@@ -82,7 +82,7 @@ class XrPlane extends EventHandler {
      * @param {import('./xr-plane-detection.js').XrPlaneDetection} planeDetection - Plane detection
      * system.
      * @param {*} xrPlane - XRPlane that is instantiated by WebXR system.
-     * @hideconstructor
+     * @ignore
      */
     constructor(planeDetection, xrPlane) {
         super();

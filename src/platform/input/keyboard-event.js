@@ -6,6 +6,27 @@
  */
 class KeyboardEvent {
     /**
+     * The keyCode of the key that has changed. See the KEY_* constants.
+     *
+     * @type {number|null}
+     */
+    key = null;
+
+    /**
+     * The element that fired the keyboard event.
+     *
+     * @type {Element|null}
+     */
+    element = null;
+
+    /**
+     * The original browser event which was fired.
+     *
+     * @type {globalThis.KeyboardEvent|null}
+     */
+    event = null;
+
+    /**
      * Create a new KeyboardEvent.
      *
      * @param {import('./keyboard.js').Keyboard} keyboard - The keyboard object which is firing the
@@ -22,28 +43,9 @@ class KeyboardEvent {
      */
     constructor(keyboard, event) {
         if (event) {
-            /**
-             * The keyCode of the key that has changed. See the KEY_* constants.
-             *
-             * @type {number}
-             */
             this.key = event.keyCode;
-            /**
-             * The element that fired the keyboard event.
-             *
-             * @type {Element}
-             */
             this.element = event.target;
-            /**
-             * The original browser event which was fired.
-             *
-             * @type {globalThis.KeyboardEvent}
-             */
             this.event = event;
-        } else {
-            this.key = null;
-            this.element = null;
-            this.event = null;
         }
     }
 }

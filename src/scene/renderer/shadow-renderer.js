@@ -300,9 +300,6 @@ class ShadowRenderer {
         const passFlags = 1 << SHADER_SHADOW;
         const shadowPass = this.getShadowPass(light);
 
-        // TODO: Similarly to forward renderer, a shader creation part of this loop should be split into a separate loop,
-        // and endShaderBatch should be called at its end
-
         // Render
         const count = visibleCasters.length;
         for (let i = 0; i < count; i++) {
@@ -339,9 +336,7 @@ class ShadowRenderer {
             // sort shadow casters by shader
             meshInstance._key[SORTKEY_DEPTH] = shadowShader.id;
 
-            if (!shadowShader.failed && !device.setShader(shadowShader)) {
-                Debug.error(`Error compiling shadow shader for material=${material.name} pass=${shadowPass}`, material);
-            }
+            device.setShader(shadowShader);
 
             // set buffers
             renderer.setVertexBuffers(device, mesh);

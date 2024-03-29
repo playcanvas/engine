@@ -11,7 +11,6 @@ import { XrInputSource } from './xr-input-source.js';
  * - hands - with their individual joints
  * - transient sources - such as touch screen taps and voice commands
  *
- * @augments EventHandler
  * @category XR
  */
 class XrInput extends EventHandler {
@@ -151,7 +150,7 @@ class XrInput extends EventHandler {
      * Create a new XrInput instance.
      *
      * @param {import('./xr-manager.js').XrManager} manager - WebXR Manager.
-     * @hideconstructor
+     * @ignore
      */
     constructor(manager) {
         super();

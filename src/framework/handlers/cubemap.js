@@ -21,7 +21,7 @@ class CubemapHandler extends ResourceHandler {
      * @ignore
      */
     constructor(app) {
-        super('cubemap');
+        super(app, 'cubemap');
 
         this._device = app.graphicsDevice;
         this._registry = app.assets;

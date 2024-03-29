@@ -37,7 +37,6 @@ const _properties = [
  * Allows an Entity to render a mesh or a primitive shape like a box, capsule, sphere, cylinder,
  * cone etc.
  *
- * @augments ComponentSystem
  * @category Graphics
  */
 class RenderComponentSystem extends ComponentSystem {
@@ -45,7 +44,7 @@ class RenderComponentSystem extends ComponentSystem {
      * Create a new RenderComponentSystem.
      *
      * @param {import('../../app-base.js').AppBase} app - The Application.
-     * @hideconstructor
+     * @ignore
      */
     constructor(app) {
         super(app);

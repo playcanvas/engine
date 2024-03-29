@@ -399,7 +399,7 @@ class Vec3 {
      *
      * a.mul(b);
      *
-     * // Outputs 8, 15, 24
+     * // Outputs [8, 15, 24]
      * console.log("The result of the multiplication is: " + a.toString());
      */
     mul(rhs) {
@@ -423,7 +423,7 @@ class Vec3 {
      *
      * r.mul2(a, b);
      *
-     * // Outputs 8, 15, 24
+     * // Outputs [8, 15, 24]
      * console.log("The result of the multiplication is: " + r.toString());
      */
     mul2(lhs, rhs) {
@@ -466,7 +466,7 @@ class Vec3 {
      *
      * v.normalize();
      *
-     * // Outputs 1, 0, 0
+     * // Outputs [1, 0, 0]
      * console.log("The result of the vector normalization is: " + v.toString());
      */
     normalize(src = this) {
@@ -557,7 +557,7 @@ class Vec3 {
      *
      * v.project(normal);
      *
-     * // Outputs 5, 0, 0
+     * // Outputs [5, 0, 0]
      * console.log("The result of the vector projection is: " + v.toString());
      */
     project(rhs) {
@@ -581,7 +581,7 @@ class Vec3 {
      * const v = new pc.Vec3();
      * v.set(5, 10, 20);
      *
-     * // Outputs 5, 10, 20
+     * // Outputs [5, 10, 20]
      * console.log("The result of the vector set is: " + v.toString());
      */
     set(x, y, z) {

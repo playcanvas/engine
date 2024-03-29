@@ -44,7 +44,7 @@ const VARIANT_DEFAULT_PRIORITY = ['pvr', 'dxt', 'etc2', 'etc1', 'basis'];
  *
  * See the {@link AssetRegistry} for details on loading resources from assets.
  *
- * @augments EventHandler
+ * @category Asset
  */
 class Asset extends EventHandler {
     /**
@@ -132,7 +132,7 @@ class Asset extends EventHandler {
      *
      * @param {string} name - A non-unique but human-readable name which can be later used to
      * retrieve the asset.
-     * @param {string} type - Type of asset. One of ["animation", "audio", "binary", "container",
+     * @param {string} type - Type of asset. One of ["animation", "audio", "binary", "bundle", "container",
      * "cubemap", "css", "font", "json", "html", "material", "model", "script", "shader", "sprite",
      * "template", text", "texture", "textureatlas"]
      * @param {object} [file] - Details about the file the asset is made from. At the least must
@@ -195,6 +195,8 @@ class Asset extends EventHandler {
 
         // This is where the loaded resource(s) will be
         this._resources = [];
+
+        this.urlObject = null;
 
         // a string-assetId dictionary that maps
         // locale to asset id
@@ -531,6 +533,11 @@ class Asset extends EventHandler {
         this.registry.fire('unload:' + this.id, this);
 
         const old = this._resources;
+
+        if (this.urlObject) {
+            URL.revokeObjectURL(this.urlObject);
+            this.urlObject = null;
+        }
 
         // clear resources on the asset
         this.resources = [];

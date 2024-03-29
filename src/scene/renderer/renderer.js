@@ -38,11 +38,10 @@ import { ShadowRendererDirectional } from './shadow-renderer-directional.js';
 import { ShadowRenderer } from './shadow-renderer.js';
 import { WorldClustersAllocator } from './world-clusters-allocator.js';
 import { RenderPassUpdateClustered } from './render-pass-update-clustered.js';
-import { getBlueNoiseTexture } from '../graphics/blue-noise-texture.js';
+import { getBlueNoiseTexture } from '../graphics/noise-textures.js';
 import { BlueNoise } from '../../core/math/blue-noise.js';
 
 let _skinUpdateIndex = 0;
-const boneTextureSize = [0, 0, 0, 0];
 const viewProjMat = new Mat4();
 const viewInvMat = new Mat4();
 const viewMat = new Mat4();
@@ -51,7 +50,6 @@ const tempSphere = new BoundingSphere();
 const _flipYMat = new Mat4().setScale(1, -1, 1);
 const _tempLightSet = new Set();
 const _tempLayerSet = new Set();
-const _tempVec4 = new Vec4();
 
 // Converts a projection matrix in OpenGL style (depth range of -1..1) to a DirectX style (depth range of 0..1).
 const _fixProjRangeMat = new Mat4().set([
@@ -222,6 +220,9 @@ class Renderer {
         this.cameraParamsId = scope.resolve('camera_params');
         this.viewIndexId = scope.resolve('view_index');
 
+        this.blueNoiseJitterVersion = 0;
+        this.blueNoiseJitterVec = new Vec4();
+        this.blueNoiseJitterData = new Float32Array(4);
         this.blueNoiseJitterId = scope.resolve('blueNoiseJitter');
         this.blueNoiseTextureId = scope.resolve('blueNoiseTex32');
 
@@ -376,7 +377,8 @@ class Renderer {
 
             // camera jitter
             const { jitter } = camera;
-            let noise = Vec4.ZERO;
+            let jitterX = 0;
+            let jitterY = 0;
             if (jitter > 0) {
 
                 // render target size
@@ -385,24 +387,32 @@ class Renderer {
 
                 // offsets
                 const offset = _haltonSequence[this.device.renderVersion % _haltonSequence.length];
-                const offsetX = jitter * (offset.x * 2 - 1) / targetWidth;
-                const offsetY = jitter * (offset.y * 2 - 1) / targetHeight;
+                jitterX = jitter * (offset.x * 2 - 1) / targetWidth;
+                jitterY = jitter * (offset.y * 2 - 1) / targetHeight;
 
                 // apply offset to projection matrix
                 projMat = _tempProjMat4.copy(projMat);
-                projMat.data[8] = offsetX;
-                projMat.data[9] = offsetY;
+                projMat.data[8] = jitterX;
+                projMat.data[9] = jitterY;
 
                 // apply offset to skybox projection matrix
                 projMatSkybox = _tempProjMat5.copy(projMatSkybox);
-                projMatSkybox.data[8] = offsetX;
-                projMatSkybox.data[9] = offsetY;
+                projMatSkybox.data[8] = jitterX;
+                projMatSkybox.data[9] = jitterY;
 
-                // blue noise vec4 - only set when jitter is enabled
-                noise = this.blueNoise.vec4(_tempVec4);
+                // blue noise vec4 - only use when jitter is enabled
+                if (this.blueNoiseJitterVersion !== this.device.renderVersion) {
+                    this.blueNoiseJitterVersion = this.device.renderVersion;
+                    this.blueNoise.vec4(this.blueNoiseJitterVec);
+                }
             }
 
-            this.blueNoiseJitterId.setValue([noise.x, noise.y, noise.z, noise.w]);
+            const jitterVec = jitter > 0 ? this.blueNoiseJitterVec : Vec4.ZERO;
+            this.blueNoiseJitterData[0] = jitterVec.x;
+            this.blueNoiseJitterData[1] = jitterVec.y;
+            this.blueNoiseJitterData[2] = jitterVec.z;
+            this.blueNoiseJitterData[3] = jitterVec.w;
+            this.blueNoiseJitterId.setValue(this.blueNoiseJitterData);
 
             this.projId.setValue(projMat.data);
             this.projSkyboxId.setValue(projMatSkybox.data);
@@ -428,6 +438,9 @@ class Renderer {
             // ViewProjection Matrix
             viewProjMat.mul2(projMat, viewMat);
             this.viewProjId.setValue(viewProjMat.data);
+
+            // store matrices needed by TAA
+            camera._storeShaderMatrices(viewProjMat, jitterX, jitterY, this.device.renderVersion);
 
             this.flipYId.setValue(flipY ? -1 : 1);
 
@@ -748,18 +761,15 @@ class Renderer {
     }
 
     setSkinning(device, meshInstance) {
-        if (meshInstance.skinInstance) {
+        const skinInstance = meshInstance.skinInstance;
+        if (skinInstance) {
             this._skinDrawCalls++;
             if (device.supportsBoneTextures) {
-                const boneTexture = meshInstance.skinInstance.boneTexture;
+                const boneTexture = skinInstance.boneTexture;
                 this.boneTextureId.setValue(boneTexture);
-                boneTextureSize[0] = boneTexture.width;
-                boneTextureSize[1] = boneTexture.height;
-                boneTextureSize[2] = 1.0 / boneTexture.width;
-                boneTextureSize[3] = 1.0 / boneTexture.height;
-                this.boneTextureSizeId.setValue(boneTextureSize);
+                this.boneTextureSizeId.setValue(skinInstance.boneTextureSize);
             } else {
-                this.poseMatrixId.setValue(meshInstance.skinInstance.matrixPalette);
+                this.poseMatrixId.setValue(skinInstance.matrixPalette);
             }
         }
     }

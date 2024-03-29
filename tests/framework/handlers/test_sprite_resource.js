@@ -27,14 +27,14 @@ describe("pc.SpriteHandler", function () {
             this.app.assets.load(spriteAsset);
 
             spriteAsset.ready(function (asset) {
-                ok(asset.resource.atlas);
+                expect(asset.resource.atlas).to.exist;
 
-                strictEqual(asset.loaded, true);
+                expect(asset.loaded).to.be.true;
 
-                strictEqual(asset.data.renderMode, 0);
-                strictEqual(asset.data.pixelsPerUnit, 100);
-                strictEqual(asset.data.textureAtlasAsset, atlasAsset.id);
-                strictEqual(asset.data.frameKeys[0], 0);
+                expect(asset.data.renderMode).to.equal(0);
+                expect(asset.data.pixelsPerUnit).to.equal(100);
+                expect(asset.data.textureAtlasAsset).to.equal(atlasAsset.id);
+                expect(asset.data.frameKeys[0]).to.equal(0);
                 done();
             }, this);
 
@@ -70,17 +70,15 @@ describe("pc.SpriteHandler", function () {
             this.app.assets.load(spriteAsset);
 
             spriteAsset.ready(function (asset) {
+                expect(asset.resource.atlas).to.exist;
 
-                strictEqual(asset.loaded, true);
+                expect(asset.loaded).to.be.true;
 
-                ok(asset.resource.atlas);
-
-                strictEqual(asset.data.renderMode, 0);
-                strictEqual(asset.data.pixelsPerUnit, 100);
-                strictEqual(asset.data.textureAtlasAsset, atlasAsset.id);
-                strictEqual(asset.data.frameKeys[0], 0);
+                expect(asset.data.renderMode).to.equal(0);
+                expect(asset.data.pixelsPerUnit).to.equal(100);
+                expect(asset.data.textureAtlasAsset).to.equal(atlasAsset.id);
+                expect(asset.data.frameKeys[0]).to.equal(0);
                 done();
-
             }, this);
 
             spriteAsset.on('error', function (err) {

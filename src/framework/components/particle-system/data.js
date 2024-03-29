@@ -6,8 +6,10 @@ class ParticleSystemComponentData {
     constructor() {
         this.numParticles = 1;                  // Amount of particles allocated (max particles = max GL texture width at this moment)
         this.rate = 1;                          // Emission rate
+        /** @type {number} */
         this.rate2 = null;
         this.startAngle = 0;
+        /** @type {number} */
         this.startAngle2 = null;
         this.lifetime = 50;                     // Particle lifetime
         this.emitterExtents = new Vec3();       // Spawn point divergence
@@ -16,12 +18,17 @@ class ParticleSystemComponentData {
         this.emitterRadiusInner = 0;
         this.emitterShape = EMITTERSHAPE_BOX;
         this.initialVelocity = 0;
+        this.wrap = false;
         this.wrapBounds = new Vec3();
         this.localSpace = false;
         this.screenSpace = false;
+        /** @type {import('../../../platform/graphics/texture.js').Texture} */
         this.colorMap = null;
+        /** @type {import('../../../framework/asset/asset.js').Asset} */
         this.colorMapAsset = null;
+        /** @type {import('../../../platform/graphics/texture.js').Texture} */
         this.normalMap = null;
+        /** @type {import('../../../framework/asset/asset.js').Asset} */
         this.normalMapAsset = null;
         this.loop = true;
         this.preWarm = false;
@@ -34,7 +41,11 @@ class ParticleSystemComponentData {
         this.stretch = 0.0;
         this.alignToMotion = false;
         this.depthSoftening = 0;
+        /** @type {import('../../../framework/asset/asset.js').Asset} */
+        this.renderAsset = null;
+        /** @type {import('../../../framework/asset/asset.js').Asset} */
         this.meshAsset = null;
+        /** @type {import('../../../scene/mesh.js').Mesh} */
         this.mesh = null;                       // Mesh to be used as particle. Vertex buffer is supposed to hold vertex position in first 3 floats of each vertex
                                                 // Leave undefined to use simple quads
         this.depthWrite = false;
@@ -54,25 +65,39 @@ class ParticleSystemComponentData {
         this.animLoop = true;
 
         // Time-dependent parameters
+        /** @type {import('../../../core/math/curve.js').Curve} */
         this.scaleGraph = null;
+        /** @type {import('../../../core/math/curve.js').Curve} */
         this.scaleGraph2 = null;
 
+        /** @type {import('../../../core/math/curve-set.js').CurveSet} */
         this.colorGraph = null;
+        /** @type {import('../../../core/math/curve-set.js').CurveSet} */
         this.colorGraph2 = null;
 
+        /** @type {import('../../../core/math/curve.js').Curve} */
         this.alphaGraph = null;
+        /** @type {import('../../../core/math/curve.js').Curve} */
         this.alphaGraph2 = null;
 
+        /** @type {import('../../../core/math/curve-set.js').CurveSet} */
         this.localVelocityGraph = null;
+        /** @type {import('../../../core/math/curve-set.js').CurveSet} */
         this.localVelocityGraph2 = null;
 
+        /** @type {import('../../../core/math/curve-set.js').CurveSet} */
         this.velocityGraph = null;
+        /** @type {import('../../../core/math/curve-set.js').CurveSet} */
         this.velocityGraph2 = null;
 
+        /** @type {import('../../../core/math/curve.js').Curve} */
         this.rotationSpeedGraph = null;
+        /** @type {import('../../../core/math/curve.js').Curve} */
         this.rotationSpeedGraph2 = null;
 
+        /** @type {import('../../../core/math/curve.js').Curve} */
         this.radialSpeedGraph = null;
+        /** @type {import('../../../core/math/curve.js').Curve} */
         this.radialSpeedGraph2 = null;
 
         this.blendType = BLEND_NORMAL;

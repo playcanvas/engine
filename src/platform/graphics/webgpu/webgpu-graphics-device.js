@@ -1,5 +1,6 @@
 import { TRACEID_RENDER_QUEUE } from '../../../core/constants.js';
 import { Debug, DebugHelper } from '../../../core/debug.js';
+import { path } from '../../../core/path.js';
 
 import {
     PIXELFORMAT_RGBA32F, PIXELFORMAT_RGBA8, PIXELFORMAT_BGRA8, DEVICETYPE_WEBGPU
@@ -176,9 +177,13 @@ class WebgpuGraphicsDevice extends GraphicsDevice {
         Debug.log("WebgpuGraphicsDevice initialization ..");
 
         // build a full URL from a relative path
-        const buildUrl = (relativePath) => {
+        const buildUrl = (srcPath) => {
+            if (!path.isRelativePath(srcPath)) {
+                return srcPath;
+            }
+
             const url = new URL(window.location.href);
-            url.pathname = relativePath;
+            url.pathname = srcPath;
             url.search = '';
             return url.toString();
         };
@@ -240,11 +245,20 @@ class WebgpuGraphicsDevice extends GraphicsDevice {
             }
         };
 
+        DebugHelper.setLabel(deviceDescr, 'PlayCanvasWebGPUDevice');
+
         /**
          * @type {GPUDevice}
          * @private
          */
         this.wgpu = await this.gpuAdapter.requestDevice(deviceDescr);
+
+        this.wgpu.lost?.then((info) => {
+            // reason is 'destroyed' if we intentionally destroy the device
+            if (info.reason !== 'destroyed') {
+                Debug.warn(`WebGPU device was lost: ${info.message}, this needs to be handled`);
+            }
+        });
 
         this.initDeviceCaps();
 
@@ -358,7 +372,9 @@ class WebgpuGraphicsDevice extends GraphicsDevice {
         // submit scheduled command buffers
         this.submit();
 
-        this.gpuProfiler.request();
+        if (!this.contextLost) {
+            this.gpuProfiler.request();
+        }
     }
 
     createUniformBufferImpl(uniformBuffer) {
@@ -463,9 +479,9 @@ class WebgpuGraphicsDevice extends GraphicsDevice {
             if (ib) {
                 this.indexBuffer = null;
                 passEncoder.setIndexBuffer(ib.impl.buffer, ib.impl.format);
-                passEncoder.drawIndexed(primitive.count, numInstances, 0, 0, 0);
+                passEncoder.drawIndexed(primitive.count, numInstances, primitive.base, 0, 0);
             } else {
-                passEncoder.draw(primitive.count, numInstances, 0, 0);
+                passEncoder.draw(primitive.count, numInstances, primitive.base, 0);
             }
 
             WebgpuDebug.end(this, {
@@ -479,16 +495,16 @@ class WebgpuGraphicsDevice extends GraphicsDevice {
         }
     }
 
-    setShader(shader) {
+    setShader(shader, asyncCompile = false) {
 
-        this.shader = shader;
+        if (shader !== this.shader) {
+            this.shader = shader;
 
-        // #if _PROFILER
-        // TODO: we should probably track other stats instead, like pipeline switches
-        this._shaderSwitchesPerFrame++;
-        // #endif
-
-        return true;
+            // #if _PROFILER
+            // TODO: we should probably track other stats instead, like pipeline switches
+            this._shaderSwitchesPerFrame++;
+            // #endif
+        }
     }
 
     setBlendState(blendState) {
@@ -606,6 +622,9 @@ class WebgpuGraphicsDevice extends GraphicsDevice {
         this.passEncoder = this.commandEncoder.beginRenderPass(renderPassDesc);
         DebugHelper.setLabel(this.passEncoder, renderPass.name);
 
+        // push marker to the passEncoder
+        DebugGraphics.pushGpuMarker(this, `Pass:${renderPass.name}`);
+
         this.setupPassEncoderDefaults();
 
         // the pass always clears full target
@@ -626,6 +645,9 @@ class WebgpuGraphicsDevice extends GraphicsDevice {
      * @ignore
      */
     endRenderPass(renderPass) {
+
+        // pop the marker from the passEncoder
+        DebugGraphics.popGpuMarker(this);
 
         // end the render pass
         this.passEncoder.end();
@@ -697,6 +719,26 @@ class WebgpuGraphicsDevice extends GraphicsDevice {
 
         WebgpuDebug.end(this);
         WebgpuDebug.end(this);
+    }
+
+    computeDispatch(computes) {
+
+        this.startComputePass();
+
+        // update uniform buffers and bind groups
+        for (let i = 0; i < computes.length; i++) {
+            const compute = computes[i];
+            compute.applyParameters();
+            compute.impl.updateBindGroup();
+        }
+
+        // dispatch
+        for (let i = 0; i < computes.length; i++) {
+            const compute = computes[i];
+            compute.impl.dispatch(compute.countX, compute.countY, compute.countZ);
+        }
+
+        this.endComputePass();
     }
 
     addCommandBuffer(commandBuffer, front = false) {

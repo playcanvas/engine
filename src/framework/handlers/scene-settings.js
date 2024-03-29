@@ -4,9 +4,7 @@ import { ResourceHandler } from './handler.js';
 
 class SceneSettingsHandler extends ResourceHandler {
     constructor(app) {
-        super('scenesettings');
-
-        this._app = app;
+        super(app, 'scenesettings');
     }
 
     load(url, callback) {

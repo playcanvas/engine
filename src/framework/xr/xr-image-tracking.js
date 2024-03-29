@@ -8,7 +8,6 @@ import { XrTrackedImage } from './xr-tracked-image.js';
  * their estimated sizes. The underlying system will assume that tracked image can move and rotate
  * in the real world and will try to provide transformation estimates and its tracking state.
  *
- * @augments EventHandler
  * @category XR
  */
 class XrImageTracking extends EventHandler {
@@ -53,7 +52,7 @@ class XrImageTracking extends EventHandler {
      * their estimate sizes.
      *
      * @param {import('./xr-manager.js').XrManager} manager - WebXR Manager.
-     * @hideconstructor
+     * @ignore
      */
     constructor(manager) {
         super();

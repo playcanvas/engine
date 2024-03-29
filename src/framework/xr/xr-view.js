@@ -136,7 +136,7 @@ class XrView extends EventHandler {
      * @param {XRView} xrView - [XRView](https://developer.mozilla.org/en-US/docs/Web/API/XRView)
      * object that is created by WebXR API.
      * @param {number} viewsCount - Number of views available for the session.
-     * @hideconstructor
+     * @ignore
      */
     constructor(manager, xrView, viewsCount) {
         super();

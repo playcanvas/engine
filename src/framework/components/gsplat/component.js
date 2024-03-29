@@ -6,7 +6,6 @@ import { Component } from '../component.js';
 /**
  * Enables an Entity to render a Gaussian Splat (asset of the 'gsplat' type).
  *
- * @augments Component
  * @category Graphics
  */
 class GSplatComponent extends Component {

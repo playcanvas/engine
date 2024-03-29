@@ -849,6 +849,21 @@ export const PIXELFORMAT_RGBA32I = 48;
  */
 export const PIXELFORMAT_RGBA32U = 49;
 
+/**
+ * 16-bit floating point R (16-bit float for red channel).
+ *
+ * @type {number}
+ * @category Graphics
+ */
+export const PIXELFORMAT_R16F = 50;
+
+/**
+ * 16-bit floating point RG (16-bit float for each red and green channels).
+ *
+ * @type {number}
+ * @category Graphics
+ */
+export const PIXELFORMAT_RG16F = 51;
 
 // map of engine PIXELFORMAT_*** enums to information about the format
 export const pixelFormatInfo = new Map([
@@ -862,6 +877,8 @@ export const pixelFormatInfo = new Map([
     [PIXELFORMAT_RGBA4,         { name: 'RGBA4', size: 2 }],
     [PIXELFORMAT_RGB8,          { name: 'RGB8', size: 4 }],
     [PIXELFORMAT_RGBA8,         { name: 'RGBA8', size: 4 }],
+    [PIXELFORMAT_R16F,          { name: 'R16F', size: 2 }],
+    [PIXELFORMAT_RG16F,         { name: 'RG16F', size: 4 }],
     [PIXELFORMAT_RGB16F,        { name: 'RGB16F', size: 8 }],
     [PIXELFORMAT_RGBA16F,       { name: 'RGBA16F', size: 8 }],
     [PIXELFORMAT_RGB32F,        { name: 'RGB32F', size: 16 }],
@@ -922,6 +939,7 @@ export const isIntegerPixelFormat = (format) => {
 // get the pixel format array type
 export const getPixelFormatArrayType = (format) => {
     switch (format) {
+        case PIXELFORMAT_R32F:
         case PIXELFORMAT_RGB32F:
         case PIXELFORMAT_RGBA32F:
             return Float32Array;
@@ -943,6 +961,8 @@ export const getPixelFormatArrayType = (format) => {
         case PIXELFORMAT_RGB565:
         case PIXELFORMAT_RGBA5551:
         case PIXELFORMAT_RGBA4:
+        case PIXELFORMAT_R16F:
+        case PIXELFORMAT_RG16F:
         case PIXELFORMAT_RGB16F:
         case PIXELFORMAT_RGBA16F:
             return Uint16Array;
@@ -1810,3 +1830,4 @@ export const CHUNKAPI_1_58 = '1.58';
 export const CHUNKAPI_1_60 = '1.60';
 export const CHUNKAPI_1_62 = '1.62';
 export const CHUNKAPI_1_65 = '1.65';
+export const CHUNKAPI_1_70 = '1.70';

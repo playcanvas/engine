@@ -2,110 +2,58 @@
  * This script is used to generate the standalone HTML file for the iframe to view the example.
  */
 import fs from 'fs';
-import { dirname } from 'path';
+import { dirname, resolve } from 'path';
 import { fileURLToPath } from 'url';
-import * as realExamples from "../src/examples/index.mjs";
-import { toKebabCase } from '../src/app/helpers/strings.mjs';
+
+import { exampleMetaData } from '../cache/metadata.mjs';
 
 // @ts-ignore
 const __filename = fileURLToPath(import.meta.url);
 const MAIN_DIR = `${dirname(__filename)}/../`;
 const EXAMPLE_HTML = fs.readFileSync(`${MAIN_DIR}/iframe/example.html`, 'utf-8');
 
-/**
- * @type {Record<string, Record<string, {
- *  example: string,
- *  nameSlug: string,
- *  categorySlug: string,
- *  files: any,
- *  controls: string
- * }>>}
+const TEMPLATE_CONFIG = `export default {};\n`;
+const TEMPLATE_CONTROLS = `/**
+ * @param {import('../../../app/components/Example.mjs').ControlOptions} options - The options.
+ * @returns {JSX.Element} The returned JSX Element.
  */
-const exampleData = {};
-if (!fs.existsSync(`${MAIN_DIR}/dist/`)) {
-    fs.mkdirSync(`${MAIN_DIR}/dist/`);
-}
-if (!fs.existsSync(`${MAIN_DIR}/dist/iframe/`)) {
-    fs.mkdirSync(`${MAIN_DIR}/dist/iframe/`);
-}
-for (const category_ in realExamples) {
-    const category = toKebabCase(category_);
-    exampleData[category] = {};
-    // @ts-ignore
-    const examples = realExamples[category_];
-    for (const exampleName_ in examples) {
-        const exampleClass = examples[exampleName_];
-        const example = toKebabCase(exampleName_).replace('-example', '');
-        const exampleFunc = exampleClass.example.toString();
-        exampleData[category][example] = {
-            example: exampleFunc,
-            nameSlug: example,
-            categorySlug: category,
-            files: undefined,
-            controls: ''
-        };
-        if (exampleClass.FILES) {
-            exampleData[category][example].files = exampleClass.FILES;
-        }
-        if (exampleClass.controls) {
-            exampleData[category][example].controls = exampleClass.controls.toString();
-        }
-        const dropEnding = exampleName_.replace(/Example$/, ""); // TestExample -> Test
-        const out = generateExampleFile(category_, dropEnding, exampleClass);
-        fs.writeFileSync(`${MAIN_DIR}/dist/iframe/${category_}_${dropEnding}.html`, out);
-    }
-}
+export function controls({ fragment }) {
+    return fragment();
+}\n`;
 
 /**
  * Choose engine based on `Example#ENGINE`, e.g. ClusteredLightingExample picks:
  * static ENGINE = 'PERFORMANCE';
  *
- * @param {'PERFORMANCE' | 'DEBUG' | undefined} type - The engine type.
+ * @param {string | undefined} type - The engine type.
  * @returns {string} - The build file.
  */
 function engineFor(type) {
     switch (type) {
+        case 'DEVELOPMENT':
+            return './ENGINE_PATH/index.js';
         case 'PERFORMANCE':
-            return './playcanvas.prf.js';
+            return './playcanvas.prf.mjs';
         case 'DEBUG':
-            return './playcanvas.dbg.js';
+            return './playcanvas.dbg.mjs';
     }
-    return './playcanvas.js';
+    return './playcanvas.mjs';
 }
 
 /**
- * @typedef {object} ExampleClass
- * @property {Function} example - The example function.
- * @property {Function} [controls] - The controls function.
- * @property {object[]} [imports] - The imports array.
- * @property {string[]} [es5libs] - The ES5Libs array.
- * @property {string} DESCRIPTION - The example description.
- * @property {'PERFORMANCE' | 'DEBUG' | undefined} ENGINE - The engine type.
- * @property {object} FILES - The object of extra files to include (e.g shaders).
- * @property {boolean} INCLUDE_AR_LINK - Include AR link png.
- * @property {boolean} NO_DEVICE_SELECTOR - No device selector.
- * @property {boolean} NO_CANVAS - No canvas element.
- * @property {boolean} NO_MINISTATS - No ministats.
- * @property {boolean} WEBGPU_ENABLED - If webGPU is enabled.
- */
-/**
- * @param {string} category - The category.
- * @param {string} example - The example.
- * @param {ExampleClass} exampleClass - The example class.
+ * @param {string} categoryKebab - The category kebab name.
+ * @param {string} exampleNameKebab - The example kebab name.
+ * @param {import('../types.mjs').ExampleConfig} config - The example config.
  * @returns {string} File to write as standalone example.
  */
-function generateExampleFile(category, example, exampleClass) {
+function generateExampleFile(categoryKebab, exampleNameKebab, config) {
     let html = EXAMPLE_HTML;
 
     // title
-    html = html.replace(/'@TITLE'/g, `${category}: ${example}`);
-
-    // es5 scripts
-    const es5Str = exampleClass.es5libs?.map((/** @type {string} */ src) => `<script src="${src}"></script>`).join('\n') || '<!-- no es5libs -->';
-    html = html.replace(/'@ES5_LIBS'/g, es5Str);
+    html = html.replace(/'@TITLE'/g, `${categoryKebab}: ${exampleNameKebab}`);
 
     // AR Link
-    const arLinkStr = exampleClass.INCLUDE_AR_LINK ? `<div style="width:100%; position:absolute; top:10px">
+    const arLinkStr = config.INCLUDE_AR_LINK ? `<div style="width:100%; position:absolute; top:10px">
         <div style="text-align: center;">
             <a id="ar-link" rel="ar" download="asset.usdz">
                 <img src="./arkit.png" id="button" width="200"/>
@@ -115,42 +63,18 @@ function generateExampleFile(category, example, exampleClass) {
     html = html.replace(/'@AR_LINK'/g, arLinkStr);
 
     // canvas
-    html = html.replace(/'@CANVAS'/g, exampleClass.NO_CANVAS ? '' : '<canvas id="application-canvas"></canvas>');
+    html = html.replace(/'@CANVAS'/g, config.NO_CANVAS ? '' : '<canvas id="application-canvas"></canvas>');
 
-    // imports
-    const importsStr = `<script>${exampleClass.imports?.map((/** @type {{ toString: () => any; }} */ _) => _.toString()).join('\n\n') || ''}</script>`;
-    html = html.replace(/'@IMPORTS'/g, importsStr);
-
-    // controls
-    html = html.replace(/'@CONTROLS'/g, `<script>${exampleClass.controls?.toString() || ''}</script>`);
-
-    // example
-    html = html.replace(/'@EXAMPLE'/g, `<script>${exampleClass.example.toString()}</script>`);
-
-    // engine path
-    html = html.replace(/'@ENGINE_PATH'/g, JSON.stringify(process.env.ENGINE_PATH ?? ''));
-
-    // node env
-    html = html.replace(/'@NODE_ENV'/g, JSON.stringify(process.env.NODE_ENV ?? ''));
-
-    // webGPU enabled
-    html = html.replace(/'@WEBGPU_ENABLED'/g, `${!!exampleClass.WEBGPU_ENABLED}`);
+    // js files
+    const name = `${categoryKebab}_${exampleNameKebab}`;
+    html = html.replace(/'@EXAMPLE'/g, JSON.stringify(`./${name}.example.mjs`));
+    html = html.replace(/'@CONTROLS'/g, JSON.stringify(`./${name}.controls.mjs`));
+    html = html.replace(/'@CONFIG'/g, JSON.stringify(`./${name}.config.mjs`));
 
     // engine
-    html = html.replace(/'@ENGINE'/g, JSON.stringify(engineFor(exampleClass.ENGINE)));
-    html = html.replace(/'@DEBUG_ENGINE'/g, JSON.stringify(engineFor('DEBUG')));
-
-    // files
-    html = html.replace(/'@FILES'/g, exampleClass.FILES ? JSON.stringify(exampleClass.FILES) : '{}');
-
-    // ministats
-    html = html.replace(/'@NO_MINISTATS'/g, `${!!exampleClass.NO_MINISTATS}`);
-
-    // device selector
-    html = html.replace(/'@DEVICE_SELECTOR'/g, `${!exampleClass.NO_DEVICE_SELECTOR}`);
-
-    // description
-    html = html.replace(/'@DESCRIPTION'/g, `${JSON.stringify(exampleClass.DESCRIPTION || '')}`);
+    const engineType = process.env.ENGINE_PATH ? 'DEVELOPMENT' : process.env.NODE_ENV === 'development' ? 'DEBUG' : config.ENGINE;
+    const engine = engineFor(engineType);
+    html = html.replace(/'@ENGINE'/g, JSON.stringify(engine));
 
     if (/'@([A-Z0-9_]+)'/g.test(html)) {
         throw new Error('HTML file still has unreplaced values');
@@ -158,3 +82,56 @@ function generateExampleFile(category, example, exampleClass) {
 
     return html;
 }
+
+/**
+ * @param {string} script - The script to be patched.
+ * @returns {string} - The patched script.
+ */
+function patchScript(script) {
+    // remove playcanvas & playcanvas-extras imports
+    script = script.replace(/\s*import[\s\w*{},]+["']playcanvas["']\s*;?[\s\r\n]*/g, '');
+    script = script.replace(/\s*import[\s\w*{},]+["']playcanvas-extras["']\s*;?[\s\r\n]*/g, '');
+
+    return script;
+}
+
+async function main() {
+    if (!fs.existsSync(`${MAIN_DIR}/dist/`)) {
+        fs.mkdirSync(`${MAIN_DIR}/dist/`);
+    }
+    if (!fs.existsSync(`${MAIN_DIR}/dist/iframe/`)) {
+        fs.mkdirSync(`${MAIN_DIR}/dist/iframe/`);
+    }
+
+    await Promise.all(exampleMetaData.map(async (data) => {
+        const { categoryKebab, exampleNameKebab, path } = data;
+        const name = `${categoryKebab}_${exampleNameKebab}`;
+        const examplePath = resolve(path, 'example.mjs');
+        const controlsPath = resolve(path, 'controls.mjs');
+        const configPath = resolve(path, 'config.mjs');
+
+        const controlsExist = fs.existsSync(controlsPath);
+        const configExists = fs.existsSync(configPath);
+
+        const config = configExists ? (await import(`file://${configPath}`)).default : {};
+
+        // html file
+        const out = generateExampleFile(categoryKebab, exampleNameKebab, config);
+        fs.writeFileSync(`${MAIN_DIR}/dist/iframe/${name}.html`, out);
+
+        // example file
+        let script = fs.readFileSync(examplePath, 'utf-8');
+        fs.writeFileSync(`${MAIN_DIR}/dist/iframe/${name}.example.mjs`, patchScript(script));
+
+        // controls file
+        script = controlsExist ? fs.readFileSync(controlsPath, 'utf-8') : TEMPLATE_CONTROLS;
+        fs.writeFileSync(`${MAIN_DIR}/dist/iframe/${name}.controls.mjs`, patchScript(script));
+
+        // config files
+        script = configExists ? fs.readFileSync(configPath, 'utf-8') : TEMPLATE_CONFIG;
+        fs.writeFileSync(`${MAIN_DIR}/dist/iframe/${name}.config.mjs`, script);
+    }));
+
+    return 0;
+}
+main().then(process.exit);

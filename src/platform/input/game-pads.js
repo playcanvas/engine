@@ -316,7 +316,7 @@ class GamePadButton {
      *
      * @param {number|GamepadButton} current - The original Gamepad API gamepad button.
      * @param {number|GamepadButton} [previous] - The previous Gamepad API gamepad button.
-     * @hideconstructor
+     * @ignore
      */
     constructor(current, previous) {
         if (typeof current === 'number') {
@@ -386,7 +386,7 @@ class GamePad {
      *
      * @param {Gamepad} gamepad - The original Gamepad API gamepad.
      * @param {object} map - The buttons and axes map.
-     * @hideconstructor
+     * @ignore
      */
     constructor(gamepad, map) {
         /**
@@ -771,7 +771,6 @@ class GamePad {
 /**
  * Input handler for accessing GamePad input.
  *
- * @augments EventHandler
  * @category Input
  */
 class GamePads extends EventHandler {

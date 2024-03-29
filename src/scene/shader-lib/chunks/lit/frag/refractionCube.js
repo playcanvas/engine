@@ -14,7 +14,8 @@ void addRefraction(
     vec3 specularity, 
     vec3 albedo, 
     float transmission,
-    float refractionIndex
+    float refractionIndex,
+    float dispersion
 #if defined(LIT_IRIDESCENCE)
     , vec3 iridescenceFresnel,
     float iridescenceIntensity

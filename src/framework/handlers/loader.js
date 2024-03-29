@@ -94,12 +94,19 @@ class ResourceLoader {
      * an error occurs. Passed (err, resource) where err is null if there are no errors.
      * @param {import('../asset/asset.js').Asset} [asset] - Optional asset that is passed into
      * handler.
+     * @param {object} [options] - Additional options for loading.
+     * @param {boolean} [options.bundlesIgnore] - If set to true, then asset will not try to load
+     * from a bundle. Defaults to false.
+     * @param {import('../asset/asset-registry.js').BundlesFilterCallback} [options.bundlesFilter] - A callback that will be called
+     * when loading an asset that is contained in any of the bundles. It provides an array of
+     * bundles and will ensure asset is loaded from bundle returned from a callback. By default
+     * smallest filesize bundle is choosen.
      * @example
      * app.loader.load("../path/to/texture.png", "texture", function (err, texture) {
      *     // use texture here
      * });
      */
-    load(url, type, callback, asset) {
+    load(url, type, callback, asset, options) {
         const handler = this._handlers[type];
         if (!handler) {
             const err = `No resource handler for asset type: '${type}' when loading [${url}]`;
@@ -134,6 +141,28 @@ class ResourceLoader {
                     return;
                 }
 
+                if (urlObj.load instanceof DataView) {
+                    if (handler.openBinary) {
+                        if (!self._requests[key])
+                            return;
+
+                        try {
+                            const data = handler.openBinary(urlObj.load);
+                            self._onSuccess(key, data);
+                        } catch (err) {
+                            self._onFailure(key, err);
+                        }
+                        return;
+                    }
+
+                    urlObj.load = URL.createObjectURL(new Blob([urlObj.load]));
+                    if (asset) {
+                        if (asset.urlObject)
+                            URL.revokeObjectURL(asset.urlObject);
+                        asset.urlObject = urlObj.load;
+                    }
+                }
+
                 handler.load(urlObj, function (err, data, extra) {
                     // make sure key exists because loader
                     // might have been destroyed by now
@@ -155,10 +184,25 @@ class ResourceLoader {
             };
 
             const normalizedUrl = url.split('?')[0];
-            if (this._app.enableBundles && this._app.bundles.hasUrl(normalizedUrl)) {
-                if (!this._app.bundles.canLoadUrl(normalizedUrl)) {
-                    handleLoad(`Bundle for ${url} not loaded yet`);
-                    return;
+            if (this._app.enableBundles && this._app.bundles.hasUrl(normalizedUrl) && !(options && options.bundlesIgnore)) {
+                // if there is no loaded bundle with asset, then start loading a bundle
+                if (!this._app.bundles.urlIsLoadedOrLoading(normalizedUrl)) {
+                    const bundles = this._app.bundles.listBundlesForAsset(asset);
+                    let bundle;
+
+                    if (options && options.bundlesFilter) {
+                        bundle = options.bundlesFilter(bundles);
+                    }
+
+                    if (!bundle) {
+                        // prioritize smallest bundle
+                        bundles?.sort((a, b) => {
+                            return a.file.size - b.file.size;
+                        });
+                        bundle = bundles?.[0];
+                    }
+
+                    if (bundle) this._app.assets?.load(bundle);
                 }
 
                 this._app.bundles.loadUrl(normalizedUrl, function (err, fileUrlFromBundle) {

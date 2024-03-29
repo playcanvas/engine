@@ -2,7 +2,7 @@ import { Debug } from '../core/debug.js';
 import { math } from '../core/math/math.js';
 import { Mat4 } from '../core/math/mat4.js';
 
-import { FILTER_NEAREST, PIXELFORMAT_RGBA32F } from '../platform/graphics/constants.js';
+import { FILTER_NEAREST, PIXELFORMAT_RGBA32F, TEXTURELOCK_READ } from '../platform/graphics/constants.js';
 import { Texture } from '../platform/graphics/texture.js';
 
 const _invMatrix = new Mat4();
@@ -20,6 +20,8 @@ class SkinInstance {
      * @type {import('./graph-node.js').GraphNode[]}
      */
     bones;
+
+    boneTextureSize;
 
     /**
      * Create a new SkinInstance instance.
@@ -72,7 +74,10 @@ class SkinInstance {
                 name: 'skin'
             });
 
-            this.matrixPalette = this.boneTexture.lock();
+            this.boneTextureSize = [width, height, 1.0 / width, 1.0 / height];
+
+            this.matrixPalette = this.boneTexture.lock({ mode: TEXTURELOCK_READ });
+            this.boneTexture.unlock();
 
         } else {
             this.matrixPalette = new Float32Array(numBones * 12);

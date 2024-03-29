@@ -24,7 +24,7 @@ class AnimTrack {
      * @param {import('./anim-data.js').AnimData[]} outputs - List of curve value data.
      * @param {import('./anim-curve.js').AnimCurve[]} curves - The list of curves.
      * @param {AnimEvents} animEvents - A sequence of animation events.
-     * @hideconstructor
+     * @ignore
      */
     constructor(name, duration, inputs, outputs, curves, animEvents = new AnimEvents([])) {
         this._name = name;

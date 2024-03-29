@@ -8,6 +8,7 @@ class ButtonComponentData {
         this.enabled = true;
 
         this.active = true;
+        /** @type {import('../../../framework/entity.js').Entity} */
         this.imageEntity = null;
         this.hitPadding = new Vec4();
         this.transitionMode = BUTTON_TRANSITION_MODE_TINT;
@@ -15,10 +16,13 @@ class ButtonComponentData {
         this.pressedTint = new Color(0.5, 0.5, 0.5);
         this.inactiveTint = new Color(0.25, 0.25, 0.25);
         this.fadeDuration = 0;
+        /** @type {import('../../../framework/asset/asset.js').Asset} */
         this.hoverSpriteAsset = null;
         this.hoverSpriteFrame = 0;
+        /** @type {import('../../../framework/asset/asset.js').Asset} */
         this.pressedSpriteAsset = null;
         this.pressedSpriteFrame = 0;
+        /** @type {import('../../../framework/asset/asset.js').Asset} */
         this.inactiveSpriteAsset = null;
         this.inactiveSpriteFrame = 0;
     }
