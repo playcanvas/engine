@@ -52,7 +52,7 @@ class HitResult {
      * @type {number}
      */
     hitFraction;
-    
+
     /**
      * The distance at which the hit occurred from the starting point.
      *
