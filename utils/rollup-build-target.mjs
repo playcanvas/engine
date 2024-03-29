@@ -11,6 +11,7 @@ import { visualizer } from 'rollup-plugin-visualizer';
 import { shaderChunks } from './rollup-shader-chunks.mjs';
 import { engineLayerImportValidation } from './rollup-import-validation.mjs';
 import { spacesToTabs } from './rollup-spaces-to-tabs.mjs';
+import { dynamicImportLegacyBrowserSupport, dynamicImportViteSupress } from './rollup-dynamic-import-transform.mjs';
 
 import { version, revision } from './rollup-version-revision.mjs';
 import { getBanner } from './rollup-get-banner.mjs';
@@ -56,9 +57,10 @@ const stripFunctions = [
  * @param {'es5'|'es6'} moduleFormat - The module format.
  * @param {string} input - Only used for Examples to change it to `../src/index.js`.
  * @param {string} [buildDir] - Only used for examples to change the output location.
+ * @param {Boolean} [shouldBundle] - Whether the target should be bundled.
  * @returns {RollupOptions} One rollup target.
  */
-function buildTarget(buildType, moduleFormat, input = 'src/index.js', buildDir = 'build') {
+function buildTarget(buildType, moduleFormat, input = 'src/index.js', buildDir = 'build', shouldBundle = true) {
     const banner = {
         debug: ' (DEBUG)',
         release: ' (RELEASE)',
@@ -104,7 +106,7 @@ function buildTarget(buildType, moduleFormat, input = 'src/index.js', buildDir =
 
     const outputExtension = {
         es5: '.js',
-        es6: '.mjs'
+        es6: shouldBundle ? '.mjs' : ''
     };
 
     /** @type {Record<string, ModuleFormat>} */
@@ -119,17 +121,17 @@ function buildTarget(buildType, moduleFormat, input = 'src/index.js', buildDir =
     };
     /** @type {OutputOptions} */
     const outputOptions = {
-        banner: moduleFormat === 'es5' && getBanner(banner[buildType]),
+        banner: (moduleFormat === 'es5' || shouldBundle) ? getBanner(banner[buildType]) : undefined,
         plugins: outputPlugins[buildType || outputPlugins.release],
         format: outputFormat[moduleFormat],
         indent: '\t',
-        sourcemap: sourceMap[buildType] || sourceMap.release,
+        sourcemap: shouldBundle && (sourceMap[buildType] || sourceMap.release),
         name: 'pc',
-        preserveModules: moduleFormat === 'es6'
+        preserveModules: !shouldBundle
     };
 
     const loc = `${buildDir}/${outputFile[buildType]}${outputExtension[moduleFormat]}`;
-    outputOptions[moduleFormat === 'es6' ? 'dir' : 'file'] = loc;
+    outputOptions[shouldBundle ? 'file' : 'dir'] = loc;
 
     const sdkVersion = {
         _CURRENT_SDK_VERSION: version,
@@ -168,15 +170,21 @@ function buildTarget(buildType, moduleFormat, input = 'src/index.js', buildDir =
         es6: moduleOptions(buildType)
     };
 
+    const jsccParam = jsccOptions[buildType] || jsccOptions.release;
+    if (moduleFormat === 'es5') jsccParam.values._IS_UMD = 1;
+    jsccParam.asloader = false;
+
     return {
         input,
         output: outputOptions,
         plugins: [
-            jscc(jsccOptions[buildType] || jsccOptions.release),
+            jscc(jsccParam),
+            moduleFormat === 'es5' ? dynamicImportLegacyBrowserSupport() : undefined,
             shaderChunks({ enabled: buildType !== 'debug' }),
             engineLayerImportValidation(input, buildType === 'debug'),
             buildType !== 'debug' ? strip(stripOptions) : undefined,
             babel(babelOptions[moduleFormat]),
+            moduleFormat === 'es6' && buildType !== 'debug' ? dynamicImportViteSupress() : undefined,
             spacesToTabs(buildType !== 'debug')
         ]
     };

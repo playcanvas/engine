@@ -170,7 +170,7 @@ class ContainerHandler extends ResourceHandler {
      * @ignore
      */
     constructor(app) {
-        super('container');
+        super(app, 'container');
 
         this.glbContainerParser = new GlbContainerParser(app.graphicsDevice, app.assets, 0);
         this.parsers = { };

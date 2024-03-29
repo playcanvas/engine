@@ -6,7 +6,6 @@ import { TouchEvent } from './touch-event.js';
  * Attach a TouchDevice to an element and it will receive and fire events when the element is
  * touched. See also {@link Touch} and {@link TouchEvent}.
  *
- * @augments EventHandler
  * @category Input
  */
 class TouchDevice extends EventHandler {

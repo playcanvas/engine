@@ -124,16 +124,17 @@ class GeometryVertexStream {
  *     0, 1, 0  // pos 3
  * ]);
  * const uvs = new Float32Array([
- *     0, 0, // uv 0
- *     1, 0, // uv 1
- *     1, 1, // uv 2
  *     0, 1  // uv 3
+ *     1, 1, // uv 2
+ *     1, 0, // uv 1
+ *     0, 0, // uv 0
  * ]);
  * const indices = [
  *     0, 1, 2, // triangle 0
  *     0, 2, 3  // triangle 1
  * ];
  * mesh.setPositions(positions);
+ * mesh.setNormals(pc.calculateNormals(positions, indices));
  * mesh.setUvs(0, uvs);
  * mesh.setIndices(indices);
  * mesh.update();
@@ -172,6 +173,7 @@ class Mesh extends RefCountedObject {
      * aabb representing object space bounds of the mesh.
      *
      * @type {BoundingBox}
+     * @private
      */
     _aabb = new BoundingBox();
 
@@ -223,7 +225,7 @@ class Mesh extends RefCountedObject {
          * - `indexed` specifies whether to interpret the primitive as indexed, thereby using the
          * currently set index buffer.
          *
-         * @type {Array.<{type: number, base: number, count: number, indexed: boolean|undefined}>}
+         * @type {{type: number, base: number, count: number, indexed?: boolean}[]}
          */
         this.primitive = [{
             type: 0,
@@ -502,7 +504,7 @@ class Mesh extends RefCountedObject {
      *
      * @param {string} semantic - The meaning of the vertex element. For supported semantics, see
      * SEMANTIC_* in {@link VertexFormat}.
-     * @param {number[]|Int8Array|Uint8Array|Uint8ClampedArray|Int16Array|Uint16Array|Int32Array|Uint32Array|Float32Array} data - Vertex
+     * @param {number[]|ArrayBufferView} data - Vertex
      * data for the specified semantic.
      * @param {number} componentCount - The number of values that form a single Vertex element. For
      * example when setting a 3D position represented by 3 numbers per vertex, number 3 should be
@@ -534,7 +536,7 @@ class Mesh extends RefCountedObject {
      *
      * @param {string} semantic - The semantic of the vertex element to get. For supported
      * semantics, see SEMANTIC_* in {@link VertexFormat}.
-     * @param {number[]|Int8Array|Uint8Array|Uint8ClampedArray|Int16Array|Uint16Array|Int32Array|Uint32Array|Float32Array} data - An
+     * @param {number[]|ArrayBufferView} data - An
      * array to populate with the vertex data. When typed array is supplied, enough space needs to
      * be reserved, otherwise only partial data is copied.
      * @returns {number} Returns the number of vertices populated.
@@ -576,7 +578,7 @@ class Mesh extends RefCountedObject {
     /**
      * Sets the vertex positions array. Vertices are stored using {@link TYPE_FLOAT32} format.
      *
-     * @param {number[]|Int8Array|Uint8Array|Uint8ClampedArray|Int16Array|Uint16Array|Int32Array|Uint32Array|Float32Array} positions - Vertex
+     * @param {number[]|ArrayBufferView} positions - Vertex
      * data containing positions.
      * @param {number} [componentCount] - The number of values that form a single position element.
      * Defaults to 3 if not specified, corresponding to x, y and z coordinates.
@@ -590,7 +592,7 @@ class Mesh extends RefCountedObject {
     /**
      * Sets the vertex normals array. Normals are stored using {@link TYPE_FLOAT32} format.
      *
-     * @param {number[]|Int8Array|Uint8Array|Uint8ClampedArray|Int16Array|Uint16Array|Int32Array|Uint32Array|Float32Array} normals - Vertex
+     * @param {number[]|ArrayBufferView} normals - Vertex
      * data containing normals.
      * @param {number} [componentCount] - The number of values that form a single normal element.
      * Defaults to 3 if not specified, corresponding to x, y and z direction.
@@ -605,7 +607,7 @@ class Mesh extends RefCountedObject {
      * Sets the vertex uv array. Uvs are stored using {@link TYPE_FLOAT32} format.
      *
      * @param {number} channel - The uv channel in [0..7] range.
-     * @param {number[]|Int8Array|Uint8Array|Uint8ClampedArray|Int16Array|Uint16Array|Int32Array|Uint32Array|Float32Array} uvs - Vertex
+     * @param {number[]|ArrayBufferView} uvs - Vertex
      * data containing uv-coordinates.
      * @param {number} [componentCount] - The number of values that form a single uv element.
      * Defaults to 2 if not specified, corresponding to u and v coordinates.
@@ -620,7 +622,7 @@ class Mesh extends RefCountedObject {
      * Sets the vertex color array. Colors are stored using {@link TYPE_FLOAT32} format, which is
      * useful for HDR colors.
      *
-     * @param {number[]|Int8Array|Uint8Array|Uint8ClampedArray|Int16Array|Uint16Array|Int32Array|Uint32Array|Float32Array} colors - Vertex
+     * @param {number[]|ArrayBufferView} colors - Vertex
      * data containing colors.
      * @param {number} [componentCount] - The number of values that form a single color element.
      * Defaults to 4 if not specified, corresponding to r, g, b and a.
@@ -636,7 +638,7 @@ class Mesh extends RefCountedObject {
      * useful for LDR colors. Values in the array are expected in [0..255] range, and are mapped to
      * [0..1] range in the shader.
      *
-     * @param {number[]|Int8Array|Uint8Array|Uint8ClampedArray|Int16Array|Uint16Array|Int32Array|Uint32Array|Float32Array} colors - Vertex
+     * @param {number[]|ArrayBufferView} colors - Vertex
      * data containing colors. The array is expected to contain 4 components per vertex,
      * corresponding to r, g, b and a.
      * @param {number} [numVertices] - The number of vertices to be used from data array. If not
@@ -665,7 +667,7 @@ class Mesh extends RefCountedObject {
     /**
      * Gets the vertex positions data.
      *
-     * @param {number[]|Int8Array|Uint8Array|Uint8ClampedArray|Int16Array|Uint16Array|Int32Array|Uint32Array|Float32Array} positions - An
+     * @param {number[]|ArrayBufferView} positions - An
      * array to populate with the vertex data. When typed array is supplied, enough space needs to
      * be reserved, otherwise only partial data is copied.
      * @returns {number} Returns the number of vertices populated.
@@ -677,7 +679,7 @@ class Mesh extends RefCountedObject {
     /**
      * Gets the vertex normals data.
      *
-     * @param {number[]|Int8Array|Uint8Array|Uint8ClampedArray|Int16Array|Uint16Array|Int32Array|Uint32Array|Float32Array} normals - An
+     * @param {number[]|ArrayBufferView} normals - An
      * array to populate with the vertex data. When typed array is supplied, enough space needs to
      * be reserved, otherwise only partial data is copied.
      * @returns {number} Returns the number of vertices populated.
@@ -690,7 +692,7 @@ class Mesh extends RefCountedObject {
      * Gets the vertex uv data.
      *
      * @param {number} channel - The uv channel in [0..7] range.
-     * @param {number[]|Int8Array|Uint8Array|Uint8ClampedArray|Int16Array|Uint16Array|Int32Array|Uint32Array|Float32Array} uvs - An
+     * @param {number[]|ArrayBufferView} uvs - An
      * array to populate with the vertex data. When typed array is supplied, enough space needs to
      * be reserved, otherwise only partial data is copied.
      * @returns {number} Returns the number of vertices populated.
@@ -702,7 +704,7 @@ class Mesh extends RefCountedObject {
     /**
      * Gets the vertex color data.
      *
-     * @param {number[]|Int8Array|Uint8Array|Uint8ClampedArray|Int16Array|Uint16Array|Int32Array|Uint32Array|Float32Array} colors - An
+     * @param {number[]|ArrayBufferView} colors - An
      * array to populate with the vertex data. When typed array is supplied, enough space needs to
      * be reserved, otherwise only partial data is copied.
      * @returns {number} Returns the number of vertices populated.

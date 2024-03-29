@@ -1,6 +1,9 @@
 import { createRoot } from 'react-dom/client';
+
 import { jsx } from './jsx.mjs';
-import { MainLayout } from './MainLayout.mjs';
+
+import { MainLayout } from './components/MainLayout.mjs';
+
 import '@playcanvas/pcui/styles';
 
 function main() {
@@ -13,7 +16,4 @@ function main() {
     root.render(jsx(MainLayout, null));
 }
 
-window.onload = () => {
-    // Just a little timeout to give browser some time to "breathe"
-    setTimeout(main, 50);
-};
+main();

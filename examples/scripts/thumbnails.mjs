@@ -7,9 +7,9 @@ import puppeteer from 'puppeteer';
 import sharp from 'sharp';
 import { dirname } from 'path';
 import { fileURLToPath } from 'url';
-import { kebabCaseToPascalCase, toKebabCase } from '../src/app/helpers/strings.mjs';
-import * as categories from "../src/examples/index.mjs";
 import { spawn, execSync } from 'node:child_process';
+
+import { exampleMetaData } from '../cache/metadata.mjs';
 
 // @ts-ignore
 const __filename = fileURLToPath(import.meta.url);
@@ -17,25 +17,8 @@ const __dirname = dirname(__filename);
 const PORT = process.env.PORT || '12321';
 const MAIN_DIR = `${__dirname}/../`;
 const TIMEOUT = 1e8;
-const DEBUG = false;
-
-/** @type {{category: string, example: string}[]} */
-const exampleList = [];
-for (const category_ in categories) {
-    const category = toKebabCase(category_);
-    // @ts-ignore
-    const examples = categories[category_];
-    for (const example_ in examples) {
-        const example = toKebabCase(example_).replace('-example', '');
-        exampleList.push({
-            category,
-            example
-        });
-    }
-}
-if (!fs.existsSync(`${MAIN_DIR}/thumbnails`)) {
-    fs.mkdirSync(`${MAIN_DIR}/thumbnails`);
-}
+const DEBUG = process.argv.includes('--debug');
+const CLEAN = process.argv.includes('--clean');
 
 class PuppeteerPool {
     /**
@@ -121,67 +104,83 @@ class PuppeteerPool {
     }
 
     close() {
-        return Promise.all(this._pool.map((item) => {
-            item.pages = 0;
-            return item.browser.close();
-        }));
+        return Promise.all(
+            this._pool.map((item) => {
+                item.pages = 0;
+                return item.browser.close();
+            })
+        );
     }
 }
 
 /**
  * @param {PuppeteerPool} pool - The pool instance.
- * @param {string} exampleSlug - Example slug.
- * @param {string} categorySlug - Category slug.
- * @param {string} example - Example kebab name.
- * @param {string} category - Category kebab name.
+ * @param {string} categoryKebab - Category kebab name.
+ * @param {string} exampleNameKebab - Example kebab name.
  */
-async function takeThumbnails(pool, exampleSlug, categorySlug, example, category) {
+async function takeThumbnails(pool, categoryKebab, exampleNameKebab) {
     const poolItem = pool.allocPoolItem();
     const page = await pool.newPage(poolItem);
     if (DEBUG) {
-        page.on('console', message => console.log(`${message.type().substring(0, 3).toUpperCase()} ${message.text()}`));
-        page.on('pageerror', ({ message }) => console.log(message));
-        page.on('requestfailed', request => console.log(`${request.failure()?.errorText} ${request.url()}`));
+        page.on('console', message => console.log(`[CONSOLE] ${message.type().substring(0, 3).toUpperCase()} ${message.text()}`)
+        );
+        page.on('pageerror', ({ message }) => console.log(`[PAGE ERROR] ${message}`));
+        page.on('requestfailed', request => console.log(`[REQUEST FAILED] ${request.failure()?.errorText} ${request.url()}`)
+        );
     }
 
     // navivate to example
-    const link = `http://localhost:${PORT}/iframe/${category}_${example}.html?miniStats=false`;
+    const link = `http://localhost:${PORT}/iframe/${categoryKebab}_${exampleNameKebab}.html?miniStats=false&deviceType=webgl2`;
     if (DEBUG) {
-        console.log("goto", link);
+        console.log('goto', link);
     }
     await page.goto(link, { timeout: TIMEOUT });
 
     // wait to load
     if (DEBUG) {
-        console.log("wait for", link);
+        console.log('wait for', link);
     }
-    await page.waitForFunction("window?.pc?.app?._time > 1000", { timeout: TIMEOUT });
+    await page.waitForFunction('window?.pc?.app?._time > 1000', { timeout: TIMEOUT });
 
     // screenshot page
-    await page.screenshot({ path: `${MAIN_DIR}/thumbnails/${categorySlug}_${exampleSlug}.webp`, type: 'webp' });
+    await page.screenshot({ path: `${MAIN_DIR}/thumbnails/${categoryKebab}_${exampleNameKebab}.webp`, type: 'webp' });
+
+    // read in image as data
+    // N.B. Cannot use path because of file locking (https://github.com/lovell/sharp/issues/346)
+    const imgData = fs.readFileSync(`${MAIN_DIR}/thumbnails/${categoryKebab}_${exampleNameKebab}.webp`);
 
     // copy and crop image for large thumbnail
-    await sharp(`${MAIN_DIR}/thumbnails/${categorySlug}_${exampleSlug}.webp`)
+    await sharp(imgData)
         .resize(320, 240)
-        .toFile(`${MAIN_DIR}/thumbnails/${categorySlug}_${exampleSlug}_large.webp`);
+        .toFile(`${MAIN_DIR}/thumbnails/${categoryKebab}_${exampleNameKebab}_large.webp`);
 
     // copy and crop image for small thumbnail
-    await sharp(`${MAIN_DIR}/thumbnails/${categorySlug}_${exampleSlug}.webp`)
+    await sharp(imgData)
         .resize(64, 48)
-        .toFile(`${MAIN_DIR}/thumbnails/${categorySlug}_${exampleSlug}_small.webp`);
+        .toFile(`${MAIN_DIR}/thumbnails/${categoryKebab}_${exampleNameKebab}_small.webp`);
 
     // remove screenshot
-    fs.rmSync(`${MAIN_DIR}/thumbnails/${categorySlug}_${exampleSlug}.webp`);
+    fs.unlinkSync(`${MAIN_DIR}/thumbnails/${categoryKebab}_${exampleNameKebab}.webp`);
 
     // close page
     await pool.closePage(poolItem, page);
 
-    console.log(`screenshot taken for: ${category}/${example}`);
+    console.log(`screenshot taken for: ${categoryKebab}/${exampleNameKebab}`);
 }
 
-async function takeScreenshots() {
-    if (exampleList.length === 0) {
+/**
+ * @param {typeof exampleMetaData} metadata - Example metadata.
+ */
+async function takeScreenshots(metadata) {
+    if (metadata.length === 0) {
         return;
+    }
+
+    if (CLEAN) {
+        fs.rmSync(`${MAIN_DIR}/thumbnails`, { recursive: true, force: true });
+    }
+    if (!fs.existsSync(`${MAIN_DIR}/thumbnails`)) {
+        fs.mkdirSync(`${MAIN_DIR}/thumbnails`);
     }
 
     // create browser instance with new page
@@ -189,21 +188,18 @@ async function takeScreenshots() {
     await pool.launch({ headless: 'new' });
 
     const screenshotPromises = [];
-    for (let i = 0; i < exampleList.length; i++) {
-        const exampleListItem = exampleList[i];
-        const exampleSlug = exampleListItem.example;
-        const categorySlug = exampleListItem.category;
-        const example = kebabCaseToPascalCase(exampleListItem.example);
-        const category = kebabCaseToPascalCase(exampleListItem.category);
+    for (let i = 0; i < metadata.length; i++) {
+        const { categoryKebab, exampleNameKebab } = metadata[i];
 
         // check if thumbnail exists
-        if (fs.existsSync(`${MAIN_DIR}/thumbnails/${categorySlug}_${exampleSlug}_large.png`)) {
-            console.log(`skipped: ${category}/${example}`);
+        if (fs.existsSync(`${MAIN_DIR}/thumbnails/${categoryKebab}_${exampleNameKebab}_large.webp`)) {
+            console.log(`skipped: ${categoryKebab}/${exampleNameKebab}`);
             continue;
         }
 
-        screenshotPromises.push(takeThumbnails(pool, exampleSlug, categorySlug, example, category));
-
+        screenshotPromises.push(
+            takeThumbnails(pool, categoryKebab, exampleNameKebab)
+        );
     }
 
     // ensure all screenshots have finished.
@@ -233,10 +229,10 @@ async function main() {
     const cmd = isWin ? 'npx.cmd' : 'npx';
     const server = spawn(cmd, ['serve', 'dist', '-l', PORT, '--no-request-logging', '--config', '../serve.json']);
     await sleep(1000); // give a second to spawn server
-    console.log("Starting puppeteer screenshot process");
+    console.log('Starting puppeteer screenshot process');
     try {
         console.time('Time');
-        await takeScreenshots();
+        await takeScreenshots(exampleMetaData);
         console.timeEnd('Time');
     } catch (e) {
         console.error(e);

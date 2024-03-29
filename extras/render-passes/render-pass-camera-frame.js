@@ -20,7 +20,7 @@ import { RenderPassPrepass } from "./render-pass-prepass.js";
 class RenderPassCameraFrame extends RenderPass {
     app;
 
-    prepPass;
+    prePass;
 
     scenePass;
 
@@ -126,7 +126,7 @@ class RenderPassCameraFrame extends RenderPass {
         // create a render target to render the scene into
         const format = device.getRenderableHdrFormat() || PIXELFORMAT_RGBA8;
         const sceneTexture = new Texture(device, {
-            name: 'SceneTexture',
+            name: 'SceneColor',
             width: 4,
             height: 4,
             format: format,
@@ -165,7 +165,7 @@ class RenderPassCameraFrame extends RenderPass {
         // ------ SCENE PREPASS ------
 
         if (options.prepassEnabled) {
-            this.prepPass = new RenderPassPrepass(device, scene, renderer, cameraComponent, sceneDepth, sceneOptions);
+            this.prePass = new RenderPassPrepass(device, scene, renderer, cameraComponent, sceneDepth, sceneOptions);
         }
 
         // ------ SCENE RENDERING WITH OPTIONAL GRAB PASS ------
@@ -176,9 +176,10 @@ class RenderPassCameraFrame extends RenderPass {
         this.scenePass = new RenderPassForward(device, composition, scene, renderer);
         this.scenePass.init(rt, sceneOptions);
 
-        // if prepass is enabled, do not clear the depth buffer when rendering the scene
+        // if prepass is enabled, do not clear the depth buffer when rendering the scene, and preserve it
         if (options.prepassEnabled) {
             this.scenePass.noDepthClear = true;
+            this.scenePass.depthStencilOps.storeDepth = true;
         }
 
         // layers this pass renders depend on the grab pass being used
@@ -213,8 +214,8 @@ class RenderPassCameraFrame extends RenderPass {
 
         let sceneTextureWithTaa = sceneTexture;
         if (options.taaEnabled) {
-            this.taaPass = new RenderPassTAA(device, sceneTexture);
-            sceneTextureWithTaa = this.taaPass.accumulationTexture;
+            this.taaPass = new RenderPassTAA(device, sceneTexture, cameraComponent);
+            sceneTextureWithTaa = this.taaPass.historyTexture;
         }
 
         // ------ BLOOM GENERATION ------
@@ -226,8 +227,8 @@ class RenderPassCameraFrame extends RenderPass {
 
         // create a compose pass, which combines the scene texture with the bloom texture
         this.composePass = new RenderPassCompose(app.graphicsDevice);
-        // this.composePass.sceneTexture = sceneTextureWithTaa;
         this.composePass.bloomTexture = this.bloomPass.bloomTexture;
+        this.composePass.taaEnabled = options.taaEnabled;
 
         // compose pass renders directly to target renderTarget
         this.composePass.init(targetRenderTarget);
@@ -242,7 +243,7 @@ class RenderPassCameraFrame extends RenderPass {
         afterPass.addLayers(composition, cameraComponent, lastAddedIndex, clearRenderTarget);
 
         // use these prepared render passes in the order they should be executed
-        const allPasses = [this.prepPass, this.scenePass, colorGrabPass, scenePassTransparent, this.taaPass, this.bloomPass, this.composePass, afterPass];
+        const allPasses = [this.prePass, this.scenePass, colorGrabPass, scenePassTransparent, this.taaPass, this.bloomPass, this.composePass, afterPass];
         this.beforePasses = allPasses.filter(element => element !== undefined);
     }
 
@@ -253,7 +254,7 @@ class RenderPassCameraFrame extends RenderPass {
         // scene texture is either output of taa pass or the scene render target
         const sceneTexture = this.taaPass?.update() ?? this._rt.colorBuffer;
 
-        // TAA accumulation buffer is double buffered, assign the current one to the follow up passes.
+        // TAA history buffer is double buffered, assign the current one to the follow up passes.
         this.composePass.sceneTexture = sceneTexture;
         if (this.bloomEnabled) {
             this.bloomPass.sourceTexture = sceneTexture;

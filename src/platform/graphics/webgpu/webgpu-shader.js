@@ -1,5 +1,6 @@
 import { Debug, DebugHelper } from '../../../core/debug.js';
 import { SHADERLANGUAGE_WGSL } from '../constants.js';
+import { DebugGraphics } from '../debug-graphics.js';
 
 import { ShaderProcessor } from '../shader-processor.js';
 import { WebgpuDebug } from './webgpu-debug.js';
@@ -61,6 +62,13 @@ class WebgpuShader {
             this._vertexCode = definition.vshader ?? null;
             this._fragmentCode = definition.fshader ?? null;
             this._computeCode = definition.cshader ?? null;
+
+            this.meshUniformBufferFormat = definition.meshUniformBufferFormat;
+            this.meshBindGroupFormat = definition.meshBindGroupFormat;
+
+            this.computeUniformBufferFormat = definition.computeUniformBufferFormat;
+            this.computeBindGroupFormat = definition.computeBindGroupFormat;
+
             this.vertexEntryPoint = 'vertexMain';
             this.fragmentEntryPoint = 'fragmentMain';
             shader.ready = true;
@@ -144,7 +152,7 @@ class WebgpuShader {
             const spirv = this.shader.device.glslang.compileGLSL(src, shaderType);
             return this.shader.device.twgsl.convertSpirV2WGSL(spirv);
         } catch (err) {
-            console.error(`Failed to transpile webgl ${shaderType} shader [${this.shader.label}] to WebGPU: [${err.message}]`, {
+            console.error(`Failed to transpile webgl ${shaderType} shader [${this.shader.label}] to WebGPU: [${err.message}] while rendering ${DebugGraphics.toString()}`, {
                 processed: src,
                 original: originalSrc,
                 shader: this.shader

@@ -27,10 +27,18 @@ import { Asset } from './asset.js';
  */
 
 /**
+ * Callback used by {@link ResourceLoader#load} and called when an asset is choosing a bundle
+ * to load from. Return a single bundle to ensure asset is loaded from it.
+ *
+ * @callback BundlesFilterCallback
+ * @param {import('../bundle/bundle.js').Bundle[]} bundles - List of bundles which contain the asset.
+ */
+
+/**
  * Container for all assets that are available to this application. Note that PlayCanvas scripts
  * are provided with an AssetRegistry instance as `app.assets`.
  *
- * @augments EventHandler
+ * @category Asset
  */
 class AssetRegistry extends EventHandler {
     /**
@@ -189,6 +197,13 @@ class AssetRegistry extends EventHandler {
     prefix = null;
 
     /**
+     * BundleRegistry
+     *
+     * @type {import('../bundle/bundle-registry.js').BundleRegistry|null}
+     */
+    bundles = null;
+
+    /**
      * Create an instance of an AssetRegistry.
      *
      * @param {import('../handlers/loader.js').ResourceLoader} loader - The ResourceLoader used to
@@ -334,6 +349,15 @@ class AssetRegistry extends EventHandler {
      * out when it is loaded.
      *
      * @param {Asset} asset - The asset to load.
+     * @param {object} [options] - Options for asset loading.
+     * @param {boolean} [options.bundlesIgnore] - If set to true, then asset will not try to load
+     * from a bundle. Defaults to false.
+     * @param {boolean} [options.force] - If set to true, then the check of asset being loaded or
+     * is already loaded is bypassed, which forces loading of asset regardless.
+     * @param {BundlesFilterCallback} [options.bundlesFilter] - A callback that will be called
+     * when loading an asset that is contained in any of the bundles. It provides an array of
+     * bundles and will ensure asset is loaded from bundle returned from a callback. By default
+     * smallest filesize bundle is choosen.
      * @example
      * // load some assets
      * const assetsToLoad = [
@@ -351,15 +375,23 @@ class AssetRegistry extends EventHandler {
      *     app.assets.load(assetToLoad);
      * });
      */
-    load(asset) {
+    load(asset, options) {
         // do nothing if asset is already loaded
         // note: lots of code calls assets.load() assuming this check is present
         // don't remove it without updating calls to assets.load() with checks for the asset.loaded state
-        if (asset.loading || asset.loaded) {
+        if ((asset.loading || asset.loaded) && !options?.force) {
             return;
         }
 
         const file = asset.file;
+
+        const _fireLoad = () => {
+            this.fire('load', asset);
+            this.fire('load:' + asset.id, asset);
+            if (file && file.url)
+                this.fire('load:url:' + file.url, asset);
+            asset.fire('load', asset);
+        };
 
         // open has completed on the resource
         const _opened = (resource) => {
@@ -372,11 +404,28 @@ class AssetRegistry extends EventHandler {
             // let handler patch the resource
             this._loader.patch(asset, this);
 
-            this.fire('load', asset);
-            this.fire('load:' + asset.id, asset);
-            if (file && file.url)
-                this.fire('load:url:' + file.url, asset);
-            asset.fire('load', asset);
+            if (asset.type === 'bundle') {
+                const assetIds = asset.data.assets;
+                for (let i = 0; i < assetIds.length; i++) {
+                    const assetInBundle = this._idToAsset.get(assetIds[i]);
+                    if (assetInBundle && !assetInBundle.loaded) {
+                        this.load(assetInBundle, { force: true });
+                    }
+                }
+
+                if (asset.resource.loaded) {
+                    _fireLoad();
+                } else {
+                    this.fire('load:start', asset);
+                    this.fire('load:start:' + asset.id, asset);
+                    if (file && file.url)
+                        this.fire('load:start:url:' + file.url, asset);
+                    asset.fire('load:start', asset);
+                    asset.resource.on('load', _fireLoad);
+                }
+            } else {
+                _fireLoad();
+            }
         };
 
         // load has completed on the resource
@@ -408,7 +457,26 @@ class AssetRegistry extends EventHandler {
             this.fire('load:' + asset.id + ':start', asset);
 
             asset.loading = true;
-            this._loader.load(asset.getFileUrl(), asset.type, _loaded, asset);
+
+            const fileUrl = asset.getFileUrl();
+
+            // mark bundle assets as loading
+            if (asset.type === 'bundle') {
+                const assetIds = asset.data.assets;
+                for (let i = 0; i < assetIds.length; i++) {
+                    const assetInBundle = this._idToAsset.get(assetIds[i]);
+                    if (!assetInBundle)
+                        continue;
+
+                    if (assetInBundle.loaded || assetInBundle.resource || assetInBundle.loading)
+                        continue;
+
+                    assetInBundle.loading = true;
+                }
+            }
+
+
+            this._loader.load(fileUrl, asset.type, _loaded, asset, options);
         } else {
             // asset has no file to load, open it directly
             const resource = this._loader.open(asset.type, asset.data);

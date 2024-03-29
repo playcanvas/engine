@@ -55,8 +55,6 @@ class Preprocessor {
             .join('\n');
 
         // generate defines to remove unused color attachments
-        // Note: this is only needed for iOS 15 on WebGL2 where there seems to be a bug where color attachments that are not
-        // written to generate metal linking errors. This is fixed on iOS 16, and iOS 14 does not support WebGL2.
         const defines = new Map();
         if (stripUnusedColorAttachments) {
 
@@ -88,21 +86,35 @@ class Preprocessor {
             }
         });
 
-        // process individual lines
+        // remove empty lines
+        source = this.RemoveEmptyLines(source);
+
+        // process array sizes
+        source = this.processArraySize(source, intDefines);
+
+        return source;
+    }
+
+    static processArraySize(source, intDefines) {
+
+        if (source !== null) {
+            // replace lines containing "[intDefine]" with their values, so that we know the array size for WebGPU uniform buffer
+            // example: weight[SAMPLES] => float weight[11] in case there was a "define SAMPLES 11" in the source code
+            intDefines.forEach((value, key) => {
+                source = source.replace(new RegExp(`\\[${key}\\]`, 'g'), `[${value}]`);
+            });
+        }
+
+        return source;
+    }
+
+    static RemoveEmptyLines(source) {
+
         if (source !== null) {
             source = source.split(/\r?\n/)
 
                 // convert lines with only white space into empty string
                 .map(line => (line.trim() === '' ? '' : line))
-
-                // replace lines containing "[intDefine]" with their values, so that we know the array size for WebGPU uniform buffer
-                // example: weight[SAMPLES] => float weight[11] in case there was a "define SAMPLES 11" in the source code
-                .map((line) => {
-                    intDefines.forEach((value, key) => {
-                        line = line.replace(new RegExp(`\\[${key}\\]`, 'g'), `[${value}]`);
-                    });
-                    return line;
-                })
                 .join('\n');
 
             // remove more than 1 consecutive empty lines

@@ -88,8 +88,6 @@ function findNode(node, test) {
 
 /**
  * A hierarchical scene node.
- *
- * @augments EventHandler
  */
 class GraphNode extends EventHandler {
     /**
@@ -526,11 +524,14 @@ class GraphNode extends EventHandler {
 
 
     /**
-     * Detach a GraphNode from the hierarchy and recursively destroy all children.
+     * Destroy the graph node and all of its descendants. First, the graph node is removed from the
+     * hierarchy. This is then repeated recursively for all descendants of the graph node.
+     *
+     * The last thing the graph node does is fire the `destroy` event.
      *
      * @example
-     * const firstChild = this.entity.children[0];
-     * firstChild.destroy(); // delete child, all components and remove from hierarchy
+     * const firstChild = graphNode.children[0];
+     * firstChild.destroy(); // destroy child and all of its descendants
      */
     destroy() {
         // Detach from parent

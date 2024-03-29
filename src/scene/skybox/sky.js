@@ -7,6 +7,7 @@ import { SkyMesh } from "./sky-mesh.js";
  * Implementation of the sky.
  *
  * @category Graphics
+ * @ignore
  */
 class Sky {
     /**
@@ -46,7 +47,7 @@ class Sky {
      * Constructs a new sky.
      *
      * @param {import('../scene.js').Scene} scene - The scene owning the sky.
-     * @hideconstructor
+     * @ignore
      */
     constructor(scene) {
         this.device = scene.device;

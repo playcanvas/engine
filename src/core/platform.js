@@ -17,7 +17,8 @@ const detectPassiveEvents = () => {
 };
 
 const ua = (typeof navigator !== 'undefined') ? navigator.userAgent : '';
-const environment = (typeof window !== 'undefined') ? 'browser' : 'node';
+const environment = typeof window !== 'undefined' ? 'browser' :
+    typeof global !== 'undefined' ? 'node' : 'worker';
 
 // detect platform
 const platformName =
@@ -62,19 +63,22 @@ const platform = {
     name: platformName,
 
     /**
-     * String identifying the current runtime environment. Either 'browser' or 'node'.
+     * String identifying the current runtime environment. Either 'browser', 'node' or 'worker'.
      *
-     * @type {'browser' | 'node'}
+     * @type {'browser' | 'node' | 'worker'}
      */
     environment: environment,
 
     /**
      * The global object. This will be the window object when running in a browser and the global
-     * object when running in nodejs.
+     * object when running in nodejs and self when running in a worker.
      *
      * @type {object}
      */
-    global: (environment === 'browser') ? window : global,
+    global: (typeof globalThis !== 'undefined' && globalThis) ??
+        (environment === 'browser' && window) ??
+        (environment === 'node' && global) ??
+        (environment === 'worker' && self),
 
     /**
      * Convenience boolean indicating whether we're running in the browser.

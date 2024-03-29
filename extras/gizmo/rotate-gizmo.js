@@ -21,7 +21,6 @@ const tmpQ2 = new Quat();
 /**
  * Rotation gizmo.
  *
- * @augments TransformGizmo
  * @category Gizmo
  */
 class RotateGizmo extends TransformGizmo {
@@ -292,7 +291,7 @@ class RotateGizmo extends TransformGizmo {
     }
 
     _xyzAxisLookAtCamera() {
-        if (this._camera.projecion === PROJECTION_PERSPECTIVE) {
+        if (this._camera.projection === PROJECTION_PERSPECTIVE) {
             tmpV1.copy(this._camera.entity.getPosition()).sub(this.root.getPosition());
             tmpQ1.copy(this.root.getRotation()).invert().transformVector(tmpV1, tmpV1);
         } else {

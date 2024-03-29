@@ -106,8 +106,7 @@ class NullGraphicsDevice extends GraphicsDevice {
     draw(primitive, numInstances = 1, keepBuffers) {
     }
 
-    setShader(shader) {
-        return true;
+    setShader(shader, asyncCompile = false) {
     }
 
     setBlendState(blendState) {

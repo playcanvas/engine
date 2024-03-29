@@ -12,11 +12,7 @@ const _matrix = new Mat4();
  * performance reasons. And many other possible options. Zones are building blocks and meant to be
  * used in many different ways.
  *
- * @property {"box"|"sphere"} shape The shape of this zone. Can be a `box` or a `sphere`.
- * @property {Vec3} halfExtents The half-extents of the box-shaped zone in the x, y and z axes. Defaults to [0.5, 0.5, 0.5].
- * @property {number} radius The radius of the sphere-shaped zone. Defaults to 0.5.
- * @property {boolean} useColliders Whether the zone should look for colliders collision if entity is outside of it. Defaults to false.
- * @augments Component
+ * @ignore
  */
 class ZoneComponent extends Component {
     /**

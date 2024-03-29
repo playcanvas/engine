@@ -56,7 +56,6 @@ const _keyCodeToKeyIdentifier = {
  * A Keyboard device bound to an Element. Allows you to detect the state of the key presses. Note
  * that the Keyboard object must be attached to an Element before it can detect any key presses.
  *
- * @augments EventHandler
  * @category Input
  */
 class Keyboard extends EventHandler {
@@ -92,6 +91,15 @@ class Keyboard extends EventHandler {
      */
     static EVENT_KEYUP = 'keyup';
 
+    /** @private */
+    _element = null;
+
+    /** @private */
+    _keymap = {};
+
+    /** @private */
+    _lastmap = {};
+
     /**
      * Create a new Keyboard instance.
      *
@@ -113,16 +121,11 @@ class Keyboard extends EventHandler {
     constructor(element, options = {}) {
         super();
 
-        this._element = null;
-
         this._keyDownHandler = this._handleKeyDown.bind(this);
         this._keyUpHandler = this._handleKeyUp.bind(this);
         this._keyPressHandler = this._handleKeyPress.bind(this);
         this._visibilityChangeHandler = this._handleVisibilityChange.bind(this);
         this._windowBlurHandler = this._handleWindowBlur.bind(this);
-
-        this._keymap = {};
-        this._lastmap = {};
 
         if (element) {
             this.attach(element);

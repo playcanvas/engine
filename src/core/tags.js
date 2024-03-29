@@ -3,8 +3,6 @@ import { EventHandler } from './event-handler.js';
 /**
  * Set of tag names. Tags are automatically available on {@link Entity} and {@link Asset} as `tags`
  * field.
- *
- * @augments EventHandler
  */
 class Tags extends EventHandler {
     /**

@@ -42,50 +42,6 @@ const JSON_TEXTURE_TYPE = {
     'swizzleGGGR': TEXTURETYPE_SWIZZLEGGGR
 };
 
-/**
- * @interface
- * @name TextureParser
- * @description Interface to a texture parser. Implementations of this interface handle the loading
- * and opening of texture assets.
- *
- * @category Graphics
- */
-class TextureParser {
-    /* eslint-disable jsdoc/require-returns-check */
-    /**
-     * @function
-     * @name TextureParser#load
-     * @description Load the texture from the remote URL. When loaded (or failed),
-     * use the callback to return an the raw resource data (or error).
-     * @param {object} url - The URL of the resource to load.
-     * @param {string} url.load - The URL to use for loading the resource.
-     * @param {string} url.original - The original URL useful for identifying the resource type.
-     * @param {import('./handler.js').ResourceHandlerCallback} callback - The callback used when
-     * the resource is loaded or an error occurs.
-     * @param {import('../asset/asset.js').Asset} [asset] - Optional asset that is passed by
-     * ResourceLoader.
-     */
-    load(url, callback, asset) {
-        throw new Error('not implemented');
-    }
-
-    /**
-     * @function
-     * @name TextureParser#open
-     * @description Convert raw resource data into a resource instance. E.g. Take 3D model format
-     * JSON and return a {@link Model}.
-     * @param {string} url - The URL of the resource to open.
-     * @param {*} data - The raw resource data passed by callback from {@link ResourceHandler#load}.
-     * @param {import('../../platform/graphics/graphics-device.js').GraphicsDevice} device - The
-     * graphics device.
-     * @returns {Texture} The parsed resource data.
-     */
-    open(url, data, device) {
-        throw new Error('not implemented');
-    }
-    /* eslint-enable jsdoc/require-returns-check */
-}
-
 // In the case where a texture has more than 1 level of mip data specified, but not the full
 // mip chain, we generate the missing levels here.
 // This is to overcome an issue where iphone xr and xs ignores further updates to the mip data
@@ -169,7 +125,7 @@ class TextureHandler extends ResourceHandler {
      * @ignore
      */
     constructor(app) {
-        super('texture');
+        super(app, 'texture');
 
         const assets = app.assets;
         const device = app.graphicsDevice;
@@ -329,4 +285,4 @@ class TextureHandler extends ResourceHandler {
     }
 }
 
-export { TextureHandler, TextureParser };
+export { TextureHandler };

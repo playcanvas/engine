@@ -3,6 +3,7 @@ import {
     PROJECTION_PERSPECTIVE,
     EventHandler,
     Entity,
+    Ray,
     Mat4,
     Vec3
 } from 'playcanvas';
@@ -14,6 +15,8 @@ const tmpM2 = new Mat4();
 
 const xstart = new Vec3();
 const xdir = new Vec3();
+
+const ray = new Ray();
 
 // constants
 const MIN_GIZMO_SCALE = 1e-4;
@@ -395,7 +398,8 @@ class Gizmo extends EventHandler {
                 xdir.normalize();
 
                 for (let k = 0; k < tris.length; k++) {
-                    if (tris[k].intersectRay(xstart, xdir, tmpV1)) {
+                    ray.set(xstart, xdir);
+                    if (tris[k].intersectsRay(ray, tmpV1)) {
                         selection.push({
                             dist: tmpM1.transformPoint(tmpV1).sub(start).length(),
                             meshInstances: meshInstances,
@@ -422,7 +426,7 @@ class Gizmo extends EventHandler {
     /**
      * Attach an array of graph nodes to the gizmo.
      *
-     * @param {import('playcanvas').GraphNode} [nodes] - The graph nodes. Defaults to [].
+     * @param {import('playcanvas').GraphNode[]} [nodes] - The graph nodes. Defaults to [].
      * @example
      * const gizmo = new pcx.Gizmo(app, camera, layer);
      * gizmo.attach([boxA, boxB]);

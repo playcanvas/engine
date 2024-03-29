@@ -7,10 +7,10 @@ class GSplatHandler extends ResourceHandler {
      * Create a new GSplatHandler instance.
      *
      * @param {import('../app-base.js').AppBase} app - The running {@link AppBase}.
-     * @hideconstructor
+     * @ignore
      */
     constructor(app) {
-        super('gsplat');
+        super(app, 'gsplat');
         this.parser = new PlyParser(app.graphicsDevice, app.assets, 3);
     }
 

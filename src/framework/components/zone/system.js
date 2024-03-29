@@ -11,7 +11,7 @@ const _schema = ['enabled', 'shape', 'halfExtents', 'radius', 'useColliders'];
 /**
  * Creates and manages {@link ZoneComponent} instances.
  *
- * @augments ComponentSystem
+ * @ignore
  */
 class ZoneComponentSystem extends ComponentSystem {
     /**
@@ -25,7 +25,7 @@ class ZoneComponentSystem extends ComponentSystem {
      * Create a new ZoneComponentSystem instance.
      *
      * @param {import('../../app-base.js').AppBase} app - The Application.
-     * @hideconstructor
+     * @ignore
      */
     constructor(app) {
         super(app);
