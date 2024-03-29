@@ -23,8 +23,6 @@ const _enableList = [];
  * e.g. the ability to render a model or play a sound. Components are specific to an instance of an
  * Entity and are attached (e.g. `this.entity.model`) ComponentSystems allow access to all Entities
  * and Components and are attached to the {@link AppBase}.
- *
- * @augments GraphNode
  */
 class Entity extends GraphNode {
     /**
@@ -402,7 +400,7 @@ class Entity extends GraphNode {
     /**
      * Search the entity and all of its descendants for the first script instance of specified type.
      *
-     * @param {string|Class<import('./script/script-type.js').ScriptType>} nameOrType - The name or type of {@link ScriptType}.
+     * @param {string|typeof import('./script/script-type.js').ScriptType} nameOrType - The name or type of {@link ScriptType}.
      * @returns {import('./script/script-type.js').ScriptType|undefined} A script instance of specified type, if the entity or any of its descendants
      * has one. Returns undefined otherwise.
      * @example
@@ -417,7 +415,7 @@ class Entity extends GraphNode {
     /**
      * Search the entity and all of its descendants for all script instances of specified type.
      *
-     * @param {string|Class<import('./script/script-type.js').ScriptType>} nameOrType - The name or type of {@link ScriptType}.
+     * @param {string|typeof import('./script/script-type.js').ScriptType} nameOrType - The name or type of {@link ScriptType}.
      * @returns {import('./script/script-type.js').ScriptType[]} All script instances of specified type in the entity or any of its
      * descendants. Returns empty array if none found.
      * @example
@@ -549,12 +547,15 @@ class Entity extends GraphNode {
     }
 
     /**
-     * Remove all components from the Entity and detach it from the Entity hierarchy. Then
-     * recursively destroy all ancestor Entities.
+     * Destroy the entity and all of its descendants. First, all of the entity's components are
+     * disabled and then removed. Then, the entity is removed from the hierarchy. This is then
+     * repeated recursively for all descendants of the entity.
+     *
+     * The last thing the entity does is fire the `destroy` event.
      *
      * @example
      * const firstChild = this.entity.children[0];
-     * firstChild.destroy(); // delete child, all components and remove from hierarchy
+     * firstChild.destroy(); // destroy child and all of its descendants
      */
     destroy() {
         this._destroying = true;

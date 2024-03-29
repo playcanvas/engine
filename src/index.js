@@ -8,6 +8,7 @@
  * @module Engine
  */
 
+// #if _IS_UMD
 // POLYFILLS
 import './polyfill/array-fill.js';
 import './polyfill/array-find.js';
@@ -16,10 +17,12 @@ import './polyfill/math-log2.js';
 import './polyfill/math-sign.js';
 import './polyfill/number-isfinite.js';
 import './polyfill/object-assign.js';
+import './polyfill/object-entries.js';
 import './polyfill/object-values.js';
 import './polyfill/pointer-lock.js';
 import './polyfill/string.js';
 import './polyfill/typedarray-fill.js';
+// #endif
 
 // CORE
 export * from './core/constants.js';
@@ -60,6 +63,7 @@ export { BoundingSphere } from './core/shape/bounding-sphere.js';
 export { Frustum } from './core/shape/frustum.js';
 export { OrientedBox } from './core/shape/oriented-box.js';
 export { Plane } from './core/shape/plane.js';
+export { Tri } from './core/shape/tri.js';
 export { Ray } from './core/shape/ray.js';
 
 // PLATFORM / AUDIO
@@ -84,6 +88,7 @@ export { ShaderUtils } from './platform/graphics/shader-utils.js';  // used by s
 export { Texture } from './platform/graphics/texture.js';
 export { TextureUtils } from './platform/graphics/texture-utils.js';
 export { TransformFeedback } from './platform/graphics/transform-feedback.js';
+export { UniformBufferFormat, UniformFormat } from './platform/graphics/uniform-buffer-format.js';
 export { VertexBuffer } from './platform/graphics/vertex-buffer.js';
 export { VertexFormat } from './platform/graphics/vertex-format.js';
 export { VertexIterator } from './platform/graphics/vertex-iterator.js';
@@ -333,7 +338,7 @@ export { ShaderHandler } from './framework/handlers/shader.js';
 export { SpriteHandler } from './framework/handlers/sprite.js';
 export { TemplateHandler } from './framework/handlers/template.js';
 export { TextHandler } from './framework/handlers/text.js';
-export { TextureHandler, TextureParser } from './framework/handlers/texture.js';
+export { TextureHandler } from './framework/handlers/texture.js';
 export { TextureAtlasHandler } from './framework/handlers/texture-atlas.js';
 
 // FRAMEWORK / INPUT

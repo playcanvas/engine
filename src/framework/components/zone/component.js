@@ -9,7 +9,6 @@ import { Component } from '../component.js';
  * performance reasons. And many other possible options. Zones are building blocks and meant to be
  * used in many different ways.
  *
- * @augments Component
  * @ignore
  */
 class ZoneComponent extends Component {

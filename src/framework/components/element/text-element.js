@@ -129,6 +129,7 @@ class TextElement {
         this._symbolColors = null;  // per-symbol color indexes. only set for text with markup.
         this._symbolOutlineParams = null;  // per-symbol outline color/thickness indexes. only set for text with markup.
         this._symbolShadowParams = null;  // per-symbol shadow color/offset indexes. only set for text with markup.
+        /** @type {string} */
         this._i18nKey = null;
 
         this._fontAsset = new LocalizedAsset(this._system.app);
@@ -137,6 +138,7 @@ class TextElement {
         this._fontAsset.on('change', this._onFontChange, this);
         this._fontAsset.on('remove', this._onFontRemove, this);
 
+        /** @type {import('../../../framework/font/font.js').Font | import('../../../framework/font/canvas-font.js').CanvasFont} */
         this._font = null;
 
         this._color = new Color(1, 1, 1, 1);
@@ -1899,6 +1901,9 @@ class TextElement {
     }
 
     // private
+    /**
+     * @type {import('../../../core/shape/bounding-box.js').BoundingBox}
+     */
     get aabb() {
         if (this._aabbDirty) {
             let initialized = false;

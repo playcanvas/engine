@@ -23,7 +23,6 @@ const spriteIndices = [
  * the {@link SpriteComponent} or the {@link ElementComponent} to render a single frame or a sprite
  * animation.
  *
- * @augments EventHandler
  * @category Graphics
  */
 class Sprite extends EventHandler {

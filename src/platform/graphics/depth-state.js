@@ -186,7 +186,8 @@ class DepthState {
     }
 
     /**
-     * A default depth state that has the depth testing function set to {@link FUNC_LESSEQUAL} and depth writes enabled.
+     * A default depth state that has the depth testing function set to {@link FUNC_LESSEQUAL} and
+     * depth writes enabled.
      *
      * @type {DepthState}
      * @readonly

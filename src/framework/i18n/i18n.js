@@ -19,8 +19,6 @@ import {
  * Handles localization. Responsible for loading localization assets and returning translations for
  * a certain key. Can also handle plural forms. To override its default behavior define a different
  * implementation for {@link I18n#getText} and {@link I18n#getPluralText}.
- *
- * @augments EventHandler
  */
 class I18n extends EventHandler {
     /**

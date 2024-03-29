@@ -4,8 +4,8 @@
         "outDir": "dist",
         "noImplicitAny": true,
         "strictNullChecks": true,
-        "module": "ES2015",
-        "target": "es5",
+        "module": "esnext",
+        "target": "es2020",
         "allowJs": true,
         "jsx": "react",
         "lib": [
@@ -16,6 +16,6 @@
         "esModuleInterop" : true,
         "moduleResolution" : "node"
     },
-    "include": ["src", "scripts"],
+    "include": ["src", "scripts", "iframe", "utils.mjs"],
     "exclude": ["node_modules", "src/lib"]
 }

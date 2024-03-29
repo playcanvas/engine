@@ -4,7 +4,7 @@ import { version, revision } from '../../core/core.js';
 
 import { Shader } from '../../platform/graphics/shader.js';
 
-import { SHADER_FORWARD, SHADER_DEPTH, SHADER_PICK, SHADER_SHADOW } from '../constants.js';
+import { SHADER_FORWARD, SHADER_DEPTH, SHADER_PICK, SHADER_SHADOW, SHADER_PREPASS_VELOCITY } from '../constants.js';
 import { ShaderPass } from '../shader-pass.js';
 import { StandardMaterialOptions } from '../materials/standard-material-options.js';
 
@@ -173,7 +173,8 @@ class ProgramLibrary {
                 attributes: generatedShaderDef.attributes,
                 vshader: generatedShaderDef.vshader,
                 fshader: generatedShaderDef.fshader,
-                processingOptions: processingOptions
+                processingOptions: processingOptions,
+                shaderLanguage: generatedShaderDef.shaderLanguage
             };
 
             // add new shader to the processed cache
@@ -268,7 +269,7 @@ class ProgramLibrary {
 
     _getDefaultStdMatOptions(pass) {
         const shaderPassInfo = ShaderPass.get(this._device).getByIndex(pass);
-        return (pass === SHADER_DEPTH || pass === SHADER_PICK || shaderPassInfo.isShadow) ?
+        return (pass === SHADER_DEPTH || pass === SHADER_PICK || pass === SHADER_PREPASS_VELOCITY || shaderPassInfo.isShadow) ?
             this._defaultStdMatOptionMin : this._defaultStdMatOption;
     }
 

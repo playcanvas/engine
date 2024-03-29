@@ -70,9 +70,8 @@ class GSplatInstance {
             });
         } else {
             this.mesh = new Mesh(device);
-            this.mesh.setPositions(new Float32Array([
-                -1, -1, 1, -1, 1, 1, -1, -1, 1, 1, -1, 1
-            ]), 2);
+            this.mesh.setPositions(new Float32Array([-1, -1, 1, -1, 1, 1, -1, 1]), 2);
+            this.mesh.setIndices([0, 1, 2, 0, 2, 3]);
             this.mesh.update();
         }
 

@@ -25,7 +25,6 @@ import { Quat } from '../../core/math/quat.js';
  * scene in a way that helps with maintaining the illusion that the placed objects are really
  * present in the user’s environment.
  *
- * @augments EventHandler
  * @category XR
  */
 class XrAnchor extends EventHandler {
@@ -106,7 +105,7 @@ class XrAnchor extends EventHandler {
      * @param {import('./xr-anchors.js').XrAnchors} anchors - Anchor manager.
      * @param {object} xrAnchor - native XRAnchor object that is provided by WebXR API
      * @param {string|null} uuid - ID string associated with a persistent anchor
-     * @hideconstructor
+     * @ignore
      */
     constructor(anchors, xrAnchor, uuid = null) {
         super();

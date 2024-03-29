@@ -6,6 +6,7 @@ import { TRACEID_RENDERPIPELINE_ALLOC } from "../../../core/constants.js";
 import { WebgpuVertexBufferLayout } from "./webgpu-vertex-buffer-layout.js";
 import { WebgpuDebug } from "./webgpu-debug.js";
 import { WebgpuPipeline } from "./webgpu-pipeline.js";
+import { DebugGraphics } from "../debug-graphics.js";
 
 let _pipelineId = 0;
 
@@ -290,14 +291,14 @@ class WebgpuRenderPipeline extends WebgpuPipeline {
             layout: pipelineLayout
         };
 
+        descr.fragment = {
+            module: webgpuShader.getFragmentShaderModule(),
+            entryPoint: webgpuShader.fragmentEntryPoint,
+            targets: []
+        };
+
         const colorAttachments = renderTarget.impl.colorAttachments;
         if (colorAttachments.length > 0) {
-
-            descr.fragment = {
-                module: webgpuShader.getFragmentShaderModule(),
-                entryPoint: webgpuShader.fragmentEntryPoint,
-                targets: []
-            };
 
             // the same write mask is used by all color buffers, to match the WebGL behavior
             let writeMask = 0;
@@ -326,7 +327,7 @@ class WebgpuRenderPipeline extends WebgpuPipeline {
         const pipeline = wgpu.createRenderPipeline(descr);
 
         DebugHelper.setLabel(pipeline, `RenderPipeline-${_pipelineId}`);
-        Debug.trace(TRACEID_RENDERPIPELINE_ALLOC, `Alloc: Id ${_pipelineId}`, descr);
+        Debug.trace(TRACEID_RENDERPIPELINE_ALLOC, `Alloc: Id ${_pipelineId}, stack: ${DebugGraphics.toString()}`, descr);
 
         WebgpuDebug.end(this.device, {
             renderPipeline: this,

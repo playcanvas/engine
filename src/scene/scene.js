@@ -19,7 +19,6 @@ import { EnvLighting } from './graphics/env-lighting.js';
  * A scene is graphical representation of an environment. It manages the scene hierarchy, all
  * graphical objects, lights, and scene-wide properties.
  *
- * @augments EventHandler
  * @category Graphics
  */
 class Scene extends EventHandler {
@@ -220,7 +219,7 @@ class Scene extends EventHandler {
      *
      * @param {import('../platform/graphics/graphics-device.js').GraphicsDevice} graphicsDevice -
      * The graphics device used to manage this scene.
-     * @hideconstructor
+     * @ignore
      */
     constructor(graphicsDevice) {
         super();

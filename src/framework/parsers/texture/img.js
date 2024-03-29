@@ -10,16 +10,16 @@ import { ImgAlphaTest } from './img-alpha-test.js';
 import { Tracing } from '../../../core/tracing.js';
 // #endif
 
-/** @typedef {import('../../handlers/texture.js').TextureParser} TextureParser */
+import { TextureParser } from './texture.js';
 
 /**
  * Parser for browser-supported image formats.
  *
- * @implements {TextureParser}
  * @ignore
  */
-class ImgParser {
+class ImgParser extends TextureParser {
     constructor(registry, device) {
+        super();
         // by default don't try cross-origin, because some browsers send different cookies (e.g. safari) if this is set.
         this.crossOrigin = registry.prefix ? 'anonymous' : null;
         this.maxRetries = 0;

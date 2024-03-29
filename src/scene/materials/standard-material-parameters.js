@@ -103,6 +103,7 @@ const standardMaterialParameterTypes = {
     refractionTint: 'boolean',
     ..._textureParameter('refraction'),
     refractionIndex: 'number',
+    dispersion: 'number',
     thickness: 'number',
     thicknessTint: 'boolean',
     ..._textureParameter('thickness'),
