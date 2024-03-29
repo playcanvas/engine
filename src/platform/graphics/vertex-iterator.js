@@ -71,6 +71,7 @@ function arrayGet4(offset, outputArray, outputIndex) {
  * Helps with accessing a specific vertex attribute.
  *
  * @category Graphics
+ * @ignore
  */
 class VertexIteratorAccessor {
     /**
@@ -191,7 +192,7 @@ class VertexIteratorAccessor {
      *
      * @param {number} offset - The component offset at which to read data from the buffer. Will be
      * used instead of the iterator's current index.
-     * @param {number[]|Int8Array|Uint8Array|Uint8ClampedArray|Int16Array|Uint16Array|Int32Array|Uint32Array|Float32Array} outputArray - The output array to write data into.
+     * @param {number[]|ArrayBufferView} outputArray - The output array to write data into.
      * @param {number} outputIndex - The output index at which to write into the output array.
      */
     getToArray(offset, outputArray, outputIndex) {
@@ -203,7 +204,7 @@ class VertexIteratorAccessor {
      *
      * @param {number} index - The starting index at which to write data into the buffer. Will be
      * used instead of the iterator's current index.
-     * @param {number[]|Int8Array|Uint8Array|Uint8ClampedArray|Int16Array|Uint16Array|Int32Array|Uint32Array|Float32Array} inputArray - The input array to read data from.
+     * @param {number[]|ArrayBufferView} inputArray - The input array to read data from.
      * @param {number} inputIndex - The input index at which to read from the input array.
      */
     setFromArray(index, inputArray, inputIndex) {
@@ -303,7 +304,7 @@ class VertexIterator {
      * and non-interleaved (fast) vertex buffers.
      *
      * @param {string} semantic - The semantic of the vertex element to set.
-     * @param {number[]|Int8Array|Uint8Array|Uint8ClampedArray|Int16Array|Uint16Array|Int32Array|Uint32Array|Float32Array} data - The data to set.
+     * @param {number[]|ArrayBufferView} data - The data to set.
      * @param {number} numVertices - The number of vertices to write.
      * @ignore
      */
@@ -357,7 +358,7 @@ class VertexIterator {
      * only part of the data gets copied out (typed arrays ignore read/write out of range).
      *
      * @param {string} semantic - The semantic of the vertex element to read.
-     * @param {number[]|Int8Array|Uint8Array|Uint8ClampedArray|Int16Array|Uint16Array|Int32Array|Uint32Array|Float32Array} data - The
+     * @param {number[]|ArrayBufferView} data - The
      * array to receive the data.
      * @returns {number} The number of vertices read.
      * @ignore

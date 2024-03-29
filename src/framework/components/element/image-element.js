@@ -266,13 +266,20 @@ class ImageElement {
         this._system = element.system;
 
         // public
+        /** @type {number} */
         this._textureAsset = null;
+        /** @type {import('../../../platform/graphics/texture.js').Texture} */
         this._texture = null;
+        /** @type {number} */
         this._materialAsset = null;
+        /** @type {import('../../../scene/materials/material.js').Material} */
         this._material = null;
+        /** @type {number} */
         this._spriteAsset = null;
+        /** @type {import('../../../scene/sprite.js').Sprite} */
         this._sprite = null;
         this._spriteFrame = 0;
+        /** @type {number} */
         this._pixelsPerUnit = null;
         this._targetAspectRatio = -1; // will be set when assigning textures
 
@@ -1312,6 +1319,9 @@ class ImageElement {
     }
 
     // private
+    /**
+     * @type {import('../../../core/shape/bounding-box.js').BoundingBox | null}
+     */
     get aabb() {
         if (this._renderable.meshInstance) {
             return this._renderable.meshInstance.aabb;

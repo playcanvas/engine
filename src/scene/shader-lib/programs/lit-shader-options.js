@@ -240,6 +240,8 @@ class LitShaderOptions {
 
     useDynamicRefraction = false;
 
+    dispersion = false;
+
     /**
      * The type of fog being applied in the shader. See {@link Scene#fog} for the list of possible
      * values.

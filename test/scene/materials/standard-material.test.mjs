@@ -241,6 +241,7 @@ describe('StandardMaterial', function () {
         expect(material.reflectivity).to.equal(1);
         expect(material.refraction).to.equal(0);
         expect(material.refractionIndex).to.equal(1.0 / 1.5);
+        expect(material.dispersion).to.equal(0);
         expect(material.shadingModel).to.equal(SPECULAR_BLINN);
 
         expect(material.specular).to.be.instanceof(Color);

@@ -159,7 +159,7 @@ class ScriptAttributes {
     /**
      * Create a new ScriptAttributes instance.
      *
-     * @param {Class<import('./script-type.js').ScriptType>} scriptType - Script Type that attributes relate to.
+     * @param {typeof import('./script-type.js').ScriptType} scriptType - Script Type that attributes relate to.
      */
     constructor(scriptType) {
         this.scriptType = scriptType;

@@ -2,6 +2,8 @@ import handler from 'serve-handler';
 import http from 'http';
 import XMLHttpRequest from 'xhr2';
 
+import 'global-jsdom/register'; // eslint-disable-line import/no-unresolved,import/extensions
+
 let server;
 
 export const mochaGlobalSetup = () => {

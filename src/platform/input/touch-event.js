@@ -35,6 +35,41 @@ function getTouchTargetCoords(touch) {
  */
 class Touch {
     /**
+     * The identifier of the touch.
+     *
+     * @type {number}
+     */
+    id;
+
+    /**
+     * The x coordinate relative to the element that the TouchDevice is attached to.
+     *
+     * @type {number}
+     */
+    x;
+
+    /**
+     * The y coordinate relative to the element that the TouchDevice is attached to.
+     *
+     * @type {number}
+     */
+    y;
+
+    /**
+     * The target DOM element of the touch event.
+     *
+     * @type {Element}
+     */
+    target;
+
+    /**
+     * The original browser Touch object.
+     *
+     * @type {globalThis.Touch}
+     */
+    touch;
+
+    /**
      * Create a new Touch object from the browser Touch.
      *
      * @param {globalThis.Touch} touch - The browser Touch object.
@@ -42,38 +77,10 @@ class Touch {
     constructor(touch) {
         const coords = getTouchTargetCoords(touch);
 
-        /**
-         * The identifier of the touch.
-         *
-         * @type {number}
-         */
         this.id = touch.identifier;
-
-        /**
-         * The x coordinate relative to the element that the TouchDevice is attached to.
-         *
-         * @type {number}
-         */
         this.x = coords.x;
-        /**
-         * The y coordinate relative to the element that the TouchDevice is attached to.
-         *
-         * @type {number}
-         */
         this.y = coords.y;
-
-        /**
-         * The target DOM element of the touch event.
-         *
-         * @type {Element}
-         */
         this.target = touch.target;
-
-        /**
-         * The original browser Touch object.
-         *
-         * @type {globalThis.Touch}
-         */
         this.touch = touch;
     }
 }
@@ -86,6 +93,34 @@ class Touch {
  */
 class TouchEvent {
     /**
+     * The target DOM element that the event was fired from.
+     *
+     * @type {Element}
+     */
+    element;
+
+    /**
+     * The original browser TouchEvent.
+     *
+     * @type {globalThis.TouchEvent}
+     */
+    event;
+
+    /**
+     * A list of all touches currently in contact with the device.
+     *
+     * @type {Touch[]}
+     */
+    touches = [];
+
+    /**
+     * A list of touches that have changed since the last event.
+     *
+     * @type {Touch[]}
+     */
+    changedTouches = [];
+
+    /**
      * Create a new TouchEvent instance. It is created from an existing browser event.
      *
      * @param {import('./touch-device.js').TouchDevice} device - The source device of the touch
@@ -93,42 +128,11 @@ class TouchEvent {
      * @param {globalThis.TouchEvent} event - The original browser TouchEvent.
      */
     constructor(device, event) {
-        /**
-         * The target DOM element that the event was fired from.
-         *
-         * @type {Element}
-         */
         this.element = event.target;
-        /**
-         * The original browser TouchEvent.
-         *
-         * @type {globalThis.TouchEvent}
-         */
         this.event = event;
 
-        /**
-         * A list of all touches currently in contact with the device.
-         *
-         * @type {Touch[]}
-         */
-        this.touches = [];
-        /**
-         * A list of touches that have changed since the last event.
-         *
-         * @type {Touch[]}
-         */
-        this.changedTouches = [];
-
-        if (event) {
-            for (let i = 0, l = event.touches.length; i < l; i++) {
-                this.touches.push(new Touch(event.touches[i]));
-            }
-
-
-            for (let i = 0, l = event.changedTouches.length; i < l; i++) {
-                this.changedTouches.push(new Touch(event.changedTouches[i]));
-            }
-        }
+        this.touches = Array.from(event.touches).map(touch => new Touch(touch));
+        this.changedTouches = Array.from(event.changedTouches).map(touch => new Touch(touch));
     }
 
     /**
@@ -136,17 +140,11 @@ class TouchEvent {
      * id so that you can be sure you are referencing the same touch.
      *
      * @param {number} id - The identifier of the touch.
-     * @param {Touch[]|null} list - An array of touches to search.
-     * @returns {Touch} The {@link Touch} object or null.
+     * @param {Touch[]} list - An array of touches to search.
+     * @returns {Touch|null} The {@link Touch} object or null.
      */
     getTouchById(id, list) {
-        for (let i = 0, l = list.length; i < l; i++) {
-            if (list[i].id === id) {
-                return list[i];
-            }
-        }
-
-        return null;
+        return list.find(touch => touch.id === id) || null;
     }
 }
 

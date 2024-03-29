@@ -133,9 +133,7 @@ if (app.xr.supported) {
         }
     });
 
-    app.xr.on('start', function () {
-        message('Immersive AR session has started');
-
+    app.xr.hitTest.on('available', () => {
         if (!app.xr.hitTest.supported || !app.xr.anchors.supported) return;
 
         // provide gaze-like way to create anchors
@@ -165,6 +163,10 @@ if (app.xr.supported) {
 
             createAnchor(lastHitTestResult);
         });
+    });
+
+    app.xr.on('start', function () {
+        message('Immersive AR session has started');
     });
     app.xr.on('end', function () {
         message('Immersive AR session has ended');

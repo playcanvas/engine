@@ -11,6 +11,7 @@ import {
     DITHER_NONE,
     FRESNEL_SCHLICK,
     SHADER_DEPTH, SHADER_PICK,
+    SHADER_PREPASS_VELOCITY,
     SPECOCC_AO,
     SPECULAR_BLINN, SPECULAR_PHONG
 } from '../constants.js';
@@ -278,6 +279,8 @@ let _params = new Set();
  * indices of refraction, the one around the object and the one of its own surface. In most
  * situations outer medium is air, so outerIor will be approximately 1. Then you only need to do
  * (1.0 / surfaceIor).
+ * @property {number} dispersion The strength of the angular separation of colors (chromatic
+ * aberration) transmitting through a volume. Defaults to 0, which is equivalent to no dispersion.
  * @property {boolean} useDynamicRefraction Enables higher quality refractions using the grab pass
  * instead of pre-computed cube maps for refractions.
  * @property {number} thickness The thickness of the medium, only used when useDynamicRefraction
@@ -381,7 +384,8 @@ let _params = new Set();
  *
  * - {@link DITHER_NONE}: Opacity dithering is disabled.
  * - {@link DITHER_BAYER8}: Opacity is dithered using a Bayer 8 matrix.
- * - {@link DITHER_BLUENOISE}: Opacity is dithered using a blue noise texture.
+ * - {@link DITHER_BLUENOISE}: Opacity is dithered using a blue noise.
+ * - {@link DITHER_IGNNOISE}: Opacity is dithered using an interleaved gradient noise.
  *
  * Defaults to {@link DITHER_NONE}.
  * @property {boolean} opacityShadowDither Used to specify whether shadow opacity is dithered, which
@@ -389,7 +393,8 @@ let _params = new Set();
  *
  * - {@link DITHER_NONE}: Opacity dithering is disabled.
  * - {@link DITHER_BAYER8}: Opacity is dithered using a Bayer 8 matrix.
- * - {@link DITHER_BLUENOISE}: Opacity is dithered using a blue noise texture.
+ * - {@link DITHER_BLUENOISE}: Opacity is dithered using a blue noise.
+ * - {@link DITHER_IGNNOISE}: Opacity is dithered using an interleaved gradient noise.
  *
  * Defaults to {@link DITHER_NONE}.
  * @property {number} alphaFade Used to fade out materials when
@@ -548,7 +553,7 @@ let _params = new Set();
  * split into two sections, generic standard material options and lit options. Properties of the
  * standard material options are {@link StandardMaterialOptions} and the options for the lit options
  * are {@link LitShaderOptions}.
- * @augments Material
+ *
  * @category Graphics
  */
 class StandardMaterial extends Material {
@@ -786,6 +791,10 @@ class StandardMaterial extends Material {
             this._setParameter('material_refraction', this.refraction);
         }
 
+        if (this.dispersion > 0) {
+            this._setParameter('material_dispersion', this.dispersion);
+        }
+
         if (this.useDynamicRefraction) {
             this._setParameter('material_thickness', this.thickness);
             this._setParameter('material_attenuation', getUniform('attenuation'));
@@ -880,9 +889,9 @@ class StandardMaterial extends Material {
         // update prefiltered lighting data
         this.updateEnvUniforms(device, scene);
 
-        // Minimal options for Depth and Shadow passes
+        // Minimal options for Depth, Shadow and Prepass passes
         const shaderPassInfo = ShaderPass.get(device).getByIndex(pass);
-        const minimalOptions = pass === SHADER_DEPTH || pass === SHADER_PICK || shaderPassInfo.isShadow;
+        const minimalOptions = pass === SHADER_DEPTH || pass === SHADER_PICK || pass === SHADER_PREPASS_VELOCITY || shaderPassInfo.isShadow;
         let options = minimalOptions ? standard.optionsContextMin : standard.optionsContext;
 
         if (minimalOptions)
@@ -1170,6 +1179,7 @@ function _defineMaterialProps() {
     _defineFloat('occludeSpecularIntensity', 1);
     _defineFloat('refraction', 0);
     _defineFloat('refractionIndex', 1.0 / 1.5); // approx. (air ior / glass ior)
+    _defineFloat('dispersion', 0);
     _defineFloat('thickness', 0);
     _defineFloat('attenuationDistance', 0);
     _defineFloat('metalness', 1);

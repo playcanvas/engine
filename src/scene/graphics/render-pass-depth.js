@@ -30,7 +30,12 @@ class RenderPassDepth extends RenderPass {
 
     destroy() {
         super.destroy();
-        this.releaseRenderTarget(this.renderTarget);
+
+        if (this.renderTarget) {
+            this.renderTarget.destroyTextureBuffers();
+            this.renderTarget.destroy();
+            this.renderTarget = null;
+        }
     }
 
     update(scene) {

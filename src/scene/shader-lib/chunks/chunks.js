@@ -153,6 +153,7 @@ import reflectionSheenPS from './lit/frag/reflectionSheen.js';
 import refractionCubePS from './lit/frag/refractionCube.js';
 import refractionDynamicPS from './lit/frag/refractionDynamic.js';
 import reprojectPS from './common/frag/reproject.js';
+import sampleCatmullRomPS from './common/frag/sampleCatmullRom.js';
 import screenDepthPS from './common/frag/screenDepth.js';
 import shadowCascadesPS from './lit/frag/shadowCascades.js';
 import shadowEVSMPS from './lit/frag/shadowEVSM.js';
@@ -364,6 +365,7 @@ const shaderChunks = {
     refractionCubePS,
     refractionDynamicPS,
     reprojectPS,
+    sampleCatmullRomPS,
     screenDepthPS,
     shadowCascadesPS,
     shadowEVSMPS,

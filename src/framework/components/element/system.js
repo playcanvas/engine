@@ -10,7 +10,6 @@ import { Texture } from '../../../platform/graphics/texture.js';
 import { BLEND_PREMULTIPLIED, SPRITE_RENDERMODE_SLICED, SPRITE_RENDERMODE_TILED } from '../../../scene/constants.js';
 import { StandardMaterial } from '../../../scene/materials/standard-material.js';
 
-import { Component } from '../component.js';
 import { ComponentSystem } from '../system.js';
 
 import { ELEMENTTYPE_IMAGE, ELEMENTTYPE_TEXT } from './constants.js';
@@ -22,7 +21,6 @@ const _schema = ['enabled'];
 /**
  * Manages creation of {@link ElementComponent}s.
  *
- * @augments ComponentSystem
  * @category User Interface
  */
 class ElementComponentSystem extends ComponentSystem {
@@ -30,7 +28,7 @@ class ElementComponentSystem extends ComponentSystem {
      * Create a new ElementComponentSystem instance.
      *
      * @param {import('../../app-base.js').AppBase} app - The application.
-     * @hideconstructor
+     * @ignore
      */
     constructor(app) {
         super(app);
@@ -597,7 +595,5 @@ class ElementComponentSystem extends ComponentSystem {
         return this._rtlReorder;
     }
 }
-
-Component._buildAccessors(ElementComponent.prototype, _schema);
 
 export { ElementComponentSystem };

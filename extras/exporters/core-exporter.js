@@ -22,6 +22,7 @@ const textureBlitFragmentShader = `
  * The base class for the exporters, implementing shared functionality.
  *
  * @category Exporter
+ * @ignore
  */
 class CoreExporter {
     /**

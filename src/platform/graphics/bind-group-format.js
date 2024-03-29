@@ -84,16 +84,10 @@ class BindGroupFormat {
      * Defaults to an empty array.
      * @param {BindStorageTextureFormat[]} [storageTextureFormats] - An array of bind storage texture
      * formats (storage textures), used by the compute shader. Defaults to an empty array.
-     * @param {object} [options] - Object for passing optional arguments.
-     * @param {boolean} [options.compute] - If true, this bind group format is used by the compute
-     * shader.
      */
-    constructor(graphicsDevice, bufferFormats = [], textureFormats = [], storageTextureFormats = [], options = {}) {
+    constructor(graphicsDevice, bufferFormats = [], textureFormats = [], storageTextureFormats = []) {
         this.id = id++;
         DebugHelper.setName(this, `BindGroupFormat_${this.id}`);
-
-        this.compute = options.compute ?? false;
-        Debug.assert(this.compute || storageTextureFormats.length === 0, "Storage textures can be specified only for compute");
 
         /** @type {import('./graphics-device.js').GraphicsDevice} */
         this.device = graphicsDevice;

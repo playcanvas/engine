@@ -1,10 +1,4 @@
 /**
- * @name pc
- * @namespace
- * @description Root namespace for the PlayCanvas Engine.
- */
-
-/**
  * The engine version number. This is in semantic versioning format (MAJOR.MINOR.PATCH).
  */
 const version = '$_CURRENT_SDK_VERSION';

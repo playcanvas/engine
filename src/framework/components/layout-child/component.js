@@ -4,7 +4,6 @@ import { Component } from '../component.js';
  * A LayoutChildComponent enables the Entity to control the sizing applied to it by its parent
  * {@link LayoutGroupComponent}.
  *
- * @augments Component
  * @category User Interface
  */
 class LayoutChildComponent extends Component {

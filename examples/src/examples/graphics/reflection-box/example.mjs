@@ -164,11 +164,12 @@ assetListLoader.load(() => {
     screenMaterial.update();
 
     /**
-     * helper function to create a 3d primitive including its material
-     * @param {string} primitiveType
-     * @param {pc.Vec3} position
-     * @param {pc.Vec3} scale
-     * @param {pc.Material} material
+     * Helper function to create a 3d primitive including its material.
+     *
+     * @param {string} primitiveType - The primitive type.
+     * @param {pc.Vec3} position - The position.
+     * @param {pc.Vec3} scale - The scale.
+     * @param {pc.Material} material - The material.
      */
     function createPrimitive(primitiveType, position, scale, material) {
         // create the primitive using the material

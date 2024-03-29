@@ -43,13 +43,14 @@ assetListLoader.load(() => {
     app.scene.ambientLight = new pc.Color(0.2, 0.2, 0.2);
 
     /**
-     * helper function to create a primitive with shape type, position, scale, color and layer
-     * @param {string} primitiveType
-     * @param {number | pc.Vec3} position
-     * @param {number | pc.Vec3} scale
-     * @param {pc.Color} color
-     * @param {number[]} layer
-     * @returns {pc.Entity}
+     * Helper function to create a primitive with shape type, position, scale, color and layer.
+     *
+     * @param {string} primitiveType - The primitive type.
+     * @param {number | pc.Vec3} position - The position.
+     * @param {number | pc.Vec3} scale - The scale.
+     * @param {pc.Color} color - The color.
+     * @param {number[]} layer - The layer.
+     * @returns {pc.Entity} The new primitive entity.
      */
     function createPrimitive(primitiveType, position, scale, color, layer) {
         // create material of specified color

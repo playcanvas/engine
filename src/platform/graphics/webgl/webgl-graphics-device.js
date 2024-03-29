@@ -251,7 +251,6 @@ function testTextureFloatHighPrecision(device) {
  * specific canvas HTML element. It is valid to have more than one canvas element per page and
  * create a new graphics device against each.
  *
- * @augments GraphicsDevice
  * @category Graphics
  */
 class WebglGraphicsDevice extends GraphicsDevice {
@@ -337,7 +336,6 @@ class WebglGraphicsDevice extends GraphicsDevice {
 
         this._contextLostHandler = (event) => {
             event.preventDefault();
-            this.contextLost = true;
             this.loseContext();
             Debug.log('pc.GraphicsDevice: WebGL context lost.');
             this.fire('devicelost');
@@ -345,7 +343,6 @@ class WebglGraphicsDevice extends GraphicsDevice {
 
         this._contextRestoredHandler = () => {
             Debug.log('pc.GraphicsDevice: WebGL context restored.');
-            this.contextLost = false;
             this.restoreContext();
             this.fire('devicerestored');
         };
@@ -818,14 +815,10 @@ class WebglGraphicsDevice extends GraphicsDevice {
         numUniforms -= 4 * 4; // Up to 4 texture transforms
         this.boneLimit = Math.floor(numUniforms / 3);   // each bone uses 3 uniforms
 
-        // Put a limit on the number of supported bones before skin partitioning must be performed
+        // Put a limit on the number of supported bones when texture skinning is not supported.
         // Some GPUs have demonstrated performance issues if the number of vectors allocated to the
         // skin matrix palette is left unbounded
         this.boneLimit = Math.min(this.boneLimit, 128);
-
-        if (this.unmaskedRenderer === 'Mali-450 MP') {
-            this.boneLimit = 34;
-        }
 
         this.constantTexSource = this.scope.resolve("source");
 
@@ -1229,6 +1222,8 @@ class WebglGraphicsDevice extends GraphicsDevice {
         gl.blendColor(0, 0, 0, 0);
 
         gl.enable(gl.CULL_FACE);
+
+        this.cullFace = gl.BACK;
         gl.cullFace(gl.BACK);
 
         // default depth state
@@ -1321,32 +1316,12 @@ class WebglGraphicsDevice extends GraphicsDevice {
      */
     loseContext() {
 
-        // force the backbuffer to be recreated on restore
-        this.backBufferSize.set(-1, -1);
+        super.loseContext();
 
         // release shaders
         for (const shader of this.shaders) {
             shader.loseContext();
         }
-
-        // release textures
-        for (const texture of this.textures) {
-            texture.loseContext();
-        }
-
-        // release vertex and index buffers
-        for (const buffer of this.buffers) {
-            buffer.loseContext();
-        }
-
-        // Reset all render targets so they'll be recreated as required.
-        // TODO: a solution for the case where a render target contains something
-        // that was previously generated that needs to be re-rendered.
-        for (const target of this.targets) {
-            target.loseContext();
-        }
-
-        this.gpuProfiler?.loseContext();
     }
 
     /**
@@ -1355,22 +1330,16 @@ class WebglGraphicsDevice extends GraphicsDevice {
      * @ignore
      */
     restoreContext() {
+
         this.initializeExtensions();
         this.initializeCapabilities();
-        this.initializeRenderState();
-        this.initializeContextCaches();
 
-        // Recompile all shaders (they'll be linked when they're next actually used)
+        super.restoreContext();
+
+        // Recompile all shaders
         for (const shader of this.shaders) {
             shader.restoreContext();
         }
-
-        // Recreate buffer objects and reupload buffer data to the GPU
-        for (const buffer of this.buffers) {
-            buffer.unlock();
-        }
-
-        this.gpuProfiler?.restoreContext();
     }
 
     /**

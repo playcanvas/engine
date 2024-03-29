@@ -28,7 +28,6 @@ const properties = [
 /**
  * The JointComponent adds a physics joint constraint linking two rigid bodies.
  *
- * @augments Component
  * @ignore
  */
 class JointComponent extends Component {
