@@ -34,7 +34,7 @@ createOptions.componentSystems = [
     pc.RenderComponentSystem,
     pc.CameraComponentSystem,
     pc.LightComponentSystem,
-    pc.ScriptComponentSystem,
+    pc.ScriptComponentSystem
 ];
 createOptions.resourceHandlers = [
     pc.TextureHandler,

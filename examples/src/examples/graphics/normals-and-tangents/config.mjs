@@ -2,5 +2,6 @@
  * @type {import('../../../../types.mjs').ExampleConfig}
  */
 export default {
-    WEBGPU_ENABLED: true,
+    HIDDEN: true,
+    WEBGPU_ENABLED: true
 };
