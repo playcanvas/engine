@@ -42,12 +42,13 @@ class AnimBlendTree extends AnimNode {
             if (child.children) {
                 this._children.push(createTree(
                     child.type,
+                    state,
                     this,
-                    null,
-                    name,
+                    child.name,
                     1.0,
                     child.parameter ? [child.parameter] : child.parameters,
                     child.children,
+                    child.syncAnimations,
                     createTree,
                     findParameter
                 ));
