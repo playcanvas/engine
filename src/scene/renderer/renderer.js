@@ -897,6 +897,8 @@ class Renderer {
                 this._instancedDrawCalls++;
                 device.setVertexBuffer(instancingData.vertexBuffer);
                 device.draw(mesh.primitive[style], instancingData.count);
+            } else {
+                device.clearVertexBuffer();
             }
         } else {
             device.draw(mesh.primitive[style]);
@@ -915,6 +917,8 @@ class Renderer {
             if (instancingData.count > 0) {
                 this._instancedDrawCalls++;
                 device.draw(mesh.primitive[style], instancingData.count, true);
+            } else {
+                device.clearVertexBuffer();
             }
         } else {
             // matrices are already set

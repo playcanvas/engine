@@ -402,7 +402,8 @@ class GraphicsDevice extends EventHandler {
             tex: 0,
             vb: 0,
             ib: 0,
-            ub: 0
+            ub: 0,
+            sb: 0
         };
 
         this._shaderStats = {
@@ -659,6 +660,15 @@ class GraphicsDevice extends EventHandler {
         if (vertexBuffer) {
             this.vertexBuffers.push(vertexBuffer);
         }
+    }
+
+    /**
+     * Clears the vertex buffer set on the graphics device. This is called automatically by the
+     * renderer.
+     * @ignore
+     */
+    clearVertexBuffer() {
+        this.vertexBuffers.length = 0;
     }
 
     /**

@@ -31,6 +31,22 @@ class BindBufferFormat {
 /**
  * @ignore
  */
+class BindStorageBufferFormat {
+    /** @type {import('./scope-id.js').ScopeId} */
+    scopeId;
+
+    constructor(name, visibility) {
+        /** @type {string} */
+        this.name = name;
+
+        // SHADERSTAGE_VERTEX, SHADERSTAGE_FRAGMENT, SHADERSTAGE_COMPUTE
+        this.visibility = visibility;
+    }
+}
+
+/**
+ * @ignore
+ */
 class BindTextureFormat {
     /** @type {import('./scope-id.js').ScopeId} */
     scopeId;
@@ -73,8 +89,6 @@ class BindStorageTextureFormat {
  * @ignore
  */
 class BindGroupFormat {
-    compute = false;
-
     /**
      * @param {import('./graphics-device.js').GraphicsDevice} graphicsDevice - The graphics device
      * used to manage this vertex format.
@@ -84,8 +98,10 @@ class BindGroupFormat {
      * Defaults to an empty array.
      * @param {BindStorageTextureFormat[]} [storageTextureFormats] - An array of bind storage texture
      * formats (storage textures), used by the compute shader. Defaults to an empty array.
+     * @param {BindStorageBufferFormat[]} [storageBufferFormats] - An array of bind storage buffer
+     * formats. Defaults to an empty array.
      */
-    constructor(graphicsDevice, bufferFormats = [], textureFormats = [], storageTextureFormats = []) {
+    constructor(graphicsDevice, bufferFormats = [], textureFormats = [], storageTextureFormats = [], storageBufferFormats = []) {
         this.id = id++;
         DebugHelper.setName(this, `BindGroupFormat_${this.id}`);
 
@@ -125,6 +141,19 @@ class BindGroupFormat {
 
             // resolve scope id
             tf.scopeId = scope.resolve(tf.name);
+        });
+
+        /** @type {BindStorageBufferFormat[]} */
+        this.storageBufferFormats = storageBufferFormats;
+
+        // maps a storage buffer format name to a slot index
+        /** @type {Map<string, number>} */
+        this.storageBufferFormatsMap = new Map();
+        storageBufferFormats.forEach((bf, i) => {
+            this.storageBufferFormatsMap.set(bf.name, i);
+
+            // resolve scope id
+            bf.scopeId = scope.resolve(bf.name);
         });
 
         this.impl = graphicsDevice.createBindGroupFormatImpl(this);
@@ -205,4 +234,4 @@ class BindGroupFormat {
     }
 }
 
-export { BindBufferFormat, BindTextureFormat, BindGroupFormat, BindStorageTextureFormat };
+export { BindBufferFormat, BindTextureFormat, BindGroupFormat, BindStorageTextureFormat, BindStorageBufferFormat };

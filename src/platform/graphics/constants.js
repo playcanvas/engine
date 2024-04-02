@@ -168,6 +168,59 @@ export const BLENDEQUATION_MIN = 3;
 export const BLENDEQUATION_MAX = 4;
 
 /**
+ * A flag utilized during the construction of a {@link StorageBuffer} to make it available for read
+ * access by CPU.
+ *
+ * @type {number}
+ * @category Graphics
+ */
+export const BUFFERUSAGE_READ = 0x0001;
+
+/**
+ * A flag utilized during the construction of a {@link StorageBuffer} to make it available for write
+ * access by CPU.
+ *
+ * @type {number}
+ * @category Graphics
+ */
+export const BUFFERUSAGE_WRITE = 0x0002;
+
+/**
+ * A flag utilized during the construction of a {@link StorageBuffer} to ensure its compatibility
+ * when used as a source of a copy operation.
+ *
+ * @type {number}
+ * @category Graphics
+ */
+export const BUFFERUSAGE_COPY_SRC = 0x0004;
+
+/**
+ * A flag utilized during the construction of a {@link StorageBuffer} to ensure its compatibility
+ * when used as a destination of a copy operation, or as a target of a write operation.
+ *
+ * @type {number}
+ * @category Graphics
+ */
+export const BUFFERUSAGE_COPY_DST = 0x0008;
+
+// internal flags
+export const BUFFERUSAGE_INDEX = 0x0010;
+export const BUFFERUSAGE_VERTEX = 0x0020;
+export const BUFFERUSAGE_UNIFORM = 0x0040;
+export const BUFFERUSAGE_STORAGE = 0x0080;
+
+/**
+ * A flag utilized during the construction of a {@link StorageBuffer} to allow it to store indirect
+ * command arguments.
+ * TODO: This flag is hidden till the feature is implemented.
+ *
+ * @type {number}
+ * @category Graphics
+ * @ignore
+ */
+export const BUFFERUSAGE_INDIRECT = 0x0100;
+
+/**
  * The data store contents will be modified once and used many times.
  *
  * @type {number}

@@ -199,6 +199,24 @@ class WebgpuBindGroupFormat {
             });
         });
 
+        // storage buffers
+        bindGroupFormat.storageBufferFormats.forEach((bufferFormat) => {
+
+            const readOnly = false;
+            const visibility = WebgpuUtils.shaderStage(bufferFormat.visibility);
+            key += `#${index}SB:${visibility}-${readOnly ? 'ro' : 'rw'}`;
+
+            entries.push({
+                binding: index++,
+                visibility: visibility,
+                buffer: {
+
+                    // "storage", "read-only-storage"
+                    type: readOnly ? 'read-only-storage' : 'storage'
+                }
+            });
+        });
+
         /** @type {GPUBindGroupLayoutDescriptor} */
         const descr = {
             entries: entries

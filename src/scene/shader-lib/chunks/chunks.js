@@ -196,6 +196,7 @@ import tonemappingNonePS from './common/frag/tonemappingNone.js';
 import transformVS from './common/vert/transform.js';
 import transformDeclVS from './common/vert/transformDecl.js';
 import transmissionPS from './standard/frag/transmission.js';
+import twoSidedLightingPS from './lit/frag/twoSidedLighting.js';
 import uv0VS from './lit/vert/uv0.js';
 import uv1VS from './lit/vert/uv1.js';
 import viewDirPS from './lit/frag/viewDir.js';
@@ -408,6 +409,7 @@ const shaderChunks = {
     transformVS,
     transformDeclVS,
     transmissionPS,
+    twoSidedLightingPS,
     uv0VS,
     uv1VS,
     viewDirPS,

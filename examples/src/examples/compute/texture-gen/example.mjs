@@ -136,7 +136,7 @@ assetListLoader.load(() => {
         });
 
         // create an instance of the compute shader, and set the input and output textures
-        const compute = new pc.Compute(device, shader);
+        const compute = new pc.Compute(device, shader, 'ComputeModifyTexture');
         compute.setParameter('inTexture', assets.texture.resource);
         compute.setParameter('outTexture', storageTexture);
 
