@@ -26,7 +26,7 @@ class GSplatInstance {
     /** @type {import('../materials/material.js').Material} */
     material;
 
-    /** @type {VertexBuffer} */
+    /** @type {import('../../platform/graphics/vertex-buffer.js').VertexBuffer} */
     vb;
 
     options = {};
