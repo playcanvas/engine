@@ -9,7 +9,7 @@ import { visualizer } from 'rollup-plugin-visualizer';
 
 // custom plugins
 import { shaderChunks } from './plugins/rollup-shader-chunks.mjs';
-import { engineLayerImportValidation } from './rollup-import-validation.mjs';
+import { engineLayerImportValidation } from './plugins/rollup-import-validation.mjs';
 import { spacesToTabs } from './plugins/rollup-spaces-to-tabs.mjs';
 import { dynamicImportLegacyBrowserSupport, dynamicImportViteSupress } from './plugins/rollup-dynamic.mjs';
 
