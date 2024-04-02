@@ -158,7 +158,7 @@ class WebgpuBindGroupFormat {
             });
 
             // sampler
-            if (textureFormat.useSampler) {
+            if (textureFormat.hasSampler) {
                 const gpuSamplerType = samplerTypes[sampleType];
                 Debug.assert(gpuSamplerType);
 

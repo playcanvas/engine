@@ -97,7 +97,7 @@ class WebgpuBindGroup {
             });
 
             // sampler
-            if (textureFormat.useSampler) {
+            if (textureFormat.hasSampler) {
                 const sampler = wgpuTexture.getSampler(device, textureFormat.sampleType);
                 Debug.assert(sampler, 'NULL sampler cannot be used by the bind group');
                 Debug.call(() => {

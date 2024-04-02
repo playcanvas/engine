@@ -51,7 +51,7 @@ class BindTextureFormat {
     /** @type {import('./scope-id.js').ScopeId} */
     scopeId;
 
-    constructor(name, visibility, textureDimension = TEXTUREDIMENSION_2D, sampleType = SAMPLETYPE_FLOAT, useSampler = true) {
+    constructor(name, visibility, textureDimension = TEXTUREDIMENSION_2D, sampleType = SAMPLETYPE_FLOAT, hasSampler = true) {
         /** @type {string} */
         this.name = name;
 
@@ -65,7 +65,7 @@ class BindTextureFormat {
         this.sampleType = sampleType;
 
         // whether to use a sampler with this texture
-        this.useSampler = useSampler;
+        this.hasSampler = hasSampler;
     }
 }
 
