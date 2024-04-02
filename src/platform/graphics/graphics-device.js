@@ -663,6 +663,15 @@ class GraphicsDevice extends EventHandler {
     }
 
     /**
+     * Clears the vertex buffer set on the graphics device. This is called automatically by the
+     * renderer.
+     * @ignore
+     */
+    clearVertexBuffer() {
+        this.vertexBuffers.length = 0;
+    }
+
+    /**
      * Queries the currently set render target on the device.
      *
      * @returns {import('./render-target.js').RenderTarget} The current render target.
