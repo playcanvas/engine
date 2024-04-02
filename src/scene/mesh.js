@@ -77,11 +77,12 @@ class GeometryData {
 
 // class storing information about single vertex data stream
 class GeometryVertexStream {
-    constructor(data, componentCount, dataType, dataTypeNormalize) {
+    constructor(data, componentCount, dataType, dataTypeNormalize, asInt) {
         this.data = data;                           // array of data
         this.componentCount = componentCount;       // number of components
         this.dataType = dataType;                   // format of elements (pc.TYPE_FLOAT32 ..)
         this.dataTypeNormalize = dataTypeNormalize; // normalize element (divide by 255)
+        this.asInt = asInt;                         // treat data as integer (WebGL2 and WebGPU only)
     }
 }
 
@@ -516,8 +517,11 @@ class Mesh extends RefCountedObject {
      * @param {boolean} [dataTypeNormalize] - If true, vertex attribute data will be mapped from a
      * 0 to 255 range down to 0 to 1 when fed to a shader. If false, vertex attribute data is left
      * unchanged. If this property is unspecified, false is assumed.
+     * @param {boolean} [asInt] - If true, vertex attribute data will be accessible as integer
+     * numbers in shader code. Defaults to false, which means that vertex attribute data will be
+     * accessible as floating point numbers. Can be only used with INT and UINT data types.
      */
-    setVertexStream(semantic, data, componentCount, numVertices, dataType = TYPE_FLOAT32, dataTypeNormalize = false) {
+    setVertexStream(semantic, data, componentCount, numVertices, dataType = TYPE_FLOAT32, dataTypeNormalize = false, asInt = false) {
         this._initGeometryData();
         const vertexCount = numVertices || data.length / componentCount;
         this._geometryData._changeVertexCount(vertexCount, semantic);
@@ -527,7 +531,8 @@ class Mesh extends RefCountedObject {
             data,
             componentCount,
             dataType,
-            dataTypeNormalize
+            dataTypeNormalize,
+            asInt
         );
     }
 
@@ -866,7 +871,8 @@ class Mesh extends RefCountedObject {
                 semantic: semantic,
                 components: stream.componentCount,
                 type: stream.dataType,
-                normalize: stream.dataTypeNormalize
+                normalize: stream.dataTypeNormalize,
+                asInt: stream.asInt
             });
         }
 
