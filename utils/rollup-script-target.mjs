@@ -22,8 +22,6 @@ function scriptTarget(name, moduleFormat, input, output, shouldBundle = false) {
     const isES5 = moduleFormat === 'es5';
     const bundled = isES5 || shouldBundle;
 
-    const out = isES5 ? (output || input.replace('.mjs', '.js')) : output;
-
     return {
         input: input,
         output: {
@@ -33,15 +31,15 @@ function scriptTarget(name, moduleFormat, input, output, shouldBundle = false) {
             name: name,
             preserveModules: !bundled,
             globals: isES5 ? { playcanvas: 'pc' } : undefined,
-            file: bundled ? out : undefined,
-            dir: !bundled ? out : undefined
+            file: bundled ? output : undefined,
+            dir: !bundled ? output : undefined
         },
         plugins: [
             resolve(),
             babel(isES5 ? es5Options('release') : moduleOptions('release')),
             spacesToTabs()
         ],
-        external: ['playcanvas']
+        external: ['playcanvas', 'fflate']
     };
 }
 
