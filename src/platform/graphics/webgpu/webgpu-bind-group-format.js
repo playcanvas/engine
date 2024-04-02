@@ -158,20 +158,22 @@ class WebgpuBindGroupFormat {
             });
 
             // sampler
-            const gpuSamplerType = samplerTypes[sampleType];
-            Debug.assert(gpuSamplerType);
+            if (textureFormat.useSampler) {
+                const gpuSamplerType = samplerTypes[sampleType];
+                Debug.assert(gpuSamplerType);
 
-            key += `#${index}S:${visibility}-${gpuSamplerType}`;
+                key += `#${index}S:${visibility}-${gpuSamplerType}`;
 
-            entries.push({
-                binding: index++,
-                visibility: visibility,
-                sampler: {
-                    // Indicates the required type of a sampler bound to this bindings
-                    // 'filtering', 'non-filtering', 'comparison'
-                    type: gpuSamplerType
-                }
-            });
+                entries.push({
+                    binding: index++,
+                    visibility: visibility,
+                    sampler: {
+                        // Indicates the required type of a sampler bound to this bindings
+                        // 'filtering', 'non-filtering', 'comparison'
+                        type: gpuSamplerType
+                    }
+                });
+            }
         });
 
         // storage textures

@@ -97,16 +97,18 @@ class WebgpuBindGroup {
             });
 
             // sampler
-            const sampler = wgpuTexture.getSampler(device, textureFormat.sampleType);
-            Debug.assert(sampler, 'NULL sampler cannot be used by the bind group');
-            Debug.call(() => {
-                this.debugFormat += `${index}: ${sampler.label}\n`;
-            });
+            if (textureFormat.useSampler) {
+                const sampler = wgpuTexture.getSampler(device, textureFormat.sampleType);
+                Debug.assert(sampler, 'NULL sampler cannot be used by the bind group');
+                Debug.call(() => {
+                    this.debugFormat += `${index}: ${sampler.label}\n`;
+                });
 
-            entries.push({
-                binding: index++,
-                resource: sampler
-            });
+                entries.push({
+                    binding: index++,
+                    resource: sampler
+                });
+            }
         });
 
         // storage textures
