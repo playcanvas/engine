@@ -1,5 +1,6 @@
 import { Debug, DebugHelper } from "../../../core/debug.js";
 import { BindGroup } from "../bind-group.js";
+import { DebugGraphics } from "../debug-graphics.js";
 import { UniformBuffer } from "../uniform-buffer.js";
 
 /**
@@ -12,6 +13,8 @@ class WebgpuCompute {
         this.compute = compute;
 
         const { device, shader } = compute;
+
+        DebugGraphics.pushGpuMarker(device, `Compute:${compute.name}`);
 
         // create bind group
         const { computeBindGroupFormat, computeUniformBufferFormat } = shader.impl;
@@ -27,6 +30,8 @@ class WebgpuCompute {
 
         // pipeline
         this.pipeline = device.computePipeline.get(shader, computeBindGroupFormat);
+
+        DebugGraphics.popGpuMarker(device);
     }
 
     updateBindGroup() {
