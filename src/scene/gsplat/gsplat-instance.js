@@ -1,13 +1,9 @@
 import { Mat4 } from '../../core/math/mat4.js';
 import { Vec3 } from '../../core/math/vec3.js';
-import { ADDRESS_CLAMP_TO_EDGE, BUFFER_DYNAMIC, FILTER_NEAREST, PIXELFORMAT_RGBA16F, SEMANTIC_POSITION, TYPE_UINT32 } from '../../platform/graphics/constants.js';
-import { RenderTarget } from '../../platform/graphics/render-target.js';
-import { Texture } from '../../platform/graphics/texture.js';
-import { VertexBuffer } from '../../platform/graphics/vertex-buffer.js';
+import { SEMANTIC_POSITION, TYPE_UINT32 } from '../../platform/graphics/constants.js';
 import { DITHER_NONE } from '../constants.js';
 import { MeshInstance } from '../mesh-instance.js';
 import { Mesh } from '../mesh.js';
-import { createBox } from '../procedural.js';
 import { createGSplatMaterial } from './gsplat-material.js';
 import { GSplatSorter } from './gsplat-sorter.js';
 
