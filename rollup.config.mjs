@@ -2,7 +2,6 @@ import * as fs from 'node:fs';
 import { version, revision } from './utils/rollup-version-revision.mjs';
 import { buildTarget } from './utils/rollup-build-target.mjs';
 import { scriptTarget } from './utils/rollup-script-target.mjs';
-import { scriptTargetEs6 } from './utils/rollup-script-target-es6.mjs';
 
 // unofficial package plugins
 import dts from 'rollup-plugin-dts';
@@ -29,9 +28,9 @@ const MODULE_FORMAT = ['es6', 'es5'];
  * @type {RollupOptions[]}
  */
 const EXTRAS_TARGETS = [
-    scriptTarget('pcx', 'extras/index.js', 'build/playcanvas-extras.js'),
-    scriptTargetEs6('pcx', 'extras/index.js', 'build/playcanvas-extras', false),
-    scriptTargetEs6('pcx', 'extras/index.js', 'build/playcanvas-extras.mjs', true)
+    scriptTarget('pcx', 'es5', 'extras/index.js', 'build/playcanvas-extras.js'),
+    scriptTarget('pcx', 'es6', 'extras/index.js', 'build/playcanvas-extras', false),
+    scriptTarget('pcx', 'es6', 'extras/index.js', 'build/playcanvas-extras.mjs', true)
 ];
 
 /**

@@ -13,7 +13,7 @@ import terser from '@rollup/plugin-terser';
 
 // engine rollup utils
 import { buildTarget } from '../utils/rollup-build-target.mjs';
-import { scriptTargetEs6 } from '../utils/rollup-script-target-es6.mjs';
+import { scriptTarget } from '../utils/rollup-script-target.mjs';
 
 // util functions
 import { isModuleWithExternalDependencies } from './utils.mjs';
@@ -191,7 +191,7 @@ function buildAndWatchStandaloneExamples() {
 function getEngineTargets() {
     const targets = [
         // Outputs: dist/iframe/playcanvas-extras.mjs
-        scriptTargetEs6('pcx', '../extras/index.js', 'dist/iframe/playcanvas-extras.mjs')
+        scriptTarget('pcx', 'es6', '../extras/index.js', 'dist/iframe/playcanvas-extras.mjs')
     ];
     if (ENGINE_PATH) {
         return targets;
