@@ -60,7 +60,7 @@ class Compute {
      * @param {import('./shader.js').Shader} shader - The compute shader.
      * @param {string} [name] - The name of the compute instance, used for debugging only.
      */
-    constructor(graphicsDevice, shader, name = 'Noname') {
+    constructor(graphicsDevice, shader, name = 'Unnamed') {
         this.device = graphicsDevice;
         this.shader = shader;
         this.name = name;
