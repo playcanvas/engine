@@ -104,7 +104,7 @@ assetListLoader.load(() => {
             new pc.BindBufferFormat(pc.UNIFORM_BUFFER_DEFAULT_SLOT_NAME, pc.SHADERSTAGE_COMPUTE)
         ], [
             // input textures
-            new pc.BindTextureFormat('inTexture', pc.SHADERSTAGE_COMPUTE)
+            new pc.BindTextureFormat('inTexture', pc.SHADERSTAGE_COMPUTE, undefined, undefined, false)
         ], [
             // output storage textures
             new pc.BindStorageTextureFormat('outTexture', pc.PIXELFORMAT_RGBA8, pc.TEXTUREDIMENSION_2D)
