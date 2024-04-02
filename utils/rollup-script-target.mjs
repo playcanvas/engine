@@ -3,8 +3,8 @@ import { babel } from '@rollup/plugin-babel';
 import resolve from '@rollup/plugin-node-resolve';
 
 import { getBanner } from './rollup-get-banner.mjs';
-import { es5Options } from './rollup-es5-options.mjs';
-import { spacesToTabs } from './plugins/rollup-spaces-to-tabs.mjs/index.js';
+import { es5Options } from './rollup-babel-options.mjs';
+import { spacesToTabs } from './plugins/rollup-spaces-to-tabs.mjs';
 
 /** @typedef {import('rollup').RollupOptions} RollupOptions */
 
