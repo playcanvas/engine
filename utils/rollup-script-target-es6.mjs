@@ -35,7 +35,7 @@ function scriptTargetEs6(name, input, output, shouldBundle = false) {
         plugins: [
             resolve(),
             babel(moduleOptions('release')),
-            spacesToTabs(true)
+            spacesToTabs()
         ],
         external: ['playcanvas', 'fflate']
     };

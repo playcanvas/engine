@@ -30,7 +30,7 @@ function scriptTarget(name, input, output) {
         plugins: [
             resolve(),
             babel(es5Options('release')),
-            spacesToTabs(true)
+            spacesToTabs()
         ],
         external: ['playcanvas'],
         cache: false
