@@ -237,7 +237,7 @@ class RenderPassForward extends RenderPass {
         const { layer, transparent, camera } = renderAction;
         const cameraPass = layerComposition.camerasMap.get(camera);
 
-        DebugGraphics.pushGpuMarker(this.device, camera ? camera.entity.name : 'noname');
+        DebugGraphics.pushGpuMarker(this.device, camera ? camera.entity.name : 'Unnamed');
         DebugGraphics.pushGpuMarker(this.device, `${layer.name}(${transparent ? 'TRANSP' : 'OPAQUE'})`);
 
         // #if _PROFILER
