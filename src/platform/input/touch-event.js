@@ -2,7 +2,7 @@
  * This function takes a browser Touch object and returns the coordinates of the touch relative to
  * the target DOM element.
  *
- * @param {Touch} touch - The browser Touch object.
+ * @param {globalThis.Touch} touch - The browser Touch object.
  * @returns {object} The coordinates of the touch relative to the touch.target DOM element. In the
  * format \{x, y\}.
  * @category Input
@@ -65,14 +65,14 @@ class Touch {
     /**
      * The original browser Touch object.
      *
-     * @type {Touch}
+     * @type {globalThis.Touch}
      */
     touch;
 
     /**
      * Create a new Touch object from the browser Touch.
      *
-     * @param {Touch} touch - The browser Touch object.
+     * @param {globalThis.Touch} touch - The browser Touch object.
      */
     constructor(touch) {
         const coords = getTouchTargetCoords(touch);
@@ -102,7 +102,7 @@ class TouchEvent {
     /**
      * The original browser TouchEvent.
      *
-     * @type {TouchEvent}
+     * @type {globalThis.TouchEvent}
      */
     event;
 
@@ -125,7 +125,7 @@ class TouchEvent {
      *
      * @param {import('./touch-device.js').TouchDevice} device - The source device of the touch
      * events.
-     * @param {TouchEvent} event - The original browser TouchEvent.
+     * @param {globalThis.TouchEvent} event - The original browser TouchEvent.
      */
     constructor(device, event) {
         this.element = event.target;
