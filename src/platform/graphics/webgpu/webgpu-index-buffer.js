@@ -1,5 +1,5 @@
 import { Debug } from '../../../core/debug.js';
-import { INDEXFORMAT_UINT8, INDEXFORMAT_UINT16 } from '../constants.js';
+import { INDEXFORMAT_UINT8, INDEXFORMAT_UINT16, BUFFERUSAGE_INDEX } from '../constants.js';
 import { WebgpuBuffer } from "./webgpu-buffer.js";
 
 /**
@@ -11,7 +11,7 @@ class WebgpuIndexBuffer extends WebgpuBuffer {
     format = null;
 
     constructor(indexBuffer) {
-        super();
+        super(BUFFERUSAGE_INDEX);
 
         Debug.assert(indexBuffer.format !== INDEXFORMAT_UINT8, "WebGPU does not support 8-bit index buffer format");
         this.format = indexBuffer.format === INDEXFORMAT_UINT16 ? "uint16" : "uint32";
@@ -19,7 +19,7 @@ class WebgpuIndexBuffer extends WebgpuBuffer {
 
     unlock(indexBuffer) {
         const device = indexBuffer.device;
-        super.unlock(device, indexBuffer.usage, GPUBufferUsage.INDEX, indexBuffer.storage);
+        super.unlock(device, indexBuffer.storage);
     }
 }
 
