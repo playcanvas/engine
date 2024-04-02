@@ -61,7 +61,7 @@ function SortWorker() {
         if (distances?.length !== numVertices) {
             distances = new Uint32Array(numVertices);
             indices = new Uint32Array(numVertices);
-            target = new Float32Array(numVertices);
+            target = new Float32Array(numVertices * 4); // output 4 indices per splat (quad)
         }
 
         // calc min/max distance using bound
@@ -113,7 +113,15 @@ function SortWorker() {
         for (let i = numVertices - 1; i >= 0; i--) {
             const distance = distances[i];
             const index = indices[i];
-            outputArray[countBuffer[distance] - 1] = index + offset;
+            let destIndex = countBuffer[distance] - 1;
+
+            destIndex *= 4;
+            const splatIndex = index + offset;
+            outputArray[destIndex] = splatIndex;
+            outputArray[destIndex + 1] = splatIndex;
+            outputArray[destIndex + 2] = splatIndex;
+            outputArray[destIndex + 3] = splatIndex;
+
             countBuffer[distance]--;
         }
 
