@@ -28,9 +28,18 @@ const MODULE_FORMAT = ['es6', 'es5'];
  * @type {RollupOptions[]}
  */
 const EXTRAS_TARGETS = [
-    scriptTarget('pcx', 'es5', 'extras/index.js', 'build/playcanvas-extras.js'),
-    scriptTarget('pcx', 'es6', 'extras/index.js', 'build/playcanvas-extras', false),
-    scriptTarget('pcx', 'es6', 'extras/index.js', 'build/playcanvas-extras.mjs', true)
+    ...scriptTarget({
+        name: 'pcx',
+        moduleFormat: 'es6',
+        input: 'extras/index.js',
+        output: 'build/playcanvas-extras'
+    }),
+    ...scriptTarget({
+        name: 'pcx',
+        moduleFormat: 'es5',
+        input: 'extras/index.js',
+        output: 'build/playcanvas-extras.js'
+    })
 ];
 
 /**
@@ -84,7 +93,10 @@ if (envTarget === null || envTarget === 'extras') {
 BUILD_TYPES.forEach((type) => {
     MODULE_FORMAT.forEach((format) => {
         if (envTarget === null || envTarget === type || envTarget === format || envTarget === `${type}_${format}`) {
-            targets.push(...buildTarget(type, format, 'src/index.js', 'build'));
+            targets.push(...buildTarget({
+                buildType: type,
+                moduleFormat: format
+            }));
         }
     });
 });

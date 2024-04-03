@@ -9,38 +9,65 @@ import { spacesToTabs } from './plugins/rollup-spaces-to-tabs.mjs';
 /** @typedef {import('rollup').RollupOptions} RollupOptions */
 
 /**
- * Build an ES6 target that rollup is supposed to build.
+ * Build an ES6 target that rollup is supposed to build (bundled and unbundled).
  *
- * @param {string} name - The name, like `pcx`.
- * @param {'es5'|'es6'} moduleFormat - The module format.
- * @param {string} input - The input file, like `extras/index.js`.
- * @param {string} output - The output file, like `build/playcanvas-extras.mjs`.
- * @param {boolean} [shouldBundle] - Whether the target should be bundled.
- * @returns {RollupOptions} One rollup target.
+ * @param {object} options - The script target options.
+ * @param {string} options.name - The name, like `pcx`.
+ * @param {'es5'|'es6'} options.moduleFormat - The module format.
+ * @param {string} options.input - The input file, like `extras/index.js`.
+ * @param {string} options.output - The output file, like `build/playcanvas-extras.mjs`.
+ * @param {boolean} [options.skipBundled] - Whether to skip the bundled target (ES6 only).
+ * @returns {RollupOptions[]} Rollup targets.
  */
-function scriptTarget(name, moduleFormat, input, output, shouldBundle = false) {
+function scriptTarget({ name, moduleFormat, input, output, skipBundled = true }) {
     const isES5 = moduleFormat === 'es5';
-    const bundled = isES5 || shouldBundle;
 
-    return {
-        input: input,
+    const targets = [];
+
+    /**
+     * @type {RollupOptions}
+     */
+    const target = {
+        input,
         output: {
             banner: getBanner(''),
             format: isES5 ? 'umd' : 'es',
             indent: '\t',
             name: name,
-            preserveModules: !bundled,
+            preserveModules: !isES5,
             globals: isES5 ? { playcanvas: 'pc' } : undefined,
-            file: bundled ? output : undefined,
-            dir: !bundled ? output : undefined
+            file: isES5 ? output : undefined,
+            dir: !isES5 ? output : undefined
         },
         plugins: [
             resolve(),
             babel(isES5 ? es5Options('release') : moduleOptions('release')),
             spacesToTabs()
         ],
-        external: ['playcanvas', 'fflate']
+        external: isES5 ? ['playcanvas'] : ['playcanvas', 'fflate']
     };
+    targets.push(target);
+
+    if (!skipBundled && !isES5) {
+        /**
+         * @type {RollupOptions}
+         */
+        const target = {
+            input: output,
+            output: {
+                banner: getBanner(''),
+                format: 'es',
+                indent: '\t',
+                name: name,
+                preserveModules: false,
+                file: `${output}.mjs`
+            },
+            external: ['playcanvas', 'fflate']
+        };
+        targets.push(target);
+    }
+
+    return targets;
 }
 
 export { scriptTarget };

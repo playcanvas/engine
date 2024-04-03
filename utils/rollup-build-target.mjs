@@ -140,13 +140,15 @@ function getOutPlugins() {
 /**
  * Build a target that rollup is supposed to build (bundled and unbundled).
  *
- * @param {'debug'|'release'|'profiler'|'min'} buildType - The build type.
- * @param {'es5'|'es6'} moduleFormat - The module format.
- * @param {string} input - Only used for Examples to change it to `../src/index.js`.
- * @param {string} [dir] - Only used for examples to change the output location.
- * @returns {RollupOptions[]} One rollup target.
+ * @param {object} options - The build target options.
+ * @param {'debug'|'release'|'profiler'|'min'} options.buildType - The build type.
+ * @param {'es5'|'es6'} options.moduleFormat - The module format.
+ * @param {string} [options.input] - Only used for Examples to change it to `../src/index.js`.
+ * @param {string} [options.dir] - Only used for examples to change the output location.
+ * @param {boolean} [options.skipBundled] - Whether to skip the bundled target (ES6 only).
+ * @returns {RollupOptions[]} Rollup targets.
  */
-function buildTarget(buildType, moduleFormat, input = 'src/index.js', dir = 'build') {
+function buildTarget({ buildType, moduleFormat, input = 'src/index.js', dir = 'build', skipBundled = false }) {
     const isDebug = buildType === 'debug';
     const isMin = buildType === 'min';
     const isES5 = moduleFormat === 'es5';
@@ -186,7 +188,7 @@ function buildTarget(buildType, moduleFormat, input = 'src/index.js', dir = 'bui
     targets.push(target);
 
     // check if unbundled target is in history
-    if (HISTORY.has(`${buildType}-${moduleFormat}-false`)) {
+    if (!skipBundled && HISTORY.has(`${buildType}-${moduleFormat}-false`)) {
         const unbundled = HISTORY.get(`${buildType}-${moduleFormat}-false`);
 
         /**
