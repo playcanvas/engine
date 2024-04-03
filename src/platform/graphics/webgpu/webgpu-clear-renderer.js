@@ -1,5 +1,5 @@
 import { Debug, DebugHelper } from "../../../core/debug.js";
-import { BindBufferFormat, BindGroupFormat } from "../bind-group-format.js";
+import { BindUniformBufferFormat, BindGroupFormat } from "../bind-group-format.js";
 import { UniformBufferFormat, UniformFormat } from "../uniform-buffer-format.js";
 import { BlendState } from "../blend-state.js";
 import {
@@ -79,7 +79,7 @@ class WebgpuClearRenderer {
 
         // format of the bind group
         const bindGroupFormat = new BindGroupFormat(device, [
-            new BindBufferFormat(UNIFORM_BUFFER_DEFAULT_SLOT_NAME, SHADERSTAGE_VERTEX | SHADERSTAGE_FRAGMENT)
+            new BindUniformBufferFormat(UNIFORM_BUFFER_DEFAULT_SLOT_NAME, SHADERSTAGE_VERTEX | SHADERSTAGE_FRAGMENT)
         ]);
 
         // bind group

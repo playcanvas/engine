@@ -88,7 +88,7 @@ class WebgpuBindGroupFormat {
         let key = '';
 
         // buffers
-        bindGroupFormat.bufferFormats.forEach((bufferFormat) => {
+        bindGroupFormat.uniformBufferFormats.forEach((bufferFormat) => {
 
             const visibility = WebgpuUtils.shaderStage(bufferFormat.visibility);
             key += `#${bufferFormat.slot}U:${visibility}`;

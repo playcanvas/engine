@@ -37,7 +37,7 @@ class BindBaseFormat {
 /**
  * @ignore
  */
-class BindBufferFormat extends BindBaseFormat {
+class BindUniformBufferFormat extends BindBaseFormat {
 }
 
 /**
@@ -83,8 +83,8 @@ class BindStorageTextureFormat extends BindBaseFormat {
  * @ignore
  */
 class BindGroupFormat {
-    /** @type {BindBufferFormat[]} */
-    bufferFormats = [];
+    /** @type {BindUniformBufferFormat[]} */
+    uniformBufferFormats = [];
 
     /** @type {BindTextureFormat[]} */
     textureFormats = [];
@@ -117,8 +117,8 @@ class BindGroupFormat {
             }
 
             // split the array into separate arrays
-            if (format instanceof BindBufferFormat) {
-                this.bufferFormats.push(format);
+            if (format instanceof BindUniformBufferFormat) {
+                this.uniformBufferFormats.push(format);
             } else if (format instanceof BindTextureFormat) {
                 this.textureFormats.push(format);
             } else if (format instanceof BindStorageTextureFormat) {
@@ -137,7 +137,7 @@ class BindGroupFormat {
         // maps a buffer format name to an index
         /** @type {Map<string, number>} */
         this.bufferFormatsMap = new Map();
-        this.bufferFormats.forEach((bf, i) => this.bufferFormatsMap.set(bf.name, i));
+        this.uniformBufferFormats.forEach((bf, i) => this.bufferFormatsMap.set(bf.name, i));
 
         // maps a texture format name to a slot index
         /** @type {Map<string, number>} */
@@ -247,4 +247,4 @@ class BindGroupFormat {
     }
 }
 
-export { BindBufferFormat, BindTextureFormat, BindGroupFormat, BindStorageTextureFormat, BindStorageBufferFormat };
+export { BindUniformBufferFormat, BindTextureFormat, BindGroupFormat, BindStorageTextureFormat, BindStorageBufferFormat };
