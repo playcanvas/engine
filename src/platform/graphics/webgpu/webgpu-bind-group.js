@@ -59,7 +59,7 @@ class WebgpuBindGroup {
         });
 
         // uniform buffers
-        const uniformBufferFormats = bindGroup.format.bufferFormats;
+        const uniformBufferFormats = bindGroup.format.uniformBufferFormats;
         bindGroup.uniformBuffers.forEach((ub, i) => {
             const slot = uniformBufferFormats[i].slot;
             const buffer = ub.persistent ? ub.impl.buffer : ub.allocation.gpuBuffer.buffer;

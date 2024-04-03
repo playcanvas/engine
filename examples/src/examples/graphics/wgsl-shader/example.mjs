@@ -60,7 +60,7 @@ const shaderDefinition = {
         new pc.UniformFormat('amount', pc.UNIFORMTYPE_FLOAT)
     ]),
     meshBindGroupFormat: new pc.BindGroupFormat(app.graphicsDevice, [
-        new pc.BindBufferFormat(pc.UNIFORM_BUFFER_DEFAULT_SLOT_NAME, pc.SHADERSTAGE_VERTEX | pc.SHADERSTAGE_FRAGMENT)
+        new pc.BindUniformBufferFormat(pc.UNIFORM_BUFFER_DEFAULT_SLOT_NAME, pc.SHADERSTAGE_VERTEX | pc.SHADERSTAGE_FRAGMENT)
     ])
 };
 const shader = new pc.Shader(app.graphicsDevice, shaderDefinition);
