@@ -79,7 +79,7 @@ class WebgpuBindGroup {
         });
 
         // textures
-        const textureFormats = bindGroup.format.textureFormats
+        const textureFormats = bindGroup.format.textureFormats;
         bindGroup.textures.forEach((tex, textureIndex) => {
 
             /** @type {import('./webgpu-texture.js').WebgpuTexture} */
