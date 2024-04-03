@@ -25,6 +25,14 @@
       "import": "./build/playcanvas.mjs",
       "require": "./build/playcanvas.js"
     },
+    "./dbg": {
+      "import": "./build/playcanvas.dbg.mjs",
+      "require": "./build/playcanvas.dbg.js"
+    },
+    "./prf": {
+      "import": "./build/playcanvas.prf.mjs",
+      "require": "./build/playcanvas.prf.js"
+    },
     "./extras": {
       "import": "./build/playcanvas-extras.mjs",
       "require": "./build/playcanvas-extras.js"
