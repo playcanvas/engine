@@ -4,6 +4,8 @@ const GREEN_OUT = '\x1b[32m';
 const BOLD_OUT = `\x1b[1m`;
 const REGULAR_OUT = `\x1b[22m`;
 
+const TYPES_PATH = './build/playcanvas';
+
 const STANDARD_MAT_PROPS = [
     ['alphaFade', 'boolean'],
     ['ambient', 'Color'],
@@ -191,7 +193,7 @@ const STANDARD_MAT_PROPS = [
 ];
 
 const REPLACEMENTS = [{
-    path: `./build/playcanvas/scene/materials/standard-material.d.ts`,
+    path: `${TYPES_PATH}/scene/materials/standard-material.d.ts`,
     replacement: {
         from: 'reset(): void;',
         to: `reset(): void;
@@ -207,7 +209,7 @@ import { Texture } from '../../platform/graphics/texture.js';
 `
     }
 }, {
-    path: `./build/playcanvas/framework/script/script-type.d.ts`,
+    path: `${TYPES_PATH}/framework/script/script-type.d.ts`,
     replacement: {
         from: 'get enabled(): boolean;',
         to: `get enabled(): boolean;
