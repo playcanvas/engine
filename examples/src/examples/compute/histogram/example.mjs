@@ -104,8 +104,8 @@ assetListLoader.load(() => {
         computeBindGroupFormat: new pc.BindGroupFormat(device, [
             // no uniform buffer
         ], [
-            // input texture - the scene color map
-            new pc.BindTextureFormat('uSceneColorMap', pc.SHADERSTAGE_COMPUTE)
+            // input texture - the scene color map, without a sampler
+            new pc.BindTextureFormat('uSceneColorMap', pc.SHADERSTAGE_COMPUTE, undefined, undefined, false)
         ], [
             // no storage textures
         ], [
