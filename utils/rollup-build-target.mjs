@@ -15,7 +15,7 @@ import { dynamicImportLegacyBrowserSupport, dynamicImportViteSupress } from './p
 
 import { version, revision } from './rollup-version-revision.mjs';
 import { getBanner } from './rollup-get-banner.mjs';
-import { es5Options, moduleOptions } from './rollup-babel-options.mjs';
+import { babelOptions } from './rollup-babel-options.mjs';
 
 /** @typedef {import('rollup').RollupOptions} RollupOptions */
 /** @typedef {import('rollup').OutputOptions} OutputOptions */
@@ -178,7 +178,7 @@ function buildTarget({ buildType, moduleFormat, input = 'src/index.js', dir = 'b
             !isDebug ? shaderChunks() : undefined,
             isDebug ? engineLayerImportValidation(input) : undefined,
             !isDebug ? strip({ functions: STRIP_FUNCTIONS }) : undefined,
-            babel(isES5 ? es5Options(buildType) : moduleOptions(buildType)),
+            babel(babelOptions(isDebug, isES5)),
             !isES5 && !isDebug ? dynamicImportViteSupress() : undefined,
             !isDebug ? spacesToTabs() : undefined
         ]

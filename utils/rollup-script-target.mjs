@@ -3,7 +3,7 @@ import { babel } from '@rollup/plugin-babel';
 import resolve from '@rollup/plugin-node-resolve';
 
 import { getBanner } from './rollup-get-banner.mjs';
-import { es5Options, moduleOptions } from './rollup-babel-options.mjs';
+import { babelOptions } from './rollup-babel-options.mjs';
 import { spacesToTabs } from './plugins/rollup-spaces-to-tabs.mjs';
 
 /** @typedef {import('rollup').RollupOptions} RollupOptions */
@@ -41,7 +41,7 @@ function scriptTarget({ name, moduleFormat, input, output, skipBundled = true })
         },
         plugins: [
             resolve(),
-            babel(isES5 ? es5Options('release') : moduleOptions('release')),
+            babel(babelOptions(false, isES5)),
             spacesToTabs()
         ],
         external: isES5 ? ['playcanvas'] : ['playcanvas', 'fflate']

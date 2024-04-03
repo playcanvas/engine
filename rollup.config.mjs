@@ -90,12 +90,12 @@ if (envTarget === null || envTarget === 'extras') {
     targets.push(...EXTRAS_TARGETS);
 }
 
-BUILD_TYPES.forEach((type) => {
-    MODULE_FORMAT.forEach((format) => {
-        if (envTarget === null || envTarget === type || envTarget === format || envTarget === `${type}_${format}`) {
+BUILD_TYPES.forEach((buildType) => {
+    MODULE_FORMAT.forEach((moduleFormat) => {
+        if (envTarget === null || envTarget === buildType || envTarget === moduleFormat || envTarget === `${buildType}_${moduleFormat}`) {
             targets.push(...buildTarget({
-                buildType: type,
-                moduleFormat: format
+                buildType,
+                moduleFormat
             }));
         }
     });
