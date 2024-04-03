@@ -3,7 +3,7 @@ import { Debug, DebugHelper } from '../../core/debug.js';
 
 import {
     TEXTUREDIMENSION_2D, TEXTUREDIMENSION_CUBE, TEXTUREDIMENSION_3D, TEXTUREDIMENSION_2D_ARRAY,
-    SAMPLETYPE_FLOAT, PIXELFORMAT_RGBA8, SAMPLETYPE_INT, SAMPLETYPE_UINT
+    SAMPLETYPE_FLOAT, PIXELFORMAT_RGBA8, SAMPLETYPE_INT, SAMPLETYPE_UINT, SHADERSTAGE_COMPUTE
 } from './constants.js';
 
 let id = 0;
@@ -18,22 +18,12 @@ const textureDimensionInfo = {
 /**
  * @ignore
  */
-class BindBufferFormat {
-    constructor(name, visibility) {
-        /** @type {string} */
-        this.name = name;
+class BindBaseFormat {
+    /** @type {number} */
+    slot = -1;
 
-        // SHADERSTAGE_VERTEX, SHADERSTAGE_FRAGMENT, SHADERSTAGE_COMPUTE
-        this.visibility = visibility;
-    }
-}
-
-/**
- * @ignore
- */
-class BindStorageBufferFormat {
-    /** @type {import('./scope-id.js').ScopeId} */
-    scopeId;
+    /** @type {import('./scope-id.js').ScopeId|null} */
+    scopeId = null;
 
     constructor(name, visibility) {
         /** @type {string} */
@@ -47,16 +37,21 @@ class BindStorageBufferFormat {
 /**
  * @ignore
  */
-class BindTextureFormat {
-    /** @type {import('./scope-id.js').ScopeId} */
-    scopeId;
+class BindBufferFormat extends BindBaseFormat {
+}
 
+/**
+ * @ignore
+ */
+class BindStorageBufferFormat extends BindBaseFormat {
+}
+
+/**
+ * @ignore
+ */
+class BindTextureFormat extends BindBaseFormat {
     constructor(name, visibility, textureDimension = TEXTUREDIMENSION_2D, sampleType = SAMPLETYPE_FLOAT, hasSampler = true) {
-        /** @type {string} */
-        this.name = name;
-
-        // SHADERSTAGE_VERTEX, SHADERSTAGE_FRAGMENT, SHADERSTAGE_COMPUTE
-        this.visibility = visibility;
+        super(name, visibility);
 
         // TEXTUREDIMENSION_***
         this.textureDimension = textureDimension;
@@ -72,13 +67,9 @@ class BindTextureFormat {
 /**
  * @ignore
  */
-class BindStorageTextureFormat {
-    /** @type {import('./scope-id.js').ScopeId} */
-    scopeId;
-
+class BindStorageTextureFormat extends BindBaseFormat {
     constructor(name, format = PIXELFORMAT_RGBA8, textureDimension = TEXTUREDIMENSION_2D) {
-        /** @type {string} */
-        this.name = name;
+        super(name, SHADERSTAGE_COMPUTE);
 
         // PIXELFORMAT_***
         this.format = format;
@@ -92,67 +83,86 @@ class BindStorageTextureFormat {
  * @ignore
  */
 class BindGroupFormat {
+    /** @type {BindBufferFormat[]} */
+    bufferFormats = [];
+
+    /** @type {BindTextureFormat[]} */
+    textureFormats = [];
+
+    /** @type {BindStorageTextureFormat[]} */
+    storageTextureFormats = [];
+
+    /** @type {BindStorageBufferFormat[]} */
+    storageBufferFormats = [];
+
     /**
      * @param {import('./graphics-device.js').GraphicsDevice} graphicsDevice - The graphics device
      * used to manage this vertex format.
-     * @param {BindBufferFormat[]} [bufferFormats] - An array of bind buffer formats (uniform
-     * buffers). Defaults to an empty array.
-     * @param {BindTextureFormat[]} [textureFormats] - An array of bind texture formats (textures).
-     * Defaults to an empty array.
-     * @param {BindStorageTextureFormat[]} [storageTextureFormats] - An array of bind storage texture
-     * formats (storage textures), used by the compute shader. Defaults to an empty array.
-     * @param {BindStorageBufferFormat[]} [storageBufferFormats] - An array of bind storage buffer
-     * formats. Defaults to an empty array.
+     * @param {(BindBaseFormat|BindTextureFormat|BindStorageTextureFormat|BindStorageBufferFormat)[]} formats
+     * - An array of bind formats.
      */
-    constructor(graphicsDevice, bufferFormats = [], textureFormats = [], storageTextureFormats = [], storageBufferFormats = []) {
+    constructor(graphicsDevice, formats) {
         this.id = id++;
         DebugHelper.setName(this, `BindGroupFormat_${this.id}`);
+
+        Debug.assert(formats);
+
+        let slot = 0;
+        formats.forEach((format) => {
+
+            // Assign slot. For texture format, we also need to assign a slot for its sampler.
+            format.slot = slot++;
+            if (format instanceof BindTextureFormat && format.hasSampler) {
+                slot++;
+            }
+
+            // split the array into separate arrays
+            if (format instanceof BindBufferFormat) {
+                this.bufferFormats.push(format);
+            } else if (format instanceof BindTextureFormat) {
+                this.textureFormats.push(format);
+            } else if (format instanceof BindStorageTextureFormat) {
+                this.storageTextureFormats.push(format);
+            } else if (format instanceof BindStorageBufferFormat) {
+                this.storageBufferFormats.push(format);
+            } else {
+                Debug.assert('Invalid bind format', format);
+            }
+        });
 
         /** @type {import('./graphics-device.js').GraphicsDevice} */
         this.device = graphicsDevice;
         const scope = graphicsDevice.scope;
 
-        /** @type {BindBufferFormat[]} */
-        this.bufferFormats = bufferFormats;
-
         // maps a buffer format name to an index
         /** @type {Map<string, number>} */
         this.bufferFormatsMap = new Map();
-        bufferFormats.forEach((bf, i) => this.bufferFormatsMap.set(bf.name, i));
-
-        /** @type {BindTextureFormat[]} */
-        this.textureFormats = textureFormats;
+        this.bufferFormats.forEach((bf, i) => this.bufferFormatsMap.set(bf.name, i));
 
         // maps a texture format name to a slot index
         /** @type {Map<string, number>} */
         this.textureFormatsMap = new Map();
-        textureFormats.forEach((tf, i) => {
+        this.textureFormats.forEach((tf, i) => {
             this.textureFormatsMap.set(tf.name, i);
 
             // resolve scope id
             tf.scopeId = scope.resolve(tf.name);
         });
 
-        /** @type {BindStorageTextureFormat[]} */
-        this.storageTextureFormats = storageTextureFormats;
-
         // maps a storage texture format name to a slot index
         /** @type {Map<string, number>} */
         this.storageTextureFormatsMap = new Map();
-        storageTextureFormats.forEach((tf, i) => {
+        this.storageTextureFormats.forEach((tf, i) => {
             this.storageTextureFormatsMap.set(tf.name, i);
 
             // resolve scope id
             tf.scopeId = scope.resolve(tf.name);
         });
 
-        /** @type {BindStorageBufferFormat[]} */
-        this.storageBufferFormats = storageBufferFormats;
-
         // maps a storage buffer format name to a slot index
         /** @type {Map<string, number>} */
         this.storageBufferFormatsMap = new Map();
-        storageBufferFormats.forEach((bf, i) => {
+        this.storageBufferFormats.forEach((bf, i) => {
             this.storageBufferFormatsMap.set(bf.name, i);
 
             // resolve scope id
@@ -203,7 +213,6 @@ class BindGroupFormat {
 
     getShaderDeclarationTextures(bindGroup) {
         let code = '';
-        let bindIndex = this.bufferFormats.length;
         this.textureFormats.forEach((format) => {
 
             let textureType = textureDimensionInfo[format.textureDimension];
@@ -223,10 +232,11 @@ class BindGroupFormat {
                 textureType = `u${textureType}`;
             }
 
-            code += `layout(set = ${bindGroup}, binding = ${bindIndex++}) uniform ${textureType} ${format.name}${namePostfix};\n` +
-                    `layout(set = ${bindGroup}, binding = ${bindIndex++}) uniform sampler ${format.name}_sampler;\n` +
-                    extraCode;
-
+            code += `layout(set = ${bindGroup}, binding = ${format.slot}) uniform ${textureType} ${format.name}${namePostfix};\n`;
+            if (format.hasSampler) {
+                code += `layout(set = ${bindGroup}, binding = ${format.slot + 1}) uniform sampler ${format.name}_sampler;\n`;
+            }
+            code += extraCode;
         });
 
         return code;

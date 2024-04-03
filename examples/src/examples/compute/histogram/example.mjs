@@ -102,13 +102,8 @@ assetListLoader.load(() => {
 
         // format of a bind group, providing resources for the compute shader
         computeBindGroupFormat: new pc.BindGroupFormat(device, [
-            // no uniform buffer
-        ], [
             // input texture - the scene color map, without a sampler
-            new pc.BindTextureFormat('uSceneColorMap', pc.SHADERSTAGE_COMPUTE, undefined, undefined, false)
-        ], [
-            // no storage textures
-        ], [
+            new pc.BindTextureFormat('uSceneColorMap', pc.SHADERSTAGE_COMPUTE, undefined, undefined, false),
             // output storage buffer
             new pc.BindStorageBufferFormat('outBuffer', pc.SHADERSTAGE_COMPUTE)
         ])

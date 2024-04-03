@@ -815,11 +815,11 @@ class Renderer {
             this.viewUniformFormat = new UniformBufferFormat(this.device, uniforms);
 
             // format of the view bind group - contains single uniform buffer, and some textures
-            const buffers = [
-                new BindBufferFormat(UNIFORM_BUFFER_DEFAULT_SLOT_NAME, SHADERSTAGE_VERTEX | SHADERSTAGE_FRAGMENT)
-            ];
+            const formats = [
 
-            const textures = [
+                // uniform buffer needs to be first, as the shader processor assumes slot 0 for it
+                new BindBufferFormat(UNIFORM_BUFFER_DEFAULT_SLOT_NAME, SHADERSTAGE_VERTEX | SHADERSTAGE_FRAGMENT),
+
                 new BindTextureFormat('lightsTextureFloat', SHADERSTAGE_FRAGMENT, TEXTUREDIMENSION_2D, SAMPLETYPE_UNFILTERABLE_FLOAT),
                 new BindTextureFormat('lightsTexture8', SHADERSTAGE_FRAGMENT, TEXTUREDIMENSION_2D, SAMPLETYPE_UNFILTERABLE_FLOAT),
                 new BindTextureFormat('shadowAtlasTexture', SHADERSTAGE_FRAGMENT, TEXTUREDIMENSION_2D, SAMPLETYPE_DEPTH),
@@ -830,12 +830,12 @@ class Renderer {
             ];
 
             if (isClustered) {
-                textures.push(...[
+                formats.push(...[
                     new BindTextureFormat('clusterWorldTexture', SHADERSTAGE_FRAGMENT, TEXTUREDIMENSION_2D, SAMPLETYPE_UNFILTERABLE_FLOAT)
                 ]);
             }
 
-            this.viewBindGroupFormat = new BindGroupFormat(this.device, buffers, textures);
+            this.viewBindGroupFormat = new BindGroupFormat(this.device, formats);
         }
     }
 
