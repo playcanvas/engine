@@ -18,25 +18,13 @@
   ],
   "license": "MIT",
   "main": "build/playcanvas.js",
-  "module": "build/playcanvas.mjs",
-  "types": "build/playcanvas.d.ts",
+  "module": "build/playcanvas/index.js",
   "exports": {
     ".": {
-      "import": "./build/playcanvas.mjs",
+      "import": "./build/playcanvas/index.js",
       "require": "./build/playcanvas.js"
     },
-    "./dbg": {
-      "import": "./build/playcanvas.dbg.mjs",
-      "require": "./build/playcanvas.dbg.js"
-    },
-    "./prf": {
-      "import": "./build/playcanvas.prf.mjs",
-      "require": "./build/playcanvas.prf.js"
-    },
-    "./extras": {
-      "import": "./build/playcanvas-extras.mjs",
-      "require": "./build/playcanvas-extras.js"
-    }
+    "./build/*": "./build/*"
   },
   "sideEffects": false,
   "type": "module",
@@ -91,18 +79,21 @@
     "scripts/spine/playcanvas-spine.3.8.mjs"
   ],
   "files": [
-    "build/playcanvas.js",
-    "build/playcanvas.min.js",
-    "build/playcanvas.dbg.js",
-    "build/playcanvas.prf.js",
+    "build/playcanvas",
     "build/playcanvas.mjs",
-    "build/playcanvas.min.mjs",
-    "build/playcanvas.dbg.mjs",
-    "build/playcanvas.prf.mjs",
+    "build/playcanvas.js",
     "build/playcanvas.d.ts",
-    "build/playcanvas-extras.js",
+    "build/playcanvas.dbg",
+    "build/playcanvas.dbg.mjs",
+    "build/playcanvas.dbg.js",
+    "build/playcanvas.prf",
+    "build/playcanvas.prf.mjs",
+    "build/playcanvas.prf.js",
+    "build/playcanvas.min.mjs",
+    "build/playcanvas.min.js",
+    "build/playcanvas-extras",
     "build/playcanvas-extras.mjs",
-    "build/playcanvas-extras/index.js",
+    "build/playcanvas-extras.js",
     "build/playcanvas-extras.d.ts",
     "scripts",
     "LICENSE",
