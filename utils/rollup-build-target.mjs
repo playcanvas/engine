@@ -66,7 +66,7 @@ const OUT_PREFIX = {
 const HISTORY = new Map();
 
 /**
- * @param {'debug'|'release'|'profiler'|'min'} buildType - The build type.
+ * @param {'debug'|'release'|'profiler'} buildType - The build type.
  * @param {boolean} isES5 - Whether the build is for ES5.
  * @returns {object} - The JSCC options.
  */
@@ -101,7 +101,7 @@ function getJSCCOptions(buildType, isES5) {
             asloader: true
         }
     };
-    return options[buildType] || options.release;
+    return options[buildType];
 }
 
 /**
@@ -195,7 +195,7 @@ function buildTarget({ buildType, moduleFormat, input = 'src/index.js', dir = 'b
             dir: !bundled ? `${dir}/${OUT_PREFIX[buildType]}` : undefined
         },
         plugins: [
-            jscc(getJSCCOptions(buildType, isES5)),
+            jscc(getJSCCOptions(isMin ? 'release' : buildType, isES5)),
             isES5 ? dynamicImportLegacyBrowserSupport() : undefined,
             !isDebug ? shaderChunks() : undefined,
             isDebug ? engineLayerImportValidation(input) : undefined,
