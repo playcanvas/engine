@@ -307,7 +307,7 @@ class ShaderProcessor {
             // validate types in else
 
         });
-        const meshBindGroupFormat = new BindGroupFormat(device, bufferFormats, textureFormats);
+        const meshBindGroupFormat = new BindGroupFormat(device, [...bufferFormats, ...textureFormats]);
 
         // generate code for uniform buffers
         let code = '';

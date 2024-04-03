@@ -580,7 +580,6 @@ class ShadowRenderer {
             // format of the view bind group - contains single uniform buffer, and no textures
             this.viewBindGroupFormat = new BindGroupFormat(this.device, [
                 new BindBufferFormat(UNIFORM_BUFFER_DEFAULT_SLOT_NAME, SHADERSTAGE_VERTEX | SHADERSTAGE_FRAGMENT)
-            ], [
             ]);
         }
     }
