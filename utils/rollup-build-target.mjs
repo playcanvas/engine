@@ -156,6 +156,28 @@ function buildTarget({ buildType, moduleFormat, input = 'src/index.js', dir = 'b
 
     const targets = [];
 
+    // minify from release build
+    if (isMin && HISTORY.has(`release-${moduleFormat}-true`)) {
+        const release = HISTORY.get(`release-${moduleFormat}-true`);
+
+        /**
+         * @type {RollupOptions}
+         */
+        const target = {
+            input: release.output.file,
+            output: {
+                plugins: getOutPlugins(),
+                file: `${dir}/${OUT_PREFIX[buildType]}${isES5 ? '.js' : '.mjs'}`
+            },
+            context: isES5 ? "this" : undefined
+        };
+
+        HISTORY.set(`${buildType}-${moduleFormat}-${bundled}`, target);
+        targets.push(target);
+
+        return targets;
+    }
+
     /**
      * @type {RollupOptions}
      */
@@ -187,8 +209,8 @@ function buildTarget({ buildType, moduleFormat, input = 'src/index.js', dir = 'b
     HISTORY.set(`${buildType}-${moduleFormat}-${bundled}`, target);
     targets.push(target);
 
-    // check if unbundled target is in history
-    if (!skipBundled && HISTORY.has(`${buildType}-${moduleFormat}-false`)) {
+    // bundle es6 from unbundled es6 build
+    if (!skipBundled && !bundled && HISTORY.has(`${buildType}-${moduleFormat}-false`)) {
         const unbundled = HISTORY.get(`${buildType}-${moduleFormat}-false`);
 
         /**
@@ -207,10 +229,9 @@ function buildTarget({ buildType, moduleFormat, input = 'src/index.js', dir = 'b
             }
         };
 
-        HISTORY.set(`${buildType}-${moduleFormat}-${bundled}`, target);
+        HISTORY.set(`${buildType}-${moduleFormat}-true`, target);
         targets.push(target);
     }
-
 
     return targets;
 }
