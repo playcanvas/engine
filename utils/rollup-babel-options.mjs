@@ -1,13 +1,13 @@
 /** @typedef {import('@rollup/plugin-babel').RollupBabelInputPluginOptions} RollupBabelInputPluginOptions */
 
 /**
- * The ES6 options for babel(...) plugin.
+ * The options for babel(...) plugin.
  *
  * @param {boolean} isDebug - Whether the build is for debug.
- * @param {boolean} isES5 - Whether the build is for ES5.
+ * @param {boolean} isUMD - Whether the build is for UMD.
  * @returns {RollupBabelInputPluginOptions} The babel options.
  */
-function babelOptions(isDebug, isES5) {
+function babelOptions(isDebug, isUMD) {
     return {
         babelHelpers: 'bundled',
         babelrc: false,
@@ -17,12 +17,12 @@ function babelOptions(isDebug, isES5) {
         presets: [
             [
                 '@babel/preset-env', {
-                    bugfixes: !isES5,
+                    bugfixes: !isUMD,
                     loose: true,
                     modules: false,
                     targets: {
-                        esmodules: !isES5,
-                        browsers: isES5 ? [
+                        esmodules: !isUMD,
+                        browsers: isUMD ? [
                             'fully supports webgl',
                             '> 0.1%',
                             'not dead'

@@ -9,18 +9,18 @@ import { spacesToTabs } from './plugins/rollup-spaces-to-tabs.mjs';
 /** @typedef {import('rollup').RollupOptions} RollupOptions */
 
 /**
- * Build an ES6 target that rollup is supposed to build (bundled and unbundled).
+ * Build a target that rollup is supposed to build (bundled and unbundled).
  *
  * @param {object} options - The script target options.
  * @param {string} options.name - The name, like `pcx`.
- * @param {'es5'|'es6'} options.moduleFormat - The module format.
+ * @param {'umd'|'esm'} options.moduleFormat - The module format.
  * @param {string} options.input - The input file, like `extras/index.js`.
  * @param {string} options.output - The output file, like `build/playcanvas-extras.mjs`.
- * @param {boolean} [options.skipBundled] - Whether to skip the bundled target (ES6 only).
+ * @param {boolean} [options.skipBundled] - Whether to skip the bundled target (ESM only).
  * @returns {RollupOptions[]} Rollup targets.
  */
 function scriptTarget({ name, moduleFormat, input, output, skipBundled = false }) {
-    const isES5 = moduleFormat === 'es5';
+    const isUMD = moduleFormat === 'umd';
 
     const targets = [];
 
@@ -31,24 +31,24 @@ function scriptTarget({ name, moduleFormat, input, output, skipBundled = false }
         input,
         output: {
             banner: getBanner(''),
-            format: isES5 ? 'umd' : 'es',
+            format: isUMD ? 'umd' : 'es',
             indent: '\t',
             name: name,
-            preserveModules: !isES5,
-            globals: isES5 ? { playcanvas: 'pc' } : undefined,
-            file: isES5 ? output : undefined,
-            dir: !isES5 ? output : undefined
+            preserveModules: !isUMD,
+            globals: isUMD ? { playcanvas: 'pc' } : undefined,
+            file: isUMD ? output : undefined,
+            dir: !isUMD ? output : undefined
         },
         plugins: [
             resolve(),
-            babel(babelOptions(false, isES5)),
+            babel(babelOptions(false, isUMD)),
             spacesToTabs()
         ],
-        external: isES5 ? ['playcanvas'] : ['playcanvas', 'fflate']
+        external: isUMD ? ['playcanvas'] : ['playcanvas', 'fflate']
     };
     targets.push(target);
 
-    if (!skipBundled && !isES5) {
+    if (!skipBundled && !isUMD) {
         /**
          * @type {RollupOptions}
          */

@@ -193,7 +193,7 @@ function getEngineTargets() {
         // Outputs: dist/iframe/playcanvas-extras.mjs
         ...scriptTarget({
             name: 'pcx',
-            moduleFormat: 'es6',
+            moduleFormat: 'esm',
             input: '../extras/index.js',
             output: 'dist/iframe/playcanvas-extras',
             skipBundled: true
@@ -206,7 +206,7 @@ function getEngineTargets() {
         // Outputs: dist/iframe/playcanvas.mjs
         targets.push(...buildTarget({
             buildType: 'release',
-            moduleFormat: 'es6',
+            moduleFormat: 'esm',
             input: '../src/index.js',
             dir: 'dist/iframe',
             skipBundled: true
@@ -216,7 +216,7 @@ function getEngineTargets() {
         // Outputs: dist/iframe/playcanvas.dbg.mjs
         targets.push(...buildTarget({
             buildType: 'debug',
-            moduleFormat: 'es6',
+            moduleFormat: 'esm',
             input: '../src/index.js',
             dir: 'dist/iframe',
             skipBundled: true
@@ -226,7 +226,7 @@ function getEngineTargets() {
         // Outputs: dist/iframe/playcanvas.prf.mjs
         targets.push(...buildTarget({
             buildType: 'profiler',
-            moduleFormat: 'es6',
+            moduleFormat: 'esm',
             input: '../src/index.js',
             dir: 'dist/iframe',
             skipBundled: true

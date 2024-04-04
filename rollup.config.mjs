@@ -20,9 +20,9 @@ console.log(`Building PlayCanvas Engine v${version} revision ${revision}`);
 const BUILD_TYPES = ['release', 'debug', 'profiler', 'min'];
 
 /**
- * @type {['es5', 'es6']}
+ * @type {['umd', 'esm']}
  */
-const MODULE_FORMAT = ['es5', 'es6'];
+const MODULE_FORMAT = ['umd', 'esm'];
 
 /**
  * @type {RollupOptions[]}
@@ -30,13 +30,13 @@ const MODULE_FORMAT = ['es5', 'es6'];
 const EXTRAS_TARGETS = [
     ...scriptTarget({
         name: 'pcx',
-        moduleFormat: 'es5',
+        moduleFormat: 'umd',
         input: 'extras/index.js',
         output: 'build/playcanvas-extras.js'
     }),
     ...scriptTarget({
         name: 'pcx',
-        moduleFormat: 'es6',
+        moduleFormat: 'esm',
         input: 'extras/index.js',
         output: 'build/playcanvas-extras'
     })

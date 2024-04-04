@@ -22,10 +22,10 @@ Visit the url mentioned in your terminal to view the examples browser.
 You can also run the examples browser with a specific version of the engine by running the following command:
 
 ```
-ENGINE_PATH=../build/playcanvas.mjs/index.js npm run develop
+ENGINE_PATH=../build/playcanvas.mjs npm run develop
 ```
 
-Where `../build/playcanvas.mjs/index.js` is the path to the es6 version of the engine.
+Where `../build/playcanvas.mjs` is the path to the ESM version of the engine.
 
 Or directly from the source:
 

@@ -67,16 +67,16 @@ const HISTORY = new Map();
 
 /**
  * @param {'debug'|'release'|'profiler'} buildType - The build type.
- * @param {boolean} isES5 - Whether the build is for ES5.
+ * @param {boolean} isUMD - Whether the build is for UMD.
  * @returns {object} - The JSCC options.
  */
-function getJSCCOptions(buildType, isES5) {
+function getJSCCOptions(buildType, isUMD) {
     const options = {
         debug: {
             values: {
                 _CURRENT_SDK_VERSION: version,
                 _CURRENT_SDK_REVISION: revision,
-                _IS_UMD: +isES5,
+                _IS_UMD: +isUMD,
                 _DEBUG: 1,
                 _PROFILER: 1
             },
@@ -87,7 +87,7 @@ function getJSCCOptions(buildType, isES5) {
             values: {
                 _CURRENT_SDK_VERSION: version,
                 _CURRENT_SDK_REVISION: revision,
-                _IS_UMD: +isES5
+                _IS_UMD: +isUMD
             },
             asloader: true
         },
@@ -95,7 +95,7 @@ function getJSCCOptions(buildType, isES5) {
             values: {
                 _CURRENT_SDK_VERSION: version,
                 _CURRENT_SDK_REVISION: revision,
-                _IS_UMD: +isES5,
+                _IS_UMD: +isUMD,
                 _PROFILER: 1
             },
             asloader: true
@@ -142,17 +142,17 @@ function getOutPlugins() {
  *
  * @param {object} options - The build target options.
  * @param {'debug'|'release'|'profiler'|'min'} options.buildType - The build type.
- * @param {'es5'|'es6'} options.moduleFormat - The module format.
+ * @param {'umd'|'esm'} options.moduleFormat - The module format.
  * @param {string} [options.input] - Only used for Examples to change it to `../src/index.js`.
  * @param {string} [options.dir] - Only used for examples to change the output location.
- * @param {boolean} [options.skipBundled] - Whether to skip the bundled target (ES6 only).
+ * @param {boolean} [options.skipBundled] - Whether to skip the bundled target (ESM only).
  * @returns {RollupOptions[]} Rollup targets.
  */
 function buildTarget({ buildType, moduleFormat, input = 'src/index.js', dir = 'build', skipBundled = false }) {
     const isDebug = buildType === 'debug';
     const isMin = buildType === 'min';
-    const isES5 = moduleFormat === 'es5';
-    const bundled = isES5 || isMin;
+    const isUMD = moduleFormat === 'umd';
+    const bundled = isUMD || isMin;
 
     const targets = [];
 
@@ -167,9 +167,9 @@ function buildTarget({ buildType, moduleFormat, input = 'src/index.js', dir = 'b
             input: release.output.file,
             output: {
                 plugins: getOutPlugins(),
-                file: `${dir}/${OUT_PREFIX[buildType]}${isES5 ? '.js' : '.mjs'}`
+                file: `${dir}/${OUT_PREFIX[buildType]}${isUMD ? '.js' : '.mjs'}`
             },
-            context: isES5 ? "this" : undefined
+            context: isUMD ? "this" : undefined
         };
 
         HISTORY.set(`${buildType}-${moduleFormat}-${bundled}`, target);
@@ -186,22 +186,22 @@ function buildTarget({ buildType, moduleFormat, input = 'src/index.js', dir = 'b
         output: {
             banner: bundled ? getBanner(BANNER[buildType]) : undefined,
             plugins: isMin ? getOutPlugins() : undefined,
-            format: isES5 ? 'umd' : 'es',
+            format: isUMD ? 'umd' : 'es',
             indent: '\t',
             sourcemap: bundled && isDebug && 'inline',
             name: 'pc',
             preserveModules: !bundled,
-            file: bundled ? `${dir}/${OUT_PREFIX[buildType]}${isES5 ? '.js' : '.mjs'}` : undefined,
+            file: bundled ? `${dir}/${OUT_PREFIX[buildType]}${isUMD ? '.js' : '.mjs'}` : undefined,
             dir: !bundled ? `${dir}/${OUT_PREFIX[buildType]}` : undefined
         },
         plugins: [
-            jscc(getJSCCOptions(isMin ? 'release' : buildType, isES5)),
-            isES5 ? dynamicImportLegacyBrowserSupport() : undefined,
+            jscc(getJSCCOptions(isMin ? 'release' : buildType, isUMD)),
+            isUMD ? dynamicImportLegacyBrowserSupport() : undefined,
             !isDebug ? shaderChunks() : undefined,
             isDebug ? engineLayerImportValidation(input) : undefined,
             !isDebug ? strip({ functions: STRIP_FUNCTIONS }) : undefined,
-            babel(babelOptions(isDebug, isES5)),
-            !isES5 && !isDebug ? dynamicImportViteSupress() : undefined,
+            babel(babelOptions(isDebug, isUMD)),
+            !isUMD && !isDebug ? dynamicImportViteSupress() : undefined,
             !isDebug ? spacesToTabs() : undefined
         ]
     };
@@ -209,7 +209,7 @@ function buildTarget({ buildType, moduleFormat, input = 'src/index.js', dir = 'b
     HISTORY.set(`${buildType}-${moduleFormat}-${bundled}`, target);
     targets.push(target);
 
-    // bundle es6 from unbundled es6 build
+    // bundle ESM from unbundled ESM build
     if (!skipBundled && !bundled && HISTORY.has(`${buildType}-${moduleFormat}-false`)) {
         const unbundled = HISTORY.get(`${buildType}-${moduleFormat}-false`);
 
