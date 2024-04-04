@@ -82,14 +82,6 @@ if (envTarget === null && fs.existsSync('build')) {
     fs.rmSync('build', { recursive: true });
 }
 
-if (envTarget === null || envTarget === 'types') {
-    targets.push(...TYPES_TARGET);
-}
-
-if (envTarget === null || envTarget === 'extras') {
-    targets.push(...EXTRAS_TARGETS);
-}
-
 BUILD_TYPES.forEach((buildType) => {
     MODULE_FORMAT.forEach((moduleFormat) => {
         if (envTarget === null || envTarget === buildType || envTarget === moduleFormat || envTarget === `${buildType}_${moduleFormat}`) {
@@ -100,5 +92,13 @@ BUILD_TYPES.forEach((buildType) => {
         }
     });
 });
+
+if (envTarget === null || envTarget === 'extras') {
+    targets.push(...EXTRAS_TARGETS);
+}
+
+if (envTarget === null || envTarget === 'types') {
+    targets.push(...TYPES_TARGET);
+}
 
 export default targets;

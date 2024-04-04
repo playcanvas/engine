@@ -19,7 +19,7 @@ import { spacesToTabs } from './plugins/rollup-spaces-to-tabs.mjs';
  * @param {boolean} [options.skipBundled] - Whether to skip the bundled target (ES6 only).
  * @returns {RollupOptions[]} Rollup targets.
  */
-function scriptTarget({ name, moduleFormat, input, output, skipBundled = true }) {
+function scriptTarget({ name, moduleFormat, input, output, skipBundled = false }) {
     const isES5 = moduleFormat === 'es5';
 
     const targets = [];
@@ -53,7 +53,7 @@ function scriptTarget({ name, moduleFormat, input, output, skipBundled = true })
          * @type {RollupOptions}
          */
         const target = {
-            input: output,
+            input: `${output}/index.js`,
             output: {
                 banner: getBanner(''),
                 format: 'es',
