@@ -167,7 +167,7 @@ class CameraComponent extends Component {
         }) : null;
         this._camera.shaderPassInfo = shaderPassInfo;
 
-        return shaderPassInfo.index;
+        return shaderPassInfo?.index ?? null;
     }
 
     /**
