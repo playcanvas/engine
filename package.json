@@ -81,12 +81,7 @@
   "files": [
     "build/playcanvas*",
     "scripts",
-    "LICENSE",
-    "package.json",
-    "README.md",
-    "README-ja.md",
-    "README-kr.md",
-    "README-zh.md"
+    "README*.md"
   ],
   "dependencies": {
     "@types/webxr": "^0.5.14",
