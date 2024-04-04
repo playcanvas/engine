@@ -205,8 +205,8 @@ function getEngineTargets() {
     if (NODE_ENV === 'production') {
         // Outputs: dist/iframe/playcanvas.mjs
         targets.push(...buildTarget({
-            buildType: 'release',
             moduleFormat: 'esm',
+            buildType: 'release',
             input: '../src/index.js',
             dir: 'dist/iframe',
             skipBundled: true
@@ -215,8 +215,8 @@ function getEngineTargets() {
     if (NODE_ENV === 'production' || NODE_ENV === 'development') {
         // Outputs: dist/iframe/playcanvas.dbg.mjs
         targets.push(...buildTarget({
-            buildType: 'debug',
             moduleFormat: 'esm',
+            buildType: 'debug',
             input: '../src/index.js',
             dir: 'dist/iframe',
             skipBundled: true
@@ -225,8 +225,8 @@ function getEngineTargets() {
     if (NODE_ENV === 'production' || NODE_ENV === 'profiler') {
         // Outputs: dist/iframe/playcanvas.prf.mjs
         targets.push(...buildTarget({
-            buildType: 'profiler',
             moduleFormat: 'esm',
+            buildType: 'profiler',
             input: '../src/index.js',
             dir: 'dist/iframe',
             skipBundled: true

@@ -141,17 +141,17 @@ function getOutPlugins() {
  * Build a target that rollup is supposed to build (bundled and unbundled).
  *
  * @param {object} options - The build target options.
- * @param {'debug'|'release'|'profiler'|'min'} options.buildType - The build type.
  * @param {'umd'|'esm'} options.moduleFormat - The module format.
+ * @param {'debug'|'release'|'profiler'|'min'} options.buildType - The build type.
  * @param {string} [options.input] - Only used for Examples to change it to `../src/index.js`.
  * @param {string} [options.dir] - Only used for examples to change the output location.
  * @param {boolean} [options.skipBundled] - Whether to skip the bundled target (ESM only).
  * @returns {RollupOptions[]} Rollup targets.
  */
-function buildTarget({ buildType, moduleFormat, input = 'src/index.js', dir = 'build', skipBundled = false }) {
+function buildTarget({ moduleFormat, buildType, input = 'src/index.js', dir = 'build', skipBundled = false }) {
+    const isUMD = moduleFormat === 'umd';
     const isDebug = buildType === 'debug';
     const isMin = buildType === 'min';
-    const isUMD = moduleFormat === 'umd';
     const bundled = isUMD || isMin;
 
     const targets = [];
