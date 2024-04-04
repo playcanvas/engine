@@ -188,7 +188,7 @@ function buildTarget({ moduleFormat, buildType, input = 'src/index.js', dir = 'b
             plugins: isMin ? getOutPlugins() : undefined,
             format: isUMD ? 'umd' : 'es',
             indent: '\t',
-            sourcemap: bundled && isDebug && 'inline',
+            sourcemap: bundled && isDebug,
             name: 'pc',
             preserveModules: !bundled,
             file: bundled ? `${dir}/${OUT_PREFIX[buildType]}${isUMD ? '.js' : '.mjs'}` : undefined,
@@ -201,7 +201,7 @@ function buildTarget({ moduleFormat, buildType, input = 'src/index.js', dir = 'b
             isDebug ? engineLayerImportValidation(input) : undefined,
             !isDebug ? strip({ functions: STRIP_FUNCTIONS }) : undefined,
             babel(babelOptions(isDebug, isUMD)),
-            !isUMD && !isDebug ? dynamicImportViteSupress() : undefined,
+            !isUMD ? dynamicImportViteSupress() : undefined,
             !isDebug ? spacesToTabs() : undefined
         ]
     };
@@ -222,7 +222,7 @@ function buildTarget({ moduleFormat, buildType, input = 'src/index.js', dir = 'b
                 banner: getBanner(BANNER[buildType]),
                 format: 'es',
                 indent: '\t',
-                sourcemap: isDebug && 'inline',
+                sourcemap: isDebug,
                 name: 'pc',
                 preserveModules: false,
                 file: `${dir}/${OUT_PREFIX[buildType]}.mjs`

@@ -30,7 +30,7 @@ export function dynamicImportViteSupress() {
         name: 'dynamic-import-vite-suppress',
         transform(code, id) {
             return {
-                code: code.replace(/([^\w])import\(/g, '$1import(/* @vite-ignore */'),
+                code: code.replace(/import\(([^'])/g, 'import(/* @vite-ignore */$1'),
                 map: null
             };
         }
