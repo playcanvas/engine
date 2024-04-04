@@ -72,7 +72,7 @@ export * from './platform/audio/constants.js';
 // PLATFORM / GRAPHICS
 export * from './platform/graphics/constants.js';
 export { createGraphicsDevice } from './platform/graphics/graphics-device-create.js';
-export { BindGroupFormat, BindBufferFormat, BindTextureFormat, BindStorageTextureFormat, BindStorageBufferFormat } from './platform/graphics/bind-group-format.js';
+export { BindGroupFormat, BindUniformBufferFormat, BindTextureFormat, BindStorageTextureFormat, BindStorageBufferFormat } from './platform/graphics/bind-group-format.js';
 export { BlendState } from './platform/graphics/blend-state.js';
 export { Compute } from './platform/graphics/compute.js';
 export { DepthState } from './platform/graphics/depth-state.js';

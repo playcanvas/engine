@@ -71,18 +71,6 @@ class WebgpuBindGroupFormat {
     }
 
     /**
-     * Returns texture binding slot.
-     *
-     * @param {import('../bind-group-format.js').BindGroupFormat} bindGroupFormat - Bind group format.
-     * @param {number} index - The index of the texture.
-     * @returns {number} - The slot index.
-     */
-    getTextureSlot(bindGroupFormat, index) {
-        // each texture takes 2 slots (texture, sampler) and those are added after uniform buffers
-        return bindGroupFormat.bufferFormats.length + index * 2;
-    }
-
-    /**
      * @param {any} bindGroupFormat - The format of the bind group.
      * @returns {any} Returns the bind group descriptor.
      */
@@ -98,16 +86,15 @@ class WebgpuBindGroupFormat {
 
         // generate unique key
         let key = '';
-        let index = 0;
 
         // buffers
-        bindGroupFormat.bufferFormats.forEach((bufferFormat) => {
+        bindGroupFormat.uniformBufferFormats.forEach((bufferFormat) => {
 
             const visibility = WebgpuUtils.shaderStage(bufferFormat.visibility);
-            key += `#${index}U:${visibility}`;
+            key += `#${bufferFormat.slot}U:${visibility}`;
 
             entries.push({
-                binding: index++,
+                binding: bufferFormat.slot,
                 visibility: visibility,
 
                 buffer: {
@@ -137,11 +124,11 @@ class WebgpuBindGroupFormat {
             const gpuSampleType = sampleTypes[sampleType];
             Debug.assert(gpuSampleType);
 
-            key += `#${index}T:${visibility}-${gpuSampleType}-${viewDimension}-${multisampled}`;
+            key += `#${textureFormat.slot}T:${visibility}-${gpuSampleType}-${viewDimension}-${multisampled}`;
 
             // texture
             entries.push({
-                binding: index++,
+                binding: textureFormat.slot,
                 visibility: visibility,
                 texture: {
                     // Indicates the type required for texture views bound to this binding.
@@ -162,10 +149,10 @@ class WebgpuBindGroupFormat {
                 const gpuSamplerType = samplerTypes[sampleType];
                 Debug.assert(gpuSamplerType);
 
-                key += `#${index}S:${visibility}-${gpuSamplerType}`;
+                key += `#${textureFormat.slot + 1}S:${visibility}-${gpuSamplerType}`;
 
                 entries.push({
-                    binding: index++,
+                    binding: textureFormat.slot + 1,
                     visibility: visibility,
                     sampler: {
                         // Indicates the required type of a sampler bound to this bindings
@@ -180,11 +167,11 @@ class WebgpuBindGroupFormat {
         bindGroupFormat.storageTextureFormats.forEach((textureFormat) => {
 
             const { format, textureDimension } = textureFormat;
-            key += `#${index}ST:${format}-${textureDimension}`;
+            key += `#${textureFormat.slot}ST:${format}-${textureDimension}`;
 
             // storage texture
             entries.push({
-                binding: index++,
+                binding: textureFormat.slot,
                 visibility: GPUShaderStage.COMPUTE,
                 storageTexture: {
 
@@ -206,10 +193,10 @@ class WebgpuBindGroupFormat {
 
             const readOnly = false;
             const visibility = WebgpuUtils.shaderStage(bufferFormat.visibility);
-            key += `#${index}SB:${visibility}-${readOnly ? 'ro' : 'rw'}`;
+            key += `#${bufferFormat.slot}SB:${visibility}-${readOnly ? 'ro' : 'rw'}`;
 
             entries.push({
-                binding: index++,
+                binding: bufferFormat.slot,
                 visibility: visibility,
                 buffer: {
 
