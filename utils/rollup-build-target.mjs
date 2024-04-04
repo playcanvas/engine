@@ -80,7 +80,7 @@ function getJSCCOptions(buildType, isUMD) {
                 _DEBUG: 1,
                 _PROFILER: 1
             },
-            asloader: true,
+            asloader: false,
             keepLines: true
         },
         release: {
@@ -89,7 +89,7 @@ function getJSCCOptions(buildType, isUMD) {
                 _CURRENT_SDK_REVISION: revision,
                 _IS_UMD: +isUMD
             },
-            asloader: true
+            asloader: false
         },
         profiler: {
             values: {
@@ -98,7 +98,7 @@ function getJSCCOptions(buildType, isUMD) {
                 _IS_UMD: +isUMD,
                 _PROFILER: 1
             },
-            asloader: true
+            asloader: false
         }
     };
     return options[buildType];
