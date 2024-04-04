@@ -84,7 +84,7 @@ if (envTarget === null && fs.existsSync('build')) {
 
 BUILD_TYPES.forEach((buildType) => {
     MODULE_FORMAT.forEach((moduleFormat) => {
-        if (envTarget === null || envTarget === buildType || envTarget === moduleFormat || envTarget === `${buildType}_${moduleFormat}`) {
+        if (envTarget === null || envTarget === buildType || envTarget === moduleFormat || envTarget === `${buildType}:${moduleFormat}`) {
             targets.push(...buildTarget({
                 buildType,
                 moduleFormat
