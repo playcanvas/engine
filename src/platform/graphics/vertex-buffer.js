@@ -21,8 +21,11 @@ class VertexBuffer {
      * @param {number} numVertices - The number of vertices that this vertex buffer will hold.
      * @param {number} [usage] - The usage type of the vertex buffer (see BUFFER_*). Defaults to BUFFER_STATIC.
      * @param {ArrayBuffer} [initialData] - Initial data.
+     * @param {object} [options] - Object for passing optional arguments.
+     * @param {boolean} [options.storage] - Defines if the vertex buffer can be used as a storage
+     * buffer by a compute shader. Defaults to false. Only supported on WebGPU.
      */
-    constructor(graphicsDevice, format, numVertices, usage = BUFFER_STATIC, initialData) {
+    constructor(graphicsDevice, format, numVertices, usage = BUFFER_STATIC, initialData, options) {
         // By default, vertex buffers are static (better for performance since buffer data can be cached in VRAM)
         this.device = graphicsDevice;
         this.format = format;
@@ -31,7 +34,7 @@ class VertexBuffer {
 
         this.id = id++;
 
-        this.impl = graphicsDevice.createVertexBufferImpl(this, format);
+        this.impl = graphicsDevice.createVertexBufferImpl(this, format, options);
 
         // Calculate the size. If format contains verticesByteSize (non-interleaved format), use it
         this.numBytes = format.verticesByteSize ? format.verticesByteSize : format.size * numVertices;

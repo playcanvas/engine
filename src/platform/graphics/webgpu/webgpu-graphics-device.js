@@ -387,12 +387,12 @@ class WebgpuGraphicsDevice extends GraphicsDevice {
         return new WebgpuUniformBuffer(uniformBuffer);
     }
 
-    createVertexBufferImpl(vertexBuffer, format) {
-        return new WebgpuVertexBuffer(vertexBuffer, format);
+    createVertexBufferImpl(vertexBuffer, format, options) {
+        return new WebgpuVertexBuffer(vertexBuffer, format, options);
     }
 
-    createIndexBufferImpl(indexBuffer) {
-        return new WebgpuIndexBuffer(indexBuffer);
+    createIndexBufferImpl(indexBuffer, options) {
+        return new WebgpuIndexBuffer(indexBuffer, options);
     }
 
     createShaderImpl(shader) {

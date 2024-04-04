@@ -232,6 +232,10 @@ function calculateTangents(positions, normals, uvs, indices) {
  * @param {number[]} [opts.blendWeights] - An array of 4-dimensional bone weights where each
  * component is in the range 0 to 1 and the sum of the weights should equal 1.
  * @param {number[]} [opts.indices] - An array of triangle indices.
+ * @param {boolean} [opts.storageVertex] - Defines if the vertex buffer of the mesh can be used as
+ * a storage buffer by a compute shader. Defaults to false. Only supported on WebGPU.
+ * @param {boolean} [opts.storageIndex] - Defines if the index buffer of the mesh can be used as
+ * a storage buffer by a compute shader. Defaults to false. Only supported on WebGPU.
  * @returns {Mesh} A new Mesh constructed from the supplied vertex and triangle data.
  * @example
  * // Create a simple, indexed triangle (with texture coordinates and vertex normals)
@@ -244,7 +248,12 @@ function calculateTangents(positions, normals, uvs, indices) {
  */
 function createMesh(device, positions, opts) {
 
-    const mesh = new Mesh(device);
+    const meshOpts = (opts?.storageIndex || opts?.storageVertex) ? {
+        storageVertex: opts?.storageVertex,
+        storageIndex: opts?.storageIndex
+    } : undefined;
+
+    const mesh = new Mesh(device, meshOpts);
     mesh.setPositions(positions);
 
     if (opts) {
@@ -309,6 +318,10 @@ function createMesh(device, positions, opts) {
  * @param {number} [opts.sides] - The number of divisions around the tubular body of the torus ring
  * (defaults to 30).
  * @param {boolean} [opts.calculateTangents] - Generate tangent information (defaults to false).
+ * @param {boolean} [opts.storageVertex] - Defines if the vertex buffer of the mesh can be used as
+ * a storage buffer by a compute shader. Defaults to false. Only supported on WebGPU.
+ * @param {boolean} [opts.storageIndex] - Defines if the index buffer of the mesh can be used as
+ * a storage buffer by a compute shader. Defaults to false. Only supported on WebGPU.
  * @returns {Mesh} A new torus-shaped mesh.
  * @category Graphics
  */
@@ -360,7 +373,9 @@ function createTorus(device, opts = {}) {
         normals: normals,
         uvs: uvs,
         uvs1: uvs,
-        indices: indices
+        indices: indices,
+        storageVertex: opts.storageVertex,
+        storageIndex: opts.storageIndex
     };
 
     if (calcTangents) {
@@ -608,6 +623,10 @@ function _createConeData(baseRadius, peakRadius, height, heightSegments, capSegm
  * @param {number} [opts.capSegments] - The number of divisions around the tubular body of the
  * cylinder (defaults to 20).
  * @param {boolean} [opts.calculateTangents] - Generate tangent information (defaults to false).
+ * @param {boolean} [opts.storageVertex] - Defines if the vertex buffer of the mesh can be used as
+ * a storage buffer by a compute shader. Defaults to false. Only supported on WebGPU.
+ * @param {boolean} [opts.storageIndex] - Defines if the index buffer of the mesh can be used as
+ * a storage buffer by a compute shader. Defaults to false. Only supported on WebGPU.
  * @returns {Mesh} A new cylinder-shaped mesh.
  * @category Graphics
  */
@@ -625,6 +644,9 @@ function createCylinder(device, opts = {}) {
     if (calcTangents) {
         options.tangents = calculateTangents(options.positions, options.normals, options.uvs, options.indices);
     }
+
+    options.storageVertex = opts.storageVertex;
+    options.storageIndex = opts.storageIndex;
 
     return createMesh(device, options.positions, options);
 }
@@ -651,6 +673,10 @@ function createCylinder(device, opts = {}) {
  * @param {number} [opts.sides] - The number of divisions around the tubular body of the capsule
  * (defaults to 20).
  * @param {boolean} [opts.calculateTangents] - Generate tangent information (defaults to false).
+ * @param {boolean} [opts.storageVertex] - Defines if the vertex buffer of the mesh can be used as
+ * a storage buffer by a compute shader. Defaults to false. Only supported on WebGPU.
+ * @param {boolean} [opts.storageIndex] - Defines if the index buffer of the mesh can be used as
+ * a storage buffer by a compute shader. Defaults to false. Only supported on WebGPU.
  * @returns {Mesh} A new cylinder-shaped mesh.
  * @category Graphics
  */
@@ -668,6 +694,9 @@ function createCapsule(device, opts = {}) {
     if (calcTangents) {
         options.tangents = calculateTangents(options.positions, options.normals, options.uvs, options.indices);
     }
+
+    options.storageVertex = opts.storageVertex;
+    options.storageIndex = opts.storageIndex;
 
     return createMesh(device, options.positions, options);
 }
@@ -693,6 +722,10 @@ function createCapsule(device, opts = {}) {
  * @param {number} [opts.capSegments] - The number of divisions around the tubular body of the cone
  * (defaults to 18).
  * @param {boolean} [opts.calculateTangents] - Generate tangent information (defaults to false).
+ * @param {boolean} [opts.storageVertex] - Defines if the vertex buffer of the mesh can be used as
+ * a storage buffer by a compute shader. Defaults to false. Only supported on WebGPU.
+ * @param {boolean} [opts.storageIndex] - Defines if the index buffer of the mesh can be used as
+ * a storage buffer by a compute shader. Defaults to false. Only supported on WebGPU.
  * @returns {Mesh} A new cone-shaped mesh.
  * @category Graphics
  */
@@ -710,6 +743,9 @@ function createCone(device, opts = {}) {
     if (calcTangents) {
         options.tangents = calculateTangents(options.positions, options.normals, options.uvs, options.indices);
     }
+
+    options.storageVertex = opts.storageVertex;
+    options.storageIndex = opts.storageIndex;
 
     return createMesh(device, options.positions, options);
 }
@@ -733,6 +769,10 @@ function createCone(device, opts = {}) {
  * @param {number} [opts.longitudeBands] - The number of divisions along the longitudinal axis of
  * the sphere (defaults to 16).
  * @param {boolean} [opts.calculateTangents] - Generate tangent information (defaults to false).
+ * @param {boolean} [opts.storageVertex] - Defines if the vertex buffer of the mesh can be used as
+ * a storage buffer by a compute shader. Defaults to false. Only supported on WebGPU.
+ * @param {boolean} [opts.storageIndex] - Defines if the index buffer of the mesh can be used as
+ * a storage buffer by a compute shader. Defaults to false. Only supported on WebGPU.
  * @returns {Mesh} A new sphere-shaped mesh.
  * @category Graphics
  */
@@ -786,7 +826,9 @@ function createSphere(device, opts = {}) {
         normals: normals,
         uvs: uvs,
         uvs1: uvs, // UV1 = UV0 for sphere
-        indices: indices
+        indices: indices,
+        storageVertex: opts.storageVertex,
+        storageIndex: opts.storageIndex
     };
 
     if (calcTangents) {
@@ -817,6 +859,10 @@ function createSphere(device, opts = {}) {
  * @param {number} [opts.lengthSegments] - The number of divisions along the Z axis of the plane
  * (defaults to 5).
  * @param {boolean} [opts.calculateTangents] - Generate tangent information (defaults to false).
+ * @param {boolean} [opts.storageVertex] - Defines if the vertex buffer of the mesh can be used as
+ * a storage buffer by a compute shader. Defaults to false. Only supported on WebGPU.
+ * @param {boolean} [opts.storageIndex] - Defines if the index buffer of the mesh can be used as
+ * a storage buffer by a compute shader. Defaults to false. Only supported on WebGPU.
  * @returns {Mesh} A new plane-shaped mesh.
  * @category Graphics
  */
@@ -872,6 +918,9 @@ function createPlane(device, opts = {}) {
         indices: indices
     };
 
+    options.storageVertex = opts.storageVertex;
+    options.storageIndex = opts.storageIndex;
+
     if (calcTangents) {
         options.tangents = calculateTangents(positions, normals, uvs, indices);
     }
@@ -903,6 +952,10 @@ function createPlane(device, opts = {}) {
  * @param {boolean} [opts.calculateTangents] - Generate tangent information (defaults to false).
  * @param {number} [opts.yOffset] - Move the box vertically by given offset in local space. Pass
  * 0.5 to generate the box with pivot point at the bottom face. Defaults to 0.
+ * @param {boolean} [opts.storageVertex] - Defines if the vertex buffer of the mesh can be used as
+ * a storage buffer by a compute shader. Defaults to false. Only supported on WebGPU.
+ * @param {boolean} [opts.storageIndex] - Defines if the index buffer of the mesh can be used as
+ * a storage buffer by a compute shader. Defaults to false. Only supported on WebGPU.
  * @returns {Mesh} A new box-shaped mesh.
  * @category Graphics
  */
@@ -1020,6 +1073,9 @@ function createBox(device, opts = {}) {
     if (calcTangents) {
         options.tangents = calculateTangents(positions, normals, uvs, indices);
     }
+
+    options.storageVertex = opts.storageVertex;
+    options.storageIndex = opts.storageIndex;
 
     return createMesh(device, positions, options);
 }

@@ -179,16 +179,40 @@ class Mesh extends RefCountedObject {
     _aabb = new BoundingBox();
 
     /**
+     * True if the created vertex buffer should be accessible as a storage buffer in compute shader.
+     *
+     * @type {boolean}
+     * @private
+     */
+    _storageVertex = false;
+
+    /**
+     * True if the created index buffer should be accessible as a storage buffer in compute shader.
+     *
+     * @type {boolean}
+     * @private
+     */
+    _storageIndex = false;
+
+    /**
      * Create a new Mesh instance.
      *
      * @param {import('../platform/graphics/graphics-device.js').GraphicsDevice} graphicsDevice -
      * The graphics device used to manage this mesh.
+     * @param {object} [options] - Object for passing optional arguments.
+     * @param {boolean} [options.storageVertex] - Defines if the vertex buffer can be used as
+     * a storage buffer by a compute shader. Defaults to false. Only supported on WebGPU.
+     * @param {boolean} [options.storageIndex] - Defines if the index buffer can be used as
+     * a storage buffer by a compute shader. Defaults to false. Only supported on WebGPU.
      */
-    constructor(graphicsDevice) {
+    constructor(graphicsDevice, options) {
         super();
         this.id = id++;
         Debug.assert(graphicsDevice, "Mesh constructor takes a GraphicsDevice as a parameter, and it was not provided.");
         this.device = graphicsDevice;
+
+        this._storageIndex = options?.storageIndex || false;
+        this._storageVertex = options?.storageVertex || false;
 
         /**
          * The vertex buffer holding the vertex data of the mesh.
@@ -886,7 +910,8 @@ class Mesh extends RefCountedObject {
         if (!this.vertexBuffer) {
             const allocateVertexCount = this._geometryData.maxVertices;
             const format = this._buildVertexFormat(allocateVertexCount);
-            this.vertexBuffer = new VertexBuffer(this.device, format, allocateVertexCount, this._geometryData.verticesUsage);
+            const options = this._storageVertex ? { storage: true } : undefined;
+            this.vertexBuffer = new VertexBuffer(this.device, format, allocateVertexCount, this._geometryData.verticesUsage, undefined, options);
         }
 
         // lock vertex buffer and create typed access arrays for individual elements
@@ -911,7 +936,8 @@ class Mesh extends RefCountedObject {
         // if we don't have index buffer, create new one, otherwise update existing one
         if (this.indexBuffer.length <= 0 || !this.indexBuffer[0]) {
             const createFormat = this._geometryData.maxVertices > 0xffff ? INDEXFORMAT_UINT32 : INDEXFORMAT_UINT16;
-            this.indexBuffer[0] = new IndexBuffer(this.device, createFormat, this._geometryData.maxIndices, this._geometryData.indicesUsage);
+            const options = this._storageIndex ? { storage: true } : undefined;
+            this.indexBuffer[0] = new IndexBuffer(this.device, createFormat, this._geometryData.maxIndices, this._geometryData.indicesUsage, undefined, options);
         }
 
         const srcIndices = this._geometryData.indices;

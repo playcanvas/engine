@@ -74,7 +74,7 @@ class Compute {
      * Sets a shader parameter on a compute instance.
      *
      * @param {string} name - The name of the parameter to set.
-     * @param {number|number[]|Float32Array|import('./texture.js').Texture|import('./storage-buffer.js').StorageBuffer} value
+     * @param {number|number[]|Float32Array|import('./texture.js').Texture|import('./storage-buffer.js').StorageBuffer|import('./vertex-buffer.js').VertexBuffer|import('./index-buffer.js').IndexBuffer} value
      * - The value for the specified parameter.
      */
     setParameter(name, value) {
@@ -91,7 +91,7 @@ class Compute {
      * Returns the value of a shader parameter from the compute instance.
      *
      * @param {string} name - The name of the parameter to get.
-     * @returns {number|number[]|Float32Array|import('./texture.js').Texture|import('./storage-buffer.js').StorageBuffer|undefined}
+     * @returns {number|number[]|Float32Array|import('./texture.js').Texture|import('./storage-buffer.js').StorageBuffer|import('./vertex-buffer.js').VertexBuffer|import('./index-buffer.js').IndexBuffer|undefined}
      * The value of the specified parameter.
      */
     getParameter(name) {
