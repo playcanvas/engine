@@ -154,7 +154,7 @@
     "build:es6": "rollup -c --environment target:es6",
     "build:es6_release": "rollup -c --environment target:release_es6",
     "build:es6_debug": "rollup -c --environment target:debug_es6",
-    "build:es6_profiler": "rollup -c --environment target:debug_es6",
+    "build:es6_profiler": "rollup -c --environment target:profiler_es6",
     "build:profiler": "rollup -c --environment target:profiler",
     "build:treemap": "npm run build:es5 -- --environment treemap",
     "build:treenet": "npm run build:es5 -- --environment treenet",
