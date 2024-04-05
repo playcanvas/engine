@@ -925,6 +925,7 @@ class Renderer {
         // #if _PROFILER
         const cullTime = now();
         // #endif
+        // magnopus patched
         let cleanupNeeded = false;
         const opaque = culledInstances.opaque;
         opaque.length = 0;
@@ -937,6 +938,7 @@ class Renderer {
         for (let i = 0; i < count; i++) {
             const drawCall = drawCalls[i];
             // if mesh is null, we need to cleanup the layer
+            // magnopus patched
             cleanupNeeded = cleanupNeeded || !drawCall.mesh;
             if (drawCall.visible) {
                 const visible = !doCull || !drawCall.cull || drawCall._isVisible(camera);
@@ -963,6 +965,7 @@ class Renderer {
         this._cullTime += now() - cullTime;
         this._numDrawCallsCulled += doCull ? count : 0;
         // #endif
+        // magnopus patched
         return cleanupNeeded;
     }
 
@@ -1193,6 +1196,7 @@ class Renderer {
                     layer.onPreCull?.(comp.camerasMap.get(camera));
 
                     const culledInstances = layer.getCulledInstances(camera.camera);
+                    // magnopus patched
                     const cleanupNeeded = this.cull(camera.camera, layer.meshInstances, culledInstances);
                     // ensure layers do not reference deleted meshes
                     if (cleanupNeeded) {
