@@ -925,7 +925,7 @@ class Renderer {
         // #if _PROFILER
         const cullTime = now();
         // #endif
-
+        let cleanupNeeded = false;
         const opaque = culledInstances.opaque;
         opaque.length = 0;
         const transparent = culledInstances.transparent;
@@ -936,8 +936,9 @@ class Renderer {
 
         for (let i = 0; i < count; i++) {
             const drawCall = drawCalls[i];
+            // if mesh is null, we need to cleanup the layer
+            cleanupNeeded = cleanupNeeded || !drawCall.mesh;
             if (drawCall.visible) {
-                
                 const visible = !doCull || !drawCall.cull || drawCall._isVisible(camera);
                 if (visible) {
                     drawCall.visibleThisFrame = true;
@@ -962,6 +963,7 @@ class Renderer {
         this._cullTime += now() - cullTime;
         this._numDrawCallsCulled += doCull ? count : 0;
         // #endif
+        return cleanupNeeded;
     }
 
     collectLights(comp) {
@@ -1191,7 +1193,11 @@ class Renderer {
                     layer.onPreCull?.(comp.camerasMap.get(camera));
 
                     const culledInstances = layer.getCulledInstances(camera.camera);
-                    this.cull(camera.camera, layer.meshInstances, culledInstances);
+                    const cleanupNeeded = this.cull(camera.camera, layer.meshInstances, culledInstances);
+                    // ensure layers do not reference deleted meshes
+                    if (cleanupNeeded) {
+                      layer.meshInstances = layer.meshInstances.filter(meshInstance => meshInstance.mesh);
+                    }
 
                     layer.onPostCull?.(comp.camerasMap.get(camera));
                 }
