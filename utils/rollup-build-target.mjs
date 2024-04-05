@@ -143,7 +143,7 @@ function getOutPlugins() {
  * @param {object} options - The build target options.
  * @param {'umd'|'esm'} options.moduleFormat - The module format.
  * @param {'debug'|'release'|'profiler'|'min'} options.buildType - The build type.
- * @param {string} [options.input] - Only used for Examples to change it to `../src/index.js`.
+ * @param {string} [options.input] - Only used for examples to change it to `../src/index.js`.
  * @param {string} [options.dir] - Only used for examples to change the output location.
  * @param {boolean} [options.skipBundled] - Whether to skip the bundled target (ESM only).
  * @returns {RollupOptions[]} Rollup targets.
