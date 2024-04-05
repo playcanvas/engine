@@ -1,22 +1,12 @@
-import fs from 'fs';
+import * as fs from 'node:fs';
 
-// Generate TS declarations for getter/setter pairs
-const getDeclarations = (properties) => {
-    let declarations = '';
+const GREEN_OUT = '\x1b[32m';
+const BOLD_OUT = `\x1b[1m`;
+const REGULAR_OUT = `\x1b[22m`;
 
-    properties.forEach((prop) => {
-        declarations += `
-    set ${prop[0]}(arg: ${prop[1]});
-    get ${prop[0]}(): ${prop[1]};
-`;
-    });
+const TYPES_PATH = './build/playcanvas';
 
-    return declarations;
-};
-
-let path, dts;
-
-const standardMaterialProps = [
+const STANDARD_MAT_PROPS = [
     ['alphaFade', 'boolean'],
     ['ambient', 'Color'],
     ['ambientTint', 'boolean'],
@@ -202,21 +192,27 @@ const standardMaterialProps = [
     ['useSkybox', 'boolean']
 ];
 
-path = './types/scene/materials/standard-material.d.ts';
-dts = fs.readFileSync(path, 'utf8');
-dts = dts.replace('reset(): void;', 'reset(): void;\n' + getDeclarations(standardMaterialProps));
-// We need to import types that are newly introduced in the property list above
-dts += `
+const REPLACEMENTS = [{
+    path: `${TYPES_PATH}/scene/materials/standard-material.d.ts`,
+    replacement: {
+        from: 'reset(): void;',
+        to: `reset(): void;
+${STANDARD_MAT_PROPS.map(prop => `
+    set ${prop[0]}(arg: ${prop[1]});
+    get ${prop[0]}(): ${prop[1]};
+`).join('')}`,
+        footer: `
 import { Color } from '../../core/math/color.js';
 import { Vec2 } from '../../core/math/vec2.js';
 import { BoundingBox } from '../../core/shape/bounding-box.js';
 import { Texture } from '../../platform/graphics/texture.js';
-`;
-fs.writeFileSync(path, dts);
-
-path = './types/framework/script/script-type.d.ts';
-dts = fs.readFileSync(path, 'utf8');
-dts = dts.replace('get enabled(): boolean;', `get enabled(): boolean;
+`
+    }
+}, {
+    path: `${TYPES_PATH}/framework/script/script-type.d.ts`,
+    replacement: {
+        from: 'get enabled(): boolean;',
+        to: `get enabled(): boolean;
     /**
      * Called when script is about to run for the first time.
      */
@@ -242,5 +238,22 @@ dts = dts.replace('get enabled(): boolean;', `get enabled(): boolean;
      * @param old - Old instance of the scriptType to copy data to the new instance.
      */
     swap?(old: ScriptType): void;
-`);
-fs.writeFileSync(path, dts);
+`
+    }
+}];
+
+export function typesFixup() {
+    return {
+        name: 'types-fixup',
+        buildStart() {
+            REPLACEMENTS.forEach((item) => {
+                const { from, to, footer } = item.replacement;
+                let contents = fs.readFileSync(item.path, 'utf-8');
+                contents = contents.replace(from, to);
+                contents += footer ?? '';
+                fs.writeFileSync(item.path, contents, 'utf-8');
+                console.log(`${GREEN_OUT}type fixed ${BOLD_OUT}${item.path}${REGULAR_OUT}`);
+            });
+        }
+    };
+}

@@ -20,15 +20,14 @@ const DEFAULT_SHADERS = Object.freeze(['**/*.js']);
  */
 export function shaderChunks({
     include = DEFAULT_SHADERS,
-    exclude = undefined,
-    enabled = true
+    exclude = undefined
 } = {}) {
     const filter = createFilter(include, exclude);
 
     return {
         name: 'shaderChunks',
         transform(source, shader) {
-            if (!enabled || !filter(shader)) return;
+            if (!filter(shader)) return;
 
             source = source.replace(/\/\* *glsl *\*\/\s*(`.*?`)/gs, function (match, glsl) {
                 return glsl

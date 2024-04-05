@@ -13,7 +13,7 @@ import terser from '@rollup/plugin-terser';
 
 // engine rollup utils
 import { buildTarget } from '../utils/rollup-build-target.mjs';
-import { scriptTargetEs6 } from '../utils/rollup-script-target-es6.mjs';
+import { scriptTarget } from '../utils/rollup-script-target.mjs';
 
 // util functions
 import { isModuleWithExternalDependencies } from './utils.mjs';
@@ -191,22 +191,46 @@ function buildAndWatchStandaloneExamples() {
 function getEngineTargets() {
     const targets = [
         // Outputs: dist/iframe/playcanvas-extras.mjs
-        scriptTargetEs6('pcx', '../extras/index.js', 'dist/iframe/playcanvas-extras.mjs')
+        ...scriptTarget({
+            name: 'pcx',
+            moduleFormat: 'esm',
+            input: '../extras/index.js',
+            output: 'dist/iframe/playcanvas-extras',
+            skipBundled: true
+        })
     ];
     if (ENGINE_PATH) {
         return targets;
     }
     if (NODE_ENV === 'production') {
         // Outputs: dist/iframe/playcanvas.mjs
-        targets.push(buildTarget('release', 'es6', '../src/index.js', 'dist/iframe'));
+        targets.push(...buildTarget({
+            moduleFormat: 'esm',
+            buildType: 'release',
+            input: '../src/index.js',
+            dir: 'dist/iframe',
+            skipBundled: true
+        }));
     }
     if (NODE_ENV === 'production' || NODE_ENV === 'development') {
         // Outputs: dist/iframe/playcanvas.dbg.mjs
-        targets.push(buildTarget('debug', 'es6', '../src/index.js', 'dist/iframe'));
+        targets.push(...buildTarget({
+            moduleFormat: 'esm',
+            buildType: 'debug',
+            input: '../src/index.js',
+            dir: 'dist/iframe',
+            skipBundled: true
+        }));
     }
     if (NODE_ENV === 'production' || NODE_ENV === 'profiler') {
         // Outputs: dist/iframe/playcanvas.prf.mjs
-        targets.push(buildTarget('profiler', 'es6', '../src/index.js', 'dist/iframe'));
+        targets.push(...buildTarget({
+            moduleFormat: 'esm',
+            buildType: 'profiler',
+            input: '../src/index.js',
+            dir: 'dist/iframe',
+            skipBundled: true
+        }));
     }
     return targets;
 }
