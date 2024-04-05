@@ -191,7 +191,7 @@ class WebgpuBindGroupFormat {
         // storage buffers
         bindGroupFormat.storageBufferFormats.forEach((bufferFormat) => {
 
-            const readOnly = false;
+            const readOnly = bufferFormat.readOnly;
             const visibility = WebgpuUtils.shaderStage(bufferFormat.visibility);
             key += `#${bufferFormat.slot}SB:${visibility}-${readOnly ? 'ro' : 'rw'}`;
 

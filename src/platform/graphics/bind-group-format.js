@@ -44,6 +44,12 @@ class BindUniformBufferFormat extends BindBaseFormat {
  * @ignore
  */
 class BindStorageBufferFormat extends BindBaseFormat {
+    constructor(name, visibility, readOnly = false) {
+        super(name, visibility);
+
+        // whether the buffer is read-only
+        this.readOnly = readOnly;
+    }
 }
 
 /**
