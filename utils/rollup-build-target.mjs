@@ -138,7 +138,7 @@ function getOutPlugins() {
 }
 
 /**
- * Build a target that rollup is supposed to build (bundled and unbundled).
+ * Build a target that Rollup is supposed to build (bundled and unbundled).
  *
  * @param {object} options - The build target options.
  * @param {'umd'|'esm'} options.moduleFormat - The module format.
