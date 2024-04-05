@@ -9,7 +9,7 @@ import { spacesToTabs } from './plugins/rollup-spaces-to-tabs.mjs';
 /** @typedef {import('rollup').RollupOptions} RollupOptions */
 
 /**
- * Build a target that rollup is supposed to build (bundled and unbundled).
+ * Build a target that Rollup is supposed to build (bundled and unbundled).
  *
  * @param {object} options - The script target options.
  * @param {string} options.name - The name, like `pcx`.
