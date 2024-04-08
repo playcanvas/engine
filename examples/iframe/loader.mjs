@@ -132,7 +132,7 @@ class ExampleLoader {
     }
 
     /**
-     * @param {*} enabled - The enabled state of ministats
+     * @param {boolean} enabled - The enabled state of ministats
      */
     setMiniStats(enabled = false) {
         MiniStats.enable(this._app, enabled);
