@@ -1,5 +1,4 @@
 import * as pc from 'playcanvas';
-import * as pcx from 'playcanvas-extras';
 import { data } from '@examples/observer';
 import { deviceType, rootPath } from '@examples/utils';
 
@@ -143,7 +142,7 @@ assetListLoader.load(() => {
 
         // Use a render pass camera frame, which is a render pass that implements typical rendering of a camera.
         // Internally this sets up additional passes it needs, based on the options passed to it.
-        const renderPassCamera = new pcx.RenderPassCameraFrame(app, currentOptions);
+        const renderPassCamera = new pc.RenderPassCameraFrame(app, currentOptions);
 
         const composePass = renderPassCamera.composePass;
         composePass.toneMapping = data.get('data.scene.tonemapping');

@@ -58,7 +58,6 @@
     "fs-extra": "^10.1.0",
     "monaco-editor": "^0.33.0",
     "playcanvas": "file:..",
-    "playcanvas-extras": "file:../extras",
     "prop-types": "^15.7.2",
     "puppeteer": "^20.9.0",
     "react": "^18.2.0",

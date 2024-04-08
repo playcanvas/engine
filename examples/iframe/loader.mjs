@@ -70,16 +70,13 @@ class ExampleLoader {
     }
 
     /**
-     * @param {{ engineUrl: string, extrasUrl: string, exampleUrl: string, controlsUrl: string }} options - Options to start the loader
+     * @param {{ engineUrl: string, exampleUrl: string, controlsUrl: string }} options - Options to start the loader
      */
-    async start({ engineUrl, extrasUrl, exampleUrl, controlsUrl }) {
+    async start({ engineUrl, exampleUrl, controlsUrl }) {
         window.pc = await import(engineUrl);
-        window.pcx = await import(extrasUrl);
 
         // @ts-ignore
         window.top.pc = window.pc;
-        // @ts-ignore
-        window.top.pcx = window.pcx;
 
         files['example.mjs'] = await fetchFile(exampleUrl);
         files['controls.mjs'] = await fetchFile(controlsUrl);

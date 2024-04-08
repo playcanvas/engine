@@ -4,7 +4,7 @@ import { getQueryParams } from '@examples/utils';
 const params = getQueryParams(window.top?.location.href ?? '');
 
 export default class MiniStats {
-    /** @type {import('playcanvas-extras').MiniStats | null} */
+    /** @type {import('playcanvas').MiniStats | null} */
     static instance = null;
 
     /**
@@ -18,7 +18,7 @@ export default class MiniStats {
         if (params.miniStats === 'false') {
             return;
         }
-        if (typeof pc === 'undefined' || typeof pcx === 'undefined') {
+        if (typeof window.pc === 'undefined') {
             return;
         }
         if (!app) {
@@ -30,7 +30,7 @@ export default class MiniStats {
         }
         if (state) {
             if (!MiniStats.instance) {
-                MiniStats.instance = new pcx.MiniStats(app);
+                MiniStats.instance = new window.pc.MiniStats(app);
             }
         }
         if (!MiniStats.instance) {
