@@ -1,4 +1,4 @@
-import { now } from 'playcanvas';
+import { now } from '../../core/time.js';
 
 class CpuTimer {
     constructor(app) {

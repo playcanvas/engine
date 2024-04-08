@@ -1,10 +1,11 @@
 import {
-    FILTER_LINEAR, ADDRESS_CLAMP_TO_EDGE,
-    shaderChunks,
-    RenderPassShaderQuad,
-    Texture,
-    RenderTarget
-} from "playcanvas";
+    FILTER_LINEAR,
+    ADDRESS_CLAMP_TO_EDGE
+} from '../../platform/graphics/constants.js';
+import { Texture } from '../../platform/graphics/texture.js';
+import { shaderChunks } from '../../scene/shader-lib/chunks/chunks.js';
+import { RenderPassShaderQuad } from '../../scene/graphics/render-pass-shader-quad.js';
+import { RenderTarget } from '../../platform/graphics/render-target.js';
 
 const fs = /* glsl */ `
     uniform highp sampler2D uSceneDepthMap;
@@ -132,7 +133,7 @@ class RenderPassTAA extends RenderPassShaderQuad {
         this.sourceTexture = sourceTexture;
         this.cameraComponent = cameraComponent;
 
-        const defines = `
+        const defines = /* glsl */`
             #define QUALITY_HIGH
         `;
         const fsChunks = shaderChunks.sampleCatmullRomPS;

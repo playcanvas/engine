@@ -1,11 +1,9 @@
-import {
-    PROJECTION_PERSPECTIVE,
-    math,
-    Color,
-    Quat,
-    Mat4,
-    Vec3
-} from 'playcanvas';
+import { math } from '../../core/math/math.js';
+import { Color } from '../../core/math/color.js';
+import { Quat } from '../../core/math/quat.js';
+import { Mat4 } from '../../core/math/mat4.js';
+import { Vec3 } from '../../core/math/vec3.js';
+import { PROJECTION_PERSPECTIVE } from '../../scene/constants.js';
 
 import { AxisDisk } from './axis-shapes.js';
 import { GIZMO_LOCAL } from './gizmo.js';
@@ -64,7 +62,7 @@ class RotateGizmo extends TransformGizmo {
     /**
      * Internal mapping from each attached node to their starting rotation in local space.
      *
-     * @type {Map<import('playcanvas').GraphNode, Quat>}
+     * @type {Map<import('../../scene/graph-node.js').GraphNode, Quat>}
      * @private
      */
     _nodeLocalRotations = new Map();
@@ -72,7 +70,7 @@ class RotateGizmo extends TransformGizmo {
     /**
      * Internal mapping from each attached node to their starting rotation in world space.
      *
-     * @type {Map<import('playcanvas').GraphNode, Quat>}
+     * @type {Map<import('../../scene/graph-node.js').GraphNode, Quat>}
      * @private
      */
     _nodeRotations = new Map();
@@ -80,7 +78,7 @@ class RotateGizmo extends TransformGizmo {
     /**
      * Internal mapping from each attached node to their offset position from the gizmo.
      *
-     * @type {Map<import('playcanvas').GraphNode, Vec3>}
+     * @type {Map<import('../../scene/graph-node.js').GraphNode, Vec3>}
      * @private
      */
     _nodeOffsets = new Map();
@@ -117,9 +115,10 @@ class RotateGizmo extends TransformGizmo {
     /**
      * Creates a new RotateGizmo object.
      *
-     * @param {import('playcanvas').AppBase} app - The application instance.
-     * @param {import('playcanvas').CameraComponent} camera - The camera component.
-     * @param {import('playcanvas').Layer} layer - The render layer.
+     * @param {import('../../framework/app-base.js').AppBase} app - The application instance.
+     * @param {import('../../framework/components/camera/component.js').CameraComponent} camera -
+     * The camera component.
+     * @param {import('../../scene/layer.js').Layer} layer - The render layer.
      * @example
      * const gizmo = new pcx.RotateGizmo(app, camera, layer);
      */

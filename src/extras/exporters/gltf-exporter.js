@@ -1,29 +1,28 @@
 import { CoreExporter } from './core-exporter.js';
+
 import {
-    ADDRESS_CLAMP_TO_EDGE, ADDRESS_MIRRORED_REPEAT, ADDRESS_REPEAT,
-    BLEND_NONE, BLEND_NORMAL,
     CULLFACE_NONE,
-    FILTER_NEAREST, FILTER_LINEAR, FILTER_NEAREST_MIPMAP_NEAREST, FILTER_LINEAR_MIPMAP_NEAREST,
-    FILTER_NEAREST_MIPMAP_LINEAR, FILTER_LINEAR_MIPMAP_LINEAR,
     INDEXFORMAT_UINT8, INDEXFORMAT_UINT16, INDEXFORMAT_UINT32,
-    PROJECTION_ORTHOGRAPHIC,
+    ADDRESS_CLAMP_TO_EDGE, ADDRESS_MIRRORED_REPEAT, ADDRESS_REPEAT,
+    FILTER_LINEAR, FILTER_NEAREST, FILTER_LINEAR_MIPMAP_LINEAR, FILTER_LINEAR_MIPMAP_NEAREST, FILTER_NEAREST_MIPMAP_LINEAR, FILTER_NEAREST_MIPMAP_NEAREST,
     SEMANTIC_POSITION, SEMANTIC_NORMAL, SEMANTIC_TANGENT, SEMANTIC_COLOR,
     SEMANTIC_BLENDINDICES, SEMANTIC_BLENDWEIGHT, SEMANTIC_TEXCOORD0,
     SEMANTIC_TEXCOORD1, SEMANTIC_TEXCOORD2, SEMANTIC_TEXCOORD3, SEMANTIC_TEXCOORD4,
     SEMANTIC_TEXCOORD5, SEMANTIC_TEXCOORD6, SEMANTIC_TEXCOORD7, TYPE_INT8,
     TYPE_UINT8, TYPE_INT16, TYPE_UINT16,
-    TYPE_INT32, TYPE_UINT32, TYPE_FLOAT32,
-    math,
-    BoundingBox,
-    Color,
-    Quat,
-    Vec2,
-    Vec3,
-    IndexBuffer,
-    VertexBuffer,
-    StandardMaterial,
-    BasicMaterial
-} from 'playcanvas';
+    TYPE_INT32, TYPE_UINT32, TYPE_FLOAT32
+} from '../../platform/graphics/constants.js';
+import { math } from '../../core/math/math.js';
+import { Vec2 } from '../../core/math/vec2.js';
+import { Vec3 } from '../../core/math/vec3.js';
+import { Quat } from '../../core/math/quat.js';
+import { Color } from '../../core/math/color.js';
+import { BoundingBox } from '../../core/shape/bounding-box.js';
+import { IndexBuffer } from '../../platform/graphics/index-buffer.js';
+import { VertexBuffer } from '../../platform/graphics/vertex-buffer.js';
+import { StandardMaterial } from '../../scene/materials/standard-material.js';
+import { BasicMaterial } from '../../scene/materials/basic-material.js';
+import { BLEND_NONE, BLEND_NORMAL, PROJECTION_ORTHOGRAPHIC } from '../../scene/constants.js';
 
 const ARRAY_BUFFER = 34962;
 const ELEMENT_ARRAY_BUFFER = 34963;
@@ -77,6 +76,7 @@ const getSemantic = (engineSemantic) => {
         case SEMANTIC_TEXCOORD6: return 'TEXCOORD_6';
         case SEMANTIC_TEXCOORD7: return 'TEXCOORD_7';
     }
+    return '';
 };
 
 const getFilter = function (filter) {
@@ -88,6 +88,7 @@ const getFilter = function (filter) {
         case FILTER_NEAREST_MIPMAP_LINEAR: return 9986;
         case FILTER_LINEAR_MIPMAP_LINEAR: return 9987;
     }
+    return 0;
 };
 
 const getWrap = function (wrap) {
@@ -96,6 +97,7 @@ const getWrap = function (wrap) {
         case ADDRESS_MIRRORED_REPEAT: return 33648;
         case ADDRESS_REPEAT: return 10497;
     }
+    return 0;
 };
 
 function isCanvasTransparent(canvas) {

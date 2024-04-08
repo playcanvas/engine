@@ -1,11 +1,8 @@
-import {
-    math,
-    PROJECTION_PERSPECTIVE,
-    PROJECTION_ORTHOGRAPHIC,
-    Color,
-    Vec3,
-    Quat
-} from 'playcanvas';
+import { math } from '../../core/math/math.js';
+import { Color } from '../../core/math/color.js';
+import { Quat } from '../../core/math/quat.js';
+import { Vec3 } from '../../core/math/vec3.js';
+import { PROJECTION_PERSPECTIVE, PROJECTION_ORTHOGRAPHIC } from '../../scene/constants.js';
 
 import {
     COLOR_RED,
@@ -194,7 +191,7 @@ class TransformGizmo extends Gizmo {
     /**
      * Internal mapping of mesh instances to axis shapes.
      *
-     * @type {Map<import('playcanvas').MeshInstance, import('./axis-shapes.js').AxisShape>}
+     * @type {Map<import('../../scene/mesh-instance.js').MeshInstance, import('./axis-shapes.js').AxisShape>}
      * @private
      */
     _shapeMap = new Map();
@@ -297,9 +294,10 @@ class TransformGizmo extends Gizmo {
     /**
      * Creates a new TransformGizmo object.
      *
-     * @param {import('playcanvas').AppBase} app - The application instance.
-     * @param {import('playcanvas').CameraComponent} camera - The camera component.
-     * @param {import('playcanvas').Layer} layer - The render layer.
+     * @param {import('../../framework/app-base.js').AppBase} app - The application instance.
+     * @param {import('../../framework/components/camera/component.js').CameraComponent} camera -
+     * The camera component.
+     * @param {import('../../scene/layer.js').Layer} layer - The render layer.
      * @example
      * const gizmo = new pcx.TransformGizmo(app, camera, layer);
      */

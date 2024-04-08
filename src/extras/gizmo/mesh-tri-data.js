@@ -1,10 +1,8 @@
-import {
-    Mesh,
-    Mat4,
-    Quat,
-    Tri,
-    Vec3
-} from 'playcanvas';
+import { Vec3 } from '../../core/math/vec3.js';
+import { Quat } from '../../core/math/quat.js';
+import { Mat4 } from '../..//core/math/mat4.js';
+import { Tri } from '../../core/shape/tri.js';
+import { Mesh } from '../../scene/mesh.js';
 
 // temporary variables
 const tmpV1 = new Vec3();

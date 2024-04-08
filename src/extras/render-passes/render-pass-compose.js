@@ -1,10 +1,9 @@
-import {
-    math,
-    Color,
-    RenderPassShaderQuad,
-    shaderChunks,
-    TONEMAP_LINEAR, TONEMAP_FILMIC, TONEMAP_HEJL, TONEMAP_ACES, TONEMAP_ACES2
-} from "playcanvas";
+import { math } from '../../core/math/math.js';
+import { Color } from '../../core/math/color.js';
+import { RenderPassShaderQuad } from '../../scene/graphics/render-pass-shader-quad.js';
+import { shaderChunks } from '../../scene/shader-lib/chunks/chunks.js';
+import { TONEMAP_LINEAR, TONEMAP_FILMIC, TONEMAP_HEJL, TONEMAP_ACES, TONEMAP_ACES2 } from '../../scene/constants.js';
+
 
 // Contrast Adaptive Sharpening (CAS) is used to apply the sharpening. It's based on AMD's
 // FidelityFX CAS, WebGL implementation: https://www.shadertoy.com/view/wtlSWB. It's best to run it

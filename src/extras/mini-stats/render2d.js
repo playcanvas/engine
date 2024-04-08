@@ -1,8 +1,5 @@
 import {
-    BLENDEQUATION_ADD,
-    BLENDMODE_ONE,
-    BLENDMODE_ONE_MINUS_SRC_ALPHA,
-    BLENDMODE_SRC_ALPHA,
+    BLENDEQUATION_ADD, BLENDMODE_SRC_ALPHA, BLENDMODE_ONE_MINUS_SRC_ALPHA, BLENDMODE_ONE,
     BUFFER_STATIC,
     BUFFER_STREAM,
     CULLFACE_NONE,
@@ -10,18 +7,18 @@ import {
     PRIMITIVE_TRIANGLES,
     SEMANTIC_POSITION,
     SEMANTIC_TEXCOORD0,
-    TYPE_FLOAT32,
-    shaderChunks,
-    IndexBuffer,
-    VertexBuffer,
-    VertexFormat,
-    BlendState,
-    DepthState,
-    Mesh,
-    MeshInstance,
-    Material,
-    GraphNode
-} from 'playcanvas';
+    TYPE_FLOAT32
+} from '../../platform/graphics/constants.js';
+import { DepthState } from '../../platform/graphics/depth-state.js';
+import { BlendState } from '../../platform/graphics/blend-state.js';
+import { GraphNode } from '../../scene/graph-node.js';
+import { MeshInstance } from '../../scene/mesh-instance.js';
+import { Material } from '../../scene/materials/material.js';
+import { Mesh } from '../../scene/mesh.js';
+import { IndexBuffer } from '../../platform/graphics/index-buffer.js';
+import { VertexBuffer } from '../../platform/graphics/vertex-buffer.js';
+import { VertexFormat } from '../../platform/graphics/vertex-format.js';
+import { shaderChunks } from '../../scene/shader-lib/chunks/chunks.js';
 
 const vertexShader = /* glsl */ `
 attribute vec3 vertex_position;         // unnormalized xy, word flag

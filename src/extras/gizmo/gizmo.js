@@ -1,12 +1,10 @@
-import {
-    math,
-    PROJECTION_PERSPECTIVE,
-    EventHandler,
-    Entity,
-    Ray,
-    Mat4,
-    Vec3
-} from 'playcanvas';
+import { math } from '../../core/math/math.js';
+import { Vec3 } from '../../core/math/vec3.js';
+import { Mat4 } from '../../core/math/mat4.js';
+import { Ray } from '../../core/shape/ray.js';
+import { EventHandler } from '../../core/event-handler.js';
+import { PROJECTION_PERSPECTIVE } from '../../scene/constants.js';
+import { Entity } from '../../framework/entity.js';
 
 // temporary variables
 const tmpV1 = new Vec3();
@@ -181,7 +179,7 @@ class Gizmo extends EventHandler {
     /**
      * Internal reference to the app containing the gizmo.
      *
-     * @type {import('playcanvas').AppBase}
+     * @type {import('../../framework/app-base.js').AppBase}
      * @protected
      */
     _app;
@@ -189,7 +187,7 @@ class Gizmo extends EventHandler {
     /**
      * Internal reference to the graphics device of the app.
      *
-     * @type {import('playcanvas').AppBase}
+     * @type {import('../../platform/graphics/graphics-device.js').GraphicsDevice}
      * @protected
      */
     _device;
@@ -197,7 +195,7 @@ class Gizmo extends EventHandler {
     /**
      * Internal reference to camera component to view the gizmo.
      *
-     * @type {import('playcanvas').CameraComponent}
+     * @type {import('../../framework/components/camera/component.js').CameraComponent}
      * @protected
      */
     _camera;
@@ -205,7 +203,7 @@ class Gizmo extends EventHandler {
     /**
      * Internal reference to layer to render the gizmo..
      *
-     * @type {import('playcanvas').Layer}
+     * @type {import('../../scene/layer.js').Layer}
      * @protected
      */
     _layer;
@@ -213,14 +211,14 @@ class Gizmo extends EventHandler {
     /**
      * The graph nodes attached to the gizmo.
      *
-     * @type {import('playcanvas').GraphNode[]}
+     * @type {import('../../scene/graph-node.js').GraphNode[]}
      */
     nodes = [];
 
     /**
      * The root gizmo entity.
      *
-     * @type {import('playcanvas').Entity}
+     * @type {import('../../framework/entity.js').Entity}
      */
     root;
 
@@ -228,8 +226,8 @@ class Gizmo extends EventHandler {
      * @typedef IntersectData
      * @property {import('./mesh-tri-data.js').MeshTriData[]} meshTriDataList -
      * The array of {@link MeshTriData}
-     * @property {import('playcanvas').GraphNode} parent - The mesh parent node.
-     * @property {import('playcanvas').MeshInstance[]} meshInstances -
+     * @property {import('../../scene/graph-node.js').GraphNode} parent - The mesh parent node.
+     * @property {import('../../scene/mesh-instance.js').MeshInstance[]} meshInstances -
      * array of mesh instances for rendering
      */
     /**
@@ -242,9 +240,9 @@ class Gizmo extends EventHandler {
     /**
      * Creates a new Gizmo object.
      *
-     * @param {import('playcanvas').AppBase} app - The application instance.
-     * @param {import('playcanvas').CameraComponent} camera - The camera component.
-     * @param {import('playcanvas').Layer} layer - The render layer.
+     * @param {import('../../framework/app-base.js').AppBase} app - The application instance.
+     * @param {import('../../framework/components/camera/component.js').CameraComponent} camera - The camera component.
+     * @param {import('../../scene/layer.js').Layer} layer - The render layer.
      * @example
      * const gizmo = new pcx.Gizmo(app, camera, layer);
      */
@@ -426,7 +424,7 @@ class Gizmo extends EventHandler {
     /**
      * Attach an array of graph nodes to the gizmo.
      *
-     * @param {import('playcanvas').GraphNode[]} [nodes] - The graph nodes. Defaults to [].
+     * @param {import('../../scene/graph-node.js').GraphNode[]} [nodes] - The graph nodes. Defaults to [].
      * @example
      * const gizmo = new pcx.Gizmo(app, camera, layer);
      * gizmo.attach([boxA, boxB]);
