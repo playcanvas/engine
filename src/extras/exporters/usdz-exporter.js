@@ -12,8 +12,7 @@ import { Color } from '../../core/math/color.js';
 
 const ROOT_FILE_NAME = 'root';
 
-const header = `
-#usda 1.0
+const header = `#usda 1.0
 (
     customLayerData = {
         string creator = "PlayCanvas UsdzExporter"
