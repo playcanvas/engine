@@ -155,13 +155,13 @@ class ScriptHandler extends ResourceHandler {
                 const extendsScriptType = scriptClass.prototype instanceof ScriptType;
 
                 if (extendsScriptType) {
-                    const attributes = new ScriptAttributes(scriptClass);
                     if (scriptClass.attributes) {
+                        const attributes = new ScriptAttributes(scriptClass);
                         for (const key in script.attributes) {
                             attributes.add(key, scriptClass.attributes[key]);
                         }
+                        scriptClass.attributes = attributes;
                     }
-                    scriptClass.attributes = attributes;
                     registerScript(scriptClass, scriptClass.name.toLowerCase());
                 }
             }
