@@ -1,5 +1,8 @@
 import { RenderPassShaderQuad } from '../../scene/graphics/render-pass-shader-quad.js';
 
+/**
+ * @category Graphics
+ */
 class RenderPassDownsample extends RenderPassShaderQuad {
     constructor(device, sourceTexture) {
         super(device);

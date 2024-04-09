@@ -9,7 +9,9 @@ import { RenderPassDownsample } from './render-pass-downsample.js';
 import { RenderPassUpsample } from './render-pass-upsample.js';
 
 // based on https://learnopengl.com/Guest-Articles/2022/Phys.-Based-Bloom
-
+/**
+ * @category Graphics
+ */
 class RenderPassBloom extends RenderPass {
     bloomTexture;
 

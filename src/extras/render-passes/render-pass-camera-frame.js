@@ -17,6 +17,9 @@ import { RenderPassCompose } from './render-pass-compose.js';
 import { RenderPassTAA } from './render-pass-taa.js';
 import { RenderPassPrepass } from './render-pass-prepass.js';
 
+/**
+ * @category Graphics
+ */
 class RenderPassCameraFrame extends RenderPass {
     app;
 

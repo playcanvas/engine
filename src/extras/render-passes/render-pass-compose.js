@@ -153,6 +153,9 @@ const fragmentShader = /* glsl */ `
     }
 `;
 
+/**
+ * @category Graphics
+ */
 class RenderPassCompose extends RenderPassShaderQuad {
     sceneTexture = null;
 

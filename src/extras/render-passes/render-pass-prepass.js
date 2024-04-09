@@ -25,6 +25,7 @@ const VELOCITY_UNIFORM_NAME = 'uSceneVelocityMap';
  * that is required for the main rendering pass (and also in following passes) into separate render
  * targets. This can include depth, normals, velocity, etc, used by TAA, motion blur, SSAO, etc.
  *
+ * @category Graphics
  * @ignore
  */
 class RenderPassPrepass extends RenderPass {

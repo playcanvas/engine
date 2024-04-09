@@ -105,6 +105,9 @@ const fs = /* glsl */ `
     }
 `;
 
+/**
+ * @category Graphics
+ */
 class RenderPassTAA extends RenderPassShaderQuad {
     /**
      * The index of the history texture to render to.
