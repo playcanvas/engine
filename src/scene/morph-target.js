@@ -150,7 +150,10 @@ class MorphTarget {
 
             // create vertex buffer with specified type (or float32), and semantic of ATTR0 which gets replaced at runtime with actual semantic
             const formatDesc = [{ semantic: SEMANTIC_ATTR0, components: 3, type: dataType }];
-            return new VertexBuffer(device, new VertexFormat(device, formatDesc), data.length / 3, BUFFER_STATIC, data);
+            return new VertexBuffer(device, new VertexFormat(device, formatDesc), data.length / 3, {
+                usage: BUFFER_STATIC,
+                data: data
+            });
         }
 
         return null;

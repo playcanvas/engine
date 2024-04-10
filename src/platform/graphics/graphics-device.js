@@ -443,7 +443,10 @@ class GraphicsDevice extends EventHandler {
             { semantic: SEMANTIC_POSITION, components: 2, type: TYPE_FLOAT32 }
         ]);
         const positions = new Float32Array([-1, -1, 1, -1, -1, 1, 1, 1]);
-        this.quadVertexBuffer = new VertexBuffer(this, vertexFormat, 4, BUFFER_STATIC, positions);
+        this.quadVertexBuffer = new VertexBuffer(this, vertexFormat, 4, {
+            usage: BUFFER_STATIC,
+            data: positions
+        });
     }
 
     /**

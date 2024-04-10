@@ -435,7 +435,10 @@ class ImageElement {
             ]);
         });
 
-        const vertexBuffer = new VertexBuffer(device, vertexFormat, 4, BUFFER_STATIC, vertexData.buffer);
+        const vertexBuffer = new VertexBuffer(device, vertexFormat, 4, {
+            usage: BUFFER_STATIC,
+            data: vertexData.buffer
+        });
 
         const mesh = new Mesh(device);
         mesh.vertexBuffer = vertexBuffer;

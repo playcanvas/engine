@@ -534,10 +534,9 @@ const createVertexBufferInternal = (device, sourceDesc, flipV) => {
     }
 
     // create vertex buffer
-    const vertexBuffer = new VertexBuffer(device,
-                                          vertexFormat,
-                                          numVertices,
-                                          BUFFER_STATIC);
+    const vertexBuffer = new VertexBuffer(device, vertexFormat, numVertices, {
+        usage: BUFFER_STATIC
+    });
 
     const vertexData = vertexBuffer.lock();
     const targetArray = new Uint32Array(vertexData);
@@ -747,7 +746,10 @@ const createDracoMesh = (device, primitive, accessors, bufferViews, meshVariants
                     }
                 });
 
-                const vertexBuffer = new VertexBuffer(device, vertexFormat, numVertices, BUFFER_STATIC, decompressedData.vertices);
+                const vertexBuffer = new VertexBuffer(device, vertexFormat, numVertices, {
+                    usage: BUFFER_STATIC,
+                    data: decompressedData.vertices
+                });
                 const indexBuffer = new IndexBuffer(device, indexFormat, numIndices, BUFFER_STATIC, decompressedData.indices);
 
                 result.vertexBuffer = vertexBuffer;

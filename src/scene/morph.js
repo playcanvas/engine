@@ -265,8 +265,10 @@ class Morph extends RefCountedObject {
 
         // create vertex stream with vertex_id used to map vertex to texture
         const formatDesc = [{ semantic: SEMANTIC_ATTR15, components: 1, type: useUintIds ? TYPE_UINT32 : TYPE_FLOAT32 }];
-        this.vertexBufferIds = new VertexBuffer(this.device, new VertexFormat(this.device, formatDesc, ids.length), ids.length, BUFFER_STATIC,
-                                                useUintIds ? new Uint32Array(ids) : new Float32Array(ids));
+        this.vertexBufferIds = new VertexBuffer(this.device, new VertexFormat(this.device, formatDesc, ids.length), ids.length, {
+            usage: BUFFER_STATIC,
+            data: useUintIds ? new Uint32Array(ids) : new Float32Array(ids)
+        });
 
         return true;
     }

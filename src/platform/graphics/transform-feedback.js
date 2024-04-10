@@ -102,7 +102,10 @@ class TransformFeedback {
             gl.bufferData(gl.ARRAY_BUFFER, inputBuffer.storage, gl.DYNAMIC_COPY);
         }
 
-        this._outputBuffer = new VertexBuffer(inputBuffer.device, inputBuffer.format, inputBuffer.numVertices, usage, inputBuffer.storage);
+        this._outputBuffer = new VertexBuffer(inputBuffer.device, inputBuffer.format, inputBuffer.numVertices, {
+            usage: usage,
+            data: inputBuffer.storage
+        });
     }
 
     /**
