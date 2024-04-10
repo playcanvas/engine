@@ -9,10 +9,16 @@ import { execSync } from 'child_process';
 
 const ARGS = process.argv.slice(2);
 
-const env = [];
+const ENV_START_MATCHES = [
+    'target',
+    'treemap',
+    'treenet',
+    'treesun'
+];
 
+const env = [];
 for (let i = 0; i < ARGS.length; i++) {
-    if (ARGS[i].startsWith('target') || ARGS[i].startsWith('tree')) {
+    if (ENV_START_MATCHES.some(match => ARGS[i].startsWith(match))) {
         env.push(`--environment ${ARGS[i]}`);
     }
 }

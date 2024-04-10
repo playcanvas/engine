@@ -112,24 +112,24 @@ function getOutPlugins() {
         terser()
     ];
 
-    if (process.env.tree === 'map') {
+    if (process.env.treemap) {
         plugins.push(visualizer({
-            filename: 'tree-map.html',
+            filename: 'treemap.html',
             brotliSize: true,
             gzipSize: true
         }));
     }
 
-    if (process.env.tree === 'net') {
+    if (process.env.treenet) {
         plugins.push(visualizer({
-            filename: 'tree-net.html',
+            filename: 'treenet.html',
             template: 'network'
         }));
     }
 
-    if (process.env.tree === 'sun') {
+    if (process.env.treesun) {
         plugins.push(visualizer({
-            filename: 'tree-sun.html',
+            filename: 'treesun.html',
             template: 'sunburst'
         }));
     }
