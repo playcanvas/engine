@@ -444,7 +444,6 @@ class GraphicsDevice extends EventHandler {
         ]);
         const positions = new Float32Array([-1, -1, 1, -1, -1, 1, 1, 1]);
         this.quadVertexBuffer = new VertexBuffer(this, vertexFormat, 4, {
-            usage: BUFFER_STATIC,
             data: positions
         });
     }

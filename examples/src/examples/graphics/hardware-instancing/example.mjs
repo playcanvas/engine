@@ -113,7 +113,6 @@ assetListLoader.load(() => {
         // create static vertex buffer containing the matrices
         const vbFormat = pc.VertexFormat.getDefaultInstancingFormat(app.graphicsDevice);
         const vertexBuffer = new pc.VertexBuffer(app.graphicsDevice, vbFormat, instanceCount, {
-            usage: pc.BUFFER_STATIC,
             data: matrices
         });
 

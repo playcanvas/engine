@@ -436,7 +436,6 @@ class ImageElement {
         });
 
         const vertexBuffer = new VertexBuffer(device, vertexFormat, 4, {
-            usage: BUFFER_STATIC,
             data: vertexData.buffer
         });
 

@@ -213,7 +213,6 @@ app.on('update', function () {
             const data = new Float32Array(vertexCount * 16);
             const format = pc.VertexFormat.getDefaultInstancingFormat(app.graphicsDevice);
             vertexBuffer = new pc.VertexBuffer(app.graphicsDevice, format, vertexCount, {
-                usage: pc.BUFFER_STATIC,
                 data: data
             });
             vertexBuffers.push(vertexBuffer);

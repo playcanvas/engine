@@ -20,7 +20,8 @@ class VertexBuffer {
      * buffer.
      * @param {number} numVertices - The number of vertices that this vertex buffer will hold.
      * @param {object} [options] - Object for passing optional arguments.
-     * @param {number} [options.usage] - The usage type of the vertex buffer (see BUFFER_*). Defaults to BUFFER_STATIC.
+     * @param {number} [options.usage] - The usage type of the vertex buffer (see BUFFER_*).
+     * Defaults to BUFFER_STATIC.
      * @param {ArrayBuffer} [options.data] - Initial data.
      * @param {boolean} [options.storage] - Defines if the vertex buffer can be used as a storage
      * buffer by a compute shader. Defaults to false. Only supported on WebGPU.
@@ -34,7 +35,7 @@ class VertexBuffer {
             this.usage = options.usage ?? BUFFER_STATIC;
             initialData = options.data;
 
-        } else {  // handle backwards compatibility
+        } else if (arguments.length > 3) {  // handle backwards compatibility
 
             Debug.deprecated('VertexBuffer: usage and initialData parameters are deprecated, use options object instead');
             this.usage = arguments[3] ?? BUFFER_STATIC;
