@@ -210,13 +210,10 @@ app.on('update', function () {
             // add vertex buffer
             const vertexCount = 500;
             const data = new Float32Array(vertexCount * 16);
-            vertexBuffer = new pc.VertexBuffer(
-                app.graphicsDevice,
-                pc.VertexFormat.getDefaultInstancingFormat(app.graphicsDevice),
-                vertexCount,
-                pc.BUFFER_STATIC,
-                data
-            );
+            const format = pc.VertexFormat.getDefaultInstancingFormat(app.graphicsDevice);
+            vertexBuffer = new pc.VertexBuffer(app.graphicsDevice, format, vertexCount, {
+                data: data
+            });
             vertexBuffers.push(vertexBuffer);
 
             // allocate texture
