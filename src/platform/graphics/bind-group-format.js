@@ -3,7 +3,7 @@ import { Debug, DebugHelper } from '../../core/debug.js';
 
 import {
     TEXTUREDIMENSION_2D, TEXTUREDIMENSION_CUBE, TEXTUREDIMENSION_3D, TEXTUREDIMENSION_2D_ARRAY,
-    SAMPLETYPE_FLOAT, PIXELFORMAT_RGBA8, SAMPLETYPE_INT, SAMPLETYPE_UINT, SHADERSTAGE_COMPUTE
+    SAMPLETYPE_FLOAT, PIXELFORMAT_RGBA8, SAMPLETYPE_INT, SAMPLETYPE_UINT, SHADERSTAGE_COMPUTE, SHADERSTAGE_VERTEX
 } from './constants.js';
 
 let id = 0;
@@ -49,6 +49,7 @@ class BindStorageBufferFormat extends BindBaseFormat {
 
         // whether the buffer is read-only
         this.readOnly = readOnly;
+        Debug.assert(readOnly || !(visibility & SHADERSTAGE_VERTEX), "Storage buffer can only be used in read-only mode in SHADERSTAGE_VERTEX.");
     }
 }
 
