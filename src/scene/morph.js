@@ -8,7 +8,7 @@ import { VertexBuffer } from '../platform/graphics/vertex-buffer.js';
 import { VertexFormat } from '../platform/graphics/vertex-format.js';
 
 import {
-    BUFFER_STATIC, TYPE_FLOAT32, TYPE_UINT32, SEMANTIC_ATTR15, ADDRESS_CLAMP_TO_EDGE, FILTER_NEAREST,
+    TYPE_FLOAT32, TYPE_UINT32, SEMANTIC_ATTR15, ADDRESS_CLAMP_TO_EDGE, FILTER_NEAREST,
     PIXELFORMAT_RGBA16F, PIXELFORMAT_RGB32F, PIXELFORMAT_RGBA32F
 } from '../platform/graphics/constants.js';
 

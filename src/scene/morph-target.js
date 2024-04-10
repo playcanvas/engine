@@ -1,7 +1,7 @@
 import { Debug } from '../core/debug.js';
 import { BoundingBox } from '../core/shape/bounding-box.js';
 
-import { BUFFER_STATIC, SEMANTIC_ATTR0, TYPE_FLOAT32 } from '../platform/graphics/constants.js';
+import { SEMANTIC_ATTR0, TYPE_FLOAT32 } from '../platform/graphics/constants.js';
 import { VertexBuffer } from '../platform/graphics/vertex-buffer.js';
 import { VertexFormat } from '../platform/graphics/vertex-format.js';
 

@@ -8,7 +8,6 @@ import { Vec3 } from '../../../core/math/vec3.js';
 import { Vec4 } from '../../../core/math/vec4.js';
 
 import {
-    BUFFER_STATIC,
     FUNC_EQUAL,
     PRIMITIVE_TRISTRIP,
     SEMANTIC_POSITION, SEMANTIC_NORMAL, SEMANTIC_TEXCOORD0,
