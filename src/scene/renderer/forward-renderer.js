@@ -676,7 +676,7 @@ class ForwardRenderer extends Renderer {
      * storing the view level bing groups (can be empty array, and this function populates if per
      * view).
      * @param {object} [options] - Object for passing optional arguments.
-     * @param {boolean} [options.clearColors] - True if the color buffer should be cleared.
+     * @param {boolean} [options.clearColor] - True if the color buffer should be cleared.
      * @param {boolean} [options.clearDepth] - True if the depth buffer should be cleared.
      * @param {boolean} [options.clearStencil] - True if the stencil buffer should be cleared.
      * @param {import('../lighting/world-clusters.js').WorldClusters} [options.lightClusters] - The
@@ -693,7 +693,7 @@ class ForwardRenderer extends Renderer {
         this.setupViewport(camera, renderTarget);
 
         // clearing
-        const clearColor = options.clearColors ?? false;
+        const clearColor = options.clearColor ?? false;
         const clearDepth = options.clearDepth ?? false;
         const clearStencil = options.clearStencil ?? false;
         if (clearColor || clearDepth || clearStencil) {
