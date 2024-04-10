@@ -88,7 +88,9 @@ class Render2d {
         const shader = shaderChunks.createShaderFromCode(device, vertexShader, fragmentShader, 'mini-stats');
 
         this.device = device;
-        this.buffer = new VertexBuffer(device, format, maxQuads * 4, BUFFER_STREAM);
+        this.buffer = new VertexBuffer(device, format, maxQuads * 4, {
+            usage: BUFFER_STREAM
+        });
         this.data = new Float32Array(this.buffer.numBytes / 4);
         this.indexBuffer = new IndexBuffer(device, INDEXFORMAT_UINT16, maxQuads * 6, BUFFER_STATIC, indices);
         this.prim = {
