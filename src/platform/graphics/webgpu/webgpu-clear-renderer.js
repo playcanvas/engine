@@ -112,7 +112,7 @@ class WebgpuClearRenderer {
             DebugGraphics.pushGpuMarker(device, 'CLEAR-RENDERER');
 
             // setup clear color
-            if ((flags & CLEARFLAG_COLOR) && renderTarget.colorBuffer) {
+            if ((flags & CLEARFLAG_COLOR) && (renderTarget.colorBuffer || renderTarget.impl.assignedColorTexture)) {
                 const color = options.color ?? defaultOptions.color;
                 this.colorData.set(color);
 
