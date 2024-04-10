@@ -14,7 +14,8 @@ export function engineLayerImportValidation(rootFile) {
         'core': 0,
         'platform': 1,
         'scene': 2,
-        'framework': 3
+        'framework': 3,
+        'extras': 4
     };
 
     let rootPath;
