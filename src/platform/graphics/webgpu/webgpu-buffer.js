@@ -98,6 +98,10 @@ class WebgpuBuffer {
         return device.readStorageBuffer(this, offset, size, data);
     }
 
+    write(device, bufferOffset, data, dataOffset, size) {
+        device.writeStorageBuffer(this, bufferOffset, data, dataOffset, size);
+    }
+
     clear(device, offset, size) {
         device.clearStorageBuffer(this, offset, size);
     }

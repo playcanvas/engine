@@ -935,7 +935,8 @@ class Mesh extends RefCountedObject {
 
         // if we don't have index buffer, create new one, otherwise update existing one
         if (this.indexBuffer.length <= 0 || !this.indexBuffer[0]) {
-            const createFormat = this._geometryData.maxVertices > 0xffff ? INDEXFORMAT_UINT32 : INDEXFORMAT_UINT16;
+            const maxVertices = this._geometryData.maxVertices;
+            const createFormat = ((maxVertices > 0xffff) || (maxVertices === 0)) ? INDEXFORMAT_UINT32 : INDEXFORMAT_UINT16;
             const options = this._storageIndex ? { storage: true } : undefined;
             this.indexBuffer[0] = new IndexBuffer(this.device, createFormat, this._geometryData.maxIndices, this._geometryData.indicesUsage, undefined, options);
         }

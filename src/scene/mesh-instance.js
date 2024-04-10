@@ -240,10 +240,13 @@ class MeshInstance {
         this.material = material;   // The material with which to render this instance
 
         this._shaderDefs = MASK_AFFECT_DYNAMIC << 16; // 2 byte toggles, 2 bytes light mask; Default value is no toggles and mask = pc.MASK_AFFECT_DYNAMIC
-        this._shaderDefs |= mesh.vertexBuffer.format.hasUv0 ? SHADERDEF_UV0 : 0;
-        this._shaderDefs |= mesh.vertexBuffer.format.hasUv1 ? SHADERDEF_UV1 : 0;
-        this._shaderDefs |= mesh.vertexBuffer.format.hasColor ? SHADERDEF_VCOLOR : 0;
-        this._shaderDefs |= mesh.vertexBuffer.format.hasTangents ? SHADERDEF_TANGENTS : 0;
+        if (mesh.vertexBuffer) {
+            const format = mesh.vertexBuffer.format;
+            this._shaderDefs |= format.hasUv0 ? SHADERDEF_UV0 : 0;
+            this._shaderDefs |= format.hasUv1 ? SHADERDEF_UV1 : 0;
+            this._shaderDefs |= format.hasColor ? SHADERDEF_VCOLOR : 0;
+            this._shaderDefs |= format.hasTangents ? SHADERDEF_TANGENTS : 0;
+        }
 
         // Render options
         this.layer = LAYER_WORLD; // legacy
@@ -517,7 +520,7 @@ class MeshInstance {
             if (!shaderInstance.shader) {
 
                 const shader = mat.getShaderVariant(this.mesh.device, scene, shaderDefs, null, shaderPass, sortedLights,
-                                                    viewUniformFormat, viewBindGroupFormat, this._mesh.vertexBuffer.format);
+                                                    viewUniformFormat, viewBindGroupFormat, this._mesh.vertexBuffer?.format);
 
                 // add it to the material variants cache
                 mat.variants.set(variantKey, shader);

@@ -6,6 +6,7 @@ import { registerScript } from '../script/script.js';
 import { ResourceLoader } from './loader.js';
 
 import { ResourceHandler } from './handler.js';
+import { ScriptAttributes } from '../script/script-attributes.js';
 
 /**
  * Resource handler for loading JavaScript files dynamically.  Two types of JavaScript files can be
@@ -154,13 +155,13 @@ class ScriptHandler extends ResourceHandler {
                 const extendsScriptType = scriptClass.prototype instanceof ScriptType;
 
                 if (extendsScriptType) {
-
-                    if (script.attributesDefinition) {
-                        for (const key in script.attributesDefinition) {
-                            scriptClass.attributes.add(key, script.attributesDefinition[key]);
+                    if (scriptClass.attributes) {
+                        const attributes = new ScriptAttributes(scriptClass);
+                        for (const key in script.attributes) {
+                            attributes.add(key, scriptClass.attributes[key]);
                         }
+                        scriptClass.attributes = attributes;
                     }
-
                     registerScript(scriptClass, scriptClass.name.toLowerCase());
                 }
             }
