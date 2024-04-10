@@ -20,11 +20,12 @@ class StorageBuffer {
      * @param {import('./graphics-device.js').GraphicsDevice} graphicsDevice - The graphics device
      * used to manage this storage buffer.
      * @param {number} byteSize - The size of the storage buffer in bytes.
-     * @param {number} bufferUsage - The usage type of the storage buffer. Can be a combination of
+     * @param {number} [bufferUsage] - The usage type of the storage buffer. Can be a combination of
      * {@link BUFFERUSAGE_READ}, {@link BUFFERUSAGE_WRITE}, {@link BUFFERUSAGE_COPY_SRC} and
-     * {@link BUFFERUSAGE_COPY_DST} flags.
+     * {@link BUFFERUSAGE_COPY_DST} flags. This parameter can be omitted if no special usage is
+     * required.
      */
-    constructor(graphicsDevice, byteSize, bufferUsage) {
+    constructor(graphicsDevice, byteSize, bufferUsage = 0) {
         this.device = graphicsDevice;
         this.byteSize = byteSize;
         this.bufferUsage = bufferUsage;
@@ -59,6 +60,10 @@ class StorageBuffer {
 
     read(offset = 0, size = this.byteSize, data = null) {
         return this.impl.read(this.device, offset, size, data);
+    }
+
+    write(bufferOffset = 0, data, dataOffset = 0, size) {
+        this.impl.write(this.device, bufferOffset, data, dataOffset, size);
     }
 
     clear(offset = 0, size = this.byteSize) {
