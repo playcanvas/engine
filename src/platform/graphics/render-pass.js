@@ -386,7 +386,7 @@ class RenderPass {
     }
 
     // #if _DEBUG
-    log(device, index) {
+    log(device, index = 0) {
         if (Tracing.get(TRACEID_RENDER_PASS) || Tracing.get(TRACEID_RENDER_PASS_DETAIL)) {
 
             const rt = this.renderTarget ?? (this.renderTarget === null ? device.backBuffer : null);
