@@ -124,7 +124,7 @@
     "xhr2": "^0.2.1"
   },
   "scripts": {
-    "build": "node ./build.mjs",
+    "build": "node build.mjs",
     "build:release": "npm run build target:release",
     "build:debug": "npm run build target:debug",
     "build:profiler": "npm run build target:profiler",
