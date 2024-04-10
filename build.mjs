@@ -7,7 +7,7 @@
 // tree:<treeType> - Specify the tree type. Example: tree:map
 import { execSync } from 'child_process';
 
-const ARGS = process.argv.slice(2);
+const args = process.argv.slice(2);
 
 const ENV_START_MATCHES = [
     'target',
@@ -17,12 +17,15 @@ const ENV_START_MATCHES = [
 ];
 
 const env = [];
-for (let i = 0; i < ARGS.length; i++) {
-    if (ENV_START_MATCHES.some(match => ARGS[i].startsWith(match))) {
-        env.push(`--environment ${ARGS[i]}`);
+for (let i = 0; i < args.length; i++) {
+    if (ENV_START_MATCHES.some(match => args[i].startsWith(match))) {
+        env.push(`--environment ${args[i]}`);
+        args.splice(i, 1);
+        i--;
+        continue;
     }
 }
 
-const cmd = `rollup -c ${env.join(' ')}`;
+const cmd = `rollup -c ${args.join(' ')} ${env.join(' ')}`;
 console.log(cmd);
 execSync(cmd, { stdio: 'inherit' });
