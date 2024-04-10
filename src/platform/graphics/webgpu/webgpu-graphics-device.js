@@ -852,7 +852,8 @@ class WebgpuGraphicsDevice extends GraphicsDevice {
      *
      * @param {import('./webgpu-buffer.js').WebgpuBuffer} storageBuffer - The storage buffer.
      * @param {number} [offset] - The offset of data to read. Defaults to 0.
-     * @param {number} [size] - The size of data to read. Defaults to the full size of the buffer.
+     * @param {number} [size] - The byte size of data to read. Defaults to the full size of the
+     * buffer.
      * @param {ArrayBufferView} [data] - Typed array to populate with the data read from the storage
      * buffer. When typed array is supplied, enough space needs to be reserved, otherwise only
      * partial data is copied. If not specified, the data is returned in an Uint8Array. Defaults to
@@ -919,6 +920,23 @@ class WebgpuGraphicsDevice extends GraphicsDevice {
                 });
             }
         });
+    }
+
+    /**
+     * Issues a write operation of the provided data into a storage buffer.
+     *
+     * @param {import('./webgpu-buffer.js').WebgpuBuffer} storageBuffer - The storage buffer.
+     * @param {number} bufferOffset - The offset in bytes to start writing to the storage buffer.
+     * @param {ArrayBufferView} data - The data to write to the storage buffer.
+     * @param {number} dataOffset - Offset in data to begin writing from. Given in elements if data
+     * is a TypedArray and bytes otherwise.
+     * @param {number} size - Size of content to write from data to buffer. Given in elements if
+     * data is a TypedArray and bytes otherwise.
+     */
+    writeStorageBuffer(storageBuffer, bufferOffset = 0, data, dataOffset = 0, size) {
+        Debug.assert(storageBuffer.buffer);
+        Debug.assert(data);
+        this.wgpu.queue.writeBuffer(storageBuffer.buffer, bufferOffset, data, dataOffset, size);
     }
 
     /**
