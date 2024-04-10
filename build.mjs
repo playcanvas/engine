@@ -1,12 +1,17 @@
-// Build helper scripts
-// Format: node build.mjs [options]
-// Options:
-// target:<moduleFormat>:<buildType> - Specify the target module format and build type. Example: target:esm:release
-// target:<moduleFormat> - Specify the target module format only. Example: target:esm
-// target:<buildType> - Specify the build type only. Example: target:release
-// treemap - Enable treemap build visualization.
-// treenet - Enable treenet build visualization.
-// treesun - Enable treesun build visualization.
+/**
+ * Build helper scripts
+ * Usage: node build.mjs [options] -- [rollup options]
+ *
+ * Options:
+ * target:<moduleFormat>:<buildType> - Specify the target module format and build type. Example: target:esm:release
+ * target:<moduleFormat> - Specify the target module format only. Example: target:esm
+ * target:<buildType> - Specify the build type only. Example: target:release
+ *
+ * treemap - Enable treemap build visualization.
+ * treenet - Enable treenet build visualization.
+ * treesun - Enable treesun build visualization.
+ */
+
 import { execSync } from 'child_process';
 
 const args = process.argv.slice(2);
