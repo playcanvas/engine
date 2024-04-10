@@ -390,4 +390,4 @@ class ScriptType extends EventHandler {
      */
 }
 
-export { ScriptType };
+export { ScriptType, ScriptType as Script };

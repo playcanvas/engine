@@ -352,7 +352,7 @@ export { JsonStandardMaterialParser } from './framework/parsers/material/json-st
 export { createScript, registerScript, getReservedScriptNames } from './framework/script/script.js';
 export { ScriptAttributes } from './framework/script/script-attributes.js';
 export { ScriptRegistry } from './framework/script/script-registry.js';
-export { ScriptType } from './framework/script/script-type.js';
+export { ScriptType, Script } from './framework/script/script-type.js';
 
 // FRAMEWORK / LOCALIZATION
 export { I18n } from './framework/i18n/i18n.js';
