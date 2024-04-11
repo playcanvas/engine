@@ -4,6 +4,11 @@ import { expect } from 'chai';
 
 describe('Preprocessor', function () {
 
+    const includes = {
+        'inc1': 'block1',
+        'inc2': 'block2'
+    };
+
     const srcData = `
         
         #define FEATURE1
@@ -11,6 +16,7 @@ describe('Preprocessor', function () {
 
         #ifdef FEATURE1
             TEST1
+            #include "inc1"
         #endif
 
         #if defined(FEATURE1)
@@ -23,12 +29,13 @@ describe('Preprocessor', function () {
             #endif
         #endif
 
-        #ifndef UNKOWN
+        #ifndef UNKNOWN
             TEST4
         #endif
 
         #if defined (UNKNOWN)
             TEST5
+            #include "inc2"
         #else
             TEST6
         #endif
@@ -130,4 +137,13 @@ describe('Preprocessor', function () {
     it('returns false for TEST14', function () {
         expect(Preprocessor.run(srcData).includes('TEST14')).to.equal(false);
     });
+
+    it('returns true for INC1', function () {
+        expect(Preprocessor.run(srcData, includes).includes('block1')).to.equal(true);
+    });
+
+    it('returns false for INC2', function () {
+        expect(Preprocessor.run(srcData, includes).includes('block2')).to.equal(false);
+    });
+
 });
