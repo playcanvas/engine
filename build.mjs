@@ -34,4 +34,5 @@ for (let i = 0; i < args.length; i++) {
 }
 
 const cmd = `rollup -c ${args.join(' ')} ${env.join(' ')}`;
+console.log(cmd);
 execSync(cmd, { stdio: 'inherit' });
