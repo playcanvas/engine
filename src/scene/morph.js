@@ -8,7 +8,7 @@ import { VertexBuffer } from '../platform/graphics/vertex-buffer.js';
 import { VertexFormat } from '../platform/graphics/vertex-format.js';
 
 import {
-    BUFFER_STATIC, TYPE_FLOAT32, TYPE_UINT32, SEMANTIC_ATTR15, ADDRESS_CLAMP_TO_EDGE, FILTER_NEAREST,
+    TYPE_FLOAT32, TYPE_UINT32, SEMANTIC_ATTR15, ADDRESS_CLAMP_TO_EDGE, FILTER_NEAREST,
     PIXELFORMAT_RGBA16F, PIXELFORMAT_RGB32F, PIXELFORMAT_RGBA32F
 } from '../platform/graphics/constants.js';
 
@@ -265,8 +265,9 @@ class Morph extends RefCountedObject {
 
         // create vertex stream with vertex_id used to map vertex to texture
         const formatDesc = [{ semantic: SEMANTIC_ATTR15, components: 1, type: useUintIds ? TYPE_UINT32 : TYPE_FLOAT32 }];
-        this.vertexBufferIds = new VertexBuffer(this.device, new VertexFormat(this.device, formatDesc, ids.length), ids.length, BUFFER_STATIC,
-                                                useUintIds ? new Uint32Array(ids) : new Float32Array(ids));
+        this.vertexBufferIds = new VertexBuffer(this.device, new VertexFormat(this.device, formatDesc, ids.length), ids.length, {
+            data: useUintIds ? new Uint32Array(ids) : new Float32Array(ids)
+        });
 
         return true;
     }

@@ -987,7 +987,9 @@ class ParticleEmitter {
                 }
                 const particleFormat = new VertexFormat(this.graphicsDevice, elements);
 
-                this.vertexBuffer = new VertexBuffer(this.graphicsDevice, particleFormat, psysVertCount, BUFFER_DYNAMIC);
+                this.vertexBuffer = new VertexBuffer(this.graphicsDevice, particleFormat, psysVertCount, {
+                    usage: BUFFER_DYNAMIC
+                });
                 this.indexBuffer = new IndexBuffer(this.graphicsDevice, INDEXFORMAT_UINT16, psysIndexCount);
             } else {
                 const elements = [{
@@ -1013,7 +1015,9 @@ class ParticleEmitter {
                 }];
                 const particleFormat = new VertexFormat(this.graphicsDevice, elements);
 
-                this.vertexBuffer = new VertexBuffer(this.graphicsDevice, particleFormat, psysVertCount, BUFFER_DYNAMIC);
+                this.vertexBuffer = new VertexBuffer(this.graphicsDevice, particleFormat, psysVertCount, {
+                    usage: BUFFER_DYNAMIC
+                });
                 this.indexBuffer = new IndexBuffer(this.graphicsDevice, INDEXFORMAT_UINT16, psysIndexCount);
             }
 

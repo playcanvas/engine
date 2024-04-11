@@ -1,7 +1,7 @@
 import { Debug } from '../core/debug.js';
 import { BoundingBox } from '../core/shape/bounding-box.js';
 
-import { BUFFER_STATIC, SEMANTIC_ATTR0, TYPE_FLOAT32 } from '../platform/graphics/constants.js';
+import { SEMANTIC_ATTR0, TYPE_FLOAT32 } from '../platform/graphics/constants.js';
 import { VertexBuffer } from '../platform/graphics/vertex-buffer.js';
 import { VertexFormat } from '../platform/graphics/vertex-format.js';
 
@@ -150,7 +150,9 @@ class MorphTarget {
 
             // create vertex buffer with specified type (or float32), and semantic of ATTR0 which gets replaced at runtime with actual semantic
             const formatDesc = [{ semantic: SEMANTIC_ATTR0, components: 3, type: dataType }];
-            return new VertexBuffer(device, new VertexFormat(device, formatDesc), data.length / 3, BUFFER_STATIC, data);
+            return new VertexBuffer(device, new VertexFormat(device, formatDesc), data.length / 3, {
+                data: data
+            });
         }
 
         return null;

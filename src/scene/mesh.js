@@ -910,8 +910,10 @@ class Mesh extends RefCountedObject {
         if (!this.vertexBuffer) {
             const allocateVertexCount = this._geometryData.maxVertices;
             const format = this._buildVertexFormat(allocateVertexCount);
-            const options = this._storageVertex ? { storage: true } : undefined;
-            this.vertexBuffer = new VertexBuffer(this.device, format, allocateVertexCount, this._geometryData.verticesUsage, undefined, options);
+            this.vertexBuffer = new VertexBuffer(this.device, format, allocateVertexCount, {
+                usage: this._geometryData.verticesUsage,
+                storage: this._storageVertex
+            });
         }
 
         // lock vertex buffer and create typed access arrays for individual elements
