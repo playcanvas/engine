@@ -44,12 +44,12 @@ class Preprocessor {
      * Run c-like preprocessor on the source code, and resolves the code based on the defines and ifdefs
      *
      * @param {string} source - The source code to work on.
-     * @param {object} [includes] - An object containing key-value pairs of include names and their
+     * @param {Map<string, string>} [includes] - An object containing key-value pairs of include names and their
      * content.
      * @param {boolean} [stripUnusedColorAttachments] - If true, strips unused color attachments.
      * @returns {string|null} Returns preprocessed source code, or null in case of error.
      */
-    static run(source, includes = {}, stripUnusedColorAttachments = false) {
+    static run(source, includes = new Map(), stripUnusedColorAttachments = false) {
 
         // strips comments, handles // and many cases of /*
         source = source.replace(/\/\*[\s\S]*?\*\/|([^\\:]|^)\/\/.*$/gm, '$1');
@@ -136,7 +136,7 @@ class Preprocessor {
      * @param {Map<string, string>} defines - Supplied defines which are used in addition to those
      * defined in the source code. Maps a define name to its value. Note that the map is modified
      * by the function.
-     * @param {object} [includes] - An object containing key-value pairs of include names and their
+     * @param {Map<string, string>} [includes] - An object containing key-value pairs of include names and their
      * content.
      * @returns {string} Returns preprocessed source code.
      */
@@ -323,7 +323,7 @@ class Preprocessor {
                     if (keep) {
 
                         // cut out the include line and replace it with the included string
-                        const includeSource = includes[identifier];
+                        const includeSource = includes?.get(identifier);
                         if (includeSource) {
                             source = source.substring(0, include.index - 1) + includeSource + source.substring(INCLUDE.lastIndex);
 

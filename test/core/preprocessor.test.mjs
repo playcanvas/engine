@@ -4,16 +4,15 @@ import { expect } from 'chai';
 
 describe('Preprocessor', function () {
 
-    const includes = {
-        'inc1': `
+    const includes = new Map([
+        ['inc1', `
             block1
             #ifdef FEATURE2
                 nested
             #endif
-        `,
-        'inc2': 'block2'
-    };
-
+        `],
+        ['inc2', 'block2']
+    ]);
     const srcData = `
         
         #define FEATURE1
