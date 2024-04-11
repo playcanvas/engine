@@ -1,8 +1,8 @@
 import { platform } from '../../core/platform.js';
 import { script } from '../script.js';
-import { ScriptType } from '../script/script-type.js';
+import { ScriptType } from '../script/script.js';
 import { ScriptTypes } from '../script/script-types.js';
-import { registerScript } from '../script/script.js';
+import { registerScript } from '../script/script-create.js';
 import { ResourceLoader } from './loader.js';
 
 import { ResourceHandler } from './handler.js';
