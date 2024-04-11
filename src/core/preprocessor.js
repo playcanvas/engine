@@ -326,6 +326,9 @@ class Preprocessor {
                         const includeSource = includes[identifier];
                         if (includeSource) {
                             source = source.substring(0, include.index - 1) + includeSource + source.substring(INCLUDE.lastIndex);
+
+                            // process the just included test
+                            KEYWORD.lastIndex = include.index;
                         } else {
                             console.error(`Include not found: ${identifier}`);
                             error = true;

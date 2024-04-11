@@ -5,7 +5,12 @@ import { expect } from 'chai';
 describe('Preprocessor', function () {
 
     const includes = {
-        'inc1': 'block1',
+        'inc1': `
+            block1
+            #ifdef FEATURE2
+                nested
+            #endif
+        `,
         'inc2': 'block2'
     };
 
@@ -146,4 +151,7 @@ describe('Preprocessor', function () {
         expect(Preprocessor.run(srcData, includes).includes('block2')).to.equal(false);
     });
 
+    it('returns true for nested', function () {
+        expect(Preprocessor.run(srcData, includes).includes('nested')).to.equal(true);
+    });
 });
