@@ -11,6 +11,8 @@ let id = 0;
  * @category Graphics
  */
 class VertexBuffer {
+    usage = BUFFER_STATIC;
+
     /**
      * Create a new VertexBuffer instance.
      *
