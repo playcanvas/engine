@@ -150,7 +150,7 @@
     "docs": "typedoc",
     "lint": "eslint --ext .js,.mjs extras scripts src test utils rollup.config.mjs",
     "publint": "publint",
-    "serve": "serve build -l 51000",
+    "serve": "serve build -l 51000 --cors",
     "test": "mocha --recursive --require test/fixtures.mjs",
     "test:coverage": "c8 npm test",
     "test:karma": "karma start tests/karma.conf.cjs -- --single-run",
