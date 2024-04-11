@@ -25,7 +25,7 @@ const ENV_START_MATCHES = [
 
 const env = [];
 for (let i = 0; i < args.length; i++) {
-    if (ENV_START_MATCHES.some(match => args[i].startsWith(match))) {
+    if (ENV_START_MATCHES.some(match => args[i].startsWith(match)) && args[i - 1] !== '--environment') {
         env.push(`--environment ${args[i]}`);
         args.splice(i, 1);
         i--;
