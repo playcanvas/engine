@@ -2116,8 +2116,7 @@ const makeTick = function (_app) {
 
         // cancel any hanging rAF to avoid multiple rAF callbacks per frame
         if (application.frameRequestId) {
-            if (application.xr?.session)
-                application.xr.session.cancelAnimationFrame(application.frameRequestId);
+            application.xr?.session?.cancelAnimationFrame(application.frameRequestId);
             cancelAnimationFrame(application.frameRequestId);
         }
 
