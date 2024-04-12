@@ -91,7 +91,7 @@ export const SHAPEAXIS_FACE = 'face';
  * Converts Color4 to Color3.
  *
  * @param {Color} color - Color4
- * @returns Color3
+ * @returns {Color} - Color3
  */
 function color3from4(color) {
     return new Color(color.r, color.g, color.b);
@@ -447,9 +447,9 @@ class TransformGizmo extends Gizmo {
     set colorAlpha(value) {
         this._colorAlpha = math.clamp(value, 0, 1);
 
-        this._updateAxisColor('x', color3from4(this._meshColors.axis.x));
-        this._updateAxisColor('y', color3from4(this._meshColors.axis.y));
-        this._updateAxisColor('z', color3from4(this._meshColors.axis.z));
+        this._updateAxisColor('x', this._meshColors.axis.x);
+        this._updateAxisColor('y', this._meshColors.axis.y);
+        this._updateAxisColor('z', this._meshColors.axis.z);
     }
 
     get colorAlpha() {
@@ -463,9 +463,12 @@ class TransformGizmo extends Gizmo {
     }
 
     _updateAxisColor(axis, value) {
-        this._guideColors[axis].copy(value);
-        this._meshColors.axis[axis].copy(this._colorSemi(value));
-        this._meshColors.hover[axis].copy(value);
+        const color3 = color3from4(value);
+        const color4 = this._colorSemi(value);
+
+        this._guideColors[axis].copy(color3);
+        this._meshColors.axis[axis].copy(color4);
+        this._meshColors.hover[axis].copy(color3);
 
         for (const name in this._shapes) {
             this._shapes[name].hover(!!this._hoverAxis);
