@@ -16,9 +16,9 @@ const funcNameRegex = new RegExp('^\\s*function(?:\\s|\\s*\\/\\*.*\\*\\/\\s*)+([
  * ```javascript
  * import { Script } from 'playcanvas';
  * class Rotator extends Script {
- *    update() {
- *      this.entity.rotate(0, 0.1, 0);
- *    }
+ *     update() {
+ *         this.entity.rotate(0, 0.1, 0);
+ *     }
  * }
  * ```
  * The following methods are called if they exist on the Script instance:
