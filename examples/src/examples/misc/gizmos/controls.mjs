@@ -95,6 +95,17 @@ export function controls({ observer, ReactPCUI, React, jsx, fragment }) {
                     binding: new BindingTwoWay(),
                     link: { observer, path: 'gizmo.zAxisColor' }
                 })
+            ),
+            jsx(
+                LabelGroup,
+                { text: 'Color Alpha' },
+                jsx(SliderInput, {
+                    binding: new BindingTwoWay(),
+                    link: { observer, path: 'gizmo.colorAlpha' },
+                    min: 0,
+                    max: 1,
+                    precision: 2
+                })
             )
         ),
         jsx(
