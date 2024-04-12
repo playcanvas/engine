@@ -155,9 +155,11 @@ class ScriptHandler extends ResourceHandler {
                 const extendsScriptType = scriptClass.prototype instanceof ScriptType;
 
                 if (extendsScriptType) {
-                    if (scriptClass.attributes) {
+
+                    // Check if attributes is defined directly on the class and not inherited
+                    if (scriptClass.hasOwnProperty('attributes')) {
                         const attributes = new ScriptAttributes(scriptClass);
-                        for (const key in script.attributes) {
+                        for (const key in scriptClass.attributes) {
                             attributes.add(key, scriptClass.attributes[key]);
                         }
                         scriptClass.attributes = attributes;
