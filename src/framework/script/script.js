@@ -7,11 +7,20 @@ import { ScriptAttributes } from './script-attributes.js';
 const funcNameRegex = new RegExp('^\\s*function(?:\\s|\\s*\\/\\*.*\\*\\/\\s*)+([^\\(\\s\\/]*)\\s*');
 
 /**
- * Represents the type of a script. It is returned by {@link createScript}. Also referred to as
- * Script Type.
+ * The Script class is a base class that you must extend to receive
+ * {@link https://developer.playcanvas.com/user-manual/scripting/anatomy/}[various lifecycle updates]
+ * from the engine.
  *
- * The type is to be extended using its JavaScript prototype. There is a list of methods that will
- * be executed by the engine on instances of this type, such as:
+ * You can create a Script using either {@link createScript} or by extending the class directly.
+ *
+ * ```javascript
+ * class Rotator extends Script {
+ *    update() {
+ *      this.entity.rotate(0, 0.1, 0);
+ *    }
+ * }
+ * ```
+ * The following methods are called if they exist on the Script instance:
  *
  * - `initialize`
  * - `postInitialize`
@@ -30,6 +39,7 @@ const funcNameRegex = new RegExp('^\\s*function(?:\\s|\\s*\\/\\*.*\\*\\/\\s*)+([
  * new Script has a `swap` method in its prototype, then it will be executed to perform hot-
  * reload at runtime.
  *
+ * @see {@link https://developer.playcanvas.com/user-manual/scripting/anatomy/} for more information.
  * @category Script
  */
 class Script extends EventHandler {
@@ -390,4 +400,4 @@ class Script extends EventHandler {
      */
 }
 
-export { Script, Script as ScriptType };
+export { Script };
