@@ -447,9 +447,11 @@ class TransformGizmo extends Gizmo {
     set colorAlpha(value) {
         this._colorAlpha = math.clamp(value, 0, 1);
 
-        this._updateAxisColor('x', this._meshColors.axis.x);
-        this._updateAxisColor('y', this._meshColors.axis.y);
-        this._updateAxisColor('z', this._meshColors.axis.z);
+        this._meshColors.axis.x.copy(this._colorSemi(this._meshColors.axis.x));
+        this._meshColors.axis.y.copy(this._colorSemi(this._meshColors.axis.y));
+        this._meshColors.axis.z.copy(this._colorSemi(this._meshColors.axis.z));
+        this._meshColors.axis.xyz.copy(this._colorSemi(this._meshColors.axis.xyz));
+        this._meshColors.axis.face.copy(this._colorSemi(this._meshColors.axis.face));
     }
 
     get colorAlpha() {
