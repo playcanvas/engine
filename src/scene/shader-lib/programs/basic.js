@@ -154,12 +154,6 @@ class ShaderGeneratorBasic extends ShaderGenerator {
         definitionOptions.attributes = attributes;
     }
 
-    addDefine(defines, condition, name) {
-        if (condition) {
-            defines.set(name, true);
-        }
-    }
-
     createVertexDefinition(device, definitionOptions, options, shaderPassInfo) {
 
         const includes = new Map();
@@ -170,9 +164,9 @@ class ShaderGeneratorBasic extends ShaderGenerator {
         includes.set('transformVS', shaderChunks.transformVS);
         includes.set('skinCode', ShaderGenerator.skinCode(device));
 
-        this.addDefine(defines, options.skin, 'SKIN');
-        this.addDefine(defines, options.vertexColors, 'VERTEX_COLORS');
-        this.addDefine(defines, options.diffuseMap, 'DIFFUSE_MAP');
+        if (options.skin) defines.set('SKIN', true);
+        if (options.vertexColors) defines.set('VERTEX_COLORS', true);
+        if (options.diffuseMap) defines.set('DIFFUSE_MAP', true);
 
         definitionOptions.vertexCode = vShader;
         definitionOptions.vertexIncludesMap = includes;
@@ -189,10 +183,10 @@ class ShaderGeneratorBasic extends ShaderGenerator {
         includes.set('alphaTestPS', shaderChunks.alphaTestPS);
         includes.set('packDepthPS', shaderChunks.packDepthPS);
 
-        this.addDefine(defines, options.vertexColors, 'VERTEX_COLORS');
-        this.addDefine(defines, options.diffuseMap, 'DIFFUSE_MAP');
-        this.addDefine(defines, options.fog, 'FOG');
-        this.addDefine(defines, options.alphaTest, 'ALPHA_TEST');
+        if (options.vertexColors) defines.set('VERTEX_COLORS', true);
+        if (options.diffuseMap) defines.set('DIFFUSE_MAP', true);
+        if (options.fog) defines.set('FOG', true);
+        if (options.alphaTest) defines.set('ALPHA_TEST', true);
 
         definitionOptions.fragmentCode = fShader;
         definitionOptions.fragmentIncludesMap = includes;
