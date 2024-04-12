@@ -2118,9 +2118,9 @@ const makeTick = function (_app) {
         if (application.frameRequestId) {
             application.xr?.session?.cancelAnimationFrame(application.frameRequestId);
             cancelAnimationFrame(application.frameRequestId);
+            application.frameRequestId = null;
         }
 
-        application.frameRequestId = null;
         application._inFrameUpdate = true;
 
         setApplication(application);
