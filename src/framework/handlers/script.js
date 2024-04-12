@@ -1,6 +1,6 @@
 import { platform } from '../../core/platform.js';
 import { script } from '../script.js';
-import { ScriptType } from '../script/script.js';
+import { Script } from '../script/script.js';
 import { ScriptTypes } from '../script/script-types.js';
 import { registerScript } from '../script/script-create.js';
 import { ResourceLoader } from './loader.js';
@@ -152,7 +152,7 @@ class ScriptHandler extends ResourceHandler {
 
             for (const key in module) {
                 const scriptClass = module[key];
-                const extendsScriptType = scriptClass.prototype instanceof ScriptType;
+                const extendsScriptType = scriptClass.prototype instanceof Script;
 
                 if (extendsScriptType) {
 

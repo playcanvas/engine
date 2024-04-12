@@ -5,7 +5,7 @@ import { script } from '../script.js';
 import { AppBase } from '../app-base.js';
 
 import { ScriptAttributes } from './script-attributes.js';
-import { ScriptType } from './script.js';
+import { Script } from './script.js';
 import { ScriptTypes } from './script-types.js';
 
 const reservedScriptNames = new Set([
@@ -37,7 +37,7 @@ function getReservedScriptNames() {
  * @param {AppBase} [app] - Optional application handler, to choose which {@link ScriptRegistry}
  * to add a script to. By default it will use `Application.getApplication()` to get current
  * {@link AppBase}.
- * @returns {typeof ScriptType|null} A class type (constructor function) that inherits {@link Script},
+ * @returns {typeof Script|null} A class type (constructor function) that inherits {@link Script},
  * which the developer is meant to further extend by adding attributes and prototype methods.
  * Returns null if there was an error.
  * @example
@@ -67,13 +67,13 @@ function createScript(name, app) {
 
     const scriptType = function (args) {
         EventHandler.prototype.initEventHandler.call(this);
-        ScriptType.prototype.initScriptType.call(this, args);
+        Script.prototype.initScriptType.call(this, args);
     };
 
-    scriptType.prototype = Object.create(ScriptType.prototype);
+    scriptType.prototype = Object.create(Script.prototype);
     scriptType.prototype.constructor = scriptType;
 
-    scriptType.extend = ScriptType.extend;
+    scriptType.extend = Script.extend;
     scriptType.attributes = new ScriptAttributes(scriptType);
 
     registerScript(scriptType, name, app);
@@ -92,7 +92,7 @@ createScript.reservedAttributes = reservedAttributes;
  * Register a existing class type as a Script Type to {@link ScriptRegistry}. Useful when defining
  * a ES6 script class that extends {@link Script} (see example).
  *
- * @param {typeof ScriptType} script - The existing class type (constructor function) to be
+ * @param {typeof Script} script - The existing class type (constructor function) to be
  * registered as a Script Type. Class must extend {@link Script} (see example). Please note: A
  * class created using {@link createScript} is auto-registered, and should therefore not be pass
  * into {@link registerScript} (which would result in swapping out all related script instances).
@@ -135,10 +135,10 @@ function registerScript(script, name, app) {
     if (typeof script !== 'function')
         throw new Error(`script class: '${script}' must be a constructor function (i.e. class).`);
 
-    if (!(script.prototype instanceof ScriptType))
-        throw new Error(`script class: '${ScriptType.__getScriptName(script)}' does not extend pc.Script.`);
+    if (!(script.prototype instanceof Script))
+        throw new Error(`script class: '${Script.__getScriptName(script)}' does not extend pc.Script.`);
 
-    name = name || script.__name || ScriptType.__getScriptName(script);
+    name = name || script.__name || Script.__getScriptName(script);
 
     if (reservedScriptNames.has(name))
         throw new Error(`script name: '${name}' is reserved, please change script name`);
