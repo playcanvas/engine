@@ -50,7 +50,20 @@ class ShaderUtils {
      * @param {string} [options.fragmentDefines] - The fragment shader defines.
      * @param {string} [options.fragmentExtensions] - The fragment shader extensions code.
      * @param {string} [options.fragmentPreamble] - The preamble string for the fragment shader.
-     * @param {boolean} [options.useTransformFeedback] - Whether to use transform feedback. Defaults to false.
+     * @param {boolean} [options.useTransformFeedback] - Whether to use transform feedback. Defaults
+     * to false.
+     * @param {Map<string, string>} [options.vertexIncludesMap] - A map containing key-value pairs of
+     * include names and their content. These are used for resolving #include directives in the
+     * vertex shader source.
+     * @param {Map<string, string>} [options.vertexDefinesMap] - A map containing key-value pairs of
+     * define names and their values. These are used for resolving #ifdef style of directives in the
+     * vertex code.
+     * @param {Map<string, string>} [options.fragmentIncludesMap] - A map containing key-value pairs
+     * of include names and their content. These are used for resolving #include directives in the
+     * fragment shader source.
+     * @param {Map<string, string>} [options.fragmentDefinesMap] - A map containing key-value pairs of
+     * define names and their values. These are used for resolving #ifdef style of directives in the
+     * fragment code.
      * @param {string | string[]} [options.fragmentOutputTypes] - Fragment shader output types,
      * which default to vec4. Passing a string will set the output type for all color attachments.
      * Passing an array will set the output type for each color attachment.
@@ -112,6 +125,10 @@ class ShaderUtils {
             name: name,
             attributes: attribs,
             vshader: vertCode,
+            vdefines: options.vertexDefinesMap,
+            vincludes: options.vertexIncludesMap,
+            fdefines: options.fragmentDefinesMap,
+            fincludes: options.fragmentIncludesMap,
             fshader: fragCode,
             useTransformFeedback: options.useTransformFeedback
         };
