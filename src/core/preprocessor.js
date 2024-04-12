@@ -44,12 +44,17 @@ class Preprocessor {
      * Run c-like preprocessor on the source code, and resolves the code based on the defines and ifdefs
      *
      * @param {string} source - The source code to work on.
-     * @param {Map<string, string>} [includes] - An object containing key-value pairs of include names and their
-     * content.
+     * @param {Map<string, string>} [defines] - A map containing key-value pairs of define names
+     * and their values. These are used for resolving #ifdef style of directives in the source.
+     * @param {Map<string, string>} [includes] - A map containing key-value pairs of include names
+     * and their content. These are used for resolving #include directives in the source.
      * @param {boolean} [stripUnusedColorAttachments] - If true, strips unused color attachments.
      * @returns {string|null} Returns preprocessed source code, or null in case of error.
      */
-    static run(source, includes = new Map(), stripUnusedColorAttachments = false) {
+    static run(source, defines, includes = new Map(), stripUnusedColorAttachments = false) {
+
+        // shallow clone as we will modify the map
+        defines = defines ? new Map(defines) : new Map();
 
         // strips comments, handles // and many cases of /*
         source = source.replace(/\/\*[\s\S]*?\*\/|([^\\:]|^)\/\/.*$/gm, '$1');
@@ -60,7 +65,6 @@ class Preprocessor {
             .join('\n');
 
         // generate defines to remove unused color attachments
-        const defines = new Map();
         if (stripUnusedColorAttachments) {
 
             // find out how many times pcFragColorX is used (see gles3.js)
