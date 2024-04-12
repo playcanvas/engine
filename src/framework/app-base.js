@@ -2114,7 +2114,13 @@ const makeTick = function (_app) {
         if (!application.graphicsDevice)
             return;
 
-        application.frameRequestId = null;
+        // cancel any hanging rAF to avoid multiple rAF callbacks per frame
+        if (application.frameRequestId) {
+            application.xr?.session?.cancelAnimationFrame(application.frameRequestId);
+            cancelAnimationFrame(application.frameRequestId);
+            application.frameRequestId = null;
+        }
+
         application._inFrameUpdate = true;
 
         setApplication(application);
