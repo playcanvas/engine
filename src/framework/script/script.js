@@ -8,12 +8,13 @@ const funcNameRegex = new RegExp('^\\s*function(?:\\s|\\s*\\/\\*.*\\*\\/\\s*)+([
 
 /**
  * The Script class is a base class that you must extend to receive
- * {@link https://developer.playcanvas.com/user-manual/scripting/anatomy/}[various lifecycle updates]
+ * {@link https://developer.playcanvas.com/user-manual/scripting/anatomy/ various lifecycle updates}
  * from the engine.
  *
  * You can create a Script using either {@link createScript} or by extending the class directly.
  *
  * ```javascript
+ * import { Script } from 'playcanvas';
  * class Rotator extends Script {
  *    update() {
  *      this.entity.rotate(0, 0.1, 0);
