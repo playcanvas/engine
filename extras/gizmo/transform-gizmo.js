@@ -86,6 +86,17 @@ export const SHAPEAXIS_XYZ = 'xyz';
  */
 export const SHAPEAXIS_FACE = 'face';
 
+
+/**
+ * Converts Color4 to Color3.
+ *
+ * @param {Color} color - Color4
+ * @returns Color3
+ */
+function color3from4(color) {
+    return new Color(color.r, color.g, color.b);
+}
+
 /**
  * The base class for all transform gizmos.
  *
@@ -436,9 +447,9 @@ class TransformGizmo extends Gizmo {
     set colorAlpha(value) {
         this._colorAlpha = math.clamp(value, 0, 1);
 
-        this._updateAxisColor('x', this._meshColors.axis.x);
-        this._updateAxisColor('y', this._meshColors.axis.y);
-        this._updateAxisColor('z', this._meshColors.axis.z);
+        this._updateAxisColor('x', color3from4(this._meshColors.axis.x));
+        this._updateAxisColor('y', color3from4(this._meshColors.axis.y));
+        this._updateAxisColor('z', color3from4(this._meshColors.axis.z));
     }
 
     get colorAlpha() {
