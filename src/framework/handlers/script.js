@@ -8,6 +8,8 @@ import { ResourceLoader } from './loader.js';
 import { ResourceHandler } from './handler.js';
 import { ScriptAttributes } from '../script/script-attributes.js';
 
+const toLowerCamelCase = str => str[0].toLowerCase() + str.substring(1);
+
 /**
  * Resource handler for loading JavaScript files dynamically.  Two types of JavaScript files can be
  * loaded, PlayCanvas scripts which contain calls to {@link createScript}, or regular JavaScript
@@ -155,14 +157,16 @@ class ScriptHandler extends ResourceHandler {
                 const extendsScriptType = scriptClass.prototype instanceof ScriptType;
 
                 if (extendsScriptType) {
-                    if (scriptClass.attributes) {
+
+                    // Check if attributes is defined directly on the class and not inherited
+                    if (scriptClass.hasOwnProperty('attributes')) {
                         const attributes = new ScriptAttributes(scriptClass);
-                        for (const key in script.attributes) {
+                        for (const key in scriptClass.attributes) {
                             attributes.add(key, scriptClass.attributes[key]);
                         }
                         scriptClass.attributes = attributes;
                     }
-                    registerScript(scriptClass, scriptClass.name.toLowerCase());
+                    registerScript(scriptClass, toLowerCamelCase(scriptClass.name));
                 }
             }
 

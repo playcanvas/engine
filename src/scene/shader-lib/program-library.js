@@ -172,6 +172,10 @@ class ProgramLibrary {
                 name: `${generatedShaderDef.name}${passName}-proc`,
                 attributes: generatedShaderDef.attributes,
                 vshader: generatedShaderDef.vshader,
+                vdefines: generatedShaderDef.vdefines,
+                vincludes: generatedShaderDef.vincludes,
+                fdefines: generatedShaderDef.fdefines,
+                fincludes: generatedShaderDef.fincludes,
                 fshader: generatedShaderDef.fshader,
                 processingOptions: processingOptions,
                 shaderLanguage: generatedShaderDef.shaderLanguage
