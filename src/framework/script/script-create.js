@@ -1,5 +1,4 @@
 import { Debug } from '../../core/debug.js';
-import { EventHandler } from '../../core/event-handler.js';
 
 import { script } from '../script.js';
 import { AppBase } from '../app-base.js';
