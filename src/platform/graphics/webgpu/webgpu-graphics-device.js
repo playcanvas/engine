@@ -126,7 +126,7 @@ class WebgpuGraphicsDevice extends GraphicsDevice {
         // temporarily disabled functionality which is not supported to avoid errors
         this.disableParticleSystem = true;
 
-        const limits = this.gpuAdapter.limits;
+        const limits = this.wgpu?.limits;
         this.limits = limits;
 
         this.precision = 'highp';
