@@ -169,8 +169,8 @@ class ShaderGeneratorBasic extends ShaderGenerator {
         if (options.diffuseMap) defines.set('DIFFUSE_MAP', true);
 
         definitionOptions.vertexCode = vShader;
-        definitionOptions.vertexIncludesMap = includes;
-        definitionOptions.vertexDefinesMap = defines;
+        definitionOptions.vertexIncludes = includes;
+        definitionOptions.vertexDefines = defines;
     }
 
     createFragmentDefinition(definitionOptions, options, shaderPassInfo) {
@@ -189,8 +189,8 @@ class ShaderGeneratorBasic extends ShaderGenerator {
         if (options.alphaTest) defines.set('ALPHA_TEST', true);
 
         definitionOptions.fragmentCode = fShader;
-        definitionOptions.fragmentIncludesMap = includes;
-        definitionOptions.fragmentDefinesMap = defines;
+        definitionOptions.fragmentIncludes = includes;
+        definitionOptions.fragmentDefines = defines;
     }
 
     createShaderDefinition(device, options) {
