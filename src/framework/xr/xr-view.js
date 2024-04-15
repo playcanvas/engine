@@ -325,6 +325,14 @@ class XrView extends EventHandler {
     }
 
     /**
+     * @type {Mat4}
+     * @ignore
+     */
+    get viewInvMat() {
+        return this._viewInvMat;
+    }
+
+    /**
      * @type {Mat3}
      * @ignore
      */
