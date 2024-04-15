@@ -65,19 +65,12 @@ function createScript(name, app) {
     if (reservedScriptNames.has(name))
         throw new Error(`Script name '${name}' is reserved, please rename the script`);
 
-    const scriptType = function (args) {
-        EventHandler.prototype.initEventHandler.call(this);
-        Script.prototype.initScriptType.call(this, args);
-    };
+    class ScriptWithAttributes extends Script {
+        attributes = new ScriptAttributes(ScriptWithAttributes);
+    }
 
-    scriptType.prototype = Object.create(Script.prototype);
-    scriptType.prototype.constructor = scriptType;
-
-    scriptType.extend = Script.extend;
-    scriptType.attributes = new ScriptAttributes(scriptType);
-
-    registerScript(scriptType, name, app);
-    return scriptType;
+    registerScript(ScriptWithAttributes, name, app);
+    return ScriptWithAttributes;
 }
 
 // Editor uses this - migrate to ScriptAttributes.reservedNames and delete this
