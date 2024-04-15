@@ -1,4 +1,6 @@
-import { FILTER_NEAREST, math, Texture } from 'playcanvas';
+import { math } from '../../core/math/math.js';
+import { Texture } from '../../platform/graphics/texture.js';
+import { FILTER_NEAREST } from '../../platform/graphics/constants.js';
 
 class WordAtlas {
     constructor(device, words) {

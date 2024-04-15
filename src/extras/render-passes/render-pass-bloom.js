@@ -1,16 +1,17 @@
-import {
-    Color,
-    Texture,
-    BlendState,
-    RenderTarget,
-    RenderPass,
-    FILTER_LINEAR, ADDRESS_CLAMP_TO_EDGE
-} from "playcanvas";
-import { RenderPassDownsample } from "./render-pass-downsample.js";
-import { RenderPassUpsample } from "./render-pass-upsample.js";
+import { Color } from '../../core/math/color.js';
+import { Texture } from '../../platform/graphics/texture.js';
+import { BlendState } from '../../platform/graphics/blend-state.js';
+import { RenderTarget } from '../../platform/graphics/render-target.js';
+import { RenderPass } from '../../platform/graphics/render-pass.js';
+import { FILTER_LINEAR, ADDRESS_CLAMP_TO_EDGE } from '../../platform/graphics/constants.js';
+
+import { RenderPassDownsample } from './render-pass-downsample.js';
+import { RenderPassUpsample } from './render-pass-upsample.js';
 
 // based on https://learnopengl.com/Guest-Articles/2022/Phys.-Based-Bloom
-
+/**
+ * @category Graphics
+ */
 class RenderPassBloom extends RenderPass {
     bloomTexture;
 

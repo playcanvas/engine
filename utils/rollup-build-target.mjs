@@ -1,5 +1,6 @@
 // official package plugins
 import { babel } from '@rollup/plugin-babel';
+import resolve from '@rollup/plugin-node-resolve';
 import strip from '@rollup/plugin-strip';
 import terser from '@rollup/plugin-terser';
 
@@ -192,9 +193,11 @@ function buildTarget({ moduleFormat, buildType, input = 'src/index.js', dir = 'b
             name: 'pc',
             preserveModules: !bundled,
             file: bundled ? `${dir}/${OUT_PREFIX[buildType]}${isUMD ? '.js' : '.mjs'}` : undefined,
-            dir: !bundled ? `${dir}/${OUT_PREFIX[buildType]}` : undefined
+            dir: !bundled ? `${dir}/${OUT_PREFIX[buildType]}` : undefined,
+            footer: isUMD ? 'this.pcx = pc;' : undefined
         },
         plugins: [
+            resolve(),
             jscc(getJSCCOptions(isMin ? 'release' : buildType, isUMD)),
             isUMD ? dynamicImportLegacyBrowserSupport() : undefined,
             !isDebug ? shaderChunks() : undefined,
@@ -217,7 +220,7 @@ function buildTarget({ moduleFormat, buildType, input = 'src/index.js', dir = 'b
          * @type {RollupOptions}
          */
         const target = {
-            input: `${unbundled.output.dir}/index.js`,
+            input: `${unbundled.output.dir}/src/index.js`,
             output: {
                 banner: getBanner(BANNER[buildType]),
                 format: 'es',

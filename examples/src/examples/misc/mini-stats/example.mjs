@@ -1,5 +1,4 @@
 import * as pc from 'playcanvas';
-import * as pcx from 'playcanvas-extras';
 import { deviceType, rootPath } from '@examples/utils';
 
 const canvas = document.getElementById('application-canvas');
@@ -40,7 +39,7 @@ app.on('destroy', () => {
 });
 
 // set up options for mini-stats, start with the default options
-const options = pcx.MiniStats.getDefaultOptions();
+const options = pc.MiniStats.getDefaultOptions();
 
 // configure sizes
 options.sizes = [
@@ -125,7 +124,7 @@ options.stats = [
 ];
 
 // create mini-stats system
-const miniStats = new pcx.MiniStats(app, options); // eslint-disable-line no-unused-vars
+const miniStats = new pc.MiniStats(app, options); // eslint-disable-line no-unused-vars
 
 // add directional lights to the scene
 const light = new pc.Entity();

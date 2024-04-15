@@ -1,17 +1,18 @@
 import { CoreExporter } from "./core-exporter.js";
 import { zipSync, strToU8 } from 'fflate';
+
 import {
     SEMANTIC_POSITION,
     SEMANTIC_NORMAL,
     SEMANTIC_TEXCOORD0,
-    SEMANTIC_TEXCOORD1,
-    Color
-} from 'playcanvas';
+    SEMANTIC_TEXCOORD1
+} from "../../platform/graphics/constants.js";
+
+import { Color } from '../../core/math/color.js';
 
 const ROOT_FILE_NAME = 'root';
 
-const header =
-`#usda 1.0
+const header = `#usda 1.0
 (
     customLayerData = {
         string creator = "PlayCanvas UsdzExporter"
@@ -50,7 +51,7 @@ def "Mesh"
 }
 `;
 
-const meshInstanceTemplate = (nodeName, meshRefPath, worldMatrix, materialRefPath) => `
+const meshInstanceTemplate = (nodeName, meshRefPath, worldMatrix, materialRefPath) => /* usd */`
 def Xform "${nodeName}" (
     prepend references = ${meshRefPath}
 )
@@ -73,7 +74,7 @@ class UsdzExporter extends CoreExporter {
     /**
      * Maps a mesh to a reference (path) inside the usdz container
      *
-     * @type {Map<import('playcanvas').Mesh, string>}
+     * @type {Map<import('../../scene/mesh.js').Mesh, string>}
      * @ignore
      */
     meshMap;
@@ -81,7 +82,7 @@ class UsdzExporter extends CoreExporter {
     /**
      * Maps a material to a reference (path) inside the usdz container
      *
-     * @type {Map<import('playcanvas').Material, string>}
+     * @type {Map<import('../../scene/materials/material.js').Material, string>}
      * @ignore
      */
     materialMap;
@@ -96,7 +97,7 @@ class UsdzExporter extends CoreExporter {
     /**
      * A map of texture requests
      *
-     * @type {Map<import('playcanvas').Texture, string>}
+     * @type {Map<import('../../platform/graphics/texture.js').Texture, string>}
      * @ignore
      */
     textureMap;
@@ -139,7 +140,7 @@ class UsdzExporter extends CoreExporter {
     /**
      * Converts a hierarchy of entities to USDZ format.
      *
-     * @param {import('playcanvas').Entity} entity - The root of the entity hierarchy to convert.
+     * @param {import('../../framework/entity.js').Entity} entity - The root of the entity hierarchy to convert.
      * @param {object} options - Object for passing optional arguments.
      * @param {number} [options.maxTextureSize] - Maximum texture size. Texture is resized if over
      * the size.
@@ -270,7 +271,7 @@ class UsdzExporter extends CoreExporter {
         return this.getFileIds('texture', `Texture_${texture.id}`, 'Texture', 'png');
     }
 
-    addFile(category, uniqueId, refName = '', content = null) {
+    addFile(category, uniqueId, refName = '', content = '') {
 
         // prepare the content with the header
         let contentU8 = null;

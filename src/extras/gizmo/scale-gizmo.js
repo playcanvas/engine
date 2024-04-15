@@ -1,24 +1,22 @@
-import {
-    Quat,
-    Vec3
-} from 'playcanvas';
+import { Vec3 } from '../../core/math/vec3.js';
 
-import { AxisArrow, AxisPlane } from './axis-shapes.js';
+import { AxisBoxCenter, AxisBoxLine, AxisPlane } from './axis-shapes.js';
 import { GIZMO_LOCAL } from './gizmo.js';
 import { TransformGizmo } from "./transform-gizmo.js";
 
-// temporary variables
-const tmpV1 = new Vec3();
-const tmpV2 = new Vec3();
-const tmpQ1 = new Quat();
-
 /**
- * Translation gizmo.
+ * Scaling gizmo.
  *
  * @category Gizmo
  */
-class TranslateGizmo extends TransformGizmo {
+class ScaleGizmo extends TransformGizmo {
     _shapes = {
+        xyz: new AxisBoxCenter(this._device, {
+            axis: 'xyz',
+            layers: [this._layer.id],
+            defaultColor: this._meshColors.axis.xyz,
+            hoverColor: this._meshColors.hover.xyz
+        }),
         yz: new AxisPlane(this._device, {
             axis: 'x',
             flipAxis: 'y',
@@ -43,21 +41,21 @@ class TranslateGizmo extends TransformGizmo {
             defaultColor: this._meshColors.axis.z,
             hoverColor: this._meshColors.hover.z
         }),
-        x: new AxisArrow(this._device, {
+        x: new AxisBoxLine(this._device, {
             axis: 'x',
             layers: [this._layer.id],
             rotation: new Vec3(0, 0, -90),
             defaultColor: this._meshColors.axis.x,
             hoverColor: this._meshColors.hover.x
         }),
-        y: new AxisArrow(this._device, {
+        y: new AxisBoxLine(this._device, {
             axis: 'y',
             layers: [this._layer.id],
             rotation: new Vec3(0, 0, 0),
             defaultColor: this._meshColors.axis.y,
             hoverColor: this._meshColors.hover.y
         }),
-        z: new AxisArrow(this._device, {
+        z: new AxisBoxLine(this._device, {
             axis: 'z',
             layers: [this._layer.id],
             rotation: new Vec3(90, 0, 0),
@@ -66,21 +64,15 @@ class TranslateGizmo extends TransformGizmo {
         })
     };
 
-    /**
-     * Internal mapping from each attached node to their starting position in local space.
-     *
-     * @type {Map<import('playcanvas').GraphNode, Vec3>}
-     * @private
-     */
-    _nodeLocalPositions = new Map();
+    _coordSpace = GIZMO_LOCAL;
 
     /**
-     * Internal mapping from each attached node to their starting position in world space.
+     * Internal mapping from each attached node to their starting scale.
      *
      * @type {Map<import('playcanvas').GraphNode, Vec3>}
      * @private
      */
-    _nodePositions = new Map();
+    _nodeScales = new Map();
 
     /**
      * @override
@@ -88,13 +80,14 @@ class TranslateGizmo extends TransformGizmo {
     snapIncrement = 1;
 
     /**
-     * Creates a new TranslateGizmo object.
+     * Creates a new ScaleGizmo object.
      *
-     * @param {import('playcanvas').AppBase} app - The application instance.
-     * @param {import('playcanvas').CameraComponent} camera - The camera component.
-     * @param {import('playcanvas').Layer} layer - The render layer.
+     * @param {import('../../framework/app-base.js').AppBase} app - The application instance.
+     * @param {import('../../framework/components/camera/component.js').CameraComponent} camera -
+     * The camera component.
+     * @param {import('../../scene/layer.js').Layer} layer - The render layer.
      * @example
-     * const gizmo = new pcx.TranslateGizmo(app, camera, layer);
+     * const gizmo = new pcx.ScaleGizmo(app, camera, layer);
      */
     constructor(app, camera, layer) {
         super(app, camera, layer);
@@ -102,7 +95,8 @@ class TranslateGizmo extends TransformGizmo {
         this._createTransform();
 
         this.on('transform:start', () => {
-            this._storeNodePositions();
+            this._selectionStartPoint.sub(Vec3.ONE);
+            this._storeNodeScales();
         });
 
         this.on('transform:move', (pointDelta) => {
@@ -111,13 +105,33 @@ class TranslateGizmo extends TransformGizmo {
                 pointDelta.round();
                 pointDelta.mulScalar(this.snapIncrement);
             }
-            this._setNodePositions(pointDelta);
+            this._setNodeScales(pointDelta);
         });
 
         this.on('nodes:detach', () => {
-            this._nodeLocalPositions.clear();
-            this._nodePositions.clear();
+            this._nodeScales.clear();
         });
+    }
+
+    set coordSpace(value) {
+        // disallow changing coordSpace for scale
+    }
+
+    get coordSpace() {
+        return this._coordSpace;
+    }
+
+    /**
+     * Uniform scaling state for planes.
+     *
+     * @type {boolean}
+     */
+    set uniform(value) {
+        this._useUniformScaling = value ?? true;
+    }
+
+    get uniform() {
+        return this._useUniformScaling;
     }
 
     /**
@@ -173,29 +187,16 @@ class TranslateGizmo extends TransformGizmo {
     }
 
     /**
-     * Arrow thickness.
+     * Axis box size.
      *
      * @type {number}
      */
-    set axisArrowThickness(value) {
-        this._setArrowProp('arrowThickness', value);
+    set axisBoxSize(value) {
+        this._setArrowProp('boxSize', value);
     }
 
-    get axisArrowThickness() {
-        return this._shapes.x.arrowThickness;
-    }
-
-    /**
-     * Arrow length.
-     *
-     * @type {number}
-     */
-    set axisArrowLength(value) {
-        this._setArrowProp('arrowLength', value);
-    }
-
-    get axisArrowLength() {
-        return this._shapes.x.arrowLength;
+    get axisBoxSize() {
+        return this._shapes.x.boxSize;
     }
 
     /**
@@ -224,6 +225,32 @@ class TranslateGizmo extends TransformGizmo {
         return this._shapes.yz.gap;
     }
 
+    /**
+     * Axis center size.
+     *
+     * @type {number}
+     */
+    set axisCenterSize(value) {
+        this._shapes.xyz.size = value;
+    }
+
+    get axisCenterSize() {
+        return this._shapes.xyz.size;
+    }
+
+    /**
+     * Axis center tolerance.
+     *
+     * @type {number}
+     */
+    set axisCenterTolerance(value) {
+        this._shapes.xyz.tolerance = value;
+    }
+
+    get axisCenterTolerance() {
+        return this._shapes.xyz.tolerance;
+    }
+
     _setArrowProp(prop, value) {
         this._shapes.x[prop] = value;
         this._shapes.y[prop] = value;
@@ -236,33 +263,19 @@ class TranslateGizmo extends TransformGizmo {
         this._shapes.xy[prop] = value;
     }
 
-    _storeNodePositions() {
+    _storeNodeScales() {
         for (let i = 0; i < this.nodes.length; i++) {
             const node = this.nodes[i];
-            this._nodeLocalPositions.set(node, node.getLocalPosition().clone());
-            this._nodePositions.set(node, node.getPosition().clone());
+            this._nodeScales.set(node, node.getLocalScale().clone());
         }
     }
 
-    _setNodePositions(pointDelta) {
+    _setNodeScales(pointDelta) {
         for (let i = 0; i < this.nodes.length; i++) {
             const node = this.nodes[i];
-            if (this._coordSpace === GIZMO_LOCAL) {
-                tmpV1.copy(pointDelta);
-                node.parent.getWorldTransform().getScale(tmpV2);
-                tmpV2.x = 1 / tmpV2.x;
-                tmpV2.y = 1 / tmpV2.y;
-                tmpV2.z = 1 / tmpV2.z;
-                tmpQ1.copy(node.getLocalRotation()).transformVector(tmpV1, tmpV1);
-                tmpV1.mul(tmpV2);
-                node.setLocalPosition(this._nodeLocalPositions.get(node).clone().add(tmpV1));
-            } else {
-                node.setPosition(this._nodePositions.get(node).clone().add(pointDelta));
-            }
+            node.setLocalScale(this._nodeScales.get(node).clone().mul(pointDelta));
         }
-
-        this._updatePosition();
     }
 }
 
-export { TranslateGizmo };
+export { ScaleGizmo };

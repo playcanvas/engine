@@ -5,7 +5,7 @@ import { deviceType, rootPath } from '@examples/utils';
 
 // This tar file has been created by a command line:
 // : cd engine/examples/
-// : tar cvf bundle.tar assets/models/geometry-camera-light.glb assets/models/torus.png
+// : tar cvf assets/bundles/bundle.tar assets/models/geometry-camera-light.glb assets/models/torus.png
 
 const canvas = document.getElementById('application-canvas');
 if (!(canvas instanceof HTMLCanvasElement)) {

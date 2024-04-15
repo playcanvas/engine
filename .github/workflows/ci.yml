@@ -170,9 +170,6 @@ jobs:
     - name: Build PlayCanvas (ESM-only)
       run: npm run build:esm
 
-    - name: Build PlayCanvas Extras
-      run: npm run build:extras
-
     - name: Build TypeScript declarations
       run: npm run build:types
 

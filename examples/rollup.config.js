@@ -13,7 +13,6 @@ import terser from '@rollup/plugin-terser';
 
 // engine rollup utils
 import { buildTarget } from '../utils/rollup-build-target.mjs';
-import { scriptTarget } from '../utils/rollup-script-target.mjs';
 
 // util functions
 import { isModuleWithExternalDependencies } from './utils.mjs';
@@ -61,7 +60,7 @@ const STATIC_FILES = [
     // modules (N.B. destination folder is 'modules' as 'node_modules' are automatically excluded by git pages)
     { src: './node_modules/monaco-editor/min/vs', dest: 'dist/modules/monaco-editor/min/vs' },
 
-    // TODO: fflate will not be needed once extras module is rolled up
+    // fflate (for when using ENGINE_PATH)
     { src: '../node_modules/fflate/esm/', dest: 'dist/modules/fflate/esm' },
 
     // engine path
@@ -189,16 +188,7 @@ function buildAndWatchStandaloneExamples() {
 }
 
 function getEngineTargets() {
-    const targets = [
-        // Outputs: dist/iframe/playcanvas-extras.mjs
-        ...scriptTarget({
-            name: 'pcx',
-            moduleFormat: 'esm',
-            input: '../extras/index.js',
-            output: 'dist/iframe/playcanvas-extras',
-            skipBundled: true
-        })
-    ];
+    const targets = [];
     if (ENGINE_PATH) {
         return targets;
     }

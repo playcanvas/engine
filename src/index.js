@@ -382,3 +382,6 @@ export { XrViews } from './framework/xr/xr-views.js';
 
 // BACKWARDS COMPATIBILITY
 export * from './deprecated/deprecated.js';
+
+// EXTRAS
+export * from './extras/index.js';

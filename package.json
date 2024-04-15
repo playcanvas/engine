@@ -18,11 +18,11 @@
   ],
   "license": "MIT",
   "main": "build/playcanvas.js",
-  "module": "build/playcanvas/index.js",
+  "module": "build/playcanvas/src/index.js",
   "types": "build/playcanvas.d.ts",
   "exports": {
     ".": {
-      "import": "./build/playcanvas/index.js",
+      "import": "./build/playcanvas/src/index.js",
       "require": "./build/playcanvas.js"
     },
     "./build/*": "./build/*"
@@ -128,7 +128,6 @@
     "build:release": "npm run build target:release",
     "build:debug": "npm run build target:debug",
     "build:profiler": "npm run build target:profiler",
-    "build:extras": "npm run build target:extras",
     "build:types": "npm run build target:types",
     "build:umd": "npm run build target:umd",
     "build:esm": "npm run build target:esm",
@@ -148,7 +147,7 @@
     "watch:esm:release": "npm run build target:esm:release -- -w",
     "watch:esm:debug": "npm run build target:esm:debug -- -w",
     "docs": "typedoc",
-    "lint": "eslint --ext .js,.mjs extras scripts src test utils rollup.config.mjs",
+    "lint": "eslint --ext .js,.mjs scripts src test utils rollup.config.mjs",
     "publint": "publint",
     "serve": "serve build -l 51000 --cors",
     "test": "mocha --recursive --require test/fixtures.mjs",

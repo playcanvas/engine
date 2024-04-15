@@ -1,23 +1,20 @@
+import { Color } from '../../core/math/color.js';
+import { Vec3 } from '../../core/math/vec3.js';
+import { Quat } from '../../core/math/quat.js';
+import { Material } from '../../scene/materials/material.js';
+import { MeshInstance } from '../../scene/mesh-instance.js';
+import { Entity } from '../../framework/entity.js';
+import { CULLFACE_NONE, CULLFACE_BACK, SEMANTIC_POSITION, SEMANTIC_COLOR } from '../../platform/graphics/constants.js';
+import { BLEND_NORMAL } from '../../scene/constants.js';
 import {
-    CULLFACE_NONE,
-    CULLFACE_BACK,
-    BLEND_NORMAL,
-    SEMANTIC_POSITION,
-    SEMANTIC_COLOR,
     createBox,
     createCone,
     createCylinder,
     createPlane,
     createMesh,
-    createTorus,
-    createShaderFromCode,
-    Material,
-    MeshInstance,
-    Entity,
-    Color,
-    Quat,
-    Vec3
-} from 'playcanvas';
+    createTorus
+} from '../../scene/procedural.js';
+import { createShaderFromCode } from '../../scene/shader-lib/utils.js';
 
 import { COLOR_GRAY } from './default-colors.js';
 import { MeshTriData } from './mesh-tri-data.js';
@@ -79,6 +76,7 @@ function createShadowMesh(device, entity, type, color = Color.WHITE, templateOpt
     }
 
     const mesh = createTemplate(device, templateOpts);
+    /** @type {Record<string, number[]>} */
     const options = {
         positions: [],
         normals: [],

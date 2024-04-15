@@ -1,22 +1,25 @@
+import { LAYERID_SKYBOX, LAYERID_IMMEDIATE } from '../../scene/constants.js';
 import {
-    LAYERID_SKYBOX,
-    LAYERID_IMMEDIATE,
-    PIXELFORMAT_RGBA8,
     ADDRESS_CLAMP_TO_EDGE,
     FILTER_LINEAR,
     FILTER_NEAREST,
     PIXELFORMAT_DEPTH,
-    RenderPass,
-    RenderPassColorGrab,
-    RenderPassForward,
-    RenderTarget,
-    Texture
-} from "playcanvas";
-import { RenderPassBloom } from "./render-pass-bloom.js";
-import { RenderPassCompose } from "./render-pass-compose.js";
-import { RenderPassTAA } from "./render-pass-taa.js";
-import { RenderPassPrepass } from "./render-pass-prepass.js";
+    PIXELFORMAT_RGBA8
+} from '../../platform/graphics/constants.js';
+import { Texture } from '../../platform/graphics/texture.js';
+import { RenderPass } from '../../platform/graphics/render-pass.js';
+import { RenderPassColorGrab } from '../../scene/graphics/render-pass-color-grab.js';
+import { RenderPassForward } from '../../scene/renderer/render-pass-forward.js';
+import { RenderTarget } from '../../platform/graphics/render-target.js';
 
+import { RenderPassBloom } from './render-pass-bloom.js';
+import { RenderPassCompose } from './render-pass-compose.js';
+import { RenderPassTAA } from './render-pass-taa.js';
+import { RenderPassPrepass } from './render-pass-prepass.js';
+
+/**
+ * @category Graphics
+ */
 class RenderPassCameraFrame extends RenderPass {
     app;
 

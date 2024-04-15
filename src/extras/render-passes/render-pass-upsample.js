@@ -1,13 +1,14 @@
-import {
-    RenderPassShaderQuad
-} from "playcanvas";
+import { RenderPassShaderQuad } from '../../scene/graphics/render-pass-shader-quad.js';
 
+/**
+ * @category Graphics
+ */
 class RenderPassUpsample extends RenderPassShaderQuad {
     constructor(device, sourceTexture) {
         super(device);
         this.sourceTexture = sourceTexture;
 
-        this.shader = this.createQuadShader('UpSampleShader', `
+        this.shader = this.createQuadShader('UpSampleShader', /* glsl */`
 
             uniform sampler2D sourceTexture;
             uniform vec2 sourceInvResolution;

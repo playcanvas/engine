@@ -12,10 +12,10 @@ import { spacesToTabs } from './plugins/rollup-spaces-to-tabs.mjs';
  * Build a target that Rollup is supposed to build (bundled and unbundled).
  *
  * @param {object} options - The script target options.
- * @param {string} options.name - The name, like `pcx`.
+ * @param {string} options.name - The name.
  * @param {'umd'|'esm'} options.moduleFormat - The module format.
- * @param {string} options.input - The input file, like `extras/index.js`.
- * @param {string} options.output - The output file, like `build/playcanvas-extras.mjs`.
+ * @param {string} options.input - The input file.
+ * @param {string} options.output - The output file.
  * @param {boolean} [options.skipBundled] - Whether to skip the bundled target (ESM only).
  * @returns {RollupOptions[]} Rollup targets.
  */

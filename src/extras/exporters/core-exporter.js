@@ -1,9 +1,11 @@
-import {
-    createShaderFromCode, Texture, BlendState, drawQuadWithShader, RenderTarget,
-    FILTER_LINEAR, ADDRESS_CLAMP_TO_EDGE
-} from 'playcanvas';
+import { createShaderFromCode } from '../../scene/shader-lib/utils.js';
+import { Texture } from '../../platform/graphics/texture.js';
+import { BlendState } from '../../platform/graphics/blend-state.js';
+import { drawQuadWithShader } from '../../scene/graphics/quad-render-utils.js';
+import { RenderTarget } from '../../platform/graphics/render-target.js';
+import { FILTER_LINEAR, ADDRESS_CLAMP_TO_EDGE } from '../../platform/graphics/constants.js';
 
-const textureBlitVertexShader = `
+const textureBlitVertexShader = /* glsl */`
     attribute vec2 vertex_position;
     varying vec2 uv0;
     void main(void) {
@@ -11,7 +13,7 @@ const textureBlitVertexShader = `
         uv0 = vertex_position.xy * 0.5 + 0.5;
     }`;
 
-const textureBlitFragmentShader = `
+const textureBlitFragmentShader = /* glsl */`
     varying vec2 uv0;
     uniform sampler2D blitTexture;
     void main(void) {
@@ -36,7 +38,7 @@ class CoreExporter {
      *
      * @param {Texture} texture - The source texture to be converted.
      * @param {object} options - Object for passing optional arguments.
-     * @param {import('playcanvas').Color} [options.color] - The tint color to modify the texture with.
+     * @param {import('../../core/math/color.js').Color} [options.color] - The tint color to modify the texture with.
      * @param {number} [options.maxTextureSize] - Maximum texture size. Texture is resized if over the size.
      * @returns {Promise<HTMLCanvasElement>|Promise<undefined>} - The canvas element containing the image.
      *
@@ -59,6 +61,9 @@ class CoreExporter {
             canvas.width = width;
             canvas.height = height;
             const context = canvas.getContext('2d');
+            if (context === null) {
+                return Promise.resolve(undefined);
+            }
             context.drawImage(image, 0, 0, canvas.width, canvas.height);
 
             // tint the texture by specified color
@@ -122,6 +127,9 @@ class CoreExporter {
         canvas.width = width;
         canvas.height = height;
         const newContext = canvas.getContext('2d');
+        if (!newContext) {
+            return Promise.resolve(undefined);
+        }
         newContext.putImageData(newImage, 0, 0);
 
         return Promise.resolve(canvas);
