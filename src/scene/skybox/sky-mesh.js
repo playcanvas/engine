@@ -38,7 +38,6 @@ class SkyMesh {
             const options = {
                 pass: pass,
                 encoding: texture.encoding,
-                useIntensity: scene.skyboxIntensity !== 1 || scene.physicalUnits,
                 gamma: (pass === SHADER_FORWARDHDR ? (scene.gammaCorrection ? GAMMA_SRGBHDR : GAMMA_NONE) : scene.gammaCorrection),
                 toneMapping: (pass === SHADER_FORWARDHDR ? TONEMAP_LINEAR : scene.toneMapping),
                 skymesh: type

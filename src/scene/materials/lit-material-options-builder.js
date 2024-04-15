@@ -130,7 +130,7 @@ class LitMaterialOptionsBuilder {
         }
 
         const hasSkybox = !!litOptions.reflectionSource;
-        litOptions.skyboxIntensity = hasSkybox && (scene.skyboxIntensity !== 1 || scene.physicalUnits);
+        litOptions.skyboxIntensity = hasSkybox;
         litOptions.useCubeMapRotation = hasSkybox && scene._skyboxRotationShaderInclude;
     }
 
