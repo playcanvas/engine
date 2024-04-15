@@ -44,24 +44,22 @@ class ShaderUtils {
      * @param {object} [options.attributes] - Attributes. Will be extracted from the vertexCode if
      * not provided.
      * @param {string} options.vertexCode - The vertex shader code.
-     * @param {string} [options.vertexDefines] - The vertex shader defines.
      * @param {string} [options.vertexExtensions] - The vertex shader extensions code.
      * @param {string} [options.fragmentCode] - The fragment shader code.
-     * @param {string} [options.fragmentDefines] - The fragment shader defines.
      * @param {string} [options.fragmentExtensions] - The fragment shader extensions code.
      * @param {string} [options.fragmentPreamble] - The preamble string for the fragment shader.
      * @param {boolean} [options.useTransformFeedback] - Whether to use transform feedback. Defaults
      * to false.
-     * @param {Map<string, string>} [options.vertexIncludesMap] - A map containing key-value pairs of
+     * @param {Map<string, string>} [options.vertexIncludes] - A map containing key-value pairs of
      * include names and their content. These are used for resolving #include directives in the
      * vertex shader source.
-     * @param {Map<string, string>} [options.vertexDefinesMap] - A map containing key-value pairs of
+     * @param {Map<string, string>} [options.vertexDefines] - A map containing key-value pairs of
      * define names and their values. These are used for resolving #ifdef style of directives in the
      * vertex code.
-     * @param {Map<string, string>} [options.fragmentIncludesMap] - A map containing key-value pairs
+     * @param {Map<string, string>} [options.fragmentIncludes] - A map containing key-value pairs
      * of include names and their content. These are used for resolving #include directives in the
      * fragment shader source.
-     * @param {Map<string, string>} [options.fragmentDefinesMap] - A map containing key-value pairs of
+     * @param {Map<string, string>} [options.fragmentDefines] - A map containing key-value pairs of
      * define names and their values. These are used for resolving #ifdef style of directives in the
      * fragment code.
      * @param {string | string[]} [options.fragmentOutputTypes] - Fragment shader output types,
@@ -71,6 +69,10 @@ class ShaderUtils {
      */
     static createDefinition(device, options) {
         Debug.assert(options);
+        Debug.assert(!options.vertexDefines || options.vertexDefines instanceof Map);
+        Debug.assert(!options.vertexIncludes || options.vertexIncludes instanceof Map);
+        Debug.assert(!options.fragmentDefines || options.fragmentDefines instanceof Map);
+        Debug.assert(!options.fragmentIncludes || options.fragmentIncludes instanceof Map);
 
         const getDefines = (gpu, gl2, gl1, isVertex, options) => {
 
@@ -101,18 +103,18 @@ class ShaderUtils {
         const name = options.name ?? 'Untitled';
 
         // vertex code
-        const vertDefines = options.vertexDefines || getDefines(webgpuVS, gles3VS, '', true, options);
         const vertCode = ShaderUtils.versionCode(device) +
-            vertDefines +
+            getDefines(webgpuVS, gles3VS, '', true, options) +
+            ShaderUtils.getDefinesCode(options.vertexDefines) +
             sharedFS +
             ShaderUtils.getShaderNameCode(name) +
             options.vertexCode;
 
         // fragment code
-        const fragDefines = options.fragmentDefines || getDefines(webgpuFS, gles3FS, gles2FS, false, options);
         const fragCode = (options.fragmentPreamble || '') +
             ShaderUtils.versionCode(device) +
-            fragDefines +
+            getDefines(webgpuFS, gles3FS, gles2FS, false, options) +
+            ShaderUtils.getDefinesCode(options.fragmentDefines) +
             ShaderUtils.precisionCode(device) + '\n' +
             sharedFS +
             ShaderUtils.getShaderNameCode(name) +
@@ -125,13 +127,24 @@ class ShaderUtils {
             name: name,
             attributes: attribs,
             vshader: vertCode,
-            vdefines: options.vertexDefinesMap,
-            vincludes: options.vertexIncludesMap,
-            fdefines: options.fragmentDefinesMap,
-            fincludes: options.fragmentIncludesMap,
+            vincludes: options.vertexIncludes,
+            fincludes: options.fragmentIncludes,
             fshader: fragCode,
             useTransformFeedback: options.useTransformFeedback
         };
+    }
+
+    /**
+     * @param {Map<string, string>} [defines] - A map containing key-value pairs.
+     * @returns {string} The shader code for the defines.
+     * @private
+     */
+    static getDefinesCode(defines) {
+        let code = '';
+        defines?.forEach((value, key) => {
+            code += `#define ${key} ${value}\n`;
+        });
+        return code;
     }
 
     // SpectorJS integration
