@@ -8,27 +8,33 @@ import { SKYTYPE_INFINITE } from '../../constants.js';
 
 class ShaderGeneratorSkybox extends ShaderGenerator {
     generateKey(options) {
-        const sharedKey = `skybox-${options.type}-${options.encoding}-${options.useIntensity}-${options.gamma}-${options.toneMapping}-${options.skymesh}`;
-        return sharedKey + (options.type === 'cubemap' ? `-${options.fixSeams}-${options.mip}` : '');
+        const sharedKey = `skybox-${options.type}-${options.encoding}-${options.gamma}-${options.toneMapping}-${options.skymesh}`;
+        return sharedKey + (options.type === 'cubemap' ? `-${options.mip}` : '');
     }
 
     createShaderDefinition(device, options) {
-        const defines = options.skymesh === SKYTYPE_INFINITE ? '' : '#define SKYMESH\n';
-        const vshader = defines + shaderChunks.skyboxVS;
-        let fshader = defines;
 
+        // shared defines
+        const defines = new Map();
+        if (options.skymesh !== SKYTYPE_INFINITE) defines.set('SKYMESH', '');
+        if (options.type === 'cubemap') defines.set('SKY_CUBEMAP', '');
+
+        // fragment shader
+        let fshader = '';
         if (options.type === 'cubemap') {
+
+            // mip level
             const mip2size = [128, 64, /* 32 */ 16, 8, 4, 2];
+            defines.set('SKYBOX_MIP', (1 - 1 / mip2size[options.mip]).toString());
+
             fshader += options.mip ? shaderChunks.fixCubemapSeamsStretchPS : shaderChunks.fixCubemapSeamsNonePS;
-            fshader += options.useIntensity ? shaderChunks.envMultiplyPS : shaderChunks.envConstPS;
+            fshader += shaderChunks.envMultiplyPS;
             fshader += shaderChunks.decodePS;
             fshader += ShaderGenerator.gammaCode(options.gamma);
             fshader += ShaderGenerator.tonemapCode(options.toneMapping);
-            fshader += shaderChunks.skyboxHDRPS
-                .replace(/\$DECODE/g, ChunkUtils.decodeFunc(options.encoding))
-                .replace(/\$FIXCONST/g, (1 - 1 / mip2size[options.mip]) + "");
+            fshader += shaderChunks.skyboxHDRPS.replace(/\$DECODE/g, ChunkUtils.decodeFunc(options.encoding));
         } else {
-            fshader += options.useIntensity ? shaderChunks.envMultiplyPS : shaderChunks.envConstPS;
+            fshader += shaderChunks.envMultiplyPS;
             fshader += shaderChunks.decodePS;
             fshader += ShaderGenerator.gammaCode(options.gamma);
             fshader += ShaderGenerator.tonemapCode(options.toneMapping);
@@ -42,8 +48,10 @@ class ShaderGeneratorSkybox extends ShaderGenerator {
             attributes: {
                 aPosition: SEMANTIC_POSITION
             },
-            vertexCode: vshader,
-            fragmentCode: fshader
+            vertexCode: shaderChunks.skyboxVS,
+            vertexDefines: defines,
+            fragmentCode: fshader,
+            fragmentDefines: defines
         });
     }
 }

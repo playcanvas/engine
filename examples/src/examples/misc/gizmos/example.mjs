@@ -100,6 +100,7 @@ class GizmoHandler {
             xAxisColor: Object.values(gizmo.xAxisColor),
             yAxisColor: Object.values(gizmo.yAxisColor),
             zAxisColor: Object.values(gizmo.zAxisColor),
+            colorAlpha: gizmo.colorAlpha,
             coordSpace: gizmo.coordSpace,
             axisLineTolerance: gizmo.axisLineTolerance,
             axisCenterTolerance: gizmo.axisCenterTolerance,

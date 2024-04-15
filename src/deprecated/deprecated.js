@@ -118,6 +118,9 @@ import { RigidBodyComponentSystem } from '../framework/components/rigid-body/sys
 import { basisInitialize } from '../framework/handlers/basis.js';
 import { LitShader } from '../scene/shader-lib/programs/lit-shader.js';
 
+// ScriptType alias
+export { Script as ScriptType } from '../framework/script/script.js';
+
 // CORE
 export const LINEBATCH_WORLD = 0;
 export const LINEBATCH_OVERLAY = 1;

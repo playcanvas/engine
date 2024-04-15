@@ -28,16 +28,6 @@ const SPANLINE_SIZE = 1e3;
 const ROTATE_SCALE = 900;
 
 /**
- * @param {Color} color - The color.
- * @returns {Color} - The semi transparent color.
- */
-const colorSemi = (color) => {
-    const clone = color.clone();
-    clone.a = 0.6;
-    return clone;
-};
-
-/**
  * Shape axis for the line X.
  *
  * @type {string}
@@ -93,6 +83,17 @@ export const SHAPEAXIS_XYZ = 'xyz';
  */
 export const SHAPEAXIS_FACE = 'face';
 
+
+/**
+ * Converts Color4 to Color3.
+ *
+ * @param {Color} color - Color4
+ * @returns {Color} - Color3
+ */
+function color3from4(color) {
+    return new Color(color.r, color.g, color.b);
+}
+
 /**
  * The base class for all transform gizmos.
  *
@@ -136,6 +137,14 @@ class TransformGizmo extends Gizmo {
     static EVENT_TRANSFORMEND = 'transform:end';
 
     /**
+     * Internal color alpha value.
+     *
+     * @type {number}
+     * @private
+     */
+    _colorAlpha = 0.6;
+
+    /**
      * Internal color for meshs.
      *
      * @type {Object}
@@ -143,11 +152,11 @@ class TransformGizmo extends Gizmo {
      */
     _meshColors = {
         axis: {
-            x: colorSemi(COLOR_RED),
-            y: colorSemi(COLOR_GREEN),
-            z: colorSemi(COLOR_BLUE),
-            xyz: colorSemi(Color.WHITE),
-            face: colorSemi(Color.WHITE)
+            x: this._colorSemi(COLOR_RED),
+            y: this._colorSemi(COLOR_GREEN),
+            z: this._colorSemi(COLOR_BLUE),
+            xyz: this._colorSemi(Color.WHITE),
+            face: this._colorSemi(Color.WHITE)
         },
         hover: {
             x: COLOR_RED.clone(),
@@ -428,10 +437,38 @@ class TransformGizmo extends Gizmo {
         return this._meshColors.axis.z;
     }
 
+    /**
+     * The color alpha for all axes.
+     *
+     * @type {number}
+     */
+    set colorAlpha(value) {
+        this._colorAlpha = math.clamp(value, 0, 1);
+
+        this._meshColors.axis.x.copy(this._colorSemi(this._meshColors.axis.x));
+        this._meshColors.axis.y.copy(this._colorSemi(this._meshColors.axis.y));
+        this._meshColors.axis.z.copy(this._colorSemi(this._meshColors.axis.z));
+        this._meshColors.axis.xyz.copy(this._colorSemi(this._meshColors.axis.xyz));
+        this._meshColors.axis.face.copy(this._colorSemi(this._meshColors.axis.face));
+    }
+
+    get colorAlpha() {
+        return this._colorAlpha;
+    }
+
+    _colorSemi(color) {
+        const clone = color.clone();
+        clone.a = this._colorAlpha;
+        return clone;
+    }
+
     _updateAxisColor(axis, value) {
-        this._guideColors[axis].copy(value);
-        this._meshColors.axis[axis].copy(colorSemi(value));
-        this._meshColors.hover[axis].copy(value);
+        const color3 = color3from4(value);
+        const color4 = this._colorSemi(value);
+
+        this._guideColors[axis].copy(color3);
+        this._meshColors.axis[axis].copy(color4);
+        this._meshColors.hover[axis].copy(color3);
 
         for (const name in this._shapes) {
             this._shapes[name].hover(!!this._hoverAxis);
