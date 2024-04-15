@@ -770,7 +770,7 @@ class LitShader {
         if (this.needsNormal) {
             func.append(chunks.cubeMapRotatePS);
             func.append(options.cubeMapProjection > 0 ? chunks.cubeMapProjectBoxPS : chunks.cubeMapProjectNonePS);
-            func.append(options.skyboxIntensity ? chunks.envMultiplyPS : chunks.envConstPS);
+            func.append(chunks.envMultiplyPS);
         }
 
         if ((this.lighting && options.useSpecular) || this.reflections) {
