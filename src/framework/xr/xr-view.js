@@ -85,13 +85,13 @@ class XrView extends EventHandler {
      * @type {Mat4}
      * @private
      */
-    _viewInvMat = new Mat4();
+    _invViewMat = new Mat4();
 
     /**
      * @type {Mat4}
      * @private
      */
-    _viewInvOffMat = new Mat4();
+    _invViewOffMat = new Mat4();
 
     /**
      * @type {XRCamera}
@@ -320,16 +320,8 @@ class XrView extends EventHandler {
      * @type {Mat4}
      * @ignore
      */
-    get viewInvOffMat() {
-        return this._viewInvOffMat;
-    }
-
-    /**
-     * @type {Mat4}
-     * @ignore
-     */
-    get viewInvMat() {
-        return this._viewInvMat;
+    get invViewOffMat() {
+        return this._invViewOffMat;
     }
 
     /**
@@ -370,7 +362,7 @@ class XrView extends EventHandler {
         // matrices
         this._projMat.set(this._xrView.projectionMatrix);
         this._viewMat.set(this._xrView.transform.inverse.matrix);
-        this._viewInvMat.set(this._xrView.transform.matrix);
+        this._invViewMat.set(this._xrView.transform.matrix);
 
         this._updateTextureColor();
         this._updateDepth(frame);
@@ -508,19 +500,19 @@ class XrView extends EventHandler {
      */
     updateTransforms(transform) {
         if (transform) {
-            this._viewInvOffMat.mul2(transform, this._viewInvMat);
-            this.viewOffMat.copy(this._viewInvOffMat).invert();
+            this._invViewOffMat.mul2(transform, this._invViewMat);
+            this.viewOffMat.copy(this._invViewOffMat).invert();
         } else {
-            this._viewInvOffMat.copy(this._viewInvMat);
+            this._invViewOffMat.copy(this._invViewMat);
             this.viewOffMat.copy(this._viewMat);
         }
 
         this._viewMat3.setFromMat4(this._viewOffMat);
         this._projViewOffMat.mul2(this._projMat, this._viewOffMat);
 
-        this._positionData[0] = this._viewInvOffMat.data[12];
-        this._positionData[1] = this._viewInvOffMat.data[13];
-        this._positionData[2] = this._viewInvOffMat.data[14];
+        this._positionData[0] = this._invViewOffMat.data[12];
+        this._positionData[1] = this._invViewOffMat.data[13];
+        this._positionData[2] = this._invViewOffMat.data[14];
     }
 
     _onDeviceLost() {

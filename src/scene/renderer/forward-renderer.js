@@ -612,7 +612,7 @@ class ForwardRenderer extends Renderer {
                     this.projId.setValue(view.projMat.data);
                     this.projSkyboxId.setValue(view.projMat.data);
                     this.viewId.setValue(view.viewOffMat.data);
-                    this.viewInvId.setValue(view.viewInvOffMat.data);
+                    this.viewInvId.setValue(view.invViewOffMat.data);
                     this.viewId3.setValue(view.viewMat3.data);
                     this.viewProjId.setValue(view.projViewOffMat.data);
                     this.viewPosId.setValue(view.positionData);

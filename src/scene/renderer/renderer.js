@@ -43,7 +43,7 @@ import { BlueNoise } from '../../core/math/blue-noise.js';
 
 let _skinUpdateIndex = 0;
 const viewProjMat = new Mat4();
-const viewInvMat = new Mat4();
+const invViewMat = new Mat4();
 const viewMat = new Mat4();
 const viewMat3 = new Mat3();
 const tempSphere = new BoundingSphere();
@@ -419,16 +419,16 @@ class Renderer {
 
             // ViewInverse Matrix
             if (camera.calculateTransform) {
-                camera.calculateTransform(viewInvMat, VIEW_CENTER);
+                camera.calculateTransform(invViewMat, VIEW_CENTER);
             } else {
                 const pos = camera._node.getPosition();
                 const rot = camera._node.getRotation();
-                viewInvMat.setTRS(pos, rot, Vec3.ONE);
+                invViewMat.setTRS(pos, rot, Vec3.ONE);
             }
-            this.viewInvId.setValue(viewInvMat.data);
+            this.viewInvId.setValue(invViewMat.data);
 
             // View Matrix
-            viewMat.copy(viewInvMat).invert();
+            viewMat.copy(invViewMat).invert();
             this.viewId.setValue(viewMat.data);
 
             // View 3x3
@@ -585,14 +585,14 @@ class Renderer {
         }
 
         if (camera.calculateTransform) {
-            camera.calculateTransform(viewInvMat, VIEW_CENTER);
+            camera.calculateTransform(invViewMat, VIEW_CENTER);
         } else {
             const pos = camera._node.getPosition();
             const rot = camera._node.getRotation();
-            viewInvMat.setTRS(pos, rot, Vec3.ONE);
-            this.viewInvId.setValue(viewInvMat.data);
+            invViewMat.setTRS(pos, rot, Vec3.ONE);
+            this.viewInvId.setValue(invViewMat.data);
         }
-        viewMat.copy(viewInvMat).invert();
+        viewMat.copy(invViewMat).invert();
 
         viewProjMat.mul2(projMat, viewMat);
         camera.frustum.setFromMat4(viewProjMat);
