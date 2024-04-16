@@ -126,7 +126,7 @@ class WebgpuGraphicsDevice extends GraphicsDevice {
         // temporarily disabled functionality which is not supported to avoid errors
         this.disableParticleSystem = true;
 
-        const limits = this.gpuAdapter.limits;
+        const limits = this.wgpu?.limits;
         this.limits = limits;
 
         this.precision = 'highp';
@@ -234,13 +234,19 @@ class WebgpuGraphicsDevice extends GraphicsDevice {
         this.textureRG11B10Renderable = requireFeature('rg11b10ufloat-renderable');
         Debug.log(`WEBGPU features: ${requiredFeatures.join(', ')}`);
 
+        // copy all adapter limits to the requiredLimits object - to created a device with the best feature sets available
+        const adapterLimits = this.gpuAdapter?.limits;
+        const requiredLimits = {};
+        if (adapterLimits) {
+            for (const limitName in adapterLimits) {
+                requiredLimits[limitName] = adapterLimits[limitName];
+            }
+        }
+
         /** @type {GPUDeviceDescriptor} */
         const deviceDescr = {
             requiredFeatures,
-
-            // Note that we can request limits, but it does not seem to be supported at the moment
-            requiredLimits: {
-            },
+            requiredLimits,
 
             defaultQueue: {
                 label: 'Default Queue'
