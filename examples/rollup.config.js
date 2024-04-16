@@ -161,7 +161,26 @@ function generateStandaloneFiles() {
     };
 }
 
+function checkAppEngine() {
+    // types
+    if (!fs.existsSync('../build/playcanvas.d.ts')) {
+        const cmd = `npm run build:types --prefix ../`;
+        console.log("\x1b[32m%s\x1b[0m", cmd);
+        execSync(cmd);
+    }
+
+    // engine
+    if (!fs.existsSync('../build/playcanvas/src/index.js')) {
+        const cmd = `npm run build:esm:release --prefix ../`;
+        console.log("\x1b[32m%s\x1b[0m", cmd);
+        execSync(cmd);
+    }
+}
+
 function getEngineTargets() {
+    // Checks for types and engien for app building
+    checkAppEngine();
+
     const targets = [];
     if (ENGINE_PATH) {
         return targets;
@@ -198,23 +217,6 @@ function getEngineTargets() {
     }
     return targets;
 }
-
-function generateAppEngine() {
-    // types
-    if (!fs.existsSync('../build/playcanvas.d.ts')) {
-        const cmd = `npm run build:types --prefix ../`;
-        console.log("\x1b[32m%s\x1b[0m", cmd);
-        execSync(cmd);
-    }
-
-    // engine
-    if (!fs.existsSync('../build/playcanvas/src/index.js')) {
-        const cmd = `npm run build:esm:release --prefix ../`;
-        console.log("\x1b[32m%s\x1b[0m", cmd);
-        execSync(cmd);
-    }
-}
-generateAppEngine();
 
 export default [
     {
