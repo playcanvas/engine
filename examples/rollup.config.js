@@ -1,8 +1,6 @@
-import * as fs from 'node:fs';
-import fse from 'fs-extra';
-import { fileURLToPath } from 'node:url';
-import path from 'node:path';
-import { execSync } from 'node:child_process';
+import fs from 'fs';
+import path from 'path';
+import { execSync } from 'child_process';
 
 // 1st party Rollup plugins
 import alias from '@rollup/plugin-alias';
@@ -11,16 +9,15 @@ import replace from '@rollup/plugin-replace';
 import resolve from "@rollup/plugin-node-resolve";
 import terser from '@rollup/plugin-terser';
 
+// custom plugins
+import { copyStatic } from './utils/plugins/rollup-copy-static.mjs';
+import { generateStandalone } from './utils/plugins/rollup-generate-standalone.mjs';
+
 // engine rollup utils
 import { buildTarget } from '../utils/rollup-build-target.mjs';
 
 // util functions
-import { isModuleWithExternalDependencies } from './utils.mjs';
-
-/** @typedef {import('rollup').RollupOptions} RollupOptions */
-/** @typedef {import('rollup').Plugin} RollupPlugin */
-
-const __dirname = path.dirname(fileURLToPath(import.meta.url));
+import { isModuleWithExternalDependencies } from './utils/utils.mjs';
 
 const NODE_ENV = process.env.NODE_ENV ?? '';
 const ENGINE_PATH = !process.env.ENGINE_PATH && NODE_ENV === 'development' ?
@@ -86,108 +83,26 @@ function getEnginePathFiles() {
     return [{ src, dest }];
 }
 
-/**
- * @param {string} name - The timer name.
- * @returns {RollupPlugin} The plugin.
- */
-function timeStart(name) {
-    return {
-        name: 'time-start',
-        buildStart() {
-            console.time(name);
-        }
-    };
-}
-
-/**
- * @param {string} name - The timer name.
- * @returns {RollupPlugin} The plugin.
- */
-function timeEnd(name) {
-    return {
-        name: 'time-end',
-        writeBundle() {
-            console.timeEnd(name);
-        }
-    };
-}
-
-/**
- * @param {RollupPlugin} plugin - The Rollup plugin.
- * @param {string} src - File or path to watch.
- */
-function watch(plugin, src) {
-    const srcStats = fs.statSync(src);
-    if (srcStats.isFile()) {
-        plugin.addWatchFile(path.resolve(__dirname, src));
-        return;
+function checkAppEngine() {
+    // types
+    if (!fs.existsSync('../build/playcanvas.d.ts')) {
+        const cmd = `npm run build:types --prefix ../`;
+        console.log("\x1b[32m%s\x1b[0m", cmd);
+        execSync(cmd);
     }
-    const filesToWatch = fs.readdirSync(src);
-    for (const file of filesToWatch) {
-        const fullPath = path.join(src, file);
-        const stats = fs.statSync(fullPath);
-        if (stats.isFile()) {
-            plugin.addWatchFile(path.resolve(__dirname, fullPath));
-        } else if (stats.isDirectory()) {
-            watch(plugin, fullPath);
-        }
+
+    // engine
+    if (!fs.existsSync('../build/playcanvas/src/index.js')) {
+        const cmd = `npm run build:esm:release --prefix ../`;
+        console.log("\x1b[32m%s\x1b[0m", cmd);
+        execSync(cmd);
     }
-}
-
-/**
- * This plugin copies static files from source to destination.
- *
- * @param {STATIC_FILES} targets - Array of source and destination objects.
- * @returns {RollupPlugin} The plugin.
- */
-function copyStaticFiles(targets) {
-    return {
-        name: 'copy-and-watch',
-        load() {
-            return 'console.log("This temp file is created when copying static files, it should be removed during the build process.");';
-        },
-        buildStart() {
-            if (NODE_ENV === 'development') {
-                targets.forEach((target) => {
-                    watch(this, target.src);
-                });
-            }
-        },
-        generateBundle() {
-            targets.forEach((target) => {
-                fse.copySync(target.src, target.dest, { overwrite: true });
-            });
-        },
-        writeBundle() {
-            fs.unlinkSync('dist/copy.tmp');
-        }
-    };
-}
-
-/**
- * This plugin builds the standalone html files.
- *
- * @returns {RollupPlugin} The plugin.
- */
-function buildAndWatchStandaloneExamples() {
-    return {
-        name: 'build-and-watch-standalone-examples',
-        buildStart() {
-            if (NODE_ENV === 'development') {
-                watch(this, 'iframe/example.html');
-                watch(this, 'scripts/standalone-html.mjs');
-                watch(this, 'src/examples');
-            }
-        },
-        generateBundle() {
-            const cmd = `cross-env NODE_ENV=${NODE_ENV} ENGINE_PATH=${ENGINE_PATH} npm run build:standalone`;
-            console.log("\x1b[32m%s\x1b[0m", cmd);
-            execSync(cmd);
-        }
-    };
 }
 
 function getEngineTargets() {
+    // Checks for types and engien for app building
+    checkAppEngine();
+
     const targets = [];
     if (ENGINE_PATH) {
         return targets;
@@ -232,10 +147,8 @@ export default [
             file: `dist/copy.tmp`
         },
         plugins: [
-            timeStart('examples'),
-            buildAndWatchStandaloneExamples(),
-            copyStaticFiles(STATIC_FILES),
-            timeEnd('examples')
+            generateStandalone(NODE_ENV, ENGINE_PATH),
+            copyStatic(NODE_ENV, STATIC_FILES)
         ]
     },
     {
@@ -246,7 +159,6 @@ export default [
             format: 'umd'
         },
         plugins: [
-            timeStart('site'),
             alias({
                 entries: {
                     // define supported module overrides
@@ -262,8 +174,7 @@ export default [
                 },
                 preventAssignment: true
             }),
-            (NODE_ENV === 'production' && terser()),
-            timeEnd('site')
+            (NODE_ENV === 'production' && terser())
         ]
     },
     ...getEngineTargets()

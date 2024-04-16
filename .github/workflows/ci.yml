@@ -167,12 +167,6 @@ jobs:
     - name: Install dependencies
       run: npm clean-install --progress=false --no-fund
 
-    - name: Build PlayCanvas (ESM-only)
-      run: npm run build:esm
-
-    - name: Build TypeScript declarations
-      run: npm run build:types
-
     - name: Build Examples Browser
       working-directory: ./examples
       run: |
