@@ -141,7 +141,17 @@ class BindGroup {
     }
 
     /**
-     * Applies any changes made to the bind group's properties.
+     * Updates the uniform buffers in this bind group.
+     */
+    updateUniformBuffers() {
+        for (let i = 0; i < this.uniformBuffers.length; i++) {
+            this.uniformBuffers[i].update();
+        }
+    }
+
+    /**
+     * Applies any changes made to the bind group's properties. Note that the content of used
+     * uniform buffers needs to be updated before calling this method.
      */
     update() {
 

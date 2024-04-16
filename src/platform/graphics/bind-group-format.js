@@ -16,15 +16,34 @@ const textureDimensionInfo = {
 };
 
 /**
- * @ignore
+ * A base class to describe the format of the resource for {@link BindGroupFormat}.
+ *
+ * @category Graphics
  */
 class BindBaseFormat {
-    /** @type {number} */
+    /**
+     * @type {number}
+     * @ignore
+     */
     slot = -1;
 
-    /** @type {import('./scope-id.js').ScopeId|null} */
+    /**
+     * @type {import('./scope-id.js').ScopeId|null}
+     * @ignore
+     */
     scopeId = null;
 
+    /**
+     * Create a new instance.
+     *
+     * @param {string} name - The name of the resource.
+     * @param {number} visibility - A bit-flag that specifies the shader stages in which the resource
+     * is visible. Can be:
+     *
+     * - {@link SHADERSTAGE_VERTEX}
+     * - {@link SHADERSTAGE_FRAGMENT}
+     * - {@link SHADERSTAGE_COMPUTE}
+     */
     constructor(name, visibility) {
         /** @type {string} */
         this.name = name;
@@ -35,15 +54,33 @@ class BindBaseFormat {
 }
 
 /**
- * @ignore
+ * A class to describe the format of the uniform buffer for {@link BindGroupFormat}.
+ *
+ * @category Graphics
  */
 class BindUniformBufferFormat extends BindBaseFormat {
 }
 
 /**
- * @ignore
+ * A class to describe the format of the storage buffer for {@link BindGroupFormat}.
+ *
+ * @category Graphics
  */
 class BindStorageBufferFormat extends BindBaseFormat {
+    /**
+     * Create a new instance.
+     *
+     * @param {string} name - The name of the storage buffer.
+     * @param {number} visibility - A bit-flag that specifies the shader stages in which the storage
+     * buffer is visible. Can be:
+     *
+     * - {@link SHADERSTAGE_VERTEX}
+     * - {@link SHADERSTAGE_FRAGMENT}
+     * - {@link SHADERSTAGE_COMPUTE}
+     *
+     * @param {boolean} readOnly - Whether the storage buffer is read-only, or read-write. Defaults
+     * to false. This has to be true for the storage buffer used in the vertex shader.
+     */
     constructor(name, visibility, readOnly = false) {
         super(name, visibility);
 
@@ -54,9 +91,45 @@ class BindStorageBufferFormat extends BindBaseFormat {
 }
 
 /**
- * @ignore
+ * A class to describe the format of the texture for {@link BindGroupFormat}.
+ *
+ * @category Graphics
  */
 class BindTextureFormat extends BindBaseFormat {
+    /**
+     * Create a new instance.
+     *
+     * @param {string} name - The name of the storage buffer.
+     * @param {number} visibility - A bit-flag that specifies the shader stages in which the storage
+     * buffer is visible. Can be:
+     *
+     * - {@link SHADERSTAGE_VERTEX}
+     * - {@link SHADERSTAGE_FRAGMENT}
+     * - {@link SHADERSTAGE_COMPUTE}
+     *
+     * @param {string} textureDimension - The dimension of the texture. Defaults to
+     * {@link TEXTUREDIMENSION_2D}. Can be:
+     *
+     * - {@link TEXTUREDIMENSION_1D}
+     * - {@link TEXTUREDIMENSION_2D}
+     * - {@link TEXTUREDIMENSION_2D_ARRAY}
+     * - {@link TEXTUREDIMENSION_CUBE}
+     * - {@link TEXTUREDIMENSION_CUBE_ARRAY}
+     * - {@link TEXTUREDIMENSION_3D}
+     *
+     * @param {number} sampleType - The type of the texture samples. Defaults to
+     * {@link SAMPLETYPE_FLOAT}. Can be:
+     *
+     * - {@link SAMPLETYPE_FLOAT}
+     * - {@link SAMPLETYPE_UNFILTERABLE_FLOAT}
+     * - {@link SAMPLETYPE_DEPTH}
+     * - {@link SAMPLETYPE_INT}
+     * - {@link SAMPLETYPE_UINT}
+     *
+     * @param {boolean} hasSampler - True if the sampler for the texture is needed. Note that if the
+     * sampler is used, it will take up an additional slot, directly following the texture slot.
+     * Defaults to true.
+     */
     constructor(name, visibility, textureDimension = TEXTUREDIMENSION_2D, sampleType = SAMPLETYPE_FLOAT, hasSampler = true) {
         super(name, visibility);
 
@@ -72,9 +145,28 @@ class BindTextureFormat extends BindBaseFormat {
 }
 
 /**
- * @ignore
+ * A class to describe the format of the storage texture for. Storage texture is a texture created
+ * with the storage flag set to true, which allows it to be used as an output of a compute shader.
+ * Note: At the current time, storage textures are only supported in compute shaders, in a
+ * write-only mode.
+ *
+ * @category Graphics
  */
 class BindStorageTextureFormat extends BindBaseFormat {
+    /**
+     * Create a new instance.
+     *
+     * @param {string} name - The name of the storage buffer.
+     * @param {number} format - The pixel format of the texture. Note that not all formats can be
+     * used. Defaults to {@link PIXELFORMAT_RGBA8}.
+     * @param {string} textureDimension - The dimension of the texture. Defaults to
+     * {@link TEXTUREDIMENSION_2D}. Can be:
+     *
+     * - {@link TEXTUREDIMENSION_1D}
+     * - {@link TEXTUREDIMENSION_2D}
+     * - {@link TEXTUREDIMENSION_2D_ARRAY}
+     * - {@link TEXTUREDIMENSION_3D}
+     */
     constructor(name, format = PIXELFORMAT_RGBA8, textureDimension = TEXTUREDIMENSION_2D) {
         super(name, SHADERSTAGE_COMPUTE);
 
@@ -87,26 +179,48 @@ class BindStorageTextureFormat extends BindBaseFormat {
 }
 
 /**
- * @ignore
+ * BindGroupFormat is a data structure that defines the layout of resources (buffers, textures,
+ * samplers) used by rendering or compute shaders. It describes the binding points for each
+ * resource type, and the visibility of these resources in the shader stages.
+ * Currently this class is only used on WebGPU platform to specify the input and output resources
+ * for vertex, fragment and compute shaders written in {@link SHADERLANGUAGE_WGSL} language.
+ *
+ * @category Graphics
  */
 class BindGroupFormat {
-    /** @type {BindUniformBufferFormat[]} */
+    /**
+     * @type {BindUniformBufferFormat[]}
+     * @private
+     */
     uniformBufferFormats = [];
 
-    /** @type {BindTextureFormat[]} */
+    /**
+     * @type {BindTextureFormat[]}
+     * @private
+     */
     textureFormats = [];
 
-    /** @type {BindStorageTextureFormat[]} */
+    /**
+     * @type {BindStorageTextureFormat[]}
+     * @private
+     */
     storageTextureFormats = [];
 
-    /** @type {BindStorageBufferFormat[]} */
+    /**
+     * @type {BindStorageBufferFormat[]}
+     * @private
+     */
     storageBufferFormats = [];
 
     /**
+     * Create a new instance.
+     *
      * @param {import('./graphics-device.js').GraphicsDevice} graphicsDevice - The graphics device
      * used to manage this vertex format.
-     * @param {(BindBaseFormat|BindTextureFormat|BindStorageTextureFormat|BindStorageBufferFormat)[]} formats
-     * - An array of bind formats.
+     * @param {(BindTextureFormat|BindStorageTextureFormat|BindUniformBufferFormat|BindStorageBufferFormat)[]} formats
+     * - An array of bind formats. Note that each entry in the array uses up one slot. The exception
+     * is a texture format that has a sampler, which uses up two slots. The slots are allocated
+     * sequentially, starting from 0.
      */
     constructor(graphicsDevice, formats) {
         this.id = id++;
@@ -193,6 +307,7 @@ class BindGroupFormat {
      *
      * @param {string} name - The name of the texture slot.
      * @returns {BindTextureFormat|null} - The format.
+     * @ignore
      */
     getTexture(name) {
         const index = this.textureFormatsMap.get(name);
@@ -208,6 +323,7 @@ class BindGroupFormat {
      *
      * @param {string} name - The name of the texture slot.
      * @returns {BindStorageTextureFormat|null} - The format.
+     * @ignore
      */
     getStorageTexture(name) {
         const index = this.storageTextureFormatsMap.get(name);
