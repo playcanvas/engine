@@ -87,32 +87,6 @@ function getEnginePathFiles() {
 }
 
 /**
- * @param {string} name - The timer name.
- * @returns {RollupPlugin} The plugin.
- */
-function timeStart(name) {
-    return {
-        name: 'time-start',
-        buildStart() {
-            console.time(name);
-        }
-    };
-}
-
-/**
- * @param {string} name - The timer name.
- * @returns {RollupPlugin} The plugin.
- */
-function timeEnd(name) {
-    return {
-        name: 'time-end',
-        writeBundle() {
-            console.timeEnd(name);
-        }
-    };
-}
-
-/**
  * @param {RollupPlugin} plugin - The Rollup plugin.
  * @param {string} src - File or path to watch.
  */
@@ -142,7 +116,7 @@ function watch(plugin, src) {
  */
 function copyStaticFiles(targets) {
     return {
-        name: 'copy-and-watch',
+        name: 'copy-static-files',
         load() {
             return 'console.log("This temp file is created when copying static files, it should be removed during the build process.");';
         },
@@ -169,9 +143,9 @@ function copyStaticFiles(targets) {
  *
  * @returns {RollupPlugin} The plugin.
  */
-function buildAndWatchStandaloneExamples() {
+function generateStandaloneFiles() {
     return {
-        name: 'build-and-watch-standalone-examples',
+        name: 'generate-standalone-files',
         buildStart() {
             if (NODE_ENV === 'development') {
                 watch(this, 'iframe/example.html');
@@ -225,6 +199,23 @@ function getEngineTargets() {
     return targets;
 }
 
+function generateAppEngine() {
+    // types
+    if (!fs.existsSync('../build/playcanvas.d.ts')) {
+        const cmd = `npm run build:types --prefix ../`;
+        console.log("\x1b[32m%s\x1b[0m", cmd);
+        execSync(cmd);
+    }
+
+    // engine
+    if (!fs.existsSync('../build/playcanvas/src/index.js')) {
+        const cmd = `npm run build:esm:release --prefix ../`;
+        console.log("\x1b[32m%s\x1b[0m", cmd);
+        execSync(cmd);
+    }
+}
+generateAppEngine();
+
 export default [
     {
         input: 'src/static/index.html',
@@ -232,10 +223,8 @@ export default [
             file: `dist/copy.tmp`
         },
         plugins: [
-            timeStart('examples'),
-            buildAndWatchStandaloneExamples(),
-            copyStaticFiles(STATIC_FILES),
-            timeEnd('examples')
+            generateStandaloneFiles(),
+            copyStaticFiles(STATIC_FILES)
         ]
     },
     {
@@ -246,7 +235,6 @@ export default [
             format: 'umd'
         },
         plugins: [
-            timeStart('site'),
             alias({
                 entries: {
                     // define supported module overrides
@@ -262,8 +250,7 @@ export default [
                 },
                 preventAssignment: true
             }),
-            (NODE_ENV === 'production' && terser()),
-            timeEnd('site')
+            (NODE_ENV === 'production' && terser())
         ]
     },
     ...getEngineTargets()
