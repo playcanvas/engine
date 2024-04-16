@@ -7,17 +7,17 @@ import { Entity } from '../../framework/entity.js';
 import { CULLFACE_NONE, CULLFACE_BACK, SEMANTIC_POSITION, SEMANTIC_COLOR } from '../../platform/graphics/constants.js';
 import { BLEND_NORMAL } from '../../scene/constants.js';
 import {
-    createBox,
-    createCone,
-    createCylinder,
-    createPlane,
-    createMesh,
-    createTorus
-} from '../../scene/procedural.js';
+    createCylinder
+} from '../../scene/procedural/cylinder.js';
+import { createMesh } from '../../scene/procedural/create-mesh.js';
+import { createTorus } from '../../scene/procedural/torus.js';
 import { createShaderFromCode } from '../../scene/shader-lib/utils.js';
 
 import { COLOR_GRAY } from './default-colors.js';
 import { MeshTriData } from './mesh-tri-data.js';
+import { createPlane } from '../../scene/procedural/plane.js';
+import { createBox } from '../../scene/procedural/box.js';
+import { createCone } from '../../scene/procedural/cone.js';
 
 // constants
 const SHADOW_DAMP_SCALE = 0.25;

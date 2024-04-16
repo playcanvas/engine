@@ -1,6 +1,7 @@
 import { Debug } from "../../core/debug.js";
 import { SKYTYPE_BOX, SKYTYPE_DOME, SKYTYPE_INFINITE } from "../constants.js";
-import { createBox, createMesh } from "../procedural.js";
+import { createBox } from "../procedural/box.js";
+import { createMesh } from "../procedural/create-mesh.js";
 
 class SkyGeometry {
     static create(device, type) {
