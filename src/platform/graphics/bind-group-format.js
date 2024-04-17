@@ -147,7 +147,7 @@ class BindTextureFormat extends BindBaseFormat {
 /**
  * A class to describe the format of the storage texture for. Storage texture is a texture created
  * with the storage flag set to true, which allows it to be used as an output of a compute shader.
- * Note: At the current time, storage textures are only supported in compute shaders, in a
+ * Note: At the current time, storage textures are only supported in compute shaders in a
  * write-only mode.
  *
  * @category Graphics
