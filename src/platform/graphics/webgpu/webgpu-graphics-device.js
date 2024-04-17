@@ -857,9 +857,9 @@ class WebgpuGraphicsDevice extends GraphicsDevice {
      * Read a content of a storage buffer.
      *
      * @param {import('./webgpu-buffer.js').WebgpuBuffer} storageBuffer - The storage buffer.
-     * @param {number} [offset] - The offset of data to read. Defaults to 0.
+     * @param {number} [offset] - The byte offset of data to read. Defaults to 0.
      * @param {number} [size] - The byte size of data to read. Defaults to the full size of the
-     * buffer.
+     * buffer minus the offset.
      * @param {ArrayBufferView} [data] - Typed array to populate with the data read from the storage
      * buffer. When typed array is supplied, enough space needs to be reserved, otherwise only
      * partial data is copied. If not specified, the data is returned in an Uint8Array. Defaults to
@@ -871,7 +871,7 @@ class WebgpuGraphicsDevice extends GraphicsDevice {
      * buffer.
      * @ignore
      */
-    readStorageBuffer(storageBuffer, offset = 0, size = storageBuffer.byteSize, data = null, immediate = false) {
+    readStorageBuffer(storageBuffer, offset = 0, size = storageBuffer.byteSize - offset, data = null, immediate = false) {
 
         // create a temporary staging buffer
         const stagingBuffer = this.createBufferImpl(BUFFERUSAGE_READ | BUFFERUSAGE_COPY_DST);

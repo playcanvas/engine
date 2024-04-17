@@ -112,7 +112,7 @@ assetListLoader.load(() => {
     // Create a storage buffer to which the compute shader will write the histogram values.
     const numBins = 256;
     const histogramStorageBuffer = new pc.StorageBuffer(
-        device, numBins * 4,     // 4 bytes per value, storing unsigned int
+        device, numBins * 4,      // 4 bytes per value, storing unsigned int
         pc.BUFFERUSAGE_COPY_SRC | // needed for reading back the data to CPU
         pc.BUFFERUSAGE_COPY_DST   // needed for clearing the buffer
     );

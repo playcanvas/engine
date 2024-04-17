@@ -11,9 +11,8 @@ class ComputeParameter {
 }
 
 /**
- * A representation of a compute shader with the associated data, that can be executed on the GPU.
- *
- * @ignore
+ * A representation of a compute shader with the associated resources, that can be executed on the
+ * GPU. Only supported on WebGPU platform.
  */
 class Compute {
     /**
@@ -24,7 +23,11 @@ class Compute {
      */
     shader = null;
 
-    /** @type {string} */
+    /**
+     * The non-unique name of an instance of the class. Defaults to 'Unnamed'.
+     *
+     * @type {string}
+     */
     name;
 
     /**

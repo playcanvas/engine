@@ -125,7 +125,6 @@ export { SoundInstance3d } from './platform/sound/instance3d.js';
 
 // SCENE
 export * from './scene/constants.js';
-export { calculateNormals, calculateTangents, createBox, createCapsule, createCone, createCylinder, createMesh, createPlane, createSphere, createTorus } from './scene/procedural.js';
 export { drawQuadWithShader, drawTexture } from './scene/graphics/quad-render-utils.js';
 export { BasicMaterial } from './scene/materials/basic-material.js';
 export { Batch } from './scene/batching/batch.js';
@@ -171,6 +170,16 @@ export { RenderPassColorGrab } from './scene/graphics/render-pass-color-grab.js'
 export { RenderPassShaderQuad } from './scene/graphics/render-pass-shader-quad.js';
 export { shFromCubemap } from './scene/graphics/prefilter-cubemap.js';
 export { reprojectTexture } from './scene/graphics/reproject-texture.js';
+
+// SCENE / PROCEDURAL
+export { calculateNormals, calculateTangents, createMesh } from './scene/procedural/create-mesh.js';
+export { createCapsule } from './scene/procedural/capsule.js';
+export { createCylinder } from './scene/procedural/cylinder.js';
+export { createBox } from './scene/procedural/box.js';
+export { createCone } from './scene/procedural/cone.js';
+export { createPlane } from './scene/procedural/plane.js';
+export { createSphere } from './scene/procedural/sphere.js';
+export { createTorus } from './scene/procedural/torus.js';
 
 // SCENE / RENDERER
 export { RenderPassForward } from './scene/renderer/render-pass-forward.js';

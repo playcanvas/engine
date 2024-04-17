@@ -2,7 +2,7 @@ import { EventHandler } from '../core/event-handler.js';
 import { Vec2 } from '../core/math/vec2.js';
 
 import { SPRITE_RENDERMODE_SIMPLE, SPRITE_RENDERMODE_SLICED, SPRITE_RENDERMODE_TILED } from './constants.js';
-import { createMesh } from './procedural.js';
+import { createMesh } from './procedural/create-mesh.js';
 
 // normals are the same for every mesh
 const spriteNormals = [
