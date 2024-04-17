@@ -118,17 +118,19 @@ assetListLoader.load(() => {
         cshader: files['compute-shader.wgsl'],
 
         // format of a uniform buffer used by the compute shader
-        computeUniformBufferFormat: new pc.UniformBufferFormat(device, [
-            new pc.UniformFormat('count', pc.UNIFORMTYPE_UINT),
-            new pc.UniformFormat('positionOffset', pc.UNIFORMTYPE_UINT),
-            new pc.UniformFormat('normalOffset', pc.UNIFORMTYPE_UINT),
-            new pc.UniformFormat('time', pc.UNIFORMTYPE_FLOAT)
-        ]),
+        computeUniformBufferFormats: {
+            'ub': new pc.UniformBufferFormat(device, [
+                new pc.UniformFormat('count', pc.UNIFORMTYPE_UINT),
+                new pc.UniformFormat('positionOffset', pc.UNIFORMTYPE_UINT),
+                new pc.UniformFormat('normalOffset', pc.UNIFORMTYPE_UINT),
+                new pc.UniformFormat('time', pc.UNIFORMTYPE_FLOAT)
+            ])
+        },
 
         // format of a bind group, providing resources for the compute shader
         computeBindGroupFormat: new pc.BindGroupFormat(device, [
             // a uniform buffer we provided format for
-            new pc.BindUniformBufferFormat(pc.UNIFORM_BUFFER_DEFAULT_SLOT_NAME, pc.SHADERSTAGE_COMPUTE),
+            new pc.BindUniformBufferFormat('ub', pc.SHADERSTAGE_COMPUTE),
             // the vertex buffer we want to modify
             new pc.BindStorageBufferFormat('vb', pc.SHADERSTAGE_COMPUTE)
         ])

@@ -91,17 +91,18 @@ assetListLoader.load(() => {
         shaderLanguage: pc.SHADERLANGUAGE_WGSL,
         cshader: files['compute-shader.wgsl'],
 
-        // format of a uniform buffer used by the compute shader
-        computeUniformBufferFormat: new pc.UniformBufferFormat(device, [
-            new pc.UniformFormat('tint', pc.UNIFORMTYPE_VEC4),
-            new pc.UniformFormat('offset', pc.UNIFORMTYPE_FLOAT),
-            new pc.UniformFormat('frequency', pc.UNIFORMTYPE_FLOAT)
-        ]),
+        computeUniformBufferFormats: {
+            'ub': new pc.UniformBufferFormat(device, [
+                new pc.UniformFormat('tint', pc.UNIFORMTYPE_VEC4),
+                new pc.UniformFormat('offset', pc.UNIFORMTYPE_FLOAT),
+                new pc.UniformFormat('frequency', pc.UNIFORMTYPE_FLOAT)
+            ])
+        },
 
         // format of a bind group, providing resources for the compute shader
         computeBindGroupFormat: new pc.BindGroupFormat(device, [
             // a uniform buffer we provided format for
-            new pc.BindUniformBufferFormat(pc.UNIFORM_BUFFER_DEFAULT_SLOT_NAME, pc.SHADERSTAGE_COMPUTE),
+            new pc.BindUniformBufferFormat('ub', pc.SHADERSTAGE_COMPUTE),
             // input textures
             new pc.BindTextureFormat('inTexture', pc.SHADERSTAGE_COMPUTE, undefined, undefined, false),
             // output storage textures
