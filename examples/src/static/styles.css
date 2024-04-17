@@ -449,6 +449,13 @@ body {
     top: 4px;
 }
 
+#errorLabel {
+    color: #f95555 !important;
+    font-size: 14px;
+    text-align: center;
+    display: block;
+}
+
 .filter-input {
     margin: 8px 8px 0px 8px !important;
     width: calc(100% - 16px);

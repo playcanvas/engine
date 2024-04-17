@@ -176,6 +176,7 @@ class Example extends TypedComponent {
             controls,
             observer
         });
+        window.dispatchEvent(new CustomEvent('resetErrorBoundary'));
     }
 
     /**

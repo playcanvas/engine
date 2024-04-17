@@ -4,7 +4,6 @@ import { Container } from '@playcanvas/pcui/react';
 
 import { CodeEditor } from './CodeEditor.mjs';
 import { Example } from './Example.mjs';
-import { ErrorBoundary } from './ErrorBoundary.mjs';
 import { Menu } from './Menu.mjs';
 import { SideBar } from './Sidebar.mjs';
 
@@ -85,12 +84,8 @@ class MainLayout extends TypedComponent {
                             jsx(
                                 Container,
                                 { id: 'main-view' },
-                                jsx(
-                                    ErrorBoundary,
-                                    null,
-                                    orientation === 'landscape' && jsx(CodeEditor),
-                                    jsx(Example, null)
-                                )
+                                orientation === 'landscape' && jsx(CodeEditor),
+                                jsx(Example, null)
                             )
                         )
                     )
