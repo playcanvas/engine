@@ -66,6 +66,9 @@ class CodeEditor extends TypedComponent {
     /** @type {string[]} */
     _decorators = [];
 
+    /** @type {Map<string, object[]>} */
+    _decoratorMap = new Map();
+
     /**
      * @param {Props} props - Component properties.
      */
@@ -114,7 +117,16 @@ class CodeEditor extends TypedComponent {
                 }
             }
         };
-        this._decorators = editor.deltaDecorations(this._decorators, [decorator]);
+        this._decoratorMap.set(this.state.selectedFile, [decorator]);
+        this._refreshDecorators();
+
+    }
+
+    _refreshDecorators() {
+        if (!monacoEditor) {
+            return;
+        }
+        this._decorators = monacoEditor.deltaDecorations(this._decorators, this._decoratorMap.get(this.state.selectedFile) ?? []);
     }
 
     /**
@@ -126,7 +138,8 @@ class CodeEditor extends TypedComponent {
     }
 
     _handleExampleHotReload() {
-        this._decorators = monacoEditor.deltaDecorations(this._decorators, []);
+        this._decoratorMap.delete(this.state.selectedFile);
+        this._refreshDecorators();
     }
 
     /**
@@ -254,7 +267,7 @@ class CodeEditor extends TypedComponent {
      */
     selectFile(selectedFile) {
         this.mergeState({ selectedFile });
-        monacoEditor?.setScrollPosition({ scrollTop: 0, scrollLeft: 0 });
+        monacoEditor.setScrollPosition({ scrollTop: 0, scrollLeft: 0 });
     }
 
     renderTabs() {
@@ -275,7 +288,10 @@ class CodeEditor extends TypedComponent {
     }
 
     render() {
-        setTimeout(() => iframe.fire('resize'), 50);
+        setTimeout(() => {
+            iframe.fire('resize');
+            this._refreshDecorators();
+        }, 50);
         const { files, selectedFile, showMinimap } = this.state;
         const language = FILE_TYPE_LANGUAGES[selectedFile.split('.').pop() || 'shader'];
         let value = files[selectedFile];
@@ -284,6 +300,7 @@ class CodeEditor extends TypedComponent {
         } else {
             value = '// reloading, please wait';
         }
+
         /** @type {import('@monaco-editor/react').EditorProps} */
         const options = {
             value,
