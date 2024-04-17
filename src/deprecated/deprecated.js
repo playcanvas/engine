@@ -58,7 +58,14 @@ import { BlendState } from '../platform/graphics/blend-state.js';
 import { DepthState } from '../platform/graphics/depth-state.js';
 
 import { PROJECTION_ORTHOGRAPHIC, PROJECTION_PERSPECTIVE, LAYERID_IMMEDIATE, LAYERID_WORLD } from '../scene/constants.js';
-import { calculateTangents, createBox, createCapsule, createCone, createCylinder, createMesh, createPlane, createSphere, createTorus } from '../scene/procedural.js';
+import { createCylinder } from '../scene/procedural/cylinder.js';
+import { createBox } from '../scene/procedural/box.js';
+import { createCapsule } from '../scene/procedural/capsule.js';
+import { createCone } from '../scene/procedural/cone.js';
+import { createPlane } from '../scene/procedural/plane.js';
+import { createSphere } from '../scene/procedural/sphere.js';
+import { createTorus } from '../scene/procedural/torus.js';
+import { calculateTangents, createMesh } from '../scene/procedural/create-mesh.js';
 import { BasicMaterial } from '../scene/materials/basic-material.js';
 import { ForwardRenderer } from '../scene/renderer/forward-renderer.js';
 import { GraphNode } from '../scene/graph-node.js';
