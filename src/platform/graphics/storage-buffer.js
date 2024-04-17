@@ -59,7 +59,7 @@ class StorageBuffer {
     }
 
     /**
-     * Read a content of a storage buffer.
+     * Read the contents of a storage buffer.
      *
      * @param {number} [offset] - The byte offset of data to read. Defaults to 0.
      * @param {number} [size] - The byte size of data to read. Defaults to the full size of the
