@@ -63,6 +63,12 @@ class CodeEditor extends TypedComponent {
         showMinimap: getShowMinimap()
     };
 
+    /** @type {string[]} */
+    _decorators = [];
+
+    /** @type {Map<string, object[]>} */
+    _decoratorMap = new Map();
+
     /**
      * @param {Props} props - Component properties.
      */
@@ -70,6 +76,8 @@ class CodeEditor extends TypedComponent {
         super(props);
         this._handleExampleLoad = this._handleExampleLoad.bind(this);
         this._handleExampleLoading = this._handleExampleLoading.bind(this);
+        this._handleExampleHotReload = this._handleExampleHotReload.bind(this);
+        this._handleExampleError = this._handleExampleError.bind(this);
         this._handleRequestedFiles = this._handleRequestedFiles.bind(this);
     }
 
@@ -86,11 +94,52 @@ class CodeEditor extends TypedComponent {
     }
 
     /**
+     * @param {ErrorEvent} event - The event.
+     */
+    _handleExampleError(event) {
+        const editor = window.editor;
+        if (!editor) {
+            return;
+        }
+        const monaco = window.monaco;
+
+        const { name, message, locations } = event.detail;
+        const { line, column } = locations[0];
+
+        const messageMarkdown = `**${name}: ${message}** [Ln ${line}, Col ${column}]`;
+        const lineText = editor.getModel().getLineContent(line);
+        const decorator = {
+            range: new monaco.Range(line, 0, line, lineText.length),
+            options: {
+                className: 'squiggly-error',
+                hoverMessage: {
+                    value: messageMarkdown
+                }
+            }
+        };
+        this._decoratorMap.set(this.state.selectedFile, [decorator]);
+        this._refreshDecorators();
+
+    }
+
+    _refreshDecorators() {
+        if (!monacoEditor) {
+            return;
+        }
+        this._decorators = monacoEditor.deltaDecorations(this._decorators, this._decoratorMap.get(this.state.selectedFile) ?? []);
+    }
+
+    /**
      * @param {StateEvent} event - The event.
      */
     _handleRequestedFiles(event) {
         const { files } = event.detail;
         this.mergeState({ files });
+    }
+
+    _handleExampleHotReload() {
+        this._decoratorMap.delete(this.state.selectedFile);
+        this._refreshDecorators();
     }
 
     /**
@@ -105,6 +154,8 @@ class CodeEditor extends TypedComponent {
     componentDidMount() {
         window.addEventListener('exampleLoad', this._handleExampleLoad);
         window.addEventListener('exampleLoading', this._handleExampleLoading);
+        window.addEventListener('exampleHotReload', this._handleExampleHotReload);
+        window.addEventListener('exampleError', this._handleExampleError);
         window.addEventListener('requestedFiles', this._handleRequestedFiles);
         iframe.fire('requestFiles');
     }
@@ -112,6 +163,8 @@ class CodeEditor extends TypedComponent {
     componentWillUnmount() {
         window.removeEventListener('exampleLoad', this._handleExampleLoad);
         window.removeEventListener('exampleLoading', this._handleExampleLoading);
+        window.removeEventListener('exampleHotReload', this._handleExampleHotReload);
+        window.removeEventListener('exampleError', this._handleExampleError);
         window.removeEventListener('requestedFiles', this._handleRequestedFiles);
     }
 
@@ -214,7 +267,7 @@ class CodeEditor extends TypedComponent {
      */
     selectFile(selectedFile) {
         this.mergeState({ selectedFile });
-        monacoEditor?.setScrollPosition({ scrollTop: 0, scrollLeft: 0 });
+        monacoEditor.setScrollPosition({ scrollTop: 0, scrollLeft: 0 });
     }
 
     renderTabs() {
@@ -235,7 +288,10 @@ class CodeEditor extends TypedComponent {
     }
 
     render() {
-        setTimeout(() => iframe.fire('resize'), 50);
+        setTimeout(() => {
+            iframe.fire('resize');
+            this._refreshDecorators();
+        }, 50);
         const { files, selectedFile, showMinimap } = this.state;
         const language = FILE_TYPE_LANGUAGES[selectedFile.split('.').pop() || 'shader'];
         let value = files[selectedFile];
@@ -244,6 +300,7 @@ class CodeEditor extends TypedComponent {
         } else {
             value = '// reloading, please wait';
         }
+
         /** @type {import('@monaco-editor/react').EditorProps} */
         const options = {
             value,
