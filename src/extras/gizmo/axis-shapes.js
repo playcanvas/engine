@@ -6,18 +6,16 @@ import { MeshInstance } from '../../scene/mesh-instance.js';
 import { Entity } from '../../framework/entity.js';
 import { CULLFACE_NONE, CULLFACE_BACK, SEMANTIC_POSITION, SEMANTIC_COLOR } from '../../platform/graphics/constants.js';
 import { BLEND_NORMAL } from '../../scene/constants.js';
-import {
-    createCylinder
-} from '../../scene/procedural/cylinder.js';
-import { createMesh } from '../../scene/procedural/create-mesh.js';
-import { createTorus } from '../../scene/procedural/torus.js';
 import { createShaderFromCode } from '../../scene/shader-lib/utils.js';
 
 import { COLOR_GRAY } from './default-colors.js';
 import { MeshTriData } from './mesh-tri-data.js';
-import { createPlane } from '../../scene/procedural/plane.js';
-import { createBox } from '../../scene/procedural/box.js';
-import { createCone } from '../../scene/procedural/cone.js';
+import { Mesh } from '../../scene/mesh.js';
+import { BoxGeometry } from '../../scene/geometry/box-geometry.js';
+import { CylinderGeometry } from '../../scene/geometry/cylinder-geometry.js';
+import { ConeGeometry } from '../../scene/geometry/cone-geometry.js';
+import { PlaneGeometry } from '../../scene/geometry/plane-geometry.js';
+import { TorusGeometry } from '../../scene/geometry/torus-geometry.js';
 
 // constants
 const SHADOW_DAMP_SCALE = 0.25;
@@ -27,11 +25,11 @@ const TORUS_RENDER_SEGMENTS = 80;
 const TORUS_INTERSECT_SEGMENTS = 20;
 const LIGHT_DIR = new Vec3(1, 2, 3);
 const MESH_TEMPLATES = {
-    box: createBox,
-    cone: createCone,
-    cylinder: createCylinder,
-    plane: createPlane,
-    torus: createTorus
+    box: BoxGeometry,
+    cone: ConeGeometry,
+    cylinder: CylinderGeometry,
+    plane: PlaneGeometry,
+    torus: TorusGeometry
 };
 const SHADER = {
     vert: /* glsl */`
@@ -69,36 +67,26 @@ const tmpV1 = new Vec3();
 const tmpV2 = new Vec3();
 const tmpQ1 = new Quat();
 
-function createShadowMesh(device, entity, type, color = Color.WHITE, templateOpts = {}) {
-    const createTemplate = MESH_TEMPLATES[type];
-    if (!createTemplate) {
+function createShadowMesh(device, entity, type, color = Color.WHITE, templateOpts) {
+    const geomTemplate = MESH_TEMPLATES[type];
+    if (!geomTemplate) {
         throw new Error('Invalid primitive type.');
     }
 
-    const mesh = createTemplate(device, templateOpts);
-    /** @type {Record<string, number[]>} */
-    const options = {
-        positions: [],
-        normals: [],
-        indices: [],
-        colors: []
-    };
-
-    mesh.getPositions(options.positions);
-    mesh.getNormals(options.normals);
-    mesh.getIndices(options.indices);
+    const geom = new geomTemplate(templateOpts);
+    geom.colors = [];
 
     const wtm = entity.getWorldTransform().clone().invert();
     tmpV1.copy(LIGHT_DIR);
     wtm.transformVector(tmpV1, tmpV1);
     tmpV1.normalize();
-    const numVertices = mesh.vertexBuffer.numVertices;
-    const shadow = calculateShadow(tmpV1, numVertices, options.normals);
+    const numVertices = geom.positions.length / 3;
+    const shadow = calculateShadow(tmpV1, numVertices, geom.normals);
     for (let i = 0; i < shadow.length; i++) {
-        options.colors.push(shadow[i] * color.r * 255, shadow[i] * color.g * 255, shadow[i] * color.b * 255, color.a * 255);
+        geom.colors.push(shadow[i] * color.r * 255, shadow[i] * color.g * 255, shadow[i] * color.b * 255, color.a * 255);
     }
 
-    const shadowMesh = createMesh(device, options.positions, options);
+    const shadowMesh = Mesh.fromGeometry(device, geom);
     SHADOW_MESH_MAP.set(shadowMesh, shadow);
 
     return shadowMesh;
@@ -269,8 +257,8 @@ class AxisArrow extends AxisShape {
         super(device, options);
 
         this.meshTriDataList = [
-            new MeshTriData(createCone(this.device)),
-            new MeshTriData(createCylinder(this.device), 1)
+            new MeshTriData(Mesh.fromGeometry(this.device, new ConeGeometry())),
+            new MeshTriData(Mesh.fromGeometry(this.device, new CylinderGeometry()), 1)
         ];
 
         this._createArrow();
@@ -382,7 +370,7 @@ class AxisBoxCenter extends AxisShape {
         super(device, options);
 
         this.meshTriDataList = [
-            new MeshTriData(createBox(this.device), 2)
+            new MeshTriData(Mesh.fromGeometry(this.device, new BoxGeometry()), 2)
         ];
 
         this._createCenter();
@@ -435,8 +423,8 @@ class AxisBoxLine extends AxisShape {
         super(device, options);
 
         this.meshTriDataList = [
-            new MeshTriData(createBox(this.device)),
-            new MeshTriData(createCylinder(this.device), 1)
+            new MeshTriData(Mesh.fromGeometry(this.device, new BoxGeometry())),
+            new MeshTriData(Mesh.fromGeometry(this.device, new CylinderGeometry()), 1)
         ];
 
         this._createBoxLine();
@@ -558,12 +546,12 @@ class AxisDisk extends AxisShape {
     }
 
     _createIntersectTorus() {
-        return createTorus(this.device, {
+        return Mesh.fromGeometry(this.device, new TorusGeometry({
             tubeRadius: this._tubeRadius + this._tolerance,
             ringRadius: this._ringRadius,
             sectorAngle: this._sectorAngle,
             segments: TORUS_INTERSECT_SEGMENTS
-        });
+        }));
     }
 
     _createRenderTorus(sectorAngle) {
@@ -650,7 +638,7 @@ class AxisPlane extends AxisShape {
         super(device, options);
 
         this.meshTriDataList = [
-            new MeshTriData(createPlane(this.device))
+            new MeshTriData(Mesh.fromGeometry(this.device, new PlaneGeometry()))
         ];
 
         this._createPlane();

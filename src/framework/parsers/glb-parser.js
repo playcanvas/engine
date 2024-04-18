@@ -35,7 +35,7 @@ import { Light, lightTypes } from '../../scene/light.js';
 import { Mesh } from '../../scene/mesh.js';
 import { Morph } from '../../scene/morph.js';
 import { MorphTarget } from '../../scene/morph-target.js';
-import { calculateNormals } from '../../scene/procedural/create-mesh.js';
+import { calculateNormals } from '../../scene/geometry/geometry-utils.js';
 import { Render } from '../../scene/render.js';
 import { Skin } from '../../scene/skin.js';
 import { StandardMaterial } from '../../scene/materials/standard-material.js';

@@ -1,7 +1,8 @@
 import { Debug } from "../../core/debug.js";
 import { SKYTYPE_BOX, SKYTYPE_DOME, SKYTYPE_INFINITE } from "../constants.js";
-import { createBox } from "../procedural/box.js";
-import { createMesh } from "../procedural/create-mesh.js";
+import { Mesh } from "../mesh.js";
+import { BoxGeometry } from "../geometry/box-geometry.js";
+import { Geometry } from "../geometry/geometry.js";
 
 class SkyGeometry {
     static create(device, type) {
@@ -14,13 +15,11 @@ class SkyGeometry {
     }
 
     static infinite(device) {
-        return createBox(device);
+        return Mesh.fromGeometry(device, new BoxGeometry(device));
     }
 
     static box(device) {
-        return createBox(device, {
-            yOffset: 0.5
-        });
+        return Mesh.fromGeometry(device, new BoxGeometry({ yOffset: 0.5 }));
     }
 
     static dome(device) {
@@ -83,9 +82,11 @@ class SkyGeometry {
             }
         }
 
-        return createMesh(device, positions, {
-            indices: indices
-        });
+        const geom = new Geometry();
+        geom.positions = positions;
+        geom.indices = indices;
+
+        return Mesh.fromGeometry(device, geom);
     }
 }
 

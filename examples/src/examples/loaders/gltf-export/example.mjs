@@ -91,8 +91,8 @@ assetListLoader.load(() => {
     entity.addComponent('render', {
         type: 'asset',
         meshInstances: [
-            new pc.MeshInstance(pc.createSphere(app.graphicsDevice), material),
-            new pc.MeshInstance(pc.createCone(app.graphicsDevice), material)
+            new pc.MeshInstance(pc.Mesh.fromGeometry(app.graphicsDevice, new pc.SphereGeometry()), material),
+            new pc.MeshInstance(pc.Mesh.fromGeometry(app.graphicsDevice, new pc.ConeGeometry()), material)
         ]
     });
     app.root.addChild(entity);

@@ -78,11 +78,13 @@ assetListLoader.load(() => {
     const entity = new pc.Entity('Sphere');
     app.root.addChild(entity);
 
-    // create hight resolution sphere
-    const mesh = pc.createSphere(app.graphicsDevice, {
+    const geom = new pc.SphereGeometry({
         radius: 1,
         latitudeBands: 100,
-        longitudeBands: 100,
+        longitudeBands: 100
+    });
+
+    const mesh = pc.Mesh.fromGeometry(device, geom, {
         storageVertex: true  // allow vertex buffer to be accessible by compute shader
     });
 

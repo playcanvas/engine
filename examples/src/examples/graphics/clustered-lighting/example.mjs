@@ -93,7 +93,7 @@ assetListLoader.load(() => {
     app.root.addChild(ground);
 
     // high polycount cylinder
-    const cylinderMesh = pc.createCylinder(app.graphicsDevice, { capSegments: 200 });
+    const cylinderMesh = pc.Mesh.fromGeometry(app.graphicsDevice, new pc.CylinderGeometry({ capSegments: 200 }));
     const cylinder = new pc.Entity();
     cylinder.addComponent('render', {
         material: material,

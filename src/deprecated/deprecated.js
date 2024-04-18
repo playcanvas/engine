@@ -58,14 +58,14 @@ import { BlendState } from '../platform/graphics/blend-state.js';
 import { DepthState } from '../platform/graphics/depth-state.js';
 
 import { PROJECTION_ORTHOGRAPHIC, PROJECTION_PERSPECTIVE, LAYERID_IMMEDIATE, LAYERID_WORLD } from '../scene/constants.js';
-import { createCylinder } from '../scene/procedural/cylinder.js';
-import { createBox } from '../scene/procedural/box.js';
-import { createCapsule } from '../scene/procedural/capsule.js';
-import { createCone } from '../scene/procedural/cone.js';
-import { createPlane } from '../scene/procedural/plane.js';
-import { createSphere } from '../scene/procedural/sphere.js';
-import { createTorus } from '../scene/procedural/torus.js';
-import { calculateTangents, createMesh } from '../scene/procedural/create-mesh.js';
+import { CylinderGeometry } from '../scene/geometry/cylinder-geometry.js';
+import { BoxGeometry } from '../scene/geometry/box-geometry.js';
+import { CapsuleGeometry } from '../scene/geometry/capsule-geometry.js';
+import { ConeGeometry } from '../scene/geometry/cone-geometry.js';
+import { PlaneGeometry } from '../scene/geometry/plane-geometry.js';
+import { SphereGeometry } from '../scene/geometry/sphere-geometry.js';
+import { TorusGeometry } from '../scene/geometry/torus-geometry.js';
+import { calculateTangents } from '../scene/geometry/geometry-utils.js';
 import { BasicMaterial } from '../scene/materials/basic-material.js';
 import { ForwardRenderer } from '../scene/renderer/forward-renderer.js';
 import { GraphNode } from '../scene/graph-node.js';
@@ -124,6 +124,7 @@ import { RigidBodyComponent } from '../framework/components/rigid-body/component
 import { RigidBodyComponentSystem } from '../framework/components/rigid-body/system.js';
 import { basisInitialize } from '../framework/handlers/basis.js';
 import { LitShader } from '../scene/shader-lib/programs/lit-shader.js';
+import { Geometry } from '../scene/geometry/geometry.js';
 
 // ScriptType alias
 export { Script as ScriptType } from '../framework/script/script.js';
@@ -470,6 +471,58 @@ export const gfx = {
 };
 
 const _viewport = new Vec4();
+
+export function createSphere(device, opts) {
+    Debug.deprecated(`pc.createSphere is deprecated. Use 'pc.Mesh.fromGeometry(device, new SphereGeometry(options);' format instead.`);
+    return Mesh.fromGeometry(device, new SphereGeometry(opts));
+}
+
+export function createPlane(device, opts) {
+    Debug.deprecated(`pc.createPlane is deprecated. Use 'pc.Mesh.fromGeometry(device, new PlaneGeometry(options);' format instead.`);
+    return Mesh.fromGeometry(device, new PlaneGeometry(opts));
+}
+
+export function createBox(device, opts) {
+    Debug.deprecated(`pc.createBox is deprecated. Use 'pc.Mesh.fromGeometry(device, new BoxGeometry(options);' format instead.`);
+    return Mesh.fromGeometry(device, new BoxGeometry(opts));
+}
+
+export function createTorus(device, opts) {
+    Debug.deprecated(`pc.createTorus is deprecated. Use 'pc.Mesh.fromGeometry(device, new TorusGeometry(options);' format instead.`);
+    return Mesh.fromGeometry(device, new TorusGeometry(opts));
+}
+
+export function createCapsule(device, opts) {
+    Debug.deprecated(`pc.createCapsule is deprecated. Use 'pc.Mesh.fromGeometry(device, new CapsuleGeometry(options);' format instead.`);
+    return Mesh.fromGeometry(device, new CapsuleGeometry(opts));
+}
+
+export function createCone(device, opts) {
+    Debug.deprecated(`pc.createCone is deprecated. Use 'pc.Mesh.fromGeometry(device, new ConeGeometry(options);' format instead.`);
+    return Mesh.fromGeometry(device, new ConeGeometry(opts));
+}
+
+export function createCylinder(device, opts) {
+    Debug.deprecated(`pc.createCylinder is deprecated. Use 'pc.Mesh.fromGeometry(device, new CylinderGeometry(options);' format instead.`);
+    return Mesh.fromGeometry(device, new CylinderGeometry(opts));
+}
+
+export function createMesh(device, positions, opts = {}) {
+    Debug.deprecated(`pc.createMesh is deprecated. Use 'pc.Mesh.fromGeometry(device, new Geometry();' format instead.`);
+
+    const geom = new Geometry();
+    geom.positions = positions;
+    geom.normals = opts.normals;
+    geom.tangents = opts.tangents;
+    geom.colors = opts.colors;
+    geom.uvs = opts.uvs;
+    geom.uvs1 = opts.uvs1;
+    geom.blendIndices = opts.blendIndices;
+    geom.blendWeights = opts.blendWeights;
+    geom.indices = opts.indices;
+
+    return Mesh.fromGeometry(device, geom, opts);
+}
 
 export function drawFullscreenQuad(device, target, vertexBuffer, shader, rect) {
 

@@ -205,7 +205,7 @@ class MeshInstance {
      * component is attached to.
      * @example
      * // Create a mesh instance pointing to a 1x1x1 'cube' mesh
-     * const mesh = pc.createBox(graphicsDevice);
+     * const mesh = pc.Mesh.fromGeometry(app.graphicsDevice, new pc.BoxGeometry());
      * const material = new pc.StandardMaterial();
      *
      * const meshInstance = new pc.MeshInstance(mesh, material);
