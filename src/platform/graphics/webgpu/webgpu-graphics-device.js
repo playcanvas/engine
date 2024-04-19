@@ -167,6 +167,10 @@ class WebgpuGraphicsDevice extends GraphicsDevice {
 
         // WebGPU currently only supports 1 and 4 samples
         this.samples = this.backBufferAntialias ? 4 : 1;
+
+        // WGSL features
+        const wgslFeatures = navigator.gpu.wgslLanguageFeatures;
+        this.supportsStorageTextureRead = wgslFeatures.has('readonly_and_readwrite_storage_textures');
     }
 
     async initWebGpu(glslangUrl, twgslUrl) {

@@ -78,7 +78,7 @@ class BindStorageBufferFormat extends BindBaseFormat {
      * - {@link SHADERSTAGE_FRAGMENT}
      * - {@link SHADERSTAGE_COMPUTE}
      *
-     * @param {boolean} readOnly - Whether the storage buffer is read-only, or read-write. Defaults
+     * @param {boolean} [readOnly] - Whether the storage buffer is read-only, or read-write. Defaults
      * to false. This has to be true for the storage buffer used in the vertex shader.
      */
     constructor(name, visibility, readOnly = false) {
@@ -107,7 +107,7 @@ class BindTextureFormat extends BindBaseFormat {
      * - {@link SHADERSTAGE_FRAGMENT}
      * - {@link SHADERSTAGE_COMPUTE}
      *
-     * @param {string} textureDimension - The dimension of the texture. Defaults to
+     * @param {string} [textureDimension] - The dimension of the texture. Defaults to
      * {@link TEXTUREDIMENSION_2D}. Can be:
      *
      * - {@link TEXTUREDIMENSION_1D}
@@ -117,7 +117,7 @@ class BindTextureFormat extends BindBaseFormat {
      * - {@link TEXTUREDIMENSION_CUBE_ARRAY}
      * - {@link TEXTUREDIMENSION_3D}
      *
-     * @param {number} sampleType - The type of the texture samples. Defaults to
+     * @param {number} [sampleType] - The type of the texture samples. Defaults to
      * {@link SAMPLETYPE_FLOAT}. Can be:
      *
      * - {@link SAMPLETYPE_FLOAT}
@@ -126,7 +126,7 @@ class BindTextureFormat extends BindBaseFormat {
      * - {@link SAMPLETYPE_INT}
      * - {@link SAMPLETYPE_UINT}
      *
-     * @param {boolean} hasSampler - True if the sampler for the texture is needed. Note that if the
+     * @param {boolean} [hasSampler] - True if the sampler for the texture is needed. Note that if the
      * sampler is used, it will take up an additional slot, directly following the texture slot.
      * Defaults to true.
      */
@@ -158,17 +158,24 @@ class BindStorageTextureFormat extends BindBaseFormat {
      * Create a new instance.
      *
      * @param {string} name - The name of the storage buffer.
-     * @param {number} format - The pixel format of the texture. Note that not all formats can be
+     * @param {number} [format] - The pixel format of the texture. Note that not all formats can be
      * used. Defaults to {@link PIXELFORMAT_RGBA8}.
-     * @param {string} textureDimension - The dimension of the texture. Defaults to
+     * @param {string} [textureDimension] - The dimension of the texture. Defaults to
      * {@link TEXTUREDIMENSION_2D}. Can be:
      *
      * - {@link TEXTUREDIMENSION_1D}
      * - {@link TEXTUREDIMENSION_2D}
      * - {@link TEXTUREDIMENSION_2D_ARRAY}
      * - {@link TEXTUREDIMENSION_3D}
+     *
+     * @param {boolean} [write] - Whether the storage texture is writeable. Defaults to true.
+     * @param {boolean} [read] - Whether the storage texture is readable. Defaults to false. Note
+     * that storage texture reads are only supported if
+     * {@link GraphicsDevice#supportsStorageTextureRead} is true. Also note that only a subset of
+     * pixel formats can be used for storage texture reads - as an example, PIXELFORMAT_RGBA8 is not
+     * compatible, but PIXELFORMAT_R32U is.
      */
-    constructor(name, format = PIXELFORMAT_RGBA8, textureDimension = TEXTUREDIMENSION_2D) {
+    constructor(name, format = PIXELFORMAT_RGBA8, textureDimension = TEXTUREDIMENSION_2D, write = true, read = false) {
         super(name, SHADERSTAGE_COMPUTE);
 
         // PIXELFORMAT_***
@@ -176,6 +183,12 @@ class BindStorageTextureFormat extends BindBaseFormat {
 
         // TEXTUREDIMENSION_***
         this.textureDimension = textureDimension;
+
+        // whether the texture is writeable
+        this.write = write;
+
+        // whether the texture is readable
+        this.read = read;
     }
 }
 
