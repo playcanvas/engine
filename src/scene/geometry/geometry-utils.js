@@ -1,28 +1,17 @@
 import { Vec2 } from '../../core/math/vec2.js';
 import { Vec3 } from '../../core/math/vec3.js';
-import {
-    SEMANTIC_TANGENT, SEMANTIC_BLENDWEIGHT, SEMANTIC_BLENDINDICES,
-    TYPE_UINT8
-} from '../../platform/graphics/constants.js';
-import { Mesh } from '../mesh.js';
 
 /**
- * Generates normal information from the specified positions and triangle indices. See
- * {@link createMesh}.
+ * Generates normal information from the specified positions and triangle indices.
  *
  * @param {number[]} positions - An array of 3-dimensional vertex positions.
  * @param {number[]} indices - An array of triangle indices.
  * @returns {number[]} An array of 3-dimensional vertex normals.
  * @example
  * const normals = pc.calculateNormals(positions, indices);
- * const mesh = pc.createMesh(graphicsDevice, positions, {
- *     normals: normals,
- *     uvs: uvs,
- *     indices: indices
- * });
  * @category Graphics
  */
-function calculateNormals(positions, indices) {
+const calculateNormals = (positions, indices) => {
     const triangleCount = indices.length / 3;
     const vertexCount   = positions.length / 3;
     const p1 = new Vec3();
@@ -76,11 +65,11 @@ function calculateNormals(positions, indices) {
     }
 
     return normals;
-}
+};
 
 /**
  * Generates tangent information from the specified positions, normals, texture coordinates and
- * triangle indices. See {@link createMesh}.
+ * triangle indices.
  *
  * @param {number[]} positions - An array of 3-dimensional vertex positions.
  * @param {number[]} normals - An array of 3-dimensional vertex normals.
@@ -89,15 +78,9 @@ function calculateNormals(positions, indices) {
  * @returns {number[]} An array of 3-dimensional vertex tangents.
  * @example
  * const tangents = pc.calculateTangents(positions, normals, uvs, indices);
- * const mesh = pc.createMesh(graphicsDevice, positions, {
- *     normals: normals,
- *     tangents: tangents,
- *     uvs: uvs,
- *     indices: indices
- * });
  * @category Graphics
  */
-function calculateTangents(positions, normals, uvs, indices) {
+const calculateTangents = (positions, normals, uvs, indices) => {
     // Lengyel's Method
     // http://web.archive.org/web/20180620024439/http://www.terathon.com/code/tangent.html
     const triangleCount = indices.length / 3;
@@ -203,86 +186,6 @@ function calculateTangents(positions, normals, uvs, indices) {
     }
 
     return tangents;
-}
+};
 
-/**
- * Creates a new mesh object from the supplied vertex information and topology.
- *
- * @param {import('../../platform/graphics/graphics-device.js').GraphicsDevice} device - The graphics
- * device used to manage the mesh.
- * @param {number[]} positions - An array of 3-dimensional vertex positions.
- * @param {object} [opts] - An object that specifies optional inputs for the function as follows:
- * @param {number[]} [opts.normals] - An array of 3-dimensional vertex normals.
- * @param {number[]} [opts.tangents] - An array of 3-dimensional vertex tangents.
- * @param {number[]} [opts.colors] - An array of 4-dimensional vertex colors where each component
- * is an integer in the range 0 to 255.
- * @param {number[]} [opts.uvs] - An array of 2-dimensional vertex texture coordinates.
- * @param {number[]} [opts.uvs1] - Same as opts.uvs, but for additional UV set
- * @param {number[]} [opts.blendIndices] - An array of 4-dimensional bone indices where each
- * component is an integer in the range 0 to 255.
- * @param {number[]} [opts.blendWeights] - An array of 4-dimensional bone weights where each
- * component is in the range 0 to 1 and the sum of the weights should equal 1.
- * @param {number[]} [opts.indices] - An array of triangle indices.
- * @param {boolean} [opts.storageVertex] - Defines if the vertex buffer of the mesh can be used as
- * a storage buffer by a compute shader. Defaults to false. Only supported on WebGPU.
- * @param {boolean} [opts.storageIndex] - Defines if the index buffer of the mesh can be used as
- * a storage buffer by a compute shader. Defaults to false. Only supported on WebGPU.
- * @returns {Mesh} A new Mesh constructed from the supplied vertex and triangle data.
- * @example
- * // Create a simple, indexed triangle (with texture coordinates and vertex normals)
- * const mesh = pc.createMesh(graphicsDevice, [0, 0, 0, 1, 0, 0, 0, 1, 0], {
- *     normals: [0, 0, 1, 0, 0, 1, 0, 0, 1],
- *     uvs: [0, 0, 1, 0, 0, 1],
- *     indices: [0, 1, 2]
- * });
- * @category Graphics
- */
-function createMesh(device, positions, opts) {
-
-    const meshOpts = (opts?.storageIndex || opts?.storageVertex) ? {
-        storageVertex: opts?.storageVertex,
-        storageIndex: opts?.storageIndex
-    } : undefined;
-
-    const mesh = new Mesh(device, meshOpts);
-    mesh.setPositions(positions);
-
-    if (opts) {
-        if (opts.normals) {
-            mesh.setNormals(opts.normals);
-        }
-
-        if (opts.tangents) {
-            mesh.setVertexStream(SEMANTIC_TANGENT, opts.tangents, 4);
-        }
-
-        if (opts.colors) {
-            mesh.setColors32(opts.colors);
-        }
-
-        if (opts.uvs) {
-            mesh.setUvs(0, opts.uvs);
-        }
-
-        if (opts.uvs1) {
-            mesh.setUvs(1, opts.uvs1);
-        }
-
-        if (opts.blendIndices) {
-            mesh.setVertexStream(SEMANTIC_BLENDINDICES, opts.blendIndices, 4, opts.blendIndices.length / 4, TYPE_UINT8);
-        }
-
-        if (opts.blendWeights) {
-            mesh.setVertexStream(SEMANTIC_BLENDWEIGHT, opts.blendWeights, 4);
-        }
-
-        if (opts.indices) {
-            mesh.setIndices(opts.indices);
-        }
-    }
-
-    mesh.update();
-    return mesh;
-}
-
-export { calculateNormals, calculateTangents, createMesh };
+export { calculateNormals, calculateTangents };

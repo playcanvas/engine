@@ -172,14 +172,15 @@ export { shFromCubemap } from './scene/graphics/prefilter-cubemap.js';
 export { reprojectTexture } from './scene/graphics/reproject-texture.js';
 
 // SCENE / PROCEDURAL
-export { calculateNormals, calculateTangents, createMesh } from './scene/procedural/create-mesh.js';
-export { createCapsule } from './scene/procedural/capsule.js';
-export { createCylinder } from './scene/procedural/cylinder.js';
-export { createBox } from './scene/procedural/box.js';
-export { createCone } from './scene/procedural/cone.js';
-export { createPlane } from './scene/procedural/plane.js';
-export { createSphere } from './scene/procedural/sphere.js';
-export { createTorus } from './scene/procedural/torus.js';
+export { calculateNormals, calculateTangents } from './scene/geometry/geometry-utils.js';
+export { CapsuleGeometry } from './scene/geometry/capsule-geometry.js';
+export { ConeGeometry } from './scene/geometry/cone-geometry.js';
+export { CylinderGeometry } from './scene/geometry/cylinder-geometry.js';
+export { Geometry } from './scene/geometry/geometry.js';
+export { BoxGeometry } from './scene/geometry/box-geometry.js';
+export { PlaneGeometry } from './scene/geometry/plane-geometry.js';
+export { SphereGeometry } from './scene/geometry/sphere-geometry.js';
+export { TorusGeometry } from './scene/geometry/torus-geometry.js';
 
 // SCENE / RENDERER
 export { RenderPassForward } from './scene/renderer/render-pass-forward.js';

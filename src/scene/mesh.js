@@ -9,7 +9,8 @@ import {
     PRIMITIVE_LINES, PRIMITIVE_TRIANGLES, PRIMITIVE_POINTS,
     SEMANTIC_BLENDINDICES, SEMANTIC_BLENDWEIGHT, SEMANTIC_COLOR, SEMANTIC_NORMAL, SEMANTIC_POSITION, SEMANTIC_TEXCOORD,
     TYPE_FLOAT32, TYPE_UINT8, TYPE_INT8, TYPE_INT16, TYPE_UINT16,
-    typedArrayIndexFormats
+    typedArrayIndexFormats,
+    SEMANTIC_TANGENT
 } from '../platform/graphics/constants.js';
 import { IndexBuffer } from '../platform/graphics/index-buffer.js';
 import { VertexBuffer } from '../platform/graphics/vertex-buffer.js';
@@ -270,6 +271,65 @@ class Mesh extends RefCountedObject {
 
         // Array of object space AABBs of vertices affected by each bone
         this.boneAabb = null;
+    }
+
+    /**
+     * Create a new Mesh instance from {@link Geometry} object.
+     * @param {import('../platform/graphics/graphics-device.js').GraphicsDevice} graphicsDevice -
+     * The graphics device used to manage this mesh.
+     * @param {import('./geometry/geometry.js').Geometry} geometry - The geometry object to create
+     * the mesh from.
+     * @param {object} [options] - An object that specifies optional inputs for the function as follows:
+     * @param {boolean} [options.storageVertex] - Defines if the vertex buffer of the mesh can be used as
+     * a storage buffer by a compute shader. Defaults to false. Only supported on WebGPU.
+     * @param {boolean} [options.storageIndex] - Defines if the index buffer of the mesh can be used as
+     * a storage buffer by a compute shader. Defaults to false. Only supported on WebGPU.
+     * @returns {Mesh} A new mesh.
+     */
+    static fromGeometry(graphicsDevice, geometry, options = {}) {
+
+        const mesh = new Mesh(graphicsDevice, options);
+
+        const { positions, normals, tangents, colors, uvs, uvs1, blendIndices, blendWeights, indices } = geometry;
+
+        if (positions) {
+            mesh.setPositions(positions);
+        }
+
+        if (normals) {
+            mesh.setNormals(normals);
+        }
+
+        if (tangents) {
+            mesh.setVertexStream(SEMANTIC_TANGENT, tangents, 4);
+        }
+
+        if (colors) {
+            mesh.setColors32(colors);
+        }
+
+        if (uvs) {
+            mesh.setUvs(0, uvs);
+        }
+
+        if (uvs1) {
+            mesh.setUvs(1, uvs1);
+        }
+
+        if (blendIndices) {
+            mesh.setVertexStream(SEMANTIC_BLENDINDICES, blendIndices, 4, blendIndices.length / 4, TYPE_UINT8);
+        }
+
+        if (blendWeights) {
+            mesh.setVertexStream(SEMANTIC_BLENDWEIGHT, blendWeights, 4);
+        }
+
+        if (indices) {
+            mesh.setIndices(indices);
+        }
+
+        mesh.update();
+        return mesh;
     }
 
     /**

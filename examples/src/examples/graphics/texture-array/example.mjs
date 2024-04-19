@@ -188,13 +188,12 @@ assetListLoader.load(() => {
     ground.setLocalPosition(0, -7, 0);
     app.root.addChild(ground);
 
-    // Create a torus shape
-    const torus = pc.createTorus(app.graphicsDevice, {
+    const torus = pc.Mesh.fromGeometry(app.graphicsDevice, new pc.TorusGeometry({
         tubeRadius: 0.2,
         ringRadius: 0.3,
-        segments: 50,
-        sides: 40
-    });
+        radialSegments: 50,
+        tubularSegments: 40
+    }));
     const shape = new pc.Entity();
     shape.addComponent('render', {
         material: material,
