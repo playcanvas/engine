@@ -171,7 +171,9 @@ class BindStorageTextureFormat extends BindBaseFormat {
      * @param {boolean} [write] - Whether the storage texture is writeable. Defaults to true.
      * @param {boolean} [read] - Whether the storage texture is readable. Defaults to false. Note
      * that storage texture reads are only supported if
-     * {@link GraphicsDevice#supportsStorageTextureRead} is true.
+     * {@link GraphicsDevice#supportsStorageTextureRead} is true. Also note that only a subset of
+     * pixel formats can be used for storage texture reads - as an example, PIXELFORMAT_RGBA8 is not
+     * compatible, but PIXELFORMAT_R32U is.
      */
     constructor(name, format = PIXELFORMAT_RGBA8, textureDimension = TEXTUREDIMENSION_2D, write = true, read = false) {
         super(name, SHADERSTAGE_COMPUTE);
