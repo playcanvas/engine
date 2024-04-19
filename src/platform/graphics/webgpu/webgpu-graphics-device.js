@@ -239,6 +239,10 @@ class WebgpuGraphicsDevice extends GraphicsDevice {
         const requiredLimits = {};
         if (adapterLimits) {
             for (const limitName in adapterLimits) {
+                // skip these as they fail on Windows Chrome and are not part of spec currently
+                if (limitName === "minSubgroupSize" || limitName === "maxSubgroupSize") {
+                    continue;
+                }
                 requiredLimits[limitName] = adapterLimits[limitName];
             }
         }
