@@ -132,8 +132,8 @@ assetListLoader.load(() => {
     app.on('update', function (dt) {
         currentTime += dt;
 
-        const material = guitar.gsplat.material;
-        material.setParameter('uTime', currentTime);
+        const material = guitar.gsplat?.material;
+        material?.setParameter('uTime', currentTime);
 
 
         biker2.rotate(0, 80 * dt, 0);
