@@ -176,6 +176,7 @@ export { calculateNormals, calculateTangents } from './scene/geometry/geometry-u
 export { CapsuleGeometry } from './scene/geometry/capsule-geometry.js';
 export { ConeGeometry } from './scene/geometry/cone-geometry.js';
 export { CylinderGeometry } from './scene/geometry/cylinder-geometry.js';
+export { DomeGeometry } from './scene/geometry/dome-geometry.js';
 export { Geometry } from './scene/geometry/geometry.js';
 export { BoxGeometry } from './scene/geometry/box-geometry.js';
 export { PlaneGeometry } from './scene/geometry/plane-geometry.js';
