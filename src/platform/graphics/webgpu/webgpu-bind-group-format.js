@@ -167,7 +167,8 @@ class WebgpuBindGroupFormat {
         bindGroupFormat.storageTextureFormats.forEach((textureFormat) => {
 
             const { format, textureDimension } = textureFormat;
-            key += `#${textureFormat.slot}ST:${format}-${textureDimension}`;
+            const { read, write } = textureFormat;
+            key += `#${textureFormat.slot}ST:${format}-${textureDimension}-${read ? 'r1' : 'r0'}-${write ? 'w1' : 'w0'}`;
 
             // storage texture
             entries.push({
@@ -176,7 +177,8 @@ class WebgpuBindGroupFormat {
                 storageTexture: {
 
                     // The access mode for this binding, indicating readability and writability.
-                    access: 'write-only', // only single option currently, more in the future
+                    // 'write-only' is always support, 'read-write' and 'read-only' optionally
+                    access: read ? (write ? 'read-write' : 'read-only') : 'write-only',
 
                     // The required format of texture views bound to this binding.
                     format: gpuTextureFormats[format],

@@ -208,6 +208,20 @@ class GraphicsDevice extends EventHandler {
     supportsCompute = false;
 
     /**
+     * True if the device can read from StorageTexture in the compute shader. By default, the
+     * storage texture can be only used with the write operation.
+     * When a shader uses this feature, it's recommended to use a requires-directive to signal the
+     * potential for non-portability at the top of the WGSL shader code:
+     * ```javascript
+     * requires readonly_and_readwrite_storage_textures;
+     * ```
+     *
+     * @readonly
+     * @type {boolean}
+     */
+    supportsStorageTextureRead = false;
+
+    /**
      * Currently active render target.
      *
      * @type {import('./render-target.js').RenderTarget|null}
