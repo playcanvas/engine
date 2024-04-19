@@ -106,6 +106,7 @@ class CollisionComponent extends Component {
         this.entity.on('insert', this._onInsert, this);
 
         this.on('set_type', this.onSetType, this);
+        this.on('set_convexHull', this.onSetModel, this);
         this.on('set_halfExtents', this.onSetHalfExtents, this);
         this.on('set_linearOffset', this.onSetOffset, this);
         this.on('set_angularOffset', this.onSetOffset, this);
@@ -272,6 +273,21 @@ class CollisionComponent extends Component {
 
     get renderAsset() {
         return this.data.renderAsset;
+    }
+
+    /**
+     * Whether the collision mesh should be treated as a convex hull. When false, the mesh can only
+     * be used with a static body. When true, the mesh can be used with a static, dynamic or
+     * kinematic body. Defaults to `false`.
+     *
+     * @type {boolean}
+     */
+    set convexHull(arg) {
+        this._setValue('convexHull', arg);
+    }
+
+    get convexHull() {
+        return this.data.convexHull;
     }
 
     /**
