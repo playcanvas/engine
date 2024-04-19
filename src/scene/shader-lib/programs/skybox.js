@@ -6,6 +6,24 @@ import { ShaderUtils } from '../../../platform/graphics/shader-utils.js';
 import { ShaderGenerator } from './shader-generator.js';
 import { SKYTYPE_INFINITE } from '../../constants.js';
 
+const mip2size = [128, 64, /* 32 */ 16, 8, 4, 2];
+
+const fShader = `
+    #include "decodePS"
+    #include "gamma"
+    #include "tonemapping"
+    #include "envMultiplyPS"
+
+    #ifdef SKY_CUBEMAP
+        #include "cubemapSeams"
+        #include "skyboxHDRPS"
+    #else
+        #include "sphericalPS"
+        #include "envAtlasPS"
+        #include "skyboxEnvPS"
+    #endif
+`;
+
 class ShaderGeneratorSkybox extends ShaderGenerator {
     generateKey(options) {
         const sharedKey = `skybox-${options.type}-${options.encoding}-${options.gamma}-${options.toneMapping}-${options.skymesh}`;
@@ -14,33 +32,29 @@ class ShaderGeneratorSkybox extends ShaderGenerator {
 
     createShaderDefinition(device, options) {
 
-        // shared defines
+        // defines
         const defines = new Map();
+        defines.set('SKYBOX_DECODE_FNC', ChunkUtils.decodeFunc(options.encoding));
         if (options.skymesh !== SKYTYPE_INFINITE) defines.set('SKYMESH', '');
-        if (options.type === 'cubemap') defines.set('SKY_CUBEMAP', '');
-
-        // fragment shader
-        let fshader = '';
         if (options.type === 'cubemap') {
-
-            // mip level
-            const mip2size = [128, 64, /* 32 */ 16, 8, 4, 2];
+            defines.set('SKY_CUBEMAP', '');
             defines.set('SKYBOX_MIP', (1 - 1 / mip2size[options.mip]).toString());
+        }
 
-            fshader += options.mip ? shaderChunks.fixCubemapSeamsStretchPS : shaderChunks.fixCubemapSeamsNonePS;
-            fshader += shaderChunks.envMultiplyPS;
-            fshader += shaderChunks.decodePS;
-            fshader += ShaderGenerator.gammaCode(options.gamma);
-            fshader += ShaderGenerator.tonemapCode(options.toneMapping);
-            fshader += shaderChunks.skyboxHDRPS.replace(/\$DECODE/g, ChunkUtils.decodeFunc(options.encoding));
+        // includes
+        const includes = new Map();
+        includes.set('decodePS', shaderChunks.decodePS);
+        includes.set('gamma', ShaderGenerator.gammaCode(options.gamma));
+        includes.set('tonemapping', ShaderGenerator.tonemapCode(options.toneMapping));
+        includes.set('envMultiplyPS', shaderChunks.envMultiplyPS);
+
+        if (options.type === 'cubemap') {
+            includes.set('cubemapSeams', options.mip ? shaderChunks.fixCubemapSeamsStretchPS : shaderChunks.fixCubemapSeamsNonePS);
+            includes.set('skyboxHDRPS', shaderChunks.skyboxHDRPS);
         } else {
-            fshader += shaderChunks.envMultiplyPS;
-            fshader += shaderChunks.decodePS;
-            fshader += ShaderGenerator.gammaCode(options.gamma);
-            fshader += ShaderGenerator.tonemapCode(options.toneMapping);
-            fshader += shaderChunks.sphericalPS;
-            fshader += shaderChunks.envAtlasPS;
-            fshader += shaderChunks.skyboxEnvPS.replace(/\$DECODE/g, ChunkUtils.decodeFunc(options.encoding));
+            includes.set('sphericalPS', shaderChunks.sphericalPS);
+            includes.set('envAtlasPS', shaderChunks.envAtlasPS);
+            includes.set('skyboxEnvPS', shaderChunks.skyboxEnvPS);
         }
 
         return ShaderUtils.createDefinition(device, {
@@ -50,8 +64,9 @@ class ShaderGeneratorSkybox extends ShaderGenerator {
             },
             vertexCode: shaderChunks.skyboxVS,
             vertexDefines: defines,
-            fragmentCode: fshader,
-            fragmentDefines: defines
+            fragmentCode: fShader,
+            fragmentDefines: defines,
+            fragmentIncludes: includes
         });
     }
 }
