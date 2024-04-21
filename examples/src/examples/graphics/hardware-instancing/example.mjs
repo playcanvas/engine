@@ -7,6 +7,7 @@ if (!(canvas instanceof HTMLCanvasElement)) {
 }
 
 const assets = {
+    grass: new pc.Asset('grass', 'container', { url: rootPath + '/static/assets/models/grass.glb' }),
     helipad: new pc.Asset(
         'helipad-env-atlas',
         'texture',
@@ -26,7 +27,7 @@ const createOptions = new pc.AppOptions();
 createOptions.graphicsDevice = device;
 
 createOptions.componentSystems = [pc.RenderComponentSystem, pc.CameraComponentSystem];
-createOptions.resourceHandlers = [pc.TextureHandler];
+createOptions.resourceHandlers = [pc.TextureHandler, pc.ContainerHandler];
 
 const app = new pc.AppBase(canvas);
 app.init(createOptions);
@@ -71,15 +72,12 @@ assetListLoader.load(() => {
     material.useMetalness = true;
     material.update();
 
-    // Create a Entity with a cylinder render component and the instancing material
-    const cylinder = new pc.Entity('InstancingEntity');
-    cylinder.addComponent('render', {
-        material: material,
-        type: 'cylinder'
-    });
+    const grass = assets.grass.resource.instantiateRenderEntity();
+
+    grass.children[0].render.meshInstances[0].material = material;
 
     // add the box entity to the hierarchy
-    app.root.addChild(cylinder);
+    app.root.addChild(grass);
 
     if (app.graphicsDevice.supportsInstancing) {
         // number of instances to render
@@ -117,8 +115,8 @@ assetListLoader.load(() => {
         });
 
         // initialize instancing using the vertex buffer on meshInstance of the created box
-        const cylinderMeshInst = cylinder.render.meshInstances[0];
-        cylinderMeshInst.setInstancing(vertexBuffer);
+        const grassMeshInst = grass.children[0].render.meshInstances[0];
+        grassMeshInst.setInstancing(vertexBuffer);
     }
 
     // Set an update function on the app's update event
