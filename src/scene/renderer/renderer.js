@@ -940,7 +940,7 @@ class Renderer {
             // if mesh is null, we need to cleanup the layer
             // magnopus patched
             cleanupNeeded = cleanupNeeded || !drawCall.mesh;
-            if (drawCall.visible) {
+            if (!cleanupNeeded && drawCall.visible) {
                 const visible = !doCull || !drawCall.cull || drawCall._isVisible(camera);
                 if (visible) {
                     drawCall.visibleThisFrame = true;
