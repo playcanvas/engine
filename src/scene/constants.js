@@ -637,6 +637,14 @@ export const TONEMAP_ACES = 3;
 export const TONEMAP_ACES2 = 4;
 
 /**
+ * Khronos PBR Neutral tonemapping curve.
+ *
+ * @type {number}
+ * @category Graphics
+ */
+export const TONEMAP_KHRONOS_NEUTRAL = 5;
+
+/**
  * No specular occlusion.
  *
  * @type {number}
