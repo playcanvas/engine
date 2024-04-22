@@ -190,8 +190,8 @@ import tonemappingAcesPS from './common/frag/tonemappingAces.js';
 import tonemappingAces2PS from './common/frag/tonemappingAces2.js';
 import tonemappingFilmicPS from './common/frag/tonemappingFilmic.js';
 import tonemappingHejlPS from './common/frag/tonemappingHejl.js';
-import tonemappingKhronosNeutralPS from './common/frag/tonemappingKhronosNeutral.js';
 import tonemappingLinearPS from './common/frag/tonemappingLinear.js';
+import tonemappingNeutralPS from './common/frag/tonemappingNeutral.js';
 import tonemappingNonePS from './common/frag/tonemappingNone.js';
 import transformVS from './common/vert/transform.js';
 import transformDeclVS from './common/vert/transformDecl.js';
@@ -403,8 +403,8 @@ const shaderChunks = {
     tonemappingAces2PS,
     tonemappingFilmicPS,
     tonemappingHejlPS,
-    tonemappingKhronosNeutralPS,
     tonemappingLinearPS,
+    tonemappingNeutralPS,
     tonemappingNonePS,
     transformVS,
     transformDeclVS,

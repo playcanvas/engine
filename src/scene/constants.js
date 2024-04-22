@@ -642,7 +642,7 @@ export const TONEMAP_ACES2 = 4;
  * @type {number}
  * @category Graphics
  */
-export const TONEMAP_KHRONOS_NEUTRAL = 5;
+export const TONEMAP_NEUTRAL = 5;
 
 /**
  * No specular occlusion.

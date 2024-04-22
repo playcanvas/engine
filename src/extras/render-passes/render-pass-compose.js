@@ -2,7 +2,7 @@ import { math } from '../../core/math/math.js';
 import { Color } from '../../core/math/color.js';
 import { RenderPassShaderQuad } from '../../scene/graphics/render-pass-shader-quad.js';
 import { shaderChunks } from '../../scene/shader-lib/chunks/chunks.js';
-import { TONEMAP_LINEAR, TONEMAP_FILMIC, TONEMAP_HEJL, TONEMAP_ACES, TONEMAP_ACES2, TONEMAP_KHRONOS_NEUTRAL } from '../../scene/constants.js';
+import { TONEMAP_LINEAR, TONEMAP_FILMIC, TONEMAP_HEJL, TONEMAP_ACES, TONEMAP_ACES2, TONEMAP_NEUTRAL } from '../../scene/constants.js';
 
 
 // Contrast Adaptive Sharpening (CAS) is used to apply the sharpening. It's based on AMD's
@@ -283,7 +283,7 @@ class RenderPassCompose extends RenderPassShaderQuad {
             case TONEMAP_HEJL: return shaderChunks.tonemappingHejlPS;
             case TONEMAP_ACES: return shaderChunks.tonemappingAcesPS;
             case TONEMAP_ACES2: return shaderChunks.tonemappingAces2PS;
-            case TONEMAP_KHRONOS_NEUTRAL: return shaderChunks.tonemappingKhronosNeutralPS;
+            case TONEMAP_NEUTRAL: return shaderChunks.tonemappingNeutralPS;
         }
         return shaderChunks.tonemappingNonePS;
     }
