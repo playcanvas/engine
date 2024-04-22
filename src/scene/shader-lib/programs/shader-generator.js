@@ -1,6 +1,6 @@
 import {
     GAMMA_SRGB, GAMMA_SRGBFAST, GAMMA_SRGBHDR,
-    TONEMAP_ACES, TONEMAP_ACES2, TONEMAP_FILMIC, TONEMAP_HEJL, TONEMAP_KHRONOS_NEUTRAL, TONEMAP_LINEAR
+    TONEMAP_ACES, TONEMAP_ACES2, TONEMAP_FILMIC, TONEMAP_HEJL, TONEMAP_NEUTRAL, TONEMAP_LINEAR
 } from '../../constants.js';
 import { shaderChunks } from '../chunks/chunks.js';
 
@@ -47,7 +47,7 @@ class ShaderGenerator {
             case TONEMAP_HEJL: return chunks.tonemappingHejlPS ?? shaderChunks.tonemappingHejlPS;
             case TONEMAP_ACES: return chunks.tonemappingAcesPS ?? shaderChunks.tonemappingAcesPS;
             case TONEMAP_ACES2: return chunks.tonemappingAces2PS ?? shaderChunks.tonemappingAces2PS;
-            case TONEMAP_KHRONOS_NEUTRAL: return chunks.tonemappingKhronosNeutralPS ?? shaderChunks.tonemappingKhronosNeutralPS;
+            case TONEMAP_NEUTRAL: return chunks.tonemappingNeutralPS ?? shaderChunks.tonemappingNeutralPS;
         }
         return chunks.tonemapingNonePS ?? shaderChunks.tonemappingNonePS;
     }
