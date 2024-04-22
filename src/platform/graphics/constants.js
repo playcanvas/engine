@@ -168,6 +168,91 @@ export const BLENDEQUATION_MIN = 3;
 export const BLENDEQUATION_MAX = 4;
 
 /**
+ * A flag utilized during the construction of a {@link StorageBuffer} to make it available for read
+ * access by CPU.
+ *
+ * @type {number}
+ * @category Graphics
+ */
+export const BUFFERUSAGE_READ = 0x0001;
+
+/**
+ * A flag utilized during the construction of a {@link StorageBuffer} to make it available for write
+ * access by CPU.
+ *
+ * @type {number}
+ * @category Graphics
+ */
+export const BUFFERUSAGE_WRITE = 0x0002;
+
+/**
+ * A flag utilized during the construction of a {@link StorageBuffer} to ensure its compatibility
+ * when used as a source of a copy operation.
+ *
+ * @type {number}
+ * @category Graphics
+ */
+export const BUFFERUSAGE_COPY_SRC = 0x0004;
+
+/**
+ * A flag utilized during the construction of a {@link StorageBuffer} to ensure its compatibility
+ * when used as a destination of a copy operation, or as a target of a write operation.
+ *
+ * @type {number}
+ * @category Graphics
+ */
+export const BUFFERUSAGE_COPY_DST = 0x0008;
+
+/**
+ * A flag utilized during the construction of a {@link StorageBuffer} to ensure its compatibility
+ * when used as an index buffer.
+ *
+ * @type {number}
+ * @category Graphics
+ */
+export const BUFFERUSAGE_INDEX = 0x0010;
+
+/**
+ * A flag utilized during the construction of a {@link StorageBuffer} to ensure its compatibility
+ * when used as a vertex buffer.
+ *
+ * @type {number}
+ * @category Graphics
+ */
+export const BUFFERUSAGE_VERTEX = 0x0020;
+
+/**
+ * A flag utilized during the construction of a {@link StorageBuffer} to ensure its compatibility
+ * when used as an uniform buffer.
+ *
+ * @type {number}
+ * @category Graphics
+ */
+export const BUFFERUSAGE_UNIFORM = 0x0040;
+
+/**
+ * An internal flag utilized during the construction of a {@link StorageBuffer} to ensure its
+ * compatibility when used as a storage buffer.
+ * This flag is hidden as it's automatically used by the StorageBuffer constructor.
+ *
+ * @type {number}
+ * @category Graphics
+ * @ignore
+ */
+export const BUFFERUSAGE_STORAGE = 0x0080;
+
+/**
+ * A flag utilized during the construction of a {@link StorageBuffer} to allow it to store indirect
+ * command arguments.
+ * TODO: This flag is hidden till the feature is implemented.
+ *
+ * @type {number}
+ * @category Graphics
+ * @ignore
+ */
+export const BUFFERUSAGE_INDIRECT = 0x0100;
+
+/**
  * The data store contents will be modified once and used many times.
  *
  * @type {number}
@@ -1414,17 +1499,94 @@ export const TEXHINT_SHADOWMAP = 1;
 export const TEXHINT_ASSET = 2;
 export const TEXHINT_LIGHTMAP = 3;
 
+/**
+ * Texture data is stored in a 1-dimensional texture.
+ *
+ * @type {string}
+ * @category Graphics
+ */
 export const TEXTUREDIMENSION_1D = '1d';
+
+/**
+ * Texture data is stored in a 2-dimensional texture.
+ *
+ * @type {string}
+ * @category Graphics
+ */
 export const TEXTUREDIMENSION_2D = '2d';
+
+/**
+ * Texture data is stored in an array of 2-dimensional textures.
+ *
+ * @type {string}
+ * @category Graphics
+ */
 export const TEXTUREDIMENSION_2D_ARRAY = '2d-array';
+
+/**
+ * Texture data is stored in a cube texture.
+ *
+ * @type {string}
+ * @category Graphics
+ */
 export const TEXTUREDIMENSION_CUBE = 'cube';
+
+/**
+ * Texture data is stored in an array of cube textures.
+ *
+ * @type {string}
+ * @category Graphics
+ */
 export const TEXTUREDIMENSION_CUBE_ARRAY = 'cube-array';
+
+/**
+ * Texture data is stored in a 3-dimensional texture.
+ *
+ * @type {string}
+ * @category Graphics
+ */
 export const TEXTUREDIMENSION_3D = '3d';
 
+/**
+ * A sampler type of a texture that contains floating-point data. Typically stored for color
+ * textures, where data can be filtered.
+ *
+ * @type {number}
+ * @category Graphics
+ */
 export const SAMPLETYPE_FLOAT = 0;
+
+/**
+ * A sampler type of a texture that contains floating-point data, but cannot be filtered. Typically
+ * used for textures storing data that cannot be interpolated.
+ *
+ * @type {number}
+ * @category Graphics
+ */
 export const SAMPLETYPE_UNFILTERABLE_FLOAT = 1;
+
+/**
+ * A sampler type of a texture that contains depth data. Typically used for depth textures.
+ *
+ * @type {number}
+ * @category Graphics
+ */
 export const SAMPLETYPE_DEPTH = 2;
+
+/**
+ * A sampler type of a texture that contains signed integer data.
+ *
+ * @type {number}
+ * @category Graphics
+ */
 export const SAMPLETYPE_INT = 3;
+
+/**
+ * A sampler type of a texture that contains unsigned integer data.
+ *
+ * @type {number}
+ * @category Graphics
+ */
 export const SAMPLETYPE_UINT = 4;
 
 /**
@@ -1539,22 +1701,131 @@ export const TYPE_FLOAT32 = 6;
  */
 export const TYPE_FLOAT16 = 7;
 
-// Uniform types
+// ---------- Uniform types ------------
+// Note: Only types which can be used in uniform buffers are exported here, others are internal.
+// The arrays are exposed as a base type with number of elements, and textures are not part of the
+// uniform buffers.
+
+/**
+ * Boolean uniform type.
+ *
+ * @type {number}
+ * @category Graphics
+ */
 export const UNIFORMTYPE_BOOL = 0;
+
+/**
+ * Integer uniform type.
+ *
+ * @type {number}
+ * @category Graphics
+ */
 export const UNIFORMTYPE_INT = 1;
+
+/**
+ * Float uniform type.
+ *
+ * @type {number}
+ * @category Graphics
+ */
 export const UNIFORMTYPE_FLOAT = 2;
+
+/**
+ * 2 x Float uniform type.
+ *
+ * @type {number}
+ * @category Graphics
+ */
 export const UNIFORMTYPE_VEC2 = 3;
+
+/**
+ * 3 x Float uniform type.
+ *
+ * @type {number}
+ * @category Graphics
+ */
 export const UNIFORMTYPE_VEC3 = 4;
+
+/**
+ * 4 x Float uniform type.
+ *
+ * @type {number}
+ * @category Graphics
+ */
 export const UNIFORMTYPE_VEC4 = 5;
+
+/**
+ * 2 x Integer uniform type.
+ *
+ * @type {number}
+ * @category Graphics
+ */
 export const UNIFORMTYPE_IVEC2 = 6;
+
+/**
+ * 3 x Integer uniform type.
+ *
+ * @type {number}
+ * @category Graphics
+ */
 export const UNIFORMTYPE_IVEC3 = 7;
+
+/**
+ * 4 x Integer uniform type.
+ *
+ * @type {number}
+ * @category Graphics
+ */
 export const UNIFORMTYPE_IVEC4 = 8;
+
+/**
+ * 2 x Boolean uniform type.
+ *
+ * @type {number}
+ * @category Graphics
+ */
 export const UNIFORMTYPE_BVEC2 = 9;
+
+/**
+ * 3 x Boolean uniform type.
+ *
+ * @type {number}
+ * @category Graphics
+ */
 export const UNIFORMTYPE_BVEC3 = 10;
+
+/**
+ * 4 x Boolean uniform type.
+ *
+ * @type {number}
+ * @category Graphics
+ */
 export const UNIFORMTYPE_BVEC4 = 11;
+
+/**
+ * 2 x 2 x Float uniform type.
+ *
+ * @type {number}
+ * @category Graphics
+ */
 export const UNIFORMTYPE_MAT2 = 12;
+
+/**
+ * 3 x 3 x Float uniform type.
+ *
+ * @type {number}
+ * @category Graphics
+ */
 export const UNIFORMTYPE_MAT3 = 13;
+
+/**
+ * 4 x 4 x Float uniform type.
+ *
+ * @type {number}
+ * @category Graphics
+ */
 export const UNIFORMTYPE_MAT4 = 14;
+
 export const UNIFORMTYPE_TEXTURE2D = 15;
 export const UNIFORMTYPE_TEXTURECUBE = 16;
 export const UNIFORMTYPE_FLOATARRAY = 17;
@@ -1568,9 +1839,37 @@ export const UNIFORMTYPE_MAT4ARRAY = 24;
 export const UNIFORMTYPE_TEXTURE2D_ARRAY = 25;
 
 // Unsigned uniform types
+
+/**
+ * Unsigned integer uniform type.
+ *
+ * @type {number}
+ * @category Graphics
+ */
 export const UNIFORMTYPE_UINT = 26;
+
+/**
+ * 2 x Unsigned integer uniform type.
+ *
+ * @type {number}
+ * @category Graphics
+ */
 export const UNIFORMTYPE_UVEC2 = 27;
+
+/**
+ * 3 x Unsigned integer uniform type.
+ *
+ * @type {number}
+ * @category Graphics
+ */
 export const UNIFORMTYPE_UVEC3 = 28;
+
+/**
+ * 4 x Unsigned integer uniform type.
+ *
+ * @type {number}
+ * @category Graphics
+ */
 export const UNIFORMTYPE_UVEC4 = 29;
 
 // Integer uniform array types
@@ -1596,6 +1895,8 @@ export const UNIFORMTYPE_ITEXTURE3D = 46;
 export const UNIFORMTYPE_UTEXTURE3D = 47;
 export const UNIFORMTYPE_ITEXTURE2D_ARRAY = 48;
 export const UNIFORMTYPE_UTEXTURE2D_ARRAY = 49;
+
+// ----------
 
 export const uniformTypeToName = [
     // Uniforms
@@ -1737,9 +2038,28 @@ export const DEVICETYPE_WEBGPU = 'webgpu';
  */
 export const DEVICETYPE_NULL = 'null';
 
-// (bit-flags) shader stages for resource visibility on the GPU
+/**
+ * The resource is visible to the vertex shader.
+ *
+ * @type {number}
+ * @category Graphics
+ */
 export const SHADERSTAGE_VERTEX = 1;
+
+/**
+ * The resource is visible to the fragment shader.
+ *
+ * @type {number}
+ * @category Graphics
+ */
 export const SHADERSTAGE_FRAGMENT = 2;
+
+/**
+ * The resource is visible to the compute shader.
+ *
+ * @type {number}
+ * @category Graphics
+ */
 export const SHADERSTAGE_COMPUTE = 4;
 
 // indices of commonly used bind groups
@@ -1830,3 +2150,4 @@ export const CHUNKAPI_1_58 = '1.58';
 export const CHUNKAPI_1_60 = '1.60';
 export const CHUNKAPI_1_62 = '1.62';
 export const CHUNKAPI_1_65 = '1.65';
+export const CHUNKAPI_1_70 = '1.70';

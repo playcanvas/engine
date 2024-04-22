@@ -6,7 +6,7 @@ import { BatchGroup } from '../../../scene/batching/batch-group.js';
 import { GraphNode } from '../../../scene/graph-node.js';
 import { MeshInstance } from '../../../scene/mesh-instance.js';
 import { Model } from '../../../scene/model.js';
-import { getShapePrimitive } from '../../../scene/procedural.js';
+import { getShapePrimitive } from '../../graphics/primitive-cache.js';
 
 import { Asset } from '../../asset/asset.js';
 
@@ -16,7 +16,6 @@ import { Component } from '../component.js';
  * Enables an Entity to render a model or a primitive shape. This Component attaches additional
  * model geometry in to the scene graph below the Entity.
  *
- * @augments Component
  * @category Graphics
  */
 class ModelComponent extends Component {

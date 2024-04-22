@@ -33,11 +33,11 @@ function engineFor(type) {
         case 'DEVELOPMENT':
             return './ENGINE_PATH/index.js';
         case 'PERFORMANCE':
-            return './playcanvas.prf.mjs';
+            return './playcanvas.prf/src/index.js';
         case 'DEBUG':
-            return './playcanvas.dbg.mjs';
+            return './playcanvas.dbg/src/index.js';
     }
-    return './playcanvas.mjs';
+    return './playcanvas/src/index.js';
 }
 
 /**
@@ -88,9 +88,8 @@ function generateExampleFile(categoryKebab, exampleNameKebab, config) {
  * @returns {string} - The patched script.
  */
 function patchScript(script) {
-    // remove playcanvas & playcanvas-extras imports
+    // remove playcanvas imports
     script = script.replace(/\s*import[\s\w*{},]+["']playcanvas["']\s*;?[\s\r\n]*/g, '');
-    script = script.replace(/\s*import[\s\w*{},]+["']playcanvas-extras["']\s*;?[\s\r\n]*/g, '');
 
     return script;
 }

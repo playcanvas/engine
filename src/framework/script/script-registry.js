@@ -1,14 +1,25 @@
 import { EventHandler } from '../../core/event-handler.js';
 
 /**
- * Container for all {@link ScriptType}s that are available to this application. Note that
+ * Container for all {@link Script}s that are available to this application. Note that
  * PlayCanvas scripts can access the Script Registry from inside the application with
  * {@link AppBase#scripts}.
  *
- * @augments EventHandler
  * @category Script
  */
 class ScriptRegistry extends EventHandler {
+    /**
+     * @type {Object<string, typeof import('./script.js').Script>}
+     * @private
+     */
+    _scripts = {};
+
+    /**
+     * @type {typeof import('./script.js').Script[]}
+     * @private
+     */
+    _list = [];
+
     /**
      * Create a new ScriptRegistry instance.
      *
@@ -18,8 +29,6 @@ class ScriptRegistry extends EventHandler {
         super();
 
         this.app = app;
-        this._scripts = { };
-        this._list = [];
     }
 
     destroy() {
@@ -28,12 +37,12 @@ class ScriptRegistry extends EventHandler {
     }
 
     /**
-     * Add {@link ScriptType} to registry. Note: when {@link createScript} is called, it will add
-     * the {@link ScriptType} to the registry automatically. If a script already exists in
+     * Add {@link Script} to registry. Note: when {@link createScript} is called, it will add
+     * the {@link Script} to the registry automatically. If a script already exists in
      * registry, and the new script has a `swap` method defined, it will perform code hot swapping
      * automatically in async manner.
      *
-     * @param {Class<import('./script-type.js').ScriptType>} script - Script Type that is created
+     * @param {typeof import('./script.js').Script} script - Script Type that is created
      * using {@link createScript}.
      * @returns {boolean} True if added for the first time or false if script already exists.
      * @example
@@ -137,10 +146,10 @@ class ScriptRegistry extends EventHandler {
     }
 
     /**
-     * Remove {@link ScriptType}.
+     * Remove {@link Script}.
      *
-     * @param {string|Class<import('./script-type.js').ScriptType>} nameOrType - The name or type
-     * of {@link ScriptType}.
+     * @param {string|typeof import('./script.js').Script} nameOrType - The name or type
+     * of {@link Script}.
      * @returns {boolean} True if removed or False if already not in registry.
      * @example
      * app.scripts.remove('playerController');
@@ -169,10 +178,10 @@ class ScriptRegistry extends EventHandler {
     }
 
     /**
-     * Get {@link ScriptType} by name.
+     * Get {@link Script} by name.
      *
-     * @param {string} name - Name of a {@link ScriptType}.
-     * @returns {Class<import('./script-type.js').ScriptType>} The Script Type if it exists in the
+     * @param {string} name - Name of a {@link Script}.
+     * @returns {typeof import('./script.js').Script} The Script Type if it exists in the
      * registry or null otherwise.
      * @example
      * var PlayerController = app.scripts.get('playerController');
@@ -182,11 +191,11 @@ class ScriptRegistry extends EventHandler {
     }
 
     /**
-     * Check if a {@link ScriptType} with the specified name is in the registry.
+     * Check if a {@link Script} with the specified name is in the registry.
      *
-     * @param {string|Class<import('./script-type.js').ScriptType>} nameOrType - The name or type
-     * of {@link ScriptType}.
-     * @returns {boolean} True if {@link ScriptType} is in registry.
+     * @param {string|typeof import('./script.js').Script} nameOrType - The name or type
+     * of {@link Script}.
+     * @returns {boolean} True if {@link Script} is in registry.
      * @example
      * if (app.scripts.has('playerController')) {
      *     // playerController is in pc.ScriptRegistry
@@ -203,9 +212,9 @@ class ScriptRegistry extends EventHandler {
     }
 
     /**
-     * Get list of all {@link ScriptType}s from registry.
+     * Get list of all {@link Script}s from registry.
      *
-     * @returns {Array<Class<import('./script-type.js').ScriptType>>} list of all {@link ScriptType}s
+     * @returns {Array<typeof import('./script.js').Script>} list of all {@link Script}s
      * in registry.
      * @example
      * // logs array of all Script Type names available in registry

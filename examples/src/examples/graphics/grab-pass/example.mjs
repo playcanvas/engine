@@ -65,12 +65,13 @@ assetListLoader.load(() => {
     app.scene.layers.insertOpaque(depthLayer, 2);
 
     /**
-     * helper function to create a primitive with shape type, position, scale, color
+     * Helper function to create a primitive with shape type, position, scale, color.
+     *
      * @param {string} primitiveType - The primitive type.
      * @param {pc.Vec3} position - The position.
      * @param {pc.Vec3} scale - The scale.
      * @param {pc.Color} color - The color.
-     * @returns {pc.Entity}
+     * @returns {pc.Entity} - The created primitive entity.
      */
     function createPrimitive(primitiveType, position, scale, color) {
         // create material of specified color

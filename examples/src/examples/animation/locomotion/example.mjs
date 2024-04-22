@@ -334,9 +334,10 @@ assetListLoader.load(() => {
     };
 
     /**
-     * defines how many units the character should move per second given its current animation state
-     * @param {string} state
-     * @returns {number}
+     * Defines how many units the character should move per second given its current animation state.
+     *
+     * @param {string} state - The animation state.
+     * @returns {number} The speed of the character.
      */
     function speedForState(state) {
         switch (state) {

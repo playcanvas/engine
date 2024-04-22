@@ -111,13 +111,10 @@ assetListLoader.load(() => {
         }
 
         // create static vertex buffer containing the matrices
-        const vertexBuffer = new pc.VertexBuffer(
-            app.graphicsDevice,
-            pc.VertexFormat.getDefaultInstancingFormat(app.graphicsDevice),
-            instanceCount,
-            pc.BUFFER_STATIC,
-            matrices
-        );
+        const vbFormat = pc.VertexFormat.getDefaultInstancingFormat(app.graphicsDevice);
+        const vertexBuffer = new pc.VertexBuffer(app.graphicsDevice, vbFormat, instanceCount, {
+            data: matrices
+        });
 
         // initialize instancing using the vertex buffer on meshInstance of the created box
         const cylinderMeshInst = cylinder.render.meshInstances[0];

@@ -195,7 +195,7 @@ assetListLoader.load(() => {
     app.root.addChild(directionalLight);
 
     app.scene.envAtlas = assets.helipad.resource;
-    app.scene.toneMapping = pc.TONEMAP_ACES;
+    app.scene.toneMapping = pc.TONEMAP_NEUTRAL;
     app.scene.skyboxMip = 1;
     app.scene.skyboxRotation = new pc.Quat().setFromEulerAngles(0, 70, 0);
     app.scene.skyboxIntensity = 1.5;

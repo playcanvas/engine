@@ -637,6 +637,14 @@ export const TONEMAP_ACES = 3;
 export const TONEMAP_ACES2 = 4;
 
 /**
+ * Khronos PBR Neutral tonemapping curve.
+ *
+ * @type {number}
+ * @category Graphics
+ */
+export const TONEMAP_NEUTRAL = 5;
+
+/**
  * No specular occlusion.
  *
  * @type {number}
@@ -1023,9 +1031,17 @@ export const DITHER_NONE = 'none';
 export const DITHER_BAYER8 = 'bayer8';
 
 /**
- * Opacity is dithered using a blue noise texture.
+ * Opacity is dithered using a blue noise.
  *
  * @type {string}
  * @category Graphics
  */
 export const DITHER_BLUENOISE = 'bluenoise';
+
+/**
+ * Opacity is dithered using an interleaved gradient noise.
+ *
+ * @type {string}
+ * @category Graphics
+ */
+export const DITHER_IGNNOISE = 'ignnoise';

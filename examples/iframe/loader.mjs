@@ -69,17 +69,31 @@ class ExampleLoader {
         this._allowRestart = true;
     }
 
+    _parseErrorLocations(stack) {
+        const lines = stack.split('\n');
+        const locations = [];
+        lines.forEach((line) => {
+            const match = /^\s*at\s(.+):(\d+):(\d+)$/g.exec(line);
+            if (!match) {
+                return;
+            }
+            locations.push({
+                file: match[1],
+                line: +match[2],
+                column: +match[3]
+            });
+        });
+        return locations;
+    }
+
     /**
-     * @param {{ engineUrl: string, extrasUrl: string, exampleUrl: string, controlsUrl: string }} options - Options to start the loader
+     * @param {{ engineUrl: string, exampleUrl: string, controlsUrl: string }} options - Options to start the loader
      */
-    async start({ engineUrl, extrasUrl, exampleUrl, controlsUrl }) {
+    async start({ engineUrl, exampleUrl, controlsUrl }) {
         window.pc = await import(engineUrl);
-        window.pcx = await import(extrasUrl);
 
         // @ts-ignore
         window.top.pc = window.pc;
-        // @ts-ignore
-        window.top.pcx = window.pcx;
 
         files['example.mjs'] = await fetchFile(exampleUrl);
         files['controls.mjs'] = await fetchFile(controlsUrl);
@@ -112,6 +126,15 @@ class ExampleLoader {
             this._scriptDestroy = module.destroy;
         } catch (e) {
             console.error(e);
+            const locations = this._parseErrorLocations(e.stack);
+            window.top.dispatchEvent(new CustomEvent('exampleError', {
+                detail: {
+                    name: e.constructor.name,
+                    message: e.message,
+                    locations
+                }
+            }));
+
             this._allowRestart = true;
             return;
         }
@@ -135,7 +158,7 @@ class ExampleLoader {
     }
 
     /**
-     * @param {*} enabled - The enabled state of ministats
+     * @param {boolean} enabled - The enabled state of ministats
      */
     setMiniStats(enabled = false) {
         MiniStats.enable(this._app, enabled);
@@ -146,6 +169,7 @@ class ExampleLoader {
             console.warn('Dropping restart while still restarting');
             return;
         }
+        window.top.dispatchEvent(new CustomEvent('exampleHotReload'));
         this.destroy();
         this.load();
     }

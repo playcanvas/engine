@@ -110,7 +110,6 @@ import { EventHandler } from '../../core/event-handler.js';
  * of the parent component – you should never have to worry about manually calling
  * `Function.bind()`.
  *
- * @augments EventHandler
  * @ignore
  */
 class EntityReference extends EventHandler {

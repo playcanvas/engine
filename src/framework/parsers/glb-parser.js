@@ -35,7 +35,7 @@ import { Light, lightTypes } from '../../scene/light.js';
 import { Mesh } from '../../scene/mesh.js';
 import { Morph } from '../../scene/morph.js';
 import { MorphTarget } from '../../scene/morph-target.js';
-import { calculateNormals } from '../../scene/procedural.js';
+import { calculateNormals } from '../../scene/geometry/geometry-utils.js';
 import { Render } from '../../scene/render.js';
 import { Skin } from '../../scene/skin.js';
 import { StandardMaterial } from '../../scene/materials/standard-material.js';
@@ -541,10 +541,7 @@ const createVertexBufferInternal = (device, sourceDesc, flipV) => {
     }
 
     // create vertex buffer
-    const vertexBuffer = new VertexBuffer(device,
-                                          vertexFormat,
-                                          numVertices,
-                                          BUFFER_STATIC);
+    const vertexBuffer = new VertexBuffer(device, vertexFormat, numVertices);
 
     const vertexData = vertexBuffer.lock();
     const targetArray = new Uint32Array(vertexData);
@@ -754,7 +751,9 @@ const createDracoMesh = (device, primitive, accessors, bufferViews, meshVariants
                     }
                 });
 
-                const vertexBuffer = new VertexBuffer(device, vertexFormat, numVertices, BUFFER_STATIC, decompressedData.vertices);
+                const vertexBuffer = new VertexBuffer(device, vertexFormat, numVertices, {
+                    data: decompressedData.vertices
+                });
                 const indexBuffer = new IndexBuffer(device, indexFormat, numIndices, BUFFER_STATIC, decompressedData.indices);
 
                 result.vertexBuffer = vertexBuffer;
@@ -1090,6 +1089,12 @@ const extensionIor = (data, material, textures) => {
     }
 };
 
+const extensionDispersion = (data, material, textures) => {
+    if (data.hasOwnProperty('dispersion')) {
+        material.dispersion = data.dispersion;
+    }
+};
+
 const extensionTransmission = (data, material, textures) => {
     material.blendType = BLEND_NORMAL;
     material.useDynamicRefraction = true;
@@ -1322,6 +1327,7 @@ const createMaterial = (gltfMaterial, textures, flipV) => {
         "KHR_materials_clearcoat": extensionClearCoat,
         "KHR_materials_emissive_strength": extensionEmissiveStrength,
         "KHR_materials_ior": extensionIor,
+        "KHR_materials_dispersion": extensionDispersion,
         "KHR_materials_iridescence": extensionIridescence,
         "KHR_materials_pbrSpecularGlossiness": extensionPbrSpecGlossiness,
         "KHR_materials_sheen": extensionSheen,

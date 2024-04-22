@@ -112,8 +112,9 @@ assetListLoader.load(() => {
     }
 
     /**
-     * light up a box at the given position with a random color using the emissive material property
-     * @param {pc.Vec3} pos
+     * Light up a box at the given position with a random color using the emissive material property.
+     *
+     * @param {pc.Vec3} pos - The position of the box to light up.
      */
     const highlightBox = (pos) => {
         const i = Math.floor(pos.x + 0.5);

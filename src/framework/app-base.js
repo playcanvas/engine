@@ -105,8 +105,6 @@ let app = null;
  *
  * If you are using the Engine without the Editor, you have to create the application instance
  * manually.
- *
- * @augments EventHandler
  */
 class AppBase extends EventHandler {
     /**
@@ -154,8 +152,6 @@ class AppBase extends EventHandler {
      *
      * // Start the application's main loop
      * app.start();
-     *
-     * @hideconstructor
      */
     constructor(canvas) {
         super();
@@ -1497,6 +1493,8 @@ class AppBase extends EventHandler {
      * - {@link TONEMAP_FILMIC}
      * - {@link TONEMAP_HEJL}
      * - {@link TONEMAP_ACES}
+     * - {@link TONEMAP_ACES2}
+     * - {@link TONEMAP_NEUTRAL}
      *
      * @param {number} settings.render.exposure - The exposure value tweaks the overall brightness
      * of the scene.
@@ -1748,8 +1746,9 @@ class AppBase extends EventHandler {
      *
      * @param {number[]} positions - An array of points to draw lines between. Each point is
      * represented by 3 numbers - x, y and z coordinate.
-     * @param {number[]} colors - An array of colors to color the lines. This must be the same
-     * length as the position array. The length of the array must also be a multiple of 2.
+     * @param {number[]|Color} colors - A single color for all lines, or an array of colors to color
+     * the lines. If an array is specified, number of colors it stores must match the number of
+     * positions provided.
      * @param {boolean} [depthTest] - Specifies if the lines are depth tested against the depth
      * buffer. Defaults to true.
      * @param {Layer} [layer] - The layer to render the lines into. Defaults to {@link LAYERID_IMMEDIATE}.
@@ -2118,7 +2117,13 @@ const makeTick = function (_app) {
         if (!application.graphicsDevice)
             return;
 
-        application.frameRequestId = null;
+        // cancel any hanging rAF to avoid multiple rAF callbacks per frame
+        if (application.frameRequestId) {
+            application.xr?.session?.cancelAnimationFrame(application.frameRequestId);
+            cancelAnimationFrame(application.frameRequestId);
+            application.frameRequestId = null;
+        }
+
         application._inFrameUpdate = true;
 
         setApplication(application);

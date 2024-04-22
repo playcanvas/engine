@@ -1,5 +1,4 @@
 import * as pc from 'playcanvas';
-import * as pcx from 'playcanvas-extras';
 import { deviceType, rootPath } from '@examples/utils';
 
 const canvas = document.getElementById('application-canvas');
@@ -40,7 +39,7 @@ app.on('destroy', () => {
 });
 
 // set up options for mini-stats, start with the default options
-const options = pcx.MiniStats.getDefaultOptions();
+const options = pc.MiniStats.getDefaultOptions();
 
 // configure sizes
 options.sizes = [
@@ -125,7 +124,7 @@ options.stats = [
 ];
 
 // create mini-stats system
-const miniStats = new pcx.MiniStats(app, options);
+const miniStats = new pc.MiniStats(app, options); // eslint-disable-line no-unused-vars
 
 // add directional lights to the scene
 const light = new pc.Entity();
@@ -145,11 +144,12 @@ camera.setLocalPosition(20, 10, 10);
 camera.lookAt(pc.Vec3.ZERO);
 
 /**
- * helper function to create a primitive with shape type, position, scale
- * @param {string} primitiveType
- * @param {number | pc.Vec3} position
- * @param {number | pc.Vec3} scale
- * @returns {pc.Entity}
+ * Helper function to create a primitive with shape type, position, scale.
+ *
+ * @param {string} primitiveType - The primitive type.
+ * @param {number | pc.Vec3} position - The position.
+ * @param {number | pc.Vec3} scale - The scale.
+ * @returns {pc.Entity} The new primitive entity.
  */
 function createPrimitive(primitiveType, position, scale) {
     // create material of random color
@@ -210,13 +210,10 @@ app.on('update', function () {
             // add vertex buffer
             const vertexCount = 500;
             const data = new Float32Array(vertexCount * 16);
-            vertexBuffer = new pc.VertexBuffer(
-                app.graphicsDevice,
-                pc.VertexFormat.getDefaultInstancingFormat(app.graphicsDevice),
-                vertexCount,
-                pc.BUFFER_STATIC,
-                data
-            );
+            const format = pc.VertexFormat.getDefaultInstancingFormat(app.graphicsDevice);
+            vertexBuffer = new pc.VertexBuffer(app.graphicsDevice, format, vertexCount, {
+                data: data
+            });
             vertexBuffers.push(vertexBuffer);
 
             // allocate texture

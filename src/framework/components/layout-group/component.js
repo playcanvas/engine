@@ -20,7 +20,6 @@ function isEnabledAndHasEnabledElement(entity) {
  * A LayoutGroupComponent enables the Entity to position and scale child {@link ElementComponent}s
  * according to configurable layout rules.
  *
- * @augments Component
  * @category User Interface
  */
 class LayoutGroupComponent extends Component {

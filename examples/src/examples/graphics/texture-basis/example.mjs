@@ -90,12 +90,12 @@ assetListLoader.load(() => {
     material.update();
 
     // Create a torus shape
-    const torus = pc.createTorus(app.graphicsDevice, {
+    const torus = pc.Mesh.fromGeometry(app.graphicsDevice, new pc.TorusGeometry({
         tubeRadius: 0.2,
         ringRadius: 0.3,
         segments: 50,
         sides: 40
-    });
+    }));
     const shape = new pc.Entity();
     shape.addComponent('render', {
         material: material,

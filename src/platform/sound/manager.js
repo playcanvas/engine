@@ -22,7 +22,6 @@ const USER_INPUT_EVENTS = [
  * The SoundManager is used to load and play audio. It also applies system-wide settings like
  * global volume, suspend and resume.
  *
- * @augments EventHandler
  * @category Sound
  */
 class SoundManager extends EventHandler {

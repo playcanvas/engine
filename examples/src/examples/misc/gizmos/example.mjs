@@ -1,5 +1,4 @@
 import * as pc from 'playcanvas';
-import * as pcx from 'playcanvas-extras';
 import { data } from '@examples/observer';
 import { deviceType, rootPath } from '@examples/utils';
 
@@ -21,7 +20,7 @@ class GizmoHandler {
     /**
      * Object to reference each gizmo.
      *
-     * @type {Record<string, pcx.Gizmo>}
+     * @type {Record<string, pc.Gizmo>}
      * @private
      */
     _gizmos;
@@ -52,14 +51,14 @@ class GizmoHandler {
 
     /**
      * @param {pc.AppBase} app - The application.
-     * @param {pc.CameraComponent | undefined} camera - The camera component.
+     * @param {pc.CameraComponent} camera - The camera component.
      * @param {pc.Layer} layer - The gizmo layer
      */
     constructor(app, camera, layer) {
         this._gizmos = {
-            translate: new pcx.TranslateGizmo(app, camera, layer),
-            rotate: new pcx.RotateGizmo(app, camera, layer),
-            scale: new pcx.ScaleGizmo(app, camera, layer)
+            translate: new pc.TranslateGizmo(app, camera, layer),
+            rotate: new pc.RotateGizmo(app, camera, layer),
+            scale: new pc.ScaleGizmo(app, camera, layer)
         };
 
         for (const type in this._gizmos) {
@@ -101,6 +100,7 @@ class GizmoHandler {
             xAxisColor: Object.values(gizmo.xAxisColor),
             yAxisColor: Object.values(gizmo.yAxisColor),
             zAxisColor: Object.values(gizmo.zAxisColor),
+            colorAlpha: gizmo.colorAlpha,
             coordSpace: gizmo.coordSpace,
             axisLineTolerance: gizmo.axisLineTolerance,
             axisCenterTolerance: gizmo.axisCenterTolerance,

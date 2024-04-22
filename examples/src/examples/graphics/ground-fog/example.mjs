@@ -140,7 +140,7 @@ assetListLoader.load(() => {
     material.update();
 
     // create a subdivided plane mesh, to allow for vertex animation by the shader
-    const mesh = pc.createPlane(app.graphicsDevice, { widthSegments: 20, lengthSegments: 20 });
+    const mesh = pc.Mesh.fromGeometry(app.graphicsDevice, new pc.PlaneGeometry({ widthSegments: 20, lengthSegments: 20 }));
     const meshInstance = new pc.MeshInstance(mesh, material);
     const ground = new pc.Entity();
     ground.addComponent('render', {

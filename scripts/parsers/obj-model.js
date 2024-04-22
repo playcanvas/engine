@@ -106,13 +106,15 @@ Object.assign(ObjModelParser.prototype, {
                 console.warn("Warning: mesh with more than 65535 vertices");
             }
 
-            var meshOptions = {};
+            var geom = new pc.Geometry();
+            geom.positions = currentGroup.verts;
             if (currentGroup.normals.length > 0)
-                meshOptions.normals = currentGroup.normals;
+                geom.normals = currentGroup.normals;
             if (currentGroup.uvs.length > 0)
-                meshOptions.uvs = currentGroup.uvs;
+                geom.uvs = currentGroup.uvs;
 
-            var mesh = pc.createMesh(this._device, currentGroup.verts, meshOptions);
+            var mesh = pc.Mesh.fromGeometry(this._device, geom);
+
             var mi = new pc.MeshInstance(mesh, this._defaultMaterial, new pc.GraphNode());
             model.meshInstances.push(mi);
             root.addChild(mi.node);

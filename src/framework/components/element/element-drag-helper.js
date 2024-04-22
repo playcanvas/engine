@@ -25,7 +25,6 @@ const OPPOSITE_AXIS = {
 /**
  * Helper class that makes it easy to create Elements that can be dragged by the mouse or touch.
  *
- * @augments EventHandler
  * @category User Interface
  */
 class ElementDragHelper extends EventHandler {

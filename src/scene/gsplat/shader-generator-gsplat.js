@@ -1,5 +1,5 @@
 import { hashCode } from "../../core/hash.js";
-import { SEMANTIC_ATTR13, SEMANTIC_POSITION } from "../../platform/graphics/constants.js";
+import { SEMANTIC_POSITION } from "../../platform/graphics/constants.js";
 import { ShaderUtils } from "../../platform/graphics/shader-utils.js";
 import { DITHER_NONE } from "../constants.js";
 import { shaderChunks } from "../shader-lib/chunks/chunks.js";
@@ -7,8 +7,6 @@ import { ShaderGenerator } from "../shader-lib/programs/shader-generator.js";
 import { ShaderPass } from "../shader-pass.js";
 
 const splatCoreVS = `
-    attribute vec3 vertex_position;
-
     uniform mat4 matrix_model;
     uniform mat4 matrix_view;
     uniform mat4 matrix_projection;
@@ -125,6 +123,7 @@ const splatCoreVS = `
             return vec4(0.0, 0.0, 2.0, 1.0);
         }
 
+        id = float(vertex_id);
         color = getColor();
 
         mat3 Vrk = mat3(
@@ -167,12 +166,14 @@ const splatCoreVS = `
             return vec4(0.0, 0.0, 2.0, 1.0);
         }
 
-        texCoord = vertex_position.xy * 2.0;
+        int vertexIndex = int(gl_VertexID) % 4;
+        texCoord = vec2(
+            float((vertexIndex == 0 || vertexIndex == 3) ? -2 : 2),
+            float((vertexIndex == 0 || vertexIndex == 1) ? -2 : 2)
+        );
 
         splat_proj.xy += (texCoord.x * v1 + texCoord.y * v2) / viewport * splat_proj.w;
         return splat_proj;
-
-        id = float(vertex_id);
     }
 `;
 
@@ -248,8 +249,7 @@ class GShaderGeneratorSplat {
         return ShaderUtils.createDefinition(device, {
             name: 'SplatShader',
             attributes: {
-                vertex_position: SEMANTIC_POSITION,
-                vertex_id: SEMANTIC_ATTR13
+                vertex_id: SEMANTIC_POSITION
             },
             vertexCode: vs,
             fragmentCode: fs

@@ -5,10 +5,9 @@ import { Vec2 } from '../../core/math/vec2.js';
 import { Mat3 } from '../../core/math/mat3.js';
 import {
     ADDRESS_CLAMP_TO_EDGE, FILTER_NEAREST, PIXELFORMAT_R16F, PIXELFORMAT_R32F, PIXELFORMAT_RGBA16F, PIXELFORMAT_RGBA32F,
-    PIXELFORMAT_RGBA8, SEMANTIC_ATTR13, TYPE_FLOAT32, TYPE_UINT32
+    PIXELFORMAT_RGBA8
 } from '../../platform/graphics/constants.js';
 import { Texture } from '../../platform/graphics/texture.js';
-import { VertexFormat } from '../../platform/graphics/vertex-format.js';
 import { Vec3 } from '../../core/math/vec3.js';
 
 const _tmpVecA = new Vec3();
@@ -25,9 +24,6 @@ class GSplat {
     device;
 
     numSplats;
-
-    /** @type {VertexFormat} */
-    vertexFormat;
 
     /**
      * True if half format should be used, false is float format should be used or undefined if none
@@ -64,10 +60,6 @@ class GSplat {
         this.device = device;
         this.numSplats = numSplats;
         this.aabb = aabb;
-
-        this.vertexFormat = new VertexFormat(device, [
-            { semantic: SEMANTIC_ATTR13, components: 1, type: device.isWebGL1 ? TYPE_FLOAT32 : TYPE_UINT32, asInt: !device.isWebGL1 }
-        ]);
 
         // create data textures if any format is available
         this.halfFormat = this.getTextureFormat(device, true);

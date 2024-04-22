@@ -139,6 +139,7 @@ class CollisionComponent extends Component {
         this.entity.on('insert', this._onInsert, this);
 
         this.on('set_type', this.onSetType, this);
+        this.on('set_convexHull', this.onSetModel, this);
         this.on('set_halfExtents', this.onSetHalfExtents, this);
         this.on('set_linearOffset', this.onSetOffset, this);
         this.on('set_angularOffset', this.onSetOffset, this);
@@ -149,6 +150,235 @@ class CollisionComponent extends Component {
         this.on('set_renderAsset', this.onSetRenderAsset, this);
         this.on('set_model', this.onSetModel, this);
         this.on('set_render', this.onSetRender, this);
+    }
+
+    // TODO: Remove this override in upgrading component
+    /**
+     * @type {import('./data.js').CollisionComponentData}
+     * @ignore
+     */
+    get data() {
+        const record = this.system.store[this.entity.getGuid()];
+        return record ? record.data : null;
+    }
+
+    /**
+     * @type {boolean}
+     */
+    set enabled(arg) {
+        this._setValue('enabled', arg);
+    }
+
+    get enabled() {
+        return this.data.enabled;
+    }
+
+    /**
+     * The type of the collision volume. Can be:
+     *
+     * - "box": A box-shaped collision volume.
+     * - "capsule": A capsule-shaped collision volume.
+     * - "compound": A compound shape. Any descendant entities with a collision component  of type
+     * box, capsule, cone, cylinder or sphere will be combined into a single, rigid  shape.
+     * - "cone": A cone-shaped collision volume.  - "cylinder": A cylinder-shaped collision volume.
+     * - "mesh": A collision volume that uses a model asset as its shape.
+     * - "sphere": A sphere-shaped collision volume.
+     *
+     * Defaults to "box".
+     *
+     * @type {string}
+     */
+    set type(arg) {
+        this._setValue('type', arg);
+    }
+
+    get type() {
+        return this.data.type;
+    }
+
+    /**
+     * The half-extents of the  box-shaped collision volume in the x, y and z axes. Defaults to
+     * [0.5, 0.5, 0.5].
+     *
+     * @type {Vec3}
+     */
+    set halfExtents(arg) {
+        this._setValue('halfExtents', arg);
+    }
+
+    get halfExtents() {
+        return this.data.halfExtents;
+    }
+
+    /**
+     * The positional offset of the collision shape from the Entity position along the local axes.
+     * Defaults to [0, 0, 0].
+     *
+     * @type {Vec3}
+     */
+    set linearOffset(arg) {
+        this._setValue('linearOffset', arg);
+    }
+
+    get linearOffset() {
+        return this.data.linearOffset;
+    }
+
+    /**
+     * The rotational offset of the collision shape from the Entity rotation in local space.
+     * Defaults to identity.
+     *
+     * @type {Quat}
+     */
+    set angularOffset(arg) {
+        this._setValue('angularOffset', arg);
+    }
+
+    get angularOffset() {
+        return this.data.angularOffset;
+    }
+
+    /**
+     * The radius of the sphere, capsule, cylinder or cone-shaped collision  volumes.
+     * Defaults to 0.5.
+     *
+     * @type {number}
+     */
+    set radius(arg) {
+        this._setValue('radius', arg);
+    }
+
+    get radius() {
+        return this.data.radius;
+    }
+
+    /**
+     * The local space axis with which the capsule, cylinder or cone-shaped  collision volume's
+     * length is aligned. 0 for X, 1 for Y and 2 for Z. Defaults to 1 (Y-axis).
+     *
+     * @type {number}
+     */
+    set axis(arg) {
+        this._setValue('axis', arg);
+    }
+
+    get axis() {
+        return this.data.axis;
+    }
+
+    /**
+     * The total height of the capsule, cylinder or cone-shaped collision  volume from tip to tip.
+     * Defaults to 2.
+     *
+     * @type {number}
+     */
+    set height(arg) {
+        this._setValue('height', arg);
+    }
+
+    get height() {
+        return this.data.height;
+    }
+
+    /**
+     * The asset for the model of the mesh collision volume - can also  be an asset id. Defaults to
+     * null.
+     *
+     * @type {Asset}
+     */
+    set asset(arg) {
+        this._setValue('asset', arg);
+    }
+
+    get asset() {
+        return this.data.asset;
+    }
+
+    /**
+     * The render asset of the mesh collision volume - can also be  an asset id. Defaults to null.
+     * If not set then the asset property will be checked instead.
+     *
+     * @type {Asset | number}
+     */
+    set renderAsset(arg) {
+        this._setValue('renderAsset', arg);
+    }
+
+    get renderAsset() {
+        return this.data.renderAsset;
+    }
+
+    /**
+     * Whether the collision mesh should be treated as a convex hull. When false, the mesh can only
+     * be used with a static body. When true, the mesh can be used with a static, dynamic or
+     * kinematic body. Defaults to `false`.
+     *
+     * @type {boolean}
+     */
+    set convexHull(arg) {
+        this._setValue('convexHull', arg);
+    }
+
+    get convexHull() {
+        return this.data.convexHull;
+    }
+
+    /**
+     * @type {any}
+     * @ignore
+     */
+    set shape(arg) {
+        this._setValue('shape', arg);
+    }
+
+    get shape() {
+        return this.data.shape;
+    }
+
+    /**
+     * The model that is added to the scene graph for the mesh collision volume.
+     *
+     * @type {import('../../../scene/model.js').Model | null}
+     */
+    set model(arg) {
+        this._setValue('model', arg);
+    }
+
+    get model() {
+        return this.data.model;
+    }
+
+    /**
+     * @type {any}
+     * @ignore
+     */
+    set render(arg) {
+        this._setValue('render', arg);
+    }
+
+    get render() {
+        return this.data.render;
+    }
+
+    /**
+     * Enable checking for duplicate vertices.
+     *
+     * @type {boolean}
+     */
+    set checkVertexDuplicates(arg) {
+        this._setValue('checkVertexDuplicates', arg);
+    }
+
+    get checkVertexDuplicates() {
+        return this.data.checkVertexDuplicates;
+    }
+
+    /** @ignore */
+    _setValue(name, value) {
+        const data = this.data;
+        const oldValue = data[name];
+        data[name] = value;
+        this.fire('set', name, oldValue, value);
     }
 
     /**
@@ -183,7 +413,9 @@ class CollisionComponent extends Component {
      * @private
      */
     onSetOffset(name, oldValue, newValue) {
-        this._hasOffset = !this.data.linearOffset.equals(Vec3.ZERO) || !this.data.angularOffset.equals(Quat.IDENTITY);
+        this._hasOffset =
+            !this.data.linearOffset.equals(Vec3.ZERO) ||
+            !this.data.angularOffset.equals(Quat.IDENTITY);
 
         if (this.data.initialized) {
             this.system.recreatePhysicalShapes(this);
@@ -385,8 +617,9 @@ class CollisionComponent extends Component {
         // and there is no change of compoundParent, then update child transform
         // once updateChildTransform is exposed in ammo.js
 
-        if (typeof Ammo === 'undefined')
+        if (typeof Ammo === 'undefined') {
             return;
+        }
 
         if (this._compoundParent) {
             this.system.recreatePhysicalShapes(this);
@@ -413,11 +646,13 @@ class CollisionComponent extends Component {
             let dirty = entity._dirtyLocal;
             let parent = entity;
             while (parent && !dirty) {
-                if (parent.collision && parent.collision === this._compoundParent)
+                if (parent.collision && parent.collision === this._compoundParent) {
                     break;
+                }
 
-                if (parent._dirtyLocal)
+                if (parent._dirtyLocal) {
                     dirty = true;
+                }
 
                 parent = parent.parent;
             }
@@ -426,12 +661,12 @@ class CollisionComponent extends Component {
                 entity.forEach(this.system.implementations.compound._updateEachDescendantTransform, entity);
 
                 const bodyComponent = this._compoundParent.entity.rigidbody;
-                if (bodyComponent)
+                if (bodyComponent) {
                     bodyComponent.activate();
+                }
             }
         }
     }
-
 
     /**
      * @description Returns the world position for the collision shape taking into account of any offsets.
@@ -465,7 +700,6 @@ class CollisionComponent extends Component {
         return rot;
     }
 
-    /** @private */
     onEnable() {
         if (this.data.type === 'mesh' && (this.data.asset || this.data.renderAsset) && this.data.initialized) {
             const asset = this.system.app.assets.get(this.data.asset || this.data.renderAsset);
@@ -489,15 +723,15 @@ class CollisionComponent extends Component {
                 this._compoundParent.shape.addChildShape(transform, this.data.shape);
                 Ammo.destroy(transform);
 
-                if (this._compoundParent.entity.rigidbody)
+                if (this._compoundParent.entity.rigidbody) {
                     this._compoundParent.entity.rigidbody.activate();
+                }
             }
         } else if (this.entity.trigger) {
             this.entity.trigger.enable();
         }
     }
 
-    /** @private */
     onDisable() {
         if (this.entity.rigidbody) {
             this.entity.rigidbody.disableSimulation();
@@ -505,8 +739,9 @@ class CollisionComponent extends Component {
             if (!this._compoundParent.entity._destroying) {
                 this.system._removeCompoundChild(this._compoundParent, this.data.shape);
 
-                if (this._compoundParent.entity.rigidbody)
+                if (this._compoundParent.entity.rigidbody) {
                     this._compoundParent.entity.rigidbody.activate();
+                }
             }
         } else if (this.entity.trigger) {
             this.entity.trigger.disable();

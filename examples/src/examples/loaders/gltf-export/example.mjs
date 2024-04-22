@@ -1,5 +1,4 @@
 import * as pc from 'playcanvas';
-import * as pcx from 'playcanvas-extras';
 import { data } from '@examples/observer';
 import { deviceType, rootPath } from '@examples/utils';
 
@@ -92,8 +91,8 @@ assetListLoader.load(() => {
     entity.addComponent('render', {
         type: 'asset',
         meshInstances: [
-            new pc.MeshInstance(pc.createSphere(app.graphicsDevice), material),
-            new pc.MeshInstance(pc.createCone(app.graphicsDevice), material)
+            new pc.MeshInstance(pc.Mesh.fromGeometry(app.graphicsDevice, new pc.SphereGeometry()), material),
+            new pc.MeshInstance(pc.Mesh.fromGeometry(app.graphicsDevice, new pc.ConeGeometry()), material)
         ]
     });
     app.root.addChild(entity);
@@ -136,7 +135,7 @@ assetListLoader.load(() => {
         maxTextureSize: 1024
     };
 
-    new pcx.GltfExporter()
+    new pc.GltfExporter()
         .build(app.root, options)
         .then((arrayBuffer) => {
             const blob = new Blob([arrayBuffer], { type: 'application/octet-stream' });

@@ -95,6 +95,17 @@ export function controls({ observer, ReactPCUI, React, jsx, fragment }) {
                     binding: new BindingTwoWay(),
                     link: { observer, path: 'gizmo.zAxisColor' }
                 })
+            ),
+            jsx(
+                LabelGroup,
+                { text: 'Color Alpha' },
+                jsx(SliderInput, {
+                    binding: new BindingTwoWay(),
+                    link: { observer, path: 'gizmo.colorAlpha' },
+                    min: 0,
+                    max: 1,
+                    precision: 2
+                })
             )
         ),
         jsx(
@@ -272,7 +283,7 @@ export function controls({ observer, ReactPCUI, React, jsx, fragment }) {
                     ],
                     binding: new BindingTwoWay(),
                     link: { observer, path: 'camera.proj' },
-                    onSelect: value => setProj((parseInt(value) || 1) - 1)
+                    onSelect: value => setProj((parseInt(value, 10) || 1) - 1)
                 })
             ),
             proj === pc.PROJECTION_PERSPECTIVE &&

@@ -115,7 +115,7 @@ class XrJoint {
      * @param {import('./xr-hand.js').XrHand} hand - Hand that joint relates to.
      * @param {import('./xr-finger.js').XrFinger|null} finger - Finger that joint is related to.
      * Can be null in the case of the wrist joint.
-     * @hideconstructor
+     * @ignore
      */
     constructor(index, id, hand, finger = null) {
         this._index = index;

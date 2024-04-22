@@ -223,7 +223,7 @@ class LitShader {
 
         codeBody += "   vPositionW    = getWorldPosition();\n";
 
-        if (this.options.pass === SHADER_DEPTH) {
+        if (this.options.pass === SHADER_DEPTH || this.options.pass === SHADER_PREPASS_VELOCITY) {
             code += 'varying float vDepth;\n';
             code += '#ifndef VIEWMATRIX\n';
             code += '#define VIEWMATRIX\n';
@@ -237,7 +237,7 @@ class LitShader {
         }
 
         if (this.options.pass === SHADER_PREPASS_VELOCITY) {
-            Debug.error("SHADER_PREPASS_VELOCITY not implemented");
+            Debug.warnOnce("SHADER_PREPASS_VELOCITY not implemented");
         }
 
         if (this.options.useInstancing) {
@@ -465,14 +465,9 @@ class LitShader {
     }
 
     _fsGetPrePassVelocityCode() {
-        const code = `
-            void main(void)
-            {
-                gl_FragColor = vec4(1, 0, 0, 1);
-            }
-            `;
 
-        return code;
+        // till the velocity is implemented, just output the depth
+        return this._fsGetDepthPassCode();
     }
 
     _fsGetShadowPassCode() {
@@ -764,6 +759,9 @@ class LitShader {
                     func.append(chunks.TBNObjectSpacePS);
                 }
             }
+            if (options.twoSidedLighting) {
+                func.append(chunks.twoSidedLightingPS);
+            }
         }
 
         // FIXME: only add these when needed
@@ -783,7 +781,7 @@ class LitShader {
         if (this.needsNormal) {
             func.append(chunks.cubeMapRotatePS);
             func.append(options.cubeMapProjection > 0 ? chunks.cubeMapProjectBoxPS : chunks.cubeMapProjectNonePS);
-            func.append(options.skyboxIntensity ? chunks.envMultiplyPS : chunks.envConstPS);
+            func.append(chunks.envMultiplyPS);
         }
 
         if ((this.lighting && options.useSpecular) || this.reflections) {
@@ -842,6 +840,10 @@ class LitShader {
 
         if (options.useRefraction) {
             if (options.useDynamicRefraction) {
+                if (options.dispersion) {
+                    decl.append("uniform float material_dispersion;");
+                    decl.append('#define DISPERSION\n');
+                }
                 func.append(chunks.refractionDynamicPS);
             } else if (this.reflections) {
                 func.append(chunks.refractionCubePS);
@@ -1002,34 +1004,24 @@ class LitShader {
             func.append(chunks.clusteredLightPS);
         }
 
-        if (options.twoSidedLighting) {
-            decl.append("uniform float twoSidedLightingNegScaleFactor;");
-        }
-
         // FRAGMENT SHADER BODY
 
         code.append(this._fsGetStartCode(code, device, chunks, options));
 
         if (this.needsNormal) {
-            if (options.twoSidedLighting) {
-                code.append("    dVertexNormalW = normalize(gl_FrontFacing ? vNormalW * twoSidedLightingNegScaleFactor : -vNormalW * twoSidedLightingNegScaleFactor);");
-            } else {
-                code.append("    dVertexNormalW = normalize(vNormalW);");
-            }
+            code.append("    dVertexNormalW = normalize(vNormalW);");
 
             if ((options.useHeights || options.useNormals) && options.hasTangents) {
-                if (options.twoSidedLighting) {
-                    code.append("    dTangentW = gl_FrontFacing ? vTangentW * twoSidedLightingNegScaleFactor : -vTangentW * twoSidedLightingNegScaleFactor;");
-                    code.append("    dBinormalW = gl_FrontFacing ? vBinormalW * twoSidedLightingNegScaleFactor : -vBinormalW * twoSidedLightingNegScaleFactor;");
-                } else {
-                    code.append("    dTangentW = vTangentW;");
-                    code.append("    dBinormalW = vBinormalW;");
-                }
+                code.append("    dTangentW = vTangentW;");
+                code.append("    dBinormalW = vBinormalW;");
             }
 
             code.append("    getViewDir();");
             if (hasTBN) {
                 code.append("    getTBN(dTangentW, dBinormalW, dVertexNormalW);");
+                if (options.twoSidedLighting) {
+                    code.append("    handleTwoSidedLighting();");
+                }
             }
         }
 
@@ -1462,7 +1454,8 @@ class LitShader {
                         litArgs_specularity, 
                         litArgs_albedo, 
                         litArgs_transmission,
-                        litArgs_ior
+                        litArgs_ior,
+                        litArgs_dispersion
                     #if defined(LIT_IRIDESCENCE)
                         , iridescenceFresnel, 
                         litArgs_iridescence_intensity

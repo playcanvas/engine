@@ -127,8 +127,8 @@ if (app.xr.supported) {
         }
     });
 
-    app.xr.on('start', function () {
-        message('Immersive AR session has started');
+    app.xr.anchors.on('available', () => {
+        message('Anchors became available');
 
         // restore all persistent anchors
         if (app.xr.anchors.persistence) {
@@ -137,6 +137,10 @@ if (app.xr.supported) {
                 app.xr.anchors.restore(uuids[i]);
             }
         }
+    });
+
+    app.xr.on('start', function () {
+        message('Immersive AR session has started');
     });
     app.xr.on('end', function () {
         message('Immersive AR session has ended');

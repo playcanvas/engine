@@ -127,7 +127,7 @@ const createMorphTarget = function (positions, normals, indices, nx, ny, nz) {
  */
 const createMorphInstance = function (x, y, z) {
     // create the base mesh - a sphere, with higher amount of vertices / triangles
-    const mesh = pc.createSphere(app.graphicsDevice, { latitudeBands: 200, longitudeBands: 200 });
+    const mesh = pc.Mesh.fromGeometry(app.graphicsDevice, new pc.SphereGeometry({ latitudeBands: 200, longitudeBands: 200 }));
 
     // obtain base mesh vertex / index data
     /** @type {number[]} */

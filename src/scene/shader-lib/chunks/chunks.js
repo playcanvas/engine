@@ -40,7 +40,6 @@ import encodePS from './common/frag/encode.js';
 import endPS from './lit/frag/end.js';
 import endVS from './lit/vert/end.js';
 import envAtlasPS from './common/frag/envAtlas.js';
-import envConstPS from './common/frag/envConst.js';
 import envMultiplyPS from './common/frag/envMultiply.js';
 import extensionPS from './lit/frag/extension.js';
 import extensionVS from './lit/vert/extension.js';
@@ -192,10 +191,12 @@ import tonemappingAces2PS from './common/frag/tonemappingAces2.js';
 import tonemappingFilmicPS from './common/frag/tonemappingFilmic.js';
 import tonemappingHejlPS from './common/frag/tonemappingHejl.js';
 import tonemappingLinearPS from './common/frag/tonemappingLinear.js';
+import tonemappingNeutralPS from './common/frag/tonemappingNeutral.js';
 import tonemappingNonePS from './common/frag/tonemappingNone.js';
 import transformVS from './common/vert/transform.js';
 import transformDeclVS from './common/vert/transformDecl.js';
 import transmissionPS from './standard/frag/transmission.js';
+import twoSidedLightingPS from './lit/frag/twoSidedLighting.js';
 import uv0VS from './lit/vert/uv0.js';
 import uv1VS from './lit/vert/uv1.js';
 import uv2VS from './lit/vert/uv2.js';
@@ -255,7 +256,6 @@ const shaderChunks = {
     endPS,
     endVS,
     envAtlasPS,
-    envConstPS,
     envMultiplyPS,
     extensionPS,
     extensionVS,
@@ -407,10 +407,12 @@ const shaderChunks = {
     tonemappingFilmicPS,
     tonemappingHejlPS,
     tonemappingLinearPS,
+    tonemappingNeutralPS,
     tonemappingNonePS,
     transformVS,
     transformDeclVS,
     transmissionPS,
+    twoSidedLightingPS,
     uv0VS,
     uv1VS,
     uv2VS,

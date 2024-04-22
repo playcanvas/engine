@@ -20,7 +20,6 @@ const _schema = ['enabled'];
 /**
  * Manages creation of {@link SpriteComponent}s.
  *
- * @augments ComponentSystem
  * @category Graphics
  */
 class SpriteComponentSystem extends ComponentSystem {
@@ -28,7 +27,7 @@ class SpriteComponentSystem extends ComponentSystem {
      * Create a new SpriteComponentSystem instance.
      *
      * @param {import('../../app-base.js').AppBase} app - The application.
-     * @hideconstructor
+     * @ignore
      */
     constructor(app) {
         super(app);

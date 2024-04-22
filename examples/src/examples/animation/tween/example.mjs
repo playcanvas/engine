@@ -53,12 +53,12 @@ assetListLoader.load(() => {
     /**
      * Utility function to create a text element-based entity
      *
-     * @param {pc.Asset} fontAsset
-     * @param {string} message
-     * @param {number} x
-     * @param {number} y
-     * @param {number} z
-     * @param {number} rot
+     * @param {pc.Asset} fontAsset - The font asset to use.
+     * @param {string} message - The message to display.
+     * @param {number} x - The x position.
+     * @param {number} y - The y position.
+     * @param {number} z - The z position.
+     * @param {number} rot - The rotation.
      */
     const createText = function (fontAsset, message, x, y, z, rot) {
         const text = new pc.Entity();

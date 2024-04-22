@@ -1,84 +1,70 @@
 import * as fs from 'node:fs';
-import { exec } from 'node:child_process';
 import { version, revision } from './utils/rollup-version-revision.mjs';
 import { buildTarget } from './utils/rollup-build-target.mjs';
-import { scriptTarget } from './utils/rollup-script-target.mjs';
-import { scriptTargetEs6 } from './utils/rollup-script-target-es6.mjs';
 
-// 3rd party Rollup plugins
+// unofficial package plugins
 import dts from 'rollup-plugin-dts';
+
+// custom plugins
+import { runTsc } from './utils/plugins/rollup-run-tsc.mjs';
+import { typesFixup } from './utils/plugins/rollup-types-fixup.mjs';
 
 /** @typedef {import('rollup').RollupOptions} RollupOptions */
 
 console.log(`Building PlayCanvas Engine v${version} revision ${revision}`);
 
-const target_extras = [
-    scriptTarget('pcx', 'extras/index.js', 'build/playcanvas-extras.js'),
-    scriptTargetEs6('pcx', 'extras/index.js', 'build/playcanvas-extras', false),
-    scriptTargetEs6('pcx', 'extras/index.js', 'build/playcanvas-extras.mjs', true),
-    scriptTarget('VoxParser', 'scripts/parsers/vox-parser.mjs')
-];
+/**
+ * @type {['release', 'debug', 'profiler', 'min']}
+ */
+const BUILD_TYPES = ['release', 'debug', 'profiler', 'min'];
 
-/** @type {RollupOptions} */
-const target_types = {
-    input: 'types/index.d.ts',
+/**
+ * @type {['umd', 'esm']}
+ */
+const MODULE_FORMAT = ['umd', 'esm'];
+
+/**
+ * @type {RollupOptions[]}
+ */
+const TYPES_TARGET = [{
+    input: 'build/playcanvas/index.d.ts',
     output: [{
         file: 'build/playcanvas.d.ts',
-        footer: 'export as namespace pc;',
+        footer: 'export as namespace pc;\nexport as namespace pcx;',
         format: 'es'
     }],
     plugins: [
+        runTsc('tsconfig.build.json'),
+        typesFixup(),
         dts()
     ]
-};
+}];
 
-function buildTypes() {
-    const start = Date.now();
-    const child = exec('npm run build:types');
-    child.on('exit', function () {
-        const end = Date.now();
-        const delta = (end - start) / 1000;
-        console.log(`created build/playcanvas.d.ts in ${delta}s`);
-    });
+/**
+ * @type {RollupOptions[]}
+ */
+const targets = [];
+
+const envTarget = process.env.target ? process.env.target.toLowerCase() : null;
+
+if (envTarget === null && fs.existsSync('build')) {
+    // no targets specified, clean build directory
+    fs.rmSync('build', { recursive: true });
 }
 
-export default (args) => {
-    /** @type {RollupOptions[]} */
-    const targets = [];
-
-    const envTarget = process.env.target ? process.env.target.toLowerCase() : null;
-
-    if ((envTarget === null) && fs.existsSync('build')) {
-        // no targets specified, clean build directory
-        fs.rmSync('build', { recursive: true });
-    }
-
-    if (envTarget === 'types') {
-        targets.push(target_types);
-    } else if (envTarget === 'extras') {
-        targets.push(...target_extras);
-    } else {
-        ['release', 'debug', 'profiler', 'min'].forEach((t) => {
-            ['es5', 'es6'].forEach((m) => {
-                if (envTarget === null || envTarget === t || envTarget === m || envTarget === `${t}_${m}`) {
-                    targets.push(buildTarget(t, m, 'src/index.js', 'build', true));
-                }
-            });
-
-            // Add an unbundled es6 build
-            if (t !== 'min' && envTarget === null || envTarget === t || envTarget === `${t}_es6`) {
-                if (t !== 'min') targets.push(buildTarget(t, 'es6', 'src/index.js', 'build', false));
-            }
-
-        });
-
-
-        if (envTarget === null) {
-            // no targets specified, build them all
-            buildTypes();
-            targets.push(...target_extras);
+BUILD_TYPES.forEach((buildType) => {
+    MODULE_FORMAT.forEach((moduleFormat) => {
+        if (envTarget === null || envTarget === buildType || envTarget === moduleFormat || envTarget === `${moduleFormat}:${buildType}`) {
+            targets.push(...buildTarget({
+                moduleFormat,
+                buildType
+            }));
         }
-    }
+    });
+});
 
-    return targets;
-};
+if (envTarget === null || envTarget === 'types') {
+    targets.push(...TYPES_TARGET);
+}
+
+export default targets;

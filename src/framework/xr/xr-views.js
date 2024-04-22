@@ -107,7 +107,7 @@ class XrViews extends EventHandler {
 
     /**
      * @param {import('./xr-manager.js').XrManager} manager - WebXR Manager.
-     * @hideconstructor
+     * @ignore
      */
     constructor(manager) {
         super();
@@ -259,6 +259,9 @@ class XrViews extends EventHandler {
      */
     _onSessionStart() {
         if (this._manager.type !== XRTYPE_AR)
+            return;
+
+        if (!this._manager.session.enabledFeatures)
             return;
 
         this._availableColor = this._manager.session.enabledFeatures.indexOf('camera-access') !== -1;

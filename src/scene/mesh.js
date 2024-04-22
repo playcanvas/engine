@@ -9,7 +9,8 @@ import {
     PRIMITIVE_LINES, PRIMITIVE_TRIANGLES, PRIMITIVE_POINTS,
     SEMANTIC_BLENDINDICES, SEMANTIC_BLENDWEIGHT, SEMANTIC_COLOR, SEMANTIC_NORMAL, SEMANTIC_POSITION, SEMANTIC_TEXCOORD,
     TYPE_FLOAT32, TYPE_UINT8, TYPE_INT8, TYPE_INT16, TYPE_UINT16,
-    typedArrayIndexFormats
+    typedArrayIndexFormats,
+    SEMANTIC_TANGENT
 } from '../platform/graphics/constants.js';
 import { IndexBuffer } from '../platform/graphics/index-buffer.js';
 import { VertexBuffer } from '../platform/graphics/vertex-buffer.js';
@@ -77,11 +78,12 @@ class GeometryData {
 
 // class storing information about single vertex data stream
 class GeometryVertexStream {
-    constructor(data, componentCount, dataType, dataTypeNormalize) {
+    constructor(data, componentCount, dataType, dataTypeNormalize, asInt) {
         this.data = data;                           // array of data
         this.componentCount = componentCount;       // number of components
         this.dataType = dataType;                   // format of elements (pc.TYPE_FLOAT32 ..)
         this.dataTypeNormalize = dataTypeNormalize; // normalize element (divide by 255)
+        this.asInt = asInt;                         // treat data as integer (WebGL2 and WebGPU only)
     }
 }
 
@@ -124,16 +126,17 @@ class GeometryVertexStream {
  *     0, 1, 0  // pos 3
  * ]);
  * const uvs = new Float32Array([
- *     0, 0, // uv 0
- *     1, 0, // uv 1
- *     1, 1, // uv 2
  *     0, 1  // uv 3
+ *     1, 1, // uv 2
+ *     1, 0, // uv 1
+ *     0, 0, // uv 0
  * ]);
  * const indices = [
  *     0, 1, 2, // triangle 0
  *     0, 2, 3  // triangle 1
  * ];
  * mesh.setPositions(positions);
+ * mesh.setNormals(pc.calculateNormals(positions, indices));
  * mesh.setUvs(0, uvs);
  * mesh.setIndices(indices);
  * mesh.update();
@@ -172,20 +175,45 @@ class Mesh extends RefCountedObject {
      * aabb representing object space bounds of the mesh.
      *
      * @type {BoundingBox}
+     * @private
      */
     _aabb = new BoundingBox();
+
+    /**
+     * True if the created vertex buffer should be accessible as a storage buffer in compute shader.
+     *
+     * @type {boolean}
+     * @private
+     */
+    _storageVertex = false;
+
+    /**
+     * True if the created index buffer should be accessible as a storage buffer in compute shader.
+     *
+     * @type {boolean}
+     * @private
+     */
+    _storageIndex = false;
 
     /**
      * Create a new Mesh instance.
      *
      * @param {import('../platform/graphics/graphics-device.js').GraphicsDevice} graphicsDevice -
      * The graphics device used to manage this mesh.
+     * @param {object} [options] - Object for passing optional arguments.
+     * @param {boolean} [options.storageVertex] - Defines if the vertex buffer can be used as
+     * a storage buffer by a compute shader. Defaults to false. Only supported on WebGPU.
+     * @param {boolean} [options.storageIndex] - Defines if the index buffer can be used as
+     * a storage buffer by a compute shader. Defaults to false. Only supported on WebGPU.
      */
-    constructor(graphicsDevice) {
+    constructor(graphicsDevice, options) {
         super();
         this.id = id++;
         Debug.assert(graphicsDevice, "Mesh constructor takes a GraphicsDevice as a parameter, and it was not provided.");
         this.device = graphicsDevice;
+
+        this._storageIndex = options?.storageIndex || false;
+        this._storageVertex = options?.storageVertex || false;
 
         /**
          * The vertex buffer holding the vertex data of the mesh.
@@ -223,7 +251,7 @@ class Mesh extends RefCountedObject {
          * - `indexed` specifies whether to interpret the primitive as indexed, thereby using the
          * currently set index buffer.
          *
-         * @type {Array.<{type: number, base: number, count: number, indexed: boolean|undefined}>}
+         * @type {{type: number, base: number, count: number, indexed?: boolean}[]}
          */
         this.primitive = [{
             type: 0,
@@ -243,6 +271,65 @@ class Mesh extends RefCountedObject {
 
         // Array of object space AABBs of vertices affected by each bone
         this.boneAabb = null;
+    }
+
+    /**
+     * Create a new Mesh instance from {@link Geometry} object.
+     * @param {import('../platform/graphics/graphics-device.js').GraphicsDevice} graphicsDevice -
+     * The graphics device used to manage this mesh.
+     * @param {import('./geometry/geometry.js').Geometry} geometry - The geometry object to create
+     * the mesh from.
+     * @param {object} [options] - An object that specifies optional inputs for the function as follows:
+     * @param {boolean} [options.storageVertex] - Defines if the vertex buffer of the mesh can be used as
+     * a storage buffer by a compute shader. Defaults to false. Only supported on WebGPU.
+     * @param {boolean} [options.storageIndex] - Defines if the index buffer of the mesh can be used as
+     * a storage buffer by a compute shader. Defaults to false. Only supported on WebGPU.
+     * @returns {Mesh} A new mesh.
+     */
+    static fromGeometry(graphicsDevice, geometry, options = {}) {
+
+        const mesh = new Mesh(graphicsDevice, options);
+
+        const { positions, normals, tangents, colors, uvs, uvs1, blendIndices, blendWeights, indices } = geometry;
+
+        if (positions) {
+            mesh.setPositions(positions);
+        }
+
+        if (normals) {
+            mesh.setNormals(normals);
+        }
+
+        if (tangents) {
+            mesh.setVertexStream(SEMANTIC_TANGENT, tangents, 4);
+        }
+
+        if (colors) {
+            mesh.setColors32(colors);
+        }
+
+        if (uvs) {
+            mesh.setUvs(0, uvs);
+        }
+
+        if (uvs1) {
+            mesh.setUvs(1, uvs1);
+        }
+
+        if (blendIndices) {
+            mesh.setVertexStream(SEMANTIC_BLENDINDICES, blendIndices, 4, blendIndices.length / 4, TYPE_UINT8);
+        }
+
+        if (blendWeights) {
+            mesh.setVertexStream(SEMANTIC_BLENDWEIGHT, blendWeights, 4);
+        }
+
+        if (indices) {
+            mesh.setIndices(indices);
+        }
+
+        mesh.update();
+        return mesh;
     }
 
     /**
@@ -502,7 +589,7 @@ class Mesh extends RefCountedObject {
      *
      * @param {string} semantic - The meaning of the vertex element. For supported semantics, see
      * SEMANTIC_* in {@link VertexFormat}.
-     * @param {number[]|Int8Array|Uint8Array|Uint8ClampedArray|Int16Array|Uint16Array|Int32Array|Uint32Array|Float32Array} data - Vertex
+     * @param {number[]|ArrayBufferView} data - Vertex
      * data for the specified semantic.
      * @param {number} componentCount - The number of values that form a single Vertex element. For
      * example when setting a 3D position represented by 3 numbers per vertex, number 3 should be
@@ -514,8 +601,11 @@ class Mesh extends RefCountedObject {
      * @param {boolean} [dataTypeNormalize] - If true, vertex attribute data will be mapped from a
      * 0 to 255 range down to 0 to 1 when fed to a shader. If false, vertex attribute data is left
      * unchanged. If this property is unspecified, false is assumed.
+     * @param {boolean} [asInt] - If true, vertex attribute data will be accessible as integer
+     * numbers in shader code. Defaults to false, which means that vertex attribute data will be
+     * accessible as floating point numbers. Can be only used with INT and UINT data types.
      */
-    setVertexStream(semantic, data, componentCount, numVertices, dataType = TYPE_FLOAT32, dataTypeNormalize = false) {
+    setVertexStream(semantic, data, componentCount, numVertices, dataType = TYPE_FLOAT32, dataTypeNormalize = false, asInt = false) {
         this._initGeometryData();
         const vertexCount = numVertices || data.length / componentCount;
         this._geometryData._changeVertexCount(vertexCount, semantic);
@@ -525,7 +615,8 @@ class Mesh extends RefCountedObject {
             data,
             componentCount,
             dataType,
-            dataTypeNormalize
+            dataTypeNormalize,
+            asInt
         );
     }
 
@@ -534,7 +625,7 @@ class Mesh extends RefCountedObject {
      *
      * @param {string} semantic - The semantic of the vertex element to get. For supported
      * semantics, see SEMANTIC_* in {@link VertexFormat}.
-     * @param {number[]|Int8Array|Uint8Array|Uint8ClampedArray|Int16Array|Uint16Array|Int32Array|Uint32Array|Float32Array} data - An
+     * @param {number[]|ArrayBufferView} data - An
      * array to populate with the vertex data. When typed array is supplied, enough space needs to
      * be reserved, otherwise only partial data is copied.
      * @returns {number} Returns the number of vertices populated.
@@ -576,7 +667,7 @@ class Mesh extends RefCountedObject {
     /**
      * Sets the vertex positions array. Vertices are stored using {@link TYPE_FLOAT32} format.
      *
-     * @param {number[]|Int8Array|Uint8Array|Uint8ClampedArray|Int16Array|Uint16Array|Int32Array|Uint32Array|Float32Array} positions - Vertex
+     * @param {number[]|ArrayBufferView} positions - Vertex
      * data containing positions.
      * @param {number} [componentCount] - The number of values that form a single position element.
      * Defaults to 3 if not specified, corresponding to x, y and z coordinates.
@@ -590,7 +681,7 @@ class Mesh extends RefCountedObject {
     /**
      * Sets the vertex normals array. Normals are stored using {@link TYPE_FLOAT32} format.
      *
-     * @param {number[]|Int8Array|Uint8Array|Uint8ClampedArray|Int16Array|Uint16Array|Int32Array|Uint32Array|Float32Array} normals - Vertex
+     * @param {number[]|ArrayBufferView} normals - Vertex
      * data containing normals.
      * @param {number} [componentCount] - The number of values that form a single normal element.
      * Defaults to 3 if not specified, corresponding to x, y and z direction.
@@ -605,7 +696,7 @@ class Mesh extends RefCountedObject {
      * Sets the vertex uv array. Uvs are stored using {@link TYPE_FLOAT32} format.
      *
      * @param {number} channel - The uv channel in [0..7] range.
-     * @param {number[]|Int8Array|Uint8Array|Uint8ClampedArray|Int16Array|Uint16Array|Int32Array|Uint32Array|Float32Array} uvs - Vertex
+     * @param {number[]|ArrayBufferView} uvs - Vertex
      * data containing uv-coordinates.
      * @param {number} [componentCount] - The number of values that form a single uv element.
      * Defaults to 2 if not specified, corresponding to u and v coordinates.
@@ -620,7 +711,7 @@ class Mesh extends RefCountedObject {
      * Sets the vertex color array. Colors are stored using {@link TYPE_FLOAT32} format, which is
      * useful for HDR colors.
      *
-     * @param {number[]|Int8Array|Uint8Array|Uint8ClampedArray|Int16Array|Uint16Array|Int32Array|Uint32Array|Float32Array} colors - Vertex
+     * @param {number[]|ArrayBufferView} colors - Vertex
      * data containing colors.
      * @param {number} [componentCount] - The number of values that form a single color element.
      * Defaults to 4 if not specified, corresponding to r, g, b and a.
@@ -636,7 +727,7 @@ class Mesh extends RefCountedObject {
      * useful for LDR colors. Values in the array are expected in [0..255] range, and are mapped to
      * [0..1] range in the shader.
      *
-     * @param {number[]|Int8Array|Uint8Array|Uint8ClampedArray|Int16Array|Uint16Array|Int32Array|Uint32Array|Float32Array} colors - Vertex
+     * @param {number[]|ArrayBufferView} colors - Vertex
      * data containing colors. The array is expected to contain 4 components per vertex,
      * corresponding to r, g, b and a.
      * @param {number} [numVertices] - The number of vertices to be used from data array. If not
@@ -665,7 +756,7 @@ class Mesh extends RefCountedObject {
     /**
      * Gets the vertex positions data.
      *
-     * @param {number[]|Int8Array|Uint8Array|Uint8ClampedArray|Int16Array|Uint16Array|Int32Array|Uint32Array|Float32Array} positions - An
+     * @param {number[]|ArrayBufferView} positions - An
      * array to populate with the vertex data. When typed array is supplied, enough space needs to
      * be reserved, otherwise only partial data is copied.
      * @returns {number} Returns the number of vertices populated.
@@ -677,7 +768,7 @@ class Mesh extends RefCountedObject {
     /**
      * Gets the vertex normals data.
      *
-     * @param {number[]|Int8Array|Uint8Array|Uint8ClampedArray|Int16Array|Uint16Array|Int32Array|Uint32Array|Float32Array} normals - An
+     * @param {number[]|ArrayBufferView} normals - An
      * array to populate with the vertex data. When typed array is supplied, enough space needs to
      * be reserved, otherwise only partial data is copied.
      * @returns {number} Returns the number of vertices populated.
@@ -690,7 +781,7 @@ class Mesh extends RefCountedObject {
      * Gets the vertex uv data.
      *
      * @param {number} channel - The uv channel in [0..7] range.
-     * @param {number[]|Int8Array|Uint8Array|Uint8ClampedArray|Int16Array|Uint16Array|Int32Array|Uint32Array|Float32Array} uvs - An
+     * @param {number[]|ArrayBufferView} uvs - An
      * array to populate with the vertex data. When typed array is supplied, enough space needs to
      * be reserved, otherwise only partial data is copied.
      * @returns {number} Returns the number of vertices populated.
@@ -702,7 +793,7 @@ class Mesh extends RefCountedObject {
     /**
      * Gets the vertex color data.
      *
-     * @param {number[]|Int8Array|Uint8Array|Uint8ClampedArray|Int16Array|Uint16Array|Int32Array|Uint32Array|Float32Array} colors - An
+     * @param {number[]|ArrayBufferView} colors - An
      * array to populate with the vertex data. When typed array is supplied, enough space needs to
      * be reserved, otherwise only partial data is copied.
      * @returns {number} Returns the number of vertices populated.
@@ -864,7 +955,8 @@ class Mesh extends RefCountedObject {
                 semantic: semantic,
                 components: stream.componentCount,
                 type: stream.dataType,
-                normalize: stream.dataTypeNormalize
+                normalize: stream.dataTypeNormalize,
+                asInt: stream.asInt
             });
         }
 
@@ -878,7 +970,10 @@ class Mesh extends RefCountedObject {
         if (!this.vertexBuffer) {
             const allocateVertexCount = this._geometryData.maxVertices;
             const format = this._buildVertexFormat(allocateVertexCount);
-            this.vertexBuffer = new VertexBuffer(this.device, format, allocateVertexCount, this._geometryData.verticesUsage);
+            this.vertexBuffer = new VertexBuffer(this.device, format, allocateVertexCount, {
+                usage: this._geometryData.verticesUsage,
+                storage: this._storageVertex
+            });
         }
 
         // lock vertex buffer and create typed access arrays for individual elements
@@ -902,8 +997,10 @@ class Mesh extends RefCountedObject {
 
         // if we don't have index buffer, create new one, otherwise update existing one
         if (this.indexBuffer.length <= 0 || !this.indexBuffer[0]) {
-            const createFormat = this._geometryData.maxVertices > 0xffff ? INDEXFORMAT_UINT32 : INDEXFORMAT_UINT16;
-            this.indexBuffer[0] = new IndexBuffer(this.device, createFormat, this._geometryData.maxIndices, this._geometryData.indicesUsage);
+            const maxVertices = this._geometryData.maxVertices;
+            const createFormat = ((maxVertices > 0xffff) || (maxVertices === 0)) ? INDEXFORMAT_UINT32 : INDEXFORMAT_UINT16;
+            const options = this._storageIndex ? { storage: true } : undefined;
+            this.indexBuffer[0] = new IndexBuffer(this.device, createFormat, this._geometryData.maxIndices, this._geometryData.indicesUsage, undefined, options);
         }
 
         const srcIndices = this._geometryData.indices;
