@@ -2,6 +2,8 @@ import { math } from '../../core/math/math.js';
 import { Color } from '../../core/math/color.js';
 import { Quat } from '../../core/math/quat.js';
 import { Vec3 } from '../../core/math/vec3.js';
+import { Ray } from '../../core/shape/ray.js';
+import { Plane } from '../../core/shape/plane.js';
 import { PROJECTION_PERSPECTIVE, PROJECTION_ORTHOGRAPHIC } from '../../scene/constants.js';
 
 import {
@@ -208,7 +210,7 @@ class TransformGizmo extends Gizmo {
     /**
      * Internal currently hovered shape.
      *
-     * @type {import('./axis-shapes.js').AxisShape}
+     * @type {import('./axis-shapes.js').AxisShape | null}
      * @private
      */
     _hoverShape = null;
@@ -510,53 +512,84 @@ class TransformGizmo extends Gizmo {
         this.fire('render:update');
     }
 
+    _createRay(mouseWPos) {
+        const cameraPos = this._camera.entity.getPosition();
+        const cameraTransform = this._camera.entity.getWorldTransform();
+
+        const ray = new Ray(cameraPos);
+
+        // calculate ray direction from mouse position
+        if (this._camera.projection === PROJECTION_PERSPECTIVE) {
+            ray.direction.sub2(mouseWPos, ray.origin).normalize();
+        } else {
+            ray.origin.add(mouseWPos);
+            cameraTransform.transformVector(tmpV1.set(0, 0, -1), ray.direction);
+        }
+
+        return ray;
+    }
+
+    _createPlane(axis, isFacing, isLine) {
+        const cameraPos = this._camera.entity.getPosition();
+        const gizmoPos = this.root.getPosition();
+
+        const plane = new Plane();
+        const facingDir = tmpV1.sub2(cameraPos, gizmoPos).normalize();
+
+        if (isFacing) {
+            // all axes so set normal to plane facing camera
+            plane.normal.copy(facingDir);
+        } else {
+            // set plane normal based on axis
+            plane.normal.set(0, 0, 0);
+            plane.normal[axis] = 1;
+
+            // rotate plane normal by gizmo rotation
+            this._gizmoRotationStart.transformVector(plane.normal, plane.normal);
+
+            if (isLine) {
+                // TODO: figure out what this is doing
+                tmpV1.sub2(facingDir, plane.normal.mulScalar(plane.normal.dot(facingDir))).normalize();
+                plane.normal.copy(tmpV1);
+            }
+        }
+
+        plane.distance = gizmoPos.dot(plane.normal);
+        console.log(gizmoPos, plane.normal);
+        return plane;
+    }
+
+    _intersectRayPlane(ray, plane) {
+        const denominator = plane.normal.dot(ray.direction);
+        // FIXME: this should be adding plane.distance, not subtracting
+        const t = -(plane.normal.dot(ray.origin) - plane.distance) / denominator;
+        return ray.direction.mulScalar(t).add(ray.origin);
+    }
+
     _calcPoint(x, y) {
         const gizmoPos = this.root.getPosition();
         const mouseWPos = this._camera.screenToWorld(x, y, 1);
         const cameraRot = this._camera.entity.getRotation();
-        const rayOrigin = this._camera.entity.getPosition();
-        const rayDir = new Vec3();
-        const planeNormal = new Vec3();
+
         const axis = this._selectedAxis;
         const isPlane = this._selectedIsPlane;
         const isRotation = this._isRotation;
         const isUniform = this._useUniformScaling && isPlane;
         const isAllAxes = axis === 'xyz';
         const isFacing = axis === 'face';
+        const isLine = !isPlane && !isRotation;
 
-        // calculate ray direction from mouse position
-        if (this._camera.projection === PROJECTION_PERSPECTIVE) {
-            rayDir.copy(mouseWPos).sub(rayOrigin).normalize();
-        } else {
-            rayOrigin.add(mouseWPos);
-            this._camera.entity.getWorldTransform().transformVector(tmpV1.set(0, 0, -1), rayDir);
-        }
+        const ray = this._createRay(mouseWPos);
+        const plane = this._createPlane(axis, isUniform || isAllAxes || isFacing, isLine);
 
-        if (isUniform || isAllAxes || isFacing) {
-            // all axes so set normal to plane facing camera
-            planeNormal.copy(rayOrigin).sub(gizmoPos).normalize();
-        } else {
-            // set plane normal based on axis
-            planeNormal[axis] = 1;
+        const point = this._intersectRayPlane(ray, plane);
 
-            // rotate plane normal by gizmo rotation
-            tmpQ1.copy(this._gizmoRotationStart).transformVector(planeNormal, planeNormal);
-
-            if (!isPlane && !isRotation) {
-                tmpV1.copy(rayOrigin).sub(gizmoPos).normalize();
-                planeNormal.copy(tmpV1.sub(planeNormal.mulScalar(planeNormal.dot(tmpV1))).normalize());
-            }
-        }
-
-        // ray intersection with plane
-        const rayPlaneDot = planeNormal.dot(rayDir);
-        const planeDist = gizmoPos.dot(planeNormal);
-        const pointPlaneDist = (planeNormal.dot(rayOrigin) - planeDist) / rayPlaneDot;
-        const point = rayDir.mulScalar(-pointPlaneDist).add(rayOrigin);
+        // console.log(gizmoPos, point);
 
         if (isRotation) {
             // point needs to be relative to gizmo for angle calculation
             point.sub(gizmoPos);
+
         }
 
         if (isUniform) {
@@ -595,18 +628,18 @@ class TransformGizmo extends Gizmo {
             const v = point.sub(gizmoPos).length() * tmpV1.dot(tmpV2);
             point.set(v, v, v);
         } else if (!isFacing) {
-            if (!isPlane && !isRotation) {
+            if (isLine) {
                 // reset normal based on axis and project position from plane onto normal
-                planeNormal.set(0, 0, 0);
-                planeNormal[axis] = 1;
-                tmpQ1.transformVector(planeNormal, planeNormal);
-                point.copy(planeNormal.mulScalar(planeNormal.dot(point)));
+                plane.normal.set(0, 0, 0);
+                plane.normal[axis] = 1;
+                this._gizmoRotationStart.transformVector(plane.normal, plane.normal);
+                point.copy(plane.normal.mulScalar(plane.normal.dot(point)));
             }
 
             // rotate point back to world coords
-            tmpQ1.invert().transformVector(point, point);
+            tmpQ1.copy(this._gizmoRotationStart).invert().transformVector(point, point);
 
-            if (!isPlane && !isRotation) {
+            if (isLine) {
                 // set other axes to zero if not plane point
                 const v = point[axis];
                 point.set(0, 0, 0);
@@ -617,12 +650,9 @@ class TransformGizmo extends Gizmo {
         // calculate angle
         let angle = 0;
         if (isRotation) {
-            let isAxisFacing = isFacing;
-            tmpV1.copy(rayOrigin).sub(gizmoPos).normalize();
-            tmpV2.cross(planeNormal, tmpV1);
-            isAxisFacing ||= tmpV2.length() < FACING_EPSILON;
-
-            if (isAxisFacing) {
+            tmpV1.sub2(ray.origin, gizmoPos).normalize();
+            tmpV2.cross(plane.normal, tmpV1);
+            if (isFacing || tmpV2.length() < FACING_EPSILON) {
                 switch (axis) {
                     case 'x':
                         angle = Math.atan2(point.z, point.y) * math.RAD_TO_DEG;
