@@ -3,6 +3,8 @@ import { execSync } from 'child_process';
 // custom plugins
 import { watch } from '../rollup-watch.mjs';
 
+const GREEN_OUT = '\x1b[32m';
+
 /**
  * This plugin builds the standalone html files.
  *
@@ -21,8 +23,8 @@ export function generateStandalone(nodeEnv, enginePath) {
             }
         },
         generateBundle() {
-            const cmd = `cross-env NODE_ENV=${nodeEnv} ENGINE_PATH=${enginePath} npm run build:standalone`;
-            console.log("\x1b[32m%s\x1b[0m", cmd);
+            const cmd = `cross-env NODE_ENV=${nodeEnv} ENGINE_PATH=${enginePath} node ./scripts/standalone-html.mjs`;
+            console.log(`${GREEN_OUT}${cmd}`);
             execSync(cmd);
         }
     };
