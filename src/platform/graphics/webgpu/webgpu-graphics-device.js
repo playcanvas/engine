@@ -4,7 +4,7 @@ import { path } from '../../../core/path.js';
 
 import {
     PIXELFORMAT_RGBA32F, PIXELFORMAT_RGBA8, PIXELFORMAT_BGRA8, DEVICETYPE_WEBGPU,
-    BUFFERUSAGE_READ, BUFFERUSAGE_COPY_DST
+    BUFFERUSAGE_READ, BUFFERUSAGE_COPY_DST, semanticToLocation
 } from '../constants.js';
 import { GraphicsDevice } from '../graphics-device.js';
 import { DebugGraphics } from '../debug-graphics.js';
@@ -29,6 +29,8 @@ import { WebgpuGpuProfiler } from './webgpu-gpu-profiler.js';
 import { WebgpuResolver } from './webgpu-resolver.js';
 import { WebgpuCompute } from './webgpu-compute.js';
 import { WebgpuBuffer } from './webgpu-buffer.js';
+
+const _uniqueLocations = new Map();
 
 class WebgpuGraphicsDevice extends GraphicsDevice {
     /**
@@ -452,14 +454,43 @@ class WebgpuGraphicsDevice extends GraphicsDevice {
 
     submitVertexBuffer(vertexBuffer, slot) {
 
-        const elements = vertexBuffer.format.elements;
+        const format = vertexBuffer.format;
+        const { interleaved, elements } = format;
         const elementCount = elements.length;
         const vbBuffer = vertexBuffer.impl.buffer;
+
+        if (interleaved) {
+            // for interleaved buffers, we use a single vertex buffer, and attributes are specified using the layout
+            this.passEncoder.setVertexBuffer(slot, vbBuffer);
+            return 1;
+        }
+
+        // non-interleaved - vertex buffer per attribute
         for (let i = 0; i < elementCount; i++) {
             this.passEncoder.setVertexBuffer(slot + i, vbBuffer, elements[i].offset);
         }
 
         return elementCount;
+    }
+
+    validateVBLocations(vb0, vb1) {
+
+        // in case of multiple VBs, validate all elements use unique locations
+        const validateVB = (vb) => {
+            const { elements } = vb.format;
+            for (let i = 0; i < elements.length; i++) {
+                const name = elements[i].name;
+                const location = semanticToLocation[name];
+                if (_uniqueLocations.has(location)) {
+                    Debug.errorOnce(`Vertex buffer element location ${location} used by [${name}] is already used by element [${_uniqueLocations.get(location)}], while rendering [${DebugGraphics.toString()}]`);
+                }
+                _uniqueLocations.set(location, name);
+            }
+        };
+
+        validateVB(vb0);
+        validateVB(vb1);
+        _uniqueLocations.clear();
     }
 
     draw(primitive, numInstances = 1, keepBuffers) {
@@ -479,6 +510,7 @@ class WebgpuGraphicsDevice extends GraphicsDevice {
             if (vb0) {
                 const vbSlot = this.submitVertexBuffer(vb0, 0);
                 if (vb1) {
+                    Debug.call(() => this.validateVBLocations(vb0, vb1));
                     this.submitVertexBuffer(vb1, vbSlot);
                 }
             }
