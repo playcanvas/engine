@@ -6,6 +6,7 @@ import {
 } from './constants.js';
 
 import gles2FS from './shader-chunks/frag/gles2.js';
+import gles2VS from './shader-chunks/vert/gles2.js';
 import gles3FS from './shader-chunks/frag/gles3.js';
 import gles3VS from './shader-chunks/vert/gles3.js';
 import webgpuFS from './shader-chunks/frag/webgpu.js';
@@ -104,7 +105,7 @@ class ShaderUtils {
 
         // vertex code
         const vertCode = ShaderUtils.versionCode(device) +
-            getDefines(webgpuVS, gles3VS, '', true, options) +
+            getDefines(webgpuVS, gles3VS, gles2VS, true, options) +
             ShaderUtils.getDefinesCode(options.vertexDefines) +
             sharedFS +
             ShaderUtils.getShaderNameCode(name) +

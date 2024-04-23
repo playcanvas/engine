@@ -10,7 +10,7 @@ vec3 unpack3NFloats(float src) {
     return vec3(r, g, b);
 }
 
-vec3 tex1Dlod_lerp(highp sampler2D tex, vec2 tc, out vec3 w) {
+vec3 tex1Dlod_lerp(TEXTURE_ACCEPT_HIGHP(tex), vec2 tc, out vec3 w) {
     vec4 a = texture2D(tex, tc);
     vec4 b = texture2D(tex, tc + graphSampleSize);
     float c = fract(tc.x * graphNumSamples);
@@ -45,13 +45,13 @@ void main(void) {
     vec3 localVelocityDiv;
     vec3 velocityDiv;
     vec3 paramDiv;
-    vec3 localVelocity = tex1Dlod_lerp(internalTex0, vec2(nlife, 0), localVelocityDiv);
-    vec3 velocity =      tex1Dlod_lerp(internalTex1, vec2(nlife, 0), velocityDiv);
-    vec3 params =        tex1Dlod_lerp(internalTex2, vec2(nlife, 0), paramDiv);
+    vec3 localVelocity = tex1Dlod_lerp(TEXTURE_PASS(internalTex0), vec2(nlife, 0), localVelocityDiv);
+    vec3 velocity =      tex1Dlod_lerp(TEXTURE_PASS(internalTex1), vec2(nlife, 0), velocityDiv);
+    vec3 params =        tex1Dlod_lerp(TEXTURE_PASS(internalTex2), vec2(nlife, 0), paramDiv);
     float rotSpeed = params.x;
     float rotSpeedDiv = paramDiv.y;
 
-    vec3 radialParams = tex1Dlod_lerp(internalTex3, vec2(nlife, 0), paramDiv);
+    vec3 radialParams = tex1Dlod_lerp(TEXTURE_PASS(internalTex3), vec2(nlife, 0), paramDiv);
     float radialSpeed = radialParams.x;
     float radialSpeedDiv = radialParams.y;
 

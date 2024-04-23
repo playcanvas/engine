@@ -70,6 +70,7 @@ layout(location = 7) out highp outType_7 pc_fragColor7;
 #define SHADOWMAP_ACCEPT(name) texture2D name, sampler name ## _sampler
 #define TEXTURE_PASS(name) name, name ## _sampler
 #define TEXTURE_ACCEPT(name) texture2D name, sampler name ## _sampler
+#define TEXTURE_ACCEPT_HIGHP TEXTURE_ACCEPT
 
 #define GL2
 #define WEBGPU
