@@ -7,6 +7,7 @@ import { jsx } from '../jsx.mjs';
 import { iframe } from '../iframe.mjs';
 import { removeRedundantSpaces } from '../strings.mjs';
 import { playcanvasTheme } from '../monaco/theme.mjs';
+import { jsdoc } from '../monaco/tokenizers.mjs';
 import * as languages from '../monaco/languages/index.mjs';
 
 import '../events.js';
@@ -195,6 +196,13 @@ class CodeEditor extends TypedComponent {
                     // @ts-ignore
                     monaco.languages.setMonarchTokensProvider(id, languages[id].language);
                 }
+
+                const allLangs = monaco.languages.getLanguages();
+                const tsLang = allLangs.find(({ id }) => id === 'javascript');
+                // @ts-ignore
+                tsLang?.loader()?.then(({ language }) => {
+                    language.tokenizer.jsdoc = jsdoc;
+                });
             });
     }
 
