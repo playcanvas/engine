@@ -125,9 +125,6 @@ class WebgpuGraphicsDevice extends GraphicsDevice {
 
     initDeviceCaps() {
 
-        // temporarily disabled functionality which is not supported to avoid errors
-        this.disableParticleSystem = true;
-
         const limits = this.wgpu?.limits;
         this.limits = limits;
 
@@ -150,7 +147,7 @@ class WebgpuGraphicsDevice extends GraphicsDevice {
         this.supportsMorphTargetTexturesCore = true;
         this.supportsAreaLights = true;
         this.supportsDepthShadow = true;
-        this.supportsGpuParticles = false;
+        this.supportsGpuParticles = true;
         this.supportsMrt = true;
         this.supportsCompute = true;
         this.extUintElement = true;
