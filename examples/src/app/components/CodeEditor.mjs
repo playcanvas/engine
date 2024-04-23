@@ -7,7 +7,7 @@ import { jsx } from '../jsx.mjs';
 import { iframe } from '../iframe.mjs';
 import { removeRedundantSpaces } from '../strings.mjs';
 import { playcanvasTheme } from '../monaco/theme.mjs';
-import { jsdoc } from '../monaco/tokenizers.mjs';
+import { jsdoc } from '../monaco/tokenizer-rules.mjs';
 import * as languages from '../monaco/languages/index.mjs';
 
 import '../events.js';
