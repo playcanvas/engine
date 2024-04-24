@@ -226,7 +226,7 @@ assetListLoader.load(() => {
     const lightOmni = new pc.Entity();
     lightOmni.addComponent('light', {
         type: 'omni',
-        layers: [excludedLayer.id], // add it to excluded layer, wePIXELFORMAT_RGBA8 don't want the light captured in the reflection
+        layers: [excludedLayer.id], // add it to excluded layer, we don't want the light captured in the reflection
         castShadows: false,
         color: pc.Color.WHITE,
         intensity: 0.2,
