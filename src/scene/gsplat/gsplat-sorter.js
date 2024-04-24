@@ -105,16 +105,14 @@ function SortWorker() {
 
         // Build the output array
         const outputArray = new Uint32Array(target.buffer);
-        for (let i = numVertices - 1; i >= 0; i--) {
+        for (let i = 0; i < numVertices; i++) {
             const distance = distances[i];
-            const destIndex = (countBuffer[distance] - 1) * 4;
+            const destIndex = (--countBuffer[distance]) * 4;
 
             outputArray[destIndex] = i;
             outputArray[destIndex + 1] = i;
             outputArray[destIndex + 2] = i;
             outputArray[destIndex + 3] = i;
-
-            countBuffer[distance]--;
         }
 
         // swap
