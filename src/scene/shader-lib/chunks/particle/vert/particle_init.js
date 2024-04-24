@@ -34,9 +34,12 @@ uniform float seed;
 uniform float delta;
 uniform sampler2D particleTexOUT;
 uniform sampler2D particleTexIN;
-uniform highp sampler2D internalTex0;
-uniform highp sampler2D internalTex1;
-uniform highp sampler2D internalTex2;
+
+#ifdef PARTICLE_GPU
+    uniform highp sampler2D internalTex0;
+    uniform highp sampler2D internalTex1;
+    uniform highp sampler2D internalTex2;
+#endif
 
 #ifndef CAMERAPLANES
 #define CAMERAPLANES
