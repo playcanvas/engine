@@ -8,16 +8,18 @@ import { SphereGeometry } from "./sphere-geometry.js";
  *
  * Note that the dome is created with UVs in the range of 0 to 1.
  *
- * @param {import('../../platform/graphics/graphics-device.js').GraphicsDevice} device - The graphics
- * device used to manage the mesh.
- * @param {object} [opts] - An object that specifies optional inputs for the function as follows:
- * @param {number} [opts.latitudeBands] - The number of divisions along the latitudinal axis of the
- * sphere (defaults to 16).
- * @param {number} [opts.longitudeBands] - The number of divisions along the longitudinal axis of
- * the sphere (defaults to 16).
  * @category Graphics
  */
 class DomeGeometry extends SphereGeometry {
+    /**
+     * Create a new CylinderGeometry instance.
+     *
+     * @param {object} [opts] - An object that specifies optional inputs for the function as follows:
+     * @param {number} [opts.latitudeBands] - The number of divisions along the latitudinal axis of the
+     * sphere (defaults to 16).
+     * @param {number} [opts.longitudeBands] - The number of divisions along the longitudinal axis of
+     * the sphere (defaults to 16).
+     */
     constructor(opts = {}) {
 
         // create a sphere geometry
