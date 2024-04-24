@@ -11,23 +11,25 @@ import { Geometry } from './geometry.js';
  *
  * Note that the torus is created with UVs in the range of 0 to 1.
  *
- * @param {import('../../platform/graphics/graphics-device.js').GraphicsDevice} device - The graphics
- * device used to manage the mesh.
- * @param {object} [opts] - An object that specifies optional inputs for the function as follows:
- * @param {number} [opts.tubeRadius] - The radius of the tube forming the body of the torus
- * (defaults to 0.2).
- * @param {number} [opts.ringRadius] - The radius from the centre of the torus to the centre of the
- * tube (defaults to 0.3).
- * @param {number} [opts.sectorAngle] - The sector angle in degrees of the ring of the torus
- * (defaults to 2 * Math.PI).
- * @param {number} [opts.segments] - The number of radial divisions forming cross-sections of the
- * torus ring (defaults to 20).
- * @param {number} [opts.sides] - The number of divisions around the tubular body of the torus ring
- * (defaults to 30).
- * @param {boolean} [opts.calculateTangents] - Generate tangent information (defaults to false).
  * @category Graphics
  */
 class TorusGeometry extends Geometry {
+    /**
+     * Create a new TorusGeometry instance.
+     *
+     * @param {object} [opts] - An object that specifies optional inputs for the function as follows:
+     * @param {number} [opts.tubeRadius] - The radius of the tube forming the body of the torus
+     * (defaults to 0.2).
+     * @param {number} [opts.ringRadius] - The radius from the centre of the torus to the centre of the
+     * tube (defaults to 0.3).
+     * @param {number} [opts.sectorAngle] - The sector angle in degrees of the ring of the torus
+     * (defaults to 2 * Math.PI).
+     * @param {number} [opts.segments] - The number of radial divisions forming cross-sections of the
+     * torus ring (defaults to 20).
+     * @param {number} [opts.sides] - The number of divisions around the tubular body of the torus ring
+     * (defaults to 30).
+     * @param {boolean} [opts.calculateTangents] - Generate tangent information (defaults to false).
+     */
     constructor(opts = {}) {
         super();
 
