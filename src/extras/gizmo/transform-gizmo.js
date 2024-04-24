@@ -554,15 +554,13 @@ class TransformGizmo extends Gizmo {
             }
         }
 
-        plane.distance = gizmoPos.dot(plane.normal);
-        console.log(gizmoPos, plane.normal);
+        plane.distance = -gizmoPos.dot(plane.normal);
         return plane;
     }
 
     _intersectRayPlane(ray, plane) {
         const denominator = plane.normal.dot(ray.direction);
-        // FIXME: this should be adding plane.distance, not subtracting
-        const t = -(plane.normal.dot(ray.origin) - plane.distance) / denominator;
+        const t = -(plane.normal.dot(ray.origin) + plane.distance) / denominator;
         return ray.direction.mulScalar(t).add(ray.origin);
     }
 
@@ -576,20 +574,18 @@ class TransformGizmo extends Gizmo {
         const isRotation = this._isRotation;
         const isUniform = this._useUniformScaling && isPlane;
         const isAllAxes = axis === 'xyz';
-        const isFacing = axis === 'face';
         const isLine = !isPlane && !isRotation;
+        const isFacing = axis === 'face';
 
         const ray = this._createRay(mouseWPos);
         const plane = this._createPlane(axis, isUniform || isAllAxes || isFacing, isLine);
 
-        const point = this._intersectRayPlane(ray, plane);
-
-        // console.log(gizmoPos, point);
+        const point = new Vec3();
+        plane.intersectsRay(ray, point);
 
         if (isRotation) {
             // point needs to be relative to gizmo for angle calculation
             point.sub(gizmoPos);
-
         }
 
         if (isUniform) {

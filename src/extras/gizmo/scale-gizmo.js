@@ -69,7 +69,7 @@ class ScaleGizmo extends TransformGizmo {
     /**
      * Internal mapping from each attached node to their starting scale.
      *
-     * @type {Map<import('playcanvas').GraphNode, Vec3>}
+     * @type {Map<import('../../scene/graph-node.js').GraphNode, Vec3>}
      * @private
      */
     _nodeScales = new Map();
