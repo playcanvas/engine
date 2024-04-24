@@ -7,6 +7,10 @@ export default /* glsl */`
 #define itexture2D(res, uv) texture(isampler2D(res, res ## _sampler), uv)
 #define utexture2D(res, uv) texture(usampler2D(res, res ## _sampler), uv)
 
+#define TEXTURE_PASS(name) name, name ## _sampler
+#define TEXTURE_ACCEPT(name) texture2D name, sampler name ## _sampler
+#define TEXTURE_ACCEPT_HIGHP TEXTURE_ACCEPT
+
 #define GL2
 #define WEBGPU
 #define VERTEXSHADER

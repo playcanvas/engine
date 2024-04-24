@@ -14,17 +14,32 @@ uniform mat4 matrix_viewInverse;
 uniform mat4 matrix_view;
 #endif
 
-uniform float numParticles, numParticlesPot;
+uniform float numParticles;
+uniform float numParticlesPot;
 uniform float graphSampleSize;
 uniform float graphNumSamples;
 uniform float stretch;
 uniform vec3 wrapBounds;
-uniform vec3 emitterScale, emitterPos, faceTangent, faceBinorm;
-uniform float rate, rateDiv, lifetime, deltaRandomnessStatic, scaleDivMult, alphaDivMult, seed, delta;
-uniform sampler2D particleTexOUT, particleTexIN;
-uniform highp sampler2D internalTex0;
-uniform highp sampler2D internalTex1;
-uniform highp sampler2D internalTex2;
+uniform vec3 emitterScale;
+uniform vec3 emitterPos;
+uniform vec3 faceTangent;
+uniform vec3 faceBinorm;
+uniform float rate;
+uniform float rateDiv;
+uniform float lifetime;
+uniform float deltaRandomnessStatic;
+uniform float scaleDivMult;
+uniform float alphaDivMult;
+uniform float seed;
+uniform float delta;
+uniform sampler2D particleTexOUT;
+uniform sampler2D particleTexIN;
+
+#ifdef PARTICLE_GPU
+    uniform highp sampler2D internalTex0;
+    uniform highp sampler2D internalTex1;
+    uniform highp sampler2D internalTex2;
+#endif
 
 #ifndef CAMERAPLANES
 #define CAMERAPLANES
