@@ -265,6 +265,48 @@ class Mat3 {
     }
 
     /**
+     * Sets this matrix to the given quaternion rotation.
+     *
+     * @param {import('./quat.js').Quat} r - A quaternion rotation.
+     * @returns {Mat3} Self for chaining.
+     */
+    setFromQuat(r) {
+        const qx = r.x;
+        const qy = r.y;
+        const qz = r.z;
+        const qw = r.w;
+
+        const x2 = qx + qx;
+        const y2 = qy + qy;
+        const z2 = qz + qz;
+        const xx = qx * x2;
+        const xy = qx * y2;
+        const xz = qx * z2;
+        const yy = qy * y2;
+        const yz = qy * z2;
+        const zz = qz * z2;
+        const wx = qw * x2;
+        const wy = qw * y2;
+        const wz = qw * z2;
+
+        const m = this.data;
+
+        m[0] = (1 - (yy + zz));
+        m[1] = (xy + wz);
+        m[2] = (xz - wy);
+
+        m[3] = (xy - wz);
+        m[4] = (1 - (xx + zz));
+        m[5] = (yz + wx);
+
+        m[6] = (xz + wy);
+        m[7] = (yz - wx);
+        m[8] = (1 - (xx + yy));
+
+        return this;
+    }
+
+    /**
      * Set the matrix to the inverse of the specified 4x4 matrix.
      *
      * @param {import('./mat4.js').Mat4} src - The 4x4 matrix to invert.
