@@ -7,7 +7,7 @@ import { jsx } from '../jsx.mjs';
 import { iframe } from '../iframe.mjs';
 import { removeRedundantSpaces } from '../strings.mjs';
 import { playcanvasTheme } from '../monaco/theme.mjs';
-import { jsdoc } from '../monaco/tokenizer-rules.mjs';
+import { jsRules } from '../monaco/tokenizer-rules.mjs';
 import * as languages from '../monaco/languages/index.mjs';
 
 import '../events.js';
@@ -197,11 +197,12 @@ class CodeEditor extends TypedComponent {
                     monaco.languages.setMonarchTokensProvider(id, languages[id].language);
                 }
 
+                // patches highlighter tokenizer for javascript to include jsdoc
                 const allLangs = monaco.languages.getLanguages();
-                const tsLang = allLangs.find(({ id }) => id === 'javascript');
+                const jsLang = allLangs.find(({ id }) => id === 'javascript');
                 // @ts-ignore
-                tsLang?.loader()?.then(({ language }) => {
-                    language.tokenizer.jsdoc = jsdoc;
+                jsLang?.loader()?.then(({ language }) => {
+                    Object.assign(language.tokenizer, jsRules);
                 });
             });
     }
