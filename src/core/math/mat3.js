@@ -271,10 +271,10 @@ class Mat3 {
      * @returns {Mat3} Self for chaining.
      * @example
      * const r = new pc.Quat(1, 2, 3, 4).normalize();
-     * 
+     *
      * const m = new pc.Mat4();
      * m.setFromQuat(r);
-    */
+     */
     setFromQuat(r) {
         const qx = r.x;
         const qy = r.y;

@@ -207,7 +207,7 @@ class GSplatSorter extends EventHandler {
         const buf = vertexBuffer.storage.slice(0);
         this.worker.postMessage({
             data: buf,
-            centers: centers.buffer,
+            centers: centers.buffer
         }, [buf, centers.buffer]);
     }
 
