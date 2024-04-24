@@ -6,6 +6,7 @@ import {
 } from './constants.js';
 
 import gles2FS from './shader-chunks/frag/gles2.js';
+import gles2VS from './shader-chunks/vert/gles2.js';
 import gles3FS from './shader-chunks/frag/gles3.js';
 import gles3VS from './shader-chunks/vert/gles3.js';
 import webgpuFS from './shader-chunks/frag/webgpu.js';
@@ -104,7 +105,7 @@ class ShaderUtils {
 
         // vertex code
         const vertCode = ShaderUtils.versionCode(device) +
-            getDefines(webgpuVS, gles3VS, '', true, options) +
+            getDefines(webgpuVS, gles3VS, gles2VS, true, options) +
             ShaderUtils.getDefinesCode(options.vertexDefines) +
             sharedFS +
             ShaderUtils.getShaderNameCode(name) +
@@ -240,12 +241,17 @@ class ShaderUtils {
             const startOfAttribName = vsCode.lastIndexOf(' ', endOfLine);
             const attribName = vsCode.substring(startOfAttribName + 1, endOfLine);
 
-            const semantic = _attrib2Semantic[attribName];
-            if (semantic !== undefined) {
-                attribs[attribName] = semantic;
+            // if the attribute already exists in the semantic map
+            if (attribs[attribName]) {
+                Debug.warn(`Attribute [${attribName}] already exists when extracting the attributes from the vertex shader, ignoring.`, { vsCode });
             } else {
-                attribs[attribName] = "ATTR" + attrs;
-                attrs++;
+                const semantic = _attrib2Semantic[attribName];
+                if (semantic !== undefined) {
+                    attribs[attribName] = semantic;
+                } else {
+                    attribs[attribName] = "ATTR" + attrs;
+                    attrs++;
+                }
             }
 
             found = vsCode.indexOf("attribute", found + 1);
