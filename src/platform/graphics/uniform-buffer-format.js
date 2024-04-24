@@ -192,7 +192,7 @@ class UniformFormat {
 }
 
 /**
- * A descriptor that defines the layout of of data inside the {@link UniformBuffer}.
+ * A descriptor that defines the layout of of data inside the uniform buffer.
  */
 class UniformBufferFormat {
     /**
