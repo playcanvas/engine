@@ -124,38 +124,39 @@ assetListLoader.load(() => {
     // @ts-ignore
     sphereMaterial.envAtlas = envAtlas; // use reflection from env atlas
     sphereMaterial.update();
-    /** @type {pc.Texture} */
-    let videoTexture;
-    if (!app.graphicsDevice.isWebGPU) {
-        // set up video playback into a texture
-        videoTexture = new pc.Texture(app.graphicsDevice, {
-            format: pc.PIXELFORMAT_RGB565,
-            mipmaps: false,
-            minFilter: pc.FILTER_LINEAR,
-            magFilter: pc.FILTER_LINEAR,
-            addressU: pc.ADDRESS_CLAMP_TO_EDGE,
-            addressV: pc.ADDRESS_CLAMP_TO_EDGE
-        });
+    // set up video playback into a texture
+    const videoTexture = new pc.Texture(app.graphicsDevice, {
+        format: pc.PIXELFORMAT_RGBA8,
+        mipmaps: false,
+        minFilter: pc.FILTER_LINEAR,
+        magFilter: pc.FILTER_LINEAR,
+        addressU: pc.ADDRESS_CLAMP_TO_EDGE,
+        addressV: pc.ADDRESS_CLAMP_TO_EDGE
+    });
 
-        // create a HTML element with the video
-        /** @type {HTMLVideoElement} */
-        const video = document.createElement('video');
-        video.id = 'vid';
-        video.loop = true;
-        video.muted = true;
-        video.autoplay = true;
-        video.playsInline = true;
-        video.crossOrigin = 'anonymous';
-        video.setAttribute(
-            'style',
-            'display: block; width: 1px; height: 1px; position: absolute; opacity: 0; z-index: -1000; top: 0px; pointer-events: none'
-        );
-        video.src = rootPath + '/static/assets/video/SampleVideo_1280x720_1mb.mp4';
-        document.body.append(video);
-        video.addEventListener('canplaythrough', function () {
-            videoTexture.setSource(video);
-        });
-    }
+    // create a HTML element with the video
+    /** @type {HTMLVideoElement} */
+    const video = document.createElement('video');
+    video.id = 'vid';
+    video.loop = true;
+    video.muted = true;
+    video.autoplay = true;
+    video.playsInline = true;
+    video.crossOrigin = 'anonymous';
+    video.setAttribute(
+        'style',
+        'display: block; width: 1px; height: 1px; position: absolute; opacity: 0; z-index: -1000; top: 0px; pointer-events: none'
+    );
+    video.src = rootPath + '/static/assets/video/SampleVideo_1280x720_1mb.mp4';
+    document.body.append(video);
+    video.addEventListener('canplaythrough', function () {
+        videoTexture.setSource(video);
+    });
+
+    // Listen for the 'loadedmetadata' event to resize the texture appropriately
+    video.addEventListener('loadedmetadata', function () {
+        videoTexture.resize(video.videoWidth, video.videoHeight);
+    });
 
     // materials used on the TV screen to display the video texture
     const screenMaterial = new pc.StandardMaterial();

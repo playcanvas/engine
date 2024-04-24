@@ -79,7 +79,7 @@ class WebgpuTexture {
         this.texture = texture;
 
         this.format = gpuTextureFormats[texture.format];
-        Debug.assert(this.format !== '', `WebGPU does not support texture format ${texture.format} for texture ${texture.name}`, texture);
+        Debug.assert(this.format !== '', `WebGPU does not support texture format ${texture.format} [${pixelFormatInfo.get(texture.format)?.name}] for texture ${texture.name}`, texture);
 
         this.create(texture.device);
     }
