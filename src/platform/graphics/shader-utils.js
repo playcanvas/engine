@@ -241,12 +241,17 @@ class ShaderUtils {
             const startOfAttribName = vsCode.lastIndexOf(' ', endOfLine);
             const attribName = vsCode.substring(startOfAttribName + 1, endOfLine);
 
-            const semantic = _attrib2Semantic[attribName];
-            if (semantic !== undefined) {
-                attribs[attribName] = semantic;
+            // if the attribute already exists in the semantic map
+            if (attribs[attribName]) {
+                Debug.warn(`Attribute [${attribName}] already exists when extracting the attributes from the vertex shader, ignoring.`, { vsCode });
             } else {
-                attribs[attribName] = "ATTR" + attrs;
-                attrs++;
+                const semantic = _attrib2Semantic[attribName];
+                if (semantic !== undefined) {
+                    attribs[attribName] = semantic;
+                } else {
+                    attribs[attribName] = "ATTR" + attrs;
+                    attrs++;
+                }
             }
 
             found = vsCode.indexOf("attribute", found + 1);
