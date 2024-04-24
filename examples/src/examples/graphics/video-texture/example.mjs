@@ -102,7 +102,7 @@ assetListLoader.load(() => {
     });
 
     // Listen for the 'loadedmetadata' event to resize the texture appropriately
-    video.addEventListener('loadedmetadata', function() {
+    video.addEventListener('loadedmetadata', function () {
         videoTexture.resize(video.videoWidth, video.videoHeight);
     });
 
