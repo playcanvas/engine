@@ -64,7 +64,7 @@ assetListLoader.load(() => {
 
     // Create a texture to hold the video frame data
     const videoTexture = new pc.Texture(app.graphicsDevice, {
-        format: pc.PIXELFORMAT_RGB565,
+        format: pc.PIXELFORMAT_RGBA8,
         mipmaps: false,
         minFilter: pc.FILTER_LINEAR,
         magFilter: pc.FILTER_LINEAR,
@@ -99,6 +99,11 @@ assetListLoader.load(() => {
 
     video.addEventListener('canplaythrough', function () {
         videoTexture.setSource(video);
+    });
+
+    // Listen for the 'loadedmetadata' event to resize the texture appropriately
+    video.addEventListener('loadedmetadata', function() {
+        videoTexture.resize(video.videoWidth, video.videoHeight);
     });
 
     // create an entity to render the tv mesh
