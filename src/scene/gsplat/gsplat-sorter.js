@@ -107,13 +107,12 @@ function SortWorker() {
         const outputArray = new Uint32Array(target.buffer);
         for (let i = numVertices - 1; i >= 0; i--) {
             const distance = distances[i];
-            const index = i;
             const destIndex = (countBuffer[distance] - 1) * 4;
 
-            outputArray[destIndex] = index;
-            outputArray[destIndex + 1] = index;
-            outputArray[destIndex + 2] = index;
-            outputArray[destIndex + 3] = index;
+            outputArray[destIndex] = i;
+            outputArray[destIndex + 1] = i;
+            outputArray[destIndex + 2] = i;
+            outputArray[destIndex + 3] = i;
 
             countBuffer[distance]--;
         }
