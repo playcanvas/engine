@@ -314,8 +314,6 @@ class Renderer {
     setupViewport(camera, renderTarget) {
 
         const device = this.device;
-        DebugGraphics.pushGpuMarker(device, 'SETUP-VIEWPORT');
-
         const pixelWidth = renderTarget ? renderTarget.width : device.width;
         const pixelHeight = renderTarget ? renderTarget.height : device.height;
 
@@ -335,8 +333,6 @@ class Renderer {
             h = Math.floor(scissorRect.w * pixelHeight);
         }
         device.setScissor(x, y, w, h);
-
-        DebugGraphics.popGpuMarker(device);
     }
 
     setCameraUniforms(camera, target) {
@@ -883,8 +879,6 @@ class Renderer {
 
     drawInstance(device, meshInstance, mesh, style, normal) {
 
-        DebugGraphics.pushGpuMarker(device, meshInstance.node.name);
-
         const modelMatrix = meshInstance.node.worldTransform;
         this.modelMatrixId.setValue(modelMatrix.data);
         if (normal) {
@@ -903,14 +897,10 @@ class Renderer {
         } else {
             device.draw(mesh.primitive[style]);
         }
-
-        DebugGraphics.popGpuMarker(device);
     }
 
     // used for stereo
     drawInstance2(device, meshInstance, mesh, style) {
-
-        DebugGraphics.pushGpuMarker(device, meshInstance.node.name);
 
         const instancingData = meshInstance.instancingData;
         if (instancingData) {
@@ -924,8 +914,6 @@ class Renderer {
             // matrices are already set
             device.draw(mesh.primitive[style], undefined, true);
         }
-
-        DebugGraphics.popGpuMarker(device);
     }
 
     /**
