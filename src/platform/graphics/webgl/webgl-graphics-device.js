@@ -2005,7 +2005,7 @@ class WebglGraphicsDevice extends GraphicsDevice {
                 this._vaoMap.set(key, vao);
             }
 
-            if (!locZero) {
+            if (vertexBuffers.length && !locZero) {
                 Debug.warn("No vertex attribute is mapped to location 0, which might cause compatibility issues on Safari on MacOS - please use attribute SEMANTIC_POSITION or SEMANTIC_ATTR15");
             }
         }

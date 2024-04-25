@@ -1,6 +1,6 @@
 import { Mat4 } from '../../core/math/mat4.js';
 import { Vec3 } from '../../core/math/vec3.js';
-import { PIXELFORMAT_R32U, SEMANTIC_POSITION, TYPE_UINT32 } from '../../platform/graphics/constants.js';
+import { PIXELFORMAT_R32U } from '../../platform/graphics/constants.js';
 import { DITHER_NONE } from '../constants.js';
 import { MeshInstance } from '../mesh-instance.js';
 import { Mesh } from '../mesh.js';
@@ -72,16 +72,9 @@ class GSplatInstance {
 
         const numSplats = splat.numSplats;
         const indices = new Uint32Array(numSplats * 6);
-        const ids = new Uint32Array(numSplats * 4);
 
         for (let i = 0; i < numSplats; ++i) {
             const base = i * 4;
-
-            // 4 vertices
-            ids[base + 0] = i;
-            ids[base + 1] = i;
-            ids[base + 2] = i;
-            ids[base + 3] = i;
 
             // 2 triangles
             const triBase = i * 6;
@@ -95,7 +88,6 @@ class GSplatInstance {
 
         // mesh
         const mesh = new Mesh(device);
-        mesh.setVertexStream(SEMANTIC_POSITION, ids, 1, numSplats * 4, TYPE_UINT32, false, !device.isWebGL1);
         mesh.setIndices(indices);
         mesh.update();
         this.mesh = mesh;
@@ -112,6 +104,10 @@ class GSplatInstance {
             this.sorter = new GSplatSorter();
             this.sorter.init(this.orderTexture, this.centers);
             this.sorter.on('updated', (count) => {
+                // ideally we would update the number of splats rendered here in order to skip
+                // the ones behind the camera. unfortunately changing this value dynamically
+                // results in performance lockups. (the browser is likely re-validating the index
+                // buffer when this value changes and/or re-uploading the index buffer to gpu memory).
                 // this.mesh.primitive[0].count = count * 6;
             });
         }

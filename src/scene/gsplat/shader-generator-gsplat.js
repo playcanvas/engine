@@ -14,8 +14,6 @@ const splatCoreVS = `
 
     uniform vec2 viewport;
 
-    attribute uint vertex_id_attrib;
-
     varying vec2 texCoord;
     varying vec4 color;
     varying float id;
@@ -41,9 +39,11 @@ const splatCoreVS = `
         ivec2 textureSize = ivec2(tex_params.xy);
         vec2 invTextureSize = tex_params.zw;
 
+        int splatIndex = gl_VertexID / 4;
+
         // order
-        int orderV = int(float(vertex_id_attrib) * invTextureSize.x);
-        int orderU = int(vertex_id_attrib) - orderV * textureSize.x;
+        int orderV = int(float(splatIndex) * invTextureSize.x);
+        int orderU = int(splatIndex) - orderV * textureSize.x;
         vertex_id = texelFetch(splatOrder, ivec2(orderU, orderV), 0).r;
 
         int gridV = int(float(vertex_id) * invTextureSize.x);
@@ -208,9 +208,7 @@ class GShaderGeneratorSplat {
 
         return ShaderUtils.createDefinition(device, {
             name: 'SplatShader',
-            attributes: {
-                vertex_id_attrib: SEMANTIC_POSITION
-            },
+            attributes: { },
             vertexCode: vs,
             fragmentCode: fs
         });
