@@ -179,11 +179,6 @@ class GSplatInstance {
             this.cameras.length = 0;
         }
     }
-
-    // sort and render only a subset of all the splats
-    renderSubset(numSplats, pred) {
-        // const ids = this.
-    }
 }
 
 export { GSplatInstance };
