@@ -22,7 +22,7 @@ export function generateStandalone(nodeEnv, enginePath) {
                 watch(this, 'src/examples');
             }
         },
-        generateBundle() {
+        buildEnd() {
             const cmd = `cross-env NODE_ENV=${nodeEnv} ENGINE_PATH=${enginePath} node ./scripts/standalone-html.mjs`;
             console.log(`${GREEN_OUT}${cmd}`);
             execSync(cmd);

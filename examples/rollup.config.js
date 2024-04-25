@@ -147,6 +147,10 @@ export default [
         output: {
             file: `cache/output.tmp`
         },
+        watch: {
+            skipWrite: true
+        },
+        treeshake: false,
         plugins: [
             generateStandalone(NODE_ENV, ENGINE_PATH),
             copyStatic(NODE_ENV, STATIC_FILES)

@@ -30,17 +30,17 @@ export function copyStatic(nodeEnv, targets, log = false) {
                 });
             }
         },
-        async buildEnd() {
-            await Promise.all(targets.map((target) => {
+        buildEnd() {
+            for (let i = 0; i < targets.length; i++) {
+                const target = targets[i];
                 if (target.once && copied.has(target.src)) {
                     if (log) {
                         console.log(`${YELLOW_OUT}skipped copying ${BOLD_OUT}${target.src}${REGULAR_OUT}`);
                     }
-                    return null;
+                    continue;
                 }
-                copied.add(target.src);
-                return fse.copy(target.src, target.dest, { overwrite: true });
-            }));
+                fse.copySync(target.src, target.dest, { overwrite: true });
+            }
         }
     };
 }
