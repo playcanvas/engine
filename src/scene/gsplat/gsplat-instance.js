@@ -1,6 +1,6 @@
 import { Mat4 } from '../../core/math/mat4.js';
 import { Vec3 } from '../../core/math/vec3.js';
-import { SEMANTIC_POSITION, TYPE_UINT32 } from '../../platform/graphics/constants.js';
+import { PIXELFORMAT_R32U, SEMANTIC_POSITION, TYPE_UINT32 } from '../../platform/graphics/constants.js';
 import { DITHER_NONE } from '../constants.js';
 import { MeshInstance } from '../mesh-instance.js';
 import { Mesh } from '../mesh.js';
@@ -31,6 +31,9 @@ class GSplatInstance {
 
     options = {};
 
+    /** @type {import('../../platform/graphics/texture.js').Texture} */
+    orderTexture;
+
     /** @type {GSplatSorter | null} */
     sorter = null;
 
@@ -60,6 +63,9 @@ class GSplatInstance {
         const device = splat.device;
         if (device.isWebGL1)
             return;
+
+        // create the order texture
+        this.orderTexture = this.splat.createTexture('splatOrder', PIXELFORMAT_R32U, this.splat.evalTextureSize(this.splat.numSplats));
 
         // material
         this.createMaterial(options);
@@ -104,13 +110,17 @@ class GSplatInstance {
         // create sorter
         if (!options.dither || options.dither === DITHER_NONE) {
             this.sorter = new GSplatSorter();
-            this.sorter.init(mesh.vertexBuffer, this.centers, !this.splat.device.isWebGL1);
+            this.sorter.init(this.orderTexture, this.centers);
+            this.sorter.on('updated', (count) => {
+                // this.mesh.primitive[0].count = count * 6;
+            });
         }
     }
 
     destroy() {
         this.material?.destroy();
         this.meshInstance?.destroy();
+        this.orderTexture?.destroy();
         this.sorter?.destroy();
     }
 
@@ -120,6 +130,7 @@ class GSplatInstance {
 
     createMaterial(options) {
         this.material = createGSplatMaterial(options);
+        this.material.setParameter('splatOrder', this.orderTexture);
         this.splat.setupMaterial(this.material);
         if (this.meshInstance) {
             this.meshInstance.material = this.material;
@@ -171,6 +182,11 @@ class GSplatInstance {
             // we get new list of cameras each frame
             this.cameras.length = 0;
         }
+    }
+
+    // sort and render only a subset of all the splats
+    renderSubset(numSplats, pred) {
+        // const ids = this.
     }
 }
 

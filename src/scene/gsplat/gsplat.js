@@ -61,14 +61,14 @@ class GSplat {
         this.aabb = aabb;
 
         // create data textures if any format is available
-        this.halfFormat = this.getTextureFormat(device, true);
+        this.halfFormat = this.getTextureFormat(true);
 
         if (this.halfFormat !== undefined) {
             const size = this.evalTextureSize(numSplats);
-            this.colorTexture = this.createTexture(device, 'splatColor', PIXELFORMAT_RGBA8, size);
-            this.transformATexture = this.createTexture(device, 'transformA', this.halfFormat ? PIXELFORMAT_RGBA16F : PIXELFORMAT_RGBA32F, size);
-            this.transformBTexture = this.createTexture(device, 'transformB', this.halfFormat ? PIXELFORMAT_RGBA16F : PIXELFORMAT_RGBA32F, size);
-            this.transformCTexture = this.createTexture(device, 'transformC', this.halfFormat ? PIXELFORMAT_R16F : PIXELFORMAT_R32F, size);
+            this.colorTexture = this.createTexture('splatColor', PIXELFORMAT_RGBA8, size);
+            this.transformATexture = this.createTexture('transformA', this.halfFormat ? PIXELFORMAT_RGBA16F : PIXELFORMAT_RGBA32F, size);
+            this.transformBTexture = this.createTexture('transformB', this.halfFormat ? PIXELFORMAT_RGBA16F : PIXELFORMAT_RGBA32F, size);
+            this.transformCTexture = this.createTexture('transformC', this.halfFormat ? PIXELFORMAT_R16F : PIXELFORMAT_R32F, size);
         }
     }
 
@@ -113,14 +113,13 @@ class GSplat {
     /**
      * Creates a new texture with the specified parameters.
      *
-     * @param {import('../../platform/graphics/graphics-device.js').GraphicsDevice} device - The graphics device to use for the texture creation.
      * @param {string} name - The name of the texture to be created.
      * @param {number} format - The pixel format of the texture.
      * @param {Vec2} size - The size of the texture in a Vec2 object, containing width (x) and height (y).
      * @returns {Texture} The created texture instance.
      */
-    createTexture(device, name, format, size) {
-        return new Texture(device, {
+    createTexture(name, format, size) {
+        return new Texture(this.device, {
             name: name,
             width: size.x,
             height: size.y,
@@ -137,12 +136,12 @@ class GSplat {
     /**
      * Gets the most suitable texture format based on device capabilities.
      *
-     * @param {import('../../platform/graphics/graphics-device.js').GraphicsDevice} device - The graphics device.
      * @param {boolean} preferHighPrecision - True to prefer high precision when available.
      * @returns {boolean|undefined} True if half format should be used, false is float format should
      * be used or undefined if none are available.
      */
-    getTextureFormat(device, preferHighPrecision) {
+    getTextureFormat(preferHighPrecision) {
+        const device = this.device;
 
         // on WebGL1 R32F is not supported, always use half precision
         if (device.isWebGL1)

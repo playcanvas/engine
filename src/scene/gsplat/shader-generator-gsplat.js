@@ -14,11 +14,14 @@ const splatCoreVS = `
 
     uniform vec2 viewport;
 
+    attribute uint vertex_id_attrib;
+
     varying vec2 texCoord;
     varying vec4 color;
     varying float id;
 
     uniform vec4 tex_params;
+    uniform highp usampler2D splatOrder;
     uniform sampler2D splatColor;
 
     uniform highp sampler2D transformA;
@@ -29,13 +32,19 @@ const splatCoreVS = `
     vec3 covA;
     vec3 covB;
 
-    attribute uint vertex_id;
+    uint vertex_id;
     ivec2 dataUV;
+
     void evalDataUV() {
 
         // turn vertex_id into int grid coordinates
         ivec2 textureSize = ivec2(tex_params.xy);
         vec2 invTextureSize = tex_params.zw;
+
+        // order
+        int orderV = int(float(vertex_id_attrib) * invTextureSize.x);
+        int orderU = int(vertex_id_attrib) - orderV * textureSize.x;
+        vertex_id = texelFetch(splatOrder, ivec2(orderU, orderV), 0).r;
 
         int gridV = int(float(vertex_id) * invTextureSize.x);
         int gridU = int(vertex_id) - gridV * textureSize.x;
@@ -200,7 +209,7 @@ class GShaderGeneratorSplat {
         return ShaderUtils.createDefinition(device, {
             name: 'SplatShader',
             attributes: {
-                vertex_id: SEMANTIC_POSITION
+                vertex_id_attrib: SEMANTIC_POSITION
             },
             vertexCode: vs,
             fragmentCode: fs
