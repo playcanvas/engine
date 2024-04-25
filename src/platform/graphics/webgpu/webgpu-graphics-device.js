@@ -227,11 +227,11 @@ class WebgpuGraphicsDevice extends GraphicsDevice {
         this.extCompressedTextureETC = requireFeature('texture-compression-etc2');
         this.extCompressedTextureASTC = requireFeature('texture-compression-astc');
         this.supportsTimestampQuery = requireFeature('timestamp-query');
-        this.supportsTimestampQuery = requireFeature('depth-clip-control');
-        this.supportsTimestampQuery = requireFeature('depth32float-stencil8');
-        this.supportsTimestampQuery = requireFeature('indirect-first-instance');
-        this.supportsTimestampQuery = requireFeature('shader-f16');
-        this.supportsTimestampQuery = requireFeature('bgra8unorm-storage');
+        this.supportsDepthClip = requireFeature('depth-clip-control');
+        this.supportsDepth32Stencil = requireFeature('depth32float-stencil8');
+        this.supportsIndirectFirstInstance = requireFeature('indirect-first-instance');
+        this.supportsShaderF16 = requireFeature('shader-f16');
+        this.supportsStorageRGBA8 = requireFeature('bgra8unorm-storage');
         this.textureRG11B10Renderable = requireFeature('rg11b10ufloat-renderable');
         Debug.log(`WEBGPU features: ${requiredFeatures.join(', ')}`);
 
