@@ -12,19 +12,21 @@ import { Geometry } from './geometry.js';
  *
  * Note that the plane is created with UVs in the range of 0 to 1.
  *
- * @param {import('../../platform/graphics/graphics-device.js').GraphicsDevice} device - The graphics
- * device used to manage the mesh.
- * @param {object} [opts] - An object that specifies optional inputs for the function as follows:
- * @param {Vec2} [opts.halfExtents] - The half dimensions of the plane in the X and Z axes
- * (defaults to [0.5, 0.5]).
- * @param {number} [opts.widthSegments] - The number of divisions along the X axis of the plane
- * (defaults to 5).
- * @param {number} [opts.lengthSegments] - The number of divisions along the Z axis of the plane
- * (defaults to 5).
- * @param {boolean} [opts.calculateTangents] - Generate tangent information (defaults to false).
  * @category Graphics
  */
 class PlaneGeometry extends Geometry {
+    /**
+     * Create a new PlaneGeometry instance.
+     *
+     * @param {object} [opts] - An object that specifies optional inputs for the function as follows:
+     * @param {Vec2} [opts.halfExtents] - The half dimensions of the plane in the X and Z axes
+     * (defaults to [0.5, 0.5]).
+     * @param {number} [opts.widthSegments] - The number of divisions along the X axis of the plane
+     * (defaults to 5).
+     * @param {number} [opts.lengthSegments] - The number of divisions along the Z axis of the plane
+     * (defaults to 5).
+     * @param {boolean} [opts.calculateTangents] - Generate tangent information (defaults to false).
+     */
     constructor(opts = {}) {
         super();
 
