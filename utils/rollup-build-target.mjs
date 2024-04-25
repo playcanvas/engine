@@ -198,8 +198,7 @@ function buildTarget({ moduleFormat, buildType, input = 'src/index.js', dir = 'b
             name: 'pc',
             preserveModules: !bundled,
             file: bundled ? `${dir}/${OUT_PREFIX[buildType]}${isUMD ? '.js' : '.mjs'}` : undefined,
-            dir: !bundled ? `${dir}/${OUT_PREFIX[buildType]}` : undefined,
-            footer: isUMD ? 'this.pcx = pc;' : undefined
+            dir: !bundled ? `${dir}/${OUT_PREFIX[buildType]}` : undefined
         },
         plugins: [
             resolve(),
