@@ -549,8 +549,12 @@ class TransformGizmo extends Gizmo {
 
             if (isLine) {
                 // TODO: figure out what this is doing
-                tmpV1.sub2(facingDir, plane.normal.mulScalar(plane.normal.dot(facingDir))).normalize();
+                plane.normal.mulScalar(plane.normal.dot(facingDir));
+                tmpV1.sub2(facingDir, plane.normal).normalize();
                 plane.normal.copy(tmpV1);
+
+                // tmpV1.copy(plane.normal).normalize().mulScalar(10);
+                // this._app.drawLine(gizmoPos, tmpV1.add(gizmoPos), new Color(1, 1, 1, 1), true);
             }
         }
 
@@ -676,26 +680,26 @@ class TransformGizmo extends Gizmo {
     }
 
     _drawGuideLines() {
-        const gizmoPos = this.root.getPosition();
-        const gizmoRot = tmpQ1.copy(this.root.getRotation());
-        const checkAxis = this._hoverAxis || this._selectedAxis;
-        const checkIsPlane = this._hoverIsPlane || this._selectedIsPlane;
-        for (let i = 0; i < VEC3_AXES.length; i++) {
-            const axis = VEC3_AXES[i];
-            if (checkAxis === 'xyz') {
-                this._drawSpanLine(gizmoPos, gizmoRot, axis);
-                continue;
-            }
-            if (checkIsPlane) {
-                if (axis !== checkAxis) {
-                    this._drawSpanLine(gizmoPos, gizmoRot, axis);
-                }
-            } else {
-                if (axis === checkAxis) {
-                    this._drawSpanLine(gizmoPos, gizmoRot, axis);
-                }
-            }
-        }
+        // const gizmoPos = this.root.getPosition();
+        // const gizmoRot = tmpQ1.copy(this.root.getRotation());
+        // const checkAxis = this._hoverAxis || this._selectedAxis;
+        // const checkIsPlane = this._hoverIsPlane || this._selectedIsPlane;
+        // for (let i = 0; i < VEC3_AXES.length; i++) {
+        //     const axis = VEC3_AXES[i];
+        //     if (checkAxis === 'xyz') {
+        //         this._drawSpanLine(gizmoPos, gizmoRot, axis);
+        //         continue;
+        //     }
+        //     if (checkIsPlane) {
+        //         if (axis !== checkAxis) {
+        //             this._drawSpanLine(gizmoPos, gizmoRot, axis);
+        //         }
+        //     } else {
+        //         if (axis === checkAxis) {
+        //             this._drawSpanLine(gizmoPos, gizmoRot, axis);
+        //         }
+        //     }
+        // }
     }
 
     _drawSpanLine(pos, rot, axis) {
