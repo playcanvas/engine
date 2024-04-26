@@ -53,7 +53,6 @@ class NullGraphicsDevice extends GraphicsDevice {
         this.textureFloatRenderable = true;
         this.extTextureHalfFloat = true;
         this.textureHalfFloatRenderable = true;
-        this.textureHalfFloatUpdatable = true;
         this.boneLimit = 1024;
         this.supportsImageBitmap = true;
         this.extStandardDerivatives = true;
