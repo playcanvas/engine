@@ -114,7 +114,7 @@ function getEngineTargets() {
             buildType: 'release',
             input: '../src/index.js',
             dir: 'dist/iframe',
-            skipBundled: true
+            bundleState: 'unbundled'
         }));
     }
     if (NODE_ENV === 'production' || NODE_ENV === 'development') {
@@ -124,7 +124,7 @@ function getEngineTargets() {
             buildType: 'debug',
             input: '../src/index.js',
             dir: 'dist/iframe',
-            skipBundled: true
+            bundleState: 'unbundled'
         }));
     }
     if (NODE_ENV === 'production' || NODE_ENV === 'profiler') {
@@ -134,7 +134,7 @@ function getEngineTargets() {
             buildType: 'profiler',
             input: '../src/index.js',
             dir: 'dist/iframe',
-            skipBundled: true
+            bundleState: 'unbundled'
         }));
     }
     return targets;
