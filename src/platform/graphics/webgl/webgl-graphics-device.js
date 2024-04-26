@@ -313,8 +313,6 @@ class WebglGraphicsDevice extends GraphicsDevice {
      * @param {boolean} [options.failIfMajorPerformanceCaveat] - Boolean that indicates if a
      * context will be created if the system performance is low or if no hardware GPU is available.
      * Defaults to false.
-     * @param {boolean} [options.preferWebGl2] - Boolean that indicates if a WebGl2 context should
-     * be preferred. Defaults to true.
      * @param {boolean} [options.desynchronized] - Boolean that hints the user agent to reduce the
      * latency by desynchronizing the canvas paint cycle from the event loop. Defaults to false.
      * @param {boolean} [options.xrCompatible] - Boolean that hints to the user agent to use a
@@ -380,8 +378,7 @@ class WebglGraphicsDevice extends GraphicsDevice {
         if (options.gl) {
             gl = options.gl;
         } else {
-            const preferWebGl2 = (options.preferWebGl2 !== undefined) ? options.preferWebGl2 : true;
-            const names = preferWebGl2 ? ["webgl2", "webgl", "experimental-webgl"] : ["webgl", "experimental-webgl"];
+            const names = ["webgl2", "webgl", "experimental-webgl"];
             for (let i = 0; i < names.length; i++) {
                 gl = canvas.getContext(names[i], options);
                 if (gl) {

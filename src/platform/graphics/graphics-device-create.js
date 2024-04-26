@@ -47,9 +47,6 @@ function createGraphicsDevice(canvas, options = {}) {
     if (!deviceTypes.includes(DEVICETYPE_WEBGL2)) {
         deviceTypes.push(DEVICETYPE_WEBGL2);
     }
-    if (!deviceTypes.includes(DEVICETYPE_WEBGL1)) {
-        deviceTypes.push(DEVICETYPE_WEBGL1);
-    }
     if (!deviceTypes.includes(DEVICETYPE_NULL)) {
         deviceTypes.push(DEVICETYPE_NULL);
     }
@@ -73,7 +70,6 @@ function createGraphicsDevice(canvas, options = {}) {
 
         if (deviceType === DEVICETYPE_WEBGL1 || deviceType === DEVICETYPE_WEBGL2) {
             deviceCreateFuncs.push(() => {
-                options.preferWebGl2 = deviceType === DEVICETYPE_WEBGL2;
                 return new WebglGraphicsDevice(canvas, options);
             });
         }
