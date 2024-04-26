@@ -1,6 +1,7 @@
 import { LocalizedAsset } from '../../../src/framework/asset/asset-localized.js';
 import { Application } from '../../../src/framework/application.js';
 import { Asset } from '../../../src/framework/asset/asset.js';
+import { NullGraphicsDevice } from '../../../src/platform/graphics/null/null-graphics-device.js';
 
 import { HTMLCanvasElement } from '@playcanvas/canvas-mock';
 
@@ -12,7 +13,7 @@ describe('LocalizedAsset', function () {
 
     beforeEach(function () {
         const canvas = new HTMLCanvasElement(500, 500);
-        app = new Application(canvas);
+        app = new Application(canvas, { graphicsDevice: new NullGraphicsDevice(canvas) });
     });
 
     afterEach(function () {
