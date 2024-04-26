@@ -1,5 +1,4 @@
 import { hashCode } from "../../core/hash.js";
-import { SEMANTIC_POSITION } from "../../platform/graphics/constants.js";
 import { ShaderUtils } from "../../platform/graphics/shader-utils.js";
 import { DITHER_NONE } from "../constants.js";
 import { shaderChunks } from "../shader-lib/chunks/chunks.js";
