@@ -683,6 +683,13 @@ Object.defineProperty(GraphicsDevice.prototype, 'webgl2', {
     }
 });
 
+Object.defineProperty(GraphicsDevice.prototype, 'textureHalfFloatUpdatable', {
+    get: function () {
+        Debug.deprecated('pc.GraphicsDevice#textureHalfFloatUpdatable is deprecated as it is always true.');
+        return true;
+    }
+});
+
 GraphicsDevice.prototype.getProgramLibrary = function () {
     Debug.deprecated(`pc.GraphicsDevice#getProgramLibrary is deprecated.`);
     return getProgramLibrary(this);
