@@ -25,8 +25,7 @@ import {
     semanticToLocation,
     UNIFORMTYPE_TEXTURE2D_ARRAY,
     PRIMITIVE_TRISTRIP,
-    DEVICETYPE_WEBGL2,
-    DEVICETYPE_WEBGL1
+    DEVICETYPE_WEBGL2
 } from '../constants.js';
 
 import { GraphicsDevice } from '../graphics-device.js';
@@ -392,9 +391,8 @@ class WebglGraphicsDevice extends GraphicsDevice {
         }
 
         this.gl = gl;
-        this.isWebGL2 = typeof WebGL2RenderingContext !== 'undefined' && gl instanceof WebGL2RenderingContext;
-        this.isWebGL1 = !this.isWebGL2;
-        this._deviceType = this.isWebGL2 ? DEVICETYPE_WEBGL2 : DEVICETYPE_WEBGL1;
+        this.isWebGL2 = true;
+        this._deviceType = DEVICETYPE_WEBGL2;
 
         // pixel format of the framebuffer
         this.updateBackbufferFormat(null);
