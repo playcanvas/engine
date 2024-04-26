@@ -819,7 +819,6 @@ class ForwardRenderer extends Renderer {
     buildFrameGraph(frameGraph, layerComposition) {
 
         const scene = this.scene;
-        const webgl1 = this.device.isWebGL1;
         frameGraph.reset();
 
         // update composition, cull everything, assign atlas slots for clustered lighting
@@ -858,20 +857,7 @@ class ForwardRenderer extends Renderer {
 
             } else {
 
-                // on webgl1, depth pass renders ahead of the main camera instead of the middle of the frame
-                const depthPass = camera.camera.renderPassDepthGrab;
-                if (depthPass && webgl1 && renderAction.firstCameraUse) {
-                    depthPass.options.resizeSource = camera.camera.renderTarget;
-                    depthPass.update(this.scene);
-                    frameGraph.addRenderPass(depthPass);
-                }
-
                 const isDepthLayer = layer.id === LAYERID_DEPTH;
-
-                // skip depth layer on webgl1 if color grab pass is not enabled, as depth pass renders ahead of the main camera
-                if (webgl1 && isDepthLayer && !camera.renderSceneColorMap)
-                    continue;
-
                 const isGrabPass = isDepthLayer && (camera.renderSceneColorMap || camera.renderSceneDepthMap);
 
                 // start of block of render actions rendering to the same render target
@@ -884,7 +870,7 @@ class ForwardRenderer extends Renderer {
                 // info about the next render action
                 const nextRenderAction = renderActions[i + 1];
                 const isNextLayerDepth = nextRenderAction ? nextRenderAction.layer.id === LAYERID_DEPTH : false;
-                const isNextLayerGrabPass = isNextLayerDepth && (camera.renderSceneColorMap || camera.renderSceneDepthMap) && !webgl1;
+                const isNextLayerGrabPass = isNextLayerDepth && (camera.renderSceneColorMap || camera.renderSceneDepthMap);
                 const nextNeedDirShadows = nextRenderAction ? (nextRenderAction.firstCameraUse && this.cameraDirShadowLights.has(nextRenderAction.camera.camera)) : false;
 
                 // end of the block using the same render target if the next render action uses a different render target, or needs directional shadows
@@ -907,7 +893,7 @@ class ForwardRenderer extends Renderer {
                             frameGraph.addRenderPass(colorGrabPass);
                         }
 
-                        if (camera.renderSceneDepthMap && !webgl1) {
+                        if (camera.renderSceneDepthMap) {
                             frameGraph.addRenderPass(camera.camera.renderPassDepthGrab);
                         }
                     }

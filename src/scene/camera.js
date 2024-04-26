@@ -12,7 +12,6 @@ import {
 } from './constants.js';
 import { RenderPassColorGrab } from './graphics/render-pass-color-grab.js';
 import { RenderPassDepthGrab } from './graphics/render-pass-depth-grab.js';
-import { RenderPassDepth } from './graphics/render-pass-depth.js';
 
 // pre-allocated temp variables
 const _deviceCoord = new Vec3();
@@ -497,9 +496,7 @@ class Camera {
     _enableRenderPassDepthGrab(device, renderer, enable) {
         if (enable) {
             if (!this.renderPassDepthGrab) {
-                this.renderPassDepthGrab = device.isWebGL1 ?
-                    new RenderPassDepth(device, renderer, this) :
-                    new RenderPassDepthGrab(device, this);
+                this.renderPassDepthGrab = new RenderPassDepthGrab(device, this);
             }
         } else {
             this.renderPassDepthGrab?.destroy();
