@@ -74,7 +74,10 @@ function SortWorker() {
         const numVertices = centers.length / 3;
         if (distances?.length !== numVertices) {
             distances = new Uint32Array(numVertices);
-            target = new Float32Array(numVertices * 4); // output 4 indices per splat (quad)
+        }
+
+        if (target?.length !== data.length) {
+            target = data.slice();
         }
 
         // calc min/max distance using bound
@@ -120,15 +123,14 @@ function SortWorker() {
             countBuffer[i] += countBuffer[i - 1];
 
         // Build the output array
-        const outputArray = new Uint32Array(target.buffer);
         for (let i = 0; i < numVertices; i++) {
             const distance = distances[i];
             const destIndex = --countBuffer[distance];
-            outputArray[destIndex] = i;
+            target[destIndex] = i;
         }
 
         // find splat with distance 0 to limit rendering
-        const dist = (i) => distances[outputArray[i]] / divider + minDist;
+        const dist = (i) => distances[target[i]] / divider + minDist;
         const findZero = () => {
             const result = binarySearch(0, numVertices - 1, (i) => -dist(i));
             return Math.min(numVertices, Math.abs(result));
@@ -150,7 +152,7 @@ function SortWorker() {
 
     self.onmessage = (message) => {
         if (message.data.data) {
-            data = new Float32Array(message.data.data);
+            data = new Uint32Array(message.data.data);
         }
         if (message.data.centers) {
             centers = new Float32Array(message.data.centers);
