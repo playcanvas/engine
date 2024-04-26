@@ -4,7 +4,7 @@ import { DITHER_NONE } from "../constants.js";
 import { shaderChunks } from "../shader-lib/chunks/chunks.js";
 import { ShaderGenerator } from "../shader-lib/programs/shader-generator.js";
 import { ShaderPass } from "../shader-pass.js";
-
+import { SEMANTIC_POSITION } from "../../platform/graphics/constants.js";
 const splatCoreVS = `
     uniform mat4 matrix_model;
     uniform mat4 matrix_view;
@@ -12,6 +12,8 @@ const splatCoreVS = `
     uniform mat4 matrix_viewProjection;
 
     uniform vec2 viewport;
+
+    attribute uint vertex_id_attrib;
 
     varying vec2 texCoord;
     varying vec4 color;
@@ -38,7 +40,7 @@ const splatCoreVS = `
         ivec2 textureSize = ivec2(tex_params.xy);
         vec2 invTextureSize = tex_params.zw;
 
-        int splatIndex = gl_VertexID / 4;
+        uint splatIndex = vertex_id_attrib;
 
         // order
         int orderV = int(float(splatIndex) * invTextureSize.x);
@@ -207,7 +209,9 @@ class GShaderGeneratorSplat {
 
         return ShaderUtils.createDefinition(device, {
             name: 'SplatShader',
-            attributes: { },
+            attributes: {
+                vertex_id_attrib: SEMANTIC_POSITION
+            },
             vertexCode: vs,
             fragmentCode: fs
         });
