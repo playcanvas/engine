@@ -11,9 +11,11 @@ import { typesFixup } from './utils/plugins/rollup-types-fixup.mjs';
 
 /** @typedef {import('rollup').RollupOptions} RollupOptions */
 
-const MAG_OUT = '\x1b[35m';
+const BLUE_OUT = '\x1b[34m';
+const RED_OUT = '\x1b[31m';
 const BOLD_OUT = `\x1b[1m`;
 const REGULAR_OUT = `\x1b[22m`;
+const RESET_OUT = `\x1b[0m`;
 
 /**
  * @type {['release', 'debug', 'profiler', 'min']}
@@ -51,11 +53,12 @@ const TYPES_TARGET = [{
 const envTarget = process.env.target ? process.env.target.toLowerCase() : null;
 
 const title = [
-    `engine ${BOLD_OUT}v${version}${REGULAR_OUT}`,
+    `Building PlayCanvas Engine`,
+    `version ${BOLD_OUT}v${version}${REGULAR_OUT}`,
     `revision ${BOLD_OUT}${revision}${REGULAR_OUT}`,
     `target ${BOLD_OUT}${envTarget ?? 'all'}${REGULAR_OUT}`
 ].join('\n');
-console.log(`${MAG_OUT}${title}`);
+console.log(`${BLUE_OUT}${title}${RESET_OUT}`);
 
 if (envTarget === null && fs.existsSync('build')) {
     // no targets specified, clean build directory
@@ -105,7 +108,7 @@ if (envTarget === null || envTarget === 'types') {
 }
 
 if (!targets.length) {
-    console.error('No targets found');
+    console.error(`${RED_OUT}${BOLD_OUT}No targets found${RESET_OUT}`);
     process.exit(1);
 }
 
