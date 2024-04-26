@@ -86,14 +86,6 @@ class GraphicsDevice extends EventHandler {
     isWebGPU = false;
 
     /**
-     * True if the deviceType is WebGL1
-     *
-     * @type {boolean}
-     * @readonly
-     */
-    isWebGL1 = false;
-
-    /**
      * True if the deviceType is WebGL2
      *
      * @type {boolean}
@@ -835,9 +827,9 @@ class GraphicsDevice extends EventHandler {
     }
 
     /**
-     * The type of the device. Can be one of pc.DEVICETYPE_WEBGL1, pc.DEVICETYPE_WEBGL2 or pc.DEVICETYPE_WEBGPU.
+     * The type of the device. Can be pc.DEVICETYPE_WEBGL2 or pc.DEVICETYPE_WEBGPU.
      *
-     * @type {import('./constants.js').DEVICETYPE_WEBGL1 | import('./constants.js').DEVICETYPE_WEBGL2 | import('./constants.js').DEVICETYPE_WEBGPU}
+     * @type {import('./constants.js').DEVICETYPE_WEBGL2 | import('./constants.js').DEVICETYPE_WEBGPU}
      */
     get deviceType() {
         return this._deviceType;

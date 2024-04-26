@@ -26,6 +26,7 @@ import { ScrollViewComponent } from '../../src/framework/components/scroll-view/
 import { SoundComponent } from '../../src/framework/components/sound/component.js';
 import { SpriteComponent } from '../../src/framework/components/sprite/component.js';
 import { ZoneComponent } from '../../src/framework/components/zone/component.js';
+import { NullGraphicsDevice } from '../../src/platform/graphics/null/null-graphics-device.js';
 
 import { DummyComponentSystem } from './test-component/system.mjs';
 
@@ -39,7 +40,7 @@ describe('Entity', function () {
 
     beforeEach(function () {
         const canvas = new HTMLCanvasElement(500, 500);
-        app = new Application(canvas);
+        app = new Application(canvas, { graphicsDevice: new NullGraphicsDevice(canvas) });
 
         app.systems.add(new DummyComponentSystem(app));
     });

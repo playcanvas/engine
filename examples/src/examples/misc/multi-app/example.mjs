@@ -21,9 +21,7 @@ const createApp = async function (deviceType) {
         device = new pc.WebgpuGraphicsDevice(canvas, {});
         await device.initWebGpu(rootPath + '/static/lib/glslang/glslang.js', rootPath + '/static/lib/twgsl/twgsl.js');
     } else if (deviceType === 'webgl1' || deviceType === 'webgl2') {
-        device = new pc.WebglGraphicsDevice(canvas, {
-            preferWebGl2: deviceType === 'webgl2'
-        });
+        device = new pc.WebglGraphicsDevice(canvas);
     } else {
         device = new pc.NullGraphicsDevice(canvas, {});
     }
