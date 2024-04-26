@@ -366,25 +366,13 @@ class WebglGraphicsDevice extends GraphicsDevice {
             }
         }
 
-        /** @type {WebGL2RenderingContext} */
-        let gl = null;
-
         // we always allocate the default framebuffer without antialiasing, so remove that option
         this.backBufferAntialias = options.antialias ?? false;
         options.antialias = false;
 
         // Retrieve the WebGL context
-        if (options.gl) {
-            gl = options.gl;
-        } else {
-            const names = ["webgl2", "webgl", "experimental-webgl"];
-            for (let i = 0; i < names.length; i++) {
-                gl = canvas.getContext(names[i], options);
-                if (gl) {
-                    break;
-                }
-            }
-        }
+        /** @type {WebGL2RenderingContext} */
+        const gl = options.gl ?? canvas.getContext('webgl2', options);
 
         if (!gl) {
             throw new Error("WebGL not supported");
