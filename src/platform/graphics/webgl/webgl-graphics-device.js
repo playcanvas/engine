@@ -119,67 +119,6 @@ function quadWithShader(device, target, shader) {
     DebugGraphics.popGpuMarker(device);
 }
 
-function testRenderable(gl, pixelFormat) {
-    let result = true;
-
-    // Create a 2x2 texture
-    const texture = gl.createTexture();
-    gl.bindTexture(gl.TEXTURE_2D, texture);
-    gl.texParameteri(gl.TEXTURE_2D, gl.TEXTURE_MIN_FILTER, gl.NEAREST);
-    gl.texParameteri(gl.TEXTURE_2D, gl.TEXTURE_MAG_FILTER, gl.NEAREST);
-    gl.texParameteri(gl.TEXTURE_2D, gl.TEXTURE_WRAP_S, gl.CLAMP_TO_EDGE);
-    gl.texParameteri(gl.TEXTURE_2D, gl.TEXTURE_WRAP_T, gl.CLAMP_TO_EDGE);
-    gl.texImage2D(gl.TEXTURE_2D, 0, gl.RGBA, 2, 2, 0, gl.RGBA, pixelFormat, null);
-
-    // Try to use this texture as a render target
-    const framebuffer = gl.createFramebuffer();
-    gl.bindFramebuffer(gl.FRAMEBUFFER, framebuffer);
-    gl.framebufferTexture2D(gl.FRAMEBUFFER, gl.COLOR_ATTACHMENT0, gl.TEXTURE_2D, texture, 0);
-
-    // It is legal for a WebGL implementation exposing the OES_texture_float extension to
-    // support floating-point textures but not as attachments to framebuffer objects.
-    if (gl.checkFramebufferStatus(gl.FRAMEBUFFER) !== gl.FRAMEBUFFER_COMPLETE) {
-        result = false;
-    }
-
-    // Clean up
-    gl.bindTexture(gl.TEXTURE_2D, null);
-    gl.deleteTexture(texture);
-    gl.bindFramebuffer(gl.FRAMEBUFFER, null);
-    gl.deleteFramebuffer(framebuffer);
-
-    return result;
-}
-
-function testTextureHalfFloatUpdatable(gl, pixelFormat) {
-    let result = true;
-
-    // Create a 2x2 texture
-    const texture = gl.createTexture();
-    gl.bindTexture(gl.TEXTURE_2D, texture);
-    gl.texParameteri(gl.TEXTURE_2D, gl.TEXTURE_MIN_FILTER, gl.NEAREST);
-    gl.texParameteri(gl.TEXTURE_2D, gl.TEXTURE_MAG_FILTER, gl.NEAREST);
-    gl.texParameteri(gl.TEXTURE_2D, gl.TEXTURE_WRAP_S, gl.CLAMP_TO_EDGE);
-    gl.texParameteri(gl.TEXTURE_2D, gl.TEXTURE_WRAP_T, gl.CLAMP_TO_EDGE);
-
-    // upload some data - on iOS prior to about November 2019, passing data to half texture would fail here
-    // see details here: https://bugs.webkit.org/show_bug.cgi?id=169999
-    // note that if not supported, this prints an error to console, the error can be safely ignored as it's handled
-    const data = new Uint16Array(4 * 2 * 2);
-    gl.texImage2D(gl.TEXTURE_2D, 0, gl.RGBA, 2, 2, 0, gl.RGBA, pixelFormat, data);
-
-    if (gl.getError() !== gl.NO_ERROR) {
-        result = false;
-        console.log("Above error related to HALF_FLOAT_OES can be ignored, it was triggered by testing half float texture support");
-    }
-
-    // Clean up
-    gl.bindTexture(gl.TEXTURE_2D, null);
-    gl.deleteTexture(texture);
-
-    return result;
-}
-
 function testTextureFloatHighPrecision(device) {
     if (!device.textureFloatRenderable)
         return false;
@@ -823,13 +762,8 @@ class WebglGraphicsDevice extends GraphicsDevice {
         this.constantTexSource = this.scope.resolve("source");
 
         if (this.extTextureFloat) {
-            if (this.isWebGL2) {
-                // In WebGL2 float texture renderability is dictated by the EXT_color_buffer_float extension
-                this.textureFloatRenderable = !!this.extColorBufferFloat;
-            } else {
-                // In WebGL1 we should just try rendering into a float texture
-                this.textureFloatRenderable = testRenderable(gl, gl.FLOAT);
-            }
+            // In WebGL2 float texture renderability is dictated by the EXT_color_buffer_float extension
+            this.textureFloatRenderable = !!this.extColorBufferFloat;
         } else {
             this.textureFloatRenderable = false;
         }
@@ -838,13 +772,8 @@ class WebglGraphicsDevice extends GraphicsDevice {
         if (this.extColorBufferHalfFloat) {
             this.textureHalfFloatRenderable = !!this.extColorBufferHalfFloat;
         } else if (this.extTextureHalfFloat) {
-            if (this.isWebGL2) {
-                // EXT_color_buffer_float should affect both float and halffloat formats
-                this.textureHalfFloatRenderable = !!this.extColorBufferFloat;
-            } else {
-                // Manual render check for half float
-                this.textureHalfFloatRenderable = testRenderable(gl, this.extTextureHalfFloat.HALF_FLOAT_OES);
-            }
+            // EXT_color_buffer_float should affect both float and halffloat formats
+            this.textureHalfFloatRenderable = !!this.extColorBufferFloat;
         } else {
             this.textureHalfFloatRenderable = false;
         }
@@ -853,11 +782,10 @@ class WebglGraphicsDevice extends GraphicsDevice {
         this.supportsDepthShadow = this.isWebGL2;
 
         this._textureFloatHighPrecision = undefined;
-        this._textureHalfFloatUpdatable = undefined;
 
         // area light LUT format - order of preference: half, float, 8bit
         this.areaLightLutFormat = PIXELFORMAT_RGBA8;
-        if (this.extTextureHalfFloat && this.textureHalfFloatUpdatable && this.extTextureHalfFloatLinear) {
+        if (this.extTextureHalfFloat && this.extTextureHalfFloatLinear) {
             this.areaLightLutFormat = PIXELFORMAT_RGBA16F;
         } else if (this.extTextureFloat && this.extTextureFloatLinear) {
             this.areaLightLutFormat = PIXELFORMAT_RGBA32F;
@@ -2825,22 +2753,6 @@ class WebglGraphicsDevice extends GraphicsDevice {
             this._textureFloatHighPrecision = testTextureFloatHighPrecision(this);
         }
         return this._textureFloatHighPrecision;
-    }
-
-    /**
-     * Check if texture with half float format can be updated with data.
-     *
-     * @type {boolean}
-     */
-    get textureHalfFloatUpdatable() {
-        if (this._textureHalfFloatUpdatable === undefined) {
-            if (this.isWebGL2) {
-                this._textureHalfFloatUpdatable = true;
-            } else {
-                this._textureHalfFloatUpdatable = testTextureHalfFloatUpdatable(this.gl, this.extTextureHalfFloat.HALF_FLOAT_OES);
-            }
-        }
-        return this._textureHalfFloatUpdatable;
     }
 
     // #if _DEBUG
