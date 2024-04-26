@@ -5,7 +5,7 @@
  * @ignore
  */
 class Features {
-    static removedWebGL1 = true;
+    static noWebGL1 = true;
 }
 
 export { Features };
