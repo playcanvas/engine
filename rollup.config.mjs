@@ -11,7 +11,9 @@ import { typesFixup } from './utils/plugins/rollup-types-fixup.mjs';
 
 /** @typedef {import('rollup').RollupOptions} RollupOptions */
 
-console.log(`Building PlayCanvas Engine v${version} revision ${revision}`);
+const MAG_OUT = '\x1b[35m';
+const BOLD_OUT = `\x1b[1m`;
+const REGULAR_OUT = `\x1b[22m`;
 
 /**
  * @type {['release', 'debug', 'profiler', 'min']}
@@ -45,18 +47,36 @@ const TYPES_TARGET = [{
     ]
 }];
 
-/**
- * @type {RollupOptions[]}
- */
-const targets = [];
 
 const envTarget = process.env.target ? process.env.target.toLowerCase() : null;
+
+const title = [
+    `engine ${BOLD_OUT}v${version}${REGULAR_OUT}`,
+    `revision ${BOLD_OUT}${revision}${REGULAR_OUT}`,
+    `target ${BOLD_OUT}${envTarget ?? 'all'}${REGULAR_OUT}`
+].join('\n');
+console.log(`${MAG_OUT}${title}`);
 
 if (envTarget === null && fs.existsSync('build')) {
     // no targets specified, clean build directory
     fs.rmSync('build', { recursive: true });
 }
 
+function includeBuild(buildType, moduleFormat, bundleState) {
+    return envTarget === null ||
+        envTarget === buildType ||
+        envTarget === moduleFormat ||
+        envTarget === bundleState ||
+        envTarget === `${moduleFormat}:${buildType}` ||
+        envTarget === `${moduleFormat}:${bundleState}` ||
+        envTarget === `${buildType}:${bundleState}` ||
+        envTarget === `${moduleFormat}:${buildType}:${bundleState}`;
+}
+
+/**
+ * @type {RollupOptions[]}
+ */
+const targets = [];
 BUILD_TYPES.forEach((buildType) => {
     MODULE_FORMAT.forEach((moduleFormat) => {
         BUNDLE_STATES.forEach((bundleState) => {
@@ -67,21 +87,15 @@ BUILD_TYPES.forEach((buildType) => {
                 return;
             }
 
-            if (envTarget === null ||
-                envTarget === buildType ||
-                envTarget === moduleFormat ||
-                envTarget === bundleState ||
-                envTarget === `${moduleFormat}:${buildType}` ||
-                envTarget === `${moduleFormat}:${bundleState}` ||
-                envTarget === `${buildType}:${bundleState}` ||
-                envTarget === `${moduleFormat}:${buildType}:${bundleState}`
-            ) {
-                targets.push(...buildTarget({
-                    moduleFormat,
-                    buildType,
-                    bundleState
-                }));
+            if (!includeBuild(buildType, moduleFormat, bundleState)) {
+                return;
             }
+
+            targets.push(...buildTarget({
+                moduleFormat,
+                buildType,
+                bundleState
+            }));
         });
     });
 });
