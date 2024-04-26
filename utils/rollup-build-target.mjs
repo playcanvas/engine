@@ -144,18 +144,44 @@ function getOutPlugins() {
  * @param {object} options - The build target options.
  * @param {'umd'|'esm'} options.moduleFormat - The module format.
  * @param {'debug'|'release'|'profiler'|'min'} options.buildType - The build type.
+ * @param {'unbundled'|'bundled'} [options.bundleState] - The bundle state.
  * @param {string} [options.input] - Only used for examples to change it to `../src/index.js`.
  * @param {string} [options.dir] - Only used for examples to change the output location.
- * @param {boolean} [options.skipBundled] - Whether to skip the bundled target (ESM only).
  * @returns {RollupOptions[]} Rollup targets.
  */
-function buildTarget({ moduleFormat, buildType, input = 'src/index.js', dir = 'build', skipBundled = false }) {
+function buildTarget({ moduleFormat, buildType, bundleState, input = 'src/index.js', dir = 'build' }) {
     const isUMD = moduleFormat === 'umd';
     const isDebug = buildType === 'debug';
     const isMin = buildType === 'min';
-    const bundled = isUMD || isMin;
+    const bundled = isUMD || isMin || bundleState === 'bundled';
 
     const targets = [];
+
+    // bundle from unbundled
+    if (bundled && HISTORY.has(`${buildType}-${moduleFormat}-false`)) {
+        const unbundled = HISTORY.get(`${buildType}-${moduleFormat}-false`);
+
+        /**
+         * @type {RollupOptions}
+         */
+        const target = {
+            input: `${unbundled.output.dir}/src/index.js`,
+            output: {
+                banner: getBanner(BANNER[buildType]),
+                format: 'es',
+                indent: '\t',
+                sourcemap: isDebug && 'inline',
+                name: 'pc',
+                preserveModules: false,
+                file: `${dir}/${OUT_PREFIX[buildType]}.mjs`
+            }
+        };
+
+        HISTORY.set(`${buildType}-${moduleFormat}-true`, target);
+        targets.push(target);
+
+        return targets;
+    }
 
     // minify from release build
     if (isMin && HISTORY.has(`release-${moduleFormat}-true`)) {
@@ -210,30 +236,6 @@ function buildTarget({ moduleFormat, buildType, input = 'src/index.js', dir = 'b
 
     HISTORY.set(`${buildType}-${moduleFormat}-${bundled}`, target);
     targets.push(target);
-
-    // bundle ESM from unbundled ESM build
-    if (!skipBundled && !bundled && HISTORY.has(`${buildType}-${moduleFormat}-false`)) {
-        const unbundled = HISTORY.get(`${buildType}-${moduleFormat}-false`);
-
-        /**
-         * @type {RollupOptions}
-         */
-        const target = {
-            input: `${unbundled.output.dir}/src/index.js`,
-            output: {
-                banner: getBanner(BANNER[buildType]),
-                format: 'es',
-                indent: '\t',
-                sourcemap: isDebug && 'inline',
-                name: 'pc',
-                preserveModules: false,
-                file: `${dir}/${OUT_PREFIX[buildType]}.mjs`
-            }
-        };
-
-        HISTORY.set(`${buildType}-${moduleFormat}-true`, target);
-        targets.push(target);
-    }
 
     return targets;
 }

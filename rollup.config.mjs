@@ -24,6 +24,11 @@ const BUILD_TYPES = ['release', 'debug', 'profiler', 'min'];
 const MODULE_FORMAT = ['umd', 'esm'];
 
 /**
+ * @type {['unbundled', 'bundled']}
+ */
+const BUNDLE_STATES = ['unbundled', 'bundled'];
+
+/**
  * @type {RollupOptions[]}
  */
 const TYPES_TARGET = [{
@@ -54,17 +59,40 @@ if (envTarget === null && fs.existsSync('build')) {
 
 BUILD_TYPES.forEach((buildType) => {
     MODULE_FORMAT.forEach((moduleFormat) => {
-        if (envTarget === null || envTarget === buildType || envTarget === moduleFormat || envTarget === `${moduleFormat}:${buildType}`) {
-            targets.push(...buildTarget({
-                moduleFormat,
-                buildType
-            }));
-        }
+        BUNDLE_STATES.forEach((bundleState) => {
+            if (bundleState === 'unbundled' && moduleFormat === 'umd') {
+                return;
+            }
+            if (bundleState === 'unbundled' && buildType === 'min') {
+                return;
+            }
+
+            if (envTarget === null ||
+                envTarget === buildType ||
+                envTarget === moduleFormat ||
+                envTarget === bundleState ||
+                envTarget === `${moduleFormat}:${buildType}` ||
+                envTarget === `${moduleFormat}:${bundleState}` ||
+                envTarget === `${buildType}:${bundleState}` ||
+                envTarget === `${moduleFormat}:${buildType}:${bundleState}`
+            ) {
+                targets.push(...buildTarget({
+                    moduleFormat,
+                    buildType,
+                    bundleState
+                }));
+            }
+        });
     });
 });
 
 if (envTarget === null || envTarget === 'types') {
     targets.push(...TYPES_TARGET);
+}
+
+if (!targets.length) {
+    console.error('No targets found');
+    process.exit(1);
 }
 
 export default targets;
