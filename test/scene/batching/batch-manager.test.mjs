@@ -1,5 +1,6 @@
 import { Application } from '../../../src/framework/application.js';
 import { Entity } from '../../../src/framework/entity.js';
+import { NullGraphicsDevice } from '../../../src/platform/graphics/null/null-graphics-device.js';
 import { LAYERID_WORLD } from '../../../src/scene/constants.js';
 
 import { HTMLCanvasElement } from '@playcanvas/canvas-mock';
@@ -10,7 +11,7 @@ describe('BatchManager', function () {
 
     beforeEach(function () {
         const canvas = new HTMLCanvasElement(500, 500);
-        this.app = new Application(canvas);
+        this.app = new Application(canvas, { graphicsDevice: new NullGraphicsDevice(canvas) });
 
         this.bg = this.app.batcher.addGroup('Test Group', false, 100);
     });

@@ -4,6 +4,7 @@ import { ComponentSystem } from '../../../src/framework/components/system.js';
 import { Vec2 } from '../../../src/core/math/vec2.js';
 import { Vec3 } from '../../../src/core/math/vec3.js';
 import { Vec4 } from '../../../src/core/math/vec4.js';
+import { NullGraphicsDevice } from '../../../src/platform/graphics/null/null-graphics-device.js';
 
 import { HTMLCanvasElement } from '@playcanvas/canvas-mock';
 
@@ -17,7 +18,7 @@ describe('ComponentSystem', function () {
 
     beforeEach(function () {
         const canvas = new HTMLCanvasElement(500, 500);
-        app = new Application(canvas);
+        app = new Application(canvas, { graphicsDevice: new NullGraphicsDevice(canvas) });
 
         system = new ComponentSystem(app);
     });

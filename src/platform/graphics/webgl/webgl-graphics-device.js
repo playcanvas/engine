@@ -25,8 +25,7 @@ import {
     semanticToLocation,
     UNIFORMTYPE_TEXTURE2D_ARRAY,
     PRIMITIVE_TRISTRIP,
-    DEVICETYPE_WEBGL2,
-    DEVICETYPE_WEBGL1
+    DEVICETYPE_WEBGL2
 } from '../constants.js';
 
 import { GraphicsDevice } from '../graphics-device.js';
@@ -252,8 +251,6 @@ class WebglGraphicsDevice extends GraphicsDevice {
      * @param {boolean} [options.failIfMajorPerformanceCaveat] - Boolean that indicates if a
      * context will be created if the system performance is low or if no hardware GPU is available.
      * Defaults to false.
-     * @param {boolean} [options.preferWebGl2] - Boolean that indicates if a WebGl2 context should
-     * be preferred. Defaults to true.
      * @param {boolean} [options.desynchronized] - Boolean that hints the user agent to reduce the
      * latency by desynchronizing the canvas paint cycle from the event loop. Defaults to false.
      * @param {boolean} [options.xrCompatible] - Boolean that hints to the user agent to use a
@@ -308,35 +305,21 @@ class WebglGraphicsDevice extends GraphicsDevice {
             }
         }
 
-        /** @type {WebGL2RenderingContext} */
-        let gl = null;
-
         // we always allocate the default framebuffer without antialiasing, so remove that option
         this.backBufferAntialias = options.antialias ?? false;
         options.antialias = false;
 
         // Retrieve the WebGL context
-        if (options.gl) {
-            gl = options.gl;
-        } else {
-            const preferWebGl2 = (options.preferWebGl2 !== undefined) ? options.preferWebGl2 : true;
-            const names = preferWebGl2 ? ["webgl2", "webgl", "experimental-webgl"] : ["webgl", "experimental-webgl"];
-            for (let i = 0; i < names.length; i++) {
-                gl = canvas.getContext(names[i], options);
-                if (gl) {
-                    break;
-                }
-            }
-        }
+        /** @type {WebGL2RenderingContext} */
+        const gl = options.gl ?? canvas.getContext('webgl2', options);
 
         if (!gl) {
             throw new Error("WebGL not supported");
         }
 
         this.gl = gl;
-        this.isWebGL2 = typeof WebGL2RenderingContext !== 'undefined' && gl instanceof WebGL2RenderingContext;
-        this.isWebGL1 = !this.isWebGL2;
-        this._deviceType = this.isWebGL2 ? DEVICETYPE_WEBGL2 : DEVICETYPE_WEBGL1;
+        this.isWebGL2 = true;
+        this._deviceType = DEVICETYPE_WEBGL2;
 
         // pixel format of the framebuffer
         this.updateBackbufferFormat(null);
