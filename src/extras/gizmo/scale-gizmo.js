@@ -87,7 +87,7 @@ class ScaleGizmo extends TransformGizmo {
      * The camera component.
      * @param {import('../../scene/layer.js').Layer} layer - The render layer.
      * @example
-     * const gizmo = new pcx.ScaleGizmo(app, camera, layer);
+     * const gizmo = new pc.ScaleGizmo(app, camera, layer);
      */
     constructor(app, camera, layer) {
         super(app, camera, layer);
