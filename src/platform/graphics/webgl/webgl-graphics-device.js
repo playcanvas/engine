@@ -963,41 +963,22 @@ class WebglGraphicsDevice extends GraphicsDevice {
             this.extBlendMinmax = true;
             this.extDrawBuffers = true;
             this.drawBuffers = gl.drawBuffers.bind(gl);
-            this.extInstancing = true;
             this.extTextureFloat = true;
             this.extTextureHalfFloat = true;
             this.textureHalfFloatFilterable = true;
             this.extTextureLod = true;
             this.extUintElement = true;
-            this.extVertexArrayObject = true;
             this.extColorBufferFloat = this.getExtension('EXT_color_buffer_float');
             this.extDepthTexture = true;
             this.textureRG11B10Renderable = true;
         } else {
             this.extBlendMinmax = this.getExtension("EXT_blend_minmax");
             this.extDrawBuffers = this.getExtension('WEBGL_draw_buffers');
-            this.extInstancing = this.getExtension("ANGLE_instanced_arrays");
             this.drawBuffers = this.extDrawBuffers?.drawBuffersWEBGL.bind(this.extDrawBuffers);
-            if (this.extInstancing) {
-                // Install the WebGL 2 Instancing API for WebGL 1.0
-                const ext = this.extInstancing;
-                gl.drawArraysInstanced = ext.drawArraysInstancedANGLE.bind(ext);
-                gl.drawElementsInstanced = ext.drawElementsInstancedANGLE.bind(ext);
-                gl.vertexAttribDivisor = ext.vertexAttribDivisorANGLE.bind(ext);
-            }
 
             this.extTextureFloat = this.getExtension("OES_texture_float");
             this.extTextureLod = this.getExtension('EXT_shader_texture_lod');
             this.extUintElement = this.getExtension("OES_element_index_uint");
-            this.extVertexArrayObject = this.getExtension("OES_vertex_array_object");
-            if (this.extVertexArrayObject) {
-                // Install the WebGL 2 VAO API for WebGL 1.0
-                const ext = this.extVertexArrayObject;
-                gl.createVertexArray = ext.createVertexArrayOES.bind(ext);
-                gl.deleteVertexArray = ext.deleteVertexArrayOES.bind(ext);
-                gl.isVertexArray = ext.isVertexArrayOES.bind(ext);
-                gl.bindVertexArray = ext.bindVertexArrayOES.bind(ext);
-            }
             this.extColorBufferFloat = null;
             this.extDepthTexture = gl.getExtension('WEBGL_depth_texture');
 
@@ -1041,8 +1022,6 @@ class WebglGraphicsDevice extends GraphicsDevice {
         const contextAttribs = gl.getContextAttributes();
         this.supportsMsaa = contextAttribs?.antialias ?? false;
         this.supportsStencil = contextAttribs?.stencil ?? false;
-
-        this.supportsInstancing = !!this.extInstancing;
 
         // Query parameter values from the WebGL context
         this.maxTextureSize = gl.getParameter(gl.MAX_TEXTURE_SIZE);
