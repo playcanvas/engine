@@ -7,12 +7,6 @@ import * as pc from 'playcanvas';
 export function controls({ observer, ReactPCUI, React, jsx, fragment }) {
     const { InfoBox, BindingTwoWay, LabelGroup, Panel, BooleanInput } = ReactPCUI;
     return fragment(
-        jsx(InfoBox, {
-            icon: 'E218',
-            title: 'WebGL 1.0',
-            text: 'Texture Arrays are not supported on WebGL 1.0 devices',
-            hidden: !(pc.app?.graphicsDevice.isWebGL1 ?? false)
-        }),
         jsx(
             Panel,
             { headerText: 'Texture Arrays' },

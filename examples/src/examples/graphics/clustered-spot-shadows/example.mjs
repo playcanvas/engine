@@ -333,9 +333,6 @@ assetListLoader.load(() => {
             spotlight.rotateLocal(90, 0, 0);
         });
 
-        // display shadow texture (debug feature, only works when depth is stored as color, which is webgl1)
-        // app.drawTexture(-0.7, 0.7, 0.4, 0.4, app.renderer.lightTextureAtlas.shadowAtlas.texture);
-
         // display cookie texture (debug feature)
         if (debugAtlas) {
             // @ts-ignore engine-tsd
