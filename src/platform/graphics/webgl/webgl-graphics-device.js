@@ -192,10 +192,7 @@ function testTextureFloatHighPrecision(device) {
  */
 class WebglGraphicsDevice extends GraphicsDevice {
     /**
-     * The WebGL context managed by the graphics device. The type could also technically be
-     * `WebGLRenderingContext` if WebGL 2.0 is not available. But in order for IntelliSense to be
-     * able to function for all WebGL calls in the codebase, we specify `WebGL2RenderingContext`
-     * here instead.
+     * The WebGL2 context managed by the graphics device.
      *
      * @type {WebGL2RenderingContext}
      * @ignore
@@ -254,7 +251,7 @@ class WebglGraphicsDevice extends GraphicsDevice {
      * latency by desynchronizing the canvas paint cycle from the event loop. Defaults to false.
      * @param {boolean} [options.xrCompatible] - Boolean that hints to the user agent to use a
      * compatible graphics adapter for an immersive XR device.
-     * @param {WebGLRenderingContext | WebGL2RenderingContext} [options.gl] - The rendering context
+     * @param {WebGL2RenderingContext} [options.gl] - The rendering context
      * to use. If not specified, a new context will be created.
      */
     constructor(canvas, options = {}) {
