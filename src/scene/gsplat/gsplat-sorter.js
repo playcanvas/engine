@@ -15,10 +15,8 @@ function SortWorker() {
     let data;
     let centers;
     let cameraPosition;
-    let cameraDirection;
 
     const lastCameraPosition = { x: 0, y: 0, z: 0 };
-    const lastCameraDirection = { x: 0, y: 0, z: 0 };
 
     const boundMin = { x: 0, y: 0, z: 0 };
     const boundMax = { x: 0, y: 0, z: 0 };
@@ -43,32 +41,23 @@ function SortWorker() {
     }
 
     const update = () => {
-        if (!centers || !data || !cameraPosition || !cameraDirection) return;
+        if (!centers || !data || !cameraPosition) return;
 
         const px = cameraPosition.x;
         const py = cameraPosition.y;
         const pz = cameraPosition.z;
-        const dx = cameraDirection.x;
-        const dy = cameraDirection.y;
-        const dz = cameraDirection.z;
 
         const epsilon = 0.001;
 
         if (Math.abs(px - lastCameraPosition.x) < epsilon &&
             Math.abs(py - lastCameraPosition.y) < epsilon &&
-            Math.abs(pz - lastCameraPosition.z) < epsilon &&
-            Math.abs(dx - lastCameraDirection.x) < epsilon &&
-            Math.abs(dy - lastCameraDirection.y) < epsilon &&
-            Math.abs(dz - lastCameraDirection.z) < epsilon) {
+            Math.abs(pz - lastCameraPosition.z) < epsilon) {
             return;
         }
 
         lastCameraPosition.x = px;
         lastCameraPosition.y = py;
         lastCameraPosition.z = pz;
-        lastCameraDirection.x = dx;
-        lastCameraDirection.y = dy;
-        lastCameraDirection.z = dz;
 
         // create distance buffer
         const numVertices = centers.length / 3;
@@ -80,21 +69,22 @@ function SortWorker() {
             target = data.slice();
         }
 
-        // calc min/max distance using bound
-        let minDist;
-        let maxDist;
-        for (let i = 0; i < 8; ++i) {
-            const x = i & 1 ? boundMin.x : boundMax.x;
-            const y = i & 2 ? boundMin.y : boundMax.y;
-            const z = i & 4 ? boundMin.z : boundMax.z;
-            const d = (x - px) * dx + (y - py) * dy + (z - pz) * dz;
-            if (i === 0) {
-                minDist = maxDist = d;
-            } else {
-                minDist = Math.min(minDist, d);
-                maxDist = Math.max(maxDist, d);
-            }
-        }
+        const len = (x, y, z) => Math.sqrt(x * x + y * y + z * z);
+
+        const sceneCenterDist = len(
+            (boundMin.x + boundMax.x) * 0.5 - px,
+            (boundMin.y + boundMax.y) * 0.5 - py,
+            (boundMin.z + boundMax.z) * 0.5 - pz
+        );
+
+        const sceneRadius = 0.5 * len(
+            boundMax.x - boundMin.x,
+            boundMax.y - boundMin.y,
+            boundMax.z - boundMin.z
+        );
+
+        const minDist = Math.max(0, sceneCenterDist - sceneRadius);
+        const maxDist = sceneCenterDist + sceneRadius;
 
         if (!countBuffer)
             countBuffer = new Uint32Array(bucketCount);
@@ -107,10 +97,11 @@ function SortWorker() {
         const divider = 1 / range * (2 ** compareBits);
         for (let i = 0; i < numVertices; ++i) {
             const istride = i * 3;
-            const d = (centers[istride + 0] - px) * dx +
-                      (centers[istride + 1] - py) * dy +
-                      (centers[istride + 2] - pz) * dz;
-            const sortKey = Math.floor((d - minDist) * divider);
+            const x = centers[istride + 0] - px;
+            const y = centers[istride + 1] - py;
+            const z = centers[istride + 2] - pz;
+            const d = Math.sqrt(x * x + y * y + z * z);
+            const sortKey = Math.floor((maxDist - d) * divider);
 
             distances[i] = sortKey;
 
@@ -178,7 +169,6 @@ function SortWorker() {
             }
         }
         if (message.data.cameraPosition) cameraPosition = message.data.cameraPosition;
-        if (message.data.cameraDirection) cameraDirection = message.data.cameraDirection;
 
         update();
     };
@@ -237,7 +227,6 @@ class GSplatSorter extends EventHandler {
     setCamera(pos, dir) {
         this.worker.postMessage({
             cameraPosition: { x: pos.x, y: pos.y, z: pos.z },
-            cameraDirection: { x: dir.x, y: dir.y, z: dir.z }
         });
     }
 }
