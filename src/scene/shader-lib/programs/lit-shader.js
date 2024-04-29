@@ -495,9 +495,7 @@ class LitShader {
         code += this.frontendDecl;
         code += this.frontendCode;
 
-        const mayPackDepth = shadowType === SHADOW_PCF1 || shadowType === SHADOW_PCF3 || shadowType === SHADOW_PCF5 || shadowType === SHADOW_PCSS;
-        const mustPackDepth = (lightType === LIGHTTYPE_OMNI && shadowType !== SHADOW_PCSS && !options.clusteredLightingEnabled);
-        const usePackedDepth = mayPackDepth && !device.supportsDepthShadow || mustPackDepth;
+        const usePackedDepth = (lightType === LIGHTTYPE_OMNI && shadowType !== SHADOW_PCSS && !options.clusteredLightingEnabled);
         if (usePackedDepth) {
             code += chunks.packDepthPS;
         } else if (shadowType === SHADOW_VSM8) {
@@ -687,7 +685,7 @@ class LitShader {
                 if (lightType === LIGHTTYPE_OMNI) {
                     decl.append("uniform samplerCube light" + i + "_shadowMap;");
                 } else {
-                    if (light._isPcf && device.supportsDepthShadow) {
+                    if (light._isPcf) {
                         decl.append("uniform sampler2DShadow light" + i + "_shadowMap;");
                     } else {
                         decl.append("uniform sampler2D light" + i + "_shadowMap;");

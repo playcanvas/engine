@@ -145,7 +145,6 @@ class WebgpuGraphicsDevice extends GraphicsDevice {
         this.supportsBoneTextures = true;
         this.supportsMorphTargetTexturesCore = true;
         this.supportsAreaLights = true;
-        this.supportsDepthShadow = true;
         this.supportsGpuParticles = true;
         this.supportsMrt = true;
         this.supportsCompute = true;
