@@ -963,7 +963,6 @@ class WebglGraphicsDevice extends GraphicsDevice {
             this.extBlendMinmax = true;
             this.extDrawBuffers = true;
             this.drawBuffers = gl.drawBuffers.bind(gl);
-            this.extInstancing = true;
             this.extTextureFloat = true;
             this.extTextureHalfFloat = true;
             this.textureHalfFloatFilterable = true;
@@ -976,15 +975,7 @@ class WebglGraphicsDevice extends GraphicsDevice {
         } else {
             this.extBlendMinmax = this.getExtension("EXT_blend_minmax");
             this.extDrawBuffers = this.getExtension('WEBGL_draw_buffers');
-            this.extInstancing = this.getExtension("ANGLE_instanced_arrays");
             this.drawBuffers = this.extDrawBuffers?.drawBuffersWEBGL.bind(this.extDrawBuffers);
-            if (this.extInstancing) {
-                // Install the WebGL 2 Instancing API for WebGL 1.0
-                const ext = this.extInstancing;
-                gl.drawArraysInstanced = ext.drawArraysInstancedANGLE.bind(ext);
-                gl.drawElementsInstanced = ext.drawElementsInstancedANGLE.bind(ext);
-                gl.vertexAttribDivisor = ext.vertexAttribDivisorANGLE.bind(ext);
-            }
 
             this.extTextureFloat = this.getExtension("OES_texture_float");
             this.extTextureLod = this.getExtension('EXT_shader_texture_lod');
