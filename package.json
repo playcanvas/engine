@@ -81,6 +81,7 @@
   ],
   "files": [
     "build/playcanvas*",
+    "build/playcanvas*/*",
     "scripts",
     "README*.md"
   ],
