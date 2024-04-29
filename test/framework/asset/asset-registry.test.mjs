@@ -4,6 +4,7 @@ import { AssetRegistry } from '../../../src/framework/asset/asset-registry.js';
 import { GlbContainerResource } from '../../../src/framework/parsers/glb-container-resource.js';
 import { ResourceLoader } from '../../../src/framework/handlers/loader.js';
 import { http, Http } from '../../../src/platform/net/http.js';
+import { NullGraphicsDevice } from '../../../src/platform/graphics/null/null-graphics-device.js';
 
 import { HTMLCanvasElement } from '@playcanvas/canvas-mock';
 
@@ -19,7 +20,7 @@ describe('AssetRegistry', function () {
         retryDelay = Http.retryDelay;
         Http.retryDelay = 1;
         const canvas = new HTMLCanvasElement(500, 500);
-        app = new Application(canvas);
+        app = new Application(canvas, { graphicsDevice: new NullGraphicsDevice(canvas) });
     });
 
     afterEach(function () {

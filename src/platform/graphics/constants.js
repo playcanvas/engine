@@ -278,7 +278,7 @@ export const BUFFER_STREAM = 2;
 
 /**
  * The data store contents will be modified repeatedly on the GPU and used many times. Optimal for
- * transform feedback usage (WebGL2 only).
+ * transform feedback usage.
  *
  * @type {number}
  * @category Graphics
@@ -653,7 +653,7 @@ export const PIXELFORMAT_RGB32F = 13;
 export const PIXELFORMAT_RGBA32F = 14;
 
 /**
- * 32-bit floating point single channel format (WebGL2 only).
+ * 32-bit floating point single channel format.
  *
  * @type {number}
  * @category Graphics
@@ -669,7 +669,7 @@ export const PIXELFORMAT_R32F = 15;
 export const PIXELFORMAT_DEPTH = 16;
 
 /**
- * A readable depth/stencil buffer format (WebGL2 only).
+ * A readable depth/stencil buffer format.
  *
  * @type {number}
  * @category Graphics
@@ -678,7 +678,7 @@ export const PIXELFORMAT_DEPTHSTENCIL = 17;
 
 /**
  * A floating-point color-only format with 11 bits for red and green channels and 10 bits for the
- * blue channel (WebGL2 only).
+ * blue channel.
  *
  * @type {number}
  * @category Graphics
@@ -686,7 +686,7 @@ export const PIXELFORMAT_DEPTHSTENCIL = 17;
 export const PIXELFORMAT_111110F = 18;
 
 /**
- * Color-only sRGB format (WebGL2 only).
+ * Color-only sRGB format.
  *
  * @type {number}
  * @category Graphics
@@ -694,7 +694,7 @@ export const PIXELFORMAT_111110F = 18;
 export const PIXELFORMAT_SRGB = 19;
 
 /**
- * Color sRGB format with additional alpha channel (WebGL2 only).
+ * Color sRGB format with additional alpha channel.
  *
  * @type {number}
  * @category Graphics
@@ -791,7 +791,7 @@ export const PIXELFORMAT_ATC_RGBA = 30;
 export const PIXELFORMAT_BGRA8 = 31;
 
 /**
- * 8-bit signed integer single-channel (R) format (Not supported by WebGL1).
+ * 8-bit signed integer single-channel (R) format.
  *
  * @type {number}
  * @category Graphics
@@ -799,7 +799,7 @@ export const PIXELFORMAT_BGRA8 = 31;
 export const PIXELFORMAT_R8I = 32;
 
 /**
- * 8-bit unsigned integer single-channel (R) format (Not supported by WebGL1).
+ * 8-bit unsigned integer single-channel (R) format.
  *
  * @type {number}
  * @category Graphics
@@ -807,7 +807,7 @@ export const PIXELFORMAT_R8I = 32;
 export const PIXELFORMAT_R8U = 33;
 
 /**
- * 16-bit signed integer single-channel (R) format (Not supported by WebGL1).
+ * 16-bit signed integer single-channel (R) format.
  *
  * @type {number}
  * @category Graphics
@@ -815,7 +815,7 @@ export const PIXELFORMAT_R8U = 33;
 export const PIXELFORMAT_R16I = 34;
 
 /**
- * 16-bit unsigned integer single-channel (R) format (Not supported by WebGL1).
+ * 16-bit unsigned integer single-channel (R) format.
  *
  * @type {number}
  * @category Graphics
@@ -823,7 +823,7 @@ export const PIXELFORMAT_R16I = 34;
 export const PIXELFORMAT_R16U = 35;
 
 /**
- * 32-bit signed integer single-channel (R) format (Not supported by WebGL1).
+ * 32-bit signed integer single-channel (R) format.
  *
  * @type {number}
  * @category Graphics
@@ -831,7 +831,7 @@ export const PIXELFORMAT_R16U = 35;
 export const PIXELFORMAT_R32I = 36;
 
 /**
- * 32-bit unsigned integer single-channel (R) format (Not supported by WebGL1).
+ * 32-bit unsigned integer single-channel (R) format.
  *
  * @type {number}
  * @category Graphics
@@ -839,7 +839,7 @@ export const PIXELFORMAT_R32I = 36;
 export const PIXELFORMAT_R32U = 37;
 
 /**
- * 8-bit per-channel signed integer (RG) format (Not supported by WebGL1).
+ * 8-bit per-channel signed integer (RG) format.
  *
  * @type {number}
  * @category Graphics
@@ -847,7 +847,7 @@ export const PIXELFORMAT_R32U = 37;
 export const PIXELFORMAT_RG8I = 38;
 
 /**
- * 8-bit per-channel unsigned integer (RG) format (Not supported by WebGL1).
+ * 8-bit per-channel unsigned integer (RG) format.
  *
  * @type {number}
  * @category Graphics
@@ -855,7 +855,7 @@ export const PIXELFORMAT_RG8I = 38;
 export const PIXELFORMAT_RG8U = 39;
 
 /**
- * 16-bit per-channel signed integer (RG) format (Not supported by WebGL1).
+ * 16-bit per-channel signed integer (RG) format.
  *
  * @type {number}
  * @category Graphics
@@ -863,7 +863,7 @@ export const PIXELFORMAT_RG8U = 39;
 export const PIXELFORMAT_RG16I = 40;
 
 /**
- * 16-bit per-channel unsigned integer (RG) format (Not supported by WebGL1).
+ * 16-bit per-channel unsigned integer (RG) format.
  *
  * @type {number}
  * @category Graphics
@@ -871,7 +871,7 @@ export const PIXELFORMAT_RG16I = 40;
 export const PIXELFORMAT_RG16U = 41;
 
 /**
- * 32-bit per-channel signed integer (RG) format (Not supported by WebGL1).
+ * 32-bit per-channel signed integer (RG) format.
  *
  * @type {number}
  * @category Graphics
@@ -879,7 +879,7 @@ export const PIXELFORMAT_RG16U = 41;
 export const PIXELFORMAT_RG32I = 42;
 
 /**
- * 32-bit per-channel unsigned integer (RG) format (Not supported by WebGL1).
+ * 32-bit per-channel unsigned integer (RG) format.
  *
  * @type {number}
  * @category Graphics
@@ -887,7 +887,7 @@ export const PIXELFORMAT_RG32I = 42;
 export const PIXELFORMAT_RG32U = 43;
 
 /**
- * 8-bit per-channel signed integer (RGBA) format (Not supported by WebGL1).
+ * 8-bit per-channel signed integer (RGBA) format.
  *
  * @type {number}
  * @category Graphics
@@ -895,7 +895,7 @@ export const PIXELFORMAT_RG32U = 43;
 export const PIXELFORMAT_RGBA8I = 44;
 
 /**
- * 8-bit per-channel unsigned integer (RGBA) format (Not supported by WebGL1).
+ * 8-bit per-channel unsigned integer (RGBA) format.
  *
  * @type {number}
  * @category Graphics
@@ -903,7 +903,7 @@ export const PIXELFORMAT_RGBA8I = 44;
 export const PIXELFORMAT_RGBA8U = 45;
 
 /**
- * 16-bit per-channel signed integer (RGBA) format (Not supported by WebGL1).
+ * 16-bit per-channel signed integer (RGBA) format.
  *
  * @type {number}
  * @category Graphics
@@ -911,7 +911,7 @@ export const PIXELFORMAT_RGBA8U = 45;
 export const PIXELFORMAT_RGBA16I = 46;
 
 /**
- * 16-bit per-channel unsigned integer (RGBA) format (Not supported by WebGL1).
+ * 16-bit per-channel unsigned integer (RGBA) format.
  *
  * @type {number}
  * @category Graphics
@@ -919,7 +919,7 @@ export const PIXELFORMAT_RGBA16I = 46;
 export const PIXELFORMAT_RGBA16U = 47;
 
 /**
- * 32-bit per-channel signed integer (RGBA) format (Not supported by WebGL1).
+ * 32-bit per-channel signed integer (RGBA) format.
  *
  * @type {number}
  * @category Graphics
@@ -927,7 +927,7 @@ export const PIXELFORMAT_RGBA16U = 47;
 export const PIXELFORMAT_RGBA32I = 48;
 
 /**
- * 32-bit per-channel unsigned integer (RGBA) format (Not supported by WebGL1).
+ * 32-bit per-channel unsigned integer (RGBA) format.
  *
  * @type {number}
  * @category Graphics
@@ -953,7 +953,7 @@ export const PIXELFORMAT_RG16F = 51;
 // map of engine PIXELFORMAT_*** enums to information about the format
 export const pixelFormatInfo = new Map([
 
-    // uncompressed formats
+    // float formats
     [PIXELFORMAT_A8,            { name: 'A8', size: 1 }],
     [PIXELFORMAT_L8,            { name: 'L8', size: 1 }],
     [PIXELFORMAT_LA8,           { name: 'LA8', size: 2 }],
@@ -991,7 +991,7 @@ export const pixelFormatInfo = new Map([
     [PIXELFORMAT_ATC_RGB, { name: 'ATC_RGB', blockSize: 8 }],
     [PIXELFORMAT_ATC_RGBA, { name: 'ATC_RGBA', blockSize: 16 }],
 
-    // uncompressed integer formats (Not supported on WebGL1)
+    // integer formats
     [PIXELFORMAT_R8I,      { name: 'R8I', size: 1, isInt: true }],
     [PIXELFORMAT_R8U,      { name: 'R8U', size: 1, isInt: true }],
     [PIXELFORMAT_R16I,     { name: 'R16I', size: 2, isInt: true }],
@@ -1694,7 +1694,7 @@ export const TYPE_UINT32 = 5;
 export const TYPE_FLOAT32 = 6;
 
 /**
- * 16-bit floating point vertex element type (not supported by WebGL1).
+ * 16-bit floating point vertex element type.
  *
  * @type {number}
  * @category Graphics

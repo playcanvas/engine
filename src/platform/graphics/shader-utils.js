@@ -161,9 +161,6 @@ class ShaderUtils {
             code = options.fragmentExtensions ? `${options.fragmentExtensions}\n` : '';
 
             // extensions used by default
-            if (device.extStandardDerivatives) {
-                code += "#extension GL_OES_standard_derivatives : enable\n";
-            }
             if (device.extTextureLod) {
                 code += "#extension GL_EXT_shader_texture_lod : enable\n";
                 code += "#define SUPPORTS_TEXLOD\n";

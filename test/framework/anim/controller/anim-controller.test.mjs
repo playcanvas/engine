@@ -8,6 +8,7 @@ import { AnimData } from '../../../../src/framework/anim/evaluator/anim-data.js'
 import { AnimCurve } from '../../../../src/framework/anim/evaluator/anim-curve.js';
 import { INTERPOLATION_LINEAR } from '../../../../src/framework/anim/constants.js';
 import { ANIM_LESS_THAN } from '../../../../src/framework/anim/controller/constants.js';
+import { NullGraphicsDevice } from '../../../../src/platform/graphics/null/null-graphics-device.js';
 import { HTMLCanvasElement } from '@playcanvas/canvas-mock';
 import { expect } from 'chai';
 
@@ -18,7 +19,7 @@ describe('AnimController', function () {
 
     beforeEach(function () {
         const canvas = new HTMLCanvasElement(500, 500);
-        app = new Application(canvas);
+        app = new Application(canvas, { graphicsDevice: new NullGraphicsDevice(canvas) });
         const states = [
             {
                 name: 'START'

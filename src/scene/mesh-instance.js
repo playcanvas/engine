@@ -20,6 +20,7 @@ import {
 import { GraphNode } from './graph-node.js';
 import { getDefaultMaterial } from './materials/default-material.js';
 import { LightmapCache } from './graphics/lightmap-cache.js';
+import { DebugGraphics } from '../platform/graphics/debug-graphics.js';
 
 let id = 0;
 const _tmpAabb = new BoundingBox();
@@ -519,8 +520,13 @@ class MeshInstance {
             // cache miss in the material variants
             if (!shaderInstance.shader) {
 
+                // marker to allow us to see the source node for shader alloc
+                DebugGraphics.pushGpuMarker(this.mesh.device, `Node: ${this.node.name}`);
+
                 const shader = mat.getShaderVariant(this.mesh.device, scene, shaderDefs, null, shaderPass, sortedLights,
                                                     viewUniformFormat, viewBindGroupFormat, this._mesh.vertexBuffer?.format);
+
+                DebugGraphics.popGpuMarker(this.mesh.device);
 
                 // add it to the material variants cache
                 mat.variants.set(variantKey, shader);

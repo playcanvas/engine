@@ -17,7 +17,6 @@ const _m0 = new Vec3();
 const _m1 = new Vec3();
 const _m2 = new Vec3();
 const _s = new Vec3();
-const _r = new Vec3();
 
 /** @ignore */
 class GSplat {
@@ -149,7 +148,7 @@ class GSplat {
         if (device.isWebGL1)
             preferHighPrecision = false;
 
-        const halfSupported = device.extTextureHalfFloat && device.textureHalfFloatUpdatable;
+        const halfSupported = device.extTextureHalfFloat;
         const floatSupported = device.extTextureFloat;
 
         // true if half format should be used, false is float format should be used or undefined if none are available.
@@ -223,10 +222,10 @@ class GSplat {
      * @param {Float32Array} x - The array containing the 'x' component of the center points.
      * @param {Float32Array} y - The array containing the 'y' component of the center points.
      * @param {Float32Array} z - The array containing the 'z' component of the center points.
-     * @param {Float32Array} rot0 - The array containing the 'x' component of quaternion rotations.
-     * @param {Float32Array} rot1 - The array containing the 'y' component of quaternion rotations.
-     * @param {Float32Array} rot2 - The array containing the 'z' component of quaternion rotations.
-     * @param {Float32Array} rot3 - The array containing the 'w' component of quaternion rotations.
+     * @param {Float32Array} rot0 - The array containing the 'w' component of quaternion rotations.
+     * @param {Float32Array} rot1 - The array containing the 'x' component of quaternion rotations.
+     * @param {Float32Array} rot2 - The array containing the 'y' component of quaternion rotations.
+     * @param {Float32Array} rot3 - The array containing the 'z' component of quaternion rotations.
      * @param {Float32Array} scale0 - The first scale component associated with the x-dimension.
      * @param {Float32Array} scale1 - The second scale component associated with the y-dimension.
      * @param {Float32Array} scale2 - The third scale component associated with the z-dimension.
@@ -251,12 +250,8 @@ class GSplat {
         for (let i = 0; i < this.numSplats; i++) {
 
             // rotation
-            quat.set(rot0[i], rot1[i], rot2[i], rot3[i]).normalize();
-            if (quat.w < 0) {
-                quat.conjugate();
-            }
-            _r.set(quat.x, quat.y, quat.z);
-            this.quatToMat3(_r, mat);
+            quat.set(rot1[i], rot2[i], rot3[i], rot0[i]).normalize();
+            mat.setFromQuat(quat);
 
             // scale
             _s.set(
@@ -300,32 +295,6 @@ class GSplat {
         this.transformATexture.unlock();
         this.transformBTexture.unlock();
         this.transformCTexture.unlock();
-    }
-
-    /**
-     * Convert quaternion rotation stored in Vec3 to a rotation matrix.
-     *
-     * @param {Vec3} R - Rotation stored in Vec3.
-     * @param {Mat3} mat - The output rotation matrix.
-     */
-    quatToMat3(R, mat) {
-        const x = R.x;
-        const y = R.y;
-        const z = R.z;
-        const w = Math.sqrt(1.0 - R.dot(R));
-
-        const d = mat.data;
-        d[0] = 1.0 - 2.0 * (z * z + w * w);
-        d[1] = 2.0 * (y * z + x * w);
-        d[2] = 2.0 * (y * w - x * z);
-
-        d[3] = 2.0 * (y * z - x * w);
-        d[4] = 1.0 - 2.0 * (y * y + w * w);
-        d[5] = 2.0 * (z * w + x * y);
-
-        d[6] = 2.0 * (y * w + x * z);
-        d[7] = 2.0 * (z * w - x * y);
-        d[8] = 1.0 - 2.0 * (y * y + z * z);
     }
 
     /**

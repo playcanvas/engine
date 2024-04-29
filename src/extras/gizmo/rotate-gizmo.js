@@ -120,7 +120,7 @@ class RotateGizmo extends TransformGizmo {
      * The camera component.
      * @param {import('../../scene/layer.js').Layer} layer - The render layer.
      * @example
-     * const gizmo = new pcx.RotateGizmo(app, camera, layer);
+     * const gizmo = new pc.RotateGizmo(app, camera, layer);
      */
     constructor(app, camera, layer) {
         super(app, camera, layer);

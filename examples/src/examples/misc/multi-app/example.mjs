@@ -20,10 +20,8 @@ const createApp = async function (deviceType) {
     if (deviceType === 'webgpu') {
         device = new pc.WebgpuGraphicsDevice(canvas, {});
         await device.initWebGpu(rootPath + '/static/lib/glslang/glslang.js', rootPath + '/static/lib/twgsl/twgsl.js');
-    } else if (deviceType === 'webgl1' || deviceType === 'webgl2') {
-        device = new pc.WebglGraphicsDevice(canvas, {
-            preferWebGl2: deviceType === 'webgl2'
-        });
+    } else if (deviceType === 'webgl2') {
+        device = new pc.WebglGraphicsDevice(canvas);
     } else {
         device = new pc.NullGraphicsDevice(canvas, {});
     }
@@ -95,7 +93,7 @@ const createApp = async function (deviceType) {
         app.root.addChild(screen);
 
         // device type as text
-        const text = app.graphicsDevice.isWebGL1 ? 'WebGL 1' : app.graphicsDevice.isWebGL2 ? 'WebGL 2' : 'WebGPU';
+        const text = app.graphicsDevice.isWebGL2 ? 'WebGL 2' : 'WebGPU';
 
         // Text with outline to identify the platform
         const textOutline = new pc.Entity();
@@ -126,7 +124,6 @@ const createApp = async function (deviceType) {
 const apps = {
     webgpu: [],
     webgl2: [],
-    webgl1: [],
     null: []
 };
 

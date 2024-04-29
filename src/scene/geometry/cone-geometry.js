@@ -10,20 +10,22 @@ import { calculateTangents } from './geometry-utils.js';
  *
  * Note that the cone is created with UVs in the range of 0 to 1.
  *
- * @param {import('../../platform/graphics/graphics-device.js').GraphicsDevice} device - The graphics
- * device used to manage the mesh.
- * @param {object} [opts] - An object that specifies optional inputs for the function as follows:
- * @param {number} [opts.baseRadius] - The base radius of the cone (defaults to 0.5).
- * @param {number} [opts.peakRadius] - The peak radius of the cone (defaults to 0.0).
- * @param {number} [opts.height] - The length of the body of the cone (defaults to 1.0).
- * @param {number} [opts.heightSegments] - The number of divisions along the length of the cone
- * (defaults to 5).
- * @param {number} [opts.capSegments] - The number of divisions around the tubular body of the cone
- * (defaults to 18).
- * @param {boolean} [opts.calculateTangents] - Generate tangent information (defaults to false).
  * @category Graphics
  */
 class ConeGeometry extends ConeBaseGeometry {
+    /**
+     * Create a new ConeGeometry instance.
+     *
+     * @param {object} [opts] - An object that specifies optional inputs for the function as follows:
+     * @param {number} [opts.baseRadius] - The base radius of the cone (defaults to 0.5).
+     * @param {number} [opts.peakRadius] - The peak radius of the cone (defaults to 0.0).
+     * @param {number} [opts.height] - The length of the body of the cone (defaults to 1.0).
+     * @param {number} [opts.heightSegments] - The number of divisions along the length of the cone
+     * (defaults to 5).
+     * @param {number} [opts.capSegments] - The number of divisions around the tubular body of the cone
+     * (defaults to 18).
+     * @param {boolean} [opts.calculateTangents] - Generate tangent information (defaults to false).
+     */
     constructor(opts = {}) {
 
         // Check the supplied options and provide defaults for unspecified ones

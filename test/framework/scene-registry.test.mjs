@@ -1,5 +1,6 @@
 import { Application } from '../../src/framework/application.js';
 import { SceneRegistry } from '../../src/framework/scene-registry.js';
+import { NullGraphicsDevice } from '../../src/platform/graphics/null/null-graphics-device.js';
 
 import { HTMLCanvasElement } from '@playcanvas/canvas-mock';
 
@@ -11,7 +12,7 @@ describe('SceneRegistry', function () {
 
     beforeEach(function () {
         const canvas = new HTMLCanvasElement(500, 500);
-        app = new Application(canvas);
+        app = new Application(canvas, { graphicsDevice: new NullGraphicsDevice(canvas) });
     });
 
     afterEach(function () {

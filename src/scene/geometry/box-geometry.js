@@ -14,23 +14,25 @@ const primitiveUv1PaddingScale = 1.0 - primitiveUv1Padding * 2;
  *
  * Note that the box is created with UVs in the range of 0 to 1 on each face.
  *
- * @param {import('../../platform/graphics/graphics-device.js').GraphicsDevice} device - The graphics
- * device used to manage the mesh.
- * @param {object} [opts] - An object that specifies optional inputs for the function as follows:
- * @param {Vec3} [opts.halfExtents] - The half dimensions of the box in each axis (defaults to
- * [0.5, 0.5, 0.5]).
- * @param {number} [opts.widthSegments] - The number of divisions along the X axis of the box
- * (defaults to 1).
- * @param {number} [opts.lengthSegments] - The number of divisions along the Z axis of the box
- * (defaults to 1).
- * @param {number} [opts.heightSegments] - The number of divisions along the Y axis of the box
- * (defaults to 1).
- * @param {boolean} [opts.calculateTangents] - Generate tangent information (defaults to false).
- * @param {number} [opts.yOffset] - Move the box vertically by given offset in local space. Pass
- * 0.5 to generate the box with pivot point at the bottom face. Defaults to 0.
  * @category Graphics
  */
 class BoxGeometry extends Geometry {
+    /**
+     * Create a new BoxGeometry instance.
+     *
+     * @param {object} [opts] - An object that specifies optional inputs for the function as follows:
+     * @param {Vec3} [opts.halfExtents] - The half dimensions of the box in each axis (defaults to
+     * [0.5, 0.5, 0.5]).
+     * @param {number} [opts.widthSegments] - The number of divisions along the X axis of the box
+     * (defaults to 1).
+     * @param {number} [opts.lengthSegments] - The number of divisions along the Z axis of the box
+     * (defaults to 1).
+     * @param {number} [opts.heightSegments] - The number of divisions along the Y axis of the box
+     * (defaults to 1).
+     * @param {boolean} [opts.calculateTangents] - Generate tangent information (defaults to false).
+     * @param {number} [opts.yOffset] - Move the box vertically by given offset in local space. Pass
+     * 0.5 to generate the box with pivot point at the bottom face. Defaults to 0.
+     */
     constructor(opts = {}) {
         super();
 

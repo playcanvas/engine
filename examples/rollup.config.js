@@ -37,13 +37,13 @@ const STATIC_FILES = [
     { src: './iframe', dest: 'dist/iframe' },
 
     // assets used in examples
-    { src: './assets', dest: 'dist/static/assets/' },
+    { src: './assets', dest: 'dist/static/assets/', once: true },
 
     // thumbnails used in examples
-    { src: './thumbnails', dest: 'dist/thumbnails/' },
+    { src: './thumbnails', dest: 'dist/thumbnails/', once: true },
 
     // external libraries used in examples
-    { src: './src/lib', dest: 'dist/static/lib/' },
+    { src: './src/lib', dest: 'dist/static/lib/', once: true },
 
     // engine scripts
     { src: '../scripts', dest: 'dist/static/scripts/' },
@@ -52,13 +52,13 @@ const STATIC_FILES = [
     { src: '../build/playcanvas.d.ts', dest: 'dist/playcanvas.d.ts' },
 
     // playcanvas observer
-    { src: './node_modules/@playcanvas/observer/dist/index.mjs', dest: 'dist/iframe/playcanvas-observer.mjs' },
+    { src: './node_modules/@playcanvas/observer/dist/index.mjs', dest: 'dist/iframe/playcanvas-observer.mjs', once: true },
 
     // modules (N.B. destination folder is 'modules' as 'node_modules' are automatically excluded by git pages)
-    { src: './node_modules/monaco-editor/min/vs', dest: 'dist/modules/monaco-editor/min/vs' },
+    { src: './node_modules/monaco-editor/min/vs', dest: 'dist/modules/monaco-editor/min/vs', once: true },
 
     // fflate (for when using ENGINE_PATH)
-    { src: '../node_modules/fflate/esm/', dest: 'dist/modules/fflate/esm' },
+    { src: '../node_modules/fflate/esm/', dest: 'dist/modules/fflate/esm', once: true },
 
     // engine path
     ...getEnginePathFiles()
@@ -142,10 +142,15 @@ function getEngineTargets() {
 
 export default [
     {
+        // used as a placeholder
         input: 'src/static/index.html',
         output: {
-            file: `dist/copy.tmp`
+            file: `cache/output.tmp`
         },
+        watch: {
+            skipWrite: true
+        },
+        treeshake: false,
         plugins: [
             generateStandalone(NODE_ENV, ENGINE_PATH),
             copyStatic(NODE_ENV, STATIC_FILES)
