@@ -173,14 +173,6 @@ class LightsBuffer {
             this._lightsTextureFloatId = undefined;
         }
 
-        // inverse sizes for both textures
-        this._lightsTextureInvSizeId = this.device.scope.resolve('lightsTextureInvSize');
-        this._lightsTextureInvSizeData = new Float32Array(4);
-        this._lightsTextureInvSizeData[0] = pixelsPerLightFloat ? 1.0 / this.lightsTextureFloat.width : 0;
-        this._lightsTextureInvSizeData[1] = pixelsPerLightFloat ? 1.0 / this.lightsTextureFloat.height : 0;
-        this._lightsTextureInvSizeData[2] = 1.0 / this.lightsTexture8.width;
-        this._lightsTextureInvSizeData[3] = 1.0 / this.lightsTexture8.height;
-
         // compression ranges
         this.invMaxColorValue = 0;
         this.invMaxAttenuation = 0;
@@ -249,8 +241,6 @@ class LightsBuffer {
         if (this.lightTextureFormat === FORMAT_FLOAT) {
             this._lightsTextureFloatId.setValue(this.lightsTextureFloat);
         }
-
-        this._lightsTextureInvSizeId.setValue(this._lightsTextureInvSizeData);
     }
 
     getSpotDirection(direction, spot) {
