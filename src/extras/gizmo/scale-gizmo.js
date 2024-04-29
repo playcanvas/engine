@@ -8,7 +8,6 @@ import { TransformGizmo } from "./transform-gizmo.js";
 // temporary variables
 const tmpV1 = new Vec3();
 const tmpV2 = new Vec3();
-const tmpV3 = new Vec3();
 const tmpQ1 = new Quat();
 
 /**
@@ -301,33 +300,33 @@ class ScaleGizmo extends TransformGizmo {
 
         plane.intersectsRay(ray, point);
 
-        const gizmoPoint = tmpV1.sub2(point, gizmoPos).normalize();
-
         if (isScaleUniform) {
+            // rotate point back to world coords
+            // tmpQ1.copy(this._gizmoRotationStart).invert().transformVector(point, point);
+
             // calculate projecion vector for scale direction
             switch (axis) {
                 case 'x':
-                    tmpV2.copy(this.root.up);
-                    tmpV3.copy(this.root.forward).mulScalar(-1);
+                    tmpV1.copy(this.root.up);
+                    tmpV2.copy(this.root.forward).mulScalar(-1);
                     break;
                 case 'y':
-                    tmpV2.copy(this.root.right);
-                    tmpV3.copy(this.root.forward).mulScalar(-1);
+                    tmpV1.copy(this.root.right);
+                    tmpV2.copy(this.root.forward).mulScalar(-1);
                     break;
                 case 'z':
-                    tmpV2.copy(this.root.up);
-                    tmpV3.copy(this.root.right);
+                    tmpV1.copy(this.root.up);
+                    tmpV2.copy(this.root.right);
                     break;
                 default:
                     // defaults to all axes
-                    tmpV2.copy(this._camera.entity.up);
-                    tmpV3.copy(this._camera.entity.right);
+                    tmpV1.copy(this._camera.entity.up);
+                    tmpV2.copy(this._camera.entity.right);
                     break;
             }
-
-            tmpV2.add(tmpV3).normalize();
-
-            const v = point.sub(gizmoPos).length() * gizmoPoint.dot(tmpV2);
+            tmpV2.add(tmpV1).normalize();
+            tmpV1.sub2(point, gizmoPos).normalize();
+            const v = point.sub(gizmoPos).length() * tmpV1.dot(tmpV2);
             point.set(v, v, v);
 
             // keep scale of axis constant if not all axes are selected
