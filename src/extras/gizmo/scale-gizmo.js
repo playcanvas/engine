@@ -301,9 +301,6 @@ class ScaleGizmo extends TransformGizmo {
         plane.intersectsRay(ray, point);
 
         if (isScaleUniform) {
-            // rotate point back to world coords
-            // tmpQ1.copy(this._gizmoRotationStart).invert().transformVector(point, point);
-
             // calculate projecion vector for scale direction
             switch (axis) {
                 case 'x':
@@ -325,8 +322,9 @@ class ScaleGizmo extends TransformGizmo {
                     break;
             }
             tmpV2.add(tmpV1).normalize();
-            tmpV1.sub2(point, gizmoPos).normalize();
-            const v = point.sub(gizmoPos).length() * tmpV1.dot(tmpV2);
+            tmpV1.sub2(point, gizmoPos);
+            const length = tmpV1.length();
+            const v = length * tmpV1.normalize().dot(tmpV2);
             point.set(v, v, v);
 
             // keep scale of axis constant if not all axes are selected
@@ -341,15 +339,7 @@ class ScaleGizmo extends TransformGizmo {
         tmpQ1.copy(this._gizmoRotationStart).invert().transformVector(point, point);
 
         if (!isPlane) {
-            // set normal to axis and project position from plane onto normal
-            const axisLine = tmpV1.set(0, 0, 0);
-            axisLine[axis] = 1;
-            point.copy(axisLine.mulScalar(axisLine.dot(point)));
-
-            // set other axes to zero (floating point fix)
-            const v = point[axis];
-            point.set(0, 0, 0);
-            point[axis] = v;
+            this._projectToAxis(point, axis);
         }
 
         return { point, angle };

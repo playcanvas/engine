@@ -557,6 +557,18 @@ class TransformGizmo extends Gizmo {
         return plane;
     }
 
+    _projectToAxis(point, axis) {
+        // set normal to axis and project position from plane onto normal
+        tmpV1.set(0, 0, 0);
+        tmpV1[axis] = 1;
+        point.copy(tmpV1.mulScalar(tmpV1.dot(point)));
+
+        // set other axes to zero (floating point fix)
+        const v = point[axis];
+        point.set(0, 0, 0);
+        point[axis] = v;
+    }
+
     _calcPoint(x, y) {
         const mouseWPos = this._camera.screenToWorld(x, y, 1);
 
@@ -575,15 +587,7 @@ class TransformGizmo extends Gizmo {
         tmpQ1.copy(this._gizmoRotationStart).invert().transformVector(point, point);
 
         if (!isPlane) {
-            // set normal to axis and project position from plane onto normal
-            const axisLine = tmpV1.set(0, 0, 0);
-            axisLine[axis] = 1;
-            point.copy(axisLine.mulScalar(axisLine.dot(point)));
-
-            // set other axes to zero (floating point fix)
-            const v = point[axis];
-            point.set(0, 0, 0);
-            point[axis] = v;
+            this._projectToAxis(point, axis);
         }
 
         return { point, angle };
