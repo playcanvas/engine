@@ -968,7 +968,6 @@ class WebglGraphicsDevice extends GraphicsDevice {
             this.textureHalfFloatFilterable = true;
             this.extTextureLod = true;
             this.extUintElement = true;
-            this.extVertexArrayObject = true;
             this.extColorBufferFloat = this.getExtension('EXT_color_buffer_float');
             this.extDepthTexture = true;
             this.textureRG11B10Renderable = true;
@@ -980,15 +979,6 @@ class WebglGraphicsDevice extends GraphicsDevice {
             this.extTextureFloat = this.getExtension("OES_texture_float");
             this.extTextureLod = this.getExtension('EXT_shader_texture_lod');
             this.extUintElement = this.getExtension("OES_element_index_uint");
-            this.extVertexArrayObject = this.getExtension("OES_vertex_array_object");
-            if (this.extVertexArrayObject) {
-                // Install the WebGL 2 VAO API for WebGL 1.0
-                const ext = this.extVertexArrayObject;
-                gl.createVertexArray = ext.createVertexArrayOES.bind(ext);
-                gl.deleteVertexArray = ext.deleteVertexArrayOES.bind(ext);
-                gl.isVertexArray = ext.isVertexArrayOES.bind(ext);
-                gl.bindVertexArray = ext.bindVertexArrayOES.bind(ext);
-            }
             this.extColorBufferFloat = null;
             this.extDepthTexture = gl.getExtension('WEBGL_depth_texture');
 
