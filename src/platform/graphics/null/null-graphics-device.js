@@ -44,7 +44,6 @@ class NullGraphicsDevice extends GraphicsDevice {
         this.supportsBoneTextures = true;
         this.supportsMorphTargetTexturesCore = true;
         this.supportsAreaLights = true;
-        this.supportsDepthShadow = true;
         this.supportsGpuParticles = false;
         this.supportsMrt = true;
         this.extUintElement = true;
