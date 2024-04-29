@@ -1,11 +1,9 @@
-import * as pc from 'playcanvas';
-
 /**
  * @param {import('../../../app/components/Example.mjs').ControlOptions} options - The options.
  * @returns {JSX.Element} The returned JSX Element.
  */
 export function controls({ observer, ReactPCUI, jsx, fragment }) {
-    const { BindingTwoWay, Container, Button, InfoBox, LabelGroup, Panel, SliderInput, SelectInput } = ReactPCUI;
+    const { BindingTwoWay, Container, Button, LabelGroup, Panel, SliderInput, SelectInput } = ReactPCUI;
 
     return fragment(
         jsx(
