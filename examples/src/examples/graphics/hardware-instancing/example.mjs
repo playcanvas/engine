@@ -81,45 +81,43 @@ assetListLoader.load(() => {
     // add the box entity to the hierarchy
     app.root.addChild(cylinder);
 
-    if (app.graphicsDevice.supportsInstancing) {
-        // number of instances to render
-        const instanceCount = 1000;
+    // number of instances to render
+    const instanceCount = 1000;
 
-        // store matrices for individual instances into array
-        const matrices = new Float32Array(instanceCount * 16);
-        let matrixIndex = 0;
+    // store matrices for individual instances into array
+    const matrices = new Float32Array(instanceCount * 16);
+    let matrixIndex = 0;
 
-        const radius = 5;
-        const pos = new pc.Vec3();
-        const rot = new pc.Quat();
-        const scl = new pc.Vec3();
-        const matrix = new pc.Mat4();
+    const radius = 5;
+    const pos = new pc.Vec3();
+    const rot = new pc.Quat();
+    const scl = new pc.Vec3();
+    const matrix = new pc.Mat4();
 
-        for (let i = 0; i < instanceCount; i++) {
-            // generate random positions / scales and rotations
-            pos.set(
-                Math.random() * radius - radius * 0.5,
-                Math.random() * radius - radius * 0.5,
-                Math.random() * radius - radius * 0.5
-            );
-            scl.set(0.1 + Math.random() * 0.1, 0.1 + Math.random() * 0.3, 0.1 + Math.random() * 0.1);
-            rot.setFromEulerAngles(i * 30, i * 50, i * 70);
-            matrix.setTRS(pos, rot, scl);
+    for (let i = 0; i < instanceCount; i++) {
+        // generate random positions / scales and rotations
+        pos.set(
+            Math.random() * radius - radius * 0.5,
+            Math.random() * radius - radius * 0.5,
+            Math.random() * radius - radius * 0.5
+        );
+        scl.set(0.1 + Math.random() * 0.1, 0.1 + Math.random() * 0.3, 0.1 + Math.random() * 0.1);
+        rot.setFromEulerAngles(i * 30, i * 50, i * 70);
+        matrix.setTRS(pos, rot, scl);
 
-            // copy matrix elements into array of floats
-            for (let m = 0; m < 16; m++) matrices[matrixIndex++] = matrix.data[m];
-        }
-
-        // create static vertex buffer containing the matrices
-        const vbFormat = pc.VertexFormat.getDefaultInstancingFormat(app.graphicsDevice);
-        const vertexBuffer = new pc.VertexBuffer(app.graphicsDevice, vbFormat, instanceCount, {
-            data: matrices
-        });
-
-        // initialize instancing using the vertex buffer on meshInstance of the created box
-        const cylinderMeshInst = cylinder.render.meshInstances[0];
-        cylinderMeshInst.setInstancing(vertexBuffer);
+        // copy matrix elements into array of floats
+        for (let m = 0; m < 16; m++) matrices[matrixIndex++] = matrix.data[m];
     }
+
+    // create static vertex buffer containing the matrices
+    const vbFormat = pc.VertexFormat.getDefaultInstancingFormat(app.graphicsDevice);
+    const vertexBuffer = new pc.VertexBuffer(app.graphicsDevice, vbFormat, instanceCount, {
+        data: matrices
+    });
+
+    // initialize instancing using the vertex buffer on meshInstance of the created box
+    const cylinderMeshInst = cylinder.render.meshInstances[0];
+    cylinderMeshInst.setInstancing(vertexBuffer);
 
     // Set an update function on the app's update event
     let angle = 0;

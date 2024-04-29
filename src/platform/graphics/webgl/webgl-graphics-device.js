@@ -1042,8 +1042,6 @@ class WebglGraphicsDevice extends GraphicsDevice {
         this.supportsMsaa = contextAttribs?.antialias ?? false;
         this.supportsStencil = contextAttribs?.stencil ?? false;
 
-        this.supportsInstancing = !!this.extInstancing;
-
         // Query parameter values from the WebGL context
         this.maxTextureSize = gl.getParameter(gl.MAX_TEXTURE_SIZE);
         this.maxCubeMapSize = gl.getParameter(gl.MAX_CUBE_MAP_TEXTURE_SIZE);
