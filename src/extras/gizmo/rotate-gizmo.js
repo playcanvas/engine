@@ -3,7 +3,7 @@ import { Color } from '../../core/math/color.js';
 import { Quat } from '../../core/math/quat.js';
 import { Mat4 } from '../../core/math/mat4.js';
 import { Vec3 } from '../../core/math/vec3.js';
-import { PROJECTION_PERSPECTIVE } from '../../scene/constants.js';
+import { PROJECTION_ORTHOGRAPHIC, PROJECTION_PERSPECTIVE } from '../../scene/constants.js';
 
 import { AxisDisk } from './axis-shapes.js';
 import { GIZMO_LOCAL } from './gizmo.js';
@@ -15,6 +15,10 @@ const tmpV2 = new Vec3();
 const tmpM1 = new Mat4();
 const tmpQ1 = new Quat();
 const tmpQ2 = new Quat();
+
+// constants
+const FACING_EPSILON = 0.2;
+const ROTATE_SCALE = 900;
 
 /**
  * Rotation gizmo.
@@ -359,6 +363,45 @@ class RotateGizmo extends TransformGizmo {
         if (this._coordSpace === GIZMO_LOCAL) {
             this._updateRotation();
         }
+    }
+
+    _calcPoint(x, y) {
+        const gizmoPos = this.root.getPosition();
+        const mouseWPos = this._camera.screenToWorld(x, y, 1);
+
+        const axis = this._selectedAxis;
+
+        const ray = this._createRay(mouseWPos);
+        const plane = this._createPlane(axis, axis === 'face', false);
+
+        const point = new Vec3();
+        let angle = 0;
+
+        plane.intersectsRay(ray, point);
+
+        // point needs to be relative to gizmo for angle calculation
+        point.sub(gizmoPos);
+
+        // rotate point back to world coords
+        tmpQ1.copy(this._gizmoRotationStart).invert().transformVector(point, point);
+
+        // calculate angle
+        const facingDir = tmpV1.sub2(ray.origin, gizmoPos).normalize();
+        const planeFacingCross = tmpV2.cross(plane.normal, facingDir);
+        if (axis === 'face' || planeFacingCross.length() < FACING_EPSILON) {
+            // plane facing camera so based on mouse position around gizmo
+            tmpQ1.copy(this._camera.entity.getRotation()).invert();
+            tmpQ1.transformVector(point, tmpV1);
+            angle = Math.atan2(tmpV1.y, tmpV1.x) * math.RAD_TO_DEG;
+        } else {
+            // plane not facing camera so based on absolute mouse position
+            angle = mouseWPos.dot(planeFacingCross.normalize()) * ROTATE_SCALE;
+            if (this._camera.projection === PROJECTION_ORTHOGRAPHIC) {
+                angle /= (this._camera.orthoHeight || 1);
+            }
+        }
+
+        return { point, angle };
     }
 }
 

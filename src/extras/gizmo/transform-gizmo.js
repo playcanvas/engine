@@ -543,18 +543,13 @@ class TransformGizmo extends Gizmo {
             // set plane normal based on axis
             plane.normal.set(0, 0, 0);
             plane.normal[axis] = 1;
-
-            // rotate plane normal by gizmo rotation
             this._gizmoRotationStart.transformVector(plane.normal, plane.normal);
 
             if (isLine) {
-                // TODO: figure out what this is doing
+                // set plane normal to face camera but keep normal perpendicular to axis
                 plane.normal.mulScalar(plane.normal.dot(facingDir));
                 tmpV1.sub2(facingDir, plane.normal).normalize();
                 plane.normal.copy(tmpV1);
-
-                // tmpV1.copy(plane.normal).normalize().mulScalar(10);
-                // this._app.drawLine(gizmoPos, tmpV1.add(gizmoPos), new Color(1, 1, 1, 1), true);
             }
         }
 
@@ -563,136 +558,58 @@ class TransformGizmo extends Gizmo {
     }
 
     _calcPoint(x, y) {
-        const gizmoPos = this.root.getPosition();
         const mouseWPos = this._camera.screenToWorld(x, y, 1);
 
         const axis = this._selectedAxis;
         const isPlane = this._selectedIsPlane;
-        const isRotation = this._isRotation;
-        const isUniform = this._useUniformScaling && isPlane;
-        const isAllAxes = axis === 'xyz';
-        const isLine = !isPlane && !isRotation;
-        const isFacing = axis === 'face';
 
         const ray = this._createRay(mouseWPos);
-        const plane = this._createPlane(axis, isUniform || isAllAxes || isFacing, isLine);
+        const plane = this._createPlane(axis, false, !isPlane);
 
         const point = new Vec3();
-        let angle = 0;
+        const angle = 0;
 
         plane.intersectsRay(ray, point);
 
-        if (isRotation) {
-            // point needs to be relative to gizmo for angle calculation
-            point.sub(gizmoPos);
+        // rotate point back to world coords
+        tmpQ1.copy(this._gizmoRotationStart).invert().transformVector(point, point);
 
-            // rotate point back to world coords
-            tmpQ1.copy(this._gizmoRotationStart).invert().transformVector(point, point);
+        if (!isPlane) {
+            // set normal to axis and project position from plane onto normal
+            const axisLine = tmpV1.set(0, 0, 0);
+            axisLine[axis] = 1;
+            point.copy(axisLine.mulScalar(axisLine.dot(point)));
 
-            // calculate angle
-            const facingDir = tmpV1.sub2(ray.origin, gizmoPos).normalize();
-            tmpV2.cross(plane.normal, facingDir);
-            if (isFacing || tmpV2.length() < FACING_EPSILON) {
-                tmpQ1.copy(this._camera.entity.getRotation()).invert();
-                tmpQ1.transformVector(point, tmpV1);
-                angle = Math.atan2(tmpV1.y, tmpV1.x) * math.RAD_TO_DEG;
-            } else {
-                angle = mouseWPos.dot(tmpV2.normalize()) * ROTATE_SCALE;
-                if (this._camera.projection === PROJECTION_ORTHOGRAPHIC) {
-                    angle /= (this._camera.orthoHeight || 1);
-                }
-            }
-
-            return { point, angle };
-        }
-
-        if (isUniform) {
-            // calculate point distance from gizmo
-            tmpV1.sub2(point, gizmoPos).normalize();
-
-            // calculate projecion vector for scale direction
-            switch (axis) {
-                case 'x':
-                    tmpV2.copy(this.root.up);
-                    tmpV3.copy(this.root.forward).mulScalar(-1);
-                    break;
-                case 'y':
-                    tmpV2.copy(this.root.right);
-                    tmpV3.copy(this.root.forward).mulScalar(-1);
-                    break;
-                case 'z':
-                    tmpV2.copy(this.root.up);
-                    tmpV3.copy(this.root.right);
-                    break;
-                default:
-                    tmpV2.set(0, 0, 0);
-                    tmpV3.set(0, 0, 0);
-                    break;
-            }
-            tmpV2.add(tmpV3).normalize();
-
-            const v = point.sub(gizmoPos).length() * tmpV1.dot(tmpV2);
-            point.set(v, v, v);
-            point[axis] = 1;
-
-            return { point, angle };
-        }
-
-        if (isAllAxes) {
-            // calculate point distance from gizmo
-            tmpV1.sub2(point, gizmoPos).normalize();
-            tmpV2.copy(this._camera.entity.up).add(this._camera.entity.right).normalize();
-
-            const v = point.sub(gizmoPos).length() * tmpV1.dot(tmpV2);
-            point.set(v, v, v);
-
-            return { point, angle };
-        }
-
-        if (!isFacing) {
-            if (isLine) {
-                // reset normal based on axis and project position from plane onto normal
-                plane.normal.set(0, 0, 0);
-                plane.normal[axis] = 1;
-                this._gizmoRotationStart.transformVector(plane.normal, plane.normal);
-                point.copy(plane.normal.mulScalar(plane.normal.dot(point)));
-            }
-
-            // rotate point back to world coords
-            tmpQ1.copy(this._gizmoRotationStart).invert().transformVector(point, point);
-
-            if (isLine) {
-                // set other axes to zero if not plane point
-                const v = point[axis];
-                point.set(0, 0, 0);
-                point[axis] = v;
-            }
+            // set other axes to zero (floating point fix)
+            const v = point[axis];
+            point.set(0, 0, 0);
+            point[axis] = v;
         }
 
         return { point, angle };
     }
 
     _drawGuideLines() {
-        // const gizmoPos = this.root.getPosition();
-        // const gizmoRot = tmpQ1.copy(this.root.getRotation());
-        // const checkAxis = this._hoverAxis || this._selectedAxis;
-        // const checkIsPlane = this._hoverIsPlane || this._selectedIsPlane;
-        // for (let i = 0; i < VEC3_AXES.length; i++) {
-        //     const axis = VEC3_AXES[i];
-        //     if (checkAxis === 'xyz') {
-        //         this._drawSpanLine(gizmoPos, gizmoRot, axis);
-        //         continue;
-        //     }
-        //     if (checkIsPlane) {
-        //         if (axis !== checkAxis) {
-        //             this._drawSpanLine(gizmoPos, gizmoRot, axis);
-        //         }
-        //     } else {
-        //         if (axis === checkAxis) {
-        //             this._drawSpanLine(gizmoPos, gizmoRot, axis);
-        //         }
-        //     }
-        // }
+        const gizmoPos = this.root.getPosition();
+        const gizmoRot = tmpQ1.copy(this.root.getRotation());
+        const checkAxis = this._hoverAxis || this._selectedAxis;
+        const checkIsPlane = this._hoverIsPlane || this._selectedIsPlane;
+        for (let i = 0; i < VEC3_AXES.length; i++) {
+            const axis = VEC3_AXES[i];
+            if (checkAxis === 'xyz') {
+                this._drawSpanLine(gizmoPos, gizmoRot, axis);
+                continue;
+            }
+            if (checkIsPlane) {
+                if (axis !== checkAxis) {
+                    this._drawSpanLine(gizmoPos, gizmoRot, axis);
+                }
+            } else {
+                if (axis === checkAxis) {
+                    this._drawSpanLine(gizmoPos, gizmoRot, axis);
+                }
+            }
+        }
     }
 
     _drawSpanLine(pos, rot, axis) {
