@@ -39,6 +39,7 @@ import encodePS from './common/frag/encode.js';
 import endPS from './lit/frag/end.js';
 import endVS from './lit/vert/end.js';
 import envAtlasPS from './common/frag/envAtlas.js';
+import envConstPS from './common/frag/envConst.js';
 import envMultiplyPS from './common/frag/envMultiply.js';
 import extensionPS from './lit/frag/extension.js';
 import extensionVS from './lit/vert/extension.js';
@@ -252,6 +253,7 @@ const shaderChunks = {
     endPS,
     endVS,
     envAtlasPS,
+    envConstPS,
     envMultiplyPS,
     extensionPS,
     extensionVS,
