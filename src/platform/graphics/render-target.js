@@ -367,7 +367,7 @@ class RenderTarget {
      * average all samples and create a simple texture with one color per pixel. This function
      * performs this averaging and updates the colorBuffer and the depthBuffer. If autoResolve is
      * set to true, the resolve will happen after every rendering to this render target, otherwise
-     * you can do it manually, during the app update or inside a {@link Command}.
+     * you can do it manually, during the app update or similar.
      *
      * @param {boolean} [color] - Resolve color buffer. Defaults to true.
      * @param {boolean} [depth] - Resolve depth buffer. Defaults to true if the render target has a

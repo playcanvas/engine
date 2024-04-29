@@ -1,6 +1,6 @@
 {
   "name": "playcanvas",
-  "version": "1.70.0",
+  "version": "1.70.1",
   "author": "PlayCanvas <support@playcanvas.com>",
   "homepage": "https://playcanvas.com",
   "description": "PlayCanvas WebGL game engine",
@@ -81,6 +81,7 @@
   ],
   "files": [
     "build/playcanvas*",
+    "build/playcanvas*/*",
     "scripts",
     "README*.md"
   ],
