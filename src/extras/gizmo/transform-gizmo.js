@@ -565,7 +565,6 @@ class TransformGizmo extends Gizmo {
     _calcPoint(x, y) {
         const gizmoPos = this.root.getPosition();
         const mouseWPos = this._camera.screenToWorld(x, y, 1);
-        const cameraRot = this._camera.entity.getRotation();
 
         const axis = this._selectedAxis;
         const isPlane = this._selectedIsPlane;
@@ -594,21 +593,9 @@ class TransformGizmo extends Gizmo {
             const facingDir = tmpV1.sub2(ray.origin, gizmoPos).normalize();
             tmpV2.cross(plane.normal, facingDir);
             if (isFacing || tmpV2.length() < FACING_EPSILON) {
-                switch (axis) {
-                    case 'x':
-                        angle = Math.atan2(point.z, point.y) * math.RAD_TO_DEG;
-                        break;
-                    case 'y':
-                        angle = Math.atan2(point.x, point.z) * math.RAD_TO_DEG;
-                        break;
-                    case 'z':
-                        angle = Math.atan2(point.y, point.x) * math.RAD_TO_DEG;
-                        break;
-                    case 'face':
-                        cameraRot.invert().transformVector(point, tmpV1);
-                        angle = Math.atan2(tmpV1.y, tmpV1.x) * math.RAD_TO_DEG;
-                        break;
-                }
+                tmpQ1.copy(this._camera.entity.getRotation()).invert();
+                tmpQ1.transformVector(point, tmpV1);
+                angle = Math.atan2(tmpV1.y, tmpV1.x) * math.RAD_TO_DEG;
             } else {
                 angle = mouseWPos.dot(tmpV2.normalize()) * ROTATE_SCALE;
                 if (this._camera.projection === PROJECTION_ORTHOGRAPHIC) {
