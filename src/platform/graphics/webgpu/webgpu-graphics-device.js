@@ -158,7 +158,6 @@ class WebgpuGraphicsDevice extends GraphicsDevice {
         this.textureHalfFloatRenderable = true;
         this.boneLimit = 1024;
         this.supportsImageBitmap = true;
-        this.extStandardDerivatives = true;
         this.extBlendMinmax = true;
         this.areaLightLutFormat = this.textureFloatFilterable ? PIXELFORMAT_RGBA32F : PIXELFORMAT_RGBA8;
         this.supportsTextureFetch = true;

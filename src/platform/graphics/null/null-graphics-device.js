@@ -55,7 +55,6 @@ class NullGraphicsDevice extends GraphicsDevice {
         this.textureHalfFloatRenderable = true;
         this.boneLimit = 1024;
         this.supportsImageBitmap = true;
-        this.extStandardDerivatives = true;
         this.extBlendMinmax = true;
         this.areaLightLutFormat = PIXELFORMAT_RGBA8;
         this.supportsTextureFetch = true;
