@@ -251,8 +251,6 @@ class LitShader {
                 code += chunks.tangentBinormalVS;
                 codeBody += "   vTangentW   = getTangent();\n";
                 codeBody += "   vBinormalW  = getBinormal();\n";
-            } else if (options.enableGGXSpecular || !device.extStandardDerivatives) {
-                codeBody += "   vObjectSpaceUpW = normalize(dNormalMatrix * vec3(0, 1, 0));\n";
             }
         }
 
@@ -477,10 +475,6 @@ class LitShader {
 
         let code = this._fsGetBeginCode();
 
-        if (device.extStandardDerivatives && device.isWebGL1) {
-            code += 'uniform vec2 polygonOffset;\n';
-        }
-
         if (shadowType === SHADOW_VSM32) {
             if (device.textureFloatHighPrecision) {
                 code += '#define VSM_EXPONENT 15.0\n\n';
@@ -524,7 +518,6 @@ class LitShader {
         code += this.frontendFunc;
 
         const isVsm = shadowType === SHADOW_VSM8 || shadowType === SHADOW_VSM16 || shadowType === SHADOW_VSM32;
-        const applySlopeScaleBias = device.isWebGL1 && device.extStandardDerivatives;
 
         // Use perspective depth for:
         // Directional: Always since light has no position
@@ -538,12 +531,6 @@ class LitShader {
             code += "    float depth = gl_FragCoord.z;\n";
         } else {
             code += "    float depth = min(distance(view_position, vPositionW) / light_radius, 0.99999);\n";
-            hasModifiedDepth = true;
-        }
-
-        if (applySlopeScaleBias) {
-            code += "    float minValue = 2.3374370500153186e-10; //(1.0 / 255.0) / (256.0 * 256.0 * 256.0);\n";
-            code += "    depth += polygonOffset.x * max(abs(dFdx(depth)), abs(dFdy(depth))) + minValue * polygonOffset.y;\n";
             hasModifiedDepth = true;
         }
 
@@ -743,7 +730,7 @@ class LitShader {
             if (options.hasTangents) {
                 func.append(options.fastTbn ? chunks.TBNfastPS : chunks.TBNPS);
             } else {
-                if (device.extStandardDerivatives && (options.useNormals || options.useClearCoatNormals)) {
+                if (options.useNormals || options.useClearCoatNormals) {
                     func.append(chunks.TBNderivativePS.replace(/\$UV/g, this.lightingUv));
                 } else {
                     func.append(chunks.TBNObjectSpacePS);
@@ -885,10 +872,6 @@ class LitShader {
             if (usePcss) {
                 func.append(chunks.linearizeDepthPS);
                 func.append(chunks.shadowPCSSPS);
-            }
-
-            if (!(device.isWebGL2 || device.isWebGPU || device.extStandardDerivatives)) {
-                func.append(chunks.biasConstPS);
             }
         }
 
@@ -1269,7 +1252,7 @@ class LitShader {
                         if (lightType === LIGHTTYPE_DIRECTIONAL) {
                             func.append("#define SHADOW_SAMPLE_ORTHO");
                         }
-                        if ((pcfShadows || pcssShadows) && device.isWebGL2 || device.isWebGPU || device.extStandardDerivatives) {
+                        if ((pcfShadows || pcssShadows) && device.isWebGL2 || device.isWebGPU) {
                             func.append("#define SHADOW_SAMPLE_SOURCE_ZBUFFER");
                         }
                         if (lightType === LIGHTTYPE_OMNI) {

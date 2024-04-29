@@ -15,7 +15,6 @@ import baseNineSlicedPS from './lit/frag/baseNineSliced.js';
 import baseNineSlicedVS from './lit/vert/baseNineSliced.js';
 import baseNineSlicedTiledPS from './lit/frag/baseNineSlicedTiled.js';
 import bayerPS from './common/frag/bayer.js';
-import biasConstPS from './lit/frag/biasConst.js';
 import blurVSMPS from './lit/frag/blurVSM.js';
 import clearCoatPS from './standard/frag/clearCoat.js';
 import clearCoatGlossPS from './standard/frag/clearCoatGloss.js';
@@ -229,7 +228,6 @@ const shaderChunks = {
     baseNineSlicedVS,
     baseNineSlicedTiledPS,
     bayerPS,
-    biasConstPS,
     blurVSMPS,
     clearCoatPS,
     clearCoatGlossPS,
