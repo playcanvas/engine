@@ -562,12 +562,6 @@ class TransformGizmo extends Gizmo {
         return plane;
     }
 
-    _intersectRayPlane(ray, plane) {
-        const denominator = plane.normal.dot(ray.direction);
-        const t = -(plane.normal.dot(ray.origin) + plane.distance) / denominator;
-        return ray.direction.mulScalar(t).add(ray.origin);
-    }
-
     _calcPoint(x, y) {
         const gizmoPos = this.root.getPosition();
         const mouseWPos = this._camera.screenToWorld(x, y, 1);
@@ -585,16 +579,49 @@ class TransformGizmo extends Gizmo {
         const plane = this._createPlane(axis, isUniform || isAllAxes || isFacing, isLine);
 
         const point = new Vec3();
+        let angle = 0;
+
         plane.intersectsRay(ray, point);
 
         if (isRotation) {
             // point needs to be relative to gizmo for angle calculation
             point.sub(gizmoPos);
+
+            // rotate point back to world coords
+            tmpQ1.copy(this._gizmoRotationStart).invert().transformVector(point, point);
+
+            // calculate angle
+            const facingDir = tmpV1.sub2(ray.origin, gizmoPos).normalize();
+            tmpV2.cross(plane.normal, facingDir);
+            if (isFacing || tmpV2.length() < FACING_EPSILON) {
+                switch (axis) {
+                    case 'x':
+                        angle = Math.atan2(point.z, point.y) * math.RAD_TO_DEG;
+                        break;
+                    case 'y':
+                        angle = Math.atan2(point.x, point.z) * math.RAD_TO_DEG;
+                        break;
+                    case 'z':
+                        angle = Math.atan2(point.y, point.x) * math.RAD_TO_DEG;
+                        break;
+                    case 'face':
+                        cameraRot.invert().transformVector(point, tmpV1);
+                        angle = Math.atan2(tmpV1.y, tmpV1.x) * math.RAD_TO_DEG;
+                        break;
+                }
+            } else {
+                angle = mouseWPos.dot(tmpV2.normalize()) * ROTATE_SCALE;
+                if (this._camera.projection === PROJECTION_ORTHOGRAPHIC) {
+                    angle /= (this._camera.orthoHeight || 1);
+                }
+            }
+
+            return { point, angle };
         }
 
         if (isUniform) {
             // calculate point distance from gizmo
-            tmpV1.copy(point).sub(gizmoPos).normalize();
+            tmpV1.sub2(point, gizmoPos).normalize();
 
             // calculate projecion vector for scale direction
             switch (axis) {
@@ -620,14 +647,22 @@ class TransformGizmo extends Gizmo {
             const v = point.sub(gizmoPos).length() * tmpV1.dot(tmpV2);
             point.set(v, v, v);
             point[axis] = 1;
-        } else if (isAllAxes) {
+
+            return { point, angle };
+        }
+
+        if (isAllAxes) {
             // calculate point distance from gizmo
-            tmpV1.copy(point).sub(gizmoPos).normalize();
+            tmpV1.sub2(point, gizmoPos).normalize();
             tmpV2.copy(this._camera.entity.up).add(this._camera.entity.right).normalize();
 
             const v = point.sub(gizmoPos).length() * tmpV1.dot(tmpV2);
             point.set(v, v, v);
-        } else if (!isFacing) {
+
+            return { point, angle };
+        }
+
+        if (!isFacing) {
             if (isLine) {
                 // reset normal based on axis and project position from plane onto normal
                 plane.normal.set(0, 0, 0);
@@ -644,35 +679,6 @@ class TransformGizmo extends Gizmo {
                 const v = point[axis];
                 point.set(0, 0, 0);
                 point[axis] = v;
-            }
-        }
-
-        // calculate angle
-        let angle = 0;
-        if (isRotation) {
-            tmpV1.sub2(ray.origin, gizmoPos).normalize();
-            tmpV2.cross(plane.normal, tmpV1);
-            if (isFacing || tmpV2.length() < FACING_EPSILON) {
-                switch (axis) {
-                    case 'x':
-                        angle = Math.atan2(point.z, point.y) * math.RAD_TO_DEG;
-                        break;
-                    case 'y':
-                        angle = Math.atan2(point.x, point.z) * math.RAD_TO_DEG;
-                        break;
-                    case 'z':
-                        angle = Math.atan2(point.y, point.x) * math.RAD_TO_DEG;
-                        break;
-                    case 'face':
-                        cameraRot.invert().transformVector(point, tmpV1);
-                        angle = Math.atan2(tmpV1.y, tmpV1.x) * math.RAD_TO_DEG;
-                        break;
-                }
-            } else {
-                angle = mouseWPos.dot(tmpV2.normalize()) * ROTATE_SCALE;
-                if (this._camera.projection === PROJECTION_ORTHOGRAPHIC) {
-                    angle /= (this._camera.orthoHeight || 1);
-                }
             }
         }
 
