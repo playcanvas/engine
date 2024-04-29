@@ -516,12 +516,7 @@ class ForwardRenderer extends Renderer {
                 }
             }
 
-            // marker to allow us to see the source node for shader alloc
-            DebugGraphics.pushGpuMarker(device, `Node: ${drawCall.node.name}`);
-
             const shaderInstance = drawCall.getShaderInstance(pass, lightHash, scene, this.viewUniformFormat, this.viewBindGroupFormat, sortedLights);
-
-            DebugGraphics.popGpuMarker(device);
 
             addCall(drawCall, shaderInstance, material !== prevMaterial, !prevMaterial || lightMask !== prevLightMask);
 
@@ -576,8 +571,7 @@ class ForwardRenderer extends Renderer {
                 device.setAlphaToCoverage(material.alphaToCoverage);
             }
 
-            DebugGraphics.pushGpuMarker(device, `Node: ${drawCall.node.name}`);
-            DebugGraphics.pushGpuMarker(device, `Material: ${material.name}`);
+            DebugGraphics.pushGpuMarker(device, `Node: ${drawCall.node.name}, Material: ${material.name}`);
 
             this.setupCullMode(camera._cullFaces, flipFactor, drawCall);
 
@@ -636,7 +630,6 @@ class ForwardRenderer extends Renderer {
                 material.setParameters(device, drawCall.parameters);
             }
 
-            DebugGraphics.popGpuMarker(device);
             DebugGraphics.popGpuMarker(device);
         }
     }

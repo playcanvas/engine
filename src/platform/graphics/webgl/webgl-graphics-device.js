@@ -4,7 +4,6 @@ import { platform } from '../../../core/platform.js';
 import { Color } from '../../../core/math/color.js';
 
 import {
-    ADDRESS_CLAMP_TO_EDGE,
     CLEARFLAG_COLOR, CLEARFLAG_DEPTH, CLEARFLAG_STENCIL,
     CULLFACE_NONE,
     FILTER_NEAREST, FILTER_LINEAR, FILTER_NEAREST_MIPMAP_NEAREST, FILTER_NEAREST_MIPMAP_LINEAR,
@@ -964,43 +963,22 @@ class WebglGraphicsDevice extends GraphicsDevice {
             this.extBlendMinmax = true;
             this.extDrawBuffers = true;
             this.drawBuffers = gl.drawBuffers.bind(gl);
-            this.extInstancing = true;
-            this.extStandardDerivatives = true;
             this.extTextureFloat = true;
             this.extTextureHalfFloat = true;
             this.textureHalfFloatFilterable = true;
             this.extTextureLod = true;
             this.extUintElement = true;
-            this.extVertexArrayObject = true;
             this.extColorBufferFloat = this.getExtension('EXT_color_buffer_float');
             this.extDepthTexture = true;
             this.textureRG11B10Renderable = true;
         } else {
             this.extBlendMinmax = this.getExtension("EXT_blend_minmax");
             this.extDrawBuffers = this.getExtension('WEBGL_draw_buffers');
-            this.extInstancing = this.getExtension("ANGLE_instanced_arrays");
             this.drawBuffers = this.extDrawBuffers?.drawBuffersWEBGL.bind(this.extDrawBuffers);
-            if (this.extInstancing) {
-                // Install the WebGL 2 Instancing API for WebGL 1.0
-                const ext = this.extInstancing;
-                gl.drawArraysInstanced = ext.drawArraysInstancedANGLE.bind(ext);
-                gl.drawElementsInstanced = ext.drawElementsInstancedANGLE.bind(ext);
-                gl.vertexAttribDivisor = ext.vertexAttribDivisorANGLE.bind(ext);
-            }
 
-            this.extStandardDerivatives = this.getExtension("OES_standard_derivatives");
             this.extTextureFloat = this.getExtension("OES_texture_float");
             this.extTextureLod = this.getExtension('EXT_shader_texture_lod');
             this.extUintElement = this.getExtension("OES_element_index_uint");
-            this.extVertexArrayObject = this.getExtension("OES_vertex_array_object");
-            if (this.extVertexArrayObject) {
-                // Install the WebGL 2 VAO API for WebGL 1.0
-                const ext = this.extVertexArrayObject;
-                gl.createVertexArray = ext.createVertexArrayOES.bind(ext);
-                gl.deleteVertexArray = ext.deleteVertexArrayOES.bind(ext);
-                gl.isVertexArray = ext.isVertexArrayOES.bind(ext);
-                gl.bindVertexArray = ext.bindVertexArrayOES.bind(ext);
-            }
             this.extColorBufferFloat = null;
             this.extDepthTexture = gl.getExtension('WEBGL_depth_texture');
 
@@ -1044,8 +1022,6 @@ class WebglGraphicsDevice extends GraphicsDevice {
         const contextAttribs = gl.getContextAttributes();
         this.supportsMsaa = contextAttribs?.antialias ?? false;
         this.supportsStencil = contextAttribs?.stencil ?? false;
-
-        this.supportsInstancing = !!this.extInstancing;
 
         // Query parameter values from the WebGL context
         this.maxTextureSize = gl.getParameter(gl.MAX_TEXTURE_SIZE);
@@ -1177,13 +1153,7 @@ class WebglGraphicsDevice extends GraphicsDevice {
         this.clearStencil = 0;
         gl.clearStencil(0);
 
-        if (this.isWebGL2) {
-            gl.hint(gl.FRAGMENT_SHADER_DERIVATIVE_HINT, gl.NICEST);
-        } else {
-            if (this.extStandardDerivatives) {
-                gl.hint(this.extStandardDerivatives.FRAGMENT_SHADER_DERIVATIVE_HINT_OES, gl.NICEST);
-            }
-        }
+        gl.hint(gl.FRAGMENT_SHADER_DERIVATIVE_HINT, gl.NICEST);
 
         gl.enable(gl.SCISSOR_TEST);
 
@@ -1765,35 +1735,19 @@ class WebglGraphicsDevice extends GraphicsDevice {
             gl.texParameteri(target, gl.TEXTURE_MAG_FILTER, this.glFilter[texture._magFilter]);
         }
         if (flags & 4) {
-            if (this.isWebGL2) {
-                gl.texParameteri(target, gl.TEXTURE_WRAP_S, this.glAddress[texture._addressU]);
-            } else {
-                // WebGL1 doesn't support all addressing modes with NPOT textures
-                gl.texParameteri(target, gl.TEXTURE_WRAP_S, this.glAddress[texture.pot ? texture._addressU : ADDRESS_CLAMP_TO_EDGE]);
-            }
+            gl.texParameteri(target, gl.TEXTURE_WRAP_S, this.glAddress[texture._addressU]);
         }
         if (flags & 8) {
-            if (this.isWebGL2) {
-                gl.texParameteri(target, gl.TEXTURE_WRAP_T, this.glAddress[texture._addressV]);
-            } else {
-                // WebGL1 doesn't support all addressing modes with NPOT textures
-                gl.texParameteri(target, gl.TEXTURE_WRAP_T, this.glAddress[texture.pot ? texture._addressV : ADDRESS_CLAMP_TO_EDGE]);
-            }
+            gl.texParameteri(target, gl.TEXTURE_WRAP_T, this.glAddress[texture._addressV]);
         }
         if (flags & 16) {
-            if (this.isWebGL2) {
-                gl.texParameteri(target, gl.TEXTURE_WRAP_R, this.glAddress[texture._addressW]);
-            }
+            gl.texParameteri(target, gl.TEXTURE_WRAP_R, this.glAddress[texture._addressW]);
         }
         if (flags & 32) {
-            if (this.isWebGL2) {
-                gl.texParameteri(target, gl.TEXTURE_COMPARE_MODE, texture._compareOnRead ? gl.COMPARE_REF_TO_TEXTURE : gl.NONE);
-            }
+            gl.texParameteri(target, gl.TEXTURE_COMPARE_MODE, texture._compareOnRead ? gl.COMPARE_REF_TO_TEXTURE : gl.NONE);
         }
         if (flags & 64) {
-            if (this.isWebGL2) {
-                gl.texParameteri(target, gl.TEXTURE_COMPARE_FUNC, this.glComparison[texture._compareFunc]);
-            }
+            gl.texParameteri(target, gl.TEXTURE_COMPARE_FUNC, this.glComparison[texture._compareFunc]);
         }
         if (flags & 128) {
             const ext = this.extTextureFilterAnisotropic;
@@ -2269,12 +2223,6 @@ class WebglGraphicsDevice extends GraphicsDevice {
     async readPixelsAsync(x, y, w, h, pixels) {
         const gl = this.gl;
 
-        if (!this.isWebGL2) {
-            // async fences aren't supported on webgl1
-            this.readPixels(x, y, w, h, pixels);
-            return;
-        }
-
         const clientWaitAsync = (flags, interval_ms) => {
             const sync = gl.fenceSync(gl.SYNC_GPU_COMMANDS_COMPLETE, 0);
             this.submit();
@@ -2318,20 +2266,20 @@ class WebglGraphicsDevice extends GraphicsDevice {
     }
 
     /**
-     * Enables or disables alpha to coverage (WebGL2 only).
+     * Enables or disables alpha to coverage.
      *
      * @param {boolean} state - True to enable alpha to coverage and false to disable it.
      * @ignore
      */
     setAlphaToCoverage(state) {
-        if (this.isWebGL1) return;
-        if (this.alphaToCoverage === state) return;
-        this.alphaToCoverage = state;
+        if (this.alphaToCoverage !== state) {
+            this.alphaToCoverage = state;
 
-        if (state) {
-            this.gl.enable(this.gl.SAMPLE_ALPHA_TO_COVERAGE);
-        } else {
-            this.gl.disable(this.gl.SAMPLE_ALPHA_TO_COVERAGE);
+            if (state) {
+                this.gl.enable(this.gl.SAMPLE_ALPHA_TO_COVERAGE);
+            } else {
+                this.gl.disable(this.gl.SAMPLE_ALPHA_TO_COVERAGE);
+            }
         }
     }
 

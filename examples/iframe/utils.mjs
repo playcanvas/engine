@@ -81,7 +81,6 @@ function getDeviceType() {
         case 'webgpu':
             console.warn('Picked WebGPU but example is not supported on WebGPU, defaulting to WebGL2');
             return 'webgl2';
-        case 'webgl1':
         case 'webgl2':
             return savedDevice;
         default:

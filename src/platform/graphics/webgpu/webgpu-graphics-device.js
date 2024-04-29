@@ -140,7 +140,6 @@ class WebgpuGraphicsDevice extends GraphicsDevice {
         this.maxAnisotropy = 16;
         this.fragmentUniformsCount = limits.maxUniformBufferBindingSize / 16;
         this.vertexUniformsCount = limits.maxUniformBufferBindingSize / 16;
-        this.supportsInstancing = true;
         this.supportsUniformBuffers = true;
         this.supportsVolumeTextures = true;
         this.supportsBoneTextures = true;
@@ -158,7 +157,6 @@ class WebgpuGraphicsDevice extends GraphicsDevice {
         this.textureHalfFloatRenderable = true;
         this.boneLimit = 1024;
         this.supportsImageBitmap = true;
-        this.extStandardDerivatives = true;
         this.extBlendMinmax = true;
         this.areaLightLutFormat = this.textureFloatFilterable ? PIXELFORMAT_RGBA32F : PIXELFORMAT_RGBA8;
         this.supportsTextureFetch = true;

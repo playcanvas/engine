@@ -39,7 +39,6 @@ class NullGraphicsDevice extends GraphicsDevice {
         this.maxColorAttachments = 8;
         this.maxPixelRatio = 1;
         this.maxAnisotropy = 16;
-        this.supportsInstancing = true;
         this.supportsUniformBuffers = false;
         this.supportsVolumeTextures = true;
         this.supportsBoneTextures = true;
@@ -55,7 +54,6 @@ class NullGraphicsDevice extends GraphicsDevice {
         this.textureHalfFloatRenderable = true;
         this.boneLimit = 1024;
         this.supportsImageBitmap = true;
-        this.extStandardDerivatives = true;
         this.extBlendMinmax = true;
         this.areaLightLutFormat = PIXELFORMAT_RGBA8;
         this.supportsTextureFetch = true;

@@ -15,7 +15,6 @@ import baseNineSlicedPS from './lit/frag/baseNineSliced.js';
 import baseNineSlicedVS from './lit/vert/baseNineSliced.js';
 import baseNineSlicedTiledPS from './lit/frag/baseNineSlicedTiled.js';
 import bayerPS from './common/frag/bayer.js';
-import biasConstPS from './lit/frag/biasConst.js';
 import blurVSMPS from './lit/frag/blurVSM.js';
 import clearCoatPS from './standard/frag/clearCoat.js';
 import clearCoatGlossPS from './standard/frag/clearCoatGloss.js';
@@ -40,6 +39,7 @@ import encodePS from './common/frag/encode.js';
 import endPS from './lit/frag/end.js';
 import endVS from './lit/vert/end.js';
 import envAtlasPS from './common/frag/envAtlas.js';
+import envConstPS from './common/frag/envConst.js';
 import envMultiplyPS from './common/frag/envMultiply.js';
 import extensionPS from './lit/frag/extension.js';
 import extensionVS from './lit/vert/extension.js';
@@ -229,7 +229,6 @@ const shaderChunks = {
     baseNineSlicedVS,
     baseNineSlicedTiledPS,
     bayerPS,
-    biasConstPS,
     blurVSMPS,
     clearCoatPS,
     clearCoatGlossPS,
@@ -254,6 +253,7 @@ const shaderChunks = {
     endPS,
     endVS,
     envAtlasPS,
+    envConstPS,
     envMultiplyPS,
     extensionPS,
     extensionVS,

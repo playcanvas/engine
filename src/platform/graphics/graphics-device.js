@@ -266,14 +266,6 @@ class GraphicsDevice extends EventHandler {
     insideRenderPass = false;
 
     /**
-     * True if hardware instancing is supported.
-     *
-     * @type {boolean}
-     * @readonly
-     */
-    supportsInstancing;
-
-    /**
      * True if the device supports uniform buffers.
      *
      * @type {boolean}

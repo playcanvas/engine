@@ -683,9 +683,23 @@ Object.defineProperty(GraphicsDevice.prototype, 'webgl2', {
     }
 });
 
+Object.defineProperty(GraphicsDevice.prototype, 'supportsInstancing', {
+    get: function () {
+        Debug.deprecated('pc.GraphicsDevice#supportsInstancing is deprecated as it is always true.');
+        return true;
+    }
+});
+
 Object.defineProperty(GraphicsDevice.prototype, 'textureHalfFloatUpdatable', {
     get: function () {
         Debug.deprecated('pc.GraphicsDevice#textureHalfFloatUpdatable is deprecated as it is always true.');
+        return true;
+    }
+});
+
+Object.defineProperty(GraphicsDevice.prototype, 'extStandardDerivatives', {
+    get: function () {
+        Debug.deprecated('pc.GraphicsDevice#extStandardDerivatives is deprecated as it is always true.');
         return true;
     }
 });

@@ -81,9 +81,6 @@ class ShadowRenderer {
 
         const scope = this.device.scope;
 
-        this.polygonOffsetId = scope.resolve('polygonOffset');
-        this.polygonOffset = new Float32Array(2);
-
         // VSM
         this.sourceId = scope.resolve('source');
         this.pixelOffsetId = scope.resolve('pixelOffset');
@@ -204,19 +201,6 @@ class ShadowRenderer {
     }
 
     setupRenderState(device, light) {
-
-        // webgl1 depth bias (not rendering to a shadow map, so cannot use hardware depth bias)
-        if (device.isWebGL1 && device.extStandardDerivatives) {
-            if (light._type === LIGHTTYPE_OMNI) {
-                this.polygonOffset[0] = 0;
-                this.polygonOffset[1] = 0;
-                this.polygonOffsetId.setValue(this.polygonOffset);
-            } else {
-                this.polygonOffset[0] = light.shadowBias * -1000.0;
-                this.polygonOffset[1] = light.shadowBias * -1000.0;
-                this.polygonOffsetId.setValue(this.polygonOffset);
-            }
-        }
 
         // Set standard shadowmap states
         const isClustered = this.renderer.scene.clusteredLightingEnabled;

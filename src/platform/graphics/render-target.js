@@ -105,8 +105,7 @@ class RenderTarget {
      * @param {boolean} [options.flipY] - When set to true the image will be flipped in Y. Default
      * is false.
      * @param {string} [options.name] - The name of the render target.
-     * @param {number} [options.samples] - Number of hardware anti-aliasing samples (not supported
-     * on WebGL1). Default is 1.
+     * @param {number} [options.samples] - Number of hardware anti-aliasing samples. Default is 1.
      * @param {boolean} [options.stencil] - If set to true, depth buffer will include stencil.
      * Defaults to false. Ignored if depthBuffer is defined or depth is false.
      * @example
