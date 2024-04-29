@@ -13,24 +13,15 @@ uniform highp sampler2D lightsTextureFloat;
 #endif
 
 #ifdef CLUSTER_SHADOWS
-    #ifdef GL2
-        // TODO: when VSM shadow is supported, it needs to use sampler2D in webgl2
-        uniform sampler2DShadow shadowAtlasTexture;
-    #else
-        uniform sampler2D shadowAtlasTexture;
-    #endif
+    // TODO: when VSM shadow is supported, it needs to use sampler2D in webgl2
+    uniform sampler2DShadow shadowAtlasTexture;
 #endif
 
 #ifdef CLUSTER_COOKIES
     uniform sampler2D cookieAtlasTexture;
 #endif
 
-#ifdef GL2
-    uniform int clusterMaxCells;
-#else
-    uniform float clusterMaxCells;
-    uniform vec4 lightsTextureInvSize;
-#endif
+uniform int clusterMaxCells;
 
 // 1.0 if clustered lighting can be skipped (0 lights in the clusters)
 uniform float clusterSkip;
@@ -151,36 +142,18 @@ vec4 decodeClusterLowRange4Vec4(vec4 d0, vec4 d1, vec4 d2, vec4 d3) {
     );
 }
 
-#ifdef GL2
+vec4 sampleLightsTexture8(const ClusterLightData clusterLightData, int index) {
+    return texelFetch(lightsTexture8, ivec2(index, clusterLightData.lightIndex), 0);
+}
 
-    vec4 sampleLightsTexture8(const ClusterLightData clusterLightData, int index) {
-        return texelFetch(lightsTexture8, ivec2(index, clusterLightData.lightIndex), 0);
-    }
-
-    vec4 sampleLightTextureF(const ClusterLightData clusterLightData, int index) {
-        return texelFetch(lightsTextureFloat, ivec2(index, clusterLightData.lightIndex), 0);
-    }
-
-#else
-
-    vec4 sampleLightsTexture8(const ClusterLightData clusterLightData, float index) {
-        return texture2DLodEXT(lightsTexture8, vec2(index * lightsTextureInvSize.z, clusterLightData.lightV), 0.0);
-    }
-
-    vec4 sampleLightTextureF(const ClusterLightData clusterLightData, float index) {
-        return texture2DLodEXT(lightsTextureFloat, vec2(index * lightsTextureInvSize.x, clusterLightData.lightV), 0.0);
-    }
-
-#endif
+vec4 sampleLightTextureF(const ClusterLightData clusterLightData, int index) {
+    return texelFetch(lightsTextureFloat, ivec2(index, clusterLightData.lightIndex), 0);
+}
 
 void decodeClusterLightCore(inout ClusterLightData clusterLightData, float lightIndex) {
 
     // light index
-    #ifdef GL2
-        clusterLightData.lightIndex = int(lightIndex);
-    #else
-        clusterLightData.lightV = (lightIndex + 0.5) * lightsTextureInvSize.w;
-    #endif
+    clusterLightData.lightIndex = int(lightIndex);
 
     // shared data from 8bit texture
     vec4 lightInfo = sampleLightsTexture8(clusterLightData, CLUSTER_TEXTURE_8_FLAGS);
@@ -689,79 +662,36 @@ void addClusteredLights(
         float clusterV = floor(cellIndex * clusterTextureSize.y);
         float clusterU = cellIndex - (clusterV * clusterTextureSize.x);
 
-        #ifdef GL2
+        // loop over maximum number of light cells
+        for (int lightCellIndex = 0; lightCellIndex < clusterMaxCells; lightCellIndex++) {
 
-            // loop over maximum number of light cells
-            for (int lightCellIndex = 0; lightCellIndex < clusterMaxCells; lightCellIndex++) {
+            // using a single channel texture with data in alpha channel
+            float lightIndex = texelFetch(clusterWorldTexture, ivec2(int(clusterU) + lightCellIndex, clusterV), 0).x;
 
-                // using a single channel texture with data in alpha channel
-                float lightIndex = texelFetch(clusterWorldTexture, ivec2(int(clusterU) + lightCellIndex, clusterV), 0).x;
-
-                if (lightIndex <= 0.0)
-                        return;
-
-                evaluateClusterLight(
-                    lightIndex * 255.0, 
-                    worldNormal, 
-                    viewDir, 
-                    reflectionDir,
-#if defined(LIT_CLEARCOAT)
-                    clearcoatReflectionDir,
-#endif
-                    gloss, 
-                    specularity, 
-                    geometricNormal, 
-                    tbn, 
-#if defined(LIT_IRIDESCENCE)
-                    iridescenceFresnel,
-#endif
-                    clearcoat_worldNormal,
-                    clearcoat_gloss,
-                    sheen_gloss,
-                    iridescence_intensity
-                ); 
-            }
-
-        #else
-
-            clusterV = (clusterV + 0.5) * clusterTextureSize.z;
-
-            // loop over maximum possible number of supported light cells
-            const float maxLightCells = 256.0;
-            for (float lightCellIndex = 0.5; lightCellIndex < maxLightCells; lightCellIndex++) {
-
-                float lightIndex = texture2DLodEXT(clusterWorldTexture, vec2(clusterTextureSize.y * (clusterU + lightCellIndex), clusterV), 0.0).x;
-
-                if (lightIndex <= 0.0)
+            if (lightIndex <= 0.0)
                     return;
-                
-                evaluateClusterLight(
-                    lightIndex * 255.0, 
-                    worldNormal, 
-                    viewDir, 
-                    reflectionDir,
-#if defined(LIT_CLEARCOAT)
-                    clearcoatReflectionDir,
-#endif
-                    gloss, 
-                    specularity, 
-                    geometricNormal, 
-                    tbn, 
-#if defined(LIT_IRIDESCENCE)
-                    iridescenceFresnel,
-#endif
-                    clearcoat_worldNormal,
-                    clearcoat_gloss,
-                    sheen_gloss,
-                    iridescence_intensity
-                ); 
-                // end of the cell array
-                if (lightCellIndex >= clusterMaxCells) {
-                    break;
-                }
-            }
 
-        #endif
+            evaluateClusterLight(
+                lightIndex * 255.0, 
+                worldNormal, 
+                viewDir, 
+                reflectionDir,
+#if defined(LIT_CLEARCOAT)
+                clearcoatReflectionDir,
+#endif
+                gloss, 
+                specularity, 
+                geometricNormal, 
+                tbn, 
+#if defined(LIT_IRIDESCENCE)
+                iridescenceFresnel,
+#endif
+                clearcoat_worldNormal,
+                clearcoat_gloss,
+                sheen_gloss,
+                iridescence_intensity
+            ); 
+        }
     }
 }
 `;
