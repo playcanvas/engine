@@ -1,5 +1,5 @@
 import { Debug } from "../../core/debug.js";
-import { calculateNormals, calculateTangents } from "./geometry-utils.js";
+import { calculateNormals, calculateTangents, calculateTris } from "./geometry-utils.js";
 
 /**
  * The Geometry class serves as a container for storing geometric information. It encapsulates data
@@ -72,6 +72,13 @@ class Geometry {
     indices;
 
     /**
+     * Tris.
+     *
+     * @type {import('../../core/shape/tri.js').Tri[]|undefined}
+     */
+    tris;
+
+    /**
      * Generates normal information from the positions and triangle indices.
      */
     calculateNormals() {
@@ -90,6 +97,15 @@ class Geometry {
         Debug.assert(this.uvs, 'Geometry must have uvs set');
         Debug.assert(this.indices, 'Geometry must have indices set');
         this.tangents = calculateTangents(this.positions, this.normals, this.uvs, this.indices);
+    }
+
+    /**
+     * Generates triangle information from the positions and triangle indices.
+     */
+    calculateTris() {
+        Debug.assert(this.positions, 'Geometry must have positions set');
+        Debug.assert(this.indices, 'Geometry must have indices set');
+        this.tris = calculateTris(this.positions, this.indices);
     }
 }
 

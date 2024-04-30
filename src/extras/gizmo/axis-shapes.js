@@ -613,7 +613,7 @@ class AxisDisk extends AxisShape {
 
     _updateTransform() {
         // intersect
-        this.triData[0].setTris(this._createTorusGeometry());
+        this.triData[0].fromGeometry(this._createTorusGeometry());
 
         // render
         this.meshInstances[0].mesh = this._createTorusMesh(this._sectorAngle);

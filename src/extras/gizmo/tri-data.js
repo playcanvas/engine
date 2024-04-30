@@ -43,7 +43,7 @@ class TriData {
      * @param {number} [priority] - The priority of the triangle data.
      */
     constructor(geometry, priority = 0) {
-        this.setTris(geometry);
+        this.fromGeometry(geometry);
         this._priority = priority;
     }
 
@@ -55,34 +55,19 @@ class TriData {
         return this._priority;
     }
 
-    _fromGeometry(geometry) {
-        const tris = [];
-        const pos = geometry.positions;
-        const indices = geometry.indices;
-
-        for (let k = 0; k < indices.length; k += 3) {
-            const i1 = indices[k];
-            const i2 = indices[k + 1];
-            const i3 = indices[k + 2];
-
-            tmpV1.set(pos[i1 * 3], pos[i1 * 3 + 1], pos[i1 * 3 + 2]);
-            tmpV2.set(pos[i2 * 3], pos[i2 * 3 + 1], pos[i2 * 3 + 2]);
-            tmpV3.set(pos[i3 * 3], pos[i3 * 3 + 1], pos[i3 * 3 + 2]);
-            const tri = new Tri(tmpV1, tmpV2, tmpV3);
-            tris.push(tri);
-        }
-        return tris;
-    }
-
     setTransform(pos = new Vec3(), rot = new Quat(), scale = new Vec3()) {
         this.ptm.setTRS(pos, rot, scale);
     }
 
-    setTris(geometry) {
+    fromGeometry(geometry) {
         if (!geometry || !(geometry instanceof Geometry)) {
-            throw new Error('No mesh provided.');
+            throw new Error('No geometry provided.');
         }
-        this.tris = this._fromGeometry(geometry);
+        geometry.calculateTris();
+        if (!geometry.tris) {
+            throw new Error('No tris found in geometry.');
+        }
+        this.tris = geometry.tris;
     }
 }
 

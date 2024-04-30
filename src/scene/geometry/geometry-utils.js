@@ -1,5 +1,10 @@
 import { Vec2 } from '../../core/math/vec2.js';
 import { Vec3 } from '../../core/math/vec3.js';
+import { Tri } from '../../core/shape/tri.js';
+
+const tmpV1 = new Vec3();
+const tmpV2 = new Vec3();
+const tmpV3 = new Vec3();
 
 /**
  * Generates normal information from the specified positions and triangle indices.
@@ -188,4 +193,30 @@ const calculateTangents = (positions, normals, uvs, indices) => {
     return tangents;
 };
 
-export { calculateNormals, calculateTangents };
+/**
+ * Generates triangle information from the specified positions and triangle indices.
+ *
+ * @param {number[]} positions - An array of 3-dimensional vertex positions.
+ * @param {number[]} indices - An array of triangle indices.
+ * @returns {Tri[]} An array of 3-dimensional vertex normals.
+ * @example
+ * const tris = pc.calculateTris(positions, indices);
+ * @category Graphics
+ */
+const calculateTris = (positions, indices) => {
+    const tris = [];
+    for (let k = 0; k < indices.length; k += 3) {
+        const i1 = indices[k];
+        const i2 = indices[k + 1];
+        const i3 = indices[k + 2];
+
+        tmpV1.set(positions[i1 * 3], positions[i1 * 3 + 1], positions[i1 * 3 + 2]);
+        tmpV2.set(positions[i2 * 3], positions[i2 * 3 + 1], positions[i2 * 3 + 2]);
+        tmpV3.set(positions[i3 * 3], positions[i3 * 3 + 1], positions[i3 * 3 + 2]);
+        const tri = new Tri(tmpV1, tmpV2, tmpV3);
+        tris.push(tri);
+    }
+    return tris;
+};
+
+export { calculateNormals, calculateTangents, calculateTris };
