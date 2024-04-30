@@ -732,12 +732,8 @@ class WebglGraphicsDevice extends GraphicsDevice {
 
         this.constantTexSource = this.scope.resolve("source");
 
-        if (this.extTextureFloat) {
-            // In WebGL2 float texture renderability is dictated by the EXT_color_buffer_float extension
-            this.textureFloatRenderable = !!this.extColorBufferFloat;
-        } else {
-            this.textureFloatRenderable = false;
-        }
+        // In WebGL2 float texture renderability is dictated by the EXT_color_buffer_float extension
+        this.textureFloatRenderable = !!this.extColorBufferFloat;
 
         // two extensions allow us to render to half float buffers
         if (this.extColorBufferHalfFloat) {
@@ -757,7 +753,7 @@ class WebglGraphicsDevice extends GraphicsDevice {
         this.areaLightLutFormat = PIXELFORMAT_RGBA8;
         if (this.extTextureHalfFloat && this.extTextureHalfFloatLinear) {
             this.areaLightLutFormat = PIXELFORMAT_RGBA16F;
-        } else if (this.extTextureFloat && this.extTextureFloatLinear) {
+        } else if (this.extTextureFloatLinear) {
             this.areaLightLutFormat = PIXELFORMAT_RGBA32F;
         }
 
@@ -951,7 +947,6 @@ class WebglGraphicsDevice extends GraphicsDevice {
             this.extBlendMinmax = true;
             this.extDrawBuffers = true;
             this.drawBuffers = gl.drawBuffers.bind(gl);
-            this.extTextureFloat = true;
             this.extTextureHalfFloat = true;
             this.textureHalfFloatFilterable = true;
             this.extTextureLod = true;
@@ -962,7 +957,6 @@ class WebglGraphicsDevice extends GraphicsDevice {
             this.extDrawBuffers = this.getExtension('WEBGL_draw_buffers');
             this.drawBuffers = this.extDrawBuffers?.drawBuffersWEBGL.bind(this.extDrawBuffers);
 
-            this.extTextureFloat = this.getExtension("OES_texture_float");
             this.extTextureLod = this.getExtension('EXT_shader_texture_lod');
             this.extColorBufferFloat = null;
             this.extDepthTexture = gl.getExtension('WEBGL_depth_texture');

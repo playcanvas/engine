@@ -697,6 +697,13 @@ Object.defineProperty(GraphicsDevice.prototype, 'textureHalfFloatUpdatable', {
     }
 });
 
+Object.defineProperty(GraphicsDevice.prototype, 'extTextureFloat', {
+    get: function () {
+        Debug.deprecated('pc.GraphicsDevice#extTextureFloat is deprecated as it is always true');
+        return true;
+    }
+});
+
 Object.defineProperty(GraphicsDevice.prototype, 'extStandardDerivatives', {
     get: function () {
         Debug.deprecated('pc.GraphicsDevice#extStandardDerivatives is deprecated as it is always true.');
