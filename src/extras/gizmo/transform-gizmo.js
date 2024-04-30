@@ -433,6 +433,10 @@ class TransformGizmo extends Gizmo {
         this._meshColors.axis.z.copy(this._colorSemi(this._meshColors.axis.z));
         this._meshColors.axis.xyz.copy(this._colorSemi(this._meshColors.axis.xyz));
         this._meshColors.axis.face.copy(this._colorSemi(this._meshColors.axis.face));
+
+        for (const name in this._shapes) {
+            this._shapes[name].hover(!!this._hoverAxis);
+        }
     }
 
     get colorAlpha() {
