@@ -194,16 +194,7 @@ function SSAOEffect(graphicsDevice, ssaoScript) {
         "    float ssDiskRadius = -(uProjectionScaleRadius / origin.z);",
         "",
         "    float occlusion = 0.0;",
-
-        // webgl1 does not handle non-constant loop, work around it
-        graphicsDevice.isWebGL2 ? (
-            "    for (float i = 0.0; i < uSampleCount.x; i += 1.0) {"
-        ) : (
-            "   const float maxSampleCount = 256.0;" +
-            "   for (float i = 0.0; i < maxSampleCount; i += 1.0) {" +
-            "       if (i >= uSampleCount.x) break;"
-        ),
-
+        "    for (float i = 0.0; i < uSampleCount.x; i += 1.0) {",
         "        computeAmbientOcclusionSAO(occlusion, i, ssDiskRadius, uv, origin, normal, tapPosition, noise);",
         "        tapPosition = angleStep * tapPosition;",
         "    }",
@@ -288,16 +279,8 @@ function SSAOEffect(graphicsDevice, ssaoScript) {
         "    float ssao = texture2D( uSSAOBuffer, vUv0 ).r;",
         "    float sum = ssao * totalWeight;",
         "",
-
-        // webgl1 does not handle non-constant loop, work around it
-        graphicsDevice.isWebGL2 ? (
-            "    for (int x = -uBilatSampleCount; x <= uBilatSampleCount; x++) {" +
-            "       for (int y = -uBilatSampleCount; y < uBilatSampleCount; y++) {"
-        ) : (
-            "    for (int x = -4; x <= 4; x++) {" +
-            "       for (int y = -4; y < 4; y++) {"
-        ),
-
+        "    for (int x = -uBilatSampleCount; x <= uBilatSampleCount; x++) {",
+        "       for (int y = -uBilatSampleCount; y < uBilatSampleCount; y++) {",
         "           float weight = 1.0;",
         "           vec2 offset = vec2(x,y)*uResolution.zw;",
         "           tap(sum, totalWeight, weight, depth, uv + offset);",

@@ -52,9 +52,9 @@ class ShadowMap {
             return PIXELFORMAT_RGBA16F;
         } else if (shadowType === SHADOW_PCF5) {
             return PIXELFORMAT_DEPTH;
-        } else if ((shadowType === SHADOW_PCF1 || shadowType === SHADOW_PCF3) && device.supportsDepthShadow) {
+        } else if (shadowType === SHADOW_PCF1 || shadowType === SHADOW_PCF3) {
             return PIXELFORMAT_DEPTH;
-        } else if ((shadowType === SHADOW_PCSS) && !device.isWebGL1) {
+        } else if (shadowType === SHADOW_PCSS) {
             return PIXELFORMAT_R32F;
         }
 
@@ -62,9 +62,7 @@ class ShadowMap {
     }
 
     static getShadowFiltering(device, shadowType) {
-        if ((shadowType === SHADOW_PCF1 || shadowType === SHADOW_PCF3 || shadowType === SHADOW_PCSS) && !device.supportsDepthShadow) {
-            return FILTER_NEAREST;
-        } else if (shadowType === SHADOW_VSM32) {
+        if (shadowType === SHADOW_VSM32) {
             return device.extTextureFloatLinear ? FILTER_LINEAR : FILTER_NEAREST;
         } else if (shadowType === SHADOW_VSM16) {
             return device.extTextureHalfFloatLinear ? FILTER_LINEAR : FILTER_NEAREST;
@@ -119,7 +117,7 @@ class ShadowMap {
         });
 
         let target = null;
-        if (shadowType === SHADOW_PCF5 || ((shadowType === SHADOW_PCF1 || shadowType === SHADOW_PCF3) && device.supportsDepthShadow)) {
+        if (shadowType === SHADOW_PCF5 || shadowType === SHADOW_PCF1 || shadowType === SHADOW_PCF3) {
 
             // enable hardware PCF when sampling the depth texture
             texture.compareOnRead = true;

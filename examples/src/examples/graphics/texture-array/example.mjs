@@ -95,11 +95,6 @@ app.on('destroy', () => {
 const assetListLoader = new pc.AssetListLoader(Object.values(assets), app.assets);
 assetListLoader.load(() => {
     app.start();
-
-    if (app.graphicsDevice.isWebGL1) {
-        return app;
-    }
-
     app.scene.ambientLight = new pc.Color(0.2, 0.2, 0.2);
 
     // Create directional light
