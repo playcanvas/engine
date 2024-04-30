@@ -262,6 +262,30 @@ class TranslateGizmo extends TransformGizmo {
 
         this._updatePosition();
     }
+
+    _calcPoint(x, y) {
+        const mouseWPos = this._camera.screenToWorld(x, y, 1);
+
+        const axis = this._selectedAxis;
+        const isPlane = this._selectedIsPlane;
+
+        const ray = this._createRay(mouseWPos);
+        const plane = this._createPlane(axis, false, !isPlane);
+
+        const point = new Vec3();
+        const angle = 0;
+
+        plane.intersectsRay(ray, point);
+
+        // rotate point back to world coords
+        tmpQ1.copy(this._gizmoRotationStart).invert().transformVector(point, point);
+
+        if (!isPlane) {
+            this._projectToAxis(point, axis);
+        }
+
+        return { point, angle };
+    }
 }
 
 export { TranslateGizmo };

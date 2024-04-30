@@ -17,7 +17,7 @@ const tmpQ1 = new Quat();
 const tmpQ2 = new Quat();
 
 // constants
-const FACING_EPSILON = 0.2;
+const FACING_EPSILON = 0.9;
 const ROTATE_SCALE = 900;
 
 /**
@@ -132,43 +132,24 @@ class RotateGizmo extends TransformGizmo {
         this._createTransform();
 
         this.on('transform:start', () => {
-            const axis = this._selectedAxis;
-            const isFacing = axis === 'face';
-            const scale = isFacing ? this.faceRingRadius : this.xyzRingRadius;
-
             this._storeNodeRotations();
 
-            // guide angle line start
-            this._guideAngleStart.copy(this._selectionStartPoint).normalize();
-            this._guideAngleStart.mulScalar(scale);
-            this._gizmoRotationStart.transformVector(this._guideAngleStart, this._guideAngleStart);
-            this._guideAngleEnd.copy(this._guideAngleStart);
+            // store guide points
+            this._storeGuidePoints();
 
             // drag handle for disk (arc <-> circle)
             this._drag(true);
         });
 
         this.on('transform:move', (pointDelta, angleDelta) => {
-            const gizmoPos = this.root.getPosition();
-            const cameraPos = this._camera.entity.getPosition();
             const axis = this._selectedAxis;
-            const isFacing = axis === 'face';
 
             if (this.snap) {
                 angleDelta = Math.round(angleDelta / this.snapIncrement) * this.snapIncrement;
             }
             this._setNodeRotations(axis, angleDelta);
 
-            // guide angle line update rotation
-            tmpV1.set(0, 0, 0);
-            if (isFacing) {
-                tmpV1.copy(cameraPos).sub(gizmoPos).normalize();
-            } else {
-                tmpV1[axis] = 1;
-            }
-            this._gizmoRotationStart.transformVector(tmpV1, tmpV1);
-            tmpQ1.setFromAxisAngle(tmpV1, angleDelta);
-            tmpQ1.transformVector(this._guideAngleStart, this._guideAngleEnd);
+            this._updateGuidePoints(angleDelta);
         });
 
         this.on('transform:end', () => {
@@ -266,6 +247,34 @@ class RotateGizmo extends TransformGizmo {
         this._shapes.z[prop] = value;
     }
 
+    _storeGuidePoints() {
+        const gizmoPos = this.root.getPosition();
+        const axis = this._selectedAxis;
+        const isFacing = axis === 'face';
+        const scale = isFacing ? this.faceRingRadius : this.xyzRingRadius;
+
+        this._guideAngleStart.copy(this._selectionStartPoint).sub(gizmoPos).normalize();
+        this._guideAngleStart.mulScalar(scale);
+        this._guideAngleEnd.copy(this._guideAngleStart);
+    }
+
+    _updateGuidePoints(angleDelta) {
+        const gizmoPos = this.root.getPosition();
+        const cameraPos = this._camera.entity.getPosition();
+        const axis = this._selectedAxis;
+        const isFacing = axis === 'face';
+
+        tmpV1.set(0, 0, 0);
+        if (isFacing) {
+            tmpV1.sub2(cameraPos, gizmoPos).normalize();
+        } else {
+            tmpV1[axis] = 1;
+            this._gizmoRotationStart.transformVector(tmpV1, tmpV1);
+        }
+        tmpQ1.setFromAxisAngle(tmpV1, angleDelta);
+        tmpQ1.transformVector(this._guideAngleStart, this._guideAngleEnd);
+    }
+
     _drawGuideAngleLine(pos, axis, point, color = this._guideColors[axis]) {
         tmpV1.set(0, 0, 0);
         tmpV2.copy(point).mulScalar(this._scale);
@@ -354,7 +363,7 @@ class RotateGizmo extends TransformGizmo {
                 tmpQ1.transformVector(tmpV1, tmpV1);
                 tmpQ2.copy(tmpQ1).mul(this._nodeRotations.get(node));
 
-                // Fix: Rotation via quaternion when scale inverted causes scale warping?
+                // N.B. Rotation via quaternion when scale inverted causes scale warping?
                 node.setEulerAngles(tmpQ2.getEulerAngles());
                 node.setPosition(tmpV1.add(gizmoPos));
             }
@@ -379,23 +388,22 @@ class RotateGizmo extends TransformGizmo {
 
         plane.intersectsRay(ray, point);
 
-        // point needs to be relative to gizmo for angle calculation
-        point.sub(gizmoPos);
-
-        // rotate point back to world coords
-        tmpQ1.copy(this._gizmoRotationStart).invert().transformVector(point, point);
-
         // calculate angle
         const facingDir = tmpV1.sub2(ray.origin, gizmoPos).normalize();
-        const planeFacingCross = tmpV2.cross(plane.normal, facingDir);
-        if (axis === 'face' || planeFacingCross.length() < FACING_EPSILON) {
+        const facingDot = plane.normal.dot(facingDir);
+        if (axis === 'face' || Math.abs(facingDot) > FACING_EPSILON) {
             // plane facing camera so based on mouse position around gizmo
             tmpQ1.copy(this._camera.entity.getRotation()).invert();
-            tmpQ1.transformVector(point, tmpV1);
-            angle = Math.atan2(tmpV1.y, tmpV1.x) * math.RAD_TO_DEG;
+
+            // transform point so its facing the camera
+            tmpV1.sub2(point, gizmoPos);
+            tmpQ1.transformVector(tmpV1, tmpV1);
+            angle = Math.sign(facingDot) * Math.atan2(tmpV1.y, tmpV1.x) * math.RAD_TO_DEG;
         } else {
+
             // plane not facing camera so based on absolute mouse position
-            angle = mouseWPos.dot(planeFacingCross.normalize()) * ROTATE_SCALE;
+            tmpV1.cross(plane.normal, facingDir).normalize();
+            angle = mouseWPos.dot(tmpV1) * ROTATE_SCALE;
             if (this._camera.projection === PROJECTION_ORTHOGRAPHIC) {
                 angle /= (this._camera.orthoHeight || 1);
             }

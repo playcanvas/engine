@@ -568,22 +568,23 @@ class TransformGizmo extends Gizmo {
         point[axis] = v;
     }
 
-    _calcPoint(x, y) {
+    _calcPoint(x, y, isFacing = false, isLine = false) {
         const mouseWPos = this._camera.screenToWorld(x, y, 1);
 
         const axis = this._selectedAxis;
         const isPlane = this._selectedIsPlane;
 
         const ray = this._createRay(mouseWPos);
-        const plane = this._createPlane(axis, false, !isPlane);
+        const plane = this._createPlane(axis, isFacing, isLine);
 
         const point = new Vec3();
         const angle = 0;
-
         plane.intersectsRay(ray, point);
 
-        // rotate point back to world coords
-        tmpQ1.copy(this._gizmoRotationStart).invert().transformVector(point, point);
+        if (isFacing) {
+            // rotate point back to world coords
+            tmpQ1.copy(this._gizmoRotationStart).invert().transformVector(point, point);
+        }
 
         if (!isPlane) {
             this._projectToAxis(point, axis);
