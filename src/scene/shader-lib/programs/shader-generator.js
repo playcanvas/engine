@@ -14,10 +14,7 @@ class ShaderGenerator {
     }
 
     static skinCode(device, chunks = shaderChunks) {
-        if (device.supportsBoneTextures) {
-            return chunks.skinTexVS;
-        }
-        return "#define BONE_LIMIT " + device.getBoneLimit() + "\n" + chunks.skinConstVS;
+        return chunks.skinTexVS;
     }
 
     static fogCode(value, chunks = shaderChunks) {
