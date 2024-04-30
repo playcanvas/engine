@@ -12,10 +12,6 @@ const tmpM1 = new Mat4();
 const tmpM2 = new Mat4();
 const tmpR1 = new Ray();
 
-const xstart = new Vec3();
-const xdir = new Vec3();
-
-
 // constants
 const MIN_GIZMO_SCALE = 1e-4;
 const PERS_SCALE_RATIO = 0.3;
@@ -391,12 +387,11 @@ class Gizmo extends EventHandler {
                 const { tris, ptm, priority } = meshTriDataList[j];
                 tmpM1.copy(wtm).mul(ptm);
                 tmpM2.copy(tmpM1).invert();
-                tmpM2.transformPoint(start, xstart);
-                tmpM2.transformVector(dir, xdir);
-                xdir.normalize();
+                tmpM2.transformPoint(start, tmpR1.origin);
+                tmpM2.transformVector(dir, tmpR1.direction);
+                tmpR1.direction.normalize();
 
                 for (let k = 0; k < tris.length; k++) {
-                    tmpR1.set(xstart, xdir);
                     if (tris[k].intersectsRay(tmpR1, tmpV1)) {
                         selection.push({
                             dist: tmpM1.transformPoint(tmpV1).sub(start).length(),
