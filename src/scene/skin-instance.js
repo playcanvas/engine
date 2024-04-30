@@ -126,10 +126,7 @@ class SkinInstance {
     }
 
     uploadBones(device) {
-
-        // TODO: this is a bit strange looking. Change the Texture API to do a reupload
-        this.boneTexture.lock();
-        this.boneTexture.unlock();
+        this.boneTexture.upload();
     }
 
     _updateMatrices(rootNode, skinUpdateIndex) {
