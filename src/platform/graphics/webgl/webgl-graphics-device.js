@@ -945,6 +945,8 @@ class WebglGraphicsDevice extends GraphicsDevice {
         this.supportedExtensions = gl.getSupportedExtensions() ?? [];
         this._extDisjointTimerQuery = null;
 
+        this.textureRG11B10Renderable = true;
+
         if (this.isWebGL2) {
             this.extBlendMinmax = true;
             this.extDrawBuffers = true;
@@ -953,10 +955,8 @@ class WebglGraphicsDevice extends GraphicsDevice {
             this.extTextureHalfFloat = true;
             this.textureHalfFloatFilterable = true;
             this.extTextureLod = true;
-            this.extUintElement = true;
             this.extColorBufferFloat = this.getExtension('EXT_color_buffer_float');
             this.extDepthTexture = true;
-            this.textureRG11B10Renderable = true;
         } else {
             this.extBlendMinmax = this.getExtension("EXT_blend_minmax");
             this.extDrawBuffers = this.getExtension('WEBGL_draw_buffers');
@@ -964,7 +964,6 @@ class WebglGraphicsDevice extends GraphicsDevice {
 
             this.extTextureFloat = this.getExtension("OES_texture_float");
             this.extTextureLod = this.getExtension('EXT_shader_texture_lod');
-            this.extUintElement = this.getExtension("OES_element_index_uint");
             this.extColorBufferFloat = null;
             this.extDepthTexture = gl.getExtension('WEBGL_depth_texture');
 

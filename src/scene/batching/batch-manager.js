@@ -436,9 +436,9 @@ class BatchManager {
         const halfMaxAabbSize = maxAabbSize * 0.5;
         const maxInstanceCount = this.device.supportsBoneTextures ? 1024 : this.device.boneLimit;
 
-        // maximum number of vertices that can be used in batch depends on 32bit index buffer support (do this for non-indexed as well,
+        // maximum number of vertices that can be used in batch (do this for non-indexed as well,
         // as in some cases (UI elements) non-indexed geometry gets batched into indexed)
-        const maxNumVertices = this.device.extUintElement ? 0xffffffff : 0xffff;
+        const maxNumVertices = 0xffffffff;
 
         const aabb = new BoundingBox();
         const testAabb = new BoundingBox();
