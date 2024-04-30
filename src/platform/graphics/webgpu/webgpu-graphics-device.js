@@ -148,7 +148,6 @@ class WebgpuGraphicsDevice extends GraphicsDevice {
         this.supportsGpuParticles = true;
         this.supportsMrt = true;
         this.supportsCompute = true;
-        this.extUintElement = true;
         this.extTextureFloat = true;
         this.textureFloatRenderable = true;
         this.textureHalfFloatFilterable = true;
