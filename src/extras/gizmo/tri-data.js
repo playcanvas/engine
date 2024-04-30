@@ -1,13 +1,7 @@
 import { Vec3 } from '../../core/math/vec3.js';
 import { Quat } from '../../core/math/quat.js';
 import { Mat4 } from '../../core/math/mat4.js';
-import { Tri } from '../../core/shape/tri.js';
 import { Geometry } from '../../scene/geometry/geometry.js';
-
-// temporary variables
-const tmpV1 = new Vec3();
-const tmpV2 = new Vec3();
-const tmpV3 = new Vec3();
 
 /**
  * The class for holding triangle data.
@@ -16,9 +10,10 @@ const tmpV3 = new Vec3();
  */
 class TriData {
     /**
-     * The priority of the triangle data (Used for intersection ordering).
-     * priority = 0 - no priority
-     * priority > 0 - higher value represents a higher priority
+     * The priority of the triangle data (Used for intersection ordering):
+     *     - priority = 0 - no priority
+     *     - priority > 0 - higher value represents a higher priority
+     * defaults to 0.
      *
      * @type {number}
      */
@@ -34,7 +29,7 @@ class TriData {
     /**
      * The array of triangles for the geometry.
      *
-     * @type {Tri[]}
+     * @type {import('../../core/shape/tri.js').Tri[]}
      */
     tris = [];
 
