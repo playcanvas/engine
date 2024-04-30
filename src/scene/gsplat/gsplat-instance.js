@@ -1,11 +1,115 @@
 import { Mat4 } from '../../core/math/mat4.js';
 import { Vec3 } from '../../core/math/vec3.js';
-import { PIXELFORMAT_R32U, SEMANTIC_POSITION, TYPE_UINT32 } from '../../platform/graphics/constants.js';
+import { PIXELFORMAT_R32U, PIXELFORMAT_RGBA16F, PIXELFORMAT_RGBA32F, SEMANTIC_POSITION, TYPE_UINT32 } from '../../platform/graphics/constants.js';
 import { DITHER_NONE } from '../constants.js';
 import { MeshInstance } from '../mesh-instance.js';
 import { Mesh } from '../mesh.js';
 import { createGSplatMaterial } from './gsplat-material.js';
 import { GSplatSorter } from './gsplat-sorter.js';
+import { RenderTarget } from '../../platform/graphics/render-target.js';
+import { createShaderFromCode } from '../shader-lib/utils.js';
+import { drawQuadWithShader } from '../graphics/quad-render-utils.js';
+
+// vertex shader
+const v1v2VS = /* glsl */`
+
+attribute vec2 aPosition;
+void main(void) {
+    gl_Position = vec4(aPosition, 0.0, 1.0);
+}
+`;
+
+// fragment shader
+const v1v2FS = /* glsl */`
+
+uniform highp sampler2D transformA;
+uniform highp sampler2D transformB;
+uniform highp sampler2D transformC;
+
+// read splat center and covariance from textures
+void readTransform(vec2 splatUV, out vec3 center, out vec3 covA, out vec3 covB) {
+    vec4 tA = texture2D(transformA, splatUV);
+    vec4 tB = texture2D(transformB, splatUV);
+    vec4 tC = texture2D(transformC, splatUV);
+
+    center = tA.xyz;
+    covA = tB.xyz;
+    covB = vec3(tA.w, tB.w, tC.x);
+}
+
+// given the splat center (view space) and covariance A and B vectors, calculate
+// the v1 and v2 vectors for this view.
+vec4 calcV1V2(vec3 centerView, vec3 covA, vec3 covB, float focal, mat3 modelViewTranspose) {
+    mat3 Vrk = mat3(
+        covA.x, covA.y, covA.z, 
+        covA.y, covB.x, covB.y,
+        covA.z, covB.y, covB.z
+    );
+
+    float J1 = focal / centerView.z;
+    vec2 J2 = -J1 / centerView.z * centerView.xy;
+    mat3 J = mat3(
+        J1, 0., J2.x, 
+        0., J1, J2.y, 
+        0., 0., 0.
+    );
+
+    mat3 W = modelViewTranspose;
+    mat3 T = W * J;
+    mat3 cov = transpose(T) * Vrk * T;
+
+    float diagonal1 = cov[0][0] + 0.3;
+    float offDiagonal = cov[0][1];
+    float diagonal2 = cov[1][1] + 0.3;
+
+    float mid = 0.5 * (diagonal1 + diagonal2);
+    float radius = length(vec2((diagonal1 - diagonal2) / 2.0, offDiagonal));
+    float lambda1 = mid + radius;
+    float lambda2 = max(mid - radius, 0.1);
+    vec2 diagonalVector = normalize(vec2(offDiagonal, lambda1 - diagonal1));
+    vec2 v1 = min(sqrt(2.0 * lambda1), 1024.0) * diagonalVector;
+    vec2 v2 = min(sqrt(2.0 * lambda2), 1024.0) * vec2(diagonalVector.y, -diagonalVector.x);
+
+    // early out tiny splats
+    // TODO: figure out length units and expose as uniform parameter
+    // TODO: perhaps make this a shader compile-time option
+    // if (dot(v1, v1) < 4.0 && dot(v2, v2) < 4.0) {
+    //     return vec4(0.0, 0.0, 2.0, 1.0);
+    // }
+
+    return vec4(v1, v2);
+}
+
+uniform mat4 matrix_model;
+uniform mat4 matrix_view;
+uniform mat4 matrix_projection;
+uniform vec2 viewport;
+uniform vec2 bufferSize;
+
+void main(void) {
+    // calculate splat UV
+    vec2 splatUV = gl_FragCoord.xy / bufferSize;
+
+    // read splat center and covariance
+    vec3 center, covA, covB;
+    readTransform(splatUV, center, covA, covB);
+
+    mat4 modelView = matrix_view * matrix_model;
+
+    float focal = viewport.x * matrix_projection[0][0];
+
+    // calcV1V2
+    vec4 v1v2 = calcV1V2(
+        (modelView * vec4(center, 1.0)).xyz,
+        covA,
+        covB,
+        focal,
+        transpose(mat3(modelView))
+    );
+
+    gl_FragColor = v1v2;
+}
+`;
 
 const mat = new Mat4();
 const cameraPosition = new Vec3();
@@ -33,6 +137,10 @@ class GSplatInstance {
 
     /** @type {import('../../platform/graphics/texture.js').Texture} */
     orderTexture;
+    /** @type {import('../../platform/graphics/texture.js').Texture} */
+    v1v2Texture;
+    v1v2RenderTarget;
+    v1v2Shader;
 
     /** @type {GSplatSorter | null} */
     sorter = null;
@@ -65,7 +173,25 @@ class GSplatInstance {
             return;
 
         // create the order texture
-        this.orderTexture = this.splat.createTexture('splatOrder', PIXELFORMAT_R32U, this.splat.evalTextureSize(this.splat.numSplats));
+        this.orderTexture = this.splat.createTexture(
+            'splatOrder',
+            PIXELFORMAT_R32U,
+            this.splat.evalTextureSize(this.splat.numSplats)
+        );
+
+        this.v1v2Texture = this.splat.createTexture(
+            'splatV1V2',
+            device.textureHalfFloatRenderable ? PIXELFORMAT_RGBA16F : PIXELFORMAT_RGBA32F,
+            this.splat.evalTextureSize(this.splat.numSplats)
+        );
+
+        this.v1v2RenderTarget = new RenderTarget({
+            name: 'splatV1V2RenderTarget',
+            colorBuffer: this.v1v2Texture,
+            depth: false
+        });
+
+        this.v1v2Shader = createShaderFromCode(device, v1v2VS, v1v2FS, 'v1v2Shader', { aPosition: SEMANTIC_POSITION });
 
         // material
         this.createMaterial(options);
@@ -135,6 +261,7 @@ class GSplatInstance {
     createMaterial(options) {
         this.material = createGSplatMaterial(options);
         this.material.setParameter('splatOrder', this.orderTexture);
+        this.material.setParameter('v1v2Texture', this.v1v2Texture);
         this.splat.setupMaterial(this.material);
         if (this.meshInstance) {
             this.meshInstance.material = this.material;
@@ -182,10 +309,35 @@ class GSplatInstance {
             // TODO: extend to support multiple cameras
             const camera = this.cameras[0];
             this.sort(camera._node);
+            this.updateV1V2(camera);
 
             // we get new list of cameras each frame
             this.cameras.length = 0;
         }
+    }
+
+    updateV1V2(camera) {
+        const device = this.splat.device;
+        const scope = device.scope;
+
+        scope.resolve('transformA').setValue(this.splat.transformATexture);
+        scope.resolve('transformB').setValue(this.splat.transformBTexture);
+        scope.resolve('transformC').setValue(this.splat.transformCTexture);
+
+        const cameraMatrix = new Mat4();
+        cameraMatrix.setTRS(camera._node.getPosition(), camera._node.getRotation(), Vec3.ONE);
+
+        const viewMatrix = new Mat4();
+        viewMatrix.copy(cameraMatrix).invert();
+
+        scope.resolve('matrix_model').setValue(this.meshInstance.node.worldTransform.data);
+        scope.resolve('matrix_view').setValue(viewMatrix.data);
+        scope.resolve('matrix_projection').setValue(camera.projectionMatrix.data);
+        scope.resolve('viewport').setValue([device.width, device.height]);
+        scope.resolve('bufferSize').setValue([this.v1v2Texture.width, this.v1v2Texture.height]);
+        scope.resolve('tex_params').setValue([this.splat.numSplats, this.splat.numSplats, 1 / this.splat.numSplats, 1 / this.splat.numSplats]);
+
+        drawQuadWithShader(device, this.v1v2RenderTarget, this.v1v2Shader);
     }
 }
 

@@ -5,182 +5,130 @@ import { shaderChunks } from "../shader-lib/chunks/chunks.js";
 import { ShaderGenerator } from "../shader-lib/programs/shader-generator.js";
 import { ShaderPass } from "../shader-pass.js";
 import { SEMANTIC_POSITION } from "../../platform/graphics/constants.js";
-const splatCoreVS = `
-    uniform mat4 matrix_model;
-    uniform mat4 matrix_view;
-    uniform mat4 matrix_projection;
-    uniform mat4 matrix_viewProjection;
 
-    uniform vec2 viewport;
+// vertex shader
+const splatCoreVS = /* glsl */ `
 
-    attribute uint vertex_id_attrib;
+uniform mat4 matrix_view;
+uniform mat4 matrix_projection;
 
-    varying vec2 texCoord;
-    varying vec4 color;
-    varying float id;
+uniform vec2 viewport;
 
-    uniform vec4 tex_params;
-    uniform highp usampler2D splatOrder;
-    uniform sampler2D splatColor;
+attribute uint vertex_id_attrib;
 
-    uniform highp sampler2D transformA;
-    uniform highp sampler2D transformB;
-    uniform highp sampler2D transformC;
+varying vec2 texCoord;
+varying vec4 color;
+varying float id;
 
-    vec3 center;
-    vec3 covA;
-    vec3 covB;
+uniform vec4 tex_params;
+uniform highp sampler2D transformA;
+uniform highp sampler2D v1v2Texture;
+uniform highp usampler2D splatOrder;
+uniform sampler2D splatColor;
 
-    uint vertex_id;
-    ivec2 dataUV;
+void getSplatUV(out uint splatId, out ivec2 splatUV) {
 
-    void evalDataUV() {
+    // turn vertex_id into int grid coordinates
+    ivec2 textureSize = ivec2(tex_params.xy);
+    vec2 invTextureSize = tex_params.zw;
 
-        // turn vertex_id into int grid coordinates
-        ivec2 textureSize = ivec2(tex_params.xy);
-        vec2 invTextureSize = tex_params.zw;
+    // order
+    int orderV = int(float(vertex_id_attrib) * invTextureSize.x);
+    int orderU = int(vertex_id_attrib) - orderV * textureSize.x;
+    splatId = texelFetch(splatOrder, ivec2(orderU, orderV), 0).r;
 
-        uint splatIndex = vertex_id_attrib;
+    int gridV = int(float(splatId) * invTextureSize.x);
+    int gridU = int(splatId) - gridV * textureSize.x;
+    splatUV = ivec2(gridU, gridV);
+}
 
-        // order
-        int orderV = int(float(splatIndex) * invTextureSize.x);
-        int orderU = int(splatIndex) - orderV * textureSize.x;
-        vertex_id = texelFetch(splatOrder, ivec2(orderU, orderV), 0).r;
+vec4 evalSplat(vec4 centerProj, vec4 v1v2) {
+    int quadVertex = int(gl_VertexID) % 4;
+    texCoord = vec2(
+        float((quadVertex == 0 || quadVertex == 3) ? -2 : 2),
+        float((quadVertex == 0 || quadVertex == 1) ? -2 : 2)
+    );
 
-        int gridV = int(float(vertex_id) * invTextureSize.x);
-        int gridU = int(vertex_id) - gridV * textureSize.x;
-        dataUV = ivec2(gridU, gridV);
+    centerProj.xy += (texCoord.x * v1v2.xy + texCoord.y * v1v2.zw) / viewport * centerProj.w;
+
+    return centerProj;
+}
+
+void splatMain() {
+    uint splatId;
+    ivec2 splatUV;
+    getSplatUV(splatId, splatUV);
+
+    vec4 v1v2 = texelFetch(v1v2Texture, splatUV, 0);
+
+    // early out tiny splats
+    // TODO: figure out length units and expose as uniform parameter
+    // TODO: perhaps make this a shader compile-time option
+    if (dot(v1v2.xy, v1v2.xy) < 4.0 && dot(v1v2.zw, v1v2.zw) < 4.0) {
+        gl_Position = vec4(0.0, 0.0, 2.0, 1.0);
+        return;
     }
 
-    vec4 getColor() {
-        return texelFetch(splatColor, dataUV, 0);
+    vec3 center = texelFetch(transformA, splatUV, 0).xyz;
+
+    vec4 centerProj = matrix_projection * matrix_view * vec4(center, 1.0);
+
+    // cull splat behind camera
+    if (centerProj.z < -centerProj.w) {
+        gl_Position = vec4(0.0, 0.0, 2.0, 1.0);
+        return;
     }
 
-    void getTransform() {
-        vec4 tA = texelFetch(transformA, dataUV, 0);
-        vec4 tB = texelFetch(transformB, dataUV, 0);
-        vec4 tC = texelFetch(transformC, dataUV, 0);
-
-        center = tA.xyz;
-        covA = tB.xyz;
-        covB = vec3(tA.w, tB.w, tC.x);
-    }
-
-    vec3 evalCenter() {
-        evalDataUV();
-
-        // get data
-        getTransform();
-
-        return center;
-    }
-
-    vec4 evalSplat(vec4 centerWorld)
-    {
-        vec4 splat_cam = matrix_view * centerWorld;
-        vec4 splat_proj = matrix_projection * splat_cam;
-
-        // cull behind camera
-        if (splat_proj.z < -splat_proj.w) {
-            return vec4(0.0, 0.0, 2.0, 1.0);
-        }
-
-        id = float(vertex_id);
-        color = getColor();
-
-        mat3 Vrk = mat3(
-            covA.x, covA.y, covA.z, 
-            covA.y, covB.x, covB.y,
-            covA.z, covB.y, covB.z
-        );
-
-        float focal = viewport.x * matrix_projection[0][0];
-
-        float J1 = focal / splat_cam.z;
-        vec2 J2 = -J1 / splat_cam.z * splat_cam.xy;
-        mat3 J = mat3(
-            J1, 0., J2.x, 
-            0., J1, J2.y, 
-            0., 0., 0.
-        );
-
-        mat3 W = transpose(mat3(matrix_view) * mat3(matrix_model));
-
-        mat3 T = W * J;
-        mat3 cov = transpose(T) * Vrk * T;
-
-        float diagonal1 = cov[0][0] + 0.3;
-        float offDiagonal = cov[0][1];
-        float diagonal2 = cov[1][1] + 0.3;
-
-        float mid = 0.5 * (diagonal1 + diagonal2);
-        float radius = length(vec2((diagonal1 - diagonal2) / 2.0, offDiagonal));
-        float lambda1 = mid + radius;
-        float lambda2 = max(mid - radius, 0.1);
-        vec2 diagonalVector = normalize(vec2(offDiagonal, lambda1 - diagonal1));
-        vec2 v1 = min(sqrt(2.0 * lambda1), 1024.0) * diagonalVector;
-        vec2 v2 = min(sqrt(2.0 * lambda2), 1024.0) * vec2(diagonalVector.y, -diagonalVector.x);
-
-        // early out tiny splats
-        // TODO: figure out length units and expose as uniform parameter
-        // TODO: perhaps make this a shader compile-time option
-        if (dot(v1, v1) < 4.0 && dot(v2, v2) < 4.0) {
-            return vec4(0.0, 0.0, 2.0, 1.0);
-        }
-
-        int vertexIndex = int(gl_VertexID) % 4;
-        texCoord = vec2(
-            float((vertexIndex == 0 || vertexIndex == 3) ? -2 : 2),
-            float((vertexIndex == 0 || vertexIndex == 1) ? -2 : 2)
-        );
-
-        splat_proj.xy += (texCoord.x * v1 + texCoord.y * v2) / viewport * splat_proj.w;
-        return splat_proj;
-    }
+    gl_Position = evalSplat(centerProj, v1v2);
+    color = texelFetch(splatColor, splatUV, 0);
+    id = float(splatId);
+}
 `;
 
-const splatCoreFS = /* glsl_ */ `
-    varying vec2 texCoord;
-    varying vec4 color;
-    varying float id;
+// fragment shader
+const splatCoreFS = /* glsl */ `
 
-    #ifdef PICK_PASS
-        uniform vec4 uColor;
-    #endif
+varying vec2 texCoord;
+varying vec4 color;
+varying float id;
 
-    vec4 evalSplat() {
+#ifdef PICK_PASS
+    uniform vec4 uColor;
+#endif
 
-        #ifdef DEBUG_RENDER
+vec4 evalSplat() {
 
-            if (color.a < 0.2) discard;
-            return color;
+    #ifdef DEBUG_RENDER
 
-        #else
+        if (color.a < 0.2) discard;
+        return color;
 
-            float A = -dot(texCoord, texCoord);
-            if (A < -4.0) discard;
-            float B = exp(A) * color.a;
+    #else
 
-            #ifdef PICK_PASS
-                if (B < 0.3) discard;
-                return(uColor);
-            #endif
+        float A = -dot(texCoord, texCoord);
+        if (A < -4.0) discard;
+        float B = exp(A) * color.a;
 
-            #ifndef DITHER_NONE
-                opacityDither(B, id * 0.013);
-            #endif
-
-            // the color here is in gamma space, so bring it to linear
-            vec3 diffuse = decodeGamma(color.rgb);
-
-            // apply tone-mapping and gamma correction as needed
-            diffuse = toneMap(diffuse);
-            diffuse = gammaCorrectOutput(diffuse);
-
-            return vec4(diffuse, B);
-
+        #ifdef PICK_PASS
+            if (B < 0.3) discard;
+            return(uColor);
         #endif
-    }
+
+        #ifndef DITHER_NONE
+            opacityDither(B, id * 0.013);
+        #endif
+
+        // the color here is in gamma space, so bring it to linear
+        vec3 diffuse = decodeGamma(color.rgb);
+
+        // apply tone-mapping and gamma correction as needed
+        diffuse = toneMap(diffuse);
+        diffuse = gammaCorrectOutput(diffuse);
+
+        return vec4(diffuse, B);
+
+    #endif
+}
 `;
 
 class GShaderGeneratorSplat {

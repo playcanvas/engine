@@ -8,10 +8,7 @@ import { gsplat } from "./shader-generator-gsplat.js";
 const splatMainVS = `
     void main(void)
     {
-        vec3 centerLocal = evalCenter();
-        vec4 centerWorld = matrix_model * vec4(centerLocal, 1.0);
-
-        gl_Position = evalSplat(centerWorld);
+        splatMain();
     }
 `;
 
