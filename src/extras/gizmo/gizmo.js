@@ -236,7 +236,7 @@ class Gizmo extends EventHandler {
      * Creates a new Gizmo object.
      *
      * @param {import('../../framework/app-base.js').AppBase} app - The application instance.
-     * @param {import('../../framework/components/camera/component.js').CameraComponent} camera - 
+     * @param {import('../../framework/components/camera/component.js').CameraComponent} camera -
      * The camera component.
      * @param {import('../../scene/layer.js').Layer} layer - The render layer.
      * @example
