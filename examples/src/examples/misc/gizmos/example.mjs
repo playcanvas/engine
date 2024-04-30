@@ -214,7 +214,6 @@ function loadAssets(assetList, assetRegistry) {
 await loadAssets(Object.values(assets), app.assets);
 
 app.start();
-
 /**
  * @param {pc.Color} color - The color.
  * @returns {pc.Material} - The standard material.
@@ -225,6 +224,9 @@ function createColorMaterial(color) {
     material.update();
     return material;
 }
+
+// scene settings
+app.scene.ambientLight = new pc.Color(0.2, 0.2, 0.2);
 
 // create entities
 const box = new pc.Entity('box');
@@ -279,27 +281,12 @@ camera.setPosition(1, 1, 1);
 app.root.addChild(camera);
 orbitCamera.distance = 14;
 
-// create 3-point lighting
-const backLight = new pc.Entity('light');
-backLight.addComponent('light', {
-    intensity: 0.5
-});
-app.root.addChild(backLight);
-backLight.setEulerAngles(-60, 0, 90);
-
-const fillLight = new pc.Entity('light');
-fillLight.addComponent('light', {
-    intensity: 0.5
-});
-app.root.addChild(fillLight);
-fillLight.setEulerAngles(45, 0, 0);
-
-const keyLight = new pc.Entity('light');
-keyLight.addComponent('light', {
+const light = new pc.Entity('light');
+light.addComponent('light', {
     intensity: 1
 });
-app.root.addChild(keyLight);
-keyLight.setEulerAngles(0, 0, -60);
+app.root.addChild(light);
+light.setEulerAngles(0, 0, -60);
 
 // create layers
 const gizmoLayer = new pc.Layer({
