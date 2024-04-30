@@ -5,8 +5,6 @@ import {
     SEMANTIC_COLOR, SEMANTIC_BLENDINDICES, SEMANTIC_BLENDWEIGHT
 } from './constants.js';
 
-import gles2FS from './shader-chunks/frag/gles2.js';
-import gles2VS from './shader-chunks/vert/gles2.js';
 import gles3FS from './shader-chunks/frag/gles3.js';
 import gles3VS from './shader-chunks/vert/gles3.js';
 import webgpuFS from './shader-chunks/frag/webgpu.js';
@@ -75,10 +73,9 @@ class ShaderUtils {
         Debug.assert(!options.fragmentDefines || options.fragmentDefines instanceof Map);
         Debug.assert(!options.fragmentIncludes || options.fragmentIncludes instanceof Map);
 
-        const getDefines = (gpu, gl2, gl1, isVertex, options) => {
+        const getDefines = (gpu, gl2, isVertex, options) => {
 
-            const deviceIntro = device.isWebGPU ? gpu :
-                (device.isWebGL2 ? gl2 : ShaderUtils.gl1Extensions(device, options) + gl1);
+            const deviceIntro = device.isWebGPU ? gpu : gl2;
 
             // a define per supported color attachment, which strips out unsupported output definitions in the deviceIntro
             let attachmentsDefine = '';
@@ -105,7 +102,7 @@ class ShaderUtils {
 
         // vertex code
         const vertCode = ShaderUtils.versionCode(device) +
-            getDefines(webgpuVS, gles3VS, gles2VS, true, options) +
+            getDefines(webgpuVS, gles3VS, true, options) +
             ShaderUtils.getDefinesCode(options.vertexDefines) +
             sharedFS +
             ShaderUtils.getShaderNameCode(name) +
@@ -114,7 +111,7 @@ class ShaderUtils {
         // fragment code
         const fragCode = (options.fragmentPreamble || '') +
             ShaderUtils.versionCode(device) +
-            getDefines(webgpuFS, gles3FS, gles2FS, false, options) +
+            getDefines(webgpuFS, gles3FS, false, options) +
             ShaderUtils.getDefinesCode(options.fragmentDefines) +
             ShaderUtils.precisionCode(device) + '\n' +
             sharedFS +
@@ -153,41 +150,15 @@ class ShaderUtils {
         return `#define SHADER_NAME ${name}\n`;
     }
 
-    static gl1Extensions(device, options, isVertex) {
-        let code;
-        if (isVertex) {
-            code = options.vertexExtensions ? `${options.vertexExtensions}\n` : '';
-        } else {
-            code = options.fragmentExtensions ? `${options.fragmentExtensions}\n` : '';
-
-            // extensions used by default
-            if (device.extTextureLod) {
-                code += "#extension GL_EXT_shader_texture_lod : enable\n";
-                code += "#define SUPPORTS_TEXLOD\n";
-            }
-            if (device.extDrawBuffers) {
-                code += "#extension GL_EXT_draw_buffers : require\n";
-                code += "#define SUPPORTS_MRT\n";
-            }
-        }
-
-        return code;
-    }
-
     static dummyFragmentCode() {
         return "void main(void) {gl_FragColor = vec4(0.0);}";
     }
 
     static versionCode(device) {
-        if (device.isWebGPU) {
-            return '#version 450\n';
-        }
-        return device.isWebGL2 ? "#version 300 es\n" : "";
+        return device.isWebGPU ? '#version 450\n' : '#version 300 es\n';
     }
 
     static precisionCode(device, forcePrecision) {
-
-        let code = '';
 
         if (forcePrecision && forcePrecision !== 'highp' && forcePrecision !== 'mediump' && forcePrecision !== 'lowp') {
             forcePrecision = null;
@@ -204,17 +175,15 @@ class ShaderUtils {
 
         const precision = forcePrecision ? forcePrecision : device.precision;
 
-        if (!device.isWebGPU) {
-
-            code = `precision ${precision} float;\n`;
-
-            if (device.isWebGL2) {
-                code += `precision ${precision} sampler2DShadow;\n`;
-            }
-
-        } else { // WebGPU
+        let code = '';
+        if (device.isWebGPU) {
 
             code = `precision ${precision} float;\nprecision ${precision} int;\n`;
+
+        } else {
+
+            code = `precision ${precision} float;\n`;
+            code += `precision ${precision} sampler2DShadow;\n`;
         }
 
         return code;
