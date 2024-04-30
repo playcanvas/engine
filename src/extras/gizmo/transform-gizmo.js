@@ -547,9 +547,8 @@ class TransformGizmo extends Gizmo {
 
             if (isLine) {
                 // set plane normal to face camera but keep normal perpendicular to axis
-                plane.normal.mulScalar(plane.normal.dot(facingDir));
-                tmpV1.sub2(facingDir, plane.normal).normalize();
-                plane.normal.copy(tmpV1);
+                tmpV2.cross(plane.normal, facingDir).normalize();
+                plane.normal.cross(tmpV2, plane.normal).normalize();
             }
         }
 
