@@ -103,7 +103,7 @@ class LightsBuffer {
     static getLightTextureFormat(device) {
         // precision for texture storage
         // don't use float texture on devices with small number of texture units (as it uses both float and 8bit textures at the same time)
-        return (device.extTextureFloat && device.maxTextures > 8) ? FORMAT_FLOAT : FORMAT_8BIT;
+        return device.maxTextures > 8 ? FORMAT_FLOAT : FORMAT_8BIT;
     }
 
     static getShaderDefines(device) {
