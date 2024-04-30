@@ -200,7 +200,6 @@ class Renderer {
         const scope = graphicsDevice.scope;
         this.boneTextureId = scope.resolve('texture_poseMap');
         this.boneTextureSizeId = scope.resolve('texture_poseMapSize');
-        this.poseMatrixId = scope.resolve('matrix_pose[0]');
 
         this.modelMatrixId = scope.resolve('matrix_model');
         this.normalMatrixId = scope.resolve('matrix_normal');
@@ -760,13 +759,10 @@ class Renderer {
         const skinInstance = meshInstance.skinInstance;
         if (skinInstance) {
             this._skinDrawCalls++;
-            if (device.supportsBoneTextures) {
-                const boneTexture = skinInstance.boneTexture;
-                this.boneTextureId.setValue(boneTexture);
-                this.boneTextureSizeId.setValue(skinInstance.boneTextureSize);
-            } else {
-                this.poseMatrixId.setValue(skinInstance.matrixPalette);
-            }
+
+            const boneTexture = skinInstance.boneTexture;
+            this.boneTextureId.setValue(boneTexture);
+            this.boneTextureSizeId.setValue(skinInstance.boneTextureSize);
         }
     }
 

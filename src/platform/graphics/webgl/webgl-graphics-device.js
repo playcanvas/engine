@@ -711,25 +711,6 @@ class WebglGraphicsDevice extends GraphicsDevice {
             gl.uniformMatrix4fv(uniform.locationId, false, value);
         };
 
-        this.supportsBoneTextures = this.extTextureFloat && this.maxVertexTextures > 0;
-
-        // Calculate an estimate of the maximum number of bones that can be uploaded to the GPU
-        // based on the number of available uniforms and the number of uniforms required for non-
-        // bone data.  This is based off of the Standard shader.  A user defined shader may have
-        // even less space available for bones so this calculated value can be overridden via
-        // pc.GraphicsDevice.setBoneLimit.
-        let numUniforms = this.vertexUniformsCount;
-        numUniforms -= 4 * 4; // Model, view, projection and shadow matrices
-        numUniforms -= 8;     // 8 lights max, each specifying a position vector
-        numUniforms -= 1;     // Eye position
-        numUniforms -= 4 * 4; // Up to 4 texture transforms
-        this.boneLimit = Math.floor(numUniforms / 3);   // each bone uses 3 uniforms
-
-        // Put a limit on the number of supported bones when texture skinning is not supported.
-        // Some GPUs have demonstrated performance issues if the number of vectors allocated to the
-        // skin matrix palette is left unbounded
-        this.boneLimit = Math.min(this.boneLimit, 128);
-
         this.constantTexSource = this.scope.resolve("source");
 
         if (this.extTextureFloat) {

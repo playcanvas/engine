@@ -142,7 +142,6 @@ class WebgpuGraphicsDevice extends GraphicsDevice {
         this.vertexUniformsCount = limits.maxUniformBufferBindingSize / 16;
         this.supportsUniformBuffers = true;
         this.supportsVolumeTextures = true;
-        this.supportsBoneTextures = true;
         this.supportsMorphTargetTexturesCore = true;
         this.supportsAreaLights = true;
         this.supportsGpuParticles = true;
@@ -153,7 +152,6 @@ class WebgpuGraphicsDevice extends GraphicsDevice {
         this.textureHalfFloatFilterable = true;
         this.extTextureHalfFloat = true;
         this.textureHalfFloatRenderable = true;
-        this.boneLimit = 1024;
         this.supportsImageBitmap = true;
         this.extBlendMinmax = true;
         this.areaLightLutFormat = this.textureFloatFilterable ? PIXELFORMAT_RGBA32F : PIXELFORMAT_RGBA8;
