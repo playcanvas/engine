@@ -11,8 +11,8 @@ import { Geometry } from '../../scene/geometry/geometry.js';
 class TriData {
     /**
      * The priority of the triangle data (Used for intersection ordering):
-     *     - priority = 0 - no priority
-     *     - priority > 0 - higher value represents a higher priority
+     *   - priority = 0 - no priority
+     *   - priority > 0 - higher value represents a higher priority
      * defaults to 0.
      *
      * @type {number}
