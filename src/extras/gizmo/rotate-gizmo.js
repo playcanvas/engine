@@ -395,7 +395,7 @@ class RotateGizmo extends TransformGizmo {
             // plane facing camera so based on mouse position around gizmo
             tmpQ1.copy(this._camera.entity.getRotation()).invert();
 
-            // transform point so its facing the camera
+            // transform point so it's facing the camera
             tmpV1.sub2(point, gizmoPos);
             tmpQ1.transformVector(tmpV1, tmpV1);
             angle = Math.sign(facingDot) * Math.atan2(tmpV1.y, tmpV1.x) * math.RAD_TO_DEG;
