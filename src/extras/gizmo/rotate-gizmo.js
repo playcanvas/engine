@@ -304,11 +304,13 @@ class RotateGizmo extends TransformGizmo {
 
     _xyzAxisLookAtCamera() {
         if (this._camera.projection === PROJECTION_PERSPECTIVE) {
-            tmpV1.copy(this._camera.entity.getPosition()).sub(this.root.getPosition());
-            tmpQ1.copy(this.root.getRotation()).invert().transformVector(tmpV1, tmpV1);
+            const gizmoPos = this.root.getPosition();
+            const cameraPos = this._camera.entity.getPosition();
+            tmpV1.sub2(cameraPos, gizmoPos).normalize();
         } else {
             tmpV1.copy(this._camera.entity.forward).mulScalar(-1);
         }
+        tmpQ1.copy(this.root.getRotation()).invert().transformVector(tmpV1, tmpV1);
         let angle = Math.atan2(tmpV1.z, tmpV1.y) * math.RAD_TO_DEG;
         this._shapes.x.entity.setLocalEulerAngles(0, angle - 90, -90);
         angle = Math.atan2(tmpV1.x, tmpV1.z) * math.RAD_TO_DEG;
