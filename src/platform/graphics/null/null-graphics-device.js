@@ -45,7 +45,6 @@ class NullGraphicsDevice extends GraphicsDevice {
         this.supportsAreaLights = true;
         this.supportsGpuParticles = false;
         this.supportsMrt = true;
-        this.extTextureFloat = true;
         this.textureFloatRenderable = true;
         this.extTextureHalfFloat = true;
         this.textureHalfFloatRenderable = true;
