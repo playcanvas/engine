@@ -61,8 +61,6 @@ class RotateGizmo extends TransformGizmo {
         })
     };
 
-    _isRotation = true;
-
     /**
      * Internal mapping from each attached node to their starting rotation in local space.
      *
@@ -269,7 +267,7 @@ class RotateGizmo extends TransformGizmo {
             tmpV1.sub2(cameraPos, gizmoPos).normalize();
         } else {
             tmpV1[axis] = 1;
-            this._gizmoRotationStart.transformVector(tmpV1, tmpV1);
+            this._rootStartRot.transformVector(tmpV1, tmpV1);
         }
         tmpQ1.setFromAxisAngle(tmpV1, angleDelta);
         tmpQ1.transformVector(this._guideAngleStart, this._guideAngleEnd);

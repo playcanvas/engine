@@ -81,6 +81,14 @@ class ScaleGizmo extends TransformGizmo {
     _nodeScales = new Map();
 
     /**
+     * Internal state if transform should use uniform scaling.
+     *
+     * @type {boolean}
+     * @protected
+     */
+    _useUniformScaling = false;
+
+    /**
      * @override
      */
     snapIncrement = 1;
@@ -336,7 +344,7 @@ class ScaleGizmo extends TransformGizmo {
         }
 
         // rotate point back to world coords
-        tmpQ1.copy(this._gizmoRotationStart).invert().transformVector(point, point);
+        tmpQ1.copy(this._rootStartRot).invert().transformVector(point, point);
 
         if (!isPlane) {
             this._projectToAxis(point, axis);

@@ -278,7 +278,7 @@ class TranslateGizmo extends TransformGizmo {
         plane.intersectsRay(ray, point);
 
         // rotate point back to world coords
-        tmpQ1.copy(this._gizmoRotationStart).invert().transformVector(point, point);
+        tmpQ1.copy(this._rootStartRot).invert().transformVector(point, point);
 
         if (!isPlane) {
             this._projectToAxis(point, axis);

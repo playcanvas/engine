@@ -4,7 +4,7 @@ import { Quat } from '../../core/math/quat.js';
 import { Vec3 } from '../../core/math/vec3.js';
 import { Ray } from '../../core/shape/ray.js';
 import { Plane } from '../../core/shape/plane.js';
-import { PROJECTION_PERSPECTIVE, PROJECTION_ORTHOGRAPHIC } from '../../scene/constants.js';
+import { PROJECTION_PERSPECTIVE } from '../../scene/constants.js';
 
 import {
     COLOR_RED,
@@ -18,16 +18,13 @@ import { Gizmo } from "./gizmo.js";
 // temporary variables
 const tmpV1 = new Vec3();
 const tmpV2 = new Vec3();
-const tmpV3 = new Vec3();
 const tmpQ1 = new Quat();
 
 const pointDelta = new Vec3();
 
 // constants
 const VEC3_AXES = Object.keys(tmpV1);
-const FACING_EPSILON = 0.2;
 const SPANLINE_SIZE = 1e3;
-const ROTATE_SCALE = 900;
 
 /**
  * Shape axis for the line X.
@@ -189,7 +186,7 @@ class TransformGizmo extends Gizmo {
      * @type {Quat}
      * @protected
      */
-    _gizmoRotationStart = new Quat();
+    _rootStartRot = new Quat();
 
     /**
      * Internal object containing the axis shapes to render.
@@ -264,22 +261,6 @@ class TransformGizmo extends Gizmo {
     _selectionStartAngle = 0;
 
     /**
-     * Internal state if transform is a rotation.
-     *
-     * @type {boolean}
-     * @protected
-     */
-    _isRotation = false;
-
-    /**
-     * Internal state if transform should use uniform scaling.
-     *
-     * @type {boolean}
-     * @protected
-     */
-    _useUniformScaling = false;
-
-    /**
      * Internal state for if the gizmo is being dragged.
      *
      * @type {boolean}
@@ -338,7 +319,7 @@ class TransformGizmo extends Gizmo {
 
             this._selectedAxis = this._getAxis(meshInstance);
             this._selectedIsPlane =  this._getIsPlane(meshInstance);
-            this._gizmoRotationStart.copy(this.root.getRotation());
+            this._rootStartRot.copy(this.root.getRotation());
             const pointInfo = this._calcPoint(x, y);
             this._selectionStartPoint.copy(pointInfo.point);
             this._selectionStartAngle = pointInfo.angle;
@@ -543,7 +524,7 @@ class TransformGizmo extends Gizmo {
             // set plane normal based on axis
             plane.normal.set(0, 0, 0);
             plane.normal[axis] = 1;
-            this._gizmoRotationStart.transformVector(plane.normal, plane.normal);
+            this._rootStartRot.transformVector(plane.normal, plane.normal);
 
             if (isLine) {
                 // set plane normal to face camera but keep normal perpendicular to axis
