@@ -15,7 +15,6 @@ const tmpR1 = new Ray();
 // constants
 const MIN_GIZMO_SCALE = 1e-4;
 const PERS_SCALE_RATIO = 0.3;
-const PERS_CANVAS_RATIO = 1300;
 const ORTHO_SCALE_RATIO = 0.32;
 
 /**
@@ -149,6 +148,14 @@ class Gizmo extends EventHandler {
     static EVENT_RENDERUPDATE = 'render:update';
 
     /**
+     * Internal device start width.
+     *
+     * @type {number}
+     * @private
+     */
+    _deviceStartWidth;
+
+    /**
      * Internal version of the gizmo size. Defaults to 1.
      *
      * @type {number}
@@ -247,6 +254,7 @@ class Gizmo extends EventHandler {
 
         this._app = app;
         this._device = app.graphicsDevice;
+        this._deviceStartWidth = this._device.width;
         this._camera = camera;
         this._layer = layer;
 
@@ -362,7 +370,7 @@ class Gizmo extends EventHandler {
         if (this._camera.projection === PROJECTION_PERSPECTIVE) {
             let canvasMult = 1;
             if (this._device.width > 0 && this._device.height > 0) {
-                canvasMult = PERS_CANVAS_RATIO / Math.min(this._device.width, this._device.height);
+                canvasMult = this._deviceStartWidth / Math.min(this._device.width, this._device.height);
             }
             this._scale = this._getProjFrustumWidth() * canvasMult * PERS_SCALE_RATIO;
         } else {
