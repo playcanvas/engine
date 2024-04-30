@@ -1,10 +1,5 @@
 import { Vec2 } from '../../core/math/vec2.js';
 import { Vec3 } from '../../core/math/vec3.js';
-import { Tri } from '../../core/shape/tri.js';
-
-const tmpV1 = new Vec3();
-const tmpV2 = new Vec3();
-const tmpV3 = new Vec3();
 
 /**
  * Generates normal information from the specified positions and triangle indices.
