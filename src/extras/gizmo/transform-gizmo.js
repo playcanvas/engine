@@ -19,6 +19,8 @@ import { Gizmo } from "./gizmo.js";
 const tmpV1 = new Vec3();
 const tmpV2 = new Vec3();
 const tmpQ1 = new Quat();
+const tmpR1 = new Ray();
+const tmpP1 = new Plane();
 
 const pointDelta = new Vec3();
 
@@ -501,7 +503,7 @@ class TransformGizmo extends Gizmo {
         const cameraPos = this._camera.entity.getPosition();
         const cameraTransform = this._camera.entity.getWorldTransform();
 
-        const ray = new Ray(cameraPos);
+        const ray = tmpR1.set(cameraPos, Vec3.ZERO);
 
         // calculate ray direction from mouse position
         if (this._camera.projection === PROJECTION_PERSPECTIVE) {
@@ -518,27 +520,25 @@ class TransformGizmo extends Gizmo {
         const cameraPos = this._camera.entity.getPosition();
         const gizmoPos = this.root.getPosition();
 
-        const plane = new Plane();
         const facingDir = tmpV1.sub2(cameraPos, gizmoPos).normalize();
+        const normal = tmpP1.normal.set(0, 0, 0);
 
         if (isFacing) {
             // all axes so set normal to plane facing camera
-            plane.normal.copy(facingDir);
+            normal.copy(facingDir);
         } else {
             // set plane normal based on axis
-            plane.normal.set(0, 0, 0);
-            plane.normal[axis] = 1;
-            this._rootStartRot.transformVector(plane.normal, plane.normal);
+            normal[axis] = 1;
+            this._rootStartRot.transformVector(normal, normal);
 
             if (isLine) {
                 // set plane normal to face camera but keep normal perpendicular to axis
-                tmpV2.cross(plane.normal, facingDir).normalize();
-                plane.normal.cross(tmpV2, plane.normal).normalize();
+                tmpV2.cross(normal, facingDir).normalize();
+                normal.cross(tmpV2, normal).normalize();
             }
         }
 
-        plane.distance = -gizmoPos.dot(plane.normal);
-        return plane;
+        return tmpP1.setFromPointNormal(gizmoPos, normal);
     }
 
     _projectToAxis(point, axis) {

@@ -10,11 +10,11 @@ import { Entity } from '../../framework/entity.js';
 const tmpV1 = new Vec3();
 const tmpM1 = new Mat4();
 const tmpM2 = new Mat4();
+const tmpR1 = new Ray();
 
 const xstart = new Vec3();
 const xdir = new Vec3();
 
-const ray = new Ray();
 
 // constants
 const MIN_GIZMO_SCALE = 1e-4;
@@ -396,8 +396,8 @@ class Gizmo extends EventHandler {
                 xdir.normalize();
 
                 for (let k = 0; k < tris.length; k++) {
-                    ray.set(xstart, xdir);
-                    if (tris[k].intersectsRay(ray, tmpV1)) {
+                    tmpR1.set(xstart, xdir);
+                    if (tris[k].intersectsRay(tmpR1, tmpV1)) {
                         selection.push({
                             dist: tmpM1.transformPoint(tmpV1).sub(start).length(),
                             meshInstances: meshInstances,
