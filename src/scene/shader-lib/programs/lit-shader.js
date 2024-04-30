@@ -308,8 +308,7 @@ class LitShader {
 
                 // vertex ids attributes
                 this.attributes.morph_vertex_id = SEMANTIC_ATTR15;
-                const morphIdType = device.isWebGPU ? 'uint' : 'float';
-                code += `attribute ${morphIdType} morph_vertex_id;\n`;
+                code += `attribute uint morph_vertex_id;\n`;
 
             } else {
 
