@@ -183,10 +183,8 @@ function testTextureFloatHighPrecision(device) {
 }
 
 /**
- * The graphics device manages the underlying graphics context. It is responsible for submitting
- * render state changes and graphics primitives to the hardware. A graphics device is tied to a
- * specific canvas HTML element. It is valid to have more than one canvas element per page and
- * create a new graphics device against each.
+ * WebglGraphicsDevice extends the base {@link GraphicsDevice} to provide rendering capabilities
+ * utilizing the WebGL 2.0 specification.
  *
  * @category Graphics
  */
