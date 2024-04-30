@@ -251,6 +251,8 @@ class LitShader {
                 code += chunks.tangentBinormalVS;
                 codeBody += "   vTangentW   = getTangent();\n";
                 codeBody += "   vBinormalW  = getBinormal();\n";
+            } else if (options.enableGGXSpecular) {
+                codeBody += "   vObjectSpaceUpW = normalize(dNormalMatrix * vec3(0, 1, 0));\n";
             }
         }
 
