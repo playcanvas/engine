@@ -17,7 +17,7 @@ const tmpQ1 = new Quat();
 const tmpQ2 = new Quat();
 
 // constants
-const FACING_EPSILON = 0.9;
+const FACING_THRESHOLD = 0.9;
 const ROTATE_SCALE = 900;
 
 /**
@@ -391,7 +391,7 @@ class RotateGizmo extends TransformGizmo {
         // calculate angle
         const facingDir = tmpV1.sub2(ray.origin, gizmoPos).normalize();
         const facingDot = plane.normal.dot(facingDir);
-        if (axis === 'face' || Math.abs(facingDot) > FACING_EPSILON) {
+        if (axis === 'face' || Math.abs(facingDot) > FACING_THRESHOLD) {
             // plane facing camera so based on mouse position around gizmo
             tmpQ1.copy(this._camera.entity.getRotation()).invert();
 
