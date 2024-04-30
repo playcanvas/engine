@@ -102,14 +102,6 @@ class GraphicsDevice extends EventHandler {
     scope;
 
     /**
-     * The maximum number of supported bones using uniform buffers.
-     *
-     * @type {number}
-     * @readonly
-     */
-    boneLimit;
-
-    /**
      * The maximum supported texture anisotropy setting.
      *
      * @type {number}
@@ -825,32 +817,6 @@ class GraphicsDevice extends EventHandler {
      */
     get deviceType() {
         return this._deviceType;
-    }
-
-    /**
-     * Queries the maximum number of bones that can be referenced by a shader. The shader
-     * generators (programlib) use this number to specify the matrix array size of the uniform
-     * 'matrix_pose[0]'. The value is calculated based on the number of available uniform vectors
-     * available after subtracting the number taken by a typical heavyweight shader. If a different
-     * number is required, it can be tuned via {@link GraphicsDevice#setBoneLimit}.
-     *
-     * @returns {number} The maximum number of bones that can be supported by the host hardware.
-     * @ignore
-     */
-    getBoneLimit() {
-        return this.boneLimit;
-    }
-
-    /**
-     * Specifies the maximum number of bones that the device can support on the current hardware.
-     * This function allows the default calculated value based on available vector uniforms to be
-     * overridden.
-     *
-     * @param {number} maxBones - The maximum number of bones supported by the host hardware.
-     * @ignore
-     */
-    setBoneLimit(maxBones) {
-        this.boneLimit = maxBones;
     }
 
     startRenderPass(renderPass) {

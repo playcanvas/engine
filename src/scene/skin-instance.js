@@ -56,32 +56,26 @@ class SkinInstance {
 
     init(device, numBones) {
 
-        if (device.supportsBoneTextures) {
+        // texture size - roughly square that fits all bones, width is multiply of 3 to simplify shader math
+        const numPixels = numBones * 3;
+        let width = Math.ceil(Math.sqrt(numPixels));
+        width = math.roundUp(width, 3);
+        const height = Math.ceil(numPixels / width);
 
-            // texture size - roughly square that fits all bones, width is multiply of 3 to simplify shader math
-            const numPixels = numBones * 3;
-            let width = Math.ceil(Math.sqrt(numPixels));
-            width = math.roundUp(width, 3);
-            const height = Math.ceil(numPixels / width);
+        this.boneTexture = new Texture(device, {
+            width: width,
+            height: height,
+            format: PIXELFORMAT_RGBA32F,
+            mipmaps: false,
+            minFilter: FILTER_NEAREST,
+            magFilter: FILTER_NEAREST,
+            name: 'skin'
+        });
 
-            this.boneTexture = new Texture(device, {
-                width: width,
-                height: height,
-                format: PIXELFORMAT_RGBA32F,
-                mipmaps: false,
-                minFilter: FILTER_NEAREST,
-                magFilter: FILTER_NEAREST,
-                name: 'skin'
-            });
+        this.boneTextureSize = [width, height, 1.0 / width, 1.0 / height];
 
-            this.boneTextureSize = [width, height, 1.0 / width, 1.0 / height];
-
-            this.matrixPalette = this.boneTexture.lock({ mode: TEXTURELOCK_READ });
-            this.boneTexture.unlock();
-
-        } else {
-            this.matrixPalette = new Float32Array(numBones * 12);
-        }
+        this.matrixPalette = this.boneTexture.lock({ mode: TEXTURELOCK_READ });
+        this.boneTexture.unlock();
     }
 
     destroy() {
@@ -134,10 +128,8 @@ class SkinInstance {
     uploadBones(device) {
 
         // TODO: this is a bit strange looking. Change the Texture API to do a reupload
-        if (device.supportsBoneTextures) {
-            this.boneTexture.lock();
-            this.boneTexture.unlock();
-        }
+        this.boneTexture.lock();
+        this.boneTexture.unlock();
     }
 
     _updateMatrices(rootNode, skinUpdateIndex) {

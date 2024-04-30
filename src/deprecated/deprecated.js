@@ -676,6 +676,13 @@ Object.defineProperties(Texture.prototype, {
     }
 });
 
+Object.defineProperty(GraphicsDevice.prototype, 'boneLimit', {
+    get: function () {
+        Debug.deprecated('pc.GraphicsDevice#boneLimit is deprecated and the limit has been removed.');
+        return 1024;
+    }
+});
+
 Object.defineProperty(GraphicsDevice.prototype, 'webgl2', {
     get: function () {
         Debug.deprecated('pc.GraphicsDevice#webgl2 is deprecated, use pc.GraphicsDevice#isWebGL2 instead.');

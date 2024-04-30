@@ -162,9 +162,7 @@ import shadowStandardPS from './lit/frag/shadowStandard.js';
 import shadowStandardGL2PS from './lit/frag/shadowStandardGL2.js';
 import shadowVSM8PS from './lit/frag/shadowVSM8.js';
 import shadowVSM_commonPS from './lit/frag/shadowVSM_common.js';
-import skinBatchConstVS from './common/vert/skinBatchConst.js';
 import skinBatchTexVS from './common/vert/skinBatchTex.js';
-import skinConstVS from './common/vert/skinConst.js';
 import skinTexVS from './common/vert/skinTex.js';
 import skyboxEnvPS from './skybox/frag/skyboxEnv.js';
 import skyboxHDRPS from './skybox/frag/skyboxHDR.js';
@@ -374,9 +372,7 @@ const shaderChunks = {
     shadowStandardGL2PS,
     shadowVSM8PS,
     shadowVSM_commonPS,
-    skinBatchConstVS,
     skinBatchTexVS,
-    skinConstVS,
     skinTexVS,
     skyboxEnvPS,
     skyboxHDRPS,

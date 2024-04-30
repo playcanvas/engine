@@ -434,7 +434,7 @@ class BatchManager {
     prepare(meshInstances, dynamic, maxAabbSize = Number.POSITIVE_INFINITY, translucent) {
         if (meshInstances.length === 0) return [];
         const halfMaxAabbSize = maxAabbSize * 0.5;
-        const maxInstanceCount = this.device.supportsBoneTextures ? 1024 : this.device.boneLimit;
+        const maxInstanceCount = 1024;
 
         // maximum number of vertices that can be used in batch (do this for non-indexed as well,
         // as in some cases (UI elements) non-indexed geometry gets batched into indexed)
@@ -632,10 +632,8 @@ class BatchManager {
         // #endif
 
         if (!this._init) {
-            const boneLimit = '#define BONE_LIMIT ' + this.device.getBoneLimit() + '\n';
-            this.transformVS = boneLimit + '#define DYNAMICBATCH\n' + shaderChunks.transformVS;
+            this.transformVS = '#define DYNAMICBATCH\n' + shaderChunks.transformVS;
             this.skinTexVS = shaderChunks.skinBatchTexVS;
-            this.skinConstVS = shaderChunks.skinBatchConstVS;
             this.vertexFormats = {};
             this._init = true;
         }
@@ -782,7 +780,6 @@ class BatchManager {
                 material = material.clone();
                 material.chunks.transformVS = this.transformVS;
                 material.chunks.skinTexVS = this.skinTexVS;
-                material.chunks.skinConstVS = this.skinConstVS;
                 material.update();
             }
 
