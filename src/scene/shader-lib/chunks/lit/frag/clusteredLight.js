@@ -48,13 +48,8 @@ struct ClusterLightData {
     // area light sizes / orientation
     vec3 halfHeight;
 
-    #ifdef GL2
-        // light index
-        int lightIndex;
-    #else
-        // v coordinate to look up the light textures - this is the same as lightIndex but in 0..1 range
-        float lightV;
-    #endif
+    // light index
+    int lightIndex;
 
     // world space position
     vec3 position;

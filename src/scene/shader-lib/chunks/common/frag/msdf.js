@@ -1,13 +1,7 @@
 export default /* glsl */`
 uniform sampler2D texture_msdfMap;
 
-#ifdef GL_OES_standard_derivatives
 #define USE_FWIDTH
-#endif
-
-#ifdef GL2
-#define USE_FWIDTH
-#endif
 
 float median(float r, float g, float b) {
     return max(min(r, g), min(max(r, g), b));
