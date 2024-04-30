@@ -2007,14 +2007,6 @@ export const uniformTypeToStorage = new Uint8Array([
 ]);
 
 /**
- * A WebGL 1 device type.
- *
- * @type {string}
- * @category Graphics
- */
-export const DEVICETYPE_WEBGL1 = 'webgl1';
-
-/**
  * A WebGL 2 device type.
  *
  * @type {string}
