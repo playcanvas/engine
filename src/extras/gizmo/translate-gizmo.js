@@ -263,7 +263,7 @@ class TranslateGizmo extends TransformGizmo {
         this._updatePosition();
     }
 
-    _calcPoint(x, y) {
+    _screenToPoint(x, y) {
         const mouseWPos = this._camera.screenToWorld(x, y, 1);
 
         const axis = this._selectedAxis;

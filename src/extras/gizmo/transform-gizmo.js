@@ -320,7 +320,7 @@ class TransformGizmo extends Gizmo {
             this._selectedAxis = this._getAxis(meshInstance);
             this._selectedIsPlane =  this._getIsPlane(meshInstance);
             this._rootStartRot.copy(this.root.getRotation());
-            const pointInfo = this._calcPoint(x, y);
+            const pointInfo = this._screenToPoint(x, y);
             this._selectionStartPoint.copy(pointInfo.point);
             this._selectionStartAngle = pointInfo.angle;
             this._dragging = true;
@@ -339,7 +339,7 @@ class TransformGizmo extends Gizmo {
                 return;
             }
 
-            const pointInfo = this._calcPoint(x, y);
+            const pointInfo = this._screenToPoint(x, y);
             pointDelta.copy(pointInfo.point).sub(this._selectionStartPoint);
             const angleDelta = pointInfo.angle - this._selectionStartAngle;
             this.fire(TransformGizmo.EVENT_TRANSFORMMOVE, pointDelta, angleDelta);
@@ -553,7 +553,7 @@ class TransformGizmo extends Gizmo {
         point[axis] = v;
     }
 
-    _calcPoint(x, y, isFacing = false, isLine = false) {
+    _screenToPoint(x, y, isFacing = false, isLine = false) {
         const mouseWPos = this._camera.screenToWorld(x, y, 1);
 
         const axis = this._selectedAxis;

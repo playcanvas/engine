@@ -374,7 +374,7 @@ class RotateGizmo extends TransformGizmo {
         }
     }
 
-    _calcPoint(x, y) {
+    _screenToPoint(x, y) {
         const gizmoPos = this.root.getPosition();
         const mouseWPos = this._camera.screenToWorld(x, y, 1);
 
