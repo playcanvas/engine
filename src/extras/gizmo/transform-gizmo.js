@@ -607,7 +607,7 @@ class TransformGizmo extends Gizmo {
             const shape = this._shapes[key];
             this.root.addChild(shape.entity);
             this.intersectData.push({
-                meshTriDataList: shape.meshTriDataList,
+                triData: shape.triData,
                 parent: shape.entity,
                 meshInstances: shape.meshInstances
             });

@@ -220,8 +220,7 @@ class Gizmo extends EventHandler {
 
     /**
      * @typedef IntersectData
-     * @property {import('./mesh-tri-data.js').MeshTriData[]} meshTriDataList -
-     * The array of {@link MeshTriData}
+     * @property {import('./tri-data.js').TriData[]} triData - The array of {@link TriData}
      * @property {import('../../scene/graph-node.js').GraphNode} parent - The mesh parent node.
      * @property {import('../../scene/mesh-instance.js').MeshInstance[]} meshInstances -
      * array of mesh instances for rendering
@@ -237,7 +236,8 @@ class Gizmo extends EventHandler {
      * Creates a new Gizmo object.
      *
      * @param {import('../../framework/app-base.js').AppBase} app - The application instance.
-     * @param {import('../../framework/components/camera/component.js').CameraComponent} camera - The camera component.
+     * @param {import('../../framework/components/camera/component.js').CameraComponent} camera - 
+     * The camera component.
      * @param {import('../../scene/layer.js').Layer} layer - The render layer.
      * @example
      * const gizmo = new pc.Gizmo(app, camera, layer);
@@ -381,10 +381,10 @@ class Gizmo extends EventHandler {
 
         const selection = [];
         for (let i = 0; i < this.intersectData.length; i++) {
-            const { meshTriDataList, parent, meshInstances } = this.intersectData[i];
+            const { triData, parent, meshInstances } = this.intersectData[i];
             const wtm = parent.getWorldTransform().clone();
-            for (let j = 0; j < meshTriDataList.length; j++) {
-                const { tris, ptm, priority } = meshTriDataList[j];
+            for (let j = 0; j < triData.length; j++) {
+                const { tris, ptm, priority } = triData[j];
                 tmpM1.copy(wtm).mul(ptm);
                 tmpM2.copy(tmpM1).invert();
                 tmpM2.transformPoint(start, tmpR1.origin);

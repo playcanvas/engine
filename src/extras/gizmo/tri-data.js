@@ -1,8 +1,8 @@
 import { Vec3 } from '../../core/math/vec3.js';
 import { Quat } from '../../core/math/quat.js';
-import { Mat4 } from '../..//core/math/mat4.js';
+import { Mat4 } from '../../core/math/mat4.js';
 import { Tri } from '../../core/shape/tri.js';
-import { Mesh } from '../../scene/mesh.js';
+import { Geometry } from '../../scene/geometry/geometry.js';
 
 // temporary variables
 const tmpV1 = new Vec3();
@@ -10,11 +10,11 @@ const tmpV2 = new Vec3();
 const tmpV3 = new Vec3();
 
 /**
- * The class for holding mesh triangle data.
+ * The class for holding triangle data.
  *
  * @ignore
  */
-class MeshTriData {
+class TriData {
     /**
      * The priority of the triangle data (Used for intersection ordering).
      * priority = 0 - no priority
@@ -25,21 +25,25 @@ class MeshTriData {
     _priority = 0;
 
     /**
-     * The transform of the mesh.
+     * The transform of the triangles.
      *
      * @type {Mat4}
      */
     _ptm = new Mat4();
 
     /**
-     * The array of triangles for the mesh.
+     * The array of triangles for the geometry.
      *
      * @type {Tri[]}
      */
-    tris;
+    tris = [];
 
-    constructor(mesh, priority = 0) {
-        this.setTris(mesh);
+    /**
+     * @param {Geometry} geometry - The geometry to create the triangle data from.
+     * @param {number} [priority] - The priority of the triangle data.
+     */
+    constructor(geometry, priority = 0) {
+        this.setTris(geometry);
         this._priority = priority;
     }
 
@@ -51,15 +55,10 @@ class MeshTriData {
         return this._priority;
     }
 
-    _trisFromMesh(mesh, destroy = true) {
+    _fromGeometry(geometry) {
         const tris = [];
-        const pos = [];
-        const indices = [];
-        mesh.getPositions(pos);
-        mesh.getIndices(indices);
-        if (destroy) {
-            mesh.destroy();
-        }
+        const pos = geometry.positions;
+        const indices = geometry.indices;
 
         for (let k = 0; k < indices.length; k += 3) {
             const i1 = indices[k];
@@ -79,12 +78,12 @@ class MeshTriData {
         this.ptm.setTRS(pos, rot, scale);
     }
 
-    setTris(mesh) {
-        if (!mesh || !(mesh instanceof Mesh)) {
+    setTris(geometry) {
+        if (!geometry || !(geometry instanceof Geometry)) {
             throw new Error('No mesh provided.');
         }
-        this.tris = this._trisFromMesh(mesh);
+        this.tris = this._fromGeometry(geometry);
     }
 }
 
-export { MeshTriData };
+export { TriData };
