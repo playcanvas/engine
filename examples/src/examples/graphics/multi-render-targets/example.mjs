@@ -128,7 +128,7 @@ assetListLoader.load(() => {
     });
     app.root.addChild(textureCamera);
 
-    // if MRT is supported, set the shader pass to use MRT output
+    // set the shader pass to use MRT output
     textureCamera.camera.setShaderPass('MyMRT');
 
     // get the instance of the chess board. Render it into RTLayer only.
