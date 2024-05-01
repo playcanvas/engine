@@ -177,7 +177,7 @@ function SortWorker() {
 class GSplatSorter extends EventHandler {
     worker;
 
-    orderTexture;
+    vertexBuffer;
 
     constructor() {
         super();
@@ -188,17 +188,16 @@ class GSplatSorter extends EventHandler {
 
         this.worker.onmessage = (message) => {
             const newData = message.data.data;
-            const oldData = this.orderTexture._levels[0].buffer;
+            const oldData = this.vertexBuffer.storage;
 
             // send vertex storage to worker to start the next frame
             this.worker.postMessage({
                 data: oldData
             }, [oldData]);
 
-            // set new data directly on texture
-            this.orderTexture._levels[0] = new Uint32Array(newData);
-            this.orderTexture.upload();
+            this.vertexBuffer.setData(newData);
 
+            // set new data directly on texture
             this.fire('updated', message.data.count);
         };
     }
@@ -208,14 +207,10 @@ class GSplatSorter extends EventHandler {
         this.worker = null;
     }
 
-    init(orderTexture, centers) {
-        this.orderTexture = orderTexture;
+    init(vertexBuffer, centers) {
+        this.vertexBuffer = vertexBuffer;
 
-        // get the texture's storage buffer and make a copy
-        const buf = this.orderTexture.lock({
-            mode: TEXTURELOCK_READ
-        }).buffer.slice();
-        this.orderTexture.unlock();
+        const buf = vertexBuffer.storage.slice();
 
         // send the initial buffer to worker
         this.worker.postMessage({

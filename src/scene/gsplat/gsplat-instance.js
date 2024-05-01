@@ -1,6 +1,6 @@
 import { Mat4 } from '../../core/math/mat4.js';
 import { Vec3 } from '../../core/math/vec3.js';
-import { PIXELFORMAT_R32U, PIXELFORMAT_RGBA16F, PIXELFORMAT_RGBA32F, SEMANTIC_POSITION, TYPE_UINT32 } from '../../platform/graphics/constants.js';
+import { BUFFER_DYNAMIC, BUFFER_STATIC, PIXELFORMAT_R32U, PIXELFORMAT_RGBA16F, PIXELFORMAT_RGBA32F, SEMANTIC_ATTR13, SEMANTIC_POSITION, TYPE_UINT32 } from '../../platform/graphics/constants.js';
 import { DITHER_NONE } from '../constants.js';
 import { MeshInstance } from '../mesh-instance.js';
 import { Mesh } from '../mesh.js';
@@ -9,6 +9,8 @@ import { GSplatSorter } from './gsplat-sorter.js';
 import { RenderTarget } from '../../platform/graphics/render-target.js';
 import { createShaderFromCode } from '../shader-lib/utils.js';
 import { drawQuadWithShader } from '../graphics/quad-render-utils.js';
+import { VertexBuffer } from '../../platform/graphics/vertex-buffer.js';
+import { VertexFormat } from '../../platform/graphics/vertex-format.js';
 
 // vertex shader
 const v1v2VS = /* glsl */`
@@ -39,7 +41,7 @@ void readTransform(vec2 splatUV, out vec3 center, out vec3 covA, out vec3 covB) 
 
 // given the splat center (view space) and covariance A and B vectors, calculate
 // the v1 and v2 vectors for this view.
-vec4 calcV1V2(vec3 centerView, vec3 covA, vec3 covB, float focal, mat3 modelViewTranspose) {
+vec4 calcV1V2(vec3 centerView, vec3 covA, vec3 covB, float focal, mat3 W) {
     mat3 Vrk = mat3(
         covA.x, covA.y, covA.z, 
         covA.y, covB.x, covB.y,
@@ -54,7 +56,6 @@ vec4 calcV1V2(vec3 centerView, vec3 covA, vec3 covB, float focal, mat3 modelView
         0., 0., 0.
     );
 
-    mat3 W = modelViewTranspose;
     mat3 T = W * J;
     mat3 cov = transpose(T) * Vrk * T;
 
@@ -69,13 +70,6 @@ vec4 calcV1V2(vec3 centerView, vec3 covA, vec3 covB, float focal, mat3 modelView
     vec2 diagonalVector = normalize(vec2(offDiagonal, lambda1 - diagonal1));
     vec2 v1 = min(sqrt(2.0 * lambda1), 1024.0) * diagonalVector;
     vec2 v2 = min(sqrt(2.0 * lambda2), 1024.0) * vec2(diagonalVector.y, -diagonalVector.x);
-
-    // early out tiny splats
-    // TODO: figure out length units and expose as uniform parameter
-    // TODO: perhaps make this a shader compile-time option
-    // if (dot(v1, v1) < 4.0 && dot(v2, v2) < 4.0) {
-    //     return vec4(0.0, 0.0, 2.0, 1.0);
-    // }
 
     return vec4(v1, v2);
 }
@@ -99,15 +93,13 @@ void main(void) {
     float focal = viewport.x * matrix_projection[0][0];
 
     // calcV1V2
-    vec4 v1v2 = calcV1V2(
+    gl_FragColor = calcV1V2(
         (modelView * vec4(center, 1.0)).xyz,
         covA,
         covB,
         focal,
         transpose(mat3(modelView))
     );
-
-    gl_FragColor = v1v2;
 }
 `;
 
@@ -130,7 +122,7 @@ class GSplatInstance {
     /** @type {import('../materials/material.js').Material} */
     material;
 
-    /** @type {import('../../platform/graphics/vertex-buffer.js').VertexBuffer} */
+    /** @type {VertexBuffer} */
     vb;
 
     options = {};
@@ -197,37 +189,35 @@ class GSplatInstance {
         this.createMaterial(options);
 
         const numSplats = splat.numSplats;
-        const indices = new Uint32Array(numSplats * 6);
-        const ids = new Uint32Array(numSplats * 4);
 
+        const indexData = new Uint32Array(numSplats);
         for (let i = 0; i < numSplats; ++i) {
-            const base = i * 4;
-
-            // 4 vertices	
-            ids[base + 0] = i;	
-            ids[base + 1] = i;	
-            ids[base + 2] = i;	
-            ids[base + 3] = i;
-
-            // 2 triangles
-            const triBase = i * 6;
-            indices[triBase + 0] = base;
-            indices[triBase + 1] = base + 1;
-            indices[triBase + 2] = base + 2;
-            indices[triBase + 3] = base;
-            indices[triBase + 4] = base + 2;
-            indices[triBase + 5] = base + 3;
+            indexData[i] = i;
         }
 
-        // mesh
+        const vertexFormat = new VertexFormat(device, [
+            { semantic: SEMANTIC_ATTR13, components: 1, type: TYPE_UINT32, asInt: true }
+        ]);
+
+        const vb = new VertexBuffer(
+            device,
+            vertexFormat,
+            numSplats,
+            {
+                usage: BUFFER_DYNAMIC,
+                data: indexData.buffer
+            }
+        );
+
         const mesh = new Mesh(device);
-        mesh.setVertexStream(SEMANTIC_POSITION, ids, 1, numSplats * 4, TYPE_UINT32, false, true);
-        mesh.setIndices(indices);
+        mesh.setPositions(new Float32Array([-2, -2, 2, -2, 2, 2, -2, 2]), 2);
+        mesh.setIndices([0, 1, 2, 0, 2, 3]);
         mesh.update();
+
         this.mesh = mesh;
         this.mesh.aabb.copy(splat.aabb);
-
         this.meshInstance = new MeshInstance(this.mesh, this.material);
+        this.meshInstance.setInstancing(vb, true);
         this.meshInstance.gsplatInstance = this;
 
         // clone centers to allow multiple instances of sorter
@@ -236,13 +226,16 @@ class GSplatInstance {
         // create sorter
         if (!options.dither || options.dither === DITHER_NONE) {
             this.sorter = new GSplatSorter();
-            this.sorter.init(this.orderTexture, this.centers);
+            this.sorter.init(vb, this.centers);
             this.sorter.on('updated', (count) => {
                 // ideally we would update the number of splats rendered here in order to skip
                 // the ones behind the camera. unfortunately changing this value dynamically
                 // results in performance lockups. (the browser is likely re-validating the index
                 // buffer when this value changes and/or re-uploading the index buffer to gpu memory).
                 // this.mesh.primitive[0].count = count * 6;
+
+                // sorter not working
+                // this.meshInstance.instancingCount = count;
             });
         }
     }
