@@ -21,7 +21,7 @@ const supportsFloat16 = (device) => {
 };
 
 const supportsFloat32 = (device) => {
-    return device.extTextureFloat && device.textureFloatRenderable;
+    return device.textureFloatRenderable;
 };
 
 // lighting source should be stored HDR

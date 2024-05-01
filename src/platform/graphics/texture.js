@@ -209,15 +209,9 @@ class Texture {
             options.magFilter = FILTER_NEAREST;
         }
 
-        if (graphicsDevice.supportsVolumeTextures) {
-            this._volume = options.volume ?? false;
-            this._depth = Math.floor(options.depth ?? 1);
-            this._arrayLength = Math.floor(options.arrayLength ?? 0);
-        } else {
-            this._volume = false;
-            this._depth = 1;
-            this._arrayLength = 0;
-        }
+        this._volume = options.volume ?? false;
+        this._depth = Math.floor(options.depth ?? 1);
+        this._arrayLength = Math.floor(options.arrayLength ?? 0);
 
         this._storage = options.storage ?? false;
         this._cubemap = options.cubemap ?? false;
@@ -494,7 +488,6 @@ class Texture {
      * @type {number}
      */
     set addressW(addressW) {
-        if (!this.device.supportsVolumeTextures) return;
         if (!this._volume) {
             Debug.warn("pc.Texture#addressW: Can't set W addressing mode for a non-3D texture.");
             return;

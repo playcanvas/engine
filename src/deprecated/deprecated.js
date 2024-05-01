@@ -676,10 +676,31 @@ Object.defineProperties(Texture.prototype, {
     }
 });
 
+Object.defineProperty(GraphicsDevice.prototype, 'boneLimit', {
+    get: function () {
+        Debug.deprecated('pc.GraphicsDevice#boneLimit is deprecated and the limit has been removed.');
+        return 1024;
+    }
+});
+
 Object.defineProperty(GraphicsDevice.prototype, 'webgl2', {
     get: function () {
         Debug.deprecated('pc.GraphicsDevice#webgl2 is deprecated, use pc.GraphicsDevice#isWebGL2 instead.');
         return this.isWebGL2;
+    }
+});
+
+Object.defineProperty(GraphicsDevice.prototype, 'supportsMrt', {
+    get: function () {
+        Debug.deprecated('pc.GraphicsDevice#supportsMrt is deprecated as it is always true.');
+        return true;
+    }
+});
+
+Object.defineProperty(GraphicsDevice.prototype, 'supportsVolumeTextures', {
+    get: function () {
+        Debug.deprecated('pc.GraphicsDevice#supportsVolumeTextures is deprecated as it is always true.');
+        return true;
     }
 });
 
@@ -693,6 +714,13 @@ Object.defineProperty(GraphicsDevice.prototype, 'supportsInstancing', {
 Object.defineProperty(GraphicsDevice.prototype, 'textureHalfFloatUpdatable', {
     get: function () {
         Debug.deprecated('pc.GraphicsDevice#textureHalfFloatUpdatable is deprecated as it is always true.');
+        return true;
+    }
+});
+
+Object.defineProperty(GraphicsDevice.prototype, 'extTextureFloat', {
+    get: function () {
+        Debug.deprecated('pc.GraphicsDevice#extTextureFloat is deprecated as it is always true');
         return true;
     }
 });

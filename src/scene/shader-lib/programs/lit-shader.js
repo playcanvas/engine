@@ -251,6 +251,8 @@ class LitShader {
                 code += chunks.tangentBinormalVS;
                 codeBody += "   vTangentW   = getTangent();\n";
                 codeBody += "   vBinormalW  = getBinormal();\n";
+            } else if (options.enableGGXSpecular) {
+                codeBody += "   vObjectSpaceUpW = normalize(dNormalMatrix * vec3(0, 1, 0));\n";
             }
         }
 
@@ -308,8 +310,7 @@ class LitShader {
 
                 // vertex ids attributes
                 this.attributes.morph_vertex_id = SEMANTIC_ATTR15;
-                const morphIdType = device.isWebGPU ? 'uint' : 'float';
-                code += `attribute ${morphIdType} morph_vertex_id;\n`;
+                code += `attribute uint morph_vertex_id;\n`;
 
             } else {
 
@@ -495,9 +496,7 @@ class LitShader {
         code += this.frontendDecl;
         code += this.frontendCode;
 
-        const mayPackDepth = shadowType === SHADOW_PCF1 || shadowType === SHADOW_PCF3 || shadowType === SHADOW_PCF5 || shadowType === SHADOW_PCSS;
-        const mustPackDepth = (lightType === LIGHTTYPE_OMNI && shadowType !== SHADOW_PCSS && !options.clusteredLightingEnabled);
-        const usePackedDepth = mayPackDepth && !device.supportsDepthShadow || mustPackDepth;
+        const usePackedDepth = (lightType === LIGHTTYPE_OMNI && shadowType !== SHADOW_PCSS && !options.clusteredLightingEnabled);
         if (usePackedDepth) {
             code += chunks.packDepthPS;
         } else if (shadowType === SHADOW_VSM8) {
@@ -687,7 +686,7 @@ class LitShader {
                 if (lightType === LIGHTTYPE_OMNI) {
                     decl.append("uniform samplerCube light" + i + "_shadowMap;");
                 } else {
-                    if (light._isPcf && device.supportsDepthShadow) {
+                    if (light._isPcf) {
                         decl.append("uniform sampler2DShadow light" + i + "_shadowMap;");
                     } else {
                         decl.append("uniform sampler2D light" + i + "_shadowMap;");
@@ -968,7 +967,7 @@ class LitShader {
             if (options.clusteredLightingAreaLightsEnabled)
                 decl.append("#define CLUSTER_AREALIGHTS");
 
-            decl.append(LightsBuffer.getShaderDefines(device));
+            decl.append(LightsBuffer.getShaderDefines());
 
             if (options.clusteredLightingShadowsEnabled && !options.noShadow) {
                 func.append(chunks.clusteredLightShadowsPS);

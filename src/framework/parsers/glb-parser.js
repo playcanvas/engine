@@ -809,24 +809,8 @@ const createMesh = (device, gltfMesh, accessors, bufferViews, flipV, vertexBuffe
                     indexFormat = INDEXFORMAT_UINT32;
                 }
 
-                // 32bit index buffer is used but not supported
-                if (indexFormat === INDEXFORMAT_UINT32 && !device.extUintElement) {
-
-                    // #if _DEBUG
-                    if (vertexBuffer.numVertices > 0xFFFF) {
-                        console.warn('Glb file contains 32bit index buffer but these are not supported by this device - it may be rendered incorrectly.');
-                    }
-                    // #endif
-
-                    // convert to 16bit
-                    indexFormat = INDEXFORMAT_UINT16;
-                    indices = new Uint16Array(indices);
-                }
-
                 if (indexFormat === INDEXFORMAT_UINT8 && device.isWebGPU) {
-                    Debug.warn('Glb file contains 8bit index buffer but these are not supported by WebGPU - converting to 16bit.');
-
-                    // convert to 16bit
+                    // silently convert to 16bit
                     indexFormat = INDEXFORMAT_UINT16;
                     indices = new Uint16Array(indices);
                 }

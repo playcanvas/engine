@@ -83,8 +83,7 @@ class RenderTarget {
      * target will treat as a rendering surface.
      * @param {import('./texture.js').Texture[]} [options.colorBuffers] - The textures that this
      * render target will treat as a rendering surfaces. If this option is set, the colorBuffer
-     * option is ignored. This option can be used only when {@link GraphicsDevice#supportsMrt} is
-     * true.
+     * option is ignored.
      * @param {boolean} [options.depth] - If set to true, depth buffer will be created. Defaults to
      * true. Ignored if depthBuffer is defined.
      * @param {import('./texture.js').Texture} [options.depthBuffer] - The texture that this render
@@ -190,12 +189,6 @@ class RenderTarget {
         const device = this._colorBuffer?.device || this._depthBuffer?.device || options.graphicsDevice;
         Debug.assert(device, "Failed to obtain the device, colorBuffer nor depthBuffer store it.");
         this._device = device;
-
-        Debug.call(() => {
-            if (this._colorBuffers) {
-                Debug.assert(this._colorBuffers.length <= 1 || device.supportsMrt, 'Multiple render targets are not supported on this device');
-            }
-        });
 
         const { maxSamples } = this._device;
         this._samples = Math.min(options.samples ?? 1, maxSamples);

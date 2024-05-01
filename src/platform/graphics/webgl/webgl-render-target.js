@@ -125,7 +125,7 @@ class WebglRenderTarget {
 
             // --- Init the provided color buffer (optional) ---
             const colorBufferCount = target._colorBuffers?.length ?? 0;
-            const attachmentBaseConstant = device.isWebGL2 ? gl.COLOR_ATTACHMENT0 : (device.extDrawBuffers?.COLOR_ATTACHMENT0_WEBGL ?? gl.COLOR_ATTACHMENT0);
+            const attachmentBaseConstant = gl.COLOR_ATTACHMENT0;
             for (let i = 0; i < colorBufferCount; ++i) {
                 const colorBuffer = target.getColorBuffer(i);
                 if (colorBuffer) {
@@ -148,9 +148,7 @@ class WebglRenderTarget {
                 }
             }
 
-            if (device.drawBuffers) {
-                device.drawBuffers(buffers);
-            }
+            gl.drawBuffers(buffers);
 
             const depthBuffer = target._depthBuffer;
             if (depthBuffer) {
@@ -263,7 +261,7 @@ class WebglRenderTarget {
 
                 // restore rendering back to the main framebuffer
                 device.setFramebuffer(this._glFrameBuffer);
-                device.drawBuffers(buffers);
+                gl.drawBuffers(buffers);
             }
         }
     }
@@ -285,7 +283,7 @@ class WebglRenderTarget {
             gl.renderbufferStorageMultisample(gl.RENDERBUFFER, target._samples, colorBuffer.impl._glInternalFormat, target.width, target.height);
             gl.framebufferRenderbuffer(gl.FRAMEBUFFER, gl.COLOR_ATTACHMENT0, gl.RENDERBUFFER, buffer);
 
-            device.drawBuffers([gl.COLOR_ATTACHMENT0]);
+            gl.drawBuffers([gl.COLOR_ATTACHMENT0]);
 
             Debug.call(() => this._checkFbo(device, target, `MSAA-MRT-src${i}`));
 

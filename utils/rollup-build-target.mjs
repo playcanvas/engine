@@ -13,6 +13,7 @@ import { shaderChunks } from './plugins/rollup-shader-chunks.mjs';
 import { engineLayerImportValidation } from './plugins/rollup-import-validation.mjs';
 import { spacesToTabs } from './plugins/rollup-spaces-to-tabs.mjs';
 import { dynamicImportLegacyBrowserSupport, dynamicImportViteSupress } from './plugins/rollup-dynamic.mjs';
+import { treeshakeIgnore } from './plugins/rollup-treeshake-ignore.mjs';
 
 import { version, revision } from './rollup-version-revision.mjs';
 import { getBanner } from './rollup-get-banner.mjs';
@@ -22,6 +23,10 @@ import { babelOptions } from './rollup-babel-options.mjs';
 /** @typedef {import('rollup').OutputOptions} OutputOptions */
 /** @typedef {import('rollup').ModuleFormat} ModuleFormat */
 /** @typedef {import('@rollup/plugin-strip').RollupStripOptions} RollupStripOptions */
+
+const TREESHAKE_IGNORE_REGEXES = [
+    /polyfill/
+];
 
 const STRIP_FUNCTIONS = [
     'Debug.assert',
@@ -224,6 +229,7 @@ function buildTarget({ moduleFormat, buildType, bundleState, input = 'src/index.
         plugins: [
             resolve(),
             jscc(getJSCCOptions(isMin ? 'release' : buildType, isUMD)),
+            isUMD ? treeshakeIgnore(TREESHAKE_IGNORE_REGEXES) : undefined,
             isUMD ? dynamicImportLegacyBrowserSupport() : undefined,
             !isDebug ? shaderChunks() : undefined,
             isDebug ? engineLayerImportValidation(input) : undefined,

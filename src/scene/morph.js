@@ -8,7 +8,7 @@ import { VertexBuffer } from '../platform/graphics/vertex-buffer.js';
 import { VertexFormat } from '../platform/graphics/vertex-format.js';
 
 import {
-    TYPE_FLOAT32, TYPE_UINT32, SEMANTIC_ATTR15, ADDRESS_CLAMP_TO_EDGE, FILTER_NEAREST,
+    TYPE_UINT32, SEMANTIC_ATTR15, ADDRESS_CLAMP_TO_EDGE, FILTER_NEAREST,
     PIXELFORMAT_RGBA16F, PIXELFORMAT_RGB32F, PIXELFORMAT_RGBA32F
 } from '../platform/graphics/constants.js';
 
@@ -56,13 +56,13 @@ class Morph extends RefCountedObject {
 
             // renderable format
             const renderableHalf = (device.extTextureHalfFloat && device.textureHalfFloatRenderable) ? PIXELFORMAT_RGBA16F : undefined;
-            const renderableFloat = (device.extTextureFloat && device.textureFloatRenderable) ? PIXELFORMAT_RGBA32F : undefined;
+            const renderableFloat = device.textureFloatRenderable ? PIXELFORMAT_RGBA32F : undefined;
             this._renderTextureFormat = this.preferHighPrecision ?
                 (renderableFloat ?? renderableHalf) : (renderableHalf ?? renderableFloat);
 
             // texture format
             const textureHalf = (device.extTextureHalfFloat) ? PIXELFORMAT_RGBA16F : undefined;
-            const textureFloat = device.extTextureFloat ? PIXELFORMAT_RGB32F : undefined;
+            const textureFloat = PIXELFORMAT_RGB32F;
             this._textureFormat = this.preferHighPrecision ?
                 (textureFloat ?? textureHalf) : (textureHalf ?? textureFloat);
 
@@ -140,7 +140,7 @@ class Morph extends RefCountedObject {
         }
     }
 
-    _findSparseSet(deltaArrays, ids, usedDataIndices, floatRounding) {
+    _findSparseSet(deltaArrays, ids, usedDataIndices) {
 
         let freeIndex = 1;  // reserve slot 0 for zero delta
         const dataCount = deltaArrays[0].length;
@@ -159,12 +159,12 @@ class Morph extends RefCountedObject {
             }
 
             if (vertexUsed) {
-                ids.push(freeIndex + floatRounding);
+                ids.push(freeIndex);
                 usedDataIndices.push(v / 3);
                 freeIndex++;
             } else {
                 // non morphed vertices would be all mapped to pixel 0 of texture
-                ids.push(0 + floatRounding);
+                ids.push(0);
             }
         }
 
@@ -172,12 +172,6 @@ class Morph extends RefCountedObject {
     }
 
     _initTextureBased() {
-
-        // use uint32 for vertex Ids instead of float32
-        const useUintIds = this.device.isWebGPU;
-
-        // value added to floats which are used as ints on the shader side to avoid values being rounded to one less occasionally
-        const floatRounding = useUintIds ? 0 : 0.2;
 
         // collect all source delta arrays to find sparse set of vertices
         const deltaArrays = [], deltaInfos = [];
@@ -195,13 +189,10 @@ class Morph extends RefCountedObject {
 
         // find sparse set for all target deltas into usedDataIndices and build vertex id buffer
         const ids = [], usedDataIndices = [];
-        const freeIndex = this._findSparseSet(deltaArrays, ids, usedDataIndices, floatRounding);
-
-        // max texture size: vertexBufferIds is stored in float32 format, giving us 2^24 range, so can address 4096 texture at maximum
-        // TODO: on webgl2 we could store this in uint32 format and remove this limit
-        const maxTextureSize = Math.min(this.device.maxTextureSize, 4096);
+        const freeIndex = this._findSparseSet(deltaArrays, ids, usedDataIndices);
 
         // texture size for freeIndex pixels - roughly square
+        const maxTextureSize = this.device.maxTextureSize;
         let morphTextureWidth = Math.ceil(Math.sqrt(freeIndex));
         morphTextureWidth = Math.min(morphTextureWidth, maxTextureSize);
         const morphTextureHeight = Math.ceil(freeIndex / morphTextureWidth);
@@ -264,9 +255,9 @@ class Morph extends RefCountedObject {
         }
 
         // create vertex stream with vertex_id used to map vertex to texture
-        const formatDesc = [{ semantic: SEMANTIC_ATTR15, components: 1, type: useUintIds ? TYPE_UINT32 : TYPE_FLOAT32 }];
+        const formatDesc = [{ semantic: SEMANTIC_ATTR15, components: 1, type: TYPE_UINT32, asInt: true }];
         this.vertexBufferIds = new VertexBuffer(this.device, new VertexFormat(this.device, formatDesc, ids.length), ids.length, {
-            data: useUintIds ? new Uint32Array(ids) : new Float32Array(ids)
+            data: new Uint32Array(ids)
         });
 
         return true;

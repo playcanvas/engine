@@ -144,27 +144,12 @@ class GSplat {
      */
     getTextureFormat(device, preferHighPrecision) {
 
-        // on WebGL1 R32F is not supported, always use half precision
-        if (device.isWebGL1)
-            preferHighPrecision = false;
-
-        const halfSupported = device.extTextureHalfFloat;
-        const floatSupported = device.extTextureFloat;
-
         // true if half format should be used, false is float format should be used or undefined if none are available.
         let halfFormat;
         if (preferHighPrecision) {
-            if (floatSupported) {
-                halfFormat = false;
-            } else if (halfSupported) {
-                halfFormat = true;
-            }
+            halfFormat = false;
         } else {
-            if (halfSupported) {
-                halfFormat = true;
-            } else if (floatSupported) {
-                halfFormat = false;
-            }
+            halfFormat = device.extTextureHalfFloat;
         }
 
         return halfFormat;
