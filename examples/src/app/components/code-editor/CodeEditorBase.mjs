@@ -117,6 +117,8 @@ class CodeEditorBase extends TypedComponent {
                 jsLang?.loader()?.then(({ language }) => {
                     Object.assign(language.tokenizer, jsRules);
                 });
+
+                this.mergeState({});
             });
     }
 
