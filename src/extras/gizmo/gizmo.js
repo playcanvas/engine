@@ -148,7 +148,7 @@ class Gizmo extends EventHandler {
     static EVENT_RENDERUPDATE = 'render:update';
 
     /**
-     * Internal device start width.
+     * Internal device start size.
      *
      * @type {number}
      * @private
