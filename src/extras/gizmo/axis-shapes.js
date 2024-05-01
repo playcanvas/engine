@@ -46,12 +46,10 @@ const SHADER = {
         void main(void) {
             gl_Position = matrix_viewProjection * matrix_model * vec4(vertex_position, 1.0);
             vColor = vertex_color;
-            #ifdef GL2
-                // store z/w for later use in fragment shader
-                vZW = gl_Position.zw;
-                // disable depth clipping
-                gl_Position.z = 0.0;
-            #endif
+            // store z/w for later use in fragment shader
+            vZW = gl_Position.zw;
+            // disable depth clipping
+            gl_Position.z = 0.0;
         }`,
     frag: /* glsl */`
         precision highp float;
@@ -59,10 +57,8 @@ const SHADER = {
         varying vec2 vZW;
         void main(void) {
             gl_FragColor = vColor;
-            #ifdef GL2
-                // clamp depth in Z to [0, 1] range
-                gl_FragDepth = max(0.0, min(1.0, (vZW.x / vZW.y + 1.0) * 0.5));
-            #endif
+            // clamp depth in Z to [0, 1] range
+            gl_FragDepth = max(0.0, min(1.0, (vZW.x / vZW.y + 1.0) * 0.5));
         }`
 };
 
