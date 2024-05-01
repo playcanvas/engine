@@ -814,9 +814,6 @@ class ForwardRenderer extends Renderer {
         const scene = this.scene;
         frameGraph.reset();
 
-        // update composition, cull everything, assign atlas slots for clustered lighting
-        this.update(layerComposition);
-
         if (scene.clusteredLightingEnabled) {
 
             // clustered lighting passes
