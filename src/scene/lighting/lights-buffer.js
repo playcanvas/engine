@@ -17,7 +17,7 @@ const areaHalfAxisHeight = new Vec3(0, 0, 0.5);
 // this is used to store data in the texture correctly, and also use to generate defines for the shader
 const TextureIndex8 = {
 
-    // always 8bit texture data, regardless of float texture support
+    // format of the 8bit texture data
     FLAGS: 0,                   // lightType, lightShape, fallofMode, castShadows
     COLOR_A: 1,                 // color.r, color.r, color.g, color.g    // HDR color is stored using 2 bytes per channel
     COLOR_B: 2,                 // color.b, color.b, useCookie, lightMask
@@ -30,7 +30,7 @@ const TextureIndex8 = {
     COUNT: 7
 };
 
-// format of the float texture
+// format of the float texture data
 const TextureIndexFloat = {
     POSITION_RANGE: 0,              // positions.xyz, range
     SPOT_DIRECTION: 1,              // spot direction.xyz, -
