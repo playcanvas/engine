@@ -43,7 +43,7 @@ let monacoEditor;
 
 // eslint-disable-next-line jsdoc/require-property
 /**
- * @typedef {object} Props
+ * @typedef {Record<string, any>} Props
  */
 
 /**
@@ -314,7 +314,7 @@ class CodeEditor extends TypedComponent {
         const options = {
             value,
             language,
-            theme: 'vs-dark',
+            theme: 'playcanvas',
             loading: null,
             beforeMount: this.beforeMount.bind(this),
             onMount: this.editorDidMount.bind(this),
@@ -390,4 +390,116 @@ class CodeEditor extends TypedComponent {
     }
 }
 
-export { CodeEditor };
+class CodeEditorMobile extends TypedComponent {
+    /** @type {State} */
+    state = {
+        files: { 'example.mjs': '// init' },
+        selectedFile: 'example.mjs',
+        showMinimap: true
+    };
+
+    /**
+     * @param {Props} props - Component properties.
+     */
+    constructor(props) {
+        super(props);
+        if (props.files) {
+            this.state.files = props.files;
+        }
+        this._handleExampleLoad = this._handleExampleLoad.bind(this);
+    }
+
+    /**
+     * @param {StateEvent} event - The event.
+     */
+    _handleExampleLoad(event) {
+        const { files } = event.detail;
+        this.mergeState({ files });
+    }
+
+    /**
+     * @param {Partial<State>} state - New partial state.
+     */
+    mergeState(state) {
+        // new state is always calculated from the current state,
+        // avoiding any potential issues with asynchronous updates
+        this.setState(prevState => ({ ...prevState, ...state }));
+    }
+
+    componentDidMount() {
+        window.addEventListener('exampleLoad', this._handleExampleLoad);
+    }
+
+    componentWillUnmount() {
+        window.removeEventListener('exampleLoad', this._handleExampleLoad);
+    }
+
+    /**
+     * @param {import('@monaco-editor/react').Monaco} monaco - The monaco editor.
+     */
+    beforeMount(monaco) {
+        fetch(pcTypes)
+            .then((r) => {
+                return r.text();
+            })
+            .then((playcanvasDefs) => {
+                // set types
+                monaco.languages.typescript.typescriptDefaults.addExtraLib(
+                    playcanvasDefs,
+                    '@playcanvas/playcanvas.d.ts'
+                );
+                monaco.languages.typescript.javascriptDefaults.addExtraLib(
+                    playcanvasDefs,
+                    '@playcanvas/playcanvas.d.ts'
+                );
+
+                // set languages
+                for (const id in languages) {
+                    monaco.languages.register({ id });
+                    // @ts-ignore
+                    monaco.languages.setLanguageConfiguration(id, languages[id].conf);
+                    // @ts-ignore
+                    monaco.languages.setMonarchTokensProvider(id, languages[id].language);
+                }
+
+                // patches highlighter tokenizer for javascript to include jsdoc
+                const allLangs = monaco.languages.getLanguages();
+                const jsLang = allLangs.find(({ id }) => id === 'javascript');
+                // @ts-ignore
+                jsLang?.loader()?.then(({ language }) => {
+                    Object.assign(language.tokenizer, jsRules);
+                });
+            });
+    }
+
+    editorDidMount() {
+        // @ts-ignore
+        const monaco = window.monaco;
+
+        // set theme
+        monaco.editor.defineTheme('playcanvas', playcanvasTheme);
+        monaco.editor.setTheme('playcanvas');
+    }
+
+    render() {
+        const { files, selectedFile, showMinimap } = this.state;
+        const options = {
+            className: 'code-editor-mobile',
+            value: files[selectedFile],
+            language: 'javascript',
+            beforeMount: this.beforeMount.bind(this),
+            onMount: this.editorDidMount.bind(this),
+            options: {
+                theme: 'playcanvas',
+                readOnly: true,
+                minimap: {
+                    enabled: showMinimap
+                }
+            }
+        };
+
+        return jsx(MonacoEditor, options);
+    }
+}
+
+export { CodeEditor, CodeEditorMobile };

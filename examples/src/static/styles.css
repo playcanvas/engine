@@ -427,8 +427,13 @@ body {
         height: calc(100% - 48px);
     }
 
-    #controls-wrapper.has-controls {
-        height: calc(100% - 100px);
+    #controlPanel-controls {
+        height: calc(100% - 48px);
+        overflow: auto;
+    }
+
+    .code-editor-mobile {
+        height: calc(100% - 48px);
     }
 }
 

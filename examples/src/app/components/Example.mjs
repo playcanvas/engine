@@ -1,11 +1,11 @@
 import React, { Component } from 'react';
-import MonacoEditor from '@monaco-editor/react';
 import { withRouter } from 'react-router-dom';
 import * as PCUI from '@playcanvas/pcui';
 import * as ReactPCUI from '@playcanvas/pcui/react';
 import { Panel, Container, Button, Spinner } from '@playcanvas/pcui/react';
 
 import { DeviceSelector } from './DeviceSelector.mjs';
+import { CodeEditorMobile } from './CodeEditor.mjs';
 import { ErrorBoundary } from './ErrorBoundary.mjs';
 
 import { MIN_DESKTOP_WIDTH } from '../constants.mjs';
@@ -323,8 +323,7 @@ class Example extends TypedComponent {
                 jsx(
                     Container,
                     {
-                        id: 'controls-wrapper',
-                        class: controls ? 'has-controls' : null
+                        id: 'controls-wrapper'
                     },
                     jsx(
                         Container,
@@ -361,15 +360,7 @@ class Example extends TypedComponent {
                             },
                             this.renderControls()
                         ),
-                    show === 'code' &&
-                        jsx(MonacoEditor, {
-                            options: {
-                                readOnly: true,
-                                theme: 'vs-dark'
-                            },
-                            defaultLanguage: 'javascript',
-                            value: files['example.mjs']
-                        })
+                    show === 'code' && jsx(CodeEditorMobile, { files })
                 )
             ),
             this.renderDescription()
