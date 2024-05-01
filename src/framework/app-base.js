@@ -1195,6 +1195,10 @@ class AppBase extends EventHandler {
     // render a layer composition
     renderComposition(layerComposition) {
         DebugGraphics.clearGpuMarkers();
+
+        // update composition, cull everything, assign atlas slots for clustered lighting
+        this.renderer.update(layerComposition);
+
         this.renderer.buildFrameGraph(this.frameGraph, layerComposition);
         this.frameGraph.render(this.graphicsDevice);
     }
