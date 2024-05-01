@@ -26,48 +26,8 @@ const TextureIndex8 = {
     COOKIE_A: 5,                // cookieIntensity, cookieIsRgb, -, -
     COOKIE_B: 6,                // cookieChannelMask.xyzw
 
-    // leave in-between
-    COUNT_ALWAYS: 7,
-
-    // 8bit texture data used when float texture is not supported
-    POSITION_X: 7,              // position.x
-    POSITION_Y: 8,              // position.y
-    POSITION_Z: 9,              // position.z
-    RANGE: 10,                  // range
-    SPOT_DIRECTION_X: 11,       // spot direction x
-    SPOT_DIRECTION_Y: 12,       // spot direction y
-    SPOT_DIRECTION_Z: 13,       // spot direction z
-
-    PROJ_MAT_00: 14,            // light projection matrix, mat4, 16 floats
-    ATLAS_VIEWPORT_A: 14,       // viewport.x, viewport.x, viewport.y, viewport.y
-
-    PROJ_MAT_01: 15,
-    ATLAS_VIEWPORT_B: 15,       // viewport.z, viewport.z, -, -
-
-    PROJ_MAT_02: 16,
-    PROJ_MAT_03: 17,
-    PROJ_MAT_10: 18,
-    PROJ_MAT_11: 19,
-    PROJ_MAT_12: 20,
-    PROJ_MAT_13: 21,
-    PROJ_MAT_20: 22,
-    PROJ_MAT_21: 23,
-    PROJ_MAT_22: 24,
-    PROJ_MAT_23: 25,
-    PROJ_MAT_30: 26,
-    PROJ_MAT_31: 27,
-    PROJ_MAT_32: 28,
-    PROJ_MAT_33: 29,
-
-    AREA_DATA_WIDTH_X: 30,
-    AREA_DATA_WIDTH_Y: 31,
-    AREA_DATA_WIDTH_Z: 32,
-    AREA_DATA_HEIGHT_X: 33,
-    AREA_DATA_HEIGHT_Y: 34,
-    AREA_DATA_HEIGHT_Z: 35,
-
     // leave last
-    COUNT: 36
+    COUNT: 7
 };
 
 // format of the float texture
@@ -89,45 +49,26 @@ const TextureIndexFloat = {
     COUNT: 8
 };
 
-// format for high precision light texture - float
-const FORMAT_FLOAT = 0;
-
-// format for high precision light texture - 8bit
-const FORMAT_8BIT = 1;
-
 // device cache storing shader defines for the device
 const shaderDefinesDeviceCache = new DeviceCache();
 
 // A class used by clustered lighting, responsible for encoding light properties into textures for the use on the GPU
 class LightsBuffer {
-    static getLightTextureFormat(device) {
-        // precision for texture storage
-        // don't use float texture on devices with small number of texture units (as it uses both float and 8bit textures at the same time)
-        return device.maxTextures > 8 ? FORMAT_FLOAT : FORMAT_8BIT;
-    }
-
     static getShaderDefines(device) {
 
         // return defines for this device from the cache, or create them if not cached yet
         return shaderDefinesDeviceCache.get(device, () => {
 
-            // converts object with properties to a list of these as an example: "#define CLUSTER_TEXTURE_8_BLAH 1.5"
-            const buildShaderDefines = (device, object, prefix, floatOffset) => {
+            // converts object with properties to a list of these as an example: "#define CLUSTER_TEXTURE_8_BLAH 1"
+            const buildShaderDefines = (device, object, prefix) => {
                 return Object.keys(object)
-                    .map(key => `#define ${prefix}${key} ${object[key]}${floatOffset}`)
+                    .map(key => `#define ${prefix}${key} ${object[key]}`)
                     .join('\n');
             };
 
-            const lightTextureFormat = LightsBuffer.getLightTextureFormat(device);
-            const clusterTextureFormat = lightTextureFormat === FORMAT_FLOAT ? 'FLOAT' : '8BIT';
-
-            // on webgl2 and WebGPU we use texelFetch instruction to read data textures, and don't need the offset
-            const floatOffset = device.supportsTextureFetch ? '' : '.5';
-
-            return `
-                \n#define CLUSTER_TEXTURE_${clusterTextureFormat}
-                ${buildShaderDefines(device, TextureIndex8, 'CLUSTER_TEXTURE_8_', floatOffset)}
-                ${buildShaderDefines(device, TextureIndexFloat, 'CLUSTER_TEXTURE_F_', floatOffset)}
+            return `\n
+                ${buildShaderDefines(device, TextureIndex8, 'CLUSTER_TEXTURE_8_')}
+                ${buildShaderDefines(device, TextureIndexFloat, 'CLUSTER_TEXTURE_F_')}
             `;
         });
     }
@@ -144,34 +85,17 @@ class LightsBuffer {
         // using 8 bit index so this is maximum supported number of lights
         this.maxLights = 255;
 
-        // shared 8bit texture pixels:
-        let pixelsPerLight8 = TextureIndex8.COUNT_ALWAYS;
-        let pixelsPerLightFloat = 0;
-
-        this.lightTextureFormat = LightsBuffer.getLightTextureFormat(device);
-
-        // float texture format
-        if (this.lightTextureFormat === FORMAT_FLOAT) {
-            pixelsPerLightFloat = TextureIndexFloat.COUNT;
-        } else { // 8bit texture
-            pixelsPerLight8 = TextureIndex8.COUNT;
-        }
-
         // 8bit texture - to store data that can fit into 8bits to lower the bandwidth requirements
+        const pixelsPerLight8 = TextureIndex8.COUNT;
         this.lights8 = new Uint8ClampedArray(4 * pixelsPerLight8 * this.maxLights);
         this.lightsTexture8 = this.createTexture(this.device, pixelsPerLight8, this.maxLights, PIXELFORMAT_RGBA8, 'LightsTexture8');
         this._lightsTexture8Id = this.device.scope.resolve('lightsTexture8');
 
         // float texture
-        if (pixelsPerLightFloat) {
-            this.lightsFloat = new Float32Array(4 * pixelsPerLightFloat * this.maxLights);
-            this.lightsTextureFloat = this.createTexture(this.device, pixelsPerLightFloat, this.maxLights, PIXELFORMAT_RGBA32F, 'LightsTextureFloat');
-            this._lightsTextureFloatId = this.device.scope.resolve('lightsTextureFloat');
-        } else {
-            this.lightsFloat = null;
-            this.lightsTextureFloat = null;
-            this._lightsTextureFloatId = undefined;
-        }
+        const pixelsPerLightFloat = TextureIndexFloat.COUNT;
+        this.lightsFloat = new Float32Array(4 * pixelsPerLightFloat * this.maxLights);
+        this.lightsTextureFloat = this.createTexture(this.device, pixelsPerLightFloat, this.maxLights, PIXELFORMAT_RGBA32F, 'LightsTextureFloat');
+        this._lightsTextureFloatId = this.device.scope.resolve('lightsTextureFloat');
 
         // compression ranges
         this.invMaxColorValue = 0;
@@ -183,15 +107,11 @@ class LightsBuffer {
     destroy() {
 
         // release textures
-        if (this.lightsTexture8) {
-            this.lightsTexture8.destroy();
-            this.lightsTexture8 = null;
-        }
+        this.lightsTexture8?.destroy();
+        this.lightsTexture8 = null;
 
-        if (this.lightsTextureFloat) {
-            this.lightsTextureFloat.destroy();
-            this.lightsTextureFloat = null;
-        }
+        this.lightsTextureFloat?.destroy();
+        this.lightsTextureFloat = null;
     }
 
     createTexture(device, width, height, format, name) {
@@ -224,10 +144,8 @@ class LightsBuffer {
 
     uploadTextures() {
 
-        if (this.lightsTextureFloat) {
-            this.lightsTextureFloat.lock().set(this.lightsFloat);
-            this.lightsTextureFloat.unlock();
-        }
+        this.lightsTextureFloat.lock().set(this.lightsFloat);
+        this.lightsTextureFloat.unlock();
 
         this.lightsTexture8.lock().set(this.lights8);
         this.lightsTexture8.unlock();
@@ -237,10 +155,7 @@ class LightsBuffer {
 
         // textures
         this._lightsTexture8Id.setValue(this.lightsTexture8);
-
-        if (this.lightTextureFormat === FORMAT_FLOAT) {
-            this._lightsTextureFloatId.setValue(this.lightsTextureFloat);
-        }
+        this._lightsTextureFloatId.setValue(this.lightsTextureFloat);
     }
 
     getSpotDirection(direction, spot) {
@@ -308,31 +223,6 @@ class LightsBuffer {
         FloatPacking.float2Bytes(biases.normalBias, data8, index + 2, 2);     // normalBias: 0 to 1 range
     }
 
-    addLightDataPositionRange(data8, index, light, pos) {
-        // position and range scaled to 0..1 range
-        const normPos = tempVec3.sub2(pos, this.boundsMin).div(this.boundsDelta);
-        FloatPacking.float2Bytes(normPos.x, data8, index + 0, 4);
-        FloatPacking.float2Bytes(normPos.y, data8, index + 4, 4);
-        FloatPacking.float2Bytes(normPos.z, data8, index + 8, 4);
-        FloatPacking.float2Bytes(light.attenuationEnd * this.invMaxAttenuation, data8, index + 12, 4);
-    }
-
-    addLightDataSpotDirection(data8, index, light) {
-        this.getSpotDirection(tempVec3, light);
-        FloatPacking.float2Bytes(tempVec3.x * (0.5 - epsilon) + 0.5, data8, index + 0, 4);
-        FloatPacking.float2Bytes(tempVec3.y * (0.5 - epsilon) + 0.5, data8, index + 4, 4);
-        FloatPacking.float2Bytes(tempVec3.z * (0.5 - epsilon) + 0.5, data8, index + 8, 4);
-    }
-
-    addLightDataLightProjMatrix(data8, index, lightProjectionMatrix) {
-        const matData = lightProjectionMatrix.data;
-        for (let m = 0; m < 12; m++)    // these are in -2..2 range
-            FloatPacking.float2BytesRange(matData[m], data8, index + 4 * m, -2, 2, 4);
-        for (let m = 12; m < 16; m++) {  // these are full float range
-            FloatPacking.float2MantissaExponent(matData[m], data8, index + 4 * m, 4);
-        }
-    }
-
     addLightDataCookies(data8, index, light) {
         const isRgb = light._cookieChannel === 'rgb';
         data8[index + 0] = Math.floor(light.cookieIntensity * 255);
@@ -345,21 +235,6 @@ class LightsBuffer {
             data8[index + 5] = channel === 'ggg' ? 255 : 0;
             data8[index + 6] = channel === 'bbb' ? 255 : 0;
             data8[index + 7] = channel === 'aaa' ? 255 : 0;
-        }
-    }
-
-    addLightAtlasViewport(data8, index, atlasViewport) {
-        // all these are in 0..1 range
-        FloatPacking.float2Bytes(atlasViewport.x, data8, index + 0, 2);
-        FloatPacking.float2Bytes(atlasViewport.y, data8, index + 2, 2);
-        FloatPacking.float2Bytes(atlasViewport.z / 3, data8, index + 4, 2);
-        // we have two unused bytes here
-    }
-
-    addLightAreaSizes(data8, index, light) {
-        const areaSizes = this.getLightAreaSizes(light);
-        for (let i = 0; i < 6; i++) {  // these are full float range
-            FloatPacking.float2MantissaExponent(areaSizes[i], data8, index + 4 * i, 4);
         }
     }
 
@@ -413,74 +288,47 @@ class LightsBuffer {
             this.addLightDataCookies(data8, data8Start + 4 * TextureIndex8.COOKIE_A, light);
         }
 
-        // high precision data stored using float texture
-        if (this.lightTextureFormat === FORMAT_FLOAT) {
+        const dataFloat = this.lightsFloat;
+        const dataFloatStart = lightIndex * this.lightsTextureFloat.width * 4;
 
-            const dataFloat = this.lightsFloat;
-            const dataFloatStart = lightIndex * this.lightsTextureFloat.width * 4;
+        // pos and range
+        dataFloat[dataFloatStart + 4 * TextureIndexFloat.POSITION_RANGE + 0] = pos.x;
+        dataFloat[dataFloatStart + 4 * TextureIndexFloat.POSITION_RANGE + 1] = pos.y;
+        dataFloat[dataFloatStart + 4 * TextureIndexFloat.POSITION_RANGE + 2] = pos.z;
+        dataFloat[dataFloatStart + 4 * TextureIndexFloat.POSITION_RANGE + 3] = light.attenuationEnd;
 
-            // pos and range
-            dataFloat[dataFloatStart + 4 * TextureIndexFloat.POSITION_RANGE + 0] = pos.x;
-            dataFloat[dataFloatStart + 4 * TextureIndexFloat.POSITION_RANGE + 1] = pos.y;
-            dataFloat[dataFloatStart + 4 * TextureIndexFloat.POSITION_RANGE + 2] = pos.z;
-            dataFloat[dataFloatStart + 4 * TextureIndexFloat.POSITION_RANGE + 3] = light.attenuationEnd;
+        // spot direction
+        if (isSpot) {
+            this.getSpotDirection(tempVec3, light);
+            dataFloat[dataFloatStart + 4 * TextureIndexFloat.SPOT_DIRECTION + 0] = tempVec3.x;
+            dataFloat[dataFloatStart + 4 * TextureIndexFloat.SPOT_DIRECTION + 1] = tempVec3.y;
+            dataFloat[dataFloatStart + 4 * TextureIndexFloat.SPOT_DIRECTION + 2] = tempVec3.z;
+            // here we have unused float
+        }
 
-            // spot direction
-            if (isSpot) {
-                this.getSpotDirection(tempVec3, light);
-                dataFloat[dataFloatStart + 4 * TextureIndexFloat.SPOT_DIRECTION + 0] = tempVec3.x;
-                dataFloat[dataFloatStart + 4 * TextureIndexFloat.SPOT_DIRECTION + 1] = tempVec3.y;
-                dataFloat[dataFloatStart + 4 * TextureIndexFloat.SPOT_DIRECTION + 2] = tempVec3.z;
-                // here we have unused float
-            }
+        // light projection matrix
+        if (lightProjectionMatrix) {
+            const matData = lightProjectionMatrix.data;
+            for (let m = 0; m < 16; m++)
+                dataFloat[dataFloatStart + 4 * TextureIndexFloat.PROJ_MAT_0 + m] = matData[m];
+        }
 
-            // light projection matrix
-            if (lightProjectionMatrix) {
-                const matData = lightProjectionMatrix.data;
-                for (let m = 0; m < 16; m++)
-                    dataFloat[dataFloatStart + 4 * TextureIndexFloat.PROJ_MAT_0 + m] = matData[m];
-            }
+        if (atlasViewport) {
+            dataFloat[dataFloatStart + 4 * TextureIndexFloat.ATLAS_VIEWPORT + 0] = atlasViewport.x;
+            dataFloat[dataFloatStart + 4 * TextureIndexFloat.ATLAS_VIEWPORT + 1] = atlasViewport.y;
+            dataFloat[dataFloatStart + 4 * TextureIndexFloat.ATLAS_VIEWPORT + 2] = atlasViewport.z / 3; // size of a face slot (3x3 grid)
+        }
 
-            if (atlasViewport) {
-                dataFloat[dataFloatStart + 4 * TextureIndexFloat.ATLAS_VIEWPORT + 0] = atlasViewport.x;
-                dataFloat[dataFloatStart + 4 * TextureIndexFloat.ATLAS_VIEWPORT + 1] = atlasViewport.y;
-                dataFloat[dataFloatStart + 4 * TextureIndexFloat.ATLAS_VIEWPORT + 2] = atlasViewport.z / 3; // size of a face slot (3x3 grid)
-            }
+        // area light sizes
+        if (isArea) {
+            const areaSizes = this.getLightAreaSizes(light);
+            dataFloat[dataFloatStart + 4 * TextureIndexFloat.AREA_DATA_WIDTH + 0] = areaSizes[0];
+            dataFloat[dataFloatStart + 4 * TextureIndexFloat.AREA_DATA_WIDTH + 1] = areaSizes[1];
+            dataFloat[dataFloatStart + 4 * TextureIndexFloat.AREA_DATA_WIDTH + 2] = areaSizes[2];
 
-            // area light sizes
-            if (isArea) {
-                const areaSizes = this.getLightAreaSizes(light);
-                dataFloat[dataFloatStart + 4 * TextureIndexFloat.AREA_DATA_WIDTH + 0] = areaSizes[0];
-                dataFloat[dataFloatStart + 4 * TextureIndexFloat.AREA_DATA_WIDTH + 1] = areaSizes[1];
-                dataFloat[dataFloatStart + 4 * TextureIndexFloat.AREA_DATA_WIDTH + 2] = areaSizes[2];
-
-                dataFloat[dataFloatStart + 4 * TextureIndexFloat.AREA_DATA_HEIGHT + 0] = areaSizes[3];
-                dataFloat[dataFloatStart + 4 * TextureIndexFloat.AREA_DATA_HEIGHT + 1] = areaSizes[4];
-                dataFloat[dataFloatStart + 4 * TextureIndexFloat.AREA_DATA_HEIGHT + 2] = areaSizes[5];
-            }
-
-        } else {    // high precision data stored using 8bit texture
-
-            this.addLightDataPositionRange(data8, data8Start + 4 * TextureIndex8.POSITION_X, light, pos);
-
-            // spot direction
-            if (isSpot) {
-                this.addLightDataSpotDirection(data8, data8Start + 4 * TextureIndex8.SPOT_DIRECTION_X, light);
-            }
-
-            // light projection matrix
-            if (lightProjectionMatrix) {
-                this.addLightDataLightProjMatrix(data8, data8Start + 4 * TextureIndex8.PROJ_MAT_00, lightProjectionMatrix);
-            }
-
-            if (atlasViewport) {
-                this.addLightAtlasViewport(data8, data8Start + 4 * TextureIndex8.ATLAS_VIEWPORT_A, atlasViewport);
-            }
-
-            // area light sizes
-            if (isArea) {
-                this.addLightAreaSizes(data8, data8Start + 4 * TextureIndex8.AREA_DATA_WIDTH_X, light);
-            }
+            dataFloat[dataFloatStart + 4 * TextureIndexFloat.AREA_DATA_HEIGHT + 0] = areaSizes[3];
+            dataFloat[dataFloatStart + 4 * TextureIndexFloat.AREA_DATA_HEIGHT + 1] = areaSizes[4];
+            dataFloat[dataFloatStart + 4 * TextureIndexFloat.AREA_DATA_HEIGHT + 2] = areaSizes[5];
         }
     }
 }

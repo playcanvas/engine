@@ -129,7 +129,7 @@ async function takeThumbnails(pool, categoryKebab, exampleNameKebab) {
         );
     }
 
-    // navivate to example
+    // navigate to example
     const link = `http://localhost:${PORT}/iframe/${categoryKebab}_${exampleNameKebab}.html?miniStats=false&deviceType=webgl2`;
     if (DEBUG) {
         console.log('goto', link);

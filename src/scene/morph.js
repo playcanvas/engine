@@ -191,11 +191,8 @@ class Morph extends RefCountedObject {
         const ids = [], usedDataIndices = [];
         const freeIndex = this._findSparseSet(deltaArrays, ids, usedDataIndices);
 
-        // max texture size: vertexBufferIds is stored in float32 format, giving us 2^24 range, so can address 4096 texture at maximum
-        // TODO: on webgl2 we could store this in uint32 format and remove this limit
-        const maxTextureSize = Math.min(this.device.maxTextureSize, 4096);
-
         // texture size for freeIndex pixels - roughly square
+        const maxTextureSize = this.device.maxTextureSize;
         let morphTextureWidth = Math.ceil(Math.sqrt(freeIndex));
         morphTextureWidth = Math.min(morphTextureWidth, maxTextureSize);
         const morphTextureHeight = Math.ceil(freeIndex / morphTextureWidth);
