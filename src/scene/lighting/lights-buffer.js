@@ -3,7 +3,6 @@ import { PIXELFORMAT_RGBA8, PIXELFORMAT_RGBA32F, ADDRESS_CLAMP_TO_EDGE, TEXTURET
 import { FloatPacking } from '../../core/math/float-packing.js';
 import { LIGHTSHAPE_PUNCTUAL, LIGHTTYPE_SPOT, MASK_AFFECT_LIGHTMAPPED, MASK_AFFECT_DYNAMIC } from '../constants.js';
 import { Texture } from '../../platform/graphics/texture.js';
-import { DeviceCache } from '../../platform/graphics/device-cache.js';
 import { LightCamera } from '../renderer/light-camera.js';
 
 const epsilon = 0.000001;
@@ -49,28 +48,27 @@ const TextureIndexFloat = {
     COUNT: 8
 };
 
-// device cache storing shader defines for the device
-const shaderDefinesDeviceCache = new DeviceCache();
+let _defines;
 
 // A class used by clustered lighting, responsible for encoding light properties into textures for the use on the GPU
 class LightsBuffer {
-    static getShaderDefines(device) {
+    static getShaderDefines() {
 
-        // return defines for this device from the cache, or create them if not cached yet
-        return shaderDefinesDeviceCache.get(device, () => {
+        // converts object with properties to a list of these as an example: "#define CLUSTER_TEXTURE_8_BLAH 1"
+        const buildShaderDefines = (object, prefix) => {
+            return Object.keys(object)
+                .map(key => `#define ${prefix}${key} ${object[key]}`)
+                .join('\n');
+        };
 
-            // converts object with properties to a list of these as an example: "#define CLUSTER_TEXTURE_8_BLAH 1"
-            const buildShaderDefines = (device, object, prefix) => {
-                return Object.keys(object)
-                    .map(key => `#define ${prefix}${key} ${object[key]}`)
-                    .join('\n');
-            };
-
-            return `\n
-                ${buildShaderDefines(device, TextureIndex8, 'CLUSTER_TEXTURE_8_')}
-                ${buildShaderDefines(device, TextureIndexFloat, 'CLUSTER_TEXTURE_F_')}
+        if (!_defines) {
+            _defines =  `\n
+                ${buildShaderDefines(TextureIndex8, 'CLUSTER_TEXTURE_8_')}
+                ${buildShaderDefines(TextureIndexFloat, 'CLUSTER_TEXTURE_F_')}
             `;
-        });
+        }
+
+        return _defines;
     }
 
     constructor(device) {
