@@ -926,8 +926,6 @@ class WebglGraphicsDevice extends GraphicsDevice {
 
         if (this.isWebGL2) {
             this.extBlendMinmax = true;
-            this.extDrawBuffers = true;
-            this.drawBuffers = gl.drawBuffers.bind(gl);
             this.extTextureHalfFloat = true;
             this.textureHalfFloatFilterable = true;
             this.extTextureLod = true;
@@ -935,8 +933,6 @@ class WebglGraphicsDevice extends GraphicsDevice {
             this.extDepthTexture = true;
         } else {
             this.extBlendMinmax = this.getExtension("EXT_blend_minmax");
-            this.extDrawBuffers = this.getExtension('WEBGL_draw_buffers');
-            this.drawBuffers = this.extDrawBuffers?.drawBuffersWEBGL.bind(this.extDrawBuffers);
 
             this.extTextureLod = this.getExtension('EXT_shader_texture_lod');
             this.extColorBufferFloat = null;
@@ -992,19 +988,8 @@ class WebglGraphicsDevice extends GraphicsDevice {
         this.maxVertexTextures = gl.getParameter(gl.MAX_VERTEX_TEXTURE_IMAGE_UNITS);
         this.vertexUniformsCount = gl.getParameter(gl.MAX_VERTEX_UNIFORM_VECTORS);
         this.fragmentUniformsCount = gl.getParameter(gl.MAX_FRAGMENT_UNIFORM_VECTORS);
-        if (this.isWebGL2) {
-            this.maxDrawBuffers = gl.getParameter(gl.MAX_DRAW_BUFFERS);
-            this.maxColorAttachments = gl.getParameter(gl.MAX_COLOR_ATTACHMENTS);
-            this.maxVolumeSize = gl.getParameter(gl.MAX_3D_TEXTURE_SIZE);
-            this.supportsMrt = true;
-            this.supportsVolumeTextures = true;
-        } else {
-            ext = this.extDrawBuffers;
-            this.supportsMrt = !!ext;
-            this.maxDrawBuffers = ext ? gl.getParameter(ext.MAX_DRAW_BUFFERS_WEBGL) : 1;
-            this.maxColorAttachments = ext ? gl.getParameter(ext.MAX_COLOR_ATTACHMENTS_WEBGL) : 1;
-            this.maxVolumeSize = 1;
-        }
+        this.maxColorAttachments = gl.getParameter(gl.MAX_COLOR_ATTACHMENTS);
+        this.maxVolumeSize = gl.getParameter(gl.MAX_3D_TEXTURE_SIZE);
 
         ext = this.extDebugRendererInfo;
         this.unmaskedRenderer = ext ? gl.getParameter(ext.UNMASKED_RENDERER_WEBGL) : '';
