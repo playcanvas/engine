@@ -20,6 +20,7 @@ const gfxOptions = {
 
 /** @type {pc.GraphicsDevice} */
 const device = await pc.createGraphicsDevice(canvas, gfxOptions);
+device.maxPixelRatio = Math.min(window.devicePixelRatio, 2);
 
 const createOptions = new pc.AppOptions();
 createOptions.graphicsDevice = device;

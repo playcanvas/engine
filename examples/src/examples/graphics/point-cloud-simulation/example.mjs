@@ -14,6 +14,7 @@ const gfxOptions = {
 };
 
 const device = await pc.createGraphicsDevice(canvas, gfxOptions);
+device.maxPixelRatio = Math.min(window.devicePixelRatio, 2);
 
 // render to low resolution to make particles more visible on WebGPU, as it doesn't support point
 // size and those are very small otherwise. This is not a proper solution, and only a temporary

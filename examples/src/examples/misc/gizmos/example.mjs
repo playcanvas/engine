@@ -175,7 +175,7 @@ const gfxOptions = {
 };
 
 const device = await pc.createGraphicsDevice(canvas, gfxOptions);
-device.maxPixelRatio = window.devicePixelRatio;
+device.maxPixelRatio = Math.min(window.devicePixelRatio, 2);
 const createOptions = new pc.AppOptions();
 createOptions.graphicsDevice = device;
 createOptions.mouse = new pc.Mouse(document.body);
