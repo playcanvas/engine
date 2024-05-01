@@ -104,7 +104,7 @@ assetListLoader.load(() => {
     const texture2 = createTexture('RT-texture-2', 512, 512);
 
     // render to multiple targets if supported
-    const colorBuffers = app.graphicsDevice.supportsMrt ? [texture0, texture1, texture2] : [texture0];
+    const colorBuffers = [texture0, texture1, texture2];
     const renderTarget = new pc.RenderTarget({
         name: `MRT`,
         colorBuffers: colorBuffers,
@@ -128,10 +128,8 @@ assetListLoader.load(() => {
     });
     app.root.addChild(textureCamera);
 
-    // if MRT is supported, set the shader pass to use MRT output
-    if (app.graphicsDevice.supportsMrt) {
-        textureCamera.camera.setShaderPass('MyMRT');
-    }
+    // set the shader pass to use MRT output
+    textureCamera.camera.setShaderPass('MyMRT');
 
     // get the instance of the chess board. Render it into RTLayer only.
     const boardEntity = assets.board.resource.instantiateRenderEntity({
