@@ -147,7 +147,7 @@ class GSplat {
         if (device.isWebGL1)
             preferHighPrecision = false;
 
-        const halfSupported = device.extTextureHalfFloat && device.textureHalfFloatUpdatable;
+        const halfSupported = device.extTextureHalfFloat;
         const floatSupported = device.extTextureFloat;
 
         // true if half format should be used, false is float format should be used or undefined if none are available.

@@ -61,7 +61,7 @@ class Morph extends RefCountedObject {
                 (renderableFloat ?? renderableHalf) : (renderableHalf ?? renderableFloat);
 
             // texture format
-            const textureHalf = (device.extTextureHalfFloat && device.textureHalfFloatUpdatable) ? PIXELFORMAT_RGBA16F : undefined;
+            const textureHalf = (device.extTextureHalfFloat) ? PIXELFORMAT_RGBA16F : undefined;
             const textureFloat = device.extTextureFloat ? PIXELFORMAT_RGB32F : undefined;
             this._textureFormat = this.preferHighPrecision ?
                 (textureFloat ?? textureHalf) : (textureHalf ?? textureFloat);

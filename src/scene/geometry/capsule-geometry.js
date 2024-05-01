@@ -10,21 +10,23 @@ import { calculateTangents } from './geometry-utils.js';
  *
  * Note that the capsule is created with UVs in the range of 0 to 1.
  *
- * @param {import('../../platform/graphics/graphics-device.js').GraphicsDevice} device - The graphics
- * device used to manage the mesh.
- * @param {object} [opts] - An object that specifies optional inputs for the function as follows:
- * @param {number} [opts.radius] - The radius of the tube forming the body of the capsule (defaults
- * to 0.3).
- * @param {number} [opts.height] - The length of the body of the capsule from tip to tip (defaults
- * to 1.0).
- * @param {number} [opts.heightSegments] - The number of divisions along the tubular length of the
- * capsule (defaults to 1).
- * @param {number} [opts.sides] - The number of divisions around the tubular body of the capsule
- * (defaults to 20).
- * @param {boolean} [opts.calculateTangents] - Generate tangent information (defaults to false).
  * @category Graphics
  */
 class CapsuleGeometry extends ConeBaseGeometry {
+    /**
+     * Create a new CapsuleGeometry instance.
+     *
+     * @param {object} [opts] - An object that specifies optional inputs for the function as follows:
+     * @param {number} [opts.radius] - The radius of the tube forming the body of the capsule (defaults
+     * to 0.3).
+     * @param {number} [opts.height] - The length of the body of the capsule from tip to tip (defaults
+     * to 1.0).
+     * @param {number} [opts.heightSegments] - The number of divisions along the tubular length of the
+     * capsule (defaults to 1).
+     * @param {number} [opts.sides] - The number of divisions around the tubular body of the capsule
+     * (defaults to 20).
+     * @param {boolean} [opts.calculateTangents] - Generate tangent information (defaults to false).
+     */
     constructor(opts = {}) {
 
         // Check the supplied options and provide defaults for unspecified ones

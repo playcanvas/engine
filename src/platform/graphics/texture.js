@@ -71,7 +71,7 @@ class Texture {
      * @param {string} [options.name] - The name of the texture. Defaults to null.
      * @param {number} [options.width] - The width of the texture in pixels. Defaults to 4.
      * @param {number} [options.height] - The height of the texture in pixels. Defaults to 4.
-     * @param {number} [options.depth] - The number of depth slices in a 3D texture (not supported by WebGl1).
+     * @param {number} [options.depth] - The number of depth slices in a 3D texture.
      * @param {number} [options.format] - The pixel format of the texture. Can be:
      *
      * - {@link PIXELFORMAT_A8}
@@ -128,9 +128,9 @@ class Texture {
      * Defaults to false.
      * @param {number} [options.arrayLength] - Specifies whether the texture is to be a 2D texture array.
      * When passed in as undefined or < 1, this is not an array texture. If >= 1, this is an array texture.
-     * (not supported by WebGL1). Defaults to undefined.
-     * @param {boolean} [options.volume] - Specifies whether the texture is to be a 3D volume
-     * (not supported by WebGL1). Defaults to false.
+     * Defaults to undefined.
+     * @param {boolean} [options.volume] - Specifies whether the texture is to be a 3D volume.
+     * Defaults to false.
      * @param {string} [options.type] - Specifies the texture type.  Can be:
      *
      * - {@link TEXTURETYPE_DEFAULT}
@@ -150,10 +150,10 @@ class Texture {
      * present) is multiplied into the color channels. Defaults to false.
      * @param {boolean} [options.compareOnRead] - When enabled, and if texture format is
      * {@link PIXELFORMAT_DEPTH} or {@link PIXELFORMAT_DEPTHSTENCIL}, hardware PCF is enabled for
-     * this texture, and you can get filtered results of comparison using texture() in your shader
-     * (not supported by WebGL1). Defaults to false.
-     * @param {number} [options.compareFunc] - Comparison function when compareOnRead is enabled
-     * (not supported by WebGL1). Can be:
+     * this texture, and you can get filtered results of comparison using texture() in your shader.
+     * Defaults to false.
+     * @param {number} [options.compareFunc] - Comparison function when compareOnRead is enabled.
+     * Can be:
      *
      * - {@link FUNC_LESS}
      * - {@link FUNC_LESSEQUAL}
@@ -485,7 +485,7 @@ class Texture {
     }
 
     /**
-     * The addressing mode to be applied to the 3D texture depth (not supported on WebGL1). Can be:
+     * The addressing mode to be applied to the 3D texture depth. Can be:
      *
      * - {@link ADDRESS_REPEAT}
      * - {@link ADDRESS_CLAMP_TO_EDGE}
@@ -512,7 +512,7 @@ class Texture {
     /**
      * When enabled, and if texture format is {@link PIXELFORMAT_DEPTH} or
      * {@link PIXELFORMAT_DEPTHSTENCIL}, hardware PCF is enabled for this texture, and you can get
-     * filtered results of comparison using texture() in your shader (not supported on WebGL1).
+     * filtered results of comparison using texture() in your shader.
      *
      * @type {boolean}
      */
@@ -528,7 +528,7 @@ class Texture {
     }
 
     /**
-     * Comparison function when compareOnRead is enabled (not supported on WebGL1). Possible values:
+     * Comparison function when compareOnRead is enabled. Possible values:
      *
      * - {@link FUNC_LESS}
      * - {@link FUNC_LESSEQUAL}
