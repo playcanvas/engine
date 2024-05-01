@@ -5,7 +5,7 @@ import * as ReactPCUI from '@playcanvas/pcui/react';
 import { Panel, Container, Button, Spinner } from '@playcanvas/pcui/react';
 
 import { DeviceSelector } from './DeviceSelector.mjs';
-import { CodeEditorMobile } from './CodeEditor.mjs';
+import { CodeEditorMobile } from './code-editor/CodeEditorMobile.mjs';
 import { ErrorBoundary } from './ErrorBoundary.mjs';
 
 import { MIN_DESKTOP_WIDTH } from '../constants.mjs';

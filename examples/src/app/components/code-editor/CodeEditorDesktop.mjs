@@ -1,16 +1,13 @@
-import { Component } from 'react';
 import { Button, Container, Panel } from '@playcanvas/pcui/react';
 import MonacoEditor, { loader } from '@monaco-editor/react';
 
-import { pcTypes } from '../paths.mjs';
-import { jsx } from '../jsx.mjs';
-import { iframe } from '../iframe.mjs';
-import { removeRedundantSpaces } from '../strings.mjs';
-import { playcanvasTheme } from '../monaco/theme.mjs';
-import { jsRules } from '../monaco/tokenizer-rules.mjs';
-import * as languages from '../monaco/languages/index.mjs';
+import { CodeEditorBase } from './CodeEditorBase.mjs';
 
-import '../events.js';
+import { jsx } from '../../jsx.mjs';
+import { iframe } from '../../iframe.mjs';
+import { removeRedundantSpaces } from '../../strings.mjs';
+
+import '../../events.js';
 
 loader.config({ paths: { vs: './modules/monaco-editor/min/vs' } });
 
@@ -46,24 +43,7 @@ let monacoEditor;
  * @typedef {Record<string, any>} Props
  */
 
-/**
- * @typedef {object} State
- * @property {Record<string, string>} files - The example files.
- * @property {string} selectedFile - The selected file.
- * @property {boolean} showMinimap - The state of showing the Minimap
- */
-
-/** @type {typeof Component<Props, State>} */
-const TypedComponent = Component;
-
-class CodeEditor extends TypedComponent {
-    /** @type {State} */
-    state = {
-        files: { 'example.mjs': '// init' },
-        selectedFile: 'example.mjs',
-        showMinimap: getShowMinimap()
-    };
-
+class CodeEditorDesktop extends CodeEditorBase {
     /** @type {string[]} */
     _decorators = [];
 
@@ -75,23 +55,9 @@ class CodeEditor extends TypedComponent {
      */
     constructor(props) {
         super(props);
-        this._handleExampleLoad = this._handleExampleLoad.bind(this);
-        this._handleExampleLoading = this._handleExampleLoading.bind(this);
         this._handleExampleHotReload = this._handleExampleHotReload.bind(this);
         this._handleExampleError = this._handleExampleError.bind(this);
         this._handleRequestedFiles = this._handleRequestedFiles.bind(this);
-    }
-
-    /**
-     * @param {StateEvent} event - The event.
-     */
-    _handleExampleLoad(event) {
-        const { files } = event.detail;
-        this.mergeState({ files, selectedFile: 'example.mjs' });
-    }
-
-    _handleExampleLoading() {
-        this.mergeState({ files: { 'example.mjs': '// reloading' } });
     }
 
     /**
@@ -153,8 +119,7 @@ class CodeEditor extends TypedComponent {
     }
 
     componentDidMount() {
-        window.addEventListener('exampleLoad', this._handleExampleLoad);
-        window.addEventListener('exampleLoading', this._handleExampleLoading);
+        super.componentDidMount();
         window.addEventListener('exampleHotReload', this._handleExampleHotReload);
         window.addEventListener('exampleError', this._handleExampleError);
         window.addEventListener('requestedFiles', this._handleRequestedFiles);
@@ -162,64 +127,24 @@ class CodeEditor extends TypedComponent {
     }
 
     componentWillUnmount() {
-        window.removeEventListener('exampleLoad', this._handleExampleLoad);
-        window.removeEventListener('exampleLoading', this._handleExampleLoading);
+        super.componentWillUnmount();
         window.removeEventListener('exampleHotReload', this._handleExampleHotReload);
         window.removeEventListener('exampleError', this._handleExampleError);
         window.removeEventListener('requestedFiles', this._handleRequestedFiles);
     }
 
-    /**
-     * @param {import('@monaco-editor/react').Monaco} monaco - The monaco editor.
-     */
-    beforeMount(monaco) {
-        fetch(pcTypes)
-            .then((r) => {
-                return r.text();
-            })
-            .then((playcanvasDefs) => {
-                // set types
-                monaco.languages.typescript.typescriptDefaults.addExtraLib(
-                    playcanvasDefs,
-                    '@playcanvas/playcanvas.d.ts'
-                );
-                monaco.languages.typescript.javascriptDefaults.addExtraLib(
-                    playcanvasDefs,
-                    '@playcanvas/playcanvas.d.ts'
-                );
-
-                // set languages
-                for (const id in languages) {
-                    monaco.languages.register({ id });
-                    // @ts-ignore
-                    monaco.languages.setLanguageConfiguration(id, languages[id].conf);
-                    // @ts-ignore
-                    monaco.languages.setMonarchTokensProvider(id, languages[id].language);
-                }
-
-                // patches highlighter tokenizer for javascript to include jsdoc
-                const allLangs = monaco.languages.getLanguages();
-                const jsLang = allLangs.find(({ id }) => id === 'javascript');
-                // @ts-ignore
-                jsLang?.loader()?.then(({ language }) => {
-                    Object.assign(language.tokenizer, jsRules);
-                });
-            });
-    }
 
     /**
      * @param {import('monaco-editor').editor.IStandaloneCodeEditor} editor - The monaco editor.
      */
     editorDidMount(editor) {
+        super.editorDidMount(editor);
+
         // @ts-ignore
         window.editor = editor;
         monacoEditor = editor;
         // @ts-ignore
         const monaco = window.monaco;
-
-        // set theme
-        monaco.editor.defineTheme('playcanvas', playcanvasTheme);
-        monaco.editor.setTheme('playcanvas');
 
         // Hot reload code via Shift + Enter
         editor.addCommand(monaco.KeyMod.Shift | monaco.KeyCode.Enter, () => {
@@ -390,116 +315,4 @@ class CodeEditor extends TypedComponent {
     }
 }
 
-class CodeEditorMobile extends TypedComponent {
-    /** @type {State} */
-    state = {
-        files: { 'example.mjs': '// init' },
-        selectedFile: 'example.mjs',
-        showMinimap: true
-    };
-
-    /**
-     * @param {Props} props - Component properties.
-     */
-    constructor(props) {
-        super(props);
-        if (props.files) {
-            this.state.files = props.files;
-        }
-        this._handleExampleLoad = this._handleExampleLoad.bind(this);
-    }
-
-    /**
-     * @param {StateEvent} event - The event.
-     */
-    _handleExampleLoad(event) {
-        const { files } = event.detail;
-        this.mergeState({ files });
-    }
-
-    /**
-     * @param {Partial<State>} state - New partial state.
-     */
-    mergeState(state) {
-        // new state is always calculated from the current state,
-        // avoiding any potential issues with asynchronous updates
-        this.setState(prevState => ({ ...prevState, ...state }));
-    }
-
-    componentDidMount() {
-        window.addEventListener('exampleLoad', this._handleExampleLoad);
-    }
-
-    componentWillUnmount() {
-        window.removeEventListener('exampleLoad', this._handleExampleLoad);
-    }
-
-    /**
-     * @param {import('@monaco-editor/react').Monaco} monaco - The monaco editor.
-     */
-    beforeMount(monaco) {
-        fetch(pcTypes)
-            .then((r) => {
-                return r.text();
-            })
-            .then((playcanvasDefs) => {
-                // set types
-                monaco.languages.typescript.typescriptDefaults.addExtraLib(
-                    playcanvasDefs,
-                    '@playcanvas/playcanvas.d.ts'
-                );
-                monaco.languages.typescript.javascriptDefaults.addExtraLib(
-                    playcanvasDefs,
-                    '@playcanvas/playcanvas.d.ts'
-                );
-
-                // set languages
-                for (const id in languages) {
-                    monaco.languages.register({ id });
-                    // @ts-ignore
-                    monaco.languages.setLanguageConfiguration(id, languages[id].conf);
-                    // @ts-ignore
-                    monaco.languages.setMonarchTokensProvider(id, languages[id].language);
-                }
-
-                // patches highlighter tokenizer for javascript to include jsdoc
-                const allLangs = monaco.languages.getLanguages();
-                const jsLang = allLangs.find(({ id }) => id === 'javascript');
-                // @ts-ignore
-                jsLang?.loader()?.then(({ language }) => {
-                    Object.assign(language.tokenizer, jsRules);
-                });
-            });
-    }
-
-    editorDidMount() {
-        // @ts-ignore
-        const monaco = window.monaco;
-
-        // set theme
-        monaco.editor.defineTheme('playcanvas', playcanvasTheme);
-        monaco.editor.setTheme('playcanvas');
-    }
-
-    render() {
-        const { files, selectedFile, showMinimap } = this.state;
-        const options = {
-            className: 'code-editor-mobile',
-            value: files[selectedFile],
-            language: 'javascript',
-            beforeMount: this.beforeMount.bind(this),
-            onMount: this.editorDidMount.bind(this),
-            options: {
-                theme: 'playcanvas',
-                readOnly: true,
-                minimap: {
-                    enabled: showMinimap
-                }
-            }
-        };
-
-        return jsx(MonacoEditor, options);
-    }
-}
-
-export { CodeEditor, CodeEditorMobile };
+export { CodeEditorDesktop };
