@@ -307,7 +307,7 @@ class Example extends TypedComponent {
     }
 
     renderPortrait() {
-        const { collapsed, controls, show, files, description } = this.state;
+        const { collapsed, show, files, description } = this.state;
         return fragment(
             jsx(
                 Panel,
