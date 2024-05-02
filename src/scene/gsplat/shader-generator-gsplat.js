@@ -24,6 +24,7 @@ varying vec4 color;
 varying float id;
 
 uniform vec4 tex_params;
+uniform highp usampler2D splatOrder;
 uniform highp sampler2D v1v2Texture;
 uniform highp sampler2D transformA;
 uniform sampler2D splatColor;
@@ -34,8 +35,13 @@ void getSplatUV(out uint splatId, out ivec2 splatUV) {
     ivec2 textureSize = ivec2(tex_params.xy);
     vec2 invTextureSize = tex_params.zw;
 
+    // order
+    int orderV = int(float(vertex_id_attrib) * invTextureSize.x);
+    int orderU = int(vertex_id_attrib) - orderV * textureSize.x;
+    splatId = texelFetch(splatOrder, ivec2(orderU, orderV), 0).r;
+
     // splatId = vertex_id_attrib[int(vertex_position.z)];
-    splatId = vertex_id_attrib;
+    // splatId = vertex_id_attrib;
 
     int gridV = int(float(splatId) * invTextureSize.x);
     int gridU = int(splatId) - gridV * textureSize.x;

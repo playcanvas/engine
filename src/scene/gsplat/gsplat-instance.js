@@ -125,6 +125,9 @@ class GSplatInstance {
     /** @type {VertexBuffer} */
     vb;
 
+    /** @type {import('../../platform/graphics/texture.js').Texture} */
+    orderTexture;
+
     options = {};
 
     /** @type {import('../../platform/graphics/texture.js').Texture} */
@@ -159,8 +162,13 @@ class GSplatInstance {
 
         // not supported on WebGL1
         const device = splat.device;
-        if (device.isWebGL1)
-            return;
+
+        // create the order texture
+        this.orderTexture = this.splat.createTexture(
+            'splatOrder',
+            PIXELFORMAT_R32U,
+            this.splat.evalTextureSize(this.splat.numSplats)
+        );
 
         this.v1v2Texture = this.splat.createTexture(
             'splatV1V2',
@@ -194,7 +202,7 @@ class GSplatInstance {
 
         // const vb = new VertexBuffer(device, vertexFormat, numSplats / 4, {
         const vb = new VertexBuffer(device, vertexFormat, numSplats, {
-            usage: BUFFER_DYNAMIC,
+            usage: BUFFER_STATIC, // DYNAMIC,
             data: indexData.buffer
         });
 
@@ -230,7 +238,7 @@ class GSplatInstance {
         // create sorter
         if (!options.dither || options.dither === DITHER_NONE) {
             this.sorter = new GSplatSorter();
-            this.sorter.init(vb, this.centers);
+            this.sorter.init(this.orderTexture, this.centers);
             this.sorter.on('updated', (count) => {
                 // ideally we would update the number of splats rendered here in order to skip
                 // the ones behind the camera. unfortunately changing this value dynamically
@@ -260,6 +268,7 @@ class GSplatInstance {
 
     createMaterial(options) {
         this.material = createGSplatMaterial(options);
+        this.material.setParameter('splatOrder', this.orderTexture);
         this.material.setParameter('v1v2Texture', this.v1v2Texture);
         this.splat.setupMaterial(this.material);
         if (this.meshInstance) {
