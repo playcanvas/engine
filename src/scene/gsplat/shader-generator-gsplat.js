@@ -60,10 +60,10 @@ void splatMain() {
     // early out tiny splats
     // TODO: figure out length units and expose as uniform parameter
     // TODO: perhaps make this a shader compile-time option
-    // if (dot(v1v2.xy, v1v2.xy) < 4.0 && dot(v1v2.zw, v1v2.zw) < 4.0) {
-    //     gl_Position = vec4(0.0);
-    //     return;
-    // }
+    if (dot(v1v2.xy, v1v2.xy) < 4.0 && dot(v1v2.zw, v1v2.zw) < 4.0) {
+        gl_Position = vec4(0.0);
+        return;
+    }
 
     vec3 center = texelFetch(transformA, splatUV, 0).xyz;
     vec4 centerProj = matrix_projection * matrix_view * matrix_model * vec4(center, 1.0);
