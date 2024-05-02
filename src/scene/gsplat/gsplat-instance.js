@@ -1,6 +1,6 @@
 import { Mat4 } from '../../core/math/mat4.js';
 import { Vec3 } from '../../core/math/vec3.js';
-import { BUFFER_DYNAMIC, BUFFER_STATIC, PIXELFORMAT_R32U, PIXELFORMAT_RGBA16F, PIXELFORMAT_RGBA32F, SEMANTIC_ATTR13, SEMANTIC_POSITION, TYPE_UINT32 } from '../../platform/graphics/constants.js';
+import { BUFFER_DYNAMIC, BUFFER_STATIC, PIXELFORMAT_R32U, PIXELFORMAT_RGBA16F, PIXELFORMAT_RGBA32F, SEMANTIC_ATTR13, SEMANTIC_COLOR, SEMANTIC_POSITION, TYPE_UINT32 } from '../../platform/graphics/constants.js';
 import { DITHER_NONE } from '../constants.js';
 import { MeshInstance } from '../mesh-instance.js';
 import { Mesh } from '../mesh.js';
@@ -128,8 +128,6 @@ class GSplatInstance {
     options = {};
 
     /** @type {import('../../platform/graphics/texture.js').Texture} */
-    orderTexture;
-    /** @type {import('../../platform/graphics/texture.js').Texture} */
     v1v2Texture;
     v1v2RenderTarget;
     v1v2Shader;
@@ -164,13 +162,6 @@ class GSplatInstance {
         if (device.isWebGL1)
             return;
 
-        // create the order texture
-        this.orderTexture = this.splat.createTexture(
-            'splatOrder',
-            PIXELFORMAT_R32U,
-            this.splat.evalTextureSize(this.splat.numSplats)
-        );
-
         this.v1v2Texture = this.splat.createTexture(
             'splatV1V2',
             device.textureHalfFloatRenderable ? PIXELFORMAT_RGBA16F : PIXELFORMAT_RGBA32F,
@@ -188,6 +179,7 @@ class GSplatInstance {
         // material
         this.createMaterial(options);
 
+        // const numSplats = Math.floor(splat.numSplats / 4) * 4;
         const numSplats = splat.numSplats;
 
         const indexData = new Uint32Array(numSplats);
@@ -196,21 +188,30 @@ class GSplatInstance {
         }
 
         const vertexFormat = new VertexFormat(device, [
+            // { semantic: SEMANTIC_ATTR13, components: 4, type: TYPE_UINT32, asInt: true }
             { semantic: SEMANTIC_ATTR13, components: 1, type: TYPE_UINT32, asInt: true }
         ]);
 
-        const vb = new VertexBuffer(
-            device,
-            vertexFormat,
-            numSplats,
-            {
-                usage: BUFFER_DYNAMIC,
-                data: indexData.buffer
-            }
-        );
+        // const vb = new VertexBuffer(device, vertexFormat, numSplats / 4, {
+        const vb = new VertexBuffer(device, vertexFormat, numSplats, {
+            usage: BUFFER_DYNAMIC,
+            data: indexData.buffer
+        });
 
         const mesh = new Mesh(device);
+        // mesh.setPositions(new Float32Array([
+        //     -2, -2, 0, 2, -2, 0, 2, 2, 0, -2, 2, 0,
+        //     -2, -2, 1, 2, -2, 1, 2, 2, 1, -2, 2, 1,
+        //     -2, -2, 2, 2, -2, 2, 2, 2, 2, -2, 2, 2,
+        //     -2, -2, 3, 2, -2, 3, 2, 2, 3, -2, 2, 3
+        // ]), 3);
         mesh.setPositions(new Float32Array([-2, -2, 2, -2, 2, 2, -2, 2]), 2);
+        // mesh.setIndices([
+        //     0, 1, 2, 0, 2, 3,
+        //     4, 5, 6, 4, 6, 7,
+        //     8, 9, 10, 8, 10, 11,
+        //     12, 13, 14, 12, 14, 15
+        // ]);
         mesh.setIndices([0, 1, 2, 0, 2, 3]);
         mesh.update();
 
@@ -219,6 +220,9 @@ class GSplatInstance {
         this.meshInstance = new MeshInstance(this.mesh, this.material);
         this.meshInstance.setInstancing(vb, true);
         this.meshInstance.gsplatInstance = this;
+
+        // this.meshInstance.instancingCount = numSplats / 4;
+        this.meshInstance.instancingCount = numSplats;
 
         // clone centers to allow multiple instances of sorter
         this.centers = new Float32Array(splat.centers);
@@ -235,7 +239,11 @@ class GSplatInstance {
                 // this.mesh.primitive[0].count = count * 6;
 
                 // sorter not working
-                // this.meshInstance.instancingCount = count;
+                this.meshInstance.instancingCount = count;
+
+                // console.log(count);
+
+                // this.updateV1V2(this.cameras[0]);
             });
         }
     }
@@ -243,7 +251,6 @@ class GSplatInstance {
     destroy() {
         this.material?.destroy();
         this.meshInstance?.destroy();
-        this.orderTexture?.destroy();
         this.sorter?.destroy();
     }
 
@@ -253,7 +260,6 @@ class GSplatInstance {
 
     createMaterial(options) {
         this.material = createGSplatMaterial(options);
-        this.material.setParameter('splatOrder', this.orderTexture);
         this.material.setParameter('v1v2Texture', this.v1v2Texture);
         this.splat.setupMaterial(this.material);
         if (this.meshInstance) {
@@ -321,7 +327,7 @@ class GSplatInstance {
         cameraMatrix.setTRS(camera._node.getPosition(), camera._node.getRotation(), Vec3.ONE);
 
         const viewMatrix = new Mat4();
-        viewMatrix.copy(cameraMatrix).invert();
+        viewMatrix.invert(cameraMatrix);
 
         scope.resolve('matrix_model').setValue(this.meshInstance.node.worldTransform.data);
         scope.resolve('matrix_view').setValue(viewMatrix.data);

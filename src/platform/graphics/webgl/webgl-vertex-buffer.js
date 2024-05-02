@@ -27,6 +27,12 @@ class WebglVertexBuffer extends WebglBuffer {
         const device = vertexBuffer.device;
         super.unlock(device, vertexBuffer.usage, device.gl.ARRAY_BUFFER, vertexBuffer.storage);
     }
+
+    upload(vertexBuffer, offset, length) {
+
+        const device = vertexBuffer.device;
+        super.upload(device, vertexBuffer.usage, device.gl.ARRAY_BUFFER, vertexBuffer.storage, offset, length);
+    }
 }
 
 export { WebglVertexBuffer };

@@ -21,7 +21,6 @@ const splatMainFS = `
 
 /**
  * @typedef {object} SplatMaterialOptions - The options.
- * @property {boolean} [debugRender] - Adds #define DEBUG_RENDER for shader.
  * @property {string} [vertex] - Custom vertex shader, see SPLAT MANY example.
  * @property {string} [fragment] - Custom fragment shader, see SPLAT MANY example.
  * @property {string} [dither] - Opacity dithering enum.
@@ -33,14 +32,12 @@ const splatMainFS = `
  */
 const createGSplatMaterial = (options = {}) => {
 
-    const { debugRender } = options;
-
     const ditherEnum = options.dither ?? DITHER_NONE;
     const dither = ditherEnum !== DITHER_NONE;
 
     const material = new Material();
     material.name = 'splatMaterial';
-    material.cull = debugRender ? CULLFACE_BACK : CULLFACE_NONE;
+    material.cull = CULLFACE_NONE;
     material.blendType = dither ? BLEND_NONE : BLEND_NORMAL;
     material.depthWrite = dither;
 
@@ -52,7 +49,6 @@ const createGSplatMaterial = (options = {}) => {
             toneMapping: (pass === SHADER_FORWARDHDR ? TONEMAP_LINEAR : scene.toneMapping),
             vertex: options.vertex ?? splatMainVS,
             fragment: options.fragment ?? splatMainFS,
-            debugRender: debugRender,
             dither: ditherEnum
         };
 

@@ -205,7 +205,9 @@ class GSplatSorter extends EventHandler {
                 data: oldData
             }, [oldData]);
 
-            this.vertexBuffer.setData(newData);
+            // only upload the visible indices
+            this.vertexBuffer.storage = newData;
+            this.vertexBuffer.upload(0, message.data.count * 4);
 
             // set new data directly on texture
             this.fire('updated', message.data.count);

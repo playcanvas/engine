@@ -51,6 +51,17 @@ class WebglBuffer {
             gl.bufferSubData(target, 0, storage);
         }
     }
+
+    upload(device, usage, target, storage, offset, length) {
+        if (!this.bufferId) {
+            this.unlock(device, usage, target, storage);
+        } else {
+            const gl = device.gl;
+
+            gl.bindBuffer(target, this.bufferId);
+            gl.bufferSubData(target, offset, new Uint32Array(storage), offset / 4, length / 4);
+        }
+    }
 }
 
 export { WebglBuffer };
