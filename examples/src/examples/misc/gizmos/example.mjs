@@ -175,7 +175,7 @@ const gfxOptions = {
 };
 
 const device = await pc.createGraphicsDevice(canvas, gfxOptions);
-device.maxPixelRatio = window.devicePixelRatio;
+device.maxPixelRatio = Math.min(window.devicePixelRatio, 2);
 const createOptions = new pc.AppOptions();
 createOptions.graphicsDevice = device;
 createOptions.mouse = new pc.Mouse(document.body);
@@ -309,7 +309,7 @@ camera.script.create('orbitCameraInputMouse');
 camera.script.create('orbitCameraInputTouch');
 camera.setPosition(1, 1, 1);
 app.root.addChild(camera);
-orbitCamera.distance = 14;
+orbitCamera.distance = 5 * camera.camera?.aspectRatio;
 
 // create light entity
 const light = new pc.Entity('light');
