@@ -16,12 +16,14 @@ uniform mat4 matrix_projection;
 uniform vec2 viewport;
 
 attribute vec3 vertex_position;
-// attribute uvec4 vertex_id_attrib;
 attribute uint vertex_id_attrib;
 
 varying vec2 texCoord;
 varying vec4 color;
+
+#ifndef DITHER_NONE
 varying float id;
+#endif
 
 uniform vec4 tex_params;
 uniform highp usampler2D splatOrder;
@@ -35,13 +37,13 @@ void getSplatUV(out uint splatId, out ivec2 splatUV) {
     ivec2 textureSize = ivec2(tex_params.xy);
     vec2 invTextureSize = tex_params.zw;
 
-    // order
-    int orderV = int(float(vertex_id_attrib) * invTextureSize.x);
-    int orderU = int(vertex_id_attrib) - orderV * textureSize.x;
-    splatId = texelFetch(splatOrder, ivec2(orderU, orderV), 0).r;
+    // index
+    uint index = vertex_id_attrib + uint(vertex_position.z);
 
-    // splatId = vertex_id_attrib[int(vertex_position.z)];
-    // splatId = vertex_id_attrib;
+    // order
+    int orderV = int(float(index) * invTextureSize.x);
+    int orderU = int(index) - orderV * textureSize.x;
+    splatId = texelFetch(splatOrder, ivec2(orderU, orderV), 0).r;
 
     int gridV = int(float(splatId) * invTextureSize.x);
     int gridU = int(splatId) - gridV * textureSize.x;
@@ -53,31 +55,27 @@ void splatMain() {
     ivec2 splatUV;
     getSplatUV(splatId, splatUV);
 
-    vec3 center = texelFetch(transformA, splatUV, 0).xyz;
-    vec4 centerProj = matrix_projection * matrix_view * matrix_model * vec4(center, 1.0);
-
-    // cull splat behind camera
-    // if (centerProj.z < -centerProj.w) {
-    //     gl_Position = vec4(0.0);
-    //     return;
-    // }
-
     vec4 v1v2 = texelFetch(v1v2Texture, splatUV, 0);
-    // vec4 v1v2 = vec4(32.0, 0.0, 0.0, 32.0);
 
     // early out tiny splats
     // TODO: figure out length units and expose as uniform parameter
     // TODO: perhaps make this a shader compile-time option
-    if (dot(v1v2.xy, v1v2.xy) < 16.0 && dot(v1v2.zw, v1v2.zw) < 16.0) {
-        gl_Position = vec4(0.0);
-        return;
-    }
+    // if (dot(v1v2.xy, v1v2.xy) < 4.0 && dot(v1v2.zw, v1v2.zw) < 4.0) {
+    //     gl_Position = vec4(0.0);
+    //     return;
+    // }
+
+    vec3 center = texelFetch(transformA, splatUV, 0).xyz;
+    vec4 centerProj = matrix_projection * matrix_view * matrix_model * vec4(center, 1.0);
 
     texCoord = vertex_position.xy;
     centerProj.xy += (texCoord.x * v1v2.xy + texCoord.y * v1v2.zw) / viewport * centerProj.w;
     gl_Position = centerProj;
     color = texelFetch(splatColor, splatUV, 0);
+
+#ifndef DITHER_NONE
     id = float(splatId);
+#endif
 }
 `;
 

@@ -187,40 +187,43 @@ class GSplatInstance {
         // material
         this.createMaterial(options);
 
-        // const numSplats = Math.floor(splat.numSplats / 4) * 4;
-        const numSplats = splat.numSplats;
+        const splatInstanceSize = 64;
+        const numSplats = Math.floor(splat.numSplats / splatInstanceSize) * splatInstanceSize;
+        const numSplatInstances = numSplats / splatInstanceSize;
 
-        const indexData = new Uint32Array(numSplats);
-        for (let i = 0; i < numSplats; ++i) {
-            indexData[i] = i;
+        const indexData = new Uint32Array(numSplatInstances);
+        for (let i = 0; i < numSplatInstances; ++i) {
+            indexData[i] = i * splatInstanceSize;
         }
 
         const vertexFormat = new VertexFormat(device, [
-            // { semantic: SEMANTIC_ATTR13, components: 4, type: TYPE_UINT32, asInt: true }
             { semantic: SEMANTIC_ATTR13, components: 1, type: TYPE_UINT32, asInt: true }
         ]);
 
-        // const vb = new VertexBuffer(device, vertexFormat, numSplats / 4, {
-        const vb = new VertexBuffer(device, vertexFormat, numSplats, {
-            usage: BUFFER_STATIC, // DYNAMIC,
+        const vb = new VertexBuffer(device, vertexFormat, numSplatInstances, {
+            usage: BUFFER_STATIC,
             data: indexData.buffer
         });
 
+        const meshPositions = new Float32Array(12 * splatInstanceSize);
+        const meshIndices = new Uint32Array(6 * splatInstanceSize);
+        for (let i = 0; i < splatInstanceSize; ++i) {
+            meshPositions.set([
+                -2, -2, i,
+                2, -2, i,
+                2, 2, i,
+                -2, 2, i
+            ], i * 12);
+
+            const b = i * 4;
+            meshIndices.set([
+                0 + b, 1 + b, 2 + b, 0 + b, 2 + b, 3 + b
+            ], i * 6);
+        }
+
         const mesh = new Mesh(device);
-        // mesh.setPositions(new Float32Array([
-        //     -2, -2, 0, 2, -2, 0, 2, 2, 0, -2, 2, 0,
-        //     -2, -2, 1, 2, -2, 1, 2, 2, 1, -2, 2, 1,
-        //     -2, -2, 2, 2, -2, 2, 2, 2, 2, -2, 2, 2,
-        //     -2, -2, 3, 2, -2, 3, 2, 2, 3, -2, 2, 3
-        // ]), 3);
-        mesh.setPositions(new Float32Array([-2, -2, 2, -2, 2, 2, -2, 2]), 2);
-        // mesh.setIndices([
-        //     0, 1, 2, 0, 2, 3,
-        //     4, 5, 6, 4, 6, 7,
-        //     8, 9, 10, 8, 10, 11,
-        //     12, 13, 14, 12, 14, 15
-        // ]);
-        mesh.setIndices([0, 1, 2, 0, 2, 3]);
+        mesh.setPositions(meshPositions, 3);
+        mesh.setIndices(meshIndices);
         mesh.update();
 
         this.mesh = mesh;
@@ -230,7 +233,7 @@ class GSplatInstance {
         this.meshInstance.gsplatInstance = this;
 
         // this.meshInstance.instancingCount = numSplats / 4;
-        this.meshInstance.instancingCount = numSplats;
+        this.meshInstance.instancingCount = numSplatInstances;
 
         // clone centers to allow multiple instances of sorter
         this.centers = new Float32Array(splat.centers);
@@ -247,7 +250,7 @@ class GSplatInstance {
                 // this.mesh.primitive[0].count = count * 6;
 
                 // sorter not working
-                this.meshInstance.instancingCount = count;
+                this.meshInstance.instancingCount = Math.floor(count / splatInstanceSize);
 
                 // console.log(count);
 
