@@ -363,7 +363,7 @@ body {
     min-height: calc(100% - 116px);
 }
 
-#controlPanel.mobile:has(#controlPanel-controls){
+#controlPanel.mobile:has(#controlPanel-controls):not(.pcui-collapsed){
     min-height: 300px;
 }
 
