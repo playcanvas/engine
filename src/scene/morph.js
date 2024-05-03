@@ -55,16 +55,14 @@ class Morph extends RefCountedObject {
         if (device.supportsMorphTargetTexturesCore) {
 
             // renderable format
-            const renderableHalf = (device.extTextureHalfFloat && device.textureHalfFloatRenderable) ? PIXELFORMAT_RGBA16F : undefined;
+            const renderableHalf = device.textureHalfFloatRenderable ? PIXELFORMAT_RGBA16F : undefined;
             const renderableFloat = device.textureFloatRenderable ? PIXELFORMAT_RGBA32F : undefined;
             this._renderTextureFormat = this.preferHighPrecision ?
                 (renderableFloat ?? renderableHalf) : (renderableHalf ?? renderableFloat);
 
-            // texture format
-            const textureHalf = (device.extTextureHalfFloat) ? PIXELFORMAT_RGBA16F : undefined;
-            const textureFloat = PIXELFORMAT_RGB32F;
+            // texture format - both are always supported
             this._textureFormat = this.preferHighPrecision ?
-                (textureFloat ?? textureHalf) : (textureHalf ?? textureFloat);
+                (PIXELFORMAT_RGB32F ?? PIXELFORMAT_RGBA16F) : (PIXELFORMAT_RGBA16F ?? PIXELFORMAT_RGB32F);
 
             // if both available, enable texture morphing
             if (this._renderTextureFormat !== undefined && this._textureFormat !== undefined) {

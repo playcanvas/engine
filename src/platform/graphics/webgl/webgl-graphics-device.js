@@ -716,27 +716,12 @@ class WebglGraphicsDevice extends GraphicsDevice {
         // In WebGL2 float texture renderability is dictated by the EXT_color_buffer_float extension
         this.textureFloatRenderable = !!this.extColorBufferFloat;
 
-        // two extensions allow us to render to half float buffers
-        if (this.extColorBufferHalfFloat) {
-            this.textureHalfFloatRenderable = !!this.extColorBufferHalfFloat;
-        } else if (this.extTextureHalfFloat) {
-            // EXT_color_buffer_float should affect both float and halffloat formats
-            this.textureHalfFloatRenderable = !!this.extColorBufferFloat;
-        } else {
-            this.textureHalfFloatRenderable = false;
-        }
+        // render to half float buffers support - either of these two extensions
+        this.extColorBufferHalfFloat = this.extColorBufferHalfFloat || !!this.extColorBufferFloat
 
         this.supportsMorphTargetTexturesCore = (this.maxPrecision === "highp" && this.maxVertexTextures >= 2);
 
         this._textureFloatHighPrecision = undefined;
-
-        // area light LUT format - order of preference: half, float, 8bit
-        this.areaLightLutFormat = PIXELFORMAT_RGBA8;
-        if (this.extTextureHalfFloat && this.extTextureHalfFloatLinear) {
-            this.areaLightLutFormat = PIXELFORMAT_RGBA16F;
-        } else if (this.extTextureFloatLinear) {
-            this.areaLightLutFormat = PIXELFORMAT_RGBA32F;
-        }
 
         this.postInit();
     }
@@ -925,22 +910,9 @@ class WebglGraphicsDevice extends GraphicsDevice {
         this.textureRG11B10Renderable = true;
 
         if (this.isWebGL2) {
-            this.extBlendMinmax = true;
-            this.extTextureHalfFloat = true;
-            this.textureHalfFloatFilterable = true;
-            this.extTextureLod = true;
             this.extColorBufferFloat = this.getExtension('EXT_color_buffer_float');
-            this.extDepthTexture = true;
         } else {
-            this.extBlendMinmax = this.getExtension("EXT_blend_minmax");
-
-            this.extTextureLod = this.getExtension('EXT_shader_texture_lod');
             this.extColorBufferFloat = null;
-            this.extDepthTexture = gl.getExtension('WEBGL_depth_texture');
-
-            this.extTextureHalfFloat = this.getExtension("OES_texture_half_float");
-            this.extTextureHalfFloatLinear = this.getExtension("OES_texture_half_float_linear");
-            this.textureHalfFloatFilterable = !!this.extTextureHalfFloatLinear;
         }
 
         this.extDebugRendererInfo = this.getExtension('WEBGL_debug_renderer_info');

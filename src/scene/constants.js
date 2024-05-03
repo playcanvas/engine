@@ -77,7 +77,7 @@ export const BLEND_MULTIPLICATIVE2X = 7;
 export const BLEND_SCREEN = 8;
 
 /**
- * Minimum color. Check app.graphicsDevice.extBlendMinmax for support.
+ * Minimum color.
  *
  * @type {number}
  * @category Graphics
@@ -85,7 +85,7 @@ export const BLEND_SCREEN = 8;
 export const BLEND_MIN = 9;
 
 /**
- * Maximum color. Check app.graphicsDevice.extBlendMinmax for support.
+ * Maximum color.
  *
  * @type {number}
  * @category Graphics

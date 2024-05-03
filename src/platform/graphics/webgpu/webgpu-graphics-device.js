@@ -146,12 +146,8 @@ class WebgpuGraphicsDevice extends GraphicsDevice {
         this.supportsGpuParticles = true;
         this.supportsCompute = true;
         this.textureFloatRenderable = true;
-        this.textureHalfFloatFilterable = true;
-        this.extTextureHalfFloat = true;
         this.textureHalfFloatRenderable = true;
         this.supportsImageBitmap = true;
-        this.extBlendMinmax = true;
-        this.areaLightLutFormat = this.textureFloatFilterable ? PIXELFORMAT_RGBA32F : PIXELFORMAT_RGBA8;
         this.supportsTextureFetch = true;
 
         // WebGPU currently only supports 1 and 4 samples

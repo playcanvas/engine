@@ -149,7 +149,7 @@ class GSplat {
         if (preferHighPrecision) {
             halfFormat = false;
         } else {
-            halfFormat = device.extTextureHalfFloat;
+            halfFormat = true;
         }
 
         return halfFormat;

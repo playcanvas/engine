@@ -621,17 +621,9 @@ class LitShader {
         }
 
         if (hasAreaLights || options.clusteredLightingEnabled) {
-
-            let areaLutsPrecision = 'highp';
-            if (device.areaLightLutFormat === PIXELFORMAT_RGBA8) {
-                // use offset and scale for rgb8 format luts
-                decl.append("#define AREA_R8_G8_B8_A8_LUTS");
-                areaLutsPrecision = 'lowp';
-            }
-
             decl.append("#define AREA_LIGHTS");
-            decl.append(`uniform ${areaLutsPrecision} sampler2D areaLightsLutTex1;`);
-            decl.append(`uniform ${areaLutsPrecision} sampler2D areaLightsLutTex2;`);
+            decl.append(`uniform highp sampler2D areaLightsLutTex1;`);
+            decl.append(`uniform highp sampler2D areaLightsLutTex2;`);
         }
 
         for (let i = 0; i < options.lights.length; i++) {
@@ -862,7 +854,7 @@ class LitShader {
                     func.append(chunks.shadowVSM8PS);
                 }
                 if (shadowTypeUsed[SHADOW_VSM16]) {
-                    func.append(device.extTextureHalfFloatLinear ? chunks.shadowEVSMPS.replace(/\$/g, "16") : chunks.shadowEVSMnPS.replace(/\$/g, "16"));
+                    func.append(chunks.shadowEVSMPS.replace(/\$/g, "16"));
                 }
                 if (shadowTypeUsed[SHADOW_VSM32]) {
                     func.append(device.extTextureFloatLinear ? chunks.shadowEVSMPS.replace(/\$/g, "32") : chunks.shadowEVSMnPS.replace(/\$/g, "32"));
