@@ -310,7 +310,6 @@ assetListLoader.load(() => {
 
     let passNum = 0;
     app.on('update', function (/** @type {number} */) {
-
         mouseUniform[0] = mousePos.x;
         mouseUniform[1] = mousePos.y;
 

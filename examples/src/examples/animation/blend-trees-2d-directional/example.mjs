@@ -11,7 +11,9 @@ const assets = {
     idleAnim: new pc.Asset('idleAnim', 'container', { url: rootPath + '/static/assets/animations/bitmoji/idle.glb' }),
     walkAnim: new pc.Asset('idleAnim', 'container', { url: rootPath + '/static/assets/animations/bitmoji/walk.glb' }),
     jogAnim: new pc.Asset('idleAnim', 'container', { url: rootPath + '/static/assets/animations/bitmoji/run.glb' }),
-    danceAnim: new pc.Asset('danceAnim', 'container', { url: rootPath + '/static/assets/animations/bitmoji/win-dance.glb' }),
+    danceAnim: new pc.Asset('danceAnim', 'container', {
+        url: rootPath + '/static/assets/animations/bitmoji/win-dance.glb'
+    }),
     helipad: new pc.Asset(
         'helipad-env-atlas',
         'texture',

@@ -10,7 +10,9 @@ const assets = {
     skeleton: new pc.Asset('skeleton', 'json', { url: rootPath + '/static/assets//spine/spineboy-pro.json' }),
     atlas: new pc.Asset('atlas', 'text', { url: rootPath + '/static/assets//spine/spineboy-pro.atlas' }),
     texture: new pc.Asset('spineboy-pro.png', 'texture', { url: rootPath + '/static/assets//spine/spineboy-pro.png' }),
-    spinescript: new pc.Asset('spinescript', 'script', { url: rootPath + '/static/scripts/spine/playcanvas-spine.3.8.js' })
+    spinescript: new pc.Asset('spinescript', 'script', {
+        url: rootPath + '/static/scripts/spine/playcanvas-spine.3.8.js'
+    })
 };
 
 const gfxOptions = {

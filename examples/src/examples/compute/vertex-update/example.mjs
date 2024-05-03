@@ -40,10 +40,7 @@ createOptions.componentSystems = [
     pc.ScriptComponentSystem
 ];
 
-createOptions.resourceHandlers = [
-    pc.TextureHandler,
-    pc.ScriptHandler
-];
+createOptions.resourceHandlers = [pc.TextureHandler, pc.ScriptHandler];
 
 const app = new pc.AppBase(canvas);
 app.init(createOptions);
@@ -86,7 +83,7 @@ assetListLoader.load(() => {
     });
 
     const mesh = pc.Mesh.fromGeometry(device, geom, {
-        storageVertex: true  // allow vertex buffer to be accessible by compute shader
+        storageVertex: true // allow vertex buffer to be accessible by compute shader
     });
 
     // Add a render component with the mesh
@@ -104,40 +101,42 @@ assetListLoader.load(() => {
 
     // add orbit camera script with a mouse and a touch support
     cameraEntity.addComponent('script');
-    cameraEntity.script.create("orbitCamera", {
+    cameraEntity.script.create('orbitCamera', {
         attributes: {
             inertiaFactor: 0.2,
             focusEntity: entity
         }
     });
-    cameraEntity.script.create("orbitCameraInputMouse");
-    cameraEntity.script.create("orbitCameraInputTouch");
+    cameraEntity.script.create('orbitCameraInputMouse');
+    cameraEntity.script.create('orbitCameraInputTouch');
     app.root.addChild(cameraEntity);
 
     // a compute shader that will modify the vertex buffer of the mesh every frame
-    const shader = device.supportsCompute ? new pc.Shader(device, {
-        name: 'ComputeShader',
-        shaderLanguage: pc.SHADERLANGUAGE_WGSL,
-        cshader: files['compute-shader.wgsl'],
+    const shader = device.supportsCompute ?
+        new pc.Shader(device, {
+            name: 'ComputeShader',
+            shaderLanguage: pc.SHADERLANGUAGE_WGSL,
+            cshader: files['compute-shader.wgsl'],
 
-        // format of a uniform buffer used by the compute shader
-        computeUniformBufferFormats: {
-            'ub': new pc.UniformBufferFormat(device, [
-                new pc.UniformFormat('count', pc.UNIFORMTYPE_UINT),
-                new pc.UniformFormat('positionOffset', pc.UNIFORMTYPE_UINT),
-                new pc.UniformFormat('normalOffset', pc.UNIFORMTYPE_UINT),
-                new pc.UniformFormat('time', pc.UNIFORMTYPE_FLOAT)
+              // format of a uniform buffer used by the compute shader
+            computeUniformBufferFormats: {
+                ub: new pc.UniformBufferFormat(device, [
+                    new pc.UniformFormat('count', pc.UNIFORMTYPE_UINT),
+                    new pc.UniformFormat('positionOffset', pc.UNIFORMTYPE_UINT),
+                    new pc.UniformFormat('normalOffset', pc.UNIFORMTYPE_UINT),
+                    new pc.UniformFormat('time', pc.UNIFORMTYPE_FLOAT)
+                ])
+            },
+
+              // format of a bind group, providing resources for the compute shader
+            computeBindGroupFormat: new pc.BindGroupFormat(device, [
+                  // a uniform buffer we provided format for
+                new pc.BindUniformBufferFormat('ub', pc.SHADERSTAGE_COMPUTE),
+                  // the vertex buffer we want to modify
+                new pc.BindStorageBufferFormat('vb', pc.SHADERSTAGE_COMPUTE)
             ])
-        },
-
-        // format of a bind group, providing resources for the compute shader
-        computeBindGroupFormat: new pc.BindGroupFormat(device, [
-            // a uniform buffer we provided format for
-            new pc.BindUniformBufferFormat('ub', pc.SHADERSTAGE_COMPUTE),
-            // the vertex buffer we want to modify
-            new pc.BindStorageBufferFormat('vb', pc.SHADERSTAGE_COMPUTE)
-        ])
-    }) : null;
+        }) :
+        null;
 
     // information about the vertex buffer format - offset of position and normal attributes
     // Note: data is stored non-interleaved, positions together, normals together, so no need
@@ -151,13 +150,12 @@ assetListLoader.load(() => {
     compute.setParameter('vb', mesh.vertexBuffer);
     compute.setParameter('count', mesh.vertexBuffer.numVertices);
     compute.setParameter('positionOffset', positionElement?.offset / 4); // number of floats offset
-    compute.setParameter('normalOffset', normalElement?.offset / 4);     // number of floats offset
+    compute.setParameter('normalOffset', normalElement?.offset / 4); // number of floats offset
 
     let time = 0;
     app.on('update', function (dt) {
         time += dt;
         if (entity) {
-
             // update non-constant parameters each frame
             compute.setParameter('time', time);
 

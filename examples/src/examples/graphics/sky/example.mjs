@@ -10,8 +10,18 @@ if (!(canvas instanceof HTMLCanvasElement)) {
 const assets = {
     orbit: new pc.Asset('script', 'script', { url: rootPath + '/static/scripts/camera/orbit-camera.js' }),
     statue: new pc.Asset('statue', 'container', { url: rootPath + '/static/assets/models/statue.glb' }),
-    hdri_street: new pc.Asset('hdri', 'texture', { url: rootPath + '/static/assets/hdri/wide-street.hdr' }, { mipmaps: false }),
-    hdri_room: new pc.Asset('hdri', 'texture', { url: rootPath + '/static/assets/hdri/empty-room.hdr' }, { mipmaps: false })
+    hdri_street: new pc.Asset(
+        'hdri',
+        'texture',
+        { url: rootPath + '/static/assets/hdri/wide-street.hdr' },
+        { mipmaps: false }
+    ),
+    hdri_room: new pc.Asset(
+        'hdri',
+        'texture',
+        { url: rootPath + '/static/assets/hdri/empty-room.hdr' },
+        { mipmaps: false }
+    )
 };
 
 const gfxOptions = {

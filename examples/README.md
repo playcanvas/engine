@@ -110,24 +110,23 @@ console.log(data.get('flash'));
 
 ### `config.mjs`
 
-This file allows you to define the default configuration for your examples as well as overrides to particular settings such as `deviceType` and additional files (e.g. vertex and fragment shaders). Check the config options `ExampleConfig` in `types.mjs` file.
+This file allows you to define the default configuration for your examples as well as overrides to particular settings such as `deviceType`. Check the config options `ExampleConfig` in `types.mjs` file for the full list.
 
 ```js
 /**
  * @type {import('../../../../types.mjs').ExampleConfig}
  */
 export default {
+    NO_CANVAS: true,
+    NO_MINISTATS: true,
     WEBGPU_ENABLED: true,
-    FILES: {
-        "shader.vert": /* glsl */`
-            // vertex shader
-        `
-        "shader.frag": /* glsl */`
-            // fragment shader
-        `
-    }
+    WEBGPU_REQUIRED: true
 };
 ```
+
+### Additional files
+
+Any other file you wish to include in your example can be added to the same folder (e.g. `shader.vert` and `shader.frag`). These files can be accessed from the `@examples/files` module (Refer to the Example Modules below).
 
 ### Testing your example
 Ensure you have a locally built version of the examples browser by running the commands in the `Local examples browser development` section. Then run `npm run serve` to serve the examples browser.
@@ -148,11 +147,9 @@ The example script allows you to import examples only modules that interact with
 
 ## Deployment
 
-1) **Build the latest engine** by running the following in the `/engine` directory:
+1) **Install Engine packages** by running the following in the `/engine` directory:
 ```
 npm install
-npm run build
-npm run build:types
 ```
 
 2) **Build the examples browser and launch the server** by running the following in the `/engine/examples` directory:

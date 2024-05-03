@@ -48,12 +48,18 @@ function generateMipmaps(width, height) {
 }
 
 const assets = {
-    rockyTrail: new pc.Asset('rockyTrail', 'texture', { url: rootPath + '/static/assets/textures/rocky_trail_diff_1k.jpg' }),
+    rockyTrail: new pc.Asset('rockyTrail', 'texture', {
+        url: rootPath + '/static/assets/textures/rocky_trail_diff_1k.jpg'
+    }),
     rockBoulder: new pc.Asset('rockBoulder', 'texture', {
         url: rootPath + '/static/assets/textures/rock_boulder_cracked_diff_1k.jpg'
     }),
-    coastSand: new pc.Asset('coastSand', 'texture', { url: rootPath + '/static/assets/textures/coast_sand_rocks_02_diff_1k.jpg' }),
-    aerialRocks: new pc.Asset('aeralRocks', 'texture', { url: rootPath + '/static/assets/textures/aerial_rocks_02_diff_1k.jpg' }),
+    coastSand: new pc.Asset('coastSand', 'texture', {
+        url: rootPath + '/static/assets/textures/coast_sand_rocks_02_diff_1k.jpg'
+    }),
+    aerialRocks: new pc.Asset('aeralRocks', 'texture', {
+        url: rootPath + '/static/assets/textures/aerial_rocks_02_diff_1k.jpg'
+    }),
     script: new pc.Asset('script', 'script', { url: rootPath + '/static/scripts/camera/orbit-camera.js' })
 };
 
@@ -184,12 +190,15 @@ assetListLoader.load(() => {
     ground.setLocalPosition(0, -7, 0);
     app.root.addChild(ground);
 
-    const torus = pc.Mesh.fromGeometry(app.graphicsDevice, new pc.TorusGeometry({
-        tubeRadius: 0.2,
-        ringRadius: 0.3,
-        radialSegments: 50,
-        tubularSegments: 40
-    }));
+    const torus = pc.Mesh.fromGeometry(
+        app.graphicsDevice,
+        new pc.TorusGeometry({
+            tubeRadius: 0.2,
+            ringRadius: 0.3,
+            radialSegments: 50,
+            tubularSegments: 40
+        })
+    );
     const shape = new pc.Entity();
     shape.addComponent('render', {
         material: material,

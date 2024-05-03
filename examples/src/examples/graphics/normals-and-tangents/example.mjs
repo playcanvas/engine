@@ -37,11 +37,7 @@ createOptions.componentSystems = [
     pc.LightComponentSystem,
     pc.ScriptComponentSystem
 ];
-createOptions.resourceHandlers = [
-    pc.TextureHandler,
-    pc.ContainerHandler,
-    pc.ScriptHandler
-];
+createOptions.resourceHandlers = [pc.TextureHandler, pc.ContainerHandler, pc.ScriptHandler];
 
 const app = new pc.AppBase(canvas);
 app.init(createOptions);
@@ -81,23 +77,23 @@ assetListLoader.load(() => {
 
     // Create a camera with an orbit camera script
     const camera = new pc.Entity();
-    camera.addComponent("camera");
-    camera.addComponent("script");
-    camera.script.create("orbitCamera", {
+    camera.addComponent('camera');
+    camera.addComponent('script');
+    camera.script.create('orbitCamera', {
         attributes: {
             inertiaFactor: 0 // Override default of 0 (no inertia)
         }
     });
-    camera.script.create("orbitCameraInputMouse");
-    camera.script.create("orbitCameraInputTouch");
+    camera.script.create('orbitCameraInputMouse');
+    camera.script.create('orbitCameraInputTouch');
     app.root.addChild(camera);
     camera.script.orbitCamera.pitch = 0;
     camera.script.orbitCamera.yaw = 90;
     camera.script.orbitCamera.distance = 4;
 
     const directionalLight = new pc.Entity();
-    directionalLight.addComponent("light", {
-        type: "directional",
+    directionalLight.addComponent('light', {
+        type: 'directional',
         color: pc.Color.WHITE,
         castShadows: true,
         intensity: 1,

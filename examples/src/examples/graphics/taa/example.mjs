@@ -40,11 +40,7 @@ createOptions.componentSystems = [
     pc.LightComponentSystem,
     pc.ScriptComponentSystem
 ];
-createOptions.resourceHandlers = [
-    pc.TextureHandler,
-    pc.ContainerHandler,
-    pc.ScriptHandler
-];
+createOptions.resourceHandlers = [pc.TextureHandler, pc.ContainerHandler, pc.ScriptHandler];
 
 const app = new pc.AppBase(canvas);
 app.init(createOptions);
@@ -89,7 +85,7 @@ assetListLoader.load(() => {
 
     // add orbit camera script with a mouse and a touch support
     cameraEntity.addComponent('script');
-    cameraEntity.script.create("orbitCamera", {
+    cameraEntity.script.create('orbitCamera', {
         attributes: {
             inertiaFactor: 0.2,
             focusEntity: houseEntity,
@@ -97,8 +93,8 @@ assetListLoader.load(() => {
             frameOnStart: true
         }
     });
-    cameraEntity.script.create("orbitCameraInputMouse");
-    cameraEntity.script.create("orbitCameraInputTouch");
+    cameraEntity.script.create('orbitCameraInputMouse');
+    cameraEntity.script.create('orbitCameraInputTouch');
     cameraEntity.setLocalPosition(0, 40, -220);
     cameraEntity.lookAt(0, 0, 100);
     app.root.addChild(cameraEntity);
@@ -156,7 +152,6 @@ assetListLoader.load(() => {
     // ------
 
     const applySettings = () => {
-
         // if settings require render passes to be re-created
         const noPasses = cameraEntity.camera.renderPasses.length === 0;
         const taaEnabled = data.get('data.taa.enabled');

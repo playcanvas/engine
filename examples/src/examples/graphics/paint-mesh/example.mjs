@@ -68,7 +68,10 @@ assetListLoader.load(() => {
         app.root.addChild(entity);
 
         // create hight resolution sphere
-        const mesh = pc.Mesh.fromGeometry(app.graphicsDevice, new pc.SphereGeometry({ latitudeBands: 200, longitudeBands: 200 }));
+        const mesh = pc.Mesh.fromGeometry(
+            app.graphicsDevice,
+            new pc.SphereGeometry({ latitudeBands: 200, longitudeBands: 200 })
+        );
 
         // Add a render component with the mesh
         entity.addComponent('render', {

@@ -8,7 +8,9 @@ if (!(canvas instanceof HTMLCanvasElement)) {
 
 const assets = {
     font: new pc.Asset('font', 'font', { url: rootPath + '/static/assets/fonts/arial.json' }),
-    rocks: new pc.Asset('rocks', 'texture', { url: rootPath + '/static/assets/textures/seaside-rocks01-diffuse-alpha.png' })
+    rocks: new pc.Asset('rocks', 'texture', {
+        url: rootPath + '/static/assets/textures/seaside-rocks01-diffuse-alpha.png'
+    })
 };
 
 const gfxOptions = {

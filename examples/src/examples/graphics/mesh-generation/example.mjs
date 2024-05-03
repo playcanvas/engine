@@ -7,7 +7,9 @@ if (!(canvas instanceof HTMLCanvasElement)) {
 }
 
 const assets = {
-    playcanvasGrey: new pc.Asset('playcanvasGrey', 'texture', { url: rootPath + '/static/assets/textures/playcanvas-grey.png' })
+    playcanvasGrey: new pc.Asset('playcanvasGrey', 'texture', {
+        url: rootPath + '/static/assets/textures/playcanvas-grey.png'
+    })
 };
 
 const gfxOptions = {

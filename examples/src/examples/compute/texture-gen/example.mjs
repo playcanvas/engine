@@ -35,10 +35,7 @@ createOptions.componentSystems = [
     pc.LightComponentSystem,
     pc.ScriptComponentSystem
 ];
-createOptions.resourceHandlers = [
-    pc.TextureHandler,
-    pc.ContainerHandler
-];
+createOptions.resourceHandlers = [pc.TextureHandler, pc.ContainerHandler];
 
 const app = new pc.AppBase(canvas);
 app.init(createOptions);
@@ -57,7 +54,6 @@ app.on('destroy', () => {
 
 const assetListLoader = new pc.AssetListLoader(Object.values(assets), app.assets);
 assetListLoader.load(() => {
-
     // set up some general scene rendering properties
     app.scene.toneMapping = pc.TONEMAP_ACES;
 
@@ -87,36 +83,36 @@ assetListLoader.load(() => {
     };
 
     // a compute shader that will tint the input texture and write the result to the storage texture
-    const shader = device.supportsCompute ? new pc.Shader(device, {
-        name: 'ComputeShader',
-        shaderLanguage: pc.SHADERLANGUAGE_WGSL,
-        cshader: files['compute-shader.wgsl'],
+    const shader = device.supportsCompute ?
+        new pc.Shader(device, {
+            name: 'ComputeShader',
+            shaderLanguage: pc.SHADERLANGUAGE_WGSL,
+            cshader: files['compute-shader.wgsl'],
 
-        computeUniformBufferFormats: {
-            'ub': new pc.UniformBufferFormat(device, [
-                new pc.UniformFormat('tint', pc.UNIFORMTYPE_VEC4),
-                new pc.UniformFormat('offset', pc.UNIFORMTYPE_FLOAT),
-                new pc.UniformFormat('frequency', pc.UNIFORMTYPE_FLOAT)
+            computeUniformBufferFormats: {
+                ub: new pc.UniformBufferFormat(device, [
+                    new pc.UniformFormat('tint', pc.UNIFORMTYPE_VEC4),
+                    new pc.UniformFormat('offset', pc.UNIFORMTYPE_FLOAT),
+                    new pc.UniformFormat('frequency', pc.UNIFORMTYPE_FLOAT)
+                ])
+            },
+
+              // format of a bind group, providing resources for the compute shader
+            computeBindGroupFormat: new pc.BindGroupFormat(device, [
+                  // a uniform buffer we provided format for
+                new pc.BindUniformBufferFormat('ub', pc.SHADERSTAGE_COMPUTE),
+                  // input textures
+                new pc.BindTextureFormat('inTexture', pc.SHADERSTAGE_COMPUTE, undefined, undefined, false),
+                  // output storage textures
+                new pc.BindStorageTextureFormat('outTexture', pc.PIXELFORMAT_RGBA8, pc.TEXTUREDIMENSION_2D)
             ])
-        },
-
-        // format of a bind group, providing resources for the compute shader
-        computeBindGroupFormat: new pc.BindGroupFormat(device, [
-            // a uniform buffer we provided format for
-            new pc.BindUniformBufferFormat('ub', pc.SHADERSTAGE_COMPUTE),
-            // input textures
-            new pc.BindTextureFormat('inTexture', pc.SHADERSTAGE_COMPUTE, undefined, undefined, false),
-            // output storage textures
-            new pc.BindStorageTextureFormat('outTexture', pc.PIXELFORMAT_RGBA8, pc.TEXTUREDIMENSION_2D)
-        ])
-    }) : null;
+        }) :
+        null;
 
     // helper function, which creates a cube entity, and an instance of the compute shader that will
     // update its texture each frame
-    const createCubeInstance = (/** @type {pc.Vec3} */position) => {
-
-        if (!device.supportsCompute)
-            return null;
+    const createCubeInstance = (/** @type {pc.Vec3} */ position) => {
+        if (!device.supportsCompute) return null;
 
         // create a storage texture, that the compute shader will write to. Make it the same dimensions
         // as the loaded input texture
@@ -173,7 +169,6 @@ assetListLoader.load(() => {
         time += dt;
 
         if (device.supportsCompute) {
-
             // set uniform buffer parameters
             compute1.setParameter('offset', 20 * time);
             compute1.setParameter('frequency', 0.1);

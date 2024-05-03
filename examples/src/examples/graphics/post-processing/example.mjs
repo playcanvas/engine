@@ -147,7 +147,7 @@ assetListLoader.load(() => {
     cameraEntity.addComponent('script');
 
     // add orbit camera script with a mouse and a touch support
-    cameraEntity.script.create("orbitCamera", {
+    cameraEntity.script.create('orbitCamera', {
         attributes: {
             inertiaFactor: 0.2,
             focusEntity: mosquitoEntity,

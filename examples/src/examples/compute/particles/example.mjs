@@ -30,15 +30,8 @@ createOptions.graphicsDevice = device;
 createOptions.mouse = new pc.Mouse(document.body);
 createOptions.touch = new pc.TouchDevice(document.body);
 
-createOptions.componentSystems = [
-    pc.RenderComponentSystem,
-    pc.CameraComponentSystem,
-    pc.ScriptComponentSystem
-];
-createOptions.resourceHandlers = [
-    pc.TextureHandler,
-    pc.ScriptHandler
-];
+createOptions.componentSystems = [pc.RenderComponentSystem, pc.CameraComponentSystem, pc.ScriptComponentSystem];
+createOptions.resourceHandlers = [pc.TextureHandler, pc.ScriptHandler];
 
 const app = new pc.AppBase(canvas);
 app.init(createOptions);
@@ -57,7 +50,6 @@ app.on('destroy', () => {
 
 const assetListLoader = new pc.AssetListLoader(Object.values(assets), app.assets);
 assetListLoader.load(() => {
-
     // set up some general scene rendering properties
     app.scene.toneMapping = pc.TONEMAP_ACES;
     app.scene.skyboxMip = 2;
@@ -72,60 +64,63 @@ assetListLoader.load(() => {
 
     // add orbit camera script with a mouse and a touch support
     cameraEntity.addComponent('script');
-    cameraEntity.script.create("orbitCamera", {
+    cameraEntity.script.create('orbitCamera', {
         attributes: {
             inertiaFactor: 0.2,
             frameOnStart: false,
             distanceMax: 500
         }
     });
-    cameraEntity.script.create("orbitCameraInputMouse");
-    cameraEntity.script.create("orbitCameraInputTouch");
+    cameraEntity.script.create('orbitCameraInputMouse');
+    cameraEntity.script.create('orbitCameraInputTouch');
 
     // ------- Particle simulation -------
 
     const numParticles = 1024 * 1024;
 
     // a compute shader that will simulate the particles stored in a storage buffer
-    const shader = device.supportsCompute ? new pc.Shader(device, {
-        name: 'SimulationShader',
-        shaderLanguage: pc.SHADERLANGUAGE_WGSL,
-        cshader: files['shader-shared.wgsl'] + files['shader-simulation.wgsl'],
+    const shader = device.supportsCompute ?
+        new pc.Shader(device, {
+            name: 'SimulationShader',
+            shaderLanguage: pc.SHADERLANGUAGE_WGSL,
+            cshader: files['shader-shared.wgsl'] + files['shader-simulation.wgsl'],
 
-        // format of a uniform buffer used by the compute shader
-        computeUniformBufferFormats: {
-            'ub': new pc.UniformBufferFormat(device, [
-                new pc.UniformFormat('count', pc.UNIFORMTYPE_UINT),
-                new pc.UniformFormat('dt', pc.UNIFORMTYPE_FLOAT),
-                new pc.UniformFormat('sphereCount', pc.UNIFORMTYPE_UINT)
+              // format of a uniform buffer used by the compute shader
+            computeUniformBufferFormats: {
+                ub: new pc.UniformBufferFormat(device, [
+                    new pc.UniformFormat('count', pc.UNIFORMTYPE_UINT),
+                    new pc.UniformFormat('dt', pc.UNIFORMTYPE_FLOAT),
+                    new pc.UniformFormat('sphereCount', pc.UNIFORMTYPE_UINT)
+                ])
+            },
+
+              // format of a bind group, providing resources for the compute shader
+            computeBindGroupFormat: new pc.BindGroupFormat(device, [
+                  // a uniform buffer we provided the format for
+                new pc.BindUniformBufferFormat('ub', pc.SHADERSTAGE_COMPUTE),
+                  // particle storage buffer
+                new pc.BindStorageBufferFormat('particles', pc.SHADERSTAGE_COMPUTE),
+                  // rad only collision spheres
+                new pc.BindStorageBufferFormat('spheres', pc.SHADERSTAGE_COMPUTE, true)
             ])
-        },
-
-        // format of a bind group, providing resources for the compute shader
-        computeBindGroupFormat: new pc.BindGroupFormat(device, [
-            // a uniform buffer we provided the format for
-            new pc.BindUniformBufferFormat('ub', pc.SHADERSTAGE_COMPUTE),
-            // particle storage buffer
-            new pc.BindStorageBufferFormat('particles', pc.SHADERSTAGE_COMPUTE),
-            // rad only collision spheres
-            new pc.BindStorageBufferFormat('spheres', pc.SHADERSTAGE_COMPUTE, true)
-        ])
-    }) : null;
+        }) :
+        null;
 
     // Create a storage buffer to store particles
     // see the particle size / alignment / padding here: https://tinyurl.com/particle-structure
     const particleFloatSize = 12;
     const particleStructSize = particleFloatSize * 4; // 4 bytes per float
-    const particleStorageBuffer = new pc.StorageBuffer(device, numParticles * particleStructSize,
-                                                       pc.BUFFERUSAGE_VERTEX | // vertex buffer reads it
-                                                       pc.BUFFERUSAGE_COPY_DST // CPU copies initial data to it
+    const particleStorageBuffer = new pc.StorageBuffer(
+        device,
+        numParticles * particleStructSize,
+        pc.BUFFERUSAGE_VERTEX | // vertex buffer reads it
+            pc.BUFFERUSAGE_COPY_DST // CPU copies initial data to it
     );
 
     // generate initial particle data
     const particleData = new Float32Array(numParticles * particleFloatSize);
     const velocity = new pc.Vec3();
     for (let i = 0; i < numParticles; ++i) {
-
         // random velocity inside a cone
         const r = 0.4 * Math.sqrt(Math.random());
         const theta = Math.random() * 2 * Math.PI;
@@ -225,7 +220,10 @@ assetListLoader.load(() => {
         ]),
         meshBindGroupFormat: new pc.BindGroupFormat(app.graphicsDevice, [
             // uniforms
-            new pc.BindUniformBufferFormat(pc.UNIFORM_BUFFER_DEFAULT_SLOT_NAME, pc.SHADERSTAGE_VERTEX | pc.SHADERSTAGE_FRAGMENT),
+            new pc.BindUniformBufferFormat(
+                pc.UNIFORM_BUFFER_DEFAULT_SLOT_NAME,
+                pc.SHADERSTAGE_VERTEX | pc.SHADERSTAGE_FRAGMENT
+            ),
             // particle storage buffer in read-only mode
             new pc.BindStorageBufferFormat('particles', pc.SHADERSTAGE_VERTEX | pc.SHADERSTAGE_FRAGMENT, true)
         ])
@@ -253,7 +251,7 @@ assetListLoader.load(() => {
     mesh.setIndices(indices);
     mesh.update();
     const meshInstance = new pc.MeshInstance(mesh, material);
-    meshInstance.cull = false;  // disable culling as we did not supply custom aabb for the mesh instance
+    meshInstance.cull = false; // disable culling as we did not supply custom aabb for the mesh instance
 
     const entity = new pc.Entity();
     entity.addComponent('render', {
@@ -262,9 +260,7 @@ assetListLoader.load(() => {
     app.root.addChild(entity);
 
     app.on('update', function (/** @type {number} */ dt) {
-
         if (device.supportsCompute) {
-
             // update non-constant parameters each frame
             compute.setParameter('dt', dt);
 

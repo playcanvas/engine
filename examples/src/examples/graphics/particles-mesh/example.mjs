@@ -38,12 +38,7 @@ createOptions.componentSystems = [
     pc.ParticleSystemComponentSystem,
     pc.ScriptComponentSystem
 ];
-createOptions.resourceHandlers =
-[
-    pc.TextureHandler,
-    pc.ContainerHandler,
-    pc.ScriptHandler
-];
+createOptions.resourceHandlers = [pc.TextureHandler, pc.ContainerHandler, pc.ScriptHandler];
 
 const app = new pc.AppBase(canvas);
 app.init(createOptions);
@@ -138,9 +133,9 @@ assetListLoader.load(() => {
 
     // color changes throughout lifetime
     const colorCurve = new pc.CurveSet([
-        [0, 1, 0.25, 1, 0.375, 0.5, 0.5, 0],    // r
-        [0, 0, 0.125, 0.25, 0.25, 0.5, 0.375, 0.75, 0.5, 1],    // g
-        [0, 0, 1, 0.3]    // b
+        [0, 1, 0.25, 1, 0.375, 0.5, 0.5, 0], // r
+        [0, 0, 0.125, 0.25, 0.25, 0.5, 0.375, 0.75, 0.5, 1], // g
+        [0, 0, 1, 0.3] // b
     ]);
 
     // Create entity for particle system

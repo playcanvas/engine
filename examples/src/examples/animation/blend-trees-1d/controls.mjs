@@ -3,8 +3,7 @@
  * @returns {JSX.Element} The returned JSX Element.
  */
 export function controls({ observer, ReactPCUI, React, jsx }) {
-    const { BindingTwoWay, LabelGroup, SliderInput } =
-        ReactPCUI;
+    const { BindingTwoWay, LabelGroup, SliderInput } = ReactPCUI;
     class JsxControls extends React.Component {
         render() {
             const binding = new BindingTwoWay();

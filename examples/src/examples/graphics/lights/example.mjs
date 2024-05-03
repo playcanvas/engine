@@ -19,12 +19,24 @@ function createMaterial(colors) {
 const assets = {
     statue: new pc.Asset('statue', 'container', { url: rootPath + '/static/assets/models/statue.glb' }),
     heart: new pc.Asset('heart', 'texture', { url: rootPath + '/static/assets/textures/heart.png' }),
-    xmas_negx: new pc.Asset('xmas_negx', 'texture', { url: rootPath + '/static/assets/cubemaps/xmas_faces/xmas_negx.png' }),
-    xmas_negy: new pc.Asset('xmas_negy', 'texture', { url: rootPath + '/static/assets/cubemaps/xmas_faces/xmas_negy.png' }),
-    xmas_negz: new pc.Asset('xmas_negz', 'texture', { url: rootPath + '/static/assets/cubemaps/xmas_faces/xmas_negz.png' }),
-    xmas_posx: new pc.Asset('xmas_posx', 'texture', { url: rootPath + '/static/assets/cubemaps/xmas_faces/xmas_posx.png' }),
-    xmas_posy: new pc.Asset('xmas_posy', 'texture', { url: rootPath + '/static/assets/cubemaps/xmas_faces/xmas_posy.png' }),
-    xmas_posz: new pc.Asset('xmas_posz', 'texture', { url: rootPath + '/static/assets/cubemaps/xmas_faces/xmas_posz.png' })
+    xmas_negx: new pc.Asset('xmas_negx', 'texture', {
+        url: rootPath + '/static/assets/cubemaps/xmas_faces/xmas_negx.png'
+    }),
+    xmas_negy: new pc.Asset('xmas_negy', 'texture', {
+        url: rootPath + '/static/assets/cubemaps/xmas_faces/xmas_negy.png'
+    }),
+    xmas_negz: new pc.Asset('xmas_negz', 'texture', {
+        url: rootPath + '/static/assets/cubemaps/xmas_faces/xmas_negz.png'
+    }),
+    xmas_posx: new pc.Asset('xmas_posx', 'texture', {
+        url: rootPath + '/static/assets/cubemaps/xmas_faces/xmas_posx.png'
+    }),
+    xmas_posy: new pc.Asset('xmas_posy', 'texture', {
+        url: rootPath + '/static/assets/cubemaps/xmas_faces/xmas_posy.png'
+    }),
+    xmas_posz: new pc.Asset('xmas_posz', 'texture', {
+        url: rootPath + '/static/assets/cubemaps/xmas_faces/xmas_posz.png'
+    })
 };
 
 const gfxOptions = {

@@ -2,6 +2,6 @@
  * @type {import('../../../../types.mjs').ExampleConfig}
  */
 export default {
-    ENGINE: "PERFORMANCE",
+    ENGINE: 'PERFORMANCE',
     NO_MINISTATS: true
 };

@@ -38,11 +38,7 @@ createOptions.componentSystems = [
     pc.ScriptComponentSystem
 ];
 
-createOptions.resourceHandlers = [
-    pc.TextureHandler,
-    pc.ContainerHandler,
-    pc.ScriptHandler
-];
+createOptions.resourceHandlers = [pc.TextureHandler, pc.ContainerHandler, pc.ScriptHandler];
 
 const app = new pc.AppBase(canvas);
 app.init(createOptions);
@@ -68,7 +64,7 @@ assetListLoader.load(() => {
     app.scene.skyboxMip = 1;
 
     // get the instance of the cube it set up with render component and add it to scene
-    const glbEntity  = assets.model.resource.instantiateRenderEntity();
+    const glbEntity = assets.model.resource.instantiateRenderEntity();
     app.root.addChild(glbEntity);
 
     // Create an Entity with a camera component

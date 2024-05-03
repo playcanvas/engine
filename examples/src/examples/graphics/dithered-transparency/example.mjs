@@ -176,7 +176,6 @@ assetListLoader.load(() => {
     };
 
     const setupRenderPass = () => {
-
         // destroy existing pass if any
         if (cameraEntity.camera.renderPasses.length > 0) {
             cameraEntity.camera.renderPasses[0].destroy();
@@ -215,7 +214,6 @@ assetListLoader.load(() => {
             material[propertyName] = value;
 
             if (propertyName === 'opacityDither') {
-
                 // turn on / off blending depending on the dithering of the color
                 material.blendType = value === pc.DITHER_NONE ? pc.BLEND_NORMAL : pc.BLEND_NONE;
 

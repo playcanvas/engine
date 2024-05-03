@@ -156,8 +156,12 @@ const vec3A = new pc.Vec3();
 
 if (app.xr.supported) {
     // XR availability
-    document.querySelector(`.container > .button[data-xr="immersive-ar"]`)?.classList.toggle('active', app.xr.isAvailable(pc.XRTYPE_AR));
-    document.querySelector(`.container > .button[data-xr="immersive-vr"]`)?.classList.toggle('active', app.xr.isAvailable(pc.XRTYPE_VR));
+    document
+        .querySelector(`.container > .button[data-xr="immersive-ar"]`)
+        ?.classList.toggle('active', app.xr.isAvailable(pc.XRTYPE_AR));
+    document
+        .querySelector(`.container > .button[data-xr="immersive-vr"]`)
+        ?.classList.toggle('active', app.xr.isAvailable(pc.XRTYPE_VR));
 
     // XR availability events
     app.xr.on('available', (type, available) => {
@@ -172,8 +176,7 @@ if (app.xr.supported) {
 
     // button handler
     const onXrButtonClick = function () {
-        if (!this.classList.contains('active'))
-            return;
+        if (!this.classList.contains('active')) return;
 
         const type = this.getAttribute('data-xr');
 

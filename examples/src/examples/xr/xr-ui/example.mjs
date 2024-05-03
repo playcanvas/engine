@@ -114,8 +114,12 @@ assetListLoader.load(() => {
 
     if (app.xr.supported) {
         // XR availability
-        document.querySelector(`.container > .button[data-xr="immersive-ar"]`)?.classList.toggle('active', app.xr.isAvailable(pc.XRTYPE_AR));
-        document.querySelector(`.container > .button[data-xr="immersive-vr"]`)?.classList.toggle('active', app.xr.isAvailable(pc.XRTYPE_VR));
+        document
+            .querySelector(`.container > .button[data-xr="immersive-ar"]`)
+            ?.classList.toggle('active', app.xr.isAvailable(pc.XRTYPE_AR));
+        document
+            .querySelector(`.container > .button[data-xr="immersive-vr"]`)
+            ?.classList.toggle('active', app.xr.isAvailable(pc.XRTYPE_VR));
 
         // XR availability events
         app.xr.on('available', (type, available) => {
@@ -130,8 +134,7 @@ assetListLoader.load(() => {
 
         // button handler
         const onXrButtonClick = function () {
-            if (!this.classList.contains('active'))
-                return;
+            if (!this.classList.contains('active')) return;
 
             const type = this.getAttribute('data-xr');
 
@@ -160,7 +163,7 @@ assetListLoader.load(() => {
         app.on('update', function () {
             // fps meter
             const now = Date.now();
-            if ((now - fpsTime) >= 1000) {
+            if (now - fpsTime >= 1000) {
                 fpsTime = now;
                 entityFps.element.text = `FPS: ${ticks}`;
                 ticks = 0;

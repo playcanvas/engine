@@ -10,7 +10,9 @@ if (!(canvas instanceof HTMLCanvasElement)) {
 const assets = {
     model: new pc.Asset('model', 'container', { url: rootPath + '/static/assets/models/bitmoji.glb' }),
     idleAnim: new pc.Asset('idleAnim', 'container', { url: rootPath + '/static/assets/animations/bitmoji/idle.glb' }),
-    danceAnim: new pc.Asset('danceAnim', 'container', { url: rootPath + '/static/assets/animations/bitmoji/win-dance.glb' }),
+    danceAnim: new pc.Asset('danceAnim', 'container', {
+        url: rootPath + '/static/assets/animations/bitmoji/win-dance.glb'
+    }),
     helipad: new pc.Asset(
         'helipad-env-atlas',
         'texture',

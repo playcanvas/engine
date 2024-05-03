@@ -38,10 +38,7 @@ createOptions.componentSystems = [
     pc.LightComponentSystem,
     pc.ScriptComponentSystem
 ];
-createOptions.resourceHandlers = [
-    pc.TextureHandler,
-    pc.ContainerHandler
-];
+createOptions.resourceHandlers = [pc.TextureHandler, pc.ContainerHandler];
 
 const app = new pc.AppBase(canvas);
 app.init(createOptions);
@@ -60,7 +57,6 @@ app.on('destroy', () => {
 
 const assetListLoader = new pc.AssetListLoader(Object.values(assets), app.assets);
 assetListLoader.load(() => {
-
     // set up some general scene rendering properties
     app.scene.toneMapping = pc.TONEMAP_ACES;
 
@@ -96,26 +92,29 @@ assetListLoader.load(() => {
     };
 
     // a compute shader that will compute the histogram of the input texture and write the result to the storage buffer
-    const shader = device.supportsCompute ? new pc.Shader(device, {
-        name: 'ComputeShader',
-        shaderLanguage: pc.SHADERLANGUAGE_WGSL,
-        cshader: files['compute-shader.wgsl'],
+    const shader = device.supportsCompute ?
+        new pc.Shader(device, {
+            name: 'ComputeShader',
+            shaderLanguage: pc.SHADERLANGUAGE_WGSL,
+            cshader: files['compute-shader.wgsl'],
 
-        // format of a bind group, providing resources for the compute shader
-        computeBindGroupFormat: new pc.BindGroupFormat(device, [
-            // input texture - the scene color map, without a sampler
-            new pc.BindTextureFormat('uSceneColorMap', pc.SHADERSTAGE_COMPUTE, undefined, undefined, false),
-            // output storage buffer
-            new pc.BindStorageBufferFormat('outBuffer', pc.SHADERSTAGE_COMPUTE)
-        ])
-    }) : null;
+              // format of a bind group, providing resources for the compute shader
+            computeBindGroupFormat: new pc.BindGroupFormat(device, [
+                  // input texture - the scene color map, without a sampler
+                new pc.BindTextureFormat('uSceneColorMap', pc.SHADERSTAGE_COMPUTE, undefined, undefined, false),
+                  // output storage buffer
+                new pc.BindStorageBufferFormat('outBuffer', pc.SHADERSTAGE_COMPUTE)
+            ])
+        }) :
+        null;
 
     // Create a storage buffer to which the compute shader will write the histogram values.
     const numBins = 256;
     const histogramStorageBuffer = new pc.StorageBuffer(
-        device, numBins * 4,      // 4 bytes per value, storing unsigned int
+        device,
+        numBins * 4, // 4 bytes per value, storing unsigned int
         pc.BUFFERUSAGE_COPY_SRC | // needed for reading back the data to CPU
-        pc.BUFFERUSAGE_COPY_DST   // needed for clearing the buffer
+            pc.BUFFERUSAGE_COPY_DST // needed for clearing the buffer
     );
 
     // Create an instance of the compute shader, and set the input and output data. Note that we do
@@ -133,7 +132,6 @@ assetListLoader.load(() => {
 
     let firstFrame = true;
     app.on('update', function (/** @type {number} */ dt) {
-
         // The update function runs every frame before the frame gets rendered. On the first time it
         // runs, the scene color map has not been rendered yet, so we skip the first frame.
         if (firstFrame) {
@@ -142,7 +140,6 @@ assetListLoader.load(() => {
         }
 
         if (device.supportsCompute) {
-
             // clear the storage buffer, to avoid the accumulation buildup
             histogramStorageBuffer.clear();
 
@@ -154,19 +151,17 @@ assetListLoader.load(() => {
             // will be resolved later, when the GPU is done running it, and so the histogram on the
             // screen will be up to few frames behind.
             const histogramData = new Uint32Array(numBins);
-            histogramStorageBuffer.read(0, undefined, histogramData).then(
-                (data) => {
-                    // render the histogram using lines
-                    const scale = 1 / 50000;
-                    const positions = [];
-                    for (let x = 0; x < data.length; x++) {
-                        const value = pc.math.clamp(data[x] * scale, 0, 0.2);
-                        positions.push(x * 0.001, -0.35, 4);
-                        positions.push(x * 0.001, value - 0.35, 4);
-                    }
-                    app.drawLineArrays(positions, pc.Color.YELLOW);
+            histogramStorageBuffer.read(0, undefined, histogramData).then((data) => {
+                // render the histogram using lines
+                const scale = 1 / 50000;
+                const positions = [];
+                for (let x = 0; x < data.length; x++) {
+                    const value = pc.math.clamp(data[x] * scale, 0, 0.2);
+                    positions.push(x * 0.001, -0.35, 4);
+                    positions.push(x * 0.001, value - 0.35, 4);
                 }
-            );
+                app.drawLineArrays(positions, pc.Color.YELLOW);
+            });
         }
     });
 });

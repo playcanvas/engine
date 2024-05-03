@@ -10,8 +10,12 @@ const assets = {
     model: new pc.Asset('model', 'container', { url: rootPath + '/static/assets/models/bitmoji.glb' }),
     idleAnim: new pc.Asset('idleAnim', 'container', { url: rootPath + '/static/assets/animations/bitmoji/idle.glb' }),
     walkAnim: new pc.Asset('idleAnim', 'container', { url: rootPath + '/static/assets/animations/bitmoji/walk.glb' }),
-    eagerAnim: new pc.Asset('idleAnim', 'container', { url: rootPath + '/static/assets/animations/bitmoji/idle-eager.glb' }),
-    danceAnim: new pc.Asset('danceAnim', 'container', { url: rootPath + '/static/assets/animations/bitmoji/win-dance.glb' }),
+    eagerAnim: new pc.Asset('idleAnim', 'container', {
+        url: rootPath + '/static/assets/animations/bitmoji/idle-eager.glb'
+    }),
+    danceAnim: new pc.Asset('danceAnim', 'container', {
+        url: rootPath + '/static/assets/animations/bitmoji/win-dance.glb'
+    }),
     helipad: new pc.Asset(
         'helipad-env-atlas',
         'texture',

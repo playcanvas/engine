@@ -54,7 +54,9 @@ app.on('destroy', () => {
 
 const assets = {
     model: new pc.Asset('model', 'model', { url: rootPath + '/static/assets/models/playbot/playbot.json' }),
-    runAnim: new pc.Asset('runAnim', 'animation', { url: rootPath + '/static/assets/animations/playbot/playbot-run.json' }),
+    runAnim: new pc.Asset('runAnim', 'animation', {
+        url: rootPath + '/static/assets/animations/playbot/playbot-run.json'
+    }),
     gravel: new pc.Asset('gravel', 'audio', { url: rootPath + '/static/assets/sounds/footsteps.mp3' })
 };
 

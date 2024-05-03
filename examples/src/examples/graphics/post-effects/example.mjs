@@ -19,7 +19,9 @@ const assets = {
     bloom: new pc.Asset('bloom', 'script', { url: rootPath + '/static/scripts/posteffects/posteffect-bloom.js' }),
     bokeh: new pc.Asset('bokeh', 'script', { url: rootPath + '/static/scripts/posteffects/posteffect-bokeh.js' }),
     sepia: new pc.Asset('sepia', 'script', { url: rootPath + '/static/scripts/posteffects/posteffect-sepia.js' }),
-    vignette: new pc.Asset('vignette', 'script', { url: rootPath + '/static/scripts/posteffects/posteffect-vignette.js' }),
+    vignette: new pc.Asset('vignette', 'script', {
+        url: rootPath + '/static/scripts/posteffects/posteffect-vignette.js'
+    }),
     ssao: new pc.Asset('ssao', 'script', { url: rootPath + '/static/scripts/posteffects/posteffect-ssao.js' }),
     font: new pc.Asset('font', 'font', { url: rootPath + '/static/assets/fonts/arial.json' }),
     helipad: new pc.Asset(
