@@ -74,6 +74,8 @@ const resize = () => app.resizeCanvas();
 window.addEventListener('resize', resize);
 app.on('destroy', () => {
     window.removeEventListener('resize', resize);
+    div.remove();
+    css.remove();
 });
 
 // use device pixel ratio
