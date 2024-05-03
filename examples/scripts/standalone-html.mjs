@@ -44,9 +44,10 @@ function engineFor(type) {
  * @param {string} categoryKebab - The category kebab name.
  * @param {string} exampleNameKebab - The example kebab name.
  * @param {import('../types.mjs').ExampleConfig} config - The example config.
+ * @param {string[]} files - The files in the example directory.
  * @returns {string} File to write as standalone example.
  */
-function generateExampleFile(categoryKebab, exampleNameKebab, config) {
+function generateExampleFile(categoryKebab, exampleNameKebab, config, files) {
     let html = EXAMPLE_HTML;
 
     // title
@@ -67,9 +68,8 @@ function generateExampleFile(categoryKebab, exampleNameKebab, config) {
 
     // js files
     const name = `${categoryKebab}_${exampleNameKebab}`;
-    html = html.replace(/'@EXAMPLE'/g, JSON.stringify(`./${name}.example.mjs`));
-    html = html.replace(/'@CONTROLS'/g, JSON.stringify(`./${name}.controls.mjs`));
     html = html.replace(/'@CONFIG'/g, JSON.stringify(`./${name}.config.mjs`));
+    html = html.replace(/'@FILES'/g, JSON.stringify(files));
 
     // engine
     const engineType = process.env.ENGINE_PATH ? 'DEVELOPMENT' : process.env.NODE_ENV === 'development' ? 'DEBUG' : config.ENGINE;
@@ -105,30 +105,62 @@ async function main() {
     await Promise.all(exampleMetaData.map(async (data) => {
         const { categoryKebab, exampleNameKebab, path } = data;
         const name = `${categoryKebab}_${exampleNameKebab}`;
-        const examplePath = resolve(path, 'example.mjs');
-        const controlsPath = resolve(path, 'controls.mjs');
-        const configPath = resolve(path, 'config.mjs');
 
-        const controlsExist = fs.existsSync(controlsPath);
-        const configExists = fs.existsSync(configPath);
+        const files = fs.readdirSync(path);
+        if (!files.includes('example.mjs')) {
+            throw new Error(`Example ${name} is missing an example.mjs file`);
+        }
+        if (!files.includes('controls.mjs')) {
+            files.push('controls.mjs');
+        }
+        if (!files.includes('config.mjs')) {
+            files.push('config.mjs');
+        }
 
-        const config = configExists ? (await import(`file://${configPath}`)).default : {};
+        await Promise.all(files.map(async (file) => {
+            if (file === 'example.mjs') {
+                const examplePath = resolve(path, file);
 
-        // html file
-        const out = generateExampleFile(categoryKebab, exampleNameKebab, config);
-        fs.writeFileSync(`${MAIN_DIR}/dist/iframe/${name}.html`, out);
+                // example file
+                const script = fs.readFileSync(examplePath, 'utf-8');
+                fs.writeFileSync(`${MAIN_DIR}/dist/iframe/${name}.example.mjs`, patchScript(script));
+                return;
+            }
 
-        // example file
-        let script = fs.readFileSync(examplePath, 'utf-8');
-        fs.writeFileSync(`${MAIN_DIR}/dist/iframe/${name}.example.mjs`, patchScript(script));
+            if (file === 'controls.mjs') {
+                const controlsPath = resolve(path, file);
+                const controlsExist = fs.existsSync(controlsPath);
 
-        // controls file
-        script = controlsExist ? fs.readFileSync(controlsPath, 'utf-8') : TEMPLATE_CONTROLS;
-        fs.writeFileSync(`${MAIN_DIR}/dist/iframe/${name}.controls.mjs`, patchScript(script));
+                // controls file
+                const script = controlsExist ? fs.readFileSync(controlsPath, 'utf-8') : TEMPLATE_CONTROLS;
+                fs.writeFileSync(`${MAIN_DIR}/dist/iframe/${name}.controls.mjs`, patchScript(script));
+                return;
+            }
 
-        // config files
-        script = configExists ? fs.readFileSync(configPath, 'utf-8') : TEMPLATE_CONFIG;
-        fs.writeFileSync(`${MAIN_DIR}/dist/iframe/${name}.config.mjs`, script);
+            if (file === 'config.mjs') {
+                const configPath = resolve(path, file);
+                const configExists = fs.existsSync(configPath);
+                const config = configExists ? (await import(`file://${configPath}`)).default : {};
+
+                // html file
+                const displayFiles = [
+                    'example.mjs',
+                    'controls.mjs',
+                    ...files.filter(f => f !== 'example.mjs' && f !== 'controls.mjs' && f !== 'config.mjs')
+                ];
+                const out = generateExampleFile(categoryKebab, exampleNameKebab, config, displayFiles);
+                fs.writeFileSync(`${MAIN_DIR}/dist/iframe/${name}.html`, out);
+
+                // config files
+                const script = configExists ? fs.readFileSync(configPath, 'utf-8') : TEMPLATE_CONFIG;
+                fs.writeFileSync(`${MAIN_DIR}/dist/iframe/${name}.config.mjs`, script);
+                return;
+            }
+
+            const scriptPath = resolve(path, file);
+            const script = fs.readFileSync(scriptPath, 'utf-8');
+            fs.writeFileSync(`${MAIN_DIR}/dist/iframe/${name}.${file}`, script);
+        }));
     }));
 
     return 0;

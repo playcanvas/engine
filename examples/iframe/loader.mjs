@@ -87,16 +87,24 @@ class ExampleLoader {
     }
 
     /**
-     * @param {{ engineUrl: string, exampleUrl: string, controlsUrl: string }} options - Options to start the loader
+     * @param {{ engineUrl: string, fileNames: string[] }} options - Options to start the loader
      */
-    async start({ engineUrl, exampleUrl, controlsUrl }) {
+    async start({ engineUrl, fileNames }) {
         window.pc = await import(engineUrl);
 
         // @ts-ignore
         window.top.pc = window.pc;
 
-        files['example.mjs'] = await fetchFile(exampleUrl);
-        files['controls.mjs'] = await fetchFile(controlsUrl);
+        // extracts example category and name from the URL
+        const match = /([^/]+)\.html$/.exec(location.href);
+        if (!match) {
+            return;
+        }
+
+        // loads each files
+        await Promise.all(fileNames.map(async (name) => {
+            files[name] = await fetchFile(`./${match[1]}.${name}`);
+        }));
 
         await this.load();
     }
