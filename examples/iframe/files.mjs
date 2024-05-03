@@ -1,7 +1,3 @@
-import config from '@examples/config';
-
-const files = {
-    ...config.FILES
-};
+const files = {};
 
 export default files;
