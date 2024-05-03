@@ -127,6 +127,13 @@ export default {
 ### Additional files
 
 Any other file you wish to include in your example can be added to the same folder (e.g. `shader.vert` and `shader.frag`). These files can be accessed from the `@examples/files` module (Refer to the Example Modules below).
+If you wish to include a file which is a module (e.g. `module.mjs`), use the `localImport` function to include it in your project: 
+
+```js
+import { localImport } from '@examples/utils';
+
+const data = localImport('data.mjs');
+```
 
 ### Testing your example
 Ensure you have a locally built version of the examples browser by running the commands in the `Local examples browser development` section. Then run `npm run serve` to serve the examples browser.
