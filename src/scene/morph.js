@@ -61,11 +61,10 @@ class Morph extends RefCountedObject {
                 (renderableFloat ?? renderableHalf) : (renderableHalf ?? renderableFloat);
 
             // texture format - both are always supported
-            this._textureFormat = this.preferHighPrecision ?
-                (PIXELFORMAT_RGB32F ?? PIXELFORMAT_RGBA16F) : (PIXELFORMAT_RGBA16F ?? PIXELFORMAT_RGB32F);
+            this._textureFormat = this.preferHighPrecision ? PIXELFORMAT_RGB32F : PIXELFORMAT_RGBA16F;
 
-            // if both available, enable texture morphing
-            if (this._renderTextureFormat !== undefined && this._textureFormat !== undefined) {
+            // if the render format is available, enable texture morphing
+            if (this._renderTextureFormat !== undefined) {
                 this._useTextureMorph = true;
             }
         }
