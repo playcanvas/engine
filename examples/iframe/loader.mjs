@@ -69,8 +69,15 @@ class ExampleLoader {
         this._allowRestart = true;
     }
 
+    /**
+     * @param {string} stack - The stack trace.
+     * @returns {{ file: string, line: number, column: number }[]} - The error locations.
+     */
     _parseErrorLocations(stack) {
         const lines = stack.split('\n');
+        /**
+         * @type {{ file: string, line: number, column: number }[]}
+         */
         const locations = [];
         lines.forEach((line) => {
             const match = /^\s*at\s(.+):(\d+):(\d+)$/g.exec(line);
@@ -146,7 +153,7 @@ class ExampleLoader {
         } catch (e) {
             console.error(e);
             const locations = this._parseErrorLocations(e.stack);
-            window.top.dispatchEvent(new CustomEvent('exampleError', {
+            window.top?.dispatchEvent(new CustomEvent('exampleError', {
                 detail: {
                     name: e.constructor.name,
                     message: e.message,
@@ -188,7 +195,7 @@ class ExampleLoader {
             console.warn('Dropping restart while still restarting');
             return;
         }
-        window.top.dispatchEvent(new CustomEvent('exampleHotReload'));
+        window.top?.dispatchEvent(new CustomEvent('exampleHotReload'));
         this.destroy();
         this.load();
     }
