@@ -1,6 +1,6 @@
 import { Debug } from '../../../core/debug.js';
 import {
-    PIXELFORMAT_RGBA8, DEVICETYPE_NULL
+    DEVICETYPE_NULL
 } from '../constants.js';
 import { GraphicsDevice } from '../graphics-device.js';
 
