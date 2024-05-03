@@ -1,4 +1,5 @@
 import config from '@examples/config';
+import files from '@examples/files';
 
 const href = window.top?.location.href ?? '';
 const params = getQueryParams(href);
@@ -45,6 +46,34 @@ export async function loadES5(url) {
     };
     // eslint-disable-next-line no-new-func
     return (Function('module', 'exports', txt).call(module, module, module.exports), module).exports;
+}
+
+/**
+ * @type {string[]}
+ */
+const blobUrls = [];
+
+/**
+ * Imports a local file as a module.
+ *
+ * @param {string} name - The name of the local file.
+ * @returns {Promise<Object>} - The module exports.
+ */
+export function localImport(name) {
+    if (!/\.mjs$/.test(name)) {
+        throw new Error(`Invalid module: ${name}`);
+    }
+    const blob = new Blob([files[name]], { type: 'text/javascript' });
+    const url = URL.createObjectURL(blob);
+    blobUrls.push(url);
+    return import(url);
+}
+
+/**
+ * Clears all the blob URLs.
+ */
+export function clearImports() {
+    blobUrls.forEach(URL.revokeObjectURL);
 }
 
 function isLinuxChrome() {

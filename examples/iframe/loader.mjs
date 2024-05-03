@@ -1,5 +1,5 @@
 import config from '@examples/config';
-import { fetchFile, fire } from '@examples/utils';
+import { fetchFile, localImport, clearImports, fire } from '@examples/utils';
 import { data, refresh } from '@examples/observer';
 import files from '@examples/files';
 
@@ -25,16 +25,10 @@ class ExampleLoader {
     _allowRestart = true;
 
     /**
-     * @type {string}
+     * @type {Function[]}
      * @private
      */
-    _scriptUrl = '';
-
-    /**
-     * @type {Function | null}
-     * @private
-     */
-    _scriptDestroy = null;
+    destroyHandlers = [];
 
     /**
      * @type {boolean}
@@ -116,9 +110,6 @@ class ExampleLoader {
         await Promise.all(fileNames.map(async (name) => {
             unorderedFiles[name] = await fetchFile(`./${match[1]}.${name}`);
         }));
-        files['example.mjs'] = unorderedFiles['example.mjs'];
-        files['controls.mjs'] = unorderedFiles['controls.mjs'];
-        files['config.mjs'] = unorderedFiles['config.mjs'];
         for (const name of Object.keys(unorderedFiles).sort()) {
             files[name] = unorderedFiles[name];
         }
@@ -138,18 +129,17 @@ class ExampleLoader {
             fire('exampleLoading', { showDeviceSelector: !config.NO_DEVICE_SELECTOR });
         }
 
-        if (this._scriptUrl) {
-            URL.revokeObjectURL(this._scriptUrl);
-        }
-        const blob = new Blob([files['example.mjs']], { type: 'text/javascript' });
-        this._scriptUrl = URL.createObjectURL(blob);
+        clearImports();
 
         try {
-            const module = await import(this._scriptUrl);
+            // import local file
+            const module = await localImport('example.mjs');
             this._app = module.app;
 
             // additional destroy handler in case no app provided
-            this._scriptDestroy = module.destroy;
+            if (typeof module.destroy === 'function') {
+                this.destroyHandlers.push(module.destroy);
+            }
         } catch (e) {
             console.error(e);
             const locations = this._parseErrorLocations(e.stack);
@@ -205,17 +195,12 @@ class ExampleLoader {
         if (this._app && this._app.graphicsDevice) {
             this._app.destroy();
         }
-        if (this._scriptDestroy) {
-            this._scriptDestroy();
-            this._scriptDestroy = null;
-        }
+        this.destroyHandlers.forEach(destroy => destroy());
         this.ready = false;
     }
 
     exit() {
-        if (this._scriptUrl) {
-            URL.revokeObjectURL(this._scriptUrl);
-        }
+        clearImports();
         this.destroy();
     }
 }
