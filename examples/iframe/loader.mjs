@@ -102,9 +102,20 @@ class ExampleLoader {
         }
 
         // loads each files
+        /**
+         * @type {Record<string, string>}
+         */
+        const unorderedFiles = {};
         await Promise.all(fileNames.map(async (name) => {
-            files[name] = await fetchFile(`./${match[1]}.${name}`);
+            unorderedFiles[name] = await fetchFile(`./${match[1]}.${name}`);
         }));
+        files['example.mjs'] = unorderedFiles['example.mjs'];
+        files['controls.mjs'] = unorderedFiles['controls.mjs'];
+        files['config.mjs'] = unorderedFiles['config.mjs'];
+        for (const name of Object.keys(unorderedFiles).sort()) {
+            files[name] = unorderedFiles[name];
+        }
+
 
         await this.load();
     }

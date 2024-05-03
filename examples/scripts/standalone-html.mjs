@@ -143,12 +143,7 @@ async function main() {
                 const config = configExists ? (await import(`file://${configPath}`)).default : {};
 
                 // html file
-                const displayFiles = [
-                    'example.mjs',
-                    'controls.mjs',
-                    ...files.filter(f => f !== 'example.mjs' && f !== 'controls.mjs' && f !== 'config.mjs')
-                ];
-                const out = generateExampleFile(categoryKebab, exampleNameKebab, config, displayFiles);
+                const out = generateExampleFile(categoryKebab, exampleNameKebab, config, files);
                 fs.writeFileSync(`${MAIN_DIR}/dist/iframe/${name}.html`, out);
 
                 // config files
