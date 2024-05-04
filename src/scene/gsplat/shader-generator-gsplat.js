@@ -84,7 +84,10 @@ const splatCoreFS = /* glsl */ `
 
 varying vec2 texCoord;
 varying vec4 color;
-varying float id;
+
+#ifndef DITHER_NONE
+    varying float id;
+#endif
 
 #ifdef PICK_PASS
     uniform vec4 uColor;
