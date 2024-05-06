@@ -3,9 +3,11 @@
  * Usage: node build.mjs [options] -- [rollup options]
  *
  * Options:
- * target:<moduleFormat>:<buildType> - Specify the target module format and build type. Example: target:esm:release
- * target:<moduleFormat> - Specify the target module format only. Example: target:esm
- * target:<buildType> - Specify the build type only. Example: target:release
+ * target[:<moduleFormat>][:<buildType>][:<bundleState>] - Specify the target
+ *     - moduleFormat (esm, umd)
+ *     - buildType (release, debug, profiler, min)
+ *     - bundleState (unbundled, bundled)
+ * Example: target:esm:release:bundled
  *
  * treemap - Enable treemap build visualization.
  * treenet - Enable treenet build visualization.
@@ -34,5 +36,8 @@ for (let i = 0; i < args.length; i++) {
 }
 
 const cmd = `rollup -c ${args.join(' ')} ${env.join(' ')}`;
-console.log(cmd);
-execSync(cmd, { stdio: 'inherit' });
+try {
+    execSync(cmd, { stdio: 'inherit' });
+} catch (e) {
+    console.error(e.message);
+}
