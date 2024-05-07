@@ -41,7 +41,7 @@ class ExampleLoader {
                 console.warn('No canvas found.');
                 return;
             }
-            MiniStats.enable(this._app, true);
+            this.setMiniStats(true);
         }
 
         if (!this._started) {
@@ -177,6 +177,9 @@ class ExampleLoader {
      * @param {boolean} enabled - The enabled state of ministats
      */
     setMiniStats(enabled = false) {
+        if (config.NO_MINISTATS) {
+            return;
+        }
         MiniStats.enable(this._app, enabled);
     }
 
