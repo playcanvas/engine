@@ -5,7 +5,7 @@ import { DeviceCache } from '../platform/graphics/device-cache.js';
 import {
     ADDRESS_CLAMP_TO_EDGE,
     FILTER_LINEAR, FILTER_NEAREST,
-    PIXELFORMAT_RGBA16F, PIXELFORMAT_RGBA32F,
+    PIXELFORMAT_RGBA16F,
     TEXTURETYPE_DEFAULT
 } from '../platform/graphics/constants.js';
 
@@ -60,7 +60,7 @@ class AreaLightLuts {
 
     // placeholder LUT textures for area light
     static createPlaceholder(device) {
-        const texture = AreaLightLuts.createTexture(device, device.areaLightLutFormat, 2, 'placeholder');
+        const texture = AreaLightLuts.createTexture(device, PIXELFORMAT_RGBA16F, 2, 'placeholder');
 
         const pixels = texture.lock();
         pixels.fill(0);
@@ -81,17 +81,6 @@ class AreaLightLuts {
             return texture;
         }
 
-        function offsetScale(data, offset, scale) {
-
-            const count = data.length;
-            const ret = new Float32Array(count);
-            for (let i = 0; i < count; i++) {
-                const n = i % 4;
-                ret[i] = (data[i] + offset[n]) * scale[n];
-            }
-            return ret;
-        }
-
         function convertToHalfFloat(data) {
 
             const count = data.length;
@@ -104,52 +93,16 @@ class AreaLightLuts {
             return ret;
         }
 
-        function convertToUint(data) {
-
-            const count = data.length;
-            const ret = new Uint8ClampedArray(count);
-            for (let i = 0; i < count; i++) {
-                ret[i] = data[i] * 255;
-            }
-
-            return ret;
-        }
-
         const srcData1 = ltcMat1;
         const srcData2 = ltcMat2;
 
-        // pick format for lut texture
-        let data1, data2;
-        const format = device.areaLightLutFormat;
-        if (format === PIXELFORMAT_RGBA32F) {
-
-            // float
-            data1 = srcData1;
-            data2 = srcData2;
-
-        } else if (format === PIXELFORMAT_RGBA16F) {
-
-            // half float
-            data1 = convertToHalfFloat(srcData1);
-            data2 = convertToHalfFloat(srcData2);
-
-        } else {
-
-            // low precision format
-            // offset and scale to avoid clipping and increase precision - this is undone in the shader
-            const o1 = [0.0, 0.2976, 0.01381, 0.0];
-            const s1 = [0.999, 3.08737, 1.6546, 0.603249];
-
-            const o2 = [-0.306897, 0.0, 0.0, 0.0];
-            const s2 = [1.442787, 1.0, 1.0, 1.0];
-
-            data1 = convertToUint(offsetScale(srcData1, o1, s1));
-            data2 = convertToUint(offsetScale(srcData2, o2, s2));
-        }
+        // convert data to half format
+        const data1 = convertToHalfFloat(srcData1);
+        const data2 = convertToHalfFloat(srcData2);
 
         // create lut textures
-        const tex1 = buildTexture(device, data1, format);
-        const tex2 = buildTexture(device, data2, format);
+        const tex1 = buildTexture(device, data1, PIXELFORMAT_RGBA16F);
+        const tex2 = buildTexture(device, data2, PIXELFORMAT_RGBA16F);
 
         // assign to uniforms
         AreaLightLuts.applyTextures(device, tex1, tex2);

@@ -112,9 +112,9 @@ function getEngineTargets() {
         targets.push(...buildTarget({
             moduleFormat: 'esm',
             buildType: 'release',
+            bundleState: 'unbundled',
             input: '../src/index.js',
-            dir: 'dist/iframe',
-            skipBundled: true
+            dir: 'dist/iframe'
         }));
     }
     if (NODE_ENV === 'production' || NODE_ENV === 'development') {
@@ -122,9 +122,9 @@ function getEngineTargets() {
         targets.push(...buildTarget({
             moduleFormat: 'esm',
             buildType: 'debug',
+            bundleState: 'unbundled',
             input: '../src/index.js',
-            dir: 'dist/iframe',
-            skipBundled: true
+            dir: 'dist/iframe'
         }));
     }
     if (NODE_ENV === 'production' || NODE_ENV === 'profiler') {
@@ -132,9 +132,9 @@ function getEngineTargets() {
         targets.push(...buildTarget({
             moduleFormat: 'esm',
             buildType: 'profiler',
+            bundleState: 'unbundled',
             input: '../src/index.js',
-            dir: 'dist/iframe',
-            skipBundled: true
+            dir: 'dist/iframe'
         }));
     }
     return targets;
