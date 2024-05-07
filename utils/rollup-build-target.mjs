@@ -225,9 +225,7 @@ function buildTarget({ moduleFormat, buildType, bundleState, input = 'src/index.
             preserveModules: !bundled,
             file: bundled ? `${dir}/${OUT_PREFIX[buildType]}${isUMD ? '.js' : '.mjs'}` : undefined,
             dir: !bundled ? `${dir}/${OUT_PREFIX[buildType]}` : undefined,
-            entryFileNames: (chunkInfo) => {
-                return `${chunkInfo.name.replace(/node_modules/g, 'modules')}.js`;
-            }
+            entryFileNames: chunkInfo => `${chunkInfo.name.replace(/node_modules/g, 'modules')}.js`
         },
         plugins: [
             resolve(),
