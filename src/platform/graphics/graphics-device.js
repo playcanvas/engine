@@ -273,14 +273,6 @@ class GraphicsDevice extends EventHandler {
     textureFloatFilterable = false;
 
     /**
-     * True if filtering can be applied when sampling 16-bit float textures.
-     *
-     * @type {boolean}
-     * @readonly
-     */
-    textureHalfFloatFilterable = false;
-
-    /**
      * A vertex buffer representing a quad.
      *
      * @type {VertexBuffer}
@@ -886,7 +878,7 @@ class GraphicsDevice extends EventHandler {
                 }
 
                 case PIXELFORMAT_RGBA16F:
-                    if (this.textureHalfFloatRenderable && (!filterable || this.textureHalfFloatFilterable)) {
+                    if (this.textureHalfFloatRenderable) {
                         return format;
                     }
                     break;

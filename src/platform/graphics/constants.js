@@ -152,7 +152,7 @@ export const BLENDEQUATION_SUBTRACT = 1;
 export const BLENDEQUATION_REVERSE_SUBTRACT = 2;
 
 /**
- * Use the smallest value. Check app.graphicsDevice.extBlendMinmax for support.
+ * Use the smallest value.
  *
  * @type {number}
  * @category Graphics
@@ -160,7 +160,7 @@ export const BLENDEQUATION_REVERSE_SUBTRACT = 2;
 export const BLENDEQUATION_MIN = 3;
 
 /**
- * Use the largest value. Check app.graphicsDevice.extBlendMinmax for support.
+ * Use the largest value.
  *
  * @type {number}
  * @category Graphics

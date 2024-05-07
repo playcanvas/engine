@@ -3,7 +3,7 @@ import { Debug, DebugHelper } from '../../../core/debug.js';
 import { path } from '../../../core/path.js';
 
 import {
-    PIXELFORMAT_RGBA32F, PIXELFORMAT_RGBA8, PIXELFORMAT_BGRA8, DEVICETYPE_WEBGPU,
+    PIXELFORMAT_RGBA8, PIXELFORMAT_BGRA8, DEVICETYPE_WEBGPU,
     BUFFERUSAGE_READ, BUFFERUSAGE_COPY_DST, semanticToLocation
 } from '../constants.js';
 import { GraphicsDevice } from '../graphics-device.js';
@@ -146,12 +146,8 @@ class WebgpuGraphicsDevice extends GraphicsDevice {
         this.supportsGpuParticles = true;
         this.supportsCompute = true;
         this.textureFloatRenderable = true;
-        this.textureHalfFloatFilterable = true;
-        this.extTextureHalfFloat = true;
         this.textureHalfFloatRenderable = true;
         this.supportsImageBitmap = true;
-        this.extBlendMinmax = true;
-        this.areaLightLutFormat = this.textureFloatFilterable ? PIXELFORMAT_RGBA32F : PIXELFORMAT_RGBA8;
         this.supportsTextureFetch = true;
 
         // WebGPU currently only supports 1 and 4 samples
