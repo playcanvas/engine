@@ -1,4 +1,4 @@
-// @config WEBGPU_REQUIRED
+// @config WEBGL_DISABLED
 // @config HIDDEN
 import * as pc from 'playcanvas';
 import files from '@examples/files';

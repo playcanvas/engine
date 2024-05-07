@@ -72,7 +72,7 @@ Examples can also contains comments which allow you to define the default config
 // @config NO_CANVAS
 // @config NO_MINISTATS
 // @config WEBGPU_DISABLED
-// @config WEBGPU_REQUIRED
+// @config WEBGL_DISABLED
 import * as pc from 'playcanvas';
 ...
 ```

@@ -12,7 +12,7 @@
  * @property {boolean} [NO_CANVAS] - No canvas element.
  * @property {boolean} [NO_MINISTATS] - No ministats.
  * @property {boolean} [WEBGPU_DISABLED] - If webgpu is disabled.
- * @property {boolean} [WEBGPU_REQUIRED] - If webgpu is required (overrides {@link WEBGPU_DISABLED} ).
+ * @property {boolean} [WEBGL_DISABLED] - If webgl is disabled.
  */
 
 /**

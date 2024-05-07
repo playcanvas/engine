@@ -85,7 +85,7 @@ function isLinuxChrome() {
  * @returns {string} - The device type.
  */
 function getDeviceType() {
-    if (config.WEBGPU_REQUIRED) {
+    if (config.WEBGL_DISABLED) {
         if (isLinuxChrome()) {
             return 'webgl2';
         }
