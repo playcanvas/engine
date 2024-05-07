@@ -36,7 +36,7 @@ const BUNDLE_STATES = ['unbundled', 'bundled'];
  * @type {RollupOptions[]}
  */
 const TYPES_TARGET = [{
-    input: 'build/playcanvas/index.d.ts',
+    input: 'build/playcanvas/src/index.d.ts',
     output: [{
         file: 'build/playcanvas.d.ts',
         footer: 'export as namespace pc;\nexport as namespace pcx;',
