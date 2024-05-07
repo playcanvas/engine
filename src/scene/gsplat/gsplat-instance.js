@@ -1,6 +1,6 @@
 import { Mat4 } from '../../core/math/mat4.js';
 import { Vec3 } from '../../core/math/vec3.js';
-import { BUFFER_DYNAMIC, BUFFER_STATIC, PIXELFORMAT_R32U, PIXELFORMAT_RGBA16F, PIXELFORMAT_RGBA32F, SEMANTIC_ATTR13, SEMANTIC_COLOR, SEMANTIC_POSITION, TYPE_UINT32 } from '../../platform/graphics/constants.js';
+import { BUFFER_DYNAMIC, BUFFER_STATIC, PIXELFORMAT_R32U, PIXELFORMAT_RGBA8, PIXELFORMAT_RGBA16F, PIXELFORMAT_RGBA32F, SEMANTIC_ATTR13, SEMANTIC_COLOR, SEMANTIC_POSITION, TYPE_UINT32 } from '../../platform/graphics/constants.js';
 import { DITHER_NONE } from '../constants.js';
 import { MeshInstance } from '../mesh-instance.js';
 import { Mesh } from '../mesh.js';
@@ -24,19 +24,18 @@ void main(void) {
 // fragment shader
 const v1v2FS = /* glsl */`
 
+uniform sampler2D splatColor;
+uniform highp usampler2D splatOrder;
 uniform highp sampler2D transformA;
 uniform highp sampler2D transformB;
 uniform highp sampler2D transformC;
 
-// read splat center and covariance from textures
-void readTransform(vec2 splatUV, out vec3 center, out vec3 covA, out vec3 covB) {
-    vec4 tA = texture2D(transformA, splatUV);
-    vec4 tB = texture2D(transformB, splatUV);
-    vec4 tC = texture2D(transformC, splatUV);
-
-    center = tA.xyz;
-    covA = tB.xyz;
-    covB = vec3(tA.w, tB.w, tC.x);
+ivec2 calcUV(vec2 bufferSize) {
+    ivec2 uv = ivec2(int(gl_FragCoord.x), int(gl_FragCoord.y));
+    uint index = texelFetch(splatOrder, uv, 0).r;
+    int U = int(index) % int(bufferSize.x);
+    int V = int(index) / int(bufferSize.x);
+    return ivec2(U, V);
 }
 
 // given the splat center (view space) and covariance A and B vectors, calculate
@@ -82,24 +81,42 @@ uniform vec2 bufferSize;
 
 void main(void) {
     // calculate splat UV
-    vec2 splatUV = gl_FragCoord.xy / bufferSize;
+    ivec2 splatUV = calcUV(bufferSize);
 
     // read splat center and covariance
-    vec3 center, covA, covB;
-    readTransform(splatUV, center, covA, covB);
+    vec4 tA = texelFetch(transformA, splatUV, 0);
 
+    vec3 center = tA.xyz;
     mat4 modelView = matrix_view * matrix_model;
+    vec4 centerView = modelView * vec4(center, 1.0);
+    vec4 centerProj = matrix_projection * centerView;
 
-    float focal = viewport.x * matrix_projection[0][0];
+    if (centerProj.x < -centerProj.w || centerProj.x > centerProj.w ||
+        centerProj.y < -centerProj.w || centerProj.y > centerProj.w ||
+        centerProj.z < 0.0 || centerProj.z > centerProj.w) {
+        pcFragColor0 = vec4(0.0, 0.0, 0.0, 0.0);
+        pcFragColor1 = vec4(0.0, 0.0, 0.0, 0.0);
+        pcFragColor2 = vec4(0.0, 0.0, 0.0, 0.0);
+    } else {
+        vec4 tB = texelFetch(transformB, splatUV, 0);
+        vec4 tC = texelFetch(transformC, splatUV, 0);
+        vec3 covA = tB.xyz;
+        vec3 covB = vec3(tA.w, tB.w, tC.x);
 
-    // calcV1V2
-    gl_FragColor = calcV1V2(
-        (modelView * vec4(center, 1.0)).xyz,
-        covA,
-        covB,
-        focal,
-        transpose(mat3(modelView))
-    );
+        float focal = viewport.x * matrix_projection[0][0];
+
+        // calcV1V2
+        pcFragColor0 = calcV1V2(
+            centerView.xyz,
+            covA,
+            covB,
+            focal,
+            transpose(mat3(modelView))
+        );
+
+        pcFragColor1 = centerProj;
+        pcFragColor2 = texelFetch(splatColor, splatUV, 0);
+    }
 }
 `;
 
@@ -134,6 +151,9 @@ class GSplatInstance {
     v1v2Texture;
     v1v2RenderTarget;
     v1v2Shader;
+
+    centerTexture;
+    colorTexture;
 
     /** @type {GSplatSorter | null} */
     sorter = null;
@@ -176,9 +196,21 @@ class GSplatInstance {
             this.splat.evalTextureSize(this.splat.numSplats)
         );
 
+        this.centerTexture = this.splat.createTexture(
+            'centerTexture',
+            device.textureHalfFloatRenderable ? PIXELFORMAT_RGBA16F : PIXELFORMAT_RGBA32F,
+            this.splat.evalTextureSize(this.splat.numSplats)
+        );
+
+        this.colorTexture = this.splat.createTexture(
+            'colorTexture',
+            PIXELFORMAT_RGBA8,
+            this.splat.evalTextureSize(this.splat.numSplats)
+        );
+
         this.v1v2RenderTarget = new RenderTarget({
             name: 'splatV1V2RenderTarget',
-            colorBuffer: this.v1v2Texture,
+            colorBuffers: [this.v1v2Texture, this.centerTexture, this.colorTexture],
             depth: false
         });
 
@@ -271,8 +303,10 @@ class GSplatInstance {
 
     createMaterial(options) {
         this.material = createGSplatMaterial(options);
-        this.material.setParameter('splatOrder', this.orderTexture);
-        this.material.setParameter('v1v2Texture', this.v1v2Texture);
+        // this.material.setParameter('splatOrder', this.orderTexture);
+        this.material.setParameter('v1v2Texture', this.v1v2Texture)
+        this.material.setParameter('splatCenterOrdered', this.centerTexture);
+        this.material.setParameter('splatColorOrdered', this.colorTexture);
         this.splat.setupMaterial(this.material);
         if (this.meshInstance) {
             this.meshInstance.material = this.material;
@@ -331,6 +365,8 @@ class GSplatInstance {
         const device = this.splat.device;
         const scope = device.scope;
 
+        scope.resolve('splatColor').setValue(this.splat.colorTexture);
+        scope.resolve('splatOrder').setValue(this.orderTexture);
         scope.resolve('transformA').setValue(this.splat.transformATexture);
         scope.resolve('transformB').setValue(this.splat.transformBTexture);
         scope.resolve('transformC').setValue(this.splat.transformCTexture);
@@ -346,7 +382,6 @@ class GSplatInstance {
         scope.resolve('matrix_projection').setValue(camera.projectionMatrix.data);
         scope.resolve('viewport').setValue([device.width, device.height]);
         scope.resolve('bufferSize').setValue([this.v1v2Texture.width, this.v1v2Texture.height]);
-        scope.resolve('tex_params').setValue([this.splat.numSplats, this.splat.numSplats, 1 / this.splat.numSplats, 1 / this.splat.numSplats]);
 
         drawQuadWithShader(device, this.v1v2RenderTarget, this.v1v2Shader);
     }

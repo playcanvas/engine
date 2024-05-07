@@ -63,6 +63,8 @@ class GSplat {
         // create data textures if any format is available
         this.halfFormat = this.getTextureFormat(true);
 
+        this.halfFormat = true;
+
         if (this.halfFormat !== undefined) {
             const size = this.evalTextureSize(numSplats);
             this.colorTexture = this.createTexture('splatColor', PIXELFORMAT_RGBA8, size);

@@ -26,28 +26,18 @@ varying float id;
 #endif
 
 uniform vec4 tex_params;
-uniform highp usampler2D splatOrder;
 uniform highp sampler2D v1v2Texture;
-uniform highp sampler2D transformA;
-uniform sampler2D splatColor;
+uniform highp sampler2D splatCenterOrdered;
+uniform sampler2D splatColorOrdered;
 
 void getSplatUV(out uint splatId, out ivec2 splatUV) {
+    splatId = vertex_id_attrib + uint(vertex_position.z);
 
-    // turn vertex_id into int grid coordinates
-    ivec2 textureSize = ivec2(tex_params.xy);
-    vec2 invTextureSize = tex_params.zw;
-
-    // index
-    uint index = vertex_id_attrib + uint(vertex_position.z);
-
-    // order
-    int orderV = int(float(index) * invTextureSize.x);
-    int orderU = int(index) - orderV * textureSize.x;
-    splatId = texelFetch(splatOrder, ivec2(orderU, orderV), 0).r;
-
-    int gridV = int(float(splatId) * invTextureSize.x);
-    int gridU = int(splatId) - gridV * textureSize.x;
-    splatUV = ivec2(gridU, gridV);
+    int id = int(splatId);
+    splatUV = ivec2(
+        id % int(tex_params.x),
+        id / int(tex_params.x)
+    );
 }
 
 void splatMain() {
@@ -65,13 +55,15 @@ void splatMain() {
         return;
     }
 
-    vec3 center = texelFetch(transformA, splatUV, 0).xyz;
-    vec4 centerProj = matrix_projection * matrix_view * matrix_model * vec4(center, 1.0);
+    vec4 centerProj = texelFetch(splatCenterOrdered, splatUV, 0);
+
+    // vec3 center = texelFetch(transformA, splatUV, 0).xyz;
+    // vec4 centerProj = matrix_projection * matrix_view * matrix_model * vec4(center, 1.0);
 
     texCoord = vertex_position.xy;
     centerProj.xy += (texCoord.x * v1v2.xy + texCoord.y * v1v2.zw) / viewport * centerProj.w;
     gl_Position = centerProj;
-    color = texelFetch(splatColor, splatUV, 0);
+    color = texelFetch(splatColorOrdered, splatUV, 0);
 
 #ifndef DITHER_NONE
     id = float(splatId);
