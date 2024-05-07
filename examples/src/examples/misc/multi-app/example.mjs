@@ -1,3 +1,7 @@
+// @flag NO_CANVAS
+// @flag NO_MINISTATS
+// @flag NO_DEVICE_SELECTOR
+
 import * as pc from 'playcanvas';
 import { data } from '@examples/observer';
 import { rootPath } from '@examples/utils';

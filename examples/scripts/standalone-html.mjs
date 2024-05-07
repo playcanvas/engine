@@ -109,7 +109,7 @@ function patchScript(script) {
     return script;
 }
 
-async function main() {
+function main() {
     if (!fs.existsSync(`${MAIN_DIR}/dist/`)) {
         fs.mkdirSync(`${MAIN_DIR}/dist/`);
     }
@@ -117,7 +117,7 @@ async function main() {
         fs.mkdirSync(`${MAIN_DIR}/dist/iframe/`);
     }
 
-    await Promise.all(exampleMetaData.map(async (data) => {
+    exampleMetaData.forEach((data) => {
         const { categoryKebab, exampleNameKebab, path } = data;
         const name = `${categoryKebab}_${exampleNameKebab}`;
 
@@ -128,19 +128,19 @@ async function main() {
         if (!files.includes('controls.mjs')) {
             files.push('controls.mjs');
         }
-        if (!files.includes('config.mjs')) {
-            files.push('config.mjs');
-        }
 
-        await Promise.all(files.map(async (file) => {
+        files.forEach((file) => {
             if (file === 'example.mjs') {
                 const examplePath = resolve(path, file);
 
                 // example file
                 const script = fs.readFileSync(examplePath, 'utf-8');
-                const config = parseConfig(script);
-                console.log(config);
                 fs.writeFileSync(`${MAIN_DIR}/dist/iframe/${name}.example.mjs`, patchScript(script));
+
+                // html file
+                const config = parseConfig(script);
+                const out = generateExampleFile(categoryKebab, exampleNameKebab, config, files);
+                fs.writeFileSync(`${MAIN_DIR}/dist/iframe/${name}.html`, out);
                 return;
             }
 
@@ -154,42 +154,12 @@ async function main() {
                 return;
             }
 
-            if (file === 'config.mjs') {
-                const configPath = resolve(path, file);
-                const configExists = fs.existsSync(configPath);
-                const config = configExists ? (await import(`file://${configPath}`)).default : {};
-
-                const configFlags = Object.keys(config).map((key) => {
-                    if (typeof config[key] === 'string') {
-                        return `// @flag ${key} "${config[key]}"`;
-                    }
-                    return `// @flag ${key}`;
-                }).join('\n');
-                if (configFlags) {
-                    const examplePath = resolve(path, 'example.mjs');
-                    const contents = fs.readFileSync(examplePath, 'utf-8');
-                    fs.writeFileSync(examplePath, `${configFlags}\n${contents}`);
-                    fs.unlinkSync(configPath);
-                }
-                return;
-
-
-                // // html file
-                // const out = generateExampleFile(categoryKebab, exampleNameKebab, config, files);
-                // fs.writeFileSync(`${MAIN_DIR}/dist/iframe/${name}.html`, out);
-
-                // // config files
-                // const script = configExists ? fs.readFileSync(configPath, 'utf-8') : TEMPLATE_CONFIG;
-                // fs.writeFileSync(`${MAIN_DIR}/dist/iframe/${name}.config.mjs`, script);
-                // return;
-            }
-
             const scriptPath = resolve(path, file);
             const script = fs.readFileSync(scriptPath, 'utf-8');
             fs.writeFileSync(`${MAIN_DIR}/dist/iframe/${name}.${file}`, script);
-        }));
-    }));
+        });
+    });
 
     return 0;
 }
-main().then(process.exit);
+process.exit(main());

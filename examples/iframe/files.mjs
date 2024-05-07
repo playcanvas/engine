@@ -1,7 +1,6 @@
 const files = {
     'example.mjs': '',
-    'controls.mjs': '',
-    'config.mjs': ''
+    'controls.mjs': ''
 };
 
 export default files;
