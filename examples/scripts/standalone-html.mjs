@@ -24,11 +24,11 @@ export function controls({ fragment }) {
 /**
  * @param {string} categoryKebab - The category kebab name.
  * @param {string} exampleNameKebab - The example kebab name.
- * @param {import('./utils.mjs').ExampleConfig} config - The example config.
+ * @param {import('./utils.mjs').Engine | undefined} setEngineType - The engine type.
  * @param {string[]} files - The files in the example directory.
  * @returns {string} File to write as standalone example.
  */
-function generateExampleFile(categoryKebab, exampleNameKebab, config, files) {
+function generateExampleFile(categoryKebab, exampleNameKebab, setEngineType, files) {
     let html = EXAMPLE_HTML;
 
     // title
@@ -38,7 +38,7 @@ function generateExampleFile(categoryKebab, exampleNameKebab, config, files) {
     html = html.replace(/'@FILES'/g, JSON.stringify(files));
 
     // engine
-    const engineType = process.env.ENGINE_PATH ? 'development' : process.env.NODE_ENV === 'development' ? 'debug' : config.ENGINE;
+    const engineType = process.env.ENGINE_PATH ? 'development' : process.env.NODE_ENV === 'development' ? 'debug' : setEngineType;
     const engine = engineFor(engineType);
     html = html.replace(/'@ENGINE'/g, JSON.stringify(engine));
 
@@ -79,7 +79,7 @@ function main() {
 
                 // html file
                 const config = parseConfig(script);
-                const out = generateExampleFile(categoryKebab, exampleNameKebab, config, files);
+                const out = generateExampleFile(categoryKebab, exampleNameKebab, config.ENGINE, files);
                 fs.writeFileSync(`${MAIN_DIR}/dist/iframe/${name}.html`, out);
                 return;
             }
