@@ -1,4 +1,3 @@
-import config from '@examples/config';
 import { updateDeviceType, fetchFile, localImport, clearImports, fire } from '@examples/utils';
 import { data, refresh } from '@examples/observer';
 import files from '@examples/files';
@@ -6,6 +5,12 @@ import files from '@examples/files';
 import MiniStats from './ministats.mjs';
 
 class ExampleLoader {
+    /**
+     * @type {Record<string, any>}
+     * @private
+     */
+    _config;
+
     /**
      * @type {import('playcanvas').AppBase}
      * @private
@@ -48,7 +53,7 @@ class ExampleLoader {
             // Sets code editor component files
             // Sets example component files (for controls + description)
             // Sets mini stats enabled state based on UI
-            fire('exampleLoad', { observer: data, files, description: config.DESCRIPTION || '' });
+            fire('exampleLoad', { observer: data, files, description: this._config.DESCRIPTION || '' });
         }
         this._started = true;
 
@@ -61,6 +66,23 @@ class ExampleLoader {
         }
 
         this._allowRestart = true;
+    }
+
+    /**
+     * @param {string} script - The script to parse.
+     * @returns {Record<string, any>} - The parsed config.
+     */
+    _parseConfig(script) {
+        const regex = /\/\/ @config ([^ \n]+) ?([^\n]+)?/g;
+        let match;
+        /** @type {Record<string, any>} */
+        const config = {};
+        while ((match = regex.exec(script)) !== null) {
+            const key = match[1];
+            const val = match[2];
+            config[key] = /true|false/g.test(val) ? val === 'true' : val ?? true;
+        }
+        return config;
     }
 
     /**
@@ -124,17 +146,20 @@ class ExampleLoader {
         // refresh observer instance
         refresh();
 
+        // parse config
+        this._config = this._parseConfig(files['example.mjs']);
+
+        // update device type
+        updateDeviceType(this._config);
+
         if (!this._started) {
             // just notify to clean UI, but not during hot-reload
-            fire('exampleLoading', { showDeviceSelector: !config.NO_DEVICE_SELECTOR });
+            fire('exampleLoading', { showDeviceSelector: !this._config.NO_DEVICE_SELECTOR });
         }
 
         clearImports();
 
         try {
-            // update device type
-            updateDeviceType(config);
-
             // import local file
             const module = await localImport('example.mjs');
             this._app = module.app;
@@ -180,7 +205,7 @@ class ExampleLoader {
      * @param {boolean} enabled - The enabled state of ministats
      */
     setMiniStats(enabled = false) {
-        if (config.NO_MINISTATS) {
+        if (this._config.NO_MINISTATS) {
             return;
         }
         MiniStats.enable(this._app, enabled);

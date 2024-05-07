@@ -48,8 +48,6 @@ function generateExampleFile(categoryKebab, exampleNameKebab, config, files) {
     html = html.replace(/'@CANVAS'/g, config.NO_CANVAS ? '' : '<canvas id="application-canvas"></canvas>');
 
     // js files
-    const name = `${categoryKebab}_${exampleNameKebab}`;
-    html = html.replace(/'@CONFIG'/g, JSON.stringify(`./${name}.config.mjs`));
     html = html.replace(/'@FILES'/g, JSON.stringify(files));
 
     // engine
@@ -92,11 +90,8 @@ function main() {
                 const script = fs.readFileSync(examplePath, 'utf-8');
                 fs.writeFileSync(`${MAIN_DIR}/dist/iframe/${name}.example.mjs`, patchScript(script));
 
-                // config file
-                const config = parseConfig(script);
-                fs.writeFileSync(`${MAIN_DIR}/dist/iframe/${name}.config.mjs`, jsonToModule(config));
-
                 // html file
+                const config = parseConfig(script);
                 const out = generateExampleFile(categoryKebab, exampleNameKebab, config, files);
                 fs.writeFileSync(`${MAIN_DIR}/dist/iframe/${name}.html`, out);
                 return;
