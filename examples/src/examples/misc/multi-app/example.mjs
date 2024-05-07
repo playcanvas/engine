@@ -1,6 +1,7 @@
 // @config NO_CANVAS
 // @config NO_MINISTATS
 // @config NO_DEVICE_SELECTOR
+// @config WEBGPU_DISABLED
 import * as pc from 'playcanvas';
 import { data } from '@examples/observer';
 import { rootPath } from '@examples/utils';

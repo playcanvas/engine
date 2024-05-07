@@ -1,4 +1,3 @@
-// @config WEBGPU_ENABLED
 // @config INCLUDE_AR_LINK
 import * as pc from 'playcanvas';
 import { data } from '@examples/observer';

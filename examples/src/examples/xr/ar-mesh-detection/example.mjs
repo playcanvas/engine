@@ -1,3 +1,4 @@
+// @config WEBGPU_DISABLED
 import * as pc from 'playcanvas';
 import { rootPath } from '@examples/utils';
 

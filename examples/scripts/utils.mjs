@@ -11,8 +11,8 @@
  * @property {boolean} [NO_DEVICE_SELECTOR] - No device selector.
  * @property {boolean} [NO_CANVAS] - No canvas element.
  * @property {boolean} [NO_MINISTATS] - No ministats.
- * @property {boolean} [WEBGPU_ENABLED] - If webGPU is enabled.
- * @property {boolean} [WEBGPU_REQUIRED] - If webGPU is required (overrides {@link WEBGPU_ENABLED} ).
+ * @property {boolean} [WEBGPU_DISABLED] - If webgpu is disabled.
+ * @property {boolean} [WEBGPU_REQUIRED] - If webgpu is required (overrides {@link WEBGPU_DISABLED} ).
  */
 
 /**

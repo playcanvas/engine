@@ -1,5 +1,6 @@
 // @config ENGINE performance
 // @config NO_MINISTATS
+// @config WEBGPU_DISABLED
 import * as pc from 'playcanvas';
 import { deviceType, rootPath } from '@examples/utils';
 

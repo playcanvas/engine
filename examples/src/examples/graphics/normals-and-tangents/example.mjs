@@ -1,5 +1,4 @@
 // @config HIDDEN
-// @config WEBGPU_ENABLED
 import * as pc from 'playcanvas';
 import { deviceType, rootPath } from '@examples/utils';
 
