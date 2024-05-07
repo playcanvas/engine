@@ -84,12 +84,27 @@ function generateExampleFile(categoryKebab, exampleNameKebab, config, files) {
 }
 
 /**
+ * @param {string} script - The script to parse.
+ * @returns {import('../types.mjs').ExampleConfig} - The parsed config.
+ */
+function parseConfig(script) {
+    const regex = /\/\/ @flag ([^ \n]+) ?([^\n]+)?/g;
+    let match;
+    /** @type {Record<string, any>} */
+    const config = {};
+    while ((match = regex.exec(script)) !== null) {
+        config[match[1]] = match[2] ?? true;
+    }
+    return config;
+}
+
+/**
  * @param {string} script - The script to be patched.
  * @returns {string} - The patched script.
  */
 function patchScript(script) {
     // remove playcanvas imports
-    script = script.replace(/\s*import[\s\w*{},]+["']playcanvas["']\s*;?[\s\r\n]*/g, '');
+    script = script.replace(/ *import[\s\w*{},]+["']playcanvas["'] *;?[\s\r\n]*/g, '');
 
     return script;
 }
@@ -123,6 +138,8 @@ async function main() {
 
                 // example file
                 const script = fs.readFileSync(examplePath, 'utf-8');
+                const config = parseConfig(script);
+                console.log(config);
                 fs.writeFileSync(`${MAIN_DIR}/dist/iframe/${name}.example.mjs`, patchScript(script));
                 return;
             }
@@ -142,14 +159,29 @@ async function main() {
                 const configExists = fs.existsSync(configPath);
                 const config = configExists ? (await import(`file://${configPath}`)).default : {};
 
-                // html file
-                const out = generateExampleFile(categoryKebab, exampleNameKebab, config, files);
-                fs.writeFileSync(`${MAIN_DIR}/dist/iframe/${name}.html`, out);
-
-                // config files
-                const script = configExists ? fs.readFileSync(configPath, 'utf-8') : TEMPLATE_CONFIG;
-                fs.writeFileSync(`${MAIN_DIR}/dist/iframe/${name}.config.mjs`, script);
+                const configFlags = Object.keys(config).map((key) => {
+                    if (typeof config[key] === 'string') {
+                        return `// @flag ${key} "${config[key]}"`;
+                    }
+                    return `// @flag ${key}`;
+                }).join('\n');
+                if (configFlags) {
+                    const examplePath = resolve(path, 'example.mjs');
+                    const contents = fs.readFileSync(examplePath, 'utf-8');
+                    fs.writeFileSync(examplePath, `${configFlags}\n${contents}`);
+                    fs.unlinkSync(configPath);
+                }
                 return;
+
+
+                // // html file
+                // const out = generateExampleFile(categoryKebab, exampleNameKebab, config, files);
+                // fs.writeFileSync(`${MAIN_DIR}/dist/iframe/${name}.html`, out);
+
+                // // config files
+                // const script = configExists ? fs.readFileSync(configPath, 'utf-8') : TEMPLATE_CONFIG;
+                // fs.writeFileSync(`${MAIN_DIR}/dist/iframe/${name}.config.mjs`, script);
+                // return;
             }
 
             const scriptPath = resolve(path, file);
