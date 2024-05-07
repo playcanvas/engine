@@ -3,6 +3,7 @@ import { dirname, resolve } from 'path';
 import { fileURLToPath } from 'url';
 
 import { toKebabCase } from '../src/app/strings.mjs';
+import { parseConfig } from './utils.mjs';
 
 // @ts-ignore
 const __filename = fileURLToPath(import.meta.url);
@@ -40,28 +41,25 @@ function getDirFiles(path) {
     return fs.readdirSync(path);
 }
 
-async function main() {
+function main() {
     const rootPath = `${MAIN_DIR}/src/examples`;
     const categories = getDirFiles(rootPath);
 
-    await Promise.all(categories.map(async (category) => {
+    categories.forEach((category) => {
         const categoryPath = resolve(`${rootPath}/${category}`);
         const examplesFiles = getDirFiles(categoryPath);
 
         const categoryKebab = toKebabCase(category);
 
-        await Promise.all(examplesFiles.map(async (exampleFile) => {
+        examplesFiles.forEach((exampleFile) => {
             const path = resolve(`${categoryPath}/${exampleFile}`);
             const exampleName = exampleFile.split('.').shift() ?? '';
             const exampleNameKebab = toKebabCase(exampleName);
 
-            const configPath = resolve(path, 'config.mjs');
-            if (fs.existsSync(configPath)) {
-                const config = (await import(`file://${configPath}`)).default;
-                if (config.HIDDEN && process.env.NODE_ENV !== 'development') {
-                    console.info(`skipping hidden ${categoryKebab}/${exampleNameKebab}`);
-                    return;
-                }
+            const config = parseConfig(fs.readFileSync(resolve(path, 'example.mjs'), 'utf-8'));
+            if (config.HIDDEN && process.env.NODE_ENV !== 'development') {
+                console.info(`skipping hidden ${categoryKebab}/${exampleNameKebab}`);
+                return;
             }
 
             exampleMetaData.push({
@@ -69,15 +67,13 @@ async function main() {
                 categoryKebab,
                 exampleNameKebab
             });
-        }));
-    }));
+        });
+    });
 
     if (!fs.existsSync(`${MAIN_DIR}/cache`)) {
         fs.mkdirSync(`${MAIN_DIR}/cache`);
     }
 
     fs.writeFileSync(`${MAIN_DIR}/cache/metadata.mjs`, `export const exampleMetaData = ${stringify(exampleMetaData)};\n`);
-
-    return 0;
 }
-main().then(process.exit);
+main();

@@ -6,13 +6,13 @@ import { dirname, resolve } from 'path';
 import { fileURLToPath } from 'url';
 
 import { exampleMetaData } from '../cache/metadata.mjs';
+import { parseConfig, engineFor, patchScript } from './utils.mjs';
 
 // @ts-ignore
 const __filename = fileURLToPath(import.meta.url);
 const MAIN_DIR = `${dirname(__filename)}/../`;
 const EXAMPLE_HTML = fs.readFileSync(`${MAIN_DIR}/iframe/example.html`, 'utf-8');
 
-const TEMPLATE_CONFIG = `export default {};\n`;
 const TEMPLATE_CONTROLS = `/**
  * @param {import('../../../app/components/Example.mjs').ControlOptions} options - The options.
  * @returns {JSX.Element} The returned JSX Element.
@@ -22,28 +22,9 @@ export function controls({ fragment }) {
 }\n`;
 
 /**
- * Choose engine based on `Example#ENGINE`, e.g. ClusteredLightingExample picks:
- * static ENGINE = 'PERFORMANCE';
- *
- * @param {string | undefined} type - The engine type.
- * @returns {string} - The build file.
- */
-function engineFor(type) {
-    switch (type) {
-        case 'DEVELOPMENT':
-            return './ENGINE_PATH/index.js';
-        case 'PERFORMANCE':
-            return './playcanvas.prf/src/index.js';
-        case 'DEBUG':
-            return './playcanvas.dbg/src/index.js';
-    }
-    return './playcanvas/src/index.js';
-}
-
-/**
  * @param {string} categoryKebab - The category kebab name.
  * @param {string} exampleNameKebab - The example kebab name.
- * @param {import('../types.mjs').ExampleConfig} config - The example config.
+ * @param {import('./utils.mjs').ExampleConfig} config - The example config.
  * @param {string[]} files - The files in the example directory.
  * @returns {string} File to write as standalone example.
  */
@@ -81,32 +62,6 @@ function generateExampleFile(categoryKebab, exampleNameKebab, config, files) {
     }
 
     return html;
-}
-
-/**
- * @param {string} script - The script to parse.
- * @returns {import('../types.mjs').ExampleConfig} - The parsed config.
- */
-function parseConfig(script) {
-    const regex = /\/\/ @flag ([^ \n]+) ?([^\n]+)?/g;
-    let match;
-    /** @type {Record<string, any>} */
-    const config = {};
-    while ((match = regex.exec(script)) !== null) {
-        config[match[1]] = match[2] ?? true;
-    }
-    return config;
-}
-
-/**
- * @param {string} script - The script to be patched.
- * @returns {string} - The patched script.
- */
-function patchScript(script) {
-    // remove playcanvas imports
-    script = script.replace(/ *import[\s\w*{},]+["']playcanvas["'] *;?[\s\r\n]*/g, '');
-
-    return script;
 }
 
 function main() {
@@ -159,7 +114,5 @@ function main() {
             fs.writeFileSync(`${MAIN_DIR}/dist/iframe/${name}.${file}`, script);
         });
     });
-
-    return 0;
 }
-process.exit(main());
+main();
