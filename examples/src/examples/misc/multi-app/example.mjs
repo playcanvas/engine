@@ -1,4 +1,3 @@
-// @config NO_CANVAS
 // @config NO_MINISTATS
 // @config NO_DEVICE_SELECTOR
 // @config WEBGPU_DISABLED
@@ -130,6 +129,12 @@ const apps = {
     webgl2: [],
     null: []
 };
+
+// Remove existing canvas
+const existingCanvas = document.getElementById('application-canvas');
+if (existingCanvas) {
+    existingCanvas.remove();
+}
 
 // Add event listers for adding and removing apps
 for (const deviceType in apps) {

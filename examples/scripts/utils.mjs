@@ -9,7 +9,6 @@
  * @property {Engine} [ENGINE] - The engine type.
  * @property {boolean} [INCLUDE_AR_LINK] - Include AR link png.
  * @property {boolean} [NO_DEVICE_SELECTOR] - No device selector.
- * @property {boolean} [NO_CANVAS] - No canvas element.
  * @property {boolean} [NO_MINISTATS] - No ministats.
  * @property {boolean} [WEBGPU_DISABLED] - If webgpu is disabled.
  * @property {boolean} [WEBGL_DISABLED] - If webgl is disabled.

@@ -44,9 +44,6 @@ function generateExampleFile(categoryKebab, exampleNameKebab, config, files) {
     </div>` : '';
     html = html.replace(/'@AR_LINK'/g, arLinkStr);
 
-    // canvas
-    html = html.replace(/'@CANVAS'/g, config.NO_CANVAS ? '' : '<canvas id="application-canvas"></canvas>');
-
     // js files
     html = html.replace(/'@FILES'/g, JSON.stringify(files));
 

@@ -69,7 +69,6 @@ Examples can also contains comments which allow you to define the default config
 // @config ENGINE performance
 // @config INCLUDE_AR_LINK
 // @config NO_DEVICE_SELECTOR
-// @config NO_CANVAS
 // @config NO_MINISTATS
 // @config WEBGPU_DISABLED
 // @config WEBGL_DISABLED
