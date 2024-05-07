@@ -1,3 +1,4 @@
+// @config DESCRIPTION <div style='text-align:center'><div>Translate (1), Rotate (2), Scale (3)</div><div>World/Local (X)</div><div>Perspective (P), Orthographic (O)</div></div>
 // @config WEBGPU_DISABLED
 import * as pc from 'playcanvas';
 import { data } from '@examples/observer';
@@ -235,29 +236,6 @@ function createColorMaterial(color) {
 
 // scene settings
 app.scene.ambientLight = new pc.Color(0.2, 0.2, 0.2);
-
-// create screen
-const screen = new pc.Entity('screen');
-screen.addComponent('screen', {
-    referenceResolution: new pc.Vec2(1280, 720),
-    scaleBlend: 0.5,
-    scaleMode: pc.SCALEMODE_BLEND,
-    screenSpace: true
-});
-app.root.addChild(screen);
-
-const instr = new pc.Entity('instructions');
-instr.setLocalPosition(0, 200, 0);
-instr.addComponent('element', {
-    pivot: new pc.Vec2(0.5, 0.5),
-    anchor: new pc.Vec4(0, 1, 1, 0.8),
-    margin: new pc.Vec4(0, 0, 0, 0),
-    fontAsset: assets.font.id,
-    fontSize: 18,
-    text: 'Translate (1), Rotate (2), Scale (3)\nWorld/Local (X)\nPerspective (P), Orthographic (O)',
-    type: pc.ELEMENTTYPE_TEXT
-});
-screen.addChild(instr);
 
 // create entities
 const box = new pc.Entity('box');
