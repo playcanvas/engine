@@ -81,40 +81,30 @@ function isLinuxChrome() {
     return navigator.platform.includes('Linux') && navigator.appVersion.includes("Chrome");
 }
 
+const DEVICE_TYPES = ['webgpu', 'webgl2'];
+
 /**
  * @returns {string} - The device type.
  */
 function getDeviceType() {
+    if (params.deviceType && DEVICE_TYPES.includes(params.deviceType)) {
+        console.warn("Overwriting default deviceType from URL: ", params.deviceType);
+        return params.deviceType;
+    }
+
+    if (config.WEBGPU_DISABLED) {
+        return 'webgl2';
+    }
     if (config.WEBGL_DISABLED) {
         if (isLinuxChrome()) {
+            console.warn('WebGPU chosen but browser is not supported, defaulting to WebGL2');
             return 'webgl2';
         }
         return 'webgpu';
     }
 
-    if (params.deviceType) {
-        console.warn("Overwriting default deviceType from URL");
-        return params.deviceType;
-    }
-
-    const savedDevice = localStorage.getItem('preferredGraphicsDevice');
-    if (config.WEBGPU_ENABLED) {
-        let preferredDevice = 'webgpu';
-        if (isLinuxChrome()) {
-            preferredDevice = 'webgl2';
-        }
-        return savedDevice || preferredDevice;
-    }
-
-    switch (savedDevice) {
-        case 'webgpu':
-            console.warn('Picked WebGPU but example is not supported on WebGPU, defaulting to WebGL2');
-            return 'webgl2';
-        case 'webgl2':
-            return savedDevice;
-        default:
-            return 'webgl2';
-    }
+    const savedDevice = localStorage.getItem('preferredGraphicsDevice') ?? 'webgl2';
+    return DEVICE_TYPES.includes(savedDevice) ? savedDevice : 'webgl2';
 }
 export const deviceType = getDeviceType();
 
