@@ -60,16 +60,14 @@ class GSplat {
         this.numSplats = numSplats;
         this.aabb = aabb;
 
-        // create data textures if any format is available
-        this.halfFormat = this.getTextureFormat(device, true);
+        // create data textures using full float precision
+        this.halfFormat = false;
 
-        if (this.halfFormat !== undefined) {
-            const size = this.evalTextureSize(numSplats);
-            this.colorTexture = this.createTexture(device, 'splatColor', PIXELFORMAT_RGBA8, size);
-            this.transformATexture = this.createTexture(device, 'transformA', this.halfFormat ? PIXELFORMAT_RGBA16F : PIXELFORMAT_RGBA32F, size);
-            this.transformBTexture = this.createTexture(device, 'transformB', this.halfFormat ? PIXELFORMAT_RGBA16F : PIXELFORMAT_RGBA32F, size);
-            this.transformCTexture = this.createTexture(device, 'transformC', this.halfFormat ? PIXELFORMAT_R16F : PIXELFORMAT_R32F, size);
-        }
+        const size = this.evalTextureSize(numSplats);
+        this.colorTexture = this.createTexture(device, 'splatColor', PIXELFORMAT_RGBA8, size);
+        this.transformATexture = this.createTexture(device, 'transformA', this.halfFormat ? PIXELFORMAT_RGBA16F : PIXELFORMAT_RGBA32F, size);
+        this.transformBTexture = this.createTexture(device, 'transformB', this.halfFormat ? PIXELFORMAT_RGBA16F : PIXELFORMAT_RGBA32F, size);
+        this.transformCTexture = this.createTexture(device, 'transformC', this.halfFormat ? PIXELFORMAT_R16F : PIXELFORMAT_R32F, size);
     }
 
     destroy() {
@@ -132,27 +130,6 @@ class GSplat {
             addressU: ADDRESS_CLAMP_TO_EDGE,
             addressV: ADDRESS_CLAMP_TO_EDGE
         });
-    }
-
-    /**
-     * Gets the most suitable texture format based on device capabilities.
-     *
-     * @param {import('../../platform/graphics/graphics-device.js').GraphicsDevice} device - The graphics device.
-     * @param {boolean} preferHighPrecision - True to prefer high precision when available.
-     * @returns {boolean|undefined} True if half format should be used, false is float format should
-     * be used or undefined if none are available.
-     */
-    getTextureFormat(device, preferHighPrecision) {
-
-        // true if half format should be used, false is float format should be used or undefined if none are available.
-        let halfFormat;
-        if (preferHighPrecision) {
-            halfFormat = false;
-        } else {
-            halfFormat = true;
-        }
-
-        return halfFormat;
     }
 
     /**
