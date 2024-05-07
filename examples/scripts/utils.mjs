@@ -21,7 +21,9 @@ export function parseConfig(script) {
     /** @type {Record<string, any>} */
     const config = {};
     while ((match = regex.exec(script)) !== null) {
-        config[match[1]] = match[2] ?? true;
+        const key = match[1];
+        const val = match[2];
+        config[key] = /true|false/g.test(val) ? val === 'true' : val ?? true;
     }
     return config;
 }
