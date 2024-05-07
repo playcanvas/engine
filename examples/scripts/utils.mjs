@@ -1,8 +1,12 @@
 /**
+ * @typedef {'development' | 'performance' | 'debug'} Engine
+ */
+
+/**
  * @typedef {object} ExampleConfig
  * @property {string} [DESCRIPTION] - The example description.
  * @property {boolean} [HIDDEN] - The example is hidden on production.
- * @property {'DEVELOPMENT' | 'PERFORMANCE' | 'DEBUG'} [ENGINE] - The engine type.
+ * @property {Engine} [ENGINE] - The engine type.
  * @property {boolean} [INCLUDE_AR_LINK] - Include AR link png.
  * @property {boolean} [NO_DEVICE_SELECTOR] - No device selector.
  * @property {boolean} [NO_CANVAS] - No canvas element.
@@ -31,16 +35,16 @@ export function parseConfig(script) {
 /**
  * Choose engine based on `Example#ENGINE`, e.g. ClusteredLightingExample picks PERFORMANCE.
  *
- * @param {string | undefined} type - The engine type.
+ * @param {Engine | undefined} type - The engine type.
  * @returns {string} - The build file.
  */
 export function engineFor(type) {
     switch (type) {
-        case 'DEVELOPMENT':
+        case 'development':
             return './ENGINE_PATH/index.js';
-        case 'PERFORMANCE':
+        case 'performance':
             return './playcanvas.prf/src/index.js';
-        case 'DEBUG':
+        case 'debug':
             return './playcanvas.dbg/src/index.js';
     }
     return './playcanvas/src/index.js';
