@@ -60,3 +60,14 @@ export function patchScript(script) {
 
     return script;
 }
+
+/**
+ * @param {object} json - The JSON to convert to module.
+ * @returns {string} - The module string.
+ */
+export function jsonToModule(json) {
+    let str = JSON.stringify(json, null, 4);
+    str = str.replace(/"([^"]+)":/g, '$1:');
+    str = str.replace(/"/g, '\'');
+    return `export default ${str};\n`;
+}

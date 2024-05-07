@@ -6,7 +6,7 @@ import { dirname, resolve } from 'path';
 import { fileURLToPath } from 'url';
 
 import { exampleMetaData } from '../cache/metadata.mjs';
-import { parseConfig, engineFor, patchScript } from './utils.mjs';
+import { parseConfig, engineFor, patchScript, jsonToModule } from './utils.mjs';
 
 // @ts-ignore
 const __filename = fileURLToPath(import.meta.url);
@@ -53,7 +53,7 @@ function generateExampleFile(categoryKebab, exampleNameKebab, config, files) {
     html = html.replace(/'@FILES'/g, JSON.stringify(files));
 
     // engine
-    const engineType = process.env.ENGINE_PATH ? 'DEVELOPMENT' : process.env.NODE_ENV === 'development' ? 'DEBUG' : config.ENGINE;
+    const engineType = process.env.ENGINE_PATH ? 'development' : process.env.NODE_ENV === 'development' ? 'debug' : config.ENGINE;
     const engine = engineFor(engineType);
     html = html.replace(/'@ENGINE'/g, JSON.stringify(engine));
 
@@ -92,8 +92,11 @@ function main() {
                 const script = fs.readFileSync(examplePath, 'utf-8');
                 fs.writeFileSync(`${MAIN_DIR}/dist/iframe/${name}.example.mjs`, patchScript(script));
 
-                // html file
+                // config file
                 const config = parseConfig(script);
+                fs.writeFileSync(`${MAIN_DIR}/dist/iframe/${name}.config.mjs`, jsonToModule(config));
+
+                // html file
                 const out = generateExampleFile(categoryKebab, exampleNameKebab, config, files);
                 fs.writeFileSync(`${MAIN_DIR}/dist/iframe/${name}.html`, out);
                 return;
