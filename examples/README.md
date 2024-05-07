@@ -148,9 +148,9 @@ By default, the examples app uses the local version of the playcanvas engine loc
 The example script allows you to import examples only modules that interact with the environment such as the device selector and controls. These are listed below:
 
 - `@examples/config` - The example config defined in `./src/examples/<category>/<exampleName>/config.mjs`.
-- `@examples/utils` - Contains utilities functions such as `loadES5`. The full list of functions can be found in `./iframe/utils.mjs`.
+- `@examples/utils` - Contains utilities functions such as `localImport` and `loadES5`. The full list of functions can be found in `./iframe/utils.mjs`.
 - `@examples/observer` - The observer object `data`.
-- `@examples/files` - The reatime file contents of all files used in the example (includes `FILES` property from `config.mjs`).
+- `@examples/files` - The reatime file contents of all files used in the example.
 
 ## Deployment
 
