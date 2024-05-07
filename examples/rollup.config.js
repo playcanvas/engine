@@ -93,7 +93,7 @@ function checkAppEngine() {
 
     // engine
     if (!fs.existsSync('../build/playcanvas/src/index.js')) {
-        const cmd = `npm run build target:esm:release:bundled --prefix ../`;
+        const cmd = `npm run build target:esm:release:unbundled --prefix ../`;
         console.log("\x1b[32m%s\x1b[0m", cmd);
         execSync(cmd);
     }
