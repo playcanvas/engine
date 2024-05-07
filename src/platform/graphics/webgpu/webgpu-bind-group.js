@@ -34,7 +34,6 @@ class WebgpuBindGroup {
     }
 
     destroy() {
-        // this.bindGroup?.destroy();
         this.bindGroup = null;
     }
 
@@ -44,8 +43,8 @@ class WebgpuBindGroup {
      * @param {import('./webgpu-graphics-device.js').WebgpuGraphicsDevice} device - Graphics device.
      * @param {import('../bind-group.js').BindGroup} bindGroup - Bind group to create the
      * descriptor for.
-     * @returns {object} - Returns the generated descriptor of type
-     * GPUBindGroupDescriptor, which can be used to create a GPUBindGroup
+     * @returns {object} - Returns the generated descriptor of type GPUBindGroupDescriptor, which
+     * can be used to create a GPUBindGroup
      */
     createDescriptor(device, bindGroup) {
 
