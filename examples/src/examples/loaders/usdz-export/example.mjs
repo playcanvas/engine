@@ -9,16 +9,17 @@ if (!(canvas instanceof HTMLCanvasElement)) {
 
 // add AR button to download the usdz file
 const appInner = document.getElementById('appInner');
-if (appInner) {
-    const div = document.createElement('div');
-    div.style.cssText = 'width:100%; position:absolute; top:10px';
-    div.innerHTML = `<div style="text-align: center;">
-        <a id="ar-link" rel="ar" download="asset.usdz">
-            <img src="./arkit.png" id="button" width="200"/>
-        </a>    
-    </div>`;
-    appInner.appendChild(div);
+if (!(appInner instanceof HTMLElement)) {
+    throw new Error('No appInner found');
 }
+const div = document.createElement('div');
+div.style.cssText = 'width:100%; position:absolute; top:10px';
+div.innerHTML = `<div style="text-align: center;">
+    <a id="ar-link" rel="ar" download="bench.usdz">
+        <img src="${rootPath}/static/assets/textures/transparent.png" id="button" width="200"/>
+    </a>    
+</div>`;
+appInner.appendChild(div);
 
 const assets = {
     helipad: new pc.Asset(
@@ -93,13 +94,9 @@ assetListLoader.load(() => {
         .build(entity, options)
         .then((arrayBuffer) => {
             const blob = new Blob([arrayBuffer], { type: 'application/octet-stream' });
-
             // On iPhone Safari, this link creates a clickable AR link on the screen. When this is clicked,
             // the download of the .asdz file triggers its opening in QuickLook AT mode.
             // In other browsers, this simply downloads the generated .asdz file.
-
-            // @ts-ignore
-            link.download = 'bench.usdz';
 
             // @ts-ignore
             link.href = URL.createObjectURL(blob);

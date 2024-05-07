@@ -7,18 +7,19 @@ if (!(canvas instanceof HTMLCanvasElement)) {
     throw new Error('No canvas found');
 }
 
-// add AR button to download the gltf file
+// add AR button to download the glb file
 const appInner = document.getElementById('appInner');
-if (appInner) {
-    const div = document.createElement('div');
-    div.style.cssText = 'width:100%; position:absolute; top:10px';
-    div.innerHTML = `<div style="text-align: center;">
-        <a id="ar-link" rel="ar" download="asset.usdz">
-            <img src="./arkit.png" id="button" width="200"/>
-        </a>    
-    </div>`;
-    appInner.appendChild(div);
+if (!(appInner instanceof HTMLElement)) {
+    throw new Error('No appInner found');
 }
+const div = document.createElement('div');
+div.style.cssText = 'width:100%; position:absolute; top:10px';
+div.innerHTML = `<div style="text-align: center;">
+    <a id="ar-link" rel="ar" download="scene.glb">
+        <img src="${rootPath}/static/assets/textures/transparent.png" id="button" width="200"/>
+    </a>    
+</div>`;
+appInner.appendChild(div);
 
 // set up and load draco module, as the glb we load is draco compressed
 pc.WasmModule.setConfig('DracoDecoderModule', {
@@ -153,9 +154,6 @@ assetListLoader.load(() => {
         .build(app.root, options)
         .then((arrayBuffer) => {
             const blob = new Blob([arrayBuffer], { type: 'application/octet-stream' });
-
-            // @ts-ignore
-            link.download = 'scene.glb';
 
             // @ts-ignore
             link.href = URL.createObjectURL(blob);
