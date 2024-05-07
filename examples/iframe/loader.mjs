@@ -1,5 +1,5 @@
 import config from '@examples/config';
-import { fetchFile, localImport, clearImports, fire } from '@examples/utils';
+import { updateDeviceType, fetchFile, localImport, clearImports, fire } from '@examples/utils';
 import { data, refresh } from '@examples/observer';
 import files from '@examples/files';
 
@@ -132,6 +132,9 @@ class ExampleLoader {
         clearImports();
 
         try {
+            // update device type
+            updateDeviceType(config);
+
             // import local file
             const module = await localImport('example.mjs');
             this._app = module.app;

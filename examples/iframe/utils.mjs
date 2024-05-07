@@ -1,4 +1,3 @@
-import config from '@examples/config';
 import files from '@examples/files';
 
 const href = window.top?.location.href ?? '';
@@ -82,31 +81,35 @@ function isLinuxChrome() {
 }
 
 const DEVICE_TYPES = ['webgpu', 'webgl2'];
+export let deviceType = 'webgl2';
 
 /**
- * @returns {string} - The device type.
+ * @param {{ WEBGPU_DISABLED: boolean; WEBGL_DISABLED: boolean; }} config - The configuration object.
  */
-function getDeviceType() {
+export function updateDeviceType(config) {
     if (params.deviceType && DEVICE_TYPES.includes(params.deviceType)) {
         console.warn("Overwriting default deviceType from URL: ", params.deviceType);
-        return params.deviceType;
+        deviceType = params.deviceType;
+        return;
     }
 
     if (config.WEBGPU_DISABLED) {
-        return 'webgl2';
+        deviceType = 'webgl2';
+        return;
     }
     if (config.WEBGL_DISABLED) {
         if (isLinuxChrome()) {
             console.warn('WebGPU chosen but browser is not supported, defaulting to WebGL2');
-            return 'webgl2';
+            deviceType = 'webgl2';
+            return;
         }
-        return 'webgpu';
+        deviceType = 'webgpu';
+        return;
     }
 
     const savedDevice = localStorage.getItem('preferredGraphicsDevice') ?? 'webgl2';
-    return DEVICE_TYPES.includes(savedDevice) ? savedDevice : 'webgl2';
+    deviceType = DEVICE_TYPES.includes(savedDevice) ? savedDevice : 'webgl2';
 }
-export const deviceType = getDeviceType();
 
 /**
  * @param {string} eventName - The name of the fired event.
