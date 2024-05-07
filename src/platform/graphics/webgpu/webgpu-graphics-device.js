@@ -419,6 +419,7 @@ class WebgpuGraphicsDevice extends GraphicsDevice {
     /**
      * @param {number} index - Index of the bind group slot
      * @param {import('../bind-group.js').BindGroup} bindGroup - Bind group to attach
+     * @param {number[]} [offsets] - Byte offsets for all uniform buffers in the bind group.
      */
     setBindGroup(index, bindGroup, offsets) {
 
