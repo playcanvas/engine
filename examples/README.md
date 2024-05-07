@@ -61,18 +61,18 @@ export { app };
 
 This is the only file that's required to run an example. The code defined in this function is executed each time the example play button is pressed. It takes the example's canvas element from the DOM and usually begins by creating a new PlayCanvas `Application` or `AppBase` using that canvas.
 
-Examples can also contain flags which allow you to define the default configuration for your examples as well as overrides to particular settings such as `deviceType`. Check the possible values to set in `ExampleConfig` in `scripts/utils.mjs` file for the full list.
+Examples can also contains comments which allow you to define the default configuration for your examples as well as overrides to particular settings such as `deviceType`. Check the possible values to set in `ExampleConfig` in `scripts/utils.mjs` file for the full list.
 
 ```js
-// @flag DESCRIPTION This is a description
-// @flag HIDDEN
-// @flag ENGINE
-// @flag INCLUDE_AR_LINK
-// @flag NO_DEVICE_SELECTOR
-// @flag NO_CANVAS
-// @flag NO_MINISTATS
-// @flag WEBGPU_ENABLED
-// @flag WEBGPU_REQUIRED
+// @config DESCRIPTION This is a description
+// @config HIDDEN
+// @config ENGINE PERFORMANCE
+// @config INCLUDE_AR_LINK
+// @config NO_DEVICE_SELECTOR
+// @config NO_CANVAS
+// @config NO_MINISTATS
+// @config WEBGPU_ENABLED
+// @config WEBGPU_REQUIRED
 import * as pc from 'playcanvas';
 ...
 ```

@@ -1,4 +1,4 @@
-// @flag WEBGPU_ENABLED
+// @config WEBGPU_ENABLED
 import * as pc from 'playcanvas';
 import { deviceType, rootPath } from '@examples/utils';
 

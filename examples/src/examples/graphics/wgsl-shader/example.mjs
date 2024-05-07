@@ -1,5 +1,5 @@
-// @flag WEBGPU_REQUIRED
-// @flag HIDDEN
+// @config WEBGPU_REQUIRED
+// @config HIDDEN
 import * as pc from 'playcanvas';
 import files from '@examples/files';
 import { deviceType, rootPath } from '@examples/utils';

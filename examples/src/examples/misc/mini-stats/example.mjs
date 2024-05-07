@@ -1,5 +1,5 @@
-// @flag ENGINE PERFORMANCE
-// @flag NO_MINISTATS
+// @config ENGINE PERFORMANCE
+// @config NO_MINISTATS
 import * as pc from 'playcanvas';
 import { deviceType, rootPath } from '@examples/utils';
 

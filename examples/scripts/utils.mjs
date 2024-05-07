@@ -16,7 +16,7 @@
  * @returns {ExampleConfig} - The parsed config.
  */
 export function parseConfig(script) {
-    const regex = /\/\/ @flag ([^ \n]+) ?([^\n]+)?/g;
+    const regex = /\/\/ @config ([^ \n]+) ?([^\n]+)?/g;
     let match;
     /** @type {Record<string, any>} */
     const config = {};
