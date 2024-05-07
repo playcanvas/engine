@@ -1,6 +1,5 @@
 // @flag WEBGPU_ENABLED
 // @flag INCLUDE_AR_LINK
-
 import * as pc from 'playcanvas';
 import { data } from '@examples/observer';
 import { deviceType, rootPath } from '@examples/utils';

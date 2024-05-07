@@ -1,6 +1,5 @@
 // @flag HIDDEN
 // @flag WEBGPU_ENABLED
-
 import * as pc from 'playcanvas';
 import { deviceType, rootPath } from '@examples/utils';
 
