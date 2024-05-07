@@ -1,4 +1,3 @@
-// @config INCLUDE_AR_LINK
 import * as pc from 'playcanvas';
 import { data } from '@examples/observer';
 import { deviceType, rootPath } from '@examples/utils';
@@ -6,6 +5,19 @@ import { deviceType, rootPath } from '@examples/utils';
 const canvas = document.getElementById('application-canvas');
 if (!(canvas instanceof HTMLCanvasElement)) {
     throw new Error('No canvas found');
+}
+
+// add AR button to download the usdz file
+const appInner = document.getElementById('appInner');
+if (appInner) {
+    const div = document.createElement('div');
+    div.style.cssText = 'width:100%; position:absolute; top:10px';
+    div.innerHTML = `<div style="text-align: center;">
+        <a id="ar-link" rel="ar" download="asset.usdz">
+            <img src="./arkit.png" id="button" width="200"/>
+        </a>    
+    </div>`;
+    appInner.appendChild(div);
 }
 
 const assets = {

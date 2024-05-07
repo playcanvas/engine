@@ -34,16 +34,6 @@ function generateExampleFile(categoryKebab, exampleNameKebab, config, files) {
     // title
     html = html.replace(/'@TITLE'/g, `${categoryKebab}: ${exampleNameKebab}`);
 
-    // AR Link
-    const arLinkStr = config.INCLUDE_AR_LINK ? `<div style="width:100%; position:absolute; top:10px">
-        <div style="text-align: center;">
-            <a id="ar-link" rel="ar" download="asset.usdz">
-                <img src="./arkit.png" id="button" width="200"/>
-            </a>    
-        </div>
-    </div>` : '';
-    html = html.replace(/'@AR_LINK'/g, arLinkStr);
-
     // js files
     html = html.replace(/'@FILES'/g, JSON.stringify(files));
 

@@ -7,7 +7,6 @@
  * @property {string} [DESCRIPTION] - The example description.
  * @property {boolean} [HIDDEN] - The example is hidden on production.
  * @property {Engine} [ENGINE] - The engine type.
- * @property {boolean} [INCLUDE_AR_LINK] - Include AR link png.
  * @property {boolean} [NO_DEVICE_SELECTOR] - No device selector.
  * @property {boolean} [NO_MINISTATS] - No ministats.
  * @property {boolean} [WEBGPU_DISABLED] - If webgpu is disabled.

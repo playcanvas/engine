@@ -67,7 +67,6 @@ Examples can also contains comments which allow you to define the default config
 // @config DESCRIPTION This is a description
 // @config HIDDEN
 // @config ENGINE performance
-// @config INCLUDE_AR_LINK
 // @config NO_DEVICE_SELECTOR
 // @config NO_MINISTATS
 // @config WEBGPU_DISABLED
