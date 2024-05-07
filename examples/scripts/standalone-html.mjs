@@ -6,7 +6,7 @@ import { dirname, resolve } from 'path';
 import { fileURLToPath } from 'url';
 
 import { exampleMetaData } from '../cache/metadata.mjs';
-import { parseConfig, engineFor, patchScript, jsonToModule } from './utils.mjs';
+import { parseConfig, engineFor, patchScript } from './utils.mjs';
 
 // @ts-ignore
 const __filename = fileURLToPath(import.meta.url);
