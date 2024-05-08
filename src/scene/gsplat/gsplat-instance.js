@@ -24,20 +24,6 @@ void main(void) {
 // fragment shader
 const v1v2FS = /* glsl */`
 
-uniform sampler2D splatColor;
-uniform highp usampler2D splatOrder;
-uniform highp sampler2D transformA;
-uniform highp sampler2D transformB;
-uniform highp sampler2D transformC;
-
-ivec2 calcUV(vec2 bufferSize) {
-    ivec2 uv = ivec2(int(gl_FragCoord.x), int(gl_FragCoord.y));
-    uint index = texelFetch(splatOrder, uv, 0).r;
-    int U = int(index) % int(bufferSize.x);
-    int V = int(index) / int(bufferSize.x);
-    return ivec2(U, V);
-}
-
 // given the splat center (view space) and covariance A and B vectors, calculate
 // the v1 and v2 vectors for this view.
 vec4 calcV1V2(vec3 centerView, vec3 covA, vec3 covB, float focal, mat3 W) {
@@ -73,6 +59,12 @@ vec4 calcV1V2(vec3 centerView, vec3 covA, vec3 covB, float focal, mat3 W) {
     return vec4(v1, v2);
 }
 
+uniform highp usampler2D splatOrder;
+uniform highp sampler2D transformA;
+uniform highp sampler2D transformB;
+uniform highp sampler2D transformC;
+uniform sampler2D splatColor;
+
 uniform mat4 matrix_model;
 uniform mat4 matrix_view;
 uniform mat4 matrix_projection;
@@ -80,8 +72,12 @@ uniform vec2 viewport;
 uniform vec2 bufferSize;
 
 void main(void) {
-    // calculate splat UV
-    ivec2 splatUV = calcUV(bufferSize);
+    // calculate splatUV
+    uint index = texelFetch(splatOrder, ivec2(gl_FragCoord.xy), 0).r;
+    ivec2 splatUV = ivec2(
+        int(index) % int(bufferSize.x),
+        int(index) / int(bufferSize.x)
+    );
 
     // read splat center and covariance
     vec4 tA = texelFetch(transformA, splatUV, 0);
@@ -89,14 +85,12 @@ void main(void) {
     vec3 center = tA.xyz;
     mat4 modelView = matrix_view * matrix_model;
     vec4 centerView = modelView * vec4(center, 1.0);
-    vec4 centerProj = matrix_projection * centerView;
+    vec4 centerClip = matrix_projection * centerView;
 
-    if (centerProj.x < -centerProj.w || centerProj.x > centerProj.w ||
-        centerProj.y < -centerProj.w || centerProj.y > centerProj.w ||
-        centerProj.z < 0.0 || centerProj.z > centerProj.w) {
-        pcFragColor0 = vec4(0.0, 0.0, 0.0, 0.0);
-        pcFragColor1 = vec4(0.0, 0.0, 0.0, 0.0);
-        pcFragColor2 = vec4(0.0, 0.0, 0.0, 0.0);
+    if (any(greaterThan(abs(centerClip.xyz), vec3(centerClip.w)))) {
+        pcFragColor0 = vec4(0.0);
+        pcFragColor1 = vec4(0.0);
+        pcFragColor2 = vec4(0.0);
     } else {
         vec4 tB = texelFetch(transformB, splatUV, 0);
         vec4 tC = texelFetch(transformC, splatUV, 0);
@@ -114,7 +108,7 @@ void main(void) {
             transpose(mat3(modelView))
         );
 
-        pcFragColor1 = centerProj;
+        pcFragColor1 = centerClip;
         pcFragColor2 = texelFetch(splatColor, splatUV, 0);
     }
 }
@@ -180,7 +174,6 @@ class GSplatInstance {
         // clone options object
         options = Object.assign(this.options, options);
 
-        // not supported on WebGL1
         const device = splat.device;
 
         // create the order texture
@@ -219,10 +212,13 @@ class GSplatInstance {
         // material
         this.createMaterial(options);
 
-        const splatInstanceSize = 64;
+        // number of quads to combine into a single instance. this is to increase occupancy
+        // in the vertex shader.
+        const splatInstanceSize = 128;
         const numSplats = Math.floor(splat.numSplats / splatInstanceSize) * splatInstanceSize;
         const numSplatInstances = numSplats / splatInstanceSize;
 
+        // specify the base splat index per instance
         const indexData = new Uint32Array(numSplatInstances);
         for (let i = 0; i < numSplatInstances; ++i) {
             indexData[i] = i * splatInstanceSize;
@@ -232,11 +228,12 @@ class GSplatInstance {
             { semantic: SEMANTIC_ATTR13, components: 1, type: TYPE_UINT32, asInt: true }
         ]);
 
-        const vb = new VertexBuffer(device, vertexFormat, numSplatInstances, {
+        const indicesVB = new VertexBuffer(device, vertexFormat, numSplatInstances, {
             usage: BUFFER_STATIC,
             data: indexData.buffer
         });
 
+        // build the instance mesh
         const meshPositions = new Float32Array(12 * splatInstanceSize);
         const meshIndices = new Uint32Array(6 * splatInstanceSize);
         for (let i = 0; i < splatInstanceSize; ++i) {
@@ -261,10 +258,8 @@ class GSplatInstance {
         this.mesh = mesh;
         this.mesh.aabb.copy(splat.aabb);
         this.meshInstance = new MeshInstance(this.mesh, this.material);
-        this.meshInstance.setInstancing(vb, true);
+        this.meshInstance.setInstancing(indicesVB, true);
         this.meshInstance.gsplatInstance = this;
-
-        // this.meshInstance.instancingCount = numSplats / 4;
         this.meshInstance.instancingCount = numSplatInstances;
 
         // clone centers to allow multiple instances of sorter
@@ -275,17 +270,10 @@ class GSplatInstance {
             this.sorter = new GSplatSorter();
             this.sorter.init(this.orderTexture, this.centers);
             this.sorter.on('updated', (count) => {
-                // ideally we would update the number of splats rendered here in order to skip
-                // the ones behind the camera. unfortunately changing this value dynamically
-                // results in performance lockups. (the browser is likely re-validating the index
-                // buffer when this value changes and/or re-uploading the index buffer to gpu memory).
-                // this.mesh.primitive[0].count = count * 6;
-
-                // sorter not working
+                // don't render the splats behind the camera
                 this.meshInstance.instancingCount = Math.floor(count / splatInstanceSize);
 
-                // console.log(count);
-
+                // 
                 this.updateV1V2(this.cameras[0]);
             });
         }

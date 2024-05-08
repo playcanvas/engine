@@ -9,41 +9,30 @@ import { SEMANTIC_ATTR13, SEMANTIC_COLOR, SEMANTIC_POSITION } from "../../platfo
 // vertex shader
 const splatCoreVS = /* glsl */ `
 
-uniform mat4 matrix_model;
-uniform mat4 matrix_view;
-uniform mat4 matrix_projection;
-
 uniform vec2 viewport;
 
-attribute vec3 vertex_position;
-attribute uint vertex_id_attrib;
+attribute highp vec3 vertex_position;
+attribute highp uint vertex_id_attrib;
 
-varying vec2 texCoord;
-varying vec4 color;
+varying highp vec2 texCoord;
+varying highp vec4 color;
 
 #ifndef DITHER_NONE
-varying float id;
+    varying float id;
 #endif
 
-uniform vec4 tex_params;
+uniform highp vec4 tex_params;
 uniform highp sampler2D v1v2Texture;
 uniform highp sampler2D splatCenterOrdered;
-uniform sampler2D splatColorOrdered;
-
-void getSplatUV(out uint splatId, out ivec2 splatUV) {
-    splatId = vertex_id_attrib + uint(vertex_position.z);
-
-    int id = int(splatId);
-    splatUV = ivec2(
-        id % int(tex_params.x),
-        id / int(tex_params.x)
-    );
-}
+uniform highp sampler2D splatColorOrdered;
 
 void splatMain() {
-    uint splatId;
-    ivec2 splatUV;
-    getSplatUV(splatId, splatUV);
+    // calculate splat id and uv
+    uint splatId = vertex_id_attrib + uint(vertex_position.z);
+    ivec2 splatUV = ivec2(
+        int(splatId) % int(tex_params.x),
+        int(splatId) / int(tex_params.x)
+    );
 
     vec4 v1v2 = texelFetch(v1v2Texture, splatUV, 0);
 
@@ -56,9 +45,6 @@ void splatMain() {
     }
 
     vec4 centerProj = texelFetch(splatCenterOrdered, splatUV, 0);
-
-    // vec3 center = texelFetch(transformA, splatUV, 0).xyz;
-    // vec4 centerProj = matrix_projection * matrix_view * matrix_model * vec4(center, 1.0);
 
     texCoord = vertex_position.xy;
     centerProj.xy += (texCoord.x * v1v2.xy + texCoord.y * v1v2.zw) / viewport * centerProj.w;

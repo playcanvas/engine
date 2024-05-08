@@ -61,7 +61,7 @@ class GSplat {
         this.aabb = aabb;
 
         // create data textures if any format is available
-        this.halfFormat = false;
+        this.halfFormat = true;
 
         if (this.halfFormat !== undefined) {
             const size = this.evalTextureSize(numSplats);
