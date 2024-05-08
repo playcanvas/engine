@@ -15,7 +15,7 @@ const EXAMPLE_HTML = fs.readFileSync(`${MAIN_DIR}/iframe/example.html`, 'utf-8')
 const DIR_CACHE = new Map();
 
 const TEMPLATE_CONTROLS = `/**
- * @param {import('../../../app/components/Example.mjs').ControlOptions} options - The options.
+ * @param {import('../../app/components/Example.mjs').ControlOptions} options - The options.
  * @returns {JSX.Element} The returned JSX Element.
  */
 export function controls({ fragment }) {
