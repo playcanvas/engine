@@ -12,6 +12,7 @@ import { parseConfig, engineFor, patchScript } from './utils.mjs';
 const __filename = fileURLToPath(import.meta.url);
 const MAIN_DIR = `${dirname(__filename)}/../`;
 const EXAMPLE_HTML = fs.readFileSync(`${MAIN_DIR}/iframe/example.html`, 'utf-8');
+const DIR_CACHE = new Map();
 
 const TEMPLATE_CONTROLS = `/**
  * @param {import('../../../app/components/Example.mjs').ControlOptions} options - The options.
@@ -61,11 +62,15 @@ function main() {
         const { categoryKebab, exampleNameKebab, path } = data;
         const name = `${categoryKebab}_${exampleNameKebab}`;
 
+        if (!DIR_CACHE.has(path)) {
+            DIR_CACHE.set(path, fs.readdirSync(path));
+        }
+
         /**
          * @type {string[]}
          */
         const files = [];
-        for (const file of fs.readdirSync(path)) {
+        for (const file of DIR_CACHE.get(path)) {
             if (file.startsWith(`${exampleNameKebab}.`)) {
                 files.push(file.replace(`${exampleNameKebab}.`, ''));
             }
