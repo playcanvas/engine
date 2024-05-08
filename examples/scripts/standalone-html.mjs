@@ -61,7 +61,15 @@ function main() {
         const { categoryKebab, exampleNameKebab, path } = data;
         const name = `${categoryKebab}_${exampleNameKebab}`;
 
-        const files = fs.readdirSync(path);
+        /**
+         * @type {string[]}
+         */
+        const files = [];
+        for (const file of fs.readdirSync(path)) {
+            if (file.startsWith(`${exampleNameKebab}.`)) {
+                files.push(file.replace(`${exampleNameKebab}.`, ''));
+            }
+        }
         if (!files.includes('example.mjs')) {
             throw new Error(`Example ${name} is missing an example.mjs file`);
         }
@@ -71,7 +79,7 @@ function main() {
 
         files.forEach((file) => {
             if (file === 'example.mjs') {
-                const examplePath = resolve(path, file);
+                const examplePath = resolve(path, `${exampleNameKebab}.${file}`);
 
                 // example file
                 const script = fs.readFileSync(examplePath, 'utf-8');
@@ -85,7 +93,7 @@ function main() {
             }
 
             if (file === 'controls.mjs') {
-                const controlsPath = resolve(path, file);
+                const controlsPath = resolve(path, `${exampleNameKebab}.${file}`);
                 const controlsExist = fs.existsSync(controlsPath);
 
                 // controls file
@@ -94,7 +102,7 @@ function main() {
                 return;
             }
 
-            const scriptPath = resolve(path, file);
+            const scriptPath = resolve(path, `${exampleNameKebab}.${file}`);
             let script = fs.readFileSync(scriptPath, 'utf-8');
             if (/\.(mjs|js)$/.test(file)) {
                 script = patchScript(script);

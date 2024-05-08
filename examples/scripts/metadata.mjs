@@ -48,22 +48,24 @@ function main() {
     categories.forEach((category) => {
         const categoryPath = resolve(`${rootPath}/${category}`);
         const examplesFiles = getDirFiles(categoryPath);
-
         const categoryKebab = toKebabCase(category);
 
         examplesFiles.forEach((exampleFile) => {
-            const path = resolve(`${categoryPath}/${exampleFile}`);
+            if (!/\example.mjs$/.test(exampleFile)) {
+                return;
+            }
+            const examplePath = resolve(`${categoryPath}/${exampleFile}`);
             const exampleName = exampleFile.split('.').shift() ?? '';
             const exampleNameKebab = toKebabCase(exampleName);
 
-            const config = parseConfig(fs.readFileSync(resolve(path, 'example.mjs'), 'utf-8'));
+            const config = parseConfig(fs.readFileSync(examplePath, 'utf-8'));
             if (config.HIDDEN && process.env.NODE_ENV !== 'development') {
                 console.info(`skipping hidden ${categoryKebab}/${exampleNameKebab}`);
                 return;
             }
 
             exampleMetaData.push({
-                path,
+                path: categoryPath,
                 categoryKebab,
                 exampleNameKebab
             });
