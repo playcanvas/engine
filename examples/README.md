@@ -120,7 +120,8 @@ console.log(data.get('flash'));
 
 ### Additional files
 
-Any other file you wish to include in your example can be added to the same folder with the example name prepended (e.g. `<exampleName>.shader.vert` and `<exampleName>.shader.frag`). These files can be accessed from the `@examples/files` module (Refer to the Example Modules below).
+Any other file you wish to include in your example can be added to the same folder with the example name prepended (e.g. `<exampleName>.shader.vert` and `<exampleName>.shader.frag`). These files can be accessed from the `@examples/files` module (refer to the Example Modules below).
+
 If you wish to include a file which is a module (e.g. `module.mjs`), use the `localImport` function to include it in your project: 
 
 ```js
