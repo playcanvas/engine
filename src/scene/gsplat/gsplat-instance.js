@@ -286,7 +286,7 @@ class GSplatInstance {
 
                 // console.log(count);
 
-                // this.updateV1V2(this.cameras[0]);
+                this.updateV1V2(this.cameras[0]);
             });
         }
     }
@@ -354,10 +354,10 @@ class GSplatInstance {
             // TODO: extend to support multiple cameras
             const camera = this.cameras[0];
             this.sort(camera._node);
-            this.updateV1V2(camera);
+            // this.updateV1V2(camera);
 
             // we get new list of cameras each frame
-            this.cameras.length = 0;
+            // this.cameras.length = 0;
         }
     }
 
