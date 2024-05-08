@@ -33,18 +33,14 @@ Or directly from the source:
 ENGINE_PATH=../src/index.js npm run develop
 ```
 
-Please note that the examples app requires a built version of the engine to be present in the engine repo within the `../build` folder. If you haven't already done so, run `npm install` followed by `npm run build` in the engine repo.
-
-As Monaco is supporting IntelliSense via type definitions files, you will also need to build the type definitions in the engine repo with `npm run build:types`.
-
 ## Creating an example
 
-The available examples are written as classes in JavaScript under the paths `./src/examples/<category>/<exampleName>`.
+The available examples are written as classes in JavaScript under the paths `./src/examples/<category>/<exampleName>.example.mjs`.
 To create a new example you can copy any of the existing examples as a template.
 
-Each example consists of three modules to define its behavior:
+Each example consists of two modules to define its behavior:
 
-### `example.mjs`
+### `<exampleName>.example.mjs`
 
 ```js
 import * as pc from 'playcanvas';
@@ -61,6 +57,20 @@ export { app };
 
 This is the only file that's required to run an example. The code defined in this function is executed each time the example play button is pressed. It takes the example's canvas element from the DOM and usually begins by creating a new PlayCanvas `Application` or `AppBase` using that canvas.
 
+Examples can also contain comments which allow you to define the default configuration for your examples as well as overrides to particular settings such as `deviceType`. Check the possible values to set in `ExampleConfig` in `scripts/utils.mjs` file for the full list.
+
+```js
+// @config DESCRIPTION This is a description
+// @config HIDDEN
+// @config ENGINE performance
+// @config NO_DEVICE_SELECTOR
+// @config NO_MINISTATS
+// @config WEBGPU_DISABLED
+// @config WEBGL_DISABLED
+import * as pc from 'playcanvas';
+...
+```
+
 You can load external scripts into an example using the `loadES5` function as follows:
 
 ```js
@@ -76,7 +86,7 @@ However, depending on external URL's is maybe not what you want as it breaks you
 import confetti from "https://esm.sh/canvas-confetti@1.6.0"
 ```
 
-### `controls.mjs`
+### `<exampleName>.controls.mjs`
 
 This file allows you to define a set of PCUI based interface which can be used to display stats from your example or provide users with a way of controlling the example.
 
@@ -108,26 +118,19 @@ import { data } from '@examples/observer';
 console.log(data.get('flash'));
 ```
 
-### `config.mjs`
+### Additional files
 
-This file allows you to define the default configuration for your examples as well as overrides to particular settings such as `deviceType` and additional files (e.g. vertex and fragment shaders). Check the config options `ExampleConfig` in `types.mjs` file.
+Any other file you wish to include in your example can be added to the same folder with the example name prepended (e.g. `<exampleName>.shader.vert` and `<exampleName>.shader.frag`). These files can be accessed from the `@examples/files` module (refer to the Example Modules below).
+
+If you wish to include a file which is a module (e.g. `module.mjs`), use the `localImport` function to include it in your project: 
 
 ```js
-/**
- * @type {import('../../../../types.mjs').ExampleConfig}
- */
-export default {
-    WEBGPU_ENABLED: true,
-    FILES: {
-        "shader.vert": /* glsl */`
-            // vertex shader
-        `
-        "shader.frag": /* glsl */`
-            // fragment shader
-        `
-    }
-};
+import { localImport } from '@examples/utils';
+
+// use just the file name without the example name
+const data = localImport('data.mjs');
 ```
+
 
 ### Testing your example
 Ensure you have a locally built version of the examples browser by running the commands in the `Local examples browser development` section. Then run `npm run serve` to serve the examples browser.
@@ -142,17 +145,15 @@ By default, the examples app uses the local version of the playcanvas engine loc
 The example script allows you to import examples only modules that interact with the environment such as the device selector and controls. These are listed below:
 
 - `@examples/config` - The example config defined in `./src/examples/<category>/<exampleName>/config.mjs`.
-- `@examples/utils` - Contains utilities functions such as `loadES5`. The full list of functions can be found in `./iframe/utils.mjs`.
+- `@examples/utils` - Contains utilities functions such as `localImport` and `loadES5`. The full list of functions can be found in `./iframe/utils.mjs`.
 - `@examples/observer` - The observer object `data`.
-- `@examples/files` - The reatime file contents of all files used in the example (includes `FILES` property from `config.mjs`).
+- `@examples/files` - The real-time file contents of all files used in the example.
 
 ## Deployment
 
-1) **Build the latest engine** by running the following in the `/engine` directory:
+1) **Install Engine packages** by running the following in the `/engine` directory:
 ```
 npm install
-npm run build
-npm run build:types
 ```
 
 2) **Build the examples browser and launch the server** by running the following in the `/engine/examples` directory:

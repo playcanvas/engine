@@ -86,6 +86,23 @@ class CodeEditorBase extends TypedComponent {
      * @param {import('@monaco-editor/react').Monaco} monaco - The monaco editor.
      */
     beforeMount(monaco) {
+        // set languages
+        for (const id in languages) {
+            monaco.languages.register({ id });
+            // @ts-ignore
+            monaco.languages.setLanguageConfiguration(id, languages[id].conf);
+            // @ts-ignore
+            monaco.languages.setMonarchTokensProvider(id, languages[id].language);
+        }
+
+        // patches highlighter tokenizer for javascript to include jsdoc
+        const allLangs = monaco.languages.getLanguages();
+        const jsLang = allLangs.find(({ id }) => id === 'javascript');
+        // @ts-ignore
+        jsLang?.loader()?.then(({ language }) => {
+            Object.assign(language.tokenizer, jsRules);
+        });
+
         fetch(pcTypes)
             .then((r) => {
                 return r.text();
@@ -100,25 +117,6 @@ class CodeEditorBase extends TypedComponent {
                     playcanvasDefs,
                     '@playcanvas/playcanvas.d.ts'
                 );
-
-                // set languages
-                for (const id in languages) {
-                    monaco.languages.register({ id });
-                    // @ts-ignore
-                    monaco.languages.setLanguageConfiguration(id, languages[id].conf);
-                    // @ts-ignore
-                    monaco.languages.setMonarchTokensProvider(id, languages[id].language);
-                }
-
-                // patches highlighter tokenizer for javascript to include jsdoc
-                const allLangs = monaco.languages.getLanguages();
-                const jsLang = allLangs.find(({ id }) => id === 'javascript');
-                // @ts-ignore
-                jsLang?.loader()?.then(({ language }) => {
-                    Object.assign(language.tokenizer, jsRules);
-                });
-
-                this.mergeState({});
             });
     }
 
