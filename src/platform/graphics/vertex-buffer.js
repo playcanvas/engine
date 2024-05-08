@@ -163,10 +163,6 @@ class VertexBuffer {
         this.unlock();
         return true;
     }
-
-    upload(offset, length) {
-        this.impl.upload(this, offset, length);
-    }
 }
 
 export { VertexBuffer };
