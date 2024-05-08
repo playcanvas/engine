@@ -33,18 +33,14 @@ Or directly from the source:
 ENGINE_PATH=../src/index.js npm run develop
 ```
 
-Please note that the examples app requires a built version of the engine to be present in the engine repo within the `../build` folder. If you haven't already done so, run `npm install` followed by `npm run build` in the engine repo.
-
-As Monaco is supporting IntelliSense via type definitions files, you will also need to build the type definitions in the engine repo with `npm run build:types`.
-
 ## Creating an example
 
-The available examples are written as classes in JavaScript under the paths `./src/examples/<category>/<exampleName>`.
+The available examples are written as classes in JavaScript under the paths `./src/examples/<category>/<exampleName>.example.mjs`.
 To create a new example you can copy any of the existing examples as a template.
 
-Each example consists of three modules to define its behavior:
+Each example consists of two modules to define its behavior:
 
-### `example.mjs`
+### `<exampleName>.example.mjs`
 
 ```js
 import * as pc from 'playcanvas';
@@ -90,7 +86,7 @@ However, depending on external URL's is maybe not what you want as it breaks you
 import confetti from "https://esm.sh/canvas-confetti@1.6.0"
 ```
 
-### `controls.mjs`
+### `<exampleName>.controls.mjs`
 
 This file allows you to define a set of PCUI based interface which can be used to display stats from your example or provide users with a way of controlling the example.
 
@@ -124,14 +120,16 @@ console.log(data.get('flash'));
 
 ### Additional files
 
-Any other file you wish to include in your example can be added to the same folder (e.g. `shader.vert` and `shader.frag`). These files can be accessed from the `@examples/files` module (Refer to the Example Modules below).
+Any other file you wish to include in your example can be added to the same folder with the example name prepended (e.g. `<exampleName>.shader.vert` and `<exampleName>.shader.frag`). These files can be accessed from the `@examples/files` module (Refer to the Example Modules below).
 If you wish to include a file which is a module (e.g. `module.mjs`), use the `localImport` function to include it in your project: 
 
 ```js
 import { localImport } from '@examples/utils';
 
+// use just the file name without the example name
 const data = localImport('data.mjs');
 ```
+
 
 ### Testing your example
 Ensure you have a locally built version of the examples browser by running the commands in the `Local examples browser development` section. Then run `npm run serve` to serve the examples browser.
