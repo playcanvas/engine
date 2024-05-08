@@ -11,17 +11,17 @@ const splatCoreVS = /* glsl */ `
 
 uniform vec2 viewport;
 
-attribute highp vec3 vertex_position;
-attribute highp uint vertex_id_attrib;
+attribute vec3 vertex_position;
+attribute uint vertex_id_attrib;
 
-varying highp vec2 texCoord;
-varying highp vec4 color;
+varying vec2 texCoord;
+varying vec4 color;
 
 #ifndef DITHER_NONE
     varying float id;
 #endif
 
-uniform highp vec4 tex_params;
+uniform vec4 tex_params;
 uniform highp sampler2D v1v2Texture;
 uniform highp sampler2D splatCenterOrdered;
 uniform highp sampler2D splatColorOrdered;
