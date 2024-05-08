@@ -1,3 +1,28 @@
+import fs from 'fs';
+
+/**
+ * @param {object} obj - The object.
+ * @returns {string} - The stringifiied object
+ */
+export function objStringify(obj) {
+    return JSON.stringify(obj, null, 4).replace(/"(\w+)":/g, '$1:');
+}
+
+/**
+ * @param {string} path - The directory path.
+ * @returns {string[]} - The file names in the directory.
+ */
+export function getDirFiles(path) {
+    if (!fs.existsSync(path)) {
+        return [];
+    }
+    const stats = fs.statSync(path);
+    if (!stats.isDirectory()) {
+        return [];
+    }
+    return fs.readdirSync(path);
+}
+
 /**
  * @typedef {'development' | 'performance' | 'debug'} Engine
  */

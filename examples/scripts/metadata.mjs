@@ -3,19 +3,11 @@ import { dirname, resolve } from 'path';
 import { fileURLToPath } from 'url';
 
 import { toKebabCase } from '../src/app/strings.mjs';
-import { parseConfig } from './utils.mjs';
+import { objStringify, getDirFiles, parseConfig } from './utils.mjs';
 
 // @ts-ignore
 const __filename = fileURLToPath(import.meta.url);
 const MAIN_DIR = `${dirname(__filename)}/../`;
-
-/**
- * @param {object} obj - The object.
- * @returns {string} - The stringifiied object
- */
-function stringify(obj) {
-    return JSON.stringify(obj, null, 4).replace(/"(\w+)":/g, '$1:');
-}
 
 /**
  * @type {{
@@ -25,21 +17,6 @@ function stringify(obj) {
  * }[]}
  */
 const exampleMetaData = [];
-
-/**
- * @param {string} path - The directory path.
- * @returns {string[]} - The file names in the directory.
- */
-function getDirFiles(path) {
-    if (!fs.existsSync(path)) {
-        return [];
-    }
-    const stats = fs.statSync(path);
-    if (!stats.isDirectory()) {
-        return [];
-    }
-    return fs.readdirSync(path);
-}
 
 function main() {
     const rootPath = `${MAIN_DIR}/src/examples`;
@@ -76,6 +53,6 @@ function main() {
         fs.mkdirSync(`${MAIN_DIR}/cache`);
     }
 
-    fs.writeFileSync(`${MAIN_DIR}/cache/metadata.mjs`, `export const exampleMetaData = ${stringify(exampleMetaData)};\n`);
+    fs.writeFileSync(`${MAIN_DIR}/cache/metadata.mjs`, `export const exampleMetaData = ${objStringify(exampleMetaData)};\n`);
 }
 main();
