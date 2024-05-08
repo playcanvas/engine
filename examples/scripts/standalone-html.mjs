@@ -95,7 +95,10 @@ function main() {
             }
 
             const scriptPath = resolve(path, file);
-            const script = fs.readFileSync(scriptPath, 'utf-8');
+            let script = fs.readFileSync(scriptPath, 'utf-8');
+            if (/\.(mjs|js)$/.test(file)) {
+                script = patchScript(script);
+            }
             fs.writeFileSync(`${MAIN_DIR}/dist/iframe/${name}.${file}`, script);
         });
     });
