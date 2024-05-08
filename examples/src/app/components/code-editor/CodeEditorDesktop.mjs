@@ -24,13 +24,16 @@ function getShowMinimap() {
  */
 const FILE_TYPE_LANGUAGES = {
     json: 'json',
-    shader: '',
+    javascript: 'javascript',
+    js: 'javascript',
+    mjs: 'javascript',
+    html: 'html',
+    css: 'css',
+    shader: 'glsl',
     vert: 'glsl',
     frag: 'glsl',
     wgsl: 'wgsl',
-    javascript: 'javascript',
-    js: 'javascript',
-    mjs: 'javascript'
+    txt: 'text'
 };
 
 /**
@@ -227,7 +230,7 @@ class CodeEditorDesktop extends CodeEditorBase {
             this._refreshDecorators();
         }, 50);
         const { files, selectedFile, showMinimap } = this.state;
-        const language = FILE_TYPE_LANGUAGES[selectedFile.split('.').pop() || 'shader'];
+        const language = FILE_TYPE_LANGUAGES[selectedFile.split('.').pop() || 'text'];
         let value = files[selectedFile];
         if (value) {
             value = removeRedundantSpaces(value);
