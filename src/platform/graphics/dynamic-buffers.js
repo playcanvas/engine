@@ -2,29 +2,15 @@ import { Debug } from '../../core/debug.js';
 import { math } from '../../core/math/math.js';
 
 /**
- * A base class representing a single per platform buffer.
- *
- * @ignore
- */
-class DynamicBuffer {
-    /** @type {import('./graphics-device.js').GraphicsDevice} */
-    device;
-
-    constructor(device) {
-        this.device = device;
-    }
-}
-
-/**
  * A container for storing the used areas of a pair of staging and gpu buffers.
  *
  * @ignore
  */
 class UsedBuffer {
-    /** @type {DynamicBuffer} */
+    /** @type {import('./dynamic-buffer.js').DynamicBuffer} */
     gpuBuffer;
 
-    /** @type {DynamicBuffer} */
+    /** @type {import('./dynamic-buffer.js').DynamicBuffer} */
     stagingBuffer;
 
     /**
@@ -59,7 +45,7 @@ class DynamicBufferAllocation {
     /**
      * The gpu buffer this allocation will be copied to.
      *
-     * @type {DynamicBuffer}
+     * @type {import('./dynamic-buffer.js').DynamicBuffer}
      */
     gpuBuffer;
 
@@ -93,14 +79,14 @@ class DynamicBuffers {
     /**
      * Internally allocated gpu buffers.
      *
-     * @type {DynamicBuffer[]}
+     * @type {import('./dynamic-buffer.js').DynamicBuffer[]}
      */
     gpuBuffers = [];
 
     /**
      * Internally allocated staging buffers (CPU writable)
      *
-     * @type {DynamicBuffer[]}
+     * @type {import('./dynamic-buffer.js').DynamicBuffer[]}
      */
     stagingBuffers = [];
 
@@ -215,4 +201,4 @@ class DynamicBuffers {
     }
 }
 
-export { DynamicBuffer, DynamicBuffers, DynamicBufferAllocation };
+export { DynamicBuffers, DynamicBufferAllocation };

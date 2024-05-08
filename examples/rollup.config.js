@@ -86,14 +86,14 @@ function getEnginePathFiles() {
 function checkAppEngine() {
     // types
     if (!fs.existsSync('../build/playcanvas.d.ts')) {
-        const cmd = `npm run build:types --prefix ../`;
+        const cmd = `npm run build target:types --prefix ../`;
         console.log("\x1b[32m%s\x1b[0m", cmd);
         execSync(cmd);
     }
 
     // engine
     if (!fs.existsSync('../build/playcanvas/src/index.js')) {
-        const cmd = `npm run build:esm:release --prefix ../`;
+        const cmd = `npm run build target:esm:release:unbundled --prefix ../`;
         console.log("\x1b[32m%s\x1b[0m", cmd);
         execSync(cmd);
     }
@@ -112,9 +112,9 @@ function getEngineTargets() {
         targets.push(...buildTarget({
             moduleFormat: 'esm',
             buildType: 'release',
+            bundleState: 'unbundled',
             input: '../src/index.js',
-            dir: 'dist/iframe',
-            skipBundled: true
+            dir: 'dist/iframe'
         }));
     }
     if (NODE_ENV === 'production' || NODE_ENV === 'development') {
@@ -122,9 +122,9 @@ function getEngineTargets() {
         targets.push(...buildTarget({
             moduleFormat: 'esm',
             buildType: 'debug',
+            bundleState: 'unbundled',
             input: '../src/index.js',
-            dir: 'dist/iframe',
-            skipBundled: true
+            dir: 'dist/iframe'
         }));
     }
     if (NODE_ENV === 'production' || NODE_ENV === 'profiler') {
@@ -132,9 +132,9 @@ function getEngineTargets() {
         targets.push(...buildTarget({
             moduleFormat: 'esm',
             buildType: 'profiler',
+            bundleState: 'unbundled',
             input: '../src/index.js',
-            dir: 'dist/iframe',
-            skipBundled: true
+            dir: 'dist/iframe'
         }));
     }
     return targets;

@@ -61,9 +61,7 @@ class GSplat {
         this.aabb = aabb;
 
         // create data textures if any format is available
-        this.halfFormat = this.getTextureFormat(true);
-
-        this.halfFormat = true;
+        this.halfFormat = false;
 
         if (this.halfFormat !== undefined) {
             const size = this.evalTextureSize(numSplats);
@@ -133,42 +131,6 @@ class GSplat {
             addressU: ADDRESS_CLAMP_TO_EDGE,
             addressV: ADDRESS_CLAMP_TO_EDGE
         });
-    }
-
-    /**
-     * Gets the most suitable texture format based on device capabilities.
-     *
-     * @param {boolean} preferHighPrecision - True to prefer high precision when available.
-     * @returns {boolean|undefined} True if half format should be used, false is float format should
-     * be used or undefined if none are available.
-     */
-    getTextureFormat(preferHighPrecision) {
-        const device = this.device;
-
-        // on WebGL1 R32F is not supported, always use half precision
-        if (device.isWebGL1)
-            preferHighPrecision = false;
-
-        const halfSupported = device.extTextureHalfFloat;
-        const floatSupported = device.extTextureFloat;
-
-        // true if half format should be used, false is float format should be used or undefined if none are available.
-        let halfFormat;
-        if (preferHighPrecision) {
-            if (floatSupported) {
-                halfFormat = false;
-            } else if (halfSupported) {
-                halfFormat = true;
-            }
-        } else {
-            if (halfSupported) {
-                halfFormat = true;
-            } else if (floatSupported) {
-                halfFormat = false;
-            }
-        }
-
-        return halfFormat;
     }
 
     /**

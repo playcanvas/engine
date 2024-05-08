@@ -129,12 +129,6 @@ vec3 ccLTCSpecFres;
 vec3 getLTCLightSpecFres(vec2 uv, vec3 specularity)
 {
     vec4 t2 = texture2DLodEXT(areaLightsLutTex2, uv, 0.0);
-
-    #ifdef AREA_R8_G8_B8_A8_LUTS
-    t2 *= vec4(0.693103,1,1,1);
-    t2 += vec4(0.306897,0,0,0);
-    #endif
-
     return specularity * t2.x + ( vec3( 1.0 ) - specularity) * t2.y;
 }
 
@@ -388,11 +382,6 @@ float getSphereLightDiffuse(vec3 worldNormal, vec3 viewDir, vec3 lightDir, vec3 
 mat3 getLTCLightInvMat(vec2 uv)
 {
     vec4 t1 = texture2DLodEXT(areaLightsLutTex1, uv, 0.0);
-
-    #ifdef AREA_R8_G8_B8_A8_LUTS
-    t1 *= vec4(1.001, 0.3239, 0.60437568, 1.0);
-    t1 += vec4(0.0, -0.2976, -0.01381, 0.0);
-    #endif
 
     return mat3(
         vec3( t1.x, 0, t1.y ),

@@ -1,8 +1,14 @@
 import { Vec3 } from '../../core/math/vec3.js';
+import { Quat } from '../../core/math/quat.js';
 
 import { AxisBoxCenter, AxisBoxLine, AxisPlane } from './axis-shapes.js';
 import { GIZMO_LOCAL } from './gizmo.js';
 import { TransformGizmo } from "./transform-gizmo.js";
+
+// temporary variables
+const tmpV1 = new Vec3();
+const tmpV2 = new Vec3();
+const tmpQ1 = new Quat();
 
 /**
  * Scaling gizmo.
@@ -69,10 +75,18 @@ class ScaleGizmo extends TransformGizmo {
     /**
      * Internal mapping from each attached node to their starting scale.
      *
-     * @type {Map<import('playcanvas').GraphNode, Vec3>}
+     * @type {Map<import('../../scene/graph-node.js').GraphNode, Vec3>}
      * @private
      */
     _nodeScales = new Map();
+
+    /**
+     * Internal state if transform should use uniform scaling.
+     *
+     * @type {boolean}
+     * @protected
+     */
+    _useUniformScaling = false;
 
     /**
      * @override
@@ -275,6 +289,68 @@ class ScaleGizmo extends TransformGizmo {
             const node = this.nodes[i];
             node.setLocalScale(this._nodeScales.get(node).clone().mul(pointDelta));
         }
+    }
+
+    _screenToPoint(x, y) {
+        const gizmoPos = this.root.getPosition();
+        const mouseWPos = this._camera.screenToWorld(x, y, 1);
+
+        const axis = this._selectedAxis;
+
+        const isPlane = this._selectedIsPlane;
+        const isScaleUniform = (this._useUniformScaling && isPlane) || axis === 'xyz';
+
+        const ray = this._createRay(mouseWPos);
+        const plane = this._createPlane(axis, isScaleUniform, !isPlane);
+
+        const point = new Vec3();
+        const angle = 0;
+
+        plane.intersectsRay(ray, point);
+
+        if (isScaleUniform) {
+            // calculate projecion vector for scale direction
+            switch (axis) {
+                case 'x':
+                    tmpV1.copy(this.root.up);
+                    tmpV2.copy(this.root.forward).mulScalar(-1);
+                    break;
+                case 'y':
+                    tmpV1.copy(this.root.right);
+                    tmpV2.copy(this.root.forward).mulScalar(-1);
+                    break;
+                case 'z':
+                    tmpV1.copy(this.root.up);
+                    tmpV2.copy(this.root.right);
+                    break;
+                default:
+                    // defaults to all axes
+                    tmpV1.copy(this._camera.entity.up);
+                    tmpV2.copy(this._camera.entity.right);
+                    break;
+            }
+            tmpV2.add(tmpV1).normalize();
+            tmpV1.sub2(point, gizmoPos);
+            const length = tmpV1.length();
+            const v = length * tmpV1.normalize().dot(tmpV2);
+            point.set(v, v, v);
+
+            // keep scale of axis constant if not all axes are selected
+            if (axis !== 'xyz') {
+                point[axis] = 1;
+            }
+
+            return { point, angle };
+        }
+
+        // rotate point back to world coords
+        tmpQ1.copy(this._rootStartRot).invert().transformVector(point, point);
+
+        if (!isPlane) {
+            this._projectToAxis(point, axis);
+        }
+
+        return { point, angle };
     }
 }
 

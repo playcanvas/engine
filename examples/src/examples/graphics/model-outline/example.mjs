@@ -15,6 +15,7 @@ const gfxOptions = {
     twgslUrl: rootPath + '/static/lib/twgsl/twgsl.js'
 };
 const device = await pc.createGraphicsDevice(canvas, gfxOptions);
+device.maxPixelRatio = Math.min(window.devicePixelRatio, 2);
 const createOptions = new pc.AppOptions();
 createOptions.graphicsDevice = device;
 createOptions.mouse = new pc.Mouse(document.body);

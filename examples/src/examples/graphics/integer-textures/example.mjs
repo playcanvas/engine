@@ -50,6 +50,7 @@ const gfxOptions = {
 };
 
 const device = await pc.createGraphicsDevice(canvas, gfxOptions);
+device.maxPixelRatio = Math.min(window.devicePixelRatio, 2);
 const createOptions = new pc.AppOptions();
 createOptions.graphicsDevice = device;
 createOptions.keyboard = new pc.Keyboard(document.body);
@@ -99,11 +100,9 @@ const createPixelRenderTarget = (i, colorBuffer) => {
 // Create our integer pixel buffers and render targets
 const pixelColorBuffers = [];
 const pixelRenderTargets = [];
-if (!device.isWebGL1) {
-    pixelColorBuffers.push(createPixelColorBuffer(0), createPixelColorBuffer(1));
-    pixelRenderTargets.push(createPixelRenderTarget(0, pixelColorBuffers[0]));
-    pixelRenderTargets.push(createPixelRenderTarget(1, pixelColorBuffers[1]));
-}
+pixelColorBuffers.push(createPixelColorBuffer(0), createPixelColorBuffer(1));
+pixelRenderTargets.push(createPixelRenderTarget(0, pixelColorBuffers[0]));
+pixelRenderTargets.push(createPixelRenderTarget(1, pixelColorBuffers[1]));
 
 const sourceTexture = pixelColorBuffers[0];
 const sourceRenderTarget = pixelRenderTargets[0];
@@ -153,7 +152,6 @@ const outputShader = pc.createShaderFromCode(
 
 // Write the initial simulation state to the integer texture
 const resetData = () => {
-    if (device.isWebGL1) return;
     // Loop through the pixels in the texture
     // and initialize them to either AIR, SAND or WALL
     const sourceTextureData = sourceTexture.lock();
@@ -312,10 +310,6 @@ assetListLoader.load(() => {
 
     let passNum = 0;
     app.on('update', function (/** @type {number} */) {
-        if (device.isWebGL1) {
-            // WebGL1 does not support integer textures
-            return;
-        }
 
         mouseUniform[0] = mousePos.x;
         mouseUniform[1] = mousePos.y;

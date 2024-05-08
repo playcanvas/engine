@@ -9,7 +9,7 @@ import { BLEND_NORMAL } from '../../scene/constants.js';
 import { createShaderFromCode } from '../../scene/shader-lib/utils.js';
 
 import { COLOR_GRAY } from './default-colors.js';
-import { MeshTriData } from './mesh-tri-data.js';
+import { TriData } from './tri-data.js';
 import { Mesh } from '../../scene/mesh.js';
 import { BoxGeometry } from '../../scene/geometry/box-geometry.js';
 import { CylinderGeometry } from '../../scene/geometry/cylinder-geometry.js';
@@ -21,16 +21,20 @@ import { TorusGeometry } from '../../scene/geometry/torus-geometry.js';
 const SHADOW_DAMP_SCALE = 0.25;
 const SHADOW_DAMP_OFFSET = 0.75;
 const SHADOW_MESH_MAP = new Map();
+
 const TORUS_RENDER_SEGMENTS = 80;
 const TORUS_INTERSECT_SEGMENTS = 20;
+
 const LIGHT_DIR = new Vec3(1, 2, 3);
-const MESH_TEMPLATES = {
+
+const GEOMETRIES = {
     box: BoxGeometry,
     cone: ConeGeometry,
     cylinder: CylinderGeometry,
     plane: PlaneGeometry,
     torus: TorusGeometry
 };
+
 const SHADER = {
     vert: /* glsl */`
         attribute vec3 vertex_position;
@@ -42,12 +46,10 @@ const SHADER = {
         void main(void) {
             gl_Position = matrix_viewProjection * matrix_model * vec4(vertex_position, 1.0);
             vColor = vertex_color;
-            #ifdef GL2
-                // store z/w for later use in fragment shader
-                vZW = gl_Position.zw;
-                // disable depth clipping
-                gl_Position.z = 0.0;
-            #endif
+            // store z/w for later use in fragment shader
+            vZW = gl_Position.zw;
+            // disable depth clipping
+            gl_Position.z = 0.0;
         }`,
     frag: /* glsl */`
         precision highp float;
@@ -55,10 +57,8 @@ const SHADER = {
         varying vec2 vZW;
         void main(void) {
             gl_FragColor = vColor;
-            #ifdef GL2
-                // clamp depth in Z to [0, 1] range
-                gl_FragDepth = max(0.0, min(1.0, (vZW.x / vZW.y + 1.0) * 0.5));
-            #endif
+            // clamp depth in Z to [0, 1] range
+            gl_FragDepth = max(0.0, min(1.0, (vZW.x / vZW.y + 1.0) * 0.5));
         }`
 };
 
@@ -68,12 +68,12 @@ const tmpV2 = new Vec3();
 const tmpQ1 = new Quat();
 
 function createShadowMesh(device, entity, type, color = Color.WHITE, templateOpts) {
-    const geomTemplate = MESH_TEMPLATES[type];
-    if (!geomTemplate) {
+    const Geometry = GEOMETRIES[type];
+    if (!Geometry) {
         throw new Error('Invalid primitive type.');
     }
 
-    const geom = new geomTemplate(templateOpts);
+    const geom = new Geometry(templateOpts);
     geom.colors = [];
 
     const wtm = entity.getWorldTransform().clone().invert();
@@ -83,7 +83,12 @@ function createShadowMesh(device, entity, type, color = Color.WHITE, templateOpt
     const numVertices = geom.positions.length / 3;
     const shadow = calculateShadow(tmpV1, numVertices, geom.normals);
     for (let i = 0; i < shadow.length; i++) {
-        geom.colors.push(shadow[i] * color.r * 255, shadow[i] * color.g * 255, shadow[i] * color.b * 255, color.a * 255);
+        geom.colors.push(
+            shadow[i] * color.r * 0xFF,
+            shadow[i] * color.g * 0xFF,
+            shadow[i] * color.b * 0xFF,
+            color.a * 0xFF
+        );
     }
 
     const shadowMesh = Mesh.fromGeometry(device, geom);
@@ -145,7 +150,7 @@ class AxisShape {
 
     entity;
 
-    meshTriDataList = [];
+    triData = [];
 
     meshInstances = [];
 
@@ -256,9 +261,9 @@ class AxisArrow extends AxisShape {
     constructor(device, options = {}) {
         super(device, options);
 
-        this.meshTriDataList = [
-            new MeshTriData(Mesh.fromGeometry(this.device, new ConeGeometry())),
-            new MeshTriData(Mesh.fromGeometry(this.device, new CylinderGeometry()), 1)
+        this.triData = [
+            new TriData(new ConeGeometry()),
+            new TriData(new CylinderGeometry(), 1)
         ];
 
         this._createArrow();
@@ -342,7 +347,7 @@ class AxisArrow extends AxisShape {
         tmpV1.set(0, this._gap + this._arrowLength * 0.5 + this._lineLength, 0);
         tmpQ1.set(0, 0, 0, 1);
         tmpV2.set(this._arrowThickness, this._arrowLength, this._arrowThickness);
-        this.meshTriDataList[0].setTransform(tmpV1, tmpQ1, tmpV2);
+        this.triData[0].setTransform(tmpV1, tmpQ1, tmpV2);
 
         this._head.setLocalPosition(0, this._gap + this._arrowLength * 0.5 + this._lineLength, 0);
         this._head.setLocalScale(this._arrowThickness, this._arrowLength, this._arrowThickness);
@@ -353,7 +358,7 @@ class AxisArrow extends AxisShape {
         tmpV1.set(0, this._gap + this._lineLength * 0.5, 0);
         tmpQ1.set(0, 0, 0, 1);
         tmpV2.set(this._lineThickness + this._tolerance, this._lineLength, this._lineThickness + this._tolerance);
-        this.meshTriDataList[1].setTransform(tmpV1, tmpQ1, tmpV2);
+        this.triData[1].setTransform(tmpV1, tmpQ1, tmpV2);
 
         // render
         this._line.setLocalPosition(0, this._gap + this._lineLength * 0.5, 0);
@@ -369,8 +374,8 @@ class AxisBoxCenter extends AxisShape {
     constructor(device, options = {}) {
         super(device, options);
 
-        this.meshTriDataList = [
-            new MeshTriData(Mesh.fromGeometry(this.device, new BoxGeometry()), 2)
+        this.triData = [
+            new TriData(new BoxGeometry(), 2)
         ];
 
         this._createCenter();
@@ -422,9 +427,9 @@ class AxisBoxLine extends AxisShape {
     constructor(device, options = {}) {
         super(device, options);
 
-        this.meshTriDataList = [
-            new MeshTriData(Mesh.fromGeometry(this.device, new BoxGeometry())),
-            new MeshTriData(Mesh.fromGeometry(this.device, new CylinderGeometry()), 1)
+        this.triData = [
+            new TriData(new BoxGeometry()),
+            new TriData(new CylinderGeometry(), 1)
         ];
 
         this._createBoxLine();
@@ -500,7 +505,7 @@ class AxisBoxLine extends AxisShape {
         tmpV1.set(0, this._gap + this._boxSize * 0.5 + this._lineLength, 0);
         tmpQ1.set(0, 0, 0, 1);
         tmpV2.set(this._boxSize, this._boxSize, this._boxSize);
-        this.meshTriDataList[0].setTransform(tmpV1, tmpQ1, tmpV2);
+        this.triData[0].setTransform(tmpV1, tmpQ1, tmpV2);
 
         // render
         this._box.setLocalPosition(0, this._gap + this._boxSize * 0.5 + this._lineLength, 0);
@@ -512,7 +517,7 @@ class AxisBoxLine extends AxisShape {
         tmpV1.set(0, this._gap + this._lineLength * 0.5, 0);
         tmpQ1.set(0, 0, 0, 1);
         tmpV2.set(this._lineThickness + this._tolerance, this._lineLength, this._lineThickness + this._tolerance);
-        this.meshTriDataList[1].setTransform(tmpV1, tmpQ1, tmpV2);
+        this.triData[1].setTransform(tmpV1, tmpQ1, tmpV2);
 
         // render
         this._line.setLocalPosition(0, this._gap + this._lineLength * 0.5, 0);
@@ -538,23 +543,23 @@ class AxisDisk extends AxisShape {
         this._ringRadius = options.ringRadius ?? this._ringRadius;
         this._sectorAngle = options.sectorAngle ?? this._sectorAngle;
 
-        this.meshTriDataList = [
-            new MeshTriData(this._createIntersectTorus())
+        this.triData = [
+            new TriData(this._createTorusGeometry())
         ];
 
         this._createDisk();
     }
 
-    _createIntersectTorus() {
-        return Mesh.fromGeometry(this.device, new TorusGeometry({
+    _createTorusGeometry() {
+        return new TorusGeometry({
             tubeRadius: this._tubeRadius + this._tolerance,
             ringRadius: this._ringRadius,
             sectorAngle: this._sectorAngle,
             segments: TORUS_INTERSECT_SEGMENTS
-        }));
+        });
     }
 
-    _createRenderTorus(sectorAngle) {
+    _createTorusMesh(sectorAngle) {
         const color = this._disabled ? this._disabledColor : this._defaultColor;
         return createShadowMesh(this.device, this.entity, 'torus', color, {
             tubeRadius: this._tubeRadius,
@@ -569,8 +574,8 @@ class AxisDisk extends AxisShape {
 
         // arc/circle
         this._addRenderMeshes(this.entity, [
-            this._createRenderTorus(this._sectorAngle),
-            this._createRenderTorus(360)
+            this._createTorusMesh(this._sectorAngle),
+            this._createTorusMesh(360)
         ]);
         this.drag(false);
     }
@@ -604,11 +609,11 @@ class AxisDisk extends AxisShape {
 
     _updateTransform() {
         // intersect
-        this.meshTriDataList[0].setTris(this._createIntersectTorus());
+        this.triData[0].fromGeometry(this._createTorusGeometry());
 
         // render
-        this.meshInstances[0].mesh = this._createRenderTorus(this._sectorAngle);
-        this.meshInstances[1].mesh = this._createRenderTorus(360);
+        this.meshInstances[0].mesh = this._createTorusMesh(this._sectorAngle);
+        this.meshInstances[1].mesh = this._createTorusMesh(360);
     }
 
     drag(state) {
@@ -637,8 +642,8 @@ class AxisPlane extends AxisShape {
     constructor(device, options = {}) {
         super(device, options);
 
-        this.meshTriDataList = [
-            new MeshTriData(Mesh.fromGeometry(this.device, new PlaneGeometry()))
+        this.triData = [
+            new TriData(new PlaneGeometry())
         ];
 
         this._createPlane();

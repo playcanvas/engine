@@ -16,6 +16,7 @@ const gfxOptions = {
 };
 
 const device = await pc.createGraphicsDevice(canvas, gfxOptions);
+device.maxPixelRatio = Math.min(window.devicePixelRatio, 2);
 
 if (!device.isWebGPU) {
     throw new Error('WebGPU is required for this example.');

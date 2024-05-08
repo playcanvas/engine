@@ -2,8 +2,7 @@ import {
     SEMANTIC_ATTR8, SEMANTIC_ATTR9, SEMANTIC_ATTR10, SEMANTIC_ATTR11, SEMANTIC_ATTR12, SEMANTIC_ATTR13, SEMANTIC_ATTR14, SEMANTIC_ATTR15,
     SEMANTIC_BLENDINDICES, SEMANTIC_BLENDWEIGHT, SEMANTIC_COLOR, SEMANTIC_NORMAL, SEMANTIC_POSITION, SEMANTIC_TANGENT,
     SEMANTIC_TEXCOORD0, SEMANTIC_TEXCOORD1,
-    SHADERTAG_MATERIAL,
-    PIXELFORMAT_RGBA8
+    SHADERTAG_MATERIAL
 } from '../../../platform/graphics/constants.js';
 import { shaderChunks } from '../chunks/chunks.js';
 import { ChunkUtils } from '../chunk-utils.js';
@@ -251,6 +250,8 @@ class LitShader {
                 code += chunks.tangentBinormalVS;
                 codeBody += "   vTangentW   = getTangent();\n";
                 codeBody += "   vBinormalW  = getBinormal();\n";
+            } else if (options.enableGGXSpecular) {
+                codeBody += "   vObjectSpaceUpW = normalize(dNormalMatrix * vec3(0, 1, 0));\n";
             }
         }
 
@@ -308,8 +309,7 @@ class LitShader {
 
                 // vertex ids attributes
                 this.attributes.morph_vertex_id = SEMANTIC_ATTR15;
-                const morphIdType = device.isWebGPU ? 'uint' : 'float';
-                code += `attribute ${morphIdType} morph_vertex_id;\n`;
+                code += `attribute uint morph_vertex_id;\n`;
 
             } else {
 
@@ -495,9 +495,7 @@ class LitShader {
         code += this.frontendDecl;
         code += this.frontendCode;
 
-        const mayPackDepth = shadowType === SHADOW_PCF1 || shadowType === SHADOW_PCF3 || shadowType === SHADOW_PCF5 || shadowType === SHADOW_PCSS;
-        const mustPackDepth = (lightType === LIGHTTYPE_OMNI && shadowType !== SHADOW_PCSS && !options.clusteredLightingEnabled);
-        const usePackedDepth = mayPackDepth && !device.supportsDepthShadow || mustPackDepth;
+        const usePackedDepth = (lightType === LIGHTTYPE_OMNI && shadowType !== SHADOW_PCSS && !options.clusteredLightingEnabled);
         if (usePackedDepth) {
             code += chunks.packDepthPS;
         } else if (shadowType === SHADOW_VSM8) {
@@ -622,17 +620,9 @@ class LitShader {
         }
 
         if (hasAreaLights || options.clusteredLightingEnabled) {
-
-            let areaLutsPrecision = 'highp';
-            if (device.areaLightLutFormat === PIXELFORMAT_RGBA8) {
-                // use offset and scale for rgb8 format luts
-                decl.append("#define AREA_R8_G8_B8_A8_LUTS");
-                areaLutsPrecision = 'lowp';
-            }
-
             decl.append("#define AREA_LIGHTS");
-            decl.append(`uniform ${areaLutsPrecision} sampler2D areaLightsLutTex1;`);
-            decl.append(`uniform ${areaLutsPrecision} sampler2D areaLightsLutTex2;`);
+            decl.append(`uniform highp sampler2D areaLightsLutTex1;`);
+            decl.append(`uniform highp sampler2D areaLightsLutTex2;`);
         }
 
         for (let i = 0; i < options.lights.length; i++) {
@@ -687,7 +677,7 @@ class LitShader {
                 if (lightType === LIGHTTYPE_OMNI) {
                     decl.append("uniform samplerCube light" + i + "_shadowMap;");
                 } else {
-                    if (light._isPcf && device.supportsDepthShadow) {
+                    if (light._isPcf) {
                         decl.append("uniform sampler2DShadow light" + i + "_shadowMap;");
                     } else {
                         decl.append("uniform sampler2D light" + i + "_shadowMap;");
@@ -758,7 +748,7 @@ class LitShader {
         if (this.needsNormal) {
             func.append(chunks.cubeMapRotatePS);
             func.append(options.cubeMapProjection > 0 ? chunks.cubeMapProjectBoxPS : chunks.cubeMapProjectNonePS);
-            func.append(chunks.envMultiplyPS);
+            func.append(options.skyboxIntensity ? chunks.envMultiplyPS : chunks.envConstPS);
         }
 
         if ((this.lighting && options.useSpecular) || this.reflections) {
@@ -863,7 +853,7 @@ class LitShader {
                     func.append(chunks.shadowVSM8PS);
                 }
                 if (shadowTypeUsed[SHADOW_VSM16]) {
-                    func.append(device.extTextureHalfFloatLinear ? chunks.shadowEVSMPS.replace(/\$/g, "16") : chunks.shadowEVSMnPS.replace(/\$/g, "16"));
+                    func.append(chunks.shadowEVSMPS.replace(/\$/g, "16"));
                 }
                 if (shadowTypeUsed[SHADOW_VSM32]) {
                     func.append(device.extTextureFloatLinear ? chunks.shadowEVSMPS.replace(/\$/g, "32") : chunks.shadowEVSMnPS.replace(/\$/g, "32"));
@@ -968,7 +958,7 @@ class LitShader {
             if (options.clusteredLightingAreaLightsEnabled)
                 decl.append("#define CLUSTER_AREALIGHTS");
 
-            decl.append(LightsBuffer.getShaderDefines(device));
+            decl.append(LightsBuffer.getShaderDefines());
 
             if (options.clusteredLightingShadowsEnabled && !options.noShadow) {
                 func.append(chunks.clusteredLightShadowsPS);

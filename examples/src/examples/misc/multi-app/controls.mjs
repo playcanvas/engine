@@ -41,23 +41,6 @@ export function controls({ observer, ReactPCUI, React, jsx, fragment }) {
         ),
         jsx(
             Panel,
-            { headerText: 'WebGL 1' },
-            jsx(Button, {
-                text: 'Add',
-                onClick: () => observer.emit('add:webgl1')
-            }),
-            jsx(Button, {
-                text: 'Remove',
-                onClick: () => observer.emit('remove:webgl1')
-            }),
-            jsx(Label, {
-                binding: new BindingTwoWay(),
-                link: { observer, path: 'webgl1' },
-                value: observer.get('webgl1')
-            })
-        ),
-        jsx(
-            Panel,
             { headerText: 'Null' },
             jsx(Button, {
                 text: 'Add',

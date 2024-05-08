@@ -61,12 +61,9 @@ export default {
                 // get background pixel color with distorted offset
                 vec3 grabColor = texture2DLodEXT(uSceneColorMap, grabUv + offset, mipmap).rgb;
 
-                // tint the material based on mipmap, on WebGL2 only, as WebGL1 does not support non-constant array indexing
-                // (note - this could be worked around by using a series of if statements in this case)
-                #ifdef GL2
-                    float tintIndex = clamp(mipmap, 0.0, 3.0);
-                    grabColor *= tints[int(tintIndex)];
-                #endif
+                // tint the material based on mipmap
+                float tintIndex = clamp(mipmap, 0.0, 3.0);
+                grabColor *= tints[int(tintIndex)];
 
                 // brighten the refracted texture a little bit
                 // brighten even more the rough parts of the glass

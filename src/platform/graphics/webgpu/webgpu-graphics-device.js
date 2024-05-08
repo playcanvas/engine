@@ -3,7 +3,7 @@ import { Debug, DebugHelper } from '../../../core/debug.js';
 import { path } from '../../../core/path.js';
 
 import {
-    PIXELFORMAT_RGBA32F, PIXELFORMAT_RGBA8, PIXELFORMAT_BGRA8, DEVICETYPE_WEBGPU,
+    PIXELFORMAT_RGBA8, PIXELFORMAT_BGRA8, DEVICETYPE_WEBGPU,
     BUFFERUSAGE_READ, BUFFERUSAGE_COPY_DST, semanticToLocation
 } from '../constants.js';
 import { GraphicsDevice } from '../graphics-device.js';
@@ -141,24 +141,13 @@ class WebgpuGraphicsDevice extends GraphicsDevice {
         this.fragmentUniformsCount = limits.maxUniformBufferBindingSize / 16;
         this.vertexUniformsCount = limits.maxUniformBufferBindingSize / 16;
         this.supportsUniformBuffers = true;
-        this.supportsVolumeTextures = true;
-        this.supportsBoneTextures = true;
         this.supportsMorphTargetTexturesCore = true;
         this.supportsAreaLights = true;
-        this.supportsDepthShadow = true;
         this.supportsGpuParticles = true;
-        this.supportsMrt = true;
         this.supportsCompute = true;
-        this.extUintElement = true;
-        this.extTextureFloat = true;
         this.textureFloatRenderable = true;
-        this.textureHalfFloatFilterable = true;
-        this.extTextureHalfFloat = true;
         this.textureHalfFloatRenderable = true;
-        this.boneLimit = 1024;
         this.supportsImageBitmap = true;
-        this.extBlendMinmax = true;
-        this.areaLightLutFormat = this.textureFloatFilterable ? PIXELFORMAT_RGBA32F : PIXELFORMAT_RGBA8;
         this.supportsTextureFetch = true;
 
         // WebGPU currently only supports 1 and 4 samples
@@ -430,14 +419,15 @@ class WebgpuGraphicsDevice extends GraphicsDevice {
     /**
      * @param {number} index - Index of the bind group slot
      * @param {import('../bind-group.js').BindGroup} bindGroup - Bind group to attach
+     * @param {number[]} [offsets] - Byte offsets for all uniform buffers in the bind group.
      */
-    setBindGroup(index, bindGroup) {
+    setBindGroup(index, bindGroup, offsets) {
 
         // TODO: this condition should be removed, it's here to handle fake grab pass, which should be refactored instead
         if (this.passEncoder) {
 
             // set it on the device
-            this.passEncoder.setBindGroup(index, bindGroup.impl.bindGroup, bindGroup.uniformBufferOffsets);
+            this.passEncoder.setBindGroup(index, bindGroup.impl.bindGroup, offsets ?? bindGroup.uniformBufferOffsets);
 
             // store the active formats, used by the pipeline creation
             this.bindGroupFormats[index] = bindGroup.format.impl;

@@ -152,7 +152,7 @@ export const BLENDEQUATION_SUBTRACT = 1;
 export const BLENDEQUATION_REVERSE_SUBTRACT = 2;
 
 /**
- * Use the smallest value. Check app.graphicsDevice.extBlendMinmax for support.
+ * Use the smallest value.
  *
  * @type {number}
  * @category Graphics
@@ -160,7 +160,7 @@ export const BLENDEQUATION_REVERSE_SUBTRACT = 2;
 export const BLENDEQUATION_MIN = 3;
 
 /**
- * Use the largest value. Check app.graphicsDevice.extBlendMinmax for support.
+ * Use the largest value.
  *
  * @type {number}
  * @category Graphics
@@ -2005,14 +2005,6 @@ export const uniformTypeToStorage = new Uint8Array([
     TYPE_INT32,     // UNIFORMTYPE_ITEXTURE2D_ARRAY
     TYPE_UINT32     // UNIFORMTYPE_UTEXTURE2D_ARRAY
 ]);
-
-/**
- * A WebGL 1 device type.
- *
- * @type {string}
- * @category Graphics
- */
-export const DEVICETYPE_WEBGL1 = 'webgl1';
 
 /**
  * A WebGL 2 device type.

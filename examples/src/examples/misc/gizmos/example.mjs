@@ -20,7 +20,7 @@ class GizmoHandler {
     /**
      * Object to reference each gizmo.
      *
-     * @type {Record<string, pc.Gizmo>}
+     * @type {Record<string, pc.TransformGizmo>}
      * @private
      */
     _gizmos;
@@ -91,6 +91,7 @@ class GizmoHandler {
      * @param {string} type - The transform gizmo type.
      */
     _updateData(type) {
+        /** @type {any} */
         const gizmo = this.gizmo;
         this._skipSetFire = true;
         data.set('gizmo', {
@@ -153,8 +154,10 @@ class GizmoHandler {
      */
     switch(type) {
         this.gizmo.detach();
+        const coordSpace = this.gizmo.coordSpace;
         this._type = type ?? 'translate';
         this.gizmo.attach(this._nodes);
+        this.gizmo.coordSpace = coordSpace;
         this._updateData(type);
     }
 
@@ -172,6 +175,7 @@ const gfxOptions = {
 };
 
 const device = await pc.createGraphicsDevice(canvas, gfxOptions);
+device.maxPixelRatio = Math.min(window.devicePixelRatio, 2);
 const createOptions = new pc.AppOptions();
 createOptions.graphicsDevice = device;
 createOptions.mouse = new pc.Mouse(document.body);
@@ -181,9 +185,11 @@ createOptions.componentSystems = [
     pc.RenderComponentSystem,
     pc.CameraComponentSystem,
     pc.LightComponentSystem,
-    pc.ScriptComponentSystem
+    pc.ScriptComponentSystem,
+    pc.ScreenComponentSystem,
+    pc.ElementComponentSystem
 ];
-createOptions.resourceHandlers = [pc.TextureHandler, pc.ContainerHandler, pc.ScriptHandler];
+createOptions.resourceHandlers = [pc.TextureHandler, pc.ContainerHandler, pc.ScriptHandler, pc.FontHandler];
 
 const app = new pc.AppBase(canvas);
 app.init(createOptions);
@@ -198,7 +204,8 @@ window.addEventListener('resize', resize);
 
 // load assets
 const assets = {
-    script: new pc.Asset('script', 'script', { url: rootPath + '/static/scripts/camera/orbit-camera.js' })
+    script: new pc.Asset('script', 'script', { url: rootPath + '/static/scripts/camera/orbit-camera.js' }),
+    font: new pc.Asset('font', 'font', { url: rootPath + '/static/assets/fonts/courier.json' })
 };
 /**
  * @param {pc.Asset[] | number[]} assetList - The asset list.
@@ -214,7 +221,6 @@ function loadAssets(assetList, assetRegistry) {
 await loadAssets(Object.values(assets), app.assets);
 
 app.start();
-
 /**
  * @param {pc.Color} color - The color.
  * @returns {pc.Material} - The standard material.
@@ -225,6 +231,32 @@ function createColorMaterial(color) {
     material.update();
     return material;
 }
+
+// scene settings
+app.scene.ambientLight = new pc.Color(0.2, 0.2, 0.2);
+
+// create screen
+const screen = new pc.Entity('screen');
+screen.addComponent('screen', {
+    referenceResolution: new pc.Vec2(1280, 720),
+    scaleBlend: 0.5,
+    scaleMode: pc.SCALEMODE_BLEND,
+    screenSpace: true
+});
+app.root.addChild(screen);
+
+const instr = new pc.Entity('instructions');
+instr.setLocalPosition(0, 200, 0);
+instr.addComponent('element', {
+    pivot: new pc.Vec2(0.5, 0.5),
+    anchor: new pc.Vec4(0, 1, 1, 0.8),
+    margin: new pc.Vec4(0, 0, 0, 0),
+    fontAsset: assets.font.id,
+    fontSize: 18,
+    text: 'Translate (1), Rotate (2), Scale (3)\nWorld/Local (X)\nPerspective (P), Orthographic (O)',
+    type: pc.ELEMENTTYPE_TEXT
+});
+screen.addChild(instr);
 
 // create entities
 const box = new pc.Entity('box');
@@ -277,29 +309,15 @@ camera.script.create('orbitCameraInputMouse');
 camera.script.create('orbitCameraInputTouch');
 camera.setPosition(1, 1, 1);
 app.root.addChild(camera);
-orbitCamera.distance = 14;
+orbitCamera.distance = 5 * camera.camera?.aspectRatio;
 
-// create 3-point lighting
-const backLight = new pc.Entity('light');
-backLight.addComponent('light', {
-    intensity: 0.5
-});
-app.root.addChild(backLight);
-backLight.setEulerAngles(-60, 0, 90);
-
-const fillLight = new pc.Entity('light');
-fillLight.addComponent('light', {
-    intensity: 0.5
-});
-app.root.addChild(fillLight);
-fillLight.setEulerAngles(45, 0, 0);
-
-const keyLight = new pc.Entity('light');
-keyLight.addComponent('light', {
+// create light entity
+const light = new pc.Entity('light');
+light.addComponent('light', {
     intensity: 1
 });
-app.root.addChild(keyLight);
-keyLight.setEulerAngles(0, 0, -60);
+app.root.addChild(light);
+light.setEulerAngles(0, 0, -60);
 
 // create layers
 const gizmoLayer = new pc.Layer({
