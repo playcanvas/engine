@@ -2,7 +2,7 @@ import fs from 'fs';
 
 /**
  * @param {object} obj - The object.
- * @returns {string} - The stringifiied object
+ * @returns {string} - The stringified object
  */
 export function objStringify(obj) {
     return JSON.stringify(obj, null, 4).replace(/"(\w+)":/g, '$1:');
