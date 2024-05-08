@@ -57,7 +57,7 @@ export { app };
 
 This is the only file that's required to run an example. The code defined in this function is executed each time the example play button is pressed. It takes the example's canvas element from the DOM and usually begins by creating a new PlayCanvas `Application` or `AppBase` using that canvas.
 
-Examples can also contains comments which allow you to define the default configuration for your examples as well as overrides to particular settings such as `deviceType`. Check the possible values to set in `ExampleConfig` in `scripts/utils.mjs` file for the full list.
+Examples can also contain comments which allow you to define the default configuration for your examples as well as overrides to particular settings such as `deviceType`. Check the possible values to set in `ExampleConfig` in `scripts/utils.mjs` file for the full list.
 
 ```js
 // @config DESCRIPTION This is a description
