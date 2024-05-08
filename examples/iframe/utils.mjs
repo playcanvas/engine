@@ -75,11 +75,6 @@ export function clearImports() {
     blobUrls.forEach(URL.revokeObjectURL);
 }
 
-function isLinuxChrome() {
-    // Lack of Chrome's WebGPU support on Linux
-    return navigator.platform.includes('Linux') && navigator.appVersion.includes("Chrome");
-}
-
 const DEVICE_TYPES = ['webgpu', 'webgl2'];
 export let deviceType = 'webgl2';
 
@@ -98,11 +93,6 @@ export function updateDeviceType(config) {
         return;
     }
     if (config.WEBGL_DISABLED) {
-        if (isLinuxChrome()) {
-            console.warn('WebGPU chosen but browser is not supported, defaulting to WebGL2');
-            deviceType = 'webgl2';
-            return;
-        }
         deviceType = 'webgpu';
         return;
     }
