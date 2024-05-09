@@ -1,6 +1,7 @@
 import { Mat4 } from '../../core/math/mat4.js';
 import { Vec3 } from '../../core/math/vec3.js';
-import { BUFFER_DYNAMIC, BUFFER_STATIC, PIXELFORMAT_R32U, PIXELFORMAT_RGBA8, PIXELFORMAT_RGBA16F, PIXELFORMAT_RGBA32F, SEMANTIC_ATTR13, SEMANTIC_COLOR, SEMANTIC_POSITION, TYPE_UINT32 } from '../../platform/graphics/constants.js';
+import { Vec4 } from '../../core/math/vec4.js';
+import { BUFFER_STATIC, CULLFACE_NONE, PIXELFORMAT_R32U, PIXELFORMAT_RGBA8, PIXELFORMAT_RGBA16F, PIXELFORMAT_RGBA32F, SEMANTIC_ATTR13, SEMANTIC_POSITION, TYPE_UINT32 } from '../../platform/graphics/constants.js';
 import { DITHER_NONE } from '../constants.js';
 import { MeshInstance } from '../mesh-instance.js';
 import { Mesh } from '../mesh.js';
@@ -8,9 +9,12 @@ import { createGSplatMaterial } from './gsplat-material.js';
 import { GSplatSorter } from './gsplat-sorter.js';
 import { RenderTarget } from '../../platform/graphics/render-target.js';
 import { createShaderFromCode } from '../shader-lib/utils.js';
-import { drawQuadWithShader } from '../graphics/quad-render-utils.js';
 import { VertexBuffer } from '../../platform/graphics/vertex-buffer.js';
 import { VertexFormat } from '../../platform/graphics/vertex-format.js';
+import { RenderPass } from '../../platform/graphics/render-pass.js';
+import { QuadRender } from '../graphics/quad-render.js';
+import { DebugGraphics } from '../../platform/graphics/debug-graphics.js';
+import { DepthState } from '../../platform/graphics/depth-state.js';
 
 // vertex shader
 const v1v2VS = /* glsl */`
@@ -54,6 +58,8 @@ vec4 calcV1V2(vec3 centerView, vec3 covA, vec3 covB, float focal, mat3 W) {
     float lambda1 = mid + radius;
     float lambda2 = max(mid - radius, 0.1);
     vec2 diagonalVector = normalize(vec2(offDiagonal, lambda1 - diagonal1));
+
+    // TODO: these two 2d vectors could be stored in 3 floats instead: angle, length1, length2
     vec2 v1 = min(sqrt(2.0 * lambda1), 1024.0) * diagonalVector;
     vec2 v2 = min(sqrt(2.0 * lambda2), 1024.0) * vec2(diagonalVector.y, -diagonalVector.x);
 
@@ -64,7 +70,7 @@ uniform highp usampler2D splatOrder;
 uniform highp sampler2D transformA;
 uniform highp sampler2D transformB;
 uniform highp sampler2D transformC;
-uniform sampler2D splatColor;
+uniform mediump sampler2D splatColor;
 
 uniform mat4 matrix_model;
 uniform mat4 matrix_view;
@@ -89,6 +95,9 @@ void main(void) {
     vec4 centerClip = matrix_projection * centerView;
 
     if (any(greaterThan(abs(centerClip.xyz), vec3(centerClip.w)))) {
+        // NOTE: on WebGPU it is quicker to clear the render targets before rendering
+        // and discard fragments here. On WebGL2 though that approach is slower, so we
+        // keep this approach for now.
         pcFragColor0 = vec4(0.0);
         pcFragColor1 = vec4(0.0);
         pcFragColor2 = vec4(0.0);
@@ -114,6 +123,43 @@ void main(void) {
     }
 }
 `;
+
+class V1V2RenderPass extends RenderPass {
+    rect;
+    shader;
+    quad;
+
+    constructor(device, target) {
+        super(device);
+
+        this.rect = new Vec4(0, 0, target.width, target.height);
+        this.shader = createShaderFromCode(device, v1v2VS, v1v2FS, 'v1v2Shader', { aPosition: SEMANTIC_POSITION });
+        this.quad = new QuadRender(this.shader);
+
+        this.init(target);
+        this.colorOps.clear = false;
+        this.depthStencilOps.clearDepth = false;
+        // this.setClearColor(new Color(0, 0, 0, 0));
+    }
+
+    execute() {
+        const { device } = this;
+
+        DebugGraphics.pushGpuMarker(device, "V1V2RenderPass");
+
+        device.setCullMode(CULLFACE_NONE);
+        device.setDepthState(DepthState.NODEPTH);
+        device.setStencilState(null, null);
+
+        this.quad.render(this.rect, this.rect);
+        DebugGraphics.popGpuMarker(device);
+    }
+
+    destroy() {
+        this.quad.destroy();
+        super.destroy();
+    }
+};
 
 const mat = new Mat4();
 const cameraPosition = new Vec3();
@@ -144,11 +190,11 @@ class GSplatInstance {
 
     /** @type {import('../../platform/graphics/texture.js').Texture} */
     v1v2Texture;
-    v1v2RenderTarget;
-    v1v2Shader;
-
     centerTexture;
     colorTexture;
+
+    v1v2RenderTarget;
+    v1v2RenderPass;
 
     /** @type {GSplatSorter | null} */
     sorter = null;
@@ -208,7 +254,8 @@ class GSplatInstance {
             depth: false
         });
 
-        this.v1v2Shader = createShaderFromCode(device, v1v2VS, v1v2FS, 'v1v2Shader', { aPosition: SEMANTIC_POSITION });
+        // create v1v2 render pass
+        this.v1v2RenderPass = new V1V2RenderPass(device, this.v1v2RenderTarget);
 
         // material
         this.createMaterial(options);
@@ -275,7 +322,7 @@ class GSplatInstance {
                 this.meshInstance.instancingCount = Math.floor(count / splatInstanceSize);
 
                 // update preprocess buffer when sorting changes
-                this.updateV1V2(this.cameras[0]);
+                // this.updateV1V2(this.cameras[0]);
             });
         }
     }
@@ -343,10 +390,10 @@ class GSplatInstance {
             // TODO: extend to support multiple cameras
             const camera = this.cameras[0];
             this.sort(camera._node);
-            // this.updateV1V2(camera);
+            this.updateV1V2(camera);
 
             // we get new list of cameras each frame
-            // this.cameras.length = 0;
+            this.cameras.length = 0;
         }
     }
 
@@ -372,7 +419,7 @@ class GSplatInstance {
         scope.resolve('viewport').setValue([device.width, device.height]);
         scope.resolve('bufferSize').setValue([this.v1v2Texture.width, this.v1v2Texture.height]);
 
-        drawQuadWithShader(device, this.v1v2RenderTarget, this.v1v2Shader);
+        this.v1v2RenderPass.render();
     }
 }
 

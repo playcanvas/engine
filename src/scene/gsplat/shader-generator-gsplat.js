@@ -24,7 +24,7 @@ varying vec4 color;
 uniform vec4 tex_params;
 uniform highp sampler2D v1v2Texture;
 uniform highp sampler2D splatCenterOrdered;
-uniform highp sampler2D splatColorOrdered;
+uniform mediump sampler2D splatColorOrdered;
 
 void splatMain() {
     // calculate splat id and uv
