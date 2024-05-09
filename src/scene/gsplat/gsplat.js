@@ -18,19 +18,13 @@ const _m1 = new Vec3();
 const _m2 = new Vec3();
 const _s = new Vec3();
 
+const halfFormat = true;
+
 /** @ignore */
 class GSplat {
     device;
 
     numSplats;
-
-    /**
-     * True if half format should be used, false is float format should be used or undefined if none
-     * are available.
-     *
-     * @type {boolean|undefined}
-     */
-    halfFormat;
 
     /** @type {Texture} */
     colorTexture;
@@ -61,15 +55,11 @@ class GSplat {
         this.aabb = aabb;
 
         // create data textures if any format is available
-        this.halfFormat = true;
-
-        if (this.halfFormat !== undefined) {
-            const size = this.evalTextureSize(numSplats);
-            this.colorTexture = this.createTexture('splatColor', PIXELFORMAT_RGBA8, size);
-            this.transformATexture = this.createTexture('transformA', this.halfFormat ? PIXELFORMAT_RGBA16F : PIXELFORMAT_RGBA32F, size);
-            this.transformBTexture = this.createTexture('transformB', this.halfFormat ? PIXELFORMAT_RGBA16F : PIXELFORMAT_RGBA32F, size);
-            this.transformCTexture = this.createTexture('transformC', this.halfFormat ? PIXELFORMAT_R16F : PIXELFORMAT_R32F, size);
-        }
+        const size = this.evalTextureSize(numSplats);
+        this.colorTexture = this.createTexture('splatColor', PIXELFORMAT_RGBA8, size);
+        this.transformATexture = this.createTexture('transformA', halfFormat ? PIXELFORMAT_RGBA16F : PIXELFORMAT_RGBA32F, size);
+        this.transformBTexture = this.createTexture('transformB', halfFormat ? PIXELFORMAT_RGBA16F : PIXELFORMAT_RGBA32F, size);
+        this.transformCTexture = this.createTexture('transformC', halfFormat ? PIXELFORMAT_R16F : PIXELFORMAT_R32F, size);
     }
 
     destroy() {
@@ -105,7 +95,7 @@ class GSplat {
      * @returns {Vec2} An instance of Vec2 representing the width and height of the texture.
      */
     evalTextureSize(count) {
-        const width = Math.ceil(Math.sqrt(count));
+        const width = Math.pow(2, Math.ceil(Math.log2(Math.sqrt(count))));
         const height = Math.ceil(count / width);
         return new Vec2(width, height);
     }
@@ -195,7 +185,6 @@ class GSplat {
      */
     updateTransformData(x, y, z, rot0, rot1, rot2, rot3, scale0, scale1, scale2) {
 
-        const { halfFormat } = this;
         const float2Half = FloatPacking.float2Half;
 
         if (!this.transformATexture)
