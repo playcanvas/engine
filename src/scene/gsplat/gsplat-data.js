@@ -88,6 +88,7 @@ class GSplatData {
         if (!this.isCompressed && performZScale) {
             mat4.setScale(-1, -1, 1);
             this.transform(mat4);
+            this.reorderData();
         }
     }
 
@@ -407,6 +408,77 @@ class GSplatData {
                 };
             })
         }], false);
+    }
+
+    calcMortonOrder() {
+        // https://fgiesen.wordpress.com/2009/12/13/decoding-morton-codes/
+        const encodeMorton3 = (x, y, z) => {
+            const Part1By2 = (x) => {
+                x &= 0x000003ff;
+                x = (x ^ (x << 16)) & 0xff0000ff;
+                x = (x ^ (x <<  8)) & 0x0300f00f;
+                x = (x ^ (x <<  4)) & 0x030c30c3;
+                x = (x ^ (x <<  2)) & 0x09249249;
+                return x;
+            };
+
+            return (Part1By2(z) << 2) + (Part1By2(y) << 1) + Part1By2(x);
+        };
+
+        const x = this.getProp('x');
+        const y = this.getProp('y');
+        const z = this.getProp('z');
+
+        const minX = x.reduce((a, b) => Math.min(a, b), x[0]);
+        const minY = y.reduce((a, b) => Math.min(a, b), y[0]);
+        const minZ = z.reduce((a, b) => Math.min(a, b), z[0]);
+
+        const maxX = x.reduce((a, b) => Math.max(a, b), x[0]);
+        const maxY = y.reduce((a, b) => Math.max(a, b), y[0]);
+        const maxZ = z.reduce((a, b) => Math.max(a, b), z[0]);
+
+        const sizeX = 1024 / (maxX - minX);
+        const sizeY = 1024 / (maxY - minY);
+        const sizeZ = 1024 / (maxZ - minZ);
+
+        const morton = new Uint32Array(this.numSplats);
+        for (let i = 0; i < this.numSplats; i++) {
+            const ix = Math.floor((x[i] - minX) * sizeX);
+            const iy = Math.floor((y[i] - minY) * sizeY);
+            const iz = Math.floor((z[i] - minZ) * sizeZ);
+            morton[i] = encodeMorton3(ix, iy, iz);
+        }
+
+        // generate indices
+        const indices = new Uint32Array(this.numSplats);
+        for (let i = 0; i < this.numSplats; i++) {
+            indices[i] = i;
+        }
+        // order splats by morton code
+        indices.sort((a, b) => morton[a] - morton[b]);
+
+        return indices;
+    }
+
+    reorderData() {
+        // calculate splat morton order
+        const order = this.calcMortonOrder();
+
+        const reorder = (data) => {
+            const result = new data.constructor(data.length);
+
+            for (let i = 0; i < order.length; i++) {
+                result[i] = data[order[i]];
+            }
+
+            return result;
+        };
+
+        this.elements.forEach((element) => {
+            element.properties.forEach((property) => {
+                property.storage = reorder(property.storage);
+            });
+        });
     }
 }
 
