@@ -139,9 +139,6 @@ class GSplatInstance {
     /** @type {import('../materials/material.js').Material} */
     material;
 
-    /** @type {VertexBuffer} */
-    vb;
-
     /** @type {import('../../platform/graphics/texture.js').Texture} */
     orderTexture;
 
