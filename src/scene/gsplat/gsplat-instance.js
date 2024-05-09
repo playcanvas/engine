@@ -16,6 +16,7 @@ import { VertexFormat } from '../../platform/graphics/vertex-format.js';
 const v1v2VS = /* glsl */`
 
 attribute vec2 aPosition;
+
 void main(void) {
     gl_Position = vec4(aPosition, 0.0, 1.0);
 }
@@ -273,7 +274,7 @@ class GSplatInstance {
                 // don't render the splats behind the camera
                 this.meshInstance.instancingCount = Math.floor(count / splatInstanceSize);
 
-                // 
+                // update preprocess buffer when sorting changes
                 this.updateV1V2(this.cameras[0]);
             });
         }
