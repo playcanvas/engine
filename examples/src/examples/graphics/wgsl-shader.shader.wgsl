@@ -12,8 +12,8 @@ struct VertexOutput {
     @location(0) fragPosition: vec4f,
 }
 
-@group(0) @binding(0) var<uniform> uvMesh : ub_mesh;
-@group(1) @binding(0) var<uniform> ubView : ub_view;
+@group(2) @binding(0) var<uniform> uvMesh : ub_mesh;
+@group(0) @binding(0) var<uniform> ubView : ub_view;
 
 @vertex
 fn vertexMain(@location(0) position : vec4f) -> VertexOutput {

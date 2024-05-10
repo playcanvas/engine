@@ -7,6 +7,7 @@ import { WebgpuVertexBufferLayout } from "./webgpu-vertex-buffer-layout.js";
 import { WebgpuDebug } from "./webgpu-debug.js";
 import { WebgpuPipeline } from "./webgpu-pipeline.js";
 import { DebugGraphics } from "../debug-graphics.js";
+import { bindGroupNames } from "../constants.js";
 
 let _pipelineId = 0;
 
@@ -119,6 +120,12 @@ class WebgpuRenderPipeline extends WebgpuPipeline {
         depthState, cullMode, stencilEnabled, stencilFront, stencilBack) {
 
         Debug.assert(bindGroupFormats.length <= 3);
+
+        // all bind groups must be set as the WebGPU layout cannot have skipped indices. Not having a bind
+        // group would assign incorrect slots to the following bind groups, causing a validation errors.
+        Debug.assert(bindGroupFormats[0], `BindGroup with index 0 [${bindGroupNames[0]}] is not set.`);
+        Debug.assert(bindGroupFormats[1], `BindGroup with index 1 [${bindGroupNames[1]}] is not set.`);
+        Debug.assert(bindGroupFormats[2], `BindGroup with index 2 [${bindGroupNames[2]}] is not set.`);
 
         // render pipeline unique hash
         const lookupHashes = this.lookupHashes;
