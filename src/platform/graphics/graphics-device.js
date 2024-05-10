@@ -864,8 +864,10 @@ class GraphicsDevice extends EventHandler {
     /**
      * Get a renderable HDR pixel format supported by the graphics device.
      *
-     * Note: On WebGL2 and WebGPU, this function returns at least one of the supported formats on
-     * all devices apart from some very old iOS and Android devices.
+     * Note: On WebGL2 and WebGPU, when the `filterable` parameter is set to false, this function
+     * returns one of the supported formats on majority of the devices apart from some very old iOS
+     * and Android devices (99%). When the `filterable` parameter is set to true, the function
+     * returns a format on considerably lower number of devices (70%).
      *
      * @param {number[]} [formats] - An array of pixel formats to check for support. Can contain:
      *
