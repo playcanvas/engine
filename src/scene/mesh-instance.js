@@ -88,7 +88,7 @@ class ShaderInstance {
 
             const bindGroupFormat = shader.meshBindGroupFormat;
             Debug.assert(bindGroupFormat);
-            this.bindGroup = new BindGroup(device, bindGroupFormat/*, uniformBuffer*/);
+            this.bindGroup = new BindGroup(device, bindGroupFormat);
             DebugHelper.setName(this.bindGroup, `MeshBindGroup_${this.bindGroup.id}`);
         }
 
