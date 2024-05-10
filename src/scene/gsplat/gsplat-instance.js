@@ -226,7 +226,7 @@ class GSplatInstance {
         // number of quads to combine into a single instance. this is to increase occupancy
         // in the vertex shader.
         const splatInstanceSize = 128;
-        const numSplats = Math.floor(splat.numSplats / splatInstanceSize) * splatInstanceSize;
+        const numSplats = Math.ceil(splat.numSplats / splatInstanceSize) * splatInstanceSize;
         const numSplatInstances = numSplats / splatInstanceSize;
 
         // specify the base splat index per instance
@@ -281,8 +281,10 @@ class GSplatInstance {
             this.sorter = new GSplatSorter();
             this.sorter.init(this.orderTexture, this.centers);
             this.sorter.on('updated', (count) => {
-                // don't render the splats behind the camera
-                this.meshInstance.instancingCount = Math.floor(count / splatInstanceSize);
+                // limit splat render count to exclude those behind the camera.
+                // NOTE: the last instance rendered may include non-existant splat
+                // data. this should be ok though. as the data is filled with 0's.
+                this.meshInstance.instancingCount = Math.ceil(count / splatInstanceSize);
 
                 // update preprocess buffer when sorting changes
                 // this.updateV1V2(this.cameras[0]);
