@@ -275,6 +275,7 @@ class Immediate {
     onPostRender() {
 
         // clean up line batches
+        this.allBatches.forEach(batch => batch.clear());
         this.allBatches.clear();
 
         // all batches need updating next frame
