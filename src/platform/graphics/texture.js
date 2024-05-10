@@ -25,6 +25,26 @@ let id = 0;
  * A texture is a container for texel data that can be utilized in a fragment shader. Typically,
  * the texel data represents an image that is mapped over geometry.
  *
+ * Note on **HDR texture format** support:
+ * 1. **As textures**:
+ * - float (e.x. {@link PIXELFORMAT_RGBA32F}), half-float (e.x. {@link PIXELFORMAT_RGBA16F}) and
+ * small-float ({@link PIXELFORMAT_111110F}) formats are always supported on both WebGL2 and WebGPU
+ * with point sampling.
+ * - half-float and small-float formats are always supported on WebGL2 and WebGPU with linear sampling.
+ * - float formats are supported on WebGL2 and WebGPU with linear sampling only if
+ * {@link GraphicsDevice#textureFloatFilterable} is true.
+ *
+ * 2. **As renderable textures** that can be used as color buffers in a {@link RenderTarget}:
+ * - on WebGPU, rendering to float and half-float formats is always supported.
+ * - on WebGPU, rendering to small-float format is supported only if
+ * {@link GraphicsDevice#textureRG11B10Renderable} is true.
+ * - on WebGL2, rendering to these 3 formats formats is supported only if
+ * {@link GraphicsDevice#textureFloatRenderable} is true.
+ * - on WebGL2, if {@link GraphicsDevice#textureFloatRenderable} is false, but
+ * {@link GraphicsDevice#textureHalfFloatRenderable} is true, rendering to half-float formats only
+ * is supported. This is the case of many mobile iOS devices.
+ * - you can determine available renderable HDR format using
+ * {@link GraphicsDevice#getRenderableHdrFormat}.
  * @category Graphics
  */
 class Texture {
