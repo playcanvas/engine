@@ -33,14 +33,14 @@ function SortWorker() {
             const cmp = compare_fn(k);
             if (cmp > 0) {
                 m = k + 1;
-            } else if(cmp < 0) {
+            } else if (cmp < 0) {
                 n = k - 1;
             } else {
                 return k;
             }
         }
         return ~m;
-    }
+    };
 
     const update = () => {
         if (!centers || !data || !cameraPosition || !cameraDirection) return;
@@ -130,9 +130,9 @@ function SortWorker() {
         }
 
         // find splat with distance 0 to limit rendering
-        const dist = (i) => distances[target[i]] / divider + minDist;
+        const dist = i => distances[target[i]] / divider + minDist;
         const findZero = () => {
-            const result = binarySearch(0, numVertices - 1, (i) => -dist(i));
+            const result = binarySearch(0, numVertices - 1, i => -dist(i));
             return Math.min(numVertices, Math.abs(result));
         };
 

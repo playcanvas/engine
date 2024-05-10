@@ -1,4 +1,4 @@
-import { CULLFACE_BACK, CULLFACE_NONE } from "../../platform/graphics/constants.js";
+import { CULLFACE_NONE } from "../../platform/graphics/constants.js";
 import { ShaderProcessorOptions } from "../../platform/graphics/shader-processor-options.js";
 import { BLEND_NONE, BLEND_NORMAL, DITHER_NONE, GAMMA_NONE, GAMMA_SRGBHDR, SHADER_FORWARDHDR, TONEMAP_LINEAR } from "../constants.js";
 import { Material } from "../materials/material.js";

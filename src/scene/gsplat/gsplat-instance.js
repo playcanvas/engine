@@ -150,10 +150,13 @@ class GSplatInstance {
 
     /** @type {import('../../platform/graphics/texture.js').Texture} */
     v1v2Texture;
+
     centerTexture;
+
     colorTexture;
 
     v1v2RenderTarget;
+
     v1v2RenderPass;
 
     /** @type {GSplatSorter | null} */
@@ -305,7 +308,7 @@ class GSplatInstance {
     createMaterial(options) {
         this.material = createGSplatMaterial(options);
         // this.material.setParameter('splatOrder', this.orderTexture);
-        this.material.setParameter('v1v2Texture', this.v1v2Texture)
+        this.material.setParameter('v1v2Texture', this.v1v2Texture);
         this.material.setParameter('splatCenterOrdered', this.centerTexture);
         this.material.setParameter('splatColorOrdered', this.colorTexture);
         this.splat.setupMaterial(this.material);
@@ -392,7 +395,7 @@ class GSplatInstance {
 
         scope.resolve('clipScale').setValue([
             modelViewProjectionMatrix.getX().length(),
-            modelViewProjectionMatrix.getY().length(),
+            modelViewProjectionMatrix.getY().length()
         ]);
 
         this.v1v2RenderPass.render();
