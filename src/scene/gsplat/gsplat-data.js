@@ -88,6 +88,9 @@ class GSplatData {
         if (!this.isCompressed && performZScale) {
             mat4.setScale(-1, -1, 1);
             this.transform(mat4);
+
+            // reorder uncompressed splats in morton order for better memory access
+            // efficiency during rendering
             this.reorderData();
         }
     }

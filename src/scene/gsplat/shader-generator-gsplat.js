@@ -4,7 +4,7 @@ import { DITHER_NONE } from "../constants.js";
 import { shaderChunks } from "../shader-lib/chunks/chunks.js";
 import { ShaderGenerator } from "../shader-lib/programs/shader-generator.js";
 import { ShaderPass } from "../shader-pass.js";
-import { SEMANTIC_ATTR13, SEMANTIC_COLOR, SEMANTIC_POSITION } from "../../platform/graphics/constants.js";
+import { SEMANTIC_ATTR13, SEMANTIC_POSITION } from "../../platform/graphics/constants.js";
 
 // vertex shader
 const splatCoreVS = /* glsl */ `

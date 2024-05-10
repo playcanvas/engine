@@ -4,7 +4,7 @@ import { Quat } from '../../core/math/quat.js';
 import { Vec2 } from '../../core/math/vec2.js';
 import { Mat3 } from '../../core/math/mat3.js';
 import {
-    ADDRESS_CLAMP_TO_EDGE, FILTER_NEAREST, PIXELFORMAT_R16F, PIXELFORMAT_R32F, PIXELFORMAT_RGBA16F, PIXELFORMAT_RGBA32F,
+    ADDRESS_CLAMP_TO_EDGE, FILTER_NEAREST, PIXELFORMAT_RG16F, PIXELFORMAT_R32F, PIXELFORMAT_RGBA16F, PIXELFORMAT_RGBA32F,
     PIXELFORMAT_RGBA8
 } from '../../platform/graphics/constants.js';
 import { Texture } from '../../platform/graphics/texture.js';
@@ -59,7 +59,7 @@ class GSplat {
         this.colorTexture = this.createTexture('splatColor', PIXELFORMAT_RGBA8, size);
         this.transformATexture = this.createTexture('transformA', halfFormat ? PIXELFORMAT_RGBA16F : PIXELFORMAT_RGBA32F, size);
         this.transformBTexture = this.createTexture('transformB', halfFormat ? PIXELFORMAT_RGBA16F : PIXELFORMAT_RGBA32F, size);
-        this.transformCTexture = this.createTexture('transformC', halfFormat ? PIXELFORMAT_R16F : PIXELFORMAT_R32F, size);
+        this.transformCTexture = this.createTexture('transformC', halfFormat ? PIXELFORMAT_RG16F : PIXELFORMAT_R32F, size);
     }
 
     destroy() {
@@ -219,28 +219,29 @@ class GSplat {
                 dataA[i * 4 + 0] = float2Half(x[i]);
                 dataA[i * 4 + 1] = float2Half(y[i]);
                 dataA[i * 4 + 2] = float2Half(z[i]);
-                dataA[i * 4 + 3] = float2Half(cB.x);
+                dataA[i * 4 + 3] = float2Half(Math.max(_s.x, _s.y, _s.z));
 
                 dataB[i * 4 + 0] = float2Half(cA.x);
                 dataB[i * 4 + 1] = float2Half(cA.y);
                 dataB[i * 4 + 2] = float2Half(cA.z);
-                dataB[i * 4 + 3] = float2Half(cB.y);
+                dataB[i * 4 + 3] = float2Half(cB.x);
 
-                dataC[i] = float2Half(cB.z);
-
+                dataC[i * 2 + 0] = float2Half(cB.y);
+                dataC[i * 2 + 1] = float2Half(cB.z);
             } else {
 
                 dataA[i * 4 + 0] = x[i];
                 dataA[i * 4 + 1] = y[i];
                 dataA[i * 4 + 2] = z[i];
-                dataA[i * 4 + 3] = cB.x;
+                dataA[i * 4 + 3] = Math.max(_s.x, _s.y, _s.z);
 
                 dataB[i * 4 + 0] = cA.x;
                 dataB[i * 4 + 1] = cA.y;
                 dataB[i * 4 + 2] = cA.z;
-                dataB[i * 4 + 3] = cB.y;
+                dataB[i * 4 + 3] = cB.x;
 
-                dataC[i] = cB.z;
+                dataC[i * 2 + 0] = cB.y;
+                dataC[i * 4 + 1] = cB.z;
             }
         }
 

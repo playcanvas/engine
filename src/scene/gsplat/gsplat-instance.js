@@ -55,7 +55,7 @@ vec4 calcV1V2(vec3 centerView, vec3 covA, vec3 covB, float focal, mat3 W) {
     float lambda2 = max(mid - radius, 0.1);
     vec2 diagonalVector = normalize(vec2(offDiagonal, lambda1 - diagonal1));
 
-    // TODO: these two 2d vectors could be stored in 3 floats instead of 4 as angle, length1, length2
+    // TODO: these two 2d vectors could be stored in 3 floats instead of 4 as: angle, length1, length2
     vec2 v1 = min(sqrt(2.0 * lambda1), 1024.0) * diagonalVector;
     vec2 v2 = min(sqrt(2.0 * lambda2), 1024.0) * vec2(diagonalVector.y, -diagonalVector.x);
 
@@ -73,6 +73,7 @@ uniform mat4 matrix_view;
 uniform mat4 matrix_projection;
 uniform vec2 viewport;
 uniform vec2 bufferSize;
+uniform vec2 clipScale;
 
 void main(void) {
     // calculate splatUV
@@ -90,10 +91,13 @@ void main(void) {
     vec4 centerView = modelView * vec4(center, 1.0);
     vec4 centerClip = matrix_projection * centerView;
 
-    if (any(greaterThan(abs(centerClip.xyz), vec3(centerClip.w)))) {
-        // TODO: on WebGPU it is quicker to clear the render targets before rendering
-        // and discard fragments here. On WebGL2 though that approach is slower, so we
-        // keep this approach for now.
+    // calculate the bound of the splat in clip space for cull test
+    vec3 centerBound = vec3(2.0 * clipScale * tA.w, 0.0);
+
+    if (any(greaterThan(abs(centerClip.xyz) - centerBound, vec3(centerClip.w)))) {
+        // TODO: on WebGPU it is quicker to clear the render target before rendering
+        // and then discard fragments instead of writing black. On WebGL2 though, writing
+        // black is faster so we keep it for now.
         pcFragColor0 = vec4(0.0);
         pcFragColor1 = vec4(0.0);
         pcFragColor2 = vec4(0.0);
@@ -101,7 +105,7 @@ void main(void) {
         vec4 tB = texelFetch(transformB, splatUV, 0);
         vec4 tC = texelFetch(transformC, splatUV, 0);
         vec3 covA = tB.xyz;
-        vec3 covB = vec3(tA.w, tB.w, tC.x);
+        vec3 covB = vec3(tB.w, tC.x, tC.y);
 
         float focal = viewport.x * matrix_projection[0][0];
 
@@ -377,6 +381,17 @@ class GSplatInstance {
         scope.resolve('matrix_projection').setValue(camera.projectionMatrix.data);
         scope.resolve('viewport').setValue([device.width, device.height]);
         scope.resolve('bufferSize').setValue([this.v1v2Texture.width, this.v1v2Texture.height]);
+
+        // calculate and set clipScale for frustum culling based on splat size
+        const modelViewProjectionMatrix = new Mat4();
+        modelViewProjectionMatrix.mul2(camera.projectionMatrix, viewMatrix);
+        modelViewProjectionMatrix.mul(cameraMatrix);
+        modelViewProjectionMatrix.transpose();
+
+        scope.resolve('clipScale').setValue([
+            modelViewProjectionMatrix.getX().length(),
+            modelViewProjectionMatrix.getY().length(),
+        ]);
 
         this.v1v2RenderPass.render();
     }
