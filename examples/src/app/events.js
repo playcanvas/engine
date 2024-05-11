@@ -20,3 +20,11 @@
  *
  * @typedef {CustomEvent<DeviceEventDetail>} DeviceEvent
  */
+
+/**
+ * @typedef {object} ErrorEventDetail
+ * @property {string} message - The error message.
+ * @property {{ file: string, line: string, column: string }[]} locations - The error locations.
+ *
+ * @typedef {CustomEvent<ErrorEventDetail>} ErrorEvent
+ */

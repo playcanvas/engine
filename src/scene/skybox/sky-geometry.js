@@ -1,6 +1,8 @@
 import { Debug } from "../../core/debug.js";
 import { SKYTYPE_BOX, SKYTYPE_DOME, SKYTYPE_INFINITE } from "../constants.js";
-import { createBox, createMesh } from "../procedural.js";
+import { Mesh } from "../mesh.js";
+import { BoxGeometry } from "../geometry/box-geometry.js";
+import { DomeGeometry } from "../geometry/dome-geometry.js";
 
 class SkyGeometry {
     static create(device, type) {
@@ -13,78 +15,25 @@ class SkyGeometry {
     }
 
     static infinite(device) {
-        return createBox(device);
+        return Mesh.fromGeometry(device, new BoxGeometry(device));
     }
 
     static box(device) {
-        return createBox(device, {
-            yOffset: 0.5
-        });
+        return Mesh.fromGeometry(device, new BoxGeometry({ yOffset: 0.5 }));
     }
 
     static dome(device) {
-        // flatten bottom y-coordinate
-        const bottomLimit = 0.1;
 
-        // normalized distance from the center that is completely flat
-        const curvatureRadius = 0.95;
-
-        // derived values
-        const curvatureRadiusSq = curvatureRadius * curvatureRadius;
-
-        const radius = 0.5;
-        const latitudeBands = 50;
-        const longitudeBands = 50;
-        const positions = [];
-        const indices = [];
-
-        for (let lat = 0; lat <= latitudeBands; lat++) {
-            const theta = lat * Math.PI / latitudeBands;
-            const sinTheta = Math.sin(theta);
-            const cosTheta = Math.cos(theta);
-
-            for (let lon = 0; lon <= longitudeBands; lon++) {
-                // Sweep the sphere from the positive Z axis to match a 3DS Max sphere
-                const phi = lon * 2 * Math.PI / longitudeBands - Math.PI / 2;
-                const sinPhi = Math.sin(phi);
-                const cosPhi = Math.cos(phi);
-
-                const x = cosPhi * sinTheta;
-                let y = cosTheta;
-                const z = sinPhi * sinTheta;
-
-                // flatten the lower hemisphere
-                if (y < 0) {
-
-                    // scale vertices on the bottom
-                    y *= 0.3;
-
-                    // flatten the center
-                    if (x * x + z * z < curvatureRadiusSq) {
-                        y = -bottomLimit;
-                    }
-                }
-
-                // adjust y to have the center at the flat bottom
-                y += bottomLimit;
-
-                positions.push(x * radius, y * radius, z * radius);
-            }
-        }
-
-        for (let lat = 0; lat < latitudeBands; ++lat) {
-            for (let lon = 0; lon < longitudeBands; ++lon) {
-                const first  = (lat * (longitudeBands + 1)) + lon;
-                const second = first + longitudeBands + 1;
-
-                indices.push(first + 1, second, first);
-                indices.push(first + 1, second + 1, second);
-            }
-        }
-
-        return createMesh(device, positions, {
-            indices: indices
+        const geom = new DomeGeometry({
+            latitudeBands: 50,
+            longitudeBands: 50
         });
+
+        // remove unused normals and uvs
+        geom.normals = undefined;
+        geom.uvs = undefined;
+
+        return Mesh.fromGeometry(device, geom);
     }
 }
 

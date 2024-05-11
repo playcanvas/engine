@@ -30,6 +30,7 @@ const _schema = [
     'radius',
     'axis',
     'height',
+    'convexHull',
     'asset',
     'renderAsset',
     'shape',
@@ -202,6 +203,7 @@ class CollisionSystemImpl {
             radius: src.data.radius,
             axis: src.data.axis,
             height: src.data.height,
+            convexHull: src.data.convexHull,
             asset: src.data.asset,
             renderAsset: src.data.renderAsset,
             model: src.data.model,
@@ -331,6 +333,29 @@ class CollisionMeshSystemImpl extends CollisionSystemImpl {
     // special handling
     beforeInitialize(component, data) {}
 
+    createAmmoHull(mesh, node, shape, scale) {
+        const hull = new Ammo.btConvexHullShape();
+
+        const point = new Ammo.btVector3();
+
+        const positions = [];
+        mesh.getPositions(positions);
+
+        for (let i = 0; i < positions.length; i += 3) {
+            point.setValue(positions[i] * scale.x, positions[i + 1] * scale.y, positions[i + 2] * scale.z);
+
+            // No need to calculate the aabb here. We'll do it after all points are added.
+            hull.addPoint(point, false);
+        }
+
+        Ammo.destroy(point);
+
+        hull.recalcLocalAabb();
+        hull.setMargin(0.01);   // Note: default margin is 0.04
+
+        shape.addChildShape(this.system._getNodeTransform(node), hull);
+    }
+
     createAmmoMesh(mesh, node, shape, scale, checkDupes = true) {
         const system = this.system;
         let triMesh;
@@ -442,7 +467,11 @@ class CollisionMeshSystemImpl extends CollisionSystemImpl {
             } else if (data.render) {
                 const meshes = data.render.meshes;
                 for (let i = 0; i < meshes.length; i++) {
-                    this.createAmmoMesh(meshes[i], tempGraphNode, shape, scale, data.checkVertexDuplicates);
+                    if (data.convexHull) {
+                        this.createAmmoHull(meshes[i], tempGraphNode, shape, scale);
+                    } else {
+                        this.createAmmoMesh(meshes[i], tempGraphNode, shape, scale, data.checkVertexDuplicates);
+                    }
                 }
             }
 
@@ -651,6 +680,7 @@ class CollisionComponentSystem extends ComponentSystem {
             'radius',
             'axis',
             'height',
+            'convexHull',
             'shape',
             'model',
             'asset',

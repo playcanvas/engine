@@ -2,8 +2,7 @@ import {
     SEMANTIC_ATTR8, SEMANTIC_ATTR9, SEMANTIC_ATTR10, SEMANTIC_ATTR11, SEMANTIC_ATTR12, SEMANTIC_ATTR13, SEMANTIC_ATTR14, SEMANTIC_ATTR15,
     SEMANTIC_BLENDINDICES, SEMANTIC_BLENDWEIGHT, SEMANTIC_COLOR, SEMANTIC_NORMAL, SEMANTIC_POSITION, SEMANTIC_TANGENT,
     SEMANTIC_TEXCOORD0, SEMANTIC_TEXCOORD1,
-    SHADERTAG_MATERIAL,
-    PIXELFORMAT_RGBA8
+    SHADERTAG_MATERIAL
 } from '../../../platform/graphics/constants.js';
 import { shaderChunks } from '../chunks/chunks.js';
 import { ChunkUtils } from '../chunk-utils.js';
@@ -251,7 +250,7 @@ class LitShader {
                 code += chunks.tangentBinormalVS;
                 codeBody += "   vTangentW   = getTangent();\n";
                 codeBody += "   vBinormalW  = getBinormal();\n";
-            } else if (options.enableGGXSpecular || !device.extStandardDerivatives) {
+            } else if (options.enableGGXSpecular) {
                 codeBody += "   vObjectSpaceUpW = normalize(dNormalMatrix * vec3(0, 1, 0));\n";
             }
         }
@@ -310,8 +309,7 @@ class LitShader {
 
                 // vertex ids attributes
                 this.attributes.morph_vertex_id = SEMANTIC_ATTR15;
-                const morphIdType = device.isWebGPU ? 'uint' : 'float';
-                code += `attribute ${morphIdType} morph_vertex_id;\n`;
+                code += `attribute uint morph_vertex_id;\n`;
 
             } else {
 
@@ -477,10 +475,6 @@ class LitShader {
 
         let code = this._fsGetBeginCode();
 
-        if (device.extStandardDerivatives && device.isWebGL1) {
-            code += 'uniform vec2 polygonOffset;\n';
-        }
-
         if (shadowType === SHADOW_VSM32) {
             if (device.textureFloatHighPrecision) {
                 code += '#define VSM_EXPONENT 15.0\n\n';
@@ -501,9 +495,7 @@ class LitShader {
         code += this.frontendDecl;
         code += this.frontendCode;
 
-        const mayPackDepth = shadowType === SHADOW_PCF1 || shadowType === SHADOW_PCF3 || shadowType === SHADOW_PCF5 || shadowType === SHADOW_PCSS;
-        const mustPackDepth = (lightType === LIGHTTYPE_OMNI && shadowType !== SHADOW_PCSS && !options.clusteredLightingEnabled);
-        const usePackedDepth = mayPackDepth && !device.supportsDepthShadow || mustPackDepth;
+        const usePackedDepth = (lightType === LIGHTTYPE_OMNI && shadowType !== SHADOW_PCSS && !options.clusteredLightingEnabled);
         if (usePackedDepth) {
             code += chunks.packDepthPS;
         } else if (shadowType === SHADOW_VSM8) {
@@ -524,7 +516,6 @@ class LitShader {
         code += this.frontendFunc;
 
         const isVsm = shadowType === SHADOW_VSM8 || shadowType === SHADOW_VSM16 || shadowType === SHADOW_VSM32;
-        const applySlopeScaleBias = device.isWebGL1 && device.extStandardDerivatives;
 
         // Use perspective depth for:
         // Directional: Always since light has no position
@@ -538,12 +529,6 @@ class LitShader {
             code += "    float depth = gl_FragCoord.z;\n";
         } else {
             code += "    float depth = min(distance(view_position, vPositionW) / light_radius, 0.99999);\n";
-            hasModifiedDepth = true;
-        }
-
-        if (applySlopeScaleBias) {
-            code += "    float minValue = 2.3374370500153186e-10; //(1.0 / 255.0) / (256.0 * 256.0 * 256.0);\n";
-            code += "    depth += polygonOffset.x * max(abs(dFdx(depth)), abs(dFdy(depth))) + minValue * polygonOffset.y;\n";
             hasModifiedDepth = true;
         }
 
@@ -634,17 +619,10 @@ class LitShader {
             hasAreaLights = true;
         }
 
-        let areaLutsPrecision = 'highp';
-        if (device.areaLightLutFormat === PIXELFORMAT_RGBA8) {
-            // use offset and scale for rgb8 format luts
-            decl.append("#define AREA_R8_G8_B8_A8_LUTS");
-            areaLutsPrecision = 'lowp';
-        }
-
         if (hasAreaLights || options.clusteredLightingEnabled) {
             decl.append("#define AREA_LIGHTS");
-            decl.append(`uniform ${areaLutsPrecision} sampler2D areaLightsLutTex1;`);
-            decl.append(`uniform ${areaLutsPrecision} sampler2D areaLightsLutTex2;`);
+            decl.append(`uniform highp sampler2D areaLightsLutTex1;`);
+            decl.append(`uniform highp sampler2D areaLightsLutTex2;`);
         }
 
         for (let i = 0; i < options.lights.length; i++) {
@@ -699,7 +677,7 @@ class LitShader {
                 if (lightType === LIGHTTYPE_OMNI) {
                     decl.append("uniform samplerCube light" + i + "_shadowMap;");
                 } else {
-                    if (light._isPcf && device.supportsDepthShadow) {
+                    if (light._isPcf) {
                         decl.append("uniform sampler2DShadow light" + i + "_shadowMap;");
                     } else {
                         decl.append("uniform sampler2D light" + i + "_shadowMap;");
@@ -742,11 +720,14 @@ class LitShader {
             if (options.hasTangents) {
                 func.append(options.fastTbn ? chunks.TBNfastPS : chunks.TBNPS);
             } else {
-                if (device.extStandardDerivatives && (options.useNormals || options.useClearCoatNormals)) {
+                if (options.useNormals || options.useClearCoatNormals) {
                     func.append(chunks.TBNderivativePS.replace(/\$UV/g, this.lightingUv));
                 } else {
                     func.append(chunks.TBNObjectSpacePS);
                 }
+            }
+            if (options.twoSidedLighting) {
+                func.append(chunks.twoSidedLightingPS);
             }
         }
 
@@ -872,7 +853,7 @@ class LitShader {
                     func.append(chunks.shadowVSM8PS);
                 }
                 if (shadowTypeUsed[SHADOW_VSM16]) {
-                    func.append(device.extTextureHalfFloatLinear ? chunks.shadowEVSMPS.replace(/\$/g, "16") : chunks.shadowEVSMnPS.replace(/\$/g, "16"));
+                    func.append(chunks.shadowEVSMPS.replace(/\$/g, "16"));
                 }
                 if (shadowTypeUsed[SHADOW_VSM32]) {
                     func.append(device.extTextureFloatLinear ? chunks.shadowEVSMPS.replace(/\$/g, "32") : chunks.shadowEVSMnPS.replace(/\$/g, "32"));
@@ -881,10 +862,6 @@ class LitShader {
             if (usePcss) {
                 func.append(chunks.linearizeDepthPS);
                 func.append(chunks.shadowPCSSPS);
-            }
-
-            if (!(device.isWebGL2 || device.isWebGPU || device.extStandardDerivatives)) {
-                func.append(chunks.biasConstPS);
             }
         }
 
@@ -981,7 +958,7 @@ class LitShader {
             if (options.clusteredLightingAreaLightsEnabled)
                 decl.append("#define CLUSTER_AREALIGHTS");
 
-            decl.append(LightsBuffer.getShaderDefines(device));
+            decl.append(LightsBuffer.getShaderDefines());
 
             if (options.clusteredLightingShadowsEnabled && !options.noShadow) {
                 func.append(chunks.clusteredLightShadowsPS);
@@ -990,34 +967,24 @@ class LitShader {
             func.append(chunks.clusteredLightPS);
         }
 
-        if (options.twoSidedLighting) {
-            decl.append("uniform float twoSidedLightingNegScaleFactor;");
-        }
-
         // FRAGMENT SHADER BODY
 
         code.append(this._fsGetStartCode(code, device, chunks, options));
 
         if (this.needsNormal) {
-            if (options.twoSidedLighting) {
-                code.append("    dVertexNormalW = normalize(gl_FrontFacing ? vNormalW * twoSidedLightingNegScaleFactor : -vNormalW * twoSidedLightingNegScaleFactor);");
-            } else {
-                code.append("    dVertexNormalW = normalize(vNormalW);");
-            }
+            code.append("    dVertexNormalW = normalize(vNormalW);");
 
             if ((options.useHeights || options.useNormals) && options.hasTangents) {
-                if (options.twoSidedLighting) {
-                    code.append("    dTangentW = gl_FrontFacing ? vTangentW * twoSidedLightingNegScaleFactor : -vTangentW * twoSidedLightingNegScaleFactor;");
-                    code.append("    dBinormalW = gl_FrontFacing ? vBinormalW * twoSidedLightingNegScaleFactor : -vBinormalW * twoSidedLightingNegScaleFactor;");
-                } else {
-                    code.append("    dTangentW = vTangentW;");
-                    code.append("    dBinormalW = vBinormalW;");
-                }
+                code.append("    dTangentW = vTangentW;");
+                code.append("    dBinormalW = vBinormalW;");
             }
 
             code.append("    getViewDir();");
             if (hasTBN) {
                 code.append("    getTBN(dTangentW, dBinormalW, dVertexNormalW);");
+                if (options.twoSidedLighting) {
+                    code.append("    handleTwoSidedLighting();");
+                }
             }
         }
 
@@ -1275,7 +1242,7 @@ class LitShader {
                         if (lightType === LIGHTTYPE_DIRECTIONAL) {
                             func.append("#define SHADOW_SAMPLE_ORTHO");
                         }
-                        if ((pcfShadows || pcssShadows) && device.isWebGL2 || device.isWebGPU || device.extStandardDerivatives) {
+                        if ((pcfShadows || pcssShadows) && device.isWebGL2 || device.isWebGPU) {
                             func.append("#define SHADOW_SAMPLE_SOURCE_ZBUFFER");
                         }
                         if (lightType === LIGHTTYPE_OMNI) {

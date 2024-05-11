@@ -100,7 +100,7 @@ A full guide to setting up a local development environment based on the PlayCanv
 
 ## How to build
 
-Ensure you have [Node.js](https://nodejs.org) installed. Then, install all of the required Node.js dependencies:
+Ensure you have [Node.js 18+](https://nodejs.org) installed. Then, install all of the required Node.js dependencies:
 
 ```sh
 npm install

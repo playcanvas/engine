@@ -83,8 +83,7 @@ class RenderTarget {
      * target will treat as a rendering surface.
      * @param {import('./texture.js').Texture[]} [options.colorBuffers] - The textures that this
      * render target will treat as a rendering surfaces. If this option is set, the colorBuffer
-     * option is ignored. This option can be used only when {@link GraphicsDevice#supportsMrt} is
-     * true.
+     * option is ignored.
      * @param {boolean} [options.depth] - If set to true, depth buffer will be created. Defaults to
      * true. Ignored if depthBuffer is defined.
      * @param {import('./texture.js').Texture} [options.depthBuffer] - The texture that this render
@@ -105,8 +104,7 @@ class RenderTarget {
      * @param {boolean} [options.flipY] - When set to true the image will be flipped in Y. Default
      * is false.
      * @param {string} [options.name] - The name of the render target.
-     * @param {number} [options.samples] - Number of hardware anti-aliasing samples (not supported
-     * on WebGL1). Default is 1.
+     * @param {number} [options.samples] - Number of hardware anti-aliasing samples. Default is 1.
      * @param {boolean} [options.stencil] - If set to true, depth buffer will include stencil.
      * Defaults to false. Ignored if depthBuffer is defined or depth is false.
      * @example
@@ -191,12 +189,6 @@ class RenderTarget {
         const device = this._colorBuffer?.device || this._depthBuffer?.device || options.graphicsDevice;
         Debug.assert(device, "Failed to obtain the device, colorBuffer nor depthBuffer store it.");
         this._device = device;
-
-        Debug.call(() => {
-            if (this._colorBuffers) {
-                Debug.assert(this._colorBuffers.length <= 1 || device.supportsMrt, 'Multiple render targets are not supported on this device');
-            }
-        });
 
         const { maxSamples } = this._device;
         this._samples = Math.min(options.samples ?? 1, maxSamples);
@@ -367,7 +359,7 @@ class RenderTarget {
      * average all samples and create a simple texture with one color per pixel. This function
      * performs this averaging and updates the colorBuffer and the depthBuffer. If autoResolve is
      * set to true, the resolve will happen after every rendering to this render target, otherwise
-     * you can do it manually, during the app update or inside a {@link Command}.
+     * you can do it manually, during the app update or similar.
      *
      * @param {boolean} [color] - Resolve color buffer. Defaults to true.
      * @param {boolean} [depth] - Resolve depth buffer. Defaults to true if the render target has a

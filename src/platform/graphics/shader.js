@@ -53,6 +53,12 @@ class Shader {
      * useTransformFeedback or compute shader is specified.
      * @param {string} [definition.cshader] - Compute shader source (WGSL code). Only supported on
      * WebGPU platform.
+     * @param {Map<string, string>} [definition.vincludes] - A map containing key-value pairs of
+     * include names and their content. These are used for resolving #include directives in the
+     * vertex shader source.
+     * @param {Map<string, string>} [definition.fincludes] - A map containing key-value pairs
+     * of include names and their content. These are used for resolving #include directives in the
+     * fragment shader source.
      * @param {boolean} [definition.useTransformFeedback] - Specifies that this shader outputs
      * post-VS data to a buffer.
      * @param {string | string[]} [definition.fragmentOutputTypes] - Fragment shader output types,
@@ -106,13 +112,13 @@ class Shader {
             Debug.assert(definition.fshader, 'No fragment shader has been specified when creating a shader.');
 
             // pre-process shader sources
-            definition.vshader = Preprocessor.run(definition.vshader);
+            definition.vshader = Preprocessor.run(definition.vshader, definition.vincludes);
 
             // Strip unused color attachments from fragment shader.
             // Note: this is only needed for iOS 15 on WebGL2 where there seems to be a bug where color attachments that are not
             // written to generate metal linking errors. This is fixed on iOS 16, and iOS 14 does not support WebGL2.
             const stripUnusedColorAttachments = graphicsDevice.isWebGL2 && (platform.name === 'osx' || platform.name === 'ios');
-            definition.fshader = Preprocessor.run(definition.fshader, stripUnusedColorAttachments);
+            definition.fshader = Preprocessor.run(definition.fshader, definition.fincludes, stripUnusedColorAttachments);
         }
 
         this.impl = graphicsDevice.createShaderImpl(this);
