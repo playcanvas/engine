@@ -393,7 +393,7 @@ class XrView extends EventHandler {
             // create frame buffer to write to
             this._frameBuffer = gl.createFramebuffer();
         } else {
-            const attachmentBaseConstant = device.isWebGL2 ? gl.COLOR_ATTACHMENT0 : (device.extDrawBuffers?.COLOR_ATTACHMENT0_WEBGL ?? gl.COLOR_ATTACHMENT0);
+            const attachmentBaseConstant = gl.COLOR_ATTACHMENT0;
             const width = this._xrCamera.width;
             const height = this._xrCamera.height;
 

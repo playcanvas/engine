@@ -41,7 +41,7 @@ PlayCanvas 是一款使用 HTML5 和 WebGL 技术运行游戏以及其他 3D 内
 
 PlayCanvas 是一款优秀的全功能游戏引擎。
 
-- 🧊 **图形** - 基于 WebGL1&2 的超前 2D + 3D 图形引擎
+- 🧊 **图形** - 基于 WebGL2 的超前 2D + 3D 图形引擎
 - 🏃 **动画** - 基于状态的强大动画功能，有效展现动画角色和随机场景属性
 - ⚛️ **物理** - 一体化的 3D 刚体物理引擎 [ammo.js](https://github.com/kripken/ammo.js)
 - 🎮 **输入** - 支持鼠标，键盘，触控，游戏控制器以及众多 VR 控制器 API
@@ -102,7 +102,7 @@ app.start();
 
 ## 如何搭建项目
 
-确保已安装 [Node.js](https://nodejs.org) ，并安装 Node.js 相关依赖组件。
+确保已安装 [Node.js 18+](https://nodejs.org) ，并安装 Node.js 相关依赖组件。
 
 ```sh
 npm install

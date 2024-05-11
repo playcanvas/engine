@@ -30,7 +30,7 @@ import { DebugGraphics } from '../../platform/graphics/debug-graphics.js';
 import { UniformBuffer } from '../../platform/graphics/uniform-buffer.js';
 import { BindGroup } from '../../platform/graphics/bind-group.js';
 import { UniformFormat, UniformBufferFormat } from '../../platform/graphics/uniform-buffer-format.js';
-import { BindGroupFormat, BindBufferFormat, BindTextureFormat } from '../../platform/graphics/bind-group-format.js';
+import { BindGroupFormat, BindUniformBufferFormat, BindTextureFormat } from '../../platform/graphics/bind-group-format.js';
 
 import { ShadowMapCache } from './shadow-map-cache.js';
 import { ShadowRendererLocal } from './shadow-renderer-local.js';
@@ -200,7 +200,6 @@ class Renderer {
         const scope = graphicsDevice.scope;
         this.boneTextureId = scope.resolve('texture_poseMap');
         this.boneTextureSizeId = scope.resolve('texture_poseMapSize');
-        this.poseMatrixId = scope.resolve('matrix_pose[0]');
 
         this.modelMatrixId = scope.resolve('matrix_model');
         this.normalMatrixId = scope.resolve('matrix_normal');
@@ -314,8 +313,6 @@ class Renderer {
     setupViewport(camera, renderTarget) {
 
         const device = this.device;
-        DebugGraphics.pushGpuMarker(device, 'SETUP-VIEWPORT');
-
         const pixelWidth = renderTarget ? renderTarget.width : device.width;
         const pixelHeight = renderTarget ? renderTarget.height : device.height;
 
@@ -335,8 +332,6 @@ class Renderer {
             h = Math.floor(scissorRect.w * pixelHeight);
         }
         device.setScissor(x, y, w, h);
-
-        DebugGraphics.popGpuMarker(device);
     }
 
     setCameraUniforms(camera, target) {
@@ -764,13 +759,10 @@ class Renderer {
         const skinInstance = meshInstance.skinInstance;
         if (skinInstance) {
             this._skinDrawCalls++;
-            if (device.supportsBoneTextures) {
-                const boneTexture = skinInstance.boneTexture;
-                this.boneTextureId.setValue(boneTexture);
-                this.boneTextureSizeId.setValue(skinInstance.boneTextureSize);
-            } else {
-                this.poseMatrixId.setValue(skinInstance.matrixPalette);
-            }
+
+            const boneTexture = skinInstance.boneTexture;
+            this.boneTextureId.setValue(boneTexture);
+            this.boneTextureSizeId.setValue(skinInstance.boneTextureSize);
         }
     }
 
@@ -815,11 +807,11 @@ class Renderer {
             this.viewUniformFormat = new UniformBufferFormat(this.device, uniforms);
 
             // format of the view bind group - contains single uniform buffer, and some textures
-            const buffers = [
-                new BindBufferFormat(UNIFORM_BUFFER_DEFAULT_SLOT_NAME, SHADERSTAGE_VERTEX | SHADERSTAGE_FRAGMENT)
-            ];
+            const formats = [
 
-            const textures = [
+                // uniform buffer needs to be first, as the shader processor assumes slot 0 for it
+                new BindUniformBufferFormat(UNIFORM_BUFFER_DEFAULT_SLOT_NAME, SHADERSTAGE_VERTEX | SHADERSTAGE_FRAGMENT),
+
                 new BindTextureFormat('lightsTextureFloat', SHADERSTAGE_FRAGMENT, TEXTUREDIMENSION_2D, SAMPLETYPE_UNFILTERABLE_FLOAT),
                 new BindTextureFormat('lightsTexture8', SHADERSTAGE_FRAGMENT, TEXTUREDIMENSION_2D, SAMPLETYPE_UNFILTERABLE_FLOAT),
                 new BindTextureFormat('shadowAtlasTexture', SHADERSTAGE_FRAGMENT, TEXTUREDIMENSION_2D, SAMPLETYPE_DEPTH),
@@ -830,12 +822,12 @@ class Renderer {
             ];
 
             if (isClustered) {
-                textures.push(...[
+                formats.push(...[
                     new BindTextureFormat('clusterWorldTexture', SHADERSTAGE_FRAGMENT, TEXTUREDIMENSION_2D, SAMPLETYPE_UNFILTERABLE_FLOAT)
                 ]);
             }
 
-            this.viewBindGroupFormat = new BindGroupFormat(this.device, buffers, textures);
+            this.viewBindGroupFormat = new BindGroupFormat(this.device, formats);
         }
     }
 
@@ -883,8 +875,6 @@ class Renderer {
 
     drawInstance(device, meshInstance, mesh, style, normal) {
 
-        DebugGraphics.pushGpuMarker(device, meshInstance.node.name);
-
         const modelMatrix = meshInstance.node.worldTransform;
         this.modelMatrixId.setValue(modelMatrix.data);
         if (normal) {
@@ -897,31 +887,29 @@ class Renderer {
                 this._instancedDrawCalls++;
                 device.setVertexBuffer(instancingData.vertexBuffer);
                 device.draw(mesh.primitive[style], instancingData.count);
+            } else {
+                device.clearVertexBuffer();
             }
         } else {
             device.draw(mesh.primitive[style]);
         }
-
-        DebugGraphics.popGpuMarker(device);
     }
 
     // used for stereo
     drawInstance2(device, meshInstance, mesh, style) {
-
-        DebugGraphics.pushGpuMarker(device, meshInstance.node.name);
 
         const instancingData = meshInstance.instancingData;
         if (instancingData) {
             if (instancingData.count > 0) {
                 this._instancedDrawCalls++;
                 device.draw(mesh.primitive[style], instancingData.count, true);
+            } else {
+                device.clearVertexBuffer();
             }
         } else {
             // matrices are already set
             device.draw(mesh.primitive[style], undefined, true);
         }
-
-        DebugGraphics.popGpuMarker(device);
     }
 
     /**

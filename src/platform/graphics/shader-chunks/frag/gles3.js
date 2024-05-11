@@ -86,6 +86,7 @@ layout(location = 7) out highp outType_7 pc_fragColor7;
 #define SHADOWMAP_ACCEPT(name) sampler2DShadow name
 #define TEXTURE_PASS(name) name
 #define TEXTURE_ACCEPT(name) sampler2D name
+#define TEXTURE_ACCEPT_HIGHP(name) highp sampler2D name
 
 #define GL2
 #define SUPPORTS_TEXLOD

@@ -106,7 +106,7 @@ class LightRenderData {
                 return rt.colorBuffer;
             }
 
-            return light._isPcf && light.device.supportsDepthShadow ? rt.depthBuffer : rt.colorBuffer;
+            return light._isPcf ? rt.depthBuffer : rt.colorBuffer;
         }
 
         return null;
@@ -387,11 +387,6 @@ class Light {
 
         if (this._type === LIGHTTYPE_OMNI && value !== SHADOW_PCF3 && value !== SHADOW_PCSS)
             value = SHADOW_PCF3; // VSM or HW PCF for omni lights is not supported yet
-
-        const supportsDepthShadow = device.supportsDepthShadow;
-        if (value === SHADOW_PCF5 && !supportsDepthShadow) {
-            value = SHADOW_PCF3; // fallback from HW PCF to old PCF
-        }
 
         // fallback from vsm32 to vsm16
         if (value === SHADOW_VSM32 && (!device.textureFloatRenderable || !device.textureFloatFilterable))
@@ -821,7 +816,6 @@ class Light {
                     tmpBiases.bias = -0.00001 * 20;
                 } else {
                     tmpBiases.bias = this.shadowBias * 20; // approx remap from old bias values
-                    if (this.device.isWebGL1 && this.device.extStandardDerivatives) tmpBiases.bias *= -100;
                 }
                 tmpBiases.normalBias = this._isVsm ? this.vsmBias / (this.attenuationEnd / 7.0) : this._normalOffsetBias;
                 break;
@@ -832,7 +826,6 @@ class Light {
                     tmpBiases.bias = -0.00001 * 20;
                 } else {
                     tmpBiases.bias = (this.shadowBias / farClip) * 100;
-                    if (this.device.isWebGL1 && this.device.extStandardDerivatives) tmpBiases.bias *= -100;
                 }
                 tmpBiases.normalBias = this._isVsm ? this.vsmBias / (farClip / 7.0) : this._normalOffsetBias;
                 break;

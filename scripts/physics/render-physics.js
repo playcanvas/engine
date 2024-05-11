@@ -127,40 +127,40 @@ RenderPhysics.prototype.postUpdate = function (dt) {
                     var mesh;
                     switch (collision.type) {
                         case 'box':
-                            mesh = pc.createBox(this.app.graphicsDevice, {
+                            mesh = pc.Mesh.fromGeometry(this.app.graphicsDevice, new pc.BoxGeometry({
                                 halfExtents: collision.halfExtents
-                            });
+                            }));
                             debugShape._halfExtents = collision.halfExtents.clone();
                             break;
                         case 'cone':
-                            mesh = pc.createCone(this.app.graphicsDevice, {
+                            mesh = pc.Mesh.fromGeometry(this.app.graphicsDevice, new pc.ConeGeometry({
                                 height: collision.height,
                                 radius: collision.radius
-                            });
+                            }));
                             debugShape._height = collision.height;
                             debugShape._radius = collision.radius;
                             debugShape._axis = collision.axis;
                             break;
                         case 'cylinder':
-                            mesh = pc.createCylinder(this.app.graphicsDevice, {
+                            mesh = pc.Mesh.fromGeometry(this.app.graphicsDevice, new pc.CylinderGeometry({
                                 height: collision.height,
                                 radius: collision.radius
-                            });
+                            }));
                             debugShape._height = collision.height;
                             debugShape._radius = collision.radius;
                             debugShape._axis = collision.axis;
                             break;
                         case 'sphere':
-                            mesh = pc.createSphere(this.app.graphicsDevice, {
+                            mesh = pc.Mesh.fromGeometry(this.app.graphicsDevice, new pc.SphereGeometry({
                                 radius: collision.radius
-                            });
+                            }));
                             debugShape._radius = collision.radius;
                             break;
                         case 'capsule':
-                            mesh = pc.createCapsule(this.app.graphicsDevice, {
+                            mesh = pc.Mesh.fromGeometry(this.app.graphicsDevice, new pc.CapsuleGeometry({
                                 height: collision.height,
                                 radius: collision.radius
-                            });
+                            }));
                             debugShape._height = collision.height;
                             debugShape._radius = collision.radius;
                             debugShape._axis = collision.axis;

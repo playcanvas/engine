@@ -329,7 +329,7 @@ class JsonModelParser {
             maxVerts = Math.max(maxVerts, vertexBuffers[i].numVertices);
         }
         if (numIndices > 0) {
-            if (maxVerts > 0xFFFF && this._device.extUintElement) {
+            if (maxVerts > 0xFFFF) {
                 indexBuffer = new IndexBuffer(this._device, INDEXFORMAT_UINT32, numIndices);
                 indexData = new Uint32Array(indexBuffer.lock());
             } else {

@@ -35,7 +35,7 @@ import { Light, lightTypes } from '../../scene/light.js';
 import { Mesh } from '../../scene/mesh.js';
 import { Morph } from '../../scene/morph.js';
 import { MorphTarget } from '../../scene/morph-target.js';
-import { calculateNormals } from '../../scene/procedural.js';
+import { calculateNormals } from '../../scene/geometry/geometry-utils.js';
 import { Render } from '../../scene/render.js';
 import { Skin } from '../../scene/skin.js';
 import { StandardMaterial } from '../../scene/materials/standard-material.js';
@@ -534,10 +534,7 @@ const createVertexBufferInternal = (device, sourceDesc, flipV) => {
     }
 
     // create vertex buffer
-    const vertexBuffer = new VertexBuffer(device,
-                                          vertexFormat,
-                                          numVertices,
-                                          BUFFER_STATIC);
+    const vertexBuffer = new VertexBuffer(device, vertexFormat, numVertices);
 
     const vertexData = vertexBuffer.lock();
     const targetArray = new Uint32Array(vertexData);
@@ -747,7 +744,9 @@ const createDracoMesh = (device, primitive, accessors, bufferViews, meshVariants
                     }
                 });
 
-                const vertexBuffer = new VertexBuffer(device, vertexFormat, numVertices, BUFFER_STATIC, decompressedData.vertices);
+                const vertexBuffer = new VertexBuffer(device, vertexFormat, numVertices, {
+                    data: decompressedData.vertices
+                });
                 const indexBuffer = new IndexBuffer(device, indexFormat, numIndices, BUFFER_STATIC, decompressedData.indices);
 
                 result.vertexBuffer = vertexBuffer;
@@ -810,24 +809,8 @@ const createMesh = (device, gltfMesh, accessors, bufferViews, flipV, vertexBuffe
                     indexFormat = INDEXFORMAT_UINT32;
                 }
 
-                // 32bit index buffer is used but not supported
-                if (indexFormat === INDEXFORMAT_UINT32 && !device.extUintElement) {
-
-                    // #if _DEBUG
-                    if (vertexBuffer.numVertices > 0xFFFF) {
-                        console.warn('Glb file contains 32bit index buffer but these are not supported by this device - it may be rendered incorrectly.');
-                    }
-                    // #endif
-
-                    // convert to 16bit
-                    indexFormat = INDEXFORMAT_UINT16;
-                    indices = new Uint16Array(indices);
-                }
-
                 if (indexFormat === INDEXFORMAT_UINT8 && device.isWebGPU) {
-                    Debug.warn('Glb file contains 8bit index buffer but these are not supported by WebGPU - converting to 16bit.');
-
-                    // convert to 16bit
+                    // silently convert to 16bit
                     indexFormat = INDEXFORMAT_UINT16;
                     indices = new Uint16Array(indices);
                 }

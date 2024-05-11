@@ -50,7 +50,7 @@ import { ShaderUtils } from './shader-utils.js';
  *
  * TransformExample.prototype.initialize = function() {
  *     const device = this.app.graphicsDevice;
- *     const mesh = pc.createTorus(device, { tubeRadius: 0.01, ringRadius: 3 });
+ *     const mesh = pc.Mesh.fromGeometry(app.graphicsDevice, new pc.TorusGeometry({ tubeRadius: 0.01, ringRadius: 3 }));
  *     const meshInstance = new pc.MeshInstance(mesh, this.material.resource);
  *     const entity = new pc.Entity();
  *     entity.addComponent('render', {
@@ -102,7 +102,10 @@ class TransformFeedback {
             gl.bufferData(gl.ARRAY_BUFFER, inputBuffer.storage, gl.DYNAMIC_COPY);
         }
 
-        this._outputBuffer = new VertexBuffer(inputBuffer.device, inputBuffer.format, inputBuffer.numVertices, usage, inputBuffer.storage);
+        this._outputBuffer = new VertexBuffer(inputBuffer.device, inputBuffer.format, inputBuffer.numVertices, {
+            usage: usage,
+            data: inputBuffer.storage
+        });
     }
 
     /**

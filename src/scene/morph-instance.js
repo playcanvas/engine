@@ -87,8 +87,7 @@ class MorphInstance {
             }
 
             // texture params
-            this._textureParams = new Float32Array([morph.morphTextureWidth, morph.morphTextureHeight,
-                1 / morph.morphTextureWidth, 1 / morph.morphTextureHeight]);
+            this._textureParams = new Float32Array([morph.morphTextureWidth, morph.morphTextureHeight]);
 
             // resolve possible texture names
             for (let i = 0; i < this.maxSubmitCount; i++) {

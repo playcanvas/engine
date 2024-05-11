@@ -23,23 +23,7 @@ void getShadowCascadeMatrix(mat4 shadowMatrixPalette[4], float shadowCascadeDist
     cascadeIndex = min(cascadeIndex, shadowCascadeCount - 1.0);
 
     // pick shadow matrix
-    #ifdef GL2
-        cascadeShadowMat = shadowMatrixPalette[int(cascadeIndex)];
-    #else
-        // webgl 1 does not allow non-cost index array lookup
-        if (cascadeIndex == 0.0) {
-            cascadeShadowMat = shadowMatrixPalette[0];
-        }
-        else if (cascadeIndex == 1.0) {
-            cascadeShadowMat = shadowMatrixPalette[1];
-        }
-        else if (cascadeIndex == 2.0) {
-            cascadeShadowMat = shadowMatrixPalette[2];
-        }
-        else {
-            cascadeShadowMat = shadowMatrixPalette[3];
-        }
-    #endif
+    cascadeShadowMat = shadowMatrixPalette[int(cascadeIndex)];
 }
 
 void fadeShadow(float shadowCascadeDistances[4]) {                  

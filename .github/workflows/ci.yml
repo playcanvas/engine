@@ -141,8 +141,8 @@ jobs:
     - name: Install dependencies
       run: npm clean-install --progress=false --no-fund
 
-    - name: Build PlayCanvas (ES5-only)
-      run: npm run build:es5
+    - name: Build PlayCanvas (UMD-only)
+      run: npm run build:umd
 
     - name: Install X virtual framebuffer
       run: sudo apt-get install xvfb
@@ -166,15 +166,6 @@ jobs:
 
     - name: Install dependencies
       run: npm clean-install --progress=false --no-fund
-
-    - name: Build PlayCanvas (ES6-only)
-      run: npm run build:es6
-
-    - name: Build PlayCanvas Extras
-      run: npm run build:extras
-
-    - name: Build TypeScript declarations
-      run: npm run build:types
 
     - name: Build Examples Browser
       working-directory: ./examples

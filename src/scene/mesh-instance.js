@@ -20,6 +20,7 @@ import {
 import { GraphNode } from './graph-node.js';
 import { getDefaultMaterial } from './materials/default-material.js';
 import { LightmapCache } from './graphics/lightmap-cache.js';
+import { DebugGraphics } from '../platform/graphics/debug-graphics.js';
 
 let id = 0;
 const _tmpAabb = new BoundingBox();
@@ -205,7 +206,7 @@ class MeshInstance {
      * component is attached to.
      * @example
      * // Create a mesh instance pointing to a 1x1x1 'cube' mesh
-     * const mesh = pc.createBox(graphicsDevice);
+     * const mesh = pc.Mesh.fromGeometry(app.graphicsDevice, new pc.BoxGeometry());
      * const material = new pc.StandardMaterial();
      *
      * const meshInstance = new pc.MeshInstance(mesh, material);
@@ -240,10 +241,13 @@ class MeshInstance {
         this.material = material;   // The material with which to render this instance
 
         this._shaderDefs = MASK_AFFECT_DYNAMIC << 16; // 2 byte toggles, 2 bytes light mask; Default value is no toggles and mask = pc.MASK_AFFECT_DYNAMIC
-        this._shaderDefs |= mesh.vertexBuffer.format.hasUv0 ? SHADERDEF_UV0 : 0;
-        this._shaderDefs |= mesh.vertexBuffer.format.hasUv1 ? SHADERDEF_UV1 : 0;
-        this._shaderDefs |= mesh.vertexBuffer.format.hasColor ? SHADERDEF_VCOLOR : 0;
-        this._shaderDefs |= mesh.vertexBuffer.format.hasTangents ? SHADERDEF_TANGENTS : 0;
+        if (mesh.vertexBuffer) {
+            const format = mesh.vertexBuffer.format;
+            this._shaderDefs |= format.hasUv0 ? SHADERDEF_UV0 : 0;
+            this._shaderDefs |= format.hasUv1 ? SHADERDEF_UV1 : 0;
+            this._shaderDefs |= format.hasColor ? SHADERDEF_VCOLOR : 0;
+            this._shaderDefs |= format.hasTangents ? SHADERDEF_TANGENTS : 0;
+        }
 
         // Render options
         this.layer = LAYER_WORLD; // legacy
@@ -516,8 +520,13 @@ class MeshInstance {
             // cache miss in the material variants
             if (!shaderInstance.shader) {
 
+                // marker to allow us to see the source node for shader alloc
+                DebugGraphics.pushGpuMarker(this.mesh.device, `Node: ${this.node.name}`);
+
                 const shader = mat.getShaderVariant(this.mesh.device, scene, shaderDefs, null, shaderPass, sortedLights,
-                                                    viewUniformFormat, viewBindGroupFormat, this._mesh.vertexBuffer.format);
+                                                    viewUniformFormat, viewBindGroupFormat, this._mesh.vertexBuffer?.format);
+
+                DebugGraphics.popGpuMarker(this.mesh.device);
 
                 // add it to the material variants cache
                 mat.variants.set(variantKey, shader);

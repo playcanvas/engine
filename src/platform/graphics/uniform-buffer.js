@@ -304,11 +304,11 @@ class UniformBuffer {
      *
      * @param {import('./uniform-buffer-format.js').UniformFormat} uniformFormat - The format of
      * the uniform.
+     * @param {any} value - The value to assign to the uniform.
      */
-    setUniform(uniformFormat) {
+    setUniform(uniformFormat, value) {
         Debug.assert(uniformFormat);
         const offset = uniformFormat.offset;
-        const value = uniformFormat.scopeId.value;
 
         if (value !== null && value !== undefined) {
 
@@ -328,19 +328,19 @@ class UniformBuffer {
      * Assign a value to the uniform specified by name.
      *
      * @param {string} name - The name of the uniform.
+     * @param {any} value - The value to assign to the uniform.
      */
-    set(name) {
+    set(name, value) {
         const uniformFormat = this.format.map.get(name);
         Debug.assert(uniformFormat, `Uniform name [${name}] is not part of the Uniform buffer.`);
         if (uniformFormat) {
-            this.setUniform(uniformFormat);
+            this.setUniform(uniformFormat, value);
         }
     }
 
-    update() {
+    startUpdate(dynamicBindGroup) {
 
-        const persistent = this.persistent;
-        if (!persistent) {
+        if (!this.persistent) {
 
             // allocate memory from dynamic buffer for this frame
             const allocation = this.allocation;
@@ -348,25 +348,49 @@ class UniformBuffer {
             this.device.dynamicBuffers.alloc(allocation, this.format.byteSize);
             this.assignStorage(allocation.storage);
 
+            // get info about bind group we can use for this non-persistent UB for this frame
+            if (dynamicBindGroup) {
+                dynamicBindGroup.bindGroup = allocation.gpuBuffer.getBindGroup(this);
+                dynamicBindGroup.offsets[0] = allocation.offset;
+            }
+
             // buffer has changed, update the render version to force bind group to be updated
             if (oldGpuBuffer !== allocation.gpuBuffer) {
                 this.renderVersionDirty = this.device.renderVersion;
             }
         }
+    }
 
-        // set new values
-        const uniforms = this.format.uniforms;
-        for (let i = 0; i < uniforms.length; i++) {
-            this.setUniform(uniforms[i]);
-        }
+    endUpdate() {
 
-        if (persistent) {
+        if (this.persistent) {
             // Upload the new data
             this.impl.unlock(this);
         } else {
             this.storageFloat32 = null;
             this.storageInt32 = null;
         }
+    }
+
+    /**
+     * @param {import('./bind-group.js').DynamicBindGroup} [dynamicBindGroup] - The function fills
+     * in the info about the dynamic bind group for this frame, which uses this uniform buffer. Only
+     * used if the uniform buffer is non-persistent. This allows the uniform buffer to be used
+     * without having to create a bind group for it. Note that the bind group can only contains
+     * this single uniform buffer, and no other resources.
+     */
+    update(dynamicBindGroup) {
+
+        this.startUpdate(dynamicBindGroup);
+
+        // set new values
+        const uniforms = this.format.uniforms;
+        for (let i = 0; i < uniforms.length; i++) {
+            const value = uniforms[i].scopeId.value;
+            this.setUniform(uniforms[i], value);
+        }
+
+        this.endUpdate();
     }
 }
 

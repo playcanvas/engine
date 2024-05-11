@@ -2,6 +2,7 @@
 .idea/
 .vscode/
 build
+tree*.html
 coverage
 docs
 examples/dist

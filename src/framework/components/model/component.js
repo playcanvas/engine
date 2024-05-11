@@ -6,7 +6,7 @@ import { BatchGroup } from '../../../scene/batching/batch-group.js';
 import { GraphNode } from '../../../scene/graph-node.js';
 import { MeshInstance } from '../../../scene/mesh-instance.js';
 import { Model } from '../../../scene/model.js';
-import { getShapePrimitive } from '../../../scene/procedural.js';
+import { getShapePrimitive } from '../../graphics/primitive-cache.js';
 
 import { Asset } from '../../asset/asset.js';
 
