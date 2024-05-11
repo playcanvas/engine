@@ -516,12 +516,7 @@ class ForwardRenderer extends Renderer {
                 }
             }
 
-            // marker to allow us to see the source node for shader alloc
-            DebugGraphics.pushGpuMarker(device, `Node: ${drawCall.node.name}`);
-
             const shaderInstance = drawCall.getShaderInstance(pass, lightHash, scene, this.viewUniformFormat, this.viewBindGroupFormat, sortedLights);
-
-            DebugGraphics.popGpuMarker(device);
 
             addCall(drawCall, shaderInstance, material !== prevMaterial, !prevMaterial || lightMask !== prevLightMask);
 
@@ -576,8 +571,7 @@ class ForwardRenderer extends Renderer {
                 device.setAlphaToCoverage(material.alphaToCoverage);
             }
 
-            DebugGraphics.pushGpuMarker(device, `Node: ${drawCall.node.name}`);
-            DebugGraphics.pushGpuMarker(device, `Material: ${material.name}`);
+            DebugGraphics.pushGpuMarker(device, `Node: ${drawCall.node.name}, Material: ${material.name}`);
 
             this.setupCullMode(camera._cullFaces, flipFactor, drawCall);
 
@@ -637,7 +631,6 @@ class ForwardRenderer extends Renderer {
             }
 
             DebugGraphics.popGpuMarker(device);
-            DebugGraphics.popGpuMarker(device);
         }
     }
 
@@ -676,7 +669,7 @@ class ForwardRenderer extends Renderer {
      * storing the view level bing groups (can be empty array, and this function populates if per
      * view).
      * @param {object} [options] - Object for passing optional arguments.
-     * @param {boolean} [options.clearColors] - True if the color buffer should be cleared.
+     * @param {boolean} [options.clearColor] - True if the color buffer should be cleared.
      * @param {boolean} [options.clearDepth] - True if the depth buffer should be cleared.
      * @param {boolean} [options.clearStencil] - True if the stencil buffer should be cleared.
      * @param {import('../lighting/world-clusters.js').WorldClusters} [options.lightClusters] - The
@@ -693,7 +686,7 @@ class ForwardRenderer extends Renderer {
         this.setupViewport(camera, renderTarget);
 
         // clearing
-        const clearColor = options.clearColors ?? false;
+        const clearColor = options.clearColor ?? false;
         const clearDepth = options.clearDepth ?? false;
         const clearStencil = options.clearStencil ?? false;
         if (clearColor || clearDepth || clearStencil) {
@@ -819,11 +812,7 @@ class ForwardRenderer extends Renderer {
     buildFrameGraph(frameGraph, layerComposition) {
 
         const scene = this.scene;
-        const webgl1 = this.device.isWebGL1;
         frameGraph.reset();
-
-        // update composition, cull everything, assign atlas slots for clustered lighting
-        this.update(layerComposition);
 
         if (scene.clusteredLightingEnabled) {
 
@@ -858,20 +847,7 @@ class ForwardRenderer extends Renderer {
 
             } else {
 
-                // on webgl1, depth pass renders ahead of the main camera instead of the middle of the frame
-                const depthPass = camera.camera.renderPassDepthGrab;
-                if (depthPass && webgl1 && renderAction.firstCameraUse) {
-                    depthPass.options.resizeSource = camera.camera.renderTarget;
-                    depthPass.update(this.scene);
-                    frameGraph.addRenderPass(depthPass);
-                }
-
                 const isDepthLayer = layer.id === LAYERID_DEPTH;
-
-                // skip depth layer on webgl1 if color grab pass is not enabled, as depth pass renders ahead of the main camera
-                if (webgl1 && isDepthLayer && !camera.renderSceneColorMap)
-                    continue;
-
                 const isGrabPass = isDepthLayer && (camera.renderSceneColorMap || camera.renderSceneDepthMap);
 
                 // start of block of render actions rendering to the same render target
@@ -884,7 +860,7 @@ class ForwardRenderer extends Renderer {
                 // info about the next render action
                 const nextRenderAction = renderActions[i + 1];
                 const isNextLayerDepth = nextRenderAction ? nextRenderAction.layer.id === LAYERID_DEPTH : false;
-                const isNextLayerGrabPass = isNextLayerDepth && (camera.renderSceneColorMap || camera.renderSceneDepthMap) && !webgl1;
+                const isNextLayerGrabPass = isNextLayerDepth && (camera.renderSceneColorMap || camera.renderSceneDepthMap);
                 const nextNeedDirShadows = nextRenderAction ? (nextRenderAction.firstCameraUse && this.cameraDirShadowLights.has(nextRenderAction.camera.camera)) : false;
 
                 // end of the block using the same render target if the next render action uses a different render target, or needs directional shadows
@@ -907,7 +883,7 @@ class ForwardRenderer extends Renderer {
                             frameGraph.addRenderPass(colorGrabPass);
                         }
 
-                        if (camera.renderSceneDepthMap && !webgl1) {
+                        if (camera.renderSceneDepthMap) {
                             frameGraph.addRenderPass(camera.camera.renderPassDepthGrab);
                         }
                     }

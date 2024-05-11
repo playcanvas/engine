@@ -8,7 +8,6 @@ import { Vec3 } from '../../../core/math/vec3.js';
 import { Vec4 } from '../../../core/math/vec4.js';
 
 import {
-    BUFFER_STATIC,
     FUNC_EQUAL,
     PRIMITIVE_TRISTRIP,
     SEMANTIC_POSITION, SEMANTIC_NORMAL, SEMANTIC_TEXCOORD0,
@@ -435,7 +434,9 @@ class ImageElement {
             ]);
         });
 
-        const vertexBuffer = new VertexBuffer(device, vertexFormat, 4, BUFFER_STATIC, vertexData.buffer);
+        const vertexBuffer = new VertexBuffer(device, vertexFormat, 4, {
+            data: vertexData.buffer
+        });
 
         const mesh = new Mesh(device);
         mesh.vertexBuffer = vertexBuffer;

@@ -17,11 +17,11 @@ const calcLevels = (width, height = 0) => {
 };
 
 const supportsFloat16 = (device) => {
-    return device.extTextureHalfFloat && device.textureHalfFloatRenderable;
+    return device.textureHalfFloatRenderable;
 };
 
 const supportsFloat32 = (device) => {
-    return device.extTextureFloat && device.textureFloatRenderable;
+    return device.textureFloatRenderable;
 };
 
 // lighting source should be stored HDR

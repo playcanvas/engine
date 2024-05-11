@@ -13,31 +13,20 @@ uniform vec4 morph_weights_b;
 #endif
 
 #ifdef MORPHING_TEXTURE_BASED
-    uniform vec4 morph_tex_params;
+    uniform vec2 morph_tex_params;
 
-    #ifdef WEBGPU
-        ivec2 getTextureMorphCoords() {
+    ivec2 getTextureMorphCoords() {
 
-            // turn morph_vertex_id into int grid coordinates
-            ivec2 textureSize = ivec2(morph_tex_params.xy);
-            int morphGridV = int(morph_vertex_id / textureSize.x);
-            int morphGridU = int(morph_vertex_id - (morphGridV * textureSize.x));
+        // turn morph_vertex_id into int grid coordinates
+        ivec2 textureSize = ivec2(morph_tex_params);
+        int morphGridV = int(morph_vertex_id) / textureSize.x;
+        int morphGridU = int(morph_vertex_id) - (morphGridV * textureSize.x);
+        #ifdef WEBGPU
+            // flipY
             morphGridV = textureSize.y - morphGridV - 1;
-            return ivec2(morphGridU, morphGridV);
-        }
-    #else
-        vec2 getTextureMorphCoords() {
-            vec2 textureSize = morph_tex_params.xy;
-            vec2 invTextureSize = morph_tex_params.zw;
-
-            // turn morph_vertex_id into int grid coordinates
-            float morphGridV = floor(morph_vertex_id * invTextureSize.x);
-            float morphGridU = morph_vertex_id - (morphGridV * textureSize.x);
-
-            // convert grid coordinates to uv coordinates with half pixel offset
-            return vec2(morphGridU, morphGridV) * invTextureSize + (0.5 * invTextureSize);
-        }
-    #endif
+        #endif
+        return ivec2(morphGridU, morphGridV);
+    }
 
 #endif
 
@@ -94,14 +83,8 @@ vec4 getPosition() {
 
     #ifdef MORPHING_TEXTURE_BASED_POSITION
 
-        #ifdef WEBGPU
-            ivec2 morphUV = getTextureMorphCoords();
-            vec3 morphPos = texelFetch(morphPositionTex, ivec2(morphUV), 0).xyz;
-        #else
-            vec2 morphUV = getTextureMorphCoords();
-            vec3 morphPos = texture2D(morphPositionTex, morphUV).xyz;
-        #endif
-
+        ivec2 morphUV = getTextureMorphCoords();
+        vec3 morphPos = texelFetch(morphPositionTex, ivec2(morphUV), 0).xyz;
         localPos += morphPos;
 
     #endif

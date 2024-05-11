@@ -400,8 +400,8 @@ class Entity extends GraphNode {
     /**
      * Search the entity and all of its descendants for the first script instance of specified type.
      *
-     * @param {string|typeof import('./script/script-type.js').ScriptType} nameOrType - The name or type of {@link ScriptType}.
-     * @returns {import('./script/script-type.js').ScriptType|undefined} A script instance of specified type, if the entity or any of its descendants
+     * @param {string|typeof import('./script/script.js').Script} nameOrType - The name or type of {@link Script}.
+     * @returns {import('./script/script.js').Script|undefined} A script instance of specified type, if the entity or any of its descendants
      * has one. Returns undefined otherwise.
      * @example
      * // Get the first found "playerController" instance in the hierarchy tree that starts with this entity
@@ -415,8 +415,8 @@ class Entity extends GraphNode {
     /**
      * Search the entity and all of its descendants for all script instances of specified type.
      *
-     * @param {string|typeof import('./script/script-type.js').ScriptType} nameOrType - The name or type of {@link ScriptType}.
-     * @returns {import('./script/script-type.js').ScriptType[]} All script instances of specified type in the entity or any of its
+     * @param {string|typeof import('./script/script.js').Script} nameOrType - The name or type of {@link Script}.
+     * @returns {import('./script/script.js').Script[]} All script instances of specified type in the entity or any of its
      * descendants. Returns empty array if none found.
      * @example
      * // Get all "playerController" instances in the hierarchy tree that starts with this entity

@@ -33,6 +33,7 @@ class Channel {
 
         this.manager = manager;
 
+        /** @type {globalThis.Node | null} */
         this.source = null;
 
         if (hasAudioContext()) {

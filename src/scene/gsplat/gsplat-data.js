@@ -116,10 +116,10 @@ class GSplatData {
         const y = this.getProp('y');
         const z = this.getProp('z');
 
-        const rx = this.getProp('rot_0');
-        const ry = this.getProp('rot_1');
-        const rz = this.getProp('rot_2');
-        const rw = this.getProp('rot_3');
+        const rx = this.getProp('rot_1');
+        const ry = this.getProp('rot_2');
+        const rz = this.getProp('rot_3');
+        const rw = this.getProp('rot_0');
 
         quat2.setFromMat4(mat);
 
@@ -132,11 +132,11 @@ class GSplatData {
             z[i] = vec3.z;
 
             // transform orientation
-            quat.set(ry[i], rz[i], rw[i], rx[i]).mul2(quat2, quat);
-            rx[i] = quat.w;
-            ry[i] = quat.x;
-            rz[i] = quat.y;
-            rw[i] = quat.z;
+            quat.set(rx[i], ry[i], rz[i], rw[i]).mul2(quat2, quat);
+            rx[i] = quat.x;
+            ry[i] = quat.y;
+            rz[i] = quat.z;
+            rw[i] = quat.w;
 
             // TODO: transform SH
         }

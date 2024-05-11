@@ -2,7 +2,8 @@ import { EventHandler } from '../core/event-handler.js';
 import { Vec2 } from '../core/math/vec2.js';
 
 import { SPRITE_RENDERMODE_SIMPLE, SPRITE_RENDERMODE_SLICED, SPRITE_RENDERMODE_TILED } from './constants.js';
-import { createMesh } from './procedural.js';
+import { Mesh } from './mesh.js';
+import { Geometry } from './geometry/geometry.js';
 
 // normals are the same for every mesh
 const spriteNormals = [
@@ -249,13 +250,13 @@ class Sprite extends EventHandler {
             lu, tv
         ];
 
-        const mesh = createMesh(this._device, positions, {
-            uvs: uvs,
-            normals: spriteNormals,
-            indices: spriteIndices
-        });
+        const geom = new Geometry();
+        geom.positions = positions;
+        geom.normals = spriteNormals;
+        geom.uvs = uvs;
+        geom.indices = spriteIndices;
 
-        return mesh;
+        return Mesh.fromGeometry(this._device, geom);
     }
 
     _create9SliceMesh() {
@@ -304,13 +305,13 @@ class Sprite extends EventHandler {
             }
         }
 
-        const options = {
-            normals: normals, // crashes without normals on mac?
-            uvs: uvs,
-            indices: indices
-        };
+        const geom = new Geometry();
+        geom.positions = positions;
+        geom.normals = normals;
+        geom.uvs = uvs;
+        geom.indices = indices;
 
-        return createMesh(this._device, positions, options);
+        return Mesh.fromGeometry(this._device, geom);
     }
 
     _onSetFrames(frames) {

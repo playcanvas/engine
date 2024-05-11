@@ -116,8 +116,9 @@ class ElementInputEvent {
     /**
      * Create a new ElementInputEvent instance.
      *
-     * @param {MouseEvent|TouchEvent} event - The MouseEvent or TouchEvent that was originally
-     * raised.
+     * @param {import('../../platform/input/mouse-event.js').MouseEvent
+     * |import('../../platform/input/touch-event.js').TouchEvent} event - MouseEvent or TouchEvent
+     * that was originally raised.
      * @param {import('../components/element/component.js').ElementComponent} element - The
      * ElementComponent that this event was originally raised on.
      * @param {import('../components/camera/component.js').CameraComponent} camera - The
@@ -125,9 +126,10 @@ class ElementInputEvent {
      */
     constructor(event, element, camera) {
         /**
-         * The MouseEvent or TouchEvent that was originally raised.
+         * MouseEvent or TouchEvent that was originally raised.
          *
-         * @type {MouseEvent|TouchEvent}
+         * @type {import('../../platform/input/mouse-event.js').MouseEvent
+         * |import('../../platform/input/touch-event.js').TouchEvent}
          */
         this.event = event;
 
@@ -170,7 +172,8 @@ class ElementMouseEvent extends ElementInputEvent {
     /**
      * Create an instance of an ElementMouseEvent.
      *
-     * @param {MouseEvent} event - The MouseEvent that was originally raised.
+     * @param {import('../../platform/input/mouse-event.js').MouseEvent} event - The MouseEvent that
+     * was originally raised.
      * @param {import('../components/element/component.js').ElementComponent} element - The
      * ElementComponent that this event was originally raised on.
      * @param {import('../components/camera/component.js').CameraComponent} camera - The
@@ -264,14 +267,14 @@ class ElementTouchEvent extends ElementInputEvent {
     /**
      * Create an instance of an ElementTouchEvent.
      *
-     * @param {TouchEvent} event - The TouchEvent that was originally raised.
+     * @param {import('../../platform/input/touch-event.js').TouchEvent} event - The TouchEvent that was originally raised.
      * @param {import('../components/element/component.js').ElementComponent} element - The
      * ElementComponent that this event was originally raised on.
      * @param {import('../components/camera/component.js').CameraComponent} camera - The
      * CameraComponent that this event was originally raised via.
      * @param {number} x - The x coordinate of the touch that triggered the event.
      * @param {number} y - The y coordinate of the touch that triggered the event.
-     * @param {Touch} touch - The touch object that triggered the event.
+     * @param {import('../../platform/input/touch-event.js').Touch} touch - The touch object that triggered the event.
      */
     constructor(event, element, camera, x, y, touch) {
         super(event, element, camera);
@@ -280,14 +283,14 @@ class ElementTouchEvent extends ElementInputEvent {
          * The Touch objects representing all current points of contact with the surface,
          * regardless of target or changed status.
          *
-         * @type {Touch[]}
+         * @type {import('../../platform/input/touch-event.js').Touch[]}
          */
         this.touches = event.touches;
         /**
          * The Touch objects representing individual points of contact whose states changed between
          * the previous touch event and this one.
          *
-         * @type {Touch[]}
+         * @type {import('../../platform/input/touch-event.js').Touch[]}
          */
         this.changedTouches = event.changedTouches;
         this.x = x;
@@ -295,7 +298,7 @@ class ElementTouchEvent extends ElementInputEvent {
         /**
          * The touch object that triggered the event.
          *
-         * @type {Touch}
+         * @type {import('../../platform/input/touch-event.js').Touch}
          */
         this.touch = touch;
     }

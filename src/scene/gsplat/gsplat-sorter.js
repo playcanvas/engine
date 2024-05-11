@@ -15,7 +15,6 @@ function SortWorker() {
     let centers;
     let cameraPosition;
     let cameraDirection;
-    let intIndices;
 
     const lastCameraPosition = { x: 0, y: 0, z: 0 };
     const lastCameraDirection = { x: 0, y: 0, z: 0 };
@@ -24,7 +23,6 @@ function SortWorker() {
     const boundMax = { x: 0, y: 0, z: 0 };
 
     let distances;
-    let indices;
     let target;
     let countBuffer;
 
@@ -60,8 +58,7 @@ function SortWorker() {
         const numVertices = centers.length / 3;
         if (distances?.length !== numVertices) {
             distances = new Uint32Array(numVertices);
-            indices = new Uint32Array(numVertices);
-            target = new Float32Array(numVertices);
+            target = new Float32Array(numVertices * 4); // output 4 indices per splat (quad)
         }
 
         // calc min/max distance using bound
@@ -97,7 +94,6 @@ function SortWorker() {
             const sortKey = Math.floor((d - minDist) * divider);
 
             distances[i] = sortKey;
-            indices[i] = i;
 
             // count occurrences of each distance
             countBuffer[sortKey]++;
@@ -108,13 +104,15 @@ function SortWorker() {
             countBuffer[i] += countBuffer[i - 1];
 
         // Build the output array
-        const outputArray = intIndices ? new Uint32Array(target.buffer) : target;
-        const offset = intIndices ? 0 : 0.2;
-        for (let i = numVertices - 1; i >= 0; i--) {
+        const outputArray = new Uint32Array(target.buffer);
+        for (let i = 0; i < numVertices; i++) {
             const distance = distances[i];
-            const index = indices[i];
-            outputArray[countBuffer[distance] - 1] = index + offset;
-            countBuffer[distance]--;
+            const destIndex = (--countBuffer[distance]) * 4;
+
+            outputArray[destIndex] = i;
+            outputArray[destIndex + 1] = i;
+            outputArray[destIndex + 2] = i;
+            outputArray[destIndex + 3] = i;
         }
 
         // swap
@@ -156,9 +154,6 @@ function SortWorker() {
                 boundMax.y = Math.max(boundMax.y, y);
                 boundMax.z = Math.max(boundMax.z, z);
             }
-        }
-        if (message.data.intIndices) {
-            intIndices = message.data.intIndices;
         }
         if (message.data.cameraPosition) cameraPosition = message.data.cameraPosition;
         if (message.data.cameraDirection) cameraDirection = message.data.cameraDirection;
@@ -202,15 +197,14 @@ class GSplatSorter extends EventHandler {
         this.worker = null;
     }
 
-    init(vertexBuffer, centers, intIndices) {
+    init(vertexBuffer, centers) {
         this.vertexBuffer = vertexBuffer;
 
         // send the initial buffer to worker
         const buf = vertexBuffer.storage.slice(0);
         this.worker.postMessage({
             data: buf,
-            centers: centers.buffer,
-            intIndices: intIndices
+            centers: centers.buffer
         }, [buf, centers.buffer]);
     }
 

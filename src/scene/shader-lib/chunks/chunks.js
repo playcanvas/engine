@@ -15,7 +15,6 @@ import baseNineSlicedPS from './lit/frag/baseNineSliced.js';
 import baseNineSlicedVS from './lit/vert/baseNineSliced.js';
 import baseNineSlicedTiledPS from './lit/frag/baseNineSlicedTiled.js';
 import bayerPS from './common/frag/bayer.js';
-import biasConstPS from './lit/frag/biasConst.js';
 import blurVSMPS from './lit/frag/blurVSM.js';
 import clearCoatPS from './standard/frag/clearCoat.js';
 import clearCoatGlossPS from './standard/frag/clearCoatGloss.js';
@@ -58,7 +57,6 @@ import fullscreenQuadPS from './common/frag/fullscreenQuad.js';
 import fullscreenQuadVS from './common/vert/fullscreenQuad.js';
 import gamma1_0PS from './common/frag/gamma1_0.js';
 import gamma2_2PS from './common/frag/gamma2_2.js';
-import gles2PS from '../../../platform/graphics/shader-chunks/frag/gles2.js';
 import gles3PS from '../../../platform/graphics/shader-chunks/frag/gles3.js';
 import gles3VS from '../../../platform/graphics/shader-chunks/vert/gles3.js';
 import glossPS from './standard/frag/gloss.js';
@@ -164,9 +162,7 @@ import shadowStandardPS from './lit/frag/shadowStandard.js';
 import shadowStandardGL2PS from './lit/frag/shadowStandardGL2.js';
 import shadowVSM8PS from './lit/frag/shadowVSM8.js';
 import shadowVSM_commonPS from './lit/frag/shadowVSM_common.js';
-import skinBatchConstVS from './common/vert/skinBatchConst.js';
 import skinBatchTexVS from './common/vert/skinBatchTex.js';
-import skinConstVS from './common/vert/skinConst.js';
 import skinTexVS from './common/vert/skinTex.js';
 import skyboxEnvPS from './skybox/frag/skyboxEnv.js';
 import skyboxHDRPS from './skybox/frag/skyboxHDR.js';
@@ -192,10 +188,12 @@ import tonemappingAces2PS from './common/frag/tonemappingAces2.js';
 import tonemappingFilmicPS from './common/frag/tonemappingFilmic.js';
 import tonemappingHejlPS from './common/frag/tonemappingHejl.js';
 import tonemappingLinearPS from './common/frag/tonemappingLinear.js';
+import tonemappingNeutralPS from './common/frag/tonemappingNeutral.js';
 import tonemappingNonePS from './common/frag/tonemappingNone.js';
 import transformVS from './common/vert/transform.js';
 import transformDeclVS from './common/vert/transformDecl.js';
 import transmissionPS from './standard/frag/transmission.js';
+import twoSidedLightingPS from './lit/frag/twoSidedLighting.js';
 import uv0VS from './lit/vert/uv0.js';
 import uv1VS from './lit/vert/uv1.js';
 import viewDirPS from './lit/frag/viewDir.js';
@@ -227,7 +225,6 @@ const shaderChunks = {
     baseNineSlicedVS,
     baseNineSlicedTiledPS,
     bayerPS,
-    biasConstPS,
     blurVSMPS,
     clearCoatPS,
     clearCoatGlossPS,
@@ -270,7 +267,6 @@ const shaderChunks = {
     fullscreenQuadVS,
     gamma1_0PS,
     gamma2_2PS,
-    gles2PS,
     gles3PS,
     gles3VS,
     glossPS,
@@ -376,9 +372,7 @@ const shaderChunks = {
     shadowStandardGL2PS,
     shadowVSM8PS,
     shadowVSM_commonPS,
-    skinBatchConstVS,
     skinBatchTexVS,
-    skinConstVS,
     skinTexVS,
     skyboxEnvPS,
     skyboxHDRPS,
@@ -404,10 +398,12 @@ const shaderChunks = {
     tonemappingFilmicPS,
     tonemappingHejlPS,
     tonemappingLinearPS,
+    tonemappingNeutralPS,
     tonemappingNonePS,
     transformVS,
     transformDeclVS,
     transmissionPS,
+    twoSidedLightingPS,
     uv0VS,
     uv1VS,
     viewDirPS,

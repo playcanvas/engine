@@ -7,12 +7,24 @@ uniform highp sampler2D internalTex1;
 uniform highp sampler2D internalTex2;
 uniform highp sampler2D internalTex3;
 
-uniform mat3 emitterMatrix, emitterMatrixInv;
+uniform mat3 emitterMatrix;
+uniform mat3 emitterMatrixInv;
 uniform vec3 emitterScale;
 
-uniform vec3 emitterPos, frameRandom, localVelocityDivMult, velocityDivMult;
-uniform float delta, rate, rateDiv, lifetime, numParticles, rotSpeedDivMult, radialSpeedDivMult, seed;
-uniform float startAngle, startAngle2;
+uniform vec3 emitterPos;
+uniform vec3 frameRandom;
+uniform vec3 localVelocityDivMult;
+uniform vec3 velocityDivMult;
+uniform float delta;
+uniform float rate;
+uniform float rateDiv;
+uniform float lifetime;
+uniform float numParticles;
+uniform float rotSpeedDivMult;
+uniform float radialSpeedDivMult;
+uniform float seed;
+uniform float startAngle;
+uniform float startAngle2;
 uniform float initialVelocity;
 
 uniform float graphSampleSize;

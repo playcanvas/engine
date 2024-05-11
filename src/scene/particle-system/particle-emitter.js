@@ -13,7 +13,7 @@ import {
     BUFFER_DYNAMIC,
     CULLFACE_NONE,
     FILTER_LINEAR, FILTER_NEAREST,
-    INDEXFORMAT_UINT16,
+    INDEXFORMAT_UINT32,
     PIXELFORMAT_RGBA8, PIXELFORMAT_RGBA32F,
     PRIMITIVE_TRIANGLES,
     SEMANTIC_ATTR0, SEMANTIC_ATTR1, SEMANTIC_ATTR2, SEMANTIC_ATTR3, SEMANTIC_ATTR4, SEMANTIC_TEXCOORD0,
@@ -567,8 +567,7 @@ class ParticleEmitter {
         this.useCpu = this.useCpu || this.sort > PARTICLESORT_NONE ||  // force CPU if desirable by user or sorting is enabled
         gd.maxVertexTextures <= 1 || // force CPU if can't use enough vertex textures
         gd.fragmentUniformsCount < 64 || // force CPU if can't use many uniforms; TODO: change to more realistic value (this one is iphone's)
-        gd.forceCpuParticles ||
-        !gd.extTextureFloat; // no float texture extension
+        gd.forceCpuParticles;
 
         this._destroyResources();
 
@@ -576,15 +575,7 @@ class ParticleEmitter {
 
         particleTexHeight = (this.useCpu || this.pack8) ? 4 : 2;
 
-        this.useMesh = false;
-        if (this.mesh) {
-            const totalVertCount = this.numParticles * this.mesh.vertexBuffer.numVertices;
-            if (totalVertCount > 65535) {
-                Debug.warn('WARNING: particle system can\'t render mesh particles because numParticles * numVertices is more than 65k. Reverting to quad particles.');
-            } else {
-                this.useMesh = true;
-            }
-        }
+        this.useMesh = !!this.mesh;
 
         this.numParticlesPot = math.nextPowerOfTwo(this.numParticles);
         this.rebuildGraphs();
@@ -987,8 +978,10 @@ class ParticleEmitter {
                 }
                 const particleFormat = new VertexFormat(this.graphicsDevice, elements);
 
-                this.vertexBuffer = new VertexBuffer(this.graphicsDevice, particleFormat, psysVertCount, BUFFER_DYNAMIC);
-                this.indexBuffer = new IndexBuffer(this.graphicsDevice, INDEXFORMAT_UINT16, psysIndexCount);
+                this.vertexBuffer = new VertexBuffer(this.graphicsDevice, particleFormat, psysVertCount, {
+                    usage: BUFFER_DYNAMIC
+                });
+                this.indexBuffer = new IndexBuffer(this.graphicsDevice, INDEXFORMAT_UINT32, psysIndexCount);
             } else {
                 const elements = [{
                     semantic: SEMANTIC_ATTR0,
@@ -1013,8 +1006,10 @@ class ParticleEmitter {
                 }];
                 const particleFormat = new VertexFormat(this.graphicsDevice, elements);
 
-                this.vertexBuffer = new VertexBuffer(this.graphicsDevice, particleFormat, psysVertCount, BUFFER_DYNAMIC);
-                this.indexBuffer = new IndexBuffer(this.graphicsDevice, INDEXFORMAT_UINT16, psysIndexCount);
+                this.vertexBuffer = new VertexBuffer(this.graphicsDevice, particleFormat, psysVertCount, {
+                    usage: BUFFER_DYNAMIC
+                });
+                this.indexBuffer = new IndexBuffer(this.graphicsDevice, INDEXFORMAT_UINT32, psysIndexCount);
             }
 
             // Fill the vertex buffer
@@ -1061,8 +1056,8 @@ class ParticleEmitter {
 
             // Fill the index buffer
             let dst = 0;
-            const indices = new Uint16Array(this.indexBuffer.lock());
-            if (this.useMesh) meshData = new Uint16Array(this.mesh.indexBuffer[0].lock());
+            const indices = new Uint32Array(this.indexBuffer.lock());
+            if (this.useMesh) meshData = new Uint32Array(this.mesh.indexBuffer[0].lock());
             for (let i = 0; i < numParticles; i++) {
                 if (!this.useMesh) {
                     const baseIndex = i * 4;

@@ -2,6 +2,7 @@ import { Application } from '../../../../src/framework/application.js';
 import { Asset } from '../../../../src/framework/asset/asset.js';
 import { Entity } from '../../../../src/framework/entity.js';
 import { LAYERID_WORLD, LAYERID_UI } from '../../../../src/scene/constants.js';
+import { NullGraphicsDevice } from '../../../../src/platform/graphics/null/null-graphics-device.js';
 
 import { HTMLCanvasElement } from '@playcanvas/canvas-mock';
 
@@ -47,7 +48,7 @@ describe('ModelComponent', function () {
 
     beforeEach(function (done) {
         const canvas = new HTMLCanvasElement(500, 500);
-        app = new Application(canvas);
+        app = new Application(canvas, { graphicsDevice: new NullGraphicsDevice(canvas) });
 
         loadAssets(function () {
             done();
