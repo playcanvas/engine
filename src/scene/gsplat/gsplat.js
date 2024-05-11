@@ -5,10 +5,9 @@ import { Vec2 } from '../../core/math/vec2.js';
 import { Mat3 } from '../../core/math/mat3.js';
 import {
     ADDRESS_CLAMP_TO_EDGE, FILTER_NEAREST, PIXELFORMAT_R16F, PIXELFORMAT_R32F, PIXELFORMAT_RGBA16F, PIXELFORMAT_RGBA32F,
-    PIXELFORMAT_RGBA8, SEMANTIC_ATTR13, TYPE_FLOAT32, TYPE_UINT32
+    PIXELFORMAT_RGBA8
 } from '../../platform/graphics/constants.js';
 import { Texture } from '../../platform/graphics/texture.js';
-import { VertexFormat } from '../../platform/graphics/vertex-format.js';
 import { Vec3 } from '../../core/math/vec3.js';
 
 const _tmpVecA = new Vec3();
@@ -18,16 +17,12 @@ const _m0 = new Vec3();
 const _m1 = new Vec3();
 const _m2 = new Vec3();
 const _s = new Vec3();
-const _r = new Vec3();
 
 /** @ignore */
 class GSplat {
     device;
 
     numSplats;
-
-    /** @type {VertexFormat} */
-    vertexFormat;
 
     /**
      * True if half format should be used, false is float format should be used or undefined if none
@@ -65,20 +60,14 @@ class GSplat {
         this.numSplats = numSplats;
         this.aabb = aabb;
 
-        this.vertexFormat = new VertexFormat(device, [
-            { semantic: SEMANTIC_ATTR13, components: 1, type: device.isWebGL1 ? TYPE_FLOAT32 : TYPE_UINT32, asInt: !device.isWebGL1 }
-        ]);
+        // create data textures using full float precision
+        this.halfFormat = false;
 
-        // create data textures if any format is available
-        this.halfFormat = this.getTextureFormat(device, true);
-
-        if (this.halfFormat !== undefined) {
-            const size = this.evalTextureSize(numSplats);
-            this.colorTexture = this.createTexture(device, 'splatColor', PIXELFORMAT_RGBA8, size);
-            this.transformATexture = this.createTexture(device, 'transformA', this.halfFormat ? PIXELFORMAT_RGBA16F : PIXELFORMAT_RGBA32F, size);
-            this.transformBTexture = this.createTexture(device, 'transformB', this.halfFormat ? PIXELFORMAT_RGBA16F : PIXELFORMAT_RGBA32F, size);
-            this.transformCTexture = this.createTexture(device, 'transformC', this.halfFormat ? PIXELFORMAT_R16F : PIXELFORMAT_R32F, size);
-        }
+        const size = this.evalTextureSize(numSplats);
+        this.colorTexture = this.createTexture(device, 'splatColor', PIXELFORMAT_RGBA8, size);
+        this.transformATexture = this.createTexture(device, 'transformA', this.halfFormat ? PIXELFORMAT_RGBA16F : PIXELFORMAT_RGBA32F, size);
+        this.transformBTexture = this.createTexture(device, 'transformB', this.halfFormat ? PIXELFORMAT_RGBA16F : PIXELFORMAT_RGBA32F, size);
+        this.transformCTexture = this.createTexture(device, 'transformC', this.halfFormat ? PIXELFORMAT_R16F : PIXELFORMAT_R32F, size);
     }
 
     destroy() {
@@ -144,42 +133,6 @@ class GSplat {
     }
 
     /**
-     * Gets the most suitable texture format based on device capabilities.
-     *
-     * @param {import('../../platform/graphics/graphics-device.js').GraphicsDevice} device - The graphics device.
-     * @param {boolean} preferHighPrecision - True to prefer high precision when available.
-     * @returns {boolean|undefined} True if half format should be used, false is float format should
-     * be used or undefined if none are available.
-     */
-    getTextureFormat(device, preferHighPrecision) {
-
-        // on WebGL1 R32F is not supported, always use half precision
-        if (device.isWebGL1)
-            preferHighPrecision = false;
-
-        const halfSupported = device.extTextureHalfFloat && device.textureHalfFloatUpdatable;
-        const floatSupported = device.extTextureFloat;
-
-        // true if half format should be used, false is float format should be used or undefined if none are available.
-        let halfFormat;
-        if (preferHighPrecision) {
-            if (floatSupported) {
-                halfFormat = false;
-            } else if (halfSupported) {
-                halfFormat = true;
-            }
-        } else {
-            if (halfSupported) {
-                halfFormat = true;
-            } else if (floatSupported) {
-                halfFormat = false;
-            }
-        }
-
-        return halfFormat;
-    }
-
-    /**
      * Updates pixel data of this.colorTexture based on the supplied color components and opacity.
      * Assumes that the texture is using an RGBA format where RGB are color components influenced
      * by SH spherical harmonics and A is opacity after a sigmoid transformation.
@@ -231,10 +184,10 @@ class GSplat {
      * @param {Float32Array} x - The array containing the 'x' component of the center points.
      * @param {Float32Array} y - The array containing the 'y' component of the center points.
      * @param {Float32Array} z - The array containing the 'z' component of the center points.
-     * @param {Float32Array} rot0 - The array containing the 'x' component of quaternion rotations.
-     * @param {Float32Array} rot1 - The array containing the 'y' component of quaternion rotations.
-     * @param {Float32Array} rot2 - The array containing the 'z' component of quaternion rotations.
-     * @param {Float32Array} rot3 - The array containing the 'w' component of quaternion rotations.
+     * @param {Float32Array} rot0 - The array containing the 'w' component of quaternion rotations.
+     * @param {Float32Array} rot1 - The array containing the 'x' component of quaternion rotations.
+     * @param {Float32Array} rot2 - The array containing the 'y' component of quaternion rotations.
+     * @param {Float32Array} rot3 - The array containing the 'z' component of quaternion rotations.
      * @param {Float32Array} scale0 - The first scale component associated with the x-dimension.
      * @param {Float32Array} scale1 - The second scale component associated with the y-dimension.
      * @param {Float32Array} scale2 - The third scale component associated with the z-dimension.
@@ -259,12 +212,8 @@ class GSplat {
         for (let i = 0; i < this.numSplats; i++) {
 
             // rotation
-            quat.set(rot0[i], rot1[i], rot2[i], rot3[i]).normalize();
-            if (quat.w < 0) {
-                quat.conjugate();
-            }
-            _r.set(quat.x, quat.y, quat.z);
-            this.quatToMat3(_r, mat);
+            quat.set(rot1[i], rot2[i], rot3[i], rot0[i]).normalize();
+            mat.setFromQuat(quat);
 
             // scale
             _s.set(
@@ -308,32 +257,6 @@ class GSplat {
         this.transformATexture.unlock();
         this.transformBTexture.unlock();
         this.transformCTexture.unlock();
-    }
-
-    /**
-     * Convert quaternion rotation stored in Vec3 to a rotation matrix.
-     *
-     * @param {Vec3} R - Rotation stored in Vec3.
-     * @param {Mat3} mat - The output rotation matrix.
-     */
-    quatToMat3(R, mat) {
-        const x = R.x;
-        const y = R.y;
-        const z = R.z;
-        const w = Math.sqrt(1.0 - R.dot(R));
-
-        const d = mat.data;
-        d[0] = 1.0 - 2.0 * (z * z + w * w);
-        d[1] = 2.0 * (y * z + x * w);
-        d[2] = 2.0 * (y * w - x * z);
-
-        d[3] = 2.0 * (y * z - x * w);
-        d[4] = 1.0 - 2.0 * (y * y + w * w);
-        d[5] = 2.0 * (z * w + x * y);
-
-        d[6] = 2.0 * (y * w + x * z);
-        d[7] = 2.0 * (z * w - x * y);
-        d[8] = 1.0 - 2.0 * (y * y + z * z);
     }
 
     /**

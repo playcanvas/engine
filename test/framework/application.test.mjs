@@ -12,6 +12,7 @@ import { Scene } from '../../src/scene/scene.js';
 import { SceneRegistry } from '../../src/framework/scene-registry.js';
 import { ScriptRegistry } from '../../src/framework/script/script-registry.js';
 import { XrManager } from '../../src/framework/xr/xr-manager.js';
+import { NullGraphicsDevice } from '../../src/platform/graphics/null/null-graphics-device.js';
 
 import { HTMLCanvasElement } from '@playcanvas/canvas-mock';
 
@@ -23,7 +24,7 @@ describe('Application', function () {
 
         it('support no options', function () {
             const canvas = new HTMLCanvasElement(500, 500);
-            const app = new Application(canvas);
+            const app = new Application(canvas, { graphicsDevice: new NullGraphicsDevice(canvas) });
 
             expect(app.assets).to.be.instanceOf(AssetRegistry);
             expect(app.autoRender).to.be.true;
@@ -56,7 +57,7 @@ describe('Application', function () {
 
         it('destroys the application', function () {
             const canvas = new HTMLCanvasElement(500, 500);
-            const app = new Application(canvas);
+            const app = new Application(canvas, { graphicsDevice: new NullGraphicsDevice(canvas) });
 
             app.destroy();
 //            expect(app.assets).to.be.null;

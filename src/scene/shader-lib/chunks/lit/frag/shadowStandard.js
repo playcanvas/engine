@@ -13,8 +13,6 @@ vec3 lessThan2(vec3 a, vec3 b) {
 
 // ----- Direct/Spot Sampling -----
 
-#ifdef GL2
-
 float _getShadowPCF3x3(SHADOWMAP_ACCEPT(shadowMap), vec3 shadowCoord, vec3 shadowParams) {
     float z = shadowCoord.z;
     vec2 uv = shadowCoord.xy * shadowParams.x; // 1 unit - 1 texel
@@ -69,71 +67,6 @@ float getShadowPCF1x1(SHADOWMAP_ACCEPT(shadowMap), vec3 shadowCoord, vec4 shadow
 float getShadowSpotPCF1x1(SHADOWMAP_ACCEPT(shadowMap), vec3 shadowCoord, vec4 shadowParams) {
     return textureShadow(shadowMap, shadowCoord);
 }
-
-#else // GL1
-
-float _xgetShadowPCF3x3(mat3 depthKernel, vec3 shadowCoord, sampler2D shadowMap, vec3 shadowParams) {
-    mat3 shadowKernel;
-    vec3 shadowZ = vec3(shadowCoord.z);
-    shadowKernel[0] = vec3(greaterThan(depthKernel[0], shadowZ));
-    shadowKernel[1] = vec3(greaterThan(depthKernel[1], shadowZ));
-    shadowKernel[2] = vec3(greaterThan(depthKernel[2], shadowZ));
-
-    vec2 fractionalCoord = fract( shadowCoord.xy * shadowParams.x );
-
-    shadowKernel[0] = mix(shadowKernel[0], shadowKernel[1], fractionalCoord.x);
-    shadowKernel[1] = mix(shadowKernel[1], shadowKernel[2], fractionalCoord.x);
-
-    vec4 shadowValues;
-    shadowValues.x = mix(shadowKernel[0][0], shadowKernel[0][1], fractionalCoord.y);
-    shadowValues.y = mix(shadowKernel[0][1], shadowKernel[0][2], fractionalCoord.y);
-    shadowValues.z = mix(shadowKernel[1][0], shadowKernel[1][1], fractionalCoord.y);
-    shadowValues.w = mix(shadowKernel[1][1], shadowKernel[1][2], fractionalCoord.y);
-
-    return dot( shadowValues, vec4( 1.0 ) ) * 0.25;
-}
-
-float _getShadowPCF3x3(sampler2D shadowMap, vec3 shadowCoord, vec3 shadowParams) {
-    float xoffset = 1.0 / shadowParams.x; // 1/shadow map width
-    float dx0 = -xoffset;
-    float dx1 = xoffset;
-
-    mat3 depthKernel;
-    depthKernel[0][0] = unpackFloat(textureShadow(shadowMap, shadowCoord.xy + vec2(dx0, dx0)));
-    depthKernel[0][1] = unpackFloat(textureShadow(shadowMap, shadowCoord.xy + vec2(dx0, 0.0)));
-    depthKernel[0][2] = unpackFloat(textureShadow(shadowMap, shadowCoord.xy + vec2(dx0, dx1)));
-    depthKernel[1][0] = unpackFloat(textureShadow(shadowMap, shadowCoord.xy + vec2(0.0, dx0)));
-    depthKernel[1][1] = unpackFloat(textureShadow(shadowMap, shadowCoord.xy));
-    depthKernel[1][2] = unpackFloat(textureShadow(shadowMap, shadowCoord.xy + vec2(0.0, dx1)));
-    depthKernel[2][0] = unpackFloat(textureShadow(shadowMap, shadowCoord.xy + vec2(dx1, dx0)));
-    depthKernel[2][1] = unpackFloat(textureShadow(shadowMap, shadowCoord.xy + vec2(dx1, 0.0)));
-    depthKernel[2][2] = unpackFloat(textureShadow(shadowMap, shadowCoord.xy + vec2(dx1, dx1)));
-
-    return _xgetShadowPCF3x3(depthKernel, shadowCoord, shadowMap, shadowParams);
-}
-
-float getShadowPCF3x3(sampler2D shadowMap, vec3 shadowCoord, vec4 shadowParams) {
-    return _getShadowPCF3x3(shadowMap, shadowCoord, shadowParams.xyz);
-}
-
-float getShadowSpotPCF3x3(sampler2D shadowMap, vec3 shadowCoord, vec4 shadowParams) {
-    return _getShadowPCF3x3(shadowMap, shadowCoord, shadowParams.xyz);
-}
-
-float _getShadowPCF1x1(sampler2D shadowMap, vec3 shadowCoord) {
-    float shadowSample = unpackFloat(textureShadow(shadowMap, shadowCoord.xy));
-    return shadowSample > shadowCoord.z ? 1.0 : 0.0;
-}
-
-float getShadowPCF1x1(sampler2D shadowMap, vec3 shadowCoord, vec4 shadowParams) {
-    return _getShadowPCF1x1(shadowMap, shadowCoord);
-}
-
-float getShadowSpotPCF1x1(sampler2D shadowMap, vec3 shadowCoord, vec4 shadowParams) {
-    return _getShadowPCF1x1(shadowMap, shadowCoord);
-}
-#endif
-
 
 // ----- Omni Sampling -----
 

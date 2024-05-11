@@ -9,7 +9,8 @@ import {
     PRIMITIVE_LINES, PRIMITIVE_TRIANGLES, PRIMITIVE_POINTS,
     SEMANTIC_BLENDINDICES, SEMANTIC_BLENDWEIGHT, SEMANTIC_COLOR, SEMANTIC_NORMAL, SEMANTIC_POSITION, SEMANTIC_TEXCOORD,
     TYPE_FLOAT32, TYPE_UINT8, TYPE_INT8, TYPE_INT16, TYPE_UINT16,
-    typedArrayIndexFormats
+    typedArrayIndexFormats,
+    SEMANTIC_TANGENT
 } from '../platform/graphics/constants.js';
 import { IndexBuffer } from '../platform/graphics/index-buffer.js';
 import { VertexBuffer } from '../platform/graphics/vertex-buffer.js';
@@ -77,11 +78,12 @@ class GeometryData {
 
 // class storing information about single vertex data stream
 class GeometryVertexStream {
-    constructor(data, componentCount, dataType, dataTypeNormalize) {
+    constructor(data, componentCount, dataType, dataTypeNormalize, asInt) {
         this.data = data;                           // array of data
         this.componentCount = componentCount;       // number of components
         this.dataType = dataType;                   // format of elements (pc.TYPE_FLOAT32 ..)
         this.dataTypeNormalize = dataTypeNormalize; // normalize element (divide by 255)
+        this.asInt = asInt;                         // treat data as integer (WebGL2 and WebGPU only)
     }
 }
 
@@ -178,16 +180,40 @@ class Mesh extends RefCountedObject {
     _aabb = new BoundingBox();
 
     /**
+     * True if the created vertex buffer should be accessible as a storage buffer in compute shader.
+     *
+     * @type {boolean}
+     * @private
+     */
+    _storageVertex = false;
+
+    /**
+     * True if the created index buffer should be accessible as a storage buffer in compute shader.
+     *
+     * @type {boolean}
+     * @private
+     */
+    _storageIndex = false;
+
+    /**
      * Create a new Mesh instance.
      *
      * @param {import('../platform/graphics/graphics-device.js').GraphicsDevice} graphicsDevice -
      * The graphics device used to manage this mesh.
+     * @param {object} [options] - Object for passing optional arguments.
+     * @param {boolean} [options.storageVertex] - Defines if the vertex buffer can be used as
+     * a storage buffer by a compute shader. Defaults to false. Only supported on WebGPU.
+     * @param {boolean} [options.storageIndex] - Defines if the index buffer can be used as
+     * a storage buffer by a compute shader. Defaults to false. Only supported on WebGPU.
      */
-    constructor(graphicsDevice) {
+    constructor(graphicsDevice, options) {
         super();
         this.id = id++;
         Debug.assert(graphicsDevice, "Mesh constructor takes a GraphicsDevice as a parameter, and it was not provided.");
         this.device = graphicsDevice;
+
+        this._storageIndex = options?.storageIndex || false;
+        this._storageVertex = options?.storageVertex || false;
 
         /**
          * The vertex buffer holding the vertex data of the mesh.
@@ -245,6 +271,65 @@ class Mesh extends RefCountedObject {
 
         // Array of object space AABBs of vertices affected by each bone
         this.boneAabb = null;
+    }
+
+    /**
+     * Create a new Mesh instance from {@link Geometry} object.
+     * @param {import('../platform/graphics/graphics-device.js').GraphicsDevice} graphicsDevice -
+     * The graphics device used to manage this mesh.
+     * @param {import('./geometry/geometry.js').Geometry} geometry - The geometry object to create
+     * the mesh from.
+     * @param {object} [options] - An object that specifies optional inputs for the function as follows:
+     * @param {boolean} [options.storageVertex] - Defines if the vertex buffer of the mesh can be used as
+     * a storage buffer by a compute shader. Defaults to false. Only supported on WebGPU.
+     * @param {boolean} [options.storageIndex] - Defines if the index buffer of the mesh can be used as
+     * a storage buffer by a compute shader. Defaults to false. Only supported on WebGPU.
+     * @returns {Mesh} A new mesh.
+     */
+    static fromGeometry(graphicsDevice, geometry, options = {}) {
+
+        const mesh = new Mesh(graphicsDevice, options);
+
+        const { positions, normals, tangents, colors, uvs, uvs1, blendIndices, blendWeights, indices } = geometry;
+
+        if (positions) {
+            mesh.setPositions(positions);
+        }
+
+        if (normals) {
+            mesh.setNormals(normals);
+        }
+
+        if (tangents) {
+            mesh.setVertexStream(SEMANTIC_TANGENT, tangents, 4);
+        }
+
+        if (colors) {
+            mesh.setColors32(colors);
+        }
+
+        if (uvs) {
+            mesh.setUvs(0, uvs);
+        }
+
+        if (uvs1) {
+            mesh.setUvs(1, uvs1);
+        }
+
+        if (blendIndices) {
+            mesh.setVertexStream(SEMANTIC_BLENDINDICES, blendIndices, 4, blendIndices.length / 4, TYPE_UINT8);
+        }
+
+        if (blendWeights) {
+            mesh.setVertexStream(SEMANTIC_BLENDWEIGHT, blendWeights, 4);
+        }
+
+        if (indices) {
+            mesh.setIndices(indices);
+        }
+
+        mesh.update();
+        return mesh;
     }
 
     /**
@@ -516,8 +601,11 @@ class Mesh extends RefCountedObject {
      * @param {boolean} [dataTypeNormalize] - If true, vertex attribute data will be mapped from a
      * 0 to 255 range down to 0 to 1 when fed to a shader. If false, vertex attribute data is left
      * unchanged. If this property is unspecified, false is assumed.
+     * @param {boolean} [asInt] - If true, vertex attribute data will be accessible as integer
+     * numbers in shader code. Defaults to false, which means that vertex attribute data will be
+     * accessible as floating point numbers. Can be only used with INT and UINT data types.
      */
-    setVertexStream(semantic, data, componentCount, numVertices, dataType = TYPE_FLOAT32, dataTypeNormalize = false) {
+    setVertexStream(semantic, data, componentCount, numVertices, dataType = TYPE_FLOAT32, dataTypeNormalize = false, asInt = false) {
         this._initGeometryData();
         const vertexCount = numVertices || data.length / componentCount;
         this._geometryData._changeVertexCount(vertexCount, semantic);
@@ -527,7 +615,8 @@ class Mesh extends RefCountedObject {
             data,
             componentCount,
             dataType,
-            dataTypeNormalize
+            dataTypeNormalize,
+            asInt
         );
     }
 
@@ -866,7 +955,8 @@ class Mesh extends RefCountedObject {
                 semantic: semantic,
                 components: stream.componentCount,
                 type: stream.dataType,
-                normalize: stream.dataTypeNormalize
+                normalize: stream.dataTypeNormalize,
+                asInt: stream.asInt
             });
         }
 
@@ -880,7 +970,10 @@ class Mesh extends RefCountedObject {
         if (!this.vertexBuffer) {
             const allocateVertexCount = this._geometryData.maxVertices;
             const format = this._buildVertexFormat(allocateVertexCount);
-            this.vertexBuffer = new VertexBuffer(this.device, format, allocateVertexCount, this._geometryData.verticesUsage);
+            this.vertexBuffer = new VertexBuffer(this.device, format, allocateVertexCount, {
+                usage: this._geometryData.verticesUsage,
+                storage: this._storageVertex
+            });
         }
 
         // lock vertex buffer and create typed access arrays for individual elements
@@ -904,8 +997,10 @@ class Mesh extends RefCountedObject {
 
         // if we don't have index buffer, create new one, otherwise update existing one
         if (this.indexBuffer.length <= 0 || !this.indexBuffer[0]) {
-            const createFormat = this._geometryData.maxVertices > 0xffff ? INDEXFORMAT_UINT32 : INDEXFORMAT_UINT16;
-            this.indexBuffer[0] = new IndexBuffer(this.device, createFormat, this._geometryData.maxIndices, this._geometryData.indicesUsage);
+            const maxVertices = this._geometryData.maxVertices;
+            const createFormat = ((maxVertices > 0xffff) || (maxVertices === 0)) ? INDEXFORMAT_UINT32 : INDEXFORMAT_UINT16;
+            const options = this._storageIndex ? { storage: true } : undefined;
+            this.indexBuffer[0] = new IndexBuffer(this.device, createFormat, this._geometryData.maxIndices, this._geometryData.indicesUsage, undefined, options);
         }
 
         const srcIndices = this._geometryData.indices;

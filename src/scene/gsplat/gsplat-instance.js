@@ -1,11 +1,9 @@
 import { Mat4 } from '../../core/math/mat4.js';
 import { Vec3 } from '../../core/math/vec3.js';
-import { BUFFER_DYNAMIC } from '../../platform/graphics/constants.js';
-import { VertexBuffer } from '../../platform/graphics/vertex-buffer.js';
+import { SEMANTIC_POSITION, TYPE_UINT32 } from '../../platform/graphics/constants.js';
 import { DITHER_NONE } from '../constants.js';
 import { MeshInstance } from '../mesh-instance.js';
 import { Mesh } from '../mesh.js';
-import { createBox } from '../procedural.js';
 import { createGSplatMaterial } from './gsplat-material.js';
 import { GSplatSorter } from './gsplat-sorter.js';
 
@@ -28,7 +26,7 @@ class GSplatInstance {
     /** @type {import('../materials/material.js').Material} */
     material;
 
-    /** @type {VertexBuffer} */
+    /** @type {import('../../platform/graphics/vertex-buffer.js').VertexBuffer} */
     vb;
 
     options = {};
@@ -58,51 +56,46 @@ class GSplatInstance {
         // clone options object
         options = Object.assign(this.options, options);
 
+        // not supported on WebGL1
+        const device = splat.device;
+        if (device.isWebGL1)
+            return;
+
         // material
-        const debugRender = options.debugRender;
         this.createMaterial(options);
 
-        // mesh
-        const device = splat.device;
-        if (debugRender) {
-            this.mesh = createBox(device, {
-                halfExtents: new Vec3(1.0, 1.0, 1.0)
-            });
-        } else {
-            this.mesh = new Mesh(device);
-            this.mesh.setPositions(new Float32Array([-1, -1, 1, -1, 1, 1, -1, 1]), 2);
-            this.mesh.setIndices([0, 1, 2, 0, 2, 3]);
-            this.mesh.update();
+        const numSplats = splat.numSplats;
+        const indices = new Uint32Array(numSplats * 6);
+        const ids = new Uint32Array(numSplats * 4);
+
+        for (let i = 0; i < numSplats; ++i) {
+            const base = i * 4;
+
+            // 4 vertices
+            ids[base + 0] = i;
+            ids[base + 1] = i;
+            ids[base + 2] = i;
+            ids[base + 3] = i;
+
+            // 2 triangles
+            const triBase = i * 6;
+            indices[triBase + 0] = base;
+            indices[triBase + 1] = base + 1;
+            indices[triBase + 2] = base + 2;
+            indices[triBase + 3] = base;
+            indices[triBase + 4] = base + 2;
+            indices[triBase + 5] = base + 3;
         }
 
+        // mesh
+        const mesh = new Mesh(device);
+        mesh.setVertexStream(SEMANTIC_POSITION, ids, 1, numSplats * 4, TYPE_UINT32, false, !device.isWebGL1);
+        mesh.setIndices(indices);
+        mesh.update();
+        this.mesh = mesh;
         this.mesh.aabb.copy(splat.aabb);
 
-        // initialize index data
-        const numSplats = splat.numSplats;
-        let indexData;
-        if (!device.isWebGL1) {
-            indexData = new Uint32Array(numSplats);
-            for (let i = 0; i < numSplats; ++i) {
-                indexData[i] = i;
-            }
-        } else {
-            indexData = new Float32Array(numSplats);
-            for (let i = 0; i < numSplats; ++i) {
-                indexData[i] = i + 0.2;
-            }
-        }
-
-        const vb = new VertexBuffer(
-            device,
-            splat.vertexFormat,
-            numSplats,
-            BUFFER_DYNAMIC,
-            indexData.buffer
-        );
-        this.vb = vb;
-
         this.meshInstance = new MeshInstance(this.mesh, this.material);
-        this.meshInstance.setInstancing(vb, true);
         this.meshInstance.gsplatInstance = this;
 
         // clone centers to allow multiple instances of sorter
@@ -111,14 +104,13 @@ class GSplatInstance {
         // create sorter
         if (!options.dither || options.dither === DITHER_NONE) {
             this.sorter = new GSplatSorter();
-            this.sorter.init(this.vb, this.centers, !this.splat.device.isWebGL1);
+            this.sorter.init(mesh.vertexBuffer, this.centers, !this.splat.device.isWebGL1);
         }
     }
 
     destroy() {
-        this.material.destroy();
-        this.vb.destroy();
-        this.meshInstance.destroy();
+        this.material?.destroy();
+        this.meshInstance?.destroy();
         this.sorter?.destroy();
     }
 

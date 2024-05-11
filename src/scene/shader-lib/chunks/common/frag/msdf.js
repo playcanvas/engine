@@ -1,14 +1,6 @@
 export default /* glsl */`
 uniform sampler2D texture_msdfMap;
 
-#ifdef GL_OES_standard_derivatives
-#define USE_FWIDTH
-#endif
-
-#ifdef GL2
-#define USE_FWIDTH
-#endif
-
 float median(float r, float g, float b) {
     return max(min(r, g), min(max(r, g), b));
 }
@@ -46,17 +38,9 @@ vec4 applyMsdf(vec4 color) {
     // too large value (0.5) creates a dark glow around the letters
     float smoothingMax = 0.2;
 
-    #ifdef USE_FWIDTH
     // smoothing depends on size of texture on screen
     vec2 w = fwidth(vUv0);
     float smoothing = clamp(w.x * font_textureWidth / font_pxrange, 0.0, smoothingMax);
-    #else
-    float font_size = 16.0; // TODO fix this
-    // smoothing gets smaller as the font size gets bigger
-    // don't have fwidth we can approximate from font size, this doesn't account for scaling
-    // so a big font scaled down will be wrong...
-    float smoothing = clamp(font_pxrange / font_size, 0.0, smoothingMax);
-    #endif
 
     float mapMin = 0.05;
     float mapMax = clamp(1.0 - font_sdfIntensity, mapMin, 1.0);

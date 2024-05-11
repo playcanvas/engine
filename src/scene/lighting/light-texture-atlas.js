@@ -141,10 +141,8 @@ class LightTextureAtlas {
     updateUniforms() {
 
         // shadow atlas texture
-        const isShadowFilterPcf = true;
         const rt = this.shadowAtlas.renderTargets[0];
-        const isDepthShadow = !this.device.isWebGL1 && isShadowFilterPcf;
-        const shadowBuffer = isDepthShadow ? rt.depthBuffer : rt.colorBuffer;
+        const shadowBuffer = rt.depthBuffer;
         this._shadowAtlasTextureId.setValue(shadowBuffer);
 
         // shadow atlas params

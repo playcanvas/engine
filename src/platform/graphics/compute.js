@@ -11,9 +11,8 @@ class ComputeParameter {
 }
 
 /**
- * A representation of a compute shader with the associated data, that can be executed on the GPU.
- *
- * @ignore
+ * A representation of a compute shader with the associated resources, that can be executed on the
+ * GPU. Only supported on WebGPU platform.
  */
 class Compute {
     /**
@@ -23,6 +22,13 @@ class Compute {
      * @ignore
      */
     shader = null;
+
+    /**
+     * The non-unique name of an instance of the class. Defaults to 'Unnamed'.
+     *
+     * @type {string}
+     */
+    name;
 
     /**
      * @type {Map<string, ComputeParameter>}
@@ -55,10 +61,12 @@ class Compute {
      * @param {import('./graphics-device.js').GraphicsDevice} graphicsDevice -
      * The graphics device.
      * @param {import('./shader.js').Shader} shader - The compute shader.
+     * @param {string} [name] - The name of the compute instance, used for debugging only.
      */
-    constructor(graphicsDevice, shader) {
+    constructor(graphicsDevice, shader, name = 'Unnamed') {
         this.device = graphicsDevice;
         this.shader = shader;
+        this.name = name;
 
         if (graphicsDevice.supportsCompute) {
             this.impl = graphicsDevice.createComputeImpl(this);
@@ -69,8 +77,8 @@ class Compute {
      * Sets a shader parameter on a compute instance.
      *
      * @param {string} name - The name of the parameter to set.
-     * @param {number|number[]|Float32Array|import('./texture.js').Texture} value - The value for
-     * the specified parameter.
+     * @param {number|number[]|Float32Array|import('./texture.js').Texture|import('./storage-buffer.js').StorageBuffer|import('./vertex-buffer.js').VertexBuffer|import('./index-buffer.js').IndexBuffer} value
+     * - The value for the specified parameter.
      */
     setParameter(name, value) {
         let param = this.parameters.get(name);
@@ -86,8 +94,8 @@ class Compute {
      * Returns the value of a shader parameter from the compute instance.
      *
      * @param {string} name - The name of the parameter to get.
-     * @returns {number|number[]|Float32Array|import('./texture.js').Texture|undefined} The value of the
-     * specified parameter.
+     * @returns {number|number[]|Float32Array|import('./texture.js').Texture|import('./storage-buffer.js').StorageBuffer|import('./vertex-buffer.js').VertexBuffer|import('./index-buffer.js').IndexBuffer|undefined}
+     * The value of the specified parameter.
      */
     getParameter(name) {
         return this.parameters.get(name)?.value;

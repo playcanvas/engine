@@ -1,5 +1,5 @@
 import { hashCode } from "../../core/hash.js";
-import { SEMANTIC_ATTR13, SEMANTIC_POSITION } from "../../platform/graphics/constants.js";
+import { SEMANTIC_POSITION } from "../../platform/graphics/constants.js";
 import { ShaderUtils } from "../../platform/graphics/shader-utils.js";
 import { DITHER_NONE } from "../constants.js";
 import { shaderChunks } from "../shader-lib/chunks/chunks.js";
@@ -7,8 +7,6 @@ import { ShaderGenerator } from "../shader-lib/programs/shader-generator.js";
 import { ShaderPass } from "../shader-pass.js";
 
 const splatCoreVS = `
-    attribute vec3 vertex_position;
-
     uniform mat4 matrix_model;
     uniform mat4 matrix_view;
     uniform mat4 matrix_projection;
@@ -19,18 +17,6 @@ const splatCoreVS = `
     varying vec2 texCoord;
     varying vec4 color;
     varying float id;
-
-    #ifndef GL2
-    #ifndef WEBGPU
-    mat3 transpose(in mat3 m) {
-        return mat3(
-            m[0].x, m[1].x, m[2].x,
-            m[0].y, m[1].y, m[2].y,
-            m[0].z, m[1].z, m[2].z
-        );
-    }
-    #endif
-    #endif
 
     uniform vec4 tex_params;
     uniform sampler2D splatColor;
@@ -43,68 +29,32 @@ const splatCoreVS = `
     vec3 covA;
     vec3 covB;
 
-    #ifdef INT_INDICES
+    attribute uint vertex_id;
+    ivec2 dataUV;
+    void evalDataUV() {
 
-        attribute uint vertex_id;
-        ivec2 dataUV;
-        void evalDataUV() {
+        // turn vertex_id into int grid coordinates
+        ivec2 textureSize = ivec2(tex_params.xy);
+        vec2 invTextureSize = tex_params.zw;
 
-            // turn vertex_id into int grid coordinates
-            ivec2 textureSize = ivec2(tex_params.xy);
-            vec2 invTextureSize = tex_params.zw;
+        int gridV = int(float(vertex_id) * invTextureSize.x);
+        int gridU = int(vertex_id) - gridV * textureSize.x;
+        dataUV = ivec2(gridU, gridV);
+    }
 
-            int gridV = int(float(vertex_id) * invTextureSize.x);
-            int gridU = int(vertex_id) - gridV * textureSize.x;
-            dataUV = ivec2(gridU, gridV);
-        }
+    vec4 getColor() {
+        return texelFetch(splatColor, dataUV, 0);
+    }
 
-        vec4 getColor() {
-            return texelFetch(splatColor, dataUV, 0);
-        }
+    void getTransform() {
+        vec4 tA = texelFetch(transformA, dataUV, 0);
+        vec4 tB = texelFetch(transformB, dataUV, 0);
+        vec4 tC = texelFetch(transformC, dataUV, 0);
 
-        void getTransform() {
-            vec4 tA = texelFetch(transformA, dataUV, 0);
-            vec4 tB = texelFetch(transformB, dataUV, 0);
-            vec4 tC = texelFetch(transformC, dataUV, 0);
-
-            center = tA.xyz;
-            covA = tB.xyz;
-            covB = vec3(tA.w, tB.w, tC.x);
-        }
-
-    #else
-
-        // TODO: use texture2DLodEXT on WebGL
-
-        attribute float vertex_id;
-        vec2 dataUV;
-        void evalDataUV() {
-            vec2 textureSize = tex_params.xy;
-            vec2 invTextureSize = tex_params.zw;
-
-            // turn vertex_id into int grid coordinates
-            float gridV = floor(vertex_id * invTextureSize.x);
-            float gridU = vertex_id - (gridV * textureSize.x);
-
-            // convert grid coordinates to uv coordinates with half pixel offset
-            dataUV = vec2(gridU, gridV) * invTextureSize + (0.5 * invTextureSize);
-        }
-
-        vec4 getColor() {
-            return texture2D(splatColor, dataUV);
-        }
-
-        void getTransform() {
-            vec4 tA = texture2D(transformA, dataUV);
-            vec4 tB = texture2D(transformB, dataUV);
-            vec4 tC = texture2D(transformC, dataUV);
-
-            center = tA.xyz;
-            covA = tB.xyz;
-            covB = vec3(tA.w, tB.w, tC.x);
-        }
-
-    #endif
+        center = tA.xyz;
+        covA = tB.xyz;
+        covB = vec3(tA.w, tB.w, tC.x);
+    }
 
     vec3 evalCenter() {
         evalDataUV();
@@ -125,6 +75,7 @@ const splatCoreVS = `
             return vec4(0.0, 0.0, 2.0, 1.0);
         }
 
+        id = float(vertex_id);
         color = getColor();
 
         mat3 Vrk = mat3(
@@ -167,12 +118,14 @@ const splatCoreVS = `
             return vec4(0.0, 0.0, 2.0, 1.0);
         }
 
-        texCoord = vertex_position.xy * 2.0;
+        int vertexIndex = int(gl_VertexID) % 4;
+        texCoord = vec2(
+            float((vertexIndex == 0 || vertexIndex == 3) ? -2 : 2),
+            float((vertexIndex == 0 || vertexIndex == 1) ? -2 : 2)
+        );
 
         splat_proj.xy += (texCoord.x * v1 + texCoord.y * v2) / viewport * splat_proj.w;
         return splat_proj;
-
-        id = float(vertex_id);
     }
 `;
 
@@ -235,7 +188,6 @@ class GShaderGeneratorSplat {
         const defines =
             shaderPassDefines +
             (options.debugRender ? '#define DEBUG_RENDER\n' : '') +
-            (device.isWebGL1 ? '' : '#define INT_INDICES\n') +
             `#define DITHER_${options.dither.toUpperCase()}\n`;
 
         const vs = defines + splatCoreVS + options.vertex;
@@ -248,8 +200,7 @@ class GShaderGeneratorSplat {
         return ShaderUtils.createDefinition(device, {
             name: 'SplatShader',
             attributes: {
-                vertex_position: SEMANTIC_POSITION,
-                vertex_id: SEMANTIC_ATTR13
+                vertex_id: SEMANTIC_POSITION
             },
             vertexCode: vs,
             fragmentCode: fs

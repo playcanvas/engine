@@ -304,8 +304,8 @@ class Material {
      * multiplied by the source alpha.
      * - {@link BLEND_MULTIPLICATIVE2X}: Multiplies colors and doubles the result.
      * - {@link BLEND_SCREEN}: Softer version of additive.
-     * - {@link BLEND_MIN}: Minimum color. Check app.graphicsDevice.extBlendMinmax for support.
-     * - {@link BLEND_MAX}: Maximum color. Check app.graphicsDevice.extBlendMinmax for support.
+     * - {@link BLEND_MIN}: Minimum color.
+     * - {@link BLEND_MAX}: Maximum color.
      *
      * Defaults to {@link BLEND_NONE}.
      *

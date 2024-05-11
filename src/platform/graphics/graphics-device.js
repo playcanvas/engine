@@ -8,7 +8,6 @@ import { Color } from '../../core/math/color.js';
 import { TRACEID_TEXTURES } from '../../core/constants.js';
 
 import {
-    BUFFER_STATIC,
     CULLFACE_BACK,
     CLEARFLAG_COLOR, CLEARFLAG_DEPTH,
     PRIMITIVE_POINTS, PRIMITIVE_TRIFAN, SEMANTIC_POSITION, TYPE_FLOAT32, PIXELFORMAT_111110F, PIXELFORMAT_RGBA16F, PIXELFORMAT_RGBA32F
@@ -87,14 +86,6 @@ class GraphicsDevice extends EventHandler {
     isWebGPU = false;
 
     /**
-     * True if the deviceType is WebGL1
-     *
-     * @type {boolean}
-     * @readonly
-     */
-    isWebGL1 = false;
-
-    /**
      * True if the deviceType is WebGL2
      *
      * @type {boolean}
@@ -109,14 +100,6 @@ class GraphicsDevice extends EventHandler {
      * @readonly
      */
     scope;
-
-    /**
-     * The maximum number of supported bones using uniform buffers.
-     *
-     * @type {number}
-     * @readonly
-     */
-    boneLimit;
 
     /**
      * The maximum supported texture anisotropy setting.
@@ -184,29 +167,26 @@ class GraphicsDevice extends EventHandler {
     supportsStencil;
 
     /**
-     * True if Multiple Render Targets feature is supported. This refers to the ability to render to
-     * multiple color textures with a single draw call.
-     *
-     * @readonly
-     * @type {boolean}
-     */
-    supportsMrt = false;
-
-    /**
-     * True if the device supports volume textures.
-     *
-     * @readonly
-     * @type {boolean}
-     */
-    supportsVolumeTextures = false;
-
-    /**
      * True if the device supports compute shaders.
      *
      * @readonly
      * @type {boolean}
      */
     supportsCompute = false;
+
+    /**
+     * True if the device can read from StorageTexture in the compute shader. By default, the
+     * storage texture can be only used with the write operation.
+     * When a shader uses this feature, it's recommended to use a `requires` directive to signal the
+     * potential for non-portability at the top of the WGSL shader code:
+     * ```javascript
+     * requires readonly_and_readwrite_storage_textures;
+     * ```
+     *
+     * @readonly
+     * @type {boolean}
+     */
+    supportsStorageTextureRead = false;
 
     /**
      * Currently active render target.
@@ -261,14 +241,6 @@ class GraphicsDevice extends EventHandler {
     insideRenderPass = false;
 
     /**
-     * True if hardware instancing is supported.
-     *
-     * @type {boolean}
-     * @readonly
-     */
-    supportsInstancing;
-
-    /**
      * True if the device supports uniform buffers.
      *
      * @type {boolean}
@@ -299,14 +271,6 @@ class GraphicsDevice extends EventHandler {
       * @readonly
       */
     textureFloatFilterable = false;
-
-    /**
-     * True if filtering can be applied when sampling 16-bit float textures.
-     *
-     * @type {boolean}
-     * @readonly
-     */
-    textureHalfFloatFilterable = false;
 
     /**
      * A vertex buffer representing a quad.
@@ -402,7 +366,8 @@ class GraphicsDevice extends EventHandler {
             tex: 0,
             vb: 0,
             ib: 0,
-            ub: 0
+            ub: 0,
+            sb: 0
         };
 
         this._shaderStats = {
@@ -442,7 +407,9 @@ class GraphicsDevice extends EventHandler {
             { semantic: SEMANTIC_POSITION, components: 2, type: TYPE_FLOAT32 }
         ]);
         const positions = new Float32Array([-1, -1, 1, -1, -1, 1, 1, 1]);
-        this.quadVertexBuffer = new VertexBuffer(this, vertexFormat, 4, BUFFER_STATIC, positions);
+        this.quadVertexBuffer = new VertexBuffer(this, vertexFormat, 4, {
+            data: positions
+        });
     }
 
     /**
@@ -662,6 +629,15 @@ class GraphicsDevice extends EventHandler {
     }
 
     /**
+     * Clears the vertex buffer set on the graphics device. This is called automatically by the
+     * renderer.
+     * @ignore
+     */
+    clearVertexBuffer() {
+        this.vertexBuffers.length = 0;
+    }
+
+    /**
      * Queries the currently set render target on the device.
      *
      * @returns {import('./render-target.js').RenderTarget} The current render target.
@@ -810,38 +786,12 @@ class GraphicsDevice extends EventHandler {
     }
 
     /**
-     * The type of the device. Can be one of pc.DEVICETYPE_WEBGL1, pc.DEVICETYPE_WEBGL2 or pc.DEVICETYPE_WEBGPU.
+     * The type of the device. Can be pc.DEVICETYPE_WEBGL2 or pc.DEVICETYPE_WEBGPU.
      *
-     * @type {import('./constants.js').DEVICETYPE_WEBGL1 | import('./constants.js').DEVICETYPE_WEBGL2 | import('./constants.js').DEVICETYPE_WEBGPU}
+     * @type {import('./constants.js').DEVICETYPE_WEBGL2 | import('./constants.js').DEVICETYPE_WEBGPU}
      */
     get deviceType() {
         return this._deviceType;
-    }
-
-    /**
-     * Queries the maximum number of bones that can be referenced by a shader. The shader
-     * generators (programlib) use this number to specify the matrix array size of the uniform
-     * 'matrix_pose[0]'. The value is calculated based on the number of available uniform vectors
-     * available after subtracting the number taken by a typical heavyweight shader. If a different
-     * number is required, it can be tuned via {@link GraphicsDevice#setBoneLimit}.
-     *
-     * @returns {number} The maximum number of bones that can be supported by the host hardware.
-     * @ignore
-     */
-    getBoneLimit() {
-        return this.boneLimit;
-    }
-
-    /**
-     * Specifies the maximum number of bones that the device can support on the current hardware.
-     * This function allows the default calculated value based on available vector uniforms to be
-     * overridden.
-     *
-     * @param {number} maxBones - The maximum number of bones supported by the host hardware.
-     * @ignore
-     */
-    setBoneLimit(maxBones) {
-        this.boneLimit = maxBones;
     }
 
     startRenderPass(renderPass) {
@@ -928,7 +878,7 @@ class GraphicsDevice extends EventHandler {
                 }
 
                 case PIXELFORMAT_RGBA16F:
-                    if (this.textureHalfFloatRenderable && (!filterable || this.textureHalfFloatFilterable)) {
+                    if (this.textureHalfFloatRenderable) {
                         return format;
                     }
                     break;
