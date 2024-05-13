@@ -4,7 +4,7 @@ import { Quat } from '../../core/math/quat.js';
 import { Vec2 } from '../../core/math/vec2.js';
 import { Mat3 } from '../../core/math/mat3.js';
 import {
-    ADDRESS_CLAMP_TO_EDGE, FILTER_NEAREST, PIXELFORMAT_R16F, PIXELFORMAT_R32F, PIXELFORMAT_RGBA16F, PIXELFORMAT_RGBA32F,
+    ADDRESS_CLAMP_TO_EDGE, FILTER_NEAREST, PIXELFORMAT_R16F, PIXELFORMAT_RGBA16F, PIXELFORMAT_RGBA32F,
     PIXELFORMAT_RGBA8
 } from '../../platform/graphics/constants.js';
 import { Texture } from '../../platform/graphics/texture.js';
@@ -17,8 +17,6 @@ const _m0 = new Vec3();
 const _m1 = new Vec3();
 const _m2 = new Vec3();
 const _s = new Vec3();
-
-const halfFormat = true;
 
 /** @ignore */
 class GSplat {
@@ -56,9 +54,9 @@ class GSplat {
 
         const size = this.evalTextureSize(numSplats);
         this.colorTexture = this.createTexture('splatColor', PIXELFORMAT_RGBA8, size);
-        this.transformATexture = this.createTexture('transformA', halfFormat ? PIXELFORMAT_RGBA16F : PIXELFORMAT_RGBA32F, size);
-        this.transformBTexture = this.createTexture('transformB', halfFormat ? PIXELFORMAT_RGBA16F : PIXELFORMAT_RGBA32F, size);
-        this.transformCTexture = this.createTexture('transformC', halfFormat ? PIXELFORMAT_R16F : PIXELFORMAT_R32F, size);
+        this.transformATexture = this.createTexture('transformA', PIXELFORMAT_RGBA32F, size);
+        this.transformBTexture = this.createTexture('transformB', PIXELFORMAT_RGBA16F, size);
+        this.transformCTexture = this.createTexture('transformC', PIXELFORMAT_R16F, size);
     }
 
     destroy() {
@@ -213,34 +211,17 @@ class GSplat {
 
             this.computeCov3d(mat, _s, cA, cB);
 
-            if (halfFormat) {
+            dataA[i * 4 + 0] = x[i];
+            dataA[i * 4 + 1] = y[i];
+            dataA[i * 4 + 2] = z[i];
+            dataA[i * 4 + 3] = cB.x;
 
-                dataA[i * 4 + 0] = float2Half(x[i]);
-                dataA[i * 4 + 1] = float2Half(y[i]);
-                dataA[i * 4 + 2] = float2Half(z[i]);
-                dataA[i * 4 + 3] = float2Half(cB.x);
+            dataB[i * 4 + 0] = float2Half(cA.x);
+            dataB[i * 4 + 1] = float2Half(cA.y);
+            dataB[i * 4 + 2] = float2Half(cA.z);
+            dataB[i * 4 + 3] = float2Half(cB.y);
 
-                dataB[i * 4 + 0] = float2Half(cA.x);
-                dataB[i * 4 + 1] = float2Half(cA.y);
-                dataB[i * 4 + 2] = float2Half(cA.z);
-                dataB[i * 4 + 3] = float2Half(cB.y);
-
-                dataC[i] = float2Half(cB.z);
-
-            } else {
-
-                dataA[i * 4 + 0] = x[i];
-                dataA[i * 4 + 1] = y[i];
-                dataA[i * 4 + 2] = z[i];
-                dataA[i * 4 + 3] = cB.x;
-
-                dataB[i * 4 + 0] = cA.x;
-                dataB[i * 4 + 1] = cA.y;
-                dataB[i * 4 + 2] = cA.z;
-                dataB[i * 4 + 3] = cB.y;
-
-                dataC[i] = cB.z;
-            }
+            dataC[i] = float2Half(cB.z);
         }
 
         this.transformATexture.unlock();
