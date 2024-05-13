@@ -993,9 +993,7 @@ function _defineTex2D(name, channel = "rgb", vertexColor = true, uv = 0) {
         defaultValue: null,
         dirtyShaderFunc: (oldValue, newValue) => {
             return !!oldValue !== !!newValue ||
-                oldValue && (oldValue.type !== newValue.type ||
-                             oldValue.fixCubemapSeams !== newValue.fixCubemapSeams ||
-                             oldValue.format !== newValue.format);
+                oldValue && (oldValue.type !== newValue.type || oldValue.format !== newValue.format);
         }
     });
 

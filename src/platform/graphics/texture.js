@@ -140,8 +140,6 @@ class Texture {
      * - {@link TEXTURETYPE_SWIZZLEGGGR}
      *
      * Defaults to {@link TEXTURETYPE_DEFAULT}.
-     * @param {boolean} [options.fixCubemapSeams] - Specifies whether this cubemap texture requires
-     * special seam fixing shader code to look right. Defaults to false.
      * @param {boolean} [options.flipY] - Specifies whether the texture should be flipped in the
      * Y-direction. Only affects textures with a source that is an image, canvas or video element.
      * Does not affect cubemaps, compressed textures or textures set from raw pixel data. Defaults
@@ -215,7 +213,6 @@ class Texture {
 
         this._storage = options.storage ?? false;
         this._cubemap = options.cubemap ?? false;
-        this.fixCubemapSeams = options.fixCubemapSeams ?? false;
         this._flipY = options.flipY ?? false;
         this._premultiplyAlpha = options.premultiplyAlpha ?? false;
 

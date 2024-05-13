@@ -15,7 +15,6 @@ const fShader = `
     #include "envMultiplyPS"
 
     #ifdef SKY_CUBEMAP
-        #include "cubemapSeams"
         #include "skyboxHDRPS"
     #else
         #include "sphericalPS"
@@ -38,7 +37,6 @@ class ShaderGeneratorSkybox extends ShaderGenerator {
         if (options.skymesh !== SKYTYPE_INFINITE) defines.set('SKYMESH', '');
         if (options.type === 'cubemap') {
             defines.set('SKY_CUBEMAP', '');
-            defines.set('SKYBOX_MIP', (1 - 1 / mip2size[options.mip]).toString());
         }
 
         // includes
@@ -49,7 +47,6 @@ class ShaderGeneratorSkybox extends ShaderGenerator {
         includes.set('envMultiplyPS', shaderChunks.envMultiplyPS);
 
         if (options.type === 'cubemap') {
-            includes.set('cubemapSeams', options.mip ? shaderChunks.fixCubemapSeamsStretchPS : shaderChunks.fixCubemapSeamsNonePS);
             includes.set('skyboxHDRPS', shaderChunks.skyboxHDRPS);
         } else {
             includes.set('sphericalPS', shaderChunks.sphericalPS);

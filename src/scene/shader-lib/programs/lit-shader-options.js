@@ -267,14 +267,6 @@ class LitShaderOptions {
     toneMap = -1;
 
     /**
-     * If cubemaps require seam fixing (see the `fixCubemapSeams` property of the options object
-     * passed to the {@link Texture} constructor).
-     *
-     * @type {boolean}
-     */
-    fixSeams = false;
-
-    /**
      * One of "envAtlasHQ", "envAtlas", "cubeMap", "sphereMap".
      *
      * @type {string}

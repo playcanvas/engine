@@ -500,8 +500,8 @@ function reprojectTexture(source, target, options = {}) {
     const params = [
         0,
         specularPower,
-        source.fixCubemapSeams ? 1.0 / source.width : 0.0,          // source seam scale
-        target.fixCubemapSeams ? 1.0 / target.width : 0.0           // target seam scale
+        0.0,          // source seam scale
+        0.0           // target seam scale
     ];
 
     const params2 = [
