@@ -780,7 +780,6 @@ class LitShader {
         }
 
         if (options.reflectionSource === 'envAtlasHQ') {
-            func.append(options.fixSeams ? chunks.fixCubemapSeamsStretchPS : chunks.fixCubemapSeamsNonePS);
             func.append(chunks.envAtlasPS);
             func.append(chunks.reflectionEnvHQPS
                 .replace(/\$DECODE_CUBEMAP/g, ChunkUtils.decodeFunc(options.reflectionCubemapEncoding))
@@ -790,7 +789,6 @@ class LitShader {
             func.append(chunks.envAtlasPS);
             func.append(chunks.reflectionEnvPS.replace(/\$DECODE/g, ChunkUtils.decodeFunc(options.reflectionEncoding)));
         } else if (options.reflectionSource === 'cubeMap') {
-            func.append(options.fixSeams ? chunks.fixCubemapSeamsStretchPS : chunks.fixCubemapSeamsNonePS);
             func.append(chunks.reflectionCubePS.replace(/\$DECODE/g, ChunkUtils.decodeFunc(options.reflectionEncoding)));
         } else if (options.reflectionSource === 'sphereMap') {
             func.append(chunks.reflectionSpherePS.replace(/\$DECODE/g, ChunkUtils.decodeFunc(options.reflectionEncoding)));
