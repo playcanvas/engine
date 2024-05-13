@@ -132,7 +132,7 @@ class GSplatInstance {
             this.sorter.on('updated', (count) => {
                 // limit splat render count to exclude those behind the camera.
                 // NOTE: the last instance rendered may include non-existant splat
-                // data. this should be ok though. as the data is filled with 0's.
+                // data. this should be ok though as the data is filled with 0's.
                 this.meshInstance.instancingCount = Math.ceil(count / splatInstanceSize);
             });
         }
