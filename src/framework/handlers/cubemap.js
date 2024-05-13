@@ -121,7 +121,6 @@ class CubemapHandler extends ResourceHandler {
                             height: tex.height >> i,
                             format: tex.format,
                             levels: [tex._levels[i]],
-                            fixCubemapSeams: true,
                             addressU: ADDRESS_CLAMP_TO_EDGE,
                             addressV: ADDRESS_CLAMP_TO_EDGE,
                             // generate cubemaps on the top level only
@@ -180,8 +179,7 @@ class CubemapHandler extends ResourceHandler {
                     magFilter: assetData.hasOwnProperty('magFilter') ? assetData.magFilter : faceTextures[0].magFilter,
                     anisotropy: assetData.hasOwnProperty('anisotropy') ? assetData.anisotropy : 1,
                     addressU: ADDRESS_CLAMP_TO_EDGE,
-                    addressV: ADDRESS_CLAMP_TO_EDGE,
-                    fixCubemapSeams: !!assets[0]
+                    addressV: ADDRESS_CLAMP_TO_EDGE
                 });
 
                 resources[0] = faces;
