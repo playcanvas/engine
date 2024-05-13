@@ -108,7 +108,7 @@
     "@rollup/plugin-strip": "^3.0.4",
     "@rollup/plugin-terser": "^0.4.4",
     "@rollup/pluginutils": "^5.0.5",
-    "@runtime-type-inspector/plugin-rollup": "^3.2.4",
+    "@runtime-type-inspector/plugin-rollup": "^3.2.5",
     "c8": "^8.0.0",
     "chai": "^4.3.10",
     "eslint": "^8.52.0",
