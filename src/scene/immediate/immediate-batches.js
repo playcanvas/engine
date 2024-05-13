@@ -23,6 +23,10 @@ class ImmediateBatches {
             batch.onPreRender(visibleList, transparent);
         });
     }
+
+    clear() {
+        this.map.forEach(batch => batch.clear());
+    }
 }
 
 export { ImmediateBatches };
