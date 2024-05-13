@@ -774,7 +774,7 @@ class Texture {
      * - {@link TEXTURELOCK_READ}
      * - {@link TEXTURELOCK_WRITE}
      * Defaults to {@link TEXTURELOCK_WRITE}.
-     * @returns {Uint8Array|Uint16Array|Float32Array} A typed array containing the pixel data of
+     * @returns {Uint8Array|Uint16Array|Uint32Array|Float32Array} A typed array containing the pixel data of
      * the locked mip level.
      */
     lock(options = {}) {

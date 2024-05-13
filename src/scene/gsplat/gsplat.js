@@ -18,19 +18,13 @@ const _m1 = new Vec3();
 const _m2 = new Vec3();
 const _s = new Vec3();
 
+const halfFormat = true;
+
 /** @ignore */
 class GSplat {
     device;
 
     numSplats;
-
-    /**
-     * True if half format should be used, false is float format should be used or undefined if none
-     * are available.
-     *
-     * @type {boolean|undefined}
-     */
-    halfFormat;
 
     /** @type {Texture} */
     colorTexture;
@@ -60,14 +54,11 @@ class GSplat {
         this.numSplats = numSplats;
         this.aabb = aabb;
 
-        // create data textures using full float precision
-        this.halfFormat = false;
-
         const size = this.evalTextureSize(numSplats);
-        this.colorTexture = this.createTexture(device, 'splatColor', PIXELFORMAT_RGBA8, size);
-        this.transformATexture = this.createTexture(device, 'transformA', this.halfFormat ? PIXELFORMAT_RGBA16F : PIXELFORMAT_RGBA32F, size);
-        this.transformBTexture = this.createTexture(device, 'transformB', this.halfFormat ? PIXELFORMAT_RGBA16F : PIXELFORMAT_RGBA32F, size);
-        this.transformCTexture = this.createTexture(device, 'transformC', this.halfFormat ? PIXELFORMAT_R16F : PIXELFORMAT_R32F, size);
+        this.colorTexture = this.createTexture('splatColor', PIXELFORMAT_RGBA8, size);
+        this.transformATexture = this.createTexture('transformA', halfFormat ? PIXELFORMAT_RGBA16F : PIXELFORMAT_RGBA32F, size);
+        this.transformBTexture = this.createTexture('transformB', halfFormat ? PIXELFORMAT_RGBA16F : PIXELFORMAT_RGBA32F, size);
+        this.transformCTexture = this.createTexture('transformC', halfFormat ? PIXELFORMAT_R16F : PIXELFORMAT_R32F, size);
     }
 
     destroy() {
@@ -111,14 +102,13 @@ class GSplat {
     /**
      * Creates a new texture with the specified parameters.
      *
-     * @param {import('../../platform/graphics/graphics-device.js').GraphicsDevice} device - The graphics device to use for the texture creation.
      * @param {string} name - The name of the texture to be created.
      * @param {number} format - The pixel format of the texture.
      * @param {Vec2} size - The size of the texture in a Vec2 object, containing width (x) and height (y).
      * @returns {Texture} The created texture instance.
      */
-    createTexture(device, name, format, size) {
-        return new Texture(device, {
+    createTexture(name, format, size) {
+        return new Texture(this.device, {
             name: name,
             width: size.x,
             height: size.y,
@@ -194,7 +184,6 @@ class GSplat {
      */
     updateTransformData(x, y, z, rot0, rot1, rot2, rot3, scale0, scale1, scale2) {
 
-        const { halfFormat } = this;
         const float2Half = FloatPacking.float2Half;
 
         if (!this.transformATexture)
