@@ -56,12 +56,7 @@ const shaderDefinition = {
         new pc.UniformFormat('matrix_model', pc.UNIFORMTYPE_MAT4),
         new pc.UniformFormat('amount', pc.UNIFORMTYPE_FLOAT)
     ]),
-    meshBindGroupFormat: new pc.BindGroupFormat(app.graphicsDevice, [
-        new pc.BindUniformBufferFormat(
-            pc.UNIFORM_BUFFER_DEFAULT_SLOT_NAME,
-            pc.SHADERSTAGE_VERTEX | pc.SHADERSTAGE_FRAGMENT
-        )
-    ])
+    meshBindGroupFormat: new pc.BindGroupFormat(app.graphicsDevice, [])
 };
 const shader = new pc.Shader(app.graphicsDevice, shaderDefinition);
 

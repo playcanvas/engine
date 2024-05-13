@@ -24,11 +24,12 @@ import {
     SHADERSTAGE_VERTEX, SHADERSTAGE_FRAGMENT,
     SEMANTIC_ATTR,
     CULLFACE_BACK, CULLFACE_FRONT, CULLFACE_NONE,
-    TEXTUREDIMENSION_2D, SAMPLETYPE_UNFILTERABLE_FLOAT, SAMPLETYPE_FLOAT, SAMPLETYPE_DEPTH
+    TEXTUREDIMENSION_2D, SAMPLETYPE_UNFILTERABLE_FLOAT, SAMPLETYPE_FLOAT, SAMPLETYPE_DEPTH,
+    BINDGROUP_MESH_UB
 } from '../../platform/graphics/constants.js';
 import { DebugGraphics } from '../../platform/graphics/debug-graphics.js';
 import { UniformBuffer } from '../../platform/graphics/uniform-buffer.js';
-import { BindGroup } from '../../platform/graphics/bind-group.js';
+import { BindGroup, DynamicBindGroup } from '../../platform/graphics/bind-group.js';
 import { UniformFormat, UniformBufferFormat } from '../../platform/graphics/uniform-buffer-format.js';
 import { BindGroupFormat, BindUniformBufferFormat, BindTextureFormat } from '../../platform/graphics/bind-group-format.js';
 
@@ -50,6 +51,7 @@ const tempSphere = new BoundingSphere();
 const _flipYMat = new Mat4().setScale(1, -1, 1);
 const _tempLightSet = new Set();
 const _tempLayerSet = new Set();
+const _dynamicBindGroup = new DynamicBindGroup();
 
 // Converts a projection matrix in OpenGL style (depth range of -1..1) to a DirectX style (depth range of 0..1).
 const _fixProjRangeMat = new Mat4().set([
@@ -866,10 +868,12 @@ class Renderer {
 
             // update mesh bind group / uniform buffer
             const meshBindGroup = shaderInstance.getBindGroup(device);
-
-            meshBindGroup.defaultUniformBuffer.update();
             meshBindGroup.update();
             device.setBindGroup(BINDGROUP_MESH, meshBindGroup);
+
+            const meshUniformBuffer = shaderInstance.getUniformBuffer(device);
+            meshUniformBuffer.update(_dynamicBindGroup);
+            device.setBindGroup(BINDGROUP_MESH_UB, _dynamicBindGroup.bindGroup, _dynamicBindGroup.offsets);
         }
     }
 

@@ -29,6 +29,8 @@ import { WebgpuGpuProfiler } from './webgpu-gpu-profiler.js';
 import { WebgpuResolver } from './webgpu-resolver.js';
 import { WebgpuCompute } from './webgpu-compute.js';
 import { WebgpuBuffer } from './webgpu-buffer.js';
+import { BindGroupFormat } from '../bind-group-format.js';
+import { BindGroup } from '../bind-group.js';
 
 const _uniqueLocations = new Map();
 
@@ -71,6 +73,14 @@ class WebgpuGraphicsDevice extends GraphicsDevice {
      * @type {WebgpuBindGroupFormat[]}
      */
     bindGroupFormats = [];
+
+    /**
+     * An empty bind group, used when the draw call is using a typical bind group layout based on
+     * BINDGROUP_*** constants but some bind groups are not needed, for example clear renderer.
+     *
+     * @type {BindGroup}
+     */
+    emptyBindGroup;
 
     /**
      * Current command buffer encoder.
@@ -310,6 +320,10 @@ class WebgpuGraphicsDevice extends GraphicsDevice {
 
         // init dynamic buffer using 1MB allocation
         this.dynamicBuffers = new WebgpuDynamicBuffers(this, 1024 * 1024, this.limits.minUniformBufferOffsetAlignment);
+
+        // empty bind group
+        this.emptyBindGroup = new BindGroup(this, new BindGroupFormat(this, []));
+        this.emptyBindGroup.update();
     }
 
     createBackbuffer() {
