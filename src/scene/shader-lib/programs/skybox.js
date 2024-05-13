@@ -6,8 +6,6 @@ import { ShaderUtils } from '../../../platform/graphics/shader-utils.js';
 import { ShaderGenerator } from './shader-generator.js';
 import { SKYTYPE_INFINITE } from '../../constants.js';
 
-const mip2size = [128, 64, /* 32 */ 16, 8, 4, 2];
-
 const fShader = `
     #include "decodePS"
     #include "gamma"
