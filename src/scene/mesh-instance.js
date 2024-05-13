@@ -59,11 +59,18 @@ class ShaderInstance {
     shader;
 
     /**
-     * A bind group storing mesh uniforms for the shader.
+     * A bind group storing mesh textures / samplers for the shader. but not the uniform buffer.
      *
      * @type {BindGroup|null}
      */
     bindGroup = null;
+
+    /**
+     * A uniform buffer storing mesh uniforms for the shader.
+     *
+     * @type {UniformBuffer|null}
+     */
+    uniformBuffer = null;
 
     /**
      * Returns the mesh bind group for the shader.
@@ -79,28 +86,43 @@ class ShaderInstance {
             const shader = this.shader;
             Debug.assert(shader);
 
-            // mesh uniform buffer
-            const ubFormat = shader.meshUniformBufferFormat;
-            Debug.assert(ubFormat);
-            const uniformBuffer = new UniformBuffer(device, ubFormat, false);
-
-            // mesh bind group
             const bindGroupFormat = shader.meshBindGroupFormat;
             Debug.assert(bindGroupFormat);
-            this.bindGroup = new BindGroup(device, bindGroupFormat, uniformBuffer);
+            this.bindGroup = new BindGroup(device, bindGroupFormat);
             DebugHelper.setName(this.bindGroup, `MeshBindGroup_${this.bindGroup.id}`);
         }
 
         return this.bindGroup;
     }
 
-    destroy() {
-        const group = this.bindGroup;
-        if (group) {
-            group.defaultUniformBuffer?.destroy();
-            group.destroy();
-            this.bindGroup = null;
+    /**
+     * Returns the uniform buffer for the shader.
+     *
+     * @param {import('../platform/graphics/graphics-device.js').GraphicsDevice} device - The
+     * graphics device.
+     * @returns {UniformBuffer} - The uniform buffer.
+     */
+    getUniformBuffer(device) {
+
+        // create uniform buffer
+        if (!this.uniformBuffer) {
+            const shader = this.shader;
+            Debug.assert(shader);
+
+            const ubFormat = shader.meshUniformBufferFormat;
+            Debug.assert(ubFormat);
+            this.uniformBuffer = new UniformBuffer(device, ubFormat, false);
         }
+
+        return this.uniformBuffer;
+    }
+
+    destroy() {
+        this.bindGroup?.destroy();
+        this.bindGroup = null;
+
+        this.uniformBuffer?.destroy();
+        this.uniformBuffer = null;
     }
 }
 
