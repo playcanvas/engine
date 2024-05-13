@@ -414,6 +414,16 @@ class GSplatData {
     }
 
     calcMortonOrder() {
+        const calcMinMax = (arr) => {
+            let min = arr[0];
+            let max = arr[0];
+            for (let i = 1; i < arr.length; i++) {
+                if (arr[i] < min) min = arr[i];
+                if (arr[i] > max) max = arr[i];
+            }
+            return { min, max };
+        };
+
         // https://fgiesen.wordpress.com/2009/12/13/decoding-morton-codes/
         const encodeMorton3 = (x, y, z) => {
             const Part1By2 = (x) => {
@@ -432,13 +442,9 @@ class GSplatData {
         const y = this.getProp('y');
         const z = this.getProp('z');
 
-        const minX = x.reduce((a, b) => Math.min(a, b), x[0]);
-        const minY = y.reduce((a, b) => Math.min(a, b), y[0]);
-        const minZ = z.reduce((a, b) => Math.min(a, b), z[0]);
-
-        const maxX = x.reduce((a, b) => Math.max(a, b), x[0]);
-        const maxY = y.reduce((a, b) => Math.max(a, b), y[0]);
-        const maxZ = z.reduce((a, b) => Math.max(a, b), z[0]);
+        const { min: minX, max: maxX } = calcMinMax(x);
+        const { min: minY, max: maxY } = calcMinMax(y);
+        const { min: minZ, max: maxZ } = calcMinMax(z);
 
         const sizeX = 1024 / (maxX - minX);
         const sizeY = 1024 / (maxY - minY);
