@@ -66,9 +66,6 @@ class BlendState {
      * - {@link BLENDEQUATION_MIN}
      * - {@link BLENDEQUATION_MAX}
      *
-     * Note that MIN and MAX operations on WebGL platform require either EXT_blend_minmax or WebGL2
-     * to work (check device.extBlendMinmax).
-     *
      * @param {boolean} [blend] - Enables or disables blending. Defaults to false.
      * @param {number} [colorOp] - Configures color blending operation. Defaults to
      * {@link BLENDEQUATION_ADD}.

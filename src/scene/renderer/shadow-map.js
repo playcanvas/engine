@@ -64,8 +64,6 @@ class ShadowMap {
     static getShadowFiltering(device, shadowType) {
         if (shadowType === SHADOW_VSM32) {
             return device.extTextureFloatLinear ? FILTER_LINEAR : FILTER_NEAREST;
-        } else if (shadowType === SHADOW_VSM16) {
-            return device.extTextureHalfFloatLinear ? FILTER_LINEAR : FILTER_NEAREST;
         }
         return FILTER_LINEAR;
     }

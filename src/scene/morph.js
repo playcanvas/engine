@@ -55,19 +55,16 @@ class Morph extends RefCountedObject {
         if (device.supportsMorphTargetTexturesCore) {
 
             // renderable format
-            const renderableHalf = (device.extTextureHalfFloat && device.textureHalfFloatRenderable) ? PIXELFORMAT_RGBA16F : undefined;
+            const renderableHalf = device.textureHalfFloatRenderable ? PIXELFORMAT_RGBA16F : undefined;
             const renderableFloat = device.textureFloatRenderable ? PIXELFORMAT_RGBA32F : undefined;
             this._renderTextureFormat = this.preferHighPrecision ?
                 (renderableFloat ?? renderableHalf) : (renderableHalf ?? renderableFloat);
 
-            // texture format
-            const textureHalf = (device.extTextureHalfFloat) ? PIXELFORMAT_RGBA16F : undefined;
-            const textureFloat = PIXELFORMAT_RGB32F;
-            this._textureFormat = this.preferHighPrecision ?
-                (textureFloat ?? textureHalf) : (textureHalf ?? textureFloat);
+            // texture format - both are always supported
+            this._textureFormat = this.preferHighPrecision ? PIXELFORMAT_RGB32F : PIXELFORMAT_RGBA16F;
 
-            // if both available, enable texture morphing
-            if (this._renderTextureFormat !== undefined && this._textureFormat !== undefined) {
+            // if the render format is available, enable texture morphing
+            if (this._renderTextureFormat !== undefined) {
                 this._useTextureMorph = true;
             }
         }
@@ -191,11 +188,8 @@ class Morph extends RefCountedObject {
         const ids = [], usedDataIndices = [];
         const freeIndex = this._findSparseSet(deltaArrays, ids, usedDataIndices);
 
-        // max texture size: vertexBufferIds is stored in float32 format, giving us 2^24 range, so can address 4096 texture at maximum
-        // TODO: on webgl2 we could store this in uint32 format and remove this limit
-        const maxTextureSize = Math.min(this.device.maxTextureSize, 4096);
-
         // texture size for freeIndex pixels - roughly square
+        const maxTextureSize = this.device.maxTextureSize;
         let morphTextureWidth = Math.ceil(Math.sqrt(freeIndex));
         morphTextureWidth = Math.min(morphTextureWidth, maxTextureSize);
         const morphTextureHeight = Math.ceil(freeIndex / morphTextureWidth);

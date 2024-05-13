@@ -1,14 +1,14 @@
-import { Debug, DebugHelper } from "../../../core/debug.js";
-import { BindUniformBufferFormat, BindGroupFormat } from "../bind-group-format.js";
+import { Debug } from "../../../core/debug.js";
 import { UniformBufferFormat, UniformFormat } from "../uniform-buffer-format.js";
 import { BlendState } from "../blend-state.js";
 import {
     CULLFACE_NONE,
-    PRIMITIVE_TRISTRIP, SHADERLANGUAGE_WGSL, SHADERSTAGE_FRAGMENT, SHADERSTAGE_VERTEX,
-    UNIFORMTYPE_FLOAT, UNIFORMTYPE_VEC4, UNIFORM_BUFFER_DEFAULT_SLOT_NAME, BINDGROUP_MESH, CLEARFLAG_COLOR, CLEARFLAG_DEPTH, CLEARFLAG_STENCIL
+    PRIMITIVE_TRISTRIP, SHADERLANGUAGE_WGSL,
+    UNIFORMTYPE_FLOAT, UNIFORMTYPE_VEC4, BINDGROUP_MESH, CLEARFLAG_COLOR, CLEARFLAG_DEPTH, CLEARFLAG_STENCIL,
+    BINDGROUP_MESH_UB
 } from "../constants.js";
 import { Shader } from "../shader.js";
-import { BindGroup } from "../bind-group.js";
+import { DynamicBindGroup } from "../bind-group.js";
 import { UniformBuffer } from "../uniform-buffer.js";
 import { DebugGraphics } from "../debug-graphics.js";
 import { DepthState } from "../depth-state.js";
@@ -40,7 +40,7 @@ class WebgpuClearRenderer {
                 depth: f32
             }
 
-            @group(0) @binding(0) var<uniform> ubMesh : ub_mesh;
+            @group(2) @binding(0) var<uniform> ubMesh : ub_mesh;
 
             var<private> pos : array<vec2f, 4> = array<vec2f, 4>(
                 vec2(-1.0, 1.0), vec2(1.0, 1.0),
@@ -77,19 +77,10 @@ class WebgpuClearRenderer {
             new UniformFormat('depth', UNIFORMTYPE_FLOAT)
         ]), false);
 
-        // format of the bind group
-        const bindGroupFormat = new BindGroupFormat(device, [
-            new BindUniformBufferFormat(UNIFORM_BUFFER_DEFAULT_SLOT_NAME, SHADERSTAGE_VERTEX | SHADERSTAGE_FRAGMENT)
-        ]);
-
-        // bind group
-        this.bindGroup = new BindGroup(device, bindGroupFormat, this.uniformBuffer);
-        DebugHelper.setName(this.bindGroup, `ClearRenderer-BindGroup_${this.bindGroup.id}`);
+        this.dynamicBindGroup = new DynamicBindGroup();
 
         // uniform data
         this.colorData = new Float32Array(4);
-        this.colorId = device.scope.resolve('color');
-        this.depthId = device.scope.resolve('depth');
     }
 
     destroy() {
@@ -98,9 +89,6 @@ class WebgpuClearRenderer {
 
         this.uniformBuffer.destroy();
         this.uniformBuffer = null;
-
-        this.bindGroup.destroy();
-        this.bindGroup = null;
     }
 
     clear(device, renderTarget, options, defaultOptions) {
@@ -111,6 +99,14 @@ class WebgpuClearRenderer {
 
             DebugGraphics.pushGpuMarker(device, 'CLEAR-RENDERER');
 
+            // dynamic bind group for the UB
+            const { uniformBuffer, dynamicBindGroup } = this;
+            uniformBuffer.startUpdate(dynamicBindGroup);
+            device.setBindGroup(BINDGROUP_MESH_UB, dynamicBindGroup.bindGroup, dynamicBindGroup.offsets);
+
+            // not using mesh bind group
+            device.setBindGroup(BINDGROUP_MESH, device.emptyBindGroup);
+
             // setup clear color
             if ((flags & CLEARFLAG_COLOR) && (renderTarget.colorBuffer || renderTarget.impl.assignedColorTexture)) {
                 const color = options.color ?? defaultOptions.color;
@@ -120,16 +116,16 @@ class WebgpuClearRenderer {
             } else {
                 device.setBlendState(BlendState.NOWRITE);
             }
-            this.colorId.setValue(this.colorData);
+            uniformBuffer.set('color', this.colorData);
 
             // setup depth clear
             if ((flags & CLEARFLAG_DEPTH) && renderTarget.depth) {
                 const depth = options.depth ?? defaultOptions.depth;
-                this.depthId.setValue(depth);
+                uniformBuffer.set('depth', depth);
                 device.setDepthState(DepthState.WRITEDEPTH);
 
             } else {
-                this.depthId.setValue(1);
+                uniformBuffer.set('depth', 1);
                 device.setDepthState(DepthState.NODEPTH);
             }
 
@@ -138,16 +134,12 @@ class WebgpuClearRenderer {
                 Debug.warnOnce("ClearRenderer does not support stencil clear at the moment");
             }
 
+            uniformBuffer.endUpdate();
+
             device.setCullMode(CULLFACE_NONE);
 
             // render 4 vertices without vertex buffer
             device.setShader(this.shader);
-
-            const bindGroup = this.bindGroup;
-            bindGroup.defaultUniformBuffer.update();
-            bindGroup.update();
-            device.setBindGroup(BINDGROUP_MESH, bindGroup);
-
             device.draw(primitive);
 
             DebugGraphics.popGpuMarker(device);

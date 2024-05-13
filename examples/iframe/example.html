@@ -7,8 +7,7 @@
     <body>
         <div id="app">
             <div id="appInner">
-                '@AR_LINK'
-                '@CANVAS'
+                <canvas id="application-canvas"></canvas>
             </div>
         </div>
         <script src="./polyfill.js"></script>
@@ -17,7 +16,6 @@
                 "imports": {
                     "playcanvas": '@ENGINE',
                     "fflate": "../../modules/fflate/esm/browser.js",
-                    "@examples/config": '@CONFIG',
                     "@examples/utils": "./utils.mjs",
                     "@examples/observer": "./observer.mjs",
                     "@examples/files": "./files.mjs"
@@ -39,8 +37,7 @@
             document.addEventListener('DOMContentLoaded', () => {
                 loader.start({
                     engineUrl: '@ENGINE',
-                    exampleUrl: '@EXAMPLE',
-                    controlsUrl: '@CONTROLS'
+                    fileNames: '@FILES',
                 });
             });
         </script>

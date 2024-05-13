@@ -1,6 +1,6 @@
 import { Debug } from '../../../core/debug.js';
 import {
-    PIXELFORMAT_RGBA8, DEVICETYPE_NULL
+    DEVICETYPE_NULL
 } from '../constants.js';
 import { GraphicsDevice } from '../graphics-device.js';
 
@@ -40,17 +40,12 @@ class NullGraphicsDevice extends GraphicsDevice {
         this.maxPixelRatio = 1;
         this.maxAnisotropy = 16;
         this.supportsUniformBuffers = false;
-        this.supportsVolumeTextures = true;
         this.supportsMorphTargetTexturesCore = true;
         this.supportsAreaLights = true;
         this.supportsGpuParticles = false;
-        this.supportsMrt = true;
         this.textureFloatRenderable = true;
-        this.extTextureHalfFloat = true;
         this.textureHalfFloatRenderable = true;
         this.supportsImageBitmap = true;
-        this.extBlendMinmax = true;
-        this.areaLightLutFormat = PIXELFORMAT_RGBA8;
         this.supportsTextureFetch = true;
     }
 

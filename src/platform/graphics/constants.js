@@ -152,7 +152,7 @@ export const BLENDEQUATION_SUBTRACT = 1;
 export const BLENDEQUATION_REVERSE_SUBTRACT = 2;
 
 /**
- * Use the smallest value. Check app.graphicsDevice.extBlendMinmax for support.
+ * Use the smallest value.
  *
  * @type {number}
  * @category Graphics
@@ -160,7 +160,7 @@ export const BLENDEQUATION_REVERSE_SUBTRACT = 2;
 export const BLENDEQUATION_MIN = 3;
 
 /**
- * Use the largest value. Check app.graphicsDevice.extBlendMinmax for support.
+ * Use the largest value.
  *
  * @type {number}
  * @category Graphics
@@ -2054,13 +2054,13 @@ export const SHADERSTAGE_FRAGMENT = 2;
  */
 export const SHADERSTAGE_COMPUTE = 4;
 
-// indices of commonly used bind groups
-// sorted in a way that any trailing bind groups can be unused in any render pass
-export const BINDGROUP_MESH = 0;
-export const BINDGROUP_VIEW = 1;
+// indices of commonly used bind groups, sorted from the least commonly changing to avoid internal rebinding
+export const BINDGROUP_VIEW = 0;        // view bind group, textures, samplers and uniforms
+export const BINDGROUP_MESH = 1;        // mesh bind group - textures and samplers
+export const BINDGROUP_MESH_UB = 2;     // mesh bind group - a single uniform buffer
 
 // names of bind groups
-export const bindGroupNames = ['mesh', 'view'];
+export const bindGroupNames = ['view', 'mesh', 'mesh_ub'];
 
 // name of the default uniform buffer slot in a bind group
 export const UNIFORM_BUFFER_DEFAULT_SLOT_NAME = 'default';

@@ -167,23 +167,6 @@ class GraphicsDevice extends EventHandler {
     supportsStencil;
 
     /**
-     * True if Multiple Render Targets feature is supported. This refers to the ability to render to
-     * multiple color textures with a single draw call.
-     *
-     * @readonly
-     * @type {boolean}
-     */
-    supportsMrt = false;
-
-    /**
-     * True if the device supports volume textures.
-     *
-     * @readonly
-     * @type {boolean}
-     */
-    supportsVolumeTextures = false;
-
-    /**
      * True if the device supports compute shaders.
      *
      * @readonly
@@ -288,14 +271,6 @@ class GraphicsDevice extends EventHandler {
       * @readonly
       */
     textureFloatFilterable = false;
-
-    /**
-     * True if filtering can be applied when sampling 16-bit float textures.
-     *
-     * @type {boolean}
-     * @readonly
-     */
-    textureHalfFloatFilterable = false;
 
     /**
      * A vertex buffer representing a quad.
@@ -903,7 +878,7 @@ class GraphicsDevice extends EventHandler {
                 }
 
                 case PIXELFORMAT_RGBA16F:
-                    if (this.textureHalfFloatRenderable && (!filterable || this.textureHalfFloatFilterable)) {
+                    if (this.textureHalfFloatRenderable) {
                         return format;
                     }
                     break;

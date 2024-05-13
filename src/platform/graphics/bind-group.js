@@ -6,6 +6,18 @@ import { DebugGraphics } from './debug-graphics.js';
 let id = 0;
 
 /**
+ * Data structure to hold a bind group and its offsets. This is used by {@link UniformBuffer#update}
+ * to return a dynamic bind group and offset for the uniform buffer.
+ *
+ * @ignore
+ */
+class DynamicBindGroup {
+    bindGroup;
+
+    offsets = [];
+}
+
+/**
  * A bind group represents a collection of {@link UniformBuffer}, {@link Texture} and
  * {@link StorageBuffer} instanced, which can be bind on a GPU for rendering.
  *
@@ -201,4 +213,4 @@ class BindGroup {
     }
 }
 
-export { BindGroup };
+export { BindGroup, DynamicBindGroup };

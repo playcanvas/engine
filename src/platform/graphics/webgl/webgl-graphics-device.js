@@ -9,7 +9,7 @@ import {
     FILTER_NEAREST, FILTER_LINEAR, FILTER_NEAREST_MIPMAP_NEAREST, FILTER_NEAREST_MIPMAP_LINEAR,
     FILTER_LINEAR_MIPMAP_NEAREST, FILTER_LINEAR_MIPMAP_LINEAR,
     FUNC_ALWAYS,
-    PIXELFORMAT_RGB8, PIXELFORMAT_RGBA8, PIXELFORMAT_RGBA16F, PIXELFORMAT_RGBA32F,
+    PIXELFORMAT_RGB8, PIXELFORMAT_RGBA8, PIXELFORMAT_RGBA32F,
     STENCILOP_KEEP,
     UNIFORMTYPE_BOOL, UNIFORMTYPE_INT, UNIFORMTYPE_FLOAT, UNIFORMTYPE_VEC2, UNIFORMTYPE_VEC3,
     UNIFORMTYPE_VEC4, UNIFORMTYPE_IVEC2, UNIFORMTYPE_IVEC3, UNIFORMTYPE_IVEC4, UNIFORMTYPE_BVEC2,
@@ -716,27 +716,12 @@ class WebglGraphicsDevice extends GraphicsDevice {
         // In WebGL2 float texture renderability is dictated by the EXT_color_buffer_float extension
         this.textureFloatRenderable = !!this.extColorBufferFloat;
 
-        // two extensions allow us to render to half float buffers
-        if (this.extColorBufferHalfFloat) {
-            this.textureHalfFloatRenderable = !!this.extColorBufferHalfFloat;
-        } else if (this.extTextureHalfFloat) {
-            // EXT_color_buffer_float should affect both float and halffloat formats
-            this.textureHalfFloatRenderable = !!this.extColorBufferFloat;
-        } else {
-            this.textureHalfFloatRenderable = false;
-        }
+        // render to half float buffers support - either of these two extensions
+        this.extColorBufferHalfFloat = this.extColorBufferHalfFloat || !!this.extColorBufferFloat;
 
         this.supportsMorphTargetTexturesCore = (this.maxPrecision === "highp" && this.maxVertexTextures >= 2);
 
         this._textureFloatHighPrecision = undefined;
-
-        // area light LUT format - order of preference: half, float, 8bit
-        this.areaLightLutFormat = PIXELFORMAT_RGBA8;
-        if (this.extTextureHalfFloat && this.extTextureHalfFloatLinear) {
-            this.areaLightLutFormat = PIXELFORMAT_RGBA16F;
-        } else if (this.extTextureFloatLinear) {
-            this.areaLightLutFormat = PIXELFORMAT_RGBA32F;
-        }
 
         this.postInit();
     }
@@ -925,26 +910,9 @@ class WebglGraphicsDevice extends GraphicsDevice {
         this.textureRG11B10Renderable = true;
 
         if (this.isWebGL2) {
-            this.extBlendMinmax = true;
-            this.extDrawBuffers = true;
-            this.drawBuffers = gl.drawBuffers.bind(gl);
-            this.extTextureHalfFloat = true;
-            this.textureHalfFloatFilterable = true;
-            this.extTextureLod = true;
             this.extColorBufferFloat = this.getExtension('EXT_color_buffer_float');
-            this.extDepthTexture = true;
         } else {
-            this.extBlendMinmax = this.getExtension("EXT_blend_minmax");
-            this.extDrawBuffers = this.getExtension('WEBGL_draw_buffers');
-            this.drawBuffers = this.extDrawBuffers?.drawBuffersWEBGL.bind(this.extDrawBuffers);
-
-            this.extTextureLod = this.getExtension('EXT_shader_texture_lod');
             this.extColorBufferFloat = null;
-            this.extDepthTexture = gl.getExtension('WEBGL_depth_texture');
-
-            this.extTextureHalfFloat = this.getExtension("OES_texture_half_float");
-            this.extTextureHalfFloatLinear = this.getExtension("OES_texture_half_float_linear");
-            this.textureHalfFloatFilterable = !!this.extTextureHalfFloatLinear;
         }
 
         this.extDebugRendererInfo = this.getExtension('WEBGL_debug_renderer_info');
@@ -992,19 +960,8 @@ class WebglGraphicsDevice extends GraphicsDevice {
         this.maxVertexTextures = gl.getParameter(gl.MAX_VERTEX_TEXTURE_IMAGE_UNITS);
         this.vertexUniformsCount = gl.getParameter(gl.MAX_VERTEX_UNIFORM_VECTORS);
         this.fragmentUniformsCount = gl.getParameter(gl.MAX_FRAGMENT_UNIFORM_VECTORS);
-        if (this.isWebGL2) {
-            this.maxDrawBuffers = gl.getParameter(gl.MAX_DRAW_BUFFERS);
-            this.maxColorAttachments = gl.getParameter(gl.MAX_COLOR_ATTACHMENTS);
-            this.maxVolumeSize = gl.getParameter(gl.MAX_3D_TEXTURE_SIZE);
-            this.supportsMrt = true;
-            this.supportsVolumeTextures = true;
-        } else {
-            ext = this.extDrawBuffers;
-            this.supportsMrt = !!ext;
-            this.maxDrawBuffers = ext ? gl.getParameter(ext.MAX_DRAW_BUFFERS_WEBGL) : 1;
-            this.maxColorAttachments = ext ? gl.getParameter(ext.MAX_COLOR_ATTACHMENTS_WEBGL) : 1;
-            this.maxVolumeSize = 1;
-        }
+        this.maxColorAttachments = gl.getParameter(gl.MAX_COLOR_ATTACHMENTS);
+        this.maxVolumeSize = gl.getParameter(gl.MAX_3D_TEXTURE_SIZE);
 
         ext = this.extDebugRendererInfo;
         this.unmaskedRenderer = ext ? gl.getParameter(ext.UNMASKED_RENDERER_WEBGL) : '';
