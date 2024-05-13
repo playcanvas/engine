@@ -27,7 +27,7 @@ let id = 0;
  *
  * Note on **HDR texture format** support:
  * 1. **As textures**:
- *     - float (e.x. {@link PIXELFORMAT_RGBA32F}), half-float (e.x. {@link PIXELFORMAT_RGBA16F}) and
+ *     - float (i.e. {@link PIXELFORMAT_RGBA32F}), half-float (i.e. {@link PIXELFORMAT_RGBA16F}) and
  * small-float ({@link PIXELFORMAT_111110F}) formats are always supported on both WebGL2 and WebGPU
  * with point sampling.
  *     - half-float and small-float formats are always supported on WebGL2 and WebGPU with linear
