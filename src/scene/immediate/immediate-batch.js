@@ -97,7 +97,7 @@ class ImmediateBatch {
     }
 
     clear() {
-        // clear lines when after they were rendered as their lifetime is one frame
+        // clear lines after they are rendered as their lifetime is one frame
         this.positions.length = 0;
         this.colors.length = 0;
     }
