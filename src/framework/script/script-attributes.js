@@ -150,8 +150,8 @@ function rawToValue(app, args, value, old) {
 
 /**
  * Container of Script Attribute definitions. Implements an interface to add/remove attributes and
- * store their definition for a {@link Script}. Note: An instance of ScriptAttributes is
- * created automatically by each {@link Script}.
+ * store their definition for a {@link ScriptType}. Note: An instance of ScriptAttributes is
+ * created automatically by each {@link ScriptType}.
  *
  * @category Script
  */
@@ -159,7 +159,7 @@ class ScriptAttributes {
     /**
      * Create a new ScriptAttributes instance.
      *
-     * @param {typeof import('./script.js').Script} scriptType - Script Type that attributes relate to.
+     * @param {typeof import('./script-type.js').ScriptType} scriptType - Script Type that attributes relate to.
      */
     constructor(scriptType) {
         this.scriptType = scriptType;
