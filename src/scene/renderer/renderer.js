@@ -24,13 +24,14 @@ import {
     SHADERSTAGE_VERTEX, SHADERSTAGE_FRAGMENT,
     SEMANTIC_ATTR,
     CULLFACE_BACK, CULLFACE_FRONT, CULLFACE_NONE,
-    TEXTUREDIMENSION_2D, SAMPLETYPE_UNFILTERABLE_FLOAT, SAMPLETYPE_FLOAT, SAMPLETYPE_DEPTH
+    TEXTUREDIMENSION_2D, SAMPLETYPE_UNFILTERABLE_FLOAT, SAMPLETYPE_FLOAT, SAMPLETYPE_DEPTH,
+    BINDGROUP_MESH_UB
 } from '../../platform/graphics/constants.js';
 import { DebugGraphics } from '../../platform/graphics/debug-graphics.js';
 import { UniformBuffer } from '../../platform/graphics/uniform-buffer.js';
-import { BindGroup } from '../../platform/graphics/bind-group.js';
+import { BindGroup, DynamicBindGroup } from '../../platform/graphics/bind-group.js';
 import { UniformFormat, UniformBufferFormat } from '../../platform/graphics/uniform-buffer-format.js';
-import { BindGroupFormat, BindBufferFormat, BindTextureFormat } from '../../platform/graphics/bind-group-format.js';
+import { BindGroupFormat, BindUniformBufferFormat, BindTextureFormat } from '../../platform/graphics/bind-group-format.js';
 
 import { ShadowMapCache } from './shadow-map-cache.js';
 import { ShadowRendererLocal } from './shadow-renderer-local.js';
@@ -38,7 +39,7 @@ import { ShadowRendererDirectional } from './shadow-renderer-directional.js';
 import { ShadowRenderer } from './shadow-renderer.js';
 import { WorldClustersAllocator } from './world-clusters-allocator.js';
 import { RenderPassUpdateClustered } from './render-pass-update-clustered.js';
-import { getBlueNoiseTexture } from '../graphics/blue-noise-texture.js';
+import { getBlueNoiseTexture } from '../graphics/noise-textures.js';
 import { BlueNoise } from '../../core/math/blue-noise.js';
 
 let _skinUpdateIndex = 0;
@@ -50,7 +51,7 @@ const tempSphere = new BoundingSphere();
 const _flipYMat = new Mat4().setScale(1, -1, 1);
 const _tempLightSet = new Set();
 const _tempLayerSet = new Set();
-const _tempVec4 = new Vec4();
+const _dynamicBindGroup = new DynamicBindGroup();
 
 // Converts a projection matrix in OpenGL style (depth range of -1..1) to a DirectX style (depth range of 0..1).
 const _fixProjRangeMat = new Mat4().set([
@@ -201,7 +202,6 @@ class Renderer {
         const scope = graphicsDevice.scope;
         this.boneTextureId = scope.resolve('texture_poseMap');
         this.boneTextureSizeId = scope.resolve('texture_poseMapSize');
-        this.poseMatrixId = scope.resolve('matrix_pose[0]');
 
         this.modelMatrixId = scope.resolve('matrix_model');
         this.normalMatrixId = scope.resolve('matrix_normal');
@@ -221,6 +221,9 @@ class Renderer {
         this.cameraParamsId = scope.resolve('camera_params');
         this.viewIndexId = scope.resolve('view_index');
 
+        this.blueNoiseJitterVersion = 0;
+        this.blueNoiseJitterVec = new Vec4();
+        this.blueNoiseJitterData = new Float32Array(4);
         this.blueNoiseJitterId = scope.resolve('blueNoiseJitter');
         this.blueNoiseTextureId = scope.resolve('blueNoiseTex32');
 
@@ -312,8 +315,6 @@ class Renderer {
     setupViewport(camera, renderTarget) {
 
         const device = this.device;
-        DebugGraphics.pushGpuMarker(device, 'SETUP-VIEWPORT');
-
         const pixelWidth = renderTarget ? renderTarget.width : device.width;
         const pixelHeight = renderTarget ? renderTarget.height : device.height;
 
@@ -333,8 +334,6 @@ class Renderer {
             h = Math.floor(scissorRect.w * pixelHeight);
         }
         device.setScissor(x, y, w, h);
-
-        DebugGraphics.popGpuMarker(device);
     }
 
     setCameraUniforms(camera, target) {
@@ -375,7 +374,8 @@ class Renderer {
 
             // camera jitter
             const { jitter } = camera;
-            let noise = Vec4.ZERO;
+            let jitterX = 0;
+            let jitterY = 0;
             if (jitter > 0) {
 
                 // render target size
@@ -384,24 +384,32 @@ class Renderer {
 
                 // offsets
                 const offset = _haltonSequence[this.device.renderVersion % _haltonSequence.length];
-                const offsetX = jitter * (offset.x * 2 - 1) / targetWidth;
-                const offsetY = jitter * (offset.y * 2 - 1) / targetHeight;
+                jitterX = jitter * (offset.x * 2 - 1) / targetWidth;
+                jitterY = jitter * (offset.y * 2 - 1) / targetHeight;
 
                 // apply offset to projection matrix
                 projMat = _tempProjMat4.copy(projMat);
-                projMat.data[8] = offsetX;
-                projMat.data[9] = offsetY;
+                projMat.data[8] = jitterX;
+                projMat.data[9] = jitterY;
 
                 // apply offset to skybox projection matrix
                 projMatSkybox = _tempProjMat5.copy(projMatSkybox);
-                projMatSkybox.data[8] = offsetX;
-                projMatSkybox.data[9] = offsetY;
+                projMatSkybox.data[8] = jitterX;
+                projMatSkybox.data[9] = jitterY;
 
-                // blue noise vec4 - only set when jitter is enabled
-                noise = this.blueNoise.vec4(_tempVec4);
+                // blue noise vec4 - only use when jitter is enabled
+                if (this.blueNoiseJitterVersion !== this.device.renderVersion) {
+                    this.blueNoiseJitterVersion = this.device.renderVersion;
+                    this.blueNoise.vec4(this.blueNoiseJitterVec);
+                }
             }
 
-            this.blueNoiseJitterId.setValue([noise.x, noise.y, noise.z, noise.w]);
+            const jitterVec = jitter > 0 ? this.blueNoiseJitterVec : Vec4.ZERO;
+            this.blueNoiseJitterData[0] = jitterVec.x;
+            this.blueNoiseJitterData[1] = jitterVec.y;
+            this.blueNoiseJitterData[2] = jitterVec.z;
+            this.blueNoiseJitterData[3] = jitterVec.w;
+            this.blueNoiseJitterId.setValue(this.blueNoiseJitterData);
 
             this.projId.setValue(projMat.data);
             this.projSkyboxId.setValue(projMatSkybox.data);
@@ -427,6 +435,9 @@ class Renderer {
             // ViewProjection Matrix
             viewProjMat.mul2(projMat, viewMat);
             this.viewProjId.setValue(viewProjMat.data);
+
+            // store matrices needed by TAA
+            camera._storeShaderMatrices(viewProjMat, jitterX, jitterY, this.device.renderVersion);
 
             this.flipYId.setValue(flipY ? -1 : 1);
 
@@ -750,13 +761,10 @@ class Renderer {
         const skinInstance = meshInstance.skinInstance;
         if (skinInstance) {
             this._skinDrawCalls++;
-            if (device.supportsBoneTextures) {
-                const boneTexture = skinInstance.boneTexture;
-                this.boneTextureId.setValue(boneTexture);
-                this.boneTextureSizeId.setValue(skinInstance.boneTextureSize);
-            } else {
-                this.poseMatrixId.setValue(skinInstance.matrixPalette);
-            }
+
+            const boneTexture = skinInstance.boneTexture;
+            this.boneTextureId.setValue(boneTexture);
+            this.boneTextureSizeId.setValue(skinInstance.boneTextureSize);
         }
     }
 
@@ -801,11 +809,11 @@ class Renderer {
             this.viewUniformFormat = new UniformBufferFormat(this.device, uniforms);
 
             // format of the view bind group - contains single uniform buffer, and some textures
-            const buffers = [
-                new BindBufferFormat(UNIFORM_BUFFER_DEFAULT_SLOT_NAME, SHADERSTAGE_VERTEX | SHADERSTAGE_FRAGMENT)
-            ];
+            const formats = [
 
-            const textures = [
+                // uniform buffer needs to be first, as the shader processor assumes slot 0 for it
+                new BindUniformBufferFormat(UNIFORM_BUFFER_DEFAULT_SLOT_NAME, SHADERSTAGE_VERTEX | SHADERSTAGE_FRAGMENT),
+
                 new BindTextureFormat('lightsTextureFloat', SHADERSTAGE_FRAGMENT, TEXTUREDIMENSION_2D, SAMPLETYPE_UNFILTERABLE_FLOAT),
                 new BindTextureFormat('lightsTexture8', SHADERSTAGE_FRAGMENT, TEXTUREDIMENSION_2D, SAMPLETYPE_UNFILTERABLE_FLOAT),
                 new BindTextureFormat('shadowAtlasTexture', SHADERSTAGE_FRAGMENT, TEXTUREDIMENSION_2D, SAMPLETYPE_DEPTH),
@@ -816,12 +824,12 @@ class Renderer {
             ];
 
             if (isClustered) {
-                textures.push(...[
+                formats.push(...[
                     new BindTextureFormat('clusterWorldTexture', SHADERSTAGE_FRAGMENT, TEXTUREDIMENSION_2D, SAMPLETYPE_UNFILTERABLE_FLOAT)
                 ]);
             }
 
-            this.viewBindGroupFormat = new BindGroupFormat(this.device, buffers, textures);
+            this.viewBindGroupFormat = new BindGroupFormat(this.device, formats);
         }
     }
 
@@ -860,16 +868,16 @@ class Renderer {
 
             // update mesh bind group / uniform buffer
             const meshBindGroup = shaderInstance.getBindGroup(device);
-
-            meshBindGroup.defaultUniformBuffer.update();
             meshBindGroup.update();
             device.setBindGroup(BINDGROUP_MESH, meshBindGroup);
+
+            const meshUniformBuffer = shaderInstance.getUniformBuffer(device);
+            meshUniformBuffer.update(_dynamicBindGroup);
+            device.setBindGroup(BINDGROUP_MESH_UB, _dynamicBindGroup.bindGroup, _dynamicBindGroup.offsets);
         }
     }
 
     drawInstance(device, meshInstance, mesh, style, normal) {
-
-        DebugGraphics.pushGpuMarker(device, meshInstance.node.name);
 
         const modelMatrix = meshInstance.node.worldTransform;
         this.modelMatrixId.setValue(modelMatrix.data);
@@ -883,31 +891,29 @@ class Renderer {
                 this._instancedDrawCalls++;
                 device.setVertexBuffer(instancingData.vertexBuffer);
                 device.draw(mesh.primitive[style], instancingData.count);
+            } else {
+                device.clearVertexBuffer();
             }
         } else {
             device.draw(mesh.primitive[style]);
         }
-
-        DebugGraphics.popGpuMarker(device);
     }
 
     // used for stereo
     drawInstance2(device, meshInstance, mesh, style) {
-
-        DebugGraphics.pushGpuMarker(device, meshInstance.node.name);
 
         const instancingData = meshInstance.instancingData;
         if (instancingData) {
             if (instancingData.count > 0) {
                 this._instancedDrawCalls++;
                 device.draw(mesh.primitive[style], instancingData.count, true);
+            } else {
+                device.clearVertexBuffer();
             }
         } else {
             // matrices are already set
             device.draw(mesh.primitive[style], undefined, true);
         }
-
-        DebugGraphics.popGpuMarker(device);
     }
 
     /**

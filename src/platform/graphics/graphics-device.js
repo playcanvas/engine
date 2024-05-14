@@ -8,7 +8,6 @@ import { Color } from '../../core/math/color.js';
 import { TRACEID_TEXTURES } from '../../core/constants.js';
 
 import {
-    BUFFER_STATIC,
     CULLFACE_BACK,
     CLEARFLAG_COLOR, CLEARFLAG_DEPTH,
     PRIMITIVE_POINTS, PRIMITIVE_TRIFAN, SEMANTIC_POSITION, TYPE_FLOAT32, PIXELFORMAT_111110F, PIXELFORMAT_RGBA16F, PIXELFORMAT_RGBA32F
@@ -26,7 +25,6 @@ import { StencilParameters } from './stencil-parameters.js';
  * specific canvas HTML element. It is valid to have more than one canvas element per page and
  * create a new graphics device against each.
  *
- * @augments EventHandler
  * @category Graphics
  */
 class GraphicsDevice extends EventHandler {
@@ -88,14 +86,6 @@ class GraphicsDevice extends EventHandler {
     isWebGPU = false;
 
     /**
-     * True if the deviceType is WebGL1
-     *
-     * @type {boolean}
-     * @readonly
-     */
-    isWebGL1 = false;
-
-    /**
      * True if the deviceType is WebGL2
      *
      * @type {boolean}
@@ -110,14 +100,6 @@ class GraphicsDevice extends EventHandler {
      * @readonly
      */
     scope;
-
-    /**
-     * The maximum number of supported bones using uniform buffers.
-     *
-     * @type {number}
-     * @readonly
-     */
-    boneLimit;
 
     /**
      * The maximum supported texture anisotropy setting.
@@ -185,29 +167,26 @@ class GraphicsDevice extends EventHandler {
     supportsStencil;
 
     /**
-     * True if Multiple Render Targets feature is supported. This refers to the ability to render to
-     * multiple color textures with a single draw call.
-     *
-     * @readonly
-     * @type {boolean}
-     */
-    supportsMrt = false;
-
-    /**
-     * True if the device supports volume textures.
-     *
-     * @readonly
-     * @type {boolean}
-     */
-    supportsVolumeTextures = false;
-
-    /**
      * True if the device supports compute shaders.
      *
      * @readonly
      * @type {boolean}
      */
     supportsCompute = false;
+
+    /**
+     * True if the device can read from StorageTexture in the compute shader. By default, the
+     * storage texture can be only used with the write operation.
+     * When a shader uses this feature, it's recommended to use a `requires` directive to signal the
+     * potential for non-portability at the top of the WGSL shader code:
+     * ```javascript
+     * requires readonly_and_readwrite_storage_textures;
+     * ```
+     *
+     * @readonly
+     * @type {boolean}
+     */
+    supportsStorageTextureRead = false;
 
     /**
      * Currently active render target.
@@ -262,14 +241,6 @@ class GraphicsDevice extends EventHandler {
     insideRenderPass = false;
 
     /**
-     * True if hardware instancing is supported.
-     *
-     * @type {boolean}
-     * @readonly
-     */
-    supportsInstancing;
-
-    /**
      * True if the device supports uniform buffers.
      *
      * @type {boolean}
@@ -293,6 +264,15 @@ class GraphicsDevice extends EventHandler {
       */
     textureHalfFloatRenderable;
 
+    /**
+     * True if small-float textures with format {@link PIXELFORMAT_111110F} can be used as a frame
+     * buffer. This is always true on WebGL2, but optional on WebGPU device.
+     *
+     * @type {boolean}
+     * @readonly
+     */
+    textureRG11B10Renderable = false;
+
      /**
       * True if filtering can be applied when sampling float textures.
       *
@@ -300,14 +280,6 @@ class GraphicsDevice extends EventHandler {
       * @readonly
       */
     textureFloatFilterable = false;
-
-    /**
-     * True if filtering can be applied when sampling 16-bit float textures.
-     *
-     * @type {boolean}
-     * @readonly
-     */
-    textureHalfFloatFilterable = false;
 
     /**
      * A vertex buffer representing a quad.
@@ -403,7 +375,8 @@ class GraphicsDevice extends EventHandler {
             tex: 0,
             vb: 0,
             ib: 0,
-            ub: 0
+            ub: 0,
+            sb: 0
         };
 
         this._shaderStats = {
@@ -443,7 +416,9 @@ class GraphicsDevice extends EventHandler {
             { semantic: SEMANTIC_POSITION, components: 2, type: TYPE_FLOAT32 }
         ]);
         const positions = new Float32Array([-1, -1, 1, -1, -1, 1, 1, 1]);
-        this.quadVertexBuffer = new VertexBuffer(this, vertexFormat, 4, BUFFER_STATIC, positions);
+        this.quadVertexBuffer = new VertexBuffer(this, vertexFormat, 4, {
+            data: positions
+        });
     }
 
     /**
@@ -479,6 +454,58 @@ class GraphicsDevice extends EventHandler {
         this.canvas = null;
     }
 
+    /**
+     * Called when the device context was lost. It releases all context related resources.
+     *
+     * @ignore
+     */
+    loseContext() {
+
+        this.contextLost = true;
+
+        // force the back-buffer to be recreated on restore
+        this.backBufferSize.set(-1, -1);
+
+        // release textures
+        for (const texture of this.textures) {
+            texture.loseContext();
+        }
+
+        // release vertex and index buffers
+        for (const buffer of this.buffers) {
+            buffer.loseContext();
+        }
+
+        // Reset all render targets so they'll be recreated as required.
+        // TODO: a solution for the case where a render target contains something
+        // that was previously generated that needs to be re-rendered.
+        for (const target of this.targets) {
+            target.loseContext();
+        }
+
+        this.gpuProfiler?.loseContext();
+    }
+
+    /**
+     * Called when the device context is restored. It reinitializes all context related resources.
+     *
+     * @ignore
+     */
+    restoreContext() {
+
+        this.contextLost = false;
+
+        this.initializeRenderState();
+        this.initializeContextCaches();
+
+        // Recreate buffer objects and reupload buffer data to the GPU
+        for (const buffer of this.buffers) {
+            buffer.unlock();
+        }
+
+        this.gpuProfiler?.restoreContext?.();
+    }
+
     // don't stringify GraphicsDevice to JSON by JSON.stringify
     toJSON(key) {
         return undefined;
@@ -489,6 +516,7 @@ class GraphicsDevice extends EventHandler {
         this.vertexBuffers = [];
         this.shader = null;
         this.shaderValid = undefined;
+        this.shaderAsyncCompile = false;
         this.renderTarget = null;
     }
 
@@ -607,6 +635,15 @@ class GraphicsDevice extends EventHandler {
         if (vertexBuffer) {
             this.vertexBuffers.push(vertexBuffer);
         }
+    }
+
+    /**
+     * Clears the vertex buffer set on the graphics device. This is called automatically by the
+     * renderer.
+     * @ignore
+     */
+    clearVertexBuffer() {
+        this.vertexBuffers.length = 0;
     }
 
     /**
@@ -758,38 +795,12 @@ class GraphicsDevice extends EventHandler {
     }
 
     /**
-     * The type of the device. Can be one of pc.DEVICETYPE_WEBGL1, pc.DEVICETYPE_WEBGL2 or pc.DEVICETYPE_WEBGPU.
+     * The type of the device. Can be pc.DEVICETYPE_WEBGL2 or pc.DEVICETYPE_WEBGPU.
      *
-     * @type {import('./constants.js').DEVICETYPE_WEBGL1 | import('./constants.js').DEVICETYPE_WEBGL2 | import('./constants.js').DEVICETYPE_WEBGPU}
+     * @type {import('./constants.js').DEVICETYPE_WEBGL2 | import('./constants.js').DEVICETYPE_WEBGPU}
      */
     get deviceType() {
         return this._deviceType;
-    }
-
-    /**
-     * Queries the maximum number of bones that can be referenced by a shader. The shader
-     * generators (programlib) use this number to specify the matrix array size of the uniform
-     * 'matrix_pose[0]'. The value is calculated based on the number of available uniform vectors
-     * available after subtracting the number taken by a typical heavyweight shader. If a different
-     * number is required, it can be tuned via {@link GraphicsDevice#setBoneLimit}.
-     *
-     * @returns {number} The maximum number of bones that can be supported by the host hardware.
-     * @ignore
-     */
-    getBoneLimit() {
-        return this.boneLimit;
-    }
-
-    /**
-     * Specifies the maximum number of bones that the device can support on the current hardware.
-     * This function allows the default calculated value based on available vector uniforms to be
-     * overridden.
-     *
-     * @param {number} maxBones - The maximum number of bones supported by the host hardware.
-     * @ignore
-     */
-    setBoneLimit(maxBones) {
-        this.boneLimit = maxBones;
     }
 
     startRenderPass(renderPass) {
@@ -842,7 +853,22 @@ class GraphicsDevice extends EventHandler {
     }
 
     /**
+     * Dispatch multiple compute shaders inside a single compute shader pass.
+     *
+     * @param {Array<import('./compute.js').Compute>} computes - An array of compute shaders to
+     * dispatch.
+     */
+    computeDispatch(computes) {
+    }
+
+    /**
      * Get a renderable HDR pixel format supported by the graphics device.
+     *
+     * Note:
+     * - When the `filterable` parameter is set to false, this function returns one of the supported
+     * formats on the majority of devices apart from some very old iOS and Android devices (99%).
+     * - When the `filterable` parameter is set to true, the function returns a format on a
+     * considerably lower number of devices (70%).
      *
      * @param {number[]} [formats] - An array of pixel formats to check for support. Can contain:
      *
@@ -867,7 +893,7 @@ class GraphicsDevice extends EventHandler {
                 }
 
                 case PIXELFORMAT_RGBA16F:
-                    if (this.textureHalfFloatRenderable && (!filterable || this.textureHalfFloatFilterable)) {
+                    if (this.textureHalfFloatRenderable) {
                         return format;
                     }
                     break;

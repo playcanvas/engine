@@ -152,7 +152,7 @@ export const BLENDEQUATION_SUBTRACT = 1;
 export const BLENDEQUATION_REVERSE_SUBTRACT = 2;
 
 /**
- * Use the smallest value. Check app.graphicsDevice.extBlendMinmax for support.
+ * Use the smallest value.
  *
  * @type {number}
  * @category Graphics
@@ -160,12 +160,97 @@ export const BLENDEQUATION_REVERSE_SUBTRACT = 2;
 export const BLENDEQUATION_MIN = 3;
 
 /**
- * Use the largest value. Check app.graphicsDevice.extBlendMinmax for support.
+ * Use the largest value.
  *
  * @type {number}
  * @category Graphics
  */
 export const BLENDEQUATION_MAX = 4;
+
+/**
+ * A flag utilized during the construction of a {@link StorageBuffer} to make it available for read
+ * access by CPU.
+ *
+ * @type {number}
+ * @category Graphics
+ */
+export const BUFFERUSAGE_READ = 0x0001;
+
+/**
+ * A flag utilized during the construction of a {@link StorageBuffer} to make it available for write
+ * access by CPU.
+ *
+ * @type {number}
+ * @category Graphics
+ */
+export const BUFFERUSAGE_WRITE = 0x0002;
+
+/**
+ * A flag utilized during the construction of a {@link StorageBuffer} to ensure its compatibility
+ * when used as a source of a copy operation.
+ *
+ * @type {number}
+ * @category Graphics
+ */
+export const BUFFERUSAGE_COPY_SRC = 0x0004;
+
+/**
+ * A flag utilized during the construction of a {@link StorageBuffer} to ensure its compatibility
+ * when used as a destination of a copy operation, or as a target of a write operation.
+ *
+ * @type {number}
+ * @category Graphics
+ */
+export const BUFFERUSAGE_COPY_DST = 0x0008;
+
+/**
+ * A flag utilized during the construction of a {@link StorageBuffer} to ensure its compatibility
+ * when used as an index buffer.
+ *
+ * @type {number}
+ * @category Graphics
+ */
+export const BUFFERUSAGE_INDEX = 0x0010;
+
+/**
+ * A flag utilized during the construction of a {@link StorageBuffer} to ensure its compatibility
+ * when used as a vertex buffer.
+ *
+ * @type {number}
+ * @category Graphics
+ */
+export const BUFFERUSAGE_VERTEX = 0x0020;
+
+/**
+ * A flag utilized during the construction of a {@link StorageBuffer} to ensure its compatibility
+ * when used as an uniform buffer.
+ *
+ * @type {number}
+ * @category Graphics
+ */
+export const BUFFERUSAGE_UNIFORM = 0x0040;
+
+/**
+ * An internal flag utilized during the construction of a {@link StorageBuffer} to ensure its
+ * compatibility when used as a storage buffer.
+ * This flag is hidden as it's automatically used by the StorageBuffer constructor.
+ *
+ * @type {number}
+ * @category Graphics
+ * @ignore
+ */
+export const BUFFERUSAGE_STORAGE = 0x0080;
+
+/**
+ * A flag utilized during the construction of a {@link StorageBuffer} to allow it to store indirect
+ * command arguments.
+ * TODO: This flag is hidden till the feature is implemented.
+ *
+ * @type {number}
+ * @category Graphics
+ * @ignore
+ */
+export const BUFFERUSAGE_INDIRECT = 0x0100;
 
 /**
  * The data store contents will be modified once and used many times.
@@ -193,7 +278,7 @@ export const BUFFER_STREAM = 2;
 
 /**
  * The data store contents will be modified repeatedly on the GPU and used many times. Optimal for
- * transform feedback usage (WebGL2 only).
+ * transform feedback usage.
  *
  * @type {number}
  * @category Graphics
@@ -568,7 +653,7 @@ export const PIXELFORMAT_RGB32F = 13;
 export const PIXELFORMAT_RGBA32F = 14;
 
 /**
- * 32-bit floating point single channel format (WebGL2 only).
+ * 32-bit floating point single channel format.
  *
  * @type {number}
  * @category Graphics
@@ -584,7 +669,7 @@ export const PIXELFORMAT_R32F = 15;
 export const PIXELFORMAT_DEPTH = 16;
 
 /**
- * A readable depth/stencil buffer format (WebGL2 only).
+ * A readable depth/stencil buffer format.
  *
  * @type {number}
  * @category Graphics
@@ -593,7 +678,7 @@ export const PIXELFORMAT_DEPTHSTENCIL = 17;
 
 /**
  * A floating-point color-only format with 11 bits for red and green channels and 10 bits for the
- * blue channel (WebGL2 only).
+ * blue channel.
  *
  * @type {number}
  * @category Graphics
@@ -601,7 +686,7 @@ export const PIXELFORMAT_DEPTHSTENCIL = 17;
 export const PIXELFORMAT_111110F = 18;
 
 /**
- * Color-only sRGB format (WebGL2 only).
+ * Color-only sRGB format.
  *
  * @type {number}
  * @category Graphics
@@ -609,7 +694,7 @@ export const PIXELFORMAT_111110F = 18;
 export const PIXELFORMAT_SRGB = 19;
 
 /**
- * Color sRGB format with additional alpha channel (WebGL2 only).
+ * Color sRGB format with additional alpha channel.
  *
  * @type {number}
  * @category Graphics
@@ -706,7 +791,7 @@ export const PIXELFORMAT_ATC_RGBA = 30;
 export const PIXELFORMAT_BGRA8 = 31;
 
 /**
- * 8-bit signed integer single-channel (R) format (Not supported by WebGL1).
+ * 8-bit signed integer single-channel (R) format.
  *
  * @type {number}
  * @category Graphics
@@ -714,7 +799,7 @@ export const PIXELFORMAT_BGRA8 = 31;
 export const PIXELFORMAT_R8I = 32;
 
 /**
- * 8-bit unsigned integer single-channel (R) format (Not supported by WebGL1).
+ * 8-bit unsigned integer single-channel (R) format.
  *
  * @type {number}
  * @category Graphics
@@ -722,7 +807,7 @@ export const PIXELFORMAT_R8I = 32;
 export const PIXELFORMAT_R8U = 33;
 
 /**
- * 16-bit signed integer single-channel (R) format (Not supported by WebGL1).
+ * 16-bit signed integer single-channel (R) format.
  *
  * @type {number}
  * @category Graphics
@@ -730,7 +815,7 @@ export const PIXELFORMAT_R8U = 33;
 export const PIXELFORMAT_R16I = 34;
 
 /**
- * 16-bit unsigned integer single-channel (R) format (Not supported by WebGL1).
+ * 16-bit unsigned integer single-channel (R) format.
  *
  * @type {number}
  * @category Graphics
@@ -738,7 +823,7 @@ export const PIXELFORMAT_R16I = 34;
 export const PIXELFORMAT_R16U = 35;
 
 /**
- * 32-bit signed integer single-channel (R) format (Not supported by WebGL1).
+ * 32-bit signed integer single-channel (R) format.
  *
  * @type {number}
  * @category Graphics
@@ -746,7 +831,7 @@ export const PIXELFORMAT_R16U = 35;
 export const PIXELFORMAT_R32I = 36;
 
 /**
- * 32-bit unsigned integer single-channel (R) format (Not supported by WebGL1).
+ * 32-bit unsigned integer single-channel (R) format.
  *
  * @type {number}
  * @category Graphics
@@ -754,7 +839,7 @@ export const PIXELFORMAT_R32I = 36;
 export const PIXELFORMAT_R32U = 37;
 
 /**
- * 8-bit per-channel signed integer (RG) format (Not supported by WebGL1).
+ * 8-bit per-channel signed integer (RG) format.
  *
  * @type {number}
  * @category Graphics
@@ -762,7 +847,7 @@ export const PIXELFORMAT_R32U = 37;
 export const PIXELFORMAT_RG8I = 38;
 
 /**
- * 8-bit per-channel unsigned integer (RG) format (Not supported by WebGL1).
+ * 8-bit per-channel unsigned integer (RG) format.
  *
  * @type {number}
  * @category Graphics
@@ -770,7 +855,7 @@ export const PIXELFORMAT_RG8I = 38;
 export const PIXELFORMAT_RG8U = 39;
 
 /**
- * 16-bit per-channel signed integer (RG) format (Not supported by WebGL1).
+ * 16-bit per-channel signed integer (RG) format.
  *
  * @type {number}
  * @category Graphics
@@ -778,7 +863,7 @@ export const PIXELFORMAT_RG8U = 39;
 export const PIXELFORMAT_RG16I = 40;
 
 /**
- * 16-bit per-channel unsigned integer (RG) format (Not supported by WebGL1).
+ * 16-bit per-channel unsigned integer (RG) format.
  *
  * @type {number}
  * @category Graphics
@@ -786,7 +871,7 @@ export const PIXELFORMAT_RG16I = 40;
 export const PIXELFORMAT_RG16U = 41;
 
 /**
- * 32-bit per-channel signed integer (RG) format (Not supported by WebGL1).
+ * 32-bit per-channel signed integer (RG) format.
  *
  * @type {number}
  * @category Graphics
@@ -794,7 +879,7 @@ export const PIXELFORMAT_RG16U = 41;
 export const PIXELFORMAT_RG32I = 42;
 
 /**
- * 32-bit per-channel unsigned integer (RG) format (Not supported by WebGL1).
+ * 32-bit per-channel unsigned integer (RG) format.
  *
  * @type {number}
  * @category Graphics
@@ -802,7 +887,7 @@ export const PIXELFORMAT_RG32I = 42;
 export const PIXELFORMAT_RG32U = 43;
 
 /**
- * 8-bit per-channel signed integer (RGBA) format (Not supported by WebGL1).
+ * 8-bit per-channel signed integer (RGBA) format.
  *
  * @type {number}
  * @category Graphics
@@ -810,7 +895,7 @@ export const PIXELFORMAT_RG32U = 43;
 export const PIXELFORMAT_RGBA8I = 44;
 
 /**
- * 8-bit per-channel unsigned integer (RGBA) format (Not supported by WebGL1).
+ * 8-bit per-channel unsigned integer (RGBA) format.
  *
  * @type {number}
  * @category Graphics
@@ -818,7 +903,7 @@ export const PIXELFORMAT_RGBA8I = 44;
 export const PIXELFORMAT_RGBA8U = 45;
 
 /**
- * 16-bit per-channel signed integer (RGBA) format (Not supported by WebGL1).
+ * 16-bit per-channel signed integer (RGBA) format.
  *
  * @type {number}
  * @category Graphics
@@ -826,7 +911,7 @@ export const PIXELFORMAT_RGBA8U = 45;
 export const PIXELFORMAT_RGBA16I = 46;
 
 /**
- * 16-bit per-channel unsigned integer (RGBA) format (Not supported by WebGL1).
+ * 16-bit per-channel unsigned integer (RGBA) format.
  *
  * @type {number}
  * @category Graphics
@@ -834,7 +919,7 @@ export const PIXELFORMAT_RGBA16I = 46;
 export const PIXELFORMAT_RGBA16U = 47;
 
 /**
- * 32-bit per-channel signed integer (RGBA) format (Not supported by WebGL1).
+ * 32-bit per-channel signed integer (RGBA) format.
  *
  * @type {number}
  * @category Graphics
@@ -842,18 +927,33 @@ export const PIXELFORMAT_RGBA16U = 47;
 export const PIXELFORMAT_RGBA32I = 48;
 
 /**
- * 32-bit per-channel unsigned integer (RGBA) format (Not supported by WebGL1).
+ * 32-bit per-channel unsigned integer (RGBA) format.
  *
  * @type {number}
  * @category Graphics
  */
 export const PIXELFORMAT_RGBA32U = 49;
 
+/**
+ * 16-bit floating point R (16-bit float for red channel).
+ *
+ * @type {number}
+ * @category Graphics
+ */
+export const PIXELFORMAT_R16F = 50;
+
+/**
+ * 16-bit floating point RG (16-bit float for each red and green channels).
+ *
+ * @type {number}
+ * @category Graphics
+ */
+export const PIXELFORMAT_RG16F = 51;
 
 // map of engine PIXELFORMAT_*** enums to information about the format
 export const pixelFormatInfo = new Map([
 
-    // uncompressed formats
+    // float formats
     [PIXELFORMAT_A8,            { name: 'A8', size: 1 }],
     [PIXELFORMAT_L8,            { name: 'L8', size: 1 }],
     [PIXELFORMAT_LA8,           { name: 'LA8', size: 2 }],
@@ -862,6 +962,8 @@ export const pixelFormatInfo = new Map([
     [PIXELFORMAT_RGBA4,         { name: 'RGBA4', size: 2 }],
     [PIXELFORMAT_RGB8,          { name: 'RGB8', size: 4 }],
     [PIXELFORMAT_RGBA8,         { name: 'RGBA8', size: 4 }],
+    [PIXELFORMAT_R16F,          { name: 'R16F', size: 2 }],
+    [PIXELFORMAT_RG16F,         { name: 'RG16F', size: 4 }],
     [PIXELFORMAT_RGB16F,        { name: 'RGB16F', size: 8 }],
     [PIXELFORMAT_RGBA16F,       { name: 'RGBA16F', size: 8 }],
     [PIXELFORMAT_RGB32F,        { name: 'RGB32F', size: 16 }],
@@ -889,7 +991,7 @@ export const pixelFormatInfo = new Map([
     [PIXELFORMAT_ATC_RGB, { name: 'ATC_RGB', blockSize: 8 }],
     [PIXELFORMAT_ATC_RGBA, { name: 'ATC_RGBA', blockSize: 16 }],
 
-    // uncompressed integer formats (Not supported on WebGL1)
+    // integer formats
     [PIXELFORMAT_R8I,      { name: 'R8I', size: 1, isInt: true }],
     [PIXELFORMAT_R8U,      { name: 'R8U', size: 1, isInt: true }],
     [PIXELFORMAT_R16I,     { name: 'R16I', size: 2, isInt: true }],
@@ -922,6 +1024,7 @@ export const isIntegerPixelFormat = (format) => {
 // get the pixel format array type
 export const getPixelFormatArrayType = (format) => {
     switch (format) {
+        case PIXELFORMAT_R32F:
         case PIXELFORMAT_RGB32F:
         case PIXELFORMAT_RGBA32F:
             return Float32Array;
@@ -943,6 +1046,8 @@ export const getPixelFormatArrayType = (format) => {
         case PIXELFORMAT_RGB565:
         case PIXELFORMAT_RGBA5551:
         case PIXELFORMAT_RGBA4:
+        case PIXELFORMAT_R16F:
+        case PIXELFORMAT_RG16F:
         case PIXELFORMAT_RGB16F:
         case PIXELFORMAT_RGBA16F:
             return Uint16Array;
@@ -1394,17 +1499,94 @@ export const TEXHINT_SHADOWMAP = 1;
 export const TEXHINT_ASSET = 2;
 export const TEXHINT_LIGHTMAP = 3;
 
+/**
+ * Texture data is stored in a 1-dimensional texture.
+ *
+ * @type {string}
+ * @category Graphics
+ */
 export const TEXTUREDIMENSION_1D = '1d';
+
+/**
+ * Texture data is stored in a 2-dimensional texture.
+ *
+ * @type {string}
+ * @category Graphics
+ */
 export const TEXTUREDIMENSION_2D = '2d';
+
+/**
+ * Texture data is stored in an array of 2-dimensional textures.
+ *
+ * @type {string}
+ * @category Graphics
+ */
 export const TEXTUREDIMENSION_2D_ARRAY = '2d-array';
+
+/**
+ * Texture data is stored in a cube texture.
+ *
+ * @type {string}
+ * @category Graphics
+ */
 export const TEXTUREDIMENSION_CUBE = 'cube';
+
+/**
+ * Texture data is stored in an array of cube textures.
+ *
+ * @type {string}
+ * @category Graphics
+ */
 export const TEXTUREDIMENSION_CUBE_ARRAY = 'cube-array';
+
+/**
+ * Texture data is stored in a 3-dimensional texture.
+ *
+ * @type {string}
+ * @category Graphics
+ */
 export const TEXTUREDIMENSION_3D = '3d';
 
+/**
+ * A sampler type of a texture that contains floating-point data. Typically stored for color
+ * textures, where data can be filtered.
+ *
+ * @type {number}
+ * @category Graphics
+ */
 export const SAMPLETYPE_FLOAT = 0;
+
+/**
+ * A sampler type of a texture that contains floating-point data, but cannot be filtered. Typically
+ * used for textures storing data that cannot be interpolated.
+ *
+ * @type {number}
+ * @category Graphics
+ */
 export const SAMPLETYPE_UNFILTERABLE_FLOAT = 1;
+
+/**
+ * A sampler type of a texture that contains depth data. Typically used for depth textures.
+ *
+ * @type {number}
+ * @category Graphics
+ */
 export const SAMPLETYPE_DEPTH = 2;
+
+/**
+ * A sampler type of a texture that contains signed integer data.
+ *
+ * @type {number}
+ * @category Graphics
+ */
 export const SAMPLETYPE_INT = 3;
+
+/**
+ * A sampler type of a texture that contains unsigned integer data.
+ *
+ * @type {number}
+ * @category Graphics
+ */
 export const SAMPLETYPE_UINT = 4;
 
 /**
@@ -1512,29 +1694,138 @@ export const TYPE_UINT32 = 5;
 export const TYPE_FLOAT32 = 6;
 
 /**
- * 16-bit floating point vertex element type (not supported by WebGL1).
+ * 16-bit floating point vertex element type.
  *
  * @type {number}
  * @category Graphics
  */
 export const TYPE_FLOAT16 = 7;
 
-// Uniform types
+// ---------- Uniform types ------------
+// Note: Only types which can be used in uniform buffers are exported here, others are internal.
+// The arrays are exposed as a base type with number of elements, and textures are not part of the
+// uniform buffers.
+
+/**
+ * Boolean uniform type.
+ *
+ * @type {number}
+ * @category Graphics
+ */
 export const UNIFORMTYPE_BOOL = 0;
+
+/**
+ * Integer uniform type.
+ *
+ * @type {number}
+ * @category Graphics
+ */
 export const UNIFORMTYPE_INT = 1;
+
+/**
+ * Float uniform type.
+ *
+ * @type {number}
+ * @category Graphics
+ */
 export const UNIFORMTYPE_FLOAT = 2;
+
+/**
+ * 2 x Float uniform type.
+ *
+ * @type {number}
+ * @category Graphics
+ */
 export const UNIFORMTYPE_VEC2 = 3;
+
+/**
+ * 3 x Float uniform type.
+ *
+ * @type {number}
+ * @category Graphics
+ */
 export const UNIFORMTYPE_VEC3 = 4;
+
+/**
+ * 4 x Float uniform type.
+ *
+ * @type {number}
+ * @category Graphics
+ */
 export const UNIFORMTYPE_VEC4 = 5;
+
+/**
+ * 2 x Integer uniform type.
+ *
+ * @type {number}
+ * @category Graphics
+ */
 export const UNIFORMTYPE_IVEC2 = 6;
+
+/**
+ * 3 x Integer uniform type.
+ *
+ * @type {number}
+ * @category Graphics
+ */
 export const UNIFORMTYPE_IVEC3 = 7;
+
+/**
+ * 4 x Integer uniform type.
+ *
+ * @type {number}
+ * @category Graphics
+ */
 export const UNIFORMTYPE_IVEC4 = 8;
+
+/**
+ * 2 x Boolean uniform type.
+ *
+ * @type {number}
+ * @category Graphics
+ */
 export const UNIFORMTYPE_BVEC2 = 9;
+
+/**
+ * 3 x Boolean uniform type.
+ *
+ * @type {number}
+ * @category Graphics
+ */
 export const UNIFORMTYPE_BVEC3 = 10;
+
+/**
+ * 4 x Boolean uniform type.
+ *
+ * @type {number}
+ * @category Graphics
+ */
 export const UNIFORMTYPE_BVEC4 = 11;
+
+/**
+ * 2 x 2 x Float uniform type.
+ *
+ * @type {number}
+ * @category Graphics
+ */
 export const UNIFORMTYPE_MAT2 = 12;
+
+/**
+ * 3 x 3 x Float uniform type.
+ *
+ * @type {number}
+ * @category Graphics
+ */
 export const UNIFORMTYPE_MAT3 = 13;
+
+/**
+ * 4 x 4 x Float uniform type.
+ *
+ * @type {number}
+ * @category Graphics
+ */
 export const UNIFORMTYPE_MAT4 = 14;
+
 export const UNIFORMTYPE_TEXTURE2D = 15;
 export const UNIFORMTYPE_TEXTURECUBE = 16;
 export const UNIFORMTYPE_FLOATARRAY = 17;
@@ -1548,9 +1839,37 @@ export const UNIFORMTYPE_MAT4ARRAY = 24;
 export const UNIFORMTYPE_TEXTURE2D_ARRAY = 25;
 
 // Unsigned uniform types
+
+/**
+ * Unsigned integer uniform type.
+ *
+ * @type {number}
+ * @category Graphics
+ */
 export const UNIFORMTYPE_UINT = 26;
+
+/**
+ * 2 x Unsigned integer uniform type.
+ *
+ * @type {number}
+ * @category Graphics
+ */
 export const UNIFORMTYPE_UVEC2 = 27;
+
+/**
+ * 3 x Unsigned integer uniform type.
+ *
+ * @type {number}
+ * @category Graphics
+ */
 export const UNIFORMTYPE_UVEC3 = 28;
+
+/**
+ * 4 x Unsigned integer uniform type.
+ *
+ * @type {number}
+ * @category Graphics
+ */
 export const UNIFORMTYPE_UVEC4 = 29;
 
 // Integer uniform array types
@@ -1576,6 +1895,8 @@ export const UNIFORMTYPE_ITEXTURE3D = 46;
 export const UNIFORMTYPE_UTEXTURE3D = 47;
 export const UNIFORMTYPE_ITEXTURE2D_ARRAY = 48;
 export const UNIFORMTYPE_UTEXTURE2D_ARRAY = 49;
+
+// ----------
 
 export const uniformTypeToName = [
     // Uniforms
@@ -1686,14 +2007,6 @@ export const uniformTypeToStorage = new Uint8Array([
 ]);
 
 /**
- * A WebGL 1 device type.
- *
- * @type {string}
- * @category Graphics
- */
-export const DEVICETYPE_WEBGL1 = 'webgl1';
-
-/**
  * A WebGL 2 device type.
  *
  * @type {string}
@@ -1717,18 +2030,37 @@ export const DEVICETYPE_WEBGPU = 'webgpu';
  */
 export const DEVICETYPE_NULL = 'null';
 
-// (bit-flags) shader stages for resource visibility on the GPU
+/**
+ * The resource is visible to the vertex shader.
+ *
+ * @type {number}
+ * @category Graphics
+ */
 export const SHADERSTAGE_VERTEX = 1;
+
+/**
+ * The resource is visible to the fragment shader.
+ *
+ * @type {number}
+ * @category Graphics
+ */
 export const SHADERSTAGE_FRAGMENT = 2;
+
+/**
+ * The resource is visible to the compute shader.
+ *
+ * @type {number}
+ * @category Graphics
+ */
 export const SHADERSTAGE_COMPUTE = 4;
 
-// indices of commonly used bind groups
-// sorted in a way that any trailing bind groups can be unused in any render pass
-export const BINDGROUP_MESH = 0;
-export const BINDGROUP_VIEW = 1;
+// indices of commonly used bind groups, sorted from the least commonly changing to avoid internal rebinding
+export const BINDGROUP_VIEW = 0;        // view bind group, textures, samplers and uniforms
+export const BINDGROUP_MESH = 1;        // mesh bind group - textures and samplers
+export const BINDGROUP_MESH_UB = 2;     // mesh bind group - a single uniform buffer
 
 // names of bind groups
-export const bindGroupNames = ['mesh', 'view'];
+export const bindGroupNames = ['view', 'mesh', 'mesh_ub'];
 
 // name of the default uniform buffer slot in a bind group
 export const UNIFORM_BUFFER_DEFAULT_SLOT_NAME = 'default';
@@ -1810,3 +2142,4 @@ export const CHUNKAPI_1_58 = '1.58';
 export const CHUNKAPI_1_60 = '1.60';
 export const CHUNKAPI_1_62 = '1.62';
 export const CHUNKAPI_1_65 = '1.65';
+export const CHUNKAPI_1_70 = '1.70';

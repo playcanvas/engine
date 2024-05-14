@@ -30,7 +30,7 @@ class GSplatResource {
     /**
      * @param {import('../../platform/graphics/graphics-device.js').GraphicsDevice} device - The graphics device.
      * @param {import('../../scene/gsplat/gsplat-data.js').GSplatData} splatData - The splat data.
-     * @hideconstructor
+     * @ignore
      */
     constructor(device, splatData) {
         this.device = device;
@@ -57,9 +57,11 @@ class GSplatResource {
 
             // texture data
             splat.updateColorData(splatData.getProp('f_dc_0'), splatData.getProp('f_dc_1'), splatData.getProp('f_dc_2'), splatData.getProp('opacity'));
-            splat.updateScaleData(splatData.getProp('scale_0'), splatData.getProp('scale_1'), splatData.getProp('scale_2'));
-            splat.updateRotationData(splatData.getProp('rot_0'), splatData.getProp('rot_1'), splatData.getProp('rot_2'), splatData.getProp('rot_3'));
-            splat.updateCenterData(splatData.getProp('x'), splatData.getProp('y'), splatData.getProp('z'));
+            splat.updateTransformData(
+                splatData.getProp('x'), splatData.getProp('y'), splatData.getProp('z'),
+                splatData.getProp('rot_0'), splatData.getProp('rot_1'), splatData.getProp('rot_2'), splatData.getProp('rot_3'),
+                splatData.getProp('scale_0'), splatData.getProp('scale_1'), splatData.getProp('scale_2')
+            );
 
             // centers - constant buffer that is sent to the worker
             const x = splatData.getProp('x');

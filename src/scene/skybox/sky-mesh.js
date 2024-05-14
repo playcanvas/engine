@@ -31,13 +31,13 @@ class SkyMesh {
     constructor(device, scene, node, texture, type) {
 
         const material = new Material();
+        material.name = 'SkyMaterial';
 
         material.getShaderVariant = function (dev, sc, defs, unused, pass, sortedLights, viewUniformFormat, viewBindGroupFormat) {
 
             const options = {
                 pass: pass,
                 encoding: texture.encoding,
-                useIntensity: scene.skyboxIntensity !== 1 || scene.physicalUnits,
                 gamma: (pass === SHADER_FORWARDHDR ? (scene.gammaCorrection ? GAMMA_SRGBHDR : GAMMA_NONE) : scene.gammaCorrection),
                 toneMapping: (pass === SHADER_FORWARDHDR ? TONEMAP_LINEAR : scene.toneMapping),
                 skymesh: type
@@ -45,8 +45,7 @@ class SkyMesh {
 
             if (texture.cubemap) {
                 options.type = 'cubemap';
-                options.mip = texture.fixCubemapSeams ? scene.skyboxMip : 0;
-                options.fixSeams = texture.fixCubemapSeams;
+                options.mip = scene.skyboxMip;
             } else {
                 options.type = 'envAtlas';
             }

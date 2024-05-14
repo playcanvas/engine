@@ -1,4 +1,4 @@
-import { CHUNKAPI_1_51, CHUNKAPI_1_55, CHUNKAPI_1_56, CHUNKAPI_1_57, CHUNKAPI_1_60, CHUNKAPI_1_62, CHUNKAPI_1_65 } from '../../../platform/graphics/constants.js';
+import { CHUNKAPI_1_51, CHUNKAPI_1_55, CHUNKAPI_1_56, CHUNKAPI_1_57, CHUNKAPI_1_60, CHUNKAPI_1_62, CHUNKAPI_1_65, CHUNKAPI_1_70 } from '../../../platform/graphics/constants.js';
 import { Debug } from '../../../core/debug.js';
 import { shaderChunks } from './chunks.js';
 
@@ -79,8 +79,8 @@ const chunkVersions = {
     iridescenceDiffractionPS: CHUNKAPI_1_65,
     lightmapAddPS: CHUNKAPI_1_65,
     lightmapDirAddPS: CHUNKAPI_1_65,
-    refractionCubePS: CHUNKAPI_1_65,
-    refractionDynamicPS: CHUNKAPI_1_65
+    refractionCubePS: CHUNKAPI_1_70,
+    refractionDynamicPS: CHUNKAPI_1_70
 };
 
 // removed

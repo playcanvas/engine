@@ -1,7 +1,7 @@
 import { Debug, DebugHelper } from "../../core/debug.js";
 import { Vec4 } from "../../core/math/vec4.js";
-import { BindGroup } from "../../platform/graphics/bind-group.js";
-import { BINDGROUP_MESH, PRIMITIVE_TRISTRIP } from "../../platform/graphics/constants.js";
+import { BindGroup, DynamicBindGroup } from "../../platform/graphics/bind-group.js";
+import { BINDGROUP_MESH, BINDGROUP_MESH_UB, BINDGROUP_VIEW, PRIMITIVE_TRISTRIP } from "../../platform/graphics/constants.js";
 import { DebugGraphics } from "../../platform/graphics/debug-graphics.js";
 import { ShaderProcessorOptions } from "../../platform/graphics/shader-processor-options.js";
 import { UniformBuffer } from "../../platform/graphics/uniform-buffer.js";
@@ -16,6 +16,7 @@ const _quadPrimitive = {
 
 const _tempViewport = new Vec4();
 const _tempScissor = new Vec4();
+const _dynamicBindGroup = new DynamicBindGroup();
 
 /**
  * An object that renders a quad using a {@link Shader}.
@@ -70,7 +71,7 @@ class QuadRender {
             // bind group
             const bindGroupFormat = this.shader.meshBindGroupFormat;
             Debug.assert(bindGroupFormat);
-            this.bindGroup = new BindGroup(device, bindGroupFormat, this.uniformBuffer);
+            this.bindGroup = new BindGroup(device, bindGroupFormat);
             DebugHelper.setName(this.bindGroup, `QuadRender-MeshBindGroup_${this.bindGroup.id}`);
         }
     }
@@ -120,10 +121,22 @@ class QuadRender {
 
         if (device.supportsUniformBuffers) {
 
+            // not using view bind group
+            device.setBindGroup(BINDGROUP_VIEW, device.emptyBindGroup);
+
+            // mesh bind group
             const bindGroup = this.bindGroup;
-            bindGroup.defaultUniformBuffer?.update();
             bindGroup.update();
             device.setBindGroup(BINDGROUP_MESH, bindGroup);
+
+            // dynamic uniform buffer bind group
+            const uniformBuffer = this.uniformBuffer;
+            if (uniformBuffer) {
+                uniformBuffer.update(_dynamicBindGroup);
+                device.setBindGroup(BINDGROUP_MESH_UB, _dynamicBindGroup.bindGroup, _dynamicBindGroup.offsets);
+            } else {
+                device.setBindGroup(BINDGROUP_MESH_UB, device.emptyBindGroup);
+            }
         }
 
         device.draw(_quadPrimitive);

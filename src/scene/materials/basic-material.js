@@ -26,7 +26,6 @@ import { Material } from './material.js';
  * material.update();
  * ```
  *
- * @augments Material
  * @category Graphics
  */
 class BasicMaterial extends Material {

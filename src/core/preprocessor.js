@@ -4,7 +4,7 @@ import { Debug } from './debug.js';
 const TRACEID = 'Preprocessor';
 
 // accepted keywords
-const KEYWORD = /[ \t]*#(ifn?def|if|endif|else|elif|define|undef|extension)/g;
+const KEYWORD = /[ \t]*#(ifn?def|if|endif|else|elif|define|undef|extension|include)/g;
 
 // #define EXPRESSION
 const DEFINE = /define[ \t]+([^\n]+)\r?(?:\n|$)/g;
@@ -30,6 +30,9 @@ const DEFINED = /(!|\s)?defined\(([\w-]+)\)/;
 // currently unsupported characters in the expression: | & < > = + -
 const INVALID = /[><=|&+-]/g;
 
+// #include "identifier"
+const INCLUDE = /include[ \t]+"([\w-]+)"\r?(?:\n|$)/g;
+
 /**
  * Pure static class implementing subset of C-style preprocessor.
  * inspired by: https://github.com/dcodeIO/Preprocessor.js
@@ -41,10 +44,12 @@ class Preprocessor {
      * Run c-like preprocessor on the source code, and resolves the code based on the defines and ifdefs
      *
      * @param {string} source - The source code to work on.
+     * @param {Map<string, string>} [includes] - A map containing key-value pairs of include names
+     * and their content. These are used for resolving #include directives in the source.
      * @param {boolean} [stripUnusedColorAttachments] - If true, strips unused color attachments.
      * @returns {string|null} Returns preprocessed source code, or null in case of error.
      */
-    static run(source, stripUnusedColorAttachments = false) {
+    static run(source, includes = new Map(), stripUnusedColorAttachments = false) {
 
         // strips comments, handles // and many cases of /*
         source = source.replace(/\/\*[\s\S]*?\*\/|([^\\:]|^)\/\/.*$/gm, '$1');
@@ -76,7 +81,7 @@ class Preprocessor {
         }
 
         // preprocess defines / ifdefs ..
-        source = this._preprocess(source, defines);
+        source = this._preprocess(source, defines, includes);
 
         // extract defines that evaluate to an integer number
         const intDefines = new Map();
@@ -131,9 +136,11 @@ class Preprocessor {
      * @param {Map<string, string>} defines - Supplied defines which are used in addition to those
      * defined in the source code. Maps a define name to its value. Note that the map is modified
      * by the function.
+     * @param {Map<string, string>} [includes] - An object containing key-value pairs of include names and their
+     * content.
      * @returns {string} Returns preprocessed source code.
      */
-    static _preprocess(source, defines = new Map()) {
+    static _preprocess(source, defines = new Map(), includes) {
 
         const originalSource = source;
 
@@ -299,6 +306,36 @@ class Preprocessor {
                         Debug.trace(TRACEID, `${keyword}: [${endif[2]}] => ${result}`);
                     }
 
+                    break;
+                }
+
+                case 'include': {
+                    // match the include
+                    INCLUDE.lastIndex = match.index;
+                    const include = INCLUDE.exec(source);
+                    error ||= include === null;
+                    Debug.assert(include, `Invalid [${keyword}]: ${source.substring(match.index, match.index + 100)}...`);
+                    const identifier = include[1].trim();
+
+                    // are we inside if-blocks that are accepted
+                    const keep = Preprocessor._keep(stack);
+
+                    if (keep) {
+
+                        // cut out the include line and replace it with the included string
+                        const includeSource = includes?.get(identifier);
+                        if (includeSource) {
+                            source = source.substring(0, include.index - 1) + includeSource + source.substring(INCLUDE.lastIndex);
+
+                            // process the just included test
+                            KEYWORD.lastIndex = include.index;
+                        } else {
+                            console.error(`Include not found: ${identifier}`);
+                            error = true;
+                        }
+                    }
+
+                    Debug.trace(TRACEID, `${keyword}: [${identifier}] ${keep ? "" : "IGNORED"}`);
                     break;
                 }
             }

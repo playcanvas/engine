@@ -9,19 +9,17 @@ import {
 } from '../../platform/graphics/constants.js';
 import { DebugGraphics } from '../../platform/graphics/debug-graphics.js';
 
-const fixCubemapSeams = true;
-
 // calculate the number of mipmap levels given texture dimensions
 const calcLevels = (width, height = 0) => {
     return 1 + Math.floor(Math.log2(Math.max(width, height)));
 };
 
 const supportsFloat16 = (device) => {
-    return device.extTextureHalfFloat && device.textureHalfFloatRenderable;
+    return device.textureHalfFloatRenderable;
 };
 
 const supportsFloat32 = (device) => {
-    return device.extTextureFloat && device.textureFloatRenderable;
+    return device.textureFloatRenderable;
 };
 
 // lighting source should be stored HDR
@@ -46,7 +44,6 @@ const createCubemap = (device, size, format, mipmaps) => {
         type: format === PIXELFORMAT_RGBA8 ? RGBA8_TYPE : TEXTURETYPE_DEFAULT,
         addressU: ADDRESS_CLAMP_TO_EDGE,
         addressV: ADDRESS_CLAMP_TO_EDGE,
-        fixCubemapSeams: fixCubemapSeams,
         mipmaps: !!mipmaps
     });
 };
@@ -108,7 +105,6 @@ class EnvLighting {
             type: format === PIXELFORMAT_RGBA8 ? RGBA8_TYPE : TEXTURETYPE_DEFAULT,
             addressU: ADDRESS_CLAMP_TO_EDGE,
             addressV: ADDRESS_CLAMP_TO_EDGE,
-            fixCubemapSeams: false,
             mipmaps: true
         });
 

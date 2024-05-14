@@ -314,7 +314,7 @@ OrbitCamera.prototype._buildAabb = function (entity) {
     for (i = 0; i < gsplats.length; i++) {
         var gsplat = gsplats[i];
         var instance = gsplat.instance;
-        if (instance) {
+        if (instance?.meshInstance) {
             meshInstances.push(instance.meshInstance);
         }
     }

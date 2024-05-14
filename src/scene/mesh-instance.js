@@ -20,6 +20,7 @@ import {
 import { GraphNode } from './graph-node.js';
 import { getDefaultMaterial } from './materials/default-material.js';
 import { LightmapCache } from './graphics/lightmap-cache.js';
+import { DebugGraphics } from '../platform/graphics/debug-graphics.js';
 
 let id = 0;
 const _tmpAabb = new BoundingBox();
@@ -58,11 +59,18 @@ class ShaderInstance {
     shader;
 
     /**
-     * A bind group storing mesh uniforms for the shader.
+     * A bind group storing mesh textures / samplers for the shader. but not the uniform buffer.
      *
      * @type {BindGroup|null}
      */
     bindGroup = null;
+
+    /**
+     * A uniform buffer storing mesh uniforms for the shader.
+     *
+     * @type {UniformBuffer|null}
+     */
+    uniformBuffer = null;
 
     /**
      * Returns the mesh bind group for the shader.
@@ -78,28 +86,43 @@ class ShaderInstance {
             const shader = this.shader;
             Debug.assert(shader);
 
-            // mesh uniform buffer
-            const ubFormat = shader.meshUniformBufferFormat;
-            Debug.assert(ubFormat);
-            const uniformBuffer = new UniformBuffer(device, ubFormat, false);
-
-            // mesh bind group
             const bindGroupFormat = shader.meshBindGroupFormat;
             Debug.assert(bindGroupFormat);
-            this.bindGroup = new BindGroup(device, bindGroupFormat, uniformBuffer);
+            this.bindGroup = new BindGroup(device, bindGroupFormat);
             DebugHelper.setName(this.bindGroup, `MeshBindGroup_${this.bindGroup.id}`);
         }
 
         return this.bindGroup;
     }
 
-    destroy() {
-        const group = this.bindGroup;
-        if (group) {
-            group.defaultUniformBuffer?.destroy();
-            group.destroy();
-            this.bindGroup = null;
+    /**
+     * Returns the uniform buffer for the shader.
+     *
+     * @param {import('../platform/graphics/graphics-device.js').GraphicsDevice} device - The
+     * graphics device.
+     * @returns {UniformBuffer} - The uniform buffer.
+     */
+    getUniformBuffer(device) {
+
+        // create uniform buffer
+        if (!this.uniformBuffer) {
+            const shader = this.shader;
+            Debug.assert(shader);
+
+            const ubFormat = shader.meshUniformBufferFormat;
+            Debug.assert(ubFormat);
+            this.uniformBuffer = new UniformBuffer(device, ubFormat, false);
         }
+
+        return this.uniformBuffer;
+    }
+
+    destroy() {
+        this.bindGroup?.destroy();
+        this.bindGroup = null;
+
+        this.uniformBuffer?.destroy();
+        this.uniformBuffer = null;
     }
 }
 
@@ -205,7 +228,7 @@ class MeshInstance {
      * component is attached to.
      * @example
      * // Create a mesh instance pointing to a 1x1x1 'cube' mesh
-     * const mesh = pc.createBox(graphicsDevice);
+     * const mesh = pc.Mesh.fromGeometry(app.graphicsDevice, new pc.BoxGeometry());
      * const material = new pc.StandardMaterial();
      *
      * const meshInstance = new pc.MeshInstance(mesh, material);
@@ -240,10 +263,13 @@ class MeshInstance {
         this.material = material;   // The material with which to render this instance
 
         this._shaderDefs = MASK_AFFECT_DYNAMIC << 16; // 2 byte toggles, 2 bytes light mask; Default value is no toggles and mask = pc.MASK_AFFECT_DYNAMIC
-        this._shaderDefs |= mesh.vertexBuffer.format.hasUv0 ? SHADERDEF_UV0 : 0;
-        this._shaderDefs |= mesh.vertexBuffer.format.hasUv1 ? SHADERDEF_UV1 : 0;
-        this._shaderDefs |= mesh.vertexBuffer.format.hasColor ? SHADERDEF_VCOLOR : 0;
-        this._shaderDefs |= mesh.vertexBuffer.format.hasTangents ? SHADERDEF_TANGENTS : 0;
+        if (mesh.vertexBuffer) {
+            const format = mesh.vertexBuffer.format;
+            this._shaderDefs |= format.hasUv0 ? SHADERDEF_UV0 : 0;
+            this._shaderDefs |= format.hasUv1 ? SHADERDEF_UV1 : 0;
+            this._shaderDefs |= format.hasColor ? SHADERDEF_VCOLOR : 0;
+            this._shaderDefs |= format.hasTangents ? SHADERDEF_TANGENTS : 0;
+        }
 
         // Render options
         this.layer = LAYER_WORLD; // legacy
@@ -516,8 +542,13 @@ class MeshInstance {
             // cache miss in the material variants
             if (!shaderInstance.shader) {
 
+                // marker to allow us to see the source node for shader alloc
+                DebugGraphics.pushGpuMarker(this.mesh.device, `Node: ${this.node.name}`);
+
                 const shader = mat.getShaderVariant(this.mesh.device, scene, shaderDefs, null, shaderPass, sortedLights,
-                                                    viewUniformFormat, viewBindGroupFormat, this._mesh.vertexBuffer.format);
+                                                    viewUniformFormat, viewBindGroupFormat, this._mesh.vertexBuffer?.format);
+
+                DebugGraphics.popGpuMarker(this.mesh.device);
 
                 // add it to the material variants cache
                 mat.variants.set(variantKey, shader);

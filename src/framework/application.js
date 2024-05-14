@@ -87,8 +87,6 @@ import { XrManager } from './xr/xr-manager.js';
  *
  * If you are using the Engine without the Editor, you have to create the application instance
  * manually.
- *
- * @augments AppBase
  */
 class Application extends AppBase {
     /**
@@ -108,6 +106,9 @@ class Application extends AppBase {
      * handler for input.
      * @param {string} [options.scriptPrefix] - Prefix to apply to script urls before loading.
      * @param {string} [options.assetPrefix] - Prefix to apply to asset urls before loading.
+     * @param {import('../platform/graphics/graphics-device.js').GraphicsDevice} [options.graphicsDevice] - The
+     * graphics device used by the application. If not provided, a WebGl graphics device will be
+     * created.
      * @param {object} [options.graphicsDeviceOptions] - Options object that is passed into the
      * {@link GraphicsDevice} constructor.
      * @param {string[]} [options.scriptsOrder] - Scripts in order of loading first.
@@ -123,7 +124,7 @@ class Application extends AppBase {
 
         const appOptions = new AppOptions();
 
-        appOptions.graphicsDevice = this.createDevice(canvas, options);
+        appOptions.graphicsDevice = options.graphicsDevice ?? this.createDevice(canvas, options);
         this.addComponentSystems(appOptions);
         this.addResourceHandles(appOptions);
 

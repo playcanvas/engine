@@ -22,7 +22,7 @@ import { shaderChunks } from '../shader-lib/chunks/chunks.js';
 import { createShaderFromCode } from '../shader-lib/utils.js';
 import { LightCamera } from './light-camera.js';
 import { UniformBufferFormat, UniformFormat } from '../../platform/graphics/uniform-buffer-format.js';
-import { BindBufferFormat, BindGroupFormat } from '../../platform/graphics/bind-group-format.js';
+import { BindUniformBufferFormat, BindGroupFormat } from '../../platform/graphics/bind-group-format.js';
 import { BlendState } from '../../platform/graphics/blend-state.js';
 
 function gauss(x, sigma) {
@@ -81,9 +81,6 @@ class ShadowRenderer {
 
         const scope = this.device.scope;
 
-        this.polygonOffsetId = scope.resolve('polygonOffset');
-        this.polygonOffset = new Float32Array(2);
-
         // VSM
         this.sourceId = scope.resolve('source');
         this.pixelOffsetId = scope.resolve('pixelOffset');
@@ -133,7 +130,7 @@ class ShadowRenderer {
 
         // normal omni shadows on webgl2 encode depth in RGBA8 and do manual PCF sampling
         // clustered omni shadows on webgl2 use depth format and hardware PCF sampling
-        let hwPcf = shadowType === SHADOW_PCF5 || ((shadowType === SHADOW_PCF1 || shadowType === SHADOW_PCF3) && device.supportsDepthShadow);
+        let hwPcf = shadowType === SHADOW_PCF5 || shadowType === SHADOW_PCF1 || shadowType === SHADOW_PCF3;
         if (type === LIGHTTYPE_OMNI && !isClustered) {
             hwPcf = false;
         }
@@ -204,19 +201,6 @@ class ShadowRenderer {
     }
 
     setupRenderState(device, light) {
-
-        // webgl1 depth bias (not rendering to a shadow map, so cannot use hardware depth bias)
-        if (device.isWebGL1 && device.extStandardDerivatives) {
-            if (light._type === LIGHTTYPE_OMNI) {
-                this.polygonOffset[0] = 0;
-                this.polygonOffset[1] = 0;
-                this.polygonOffsetId.setValue(this.polygonOffset);
-            } else {
-                this.polygonOffset[0] = light.shadowBias * -1000.0;
-                this.polygonOffset[1] = light.shadowBias * -1000.0;
-                this.polygonOffsetId.setValue(this.polygonOffset);
-            }
-        }
 
         // Set standard shadowmap states
         const isClustered = this.renderer.scene.clusteredLightingEnabled;
@@ -579,8 +563,7 @@ class ShadowRenderer {
 
             // format of the view bind group - contains single uniform buffer, and no textures
             this.viewBindGroupFormat = new BindGroupFormat(this.device, [
-                new BindBufferFormat(UNIFORM_BUFFER_DEFAULT_SLOT_NAME, SHADERSTAGE_VERTEX | SHADERSTAGE_FRAGMENT)
-            ], [
+                new BindUniformBufferFormat(UNIFORM_BUFFER_DEFAULT_SLOT_NAME, SHADERSTAGE_VERTEX | SHADERSTAGE_FRAGMENT)
             ]);
         }
     }

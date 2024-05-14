@@ -240,6 +240,8 @@ class LitShaderOptions {
 
     useDynamicRefraction = false;
 
+    dispersion = false;
+
     /**
      * The type of fog being applied in the shader. See {@link Scene#fog} for the list of possible
      * values.
@@ -263,14 +265,6 @@ class LitShaderOptions {
      * @type {number}
      */
     toneMap = -1;
-
-    /**
-     * If cubemaps require seam fixing (see the `fixCubemapSeams` property of the options object
-     * passed to the {@link Texture} constructor).
-     *
-     * @type {boolean}
-     */
-    fixSeams = false;
 
     /**
      * One of "envAtlasHQ", "envAtlas", "cubeMap", "sphereMap".

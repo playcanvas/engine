@@ -41,7 +41,7 @@ PlayCanvas 是一款使用 HTML5 和 WebGL 技术运行游戏以及其他 3D 内
 
 PlayCanvas 是一款优秀的全功能游戏引擎。
 
-- 🧊 **图形** - 基于 WebGL1&2 的超前 2D + 3D 图形引擎
+- 🧊 **图形** - 基于 WebGL2 的超前 2D + 3D 图形引擎
 - 🏃 **动画** - 基于状态的强大动画功能，有效展现动画角色和随机场景属性
 - ⚛️ **物理** - 一体化的 3D 刚体物理引擎 [ammo.js](https://github.com/kripken/ammo.js)
 - 🎮 **输入** - 支持鼠标，键盘，触控，游戏控制器以及众多 VR 控制器 API
@@ -53,108 +53,67 @@ PlayCanvas 是一款优秀的全功能游戏引擎。
 
 以下为一个简单的使用案例 - 实现一个旋转的立方体！
 
-```html
-<!DOCTYPE html>
-<html>
-  <head>
-    <meta charset="utf-8" />
-    <title>PlayCanvas Hello Cube</title>
-    <meta
-      name="viewport"
-      content="width=device-width, initial-scale=1, maximum-scale=1, minimum-scale=1, user-scalable=no"
-    />
-    <style>
-      body {
-        margin: 0;
-        overflow: hidden;
-      }
-    </style>
-    <script src="https://code.playcanvas.com/playcanvas-stable.min.js"></script>
-  </head>
-  <body>
-    <canvas id="application"></canvas>
-    <script>
-      // 创建一个PlayCanvas应用
-      const canvas = document.getElementById("application");
-      const app = new pc.Application(canvas);
+```js
+import * as pc from 'playcanvas';
 
-      // 在全屏模式下填满可用空间
-      app.setCanvasFillMode(pc.FILLMODE_FILL_WINDOW);
-      app.setCanvasResolution(pc.RESOLUTION_AUTO);
+// 创建一个PlayCanvas应用
+const canvas = document.createElement('canvas');
+document.body.appendChild(canvas);
 
-      // 确保在窗口尺寸变化同时画布也同时改变其大小
-      window.addEventListener("resize", () => app.resizeCanvas());
+const app = new pc.Application(canvas);
 
-      // 创建一个立方体
-      const box = new pc.Entity("cube");
-      box.addComponent("render", {
-        type: "box",
-      });
-      app.root.addChild(box);
+// 在全屏模式下填满可用空间
+app.setCanvasFillMode(pc.FILLMODE_FILL_WINDOW);
+app.setCanvasResolution(pc.RESOLUTION_AUTO);
 
-      // 创建一个摄像头
-      const camera = new pc.Entity("camera");
-      camera.addComponent("camera", {
-        clearColor: new pc.Color(0.1, 0.1, 0.1),
-      });
-      app.root.addChild(camera);
-      camera.setPosition(0, 0, 3);
+// 确保在窗口尺寸变化同时画布也同时改变其大小
+window.addEventListener('resize', () => app.resizeCanvas());
 
-      // 创建一个指向灯
-      const light = new pc.Entity("light");
-      light.addComponent("light");
-      app.root.addChild(light);
-      light.setEulerAngles(45, 0, 0);
+// 创建一个立方体
+const box = new pc.Entity('cube');
+box.addComponent('model', {
+  type: 'box'
+});
+app.root.addChild(box);
 
-      // 根据立方体的时间增量旋转立方体
-      app.on("update", (dt) => box.rotate(10 * dt, 20 * dt, 30 * dt));
+// 创建一个摄像头
+const camera = new pc.Entity('camera');
+camera.addComponent('camera', {
+  clearColor: new pc.Color(0.1, 0.2, 0.3)
+});
+app.root.addChild(camera);
+camera.setPosition(0, 0, 3);
 
-      app.start();
-    </script>
-  </body>
-</html>
+// 创建一个指向灯
+const light = new pc.Entity('light');
+light.addComponent('light');
+app.root.addChild(light);
+light.setEulerAngles(45, 0, 0);
+
+// 根据立方体的时间增量旋转立方体
+app.on('update', dt => box.rotate(10 * dt, 20 * dt, 30 * dt));
+
+app.start();
 ```
 
 想要自己动手试试？点击 [CodePen](https://codepen.io/playcanvas/pen/NPbxMj).
 
+基于 PlayCanvas 引擎设置本地开发环境的完整指南可以在[这里](https://developer.playcanvas.com/user-manual/engine/standalone/)找到。
+
 ## 如何搭建项目
 
-确保已安装 [Node.js](https://nodejs.org) ，并安装 Node.js 相关依赖组件。
+确保已安装 [Node.js 18+](https://nodejs.org) ，并安装 Node.js 相关依赖组件。
 
-    npm install
+```sh
+npm install
+```
 
 现在您就可以运行不同的搭建选项了：
 
-| Command               | Description                               | Outputs                          |
-|-----------------------|-------------------------------------------|----------------------------------|
-| `npm run build`       | Build release, debug and profiler engines | `build\playcanvas[.dbg/.prf].js` |
-| `npm run build:types` | Build engine Typescript bindings          | `build\playcanvas.d.ts`          |
-| `npm run docs`        | Build engine [API reference docs][docs]   | `docs`                           |
-
-您也可以使用 PlayCanvas 的预搭建版本
-
-最新的开发版本：
-
-- https://code.playcanvas.com/playcanvas-latest.js
-- https://code.playcanvas.com/playcanvas-latest.min.js
-
-最新的稳定版本：
-
-- https://code.playcanvas.com/playcanvas-stable.js
-- https://code.playcanvas.com/playcanvas-stable.min.js
-
-特定引擎版本：
-
-- https://code.playcanvas.com/playcanvas-1.38.4.js
-- https://code.playcanvas.com/playcanvas-1.38.4.min.js
-
-### 生成 Source Maps
-
-您可以在任何构建指令之后添加 `-- -m` 来生成 Source map 更好更方便地对引擎进行调试和排错：
-
-    npm run build -- -m
-
-此条指令将会将结果输出到 `build/playcanvas.js.map`
+| 命令            | 描述                         | 输出到     |
+| --------------- | --------------------------- | ---------- |
+| `npm run build` | 构建所有引擎构建目标和类型声明 | `build`    |
+| `npm run docs`  | 构建引擎[API参考文档][docs]   | `docs`     |
 
 ## PlayCanvas 平台
 
@@ -175,4 +134,4 @@ The PlayCanvas Engine is released under the [MIT](https://opensource.org/license
 [isitmaintained-url]: https://isitmaintained.com/project/playcanvas/engine
 [twitter-badge]: https://img.shields.io/twitter/follow/playcanvas.svg?style=social&label=Follow
 [twitter-url]: https://twitter.com/intent/follow?screen_name=playcanvas
-[docs]: https://developer.playcanvas.com/en/api/
+[docs]: https://api.playcanvas.com/modules/Engine.html

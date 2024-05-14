@@ -37,7 +37,7 @@ function getReservedScriptNames() {
  * @param {AppBase} [app] - Optional application handler, to choose which {@link ScriptRegistry}
  * to add a script to. By default it will use `Application.getApplication()` to get current
  * {@link AppBase}.
- * @returns {Class<ScriptType>|null} A class type (constructor function) that inherits {@link ScriptType},
+ * @returns {typeof ScriptType|null} A class type (constructor function) that inherits {@link ScriptType},
  * which the developer is meant to further extend by adding attributes and prototype methods.
  * Returns null if there was an error.
  * @example
@@ -92,7 +92,7 @@ createScript.reservedAttributes = reservedAttributes;
  * Register a existing class type as a Script Type to {@link ScriptRegistry}. Useful when defining
  * a ES6 script class that extends {@link ScriptType} (see example).
  *
- * @param {Class<ScriptType>} script - The existing class type (constructor function) to be
+ * @param {typeof ScriptType} script - The existing class type (constructor function) to be
  * registered as a Script Type. Class must extend {@link ScriptType} (see example). Please note: A
  * class created using {@link createScript} is auto-registered, and should therefore not be pass
  * into {@link registerScript} (which would result in swapping out all related script instances).

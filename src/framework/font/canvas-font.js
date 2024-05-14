@@ -56,7 +56,6 @@ class Atlas {
 /**
  * Represents the resource of a canvas font asset.
  *
- * @augments EventHandler
  * @ignore
  */
 class CanvasFont extends EventHandler {

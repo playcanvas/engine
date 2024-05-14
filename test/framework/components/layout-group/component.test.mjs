@@ -1,6 +1,7 @@
 import { ELEMENTTYPE_GROUP } from '../../../../src/framework/components/element/constants.js';
 import { Application } from '../../../../src/framework/application.js';
 import { Entity } from '../../../../src/framework/entity.js';
+import { NullGraphicsDevice } from '../../../../src/platform/graphics/null/null-graphics-device.js';
 
 import { HTMLCanvasElement } from '@playcanvas/canvas-mock';
 
@@ -32,7 +33,7 @@ describe('LayoutGroupComponent', function () {
 
     beforeEach(function () {
         const canvas = new HTMLCanvasElement(500, 500);
-        app = new Application(canvas);
+        app = new Application(canvas, { graphicsDevice: new NullGraphicsDevice(canvas) });
         system = app.systems.layoutgroup;
 
         entity0 = buildLayoutGroupEntity('0');

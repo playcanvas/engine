@@ -1,9 +1,6 @@
-import date from 'date-and-time';
-import * as fs from 'node:fs';
-import fse from 'fs-extra';
-import { fileURLToPath } from 'node:url';
-import path from 'node:path';
-import { exec } from 'node:child_process';
+import fs from 'fs';
+import path from 'path';
+import { execSync } from 'child_process';
 
 // 1st party Rollup plugins
 import alias from '@rollup/plugin-alias';
@@ -11,21 +8,28 @@ import commonjs from "@rollup/plugin-commonjs";
 import replace from '@rollup/plugin-replace';
 import resolve from "@rollup/plugin-node-resolve";
 import terser from '@rollup/plugin-terser';
-import { buildTargetRTI } from '../utils/rollup-build-target-rti.mjs';
 
+// custom plugins
+import { copyStatic } from './utils/plugins/rollup-copy-static.mjs';
+import { generateStandalone } from './utils/plugins/rollup-generate-standalone.mjs';
+
+// engine rollup utils
 import { buildTarget } from '../utils/rollup-build-target.mjs';
-import { scriptTargetEs6 } from '../utils/rollup-script-target-es6.mjs';
 
-/** @typedef {import('rollup').RollupOptions} RollupOptions */
-/** @typedef {import('rollup').Plugin} RollupPlugin */
+// util functions
+import { isModuleWithExternalDependencies } from './utils/utils.mjs';
 
-const __dirname = path.dirname(fileURLToPath(import.meta.url));
+const NODE_ENV = process.env.NODE_ENV ?? '';
+const ENGINE_PATH = !process.env.ENGINE_PATH && NODE_ENV === 'development' ?
+    '../src/index.js' :
+    process.env.ENGINE_PATH ?? '';
 
 const PCUI_PATH = process.env.PCUI_PATH || 'node_modules/@playcanvas/pcui';
 const PCUI_REACT_PATH = path.resolve(PCUI_PATH, 'react');
 const PCUI_STYLES_PATH = path.resolve(PCUI_PATH, 'styles');
 
-const staticFiles = [
+
+const STATIC_FILES = [
     // static main page src
     { src: './src/static', dest: 'dist/' },
 
@@ -33,13 +37,13 @@ const staticFiles = [
     { src: './iframe', dest: 'dist/iframe' },
 
     // assets used in examples
-    { src: './assets', dest: 'dist/static/assets/' },
+    { src: './assets', dest: 'dist/static/assets/', once: true },
 
     // thumbnails used in examples
-    { src: './thumbnails', dest: 'dist/thumbnails/' },
+    { src: './thumbnails', dest: 'dist/thumbnails/', once: true },
 
     // external libraries used in examples
-    { src: './src/lib', dest: 'dist/static/lib/' },
+    { src: './src/lib', dest: 'dist/static/lib/', once: true },
 
     // engine scripts
     { src: '../scripts', dest: 'dist/static/scripts/' },
@@ -48,155 +52,110 @@ const staticFiles = [
     { src: '../build/playcanvas.d.ts', dest: 'dist/playcanvas.d.ts' },
 
     // playcanvas observer
-    { src: './node_modules/@playcanvas/observer/dist/index.mjs', dest: 'dist/iframe/playcanvas-observer.mjs' },
+    { src: './node_modules/@playcanvas/observer/dist/index.mjs', dest: 'dist/iframe/playcanvas-observer.mjs', once: true },
 
     // modules (N.B. destination folder is 'modules' as 'node_modules' are automatically excluded by git pages)
-    { src: './node_modules/monaco-editor/min/vs', dest: 'dist/modules/monaco-editor/min/vs' },
-    // N.B. fflate will not be needed once extras module is rolled up
-    { src: '../node_modules/fflate/esm/', dest: 'dist/modules/fflate/esm' }
+    { src: './node_modules/monaco-editor/min/vs', dest: 'dist/modules/monaco-editor/min/vs', once: true },
+
+    // fflate (for when using ENGINE_PATH)
+    { src: '../node_modules/fflate/esm/', dest: 'dist/modules/fflate/esm', once: true },
+
+    // engine path
+    ...getEnginePathFiles()
 ];
 
-const regexpExportStarFrom =  /^\s*export\s*\*\s*from\s*.+\s*;\s*$/gm;
-const regexpExportFrom     =  /^\s*export\s*{.*}\s*from\s*.+\s*;\s*$/gm;
-const regexpImport         =  /^\s*import\s*.+\s*;\s*$/gm;
-/**
- * If one of this RegExp's match, it's likely an ESM with external dependencies.
- * @example
- * isModuleWithExternalDependencies(`
- *    // Testing variants:
- *    export * from './index.mjs';
- *    export { Ray } from './core/shape/ray.js';
- *    import './polyfill/OESVertexArrayObject.js';
- *`);
- * @param {string} content - The file content to test.
- * @returns {boolean} Whether content is a module.
- */
-function isModuleWithExternalDependencies(content) {
-    const a = regexpExportStarFrom.test(content);
-    const b = regexpExportFrom.test(content);
-    const c = regexpImport.test(content);
-    // console.log('isModuleWithExternalDependencies', { a, b, c });
-    return a || b || c;
-}
+function getEnginePathFiles() {
+    if (!ENGINE_PATH) {
+        return [];
+    }
 
-const { NODE_ENV = '' } = process.env;
-let { ENGINE_PATH = '', RTI = '' } = process.env;
-
-// If we don't set ENGINE_PATH and NODE_ENV is 'development', we use ../src/index.js, which
-// requires no additional build shells.
-if (!ENGINE_PATH && NODE_ENV === 'development') {
-    ENGINE_PATH = '../src/index.js';
-}
-
-if (ENGINE_PATH) {
     const src = path.resolve(ENGINE_PATH);
     const content = fs.readFileSync(src, 'utf8');
-    const copyDir = isModuleWithExternalDependencies(content);
-    if (copyDir) {
-        // Copy entire folder for MJS versions with external dependencies
+    const isUnpacked = isModuleWithExternalDependencies(content);
+    if (isUnpacked) {
         const srcDir = path.dirname(src);
         const dest = 'dist/iframe/ENGINE_PATH';
-        staticFiles.push({ src: srcDir, dest });
-    } else {
-        // This can be both UMD/ESM as a single file
-        const entryPoint = ENGINE_PATH.split("/").pop();
-        const dest = 'dist/iframe/ENGINE_PATH/' + entryPoint;
-        staticFiles.push({ src, dest });
+        return [{ src: srcDir, dest }];
+    }
+
+    // packed module builds
+    const dest = 'dist/iframe/ENGINE_PATH/index.js';
+    return [{ src, dest }];
+}
+
+function checkAppEngine() {
+    // types
+    if (!fs.existsSync('../build/playcanvas.d.ts')) {
+        const cmd = `npm run build target:types --prefix ../`;
+        console.log("\x1b[32m%s\x1b[0m", cmd);
+        execSync(cmd);
+    }
+
+    // engine
+    if (!fs.existsSync('../build/playcanvas/src/index.js')) {
+        const cmd = `npm run build target:esm:release:unbundled --prefix ../`;
+        console.log("\x1b[32m%s\x1b[0m", cmd);
+        execSync(cmd);
     }
 }
 
-function timestamp() {
-    return {
-        name: 'timestamp',
-        writeBundle() {
-            console.log("\x1b[32m", "Finished at: " + date.format(new Date(), 'HH:mm:ss'));
-        }
-    };
-}
+function getEngineTargets() {
+    // Checks for types and engien for app building
+    checkAppEngine();
 
-/**
- * @param {import('rollup').Plugin} plugin - The Rollup plugin.
- * @param {string} src - File or path to watch.
- */
-function watch(plugin, src) {
-    const srcStats = fs.statSync(src);
-    if (srcStats.isFile()) {
-        plugin.addWatchFile(path.resolve(__dirname, src));
-        return;
+    const targets = [];
+    if (ENGINE_PATH) {
+        return targets;
     }
-    const filesToWatch = fs.readdirSync(src);
-    for (const file of filesToWatch) {
-        const fullPath = path.join(src, file);
-        const stats = fs.statSync(fullPath);
-        if (stats.isFile()) {
-            plugin.addWatchFile(path.resolve(__dirname, fullPath));
-        } else if (stats.isDirectory()) {
-            watch(plugin, fullPath);
-        }
+    if (NODE_ENV === 'production') {
+        // Outputs: dist/iframe/playcanvas.mjs
+        targets.push(...buildTarget({
+            moduleFormat: 'esm',
+            buildType: 'release',
+            bundleState: 'unbundled',
+            input: '../src/index.js',
+            dir: 'dist/iframe'
+        }));
     }
+    if (NODE_ENV === 'production' || NODE_ENV === 'development') {
+        // Outputs: dist/iframe/playcanvas.dbg.mjs
+        targets.push(...buildTarget({
+            moduleFormat: 'esm',
+            buildType: 'debug',
+            bundleState: 'unbundled',
+            input: '../src/index.js',
+            dir: 'dist/iframe'
+        }));
+    }
+    if (NODE_ENV === 'production' || NODE_ENV === 'profiler') {
+        // Outputs: dist/iframe/playcanvas.prf.mjs
+        targets.push(...buildTarget({
+            moduleFormat: 'esm',
+            buildType: 'profiler',
+            bundleState: 'unbundled',
+            input: '../src/index.js',
+            dir: 'dist/iframe'
+        }));
+    }
+    return targets;
 }
 
-/**
- * This plugin copies static files from source to destination.
- *
- * @param {staticFiles} targets - Array of source and destination objects.
- * @returns {RollupPlugin} The plugin.
- */
-function copyStaticFiles(targets) {
-    return {
-        name: 'copy-and-watch',
-        load() {
-            return 'console.log("This temp file is created when copying static files, it should be removed during the build process.");';
+export default [
+    {
+        // used as a placeholder
+        input: 'src/static/index.html',
+        output: {
+            file: `cache/output.tmp`
         },
-        buildStart() {
-            if (NODE_ENV === 'development') {
-                targets.forEach((target) => {
-                    watch(this, target.src);
-                });
-            }
+        watch: {
+            skipWrite: true
         },
-        generateBundle() {
-            targets.forEach((target) => {
-                fse.copySync(target.src, target.dest, { overwrite: true });
-            });
-        },
-        writeBundle() {
-            fs.unlinkSync('dist/copy.tmp');
-        }
-    };
-}
-
-/**
- * This plugin builds the standalone html files.
- *
- * @returns {RollupPlugin} The plugin.
- */
-function buildAndWatchStandaloneExamples() {
-    return {
-        name: 'build-and-watch-standalone-examples',
-        buildStart() {
-            if (NODE_ENV === 'development') {
-                watch(this, 'iframe/example.html');
-                watch(this, 'scripts/standalone-html.mjs');
-                watch(this, 'src/examples');
-            }
-        },
-        generateBundle() {
-            const cmd = `cross-env NODE_ENV=${NODE_ENV} ENGINE_PATH=${ENGINE_PATH} RTI=${RTI} npm run build:standalone`;
-            console.log(cmd);
-            exec(cmd);
-        }
-    };
-}
-
-// define supported module overrides
-const aliasEntries = {
-    '@playcanvas/pcui/react': PCUI_REACT_PATH,
-    '@playcanvas/pcui/styles': PCUI_STYLES_PATH
-};
-
-/** @type {RollupOptions[]} */
-const targets = [
+        treeshake: false,
+        plugins: [
+            generateStandalone(NODE_ENV, ENGINE_PATH),
+            copyStatic(NODE_ENV, STATIC_FILES)
+        ]
+    },
     {
         // A debug build is ~2.3MB and a release build ~0.6MB
         input: 'src/app/index.mjs',
@@ -205,7 +164,13 @@ const targets = [
             format: 'umd'
         },
         plugins: [
-            alias({ entries: aliasEntries }),
+            alias({
+                entries: {
+                    // define supported module overrides
+                    '@playcanvas/pcui/react': PCUI_REACT_PATH,
+                    '@playcanvas/pcui/styles': PCUI_STYLES_PATH
+                }
+            }),
             commonjs(),
             resolve(),
             replace({
@@ -214,49 +179,8 @@ const targets = [
                 },
                 preventAssignment: true
             }),
-            (NODE_ENV === 'production' && terser()),
-            timestamp()
+            (NODE_ENV === 'production' && terser())
         ]
     },
-    {
-        input: 'src/static/index.html',
-        output: {
-            file: `dist/copy.tmp`
-        },
-        plugins: [
-            copyStaticFiles(staticFiles),
-            buildAndWatchStandaloneExamples(),
-            timestamp()
-        ]
-    },
-    scriptTargetEs6('pcx', '../extras/index.js', 'dist/iframe/playcanvas-extras.mjs')
+    ...getEngineTargets()
 ];
-if (process.env.RTI) {
-    targets.push(buildTargetRTI('es6', '../src/index.rti.js', 'dist/iframe/ENGINE_PATH'));
-}
-// We skip building PlayCanvas ourselves when ENGINE_PATH is given.
-// In that case we have a watcher which copies all necessary files.
-if (ENGINE_PATH === '') {
-    /** @type {buildTarget} */
-    const pushTarget = (...args) => {
-        targets.push(buildTarget(...args));
-    };
-    if (NODE_ENV === 'production') {
-        // Outputs: dist/iframe/playcanvas.mjs
-        pushTarget('release', 'es6', '../src/index.js', 'dist/iframe');
-        // Outputs: dist/iframe/playcanvas.dbg.mjs
-        pushTarget('debug', 'es6', '../src/index.js', 'dist/iframe');
-        // Outputs: dist/iframe/playcanvas.prf.mjs
-        pushTarget('profiler', 'es6', '../src/index.js', 'dist/iframe');
-    } else if (NODE_ENV === 'development') {
-        // Outputs: dist/iframe/playcanvas.dbg.mjs
-        pushTarget('debug', 'es6', '../src/index.js', 'dist/iframe');
-    } else if (NODE_ENV === 'profiler') {
-        // Outputs: dist/iframe/playcanvas.prf.mjs
-        pushTarget('profiler', 'es6', '../src/index.js', 'dist/iframe');
-    } else {
-        console.warn("NODE_ENV is neither production, development nor profiler.");
-    }
-}
-
-export default targets;

@@ -7,7 +7,6 @@ import { Quat } from '../../core/math/quat.js';
 import { Vec3 } from '../../core/math/vec3.js';
 
 import { XRTYPE_INLINE, XRTYPE_VR, XRTYPE_AR, XRDEPTHSENSINGUSAGE_CPU, XRDEPTHSENSINGFORMAT_L8A8 } from './constants.js';
-import { DEVICETYPE_WEBGL1, DEVICETYPE_WEBGL2 } from '../../platform/graphics/constants.js';
 import { XrDepthSensing } from './xr-depth-sensing.js';
 import { XrDomOverlay } from './xr-dom-overlay.js';
 import { XrHitTest } from './xr-hit-test.js';
@@ -36,7 +35,6 @@ import { XrViews } from './xr-views.js';
 /**
  * Manage and update XR session and its states.
  *
- * @augments EventHandler
  * @category XR
  */
 class XrManager extends EventHandler {
@@ -293,7 +291,7 @@ class XrManager extends EventHandler {
      * Create a new XrManager instance.
      *
      * @param {import('../app-base.js').AppBase} app - The main application.
-     * @hideconstructor
+     * @ignore
      */
     constructor(app) {
         super();
@@ -450,7 +448,7 @@ class XrManager extends EventHandler {
             optionalFeatures: []
         };
 
-        const webgl = this.app.graphicsDevice?.isWebGL1 || this.app.graphicsDevice?.isWebGL2;
+        const webgl = this.app.graphicsDevice?.isWebGL2;
 
         if (type === XRTYPE_AR) {
             opts.optionalFeatures.push('light-estimation');
@@ -802,8 +800,7 @@ class XrManager extends EventHandler {
             antialias: false
         });
 
-        const deviceType = device.deviceType;
-        if ((deviceType === DEVICETYPE_WEBGL1 || deviceType === DEVICETYPE_WEBGL2) && window.XRWebGLBinding) {
+        if (device?.isWebGL2 && window.XRWebGLBinding) {
             try {
                 this.webglBinding = new XRWebGLBinding(this._session, device.gl); // eslint-disable-line no-undef
             } catch (ex) {

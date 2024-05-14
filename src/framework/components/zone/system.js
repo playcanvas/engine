@@ -11,7 +11,6 @@ const _schema = ['enabled'];
 /**
  * Creates and manages {@link ZoneComponent} instances.
  *
- * @augments ComponentSystem
  * @ignore
  */
 class ZoneComponentSystem extends ComponentSystem {
@@ -19,7 +18,7 @@ class ZoneComponentSystem extends ComponentSystem {
      * Create a new ZoneComponentSystem.
      *
      * @param {import('../../app-base.js').AppBase} app - The application.
-     * @hideconstructor
+     * @ignore
      */
     constructor(app) {
         super(app);

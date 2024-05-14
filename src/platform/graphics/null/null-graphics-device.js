@@ -1,6 +1,6 @@
 import { Debug } from '../../../core/debug.js';
 import {
-    PIXELFORMAT_RGBA8, DEVICETYPE_NULL
+    DEVICETYPE_NULL
 } from '../constants.js';
 import { GraphicsDevice } from '../graphics-device.js';
 
@@ -39,26 +39,13 @@ class NullGraphicsDevice extends GraphicsDevice {
         this.maxColorAttachments = 8;
         this.maxPixelRatio = 1;
         this.maxAnisotropy = 16;
-        this.supportsInstancing = true;
         this.supportsUniformBuffers = false;
-        this.supportsVolumeTextures = true;
-        this.supportsBoneTextures = true;
         this.supportsMorphTargetTexturesCore = true;
         this.supportsAreaLights = true;
-        this.supportsDepthShadow = true;
         this.supportsGpuParticles = false;
-        this.supportsMrt = true;
-        this.extUintElement = true;
-        this.extTextureFloat = true;
         this.textureFloatRenderable = true;
-        this.extTextureHalfFloat = true;
         this.textureHalfFloatRenderable = true;
-        this.textureHalfFloatUpdatable = true;
-        this.boneLimit = 1024;
         this.supportsImageBitmap = true;
-        this.extStandardDerivatives = true;
-        this.extBlendMinmax = true;
-        this.areaLightLutFormat = PIXELFORMAT_RGBA8;
         this.supportsTextureFetch = true;
     }
 
@@ -106,7 +93,7 @@ class NullGraphicsDevice extends GraphicsDevice {
     draw(primitive, numInstances = 1, keepBuffers) {
     }
 
-    setShader(shader) {
+    setShader(shader, asyncCompile = false) {
     }
 
     setBlendState(blendState) {

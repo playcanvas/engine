@@ -2,7 +2,6 @@ import { Debug } from '../../core/debug.js';
 import { Tracing } from '../../core/tracing.js';
 import { Color } from '../../core/math/color.js';
 import { TRACEID_RENDER_PASS, TRACEID_RENDER_PASS_DETAIL } from '../../core/constants.js';
-import { DebugGraphics } from '../graphics/debug-graphics.js';
 
 class ColorAttachmentOps {
     /**
@@ -360,7 +359,6 @@ class RenderPass {
 
             const device = this.device;
             const realPass = this.renderTarget !== undefined;
-            DebugGraphics.pushGpuMarker(device, `Pass:${this.name}`);
 
             Debug.call(() => {
                 this.log(device, device.renderPassIndex);
@@ -384,13 +382,11 @@ class RenderPass {
             this.after();
 
             device.renderPassIndex++;
-
-            DebugGraphics.popGpuMarker(device);
         }
     }
 
     // #if _DEBUG
-    log(device, index) {
+    log(device, index = 0) {
         if (Tracing.get(TRACEID_RENDER_PASS) || Tracing.get(TRACEID_RENDER_PASS_DETAIL)) {
 
             const rt = this.renderTarget ?? (this.renderTarget === null ? device.backBuffer : null);

@@ -32,22 +32,14 @@ varying vec2 vUv0;
 // params:
 // x - target cubemap face 0..6
 // y - specular power (when prefiltering)
-// z - source cubemap seam scale (0 to disable)
-// w - target cubemap size for seam calc (0 to disable)
+// z - target image total pixels
+// w - source cubemap size
 uniform vec4 params;
-
-// params2:
-// x - target image total pixels
-// y - source cubemap size
-uniform vec2 params2;
 
 float targetFace() { return params.x; }
 float specularPower() { return params.y; }
-float sourceCubeSeamScale() { return params.z; }
-float targetCubeSeamScale() { return params.w; }
-
-float targetTotalPixels() { return params2.x; }
-float sourceTotalPixels() { return params2.y; }
+float targetTotalPixels() { return params.z; }
+float sourceTotalPixels() { return params.w; }
 
 float PI = 3.141592653589793;
 
@@ -122,7 +114,7 @@ vec2 octEncode(in vec3 v) {
 
 #ifdef CUBEMAP_SOURCE
     vec4 sampleCubemap(vec3 dir) {
-        return textureCube(sourceCube, modifySeams(dir, 1.0 - sourceCubeSeamScale()));
+        return textureCube(sourceCube, modifySeams(dir, 1.0));
     }
 
     vec4 sampleCubemap(vec2 sph) {
@@ -130,7 +122,7 @@ vec2 octEncode(in vec3 v) {
 }
 
     vec4 sampleCubemap(vec3 dir, float mipLevel) {
-        return textureCubeLodEXT(sourceCube, modifySeams(dir, 1.0 - exp2(mipLevel) * sourceCubeSeamScale()), mipLevel);
+        return textureCubeLodEXT(sourceCube, modifySeams(dir, 1.0), mipLevel);
     }
 
     vec4 sampleCubemap(vec2 sph, float mipLevel) {
@@ -195,7 +187,7 @@ vec3 getDirectionCubemap() {
         vec = vec3(-st.x, -st.y, -1);
     }
 
-    return normalize(modifySeams(vec, 1.0 / (1.0 - targetCubeSeamScale())));
+    return normalize(modifySeams(vec, 1.0));
 }
 
 mat3 matrixFromVector(vec3 n) { // frisvad

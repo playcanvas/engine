@@ -1,83 +1,115 @@
 import * as fs from 'node:fs';
-import { exec } from 'node:child_process';
 import { version, revision } from './utils/rollup-version-revision.mjs';
 import { buildTarget } from './utils/rollup-build-target.mjs';
-import { scriptTarget } from './utils/rollup-script-target.mjs';
-import { scriptTargetEs6 } from './utils/rollup-script-target-es6.mjs';
-import { buildTargetRTI } from './utils/rollup-build-target-rti.mjs';
 
-// 3rd party Rollup plugins
+// unofficial package plugins
 import dts from 'rollup-plugin-dts';
+
+// custom plugins
+import { runTsc } from './utils/plugins/rollup-run-tsc.mjs';
+import { typesFixup } from './utils/plugins/rollup-types-fixup.mjs';
 
 /** @typedef {import('rollup').RollupOptions} RollupOptions */
 
-console.log(`Building PlayCanvas Engine v${version} revision ${revision}`);
+const BLUE_OUT = '\x1b[34m';
+const RED_OUT = '\x1b[31m';
+const BOLD_OUT = `\x1b[1m`;
+const REGULAR_OUT = `\x1b[22m`;
+const RESET_OUT = `\x1b[0m`;
 
-const target_extras = [
-    scriptTarget('pcx', 'extras/index.js', 'build/playcanvas-extras.js'),
-    scriptTargetEs6('pcx', 'extras/index.js', 'build/playcanvas-extras'),
-    scriptTarget('VoxParser', 'scripts/parsers/vox-parser.mjs')
-];
+/**
+ * @type {['release', 'debug', 'profiler', 'min']}
+ */
+const BUILD_TYPES = ['release', 'debug', 'profiler', 'min'];
 
-/** @type {RollupOptions} */
-const target_types = {
-    input: 'types/index.d.ts',
+/**
+ * @type {['umd', 'esm']}
+ */
+const MODULE_FORMAT = ['umd', 'esm'];
+
+/**
+ * @type {['unbundled', 'bundled']}
+ */
+const BUNDLE_STATES = ['unbundled', 'bundled'];
+
+/**
+ * @type {RollupOptions[]}
+ */
+const TYPES_TARGET = [{
+    input: 'build/playcanvas/src/index.d.ts',
     output: [{
         file: 'build/playcanvas.d.ts',
-        footer: 'export as namespace pc;',
+        footer: 'export as namespace pc;\nexport as namespace pcx;',
         format: 'es'
     }],
     plugins: [
+        runTsc('tsconfig.build.json'),
+        typesFixup(),
         dts()
     ]
-};
+}];
 
-function buildTypes() {
-    const start = Date.now();
-    const child = exec('npm run build:types');
-    child.on('exit', function () {
-        const end = Date.now();
-        const delta = (end - start) / 1000;
-        console.log(`created build/playcanvas.d.ts in ${delta}s`);
-    });
+
+const envTarget = process.env.target ? process.env.target.toLowerCase() : null;
+
+const title = [
+    `Building PlayCanvas Engine`,
+    `version ${BOLD_OUT}v${version}${REGULAR_OUT}`,
+    `revision ${BOLD_OUT}${revision}${REGULAR_OUT}`,
+    `target ${BOLD_OUT}${envTarget ?? 'all'}${REGULAR_OUT}`
+].join('\n');
+console.log(`${BLUE_OUT}${title}${RESET_OUT}`);
+
+if (envTarget === null && fs.existsSync('build')) {
+    // no targets specified, clean build directory
+    fs.rmSync('build', { recursive: true });
 }
 
-export default (args) => {
-    /** @type {RollupOptions[]} */
-    const targets = [];
+function includeBuild(buildType, moduleFormat, bundleState) {
+    return envTarget === null ||
+        envTarget === buildType ||
+        envTarget === moduleFormat ||
+        envTarget === bundleState ||
+        envTarget === `${moduleFormat}:${buildType}` ||
+        envTarget === `${moduleFormat}:${bundleState}` ||
+        envTarget === `${buildType}:${bundleState}` ||
+        envTarget === `${moduleFormat}:${buildType}:${bundleState}`;
+}
 
-    const envTarget = process.env.target ? process.env.target.toLowerCase() : null;
+/**
+ * @type {RollupOptions[]}
+ */
+const targets = [];
+BUILD_TYPES.forEach((buildType) => {
+    MODULE_FORMAT.forEach((moduleFormat) => {
+        BUNDLE_STATES.forEach((bundleState) => {
+            if (bundleState === 'unbundled' && moduleFormat === 'umd') {
+                return;
+            }
+            if (bundleState === 'unbundled' && buildType === 'min') {
+                return;
+            }
 
-    if ((envTarget === null) && fs.existsSync('build')) {
-        // no targets specified, clean build directory
-        fs.rmSync('build', { recursive: true });
-    }
+            if (!includeBuild(buildType, moduleFormat, bundleState)) {
+                return;
+            }
 
-    if (envTarget === 'types') {
-        targets.push(target_types);
-    } else if (envTarget === 'extras') {
-        targets.push(...target_extras);
-    } else {
-        ['release', 'debug', 'profiler', 'min'].forEach((t) => {
-            ['es5', 'es6'].forEach((m) => {
-                if (envTarget === null || envTarget === t || envTarget === m || envTarget === `${t}_${m}`) {
-                    targets.push(buildTarget(t, m, 'src/index.js', 'build', true));
-                }
-            });
-
-            // Add an unbundled es6 build
-            if (t !== 'min') targets.push(buildTarget(t, 'es6', 'src/index.js', 'build', false));
-
+            targets.push(...buildTarget({
+                moduleFormat,
+                buildType,
+                bundleState
+            }));
         });
+    });
+});
 
-        targets.push(buildTargetRTI('es5'), buildTargetRTI('es6'));
+if (envTarget === null || envTarget === 'types') {
+    targets.push(...TYPES_TARGET);
+}
 
-        if (envTarget === null) {
-            // no targets specified, build them all
-            buildTypes();
-            targets.push(...target_extras);
-        }
-    }
+if (!targets.length) {
+    console.error(`${RED_OUT}${BOLD_OUT}No targets found${RESET_OUT}`);
+    process.exit(1);
+}
 
-    return targets;
-};
+export default targets;

@@ -11,20 +11,6 @@ import { EntityReference } from '../../utils/entity-reference.js';
 /**
  * A ScrollbarComponent enables a group of entities to behave like a draggable scrollbar.
  *
- * @property {number} orientation Whether the scrollbar moves horizontally or vertically. Can be:
- *
- * - {@link ORIENTATION_HORIZONTAL}: The scrollbar animates in the horizontal axis.
- * - {@link ORIENTATION_VERTICAL}: The scrollbar animates in the vertical axis.
- *
- * Defaults to {@link ORIENTATION_HORIZONTAL}.
- * @property {number} value The current position value of the scrollbar, in the range 0 to 1.
- * Defaults to 0.
- * @property {number} handleSize The size of the handle relative to the size of the track, in the
- * range 0 to 1. For a vertical scrollbar, a value of 1 means that the handle will take up the full
- * height of the track.
- * @property {import('../../entity.js').Entity} handleEntity The entity to be used as the scrollbar
- * handle. This entity must have a Scrollbar component.
- * @augments Component
  * @category User Interface
  */
 class ScrollbarComponent extends Component {
@@ -60,6 +46,93 @@ class ScrollbarComponent extends Component {
         });
 
         this._toggleLifecycleListeners('on');
+    }
+
+    // TODO: Remove this override in upgrading component
+    /**
+     * @type {import('./data.js').ScrollbarComponentData}
+     * @ignore
+     */
+    get data() {
+        const record = this.system.store[this.entity.getGuid()];
+        return record ? record.data : null;
+    }
+
+    /**
+     * @type {boolean}
+     */
+    set enabled(arg) {
+        this._setValue('enabled', arg);
+    }
+
+    get enabled() {
+        return this.data.enabled;
+    }
+
+    /**
+     * Whether the scrollbar moves horizontally or vertically. Can be:
+     *
+     * - {@link ORIENTATION_HORIZONTAL}: The scrollbar animates in the horizontal axis.
+     * - {@link ORIENTATION_VERTICAL}: The scrollbar animates in the vertical axis.
+     *
+     * Defaults to {@link ORIENTATION_HORIZONTAL}.
+     *
+     * @type {number}
+     */
+    set orientation(arg) {
+        this._setValue('orientation', arg);
+    }
+
+    get orientation() {
+        return this.data.orientation;
+    }
+
+    /**
+     * The current position value of the scrollbar, in the range 0 to 1. Defaults to 0.
+     *
+     * @type {number}
+     */
+    set value(arg) {
+        this._setValue('value', arg);
+    }
+
+    get value() {
+        return this.data.value;
+    }
+
+    /**
+     * The size of the handle relative to the size of the track, in the range 0 to 1. For a vertical
+     * scrollbar, a value of 1 means that the handle will take up the full height of the track.
+     *
+     * @type {number}
+     */
+    set handleSize(arg) {
+        this._setValue('handleSize', arg);
+    }
+
+    get handleSize() {
+        return this.data.handleSize;
+    }
+
+    /**
+     * The entity to be used as the scrollbar handle. This entity must have a Scrollbar component.
+     *
+     * @type {import('../../../framework/entity.js').Entity}
+     */
+    set handleEntity(arg) {
+        this._setValue('handleEntity', arg);
+    }
+
+    get handleEntity() {
+        return this.data.handleEntity;
+    }
+
+    /** @ignore */
+    _setValue(name, value) {
+        const data = this.data;
+        const oldValue = data[name];
+        data[name] = value;
+        this.fire('set', name, oldValue, value);
     }
 
     /**

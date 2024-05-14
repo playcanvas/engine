@@ -75,20 +75,6 @@ class Progress {
 }
 
 /**
- * Callback used by {@link AppBase#configure} when configuration file is loaded and parsed (or
- * an error occurs).
- *
- * @callback ConfigureAppCallback
- * @param {string|null} err - The error message in the case where the loading or parsing fails.
- */
-
-/**
- * Callback used by {@link AppBase#preload} when all assets (marked as 'preload') are loaded.
- *
- * @callback PreloadAppCallback
- */
-
-/**
  * Gets the current application, if any.
  *
  * @type {AppBase|null}
@@ -119,10 +105,34 @@ let app = null;
  *
  * If you are using the Engine without the Editor, you have to create the application instance
  * manually.
- *
- * @augments EventHandler
  */
 class AppBase extends EventHandler {
+    /**
+     * Callback used by {@link AppBase#configure} when configuration file is loaded and parsed (or
+     * an error occurs).
+     *
+     * @callback ConfigureAppCallback
+     * @param {string|null} err - The error message in the case where the loading or parsing fails.
+     * @returns {void}
+     */
+
+    /**
+     * Callback used by {@link AppBase#preload} when all assets (marked as 'preload') are loaded.
+     *
+     * @callback PreloadAppCallback
+     * @returns {void}
+     */
+
+    /**
+     * Callback used by {@link AppBase#start} and itself to request
+     * the rendering of a new animation frame.
+     *
+     * @callback MakeTickCallback
+     * @param {number} [timestamp] - The timestamp supplied by requestAnimationFrame.
+     * @param {*} [frame] - XRFrame from requestAnimationFrame callback.
+     * @returns {void}
+     */
+
     /**
      * A request id returned by requestAnimationFrame, allowing us to cancel it.
      *
@@ -142,8 +152,6 @@ class AppBase extends EventHandler {
      *
      * // Start the application's main loop
      * app.start();
-     *
-     * @hideconstructor
      */
     constructor(canvas) {
         super();
@@ -1187,6 +1195,10 @@ class AppBase extends EventHandler {
     // render a layer composition
     renderComposition(layerComposition) {
         DebugGraphics.clearGpuMarkers();
+
+        // update composition, cull everything, assign atlas slots for clustered lighting
+        this.renderer.update(layerComposition);
+
         this.renderer.buildFrameGraph(this.frameGraph, layerComposition);
         this.frameGraph.render(this.graphicsDevice);
     }
@@ -1484,6 +1496,8 @@ class AppBase extends EventHandler {
      * - {@link TONEMAP_FILMIC}
      * - {@link TONEMAP_HEJL}
      * - {@link TONEMAP_ACES}
+     * - {@link TONEMAP_ACES2}
+     * - {@link TONEMAP_NEUTRAL}
      *
      * @param {number} settings.render.exposure - The exposure value tweaks the overall brightness
      * of the scene.
@@ -1735,8 +1749,9 @@ class AppBase extends EventHandler {
      *
      * @param {number[]} positions - An array of points to draw lines between. Each point is
      * represented by 3 numbers - x, y and z coordinate.
-     * @param {number[]} colors - An array of colors to color the lines. This must be the same
-     * length as the position array. The length of the array must also be a multiple of 2.
+     * @param {number[]|Color} colors - A single color for all lines, or an array of colors to color
+     * the lines. If an array is specified, number of colors it stores must match the number of
+     * positions provided.
      * @param {boolean} [depthTest] - Specifies if the lines are depth tested against the depth
      * buffer. Defaults to true.
      * @param {Layer} [layer] - The layer to render the lines into. Defaults to {@link LAYERID_IMMEDIATE}.
@@ -2089,16 +2104,6 @@ class AppBase extends EventHandler {
 const _frameEndData = {};
 
 /**
- * Callback used by {@link AppBase#start} and itself to request
- * the rendering of a new animation frame.
- *
- * @callback MakeTickCallback
- * @param {number} [timestamp] - The timestamp supplied by requestAnimationFrame.
- * @param {*} [frame] - XRFrame from requestAnimationFrame callback.
- * @ignore
- */
-
-/**
  * Create tick function to be wrapped in closure.
  *
  * @param {AppBase} _app - The application.
@@ -2115,7 +2120,13 @@ const makeTick = function (_app) {
         if (!application.graphicsDevice)
             return;
 
-        application.frameRequestId = null;
+        // cancel any hanging rAF to avoid multiple rAF callbacks per frame
+        if (application.frameRequestId) {
+            application.xr?.session?.cancelAnimationFrame(application.frameRequestId);
+            cancelAnimationFrame(application.frameRequestId);
+            application.frameRequestId = null;
+        }
+
         application._inFrameUpdate = true;
 
         setApplication(application);
