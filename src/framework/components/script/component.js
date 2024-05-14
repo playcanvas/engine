@@ -364,7 +364,7 @@ class ScriptComponent extends Component {
 
     _onInitializeAttributes() {
         for (let i = 0, len = this.scripts.length; i < len; i++)
-            this.scripts[i].__initializeAttributes();
+        this.scripts[i].__initializeAttributes && this.scripts[i].__initializeAttributes();
     }
 
     _scriptMethod(script, method, arg) {
@@ -655,7 +655,7 @@ class ScriptComponent extends Component {
 
                 this[scriptName] = scriptInstance;
 
-                if (!args.preloading)
+                if (!args.preloading && scriptInstance.__initializeAttributes)
                     scriptInstance.__initializeAttributes();
 
                 this.fire('create', scriptName, scriptInstance);
@@ -788,7 +788,7 @@ class ScriptComponent extends Component {
         if (!scriptInstance.swap)
             return false;
 
-        scriptInstance.__initializeAttributes();
+        scriptInstance.__initializeAttributes && scriptInstance.__initializeAttributes();
 
         // add to component
         this._scripts[ind] = scriptInstance;

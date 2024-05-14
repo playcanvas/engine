@@ -1,156 +1,242 @@
 import { Debug } from '../../core/debug.js';
 import { EventHandler } from '../../core/event-handler.js';
+import { SCRIPT_INITIALIZE, SCRIPT_POST_INITIALIZE } from './constants.js';
 
-import { script } from '../script.js';
-import { AppBase } from '../app-base.js';
+export class Script extends EventHandler {
+    /**
+     * Fired when a script instance becomes enabled.
+     *
+     * @event
+     * @example
+     * PlayerController.prototype.initialize = function () {
+     *     this.on('enable', () => {
+     *         // Script Instance is now enabled
+     *     });
+     * };
+     */
+    static EVENT_ENABLE = 'enable';
 
-import { ScriptAttributes } from './script-attributes.js';
-import { ScriptType } from './script-type.js';
-import { ScriptTypes } from './script-types.js';
+    /**
+     * Fired when a script instance becomes disabled.
+     *
+     * @event
+     * @example
+     * PlayerController.prototype.initialize = function () {
+     *     this.on('disable', () => {
+     *         // Script Instance is now disabled
+     *     });
+     * };
+     */
+    static EVENT_DISABLE = 'disable';
 
-const reservedScriptNames = new Set([
-    'system', 'entity', 'create', 'destroy', 'swap', 'move', 'data',
-    'scripts', '_scripts', '_scriptsIndex', '_scriptsData',
-    'enabled', '_oldState', 'onEnable', 'onDisable', 'onPostStateChange',
-    '_onSetEnabled', '_checkState', '_onBeforeRemove',
-    '_onInitializeAttributes', '_onInitialize', '_onPostInitialize',
-    '_onUpdate', '_onPostUpdate',
-    '_callbacks', '_callbackActive', 'has', 'get', 'on', 'off', 'fire', 'once', 'hasEvent'
-]);
+    /**
+     * Fired when a script instance changes state to enabled or disabled. The handler is passed a
+     * boolean parameter that states whether the script instance is now enabled or disabled.
+     *
+     * @event
+     * @example
+     * PlayerController.prototype.initialize = function () {
+     *     this.on('state', (enabled) => {
+     *         console.log(`Script Instance is now ${enabled ? 'enabled' : 'disabled'}`);
+     *     });
+     * };
+     */
+    static EVENT_STATE = 'state';
 
-function getReservedScriptNames() {
-    return reservedScriptNames;
-}
+    /**
+     * Fired when a script instance is destroyed and removed from component.
+     *
+     * @event
+     * @example
+     * PlayerController.prototype.initialize = function () {
+     *     this.on('destroy', () => {
+     *         // no longer part of the entity
+     *         // this is a good place to clean up allocated resources used by the script
+     *     });
+     * };
+     */
+    static EVENT_DESTROY = 'destroy';
 
-/**
- * Create and register a new {@link ScriptType}. It returns new class type (constructor function),
- * which is auto-registered to {@link ScriptRegistry} using its name. This is the main interface to
- * create Script Types, to define custom logic using JavaScript, that is used to create interaction
- * for entities.
- *
- * @param {string} name - Unique Name of a Script Type. If a Script Type with the same name has
- * already been registered and the new one has a `swap` method defined in its prototype, then it
- * will perform hot swapping of existing Script Instances on entities using this new Script Type.
- * Note: There is a reserved list of names that cannot be used, such as list below as well as some
- * starting from `_` (underscore): system, entity, create, destroy, swap, move, scripts, onEnable,
- * onDisable, onPostStateChange, has, on, off, fire, once, hasEvent.
- * @param {AppBase} [app] - Optional application handler, to choose which {@link ScriptRegistry}
- * to add a script to. By default it will use `Application.getApplication()` to get current
- * {@link AppBase}.
- * @returns {typeof ScriptType|null} A class type (constructor function) that inherits {@link ScriptType},
- * which the developer is meant to further extend by adding attributes and prototype methods.
- * Returns null if there was an error.
- * @example
- * var Turning = pc.createScript('turn');
- *
- * // define 'speed' attribute that is available in Editor UI
- * Turning.attributes.add('speed', {
- *     type: 'number',
- *     default: 180,
- *     placeholder: 'deg/s'
- * });
- *
- * // runs every tick
- * Turning.prototype.update = function (dt) {
- *     this.entity.rotate(0, this.speed * dt, 0);
- * };
- * @category Script
- */
-function createScript(name, app) {
-    if (script.legacy) {
-        Debug.error('This project is using the legacy script system. You cannot call pc.createScript().');
-        return null;
+    /**
+     * Fired when a script instance had an exception. The script instance will be automatically
+     * disabled. The handler is passed an {@link Error} object containing the details of the
+     * exception and the name of the method that threw the exception.
+     *
+     * @event
+     * @example
+     * PlayerController.prototype.initialize = function () {
+     *     this.on('error', (err, method) => {
+     *         // caught an exception
+     *         console.log(err.stack);
+     *     });
+     * };
+     */
+    static EVENT_ERROR = 'error';
+
+    /**
+     * The {@link AppBase} that the instance of this type belongs to.
+     *
+     * @type {import('../app-base.js').AppBase}
+     */
+    app;
+
+    /**
+     * The {@link Entity} that the instance of this type belongs to.
+     *
+     * @type {import('../entity.js').Entity}
+     */
+    entity;
+
+    /** @private */
+    _enabled;
+
+    /** @private */
+    _enabledOld;
+
+    /** @private */
+    _initialized;
+
+    /** @private */
+    _postInitialized;
+
+    /** @private */
+    __destroyed;
+
+    /** @private */
+    __scriptType;
+
+    /**
+     * The order in the script component that the methods of this script instance will run
+     * relative to other script instances in the component.
+     *
+     * @type {number}
+     * @protected
+     */
+    __executionOrder;
+
+    /**
+     * Create a new ScriptType instance.
+     *
+     * @param {object} args - The input arguments object.
+     * @param {import('../app-base.js').AppBase} args.app - The {@link AppBase} that is running the
+     * script.
+     * @param {import('../entity.js').Entity} args.entity - The {@link Entity} that the script is
+     * attached to.
+     */
+    constructor(args) {
+        super();
+        this.initScript(args);
     }
 
-    if (reservedScriptNames.has(name))
-        throw new Error(`Script name '${name}' is reserved, please rename the script`);
+    /**
+     * True if the instance of this type is in running state. False when script is not running,
+     * because the Entity or any of its parents are disabled or the {@link ScriptComponent} is
+     * disabled or the Script Instance is disabled. When disabled no update methods will be called
+     * on each tick. initialize and postInitialize methods will run once when the script instance
+     * is in `enabled` state during app tick.
+     *
+     * @type {boolean}
+     */
+    set enabled(value) {
+        this._enabled = !!value;
 
-    const scriptType = function (args) {
-        EventHandler.prototype.initEventHandler.call(this);
-        ScriptType.prototype.initScriptType.call(this, args);
-    };
+        if (this.enabled === this._enabledOld) return;
 
-    scriptType.prototype = Object.create(ScriptType.prototype);
-    scriptType.prototype.constructor = scriptType;
+        this._enabledOld = this.enabled;
+        this.fire(this.enabled ? 'enable' : 'disable');
+        this.fire('state', this.enabled);
 
-    scriptType.extend = ScriptType.extend;
-    scriptType.attributes = new ScriptAttributes(scriptType);
+        // initialize script if not initialized yet and script is enabled
+        if (!this._initialized && this.enabled) {
+            this._initialized = true;
 
-    registerScript(scriptType, name, app);
-    return scriptType;
-}
+            if (this.initialize)
+                this.entity.script._scriptMethod(this, SCRIPT_INITIALIZE);
+        }
 
-// Editor uses this - migrate to ScriptAttributes.reservedNames and delete this
-const reservedAttributes = {};
-ScriptAttributes.reservedNames.forEach((value, value2, set) => {
-    reservedAttributes[value] = 1;
-});
-createScript.reservedAttributes = reservedAttributes;
+        // post initialize script if not post initialized yet and still enabled
+        // (initialize might have disabled the script so check this.enabled again)
+        // Warning: Do not do this if the script component is currently being enabled
+        // because in this case post initialize must be called after all the scripts
+        // in the script component have been initialized first
+        if (this._initialized && !this._postInitialized && this.enabled && !this.entity.script._beingEnabled) {
+            this._postInitialized = true;
 
-/* eslint-disable jsdoc/check-examples */
-/**
- * Register a existing class type as a Script Type to {@link ScriptRegistry}. Useful when defining
- * a ES6 script class that extends {@link ScriptType} (see example).
- *
- * @param {typeof ScriptType} script - The existing class type (constructor function) to be
- * registered as a Script Type. Class must extend {@link ScriptType} (see example). Please note: A
- * class created using {@link createScript} is auto-registered, and should therefore not be pass
- * into {@link registerScript} (which would result in swapping out all related script instances).
- * @param {string} [name] - Optional unique name of the Script Type. By default it will use the
- * same name as the existing class. If a Script Type with the same name has already been registered
- * and the new one has a `swap` method defined in its prototype, then it will perform hot swapping
- * of existing Script Instances on entities using this new Script Type. Note: There is a reserved
- * list of names that cannot be used, such as list below as well as some starting from `_`
- * (underscore): system, entity, create, destroy, swap, move, scripts, onEnable, onDisable,
- * onPostStateChange, has, on, off, fire, once, hasEvent.
- * @param {AppBase} [app] - Optional application handler, to choose which {@link ScriptRegistry}
- * to register the script type to. By default it will use `Application.getApplication()` to get
- * current {@link AppBase}.
- * @example
- * // define a ES6 script class
- * class PlayerController extends pc.ScriptType {
- *
- *     initialize() {
- *         // called once on initialize
- *     }
- *
- *     update(dt) {
- *         // called each tick
- *     }
- * }
- *
- * // register the class as a script
- * pc.registerScript(PlayerController);
- *
- * // declare script attributes (Must be after pc.registerScript())
- * PlayerController.attributes.add('attribute1', {type: 'number'});
- * @category Script
- */
-function registerScript(script, name, app) {
-    if (script.legacy) {
-        Debug.error('This project is using the legacy script system. You cannot call pc.registerScript().');
-        return;
+            if (this.postInitialize)
+                this.entity.script._scriptMethod(this, SCRIPT_POST_INITIALIZE);
+        }
     }
 
-    if (typeof script !== 'function')
-        throw new Error(`script class: '${script}' must be a constructor function (i.e. class).`);
+    get enabled() {
+        return this._enabled && !this.__destroyed && this.entity.script.enabled && this.entity.enabled;
+    }
 
-    if (!(script.prototype instanceof ScriptType))
-        throw new Error(`script class: '${ScriptType.__getScriptName(script)}' does not extend pc.ScriptType.`);
+    /**
+     * @param {{entity: import('../entity.js').Entity, app: import('../app-base.js').AppBase, enabled: boolean}} args -
+     * The entity and app.
+     * @protected
+     */
+    initScript(args) {
+        const script = this.constructor; // get script type, i.e. function (class)
+        Debug.assert(args && args.app && args.entity, `script [${script.__name}] has missing arguments in constructor`);
 
-    name = name || script.__name || ScriptType.__getScriptName(script);
+        this.app = args.app;
+        this.entity = args.entity;
 
-    if (reservedScriptNames.has(name))
-        throw new Error(`script name: '${name}' is reserved, please change script name`);
+        this._enabled = typeof args.enabled === 'boolean' ? args.enabled : true;
+        this._enabledOld = this.enabled;
 
-    script.__name = name;
+        this.__destroyed = false;
+        this.__executionOrder = -1;
+        this.__scriptType = script;
+    }
 
-    // add to scripts registry
-    const registry = app ? app.scripts : AppBase.getApplication().scripts;
-    registry.add(script);
+    /**
+     * @function
+     * @name ScriptType#[initialize]
+     * @description Called when script is about to run for the first time.
+     */
 
-    ScriptTypes.push(script, script.legacy);
+    /**
+     * @function
+     * @name ScriptType#[postInitialize]
+     * @description Called after all initialize methods are executed in the same tick or enabling chain of actions.
+     */
+
+    /**
+     * @function
+     * @name ScriptType#[update]
+     * @description Called for enabled (running state) scripts on each tick.
+     * @param {number} dt - The delta time in seconds since the last frame.
+     */
+
+    /**
+     * @function
+     * @name ScriptType#[postUpdate]
+     * @description Called for enabled (running state) scripts on each tick, after update.
+     * @param {number} dt - The delta time in seconds since the last frame.
+     */
+
+    /**
+     * @function
+     * @name ScriptType#[swap]
+     * @description Called when a ScriptType that already exists in the registry
+     * gets redefined. If the new ScriptType has a `swap` method in its prototype,
+     * then it will be executed to perform hot-reload at runtime.
+     * @param {ScriptType} old - Old instance of the scriptType to copy data to the new instance.
+     */
 }
-/* eslint-enable jsdoc/check-examples */
 
-export { createScript, registerScript, getReservedScriptNames };
+const funcNameRegex = new RegExp('^\\s*function(?:\\s|\\s*\\/\\*.*\\*\\/\\s*)+([^\\(\\s\\/]*)\\s*');
+
+/**
+ * @param {Function} constructorFn - The constructor function of the script type.
+ * @returns {string|undefined} The script name.
+ */
+export function getScriptName(constructorFn) {
+    if (typeof constructorFn !== 'function') return undefined;
+    if ('name' in Function.prototype) return constructorFn.name;
+    if (constructorFn === Function || constructorFn === Function.prototype.constructor) return 'Function';
+    const match = ('' + constructorFn).match(funcNameRegex);
+    return match ? match[1] : undefined;
+}
