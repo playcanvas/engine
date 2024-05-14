@@ -53,8 +53,6 @@ function validate(value) {
     const checkProp = (prop) => {
         return validateNumber(value, prop);
     };
-    // In a bundle pc can be defined while pc is not filled with all classes yet,
-    // therefore we need to check if class is added already.
     if (value instanceof Vec2) {
         return propsXY.every(checkProp);
     }

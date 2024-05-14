@@ -140,6 +140,7 @@
     "build:treesun": "npm run build target:umd treesun",
     "build:sourcemaps": "npm run build -- -m",
     "build:publish": "npm run build && npm run publint",
+    "build:rti": "rollup -c --environment target:rti",
     "watch": "npm run build -- -w",
     "watch:release": "npm run build target:release -- -w",
     "watch:debug": "npm run build target:debug -- -w",

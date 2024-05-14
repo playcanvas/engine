@@ -1,6 +1,7 @@
 import * as fs from 'node:fs';
 import { version, revision } from './utils/rollup-version-revision.mjs';
 import { buildTarget } from './utils/rollup-build-target.mjs';
+import { buildTargetRTI } from './utils/rollup-build-target-rti.mjs';
 
 // unofficial package plugins
 import dts from 'rollup-plugin-dts';
@@ -102,6 +103,11 @@ BUILD_TYPES.forEach((buildType) => {
         });
     });
 });
+
+if (envTarget === 'rti') {
+    targets.length = 0;
+    targets.push(buildTargetRTI('umd'), buildTargetRTI('es'));
+}
 
 if (envTarget === null || envTarget === 'types') {
     targets.push(...TYPES_TARGET);

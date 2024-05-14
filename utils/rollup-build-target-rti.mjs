@@ -1,5 +1,5 @@
 import resolve from '@rollup/plugin-node-resolve';
-import { engineLayerImportValidation } from './rollup-import-validation.mjs';
+import { engineLayerImportValidation } from './plugins/rollup-import-validation.mjs';
 import { getBanner } from './rollup-get-banner.mjs';
 import { runtimeTypeInspector } from '@runtime-type-inspector/plugin-rollup';
 
@@ -12,7 +12,7 @@ import { runtimeTypeInspector } from '@runtime-type-inspector/plugin-rollup';
 /**
  * Configure a Runtime Type Inspector target that rollup is supposed to build.
  *
- * @param {'es5'|'es6'} moduleFormat - The module format.
+ * @param {'umd'|'es'} moduleFormat - The module format (subset of ModuleFormat).
  * @param {string} input - The input file.
  * @param {string} buildDir - The build dir.
  * @returns {RollupOptions} Configuration for Runtime Type Inspector rollup target.
@@ -21,22 +21,16 @@ function buildTargetRTI(moduleFormat, input = 'src/index.rti.js', buildDir = 'bu
     const banner = getBanner(' (RUNTIME-TYPE-INSPECTOR)');
 
     const outputExtension = {
-        es5: '.js',
-        es6: '.mjs'
+        umd: '.js',
+        es: '.mjs'
     };
 
     const file = `${buildDir}/playcanvas.rti${outputExtension[moduleFormat]}`;
 
-    /** @type {Record<string, ModuleFormat>} */
-    const outputFormat = {
-        es5: 'umd',
-        es6: 'es'
-    };
-
     /** @type {OutputOptions} */
     const outputOptions = {
         banner,
-        format: outputFormat[moduleFormat],
+        format: moduleFormat,
         indent: '\t',
         name: 'pc',
         file
