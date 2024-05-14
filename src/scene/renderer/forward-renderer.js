@@ -685,14 +685,6 @@ class ForwardRenderer extends Renderer {
 
         this.setupViewport(camera, renderTarget);
 
-        // clearing
-        const clearColor = options.clearColor ?? false;
-        const clearDepth = options.clearDepth ?? false;
-        const clearStencil = options.clearStencil ?? false;
-        if (clearColor || clearDepth || clearStencil) {
-            this.clear(camera, clearColor, clearDepth, clearStencil);
-        }
-
         let visible, splitLights;
         if (layer) {
             // #if _PROFILER
@@ -746,6 +738,14 @@ class ForwardRenderer extends Renderer {
         const viewCount = this.setCameraUniforms(camera, renderTarget);
         if (device.supportsUniformBuffers) {
             this.setupViewUniformBuffers(viewBindGroups, this.viewUniformFormat, this.viewBindGroupFormat, viewCount);
+        }
+
+        // clearing - do it after the view bind groups are set up, to avoid overriding those
+        const clearColor = options.clearColor ?? false;
+        const clearDepth = options.clearDepth ?? false;
+        const clearStencil = options.clearStencil ?? false;
+        if (clearColor || clearDepth || clearStencil) {
+            this.clear(camera, clearColor, clearDepth, clearStencil);
         }
 
         // enable flip faces if either the camera has _flipFaces enabled or the render target has flipY enabled

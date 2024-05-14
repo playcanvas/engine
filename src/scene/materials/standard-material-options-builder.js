@@ -301,7 +301,6 @@ class StandardMaterialOptionsBuilder {
         options.litOptions.fog = stdMat.useFog ? scene.fog : 'none';
         options.litOptions.gamma = stdMat.useGammaTonemap ? scene.gammaCorrection : GAMMA_NONE;
         options.litOptions.toneMap = stdMat.useGammaTonemap ? scene.toneMapping : -1;
-        options.litOptions.fixSeams = (stdMat.cubeMap ? stdMat.cubeMap.fixCubemapSeams : false);
 
         const isPhong = stdMat.shadingModel === SPECULAR_PHONG;
 
