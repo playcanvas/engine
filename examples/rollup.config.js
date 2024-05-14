@@ -86,14 +86,14 @@ function getEnginePathFiles() {
 function checkAppEngine() {
     // types
     if (!fs.existsSync('../build/playcanvas.d.ts')) {
-        const cmd = `npm run build:types --prefix ../`;
+        const cmd = `npm run build target:types --prefix ../`;
         console.log("\x1b[32m%s\x1b[0m", cmd);
         execSync(cmd);
     }
 
     // engine
     if (!fs.existsSync('../build/playcanvas/src/index.js')) {
-        const cmd = `npm run build:esm:release --prefix ../`;
+        const cmd = `npm run build target:esm:release --prefix ../`;
         console.log("\x1b[32m%s\x1b[0m", cmd);
         execSync(cmd);
     }
