@@ -22,7 +22,10 @@ attribute uint vertex_id_attrib;
 
 varying vec2 texCoord;
 varying vec4 color;
-varying float id;
+
+#ifndef DITHER_NONE
+    varying float id;
+#endif
 
 uniform vec2 viewport;
 uniform vec4 bufferWidths;
@@ -65,40 +68,32 @@ void calcUV() {
     );
 }
 
-// read splat packed bits and chunk details
-void readPackedData() {
-    packedData = texelFetch(packedTexture, splatUV, 0);
-    chunkDataA = texelFetch(chunkTexture, chunkUV, 0);
-    chunkDataB = texelFetch(chunkTexture, ivec2(chunkUV.x + 1, chunkUV.y), 0);
-    chunkDataC = texelFetch(chunkTexture, ivec2(chunkUV.x + 2, chunkUV.y), 0);
-}
-
 vec3 unpack111011(uint bits) {
     return vec3(
-        float(bits >> 21) / 2047.0,
-        float((bits >> 11) & 0x3ffu) / 1023.0,
+        float(bits >> 21u) / 2047.0,
+        float((bits >> 11u) & 0x3ffu) / 1023.0,
         float(bits & 0x7ffu) / 2047.0
     );
 }
 
 vec4 unpack8888(uint bits) {
     return vec4(
-        float(bits >> 24) / 255.0,
-        float((bits >> 16) & 0xffu) / 255.0,
-        float((bits >> 8) & 0xffu) / 255.0,
-        float((bits >> 0) & 0xffu) / 255.0
+        float(bits >> 24u) / 255.0,
+        float((bits >> 16u) & 0xffu) / 255.0,
+        float((bits >> 8u) & 0xffu) / 255.0,
+        float(bits & 0xffu) / 255.0
     );
 }
 
 float norm = 1.0 / (sqrt(2.0) * 0.5);
 
 vec4 unpackRotation(uint bits) {
-    float a = (float((bits >> 20) & 0x3ffu) / 1023.0 - 0.5) * norm;
-    float b = (float((bits >> 10) & 0x3ffu) / 1023.0 - 0.5) * norm;
+    float a = (float((bits >> 20u) & 0x3ffu) / 1023.0 - 0.5) * norm;
+    float b = (float((bits >> 10u) & 0x3ffu) / 1023.0 - 0.5) * norm;
     float c = (float(bits & 0x3ffu) / 1023.0 - 0.5) * norm;
     float m = sqrt(1.0 - (a * a + b * b + c * c));
 
-    uint mode = bits >> 30;
+    uint mode = bits >> 30u;
     if (mode == 0u) return vec4(m, a, b, c);
     if (mode == 1u) return vec4(a, m, b, c);
     if (mode == 2u) return vec4(a, b, m, c);
@@ -110,67 +105,32 @@ vec3 getPosition() {
 }
 
 vec4 getRotation() {
-    return vec4(0.0, 0.0, 0.0, 1.0); // unpackRotation(packedData.y);
+    return unpackRotation(packedData.y);
 }
 
 vec3 getScale() {
-    return vec3(1.0, 1000.0, 1.0); // mix(vec3(chunkDataB.zw, chunkDataC.x), chunkDataC.yzw, unpack111011(packedData.z));
+    return exp(mix(vec3(chunkDataB.zw, chunkDataC.x), chunkDataC.yzw, unpack111011(packedData.z)));
 }
 
 vec4 getColor() {
-    // return unpack8888(packedData.w);
-
-    uint chunkId = splatId / 256u;
-
-    float r = float(chunkId % 4u) / 3.0f;
-    float g = float((chunkId / 4u) % 4u) / 3.0f;
-    float b = float((chunkId / (4u * 4u)) % 4u) / 3.0f;
-
-    vec3 clr = vec3(r, g, b); //  * unpack111011(packedData.z);
-
-    return vec4(clr, 1.0);
-
+    return unpack8888(packedData.w);
 }
 
 mat3 quatToMat3(vec4 R) {
-    // float x = R.x;
-    // float y = R.y;
-    // float z = R.z;
-    // float w = R.w;
-    // return mat3(
-    //     1.0 - 2.0 * (z * z + w * w),
-    //           2.0 * (y * z + x * w),
-    //           2.0 * (y * w - x * z),
-    //           2.0 * (y * z - x * w),
-    //     1.0 - 2.0 * (y * y + w * w),
-    //           2.0 * (z * w + x * y),
-    //           2.0 * (y * w + x * z),
-    //           2.0 * (z * w - x * y),
-    //     1.0 - 2.0 * (y * y + z * z)
-    // );
-
-    float qx = R.x;
-    float qy = R.y;
-    float qz = R.z;
-    float qw = R.w;
-
-    float x2 = qx + qx;
-    float y2 = qy + qy;
-    float z2 = qz + qz;
-    float xx = qx * x2;
-    float xy = qx * y2;
-    float xz = qx * z2;
-    float yy = qy * y2;
-    float yz = qy * z2;
-    float zz = qz * z2;
-    float wx = qw * x2;
-    float wy = qw * y2;
-    float wz = qw * z2;
-
+    float x = R.x;
+    float y = R.y;
+    float z = R.z;
+    float w = R.w;
     return mat3(
-        1.0 - (yy + zz), xy + wz, xz - wy,
-        xy - wz, 1.0 - (xx + zz), yz + wx,
-        xz + wy, yz - wx, 1.0 - (xx + yy)
+        1.0 - 2.0 * (z * z + w * w),
+              2.0 * (y * z + x * w),
+              2.0 * (y * w - x * z),
+              2.0 * (y * z - x * w),
+        1.0 - 2.0 * (y * y + w * w),
+              2.0 * (z * w + x * y),
+              2.0 * (y * w + x * z),
+              2.0 * (z * w - x * y),
+        1.0 - 2.0 * (y * y + z * z)
     );
 }
 
@@ -178,29 +138,17 @@ mat3 quatToMat3(vec4 R) {
 void calcCov3d(mat3 rot, vec3 scale, out vec3 covA, out vec3 covB) {
     // M = S * R
     mat3 M = transpose(mat3(
-        scale[0] * rot[0],
-        scale[1] * rot[1],
-        scale[2] * rot[2]
+        scale.x * rot[0],
+        scale.y * rot[1],
+        scale.z * rot[2]
     ));
-    covA = vec3(
-        dot(M[0], M[0]),
-        dot(M[0], M[1]),
-        dot(M[0], M[2])
-    );
-    covB = vec3(
-        dot(M[1], M[1]),
-        dot(M[1], M[2]),
-        dot(M[2], M[2])
-    );
+    covA = vec3(dot(M[0], M[0]), dot(M[0], M[1]), dot(M[0], M[2]));
+    covB = vec3(dot(M[1], M[1]), dot(M[1], M[2]), dot(M[2], M[2]));
 }
 
 // given the splat center (view space) and covariance A and B vectors, calculate
 // the v1 and v2 vectors for this view.
-vec4 calcV1V2(vec3 centerView, float focal, mat3 W) {
-
-    // calculate the 3d covariance vectors from rotation and scale
-    vec3 covA, covB;
-    calcCov3d(quatToMat3(getRotation()), getScale(), covA, covB);
+vec4 calcV1V2(vec3 centerView, vec3 covA, vec3 covB, float focal, mat3 W) {
 
     mat3 Vrk = mat3(
         covA.x, covA.y, covA.z, 
@@ -232,7 +180,7 @@ vec4 calcV1V2(vec3 centerView, float focal, mat3 W) {
     vec2 v1 = min(sqrt(2.0 * lambda1), 1024.0) * diagonalVector;
     vec2 v2 = min(sqrt(2.0 * lambda2), 1024.0) * vec2(diagonalVector.y, -diagonalVector.x);
 
-    return vec4(v1, v2) * 0.01;
+    return vec4(v1, v2);
 }
 
 vec4 evalSplat() {
@@ -240,7 +188,10 @@ vec4 evalSplat() {
     calcUV();
 
     // read raw data
-    readPackedData();
+    packedData = texelFetch(packedTexture, splatUV, 0);
+    chunkDataA = texelFetch(chunkTexture, chunkUV, 0);
+    chunkDataB = texelFetch(chunkTexture, ivec2(chunkUV.x + 1, chunkUV.y), 0);
+    chunkDataC = texelFetch(chunkTexture, ivec2(chunkUV.x + 2, chunkUV.y), 0);
 
     mat4 modelView = matrix_view * matrix_model;
     vec4 centerView = modelView * vec4(getPosition(), 1.0);
@@ -251,9 +202,11 @@ vec4 evalSplat() {
         return vec4(0.0, 0.0, 2.0, 1.0);
     }
 
-    vec4 v1v2 = calcV1V2(centerView.xyz, viewport.x * matrix_projection[0][0], transpose(mat3(modelView)));
+    // calculate the 3d covariance vectors from rotation and scale
+    vec3 covA, covB;
+    calcCov3d(quatToMat3(getRotation()), getScale(), covA, covB);
 
-    // v1v2 = vec4(16.0, 0.0, 0.0, 16.0);
+    vec4 v1v2 = calcV1V2(centerView.xyz, covA, covB, viewport.x * matrix_projection[0][0], transpose(mat3(modelView)));
 
     // early out tiny splats
     // TODO: figure out length units and expose as uniform parameter
@@ -264,10 +217,10 @@ vec4 evalSplat() {
 
     texCoord = vertex_position.xy;
     color = getColor();
-    id = float(splatId);
 
-    // centerClip.xy += (texCoord.x * v1v2.xy + texCoord.y * v1v2.zw) / viewport * centerClip.w;
-    // return centerClip;
+    #ifndef DITHER_NONE
+        id = float(splatId);
+    #endif
 
     return centerClip + vec4((texCoord.x * v1v2.xy + texCoord.y * v1v2.zw) / viewport * centerClip.w, 0, 0);
 }
@@ -277,15 +230,16 @@ const splatCoreFS = /* glsl */ `
 
 varying vec2 texCoord;
 varying vec4 color;
-varying float id;
+
+#ifndef DITHER_NONE
+    varying float id;
+#endif
 
 #ifdef PICK_PASS
     uniform vec4 uColor;
 #endif
 
 vec4 evalSplat() {
-
-    return color;
 
     #ifdef DEBUG_RENDER
 
