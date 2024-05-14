@@ -35,6 +35,9 @@ jobs:
     - name: Build PlayCanvas
       run: npm run build
 
+    - name: Run Publint
+      run: npm run publint
+
   docs:
     name: Docs
     runs-on: ubuntu-latest
