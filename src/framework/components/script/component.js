@@ -191,7 +191,7 @@ class ScriptComponent extends Component {
      * An array of all script instances attached to an entity. This array is read-only and should
      * not be modified by developer.
      *
-     * @type {import('../../script/script-type.js').ScriptType[]}
+     * @type {import('../../script/script.js').Script[]}
      */
     set scripts(value) {
         this._scriptsData = value;
@@ -364,7 +364,7 @@ class ScriptComponent extends Component {
 
     _onInitializeAttributes() {
         for (let i = 0, len = this.scripts.length; i < len; i++)
-        this.scripts[i].__initializeAttributes && this.scripts[i].__initializeAttributes();
+            if (this.scripts[i].__initializeAttributes) this.scripts[i].__initializeAttributes();
     }
 
     _scriptMethod(script, method, arg) {
@@ -788,7 +788,7 @@ class ScriptComponent extends Component {
         if (!scriptInstance.swap)
             return false;
 
-        scriptInstance.__initializeAttributes && scriptInstance.__initializeAttributes();
+        if (scriptInstance.__initializeAttributes) scriptInstance.__initializeAttributes();
 
         // add to component
         this._scripts[ind] = scriptInstance;

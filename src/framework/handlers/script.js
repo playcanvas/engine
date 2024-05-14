@@ -1,12 +1,10 @@
 import { platform } from '../../core/platform.js';
 import { script } from '../script.js';
-import { ScriptType } from '../script/script-type.js';
 import { ScriptTypes } from '../script/script-types.js';
 import { registerScript } from '../script/script-create.js';
 import { ResourceLoader } from './loader.js';
 
 import { ResourceHandler } from './handler.js';
-import { ScriptAttributes } from '../script/script-attributes.js';
 import { Script } from '../script/script.js';
 
 const toLowerCamelCase = str => str[0].toLowerCase() + str.substring(1);
