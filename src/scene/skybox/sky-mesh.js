@@ -45,8 +45,7 @@ class SkyMesh {
 
             if (texture.cubemap) {
                 options.type = 'cubemap';
-                options.mip = texture.fixCubemapSeams ? scene.skyboxMip : 0;
-                options.fixSeams = texture.fixCubemapSeams;
+                options.mip = scene.skyboxMip;
             } else {
                 options.type = 'envAtlas';
             }

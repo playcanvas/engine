@@ -264,6 +264,15 @@ class GraphicsDevice extends EventHandler {
       */
     textureHalfFloatRenderable;
 
+    /**
+     * True if small-float textures with format {@link PIXELFORMAT_111110F} can be used as a frame
+     * buffer. This is always true on WebGL2, but optional on WebGPU device.
+     *
+     * @type {boolean}
+     * @readonly
+     */
+    textureRG11B10Renderable = false;
+
      /**
       * True if filtering can be applied when sampling float textures.
       *
@@ -854,6 +863,12 @@ class GraphicsDevice extends EventHandler {
 
     /**
      * Get a renderable HDR pixel format supported by the graphics device.
+     *
+     * Note:
+     * - When the `filterable` parameter is set to false, this function returns one of the supported
+     * formats on the majority of devices apart from some very old iOS and Android devices (99%).
+     * - When the `filterable` parameter is set to true, the function returns a format on a
+     * considerably lower number of devices (70%).
      *
      * @param {number[]} [formats] - An array of pixel formats to check for support. Can contain:
      *
