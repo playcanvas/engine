@@ -4,7 +4,6 @@ import { BUFFER_STATIC, PIXELFORMAT_R32U, SEMANTIC_ATTR13, TYPE_UINT32 } from '.
 import { DITHER_NONE } from '../constants.js';
 import { MeshInstance } from '../mesh-instance.js';
 import { Mesh } from '../mesh.js';
-import { createGSplatMaterial } from './gsplat-material.js';
 import { GSplatSorter } from './gsplat-sorter.js';
 import { VertexFormat } from '../../platform/graphics/vertex-format.js';
 import { VertexBuffer } from '../../platform/graphics/vertex-buffer.js';
@@ -149,9 +148,8 @@ class GSplatInstance {
     }
 
     createMaterial(options) {
-        this.material = createGSplatMaterial(options);
+        this.material = this.splat.createMaterial(options);
         this.material.setParameter('splatOrder', this.orderTexture);
-        this.splat.setupMaterial(this.material);
         if (this.meshInstance) {
             this.meshInstance.material = this.material;
         }
@@ -199,9 +197,26 @@ class GSplatInstance {
             const camera = this.cameras[0];
             this.sort(camera._node);
 
+            this.updateMaterial(camera);
+
             // we get new list of cameras each frame
             this.cameras.length = 0;
         }
+    }
+
+    updateMaterial(camera) {
+        const device = this.splat.device;
+        const scope = device.scope;
+
+        const cameraMatrix = new Mat4();
+        cameraMatrix.setTRS(camera._node.getPosition(), camera._node.getRotation(), Vec3.ONE);
+
+        const viewMatrix = new Mat4();
+        viewMatrix.invert(cameraMatrix);
+
+        scope.resolve('matrix_model').setValue(this.meshInstance.node.worldTransform.data);
+        scope.resolve('matrix_view').setValue(viewMatrix.data);
+        scope.resolve('matrix_projection').setValue(camera.projectionMatrix.data);
     }
 }
 

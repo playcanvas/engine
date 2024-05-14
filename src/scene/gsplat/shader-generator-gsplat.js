@@ -6,7 +6,7 @@ import { shaderChunks } from "../shader-lib/chunks/chunks.js";
 import { ShaderGenerator } from "../shader-lib/programs/shader-generator.js";
 import { ShaderPass } from "../shader-pass.js";
 
-const splatCoreVS = `
+const splatCoreVS = /* glsl */ `
     uniform mat4 matrix_model;
     uniform mat4 matrix_view;
     uniform mat4 matrix_projection;
@@ -180,7 +180,7 @@ const splatCoreFS = /* glsl_ */ `
     }
 `;
 
-class GShaderGeneratorSplat {
+class GSplatShaderGenerator {
     generateKey(options) {
         const vsHash = hashCode(options.vertex);
         const fsHash = hashCode(options.fragment);
@@ -216,6 +216,6 @@ class GShaderGeneratorSplat {
     }
 }
 
-const gsplat = new GShaderGeneratorSplat();
+const gsplat = new GSplatShaderGenerator();
 
 export { gsplat };
