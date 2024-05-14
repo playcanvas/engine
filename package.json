@@ -22,9 +22,9 @@
   "types": "build/playcanvas.d.ts",
   "exports": {
     ".": {
-      "require": "./build/playcanvas.js",
+      "types": "./build/playcanvas.d.ts",
       "import": "./build/playcanvas/src/index.js",
-      "types": "./build/playcanvas.d.ts"
+      "require": "./build/playcanvas.js"
     },
     "./build/*": "./build/*"
   },
