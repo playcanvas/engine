@@ -80,18 +80,25 @@ class GSplatData {
     // /**
     //  * @param {import('./ply-reader').PlyElement[]} elements - The elements.
     //  * @param {boolean} [performZScale] - Whether to perform z scaling.
+    //  * @param {object} [options] - The options.
+    //  * @param {boolean} [options.performZScale] - Whether to perform z scaling.
+    //  * @param {boolean} [options.reorder] - Whether to reorder the data.
     //  */
-    constructor(elements, performZScale = true) {
+    constructor(elements, options = {}) {
         this.elements = elements;
         this.vertexElement = elements.find(element => element.name === 'vertex');
 
-        if (!this.isCompressed && performZScale) {
-            mat4.setScale(-1, -1, 1);
-            this.transform(mat4);
+        if (!this.isCompressed) {
+            if (options.performZScale ?? true) {
+                mat4.setScale(-1, -1, 1);
+                this.transform(mat4);
+            }
 
             // reorder uncompressed splats in morton order for better memory access
             // efficiency during rendering
-            this.reorderData();
+            if (options.reorder ?? true) {
+                this.reorderData();
+            }
         }
     }
 
@@ -410,7 +417,10 @@ class GSplatData {
                     storage: data[name]
                 };
             })
-        }], false);
+        }], {
+            performZScale: false,
+            reorder: false
+        });
     }
 
     calcMortonOrder() {
