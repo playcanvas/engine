@@ -49,12 +49,12 @@ class ScriptType extends Script {
         // list for 'enable' and initialize attributes if not already initialized
         const onFirstEnable = () => {
             if (!this._initialized && this.enabled) {
-                this.off('enabled', onFirstEnable);
+                this.off('enable', onFirstEnable);
                 this.__initializeAttributes(true);
             }
         };
 
-        this.on('enabled', onFirstEnable);
+        this.on('enable', onFirstEnable);
 
         Script.prototype.initScript.call(this, args);
         this.__attributes = { };
