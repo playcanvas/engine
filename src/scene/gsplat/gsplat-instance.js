@@ -197,26 +197,9 @@ class GSplatInstance {
             const camera = this.cameras[0];
             this.sort(camera._node);
 
-            this.updateMaterial(camera);
-
             // we get new list of cameras each frame
             this.cameras.length = 0;
         }
-    }
-
-    updateMaterial(camera) {
-        const device = this.splat.device;
-        const scope = device.scope;
-
-        const cameraMatrix = new Mat4();
-        cameraMatrix.setTRS(camera._node.getPosition(), camera._node.getRotation(), Vec3.ONE);
-
-        const viewMatrix = new Mat4();
-        viewMatrix.invert(cameraMatrix);
-
-        scope.resolve('matrix_model').setValue(this.meshInstance.node.worldTransform.data);
-        scope.resolve('matrix_view').setValue(viewMatrix.data);
-        scope.resolve('matrix_projection').setValue(camera.projectionMatrix.data);
     }
 }
 
