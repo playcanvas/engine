@@ -294,7 +294,11 @@ class PlyParser {
         } else {
             readPly(response.body.getReader(), asset.data.elementFilter ?? defaultElementFilter)
                 .then((response) => {
-                    callback(null, new GSplatResource(this.device, new GSplatData(response)));
+                    const gsplatData = new GSplatData(response, {
+                        performZScale: asset.data.performZScale,
+                        reorder: asset.data.reorder
+                    });
+                    callback(null, new GSplatResource(this.device, gsplatData));
                 })
                 .catch((err) => {
                     callback(err, null);

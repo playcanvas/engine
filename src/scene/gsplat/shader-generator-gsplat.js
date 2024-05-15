@@ -1,5 +1,5 @@
 import { hashCode } from "../../core/hash.js";
-import { SEMANTIC_POSITION } from "../../platform/graphics/constants.js";
+import { SEMANTIC_ATTR13, SEMANTIC_POSITION } from "../../platform/graphics/constants.js";
 import { ShaderUtils } from "../../platform/graphics/shader-utils.js";
 import { DITHER_NONE } from "../constants.js";
 import { shaderChunks } from "../shader-lib/chunks/chunks.js";
@@ -21,6 +21,7 @@ const splatCoreVS = `
     uniform vec4 tex_params;
     uniform sampler2D splatColor;
 
+    uniform highp usampler2D splatOrder;
     uniform highp sampler2D transformA;
     uniform highp sampler2D transformB;
     uniform highp sampler2D transformC;
@@ -29,27 +30,37 @@ const splatCoreVS = `
     vec3 covA;
     vec3 covB;
 
-    attribute uint vertex_id;
-    ivec2 dataUV;
-    void evalDataUV() {
+    attribute vec3 vertex_position;
+    attribute uint vertex_id_attrib;
 
-        // turn vertex_id into int grid coordinates
-        ivec2 textureSize = ivec2(tex_params.xy);
-        vec2 invTextureSize = tex_params.zw;
+    uint splatId;
+    ivec2 splatUV;
+    void evalSplatUV() {
+        int bufferSizeX = int(tex_params.x);
 
-        int gridV = int(float(vertex_id) * invTextureSize.x);
-        int gridU = int(vertex_id) - gridV * textureSize.x;
-        dataUV = ivec2(gridU, gridV);
+        // sample order texture
+        uint orderId = vertex_id_attrib + uint(vertex_position.z);
+        ivec2 orderUV = ivec2(
+            int(orderId) % bufferSizeX,
+            int(orderId) / bufferSizeX
+        );
+
+        // calculate splatUV
+        splatId = texelFetch(splatOrder, orderUV, 0).r;
+        splatUV = ivec2(
+            int(splatId) % bufferSizeX,
+            int(splatId) / bufferSizeX
+        );
     }
 
     vec4 getColor() {
-        return texelFetch(splatColor, dataUV, 0);
+        return texelFetch(splatColor, splatUV, 0);
     }
 
     void getTransform() {
-        vec4 tA = texelFetch(transformA, dataUV, 0);
-        vec4 tB = texelFetch(transformB, dataUV, 0);
-        vec4 tC = texelFetch(transformC, dataUV, 0);
+        vec4 tA = texelFetch(transformA, splatUV, 0);
+        vec4 tB = texelFetch(transformB, splatUV, 0);
+        vec4 tC = texelFetch(transformC, splatUV, 0);
 
         center = tA.xyz;
         covA = tB.xyz;
@@ -57,7 +68,7 @@ const splatCoreVS = `
     }
 
     vec3 evalCenter() {
-        evalDataUV();
+        evalSplatUV();
 
         // get data
         getTransform();
@@ -75,7 +86,7 @@ const splatCoreVS = `
             return vec4(0.0, 0.0, 2.0, 1.0);
         }
 
-        id = float(vertex_id);
+        id = float(splatId);
         color = getColor();
 
         mat3 Vrk = mat3(
@@ -118,11 +129,7 @@ const splatCoreVS = `
             return vec4(0.0, 0.0, 2.0, 1.0);
         }
 
-        int vertexIndex = int(gl_VertexID) % 4;
-        texCoord = vec2(
-            float((vertexIndex == 0 || vertexIndex == 3) ? -2 : 2),
-            float((vertexIndex == 0 || vertexIndex == 1) ? -2 : 2)
-        );
+        texCoord = vertex_position.xy;
 
         splat_proj.xy += (texCoord.x * v1 + texCoord.y * v2) / viewport * splat_proj.w;
         return splat_proj;
@@ -200,7 +207,8 @@ class GShaderGeneratorSplat {
         return ShaderUtils.createDefinition(device, {
             name: 'SplatShader',
             attributes: {
-                vertex_id: SEMANTIC_POSITION
+                vertex_position: SEMANTIC_POSITION,
+                vertex_id_attrib: SEMANTIC_ATTR13
             },
             vertexCode: vs,
             fragmentCode: fs
