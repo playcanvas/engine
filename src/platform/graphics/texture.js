@@ -792,7 +792,7 @@ class Texture {
      * - {@link TEXTURELOCK_READ}
      * - {@link TEXTURELOCK_WRITE}
      * Defaults to {@link TEXTURELOCK_WRITE}.
-     * @returns {Uint8Array|Uint16Array|Float32Array} A typed array containing the pixel data of
+     * @returns {Uint8Array|Uint16Array|Uint32Array|Float32Array} A typed array containing the pixel data of
      * the locked mip level.
      */
     lock(options = {}) {
@@ -998,6 +998,10 @@ class Texture {
             promises.push(promise);
         }
         await Promise.all(promises);
+    }
+
+    read(x, y, width, height, mipLevel = 0, face = 0, data = null, immediate = false) {
+        return this.impl.read?.(x, y, width, height, mipLevel, face, data, immediate);
     }
 }
 
