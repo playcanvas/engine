@@ -175,14 +175,9 @@ class ShaderUtils {
 
         const precision = forcePrecision ? forcePrecision : device.precision;
 
-        let code = '';
-        if (device.isWebGPU) {
+        let code = `precision ${precision} float;\nprecision ${precision} int;\n`;
 
-            code = `precision ${precision} float;\nprecision ${precision} int;\n`;
-
-        } else {
-
-            code = `precision ${precision} float;\n`;
+        if (device.isWebGL2) {
             code += `precision ${precision} sampler2DShadow;\n`;
         }
 
