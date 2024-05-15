@@ -456,6 +456,7 @@ class GSplatData {
                ['packed_position', 'packed_rotation', 'packed_scale', 'packed_color'].every(name => this.getProp(name));
     }
 
+    // decompress data into uncompressed splat format and return a new GSplatData instance
     decompress() {
         const members = ['x', 'y', 'z', 'f_dc_0', 'f_dc_1', 'f_dc_2', 'opacity', 'rot_0', 'rot_1', 'rot_2', 'rot_3', 'scale_0', 'scale_1', 'scale_2'];
 
@@ -565,6 +566,8 @@ class GSplatData {
         return indices;
     }
 
+    // reorder uncompressed splat data into morton order. this improves GPU
+    // memory access efficiency during rendering.
     reorderData() {
         // calculate splat morton order
         const order = this.calcMortonOrder();
