@@ -209,7 +209,7 @@ class ShaderUtils {
 
         if (!device.isWebGPU) {
 
-            code = `precision ${precision} float;\n`;
+            code = `precision ${precision} float;\nprecision ${precision} int;`;
 
             if (device.isWebGL2) {
                 code += `precision ${precision} sampler2DShadow;\n`;
