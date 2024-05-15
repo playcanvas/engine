@@ -263,6 +263,7 @@ class GSplatData {
         return this.getElement(elementName)?.properties.find(p => p.name === name)?.storage;
     }
 
+    // access the named element
     getElement(name) {
         return this.elements.find(e => e.name === name);
     }
@@ -277,7 +278,15 @@ class GSplatData {
         });
     }
 
-    // create an iterator for extracting splat data
+    /**
+     * Create an iterator for extracting splat data
+     * 
+     * @param {Vec3} p - the vector to receive splat position
+     * @param {Quat} r - the quaternion to receive splat rotation
+     * @param {Vec4} s - the vector to receive splat scale
+     * @param {Vec4} c - the vector to receive splat color
+     * @returns SplatIterator | SplatCompressedIterator The iterator
+     */
     createIter(p, r, s, c) {
         return this.isCompressed ? new SplatCompressedIterator(this, p, r, s, c) : new SplatIterator(this, p, r, s, c);
     }
