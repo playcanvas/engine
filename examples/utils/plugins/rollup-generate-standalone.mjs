@@ -10,9 +10,10 @@ const GREEN_OUT = '\x1b[32m';
  *
  * @param {string} nodeEnv - The node environment.
  * @param {string} enginePath - The path to the engine.
+ * @param {string} rti - Whether to activate RuntimeTypeInspector.
  * @returns {import('rollup').Plugin} The plugin.
  */
-export function generateStandalone(nodeEnv, enginePath) {
+export function generateStandalone(nodeEnv, enginePath, rti) {
     return {
         name: 'generate-standalone',
         buildStart() {
@@ -23,7 +24,7 @@ export function generateStandalone(nodeEnv, enginePath) {
             }
         },
         buildEnd() {
-            const cmd = `cross-env NODE_ENV=${nodeEnv} ENGINE_PATH=${enginePath} node ./scripts/standalone-html.mjs`;
+            const cmd = `cross-env NODE_ENV=${nodeEnv} ENGINE_PATH=${enginePath} RTI=${rti} node ./scripts/standalone-html.mjs`;
             console.log(`${GREEN_OUT}${cmd}`);
             execSync(cmd);
         }

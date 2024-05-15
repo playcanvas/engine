@@ -15,6 +15,7 @@ import { generateStandalone } from './utils/plugins/rollup-generate-standalone.m
 
 // engine rollup utils
 import { buildTarget } from '../utils/rollup-build-target.mjs';
+import { buildTargetRTI } from '../utils/rollup-build-target-rti.mjs';
 
 // util functions
 import { isModuleWithExternalDependencies } from './utils/utils.mjs';
@@ -27,7 +28,7 @@ const ENGINE_PATH = !process.env.ENGINE_PATH && NODE_ENV === 'development' ?
 const PCUI_PATH = process.env.PCUI_PATH || 'node_modules/@playcanvas/pcui';
 const PCUI_REACT_PATH = path.resolve(PCUI_PATH, 'react');
 const PCUI_STYLES_PATH = path.resolve(PCUI_PATH, 'styles');
-
+const { RTI = '' } = process.env;
 
 const STATIC_FILES = [
     // static main page src
@@ -104,6 +105,9 @@ function getEngineTargets() {
     checkAppEngine();
 
     const targets = [];
+    if (RTI === 'on') {
+        targets.push(buildTargetRTI('es', '../src/index.rti.js', 'dist/iframe/ENGINE_PATH'));
+    }
     if (ENGINE_PATH) {
         return targets;
     }
@@ -152,7 +156,7 @@ export default [
         },
         treeshake: false,
         plugins: [
-            generateStandalone(NODE_ENV, ENGINE_PATH),
+            generateStandalone(NODE_ENV, ENGINE_PATH, RTI),
             copyStatic(NODE_ENV, STATIC_FILES)
         ]
     },

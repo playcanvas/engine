@@ -40,7 +40,10 @@ function generateExampleFile(categoryKebab, exampleNameKebab, setEngineType, fil
 
     // engine
     const engineType = process.env.ENGINE_PATH ? 'development' : process.env.NODE_ENV === 'development' ? 'debug' : setEngineType;
-    const engine = engineFor(engineType);
+    let engine = engineFor(engineType);
+    if (process.env.RTI === 'on') {
+        engine = './ENGINE_PATH/playcanvas.rti.mjs';
+    }
     html = html.replace(/'@ENGINE'/g, JSON.stringify(engine));
 
     if (/'@([A-Z0-9_]+)'/g.test(html)) {
