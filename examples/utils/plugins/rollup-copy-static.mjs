@@ -13,7 +13,10 @@ const copied = new Set();
  * This plugin copies static files from source to destination.
  *
  * @param {string} nodeEnv - The node environment.
- * @param {{ src: string, dest: string, once: boolean }[]} targets - Array of source and destination objects.
+ * @param {object[]} targets - Array of source and destination objects.
+ * @param {string} targets.src - File or entire dir.
+ * @param {string} targets.dest - File or entire dir, usually into `dist/`.
+ * @param {boolean} [targets.once] - Copy files only once for speed-up (external libs).
  * @param {boolean} log - Log the copy status.
  * @returns {import('rollup').Plugin} The plugin.
  */

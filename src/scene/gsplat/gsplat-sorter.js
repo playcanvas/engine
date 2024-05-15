@@ -1,4 +1,5 @@
 import { EventHandler } from "../../core/event-handler.js";
+import { TEXTURELOCK_READ } from "../../platform/graphics/constants.js";
 
 // sort blind set of data
 function SortWorker() {
@@ -25,6 +26,21 @@ function SortWorker() {
     let distances;
     let target;
     let countBuffer;
+
+    const binarySearch = (m, n, compare_fn) => {
+        while (m <= n) {
+            const k = (n + m) >> 1;
+            const cmp = compare_fn(k);
+            if (cmp > 0) {
+                m = k + 1;
+            } else if (cmp < 0) {
+                n = k - 1;
+            } else {
+                return k;
+            }
+        }
+        return ~m;
+    };
 
     const update = () => {
         if (!centers || !data || !cameraPosition || !cameraDirection) return;
@@ -58,7 +74,10 @@ function SortWorker() {
         const numVertices = centers.length / 3;
         if (distances?.length !== numVertices) {
             distances = new Uint32Array(numVertices);
-            target = new Float32Array(numVertices * 4); // output 4 indices per splat (quad)
+        }
+
+        if (target?.length !== data.length) {
+            target = data.slice();
         }
 
         // calc min/max distance using bound
@@ -104,16 +123,18 @@ function SortWorker() {
             countBuffer[i] += countBuffer[i - 1];
 
         // Build the output array
-        const outputArray = new Uint32Array(target.buffer);
         for (let i = 0; i < numVertices; i++) {
             const distance = distances[i];
-            const destIndex = (--countBuffer[distance]) * 4;
-
-            outputArray[destIndex] = i;
-            outputArray[destIndex + 1] = i;
-            outputArray[destIndex + 2] = i;
-            outputArray[destIndex + 3] = i;
+            const destIndex = --countBuffer[distance];
+            target[destIndex] = i;
         }
+
+        // find splat with distance 0 to limit rendering
+        const dist = i => distances[target[i]] / divider + minDist;
+        const findZero = () => {
+            const result = binarySearch(0, numVertices - 1, i => -dist(i));
+            return Math.min(numVertices, Math.abs(result));
+        };
 
         // swap
         const tmp = data;
@@ -122,7 +143,8 @@ function SortWorker() {
 
         // send results
         self.postMessage({
-            data: data.buffer
+            data: data.buffer,
+            count: dist(numVertices - 1) >= 0 ? findZero() : numVertices
         }, [data.buffer]);
 
         data = null;
@@ -130,7 +152,7 @@ function SortWorker() {
 
     self.onmessage = (message) => {
         if (message.data.data) {
-            data = new Float32Array(message.data.data);
+            data = new Uint32Array(message.data.data);
         }
         if (message.data.centers) {
             centers = new Float32Array(message.data.centers);
@@ -165,7 +187,7 @@ function SortWorker() {
 class GSplatSorter extends EventHandler {
     worker;
 
-    vertexBuffer;
+    orderTexture;
 
     constructor() {
         super();
@@ -176,19 +198,19 @@ class GSplatSorter extends EventHandler {
 
         this.worker.onmessage = (message) => {
             const newData = message.data.data;
-            const oldData = this.vertexBuffer.storage;
+            const oldData = this.orderTexture._levels[0].buffer;
 
             // send vertex storage to worker to start the next frame
             this.worker.postMessage({
                 data: oldData
             }, [oldData]);
 
-            // update vertex buffer data in the next event cycle so the above postMesssage
-            // call is queued before the relatively slow setData call below is invoked
-            setTimeout(() => {
-                this.vertexBuffer.setData(newData);
-                this.fire('updated');
-            });
+            // set new data directly on texture
+            this.orderTexture._levels[0] = new Uint32Array(newData);
+            this.orderTexture.upload();
+
+            // set new data directly on texture
+            this.fire('updated', message.data.count);
         };
     }
 
@@ -197,11 +219,16 @@ class GSplatSorter extends EventHandler {
         this.worker = null;
     }
 
-    init(vertexBuffer, centers) {
-        this.vertexBuffer = vertexBuffer;
+    init(orderTexture, centers) {
+        this.orderTexture = orderTexture;
+
+        // get the texture's storage buffer and make a copy
+        const buf = this.orderTexture.lock({
+            mode: TEXTURELOCK_READ
+        }).buffer.slice();
+        this.orderTexture.unlock();
 
         // send the initial buffer to worker
-        const buf = vertexBuffer.storage.slice(0);
         this.worker.postMessage({
             data: buf,
             centers: centers.buffer
