@@ -34,7 +34,7 @@ class GSplatResource {
      */
     constructor(device, splatData) {
         this.device = device;
-        this.splatData = splatData; // splatData.isCompressed ? splatData.decompress() : splatData;
+        this.splatData = splatData;
     }
 
     destroy() {
