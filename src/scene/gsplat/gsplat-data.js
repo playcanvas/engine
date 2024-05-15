@@ -97,8 +97,8 @@ class SplatCompressedIterator {
                 unpack8888(c, color[i]);
             }
         };
-    } 
-};
+    }
+}
 
 // iterator for accessing uncompressed splat data
 class SplatIterator {
@@ -168,7 +168,7 @@ class SplatIterator {
  * @param {Mat4} result - Mat4 instance holding calculated rotation matrix.
  * @param {Vec3} p - The splat position
  * @param {Quat} r - The splat rotation
- * */
+ */
 const calcSplatMat = (result, p, r) => {
     quat.set(r.x, r.y, r.z, r.w).normalize();
     result.setTRS(p, quat, Vec3.ONE);
@@ -284,12 +284,12 @@ class GSplatData {
 
     /**
      * Create an iterator for accessing splat data
-     * 
+     *
      * @param {Vec3|null} [p] - the vector to receive splat position
      * @param {Quat|null} [r] - the quaternion to receive splat rotation
      * @param {Vec3|null} [s] - the vector to receive splat scale
      * @param {Vec4|null} [c] - the vector to receive splat color
-     * @returns SplatIterator | SplatCompressedIterator - The iterator
+     * @returns {SplatIterator | SplatCompressedIterator} - The iterator
      */
     createIter(p, r, s, c) {
         return this.isCompressed ? new SplatCompressedIterator(this, p, r, s, c) : new SplatIterator(this, p, r, s, c);
@@ -342,9 +342,9 @@ class GSplatData {
 
     /**
      * Calculate exact scene aabb taking into account splat size
-     * 
-     * @param {BoundingBox} result 
-     * @param {(i) => boolean} pred 
+     *
+     * @param {BoundingBox} result - Where to store the resulting bounding box.
+     * @param {(i) => boolean} [pred] - Optional predicate function to filter splats.
      * @returns {boolean} - Whether the calculation was successful.
      */
     calcAabbExact(result, pred) {

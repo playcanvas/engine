@@ -1,11 +1,10 @@
-import { CULLFACE_BACK, CULLFACE_NONE } from "../../platform/graphics/constants.js";
+import { CULLFACE_BACK, CULLFACE_NONE, SEMANTIC_ATTR13, SEMANTIC_POSITION } from "../../platform/graphics/constants.js";
 import { ShaderProcessorOptions } from "../../platform/graphics/shader-processor-options.js";
 import { BLEND_NONE, BLEND_NORMAL, DITHER_NONE, GAMMA_NONE, GAMMA_SRGBHDR, SHADER_FORWARDHDR, TONEMAP_LINEAR } from "../constants.js";
 import { Material } from "../materials/material.js";
 import { getProgramLibrary } from "../shader-lib/get-program-library.js";
 
 import { hashCode } from "../../core/hash.js";
-import { SEMANTIC_ATTR13, SEMANTIC_POSITION } from "../../platform/graphics/constants.js";
 import { ShaderUtils } from "../../platform/graphics/shader-utils.js";
 import { shaderChunks } from "../shader-lib/chunks/chunks.js";
 import { ShaderGenerator } from "../shader-lib/programs/shader-generator.js";
