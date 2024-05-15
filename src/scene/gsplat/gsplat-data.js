@@ -222,6 +222,10 @@ class GSplatData {
      * @param {Mat4} mat - The matrix.
      */
     transform(mat) {
+        if (this.isCompressed) {
+            return false;
+        }
+
         const x = this.getProp('x');
         const y = this.getProp('y');
         const z = this.getProp('z');
@@ -250,6 +254,8 @@ class GSplatData {
 
             // TODO: transform SH
         }
+
+        return true;
     }
 
     // access a named property
@@ -271,6 +277,7 @@ class GSplatData {
         });
     }
 
+    // create an iterator for extracting splat data
     createIter(p, r, s, c) {
         return this.isCompressed ? new SplatCompressedIterator(this, p, r, s, c) : new SplatIterator(this, p, r, s, c);
     }
