@@ -15,6 +15,7 @@ const aabb2 = new BoundingBox();
 const debugColor = new Color(1, 1, 0, 0.4);
 const SH_C0 = 0.28209479177387814;
 
+// iterator for accessing compressed splat data
 class SplatCompressedIterator {
     constructor(gsplatData, p, r, s, c) {
         const unpackUnorm = (value, bits) => {
@@ -99,6 +100,7 @@ class SplatCompressedIterator {
     } 
 };
 
+// iterator for accessing uncompressed splat data
 class SplatIterator {
     constructor(gsplatData, p, r, s, c) {
         const x = gsplatData.getProp('x');
@@ -162,6 +164,7 @@ class SplatIterator {
 }
 
 /**
+ * Calculate a splat orientation matrix from its position and rotation.
  * @param {Mat4} result - Mat4 instance holding calculated rotation matrix.
  * @param {Vec3} p - The splat position
  * @param {Quat} r - The splat rotation
@@ -220,6 +223,7 @@ class GSplatData {
      * Transform splat data by the given matrix.
      *
      * @param {Mat4} mat - The matrix.
+     * @returns {boolean} True if the transformation was successful, false if the data is compressed.
      */
     transform(mat) {
         if (this.isCompressed) {
@@ -279,13 +283,13 @@ class GSplatData {
     }
 
     /**
-     * Create an iterator for extracting splat data
+     * Create an iterator for accessing splat data
      * 
-     * @param {Vec3} p - the vector to receive splat position
-     * @param {Quat} r - the quaternion to receive splat rotation
-     * @param {Vec4} s - the vector to receive splat scale
-     * @param {Vec4} c - the vector to receive splat color
-     * @returns SplatIterator | SplatCompressedIterator The iterator
+     * @param {Vec3|null} [p] - the vector to receive splat position
+     * @param {Quat|null} [r] - the quaternion to receive splat rotation
+     * @param {Vec3|null} [s] - the vector to receive splat scale
+     * @param {Vec4|null} [c] - the vector to receive splat color
+     * @returns SplatIterator | SplatCompressedIterator - The iterator
      */
     createIter(p, r, s, c) {
         return this.isCompressed ? new SplatCompressedIterator(this, p, r, s, c) : new SplatIterator(this, p, r, s, c);
@@ -336,7 +340,13 @@ class GSplatData {
         return !first;
     }
 
-    // calculate exact scene aabb taking into account splat size
+    /**
+     * Calculate exact scene aabb taking into account splat size
+     * 
+     * @param {BoundingBox} result 
+     * @param {(i) => boolean} pred 
+     * @returns {boolean} - Whether the calculation was successful.
+     */
     calcAabbExact(result, pred) {
 
         const p = new Vec3();
@@ -559,8 +569,8 @@ class GSplatData {
         return indices;
     }
 
+    // reorder the splat data to aid in better gpu memory access at render time
     reorderData() {
-        // calculate splat morton order
         const order = this.calcMortonOrder();
 
         const reorder = (data) => {
