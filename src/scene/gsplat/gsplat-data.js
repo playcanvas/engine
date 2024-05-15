@@ -12,14 +12,7 @@ const quat2 = new Quat();
 const aabb = new BoundingBox();
 const aabb2 = new BoundingBox();
 
-const debugPoints = [new Vec3(), new Vec3(), new Vec3(), new Vec3(), new Vec3(), new Vec3(), new Vec3(), new Vec3()];
-const debugLines = [
-    debugPoints[0], debugPoints[1], debugPoints[1], debugPoints[3], debugPoints[3], debugPoints[2], debugPoints[2], debugPoints[0],
-    debugPoints[4], debugPoints[5], debugPoints[5], debugPoints[7], debugPoints[7], debugPoints[6], debugPoints[6], debugPoints[4],
-    debugPoints[0], debugPoints[4], debugPoints[1], debugPoints[5], debugPoints[2], debugPoints[6], debugPoints[3], debugPoints[7]
-];
 const debugColor = new Color(1, 1, 0, 0.4);
-
 const SH_C0 = 0.28209479177387814;
 
 class SplatCompressedIterator {
@@ -169,53 +162,13 @@ class SplatIterator {
 }
 
 /**
- * Defines the shape of a SplatTRS.
- * @typedef {object} SplatTRS - Represents a splat object with position, rotation, and scale.
- * @property {number} x - The x-coordinate of the position.
- * @property {number} y - The y-coordinate of the position.
- * @property {number} z - The z-coordinate of the position.
- * @property {number} rx - The x-component of the quaternion rotation.
- * @property {number} ry - The y-component of the quaternion rotation.
- * @property {number} rz - The z-component of the quaternion rotation.
- * @property {number} rw - The w-component of the quaternion rotation.
- * @property {number} sx - The scale factor in the x-direction.
- * @property {number} sy - The scale factor in the y-direction.
- * @property {number} sz - The scale factor in the z-direction.
- */
-
-/**
  * @param {Mat4} result - Mat4 instance holding calculated rotation matrix.
- * @param {SplatTRS} data - The splat TRS object.
- */
-const calcSplatMat = (result, data) => {
-    const px = data.x;
-    const py = data.y;
-    const pz = data.z;
-    const d = Math.sqrt(data.rx * data.rx + data.ry * data.ry + data.rz * data.rz + data.rw * data.rw);
-    const x = data.rx / d;
-    const y = data.ry / d;
-    const z = data.rz / d;
-    const w = data.rw / d;
-
-    // build rotation matrix
-    result.data.set([
-        1.0 - 2.0 * (z * z + w * w),
-        2.0 * (y * z + x * w),
-        2.0 * (y * w - x * z),
-        0,
-
-        2.0 * (y * z - x * w),
-        1.0 - 2.0 * (y * y + w * w),
-        2.0 * (z * w + x * y),
-        0,
-
-        2.0 * (y * w + x * z),
-        2.0 * (z * w - x * y),
-        1.0 - 2.0 * (y * y + z * z),
-        0,
-
-        px, py, pz, 1
-    ]);
+ * @param {Vec3} p - The splat position
+ * @param {Quat} r - The splat rotation
+ * */
+const calcSplatMat = (result, p, r) => {
+    quat.set(r.x, r.y, r.z, r.w).normalize();
+    result.setTRS(p, quat, Vec3.ONE);
 };
 
 class GSplatData {
@@ -252,12 +205,14 @@ class GSplatData {
 
     /**
      * @param {BoundingBox} result - Bounding box instance holding calculated result.
-     * @param {SplatTRS} data - The splat TRS object.
+     * @param {Vec3} p - The splat position
+     * @param {Quat} r - The splat rotation
+     * @param {Vec3} s - The splat scale
      */
-    static calcSplatAabb(result, data) {
-        calcSplatMat(mat4, data);
+    static calcSplatAabb(result, p, r, s) {
+        calcSplatMat(mat4, p, r);
         aabb.center.set(0, 0, 0);
-        aabb.halfExtents.set(data.sx * 2, data.sy * 2, data.sz * 2);
+        aabb.halfExtents.set(s.x * 2, s.y * 2, s.z * 2);
         result.setFromTransformedAabb(aabb, mat4);
     }
 
@@ -320,13 +275,12 @@ class GSplatData {
         return this.isCompressed ? new SplatCompressedIterator(this, p, r, s, c) : new SplatIterator(this, p, r, s, c);
     }
 
-    // calculate scene aabb taking into account splat size
+    // calculate a pessimistic aabb, which is faster than calculating the exact aabb
     calcAabb(result, pred) {
-
         const p = new Vec3();
         const s = new Vec3();
 
-        const iter = this.createIter(p, s);
+        const iter = this.createIter(p, null, s);
 
         let mx, my, mz, Mx, My, Mz;
         let first = true;
@@ -338,7 +292,7 @@ class GSplatData {
 
             iter.read(i);
 
-            const scaleVal = Math.max(s.x, s.y, s.z);
+            const scaleVal = 2.0 * Math.max(s.x, s.y, s.z);
 
             if (first) {
                 first = false;
@@ -361,6 +315,36 @@ class GSplatData {
         if (!first) {
             result.center.set((mx + Mx) * 0.5, (my + My) * 0.5, (mz + Mz) * 0.5);
             result.halfExtents.set((Mx - mx) * 0.5, (My - my) * 0.5, (Mz - mz) * 0.5);
+        }
+
+        return !first;
+    }
+
+    // calculate exact scene aabb taking into account splat size
+    calcAabbExact(result, pred) {
+
+        const p = new Vec3();
+        const r = new Quat();
+        const s = new Vec3();
+
+        const iter = this.createIter(p, r, s);
+
+        let first = true;
+
+        for (let i = 0; i < this.numSplats; ++i) {
+            if (pred && !pred(i)) {
+                continue;
+            }
+
+            iter.read(i);
+
+            if (first) {
+                first = false;
+                GSplatData.calcSplatAabb(result, p, r, s);
+            } else {
+                GSplatData.calcSplatAabb(aabb2, p, r, s);
+                result.add(aabb2);
+            }
         }
 
         return !first;
@@ -403,7 +387,7 @@ class GSplatData {
 
             iter.read(i);
 
-            const weight = 1.0 / (1.0 + Math.exp(Math.max(s.x, s.y, s.z)));
+            const weight = 1.0 / (1.0 + Math.max(s.x, s.y, s.z));
             result.x += p.x * weight;
             result.y += p.y * weight;
             result.z += p.z * weight;
@@ -421,39 +405,22 @@ class GSplatData {
         const r = new Quat();
         const s = new Vec3();
 
-        const iter = this.createIter(p, r, s);
+        const min = new Vec3();
+        const max = new Vec3();
 
-        const splat = {
-            x: 0, y: 0, z: 0, rx: 0, ry: 0, rz: 0, rw: 0, sx: 0, sy: 0, sz: 0
-        };
+        const iter = this.createIter(p, r, s);
 
         for (let i = 0; i < this.numSplats; ++i) {
             iter.read(i);
 
-            splat.x = p.x;
-            splat.y = p.y;
-            splat.z = p.z;
-            splat.rx = r.x;
-            splat.ry = r.y;
-            splat.rz = r.z;
-            splat.rw = r.w;
-            splat.sx = s.x;
-            splat.sy = s.y;
-            splat.sz = s.z;
-
-            calcSplatMat(mat4, splat);
+            calcSplatMat(mat4, p, r);
             mat4.mul2(worldMat, mat4);
 
-            for (let j = 0; j < 8; ++j) {
-                vec3.set(
-                    splat.sx * 2 * ((j & 1) ? 1 : -1),
-                    splat.sy * 2 * ((j & 2) ? 1 : -1),
-                    splat.sz * 2 * ((j & 4) ? 1 : -1)
-                );
-                mat4.transformPoint(vec3, debugPoints[j]);
-            }
+            min.set(s.x * -2.0, s.y * -2.0, s.z * -2.0);
+            max.set(s.x * 2.0, s.y * 2.0, s.z * 2.0);
 
-            scene.drawLineArrays(debugLines, debugColor);
+            // @ts-ignore
+            scene.immediate.drawWireAlignedBox(min, max, debugColor, true, scene.defaultDrawLayer, mat4);
         }
     }
 
