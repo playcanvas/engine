@@ -920,6 +920,13 @@ class WebgpuGraphicsDevice extends GraphicsDevice {
             this.addCommandBuffer(cb);
         }
 
+        return this.readBuffer(stagingBuffer, size, data, immediate);
+    }
+
+    readBuffer(stagingBuffer, size, data = null, immediate = false) {
+
+        const destBuffer = stagingBuffer.buffer;
+
         // return a promise that resolves with the data
         return new Promise((resolve, reject) => {
 
