@@ -295,40 +295,75 @@ class GSplatData {
         return this.isCompressed ? new SplatCompressedIterator(this, p, r, s, c) : new SplatIterator(this, p, r, s, c);
     }
 
-    // calculate a pessimistic aabb, which is faster than calculating the exact aabb
+    // calculafte a pessimistic aabb, which is faster than calculating an exact aabb
     calcAabb(result, pred) {
-        const p = new Vec3();
-        const s = new Vec3();
-
-        const iter = this.createIter(p, null, s);
-
         let mx, my, mz, Mx, My, Mz;
         let first = true;
 
-        for (let i = 0; i < this.numSplats; ++i) {
-            if (pred && !pred(i)) {
-                continue;
+        if (this.isCompressed && !pred && this.numSplats) {
+            // fast bounds calc using chunk data
+            const numChunks = Math.ceil(this.numSplats / 256);
+
+            const min_x = this.getProp('min_x', 'chunk');
+            const min_y = this.getProp('min_y', 'chunk');
+            const min_z = this.getProp('min_z', 'chunk');
+            const max_x = this.getProp('max_x', 'chunk');
+            const max_y = this.getProp('max_y', 'chunk');
+            const max_z = this.getProp('max_z', 'chunk');
+            const max_scale_x = this.getProp('max_scale_x', 'chunk');
+            const max_scale_y = this.getProp('max_scale_y', 'chunk');
+            const max_scale_z = this.getProp('max_scale_z', 'chunk');
+
+            let s = Math.exp(Math.max(max_scale_x[0], max_scale_y[0], max_scale_z[0]));
+            mx = min_x[0] - s;
+            my = min_y[0] - s;
+            mz = min_z[0] - s;
+            Mx = max_x[0] + s;
+            My = max_y[0] + s;
+            Mz = max_z[0] + s;
+
+            for (let i = 1; i < numChunks; ++i) {
+                s = Math.exp(Math.max(max_scale_x[i], max_scale_y[i], max_scale_z[i]));
+                mx = Math.min(mx, min_x[i] - s);
+                my = Math.min(my, min_y[i] - s);
+                mz = Math.min(mz, min_z[i] - s);
+                Mx = Math.max(Mx, max_x[i] + s);
+                My = Math.max(My, max_y[i] + s);
+                Mz = Math.max(Mz, max_z[i] + s);
             }
 
-            iter.read(i);
+            first = false;
+        } else {
+            const p = new Vec3();
+            const s = new Vec3();
 
-            const scaleVal = 2.0 * Math.max(s.x, s.y, s.z);
+            const iter = this.createIter(p, null, s);
 
-            if (first) {
-                first = false;
-                mx = p.x - scaleVal;
-                my = p.y - scaleVal;
-                mz = p.z - scaleVal;
-                Mx = p.x + scaleVal;
-                My = p.y + scaleVal;
-                Mz = p.z + scaleVal;
-            } else {
-                mx = Math.min(mx, p.x - scaleVal);
-                my = Math.min(my, p.y - scaleVal);
-                mz = Math.min(mz, p.z - scaleVal);
-                Mx = Math.max(Mx, p.x + scaleVal);
-                My = Math.max(My, p.y + scaleVal);
-                Mz = Math.max(Mz, p.z + scaleVal);
+            for (let i = 0; i < this.numSplats; ++i) {
+                if (pred && !pred(i)) {
+                    continue;
+                }
+
+                iter.read(i);
+
+                const scaleVal = 2.0 * Math.max(s.x, s.y, s.z);
+
+                if (first) {
+                    first = false;
+                    mx = p.x - scaleVal;
+                    my = p.y - scaleVal;
+                    mz = p.z - scaleVal;
+                    Mx = p.x + scaleVal;
+                    My = p.y + scaleVal;
+                    Mz = p.z + scaleVal;
+                } else {
+                    mx = Math.min(mx, p.x - scaleVal);
+                    my = Math.min(my, p.y - scaleVal);
+                    mz = Math.min(mz, p.z - scaleVal);
+                    Mx = Math.max(Mx, p.x + scaleVal);
+                    My = Math.max(My, p.y + scaleVal);
+                    Mz = Math.max(Mz, p.z + scaleVal);
+                }
             }
         }
 
@@ -380,15 +415,50 @@ class GSplatData {
      * @param {Float32Array} result - Array containing the centers.
      */
     getCenters(result) {
-        const p = new Vec3();
-        const iter = this.createIter(p);
+        if (this.isCompressed) {
+            // optimised centers extraction for centers
+            const position = this.getProp('packed_position');
+            const min_x = this.getProp('min_x', 'chunk');
+            const min_y = this.getProp('min_y', 'chunk');
+            const min_z = this.getProp('min_z', 'chunk');
+            const max_x = this.getProp('max_x', 'chunk');
+            const max_y = this.getProp('max_y', 'chunk');
+            const max_z = this.getProp('max_z', 'chunk');
 
-        for (let i = 0; i < this.numSplats; ++i) {
-            iter.read(i);
+            const numChunks = Math.ceil(this.numSplats / 256);
 
-            result[i * 3 + 0] = p.x;
-            result[i * 3 + 1] = p.y;
-            result[i * 3 + 2] = p.z;
+            let mx, my, mz, Mx, My, Mz;
+
+            for (let c = 0; c < numChunks; ++c) {
+                mx = min_x[c];
+                my = min_y[c];
+                mz = min_z[c];
+                Mx = max_x[c];
+                My = max_y[c];
+                Mz = max_z[c];
+
+                const end = Math.min(this.numSplats, (c + 1) * 256);
+                for (let i = c * 256; i < end; ++i) {
+                    const p = position[i];
+                    const px = (p >>> 21) / 2047;
+                    const py = ((p >>> 11) & 0x3ff) / 1023;
+                    const pz = (p & 0x7ff) / 2047;
+                    result[i * 3 + 0] = (1 - px) * mx + px * Mx;
+                    result[i * 3 + 1] = (1 - py) * my + py * My;
+                    result[i * 3 + 2] = (1 - pz) * mz + pz * Mz;
+                }
+            }
+        } else {
+            const p = new Vec3();
+            const iter = this.createIter(p);
+
+            for (let i = 0; i < this.numSplats; ++i) {
+                iter.read(i);
+
+                result[i * 3 + 0] = p.x;
+                result[i * 3 + 1] = p.y;
+                result[i * 3 + 2] = p.z;
+            }
         }
     }
 
