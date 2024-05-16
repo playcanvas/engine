@@ -1,4 +1,4 @@
-import { CULLFACE_BACK, CULLFACE_NONE, SEMANTIC_ATTR13, SEMANTIC_POSITION } from "../../platform/graphics/constants.js";
+import { CULLFACE_NONE, SEMANTIC_ATTR13, SEMANTIC_POSITION } from "../../platform/graphics/constants.js";
 import { ShaderProcessorOptions } from "../../platform/graphics/shader-processor-options.js";
 import { BLEND_NONE, BLEND_NORMAL, DITHER_NONE, GAMMA_NONE, GAMMA_SRGBHDR, SHADER_FORWARDHDR, TONEMAP_LINEAR } from "../constants.js";
 import { Material } from "../materials/material.js";
@@ -240,36 +240,24 @@ varying vec4 color;
 
 vec4 evalSplat() {
 
-    #ifdef DEBUG_RENDER
+    float A = -dot(texCoord, texCoord);
+    if (A < -4.0) discard;
+    float B = exp(A) * color.a;
 
-        if (color.a < 0.2) discard;
-        return color;
-
-    #else
-
-        float A = -dot(texCoord, texCoord);
-        if (A < -4.0) discard;
-        float B = exp(A) * color.a;
-
-        #ifdef PICK_PASS
-            if (B < 0.3) discard;
-            return(uColor);
-        #endif
-
-        #ifndef DITHER_NONE
-            opacityDither(B, id * 0.013);
-        #endif
-
-        // the color here is in gamma space, so bring it to linear
-        vec3 diffuse = decodeGamma(color.rgb);
-
-        // apply tone-mapping and gamma correction as needed
-        diffuse = toneMap(diffuse);
-        diffuse = gammaCorrectOutput(diffuse);
-
-        return vec4(diffuse, B);
-
+    #ifdef PICK_PASS
+        if (B < 0.3) discard;
+        return(uColor);
     #endif
+
+    #ifndef DITHER_NONE
+        opacityDither(B, id * 0.013);
+    #endif
+
+    #ifdef TONEMAP_ENABLED
+        color.rgb = gammaCorrectOutput(toneMap(decodeGamma(color.rgb)));
+    #endif
+
+    return vec4(color.rgb, B);
 }
 `;
 
@@ -277,7 +265,7 @@ class GSplatCompressedShaderGenerator {
     generateKey(options) {
         const vsHash = hashCode(options.vertex);
         const fsHash = hashCode(options.fragment);
-        return `splat-${options.pass}-${options.gamma}-${options.toneMapping}-${vsHash}-${fsHash}-${options.debugRender}-${options.dither}}`;
+        return `splat-${options.pass}-${options.gamma}-${options.toneMapping}-${vsHash}-${fsHash}-${options.dither}}`;
     }
 
     createShaderDefinition(device, options) {
@@ -287,8 +275,8 @@ class GSplatCompressedShaderGenerator {
 
         const defines =
             shaderPassDefines +
-            (options.debugRender ? '#define DEBUG_RENDER\n' : '') +
-            `#define DITHER_${options.dither.toUpperCase()}\n`;
+            `#define DITHER_${options.dither.toUpperCase()}\n` +
+            `#define TONEMAP_${options.toneMapping === TONEMAP_LINEAR ? 'DISABLED' : 'ENABLED'}\n`;
 
         const vs = defines + splatCoreVS + options.vertex;
         const fs = defines + shaderChunks.decodePS +
@@ -327,7 +315,6 @@ const splatMainFS = `
 
 /**
  * @typedef {object} SplatMaterialOptions - The options.
- * @property {boolean} [debugRender] - Adds #define DEBUG_RENDER for shader.
  * @property {string} [vertex] - Custom vertex shader, see SPLAT MANY example.
  * @property {string} [fragment] - Custom fragment shader, see SPLAT MANY example.
  * @property {string} [dither] - Opacity dithering enum.
@@ -339,14 +326,12 @@ const splatMainFS = `
  */
 const createGSplatCompressedMaterial = (options = {}) => {
 
-    const { debugRender } = options;
-
     const ditherEnum = options.dither ?? DITHER_NONE;
     const dither = ditherEnum !== DITHER_NONE;
 
     const material = new Material();
     material.name = 'compressedSplatMaterial';
-    material.cull = debugRender ? CULLFACE_BACK : CULLFACE_NONE;
+    material.cull = CULLFACE_NONE;
     material.blendType = dither ? BLEND_NONE : BLEND_NORMAL;
     material.depthWrite = dither;
 
@@ -358,7 +343,6 @@ const createGSplatCompressedMaterial = (options = {}) => {
             toneMapping: (pass === SHADER_FORWARDHDR ? TONEMAP_LINEAR : scene.toneMapping),
             vertex: options.vertex ?? splatMainVS,
             fragment: options.fragment ?? splatMainFS,
-            debugRender: debugRender,
             dither: ditherEnum
         };
 
