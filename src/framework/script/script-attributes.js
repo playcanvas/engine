@@ -13,7 +13,7 @@ import { Asset } from '../asset/asset.js';
 const components = ['x', 'y', 'z', 'w'];
 const vecLookup = [undefined, undefined, Vec2, Vec3, Vec4];
 
-function rawToValue(app, args, value, old) {
+export function rawToValue(app, args, value, old) {
     switch (args.type) {
         case 'boolean':
             return !!value;

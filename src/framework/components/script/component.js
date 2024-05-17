@@ -1,7 +1,7 @@
 import { Debug } from '../../../core/debug.js';
 import { SortedLoopArray } from '../../../core/sorted-loop-array.js';
 
-import { ScriptAttributes } from '../../script/script-attributes.js';
+import { ScriptAttributes, rawToValue } from '../../script/script-attributes.js';
 import {
     SCRIPT_INITIALIZE, SCRIPT_POST_INITIALIZE, SCRIPT_UPDATE,
     SCRIPT_POST_UPDATE, SCRIPT_SWAP
@@ -9,6 +9,7 @@ import {
 
 import { Component } from '../component.js';
 import { Entity } from '../../entity.js';
+import { ScriptType } from '../../script/script-type.js';
 
 /**
  * The ScriptComponent allows you to extend the functionality of an Entity by attaching your own
@@ -59,6 +60,13 @@ class ScriptComponent extends Component {
      * });
      */
     static EVENT_DESTROY = 'destroy';
+
+    /**
+     * A map of the initialized component data for a script
+     * @private
+     * @type {Map<string, *>}
+     */
+    _attributeDataMap
 
     /**
      * Fired when the script component becomes enabled. This event does not take into account the
@@ -363,8 +371,41 @@ class ScriptComponent extends Component {
     }
 
     _onInitializeAttributes() {
-        for (let i = 0, len = this.scripts.length; i < len; i++)
-            if (this.scripts[i].__initializeAttributes) this.scripts[i].__initializeAttributes();
+        this.initializeAllScriptAttributes();
+    }
+
+    initializeAllScriptAttributes() {
+
+        for (let i = 0, len = this.scripts.length; i < len; i++) {
+            const script = this.scripts[i];
+            this.initializeAttributes(script);
+        }
+    }
+
+    initializeAttributes(script) {
+
+        // if script has __initializeAttributes method assume it has a runtime schema
+        if (script instanceof ScriptType) {
+
+            script.__initializeAttributes();
+
+        } else {
+
+            // otherwise we need to manually initialize attributes from the schema
+            const name = script.__scriptType.__name;
+            const schema = this.system.app.scripts?.getSchema(name)[name];
+            const data = this._attributeDataMap.get(name);
+
+            if (schema && data) {
+                for (const attributeName in schema.attributes) {
+                    const attributeSchema = schema.attributes[attributeName];
+                    const value = data[attributeName];
+                    const currentValue = script[attributeName];
+
+                    script[attributeName] = rawToValue(this.system.app, attributeSchema, value, currentValue);
+                }
+            }
+        }
     }
 
     _scriptMethod(script, method, arg) {
@@ -594,8 +635,8 @@ class ScriptComponent extends Component {
     /**
      * Create a script instance and attach to an entity script component.
      *
-     * @param {string|typeof import('../../script/script-type.js').ScriptType} nameOrType - The
-     * name or type of {@link ScriptType}.
+     * @param {string|typeof import('../../script/script.js').Script} nameOrType - The
+     * name or type of {@link Script}.
      * @param {object} [args] - Object with arguments for a script.
      * @param {boolean} [args.enabled] - If script instance is enabled after creation. Defaults to
      * true.
@@ -639,6 +680,19 @@ class ScriptComponent extends Component {
                     attributes: args.attributes
                 });
 
+
+                // If the script is not a ScriptType then we must store attribute data on the component
+                if (!(scriptInstance instanceof ScriptType)) {
+
+                    if (!this._attributeDataMap) {
+                        this._attributeDataMap = new Map();
+                    }
+
+                    // Store the Attribute data
+                    this._attributeDataMap.set(scriptName, args.attributes);
+
+                }
+
                 const len = this._scripts.length;
                 let ind = -1;
                 if (typeof args.ind === 'number' && args.ind !== -1 && len > args.ind)
@@ -655,8 +709,8 @@ class ScriptComponent extends Component {
 
                 this[scriptName] = scriptInstance;
 
-                if (!args.preloading && scriptInstance.__initializeAttributes)
-                    scriptInstance.__initializeAttributes();
+                if (!args.preloading)
+                    this.initializeAttributes(scriptInstance);
 
                 this.fire('create', scriptName, scriptInstance);
                 this.fire('create:' + scriptName, scriptInstance);
@@ -719,6 +773,8 @@ class ScriptComponent extends Component {
         const scriptData = this._scriptsIndex[scriptName];
         delete this._scriptsIndex[scriptName];
         if (!scriptData) return false;
+
+        this._attributeDataMap.delete(scriptName);
 
         const scriptInstance = scriptData.instance;
         if (scriptInstance && !scriptInstance._destroyed) {
@@ -788,7 +844,7 @@ class ScriptComponent extends Component {
         if (!scriptInstance.swap)
             return false;
 
-        if (scriptInstance.__initializeAttributes) scriptInstance.__initializeAttributes();
+        this.initializeAttributes(scriptInstance);
 
         // add to component
         this._scripts[ind] = scriptInstance;

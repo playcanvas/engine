@@ -58,6 +58,31 @@ export class Script extends EventHandler {
     static EVENT_DESTROY = 'destroy';
 
     /**
+     * Fired when script attributes have changed. This event is available in two forms. They are as follows:
+     *
+     * 1. `attr` - Fired for any attribute change. The handler is passed the name of the attribute
+     * that changed, the value of the attribute before the change and the value of the attribute
+     * after the change.
+     * 2. `attr:[name]` - Fired for a specific attribute change. The handler is passed the value of
+     * the attribute before the change and the value of the attribute after the change.
+     *
+     * @event
+     * @example
+     * PlayerController.prototype.initialize = function () {
+     *     this.on('attr', (name, newValue, oldValue) => {
+     *         console.log(`Attribute '${name}' changed from '${oldValue}' to '${newValue}'`);
+     *     });
+     * };
+     * @example
+     * PlayerController.prototype.initialize = function () {
+     *     this.on('attr:speed', (newValue, oldValue) => {
+     *         console.log(`Attribute 'speed' changed from '${oldValue}' to '${newValue}'`);
+     *     });
+     * };
+     */
+    static EVENT_ATTR = 'attr';
+
+    /**
      * Fired when a script instance had an exception. The script instance will be automatically
      * disabled. The handler is passed an {@link Error} object containing the details of the
      * exception and the name of the method that threw the exception.
@@ -110,12 +135,12 @@ export class Script extends EventHandler {
      * relative to other script instances in the component.
      *
      * @type {number}
-     * @protected
+     * @private
      */
     __executionOrder;
 
     /**
-     * Create a new ScriptType instance.
+     * Create a new Script instance.
      *
      * @param {object} args - The input arguments object.
      * @param {import('../app-base.js').AppBase} args.app - The {@link AppBase} that is running the
@@ -150,6 +175,8 @@ export class Script extends EventHandler {
         if (!this._initialized && this.enabled) {
             this._initialized = true;
 
+            this.__initializeAttributes(true);
+
             if (this.initialize)
                 this.entity.script._scriptMethod(this, SCRIPT_INITIALIZE);
         }
@@ -168,11 +195,11 @@ export class Script extends EventHandler {
     }
 
     get enabled() {
-        return this._enabled && !this.__destroyed && this.entity.script.enabled && this.entity.enabled;
+        return this._enabled && !this._destroyed && this.entity.script.enabled && this.entity.enabled;
     }
 
     /**
-     * @param {{entity: import('../entity.js').Entity, app: import('../app-base.js').AppBase, enabled: boolean}} args -
+     * @param {{entity: import('../entity.js').Entity, app: import('../app-base.js').AppBase}} args -
      * The entity and app.
      * @protected
      */
@@ -187,43 +214,68 @@ export class Script extends EventHandler {
         this._enabledOld = this.enabled;
 
         this.__destroyed = false;
-        this.__executionOrder = -1;
+
         this.__scriptType = script;
+        this.__executionOrder = -1;
+    }
+
+    /**
+     * Name of a Script Type.
+     *
+     * @type {string}
+     * @private
+     */
+    static __name = null; // Will be assigned when calling createScript or registerScript.
+
+    /**
+     * @param {*} constructorFn - The constructor function of the script type.
+     * @returns {string} The script name.
+     * @private
+     */
+    static __getScriptName = getScriptName;
+
+    /**
+     * Name of a Script Type.
+     *
+     * @type {string|null}
+     */
+    static get scriptName() {
+        return this.__name;
     }
 
     /**
      * @function
-     * @name ScriptType#[initialize]
+     * @name Script#[initialize]
      * @description Called when script is about to run for the first time.
      */
 
     /**
      * @function
-     * @name ScriptType#[postInitialize]
+     * @name Script#[postInitialize]
      * @description Called after all initialize methods are executed in the same tick or enabling chain of actions.
      */
 
     /**
      * @function
-     * @name ScriptType#[update]
+     * @name Script#[update]
      * @description Called for enabled (running state) scripts on each tick.
      * @param {number} dt - The delta time in seconds since the last frame.
      */
 
     /**
      * @function
-     * @name ScriptType#[postUpdate]
+     * @name Script#[postUpdate]
      * @description Called for enabled (running state) scripts on each tick, after update.
      * @param {number} dt - The delta time in seconds since the last frame.
      */
 
     /**
      * @function
-     * @name ScriptType#[swap]
-     * @description Called when a ScriptType that already exists in the registry
-     * gets redefined. If the new ScriptType has a `swap` method in its prototype,
+     * @name Script#[swap]
+     * @description Called when a Script that already exists in the registry
+     * gets redefined. If the new Script has a `swap` method in its prototype,
      * then it will be executed to perform hot-reload at runtime.
-     * @param {ScriptType} old - Old instance of the scriptType to copy data to the new instance.
+     * @param {Script} old - Old instance of the scriptType to copy data to the new instance.
      */
 }
 

@@ -151,12 +151,16 @@ class ScriptHandler extends ResourceHandler {
         // @ts-ignore
         import(importUrl.toString()).then((module) => {
 
+            const filename = importUrl.pathname.split('/').pop();
+            const scriptSchema = this._app.assets.find(filename, 'script').data.scripts;
+
             for (const key in module) {
                 const scriptClass = module[key];
                 const extendsScriptType = scriptClass.prototype instanceof Script;
 
                 if (extendsScriptType) {
                     registerScript(scriptClass, toLowerCamelCase(scriptClass.name));
+                    this._app.scripts.addSchema(toLowerCamelCase(scriptClass.name), scriptSchema);
                 }
             }
 

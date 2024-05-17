@@ -8,75 +8,11 @@ import { Script, getScriptName } from './script.js';
  * @category Script
  */
 class ScriptType extends Script {
-    /**
-     * Fired when script attributes have changed. This event is available in two forms. They are as follows:
-     *
-     * 1. `attr` - Fired for any attribute change. The handler is passed the name of the attribute
-     * that changed, the value of the attribute before the change and the value of the attribute
-     * after the change.
-     * 2. `attr:[name]` - Fired for a specific attribute change. The handler is passed the value of
-     * the attribute before the change and the value of the attribute after the change.
-     *
-     * @event
-     * @example
-     * PlayerController.prototype.initialize = function () {
-     *     this.on('attr', (name, newValue, oldValue) => {
-     *         console.log(`Attribute '${name}' changed from '${oldValue}' to '${newValue}'`);
-     *     });
-     * };
-     * @example
-     * PlayerController.prototype.initialize = function () {
-     *     this.on('attr:speed', (newValue, oldValue) => {
-     *         console.log(`Attribute 'speed' changed from '${oldValue}' to '${newValue}'`);
-     *     });
-     * };
-     */
-    static EVENT_ATTR = 'attr';
-
     /** @private */
     __attributes;
 
     /** @private */
     __attributesRaw;
-
-    /**
-     * @param {{entity: import('../entity.js').Entity, app: import('../app-base.js').AppBase}} args -
-     * The entity and app.
-     * @protected
-     */
-    initScriptType(args) {
-
-        // list for 'enable' and initialize attributes if not already initialized
-        const onFirstEnable = () => {
-            if (!this._initialized && this.enabled) {
-                this.off('enable', onFirstEnable);
-                this.__initializeAttributes(true);
-            }
-        };
-
-        this.on('enable', onFirstEnable);
-
-        Script.prototype.initScript.call(this, args);
-        this.__attributes = { };
-        this.__attributesRaw = args.attributes || { }; // need at least an empty object to make sure default attributes are initialized
-    }
-
-    /**
-     * Name of a Script Type.
-     *
-     * @type {string}
-     * @private
-     */
-    static __name = null; // Will be assigned when calling createScript or registerScript.
-
-    /**
-     * Name of a Script Type.
-     *
-     * @type {string|null}
-     */
-    static get scriptName() {
-        return this.__name;
-    }
 
     /**
      * The interface to define attributes for Script Types. Refer to {@link ScriptAttributes}.
@@ -98,8 +34,23 @@ class ScriptType extends Script {
     }
 
     /**
+     * @protected
+     * @param {*} args
+     */
+    initScript(args) {
+        // super does not exist due to the way the class is instantiated
+
+        Script.prototype.initScript.call(this, args);
+        this.__attributes = { };
+        this.__attributesRaw = args.attributes || { }; // need at least an empty object to make sure default attributes are initialized
+    }
+
+    initScriptType(args) {
+        this.initScript(args);
+    }
+
+    /**
      * @param {boolean} [force] - Set to true to force initialization of the attributes.
-     * @private
      */
     __initializeAttributes(force) {
         if (!force && !this.__attributesRaw)
@@ -145,14 +96,6 @@ class ScriptType extends Script {
             this.prototype[key] = methods[key];
         }
     }
-
-
-    /**
-     * @param {*} constructorFn - The constructor function of the script type.
-     * @returns {string} The script name.
-     * @private
-     */
-    static __getScriptName = getScriptName;
 }
 
 export { ScriptType };

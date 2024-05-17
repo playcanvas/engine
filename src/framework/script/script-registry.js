@@ -36,6 +36,23 @@ class ScriptRegistry extends EventHandler {
         this.off();
     }
 
+    addSchema(script, schema) {
+
+        if (!schema) return;
+
+        if (!this.scriptSchemas) {
+            this.scriptSchemas = new Map();
+        }
+        this.scriptSchemas.set(script, schema);
+    }
+
+    getSchema(script) {
+        if (!this.scriptSchemas) {
+            return null;
+        }
+        return this.scriptSchemas.get(script);
+    }
+
     /**
      * Add {@link ScriptType} to registry. Note: when {@link createScript} is called, it will add
      * the {@link ScriptType} to the registry automatically. If a script already exists in
@@ -110,12 +127,11 @@ class ScriptRegistry extends EventHandler {
 
                     if (scriptInstance)
                         scriptInstances.push(scriptInstance);
+
+                    // initialize attributes
+                    component.initializeAllScriptAttributes();
                 }
             }
-
-            // initialize attributes
-            for (let i = 0; i < scriptInstances.length; i++)
-                scriptInstances[i].__initializeAttributes();
 
             // call initialize()
             for (let i = 0; i < scriptInstances.length; i++) {
