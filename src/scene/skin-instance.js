@@ -93,6 +93,7 @@ class SkinInstance {
      * the root bone.
      * @param {import('../framework/entity.js').Entity} entity - Specifies the entity used if the
      * bone match is not found in the hierarchy - usually the entity the render component is attached to.
+     * @ignore
      */
     resolve(rootBone, entity) {
 
