@@ -87,7 +87,7 @@ class SkinInstance {
     }
 
     /**
-     * Resolved skin bones to a hierarchy with the rootBone at its root.
+     * Resolves skin bones to a hierarchy with the rootBone at its root.
      *
      * @param {import('../framework/entity.js').Entity} rootBone - A reference to the entity to be used as
      * the root bone.
