@@ -323,7 +323,7 @@ class ButtonComponent extends Component {
      * Padding to be used in hit-test calculations. Can be used to expand the bounding box so that
      * the button is easier to tap.
      *
-     * @type {import('../../../core/math/vec4.js')}
+     * @type {import('../../../core/math/vec4.js').Vec4}
      */
     set hitPadding(arg) {
         this._setValue('hitPadding', arg);
