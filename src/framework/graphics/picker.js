@@ -139,7 +139,8 @@ class Picker {
         const rect = this.sanitizeRect(x, y, width, height);
 
         return this.renderTarget.colorBuffer.read(rect.x, rect.y, rect.z, rect.w, {
-            renderTarget: this.renderTarget
+            renderTarget: this.renderTarget,
+            immediate: true
         }).then((pixels) => {
             return this.decodePixels(pixels, this.mapping);
         });
