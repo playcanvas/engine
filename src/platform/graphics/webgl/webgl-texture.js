@@ -66,6 +66,11 @@ class WebglTexture {
 
     dirtyParameterFlags = 0;
 
+    constructor(texture) {
+        /** @type {import('../texture.js').Texture} */
+        this.texture = texture;
+    }
+
     destroy(device) {
         if (this._glTexture) {
 
@@ -709,6 +714,15 @@ class WebglTexture {
         texture.adjustVramSizeTracking(device._vram, texture._gpuSize);
 
         this._glCreated = true;
+    }
+
+    read(x, y, width, height, options) {
+
+        const texture = this.texture;
+
+        /** @type {import('./webgl-graphics-device.js').WebglGraphicsDevice} */
+        const device = texture.device;
+        return device.readTextureAsync(texture, x, y, width, height, options);
     }
 }
 
