@@ -9,29 +9,33 @@ import { customTypes, customValidations, validateNumber } from '@runtime-type-in
 import 'display-anything/src/style.js';
 Object.assign(customTypes, {
     AnimSetter(value) {
-        // console.log("@todo Is AnimSetter?", value);
-        return true;
+        // Fix for type in ./framework/anim/evaluator/anim-target.js
+        // The AnimSetter type is not sufficient, just patching in the correct type here
+        if (value instanceof Function) {
+            return true;
+        }
+        return value?.set instanceof Function && value?.set instanceof Function;
     },
     AnimBinder(value) {
-        // console.log("@todo Is AnimBinder?", value);
-        return true;
-    },
-    AnimCurvePath(value) {
-        // console.log("@todo Is AnimCurvePath?", value);
-        return true;
+        // Still using: @implements {AnimBinder}
+        // RTI doesn't take notice of that so far and we started removing `@implements` aswell:
+        // Testable via graphics/contact-hardening-shadows example.
+        return value?.constructor?.name?.endsWith('Binder');
     },
     ComponentData(value) {
-        // console.log("@todo Is ComponentData?", value);
-        return true;
+        // Used in src/framework/components/collision/trigger.js
+        // Why do we neither use @implements nor `extends` for such type?
+        // Testable via animation/locomotion example.
+        return value?.constructor?.name?.endsWith("ComponentData");
     },
     Renderer(value) {
         // E.g. instance of `ForwardRenderer`
-        // debugger;
         return value?.constructor?.name?.endsWith("Renderer");
     },
     IArguments(value) {
-        // console.log("@todo Is IArguments?", value);
-        return true;
+        // Used in src/core/tags.js
+        // Testable via physics/offset-collision example.
+        return value[Symbol.iterator] instanceof Function;
     }
 });
 // For quickly checking props of Vec2/Vec3/Vec4/Quat/Mat3/Mat4 without GC
