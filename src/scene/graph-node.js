@@ -567,7 +567,7 @@ class GraphNode extends EventHandler {
      * of a field then the value passed as the second argument will be checked for equality. If
      * this is the name of a function then the return value of the function will be checked for
      * equality against the valued passed as the second argument to this function.
-     * @param {object} [value] - If the first argument (attr) is a property name then this value
+     * @param {*} [value] - If the first argument (attr) is a property name then this value
      * will be checked against the value of the property.
      * @returns {GraphNode[]} The array of graph nodes that match the search criteria.
      * @example
@@ -602,7 +602,7 @@ class GraphNode extends EventHandler {
      * this is the name of a field then the value passed as the second argument will be checked for
      * equality. If this is the name of a function then the return value of the function will be
      * checked for equality against the valued passed as the second argument to this function.
-     * @param {object} [value] - If the first argument (attr) is a property name then this value
+     * @param {*} [value] - If the first argument (attr) is a property name then this value
      * will be checked against the value of the property.
      * @returns {GraphNode|null} A graph node that match the search criteria. Returns null if no
      * node is found.

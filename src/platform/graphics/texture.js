@@ -999,6 +999,10 @@ class Texture {
         }
         await Promise.all(promises);
     }
+
+    read(x, y, width, height, mipLevel = 0, face = 0, data = null, immediate = false) {
+        return this.impl.read?.(x, y, width, height, mipLevel, face, data, immediate);
+    }
 }
 
 export { Texture };
