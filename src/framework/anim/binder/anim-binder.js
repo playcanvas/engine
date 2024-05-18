@@ -54,7 +54,7 @@ class AnimBinder {
      * or string path.
      * @returns {string} The locator encoded as a string.
      * @example
-     * // returns 'spotLight/light/color.r'
+     * // returns 'spotLight/light/color/r'
      * encode(['spotLight'], 'light', ['color', 'r']);
      */
     static encode(entityPath, component, propertyPath) {
