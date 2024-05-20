@@ -757,6 +757,15 @@ export const SHADER_PREPASS_VELOCITY = 5;
 export const SHADERPASS_FORWARD = 'forward';
 
 /**
+ * Shader that performs forward rendering in HDR mode (gamma correction and tonemapping are
+ * disabled).
+ *
+ * @type {string}
+ * @category Graphics
+ */
+export const SHADERPASS_FORWARD_HDR = 'forward_hdr';
+
+/**
  * Shader used for debug rendering of albedo.
  *
  * @type {string}
