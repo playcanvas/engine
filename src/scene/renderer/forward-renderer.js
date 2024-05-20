@@ -661,7 +661,7 @@ class ForwardRenderer extends Renderer {
      *
      * @param {import('../camera.js').Camera} camera - The
      * camera.
-     * @param {import('../../platform/graphics/render-target.js').RenderTarget} renderTarget - The
+     * @param {import('../../platform/graphics/render-target.js').RenderTarget|undefined} renderTarget - The
      * render target.
      * @param {import('../layer.js').Layer} layer - The layer.
      * @param {boolean} transparent - True if transparent sublayer should be rendered, opaque

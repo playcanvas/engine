@@ -848,7 +848,7 @@ class LitShader {
             if (shadowTypeUsed[SHADOW_PCF1] || shadowTypeUsed[SHADOW_PCF3]) {
                 func.append(chunks.shadowStandardPS);
             }
-            if (shadowTypeUsed[SHADOW_PCF5] && !device.isWebGL1) {
+            if (shadowTypeUsed[SHADOW_PCF5]) {
                 func.append(chunks.shadowStandardGL2PS);
             }
             if (useVsm) {

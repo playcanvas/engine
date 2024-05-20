@@ -4,7 +4,6 @@ import { BUFFER_STATIC, PIXELFORMAT_R32U, SEMANTIC_ATTR13, TYPE_UINT32 } from '.
 import { DITHER_NONE } from '../constants.js';
 import { MeshInstance } from '../mesh-instance.js';
 import { Mesh } from '../mesh.js';
-import { createGSplatMaterial } from './gsplat-material.js';
 import { GSplatSorter } from './gsplat-sorter.js';
 import { VertexFormat } from '../../platform/graphics/vertex-format.js';
 import { VertexBuffer } from '../../platform/graphics/vertex-buffer.js';
@@ -58,7 +57,6 @@ class GSplatInstance {
         // clone options object
         options = Object.assign(this.options, options);
 
-        // not supported on WebGL1
         const device = splat.device;
 
         // create the order texture
@@ -149,9 +147,8 @@ class GSplatInstance {
     }
 
     createMaterial(options) {
-        this.material = createGSplatMaterial(options);
+        this.material = this.splat.createMaterial(options);
         this.material.setParameter('splatOrder', this.orderTexture);
-        this.splat.setupMaterial(this.material);
         if (this.meshInstance) {
             this.meshInstance.material = this.material;
         }

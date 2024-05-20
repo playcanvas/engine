@@ -294,11 +294,19 @@ class PlyParser {
         } else {
             readPly(response.body.getReader(), asset.data.elementFilter ?? defaultElementFilter)
                 .then((response) => {
+                    // construct the GSplatData object
                     const gsplatData = new GSplatData(response, {
                         performZScale: asset.data.performZScale,
                         reorder: asset.data.reorder
                     });
-                    callback(null, new GSplatResource(this.device, gsplatData));
+
+                    // construct the resource
+                    const resource = new GSplatResource(
+                        this.device,
+                        gsplatData.isCompressed && asset.data.decompress ? gsplatData.decompress() : gsplatData
+                    );
+
+                    callback(null, resource);
                 })
                 .catch((err) => {
                     callback(err, null);
