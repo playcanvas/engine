@@ -967,43 +967,6 @@ class Texture {
     }
 
     /**
-     * Download texture's top level data from graphics memory to local memory.
-     *
-     * @ignore
-     */
-    async downloadAsync() {
-
-        Debug.deprecated("Texture#downloadAsync is deprecated: Use Texture#read instead.");
-
-        const promises = [];
-        for (let i = 0; i < (this.cubemap ? 6 : 1); i++) {
-            const renderTarget = new RenderTarget({
-                colorBuffer: this,
-                depth: false,
-                face: i
-            });
-
-            this.device.setRenderTarget(renderTarget);
-            this.device.initRenderTarget(renderTarget);
-
-            const levels = this.cubemap ? this._levels[i] : this._levels;
-
-            let level = levels[0];
-            if (levels[0] && this.device._isBrowserInterface(levels[0])) {
-                levels[0] = null;
-            }
-
-            level = this.lock({ face: i });
-
-            const promise = this.device.readPixelsAsync?.(0, 0, this.width, this.height, level)
-                .then(() => renderTarget.destroy());
-
-            promises.push(promise);
-        }
-        await Promise.all(promises);
-    }
-
-    /**
      * Download the textures data from the graphics memory to the local memory.
      *
      * Note a public API yet, as not all options are implemented on all platforms.
