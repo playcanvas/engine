@@ -77,7 +77,7 @@ class AssetReference {
      * Get or set the asset url which this references. One of either id or url must be called to
      * initialize an asset reference.
      *
-     * @type {string}
+     * @type {string|null}
      */
     set url(value) {
         if (this.id) throw Error('Can\'t set id and url');

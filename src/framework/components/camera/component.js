@@ -935,7 +935,7 @@ class CameraComponent extends Component {
     /**
      * Prepare the camera for frame rendering.
      *
-     * @param {import('../../../platform/graphics/render-target.js').RenderTarget|null} rt - Render
+     * @param {import('../../../platform/graphics/render-target.js').RenderTarget|null} [rt] - Render
      * target to which rendering will be performed. Will affect camera's aspect ratio, if
      * aspectRatioMode is {@link ASPECT_AUTO}.
      * @ignore

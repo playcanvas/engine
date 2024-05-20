@@ -507,7 +507,7 @@ class LightComponent extends Component {
      * Asset that has texture that will be assigned to cookie internally
      * once asset resource is available.
      *
-     * @type {number}
+     * @type {number|null}
      */
     set cookieAsset(arg) {
         this._setValue('cookieAsset', arg, function (newValue, oldValue) {
@@ -543,7 +543,7 @@ class LightComponent extends Component {
      * Projection texture. Must be 2D for spot and cubemap for omni light
      * (ignored if incorrect type is used).
      *
-     * @type {import('../../../platform/graphics/texture.js').Texture}
+     * @type {import('../../../platform/graphics/texture.js').Texture|null}
      */
     set cookie(arg) {
         this._setValue('cookie', arg, function (newValue, oldValue) {
@@ -634,7 +634,7 @@ class LightComponent extends Component {
     /**
      * Spotlight cookie scale.
      *
-     * @type {import('../../../core/math/vec2.js').Vec2}
+     * @type {import('../../../core/math/vec2.js').Vec2|null}
      */
     set cookieScale(arg) {
         this._setValue(
