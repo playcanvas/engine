@@ -20,6 +20,13 @@ import { ScriptType } from '../../script/script-type.js';
  */
 class ScriptComponent extends Component {
     /**
+     * A map of the script name and the initialized component data
+     * @private
+     * @type {Map<string, object>}
+     */
+    _attributeDataMap = new Map();
+
+    /**
      * Fired when a {@link ScriptType} instance is created and attached to the script component.
      * This event is available in two forms. They are as follows:
      *
@@ -60,13 +67,6 @@ class ScriptComponent extends Component {
      * });
      */
     static EVENT_DESTROY = 'destroy';
-
-    /**
-     * A map of the initialized component data for a script
-     * @private
-     * @type {Map<string, *>}
-     */
-    _attributeDataMap
 
     /**
      * Fired when the script component becomes enabled. This event does not take into account the
@@ -213,8 +213,22 @@ class ScriptComponent extends Component {
                 // existing script
 
                 // enabled
-                if (typeof value[key].enabled === 'boolean')
-                    script.enabled = !!value[key].enabled;
+                if (typeof value[key].enabled === 'boolean') {
+                    const enabled = !!value[key].enabled;
+
+                    // monitor to see if the script becomes enabled
+                    if (enabled && !(script instanceof ScriptType)) {
+                        const onFirstEnabled = () => {
+                            if (!script.initialized && script.enabled) {
+                                this.initializeAttributes(script);
+                                script.off('enable', onFirstEnabled);
+                            }
+                        };
+                        script.on('enable', onFirstEnabled);
+                    }
+
+                    script.enabled = enabled;
+                }
 
                 // attributes
                 if (typeof value[key].attributes === 'object') {
@@ -333,6 +347,18 @@ class ScriptComponent extends Component {
 
         for (let i = 0, len = this.scripts.length; i < len; i++) {
             const script = this.scripts[i];
+
+            // initialize attributes when enabled
+            if (!script._initialized) {
+                const onFirstEnabled = () => {
+                    if (!script._initialized && script.enabled) {
+                        this.initializeAttributes(script);
+                        script.off('enable', onFirstEnabled);
+                    }
+                };
+                script.on('enable', onFirstEnabled);
+            }
+
             script.enabled = script._enabled;
         }
 
@@ -683,10 +709,6 @@ class ScriptComponent extends Component {
 
                 // If the script is not a ScriptType then we must store attribute data on the component
                 if (!(scriptInstance instanceof ScriptType)) {
-
-                    if (!this._attributeDataMap) {
-                        this._attributeDataMap = new Map();
-                    }
 
                     // Store the Attribute data
                     this._attributeDataMap.set(scriptName, args.attributes);

@@ -1,5 +1,5 @@
 import { ScriptAttributes } from './script-attributes.js';
-import { Script, getScriptName } from './script.js';
+import { Script } from './script.js';
 
 /**
  * This is the legacy format for creating PlayCanvas script using the `pc.createScript` function.
@@ -35,16 +35,19 @@ class ScriptType extends Script {
 
     /**
      * @protected
-     * @param {*} args
+     * @param {*} args - initialization arguments
      */
     initScript(args) {
         // super does not exist due to the way the class is instantiated
-
         Script.prototype.initScript.call(this, args);
         this.__attributes = { };
         this.__attributesRaw = args.attributes || { }; // need at least an empty object to make sure default attributes are initialized
     }
 
+    /**
+     * Expose initScript as initScriptType for backwards compatibility
+     * @param {*} args - Initialization arguments
+     */
     initScriptType(args) {
         this.initScript(args);
     }
