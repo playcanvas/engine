@@ -291,7 +291,7 @@ class CubemapHandler extends ResourceHandler {
                 onLoad(i, null);
             } else if (self.compareAssetIds(assetId, loadedAssetIds[i])) {
                 // asset id hasn't changed from what is currently set
-                onLoad(i, loadedAssets[i]);
+                processTexAsset(i, loadedAssets[i]);
             } else if (parseInt(assetId, 10) === assetId) {
                 // assetId is an asset id
                 texAsset = registry.get(assetId);
@@ -319,9 +319,7 @@ class CubemapHandler extends ResourceHandler {
                 } : assetId;
                 texAsset = new Asset(cubemapAsset.name + '_part_' + i, 'texture', file);
                 registry.add(texAsset);
-                registry.once('load:' + texAsset.id, onLoad.bind(self, i));
-                registry.once('error:' + texAsset.id, onError.bind(self, i));
-                registry.load(texAsset);
+                processTexAsset(i, texAsset);
             }
         }
     }
