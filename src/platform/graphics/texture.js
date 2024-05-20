@@ -2,7 +2,6 @@ import { Debug } from '../../core/debug.js';
 import { TRACEID_TEXTURE_ALLOC, TRACEID_VRAM_TEXTURE } from '../../core/constants.js';
 import { math } from '../../core/math/math.js';
 
-import { RenderTarget } from './render-target.js';
 import { TextureUtils } from './texture-utils.js';
 import {
     isCompressedPixelFormat,
