@@ -133,7 +133,7 @@ class GSplatCompressed {
      *
      * @param {string} name - The name of the texture to be created.
      * @param {number} format - The pixel format of the texture.
-     * @param {Vec2} size - The size of the texture in a Vec2 object, containing width (x) and height (y).
+     * @param {Vec2} size - The width and height of the texture.
      * @returns {Texture} The created texture instance.
      */
     createTexture(name, format, size) {
