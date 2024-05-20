@@ -120,7 +120,7 @@ class GSplatCompressed {
      * that can contain 'count' elements.
      *
      * @param {number} count - The number of elements to store in the texture.
-     * @returns {Vec2} An instance of Vec2 representing the width and height of the texture.
+     * @returns {Vec2} The width and height of the texture.
      */
     evalTextureSize(count) {
         const width = Math.ceil(Math.sqrt(count));
