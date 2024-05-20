@@ -1,5 +1,6 @@
 import { Debug } from '../../core/debug.js';
 
+import { GraphNode } from '../../scene/graph-node.js';
 import { MeshInstance } from '../../scene/mesh-instance.js';
 import { Model } from '../../scene/model.js';
 import { MorphInstance } from '../../scene/morph-instance.js';
@@ -191,7 +192,7 @@ class GlbContainerResource {
         });
 
         // return the scene hierarchy created from scene clones
-        return GlbContainerResource.createSceneHierarchy(sceneClones, 'Entity');
+        return GlbContainerResource.createSceneHierarchy(sceneClones, Entity);
     }
 
     // get material variants
@@ -295,7 +296,7 @@ class GlbContainerResource {
         }
 
         // node hierarchy for the model
-        model.graph = GlbContainerResource.createSceneHierarchy(glb.scenes, 'GraphNode');
+        model.graph = GlbContainerResource.createSceneHierarchy(glb.scenes, GraphNode);
 
         // create mesh instance for meshes on nodes that are part of hierarchy
         for (let i = 0; i < glb.nodes.length; i++) {
