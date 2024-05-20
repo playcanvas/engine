@@ -167,13 +167,15 @@ class RenderPassCameraFrame extends RenderPass {
         };
 
         this.createPasses(options);
-        this.schedulePasses();
+
+        const allPasses = this.collectPasses();
+        this.beforePasses = allPasses.filter(element => element !== undefined);
     }
 
-    schedulePasses() {
+    collectPasses() {
+
         // use these prepared render passes in the order they should be executed
-        const allPasses = [this.prePass, this.scenePass, this.colorGrabPass, this.scenePassTransparent, this.taaPass, this.bloomPass, this.composePass, this.afterPass];
-        this.beforePasses = allPasses.filter(element => element !== undefined);
+        return [this.prePass, this.scenePass, this.colorGrabPass, this.scenePassTransparent, this.taaPass, this.bloomPass, this.composePass, this.afterPass];
     }
 
     createPasses(options) {
