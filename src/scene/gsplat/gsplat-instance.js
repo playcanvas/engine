@@ -57,7 +57,6 @@ class GSplatInstance {
         // clone options object
         options = Object.assign(this.options, options);
 
-        // not supported on WebGL1
         const device = splat.device;
 
         // create the order texture
