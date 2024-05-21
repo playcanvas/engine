@@ -501,14 +501,19 @@ class WebgpuTexture {
         wgpu.queue.writeTexture(dest, data, dataLayout, size);
     }
 
-    read(x, y, width, height, mipLevel, face, data, immediate) {
+    read(x, y, width, height, options) {
+
+        const mipLevel = options.mipLevel ?? 0;
+        const face = options.face ?? 0;
+        let data = options.data ?? null;
+        const immediate = options.immediate ?? false;
 
         const texture = this.texture;
         const formatInfo = pixelFormatInfo.get(texture.format);
         Debug.assert(formatInfo);
+        Debug.assert(formatInfo.size);
 
         const bytesPerRow = width * formatInfo.size;
-        Debug.assert(bytesPerRow);
 
         // bytesPerRow must be a multiple of 256
         const paddedBytesPerRow = math.roundUp(bytesPerRow, 256);

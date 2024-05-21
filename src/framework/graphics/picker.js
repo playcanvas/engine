@@ -11,8 +11,11 @@ import { Layer } from '../../scene/layer.js';
 import { getApplication } from '../globals.js';
 import { Debug } from '../../core/debug.js';
 import { RenderPassPicker } from './render-pass-picker.js';
+import { math } from '../../core/math/math.js';
+import { Vec4 } from '../../core/math/vec4.js';
 
 const tempSet = new Set();
+const _rect = new Vec4();
 
 /**
  * Picker object used to select mesh instances from screen coordinates.
@@ -30,6 +33,9 @@ class Picker {
 
     // mapping table from ids to meshInstances
     mapping = new Map();
+
+    // when the device is destroyed, this allows us to ignore async results
+    deviceValid = true;
 
     /**
      * Create a new Picker instance.
@@ -55,11 +61,20 @@ class Picker {
         this.width = 0;
         this.height = 0;
         this.resize(width, height);
+
+        // handle the device getting destroyed
+        this.device.on('destroy', () => {
+            this.deviceValid = false;
+        });
     }
 
     /**
      * Return the list of mesh instances selected by the specified rectangle in the previously
-     * prepared pick buffer.The rectangle using top-left coordinate system.
+     * prepared pick buffer. The rectangle using top-left coordinate system.
+     *
+     * Note: This function is not supported on WebGPU. Use {@link Picker#getSelectionAsync} instead.
+     * Note: This function is blocks the main thread while reading pixels from GPU memory. It's
+     * recommended to use {@link Picker#getSelectionAsync} instead.
      *
      * @param {number} x - The left edge of the rectangle.
      * @param {number} y - The top edge of the rectangle.
@@ -76,50 +91,110 @@ class Picker {
      */
     getSelection(x, y, width = 1, height = 1) {
         const device = this.device;
+        if (device.isWebGPU) {
+            Debug.errorOnce('pc.Picker#getSelection is not supported on WebGPU, use pc.Picker#getSelectionAsync instead.');
+            return [];
+        }
 
         Debug.assert(typeof x !== 'object', `Picker.getSelection:param 'rect' is deprecated, use 'x, y, width, height' instead.`);
 
         y = this.renderTarget.height - (y + height);
-
-        // make sure we have nice numbers to work with
-        x = Math.floor(x);
-        y = Math.floor(y);
-        width = Math.floor(Math.max(width, 1));
-        height = Math.floor(Math.max(height, 1));
+        const rect = this.sanitizeRect(x, y, width, height);
 
         // read pixels from the render target
         device.setRenderTarget(this.renderTarget);
         device.updateBegin();
 
-        const pixels = new Uint8Array(4 * width * height);
-        device.readPixels(x, y, width, height, pixels);
+        const pixels = new Uint8Array(4 * rect.z * rect.w);
+        device.readPixels(rect.x, rect.y, rect.z, rect.w, pixels);
 
         device.updateEnd();
 
-        const mapping = this.mapping;
-        for (let i = 0; i < width * height; i++) {
-            const r = pixels[4 * i + 0];
-            const g = pixels[4 * i + 1];
-            const b = pixels[4 * i + 2];
-            const a = pixels[4 * i + 3];
-            const index = a << 24 | r << 16 | g << 8 | b;
+        return this.decodePixels(pixels, this.mapping);
+    }
 
-            // White is 'no selection'
-            if (index !== -1) {
-                tempSet.add(mapping.get(index));
-            }
+    /**
+     * Return the list of mesh instances selected by the specified rectangle in the previously
+     * prepared pick buffer. The rectangle uses top-left coordinate system.
+     *
+     * This method is asynchronous and does not block the execution.
+     *
+     * @param {number} x - The left edge of the rectangle.
+     * @param {number} y - The top edge of the rectangle.
+     * @param {number} [width] - The width of the rectangle. Defaults to 1.
+     * @param {number} [height] - The height of the rectangle. Defaults to 1.
+     * @returns {Promise<import('../../scene/mesh-instance.js').MeshInstance[]>} - Promise that
+     * resolves with an array of mesh instances that are in the selection.
+     * @example
+     * // Get the mesh instances at the rectangle with start at (10,20) and size of (5,5)
+     * picker.getSelectionAsync(10, 20, 5, 5).then((meshInstances) => {
+     *    console.log(meshInstances);
+     * });
+     */
+    getSelectionAsync(x, y, width = 1, height = 1) {
+
+        if (this.device?.isWebGL2) {
+            y = this.renderTarget.height - (y + height);
         }
+        const rect = this.sanitizeRect(x, y, width, height);
 
-        // return the content of the set as an array
+        return this.renderTarget.colorBuffer.read(rect.x, rect.y, rect.z, rect.w, {
+            renderTarget: this.renderTarget,
+            immediate: true
+        }).then((pixels) => {
+            return this.decodePixels(pixels, this.mapping);
+        });
+    }
+
+    // sanitize the rectangle to make sure it;s inside the texture and does not use fractions
+    sanitizeRect(x, y, width, height) {
+        const maxWidth = this.renderTarget.width;
+        const maxHeight = this.renderTarget.height;
+        x = math.clamp(Math.floor(x), 0, maxWidth - 1);
+        y = math.clamp(Math.floor(y), 0, maxHeight - 1);
+        width = Math.floor(Math.max(width, 1));
+        width = Math.min(width, maxWidth - x);
+        height = Math.floor(Math.max(height, 1));
+        height = Math.min(height, maxHeight - y);
+        return _rect.set(x, y, width, height);
+    }
+
+    decodePixels(pixels, mapping) {
+
         const selection = [];
-        tempSet.forEach(meshInstance => selection.push(meshInstance));
-        tempSet.clear();
+
+        // when we decode results from async calls, ignore them if the device is no longer valid
+        if (this.deviceValid) {
+
+            const count = pixels.length;
+            for (let i = 0; i < count; i += 4) {
+                const r = pixels[i + 0];
+                const g = pixels[i + 1];
+                const b = pixels[i + 2];
+                const a = pixels[i + 3];
+                const index = a << 24 | r << 16 | g << 8 | b;
+
+                // White is 'no selection'
+                if (index !== -1) {
+                    tempSet.add(mapping.get(index));
+                }
+            }
+
+            // return the content of the set as an array
+            tempSet.forEach((meshInstance) => {
+                if (meshInstance)
+                    selection.push(meshInstance);
+            });
+            tempSet.clear();
+        }
 
         return selection;
     }
 
     allocateRenderTarget() {
 
+        // TODO: Ideally we'd use a UINT32 texture format and avoid RGBA8 conversion, but WebGL2 does not
+        // support clearing render targets of this format, so we'd need a quad based clear solution.
         const colorBuffer = new Texture(this.device, {
             format: PIXELFORMAT_RGBA8,
             width: this.width,
