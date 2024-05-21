@@ -41,8 +41,6 @@ import endVS from './lit/vert/end.js';
 import envAtlasPS from './common/frag/envAtlas.js';
 import envConstPS from './common/frag/envConst.js';
 import envMultiplyPS from './common/frag/envMultiply.js';
-import extensionPS from './lit/frag/extension.js';
-import extensionVS from './lit/vert/extension.js';
 import falloffInvSquaredPS from './lit/frag/falloffInvSquared.js';
 import falloffLinearPS from './lit/frag/falloffLinear.js';
 import floatUnpackingPS from './lit/frag/float-unpacking.js';
@@ -249,8 +247,6 @@ const shaderChunks = {
     envAtlasPS,
     envConstPS,
     envMultiplyPS,
-    extensionPS,
-    extensionVS,
     falloffInvSquaredPS,
     falloffLinearPS,
     floatUnpackingPS,
