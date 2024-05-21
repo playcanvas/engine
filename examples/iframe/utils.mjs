@@ -75,10 +75,10 @@ export function clearImports() {
     blobUrls.forEach(URL.revokeObjectURL);
 }
 
-const DEVICE_TYPES = ['webgpu', 'webgl2'];
+const DEVICE_TYPES = ['webgpu', 'webgl2', 'webgl1'];
 
 /**
- * @param {{ WEBGPU_DISABLED: boolean; WEBGL_DISABLED: boolean; }} config - The configuration object.
+ * @param {{ WEBGPU_DISABLED: boolean; WEBGL_DISABLED: boolean; WEBGL1_DISABLED: boolean; }} config - The configuration object.
  */
 function getDeviceType(config) {
     if (params.deviceType && DEVICE_TYPES.includes(params.deviceType)) {
@@ -86,38 +86,35 @@ function getDeviceType(config) {
         return params.deviceType;
     }
 
-    if (config.WEBGPU_DISABLED) {
-        return 'webgl2';
-    }
+    const selectedDevice = localStorage.getItem('preferredGraphicsDevice');
 
-    if (config.WEBGL_DISABLED) {
-        return 'webgpu';
-    }
-
-    if (params.deviceType) {
-        console.warn("Overwriting default deviceType from URL");
-        return params.deviceType;
-    }
-
-    const savedDevice = localStorage.getItem('preferredGraphicsDevice');
-    if (config.WEBGPU_ENABLED) {
-        let preferredDevice = 'webgpu';
-        if (isLinuxChrome()) {
-            preferredDevice = 'webgl2';
-        }
-        return savedDevice || preferredDevice;
-    }
-
-    switch (savedDevice) {
+    switch (selectedDevice) {
         case 'webgpu':
-            console.warn('Picked WebGPU but example is not supported on WebGPU, defaulting to WebGL2');
-            return 'webgl2';
-        case 'webgl1':
+            if (config.WEBGPU_DISABLED) {
+                console.warn('Picked WebGPU but example is not supported on WebGPU, defaulting to WebGL2');
+                return 'webgl2';
+            }
+            break;
         case 'webgl2':
-            return savedDevice;
-        default:
-            return 'webgl2';
+            if (config.WEBGL_DISABLED) {
+                console.warn('Picked WebGL2 but example is not supported on WebGL, defaulting to WebGPU');
+                return 'webgpu';
+            }
+            break;
+        case 'webgl1':
+            if (config.WEBGL_DISABLED) {
+                console.warn('Picked WebGL1 but example is not supported on WebGL, defaulting to WebGPU');
+                return 'webgpu';
+            }
+
+            if (config.WEBGL1_DISABLED) {
+                console.warn('Picked WebGL1 but example is not supported on WebGL1, defaulting to WebGL2');
+                return 'webgl2';
+            }
+            break;
     }
+
+    return selectedDevice;
 }
 
 export let deviceType = 'webgl2';
