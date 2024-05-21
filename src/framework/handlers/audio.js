@@ -60,7 +60,7 @@ class AudioHandler extends ResourceHandler {
         super(app, 'audio');
 
         this.manager = app.soundManager;
-        Debug.assert(this.manager, "AudioSourceComponentSystem cannot be created without sound manager");
+        Debug.assert(this.manager, "AudioHandler cannot be created without sound manager");
     }
 
     _isSupported(url) {

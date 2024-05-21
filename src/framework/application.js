@@ -13,7 +13,6 @@ import { script } from './script.js';
 import { AnimationComponentSystem } from './components/animation/system.js';
 import { AnimComponentSystem } from './components/anim/system.js';
 import { AudioListenerComponentSystem } from './components/audio-listener/system.js';
-import { AudioSourceComponentSystem } from './components/audio-source/system.js';
 import { ButtonComponentSystem } from './components/button/system.js';
 import { CollisionComponentSystem } from './components/collision/system.js';
 import { ElementComponentSystem } from './components/element/system.js';
@@ -171,7 +170,6 @@ class Application extends AppBase {
             CameraComponentSystem,
             LightComponentSystem,
             script.legacy ? ScriptLegacyComponentSystem : ScriptComponentSystem,
-            AudioSourceComponentSystem,
             SoundComponentSystem,
             AudioListenerComponentSystem,
             ParticleSystemComponentSystem,
