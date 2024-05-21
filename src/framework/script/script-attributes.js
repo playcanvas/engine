@@ -13,7 +13,7 @@ import { Asset } from '../asset/asset.js';
 const components = ['x', 'y', 'z', 'w'];
 const vecLookup = [undefined, undefined, Vec2, Vec3, Vec4];
 
-export function rawToValue(app, args, value, old) {
+function rawToValue(app, args, value, old) {
     switch (args.type) {
         case 'boolean':
             return !!value;
@@ -148,6 +148,18 @@ export function rawToValue(app, args, value, old) {
     return value;
 }
 
+export function assignRawToValue(app, args, value, script, name) {
+    const old = script[name];
+    if (args.array) {
+        script[name] = [];
+        for (let i = 0, len = value.length; i < len; i++) {
+            script[name].push(rawToValue(app, args, value[i], old ? old[i] : null));
+        }
+    } else {
+        script[name] = rawToValue(app, args, value, old);
+    }
+}
+
 /**
  * Container of Script Attribute definitions. Implements an interface to add/remove attributes and
  * store their definition for a {@link ScriptType}. Note: An instance of ScriptAttributes is
@@ -156,6 +168,8 @@ export function rawToValue(app, args, value, old) {
  * @category Script
  */
 class ScriptAttributes {
+    static assignRawToValue = assignRawToValue;
+
     /**
      * Create a new ScriptAttributes instance.
      *

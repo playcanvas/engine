@@ -1,7 +1,7 @@
 import { Debug } from '../../../core/debug.js';
 import { SortedLoopArray } from '../../../core/sorted-loop-array.js';
 
-import { ScriptAttributes, rawToValue } from '../../script/script-attributes.js';
+import { ScriptAttributes, assignRawToValue } from '../../script/script-attributes.js';
 import {
     SCRIPT_INITIALIZE, SCRIPT_POST_INITIALIZE, SCRIPT_UPDATE,
     SCRIPT_POST_UPDATE, SCRIPT_SWAP
@@ -426,9 +426,9 @@ class ScriptComponent extends Component {
                 for (const attributeName in schema.attributes) {
                     const attributeSchema = schema.attributes[attributeName];
                     const value = data[attributeName];
-                    const currentValue = script[attributeName];
 
-                    script[attributeName] = rawToValue(this.system.app, attributeSchema, value, currentValue);
+                    // Assign the value to the script based on the attribute schema
+                    assignRawToValue(this.system.app, attributeSchema, value, script, attributeName);
                 }
             }
         }
