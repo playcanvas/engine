@@ -114,7 +114,7 @@ class CoreExporter {
         device.setBlendState(BlendState.NOBLEND);
         drawQuadWithShader(device, renderTarget, shader);
 
-        // async read back the pixels
+        // async read back the pixels of the texture
         return dstTexture.read(0, 0, width, height, {
             renderTarget: renderTarget,
             immediate: true
