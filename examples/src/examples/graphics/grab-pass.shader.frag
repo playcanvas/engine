@@ -37,8 +37,10 @@ void main(void)
     vec3 grabColor = texture2DLodEXT(uSceneColorMap, grabUv + offset, mipmap).rgb;
 
     // tint the material based on mipmap
-    float tintIndex = clamp(mipmap, 0.0, 3.0);
-    grabColor *= tints[int(tintIndex)];
+    #ifdef GL2
+        float tintIndex = clamp(mipmap, 0.0, 3.0);
+        grabColor *= tints[int(tintIndex)];
+    #endif
 
     // brighten the refracted texture a little bit
     // brighten even more the rough parts of the glass
