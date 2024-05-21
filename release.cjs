@@ -2,10 +2,12 @@ const { execSync } = require('child_process');
 const readline = require('readline');
 const fs = require('fs');
 
+const devBranchName = 'main_v1';
+
 const releaseBranchName = 'release-';
 
 const printUsage = () => {
-    console.log(`Run without arguments to perform operation based on current branch (main or release-1.XX branch).
+    console.log(`Run without arguments to perform operation based on current branch (${devBranchName} or release-1.XX branch).
 Or specify the operation as an argument:
     create-release - create the next minor release branch '${releaseBranchName}1.XX'. invoke from main branch.
     finalize-release - finalize the package version and tag the release. invoke from release branch.
@@ -112,15 +114,15 @@ const getUserConfirmation = (question, callback) => {
 // updates package versions on main and newly created release branch.
 const createRelease = (mainBranch) => {
     // check branch name
-    if (mainBranch !== 'main') {
-        console.log(`warning: source branch is not 'main'.`);
+    if (mainBranch !== devBranchName) {
+        console.log(`warning: source branch is not '${devBranchName}'.`);
     }
 
     // read current package version. this contains the version we're releasing.
     const mainVersion = readPackageVersion();
-    if (mainVersion.build !== 'main') {
+    if (mainVersion.build !== devBranchName) {
         // say something?
-        console.warn(`warning: package isn't tagged as 'main' build.`);
+        console.warn(`warning: package isn't tagged as '${devBranchName}' build.`);
     }
 
     // build release branch string
@@ -198,7 +200,7 @@ const run = () => {
         // use current branch to decide operation
         const curBranch = getCurrentBranch();
 
-        if (curBranch === 'main') {
+        if (curBranch === devBranchName) {
             createRelease(curBranch);
             return 0;
         } else if (curBranch.startsWith(releaseBranchName)) {
