@@ -400,21 +400,7 @@ void main(void) {
  * @category Graphics
  */
 function reprojectTexture(source, target, options = {}) {
-    // maintain backwards compatibility with previous function signature
-    // reprojectTexture(device, source, target, specularPower = 1, numSamples = 1024)
-    if (source instanceof GraphicsDevice) {
-        source = arguments[1];
-        target = arguments[2];
-        options = { };
-        if (arguments[3] !== undefined) {
-            options.specularPower = arguments[3];
-        }
-        if (arguments[4] !== undefined) {
-            options.numSamples = arguments[4];
-        }
-
-        Debug.deprecated('please use the updated pc.reprojectTexture API.');
-    }
+    Debug.assert(source instanceof Texture && target instanceof Texture, 'source and target must be textures');
 
     // calculate inner width and height
     const seamPixels = options.seamPixels ?? 0;
