@@ -1,4 +1,5 @@
 // @config WEBGPU_DISABLED
+// @config WEBGL1_DISABLED
 import * as pc from 'playcanvas';
 import files from '@examples/files';
 import { deviceType, rootPath } from '@examples/utils';
