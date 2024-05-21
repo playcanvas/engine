@@ -76,25 +76,22 @@ export function clearImports() {
 }
 
 const DEVICE_TYPES = ['webgpu', 'webgl2'];
-export let deviceType = 'webgl2';
 
 /**
  * @param {{ WEBGPU_DISABLED: boolean; WEBGL_DISABLED: boolean; }} config - The configuration object.
  */
-export function updateDeviceType(config) {
+function getDeviceType(config) {
     if (params.deviceType && DEVICE_TYPES.includes(params.deviceType)) {
         console.warn("Overwriting default deviceType from URL: ", params.deviceType);
-        deviceType = params.deviceType;
-        return;
+        return params.deviceType;
     }
 
     if (config.WEBGPU_DISABLED) {
-        deviceType = 'webgl2';
-        return;
+        return 'webgl2';
     }
+
     if (config.WEBGL_DISABLED) {
-        deviceType = 'webgpu';
-        return;
+        return 'webgpu';
     }
 
     if (params.deviceType) {
@@ -121,6 +118,12 @@ export function updateDeviceType(config) {
         default:
             return 'webgl2';
     }
+}
+
+export let deviceType = 'webgl2';
+
+export function updateDeviceType(config) {
+    deviceType = getDeviceType(config);
 }
 
 /**
