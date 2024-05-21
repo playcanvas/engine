@@ -2,7 +2,6 @@ import { Debug } from '../../core/debug.js';
 import { TRACEID_TEXTURE_ALLOC, TRACEID_VRAM_TEXTURE } from '../../core/constants.js';
 import { math } from '../../core/math/math.js';
 
-import { RenderTarget } from './render-target.js';
 import { TextureUtils } from './texture-utils.js';
 import {
     isCompressedPixelFormat,
@@ -964,43 +963,6 @@ class Texture {
         this._needsUpload = true;
         this._needsMipmapsUpload = this._mipmaps;
         this.impl.uploadImmediate?.(this.device, this);
-    }
-
-    /**
-     * Download texture's top level data from graphics memory to local memory.
-     *
-     * @ignore
-     */
-    async downloadAsync() {
-
-        Debug.deprecated("Texture#downloadAsync is deprecated: Use Texture#read instead.");
-
-        const promises = [];
-        for (let i = 0; i < (this.cubemap ? 6 : 1); i++) {
-            const renderTarget = new RenderTarget({
-                colorBuffer: this,
-                depth: false,
-                face: i
-            });
-
-            this.device.setRenderTarget(renderTarget);
-            this.device.initRenderTarget(renderTarget);
-
-            const levels = this.cubemap ? this._levels[i] : this._levels;
-
-            let level = levels[0];
-            if (levels[0] && this.device._isBrowserInterface(levels[0])) {
-                levels[0] = null;
-            }
-
-            level = this.lock({ face: i });
-
-            const promise = this.device.readPixelsAsync?.(0, 0, this.width, this.height, level)
-                .then(() => renderTarget.destroy());
-
-            promises.push(promise);
-        }
-        await Promise.all(promises);
     }
 
     /**

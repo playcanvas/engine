@@ -146,6 +146,7 @@ class CameraComponent extends Component {
      * equivalent to {@link SHADERPASS_FORWARD}. Can be:
      *
      * - {@link SHADERPASS_FORWARD}
+     * - {@link SHADERPASS_FORWARD_HDR}
      * - {@link SHADERPASS_ALBEDO}
      * - {@link SHADERPASS_OPACITY}
      * - {@link SHADERPASS_WORLDNORMAL}

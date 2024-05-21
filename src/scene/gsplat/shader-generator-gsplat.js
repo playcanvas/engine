@@ -160,10 +160,10 @@ const splatCoreFS = /* glsl_ */ `
         #endif
 
         #ifdef TONEMAP_ENABLED
-            color.rgb = gammaCorrectOutput(toneMap(decodeGamma(color.rgb)));
+            return vec4(gammaCorrectOutput(toneMap(decodeGamma(color.rgb))), B);
+        #else
+            return vec4(color.rgb, B);
         #endif
-
-        return vec4(color.rgb, B);
     }
 `;
 
