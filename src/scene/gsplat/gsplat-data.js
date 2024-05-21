@@ -655,7 +655,9 @@ class GSplatData {
 
         this.elements.forEach((element) => {
             element.properties.forEach((property) => {
-                property.storage = reorder(property.storage);
+                if (property.storage) {
+                    property.storage = reorder(property.storage);
+                }
             });
         });
     }
