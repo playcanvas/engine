@@ -2,6 +2,7 @@ const { execSync } = require('child_process');
 const readline = require('readline');
 const fs = require('fs');
 
+// name of the main developer branch
 const devBranchName = 'main_v1';
 
 const releaseBranchName = 'release-';
@@ -120,9 +121,9 @@ const createRelease = (mainBranch) => {
 
     // read current package version. this contains the version we're releasing.
     const mainVersion = readPackageVersion();
-    if (mainVersion.build !== devBranchName) {
+    if (mainVersion.build !== 'dev') {
         // say something?
-        console.warn(`warning: package isn't tagged as '${devBranchName}' build.`);
+        console.warn(`warning: package isn't tagged as 'dev' build.`);
     }
 
     // build release branch string
