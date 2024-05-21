@@ -1,5 +1,4 @@
 // @config DESCRIPTION <div style='text-align:center'><div>Translate (1), Rotate (2), Scale (3)</div><div>World/Local (X)</div><div>Perspective (P), Orthographic (O)</div></div>
-// @config WEBGPU_DISABLED
 import * as pc from 'playcanvas';
 import { data } from '@examples/observer';
 import { deviceType, rootPath, localImport } from '@examples/utils';
@@ -262,13 +261,14 @@ const onPointerDown = (/** @type {PointerEvent} */ e) => {
         picker.prepare(camera.camera, app.scene, pickerLayers);
     }
 
-    const selection = picker.getSelection(e.clientX - 1, e.clientY - 1, 2, 2);
-    if (!selection[0]) {
-        gizmoHandler.clear();
-        return;
-    }
+    picker.getSelectionAsync(e.clientX - 1, e.clientY - 1, 2, 2).then((selection) => {
+        if (!selection[0]) {
+            gizmoHandler.clear();
+            return;
+        }
 
-    gizmoHandler.add(selection[0].node, !e.ctrlKey && !e.metaKey);
+        gizmoHandler.add(selection[0].node, !e.ctrlKey && !e.metaKey);
+    });
 };
 window.addEventListener('pointerdown', onPointerDown);
 
