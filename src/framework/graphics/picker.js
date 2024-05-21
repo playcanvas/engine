@@ -1,14 +1,11 @@
 import { Color } from '../../core/math/color.js';
 
 import { ADDRESS_CLAMP_TO_EDGE, FILTER_NEAREST, PIXELFORMAT_RGBA8 } from '../../platform/graphics/constants.js';
-import { GraphicsDevice } from '../../platform/graphics/graphics-device.js';
 import { RenderTarget } from '../../platform/graphics/render-target.js';
 import { Texture } from '../../platform/graphics/texture.js';
 
-import { Camera } from '../../scene/camera.js';
 import { Layer } from '../../scene/layer.js';
 
-import { getApplication } from '../globals.js';
 import { Debug } from '../../core/debug.js';
 import { RenderPassPicker } from './render-pass-picker.js';
 import { math } from '../../core/math/math.js';
