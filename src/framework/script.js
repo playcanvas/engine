@@ -34,65 +34,6 @@ const script = {
     app: null,
 
     /**
-     * Creates a script attribute for the current script. The script attribute can be accessed
-     * inside the script instance like so 'this.attributeName' or outside a script instance like so
-     * 'entity.script.attributeName'. Script attributes can be edited from the Attribute Editor of
-     * the PlayCanvas Editor like normal Components.
-     *
-     * @param {string} name - The name of the attribute.
-     * @param {string} type - The type of the attribute. Can be: 'number', 'string', 'boolean',
-     * 'asset', 'entity', 'rgb', 'rgba', 'vector', 'enumeration', 'curve', 'colorcurve'.
-     * @param {object} defaultValue - The default value of the attribute.
-     * @param {object} options - Optional parameters for the attribute.
-     * @param {number} options.min - The minimum value of the attribute.
-     * @param {number} options.max - The maximum value of the attribute.
-     * @param {number} options.step - The step that will be used when changing the attribute value
-     * in the PlayCanvas Editor.
-     * @param {number} options.decimalPrecision - A number that specifies the number of decimal
-     * digits allowed for the value.
-     * @param {object[]} options.enumerations - An array of name, value pairs from which the user
-     * can select one if the attribute type is an enumeration.
-     * @param {string[]} options.curves - (For 'curve' attributes only) An array of strings that
-     * define the names of each curve in the curve editor.
-     * @param {boolean} options.color - (For 'curve' attributes only) If true then the curve
-     * attribute will be a color curve.
-     * @example
-     * pc.script.attribute('speed', 'number', 5);
-     * pc.script.attribute('message', 'string', "My message");
-     * pc.script.attribute('enemyPosition', 'vector', [1, 0, 0]);
-     * pc.script.attribute('spellType', 'enumeration', 0, {
-     *     enumerations: [{
-     *         name: "Fire",
-     *         value: 0
-     *     }, {
-     *         name: "Ice",
-     *         value: 1
-     *     }]
-     * });
-     * pc.script.attribute('enemy', 'entity');
-     * pc.script.attribute('enemySpeed', 'curve');
-     * pc.script.attribute('enemyPosition', 'curve', null, {
-     *     curves: ['x', 'y', 'z']
-     * });
-     * pc.script.attribute('color', 'colorcurve', null, {
-     *     type: 'rgba'
-     * });
-     *
-     * pc.script.create('scriptable', function (app) {
-     *     var Scriptable = function (entity) {
-     *         // store entity
-     *         this.entity = entity;
-     *     };
-     *
-     *     return Scriptable;
-     * });
-     * @ignore
-     */
-    attribute(name, type, defaultValue, options) {
-        // only works when parsing the script...
-    },
-
-    /**
      * Handles the creation of the loading screen of the application. A script can subscribe to the
      * events of a {@link AppBase} to show a loading screen, progress bar etc. In order for
      * this to work you need to set the project's loading screen script to the script that calls
