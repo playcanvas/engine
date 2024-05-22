@@ -18,6 +18,15 @@ import { version, revision } from './rollup-version-revision.mjs';
 import { getBanner } from './rollup-get-banner.mjs';
 import { babelOptions } from './rollup-babel-options.mjs';
 
+import { dirname, resolve as pathResolve } from 'path';
+import { fileURLToPath } from 'url';
+
+// Find path to the repo root
+// @ts-ignore import.meta not allowed by tsconfig module:es6, but it works
+const __filename = fileURLToPath(import.meta.url);
+const __dirname = dirname(__filename);
+const rootDir = pathResolve(__dirname, '..');
+
 /** @typedef {import('rollup').RollupOptions} RollupOptions */
 /** @typedef {import('rollup').OutputOptions} OutputOptions */
 /** @typedef {import('rollup').ModuleFormat} ModuleFormat */
@@ -192,6 +201,7 @@ function buildTarget({ moduleFormat, buildType, input = 'src/index.js', dir = 'b
             sourcemap: bundled && isDebug && 'inline',
             name: 'pc',
             preserveModules: !bundled,
+            preserveModulesRoot: !bundled ? rootDir : undefined,
             file: bundled ? `${dir}/${OUT_PREFIX[buildType]}${isUMD ? '.js' : '.mjs'}` : undefined,
             dir: !bundled ? `${dir}/${OUT_PREFIX[buildType]}` : undefined,
             footer: isUMD ? 'this.pcx = pc;' : undefined
