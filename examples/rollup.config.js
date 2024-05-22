@@ -163,6 +163,7 @@ export default [
             dir: 'dist',
             format: 'umd'
         },
+        treeshake: 'smallest',
         plugins: [
             alias({
                 entries: {
