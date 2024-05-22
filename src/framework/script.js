@@ -1,7 +1,6 @@
 import { events } from '../core/events.js';
 
 import { getApplication } from './globals.js';
-import { ScriptTypes } from './script/script-types.js';
 
 /**
  * Callback used by {@link script.createLoadingScreen}.
@@ -19,8 +18,6 @@ import { ScriptTypes } from './script/script-types.js';
  * @ignore
  */
 
-let _legacy = false;
-
 // flag to avoid creating multiple loading screens e.g. when
 // loading screen scripts are reloaded
 let _createdLoadingScreen = false;
@@ -35,47 +32,6 @@ let _createdLoadingScreen = false;
 const script = {
     // set during script load to be used for initializing script
     app: null,
-
-    /**
-     * Create a script resource object. A script file should contain a single call to
-     * {@link script.create} and the callback should return a script object which will be
-     * instantiated when attached to Entities.
-     *
-     * @param {string} name - The name of the script object.
-     * @param {CreateScriptCallback} callback - The callback function which is passed an
-     * {@link AppBase} object, which is used to access Entities and Components, and should
-     * return the Type of the script resource to be instanced for each Entity.
-     * @example
-     * pc.script.create(function (app) {
-     *     var Scriptable = function (entity) {
-     *         // store entity
-     *         this.entity = entity;
-     *
-     *         // use app
-     *         app.components.model.addComponent(entity, {
-     *             // component properties
-     *         });
-     *     };
-     *
-     *     return Scriptable;
-     * });
-     * @ignore
-     */
-    create(name, callback) {
-        if (!_legacy)
-            return;
-
-        // get the ScriptType from the callback
-        const ScriptType = callback(script.app);
-
-        // store the script name
-        ScriptType._pcScriptName = name;
-
-        // Push this onto loading stack
-        ScriptTypes.push(ScriptType, _legacy);
-
-        this.fire("created", name, callback);
-    },
 
     /**
      * Creates a script attribute for the current script. The script attribute can be accessed
@@ -164,15 +120,6 @@ const script = {
         callback(app);
     }
 };
-
-Object.defineProperty(script, 'legacy', {
-    get: function () {
-        return _legacy;
-    },
-    set: function (value) {
-        _legacy = value;
-    }
-});
 
 events.attach(script);
 

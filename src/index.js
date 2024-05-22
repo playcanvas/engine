@@ -264,8 +264,6 @@ export { ScreenComponent } from './framework/components/screen/component.js';
 export { ScreenComponentSystem } from './framework/components/screen/system.js';
 export { ScriptComponent } from './framework/components/script/component.js';
 export { ScriptComponentSystem } from './framework/components/script/system.js';
-export { ScriptLegacyComponent } from './framework/components/script-legacy/component.js';
-export { ScriptLegacyComponentSystem } from './framework/components/script-legacy/system.js';
 export { ScrollbarComponent } from './framework/components/scrollbar/component.js';
 export { ScrollbarComponentSystem } from './framework/components/scrollbar/system.js';
 export * from './framework/components/scroll-view/constants.js';
