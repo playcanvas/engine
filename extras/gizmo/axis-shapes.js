@@ -187,7 +187,8 @@ class AxisShape {
 
     set disabled(value) {
         for (let i = 0; i < this.meshInstances.length; i++) {
-            setShadowMeshColor(this.meshInstances[i].mesh, this._disabledColor);
+            // Magnopus patched to use two colours for disable AND enable
+            setShadowMeshColor(this.meshInstances[i].mesh, value ? this._disabledColor : this._defaultColor);
         }
         this._disabled = value ?? false;
     }
