@@ -1,6 +1,6 @@
 {
   "name": "playcanvas",
-  "version": "1.70.1",
+  "version": "1.70.3",
   "author": "PlayCanvas <support@playcanvas.com>",
   "homepage": "https://playcanvas.com",
   "description": "PlayCanvas WebGL game engine",
@@ -22,6 +22,7 @@
   "types": "build/playcanvas.d.ts",
   "exports": {
     ".": {
+      "types": "./build/playcanvas.d.ts",
       "import": "./build/playcanvas/src/index.js",
       "require": "./build/playcanvas.js"
     },
