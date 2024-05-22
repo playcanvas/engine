@@ -614,7 +614,7 @@ class GraphicsDevice extends EventHandler {
      * {@link GraphicsDevice#draw}, the specified index buffer will be used to provide index data
      * for any indexed primitives.
      *
-     * @param {import('./index-buffer.js').IndexBuffer} indexBuffer - The index buffer to assign to
+     * @param {import('./index-buffer.js').IndexBuffer|null} indexBuffer - The index buffer to assign to
      * the device.
      */
     setIndexBuffer(indexBuffer) {

@@ -2,7 +2,6 @@ import { Debug } from '../../core/debug.js';
 import { TRACEID_TEXTURE_ALLOC, TRACEID_VRAM_TEXTURE } from '../../core/constants.js';
 import { math } from '../../core/math/math.js';
 
-import { RenderTarget } from './render-target.js';
 import { TextureUtils } from './texture-utils.js';
 import {
     isCompressedPixelFormat,
@@ -967,41 +966,33 @@ class Texture {
     }
 
     /**
-     * Download texture's top level data from graphics memory to local memory.
+     * Download the textures data from the graphics memory to the local memory.
      *
+     * Note a public API yet, as not all options are implemented on all platforms.
+     *
+     * @param {number} x - The left edge of the rectangle.
+     * @param {number} y - The top edge of the rectangle.
+     * @param {number} width - The width of the rectangle.
+     * @param {number} height - The height of the rectangle.
+     * @param {object} [options] - Object for passing optional arguments.
+     * @param {number} [options.renderTarget] - The render target using the texture as a color
+     * buffer. Provide as an optimization to avoid creating a new render target. Important especially
+     * when this function is called with high frequency (per frame). Note that this is only utilized
+     * on the WebGL platform, and ignored on WebGPU.
+     * @param {number} [options.mipLevel] - The mip level to download. Defaults to 0.
+     * @param {number} [options.face] - The face to download. Defaults to 0.
+     * @param {Uint8Array|Uint16Array|Uint32Array|Float32Array} [options.data] - The data buffer to
+     * write the pixel data to. If not provided, a new buffer will be created. The type of the buffer
+     * must match the texture's format.
+     * @param {boolean} [options.immediate] - If true, the read operation will be executed as soon as
+     * possible. This has a performance impact, so it should be used only when necessary. Defaults
+     * to false.
+     * @returns {Promise<Uint8Array|Uint16Array|Uint32Array|Float32Array>} A promise that resolves
+     * with the pixel data of the texture.
      * @ignore
      */
-    async downloadAsync() {
-        const promises = [];
-        for (let i = 0; i < (this.cubemap ? 6 : 1); i++) {
-            const renderTarget = new RenderTarget({
-                colorBuffer: this,
-                depth: false,
-                face: i
-            });
-
-            this.device.setRenderTarget(renderTarget);
-            this.device.initRenderTarget(renderTarget);
-
-            const levels = this.cubemap ? this._levels[i] : this._levels;
-
-            let level = levels[0];
-            if (levels[0] && this.device._isBrowserInterface(levels[0])) {
-                levels[0] = null;
-            }
-
-            level = this.lock({ face: i });
-
-            const promise = this.device.readPixelsAsync?.(0, 0, this.width, this.height, level)
-                .then(() => renderTarget.destroy());
-
-            promises.push(promise);
-        }
-        await Promise.all(promises);
-    }
-
-    read(x, y, width, height, mipLevel = 0, face = 0, data = null, immediate = false) {
-        return this.impl.read?.(x, y, width, height, mipLevel, face, data, immediate);
+    read(x, y, width, height, options = {}) {
+        return this.impl.read?.(x, y, width, height, options);
     }
 }
 

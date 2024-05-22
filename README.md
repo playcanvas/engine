@@ -40,7 +40,7 @@ PlayCanvas is used by leading companies in video games, advertising and visualiz
 
 PlayCanvas is a fully-featured game engine.
 
-* 🧊 **Graphics** - Advanced 2D + 3D graphics engine built on WebGL 1 & 2.
+* 🧊 **Graphics** - Advanced 2D + 3D graphics engine built on WebGL2 & WebGPU.
 * 🏃 **Animation** - Powerful state-based animations for characters and arbitrary scene properties
 * ⚛️ **Physics** - Full integration with 3D rigid-body physics engine [ammo.js](https://github.com/kripken/ammo.js)
 * 🎮 **Input** - Mouse, keyboard, touch, gamepad and VR controller APIs

@@ -143,7 +143,7 @@ class ShadowMap {
 
     static createCubemap(device, size, shadowType) {
 
-        const format = (shadowType === SHADOW_PCSS && !device.isWebGL1) ? PIXELFORMAT_R32F : PIXELFORMAT_RGBA8;
+        const format = shadowType === SHADOW_PCSS ? PIXELFORMAT_R32F : PIXELFORMAT_RGBA8;
         const cubemap = new Texture(device, {
             // #if _PROFILER
             profilerHint: TEXHINT_SHADOWMAP,

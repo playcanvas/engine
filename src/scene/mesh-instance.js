@@ -881,8 +881,8 @@ class MeshInstance {
      * over parameter of the same name if set on Material this mesh instance uses for rendering.
      *
      * @param {string} name - The name of the parameter to set.
-     * @param {number|number[]|import('../platform/graphics/texture.js').Texture} data - The value
-     * for the specified parameter.
+     * @param {number|number[]|import('../platform/graphics/texture.js').Texture|Float32Array} data - The
+     * value for the specified parameter.
      * @param {number} [passFlags] - Mask describing which passes the material should be included
      * in.
      */

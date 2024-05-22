@@ -86,8 +86,15 @@ class SkinInstance {
         }
     }
 
-    // resolved skin bones to a hierarchy with the rootBone at its root.
-    // entity parameter specifies the entity used if the bone match is not found in the hierarchy - usually the entity the render component is attached to
+    /**
+     * Resolves skin bones to a hierarchy with the rootBone at its root.
+     *
+     * @param {import('../framework/entity.js').Entity} rootBone - A reference to the entity to be used as
+     * the root bone.
+     * @param {import('../framework/entity.js').Entity} entity - Specifies the entity used if the
+     * bone match is not found in the hierarchy - usually the entity the render component is attached to.
+     * @ignore
+     */
     resolve(rootBone, entity) {
 
         this.rootBone = rootBone;
@@ -97,6 +104,7 @@ class SkinInstance {
         const bones = [];
         for (let j = 0; j < skin.boneNames.length; j++) {
             const boneName = skin.boneNames[j];
+            /** @type {import('../framework/entity.js').Entity|import('./graph-node.js').GraphNode|null} */
             let bone = rootBone.findByName(boneName);
 
             if (!bone) {
@@ -109,6 +117,9 @@ class SkinInstance {
         this.bones = bones;
     }
 
+    /**
+     * @param {import('./skin.js').Skin} skin - The skin.
+     */
     initSkin(skin) {
 
         this.skin = skin;
