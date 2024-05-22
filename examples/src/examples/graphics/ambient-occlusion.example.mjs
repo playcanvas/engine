@@ -7,6 +7,13 @@ if (!(canvas instanceof HTMLCanvasElement)) {
     throw new Error('No canvas found');
 }
 
+// set up and load draco module, as the glb we load is draco compressed
+pc.WasmModule.setConfig('DracoDecoderModule', {
+    glueUrl: rootPath + '/static/lib/draco/draco.wasm.js',
+    wasmUrl: rootPath + '/static/lib/draco/draco.wasm.wasm',
+    fallbackUrl: rootPath + '/static/lib/draco/draco.js'
+});
+
 const assets = {
     laboratory: new pc.Asset('statue', 'container', { url: rootPath + '/static/assets/models/laboratory.glb' }),
     orbit: new pc.Asset('orbit', 'script', { url: rootPath + '/static/scripts/camera/orbit-camera.js' }),
