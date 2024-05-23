@@ -4,9 +4,9 @@ import { execSync } from 'child_process';
 
 // 1st party Rollup plugins
 import alias from '@rollup/plugin-alias';
-import commonjs from "@rollup/plugin-commonjs";
+import commonjs from '@rollup/plugin-commonjs';
 import replace from '@rollup/plugin-replace';
-import resolve from "@rollup/plugin-node-resolve";
+import resolve from '@rollup/plugin-node-resolve';
 import terser from '@rollup/plugin-terser';
 
 // custom plugins
@@ -21,14 +21,12 @@ import { buildTarget } from '../utils/rollup-build-target.mjs';
 import { isModuleWithExternalDependencies } from './utils/utils.mjs';
 
 const NODE_ENV = process.env.NODE_ENV ?? '';
-const ENGINE_PATH = !process.env.ENGINE_PATH && NODE_ENV === 'development' ?
-    '../src/index.js' :
-    process.env.ENGINE_PATH ?? '';
+const ENGINE_PATH =
+    !process.env.ENGINE_PATH && NODE_ENV === 'development' ? '../src/index.js' : process.env.ENGINE_PATH ?? '';
 
 const PCUI_PATH = process.env.PCUI_PATH || 'node_modules/@playcanvas/pcui';
 const PCUI_REACT_PATH = path.resolve(PCUI_PATH, 'react');
 const PCUI_STYLES_PATH = path.resolve(PCUI_PATH, 'styles');
-
 
 const STATIC_FILES = [
     // static main page src
@@ -53,7 +51,11 @@ const STATIC_FILES = [
     { src: '../build/playcanvas.d.ts', dest: 'dist/playcanvas.d.ts' },
 
     // playcanvas observer
-    { src: './node_modules/@playcanvas/observer/dist/index.mjs', dest: 'dist/iframe/playcanvas-observer.mjs', once: true },
+    {
+        src: './node_modules/@playcanvas/observer/dist/index.mjs',
+        dest: 'dist/iframe/playcanvas-observer.mjs',
+        once: true
+    },
 
     // modules (N.B. destination folder is 'modules' as 'node_modules' are automatically excluded by git pages)
     { src: './node_modules/monaco-editor/min/vs', dest: 'dist/modules/monaco-editor/min/vs', once: true },
@@ -88,7 +90,7 @@ function checkAppEngine() {
     // types
     if (!fs.existsSync('../build/playcanvas.d.ts')) {
         const cmd = `npm run build target:types --prefix ../`;
-        console.log("\x1b[32m%s\x1b[0m", cmd);
+        console.log('\x1b[32m%s\x1b[0m', cmd);
         execSync(cmd);
     }
 }
@@ -103,33 +105,39 @@ function getEngineTargets() {
     }
     if (NODE_ENV === 'production') {
         // Outputs: dist/iframe/playcanvas.mjs
-        targets.push(...buildTarget({
-            moduleFormat: 'esm',
-            buildType: 'release',
-            bundleState: 'unbundled',
-            input: '../src/index.js',
-            dir: 'dist/iframe'
-        }));
+        targets.push(
+            ...buildTarget({
+                moduleFormat: 'esm',
+                buildType: 'release',
+                bundleState: 'unbundled',
+                input: '../src/index.js',
+                dir: 'dist/iframe'
+            })
+        );
     }
     if (NODE_ENV === 'production' || NODE_ENV === 'development') {
         // Outputs: dist/iframe/playcanvas.dbg.mjs
-        targets.push(...buildTarget({
-            moduleFormat: 'esm',
-            buildType: 'debug',
-            bundleState: 'unbundled',
-            input: '../src/index.js',
-            dir: 'dist/iframe'
-        }));
+        targets.push(
+            ...buildTarget({
+                moduleFormat: 'esm',
+                buildType: 'debug',
+                bundleState: 'unbundled',
+                input: '../src/index.js',
+                dir: 'dist/iframe'
+            })
+        );
     }
     if (NODE_ENV === 'production' || NODE_ENV === 'profiler') {
         // Outputs: dist/iframe/playcanvas.prf.mjs
-        targets.push(...buildTarget({
-            moduleFormat: 'esm',
-            buildType: 'profiler',
-            bundleState: 'unbundled',
-            input: '../src/index.js',
-            dir: 'dist/iframe'
-        }));
+        targets.push(
+            ...buildTarget({
+                moduleFormat: 'esm',
+                buildType: 'profiler',
+                bundleState: 'unbundled',
+                input: '../src/index.js',
+                dir: 'dist/iframe'
+            })
+        );
     }
     return targets;
 }
@@ -139,16 +147,13 @@ export default [
         // used as a placeholder
         input: 'src/static/index.html',
         output: {
-            file: `cache/output.tmp`
+            file: 'cache/output.tmp'
         },
         watch: {
             skipWrite: true
         },
         treeshake: false,
-        plugins: [
-            generateStandalone(NODE_ENV, ENGINE_PATH),
-            copyStatic(NODE_ENV, STATIC_FILES)
-        ]
+        plugins: [generateStandalone(NODE_ENV, ENGINE_PATH), copyStatic(NODE_ENV, STATIC_FILES)]
     },
     {
         // A debug build is ~2.3MB and a release build ~0.6MB
@@ -175,7 +180,7 @@ export default [
                 },
                 preventAssignment: true
             }),
-            (NODE_ENV === 'production' && terser())
+            NODE_ENV === 'production' && terser()
         ]
     },
     ...getEngineTargets()
