@@ -1,14 +1,11 @@
 import { Color } from '../../core/math/color.js';
 
 import { ADDRESS_CLAMP_TO_EDGE, FILTER_NEAREST, PIXELFORMAT_RGBA8 } from '../../platform/graphics/constants.js';
-import { GraphicsDevice } from '../../platform/graphics/graphics-device.js';
 import { RenderTarget } from '../../platform/graphics/render-target.js';
 import { Texture } from '../../platform/graphics/texture.js';
 
-import { Camera } from '../../scene/camera.js';
 import { Layer } from '../../scene/layer.js';
 
-import { getApplication } from '../globals.js';
 import { Debug } from '../../core/debug.js';
 import { RenderPassPicker } from './render-pass-picker.js';
 import { math } from '../../core/math/math.js';
@@ -46,10 +43,7 @@ class Picker {
      * @param {number} height - The height of the pick buffer in pixels.
      */
     constructor(app, width, height) {
-        if (app instanceof GraphicsDevice) {
-            app = getApplication();
-            Debug.deprecated('pc.Picker now takes pc.AppBase as first argument. Passing pc.GraphicsDevice is deprecated.');
-        }
+        Debug.assert(app);
 
         // Note: The only reason this class needs the app is to access the renderer. Ideally we remove this dependency and move
         // the Picker from framework to the scene level, or even the extras.
@@ -234,14 +228,6 @@ class Picker {
      * @param {Layer[]} [layers] - Layers from which objects will be picked. If not supplied, all layers of the specified camera will be used.
      */
     prepare(camera, scene, layers) {
-
-        // handle deprecated arguments
-        if (camera instanceof Camera) {
-            Debug.deprecated('pc.Picker#prepare now takes pc.CameraComponent as first argument. Passing pc.Camera is deprecated.');
-
-            // Get the camera component
-            camera = camera.node.camera;
-        }
 
         if (layers instanceof Layer) {
             layers = [layers];
