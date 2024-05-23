@@ -119,7 +119,7 @@ class ExampleLoader {
         window.top.pc = window.pc;
 
         // extracts example category and name from the URL
-        const match = /([^/]+)\.html$/.exec(location.href);
+        const match = /([^/]+)\.html$/.exec(new URL(location.href).pathname);
         if (!match) {
             return;
         }
