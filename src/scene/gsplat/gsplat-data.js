@@ -563,6 +563,7 @@ class GSplatData {
             data.f_dc_0[i] = (c.x - 0.5) / SH_C0;
             data.f_dc_1[i] = (c.y - 0.5) / SH_C0;
             data.f_dc_2[i] = (c.z - 0.5) / SH_C0;
+            // convert opacity to log sigmoid taking into account infinities at 0 and 1
             data.opacity[i] = (c.w <= 0) ? -40 : (c.w >= 1) ? 40 : -Math.log(1 / c.w - 1);
         }
 
