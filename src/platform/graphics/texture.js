@@ -14,7 +14,7 @@ import {
     TEXHINT_SHADOWMAP, TEXHINT_ASSET, TEXHINT_LIGHTMAP,
     TEXTURELOCK_WRITE,
     TEXTUREPROJECTION_NONE, TEXTUREPROJECTION_CUBE,
-    TEXTURETYPE_DEFAULT, TEXTURETYPE_RGBM, TEXTURETYPE_RGBE, TEXTURETYPE_RGBP, TEXTURETYPE_SWIZZLEGGGR,
+    TEXTURETYPE_DEFAULT, TEXTURETYPE_RGBM, TEXTURETYPE_RGBE, TEXTURETYPE_RGBP,
     isIntegerPixelFormat, FILTER_NEAREST, TEXTURELOCK_NONE, TEXTURELOCK_READ
 } from './constants.js';
 
@@ -247,16 +247,9 @@ class Texture {
         this._compareOnRead = options.compareOnRead ?? false;
         this._compareFunc = options.compareFunc ?? FUNC_LESS;
 
-        this.type = TEXTURETYPE_DEFAULT;
-        if (options.hasOwnProperty('type')) {
-            this.type = options.type;
-        } else if (options.hasOwnProperty('rgbm')) {
-            Debug.deprecated("options.rgbm is deprecated. Use options.type instead.");
-            this.type = options.rgbm ? TEXTURETYPE_RGBM : TEXTURETYPE_DEFAULT;
-        } else if (options.hasOwnProperty('swizzleGGGR')) {
-            Debug.deprecated("options.swizzleGGGR is deprecated. Use options.type instead.");
-            this.type = options.swizzleGGGR ? TEXTURETYPE_SWIZZLEGGGR : TEXTURETYPE_DEFAULT;
-        }
+        this.type = options.hasOwnProperty('type') ? options.type : TEXTURETYPE_DEFAULT;
+        Debug.assert(!options.hasOwnProperty('rgbm'), 'Use options.type.');
+        Debug.assert(!options.hasOwnProperty('swizzleGGGR'), 'Use options.type.');
 
         this.projection = TEXTUREPROJECTION_NONE;
         if (this._cubemap) {

@@ -487,13 +487,10 @@ class ShaderGeneratorStandard extends ShaderGenerator {
                 }
             }
 
-            // only add the legacy chunk if it's referenced
-            if (code.code.indexOf('texture2DSRGB') !== -1 ||
-                code.code.indexOf('texture2DRGBM') !== -1 ||
-                code.code.indexOf('texture2DRGBE') !== -1) {
-                Debug.deprecated('Shader chunk macro $texture2DSAMPLE(XXX) is deprecated. Please use $DECODE(texture2D(XXX)) instead.');
-                code.prepend(litShader.chunks.textureSamplePS);
-            }
+            Debug.assert(code.code.indexOf('texture2DSRGB') === -1 &&
+                         code.code.indexOf('texture2DRGBM') === -1 &&
+                         code.code.indexOf('texture2DRGBE') === -1, 'Shader chunk macro $texture2DSAMPLE(XXX) is deprecated. Please use $DECODE(texture2D(XXX)) instead.');
+
         } else {
             // all other passes require only opacity
             const opacityShadowDither = options.litOptions.opacityShadowDither;
