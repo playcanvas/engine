@@ -1,14 +1,12 @@
-// Don't include all of 'playcanvas' for these defines, it just
-// causes bigger bundles and prolongs the build time by ~3s.
-import {
-    DEVICETYPE_WEBGL2,
-    DEVICETYPE_WEBGPU,
-    DEVICETYPE_NULL
-} from 'playcanvas';
 import { Component } from 'react';
 import { SelectInput } from '@playcanvas/pcui/react';
 
 import { jsx } from '../jsx.mjs';
+import {
+    DEVICETYPE_WEBGPU,
+    DEVICETYPE_WEBGL2,
+    DEVICETYPE_NULL
+} from '../constants.mjs';
 import '../events.js';
 
 const deviceTypeNames = {
