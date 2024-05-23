@@ -10,6 +10,7 @@ if (!(canvas instanceof HTMLCanvasElement)) {
 
 // class for handling gizmo
 const { GizmoHandler } = await localImport('gizmo-handler.mjs');
+const { Grid } = await localImport('grid.mjs');
 
 const gfxOptions = {
     deviceTypes: [deviceType],
@@ -273,18 +274,10 @@ const onPointerDown = (/** @type {PointerEvent} */ e) => {
 window.addEventListener('pointerdown', onPointerDown);
 
 // grid
-const gridColor = new pc.Color(1, 1, 1, 0.5);
-const gridHalfSize = 4;
-/**
- * @type {pc.Vec3[]}
- */
-const gridLines = [];
-for (let i = 0; i < gridHalfSize * 2 + 1; i++) {
-    gridLines.push(new pc.Vec3(-gridHalfSize, 0, i - gridHalfSize), new pc.Vec3(gridHalfSize, 0, i - gridHalfSize));
-    gridLines.push(new pc.Vec3(i - gridHalfSize, 0, -gridHalfSize), new pc.Vec3(i - gridHalfSize, 0, gridHalfSize));
-}
-app.on('update', () => {
-    app.drawLines(gridLines, gridColor);
+const grid = new Grid();
+
+app.on('update', (/** @type {number} */ dt) => {
+    grid.draw(app);
 });
 
 app.on('destroy', () => {
