@@ -8,7 +8,7 @@ export function treeshakeIgnore(pathRegexList = []) {
     return {
         name: 'treeshake-ignore',
         transform(code, id) {
-            if (pathRegexList.some(regex => regex.test(id))) {
+            if (pathRegexList.some(regex => regex.test(id.replace(/\\/g, '/')))) {
                 return {
                     code,
                     map: null,
