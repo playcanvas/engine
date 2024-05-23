@@ -174,7 +174,7 @@ export default [
                 }
             }),
             commonjs(),
-            treeshakeIgnore([/@playcanvas/g]), // ignore playcanvas imports
+            treeshakeIgnore([/@playcanvas\/pcui/g]), // ignore PCUI treeshake
             resolve(),
             replace({
                 values: {
