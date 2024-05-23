@@ -563,7 +563,7 @@ class GSplatData {
             data.f_dc_0[i] = (c.x - 0.5) / SH_C0;
             data.f_dc_1[i] = (c.y - 0.5) / SH_C0;
             data.f_dc_2[i] = (c.z - 0.5) / SH_C0;
-            data.opacity[i] = -Math.log(1 / c.w - 1);
+            data.opacity[i] = (c.w <= 0) ? -20 : (c.w >= 1) ? 20 : -Math.log(1 / c.w - 1);
         }
 
         return new GSplatData([{
