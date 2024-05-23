@@ -14,6 +14,7 @@ import { copyStatic } from './utils/plugins/rollup-copy-static.mjs';
 import { generateStandalone } from './utils/plugins/rollup-generate-standalone.mjs';
 
 // engine rollup utils
+import { treeshakeIgnore } from '../utils/plugins/rollup-treeshake-ignore.mjs';
 import { buildTarget } from '../utils/rollup-build-target.mjs';
 
 // util functions
@@ -173,10 +174,11 @@ export default [
                 }
             }),
             commonjs(),
+            treeshakeIgnore([/@playcanvas/g]), // ignore playcanvas imports
             resolve(),
             replace({
                 values: {
-                    'process.env.NODE_ENV': JSON.stringify(NODE_ENV)
+                    'process.env.NODE_ENV': JSON.stringify(NODE_ENV) // for REACT bundling
                 },
                 preventAssignment: true
             }),
