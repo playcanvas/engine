@@ -295,7 +295,14 @@ class GSplatData {
         return this.isCompressed ? new SplatCompressedIterator(this, p, r, s, c) : new SplatIterator(this, p, r, s, c);
     }
 
-    // calculafte a pessimistic aabb, which is faster than calculating an exact aabb
+    /**
+     * Calculate pessimistic scene aabb taking into account splat size. This is faster than
+     * calculating an exact aabb.
+     *
+     * @param {BoundingBox} result - Where to store the resulting bounding box.
+     * @param {(i: number) => boolean} [pred] - Optional predicate function to filter splats.
+     * @returns {boolean} - Whether the calculation was successful.
+     */
     calcAabb(result, pred) {
         let mx, my, mz, Mx, My, Mz;
         let first = true;
@@ -379,7 +386,7 @@ class GSplatData {
      * Calculate exact scene aabb taking into account splat size
      *
      * @param {BoundingBox} result - Where to store the resulting bounding box.
-     * @param {(i) => boolean} [pred] - Optional predicate function to filter splats.
+     * @param {(i: number) => boolean} [pred] - Optional predicate function to filter splats.
      * @returns {boolean} - Whether the calculation was successful.
      */
     calcAabbExact(result, pred) {
