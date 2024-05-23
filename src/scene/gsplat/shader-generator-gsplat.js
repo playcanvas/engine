@@ -18,7 +18,8 @@ const splatCoreVS = /* glsl */ `
     varying vec4 color;
     varying float id;
 
-    uniform vec4 tex_params;
+    // width, numSplats
+    uniform vec2 tex_params;
     uniform sampler2D splatColor;
 
     uniform highp usampler2D splatOrder;
@@ -33,13 +34,14 @@ const splatCoreVS = /* glsl */ `
     attribute vec3 vertex_position;
     attribute uint vertex_id_attrib;
 
+    uint orderId;
     uint splatId;
     ivec2 splatUV;
     void evalSplatUV() {
         int bufferSizeX = int(tex_params.x);
 
         // sample order texture
-        uint orderId = vertex_id_attrib + uint(vertex_position.z);
+        orderId = vertex_id_attrib + uint(vertex_position.z);
         ivec2 orderUV = ivec2(
             int(orderId) % bufferSizeX,
             int(orderId) / bufferSizeX
@@ -82,7 +84,7 @@ const splatCoreVS = /* glsl */ `
         vec4 splat_proj = matrix_projection * splat_cam;
 
         // cull behind camera
-        if (splat_proj.z < -splat_proj.w) {
+        if (splat_proj.z < -splat_proj.w || orderId >= uint(tex_params.y)) {
             return vec4(0.0, 0.0, 2.0, 1.0);
         }
 
