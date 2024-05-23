@@ -214,20 +214,7 @@ class ScriptComponent extends Component {
 
                 // enabled
                 if (typeof value[key].enabled === 'boolean') {
-                    const enabled = !!value[key].enabled;
-
-                    // monitor to see if the script becomes enabled
-                    if (enabled && !(script instanceof ScriptType)) {
-                        const onFirstEnabled = () => {
-                            if (!script.initialized && script.enabled) {
-                                this.initializeAttributes(script);
-                                script.off('enable', onFirstEnabled);
-                            }
-                        };
-                        script.on('enable', onFirstEnabled);
-                    }
-
-                    script.enabled = enabled;
+                    script.enabled = !!value[key].enabled;
                 }
 
                 // attributes
@@ -419,7 +406,7 @@ class ScriptComponent extends Component {
 
             // otherwise we need to manually initialize attributes from the schema
             const name = script.__scriptType.__name;
-            const schema = this.system.app.scripts?.getSchema(name)[name];
+            const schema = this.system.app.scripts?.getSchema(name);
             const data = this._attributeDataMap.get(name);
 
             if (schema && data) {

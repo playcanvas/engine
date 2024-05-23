@@ -50,7 +50,8 @@ class ScriptRegistry extends EventHandler {
         if (!this.scriptSchemas) {
             return null;
         }
-        return this.scriptSchemas.get(script);
+        const schema = this.scriptSchemas.get(script);
+        return schema && schema[script]
     }
 
     /**
