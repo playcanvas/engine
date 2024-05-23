@@ -18,7 +18,8 @@ const splatCoreVS = /* glsl */ `
     varying vec4 color;
     varying float id;
 
-    uniform vec4 tex_params;
+    // width, numSplats
+    uniform vec2 tex_params;
     uniform sampler2D splatColor;
 
     uniform highp usampler2D splatOrder;
