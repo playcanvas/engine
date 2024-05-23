@@ -94,9 +94,6 @@ class Texture {
      * @param {number} [options.depth] - The number of depth slices in a 3D texture.
      * @param {number} [options.format] - The pixel format of the texture. Can be:
      *
-     * - {@link PIXELFORMAT_A8}
-     * - {@link PIXELFORMAT_L8}
-     * - {@link PIXELFORMAT_LA8}
      * - {@link PIXELFORMAT_R8}
      * - {@link PIXELFORMAT_RG8}
      * - {@link PIXELFORMAT_RGB565}
@@ -635,9 +632,6 @@ class Texture {
     /**
      * The pixel format of the texture. Can be:
      *
-     * - {@link PIXELFORMAT_A8}
-     * - {@link PIXELFORMAT_L8}
-     * - {@link PIXELFORMAT_LA8}
      * - {@link PIXELFORMAT_R8}
      * - {@link PIXELFORMAT_RG8}
      * - {@link PIXELFORMAT_RGB565}

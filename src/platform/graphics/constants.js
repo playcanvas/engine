@@ -527,29 +527,8 @@ export const INDEXFORMAT_UINT16 = 1;
  */
 export const INDEXFORMAT_UINT32 = 2;
 
-/**
- * 8-bit alpha. Only supported on WebGL. Use {@link PIXELFORMAT_R8} instead.
- *
- * @type {number}
- * @category Graphics
- */
 export const PIXELFORMAT_A8 = 0;
-
-/**
- * 8-bit luminance. Only supported on WebGL. Use {@link PIXELFORMAT_R8} instead.
- *
- * @type {number}
- * @category Graphics
- */
 export const PIXELFORMAT_L8 = 1;
-
-/**
- * 8-bit luminance with 8-bit alpha. Only supported on WebGL. Use {@link PIXELFORMAT_RG8}
- * instead.
- *
- * @type {number}
- * @category Graphics
- */
 export const PIXELFORMAT_LA8 = 2;
 
 /**
