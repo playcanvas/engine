@@ -97,6 +97,8 @@ class Texture {
      * - {@link PIXELFORMAT_A8}
      * - {@link PIXELFORMAT_L8}
      * - {@link PIXELFORMAT_LA8}
+     * - {@link PIXELFORMAT_R8}
+     * - {@link PIXELFORMAT_RG8}
      * - {@link PIXELFORMAT_RGB565}
      * - {@link PIXELFORMAT_RGBA5551}
      * - {@link PIXELFORMAT_RGBA4}
@@ -636,6 +638,8 @@ class Texture {
      * - {@link PIXELFORMAT_A8}
      * - {@link PIXELFORMAT_L8}
      * - {@link PIXELFORMAT_LA8}
+     * - {@link PIXELFORMAT_R8}
+     * - {@link PIXELFORMAT_RG8}
      * - {@link PIXELFORMAT_RGB565}
      * - {@link PIXELFORMAT_RGBA5551}
      * - {@link PIXELFORMAT_RGBA4}
