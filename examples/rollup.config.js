@@ -3,7 +3,6 @@ import path from 'path';
 import { execSync } from 'child_process';
 
 // 1st party Rollup plugins
-import alias from '@rollup/plugin-alias';
 import commonjs from '@rollup/plugin-commonjs';
 import replace from '@rollup/plugin-replace';
 import resolve from '@rollup/plugin-node-resolve';
@@ -23,10 +22,6 @@ import { isModuleWithExternalDependencies } from './utils/utils.mjs';
 const NODE_ENV = process.env.NODE_ENV ?? '';
 const ENGINE_PATH =
     !process.env.ENGINE_PATH && NODE_ENV === 'development' ? '../src/index.js' : process.env.ENGINE_PATH ?? '';
-
-const PCUI_PATH = process.env.PCUI_PATH || 'node_modules/@playcanvas/pcui';
-const PCUI_REACT_PATH = path.resolve(PCUI_PATH, 'react');
-const PCUI_STYLES_PATH = path.resolve(PCUI_PATH, 'styles');
 
 const STATIC_FILES = [
     // static main page src
@@ -164,13 +159,6 @@ export default [
         },
         treeshake: 'smallest',
         plugins: [
-            alias({
-                entries: {
-                    // define supported module overrides
-                    '@playcanvas/pcui/react': PCUI_REACT_PATH,
-                    '@playcanvas/pcui/styles': PCUI_STYLES_PATH
-                }
-            }),
             commonjs(),
             treeshakeIgnore([/@playcanvas\/pcui/g]), // ignore PCUI treeshake
             resolve(),
