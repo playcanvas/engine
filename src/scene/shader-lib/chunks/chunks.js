@@ -177,7 +177,6 @@ import TBNPS from './lit/frag/TBN.js';
 import TBNderivativePS from './lit/frag/TBNderivative.js';
 import TBNfastPS from './lit/frag/TBNfast.js';
 import TBNObjectSpacePS from './lit/frag/TBNObjectSpace.js';
-import textureSamplePS from './standard/frag/textureSample.js';
 import thicknessPS from './standard/frag/thickness.js';
 import tonemappingAcesPS from './common/frag/tonemappingAces.js';
 import tonemappingAces2PS from './common/frag/tonemappingAces2.js';
@@ -383,7 +382,6 @@ const shaderChunks = {
     TBNderivativePS,
     TBNfastPS,
     TBNObjectSpacePS,
-    textureSamplePS,
     thicknessPS,
     tonemappingAcesPS,
     tonemappingAces2PS,
