@@ -40,12 +40,7 @@ class MorphTarget {
      * allowing the clone operation.
      */
     constructor(options) {
-
-        if (arguments.length === 2) {
-            Debug.deprecated('Passing graphicsDevice to MorphTarget is deprecated, please remove the parameter.');
-            options = arguments[1];
-        }
-
+        Debug.assert(arguments.length === 1);
         this.options = options;
         this._name = options.name;
         this._defaultWeight = options.defaultWeight || 0;
