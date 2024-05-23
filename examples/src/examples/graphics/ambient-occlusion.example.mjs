@@ -82,11 +82,16 @@ assetListLoader.load(() => {
     laboratoryEntity.setLocalScale(100, 100, 100);
     app.root.addChild(laboratoryEntity);
 
-    // set up materials to disable incorrectly set up blending / depth writes
+    // set up materials
     laboratoryEntity.findComponents('render').forEach((render) => {
         render.meshInstances.forEach((meshInstance) => {
+
+            // disable blending / enable depth writes
             meshInstance.material.depthState = pc.DepthState.DEFAULT;
             meshInstance.material.blendType = pc.BLEND_NONE;
+
+            // disable baked AO map as we want to use SSAO only
+            meshInstance.material.aoMap = null;
             meshInstance.material.update();
         });
     });
