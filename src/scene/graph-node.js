@@ -1180,6 +1180,31 @@ class GraphNode extends EventHandler {
     }
 
     /**
+     * Sets the world-space position and rotation of the specified graph node.
+     *
+     * @param {Vec3} position - The world-space position to set.
+     * @param {Quat} rotation - The world-space rotation to set.
+     * @example
+     * const position = new pc.Vec3(0, 10, 0);
+     * const rotation = new pc.Quat().setFromEulerAngles(0, 90, 0);
+     * this.entity.setPositionAndRotation(position, rotation);
+     */
+    setPositionAndRotation(position, rotation) {
+        if (this._parent === null) {
+            this.localPosition.copy(position);
+            this.localRotation.copy(rotation);
+        } else {
+            invParentWtm.copy(this._parent.getWorldTransform()).invert();
+            matrix.mul2(invParentWtm, tmpMat4.setTRS(position, rotation, Vec3.ONE));
+            this.localPosition.copy(matrix.getTranslation());
+            this.localRotation.setFromMat4(matrix);
+        }
+
+        if (!this._dirtyLocal)
+            this._dirtifyLocal();
+    }
+
+    /**
      * Sets the world-space rotation of the specified graph node using euler angles. Eulers are
      * interpreted in XYZ order. Eulers must be specified in degrees. This function has two valid
      * signatures: you can either pass a 3D vector or 3 numbers to specify the world-space euler
