@@ -1,4 +1,4 @@
-import files from '@examples/files';
+import files from 'examples/files';
 
 const href = window.top?.location.href ?? '';
 const params = getQueryParams(href);
@@ -75,10 +75,28 @@ export function clearImports() {
     blobUrls.forEach(URL.revokeObjectURL);
 }
 
+/**
+ * @param {string} script - The script to parse.
+ * @returns {Record<string, any>} - The parsed config.
+ */
+export function parseConfig(script) {
+    const regex = /\/\/ @config ([^ \n]+) ?([^\n]+)?/g;
+    let match;
+    /** @type {Record<string, any>} */
+    const config = {};
+    while ((match = regex.exec(script)) !== null) {
+        const key = match[1].trim();
+        const val = match[2]?.trim();
+        config[key] = /true|false/g.test(val) ? val === 'true' : val ?? true;
+    }
+    return config;
+}
+
 const DEVICE_TYPES = ['webgpu', 'webgl2', 'webgl1'];
 
 /**
- * @param {{ WEBGPU_DISABLED: boolean; WEBGL_DISABLED: boolean; WEBGL1_DISABLED: boolean; }} config - The configuration object.
+ * @param {any} config - The configuration object.
+ * @returns {string} - The device type.
  */
 function getDeviceType(config) {
     if (params.deviceType && DEVICE_TYPES.includes(params.deviceType)) {
@@ -86,7 +104,7 @@ function getDeviceType(config) {
         return params.deviceType;
     }
 
-    const selectedDevice = localStorage.getItem('preferredGraphicsDevice');
+    const selectedDevice = localStorage.getItem('preferredGraphicsDevice') ?? 'webgl2';
 
     switch (selectedDevice) {
         case 'webgpu':
@@ -119,6 +137,9 @@ function getDeviceType(config) {
 
 export let deviceType = 'webgl2';
 
+/**
+ * @param {Record<string, any>} config - The configuration object.
+ */
 export function updateDeviceType(config) {
     deviceType = getDeviceType(config);
 }
