@@ -89,28 +89,26 @@ class DeviceSelector extends TypedComponent {
     /**
      * If our preferred device was e.g. WebGPU, but our active device is suddenly e.g. WebGL 2,
      * then we basically infer that WebGPU wasn't supported and mark it like that.
-     * @param {string} preferredDevice - The preferred device.
-     * @param {string} activeDevice - The active device reported from the example iframe.
+     * @param {DEVICETYPE_WEBGPU | DEVICETYPE_WEBGL2 | DEVICETYPE_WEBGL1} preferredDevice - The
+     * preferred device.
+     * @param {DEVICETYPE_WEBGPU | DEVICETYPE_WEBGL2 | DEVICETYPE_WEBGL1} activeDevice - The active
+     * device reported from the example iframe.
      */
     setDisabledOptions(preferredDevice = 'webgpu', activeDevice) {
-        if (
-            (preferredDevice === DEVICETYPE_WEBGL2 || preferredDevice === DEVICETYPE_WEBGPU) &&
-            activeDevice === DEVICETYPE_WEBGL1
-        ) {
-            const fallbackOrder = [DEVICETYPE_WEBGPU, DEVICETYPE_WEBGL2, DEVICETYPE_WEBGL1];
-            const disabledOptions = {
-                [DEVICETYPE_WEBGPU]: 'WebGPU (not supported)',
-                [DEVICETYPE_WEBGL2]: 'WebGL 2 (not supported)'
-            };
-            this.mergeState({ fallbackOrder, disabledOptions, activeDevice });
-        } else if (preferredDevice === DEVICETYPE_WEBGL1 && activeDevice === DEVICETYPE_WEBGL2) {
-            const fallbackOrder = [DEVICETYPE_WEBGL1, DEVICETYPE_WEBGL2, DEVICETYPE_WEBGPU];
+        if (preferredDevice === DEVICETYPE_WEBGL1 && activeDevice !== DEVICETYPE_WEBGL1) {
+            const fallbackOrder = [DEVICETYPE_WEBGL2];
             const disabledOptions = {
                 [DEVICETYPE_WEBGL1]: 'WebGL 1 (not supported)'
             };
             this.mergeState({ fallbackOrder, disabledOptions, activeDevice });
+        } else if (preferredDevice === DEVICETYPE_WEBGL2 && activeDevice !== DEVICETYPE_WEBGL2) {
+            const fallbackOrder = [DEVICETYPE_WEBGL1];
+            const disabledOptions = {
+                [DEVICETYPE_WEBGL2]: 'WebGL 2 (not supported)'
+            };
+            this.mergeState({ fallbackOrder, disabledOptions, activeDevice });
         } else if (preferredDevice === DEVICETYPE_WEBGPU && activeDevice !== DEVICETYPE_WEBGPU) {
-            const fallbackOrder = [DEVICETYPE_WEBGPU, DEVICETYPE_WEBGL2, DEVICETYPE_WEBGL1];
+            const fallbackOrder = [DEVICETYPE_WEBGL2, DEVICETYPE_WEBGL1];
             const disabledOptions = {
                 [DEVICETYPE_WEBGPU]: 'WebGPU (not supported)'
             };
