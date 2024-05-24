@@ -579,11 +579,13 @@ class ForwardRenderer extends Renderer {
             const stencilBack = drawCall.stencilBack ?? material.stencilBack;
             device.setStencilState(stencilFront, stencilBack);
 
-            const mesh = drawCall.mesh;
-
             // Uniforms II: meshInstance overrides
             drawCall.setParameters(device, passFlag);
 
+            // mesh ID - used by the picker
+            device.scope.resolve('meshInstanceId').setValue(drawCall.id);
+
+            const mesh = drawCall.mesh;
             this.setVertexBuffers(device, mesh);
             this.setMorphing(device, drawCall.morphInstance);
             this.setSkinning(device, drawCall);

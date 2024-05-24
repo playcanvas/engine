@@ -1,17 +1,17 @@
 {
     "compilerOptions": {
-        "baseUrl": ".",
-        "outDir": "types",
         "allowJs": true,
+        "baseUrl": ".",
         "checkJs": true,
         "module": "es6",
-        "target": "es6",
         "moduleResolution": "node",
         "noImplicitReturns": true,
         "noImplicitThis": true,
         "noUnusedLocals": true,
+        "outDir": "types",
         "strictNullChecks": true,
         "strictPropertyInitialization": true,
+        "target": "es6",
         "typeRoots": [ "./node_modules/@webgpu/types", "./node_modules/@types" ]
     },
     "typedocOptions": {

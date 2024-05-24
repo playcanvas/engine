@@ -26,7 +26,18 @@
       "import": "./build/playcanvas/src/index.js",
       "require": "./build/playcanvas.js"
     },
-    "./build/*": "./build/*"
+    "./debug": {
+      "types": "./build/playcanvas.d.ts",
+      "import": "./build/playcanvas.dbg/src/index.js",
+      "require": "./build/playcanvas.dbg.js"
+    },
+    "./profiler": {
+      "types": "./build/playcanvas.d.ts",
+      "import": "./build/playcanvas.prf/src/index.js",
+      "require": "./build/playcanvas.prf.js"
+    },
+    "./build/*": "./build/*",
+    "./scripts/*": "./scripts/*"
   },
   "sideEffects": false,
   "type": "module",
@@ -140,7 +151,6 @@
     "build:treenet": "npm run build target:umd treenet",
     "build:treesun": "npm run build target:umd treesun",
     "build:sourcemaps": "npm run build -- -m",
-    "build:publish": "npm run build && npm run publint",
     "build:rti": "rollup -c --environment target:rti",
     "watch": "npm run build -- -w",
     "watch:release": "npm run build target:release -- -w",

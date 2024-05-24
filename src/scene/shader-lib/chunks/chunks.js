@@ -41,8 +41,6 @@ import endVS from './lit/vert/end.js';
 import envAtlasPS from './common/frag/envAtlas.js';
 import envConstPS from './common/frag/envConst.js';
 import envMultiplyPS from './common/frag/envMultiply.js';
-import extensionPS from './lit/frag/extension.js';
-import extensionVS from './lit/vert/extension.js';
 import falloffInvSquaredPS from './lit/frag/falloffInvSquared.js';
 import falloffLinearPS from './lit/frag/falloffLinear.js';
 import floatUnpackingPS from './lit/frag/float-unpacking.js';
@@ -179,7 +177,6 @@ import TBNPS from './lit/frag/TBN.js';
 import TBNderivativePS from './lit/frag/TBNderivative.js';
 import TBNfastPS from './lit/frag/TBNfast.js';
 import TBNObjectSpacePS from './lit/frag/TBNObjectSpace.js';
-import textureSamplePS from './standard/frag/textureSample.js';
 import thicknessPS from './standard/frag/thickness.js';
 import tonemappingAcesPS from './common/frag/tonemappingAces.js';
 import tonemappingAces2PS from './common/frag/tonemappingAces2.js';
@@ -202,7 +199,7 @@ import webgpuVS from '../../../platform/graphics/shader-chunks/vert/webgpu.js';
 /**
  * Object containing all default shader chunks used by shader generators.
  *
- * @type {object}
+ * @type {Record<string, string>}
  * @category Graphics
  */
 const shaderChunks = {
@@ -249,8 +246,6 @@ const shaderChunks = {
     envAtlasPS,
     envConstPS,
     envMultiplyPS,
-    extensionPS,
-    extensionVS,
     falloffInvSquaredPS,
     falloffLinearPS,
     floatUnpackingPS,
@@ -387,7 +382,6 @@ const shaderChunks = {
     TBNderivativePS,
     TBNfastPS,
     TBNObjectSpacePS,
-    textureSamplePS,
     thicknessPS,
     tonemappingAcesPS,
     tonemappingAces2PS,

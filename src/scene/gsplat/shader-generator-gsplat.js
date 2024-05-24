@@ -1,12 +1,12 @@
 import { hashCode } from "../../core/hash.js";
 import { SEMANTIC_ATTR13, SEMANTIC_POSITION } from "../../platform/graphics/constants.js";
 import { ShaderUtils } from "../../platform/graphics/shader-utils.js";
-import { DITHER_NONE } from "../constants.js";
+import { DITHER_NONE, TONEMAP_LINEAR } from "../constants.js";
 import { shaderChunks } from "../shader-lib/chunks/chunks.js";
 import { ShaderGenerator } from "../shader-lib/programs/shader-generator.js";
 import { ShaderPass } from "../shader-pass.js";
 
-const splatCoreVS = `
+const splatCoreVS = /* glsl */ `
     uniform mat4 matrix_model;
     uniform mat4 matrix_view;
     uniform mat4 matrix_projection;
@@ -146,45 +146,32 @@ const splatCoreFS = /* glsl_ */ `
     #endif
 
     vec4 evalSplat() {
+        float A = -dot(texCoord, texCoord);
+        if (A < -4.0) discard;
+        float B = exp(A) * color.a;
 
-        #ifdef DEBUG_RENDER
+        #ifdef PICK_PASS
+            if (B < 0.3) discard;
+            return(uColor);
+        #endif
 
-            if (color.a < 0.2) discard;
-            return color;
+        #ifndef DITHER_NONE
+            opacityDither(B, id * 0.013);
+        #endif
 
+        #ifdef TONEMAP_ENABLED
+            return vec4(gammaCorrectOutput(toneMap(decodeGamma(color.rgb))), B);
         #else
-
-            float A = -dot(texCoord, texCoord);
-            if (A < -4.0) discard;
-            float B = exp(A) * color.a;
-
-            #ifdef PICK_PASS
-                if (B < 0.3) discard;
-                return(uColor);
-            #endif
-
-            #ifndef DITHER_NONE
-                opacityDither(B, id * 0.013);
-            #endif
-
-            // the color here is in gamma space, so bring it to linear
-            vec3 diffuse = decodeGamma(color.rgb);
-
-            // apply tone-mapping and gamma correction as needed
-            diffuse = toneMap(diffuse);
-            diffuse = gammaCorrectOutput(diffuse);
-
-            return vec4(diffuse, B);
-
+            return vec4(color.rgb, B);
         #endif
     }
 `;
 
-class GShaderGeneratorSplat {
+class GSplatShaderGenerator {
     generateKey(options) {
         const vsHash = hashCode(options.vertex);
         const fsHash = hashCode(options.fragment);
-        return `splat-${options.pass}-${options.gamma}-${options.toneMapping}-${vsHash}-${fsHash}-${options.debugRender}-${options.dither}}`;
+        return `splat-${options.pass}-${options.gamma}-${options.toneMapping}-${vsHash}-${fsHash}-${options.dither}}`;
     }
 
     createShaderDefinition(device, options) {
@@ -194,8 +181,8 @@ class GShaderGeneratorSplat {
 
         const defines =
             shaderPassDefines +
-            (options.debugRender ? '#define DEBUG_RENDER\n' : '') +
-            `#define DITHER_${options.dither.toUpperCase()}\n`;
+            `#define DITHER_${options.dither.toUpperCase()}\n` +
+            `#define TONEMAP_${options.toneMapping === TONEMAP_LINEAR ? 'DISABLED' : 'ENABLED'}\n`;
 
         const vs = defines + splatCoreVS + options.vertex;
         const fs = defines + shaderChunks.decodePS +
@@ -216,6 +203,6 @@ class GShaderGeneratorSplat {
     }
 }
 
-const gsplat = new GShaderGeneratorSplat();
+const gsplat = new GSplatShaderGenerator();
 
 export { gsplat };

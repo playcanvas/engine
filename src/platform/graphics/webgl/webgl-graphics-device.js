@@ -21,7 +21,7 @@ import {
     UNIFORMTYPE_UTEXTURE2D_ARRAY, UNIFORMTYPE_INTARRAY, UNIFORMTYPE_UINTARRAY, UNIFORMTYPE_BOOLARRAY, UNIFORMTYPE_IVEC2ARRAY,
     UNIFORMTYPE_BVEC2ARRAY, UNIFORMTYPE_UVEC2ARRAY, UNIFORMTYPE_IVEC3ARRAY, UNIFORMTYPE_BVEC3ARRAY, UNIFORMTYPE_UVEC3ARRAY,
     UNIFORMTYPE_IVEC4ARRAY, UNIFORMTYPE_BVEC4ARRAY, UNIFORMTYPE_UVEC4ARRAY, UNIFORMTYPE_MAT4ARRAY,
-    semanticToLocation,
+    semanticToLocation, getPixelFormatArrayType,
     UNIFORMTYPE_TEXTURE2D_ARRAY,
     PRIMITIVE_TRISTRIP,
     DEVICETYPE_WEBGL2
@@ -43,6 +43,7 @@ import { BlendState } from '../blend-state.js';
 import { DepthState } from '../depth-state.js';
 import { StencilParameters } from '../stencil-parameters.js';
 import { WebglGpuProfiler } from './webgl-gpu-profiler.js';
+import { TextureUtils } from '../texture-utils.js';
 
 const invalidateAttachments = [];
 
@@ -813,7 +814,7 @@ class WebglGraphicsDevice extends GraphicsDevice {
     }
 
     createTextureImpl(texture) {
-        return new WebglTexture();
+        return new WebglTexture(texture);
     }
 
     createRenderTargetImpl(renderTarget) {
@@ -930,7 +931,7 @@ class WebglGraphicsDevice extends GraphicsDevice {
         this.extCompressedTextureASTC = this.getExtension('WEBGL_compressed_texture_astc');
         this.extParallelShaderCompile = this.getExtension('KHR_parallel_shader_compile');
 
-        // iOS exposes this for half precision render targets on both Webgl1 and 2 from iOS v 14.5beta
+        // iOS exposes this for half precision render targets on WebGL2 from iOS v 14.5beta
         this.extColorBufferHalfFloat = this.getExtension("EXT_color_buffer_half_float");
     }
 
@@ -2172,6 +2173,38 @@ class WebglGraphicsDevice extends GraphicsDevice {
         gl.getBufferSubData(gl.PIXEL_PACK_BUFFER, 0, pixels);
         gl.bindBuffer(gl.PIXEL_PACK_BUFFER, null);
         gl.deleteBuffer(buf);
+
+        return pixels;
+    }
+
+    readTextureAsync(texture, x, y, width, height, options) {
+
+        const face = options.face ?? 0;
+
+        // create a temporary render target if needed
+        const renderTarget = options.renderTarget ?? new RenderTarget({
+            colorBuffer: texture,
+            depth: false,
+            face: face
+        });
+        Debug.assert(renderTarget.colorBuffer === texture);
+
+        const buffer = new ArrayBuffer(TextureUtils.calcLevelGpuSize(width, height, 1, texture._format));
+        const data = new (getPixelFormatArrayType(texture._format))(buffer);
+
+        this.setRenderTarget(renderTarget);
+        this.initRenderTarget(renderTarget);
+
+        return new Promise((resolve, reject) => {
+            this.readPixelsAsync(x, y, width, height, data).then((data) => {
+
+                // destroy RT if we created it
+                if (!options.renderTarget) {
+                    renderTarget.destroy();
+                }
+                resolve(data);
+            });
+        });
     }
 
     /**
