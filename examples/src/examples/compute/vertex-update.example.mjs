@@ -1,7 +1,7 @@
 // @config WEBGL_DISABLED
 import * as pc from 'playcanvas';
-import { deviceType, rootPath } from '@examples/utils';
-import files from '@examples/files';
+import { deviceType, rootPath } from 'examples/utils';
+import files from 'examples/files';
 
 const canvas = document.getElementById('application-canvas');
 if (!(canvas instanceof HTMLCanvasElement)) {

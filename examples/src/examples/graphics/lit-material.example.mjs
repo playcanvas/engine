@@ -1,6 +1,6 @@
 // @config HIDDEN
 import * as pc from 'playcanvas';
-import { deviceType, rootPath } from '@examples/utils';
+import { deviceType, rootPath } from 'examples/utils';
 
 const canvas = document.getElementById('application-canvas');
 if (!(canvas instanceof HTMLCanvasElement)) {

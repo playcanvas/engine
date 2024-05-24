@@ -2,8 +2,8 @@
 // @config NO_DEVICE_SELECTOR
 // @config WEBGPU_DISABLED
 import * as pc from 'playcanvas';
-import { data } from '@examples/observer';
-import { rootPath } from '@examples/utils';
+import { data } from 'examples/observer';
+import { rootPath } from 'examples/utils';
 
 /**
  * @param {string} deviceType - The device type.
