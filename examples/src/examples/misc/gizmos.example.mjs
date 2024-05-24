@@ -10,6 +10,8 @@ if (!(canvas instanceof HTMLCanvasElement)) {
 
 // class for handling gizmo
 const { GizmoHandler } = await localImport('gizmo-handler.mjs');
+const { Grid } = await localImport('grid.mjs');
+const { Selector } = await localImport('selector.mjs');
 
 const gfxOptions = {
     deviceTypes: [deviceType],
@@ -162,14 +164,14 @@ const setType = (/** @type {string} */ value) => {
 
     // call method from top context (same as controls)
     // @ts-ignore
-    window.top.setType(value);
+    window.top.setType?.(value);
 };
 const setProj = (/** @type {number} */ value) => {
     data.set('camera.proj', value + 1);
 
     // call method from top context (same as controls)
     // @ts-ignore
-    window.top.setProj(value);
+    window.top.setProj?.(value);
 };
 
 // key event handlers
@@ -209,7 +211,7 @@ window.addEventListener('keypress', keypress);
 
 // gizmo and camera set handler
 const tmpC = new pc.Color();
-data.on('*:set', (/** @type {string} */ path, value) => {
+data.on('*:set', (/** @type {string} */ path, /** @type {any} */ value) => {
     const pathArray = path.split('.');
 
     switch (pathArray[0]) {
@@ -246,55 +248,34 @@ data.on('*:set', (/** @type {string} */ path, value) => {
     }
 });
 
-// picker
-const picker = new pc.Picker(app, canvas.clientWidth, canvas.clientHeight);
-const worldLayer = layers.getLayerByName('World');
-const pickerLayers = [worldLayer];
-
-const onPointerDown = (/** @type {PointerEvent} */ e) => {
+// selector
+const selector = new Selector(app, camera.camera, [layers.getLayerByName('World')]);
+selector.on('select', (/** @type {pc.GraphNode} */ node, /** @type {boolean} */ clear) => {
     if (gizmoHandler.ignorePicker) {
         return;
     }
 
-    if (picker) {
-        picker.resize(canvas.clientWidth, canvas.clientHeight);
-        picker.prepare(camera.camera, app.scene, pickerLayers);
-    }
-
-    picker.getSelectionAsync(e.clientX - 1, e.clientY - 1, 2, 2).then((selection) => {
-        if (!selection[0]) {
-            gizmoHandler.clear();
-            return;
-        }
-
-        gizmoHandler.add(selection[0].node, !e.ctrlKey && !e.metaKey);
-    });
-};
-window.addEventListener('pointerdown', onPointerDown);
+    gizmoHandler.add(node, clear);
+});
+selector.on('deselect', () => {
+    gizmoHandler.clear();
+});
 
 // grid
-const gridColor = new pc.Color(1, 1, 1, 0.5);
-const gridHalfSize = 4;
-/**
- * @type {pc.Vec3[]}
- */
-const gridLines = [];
-for (let i = 0; i < gridHalfSize * 2 + 1; i++) {
-    gridLines.push(new pc.Vec3(-gridHalfSize, 0, i - gridHalfSize), new pc.Vec3(gridHalfSize, 0, i - gridHalfSize));
-    gridLines.push(new pc.Vec3(i - gridHalfSize, 0, -gridHalfSize), new pc.Vec3(i - gridHalfSize, 0, gridHalfSize));
-}
-app.on('update', () => {
-    app.drawLines(gridLines, gridColor);
+const grid = new Grid();
+
+app.on('update', (/** @type {number} */ dt) => {
+    grid.draw(app);
 });
 
 app.on('destroy', () => {
     gizmoHandler.destroy();
+    selector.destroy();
 
     window.removeEventListener('resize', resize);
     window.removeEventListener('keydown', keydown);
     window.removeEventListener('keyup', keyup);
     window.removeEventListener('keypress', keypress);
-    window.removeEventListener('pointerdown', onPointerDown);
 });
 
 export { app };
