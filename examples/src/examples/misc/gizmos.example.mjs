@@ -211,7 +211,7 @@ window.addEventListener('keypress', keypress);
 
 // gizmo and camera set handler
 const tmpC = new pc.Color();
-data.on('*:set', (/** @type {string} */ path, value) => {
+data.on('*:set', (/** @type {string} */ path, /** @type {any} */ value) => {
     const pathArray = path.split('.');
 
     switch (pathArray[0]) {
