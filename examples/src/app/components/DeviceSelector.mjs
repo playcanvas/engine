@@ -93,13 +93,13 @@ class DeviceSelector extends TypedComponent {
      */
     setDisabledOptions(preferredDevice = DEVICETYPE_WEBGPU, activeDevice) {
         if (preferredDevice === DEVICETYPE_WEBGL2 && activeDevice !== DEVICETYPE_WEBGL2) {
-            const fallbackOrder = [DEVICETYPE_WEBGL2];
+            const fallbackOrder = [DEVICETYPE_WEBGPU];
             const disabledOptions = {
                 [DEVICETYPE_WEBGL2]: 'WebGL 2 (not supported)'
             };
             this.mergeState({ fallbackOrder, disabledOptions, activeDevice });
         } else if (preferredDevice === DEVICETYPE_WEBGPU && activeDevice !== DEVICETYPE_WEBGPU) {
-            const fallbackOrder = [DEVICETYPE_WEBGPU, DEVICETYPE_WEBGL2];
+            const fallbackOrder = [DEVICETYPE_WEBGL2];
             const disabledOptions = {
                 [DEVICETYPE_WEBGPU]: 'WebGPU (not supported)'
             };
