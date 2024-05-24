@@ -164,14 +164,14 @@ const setType = (/** @type {string} */ value) => {
 
     // call method from top context (same as controls)
     // @ts-ignore
-    window.top.setType(value);
+    window.top.setType?.(value);
 };
 const setProj = (/** @type {number} */ value) => {
     data.set('camera.proj', value + 1);
 
     // call method from top context (same as controls)
     // @ts-ignore
-    window.top.setProj(value);
+    window.top.setProj?.(value);
 };
 
 // key event handlers
