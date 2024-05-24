@@ -1,6 +1,6 @@
 import * as pc from 'playcanvas';
-import files from '@examples/files';
-import { deviceType, rootPath } from '@examples/utils';
+import files from 'examples/files';
+import { deviceType, rootPath } from 'examples/utils';
 
 const canvas = document.getElementById('application-canvas');
 if (!(canvas instanceof HTMLCanvasElement)) {
