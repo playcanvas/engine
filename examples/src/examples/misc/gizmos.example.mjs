@@ -1,8 +1,8 @@
 // @config DESCRIPTION <div style='text-align:center'><div>Translate (1), Rotate (2), Scale (3)</div><div>World/Local (X)</div><div>Perspective (P), Orthographic (O)</div></div>
 // @config WEBGPU_DISABLED
 import * as pc from 'playcanvas';
-import { data } from '@examples/observer';
-import { deviceType, rootPath, localImport } from '@examples/utils';
+import { data } from 'examples/observer';
+import { deviceType, rootPath, localImport } from 'examples/utils';
 
 const canvas = document.getElementById('application-canvas');
 if (!(canvas instanceof HTMLCanvasElement)) {

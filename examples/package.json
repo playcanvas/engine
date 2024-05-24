@@ -37,6 +37,7 @@
     "lib"
   ],
   "devDependencies": {
+    "examples": "file:../iframe",
     "@babel/standalone": "^7.22.9",
     "@monaco-editor/react": "^4.5.1",
     "@playcanvas/eslint-config": "^1.5.0",

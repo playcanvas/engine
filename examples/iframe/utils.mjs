@@ -1,4 +1,4 @@
-import files from '@examples/files';
+import files from 'examples/files';
 
 const href = window.top?.location.href ?? '';
 const params = getQueryParams(href);
@@ -75,7 +75,29 @@ export function clearImports() {
     blobUrls.forEach(URL.revokeObjectURL);
 }
 
+<<<<<<< HEAD
 const DEVICE_TYPES = ['webgpu', 'webgl2', 'webgl1'];
+=======
+/**
+ * @param {string} script - The script to parse.
+ * @returns {Record<string, any>} - The parsed config.
+ */
+export function parseConfig(script) {
+    const regex = /\/\/ @config ([^ \n]+) ?([^\n]+)?/g;
+    let match;
+    /** @type {Record<string, any>} */
+    const config = {};
+    while ((match = regex.exec(script)) !== null) {
+        const key = match[1].trim();
+        const val = match[2]?.trim();
+        config[key] = /true|false/g.test(val) ? val === 'true' : val ?? true;
+    }
+    return config;
+}
+
+const DEVICE_TYPES = ['webgpu', 'webgl2'];
+export let deviceType = 'webgl2';
+>>>>>>> bc7a9c548 (added package json for linting of example modules and renamed @examples to examples)
 
 /**
  * @param {{ WEBGPU_DISABLED: boolean; WEBGL_DISABLED: boolean; WEBGL1_DISABLED: boolean; }} config - The configuration object.
