@@ -75,9 +75,6 @@ export function clearImports() {
     blobUrls.forEach(URL.revokeObjectURL);
 }
 
-<<<<<<< HEAD
-const DEVICE_TYPES = ['webgpu', 'webgl2', 'webgl1'];
-=======
 /**
  * @param {string} script - The script to parse.
  * @returns {Record<string, any>} - The parsed config.
@@ -95,12 +92,11 @@ export function parseConfig(script) {
     return config;
 }
 
-const DEVICE_TYPES = ['webgpu', 'webgl2'];
-export let deviceType = 'webgl2';
->>>>>>> bc7a9c548 (added package json for linting of example modules and renamed @examples to examples)
+const DEVICE_TYPES = ['webgpu', 'webgl2', 'webgl1'];
 
 /**
- * @param {{ WEBGPU_DISABLED: boolean; WEBGL_DISABLED: boolean; WEBGL1_DISABLED: boolean; }} config - The configuration object.
+ * @param {any} config - The configuration object.
+ * @returns {string} - The device type.
  */
 function getDeviceType(config) {
     if (params.deviceType && DEVICE_TYPES.includes(params.deviceType)) {
@@ -108,7 +104,7 @@ function getDeviceType(config) {
         return params.deviceType;
     }
 
-    const selectedDevice = localStorage.getItem('preferredGraphicsDevice');
+    const selectedDevice = localStorage.getItem('preferredGraphicsDevice') ?? 'webgl2';
 
     switch (selectedDevice) {
         case 'webgpu':
@@ -141,6 +137,9 @@ function getDeviceType(config) {
 
 export let deviceType = 'webgl2';
 
+/**
+ * @param {Record<string, any>} config - The configuration object.
+ */
 export function updateDeviceType(config) {
     deviceType = getDeviceType(config);
 }
