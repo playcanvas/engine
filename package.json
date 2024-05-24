@@ -26,7 +26,18 @@
       "import": "./build/playcanvas/src/index.js",
       "require": "./build/playcanvas.js"
     },
-    "./build/*": "./build/*"
+    "./debug": {
+      "types": "./build/playcanvas.d.ts",
+      "import": "./build/playcanvas.dbg/src/index.js",
+      "require": "./build/playcanvas.dbg.js"
+    },
+    "./profiler": {
+      "types": "./build/playcanvas.d.ts",
+      "import": "./build/playcanvas.prf/src/index.js",
+      "require": "./build/playcanvas.prf.js"
+    },
+    "./build/*": "./build/*",
+    "./scripts/*": "./scripts/*"
   },
   "sideEffects": false,
   "type": "module",
