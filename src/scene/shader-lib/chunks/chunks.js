@@ -199,7 +199,7 @@ import webgpuVS from '../../../platform/graphics/shader-chunks/vert/webgpu.js';
 /**
  * Object containing all default shader chunks used by shader generators.
  *
- * @type {object}
+ * @type {Record<string, string>}
  * @category Graphics
  */
 const shaderChunks = {
