@@ -123,7 +123,7 @@ export function controls({ observer, ReactPCUI, React, jsx, fragment }) {
                         precision: 2
                     })
                 ),
-            type === 'scale' &&
+            (type === 'translate' || type === 'scale') &&
                 jsx(
                     LabelGroup,
                     { text: 'Center Tolerance' },
@@ -223,7 +223,7 @@ export function controls({ observer, ReactPCUI, React, jsx, fragment }) {
                         link: { observer, path: 'gizmo.axisPlaneGap' }
                     })
                 ),
-            type === 'scale' &&
+            (type === 'translate' || type === 'scale') &&
                 jsx(
                     LabelGroup,
                     { text: 'Center Size' },
