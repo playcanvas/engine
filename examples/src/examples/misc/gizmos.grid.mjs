@@ -40,6 +40,9 @@ class Grid {
         return this._color;
     }
 
+    /**
+     * @private
+     */
     _setLines() {
         this._lines = [
             new pc.Vec3(-this._halfExtents.x, 0, 0),
