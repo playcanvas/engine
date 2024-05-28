@@ -1,5 +1,6 @@
 import * as pc from 'playcanvas';
 
+const EPSILON = 1;
 class Selector extends pc.EventHandler {
     /**
      * @type {pc.CameraComponent}
@@ -64,17 +65,15 @@ class Selector extends pc.EventHandler {
      * @private
      */
     _onPointerUp(e) {
-        if (e.clientX !== this._start.x || e.clientY !== this._start.y) {
+        if (Math.abs(e.clientX - this._start.x) > EPSILON || Math.abs(e.clientY - this._start.y) > EPSILON) {
             return;
         }
 
-        if (this._picker) {
-            const device = this._picker.device;
-            this._picker.resize(device.canvas.width, device.canvas.height);
-            this._picker.prepare(this._camera, this._scene, this._layers);
-        }
+        const device = this._picker.device;
+        this._picker.resize(device.canvas.clientWidth, device.canvas.clientHeight);
+        this._picker.prepare(this._camera, this._scene, this._layers);
 
-        const selection = this._picker.getSelection(e.clientX, e.clientY, 2, 2);
+        const selection = this._picker.getSelection(e.clientX - 1, e.clientY - 1, 2, 2);
 
         if (!selection[0]) {
             this.fire('deselect');
