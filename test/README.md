@@ -92,7 +92,8 @@ Debugging tests is easy, convenient and fun! VS Code is the recommended IDE for 
 1. Open the root folder of your clone of the PlayCanvas Engine repo.
 2. Select the Explorer panel (top icon in the left-hand vertical toolbar).
 3. Navigate to the test you want to debug and set a breakpoint.
-4. At the bottom of the Explorer panel, you'll find a sub-panel called NPM SCRIPTS. Locate script `test` and click the Debug button.
+4. At the bottom of the Explorer panel, you'll find a sub-panel called NPM Scripts. Locate script `test` and click the Debug button.
+   * If you don't see NPM Scripts sub-panel, right click any visible sub-panels and select NPM Scripts from the drop-down menu.
 
 ## Help Us Reach 100% Coverage
 
