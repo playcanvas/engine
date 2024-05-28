@@ -146,7 +146,7 @@ class ScriptHandler extends ResourceHandler {
     _loadModule(url, callback) {
 
         // if we're in the browser, we need to use the full URL
-        const baseUrl = platform.browser ? window.location.origin : import.meta.url;
+        const baseUrl = platform.browser ? window.location.origin + window.location.pathname : import.meta.url;
         const importUrl = new URL(url, baseUrl);
 
         // @ts-ignore
