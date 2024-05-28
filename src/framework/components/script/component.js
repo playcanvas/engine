@@ -11,6 +11,8 @@ import { Component } from '../component.js';
 import { Entity } from '../../entity.js';
 import { ScriptType } from '../../script/script-type.js';
 
+const toLowerCamelCase = str => str[0].toLowerCase() + str.substring(1);
+
 /**
  * The ScriptComponent allows you to extend the functionality of an Entity by attaching your own
  * Script Types defined in JavaScript files to be executed with access to the Entity. For more
@@ -404,9 +406,11 @@ class ScriptComponent extends Component {
 
         } else {
 
+            const toLowerCamelCase = str => str[0].toLowerCase() + str.substring(1);
+
             // otherwise we need to manually initialize attributes from the schema
-            const name = script.__scriptType.__name;
-            const schema = this.system.app.scripts?.getSchema(name);
+            const name = script.__scriptType.__name || toLowerCamelCase(ScriptType.__getScriptName(script.__scriptType));
+            const schema = this.system.app.scripts?.tSchema(name);
             const data = this._attributeDataMap.get(name);
 
             if (schema && data) {
@@ -417,6 +421,11 @@ class ScriptComponent extends Component {
                     // Assign the value to the script based on the attribute schema
                     assignRawToValue(this.system.app, attributeSchema, value, script, attributeName);
                 }
+            } else if (data) {
+
+                // If we have data but no schema, shallow assign them to the class instance
+                Object.assign(script, data);
+
             }
         }
     }
@@ -680,7 +689,7 @@ class ScriptComponent extends Component {
         if (typeof scriptType === 'string') {
             scriptType = this.system.app.scripts.get(scriptType);
         } else if (scriptType) {
-            scriptName = scriptType.__name;
+            scriptName = scriptType.__name ?? toLowerCamelCase(ScriptType.__getScriptName(scriptType));
         }
 
         if (scriptType) {
