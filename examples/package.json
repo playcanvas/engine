@@ -37,7 +37,6 @@
     "lib"
   ],
   "devDependencies": {
-    "examples": "file:../iframe",
     "@babel/standalone": "^7.22.9",
     "@monaco-editor/react": "^4.5.1",
     "@playcanvas/eslint-config": "^1.5.0",
@@ -54,6 +53,7 @@
     "concurrently": "^7.6.0",
     "cross-env": "^7.0.2",
     "eslint": "^8.46.0",
+    "examples": "file:./iframe",
     "fflate": "^0.8.0",
     "fs-extra": "^10.1.0",
     "monaco-editor": "^0.33.0",

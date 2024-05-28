@@ -56,7 +56,7 @@ const blobUrls = [];
  * Imports a local file as a module.
  *
  * @param {string} name - The name of the local file.
- * @returns {Promise<Object>} - The module exports.
+ * @returns {Promise<any>} - The module exports.
  */
 export function localImport(name) {
     if (!/\.mjs$/.test(name)) {
