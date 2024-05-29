@@ -89,7 +89,7 @@ function createLevel() {
     map.setLocalScale(3, 3, 3);
     map.setLocalEulerAngles(-90, 0, 0);
 
-    map.findComponents('render').forEach((render) => {
+    map.findComponents('render').forEach((/** @type {pc.RenderComponent} */ render) => {
         const entity = render.entity;
         entity.addComponent('rigidbody', {
             type: 'static'
@@ -112,6 +112,9 @@ function createCharacterController() {
         fov: 90
     });
     camera.addComponent('script');
+    if (!camera.script) {
+        throw new Error('Script component not added');
+    }
     camera.script.create('ssao', {
         attributes: {
             brightness: 0.4,
@@ -138,6 +141,9 @@ function createCharacterController() {
         restitution: 0
     });
     entity.addComponent('script');
+    if (!entity.script) {
+        throw new Error('Script component not added');
+    }
     entity.script.create('characterController', {
         attributes: {
             camera: camera,
@@ -161,7 +167,7 @@ assetListLoader.load(() => {
     app.scene.envAtlas = assets.helipad.resource;
 
     // Increase gravity for more natural jumping
-    app.systems.rigidbody.gravity.set(0, -18, 0);
+    app.systems.rigidbody?.gravity.set(0, -18, 0);
 
     const level = createLevel();
     app.root.addChild(level);
