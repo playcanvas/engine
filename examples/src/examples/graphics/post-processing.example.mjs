@@ -1,6 +1,6 @@
 import * as pc from 'playcanvas';
-import { data } from '@examples/observer';
-import { deviceType, rootPath } from '@examples/utils';
+import { data } from 'examples/observer';
+import { deviceType, rootPath } from 'examples/utils';
 
 const canvas = document.getElementById('application-canvas');
 if (!(canvas instanceof HTMLCanvasElement)) {
@@ -108,7 +108,7 @@ assetListLoader.load(() => {
     app.root.addChild(mosquitoEntity);
 
     // helper function to create a box primitive
-    const createBox = (x, y, z, r, g, b) => {
+    const createBox = (x, y, z, r, g, b, name) => {
         // create material of random color
         const material = new pc.StandardMaterial();
         material.diffuse = pc.Color.BLACK;
@@ -116,7 +116,7 @@ assetListLoader.load(() => {
         material.update();
 
         // create primitive
-        const primitive = new pc.Entity();
+        const primitive = new pc.Entity(name);
         primitive.addComponent('render', {
             type: 'box',
             material: material
@@ -131,9 +131,9 @@ assetListLoader.load(() => {
 
     // create 3 emissive boxes
     const boxes = [
-        createBox(100, 20, 0, 200, 0, 0),
-        createBox(-50, 20, 100, 0, 80, 0),
-        createBox(90, 20, -80, 80, 80, 20)
+        createBox(100, 20, 0, 200, 0, 0, 'boxRed'),
+        createBox(-50, 20, 100, 0, 80, 0, 'boxGreen'),
+        createBox(90, 20, -80, 80, 80, 20, 'boxYellow')
     ];
 
     // Create an Entity with a camera component

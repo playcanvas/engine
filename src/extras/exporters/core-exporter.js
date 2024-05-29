@@ -3,7 +3,7 @@ import { Texture } from '../../platform/graphics/texture.js';
 import { BlendState } from '../../platform/graphics/blend-state.js';
 import { drawQuadWithShader } from '../../scene/graphics/quad-render-utils.js';
 import { RenderTarget } from '../../platform/graphics/render-target.js';
-import { FILTER_LINEAR, ADDRESS_CLAMP_TO_EDGE } from '../../platform/graphics/constants.js';
+import { FILTER_LINEAR, ADDRESS_CLAMP_TO_EDGE, isCompressedPixelFormat, PIXELFORMAT_RGBA8 } from '../../platform/graphics/constants.js';
 
 const textureBlitVertexShader = /* glsl */`
     attribute vec2 vertex_position;
@@ -88,12 +88,13 @@ class CoreExporter {
         // for other image sources, for example compressed textures, we extract the data by rendering the texture to a render target
         const device = texture.device;
         const { width, height } = this.calcTextureSize(texture.width, texture.height, options.maxTextureSize);
+        const format = isCompressedPixelFormat(texture.format) ? PIXELFORMAT_RGBA8 : texture.format;
 
         const dstTexture = new Texture(device, {
             name: 'ExtractedTexture',
             width,
             height,
-            format: texture.format,
+            format: format,
             cubemap: false,
             mipmaps: false,
             minFilter: FILTER_LINEAR,
@@ -113,26 +114,31 @@ class CoreExporter {
         device.setBlendState(BlendState.NOBLEND);
         drawQuadWithShader(device, renderTarget, shader);
 
-        // read back the pixels
-        // TODO: use async API when ready
-        const pixels = new Uint8ClampedArray(width * height * 4);
-        device.readPixels(0, 0, width, height, pixels);
+        // async read back the pixels of the texture
+        return dstTexture.read(0, 0, width, height, {
+            renderTarget: renderTarget,
+            immediate: true
+        }).then((textureData) => {
 
-        dstTexture.destroy();
-        renderTarget.destroy();
+            dstTexture.destroy();
+            renderTarget.destroy();
 
-        // copy pixels to a canvas
-        const newImage = new ImageData(pixels, width, height);
-        const canvas = document.createElement('canvas');
-        canvas.width = width;
-        canvas.height = height;
-        const newContext = canvas.getContext('2d');
-        if (!newContext) {
-            return Promise.resolve(undefined);
-        }
-        newContext.putImageData(newImage, 0, 0);
+            const pixels = new Uint8ClampedArray(width * height * 4);
+            pixels.set(textureData);
 
-        return Promise.resolve(canvas);
+            // copy pixels to a canvas
+            const newImage = new ImageData(pixels, width, height);
+            const canvas = document.createElement('canvas');
+            canvas.width = width;
+            canvas.height = height;
+            const newContext = canvas.getContext('2d');
+            if (!newContext) {
+                return Promise.resolve(undefined);
+            }
+            newContext.putImageData(newImage, 0, 0);
+
+            return Promise.resolve(canvas);
+        });
     }
 
     calcTextureSize(width, height, maxTextureSize) {

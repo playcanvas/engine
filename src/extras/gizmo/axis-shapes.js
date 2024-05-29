@@ -15,6 +15,7 @@ import { BoxGeometry } from '../../scene/geometry/box-geometry.js';
 import { CylinderGeometry } from '../../scene/geometry/cylinder-geometry.js';
 import { ConeGeometry } from '../../scene/geometry/cone-geometry.js';
 import { PlaneGeometry } from '../../scene/geometry/plane-geometry.js';
+import { SphereGeometry } from '../../scene/geometry/sphere-geometry.js';
 import { TorusGeometry } from '../../scene/geometry/torus-geometry.js';
 
 // constants
@@ -32,6 +33,7 @@ const GEOMETRIES = {
     cone: ConeGeometry,
     cylinder: CylinderGeometry,
     plane: PlaneGeometry,
+    sphere: SphereGeometry,
     torus: TorusGeometry
 };
 
@@ -178,7 +180,7 @@ class AxisShape {
 
     set disabled(value) {
         for (let i = 0; i < this.meshInstances.length; i++) {
-            setShadowMeshColor(this.meshInstances[i].mesh, this._disabledColor);
+            setShadowMeshColor(this.meshInstances[i].mesh, value ? this._disabledColor : this._defaultColor);
         }
         this._disabled = value ?? false;
     }
@@ -690,4 +692,51 @@ class AxisPlane extends AxisShape {
     }
 }
 
-export { AxisShape, AxisArrow, AxisBoxCenter, AxisBoxLine, AxisDisk, AxisPlane };
+class AxisSphereCenter extends AxisShape {
+    _size = 0.12;
+
+    _tolerance = 0.05;
+
+    constructor(device, options = {}) {
+        super(device, options);
+
+        this.triData = [
+            new TriData(new SphereGeometry(), 2)
+        ];
+
+        this._createCenter();
+    }
+
+    _createCenter() {
+        this._createRoot('sphereCenter');
+        this._updateTransform();
+
+        // box
+        this._addRenderShadowMesh(this.entity, 'sphere');
+    }
+
+    set size(value) {
+        this._size = value ?? 1;
+        this._updateTransform();
+    }
+
+    get size() {
+        return this._size;
+    }
+
+    set tolerance(value) {
+        this._tolerance = value;
+        this._updateTransform();
+    }
+
+    get tolerance() {
+        return this._tolerance;
+    }
+
+    _updateTransform() {
+        // intersect/render
+        this.entity.setLocalScale(this._size, this._size, this._size);
+    }
+}
+
+export { AxisShape, AxisArrow, AxisBoxCenter, AxisBoxLine, AxisDisk, AxisPlane, AxisSphereCenter };

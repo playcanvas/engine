@@ -456,15 +456,7 @@ class CollisionMeshSystemImpl extends CollisionSystemImpl {
             const entityTransform = entity.getWorldTransform();
             const scale = entityTransform.getScale();
 
-            if (data.model) {
-                const meshInstances = data.model.meshInstances;
-                for (let i = 0; i < meshInstances.length; i++) {
-                    this.createAmmoMesh(meshInstances[i].mesh, meshInstances[i].node, shape, null, data.checkVertexDuplicates);
-                }
-                const vec = new Ammo.btVector3(scale.x, scale.y, scale.z);
-                shape.setLocalScaling(vec);
-                Ammo.destroy(vec);
-            } else if (data.render) {
+            if (data.render) {
                 const meshes = data.render.meshes;
                 for (let i = 0; i < meshes.length; i++) {
                     if (data.convexHull) {
@@ -473,6 +465,14 @@ class CollisionMeshSystemImpl extends CollisionSystemImpl {
                         this.createAmmoMesh(meshes[i], tempGraphNode, shape, scale, data.checkVertexDuplicates);
                     }
                 }
+            } else if (data.model) {
+                const meshInstances = data.model.meshInstances;
+                for (let i = 0; i < meshInstances.length; i++) {
+                    this.createAmmoMesh(meshInstances[i].mesh, meshInstances[i].node, shape, null, data.checkVertexDuplicates);
+                }
+                const vec = new Ammo.btVector3(scale.x, scale.y, scale.z);
+                shape.setLocalScaling(vec);
+                Ammo.destroy(vec);
             }
 
             return shape;

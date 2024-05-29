@@ -1,4 +1,4 @@
-import { getQueryParams } from '@examples/utils';
+import { getQueryParams } from 'examples/utils';
 
 const params = getQueryParams(window.top?.location.href ?? '');
 

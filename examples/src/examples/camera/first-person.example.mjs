@@ -1,5 +1,6 @@
+// @config DESCRIPTION <div style='text-align:center'><div><b>WASD</b> to move</div><div><b>Space</b> to jump</div><div><b>Mouse</b> to look</div></div>
 import * as pc from 'playcanvas';
-import { deviceType, rootPath } from '@examples/utils';
+import { deviceType, rootPath } from 'examples/utils';
 
 const canvas = document.getElementById('application-canvas');
 if (!(canvas instanceof HTMLCanvasElement)) {
@@ -13,7 +14,6 @@ const gfxOptions = {
 };
 
 const device = await pc.createGraphicsDevice(canvas, gfxOptions);
-device.maxPixelRatio = Math.min(window.devicePixelRatio, 2);
 const createOptions = new pc.AppOptions();
 createOptions.graphicsDevice = device;
 createOptions.mouse = new pc.Mouse(document.body);
@@ -46,8 +46,15 @@ app.on('destroy', () => {
 });
 
 const assets = {
-    statue: new pc.Asset('statue', 'container', { url: rootPath + '/static/assets/models/statue.glb' }),
-    script: new pc.Asset('script', 'script', { url: rootPath + '/static/scripts/camera/first-person-camera.js' })
+    map: new pc.Asset('map', 'container', { url: rootPath + '/static/assets/models/fps-map.glb' }),
+    script: new pc.Asset('script', 'script', { url: rootPath + '/static/scripts/camera/first-person-camera.js' }),
+    ssao: new pc.Asset('ssao', 'script', { url: rootPath + '/static/scripts/posteffects/posteffect-ssao.js' }),
+    helipad: new pc.Asset(
+        'helipad-env-atlas',
+        'texture',
+        { url: rootPath + '/static/assets/cubemaps/helipad-env-atlas.png' },
+        { type: pc.TEXTURETYPE_RGBP, mipmaps: false }
+    )
 };
 
 pc.WasmModule.setConfig('Ammo', {
@@ -57,94 +64,13 @@ pc.WasmModule.setConfig('Ammo', {
 });
 
 await new Promise((resolve) => {
-    pc.WasmModule.getInstance('Ammo', () => resolve());
+    pc.WasmModule.getInstance('Ammo', () => resolve(true));
 });
 
-const assetListLoader = new pc.AssetListLoader(Object.values(assets), app.assets);
-assetListLoader.load(() => {
-    app.start();
+function createLevel() {
+    const entity = new pc.Entity();
 
-    // Create a physical floor
-    const floor = new pc.Entity();
-    floor.addComponent('collision', {
-        type: 'box',
-        halfExtents: new pc.Vec3(100, 0.5, 100)
-    });
-    floor.addComponent('rigidbody', {
-        type: 'static',
-        restitution: 0.5
-    });
-    floor.setLocalPosition(0, -0.5, 0);
-    app.root.addChild(floor);
-
-    const floorModel = new pc.Entity();
-    floorModel.addComponent('render', {
-        type: 'plane'
-    });
-    floorModel.setLocalPosition(0, 0.5, 0);
-    floorModel.setLocalScale(200, 1, 200);
-    floor.addChild(floorModel);
-
-    // Create a model entity and assign the statue model
-    const model = assets.statue.resource.instantiateRenderEntity({
-        castShadows: true
-    });
-    model.addComponent('collision', {
-        type: 'mesh',
-        asset: assets.statue.resource.model
-    });
-    model.addComponent('rigidbody', {
-        type: 'static',
-        restitution: 0.5
-    });
-    app.root.addChild(model);
-
-    // Create a camera that will be driven by the character controller
-    const camera = new pc.Entity();
-    camera.addComponent('camera', {
-        clearColor: new pc.Color(0.4, 0.45, 0.5),
-        farClip: 100,
-        fov: 65,
-        nearClip: 0.1
-    });
-    camera.setLocalPosition(0, 1, 0);
-
-    // Create a physical character controller
-    const characterController = new pc.Entity();
-    characterController.addComponent('collision', {
-        axis: 0,
-        height: 2,
-        radius: 0.5,
-        type: 'capsule'
-    });
-    characterController.addComponent('rigidbody', {
-        angularDamping: 0,
-        angularFactor: pc.Vec3.ZERO,
-        friction: 0.3,
-        linearDamping: 0,
-        linearFactor: pc.Vec3.ONE,
-        mass: 80,
-        restitution: 0,
-        type: 'dynamic'
-    });
-    characterController.addComponent('script');
-    characterController.script.create('characterController');
-    characterController.script.create('firstPersonCamera', {
-        attributes: {
-            camera: camera
-        }
-    });
-    characterController.script.create('gamePadInput');
-    characterController.script.create('keyboardInput');
-    characterController.script.create('mouseInput');
-    characterController.script.create('touchInput');
-    characterController.setLocalPosition(0, 1, 10);
-
-    // Add the character controller and camera to the hierarchy
-    app.root.addChild(characterController);
-    characterController.addChild(camera);
-
-    // Create a directional light
+    // lighting
     const light = new pc.Entity();
     light.addComponent('light', {
         castShadows: true,
@@ -155,8 +81,100 @@ assetListLoader.load(() => {
         type: 'directional',
         shadowResolution: 2048
     });
-    app.root.addChild(light);
     light.setLocalEulerAngles(45, 30, 0);
+    entity.addChild(light);
+
+    // map
+    const map = assets.map.resource.instantiateRenderEntity();
+    map.setLocalScale(3, 3, 3);
+    map.setLocalEulerAngles(-90, 0, 0);
+
+    map.findComponents('render').forEach((/** @type {pc.RenderComponent} */ render) => {
+        const entity = render.entity;
+        entity.addComponent('rigidbody', {
+            type: 'static'
+        });
+        entity.addComponent('collision', {
+            type: 'mesh',
+            renderAsset: render.asset
+        });
+    });
+    entity.addChild(map);
+
+    return entity;
+}
+
+function createCharacterController() {
+    const camera = new pc.Entity();
+    camera.addComponent('camera', {
+        clearColor: new pc.Color().fromString('#DEF5FF'),
+        farClip: 100,
+        fov: 90
+    });
+    camera.addComponent('script');
+    if (!camera.script) {
+        throw new Error('Script component not added');
+    }
+    camera.script.create('ssao', {
+        attributes: {
+            brightness: 0.4,
+            radius: 0.5
+        }
+    });
+    camera.setLocalPosition(0, 0.5, 0);
+
+    const entity = new pc.Entity('cc');
+    entity.addChild(camera);
+    entity.addComponent('collision', {
+        type: 'capsule',
+        radius: 0.5,
+        height: 2
+    });
+    entity.addComponent('rigidbody', {
+        type: 'dynamic',
+        mass: 100,
+        linearDamping: 0,
+        angularDamping: 0,
+        linearFactor: pc.Vec3.ONE,
+        angularFactor: pc.Vec3.ZERO,
+        friction: 0.5,
+        restitution: 0
+    });
+    entity.addComponent('script');
+    if (!entity.script) {
+        throw new Error('Script component not added');
+    }
+    entity.script.create('characterController', {
+        attributes: {
+            camera: camera,
+            jumpForce: 850
+        }
+    });
+    entity.script.create('desktopInput');
+    entity.script.create('mobileInput');
+    entity.script.create('gamePadInput');
+
+    return entity;
+}
+
+const assetListLoader = new pc.AssetListLoader(Object.values(assets), app.assets);
+assetListLoader.load(() => {
+    app.start();
+
+    app.scene.ambientLight.set(0.2, 0.2, 0.2);
+
+    app.scene.skyboxMip = 1;
+    app.scene.envAtlas = assets.helipad.resource;
+
+    // Increase gravity for more natural jumping
+    app.systems.rigidbody?.gravity.set(0, -18, 0);
+
+    const level = createLevel();
+    app.root.addChild(level);
+
+    const characterController = createCharacterController();
+    characterController.setPosition(-4, 2, 10);
+    app.root.addChild(characterController);
 });
 
 export { app };

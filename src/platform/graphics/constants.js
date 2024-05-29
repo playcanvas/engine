@@ -527,28 +527,8 @@ export const INDEXFORMAT_UINT16 = 1;
  */
 export const INDEXFORMAT_UINT32 = 2;
 
-/**
- * 8-bit alpha.
- *
- * @type {number}
- * @category Graphics
- */
 export const PIXELFORMAT_A8 = 0;
-
-/**
- * 8-bit luminance.
- *
- * @type {number}
- * @category Graphics
- */
 export const PIXELFORMAT_L8 = 1;
-
-/**
- * 8-bit luminance with 8-bit alpha.
- *
- * @type {number}
- * @category Graphics
- */
 export const PIXELFORMAT_LA8 = 2;
 
 /**
@@ -950,13 +930,29 @@ export const PIXELFORMAT_R16F = 50;
  */
 export const PIXELFORMAT_RG16F = 51;
 
+/**
+ * 8-bit per-channel unsigned integer (R) format.
+ *
+ * @type {number}
+ * @category Graphics
+ */
+export const PIXELFORMAT_R8 = 52;
+
+/**
+ * 8-bit per-channel unsigned integer (RG) format.
+ *
+ * @type {number}
+ * @category Graphics
+ */
+export const PIXELFORMAT_RG8 = 53;
+
 // map of engine PIXELFORMAT_*** enums to information about the format
 export const pixelFormatInfo = new Map([
 
     // float formats
     [PIXELFORMAT_A8,            { name: 'A8', size: 1 }],
-    [PIXELFORMAT_L8,            { name: 'L8', size: 1 }],
-    [PIXELFORMAT_LA8,           { name: 'LA8', size: 2 }],
+    [PIXELFORMAT_R8,            { name: 'R8', size: 1 }],
+    [PIXELFORMAT_RG8,           { name: 'RG8', size: 2 }],
     [PIXELFORMAT_RGB565,        { name: 'RGB565', size: 2 }],
     [PIXELFORMAT_RGBA5551,      { name: 'RGBA5551', size: 2 }],
     [PIXELFORMAT_RGBA4,         { name: 'RGBA4', size: 2 }],
@@ -1040,6 +1036,7 @@ export const getPixelFormatArrayType = (format) => {
         case PIXELFORMAT_RG16I:
         case PIXELFORMAT_RGBA16I:
             return Int16Array;
+        case PIXELFORMAT_RG8:
         case PIXELFORMAT_R16U:
         case PIXELFORMAT_RG16U:
         case PIXELFORMAT_RGBA16U:

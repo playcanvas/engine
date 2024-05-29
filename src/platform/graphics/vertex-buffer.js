@@ -30,19 +30,10 @@ class VertexBuffer {
      */
     constructor(graphicsDevice, format, numVertices, options) {
 
+        Debug.assert(arguments.length <= 4 && (!options || typeof options === 'object'), 'incorrect arguments');
+
         // By default, vertex buffers are static (better for performance since buffer data can be cached in VRAM)
-        let initialData;
-        if (typeof options === 'object') {
-
-            this.usage = options.usage ?? BUFFER_STATIC;
-            initialData = options.data;
-
-        } else if (arguments.length > 3) {  // handle backwards compatibility
-
-            Debug.deprecated('VertexBuffer: usage and initialData parameters are deprecated, use options object instead');
-            this.usage = arguments[3] ?? BUFFER_STATIC;
-            initialData = arguments[4];
-        }
+        this.usage = options?.usage ?? BUFFER_STATIC;
 
         this.device = graphicsDevice;
         this.format = format;
@@ -57,6 +48,7 @@ class VertexBuffer {
         this.adjustVramSizeTracking(graphicsDevice._vram, this.numBytes);
 
         // Allocate the storage
+        const initialData = options?.data;
         if (initialData) {
             this.setData(initialData);
         } else {

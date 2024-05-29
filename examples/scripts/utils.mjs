@@ -48,8 +48,8 @@ export function parseConfig(script) {
     /** @type {Record<string, any>} */
     const config = {};
     while ((match = regex.exec(script)) !== null) {
-        const key = match[1];
-        const val = match[2];
+        const key = match[1].trim();
+        const val = match[2]?.trim();
         config[key] = /true|false/g.test(val) ? val === 'true' : val ?? true;
     }
     return config;

@@ -1,7 +1,7 @@
 // @config WEBGPU_DISABLED
 import * as pc from 'playcanvas';
-import { data } from '@examples/observer';
-import { deviceType, rootPath } from '@examples/utils';
+import { data } from 'examples/observer';
+import { deviceType, rootPath } from 'examples/utils';
 
 const canvas = document.getElementById('application-canvas');
 if (!(canvas instanceof HTMLCanvasElement)) {

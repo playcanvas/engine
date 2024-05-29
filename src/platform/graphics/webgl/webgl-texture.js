@@ -10,7 +10,7 @@ import {
     PIXELFORMAT_ATC_RGBA, PIXELFORMAT_BGRA8, PIXELFORMAT_R8I, PIXELFORMAT_R8U, PIXELFORMAT_R16I, PIXELFORMAT_R16U,
     PIXELFORMAT_R32I, PIXELFORMAT_R32U, PIXELFORMAT_RG16I, PIXELFORMAT_RG16U, PIXELFORMAT_RG32I, PIXELFORMAT_RG32U,
     PIXELFORMAT_RG8I, PIXELFORMAT_RG8U, PIXELFORMAT_RGBA16I, PIXELFORMAT_RGBA16U, PIXELFORMAT_RGBA32I, PIXELFORMAT_RGBA32U,
-    PIXELFORMAT_RGBA8I, PIXELFORMAT_RGBA8U, PIXELFORMAT_R16F, PIXELFORMAT_RG16F
+    PIXELFORMAT_RGBA8I, PIXELFORMAT_RGBA8U, PIXELFORMAT_R16F, PIXELFORMAT_RG16F, PIXELFORMAT_R8, PIXELFORMAT_RG8
 } from '../constants.js';
 
 /**
@@ -66,6 +66,11 @@ class WebglTexture {
 
     dirtyParameterFlags = 0;
 
+    constructor(texture) {
+        /** @type {import('../texture.js').Texture} */
+        this.texture = texture;
+    }
+
     destroy(device) {
         if (this._glTexture) {
 
@@ -117,6 +122,17 @@ class WebglTexture {
             case PIXELFORMAT_LA8:
                 this._glFormat = gl.LUMINANCE_ALPHA;
                 this._glInternalFormat = gl.LUMINANCE_ALPHA;
+                this._glPixelType = gl.UNSIGNED_BYTE;
+                break;
+            case PIXELFORMAT_R8:
+                this._glFormat = gl.RED;
+                this._glInternalFormat = gl.R8;
+                this._glPixelType = gl.UNSIGNED_BYTE;
+                break;
+
+            case PIXELFORMAT_RG8:
+                this._glFormat = gl.RG;
+                this._glInternalFormat = gl.RG8;
                 this._glPixelType = gl.UNSIGNED_BYTE;
                 break;
             case PIXELFORMAT_RGB565:
@@ -709,6 +725,15 @@ class WebglTexture {
         texture.adjustVramSizeTracking(device._vram, texture._gpuSize);
 
         this._glCreated = true;
+    }
+
+    read(x, y, width, height, options) {
+
+        const texture = this.texture;
+
+        /** @type {import('./webgl-graphics-device.js').WebglGraphicsDevice} */
+        const device = texture.device;
+        return device.readTextureAsync(texture, x, y, width, height, options);
     }
 }
 
