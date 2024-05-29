@@ -46,7 +46,7 @@ app.on('destroy', () => {
 });
 
 const assets = {
-    map: new pc.Asset('map', 'container', { url: rootPath + '/static/assets/models/lowpoly__fps__tdm__game__map.glb' }),
+    map: new pc.Asset('map', 'container', { url: rootPath + '/static/assets/models/fps-map.glb' }),
     script: new pc.Asset('script', 'script', { url: rootPath + '/static/scripts/camera/first-person-camera.js' }),
     ssao: new pc.Asset('ssao', 'script', { url: rootPath + '/static/scripts/posteffects/posteffect-ssao.js' }),
     helipad: new pc.Asset(

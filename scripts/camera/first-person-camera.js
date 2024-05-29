@@ -516,10 +516,10 @@ class GamePadInput {
      */
     update(dt) {
         const gamepads = navigator.getGamepads ? navigator.getGamepads() : [];
-    
+
         for (let i = 0; i < gamepads.length; i++) {
             const gamepad = gamepads[i];
-    
+
             // Only proceed if we have at least 2 sticks
             if (gamepad && gamepad.mapping === 'standard' && gamepad.axes.length >= 4) {
                 // Moving (left stick)
@@ -543,7 +543,7 @@ class GamePadInput {
                     }
                     this._lastForward = forward;
                 }
-    
+
                 const strafe = this._remappedPos.x;
                 if (this._lastStrafe !== strafe) {
                     if (strafe > 0) {
@@ -560,15 +560,15 @@ class GamePadInput {
                     }
                     this._lastStrafe = strafe;
                 }
-    
+
                 // Looking (right stick)
                 this._rightStick.pos.set(gamepad.axes[2], gamepad.axes[3]);
                 applyRadialDeadZone(this._rightStick.pos, this._remappedPos, this.deadZoneLow, this.deadZoneHigh);
-    
+
                 const movX = this._remappedPos.x * this.turnSpeed;
                 const movY = this._remappedPos.y * this.turnSpeed;
                 this.app.fire('cc:look', movX, movY);
-    
+
                 // Jumping (bottom button of right cluster)
                 if (gamepad.buttons[0].pressed && !this._lastJump) {
                     if (this._jumpTimeout) {
