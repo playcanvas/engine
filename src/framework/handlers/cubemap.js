@@ -121,7 +121,6 @@ class CubemapHandler extends ResourceHandler {
                             height: tex.height >> i,
                             format: tex.format,
                             levels: [tex._levels[i]],
-                            fixCubemapSeams: true,
                             addressU: ADDRESS_CLAMP_TO_EDGE,
                             addressV: ADDRESS_CLAMP_TO_EDGE,
                             // generate cubemaps on the top level only
@@ -180,8 +179,7 @@ class CubemapHandler extends ResourceHandler {
                     magFilter: assetData.hasOwnProperty('magFilter') ? assetData.magFilter : faceTextures[0].magFilter,
                     anisotropy: assetData.hasOwnProperty('anisotropy') ? assetData.anisotropy : 1,
                     addressU: ADDRESS_CLAMP_TO_EDGE,
-                    addressV: ADDRESS_CLAMP_TO_EDGE,
-                    fixCubemapSeams: !!assets[0]
+                    addressV: ADDRESS_CLAMP_TO_EDGE
                 });
 
                 resources[0] = faces;
@@ -293,7 +291,7 @@ class CubemapHandler extends ResourceHandler {
                 onLoad(i, null);
             } else if (self.compareAssetIds(assetId, loadedAssetIds[i])) {
                 // asset id hasn't changed from what is currently set
-                onLoad(i, loadedAssets[i]);
+                processTexAsset(i, loadedAssets[i]);
             } else if (parseInt(assetId, 10) === assetId) {
                 // assetId is an asset id
                 texAsset = registry.get(assetId);
@@ -321,9 +319,7 @@ class CubemapHandler extends ResourceHandler {
                 } : assetId;
                 texAsset = new Asset(cubemapAsset.name + '_part_' + i, 'texture', file);
                 registry.add(texAsset);
-                registry.once('load:' + texAsset.id, onLoad.bind(self, i));
-                registry.once('error:' + texAsset.id, onError.bind(self, i));
-                registry.load(texAsset);
+                processTexAsset(i, texAsset);
             }
         }
     }

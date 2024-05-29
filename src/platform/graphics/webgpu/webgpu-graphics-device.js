@@ -1,6 +1,5 @@
 import { TRACEID_RENDER_QUEUE } from '../../../core/constants.js';
 import { Debug, DebugHelper } from '../../../core/debug.js';
-import { path } from '../../../core/path.js';
 
 import {
     PIXELFORMAT_RGBA8, PIXELFORMAT_BGRA8, DEVICETYPE_WEBGPU,
@@ -29,6 +28,8 @@ import { WebgpuGpuProfiler } from './webgpu-gpu-profiler.js';
 import { WebgpuResolver } from './webgpu-resolver.js';
 import { WebgpuCompute } from './webgpu-compute.js';
 import { WebgpuBuffer } from './webgpu-buffer.js';
+import { BindGroupFormat } from '../bind-group-format.js';
+import { BindGroup } from '../bind-group.js';
 
 const _uniqueLocations = new Map();
 
@@ -71,6 +72,14 @@ class WebgpuGraphicsDevice extends GraphicsDevice {
      * @type {WebgpuBindGroupFormat[]}
      */
     bindGroupFormats = [];
+
+    /**
+     * An empty bind group, used when the draw call is using a typical bind group layout based on
+     * BINDGROUP_*** constants but some bind groups are not needed, for example clear renderer.
+     *
+     * @type {BindGroup}
+     */
+    emptyBindGroup;
 
     /**
      * Current command buffer encoder.
@@ -167,16 +176,9 @@ class WebgpuGraphicsDevice extends GraphicsDevice {
         // temporary message to confirm Webgpu is being used
         Debug.log("WebgpuGraphicsDevice initialization ..");
 
-        // build a full URL from a relative path
+        // build a full URL from a relative or absolute path
         const buildUrl = (srcPath) => {
-            if (!path.isRelativePath(srcPath)) {
-                return srcPath;
-            }
-
-            const url = new URL(window.location.href);
-            url.pathname = srcPath;
-            url.search = '';
-            return url.toString();
+            return new URL(srcPath, window.location.href).toString();
         };
 
         const results = await Promise.all([
@@ -310,6 +312,10 @@ class WebgpuGraphicsDevice extends GraphicsDevice {
 
         // init dynamic buffer using 1MB allocation
         this.dynamicBuffers = new WebgpuDynamicBuffers(this, 1024 * 1024, this.limits.minUniformBufferOffsetAlignment);
+
+        // empty bind group
+        this.emptyBindGroup = new BindGroup(this, new BindGroupFormat(this, []));
+        this.emptyBindGroup.update();
     }
 
     createBackbuffer() {
@@ -913,6 +919,13 @@ class WebgpuGraphicsDevice extends GraphicsDevice {
             DebugHelper.setLabel(cb, 'ReadStorageBuffer-CommandBuffer');
             this.addCommandBuffer(cb);
         }
+
+        return this.readBuffer(stagingBuffer, size, data, immediate);
+    }
+
+    readBuffer(stagingBuffer, size, data = null, immediate = false) {
+
+        const destBuffer = stagingBuffer.buffer;
 
         // return a promise that resolves with the data
         return new Promise((resolve, reject) => {

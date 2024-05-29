@@ -8,9 +8,9 @@ struct ub_view {
     matrix_viewProjection : mat4x4f
 }
 
-@group(0) @binding(0) var<uniform> uvMesh : ub_mesh;
-@group(0) @binding(1) var<storage, read> particles: array<Particle>;
-@group(1) @binding(0) var<uniform> ubView : ub_view;
+@group(2) @binding(0) var<uniform> ubMesh : ub_mesh;
+@group(1) @binding(0) var<storage, read> particles: array<Particle>;
+@group(0) @binding(0) var<uniform> ubView : ub_view;
 
 // quad vertices - used to expand the particles into quads
 var<private> pos : array<vec2f, 4> = array<vec2f, 4>(

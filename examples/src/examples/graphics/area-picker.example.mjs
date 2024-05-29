@@ -1,6 +1,5 @@
-// @config WEBGPU_DISABLED
 import * as pc from 'playcanvas';
-import { deviceType, rootPath } from '@examples/utils';
+import { deviceType, rootPath } from 'examples/utils';
 
 const canvas = document.getElementById('application-canvas');
 if (!(canvas instanceof HTMLCanvasElement)) {
@@ -193,12 +192,6 @@ assetListLoader.load(() => {
         camera.setLocalPosition(40 * Math.sin(time), 0, 40 * Math.cos(time));
         camera.lookAt(pc.Vec3.ZERO);
 
-        // turn all previously highlighted meshes to black at the start of the frame
-        for (let h = 0; h < highlights.length; h++) {
-            highlightMaterial(highlights[h], pc.Color.BLACK);
-        }
-        highlights.length = 0;
-
         // Make sure the picker is the right size, and prepare it, which renders meshes into its render target
         if (picker) {
             picker.resize(canvas.clientWidth * pickerScale, canvas.clientHeight * pickerScale);
@@ -231,34 +224,51 @@ assetListLoader.load(() => {
             }
         ];
 
-        // process all areas
+        // process all areas every frame
+        const promises = [];
         for (let a = 0; a < areas.length; a++) {
             const areaPos = areas[a].pos;
             const areaSize = areas[a].size;
-            const color = areas[a].color;
 
             // display 2D rectangle around it
             drawRectangle(areaPos.x, areaPos.y, areaSize.x, areaSize.y);
 
             // get list of meshInstances inside the area from the picker
             // this scans the pixels inside the render target and maps the id value stored there into meshInstances
-            const selection = picker.getSelection(
+            // Note that this is an async function returning a promise. Store it in the promises array.
+            const promise = picker.getSelectionAsync(
                 areaPos.x * pickerScale,
                 areaPos.y * pickerScale,
                 areaSize.x * pickerScale,
                 areaSize.y * pickerScale
             );
 
-            // process all meshInstances it found - highlight them to appropriate color for the area
-            for (let s = 0; s < selection.length; s++) {
-                if (selection[s]) {
-                    /** @type {pc.StandardMaterial} */
-                    const material = selection[s].material;
-                    highlightMaterial(material, color);
-                    highlights.push(material);
+            promises.push(promise);
+        }
+
+        // when all promises are resolved, we can highlight the meshes
+        Promise.all(promises).then((results) => {
+
+            // turn off previously highlighted meshes
+            for (let h = 0; h < highlights.length; h++) {
+                highlightMaterial(highlights[h], pc.Color.BLACK);
+            }
+            highlights.length = 0;
+
+            // process the results
+            for (let i = 0; i < results.length; i++) {
+                const meshInstances = results[i];
+
+                for (let s = 0; s < meshInstances.length; s++) {
+                    if (meshInstances[s]) {
+                        /** @type {pc.StandardMaterial} */
+                        const material = meshInstances[s].material;
+                        highlightMaterial(material, areas[i].color);
+                        highlights.push(material);
+                    }
                 }
             }
-        }
+        });
     });
 });
 

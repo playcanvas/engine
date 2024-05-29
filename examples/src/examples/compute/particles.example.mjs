@@ -1,7 +1,7 @@
 // @config WEBGL_DISABLED
 import * as pc from 'playcanvas';
-import { deviceType, rootPath } from '@examples/utils';
-import files from '@examples/files';
+import { deviceType, rootPath } from 'examples/utils';
+import files from 'examples/files';
 
 const canvas = document.getElementById('application-canvas');
 if (!(canvas instanceof HTMLCanvasElement)) {
@@ -220,11 +220,6 @@ assetListLoader.load(() => {
             new pc.UniformFormat('matrix_model', pc.UNIFORMTYPE_MAT4)
         ]),
         meshBindGroupFormat: new pc.BindGroupFormat(app.graphicsDevice, [
-            // uniforms
-            new pc.BindUniformBufferFormat(
-                pc.UNIFORM_BUFFER_DEFAULT_SLOT_NAME,
-                pc.SHADERSTAGE_VERTEX | pc.SHADERSTAGE_FRAGMENT
-            ),
             // particle storage buffer in read-only mode
             new pc.BindStorageBufferFormat('particles', pc.SHADERSTAGE_VERTEX | pc.SHADERSTAGE_FRAGMENT, true)
         ])
@@ -232,6 +227,7 @@ assetListLoader.load(() => {
 
     // material to render the particles
     const material = new pc.Material();
+    material.name = 'ParticleRenderingMaterial';
     material.shader = new pc.Shader(app.graphicsDevice, shaderDefinition);
 
     // index buffer - two triangles (6 indices) per particle using 4 vertices
@@ -254,7 +250,7 @@ assetListLoader.load(() => {
     const meshInstance = new pc.MeshInstance(mesh, material);
     meshInstance.cull = false; // disable culling as we did not supply custom aabb for the mesh instance
 
-    const entity = new pc.Entity();
+    const entity = new pc.Entity('ParticleRenderingEntity');
     entity.addComponent('render', {
         meshInstances: [meshInstance]
     });

@@ -313,30 +313,6 @@ class AnimComponentLayer {
     }
 
     /**
-     * Add a mask to this layer.
-     *
-     * @param {object} [mask] - The mask to assign to the layer. If not provided the current mask
-     * in the layer will be removed.
-     * @example
-     * entity.anim.baseLayer.assignMask({
-     *     // include the spine of the current model and all of its children
-     *     "path/to/spine": {
-     *         children: true
-     *     },
-     *     // include the hip of the current model but not all of its children
-     *     "path/to/hip": true
-     * });
-     * @ignore
-     */
-    assignMask(mask) {
-        Debug.deprecated('The pc.AnimComponentLayer#assignMask function is now deprecated. Assign masks to the pc.AnimComponentLayer#mask property instead.');
-        if (this._controller.assignMask(mask)) {
-            this._component.rebind();
-        }
-        this._mask = mask;
-    }
-
-    /**
      * Assigns an animation track to a state or blend tree node in the current graph. If a state
      * for the given nodePath doesn't exist, it will be created. If all states nodes are linked and
      * the {@link AnimComponent#activate} value was set to true then the component will begin

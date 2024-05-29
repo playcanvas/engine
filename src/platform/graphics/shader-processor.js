@@ -2,13 +2,13 @@ import { Debug } from '../../core/debug.js';
 import {
     BINDGROUP_MESH, uniformTypeToName, semanticToLocation,
     SHADERSTAGE_VERTEX, SHADERSTAGE_FRAGMENT,
-    UNIFORM_BUFFER_DEFAULT_SLOT_NAME,
     SAMPLETYPE_FLOAT, SAMPLETYPE_DEPTH, SAMPLETYPE_UNFILTERABLE_FLOAT,
     TEXTUREDIMENSION_2D, TEXTUREDIMENSION_2D_ARRAY, TEXTUREDIMENSION_CUBE, TEXTUREDIMENSION_3D,
-    TYPE_FLOAT32, TYPE_INT8, TYPE_INT16, TYPE_INT32, TYPE_FLOAT16, SAMPLETYPE_INT, SAMPLETYPE_UINT
+    TYPE_FLOAT32, TYPE_INT8, TYPE_INT16, TYPE_INT32, TYPE_FLOAT16, SAMPLETYPE_INT, SAMPLETYPE_UINT,
+    BINDGROUP_MESH_UB
 } from './constants.js';
 import { UniformFormat, UniformBufferFormat } from './uniform-buffer-format.js';
-import { BindGroupFormat, BindUniformBufferFormat, BindTextureFormat } from './bind-group-format.js';
+import { BindGroupFormat, BindTextureFormat } from './bind-group-format.js';
 
 // accepted keywords
 // TODO: 'out' keyword is not in the list, as handling it is more complicated due
@@ -269,14 +269,7 @@ class ShaderProcessor {
         });
         const meshUniformBufferFormat = meshUniforms.length ? new UniformBufferFormat(device, meshUniforms) : null;
 
-        // build mesh bind group format - start with uniform buffer
-        const uniformBufferFormats = [];
-        if (meshUniformBufferFormat) {
-            // TODO: we could optimize visibility to only stages that use any of the data
-            uniformBufferFormats.push(new BindUniformBufferFormat(UNIFORM_BUFFER_DEFAULT_SLOT_NAME, SHADERSTAGE_VERTEX | SHADERSTAGE_FRAGMENT));
-        }
-
-        // add textures uniforms
+        // build mesh bind group format - this contains the textures, but not the uniform buffer as that is a separate binding
         const textureFormats = [];
         uniformLinesSamplers.forEach((uniform) => {
             // unmatched texture uniforms go to mesh block
@@ -307,7 +300,7 @@ class ShaderProcessor {
             // validate types in else
 
         });
-        const meshBindGroupFormat = new BindGroupFormat(device, [...uniformBufferFormats, ...textureFormats]);
+        const meshBindGroupFormat = new BindGroupFormat(device, textureFormats);
 
         // generate code for uniform buffers
         let code = '';
@@ -319,7 +312,7 @@ class ShaderProcessor {
 
         // and also for generated mesh format, which is at the slot 0 of the bind group
         if (meshUniformBufferFormat) {
-            code += meshUniformBufferFormat.getShaderDeclaration(BINDGROUP_MESH, 0);
+            code += meshUniformBufferFormat.getShaderDeclaration(BINDGROUP_MESH_UB, 0);
         }
 
         // generate code for textures

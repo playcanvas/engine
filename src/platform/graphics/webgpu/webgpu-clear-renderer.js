@@ -4,7 +4,8 @@ import { BlendState } from "../blend-state.js";
 import {
     CULLFACE_NONE,
     PRIMITIVE_TRISTRIP, SHADERLANGUAGE_WGSL,
-    UNIFORMTYPE_FLOAT, UNIFORMTYPE_VEC4, BINDGROUP_MESH, CLEARFLAG_COLOR, CLEARFLAG_DEPTH, CLEARFLAG_STENCIL
+    UNIFORMTYPE_FLOAT, UNIFORMTYPE_VEC4, BINDGROUP_MESH, CLEARFLAG_COLOR, CLEARFLAG_DEPTH, CLEARFLAG_STENCIL,
+    BINDGROUP_MESH_UB
 } from "../constants.js";
 import { Shader } from "../shader.js";
 import { DynamicBindGroup } from "../bind-group.js";
@@ -39,7 +40,7 @@ class WebgpuClearRenderer {
                 depth: f32
             }
 
-            @group(0) @binding(0) var<uniform> ubMesh : ub_mesh;
+            @group(2) @binding(0) var<uniform> ubMesh : ub_mesh;
 
             var<private> pos : array<vec2f, 4> = array<vec2f, 4>(
                 vec2(-1.0, 1.0), vec2(1.0, 1.0),
@@ -98,10 +99,13 @@ class WebgpuClearRenderer {
 
             DebugGraphics.pushGpuMarker(device, 'CLEAR-RENDERER');
 
-            // dynamic bind group for this UB
+            // dynamic bind group for the UB
             const { uniformBuffer, dynamicBindGroup } = this;
             uniformBuffer.startUpdate(dynamicBindGroup);
-            device.setBindGroup(BINDGROUP_MESH, dynamicBindGroup.bindGroup, dynamicBindGroup.offsets);
+            device.setBindGroup(BINDGROUP_MESH_UB, dynamicBindGroup.bindGroup, dynamicBindGroup.offsets);
+
+            // not using mesh bind group
+            device.setBindGroup(BINDGROUP_MESH, device.emptyBindGroup);
 
             // setup clear color
             if ((flags & CLEARFLAG_COLOR) && (renderTarget.colorBuffer || renderTarget.impl.assignedColorTexture)) {
@@ -136,7 +140,6 @@ class WebgpuClearRenderer {
 
             // render 4 vertices without vertex buffer
             device.setShader(this.shader);
-
             device.draw(primitive);
 
             DebugGraphics.popGpuMarker(device);

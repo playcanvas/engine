@@ -146,6 +146,7 @@ class CameraComponent extends Component {
      * equivalent to {@link SHADERPASS_FORWARD}. Can be:
      *
      * - {@link SHADERPASS_FORWARD}
+     * - {@link SHADERPASS_FORWARD_HDR}
      * - {@link SHADERPASS_ALBEDO}
      * - {@link SHADERPASS_OPACITY}
      * - {@link SHADERPASS_WORLDNORMAL}
@@ -935,7 +936,7 @@ class CameraComponent extends Component {
     /**
      * Prepare the camera for frame rendering.
      *
-     * @param {import('../../../platform/graphics/render-target.js').RenderTarget|null} rt - Render
+     * @param {import('../../../platform/graphics/render-target.js').RenderTarget|null} [rt] - Render
      * target to which rendering will be performed. Will affect camera's aspect ratio, if
      * aspectRatioMode is {@link ASPECT_AUTO}.
      * @ignore

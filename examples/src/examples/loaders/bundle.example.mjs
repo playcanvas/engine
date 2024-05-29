@@ -1,5 +1,5 @@
 import * as pc from 'playcanvas';
-import { deviceType, rootPath } from '@examples/utils';
+import { deviceType, rootPath } from 'examples/utils';
 
 // The example demonstrates loading multiple assets from a single bundle file
 
