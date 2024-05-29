@@ -1,8 +1,8 @@
 import { platform } from '../../core/platform.js';
 import { script } from '../script.js';
-import { Script } from '../script/script.js';
+import { ScriptType } from '../script/script-type.js';
 import { ScriptTypes } from '../script/script-types.js';
-import { registerScript } from '../script/script-create.js';
+import { registerScript } from '../script/script.js';
 import { ResourceLoader } from './loader.js';
 
 import { ResourceHandler } from './handler.js';
@@ -146,7 +146,7 @@ class ScriptHandler extends ResourceHandler {
     _loadModule(url, callback) {
 
         // if we're in the browser, we need to use the full URL
-        const baseUrl = platform.browser ? window.location.origin : import.meta.url;
+        const baseUrl = platform.browser ? window.location.origin + window.location.pathname : import.meta.url;
         const importUrl = new URL(url, baseUrl);
 
         // @ts-ignore
@@ -154,7 +154,7 @@ class ScriptHandler extends ResourceHandler {
 
             for (const key in module) {
                 const scriptClass = module[key];
-                const extendsScriptType = scriptClass.prototype instanceof Script;
+                const extendsScriptType = scriptClass.prototype instanceof ScriptType;
 
                 if (extendsScriptType) {
 

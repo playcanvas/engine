@@ -1,6 +1,6 @@
-import { updateDeviceType, fetchFile, localImport, clearImports, fire } from '@examples/utils';
-import { data, refresh } from '@examples/observer';
-import files from '@examples/files';
+import { updateDeviceType, fetchFile, localImport, clearImports, parseConfig, fire } from 'examples/utils';
+import { data, refresh } from 'examples/observer';
+import files from 'examples/files';
 
 import MiniStats from './ministats.mjs';
 
@@ -69,23 +69,6 @@ class ExampleLoader {
     }
 
     /**
-     * @param {string} script - The script to parse.
-     * @returns {Record<string, any>} - The parsed config.
-     */
-    _parseConfig(script) {
-        const regex = /\/\/ @config ([^ \n]+) ?([^\n]+)?/g;
-        let match;
-        /** @type {Record<string, any>} */
-        const config = {};
-        while ((match = regex.exec(script)) !== null) {
-            const key = match[1];
-            const val = match[2];
-            config[key] = /true|false/g.test(val) ? val === 'true' : val ?? true;
-        }
-        return config;
-    }
-
-    /**
      * @param {string} stack - The stack trace.
      * @returns {{ file: string, line: number, column: number }[]} - The error locations.
      */
@@ -119,7 +102,7 @@ class ExampleLoader {
         window.top.pc = window.pc;
 
         // extracts example category and name from the URL
-        const match = /([^/]+)\.html$/.exec(location.href);
+        const match = /([^/]+)\.html$/.exec(new URL(location.href).pathname);
         if (!match) {
             return;
         }
@@ -147,7 +130,7 @@ class ExampleLoader {
         refresh();
 
         // parse config
-        this._config = this._parseConfig(files['example.mjs']);
+        this._config = parseConfig(files['example.mjs']);
 
         // update device type
         updateDeviceType(this._config);

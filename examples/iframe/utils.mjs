@@ -1,4 +1,4 @@
-import files from '@examples/files';
+import files from 'examples/files';
 
 const href = window.top?.location.href ?? '';
 const params = getQueryParams(href);
@@ -56,7 +56,7 @@ const blobUrls = [];
  * Imports a local file as a module.
  *
  * @param {string} name - The name of the local file.
- * @returns {Promise<Object>} - The module exports.
+ * @returns {Promise<any>} - The module exports.
  */
 export function localImport(name) {
     if (!/\.mjs$/.test(name)) {
@@ -75,6 +75,23 @@ export function clearImports() {
     blobUrls.forEach(URL.revokeObjectURL);
 }
 
+/**
+ * @param {string} script - The script to parse.
+ * @returns {Record<string, any>} - The parsed config.
+ */
+export function parseConfig(script) {
+    const regex = /\/\/ @config ([^ \n]+) ?([^\n]+)?/g;
+    let match;
+    /** @type {Record<string, any>} */
+    const config = {};
+    while ((match = regex.exec(script)) !== null) {
+        const key = match[1].trim();
+        const val = match[2]?.trim();
+        config[key] = /true|false/g.test(val) ? val === 'true' : val ?? true;
+    }
+    return config;
+}
+
 const DEVICE_TYPES = ['webgpu', 'webgl2'];
 export let deviceType = 'webgl2';
 
@@ -89,10 +106,12 @@ export function updateDeviceType(config) {
     }
 
     if (config.WEBGPU_DISABLED) {
+        console.warn('WebGPU is disabled. Using WebGL2 instead.');
         deviceType = 'webgl2';
         return;
     }
     if (config.WEBGL_DISABLED) {
+        console.warn('WebGL is disabled. Using WebGPU instead.');
         deviceType = 'webgpu';
         return;
     }

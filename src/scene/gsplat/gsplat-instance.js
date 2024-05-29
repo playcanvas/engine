@@ -1,11 +1,12 @@
 import { Mat4 } from '../../core/math/mat4.js';
 import { Vec3 } from '../../core/math/vec3.js';
-import { SEMANTIC_POSITION, TYPE_UINT32 } from '../../platform/graphics/constants.js';
+import { BUFFER_STATIC, PIXELFORMAT_R32U, SEMANTIC_ATTR13, TYPE_UINT32 } from '../../platform/graphics/constants.js';
 import { DITHER_NONE } from '../constants.js';
 import { MeshInstance } from '../mesh-instance.js';
 import { Mesh } from '../mesh.js';
-import { createGSplatMaterial } from './gsplat-material.js';
 import { GSplatSorter } from './gsplat-sorter.js';
+import { VertexFormat } from '../../platform/graphics/vertex-format.js';
+import { VertexBuffer } from '../../platform/graphics/vertex-buffer.js';
 
 const mat = new Mat4();
 const cameraPosition = new Vec3();
@@ -26,8 +27,8 @@ class GSplatInstance {
     /** @type {import('../materials/material.js').Material} */
     material;
 
-    /** @type {import('../../platform/graphics/vertex-buffer.js').VertexBuffer} */
-    vb;
+    /** @type {import('../../platform/graphics/texture.js').Texture} */
+    orderTexture;
 
     options = {};
 
@@ -56,47 +57,68 @@ class GSplatInstance {
         // clone options object
         options = Object.assign(this.options, options);
 
-        // not supported on WebGL1
         const device = splat.device;
-        if (device.isWebGL1)
-            return;
+
+        // create the order texture
+        this.orderTexture = this.splat.createTexture(
+            'splatOrder',
+            PIXELFORMAT_R32U,
+            this.splat.evalTextureSize(this.splat.numSplats)
+        );
 
         // material
         this.createMaterial(options);
 
-        const numSplats = splat.numSplats;
-        const indices = new Uint32Array(numSplats * 6);
-        const ids = new Uint32Array(numSplats * 4);
+        // number of quads to combine into a single instance. this is to increase occupancy
+        // in the vertex shader.
+        const splatInstanceSize = 128;
+        const numSplats = Math.ceil(splat.numSplats / splatInstanceSize) * splatInstanceSize;
+        const numSplatInstances = numSplats / splatInstanceSize;
 
-        for (let i = 0; i < numSplats; ++i) {
-            const base = i * 4;
-
-            // 4 vertices
-            ids[base + 0] = i;
-            ids[base + 1] = i;
-            ids[base + 2] = i;
-            ids[base + 3] = i;
-
-            // 2 triangles
-            const triBase = i * 6;
-            indices[triBase + 0] = base;
-            indices[triBase + 1] = base + 1;
-            indices[triBase + 2] = base + 2;
-            indices[triBase + 3] = base;
-            indices[triBase + 4] = base + 2;
-            indices[triBase + 5] = base + 3;
+        // specify the base splat index per instance
+        const indexData = new Uint32Array(numSplatInstances);
+        for (let i = 0; i < numSplatInstances; ++i) {
+            indexData[i] = i * splatInstanceSize;
         }
 
-        // mesh
+        const vertexFormat = new VertexFormat(device, [
+            { semantic: SEMANTIC_ATTR13, components: 1, type: TYPE_UINT32, asInt: true }
+        ]);
+
+        const indicesVB = new VertexBuffer(device, vertexFormat, numSplatInstances, {
+            usage: BUFFER_STATIC,
+            data: indexData.buffer
+        });
+
+        // build the instance mesh
+        const meshPositions = new Float32Array(12 * splatInstanceSize);
+        const meshIndices = new Uint32Array(6 * splatInstanceSize);
+        for (let i = 0; i < splatInstanceSize; ++i) {
+            meshPositions.set([
+                -2, -2, i,
+                2, -2, i,
+                2, 2, i,
+                -2, 2, i
+            ], i * 12);
+
+            const b = i * 4;
+            meshIndices.set([
+                0 + b, 1 + b, 2 + b, 0 + b, 2 + b, 3 + b
+            ], i * 6);
+        }
+
         const mesh = new Mesh(device);
-        mesh.setVertexStream(SEMANTIC_POSITION, ids, 1, numSplats * 4, TYPE_UINT32, false, !device.isWebGL1);
-        mesh.setIndices(indices);
+        mesh.setPositions(meshPositions, 3);
+        mesh.setIndices(meshIndices);
         mesh.update();
+
         this.mesh = mesh;
         this.mesh.aabb.copy(splat.aabb);
 
         this.meshInstance = new MeshInstance(this.mesh, this.material);
+        this.meshInstance.setInstancing(indicesVB, true);
         this.meshInstance.gsplatInstance = this;
+        this.meshInstance.instancingCount = numSplatInstances;
 
         // clone centers to allow multiple instances of sorter
         this.centers = new Float32Array(splat.centers);
@@ -104,7 +126,13 @@ class GSplatInstance {
         // create sorter
         if (!options.dither || options.dither === DITHER_NONE) {
             this.sorter = new GSplatSorter();
-            this.sorter.init(mesh.vertexBuffer, this.centers, !this.splat.device.isWebGL1);
+            this.sorter.init(this.orderTexture, this.centers);
+            this.sorter.on('updated', (count) => {
+                // limit splat render count to exclude those behind the camera.
+                // NOTE: the last instance rendered may include non-existant splat
+                // data. this should be ok though as the data is filled with 0's.
+                this.meshInstance.instancingCount = Math.ceil(count / splatInstanceSize);
+            });
         }
     }
 
@@ -119,8 +147,8 @@ class GSplatInstance {
     }
 
     createMaterial(options) {
-        this.material = createGSplatMaterial(options);
-        this.splat.setupMaterial(this.material);
+        this.material = this.splat.createMaterial(options);
+        this.material.setParameter('splatOrder', this.orderTexture);
         if (this.meshInstance) {
             this.meshInstance.material = this.material;
         }

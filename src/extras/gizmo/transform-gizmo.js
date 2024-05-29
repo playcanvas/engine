@@ -185,6 +185,15 @@ class TransformGizmo extends Gizmo {
     /**
      * Internal gizmo starting rotation in world space.
      *
+     * @type {Vec3}
+     * @protected
+     */
+    _rootStartPos = new Vec3();
+
+
+    /**
+     * Internal gizmo starting rotation in world space.
+     *
      * @type {Quat}
      * @protected
      */
@@ -321,6 +330,7 @@ class TransformGizmo extends Gizmo {
 
             this._selectedAxis = this._getAxis(meshInstance);
             this._selectedIsPlane =  this._getIsPlane(meshInstance);
+            this._rootStartPos.copy(this.root.getPosition());
             this._rootStartRot.copy(this.root.getRotation());
             const pointInfo = this._screenToPoint(x, y);
             this._selectionStartPoint.copy(pointInfo.point);
@@ -518,9 +528,8 @@ class TransformGizmo extends Gizmo {
 
     _createPlane(axis, isFacing, isLine) {
         const cameraPos = this._camera.entity.getPosition();
-        const gizmoPos = this.root.getPosition();
 
-        const facingDir = tmpV1.sub2(cameraPos, gizmoPos).normalize();
+        const facingDir = tmpV1.sub2(cameraPos, this._rootStartPos).normalize();
         const normal = tmpP1.normal.set(0, 0, 0);
 
         if (isFacing) {
@@ -538,7 +547,7 @@ class TransformGizmo extends Gizmo {
             }
         }
 
-        return tmpP1.setFromPointNormal(gizmoPos, normal);
+        return tmpP1.setFromPointNormal(this._rootStartPos, normal);
     }
 
     _projectToAxis(point, axis) {

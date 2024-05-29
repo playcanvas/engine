@@ -3,6 +3,9 @@ export default /* glsl */`
 uniform float exposure;
 
 vec3 toneMap(vec3 color) {
+
+    color *= exposure;
+
     float startCompression = 0.8 - 0.04;
     float desaturation = 0.15;
 

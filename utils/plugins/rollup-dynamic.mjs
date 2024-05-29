@@ -20,17 +20,18 @@ export function dynamicImportLegacyBrowserSupport() {
 }
 
 /**
- * This rollup plugin transform code with import statements and adds a \/* vite-ignore *\/ comment to supress vite warnings
+ * This rollup plugin transform code with import statements and adds a \/* vite-ignore *\/ comment to suppress bundler warnings
  * generated from dynamic-import-vars {@link https://github.com/rollup/plugins/tree/master/packages/dynamic-import-vars#limitations}
+ * {@link https://webpack.js.org/api/module-methods/#dynamic-expressions-in-import}
  *
  * @returns {import('rollup').Plugin} The rollup plugin
  */
-export function dynamicImportViteSupress() {
+export function dynamicImportBundlerSuppress() {
     return {
-        name: 'dynamic-import-vite-suppress',
+        name: 'dynamic-import-bundler-suppress',
         transform(code, id) {
             return {
-                code: code.replace(/import\(([^'])/g, 'import(/* @vite-ignore */$1'),
+                code: code.replace(/import\(([^'])/g, 'import(/* @vite-ignore */ /* webpackIgnore: true */ $1'),
                 map: null
             };
         }

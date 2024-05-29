@@ -1,5 +1,5 @@
 import * as pc from 'playcanvas';
-import { data } from '@examples/observer';
+import { data } from 'examples/observer';
 
 class GizmoHandler {
     /**

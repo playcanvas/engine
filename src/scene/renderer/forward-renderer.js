@@ -579,11 +579,13 @@ class ForwardRenderer extends Renderer {
             const stencilBack = drawCall.stencilBack ?? material.stencilBack;
             device.setStencilState(stencilFront, stencilBack);
 
-            const mesh = drawCall.mesh;
-
             // Uniforms II: meshInstance overrides
             drawCall.setParameters(device, passFlag);
 
+            // mesh ID - used by the picker
+            device.scope.resolve('meshInstanceId').setValue(drawCall.id);
+
+            const mesh = drawCall.mesh;
             this.setVertexBuffers(device, mesh);
             this.setMorphing(device, drawCall.morphInstance);
             this.setSkinning(device, drawCall);
@@ -659,7 +661,7 @@ class ForwardRenderer extends Renderer {
      *
      * @param {import('../camera.js').Camera} camera - The
      * camera.
-     * @param {import('../../platform/graphics/render-target.js').RenderTarget} renderTarget - The
+     * @param {import('../../platform/graphics/render-target.js').RenderTarget|undefined} renderTarget - The
      * render target.
      * @param {import('../layer.js').Layer} layer - The layer.
      * @param {boolean} transparent - True if transparent sublayer should be rendered, opaque
@@ -684,14 +686,6 @@ class ForwardRenderer extends Renderer {
         const clusteredLightingEnabled = scene.clusteredLightingEnabled;
 
         this.setupViewport(camera, renderTarget);
-
-        // clearing
-        const clearColor = options.clearColor ?? false;
-        const clearDepth = options.clearDepth ?? false;
-        const clearStencil = options.clearStencil ?? false;
-        if (clearColor || clearDepth || clearStencil) {
-            this.clear(camera, clearColor, clearDepth, clearStencil);
-        }
 
         let visible, splitLights;
         if (layer) {
@@ -746,6 +740,14 @@ class ForwardRenderer extends Renderer {
         const viewCount = this.setCameraUniforms(camera, renderTarget);
         if (device.supportsUniformBuffers) {
             this.setupViewUniformBuffers(viewBindGroups, this.viewUniformFormat, this.viewBindGroupFormat, viewCount);
+        }
+
+        // clearing - do it after the view bind groups are set up, to avoid overriding those
+        const clearColor = options.clearColor ?? false;
+        const clearDepth = options.clearDepth ?? false;
+        const clearStencil = options.clearStencil ?? false;
+        if (clearColor || clearDepth || clearStencil) {
+            this.clear(camera, clearColor, clearDepth, clearStencil);
         }
 
         // enable flip faces if either the camera has _flipFaces enabled or the render target has flipY enabled

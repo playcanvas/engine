@@ -1,14 +1,12 @@
-// Don't include all of 'playcanvas' for these defines, it just
-// causes bigger bundles and prolongs the build time by ~3s.
-import {
-    DEVICETYPE_WEBGL2,
-    DEVICETYPE_WEBGPU,
-    DEVICETYPE_NULL
-} from 'playcanvas';
 import { Component } from 'react';
 import { SelectInput } from '@playcanvas/pcui/react';
 
 import { jsx } from '../jsx.mjs';
+import {
+    DEVICETYPE_WEBGPU,
+    DEVICETYPE_WEBGL2,
+    DEVICETYPE_NULL
+} from '../constants.mjs';
 import '../events.js';
 
 const deviceTypeNames = {
@@ -95,13 +93,13 @@ class DeviceSelector extends TypedComponent {
      */
     setDisabledOptions(preferredDevice = DEVICETYPE_WEBGPU, activeDevice) {
         if (preferredDevice === DEVICETYPE_WEBGL2 && activeDevice !== DEVICETYPE_WEBGL2) {
-            const fallbackOrder = [DEVICETYPE_WEBGL2];
+            const fallbackOrder = [DEVICETYPE_WEBGPU];
             const disabledOptions = {
                 [DEVICETYPE_WEBGL2]: 'WebGL 2 (not supported)'
             };
             this.mergeState({ fallbackOrder, disabledOptions, activeDevice });
         } else if (preferredDevice === DEVICETYPE_WEBGPU && activeDevice !== DEVICETYPE_WEBGPU) {
-            const fallbackOrder = [DEVICETYPE_WEBGPU, DEVICETYPE_WEBGL2];
+            const fallbackOrder = [DEVICETYPE_WEBGL2];
             const disabledOptions = {
                 [DEVICETYPE_WEBGPU]: 'WebGPU (not supported)'
             };
