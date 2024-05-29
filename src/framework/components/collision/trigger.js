@@ -85,6 +85,7 @@ class Trigger {
         this.disable();
 
         this.app.systems.rigidbody.destroyBody(body);
+        this.body = null;
     }
 
     _getEntityTransform(transform) {
