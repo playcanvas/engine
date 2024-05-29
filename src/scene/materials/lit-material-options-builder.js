@@ -99,7 +99,6 @@ class LitMaterialOptionsBuilder {
         litOptions.fog = material.useFog ? scene.fog : 'none';
         litOptions.gamma = material.useGammaTonemap ? scene.gammaCorrection : GAMMA_NONE;
         litOptions.toneMap = material.useGammaTonemap ? scene.toneMapping : -1;
-        litOptions.fixSeams = false;
 
         // source of reflections
         if (material.useSkybox && scene.envAtlas && scene.skybox) {

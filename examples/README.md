@@ -74,7 +74,7 @@ import * as pc from 'playcanvas';
 You can load external scripts into an example using the `loadES5` function as follows:
 
 ```js
-import { loadES5 } from '@examples/utils';
+import { loadES5 } from 'examples/utils';
 
 const CORE  = await loadES5('https://cdn.jsdelivr.net/npm/@loaders.gl/core@2.3.6/dist/dist.min.js');
 const DRACO = await loadES5('https://cdn.jsdelivr.net/npm/@loaders.gl/draco@2.3.6/dist/dist.min.js');
@@ -110,22 +110,22 @@ export function controls({ observer, ReactPCUI, React, jsx, fragment }) {
 
 The controls function takes a [pcui observer](https://playcanvas.github.io/pcui/data-binding/using-observers/) as its parameter and returns a set of PCUI components. Check this [link](https://playcanvas.github.io/pcui/examples/todo/) for an example of how to create and use PCUI.
 
-The data observer used in the `controls` function will be made available as an import `@examples/observer` to use in the example file:
+The data observer used in the `controls` function will be made available as an import `examples/observer` to use in the example file:
 
 ```js
-import { data } from '@examples/observer';
+import { data } from 'examples/observer';
 
 console.log(data.get('flash'));
 ```
 
 ### Additional files
 
-Any other file you wish to include in your example can be added to the same folder with the example name prepended (e.g. `<exampleName>.shader.vert` and `<exampleName>.shader.frag`). These files can be accessed from the `@examples/files` module (refer to the Example Modules below).
+Any other file you wish to include in your example can be added to the same folder with the example name prepended (e.g. `<exampleName>.shader.vert` and `<exampleName>.shader.frag`). These files can be accessed from the `examples/files` module (refer to the Example Modules below).
 
 If you wish to include a file which is a module (e.g. `module.mjs`), use the `localImport` function to include it in your project: 
 
 ```js
-import { localImport } from '@examples/utils';
+import { localImport } from 'examples/utils';
 
 // use just the file name without the example name
 const data = localImport('data.mjs');
@@ -144,10 +144,9 @@ By default, the examples app uses the local version of the playcanvas engine loc
 
 The example script allows you to import examples only modules that interact with the environment such as the device selector and controls. These are listed below:
 
-- `@examples/config` - The example config defined in `./src/examples/<category>/<exampleName>/config.mjs`.
-- `@examples/utils` - Contains utilities functions such as `localImport` and `loadES5`. The full list of functions can be found in `./iframe/utils.mjs`.
-- `@examples/observer` - The observer object `data`.
-- `@examples/files` - The real-time file contents of all files used in the example.
+- `examples/files` - The real-time file contents of all files used in the example.
+- `examples/observer` - The observer object `data`.
+- `examples/utils` - Contains utilities functions such as `localImport` and `loadES5`. The full list of functions can be found in `./iframe/utils.mjs`.
 
 ## Deployment
 

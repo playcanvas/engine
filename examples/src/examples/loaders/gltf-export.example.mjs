@@ -1,6 +1,6 @@
 import * as pc from 'playcanvas';
-import { data } from '@examples/observer';
-import { deviceType, rootPath } from '@examples/utils';
+import { data } from 'examples/observer';
+import { deviceType, rootPath } from 'examples/utils';
 
 const canvas = document.getElementById('application-canvas');
 if (!(canvas instanceof HTMLCanvasElement)) {
@@ -31,6 +31,13 @@ await new Promise((resolve) => {
     pc.WasmModule.getInstance('DracoDecoderModule', () => resolve());
 });
 
+// initialize basis to allow to load compressed textures
+pc.basisInitialize({
+    glueUrl: rootPath + '/static/lib/basis/basis.wasm.js',
+    wasmUrl: rootPath + '/static/lib/basis/basis.wasm.wasm',
+    fallbackUrl: rootPath + '/static/lib/basis/basis.js'
+});
+
 const assets = {
     helipad: new pc.Asset(
         'helipad-env-atlas',
@@ -42,7 +49,7 @@ const assets = {
     model: new pc.Asset('model', 'container', { url: rootPath + '/static/assets/models/bitmoji.glb' }),
     board: new pc.Asset('statue', 'container', { url: rootPath + '/static/assets/models/chess-board.glb' }),
     boombox: new pc.Asset('statue', 'container', { url: rootPath + '/static/assets/models/boom-box.glb' }),
-    color: new pc.Asset('color', 'texture', { url: rootPath + '/static/assets/textures/seaside-rocks01-color.jpg' })
+    color: new pc.Asset('color', 'texture', { url: rootPath + '/static/assets/textures/seaside-rocks01-color.basis' })
 };
 
 const gfxOptions = {
@@ -115,7 +122,7 @@ assetListLoader.load(() => {
 
     // mesh with a basic material
     const basicMaterial = new pc.BasicMaterial();
-    basicMaterial.color.set(0.5, 1.0, 0.7);
+    basicMaterial.color.set(1.6, 2.7, 1.9);
     basicMaterial.colorMap = assets.color.resource;
 
     const capsule = new pc.Entity('capsule');

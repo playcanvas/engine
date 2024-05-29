@@ -1,0 +1,4 @@
+The low poly fps tdm game map model has been obtained from this address:
+https://sketchfab.com/3d-models/lowpoly-fps-tdm-game-map-d41a19f699ea421a9aa32b407cb7537b
+It's distributed under CC license:
+https://creativecommons.org/licenses/by/4.0/

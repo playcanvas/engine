@@ -1,7 +1,7 @@
 import { Vec3 } from '../../core/math/vec3.js';
 import { math } from '../../core/math/math.js';
 import { BoundingBox } from '../../core/shape/bounding-box.js';
-import { PIXELFORMAT_L8 } from '../../platform/graphics/constants.js';
+import { PIXELFORMAT_R8 } from '../../platform/graphics/constants.js';
 import { LIGHTTYPE_DIRECTIONAL, LIGHTTYPE_SPOT, MASK_AFFECT_DYNAMIC, MASK_AFFECT_LIGHTMAPPED } from '../constants.js';
 import { LightsBuffer } from './lights-buffer.js';
 import { Debug } from '../../core/debug.js';
@@ -196,7 +196,7 @@ class WorldClusters {
             this._clusterTextureSizeData[2] = 1.0 / height;
 
             this.releaseClusterTexture();
-            this.clusterTexture = this.lightsBuffer.createTexture(this.device, width, height, PIXELFORMAT_L8, 'ClusterTexture');
+            this.clusterTexture = this.lightsBuffer.createTexture(this.device, width, height, PIXELFORMAT_R8, 'ClusterTexture');
         }
     }
 

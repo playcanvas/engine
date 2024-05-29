@@ -8,7 +8,9 @@ import {
     PIXELFORMAT_RGBA16F, PIXELFORMAT_RGBA32F, PIXELFORMAT_DEPTHSTENCIL,
     SAMPLETYPE_UNFILTERABLE_FLOAT, SAMPLETYPE_DEPTH,
     FILTER_NEAREST, FILTER_LINEAR, FILTER_NEAREST_MIPMAP_NEAREST, FILTER_NEAREST_MIPMAP_LINEAR,
-    FILTER_LINEAR_MIPMAP_NEAREST, FILTER_LINEAR_MIPMAP_LINEAR, isIntegerPixelFormat, SAMPLETYPE_INT, SAMPLETYPE_UINT
+    FILTER_LINEAR_MIPMAP_NEAREST, FILTER_LINEAR_MIPMAP_LINEAR, isIntegerPixelFormat, SAMPLETYPE_INT, SAMPLETYPE_UINT,
+    BUFFERUSAGE_READ,
+    BUFFERUSAGE_COPY_DST
 } from '../constants.js';
 import { TextureUtils } from '../texture-utils.js';
 import { WebgpuDebug } from './webgpu-debug.js';
@@ -497,6 +499,78 @@ class WebgpuTexture {
 
         Debug.trace(TRACEID_RENDER_QUEUE, `WRITE-TEX: mip:${mipLevel} index:${index} ${this.texture.name}`);
         wgpu.queue.writeTexture(dest, data, dataLayout, size);
+    }
+
+    read(x, y, width, height, options) {
+
+        const mipLevel = options.mipLevel ?? 0;
+        const face = options.face ?? 0;
+        let data = options.data ?? null;
+        const immediate = options.immediate ?? false;
+
+        const texture = this.texture;
+        const formatInfo = pixelFormatInfo.get(texture.format);
+        Debug.assert(formatInfo);
+        Debug.assert(formatInfo.size);
+
+        const bytesPerRow = width * formatInfo.size;
+
+        // bytesPerRow must be a multiple of 256
+        const paddedBytesPerRow = math.roundUp(bytesPerRow, 256);
+        const size = paddedBytesPerRow * height;
+
+        // create a temporary staging buffer
+        /** @type {import('./webgpu-graphics-device.js').WebgpuGraphicsDevice} */
+        const device = texture.device;
+        const stagingBuffer = device.createBufferImpl(BUFFERUSAGE_READ | BUFFERUSAGE_COPY_DST);
+        stagingBuffer.allocate(device, size);
+
+        // use existing or create new encoder
+        const commandEncoder = device.commandEncoder ?? device.wgpu.createCommandEncoder();
+
+        const src = {
+            texture: this.gpuTexture,
+            mipLevel: mipLevel,
+            origin: [x, y, face]
+        };
+
+        const dst = {
+            buffer: stagingBuffer.buffer,
+            offset: 0,
+            bytesPerRow: paddedBytesPerRow
+        };
+
+        const copySize = {
+            width,
+            height,
+            depthOrArrayLayers: 1   // single layer
+        };
+
+        // copy the GPU texture to the staging buffer
+        commandEncoder.copyTextureToBuffer(src, dst, copySize);
+
+        // if we created new encoder
+        if (!device.commandEncoder) {
+            DebugHelper.setLabel(commandEncoder, 'copyTextureToBuffer-Encoder');
+            const cb = commandEncoder.finish();
+            DebugHelper.setLabel(cb, 'copyTextureToBuffer-CommandBuffer');
+            device.addCommandBuffer(cb);
+        }
+
+        // async read data from the staging buffer to a temporary array
+        return device.readBuffer(stagingBuffer, size, null, immediate).then((temp) => {
+
+            // remove the 256 alignment padding from the end of each row
+            data ??= new Uint8Array(height * bytesPerRow);
+            for (let i = 0; i < height; i++) {
+                const srcOffset = i * paddedBytesPerRow;
+                const dstOffset = i * bytesPerRow;
+                const sub = temp.subarray(srcOffset, srcOffset + bytesPerRow);
+                data.set(sub, dstOffset);
+            }
+
+            return data;
+        });
     }
 }
 

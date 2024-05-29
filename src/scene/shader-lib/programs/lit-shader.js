@@ -420,17 +420,23 @@ class LitShader {
     }
 
     _fsGetPickPassCode() {
-        let code = this._fsGetBeginCode();
-        code += "uniform vec4 uColor;\n";
-        code += this.varyings;
-        code += this.varyingDefines;
-        code += this.frontendDecl;
-        code += this.frontendCode;
-        code += ShaderGenerator.begin();
-        code += this.frontendFunc;
-        code += "    gl_FragColor = uColor;\n";
-        code += ShaderGenerator.end();
-        return code;
+        return `
+            ${this._fsGetBeginCode()}
+            ${this.varyings}
+            ${this.varyingDefines}
+            ${this.frontendDecl}
+            ${this.frontendCode}
+            uniform uint meshInstanceId;
+
+            void main(void) {
+                ${this.frontendFunc}
+                
+                const vec4 inv = vec4(1.0 / 255.0, 1.0 / 255.0, 1.0 / 255.0, 1.0 / 255.0);
+                const uvec4 shifts = uvec4(16, 8, 0, 24);
+                uvec4 col = (uvec4(meshInstanceId) >> shifts) & uvec4(0xff);
+                gl_FragColor = vec4(col) * inv;
+            }
+        `;
     }
 
     _fsGetDepthPassCode() {
@@ -780,7 +786,6 @@ class LitShader {
         }
 
         if (options.reflectionSource === 'envAtlasHQ') {
-            func.append(options.fixSeams ? chunks.fixCubemapSeamsStretchPS : chunks.fixCubemapSeamsNonePS);
             func.append(chunks.envAtlasPS);
             func.append(chunks.reflectionEnvHQPS
                 .replace(/\$DECODE_CUBEMAP/g, ChunkUtils.decodeFunc(options.reflectionCubemapEncoding))
@@ -790,7 +795,6 @@ class LitShader {
             func.append(chunks.envAtlasPS);
             func.append(chunks.reflectionEnvPS.replace(/\$DECODE/g, ChunkUtils.decodeFunc(options.reflectionEncoding)));
         } else if (options.reflectionSource === 'cubeMap') {
-            func.append(options.fixSeams ? chunks.fixCubemapSeamsStretchPS : chunks.fixCubemapSeamsNonePS);
             func.append(chunks.reflectionCubePS.replace(/\$DECODE/g, ChunkUtils.decodeFunc(options.reflectionEncoding)));
         } else if (options.reflectionSource === 'sphereMap') {
             func.append(chunks.reflectionSpherePS.replace(/\$DECODE/g, ChunkUtils.decodeFunc(options.reflectionEncoding)));
@@ -844,7 +848,7 @@ class LitShader {
             if (shadowTypeUsed[SHADOW_PCF1] || shadowTypeUsed[SHADOW_PCF3]) {
                 func.append(chunks.shadowStandardPS);
             }
-            if (shadowTypeUsed[SHADOW_PCF5] && !device.isWebGL1) {
+            if (shadowTypeUsed[SHADOW_PCF5]) {
                 func.append(chunks.shadowStandardGL2PS);
             }
             if (useVsm) {

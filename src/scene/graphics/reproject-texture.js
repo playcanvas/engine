@@ -8,7 +8,6 @@ import {
 } from '../../platform/graphics/constants.js';
 import { DebugGraphics } from '../../platform/graphics/debug-graphics.js';
 import { DeviceCache } from '../../platform/graphics/device-cache.js';
-import { GraphicsDevice } from '../../platform/graphics/graphics-device.js';
 import { RenderTarget } from '../../platform/graphics/render-target.js';
 import { drawQuadWithShader } from './quad-render-utils.js';
 import { Texture } from '../../platform/graphics/texture.js';
@@ -400,21 +399,7 @@ void main(void) {
  * @category Graphics
  */
 function reprojectTexture(source, target, options = {}) {
-    // maintain backwards compatibility with previous function signature
-    // reprojectTexture(device, source, target, specularPower = 1, numSamples = 1024)
-    if (source instanceof GraphicsDevice) {
-        source = arguments[1];
-        target = arguments[2];
-        options = { };
-        if (arguments[3] !== undefined) {
-            options.specularPower = arguments[3];
-        }
-        if (arguments[4] !== undefined) {
-            options.numSamples = arguments[4];
-        }
-
-        Debug.deprecated('please use the updated pc.reprojectTexture API.');
-    }
+    Debug.assert(source instanceof Texture && target instanceof Texture, 'source and target must be textures');
 
     // calculate inner width and height
     const seamPixels = options.seamPixels ?? 0;
@@ -483,7 +468,6 @@ function reprojectTexture(source, target, options = {}) {
     constantSource.setValue(source);
 
     const constantParams = device.scope.resolve("params");
-    const constantParams2 = device.scope.resolve("params2");
 
     const uvModParam = device.scope.resolve("uvMod");
     if (seamPixels > 0) {
@@ -500,11 +484,6 @@ function reprojectTexture(source, target, options = {}) {
     const params = [
         0,
         specularPower,
-        source.fixCubemapSeams ? 1.0 / source.width : 0.0,          // source seam scale
-        target.fixCubemapSeams ? 1.0 / target.width : 0.0           // target seam scale
-    ];
-
-    const params2 = [
         target.width * target.height * (target.cubemap ? 6 : 1),
         source.width * source.height * (source.cubemap ? 6 : 1)
     ];
@@ -530,7 +509,6 @@ function reprojectTexture(source, target, options = {}) {
             });
             params[0] = f;
             constantParams.setValue(params);
-            constantParams2.setValue(params2);
 
             drawQuadWithShader(device, renderTarget, shader, options?.rect);
 
