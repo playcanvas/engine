@@ -2,11 +2,18 @@
 import * as pc from 'playcanvas';
 import { deviceType, rootPath } from 'examples/utils';
 
-const canvas = document.getElementById('application-canvas');
-if (!(canvas instanceof HTMLCanvasElement)) {
-    throw new Error('No canvas found');
-}
+const canvas = /** @type {HTMLCanvasElement} */ (document.getElementById('application-canvas'));
 window.focus();
+
+pc.WasmModule.setConfig('Ammo', {
+    glueUrl: rootPath + '/static/lib/ammo/ammo.wasm.js',
+    wasmUrl: rootPath + '/static/lib/ammo/ammo.wasm.wasm',
+    fallbackUrl: rootPath + '/static/lib/ammo/ammo.js'
+});
+
+await new Promise((resolve) => {
+    pc.WasmModule.getInstance('Ammo', () => resolve(true));
+});
 
 const gfxOptions = {
     deviceTypes: [deviceType],
@@ -26,7 +33,6 @@ const assets = {
     )
 };
 
-
 const device = await pc.createGraphicsDevice(canvas, gfxOptions);
 
 const createOptions = new pc.AppOptions();
@@ -35,7 +41,6 @@ createOptions.mouse = new pc.Mouse(document.body);
 createOptions.touch = new pc.TouchDevice(document.body);
 createOptions.gamepads = new pc.GamePads();
 createOptions.keyboard = new pc.Keyboard(window);
-
 createOptions.componentSystems = [
     pc.RenderComponentSystem,
     pc.CameraComponentSystem,
@@ -58,16 +63,6 @@ const resize = () => app.resizeCanvas();
 window.addEventListener('resize', resize);
 app.on('destroy', () => {
     window.removeEventListener('resize', resize);
-});
-
-pc.WasmModule.setConfig('Ammo', {
-    glueUrl: rootPath + '/static/lib/ammo/ammo.wasm.js',
-    wasmUrl: rootPath + '/static/lib/ammo/ammo.wasm.wasm',
-    fallbackUrl: rootPath + '/static/lib/ammo/ammo.js'
-});
-
-await new Promise((resolve) => {
-    pc.WasmModule.getInstance('Ammo', () => resolve(true));
 });
 
 await new Promise((resolve) => {
@@ -119,9 +114,6 @@ function createCharacterController() {
         fov: 90
     });
     camera.addComponent('script');
-    if (!camera.script) {
-        throw new Error('Script component not added');
-    }
     camera.script.create('ssao', {
         attributes: {
             brightness: 0.4,
@@ -148,9 +140,6 @@ function createCharacterController() {
         restitution: 0
     });
     entity.addComponent('script');
-    if (!entity.script) {
-        throw new Error('Script component not added');
-    }
     entity.script.create('characterController', {
         attributes: {
             camera: camera,
