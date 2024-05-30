@@ -2,10 +2,8 @@
 import * as pc from 'playcanvas';
 import { deviceType, rootPath } from 'examples/utils';
 
-const canvas = document.getElementById('application-canvas');
-if (!(canvas instanceof HTMLCanvasElement)) {
-    throw new Error('No canvas found');
-}
+const canvas = /** @type {HTMLCanvasElement} */ (document.getElementById('application-canvas'));
+window.focus();
 window.focus();
 
 const gfxOptions = {
