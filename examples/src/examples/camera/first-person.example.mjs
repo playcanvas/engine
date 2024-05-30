@@ -114,9 +114,6 @@ function createCharacterController() {
         fov: 90
     });
     camera.addComponent('script');
-    if (!camera.script) {
-        throw new Error('Script component not added');
-    }
     camera.script.create('ssao', {
         attributes: {
             brightness: 0.4,
@@ -143,9 +140,6 @@ function createCharacterController() {
         restitution: 0
     });
     entity.addComponent('script');
-    if (!entity.script) {
-        throw new Error('Script component not added');
-    }
     entity.script.create('characterController', {
         attributes: {
             camera: camera,

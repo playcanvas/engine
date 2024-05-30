@@ -6,10 +6,7 @@ const canvas = /** @type {HTMLCanvasElement} */ (document.getElementById('applic
 window.focus();
 
 // add AR button to download the glb file
-const appInner = document.getElementById('appInner');
-if (!(appInner instanceof HTMLElement)) {
-    throw new Error('No appInner found');
-}
+const appInner = /** @type {HTMLElement} */ (document.getElementById('appInner'));
 const div = document.createElement('div');
 div.style.cssText = 'width:100%; position:absolute; top:10px';
 div.innerHTML = `<div style="text-align: center;">
@@ -26,7 +23,7 @@ pc.WasmModule.setConfig('DracoDecoderModule', {
     fallbackUrl: rootPath + '/static/lib/draco/draco.js'
 });
 await new Promise((resolve) => {
-    pc.WasmModule.getInstance('DracoDecoderModule', () => resolve());
+    pc.WasmModule.getInstance('DracoDecoderModule', () => resolve(true));
 });
 
 // initialize basis to allow to load compressed textures
