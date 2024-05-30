@@ -738,13 +738,14 @@
     };
 
     MultiCameraScript.prototype._onKeyDown = function (event) {
-        if (event.key === 'f') {
+        if (event.key === 'f' && this.focus) {
             this.focusOnEntity(this.focus);
         }
     };
 
     MultiCameraScript.prototype.focusOnEntity = function (entity, snap = false) {
-        this.multiCamera.focusOnEntity(entity, snap);
+        this.focus = entity;
+        this.multiCamera.focusOnEntity(this.focus, snap);
     };
 
     MultiCameraScript.prototype.update = function (dt) {
