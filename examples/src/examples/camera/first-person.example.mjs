@@ -4,7 +4,6 @@ import { deviceType, rootPath } from 'examples/utils';
 
 const canvas = /** @type {HTMLCanvasElement} */ (document.getElementById('application-canvas'));
 window.focus();
-window.focus();
 
 const gfxOptions = {
     deviceTypes: [deviceType],
