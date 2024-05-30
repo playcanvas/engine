@@ -5,6 +5,16 @@ import { deviceType, rootPath } from 'examples/utils';
 const canvas = /** @type {HTMLCanvasElement} */ (document.getElementById('application-canvas'));
 window.focus();
 
+pc.WasmModule.setConfig('Ammo', {
+    glueUrl: rootPath + '/static/lib/ammo/ammo.wasm.js',
+    wasmUrl: rootPath + '/static/lib/ammo/ammo.wasm.wasm',
+    fallbackUrl: rootPath + '/static/lib/ammo/ammo.js'
+});
+
+await new Promise((resolve) => {
+    pc.WasmModule.getInstance('Ammo', () => resolve(true));
+});
+
 const gfxOptions = {
     deviceTypes: [deviceType],
     glslangUrl: rootPath + '/static/lib/glslang/glslang.js',
@@ -23,7 +33,6 @@ const assets = {
     )
 };
 
-
 const device = await pc.createGraphicsDevice(canvas, gfxOptions);
 
 const createOptions = new pc.AppOptions();
@@ -32,7 +41,6 @@ createOptions.mouse = new pc.Mouse(document.body);
 createOptions.touch = new pc.TouchDevice(document.body);
 createOptions.gamepads = new pc.GamePads();
 createOptions.keyboard = new pc.Keyboard(window);
-
 createOptions.componentSystems = [
     pc.RenderComponentSystem,
     pc.CameraComponentSystem,
@@ -55,16 +63,6 @@ const resize = () => app.resizeCanvas();
 window.addEventListener('resize', resize);
 app.on('destroy', () => {
     window.removeEventListener('resize', resize);
-});
-
-pc.WasmModule.setConfig('Ammo', {
-    glueUrl: rootPath + '/static/lib/ammo/ammo.wasm.js',
-    wasmUrl: rootPath + '/static/lib/ammo/ammo.wasm.wasm',
-    fallbackUrl: rootPath + '/static/lib/ammo/ammo.js'
-});
-
-await new Promise((resolve) => {
-    pc.WasmModule.getInstance('Ammo', () => resolve(true));
 });
 
 await new Promise((resolve) => {
