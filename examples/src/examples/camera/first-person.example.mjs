@@ -1,11 +1,19 @@
-// @config DESCRIPTION <div style='text-align:center'><div><b>WASD</b> to move</div><div><b>Space</b> to jump</div><div><b>Mouse</b> to look</div></div>
+// @config DESCRIPTION <div style='text-align:center'><div>(<b>WASD</b>) Move</div><div>(<b>Space</b>) Jump</div><div>(<b>Mouse</b>) Look</div></div>
 import * as pc from 'playcanvas';
 import { deviceType, rootPath } from 'examples/utils';
 
-const canvas = document.getElementById('application-canvas');
-if (!(canvas instanceof HTMLCanvasElement)) {
-    throw new Error('No canvas found');
-}
+const canvas = /** @type {HTMLCanvasElement} */ (document.getElementById('application-canvas'));
+window.focus();
+
+pc.WasmModule.setConfig('Ammo', {
+    glueUrl: rootPath + '/static/lib/ammo/ammo.wasm.js',
+    wasmUrl: rootPath + '/static/lib/ammo/ammo.wasm.wasm',
+    fallbackUrl: rootPath + '/static/lib/ammo/ammo.js'
+});
+
+await new Promise((resolve) => {
+    pc.WasmModule.getInstance('Ammo', () => resolve(true));
+});
 
 const gfxOptions = {
     deviceTypes: [deviceType],
@@ -13,14 +21,26 @@ const gfxOptions = {
     twgslUrl: rootPath + '/static/lib/twgsl/twgsl.js'
 };
 
+const assets = {
+    map: new pc.Asset('map', 'container', { url: rootPath + '/static/assets/models/fps-map.glb' }),
+    script: new pc.Asset('script', 'script', { url: rootPath + '/static/scripts/camera/first-person-camera.js' }),
+    ssao: new pc.Asset('ssao', 'script', { url: rootPath + '/static/scripts/posteffects/posteffect-ssao.js' }),
+    helipad: new pc.Asset(
+        'helipad-env-atlas',
+        'texture',
+        { url: rootPath + '/static/assets/cubemaps/helipad-env-atlas.png' },
+        { type: pc.TEXTURETYPE_RGBP, mipmaps: false }
+    )
+};
+
 const device = await pc.createGraphicsDevice(canvas, gfxOptions);
+
 const createOptions = new pc.AppOptions();
 createOptions.graphicsDevice = device;
 createOptions.mouse = new pc.Mouse(document.body);
 createOptions.touch = new pc.TouchDevice(document.body);
 createOptions.gamepads = new pc.GamePads();
 createOptions.keyboard = new pc.Keyboard(window);
-
 createOptions.componentSystems = [
     pc.RenderComponentSystem,
     pc.CameraComponentSystem,
@@ -45,26 +65,8 @@ app.on('destroy', () => {
     window.removeEventListener('resize', resize);
 });
 
-const assets = {
-    map: new pc.Asset('map', 'container', { url: rootPath + '/static/assets/models/fps-map.glb' }),
-    script: new pc.Asset('script', 'script', { url: rootPath + '/static/scripts/camera/first-person-camera.js' }),
-    ssao: new pc.Asset('ssao', 'script', { url: rootPath + '/static/scripts/posteffects/posteffect-ssao.js' }),
-    helipad: new pc.Asset(
-        'helipad-env-atlas',
-        'texture',
-        { url: rootPath + '/static/assets/cubemaps/helipad-env-atlas.png' },
-        { type: pc.TEXTURETYPE_RGBP, mipmaps: false }
-    )
-};
-
-pc.WasmModule.setConfig('Ammo', {
-    glueUrl: rootPath + '/static/lib/ammo/ammo.wasm.js',
-    wasmUrl: rootPath + '/static/lib/ammo/ammo.wasm.wasm',
-    fallbackUrl: rootPath + '/static/lib/ammo/ammo.js'
-});
-
 await new Promise((resolve) => {
-    pc.WasmModule.getInstance('Ammo', () => resolve(true));
+    new pc.AssetListLoader(Object.values(assets), app.assets).load(resolve);
 });
 
 function createLevel() {
@@ -112,9 +114,6 @@ function createCharacterController() {
         fov: 90
     });
     camera.addComponent('script');
-    if (!camera.script) {
-        throw new Error('Script component not added');
-    }
     camera.script.create('ssao', {
         attributes: {
             brightness: 0.4,
@@ -141,9 +140,6 @@ function createCharacterController() {
         restitution: 0
     });
     entity.addComponent('script');
-    if (!entity.script) {
-        throw new Error('Script component not added');
-    }
     entity.script.create('characterController', {
         attributes: {
             camera: camera,
@@ -157,24 +153,21 @@ function createCharacterController() {
     return entity;
 }
 
-const assetListLoader = new pc.AssetListLoader(Object.values(assets), app.assets);
-assetListLoader.load(() => {
-    app.start();
+app.start();
 
-    app.scene.ambientLight.set(0.2, 0.2, 0.2);
+app.scene.ambientLight.set(0.2, 0.2, 0.2);
 
-    app.scene.skyboxMip = 1;
-    app.scene.envAtlas = assets.helipad.resource;
+app.scene.skyboxMip = 1;
+app.scene.envAtlas = assets.helipad.resource;
 
-    // Increase gravity for more natural jumping
-    app.systems.rigidbody?.gravity.set(0, -18, 0);
+// Increase gravity for more natural jumping
+app.systems.rigidbody?.gravity.set(0, -18, 0);
 
-    const level = createLevel();
-    app.root.addChild(level);
+const level = createLevel();
+app.root.addChild(level);
 
-    const characterController = createCharacterController();
-    characterController.setPosition(-4, 2, 10);
-    app.root.addChild(characterController);
-});
+const characterController = createCharacterController();
+characterController.setPosition(-4, 2, 10);
+app.root.addChild(characterController);
 
 export { app };
