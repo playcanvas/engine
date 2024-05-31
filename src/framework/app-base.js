@@ -53,8 +53,6 @@ import {
     RESOLUTION_AUTO, RESOLUTION_FIXED
 } from './constants.js';
 
-let activeApp;
-
 // Mini-object used to measure progress of loading sets
 class Progress {
     constructor(length) {
@@ -98,6 +96,8 @@ class Progress {
 class AppBase extends EventHandler {
     static _apps = {};
 
+    static _activeApp;
+
     /**
      * Get the current application. In the case where there are multiple running applications, the
      * function can get an application based on a supplied canvas id. This function is particularly
@@ -111,7 +111,7 @@ class AppBase extends EventHandler {
      * const app = pc.AppBase.getApplication();
      */
     static getApplication(id) {
-        return id ? AppBase._apps[id] : activeApp;
+        return id ? AppBase._apps[id] : AppBase._activeApp;
     }
 
     /**
@@ -171,7 +171,7 @@ class AppBase extends EventHandler {
 
         // Store application instance
         AppBase._apps[canvas.id] = this;
-        activeApp = this;
+        AppBase._activeApp = this;
 
         /** @private */
         this._destroyRequested = false;
@@ -2053,8 +2053,8 @@ class AppBase extends EventHandler {
 
         AppBase._apps[canvasId] = null;
 
-        if (activeApp === this) {
-            activeApp = null;
+        if (AppBase._activeApp === this) {
+            AppBase._activeApp = null;
         }
 
         AppBase.cancelTick(this);
@@ -2116,7 +2116,7 @@ const makeTick = function (_app) {
 
         application._inFrameUpdate = true;
 
-        activeApp = application;
+        AppBase._activeApp = application;
 
         const currentTime = application._processTimestamp(timestamp) || now();
         const ms = currentTime - (application._time || currentTime);
