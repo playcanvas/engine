@@ -1668,7 +1668,7 @@ RigidBodyComponentSystem.prototype.raycastFirst = function (start, end, options)
 
 RigidBodyComponentSystem.prototype.raycastAll = function (start, end, options = {}) {
     Debug.deprecated('pc.RigidBodyComponentSystem#raycastAll is deprecated. Use pc.RigidBodyComponentSystem#raycast instead.');
-    return this.raycast(start, end, { ...options, findAll: true });
+    return this.raycast(start, end, Object.assign(options, { findAll: true }));
 };
 
 export function basisSetDownloadConfig(glueUrl, wasmUrl, fallbackUrl) {
