@@ -5,7 +5,7 @@ import { Ray } from '../../core/shape/ray.js';
 
 import { Mouse } from '../../platform/input/mouse.js';
 
-import { getApplication } from '../globals.js';
+import { AppBase } from '../app-base.js';
 
 let targetX, targetY;
 const vecA = new Vec3();
@@ -402,7 +402,7 @@ class ElementInput {
     }
 
     get app() {
-        return this._app || getApplication();
+        return this._app || AppBase.getApplication();
     }
 
     /**

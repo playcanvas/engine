@@ -6,8 +6,8 @@ import { EventHandler } from '../../core/event-handler.js';
 import { findAvailableLocale } from '../i18n/utils.js';
 
 import { ABSOLUTE_URL } from './constants.js';
+import { AppBase } from '../app-base.js';
 import { AssetFile } from './asset-file.js';
-import { getApplication } from '../globals.js';
 import { http } from '../../platform/net/http.js';
 
 // auto incrementing number for asset ids
@@ -266,7 +266,7 @@ class Asset extends EventHandler {
         // if value contains variants, choose the correct variant first
         if (value && value.variants && ['texture', 'textureatlas', 'bundle'].indexOf(this.type) !== -1) {
             // search for active variant
-            const app = this.registry?._loader?._app || getApplication();
+            const app = this.registry?._loader?._app || AppBase.getApplication();
             const device = app?.graphicsDevice;
             if (device) {
                 for (let i = 0, len = VARIANT_DEFAULT_PRIORITY.length; i < len; i++) {

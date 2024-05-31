@@ -1,6 +1,7 @@
 import { events } from '../core/events.js';
 
-import { getApplication } from './globals.js';
+import { AppBase } from './app-base.js';
+
 import { ScriptTypes } from './script/script-types.js';
 
 /**
@@ -160,7 +161,7 @@ const script = {
 
         _createdLoadingScreen = true;
 
-        const app = getApplication();
+        const app = AppBase.getApplication();
         callback(app);
     }
 };

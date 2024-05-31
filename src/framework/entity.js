@@ -3,7 +3,7 @@ import { guid } from '../core/guid.js';
 
 import { GraphNode } from '../scene/graph-node.js';
 
-import { getApplication } from './globals.js';
+import { AppBase } from './app-base.js';
 
 /**
  * @type {GraphNode[]}
@@ -274,7 +274,7 @@ class Entity extends GraphNode {
      * // Or use rotateLocal
      * entity.rotateLocal(0, 90, 0);
      */
-    constructor(name, app = getApplication()) {
+    constructor(name, app = AppBase.getApplication()) {
         super(name);
 
         Debug.assert(app, 'Could not find current application');

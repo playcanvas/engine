@@ -219,7 +219,7 @@ class ProgramLibrary {
 
     // run pc.app.graphicsDevice.getProgramLibrary().dumpPrograms(); from browser console to build shader options script
     dumpPrograms() {
-        let text = 'let device = pc.app ? pc.app.graphicsDevice : pc.Application.getApplication().graphicsDevice;\n';
+        let text = 'let device = pc.app ? pc.app.graphicsDevice : pc.AppBase.getApplication().graphicsDevice;\n';
         text += 'let shaders = [';
         if (this._programsCollection[0])
             text += '\n\t' + this._programsCollection[0];

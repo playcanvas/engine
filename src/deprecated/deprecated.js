@@ -110,7 +110,6 @@ import { TouchDevice } from '../platform/input/touch-device.js';
 import { getTouchTargetCoords, Touch, TouchEvent } from '../platform/input/touch-event.js';
 
 import { AppBase } from '../framework/app-base.js';
-import { getApplication } from '../framework/globals.js';
 import { CameraComponent } from '../framework/components/camera/component.js';
 import { LightComponent } from '../framework/components/light/component.js';
 import { ModelComponent } from '../framework/components/model/component.js';
@@ -896,7 +895,7 @@ export const scene = {
 Object.defineProperty(Scene.prototype, 'defaultMaterial', {
     get: function () {
         Debug.deprecated('pc.Scene#defaultMaterial is deprecated.');
-        return getDefaultMaterial(getApplication().graphicsDevice);
+        return getDefaultMaterial(AppBase.getApplication().graphicsDevice);
     }
 });
 
@@ -1002,7 +1001,7 @@ Object.defineProperty(Batch.prototype, 'model', {
 
 ForwardRenderer.prototype.renderComposition = function (comp) {
     Debug.deprecated('pc.ForwardRenderer#renderComposition is deprecated. Use pc.AppBase.renderComposition instead.');
-    getApplication().renderComposition(comp);
+    AppBase.getApplication().renderComposition(comp);
 };
 
 MeshInstance.prototype.syncAabb = function () {

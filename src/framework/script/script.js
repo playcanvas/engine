@@ -35,7 +35,7 @@ function getReservedScriptNames() {
  * starting from `_` (underscore): system, entity, create, destroy, swap, move, scripts, onEnable,
  * onDisable, onPostStateChange, has, on, off, fire, once, hasEvent.
  * @param {AppBase} [app] - Optional application handler, to choose which {@link ScriptRegistry}
- * to add a script to. By default it will use `Application.getApplication()` to get current
+ * to add a script to. By default it will use `AppBase.getApplication()` to get current
  * {@link AppBase}.
  * @returns {typeof ScriptType|null} A class type (constructor function) that inherits {@link ScriptType},
  * which the developer is meant to further extend by adding attributes and prototype methods.
@@ -104,7 +104,7 @@ createScript.reservedAttributes = reservedAttributes;
  * (underscore): system, entity, create, destroy, swap, move, scripts, onEnable, onDisable,
  * onPostStateChange, has, on, off, fire, once, hasEvent.
  * @param {AppBase} [app] - Optional application handler, to choose which {@link ScriptRegistry}
- * to register the script type to. By default it will use `Application.getApplication()` to get
+ * to register the script type to. By default it will use `AppBase.getApplication()` to get
  * current {@link AppBase}.
  * @example
  * // define a ES6 script class

@@ -10990,7 +10990,7 @@ var spine = (function (pc) {
 	}(pc.ComponentSystem);
 
 	(function () {
-	  var app = pc__namespace.Application.getApplication();
+	  var app = pc__namespace.AppBase.getApplication();
 	  var system = new SpineComponentSystem(app);
 	  app.systems.add(system);
 	})();

@@ -1,4 +1,4 @@
-import { getApplication } from './globals.js';
+import { AppBase } from './app-base.js';
 
 /**
  * Records performance-related statistics related to the application.
@@ -90,15 +90,15 @@ class ApplicationStats {
     }
 
     get scene() {
-        return getApplication().scene._stats;
+        return AppBase.getApplication().scene._stats;
     }
 
     get lightmapper() {
-        return getApplication().lightmapper?.stats;
+        return AppBase.getApplication().lightmapper?.stats;
     }
 
     get batcher() {
-        const batcher = getApplication()._batcher;
+        const batcher = AppBase.getApplication()._batcher;
         return batcher ? batcher._stats : null;
     }
 }
