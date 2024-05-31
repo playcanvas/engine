@@ -2098,95 +2098,95 @@ const _frameEndData = {};
  * @private
  */
 const makeTick = function (_app) {
-    const application = _app;
+    const app = _app;
     /**
      * @param {number} [timestamp] - The timestamp supplied by requestAnimationFrame.
      * @param {*} [frame] - XRFrame from requestAnimationFrame callback.
      */
     return function (timestamp, frame) {
-        if (!application.graphicsDevice)
+        if (!app.graphicsDevice)
             return;
 
         // cancel any hanging rAF to avoid multiple rAF callbacks per frame
-        if (application.frameRequestId) {
-            application.xr?.session?.cancelAnimationFrame(application.frameRequestId);
-            cancelAnimationFrame(application.frameRequestId);
-            application.frameRequestId = null;
+        if (app.frameRequestId) {
+            app.xr?.session?.cancelAnimationFrame(app.frameRequestId);
+            cancelAnimationFrame(app.frameRequestId);
+            app.frameRequestId = null;
         }
 
-        application._inFrameUpdate = true;
+        app._inFrameUpdate = true;
 
-        AppBase._activeApp = application;
+        AppBase._activeApp = app;
 
-        const currentTime = application._processTimestamp(timestamp) || now();
-        const ms = currentTime - (application._time || currentTime);
+        const currentTime = app._processTimestamp(timestamp) || now();
+        const ms = currentTime - (app._time || currentTime);
         let dt = ms / 1000.0;
-        dt = math.clamp(dt, 0, application.maxDeltaTime);
-        dt *= application.timeScale;
+        dt = math.clamp(dt, 0, app.maxDeltaTime);
+        dt *= app.timeScale;
 
-        application._time = currentTime;
+        app._time = currentTime;
 
         // Submit a request to queue up a new animation frame immediately
-        if (application.xr?.session) {
-            application.frameRequestId = application.xr.session.requestAnimationFrame(application.tick);
+        if (app.xr?.session) {
+            app.frameRequestId = app.xr.session.requestAnimationFrame(app.tick);
         } else {
-            application.frameRequestId = platform.browser ? window.requestAnimationFrame(application.tick) : null;
+            app.frameRequestId = platform.browser ? window.requestAnimationFrame(app.tick) : null;
         }
 
-        if (application.graphicsDevice.contextLost)
+        if (app.graphicsDevice.contextLost)
             return;
 
-        application._fillFrameStatsBasic(currentTime, dt, ms);
+        app._fillFrameStatsBasic(currentTime, dt, ms);
 
         // #if _PROFILER
-        application._fillFrameStats();
+        app._fillFrameStats();
         // #endif
 
-        application.fire("frameupdate", ms);
+        app.fire("frameupdate", ms);
 
         let shouldRenderFrame = true;
 
         if (frame) {
-            shouldRenderFrame = application.xr?.update(frame);
-            application.graphicsDevice.defaultFramebuffer = frame.session.renderState.baseLayer.framebuffer;
+            shouldRenderFrame = app.xr?.update(frame);
+            app.graphicsDevice.defaultFramebuffer = frame.session.renderState.baseLayer.framebuffer;
         } else {
-            application.graphicsDevice.defaultFramebuffer = null;
+            app.graphicsDevice.defaultFramebuffer = null;
         }
 
         if (shouldRenderFrame) {
 
-            Debug.trace(TRACEID_RENDER_FRAME, `---- Frame ${application.frame}`);
+            Debug.trace(TRACEID_RENDER_FRAME, `---- Frame ${app.frame}`);
             Debug.trace(TRACEID_RENDER_FRAME_TIME, `-- UpdateStart ${now().toFixed(2)}ms`);
 
-            application.update(dt);
+            app.update(dt);
 
-            application.fire("framerender");
+            app.fire("framerender");
 
 
-            if (application.autoRender || application.renderNextFrame) {
+            if (app.autoRender || app.renderNextFrame) {
 
                 Debug.trace(TRACEID_RENDER_FRAME_TIME, `-- RenderStart ${now().toFixed(2)}ms`);
 
-                application.updateCanvasSize();
-                application.frameStart();
-                application.render();
-                application.frameEnd();
-                application.renderNextFrame = false;
+                app.updateCanvasSize();
+                app.frameStart();
+                app.render();
+                app.frameEnd();
+                app.renderNextFrame = false;
 
                 Debug.trace(TRACEID_RENDER_FRAME_TIME, `-- RenderEnd ${now().toFixed(2)}ms`);
             }
 
             // set event data
             _frameEndData.timestamp = now();
-            _frameEndData.target = application;
+            _frameEndData.target = app;
 
-            application.fire("frameend", _frameEndData);
+            app.fire("frameend", _frameEndData);
         }
 
-        application._inFrameUpdate = false;
+        app._inFrameUpdate = false;
 
-        if (application._destroyRequested) {
-            application.destroy();
+        if (app._destroyRequested) {
+            app.destroy();
         }
     };
 };
