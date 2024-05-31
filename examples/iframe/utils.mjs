@@ -105,6 +105,11 @@ export function updateDeviceType(config) {
         return;
     }
 
+    if (config.WEBGL_DISABLED && config.WEBGPU_DISABLED) {
+        console.warn('Both WebGL and WebGPU are disabled. Using NullGraphicsDevice instead.');
+        deviceType = 'null';
+        return;
+    }
     if (config.WEBGPU_DISABLED) {
         console.warn('WebGPU is disabled. Using WebGL2 instead.');
         deviceType = 'webgl2';

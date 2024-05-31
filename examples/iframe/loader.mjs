@@ -41,6 +41,9 @@ class ExampleLoader {
     ready = false;
 
     _appStart() {
+        // set ready state
+        this.ready = true;
+
         if (this._app) {
             if (!this._app?.graphicsDevice?.canvas) {
                 console.warn('No canvas found.');
@@ -165,9 +168,6 @@ class ExampleLoader {
             this._allowRestart = true;
             return;
         }
-
-        // set ready state
-        this.ready = true;
 
         if (this._app) {
             if (this._app.frame) {
