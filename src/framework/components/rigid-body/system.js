@@ -697,13 +697,16 @@ class RigidBodyComponentSystem extends ComponentSystem {
      * @param {number} [options.filterCollisionGroup] - Collision group to apply to the shape cast.
      * @param {number} [options.filterCollisionMask] - Collision mask to apply to the shape cast.
      * @param {any[]} [options.filterTags] - Tags filters. Defined the same way as a {@link Tags#has}
-     * query but within an array.
+     * query but within an array. Only available if shape is not having different ending transform from
+     * starting one.
      * @param {Function} [options.filterCallback] - Custom function to use to filter entities.
-     * Must return true to proceed with result. Takes the entity to evaluate as argument.
+     * Must return true to proceed with result. Takes the entity to evaluate as argument. Only available
+     * if shape is not having different ending transform from starting one.
      * @param {boolean} [options.destroyShape] - Whether to destroy the shape after the cast.
      * Defaults to false, forced true when shape is not a btCollisionShape.
      * @param {boolean} [options.findAll] - Whether to return all results. When false will return only
-     * the closest result. Defaults to false.
+     * the closest result. Defaults to false. Only available if shape is not having different ending
+     * transform from starting one.
      *
      * @returns {HitResult[]} An array of shapeCast hit results (0 length if there were no hits).
      */
