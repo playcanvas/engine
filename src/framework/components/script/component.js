@@ -410,7 +410,7 @@ class ScriptComponent extends Component {
 
             // otherwise we need to manually initialize attributes from the schema
             const name = script.__scriptType.__name || toLowerCamelCase(ScriptType.__getScriptName(script.__scriptType));
-            const schema = this.system.app.scripts?.tSchema(name);
+            const schema = this.system.app.scripts?.getSchema(name);
             const data = this._attributeDataMap.get(name);
 
             if (schema && data) {
