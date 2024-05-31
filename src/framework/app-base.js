@@ -75,14 +75,6 @@ class Progress {
 }
 
 /**
- * Gets the current application, if any.
- *
- * @type {AppBase|null}
- * @ignore
- */
-let app = null;
-
-/**
  * An Application represents and manages your PlayCanvas application. If you are developing using
  * the PlayCanvas Editor, the Application is created for you. You can access your Application
  * instance in your scripts. Below is a skeleton script which shows how you can access the
@@ -165,8 +157,6 @@ class AppBase extends EventHandler {
         // Store application instance
         AppBase._applications[canvas.id] = this;
         setApplication(this);
-
-        app = this;
 
         /** @private */
         this._destroyRequested = false;
@@ -2131,9 +2121,6 @@ const makeTick = function (_app) {
 
         setApplication(application);
 
-        // have current application pointer in pc
-        app = application;
-
         const currentTime = application._processTimestamp(timestamp) || now();
         const ms = currentTime - (application._time || currentTime);
         let dt = ms / 1000.0;
@@ -2207,4 +2194,4 @@ const makeTick = function (_app) {
     };
 };
 
-export { app, AppBase };
+export { AppBase };
