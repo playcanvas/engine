@@ -204,7 +204,7 @@ export { GSplatInstance } from './scene/gsplat/gsplat-instance.js';
 // FRAMEWORK
 export * from './framework/constants.js';
 export { script } from './framework/script.js';
-export { AppBase, app } from './framework/app-base.js';
+export { AppBase } from './framework/app-base.js';
 export { AppOptions } from './framework/app-options.js';
 export { Application } from './framework/application.js';
 export { AnimationComponent } from './framework/components/animation/component.js';
