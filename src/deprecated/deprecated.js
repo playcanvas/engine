@@ -1661,6 +1661,15 @@ RigidBodyComponentSystem.prototype.setGravity = function () {
     }
 };
 
+RigidBodyComponentSystem.prototype.raycastFirst = function (start, end, options) {
+    Debug.deprecated('pc.RigidBodyComponentSystem#raycastFirst is deprecated. Use pc.RigidBodyComponentSystem#raycast instead.');
+    return this.raycast(start, end, options)[0] ?? null;
+};
+
+RigidBodyComponentSystem.prototype.raycastAll = function (start, end, options = {}) {
+    Debug.deprecated('pc.RigidBodyComponentSystem#raycastAll is deprecated. Use pc.RigidBodyComponentSystem#raycast instead.');
+    return this.raycast(start, end, { ...options, findAll: true });
+};
 
 export function basisSetDownloadConfig(glueUrl, wasmUrl, fallbackUrl) {
     Debug.deprecated('pc.basisSetDownloadConfig is deprecated. Use pc.basisInitialize instead.');
