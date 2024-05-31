@@ -53,10 +53,7 @@ import {
     RESOLUTION_AUTO, RESOLUTION_FIXED
 } from './constants.js';
 
-import {
-    getApplication,
-    setApplication
-} from './globals.js';
+let activeApp;
 
 // Mini-object used to measure progress of loading sets
 class Progress {
@@ -99,6 +96,24 @@ class Progress {
  * manually.
  */
 class AppBase extends EventHandler {
+    static _apps = {};
+
+    /**
+     * Get the current application. In the case where there are multiple running applications, the
+     * function can get an application based on a supplied canvas id. This function is particularly
+     * useful when the current Application is not readily available. For example, in the JavaScript
+     * console of the browser's developer tools.
+     *
+     * @param {string} [id] - If defined, the returned application should use the canvas which has
+     * this id. Otherwise current application will be returned.
+     * @returns {AppBase|undefined} The running application, if any.
+     * @example
+     * const app = pc.AppBase.getApplication();
+     */
+    static getApplication(id) {
+        return id ? AppBase._apps[id] : activeApp;
+    }
+
     /**
      * Callback used by {@link AppBase#configure} when configuration file is loaded and parsed (or
      * an error occurs).
@@ -155,8 +170,8 @@ class AppBase extends EventHandler {
         // #endif
 
         // Store application instance
-        AppBase._applications[canvas.id] = this;
-        setApplication(this);
+        AppBase._apps[canvas.id] = this;
+        activeApp = this;
 
         /** @private */
         this._destroyRequested = false;
@@ -574,24 +589,6 @@ class AppBase extends EventHandler {
         // bind tick function to current scope
         /* eslint-disable-next-line no-use-before-define */
         this.tick = makeTick(this); // Circular linting issue as makeTick and Application reference each other
-    }
-
-    static _applications = {};
-
-    /**
-     * Get the current application. In the case where there are multiple running applications, the
-     * function can get an application based on a supplied canvas id. This function is particularly
-     * useful when the current Application is not readily available. For example, in the JavaScript
-     * console of the browser's developer tools.
-     *
-     * @param {string} [id] - If defined, the returned application should use the canvas which has
-     * this id. Otherwise current application will be returned.
-     * @returns {AppBase|undefined} The running application, if any.
-     * @example
-     * const app = pc.AppBase.getApplication();
-     */
-    static getApplication(id) {
-        return id ? AppBase._applications[id] : getApplication();
     }
 
     /** @private */
@@ -2054,10 +2051,10 @@ class AppBase extends EventHandler {
 
         script.app = null;
 
-        AppBase._applications[canvasId] = null;
+        AppBase._apps[canvasId] = null;
 
-        if (getApplication() === this) {
-            setApplication(null);
+        if (activeApp === this) {
+            activeApp = null;
         }
 
         AppBase.cancelTick(this);
@@ -2119,7 +2116,7 @@ const makeTick = function (_app) {
 
         application._inFrameUpdate = true;
 
-        setApplication(application);
+        activeApp = application;
 
         const currentTime = application._processTimestamp(timestamp) || now();
         const ms = currentTime - (application._time || currentTime);
