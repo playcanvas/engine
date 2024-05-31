@@ -289,7 +289,8 @@ const _schema = ['enabled'];
  * Creates a new shape.
  *
  * @param {string} name - Name of the shape. Must start with capital letter.
- * @param {number} [axis] - The local space axis with which the shape's length is aligned. 0 for X, 1 for Y and 2 for Z. Defaults to 1 (Y-axis).
+ * @param {number} [axis] - The local space axis with which the shape's length is aligned.
+ * 0 for X, 1 for Y and 2 for Z. Defaults to 1 (Y-axis).
  * @param {...any} [args] - Arguments to pass to creation.
  * @returns {object} Created Ammo.btCollisionShape.
  * @ignore
@@ -551,38 +552,42 @@ class RigidBodyComponentSystem extends ComponentSystem {
      * @param {Vec3} start - The world space point where the ray starts.
      * @param {Vec3} end - The world space point where the ray ends.
      * @param {object} [options] - The additional options for the raycasting.
-     * @param {boolean} [options.sort] - Whether to sort raycast results based on distance with closest
-     * first. Defaults to false.
+     * @param {boolean} [options.sort] - Whether to sort raycast results based on distance with
+     * closest first. Defaults to false.
      * @param {number} [options.filterCollisionGroup] - Collision group to apply to the raycast.
      * @param {number} [options.filterCollisionMask] - Collision mask to apply to the raycast.
-     * @param {any[]} [options.filterTags] - Tags filters. Defined the same way as a {@link Tags#has}
-     * query but within an array.
+     * @param {any[]} [options.filterTags] - Tags filters. Defined the same way as a
+     * {@link Tags#has} query but within an array.
      * @param {Function} [options.filterCallback] - Custom function to use to filter entities.
      * Must return true to proceed with result. Takes the entity to evaluate as argument.
-     * @param {boolean} [options.findAll] - Whether to return all results. When false will return only
-     * the closest result. Defaults to false.
+     * @param {boolean} [options.findAll] - Whether to return all results. When false will return
+     * only the closest result. Defaults to false.
      *
      * @returns {HitResult[]} An array of raycast hit results (0 length if there were no hits).
      *
      * @example
-     * // Return all results of a raycast between 0, 2, 2 and 0, -2, -2
-     * const hits = this.app.systems.rigidbody.raycast(new Vec3(0, 2, 2), new Vec3(0, -2, -2), { findAll: true });
+     * // Return all results of a raycast between (0, 2, 2) and (0, -2, -2)
+     * const hits = this.app.systems.rigidbody.raycast(
+     *     new Vec3(0, 2, 2),
+     *     new Vec3(0, -2, -2),
+     *     { findAll: true }
+     * );
      * @example
-     * // Return all results of a raycast between 0, 2, 2 and 0, -2, -2
+     * // Return all results of a raycast between (0, 2, 2) and (0, -2, -2)
      * // where hit entity is tagged with `bird` OR `mammal`
      * const hits = this.app.systems.rigidbody.raycast(new Vec3(0, 2, 2), new Vec3(0, -2, -2), {
      *     filterTags: [ "bird", "mammal" ],
      *     findAll: true
      * });
      * @example
-     * // Return all results of a raycast between 0, 2, 2 and 0, -2, -2
+     * // Return all results of a raycast between (0, 2, 2) and (0, -2, -2)
      * // where hit entity has a `camera` component
      * const hits = this.app.systems.rigidbody.raycast(new Vec3(0, 2, 2), new Vec3(0, -2, -2), {
      *     filterCallback: (entity) => entity && entity.camera,
      *     findAll: true
      * });
      * @example
-     * // Return the closest result of a raycast between 0, 2, 2 and 0, -2, -2
+     * // Return the closest result of a raycast between (0, 2, 2) and (0, -2, -2)
      * // where hit entity is tagged with (`carnivore` AND `mammal`) OR (`carnivore` AND `reptile`)
      * // and the entity has an `anim` component
      * const hit = this.app.systems.rigidbody.raycast(new Vec3(0, 2, 2), new Vec3(0, -2, -2), {
@@ -677,34 +682,38 @@ class RigidBodyComponentSystem extends ComponentSystem {
      * It returns an array of {@link HitResult}. If no hits are
      * detected, the returned array will be of length 0.
      *
-     * @param {object} shape - The shape to use for collision. Can be a btCollisionShape or shape config.
+     * @param {object} shape - The shape to use for collision. Can be a btCollisionShape
+     * or shape config.
      * @param {number} [shape.axis] - The local space axis with which the capsule, cylinder or
      * cone shape's length is aligned. 0 for X, 1 for Y and 2 for Z. Defaults to 1 (Y-axis).
      * @param {Vec3} [shape.halfExtents] - The half-extents of the box in the x, y and z axes.
-     * @param {number} [shape.height] - The total height of the capsule, cylinder or cone from tip to tip.
-     * @param {string} shape.type - The type of shape to use. Available options are "box", "capsule",
-     * "cone", "cylinder" or "sphere".
+     * @param {number} [shape.height] - The total height of the capsule, cylinder or cone from
+     * tip to tip.
+     * @param {string} shape.type - The type of shape to use. Available options are "box",
+     * "capsule", "cone", "cylinder" or "sphere".
      * @param {number} [shape.radius] - The radius of the sphere, capsule, cylinder or cone.
      * @param {Vec3} startPosition - The world space position for the shape to be at start.
-     * @param {Vec3|Quat} [startRotation] - The world space rotation for the shape to have at start.
+     * @param {Vec3|Quat} [startRotation] - The world space rotation for the shape to have
+     * at start.
      * @param {Vec3} [endPosition] - The world space position for the shape to be at end.
      * @param {object} [options] - The additional options for the shape casting.
-     * @param {Vec3|Quat} [options.endRotation] - The world space rotation for the shape to have at end.
-     * @param {boolean} [options.sort] - Whether to sort raycast results based on distance with closest
-     * first. Defaults to false.
+     * @param {Vec3|Quat} [options.endRotation] - The world space rotation for the shape to have
+     * at end.
+     * @param {boolean} [options.sort] - Whether to sort raycast results based on distance with
+     * closest first. Defaults to false.
      * @param {number} [options.filterCollisionGroup] - Collision group to apply to the shape cast.
      * @param {number} [options.filterCollisionMask] - Collision mask to apply to the shape cast.
-     * @param {any[]} [options.filterTags] - Tags filters. Defined the same way as a {@link Tags#has}
-     * query but within an array. Only available if shape is not having different ending transform from
-     * starting one.
+     * @param {any[]} [options.filterTags] - Tags filters. Defined the same way as a
+     * {@link Tags#has} query but within an array. Only available if shape is not having different
+     * ending transform from starting one.
      * @param {Function} [options.filterCallback] - Custom function to use to filter entities.
-     * Must return true to proceed with result. Takes the entity to evaluate as argument. Only available
-     * if shape is not having different ending transform from starting one.
+     * Must return true to proceed with result. Takes the entity to evaluate as argument. Only
+     * available if shape is not having different ending transform from starting one.
      * @param {boolean} [options.destroyShape] - Whether to destroy the shape after the cast.
      * Defaults to false, forced true when shape is not a btCollisionShape.
-     * @param {boolean} [options.findAll] - Whether to return all results. When false will return only
-     * the closest result. Defaults to false. Only available if shape is not having different ending
-     * transform from starting one.
+     * @param {boolean} [options.findAll] - Whether to return all results. When false will return
+     * only the closest result. Defaults to false. Only available if shape is not having different
+     * ending transform from starting one.
      *
      * @returns {HitResult[]} An array of shapeCast hit results (0 length if there were no hits).
      */
@@ -714,7 +723,12 @@ class RigidBodyComponentSystem extends ComponentSystem {
         let btShape;
         switch (shape.type) {
             case 'box':
-                ammoVec3.setValue(shape.halfExtents?.x ?? 0.5, shape.halfExtents?.y ?? 0.5, shape.halfExtents?.z ?? 0.5);
+                ammoVec3.setValue(
+                    shape.halfExtents?.x ?? 0.5,
+                    shape.halfExtents?.y ?? 0.5,
+                    shape.halfExtents?.z ?? 0.5
+                );
+
                 btShape = new Ammo.btBoxShape(ammoVec3);
                 options.destroyShape = true;
                 break;
@@ -779,7 +793,13 @@ class RigidBodyComponentSystem extends ComponentSystem {
                 resultCallback.set_m_collisionFilterMask(options.filterCollisionMask);
             }
 
-            this.app.systems.rigidbody.dynamicsWorld.convexSweepTest(btShape, ammoTransform, ammoTransform2, resultCallback);
+            this.app.systems.rigidbody.dynamicsWorld.convexSweepTest(
+                btShape,
+                ammoTransform,
+                ammoTransform2,
+                resultCallback
+            );
+
             if (resultCallback.hasHit()) {
                 const body = Ammo.castObject(resultCallback.get_m_hitCollisionObject(), Ammo.btRigidBody);
 
@@ -825,7 +845,10 @@ class RigidBodyComponentSystem extends ComponentSystem {
         const resultCallback = new Ammo.ConcreteContactResultCallback();
         resultCallback.addSingleResult = function (cp, colObj0Wrap, partId0, index0, colObj1Wrap, p1, index1) {
             // Retrieve collided entity.
-            const body1 = Ammo.castObject(Ammo.wrapPointer(colObj1Wrap, Ammo.btCollisionObjectWrapper).getCollisionObject(), Ammo.btRigidBody);
+            const body1 = Ammo.castObject(
+                Ammo.wrapPointer(colObj1Wrap, Ammo.btCollisionObjectWrapper).getCollisionObject(),
+                Ammo.btRigidBody
+            );
 
             // Make sure there is an existing entity.
             if (body1.entity) {
@@ -851,7 +874,8 @@ class RigidBodyComponentSystem extends ComponentSystem {
                             body1.entity,
                             pointVec,
                             new Vec3(normal.x(), normal.y(), normal.z()),
-                            startDistance / (startDistance - distance), // Minus distance as it's negative.
+                            // Minus distance as it's negative.
+                            startDistance / (startDistance - distance),
                             startDistance
                         )
                     );
