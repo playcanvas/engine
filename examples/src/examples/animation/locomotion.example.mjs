@@ -324,7 +324,7 @@ assetListLoader.load(() => {
         const cameraEntity = app.root.findByName('Camera');
         const near = cameraEntity.camera.screenToWorld(event.x, event.y, cameraEntity.camera.nearClip);
         const far = cameraEntity.camera.screenToWorld(event.x, event.y, cameraEntity.camera.farClip);
-        const result = app.systems.rigidbody.raycastFirst(far, near);
+        const result = app.systems.rigidbody.raycast(far, near)[0];
         if (result) {
             targetPosition = new pc.Vec3(result.point.x, 0, result.point.z);
             characterEntity.anim.setInteger('speed', data.get('jogToggle') ? 2 : 1);

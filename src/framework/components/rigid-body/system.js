@@ -591,7 +591,7 @@ class RigidBodyComponentSystem extends ComponentSystem {
      *         [ "carnivore", "reptile" ]
      *     ],
      *     filterCallback: (entity) => entity && entity.anim
-     * });
+     * })[0];
      */
     raycast(start, end, options = {}) {
         Debug.assert(Ammo.AllHitsRayResultCallback, 'pc.RigidBodyComponentSystem#raycast: Your version of ammo.js does not expose Ammo.AllHitsRayResultCallback. Update it to latest.');
