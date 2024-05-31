@@ -668,8 +668,6 @@ class RigidBodyComponentSystem extends ComponentSystem {
             }
         }
 
-        Ammo.destroy(ammoRayStart);
-        Ammo.destroy(ammoRayEnd);
         Ammo.destroy(rayCallback);
         return results;
     }
