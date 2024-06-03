@@ -235,17 +235,6 @@ if (app.xr.supported) {
             } else {
                 plane.enabled = false;
             }
-
-            // for (let i = 0; i < app.xr.views.list.length; i++) {
-            //     const view = app.xr.views.list[i];
-            //     if (!view.textureDepth)
-            //         // check if depth texture is available
-            //         continue;
-
-            //     materialDepth.setParameter('depthMap', view.textureDepth);
-            //     materialDepth.setParameter('matrix_depth_uv', view.depthUvMatrix.data);
-            //     materialDepth.setParameter('depth_raw_to_meters', view.depthValueToMeters);
-            // }
         }
     });
 
