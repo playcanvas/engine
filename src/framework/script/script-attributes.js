@@ -5,12 +5,8 @@ import { CurveSet } from '../../core/math/curve-set.js';
 import { Vec2 } from '../../core/math/vec2.js';
 import { Vec3 } from '../../core/math/vec3.js';
 import { Vec4 } from '../../core/math/vec4.js';
-
 import { GraphNode } from '../../scene/graph-node.js';
-
 import { Asset } from '../asset/asset.js';
-import { Application } from '../application.js';
-import { Script } from './script.js';
 
 const components = ['x', 'y', 'z', 'w'];
 const vecLookup = [undefined, undefined, Vec2, Vec3, Vec4];
@@ -162,7 +158,7 @@ function rawToValue(app, args, value, old) {
 /**
  * Takes an attribute schema, a value and current value, and return a new value
  *
- * @param {Application} app - The working application
+ * @param {import('../../framework/application.js').Application} app - The working application
  * @param {AttributeSchema} schema - The attribute schema used to resolve properties
  * @param {*} value - The raw value to create
  * @param {*} current - The existing value
