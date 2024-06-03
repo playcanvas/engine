@@ -1,6 +1,6 @@
 {
   "name": "playcanvas",
-  "version": "1.70.1",
+  "version": "1.71.3",
   "author": "PlayCanvas <support@playcanvas.com>",
   "homepage": "https://playcanvas.com",
   "description": "PlayCanvas WebGL game engine",
@@ -22,6 +22,7 @@
   "types": "build/playcanvas.d.ts",
   "exports": {
     ".": {
+      "types": "./build/playcanvas.d.ts",
       "import": "./build/playcanvas/src/index.js",
       "require": "./build/playcanvas.js"
     },
@@ -86,13 +87,13 @@
     "README*.md"
   ],
   "dependencies": {
-    "@types/webxr": "^0.5.14",
+    "@types/webxr": "^0.5.15",
     "@webgpu/types": "^0.1.40"
   },
   "devDependencies": {
-    "@babel/core": "^7.24.3",
+    "@babel/core": "^7.24.4",
     "@babel/eslint-parser": "^7.24.1",
-    "@babel/preset-env": "^7.24.3",
+    "@babel/preset-env": "^7.24.4",
     "@playcanvas/canvas-mock": "^1.0.1",
     "@playcanvas/eslint-config": "^1.7.1",
     "@rollup/plugin-babel": "^6.0.4",
@@ -111,17 +112,17 @@
     "karma-mocha": "^2.0.1",
     "karma-sinon": "^1.0.5",
     "karma-spec-reporter": "^0.0.36",
-    "mocha": "^10.3.0",
+    "mocha": "^10.4.0",
     "publint": "^0.2.7",
-    "rollup": "^4.13.0",
+    "rollup": "^4.16.4",
     "rollup-plugin-dts": "^6.0.2",
     "rollup-plugin-jscc": "2.0.0",
     "rollup-plugin-visualizer": "^5.12.0",
-    "serve": "^14.2.1",
+    "serve": "^14.2.2",
     "sinon": "^17.0.1",
-    "typedoc": "^0.25.12",
-    "typedoc-plugin-mdn-links": "^3.1.18",
-    "typescript": "^5.4.3",
+    "typedoc": "^0.25.13",
+    "typedoc-plugin-mdn-links": "^3.1.22",
+    "typescript": "^5.4.5",
     "xhr2": "^0.2.1"
   },
   "scripts": {
@@ -157,5 +158,8 @@
     "test:coverage": "c8 npm test",
     "test:karma": "karma start tests/karma.conf.cjs -- --single-run",
     "test:types": "tsc --pretty false build/playcanvas.d.ts"
+  },
+  "engines": {
+    "node": ">=18.0.0"
   }
 }

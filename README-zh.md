@@ -102,7 +102,7 @@ app.start();
 
 ## 如何搭建项目
 
-确保已安装 [Node.js](https://nodejs.org) ，并安装 Node.js 相关依赖组件。
+确保已安装 [Node.js 18+](https://nodejs.org) ，并安装 Node.js 相关依赖组件。
 
 ```sh
 npm install

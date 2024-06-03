@@ -79,7 +79,7 @@ class WebgpuTexture {
         this.texture = texture;
 
         this.format = gpuTextureFormats[texture.format];
-        Debug.assert(this.format !== '', `WebGPU does not support texture format ${texture.format} for texture ${texture.name}`, texture);
+        Debug.assert(this.format !== '', `WebGPU does not support texture format ${texture.format} [${pixelFormatInfo.get(texture.format)?.name}] for texture ${texture.name}`, texture);
 
         this.create(texture.device);
     }
@@ -225,7 +225,6 @@ class WebgpuTexture {
 
             } else if (sampleType === SAMPLETYPE_UNFILTERABLE_FLOAT) {
 
-                // webgpu cannot currently filter float / half float textures, or integer textures
                 descr.magFilter = 'nearest';
                 descr.minFilter = 'nearest';
                 descr.mipmapFilter = 'nearest';
@@ -233,10 +232,10 @@ class WebgpuTexture {
 
             } else {
 
-                // TODO: this is temporary and needs to be made generic
-                if (this.texture.format === PIXELFORMAT_RGBA32F ||
-                    this.texture.format === PIXELFORMAT_DEPTHSTENCIL ||
-                    this.texture.format === PIXELFORMAT_RGBA16F || isIntegerPixelFormat(this.texture.format)) {
+                // if the device cannot filter float textures, force nearest filtering
+                const forceNearest = !device.textureFloatFilterable && (texture.format === PIXELFORMAT_RGBA32F || texture.format === PIXELFORMAT_RGBA16F);
+
+                if (forceNearest || this.texture.format === PIXELFORMAT_DEPTHSTENCIL || isIntegerPixelFormat(this.texture.format)) {
                     descr.magFilter = 'nearest';
                     descr.minFilter = 'nearest';
                     descr.mipmapFilter = 'nearest';

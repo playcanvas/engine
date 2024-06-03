@@ -1,6 +1,5 @@
 import { TRACEID_RENDER_QUEUE } from '../../../core/constants.js';
 import { Debug, DebugHelper } from '../../../core/debug.js';
-import { path } from '../../../core/path.js';
 
 import {
     PIXELFORMAT_RGBA32F, PIXELFORMAT_RGBA8, PIXELFORMAT_BGRA8, DEVICETYPE_WEBGPU,
@@ -125,9 +124,6 @@ class WebgpuGraphicsDevice extends GraphicsDevice {
 
     initDeviceCaps() {
 
-        // temporarily disabled functionality which is not supported to avoid errors
-        this.disableParticleSystem = true;
-
         const limits = this.wgpu?.limits;
         this.limits = limits;
 
@@ -150,7 +146,7 @@ class WebgpuGraphicsDevice extends GraphicsDevice {
         this.supportsMorphTargetTexturesCore = true;
         this.supportsAreaLights = true;
         this.supportsDepthShadow = true;
-        this.supportsGpuParticles = false;
+        this.supportsGpuParticles = true;
         this.supportsMrt = true;
         this.supportsCompute = true;
         this.extUintElement = true;
@@ -184,16 +180,9 @@ class WebgpuGraphicsDevice extends GraphicsDevice {
         // temporary message to confirm Webgpu is being used
         Debug.log("WebgpuGraphicsDevice initialization ..");
 
-        // build a full URL from a relative path
+        // build a full URL from a relative or absolute path
         const buildUrl = (srcPath) => {
-            if (!path.isRelativePath(srcPath)) {
-                return srcPath;
-            }
-
-            const url = new URL(window.location.href);
-            url.pathname = srcPath;
-            url.search = '';
-            return url.toString();
+            return new URL(srcPath, window.location.href).toString();
         };
 
         const results = await Promise.all([
@@ -215,12 +204,6 @@ class WebgpuGraphicsDevice extends GraphicsDevice {
          */
         this.gpuAdapter = await window.navigator.gpu.requestAdapter(adapterOptions);
 
-        // optional features:
-        //      "depth-clip-control",
-        //      "depth32float-stencil8",
-        //      "indirect-first-instance",
-        //      "shader-f16",
-        //      "bgra8unorm-storage",
 
         // request optional features
         const requiredFeatures = [];
@@ -236,7 +219,11 @@ class WebgpuGraphicsDevice extends GraphicsDevice {
         this.extCompressedTextureETC = requireFeature('texture-compression-etc2');
         this.extCompressedTextureASTC = requireFeature('texture-compression-astc');
         this.supportsTimestampQuery = requireFeature('timestamp-query');
-
+        this.supportsDepthClip = requireFeature('depth-clip-control');
+        this.supportsDepth32Stencil = requireFeature('depth32float-stencil8');
+        this.supportsIndirectFirstInstance = requireFeature('indirect-first-instance');
+        this.supportsShaderF16 = requireFeature('shader-f16');
+        this.supportsStorageRGBA8 = requireFeature('bgra8unorm-storage');
         this.textureRG11B10Renderable = requireFeature('rg11b10ufloat-renderable');
         Debug.log(`WEBGPU features: ${requiredFeatures.join(', ')}`);
 

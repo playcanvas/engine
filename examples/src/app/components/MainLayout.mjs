@@ -2,7 +2,7 @@ import { Component } from 'react';
 import { HashRouter, Switch, Route, Redirect } from 'react-router-dom';
 import { Container } from '@playcanvas/pcui/react';
 
-import { CodeEditor } from './CodeEditor.mjs';
+import { CodeEditorDesktop } from './code-editor/CodeEditorDesktop.mjs';
 import { Example } from './Example.mjs';
 import { Menu } from './Menu.mjs';
 import { SideBar } from './Sidebar.mjs';
@@ -84,7 +84,7 @@ class MainLayout extends TypedComponent {
                             jsx(
                                 Container,
                                 { id: 'main-view' },
-                                orientation === 'landscape' && jsx(CodeEditor),
+                                orientation === 'landscape' && jsx(CodeEditorDesktop),
                                 jsx(Example, null)
                             )
                         )

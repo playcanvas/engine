@@ -12,7 +12,8 @@ import { visualizer } from 'rollup-plugin-visualizer';
 import { shaderChunks } from './plugins/rollup-shader-chunks.mjs';
 import { engineLayerImportValidation } from './plugins/rollup-import-validation.mjs';
 import { spacesToTabs } from './plugins/rollup-spaces-to-tabs.mjs';
-import { dynamicImportLegacyBrowserSupport, dynamicImportViteSupress, dynamicImportWebpackSupress } from './plugins/rollup-dynamic.mjs';
+import { dynamicImportLegacyBrowserSupport, dynamicImportBundlerSuppress } from './plugins/rollup-dynamic.mjs';
+import { treeshakeIgnore } from './plugins/rollup-treeshake-ignore.mjs';
 
 import { version, revision } from './rollup-version-revision.mjs';
 import { getBanner } from './rollup-get-banner.mjs';
@@ -22,6 +23,10 @@ import { babelOptions } from './rollup-babel-options.mjs';
 /** @typedef {import('rollup').OutputOptions} OutputOptions */
 /** @typedef {import('rollup').ModuleFormat} ModuleFormat */
 /** @typedef {import('@rollup/plugin-strip').RollupStripOptions} RollupStripOptions */
+
+const TREESHAKE_IGNORE_REGEXES = [
+    /polyfill/
+];
 
 const STRIP_FUNCTIONS = [
     'Debug.assert',
@@ -144,18 +149,44 @@ function getOutPlugins() {
  * @param {object} options - The build target options.
  * @param {'umd'|'esm'} options.moduleFormat - The module format.
  * @param {'debug'|'release'|'profiler'|'min'} options.buildType - The build type.
+ * @param {'unbundled'|'bundled'} [options.bundleState] - The bundle state.
  * @param {string} [options.input] - Only used for examples to change it to `../src/index.js`.
  * @param {string} [options.dir] - Only used for examples to change the output location.
- * @param {boolean} [options.skipBundled] - Whether to skip the bundled target (ESM only).
  * @returns {RollupOptions[]} Rollup targets.
  */
-function buildTarget({ moduleFormat, buildType, input = 'src/index.js', dir = 'build', skipBundled = false }) {
+function buildTarget({ moduleFormat, buildType, bundleState, input = 'src/index.js', dir = 'build' }) {
     const isUMD = moduleFormat === 'umd';
     const isDebug = buildType === 'debug';
     const isMin = buildType === 'min';
-    const bundled = isUMD || isMin;
+    const bundled = isUMD || isMin || bundleState === 'bundled';
 
     const targets = [];
+
+    // bundle from unbundled
+    if (bundled && HISTORY.has(`${buildType}-${moduleFormat}-false`)) {
+        const unbundled = HISTORY.get(`${buildType}-${moduleFormat}-false`);
+
+        /**
+         * @type {RollupOptions}
+         */
+        const target = {
+            input: `${unbundled.output.dir}/src/index.js`,
+            output: {
+                banner: getBanner(BANNER[buildType]),
+                format: 'es',
+                indent: '\t',
+                sourcemap: isDebug && 'inline',
+                name: 'pc',
+                preserveModules: false,
+                file: `${dir}/${OUT_PREFIX[buildType]}.mjs`
+            }
+        };
+
+        HISTORY.set(`${buildType}-${moduleFormat}-true`, target);
+        targets.push(target);
+
+        return targets;
+    }
 
     // minify from release build
     if (isMin && HISTORY.has(`release-${moduleFormat}-true`)) {
@@ -194,47 +225,24 @@ function buildTarget({ moduleFormat, buildType, input = 'src/index.js', dir = 'b
             preserveModules: !bundled,
             file: bundled ? `${dir}/${OUT_PREFIX[buildType]}${isUMD ? '.js' : '.mjs'}` : undefined,
             dir: !bundled ? `${dir}/${OUT_PREFIX[buildType]}` : undefined,
-            footer: isUMD ? 'this.pcx = pc;' : undefined
+            entryFileNames: chunkInfo => `${chunkInfo.name.replace(/node_modules/g, 'modules')}.js`
         },
         plugins: [
             resolve(),
             jscc(getJSCCOptions(isMin ? 'release' : buildType, isUMD)),
+            isUMD ? treeshakeIgnore(TREESHAKE_IGNORE_REGEXES) : undefined,
             isUMD ? dynamicImportLegacyBrowserSupport() : undefined,
             !isDebug ? shaderChunks() : undefined,
             isDebug ? engineLayerImportValidation(input) : undefined,
             !isDebug ? strip({ functions: STRIP_FUNCTIONS }) : undefined,
             babel(babelOptions(isDebug, isUMD)),
-            !isUMD ? dynamicImportWebpackSupress() : undefined,
+            !isUMD ? dynamicImportBundlerSuppress() : undefined,
             !isDebug ? spacesToTabs() : undefined
         ]
     };
 
     HISTORY.set(`${buildType}-${moduleFormat}-${bundled}`, target);
     targets.push(target);
-
-    // bundle ESM from unbundled ESM build
-    if (!skipBundled && !bundled && HISTORY.has(`${buildType}-${moduleFormat}-false`)) {
-        const unbundled = HISTORY.get(`${buildType}-${moduleFormat}-false`);
-
-        /**
-         * @type {RollupOptions}
-         */
-        const target = {
-            input: `${unbundled.output.dir}/src/index.js`,
-            output: {
-                banner: getBanner(BANNER[buildType]),
-                format: 'es',
-                indent: '\t',
-                sourcemap: isDebug && 'inline',
-                name: 'pc',
-                preserveModules: false,
-                file: `${dir}/${OUT_PREFIX[buildType]}.mjs`
-            }
-        };
-
-        HISTORY.set(`${buildType}-${moduleFormat}-true`, target);
-        targets.push(target);
-    }
 
     return targets;
 }

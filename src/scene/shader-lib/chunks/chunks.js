@@ -59,6 +59,7 @@ import fullscreenQuadVS from './common/vert/fullscreenQuad.js';
 import gamma1_0PS from './common/frag/gamma1_0.js';
 import gamma2_2PS from './common/frag/gamma2_2.js';
 import gles2PS from '../../../platform/graphics/shader-chunks/frag/gles2.js';
+import gles2VS from '../../../platform/graphics/shader-chunks/vert/gles2.js';
 import gles3PS from '../../../platform/graphics/shader-chunks/frag/gles3.js';
 import gles3VS from '../../../platform/graphics/shader-chunks/vert/gles3.js';
 import glossPS from './standard/frag/gloss.js';
@@ -276,6 +277,7 @@ const shaderChunks = {
     gamma1_0PS,
     gamma2_2PS,
     gles2PS,
+    gles2VS,
     gles3PS,
     gles3VS,
     glossPS,

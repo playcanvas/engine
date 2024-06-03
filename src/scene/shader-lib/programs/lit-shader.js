@@ -645,14 +645,15 @@ class LitShader {
             hasAreaLights = true;
         }
 
-        let areaLutsPrecision = 'highp';
-        if (device.areaLightLutFormat === PIXELFORMAT_RGBA8) {
-            // use offset and scale for rgb8 format luts
-            decl.append("#define AREA_R8_G8_B8_A8_LUTS");
-            areaLutsPrecision = 'lowp';
-        }
-
         if (hasAreaLights || options.clusteredLightingEnabled) {
+
+            let areaLutsPrecision = 'highp';
+            if (device.areaLightLutFormat === PIXELFORMAT_RGBA8) {
+                // use offset and scale for rgb8 format luts
+                decl.append("#define AREA_R8_G8_B8_A8_LUTS");
+                areaLutsPrecision = 'lowp';
+            }
+
             decl.append("#define AREA_LIGHTS");
             decl.append(`uniform ${areaLutsPrecision} sampler2D areaLightsLutTex1;`);
             decl.append(`uniform ${areaLutsPrecision} sampler2D areaLightsLutTex2;`);

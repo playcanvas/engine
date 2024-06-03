@@ -47,7 +47,7 @@ class MiniStats {
      * for displaying a budget.
      * @example
      * // create a new MiniStats instance using default options
-     * const miniStats = new pcx.MiniStats(app);
+     * const miniStats = new pc.MiniStats(app);
      */
     constructor(app, options) {
         const device = app.graphicsDevice;
@@ -141,7 +141,7 @@ class MiniStats {
      *
      * @returns {object} The default options for MiniStats.
      * @example
-     * const options = pcx.MiniStats.getDefaultOptions();
+     * const options = pc.MiniStats.getDefaultOptions();
      */
     static getDefaultOptions() {
         return {

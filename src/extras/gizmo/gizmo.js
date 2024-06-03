@@ -10,16 +10,11 @@ import { Entity } from '../../framework/entity.js';
 const tmpV1 = new Vec3();
 const tmpM1 = new Mat4();
 const tmpM2 = new Mat4();
-
-const xstart = new Vec3();
-const xdir = new Vec3();
-
-const ray = new Ray();
+const tmpR1 = new Ray();
 
 // constants
 const MIN_GIZMO_SCALE = 1e-4;
 const PERS_SCALE_RATIO = 0.3;
-const PERS_CANVAS_RATIO = 1300;
 const ORTHO_SCALE_RATIO = 0.32;
 
 /**
@@ -49,7 +44,7 @@ class Gizmo extends EventHandler {
      *
      * @event
      * @example
-     * const gizmo = new pcx.Gizmo(app, camera, layer);
+     * const gizmo = new pc.Gizmo(app, camera, layer);
      * gizmo.on('pointer:down', (x, y, meshInstance) => {
      *     console.log(`Pointer was down on ${meshInstance.node.name} at ${x}, ${y}`);
      * });
@@ -61,7 +56,7 @@ class Gizmo extends EventHandler {
      *
      * @event
      * @example
-     * const gizmo = new pcx.Gizmo(app, camera, layer);
+     * const gizmo = new pc.Gizmo(app, camera, layer);
      * gizmo.on('pointer:move', (x, y, meshInstance) => {
      *     console.log(`Pointer was moving on ${meshInstance.node.name} at ${x}, ${y}`);
      * });
@@ -73,7 +68,7 @@ class Gizmo extends EventHandler {
      *
      * @event
      * @example
-     * const gizmo = new pcx.Gizmo(app, camera, layer);
+     * const gizmo = new pc.Gizmo(app, camera, layer);
      * gizmo.on('pointer:up', (x, y, meshInstance) => {
      *     console.log(`Pointer was up on ${meshInstance.node.name} at ${x}, ${y}`);
      * })
@@ -85,7 +80,7 @@ class Gizmo extends EventHandler {
      *
      * @event
      * @example
-     * const gizmo = new pcx.Gizmo(app, camera, layer);
+     * const gizmo = new pc.Gizmo(app, camera, layer);
      * gizmo.on('position:update', (position) => {
      *     console.log(`The gizmo's position was updated to ${position}`);
      * })
@@ -97,7 +92,7 @@ class Gizmo extends EventHandler {
      *
      * @event
      * @example
-     * const gizmo = new pcx.Gizmo(app, camera, layer);
+     * const gizmo = new pc.Gizmo(app, camera, layer);
      * gizmo.on('rotation:update', (rotation) => {
      *     console.log(`The gizmo's rotation was updated to ${rotation}`);
      * });
@@ -109,7 +104,7 @@ class Gizmo extends EventHandler {
      *
      * @event
      * @example
-     * const gizmo = new pcx.Gizmo(app, camera, layer);
+     * const gizmo = new pc.Gizmo(app, camera, layer);
      * gizmo.on('scale:update', (scale) => {
      *     console.log(`The gizmo's scale was updated to ${scale}`);
      * });
@@ -121,7 +116,7 @@ class Gizmo extends EventHandler {
      *
      * @event
      * @example
-     * const gizmo = new pcx.Gizmo(app, camera, layer);
+     * const gizmo = new pc.Gizmo(app, camera, layer);
      * gizmo.on('nodes:attach', () => {
      *     console.log('Graph nodes attached');
      * });
@@ -133,7 +128,7 @@ class Gizmo extends EventHandler {
      *
      * @event
      * @example
-     * const gizmo = new pcx.Gizmo(app, camera, layer);
+     * const gizmo = new pc.Gizmo(app, camera, layer);
      * gizmo.on('nodes:detach', () => {
      *     console.log('Graph nodes detached');
      * });
@@ -145,12 +140,20 @@ class Gizmo extends EventHandler {
      *
      * @event
      * @example
-     * const gizmo = new pcx.TransformGizmo(app, camera, layer);
+     * const gizmo = new pc.TransformGizmo(app, camera, layer);
      * gizmo.on('render:update', () => {
      *     console.log('Gizmo render has been updated');
      * });
      */
     static EVENT_RENDERUPDATE = 'render:update';
+
+    /**
+     * Internal device start size.
+     *
+     * @type {number}
+     * @private
+     */
+    _deviceStartSize;
 
     /**
      * Internal version of the gizmo size. Defaults to 1.
@@ -224,8 +227,7 @@ class Gizmo extends EventHandler {
 
     /**
      * @typedef IntersectData
-     * @property {import('./mesh-tri-data.js').MeshTriData[]} meshTriDataList -
-     * The array of {@link MeshTriData}
+     * @property {import('./tri-data.js').TriData[]} triData - The array of {@link TriData}
      * @property {import('../../scene/graph-node.js').GraphNode} parent - The mesh parent node.
      * @property {import('../../scene/mesh-instance.js').MeshInstance[]} meshInstances -
      * array of mesh instances for rendering
@@ -241,16 +243,18 @@ class Gizmo extends EventHandler {
      * Creates a new Gizmo object.
      *
      * @param {import('../../framework/app-base.js').AppBase} app - The application instance.
-     * @param {import('../../framework/components/camera/component.js').CameraComponent} camera - The camera component.
+     * @param {import('../../framework/components/camera/component.js').CameraComponent} camera -
+     * The camera component.
      * @param {import('../../scene/layer.js').Layer} layer - The render layer.
      * @example
-     * const gizmo = new pcx.Gizmo(app, camera, layer);
+     * const gizmo = new pc.Gizmo(app, camera, layer);
      */
     constructor(app, camera, layer) {
         super();
 
         this._app = app;
         this._device = app.graphicsDevice;
+        this._deviceStartSize = Math.max(this._device.width, this._device.height);
         this._camera = camera;
         this._layer = layer;
 
@@ -331,7 +335,7 @@ class Gizmo extends EventHandler {
         const gizmoPos = this.root.getPosition();
         const cameraPos = this._camera.entity.getPosition();
         const dist = tmpV1.copy(gizmoPos).sub(cameraPos).dot(this._camera.entity.forward);
-        return dist * Math.tan(this._camera.fov * math.DEG_TO_RAD / 2);
+        return dist * Math.tan(0.5 * this._camera.fov * math.DEG_TO_RAD);
     }
 
     _createGizmo() {
@@ -366,7 +370,7 @@ class Gizmo extends EventHandler {
         if (this._camera.projection === PROJECTION_PERSPECTIVE) {
             let canvasMult = 1;
             if (this._device.width > 0 && this._device.height > 0) {
-                canvasMult = PERS_CANVAS_RATIO / Math.min(this._device.width, this._device.height);
+                canvasMult = this._deviceStartSize / Math.min(this._device.width, this._device.height);
             }
             this._scale = this._getProjFrustumWidth() * canvasMult * PERS_SCALE_RATIO;
         } else {
@@ -385,19 +389,18 @@ class Gizmo extends EventHandler {
 
         const selection = [];
         for (let i = 0; i < this.intersectData.length; i++) {
-            const { meshTriDataList, parent, meshInstances } = this.intersectData[i];
+            const { triData, parent, meshInstances } = this.intersectData[i];
             const wtm = parent.getWorldTransform().clone();
-            for (let j = 0; j < meshTriDataList.length; j++) {
-                const { tris, ptm, priority } = meshTriDataList[j];
+            for (let j = 0; j < triData.length; j++) {
+                const { tris, ptm, priority } = triData[j];
                 tmpM1.copy(wtm).mul(ptm);
                 tmpM2.copy(tmpM1).invert();
-                tmpM2.transformPoint(start, xstart);
-                tmpM2.transformVector(dir, xdir);
-                xdir.normalize();
+                tmpM2.transformPoint(start, tmpR1.origin);
+                tmpM2.transformVector(dir, tmpR1.direction);
+                tmpR1.direction.normalize();
 
                 for (let k = 0; k < tris.length; k++) {
-                    ray.set(xstart, xdir);
-                    if (tris[k].intersectsRay(ray, tmpV1)) {
+                    if (tris[k].intersectsRay(tmpR1, tmpV1)) {
                         selection.push({
                             dist: tmpM1.transformPoint(tmpV1).sub(start).length(),
                             meshInstances: meshInstances,
@@ -426,7 +429,7 @@ class Gizmo extends EventHandler {
      *
      * @param {import('../../scene/graph-node.js').GraphNode[]} [nodes] - The graph nodes. Defaults to [].
      * @example
-     * const gizmo = new pcx.Gizmo(app, camera, layer);
+     * const gizmo = new pc.Gizmo(app, camera, layer);
      * gizmo.attach([boxA, boxB]);
      */
     attach(nodes = []) {
@@ -449,7 +452,7 @@ class Gizmo extends EventHandler {
      * Detaches all graph nodes from the gizmo.
      *
      * @example
-     * const gizmo = new pcx.Gizmo(app, camera, layer);
+     * const gizmo = new pc.Gizmo(app, camera, layer);
      * gizmo.attach([boxA, boxB]);
      * gizmo.detach();
      */
@@ -467,7 +470,7 @@ class Gizmo extends EventHandler {
      * all graph nodes.
      *
      * @example
-     * const gizmo = new pcx.Gizmo(app, camera, layer);
+     * const gizmo = new pc.Gizmo(app, camera, layer);
      * gizmo.attach([boxA, boxB]);
      * gizmo.destroy();
      */

@@ -360,7 +360,11 @@ body {
     width: calc(100% - 16px);
     top: inherit;
     background-color: rgba(54, 67, 70, 1);
-    min-height: calc(100% - 112px);
+    min-height: calc(100% - 116px);
+}
+
+#controlPanel.mobile:has(#controlPanel-controls):not(.pcui-collapsed){
+    min-height: 300px;
 }
 
 #controlPanel.mobile.pcui-collapsed {
@@ -427,8 +431,13 @@ body {
         height: calc(100% - 48px);
     }
 
-    #controls-wrapper.has-controls {
-        height: calc(100% - 100px);
+    #controlPanel-controls {
+        height: calc(100% - 48px);
+        overflow: auto;
+    }
+
+    .code-editor-mobile {
+        height: calc(100% - 48px);
     }
 }
 
