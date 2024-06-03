@@ -4,6 +4,7 @@ import { Color } from '../../core/math/color.js';
 import { Vec2 } from '../../core/math/vec2.js';
 import { Vec3 } from '../../core/math/vec3.js';
 import { Vec4 } from '../../core/math/vec4.js';
+import { sortOrder } from '../../core/sort.js';
 
 /**
  * Component Systems contain the logic and functionality to update all Components of a particular
@@ -49,6 +50,9 @@ class ComponentSystem extends EventHandler {
 
         entity[this.id] = component;
         entity.c[this.id] = component;
+
+        entity.oc.push(component);
+        sortOrder(entity.oc);
 
         this.initializeComponentData(component, data, []);
 

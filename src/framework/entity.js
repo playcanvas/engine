@@ -232,6 +232,9 @@ class Entity extends GraphNode {
      */
     _guid = null;
 
+    /** @private */
+    _oc = [];
+
     /**
      * Used to differentiate between the entities of a template root instance, which have it set to
      * true, and the cloned instance entities (set to false).
@@ -279,6 +282,15 @@ class Entity extends GraphNode {
 
         Debug.assert(app, 'Could not find current application');
         this._app = app;
+    }
+
+    /**
+     * Component ordered storage.
+     *
+     * @returns {Array<import('./components/component.js').Component>} - An ordered components array.
+     */
+    get oc() {
+        return this._oc;
     }
 
     /**
@@ -503,17 +515,14 @@ class Entity extends GraphNode {
     _onHierarchyStateChanged(enabled) {
         super._onHierarchyStateChanged(enabled);
 
-        // enable / disable all the components
-        const components = this.c;
-        for (const type in components) {
-            if (components.hasOwnProperty(type)) {
-                const component = components[type];
-                if (component.enabled) {
-                    if (enabled) {
-                        component.onEnable();
-                    } else {
-                        component.onDisable();
-                    }
+        const components = this._oc;
+        for (let i = 0; i < components.length; i++) {
+            const component = components[i];
+            if (component.enabled) {
+                if (enabled) {
+                    component.onEnable();
+                } else {
+                    component.onDisable();
                 }
             }
         }

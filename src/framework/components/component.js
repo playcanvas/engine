@@ -19,6 +19,9 @@ class Component extends EventHandler {
      */
     entity;
 
+    /** @private */
+    _order = 0;
+
     /**
      * Base constructor for a Component.
      *
@@ -121,6 +124,14 @@ class Component extends EventHandler {
 
     get enabled() {
         return true;
+    }
+
+    set order(newOrder) {
+        this._order = newOrder;
+    }
+
+    get order() {
+        return this._order;
     }
 }
 

@@ -168,6 +168,8 @@ class RigidBodyComponent extends Component {
      */
     constructor(system, entity) { // eslint-disable-line no-useless-constructor
         super(system, entity);
+
+        this._order = -1;
     }
 
     /** @ignore */
