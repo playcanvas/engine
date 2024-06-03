@@ -134,10 +134,6 @@ class Component extends EventHandler {
      * @type {number} - Component order number.
      * @private
      */
-    set order(newOrder) {
-        this._order = newOrder;
-    }
-
     get order() {
         return this._order;
     }
