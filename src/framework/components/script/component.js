@@ -407,8 +407,6 @@ class ScriptComponent extends Component {
 
         } else {
 
-            const toLowerCamelCase = str => str[0].toLowerCase() + str.substring(1);
-
             // otherwise we need to manually initialize attributes from the schema
             const name = script.__scriptType.__name || toLowerCamelCase(getScriptName(script.__scriptType));
             const data = this._attributeDataMap.get(name);
