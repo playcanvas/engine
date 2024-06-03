@@ -21,6 +21,12 @@ class ScriptRegistry extends EventHandler {
     _list = [];
 
     /**
+     * @type {Map<string, import('./script-attributes.js').AttributeSchema} - A Map of script names to attribute schemas
+     * @private
+     */
+    _scriptSchemas = new Map();
+
+    /**
      * Create a new ScriptRegistry instance.
      *
      * @param {import('../app-base.js').AppBase} app - Application to attach registry to.
@@ -36,22 +42,23 @@ class ScriptRegistry extends EventHandler {
         this.off();
     }
 
-    addSchema(script, schema) {
-
+    /**
+     * Registers a schema against a script instance
+     * @param {string} id - The key to use to store the schema
+     * @param {import('./script-attributes.js').AttributeSchema} schema - An schema definition for the script 
+     */
+    addSchema(id, schema) {
         if (!schema) return;
-
-        if (!this.scriptSchemas) {
-            this.scriptSchemas = new Map();
-        }
-        this.scriptSchemas.set(script, schema);
+        this._scriptSchemas.set(id, schema);
     }
 
-    getSchema(script) {
-        if (!this.scriptSchemas) {
-            return null;
-        }
-        const schema = this.scriptSchemas.get(script);
-        return schema && schema[script];
+    /**
+     * Returns a schema for a given script name
+     * @param {string} id - The key to store the schema under
+     * @returns {import('./script-attributes.js').AttributeSchema | undefined} - The schema stored under the key
+     */
+    getSchema(id) {
+        return this._scriptSchemas.get(id);
     }
 
     /**

@@ -156,12 +156,16 @@ class ScriptHandler extends ResourceHandler {
 
             for (const key in module) {
                 const scriptClass = module[key];
-                const scriptName = getScriptName(scriptClass);
+                const scriptName = toLowerCamelCase(scriptClass.name);
                 const extendsScriptType = scriptClass.prototype instanceof Script;
 
                 if (extendsScriptType) {
-                    registerScript(scriptClass, toLowerCamelCase(scriptName));
-                    this._app.scripts.addSchema(toLowerCamelCase(scriptName), scriptSchema);
+
+                    // Register the script name
+                    registerScript(scriptClass, scriptName);
+
+                    // Store any schema associated with the script
+                    this._app.scripts.addSchema(scriptName, scriptSchema[scriptName]);
                 }
             }
 

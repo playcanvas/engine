@@ -150,9 +150,6 @@ function rawToValue(app, args, value, old) {
  * @typedef {Object} AttributeSchema
  * @property {"boolean"|"number"|"string"|"json"|"asset"|"entity"|"rgb"|"rgba"|"vec2"|"vec3"|"vec4"|"curve"} type - The Attribute type
  * @property {boolean} [array] - True if this attribute is an array of `type`
- * @property {number} [step] - The precision of the attribute. (Only necessary for numerical attributes)
- * @property {number} [min] - The expected minimum range of the attributes (Only necessary for numerical attributes)
- * @property {number} [max] - The expected minimum range of the attributes (Only necessary for numerical attributes)
  */
 
 /**
@@ -182,7 +179,7 @@ export function attributeToValue(app, schema, value, current) {
  * @param {*} app - The application instance
  * @param {Object<string, AttributeSchema>} attributeSchemaMap - A map of attribute names to Attribute Schemas
  * @param {Object<string, *>} data - A Map of data to assign to the Script instance
- * @param {Script} script - The Script instance to assign values onto
+ * @param {import('../../framework/script/script.js').Script} script - The Script instance to assign values onto
  */
 export function assignAttributesToScript(app, attributeSchemaMap, data, script) {
 

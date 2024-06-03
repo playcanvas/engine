@@ -10,9 +10,6 @@ import {
 import { Component } from '../component.js';
 import { Entity } from '../../entity.js';
 import { ScriptType } from '../../script/script-type.js';
-import { getScriptName } from '../../script/script.js';
-
-const toLowerCamelCase = str => str[0].toLowerCase() + str.substring(1);
 
 /**
  * The ScriptComponent allows you to extend the functionality of an Entity by attaching your own
@@ -23,7 +20,7 @@ const toLowerCamelCase = str => str[0].toLowerCase() + str.substring(1);
  */
 class ScriptComponent extends Component {
     /**
-     * A map of the script name and the initialized component data
+     * A map of the script name and the initial component data
      * @private
      * @type {Map<string, object>}
      */
@@ -337,18 +334,6 @@ class ScriptComponent extends Component {
 
         for (let i = 0, len = this.scripts.length; i < len; i++) {
             const script = this.scripts[i];
-
-            // initialize attributes when enabled
-            if (!script._initialized) {
-                const onFirstEnabled = () => {
-                    if (!script._initialized && script.enabled) {
-                        this.initializeAttributes(script);
-                        script.off('enable', onFirstEnabled);
-                    }
-                };
-                script.on('enable', onFirstEnabled);
-            }
-
             script.enabled = script._enabled;
         }
 
@@ -408,15 +393,19 @@ class ScriptComponent extends Component {
         } else {
 
             // otherwise we need to manually initialize attributes from the schema
-            const name = script.__scriptType.__name || toLowerCamelCase(getScriptName(script.__scriptType));
+            const name = script.__scriptType.__name;
             const data = this._attributeDataMap.get(name);
 
             // If not data exists return early
-            if (!data) return;
+            if (!data) {
+                return;
+            }
 
             // Fetch schema and warn if it doesn't exist
             const schema = this.system.app.scripts?.getSchema(name);
-            if (!schema) Debug.warnOnce(`No schema exists for the script '${name}'. A schema must exist for data to be instantiated on the script.`);
+            if (!schema) {
+                Debug.warnOnce(`No schema exists for the script '${name}'. A schema must exist for data to be instantiated on the script.`);
+            }
 
             // Assign the attributes to the script instance based on the attribute schema
             assignAttributesToScript(this.system.app, schema.attributes, data, script);
@@ -683,7 +672,7 @@ class ScriptComponent extends Component {
         if (typeof scriptType === 'string') {
             scriptType = this.system.app.scripts.get(scriptType);
         } else if (scriptType) {
-            scriptName = scriptType.__name ?? toLowerCamelCase(ScriptType.__getScriptName(scriptType));
+            scriptName = scriptType.__name;
         }
 
         if (scriptType) {
