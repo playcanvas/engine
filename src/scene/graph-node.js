@@ -22,7 +22,6 @@ const invParentRot = new Quat();
 const matrix = new Mat4();
 const target = new Vec3();
 const up = new Vec3();
-const mat3 = new Mat3();
 
 /**
  * Helper function that handles signature overloading to receive a test function.
@@ -1198,7 +1197,7 @@ class GraphNode extends EventHandler {
             const parentWtm = this._parent.getWorldTransform();
             invParentWtm.copy(parentWtm).invert();
             invParentWtm.transformPoint(position, this.localPosition);
-            this.localRotation.setFromMat4(parentWtm).invert().mul(rotation);
+            this.localRotation.setFromMat4(invParentWtm).mul(rotation);
         }
 
         if (!this._dirtyLocal)
