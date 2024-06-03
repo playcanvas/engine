@@ -1194,9 +1194,10 @@ class GraphNode extends EventHandler {
             this.localPosition.copy(position);
             this.localRotation.copy(rotation);
         } else {
-            const matrix = this.getWorldTransform().setTRS(position, rotation, Vec3.ONE);
-            this.localPosition.copy(matrix.getTranslation());
-            this.localRotation.setFromMat4(matrix);
+            invParentWtm.copy(this._parent.getWorldTransform()).invert();
+            invParentWtm.transformPoint(position, this.localPosition);
+            invParentRot.copy(this._parent.getRotation()).invert();
+            this.localRotation.copy(invParentRot).mul(rotation);
         }
 
         if (!this._dirtyLocal)
