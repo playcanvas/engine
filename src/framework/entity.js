@@ -531,10 +531,9 @@ class Entity extends GraphNode {
     /** @private */
     _onHierarchyStatePostChanged() {
         // post enable all the components
-        const components = this.c;
-        for (const type in components) {
-            if (components.hasOwnProperty(type))
-                components[type].onPostStateChange();
+        const components = this._oc;
+        for (let i = 0; i < components.length; i++) {
+            components[i].onPostStateChange();
         }
     }
 
