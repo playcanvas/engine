@@ -1,7 +1,7 @@
 import { Debug } from '../../../core/debug.js';
 import { SortedLoopArray } from '../../../core/sorted-loop-array.js';
 
-import { ScriptAttributes, assignRawToValue } from '../../script/script-attributes.js';
+import { ScriptAttributes, assignAttributesToScript } from '../../script/script-attributes.js';
 import {
     SCRIPT_INITIALIZE, SCRIPT_POST_INITIALIZE, SCRIPT_UPDATE,
     SCRIPT_POST_UPDATE, SCRIPT_SWAP
@@ -10,6 +10,7 @@ import {
 import { Component } from '../component.js';
 import { Entity } from '../../entity.js';
 import { ScriptType } from '../../script/script-type.js';
+import { getScriptName } from '../../script/script.js';
 
 const toLowerCamelCase = str => str[0].toLowerCase() + str.substring(1);
 
@@ -409,7 +410,7 @@ class ScriptComponent extends Component {
             const toLowerCamelCase = str => str[0].toLowerCase() + str.substring(1);
 
             // otherwise we need to manually initialize attributes from the schema
-            const name = script.__scriptType.__name || toLowerCamelCase(ScriptType.__getScriptName(script.__scriptType));
+            const name = script.__scriptType.__name || toLowerCamelCase(getScriptName(script.__scriptType));
             const data = this._attributeDataMap.get(name);
 
             // If not data exists return early
@@ -419,14 +420,9 @@ class ScriptComponent extends Component {
             const schema = this.system.app.scripts?.getSchema(name);
             if (!schema) Debug.warnOnce(`No schema exists for the script '${name}'. A schema must exist for data to be instantiated on the script.`);
 
-            // Iterate over the schema and assign corresponding data
-            for (const attributeName in schema.attributes) {
-                const attributeSchema = schema.attributes[attributeName];
-                const value = data[attributeName];
+            // Assign the attributes to the script instance based on the attribute schema
+            assignAttributesToScript(this.system.app, schema.attributes, data, script);
 
-                // Assign the value to the script based on the attribute schema
-                assignRawToValue(this.system.app, attributeSchema, value, script, attributeName);
-            }
         }
     }
 

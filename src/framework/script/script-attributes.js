@@ -9,6 +9,8 @@ import { Vec4 } from '../../core/math/vec4.js';
 import { GraphNode } from '../../scene/graph-node.js';
 
 import { Asset } from '../asset/asset.js';
+import { Application } from '../application.js';
+import { Script } from './script.js';
 
 const components = ['x', 'y', 'z', 'w'];
 const vecLookup = [undefined, undefined, Vec2, Vec3, Vec4];
@@ -148,15 +150,53 @@ function rawToValue(app, args, value, old) {
     return value;
 }
 
-export function assignRawToValue(app, args, value, script, name) {
-    const old = script[name];
-    if (args.array) {
-        script[name] = [];
+/**
+ * @typedef {Object} AttributeSchema
+ * @property {"boolean"|"number"|"string"|"json"|"asset"|"entity"|"rgb"|"rgba"|"vec2"|"vec3"|"vec4"|"curve"} type - The Attribute type
+ * @property {boolean} [array] - True if this attribute is an array of `type`
+ * @property {number} [step] - The precision of the attribute. (Only necessary for numerical attributes)
+ * @property {number} [min] - The expected minimum range of the attributes (Only necessary for numerical attributes)
+ * @property {number} [max] - The expected minimum range of the attributes (Only necessary for numerical attributes)
+ */
+
+/**
+ * Takes an attribute schema, a value and current value, and return a new value
+ *
+ * @param {Application} app - The working application
+ * @param {AttributeSchema} schema - The attribute schema used to resolve properties
+ * @param {*} value - The raw value to create
+ * @param {*} current - The existing value
+ * @returns {*} The return value
+ */
+export function attributeToValue(app, schema, value, current) {
+    if (schema.array) {
+        const arr = [];
         for (let i = 0, len = value.length; i < len; i++) {
-            script[name].push(rawToValue(app, args, value[i], old ? old[i] : null));
+            arr.push(rawToValue(app, schema, value[i], current ? current[i] : null));
         }
-    } else {
-        script[name] = rawToValue(app, args, value, old);
+        return arr;
+    }
+
+    return rawToValue(app, schema, value, current);
+}
+
+/**
+ * This will assign values to a script instance based on a map of attributes schemas and a corresponding map of data
+ *
+ * @param {*} app - The application instance
+ * @param {Object<string, AttributeSchema>} attributeSchemaMap - A map of attribute names to Attribute Schemas
+ * @param {Object<string, *>} data - A Map of data to assign to the Script instance
+ * @param {Script} script - The Script instance to assign values onto
+ */
+export function assignAttributesToScript(app, attributeSchemaMap, data, script) {
+
+    // Iterate over the schema and assign corresponding data
+    for (const attributeName in attributeSchemaMap) {
+        const attributeSchema = attributeSchemaMap[attributeName];
+        const dataToAssign = data[attributeName];
+
+        // Assign the value to the script based on the attribute schema
+        script[attributeName] =  attributeToValue(app, attributeSchema, dataToAssign, script);
     }
 }
 
@@ -168,7 +208,7 @@ export function assignRawToValue(app, args, value, script, name) {
  * @category Script
  */
 class ScriptAttributes {
-    static assignRawToValue = assignRawToValue;
+    static assignAttributesToScript = assignAttributesToScript;
 
     /**
      * Create a new ScriptAttributes instance.
