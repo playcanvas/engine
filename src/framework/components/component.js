@@ -126,6 +126,13 @@ class Component extends EventHandler {
         return true;
     }
 
+    /**
+     * Component order. When an entity with multiple components gets enabled, this order specifies
+     * in which order the components get enabled. The lowest number gets enabled first. By default,
+     * the components will be enabled in order they were added to an entity.
+     *
+     * @type {number} - Component order number.
+     */
     set order(newOrder) {
         this._order = newOrder;
     }
