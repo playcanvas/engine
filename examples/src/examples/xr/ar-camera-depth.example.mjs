@@ -223,7 +223,6 @@ if (app.xr.supported) {
             if (!shaderUpdated && app.xr.active) {
                 shaderUpdated = true;
                 updateShader(app.xr.views.list.length > 1, app.xr.views.depthPixelFormat === pc.PIXELFORMAT_R32F);
-                // plane.enabled = true;
             }
 
             const view = app.xr.views.list?.[0];
