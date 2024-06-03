@@ -33,13 +33,6 @@ pc.basisInitialize({
     fallbackUrl: rootPath + '/static/lib/basis/basis.js'
 });
 
-// initialize basis to allow to load compressed textures
-pc.basisInitialize({
-    glueUrl: rootPath + '/static/lib/basis/basis.wasm.js',
-    wasmUrl: rootPath + '/static/lib/basis/basis.wasm.wasm',
-    fallbackUrl: rootPath + '/static/lib/basis/basis.js'
-});
-
 const assets = {
     helipad: new pc.Asset(
         'helipad-env-atlas',
