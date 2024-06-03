@@ -5,7 +5,7 @@ import { registerScript } from '../script/script-create.js';
 import { ResourceLoader } from './loader.js';
 
 import { ResourceHandler } from './handler.js';
-import { Script } from '../script/script.js';
+import { Script, getScriptName } from '../script/script.js';
 
 const toLowerCamelCase = str => str[0].toLowerCase() + str.substring(1);
 
@@ -156,7 +156,7 @@ class ScriptHandler extends ResourceHandler {
 
             for (const key in module) {
                 const scriptClass = module[key];
-                const scriptName = ScriptType.__getScriptName(scriptClass);
+                const scriptName = getScriptName(scriptClass);
                 const extendsScriptType = scriptClass.prototype instanceof Script;
 
                 if (extendsScriptType) {
