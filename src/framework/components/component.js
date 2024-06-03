@@ -19,7 +19,7 @@ class Component extends EventHandler {
      */
     entity;
 
-    /** @private */
+    /** @ignore */
     _order = 0;
 
     /**
@@ -132,6 +132,7 @@ class Component extends EventHandler {
      * the components will be enabled in order they were added to an entity.
      *
      * @type {number} - Component order number.
+     * @private
      */
     set order(newOrder) {
         this._order = newOrder;
