@@ -62,40 +62,18 @@ class CameraComponent extends Component {
      */
     onPostRender = null;
 
-    /**
-     * A counter of requests of depth map rendering.
-     *
-     * @type {number}
-     * @private
-     */
     _renderSceneDepthMap = 0;
 
-    /**
-     * A counter of requests of color map rendering.
-     *
-     * @type {number}
-     * @private
-     */
     _renderSceneColorMap = 0;
 
-    /** @private */
     _sceneDepthMapRequested = false;
 
-    /** @private */
     _sceneColorMapRequested = false;
 
-    /** @private */
     _priority = 0;
 
-    /**
-     * Layer id at which the postprocessing stops for the camera.
-     *
-     * @type {number}
-     * @private
-     */
     _disablePostEffectsLayer = LAYERID_UI;
 
-    /** @private */
     _camera = new Camera();
 
     /**
@@ -606,6 +584,12 @@ class CameraComponent extends Component {
         return this._camera.rect;
     }
 
+    /**
+     * A counter of requests of color map rendering.
+     *
+     * @type {number}
+     * @private
+     */
     set renderSceneColorMap(value) {
         if (value && !this._sceneColorMapRequested) {
             this.requestSceneColorMap(true);
@@ -620,6 +604,12 @@ class CameraComponent extends Component {
         return this._renderSceneColorMap > 0;
     }
 
+    /**
+     * A counter of requests of depth map rendering.
+     *
+     * @type {number}
+     * @private
+     */
     set renderSceneDepthMap(value) {
         if (value && !this._sceneDepthMapRequested) {
             this.requestSceneDepthMap(true);
