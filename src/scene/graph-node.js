@@ -1180,7 +1180,8 @@ class GraphNode extends EventHandler {
     }
 
     /**
-     * Sets the world-space position and rotation of the specified graph node.
+     * Sets the world-space position and rotation of the specified graph node. This is faster than
+     * setting the position and rotation independently.
      *
      * @param {Vec3} position - The world-space position to set.
      * @param {Quat} rotation - The world-space rotation to set.
