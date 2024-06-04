@@ -61,11 +61,11 @@ const _completePartialMipmapChain = function (texture) {
 
     if (!(texture._format === PIXELFORMAT_RGBA8 ||
           texture._format === PIXELFORMAT_RGBA32F) ||
-          texture._volume ||
+          texture.volume ||
           texture._compressed ||
           texture._levels.length === 1 ||
           texture._levels.length === requiredMipLevels ||
-          isHtmlElement(texture._cubemap ? texture._levels[0][0] : texture._levels[0])) {
+          isHtmlElement(texture.cubemap ? texture._levels[0][0] : texture._levels[0])) {
         return;
     }
 
@@ -99,7 +99,7 @@ const _completePartialMipmapChain = function (texture) {
     for (let level = texture._levels.length; level < requiredMipLevels; ++level) {
         const width = Math.max(1, texture._width >> (level - 1));
         const height = Math.max(1, texture._height >> (level - 1));
-        if (texture._cubemap) {
+        if (texture.cubemap) {
             const mips = [];
             for (let face = 0; face < 6; ++face) {
                 mips.push(downsample(width, height, texture._levels[level - 1][face]));
@@ -110,7 +110,7 @@ const _completePartialMipmapChain = function (texture) {
         }
     }
 
-    texture._levelsUpdated = texture._cubemap ? [[true, true, true, true, true, true]] : [true];
+    texture._levelsUpdated = texture.cubemap ? [[true, true, true, true, true, true]] : [true];
 };
 
 /**

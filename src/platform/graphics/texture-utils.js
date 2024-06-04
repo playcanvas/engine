@@ -1,7 +1,8 @@
 import { Debug } from '../../core/debug.js';
 import {
     pixelFormatInfo,
-    PIXELFORMAT_PVRTC_2BPP_RGB_1, PIXELFORMAT_PVRTC_2BPP_RGBA_1
+    PIXELFORMAT_PVRTC_2BPP_RGB_1, PIXELFORMAT_PVRTC_2BPP_RGBA_1,
+    TEXTUREDIMENSION_3D
 } from './constants.js';
 
 /**
@@ -26,7 +27,7 @@ class TextureUtils {
      *
      * @param {number} width - Texture's width.
      * @param {number} height - Texture's height.
-     * @param {number} [depth] - Texture's depth. Defaults to 1.
+     * @param {number} [depth] - Texture's depth slices. Defaults to 1.
      * @returns {number} The number of mip levels required for the texture.
      */
     static calcMipLevelsCount(width, height, depth = 1) {
@@ -38,7 +39,7 @@ class TextureUtils {
      *
      * @param {number} width - Texture's width.
      * @param {number} height - Texture's height.
-     * @param {number} depth - Texture's depth.
+     * @param {number} depth - Texture's depth slices.
      * @param {number} format - Texture's pixel format PIXELFORMAT_***.
      * @returns {number} The number of bytes of GPU memory required for the texture.
      */
@@ -68,16 +69,17 @@ class TextureUtils {
     /**
      * Calculate the GPU memory required for a texture.
      *
+     * @param {string} dimension - Texture's dimension
      * @param {number} width - Texture's width.
      * @param {number} height - Texture's height.
-     * @param {number} depth - Texture's depth.
+     * @param {number} slices - Texture's slices.
      * @param {number} format - Texture's pixel format PIXELFORMAT_***.
      * @param {boolean} mipmaps - True if the texture includes mipmaps, false otherwise.
-     * @param {boolean} cubemap - True is the texture is a cubemap, false otherwise.
      * @returns {number} The number of bytes of GPU memory required for the texture.
      */
-    static calcGpuSize(width, height, depth, format, mipmaps, cubemap) {
+    static calcGpuSize(width, height, slices, format, isVolume, mipmaps) {
         let result = 0;
+        let depth = isVolume ? slices : 1;
 
         while (1) {
             result += TextureUtils.calcLevelGpuSize(width, height, depth, format);
@@ -91,7 +93,7 @@ class TextureUtils {
             depth = Math.max(depth >> 1, 1);
         }
 
-        return result * (cubemap ? 6 : 1);
+        return result * (isVolume ? 1 : slices);
     }
 }
 
