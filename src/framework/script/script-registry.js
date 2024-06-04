@@ -45,7 +45,7 @@ class ScriptRegistry extends EventHandler {
     /**
      * Registers a schema against a script instance
      * @param {string} id - The key to use to store the schema
-     * @param {import('./script-attributes.js').AttributeSchema} schema - An schema definition for the script 
+     * @param {import('./script-attributes.js').AttributeSchema} schema - An schema definition for the script
      */
     addSchema(id, schema) {
         if (!schema) return;
@@ -137,7 +137,10 @@ class ScriptRegistry extends EventHandler {
                         scriptInstances.push(scriptInstance);
 
                     // initialize attributes
-                    component.initializeAllScriptAttributes();
+                    for (let i = 0, len = component.scripts.length; i < len; i++) {
+                        const script = component.scripts[i];
+                        component.initializeAttributes(script);
+                    }
                 }
             }
 

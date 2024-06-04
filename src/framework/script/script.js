@@ -175,8 +175,7 @@ export class Script extends EventHandler {
         if (!this._initialized && this.enabled) {
             this._initialized = true;
 
-            // Check if __initializeAttributes exists before calling
-            if (this.__initializeAttributes) this.__initializeAttributes(true);
+            this.fire('preInitialize');
 
             if (this.initialize)
                 this.entity.script._scriptMethod(this, SCRIPT_INITIALIZE);

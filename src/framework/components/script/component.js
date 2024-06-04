@@ -214,6 +214,11 @@ class ScriptComponent extends Component {
 
                 // enabled
                 if (typeof value[key].enabled === 'boolean') {
+
+                    // Before a script is initialized, initialize any attributes
+                    script.once('preInitialize', () => {
+                        this.initializeAttributes(script);
+                    });
                     script.enabled = !!value[key].enabled;
                 }
 
@@ -334,6 +339,9 @@ class ScriptComponent extends Component {
 
         for (let i = 0, len = this.scripts.length; i < len; i++) {
             const script = this.scripts[i];
+            script.once('preInitialize', () => {
+                this.initializeAttributes(script);
+            });
             script.enabled = script._enabled;
         }
 
@@ -372,11 +380,6 @@ class ScriptComponent extends Component {
     }
 
     _onInitializeAttributes() {
-        this.initializeAllScriptAttributes();
-    }
-
-    initializeAllScriptAttributes() {
-
         for (let i = 0, len = this.scripts.length; i < len; i++) {
             const script = this.scripts[i];
             this.initializeAttributes(script);
