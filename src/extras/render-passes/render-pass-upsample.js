@@ -1,7 +1,10 @@
 import { RenderPassShaderQuad } from '../../scene/graphics/render-pass-shader-quad.js';
 
 /**
+ * Render pass implementation of a up-sample filter.
+ *
  * @category Graphics
+ * @ignore
  */
 class RenderPassUpsample extends RenderPassShaderQuad {
     constructor(device, sourceTexture) {
