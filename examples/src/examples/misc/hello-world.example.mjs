@@ -55,56 +55,7 @@ light.addComponent('light');
 app.root.addChild(light);
 light.setEulerAngles(45, 0, 0);
 
-function timeFunc(fn) {
-    const start = performance.now();
-    fn();
-    return performance.now() - start;
-}
-
-const iterations = 1e6;
-const average = 5;
-
-/**
- * @type {{ pos: pc.Vec3; rot: pc.Quat; }[]}
- */
-const data = [];
-for (let i = 0; i < iterations; i++) {
-    data.push({
-        pos: new pc.Vec3(Math.random() * 10 - 5, Math.random() * 10 - 5, Math.random() * 10 - 5),
-        rot: new pc.Quat().setFromEulerAngles(Math.random() * 360, Math.random() * 360, Math.random() * 360)
-    });
-}
-
-/** @type {Record<string, number[]>} */
-const res = {
-    setPosSetRot: [],
-    setTRS: [],
-    setPosRot: []
-};
-for (let i = 0; i < average; i++) {
-    res.setPosSetRot.push(timeFunc(() => {
-        for (let j = 0; j < data.length; j++) {
-            box.setPosition(data[j].pos);
-            box.setRotation(data[j].rot);
-        }
-    }));
-    res.setTRS.push(timeFunc(() => {
-        for (let j = 0; j < data.length; j++) {
-            box.getWorldTransform().setTRS(data[j].pos, data[j].rot, pc.Vec3.ONE);
-        }
-    }));
-    res.setPosRot.push(timeFunc(() => {
-        for (let j = 0; j < data.length; j++) {
-            box.setPositionAndRotation(data[j].pos, data[j].rot);
-        }
-    }));
-}
-for (const key in res) {
-    console.log(key, res[key].reduce((a, b) => a + b) / res[key].length);
-}
-
-
-// // rotate the box according to the delta time since the last frame
-// app.on('update', (/** @type {number} */ dt) => box.rotate(10 * dt, 20 * dt, 30 * dt));
+// rotate the box according to the delta time since the last frame
+app.on('update', (/** @type {number} */ dt) => box.rotate(10 * dt, 20 * dt, 30 * dt));
 
 export { app };
