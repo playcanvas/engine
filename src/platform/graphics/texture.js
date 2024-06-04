@@ -16,7 +16,8 @@ import {
     TEXPROPERTY_MIN_FILTER, TEXPROPERTY_MAG_FILTER, TEXPROPERTY_ADDRESS_U, TEXPROPERTY_ADDRESS_V,
     TEXPROPERTY_ADDRESS_W, TEXPROPERTY_COMPARE_ON_READ, TEXPROPERTY_COMPARE_FUNC, TEXPROPERTY_ANISOTROPY,
     TEXPROPERTY_ALL, requiresManualGamma,
-    pixelFormatInfo
+    pixelFormatInfo, TEXTUREDIMENSION_2D, TEXTUREDIMENSION_3D,
+    TEXTUREDIMENSION_2D_ARRAY, TEXTUREDIMENSION_CUBE
 
 } from './constants.js';
 import { TextureUtils } from './texture-utils.js';
@@ -104,7 +105,15 @@ class Texture {
      * @param {string} [options.name] - The name of the texture. Defaults to null.
      * @param {number} [options.width] - The width of the texture in pixels. Defaults to 4.
      * @param {number} [options.height] - The height of the texture in pixels. Defaults to 4.
-     * @param {number} [options.depth] - The number of depth slices in a 3D texture.
+     * @param {number} [options.slices] - The number of depth slices in a 3D texture, the number of textures
+     * in a texture array or the number of faces for a cubemap.
+     * @param {string} [options.dimension] - The texture dimension type. Can be:
+     * - {@link TEXTUREDIMENSION_2D}
+     * - {@link TEXTUREDIMENSION_2D_ARRAY}
+     * - {@link TEXTUREDIMENSION_3D}
+     * - {@link TEXTUREDIMENSION_CUBE}
+     * Defaults to {@link TEXTUREDIMENSION_2D}. Alternatively, you can specify the dimension using
+     * the options.cubemap, options.volume or options.array properties.
      * @param {number} [options.format] - The pixel format of the texture. Can be:
      *
      * - {@link PIXELFORMAT_R8}
@@ -161,9 +170,8 @@ class Texture {
      * the mipmaps property is ignored.
      * @param {boolean} [options.cubemap] - Specifies whether the texture is to be a cubemap.
      * Defaults to false.
-     * @param {number} [options.arrayLength] - Specifies whether the texture is to be a 2D texture array.
-     * When passed in as undefined or < 1, this is not an array texture. If >= 1, this is an array texture.
-     * Defaults to undefined.
+     * @param {boolean} [options.array] - Specifies whether the texture is to be a 2D texture array.
+     * Defaults to false.
      * @param {boolean} [options.volume] - Specifies whether the texture is to be a 3D volume.
      * Defaults to false.
      * @param {string} [options.type] - Specifies the texture type.  Can be:
@@ -198,7 +206,7 @@ class Texture {
      * Defaults to {@link FUNC_LESS}.
      * @param {Uint8Array[]|Uint16Array[]|Uint32Array[]|Float32Array[]|HTMLCanvasElement[]|HTMLImageElement[]|HTMLVideoElement[]|Uint8Array[][]} [options.levels]
      * - Array of Uint8Array or other supported browser interface; or a two-dimensional array
-     * of Uint8Array if options.arrayLength is defined and greater than zero.
+     * of Uint8Array if options.dimension is {@link TEXTUREDIMENSION_2D_ARRAY}.
      * @param {boolean} [options.storage] - Defines if texture can be used as a storage texture by
      * a compute shader. Defaults to false.
      * @param {boolean} [options.immediate] - If set and true, the texture will be uploaded to the GPU immediately.
@@ -224,15 +232,24 @@ class Texture {
      */
     constructor(graphicsDevice, options = {}) {
         this.device = graphicsDevice;
-        Debug.assert(this.device, 'Texture constructor requires a graphicsDevice to be valid');
-        Debug.assert(!options.width || Number.isInteger(options.width), 'Texture width must be an integer number, got', options);
-        Debug.assert(!options.height || Number.isInteger(options.height), 'Texture height must be an integer number, got', options);
-        Debug.assert(!options.depth || Number.isInteger(options.depth), 'Texture depth must be an integer number, got', options);
+        Debug.assert(this.device, "Texture constructor requires a graphicsDevice to be valid");
+        Debug.assert(!options.width || Number.isInteger(options.width), "Texture width must be an integer number, got", options);
+        Debug.assert(!options.height || Number.isInteger(options.height), "Texture height must be an integer number, got", options);
+        Debug.assert(!options.slices || Number.isInteger(options.slices), "Texture slices must be an integer number, got", options);
 
         this.name = options.name ?? '';
 
+        this._dimension = options.dimension ?? TEXTUREDIMENSION_2D;
+        this._dimension = options.array ? TEXTUREDIMENSION_2D_ARRAY : this._dimension;
+        this._dimension = options.cubemap ? TEXTUREDIMENSION_CUBE : this._dimension;
+        this._dimension = options.volume ? TEXTUREDIMENSION_3D : this._dimension;
+
         this._width = Math.floor(options.width ?? 4);
         this._height = Math.floor(options.height ?? 4);
+
+        this._slices = Math.floor(options.slices ?? (this._dimension === TEXTUREDIMENSION_CUBE ? 6 : 1));
+
+        Debug.assert((this._dimension === TEXTUREDIMENSION_CUBE ? this._slices === 6 : true), "Texture cube map must have 6 slices");
 
         this._format = options.format ?? PIXELFORMAT_RGBA8;
         this._compressed = isCompressedPixelFormat(this._format);
@@ -242,12 +259,7 @@ class Texture {
             options.magFilter = FILTER_NEAREST;
         }
 
-        this._volume = options.volume ?? false;
-        this._depth = Math.floor(options.depth ?? 1);
-        this._arrayLength = Math.floor(options.arrayLength ?? 0);
-
         this._storage = options.storage ?? false;
-        this._cubemap = options.cubemap ?? false;
         this._flipY = options.flipY ?? false;
         this._premultiplyAlpha = options.premultiplyAlpha ?? false;
 
@@ -273,7 +285,7 @@ class Texture {
         Debug.assert(!options.hasOwnProperty('swizzleGGGR'), 'Use options.type.');
 
         this.projection = TEXTUREPROJECTION_NONE;
-        if (this._cubemap) {
+        if (this.cubemap) {
             this.projection = TEXTUREPROJECTION_CUBE;
         } else if (options.projection && options.projection !== TEXTUREPROJECTION_CUBE) {
             this.projection = options.projection;
@@ -291,7 +303,7 @@ class Texture {
         if (this._levels) {
             this.upload(options.immediate ?? false);
         } else {
-            this._levels = this._cubemap ? [[null, null, null, null, null, null]] : [null];
+            this._levels = this.cubemap ? [[null, null, null, null, null, null]] : [null];
         }
 
         // track the texture
@@ -339,10 +351,10 @@ class Texture {
      *
      * @param {number} width - The new width of the texture.
      * @param {number} height - The new height of the texture.
-     * @param {number} [depth] - The new depth of the texture. Defaults to 1.
+     * @param {number} [slices] - The new number of slices for the texture. Defaults to 1.
      * @ignore
      */
-    resize(width, height, depth = 1) {
+    resize(width, height, slices = 1) {
 
         // destroy texture impl
         const device = this.device;
@@ -351,7 +363,7 @@ class Texture {
 
         this._width = Math.floor(width);
         this._height = Math.floor(height);
-        this._depth = Math.floor(depth);
+        this._slices = Math.floor(slices);
         this._updateNumLevel();
 
         // re-create the implementation
@@ -542,7 +554,7 @@ class Texture {
      * @type {number}
      */
     set addressW(addressW) {
-        if (!this._volume) {
+        if (!this.volume) {
             Debug.warn('pc.Texture#addressW: Can\'t set W addressing mode for a non-3D texture.');
             return;
         }
@@ -705,7 +717,16 @@ class Texture {
      * @type {number}
      */
     get depth() {
-        return this._depth;
+        return this._dimension === TEXTUREDIMENSION_3D ? this._slices : 1;
+    }
+
+    /**
+     * The number of textures in a texture array or the number of faces for a cubemap.
+     *
+     * @type {number}
+     */
+    get slices() {
+        return this._slices;
     }
 
     /**
@@ -747,12 +768,12 @@ class Texture {
      * @type {boolean}
      */
     get cubemap() {
-        return this._cubemap;
+        return this._dimension === TEXTUREDIMENSION_CUBE;
     }
 
     get gpuSize() {
         const mips = this.pot && this._mipmaps && !(this._compressed && this._levels.length === 1);
-        return TextureUtils.calcGpuSize(this._width, this._height, this._depth, this._format, mips, this._cubemap);
+        return TextureUtils.calcGpuSize(this._width, this._height, this._slices, this._format, this.volume, mips);
     }
 
     /**
@@ -761,16 +782,7 @@ class Texture {
      * @type {boolean}
      */
     get array() {
-        return this._arrayLength > 0;
-    }
-
-    /**
-     * Returns the number of textures inside this texture if this is a 2D array texture or 0 otherwise.
-     *
-     * @type {number}
-     */
-    get arrayLength() {
-        return this._arrayLength;
+        return this._dimension === TEXTUREDIMENSION_2D_ARRAY;
     }
 
     /**
@@ -779,7 +791,7 @@ class Texture {
      * @type {boolean}
      */
     get volume() {
-        return this._volume;
+        return this._dimension === TEXTUREDIMENSION_3D;
     }
 
     /**
@@ -842,7 +854,7 @@ class Texture {
 
     // Force a full resubmission of the texture to the GPU (used on a context restore event)
     dirtyAll() {
-        this._levelsUpdated = this._cubemap ? [[true, true, true, true, true, true]] : [true];
+        this._levelsUpdated = this.cubemap ? [[true, true, true, true, true, true]] : [true];
 
         this._needsUpload = true;
         this._needsMipmapsUpload = this._mipmaps;
@@ -892,7 +904,7 @@ class Texture {
             // allocate storage for this mip level
             const width = Math.max(1, this._width >> options.level);
             const height = Math.max(1, this._height >> options.level);
-            const depth = Math.max(1, this._depth >> options.level);
+            const depth = Math.max(1, (this._dimension === TEXTUREDIMENSION_3D ? this._slices : 1) >> options.level);
             const data = new ArrayBuffer(TextureUtils.calcLevelGpuSize(width, height, depth, this._format));
             levels[options.level] = new (getPixelFormatArrayType(this._format))(data);
         }
@@ -915,7 +927,7 @@ class Texture {
         let invalid = false;
         let width, height;
 
-        if (this._cubemap) {
+        if (this.cubemap) {
             if (source[0]) {
                 // rely on first face sizes
                 width = source[0].width || 0;
@@ -975,7 +987,7 @@ class Texture {
             this._height = 4;
 
             // remove levels
-            if (this._cubemap) {
+            if (this.cubemap) {
                 for (let i = 0; i < 6; i++) {
                     this._levels[mipLevel][i] = null;
                     this._levelsUpdated[mipLevel][i] = true;

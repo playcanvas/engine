@@ -100,7 +100,7 @@ class WebgpuTexture {
             size: {
                 width: texture.width,
                 height: texture.height,
-                depthOrArrayLayers: texture.cubemap ? 6 : (texture.array ? texture.arrayLength : 1)
+                depthOrArrayLayers: texture.slices
             },
             format: this.format,
             mipLevelCount: numLevels,
@@ -331,15 +331,15 @@ class WebgpuTexture {
                             }
                         }
 
-                    } else if (texture._volume) {
+                    } else if (texture.volume) {
 
                         Debug.warn('Volume texture data upload is not supported yet', this.texture);
 
                     } else if (texture.array) { // texture array
 
-                        if (texture.arrayLength === mipObject.length) {
+                        if (texture.slices === mipObject.length) {
 
-                            for (let index = 0; index < texture._arrayLength; index++) {
+                            for (let index = 0; index < texture.slices; index++) {
                                 const arraySource = mipObject[index];
 
                                 if (this.isExternalImage(arraySource)) {

@@ -170,7 +170,7 @@ class WebglRenderTarget {
                     gl.framebufferTexture2D(
                         gl.FRAMEBUFFER,
                         attachmentBaseConstant + i,
-                        colorBuffer._cubemap ? gl.TEXTURE_CUBE_MAP_POSITIVE_X + target._face : gl.TEXTURE_2D,
+                        colorBuffer.cubemap ? gl.TEXTURE_CUBE_MAP_POSITIVE_X + target._face : gl.TEXTURE_2D,
                         colorBuffer.impl._glTexture,
                         target.mipLevel
                     );
@@ -197,7 +197,7 @@ class WebglRenderTarget {
 
                     // Attach
                     gl.framebufferTexture2D(gl.FRAMEBUFFER, attachmentPoint,
-                        depthBuffer._cubemap ? gl.TEXTURE_CUBE_MAP_POSITIVE_X + target._face : gl.TEXTURE_2D,
+                        depthBuffer.cubemap ? gl.TEXTURE_CUBE_MAP_POSITIVE_X + target._face : gl.TEXTURE_2D,
                         target._depthBuffer.impl._glTexture, target.mipLevel);
 
                 } else {
@@ -348,7 +348,7 @@ class WebglRenderTarget {
             const dstFramebuffer = gl.createFramebuffer();
             device.setFramebuffer(dstFramebuffer);
             gl.framebufferTexture2D(gl.FRAMEBUFFER, gl.COLOR_ATTACHMENT0,
-                colorBuffer._cubemap ? gl.TEXTURE_CUBE_MAP_POSITIVE_X + target._face : gl.TEXTURE_2D,
+                colorBuffer.cubemap ? gl.TEXTURE_CUBE_MAP_POSITIVE_X + target._face : gl.TEXTURE_2D,
                 colorBuffer.impl._glTexture,
                 0
             );
