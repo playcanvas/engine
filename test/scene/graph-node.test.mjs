@@ -851,4 +851,48 @@ describe('GraphNode', function () {
 
     });
 
+    describe('#setPositionAndRotation()', function () {
+        it('setPositionAndRotation is the same as setPosition and setRotation', function () {
+            const root = new GraphNode('root');
+            const child = new GraphNode('child');
+            root.addChild(child);
+            root.setPosition(10, 20, 30);
+
+            root.setLocalScale(0.5, 0.5, 0.5);
+
+            const pos = new Vec3(1, 2, 3);
+            const rot = new Quat().setFromEulerAngles(10, 20, 30);
+            child.setPosition(pos);
+            child.setRotation(rot);
+
+            const pos1 = child.getPosition().clone();
+            const rot1 = child.getRotation().clone();
+            const localPos1 = child.getLocalPosition().clone();
+            const localRot1 = child.getLocalRotation().clone();
+
+            child.setPositionAndRotation(pos, rot);
+
+            const pos2 = child.getPosition();
+            expect(pos2.x).to.be.closeTo(pos1.x, 0.00001);
+            expect(pos2.y).to.be.closeTo(pos1.y, 0.00001);
+            expect(pos2.z).to.be.closeTo(pos1.z, 0.00001);
+
+            const rot2 = child.getRotation();
+            expect(rot2.x).to.be.closeTo(rot1.x, 0.00001);
+            expect(rot2.y).to.be.closeTo(rot1.y, 0.00001);
+            expect(rot2.z).to.be.closeTo(rot1.z, 0.00001);
+            expect(rot2.w).to.be.closeTo(rot1.w, 0.00001);
+
+            const localPos2 = child.getLocalPosition();
+            expect(localPos2.x).to.be.closeTo(localPos1.x, 0.00001);
+            expect(localPos2.y).to.be.closeTo(localPos1.y, 0.00001);
+            expect(localPos2.z).to.be.closeTo(localPos1.z, 0.00001);
+
+            const localRot2 = child.getLocalRotation();
+            expect(localRot2.x).to.be.closeTo(localRot1.x, 0.00001);
+            expect(localRot2.y).to.be.closeTo(localRot1.y, 0.00001);
+            expect(localRot2.z).to.be.closeTo(localRot1.z, 0.00001);
+            expect(localRot2.w).to.be.closeTo(localRot1.w, 0.00001);
+        });
+    });
 });
