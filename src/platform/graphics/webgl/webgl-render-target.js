@@ -155,7 +155,7 @@ class WebglRenderTarget {
                     gl.framebufferTexture2D(
                         gl.FRAMEBUFFER,
                         attachmentBaseConstant + i,
-                        colorBuffer._cubemap ? gl.TEXTURE_CUBE_MAP_POSITIVE_X + target._face : gl.TEXTURE_2D,
+                        colorBuffer.cubemap ? gl.TEXTURE_CUBE_MAP_POSITIVE_X + target._face : gl.TEXTURE_2D,
                         colorBuffer.impl._glTexture,
                         0
                     );
@@ -178,11 +178,11 @@ class WebglRenderTarget {
                 // Attach
                 if (target._stencil) {
                     gl.framebufferTexture2D(gl.FRAMEBUFFER, gl.DEPTH_STENCIL_ATTACHMENT,
-                                            depthBuffer._cubemap ? gl.TEXTURE_CUBE_MAP_POSITIVE_X + target._face : gl.TEXTURE_2D,
+                                            depthBuffer.cubemap ? gl.TEXTURE_CUBE_MAP_POSITIVE_X + target._face : gl.TEXTURE_2D,
                                             target._depthBuffer.impl._glTexture, 0);
                 } else {
                     gl.framebufferTexture2D(gl.FRAMEBUFFER, gl.DEPTH_ATTACHMENT,
-                                            depthBuffer._cubemap ? gl.TEXTURE_CUBE_MAP_POSITIVE_X + target._face : gl.TEXTURE_2D,
+                                            depthBuffer.cubemap ? gl.TEXTURE_CUBE_MAP_POSITIVE_X + target._face : gl.TEXTURE_2D,
                                             target._depthBuffer.impl._glTexture, 0);
                 }
             } else if (target._depth) {
@@ -306,7 +306,7 @@ class WebglRenderTarget {
             const dstFramebuffer = gl.createFramebuffer();
             device.setFramebuffer(dstFramebuffer);
             gl.framebufferTexture2D(gl.FRAMEBUFFER, gl.COLOR_ATTACHMENT0,
-                                    colorBuffer._cubemap ? gl.TEXTURE_CUBE_MAP_POSITIVE_X + target._face : gl.TEXTURE_2D,
+                                    colorBuffer.cubemap ? gl.TEXTURE_CUBE_MAP_POSITIVE_X + target._face : gl.TEXTURE_2D,
                                     colorBuffer.impl._glTexture,
                                     0
             );
