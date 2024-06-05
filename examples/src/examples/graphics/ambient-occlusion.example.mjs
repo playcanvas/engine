@@ -236,22 +236,25 @@ assetListLoader.load(() => {
             ssaoPass.sampleCount = data.get('data.ssao.samples');
             ssaoPass.minAngle = data.get('data.ssao.minAngle');
             ssaoPass.scale = data.get('data.ssao.scale');
-
-            // adjust min angle based on scale to avoid depth related artifacts
-            if (ssaoPass.scale < 0.6)
-                data.set('data.ssao.minAngle', 40);
-            else if (ssaoPass.scale < 0.8)
-                data.set('data.ssao.minAngle', 20);
-            else
-                data.set('data.ssao.minAngle', 10);
         }
     };
 
     // apply UI changes
     let initialValuesSetup = false;
-    data.on('*:set', () => {
+    data.on('*:set', (/** @type {string} */ path, value) => {
         if (initialValuesSetup)
             applySettings();
+
+        const pathArray = path.split('.');
+        if (pathArray[2] === 'scale') {
+            // adjust min angle based on scale to avoid depth related artifacts
+            if (value < 0.6)
+                data.set('data.ssao.minAngle', 40);
+            else if (value < 0.8)
+                data.set('data.ssao.minAngle', 20);
+            else
+                data.set('data.ssao.minAngle', 10);
+        }
     });
 
     // initial settings
