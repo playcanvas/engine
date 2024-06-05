@@ -145,7 +145,7 @@ assetListLoader.load(() => {
 
     // when texture is loaded add particlesystem component to entity
     entity.addComponent('particlesystem', {
-        numParticles: 150,
+        numParticles: 25,
         lifetime: 1,
         rate: 0.01,
         scaleGraph: new pc.Curve([0, 0.2, 1, 0.7]),
