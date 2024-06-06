@@ -5,7 +5,6 @@ import { AnimComponent } from '../../src/framework/components/anim/component.js'
 import { AnimationComponent } from '../../src/framework/components/animation/component.js';
 import { Application } from '../../src/framework/application.js';
 import { AudioListenerComponent } from '../../src/framework/components/audio-listener/component.js';
-import { AudioSourceComponent } from '../../src/framework/components/audio-source/component.js';
 import { ButtonComponent } from '../../src/framework/components/button/component.js';
 import { CameraComponent } from '../../src/framework/components/camera/component.js';
 import { CollisionComponent } from '../../src/framework/components/collision/component.js';
@@ -53,7 +52,6 @@ describe('Entity', function () {
         anim: AnimComponent,
         animation: AnimationComponent,
         audiolistener: AudioListenerComponent,
-        audiosource: AudioSourceComponent,
         button: ButtonComponent,
         camera: CameraComponent,
         collision: CollisionComponent,
