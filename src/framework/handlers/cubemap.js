@@ -1,6 +1,6 @@
 import {
     ADDRESS_CLAMP_TO_EDGE, PIXELFORMAT_RGB8, PIXELFORMAT_RGBA8,
-    TEXTURETYPE_DEFAULT, TEXTURETYPE_RGBM, TEXTURETYPE_RGBP
+    TEXTURETYPE_DEFAULT, TEXTURETYPE_RGBM
 } from '../../platform/graphics/constants.js';
 import { Texture } from '../../platform/graphics/texture.js';
 
@@ -314,6 +314,8 @@ class CubemapHandler extends ResourceHandler {
                     filename: assetId
                 } : assetId;
 
+                // if the referenced prefiltered texture is not a dds file, then we're loading an
+                // envAtlas. In this case we must specify the correct texture state.
                 const data = file.url.search('.dds') === -1 ? {
                     type: 'rgbp',
                     addressu: 'clamp',
