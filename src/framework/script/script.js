@@ -1,7 +1,7 @@
-import { Debug } from '../../core/debug.js';
 import { EventHandler } from '../../core/event-handler.js';
 import { SCRIPT_INITIALIZE, SCRIPT_POST_INITIALIZE } from './constants.js';
 
+<<<<<<< HEAD
 export class Script extends EventHandler {
     /**
      * Fired when a script instance becomes enabled.
@@ -15,6 +15,9 @@ export class Script extends EventHandler {
      * };
      */
     static EVENT_ENABLE = 'enable';
+=======
+import { AppBase } from '../app-base.js';
+>>>>>>> 7f3f8d7de ([BREAKING] Remove support for legacy scripts (#6584))
 
     /**
      * Fired when a script instance becomes disabled.
@@ -57,6 +60,7 @@ export class Script extends EventHandler {
      */
     static EVENT_DESTROY = 'destroy';
 
+<<<<<<< HEAD
     /**
      * Fired when script attributes have changed. This event is available in two forms. They are as follows:
      *
@@ -164,6 +168,45 @@ export class Script extends EventHandler {
      */
     set enabled(value) {
         this._enabled = !!value;
+=======
+/**
+ * Create and register a new {@link ScriptType}. It returns new class type (constructor function),
+ * which is auto-registered to {@link ScriptRegistry} using its name. This is the main interface to
+ * create Script Types, to define custom logic using JavaScript, that is used to create interaction
+ * for entities.
+ *
+ * @param {string} name - Unique Name of a Script Type. If a Script Type with the same name has
+ * already been registered and the new one has a `swap` method defined in its prototype, then it
+ * will perform hot swapping of existing Script Instances on entities using this new Script Type.
+ * Note: There is a reserved list of names that cannot be used, such as list below as well as some
+ * starting from `_` (underscore): system, entity, create, destroy, swap, move, scripts, onEnable,
+ * onDisable, onPostStateChange, has, on, off, fire, once, hasEvent.
+ * @param {AppBase} [app] - Optional application handler, to choose which {@link ScriptRegistry}
+ * to add a script to. By default it will use `Application.getApplication()` to get current
+ * {@link AppBase}.
+ * @returns {typeof ScriptType|null} A class type (constructor function) that inherits {@link ScriptType},
+ * which the developer is meant to further extend by adding attributes and prototype methods.
+ * Returns null if there was an error.
+ * @example
+ * var Turning = pc.createScript('turn');
+ *
+ * // define 'speed' attribute that is available in Editor UI
+ * Turning.attributes.add('speed', {
+ *     type: 'number',
+ *     default: 180,
+ *     placeholder: 'deg/s'
+ * });
+ *
+ * // runs every tick
+ * Turning.prototype.update = function (dt) {
+ *     this.entity.rotate(0, this.speed * dt, 0);
+ * };
+ * @category Script
+ */
+function createScript(name, app) {
+    if (reservedScriptNames.has(name))
+        throw new Error(`Script name '${name}' is reserved, please rename the script`);
+>>>>>>> 7f3f8d7de ([BREAKING] Remove support for legacy scripts (#6584))
 
         if (this.enabled === this._enabledOld) return;
 
@@ -181,6 +224,7 @@ export class Script extends EventHandler {
                 this.entity.script._scriptMethod(this, SCRIPT_INITIALIZE);
         }
 
+<<<<<<< HEAD
         // post initialize script if not post initialized yet and still enabled
         // (initialize might have disabled the script so check this.enabled again)
         // Warning: Do not do this if the script component is currently being enabled
@@ -197,6 +241,50 @@ export class Script extends EventHandler {
     get enabled() {
         return this._enabled && !this._destroyed && this.entity.script.enabled && this.entity.enabled;
     }
+=======
+/* eslint-disable jsdoc/check-examples */
+/**
+ * Register a existing class type as a Script Type to {@link ScriptRegistry}. Useful when defining
+ * a ES6 script class that extends {@link ScriptType} (see example).
+ *
+ * @param {typeof ScriptType} script - The existing class type (constructor function) to be
+ * registered as a Script Type. Class must extend {@link ScriptType} (see example). Please note: A
+ * class created using {@link createScript} is auto-registered, and should therefore not be pass
+ * into {@link registerScript} (which would result in swapping out all related script instances).
+ * @param {string} [name] - Optional unique name of the Script Type. By default it will use the
+ * same name as the existing class. If a Script Type with the same name has already been registered
+ * and the new one has a `swap` method defined in its prototype, then it will perform hot swapping
+ * of existing Script Instances on entities using this new Script Type. Note: There is a reserved
+ * list of names that cannot be used, such as list below as well as some starting from `_`
+ * (underscore): system, entity, create, destroy, swap, move, scripts, onEnable, onDisable,
+ * onPostStateChange, has, on, off, fire, once, hasEvent.
+ * @param {AppBase} [app] - Optional application handler, to choose which {@link ScriptRegistry}
+ * to register the script type to. By default it will use `Application.getApplication()` to get
+ * current {@link AppBase}.
+ * @example
+ * // define a ES6 script class
+ * class PlayerController extends pc.ScriptType {
+ *
+ *     initialize() {
+ *         // called once on initialize
+ *     }
+ *
+ *     update(dt) {
+ *         // called each tick
+ *     }
+ * }
+ *
+ * // register the class as a script
+ * pc.registerScript(PlayerController);
+ *
+ * // declare script attributes (Must be after pc.registerScript())
+ * PlayerController.attributes.add('attribute1', {type: 'number'});
+ * @category Script
+ */
+function registerScript(script, name, app) {
+    if (typeof script !== 'function')
+        throw new Error(`script class: '${script}' must be a constructor function (i.e. class).`);
+>>>>>>> 7f3f8d7de ([BREAKING] Remove support for legacy scripts (#6584))
 
     /**
      * @param {{entity: import('../entity.js').Entity, app: import('../app-base.js').AppBase}} args -
@@ -219,6 +307,7 @@ export class Script extends EventHandler {
         this.__executionOrder = -1;
     }
 
+<<<<<<< HEAD
     /**
      * Name of a Script Type.
      *
@@ -277,6 +366,9 @@ export class Script extends EventHandler {
      * then it will be executed to perform hot-reload at runtime.
      * @param {Script} old - Old instance of the scriptType to copy data to the new instance.
      */
+=======
+    ScriptTypes.push(script);
+>>>>>>> 7f3f8d7de ([BREAKING] Remove support for legacy scripts (#6584))
 }
 
 const funcNameRegex = new RegExp('^\\s*function(?:\\s|\\s*\\/\\*.*\\*\\/\\s*)+([^\\(\\s\\/]*)\\s*');
