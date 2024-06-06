@@ -1,12 +1,10 @@
 // @config WEBGPU_DISABLED
 import * as pc from 'playcanvas';
-import files from '@examples/files';
-import { deviceType, loadES5, rootPath } from '@examples/utils';
+import files from 'examples/files';
+import { deviceType, loadES5, rootPath } from 'examples/utils';
 
-const canvas = document.getElementById('application-canvas');
-if (!(canvas instanceof HTMLCanvasElement)) {
-    throw new Error('No canvas found');
-}
+const canvas = /** @type {HTMLCanvasElement} */ (document.getElementById('application-canvas'));
+window.focus();
 
 const CORE = await loadES5('https://cdn.jsdelivr.net/npm/@loaders.gl/core@2.3.6/dist/dist.min.js');
 const DRACO = await loadES5('https://cdn.jsdelivr.net/npm/@loaders.gl/draco@2.3.6/dist/dist.min.js');
@@ -22,6 +20,7 @@ const gfxOptions = {
 /** @type {pc.GraphicsDevice} */
 const device = await pc.createGraphicsDevice(canvas, gfxOptions);
 device.maxPixelRatio = Math.min(window.devicePixelRatio, 2);
+
 
 const createOptions = new pc.AppOptions();
 createOptions.graphicsDevice = device;

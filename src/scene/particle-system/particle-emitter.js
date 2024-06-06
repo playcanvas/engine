@@ -17,7 +17,8 @@ import {
     PIXELFORMAT_RGBA8, PIXELFORMAT_RGBA32F,
     PRIMITIVE_TRIANGLES,
     SEMANTIC_ATTR0, SEMANTIC_ATTR1, SEMANTIC_ATTR2, SEMANTIC_ATTR3, SEMANTIC_ATTR4, SEMANTIC_TEXCOORD0,
-    TYPE_FLOAT32
+    TYPE_FLOAT32,
+    typedArrayIndexFormats
 } from '../../platform/graphics/constants.js';
 import { DeviceCache } from '../../platform/graphics/device-cache.js';
 import { IndexBuffer } from '../../platform/graphics/index-buffer.js';
@@ -1057,7 +1058,12 @@ class ParticleEmitter {
             // Fill the index buffer
             let dst = 0;
             const indices = new Uint32Array(this.indexBuffer.lock());
-            if (this.useMesh) meshData = new Uint32Array(this.mesh.indexBuffer[0].lock());
+
+            if (this.useMesh) {
+                const ib = this.mesh.indexBuffer[0];
+                meshData = new typedArrayIndexFormats[ib.format](ib.lock());
+            }
+
             for (let i = 0; i < numParticles; i++) {
                 if (!this.useMesh) {
                     const baseIndex = i * 4;

@@ -214,8 +214,6 @@ export { AnimComponentLayer } from './framework/components/anim/component-layer.
 export { AnimComponentSystem } from './framework/components/anim/system.js';
 export { AudioListenerComponent } from './framework/components/audio-listener/component.js';
 export { AudioListenerComponentSystem } from './framework/components/audio-listener/system.js';
-export { AudioSourceComponent } from './framework/components/audio-source/component.js';
-export { AudioSourceComponentSystem } from './framework/components/audio-source/system.js';
 export * from './framework/components/button/constants.js';
 export { ButtonComponent } from './framework/components/button/component.js';
 export { ButtonComponentSystem } from './framework/components/button/system.js';

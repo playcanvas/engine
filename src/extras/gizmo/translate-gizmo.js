@@ -1,7 +1,7 @@
 import { Vec3 } from '../../core/math/vec3.js';
 import { Quat } from '../../core/math/quat.js';
 
-import { AxisArrow, AxisPlane } from './axis-shapes.js';
+import { AxisArrow, AxisPlane, AxisSphereCenter } from './axis-shapes.js';
 import { GIZMO_LOCAL } from './gizmo.js';
 import { TransformGizmo } from "./transform-gizmo.js";
 
@@ -17,6 +17,12 @@ const tmpQ1 = new Quat();
  */
 class TranslateGizmo extends TransformGizmo {
     _shapes = {
+        face: new AxisSphereCenter(this._device, {
+            axis: 'face',
+            layers: [this._layer.id],
+            defaultColor: this._meshColors.axis.xyz,
+            hoverColor: this._meshColors.hover.xyz
+        }),
         yz: new AxisPlane(this._device, {
             axis: 'x',
             flipAxis: 'y',
@@ -223,6 +229,32 @@ class TranslateGizmo extends TransformGizmo {
         return this._shapes.yz.gap;
     }
 
+    /**
+     * Axis center size.
+     *
+     * @type {number}
+     */
+    set axisCenterSize(value) {
+        this._shapes.face.size = value;
+    }
+
+    get axisCenterSize() {
+        return this._shapes.face.size;
+    }
+
+    /**
+     * Axis center tolerance.
+     *
+     * @type {number}
+     */
+    set axisCenterTolerance(value) {
+        this._shapes.face.tolerance = value;
+    }
+
+    get axisCenterTolerance() {
+        return this._shapes.face.tolerance;
+    }
+
     _setArrowProp(prop, value) {
         this._shapes.x[prop] = value;
         this._shapes.y[prop] = value;
@@ -248,7 +280,7 @@ class TranslateGizmo extends TransformGizmo {
             const node = this.nodes[i];
             if (this._coordSpace === GIZMO_LOCAL) {
                 tmpV1.copy(pointDelta);
-                node.parent.getWorldTransform().getScale(tmpV2);
+                node.parent?.getWorldTransform().getScale(tmpV2);
                 tmpV2.x = 1 / tmpV2.x;
                 tmpV2.y = 1 / tmpV2.y;
                 tmpV2.z = 1 / tmpV2.z;
@@ -270,7 +302,7 @@ class TranslateGizmo extends TransformGizmo {
         const isPlane = this._selectedIsPlane;
 
         const ray = this._createRay(mouseWPos);
-        const plane = this._createPlane(axis, false, !isPlane);
+        const plane = this._createPlane(axis, axis === 'face', !isPlane);
 
         const point = new Vec3();
         const angle = 0;
@@ -280,7 +312,7 @@ class TranslateGizmo extends TransformGizmo {
         // rotate point back to world coords
         tmpQ1.copy(this._rootStartRot).invert().transformVector(point, point);
 
-        if (!isPlane) {
+        if (!isPlane && axis !== 'face') {
             this._projectToAxis(point, axis);
         }
 
