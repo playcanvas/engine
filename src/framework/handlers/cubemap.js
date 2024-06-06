@@ -129,10 +129,6 @@ class CubemapHandler extends ResourceHandler {
                     }
                 } else {
                     // prefiltered data is an env atlas
-                    tex.type = TEXTURETYPE_RGBP;
-                    tex.addressU = ADDRESS_CLAMP_TO_EDGE;
-                    tex.addressV = ADDRESS_CLAMP_TO_EDGE;
-                    tex.mipmaps = false;
                     resources[1] = tex;
                 }
             }
@@ -317,7 +313,15 @@ class CubemapHandler extends ResourceHandler {
                     url: assetId,
                     filename: assetId
                 } : assetId;
-                texAsset = new Asset(cubemapAsset.name + '_part_' + i, 'texture', file);
+
+                const data = file.url.search('.dds') === -1 ? {
+                    type: 'rgbp',
+                    addressu: 'clamp',
+                    addressv: 'clamp',
+                    mipmaps: false
+                } : null;
+
+                texAsset = new Asset(cubemapAsset.name + '_part_' + i, 'texture', file, data);
                 registry.add(texAsset);
                 processTexAsset(i, texAsset);
             }
