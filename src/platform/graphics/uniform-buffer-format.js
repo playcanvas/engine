@@ -37,34 +37,46 @@ uniformTypeToNumComponents[UNIFORMTYPE_UVEC4] = 4;
 
 /**
  * A class storing description of an individual uniform, stored inside a uniform buffer.
- *
- * @ignore
  */
 class UniformFormat {
-    /** @type {string} */
+    /**
+     * @type {string}
+     * @ignore
+     */
     name;
 
     // UNIFORMTYPE_***
-    /** @type {number} */
+    /**
+     * @type {number}
+     * @ignore
+     */
     type;
 
-    /** @type {number} */
+    /**
+     * @type {number}
+     * @ignore
+     */
     byteSize;
 
     /**
      * Index of the uniform in an array of 32bit values (Float32Array and similar)
      *
      * @type {number}
+     * @ignore
      */
     offset;
 
-    /** @type {import('./scope-id.js').ScopeId} */
+    /**
+     * @type {import('./scope-id.js').ScopeId}
+     * @ignore
+     */
     scopeId;
 
     /**
      * Count of elements for arrays, otherwise 0.
      *
      * @type {number}
+     * @ignore
      */
     count;
 
@@ -72,18 +84,27 @@ class UniformFormat {
      * Number of components in each element (e.g. vec2 has 2 components, mat4 has 16 components)
      *
      * @type {number}
+     * @ignore
      */
     numComponents;
 
     /**
      * True if this is an array of elements (i.e. count > 0)
      *
-     * @type {number}
+     * @type {boolean}
      */
     get isArrayType() {
         return this.count > 0;
     }
 
+    /**
+     * Create a new UniformFormat instance.
+     *
+     * @param {string} name - The name of the uniform.
+     * @param {number} type - The type of the uniform. One of the UNIFORMTYPE_*** constants.
+     * @param {number} count - The number of elements in the array. Defaults to 0, which represents
+     * a single element (not an array).
+     */
     constructor(name, type, count = 0) {
 
         // just a name
@@ -154,7 +175,7 @@ class UniformFormat {
     }
 
     // std140 rules: https://registry.khronos.org/OpenGL/specs/gl/glspec45.core.pdf#page=159
-    // TODO: this support limited subset of functionality, arrays and structs are not supported.
+    // TODO: this supports limited subset of functionality, arrays and arrays of structs are not supported.
     calculateOffset(offset) {
 
         // Note: vec3 has the same alignment as vec4
@@ -171,15 +192,19 @@ class UniformFormat {
 }
 
 /**
- * A descriptor that defines the layout of of data inside the {@link UniformBuffer}.
- *
- * @ignore
+ * A descriptor that defines the layout of of data inside the uniform buffer.
  */
 class UniformBufferFormat {
-    /** @type {number} */
+    /**
+     * @type {number}
+     * @ignore
+     */
     byteSize = 0;
 
-    /** @type {Map<string,UniformFormat>} */
+    /**
+     * @type {Map<string,UniformFormat>}
+     * @ignore
+     */
     map = new Map();
 
     /**
@@ -212,10 +237,10 @@ class UniformBufferFormat {
     }
 
     /**
-     * Returns format of a uniform with specified name.
+     * Returns format of a uniform with specified name. Returns undefined if the uniform is not found.
      *
      * @param {string} name - The name of the uniform.
-     * @returns {UniformFormat} - The format of the uniform.
+     * @returns {UniformFormat|undefined} - The format of the uniform.
      */
     get(name) {
         return this.map.get(name);

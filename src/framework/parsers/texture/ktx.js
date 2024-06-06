@@ -13,7 +13,7 @@ import { Texture } from '../../../platform/graphics/texture.js';
 
 import { Asset } from '../../asset/asset.js';
 
-/** @typedef {import('../../handlers/texture.js').TextureParser} TextureParser */
+import { TextureParser } from './texture.js';
 
 // Defined here: https://www.khronos.org/opengles/sdk/tools/KTX/file_format_spec/
 const IDENTIFIER = [0x58544BAB, 0xBB313120, 0x0A1A0A0D]; // «KTX 11»\r\n\x1A\n
@@ -50,11 +50,11 @@ function createContainer(pixelFormat, buffer, byteOffset, byteSize) {
 /**
  * Texture parser for ktx files.
  *
- * @implements {TextureParser}
  * @ignore
  */
-class KtxParser {
+class KtxParser extends TextureParser {
     constructor(registry) {
+        super();
         this.maxRetries = 0;
     }
 

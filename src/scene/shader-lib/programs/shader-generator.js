@@ -1,6 +1,6 @@
 import {
     GAMMA_SRGB, GAMMA_SRGBFAST, GAMMA_SRGBHDR,
-    TONEMAP_ACES, TONEMAP_ACES2, TONEMAP_FILMIC, TONEMAP_HEJL, TONEMAP_LINEAR
+    TONEMAP_ACES, TONEMAP_ACES2, TONEMAP_FILMIC, TONEMAP_HEJL, TONEMAP_NEUTRAL, TONEMAP_LINEAR
 } from '../../constants.js';
 import { shaderChunks } from '../chunks/chunks.js';
 
@@ -41,18 +41,15 @@ class ShaderGenerator {
     }
 
     static tonemapCode(value, chunks = shaderChunks) {
-        if (value === TONEMAP_FILMIC) {
-            return chunks.tonemappingFilmicPS ? chunks.tonemappingFilmicPS : shaderChunks.tonemappingFilmicPS;
-        } else if (value === TONEMAP_LINEAR) {
-            return chunks.tonemappingLinearPS ? chunks.tonemappingLinearPS : shaderChunks.tonemappingLinearPS;
-        } else if (value === TONEMAP_HEJL) {
-            return chunks.tonemappingHejlPS ? chunks.tonemappingHejlPS : shaderChunks.tonemappingHejlPS;
-        } else if (value === TONEMAP_ACES) {
-            return chunks.tonemappingAcesPS ? chunks.tonemappingAcesPS : shaderChunks.tonemappingAcesPS;
-        } else if (value === TONEMAP_ACES2) {
-            return chunks.tonemappingAces2PS ? chunks.tonemappingAces2PS : shaderChunks.tonemappingAces2PS;
+        switch (value) {
+            case TONEMAP_FILMIC: return chunks.tonemappingFilmicPS ?? shaderChunks.tonemappingFilmicPS;
+            case TONEMAP_LINEAR: return chunks.tonemappingLinearPS ?? shaderChunks.tonemappingLinearPS;
+            case TONEMAP_HEJL: return chunks.tonemappingHejlPS ?? shaderChunks.tonemappingHejlPS;
+            case TONEMAP_ACES: return chunks.tonemappingAcesPS ?? shaderChunks.tonemappingAcesPS;
+            case TONEMAP_ACES2: return chunks.tonemappingAces2PS ?? shaderChunks.tonemappingAces2PS;
+            case TONEMAP_NEUTRAL: return chunks.tonemappingNeutralPS ?? shaderChunks.tonemappingNeutralPS;
         }
-        return chunks.tonemapingNonePS ? chunks.tonemapingNonePS : shaderChunks.tonemappingNonePS;
+        return chunks.tonemapingNonePS ?? shaderChunks.tonemappingNonePS;
     }
 }
 

@@ -523,12 +523,7 @@ class ForwardRenderer extends Renderer {
                 }
             }
 
-            // marker to allow us to see the source node for shader alloc
-            DebugGraphics.pushGpuMarker(device, `Node: ${drawCall.node.name}`);
-
             const shaderInstance = drawCall.getShaderInstance(pass, lightHash, scene, this.viewUniformFormat, this.viewBindGroupFormat, sortedLights);
-
-            DebugGraphics.popGpuMarker(device);
 
             addCall(drawCall, shaderInstance, material !== prevMaterial, !prevMaterial || lightMask !== prevLightMask);
 
@@ -583,8 +578,7 @@ class ForwardRenderer extends Renderer {
                 device.setAlphaToCoverage(material.alphaToCoverage);
             }
 
-            DebugGraphics.pushGpuMarker(device, `Node: ${drawCall.node.name}`);
-            DebugGraphics.pushGpuMarker(device, `Material: ${material.name}`);
+            DebugGraphics.pushGpuMarker(device, `Node: ${drawCall.node.name}, Material: ${material.name}`);
 
             this.setupCullMode(camera._cullFaces, flipFactor, drawCall);
 
@@ -644,7 +638,6 @@ class ForwardRenderer extends Renderer {
             }
 
             DebugGraphics.popGpuMarker(device);
-            DebugGraphics.popGpuMarker(device);
         }
     }
 
@@ -673,7 +666,7 @@ class ForwardRenderer extends Renderer {
      *
      * @param {import('../camera.js').Camera} camera - The
      * camera.
-     * @param {import('../../platform/graphics/render-target.js').RenderTarget} renderTarget - The
+     * @param {import('../../platform/graphics/render-target.js').RenderTarget|undefined} renderTarget - The
      * render target.
      * @param {import('../layer.js').Layer} layer - The layer.
      * @param {boolean} transparent - True if transparent sublayer should be rendered, opaque
@@ -683,7 +676,7 @@ class ForwardRenderer extends Renderer {
      * storing the view level bing groups (can be empty array, and this function populates if per
      * view).
      * @param {object} [options] - Object for passing optional arguments.
-     * @param {boolean} [options.clearColors] - True if the color buffer should be cleared.
+     * @param {boolean} [options.clearColor] - True if the color buffer should be cleared.
      * @param {boolean} [options.clearDepth] - True if the depth buffer should be cleared.
      * @param {boolean} [options.clearStencil] - True if the stencil buffer should be cleared.
      * @param {import('../lighting/world-clusters.js').WorldClusters} [options.lightClusters] - The
@@ -700,7 +693,7 @@ class ForwardRenderer extends Renderer {
         this.setupViewport(camera, renderTarget);
 
         // clearing
-        const clearColor = options.clearColors ?? false;
+        const clearColor = options.clearColor ?? false;
         const clearDepth = options.clearDepth ?? false;
         const clearStencil = options.clearStencil ?? false;
         if (clearColor || clearDepth || clearStencil) {

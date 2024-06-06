@@ -1,9 +1,9 @@
 import { TRACEID_RENDER_QUEUE } from '../../../core/constants.js';
 import { Debug, DebugHelper } from '../../../core/debug.js';
-import { path } from '../../../core/path.js';
 
 import {
-    PIXELFORMAT_RGBA32F, PIXELFORMAT_RGBA8, PIXELFORMAT_BGRA8, DEVICETYPE_WEBGPU
+    PIXELFORMAT_RGBA32F, PIXELFORMAT_RGBA8, PIXELFORMAT_BGRA8, DEVICETYPE_WEBGPU,
+    BUFFERUSAGE_READ, BUFFERUSAGE_COPY_DST, semanticToLocation
 } from '../constants.js';
 import { GraphicsDevice } from '../graphics-device.js';
 import { DebugGraphics } from '../debug-graphics.js';
@@ -27,6 +27,9 @@ import { WebgpuDynamicBuffers } from './webgpu-dynamic-buffers.js';
 import { WebgpuGpuProfiler } from './webgpu-gpu-profiler.js';
 import { WebgpuResolver } from './webgpu-resolver.js';
 import { WebgpuCompute } from './webgpu-compute.js';
+import { WebgpuBuffer } from './webgpu-buffer.js';
+
+const _uniqueLocations = new Map();
 
 class WebgpuGraphicsDevice extends GraphicsDevice {
     /**
@@ -121,10 +124,7 @@ class WebgpuGraphicsDevice extends GraphicsDevice {
 
     initDeviceCaps() {
 
-        // temporarily disabled functionality which is not supported to avoid errors
-        this.disableParticleSystem = true;
-
-        const limits = this.gpuAdapter.limits;
+        const limits = this.wgpu?.limits;
         this.limits = limits;
 
         this.precision = 'highp';
@@ -146,7 +146,7 @@ class WebgpuGraphicsDevice extends GraphicsDevice {
         this.supportsMorphTargetTexturesCore = true;
         this.supportsAreaLights = true;
         this.supportsDepthShadow = true;
-        this.supportsGpuParticles = false;
+        this.supportsGpuParticles = true;
         this.supportsMrt = true;
         this.supportsCompute = true;
         this.extUintElement = true;
@@ -165,6 +165,10 @@ class WebgpuGraphicsDevice extends GraphicsDevice {
 
         // WebGPU currently only supports 1 and 4 samples
         this.samples = this.backBufferAntialias ? 4 : 1;
+
+        // WGSL features
+        const wgslFeatures = navigator.gpu.wgslLanguageFeatures;
+        this.supportsStorageTextureRead = wgslFeatures?.has('readonly_and_readwrite_storage_textures');
     }
 
     async initWebGpu(glslangUrl, twgslUrl) {
@@ -176,16 +180,9 @@ class WebgpuGraphicsDevice extends GraphicsDevice {
         // temporary message to confirm Webgpu is being used
         Debug.log("WebgpuGraphicsDevice initialization ..");
 
-        // build a full URL from a relative path
+        // build a full URL from a relative or absolute path
         const buildUrl = (srcPath) => {
-            if (!path.isRelativePath(srcPath)) {
-                return srcPath;
-            }
-
-            const url = new URL(window.location.href);
-            url.pathname = srcPath;
-            url.search = '';
-            return url.toString();
+            return new URL(srcPath, window.location.href).toString();
         };
 
         const results = await Promise.all([
@@ -207,12 +204,6 @@ class WebgpuGraphicsDevice extends GraphicsDevice {
          */
         this.gpuAdapter = await window.navigator.gpu.requestAdapter(adapterOptions);
 
-        // optional features:
-        //      "depth-clip-control",
-        //      "depth32float-stencil8",
-        //      "indirect-first-instance",
-        //      "shader-f16",
-        //      "bgra8unorm-storage",
 
         // request optional features
         const requiredFeatures = [];
@@ -228,28 +219,51 @@ class WebgpuGraphicsDevice extends GraphicsDevice {
         this.extCompressedTextureETC = requireFeature('texture-compression-etc2');
         this.extCompressedTextureASTC = requireFeature('texture-compression-astc');
         this.supportsTimestampQuery = requireFeature('timestamp-query');
-
+        this.supportsDepthClip = requireFeature('depth-clip-control');
+        this.supportsDepth32Stencil = requireFeature('depth32float-stencil8');
+        this.supportsIndirectFirstInstance = requireFeature('indirect-first-instance');
+        this.supportsShaderF16 = requireFeature('shader-f16');
+        this.supportsStorageRGBA8 = requireFeature('bgra8unorm-storage');
         this.textureRG11B10Renderable = requireFeature('rg11b10ufloat-renderable');
         Debug.log(`WEBGPU features: ${requiredFeatures.join(', ')}`);
+
+        // copy all adapter limits to the requiredLimits object - to created a device with the best feature sets available
+        const adapterLimits = this.gpuAdapter?.limits;
+        const requiredLimits = {};
+        if (adapterLimits) {
+            for (const limitName in adapterLimits) {
+                // skip these as they fail on Windows Chrome and are not part of spec currently
+                if (limitName === "minSubgroupSize" || limitName === "maxSubgroupSize") {
+                    continue;
+                }
+                requiredLimits[limitName] = adapterLimits[limitName];
+            }
+        }
 
         /** @type {GPUDeviceDescriptor} */
         const deviceDescr = {
             requiredFeatures,
-
-            // Note that we can request limits, but it does not seem to be supported at the moment
-            requiredLimits: {
-            },
+            requiredLimits,
 
             defaultQueue: {
                 label: 'Default Queue'
             }
         };
 
+        DebugHelper.setLabel(deviceDescr, 'PlayCanvasWebGPUDevice');
+
         /**
          * @type {GPUDevice}
          * @private
          */
         this.wgpu = await this.gpuAdapter.requestDevice(deviceDescr);
+
+        this.wgpu.lost?.then((info) => {
+            // reason is 'destroyed' if we intentionally destroy the device
+            if (info.reason !== 'destroyed') {
+                Debug.warn(`WebGPU device was lost: ${info.message}, this needs to be handled`);
+            }
+        });
 
         this.initDeviceCaps();
 
@@ -363,19 +377,25 @@ class WebgpuGraphicsDevice extends GraphicsDevice {
         // submit scheduled command buffers
         this.submit();
 
-        this.gpuProfiler.request();
+        if (!this.contextLost) {
+            this.gpuProfiler.request();
+        }
+    }
+
+    createBufferImpl(usageFlags) {
+        return new WebgpuBuffer(usageFlags);
     }
 
     createUniformBufferImpl(uniformBuffer) {
         return new WebgpuUniformBuffer(uniformBuffer);
     }
 
-    createVertexBufferImpl(vertexBuffer, format) {
-        return new WebgpuVertexBuffer(vertexBuffer, format);
+    createVertexBufferImpl(vertexBuffer, format, options) {
+        return new WebgpuVertexBuffer(vertexBuffer, format, options);
     }
 
-    createIndexBufferImpl(indexBuffer) {
-        return new WebgpuIndexBuffer(indexBuffer);
+    createIndexBufferImpl(indexBuffer, options) {
+        return new WebgpuIndexBuffer(indexBuffer, options);
     }
 
     createShaderImpl(shader) {
@@ -421,14 +441,43 @@ class WebgpuGraphicsDevice extends GraphicsDevice {
 
     submitVertexBuffer(vertexBuffer, slot) {
 
-        const elements = vertexBuffer.format.elements;
+        const format = vertexBuffer.format;
+        const { interleaved, elements } = format;
         const elementCount = elements.length;
         const vbBuffer = vertexBuffer.impl.buffer;
+
+        if (interleaved) {
+            // for interleaved buffers, we use a single vertex buffer, and attributes are specified using the layout
+            this.passEncoder.setVertexBuffer(slot, vbBuffer);
+            return 1;
+        }
+
+        // non-interleaved - vertex buffer per attribute
         for (let i = 0; i < elementCount; i++) {
             this.passEncoder.setVertexBuffer(slot + i, vbBuffer, elements[i].offset);
         }
 
         return elementCount;
+    }
+
+    validateVBLocations(vb0, vb1) {
+
+        // in case of multiple VBs, validate all elements use unique locations
+        const validateVB = (vb) => {
+            const { elements } = vb.format;
+            for (let i = 0; i < elements.length; i++) {
+                const name = elements[i].name;
+                const location = semanticToLocation[name];
+                if (_uniqueLocations.has(location)) {
+                    Debug.errorOnce(`Vertex buffer element location ${location} used by [${name}] is already used by element [${_uniqueLocations.get(location)}], while rendering [${DebugGraphics.toString()}]`);
+                }
+                _uniqueLocations.set(location, name);
+            }
+        };
+
+        validateVB(vb0);
+        validateVB(vb1);
+        _uniqueLocations.clear();
     }
 
     draw(primitive, numInstances = 1, keepBuffers) {
@@ -448,6 +497,7 @@ class WebgpuGraphicsDevice extends GraphicsDevice {
             if (vb0) {
                 const vbSlot = this.submitVertexBuffer(vb0, 0);
                 if (vb1) {
+                    Debug.call(() => this.validateVBLocations(vb0, vb1));
                     this.submitVertexBuffer(vb1, vbSlot);
                 }
             }
@@ -710,6 +760,26 @@ class WebgpuGraphicsDevice extends GraphicsDevice {
         WebgpuDebug.end(this);
     }
 
+    computeDispatch(computes) {
+
+        this.startComputePass();
+
+        // update uniform buffers and bind groups
+        for (let i = 0; i < computes.length; i++) {
+            const compute = computes[i];
+            compute.applyParameters();
+            compute.impl.updateBindGroup();
+        }
+
+        // dispatch
+        for (let i = 0; i < computes.length; i++) {
+            const compute = computes[i];
+            compute.impl.dispatch(compute.countX, compute.countY, compute.countZ);
+        }
+
+        this.endComputePass();
+    }
+
     addCommandBuffer(commandBuffer, front = false) {
         if (front) {
             this.commandBuffers.unshift(commandBuffer);
@@ -787,6 +857,122 @@ class WebgpuGraphicsDevice extends GraphicsDevice {
     }
 
     /**
+     * Clear the content of a storage buffer to 0.
+     *
+     * @param {import('./webgpu-buffer.js').WebgpuBuffer} storageBuffer - The storage buffer.
+     * @param {number} [offset] - The offset of data to clear. Defaults to 0.
+     * @param {number} [size] - The size of data to clear. Defaults to the full size of the buffer.
+     * @ignore
+     */
+    clearStorageBuffer(storageBuffer, offset = 0, size = storageBuffer.byteSize) {
+
+        // use existing or create new encoder
+        const commandEncoder = this.commandEncoder ?? this.wgpu.createCommandEncoder();
+
+        commandEncoder.clearBuffer(storageBuffer.buffer, offset, size);
+
+        // if we created the encoder
+        if (!this.commandEncoder) {
+            DebugHelper.setLabel(commandEncoder, 'ReadStorageBuffer-Encoder');
+            const cb = commandEncoder.finish();
+            DebugHelper.setLabel(cb, 'ReadStorageBuffer-CommandBuffer');
+            this.addCommandBuffer(cb);
+        }
+    }
+
+    /**
+     * Read a content of a storage buffer.
+     *
+     * @param {import('./webgpu-buffer.js').WebgpuBuffer} storageBuffer - The storage buffer.
+     * @param {number} [offset] - The byte offset of data to read. Defaults to 0.
+     * @param {number} [size] - The byte size of data to read. Defaults to the full size of the
+     * buffer minus the offset.
+     * @param {ArrayBufferView} [data] - Typed array to populate with the data read from the storage
+     * buffer. When typed array is supplied, enough space needs to be reserved, otherwise only
+     * partial data is copied. If not specified, the data is returned in an Uint8Array. Defaults to
+     * null.
+     * @param {boolean} [immediate] - If true, the read operation will be executed as soon as
+     * possible. This has a performance impact, so it should be used only when necessary. Defaults
+     * to false.
+     * @returns {Promise<ArrayBufferView>} A promise that resolves with the data read from the storage
+     * buffer.
+     * @ignore
+     */
+    readStorageBuffer(storageBuffer, offset = 0, size = storageBuffer.byteSize - offset, data = null, immediate = false) {
+
+        // create a temporary staging buffer
+        const stagingBuffer = this.createBufferImpl(BUFFERUSAGE_READ | BUFFERUSAGE_COPY_DST);
+        stagingBuffer.allocate(this, size);
+        const destBuffer = stagingBuffer.buffer;
+
+        // use existing or create new encoder
+        const commandEncoder = this.commandEncoder ?? this.wgpu.createCommandEncoder();
+
+        // copy the GPU buffer to the staging buffer
+        commandEncoder.copyBufferToBuffer(storageBuffer.buffer, offset, destBuffer, 0, size);
+
+        // if we created new encoder
+        if (!this.commandEncoder) {
+            DebugHelper.setLabel(commandEncoder, 'ReadStorageBuffer-Encoder');
+            const cb = commandEncoder.finish();
+            DebugHelper.setLabel(cb, 'ReadStorageBuffer-CommandBuffer');
+            this.addCommandBuffer(cb);
+        }
+
+        // return a promise that resolves with the data
+        return new Promise((resolve, reject) => {
+
+            const read = () => {
+
+                destBuffer?.mapAsync(GPUMapMode.READ).then(() => {
+
+                    // copy data to a buffer
+                    data ??= new Uint8Array(size);
+                    const copySrc = destBuffer.getMappedRange(0, size);
+
+                    // use the same type as the target
+                    const srcType = data.constructor;
+                    data.set(new srcType(copySrc));
+
+                    // release staging buffer
+                    destBuffer.unmap();
+                    stagingBuffer.destroy(this);
+
+                    resolve(data);
+                });
+            };
+
+            if (immediate) {
+                // submit the command buffer immediately
+                this.submit();
+                read();
+            } else {
+                // map the buffer during the next event handling cycle, when the command buffer is submitted
+                setTimeout(() => {
+                    read();
+                });
+            }
+        });
+    }
+
+    /**
+     * Issues a write operation of the provided data into a storage buffer.
+     *
+     * @param {import('./webgpu-buffer.js').WebgpuBuffer} storageBuffer - The storage buffer.
+     * @param {number} bufferOffset - The offset in bytes to start writing to the storage buffer.
+     * @param {ArrayBufferView} data - The data to write to the storage buffer.
+     * @param {number} dataOffset - Offset in data to begin writing from. Given in elements if data
+     * is a TypedArray and bytes otherwise.
+     * @param {number} size - Size of content to write from data to buffer. Given in elements if
+     * data is a TypedArray and bytes otherwise.
+     */
+    writeStorageBuffer(storageBuffer, bufferOffset = 0, data, dataOffset = 0, size) {
+        Debug.assert(storageBuffer.buffer);
+        Debug.assert(data);
+        this.wgpu.queue.writeBuffer(storageBuffer.buffer, bufferOffset, data, dataOffset, size);
+    }
+
+    /**
      * Copies source render target into destination render target. Mostly used by post-effects.
      *
      * @param {RenderTarget} [source] - The source render target. Defaults to frame buffer.
@@ -806,7 +992,6 @@ class WebgpuGraphicsDevice extends GraphicsDevice {
 
         // use existing or create new encoder if not in a render pass
         const commandEncoder = this.commandEncoder ?? this.wgpu.createCommandEncoder();
-        DebugHelper.setLabel(commandEncoder, 'CopyRenderTarget-Encoder');
 
         DebugGraphics.pushGpuMarker(this, 'COPY-RT');
 
@@ -868,6 +1053,8 @@ class WebgpuGraphicsDevice extends GraphicsDevice {
 
         // if we created the encoder
         if (!this.commandEncoder) {
+
+            DebugHelper.setLabel(commandEncoder, 'CopyRenderTarget-Encoder');
 
             // copy operation runs next
             const cb = commandEncoder.finish();

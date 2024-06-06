@@ -20,7 +20,6 @@ const _schema = ['enabled'];
  * Allows an Entity to render a model or a primitive shape like a box, capsule, sphere, cylinder,
  * cone etc.
  *
- * @augments ComponentSystem
  * @category Graphics
  */
 class ModelComponentSystem extends ComponentSystem {
@@ -28,7 +27,7 @@ class ModelComponentSystem extends ComponentSystem {
      * Create a new ModelComponentSystem instance.
      *
      * @param {import('../../app-base.js').AppBase} app - The Application.
-     * @hideconstructor
+     * @ignore
      */
     constructor(app) {
         super(app);

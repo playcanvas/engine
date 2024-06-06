@@ -66,6 +66,12 @@ class WebgpuVertexBufferLayout {
         // type  {GPUVertexBufferLayout[]}
         const layout = [];
 
+        // Note: If the VertexFormat is interleaved, we use a single vertex buffer with multiple
+        // attributes. This uses a smaller number of vertex buffers (1), which has performance
+        // benefits when setting it up on the device.
+        // If the VertexFormat is not interleaved, we use multiple vertex buffers, one per
+        // attribute. This is less efficient, but is required as there is a pretty small
+        // limit on the attribute offsets in the vertex buffer layout.
         const addFormat = (format) => {
             const interleaved = format.interleaved;
             const stepMode = format.instancing ? 'instance' : 'vertex';

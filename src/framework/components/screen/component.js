@@ -14,7 +14,6 @@ const _transform = new Mat4();
  * A ScreenComponent enables the Entity to render child {@link ElementComponent}s using anchors and
  * positions in the ScreenComponent's space.
  *
- * @augments Component
  * @category User Interface
  */
 class ScreenComponent extends Component {

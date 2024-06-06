@@ -17,6 +17,39 @@ import { Mouse } from './mouse.js';
  */
 class Controller {
     /**
+     * @type {Keyboard|null}
+     * @private
+     */
+    _keyboard;
+
+    /**
+     * @type {Mouse|null}
+     * @private
+     */
+    _mouse;
+
+    /**
+     * @type {import('./game-pads.js').GamePads|null}
+     * @private
+     */
+    _gamepads;
+
+    /**
+     * @type {Element|null}
+     * @private
+     */
+    _element = null;
+
+    /** @private */
+    _actions = {};
+
+    /** @private */
+    _axes = {};
+
+    /** @private */
+    _axesValues = {};
+
+    /**
      * Create a new instance of a Controller.
      *
      * @param {Element} [element] - Element to attach Controller to.
@@ -34,12 +67,6 @@ class Controller {
         this._keyboard = options.keyboard || null;
         this._mouse = options.mouse || null;
         this._gamepads = options.gamepads || null;
-
-        this._element = null;
-
-        this._actions = {};
-        this._axes = {};
-        this._axesValues = {};
 
         if (element) {
             this.attach(element);

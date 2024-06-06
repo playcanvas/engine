@@ -13,7 +13,6 @@ const _schema = ['enabled'];
 /**
  * Manages creation of {@link SoundComponent}s.
  *
- * @augments ComponentSystem
  * @category Sound
  */
 class SoundComponentSystem extends ComponentSystem {
@@ -21,7 +20,7 @@ class SoundComponentSystem extends ComponentSystem {
      * Create a SoundComponentSystem.
      *
      * @param {import('../../app-base.js').AppBase} app - The Application.
-     * @hideconstructor
+     * @ignore
      */
     constructor(app) {
         super(app);

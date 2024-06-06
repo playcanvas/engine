@@ -70,7 +70,7 @@ class XrMesh extends EventHandler {
      * @param {import('./xr-mesh-detection.js').XrMeshDetection} meshDetection - Mesh Detection
      * interface.
      * @param {XRMesh} xrMesh - XRMesh that is instantiated by WebXR system.
-     * @hideconstructor
+     * @ignore
      */
     constructor(meshDetection, xrMesh) {
         super();

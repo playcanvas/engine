@@ -10,7 +10,6 @@ class Plane {
     /**
      * The normal of the plane.
      *
-     * @readonly
      * @type {Vec3}
      */
     normal = new Vec3();
@@ -18,7 +17,6 @@ class Plane {
     /**
      * The distance from the plane to the origin, along its normal.
      *
-     * @readonly
      * @type {number}
      */
     distance;

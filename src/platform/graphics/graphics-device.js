@@ -8,7 +8,6 @@ import { Color } from '../../core/math/color.js';
 import { TRACEID_TEXTURES } from '../../core/constants.js';
 
 import {
-    BUFFER_STATIC,
     CULLFACE_BACK,
     CLEARFLAG_COLOR, CLEARFLAG_DEPTH,
     PRIMITIVE_POINTS, PRIMITIVE_TRIFAN, SEMANTIC_POSITION, TYPE_FLOAT32, PIXELFORMAT_111110F, PIXELFORMAT_RGBA16F, PIXELFORMAT_RGBA32F
@@ -26,7 +25,6 @@ import { StencilParameters } from './stencil-parameters.js';
  * specific canvas HTML element. It is valid to have more than one canvas element per page and
  * create a new graphics device against each.
  *
- * @augments EventHandler
  * @category Graphics
  */
 class GraphicsDevice extends EventHandler {
@@ -208,6 +206,20 @@ class GraphicsDevice extends EventHandler {
      * @type {boolean}
      */
     supportsCompute = false;
+
+    /**
+     * True if the device can read from StorageTexture in the compute shader. By default, the
+     * storage texture can be only used with the write operation.
+     * When a shader uses this feature, it's recommended to use a `requires` directive to signal the
+     * potential for non-portability at the top of the WGSL shader code:
+     * ```javascript
+     * requires readonly_and_readwrite_storage_textures;
+     * ```
+     *
+     * @readonly
+     * @type {boolean}
+     */
+    supportsStorageTextureRead = false;
 
     /**
      * Currently active render target.
@@ -403,7 +415,8 @@ class GraphicsDevice extends EventHandler {
             tex: 0,
             vb: 0,
             ib: 0,
-            ub: 0
+            ub: 0,
+            sb: 0
         };
 
         this._shaderStats = {
@@ -443,7 +456,9 @@ class GraphicsDevice extends EventHandler {
             { semantic: SEMANTIC_POSITION, components: 2, type: TYPE_FLOAT32 }
         ]);
         const positions = new Float32Array([-1, -1, 1, -1, -1, 1, 1, 1]);
-        this.quadVertexBuffer = new VertexBuffer(this, vertexFormat, 4, BUFFER_STATIC, positions);
+        this.quadVertexBuffer = new VertexBuffer(this, vertexFormat, 4, {
+            data: positions
+        });
     }
 
     /**
@@ -477,6 +492,58 @@ class GraphicsDevice extends EventHandler {
     postDestroy() {
         this.scope = null;
         this.canvas = null;
+    }
+
+    /**
+     * Called when the device context was lost. It releases all context related resources.
+     *
+     * @ignore
+     */
+    loseContext() {
+
+        this.contextLost = true;
+
+        // force the back-buffer to be recreated on restore
+        this.backBufferSize.set(-1, -1);
+
+        // release textures
+        for (const texture of this.textures) {
+            texture.loseContext();
+        }
+
+        // release vertex and index buffers
+        for (const buffer of this.buffers) {
+            buffer.loseContext();
+        }
+
+        // Reset all render targets so they'll be recreated as required.
+        // TODO: a solution for the case where a render target contains something
+        // that was previously generated that needs to be re-rendered.
+        for (const target of this.targets) {
+            target.loseContext();
+        }
+
+        this.gpuProfiler?.loseContext();
+    }
+
+    /**
+     * Called when the device context is restored. It reinitializes all context related resources.
+     *
+     * @ignore
+     */
+    restoreContext() {
+
+        this.contextLost = false;
+
+        this.initializeRenderState();
+        this.initializeContextCaches();
+
+        // Recreate buffer objects and reupload buffer data to the GPU
+        for (const buffer of this.buffers) {
+            buffer.unlock();
+        }
+
+        this.gpuProfiler?.restoreContext?.();
     }
 
     // don't stringify GraphicsDevice to JSON by JSON.stringify
@@ -587,7 +654,7 @@ class GraphicsDevice extends EventHandler {
      * {@link GraphicsDevice#draw}, the specified index buffer will be used to provide index data
      * for any indexed primitives.
      *
-     * @param {import('./index-buffer.js').IndexBuffer} indexBuffer - The index buffer to assign to
+     * @param {import('./index-buffer.js').IndexBuffer|null} indexBuffer - The index buffer to assign to
      * the device.
      */
     setIndexBuffer(indexBuffer) {
@@ -608,6 +675,15 @@ class GraphicsDevice extends EventHandler {
         if (vertexBuffer) {
             this.vertexBuffers.push(vertexBuffer);
         }
+    }
+
+    /**
+     * Clears the vertex buffer set on the graphics device. This is called automatically by the
+     * renderer.
+     * @ignore
+     */
+    clearVertexBuffer() {
+        this.vertexBuffers.length = 0;
     }
 
     /**
@@ -840,6 +916,15 @@ class GraphicsDevice extends EventHandler {
      * @ignore
      */
     frameEnd() {
+    }
+
+    /**
+     * Dispatch multiple compute shaders inside a single compute shader pass.
+     *
+     * @param {Array<import('./compute.js').Compute>} computes - An array of compute shaders to
+     * dispatch.
+     */
+    computeDispatch(computes) {
     }
 
     /**

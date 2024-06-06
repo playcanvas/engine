@@ -13,16 +13,16 @@ import { Texture } from '../../../platform/graphics/texture.js';
 
 import { Asset } from '../../asset/asset.js';
 
-/** @typedef {import('../../handlers/texture.js').TextureParser} TextureParser */
+import { TextureParser } from './texture.js';
 
 /**
  * Legacy texture parser for dds files.
  *
- * @implements {TextureParser}
  * @ignore
  */
-class DdsParser {
+class DdsParser extends TextureParser {
     constructor(registry) {
+        super();
         this.maxRetries = 0;
     }
 

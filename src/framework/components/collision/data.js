@@ -11,13 +11,17 @@ class CollisionComponentData {
         this.radius = 0.5;
         this.axis = 1;
         this.height = 2;
+        this.convexHull = false;
+        /** @type {import('../../../framework/asset/asset.js').Asset | number} */
         this.asset = null;
+        /** @type {import('../../../framework/asset/asset.js').Asset | number} */
         this.renderAsset = null;
         this.zoneCheck = false;
         this.checkVertexDuplicates = true;
 
         // Non-serialized properties
         this.shape = null;
+        /** @type {import('../../../scene/model.js').Model | null} */
         this.model = null;
         this.render = null;
         this.initialized = false;

@@ -26,7 +26,7 @@ void main(void) {
     #endif
 
     dir.x *= -1.0;
-    vec3 linear = $DECODE(textureCube(texture_cubeMap, fixSeamsStatic(dir, $FIXCONST)));
+    vec3 linear = SKYBOX_DECODE_FNC(textureCube(texture_cubeMap, fixSeamsStatic(dir, SKYBOX_MIP)));
     gl_FragColor = vec4(gammaCorrectOutput(toneMap(processEnvironment(linear))), 1.0);
 }
 `;

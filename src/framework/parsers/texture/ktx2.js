@@ -7,7 +7,7 @@ import { Texture } from '../../../platform/graphics/texture.js';
 import { Asset } from '../../asset/asset.js';
 import { basisTranscode } from '../../handlers/basis.js';
 
-/** @typedef {import('../../handlers/texture.js').TextureParser} TextureParser */
+import { TextureParser } from './texture.js';
 
 const KHRConstants = {
     KHR_DF_MODEL_ETC1S: 163,
@@ -17,11 +17,11 @@ const KHRConstants = {
 /**
  * Texture parser for ktx2 files.
  *
- * @implements {TextureParser}
  * @ignore
  */
-class Ktx2Parser {
+class Ktx2Parser extends TextureParser {
     constructor(registry, device) {
+        super();
         this.maxRetries = 0;
         this.device = device;
     }

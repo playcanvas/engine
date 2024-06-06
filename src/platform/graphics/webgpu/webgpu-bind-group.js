@@ -59,16 +59,17 @@ class WebgpuBindGroup {
         });
 
         // uniform buffers
-        let index = 0;
-        bindGroup.uniformBuffers.forEach((ub) => {
+        const uniformBufferFormats = bindGroup.format.uniformBufferFormats;
+        bindGroup.uniformBuffers.forEach((ub, i) => {
+            const slot = uniformBufferFormats[i].slot;
             const buffer = ub.persistent ? ub.impl.buffer : ub.allocation.gpuBuffer.buffer;
             Debug.assert(buffer, 'NULL uniform buffer cannot be used by the bind group');
             Debug.call(() => {
-                this.debugFormat += `${index}: UB\n`;
+                this.debugFormat += `${slot}: UB\n`;
             });
 
             entries.push({
-                binding: index++,
+                binding: slot,
                 resource: {
                     buffer: buffer,
                     offset: 0,
@@ -78,53 +79,79 @@ class WebgpuBindGroup {
         });
 
         // textures
+        const textureFormats = bindGroup.format.textureFormats;
         bindGroup.textures.forEach((tex, textureIndex) => {
 
             /** @type {import('./webgpu-texture.js').WebgpuTexture} */
             const wgpuTexture = tex.impl;
             const textureFormat = format.textureFormats[textureIndex];
+            const slot = textureFormats[textureIndex].slot;
 
             // texture
             const view = wgpuTexture.getView(device);
             Debug.assert(view, 'NULL texture view cannot be used by the bind group');
             Debug.call(() => {
-                this.debugFormat += `${index}: ${bindGroup.format.textureFormats[textureIndex].name}\n`;
+                this.debugFormat += `${slot}: ${bindGroup.format.textureFormats[textureIndex].name}\n`;
             });
 
             entries.push({
-                binding: index++,
+                binding: slot,
                 resource: view
             });
 
             // sampler
-            const sampler = wgpuTexture.getSampler(device, textureFormat.sampleType);
-            Debug.assert(sampler, 'NULL sampler cannot be used by the bind group');
-            Debug.call(() => {
-                this.debugFormat += `${index}: ${sampler.label}\n`;
-            });
+            if (textureFormat.hasSampler) {
+                const sampler = wgpuTexture.getSampler(device, textureFormat.sampleType);
+                Debug.assert(sampler, 'NULL sampler cannot be used by the bind group');
+                Debug.call(() => {
+                    this.debugFormat += `${slot + 1}: ${sampler.label}\n`;
+                });
 
-            entries.push({
-                binding: index++,
-                resource: sampler
-            });
+                entries.push({
+                    binding: slot + 1,
+                    resource: sampler
+                });
+            }
         });
 
         // storage textures
+        const storageTextureFormats = bindGroup.format.storageTextureFormats;
         bindGroup.storageTextures.forEach((tex, textureIndex) => {
 
             /** @type {import('./webgpu-texture.js').WebgpuTexture} */
             const wgpuTexture = tex.impl;
+            const slot = storageTextureFormats[textureIndex].slot;
 
             // texture
             const view = wgpuTexture.getView(device);
             Debug.assert(view, 'NULL texture view cannot be used by the bind group');
             Debug.call(() => {
-                this.debugFormat += `${index}: ${bindGroup.format.storageTextureFormats[textureIndex].name}\n`;
+                this.debugFormat += `${slot}: ${bindGroup.format.storageTextureFormats[textureIndex].name}\n`;
             });
 
             entries.push({
-                binding: index++,
+                binding: slot,
                 resource: view
+            });
+        });
+
+        // storage buffers
+        const storageBufferFormats = bindGroup.format.storageBufferFormats;
+        bindGroup.storageBuffers.forEach((buffer, bufferIndex) => {
+            /** @type {GPUBuffer} */
+            const wgpuBuffer = buffer.impl.buffer;
+            const slot = storageBufferFormats[bufferIndex].slot;
+
+            Debug.assert(wgpuBuffer, 'NULL storage buffer cannot be used by the bind group');
+            Debug.call(() => {
+                this.debugFormat += `${slot}: SB\n`;
+            });
+
+            entries.push({
+                binding: slot,
+                resource: {
+                    buffer: wgpuBuffer
+                }
             });
         });
 

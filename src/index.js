@@ -63,6 +63,7 @@ export { BoundingSphere } from './core/shape/bounding-sphere.js';
 export { Frustum } from './core/shape/frustum.js';
 export { OrientedBox } from './core/shape/oriented-box.js';
 export { Plane } from './core/shape/plane.js';
+export { Tri } from './core/shape/tri.js';
 export { Ray } from './core/shape/ray.js';
 
 // PLATFORM / AUDIO
@@ -71,7 +72,7 @@ export * from './platform/audio/constants.js';
 // PLATFORM / GRAPHICS
 export * from './platform/graphics/constants.js';
 export { createGraphicsDevice } from './platform/graphics/graphics-device-create.js';
-export { BindGroupFormat, BindBufferFormat, BindTextureFormat, BindStorageTextureFormat } from './platform/graphics/bind-group-format.js';
+export { BindGroupFormat, BindUniformBufferFormat, BindTextureFormat, BindStorageTextureFormat, BindStorageBufferFormat } from './platform/graphics/bind-group-format.js';
 export { BlendState } from './platform/graphics/blend-state.js';
 export { Compute } from './platform/graphics/compute.js';
 export { DepthState } from './platform/graphics/depth-state.js';
@@ -84,6 +85,7 @@ export { ScopeSpace } from './platform/graphics/scope-space.js';
 export { Shader } from './platform/graphics/shader.js';
 export { ShaderProcessorOptions } from './platform/graphics/shader-processor-options.js';   // used by splats in extras
 export { ShaderUtils } from './platform/graphics/shader-utils.js';  // used by splats in extras
+export { StorageBuffer } from './platform/graphics/storage-buffer.js';
 export { Texture } from './platform/graphics/texture.js';
 export { TextureUtils } from './platform/graphics/texture-utils.js';
 export { TransformFeedback } from './platform/graphics/transform-feedback.js';
@@ -123,7 +125,6 @@ export { SoundInstance3d } from './platform/sound/instance3d.js';
 
 // SCENE
 export * from './scene/constants.js';
-export { calculateNormals, calculateTangents, createBox, createCapsule, createCone, createCylinder, createMesh, createPlane, createSphere, createTorus } from './scene/procedural.js';
 export { drawQuadWithShader, drawTexture } from './scene/graphics/quad-render-utils.js';
 export { BasicMaterial } from './scene/materials/basic-material.js';
 export { Batch } from './scene/batching/batch.js';
@@ -169,6 +170,18 @@ export { RenderPassColorGrab } from './scene/graphics/render-pass-color-grab.js'
 export { RenderPassShaderQuad } from './scene/graphics/render-pass-shader-quad.js';
 export { shFromCubemap } from './scene/graphics/prefilter-cubemap.js';
 export { reprojectTexture } from './scene/graphics/reproject-texture.js';
+
+// SCENE / PROCEDURAL
+export { calculateNormals, calculateTangents } from './scene/geometry/geometry-utils.js';
+export { CapsuleGeometry } from './scene/geometry/capsule-geometry.js';
+export { ConeGeometry } from './scene/geometry/cone-geometry.js';
+export { CylinderGeometry } from './scene/geometry/cylinder-geometry.js';
+export { DomeGeometry } from './scene/geometry/dome-geometry.js';
+export { Geometry } from './scene/geometry/geometry.js';
+export { BoxGeometry } from './scene/geometry/box-geometry.js';
+export { PlaneGeometry } from './scene/geometry/plane-geometry.js';
+export { SphereGeometry } from './scene/geometry/sphere-geometry.js';
+export { TorusGeometry } from './scene/geometry/torus-geometry.js';
 
 // SCENE / RENDERER
 export { RenderPassForward } from './scene/renderer/render-pass-forward.js';
@@ -337,7 +350,7 @@ export { ShaderHandler } from './framework/handlers/shader.js';
 export { SpriteHandler } from './framework/handlers/sprite.js';
 export { TemplateHandler } from './framework/handlers/template.js';
 export { TextHandler } from './framework/handlers/text.js';
-export { TextureHandler, TextureParser } from './framework/handlers/texture.js';
+export { TextureHandler } from './framework/handlers/texture.js';
 export { TextureAtlasHandler } from './framework/handlers/texture-atlas.js';
 
 // FRAMEWORK / INPUT
@@ -380,3 +393,6 @@ export { XrViews } from './framework/xr/xr-views.js';
 
 // BACKWARDS COMPATIBILITY
 export * from './deprecated/deprecated.js';
+
+// EXTRAS
+export * from './extras/index.js';

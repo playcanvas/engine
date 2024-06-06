@@ -9,7 +9,6 @@ const _schema = ['enabled'];
 /**
  * Creates and manages physics joint components.
  *
- * @augments ComponentSystem
  * @ignore
  */
 class JointComponentSystem extends ComponentSystem {
@@ -17,7 +16,7 @@ class JointComponentSystem extends ComponentSystem {
      * Create a new JointComponentSystem instance.
      *
      * @param {import('../../app-base.js').AppBase} app - The application.
-     * @hideconstructor
+     * @ignore
      */
     constructor(app) {
         super(app);

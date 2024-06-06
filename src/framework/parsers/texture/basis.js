@@ -4,16 +4,16 @@ import { Texture } from '../../../platform/graphics/texture.js';
 import { Asset } from '../../asset/asset.js';
 import { basisTranscode } from '../../handlers/basis.js';
 
-/** @typedef {import('../../handlers/texture.js').TextureParser} TextureParser */
+import { TextureParser } from './texture.js';
 
 /**
  * Parser for basis files.
  *
- * @implements {TextureParser}
  * @ignore
  */
-class BasisParser {
+class BasisParser extends TextureParser {
     constructor(registry, device) {
+        super();
         this.device = device;
         this.maxRetries = 0;
     }

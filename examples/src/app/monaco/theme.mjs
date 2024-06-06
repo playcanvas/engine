@@ -3,11 +3,8 @@ export const playcanvasTheme = {
     inherit: true,
     rules: [
         {
-            foreground: '#ffffff'
-        },
-        {
-            token: '#f1c40f',
-            foreground: '#f1c40f'
+            token: 'comment',
+            foreground: '7F7F7F'
         }
     ],
     colors: {

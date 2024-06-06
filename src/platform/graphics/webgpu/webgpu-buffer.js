@@ -8,10 +8,16 @@ import { Debug, DebugHelper } from '../../../core/debug.js';
  */
 class WebgpuBuffer {
     /**
-     * @type {GPUBuffer}
+     * @type {GPUBuffer|null}
      * @private
      */
     buffer = null;
+
+    usageFlags = 0;
+
+    constructor(usageFlags = 0) {
+        this.usageFlags = usageFlags;
+    }
 
     destroy(device) {
         if (this.buffer) {
@@ -27,13 +33,19 @@ class WebgpuBuffer {
     loseContext() {
     }
 
+    allocate(device, size) {
+        Debug.assert(!this.buffer, "Buffer already allocated");
+        this.buffer = device.wgpu.createBuffer({
+            size,
+            usage: this.usageFlags
+        });
+    }
+
     /**
      * @param {import('./webgpu-graphics-device.js').WebgpuGraphicsDevice} device - Graphics device.
-     * @param {*} usage -
-     * @param {*} target -
      * @param {*} storage -
      */
-    unlock(device, usage, target, storage) {
+    unlock(device, storage) {
 
         const wgpu = device.wgpu;
 
@@ -42,18 +54,18 @@ class WebgpuBuffer {
 
         if (!this.buffer) {
             // size needs to be a multiple of 4
+            // note: based on specs, descriptor.size must be a multiple of 4 if descriptor.mappedAtCreation is true
             const size = (storage.byteLength + 3) & ~3;
 
-            this.buffer = device.wgpu.createBuffer({
-                size: size,
-                usage: target | GPUBufferUsage.COPY_DST
-            });
+            this.usageFlags |= GPUBufferUsage.COPY_DST;
+            this.allocate(device, size);
 
             DebugHelper.setLabel(this.buffer,
-                                 target & GPUBufferUsage.VERTEX ? 'VertexBuffer' :
-                                     target & GPUBufferUsage.INDEX ? 'IndexBuffer' :
-                                         target & GPUBufferUsage.UNIFORM ? "UniformBuffer" :
-                                             ''
+                                 this.usageFlags & GPUBufferUsage.VERTEX ? 'VertexBuffer' :
+                                     this.usageFlags & GPUBufferUsage.INDEX ? 'IndexBuffer' :
+                                         this.usageFlags & GPUBufferUsage.UNIFORM ? "UniformBuffer" :
+                                             this.usageFlags & GPUBufferUsage.STORAGE ? "StorageBuffer" :
+                                                 ''
             );
 
 
@@ -80,9 +92,18 @@ class WebgpuBuffer {
         // copy data to the gpu buffer
         Debug.trace(TRACEID_RENDER_QUEUE, `writeBuffer: ${this.buffer.label}`);
         wgpu.queue.writeBuffer(this.buffer, 0, data, 0, data.length);
+    }
 
-        // TODO: handle usage types:
-        // - BUFFER_STATIC, BUFFER_DYNAMIC, BUFFER_STREAM, BUFFER_GPUDYNAMIC
+    read(device, offset, size, data) {
+        return device.readStorageBuffer(this, offset, size, data);
+    }
+
+    write(device, bufferOffset, data, dataOffset, size) {
+        device.writeStorageBuffer(this, bufferOffset, data, dataOffset, size);
+    }
+
+    clear(device, offset, size) {
+        device.clearStorageBuffer(this, offset, size);
     }
 }
 

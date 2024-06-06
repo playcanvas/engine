@@ -22,7 +22,7 @@ import { shaderChunks } from '../shader-lib/chunks/chunks.js';
 import { createShaderFromCode } from '../shader-lib/utils.js';
 import { LightCamera } from './light-camera.js';
 import { UniformBufferFormat, UniformFormat } from '../../platform/graphics/uniform-buffer-format.js';
-import { BindBufferFormat, BindGroupFormat } from '../../platform/graphics/bind-group-format.js';
+import { BindUniformBufferFormat, BindGroupFormat } from '../../platform/graphics/bind-group-format.js';
 import { BlendState } from '../../platform/graphics/blend-state.js';
 
 function gauss(x, sigma) {
@@ -579,8 +579,7 @@ class ShadowRenderer {
 
             // format of the view bind group - contains single uniform buffer, and no textures
             this.viewBindGroupFormat = new BindGroupFormat(this.device, [
-                new BindBufferFormat(UNIFORM_BUFFER_DEFAULT_SLOT_NAME, SHADERSTAGE_VERTEX | SHADERSTAGE_FRAGMENT)
-            ], [
+                new BindUniformBufferFormat(UNIFORM_BUFFER_DEFAULT_SLOT_NAME, SHADERSTAGE_VERTEX | SHADERSTAGE_FRAGMENT)
             ]);
         }
     }

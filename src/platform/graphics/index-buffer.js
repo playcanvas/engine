@@ -35,6 +35,9 @@ class IndexBuffer {
      * Defaults to {@link BUFFER_STATIC}.
      * @param {ArrayBuffer} [initialData] - Initial data. If left unspecified, the index buffer
      * will be initialized to zeros.
+     * @param {object} [options] - Object for passing optional arguments.
+     * @param {boolean} [options.storage] - Defines if the index buffer can be used as a storage
+     * buffer by a compute shader. Defaults to false. Only supported on WebGPU.
      * @example
      * // Create an index buffer holding 3 16-bit indices. The buffer is marked as
      * // static, hinting that the buffer will never be modified.
@@ -45,7 +48,7 @@ class IndexBuffer {
      *                                        pc.BUFFER_STATIC,
      *                                        indices);
      */
-    constructor(graphicsDevice, format, numIndices, usage = BUFFER_STATIC, initialData) {
+    constructor(graphicsDevice, format, numIndices, usage = BUFFER_STATIC, initialData, options) {
         // By default, index buffers are static (better for performance since buffer data can be cached in VRAM)
         this.device = graphicsDevice;
         this.format = format;
@@ -54,7 +57,7 @@ class IndexBuffer {
 
         this.id = id++;
 
-        this.impl = graphicsDevice.createIndexBufferImpl(this);
+        this.impl = graphicsDevice.createIndexBufferImpl(this, options);
 
         // Allocate the storage
         const bytesPerIndex = typedArrayIndexFormatsByteSize[format];
