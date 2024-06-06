@@ -39,6 +39,6 @@ void main(void) {
     // still push pixels beyond far Z. See:
     // https://community.khronos.org/t/skybox-problem/61857
 
-    gl_Position.z = gl_Position.w - 0.00001;
+    gl_Position.z = gl_Position.w - 1.0e-7;
 }
 `;

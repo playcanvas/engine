@@ -1,4 +1,3 @@
-import { Debug } from '../../core/debug.js';
 import { EventHandler } from '../../core/event-handler.js';
 import { SCRIPT_INITIALIZE, SCRIPT_POST_INITIALIZE } from './constants.js';
 

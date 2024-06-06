@@ -29,15 +29,6 @@ class ComponentSystemRegistry extends EventHandler {
     audiolistener;
 
     /**
-     * Gets the {@link AudioSourceComponentSystem} from the registry.
-     *
-     * @type {import('./audio-source/system.js').AudioSourceComponentSystem|undefined}
-     * @readonly
-     * @ignore
-     */
-    audiosource;
-
-    /**
      * Gets the {@link ButtonComponentSystem} from the registry.
      *
      * @type {import('./button/system.js').ButtonComponentSystem|undefined}
