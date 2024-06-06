@@ -225,8 +225,14 @@ class RenderPass {
      * target to render into (output). This function should be called only for render passes which
      * use render target, or passes which render directly into the default framebuffer, in which
      * case a null or undefined render target is expected.
+     * @param {object} [options] - Object for passing optional arguments.
+     * @param {import('./texture.js').Texture} [options.resizeSource] - A texture to use as a source
+     * for the automatic render target resize operation. If not provided, no automatic resizing
+     * takes place.
+     * @param {number} [options.scaleX] - The scale factor for the render target width. Defaults to 1.
+     * @param {number} [options.scaleY] - The scale factor for the render target height. Defaults to 1.
      */
-    init(renderTarget = null, options = null) {
+    init(renderTarget = null, options) {
 
         this.options = options;
 
