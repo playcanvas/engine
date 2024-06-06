@@ -443,55 +443,6 @@ describe('Entity', function () {
             expect(subtree2.a_a.script.test.entityArrayAttr[1].getGuid()).to.equal(app.root.getGuid());
         });
 
-        it('does not resolve entity script attributes that refer to entities within the duplicated subtree if app.useLegacyScriptAttributeCloning is true', function () {
-            const TestScript = createScript('test');
-            TestScript.attributes.add('entityAttr', { type: 'entity' });
-            TestScript.attributes.add('entityArrayAttr', { type: 'entity', array: true });
-
-            const subtree1 = createSubtree();
-            app.root.addChild(subtree1.a);
-            subtree1.a.addComponent('script');
-            subtree1.a.script.create('test', {
-                attributes: {
-                    entityAttr: subtree1.a_a.getGuid(),
-                    entityArrayAttr: [subtree1.a_a.getGuid()]
-                }
-            });
-            expect(subtree1.a.script.test.entityAttr.getGuid()).to.equal(subtree1.a_a.getGuid());
-            expect(subtree1.a.script.test.entityArrayAttr).to.be.an('array');
-            expect(subtree1.a.script.test.entityArrayAttr.length).to.equal(1);
-            expect(subtree1.a.script.test.entityArrayAttr[0].getGuid()).to.equal(subtree1.a_a.getGuid());
-
-            subtree1.a_a.addComponent('script');
-            subtree1.a_a.script.create('test', {
-                attributes: {
-                    entityAttr: subtree1.a.getGuid(),
-                    entityArrayAttr: [subtree1.a.getGuid(), subtree1.a_a_a.getGuid()]
-                }
-            });
-
-            expect(subtree1.a_a.script.test.entityAttr.getGuid()).to.equal(subtree1.a.getGuid());
-            expect(subtree1.a_a.script.test.entityArrayAttr).to.be.an('array');
-            expect(subtree1.a_a.script.test.entityArrayAttr.length).to.equal(2);
-            expect(subtree1.a_a.script.test.entityArrayAttr[0].getGuid()).to.equal(subtree1.a.getGuid());
-            expect(subtree1.a_a.script.test.entityArrayAttr[1].getGuid()).to.equal(subtree1.a_a_a.getGuid());
-
-            app.useLegacyScriptAttributeCloning = true;
-
-            const subtree2 = cloneSubtree(subtree1);
-            app.root.addChild(subtree2.a);
-            expect(subtree2.a.script.test.entityAttr.getGuid()).to.equal(subtree1.a_a.getGuid());
-            expect(subtree2.a.script.test.entityArrayAttr).to.be.an('array');
-            expect(subtree2.a.script.test.entityArrayAttr.length).to.equal(1);
-            expect(subtree2.a.script.test.entityArrayAttr[0].getGuid()).to.equal(subtree1.a_a.getGuid());
-
-            expect(subtree2.a_a.script.test.entityAttr.getGuid()).to.equal(subtree1.a.getGuid());
-            expect(subtree2.a_a.script.test.entityArrayAttr).to.be.an('array');
-            expect(subtree2.a_a.script.test.entityArrayAttr.length).to.equal(2);
-            expect(subtree2.a_a.script.test.entityArrayAttr[0].getGuid()).to.equal(subtree1.a.getGuid());
-            expect(subtree2.a_a.script.test.entityArrayAttr[1].getGuid()).to.equal(subtree1.a_a_a.getGuid());
-        });
-
         it('ensures that an instance of a subclass keeps its class prototype', function () {
             class UserEntity extends Entity {}
             const a = new UserEntity();
