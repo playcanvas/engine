@@ -10,6 +10,9 @@ import {
 import { Component } from '../component.js';
 import { Entity } from '../../entity.js';
 import { ScriptType } from '../../script/script-type.js';
+import { getScriptName } from '../../script/script.js';
+
+const toLowerCamelCase = str => str[0].toLowerCase() + str.substring(1);
 
 /**
  * The ScriptComponent allows you to extend the functionality of an Entity by attaching your own
@@ -675,7 +678,7 @@ class ScriptComponent extends Component {
         if (typeof scriptType === 'string') {
             scriptType = this.system.app.scripts.get(scriptType);
         } else if (scriptType) {
-            scriptName = scriptType.__name;
+            scriptName = scriptType.__name ?? toLowerCamelCase(getScriptName(scriptType));
         }
 
         if (scriptType) {
