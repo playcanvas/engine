@@ -98,7 +98,7 @@ class AnimComponent extends Component {
 
 
     /**
-     * If true the animation component will normalize the weights of its layers by their sum total.
+     * Sets whether the animation component will normalize the weights of its layers by their sum total.
      *
      * @type {boolean}
      */
@@ -107,6 +107,11 @@ class AnimComponent extends Component {
         this.unbind();
     }
 
+    /**
+     * Gets whether the animation component will normalize the weights of its layers by their sum total.
+     *
+     * @type {boolean}
+     */
     get normalizeWeights() {
         return this._normalizeWeights;
     }
@@ -121,7 +126,7 @@ class AnimComponent extends Component {
     }
 
     /**
-     * Speed multiplier for animation play back speed. 1.0 is playback at normal speed, 0.0 pauses
+     * Sets the speed multiplier for animation play back speed. 1.0 is playback at normal speed, 0.0 pauses
      * the animation.
      *
      * @type {number}
@@ -130,12 +135,17 @@ class AnimComponent extends Component {
         this._speed = value;
     }
 
+    /**
+     * Gets the speed multiplier for animation play back speed.
+     *
+     * @type {number}
+     */
     get speed() {
         return this._speed;
     }
 
     /**
-     * If true the first animation will begin playing when the scene is loaded.
+     * Sets whether the first animation will begin playing when the scene is loaded.
      *
      * @type {boolean}
      */
@@ -143,13 +153,18 @@ class AnimComponent extends Component {
         this._activate = value;
     }
 
+    /**
+     * Gets whether the first animation will begin playing when the scene is loaded.
+     *
+     * @type {boolean}
+     */
     get activate() {
         return this._activate;
     }
 
 
     /**
-     * Plays or pauses all animations in the component.
+     * Sets whether to play or pause all animations in the component.
      *
      * @type {boolean}
      */
@@ -157,12 +172,17 @@ class AnimComponent extends Component {
         this._playing = value;
     }
 
+    /**
+     * Gets whether to play or pause all animations in the component.
+     *
+     * @type {boolean}
+     */
     get playing() {
         return this._playing;
     }
 
     /**
-     * The entity that this anim component should use as the root of the animation hierarchy.
+     * Sets the entity that this anim component should use as the root of the animation hierarchy.
      *
      * @type {Entity}
      */
@@ -179,6 +199,11 @@ class AnimComponent extends Component {
         this.rebind();
     }
 
+    /**
+     * Gets the entity that this anim component should use as the root of the animation hierarchy.
+     *
+     * @type {Entity}
+     */
     get rootBone() {
         return this._rootBone;
     }

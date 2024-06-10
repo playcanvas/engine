@@ -190,11 +190,11 @@ class ScriptType extends EventHandler {
     }
 
     /**
-     * True if the instance of this type is in running state. False when script is not running,
-     * because the Entity or any of its parents are disabled or the {@link ScriptComponent} is
-     * disabled or the Script Instance is disabled. When disabled no update methods will be called
-     * on each tick. initialize and postInitialize methods will run once when the script instance
-     * is in `enabled` state during app tick.
+     * Sets the enabled state for this ScriptType. False when script is not running, because the
+     * Entity or any of its parents are disabled or the {@link ScriptComponent} is disabled or the
+     * Script Instance is disabled. When disabled no update methods will be called on each tick.
+     * initialize and postInitialize methods will run once when the script instance is in `enabled`
+     * state during app tick.
      *
      * @type {boolean}
      */
@@ -230,6 +230,11 @@ class ScriptType extends EventHandler {
         }
     }
 
+    /**
+     * Gets the enabled state for this ScriptType.
+     *
+     * @type {boolean}
+     */
     get enabled() {
         return this._enabled && !this._destroyed && this.entity.script.enabled && this.entity.enabled;
     }

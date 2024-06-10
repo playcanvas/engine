@@ -317,6 +317,8 @@ class ElementComponent extends Component {
     }
 
     /**
+     * Sets the enabled state of the component.
+     *
      * @type {boolean}
      */
     set enabled(value) {
@@ -326,6 +328,11 @@ class ElementComponent extends Component {
         this.fire('set', 'enabled', oldValue, value);
     }
 
+    /**
+     * Gets the enabled state of the component.
+     *
+     * @type {boolean}
+     */
     get enabled() {
         return this.data.enabled;
     }
@@ -379,6 +386,8 @@ class ElementComponent extends Component {
     }
 
     /**
+     * Gets the world space axis-aligned bounding box for this element component.
+     *
      * @type {import('../../../core/shape/bounding-box.js').BoundingBox | null}
      */
     get aabb() {
@@ -393,17 +402,18 @@ class ElementComponent extends Component {
     }
 
     /**
-     * Specifies where the left, bottom, right and top edges of the component are anchored relative
-     * to its parent. Each value ranges from 0 to 1. e.g. a value of [0, 0, 0, 0] means that the
-     * element will be anchored to the bottom left of its parent. A value of [1, 1, 1, 1] means it
-     * will be anchored to the top right. A split anchor is when the left-right or top-bottom pairs
-     * of the anchor are not equal. In that case the component will be resized to cover that entire
-     * area. e.g. a value of [0, 0, 1, 1] will make the component resize exactly as its parent.
+     * Sets the anchor for this element component. Specifies where the left, bottom, right and top
+     * edges of the component are anchored relative to its parent. Each value ranges from 0 to 1.
+     * e.g. a value of `[0, 0, 0, 0]` means that the element will be anchored to the bottom left of
+     * its parent. A value of `[1, 1, 1, 1]` means it will be anchored to the top right. A split
+     * anchor is when the left-right or top-bottom pairs of the anchor are not equal. In that case,
+     * the component will be resized to cover that entire area. For example, a value of `[0, 0, 1, 1]`
+     * will make the component resize exactly as its parent.
      *
      * @example
-     * pc.app.root.findByName("Inventory").element.anchor = new pc.Vec4(Math.random() * 0.1, 0, 1, 0);
+     * this.entity.element.anchor = new pc.Vec4(Math.random() * 0.1, 0, 1, 0);
      * @example
-     * pc.app.root.findByName("Inventory").element.anchor = [Math.random() * 0.1, 0, 1, 0];
+     * this.entity.element.anchor = [Math.random() * 0.1, 0, 1, 0];
      *
      * @type {Vec4 | number[]}
      */
@@ -429,12 +439,17 @@ class ElementComponent extends Component {
         this.fire('set:anchor', this._anchor);
     }
 
+    /**
+     * Gets the anchor for this element component.
+     *
+     * @type {Vec4 | number[]}
+     */
     get anchor() {
         return this._anchor;
     }
 
     /**
-     * Assign element to a specific batch group (see {@link BatchGroup}). Default is -1 (no group).
+     * Sets the batch group (see {@link BatchGroup}) for this element. Default is -1 (no group).
      *
      * @type {number}
      */
@@ -463,13 +478,18 @@ class ElementComponent extends Component {
         this._batchGroupId = value;
     }
 
+    /**
+     * Gets the batch group (see {@link BatchGroup}) for this element.
+     *
+     * @type {number}
+     */
     get batchGroupId() {
         return this._batchGroupId;
     }
 
     /**
-     * The distance from the bottom edge of the anchor. Can be used in combination with a split
-     * anchor to make the component's top edge always be 'top' units away from the top.
+     * Sets the distance from the bottom edge of the anchor. Can be used in combination with a
+     * split anchor to make the component's top edge always be 'top' units away from the top.
      *
      * @type {number}
      */
@@ -484,12 +504,17 @@ class ElementComponent extends Component {
         this.entity.setLocalPosition(p);
     }
 
+    /**
+     * Gets the distance from the bottom edge of the anchor.
+     *
+     * @type {number}
+     */
     get bottom() {
         return this._margin.y;
     }
 
     /**
-     * The width at which the element will be rendered. In most cases this will be the same as
+     * Sets the width at which the element will be rendered. In most cases this will be the same as
      * `width`. However, in some cases the engine may calculate a different width for the element,
      * such as when the element is under the control of a {@link LayoutGroupComponent}. In these
      * scenarios, `calculatedWidth` may be smaller or larger than the width that was set in the
@@ -501,16 +526,21 @@ class ElementComponent extends Component {
         this._setCalculatedWidth(value, true);
     }
 
+    /**
+     * Gets the width at which the element will be rendered.
+     *
+     * @type {number}
+     */
     get calculatedWidth() {
         return this._calculatedWidth;
     }
 
     /**
-     * The height at which the element will be rendered. In most cases this will be the same as
-     * `height`. However, in some cases the engine may calculate a different height for the element,
-     * such as when the element is under the control of a {@link LayoutGroupComponent}. In these
-     * scenarios, `calculatedHeight` may be smaller or larger than the height that was set in the
-     * editor.
+     * Sets the height at which the element will be rendered. In most cases this will be the same
+     * as `height`. However, in some cases the engine may calculate a different height for the
+     * element, such as when the element is under the control of a {@link LayoutGroupComponent}. In
+     * these scenarios, `calculatedHeight` may be smaller or larger than the height that was set in
+     * the editor.
      *
      * @type {number}
      */
@@ -518,13 +548,18 @@ class ElementComponent extends Component {
         this._setCalculatedHeight(value, true);
     }
 
+    /**
+     * Gets the height at which the element will be rendered.
+     *
+     * @type {number}
+     */
     get calculatedHeight() {
         return this._calculatedHeight;
     }
 
     /**
-     * An array of 4 {@link Vec2}s that represent the bottom left, bottom right, top right and top
-     * left corners of the component in canvas pixels. Only works for screen space element
+     * Gets the array of 4 {@link Vec2}s that represent the bottom left, bottom right, top right
+     * and top left corners of the component in canvas pixels. Only works for screen space element
      * components.
      *
      * @type {Vec2[]}
@@ -550,8 +585,8 @@ class ElementComponent extends Component {
     }
 
     /**
-     * The draw order of the component. A higher value means that the component will be rendered on
-     * top of other components.
+     * Sets the draw order of the component. A higher value means that the component will be
+     * rendered on top of other components.
      *
      * @type {number}
      */
@@ -571,15 +606,20 @@ class ElementComponent extends Component {
         this.fire('set:draworder', this._drawOrder);
     }
 
+    /**
+     * Gets the draw order of the component.
+     *
+     * @type {number}
+     */
     get drawOrder() {
         return this._drawOrder;
     }
 
     /**
-     * The height of the element as set in the editor. Note that in some cases this may not reflect
-     * the true height at which the element is rendered, such as when the element is under the
-     * control of a {@link LayoutGroupComponent}. See `calculatedHeight` in order to ensure you are
-     * reading the true height at which the element will be rendered.
+     * Sets the height of the element as set in the editor. Note that in some cases this may not
+     * reflect the true height at which the element is rendered, such as when the element is under
+     * the control of a {@link LayoutGroupComponent}. See `calculatedHeight` in order to ensure you
+     * are reading the true height at which the element will be rendered.
      *
      * @type {number}
      */
@@ -593,13 +633,18 @@ class ElementComponent extends Component {
         this.fire('set:height', this._height);
     }
 
+    /**
+     * Gets the height of the element.
+     *
+     * @type {number}
+     */
     get height() {
         return this._height;
     }
 
     /**
-     * An array of layer IDs ({@link Layer#id}) to which this element should belong. Don't push,
-     * pop, splice or modify this array, if you want to change it - set a new one instead.
+     * Sets the array of layer IDs ({@link Layer#id}) to which this element should belong. Don't
+     * push, pop, splice or modify this array. If you want to change it, set a new one instead.
      *
      * @type {number[]}
      */
@@ -631,12 +676,17 @@ class ElementComponent extends Component {
         }
     }
 
+    /**
+     * Gets the array of layer IDs ({@link Layer#id}) to which this element belongs.
+     *
+     * @type {number[]}
+     */
     get layers() {
         return this._layers;
     }
 
     /**
-     * The distance from the left edge of the anchor. Can be used in combination with a split
+     * Sets the distance from the left edge of the anchor. Can be used in combination with a split
      * anchor to make the component's left edge always be 'left' units away from the left.
      *
      * @type {number}
@@ -652,14 +702,19 @@ class ElementComponent extends Component {
         this.entity.setLocalPosition(p);
     }
 
+    /**
+     * Gets the distance from the left edge of the anchor.
+     *
+     * @type {number}
+     */
     get left() {
         return this._margin.x;
     }
 
     /**
-     * The distance from the left, bottom, right and top edges of the anchor. For example if we are
-     * using a split anchor like [0,0,1,1] and the margin is [0,0,0,0] then the component will be
-     * the same width and height as its parent.
+     * Sets the distance from the left, bottom, right and top edges of the anchor. For example, if
+     * we are using a split anchor like `[0, 0, 1, 1]` and the margin is `[0, 0, 0, 0]` then the
+     * component will be the same width and height as its parent.
      *
      * @type {Vec4}
      */
@@ -669,12 +724,17 @@ class ElementComponent extends Component {
         this.fire('set:margin', this._margin);
     }
 
+    /**
+     * Gets the distance from the left, bottom, right and top edges of the anchor.
+     *
+     * @type {Vec4}
+     */
     get margin() {
         return this._margin;
     }
 
     /**
-     * Get the entity that is currently masking this element.
+     * Gets the entity that is currently masking this element.
      *
      * @type {Entity}
      * @private
@@ -684,13 +744,13 @@ class ElementComponent extends Component {
     }
 
     /**
-     * The position of the pivot of the component relative to its anchor. Each value ranges from 0
-     * to 1 where [0,0] is the bottom left and [1,1] is the top right.
+     * Sets the position of the pivot of the component relative to its anchor. Each value ranges
+     * from 0 to 1 where `[0, 0]` is the bottom left and `[1, 1]` is the top right.
      *
      * @example
-     * pc.app.root.findByName("Inventory").element.pivot = [Math.random() * 0.1, Math.random() * 0.1];
+     * this.entity.element.pivot = [Math.random() * 0.1, Math.random() * 0.1];
      * @example
-     * pc.app.root.findByName("Inventory").element.pivot = new pc.Vec2(Math.random() * 0.1, Math.random() * 0.1);
+     * this.entity.element.pivot = new pc.Vec2(Math.random() * 0.1, Math.random() * 0.1);
      *
      * @type {Vec2 | number[]}
      */
@@ -728,12 +788,17 @@ class ElementComponent extends Component {
         this.fire('set:pivot', pivot);
     }
 
+    /**
+     * Gets the position of the pivot of the component relative to its anchor.
+     *
+     * @type {Vec2 | number[]}
+     */
     get pivot() {
         return this._pivot;
     }
 
     /**
-     * The distance from the right edge of the anchor. Can be used in combination with a split
+     * Sets the distance from the right edge of the anchor. Can be used in combination with a split
      * anchor to make the component's right edge always be 'right' units away from the right.
      *
      * @type {number}
@@ -752,13 +817,18 @@ class ElementComponent extends Component {
         this.entity.setLocalPosition(p);
     }
 
+    /**
+     * Gets the distance from the right edge of the anchor.
+     *
+     * @type {number}
+     */
     get right() {
         return this._margin.z;
     }
 
     /**
-     * An array of 4 {@link Vec3}s that represent the bottom left, bottom right, top right and top
-     * left corners of the component relative to its parent {@link ScreenComponent}.
+     * Gets the array of 4 {@link Vec3}s that represent the bottom left, bottom right, top right
+     * and top left corners of the component relative to its parent {@link ScreenComponent}.
      *
      * @type {Vec3[]}
      */
@@ -796,7 +866,8 @@ class ElementComponent extends Component {
     }
 
     /**
-     * The width of the text rendered by the component. Only works for {@link ELEMENTTYPE_TEXT} types.
+     * Gets the width of the text rendered by the component. Only works for
+     * {@link ELEMENTTYPE_TEXT} types.
      *
      * @type {number}
      */
@@ -805,7 +876,8 @@ class ElementComponent extends Component {
     }
 
     /**
-     * The height of the text rendered by the component. Only works for {@link ELEMENTTYPE_TEXT} types.
+     * Gets the height of the text rendered by the component. Only works for
+     * {@link ELEMENTTYPE_TEXT} types.
      *
      * @type {number}
      */
@@ -814,8 +886,8 @@ class ElementComponent extends Component {
     }
 
     /**
-     * The distance from the top edge of the anchor. Can be used in combination with a split anchor
-     * to make the component's bottom edge always be 'bottom' units away from the bottom.
+     * Sets the distance from the top edge of the anchor. Can be used in combination with a split
+     * anchor to make the component's bottom edge always be 'bottom' units away from the bottom.
      *
      * @type {number}
      */
@@ -830,12 +902,17 @@ class ElementComponent extends Component {
         this.entity.setLocalPosition(p);
     }
 
+    /**
+     * Gets the distance from the top edge of the anchor.
+     *
+     * @type {number}
+     */
     get top() {
         return this._margin.w;
     }
 
     /**
-     * The type of the ElementComponent. Can be:
+     * Sets the type of the ElementComponent. Can be:
      *
      * - {@link ELEMENTTYPE_GROUP}: The component can be used as a layout mechanism to create groups of
      * ElementComponents e.g. panels.
@@ -865,12 +942,17 @@ class ElementComponent extends Component {
         }
     }
 
+    /**
+     * Gets the type of the ElementComponent.
+     *
+     * @type {string}
+     */
     get type() {
         return this._type;
     }
 
     /**
-     * If true then the component will receive Mouse or Touch input events.
+     * Sets whether the component will receive mouse and touch input events.
      *
      * @type {boolean}
      */
@@ -898,17 +980,25 @@ class ElementComponent extends Component {
         this.fire('set:useInput', value);
     }
 
+    /**
+     * Gets whether the component will receive mouse and touch input events.
+     *
+     * @type {boolean}
+     */
     get useInput() {
         return this._useInput;
     }
 
     /**
-     * Set how the content should be fitted and preserve the aspect ratio of the source texture or sprite.
-     * Only works for {@link ELEMENTTYPE_IMAGE} types. Can be:
+     * Sets the fit mode of the element. Controls how the content should be fitted and preserve the
+     * aspect ratio of the source texture or sprite. Only works for {@link ELEMENTTYPE_IMAGE}
+     * types. Can be:
      *
      * - {@link FITMODE_STRETCH}: Fit the content exactly to Element's bounding box.
-     * - {@link FITMODE_CONTAIN}: Fit the content within the Element's bounding box while preserving its Aspect Ratio.
-     * - {@link FITMODE_COVER}: Fit the content to cover the entire Element's bounding box while preserving its Aspect Ratio.
+     * - {@link FITMODE_CONTAIN}: Fit the content within the Element's bounding box while
+     * preserving its Aspect Ratio.
+     * - {@link FITMODE_COVER}: Fit the content to cover the entire Element's bounding box while
+     * preserving its Aspect Ratio.
      *
      * @type {string}
      */
@@ -920,15 +1010,20 @@ class ElementComponent extends Component {
         }
     }
 
+    /**
+     * Gets the fit mode of the element.
+     *
+     * @type {string}
+     */
     get fitMode() {
         return this._fitMode;
     }
 
     /**
-     * The width of the element as set in the editor. Note that in some cases this may not reflect
-     * the true width at which the element is rendered, such as when the element is under the
-     * control of a {@link LayoutGroupComponent}. See `calculatedWidth` in order to ensure you are
-     * reading the true width at which the element will be rendered.
+     * Sets the width of the element as set in the editor. Note that in some cases this may not
+     * reflect the true width at which the element is rendered, such as when the element is under
+     * the control of a {@link LayoutGroupComponent}. See `calculatedWidth` in order to ensure you
+     * are reading the true width at which the element will be rendered.
      *
      * @type {number}
      */
@@ -942,13 +1037,18 @@ class ElementComponent extends Component {
         this.fire('set:width', this._width);
     }
 
+    /**
+     * Gets the width of the element.
+     *
+     * @type {number}
+     */
     get width() {
         return this._width;
     }
 
     /**
-     * An array of 4 {@link Vec3}s that represent the bottom left, bottom right, top right and top
-     * left corners of the component in world space. Only works for 3D element components.
+     * Gets the array of 4 {@link Vec3}s that represent the bottom left, bottom right, top right
+     * and top left corners of the component in world-space. Only works for 3D element components.
      *
      * @type {Vec3[]}
      */
@@ -1010,7 +1110,7 @@ class ElementComponent extends Component {
     }
 
     /**
-     * The size of the font. Only works for {@link ELEMENTTYPE_TEXT} types.
+     * Sets the size of the font. Only works for {@link ELEMENTTYPE_TEXT} types.
      *
      * @type {number}
      */
@@ -1018,6 +1118,11 @@ class ElementComponent extends Component {
         this._setValue('fontSize', arg);
     }
 
+    /**
+     * Gets the size of the font.
+     *
+     * @type {number}
+     */
     get fontSize() {
         if (this._text) {
             return this._text.fontSize;
@@ -1027,7 +1132,8 @@ class ElementComponent extends Component {
     }
 
     /**
-     * The minimum size that the font can scale to when autoFitWidth or autoFitHeight are true.
+     * Sets the minimum size that the font can scale to when `autoFitWidth` or `autoFitHeight` are
+     * true.
      *
      * @type {number}
      */
@@ -1035,6 +1141,12 @@ class ElementComponent extends Component {
         this._setValue('minFontSize', arg);
     }
 
+    /**
+     * Gets the minimum size that the font can scale to when `autoFitWidth` or `autoFitHeight` are
+     * true.
+     *
+     * @type {number}
+     */
     get minFontSize() {
         if (this._text) {
             return this._text.minFontSize;
@@ -1044,7 +1156,8 @@ class ElementComponent extends Component {
     }
 
     /**
-     * The maximum size that the font can scale to when autoFitWidth or autoFitHeight are true.
+     * Sets the maximum size that the font can scale to when `autoFitWidth` or `autoFitHeight` are
+     * true.
      *
      * @type {number}
      */
@@ -1052,6 +1165,12 @@ class ElementComponent extends Component {
         this._setValue('maxFontSize', arg);
     }
 
+    /**
+     * Gets the maximum size that the font can scale to when `autoFitWidth` or `autoFitHeight` are
+     * true.
+     *
+     * @type {number}
+     */
     get maxFontSize() {
         if (this._text) {
             return this._text.maxFontSize;
@@ -1061,15 +1180,21 @@ class ElementComponent extends Component {
     }
 
     /**
-     * The maximum number of lines that the Element can wrap to. Any leftover text will be appended
-     * to the last line. Set this to null to allow unlimited lines.
+     * Sets the maximum number of lines that the Element can wrap to. Any leftover text will be
+     * appended to the last line. Set this to null to allow unlimited lines.
      *
-     * @type {number}
+     * @type {number|null}
      */
     set maxLines(arg) {
         this._setValue('maxLines', arg);
     }
 
+    /**
+     * Gets the maximum number of lines that the Element can wrap to. Returns null for unlimited
+     * lines.
+     *
+     * @type {number|null}
+     */
     get maxLines() {
         if (this._text) {
             return this._text.maxLines;
@@ -1079,9 +1204,9 @@ class ElementComponent extends Component {
     }
 
     /**
-     * When true the font size and line height will scale so that the text fits inside the width of
-     * the Element. The font size will be scaled between minFontSize and maxFontSize. The value of
-     * autoFitWidth will be ignored if autoWidth is true.
+     * Sets whether the font size and line height will scale so that the text fits inside the width
+     * of the Element. The font size will be scaled between `minFontSize` and `maxFontSize`. The
+     * value of `autoFitWidth` will be ignored if `autoWidth` is true.
      *
      * @type {boolean}
      */
@@ -1089,6 +1214,12 @@ class ElementComponent extends Component {
         this._setValue('autoFitWidth', arg);
     }
 
+    /**
+     * Gets whether the font size and line height will scale so that the text fits inside the width
+     * of the Element.
+     *
+     * @type {boolean}
+     */
     get autoFitWidth() {
         if (this._text) {
             return this._text.autoFitWidth;
@@ -1098,9 +1229,9 @@ class ElementComponent extends Component {
     }
 
     /**
-     * When true the font size and line height will scale so that the text fits inside the height of
-     * the Element. The font size will be scaled between minFontSize and maxFontSize. The value of
-     * autoFitHeight will be ignored if autoHeight is true.
+     * Sets whether the font size and line height will scale so that the text fits inside the
+     * height of the Element. The font size will be scaled between `minFontSize` and `maxFontSize`.
+     * The value of `autoFitHeight` will be ignored if `autoHeight` is true.
      *
      * @type {boolean}
      */
@@ -1108,6 +1239,12 @@ class ElementComponent extends Component {
         this._setValue('autoFitHeight', arg);
     }
 
+    /**
+     * Gets whether the font size and line height will scale so that the text fits inside the
+     * height of the Element.
+     *
+     * @type {boolean}
+     */
     get autoFitHeight() {
         if (this._text) {
             return this._text.autoFitHeight;
@@ -1117,7 +1254,7 @@ class ElementComponent extends Component {
     }
 
     /**
-     * The color of the image for {@link ELEMENTTYPE_IMAGE} types or the color of the text for
+     * Sets the color of the image for {@link ELEMENTTYPE_IMAGE} types or the color of the text for
      * {@link ELEMENTTYPE_TEXT} types.
      *
      * @type {import('../../../core/math/color.js').Color}
@@ -1126,6 +1263,11 @@ class ElementComponent extends Component {
         this._setValue('color', arg);
     }
 
+    /**
+     * Gets the color of the element.
+     *
+     * @type {import('../../../core/math/color.js').Color}
+     */
     get color() {
         if (this._text) {
             return this._text.color;
@@ -1139,7 +1281,7 @@ class ElementComponent extends Component {
     }
 
     /**
-     * The font used for rendering the text. Only works for {@link ELEMENTTYPE_TEXT} types.
+     * Sets the font used for rendering the text. Only works for {@link ELEMENTTYPE_TEXT} types.
      *
      * @type {import('../../../framework/font/font.js').Font | import('../../../framework/font/canvas-font.js').CanvasFont}
      */
@@ -1147,6 +1289,11 @@ class ElementComponent extends Component {
         this._setValue('font', arg);
     }
 
+    /**
+     * Gets the font used for rendering the text.
+     *
+     * @type {import('../../../framework/font/font.js').Font | import('../../../framework/font/canvas-font.js').CanvasFont}
+     */
     get font() {
         if (this._text) {
             return this._text.font;
@@ -1156,7 +1303,7 @@ class ElementComponent extends Component {
     }
 
     /**
-     * The id of the font asset used for rendering the text. Only works for {@link ELEMENTTYPE_TEXT}
+     * Sets the id of the font asset used for rendering the text. Only works for {@link ELEMENTTYPE_TEXT}
      * types.
      *
      * @type {number}
@@ -1165,6 +1312,11 @@ class ElementComponent extends Component {
         this._setValue('fontAsset', arg);
     }
 
+    /**
+     * Gets the id of the font asset used for rendering the text.
+     *
+     * @type {number}
+     */
     get fontAsset() {
         if (this._text && typeof this._text.fontAsset === 'number') {
             return this._text.fontAsset;
@@ -1174,7 +1326,7 @@ class ElementComponent extends Component {
     }
 
     /**
-     * The spacing between the letters of the text. Only works for {@link ELEMENTTYPE_TEXT} types.
+     * Sets the spacing between the letters of the text. Only works for {@link ELEMENTTYPE_TEXT} types.
      *
      * @type {number}
      */
@@ -1182,6 +1334,11 @@ class ElementComponent extends Component {
         this._setValue('spacing', arg);
     }
 
+    /**
+     * Gets the spacing between the letters of the text.
+     *
+     * @type {number}
+     */
     get spacing() {
         if (this._text) {
             return this._text.spacing;
@@ -1191,7 +1348,7 @@ class ElementComponent extends Component {
     }
 
     /**
-     * The height of each line of text. Only works for {@link ELEMENTTYPE_TEXT} types.
+     * Sets the height of each line of text. Only works for {@link ELEMENTTYPE_TEXT} types.
      *
      * @type {number}
      */
@@ -1199,6 +1356,11 @@ class ElementComponent extends Component {
         this._setValue('lineHeight', arg);
     }
 
+    /**
+     * Gets the height of each line of text.
+     *
+     * @type {number}
+     */
     get lineHeight() {
         if (this._text) {
             return this._text.lineHeight;
@@ -1208,7 +1370,7 @@ class ElementComponent extends Component {
     }
 
     /**
-     * Whether to automatically wrap lines based on the element width. Only works for
+     * Sets whether to automatically wrap lines based on the element width. Only works for
      * {@link ELEMENTTYPE_TEXT} types, and when autoWidth is set to false.
      *
      * @type {boolean}
@@ -1217,6 +1379,11 @@ class ElementComponent extends Component {
         this._setValue('wrapLines', arg);
     }
 
+    /**
+     * Gets whether to automatically wrap lines based on the element width.
+     *
+     * @type {boolean}
+     */
     get wrapLines() {
         if (this._text) {
             return this._text.wrapLines;
@@ -1225,17 +1392,10 @@ class ElementComponent extends Component {
         return null;
     }
 
-    /**
-     * @type {any}
-     * @ignore
-     */
     set lines(arg) {
         this._setValue('lines', arg);
     }
 
-    /**
-     * @ignore
-     */
     get lines() {
         if (this._text) {
             return this._text.lines;
@@ -1245,8 +1405,9 @@ class ElementComponent extends Component {
     }
 
     /**
-     * The horizontal and vertical alignment of the text. Values range from 0 to 1 where [0,0] is
-     * the bottom left and [1,1] is the top right.  Only works for {@link ELEMENTTYPE_TEXT} types.
+     * Sets the horizontal and vertical alignment of the text. Values range from 0 to 1 where
+     * `[0, 0]` is the bottom left and `[1, 1]` is the top right.  Only works for
+     * {@link ELEMENTTYPE_TEXT} types.
      *
      * @type {Vec2}
      */
@@ -1254,6 +1415,11 @@ class ElementComponent extends Component {
         this._setValue('alignment', arg);
     }
 
+    /**
+     * Gets the horizontal and vertical alignment of the text.
+     *
+     * @type {Vec2}
+     */
     get alignment() {
         if (this._text) {
             return this._text.alignment;
@@ -1263,8 +1429,8 @@ class ElementComponent extends Component {
     }
 
     /**
-     * Automatically set the width of the component to be the same as the textWidth. Only works for
-     * {@link ELEMENTTYPE_TEXT} types.
+     * Sets whether to automatically set the width of the component to be the same as the
+     * `textWidth`. Only works for {@link ELEMENTTYPE_TEXT} types.
      *
      * @type {boolean}
      */
@@ -1272,6 +1438,12 @@ class ElementComponent extends Component {
         this._setValue('autoWidth', arg);
     }
 
+    /**
+     * Gets whether to automatically set the width of the component to be the same as the
+     * `textWidth`.
+     *
+     * @type {boolean}
+     */
     get autoWidth() {
         if (this._text) {
             return this._text.autoWidth;
@@ -1281,8 +1453,8 @@ class ElementComponent extends Component {
     }
 
     /**
-     * Automatically set the height of the component to be the same as the textHeight. Only works
-     * for {@link ELEMENTTYPE_TEXT} types.
+     * Sets whether to automatically set the height of the component to be the same as the
+     * `textHeight`. Only works for {@link ELEMENTTYPE_TEXT} types.
      *
      * @type {boolean}
      */
@@ -1290,6 +1462,12 @@ class ElementComponent extends Component {
         this._setValue('autoHeight', arg);
     }
 
+    /**
+     * Gets whether to automatically set the height of the component to be the same as the
+     * `textHeight`.
+     *
+     * @type {boolean}
+     */
     get autoHeight() {
         if (this._text) {
             return this._text.autoHeight;
@@ -1299,8 +1477,8 @@ class ElementComponent extends Component {
     }
 
     /**
-     * Reorder the text for RTL languages using a function registered by
-     * `app.systems.element.registerUnicodeConverter`.
+     * Sets whether to reorder the text for RTL languages. The reordering uses a function
+     * registered by `app.systems.element.registerUnicodeConverter`.
      *
      * @type {boolean}
      */
@@ -1308,6 +1486,11 @@ class ElementComponent extends Component {
         this._setValue('rtlReorder', arg);
     }
 
+    /**
+     * Gets whether to reorder the text for RTL languages.
+     *
+     * @type {boolean}
+     */
     get rtlReorder() {
         if (this._text) {
             return this._text.rtlReorder;
@@ -1317,7 +1500,8 @@ class ElementComponent extends Component {
     }
 
     /**
-     * Convert unicode characters using a function registered by `app.systems.element.registerUnicodeConverter`.
+     * Sets whether to convert unicode characters. This uses a function registered by
+     * `app.systems.element.registerUnicodeConverter`.
      *
      * @type {boolean}
      */
@@ -1325,6 +1509,11 @@ class ElementComponent extends Component {
         this._setValue('unicodeConverter', arg);
     }
 
+    /**
+     * Gets whether to convert unicode characters.
+     *
+     * @type {boolean}
+     */
     get unicodeConverter() {
         if (this._text) {
             return this._text.unicodeConverter;
@@ -1334,9 +1523,9 @@ class ElementComponent extends Component {
     }
 
     /**
-     * The text to render. Only works for {@link ELEMENTTYPE_TEXT} types. To
-     * override certain text styling properties on a per-character basis, the text can optionally
-     * include markup tags contained within square brackets. Supported tags are:
+     * Sets the text to render. Only works for {@link ELEMENTTYPE_TEXT} types. To override certain
+     * text styling properties on a per-character basis, the text can optionally include markup
+     * tags contained within square brackets. Supported tags are:
      *
      * 1. `color` - override the element's `color` property. Examples:
      * - `[color="#ff0000"]red text[/color]`
@@ -1357,6 +1546,11 @@ class ElementComponent extends Component {
         this._setValue('text', arg);
     }
 
+    /**
+     * Sets the text to render.
+     *
+     * @type {string}
+     */
     get text() {
         if (this._text) {
             return this._text.text;
@@ -1366,8 +1560,8 @@ class ElementComponent extends Component {
     }
 
     /**
-     * The localization key to use to get the localized text from {@link Application#i18n}. Only
-     * works for {@link ELEMENTTYPE_TEXT} types.
+     * Sets the localization key to use to get the localized text from {@link Application#i18n}.
+     * Only works for {@link ELEMENTTYPE_TEXT} types.
      *
      * @type {string}
      */
@@ -1375,6 +1569,11 @@ class ElementComponent extends Component {
         this._setValue('key', arg);
     }
 
+    /**
+     * Gets the localization key to use to get the localized text from {@link Application#i18n}.
+     *
+     * @type {string}
+     */
     get key() {
         if (this._text) {
             return this._text.key;
@@ -1384,7 +1583,7 @@ class ElementComponent extends Component {
     }
 
     /**
-     * The texture to render. Only works for {@link ELEMENTTYPE_IMAGE} types.
+     * Sets the texture to render. Only works for {@link ELEMENTTYPE_IMAGE} types.
      *
      * @type {import('../../../platform/graphics/texture.js').Texture}
      */
@@ -1392,6 +1591,11 @@ class ElementComponent extends Component {
         this._setValue('texture', arg);
     }
 
+    /**
+     * Gets the texture to render.
+     *
+     * @type {import('../../../platform/graphics/texture.js').Texture}
+     */
     get texture() {
         if (this._image) {
             return this._image.texture;
@@ -1401,7 +1605,7 @@ class ElementComponent extends Component {
     }
 
     /**
-     * The id of the texture asset to render. Only works for {@link ELEMENTTYPE_IMAGE} types.
+     * Sets the id of the texture asset to render. Only works for {@link ELEMENTTYPE_IMAGE} types.
      *
      * @type {number}
      */
@@ -1409,6 +1613,11 @@ class ElementComponent extends Component {
         this._setValue('textureAsset', arg);
     }
 
+    /**
+     * Gets the id of the texture asset to render.
+     *
+     * @type {number}
+     */
     get textureAsset() {
         if (this._image) {
             return this._image.textureAsset;
@@ -1418,7 +1627,7 @@ class ElementComponent extends Component {
     }
 
     /**
-     * The material to use when rendering an image. Only works for {@link ELEMENTTYPE_IMAGE} types.
+     * Sets the material to use when rendering an image. Only works for {@link ELEMENTTYPE_IMAGE} types.
      *
      * @type {import('../../../scene/materials/material.js').Material}
      */
@@ -1426,6 +1635,11 @@ class ElementComponent extends Component {
         this._setValue('material', arg);
     }
 
+    /**
+     * Gets the material to use when rendering an image.
+     *
+     * @type {import('../../../scene/materials/material.js').Material}
+     */
     get material() {
         if (this._image) {
             return this._image.material;
@@ -1435,7 +1649,7 @@ class ElementComponent extends Component {
     }
 
     /**
-     * The id of the material asset to use when rendering an image. Only works for
+     * Sets the id of the material asset to use when rendering an image. Only works for
      * {@link ELEMENTTYPE_IMAGE} types.
      *
      * @type {number}
@@ -1444,6 +1658,11 @@ class ElementComponent extends Component {
         this._setValue('materialAsset', arg);
     }
 
+    /**
+     * Gets the id of the material asset to use when rendering an image.
+     *
+     * @type {number}
+     */
     get materialAsset() {
         if (this._image) {
             return this._image.materialAsset;
@@ -1453,8 +1672,8 @@ class ElementComponent extends Component {
     }
 
     /**
-     * The sprite to render. Only works for {@link ELEMENTTYPE_IMAGE} types which can render either
-     * a texture or a sprite.
+     * Sets the sprite to render. Only works for {@link ELEMENTTYPE_IMAGE} types which can render
+     * either a texture or a sprite.
      *
      * @type {import('../../../scene/sprite.js').Sprite}
      */
@@ -1462,6 +1681,11 @@ class ElementComponent extends Component {
         this._setValue('sprite', arg);
     }
 
+    /**
+     * Gets the sprite to render.
+     *
+     * @type {import('../../../scene/sprite.js').Sprite}
+     */
     get sprite() {
         if (this._image) {
             return this._image.sprite;
@@ -1471,7 +1695,7 @@ class ElementComponent extends Component {
     }
 
     /**
-     * The id of the sprite asset to render. Only works for {@link ELEMENTTYPE_IMAGE} types which
+     * Sets the id of the sprite asset to render. Only works for {@link ELEMENTTYPE_IMAGE} types which
      * can render either a texture or a sprite.
      *
      * @type {number}
@@ -1480,6 +1704,11 @@ class ElementComponent extends Component {
         this._setValue('spriteAsset', arg);
     }
 
+    /**
+     * Gets the id of the sprite asset to render.
+     *
+     * @type {number}
+     */
     get spriteAsset() {
         if (this._image) {
             return this._image.spriteAsset;
@@ -1489,7 +1718,7 @@ class ElementComponent extends Component {
     }
 
     /**
-     * The frame of the sprite to render. Only works for {@link ELEMENTTYPE_IMAGE} types who have a
+     * Sets the frame of the sprite to render. Only works for {@link ELEMENTTYPE_IMAGE} types who have a
      * sprite assigned.
      *
      * @type {number}
@@ -1498,6 +1727,11 @@ class ElementComponent extends Component {
         this._setValue('spriteFrame', arg);
     }
 
+    /**
+     * Gets the frame of the sprite to render.
+     *
+     * @type {number}
+     */
     get spriteFrame() {
         if (this._image) {
             return this._image.spriteFrame;
@@ -1507,7 +1741,7 @@ class ElementComponent extends Component {
     }
 
     /**
-     * The number of pixels that map to one PlayCanvas unit. Only works for
+     * Sets the number of pixels that map to one PlayCanvas unit. Only works for
      * {@link ELEMENTTYPE_IMAGE} types who have a sliced sprite assigned.
      *
      * @type {number}
@@ -1516,6 +1750,11 @@ class ElementComponent extends Component {
         this._setValue('pixelsPerUnit', arg);
     }
 
+    /**
+     * Gets the number of pixels that map to one PlayCanvas unit.
+     *
+     * @type {number}
+     */
     get pixelsPerUnit() {
         if (this._image) {
             return this._image.pixelsPerUnit;
@@ -1525,8 +1764,8 @@ class ElementComponent extends Component {
     }
 
     /**
-     * The opacity of the image for {@link ELEMENTTYPE_IMAGE} types or the text for
-     * {@link ELEMENTTYPE_TEXT} types.
+     * Sets the opacity of the element. This works for both {@link ELEMENTTYPE_IMAGE} and
+     * {@link ELEMENTTYPE_TEXT} element types.
      *
      * @type {number}
      */
@@ -1534,6 +1773,11 @@ class ElementComponent extends Component {
         this._setValue('opacity', arg);
     }
 
+    /**
+     * Gets the opacity of the element.
+     *
+     * @type {number}
+     */
     get opacity() {
         if (this._text) {
             return this._text.opacity;
@@ -1547,8 +1791,8 @@ class ElementComponent extends Component {
     }
 
     /**
-     * Specifies which region of the texture to use in order to render an image. Values range from 0
-     * to 1 and indicate u, v, width, height. Only works for {@link ELEMENTTYPE_IMAGE} types.
+     * Sets the region of the texture to use in order to render an image. Values range from 0 to 1
+     * and indicate u, v, width, height. Only works for {@link ELEMENTTYPE_IMAGE} types.
      *
      * @type {Vec4}
      */
@@ -1556,6 +1800,11 @@ class ElementComponent extends Component {
         this._setValue('rect', arg);
     }
 
+    /**
+     * Gets the region of the texture to use in order to render an image.
+     *
+     * @type {Vec4}
+     */
     get rect() {
         if (this._image) {
             return this._image.rect;
@@ -1565,8 +1814,8 @@ class ElementComponent extends Component {
     }
 
     /**
-     * Switch Image Element into a mask. Masks do not render into the scene, but instead limit child
-     * elements to only be rendered where this element is rendered.
+     * Sets whether the Image Element should be treated as a mask. Masks do not render into the
+     * scene, but instead limit child elements to only be rendered where this element is rendered.
      *
      * @type {boolean}
      */
@@ -1574,6 +1823,11 @@ class ElementComponent extends Component {
         this._setValue('mask', arg);
     }
 
+    /**
+     * Gets whether the Image Element should be treated as a mask.
+     *
+     * @type {boolean}
+     */
     get mask() {
         if (this._image) {
             return this._image.mask;
@@ -1583,7 +1837,7 @@ class ElementComponent extends Component {
     }
 
     /**
-     * The text outline effect color and opacity. Only works for {@link ELEMENTTYPE_TEXT} types.
+     * Sets the text outline effect color and opacity. Only works for {@link ELEMENTTYPE_TEXT} types.
      *
      * @type {import('../../../core/math/color.js').Color}
      */
@@ -1591,6 +1845,11 @@ class ElementComponent extends Component {
         this._setValue('outlineColor', arg);
     }
 
+    /**
+     * Gets the text outline effect color and opacity.
+     *
+     * @type {import('../../../core/math/color.js').Color}
+     */
     get outlineColor() {
         if (this._text) {
             return this._text.outlineColor;
@@ -1599,7 +1858,7 @@ class ElementComponent extends Component {
     }
 
     /**
-     * The width of the text outline effect. Only works for {@link ELEMENTTYPE_TEXT} types.
+     * Sets the width of the text outline effect. Only works for {@link ELEMENTTYPE_TEXT} types.
      *
      * @type {number}
      */
@@ -1607,6 +1866,11 @@ class ElementComponent extends Component {
         this._setValue('outlineThickness', arg);
     }
 
+    /**
+     * Gets the width of the text outline effect.
+     *
+     * @type {number}
+     */
     get outlineThickness() {
         if (this._text) {
             return this._text.outlineThickness;
@@ -1616,7 +1880,7 @@ class ElementComponent extends Component {
     }
 
     /**
-     * The text shadow effect color and opacity. Only works for {@link ELEMENTTYPE_TEXT} types.
+     * Sets the text shadow effect color and opacity. Only works for {@link ELEMENTTYPE_TEXT} types.
      *
      * @type {import('../../../core/math/color.js').Color}
      */
@@ -1624,6 +1888,11 @@ class ElementComponent extends Component {
         this._setValue('shadowColor', arg);
     }
 
+    /**
+     * Gets the text shadow effect color and opacity.
+     *
+     * @type {import('../../../core/math/color.js').Color}
+     */
     get shadowColor() {
         if (this._text) {
             return this._text.shadowColor;
@@ -1633,7 +1902,7 @@ class ElementComponent extends Component {
     }
 
     /**
-     * The text shadow effect shift amount from original text. Only works for
+     * Sets the text shadow effect shift amount from original text. Only works for
      * {@link ELEMENTTYPE_TEXT} types.
      *
      * @type {number}
@@ -1642,6 +1911,11 @@ class ElementComponent extends Component {
         this._setValue('shadowOffset', arg);
     }
 
+    /**
+     * Gets the text shadow effect shift amount from original text.
+     *
+     * @type {number}
+     */
     get shadowOffset() {
         if (this._text) {
             return this._text.shadowOffset;
@@ -1651,8 +1925,8 @@ class ElementComponent extends Component {
     }
 
     /**
-     * Flag for enabling markup processing. Only works for {@link ELEMENTTYPE_TEXT} types. Defaults
-     * to false.
+     * Sets whether markup processing is enabled for this element. Only works for
+     * {@link ELEMENTTYPE_TEXT} types. Defaults to false.
      *
      * @type {boolean}
      */
@@ -1660,6 +1934,11 @@ class ElementComponent extends Component {
         this._setValue('enableMarkup', arg);
     }
 
+    /**
+     * Sets whether markup processing is enabled for this element.
+     *
+     * @type {boolean}
+     */
     get enableMarkup() {
         if (this._text) {
             return this._text.enableMarkup;
@@ -1669,7 +1948,7 @@ class ElementComponent extends Component {
     }
 
     /**
-     * Index of the first character to render. Only works for {@link ELEMENTTYPE_TEXT} types.
+     * Sets the index of the first character to render. Only works for {@link ELEMENTTYPE_TEXT} types.
      *
      * @type {number}
      */
@@ -1677,6 +1956,11 @@ class ElementComponent extends Component {
         this._setValue('rangeStart', arg);
     }
 
+    /**
+     * Gets the index of the first character to render.
+     *
+     * @type {number}
+     */
     get rangeStart() {
         if (this._text) {
             return this._text.rangeStart;
@@ -1686,7 +1970,7 @@ class ElementComponent extends Component {
     }
 
     /**
-     * Index of the last character to render. Only works for {@link ELEMENTTYPE_TEXT} types.
+     * Sets the index of the last character to render. Only works for {@link ELEMENTTYPE_TEXT} types.
      *
      * @type {number}
      */
@@ -1694,6 +1978,11 @@ class ElementComponent extends Component {
         this._setValue('rangeEnd', arg);
     }
 
+    /**
+     * Gets the index of the last character to render.
+     *
+     * @type {number}
+     */
     get rangeEnd() {
         if (this._text) {
             return this._text.rangeEnd;

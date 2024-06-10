@@ -57,7 +57,7 @@ class OrientedBox {
     }
 
     /**
-     * The world transform of the OBB.
+     * Sets the world transform of the OBB.
      *
      * @type {Mat4}
      */
@@ -66,6 +66,11 @@ class OrientedBox {
         this._modelTransform.copy(value).invert();
     }
 
+    /**
+     * Gets the world transform of the OBB.
+     *
+     * @type {Mat4}
+     */
     get worldTransform() {
         return this._worldTransform;
     }

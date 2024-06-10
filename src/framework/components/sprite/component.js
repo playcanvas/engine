@@ -181,7 +181,7 @@ class SpriteComponent extends Component {
     }
 
     /**
-     * The type of the SpriteComponent. Can be:
+     * Sets the type of the SpriteComponent. Can be:
      *
      * - {@link SPRITETYPE_SIMPLE}: The component renders a single frame from a sprite asset.
      * - {@link SPRITETYPE_ANIMATED}: The component can play sprite animation clips.
@@ -224,13 +224,17 @@ class SpriteComponent extends Component {
         }
     }
 
+    /**
+     * Gets the type of the SpriteComponent.
+     *
+     * @type {string}
+     */
     get type() {
         return this._type;
     }
 
     /**
-     * The frame counter of the sprite. Specifies which frame from the current sprite asset to
-     * render.
+     * Sets which frame from the current sprite asset to render.
      *
      * @type {number}
      */
@@ -238,12 +242,17 @@ class SpriteComponent extends Component {
         this._currentClip.frame = value;
     }
 
+    /**
+     * Gets which frame from the current sprite asset to render.
+     *
+     * @type {number}
+     */
     get frame() {
         return this._currentClip.frame;
     }
 
     /**
-     * The asset id or the {@link Asset} of the sprite to render. Only works for
+     * Sets the asset id or the {@link Asset} of the sprite to render. Only works for
      * {@link SPRITETYPE_SIMPLE} sprites.
      *
      * @type {number|import('../../asset/asset.js').Asset}
@@ -252,12 +261,17 @@ class SpriteComponent extends Component {
         this._defaultClip.spriteAsset = value;
     }
 
+    /**
+     * Gets the asset id or the {@link Asset} of the sprite to render.
+     *
+     * @type {number|import('../../asset/asset.js').Asset}
+     */
     get spriteAsset() {
         return this._defaultClip._spriteAsset;
     }
 
     /**
-     * The current sprite.
+     * Sets the current sprite.
      *
      * @type {import('../../../scene/sprite.js').Sprite}
      */
@@ -265,6 +279,11 @@ class SpriteComponent extends Component {
         this._currentClip.sprite = value;
     }
 
+    /**
+     * Gets the current sprite.
+     *
+     * @type {import('../../../scene/sprite.js').Sprite}
+     */
     get sprite() {
         return this._currentClip.sprite;
     }
@@ -282,7 +301,7 @@ class SpriteComponent extends Component {
     }
 
     /**
-     * The color tint of the sprite.
+     * Sets the color tint of the sprite.
      *
      * @type {Color}
      */
@@ -299,12 +318,17 @@ class SpriteComponent extends Component {
         }
     }
 
+    /**
+     * Gets the color tint of the sprite.
+     *
+     * @type {Color}
+     */
     get color() {
         return this._color;
     }
 
     /**
-     * The opacity of the sprite.
+     * Sets the opacity of the sprite.
      *
      * @type {number}
      */
@@ -315,12 +339,17 @@ class SpriteComponent extends Component {
         }
     }
 
+    /**
+     * Gets the opacity of the sprite.
+     *
+     * @type {number}
+     */
     get opacity() {
         return this._color.a;
     }
 
     /**
-     * A dictionary that contains {@link SpriteAnimationClip}s.
+     * Sets the dictionary that contains {@link SpriteAnimationClip}s.
      *
      * @type {Object<string, SpriteAnimationClip>}
      */
@@ -376,12 +405,17 @@ class SpriteComponent extends Component {
         }
     }
 
+    /**
+     * Gets the dictionary that contains {@link SpriteAnimationClip}s.
+     *
+     * @type {Object<string, SpriteAnimationClip>}
+     */
     get clips() {
         return this._clips;
     }
 
     /**
-     * The current clip being played.
+     * Gets the current clip being played.
      *
      * @type {SpriteAnimationClip}
      */
@@ -390,7 +424,7 @@ class SpriteComponent extends Component {
     }
 
     /**
-     * A global speed modifier used when playing sprite animation clips.
+     * Sets the global speed modifier used when playing sprite animation clips.
      *
      * @type {number}
      */
@@ -398,12 +432,17 @@ class SpriteComponent extends Component {
         this._speed = value;
     }
 
+    /**
+     * Gets the global speed modifier used when playing sprite animation clips.
+     *
+     * @type {number}
+     */
     get speed() {
         return this._speed;
     }
 
     /**
-     * Flip the X axis when rendering a sprite.
+     * Sets whether to flip the X axis when rendering a sprite.
      *
      * @type {boolean}
      */
@@ -414,12 +453,17 @@ class SpriteComponent extends Component {
         this._updateTransform();
     }
 
+    /**
+     * Gets whether to flip the X axis when rendering a sprite.
+     *
+     * @type {boolean}
+     */
     get flipX() {
         return this._flipX;
     }
 
     /**
-     * Flip the Y axis when rendering a sprite.
+     * Sets whether to flip the Y axis when rendering a sprite.
      *
      * @type {boolean}
      */
@@ -430,13 +474,18 @@ class SpriteComponent extends Component {
         this._updateTransform();
     }
 
+    /**
+     * Gets whether to flip the Y axis when rendering a sprite.
+     *
+     * @type {boolean}
+     */
     get flipY() {
         return this._flipY;
     }
 
     /**
-     * The width of the sprite when rendering using 9-Slicing. The width and height are only used
-     * when the render mode of the sprite asset is Sliced or Tiled.
+     * Sets the width of the sprite when rendering using 9-Slicing. The width and height are only
+     * used when the render mode of the sprite asset is Sliced or Tiled.
      *
      * @type {number}
      */
@@ -451,13 +500,18 @@ class SpriteComponent extends Component {
         }
     }
 
+    /**
+     * Gets the width of the sprite when rendering using 9-Slicing.
+     *
+     * @type {number}
+     */
     get width() {
         return this._width;
     }
 
     /**
-     * The height of the sprite when rendering using 9-Slicing. The width and height are only used
-     * when the render mode of the sprite asset is Sliced or Tiled.
+     * Sets the height of the sprite when rendering using 9-Slicing. The width and height are only
+     * used when the render mode of the sprite asset is Sliced or Tiled.
      *
      * @type {number}
      */
@@ -472,12 +526,17 @@ class SpriteComponent extends Component {
         }
     }
 
+    /**
+     * Gets the height of the sprite when rendering using 9-Slicing.
+     *
+     * @type {number}
+     */
     get height() {
         return this._height;
     }
 
     /**
-     * Assign sprite to a specific batch group (see {@link BatchGroup}). Default is -1 (no group).
+     * Sets the batch group for the sprite (see {@link BatchGroup}). Default is -1 (no group).
      *
      * @type {number}
      */
@@ -503,12 +562,17 @@ class SpriteComponent extends Component {
         }
     }
 
+    /**
+     * Gets the batch group for the sprite.
+     *
+     * @type {number}
+     */
     get batchGroupId() {
         return this._batchGroupId;
     }
 
     /**
-     * The name of the clip to play automatically when the component is enabled and the clip exists.
+     * Sets the name of the clip to play automatically when the component is enabled.
      *
      * @type {string}
      */
@@ -517,14 +581,19 @@ class SpriteComponent extends Component {
         this._tryAutoPlay();
     }
 
+    /**
+     * Gets the name of the clip to play automatically when the component is enabled.
+     *
+     * @type {string}
+     */
     get autoPlayClip() {
         return this._autoPlayClip;
     }
 
     /**
-     * The draw order of the component. A higher value means that the component will be rendered on
-     * top of other components in the same layer. This is not used unless the layer's sort order is
-     * set to {@link SORTMODE_MANUAL}.
+     * Sets the draw order of the component. A higher value means that the component will be
+     * rendered on top of other components in the same layer. This is not used unless the layer's
+     * sort order is set to {@link SORTMODE_MANUAL}.
      *
      * @type {number}
      */
@@ -535,12 +604,17 @@ class SpriteComponent extends Component {
         }
     }
 
+    /**
+     * Gets the draw order of the component.
+     *
+     * @type {number}
+     */
     get drawOrder() {
         return this._drawOrder;
     }
 
     /**
-     * An array of layer IDs ({@link Layer#id}) to which this sprite should belong.
+     * Sets the array of layer IDs ({@link Layer#id}) to which this sprite should belong.
      *
      * @type {number[]}
      */
@@ -561,6 +635,11 @@ class SpriteComponent extends Component {
         }
     }
 
+    /**
+     * Gets the array of layer IDs ({@link Layer#id}) to which this sprite belongs.
+     *
+     * @type {number[]}
+     */
     get layers() {
         return this._layers;
     }

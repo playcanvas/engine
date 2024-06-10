@@ -888,7 +888,6 @@ class WebglGraphicsDevice extends GraphicsDevice {
         return null;
     }
 
-    /** @ignore */
     get extDisjointTimerQuery() {
         // lazy evaluation as this is not typically used
         if (!this._extDisjointTimerQuery) {
@@ -2594,7 +2593,7 @@ class WebglGraphicsDevice extends GraphicsDevice {
     }
 
     /**
-     * Fullscreen mode.
+     * Sets whether the device is currently in fullscreen mode.
      *
      * @type {boolean}
      */
@@ -2607,6 +2606,11 @@ class WebglGraphicsDevice extends GraphicsDevice {
         }
     }
 
+    /**
+     * Gets whether the device is currently in fullscreen mode.
+     *
+     * @type {boolean}
+     */
     get fullscreen() {
         return !!document.fullscreenElement;
     }

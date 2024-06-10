@@ -220,7 +220,7 @@ class EntityReference extends EventHandler {
     _onSetEntity(name, oldValue, newValue) {
         if (newValue instanceof Entity) {
             this._updateEntityReference();
-        } else  {
+        } else {
             if (newValue !== null && newValue !== undefined && typeof newValue !== 'string') {
                 console.warn("Entity field `" + this._entityPropertyName + "` was set to unexpected type '" + (typeof newValue) + "'");
                 return;

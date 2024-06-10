@@ -182,7 +182,7 @@ class RigidBodyComponent extends Component {
     }
 
     /**
-     * Controls the rate at which a body loses angular velocity over time.
+     * Sets the rate at which a body loses angular velocity over time.
      *
      * @type {number}
      */
@@ -196,13 +196,18 @@ class RigidBodyComponent extends Component {
         }
     }
 
+    /**
+     * Gets the rate at which a body loses angular velocity over time.
+     *
+     * @type {number}
+     */
     get angularDamping() {
         return this._angularDamping;
     }
 
     /**
-     * Scaling factor for angular movement of the body in each axis. Only valid for rigid bodies of
-     * type {@link BODYTYPE_DYNAMIC}. Defaults to 1 in all axes (body can freely rotate).
+     * Sets the scaling factor for angular movement of the body in each axis. Only valid for rigid
+     * bodies of type {@link BODYTYPE_DYNAMIC}. Defaults to 1 in all axes (body can freely rotate).
      *
      * @type {Vec3}
      */
@@ -217,12 +222,17 @@ class RigidBodyComponent extends Component {
         }
     }
 
+    /**
+     * Gets the scaling factor for angular movement of the body in each axis.
+     *
+     * @type {Vec3}
+     */
     get angularFactor() {
         return this._angularFactor;
     }
 
     /**
-     * Defines the rotational speed of the body around each world axis.
+     * Sets the rotational speed of the body around each world axis.
      *
      * @type {Vec3}
      */
@@ -237,6 +247,11 @@ class RigidBodyComponent extends Component {
         }
     }
 
+    /**
+     * Gets the rotational speed of the body around each world axis.
+     *
+     * @type {Vec3}
+     */
     get angularVelocity() {
         if (this._body && this._type === BODYTYPE_DYNAMIC) {
             const velocity = this._body.getAngularVelocity();
@@ -260,7 +275,7 @@ class RigidBodyComponent extends Component {
     }
 
     /**
-     * The friction value used when contacts occur between two bodies. A higher value indicates
+     * Sets the friction value used when contacts occur between two bodies. A higher value indicates
      * more friction. Should be set in the range 0 to 1. Defaults to 0.5.
      *
      * @type {number}
@@ -275,12 +290,17 @@ class RigidBodyComponent extends Component {
         }
     }
 
+    /**
+     * Gets the friction value used when contacts occur between two bodies.
+     *
+     * @type {number}
+     */
     get friction() {
         return this._friction;
     }
 
     /**
-     * The collision group this body belongs to. Combine the group and the mask to prevent bodies
+     * Sets the collision group this body belongs to. Combine the group and the mask to prevent bodies
      * colliding with each other. Defaults to 1.
      *
      * @type {number}
@@ -297,12 +317,17 @@ class RigidBodyComponent extends Component {
         }
     }
 
+    /**
+     * Gets the collision group this body belongs to.
+     *
+     * @type {number}
+     */
     get group() {
         return this._group;
     }
 
     /**
-     * Controls the rate at which a body loses linear velocity over time. Defaults to 0.
+     * Sets the rate at which a body loses linear velocity over time. Defaults to 0.
      *
      * @type {number}
      */
@@ -316,13 +341,18 @@ class RigidBodyComponent extends Component {
         }
     }
 
+    /**
+     * Gets the rate at which a body loses linear velocity over time.
+     *
+     * @type {number}
+     */
     get linearDamping() {
         return this._linearDamping;
     }
 
     /**
-     * Scaling factor for linear movement of the body in each axis. Only valid for rigid bodies of
-     * type {@link BODYTYPE_DYNAMIC}. Defaults to 1 in all axes (body can freely move).
+     * Sets the scaling factor for linear movement of the body in each axis. Only valid for rigid
+     * bodies of type {@link BODYTYPE_DYNAMIC}. Defaults to 1 in all axes (body can freely move).
      *
      * @type {Vec3}
      */
@@ -337,12 +367,17 @@ class RigidBodyComponent extends Component {
         }
     }
 
+    /**
+     * Gets the scaling factor for linear movement of the body in each axis.
+     *
+     * @type {Vec3}
+     */
     get linearFactor() {
         return this._linearFactor;
     }
 
     /**
-     * Defines the speed of the body in a given direction.
+     * Sets the speed of the body in a given direction.
      *
      * @type {Vec3}
      */
@@ -357,6 +392,11 @@ class RigidBodyComponent extends Component {
         }
     }
 
+    /**
+     * Gets the speed of the body in a given direction.
+     *
+     * @type {Vec3}
+     */
     get linearVelocity() {
         if (this._body && this._type === BODYTYPE_DYNAMIC) {
             const velocity = this._body.getLinearVelocity();
@@ -366,8 +406,8 @@ class RigidBodyComponent extends Component {
     }
 
     /**
-     * The collision mask sets which groups this body collides with. It is a bitfield of 16 bits,
-     * the first 8 bits are reserved for engine use. Defaults to 65535.
+     * Sets the collision mask sets which groups this body collides with. It is a bitfield of 16
+     * bits, the first 8 bits are reserved for engine use. Defaults to 65535.
      *
      * @type {number}
      */
@@ -383,13 +423,18 @@ class RigidBodyComponent extends Component {
         }
     }
 
+    /**
+     * Gets the collision mask sets which groups this body collides with.
+     *
+     * @type {number}
+     */
     get mask() {
         return this._mask;
     }
 
     /**
-     * The mass of the body. This is only relevant for {@link BODYTYPE_DYNAMIC} bodies, other types
-     * have infinite mass. Defaults to 1.
+     * Sets the mass of the body. This is only relevant for {@link BODYTYPE_DYNAMIC} bodies, other
+     * types have infinite mass. Defaults to 1.
      *
      * @type {number}
      */
@@ -416,15 +461,20 @@ class RigidBodyComponent extends Component {
         }
     }
 
+    /**
+     * Gets the mass of the body.
+     *
+     * @type {number}
+     */
     get mass() {
         return this._mass;
     }
 
     /**
-     * Influences the amount of energy lost when two rigid bodies collide. The calculation
-     * multiplies the restitution values for both colliding bodies. A multiplied value of 0 means
-     * that all energy is lost in the collision while a value of 1 means that no energy is lost.
-     * Should be set in the range 0 to 1. Defaults to 0.
+     * Sets the value that controls the amount of energy lost when two rigid bodies collide. The
+     * calculation multiplies the restitution values for both colliding bodies. A multiplied value
+     * of 0 means that all energy is lost in the collision while a value of 1 means that no energy
+     * is lost. Should be set in the range 0 to 1. Defaults to 0.
      *
      * @type {number}
      */
@@ -438,12 +488,17 @@ class RigidBodyComponent extends Component {
         }
     }
 
+    /**
+     * Gets the value that controls the amount of energy lost when two rigid bodies collide.
+     *
+     * @type {number}
+     */
     get restitution() {
         return this._restitution;
     }
 
     /**
-     * Sets a torsional friction orthogonal to the contact point. Defaults to 0.
+     * Sets the torsional friction orthogonal to the contact point. Defaults to 0.
      *
      * @type {number}
      */
@@ -457,12 +512,17 @@ class RigidBodyComponent extends Component {
         }
     }
 
+    /**
+     * Gets the torsional friction orthogonal to the contact point.
+     *
+     * @type {number}
+     */
     get rollingFriction() {
         return this._rollingFriction;
     }
 
     /**
-     * The rigid body type determines how the body is simulated. Can be:
+     * Sets the rigid body type determines how the body is simulated. Can be:
      *
      * - {@link BODYTYPE_STATIC}: infinite mass and cannot move.
      * - {@link BODYTYPE_DYNAMIC}: simulated according to applied forces.
@@ -501,6 +561,11 @@ class RigidBodyComponent extends Component {
         }
     }
 
+    /**
+     * Gets the rigid body type determines how the body is simulated.
+     *
+     * @type {string}
+     */
     get type() {
         return this._type;
     }

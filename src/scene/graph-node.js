@@ -293,7 +293,7 @@ class GraphNode extends EventHandler {
     }
 
     /**
-     * The normalized local space X-axis vector of the graph node in world space.
+     * Gets the normalized local-space X-axis vector of the graph node in world-space.
      *
      * @type {Vec3}
      */
@@ -305,7 +305,7 @@ class GraphNode extends EventHandler {
     }
 
     /**
-     * The normalized local space Y-axis vector of the graph node in world space.
+     * Gets the normalized local-space Y-axis vector of the graph node in world-space.
      *
      * @type {Vec3}
      */
@@ -317,7 +317,7 @@ class GraphNode extends EventHandler {
     }
 
     /**
-     * The normalized local space negative Z-axis vector of the graph node in world space.
+     * Gets the normalized local-space negative Z-axis vector of the graph node in world-space.
      *
      * @type {Vec3}
      */
@@ -329,9 +329,9 @@ class GraphNode extends EventHandler {
     }
 
     /**
-     * A matrix used to transform the normal.
+     * Gets the 3x3 transformation matrix used to transform normals.
      *
-     * @type  {Mat3}
+     * @type {Mat3}
      * @ignore
      */
     get normalMatrix() {
@@ -346,9 +346,9 @@ class GraphNode extends EventHandler {
     }
 
     /**
-     * Enable or disable a GraphNode. If one of the GraphNode's parents is disabled there will be
-     * no other side effects. If all the parents are enabled then the new value will activate or
-     * deactivate all the enabled children of the GraphNode.
+     * Sets the enabled state of the GraphNode. If one of the GraphNode's parents is disabled there
+     * will be no other side effects. If all the parents are enabled then the new value will
+     * activate or deactivate all the enabled children of the GraphNode.
      *
      * @type {boolean}
      */
@@ -364,6 +364,11 @@ class GraphNode extends EventHandler {
         }
     }
 
+    /**
+     * Gets the enabled state of the GraphNode.
+     *
+     * @type {boolean}
+     */
     get enabled() {
         // make sure to check this._enabled too because if that
         // was false when a parent was updated the _enabledInHierarchy
@@ -372,7 +377,7 @@ class GraphNode extends EventHandler {
     }
 
     /**
-     * A read-only property to get a parent graph node.
+     * Gets the parent of this graph node.
      *
      * @type {GraphNode|null}
      */
@@ -381,7 +386,7 @@ class GraphNode extends EventHandler {
     }
 
     /**
-     * A read-only property to get the path of the graph node relative to the root of the hierarchy.
+     * Gets the path of this graph node relative to the root of the hierarchy.
      *
      * @type {string}
      */
@@ -400,7 +405,7 @@ class GraphNode extends EventHandler {
     }
 
     /**
-     * A read-only property to get highest graph node from current node.
+     * Gets the oldest ancestor graph node from this graph node.
      *
      * @type {GraphNode}
      */
@@ -413,7 +418,7 @@ class GraphNode extends EventHandler {
     }
 
     /**
-     * A read-only property to get the children of this graph node.
+     * Gets the children of this graph node.
      *
      * @type {GraphNode[]}
      */
@@ -422,9 +427,9 @@ class GraphNode extends EventHandler {
     }
 
     /**
-     * A read-only property to get the depth of this child within the graph. Note that for
-     * performance reasons this is only recalculated when a node is added to a new parent, i.e. It
-     * is not recalculated when a node is simply removed from the graph.
+     * Gets the depth of this child within the graph. Note that for performance reasons this is
+     * only recalculated when a node is added to a new parent. In other words, it is not
+     * recalculated when a node is simply removed from the graph.
      *
      * @type {number}
      */
@@ -920,7 +925,7 @@ class GraphNode extends EventHandler {
     }
 
     /**
-     * Returns cached value of negative scale of the world transform.
+     * Gets the cached value of negative scale sign of the world transform.
      *
      * @returns {number} -1 if world transform has negative scale, 1 otherwise.
      * @ignore
