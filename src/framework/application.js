@@ -9,11 +9,9 @@ import { BatchManager } from '../scene/batching/batch-manager.js';
 
 import { AppBase } from './app-base.js';
 import { AppOptions } from './app-options.js';
-import { script } from './script.js';
 import { AnimationComponentSystem } from './components/animation/system.js';
 import { AnimComponentSystem } from './components/anim/system.js';
 import { AudioListenerComponentSystem } from './components/audio-listener/system.js';
-import { AudioSourceComponentSystem } from './components/audio-source/system.js';
 import { ButtonComponentSystem } from './components/button/system.js';
 import { CollisionComponentSystem } from './components/collision/system.js';
 import { ElementComponentSystem } from './components/element/system.js';
@@ -25,7 +23,6 @@ import { ParticleSystemComponentSystem } from './components/particle-system/syst
 import { RenderComponentSystem } from './components/render/system.js';
 import { RigidBodyComponentSystem } from './components/rigid-body/system.js';
 import { ScreenComponentSystem } from './components/screen/system.js';
-import { ScriptLegacyComponentSystem } from './components/script-legacy/system.js';
 import { ScrollViewComponentSystem } from './components/scroll-view/system.js';
 import { ScrollbarComponentSystem } from './components/scrollbar/system.js';
 import { SoundComponentSystem } from './components/sound/system.js';
@@ -170,8 +167,7 @@ class Application extends AppBase {
             RenderComponentSystem,
             CameraComponentSystem,
             LightComponentSystem,
-            script.legacy ? ScriptLegacyComponentSystem : ScriptComponentSystem,
-            AudioSourceComponentSystem,
+            ScriptComponentSystem,
             SoundComponentSystem,
             AudioListenerComponentSystem,
             ParticleSystemComponentSystem,

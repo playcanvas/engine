@@ -1,6 +1,6 @@
 import {
     ADDRESS_CLAMP_TO_EDGE, PIXELFORMAT_RGB8, PIXELFORMAT_RGBA8,
-    TEXTURETYPE_DEFAULT, TEXTURETYPE_RGBM, TEXTURETYPE_RGBP
+    TEXTURETYPE_DEFAULT, TEXTURETYPE_RGBM
 } from '../../platform/graphics/constants.js';
 import { Texture } from '../../platform/graphics/texture.js';
 
@@ -129,10 +129,6 @@ class CubemapHandler extends ResourceHandler {
                     }
                 } else {
                     // prefiltered data is an env atlas
-                    tex.type = TEXTURETYPE_RGBP;
-                    tex.addressU = ADDRESS_CLAMP_TO_EDGE;
-                    tex.addressV = ADDRESS_CLAMP_TO_EDGE;
-                    tex.mipmaps = false;
                     resources[1] = tex;
                 }
             }
@@ -317,7 +313,17 @@ class CubemapHandler extends ResourceHandler {
                     url: assetId,
                     filename: assetId
                 } : assetId;
-                texAsset = new Asset(cubemapAsset.name + '_part_' + i, 'texture', file);
+
+                // if the referenced prefiltered texture is not a dds file, then we're loading an
+                // envAtlas. In this case we must specify the correct texture state.
+                const data = file.url.search('.dds') === -1 ? {
+                    type: 'rgbp',
+                    addressu: 'clamp',
+                    addressv: 'clamp',
+                    mipmaps: false
+                } : null;
+
+                texAsset = new Asset(cubemapAsset.name + '_part_' + i, 'texture', file, data);
                 registry.add(texAsset);
                 processTexAsset(i, texAsset);
             }
