@@ -86,6 +86,10 @@ const fShader = `
         #include "packDepthPS"
     #endif
 
+    #ifdef PICK_PASS
+        uniform uint meshInstanceId;
+    #endif
+
     void main(void) {
 
         #ifdef VERTEX_COLORS
@@ -102,7 +106,14 @@ const fShader = `
             alphaTest(gl_FragColor.a);
         #endif
 
-        #ifndef PICK_PASS
+        #ifdef PICK_PASS
+
+            const vec4 inv = vec4(1.0 / 255.0, 1.0 / 255.0, 1.0 / 255.0, 1.0 / 255.0);
+            const uvec4 shifts = uvec4(16, 8, 0, 24);
+            uvec4 col = (uvec4(meshInstanceId) >> shifts) & uvec4(0xff);
+            gl_FragColor = vec4(col) * inv;
+
+        #else
 
             #ifdef DEPTH_PASS
                 gl_FragColor = packFloat(vDepth);
