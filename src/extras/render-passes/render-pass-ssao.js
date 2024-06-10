@@ -320,17 +320,15 @@ class RenderPassSsao extends RenderPassShaderQuad {
         // TODO: consider using render target with linear filtering
         // to reduce amount of samples in the blur pass
         const blurRT = this.createRenderTarget(renderTargetName);
-        const blurPass = new RenderPassDepthAwareBlur(device, {
-            sourceTexture,
+        const blurPass = new RenderPassDepthAwareBlur(device);
+
+        blurPass.init(blurRT, {
+            resizeSource: sourceTexture,
             depthAware: true,
             kernelSize,
             type,
             direction: direction,
             channels: 'r'
-        });
-
-        blurPass.init(blurRT, {
-            resizeSource: sourceTexture
         });
 
         this.afterPasses.push(blurPass);

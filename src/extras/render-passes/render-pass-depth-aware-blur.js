@@ -12,26 +12,41 @@ import { shaderChunks } from '../../scene/shader-lib/chunks/chunks.js';
  */
 class RenderPassDepthAwareBlur extends RenderPassShaderQuad {
     /**
-     * @param {import('../../platform/graphics/graphics-device.js').GraphicsDevice} device - The rendering device.
+     * Initializes a new blur render pass. It has to be called before the render pass can be used.
+     *
+     * @param {import('../../platform/graphics/render-target.js').RenderTarget|null} [renderTarget] - The render
+     * target to render into (output).
      * @param {Object} options - Options for configuring the blur effect.
-     * @param {import('../../platform/graphics/texture.js').Texture} options.sourceTexture - The source texture to be blurred.
+     * @param {import('../../platform/graphics/texture.js').Texture} [options.resizeSource] - The source texture to be blurred.
+     * @param {number} [options.scaleX] - The scale factor for the render target width. Defaults to 1.
+     * @param {number} [options.scaleY] - The scale factor for the render target height. Defaults to 1.
      * @param {number} [options.kernelSize] - The size of the blur kernel. Defaults to 7.
      * @param {boolean} [options.depthAware] - Whether the blur should be depth-aware. Defaults to false.
      * @param {BLUR_GAUSSIAN|import('../../scene/constants.js').BLUR_BOX} [options.type] - The type of blur to apply. Defaults to BLUR_GAUSSIAN.
      * @param {Vec2} [options.direction] - The direction of the blur. Defaults to (1, 0).
      * @param {string} [options.channels] - The color channels to apply the blur to ('r'|'g'|'b'|'a'|'rg'|..|'ba'|'rgb'|'gba'|'rgba'). Defaults to 'rgba'.
      */
-    constructor(device, options) {
-        super(device);
+    init(renderTarget = null, options = {}) {
+        super.init(renderTarget, options);
 
-        this.options = options;
-        this.sourceTexture = options.sourceTexture;
+        this.sourceTexture = options.resizeSource;
+
+        // FIXME: resizeSource has to be passed and it is not possible to define
+        // the default value for resizeSource.
+        // But the init function of RenderPass is defined as
+        // init(renderTarget = null, options) { ... }
+        // So, the option parameter has to be optional because it is passed after
+        // renderTarget that is an optional parameter.
+        if (this.sourceTexture === null) {
+            console.error('RenderPassDepthAwareBlur: resizeSource is not set in the options.');
+            return;
+        }
 
         const kernelSize = options.kernelSize ?? 7;
         const depthAware = options.depthAware ?? false;
         const blurType = options.type ?? BLUR_GAUSSIAN;
         const blurDirection = options.direction ?? new Vec2(1, 0);
-        const channels = 'rgba';
+        const channels = options.channels ?? 'rgba';
 
         let loop = '';
 
@@ -65,7 +80,9 @@ class RenderPassDepthAwareBlur extends RenderPassShaderQuad {
 
         const type = ["float", "vec2", "vec3", "vec4"][channels.length - 1];
 
-        this.shader = this.createQuadShader('DepthAwareBlurShader' + blurDirection.toString(), shaderChunks.screenDepthPS + /* glsl */`
+        const shaderName = `BlurShader:${JSON.stringify({ kernelSize, depthAware, blurType, blurDirection, channels })}`;
+
+        this.shader = this.createQuadShader(shaderName, shaderChunks.screenDepthPS + /* glsl */`
 
             varying vec2 uv0;
 
@@ -104,10 +121,7 @@ ${depthAware ? '#define DEPTH_AWARE' : ''}
 #endif
             }
 
-            // TODO: weights of 1 are used for all samples. Test with gaussian weights
             void main() {
-
-                // handle the center pixel separately because it doesn't participate in bilateral filtering
 #ifdef DEPTH_AWARE
                 float depth = -getLinearScreenDepth(uv0);
 #else
@@ -136,6 +150,11 @@ ${depthAware ? '#define DEPTH_AWARE' : ''}
     }
 
     execute() {
+        if (!this.sourceTexture) {
+            super.execute();
+            return;
+        }
+
         this.sourceTextureId.setValue(this.sourceTexture);
 
         const { width, height } = this.sourceTexture;
