@@ -4,6 +4,7 @@ import { Color } from '../../core/math/color.js';
 import { Mat4 } from '../../core/math/mat4.js';
 import { Vec3 } from '../../core/math/vec3.js';
 import { Vec4 } from '../../core/math/vec4.js';
+import { math } from '../../core/math/math.js';
 
 import { SHADERSTAGE_FRAGMENT, SHADERSTAGE_VERTEX, UNIFORMTYPE_MAT4, UNIFORM_BUFFER_DEFAULT_SLOT_NAME } from '../../platform/graphics/constants.js';
 import { DebugGraphics } from '../../platform/graphics/debug-graphics.js';
@@ -24,27 +25,6 @@ import { LightCamera } from './light-camera.js';
 import { UniformBufferFormat, UniformFormat } from '../../platform/graphics/uniform-buffer-format.js';
 import { BindUniformBufferFormat, BindGroupFormat } from '../../platform/graphics/bind-group-format.js';
 import { BlendState } from '../../platform/graphics/blend-state.js';
-
-function gauss(x, sigma) {
-    return Math.exp(-(x * x) / (2.0 * sigma * sigma));
-}
-
-function gaussWeights(kernelSize) {
-    const sigma = (kernelSize - 1) / (2 * 3);
-
-    const halfWidth = (kernelSize - 1) * 0.5;
-    const values = new Array(kernelSize);
-    let sum = 0.0;
-    for (let i = 0; i < kernelSize; ++i) {
-        values[i] = gauss(i - halfWidth, sigma);
-        sum += values[i];
-    }
-
-    for (let i = 0; i < kernelSize; ++i) {
-        values[i] /= sum;
-    }
-    return values;
-}
 
 const tempSet = new Set();
 const shadowCamView = new Mat4();
@@ -482,7 +462,7 @@ class ShadowRenderer {
 
         let blurShader = (isVsm8 ? this.blurPackedVsmShader : this.blurVsmShader)[blurMode][filterSize];
         if (!blurShader) {
-            this.blurVsmWeights[filterSize] = gaussWeights(filterSize);
+            this.blurVsmWeights[filterSize] = math.gaussWeights(filterSize);
 
             const blurVS = shaderChunks.fullscreenQuadVS;
             let blurFS = '#define SAMPLES ' + filterSize + '\n';

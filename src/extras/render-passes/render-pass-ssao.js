@@ -1,9 +1,11 @@
+import { BLUR_GAUSSIAN } from '../../scene/constants.js';
 import { ADDRESS_CLAMP_TO_EDGE, FILTER_NEAREST, PIXELFORMAT_R8 } from '../../platform/graphics/constants.js';
 import { RenderTarget } from '../../platform/graphics/render-target.js';
 import { Texture } from '../../platform/graphics/texture.js';
 import { RenderPassShaderQuad } from '../../scene/graphics/render-pass-shader-quad.js';
 import { shaderChunks } from '../../scene/shader-lib/chunks/chunks.js';
 import { RenderPassDepthAwareBlur } from './render-pass-depth-aware-blur.js';
+import { Vec2 } from '../../core/math/vec2.js';
 
 const fs = /* glsl */`
     varying vec2 uv0;
@@ -261,17 +263,78 @@ class RenderPassSsao extends RenderPassShaderQuad {
 
         // optional blur pass
         if (blurEnabled) {
+            let lastRenderTarget = rt;
 
-            const blurRT = this.createRenderTarget(`SsaoFinalTexture`);
-            this.ssaoTexture = blurRT.colorBuffer;
+            // horizontal blur
+            lastRenderTarget = this.addBlurPass(
+                device,
+                lastRenderTarget.colorBuffer,
+                new Vec2(1, 0),
+                11,
+                BLUR_GAUSSIAN
+            );
 
-            const blurPass = new RenderPassDepthAwareBlur(device, rt.colorBuffer);
-            blurPass.init(blurRT, {
-                resizeSource: rt.colorBuffer
-            });
+            // vertical blur
+            lastRenderTarget = this.addBlurPass(
+                device,
+                lastRenderTarget.colorBuffer,
+                new Vec2(0, 1),
+                11,
+                BLUR_GAUSSIAN
+            );
 
-            this.afterPasses.push(blurPass);
+            // horizontal blur for low frequency noise
+            lastRenderTarget = this.addBlurPass(
+                device,
+                lastRenderTarget.colorBuffer,
+                new Vec2(2, 1),
+                7,
+                BLUR_GAUSSIAN
+            );
+
+            // horizontal blur for high frequency noise
+            lastRenderTarget = this.addBlurPass(
+                device,
+                lastRenderTarget.colorBuffer,
+                new Vec2(-1, 2),
+                7,
+                BLUR_GAUSSIAN
+            );
+
+            this.ssaoTexture = lastRenderTarget.colorBuffer;
         }
+    }
+
+    /**
+     * Adds a blur pass to the SSAO render pass.
+     * @param {import('../../platform/graphics/graphics-device.js').GraphicsDevice} device - The graphics device.
+     * @param {Texture} sourceTexture - The source texture to blur.
+     * @param {Vec2} direction - The direction of the blur.
+     * @param {number} kernelSize - The size of the blur kernel.
+     * @param {BLUR_GAUSSIAN|import('../../scene/constants.js').BLUR_BOX} [type] - The type of blur to apply. Defaults to BLUR_GAUSSIAN.
+     * @returns {RenderTarget} The render target containing the blurred texture.
+     * @private
+     */
+    addBlurPass(device, sourceTexture, direction, kernelSize, type = BLUR_GAUSSIAN) {
+        const renderTargetName = `SsaoBlurTexture`;
+        // TODO: consider using render target with linear filtering
+        // to reduce amount of samples in the blur pass
+        const blurRT = this.createRenderTarget(renderTargetName);
+        const blurPass = new RenderPassDepthAwareBlur(device, {
+            sourceTexture,
+            depthAware: true,
+            kernelSize,
+            type,
+            direction: direction,
+            channels: 'r'
+        });
+
+        blurPass.init(blurRT, {
+            resizeSource: sourceTexture
+        });
+
+        this.afterPasses.push(blurPass);
+        return blurRT;
     }
 
     destroy() {

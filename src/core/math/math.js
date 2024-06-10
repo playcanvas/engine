@@ -277,6 +277,42 @@ const math = {
         const min = Math.min(a, b);
         const max = Math.max(a, b);
         return inclusive ? num >= min && num <= max : num > min && num < max;
+    },
+
+    /**
+     * Computes the Gaussian function value for a given input.
+     *
+     * @param {number} x - The input value for which the Gaussian function is to be calculated.
+     * @param {number} sigma - The standard deviation of the distribution.
+     * @returns {number} - The Gaussian function value.
+     */
+    gauss(x, sigma) {
+        return Math.exp(-(x * x) / (2.0 * sigma * sigma));
+    },
+
+    /**
+     * Generates Gaussian weights for a given kernel size.
+     *
+     * @param {number} kernelSize - The size of the kernel for which the Gaussian weights are to be computed.
+     * @returns {number[]} - An array containing the normalized Gaussian weights.
+     */
+    gaussWeights(kernelSize) {
+        const sigma = (kernelSize - 1) / (2 * 3);
+
+        const halfWidth = (kernelSize - 1) * 0.5;
+        const values = new Array(kernelSize);
+        let sum = 0.0;
+
+        for (let i = 0; i < kernelSize; ++i) {
+            values[i] = math.gauss(i - halfWidth, sigma);
+            sum += values[i];
+        }
+
+        for (let i = 0; i < kernelSize; ++i) {
+            values[i] /= sum;
+        }
+
+        return values;
     }
 };
 
