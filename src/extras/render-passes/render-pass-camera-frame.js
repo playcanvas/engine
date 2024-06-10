@@ -117,14 +117,6 @@ class RenderPassCameraFrame extends RenderPass {
         return this._renderTargetScale;
     }
 
-    set bloomEnabled(value) {
-        if (this._bloomEnabled !== value) {
-            this._bloomEnabled = value;
-            this.composePass.bloomTexture = value ? this.bloomPass.bloomTexture : null;
-            this.bloomPass.enabled = value;
-        }
-    }
-
     get bloomEnabled() {
         return this._bloomEnabled;
     }
@@ -221,7 +213,7 @@ class RenderPassCameraFrame extends RenderPass {
         const sceneTextureWithTaa = this.setupTaaPass(options);
 
         // bloom
-        this.setupBloomPass(sceneTextureWithTaa);
+        this.setupBloomPass(options, sceneTextureWithTaa);
 
         // compose
         this.setupComposePass(options);
@@ -300,8 +292,8 @@ class RenderPassCameraFrame extends RenderPass {
         }
     }
 
-    setupBloomPass(inputTexture) {
-        if (this.bloomEnabled) {
+    setupBloomPass(options, inputTexture) {
+        if (options.bloomEnabled) {
             // create a bloom pass, which generates bloom texture based on the provided texture
             this.bloomPass = new RenderPassBloom(this.device, inputTexture, this.hdrFormat);
         }

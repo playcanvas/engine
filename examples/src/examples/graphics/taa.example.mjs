@@ -122,6 +122,7 @@ assetListLoader.load(() => {
         samples: 0, // number of samples for multi-sampling
         // sceneColorMap: true, // true if the scene color should be captured
         sceneColorMap: false,
+        bloomEnabled: true,
 
         // enable the pre-pass to generate the depth buffer, which is needed by the TAA
         prepassEnabled: true,
@@ -154,8 +155,11 @@ assetListLoader.load(() => {
         // if settings require render passes to be re-created
         const noPasses = cameraEntity.camera.renderPasses.length === 0;
         const taaEnabled = data.get('data.taa.enabled');
-        if (noPasses || taaEnabled !== currentOptions.taaEnabled) {
+        const bloomEnabled = data.get('data.scene.bloom');
+
+        if (noPasses || taaEnabled !== currentOptions.taaEnabled || bloomEnabled !== currentOptions.bloomEnabled) {
             currentOptions.taaEnabled = taaEnabled;
+            currentOptions.bloomEnabled = bloomEnabled;
 
             // TAA has been flipped, setup sharpening appropriately
             data.set('data.scene.sharpness', taaEnabled ? 1 : 0);
@@ -167,7 +171,6 @@ assetListLoader.load(() => {
         // apply all runtime settings
         const renderPassCamera = cameraEntity.camera.renderPasses[0];
         renderPassCamera.renderTargetScale = data.get('data.scene.scale');
-        renderPassCamera.bloomEnabled = data.get('data.scene.bloom');
 
         const composePass = renderPassCamera.composePass;
         composePass.sharpness = data.get('data.scene.sharpness');

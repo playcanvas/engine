@@ -219,6 +219,7 @@ assetListLoader.load(() => {
         camera: cameraEntity.camera, // camera used to render those passes
         samples: 0, // number of samples for multi-sampling
         sceneColorMap: true, // true if the scene color should be captured
+        bloomEnabled: true,
 
         // disabled TAA as it currently does not handle dynamic objects
         prepassEnabled: false,
@@ -245,8 +246,11 @@ assetListLoader.load(() => {
         // if settings require render passes to be re-created
         const noPasses = cameraEntity.camera.renderPasses.length === 0;
         const taaEnabled = data.get('data.taa.enabled');
-        if (noPasses || taaEnabled !== currentOptions.taaEnabled) {
+        const bloomEnabled = data.get('data.bloom.enabled');
+
+        if (noPasses || taaEnabled !== currentOptions.taaEnabled || bloomEnabled !== currentOptions.bloomEnabled) {
             currentOptions.taaEnabled = taaEnabled;
+            currentOptions.bloomEnabled = bloomEnabled;
             currentOptions.prepassEnabled = taaEnabled;
 
             // create new pass
@@ -280,9 +284,11 @@ assetListLoader.load(() => {
         cameraEntity.camera.jitter = taaEnabled ? data.get('data.taa.jitter') : 0;
 
         // bloom
-        composePass.bloomIntensity = pc.math.lerp(0, 0.1, data.get('data.bloom.intensity') / 100);
-        renderPassCamera.lastMipLevel = data.get('data.bloom.lastMipLevel');
-        renderPassCamera.bloomEnabled = data.get('data.bloom.enabled');
+        // renderPassCamera.bloomEnabled = data.get('data.bloom.enabled');
+        if (bloomEnabled) {
+            renderPassCamera.lastMipLevel = data.get('data.bloom.lastMipLevel');
+            composePass.bloomIntensity = pc.math.lerp(0, 0.1, data.get('data.bloom.intensity') / 100);
+        }
 
         // grading
         composePass.gradingSaturation = data.get('data.grading.saturation');
@@ -317,7 +323,7 @@ assetListLoader.load(() => {
             tonemapping: pc.TONEMAP_ACES
         },
         bloom: {
-            enabled: true,
+            enabled: currentOptions.bloomEnabled,
             intensity: 20,
             lastMipLevel: 1
         },
