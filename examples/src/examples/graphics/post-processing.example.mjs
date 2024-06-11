@@ -277,7 +277,8 @@ assetListLoader.load(() => {
         });
 
         // taa - enable camera jitter if taa is enabled
-        cameraEntity.camera.jitter = taaEnabled ? data.get('data.taa.jitter') : 0;
+        const jitterResolutionScale = Math.min(Math.pow(renderPassCamera.renderTargetScale, 2.0), 1);
+        cameraEntity.camera.jitter = taaEnabled ? data.get('data.taa.jitter') * jitterResolutionScale : 0;
 
         // bloom
         composePass.bloomIntensity = pc.math.lerp(0, 0.1, data.get('data.bloom.intensity') / 100);

@@ -17,7 +17,7 @@ export function controls({ observer, ReactPCUI, React, jsx, fragment }) {
                     binding: new BindingTwoWay(),
                     link: { observer, path: 'data.scene.scale' },
                     min: 0.2,
-                    max: 1,
+                    max: 2,
                     precision: 1
                 })
             ),
