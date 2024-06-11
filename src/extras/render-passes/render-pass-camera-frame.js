@@ -1,4 +1,4 @@
-import { LAYERID_SKYBOX, LAYERID_IMMEDIATE } from '../../scene/constants.js';
+import { LAYERID_SKYBOX, LAYERID_IMMEDIATE, SHADERPASS_FORWARD_HDR } from '../../scene/constants.js';
 import {
     ADDRESS_CLAMP_TO_EDGE,
     FILTER_LINEAR,
@@ -148,6 +148,9 @@ class RenderPassCameraFrame extends RenderPass {
         const targetRenderTarget = cameraComponent.renderTarget;
 
         this.hdrFormat = device.getRenderableHdrFormat() || PIXELFORMAT_RGBA8;
+
+        // camera renders in HDR mode (linear output, no tonemapping)
+        cameraComponent.setShaderPass(SHADERPASS_FORWARD_HDR);
 
         // create a render target to render the scene into
         this.sceneTexture = new Texture(device, {

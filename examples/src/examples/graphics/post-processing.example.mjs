@@ -81,11 +81,6 @@ assetListLoader.load(() => {
     // disable skydome rendering itself, we don't need it as we use camera clear color
     app.scene.layers.getLayerByName('Skybox').enabled = false;
 
-    // the render passes render in HDR format, and so disable output tone mapping and gamma correction,
-    // as that is applied in the final compose pass
-    app.scene.toneMapping = pc.TONEMAP_LINEAR;
-    app.scene.gammaCorrection = pc.GAMMA_NONE;
-
     // create an instance of the platform and add it to the scene
     const platformEntity = assets.platform.resource.instantiateRenderEntity();
     platformEntity.setLocalScale(10, 10, 10);
@@ -107,11 +102,12 @@ assetListLoader.load(() => {
     app.root.addChild(mosquitoEntity);
 
     // helper function to create a box primitive
-    const createBox = (x, y, z, r, g, b, name) => {
+    const createBox = (x, y, z, r, g, b, emissive, name) => {
         // create material of random color
         const material = new pc.StandardMaterial();
         material.diffuse = pc.Color.BLACK;
         material.emissive = new pc.Color(r, g, b);
+        material.emissiveIntensity = emissive;
         material.update();
 
         // create primitive
@@ -130,9 +126,9 @@ assetListLoader.load(() => {
 
     // create 3 emissive boxes
     const boxes = [
-        createBox(100, 20, 0, 200, 0, 0, 'boxRed'),
-        createBox(-50, 20, 100, 0, 80, 0, 'boxGreen'),
-        createBox(90, 20, -80, 80, 80, 20, 'boxYellow')
+        createBox(100, 20, 0, 1, 0, 0, 60, 'boxRed'),
+        createBox(-50, 20, 100, 0, 1, 0, 60, 'boxGreen'),
+        createBox(90, 20, -80, 1, 1, 0.25, 50, 'boxYellow')
     ];
 
     // Create an Entity with a camera component
@@ -284,7 +280,6 @@ assetListLoader.load(() => {
         cameraEntity.camera.jitter = taaEnabled ? data.get('data.taa.jitter') : 0;
 
         // bloom
-        // renderPassCamera.bloomEnabled = data.get('data.bloom.enabled');
         if (bloomEnabled) {
             renderPassCamera.lastMipLevel = data.get('data.bloom.lastMipLevel');
             composePass.bloomIntensity = pc.math.lerp(0, 0.1, data.get('data.bloom.intensity') / 100);
@@ -324,7 +319,7 @@ assetListLoader.load(() => {
         },
         bloom: {
             enabled: currentOptions.bloomEnabled,
-            intensity: 20,
+            intensity: 10,
             lastMipLevel: 1
         },
         grading: {

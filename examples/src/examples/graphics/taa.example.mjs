@@ -62,12 +62,7 @@ assetListLoader.load(() => {
     // setup skydome with low intensity
     app.scene.envAtlas = assets.envatlas.resource;
     app.scene.skyboxMip = 0;
-    app.scene.exposure = 1.0;
-
-    // the render passes render in HDR format, and so disable output tone mapping and gamma correction,
-    // as that is applied in the final compose pass
-    app.scene.toneMapping = pc.TONEMAP_LINEAR;
-    app.scene.gammaCorrection = pc.GAMMA_NONE;
+    app.scene.exposure = 1.6;
 
     // create an instance of the house and add it to the scene
     const houseEntity = assets.house.resource.instantiateRenderEntity();
@@ -104,7 +99,7 @@ assetListLoader.load(() => {
     light.addComponent('light', {
         type: 'directional',
         color: lightColor,
-        intensity: 0.2,
+        intensity: 1,
         range: 700,
         shadowResolution: 4096,
         shadowDistance: 600,
