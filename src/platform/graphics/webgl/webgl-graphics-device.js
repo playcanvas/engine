@@ -1852,8 +1852,8 @@ class WebglGraphicsDevice extends GraphicsDevice {
      * call.
      * @param {boolean} [primitive.indexed] - True to interpret the primitive as indexed, thereby
      * using the currently set index buffer and false otherwise.
-     * @param {number} [numInstances] - The number of instances to render when using
-     * ANGLE_instanced_arrays. Defaults to 1.
+     * @param {number} [numInstances] - The number of instances to render when using instancing.
+     * Defaults to 1.
      * @param {boolean} [keepBuffers] - Optionally keep the current set of vertex / index buffers /
      * VAO. This is used when rendering of multiple views, for example under WebXR.
      * @example
