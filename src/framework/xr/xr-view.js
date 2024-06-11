@@ -4,7 +4,7 @@ import { Vec4 } from "../../core/math/vec4.js";
 import { Mat3 } from "../../core/math/mat3.js";
 import { Mat4 } from "../../core/math/mat4.js";
 
-import { ADDRESS_CLAMP_TO_EDGE, FILTER_LINEAR, PIXELFORMAT_RGB8 } from '../../platform/graphics/constants.js';
+import { ADDRESS_CLAMP_TO_EDGE, FILTER_LINEAR, FILTER_NEAREST, PIXELFORMAT_RGB8 } from '../../platform/graphics/constants.js';
 
 /**
  * Represents an XR View which represents a screen (monoscopic scenario such as a mobile phone) or an eye
@@ -166,14 +166,16 @@ class XrView extends EventHandler {
         }
 
         if (this._manager.views.supportedDepth && this._manager.views.availableDepth) {
+            const filtering = this._manager.views.depthGpuOptimized ? FILTER_NEAREST : FILTER_LINEAR;
+
             this._textureDepth = new Texture(device, {
                 format: this._manager.views.depthPixelFormat,
                 arrayLength: (viewsCount === 1) ? 0 : viewsCount,
                 mipmaps: false,
                 addressU: ADDRESS_CLAMP_TO_EDGE,
                 addressV: ADDRESS_CLAMP_TO_EDGE,
-                minFilter: FILTER_LINEAR,
-                magFilter: FILTER_LINEAR,
+                minFilter: filtering,
+                magFilter: filtering,
                 width: 4,
                 height: 4,
                 name: `XrView-${this._xrView.eye}-Depth`
@@ -182,6 +184,8 @@ class XrView extends EventHandler {
             for (let i = 0; i < this._textureDepth._levels.length; i++) {
                 this._textureDepth._levels[i] = this._emptyDepthBuffer;
             }
+
+            this._textureDepth.upload();
         }
 
         if (this._textureColor || this._textureDepth)
@@ -478,7 +482,13 @@ class XrView extends EventHandler {
             if (gpu) {
                 // gpu
                 if (this._depthInfo.texture) {
+                    const gl = this._manager.app.graphicsDevice.gl;
                     this._textureDepth.impl._glTexture = this._depthInfo.texture;
+                    this._textureDepth.impl._glTarget = gl.TEXTURE_2D_ARRAY;
+                    this._textureDepth.impl._glFormat = gl.RED;
+                    this._textureDepth.impl._glInternalFormat = gl.R32F;
+                    this._textureDepth.impl._glPixelType = gl.FLOAT;
+                    this._textureDepth.impl._glCreated = true;
                 }
             } else {
                 // cpu
