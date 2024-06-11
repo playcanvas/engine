@@ -573,7 +573,7 @@ class AnimComponent extends Component {
      * animation should be associated with. Each section of a blend tree path is split using a
      * period (`.`) therefore state names should not include this character (e.g "MyStateName" or
      * "MyStateName.BlendTreeNode").
-     * @param {object} animTrack - The animation track that will be assigned to this state and
+     * @param {AnimTrack} animTrack - The animation track that will be assigned to this state and
      * played whenever this state is active.
      * @param {string} [layerName] - The name of the anim component layer to update. If omitted the
      * default layer is used. If no state graph has been previously loaded this parameter is
