@@ -1466,7 +1466,7 @@ class AppBase extends EventHandler {
      * - {@link SHADOW_PCF3}: PCF 3x3 sampling.
      * - {@link SHADOW_PCF5}: PCF 5x5 sampling. Falls back to {@link SHADOW_PCF3} on WebGL 1.0.
      *
-     * @param {Vec3} settings.render.lightingCells - Number of cells along each world-space axis the space containing lights
+     * @param {Vec3} settings.render.lightingCells - Number of cells along each world space axis the space containing lights
      * is subdivided into.
      *
      * Only lights with bakeDir=true will be used for generating the dominant light direction.
@@ -1599,11 +1599,11 @@ class AppBase extends EventHandler {
     }
 
     /**
-     * Draws a single line. Line start and end coordinates are specified in world-space. The line
+     * Draws a single line. Line start and end coordinates are specified in world space. The line
      * will be flat-shaded with the specified color.
      *
-     * @param {Vec3} start - The start world-space coordinate of the line.
-     * @param {Vec3} end - The end world-space coordinate of the line.
+     * @param {Vec3} start - The start world space coordinate of the line.
+     * @param {Vec3} end - The end world space coordinate of the line.
      * @param {Color} [color] - The color of the line. It defaults to white if not specified.
      * @param {boolean} [depthTest] - Specifies if the line is depth tested against the depth
      * buffer. Defaults to true.

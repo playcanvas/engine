@@ -112,13 +112,18 @@ class Component extends EventHandler {
     }
 
     /**
-     * Enables or disables the component.
+     * Sets the enabled state of the component.
      *
      * @type {boolean}
      */
     set enabled(arg) {
     }
 
+    /**
+     * Gets the enabled state of the component.
+     *
+     * @type {boolean}
+     */
     get enabled() {
         return true;
     }

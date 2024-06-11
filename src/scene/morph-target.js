@@ -68,7 +68,7 @@ class MorphTarget {
     }
 
     /**
-     * The name of the morph target.
+     * Gets the name of the morph target.
      *
      * @type {string}
      */
@@ -77,7 +77,7 @@ class MorphTarget {
     }
 
     /**
-     * The default weight of the morph target.
+     * Gets the default weight of the morph target.
      *
      * @type {number}
      */

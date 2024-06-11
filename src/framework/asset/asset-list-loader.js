@@ -32,7 +32,7 @@ class AssetListLoader extends EventHandler {
      * const assetListLoader = new pc.AssetListLoader([
      *     new pc.Asset("texture1", "texture", { url: 'http://example.com/my/assets/here/texture1.png') }),
      *     new pc.Asset("texture2", "texture", { url: 'http://example.com/my/assets/here/texture2.png') })
-     * ], pc.app.assets);
+     * ], app.assets);
      */
     constructor(assetList, assetRegistry) {
         super();

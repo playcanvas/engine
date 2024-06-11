@@ -45,7 +45,7 @@ class TextureAtlas extends EventHandler {
     }
 
     /**
-     * The texture used by the atlas.
+     * Sets the texture used by the atlas.
      *
      * @type {import('../platform/graphics/texture.js').Texture}
      */
@@ -54,12 +54,17 @@ class TextureAtlas extends EventHandler {
         this.fire('set:texture', value);
     }
 
+    /**
+     * Gets the texture used by the atlas.
+     *
+     * @type {import('../platform/graphics/texture.js').Texture}
+     */
     get texture() {
         return this._texture;
     }
 
     /**
-     * Contains frames which define portions of the texture atlas.
+     * Sets the frames which define portions of the texture atlas.
      *
      * @type {object}
      */
@@ -68,6 +73,11 @@ class TextureAtlas extends EventHandler {
         this.fire('set:frames', value);
     }
 
+    /**
+     * Gets the frames which define portions of the texture atlas.
+     *
+     * @type {object}
+     */
     get frames() {
         return this._frames;
     }

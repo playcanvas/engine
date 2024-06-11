@@ -132,8 +132,8 @@ class SoundComponent extends Component {
     }
 
     /**
-     * Determines which algorithm to use to reduce the volume of the sound as it moves away from
-     * the listener. Can be:
+     * Sets which algorithm to use to reduce the volume of the sound as it moves away from the
+     * listener. Can be:
      *
      * - {@link DISTANCE_LINEAR}
      * - {@link DISTANCE_INVERSE}
@@ -148,13 +148,20 @@ class SoundComponent extends Component {
         this._updateSoundInstances('distanceModel', value, false);
     }
 
+    /**
+     * Gets which algorithm to use to reduce the volume of the sound as it moves away from the
+     * listener.
+     *
+     * @type {string}
+     */
     get distanceModel() {
         return this._distanceModel;
     }
 
     /**
-     * The maximum distance from the listener at which audio falloff stops. Note the volume of the
-     * audio is not 0 after this distance, but just doesn't fall off anymore. Defaults to 10000.
+     * Sets the maximum distance from the listener at which audio falloff stops. Note that the
+     * volume of the audio is not 0 after this distance, but just doesn't fall off anymore.
+     * Defaults to 10000.
      *
      * @type {number}
      */
@@ -163,12 +170,17 @@ class SoundComponent extends Component {
         this._updateSoundInstances('maxDistance', value, false);
     }
 
+    /**
+     * Gets the maximum distance from the listener at which audio falloff stops.
+     *
+     * @type {number}
+     */
     get maxDistance() {
         return this._maxDistance;
     }
 
     /**
-     * The reference distance for reducing volume as the sound source moves further from the
+     * Sets the reference distance for reducing volume as the sound source moves further from the
      * listener. Defaults to 1.
      *
      * @type {number}
@@ -178,12 +190,18 @@ class SoundComponent extends Component {
         this._updateSoundInstances('refDistance', value, false);
     }
 
+    /**
+     * Gets the reference distance for reducing volume as the sound source moves further from the
+     * listener.
+     *
+     * @type {number}
+     */
     get refDistance() {
         return this._refDistance;
     }
 
     /**
-     * The factor used in the falloff equation. Defaults to 1.
+     * Sets the factor used in the falloff equation. Defaults to 1.
      *
      * @type {number}
      */
@@ -192,12 +210,17 @@ class SoundComponent extends Component {
         this._updateSoundInstances('rollOffFactor', value, false);
     }
 
+    /**
+     * Gets the factor used in the falloff equation.
+     *
+     * @type {number}
+     */
     get rollOffFactor() {
         return this._rollOffFactor;
     }
 
     /**
-     * The pitch modifier to play the audio with. Must be larger than 0.01. Defaults to 1.
+     * Sets the pitch modifier to play the audio with. Must be larger than 0.01. Defaults to 1.
      *
      * @type {number}
      */
@@ -206,12 +229,17 @@ class SoundComponent extends Component {
         this._updateSoundInstances('pitch', value, true);
     }
 
+    /**
+     * Gets the pitch modifier to play the audio with.
+     *
+     * @type {number}
+     */
     get pitch() {
         return this._pitch;
     }
 
     /**
-     * The volume modifier to play the audio with. In range 0-1. Defaults to 1.
+     * Sets the volume modifier to play the audio with. In range 0-1. Defaults to 1.
      *
      * @type {number}
      */
@@ -220,13 +248,19 @@ class SoundComponent extends Component {
         this._updateSoundInstances('volume', value, true);
     }
 
+    /**
+     * Gets the volume modifier to play the audio with.
+     *
+     * @type {number}
+     */
     get volume() {
         return this._volume;
     }
 
     /**
-     * If true the audio will play back at the location of the Entity in space, so the audio will
-     * be affected by the position of the {@link AudioListenerComponent}. Defaults to true.
+     * Sets whether the component plays positional sound. If true, the audio will play back at the
+     * location of the Entity in space, so the audio will be affected by the position of the
+     * {@link AudioListenerComponent}. Defaults to true.
      *
      * @type {boolean}
      */
@@ -262,12 +296,17 @@ class SoundComponent extends Component {
         }
     }
 
+    /**
+     * Gets whether the component plays positional sound.
+     *
+     * @type {boolean}
+     */
     get positional() {
         return this._positional;
     }
 
     /**
-     * A dictionary that contains the {@link SoundSlot}s managed by this SoundComponent.
+     * Sets a dictionary that contains the {@link SoundSlot}s managed by this SoundComponent.
      *
      * @type {Object<string, SoundSlot>}
      */
@@ -301,6 +340,11 @@ class SoundComponent extends Component {
             this.onEnable();
     }
 
+    /**
+     * Gets a dictionary that contains the {@link SoundSlot}s managed by this SoundComponent.
+     *
+     * @type {Object<string, SoundSlot>}
+     */
     get slots() {
         return this._slots;
     }
@@ -360,16 +404,16 @@ class SoundComponent extends Component {
      * @param {object} [options] - Settings for the slot.
      * @param {number} [options.volume] - The playback volume, between 0 and 1. Defaults to 1.
      * @param {number} [options.pitch] - The relative pitch. Defaults to 1 (plays at normal pitch).
-     * @param {boolean} [options.loop] - If true the sound will restart when it reaches the end.
+     * @param {boolean} [options.loop] - If true, the sound will restart when it reaches the end.
      * Defaults to false.
      * @param {number} [options.startTime] - The start time from which the sound will start playing.
      * Defaults to 0 to start at the beginning.
      * @param {number} [options.duration] - The duration of the sound that the slot will play
      * starting from startTime. Defaults to `null` which means play to end of the sound.
-     * @param {boolean} [options.overlap] - If true then sounds played from slot will be played
+     * @param {boolean} [options.overlap] - If true, then sounds played from slot will be played
      * independently of each other. Otherwise the slot will first stop the current sound before
      * starting the new one. Defaults to false.
-     * @param {boolean} [options.autoPlay] - If true the slot will start playing as soon as its
+     * @param {boolean} [options.autoPlay] - If true, the slot will start playing as soon as its
      * audio asset is loaded. Defaults to false.
      * @param {number} [options.asset] - The asset id of the audio asset that is going to be played
      * by this slot.
