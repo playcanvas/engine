@@ -485,7 +485,7 @@ class WebglTexture {
 
         const requiredMipLevels = texture.numLevels;
 
-        if (texture.array) {
+        if (texture.array && !this._glCreated) {
             // for texture arrays we reserve the space in advance
             gl.texStorage3D(gl.TEXTURE_2D_ARRAY,
                             requiredMipLevels,
@@ -523,11 +523,11 @@ class WebglTexture {
                 if (device._isBrowserInterface(mipObject[0])) {
                     // Upload the image, canvas or video
                     for (face = 0; face < texture.slices; face++) {
-                        if (!texture._levelsUpdated[0][face])
+                        let src = mipObject[face];
+                        if (!texture._levelsUpdated[0][face] || !src)
                             continue;
                         }
 
-                        let src = mipObject[face];
                         // Downsize images that are too large to be used as cube maps
                         if (device._isImageBrowserInterface(src)) {
                             if (src.width > device.maxCubeMapSize || src.height > device.maxCubeMapSize) {
@@ -566,11 +566,11 @@ class WebglTexture {
                     // Upload the byte array
                     resMult = 1 / Math.pow(2, mipLevel);
                     for (face = 0; face < texture.slices; face++) {
-                        if (!texture._levelsUpdated[0][face])
+                        const texData = mipObject[face];
+                        if (!texture._levelsUpdated[0][face] || !texData)
                             continue;
                         }
 
-                        const texData = mipObject[face];
                         if (texture._compressed) {
                             if (this._glCreated && texData) {
                                 gl.compressedTexSubImage2D(
@@ -650,38 +650,40 @@ class WebglTexture {
                                   mipObject);
                 }
             } else if (texture.array && typeof mipObject === "object") {
-                if (texture._slices === mipObject.length) {
-                    if (texture._compressed) {
-                        for (let index = 0; index < texture._slices; index++) {
-                            gl.compressedTexSubImage3D(
-                                gl.TEXTURE_2D_ARRAY,
-                                mipLevel,
-                                0,
-                                0,
-                                index,
-                                Math.max(Math.floor(texture._width * resMult), 1),
-                                Math.max(Math.floor(texture._height * resMult), 1),
-                                1,
-                                this._glFormat,
-                                mipObject[index]
-                            );
-                        }
-                    } else {
-                        for (let index = 0; index < texture.slices; index++) {
-                            gl.texSubImage3D(
-                                gl.TEXTURE_2D_ARRAY,
-                                mipLevel,
-                                0,
-                                0,
-                                index,
-                                Math.max(Math.floor(texture._width * resMult), 1),
-                                Math.max(Math.floor(texture._height * resMult), 1),
-                                1,
-                                this._glFormat,
-                                this._glPixelType,
-                                mipObject[index]
-                            );
-                        }
+                if (texture._compressed) {
+                    for (let index = 0; index < texture._slices; index++) {
+                        if (!texture._levelsUpdated[0][index] || !mipObject[index])
+                            continue;
+                        gl.compressedTexSubImage3D(
+                            gl.TEXTURE_2D_ARRAY,
+                            mipLevel,
+                            0,
+                            0,
+                            index,
+                            Math.max(Math.floor(texture._width * resMult), 1),
+                            Math.max(Math.floor(texture._height * resMult), 1),
+                            1,
+                            this._glFormat,
+                            mipObject[index]
+                        );
+                    }
+                } else {
+                    for (let index = 0; index < texture.slices; index++) {
+                        if (!texture._levelsUpdated[0][index] || !mipObject[index])
+                            continue;
+                        gl.texSubImage3D(
+                            gl.TEXTURE_2D_ARRAY,
+                            mipLevel,
+                            0,
+                            0,
+                            index,
+                            Math.max(Math.floor(texture._width * resMult), 1),
+                            Math.max(Math.floor(texture._height * resMult), 1),
+                            1,
+                            this._glFormat,
+                            this._glPixelType,
+                            mipObject[index]
+                        );
                     }
                 }
             } else {
@@ -796,7 +798,7 @@ class WebglTexture {
         }
 
         if (texture._needsUpload) {
-            if (texture.cubemap) {
+            if (texture.cubemap || texture.array) {
                 for (let i = 0; i < texture.slices; i++)
                     texture._levelsUpdated[0][i] = false;
                 }

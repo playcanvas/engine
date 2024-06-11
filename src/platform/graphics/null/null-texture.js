@@ -10,6 +10,9 @@ class NullTexture {
 
     loseContext() {
     }
+
+    uploadImmediate(device, texture, immediate) {
+    }
 }
 
 export { NullTexture };

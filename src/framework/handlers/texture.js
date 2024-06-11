@@ -99,10 +99,10 @@ const _completePartialMipmapChain = function (texture) {
     for (let level = texture._levels.length; level < requiredMipLevels; ++level) {
         const width = Math.max(1, texture._width >> (level - 1));
         const height = Math.max(1, texture._height >> (level - 1));
-        if (texture.cubemap) {
+        if (texture.cubemap || texture.array) {
             const mips = [];
-            for (let face = 0; face < 6; ++face) {
-                mips.push(downsample(width, height, texture._levels[level - 1][face]));
+            for (let slice = 0; slice < texture.slices; ++slice) {
+                mips.push(downsample(width, height, texture._levels[level - 1][slice]));
             }
             texture._levels.push(mips);
         } else {
@@ -110,7 +110,7 @@ const _completePartialMipmapChain = function (texture) {
         }
     }
 
-    texture._levelsUpdated = texture.cubemap ? [[true, true, true, true, true, true]] : [true];
+    texture._levelsUpdated = (texture.cubemap || texture.array) ? [Array(texture.slices).fill(true)] : [true];
 };
 
 /**

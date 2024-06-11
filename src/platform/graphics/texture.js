@@ -74,9 +74,6 @@ class Texture {
     _invalid = false;
 
     /** @protected */
-    _lockedLevel = -1;
-
-    /** @protected */
     _lockedMode = TEXTURELOCK_NONE;
 
     /**
@@ -303,7 +300,7 @@ class Texture {
         if (this._levels) {
             this.upload(options.immediate ?? false);
         } else {
-            this._levels = this.cubemap ? [[null, null, null, null, null, null]] : [null];
+            this._levels = (this.cubemap || this.array) ? [Array(this._slices).fill(null)] : [null];
         }
 
         // track the texture
@@ -854,7 +851,7 @@ class Texture {
 
     // Force a full resubmission of the texture to the GPU (used on a context restore event)
     dirtyAll() {
-        this._levelsUpdated = this.cubemap ? [[true, true, true, true, true, true]] : [true];
+        this._levelsUpdated = (this.cubemap || this.array) ? [Array(this._slices).fill(true)] : [true];
 
         this._needsUpload = true;
         this._needsMipmapsUpload = this._mipmaps;
@@ -871,6 +868,8 @@ class Texture {
      * to 0.
      * @param {number} [options.face] - If the texture is a cubemap, this is the index of the face
      * to lock.
+     * @param {number} [options.slice] - If the texture is a texture array, this is the index of the
+     * slice to lock.
      * @param {number} [options.mode] - The lock mode. Can be:
      * - {@link TEXTURELOCK_READ}
      * - {@link TEXTURELOCK_WRITE}
@@ -882,6 +881,7 @@ class Texture {
         // Initialize options to some sensible defaults
         options.level ??= 0;
         options.face ??= 0;
+        options.slice ??= 0;
         options.mode ??= TEXTURELOCK_WRITE;
 
         Debug.assert(
@@ -896,17 +896,36 @@ class Texture {
             this
         );
 
-        this._lockedMode = options.mode;
-        this._lockedLevel = options.level;
+        Debug.assert(
+            options.level >= 0 && options.level < this._levels.length,
+            'Invalid mip level',
+            this
+        );
 
-        const levels = this.cubemap ? this._levels[options.face] : this._levels;
+        Debug.assert(
+            ((this.cubemap || this.array) && options.mode === TEXTURELOCK_WRITE) ? options.level === 0 : true,
+            'Only mip level 0 can be locked for writing for cubemaps and texture arrays',
+            this
+        );
+
+        this._lockedMode = options.mode;
+
+        const levels = this.cubemap ? this._levels[options.face] : this.array ? this._levels[options.slice] : this._levels;
         if (levels[options.level] === null) {
             // allocate storage for this mip level
             const width = Math.max(1, this._width >> options.level);
             const height = Math.max(1, this._height >> options.level);
-            const depth = Math.max(1, (this._dimension === TEXTUREDIMENSION_3D ? this._slices : 1) >> options.level);
+            const depth = Math.max(1, this.depth >> options.level);
             const data = new ArrayBuffer(TextureUtils.calcLevelGpuSize(width, height, depth, this._format));
             levels[options.level] = new (getPixelFormatArrayType(this._format))(data);
+        }
+
+        if (this._lockedMode === TEXTURELOCK_WRITE) {
+            if (this.cubemap || this.array) {
+                this._levelsUpdated[0][options.face ?? options.slice] = true;
+            } else {
+                this._levelsUpdated[0] = true;
+            }
         }
 
         return levels[options.level];
@@ -918,22 +937,21 @@ class Texture {
      *
      * @param {HTMLCanvasElement|HTMLImageElement|HTMLVideoElement|HTMLCanvasElement[]|HTMLImageElement[]|HTMLVideoElement[]} source - A
      * canvas, image or video element, or an array of 6 canvas, image or video elements.
-     * @param {number} [mipLevel] - A non-negative integer specifying the image level of detail.
      * Defaults to 0, which represents the base image source. A level value of N, that is greater
      * than 0, represents the image source for the Nth mipmap reduction level.
      * @param {boolean} [immediate] - When set to true it forces an immediate upload upon assignment. Defaults to false.
      */
-    setSource(source, mipLevel = 0, immediate = false) {
+    setSource(source, immediate = false) {
         let invalid = false;
         let width, height;
 
-        if (this.cubemap) {
+        if (this.cubemap || this.array) {
             if (source[0]) {
                 // rely on first face sizes
                 width = source[0].width || 0;
                 height = source[0].height || 0;
 
-                for (let i = 0; i < 6; i++) {
+                for (let i = 0; i < this._slices; i++) {
                     const face = source[i];
                     // cubemap becomes invalid if any condition is not satisfied
                     if (!face ||                  // face is missing
@@ -951,10 +969,9 @@ class Texture {
 
             if (!invalid) {
                 // mark levels as updated
-                for (let i = 0; i < 6; i++) {
-                    if (this._levels[mipLevel][i] !== source[i]) {
-                        this._levelsUpdated[mipLevel][i] = true;
-                    }
+                for (let i = 0; i < this._slices; i++) {
+                    if (this._levels[0][i] !== source[i])
+                        this._levelsUpdated[0][i] = true;
                 }
             }
         } else {
@@ -965,9 +982,8 @@ class Texture {
 
             if (!invalid) {
                 // mark level as updated
-                if (source !== this._levels[mipLevel]) {
-                    this._levelsUpdated[mipLevel] = true;
-                }
+                if (source !== this._levels[0])
+                    this._levelsUpdated[0] = true;
 
                 if (source instanceof HTMLVideoElement) {
                     width = source.videoWidth;
@@ -987,23 +1003,22 @@ class Texture {
             this._height = 4;
 
             // remove levels
-            if (this.cubemap) {
-                for (let i = 0; i < 6; i++) {
-                    this._levels[mipLevel][i] = null;
-                    this._levelsUpdated[mipLevel][i] = true;
+            if (this.cubemap || this.array) {
+                for (let i = 0; i < this._slices; i++) {
+                    this._levels[0][i] = null;
+                    this._levelsUpdated[0][i] = true;
                 }
             } else {
-                this._levels[mipLevel] = null;
-                this._levelsUpdated[mipLevel] = true;
+                this._levels[0] = null;
+                this._levelsUpdated[0] = true;
             }
         } else {
             // valid texture
-            if (mipLevel === 0) {
-                this._width = width;
-                this._height = height;
-            }
 
-            this._levels[mipLevel] = source;
+            this._width = width;
+            this._height = height;
+
+            this._levels[0] = source;
         }
 
         // valid or changed state of validity
@@ -1019,14 +1034,11 @@ class Texture {
      * Get the pixel data of the texture. If this is a cubemap then an array of 6 images will be
      * returned otherwise a single image.
      *
-     * @param {number} [mipLevel] - A non-negative integer specifying the image level of detail.
-     * Defaults to 0, which represents the base image source. A level value of N, that is greater
-     * than 0, represents the image source for the Nth mipmap reduction level.
      * @returns {HTMLImageElement} The source image of this texture. Can be null if source not
      * assigned for specific image level.
      */
-    getSource(mipLevel = 0) {
-        return this._levels[mipLevel];
+    getSource() {
+        return this._levels[0];
     }
 
     /**
@@ -1042,7 +1054,6 @@ class Texture {
         if (this._lockedMode === TEXTURELOCK_WRITE) {
             this.upload(immediate);
         }
-        this._lockedLevel = -1;
         this._lockedMode = TEXTURELOCK_NONE;
     }
 
