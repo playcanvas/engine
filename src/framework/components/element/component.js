@@ -515,10 +515,10 @@ class ElementComponent extends Component {
 
     /**
      * Sets the width at which the element will be rendered. In most cases this will be the same as
-     * `width`. However, in some cases the engine may calculate a different width for the element,
-     * such as when the element is under the control of a {@link LayoutGroupComponent}. In these
-     * scenarios, `calculatedWidth` may be smaller or larger than the width that was set in the
-     * editor.
+     * {@link width}. However, in some cases the engine may calculate a different width for the
+     * element, such as when the element is under the control of a {@link LayoutGroupComponent}. In
+     * these scenarios, `calculatedWidth` may be smaller or larger than the width that was set in
+     * the editor.
      *
      * @type {number}
      */
@@ -537,10 +537,10 @@ class ElementComponent extends Component {
 
     /**
      * Sets the height at which the element will be rendered. In most cases this will be the same
-     * as `height`. However, in some cases the engine may calculate a different height for the
-     * element, such as when the element is under the control of a {@link LayoutGroupComponent}. In
-     * these scenarios, `calculatedHeight` may be smaller or larger than the height that was set in
-     * the editor.
+     * as {@link height}. However, in some cases the engine may calculate a different height for
+     * the element, such as when the element is under the control of a {@link LayoutGroupComponent}.
+     * In these scenarios, `calculatedHeight` may be smaller or larger than the height that was set
+     * in the editor.
      *
      * @type {number}
      */
@@ -618,8 +618,8 @@ class ElementComponent extends Component {
     /**
      * Sets the height of the element as set in the editor. Note that in some cases this may not
      * reflect the true height at which the element is rendered, such as when the element is under
-     * the control of a {@link LayoutGroupComponent}. See `calculatedHeight` in order to ensure you
-     * are reading the true height at which the element will be rendered.
+     * the control of a {@link LayoutGroupComponent}. See {@link calculatedHeight} in order to
+     * ensure you are reading the true height at which the element will be rendered.
      *
      * @type {number}
      */
@@ -914,8 +914,8 @@ class ElementComponent extends Component {
     /**
      * Sets the type of the ElementComponent. Can be:
      *
-     * - {@link ELEMENTTYPE_GROUP}: The component can be used as a layout mechanism to create groups of
-     * ElementComponents e.g. panels.
+     * - {@link ELEMENTTYPE_GROUP}: The component can be used as a layout mechanism to create
+     * groups of ElementComponents e.g. panels.
      * - {@link ELEMENTTYPE_IMAGE}: The component will render an image
      * - {@link ELEMENTTYPE_TEXT}: The component will render text
      *
@@ -1022,8 +1022,8 @@ class ElementComponent extends Component {
     /**
      * Sets the width of the element as set in the editor. Note that in some cases this may not
      * reflect the true width at which the element is rendered, such as when the element is under
-     * the control of a {@link LayoutGroupComponent}. See `calculatedWidth` in order to ensure you
-     * are reading the true width at which the element will be rendered.
+     * the control of a {@link LayoutGroupComponent}. See {@link calculatedWidth} in order to
+     * ensure you are reading the true width at which the element will be rendered.
      *
      * @type {number}
      */
@@ -1132,8 +1132,8 @@ class ElementComponent extends Component {
     }
 
     /**
-     * Sets the minimum size that the font can scale to when `autoFitWidth` or `autoFitHeight` are
-     * true.
+     * Sets the minimum size that the font can scale to when {@link autoFitWidth} or
+     * {@link autoFitHeight} are true.
      *
      * @type {number}
      */
@@ -1142,8 +1142,8 @@ class ElementComponent extends Component {
     }
 
     /**
-     * Gets the minimum size that the font can scale to when `autoFitWidth` or `autoFitHeight` are
-     * true.
+     * Gets the minimum size that the font can scale to when {@link autoFitWidth} or
+     * {@link autoFitHeight} are true.
      *
      * @type {number}
      */
@@ -1156,8 +1156,8 @@ class ElementComponent extends Component {
     }
 
     /**
-     * Sets the maximum size that the font can scale to when `autoFitWidth` or `autoFitHeight` are
-     * true.
+     * Sets the maximum size that the font can scale to when {@link autoFitWidth} or
+     * {@link autoFitHeight} are true.
      *
      * @type {number}
      */
@@ -1166,8 +1166,8 @@ class ElementComponent extends Component {
     }
 
     /**
-     * Gets the maximum size that the font can scale to when `autoFitWidth` or `autoFitHeight` are
-     * true.
+     * Gets the maximum size that the font can scale to when {@link autoFitWidth} or
+     * {@link autoFitHeight} are true.
      *
      * @type {number}
      */
@@ -1205,8 +1205,9 @@ class ElementComponent extends Component {
 
     /**
      * Sets whether the font size and line height will scale so that the text fits inside the width
-     * of the Element. The font size will be scaled between `minFontSize` and `maxFontSize`. The
-     * value of `autoFitWidth` will be ignored if `autoWidth` is true.
+     * of the Element. The font size will be scaled between {@link minFontSize} and
+     * {@link maxFontSize}. The value of {@link autoFitWidth} will be ignored if {@link autoWidth}
+     * is true.
      *
      * @type {boolean}
      */
@@ -1230,8 +1231,9 @@ class ElementComponent extends Component {
 
     /**
      * Sets whether the font size and line height will scale so that the text fits inside the
-     * height of the Element. The font size will be scaled between `minFontSize` and `maxFontSize`.
-     * The value of `autoFitHeight` will be ignored if `autoHeight` is true.
+     * height of the Element. The font size will be scaled between {@link minFontSize} and
+     * {@link maxFontSize}. The value of {@link autoFitHeight} will be ignored if
+     * {@link autoHeight} is true.
      *
      * @type {boolean}
      */
@@ -1371,7 +1373,7 @@ class ElementComponent extends Component {
 
     /**
      * Sets whether to automatically wrap lines based on the element width. Only works for
-     * {@link ELEMENTTYPE_TEXT} types, and when autoWidth is set to false.
+     * {@link ELEMENTTYPE_TEXT} types, and when {@link autoWidth} is set to false.
      *
      * @type {boolean}
      */
@@ -1430,7 +1432,7 @@ class ElementComponent extends Component {
 
     /**
      * Sets whether to automatically set the width of the component to be the same as the
-     * `textWidth`. Only works for {@link ELEMENTTYPE_TEXT} types.
+     * {@link textWidth}. Only works for {@link ELEMENTTYPE_TEXT} types.
      *
      * @type {boolean}
      */
@@ -1440,7 +1442,7 @@ class ElementComponent extends Component {
 
     /**
      * Gets whether to automatically set the width of the component to be the same as the
-     * `textWidth`.
+     * {@link textWidth}.
      *
      * @type {boolean}
      */
@@ -1454,7 +1456,7 @@ class ElementComponent extends Component {
 
     /**
      * Sets whether to automatically set the height of the component to be the same as the
-     * `textHeight`. Only works for {@link ELEMENTTYPE_TEXT} types.
+     * {@link textHeight}. Only works for {@link ELEMENTTYPE_TEXT} types.
      *
      * @type {boolean}
      */
@@ -1464,7 +1466,7 @@ class ElementComponent extends Component {
 
     /**
      * Gets whether to automatically set the height of the component to be the same as the
-     * `textHeight`.
+     * {@link textHeight}.
      *
      * @type {boolean}
      */
@@ -1527,18 +1529,20 @@ class ElementComponent extends Component {
      * text styling properties on a per-character basis, the text can optionally include markup
      * tags contained within square brackets. Supported tags are:
      *
-     * 1. `color` - override the element's `color` property. Examples:
-     * - `[color="#ff0000"]red text[/color]`
-     * - `[color="#00ff00"]green text[/color]`
-     * - `[color="#0000ff"]blue text[/color]`
-     * 2. `outline` - override the element's `outlineColor` and `outlineThickness` properties. Example:
-     * - `[outline color="#ffffff" thickness="0.5"]text[/outline]`
-     * 3. `shadow` - override the element's `shadowColor` and `shadowOffset` properties. Examples:
-     * - `[shadow color="#ffffff" offset="0.5"]text[/shadow]`
-     * - `[shadow color="#000000" offsetX="0.1" offsetY="0.2"]text[/shadow]`
+     * 1. `color` - override the element's {@link color} property. Examples:
+     *     - `[color="#ff0000"]red text[/color]`
+     *     - `[color="#00ff00"]green text[/color]`
+     *     - `[color="#0000ff"]blue text[/color]`
+     * 2. `outline` - override the element's {@link outlineColor} and {@link outlineThickness}
+     * properties. Example:
+     *     - `[outline color="#ffffff" thickness="0.5"]text[/outline]`
+     * 3. `shadow` - override the element's {@link shadowColor} and {@link shadowOffset}
+     * properties. Examples:
+     *     - `[shadow color="#ffffff" offset="0.5"]text[/shadow]`
+     *     - `[shadow color="#000000" offsetX="0.1" offsetY="0.2"]text[/shadow]`
      *
-     * Note that markup tags are only processed if the text element's `enableMarkup` property is set to
-     * true.
+     * Note that markup tags are only processed if the text element's {@link enableMarkup} property
+     * is set to true.
      *
      * @type {string}
      */
@@ -1547,7 +1551,7 @@ class ElementComponent extends Component {
     }
 
     /**
-     * Sets the text to render.
+     * Gets the text to render.
      *
      * @type {string}
      */
@@ -1935,7 +1939,7 @@ class ElementComponent extends Component {
     }
 
     /**
-     * Sets whether markup processing is enabled for this element.
+     * Gets whether markup processing is enabled for this element.
      *
      * @type {boolean}
      */
