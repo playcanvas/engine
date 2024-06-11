@@ -171,6 +171,7 @@ assetListLoader.load(() => {
         camera: cameraEntity.camera, // camera used to render those passes
         samples: 1, // number of samples for multi-sampling
         sceneColorMap: false,
+        bloomEnabled: false,
 
         // enable the pre-pass to generate the depth buffer, which is needed by the SSAO
         prepassEnabled: true,
@@ -191,7 +192,6 @@ assetListLoader.load(() => {
         // Use a render pass camera frame, which is a render pass that implements typical rendering of a camera.
         // Internally this sets up additional passes it needs, based on the options passed to it.
         const renderPassCamera = new pc.RenderPassCameraFrame(app, currentOptions);
-        renderPassCamera.bloomEnabled = false;
 
         renderPassCamera.ssaoEnabled = currentOptions.ssaoEnabled;
 
