@@ -997,9 +997,6 @@ class WebglGraphicsDevice extends GraphicsDevice {
         // Don't allow area lights on old android devices, they often fail to compile the shader, run it incorrectly or are very slow.
         this.supportsAreaLights = !platform.android;
 
-        // supports texture fetch instruction
-        this.supportsTextureFetch = this.isWebGL2;
-
         // Also do not allow them when we only have small number of texture units
         if (this.maxTextures <= 8) {
             this.supportsAreaLights = false;
