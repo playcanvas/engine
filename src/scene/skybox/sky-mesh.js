@@ -1,7 +1,7 @@
 import { CULLFACE_FRONT } from '../../platform/graphics/constants.js';
 import { ShaderProcessorOptions } from '../../platform/graphics/shader-processor-options.js';
 
-import { GAMMA_NONE, GAMMA_SRGBHDR, LAYERID_SKYBOX, SHADER_FORWARDHDR, TONEMAP_LINEAR } from '../constants.js';
+import { GAMMA_NONE, LAYERID_SKYBOX, SHADER_FORWARDHDR, TONEMAP_LINEAR } from '../constants.js';
 import { Material } from '../materials/material.js';
 import { MeshInstance } from '../mesh-instance.js';
 import { getProgramLibrary } from '../shader-lib/get-program-library.js';
