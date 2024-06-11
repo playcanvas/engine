@@ -108,7 +108,7 @@ class GraphNode extends EventHandler {
     /** @private */
     _labels = {};
 
-    // Local-space properties of transform (only first 3 are settable by the user)
+    // Local space properties of transform (only first 3 are settable by the user)
     /**
      * @type {Vec3}
      * @private
@@ -133,7 +133,7 @@ class GraphNode extends EventHandler {
      */
     localEulerAngles = new Vec3(); // Only calculated on request
 
-    // World-space properties of transform
+    // World space properties of transform
     /**
      * @type {Vec3}
      * @private

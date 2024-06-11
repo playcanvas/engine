@@ -25,7 +25,7 @@ const writeShift = 3;      // 03 - 03 (1bit)
  */
 class DepthState {
     /**
-     * Bitfield representing the depth state.
+     * Bit field representing the depth state.
      *
      * @private
      */

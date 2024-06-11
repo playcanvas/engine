@@ -406,7 +406,7 @@ class RigidBodyComponent extends Component {
     }
 
     /**
-     * Sets the collision mask sets which groups this body collides with. It is a bitfield of 16
+     * Sets the collision mask sets which groups this body collides with. It is a bit field of 16
      * bits, the first 8 bits are reserved for engine use. Defaults to 65535.
      *
      * @type {number}
