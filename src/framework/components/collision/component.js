@@ -698,7 +698,7 @@ class CollisionComponent extends Component {
     }
 
     /**
-     * Returns the world position for the collision shape taking into account of any offsets.
+     * Returns the world position for the collision shape, taking into account of any offsets.
      *
      * @returns {Vec3} The world position for the collision shape.
      */
@@ -717,7 +717,7 @@ class CollisionComponent extends Component {
     }
 
     /**
-     * Returns the world rotation for the collision shape taking into account of any offsets.
+     * Returns the world rotation for the collision shape, taking into account of any offsets.
      *
      * @returns {Quat} The world rotation for the collision.
      */
