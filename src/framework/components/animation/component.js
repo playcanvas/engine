@@ -92,7 +92,7 @@ class AnimationComponent extends Component {
     blendSpeed = 0;
 
     /**
-     * If true the first animation asset will begin playing when the scene is loaded.
+     * If true, the first animation asset will begin playing when the scene is loaded.
      *
      * @type {boolean}
      */

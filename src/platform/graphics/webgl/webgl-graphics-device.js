@@ -1193,8 +1193,8 @@ class WebglGraphicsDevice extends GraphicsDevice {
      *
      * @param {RenderTarget} [source] - The source render target. Defaults to frame buffer.
      * @param {RenderTarget} [dest] - The destination render target. Defaults to frame buffer.
-     * @param {boolean} [color] - If true will copy the color buffer. Defaults to false.
-     * @param {boolean} [depth] - If true will copy the depth buffer. Defaults to false.
+     * @param {boolean} [color] - If true, will copy the color buffer. Defaults to false.
+     * @param {boolean} [depth] - If true, will copy the depth buffer. Defaults to false.
      * @returns {boolean} True if the copy was successful, false otherwise.
      */
     copyRenderTarget(source, dest, color, depth) {

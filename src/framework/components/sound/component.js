@@ -258,7 +258,7 @@ class SoundComponent extends Component {
     }
 
     /**
-     * Sets whether the component plays positional sound. If true the audio will play back at the
+     * Sets whether the component plays positional sound. If true, the audio will play back at the
      * location of the Entity in space, so the audio will be affected by the position of the
      * {@link AudioListenerComponent}. Defaults to true.
      *
@@ -404,16 +404,16 @@ class SoundComponent extends Component {
      * @param {object} [options] - Settings for the slot.
      * @param {number} [options.volume] - The playback volume, between 0 and 1. Defaults to 1.
      * @param {number} [options.pitch] - The relative pitch. Defaults to 1 (plays at normal pitch).
-     * @param {boolean} [options.loop] - If true the sound will restart when it reaches the end.
+     * @param {boolean} [options.loop] - If true, the sound will restart when it reaches the end.
      * Defaults to false.
      * @param {number} [options.startTime] - The start time from which the sound will start playing.
      * Defaults to 0 to start at the beginning.
      * @param {number} [options.duration] - The duration of the sound that the slot will play
      * starting from startTime. Defaults to `null` which means play to end of the sound.
-     * @param {boolean} [options.overlap] - If true then sounds played from slot will be played
+     * @param {boolean} [options.overlap] - If true, then sounds played from slot will be played
      * independently of each other. Otherwise the slot will first stop the current sound before
      * starting the new one. Defaults to false.
-     * @param {boolean} [options.autoPlay] - If true the slot will start playing as soon as its
+     * @param {boolean} [options.autoPlay] - If true, the slot will start playing as soon as its
      * audio asset is loaded. Defaults to false.
      * @param {number} [options.asset] - The asset id of the audio asset that is going to be played
      * by this slot.
