@@ -310,8 +310,8 @@ class WebgpuGraphicsDevice extends GraphicsDevice {
 
         this.gpuProfiler = new WebgpuGpuProfiler(this);
 
-        // init dynamic buffer using 1MB allocation
-        this.dynamicBuffers = new WebgpuDynamicBuffers(this, 1024 * 1024, this.limits.minUniformBufferOffsetAlignment);
+        // init dynamic buffer using 100kB allocation
+        this.dynamicBuffers = new WebgpuDynamicBuffers(this, 100 * 1024, this.limits.minUniformBufferOffsetAlignment);
 
         // empty bind group
         this.emptyBindGroup = new BindGroup(this, new BindGroupFormat(this, []));
