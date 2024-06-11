@@ -152,9 +152,10 @@ class CollisionComponent extends Component {
      *
      * - "box": A box-shaped collision volume.
      * - "capsule": A capsule-shaped collision volume.
-     * - "compound": A compound shape. Any descendant entities with a collision component  of type
-     * box, capsule, cone, cylinder or sphere will be combined into a single, rigid  shape.
-     * - "cone": A cone-shaped collision volume.  - "cylinder": A cylinder-shaped collision volume.
+     * - "compound": A compound shape. Any descendant entities with a collision component of type
+     * box, capsule, cone, cylinder or sphere will be combined into a single, rigid shape.
+     * - "cone": A cone-shaped collision volume.
+     * - "cylinder": A cylinder-shaped collision volume.
      * - "mesh": A collision volume that uses a model asset as its shape.
      * - "sphere": A sphere-shaped collision volume.
      *
@@ -234,7 +235,7 @@ class CollisionComponent extends Component {
     }
 
     /**
-     * Sets the radius of the sphere, capsule, cylinder or cone-shaped collision  volumes.
+     * Sets the radius of the sphere, capsule, cylinder or cone-shaped collision volumes.
      * Defaults to 0.5.
      *
      * @type {number}
@@ -244,7 +245,7 @@ class CollisionComponent extends Component {
     }
 
     /**
-     * Gets the radius of the sphere, capsule, cylinder or cone-shaped collision  volumes.
+     * Gets the radius of the sphere, capsule, cylinder or cone-shaped collision volumes.
      *
      * @type {number}
      */
