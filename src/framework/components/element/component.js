@@ -257,7 +257,7 @@ class ElementComponent extends Component {
         // Order is bottom left, bottom right, top right, top left
         this._canvasCorners = [new Vec2(), new Vec2(), new Vec2(), new Vec2()];
 
-        // the world-space corners of the element
+        // the world space corners of the element
         // Order is bottom left, bottom right, top right, top left
         this._worldCorners = [new Vec3(), new Vec3(), new Vec3(), new Vec3()];
 
@@ -1048,7 +1048,7 @@ class ElementComponent extends Component {
 
     /**
      * Gets the array of 4 {@link Vec3}s that represent the bottom left, bottom right, top right
-     * and top left corners of the component in world-space. Only works for 3D element components.
+     * and top left corners of the component in world space. Only works for 3D element components.
      *
      * @type {Vec3[]}
      */

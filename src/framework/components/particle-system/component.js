@@ -879,7 +879,7 @@ class ParticleSystemComponent extends Component {
     }
 
     /**
-     * Sets the local-space velocity graph.
+     * Sets the local space velocity graph.
      *
      * @type {import('../../../core/math/curve-set.js').CurveSet}
      */
@@ -888,7 +888,7 @@ class ParticleSystemComponent extends Component {
     }
 
     /**
-     * Gets the local-space velocity graph.
+     * Gets the local space velocity graph.
      *
      * @type {import('../../../core/math/curve-set.js').CurveSet}
      */
@@ -916,7 +916,7 @@ class ParticleSystemComponent extends Component {
     }
 
     /**
-     * Sets the world-space velocity graph.
+     * Sets the world space velocity graph.
      *
      * @type {import('../../../core/math/curve-set.js').CurveSet}
      */
@@ -925,7 +925,7 @@ class ParticleSystemComponent extends Component {
     }
 
     /**
-     * Gets the world-space velocity graph.
+     * Gets the world space velocity graph.
      *
      * @type {import('../../../core/math/curve-set.js').CurveSet}
      */
@@ -934,7 +934,7 @@ class ParticleSystemComponent extends Component {
     }
 
     /**
-     * Sets the second world-space velocity graph. If not null, particles pick random values
+     * Sets the second world space velocity graph. If not null, particles pick random values
      * between velocityGraph and velocityGraph2.
      *
      * @type {import('../../../core/math/curve-set.js').CurveSet}
@@ -944,7 +944,7 @@ class ParticleSystemComponent extends Component {
     }
 
     /**
-     * Gets the second world-space velocity graph.
+     * Gets the second world space velocity graph.
      *
      * @type {import('../../../core/math/curve-set.js').CurveSet}
      */

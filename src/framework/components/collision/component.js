@@ -253,7 +253,7 @@ class CollisionComponent extends Component {
     }
 
     /**
-     * Sets the local-space axis with which the capsule, cylinder or cone-shaped collision volume's
+     * Sets the local space axis with which the capsule, cylinder or cone-shaped collision volume's
      * length is aligned. 0 for X, 1 for Y and 2 for Z. Defaults to 1 (Y-axis).
      *
      * @type {number}
@@ -263,7 +263,7 @@ class CollisionComponent extends Component {
     }
 
     /**
-     * Gets the local-space axis with which the capsule, cylinder or cone-shaped collision volume's
+     * Gets the local space axis with which the capsule, cylinder or cone-shaped collision volume's
      * length is aligned.
      *
      * @type {number}

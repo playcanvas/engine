@@ -75,7 +75,7 @@ class LightingParams {
     }
 
     /**
-     * Sets the number of cells along each world-space axis the space containing lights is
+     * Sets the number of cells along each world space axis the space containing lights is
      * subdivided into. Defaults to `[10, 3, 10]`.
      *
      * @type {Vec3}
@@ -85,7 +85,7 @@ class LightingParams {
     }
 
     /**
-     * Gets the number of cells along each world-space axis the space containing lights is
+     * Gets the number of cells along each world space axis the space containing lights is
      * subdivided into.
      *
      * @type {Vec3}

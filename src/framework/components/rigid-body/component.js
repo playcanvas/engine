@@ -733,16 +733,16 @@ class RigidBodyComponent extends Component {
      * signatures. You can either specify the force (and optional relative point) via 3D-vector or
      * numbers.
      *
-     * @param {Vec3|number} x - A 3-dimensional vector representing the force in world-space or
-     * the x-component of the force in world-space.
+     * @param {Vec3|number} x - A 3-dimensional vector representing the force in world space or
+     * the x-component of the force in world space.
      * @param {Vec3|number} [y] - An optional 3-dimensional vector representing the relative point
-     * at which to apply the impulse in world-space or the y-component of the force in world-space.
-     * @param {number} [z] - The z-component of the force in world-space.
-     * @param {number} [px] - The x-component of a world-space offset from the body's position
+     * at which to apply the impulse in world space or the y-component of the force in world space.
+     * @param {number} [z] - The z-component of the force in world space.
+     * @param {number} [px] - The x-component of a world space offset from the body's position
      * where the force is applied.
-     * @param {number} [py] - The y-component of a world-space offset from the body's position
+     * @param {number} [py] - The y-component of a world space offset from the body's position
      * where the force is applied.
-     * @param {number} [pz] - The z-component of a world-space offset from the body's position
+     * @param {number} [pz] - The z-component of a world space offset from the body's position
      * where the force is applied.
      * @example
      * // Apply an approximation of gravity at the body's center
@@ -797,10 +797,10 @@ class RigidBodyComponent extends Component {
      * Apply torque (rotational force) to the body. This function has two valid signatures. You can
      * either specify the torque force with a 3D-vector or with 3 numbers.
      *
-     * @param {Vec3|number} x - A 3-dimensional vector representing the torque force in world-space
-     * or the x-component of the torque force in world-space.
-     * @param {number} [y] - The y-component of the torque force in world-space.
-     * @param {number} [z] - The z-component of the torque force in world-space.
+     * @param {Vec3|number} x - A 3-dimensional vector representing the torque force in world space
+     * or the x-component of the torque force in world space.
+     * @param {number} [y] - The y-component of the torque force in world space.
+     * @param {number} [z] - The z-component of the torque force in world space.
      * @example
      * // Apply via vector
      * const torque = new pc.Vec3(0, 10, 0);
@@ -828,34 +828,34 @@ class RigidBodyComponent extends Component {
      * has two valid signatures. You can either specify the impulse (and optional relative point)
      * via 3D-vector or numbers.
      *
-     * @param {Vec3|number} x - A 3-dimensional vector representing the impulse in world-space or
-     * the x-component of the impulse in world-space.
+     * @param {Vec3|number} x - A 3-dimensional vector representing the impulse in world space or
+     * the x-component of the impulse in world space.
      * @param {Vec3|number} [y] - An optional 3-dimensional vector representing the relative point
-     * at which to apply the impulse in the local-space of the entity or the y-component of the
-     * impulse to apply in world-space.
-     * @param {number} [z] - The z-component of the impulse to apply in world-space.
+     * at which to apply the impulse in the local space of the entity or the y-component of the
+     * impulse to apply in world space.
+     * @param {number} [z] - The z-component of the impulse to apply in world space.
      * @param {number} [px] - The x-component of the point at which to apply the impulse in the
-     * local-space of the entity.
+     * local space of the entity.
      * @param {number} [py] - The y-component of the point at which to apply the impulse in the
-     * local-space of the entity.
+     * local space of the entity.
      * @param {number} [pz] - The z-component of the point at which to apply the impulse in the
-     * local-space of the entity.
+     * local space of the entity.
      * @example
-     * // Apply an impulse along the world-space positive y-axis at the entity's position.
+     * // Apply an impulse along the world space positive y-axis at the entity's position.
      * const impulse = new pc.Vec3(0, 10, 0);
      * entity.rigidbody.applyImpulse(impulse);
      * @example
-     * // Apply an impulse along the world-space positive y-axis at 1 unit down the positive
-     * // z-axis of the entity's local-space.
+     * // Apply an impulse along the world space positive y-axis at 1 unit down the positive
+     * // z-axis of the entity's local space.
      * const impulse = new pc.Vec3(0, 10, 0);
      * const relativePoint = new pc.Vec3(0, 0, 1);
      * entity.rigidbody.applyImpulse(impulse, relativePoint);
      * @example
-     * // Apply an impulse along the world-space positive y-axis at the entity's position.
+     * // Apply an impulse along the world space positive y-axis at the entity's position.
      * entity.rigidbody.applyImpulse(0, 10, 0);
      * @example
-     * // Apply an impulse along the world-space positive y-axis at 1 unit down the positive
-     * // z-axis of the entity's local-space.
+     * // Apply an impulse along the world space positive y-axis at 1 unit down the positive
+     * // z-axis of the entity's local space.
      * entity.rigidbody.applyImpulse(0, 10, 0, 0, 0, 1);
      */
     applyImpulse(x, y, z, px, py, pz) {
@@ -887,9 +887,9 @@ class RigidBodyComponent extends Component {
      * numbers.
      *
      * @param {Vec3|number} x - A 3-dimensional vector representing the torque impulse in
-     * world-space or the x-component of the torque impulse in world-space.
-     * @param {number} [y] - The y-component of the torque impulse in world-space.
-     * @param {number} [z] - The z-component of the torque impulse in world-space.
+     * world space or the x-component of the torque impulse in world space.
+     * @param {number} [y] - The y-component of the torque impulse in world space.
+     * @param {number} [z] - The z-component of the torque impulse in world space.
      * @example
      * // Apply via vector
      * const torque = new pc.Vec3(0, 10, 0);
@@ -1050,7 +1050,7 @@ class RigidBodyComponent extends Component {
     }
 
     /**
-     * Teleport an entity to a new world-space position, optionally setting orientation. This
+     * Teleport an entity to a new world space position, optionally setting orientation. This
      * function should only be called for rigid bodies that are dynamic. This function has three
      * valid signatures. The first takes a 3-dimensional vector for the position and an optional
      * 3-dimensional vector for Euler rotation. The second takes a 3-dimensional vector for the
@@ -1072,11 +1072,11 @@ class RigidBodyComponent extends Component {
      * // Teleport the entity to the origin
      * entity.rigidbody.teleport(0, 0, 0);
      * @example
-     * // Teleport the entity to world-space coordinate [1, 2, 3] and reset orientation
+     * // Teleport the entity to world space coordinate [1, 2, 3] and reset orientation
      * const position = new pc.Vec3(1, 2, 3);
      * entity.rigidbody.teleport(position, pc.Vec3.ZERO);
      * @example
-     * // Teleport the entity to world-space coordinate [1, 2, 3] and reset orientation
+     * // Teleport the entity to world space coordinate [1, 2, 3] and reset orientation
      * entity.rigidbody.teleport(1, 2, 3, 0, 0, 0);
      */
     teleport(x, y, z, rx, ry, rz) {
