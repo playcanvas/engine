@@ -1,8 +1,7 @@
 import { Debug } from '../../core/debug.js';
 import {
     pixelFormatInfo,
-    PIXELFORMAT_PVRTC_2BPP_RGB_1, PIXELFORMAT_PVRTC_2BPP_RGBA_1,
-    TEXTUREDIMENSION_3D
+    PIXELFORMAT_PVRTC_2BPP_RGB_1, PIXELFORMAT_PVRTC_2BPP_RGBA_1
 } from './constants.js';
 
 /**
@@ -69,11 +68,11 @@ class TextureUtils {
     /**
      * Calculate the GPU memory required for a texture.
      *
-     * @param {string} dimension - Texture's dimension
      * @param {number} width - Texture's width.
      * @param {number} height - Texture's height.
      * @param {number} slices - Texture's slices.
      * @param {number} format - Texture's pixel format PIXELFORMAT_***.
+     * @param {boolean} isVolume - True if the texture is a volume texture, false otherwise.
      * @param {boolean} mipmaps - True if the texture includes mipmaps, false otherwise.
      * @returns {number} The number of bytes of GPU memory required for the texture.
      */
