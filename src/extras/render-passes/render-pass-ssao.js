@@ -283,7 +283,7 @@ class RenderPassSsao extends RenderPassShaderQuad {
                 BLUR_GAUSSIAN
             );
 
-            // horizontal blur for low frequency noise
+            // diagonal blur for low frequency noise
             lastRenderTarget = this.addBlurPass(
                 device,
                 lastRenderTarget.colorBuffer,
@@ -292,7 +292,7 @@ class RenderPassSsao extends RenderPassShaderQuad {
                 BLUR_GAUSSIAN
             );
 
-            // horizontal blur for high frequency noise
+            // diagonal blur for low frequency noise
             lastRenderTarget = this.addBlurPass(
                 device,
                 lastRenderTarget.colorBuffer,
@@ -369,6 +369,8 @@ class RenderPassSsao extends RenderPassShaderQuad {
     }
 
     createRenderTarget(name) {
+        // TODO: consider using a pool of 2 texture buffers
+        // and reusing them to reduce memory allocations
         return new RenderTarget({
             depth: false,
             colorBuffer: new Texture(this.device, {
