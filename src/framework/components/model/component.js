@@ -169,7 +169,7 @@ class ModelComponent extends Component {
     }
 
     /**
-     * Sets the custom object-space bounding box that is used for visibility culling of attached
+     * Sets the custom object space bounding box that is used for visibility culling of attached
      * mesh instances. This is an optimization, allowing an oversized bounding box to be specified
      * for skinned characters in order to avoid per frame bounding box computations based on bone
      * positions.
@@ -191,7 +191,7 @@ class ModelComponent extends Component {
     }
 
     /**
-     * Gets the custom object-space bounding box that is used for visibility culling of attached
+     * Gets the custom object space bounding box that is used for visibility culling of attached
      * mesh instances.
      *
      * @type {import('../../../core/shape/bounding-box.js').BoundingBox|null}

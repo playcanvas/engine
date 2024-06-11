@@ -69,7 +69,7 @@ class GSplatComponent extends Component {
     }
 
     /**
-     * Sets a custom object-space bounding box for visibility culling of the attached gsplat.
+     * Sets a custom object space bounding box for visibility culling of the attached gsplat.
      *
      * @type {import('../../../core/shape/bounding-box.js').BoundingBox|null}
      */
@@ -81,7 +81,7 @@ class GSplatComponent extends Component {
     }
 
     /**
-     * Gets the custom object-space bounding box for visibility culling of the attached gsplat.
+     * Gets the custom object space bounding box for visibility culling of the attached gsplat.
      *
      * @type {import('../../../core/shape/bounding-box.js').BoundingBox|null}
      */

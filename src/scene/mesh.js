@@ -363,7 +363,7 @@ class Mesh extends RefCountedObject {
     }
 
     /**
-     * Sets the axis-aligned bounding box for the object-space vertices of this mesh.
+     * Sets the axis-aligned bounding box for the object space vertices of this mesh.
      *
      * @type {BoundingBox}
      */
@@ -373,7 +373,7 @@ class Mesh extends RefCountedObject {
     }
 
     /**
-     * Gets the axis-aligned bounding box for the object-space vertices of this mesh.
+     * Gets the axis-aligned bounding box for the object space vertices of this mesh.
      *
      * @type {BoundingBox}
      */
