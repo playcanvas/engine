@@ -33,7 +33,7 @@ const allWriteShift = redWriteShift;
  */
 class BlendState {
     /**
-     * Bitfield representing the blend state for render target 0.
+     * Bit field representing the blend state for render target 0.
      *
      * @private
      */
@@ -101,7 +101,7 @@ class BlendState {
     }
 
     /**
-     * Enables or disables blending.
+     * Sets whether blending is enabled.
      *
      * @type {boolean}
      */
@@ -109,6 +109,11 @@ class BlendState {
         this.target0 = BitPacking.set(this.target0, value ? 1 : 0, blendShift);
     }
 
+    /**
+     * Gets whether blending is enabled.
+     *
+     * @type {boolean}
+     */
     get blend() {
         return BitPacking.all(this.target0, blendShift);
     }

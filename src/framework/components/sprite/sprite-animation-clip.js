@@ -110,7 +110,7 @@ class SpriteAnimationClip extends EventHandler {
     }
 
     /**
-     * The total duration of the animation in seconds.
+     * Gets the total duration of the animation in seconds.
      *
      * @type {number}
      */
@@ -123,7 +123,7 @@ class SpriteAnimationClip extends EventHandler {
     }
 
     /**
-     * The index of the frame of the {@link Sprite} currently being rendered.
+     * Sets the index of the frame of the {@link Sprite} currently being rendered.
      *
      * @type {number}
      */
@@ -135,12 +135,17 @@ class SpriteAnimationClip extends EventHandler {
         this._setTime(this._frame / fps);
     }
 
+    /**
+     * Gets the index of the frame of the {@link Sprite} currently being rendered.
+     *
+     * @type {number}
+     */
     get frame() {
         return this._frame;
     }
 
     /**
-     * Whether the animation is currently paused.
+     * Sets whether the animation is currently paused.
      *
      * @type {boolean}
      */
@@ -149,7 +154,7 @@ class SpriteAnimationClip extends EventHandler {
     }
 
     /**
-     * Whether the animation is currently playing.
+     * Sets whether the animation is currently playing.
      *
      * @type {boolean}
      */
@@ -158,7 +163,7 @@ class SpriteAnimationClip extends EventHandler {
     }
 
     /**
-     * The current sprite used to play the animation.
+     * Sets the current sprite used to play the animation.
      *
      * @type {import('../../../scene/sprite.js').Sprite}
      */
@@ -228,12 +233,17 @@ class SpriteAnimationClip extends EventHandler {
         }
     }
 
+    /**
+     * Gets the current sprite used to play the animation.
+     *
+     * @type {import('../../../scene/sprite.js').Sprite}
+     */
     get sprite() {
         return this._sprite;
     }
 
     /**
-     * The id of the sprite asset used to play the animation.
+     * Sets the id of the sprite asset used to play the animation.
      *
      * @type {number}
      */
@@ -271,12 +281,17 @@ class SpriteAnimationClip extends EventHandler {
         }
     }
 
+    /**
+     * Gets the id of the sprite asset used to play the animation.
+     *
+     * @type {number}
+     */
     get spriteAsset() {
         return this._spriteAsset;
     }
 
     /**
-     * The current time of the animation in seconds.
+     * Sets the current time of the animation in seconds.
      *
      * @type {number}
      */
@@ -290,6 +305,11 @@ class SpriteAnimationClip extends EventHandler {
         }
     }
 
+    /**
+     * Gets the current time of the animation in seconds.
+     *
+     * @type {number}
+     */
     get time() {
         return this._time;
     }

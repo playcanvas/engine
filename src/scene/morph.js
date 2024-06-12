@@ -286,7 +286,7 @@ class Morph extends RefCountedObject {
     }
 
     /**
-     * The array of morph targets.
+     * Gets the array of morph targets.
      *
      * @type {import('./morph-target.js').MorphTarget[]}
      */

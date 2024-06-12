@@ -46,8 +46,8 @@ class SoundComponentSystem extends ComponentSystem {
     }
 
     /**
-     * Sets / gets the volume for the entire Sound system. All sounds will have their volume
-     * multiplied by this value. Valid between [0, 1].
+     * Sets the volume for the entire Sound system. All sounds will have their volume multiplied by
+     * this value. Valid between [0, 1].
      *
      * @type {number}
      */
@@ -55,6 +55,11 @@ class SoundComponentSystem extends ComponentSystem {
         this.manager.volume = volume;
     }
 
+    /**
+     * Gets the volume for the entire Sound system.
+     *
+     * @type {number}
+     */
     get volume() {
         return this.manager.volume;
     }
