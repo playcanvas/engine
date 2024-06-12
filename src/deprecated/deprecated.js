@@ -122,6 +122,7 @@ import {
 } from '../framework/components/rigid-body/constants.js';
 import { RigidBodyComponent } from '../framework/components/rigid-body/component.js';
 import { RigidBodyComponentSystem } from '../framework/components/rigid-body/system.js';
+import { ZoneComponent } from '../framework/components/zone/component.js';
 import { basisInitialize } from '../framework/handlers/basis.js';
 import { LitShader } from '../scene/shader-lib/programs/lit-shader.js';
 import { Geometry } from '../scene/geometry/geometry.js';
@@ -1660,6 +1661,16 @@ RigidBodyComponentSystem.prototype.setGravity = function () {
     }
 };
 
+Object.defineProperty(ZoneComponent.prototype, 'size', {
+    get: function () {
+        Debug.deprecated('pc.ZoneComponent#size is deprecated. Use pc.ZoneComponent#halfExtents instead.');
+        return this.halfExtents;
+    },
+    set: function (halfExtents) {
+        Debug.deprecated('pc.ZoneComponent#size is deprecated. Use pc.ZoneComponent#halfExtents instead.');
+        this.halfExtents = halfExtents;
+    }
+});
 
 export function basisSetDownloadConfig(glueUrl, wasmUrl, fallbackUrl) {
     Debug.deprecated('pc.basisSetDownloadConfig is deprecated. Use pc.basisInitialize instead.');

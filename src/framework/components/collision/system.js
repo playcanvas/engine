@@ -36,6 +36,7 @@ const _schema = [
     'shape',
     'model',
     'render',
+    'zoneCheck',
     'checkVertexDuplicates'
 ];
 
@@ -208,6 +209,7 @@ class CollisionSystemImpl {
             renderAsset: src.data.renderAsset,
             model: src.data.model,
             render: src.data.render,
+            zoneCheck: src.data.zoneCheck,
             checkVertexDuplicates: src.data.checkVertexDuplicates
         };
 
@@ -691,6 +693,7 @@ class CollisionComponentSystem extends ComponentSystem {
             'enabled',
             'linearOffset',
             'angularOffset',
+            'zoneCheck',
             'checkVertexDuplicates'
         ];
 
@@ -743,6 +746,8 @@ class CollisionComponentSystem extends ComponentSystem {
                 data.angularOffset = new Quat(data.angularOffset);
             }
         }
+
+        component.data.zoneCheck = !!data.zoneCheck;
 
         const impl = this._createImplementation(data.type);
         impl.beforeInitialize(component, data);

@@ -205,6 +205,14 @@ class Entity extends GraphNode {
     sprite;
 
     /**
+     * Gets the {@link ZoneComponent} attached to this entity.
+     *
+     * @type {import('./components/zone/component.js').ZoneComponent|undefined}
+     * @readonly
+     */
+    zone;
+
+    /**
      * Component storage.
      *
      * @type {Object<string, import('./components/component.js').Component>}
@@ -282,6 +290,37 @@ class Entity extends GraphNode {
     }
 
     /**
+     * Fired after the entity enters a zone.
+     *
+     * @event Entity#zoneEnter
+     * @param {import('./components/zone/component').ZoneComponent} zone - The zone that entity entered.
+     * @example
+     * entity.on('zoneEnter', function (zone) {
+     *     // entity entered a zone
+     * });
+     */
+
+    /**
+     * Fired after the entity leaves a zone.
+     *
+     * @event Entity#zoneLeave
+     * @param {import('./components/zone/component').ZoneComponent} zone - The zone that entity left.
+     * @example
+     * entity.on('zoneLeave', function (entity) {
+     *     // entity left a zone
+     * });
+     */
+
+    /**
+     * List of all zones this entity is currently within.
+     *
+     * @type {import('./components/zone/component').ZoneComponent[]}
+     */
+    get zones() {
+        return this._app.systems.zone.zones.filter(z => z.entities.indexOf(this) !== -1);
+    }
+
+    /**
      * Create a new component and add it to the entity. Use this to add functionality to the entity
      * like rendering a model, playing sounds and so on.
      *
@@ -308,6 +347,7 @@ class Entity extends GraphNode {
      * - "scrollview" - see {@link ScrollViewComponent}
      * - "sound" - see {@link SoundComponent}
      * - "sprite" - see {@link SpriteComponent}
+     * - "zone" - see {@link ZoneComponent}
      *
      * @param {object} [data] - The initialization data for the specific component type. Refer to
      * each specific component's API reference page for details on valid values for this parameter.

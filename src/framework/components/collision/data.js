@@ -16,6 +16,7 @@ class CollisionComponentData {
         this.asset = null;
         /** @type {import('../../../framework/asset/asset.js').Asset | number} */
         this.renderAsset = null;
+        this.zoneCheck = false;
         this.checkVertexDuplicates = true;
 
         // Non-serialized properties
