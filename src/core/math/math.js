@@ -285,6 +285,7 @@ const math = {
      * @param {number} x - The input value for which the Gaussian function is to be calculated.
      * @param {number} sigma - The standard deviation of the distribution.
      * @returns {number} - The Gaussian function value.
+     * @ignore
      */
     gauss(x, sigma) {
         return Math.exp(-(x * x) / (2.0 * sigma * sigma));
@@ -295,6 +296,7 @@ const math = {
      *
      * @param {number} kernelSize - The size of the kernel for which the Gaussian weights are to be computed.
      * @returns {number[]} - An array containing the normalized Gaussian weights.
+     * @ignore
      */
     gaussWeights(kernelSize) {
         const sigma = (kernelSize - 1) / (2 * 3);
