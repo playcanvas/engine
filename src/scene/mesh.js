@@ -333,7 +333,8 @@ class Mesh extends RefCountedObject {
     }
 
     /**
-     * The morph data (if any) that drives morph target animations for this mesh.
+     * Sets the morph data that drives morph target animations for this mesh. Set to null if
+     * morphing is not used.
      *
      * @type {import('./morph.js').Morph|null}
      */
@@ -352,12 +353,17 @@ class Mesh extends RefCountedObject {
         }
     }
 
+    /**
+     * Gets the morph data that drives morph target animations for this mesh.
+     *
+     * @type {import('./morph.js').Morph|null}
+     */
     get morph() {
         return this._morph;
     }
 
     /**
-     * The axis-aligned bounding box for the object space vertices of this mesh.
+     * Sets the axis-aligned bounding box for the object space vertices of this mesh.
      *
      * @type {BoundingBox}
      */
@@ -366,6 +372,11 @@ class Mesh extends RefCountedObject {
         this._aabbVer++;
     }
 
+    /**
+     * Gets the axis-aligned bounding box for the object space vertices of this mesh.
+     *
+     * @type {BoundingBox}
+     */
     get aabb() {
         return this._aabb;
     }

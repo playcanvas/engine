@@ -1,4 +1,4 @@
-import { LAYERID_SKYBOX, LAYERID_IMMEDIATE } from '../../scene/constants.js';
+import { LAYERID_SKYBOX, LAYERID_IMMEDIATE, SHADERPASS_FORWARD_HDR } from '../../scene/constants.js';
 import {
     ADDRESS_CLAMP_TO_EDGE,
     FILTER_LINEAR,
@@ -117,14 +117,6 @@ class RenderPassCameraFrame extends RenderPass {
         return this._renderTargetScale;
     }
 
-    set bloomEnabled(value) {
-        if (this._bloomEnabled !== value) {
-            this._bloomEnabled = value;
-            this.composePass.bloomTexture = value ? this.bloomPass.bloomTexture : null;
-            this.bloomPass.enabled = value;
-        }
-    }
-
     get bloomEnabled() {
         return this._bloomEnabled;
     }
@@ -156,6 +148,9 @@ class RenderPassCameraFrame extends RenderPass {
         const targetRenderTarget = cameraComponent.renderTarget;
 
         this.hdrFormat = device.getRenderableHdrFormat() || PIXELFORMAT_RGBA8;
+
+        // camera renders in HDR mode (linear output, no tonemapping)
+        cameraComponent.setShaderPass(SHADERPASS_FORWARD_HDR);
 
         // create a render target to render the scene into
         this.sceneTexture = new Texture(device, {
@@ -221,7 +216,7 @@ class RenderPassCameraFrame extends RenderPass {
         const sceneTextureWithTaa = this.setupTaaPass(options);
 
         // bloom
-        this.setupBloomPass(sceneTextureWithTaa);
+        this.setupBloomPass(options, sceneTextureWithTaa);
 
         // compose
         this.setupComposePass(options);
@@ -300,8 +295,8 @@ class RenderPassCameraFrame extends RenderPass {
         }
     }
 
-    setupBloomPass(inputTexture) {
-        if (this.bloomEnabled) {
+    setupBloomPass(options, inputTexture) {
+        if (options.bloomEnabled) {
             // create a bloom pass, which generates bloom texture based on the provided texture
             this.bloomPass = new RenderPassBloom(this.device, inputTexture, this.hdrFormat);
         }

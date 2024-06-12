@@ -130,24 +130,32 @@ class CollisionComponent extends Component {
     }
 
     /**
+     * Sets the enabled state of the component.
+     *
      * @type {boolean}
      */
     set enabled(arg) {
         this._setValue('enabled', arg);
     }
 
+    /**
+     * Gets the enabled state of the component.
+     *
+     * @type {boolean}
+     */
     get enabled() {
         return this.data.enabled;
     }
 
     /**
-     * The type of the collision volume. Can be:
+     * Sets the type of the collision volume. Can be:
      *
      * - "box": A box-shaped collision volume.
      * - "capsule": A capsule-shaped collision volume.
-     * - "compound": A compound shape. Any descendant entities with a collision component  of type
-     * box, capsule, cone, cylinder or sphere will be combined into a single, rigid  shape.
-     * - "cone": A cone-shaped collision volume.  - "cylinder": A cylinder-shaped collision volume.
+     * - "compound": A compound shape. Any descendant entities with a collision component of type
+     * box, capsule, cone, cylinder or sphere will be combined into a single, rigid shape.
+     * - "cone": A cone-shaped collision volume.
+     * - "cylinder": A cylinder-shaped collision volume.
      * - "mesh": A collision volume that uses a model asset as its shape.
      * - "sphere": A sphere-shaped collision volume.
      *
@@ -159,13 +167,18 @@ class CollisionComponent extends Component {
         this._setValue('type', arg);
     }
 
+    /**
+     * Gets the type of the collision volume.
+     *
+     * @type {string}
+     */
     get type() {
         return this.data.type;
     }
 
     /**
-     * The half-extents of the  box-shaped collision volume in the x, y and z axes. Defaults to
-     * [0.5, 0.5, 0.5].
+     * Sets the half-extents of the box-shaped collision volume in the x, y and z axes. Defaults to
+     * `[0.5, 0.5, 0.5]`.
      *
      * @type {Vec3}
      */
@@ -173,13 +186,18 @@ class CollisionComponent extends Component {
         this._setValue('halfExtents', arg);
     }
 
+    /**
+     * Gets the half-extents of the box-shaped collision volume in the x, y and z axes.
+     *
+     * @type {Vec3}
+     */
     get halfExtents() {
         return this.data.halfExtents;
     }
 
     /**
-     * The positional offset of the collision shape from the Entity position along the local axes.
-     * Defaults to [0, 0, 0].
+     * Sets the positional offset of the collision shape from the Entity position along the local
+     * axes. Defaults to `[0, 0, 0]`.
      *
      * @type {Vec3}
      */
@@ -187,12 +205,18 @@ class CollisionComponent extends Component {
         this._setValue('linearOffset', arg);
     }
 
+    /**
+     * Gets the positional offset of the collision shape from the Entity position along the local
+     * axes.
+     *
+     * @type {Vec3}
+     */
     get linearOffset() {
         return this.data.linearOffset;
     }
 
     /**
-     * The rotational offset of the collision shape from the Entity rotation in local space.
+     * Sets the rotational offset of the collision shape from the Entity rotation in local space.
      * Defaults to identity.
      *
      * @type {Quat}
@@ -201,12 +225,17 @@ class CollisionComponent extends Component {
         this._setValue('angularOffset', arg);
     }
 
+    /**
+     * Gets the rotational offset of the collision shape from the Entity rotation in local space.
+     *
+     * @type {Quat}
+     */
     get angularOffset() {
         return this.data.angularOffset;
     }
 
     /**
-     * The radius of the sphere, capsule, cylinder or cone-shaped collision  volumes.
+     * Sets the radius of the sphere, capsule, cylinder or cone-shaped collision volumes.
      * Defaults to 0.5.
      *
      * @type {number}
@@ -215,12 +244,17 @@ class CollisionComponent extends Component {
         this._setValue('radius', arg);
     }
 
+    /**
+     * Gets the radius of the sphere, capsule, cylinder or cone-shaped collision volumes.
+     *
+     * @type {number}
+     */
     get radius() {
         return this.data.radius;
     }
 
     /**
-     * The local space axis with which the capsule, cylinder or cone-shaped  collision volume's
+     * Sets the local space axis with which the capsule, cylinder or cone-shaped collision volume's
      * length is aligned. 0 for X, 1 for Y and 2 for Z. Defaults to 1 (Y-axis).
      *
      * @type {number}
@@ -229,13 +263,19 @@ class CollisionComponent extends Component {
         this._setValue('axis', arg);
     }
 
+    /**
+     * Gets the local space axis with which the capsule, cylinder or cone-shaped collision volume's
+     * length is aligned.
+     *
+     * @type {number}
+     */
     get axis() {
         return this.data.axis;
     }
 
     /**
-     * The total height of the capsule, cylinder or cone-shaped collision  volume from tip to tip.
-     * Defaults to 2.
+     * Sets the total height of the capsule, cylinder or cone-shaped collision volume from tip to
+     * tip. Defaults to 2.
      *
      * @type {number}
      */
@@ -243,41 +283,56 @@ class CollisionComponent extends Component {
         this._setValue('height', arg);
     }
 
+    /**
+     * Gets the total height of the capsule, cylinder or cone-shaped collision volume from tip to
+     * tip.
+     *
+     * @type {number}
+     */
     get height() {
         return this.data.height;
     }
 
     /**
-     * The asset for the model of the mesh collision volume - can also  be an asset id. Defaults to
-     * null.
+     * Sets the asset or asset id for the model of the mesh collision volume. Defaults to null.
      *
-     * @type {Asset}
+     * @type {Asset|number|null}
      */
     set asset(arg) {
         this._setValue('asset', arg);
     }
 
+    /**
+     * Gets the asset or asset id for the model of the mesh collision volume.
+     *
+     * @type {Asset|number|null}
+     */
     get asset() {
         return this.data.asset;
     }
 
     /**
-     * The render asset of the mesh collision volume - can also be  an asset id. Defaults to null.
+     * Sets the render asset or asset id of the mesh collision volume. Defaults to null.
      * If not set then the asset property will be checked instead.
      *
-     * @type {Asset | number}
+     * @type {Asset|number|null}
      */
     set renderAsset(arg) {
         this._setValue('renderAsset', arg);
     }
 
+    /**
+     * Gets the render asset id of the mesh collision volume.
+     *
+     * @type {Asset|number|null}
+     */
     get renderAsset() {
         return this.data.renderAsset;
     }
 
     /**
-     * Whether the collision mesh should be treated as a convex hull. When false, the mesh can only
-     * be used with a static body. When true, the mesh can be used with a static, dynamic or
+     * Sets whether the collision mesh should be treated as a convex hull. When false, the mesh can
+     * only be used with a static body. When true, the mesh can be used with a static, dynamic or
      * kinematic body. Defaults to `false`.
      *
      * @type {boolean}
@@ -286,14 +341,15 @@ class CollisionComponent extends Component {
         this._setValue('convexHull', arg);
     }
 
+    /**
+     * Gets whether the collision mesh should be treated as a convex hull.
+     *
+     * @type {boolean}
+     */
     get convexHull() {
         return this.data.convexHull;
     }
 
-    /**
-     * @type {any}
-     * @ignore
-     */
     set shape(arg) {
         this._setValue('shape', arg);
     }
@@ -303,7 +359,7 @@ class CollisionComponent extends Component {
     }
 
     /**
-     * The model that is added to the scene graph for the mesh collision volume.
+     * Sets the model that is added to the scene graph for the mesh collision volume.
      *
      * @type {import('../../../scene/model.js').Model | null}
      */
@@ -311,14 +367,15 @@ class CollisionComponent extends Component {
         this._setValue('model', arg);
     }
 
+    /**
+     * Gets the model that is added to the scene graph for the mesh collision volume.
+     *
+     * @type {import('../../../scene/model.js').Model | null}
+     */
     get model() {
         return this.data.model;
     }
 
-    /**
-     * @type {any}
-     * @ignore
-     */
     set render(arg) {
         this._setValue('render', arg);
     }
@@ -328,7 +385,7 @@ class CollisionComponent extends Component {
     }
 
     /**
-     * Enable checking for duplicate vertices.
+     * Sets whether checking for duplicate vertices should be enabled when creating collision meshes.
      *
      * @type {boolean}
      */
@@ -336,6 +393,11 @@ class CollisionComponent extends Component {
         this._setValue('checkVertexDuplicates', arg);
     }
 
+    /**
+     * Gets whether checking for duplicate vertices should be enabled when creating collision meshes.
+     *
+     * @type {boolean}
+     */
     get checkVertexDuplicates() {
         return this.data.checkVertexDuplicates;
     }
@@ -636,7 +698,8 @@ class CollisionComponent extends Component {
     }
 
     /**
-     * @description Returns the world position for the collision shape taking into account of any offsets.
+     * Returns the world position for the collision shape, taking into account of any offsets.
+     *
      * @returns {Vec3} The world position for the collision shape.
      */
     getShapePosition() {
@@ -654,7 +717,8 @@ class CollisionComponent extends Component {
     }
 
     /**
-     * @description Returns the world rotation for the collision shape taking into account of any offsets.
+     * Returns the world rotation for the collision shape, taking into account of any offsets.
+     *
      * @returns {Quat} The world rotation for the collision.
      */
     getShapeRotation() {

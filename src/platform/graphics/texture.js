@@ -398,7 +398,7 @@ class Texture {
     }
 
     /**
-     * The minification filter to be applied to the texture. Can be:
+     * Sets the minification filter to be applied to the texture. Can be:
      *
      * - {@link FILTER_NEAREST}
      * - {@link FILTER_LINEAR}
@@ -420,12 +420,17 @@ class Texture {
         }
     }
 
+    /**
+     * Gets the minification filter to be applied to the texture.
+     *
+     * @type {number}
+     */
     get minFilter() {
         return this._minFilter;
     }
 
     /**
-     * The magnification filter to be applied to the texture. Can be:
+     * Sets the magnification filter to be applied to the texture. Can be:
      *
      * - {@link FILTER_NEAREST}
      * - {@link FILTER_LINEAR}
@@ -443,12 +448,17 @@ class Texture {
         }
     }
 
+    /**
+     * Gets the magnification filter to be applied to the texture.
+     *
+     * @type {number}
+     */
     get magFilter() {
         return this._magFilter;
     }
 
     /**
-     * The addressing mode to be applied to the texture horizontally. Can be:
+     * Sets the addressing mode to be applied to the texture horizontally. Can be:
      *
      * - {@link ADDRESS_REPEAT}
      * - {@link ADDRESS_CLAMP_TO_EDGE}
@@ -463,12 +473,17 @@ class Texture {
         }
     }
 
+    /**
+     * Gets the addressing mode to be applied to the texture horizontally.
+     *
+     * @type {number}
+     */
     get addressU() {
         return this._addressU;
     }
 
     /**
-     * The addressing mode to be applied to the texture vertically. Can be:
+     * Sets the addressing mode to be applied to the texture vertically. Can be:
      *
      * - {@link ADDRESS_REPEAT}
      * - {@link ADDRESS_CLAMP_TO_EDGE}
@@ -483,12 +498,17 @@ class Texture {
         }
     }
 
+    /**
+     * Gets the addressing mode to be applied to the texture vertically.
+     *
+     * @type {number}
+     */
     get addressV() {
         return this._addressV;
     }
 
     /**
-     * The addressing mode to be applied to the 3D texture depth. Can be:
+     * Sets the addressing mode to be applied to the 3D texture depth. Can be:
      *
      * - {@link ADDRESS_REPEAT}
      * - {@link ADDRESS_CLAMP_TO_EDGE}
@@ -507,6 +527,11 @@ class Texture {
         }
     }
 
+    /**
+     * Gets the addressing mode to be applied to the 3D texture depth.
+     *
+     * @type {number}
+     */
     get addressW() {
         return this._addressW;
     }
@@ -525,12 +550,17 @@ class Texture {
         }
     }
 
+    /**
+     * Gets whether you can get filtered results of comparison using texture() in your shader.
+     *
+     * @type {boolean}
+     */
     get compareOnRead() {
         return this._compareOnRead;
     }
 
     /**
-     * Comparison function when compareOnRead is enabled. Possible values:
+     * Sets the comparison function when compareOnRead is enabled. Possible values:
      *
      * - {@link FUNC_LESS}
      * - {@link FUNC_LESSEQUAL}
@@ -548,13 +578,18 @@ class Texture {
         }
     }
 
+    /**
+     * Sets the comparison function when compareOnRead is enabled.
+     *
+     * @type {number}
+     */
     get compareFunc() {
         return this._compareFunc;
     }
 
     /**
-     * Integer value specifying the level of anisotropic to apply to the texture ranging from 1 (no
-     * anisotropic filtering) to the {@link GraphicsDevice} property maxAnisotropy.
+     * Sets the integer value specifying the level of anisotropy to apply to the texture ranging
+     * from 1 (no anisotropic filtering) to the {@link GraphicsDevice} property maxAnisotropy.
      *
      * @type {number}
      */
@@ -565,12 +600,17 @@ class Texture {
         }
     }
 
+    /**
+     * Gets the integer value specifying the level of anisotropy to apply to the texture.
+     *
+     * @type {number}
+     */
     get anisotropy() {
         return this._anisotropy;
     }
 
     /**
-     * Defines if texture should generate/upload mipmaps if possible.
+     * Sets whether the texture should generate/upload mipmaps.
      *
      * @type {boolean}
      */
@@ -589,6 +629,11 @@ class Texture {
         }
     }
 
+    /**
+     * Gets whether the texture should generate/upload mipmaps.
+     *
+     * @type {boolean}
+     */
     get mipmaps() {
         return this._mipmaps;
     }
@@ -704,7 +749,7 @@ class Texture {
     }
 
     /**
-     * Specifies whether the texture should be flipped in the Y-direction. Only affects textures
+     * Sets whether the texture should be flipped in the Y-direction. Only affects textures
      * with a source that is an image, canvas or video element. Does not affect cubemaps,
      * compressed textures or textures set from raw pixel data. Defaults to true.
      *
@@ -717,6 +762,11 @@ class Texture {
         }
     }
 
+    /**
+     * Gets whether the texture should be flipped in the Y-direction.
+     *
+     * @type {boolean}
+     */
     get flipY() {
         return this._flipY;
     }

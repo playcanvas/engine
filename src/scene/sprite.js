@@ -69,7 +69,7 @@ class Sprite extends EventHandler {
     }
 
     /**
-     * The keys of the frames in the sprite atlas that this sprite is using.
+     * Sets the keys of the frames in the sprite atlas that this sprite is using.
      *
      * @type {string[]}
      */
@@ -87,12 +87,17 @@ class Sprite extends EventHandler {
         this.fire('set:frameKeys', value);
     }
 
+    /**
+     * Gets the keys of the frames in the sprite atlas that this sprite is using.
+     *
+     * @type {string[]}
+     */
     get frameKeys() {
         return this._frameKeys;
     }
 
     /**
-     * The texture atlas.
+     * Sets the texture atlas.
      *
      * @type {import('./texture-atlas.js').TextureAtlas}
      */
@@ -121,12 +126,17 @@ class Sprite extends EventHandler {
         this.fire('set:atlas', value);
     }
 
+    /**
+     * Gets the texture atlas.
+     *
+     * @type {import('./texture-atlas.js').TextureAtlas}
+     */
     get atlas() {
         return this._atlas;
     }
 
     /**
-     * The number of pixels that map to one PlayCanvas unit.
+     * Sets the number of pixels that map to one PlayCanvas unit.
      *
      * @type {number}
      */
@@ -146,12 +156,17 @@ class Sprite extends EventHandler {
         }
     }
 
+    /**
+     * Gets the number of pixels that map to one PlayCanvas unit.
+     *
+     * @type {number}
+     */
     get pixelsPerUnit() {
         return this._pixelsPerUnit;
     }
 
     /**
-     * The rendering mode of the sprite. Can be:
+     * Sets the rendering mode of the sprite. Can be:
      *
      * - {@link SPRITE_RENDERMODE_SIMPLE}
      * - {@link SPRITE_RENDERMODE_SLICED}
@@ -179,6 +194,11 @@ class Sprite extends EventHandler {
         }
     }
 
+    /**
+     * Sets the rendering mode of the sprite.
+     *
+     * @type {number}
+     */
     get renderMode() {
         return this._renderMode;
     }

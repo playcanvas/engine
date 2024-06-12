@@ -22,29 +22,6 @@
         },
         "entryPoints": [ "./src/index.js" ],
         "excludeNotDocumented": true,
-        "excludeNotDocumentedKinds": [
-            "Module",
-            "Namespace",
-            "Enum",
-            // "EnumMember", // Not enabled by default
-            "Variable",
-            "Function",
-            "Class",
-            "Interface",
-            "Constructor",
-            "Property",
-            "Method",
-            "CallSignature",
-            "IndexSignature",
-            "ConstructorSignature",
-            "Accessor",
-            // We only document getters/setters with one JSDoc block so if there is a setter,
-            // the getter will appear undocumented (setters always appear before getters).
-            // "GetSignature",
-            "SetSignature",
-            "TypeAlias",
-            "Reference"
-        ],
         "githubPages": false,
         "name": "PlayCanvas Engine API",
         "navigationLinks": {
