@@ -426,7 +426,7 @@ class XrInputSource extends EventHandler {
     }
 
     /**
-     * Set to true to allow input source to interact with Element components. Defaults to true.
+     * Sets whether the input source can interact with {@link ElementComponent}s. Defaults to true.
      *
      * @type {boolean}
      */
@@ -440,6 +440,11 @@ class XrInputSource extends EventHandler {
             this._elementEntity = null;
     }
 
+    /**
+     * Gets whether the input source can interact with {@link ElementComponent}s.
+     *
+     * @type {boolean}
+     */
     get elementInput() {
         return this._elementInput;
     }

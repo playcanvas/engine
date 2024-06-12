@@ -150,12 +150,15 @@ class WebgpuShader {
     transpile(src, shaderType, originalSrc) {
         try {
             const spirv = this.shader.device.glslang.compileGLSL(src, shaderType);
-            return this.shader.device.twgsl.convertSpirV2WGSL(spirv);
+            const wgsl = this.shader.device.twgsl.convertSpirV2WGSL(spirv);
+            return wgsl;
         } catch (err) {
-            console.error(`Failed to transpile webgl ${shaderType} shader [${this.shader.label}] to WebGPU: [${err.message}] while rendering ${DebugGraphics.toString()}`, {
+            console.error(`Failed to transpile webgl ${shaderType} shader [${this.shader.label}] to WebGPU while rendering ${DebugGraphics.toString()}, error:\n [${err.stack}]`, {
                 processed: src,
                 original: originalSrc,
-                shader: this.shader
+                shader: this.shader,
+                error: err,
+                stack: err.stack
             });
         }
     }

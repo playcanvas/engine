@@ -92,7 +92,7 @@ class AnimationComponent extends Component {
     blendSpeed = 0;
 
     /**
-     * If true the first animation asset will begin playing when the scene is loaded.
+     * If true, the first animation asset will begin playing when the scene is loaded.
      *
      * @type {boolean}
      */
@@ -119,7 +119,7 @@ class AnimationComponent extends Component {
     }
 
     /**
-     * Get or set dictionary of animations by name.
+     * Sets the dictionary of animations by name.
      *
      * @type {Object<string, import('../../../scene/animation/animation.js').Animation>}
      */
@@ -129,12 +129,17 @@ class AnimationComponent extends Component {
         this.onSetAnimations();
     }
 
+    /**
+     * Gets the dictionary of animations by name.
+     *
+     * @type {Object<string, import('../../../scene/animation/animation.js').Animation>}
+     */
     get animations() {
         return this._animations;
     }
 
     /**
-     * The array of animation assets. Can also be an array of asset ids.
+     * Sets the array of animation assets or asset ids.
      *
      * @type {Array.<number|Asset>}
      */
@@ -171,12 +176,17 @@ class AnimationComponent extends Component {
         this.loadAnimationAssets(assetIds);
     }
 
+    /**
+     * Gets the array of animation assets or asset ids.
+     *
+     * @type {Array.<number|Asset>}
+     */
     get assets() {
         return this._assets;
     }
 
     /**
-     * Get or set the current time position (in seconds) of the animation.
+     * Sets the current time position (in seconds) of the animation.
      *
      * @type {number}
      */
@@ -195,6 +205,11 @@ class AnimationComponent extends Component {
         }
     }
 
+    /**
+     * Gets the current time position (in seconds) of the animation.
+     *
+     * @type {number}
+     */
     get currentTime() {
         if (this.skeleton) {
             return this.skeleton._time;
@@ -213,7 +228,7 @@ class AnimationComponent extends Component {
     }
 
     /**
-     * Get the duration in seconds of the current animation. Returns 0 if no animation is playing.
+     * Gets the duration in seconds of the current animation. Returns 0 if no animation is playing.
      *
      * @type {number}
      */
@@ -227,7 +242,7 @@ class AnimationComponent extends Component {
     }
 
     /**
-     * If true the animation will restart from the beginning when it reaches the end.
+     * Sets whether the animation will restart from the beginning when it reaches the end.
      *
      * @type {boolean}
      */
@@ -245,6 +260,11 @@ class AnimationComponent extends Component {
         }
     }
 
+    /**
+     * Gets whether the animation will restart from the beginning when it reaches the end.
+     *
+     * @type {boolean}
+     */
     get loop() {
         return this._loop;
     }
