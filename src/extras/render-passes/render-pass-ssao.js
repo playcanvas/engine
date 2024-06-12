@@ -341,8 +341,8 @@ class RenderPassSsao extends RenderPassShaderQuad {
         this.renderTarget?.destroy();
         this.renderTarget = null;
 
-        if (this.afterPasses.length > 0) {
-            const blurPass = this.afterPasses[0];
+        for (let i = 0; i < this.afterPasses.length; i++) {
+            const blurPass = this.afterPasses[i];
             const blurRt = blurPass.renderTarget;
             blurRt?.destroyTextureBuffers();
             blurRt?.destroy();
