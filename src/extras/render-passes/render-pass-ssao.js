@@ -1,4 +1,4 @@
-import { BLUR_GAUSSIAN } from '../../scene/constants.js';
+import { BLUR_BOX, BLUR_GAUSSIAN } from '../../scene/constants.js';
 import { ADDRESS_CLAMP_TO_EDGE, FILTER_NEAREST, PIXELFORMAT_R8 } from '../../platform/graphics/constants.js';
 import { RenderTarget } from '../../platform/graphics/render-target.js';
 import { Texture } from '../../platform/graphics/texture.js';
@@ -270,8 +270,8 @@ class RenderPassSsao extends RenderPassShaderQuad {
                 device,
                 lastRenderTarget.colorBuffer,
                 new Vec2(1, 0),
-                11,
-                BLUR_GAUSSIAN
+                9,
+                BLUR_BOX
             );
 
             // vertical blur
@@ -279,26 +279,8 @@ class RenderPassSsao extends RenderPassShaderQuad {
                 device,
                 lastRenderTarget.colorBuffer,
                 new Vec2(0, 1),
-                11,
-                BLUR_GAUSSIAN
-            );
-
-            // diagonal blur for low frequency noise
-            lastRenderTarget = this.addBlurPass(
-                device,
-                lastRenderTarget.colorBuffer,
-                new Vec2(2, 1),
-                7,
-                BLUR_GAUSSIAN
-            );
-
-            // diagonal blur for low frequency noise
-            lastRenderTarget = this.addBlurPass(
-                device,
-                lastRenderTarget.colorBuffer,
-                new Vec2(-1, 2),
-                7,
-                BLUR_GAUSSIAN
+                9,
+                BLUR_BOX
             );
 
             this.ssaoTexture = lastRenderTarget.colorBuffer;
@@ -311,7 +293,7 @@ class RenderPassSsao extends RenderPassShaderQuad {
      * @param {Texture} sourceTexture - The source texture to blur.
      * @param {Vec2} direction - The direction of the blur.
      * @param {number} kernelSize - The size of the blur kernel.
-     * @param {BLUR_GAUSSIAN|import('../../scene/constants.js').BLUR_BOX} [type] - The type of blur to apply. Defaults to BLUR_GAUSSIAN.
+     * @param {BLUR_GAUSSIAN|BLUR_BOX} [type] - The type of blur to apply. Defaults to BLUR_GAUSSIAN.
      * @returns {RenderTarget} The render target containing the blurred texture.
      * @private
      */
