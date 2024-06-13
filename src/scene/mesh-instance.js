@@ -21,12 +21,17 @@ import { GraphNode } from './graph-node.js';
 import { getDefaultMaterial } from './materials/default-material.js';
 import { LightmapCache } from './graphics/lightmap-cache.js';
 import { DebugGraphics } from '../platform/graphics/debug-graphics.js';
+import { hash32Fnv1a } from '../core/hash.js';
+import { array } from '../core/array-utils.js';
 
 let id = 0;
 const _tmpAabb = new BoundingBox();
 const _tempBoneAabb = new BoundingBox();
 const _tempSphere = new BoundingSphere();
 const _meshSet = new Set();
+
+// internal array used to evaluate the hash for the shader instance
+const lookupHashes = new Uint32Array(3);
 
 /**
  * Internal data structure used to store data used by hardware instancing.
@@ -71,6 +76,13 @@ class ShaderInstance {
      * @type {UniformBuffer|null}
      */
     uniformBuffer = null;
+
+    /**
+     * The full array of hashes used to lookup the pipeline, used in case of hash collision.
+     *
+     * @type {Uint32Array}
+     */
+    hashes;
 
     /**
      * Returns the mesh bind group for the shader.
@@ -127,26 +139,6 @@ class ShaderInstance {
 }
 
 /**
- * An entry in the shader cache, representing shaders for this mesh instance and a specific shader
- * pass.
- *
- * @ignore
- */
-class ShaderCacheEntry {
-    /**
-     * The shader instances. Looked up by lightHash, which represents an ordered set of lights.
-     *
-     * @type {Map<number, ShaderInstance>}
-     */
-    shaderInstances = new Map();
-
-    destroy() {
-        this.shaderInstances.forEach(instance => instance.destroy());
-        this.shaderInstances.clear();
-    }
-}
-
-/**
  * Callback used by {@link Layer} to calculate the "sort distance" for a {@link MeshInstance},
  * which determines its place in the render order.
  *
@@ -198,13 +190,11 @@ class MeshInstance {
     _material = null;
 
     /**
-     * An array of shader cache entries, indexed by the shader pass constant (SHADER_FORWARD..). The
-     * value stores all shaders and bind groups for the shader pass for various light combinations.
+     * The cache of shaders, indexed by a hash value.
      *
-     * @type {Array<ShaderCacheEntry|null>}
-     * @private
+     * @type {Map<number, ShaderInstance>}
      */
-    _shaderCache = [];
+    _shaderCache = new Map();
 
     /** @ignore */
     id = id++;
@@ -511,11 +501,10 @@ class MeshInstance {
      * @ignore
      */
     clearShaders() {
-        const shaderCache = this._shaderCache;
-        for (let i = 0; i < shaderCache.length; i++) {
-            shaderCache[i]?.destroy();
-            shaderCache[i] = null;
-        }
+        this._shaderCache.forEach((shaderInstance) => {
+            shaderInstance.destroy();
+        });
+        this._shaderCache.clear();
     }
 
     /**
@@ -535,24 +524,26 @@ class MeshInstance {
      */
     getShaderInstance(shaderPass, lightHash, scene, viewUniformFormat, viewBindGroupFormat, sortedLights) {
 
-        let shaderInstance;
-        let passEntry = this._shaderCache[shaderPass];
-        if (passEntry) {
-            shaderInstance = passEntry.shaderInstances.get(lightHash);
-        } else {
-            passEntry = new ShaderCacheEntry();
-            this._shaderCache[shaderPass] = passEntry;
-        }
+        const shaderDefs = this._shaderDefs;
+
+        // unique hash for the required shader
+        lookupHashes[0] = shaderPass;
+        lookupHashes[1] = lightHash;
+        lookupHashes[2] = shaderDefs;
+        const hash = hash32Fnv1a(lookupHashes);
+
+        // look up the cache
+        let shaderInstance = this._shaderCache.get(hash);
 
         // cache miss in the shader cache of the mesh instance
         if (!shaderInstance) {
 
-            // get the shader from the material
             const mat = this._material;
-            const shaderDefs = this._shaderDefs;
-            const variantKey = shaderPass + '_' + shaderDefs + '_' + lightHash;
+
+            // get the shader from the material
             shaderInstance = new ShaderInstance();
-            shaderInstance.shader = mat.variants.get(variantKey);
+            shaderInstance.shader = mat.variants.get(hash);
+            shaderInstance.hashes = new Uint32Array(lookupHashes);
 
             // cache miss in the material variants
             if (!shaderInstance.shader) {
@@ -566,14 +557,23 @@ class MeshInstance {
                 DebugGraphics.popGpuMarker(this.mesh.device);
 
                 // add it to the material variants cache
-                mat.variants.set(variantKey, shader);
+                mat.variants.set(hash, shader);
 
                 shaderInstance.shader = shader;
             }
 
             // add it to the mesh instance cache
-            passEntry.shaderInstances.set(lightHash, shaderInstance);
+            this._shaderCache.set(hash, shaderInstance);
         }
+
+        Debug.call(() => {
+            // due to a small number of shaders in the cache, and to avoid performance hit, we're not
+            // handling the hash collision. This is very unlikely but still possible. Check and report
+            // if it happens in the debug mode, allowing us to fix the issue.
+            if (!array.equals(shaderInstance.hashes, lookupHashes)) {
+                Debug.errorOnce('Hash collision in the shader cache for mesh instance. This is very unlikely but still possible. Please report this issue.');
+            }
+        });
 
         return shaderInstance;
     }
