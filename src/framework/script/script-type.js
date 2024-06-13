@@ -2,9 +2,10 @@ import { ScriptAttributes } from './script-attributes.js';
 import { Script } from './script.js';
 
 /**
- * This is the legacy format for creating PlayCanvas script using the `pc.createScript` function.
- * It is recommended to use the ES6 class format for creating scripts and extend the {@link Script} class
+ * This is the legacy format for creating PlayCanvas script returned when calling `pc.createScript()`.
+ * You should not use this inherit from this class directly.
  *
+ * @deprecated Use {@link Script} instead.
  * @category Script
  */
 class ScriptType extends Script {

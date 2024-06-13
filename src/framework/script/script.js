@@ -2,6 +2,36 @@ import { Debug } from '../..//core/debug.js';
 import { EventHandler } from '../../core/event-handler.js';
 import { SCRIPT_INITIALIZE, SCRIPT_POST_INITIALIZE } from './constants.js';
 
+/**
+ * The `Script` class is the fundamental base class for all scripts within PlayCanvas. It provides
+ * the minimal interface that required for a script to be used in the engine and compatible with PlayCanvas editor.
+ *
+ * At it's core, a script is simply a collection of methods that are called at various points in the engine's lifecycle. These methods are:
+ *
+ * {@link Script#initialize} - Called once when the script is first enabled
+ * {@link Script#postInitialize} - Called once after all scripts have been initialized
+ * {@link Script#update} - Called every frame, if the script is enabled
+ * {@link Script#postUpdate} - Called every frame, after all scripts have been updated
+ * {@link Script#swap} - Called when a script is redefined
+ *
+ * These methods are entirely optional, but provide a useful way to manage the lifecycle of a script and perform any necessary setup and cleanup.
+ *
+ * Below is a simple example of a script that rotates an entity every frame.
+ * @example
+ * ```javascript
+ * class EntityRotator extends Script {
+ *    update() {
+ *       this.entity.rotateLocal(0, 1, 0);
+ *   }
+ * }
+ * ```
+ *
+ * When this script is attached to an entity, the update will be called every frame, slowly rotating the entity around the Y-axis.
+ *
+ * For more information on how to create scripts, see the [Scripting Overview](https://developer.playcanvas.com/user-manual/scripting/).
+ *
+ * @category Script
+ */
 export class Script extends EventHandler {
     /**
      * Fired when a script instance becomes enabled.
