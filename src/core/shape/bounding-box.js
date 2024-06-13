@@ -16,6 +16,7 @@ class BoundingBox {
      * Center of box.
      *
      * @type {Vec3}
+     * @readonly
      */
     center = new Vec3();
 
@@ -23,6 +24,7 @@ class BoundingBox {
      * Half the distance across the box in each axis.
      *
      * @type {Vec3}
+     * @readonly
      */
     halfExtents = new Vec3(0.5, 0.5, 0.5);
 

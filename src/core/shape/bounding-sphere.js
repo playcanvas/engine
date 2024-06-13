@@ -14,6 +14,7 @@ class BoundingSphere {
      * Center of sphere.
      *
      * @type {Vec3}
+     * @readonly
      */
     center;
 

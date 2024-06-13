@@ -11,6 +11,7 @@ class Plane {
      * The normal of the plane.
      *
      * @type {Vec3}
+     * @readonly
      */
     normal = new Vec3();
 
