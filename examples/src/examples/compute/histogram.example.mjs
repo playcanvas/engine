@@ -1,16 +1,14 @@
 // @config WEBGL_DISABLED
 import * as pc from 'playcanvas';
-import { deviceType, rootPath } from '@examples/utils';
-import files from '@examples/files';
+import { deviceType, rootPath } from 'examples/utils';
+import files from 'examples/files';
 
 // Note: the example is based on this article:
 // https://webgpufundamentals.org/webgpu/lessons/webgpu-compute-shaders-histogram.html
 // A simpler but less performant version of the compute shader is used for simplicity.
 
-const canvas = document.getElementById('application-canvas');
-if (!(canvas instanceof HTMLCanvasElement)) {
-    throw new Error('No canvas found');
-}
+const canvas = /** @type {HTMLCanvasElement} */ (document.getElementById('application-canvas'));
+window.focus();
 
 const assets = {
     solid: new pc.Asset('solid', 'container', { url: rootPath + '/static/assets/models/icosahedron.glb' }),
@@ -30,6 +28,7 @@ const gfxOptions = {
 
 const device = await pc.createGraphicsDevice(canvas, gfxOptions);
 device.maxPixelRatio = Math.min(window.devicePixelRatio, 2);
+
 const createOptions = new pc.AppOptions();
 createOptions.graphicsDevice = device;
 

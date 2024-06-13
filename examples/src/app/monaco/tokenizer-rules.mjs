@@ -9,7 +9,7 @@ export const jsRules = {
     jsdocBrackets: [
         [/([@]link)(\s*[^\}]+)/, ['keyword', 'identifier']],
         [/\{/, 'comment.doc', '@push'],
-        [/(?=\})/, 'comment.doc', '@pop'],
+        [/\}/, 'comment.doc', '@pop'],
         [/./, 'type.identifier']
     ]
 };

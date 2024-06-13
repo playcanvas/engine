@@ -1,12 +1,10 @@
 // @config WEBGPU_DISABLED
 import * as pc from 'playcanvas';
-import { deviceType, rootPath } from '@examples/utils';
-import files from '@examples/files';
+import { deviceType, rootPath } from 'examples/utils';
+import files from 'examples/files';
 
-const canvas = document.getElementById('application-canvas');
-if (!(canvas instanceof HTMLCanvasElement)) {
-    throw new Error('No canvas found');
-}
+const canvas = /** @type {HTMLCanvasElement} */ (document.getElementById('application-canvas'));
+window.focus();
 
 // create UI
 // html
@@ -41,6 +39,7 @@ const gfxOptions = {
 
 const device = await pc.createGraphicsDevice(canvas, gfxOptions);
 device.maxPixelRatio = Math.min(window.devicePixelRatio, 2);
+
 const createOptions = new pc.AppOptions();
 createOptions.xr = pc.XrManager;
 createOptions.graphicsDevice = device;

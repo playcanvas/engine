@@ -53,7 +53,7 @@ class AssetReference {
     }
 
     /**
-     * Get or set the asset id which this references. One of either id or url must be set to
+     * Sets the asset id which this references. One of either id or url must be set to
      * initialize an asset reference.
      *
      * @type {number}
@@ -69,12 +69,17 @@ class AssetReference {
         this._bind();
     }
 
+    /**
+     * Gets the asset id which this references.
+     *
+     * @type {number}
+     */
     get id() {
         return this._id;
     }
 
     /**
-     * Get or set the asset url which this references. One of either id or url must be called to
+     * Sets the asset url which this references. One of either id or url must be called to
      * initialize an asset reference.
      *
      * @type {string|null}
@@ -90,6 +95,11 @@ class AssetReference {
         this._bind();
     }
 
+    /**
+     * Gets the asset url which this references.
+     *
+     * @type {string|null}
+     */
     get url() {
         return this._url;
     }

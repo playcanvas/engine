@@ -63,7 +63,7 @@ class WebgpuVertexBufferLayout {
      */
     create(vertexFormat0, vertexFormat1) {
 
-        // type  {GPUVertexBufferLayout[]}
+        // type {GPUVertexBufferLayout[]}
         const layout = [];
 
         // Note: If the VertexFormat is interleaved, we use a single vertex buffer with multiple

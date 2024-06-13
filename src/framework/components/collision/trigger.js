@@ -79,12 +79,12 @@ class Trigger {
     }
 
     destroy() {
-        const body = this.body;
-        if (!body) return;
+        if (!this.body) return;
 
         this.disable();
 
-        this.app.systems.rigidbody.destroyBody(body);
+        this.app.systems.rigidbody.destroyBody(this.body);
+        this.body = null;
     }
 
     _getEntityTransform(transform) {

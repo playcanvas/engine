@@ -1222,6 +1222,7 @@ function _defineMaterialProps() {
 
     _defineFlag('ambientTint', false);
     _defineFlag('diffuseTint', false);
+    _defineFlag('sheenTint', false);
     _defineFlag('specularTint', false);
     _defineFlag('specularityFactorTint', false);
     _defineFlag('emissiveTint', false);

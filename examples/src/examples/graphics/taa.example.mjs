@@ -1,11 +1,9 @@
 import * as pc from 'playcanvas';
-import { data } from '@examples/observer';
-import { deviceType, rootPath } from '@examples/utils';
+import { data } from 'examples/observer';
+import { deviceType, rootPath } from 'examples/utils';
 
-const canvas = document.getElementById('application-canvas');
-if (!(canvas instanceof HTMLCanvasElement)) {
-    throw new Error('No canvas found');
-}
+const canvas = /** @type {HTMLCanvasElement} */ (document.getElementById('application-canvas'));
+window.focus();
 
 const assets = {
     orbit: new pc.Asset('script', 'script', { url: rootPath + '/static/scripts/camera/orbit-camera.js' }),
@@ -29,6 +27,7 @@ const gfxOptions = {
 
 const device = await pc.createGraphicsDevice(canvas, gfxOptions);
 device.maxPixelRatio = Math.min(window.devicePixelRatio, 2);
+
 const createOptions = new pc.AppOptions();
 createOptions.graphicsDevice = device;
 createOptions.mouse = new pc.Mouse(document.body);
@@ -63,12 +62,7 @@ assetListLoader.load(() => {
     // setup skydome with low intensity
     app.scene.envAtlas = assets.envatlas.resource;
     app.scene.skyboxMip = 0;
-    app.scene.exposure = 1.0;
-
-    // the render passes render in HDR format, and so disable output tone mapping and gamma correction,
-    // as that is applied in the final compose pass
-    app.scene.toneMapping = pc.TONEMAP_LINEAR;
-    app.scene.gammaCorrection = pc.GAMMA_NONE;
+    app.scene.exposure = 1.6;
 
     // create an instance of the house and add it to the scene
     const houseEntity = assets.house.resource.instantiateRenderEntity();
@@ -105,7 +99,7 @@ assetListLoader.load(() => {
     light.addComponent('light', {
         type: 'directional',
         color: lightColor,
-        intensity: 0.2,
+        intensity: 1,
         range: 700,
         shadowResolution: 4096,
         shadowDistance: 600,
@@ -123,6 +117,7 @@ assetListLoader.load(() => {
         samples: 0, // number of samples for multi-sampling
         // sceneColorMap: true, // true if the scene color should be captured
         sceneColorMap: false,
+        bloomEnabled: true,
 
         // enable the pre-pass to generate the depth buffer, which is needed by the TAA
         prepassEnabled: true,
@@ -155,8 +150,11 @@ assetListLoader.load(() => {
         // if settings require render passes to be re-created
         const noPasses = cameraEntity.camera.renderPasses.length === 0;
         const taaEnabled = data.get('data.taa.enabled');
-        if (noPasses || taaEnabled !== currentOptions.taaEnabled) {
+        const bloomEnabled = data.get('data.scene.bloom');
+
+        if (noPasses || taaEnabled !== currentOptions.taaEnabled || bloomEnabled !== currentOptions.bloomEnabled) {
             currentOptions.taaEnabled = taaEnabled;
+            currentOptions.bloomEnabled = bloomEnabled;
 
             // TAA has been flipped, setup sharpening appropriately
             data.set('data.scene.sharpness', taaEnabled ? 1 : 0);
@@ -168,7 +166,6 @@ assetListLoader.load(() => {
         // apply all runtime settings
         const renderPassCamera = cameraEntity.camera.renderPasses[0];
         renderPassCamera.renderTargetScale = data.get('data.scene.scale');
-        renderPassCamera.bloomEnabled = data.get('data.scene.bloom');
 
         const composePass = renderPassCamera.composePass;
         composePass.sharpness = data.get('data.scene.sharpness');

@@ -55,35 +55,17 @@ class ScriptHandler extends ResourceHandler {
 
         const onScriptLoad = (url.load, (err, url, extra) => {
             if (!err) {
-                if (script.legacy) {
-                    let Type = null;
-                    // pop the type from the loading stack
-                    if (ScriptTypes._types.length) {
-                        Type = ScriptTypes._types.pop();
-                    }
+                const obj = { };
 
-                    if (Type) {
-                        // store indexed by URL
-                        this._scripts[url] = Type;
-                    } else {
-                        Type = null;
-                    }
+                for (let i = 0; i < ScriptTypes._types.length; i++)
+                    obj[ScriptTypes._types[i].name] = ScriptTypes._types[i];
 
-                    // return the resource
-                    callback(null, Type, extra);
-                } else {
-                    const obj = { };
+                ScriptTypes._types.length = 0;
 
-                    for (let i = 0; i < ScriptTypes._types.length; i++)
-                        obj[ScriptTypes._types[i].name] = ScriptTypes._types[i];
+                callback(null, obj, extra);
 
-                    ScriptTypes._types.length = 0;
-
-                    callback(null, obj, extra);
-
-                    // no cache for scripts
-                    delete self._loader._cache[ResourceLoader.makeKey(url, 'script')];
-                }
+                // no cache for scripts
+                delete self._loader._cache[ResourceLoader.makeKey(url, 'script')];
             } else {
                 callback(err);
             }
@@ -146,7 +128,7 @@ class ScriptHandler extends ResourceHandler {
     _loadModule(url, callback) {
 
         // if we're in the browser, we need to use the full URL
-        const baseUrl = platform.browser ? window.location.origin : import.meta.url;
+        const baseUrl = platform.browser ? window.location.origin + window.location.pathname : import.meta.url;
         const importUrl = new URL(url, baseUrl);
 
         // @ts-ignore

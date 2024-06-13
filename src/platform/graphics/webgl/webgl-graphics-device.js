@@ -888,7 +888,6 @@ class WebglGraphicsDevice extends GraphicsDevice {
         return null;
     }
 
-    /** @ignore */
     get extDisjointTimerQuery() {
         // lazy evaluation as this is not typically used
         if (!this._extDisjointTimerQuery) {
@@ -996,9 +995,6 @@ class WebglGraphicsDevice extends GraphicsDevice {
 
         // Don't allow area lights on old android devices, they often fail to compile the shader, run it incorrectly or are very slow.
         this.supportsAreaLights = !platform.android;
-
-        // supports texture fetch instruction
-        this.supportsTextureFetch = this.isWebGL2;
 
         // Also do not allow them when we only have small number of texture units
         if (this.maxTextures <= 8) {
@@ -1194,8 +1190,8 @@ class WebglGraphicsDevice extends GraphicsDevice {
      *
      * @param {RenderTarget} [source] - The source render target. Defaults to frame buffer.
      * @param {RenderTarget} [dest] - The destination render target. Defaults to frame buffer.
-     * @param {boolean} [color] - If true will copy the color buffer. Defaults to false.
-     * @param {boolean} [depth] - If true will copy the depth buffer. Defaults to false.
+     * @param {boolean} [color] - If true, will copy the color buffer. Defaults to false.
+     * @param {boolean} [depth] - If true, will copy the depth buffer. Defaults to false.
      * @returns {boolean} True if the copy was successful, false otherwise.
      */
     copyRenderTarget(source, dest, color, depth) {
@@ -1852,8 +1848,8 @@ class WebglGraphicsDevice extends GraphicsDevice {
      * call.
      * @param {boolean} [primitive.indexed] - True to interpret the primitive as indexed, thereby
      * using the currently set index buffer and false otherwise.
-     * @param {number} [numInstances] - The number of instances to render when using
-     * ANGLE_instanced_arrays. Defaults to 1.
+     * @param {number} [numInstances] - The number of instances to render when using instancing.
+     * Defaults to 1.
      * @param {boolean} [keepBuffers] - Optionally keep the current set of vertex / index buffers /
      * VAO. This is used when rendering of multiple views, for example under WebXR.
      * @example
@@ -2594,7 +2590,7 @@ class WebglGraphicsDevice extends GraphicsDevice {
     }
 
     /**
-     * Fullscreen mode.
+     * Sets whether the device is currently in fullscreen mode.
      *
      * @type {boolean}
      */
@@ -2607,6 +2603,11 @@ class WebglGraphicsDevice extends GraphicsDevice {
         }
     }
 
+    /**
+     * Gets whether the device is currently in fullscreen mode.
+     *
+     * @type {boolean}
+     */
     get fullscreen() {
         return !!document.fullscreenElement;
     }

@@ -1,6 +1,6 @@
-import { updateDeviceType, fetchFile, localImport, clearImports, fire } from '@examples/utils';
-import { data, refresh } from '@examples/observer';
-import files from '@examples/files';
+import { updateDeviceType, fetchFile, localImport, clearImports, parseConfig, fire } from 'examples/utils';
+import { data, refresh } from 'examples/observer';
+import files from 'examples/files';
 
 import MiniStats from './ministats.mjs';
 
@@ -41,6 +41,9 @@ class ExampleLoader {
     ready = false;
 
     _appStart() {
+        // set ready state
+        this.ready = true;
+
         if (this._app) {
             if (!this._app?.graphicsDevice?.canvas) {
                 console.warn('No canvas found.');
@@ -66,23 +69,6 @@ class ExampleLoader {
         }
 
         this._allowRestart = true;
-    }
-
-    /**
-     * @param {string} script - The script to parse.
-     * @returns {Record<string, any>} - The parsed config.
-     */
-    _parseConfig(script) {
-        const regex = /\/\/ @config ([^ \n]+) ?([^\n]+)?/g;
-        let match;
-        /** @type {Record<string, any>} */
-        const config = {};
-        while ((match = regex.exec(script)) !== null) {
-            const key = match[1];
-            const val = match[2];
-            config[key] = /true|false/g.test(val) ? val === 'true' : val ?? true;
-        }
-        return config;
     }
 
     /**
@@ -147,7 +133,7 @@ class ExampleLoader {
         refresh();
 
         // parse config
-        this._config = this._parseConfig(files['example.mjs']);
+        this._config = parseConfig(files['example.mjs']);
 
         // update device type
         updateDeviceType(this._config);
@@ -182,9 +168,6 @@ class ExampleLoader {
             this._allowRestart = true;
             return;
         }
-
-        // set ready state
-        this.ready = true;
 
         if (this._app) {
             if (this._app.frame) {

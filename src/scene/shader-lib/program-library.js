@@ -217,7 +217,7 @@ class ProgramLibrary {
         this._programsCollection.push(JSON.stringify({ name: name, options: opt }));
     }
 
-    // run pc.app.graphicsDevice.getProgramLibrary().dumpPrograms(); from browser console to build shader options script
+    // run pc.getProgramLibrary(device).dumpPrograms(); from browser console to build shader options script
     dumpPrograms() {
         let text = 'let device = pc.app ? pc.app.graphicsDevice : pc.Application.getApplication().graphicsDevice;\n';
         text += 'let shaders = [';
@@ -227,7 +227,7 @@ class ProgramLibrary {
             text += ',\n\t' + this._programsCollection[i];
         }
         text += '\n];\n';
-        text += 'device.getProgramLibrary().precompile(shaders);\n';
+        text += 'pc.getProgramLibrary(device).precompile(shaders);\n';
         text += 'if (pc.version != \"' + version + '\" || pc.revision != \"' + revision + '\")\n';
         text += '\tconsole.warn(\"precompile-shaders.js: engine version mismatch, rebuild shaders lib with current engine\");';
 
