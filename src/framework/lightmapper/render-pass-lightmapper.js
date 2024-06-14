@@ -1,6 +1,6 @@
 import { DebugGraphics } from '../../platform/graphics/debug-graphics.js';
 import { RenderPass } from '../../platform/graphics/render-pass.js';
-import { SHADER_FORWARDHDR } from '../../scene/constants.js';
+import { SHADER_FORWARD } from '../../scene/constants.js';
 
 /**
  * A render pass implementing rendering of mesh instance receivers for light-mapper.
@@ -34,7 +34,7 @@ class RenderPassLightmapper extends RenderPass {
 
         const { renderer, camera, receivers, renderTarget, worldClusters, lightArray } = this;
 
-        renderer.renderForwardLayer(camera, renderTarget, null, undefined, SHADER_FORWARDHDR, this.viewBindGroups, {
+        renderer.renderForwardLayer(camera, renderTarget, null, undefined, SHADER_FORWARD, this.viewBindGroups, {
             meshInstances: receivers,
             splitLights: lightArray,
             lightClusters: worldClusters

@@ -51,7 +51,7 @@ assetListLoader.load(() => {
     app.start();
 
     app.scene.setSkybox(assets.helipad.resources);
-    app.scene.toneMapping = pc.TONEMAP_ACES;
+    app.scene.rendering.toneMapping = pc.TONEMAP_ACES;
     app.scene.skyboxIntensity = 1;
     app.scene.skyboxMip = 2;
 

@@ -31,7 +31,7 @@ const _tempSphere = new BoundingSphere();
 const _meshSet = new Set();
 
 // internal array used to evaluate the hash for the shader instance
-const lookupHashes = new Uint32Array(3);
+const lookupHashes = new Uint32Array(4);
 
 /**
  * Internal data structure used to store data used by hardware instancing.
@@ -514,6 +514,8 @@ class MeshInstance {
      * @param {number} shaderPass - The shader pass index.
      * @param {number} lightHash - The hash value of the lights that are affecting this mesh instance.
      * @param {import('./scene.js').Scene} scene - The scene.
+     * @param {import('./renderer/rendering-params.js').RenderingParams} renderParams - The rendering
+     * parameters.
      * @param {import('../platform/graphics/uniform-buffer-format.js').UniformBufferFormat} [viewUniformFormat] - The
      * format of the view uniform buffer.
      * @param {import('../platform/graphics/bind-group-format.js').BindGroupFormat} [viewBindGroupFormat] - The
@@ -522,7 +524,7 @@ class MeshInstance {
      * @returns {ShaderInstance} - the shader instance.
      * @ignore
      */
-    getShaderInstance(shaderPass, lightHash, scene, viewUniformFormat, viewBindGroupFormat, sortedLights) {
+    getShaderInstance(shaderPass, lightHash, scene, renderParams, viewUniformFormat, viewBindGroupFormat, sortedLights) {
 
         const shaderDefs = this._shaderDefs;
 
@@ -530,6 +532,7 @@ class MeshInstance {
         lookupHashes[0] = shaderPass;
         lookupHashes[1] = lightHash;
         lookupHashes[2] = shaderDefs;
+        lookupHashes[3] = renderParams.hash;
         const hash = hash32Fnv1a(lookupHashes);
 
         // look up the cache
@@ -551,7 +554,7 @@ class MeshInstance {
                 // marker to allow us to see the source node for shader alloc
                 DebugGraphics.pushGpuMarker(this.mesh.device, `Node: ${this.node.name}`);
 
-                const shader = mat.getShaderVariant(this.mesh.device, scene, shaderDefs, null, shaderPass, sortedLights,
+                const shader = mat.getShaderVariant(this.mesh.device, scene, shaderDefs, renderParams, shaderPass, sortedLights,
                                                     viewUniformFormat, viewBindGroupFormat, this._mesh.vertexBuffer?.format);
 
                 DebugGraphics.popGpuMarker(this.mesh.device);

@@ -147,7 +147,7 @@ class ForwardRenderer extends Renderer {
         this.ambientColor[0] = scene.ambientLight.r;
         this.ambientColor[1] = scene.ambientLight.g;
         this.ambientColor[2] = scene.ambientLight.b;
-        if (scene.gammaCorrection) {
+        if (scene.rendering.gammaCorrection) {
             for (let i = 0; i < 3; i++) {
                 this.ambientColor[i] = Math.pow(this.ambientColor[i], 2.2);
             }
@@ -228,7 +228,7 @@ class ForwardRenderer extends Renderer {
                 this._resolveLight(scope, cnt);
             }
 
-            this.lightColorId[cnt].setValue(scene.gammaCorrection ? directional._linearFinalColor : directional._finalColor);
+            this.lightColorId[cnt].setValue(scene.rendering.gammaCorrection ? directional._linearFinalColor : directional._finalColor);
 
             // Directional lights shine down the negative Y axis
             wtm.getY(directional._direction).mulScalar(-1);
@@ -303,7 +303,7 @@ class ForwardRenderer extends Renderer {
         }
 
         this.lightRadiusId[cnt].setValue(omni.attenuationEnd);
-        this.lightColorId[cnt].setValue(scene.gammaCorrection ? omni._linearFinalColor : omni._finalColor);
+        this.lightColorId[cnt].setValue(scene.render.gammaCorrection ? omni._linearFinalColor : omni._finalColor);
         wtm.getTranslation(omni._position);
         this.lightPos[cnt][0] = omni._position.x;
         this.lightPos[cnt][1] = omni._position.y;
@@ -359,7 +359,7 @@ class ForwardRenderer extends Renderer {
         this.lightInAngleId[cnt].setValue(spot._innerConeAngleCos);
         this.lightOutAngleId[cnt].setValue(spot._outerConeAngleCos);
         this.lightRadiusId[cnt].setValue(spot.attenuationEnd);
-        this.lightColorId[cnt].setValue(scene.gammaCorrection ? spot._linearFinalColor : spot._finalColor);
+        this.lightColorId[cnt].setValue(scene.rendering.gammaCorrection ? spot._linearFinalColor : spot._finalColor);
         wtm.getTranslation(spot._position);
         this.lightPos[cnt][0] = spot._position.x;
         this.lightPos[cnt][1] = spot._position.y;
@@ -461,6 +461,9 @@ class ForwardRenderer extends Renderer {
     // execute first pass over draw calls, in order to update materials / shaders
     renderForwardPrepareMaterials(camera, drawCalls, sortedLights, layer, pass) {
 
+        // rendering params from the scene, or overridden by the camera
+        const renderParams = camera.renderingParams ?? this.scene.rendering;
+
         const addCall = (drawCall, shaderInstance, isNewMaterial, lightMaskChanged) => {
             _drawCallList.drawCalls.push(drawCall);
             _drawCallList.shaderInstances.push(shaderInstance);
@@ -516,7 +519,7 @@ class ForwardRenderer extends Renderer {
                 }
             }
 
-            const shaderInstance = drawCall.getShaderInstance(pass, lightHash, scene, this.viewUniformFormat, this.viewBindGroupFormat, sortedLights);
+            const shaderInstance = drawCall.getShaderInstance(pass, lightHash, scene, renderParams, this.viewUniformFormat, this.viewBindGroupFormat, sortedLights);
 
             addCall(drawCall, shaderInstance, material !== prevMaterial, !prevMaterial || lightMask !== prevLightMask);
 
@@ -777,7 +780,7 @@ class ForwardRenderer extends Renderer {
             this.fogColor[0] = scene.fogColor.r;
             this.fogColor[1] = scene.fogColor.g;
             this.fogColor[2] = scene.fogColor.b;
-            if (scene.gammaCorrection) {
+            if (scene.rendering.gammaCorrection) {
                 for (let i = 0; i < 3; i++) {
                     this.fogColor[i] = Math.pow(this.fogColor[i], 2.2);
                 }

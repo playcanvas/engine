@@ -7,6 +7,7 @@ import { BlendState } from "../../platform/graphics/blend-state.js";
 import { DebugGraphics } from "../../platform/graphics/debug-graphics.js";
 import { RenderPass } from "../../platform/graphics/render-pass.js";
 import { RenderAction } from "../composition/render-action.js";
+import { SHADER_FORWARD } from "../constants.js";
 
 /**
  * A render pass used render a set of layers using a camera.
@@ -264,8 +265,8 @@ class RenderPassForward extends RenderPass {
                 lightClusters: renderAction.lightClusters
             };
 
-            // shader pass - use setting from camera if available, otherwise use layer setting
-            const shaderPass = camera.camera.shaderPassInfo?.index ?? layer.shaderPass;
+            // shader pass - use setting from camera if available, otherwise forward
+            const shaderPass = camera.camera.shaderPassInfo?.index ?? SHADER_FORWARD;
 
             // if this is not a first render action to the render target, or if the render target was not
             // fully cleared on pass start, we need to execute clears here

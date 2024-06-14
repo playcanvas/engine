@@ -1,21 +1,16 @@
 import {
-    CUBEPROJ_NONE, GAMMA_SRGBHDR, GAMMA_NONE, LIGHTTYPE_DIRECTIONAL, LIGHTTYPE_OMNI, LIGHTTYPE_SPOT,
-    MASK_AFFECT_DYNAMIC, SHADER_FORWARDHDR, TONEMAP_LINEAR, SHADERDEF_INSTANCING, SHADERDEF_MORPH_NORMAL,
+    CUBEPROJ_NONE, GAMMA_NONE, LIGHTTYPE_DIRECTIONAL, LIGHTTYPE_OMNI, LIGHTTYPE_SPOT,
+    MASK_AFFECT_DYNAMIC, TONEMAP_LINEAR, SHADERDEF_INSTANCING, SHADERDEF_MORPH_NORMAL,
     SHADERDEF_MORPH_POSITION, SHADERDEF_MORPH_TEXTURE_BASED, SHADERDEF_SCREENSPACE, SHADERDEF_SKIN,
     SHADERDEF_NOSHADOW, SHADERDEF_TANGENTS, SPECULAR_BLINN, SPRITE_RENDERMODE_SIMPLE
 } from "../constants.js";
 
 class LitMaterialOptionsBuilder {
-    static update(litOptions, material, scene, objDefs, pass, sortedLights) {
+    static update(litOptions, material, scene, renderParams, objDefs, pass, sortedLights) {
         LitMaterialOptionsBuilder.updateSharedOptions(litOptions, material, scene, objDefs, pass);
         LitMaterialOptionsBuilder.updateMaterialOptions(litOptions, material);
-        LitMaterialOptionsBuilder.updateEnvOptions(litOptions, material, scene);
+        LitMaterialOptionsBuilder.updateEnvOptions(litOptions, material, scene, renderParams);
         LitMaterialOptionsBuilder.updateLightingOptions(litOptions, material, objDefs, sortedLights);
-
-        if (pass === SHADER_FORWARDHDR) {
-            litOptions.gamma = GAMMA_SRGBHDR;
-            litOptions.toneMap = TONEMAP_LINEAR;
-        }
     }
 
     static updateSharedOptions(litOptions, material, scene, objDefs, pass) {
@@ -95,10 +90,10 @@ class LitMaterialOptionsBuilder {
         litOptions.diffuseMapEnabled = material.hasDiffuseMap;
     }
 
-    static updateEnvOptions(litOptions, material, scene) {
+    static updateEnvOptions(litOptions, material, scene, renderParams) {
         litOptions.fog = material.useFog ? scene.fog : 'none';
-        litOptions.gamma = material.useGammaTonemap ? scene.gammaCorrection : GAMMA_NONE;
-        litOptions.toneMap = material.useGammaTonemap ? scene.toneMapping : -1;
+        litOptions.gamma = material.useGammaTonemap ? renderParams.gammaCorrection : GAMMA_NONE;
+        litOptions.toneMap = material.useGammaTonemap ? renderParams.toneMapping : TONEMAP_LINEAR;
 
         // source of reflections
         if (material.useSkybox && scene.envAtlas && scene.skybox) {

@@ -579,24 +579,6 @@ export const GAMMA_NONE = 0;
 export const GAMMA_SRGB = 1;
 
 /**
- * Apply sRGB (fast) gamma correction.
- *
- * @type {number}
- * @deprecated
- * @ignore
- * @category Graphics
- */
-export const GAMMA_SRGBFAST = 2; // deprecated
-
-/**
- * Apply sRGB (HDR) gamma correction.
- *
- * @type {number}
- * @category Graphics
- */
-export const GAMMA_SRGBHDR = 3;
-
-/**
  * Linear tonemapping.
  *
  * @type {number}
@@ -717,20 +699,14 @@ export const MASK_AFFECT_LIGHTMAPPED = 2;
 export const MASK_BAKE = 4;
 
 /**
- * Render shaded materials with gamma correction and tonemapping.
+ * Render shaded materials using forward rendering.
  *
  * @type {number}
  * @category Graphics
  */
 export const SHADER_FORWARD = 0;
 
-/**
- * Render shaded materials without gamma correction and tonemapping.
- *
- * @type {number}
- * @category Graphics
- */
-export const SHADER_FORWARDHDR = 1;
+export const SHADER_PREPASS_VELOCITY = 1;
 
 /**
  * Render RGBA-encoded depth value.
@@ -746,8 +722,6 @@ export const SHADER_PICK = 3;
 // shadow pass used by the shadow rendering code
 export const SHADER_SHADOW = 4;
 
-export const SHADER_PREPASS_VELOCITY = 5;
-
 /**
  * Shader that performs forward rendering.
  *
@@ -755,15 +729,6 @@ export const SHADER_PREPASS_VELOCITY = 5;
  * @category Graphics
  */
 export const SHADERPASS_FORWARD = 'forward';
-
-/**
- * Shader that performs forward rendering in HDR mode (gamma correction and tonemapping are
- * disabled).
- *
- * @type {string}
- * @category Graphics
- */
-export const SHADERPASS_FORWARD_HDR = 'forward_hdr';
 
 /**
  * Shader used for debug rendering of albedo.

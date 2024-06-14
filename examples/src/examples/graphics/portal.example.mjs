@@ -57,7 +57,7 @@ assetListLoader.load(() => {
 
     // set skybox - this DDS file was 'prefiltered' in the PlayCanvas Editor and then downloaded.
     app.scene.envAtlas = assets.helipad.resource;
-    app.scene.toneMapping = pc.TONEMAP_ACES;
+    app.scene.rendering.toneMapping = pc.TONEMAP_ACES;
     app.scene.skyboxMip = 1;
     app.scene.skyboxIntensity = 0.7;
 

@@ -884,7 +884,7 @@ class StandardMaterial extends Material {
         this._processParameters('_activeLightingParams');
     }
 
-    getShaderVariant(device, scene, objDefs, unused, pass, sortedLights, viewUniformFormat, viewBindGroupFormat, vertexFormat) {
+    getShaderVariant(device, scene, objDefs, renderParams, pass, sortedLights, viewUniformFormat, viewBindGroupFormat, vertexFormat) {
 
         // update prefiltered lighting data
         this.updateEnvUniforms(device, scene);
@@ -897,7 +897,7 @@ class StandardMaterial extends Material {
         if (minimalOptions)
             this.shaderOptBuilder.updateMinRef(options, scene, this, objDefs, pass, sortedLights);
         else
-            this.shaderOptBuilder.updateRef(options, scene, this, objDefs, pass, sortedLights);
+            this.shaderOptBuilder.updateRef(options, scene, renderParams, this, objDefs, pass, sortedLights);
 
         // execute user callback to modify the options
         if (this.onUpdateShader) {
@@ -1096,7 +1096,7 @@ function _defineColor(name, defaultValue) {
     defineUniform(name, (material, device, scene) => {
         const uniform = material._allocUniform(name, () => new Float32Array(3));
         const color = material[name];
-        const gamma = material.useGammaTonemap && scene.gammaCorrection;
+        const gamma = material.useGammaTonemap && scene.rendering.gammaCorrection;
 
         if (gamma) {
             uniform[0] = Math.pow(color.r, 2.2);
