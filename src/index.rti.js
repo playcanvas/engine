@@ -36,6 +36,9 @@ Object.assign(customTypes, {
         // Used in src/core/tags.js
         // Testable via physics/offset-collision example.
         return value[Symbol.iterator] instanceof Function;
+    },
+    ArrayBufferView(value) {
+        return ArrayBuffer.isView(value);
     }
 });
 // For quickly checking props of Vec2/Vec3/Vec4/Quat/Mat3/Mat4 without GC
