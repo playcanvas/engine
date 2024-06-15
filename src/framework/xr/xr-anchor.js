@@ -220,10 +220,20 @@ class XrAnchor extends EventHandler {
     }
 
     /**
-     * Remove persistent UUID of an anchor from an underlying system.
+     * Removes the persistent UUID of an anchor from the underlying system. This effectively makes
+     * the anchor non-persistent, so it will not be restored in future WebXR sessions.
      *
-     * @param {XrAnchorForgetCallback} [callback] - Callback to fire when anchor has been
-     * forgotten or error if failed.
+     * @param {XrAnchorForgetCallback} [callback] - Optional callback function to be called when
+     * the anchor has been forgotten or if an error occurs.
+     * @example
+     * // Forget the anchor and log the result or error
+     * anchor.forget((err) => {
+     *     if (err) {
+     *         console.error('Failed to forget anchor:', err);
+     *     } else {
+     *         console.log('Anchor has been forgotten');
+     *     }
+     * });
      */
     forget(callback) {
         if (!this._uuid) {
