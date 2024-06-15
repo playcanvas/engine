@@ -952,6 +952,8 @@ export const pixelFormatInfo = new Map([
     // float formats
     [PIXELFORMAT_A8,            { name: 'A8', size: 1 }],
     [PIXELFORMAT_R8,            { name: 'R8', size: 1 }],
+    [PIXELFORMAT_L8,            { name: 'L8', size: 1 }],
+    [PIXELFORMAT_LA8,           { name: 'LA8', size: 2 }],
     [PIXELFORMAT_RG8,           { name: 'RG8', size: 2 }],
     [PIXELFORMAT_RGB565,        { name: 'RGB565', size: 2 }],
     [PIXELFORMAT_RGBA5551,      { name: 'RGBA5551', size: 2 }],
