@@ -239,7 +239,7 @@ class XrAnchor extends EventHandler {
     }
 
     /**
-     * UUID string of a persistent anchor or null if not persisted.
+     * Gets the UUID string of a persisted anchor or null if the anchor is not persisted.
      *
      * @type {null|string}
      */
@@ -248,7 +248,7 @@ class XrAnchor extends EventHandler {
     }
 
     /**
-     * True if an anchor is persistent.
+     * Gets whether an anchor is persistent.
      *
      * @type {boolean}
      */
