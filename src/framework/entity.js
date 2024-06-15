@@ -1,5 +1,6 @@
 import { Debug } from '../core/debug.js';
 import { guid } from '../core/guid.js';
+import { sortOrder } from '../core/sort.js';
 
 import { GraphNode } from '../scene/graph-node.js';
 
@@ -10,6 +11,12 @@ import { getApplication } from './globals.js';
  * @ignore
  */
 const _enableList = [];
+
+/**
+ * @type {Array<Component>}
+ * @ignore
+ */
+const _sortedArray = [];
 
 /**
  * The Entity is the core primitive of a PlayCanvas game. Generally speaking an object in your game
@@ -232,9 +239,6 @@ class Entity extends GraphNode {
      */
     _guid = null;
 
-    /** @private */
-    _oc = [];
-
     /**
      * Used to differentiate between the entities of a template root instance, which have it set to
      * true, and the cloned instance entities (set to false).
@@ -282,15 +286,6 @@ class Entity extends GraphNode {
 
         Debug.assert(app, 'Could not find current application');
         this._app = app;
-    }
-
-    /**
-     * Component ordered storage.
-     *
-     * @returns {Array<import('./components/component.js').Component>} - An ordered components array.
-     */
-    get oc() {
-        return this._oc;
     }
 
     /**
@@ -515,7 +510,7 @@ class Entity extends GraphNode {
     _onHierarchyStateChanged(enabled) {
         super._onHierarchyStateChanged(enabled);
 
-        const components = this._oc;
+        const components = this._getSortedComponents();
         for (let i = 0; i < components.length; i++) {
             const component = components[i];
             if (component.enabled) {
@@ -531,7 +526,7 @@ class Entity extends GraphNode {
     /** @private */
     _onHierarchyStatePostChanged() {
         // post enable all the components
-        const components = this._oc;
+        const components = this._getSortedComponents();
         for (let i = 0; i < components.length; i++) {
             components[i].onPostStateChange();
         }
@@ -607,6 +602,24 @@ class Entity extends GraphNode {
         resolveDuplicatedEntityReferenceProperties(this, this, clone, duplicatedIdsMap);
 
         return clone;
+    }
+
+    _getSortedComponents() {
+        _sortedArray.length = 0;
+
+        let needSort = false;
+        for (const component of Object.values(this.c)) {
+            if (component.constructor.order !== 0) {
+                needSort = true;
+            }
+            _sortedArray.push(component);
+        }
+
+        if (needSort) {
+            sortOrder(_sortedArray);
+        }
+
+        return _sortedArray;
     }
 
     /**

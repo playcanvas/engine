@@ -13,7 +13,7 @@ const cmpPriority = (a, b) => a.priority - b.priority;
  * @returns {number} A number indicating the relative position.
  * @ignore
  */
-const cmpOrder = (a, b) => a.order - b.order;
+const cmpOrder = (a, b) => a.constructor.order - b.constructor.order;
 
 /**
  * @param {Array<{priority: number}>} arr - Array to be sorted in place where each element contains

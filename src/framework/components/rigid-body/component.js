@@ -114,6 +114,8 @@ class RigidBodyComponent extends Component {
      */
     static EVENT_TRIGGERLEAVE = 'triggerleave';
 
+    static order = -1;
+
     /** @private */
     _angularDamping = 0;
 
@@ -168,8 +170,6 @@ class RigidBodyComponent extends Component {
      */
     constructor(system, entity) { // eslint-disable-line no-useless-constructor
         super(system, entity);
-
-        this._order = -1;
     }
 
     /** @ignore */

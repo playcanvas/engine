@@ -4,7 +4,6 @@ import { Color } from '../../core/math/color.js';
 import { Vec2 } from '../../core/math/vec2.js';
 import { Vec3 } from '../../core/math/vec3.js';
 import { Vec4 } from '../../core/math/vec4.js';
-import { sortOrder } from '../../core/sort.js';
 
 /**
  * Component Systems contain the logic and functionality to update all Components of a particular
@@ -51,9 +50,6 @@ class ComponentSystem extends EventHandler {
         entity[this.id] = component;
         entity.c[this.id] = component;
 
-        entity.oc.push(component);
-        sortOrder(entity.oc);
-
         this.initializeComponentData(component, data, []);
 
         this.fire('add', entity, component);
@@ -72,7 +68,6 @@ class ComponentSystem extends EventHandler {
      */
     removeComponent(entity) {
         const id = this.id;
-        const ordered = entity.oc;
         const record = this.store[entity.getGuid()];
         const component = entity.c[id];
 
@@ -82,8 +77,6 @@ class ComponentSystem extends EventHandler {
 
         entity[id] = undefined;
         delete entity.c[id];
-
-        ordered.splice(ordered.findIndex(comp => comp.id === id), 1);
 
         this.fire('remove', entity, record.data);
     }
