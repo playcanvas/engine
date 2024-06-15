@@ -13,7 +13,7 @@ import { getApplication } from './globals.js';
 const _enableList = [];
 
 /**
- * @type {Array<Component>}
+ * @type {Array<import('./components/component.js').Component>}
  * @ignore
  */
 const _sortedArray = [];
