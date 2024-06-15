@@ -179,9 +179,9 @@ class XrPlane extends EventHandler {
      * @type {DOMPointReadOnly[]}
      * @example
      * // prepare reusable objects
+     * const transform = new pc.Mat4();
      * const vecA = new pc.Vec3();
      * const vecB = new pc.Vec3();
-     * const color = new pc.Color(1, 1, 1);
      *
      * // update Mat4 to plane position and rotation
      * transform.setTRS(plane.getPosition(), plane.getRotation(), pc.Vec3.ONE);
@@ -191,12 +191,12 @@ class XrPlane extends EventHandler {
      *     vecA.copy(plane.points[i]);
      *     vecB.copy(plane.points[(i + 1) % plane.points.length]);
      *
-     *     // transform from planes local to world coords
+     *     // transform points to world space
      *     transform.transformPoint(vecA, vecA);
      *     transform.transformPoint(vecB, vecB);
      *
      *     // render line
-     *     app.drawLine(vecA, vecB, color);
+     *     app.drawLine(vecA, vecB, pc.Color.WHITE);
      * }
      */
     get points() {
