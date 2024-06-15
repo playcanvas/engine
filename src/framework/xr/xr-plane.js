@@ -152,9 +152,19 @@ class XrPlane extends EventHandler {
     }
 
     /**
-     * Plane's specific orientation (horizontal or vertical) or null if orientation is anything else.
+     * Gets the plane's specific orientation. This can be "horizontal" for planes that are parallel
+     * to the ground, "vertical" for planes that are perpendicular to the ground, or `null` if the
+     * orientation is different or unknown.
      *
      * @type {string|null}
+     * @example
+     * if (plane.orientation === 'horizontal') {
+     *     console.log('This plane is horizontal.');
+     * } else if (plane.orientation === 'vertical') {
+     *     console.log('This plane is vertical.');
+     * } else {
+     *     console.log('Orientation of this plane is unknown or different.');
+     * }
      */
     get orientation() {
         return this._orientation;
