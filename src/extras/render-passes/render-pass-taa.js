@@ -106,7 +106,10 @@ const fs = /* glsl */ `
 `;
 
 /**
+ * A render pass implementation of Temporal Anti-Aliasing (TAA).
+ *
  * @category Graphics
+ * @ignore
  */
 class RenderPassTAA extends RenderPassShaderQuad {
     /**

@@ -381,7 +381,7 @@ class TransformGizmo extends Gizmo {
     }
 
     /**
-     * State for if snapping is enabled. Defaults to false.
+     * Sets whether snapping is enabled. Defaults to false.
      *
      * @type {boolean}
      */
@@ -389,12 +389,17 @@ class TransformGizmo extends Gizmo {
         this._snap = this.root.enabled && value;
     }
 
+    /**
+     * Gets whether snapping is enabled. Defaults to false.
+     *
+     * @type {boolean}
+     */
     get snap() {
         return this._snap;
     }
 
     /**
-     * X axis color.
+     * Sets the X axis color.
      *
      * @type {Color}
      */
@@ -402,12 +407,17 @@ class TransformGizmo extends Gizmo {
         this._updateAxisColor('x', value);
     }
 
+    /**
+     * Gets the X axis color.
+     *
+     * @type {Color}
+     */
     get xAxisColor() {
         return this._meshColors.axis.x;
     }
 
     /**
-     * Y axis color.
+     * Sets the Y axis color.
      *
      * @type {Color}
      */
@@ -415,12 +425,17 @@ class TransformGizmo extends Gizmo {
         this._updateAxisColor('y', value);
     }
 
+    /**
+     * Gets the Y axis color.
+     *
+     * @type {Color}
+     */
     get yAxisColor() {
         return this._meshColors.axis.y;
     }
 
     /**
-     * Z axis color.
+     * Sets the Z axis color.
      *
      * @type {Color}
      */
@@ -428,12 +443,17 @@ class TransformGizmo extends Gizmo {
         this._updateAxisColor('z', value);
     }
 
+    /**
+     * Gets the Z axis color.
+     *
+     * @type {Color}
+     */
     get zAxisColor() {
         return this._meshColors.axis.z;
     }
 
     /**
-     * The color alpha for all axes.
+     * Sets the color alpha for all axes.
      *
      * @type {number}
      */
@@ -451,6 +471,11 @@ class TransformGizmo extends Gizmo {
         }
     }
 
+    /**
+     * Gets the color alpha for all axes.
+     *
+     * @type {number}
+     */
     get colorAlpha() {
         return this._colorAlpha;
     }

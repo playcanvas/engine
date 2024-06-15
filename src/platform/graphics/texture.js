@@ -20,6 +20,16 @@ import {
 
 let id = 0;
 
+const PROPERTY_MIN_FILTER = 1;
+const PROPERTY_MAG_FILTER = 2;
+const PROPERTY_ADDRESS_U = 4;
+const PROPERTY_ADDRESS_V = 8;
+const PROPERTY_ADDRESS_W = 16;
+const PROPERTY_COMPARE_ON_READ = 32;
+const PROPERTY_COMPARE_FUNC = 64;
+const PROPERTY_ANISOTROPY = 128;
+const PROPERTY_ALL = 255; // 1 | 2 | 4 | 8 | 16 | 32 | 64 | 128
+
 /**
  * A texture is a container for texel data that can be utilized in a fragment shader. Typically,
  * the texel data represents an image that is mapped over geometry.
@@ -398,7 +408,7 @@ class Texture {
     }
 
     /**
-     * The minification filter to be applied to the texture. Can be:
+     * Sets the minification filter to be applied to the texture. Can be:
      *
      * - {@link FILTER_NEAREST}
      * - {@link FILTER_LINEAR}
@@ -415,17 +425,22 @@ class Texture {
                 Debug.warn("Texture#minFilter: minFilter property cannot be changed on an integer texture, will remain FILTER_NEAREST", this);
             } else {
                 this._minFilter = v;
-                this.propertyChanged(1);
+                this.propertyChanged(PROPERTY_MIN_FILTER);
             }
         }
     }
 
+    /**
+     * Gets the minification filter to be applied to the texture.
+     *
+     * @type {number}
+     */
     get minFilter() {
         return this._minFilter;
     }
 
     /**
-     * The magnification filter to be applied to the texture. Can be:
+     * Sets the magnification filter to be applied to the texture. Can be:
      *
      * - {@link FILTER_NEAREST}
      * - {@link FILTER_LINEAR}
@@ -438,17 +453,22 @@ class Texture {
                 Debug.warn("Texture#magFilter: magFilter property cannot be changed on an integer texture, will remain FILTER_NEAREST", this);
             } else {
                 this._magFilter = v;
-                this.propertyChanged(2);
+                this.propertyChanged(PROPERTY_MAG_FILTER);
             }
         }
     }
 
+    /**
+     * Gets the magnification filter to be applied to the texture.
+     *
+     * @type {number}
+     */
     get magFilter() {
         return this._magFilter;
     }
 
     /**
-     * The addressing mode to be applied to the texture horizontally. Can be:
+     * Sets the addressing mode to be applied to the texture horizontally. Can be:
      *
      * - {@link ADDRESS_REPEAT}
      * - {@link ADDRESS_CLAMP_TO_EDGE}
@@ -459,16 +479,21 @@ class Texture {
     set addressU(v) {
         if (this._addressU !== v) {
             this._addressU = v;
-            this.propertyChanged(4);
+            this.propertyChanged(PROPERTY_ADDRESS_U);
         }
     }
 
+    /**
+     * Gets the addressing mode to be applied to the texture horizontally.
+     *
+     * @type {number}
+     */
     get addressU() {
         return this._addressU;
     }
 
     /**
-     * The addressing mode to be applied to the texture vertically. Can be:
+     * Sets the addressing mode to be applied to the texture vertically. Can be:
      *
      * - {@link ADDRESS_REPEAT}
      * - {@link ADDRESS_CLAMP_TO_EDGE}
@@ -479,16 +504,21 @@ class Texture {
     set addressV(v) {
         if (this._addressV !== v) {
             this._addressV = v;
-            this.propertyChanged(8);
+            this.propertyChanged(PROPERTY_ADDRESS_V);
         }
     }
 
+    /**
+     * Gets the addressing mode to be applied to the texture vertically.
+     *
+     * @type {number}
+     */
     get addressV() {
         return this._addressV;
     }
 
     /**
-     * The addressing mode to be applied to the 3D texture depth. Can be:
+     * Sets the addressing mode to be applied to the 3D texture depth. Can be:
      *
      * - {@link ADDRESS_REPEAT}
      * - {@link ADDRESS_CLAMP_TO_EDGE}
@@ -503,10 +533,15 @@ class Texture {
         }
         if (addressW !== this._addressW) {
             this._addressW = addressW;
-            this.propertyChanged(16);
+            this.propertyChanged(PROPERTY_ADDRESS_W);
         }
     }
 
+    /**
+     * Gets the addressing mode to be applied to the 3D texture depth.
+     *
+     * @type {number}
+     */
     get addressW() {
         return this._addressW;
     }
@@ -521,16 +556,21 @@ class Texture {
     set compareOnRead(v) {
         if (this._compareOnRead !== v) {
             this._compareOnRead = v;
-            this.propertyChanged(32);
+            this.propertyChanged(PROPERTY_COMPARE_ON_READ);
         }
     }
 
+    /**
+     * Gets whether you can get filtered results of comparison using texture() in your shader.
+     *
+     * @type {boolean}
+     */
     get compareOnRead() {
         return this._compareOnRead;
     }
 
     /**
-     * Comparison function when compareOnRead is enabled. Possible values:
+     * Sets the comparison function when compareOnRead is enabled. Possible values:
      *
      * - {@link FUNC_LESS}
      * - {@link FUNC_LESSEQUAL}
@@ -544,33 +584,43 @@ class Texture {
     set compareFunc(v) {
         if (this._compareFunc !== v) {
             this._compareFunc = v;
-            this.propertyChanged(64);
+            this.propertyChanged(PROPERTY_COMPARE_FUNC);
         }
     }
 
+    /**
+     * Sets the comparison function when compareOnRead is enabled.
+     *
+     * @type {number}
+     */
     get compareFunc() {
         return this._compareFunc;
     }
 
     /**
-     * Integer value specifying the level of anisotropic to apply to the texture ranging from 1 (no
-     * anisotropic filtering) to the {@link GraphicsDevice} property maxAnisotropy.
+     * Sets the integer value specifying the level of anisotropy to apply to the texture ranging
+     * from 1 (no anisotropic filtering) to the {@link GraphicsDevice} property maxAnisotropy.
      *
      * @type {number}
      */
     set anisotropy(v) {
         if (this._anisotropy !== v) {
             this._anisotropy = v;
-            this.propertyChanged(128);
+            this.propertyChanged(PROPERTY_ANISOTROPY);
         }
     }
 
+    /**
+     * Gets the integer value specifying the level of anisotropy to apply to the texture.
+     *
+     * @type {number}
+     */
     get anisotropy() {
         return this._anisotropy;
     }
 
     /**
-     * Defines if texture should generate/upload mipmaps if possible.
+     * Sets whether the texture should generate/upload mipmaps.
      *
      * @type {boolean}
      */
@@ -589,6 +639,11 @@ class Texture {
         }
     }
 
+    /**
+     * Gets whether the texture should generate/upload mipmaps.
+     *
+     * @type {boolean}
+     */
     get mipmaps() {
         return this._mipmaps;
     }
@@ -704,7 +759,7 @@ class Texture {
     }
 
     /**
-     * Specifies whether the texture should be flipped in the Y-direction. Only affects textures
+     * Sets whether the texture should be flipped in the Y-direction. Only affects textures
      * with a source that is an image, canvas or video element. Does not affect cubemaps,
      * compressed textures or textures set from raw pixel data. Defaults to true.
      *
@@ -717,6 +772,11 @@ class Texture {
         }
     }
 
+    /**
+     * Gets whether the texture should be flipped in the Y-direction.
+     *
+     * @type {boolean}
+     */
     get flipY() {
         return this._flipY;
     }
@@ -767,7 +827,7 @@ class Texture {
         this._needsMipmapsUpload = this._mipmaps;
         this._mipmapsUploaded = false;
 
-        this.propertyChanged(255);  // 1 | 2 | 4 | 8 | 16 | 32 | 64 | 128
+        this.propertyChanged(PROPERTY_ALL);
     }
 
     /**

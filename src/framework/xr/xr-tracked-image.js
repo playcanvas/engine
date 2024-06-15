@@ -132,6 +132,11 @@ class XrTrackedImage extends EventHandler {
         this._width = value;
     }
 
+    /**
+     * Get the width (in meters) of image in real world.
+     *
+     * @type {number}
+     */
     get width() {
         return this._width;
     }

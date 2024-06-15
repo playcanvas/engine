@@ -10,7 +10,10 @@ import { RenderPassUpsample } from './render-pass-upsample.js';
 
 // based on https://learnopengl.com/Guest-Articles/2022/Phys.-Based-Bloom
 /**
+ * Render pass implementation of HDR bloom effect.
+ *
  * @category Graphics
+ * @ignore
  */
 class RenderPassBloom extends RenderPass {
     bloomTexture;
