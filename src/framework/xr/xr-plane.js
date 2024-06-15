@@ -159,8 +159,10 @@ class XrPlane extends EventHandler {
     }
 
     /**
-     * Array of DOMPointReadOnly objects. DOMPointReadOnly is an object with `x y z` properties
-     * that defines a local point of a plane's polygon.
+     * Gets the array of points that define the polygon of the plane in its local coordinate space.
+     * Each point is represented as a `DOMPointReadOnly` object with `x`, `y`, and `z` properties.
+     * These points can be transformed to world coordinates using the plane's position and
+     * rotation.
      *
      * @type {DOMPointReadOnly[]}
      * @example
@@ -190,10 +192,17 @@ class XrPlane extends EventHandler {
     }
 
     /**
-     * Semantic Label of a plane that is provided by underlying system.
-     * Current list includes (but not limited to): https://github.com/immersive-web/semantic-labels/blob/master/labels.json
+     * Gets the semantic label of the plane provided by the underlying system. The label describes
+     * the type of surface the plane represents, such as "floor", "wall", "ceiling", etc. The list
+     * of possible labels can be found in the [semantic labels repository](https://github.com/immersive-web/semantic-labels).
      *
      * @type {string}
+     * @example
+     * if (plane.label === 'floor') {
+     *     console.log('This plane represents the floor.');
+     * } else if (plane.label === 'wall') {
+     *     console.log('This plane represents a wall.');
+     * }
      */
     get label() {
         return this._xrPlane.semanticLabel || '';
