@@ -5,8 +5,10 @@ import { Vec3 } from '../../core/math/vec3.js';
 let ids = 0;
 
 /**
- * Detected Plane instance that provides position, rotation, polygon points and its semantic label.
- * Plane data is subject to change during its lifetime.
+ * Represents a detected plane in the real world, providing its position, rotation, polygon points,
+ * and semantic label. The plane data may change over time as the system updates its understanding
+ * of the environment. Instances of this class are created and managed by the
+ * {@link XrPlaneDetection} system.
  *
  * @category XR
  */
