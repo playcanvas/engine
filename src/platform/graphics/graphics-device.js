@@ -768,7 +768,7 @@ class GraphicsDevice extends EventHandler {
     }
 
     /**
-     * Fullscreen mode.
+     * Sets whether the device is currently in fullscreen mode.
      *
      * @type {boolean}
      */
@@ -776,13 +776,18 @@ class GraphicsDevice extends EventHandler {
         Debug.error("GraphicsDevice.fullscreen is not implemented on current device.");
     }
 
+    /**
+     * Gets whether the device is currently in fullscreen mode.
+     *
+     * @type {boolean}
+     */
     get fullscreen() {
         Debug.error("GraphicsDevice.fullscreen is not implemented on current device.");
         return false;
     }
 
     /**
-     * Maximum pixel ratio.
+     * Sets the maximum pixel ratio.
      *
      * @type {number}
      */
@@ -790,12 +795,20 @@ class GraphicsDevice extends EventHandler {
         this._maxPixelRatio = ratio;
     }
 
+    /**
+     * Gets the maximum pixel ratio.
+     *
+     * @type {number}
+     */
     get maxPixelRatio() {
         return this._maxPixelRatio;
     }
 
     /**
-     * The type of the device. Can be pc.DEVICETYPE_WEBGL2 or pc.DEVICETYPE_WEBGPU.
+     * Gets the type of the device. Can be:
+     *
+     * - {@link DEVICETYPE_WEBGL2}
+     * - {@link DEVICETYPE_WEBGPU}
      *
      * @type {import('./constants.js').DEVICETYPE_WEBGL2 | import('./constants.js').DEVICETYPE_WEBGPU}
      */

@@ -81,11 +81,6 @@ assetListLoader.load(() => {
     // disable skydome rendering itself, we don't need it as we use camera clear color
     app.scene.layers.getLayerByName('Skybox').enabled = false;
 
-    // the render passes render in HDR format, and so disable output tone mapping and gamma correction,
-    // as that is applied in the final compose pass
-    app.scene.toneMapping = pc.TONEMAP_LINEAR;
-    app.scene.gammaCorrection = pc.GAMMA_NONE;
-
     // create an instance of the platform and add it to the scene
     const platformEntity = assets.platform.resource.instantiateRenderEntity();
     platformEntity.setLocalScale(10, 10, 10);
@@ -107,11 +102,12 @@ assetListLoader.load(() => {
     app.root.addChild(mosquitoEntity);
 
     // helper function to create a box primitive
-    const createBox = (x, y, z, r, g, b, name) => {
+    const createBox = (x, y, z, r, g, b, emissive, name) => {
         // create material of random color
         const material = new pc.StandardMaterial();
         material.diffuse = pc.Color.BLACK;
         material.emissive = new pc.Color(r, g, b);
+        material.emissiveIntensity = emissive;
         material.update();
 
         // create primitive
@@ -130,9 +126,9 @@ assetListLoader.load(() => {
 
     // create 3 emissive boxes
     const boxes = [
-        createBox(100, 20, 0, 200, 0, 0, 'boxRed'),
-        createBox(-50, 20, 100, 0, 80, 0, 'boxGreen'),
-        createBox(90, 20, -80, 80, 80, 20, 'boxYellow')
+        createBox(100, 20, 0, 1, 0, 0, 60, 'boxRed'),
+        createBox(-50, 20, 100, 0, 1, 0, 60, 'boxGreen'),
+        createBox(90, 20, -80, 1, 1, 0.25, 50, 'boxYellow')
     ];
 
     // Create an Entity with a camera component
@@ -219,6 +215,7 @@ assetListLoader.load(() => {
         camera: cameraEntity.camera, // camera used to render those passes
         samples: 0, // number of samples for multi-sampling
         sceneColorMap: true, // true if the scene color should be captured
+        bloomEnabled: true,
 
         // disabled TAA as it currently does not handle dynamic objects
         prepassEnabled: false,
@@ -245,8 +242,11 @@ assetListLoader.load(() => {
         // if settings require render passes to be re-created
         const noPasses = cameraEntity.camera.renderPasses.length === 0;
         const taaEnabled = data.get('data.taa.enabled');
-        if (noPasses || taaEnabled !== currentOptions.taaEnabled) {
+        const bloomEnabled = data.get('data.bloom.enabled');
+
+        if (noPasses || taaEnabled !== currentOptions.taaEnabled || bloomEnabled !== currentOptions.bloomEnabled) {
             currentOptions.taaEnabled = taaEnabled;
+            currentOptions.bloomEnabled = bloomEnabled;
             currentOptions.prepassEnabled = taaEnabled;
 
             // create new pass
@@ -280,9 +280,10 @@ assetListLoader.load(() => {
         cameraEntity.camera.jitter = taaEnabled ? data.get('data.taa.jitter') : 0;
 
         // bloom
-        composePass.bloomIntensity = pc.math.lerp(0, 0.1, data.get('data.bloom.intensity') / 100);
-        renderPassCamera.lastMipLevel = data.get('data.bloom.lastMipLevel');
-        renderPassCamera.bloomEnabled = data.get('data.bloom.enabled');
+        if (bloomEnabled) {
+            renderPassCamera.lastMipLevel = data.get('data.bloom.lastMipLevel');
+            composePass.bloomIntensity = pc.math.lerp(0, 0.1, data.get('data.bloom.intensity') / 100);
+        }
 
         // grading
         composePass.gradingSaturation = data.get('data.grading.saturation');
@@ -317,8 +318,8 @@ assetListLoader.load(() => {
             tonemapping: pc.TONEMAP_ACES
         },
         bloom: {
-            enabled: true,
-            intensity: 20,
+            enabled: currentOptions.bloomEnabled,
+            intensity: 10,
             lastMipLevel: 1
         },
         grading: {

@@ -188,8 +188,8 @@ class ScriptComponent extends Component {
     }
 
     /**
-     * An array of all script instances attached to an entity. This array is read-only and should
-     * not be modified by developer.
+     * Sets the array of all script instances attached to an entity. This array is read-only and
+     * should not be modified by developer.
      *
      * @type {import('../../script/script-type.js').ScriptType[]}
      */
@@ -233,6 +233,11 @@ class ScriptComponent extends Component {
         }
     }
 
+    /**
+     * Gets the array of all script instances attached to an entity.
+     *
+     * @type {import('../../script/script-type.js').ScriptType[]}
+     */
     get scripts() {
         return this._scripts;
     }

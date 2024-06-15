@@ -74,7 +74,7 @@ class Skeleton {
     }
 
     /**
-     * Animation currently assigned to skeleton.
+     * Sets the animation on the skeleton.
      *
      * @type {import('./animation.js').Animation}
      */
@@ -83,13 +83,18 @@ class Skeleton {
         this.currentTime = 0;
     }
 
+    /**
+     * Gets the animation on the skeleton.
+     *
+     * @type {import('./animation.js').Animation}
+     */
     get animation() {
         return this._animation;
     }
 
     /**
-     * Current time of currently active animation in seconds. This value is between zero and the
-     * duration of the animation.
+     * Sets the current time of the currently active animation in seconds. This value is between
+     * zero and the duration of the animation.
      *
      * @type {number}
      */
@@ -106,12 +111,17 @@ class Skeleton {
         this.updateGraph();
     }
 
+    /**
+     * Gets the current time of the currently active animation in seconds.
+     *
+     * @type {number}
+     */
     get currentTime() {
         return this._time;
     }
 
     /**
-     * Read-only property that returns number of nodes of a skeleton.
+     * Gets the number of nodes in the skeleton.
      *
      * @type {number}
      */

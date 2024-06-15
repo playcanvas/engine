@@ -46,7 +46,6 @@ class NullGraphicsDevice extends GraphicsDevice {
         this.textureFloatRenderable = true;
         this.textureHalfFloatRenderable = true;
         this.supportsImageBitmap = true;
-        this.supportsTextureFetch = true;
     }
 
     postInit() {

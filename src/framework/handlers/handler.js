@@ -37,7 +37,7 @@ class ResourceHandler {
     }
 
     /**
-     * The number of times to retry a failed request for the resource.
+     * Sets the number of times to retry a failed request for the resource.
      *
      * @type {number}
      */
@@ -45,6 +45,11 @@ class ResourceHandler {
         this._maxRetries = value;
     }
 
+    /**
+     * Gets the number of times to retry a failed request for the resource.
+     *
+     * @type {number}
+     */
     get maxRetries() {
         return this._maxRetries;
     }

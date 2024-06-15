@@ -38,7 +38,7 @@ class ScreenComponent extends Component {
         this._screenSpace = false;
 
         /**
-         * If true then elements inside this screen will be not be rendered when outside of the
+         * If true, then elements inside this screen will be not be rendered when outside of the
          * screen (only valid when screenSpace is true).
          *
          * @type {boolean}
@@ -156,7 +156,7 @@ class ScreenComponent extends Component {
     }
 
     /**
-     * The width and height of the ScreenComponent. When screenSpace is true the resolution will
+     * Sets the width and height of the ScreenComponent. When screenSpace is true the resolution will
      * always be equal to {@link GraphicsDevice#width} x {@link GraphicsDevice#height}.
      *
      * @type {Vec2}
@@ -180,14 +180,20 @@ class ScreenComponent extends Component {
         this._elements.forEach(element => element._onScreenResize(this._resolution));
     }
 
+    /**
+     * Gets the width and height of the ScreenComponent.
+     *
+     * @type {Vec2}
+     */
     get resolution() {
         return this._resolution;
     }
 
     /**
-     * The resolution that the ScreenComponent is designed for. This is only taken into account
-     * when screenSpace is true and scaleMode is {@link SCALEMODE_BLEND}. If the actual resolution
-     * is different then the ScreenComponent will be scaled according to the scaleBlend value.
+     * Sets the resolution that the ScreenComponent is designed for. This is only taken into
+     * account when screenSpace is true and scaleMode is {@link SCALEMODE_BLEND}. If the actual
+     * resolution is different then the ScreenComponent will be scaled according to the scaleBlend
+     * value.
      *
      * @type {Vec2}
      */
@@ -203,6 +209,11 @@ class ScreenComponent extends Component {
         this._elements.forEach(element => element._onScreenResize(this._resolution));
     }
 
+    /**
+     * Gets the resolution that the ScreenComponent is designed for.
+     *
+     * @type {Vec2}
+     */
     get referenceResolution() {
         if (this._scaleMode === SCALEMODE_NONE) {
             return this._resolution;
@@ -211,7 +222,7 @@ class ScreenComponent extends Component {
     }
 
     /**
-     * If true then the ScreenComponent will render its child {@link ElementComponent}s in screen
+     * Sets whether the ScreenComponent will render its child {@link ElementComponent}s in screen
      * space instead of world space. Enable this to create 2D user interfaces.
      *
      * @type {boolean}
@@ -231,13 +242,19 @@ class ScreenComponent extends Component {
         this._elements.forEach(element => element._onScreenSpaceChange());
     }
 
+    /**
+     * Gets whether the ScreenComponent will render its child {@link ElementComponent}s in screen
+     * space instead of world space.
+     *
+     * @type {boolean}
+     */
     get screenSpace() {
         return this._screenSpace;
     }
 
     /**
-     * Can either be {@link SCALEMODE_NONE} or {@link SCALEMODE_BLEND}. See the description of
-     * referenceResolution for more information.
+     * Sets the scale mode. Can either be {@link SCALEMODE_NONE} or {@link SCALEMODE_BLEND}. See
+     * the description of referenceResolution for more information.
      *
      * @type {string}
      */
@@ -256,14 +273,19 @@ class ScreenComponent extends Component {
         this.fire('set:scalemode', this._scaleMode);
     }
 
+    /**
+     * Gets the scale mode.
+     *
+     * @type {string}
+     */
     get scaleMode() {
         return this._scaleMode;
     }
 
     /**
-     * A value between 0 and 1 that is used when scaleMode is equal to {@link SCALEMODE_BLEND}.
-     * Scales the ScreenComponent with width as a reference (when value is 0), the height as a
-     * reference (when value is 1) or anything in between.
+     * Sets the scale blend. This is a value between 0 and 1 that is used when scaleMode is equal
+     * to {@link SCALEMODE_BLEND}. Scales the ScreenComponent with width as a reference (when value
+     * is 0), the height as a reference (when value is 1) or anything in between.
      *
      * @type {number}
      */
@@ -280,14 +302,19 @@ class ScreenComponent extends Component {
         this._elements.forEach(element => element._onScreenResize(this._resolution));
     }
 
+    /**
+     * Gets the scale blend.
+     *
+     * @type {number}
+     */
     get scaleBlend() {
         return this._scaleBlend;
     }
 
     /**
-     * Priority determines the order in which Screen components in the same layer are rendered.
-     * Number must be an integer between 0 and 255. Priority is set into the top 8 bits of the
-     * drawOrder property in an element.
+     * Sets the priority. Priority determines the order in which Screen components in the same
+     * layer are rendered. Number must be an integer between 0 and 255. Priority is set into the
+     * top 8 bits of the drawOrder property in an element.
      *
      * @type {number}
      */
@@ -304,6 +331,11 @@ class ScreenComponent extends Component {
         this.syncDrawOrder();
     }
 
+    /**
+     * Gets the priority.
+     *
+     * @type {number}
+     */
     get priority() {
         return this._priority;
     }

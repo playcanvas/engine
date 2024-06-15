@@ -93,8 +93,8 @@ class XrDomOverlay {
     }
 
     /**
-     * The DOM element to be used as the root for DOM Overlay. Can be changed only when XR session
-     * is not running.
+     * Sets the DOM element to be used as the root for DOM Overlay. Can be changed only when XR
+     * session is not running.
      *
      * @type {Element|null}
      * @example
@@ -108,6 +108,11 @@ class XrDomOverlay {
         this._root = value;
     }
 
+    /**
+     * Gets the DOM element to be used as the root for DOM Overlay.
+     *
+     * @type {Element|null}
+     */
     get root() {
         return this._root;
     }
