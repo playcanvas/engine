@@ -165,6 +165,7 @@ class WebglRenderTarget {
                         colorBuffer._width = Math.min(colorBuffer.width, device.maxRenderBufferSize);
                         colorBuffer._height = Math.min(colorBuffer.height, device.maxRenderBufferSize);
                         device.setTexture(colorBuffer, 0);
+                        colorBuffer.upload(true);
                     }
                     // Attach the color buffer
                     gl.framebufferTexture2D(
@@ -193,6 +194,7 @@ class WebglRenderTarget {
                         depthBuffer._width = Math.min(depthBuffer.width, device.maxRenderBufferSize);
                         depthBuffer._height = Math.min(depthBuffer.height, device.maxRenderBufferSize);
                         device.setTexture(depthBuffer, 0);
+                        depthBuffer.upload(true);
                     }
 
                     // Attach
