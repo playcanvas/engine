@@ -19,15 +19,6 @@ export function controls({ observer, ReactPCUI, React, jsx, fragment }) {
             ),
             jsx(
                 LabelGroup,
-                { text: 'blurEnabled' },
-                jsx(BooleanInput, {
-                    type: 'toggle',
-                    binding: new BindingTwoWay(),
-                    link: { observer, path: 'data.ssao.blurEnabled' }
-                })
-            ),
-            jsx(
-                LabelGroup,
                 { text: 'radius' },
                 jsx(SliderInput, {
                     binding: new BindingTwoWay(),
@@ -85,7 +76,43 @@ export function controls({ observer, ReactPCUI, React, jsx, fragment }) {
                     binding: new BindingTwoWay(),
                     link: { observer, path: 'data.ssao.scale' }
                 })
-            )
+            ),
+            jsx(
+                LabelGroup,
+                { text: 'blurEnabled' },
+                jsx(BooleanInput, {
+                    type: 'toggle',
+                    binding: new BindingTwoWay(),
+                    link: { observer, path: 'data.ssao.blurEnabled' }
+                })
+            ),
+            jsx(
+                LabelGroup,
+                { text: 'blurType' },
+                jsx(SelectInput, {
+                    options: [
+                        // NOTE: BLUR_BOX is 0, BLUR_GAUSSIAN is 1
+                        // But SelectInput options don't work with 0-based indices (a bug?)
+                        // So we subtract 1 from the value of data.get('data.ssao.blurType')
+                        { v: 1, t: 'Box' },
+                        { v: 2, t: 'Gaussian' }
+                    ],
+                    binding: new BindingTwoWay(),
+                    link: { observer, path: 'data.ssao.blurType' }
+                })
+            ),
+            jsx(
+                LabelGroup,
+                { text: 'blurSize' },
+                jsx(SliderInput, {
+                    min: 1,
+                    step: 1,
+                    max: 25,
+                    precision: 0,
+                    binding: new BindingTwoWay(),
+                    link: { observer, path: 'data.ssao.blurSize' }
+                })
+            ),
         )
     );
 }

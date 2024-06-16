@@ -246,6 +246,12 @@ class RenderPassSsao extends RenderPassShaderQuad {
     /** @type {number} */
     _scale = 1;
 
+    /**
+     * Blur passes to apply after the main SSAO pass.
+     * @type {RenderPassDepthAwareBlur[]}
+     */
+    blurPasses = [];
+
     constructor(device, sourceTexture, cameraComponent, blurEnabled) {
         super(device);
         this.sourceTexture = sourceTexture;
@@ -260,6 +266,8 @@ class RenderPassSsao extends RenderPassShaderQuad {
         this.init(rt, {
             resizeSource: this.sourceTexture
         });
+
+        this.blurPasses.length = 0;
 
         // optional blur pass
         if (blurEnabled) {
@@ -304,14 +312,10 @@ class RenderPassSsao extends RenderPassShaderQuad {
         const blurRT = this.createRenderTarget(renderTargetName);
         const blurPass = new RenderPassDepthAwareBlur(device);
 
-        blurPass.init(blurRT, {
-            resizeSource: sourceTexture,
-            depthAware: true,
-            kernelSize,
-            type,
-            direction: direction,
-            channels: 'r'
-        });
+        this.blurPasses.push(blurPass);
+
+        blurPass.init(blurRT, { resizeSource: sourceTexture });
+        blurPass.setup({ sourceTexture, kernelSize, type, direction });
 
         this.afterPasses.push(blurPass);
         return blurRT;
@@ -351,8 +355,6 @@ class RenderPassSsao extends RenderPassShaderQuad {
     }
 
     createRenderTarget(name) {
-        // TODO: consider using a pool of 2 texture buffers
-        // and reusing them to reduce memory allocations
         return new RenderTarget({
             depth: false,
             colorBuffer: new Texture(this.device, {
@@ -401,6 +403,36 @@ class RenderPassSsao extends RenderPassShaderQuad {
         scope.resolve("uProjectionScaleRadius").setValue(projectionScale * radius);
 
         super.execute();
+    }
+
+    /**
+     * The size of the blur kernel.
+     * @type {number}
+     * @readonly
+     */
+    set blurSize(value) {
+        for (let i = 0; i < this.blurPasses.length; i++) {
+            this.blurPasses[i].kernelSize = value;
+        }
+    }
+
+    get blurSize() {
+        return this.blurPasses[0].kernelSize;
+    }
+
+    /**
+     * The type of the blur kernel.
+     * @type {BLUR_GAUSSIAN|BLUR_BOX}
+     * @readonly
+     */
+    set blurType(value) {
+        for (let i = 0; i < this.blurPasses.length; i++) {
+            this.blurPasses[i].type = +value;
+        }
+    }
+
+    get blurType() {
+        return this.blurPasses[0].type;
     }
 }
 

@@ -295,26 +295,26 @@ const math = {
      * Generates Gaussian weights for a given kernel size.
      *
      * @param {number} kernelSize - The size of the kernel for which the Gaussian weights are to be computed.
-     * @returns {number[]} - An array containing the normalized Gaussian weights.
+     * @param {number[]|Float32Array|Float64Array} [target] - An optional array to store the computed Gaussian weights.
+     * @returns {number[]|Float32Array|Float64Array} - An array containing the normalized Gaussian weights.
      * @ignore
      */
-    gaussWeights(kernelSize) {
+    gaussWeights(kernelSize, target = new Array(kernelSize)) {
         const sigma = (kernelSize - 1) / (2 * 3);
 
         const halfWidth = (kernelSize - 1) * 0.5;
-        const values = new Array(kernelSize);
         let sum = 0.0;
 
         for (let i = 0; i < kernelSize; ++i) {
-            values[i] = math.gauss(i - halfWidth, sigma);
-            sum += values[i];
+            target[i] = math.gauss(i - halfWidth, sigma);
+            sum += target[i];
         }
 
         for (let i = 0; i < kernelSize; ++i) {
-            values[i] /= sum;
+            target[i] /= sum;
         }
 
-        return values;
+        return target;
     }
 };
 

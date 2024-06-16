@@ -231,6 +231,9 @@ assetListLoader.load(() => {
             ssaoPass.sampleCount = data.get('data.ssao.samples');
             ssaoPass.minAngle = data.get('data.ssao.minAngle');
             ssaoPass.scale = data.get('data.ssao.scale');
+            ssaoPass.blurType = data.get('data.ssao.blurType') - 1;
+            ssaoPass.blurSize = data.get('data.ssao.blurSize');
+
         }
     };
 
@@ -256,13 +259,15 @@ assetListLoader.load(() => {
     data.set('data', {
         ssao: {
             enabled: true,
-            blurEnabled: true,
             radius: 30,
             samples: 12,
             intensity: 0.4,
             power: 6,
             minAngle: 10,
-            scale: 1
+            scale: 1,
+            blurEnabled: true,
+            blurType: 1,
+            blurSize: 9
         }
     });
 
