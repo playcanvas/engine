@@ -58,7 +58,19 @@ function validate(value) {
     if (value instanceof Vec3) {
         return propsXYZ.every(checkProp);
     }
-    if ((value instanceof Vec4) || (value instanceof Quat)) {
+    if (value instanceof Vec4) {
+        return propsXYZW.every(checkProp);
+    }
+    if (value instanceof Quat) {
+        const length = value.length();
+        // A quaternion should have unit length, but can become denormalized due to
+        // floating point precision errors (aka error creep). For instance through:
+        // - Successive quaternion operations
+        // - Conversion from matrices, which accumulated FP precision loss.
+        // Simple solution is to re-normalize the quaternion.
+        if (Math.abs(1 - length) > 0.001) {
+            return false;
+        }
         return propsXYZW.every(checkProp);
     }
     if (value instanceof Mat3) {
