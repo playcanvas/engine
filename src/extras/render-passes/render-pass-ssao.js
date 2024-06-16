@@ -408,7 +408,6 @@ class RenderPassSsao extends RenderPassShaderQuad {
     /**
      * The size of the blur kernel.
      * @type {number}
-     * @readonly
      */
     set blurSize(value) {
         for (let i = 0; i < this.blurPasses.length; i++) {

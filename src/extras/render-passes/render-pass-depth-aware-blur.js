@@ -165,7 +165,6 @@ class RenderPassDepthAwareBlur extends RenderPassShaderQuad {
 
     /**
      * @type {Float32Array}
-     * @readonly
      */
     get direction() {
         return this._direction;
