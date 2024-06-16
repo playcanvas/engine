@@ -112,7 +112,7 @@ export function controls({ observer, ReactPCUI, React, jsx, fragment }) {
                     binding: new BindingTwoWay(),
                     link: { observer, path: 'data.ssao.blurSize' }
                 })
-            ),
+            )
         )
     );
 }
