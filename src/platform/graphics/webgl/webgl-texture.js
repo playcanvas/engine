@@ -567,7 +567,7 @@ class WebglTexture {
                     resMult = 1 / Math.pow(2, mipLevel);
                     for (face = 0; face < texture.slices; face++) {
                         const texData = mipObject[face];
-                        if (!texture._levelsUpdated[0][face] || !texData)
+                        if (!texture._levelsUpdated[0][face])
                             continue;
                         }
 
