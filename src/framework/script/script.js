@@ -6,7 +6,7 @@ import { SCRIPT_INITIALIZE, SCRIPT_POST_INITIALIZE } from './constants.js';
  * The `Script` class is the fundamental base class for all scripts within PlayCanvas. It provides
  * the minimal interface that required for a script to be used in the engine and compatible with PlayCanvas editor.
  *
- * At it's core, a script is simply a collection of methods that are called at various points in the engine's lifecycle. These methods are:
+ * At its core, a script is simply a collection of methods that are called at various points in the engine's lifecycle. These methods are:
  *
  * {@link Script#initialize} - Called once when the script is first enabled
  * {@link Script#postInitialize} - Called once after all scripts have been initialized
