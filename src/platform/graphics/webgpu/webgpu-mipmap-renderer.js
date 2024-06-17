@@ -110,7 +110,7 @@ class WebgpuMipmapRenderer {
         DebugHelper.setLabel(pipeline, 'RenderPipeline-MipmapRenderer');
 
         const texture = webgpuTexture.texture;
-        const numFaces = texture.slices;
+        const numFaces = texture.layers;
 
         const srcViews = [];
         for (let face = 0; face < numFaces; face++) {
