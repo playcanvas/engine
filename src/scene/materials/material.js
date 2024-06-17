@@ -83,7 +83,7 @@ class Material {
      * The cache of shader variants generated for this material. The key represents the unique
      * variant, the value is the shader.
      *
-     * @type {Map<string, import('../../platform/graphics/shader.js').Shader>}
+     * @type {Map<number, import('../../platform/graphics/shader.js').Shader>}
      * @ignore
      */
     variants = new Map();

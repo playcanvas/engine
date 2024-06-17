@@ -659,10 +659,10 @@ class ParticleEmitter {
 
         // Note: createShaderFromCode can return a shader from the cache (not a new shader) so we *should not* delete these shaders
         // when the particle emitter is destroyed
-        const params = this.emitterShape + '' + this.pack8 + '' + this.localSpace;
-        this.shaderParticleUpdateRespawn = createShaderFromCode(gd, shaderChunks.fullscreenQuadVS, shaderCodeRespawn, 'fsQuad0' + params);
-        this.shaderParticleUpdateNoRespawn = createShaderFromCode(gd, shaderChunks.fullscreenQuadVS, shaderCodeNoRespawn, 'fsQuad1' + params);
-        this.shaderParticleUpdateOnStop = createShaderFromCode(gd, shaderChunks.fullscreenQuadVS, shaderCodeOnStop, 'fsQuad2' + params);
+        const params = `Shape:${this.emitterShape}-Pack:${this.pack8}-Local:${this.localSpace}`;
+        this.shaderParticleUpdateRespawn = createShaderFromCode(gd, shaderChunks.fullscreenQuadVS, shaderCodeRespawn, `ParticleUpdateRespawn-${params}`);
+        this.shaderParticleUpdateNoRespawn = createShaderFromCode(gd, shaderChunks.fullscreenQuadVS, shaderCodeNoRespawn, `ParticleUpdateNoRespawn-${params}`);
+        this.shaderParticleUpdateOnStop = createShaderFromCode(gd, shaderChunks.fullscreenQuadVS, shaderCodeOnStop, `ParticleUpdateStop-${params}`);
 
         this.numParticleVerts = this.useMesh ? this.mesh.vertexBuffer.numVertices : 4;
         this.numParticleIndices = this.useMesh ? this.mesh.indexBuffer[0].numIndices : 6;
