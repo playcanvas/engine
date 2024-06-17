@@ -105,9 +105,6 @@ class GraphNode extends EventHandler {
      */
     tags = new Tags(this);
 
-    /** @private */
-    _labels = {};
-
     // Local space properties of transform (only first 3 are settable by the user)
     /**
      * @type {Vec3}
@@ -476,8 +473,6 @@ class GraphNode extends EventHandler {
         clone.tags.clear();
         for (let i = 0; i < tags.length; i++)
             clone.tags.add(tags[i]);
-
-        clone._labels = Object.assign({}, this._labels);
 
         clone.localPosition.copy(this.localPosition);
         clone.localRotation.copy(this.localRotation);
