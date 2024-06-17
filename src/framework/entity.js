@@ -609,6 +609,8 @@ class Entity extends GraphNode {
     }
 
     _getSortedComponents() {
+        Debug.assert(_sortedArray.length === 0);
+
         const components = this.c;
         let needSort = 0;
         for (const type in components) {
