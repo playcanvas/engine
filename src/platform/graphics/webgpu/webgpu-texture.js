@@ -100,7 +100,7 @@ class WebgpuTexture {
             size: {
                 width: texture.width,
                 height: texture.height,
-                depthOrArrayLayers: texture.slices
+                depthOrArrayLayers: texture.layers
             },
             format: this.format,
             mipLevelCount: numLevels,
@@ -337,9 +337,9 @@ class WebgpuTexture {
 
                     } else if (texture.array) { // texture array
 
-                        if (texture.slices === mipObject.length) {
+                        if (texture.layers === mipObject.length) {
 
-                            for (let index = 0; index < texture.slices; index++) {
+                            for (let index = 0; index < texture.layers; index++) {
                                 const arraySource = mipObject[index];
 
                                 if (this.isExternalImage(arraySource)) {
