@@ -61,7 +61,7 @@ class XrPlane extends EventHandler {
     _lastChangedTime;
 
     /**
-     * @type {string}
+     * @type {"horizontal"|"vertical"|null}
      * @private
      */
     _orientation;
@@ -156,7 +156,7 @@ class XrPlane extends EventHandler {
      * to the ground, "vertical" for planes that are perpendicular to the ground, or `null` if the
      * orientation is different or unknown.
      *
-     * @type {string|null}
+     * @type {"horizontal"|"vertical"|null}
      * @example
      * if (plane.orientation === 'horizontal') {
      *     console.log('This plane is horizontal.');
