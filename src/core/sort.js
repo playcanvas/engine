@@ -25,7 +25,7 @@ export const sortPriority = arr => arr.sort(cmpPriority);
 
 /**
  * @param {Array<{order: number}>} arr - Array to be sorted in place where each element contains
- * an object with at least an `order` property.
+ * an object with a static `order` property.
  * @returns {Array<{order: number}>} In place sorted array.
  * @ignore
  */
