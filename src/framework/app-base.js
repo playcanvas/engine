@@ -241,15 +241,6 @@ class AppBase extends EventHandler {
         this._fillMode = FILLMODE_KEEP_ASPECT;
         this._resolutionMode = RESOLUTION_FIXED;
         this._allowResize = true;
-
-        /**
-         * For backwards compatibility with scripts 1.0.
-         *
-         * @type {AppBase}
-         * @deprecated
-         * @ignore
-         */
-        this.context = this;
     }
 
     /**
