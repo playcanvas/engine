@@ -94,7 +94,7 @@ class Texture {
      * @param {string} [options.name] - The name of the texture. Defaults to null.
      * @param {number} [options.width] - The width of the texture in pixels. Defaults to 4.
      * @param {number} [options.height] - The height of the texture in pixels. Defaults to 4.
-     * @param {number} [options.slices] - The number of depth slices in a 3D texture, the number of textures
+     * @param {number} [options.layers] - The number of depth layers in a 3D texture, the number of textures
      * in a texture array or the number of faces for a cubemap.
      * @param {string} [options.dimension] - The texture dimension type. Can be:
      * - {@link TEXTUREDIMENSION_2D}
@@ -221,7 +221,7 @@ class Texture {
         Debug.assert(this.device, "Texture constructor requires a graphicsDevice to be valid");
         Debug.assert(!options.width || Number.isInteger(options.width), "Texture width must be an integer number, got", options);
         Debug.assert(!options.height || Number.isInteger(options.height), "Texture height must be an integer number, got", options);
-        Debug.assert(!options.slices || Number.isInteger(options.slices), "Texture slices must be an integer number, got", options);
+        Debug.assert(!options.layers || Number.isInteger(options.layers), "Texture layers must be an integer number, got", options);
 
         this.name = options.name ?? '';
 
@@ -233,9 +233,9 @@ class Texture {
         this._width = Math.floor(options.width ?? 4);
         this._height = Math.floor(options.height ?? 4);
 
-        this._slices = Math.floor(options.slices ?? (this._dimension === TEXTUREDIMENSION_CUBE ? 6 : 1));
+        this._layers = Math.floor(options.layers ?? (this._dimension === TEXTUREDIMENSION_CUBE ? 6 : 1));
 
-        Debug.assert((this._dimension === TEXTUREDIMENSION_CUBE ? this._slices === 6 : true), "Texture cube map must have 6 slices");
+        Debug.assert((this._dimension === TEXTUREDIMENSION_CUBE ? this._layers === 6 : true), "Texture cube map must have 6 layers");
 
         this._format = options.format ?? PIXELFORMAT_RGBA8;
         this._compressed = isCompressedPixelFormat(this._format);
@@ -284,7 +284,7 @@ class Texture {
         if (this._levels) {
             this.upload(options.immediate ?? false);
         } else {
-            this._levels = (this.cubemap || this.array) ? [Array(this._slices).fill(null)] : [null];
+            this._levels = (this.cubemap || this.array) ? [Array(this._layers).fill(null)] : [null];
         }
 
         // track the texture
@@ -332,10 +332,10 @@ class Texture {
      *
      * @param {number} width - The new width of the texture.
      * @param {number} height - The new height of the texture.
-     * @param {number} [slices] - The new number of slices for the texture. Defaults to 1.
+     * @param {number} [layers] - The new number of layers for the texture. Defaults to 1.
      * @ignore
      */
-    resize(width, height, slices = 1) {
+    resize(width, height, layers = 1) {
 
         // destroy texture impl
         const device = this.device;
@@ -344,7 +344,7 @@ class Texture {
 
         this._width = Math.floor(width);
         this._height = Math.floor(height);
-        this._slices = Math.floor(slices);
+        this._layers = Math.floor(layers);
 
         // re-create the implementation
         this.impl = device.createTextureImpl(this);
@@ -681,12 +681,12 @@ class Texture {
     }
 
     /**
-     * The number of depth slices in a 3D texture.
+     * The number of depth layers in a 3D texture.
      *
      * @type {number}
      */
     get depth() {
-        return this._dimension === TEXTUREDIMENSION_3D ? this._slices : 1;
+        return this._dimension === TEXTUREDIMENSION_3D ? this._layers : 1;
     }
 
     /**
@@ -694,8 +694,8 @@ class Texture {
      *
      * @type {number}
      */
-    get slices() {
-        return this._slices;
+    get layers() {
+        return this._layers;
     }
 
     /**
@@ -742,7 +742,7 @@ class Texture {
 
     get gpuSize() {
         const mips = this.pot && this._mipmaps && !(this._compressed && this._levels.length === 1);
-        return TextureUtils.calcGpuSize(this._width, this._height, this._slices, this._format, this.volume, mips);
+        return TextureUtils.calcGpuSize(this._width, this._height, this._layers, this._format, this.volume, mips);
     }
 
     /**
@@ -823,7 +823,7 @@ class Texture {
 
     // Force a full resubmission of the texture to the GPU (used on a context restore event)
     dirtyAll() {
-        this._levelsUpdated = (this.cubemap || this.array) ? [Array(this._slices).fill(true)] : [true];
+        this._levelsUpdated = (this.cubemap || this.array) ? [Array(this._layers).fill(true)] : [true];
 
         this._needsUpload = true;
         this._needsMipmapsUpload = this._mipmaps;
@@ -840,8 +840,8 @@ class Texture {
      * to 0.
      * @param {number} [options.face] - If the texture is a cubemap, this is the index of the face
      * to lock.
-     * @param {number} [options.slice] - If the texture is a texture array, this is the index of the
-     * slice to lock.
+     * @param {number} [options.layer] - If the texture is a texture array, this is the index of the
+     * layer to lock.
      * @param {number} [options.mode] - The lock mode. Can be:
      * - {@link TEXTURELOCK_READ}
      * - {@link TEXTURELOCK_WRITE}
@@ -853,7 +853,7 @@ class Texture {
         // Initialize options to some sensible defaults
         options.level ??= 0;
         options.face ??= 0;
-        options.slice ??= 0;
+        options.layer ??= 0;
         options.mode ??= TEXTURELOCK_WRITE;
 
         Debug.assert(
@@ -882,7 +882,7 @@ class Texture {
 
         this._lockedMode = options.mode;
 
-        const levels = this.cubemap ? this._levels[options.face] : this.array ? this._levels[options.slice] : this._levels;
+        const levels = this.cubemap ? this._levels[options.face] : this.array ? this._levels[options.layer] : this._levels;
         if (levels[options.level] === null) {
             // allocate storage for this mip level
             const width = Math.max(1, this._width >> options.level);
@@ -894,7 +894,7 @@ class Texture {
 
         if (this._lockedMode === TEXTURELOCK_WRITE) {
             if (this.cubemap || this.array) {
-                this._levelsUpdated[0][options.face ?? options.slice] = true;
+                this._levelsUpdated[0][options.face ?? options.layer] = true;
             } else {
                 this._levelsUpdated[0] = true;
             }
@@ -923,7 +923,7 @@ class Texture {
                 width = source[0].width || 0;
                 height = source[0].height || 0;
 
-                for (let i = 0; i < this._slices; i++) {
+                for (let i = 0; i < this._layers; i++) {
                     const face = source[i];
                     // cubemap becomes invalid if any condition is not satisfied
                     if (!face ||                  // face is missing
@@ -941,7 +941,7 @@ class Texture {
 
             if (!invalid) {
                 // mark levels as updated
-                for (let i = 0; i < this._slices; i++) {
+                for (let i = 0; i < this._layers; i++) {
                     if (this._levels[0][i] !== source[i])
                         this._levelsUpdated[0][i] = true;
                 }
@@ -971,7 +971,7 @@ class Texture {
 
             // remove levels
             if (this.cubemap || this.array) {
-                for (let i = 0; i < this._slices; i++) {
+                for (let i = 0; i < this._layers; i++) {
                     this._levels[0][i] = null;
                     this._levelsUpdated[0][i] = true;
                 }
