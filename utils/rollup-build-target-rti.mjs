@@ -45,7 +45,8 @@ function buildTargetRTI(moduleFormat, input = 'src/index.rti.js', buildDir = 'bu
             runtimeTypeInspector({
                 ignoredFiles: [
                     'node_modules',
-                    'framework/parsers/draco-worker.js' // runs in Worker context without RTI
+                    'framework/parsers/draco-worker.js', // runs in Worker context without RTI
+                    'scene/gsplat/gsplat-sorter.js'
                 ]
             })
         ]
