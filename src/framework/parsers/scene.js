@@ -70,12 +70,6 @@ class SceneParser {
             }
         }
 
-        if (data.labels) {
-            data.labels.forEach(function (label) {
-                entity.addLabel(label);
-            });
-        }
-
         return entity;
     }
 
