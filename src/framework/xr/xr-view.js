@@ -173,7 +173,7 @@ class XrView extends EventHandler {
             this._textureDepth = new Texture(device, {
                 format: this._manager.views.depthPixelFormat,
                 array: viewsCount > 1,
-                slices: viewsCount,
+                layers: viewsCount,
                 mipmaps: false,
                 addressU: ADDRESS_CLAMP_TO_EDGE,
                 addressV: ADDRESS_CLAMP_TO_EDGE,
