@@ -607,12 +607,14 @@ class Entity extends GraphNode {
     _getSortedComponents() {
         _sortedArray.length = 0;
 
-        let needSort = false;
-        for (const component of Object.values(this.c)) {
-            if (component.constructor.order !== 0) {
-                needSort = true;
+        const components = this.c;
+        let needSort = 0;
+        for (const type in components) {
+            if (components.hasOwnProperty(type)) {
+                const component = components[type];
+                needSort |= component.constructor.order !== 0;
+                _sortedArray.push(component);
             }
-            _sortedArray.push(component);
         }
 
         if (needSort) {
