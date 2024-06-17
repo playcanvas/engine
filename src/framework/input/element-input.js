@@ -313,7 +313,7 @@ class ElementSelectEvent extends ElementInputEvent {
     /**
      * Create an instance of a ElementSelectEvent.
      *
-     * @param {object} event - The XRInputSourceEvent that was originally raised.
+     * @param {XRInputSourceEvent} event - The XRInputSourceEvent that was originally raised.
      * @param {import('../components/element/component.js').ElementComponent} element - The
      * ElementComponent that this event was originally raised on.
      * @param {import('../components/camera/component.js').CameraComponent} camera - The
