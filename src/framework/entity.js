@@ -1,6 +1,6 @@
 import { Debug } from '../core/debug.js';
 import { guid } from '../core/guid.js';
-import { sortOrder } from '../core/sort.js';
+import { sortStaticOrder } from '../core/sort.js';
 
 import { GraphNode } from '../scene/graph-node.js';
 
@@ -618,7 +618,7 @@ class Entity extends GraphNode {
         }
 
         if (needSort && _sortedArray.length > 1) {
-            sortOrder(_sortedArray);
+            sortStaticOrder(_sortedArray);
         }
 
         return _sortedArray;

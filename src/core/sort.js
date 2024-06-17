@@ -29,4 +29,4 @@ export const sortPriority = arr => arr.sort(cmpPriority);
  * @returns {Array<{order: number}>} In place sorted array.
  * @ignore
  */
-export const sortOrder = arr => arr.sort(cmpStaticOrder);
+export const sortStaticOrder = arr => arr.sort(cmpStaticOrder);
