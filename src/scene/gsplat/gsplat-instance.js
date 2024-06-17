@@ -119,7 +119,9 @@ class GSplatInstance {
         this.meshInstance = new MeshInstance(this.mesh, this.material);
         this.meshInstance.setInstancing(indicesVB, true);
         this.meshInstance.gsplatInstance = this;
-        this.meshInstance.instancingCount = numSplatInstances;
+
+        // only start rendering the splat after we've received the splat order data
+        this.meshInstance.instancingCount = 0;
 
         // clone centers to allow multiple instances of sorter
         this.centers = new Float32Array(splat.centers);

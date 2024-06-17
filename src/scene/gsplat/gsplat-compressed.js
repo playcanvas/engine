@@ -110,7 +110,7 @@ class GSplatCompressed {
         const result = createGSplatCompressedMaterial(options);
         result.setParameter('packedTexture', this.packedTexture);
         result.setParameter('chunkTexture', this.chunkTexture);
-        result.setParameter('bufferWidths', new Float32Array([this.packedTexture.width, this.chunkTexture.width / 3, 0, 0]));
+        result.setParameter('bufferWidths', new Float32Array([this.packedTexture.width, this.chunkTexture.width / 3, this.numSplats, 0]));
         return result;
     }
 
