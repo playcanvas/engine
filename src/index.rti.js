@@ -42,9 +42,16 @@ const props16   = [0, 1, 2, 3, 4, 5, 6, 7, 8, 9, 10, 11, 12, 13, 14, 15];
 /**
  * `@ignoreRTI`
  * @param {any} value - The value.
- * @returns {boolean} Only false if we can find some NaN issues.
+ * @param {*} expect - Expected type structure.
+ * @todo Split array/class.
+ * @param {string} loc - String like `BoundingBox#compute`
+ * @param {string} name - Name of the argument.
+ * @param {boolean} critical - Only false for unions.
+ * @param {console["warn"]} warn - Function to warn with.
+ * @param {number} depth - The depth to detect recursion.
+ * @returns {boolean} Only false if we can find some NaN issues or denormalisation issues.
  */
-function validate(value) {
+function validate(value, expect, loc, name, critical, warn, depth) {
     /**
      * @param {string|number} prop - Something like 'x', 'y', 'z', 'w', 0, 1, 2, 3, 4 etc.
      * @returns {boolean} Wether prop is a valid number.
@@ -63,13 +70,17 @@ function validate(value) {
     }
     if (value instanceof Quat) {
         const length = value.length();
-        // A quaternion should have unit length, but can become denormalized due to
-        // floating point precision errors (aka error creep). For instance through:
-        // - Successive quaternion operations
-        // - Conversion from matrices, which accumulated FP precision loss.
-        // Simple solution is to re-normalize the quaternion.
-        if (Math.abs(1 - length) > 0.001) {
-            return false;
+        // Don't want developers of denormalized Quat's when they normalize it.
+        if (loc !== 'Quat#normalize') {
+            // A quaternion should have unit length, but can become denormalized due to
+            // floating point precision errors (aka error creep). For instance through:
+            // - Successive quaternion operations
+            // - Conversion from matrices, which accumulated FP precision loss.
+            // Simple solution is to renormalize the quaternion.
+            if (Math.abs(1 - length) > 0.001) {
+                warn('Quat is denormalized, please renormalize it before use.');
+                return false;
+            }
         }
         return propsXYZW.every(checkProp);
     }
