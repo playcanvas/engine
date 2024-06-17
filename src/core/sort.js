@@ -13,7 +13,7 @@ const cmpPriority = (a, b) => a.priority - b.priority;
  * @returns {number} A number indicating the relative position.
  * @ignore
  */
-const cmpOrder = (a, b) => a.constructor.order - b.constructor.order;
+const cmpStaticOrder = (a, b) => a.constructor.order - b.constructor.order;
 
 /**
  * @param {Array<{priority: number}>} arr - Array to be sorted in place where each element contains
@@ -29,4 +29,4 @@ export const sortPriority = arr => arr.sort(cmpPriority);
  * @returns {Array<{order: number}>} In place sorted array.
  * @ignore
  */
-export const sortOrder = arr => arr.sort(cmpOrder);
+export const sortOrder = arr => arr.sort(cmpStaticOrder);
