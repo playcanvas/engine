@@ -114,6 +114,8 @@ class RigidBodyComponent extends Component {
      */
     static EVENT_TRIGGERLEAVE = 'triggerleave';
 
+    static order = -1;
+
     /** @private */
     _angularDamping = 0;
 
