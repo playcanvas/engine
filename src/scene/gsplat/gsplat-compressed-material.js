@@ -27,11 +27,12 @@ varying vec4 color;
 #endif
 
 uniform vec2 viewport;
-uniform vec4 bufferWidths;
+uniform vec4 bufferWidths;                  // packed width, chunked width, numSplats
 uniform highp usampler2D splatOrder;
 uniform highp usampler2D packedTexture;
 uniform highp sampler2D chunkTexture;
 
+uint orderId;
 uint splatId;
 ivec2 splatUV;
 ivec2 chunkUV;
@@ -46,7 +47,7 @@ void calcUV() {
     int chunkWidth = int(bufferWidths.y);
 
     // sample order texture
-    uint orderId = vertex_id_attrib + uint(vertex_position.z);
+    orderId = vertex_id_attrib + uint(vertex_position.z);
     ivec2 orderUV = ivec2(
         int(orderId) % packedWidth,
         int(orderId) / packedWidth
@@ -197,7 +198,7 @@ vec4 evalSplat() {
     vec4 centerClip = matrix_projection * centerView;
 
     // cull behind camera
-    if (centerClip.z < -centerClip.w) {
+    if (centerClip.z < -centerClip.w || orderId >= uint(bufferWidths.z)) {
         return vec4(0.0, 0.0, 2.0, 1.0);
     }
 
