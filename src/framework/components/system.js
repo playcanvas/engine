@@ -67,15 +67,16 @@ class ComponentSystem extends EventHandler {
      * @ignore
      */
     removeComponent(entity) {
+        const id = this.id;
         const record = this.store[entity.getGuid()];
-        const component = entity.c[this.id];
+        const component = entity.c[id];
 
         this.fire('beforeremove', entity, component);
 
         delete this.store[entity.getGuid()];
 
-        entity[this.id] = undefined;
-        delete entity.c[this.id];
+        entity[id] = undefined;
+        delete entity.c[id];
 
         this.fire('remove', entity, record.data);
     }

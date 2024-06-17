@@ -1,5 +1,6 @@
 import { Debug } from '../core/debug.js';
 import { guid } from '../core/guid.js';
+import { sortStaticOrder } from '../core/sort.js';
 
 import { GraphNode } from '../scene/graph-node.js';
 
@@ -10,6 +11,12 @@ import { getApplication } from './globals.js';
  * @ignore
  */
 const _enableList = [];
+
+/**
+ * @type {Array<import('./components/component.js').Component>}
+ * @ignore
+ */
+const _sortedArray = [];
 
 /**
  * The Entity is the core primitive of a PlayCanvas game. Generally speaking an object in your game
@@ -503,30 +510,30 @@ class Entity extends GraphNode {
     _onHierarchyStateChanged(enabled) {
         super._onHierarchyStateChanged(enabled);
 
-        // enable / disable all the components
-        const components = this.c;
-        for (const type in components) {
-            if (components.hasOwnProperty(type)) {
-                const component = components[type];
-                if (component.enabled) {
-                    if (enabled) {
-                        component.onEnable();
-                    } else {
-                        component.onDisable();
-                    }
+        const components = this._getSortedComponents();
+        for (let i = 0; i < components.length; i++) {
+            const component = components[i];
+            if (component.enabled) {
+                if (enabled) {
+                    component.onEnable();
+                } else {
+                    component.onDisable();
                 }
             }
         }
+
+        components.length = 0;
     }
 
     /** @private */
     _onHierarchyStatePostChanged() {
         // post enable all the components
-        const components = this.c;
-        for (const type in components) {
-            if (components.hasOwnProperty(type))
-                components[type].onPostStateChange();
+        const components = this._getSortedComponents();
+        for (let i = 0; i < components.length; i++) {
+            components[i].onPostStateChange();
         }
+
+        components.length = 0;
     }
 
     /**
@@ -599,6 +606,26 @@ class Entity extends GraphNode {
         resolveDuplicatedEntityReferenceProperties(this, this, clone, duplicatedIdsMap);
 
         return clone;
+    }
+
+    _getSortedComponents() {
+        Debug.assert(_sortedArray.length === 0);
+
+        const components = this.c;
+        let needSort = 0;
+        for (const type in components) {
+            if (components.hasOwnProperty(type)) {
+                const component = components[type];
+                needSort |= component.constructor.order !== 0;
+                _sortedArray.push(component);
+            }
+        }
+
+        if (needSort && _sortedArray.length > 1) {
+            sortStaticOrder(_sortedArray);
+        }
+
+        return _sortedArray;
     }
 
     /**

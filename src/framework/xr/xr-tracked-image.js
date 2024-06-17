@@ -93,9 +93,7 @@ class XrTrackedImage extends EventHandler {
     _rotation = new Quat();
 
     /**
-     * The tracked image interface that is created by the Image Tracking system and is provided as
-     * a list from {@link XrImageTracking#images}. It contains information about the tracking state
-     * as well as the position and rotation of the tracked image.
+     * Create a new XrTrackedImage instance.
      *
      * @param {HTMLCanvasElement|HTMLImageElement|SVGImageElement|HTMLVideoElement|Blob|ImageData|ImageBitmap} image - Image
      * that is matching the real world image as closely as possible. Resolution of images should be
