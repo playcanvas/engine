@@ -617,7 +617,7 @@ class Entity extends GraphNode {
             }
         }
 
-        if (needSort) {
+        if (needSort && _sortedArray.length > 1) {
             sortOrder(_sortedArray);
         }
 
