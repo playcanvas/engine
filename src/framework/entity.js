@@ -521,6 +521,8 @@ class Entity extends GraphNode {
                 }
             }
         }
+
+        components.length = 0;
     }
 
     /** @private */
@@ -530,6 +532,8 @@ class Entity extends GraphNode {
         for (let i = 0; i < components.length; i++) {
             components[i].onPostStateChange();
         }
+
+        components.length = 0;
     }
 
     /**
@@ -605,8 +609,6 @@ class Entity extends GraphNode {
     }
 
     _getSortedComponents() {
-        _sortedArray.length = 0;
-
         const components = this.c;
         let needSort = 0;
         for (const type in components) {
