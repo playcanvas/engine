@@ -75,7 +75,7 @@ class XrTrackedImage extends EventHandler {
     _emulated = false;
 
     /**
-     * @type {*}
+     * @type {XRPose|null}
      * @ignore
      */
     _pose = null;

@@ -129,7 +129,7 @@ class AppBase extends EventHandler {
      *
      * @callback MakeTickCallback
      * @param {number} [timestamp] - The timestamp supplied by requestAnimationFrame.
-     * @param {*} [frame] - XRFrame from requestAnimationFrame callback.
+     * @param {XRFrame} [frame] - XRFrame from requestAnimationFrame callback.
      * @returns {void}
      */
 
@@ -2110,7 +2110,7 @@ const makeTick = function (_app) {
     const application = _app;
     /**
      * @param {number} [timestamp] - The timestamp supplied by requestAnimationFrame.
-     * @param {*} [frame] - XRFrame from requestAnimationFrame callback.
+     * @param {XRFrame} [frame] - XRFrame from requestAnimationFrame callback.
      */
     return function (timestamp, frame) {
         if (!application.graphicsDevice)
