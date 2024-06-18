@@ -153,7 +153,7 @@ function rawToValue(app, args, value, old) {
  */
 
 /**
- * Takes an attribute schema, a value and current value, and return a new value
+ * Takes an attribute schema, a value and current value, and return a new value.
  *
  * @param {import('../../framework/application.js').Application} app - The working application
  * @param {AttributeSchema} schema - The attribute schema used to resolve properties
