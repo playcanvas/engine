@@ -21,6 +21,7 @@ const tmpBiases = {
     bias: 0,
     normalBias: 0
 };
+const tmpColor = new Color();
 
 const chanId = { r: 0, g: 1, b: 2, a: 3 };
 
@@ -910,14 +911,14 @@ class Light {
         const color = this._color;
         const colorLinear = this._colorLinear;
         if (intensity >= 1) {
-            colorLinear[0] = math.gammaToLinear(color.r) * intensity;
-            colorLinear[1] = math.gammaToLinear(color.g) * intensity;
-            colorLinear[2] = math.gammaToLinear(color.b) * intensity;
+            tmpColor.linear(color).mulScalar(intensity);
         } else {
-            colorLinear[0] = math.gammaToLinear(color.r * intensity);
-            colorLinear[1] = math.gammaToLinear(color.g * intensity);
-            colorLinear[2] = math.gammaToLinear(color.b * intensity);
+            tmpColor.copy(color).mulScalar(intensity).linear();
         }
+
+        colorLinear[0] = tmpColor.r;
+        colorLinear[1] = tmpColor.g;
+        colorLinear[2] = tmpColor.b;
     }
 
     setColor() {

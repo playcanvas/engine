@@ -181,6 +181,19 @@ class Color {
     }
 
     /**
+     * Multiplies RGB elements of a Color by a number. Note that the alpha value is left unchanged.
+     *
+     * @param {number} scalar - The number to multiply by.
+     * @returns {Color} Self for chaining.
+     */
+    mulScalar(scalar) {
+        this.r *= scalar;
+        this.g *= scalar;
+        this.b *= scalar;
+        return this;
+    }
+
+    /**
      * Set the values of the color from a string representation '#11223344' or '#112233'.
      *
      * @param {string} hex - A string representation in the format '#RRGGBBAA' or '#RRGGBB'. Where

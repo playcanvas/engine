@@ -2,6 +2,7 @@ import { now } from '../../core/time.js';
 import { Debug } from '../../core/debug.js';
 
 import { Vec3 } from '../../core/math/vec3.js';
+import { Color } from '../../core/math/color.js';
 
 import { DebugGraphics } from '../../platform/graphics/debug-graphics.js';
 
@@ -17,9 +18,9 @@ import { Renderer } from './renderer.js';
 import { LightCamera } from './light-camera.js';
 import { RenderPassForward } from './render-pass-forward.js';
 import { RenderPassPostprocessing } from './render-pass-postprocessing.js';
-import { math } from '../../core/math/math.js';
 
 const _noLights = [[], [], []];
+const tmpColor = new Color();
 
 const _drawCallList = {
     drawCalls: [],
@@ -145,12 +146,13 @@ class ForwardRenderer extends Renderer {
      * @param {import('../scene.js').Scene} scene - The scene.
      */
     dispatchGlobalLights(scene) {
-        const srcAmbientColor = scene.ambientLight;
         const ambientUniform = this.ambientColor;
 
-        ambientUniform[0] = math.gammaToLinear(srcAmbientColor.r);
-        ambientUniform[1] = math.gammaToLinear(srcAmbientColor.g);
-        ambientUniform[2] = math.gammaToLinear(srcAmbientColor.b);
+        // color in linear space
+        tmpColor.linear(scene.ambientLight);
+        ambientUniform[0] = tmpColor.r;
+        ambientUniform[1] = tmpColor.g;
+        ambientUniform[2] = tmpColor.b;
 
         if (scene.physicalUnits) {
             for (let i = 0; i < 3; i++) {
@@ -777,11 +779,13 @@ class ForwardRenderer extends Renderer {
 
         // Set up the fog
         if (scene.fog !== FOG_NONE) {
-            const srcFogColor = scene.fogColor;
+
+            // color in linear space
+            tmpColor.linear(scene.fogColor);
             const fogUniform = this.fogColor;
-            fogUniform[0] = math.gammaToLinear(srcFogColor.r);
-            fogUniform[1] = math.gammaToLinear(srcFogColor.g);
-            fogUniform[2] = math.gammaToLinear(srcFogColor.b);
+            fogUniform[0] = tmpColor.r;
+            fogUniform[1] = tmpColor.g;
+            fogUniform[2] = tmpColor.b;
             this.fogColorId.setValue(fogUniform);
 
             if (scene.fog === FOG_LINEAR) {

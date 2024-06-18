@@ -277,16 +277,6 @@ const math = {
         const min = Math.min(a, b);
         const max = Math.max(a, b);
         return inclusive ? num >= min && num <= max : num > min && num < max;
-    },
-
-    /**
-     * Convert a value in sRGB color space to linear color space.
-     *
-     * @param {number} value - the sRGB value to convert to linear.
-     * @returns {number} The value in linear color space.
-     */
-    gammaToLinear(value) {
-        return Math.pow(value, 2.2);
     }
 };
 
