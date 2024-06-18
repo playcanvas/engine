@@ -163,11 +163,7 @@ function rawToValue(app, args, value, old) {
  */
 export function attributeToValue(app, schema, value, current) {
     if (schema.array) {
-        const arr = [];
-        for (let i = 0, len = value.length; i < len; i++) {
-            arr.push(rawToValue(app, schema, value[i], current ? current[i] : null));
-        }
-        return arr;
+        return value.map((item, index) => rawToValue(app, schema, item, current ? current[index] : null));
     }
 
     return rawToValue(app, schema, value, current);
