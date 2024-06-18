@@ -70,7 +70,7 @@ assetListLoader.load(() => {
     // setup skydome
     app.scene.envAtlas = assets.helipad.resource;
     app.scene.skyboxMip = 2;
-    app.scene.exposure = 5;
+    app.scene.exposure = 1.5;
 
     // get the instance of the laboratory
     const laboratoryEntity = assets.laboratory.resource.instantiateRenderEntity({

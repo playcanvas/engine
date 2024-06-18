@@ -292,7 +292,7 @@ class AppBase extends EventHandler {
          * @type {Scene}
          * @example
          * // Set the tone mapping property of the application's scene
-         * this.app.scene.toneMapping = pc.TONEMAP_FILMIC;
+         * this.app.scene.rendering.toneMapping = pc.TONEMAP_FILMIC;
          */
         this.scene = new Scene(device);
         this._registerSceneImmediate(this.scene);

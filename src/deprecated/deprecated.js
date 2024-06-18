@@ -480,6 +480,28 @@ Object.defineProperty(Scene.prototype, 'defaultMaterial', {
     }
 });
 
+Object.defineProperty(Scene.prototype, 'toneMapping', {
+    set: function (value) {
+        Debug.deprecated('Scene#toneMapping is deprecated. Use Scene#rendering.toneMapping instead.');
+        this.rendering.toneMapping = value;
+    },
+    get: function () {
+        Debug.deprecated('Scene#toneMapping is deprecated. Use Scene#rendering.toneMapping instead.');
+        return this.rendering.toneMapping;
+    }
+});
+
+Object.defineProperty(Scene.prototype, 'gammaCorrection', {
+    set: function (value) {
+        Debug.deprecated('Scene#gammaCorrection is deprecated. Use Scene#rendering.gammaCorrection instead.');
+        this.rendering.gammaCorrection = value;
+    },
+    get: function () {
+        Debug.deprecated('Scene#gammaCorrection is deprecated. Use Scene#rendering.gammaCorrection instead.');
+        return this.rendering.gammaCorrection;
+    }
+});
+
 Object.defineProperty(LayerComposition.prototype, '_meshInstances', {
     get: function () {
         Debug.deprecated('pc.LayerComposition#_meshInstances is deprecated.');

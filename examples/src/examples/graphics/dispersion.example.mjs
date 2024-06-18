@@ -59,7 +59,7 @@ assetListLoader.load(() => {
 
     // set skybox
     app.scene.envAtlas = assets.helipad.resource;
-    app.scene.toneMapping = pc.TONEMAP_ACES;
+    app.scene.rendering.toneMapping = pc.TONEMAP_ACES;
     app.scene.skyboxMip = 1;
 
     // get the instance of the cube it set up with render component and add it to scene

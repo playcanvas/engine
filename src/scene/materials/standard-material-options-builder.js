@@ -4,10 +4,10 @@ import {
 
 import {
     BLEND_NONE,
-    GAMMA_NONE, GAMMA_SRGBHDR,
+    GAMMA_NONE,
     LIGHTTYPE_DIRECTIONAL, LIGHTTYPE_OMNI, LIGHTTYPE_SPOT,
     MASK_AFFECT_DYNAMIC,
-    SHADER_FORWARDHDR, SHADER_PREPASS_VELOCITY,
+    SHADER_PREPASS_VELOCITY,
     SHADERDEF_DIRLM, SHADERDEF_INSTANCING, SHADERDEF_LM, SHADERDEF_MORPH_POSITION, SHADERDEF_MORPH_NORMAL, SHADERDEF_NOSHADOW, SHADERDEF_MORPH_TEXTURE_BASED,
     SHADERDEF_SCREENSPACE, SHADERDEF_SKIN, SHADERDEF_TANGENTS, SHADERDEF_UV0, SHADERDEF_UV1, SHADERDEF_VCOLOR, SHADERDEF_LMAMBIENT,
     TONEMAP_LINEAR,
@@ -49,14 +49,10 @@ class StandardMaterialOptionsBuilder {
         this._updateUVOptions(options, stdMat, objDefs, true);
     }
 
-    updateRef(options, scene, stdMat, objDefs, pass, sortedLights) {
+    updateRef(options, scene, renderParams, stdMat, objDefs, pass, sortedLights) {
         this._updateSharedOptions(options, scene, stdMat, objDefs, pass);
-        this._updateEnvOptions(options, stdMat, scene);
+        this._updateEnvOptions(options, stdMat, scene, renderParams);
         this._updateMaterialOptions(options, stdMat);
-        if (pass === SHADER_FORWARDHDR) {
-            if (options.litOptions.gamma) options.litOptions.gamma = GAMMA_SRGBHDR;
-            options.litOptions.toneMap = TONEMAP_LINEAR;
-        }
         options.litOptions.hasTangents = objDefs && ((objDefs & SHADERDEF_TANGENTS) !== 0);
         this._updateLightOptions(options, scene, stdMat, objDefs, sortedLights);
         this._updateUVOptions(options, stdMat, objDefs, false);
@@ -297,10 +293,10 @@ class StandardMaterialOptionsBuilder {
         options.litOptions.dispersion = stdMat.dispersion > 0;
     }
 
-    _updateEnvOptions(options, stdMat, scene) {
+    _updateEnvOptions(options, stdMat, scene, renderParams) {
         options.litOptions.fog = stdMat.useFog ? scene.fog : 'none';
-        options.litOptions.gamma = stdMat.useGammaTonemap ? scene.gammaCorrection : GAMMA_NONE;
-        options.litOptions.toneMap = stdMat.useGammaTonemap ? scene.toneMapping : -1;
+        options.litOptions.gamma = stdMat.useGammaTonemap ? renderParams.gammaCorrection : GAMMA_NONE;
+        options.litOptions.toneMap = stdMat.useGammaTonemap ? renderParams.toneMapping : TONEMAP_LINEAR;
 
         const isPhong = stdMat.shadingModel === SPECULAR_PHONG;
 

@@ -56,7 +56,7 @@ assetListLoader.load(() => {
     app.scene.exposure = 2;
     app.scene.envAtlas = assets.helipad.resource;
 
-    app.scene.toneMapping = pc.TONEMAP_ACES;
+    app.scene.rendering.toneMapping = pc.TONEMAP_ACES;
 
     // Depth layer is where the framebuffer is copied to a texture to be used in the following layers.
     // Move the depth layer to take place after World and Skydome layers, to capture both of them.

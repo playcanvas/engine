@@ -816,7 +816,7 @@ class ParticleEmitter {
             this.normalOption = hasNormal ? 2 : 1;
         }
         // getShaderVariant is also called by pc.Scene when all shaders need to be updated
-        this.material.getShaderVariant = function (dev, sc, defs, unused, pass, sortedLights, viewUniformFormat, viewBindGroupFormat) {
+        this.material.getShaderVariant = function (dev, sc, defs, renderParams, pass, sortedLights, viewUniformFormat, viewBindGroupFormat) {
 
             // The app works like this:
             // 1. Emitter init
@@ -838,6 +838,9 @@ class ParticleEmitter {
             const inTools = this.emitter.inTools;
             const processingOptions = new ShaderProcessorOptions(viewUniformFormat, viewBindGroupFormat);
 
+            // renderParams and other parametesr should be passed in, but they are not so work around it
+            renderParams = renderParams ?? this.emitter.camera?.renderingParams ?? this.emitter.scene?.rendering;
+
             const shader = programLib.getProgram('particle', {
                 pass: SHADER_FORWARD,
                 useCpu: this.emitter.useCpu,
@@ -847,8 +850,8 @@ class ParticleEmitter {
                 alignToMotion: this.emitter.alignToMotion,
                 soft: this.emitter.depthSoftening,
                 mesh: this.emitter.useMesh,
-                gamma: this.emitter.scene ? this.emitter.scene.gammaCorrection : 0,
-                toneMap: this.emitter.scene ? this.emitter.scene.toneMapping : 0,
+                gamma: renderParams?.gammaCorrection ?? 0,
+                toneMap: renderParams?.toneMapping ?? 0,
                 fog: (this.emitter.scene && !this.emitter.noFog) ? this.emitter.scene.fog : 'none',
                 wrap: this.emitter.wrap && this.emitter.wrapBounds,
                 localSpace: this.emitter.localSpace,

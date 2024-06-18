@@ -51,7 +51,7 @@ app.on('destroy', () => {
 const assetListLoader = new pc.AssetListLoader(Object.values(assets), app.assets);
 assetListLoader.load(() => {
     // set up some general scene rendering properties
-    app.scene.toneMapping = pc.TONEMAP_ACES;
+    app.scene.rendering.toneMapping = pc.TONEMAP_ACES;
     app.scene.skyboxMip = 2;
     app.scene.skyboxIntensity = 0.2;
     app.scene.envAtlas = assets.helipad.resource;
