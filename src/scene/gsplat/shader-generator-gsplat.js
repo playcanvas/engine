@@ -142,12 +142,12 @@ const splatCoreVS = /* glsl */ `
     }
 `;
 
-const splatCoreFS = /* glsl_ */ `
+const splatCoreFS = /* glsl */ `
     varying vec2 texCoord;
     varying vec4 color;
 
     #ifndef DITHER_NONE
-    varying float id;
+        varying float id;
     #endif
 
     #ifdef PICK_PASS
