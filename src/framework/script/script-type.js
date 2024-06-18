@@ -35,8 +35,8 @@ class ScriptType extends Script {
     }
 
     /**
-     * @protected
      * @param {*} args - initialization arguments
+     * @protected
      */
     initScript(args) {
         // super does not exist due to the way the class is instantiated
