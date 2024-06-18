@@ -126,7 +126,7 @@ export class Script extends EventHandler {
 
     /**
      * Fired when a script instance had an exception. The script instance will be automatically
-     * disabled. The handler is passed an {@link Error} object containing the details of the
+     * disabled. The handler is passed an Error object containing the details of the
      * exception and the name of the method that threw the exception.
      *
      * @event
