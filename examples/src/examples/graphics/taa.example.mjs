@@ -62,7 +62,7 @@ assetListLoader.load(() => {
     // setup skydome with low intensity
     app.scene.envAtlas = assets.envatlas.resource;
     app.scene.skyboxMip = 0;
-    app.scene.exposure = 1.6;
+    app.scene.exposure = 2.5;
 
     // create an instance of the house and add it to the scene
     const houseEntity = assets.house.resource.instantiateRenderEntity();

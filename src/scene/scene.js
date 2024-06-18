@@ -86,7 +86,8 @@ class Scene extends EventHandler {
     ambientBakeOcclusionContrast = 0;
 
     /**
-     * The color of the scene's ambient light. Defaults to black (0, 0, 0).
+     * The color of the scene's ambient light, specified in sRGB color space. Defaults to black
+     * (0, 0, 0).
      *
      * @type {Color}
      */
@@ -107,7 +108,7 @@ class Scene extends EventHandler {
     exposure = 1;
 
     /**
-     * The color of the fog (if enabled). Defaults to black (0, 0, 0).
+     * The color of the fog (if enabled), specified in sRGB color space. Defaults to black (0, 0, 0).
      *
      * @type {Color}
      */

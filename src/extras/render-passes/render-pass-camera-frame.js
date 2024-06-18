@@ -1,4 +1,4 @@
-import { LAYERID_SKYBOX, LAYERID_IMMEDIATE, TONEMAP_LINEAR, GAMMA_NONE } from '../../scene/constants.js';
+import { LAYERID_SKYBOX, LAYERID_IMMEDIATE, TONEMAP_NONE, GAMMA_NONE } from '../../scene/constants.js';
 import {
     ADDRESS_CLAMP_TO_EDGE,
     FILTER_LINEAR,
@@ -155,14 +155,14 @@ class RenderPassCameraFrame extends RenderPass {
         if (!cameraComponent.rendering) {
             const renderingParams = new RenderingParams();
             renderingParams.gammaCorrection = GAMMA_NONE;
-            renderingParams.toneMapping = TONEMAP_LINEAR;
+            renderingParams.toneMapping = TONEMAP_NONE;
             cameraComponent.rendering = renderingParams;
         }
 
         Debug.call(() => {
             const renderingParams = cameraComponent.rendering;
-            if (renderingParams.gammaCorrection !== GAMMA_NONE || renderingParams.toneMapping !== TONEMAP_LINEAR) {
-                Debug.error('Camera rendering parameters are not set to HDR mode');
+            if (renderingParams.gammaCorrection !== GAMMA_NONE || renderingParams.toneMapping !== TONEMAP_NONE) {
+                Debug.error('Camera rendering parameters are not set to HDR mode: GAMMA_NONE and TONEMAP_NONE');
             }
         });
 

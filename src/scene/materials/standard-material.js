@@ -1096,12 +1096,11 @@ function _defineColor(name, defaultValue) {
     defineUniform(name, (material, device, scene) => {
         const uniform = material._allocUniform(name, () => new Float32Array(3));
         const color = material[name];
-        const gamma = material.useGammaTonemap && scene.rendering.gammaCorrection;
 
-        if (gamma) {
-            uniform[0] = Math.pow(color.r, 2.2);
-            uniform[1] = Math.pow(color.g, 2.2);
-            uniform[2] = Math.pow(color.b, 2.2);
+        if (material.useGammaTonemap) {
+            uniform[0] = math.gammaToLinear(color.r);
+            uniform[1] = math.gammaToLinear(color.g);
+            uniform[2] = math.gammaToLinear(color.b);
         } else {
             uniform[0] = color.r;
             uniform[1] = color.g;

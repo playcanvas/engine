@@ -1,6 +1,6 @@
 import {
     CUBEPROJ_NONE, GAMMA_NONE, LIGHTTYPE_DIRECTIONAL, LIGHTTYPE_OMNI, LIGHTTYPE_SPOT,
-    MASK_AFFECT_DYNAMIC, TONEMAP_LINEAR, SHADERDEF_INSTANCING, SHADERDEF_MORPH_NORMAL,
+    MASK_AFFECT_DYNAMIC, TONEMAP_NONE, SHADERDEF_INSTANCING, SHADERDEF_MORPH_NORMAL,
     SHADERDEF_MORPH_POSITION, SHADERDEF_MORPH_TEXTURE_BASED, SHADERDEF_SCREENSPACE, SHADERDEF_SKIN,
     SHADERDEF_NOSHADOW, SHADERDEF_TANGENTS, SPECULAR_BLINN, SPRITE_RENDERMODE_SIMPLE
 } from "../constants.js";
@@ -93,7 +93,7 @@ class LitMaterialOptionsBuilder {
     static updateEnvOptions(litOptions, material, scene, renderParams) {
         litOptions.fog = material.useFog ? scene.fog : 'none';
         litOptions.gamma = material.useGammaTonemap ? renderParams.gammaCorrection : GAMMA_NONE;
-        litOptions.toneMap = material.useGammaTonemap ? renderParams.toneMapping : TONEMAP_LINEAR;
+        litOptions.toneMap = material.useGammaTonemap ? renderParams.toneMapping : TONEMAP_NONE;
 
         // source of reflections
         if (material.useSkybox && scene.envAtlas && scene.skybox) {

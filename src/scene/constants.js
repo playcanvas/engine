@@ -627,6 +627,14 @@ export const TONEMAP_ACES2 = 4;
 export const TONEMAP_NEUTRAL = 5;
 
 /**
+ * No tonemapping is applied. Used for HDR rendering.
+ *
+ * @type {number}
+ * @category Graphics
+ */
+export const TONEMAP_NONE = 6;
+
+/**
  * No specular occlusion.
  *
  * @type {number}

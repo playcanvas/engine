@@ -189,9 +189,9 @@ class LightsBuffer {
         data8[index + 3] = castShadows ? shadowIntensity * 255 : 0;
     }
 
-    addLightDataColor(data8, index, light, gammaCorrection, isCookie) {
+    addLightDataColor(data8, index, light, isCookie) {
         const invMaxColorValue = this.invMaxColorValue;
-        const color = gammaCorrection ? light._linearFinalColor : light._finalColor;
+        const color = light._colorLinear;
         FloatPacking.float2Bytes(color[0] * invMaxColorValue, data8, index + 0, 2);
         FloatPacking.float2Bytes(color[1] * invMaxColorValue, data8, index + 2, 2);
         FloatPacking.float2Bytes(color[2] * invMaxColorValue, data8, index + 4, 2);
@@ -237,7 +237,7 @@ class LightsBuffer {
     }
 
     // fill up both float and 8bit texture data with light properties
-    addLightData(light, lightIndex, gammaCorrection) {
+    addLightData(light, lightIndex) {
 
         const isSpot = light._type === LIGHTTYPE_SPOT;
         const hasAtlasViewport = light.atlasViewportAllocated; // if the light does not have viewport, it does not fit to the atlas
@@ -269,7 +269,7 @@ class LightsBuffer {
         this.addLightDataFlags(data8, data8Start + 4 * TextureIndex8.FLAGS, light, isSpot, castShadows, light.shadowIntensity);
 
         // light color
-        this.addLightDataColor(data8, data8Start + 4 * TextureIndex8.COLOR_A, light, gammaCorrection, isCookie);
+        this.addLightDataColor(data8, data8Start + 4 * TextureIndex8.COLOR_A, light, isCookie);
 
         // spot light angles
         if (isSpot) {
