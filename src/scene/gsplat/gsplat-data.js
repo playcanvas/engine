@@ -602,9 +602,9 @@ class GSplatData {
         const { min: minY, max: maxY } = calcMinMax(y);
         const { min: minZ, max: maxZ } = calcMinMax(z);
 
-        const sizeX = minX == maxX ? 0 : 1024 / (maxX - minX);
-        const sizeY = minY == maxY ? 0 : 1024 / (maxY - minY);
-        const sizeZ = minZ == maxZ ? 0 : 1024 / (maxZ - minZ);
+        const sizeX = minX === maxX ? 0 : 1024 / (maxX - minX);
+        const sizeY = minY === maxY ? 0 : 1024 / (maxY - minY);
+        const sizeZ = minZ === maxZ ? 0 : 1024 / (maxZ - minZ);
 
         const codes = new Map();
         for (let i = 0; i < this.numSplats; i++) {
