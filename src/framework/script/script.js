@@ -322,9 +322,8 @@ export class Script extends EventHandler {
     /**
      * @function
      * @name Script#[swap]
-     * @description Called when a Script that already exists in the registry
-     * gets redefined. If the new Script has a `swap` method.
-     * then it will be executed to perform hot-reload at runtime.
+     * @description Called when a Script that already exists in the registry gets redefined. If the
+     * new Script has a `swap` method, then it will be executed to perform hot-reload at runtime.
      * @param {Script} old - Old instance of the scriptType to copy data to the new instance.
      */
 }
