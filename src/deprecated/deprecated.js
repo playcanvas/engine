@@ -650,6 +650,17 @@ Object.defineProperty(StandardMaterial.prototype, 'shininess', {
     }
 });
 
+// useGammaTonemap was renamed to useTonemap. For now do not log a deprecated warning to make existing
+// code work without warnings.
+Object.defineProperty(StandardMaterial.prototype, 'useGammaTonemap', {
+    get: function () {
+        return this.useTonemap;
+    },
+    set: function (value) {
+        this.useTonemap = value;
+    }
+});
+
 function _defineAlias(newName, oldName) {
     Object.defineProperty(StandardMaterial.prototype, oldName, {
         get: function () {
