@@ -310,9 +310,7 @@ class PlyParser {
 
                         // reorder data
                         if (asset.data.reorder ?? true) {
-                            const start = Date.now();
                             gsplatData.reorderData();
-                            console.log(`took ${Date.now() - start}ms`);
                         }
                     }
 
