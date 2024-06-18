@@ -185,7 +185,7 @@ const STANDARD_MAT_PROPS = [
     ['sphereMap', 'Texture|null'],
     ['twoSidedLighting', 'boolean'],
     ['useFog', 'boolean'],
-    ['useGammaTonemap', 'boolean'],
+    ['useTonemap', 'boolean'],
     ['useLighting', 'boolean'],
     ['useMetalness', 'boolean'],
     ['useMetalnessSpecularColor', 'boolean'],

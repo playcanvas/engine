@@ -32,6 +32,8 @@ const _uniforms = {};
 // temporary set of params
 let _params = new Set();
 
+const _tempColor = new Color();
+
 /**
  * Callback used by {@link StandardMaterial#onUpdateShader}.
  *
@@ -537,8 +539,8 @@ let _params = new Set();
  * @property {boolean} useFog Apply fogging (as configured in scene settings)
  * @property {boolean} useLighting Apply lighting
  * @property {boolean} useSkybox Apply scene skybox as prefiltered environment map
- * @property {boolean} useGammaTonemap Apply gamma correction and tonemapping (as configured in
- * scene settings).
+ * @property {boolean} useTonemap Apply tonemapping (as configured in {@link Scene#rendering} or
+ * {@link CameraComponent.rendering}). Defaults to true.
  * @property {boolean} pixelSnap Align vertices to pixel coordinates when rendering. Useful for
  * pixel perfect 2D graphics.
  * @property {boolean} twoSidedLighting Calculate proper normals (and therefore lighting) on
@@ -1097,15 +1099,11 @@ function _defineColor(name, defaultValue) {
         const uniform = material._allocUniform(name, () => new Float32Array(3));
         const color = material[name];
 
-        if (material.useGammaTonemap) {
-            uniform[0] = math.gammaToLinear(color.r);
-            uniform[1] = math.gammaToLinear(color.g);
-            uniform[2] = math.gammaToLinear(color.b);
-        } else {
-            uniform[0] = color.r;
-            uniform[1] = color.g;
-            uniform[2] = color.b;
-        }
+        // uniforms are always in linear space
+        const uniformColor = _tempColor.linear(color);
+        uniform[0] = uniformColor.r;
+        uniform[1] = uniformColor.g;
+        uniform[2] = uniformColor.b;
 
         return uniform;
     });
@@ -1242,7 +1240,7 @@ function _defineMaterialProps() {
     _defineFlag('customFragmentShader', null);
     _defineFlag('useFog', true);
     _defineFlag('useLighting', true);
-    _defineFlag('useGammaTonemap', true);
+    _defineFlag('useTonemap', true);
     _defineFlag('useSkybox', true);
     _defineFlag('forceUv1', false);
     _defineFlag('pixelSnap', false);

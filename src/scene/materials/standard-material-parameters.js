@@ -140,7 +140,7 @@ const standardMaterialParameterTypes = {
     useFog: 'boolean',
     useLighting: 'boolean',
     useSkybox: 'boolean',
-    useGammaTonemap: 'boolean',
+    useTonemap: 'boolean',
 
     envAtlas: 'texture',
 

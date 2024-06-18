@@ -29,7 +29,7 @@ class LitMaterial extends Material {
 
     useFog = true;
 
-    useGammaTonemap = true;
+    useTonemap = true;
 
     useSkybox = true;
 
