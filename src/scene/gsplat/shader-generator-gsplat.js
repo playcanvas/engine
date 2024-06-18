@@ -16,7 +16,10 @@ const splatCoreVS = /* glsl */ `
 
     varying vec2 texCoord;
     varying vec4 color;
-    varying float id;
+
+    #ifndef DITHER_NONE
+        varying float id;
+    #endif
 
     // width, numSplats
     uniform vec2 tex_params;
@@ -88,7 +91,10 @@ const splatCoreVS = /* glsl */ `
             return vec4(0.0, 0.0, 2.0, 1.0);
         }
 
-        id = float(splatId);
+        #ifndef DITHER_NONE
+            id = float(splatId);
+        #endif
+
         color = getColor();
 
         mat3 Vrk = mat3(
@@ -138,10 +144,13 @@ const splatCoreVS = /* glsl */ `
     }
 `;
 
-const splatCoreFS = /* glsl_ */ `
+const splatCoreFS = /* glsl */ `
     varying vec2 texCoord;
     varying vec4 color;
-    varying float id;
+
+    #ifndef DITHER_NONE
+        varying float id;
+    #endif
 
     #ifdef PICK_PASS
         uniform vec4 uColor;
