@@ -48,6 +48,7 @@ class ScriptType extends Script {
     /**
      * Expose initScript as initScriptType for backwards compatibility
      * @param {*} args - Initialization arguments
+     * @protected
      */
     initScriptType(args) {
         this.initScript(args);

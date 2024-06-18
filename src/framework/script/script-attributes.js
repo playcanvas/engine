@@ -170,12 +170,13 @@ export function attributeToValue(app, schema, value, current) {
 }
 
 /**
- * This will assign values to a script instance based on a map of attributes schemas and a corresponding map of data
+ * Assigns values to a script instance based on a map of attributes schemas
+ * and a corresponding map of data.
  *
- * @param {*} app - The application instance
- * @param {Object<string, AttributeSchema>} attributeSchemaMap - A map of attribute names to Attribute Schemas
+ * @param {import('../../framework/application.js').Application} app - The application instance
+ * @param {Object<string, AttributeSchema>} attributeSchemaMap - A map of names to Schemas
  * @param {Object<string, *>} data - A Map of data to assign to the Script instance
- * @param {import('../../framework/script/script.js').Script} script - The Script instance to assign values onto
+ * @param {import('../../framework/script/script.js').Script} script - A Script instance to assign values on
  */
 export function assignAttributesToScript(app, attributeSchemaMap, data, script) {
 

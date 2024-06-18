@@ -21,7 +21,9 @@ class ScriptRegistry extends EventHandler {
     _list = [];
 
     /**
-     * @type {Map<string, import('./script-attributes.js').AttributeSchema} - A Map of script names to attribute schemas
+     * A Map of script names to attribute schemas.
+     *
+     * @type {Map<string, import('./script-attributes.js').AttributeSchema>}
      * @private
      */
     _scriptSchemas = new Map();
@@ -43,7 +45,8 @@ class ScriptRegistry extends EventHandler {
     }
 
     /**
-     * Registers a schema against a script instance
+     * Registers a schema against a script instance.
+     *
      * @param {string} id - The key to use to store the schema
      * @param {import('./script-attributes.js').AttributeSchema} schema - An schema definition for the script
      */
@@ -53,7 +56,8 @@ class ScriptRegistry extends EventHandler {
     }
 
     /**
-     * Returns a schema for a given script name
+     * Returns a schema for a given script name.
+     *
      * @param {string} id - The key to store the schema under
      * @returns {import('./script-attributes.js').AttributeSchema | undefined} - The schema stored under the key
      */
@@ -137,8 +141,7 @@ class ScriptRegistry extends EventHandler {
                         scriptInstances.push(scriptInstance);
 
                     // initialize attributes
-                    for (let i = 0, len = component.scripts.length; i < len; i++) {
-                        const script = component.scripts[i];
+                    for (const script of component.scripts) {
                         component.initializeAttributes(script);
                     }
                 }

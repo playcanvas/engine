@@ -8,7 +8,7 @@ import { SCRIPT_INITIALIZE, SCRIPT_POST_INITIALIZE } from './constants.js';
  *
  * At its core, a script is simply a collection of methods that are called at various points in the engine's lifecycle. These methods are:
  *
- * {@link Script#initialize} - Called once when the script is first enabled
+ * {@link Script#initialize} - Called once when the script is initialized
  * {@link Script#postInitialize} - Called once after all scripts have been initialized
  * {@link Script#update} - Called every frame, if the script is enabled
  * {@link Script#postUpdate} - Called every frame, after all scripts have been updated
@@ -38,10 +38,12 @@ export class Script extends EventHandler {
      *
      * @event
      * @example
-     * PlayerController.prototype.initialize = function () {
-     *     this.on('enable', () => {
-     *         // Script Instance is now enabled
-     *     });
+     * export class PlayerController extends Script {
+     *     initialize() {
+     *         this.on('enable', () => {
+     *             // Script Instance is now enabled
+     *         });
+     *     }
      * };
      */
     static EVENT_ENABLE = 'enable';
@@ -51,10 +53,12 @@ export class Script extends EventHandler {
      *
      * @event
      * @example
-     * PlayerController.prototype.initialize = function () {
-     *     this.on('disable', () => {
-     *         // Script Instance is now disabled
-     *     });
+     * export class PlayerController extends Script {
+     *     initialize() {
+     *         this.on('disable', () => {
+     *             // Script Instance is now disabled
+     *         });
+     *     }
      * };
      */
     static EVENT_DISABLE = 'disable';
@@ -65,10 +69,12 @@ export class Script extends EventHandler {
      *
      * @event
      * @example
-     * PlayerController.prototype.initialize = function () {
-     *     this.on('state', (enabled) => {
-     *         console.log(`Script Instance is now ${enabled ? 'enabled' : 'disabled'}`);
-     *     });
+     * export class PlayerController extends Script {
+     *     initialize() {
+     *         this.on('state', (enabled) => {
+     *             console.log(`Script Instance is now ${enabled ? 'enabled' : 'disabled'}`);
+     *         });
+     *     }
      * };
      */
     static EVENT_STATE = 'state';
@@ -78,11 +84,13 @@ export class Script extends EventHandler {
      *
      * @event
      * @example
-     * PlayerController.prototype.initialize = function () {
-     *     this.on('destroy', () => {
-     *         // no longer part of the entity
-     *         // this is a good place to clean up allocated resources used by the script
-     *     });
+     * export class PlayerController extends Script {
+     *     initialize() {
+     *         this.on('destroy', () => {
+     *             // no longer part of the entity
+     *             // this is a good place to clean up allocated resources used by the script
+     *         });
+     *     }
      * };
      */
     static EVENT_DESTROY = 'destroy';
@@ -98,16 +106,20 @@ export class Script extends EventHandler {
      *
      * @event
      * @example
-     * PlayerController.prototype.initialize = function () {
-     *     this.on('attr', (name, newValue, oldValue) => {
-     *         console.log(`Attribute '${name}' changed from '${oldValue}' to '${newValue}'`);
-     *     });
+     * export class PlayerController extends Script {
+     *     initialize() {
+     *         this.on('attr', (name, newValue, oldValue) => {
+     *             console.log(`Attribute '${name}' changed from '${oldValue}' to '${newValue}'`);
+     *         });
+     *     }
      * };
      * @example
-     * PlayerController.prototype.initialize = function () {
-     *     this.on('attr:speed', (newValue, oldValue) => {
-     *         console.log(`Attribute 'speed' changed from '${oldValue}' to '${newValue}'`);
-     *     });
+     * export class PlayerController extends Script {
+     *     initialize() {
+     *         this.on('attr:speed', (newValue, oldValue) => {
+     *             console.log(`Attribute 'speed' changed from '${oldValue}' to '${newValue}'`);
+     *         });
+     *     }
      * };
      */
     static EVENT_ATTR = 'attr';
@@ -119,11 +131,13 @@ export class Script extends EventHandler {
      *
      * @event
      * @example
-     * PlayerController.prototype.initialize = function () {
-     *     this.on('error', (err, method) => {
-     *         // caught an exception
-     *         console.log(err.stack);
-     *     });
+     * export class PlayerController extends Script {
+     *     initialize() {
+     *         this.on('error', (err, method) => {
+     *             // caught an exception
+     *             console.log(err.stack);
+     *         });
+     *     }
      * };
      */
     static EVENT_ERROR = 'error';
@@ -229,8 +243,14 @@ export class Script extends EventHandler {
     }
 
     /**
-     * @param {{entity: import('../entity.js').Entity, app: import('../app-base.js').AppBase}} args -
-     * The entity and app.
+     * @typedef {object} ScriptInitializationArgs
+     * @property {boolean} [enabled] - True if the script instance is in running state.
+     * @property {import('../app-base.js').AppBase} app - The {@link AppBase} that is running the script.
+     * @property {import('../entity.js').Entity} entity - The {@link Entity} that the script is attached to.
+     */
+
+    /**
+     * @param {ScriptInitializationArgs} args - The input arguments object.
      * @protected
      */
     initScript(args) {
@@ -303,7 +323,7 @@ export class Script extends EventHandler {
      * @function
      * @name Script#[swap]
      * @description Called when a Script that already exists in the registry
-     * gets redefined. If the new Script has a `swap` method in its prototype,
+     * gets redefined. If the new Script has a `swap` method.
      * then it will be executed to perform hot-reload at runtime.
      * @param {Script} old - Old instance of the scriptType to copy data to the new instance.
      */
