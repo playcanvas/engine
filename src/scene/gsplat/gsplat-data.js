@@ -637,27 +637,6 @@ class GSplatData {
 
     // reorder the splat data to aid in better gpu memory access at render time
     reorder(order) {
-
-        const reorder = (data) => {
-            const result = new data.constructor(data.length);
-
-            for (let i = 0; i < order.length; i++) {
-                result[i] = data[order[i]];
-            }
-
-            return result;
-        };
-
-        this.elements.forEach((element) => {
-            element.properties.forEach((property) => {
-                if (property.storage) {
-                    property.storage = reorder(property.storage);
-                }
-            });
-        });
-    }
-
-    reorderFast(order) {
         const cache = new Map();
 
         const getStorage = (size) => {
@@ -697,7 +676,7 @@ class GSplatData {
 
     // reorder the splat data to aid in better gpu memory access at render time
     reorderData() {
-        this.reorderFast(this.calcMortonOrder());
+        this.reorder(this.calcMortonOrder());
     }
 }
 
