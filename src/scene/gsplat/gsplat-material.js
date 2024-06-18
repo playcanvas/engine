@@ -27,6 +27,8 @@ const splatMainFS = `
  * @property {string} [vertex] - Custom vertex shader, see SPLAT MANY example.
  * @property {string} [fragment] - Custom fragment shader, see SPLAT MANY example.
  * @property {string} [dither] - Opacity dithering enum.
+ *
+ * @ignore
  */
 
 /**
