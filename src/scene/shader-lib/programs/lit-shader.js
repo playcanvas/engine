@@ -594,7 +594,9 @@ class LitShader {
         const func = new ChunkBuilder();
         const backend = new ChunkBuilder();
         const code = new ChunkBuilder();
-
+        // magnopus patched, ensure HDR define is set and gamma functions are available
+        func.append(chunks.decodePS);
+        func.append(ShaderGenerator.gammaCode(options.gamma, chunks));
         if (options.opacityFadesSpecular === false) {
             decl.append('uniform float material_alphaFade;');
         }
@@ -767,8 +769,6 @@ class LitShader {
 
         // FIXME: only add these when needed
         func.append(chunks.sphericalPS);
-        func.append(chunks.decodePS);
-        func.append(ShaderGenerator.gammaCode(options.gamma, chunks));
         func.append(ShaderGenerator.tonemapCode(options.toneMap, chunks));
         func.append(ShaderGenerator.fogCode(options.fog, chunks));
 

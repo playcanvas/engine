@@ -257,7 +257,8 @@ vec4 evalSplat() {
     #ifdef TONEMAP_ENABLED
         return vec4(gammaCorrectOutput(toneMap(decodeGamma(color.rgb))), B);
     #else
-        return vec4(color.rgb, B);
+      // Magnopus Patched, extra decode gamma to prevent double correction
+			return vec4(decodeGamma(color.rgb), B);
     #endif
 }
 `;
