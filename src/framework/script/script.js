@@ -20,9 +20,9 @@ import { SCRIPT_INITIALIZE, SCRIPT_POST_INITIALIZE } from './constants.js';
  * @example
  * ```javascript
  * class EntityRotator extends Script {
- *    update() {
- *       this.entity.rotateLocal(0, 1, 0);
- *   }
+ *     update() {
+ *         this.entity.rotateLocal(0, 1, 0);
+ *     }
  * }
  * ```
  *
