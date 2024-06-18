@@ -98,7 +98,7 @@
     "README*.md"
   ],
   "dependencies": {
-    "@types/webxr": "^0.5.15",
+    "@types/webxr": "^0.5.16",
     "@webgpu/types": "^0.1.40"
   },
   "devDependencies": {
