@@ -299,8 +299,7 @@ class XrInputSource extends EventHandler {
      * Create a new XrInputSource instance.
      *
      * @param {import('./xr-manager.js').XrManager} manager - WebXR Manager.
-     * @param {*} xrInputSource - [XRInputSource](https://developer.mozilla.org/en-US/docs/Web/API/XRInputSource)
-     * object that is created by WebXR API.
+     * @param {XRInputSource} xrInputSource - A WebXR input source.
      * @ignore
      */
     constructor(manager, xrInputSource) {
@@ -328,7 +327,7 @@ class XrInputSource extends EventHandler {
     /**
      * XRInputSource object that is associated with this input source.
      *
-     * @type {object}
+     * @type {XRInputSource}
      */
     get inputSource() {
         return this._xrInputSource;
@@ -469,7 +468,7 @@ class XrInputSource extends EventHandler {
     }
 
     /**
-     * @param {*} frame - XRFrame from requestAnimationFrame callback.
+     * @param {XRFrame} frame - XRFrame from requestAnimationFrame callback.
      * @ignore
      */
     update(frame) {
