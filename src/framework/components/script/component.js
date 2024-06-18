@@ -23,9 +23,10 @@ const toLowerCamelCase = str => str[0].toLowerCase() + str.substring(1);
  */
 class ScriptComponent extends Component {
     /**
-     * A map of the script name and the initial component data
-     * @private
+     * A map of script name to initial component data.
+     *
      * @type {Map<string, object>}
+     * @private
      */
     _attributeDataMap = new Map();
 
