@@ -7,7 +7,6 @@ import { Quat } from '../../core/math/quat.js';
  * list from {@link XrImageTracking#images}. It contains information about the tracking state as
  * well as the position and rotation of the tracked image.
  *
- * @augments EventHandler
  * @category XR
  */
 class XrTrackedImage extends EventHandler {
@@ -105,7 +104,7 @@ class XrTrackedImage extends EventHandler {
      * repeating patterns will reduce tracking stability.
      * @param {number} width - Width (in meters) of image in real world. Providing this value as
      * close to the real value will improve tracking quality.
-     * @hideconstructor
+     * @ignore
      */
     constructor(image, width) {
         super();

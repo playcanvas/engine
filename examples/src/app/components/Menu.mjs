@@ -31,6 +31,7 @@ class Menu extends TypedComponent {
 
     /** @type {EventListener | null} */
     clickFullscreenListener = null;
+
     toggleFullscreen() {
         const contentDocument = document.querySelector('iframe')?.contentDocument;
         if (!contentDocument) {

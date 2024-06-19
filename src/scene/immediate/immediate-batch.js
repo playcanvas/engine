@@ -91,13 +91,15 @@ class ImmediateBatch {
                 this.meshInstance = new MeshInstance(this.mesh, this.material, identityGraphNode);
             }
 
-            // clear lines when after they were rendered as their lifetime is one frame
-            this.positions.length = 0;
-            this.colors.length = 0;
-
             // inject mesh instance into visible list to be rendered
             visibleList.push(this.meshInstance);
         }
+    }
+
+    clear() {
+        // clear lines after they are rendered as their lifetime is one frame
+        this.positions.length = 0;
+        this.colors.length = 0;
     }
 }
 

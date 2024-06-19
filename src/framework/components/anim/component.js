@@ -18,7 +18,6 @@ import { AnimTrack } from '../../anim/evaluator/anim-track.js';
 /**
  * The Anim Component allows an Entity to playback animations on models and entity properties.
  *
- * @augments Component
  * @category Animation
  */
 class AnimComponent extends Component {

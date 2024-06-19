@@ -89,8 +89,6 @@ function findNode(node, test) {
 
 /**
  * A hierarchical scene node.
- *
- * @augments EventHandler
  */
 class GraphNode extends EventHandler {
     /**
@@ -538,11 +536,14 @@ class GraphNode extends EventHandler {
 
 
     /**
-     * Detach a GraphNode from the hierarchy and recursively destroy all children.
+     * Destroy the graph node and all of its descendants. First, the graph node is removed from the
+     * hierarchy. This is then repeated recursively for all descendants of the graph node.
+     *
+     * The last thing the graph node does is fire the `destroy` event.
      *
      * @example
-     * const firstChild = this.entity.children[0];
-     * firstChild.destroy(); // delete child, all components and remove from hierarchy
+     * const firstChild = graphNode.children[0];
+     * firstChild.destroy(); // destroy child and all of its descendants
      */
     destroy() {
         // Detach from parent
@@ -578,7 +579,7 @@ class GraphNode extends EventHandler {
      * of a field then the value passed as the second argument will be checked for equality. If
      * this is the name of a function then the return value of the function will be checked for
      * equality against the valued passed as the second argument to this function.
-     * @param {object} [value] - If the first argument (attr) is a property name then this value
+     * @param {*} [value] - If the first argument (attr) is a property name then this value
      * will be checked against the value of the property.
      * @returns {GraphNode[]} The array of graph nodes that match the search criteria.
      * @example
@@ -613,7 +614,7 @@ class GraphNode extends EventHandler {
      * this is the name of a field then the value passed as the second argument will be checked for
      * equality. If this is the name of a function then the return value of the function will be
      * checked for equality against the valued passed as the second argument to this function.
-     * @param {object} [value] - If the first argument (attr) is a property name then this value
+     * @param {*} [value] - If the first argument (attr) is a property name then this value
      * will be checked against the value of the property.
      * @returns {GraphNode|null} A graph node that match the search criteria. Returns null if no
      * node is found.

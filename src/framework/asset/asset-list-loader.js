@@ -20,7 +20,6 @@ import { Asset } from './asset.js';
  * });
  * ```
  *
- * @augments EventHandler
  * @category Asset
  */
 class AssetListLoader extends EventHandler {

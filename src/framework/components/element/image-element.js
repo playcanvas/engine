@@ -8,7 +8,6 @@ import { Vec3 } from '../../../core/math/vec3.js';
 import { Vec4 } from '../../../core/math/vec4.js';
 
 import {
-    BUFFER_STATIC,
     FUNC_EQUAL,
     PRIMITIVE_TRISTRIP,
     SEMANTIC_POSITION, SEMANTIC_NORMAL, SEMANTIC_TEXCOORD0,
@@ -266,13 +265,20 @@ class ImageElement {
         this._system = element.system;
 
         // public
+        /** @type {number} */
         this._textureAsset = null;
+        /** @type {import('../../../platform/graphics/texture.js').Texture} */
         this._texture = null;
+        /** @type {number} */
         this._materialAsset = null;
+        /** @type {import('../../../scene/materials/material.js').Material} */
         this._material = null;
+        /** @type {number} */
         this._spriteAsset = null;
+        /** @type {import('../../../scene/sprite.js').Sprite} */
         this._sprite = null;
         this._spriteFrame = 0;
+        /** @type {number} */
         this._pixelsPerUnit = null;
         this._targetAspectRatio = -1; // will be set when assigning textures
 
@@ -428,7 +434,9 @@ class ImageElement {
             ]);
         });
 
-        const vertexBuffer = new VertexBuffer(device, vertexFormat, 4, BUFFER_STATIC, vertexData.buffer);
+        const vertexBuffer = new VertexBuffer(device, vertexFormat, 4, {
+            data: vertexData.buffer
+        });
 
         const mesh = new Mesh(device);
         mesh.vertexBuffer = vertexBuffer;
@@ -1312,6 +1320,9 @@ class ImageElement {
     }
 
     // private
+    /**
+     * @type {import('../../../core/shape/bounding-box.js').BoundingBox | null}
+     */
     get aabb() {
         if (this._renderable.meshInstance) {
             return this._renderable.meshInstance.aabb;

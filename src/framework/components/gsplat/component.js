@@ -6,7 +6,6 @@ import { Component } from '../component.js';
 /**
  * Enables an Entity to render a Gaussian Splat (asset of the 'gsplat' type).
  *
- * @augments Component
  * @category Graphics
  */
 class GSplatComponent extends Component {
@@ -79,7 +78,7 @@ class GSplatComponent extends Component {
         this._customAabb = value;
 
         // set it on meshInstance
-        this._instance?.meshInstance.setCustomAabb(this._customAabb);
+        this._instance?.meshInstance?.setCustomAabb(this._customAabb);
     }
 
     get customAabb() {
@@ -98,7 +97,7 @@ class GSplatComponent extends Component {
 
         this._instance = value;
 
-        if (this._instance) {
+        if (this._instance?.meshInstance) {
 
             // if mesh instance was created without a node, assign it here
             const mi = this._instance.meshInstance;

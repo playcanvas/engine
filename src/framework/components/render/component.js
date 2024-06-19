@@ -3,7 +3,7 @@ import { LAYERID_WORLD, RENDERSTYLE_SOLID } from '../../../scene/constants.js';
 import { BatchGroup } from '../../../scene/batching/batch-group.js';
 import { MeshInstance } from '../../../scene/mesh-instance.js';
 import { MorphInstance } from '../../../scene/morph-instance.js';
-import { getShapePrimitive } from '../../../scene/procedural.js';
+import { getShapePrimitive } from '../../graphics/primitive-cache.js';
 import { GraphNode } from '../../../scene/graph-node.js';
 import { SkinInstanceCache } from '../../../scene/skin-instance-cache.js';
 
@@ -20,7 +20,7 @@ import { EntityReference } from '../../utils/entity-reference.js';
  *
  * @property {import('../../entity.js').Entity} rootBone A reference to the entity to be used as
  * the root bone for any skinned meshes that are rendered by this component.
- * @augments Component
+ *
  * @category Graphics
  */
 class RenderComponent extends Component {

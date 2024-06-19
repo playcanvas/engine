@@ -17,7 +17,7 @@ class AnimStateGraph {
      * Create an AnimStateGraph instance from JSON data.
      *
      * @param {object} data - The JSON data to create the AnimStateGraph from.
-     * @hideconstructor
+     * @ignore
      */
     constructor(data) {
         this._layers = [];

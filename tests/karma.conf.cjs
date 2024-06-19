@@ -1,19 +1,3 @@
-var fs = require('fs');
-var path = require('path');
-
-var release = process.argv.includes('--release');
-var sourceFiles;
-
-if (release) {
-    console.log('Testing release build');
-    sourceFiles = [path.resolve('build/playcanvas.js')];
-} else {
-    console.log('Testing unbuilt sources');
-    sourceFiles = fs.readFileSync('build/dependencies.txt').toString().split('\n').map(function (value) {
-        return path.resolve(value.replace('../', ''));
-    });
-}
-
 module.exports = function (config) {
     config.set({
         // base path that will be used to resolve all patterns (eg. files, exclude)
@@ -24,13 +8,10 @@ module.exports = function (config) {
         },
 
         // list of files / patterns to load in the browser
-        files: sourceFiles.concat([
-            // libraries
-            'node_modules/sinon/pkg/sinon.js',
-            'node_modules/chai/chai.js',
-
-            // test environment setup
-            'tests/setup.js',
+        files: [
+            { pattern: 'node_modules/chai/chai.js', type: 'module' },
+            { pattern: 'tests/setup.js', type: 'module' },
+            'build/playcanvas.js',
 
             // test files - change this to a specific file in order to run a single suite
             'tests/**/test_*.js',
@@ -38,11 +19,9 @@ module.exports = function (config) {
             // resources - list any files here that need to be loaded by tests (i.e. via XHR), or
             // need to be pre-loaded in order to provide helper functions etc.
             { pattern: 'tests/test-assets/**/*.*', included: false, served: true, watched: true, nocache: true },
-            { pattern: 'tests/helpers/**/*.js', included: true, served: true, watched: true, nocache: true },
             { pattern: 'tests/framework/components/script/*.*', included: false, served: true, watched: true, nocache: true },
-            { pattern: 'tests/platform/input/simulate_event.js', included: true, served: true, watched: true, nocache: true },
             { pattern: 'examples/assets/**/*.*', included: false, served: true, watched: true, nocache: true }
-        ]),
+        ],
 
         // Serve .gz files with Content-Encoding: gzip
         customHeaders: [{
@@ -60,7 +39,14 @@ module.exports = function (config) {
 
         // frameworks to use
         // available frameworks: https://npmjs.org/browse/keyword/karma-adapter
-        frameworks: ['mocha'],
+        frameworks: ['mocha', 'sinon'],
+
+        plugins: [
+            'karma-mocha',
+            'karma-sinon',
+            'karma-chrome-launcher',
+            'karma-spec-reporter'
+        ],
 
         // test results reporter to use
         // possible values: 'dots', 'progress'
@@ -76,8 +62,6 @@ module.exports = function (config) {
         // level of logging
         // possible values: config.LOG_DISABLE || config.LOG_ERROR || config.LOG_WARN || config.LOG_INFO || config.LOG_DEBUG
         logLevel: config.LOG_INFO,
-
-        // browserConsoleLogOptions: config.LOG_WARN,
 
         // enable / disable watching file and executing tests whenever any file changes
         autoWatch: true,

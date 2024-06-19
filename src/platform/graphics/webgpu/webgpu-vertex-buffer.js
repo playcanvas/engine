@@ -1,3 +1,4 @@
+import { BUFFERUSAGE_STORAGE, BUFFERUSAGE_VERTEX } from "../constants.js";
 import { WebgpuBuffer } from "./webgpu-buffer.js";
 
 /**
@@ -6,21 +7,14 @@ import { WebgpuBuffer } from "./webgpu-buffer.js";
  * @ignore
  */
 class WebgpuVertexBuffer extends WebgpuBuffer {
-    constructor(vertexBuffer, format) {
-        super();
-    }
-
-    destroy(device) {
-
-        super.destroy(device);
-
-        // TODO: clear up bound vertex buffers
+    constructor(vertexBuffer, format, options) {
+        super(BUFFERUSAGE_VERTEX | (options?.storage ? BUFFERUSAGE_STORAGE : 0));
     }
 
     unlock(vertexBuffer) {
 
         const device = vertexBuffer.device;
-        super.unlock(device, vertexBuffer.usage, GPUBufferUsage.VERTEX, vertexBuffer.storage);
+        super.unlock(device, vertexBuffer.storage);
     }
 }
 

@@ -11,6 +11,8 @@ let id = 0;
  * @category Graphics
  */
 class VertexBuffer {
+    usage = BUFFER_STATIC;
+
     /**
      * Create a new VertexBuffer instance.
      *
@@ -19,19 +21,36 @@ class VertexBuffer {
      * @param {import('./vertex-format.js').VertexFormat} format - The vertex format of this vertex
      * buffer.
      * @param {number} numVertices - The number of vertices that this vertex buffer will hold.
-     * @param {number} [usage] - The usage type of the vertex buffer (see BUFFER_*). Defaults to BUFFER_STATIC.
-     * @param {ArrayBuffer} [initialData] - Initial data.
+     * @param {object} [options] - Object for passing optional arguments.
+     * @param {number} [options.usage] - The usage type of the vertex buffer (see BUFFER_*).
+     * Defaults to BUFFER_STATIC.
+     * @param {ArrayBuffer} [options.data] - Initial data.
+     * @param {boolean} [options.storage] - Defines if the vertex buffer can be used as a storage
+     * buffer by a compute shader. Defaults to false. Only supported on WebGPU.
      */
-    constructor(graphicsDevice, format, numVertices, usage = BUFFER_STATIC, initialData) {
+    constructor(graphicsDevice, format, numVertices, options) {
+
         // By default, vertex buffers are static (better for performance since buffer data can be cached in VRAM)
+        let initialData;
+        if (typeof options === 'object') {
+
+            this.usage = options.usage ?? BUFFER_STATIC;
+            initialData = options.data;
+
+        } else if (arguments.length > 3) {  // handle backwards compatibility
+
+            Debug.deprecated('VertexBuffer: usage and initialData parameters are deprecated, use options object instead');
+            this.usage = arguments[3] ?? BUFFER_STATIC;
+            initialData = arguments[4];
+        }
+
         this.device = graphicsDevice;
         this.format = format;
         this.numVertices = numVertices;
-        this.usage = usage;
 
         this.id = id++;
 
-        this.impl = graphicsDevice.createVertexBufferImpl(this, format);
+        this.impl = graphicsDevice.createVertexBufferImpl(this, format, options);
 
         // Calculate the size. If format contains verticesByteSize (non-interleaved format), use it
         this.numBytes = format.verticesByteSize ? format.verticesByteSize : format.size * numVertices;

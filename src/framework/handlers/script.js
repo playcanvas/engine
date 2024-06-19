@@ -6,6 +6,9 @@ import { registerScript } from '../script/script.js';
 import { ResourceLoader } from './loader.js';
 
 import { ResourceHandler } from './handler.js';
+import { ScriptAttributes } from '../script/script-attributes.js';
+
+const toLowerCamelCase = str => str[0].toLowerCase() + str.substring(1);
 
 /**
  * Resource handler for loading JavaScript files dynamically.  Two types of JavaScript files can be
@@ -143,7 +146,7 @@ class ScriptHandler extends ResourceHandler {
     _loadModule(url, callback) {
 
         // if we're in the browser, we need to use the full URL
-        const baseUrl = platform.browser ? window.location.origin : import.meta.url;
+        const baseUrl = platform.browser ? window.location.origin + window.location.pathname : import.meta.url;
         const importUrl = new URL(url, baseUrl);
 
         // @ts-ignore
@@ -155,13 +158,15 @@ class ScriptHandler extends ResourceHandler {
 
                 if (extendsScriptType) {
 
-                    if (script.attributesDefinition) {
-                        for (const key in script.attributesDefinition) {
-                            scriptClass.attributes.add(key, script.attributesDefinition[key]);
+                    // Check if attributes is defined directly on the class and not inherited
+                    if (scriptClass.hasOwnProperty('attributes')) {
+                        const attributes = new ScriptAttributes(scriptClass);
+                        for (const key in scriptClass.attributes) {
+                            attributes.add(key, scriptClass.attributes[key]);
                         }
+                        scriptClass.attributes = attributes;
                     }
-
-                    registerScript(scriptClass, scriptClass.name.toLowerCase());
+                    registerScript(scriptClass, toLowerCamelCase(scriptClass.name));
                 }
             }
 

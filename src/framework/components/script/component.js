@@ -15,7 +15,6 @@ import { Entity } from '../../entity.js';
  * Script Types defined in JavaScript files to be executed with access to the Entity. For more
  * details on scripting see [Scripting](https://developer.playcanvas.com/user-manual/scripting/).
  *
- * @augments Component
  * @category Script
  */
 class ScriptComponent extends Component {
@@ -547,7 +546,7 @@ class ScriptComponent extends Component {
     /**
      * Detect if script is attached to an entity.
      *
-     * @param {string|Class<import('../../script/script-type.js').ScriptType>} nameOrType - The
+     * @param {string|typeof import('../../script/script-type.js').ScriptType} nameOrType - The
      * name or type of {@link ScriptType}.
      * @returns {boolean} If script is attached to an entity.
      * @example
@@ -571,7 +570,7 @@ class ScriptComponent extends Component {
     /**
      * Get a script instance (if attached).
      *
-     * @param {string|Class<import('../../script/script-type.js').ScriptType>} nameOrType - The
+     * @param {string|typeof import('../../script/script-type.js').ScriptType} nameOrType - The
      * name or type of {@link ScriptType}.
      * @returns {import('../../script/script-type.js').ScriptType|null} If script is attached, the
      * instance is returned. Otherwise null is returned.
@@ -595,7 +594,7 @@ class ScriptComponent extends Component {
     /**
      * Create a script instance and attach to an entity script component.
      *
-     * @param {string|Class<import('../../script/script-type.js').ScriptType>} nameOrType - The
+     * @param {string|typeof import('../../script/script-type.js').ScriptType} nameOrType - The
      * name or type of {@link ScriptType}.
      * @param {object} [args] - Object with arguments for a script.
      * @param {boolean} [args.enabled] - If script instance is enabled after creation. Defaults to
@@ -700,7 +699,7 @@ class ScriptComponent extends Component {
     /**
      * Destroy the script instance that is attached to an entity.
      *
-     * @param {string|Class<import('../../script/script-type.js').ScriptType>} nameOrType - The
+     * @param {string|typeof import('../../script/script-type.js').ScriptType} nameOrType - The
      * name or type of {@link ScriptType}.
      * @returns {boolean} If it was successfully destroyed.
      * @example
@@ -757,7 +756,7 @@ class ScriptComponent extends Component {
     /**
      * Swap the script instance.
      *
-     * @param {string|Class<import('../../script/script-type.js').ScriptType>} nameOrType - The
+     * @param {string|typeof import('../../script/script-type.js').ScriptType} nameOrType - The
      * name or type of {@link ScriptType}.
      * @returns {boolean} If it was successfully swapped.
      * @private
@@ -928,7 +927,7 @@ class ScriptComponent extends Component {
     /**
      * Move script instance to different position to alter update order of scripts within entity.
      *
-     * @param {string|Class<import('../../script/script-type.js').ScriptType>} nameOrType - The
+     * @param {string|typeof import('../../script/script-type.js').ScriptType} nameOrType - The
      * name or type of {@link ScriptType}.
      * @param {number} ind - New position index.
      * @returns {boolean} If it was successfully moved.

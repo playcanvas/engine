@@ -51,7 +51,6 @@ const _vec3 = new Vec3();
  * - [Falling shapes](https://playcanvas.github.io/#/physics/falling-shapes)
  * - [Vehicle physics](https://playcanvas.github.io/#/physics/vehicle)
  *
- * @augments Component
  * @category Physics
  */
 class RigidBodyComponent extends Component {

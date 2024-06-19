@@ -13,7 +13,6 @@ const MAX_DISTANCE = 10000;
 /**
  * A SoundInstance3d plays a {@link Sound} in 3D.
  *
- * @augments SoundInstance
  * @category Sound
  */
 class SoundInstance3d extends SoundInstance {

@@ -6,35 +6,55 @@ import { ShaderUtils } from '../../../platform/graphics/shader-utils.js';
 import { ShaderGenerator } from './shader-generator.js';
 import { SKYTYPE_INFINITE } from '../../constants.js';
 
+const mip2size = [128, 64, /* 32 */ 16, 8, 4, 2];
+
+const fShader = `
+    #include "decodePS"
+    #include "gamma"
+    #include "tonemapping"
+    #include "envMultiplyPS"
+
+    #ifdef SKY_CUBEMAP
+        #include "cubemapSeams"
+        #include "skyboxHDRPS"
+    #else
+        #include "sphericalPS"
+        #include "envAtlasPS"
+        #include "skyboxEnvPS"
+    #endif
+`;
+
 class ShaderGeneratorSkybox extends ShaderGenerator {
     generateKey(options) {
-        const sharedKey = `skybox-${options.type}-${options.encoding}-${options.useIntensity}-${options.gamma}-${options.toneMapping}-${options.skymesh}`;
-        return sharedKey + (options.type === 'cubemap' ? `-${options.fixSeams}-${options.mip}` : '');
+        const sharedKey = `skybox-${options.type}-${options.encoding}-${options.gamma}-${options.toneMapping}-${options.skymesh}`;
+        return sharedKey + (options.type === 'cubemap' ? `-${options.mip}` : '');
     }
 
     createShaderDefinition(device, options) {
-        const defines = options.skymesh === SKYTYPE_INFINITE ? '' : '#define SKYMESH\n';
-        const vshader = defines + shaderChunks.skyboxVS;
-        let fshader = defines;
+
+        // defines
+        const defines = new Map();
+        defines.set('SKYBOX_DECODE_FNC', ChunkUtils.decodeFunc(options.encoding));
+        if (options.skymesh !== SKYTYPE_INFINITE) defines.set('SKYMESH', '');
+        if (options.type === 'cubemap') {
+            defines.set('SKY_CUBEMAP', '');
+            defines.set('SKYBOX_MIP', (1 - 1 / mip2size[options.mip]).toString());
+        }
+
+        // includes
+        const includes = new Map();
+        includes.set('decodePS', shaderChunks.decodePS);
+        includes.set('gamma', ShaderGenerator.gammaCode(options.gamma));
+        includes.set('tonemapping', ShaderGenerator.tonemapCode(options.toneMapping));
+        includes.set('envMultiplyPS', shaderChunks.envMultiplyPS);
 
         if (options.type === 'cubemap') {
-            const mip2size = [128, 64, /* 32 */ 16, 8, 4, 2];
-            fshader += options.mip ? shaderChunks.fixCubemapSeamsStretchPS : shaderChunks.fixCubemapSeamsNonePS;
-            fshader += options.useIntensity ? shaderChunks.envMultiplyPS : shaderChunks.envConstPS;
-            fshader += shaderChunks.decodePS;
-            fshader += ShaderGenerator.gammaCode(options.gamma);
-            fshader += ShaderGenerator.tonemapCode(options.toneMapping);
-            fshader += shaderChunks.skyboxHDRPS
-                .replace(/\$DECODE/g, ChunkUtils.decodeFunc(options.encoding))
-                .replace(/\$FIXCONST/g, (1 - 1 / mip2size[options.mip]) + "");
+            includes.set('cubemapSeams', options.mip ? shaderChunks.fixCubemapSeamsStretchPS : shaderChunks.fixCubemapSeamsNonePS);
+            includes.set('skyboxHDRPS', shaderChunks.skyboxHDRPS);
         } else {
-            fshader += options.useIntensity ? shaderChunks.envMultiplyPS : shaderChunks.envConstPS;
-            fshader += shaderChunks.decodePS;
-            fshader += ShaderGenerator.gammaCode(options.gamma);
-            fshader += ShaderGenerator.tonemapCode(options.toneMapping);
-            fshader += shaderChunks.sphericalPS;
-            fshader += shaderChunks.envAtlasPS;
-            fshader += shaderChunks.skyboxEnvPS.replace(/\$DECODE/g, ChunkUtils.decodeFunc(options.encoding));
+            includes.set('sphericalPS', shaderChunks.sphericalPS);
+            includes.set('envAtlasPS', shaderChunks.envAtlasPS);
+            includes.set('skyboxEnvPS', shaderChunks.skyboxEnvPS);
         }
 
         return ShaderUtils.createDefinition(device, {
@@ -42,8 +62,11 @@ class ShaderGeneratorSkybox extends ShaderGenerator {
             attributes: {
                 aPosition: SEMANTIC_POSITION
             },
-            vertexCode: vshader,
-            fragmentCode: fshader
+            vertexCode: shaderChunks.skyboxVS,
+            vertexDefines: defines,
+            fragmentCode: fShader,
+            fragmentDefines: defines,
+            fragmentIncludes: includes
         });
     }
 }

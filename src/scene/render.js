@@ -5,7 +5,6 @@ import { EventHandler } from '../core/event-handler.js';
  * model, and are accessible using {@link ContainerResource#renders} property. The render is the
  * resource of a Render Asset.
  *
- * @augments EventHandler
  * @ignore
  */
 class Render extends EventHandler {

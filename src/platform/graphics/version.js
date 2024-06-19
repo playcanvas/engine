@@ -1,9 +1,7 @@
 class Version {
-    constructor() {
-        // Set the variables
-        this.globalId = 0;
-        this.revision = 0;
-    }
+    globalId = 0;
+
+    revision = 0;
 
     equals(other) {
         return this.globalId === other.globalId &&

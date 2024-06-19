@@ -6,6 +6,7 @@ import {
 } from './constants.js';
 
 import gles2FS from './shader-chunks/frag/gles2.js';
+import gles2VS from './shader-chunks/vert/gles2.js';
 import gles3FS from './shader-chunks/frag/gles3.js';
 import gles3VS from './shader-chunks/vert/gles3.js';
 import webgpuFS from './shader-chunks/frag/webgpu.js';
@@ -44,13 +45,24 @@ class ShaderUtils {
      * @param {object} [options.attributes] - Attributes. Will be extracted from the vertexCode if
      * not provided.
      * @param {string} options.vertexCode - The vertex shader code.
-     * @param {string} [options.vertexDefines] - The vertex shader defines.
      * @param {string} [options.vertexExtensions] - The vertex shader extensions code.
      * @param {string} [options.fragmentCode] - The fragment shader code.
-     * @param {string} [options.fragmentDefines] - The fragment shader defines.
      * @param {string} [options.fragmentExtensions] - The fragment shader extensions code.
      * @param {string} [options.fragmentPreamble] - The preamble string for the fragment shader.
-     * @param {boolean} [options.useTransformFeedback] - Whether to use transform feedback. Defaults to false.
+     * @param {boolean} [options.useTransformFeedback] - Whether to use transform feedback. Defaults
+     * to false.
+     * @param {Map<string, string>} [options.vertexIncludes] - A map containing key-value pairs of
+     * include names and their content. These are used for resolving #include directives in the
+     * vertex shader source.
+     * @param {Map<string, string>} [options.vertexDefines] - A map containing key-value pairs of
+     * define names and their values. These are used for resolving #ifdef style of directives in the
+     * vertex code.
+     * @param {Map<string, string>} [options.fragmentIncludes] - A map containing key-value pairs
+     * of include names and their content. These are used for resolving #include directives in the
+     * fragment shader source.
+     * @param {Map<string, string>} [options.fragmentDefines] - A map containing key-value pairs of
+     * define names and their values. These are used for resolving #ifdef style of directives in the
+     * fragment code.
      * @param {string | string[]} [options.fragmentOutputTypes] - Fragment shader output types,
      * which default to vec4. Passing a string will set the output type for all color attachments.
      * Passing an array will set the output type for each color attachment.
@@ -58,6 +70,10 @@ class ShaderUtils {
      */
     static createDefinition(device, options) {
         Debug.assert(options);
+        Debug.assert(!options.vertexDefines || options.vertexDefines instanceof Map);
+        Debug.assert(!options.vertexIncludes || options.vertexIncludes instanceof Map);
+        Debug.assert(!options.fragmentDefines || options.fragmentDefines instanceof Map);
+        Debug.assert(!options.fragmentIncludes || options.fragmentIncludes instanceof Map);
 
         const getDefines = (gpu, gl2, gl1, isVertex, options) => {
 
@@ -88,18 +104,18 @@ class ShaderUtils {
         const name = options.name ?? 'Untitled';
 
         // vertex code
-        const vertDefines = options.vertexDefines || getDefines(webgpuVS, gles3VS, '', true, options);
         const vertCode = ShaderUtils.versionCode(device) +
-            vertDefines +
+            getDefines(webgpuVS, gles3VS, gles2VS, true, options) +
+            ShaderUtils.getDefinesCode(options.vertexDefines) +
             sharedFS +
             ShaderUtils.getShaderNameCode(name) +
             options.vertexCode;
 
         // fragment code
-        const fragDefines = options.fragmentDefines || getDefines(webgpuFS, gles3FS, gles2FS, false, options);
         const fragCode = (options.fragmentPreamble || '') +
             ShaderUtils.versionCode(device) +
-            fragDefines +
+            getDefines(webgpuFS, gles3FS, gles2FS, false, options) +
+            ShaderUtils.getDefinesCode(options.fragmentDefines) +
             ShaderUtils.precisionCode(device) + '\n' +
             sharedFS +
             ShaderUtils.getShaderNameCode(name) +
@@ -112,9 +128,24 @@ class ShaderUtils {
             name: name,
             attributes: attribs,
             vshader: vertCode,
+            vincludes: options.vertexIncludes,
+            fincludes: options.fragmentIncludes,
             fshader: fragCode,
             useTransformFeedback: options.useTransformFeedback
         };
+    }
+
+    /**
+     * @param {Map<string, string>} [defines] - A map containing key-value pairs.
+     * @returns {string} The shader code for the defines.
+     * @private
+     */
+    static getDefinesCode(defines) {
+        let code = '';
+        defines?.forEach((value, key) => {
+            code += `#define ${key} ${value}\n`;
+        });
+        return code;
     }
 
     // SpectorJS integration
@@ -178,7 +209,7 @@ class ShaderUtils {
 
         if (!device.isWebGPU) {
 
-            code = `precision ${precision} float;\n`;
+            code = `precision ${precision} float;\nprecision ${precision} int;`;
 
             if (device.isWebGL2) {
                 code += `precision ${precision} sampler2DShadow;\n`;
@@ -210,12 +241,17 @@ class ShaderUtils {
             const startOfAttribName = vsCode.lastIndexOf(' ', endOfLine);
             const attribName = vsCode.substring(startOfAttribName + 1, endOfLine);
 
-            const semantic = _attrib2Semantic[attribName];
-            if (semantic !== undefined) {
-                attribs[attribName] = semantic;
+            // if the attribute already exists in the semantic map
+            if (attribs[attribName]) {
+                Debug.warn(`Attribute [${attribName}] already exists when extracting the attributes from the vertex shader, ignoring.`, { vsCode });
             } else {
-                attribs[attribName] = "ATTR" + attrs;
-                attrs++;
+                const semantic = _attrib2Semantic[attribName];
+                if (semantic !== undefined) {
+                    attribs[attribName] = semantic;
+                } else {
+                    attribs[attribName] = "ATTR" + attrs;
+                    attrs++;
+                }
             }
 
             found = vsCode.indexOf("attribute", found + 1);

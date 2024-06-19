@@ -100,7 +100,7 @@ A full guide to setting up a local development environment based on the PlayCanv
 
 ## How to build
 
-Ensure you have [Node.js](https://nodejs.org) installed. Then, install all of the required Node.js dependencies:
+Ensure you have [Node.js 18+](https://nodejs.org) installed. Then, install all of the required Node.js dependencies:
 
 ```sh
 npm install
@@ -108,10 +108,10 @@ npm install
 
 Now you can run various build options:
 
-| Command                 | Description                                    | Outputs To |
-| ----------------------- | ---------------------------------------------- | ---------- |
-| `npm run build`         | Build all engine flavors and type declarations | `build`    |
-| `npm run typedocs`      | Build engine [API reference docs][docs]        | `typedocs` |
+| Command         | Description                                    | Outputs To |
+| --------------- | ---------------------------------------------- | ---------- |
+| `npm run build` | Build all engine flavors and type declarations | `build`    |
+| `npm run docs`  | Build engine [API reference docs][docs]        | `docs`     |
 
 ## PlayCanvas Editor
 

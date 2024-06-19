@@ -59,6 +59,7 @@ import fullscreenQuadVS from './common/vert/fullscreenQuad.js';
 import gamma1_0PS from './common/frag/gamma1_0.js';
 import gamma2_2PS from './common/frag/gamma2_2.js';
 import gles2PS from '../../../platform/graphics/shader-chunks/frag/gles2.js';
+import gles2VS from '../../../platform/graphics/shader-chunks/vert/gles2.js';
 import gles3PS from '../../../platform/graphics/shader-chunks/frag/gles3.js';
 import gles3VS from '../../../platform/graphics/shader-chunks/vert/gles3.js';
 import glossPS from './standard/frag/gloss.js';
@@ -192,10 +193,12 @@ import tonemappingAces2PS from './common/frag/tonemappingAces2.js';
 import tonemappingFilmicPS from './common/frag/tonemappingFilmic.js';
 import tonemappingHejlPS from './common/frag/tonemappingHejl.js';
 import tonemappingLinearPS from './common/frag/tonemappingLinear.js';
+import tonemappingNeutralPS from './common/frag/tonemappingNeutral.js';
 import tonemappingNonePS from './common/frag/tonemappingNone.js';
 import transformVS from './common/vert/transform.js';
 import transformDeclVS from './common/vert/transformDecl.js';
 import transmissionPS from './standard/frag/transmission.js';
+import twoSidedLightingPS from './lit/frag/twoSidedLighting.js';
 import uv0VS from './lit/vert/uv0.js';
 import uv1VS from './lit/vert/uv1.js';
 import uv2VS from './lit/vert/uv2.js';
@@ -274,6 +277,7 @@ const shaderChunks = {
     gamma1_0PS,
     gamma2_2PS,
     gles2PS,
+    gles2VS,
     gles3PS,
     gles3VS,
     glossPS,
@@ -407,10 +411,12 @@ const shaderChunks = {
     tonemappingFilmicPS,
     tonemappingHejlPS,
     tonemappingLinearPS,
+    tonemappingNeutralPS,
     tonemappingNonePS,
     transformVS,
     transformDeclVS,
     transmissionPS,
+    twoSidedLightingPS,
     uv0VS,
     uv1VS,
     uv2VS,

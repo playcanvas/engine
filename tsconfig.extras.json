@@ -1,9 +1,0 @@
-{
-    "files": ["extras/index.js"],
-    "compilerOptions": {
-        "allowJs": true,
-        "declaration": true,
-        "emitDeclarationOnly": true,
-        "outDir": "build/playcanvas-extras"
-    }
-}

@@ -6,13 +6,12 @@ import { Light, lightTypes } from '../../../scene/light.js';
 
 import { ComponentSystem } from '../system.js';
 
-import { _lightProps, LightComponent } from './component.js';
-import { LightComponentData } from './data.js';
+import { LightComponent } from './component.js';
+import { properties, LightComponentData } from './data.js';
 
 /**
  * A Light Component is used to dynamically light the scene.
  *
- * @augments ComponentSystem
  * @category Graphics
  */
 class LightComponentSystem extends ComponentSystem {
@@ -20,7 +19,7 @@ class LightComponentSystem extends ComponentSystem {
      * Create a new LightComponentSystem instance.
      *
      * @param {import('../../app-base.js').AppBase} app - The application.
-     * @hideconstructor
+     * @ignore
      */
     constructor(app) {
         super(app);
@@ -34,15 +33,8 @@ class LightComponentSystem extends ComponentSystem {
     }
 
     initializeComponentData(component, _data) {
-        const properties = _lightProps;
-
         // duplicate because we're modifying the data
-        const data = {};
-        for (let i = 0, len = properties.length; i < len; i++) {
-            const property = properties[i];
-            data[property] = _data[property];
-        }
-
+        const data = { ..._data };
         if (!data.type)
             data.type = component.data.type;
 
@@ -87,10 +79,13 @@ class LightComponentSystem extends ComponentSystem {
 
         const data = [];
         let name;
-        const _props = _lightProps;
-        for (let i = 0; i < _props.length; i++) {
-            name = _props[i];
-            if (name === 'light') continue;
+
+        for (let i = 0; i < properties.length; i++) {
+            name = properties[i];
+            if (name === 'light') {
+                continue;
+            }
+
             if (light[name] && light[name].clone) {
                 data[name] = light[name].clone();
             } else {
