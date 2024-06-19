@@ -27,6 +27,12 @@ void main(void) {
 
     dir.x *= -1.0;
     vec3 linear = SKYBOX_DECODE_FNC(textureCube(texture_cubeMap, fixSeamsStatic(dir, SKYBOX_MIP)));
-    gl_FragColor = vec4(gammaCorrectOutput(toneMap(processEnvironment(linear))), 1.0);
+    // Magnopus patched
+    // when rendering with bloom
+    #ifdef HDR
+      gl_FragColor = vec4(linear, 1.0);
+    #else
+      gl_FragColor = vec4(gammaCorrectOutput(toneMap(processEnvironment(linear))), 1.0);
+    #endif
 }
 `;

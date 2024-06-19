@@ -4,7 +4,7 @@ import { ChunkUtils } from '../chunk-utils.js';
 
 import { ShaderUtils } from '../../../platform/graphics/shader-utils.js';
 import { ShaderGenerator } from './shader-generator.js';
-import { SKYTYPE_INFINITE } from '../../constants.js';
+import { GAMMA_SRGBHDR, SKYTYPE_INFINITE } from '../../constants.js';
 
 const mip2size = [128, 64, /* 32 */ 16, 8, 4, 2];
 
@@ -44,6 +44,8 @@ class ShaderGeneratorSkybox extends ShaderGenerator {
         // includes
         const includes = new Map();
         includes.set('decodePS', shaderChunks.decodePS);
+        // magnopus patched, ensure HDR define is set
+        if (options.gamma === GAMMA_SRGBHDR) defines.set('HDR', '');
         includes.set('gamma', ShaderGenerator.gammaCode(options.gamma));
         includes.set('tonemapping', ShaderGenerator.tonemapCode(options.toneMapping));
         includes.set('envMultiplyPS', shaderChunks.envMultiplyPS);
