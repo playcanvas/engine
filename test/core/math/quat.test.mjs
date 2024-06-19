@@ -543,6 +543,32 @@ describe('Quat', function () {
             expect(q.equals(Quat.IDENTITY)).to.be.true;
         });
 
+        const nq = new Quat();
+        const q = new Quat();
+        const m = new Mat4();
+
+        const quatToMatToQuat = (w, x, y, z, epsilon = 1e-6) => {
+            nq.set(x, y, z, w).normalize();
+            m.setTRS(Vec3.ZERO, nq, Vec3.ONE);
+            q.setFromMat4(m);
+            const result =
+                (Math.abs(nq.x - q.x) < epsilon &&
+                 Math.abs(nq.y - q.y) < epsilon &&
+                 Math.abs(nq.z - q.z) < epsilon &&
+                 Math.abs(nq.w - q.w) < epsilon) ||
+                (Math.abs(nq.x + q.x) < epsilon &&
+                 Math.abs(nq.y + q.y) < epsilon &&
+                 Math.abs(nq.z + q.z) < epsilon &&
+                 Math.abs(nq.w + q.w) < epsilon);
+
+            if (!result) {
+                // helpful for debugging
+                console.log(`Failed Quat [${x}, ${y}, ${z}, ${w}] -> [${nq.x}, ${nq.y}, ${nq.z}, ${nq.w}] != [${q.x}, ${q.y}, ${q.z}, ${q.w}]`);
+            }
+
+            return result;
+        };
+
         it('set the quaternion from a non-identity matrix', function () {
             const q = new Quat();
             const m = new Mat4();
@@ -552,6 +578,103 @@ describe('Quat', function () {
             expect(eulers.x).to.be.closeTo(10, 0.00001);
             expect(eulers.y).to.be.closeTo(20, 0.00001);
             expect(eulers.z).to.be.closeTo(30, 0.00001);
+        });
+
+        // tests taken from Blender:
+        // https://github.com/blender/blender/blob/main/source/blender/blenlib/tests/BLI_math_rotation_test.cc
+
+        it('converts rot180', function () {
+            expect(quatToMatToQuat(1, 0, 0, 0)).to.be.true;
+            expect(quatToMatToQuat(0, 1, 0, 0)).to.be.true;
+            expect(quatToMatToQuat(0, 0, 1, 0)).to.be.true;
+            expect(quatToMatToQuat(0, 0, 0, 1)).to.be.true;
+        });
+
+        it('converts rot180n', function () {
+            expect(quatToMatToQuat(-1, 0, 0, 0)).to.be.true;
+            expect(quatToMatToQuat(-1e-20, -1, 0, 0)).to.be.true;
+            expect(quatToMatToQuat(-1e-20, 0, -1, 0)).to.be.true;
+            expect(quatToMatToQuat(-1e-20, 0, 0, -1)).to.be.true;
+        });
+
+        const s2 = 1 / Math.sqrt(2);
+
+        it('converts rot90', function () {
+            expect(quatToMatToQuat(s2, s2, 0, 0 )).to.be.true;
+            expect(quatToMatToQuat(s2, -s2, 0, 0)).to.be.true;
+            expect(quatToMatToQuat(s2, 0, s2, 0 )).to.be.true;
+            expect(quatToMatToQuat(s2, 0, -s2, 0)).to.be.true;
+            expect(quatToMatToQuat(s2, 0, 0, s2 )).to.be.true;
+            expect(quatToMatToQuat(s2, 0, 0, -s2)).to.be.true;
+        });
+
+        it('converts rot90n', function () {
+            expect(quatToMatToQuat(-s2, s2, 0, 0 )).to.be.true;
+            expect(quatToMatToQuat(-s2, -s2, 0, 0)).to.be.true;
+            expect(quatToMatToQuat(-s2, 0, s2, 0 )).to.be.true;
+            expect(quatToMatToQuat(-s2, 0, -s2, 0)).to.be.true;
+            expect(quatToMatToQuat(-s2, 0, 0, s2 )).to.be.true;
+            expect(quatToMatToQuat(-s2, 0, 0, -s2)).to.be.true;
+        });
+
+        it('converts bad_T83196', function () {
+            expect(quatToMatToQuat(0.0032, 0.9999, -0.0072, -0.0100)).to.be.true;
+            expect(quatToMatToQuat(0.0058, 0.9999, -0.0090, -0.0101)).to.be.true;
+            expect(quatToMatToQuat(0.0110, 0.9998, -0.0140, -0.0104)).to.be.true;
+            expect(quatToMatToQuat(0.0142, 0.9997, -0.0192, -0.0107)).to.be.true;
+            expect(quatToMatToQuat(0.0149, 0.9996, -0.0212, -0.0107)).to.be.true;
+        });
+          
+        it('converts near_1000', function () {
+            expect(quatToMatToQuat(0.9999, 0.01, -0.001, -0.01)).to.be.true;
+            expect(quatToMatToQuat(0.9999, 0.02, -0.002, -0.02)).to.be.true;
+            expect(quatToMatToQuat(0.9999, 0.03, -0.003, -0.03)).to.be.true;
+            expect(quatToMatToQuat(0.9999, 0.04, -0.004, -0.04)).to.be.true;
+            expect(quatToMatToQuat(0.9999, 0.05, -0.005, -0.05)).to.be.true;
+            expect(quatToMatToQuat(0.999, 0.10, -0.010, -0.10)).to.be.true;
+            expect(quatToMatToQuat(0.99, 0.15, -0.015, -0.15)).to.be.true;
+            expect(quatToMatToQuat(0.98, 0.20, -0.020, -0.20)).to.be.true;
+            expect(quatToMatToQuat(0.97, 0.25, -0.025, -0.25)).to.be.true;
+            expect(quatToMatToQuat(0.95, 0.30, -0.030, -0.30)).to.be.true;
+        });
+
+        it('converts near_0100', function () {
+            expect(quatToMatToQuat(0.01, 0.9999, -0.001, -0.01)).to.be.true;
+            expect(quatToMatToQuat(0.02, 0.9999, -0.002, -0.02)).to.be.true;
+            expect(quatToMatToQuat(0.03, 0.9999, -0.003, -0.03)).to.be.true;
+            expect(quatToMatToQuat(0.04, 0.9999, -0.004, -0.04)).to.be.true;
+            expect(quatToMatToQuat(0.05, 0.9999, -0.005, -0.05)).to.be.true;
+            expect(quatToMatToQuat(0.10, 0.999, -0.010, -0.10)).to.be.true;
+            expect(quatToMatToQuat(0.15, 0.99, -0.015, -0.15)).to.be.true;
+            expect(quatToMatToQuat(0.20, 0.98, -0.020, -0.20)).to.be.true;
+            expect(quatToMatToQuat(0.25, 0.97, -0.025, -0.25)).to.be.true;
+            expect(quatToMatToQuat(0.30, 0.95, -0.030, -0.30)).to.be.true;
+        });
+
+        it('converts near_0010', function () {
+            expect(quatToMatToQuat(0.01, -0.001, 0.9999, -0.01)).to.be.true;
+            expect(quatToMatToQuat(0.02, -0.002, 0.9999, -0.02)).to.be.true;
+            expect(quatToMatToQuat(0.03, -0.003, 0.9999, -0.03)).to.be.true;
+            expect(quatToMatToQuat(0.04, -0.004, 0.9999, -0.04)).to.be.true;
+            expect(quatToMatToQuat(0.05, -0.005, 0.9999, -0.05)).to.be.true;
+            expect(quatToMatToQuat(0.10, -0.010, 0.999, -0.10)).to.be.true;
+            expect(quatToMatToQuat(0.15, -0.015, 0.99, -0.15)).to.be.true;
+            expect(quatToMatToQuat(0.20, -0.020, 0.98, -0.20)).to.be.true;
+            expect(quatToMatToQuat(0.25, -0.025, 0.97, -0.25)).to.be.true;
+            expect(quatToMatToQuat(0.30, -0.030, 0.95, -0.30)).to.be.true;
+        });
+
+        it('converts near_0001', function () {
+            expect(quatToMatToQuat(0.01, -0.001, -0.01, 0.9999)).to.be.true;
+            expect(quatToMatToQuat(0.02, -0.002, -0.02, 0.9999)).to.be.true;
+            expect(quatToMatToQuat(0.03, -0.003, -0.03, 0.9999)).to.be.true;
+            expect(quatToMatToQuat(0.04, -0.004, -0.04, 0.9999)).to.be.true;
+            expect(quatToMatToQuat(0.05, -0.005, -0.05, 0.9999)).to.be.true;
+            expect(quatToMatToQuat(0.10, -0.010, -0.10, 0.999)).to.be.true;
+            expect(quatToMatToQuat(0.15, -0.015, -0.15, 0.99)).to.be.true;
+            expect(quatToMatToQuat(0.20, -0.020, -0.20, 0.98)).to.be.true;
+            expect(quatToMatToQuat(0.25, -0.025, -0.25, 0.97)).to.be.true;
+            expect(quatToMatToQuat(0.30, -0.030, -0.30, 0.95)).to.be.true;
         });
 
         it('returns this', function () {
