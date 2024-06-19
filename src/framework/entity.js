@@ -1,10 +1,29 @@
 import { Debug } from '../core/debug.js';
 import { guid } from '../core/guid.js';
-import { sortStaticOrder } from '../core/sort.js';
 
 import { GraphNode } from '../scene/graph-node.js';
 
 import { getApplication } from './globals.js';
+
+/**
+ * @typedef {import('./components/component.js').Component} Component
+ */
+
+/**
+ * @param {Component} a - First object with `order` property.
+ * @param {Component} b - Second object with `order` property.
+ * @returns {number} A number indicating the relative position.
+ * @ignore
+ */
+const cmpStaticOrder = (a, b) => a.constructor.order - b.constructor.order;
+
+/**
+ * @param {Array<Component>} arr - Array to be sorted in place where each element contains
+ * an object with a static `order` property.
+ * @returns {Array<Component>} In place sorted array.
+ * @ignore
+ */
+const sortStaticOrder = arr => arr.sort(cmpStaticOrder);
 
 /**
  * @type {GraphNode[]}
@@ -13,20 +32,21 @@ import { getApplication } from './globals.js';
 const _enableList = [];
 
 /**
- * @type {Array<Array<import('./components/component.js').Component>>}
+ * @type {Array<Array<Component>>}
  * @ignore
  */
 const tmpPool = [];
 
 const getTempArray = () => {
-    return tmpPool.pop() || [];
+    return tmpPool.pop() ?? [];
 };
 
 /**
- * @param {Array<import('./components/component.js').Component>} a - Array to return back to pool.
+ * @param {Array<Component>} a - Array to return back to pool.
  * @ignore
  */
 const releaseTempArray = (a) => {
+    a.length = 0;
     tmpPool.push(a);
 };
 
@@ -534,7 +554,6 @@ class Entity extends GraphNode {
             }
         }
 
-        components.length = 0;
         releaseTempArray(components);
     }
 
@@ -546,7 +565,6 @@ class Entity extends GraphNode {
             components[i].onPostStateChange();
         }
 
-        components.length = 0;
         releaseTempArray(components);
     }
 
