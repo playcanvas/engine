@@ -11,8 +11,8 @@ import { SoundSlot } from './slot.js';
  * multiple {@link SoundSlot}s, each of which can play a different audio asset with its own set
  * of properties such as volume, pitch, and looping behavior.
  *
- * The SoundComponent supports positional audio, meaning that the sound can be played relative 
- * to the Entity's position in 3D space. This is useful for creating immersive audio experiences 
+ * The SoundComponent supports positional audio, meaning that the sound can be played relative
+ * to the Entity's position in 3D space. This is useful for creating immersive audio experiences
  * where the sound's volume and panning are affected by the listener's position and orientation.
  * Positional audio requires that an Entity with an {@link AudioListenerComponent} be added to the
  * scene.
