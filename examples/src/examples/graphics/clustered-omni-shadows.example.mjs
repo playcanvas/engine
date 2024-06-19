@@ -69,7 +69,7 @@ assetListLoader.load(() => {
     app.start();
 
     // set up some general scene rendering properties
-    app.scene.toneMapping = pc.TONEMAP_ACES;
+    app.scene.rendering.toneMapping = pc.TONEMAP_ACES;
 
     data.set('settings', {
         shadowAtlasResolution: 1300, // shadow map resolution storing all shadows

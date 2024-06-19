@@ -182,28 +182,10 @@ class GSplatData {
 
     // /**
     //  * @param {import('./ply-reader').PlyElement[]} elements - The elements.
-    //  * @param {boolean} [performZScale] - Whether to perform z scaling.
-    //  * @param {object} [options] - The options.
-    //  * @param {boolean} [options.performZScale] - Whether to perform z scaling.
-    //  * @param {boolean} [options.reorder] - Whether to reorder the data.
     //  */
-    constructor(elements, options = {}) {
+    constructor(elements) {
         this.elements = elements;
-
         this.numSplats = this.getElement('vertex').count;
-
-        if (!this.isCompressed) {
-            if (options.performZScale ?? true) {
-                mat4.setScale(-1, -1, 1);
-                this.transform(mat4);
-            }
-
-            // reorder uncompressed splats in morton order for better memory access
-            // efficiency during rendering
-            if (options.reorder ?? true) {
-                this.reorderData();
-            }
-        }
     }
 
     /**
@@ -584,10 +566,7 @@ class GSplatData {
                     storage: data[name]
                 };
             })
-        }], {
-            performZScale: false,
-            reorder: false
-        });
+        }]);
     }
 
     calcMortonOrder() {
@@ -623,39 +602,65 @@ class GSplatData {
         const { min: minY, max: maxY } = calcMinMax(y);
         const { min: minZ, max: maxZ } = calcMinMax(z);
 
-        const sizeX = 1024 / (maxX - minX);
-        const sizeY = 1024 / (maxY - minY);
-        const sizeZ = 1024 / (maxZ - minZ);
+        const sizeX = minX === maxX ? 0 : 1024 / (maxX - minX);
+        const sizeY = minY === maxY ? 0 : 1024 / (maxY - minY);
+        const sizeZ = minZ === maxZ ? 0 : 1024 / (maxZ - minZ);
 
-        const morton = new Uint32Array(this.numSplats);
+        const codes = new Map();
         for (let i = 0; i < this.numSplats; i++) {
             const ix = Math.floor((x[i] - minX) * sizeX);
             const iy = Math.floor((y[i] - minY) * sizeY);
             const iz = Math.floor((z[i] - minZ) * sizeZ);
-            morton[i] = encodeMorton3(ix, iy, iz);
+            const code = encodeMorton3(ix, iy, iz);
+
+            const val = codes.get(code);
+            if (val) {
+                val.push(i);
+            } else {
+                codes.set(code, [i]);
+            }
         }
 
-        // generate indices
+        const keys = Array.from(codes.keys()).sort((a, b) => a - b);
         const indices = new Uint32Array(this.numSplats);
-        for (let i = 0; i < this.numSplats; i++) {
-            indices[i] = i;
+        let idx = 0;
+
+        for (let i = 0; i < keys.length; ++i) {
+            const val = codes.get(keys[i]);
+            for (let j = 0; j < val.length; ++j) {
+                indices[idx++] = val[j];
+            }
         }
-        // order splats by morton code
-        indices.sort((a, b) => morton[a] - morton[b]);
 
         return indices;
     }
 
     // reorder the splat data to aid in better gpu memory access at render time
-    reorderData() {
-        const order = this.calcMortonOrder();
+    reorder(order) {
+        const cache = new Map();
+
+        const getStorage = (size) => {
+            if (cache.has(size)) {
+                const buffer = cache.get(size);
+                cache.delete(size);
+                return buffer;
+            }
+
+            return new ArrayBuffer(size);
+        };
+
+        const returnStorage = (buffer) => {
+            cache.set(buffer.byteLength, buffer);
+        };
 
         const reorder = (data) => {
-            const result = new data.constructor(data.length);
+            const result = new data.constructor(getStorage(data.byteLength));
 
             for (let i = 0; i < order.length; i++) {
                 result[i] = data[order[i]];
             }
+
+            returnStorage(data.buffer);
 
             return result;
         };
@@ -667,6 +672,11 @@ class GSplatData {
                 }
             });
         });
+    }
+
+    // reorder the splat data to aid in better gpu memory access at render time
+    reorderData() {
+        this.reorder(this.calcMortonOrder());
     }
 }
 

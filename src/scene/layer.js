@@ -4,7 +4,6 @@ import { hash32Fnv1a } from '../core/hash.js';
 import {
     LIGHTTYPE_DIRECTIONAL,
     LAYER_FX,
-    SHADER_FORWARD,
     SORTKEY_FORWARD,
     SORTMODE_BACK2FRONT, SORTMODE_CUSTOM, SORTMODE_FRONT2BACK, SORTMODE_MATERIALMESH, SORTMODE_NONE
 } from './constants.js';
@@ -249,21 +248,6 @@ class Layer {
         if (options.renderTarget) {
             this.renderTarget = options.renderTarget;
         }
-
-        /**
-         * A type of shader to use during rendering. Possible values are:
-         *
-         * - {@link SHADER_FORWARD}
-         * - {@link SHADER_FORWARDHDR}
-         * - {@link SHADER_DEPTH}
-         * - Your own custom value. Should be in 19 - 31 range. Use {@link StandardMaterial#onUpdateShader}
-         * to apply shader modifications based on this value.
-         *
-         * Defaults to {@link SHADER_FORWARD}.
-         *
-         * @type {number}
-         */
-        this.shaderPass = options.shaderPass ?? SHADER_FORWARD;
 
         // clear flags
         /**

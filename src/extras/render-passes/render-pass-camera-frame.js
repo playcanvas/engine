@@ -1,4 +1,4 @@
-import { LAYERID_SKYBOX, LAYERID_IMMEDIATE, SHADERPASS_FORWARD_HDR } from '../../scene/constants.js';
+import { LAYERID_SKYBOX, LAYERID_IMMEDIATE, TONEMAP_NONE, GAMMA_NONE } from '../../scene/constants.js';
 import {
     ADDRESS_CLAMP_TO_EDGE,
     FILTER_LINEAR,
@@ -17,6 +17,8 @@ import { RenderPassCompose } from './render-pass-compose.js';
 import { RenderPassTAA } from './render-pass-taa.js';
 import { RenderPassPrepass } from './render-pass-prepass.js';
 import { RenderPassSsao } from './render-pass-ssao.js';
+import { RenderingParams } from '../../scene/renderer/rendering-params.js';
+import { Debug } from '../../core/debug.js';
 
 /**
  * Render pass implementation of a common camera frame rendering with integrated  post-processing
@@ -150,7 +152,19 @@ class RenderPassCameraFrame extends RenderPass {
         this.hdrFormat = device.getRenderableHdrFormat() || PIXELFORMAT_RGBA8;
 
         // camera renders in HDR mode (linear output, no tonemapping)
-        cameraComponent.setShaderPass(SHADERPASS_FORWARD_HDR);
+        if (!cameraComponent.rendering) {
+            const renderingParams = new RenderingParams();
+            renderingParams.gammaCorrection = GAMMA_NONE;
+            renderingParams.toneMapping = TONEMAP_NONE;
+            cameraComponent.rendering = renderingParams;
+        }
+
+        Debug.call(() => {
+            const renderingParams = cameraComponent.rendering;
+            if (renderingParams.gammaCorrection !== GAMMA_NONE || renderingParams.toneMapping !== TONEMAP_NONE) {
+                Debug.error('Camera rendering parameters are not set to HDR mode: GAMMA_NONE and TONEMAP_NONE');
+            }
+        });
 
         // create a render target to render the scene into
         this.sceneTexture = new Texture(device, {

@@ -24,6 +24,7 @@ import { LightCamera } from './light-camera.js';
 import { UniformBufferFormat, UniformFormat } from '../../platform/graphics/uniform-buffer-format.js';
 import { BindUniformBufferFormat, BindGroupFormat } from '../../platform/graphics/bind-group-format.js';
 import { BlendState } from '../../platform/graphics/blend-state.js';
+import { RenderingParams } from './rendering-params.js';
 
 function gauss(x, sigma) {
     return Math.exp(-(x * x) / (2.0 * sigma * sigma));
@@ -106,6 +107,9 @@ class ShadowRenderer {
         this.blendStateWrite = new BlendState();
         this.blendStateNoWrite = new BlendState();
         this.blendStateNoWrite.setColorWrite(false, false, false, false);
+
+        // shadow rendering parameters
+        this.shadowRenderingParams = new RenderingParams();
     }
 
     // creates shadow camera for a light and sets up its constant properties
@@ -283,6 +287,7 @@ class ShadowRenderer {
         const scene = renderer.scene;
         const passFlags = 1 << SHADER_SHADOW;
         const shadowPass = this.getShadowPass(light);
+        const renderParams = this.shadowRenderingParams;
 
         // Render
         const count = visibleCasters.length;
@@ -313,7 +318,7 @@ class ShadowRenderer {
                 meshInstance.setParameters(device, passFlags);
             }
 
-            const shaderInstance = meshInstance.getShaderInstance(shadowPass, 0, scene, this.viewUniformFormat, this.viewBindGroupFormat);
+            const shaderInstance = meshInstance.getShaderInstance(shadowPass, 0, scene, renderParams, this.viewUniformFormat, this.viewBindGroupFormat);
             const shadowShader = shaderInstance.shader;
             Debug.assert(shadowShader, `no shader for pass ${shadowPass}`, material);
 

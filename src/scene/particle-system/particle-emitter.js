@@ -659,10 +659,10 @@ class ParticleEmitter {
 
         // Note: createShaderFromCode can return a shader from the cache (not a new shader) so we *should not* delete these shaders
         // when the particle emitter is destroyed
-        const params = this.emitterShape + '' + this.pack8 + '' + this.localSpace;
-        this.shaderParticleUpdateRespawn = createShaderFromCode(gd, shaderChunks.fullscreenQuadVS, shaderCodeRespawn, 'fsQuad0' + params);
-        this.shaderParticleUpdateNoRespawn = createShaderFromCode(gd, shaderChunks.fullscreenQuadVS, shaderCodeNoRespawn, 'fsQuad1' + params);
-        this.shaderParticleUpdateOnStop = createShaderFromCode(gd, shaderChunks.fullscreenQuadVS, shaderCodeOnStop, 'fsQuad2' + params);
+        const params = `Shape:${this.emitterShape}-Pack:${this.pack8}-Local:${this.localSpace}`;
+        this.shaderParticleUpdateRespawn = createShaderFromCode(gd, shaderChunks.fullscreenQuadVS, shaderCodeRespawn, `ParticleUpdateRespawn-${params}`);
+        this.shaderParticleUpdateNoRespawn = createShaderFromCode(gd, shaderChunks.fullscreenQuadVS, shaderCodeNoRespawn, `ParticleUpdateNoRespawn-${params}`);
+        this.shaderParticleUpdateOnStop = createShaderFromCode(gd, shaderChunks.fullscreenQuadVS, shaderCodeOnStop, `ParticleUpdateStop-${params}`);
 
         this.numParticleVerts = this.useMesh ? this.mesh.vertexBuffer.numVertices : 4;
         this.numParticleIndices = this.useMesh ? this.mesh.indexBuffer[0].numIndices : 6;
@@ -816,7 +816,7 @@ class ParticleEmitter {
             this.normalOption = hasNormal ? 2 : 1;
         }
         // getShaderVariant is also called by pc.Scene when all shaders need to be updated
-        this.material.getShaderVariant = function (dev, sc, defs, unused, pass, sortedLights, viewUniformFormat, viewBindGroupFormat) {
+        this.material.getShaderVariant = function (dev, sc, defs, renderParams, pass, sortedLights, viewUniformFormat, viewBindGroupFormat) {
 
             // The app works like this:
             // 1. Emitter init
@@ -838,6 +838,9 @@ class ParticleEmitter {
             const inTools = this.emitter.inTools;
             const processingOptions = new ShaderProcessorOptions(viewUniformFormat, viewBindGroupFormat);
 
+            // renderParams and other parametesr should be passed in, but they are not so work around it
+            renderParams = renderParams ?? this.emitter.camera?.renderingParams ?? this.emitter.scene?.rendering;
+
             const shader = programLib.getProgram('particle', {
                 pass: SHADER_FORWARD,
                 useCpu: this.emitter.useCpu,
@@ -847,8 +850,8 @@ class ParticleEmitter {
                 alignToMotion: this.emitter.alignToMotion,
                 soft: this.emitter.depthSoftening,
                 mesh: this.emitter.useMesh,
-                gamma: this.emitter.scene ? this.emitter.scene.gammaCorrection : 0,
-                toneMap: this.emitter.scene ? this.emitter.scene.toneMapping : 0,
+                gamma: renderParams?.gammaCorrection ?? 0,
+                toneMap: renderParams?.toneMapping ?? 0,
                 fog: (this.emitter.scene && !this.emitter.noFog) ? this.emitter.scene.fog : 'none',
                 wrap: this.emitter.wrap && this.emitter.wrapBounds,
                 localSpace: this.emitter.localSpace,

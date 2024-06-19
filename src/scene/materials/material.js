@@ -83,7 +83,7 @@ class Material {
      * The cache of shader variants generated for this material. The key represents the unique
      * variant, the value is the shader.
      *
-     * @type {Map<string, import('../../platform/graphics/shader.js').Shader>}
+     * @type {Map<number, import('../../platform/graphics/shader.js').Shader>}
      * @ignore
      */
     variants = new Map();
@@ -532,8 +532,7 @@ class Material {
     updateUniforms(device, scene) {
     }
 
-    // TODO: unused parameter should be removed, but the Editor still uses this function
-    getShaderVariant(device, scene, objDefs, unused, pass, sortedLights, viewUniformFormat, viewBindGroupFormat, vertexFormat) {
+    getShaderVariant(device, scene, objDefs, renderParams, pass, sortedLights, viewUniformFormat, viewBindGroupFormat, vertexFormat) {
 
         // generate shader variant - its the same shader, but with different processing options
         const processingOptions = new ShaderProcessorOptions(viewUniformFormat, viewBindGroupFormat, vertexFormat);

@@ -281,7 +281,7 @@ describe('StandardMaterial', function () {
         expect(material.twoSidedLighting).to.equal(false);
 
         expect(material.useFog).to.equal(true);
-        expect(material.useGammaTonemap).to.equal(true);
+        expect(material.useTonemap).to.equal(true);
         expect(material.useLighting).to.equal(true);
         expect(material.useMetalness).to.equal(false);
         expect(material.useMetalnessSpecularColor).to.equal(false);

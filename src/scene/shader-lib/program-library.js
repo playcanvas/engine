@@ -7,6 +7,7 @@ import { Shader } from '../../platform/graphics/shader.js';
 import { SHADER_FORWARD, SHADER_DEPTH, SHADER_PICK, SHADER_SHADOW, SHADER_PREPASS_VELOCITY } from '../constants.js';
 import { ShaderPass } from '../shader-pass.js';
 import { StandardMaterialOptions } from '../materials/standard-material-options.js';
+import { RenderingParams } from '../renderer/rendering-params.js';
 
 /**
  * A class responsible for creation and caching of required shaders.
@@ -48,8 +49,9 @@ class ProgramLibrary {
         this._defaultStdMatOption = new StandardMaterialOptions();
         this._defaultStdMatOptionMin = new StandardMaterialOptions();
 
+        const defaultRenderParams = new RenderingParams();
         standardMaterial.shaderOptBuilder.updateRef(
-            this._defaultStdMatOption, {}, standardMaterial, null, [], SHADER_FORWARD, null);
+            this._defaultStdMatOption, {}, defaultRenderParams, standardMaterial, null, [], SHADER_FORWARD, null);
         standardMaterial.shaderOptBuilder.updateMinRef(
             this._defaultStdMatOptionMin, {}, standardMaterial, null, SHADER_SHADOW, null);
 
@@ -217,7 +219,7 @@ class ProgramLibrary {
         this._programsCollection.push(JSON.stringify({ name: name, options: opt }));
     }
 
-    // run pc.app.graphicsDevice.getProgramLibrary().dumpPrograms(); from browser console to build shader options script
+    // run pc.getProgramLibrary(device).dumpPrograms(); from browser console to build shader options script
     dumpPrograms() {
         let text = 'let device = pc.app ? pc.app.graphicsDevice : pc.Application.getApplication().graphicsDevice;\n';
         text += 'let shaders = [';
@@ -227,7 +229,7 @@ class ProgramLibrary {
             text += ',\n\t' + this._programsCollection[i];
         }
         text += '\n];\n';
-        text += 'device.getProgramLibrary().precompile(shaders);\n';
+        text += 'pc.getProgramLibrary(device).precompile(shaders);\n';
         text += 'if (pc.version != \"' + version + '\" || pc.revision != \"' + revision + '\")\n';
         text += '\tconsole.warn(\"precompile-shaders.js: engine version mismatch, rebuild shaders lib with current engine\");';
 

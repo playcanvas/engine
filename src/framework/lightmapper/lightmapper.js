@@ -27,12 +27,13 @@ import { shaderChunksLightmapper } from '../../scene/shader-lib/chunks/chunks-li
 
 import {
     BAKE_COLORDIR,
-    FOG_NONE,
+    FOG_NONE, GAMMA_NONE, TONEMAP_LINEAR,
     LIGHTTYPE_DIRECTIONAL, LIGHTTYPE_OMNI, LIGHTTYPE_SPOT,
     PROJECTION_ORTHOGRAPHIC, PROJECTION_PERSPECTIVE,
     SHADERDEF_DIRLM, SHADERDEF_LM, SHADERDEF_LMAMBIENT,
     MASK_BAKE, MASK_AFFECT_LIGHTMAPPED, MASK_AFFECT_DYNAMIC,
-    SHADOWUPDATE_REALTIME, SHADOWUPDATE_THISFRAME, SHADER_FORWARDHDR
+    SHADOWUPDATE_REALTIME, SHADOWUPDATE_THISFRAME,
+    SHADER_FORWARD
 } from '../../scene/constants.js';
 import { Camera } from '../../scene/camera.js';
 import { GraphNode } from '../../scene/graph-node.js';
@@ -46,6 +47,7 @@ import { LightmapFilters } from './lightmap-filters.js';
 import { BlendState } from '../../platform/graphics/blend-state.js';
 import { DepthState } from '../../platform/graphics/depth-state.js';
 import { RenderPassLightmapper } from './render-pass-lightmapper.js';
+import { RenderingParams } from '../../scene/renderer/rendering-params.js';
 
 const MAX_LIGHTMAP_SIZE = 2048;
 
@@ -161,6 +163,12 @@ class Lightmapper {
             camera.aspectRatio = 1;
             camera.node = new GraphNode();
             this.camera = camera;
+
+            // baking uses HDR (no gamma / tone mapping)
+            const rp = new RenderingParams();
+            rp.gammaCorrection = GAMMA_NONE;
+            rp.toneMapping = TONEMAP_LINEAR;
+            this.camera.renderingParams = rp;
         }
 
         // create light cluster structure
@@ -1035,7 +1043,7 @@ class Lightmapper {
                     shadowMapRendered = this.renderShadowMap(comp, shadowMapRendered, casters, bakeLight);
 
                     if (clusteredLightingEnabled) {
-                        this.worldClusters.update(clusterLights, this.scene.gammaCorrection, this.lightingParams);
+                        this.worldClusters.update(clusterLights, this.lightingParams);
                     }
 
                     // Store original materials
@@ -1118,7 +1126,7 @@ class Lightmapper {
                             this.renderer._forwardTime = 0;
                             this.renderer._shadowMapTime = 0;
 
-                            this.renderer.renderForward(this.camera, rcv, lightArray, SHADER_FORWARDHDR);
+                            this.renderer.renderForward(this.camera, rcv, lightArray, SHADER_FORWARD);
 
                             device.updateEnd();
                         }

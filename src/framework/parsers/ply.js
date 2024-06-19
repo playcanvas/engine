@@ -1,5 +1,6 @@
 import { GSplatData } from '../../scene/gsplat/gsplat-data.js';
 import { GSplatResource } from './gsplat-resource.js';
+import { Mat4 } from '../../core/math/mat4.js';
 
 const magicBytes = new Uint8Array([112, 108, 121, 10]);                                                 // ply\n
 const endHeaderBytes = new Uint8Array([10, 101, 110, 100, 95, 104, 101, 97, 100, 101, 114, 10]);        // \nend_header\n
@@ -258,6 +259,8 @@ const defaultElements = [
 const defaultElementsSet = new Set(defaultElements);
 const defaultElementFilter = val => defaultElementsSet.has(val);
 
+const mat4 = new Mat4();
+
 class PlyParser {
     /** @type {import('../../platform/graphics/graphics-device.js').GraphicsDevice} */
     device;
@@ -295,10 +298,21 @@ class PlyParser {
             readPly(response.body.getReader(), asset.data.elementFilter ?? defaultElementFilter)
                 .then((response) => {
                     // construct the GSplatData object
-                    const gsplatData = new GSplatData(response, {
-                        performZScale: asset.data.performZScale,
-                        reorder: asset.data.reorder
-                    });
+                    const gsplatData = new GSplatData(response);
+
+                    if (!gsplatData.isCompressed) {
+
+                        // perform Z scale
+                        if (asset.data.performZScale ?? true) {
+                            mat4.setScale(-1, -1, 1);
+                            gsplatData.transform(mat4);
+                        }
+
+                        // reorder data
+                        if (asset.data.reorder ?? true) {
+                            gsplatData.reorderData();
+                        }
+                    }
 
                     // construct the resource
                     const resource = new GSplatResource(

@@ -9,11 +9,12 @@ import { Mat4 } from '../core/math/mat4.js';
 
 import { PIXELFORMAT_RGBA8, ADDRESS_CLAMP_TO_EDGE, FILTER_LINEAR } from '../platform/graphics/constants.js';
 
-import { BAKE_COLORDIR, FOG_NONE, GAMMA_SRGB, LAYERID_IMMEDIATE } from './constants.js';
+import { BAKE_COLORDIR, FOG_NONE, LAYERID_IMMEDIATE } from './constants.js';
 import { LightingParams } from './lighting/lighting-params.js';
 import { Sky } from './skybox/sky.js';
 import { Immediate } from './immediate/immediate.js';
 import { EnvLighting } from './graphics/env-lighting.js';
+import { RenderingParams } from './renderer/rendering-params.js';
 
 /**
  * A scene is graphical representation of an environment. It manages the scene hierarchy, all
@@ -39,7 +40,7 @@ class Scene extends EventHandler {
      *                 layer.onDisable = myOnDisableFunction;
      *                 break;
      *             case 'MyOtherLayer':
-     *                 layer.shaderPass = myShaderPass;
+     *                 layer.clearColorBuffer = true;
      *                 break;
      *         }
      *     }
@@ -85,7 +86,8 @@ class Scene extends EventHandler {
     ambientBakeOcclusionContrast = 0;
 
     /**
-     * The color of the scene's ambient light. Defaults to black (0, 0, 0).
+     * The color of the scene's ambient light, specified in sRGB color space. Defaults to black
+     * (0, 0, 0).
      *
      * @type {Color}
      */
@@ -106,7 +108,7 @@ class Scene extends EventHandler {
     exposure = 1;
 
     /**
-     * The color of the fog (if enabled). Defaults to black (0, 0, 0).
+     * The color of the fog (if enabled), specified in sRGB color space. Defaults to black (0, 0, 0).
      *
      * @type {Color}
      */
@@ -215,6 +217,13 @@ class Scene extends EventHandler {
     _skyboxCubeMap = null;
 
     /**
+     * The rendering parameters.
+     *
+     * @private
+     */
+    _renderingParams = new RenderingParams();
+
+    /**
      * Create a new Scene instance.
      *
      * @param {import('../platform/graphics/graphics-device.js').GraphicsDevice} graphicsDevice -
@@ -236,9 +245,6 @@ class Scene extends EventHandler {
         this._layers = null;
 
         this._fog = FOG_NONE;
-
-        this._gammaCorrection = GAMMA_SRGB;
-        this._toneMapping = 0;
 
         /**
          * Array of 6 prefiltered lighting data cubemaps.
@@ -447,32 +453,6 @@ class Scene extends EventHandler {
     }
 
     /**
-     * Sets the gamma correction to apply when rendering the scene. Can be:
-     *
-     * - {@link GAMMA_NONE}
-     * - {@link GAMMA_SRGB}
-     *
-     * Defaults to {@link GAMMA_SRGB}.
-     *
-     * @type {number}
-     */
-    set gammaCorrection(value) {
-        if (value !== this._gammaCorrection) {
-            this._gammaCorrection = value;
-            this.updateShaders = true;
-        }
-    }
-
-    /**
-     * Gets the gamma correction to apply when rendering the scene.
-     *
-     * @type {number}
-     */
-    get gammaCorrection() {
-        return this._gammaCorrection;
-    }
-
-    /**
      * Sets the {@link LayerComposition} that defines rendering order of this scene.
      *
      * @type {import('./composition/layer-composition.js').LayerComposition}
@@ -503,6 +483,15 @@ class Scene extends EventHandler {
      */
     get lighting() {
         return this._lightingParams;
+    }
+
+    /**
+     * A {@link RenderingParams} that defines rendering parameters.
+     *
+     * @type {RenderingParams}
+     */
+    get rendering() {
+        return this._renderingParams;
     }
 
     /**
@@ -707,36 +696,6 @@ class Scene extends EventHandler {
         return this._skyboxRotation;
     }
 
-    /**
-     * Sets the tonemapping transform to apply when writing fragments to the frame buffer. Can be:
-     *
-     * - {@link TONEMAP_LINEAR}
-     * - {@link TONEMAP_FILMIC}
-     * - {@link TONEMAP_HEJL}
-     * - {@link TONEMAP_ACES}
-     * - {@link TONEMAP_ACES2}
-     * - {@link TONEMAP_NEUTRAL}
-     *
-     * Defaults to {@link TONEMAP_LINEAR}.
-     *
-     * @type {number}
-     */
-    set toneMapping(value) {
-        if (value !== this._toneMapping) {
-            this._toneMapping = value;
-            this.updateShaders = true;
-        }
-    }
-
-    /**
-     * Gets the tonemapping transform to apply when writing fragments to the frame buffer.
-     *
-     * @type {number}
-     */
-    get toneMapping() {
-        return this._toneMapping;
-    }
-
     destroy() {
         this._resetSkyMesh();
         this.root = null;
@@ -771,8 +730,8 @@ class Scene extends EventHandler {
         this.fogStart = render.fog_start;
         this.fogEnd = render.fog_end;
         this.fogDensity = render.fog_density;
-        this._gammaCorrection = render.gamma_correction;
-        this._toneMapping = render.tonemapping;
+        this._renderingParams.gammaCorrection = render.gamma_correction;
+        this._renderingParams.toneMapping = render.tonemapping;
         this.lightmapSizeMultiplier = render.lightmapSizeMultiplier;
         this.lightmapMaxResolution = render.lightmapMaxResolution;
         this.lightmapMode = render.lightmapMode;

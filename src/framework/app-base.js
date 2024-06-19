@@ -129,7 +129,7 @@ class AppBase extends EventHandler {
      *
      * @callback MakeTickCallback
      * @param {number} [timestamp] - The timestamp supplied by requestAnimationFrame.
-     * @param {*} [frame] - XRFrame from requestAnimationFrame callback.
+     * @param {XRFrame} [frame] - XRFrame from requestAnimationFrame callback.
      * @returns {void}
      */
 
@@ -241,15 +241,6 @@ class AppBase extends EventHandler {
         this._fillMode = FILLMODE_KEEP_ASPECT;
         this._resolutionMode = RESOLUTION_FIXED;
         this._allowResize = true;
-
-        /**
-         * For backwards compatibility with scripts 1.0.
-         *
-         * @type {AppBase}
-         * @deprecated
-         * @ignore
-         */
-        this.context = this;
     }
 
     /**
@@ -301,7 +292,7 @@ class AppBase extends EventHandler {
          * @type {Scene}
          * @example
          * // Set the tone mapping property of the application's scene
-         * this.app.scene.toneMapping = pc.TONEMAP_FILMIC;
+         * this.app.scene.rendering.toneMapping = pc.TONEMAP_FILMIC;
          */
         this.scene = new Scene(device);
         this._registerSceneImmediate(this.scene);
@@ -2045,7 +2036,7 @@ const makeTick = function (_app) {
     const application = _app;
     /**
      * @param {number} [timestamp] - The timestamp supplied by requestAnimationFrame.
-     * @param {*} [frame] - XRFrame from requestAnimationFrame callback.
+     * @param {XRFrame} [frame] - XRFrame from requestAnimationFrame callback.
      */
     return function (timestamp, frame) {
         if (!application.graphicsDevice)

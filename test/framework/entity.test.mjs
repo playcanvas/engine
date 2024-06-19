@@ -32,6 +32,7 @@ import { DummyComponentSystem } from './test-component/system.mjs';
 import { HTMLCanvasElement } from '@playcanvas/canvas-mock';
 
 import { expect } from 'chai';
+import { stub } from 'sinon';
 
 describe('Entity', function () {
 
@@ -120,6 +121,68 @@ describe('Entity', function () {
                 entity.destroy();
             });
         }
+
+        it('respects components order on disable', function () {
+            const entity = new Entity();
+            entity.enabled = true;
+
+            entity.addComponent('collision');
+            entity.addComponent('rigidbody');
+
+            const colOnDisable = stub();
+            const rbOnDisable = stub();
+            let disableOrder = 0;
+
+            entity.collision.onDisable = colOnDisable;
+            entity.rigidbody.onDisable = rbOnDisable;
+
+            colOnDisable.onFirstCall().callsFake(() => {
+                disableOrder = 2;
+            });
+            rbOnDisable.onFirstCall().callsFake(() => {
+                disableOrder = 1;
+            });
+
+            entity.enabled = false;
+
+            expect(disableOrder).to.equal(2);
+
+            entity.destroy();
+        });
+
+        it('respects components order on enable', function () {
+            const entity = new Entity('Child');
+            const parent = new Entity('Parent');
+
+            parent.addChild(entity);
+            parent._enabled = true;
+            parent._enabledInHierarchy = true;
+
+            entity.addComponent('collision');
+            entity.addComponent('rigidbody');
+
+            entity.enabled = false;
+
+            const rbOnEnable = stub();
+            const colOnEnable = stub();
+            let enableOrder = 0;
+
+            entity.collision.onEnable = colOnEnable;
+            entity.rigidbody.onEnable = rbOnEnable;
+
+            colOnEnable.onFirstCall().callsFake(() => {
+                enableOrder = 2;
+            });
+            rbOnEnable.onFirstCall().callsFake(() => {
+                enableOrder = 1;
+            });
+
+            entity.enabled = true;
+
+            expect(enableOrder).to.equal(2);
+
+            parent.destroy();
+        });
 
     });
 

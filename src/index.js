@@ -184,6 +184,7 @@ export { SphereGeometry } from './scene/geometry/sphere-geometry.js';
 export { TorusGeometry } from './scene/geometry/torus-geometry.js';
 
 // SCENE / RENDERER
+export { RenderingParams } from './scene/renderer/rendering-params.js';
 export { RenderPassForward } from './scene/renderer/render-pass-forward.js';
 
 // SCENE / SHADER-LIB
