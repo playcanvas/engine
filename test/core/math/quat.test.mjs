@@ -597,24 +597,24 @@ describe('Quat', function () {
         const s2 = 1 / Math.sqrt(2);
 
         it('converts rot90', function () {
-            expect(quatToMatToQuat(s2, s2, 0, 0 )).to.be.true;
+            expect(quatToMatToQuat(s2, s2, 0, 0)).to.be.true;
             expect(quatToMatToQuat(s2, -s2, 0, 0)).to.be.true;
-            expect(quatToMatToQuat(s2, 0, s2, 0 )).to.be.true;
+            expect(quatToMatToQuat(s2, 0, s2, 0)).to.be.true;
             expect(quatToMatToQuat(s2, 0, -s2, 0)).to.be.true;
-            expect(quatToMatToQuat(s2, 0, 0, s2 )).to.be.true;
+            expect(quatToMatToQuat(s2, 0, 0, s2)).to.be.true;
             expect(quatToMatToQuat(s2, 0, 0, -s2)).to.be.true;
         });
 
         it('converts rot90n', function () {
-            expect(quatToMatToQuat(-s2, s2, 0, 0 )).to.be.true;
+            expect(quatToMatToQuat(-s2, s2, 0, 0)).to.be.true;
             expect(quatToMatToQuat(-s2, -s2, 0, 0)).to.be.true;
-            expect(quatToMatToQuat(-s2, 0, s2, 0 )).to.be.true;
+            expect(quatToMatToQuat(-s2, 0, s2, 0)).to.be.true;
             expect(quatToMatToQuat(-s2, 0, -s2, 0)).to.be.true;
-            expect(quatToMatToQuat(-s2, 0, 0, s2 )).to.be.true;
+            expect(quatToMatToQuat(-s2, 0, 0, s2)).to.be.true;
             expect(quatToMatToQuat(-s2, 0, 0, -s2)).to.be.true;
         });
 
-        it ('converts suit', function () {
+        it('converts suit', function () {
             const vals = [0.9999, -0.002, -0.999, 0.01, 0, 1];
 
             vals.forEach((x) => {
