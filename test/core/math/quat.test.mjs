@@ -580,9 +580,6 @@ describe('Quat', function () {
             expect(eulers.z).to.be.closeTo(30, 0.00001);
         });
 
-        // tests taken from Blender:
-        // https://github.com/blender/blender/blob/main/source/blender/blenlib/tests/BLI_math_rotation_test.cc
-
         it('converts rot180', function () {
             expect(quatToMatToQuat(1, 0, 0, 0)).to.be.true;
             expect(quatToMatToQuat(0, 1, 0, 0)).to.be.true;
