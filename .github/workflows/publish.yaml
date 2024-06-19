@@ -33,7 +33,7 @@ jobs:
         id: release-tag
         run: |
           TAG_NAME=${{ github.event.release.tag_name }}
-          if [[ "$TAG_NAME" == *-alpha.* ]]; then
+          if [[ "$TAG_NAME" == *-alpha ]]; then
             echo "tag=alpha" >> $GITHUB_ENV
           else
             echo "tag=latest" >> $GITHUB_ENV
