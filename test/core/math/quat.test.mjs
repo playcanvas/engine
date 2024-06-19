@@ -543,6 +543,32 @@ describe('Quat', function () {
             expect(q.equals(Quat.IDENTITY)).to.be.true;
         });
 
+        const nq = new Quat();
+        const q = new Quat();
+        const m = new Mat4();
+
+        const quatToMatToQuat = (w, x, y, z, epsilon = 1e-6) => {
+            nq.set(x, y, z, w).normalize();
+            m.setTRS(Vec3.ZERO, nq, Vec3.ONE);
+            q.setFromMat4(m);
+            const result =
+                (Math.abs(nq.x - q.x) < epsilon &&
+                 Math.abs(nq.y - q.y) < epsilon &&
+                 Math.abs(nq.z - q.z) < epsilon &&
+                 Math.abs(nq.w - q.w) < epsilon) ||
+                (Math.abs(nq.x + q.x) < epsilon &&
+                 Math.abs(nq.y + q.y) < epsilon &&
+                 Math.abs(nq.z + q.z) < epsilon &&
+                 Math.abs(nq.w + q.w) < epsilon);
+
+            if (!result) {
+                // helpful for debugging
+                console.log(`Failed Quat [${x}, ${y}, ${z}, ${w}] -> [${nq.x}, ${nq.y}, ${nq.z}, ${nq.w}] != [${q.x}, ${q.y}, ${q.z}, ${q.w}]`);
+            }
+
+            return result;
+        };
+
         it('set the quaternion from a non-identity matrix', function () {
             const q = new Quat();
             const m = new Mat4();
@@ -552,6 +578,54 @@ describe('Quat', function () {
             expect(eulers.x).to.be.closeTo(10, 0.00001);
             expect(eulers.y).to.be.closeTo(20, 0.00001);
             expect(eulers.z).to.be.closeTo(30, 0.00001);
+        });
+
+        it('converts rot180', function () {
+            expect(quatToMatToQuat(1, 0, 0, 0)).to.be.true;
+            expect(quatToMatToQuat(0, 1, 0, 0)).to.be.true;
+            expect(quatToMatToQuat(0, 0, 1, 0)).to.be.true;
+            expect(quatToMatToQuat(0, 0, 0, 1)).to.be.true;
+        });
+
+        it('converts rot180n', function () {
+            expect(quatToMatToQuat(-1, 0, 0, 0)).to.be.true;
+            expect(quatToMatToQuat(-1e-20, -1, 0, 0)).to.be.true;
+            expect(quatToMatToQuat(-1e-20, 0, -1, 0)).to.be.true;
+            expect(quatToMatToQuat(-1e-20, 0, 0, -1)).to.be.true;
+        });
+
+        const s2 = 1 / Math.sqrt(2);
+
+        it('converts rot90', function () {
+            expect(quatToMatToQuat(s2, s2, 0, 0)).to.be.true;
+            expect(quatToMatToQuat(s2, -s2, 0, 0)).to.be.true;
+            expect(quatToMatToQuat(s2, 0, s2, 0)).to.be.true;
+            expect(quatToMatToQuat(s2, 0, -s2, 0)).to.be.true;
+            expect(quatToMatToQuat(s2, 0, 0, s2)).to.be.true;
+            expect(quatToMatToQuat(s2, 0, 0, -s2)).to.be.true;
+        });
+
+        it('converts rot90n', function () {
+            expect(quatToMatToQuat(-s2, s2, 0, 0)).to.be.true;
+            expect(quatToMatToQuat(-s2, -s2, 0, 0)).to.be.true;
+            expect(quatToMatToQuat(-s2, 0, s2, 0)).to.be.true;
+            expect(quatToMatToQuat(-s2, 0, -s2, 0)).to.be.true;
+            expect(quatToMatToQuat(-s2, 0, 0, s2)).to.be.true;
+            expect(quatToMatToQuat(-s2, 0, 0, -s2)).to.be.true;
+        });
+
+        it('converts suit', function () {
+            const vals = [0.9999, -0.002, -0.999, 0.01, 0, 1];
+
+            vals.forEach((x) => {
+                vals.forEach((y) => {
+                    vals.forEach((z) => {
+                        vals.forEach((w) => {
+                            expect(quatToMatToQuat(w, x, y, z)).to.be.true;
+                        });
+                    });
+                });
+            });
         });
 
         it('returns this', function () {
