@@ -528,6 +528,10 @@ class Quat {
             }
         }
 
+        // Instead of scaling by 0.5 / Math.sqrt(t) (to match the original implementation),
+        // instead we normalize the result. It costs 3 more adds and muls, but we get
+        // a stable result and in some cases normalization is required anyway, see
+        // https://github.com/blender/blender/blob/v4.1.1/source/blender/blenlib/intern/math_rotation.c#L368
         return this.mulScalar(1.0 / this.length());
     }
 
