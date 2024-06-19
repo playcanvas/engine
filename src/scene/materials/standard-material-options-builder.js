@@ -4,13 +4,12 @@ import {
 
 import {
     BLEND_NONE,
-    GAMMA_NONE,
     LIGHTTYPE_DIRECTIONAL, LIGHTTYPE_OMNI, LIGHTTYPE_SPOT,
     MASK_AFFECT_DYNAMIC,
     SHADER_PREPASS_VELOCITY,
     SHADERDEF_DIRLM, SHADERDEF_INSTANCING, SHADERDEF_LM, SHADERDEF_MORPH_POSITION, SHADERDEF_MORPH_NORMAL, SHADERDEF_NOSHADOW, SHADERDEF_MORPH_TEXTURE_BASED,
     SHADERDEF_SCREENSPACE, SHADERDEF_SKIN, SHADERDEF_TANGENTS, SHADERDEF_UV0, SHADERDEF_UV1, SHADERDEF_VCOLOR, SHADERDEF_LMAMBIENT,
-    TONEMAP_LINEAR,
+    TONEMAP_NONE,
     SPECULAR_PHONG,
     DITHER_NONE
 } from '../constants.js';
@@ -295,8 +294,8 @@ class StandardMaterialOptionsBuilder {
 
     _updateEnvOptions(options, stdMat, scene, renderParams) {
         options.litOptions.fog = stdMat.useFog ? scene.fog : 'none';
-        options.litOptions.gamma = stdMat.useGammaTonemap ? renderParams.gammaCorrection : GAMMA_NONE;
-        options.litOptions.toneMap = stdMat.useGammaTonemap ? renderParams.toneMapping : TONEMAP_LINEAR;
+        options.litOptions.gamma = renderParams.gammaCorrection;
+        options.litOptions.toneMap = stdMat.useTonemap ? renderParams.toneMapping : TONEMAP_NONE;
 
         const isPhong = stdMat.shadingModel === SPECULAR_PHONG;
 

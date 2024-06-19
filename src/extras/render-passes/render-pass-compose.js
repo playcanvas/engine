@@ -2,7 +2,8 @@ import { math } from '../../core/math/math.js';
 import { Color } from '../../core/math/color.js';
 import { RenderPassShaderQuad } from '../../scene/graphics/render-pass-shader-quad.js';
 import { shaderChunks } from '../../scene/shader-lib/chunks/chunks.js';
-import { TONEMAP_LINEAR, TONEMAP_FILMIC, TONEMAP_HEJL, TONEMAP_ACES, TONEMAP_ACES2, TONEMAP_NEUTRAL } from '../../scene/constants.js';
+import { TONEMAP_LINEAR } from '../../scene/constants.js';
+import { ShaderGenerator } from '../../scene/shader-lib/programs/shader-generator.js';
 
 
 // Contrast Adaptive Sharpening (CAS) is used to apply the sharpening. It's based on AMD's
@@ -176,7 +177,7 @@ class RenderPassCompose extends RenderPassShaderQuad {
 
     _ssaoTexture = null;
 
-    _toneMapping = TONEMAP_ACES2;
+    _toneMapping = TONEMAP_LINEAR;
 
     _gradingEnabled = false;
 
@@ -301,18 +302,6 @@ class RenderPassCompose extends RenderPassShaderQuad {
         return this._toneMapping;
     }
 
-    get toneMapChunk() {
-        switch (this.toneMapping) {
-            case TONEMAP_LINEAR: return shaderChunks.tonemappingLinearPS;
-            case TONEMAP_FILMIC: return shaderChunks.tonemappingFilmicPS;
-            case TONEMAP_HEJL: return shaderChunks.tonemappingHejlPS;
-            case TONEMAP_ACES: return shaderChunks.tonemappingAcesPS;
-            case TONEMAP_ACES2: return shaderChunks.tonemappingAces2PS;
-            case TONEMAP_NEUTRAL: return shaderChunks.tonemappingNeutralPS;
-        }
-        return shaderChunks.tonemappingNonePS;
-    }
-
     set sharpness(value) {
         if (this._sharpness !== value) {
             this._sharpness = value;
@@ -364,7 +353,7 @@ class RenderPassCompose extends RenderPassShaderQuad {
                 const fsChunks =
                 shaderChunks.decodePS +
                 shaderChunks.gamma2_2PS +
-                this.toneMapChunk;
+                ShaderGenerator.tonemapCode(this.toneMapping);
 
                 this.shader = this.createQuadShader(`ComposeShader-${key}`, defines + fsChunks + fragmentShader);
             }

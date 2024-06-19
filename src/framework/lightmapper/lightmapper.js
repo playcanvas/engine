@@ -1043,7 +1043,7 @@ class Lightmapper {
                     shadowMapRendered = this.renderShadowMap(comp, shadowMapRendered, casters, bakeLight);
 
                     if (clusteredLightingEnabled) {
-                        this.worldClusters.update(clusterLights, this.scene.rendering.gammaCorrection, this.lightingParams);
+                        this.worldClusters.update(clusterLights, this.lightingParams);
                     }
 
                     // Store original materials

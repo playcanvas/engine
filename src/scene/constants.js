@@ -579,7 +579,7 @@ export const GAMMA_NONE = 0;
 export const GAMMA_SRGB = 1;
 
 /**
- * Linear tonemapping.
+ * Linear tonemapping. The colors are preserved, but the exposure is applied.
  *
  * @type {number}
  * @category Graphics
@@ -625,6 +625,14 @@ export const TONEMAP_ACES2 = 4;
  * @category Graphics
  */
 export const TONEMAP_NEUTRAL = 5;
+
+/**
+ * No tonemapping or exposure is applied. Used for HDR rendering.
+ *
+ * @type {number}
+ * @category Graphics
+ */
+export const TONEMAP_NONE = 6;
 
 /**
  * No specular occlusion.

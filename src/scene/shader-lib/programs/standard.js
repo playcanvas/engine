@@ -151,7 +151,7 @@ class ShaderGeneratorStandard extends ShaderGenerator {
                     // is never decoded).
                     subCode = subCode.replace(/\$DECODE/g, 'passThrough');
                 } else {
-                    subCode = subCode.replace(/\$DECODE/g, ChunkUtils.decodeFunc((!options.litOptions.gamma && encoding === 'srgb') ? 'linear' : encoding));
+                    subCode = subCode.replace(/\$DECODE/g, ChunkUtils.decodeFunc(encoding));
                 }
 
                 // continue to support $texture2DSAMPLE

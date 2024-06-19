@@ -319,7 +319,7 @@ assetListLoader.load(() => {
         },
         bloom: {
             enabled: currentOptions.bloomEnabled,
-            intensity: 20,
+            intensity: 10,
             lastMipLevel: 1
         },
         grading: {
