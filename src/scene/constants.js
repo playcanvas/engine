@@ -627,7 +627,7 @@ export const TONEMAP_ACES2 = 4;
 export const TONEMAP_NEUTRAL = 5;
 
 /**
- * No tonemapping nor the exposure is applied. Used for HDR rendering.
+ * No tonemapping or exposure is applied. Used for HDR rendering.
  *
  * @type {number}
  * @category Graphics
