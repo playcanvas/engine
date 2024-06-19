@@ -20,7 +20,8 @@ export { RenderPassTAA } from './render-passes/render-pass-taa.js';
 
 // GIZMOS
 export { Gizmo, GIZMO_LOCAL, GIZMO_WORLD } from "./gizmo/gizmo.js";
-export { TransformGizmo } from "./gizmo/transform-gizmo.js";
+// Magnopus patched comment exported all the SHAPEAXIS constants
+export { TransformGizmo, SHAPEAXIS_X, SHAPEAXIS_Y, SHAPEAXIS_Z, SHAPEAXIS_XY, SHAPEAXIS_XZ, SHAPEAXIS_YZ, SHAPEAXIS_XYZ, SHAPEAXIS_FACE } from "./gizmo/transform-gizmo.js";
 export { TranslateGizmo } from "./gizmo/translate-gizmo.js";
 export { RotateGizmo } from "./gizmo/rotate-gizmo.js";
 export { ScaleGizmo } from "./gizmo/scale-gizmo.js";
