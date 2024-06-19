@@ -1100,10 +1100,10 @@ function _defineColor(name, defaultValue) {
         const color = material[name];
 
         // uniforms are always in linear space
-        const uniformColor = _tempColor.linear(color);
-        uniform[0] = uniformColor.r;
-        uniform[1] = uniformColor.g;
-        uniform[2] = uniformColor.b;
+        _tempColor.linear(color);
+        uniform[0] = _tempColor.r;
+        uniform[1] = _tempColor.g;
+        uniform[2] = _tempColor.b;
 
         return uniform;
     });
