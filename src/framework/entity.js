@@ -13,10 +13,22 @@ import { getApplication } from './globals.js';
 const _enableList = [];
 
 /**
- * @type {Array<import('./components/component.js').Component>}
+ * @type {Array<Array<import('./components/component.js').Component>>}
  * @ignore
  */
-const _sortedArray = [];
+const tmpPool = [];
+
+const getTempArray = () => {
+    return tmpPool.pop() || [];
+};
+
+/**
+ * @param {Array<import('./components/component.js').Component>} a - Array to return back to pool.
+ * @ignore
+ */
+const releaseTempArray = (a) => {
+    tmpPool.push(a);
+};
 
 /**
  * The Entity is the core primitive of a PlayCanvas game. Generally speaking an object in your game
@@ -523,6 +535,7 @@ class Entity extends GraphNode {
         }
 
         components.length = 0;
+        releaseTempArray(components);
     }
 
     /** @private */
@@ -534,6 +547,7 @@ class Entity extends GraphNode {
         }
 
         components.length = 0;
+        releaseTempArray(components);
     }
 
     /**
@@ -609,23 +623,22 @@ class Entity extends GraphNode {
     }
 
     _getSortedComponents() {
-        Debug.assert(_sortedArray.length === 0);
-
         const components = this.c;
+        const sortedArray = getTempArray();
         let needSort = 0;
         for (const type in components) {
             if (components.hasOwnProperty(type)) {
                 const component = components[type];
                 needSort |= component.constructor.order !== 0;
-                _sortedArray.push(component);
+                sortedArray.push(component);
             }
         }
 
-        if (needSort && _sortedArray.length > 1) {
-            sortStaticOrder(_sortedArray);
+        if (needSort && sortedArray.length > 1) {
+            sortStaticOrder(sortedArray);
         }
 
-        return _sortedArray;
+        return sortedArray;
     }
 
     /**
