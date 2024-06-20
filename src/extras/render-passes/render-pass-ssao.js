@@ -1,9 +1,11 @@
+import { BLUR_BOX, BLUR_GAUSSIAN } from '../../scene/constants.js';
 import { ADDRESS_CLAMP_TO_EDGE, FILTER_NEAREST, PIXELFORMAT_R8 } from '../../platform/graphics/constants.js';
 import { RenderTarget } from '../../platform/graphics/render-target.js';
 import { Texture } from '../../platform/graphics/texture.js';
 import { RenderPassShaderQuad } from '../../scene/graphics/render-pass-shader-quad.js';
 import { shaderChunks } from '../../scene/shader-lib/chunks/chunks.js';
 import { RenderPassDepthAwareBlur } from './render-pass-depth-aware-blur.js';
+import { Vec2 } from '../../core/math/vec2.js';
 
 const fs = /* glsl */`
     varying vec2 uv0;
@@ -244,6 +246,12 @@ class RenderPassSsao extends RenderPassShaderQuad {
     /** @type {number} */
     _scale = 1;
 
+    /**
+     * Blur passes to apply after the main SSAO pass.
+     * @type {RenderPassDepthAwareBlur[]}
+     */
+    blurPasses = [];
+
     constructor(device, sourceTexture, cameraComponent, blurEnabled) {
         super(device);
         this.sourceTexture = sourceTexture;
@@ -259,19 +267,58 @@ class RenderPassSsao extends RenderPassShaderQuad {
             resizeSource: this.sourceTexture
         });
 
+        this.blurPasses.length = 0;
+
         // optional blur pass
         if (blurEnabled) {
+            let lastRenderTarget = rt;
 
-            const blurRT = this.createRenderTarget(`SsaoFinalTexture`);
-            this.ssaoTexture = blurRT.colorBuffer;
+            // horizontal blur
+            lastRenderTarget = this.addBlurPass(
+                device,
+                lastRenderTarget.colorBuffer,
+                new Vec2(1, 0),
+                9,
+                BLUR_BOX
+            );
 
-            const blurPass = new RenderPassDepthAwareBlur(device, rt.colorBuffer);
-            blurPass.init(blurRT, {
-                resizeSource: rt.colorBuffer
-            });
+            // vertical blur
+            lastRenderTarget = this.addBlurPass(
+                device,
+                lastRenderTarget.colorBuffer,
+                new Vec2(0, 1),
+                9,
+                BLUR_BOX
+            );
 
-            this.afterPasses.push(blurPass);
+            this.ssaoTexture = lastRenderTarget.colorBuffer;
         }
+    }
+
+    /**
+     * Adds a blur pass to the SSAO render pass.
+     * @param {import('../../platform/graphics/graphics-device.js').GraphicsDevice} device - The graphics device.
+     * @param {Texture} sourceTexture - The source texture to blur.
+     * @param {Vec2} direction - The direction of the blur.
+     * @param {number} kernelSize - The size of the blur kernel.
+     * @param {BLUR_GAUSSIAN|BLUR_BOX} [type] - The type of blur to apply. Defaults to BLUR_GAUSSIAN.
+     * @returns {RenderTarget} The render target containing the blurred texture.
+     * @private
+     */
+    addBlurPass(device, sourceTexture, direction, kernelSize, type = BLUR_GAUSSIAN) {
+        const renderTargetName = `SsaoBlurTexture`;
+        // TODO: consider using render target with linear filtering
+        // to reduce amount of samples in the blur pass
+        const blurRT = this.createRenderTarget(renderTargetName);
+        const blurPass = new RenderPassDepthAwareBlur(device);
+
+        this.blurPasses.push(blurPass);
+
+        blurPass.init(blurRT, { resizeSource: sourceTexture });
+        blurPass.setup({ sourceTexture, kernelSize, type, direction });
+
+        this.afterPasses.push(blurPass);
+        return blurRT;
     }
 
     destroy() {
@@ -280,8 +327,8 @@ class RenderPassSsao extends RenderPassShaderQuad {
         this.renderTarget?.destroy();
         this.renderTarget = null;
 
-        if (this.afterPasses.length > 0) {
-            const blurPass = this.afterPasses[0];
+        for (let i = 0; i < this.afterPasses.length; i++) {
+            const blurPass = this.afterPasses[i];
             const blurRt = blurPass.renderTarget;
             blurRt?.destroyTextureBuffers();
             blurRt?.destroy();
@@ -356,6 +403,35 @@ class RenderPassSsao extends RenderPassShaderQuad {
         scope.resolve("uProjectionScaleRadius").setValue(projectionScale * radius);
 
         super.execute();
+    }
+
+    /**
+     * The size of the blur kernel.
+     * @type {number}
+     */
+    set blurSize(value) {
+        for (let i = 0; i < this.blurPasses.length; i++) {
+            this.blurPasses[i].kernelSize = value;
+        }
+    }
+
+    get blurSize() {
+        return this.blurPasses[0].kernelSize;
+    }
+
+    /**
+     * The type of the blur kernel.
+     * @type {BLUR_GAUSSIAN|BLUR_BOX}
+     * @readonly
+     */
+    set blurType(value) {
+        for (let i = 0; i < this.blurPasses.length; i++) {
+            this.blurPasses[i].type = +value;
+        }
+    }
+
+    get blurType() {
+        return this.blurPasses[0].type;
     }
 }
 
