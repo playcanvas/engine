@@ -64,7 +64,6 @@ assetListLoader.load(() => {
 
     const createSplatInstance = (resource, px, py, pz, scale, vertex, fragment) => {
         const splat = resource.instantiate({
-            debugRender: false,
             fragment: fragment,
             vertex: vertex
         });

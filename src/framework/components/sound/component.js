@@ -7,7 +7,48 @@ import { Component } from '../component.js';
 import { SoundSlot } from './slot.js';
 
 /**
- * The Sound Component controls playback of {@link Sound}s.
+ * The SoundComponent enables an {@link Entity} to play audio. The SoundComponent can manage
+ * multiple {@link SoundSlot}s, each of which can play a different audio asset with its own set
+ * of properties such as volume, pitch, and looping behavior.
+ *
+ * The SoundComponent supports positional audio, meaning that the sound can be played relative
+ * to the Entity's position in 3D space. This is useful for creating immersive audio experiences
+ * where the sound's volume and panning are affected by the listener's position and orientation.
+ * Positional audio requires that an Entity with an {@link AudioListenerComponent} be added to the
+ * scene.
+ *
+ * You should never need to use the SoundComponent constructor directly. To add a SoundComponent
+ * to an Entity, use {@link Entity#addComponent}:
+ *
+ * ```javascript
+ * // Add a sound component to an entity
+ * const entity = new pc.Entity();
+ * entity.addComponent("sound");
+ * ```
+ *
+ * Then, to add a sound slot to the component:
+ *
+ * ```javascript
+ * entity.sound.addSlot("beep", {
+ *     asset: asset,
+ *     autoPlay: true,
+ *     loop: true,
+ *     overlap: true,
+ *     pitch: 1.5
+ * });
+ * ```
+ *
+ * Once the SoundComponent is added to the entity, you can set and get any of its properties:
+ *
+ * ```javascript
+ * entity.sound.volume = 0.8;  // Set the volume for all sounds
+ *
+ * console.log(entity.sound.volume); // Get the volume and print it
+ * ```
+ *
+ * Relevant examples:
+ *
+ * - [Positional Sound](https://playcanvas.github.io/#/sound/positional)
  *
  * @category Sound
  */
