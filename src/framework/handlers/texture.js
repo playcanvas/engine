@@ -219,8 +219,8 @@ class TextureHandler extends ResourceHandler {
                 options.flipY = !!assetData.flipY;
             }
 
-            if (assetData.hasOwnProperty('encoding')) {
-                options.srgb = assetData.encoding === 'srgb';
+            if (assetData.hasOwnProperty('srgb')) {
+                options.srgb = !!assetData.srgb;
             }
 
             // extract asset type (this is bit of a mess)

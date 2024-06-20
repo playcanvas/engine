@@ -13,8 +13,8 @@ const assets = {
         { url: rootPath + '/static/assets/cubemaps/helipad-env-atlas.png' },
         { type: pc.TEXTURETYPE_RGBP, mipmaps: false }
     ),
-    color: new pc.Asset('color', 'texture', { url: rootPath + '/static/assets/textures/seaside-rocks01-color.jpg' }, { encoding: 'srgb' }),
-    decal: new pc.Asset('color', 'texture', { url: rootPath + '/static/assets/textures/heart.png' }, { encoding: 'srgb' })
+    color: new pc.Asset('color', 'texture', { url: rootPath + '/static/assets/textures/seaside-rocks01-color.jpg' }, { srgb: true }),
+    decal: new pc.Asset('color', 'texture', { url: rootPath + '/static/assets/textures/heart.png' }, { srgb: true })
 };
 
 const gfxOptions = {
