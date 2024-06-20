@@ -89,7 +89,7 @@ assetListLoader.load(() => {
             name: name,
             width: width,
             height: height,
-            format: pc.PIXELFORMAT_R8_G8_B8_A8,
+            format: pc.PIXELFORMAT_RGBA8,
             mipmaps: true,
             minFilter: pc.FILTER_LINEAR_MIPMAP_LINEAR,
             magFilter: pc.FILTER_LINEAR,
