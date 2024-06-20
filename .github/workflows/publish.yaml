@@ -4,6 +4,7 @@ on:
   push:
     tags:
       - 'v[0-9]+.[0-9]+.[0-9]+'
+      - 'v[0-9]+.[0-9]+.[0-9]+-alpha.[0-9]+'
 
 jobs:
   publish-npm:
@@ -27,8 +28,19 @@ jobs:
 
       - name: Run Publint
         run: npm run publint
+
+      - name: Determine pre-release tag
+        id: release-tag
+        run: |
+          TAG_NAME=${GITHUB_REF#refs/tags/}
+          echo "Detected tag: $TAG_NAME"
+          if [[ "$TAG_NAME" == *-alpha.* ]]; then
+            echo "tag=alpha" >> $GITHUB_ENV
+          else
+            echo "tag=latest" >> $GITHUB_ENV
+          fi
       
       - name: Publish to npm
-        run: npm publish
+        run: npm publish --tag ${{ env.TAG }}
         env:
           NODE_AUTH_TOKEN: ${{ secrets.NPM_TOKEN }}
