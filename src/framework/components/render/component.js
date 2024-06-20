@@ -52,6 +52,7 @@ import { EntityReference } from '../../utils/entity-reference.js';
  *
  * - [Spinning Cube](https://playcanvas.github.io/#/misc/hello-world)
  * - [Primitive Shapes](https://playcanvas.github.io/#/graphics/shapes)
+ * - [Loading Render Assets](https://playcanvas.github.io/#/graphics/render-asset)
  *
  * @property {import('../../entity.js').Entity} rootBone A reference to the entity to be used as
  * the root bone for any skinned meshes that are rendered by this component.
