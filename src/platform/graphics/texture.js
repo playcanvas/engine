@@ -15,7 +15,8 @@ import {
     TEXTURELOCK_WRITE,
     TEXTUREPROJECTION_NONE, TEXTUREPROJECTION_CUBE,
     TEXTURETYPE_DEFAULT, TEXTURETYPE_RGBM, TEXTURETYPE_RGBE, TEXTURETYPE_RGBP,
-    isIntegerPixelFormat, FILTER_NEAREST, TEXTURELOCK_NONE, TEXTURELOCK_READ
+    isIntegerPixelFormat, FILTER_NEAREST, TEXTURELOCK_NONE, TEXTURELOCK_READ,
+    isLinearFormat
 } from './constants.js';
 
 let id = 0;
@@ -810,13 +811,9 @@ class Texture {
                 return 'rgbe';
             case TEXTURETYPE_RGBP:
                 return 'rgbp';
-            default:
-                return (this.format === PIXELFORMAT_RGB16F ||
-                        this.format === PIXELFORMAT_RGB32F ||
-                        this.format === PIXELFORMAT_RGBA16F ||
-                        this.format === PIXELFORMAT_RGBA32F ||
-                        isIntegerPixelFormat(this.format)) ? 'linear' : 'srgb';
         }
+
+        return isLinearFormat(this.format) ? 'linear' : 'srgb';
     }
 
     // Force a full resubmission of the texture to the GPU (used on a context restore event)
