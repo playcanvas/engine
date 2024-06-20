@@ -1,7 +1,7 @@
 import * as pc from 'playcanvas';
 import { deviceType, rootPath, fileImport } from 'examples/utils';
 
-const { Rotator } = await fileImport(rootPath + '/static/scripts/misc/rotator.mjs');
+const { Rotator } = await fileImport(rootPath + '/static/assets/scripts/misc/rotator.mjs');
 
 const canvas = /** @type {HTMLCanvasElement} */ (document.getElementById('application-canvas'));
 window.focus();
