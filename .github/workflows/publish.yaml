@@ -41,6 +41,6 @@ jobs:
           fi
       
       - name: Publish to npm
-        run: npm publish --tag ${{ env.TAG }}
+        run: npm publish --tag ${{ env.tag }}
         env:
           NODE_AUTH_TOKEN: ${{ secrets.NPM_TOKEN }}
