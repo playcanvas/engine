@@ -31,7 +31,7 @@ const matC = new Mat4();
 const matD = new Mat4();
 
 /**
- * ElementComponents are used to construct user interfaces. An ElementComponent's [type](#type)
+ * ElementComponents are used to construct user interfaces. The {@link ElementComponent#type}
  * property can be configured in 3 main ways: as a text element, as an image element or as a group
  * element. If the ElementComponent has a {@link ScreenComponent} ancestor in the hierarchy, it
  * will be transformed with respect to the coordinate system of the screen. If there is no
@@ -69,6 +69,7 @@ const matD = new Mat4();
  * ```
  *
  * Relevant 'Engine-only' examples:
+ *
  * - [Basic text rendering](https://playcanvas.github.io/#/user-interface/text)
  * - [Auto font sizing](https://playcanvas.github.io/#/user-interface/text-auto-font-size)
  * - [Emojis](https://playcanvas.github.io/#/user-interface/text-emojis)
