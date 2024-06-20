@@ -1816,7 +1816,7 @@ class AppBase extends EventHandler {
             material = new Material();
             material.cull = CULLFACE_NONE;
             material.setParameter("colorMap", texture);
-            material.shader = filterable ? this.scene.immediate.getTextureShader() : this.scene.immediate.getUnfilterableTextureShader();
+            material.shader = filterable ? this.scene.immediate.getTextureShader(texture.encoding) : this.scene.immediate.getUnfilterableTextureShader();
             material.update();
         }
 

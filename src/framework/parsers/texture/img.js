@@ -1,5 +1,5 @@
 import {
-    PIXELFORMAT_RGBA8, TEXHINT_ASSET
+    PIXELFORMAT_RGBA8, PIXELFORMAT_SRGBA8, TEXHINT_ASSET
 } from '../../../platform/graphics/constants.js';
 import { Texture } from '../../../platform/graphics/texture.js';
 import { http } from '../../../platform/net/http.js';
@@ -77,7 +77,7 @@ class ImgParser extends TextureParser {
             // #endif
             width: data.width,
             height: data.height,
-            format: PIXELFORMAT_RGBA8,
+            format: textureOptions.srgb ? PIXELFORMAT_SRGBA8 : PIXELFORMAT_RGBA8,
 
             ...textureOptions
         });
