@@ -802,7 +802,7 @@ class XrManager extends EventHandler {
 
         if (device?.isWebGL2 && window.XRWebGLBinding) {
             try {
-                this.webglBinding = new XRWebGLBinding(this._session, device.gl); // eslint-disable-line no-undef
+                this.webglBinding = new XRWebGLBinding(this._session, device.gl);
             } catch (ex) {
                 this.fire('error', ex);
             }

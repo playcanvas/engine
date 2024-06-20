@@ -4,7 +4,14 @@ import { AssetReference } from '../../asset/asset-reference.js';
 import { Component } from '../component.js';
 
 /**
- * Enables an Entity to render a Gaussian Splat (asset of the 'gsplat' type).
+ * The GSplatComponent enables an {@link Entity} to render 3D Gaussian Splats. Splats are always
+ * loaded from {@link Asset}s rather than being created programmatically. The asset type is
+ * `gsplat` which are in the `.ply` file format.
+ *
+ * Relevant examples:
+ *
+ * - [Loading a Splat](https://playcanvas.github.io/#/loaders/gsplat)
+ * - [Custom Splat Shaders](https://playcanvas.github.io/#/loaders/gsplat-many)
  *
  * @category Graphics
  */
