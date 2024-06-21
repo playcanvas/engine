@@ -111,10 +111,6 @@ function BasisWorker() {
         return result;
     };
 
-    const isPOT = (width, height) => {
-        return ((width & (width - 1)) === 0) && ((height & (height - 1)) === 0);
-    };
-
     const performanceNow = () => {
         return (typeof performance !== 'undefined') ? performance.now() : 0;
     };
