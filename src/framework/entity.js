@@ -444,7 +444,7 @@ class Entity extends GraphNode {
      * has one. Returns undefined otherwise.
      * @example
      * // Get the first found "playerController" instance in the hierarchy tree that starts with this entity
-     * var controller = entity.findScript("playerController");
+     * const controller = entity.findScript("playerController");
      */
     findScript(nameOrType) {
         const entity = this.findOne(node => node.c?.script?.has(nameOrType));
@@ -459,7 +459,7 @@ class Entity extends GraphNode {
      * descendants. Returns empty array if none found.
      * @example
      * // Get all "playerController" instances in the hierarchy tree that starts with this entity
-     * var controllers = entity.findScripts("playerController");
+     * const controllers = entity.findScripts("playerController");
      */
     findScripts(nameOrType) {
         const entities = this.find(node => node.c?.script?.has(nameOrType));
