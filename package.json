@@ -77,7 +77,8 @@
         "error",
         {
           "definedTags": [
-            "category"
+            "category",
+            "attribute"
           ]
         }
       ]
