@@ -4,13 +4,12 @@ import {
 
 import {
     BLEND_NONE,
-    GAMMA_NONE, GAMMA_SRGBHDR,
     LIGHTTYPE_DIRECTIONAL, LIGHTTYPE_OMNI, LIGHTTYPE_SPOT,
     MASK_AFFECT_DYNAMIC,
-    SHADER_FORWARDHDR, SHADER_PREPASS_VELOCITY,
+    SHADER_PREPASS_VELOCITY,
     SHADERDEF_DIRLM, SHADERDEF_INSTANCING, SHADERDEF_LM, SHADERDEF_MORPH_POSITION, SHADERDEF_MORPH_NORMAL, SHADERDEF_NOSHADOW, SHADERDEF_MORPH_TEXTURE_BASED,
     SHADERDEF_SCREENSPACE, SHADERDEF_SKIN, SHADERDEF_TANGENTS, SHADERDEF_UV0, SHADERDEF_UV1, SHADERDEF_VCOLOR, SHADERDEF_LMAMBIENT,
-    TONEMAP_LINEAR,
+    TONEMAP_NONE,
     SPECULAR_PHONG,
     DITHER_NONE
 } from '../constants.js';
@@ -49,14 +48,10 @@ class StandardMaterialOptionsBuilder {
         this._updateUVOptions(options, stdMat, objDefs, true);
     }
 
-    updateRef(options, scene, stdMat, objDefs, pass, sortedLights) {
+    updateRef(options, scene, renderParams, stdMat, objDefs, pass, sortedLights) {
         this._updateSharedOptions(options, scene, stdMat, objDefs, pass);
-        this._updateEnvOptions(options, stdMat, scene);
+        this._updateEnvOptions(options, stdMat, scene, renderParams);
         this._updateMaterialOptions(options, stdMat);
-        if (pass === SHADER_FORWARDHDR) {
-            if (options.litOptions.gamma) options.litOptions.gamma = GAMMA_SRGBHDR;
-            options.litOptions.toneMap = TONEMAP_LINEAR;
-        }
         options.litOptions.hasTangents = objDefs && ((objDefs & SHADERDEF_TANGENTS) !== 0);
         this._updateLightOptions(options, scene, stdMat, objDefs, sortedLights);
         this._updateUVOptions(options, stdMat, objDefs, false);
@@ -189,7 +184,7 @@ class StandardMaterialOptionsBuilder {
     }
 
     _updateMinOptions(options, stdMat, pass) {
-        options.opacityTint = stdMat.opacity !== 1 && (stdMat.blendType !== BLEND_NONE || stdMat.opacityShadowDither !== DITHER_NONE);
+        options.opacityTint = stdMat.blendType !== BLEND_NONE || stdMat.opacityShadowDither !== DITHER_NONE;
 
         // pre-pass uses the same dither setting as forward pass, otherwise shadow dither
         const isPrepass = pass === SHADER_PREPASS_VELOCITY;
@@ -199,8 +194,7 @@ class StandardMaterialOptionsBuilder {
     }
 
     _updateMaterialOptions(options, stdMat) {
-        const diffuseTint = (stdMat.diffuseTint || (!stdMat.diffuseMap && !stdMat.diffuseVertexColor)) &&
-                            notWhite(stdMat.diffuse);
+        const diffuseTint = (stdMat.diffuseTint || (!stdMat.diffuseMap && !stdMat.diffuseVertexColor));
 
         const useSpecular = !!(stdMat.useMetalness || stdMat.specularMap || stdMat.sphereMap || stdMat.cubeMap ||
                             notBlack(stdMat.specular) || (stdMat.specularityFactor > 0 && stdMat.useMetalness) ||
@@ -220,7 +214,7 @@ class StandardMaterialOptionsBuilder {
 
         const isPackedNormalMap = stdMat.normalMap ? (stdMat.normalMap.format === PIXELFORMAT_DXT5 || stdMat.normalMap.type === TEXTURETYPE_SWIZZLEGGGR) : false;
 
-        options.opacityTint = (stdMat.opacity !== 1 && (stdMat.blendType !== BLEND_NONE || stdMat.alphaTest > 0 || stdMat.opacityDither !== DITHER_NONE)) ? 1 : 0;
+        options.opacityTint = (stdMat.blendType !== BLEND_NONE || stdMat.alphaTest > 0 || stdMat.opacityDither !== DITHER_NONE) ? 1 : 0;
         options.ambientTint = stdMat.ambientTint;
         options.diffuseTint = diffuseTint ? 2 : 0;
         options.specularTint = specularTint ? 2 : 0;
@@ -297,10 +291,10 @@ class StandardMaterialOptionsBuilder {
         options.litOptions.dispersion = stdMat.dispersion > 0;
     }
 
-    _updateEnvOptions(options, stdMat, scene) {
+    _updateEnvOptions(options, stdMat, scene, renderParams) {
         options.litOptions.fog = stdMat.useFog ? scene.fog : 'none';
-        options.litOptions.gamma = stdMat.useGammaTonemap ? scene.gammaCorrection : GAMMA_NONE;
-        options.litOptions.toneMap = stdMat.useGammaTonemap ? scene.toneMapping : -1;
+        options.litOptions.gamma = renderParams.gammaCorrection;
+        options.litOptions.toneMap = stdMat.useTonemap ? renderParams.toneMapping : TONEMAP_NONE;
 
         const isPhong = stdMat.shadingModel === SPECULAR_PHONG;
 

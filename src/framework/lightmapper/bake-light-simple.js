@@ -34,7 +34,7 @@ class BakeLightSimple extends BakeLight {
         light._node.getWorldTransform();
 
         // divide intensity by number of virtual lights (in linear space)
-        const gamma = this.scene.gammaCorrection ? 2.2 : 1;
+        const gamma = 2.2;
         const linearIntensity = Math.pow(this.intensity, gamma);
         light.intensity = Math.pow(linearIntensity / numVirtualLights, 1 / gamma);
     }

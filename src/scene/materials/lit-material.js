@@ -29,7 +29,7 @@ class LitMaterial extends Material {
 
     useFog = true;
 
-    useGammaTonemap = true;
+    useTonemap = true;
 
     useSkybox = true;
 
@@ -90,11 +90,11 @@ class LitMaterial extends Material {
 
     hasClearCoatNormals = false;
 
-    getShaderVariant(device, scene, objDefs, unused, pass, sortedLights, viewUniformFormat, viewBindGroupFormat, vertexFormat) {
+    getShaderVariant(device, scene, objDefs, renderParams, pass, sortedLights, viewUniformFormat, viewBindGroupFormat, vertexFormat) {
         options.usedUvs = this.usedUvs.slice();
         options.shaderChunk = this.shaderChunk;
 
-        LitMaterialOptionsBuilder.update(options.litOptions, this, scene, objDefs, pass, sortedLights);
+        LitMaterialOptionsBuilder.update(options.litOptions, this, scene, renderParams, objDefs, pass, sortedLights);
         const processingOptions = new ShaderProcessorOptions(viewUniformFormat, viewBindGroupFormat, vertexFormat);
         const library = getProgramLibrary(device);
         library.register('lit', lit);

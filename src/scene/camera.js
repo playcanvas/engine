@@ -42,6 +42,13 @@ class Camera {
     renderPassDepthGrab = null;
 
     /**
+     * The rendering parameters.
+     *
+     * @type {import('./renderer/rendering-params.js').RenderingParams|null}
+     */
+    renderingParams = null;
+
+    /**
      * Render passes used to render this camera. If empty, the camera will render using the default
      * render passes.
      *

@@ -87,7 +87,15 @@ function findNode(node, test) {
  */
 
 /**
- * A hierarchical scene node.
+ * The `GraphNode` class represents a node within a hierarchical scene graph. Each `GraphNode` can
+ * reference a array of child nodes. This creates a tree-like structure that is fundamental for
+ * organizing and managing the spatial relationships between objects in a 3D scene. This class
+ * provides a comprehensive API for manipulating the position, rotation, and scale of nodes both
+ * locally and in world space.
+ *
+ * `GraphNode` is the superclass of {@link Entity}, which is the primary class for creating objects
+ * in a PlayCanvas application. For this reason, `GraphNode` is rarely used directly, but it provides
+ * a powerful set of features that are leveraged by the `Entity` class.
  */
 class GraphNode extends EventHandler {
     /**
@@ -104,9 +112,6 @@ class GraphNode extends EventHandler {
      * @type {Tags}
      */
     tags = new Tags(this);
-
-    /** @private */
-    _labels = {};
 
     // Local space properties of transform (only first 3 are settable by the user)
     /**
@@ -476,8 +481,6 @@ class GraphNode extends EventHandler {
         clone.tags.clear();
         for (let i = 0; i < tags.length; i++)
             clone.tags.add(tags[i]);
-
-        clone._labels = Object.assign({}, this._labels);
 
         clone.localPosition.copy(this.localPosition);
         clone.localRotation.copy(this.localRotation);

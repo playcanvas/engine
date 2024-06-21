@@ -2,7 +2,7 @@ import { Debug } from '../../../core/debug.js';
 
 import {
     BLEND_NONE, DITHER_BAYER8, DITHER_NONE, FRESNEL_SCHLICK,
-    SHADER_FORWARD, SHADER_FORWARDHDR,
+    SHADER_FORWARD,
     SPECULAR_PHONG,
     SPRITE_RENDERMODE_SLICED, SPRITE_RENDERMODE_TILED
 } from '../../constants.js';
@@ -61,7 +61,7 @@ class ShaderGeneratorStandard extends ShaderGenerator {
     _getUvSourceExpression(transformPropName, uVPropName, options) {
         const transformId = options[transformPropName];
         const uvChannel = options[uVPropName];
-        const isMainPass = options.litOptions.pass === SHADER_FORWARD || options.litOptions.pass === SHADER_FORWARDHDR;
+        const isMainPass = options.litOptions.pass === SHADER_FORWARD;
 
         let expression;
         if (isMainPass && options.litOptions.nineSlicedMode === SPRITE_RENDERMODE_SLICED) {
@@ -151,7 +151,7 @@ class ShaderGeneratorStandard extends ShaderGenerator {
                     // is never decoded).
                     subCode = subCode.replace(/\$DECODE/g, 'passThrough');
                 } else {
-                    subCode = subCode.replace(/\$DECODE/g, ChunkUtils.decodeFunc((!options.litOptions.gamma && encoding === 'srgb') ? 'linear' : encoding));
+                    subCode = subCode.replace(/\$DECODE/g, ChunkUtils.decodeFunc(encoding));
                 }
 
                 // continue to support $texture2DSAMPLE

@@ -1,7 +1,11 @@
 import { math } from './math.js';
 
 /**
- * Representation of an RGBA color.
+ * An RGBA color.
+ *
+ * Each color component is a floating point value in the range 0 to 1. The `r` (red), `g` (green)
+ * and `b` (blue) components define a color in RGB color space. The `a` (alpha) component defines
+ * transparency. An alpha of 1 is fully opaque. An alpha of 0 is fully transparent.
  *
  * @category Math
  */
@@ -49,7 +53,7 @@ class Color {
             this.r = r[0];
             this.g = r[1];
             this.b = r[2];
-            this.a = r[3] !== undefined ? r[3] : 1;
+            this.a = r[3] ?? 1;
         } else {
             this.r = r;
             this.g = g;
@@ -147,6 +151,49 @@ class Color {
         this.b = lhs.b + alpha * (rhs.b - lhs.b);
         this.a = lhs.a + alpha * (rhs.a - lhs.a);
 
+        return this;
+    }
+
+    /**
+     * Converts the color from gamma to linear color space.
+     *
+     * @param {Color} [src] - The color to convert to linear color space. If not set, the operation
+     * is done in place.
+     * @returns {Color} Self for chaining.
+     */
+    linear(src = this) {
+        this.r = Math.pow(src.r, 2.2);
+        this.g = Math.pow(src.g, 2.2);
+        this.b = Math.pow(src.b, 2.2);
+        this.a = src.a;
+        return this;
+    }
+
+    /**
+     * Converts the color from linear to gamma color space.
+     *
+     * @param {Color} [src] - The color to convert to gamma color space. If not set, the operation is
+     * done in place.
+     * @returns {Color} Self for chaining.
+     */
+    gamma(src = this) {
+        this.r = Math.pow(src.r, 1 / 2.2);
+        this.g = Math.pow(src.g, 1 / 2.2);
+        this.b = Math.pow(src.b, 1 / 2.2);
+        this.a = src.a;
+        return this;
+    }
+
+    /**
+     * Multiplies RGB elements of a Color by a number. Note that the alpha value is left unchanged.
+     *
+     * @param {number} scalar - The number to multiply by.
+     * @returns {Color} Self for chaining.
+     */
+    mulScalar(scalar) {
+        this.r *= scalar;
+        this.g *= scalar;
+        this.b *= scalar;
         return this;
     }
 
