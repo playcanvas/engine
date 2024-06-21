@@ -946,8 +946,95 @@ export const PIXELFORMAT_R8 = 52;
  */
 export const PIXELFORMAT_RG8 = 53;
 
-// map of engine PIXELFORMAT_*** enums to information about the format
-// .srgb: true if sampling the format returns value in sRGB space, otherwise in linear space
+/**
+ * Format equivalent to {@link PIXELFORMAT_DXT1} but sampled in linear color space.
+ *
+ * @type {number}
+ * @category Graphics
+ */
+export const PIXELFORMAT_DXT1_SRGB = 54;
+
+/**
+ * Format equivalent to {@link PIXELFORMAT_DXT3} but sampled in linear color space.
+ *
+ * @type {number}
+ * @category Graphics
+ */
+export const PIXELFORMAT_DXT3_SRGB = 55;
+
+/**
+ * Format equivalent to {@link PIXELFORMAT_DXT5} but sampled in linear color space.
+ *
+ * @type {number}
+ * @category Graphics
+ */
+export const PIXELFORMAT_DXT5_SRGB = 56;
+
+/**
+ * Format equivalent to {@link PIXELFORMAT_PVRTC_2BPP_RGB_1} but sampled in linear color space.
+ *
+ * @type {number}
+ * @category Graphics
+ */
+export const PIXELFORMAT_PVRTC_2BPP_SRGB_1 = 57;
+
+/**
+ * Format equivalent to {@link PIXELFORMAT_PVRTC_2BPP_RGBA_1} but sampled in linear color space.
+ *
+ * @type {number}
+ * @category Graphics
+ */
+export const PIXELFORMAT_PVRTC_2BPP_SRGBA_1 = 58;
+
+/**
+ * Format equivalent to {@link PIXELFORMAT_PVRTC_4BPP_RGB_1} but sampled in linear color space.
+ *
+ * @type {number}
+ * @category Graphics
+ */
+export const PIXELFORMAT_PVRTC_4BPP_SRGB_1 = 59;
+
+/**
+ * Format equivalent to {@link PIXELFORMAT_PVRTC_4BPP_RGBA_1} but sampled in linear color space.
+ *
+ * @type {number}
+ * @category Graphics
+ */
+export const PIXELFORMAT_PVRTC_4BPP_SRGBA_1 = 60;
+
+/**
+ * Format equivalent to {@link PIXELFORMAT_ETC2_RGB} but sampled in linear color space.
+ *
+ * @type {number}
+ * @category Graphics
+ */
+export const PIXELFORMAT_ETC2_SRGB = 61;
+
+/**
+ * Format equivalent to {@link PIXELFORMAT_ETC2_RGBA} but sampled in linear color space.
+ *
+ * @type {number}
+ * @category Graphics
+ */
+export const PIXELFORMAT_ETC2_SRGBA = 62;
+
+/**
+ * Format equivalent to {@link PIXELFORMAT_ASTC_4x4} but sampled in linear color space.
+ *
+ * @type {number}
+ * @category Graphics
+ */
+export const PIXELFORMAT_ASTC_4x4_SRGB = 63;
+
+/**
+ * Information about pixel formats.
+ *
+ * srgb: true if sampling the format returns value in sRGB space, otherwise in linear space
+ * linearFormat: the corresponding linear format for sRGB formats (sampled in linear space)
+ *
+ * @type {Map<number, { name: string, size?: number, blockSize?: number, srgb?: boolean, linearFormat?: number, isInt?: boolean }>}
+ * @ignore
+ */
 export const pixelFormatInfo = new Map([
 
     // float formats
@@ -960,7 +1047,7 @@ export const pixelFormatInfo = new Map([
     [PIXELFORMAT_RGBA5551,      { name: 'RGBA5551', size: 2, srgb: true }],
     [PIXELFORMAT_RGBA4,         { name: 'RGBA4', size: 2, srgb: true }],
     [PIXELFORMAT_RGB8,          { name: 'RGB8', size: 4, srgb: true }],
-    [PIXELFORMAT_RGBA8,         { name: 'RGBA8', size: 4, srgb: true }],
+    [PIXELFORMAT_RGBA8,         { name: 'RGBA8', size: 4, srgb: true, linearFormat: PIXELFORMAT_SRGBA8 }],
     [PIXELFORMAT_R16F,          { name: 'R16F', size: 2 }],
     [PIXELFORMAT_RG16F,         { name: 'RG16F', size: 4 }],
     [PIXELFORMAT_RGB16F,        { name: 'RGB16F', size: 8 }],
@@ -976,19 +1063,31 @@ export const pixelFormatInfo = new Map([
     [PIXELFORMAT_BGRA8,         { name: 'BGRA8', size: 4 }],
 
     // compressed formats
-    [PIXELFORMAT_DXT1,              { name: 'DXT1', blockSize: 8, srgb: true }],
-    [PIXELFORMAT_DXT3,              { name: 'DXT3', blockSize: 16, srgb: true }],
-    [PIXELFORMAT_DXT5,              { name: 'DXT5', blockSize: 16, srgb: true }],
+    [PIXELFORMAT_DXT1,              { name: 'DXT1', blockSize: 8, srgb: true, linearFormat: PIXELFORMAT_DXT1_SRGB }],
+    [PIXELFORMAT_DXT3,              { name: 'DXT3', blockSize: 16, srgb: true, linearFormat: PIXELFORMAT_DXT3_SRGB }],
+    [PIXELFORMAT_DXT5,              { name: 'DXT5', blockSize: 16, srgb: true, linearFormat: PIXELFORMAT_DXT5_SRGB }],
     [PIXELFORMAT_ETC1,              { name: 'ETC1', blockSize: 8, srgb: true }],
-    [PIXELFORMAT_ETC2_RGB,          { name: 'ETC2_RGB', blockSize: 8, srgb: true }],
-    [PIXELFORMAT_ETC2_RGBA,         { name: 'ETC2_RGBA', blockSize: 16, srgb: true }],
-    [PIXELFORMAT_PVRTC_2BPP_RGB_1,  { name: 'PVRTC_2BPP_RGB_1', blockSize: 8, srgb: true }],
-    [PIXELFORMAT_PVRTC_2BPP_RGBA_1, { name: 'PVRTC_2BPP_RGBA_1', blockSize: 8, srgb: true }],
-    [PIXELFORMAT_PVRTC_4BPP_RGB_1,  { name: 'PVRTC_4BPP_RGB_1', blockSize: 8, srgb: true }],
-    [PIXELFORMAT_PVRTC_4BPP_RGBA_1, { name: 'PVRTC_4BPP_RGBA_1', blockSize: 8, srgb: true }],
-    [PIXELFORMAT_ASTC_4x4,          { name: 'ASTC_4x4', blockSize: 16, srgb: true }],
+    [PIXELFORMAT_ETC2_RGB,          { name: 'ETC2_RGB', blockSize: 8, srgb: true, linearFormat: PIXELFORMAT_ETC2_SRGB }],
+    [PIXELFORMAT_ETC2_RGBA,         { name: 'ETC2_RGBA', blockSize: 16, srgb: true, linearFormat: PIXELFORMAT_ETC2_SRGBA }],
+    [PIXELFORMAT_PVRTC_2BPP_RGB_1,  { name: 'PVRTC_2BPP_RGB_1', blockSize: 8, srgb: true, linearFormat: PIXELFORMAT_PVRTC_2BPP_SRGB_1 }],
+    [PIXELFORMAT_PVRTC_2BPP_RGBA_1, { name: 'PVRTC_2BPP_RGBA_1', blockSize: 8, srgb: true, linearFormat: PIXELFORMAT_PVRTC_2BPP_SRGBA_1 }],
+    [PIXELFORMAT_PVRTC_4BPP_RGB_1,  { name: 'PVRTC_4BPP_RGB_1', blockSize: 8, srgb: true, linearFormat: PIXELFORMAT_PVRTC_4BPP_SRGB_1 }],
+    [PIXELFORMAT_PVRTC_4BPP_RGBA_1, { name: 'PVRTC_4BPP_RGBA_1', blockSize: 8, srgb: true, linearFormat: PIXELFORMAT_PVRTC_4BPP_SRGBA_1 }],
+    [PIXELFORMAT_ASTC_4x4,          { name: 'ASTC_4x4', blockSize: 16, srgb: true, linearFormat: PIXELFORMAT_ASTC_4x4_SRGB }],
     [PIXELFORMAT_ATC_RGB,           { name: 'ATC_RGB', blockSize: 8, srgb: true }],
     [PIXELFORMAT_ATC_RGBA,          { name: 'ATC_RGBA', blockSize: 16, srgb: true }],
+
+    // compressed sRGB formats
+    [PIXELFORMAT_DXT1_SRGB,          { name: 'DXT1_SRGB', blockSize: 8 }],
+    [PIXELFORMAT_DXT3_SRGB,          { name: 'DXT3_SRGB', blockSize: 16 }],
+    [PIXELFORMAT_DXT5_SRGB,          { name: 'DXT5_SRGB', blockSize: 16 }],
+    [PIXELFORMAT_PVRTC_2BPP_SRGB_1,  { name: 'PVRTC_2BPP_SRGB_1', blockSize: 8 }],
+    [PIXELFORMAT_PVRTC_2BPP_SRGBA_1, { name: 'PVRTC_2BPP_SRGBA_1', blockSize: 8 }],
+    [PIXELFORMAT_PVRTC_4BPP_SRGB_1,  { name: 'PVRTC_4BPP_SRGB_1', blockSize: 8 }],
+    [PIXELFORMAT_PVRTC_4BPP_SRGBA_1, { name: 'PVRTC_4BPP_SRGBA_1', blockSize: 8 }],
+    [PIXELFORMAT_ETC2_SRGB,          { name: 'ETC2_SRGB', blockSize: 8 }],
+    [PIXELFORMAT_ETC2_SRGBA,         { name: 'ETC2_SRGBA', blockSize: 16 }],
+    [PIXELFORMAT_ASTC_4x4_SRGB,      { name: 'ASTC_4x4_SRGB', blockSize: 16 }],
 
     // integer formats
     [PIXELFORMAT_R8I,      { name: 'R8I', size: 1, isInt: true }],
@@ -1021,8 +1120,20 @@ export const isIntegerPixelFormat = (format) => {
 };
 
 /**
+ * Returns the linear format for the given sRGB format. If it does not exist, the input format is
+ * returned. For example for {@link PIXELFORMAT_RGBA8} the return value is {@link PIXELFORMAT_RGBA8}.
+ *
  * @param {number} format - The texture format.
- * @returns {boolean} - Whether sampling the texture with this format returns a linear value.
+ * @returns {number} The linear format for the given sRGB format.
+ * @ignore
+ */
+export const getPixelFormatLinearMatch = (format) => {
+    return pixelFormatInfo.get(format)?.linearFormat || format;
+};
+
+/**
+ * @param {number} format - The texture format.
+ * @returns {boolean} Whether sampling the texture with this format returns a linear value.
  * @ignore
  */
 export const isLinearFormat = (format) => {
