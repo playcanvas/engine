@@ -71,7 +71,7 @@ function validate(value, expect, loc, name, critical, warn, depth) {
     if (value instanceof Quat) {
         const length = value.length();
         // Don't want developers of denormalized Quat's when they normalize it.
-        if (loc !== 'Quat#normalize') {
+        if (loc !== 'Quat#normalize' && loc !== 'Quat#mulScalar') {
             // A quaternion should have unit length, but can become denormalized due to
             // floating point precision errors (aka error creep). For instance through:
             // - Successive quaternion operations
