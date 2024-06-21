@@ -1,3 +1,4 @@
+// @config HIDDEN
 import * as pc from 'playcanvas';
 import { deviceType, rootPath, fileImport } from 'examples/utils';
 
