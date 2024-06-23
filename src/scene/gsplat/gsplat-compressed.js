@@ -45,18 +45,12 @@ class GSplatCompressed {
 
         // initialize packed data
         this.packedTexture = this.createTexture('packedData', PIXELFORMAT_RGBA32U, this.evalTextureSize(numSplats), gsplatData.vertexData);
-        // const packedData = this.packedTexture.lock();
-        // packedData.set(gsplatData.vertexData);
-        // this.packedTexture.unlock();
 
         // initialize chunk data
         const chunkSize = this.evalTextureSize(numChunks);
         chunkSize.x *= 3;
 
         this.chunkTexture = this.createTexture('chunkData', PIXELFORMAT_RGBA32F, chunkSize, gsplatData.chunkData);
-        // const chunkData = this.chunkTexture.lock();
-        // chunkData.set(gsplatData.chunkData);
-        // this.chunkTexture.unlock();
     }
 
     destroy() {
