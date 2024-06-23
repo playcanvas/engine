@@ -39,9 +39,13 @@ const dataTypeMap = new Map([
 // helper for streaming in chunks of data in a memory efficient way
 class StreamBuf {
     reader;
+
     data;
+
     view;
+
     head = 0;
+
     tail = 0;
 
     constructor(reader) {
@@ -114,15 +118,39 @@ class StreamBuf {
         return this.tail - this.head;
     }
 
-    getInt8()    { const result = this.view.getInt8(this.head); this.head++; return result; }
-    getUint8()   { const result = this.view.getUint8(this.head); this.head++; return result; }
-    getInt16()   { const result = this.view.getInt16(this.head, true); this.head += 2; return result; }
-    getUint16()  { const result = this.view.getUint16(this.head, true); this.head += 2; return result; }
-    getInt32()   { const result = this.view.getInt32(this.head, true); this.head += 4; return result; }
-    getUint32()  { const result = this.view.getUint32(this.head, true); this.head += 4; return result; }
-    getFloat32() { const result = this.view.getFloat32(this.head, true); this.head += 4; return result; }
-    getFloat64() { const result = this.view.getFloat64(this.head, true); this.head += 8; return result; }
-};
+    // helpers for extracting data from head
+    getInt8() {
+        const result = this.view.getInt8(this.head); this.head++; return result;
+    }
+
+    getUint8() {
+        const result = this.view.getUint8(this.head); this.head++; return result;
+    }
+
+    getInt16() {
+        const result = this.view.getInt16(this.head, true); this.head += 2; return result;
+    }
+
+    getUint16() {
+        const result = this.view.getUint16(this.head, true); this.head += 2; return result;
+    }
+
+    getInt32() {
+        const result = this.view.getInt32(this.head, true); this.head += 4; return result;
+    }
+
+    getUint32() {
+        const result = this.view.getUint32(this.head, true); this.head += 4; return result;
+    }
+
+    getFloat32() {
+        const result = this.view.getFloat32(this.head, true); this.head += 4; return result;
+    }
+
+    getFloat64() {
+        const result = this.view.getFloat64(this.head, true); this.head += 8; return result;
+    }
+}
 
 // parse the ply header text and return an array of Element structures and a
 // string containing the ply format
@@ -216,6 +244,7 @@ const readCompressedPly = async (streamBuf, elements, littleEndian) => {
     let chunks = 0;
     while (chunks < numChunks) {
         while (streamBuf.remaining < chunkSize) {
+            /* eslint-disable no-await-in-loop */
             await streamBuf.read();
         }
 
@@ -241,6 +270,7 @@ const readCompressedPly = async (streamBuf, elements, littleEndian) => {
     let vertices = 0;
     while (vertices < numVertices) {
         while (streamBuf.remaining < vertexSize) {
+            /* eslint-disable no-await-in-loop */
             await streamBuf.read();
         }
 
@@ -324,6 +354,7 @@ const readPly = async (reader, propertyFilter = null) => {
 
     while (true) {
         // get the next chunk of data
+        /* eslint-disable no-await-in-loop */
         await streamBuf.read();
 
         // check magic bytes
@@ -384,6 +415,7 @@ const readPly = async (reader, propertyFilter = null) => {
 
         while (c < element.count) {
             while (streamBuf.remaining < inputSize) {
+                /* eslint-disable no-await-in-loop */
                 await streamBuf.read();
             }
 
@@ -408,7 +440,7 @@ const readPly = async (reader, propertyFilter = null) => {
                         streamBuf.head += property.byteSize;
                     }
                 }
-                c++
+                c++;
             }
         }
     }

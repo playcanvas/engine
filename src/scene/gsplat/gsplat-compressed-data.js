@@ -1,7 +1,6 @@
 import { Quat } from '../../core/math/quat.js';
 import { Vec3 } from '../../core/math/vec3.js';
 import { Vec4 } from '../../core/math/vec4.js';
-import { BoundingBox } from '../../core/shape/bounding-box.js';
 import { GSplatData } from './gsplat-data.js';
 
 const SH_C0 = 0.28209479177387814;
@@ -79,17 +78,24 @@ class SplatCompressedIterator {
 class GSplatCompressedData {
     numSplats;
 
-    // contains 12 floats per chunk:
-    //   min_x, min_y, min_z,
-    //   max_x, max_y, max_z,
-    //   min_scale_x, min_scale_y, min_scale_z,
-    //   max_scale_x, max_scale_y, max_scale_z
-    /* @type {Float32Array} */
+    /**
+     * Contains 12 floats per chunk:
+     *      min_x, min_y, min_z,
+     *      max_x, max_y, max_z,
+     *      min_scale_x, min_scale_y, min_scale_z,
+     *      max_scale_x, max_scale_y, max_scale_z
+     * @type {Float32Array}
+     */
     chunkData;
 
-    // contains 4 uint32 per vertex:
-    //   packed_position, packed_rotation, packed_scale, packed_color
-    /* @type {Uint32Array} */
+    /**
+     * Contains 4 uint32 per vertex:
+     *      packed_position
+     *      packed_rotation
+     *      packed_scale
+     *      packed_color
+     * @type {Uint32Array}
+     */
     vertexData;
 
     /**
@@ -109,7 +115,7 @@ class GSplatCompressedData {
      * Calculate pessimistic scene aabb taking into account splat size. This is faster than
      * calculating an exact aabb.
      *
-     * @param {BoundingBox} result - Where to store the resulting bounding box.
+     * @param {import('../../core/shape/bounding-box.js').BoundingBox} result - Where to store the resulting bounding box.
      * @returns {boolean} - Whether the calculation was successful.
      */
     calcAabb(result) {
@@ -252,6 +258,6 @@ class GSplatCompressedData {
             })
         }]);
     }
-};
+}
 
 export { GSplatCompressedData };

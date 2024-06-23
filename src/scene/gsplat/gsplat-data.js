@@ -2,7 +2,6 @@ import { Color } from '../../core/math/color.js';
 import { Mat4 } from '../../core/math/mat4.js';
 import { Quat } from '../../core/math/quat.js';
 import { Vec3 } from '../../core/math/vec3.js';
-import { Vec4 } from '../../core/math/vec4.js';
 import { BoundingBox } from '../../core/shape/bounding-box.js';
 
 const vec3 = new Vec3();
@@ -178,7 +177,7 @@ class GSplatData {
      * @param {Vec3|null} [p] - the vector to receive splat position
      * @param {Quat|null} [r] - the quaternion to receive splat rotation
      * @param {Vec3|null} [s] - the vector to receive splat scale
-     * @param {Vec4|null} [c] - the vector to receive splat color
+     * @param {import('../../core/math/vec4.js').Vec4|null} [c] - the vector to receive splat color
      * @returns {SplatIterator} - The iterator
      */
     createIter(p, r, s, c) {

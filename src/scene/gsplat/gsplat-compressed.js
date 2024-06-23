@@ -104,7 +104,7 @@ class GSplatCompressed {
             magFilter: FILTER_NEAREST,
             addressU: ADDRESS_CLAMP_TO_EDGE,
             addressV: ADDRESS_CLAMP_TO_EDGE,
-            ... data ? { levels: [data] } : { }
+            ...(data ? { levels: [data] } : { })
         });
     }
 }
