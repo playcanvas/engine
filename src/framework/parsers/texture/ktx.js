@@ -8,7 +8,7 @@ import {
     PIXELFORMAT_RGB8, PIXELFORMAT_RGBA8, PIXELFORMAT_SRGB8, PIXELFORMAT_SRGBA8,
     PIXELFORMAT_111110F, PIXELFORMAT_RGB16F, PIXELFORMAT_RGBA16F,
     TEXHINT_ASSET,
-    getPixelFormatLinearSampling
+    pixelFormatLinearToGamma
 } from '../../../platform/graphics/constants.js';
 import { Texture } from '../../../platform/graphics/texture.js';
 
@@ -70,7 +70,7 @@ class KtxParser extends TextureParser {
             return null;
         }
 
-        const format = textureOptions.srgb ? getPixelFormatLinearSampling(textureData.format) : textureData.format;
+        const format = textureOptions.srgb ? pixelFormatLinearToGamma(textureData.format) : textureData.format;
         const texture = new Texture(device, {
             name: url,
             // #if _PROFILER
