@@ -111,6 +111,10 @@ function BasisWorker() {
         return result;
     };
 
+    const isPOT = (width, height) => {
+        return ((width & (width - 1)) === 0) && ((height & (height - 1)) === 0);
+    };
+
     const performanceNow = () => {
         return (typeof performance !== 'undefined') ? performance.now() : 0;
     };
@@ -167,7 +171,7 @@ function BasisWorker() {
             // pvrtc
             case BASIS_FORMAT.cTFPVRTC1_4_RGB:
             case BASIS_FORMAT.cTFPVRTC1_4_RGBA:
-                return true;
+                return isPOT(width, height);
             // astc
             case BASIS_FORMAT.cTFASTC_4x4:
                 return true;
