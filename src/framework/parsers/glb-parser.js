@@ -2094,9 +2094,7 @@ const createImages = (gltf, bufferViews, urlBase, registry, options) => {
                 }
 
                 // create and load the asset
-                const data = {
-                    srgb: srgb
-                };
+                const data = { srgb };
 
                 const asset = new Asset(name, 'texture', file, data, options);
                 asset.on('load', asset => resolve(asset));
