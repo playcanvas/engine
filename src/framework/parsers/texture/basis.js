@@ -1,4 +1,4 @@
-import { ADDRESS_CLAMP_TO_EDGE, ADDRESS_REPEAT, TEXHINT_ASSET, getPixelFormatLinearMatch } from '../../../platform/graphics/constants.js';
+import { ADDRESS_CLAMP_TO_EDGE, ADDRESS_REPEAT, TEXHINT_ASSET, getPixelFormatLinearSampling } from '../../../platform/graphics/constants.js';
 import { Texture } from '../../../platform/graphics/texture.js';
 
 import { Asset } from '../../asset/asset.js';
@@ -46,7 +46,7 @@ class BasisParser extends TextureParser {
 
     // our async transcode call provides the neat structure we need to create the texture instance
     open(url, data, device, textureOptions = {}) {
-        const format = textureOptions.srgb ? getPixelFormatLinearMatch(data.format) : data.format;
+        const format = textureOptions.srgb ? getPixelFormatLinearSampling(data.format) : data.format;
         const texture = new Texture(device, {
             name: url,
             // #if _PROFILER

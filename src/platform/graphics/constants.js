@@ -1029,8 +1029,10 @@ export const PIXELFORMAT_ASTC_4x4_SRGB = 63;
 /**
  * Information about pixel formats.
  *
- * srgb: true if sampling the format returns value in sRGB space, otherwise in linear space
- * linearFormat: the corresponding linear format for sRGB formats (sampled in linear space)
+ * srgb: true if sampling the sRGB space pixel value returns the value in sRGB space, otherwise
+ * the value gets automatically converted to a linear space. Only applicable to formats typically
+ * used for color data in LDR space, which are often stored in sRGB space.
+ * linearFormat: the corresponding linear, which automatically converts the sRGB value to linear
  *
  * @type {Map<number, { name: string, size?: number, blockSize?: number, srgb?: boolean, linearFormat?: number, isInt?: boolean }>}
  * @ignore
@@ -1120,14 +1122,15 @@ export const isIntegerPixelFormat = (format) => {
 };
 
 /**
- * Returns the linear format for the given sRGB format. If it does not exist, the input format is
- * returned. For example for {@link PIXELFORMAT_RGBA8} the return value is {@link PIXELFORMAT_RGBA8}.
+ * Returns for the format which can be used to sample the sRGB stored data in linear space, with
+ * automatic sRGB to linear conversion. If it does not exist, the input format is returned. For
+ * example for {@link PIXELFORMAT_RGBA8} the return value is {@link PIXELFORMAT_RGBA8}.
  *
  * @param {number} format - The texture format.
- * @returns {number} The linear format for the given sRGB format.
+ * @returns {number} The format allowing linear sampling of the texture.
  * @ignore
  */
-export const getPixelFormatLinearMatch = (format) => {
+export const getPixelFormatLinearSampling = (format) => {
     return pixelFormatInfo.get(format)?.linearFormat || format;
 };
 
