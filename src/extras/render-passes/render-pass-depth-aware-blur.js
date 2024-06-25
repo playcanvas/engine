@@ -70,7 +70,7 @@ class RenderPassDepthAwareBlur extends RenderPassShaderQuad {
         `
         );
 
-        var scope = this.device.scope;
+        const scope = this.device.scope;
         this.sourceTextureId = scope.resolve('sourceTexture');
         this.sourceInvResolutionId = scope.resolve('sourceInvResolution');
         this.sourceInvResolutionValue = new Float32Array(2);

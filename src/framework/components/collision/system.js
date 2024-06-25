@@ -423,7 +423,7 @@ class CollisionMeshSystemImpl extends CollisionSystemImpl {
                 return idx;
             };
 
-            for (var i = 0; i < numTriangles; i++) {
+            for (let i = 0; i < numTriangles; i++) {
                 i1 = addVertex(indices[base + i * 3]);
                 i2 = addVertex(indices[base + i * 3 + 1]);
                 i3 = addVertex(indices[base + i * 3 + 2]);
