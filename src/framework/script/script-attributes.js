@@ -180,7 +180,7 @@ function attributeToValue(app, schema, value, current) {
  */
 export function assignAttributesToScript(app, attributeSchemaMap, data, script) {
 
-    if(!data) return;
+    if (!data) return;
 
     // Iterate over the schema and assign corresponding data
     for (const attributeName in attributeSchemaMap) {
@@ -188,7 +188,7 @@ export function assignAttributesToScript(app, attributeSchemaMap, data, script) 
         const dataToAssign = data[attributeName];
 
         // Skip if the data is not defined
-        if(dataToAssign === undefined) continue;
+        if (dataToAssign === undefined) continue;
 
         // Assign the value to the script based on the attribute schema
         script[attributeName] =  attributeToValue(app, attributeSchema, dataToAssign, script[attributeName]);
@@ -204,6 +204,7 @@ export function assignAttributesToScript(app, attributeSchemaMap, data, script) 
  */
 class ScriptAttributes {
     static assignAttributesToScript = assignAttributesToScript;
+
     static attributeToValue = attributeToValue;
 
     /**
