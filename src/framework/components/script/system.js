@@ -92,7 +92,8 @@ class ScriptComponentSystem extends ComponentSystem {
                 component.create(data.order[i], {
                     enabled: data.scripts[data.order[i]].enabled,
                     attributes: data.scripts[data.order[i]].attributes,
-                    preloading: this.preloading
+                    preloading: this.preloading,
+                    requireAttributeSchema: true,
                 });
             }
         }

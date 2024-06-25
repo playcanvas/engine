@@ -10,7 +10,7 @@ import {
 import { Component } from '../component.js';
 import { Entity } from '../../entity.js';
 import { ScriptType } from '../../script/script-type.js';
-import { getScriptName } from '../../script/script.js';
+import { Script, getScriptName } from '../../script/script.js';
 
 const toLowerCamelCase = str => str[0].toLowerCase() + str.substring(1);
 
@@ -395,14 +395,14 @@ class ScriptComponent extends Component {
         }
     }
 
-    initializeAttributes(script) {
+    initializeAttributes(script, requireAttributeSchema = true) {
 
         // if script has __initializeAttributes method assume it has a runtime schema
         if (script instanceof ScriptType) {
 
             script.__initializeAttributes();
 
-        } else {
+        } else if (script instanceof Script) {
 
             // otherwise we need to manually initialize attributes from the schema
             const name = script.__scriptType.__name;
@@ -413,15 +413,28 @@ class ScriptComponent extends Component {
                 return;
             }
 
-            // Fetch schema and warn if it doesn't exist
+
             const schema = this.system.app.scripts?.getSchema(name);
-            if (!schema) {
+            
+            if(schema) {
+                
+                // Assign the attributes to he script instance based on the attribute schema
+                assignAttributesToScript(this.system.app, schema.attributes, data, script);
+                
+            } else if(!requireAttributeSchema) {
+                
+                // If no schema exists then assign the attributes directly
+                Object.assign(script, data.attributes);
+                
+            } else {
+
+                // If no schema exists and requireAttributeSchema is true then warn the user
                 Debug.warnOnce(`No schema exists for the script '${name}'. A schema must exist for data to be instantiated on the script.`);
+                
             }
 
-            // Assign the attributes to the script instance based on the attribute schema
-            assignAttributesToScript(this.system.app, schema.attributes, data, script);
-
+        } else {
+            Debug.warnOnce(`Script '${script.__scriptType.__name}' must either inherit from 'ScriptType' or 'Script'.`);
         }
     }
 
@@ -663,6 +676,8 @@ class ScriptComponent extends Component {
      * script and attributes must be initialized manually. Defaults to false.
      * @param {number} [args.ind] - The index where to insert the script instance at. Defaults to
      * -1, which means append it at the end.
+     * @param {boolean} [args.requireAttributeSchema] - If true, attributes are only initialized if
+     * a schema exists for the script. Defaults to false.
      * @returns {import('../../script/script-type.js').ScriptType|null} Returns an instance of a
      * {@link ScriptType} if successfully attached to an entity, or null if it failed because a
      * script with a same name has already been added or if the {@link ScriptType} cannot be found
@@ -722,8 +737,10 @@ class ScriptComponent extends Component {
 
                 this[scriptName] = scriptInstance;
 
-                if (!args.preloading)
-                    this.initializeAttributes(scriptInstance);
+                if (!args.preloading) {
+                    const requireAttributeSchema = args.hasOwnProperty('requireAttributeSchema') ? args.requireAttributeSchema : false;
+                    this.initializeAttributes(scriptInstance, requireAttributeSchema);
+                }
 
                 this.fire('create', scriptName, scriptInstance);
                 this.fire('create:' + scriptName, scriptInstance);
