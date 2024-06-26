@@ -1,6 +1,6 @@
 import { Debug } from '../../core/debug.js';
 import { TRACEID_RENDER_TARGET_ALLOC } from '../../core/constants.js';
-import { PIXELFORMAT_DEPTH, PIXELFORMAT_DEPTHSTENCIL } from './constants.js';
+import { PIXELFORMAT_DEPTH, PIXELFORMAT_DEPTHSTENCIL, isSrgbPixelFormat } from './constants.js';
 import { DebugGraphics } from './debug-graphics.js';
 import { GraphicsDevice } from './graphics-device.js';
 
@@ -481,6 +481,16 @@ class RenderTarget {
      */
     get height() {
         return this._colorBuffer?.height || this._depthBuffer?.height || this._device.height;
+    }
+
+    /**
+     * True if the first color buffer format is sRGB.
+     *
+     * @type {boolean}
+     * @ignore
+     */
+    get srgb() {
+        return this.colorBuffer ? isSrgbPixelFormat(this.colorBuffer.format) : false;
     }
 }
 

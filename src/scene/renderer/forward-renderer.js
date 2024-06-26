@@ -18,7 +18,6 @@ import { Renderer } from './renderer.js';
 import { LightCamera } from './light-camera.js';
 import { RenderPassForward } from './render-pass-forward.js';
 import { RenderPassPostprocessing } from './render-pass-postprocessing.js';
-import { isSrgbPixelFormat } from '../../platform/graphics/constants.js';
 
 const _noLights = [[], [], []];
 const tmpColor = new Color();
@@ -468,8 +467,7 @@ class ForwardRenderer extends Renderer {
         const renderParams = camera.renderingParams ?? this.scene.rendering;
 
         // output gamma correction is determined by the render target
-        const colorBuffer = renderTarget?.colorBuffer;
-        renderParams.srgbRenderTarget = colorBuffer ? isSrgbPixelFormat(colorBuffer.format) : false;
+        renderParams.srgbRenderTarget = renderTarget?.srgb ?? false;
 
         const addCall = (drawCall, shaderInstance, isNewMaterial, lightMaskChanged) => {
             _drawCallList.drawCalls.push(drawCall);
