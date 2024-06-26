@@ -92,7 +92,7 @@ class LitMaterialOptionsBuilder {
 
     static updateEnvOptions(litOptions, material, scene, renderParams) {
         litOptions.fog = material.useFog ? scene.fog : 'none';
-        litOptions.gamma = renderParams.gammaCorrection;
+        litOptions.gamma = renderParams.shaderOutputGamma;
         litOptions.toneMap = material.useTonemap ? renderParams.toneMapping : TONEMAP_NONE;
 
         // source of reflections
