@@ -10,9 +10,18 @@ const splatCoreVS = /* glsl */ `
     uniform mat4 matrix_model;
     uniform mat4 matrix_view;
     uniform mat4 matrix_projection;
-    uniform mat4 matrix_viewProjection;
 
     uniform vec2 viewport;
+    uniform vec4 tex_params;            // num splats, texture width
+
+    uniform highp usampler2D splatOrder;
+    uniform highp sampler2D transformA;
+    uniform highp sampler2D transformB;
+    uniform highp sampler2D transformC;
+    uniform sampler2D splatColor;
+
+    attribute vec3 vertex_position;
+    attribute uint vertex_id_attrib;
 
     varying vec2 texCoord;
     varying vec4 color;
@@ -21,46 +30,43 @@ const splatCoreVS = /* glsl */ `
         varying float id;
     #endif
 
-    uniform vec4 tex_params;
-    uniform sampler2D splatColor;
-
-    uniform highp usampler2D splatOrder;
-    uniform highp sampler2D transformA;
-    uniform highp sampler2D transformB;
-    uniform highp sampler2D transformC;
+    uint orderId;
+    uint splatId;
+    ivec2 splatUV;
 
     vec3 center;
     vec3 covA;
     vec3 covB;
 
-    attribute vec3 vertex_position;
-    attribute uint vertex_id_attrib;
+    // calculate the current splat index and uv
+    bool calcSplatUV() {
+        uint numSplats = uint(tex_params.x);
+        uint textureWidth = uint(tex_params.y);
 
-    uint splatId;
-    ivec2 splatUV;
-    void evalSplatUV() {
-        int bufferSizeX = int(tex_params.x);
+        // calculate splat index
+        orderId = vertex_id_attrib + uint(vertex_position.z);
 
-        // sample order texture
-        uint orderId = vertex_id_attrib + uint(vertex_position.z);
+        if (orderId > numSplats) {
+            return false;
+        }
+
         ivec2 orderUV = ivec2(
-            int(orderId) % bufferSizeX,
-            int(orderId) / bufferSizeX
+            int(orderId % textureWidth),
+            int(orderId / textureWidth)
         );
 
         // calculate splatUV
         splatId = texelFetch(splatOrder, orderUV, 0).r;
         splatUV = ivec2(
-            int(splatId) % bufferSizeX,
-            int(splatId) / bufferSizeX
+            int(splatId % textureWidth),
+            int(splatId / textureWidth)
         );
+
+        return true;
     }
 
-    vec4 getColor() {
-        return texelFetch(splatColor, splatUV, 0);
-    }
-
-    void getTransform() {
+    // read chunk and packed data from textures
+    void readData() {
         vec4 tA = texelFetch(transformA, splatUV, 0);
         vec4 tB = texelFetch(transformB, splatUV, 0);
         vec4 tC = texelFetch(transformC, splatUV, 0);
@@ -70,30 +76,21 @@ const splatCoreVS = /* glsl */ `
         covB = vec3(tA.w, tB.w, tC.x);
     }
 
-    vec3 evalCenter() {
-        evalSplatUV();
-
-        // get data
-        getTransform();
-
-        return center;
+    vec4 getColor() {
+        return texelFetch(splatColor, splatUV, 0);
     }
 
-    vec4 evalSplat(vec4 centerWorld)
+    // evaluate the splat position
+    bool evalSplat(out vec4 result)
     {
+        vec4 centerWorld = matrix_model * vec4(center, 1.0);
         vec4 splat_cam = matrix_view * centerWorld;
         vec4 splat_proj = matrix_projection * splat_cam;
 
         // cull behind camera
         if (splat_proj.z < -splat_proj.w) {
-            return vec4(0.0, 0.0, 2.0, 1.0);
+            return false;
         }
-
-        #ifndef DITHER_NONE
-            id = float(splatId);
-        #endif
-
-        color = getColor();
 
         mat3 Vrk = mat3(
             covA.x, covA.y, covA.z, 
@@ -132,13 +129,12 @@ const splatCoreVS = /* glsl */ `
         // TODO: figure out length units and expose as uniform parameter
         // TODO: perhaps make this a shader compile-time option
         if (dot(v1, v1) < 4.0 && dot(v2, v2) < 4.0) {
-            return vec4(0.0, 0.0, 2.0, 1.0);
+            return false;
         }
 
-        texCoord = vertex_position.xy;
+        result = splat_proj + vec4((vertex_position.x * v1 + vertex_position.y * v2) / viewport * splat_proj.w, 0, 0);
 
-        splat_proj.xy += (texCoord.x * v1 + texCoord.y * v2) / viewport * splat_proj.w;
-        return splat_proj;
+        return true;
     }
 `;
 
