@@ -1,19 +1,7 @@
 import { GSplatData } from '../../scene/gsplat/gsplat-data.js';
+import { GSplatCompressedData } from '../../scene/gsplat/gsplat-compressed-data.js';
 import { GSplatResource } from './gsplat-resource.js';
-
-const magicBytes = new Uint8Array([112, 108, 121, 10]);                                                 // ply\n
-const endHeaderBytes = new Uint8Array([10, 101, 110, 100, 95, 104, 101, 97, 100, 101, 114, 10]);        // \nend_header\n
-
-const dataTypeMap = new Map([
-    ['char', Int8Array],
-    ['uchar', Uint8Array],
-    ['short', Int16Array],
-    ['ushort', Uint16Array],
-    ['int', Int32Array],
-    ['uint', Uint32Array],
-    ['float', Float32Array],
-    ['double', Float64Array]
-]);
+import { Mat4 } from '../../core/math/mat4.js';
 
 /**
  * @typedef {Int8Array|Uint8Array|Int16Array|Uint16Array|Int32Array|Uint32Array|Float32Array|Float64Array} DataType
@@ -34,21 +22,287 @@ const dataTypeMap = new Map([
  * @property {PlyProperty[]} properties - The properties.
  */
 
+const magicBytes = new Uint8Array([112, 108, 121, 10]);                                                 // ply\n
+const endHeaderBytes = new Uint8Array([10, 101, 110, 100, 95, 104, 101, 97, 100, 101, 114, 10]);        // \nend_header\n
+
+const dataTypeMap = new Map([
+    ['char', Int8Array],
+    ['uchar', Uint8Array],
+    ['short', Int16Array],
+    ['ushort', Uint16Array],
+    ['int', Int32Array],
+    ['uint', Uint32Array],
+    ['float', Float32Array],
+    ['double', Float64Array]
+]);
+
+// helper for streaming in chunks of data in a memory efficient way
+class StreamBuf {
+    reader;
+
+    data;
+
+    view;
+
+    head = 0;
+
+    tail = 0;
+
+    constructor(reader) {
+        this.reader = reader;
+    }
+
+    // read the next chunk of data
+    async read() {
+        const { value, done } = await this.reader.read();
+
+        if (done) {
+            throw new Error('Stream finished before end of header');
+        }
+
+        this.push(value);
+    }
+
+    // append data to the buffer
+    push(data) {
+        if (!this.data) {
+            // first buffer
+            this.data = data;
+            this.view = new DataView(this.data.buffer);
+            this.tail = data.length;
+        } else {
+            const remaining = this.tail - this.head;
+            const newSize = remaining + data.length;
+
+            if (this.data.length >= newSize) {
+                // buffer is large enough to contain combined data
+                if (this.head > 0) {
+                    // shuffle existing data to index 0 and append the new data
+                    this.data.copyWithin(0, this.head, this.tail);
+                    this.data.set(data, remaining);
+                    this.head = 0;
+                    this.tail = newSize;
+                } else {
+                    // no shuffle needed, just append new data
+                    this.data.set(data, this.tail);
+                    this.tail += data.length;
+                }
+            } else {
+                // buffer is too small and must grow
+                const tmp = new Uint8Array(newSize);
+                if (this.head > 0 || this.tail < this.data.length) {
+                    // shuffle existing data to index 0 and append the new data
+                    tmp.set(this.data.subarray(this.head, this.tail), 0);
+                } else {
+                    tmp.set(this.data, 0);
+                }
+                tmp.set(data, remaining);
+                this.data = tmp;
+                this.view = new DataView(this.data.buffer);
+                this.head = 0;
+                this.tail = newSize;
+            }
+        }
+    }
+
+    // remove the read data from the head of the buffer
+    compact() {
+        if (this.head > 0) {
+            this.data.copyWithin(0, this.head, this.tail);
+            this.tail -= this.head;
+            this.head = 0;
+        }
+    }
+
+    get remaining() {
+        return this.tail - this.head;
+    }
+
+    // helpers for extracting data from head
+    getInt8() {
+        const result = this.view.getInt8(this.head); this.head++; return result;
+    }
+
+    getUint8() {
+        const result = this.view.getUint8(this.head); this.head++; return result;
+    }
+
+    getInt16() {
+        const result = this.view.getInt16(this.head, true); this.head += 2; return result;
+    }
+
+    getUint16() {
+        const result = this.view.getUint16(this.head, true); this.head += 2; return result;
+    }
+
+    getInt32() {
+        const result = this.view.getInt32(this.head, true); this.head += 4; return result;
+    }
+
+    getUint32() {
+        const result = this.view.getUint32(this.head, true); this.head += 4; return result;
+    }
+
+    getFloat32() {
+        const result = this.view.getFloat32(this.head, true); this.head += 4; return result;
+    }
+
+    getFloat64() {
+        const result = this.view.getFloat64(this.head, true); this.head += 8; return result;
+    }
+}
+
+// parse the ply header text and return an array of Element structures and a
+// string containing the ply format
+const parseHeader = (lines) => {
+    const elements = [];
+    let format;
+
+    for (let i = 1; i < lines.length; ++i) {
+        const words = lines[i].split(' ');
+
+        switch (words[0]) {
+            case 'format':
+                format = words[1];
+                break;
+            case 'element':
+                elements.push({
+                    name: words[1],
+                    count: parseInt(words[2], 10),
+                    properties: []
+                });
+                break;
+            case 'property': {
+                if (!dataTypeMap.has(words[1])) {
+                    throw new Error(`Unrecognized property data type '${words[1]}' in ply header`);
+                }
+                const element = elements[elements.length - 1];
+                element.properties.push({
+                    type: words[1],
+                    name: words[2],
+                    storage: null,
+                    byteSize: dataTypeMap.get(words[1]).BYTES_PER_ELEMENT
+                });
+                break;
+            }
+            default:
+                throw new Error(`Unrecognized header value '${words[0]}' in ply header`);
+        }
+    }
+
+    return { elements, format };
+};
+
+// return true if the array of elements references a compressed ply file
+const isCompressedPly = (elements) => {
+    const chunkProperties = [
+        'min_x', 'min_y', 'min_z',
+        'max_x', 'max_y', 'max_z',
+        'min_scale_x', 'min_scale_y', 'min_scale_z',
+        'max_scale_x', 'max_scale_y', 'max_scale_z'
+    ];
+
+    const vertexProperties = [
+        'packed_position', 'packed_rotation', 'packed_scale', 'packed_color'
+    ];
+
+    return elements.length === 2 &&
+           elements[0].name === 'chunk' &&
+           elements[0].properties.every((p, i) => p.name === chunkProperties[i] && p.type === 'float') &&
+           elements[1].name === 'vertex' &&
+           elements[1].properties.every((p, i) => p.name === vertexProperties[i] && p.type === 'uint');
+};
+
+// read the data of a compressed ply file
+const readCompressedPly = async (streamBuf, elements, littleEndian) => {
+    const result = new GSplatCompressedData();
+
+    const numChunks = elements[0].count;
+    const chunkSize = 12 * 4;
+
+    const numVertices = elements[1].count;
+    const vertexSize = 4 * 4;
+
+    // evaluate the storage size for the given count (this must match the
+    // texture size calculation in GSplatCompressed).
+    const evalStorageSize = (count) => {
+        const width = Math.ceil(Math.sqrt(count));
+        const height = Math.ceil(count / width);
+        return width * height;
+    };
+
+    // allocate result
+    result.numSplats = elements[1].count;
+    result.chunkData = new Float32Array(evalStorageSize(numChunks) * 12);
+    result.vertexData = new Uint32Array(evalStorageSize(numVertices) * 4);
+
+    let uint32StreamData;
+    const uint32ChunkData = new Uint32Array(result.chunkData.buffer);
+    const uint32VertexData = result.vertexData;
+
+    // read chunks
+    let chunks = 0;
+    while (chunks < numChunks) {
+        while (streamBuf.remaining < chunkSize) {
+            /* eslint-disable no-await-in-loop */
+            await streamBuf.read();
+        }
+
+        // ensure the uint32 view is still valid
+        if (uint32StreamData?.buffer !== streamBuf.data.buffer) {
+            uint32StreamData = new Uint32Array(streamBuf.data.buffer, 0, Math.floor(streamBuf.data.buffer.byteLength / 4));
+        }
+
+        // read the next chunk of data
+        const toRead = Math.min(numChunks - chunks, Math.floor(streamBuf.remaining / chunkSize));
+
+        const dstOffset = chunks * 12;
+        const srcOffset = streamBuf.head / 4;
+        for (let i = 0; i < toRead * 12; ++i) {
+            uint32ChunkData[dstOffset + i] = uint32StreamData[srcOffset + i];
+        }
+
+        streamBuf.head += toRead * chunkSize;
+        chunks += toRead;
+    }
+
+    // read vertices
+    let vertices = 0;
+    while (vertices < numVertices) {
+        while (streamBuf.remaining < vertexSize) {
+            /* eslint-disable no-await-in-loop */
+            await streamBuf.read();
+        }
+
+        // ensure the uint32 view is still valid
+        if (uint32StreamData?.buffer !== streamBuf.data.buffer) {
+            uint32StreamData = new Uint32Array(streamBuf.data.buffer, 0, Math.floor(streamBuf.data.buffer.byteLength / 4));
+        }
+
+        // read the next chunk of data
+        const toRead = Math.min(numVertices - vertices, Math.floor(streamBuf.remaining / vertexSize));
+
+        const dstOffset = vertices * 4;
+        const srcOffset = streamBuf.head / 4;
+        for (let i = 0; i < toRead * 4; ++i) {
+            uint32VertexData[dstOffset + i] = uint32StreamData[srcOffset + i];
+        }
+
+        streamBuf.head += toRead * vertexSize;
+        vertices += toRead;
+    }
+
+    return result;
+};
+
 /**
  * asynchronously read a ply file data
  *
  * @param {ReadableStreamDefaultReader<Uint8Array>} reader - The reader.
  * @param {Function|null} propertyFilter - Function to filter properties with.
- * @returns {Promise<PlyElement[]>} The ply file data.
+ * @returns {Promise<GSplatData | GSplatCompressedData>} The ply file data.
  */
 const readPly = async (reader, propertyFilter = null) => {
-    const concat = (a, b) => {
-        const c = new Uint8Array(a.byteLength + b.byteLength);
-        c.set(a);
-        c.set(b, a.byteLength);
-        return c;
-    };
-
     /**
      * Searches for the first occurrence of a sequence within a buffer.
      * @example
@@ -95,150 +349,105 @@ const readPly = async (reader, propertyFilter = null) => {
         return true;
     };
 
-    /** @type {Uint8Array|undefined} */
-    let buf;
-    /** @type {number} */
-    let endHeaderIndex;
+    const streamBuf = new StreamBuf(reader);
+    let headerLength;
 
     while (true) {
-        // get the next chunk
+        // get the next chunk of data
         /* eslint-disable no-await-in-loop */
-        const { value, done } = await reader.read();
-
-        if (done) {
-            throw new Error('Stream finished before end of header');
-        }
-
-        // combine new chunk with the previous
-        buf = buf ? concat(buf, value) : value;
+        await streamBuf.read();
 
         // check magic bytes
-        if (buf.length >= magicBytes.length && !startsWith(buf, magicBytes)) {
+        if (streamBuf.tail >= magicBytes.length && !startsWith(streamBuf.data, magicBytes)) {
             throw new Error('Invalid ply header');
         }
 
-        // check if we can find the end-of-header marker
-        endHeaderIndex = find(buf, endHeaderBytes);
+        // search for end-of-header marker
+        headerLength = find(streamBuf.data, endHeaderBytes);
 
-        if (endHeaderIndex !== -1) {
+        if (headerLength !== -1) {
             break;
         }
     }
 
-    // decode buffer header text
-    const headerText = new TextDecoder('ascii').decode(buf.slice(0, endHeaderIndex));
-
-    // split into lines and remove comments
-    const headerLines = headerText.split('\n')
+    // decode buffer header text and split into lines and remove comments
+    const lines = new TextDecoder('ascii')
+        .decode(streamBuf.data.subarray(0, headerLength))
+        .split('\n')
         .filter(line => !line.startsWith('comment '));
 
-    // decode header and allocate data storage
-    const elements = [];
-    for (let i = 1; i < headerLines.length; ++i) {
-        const words = headerLines[i].split(' ');
+    // decode header and build element and property list
+    const { elements, format } = parseHeader(lines);
 
-        switch (words[0]) {
-            case 'format':
-                if (words[1] !== 'binary_little_endian') {
-                    throw new Error('Unsupported ply format');
-                }
-                break;
-            case 'element':
-                elements.push({
-                    name: words[1],
-                    count: parseInt(words[2], 10),
-                    properties: []
-                });
-                break;
-            case 'property': {
-                if (!dataTypeMap.has(words[1])) {
-                    throw new Error(`Unrecognized property data type '${words[1]}' in ply header`);
-                }
-                const element = elements[elements.length - 1];
-                const storageType = dataTypeMap.get(words[1]);
-                const storage = (!propertyFilter || propertyFilter(words[2])) ? new storageType(element.count) : null;
-                element.properties.push({
-                    type: words[1],
-                    name: words[2],
-                    storage: storage,
-                    byteSize: storageType.BYTES_PER_ELEMENT
-                });
-                break;
-            }
-            default:
-                throw new Error(`Unrecognized header value '${words[0]}' in ply header`);
-        }
+    // check format is supported
+    if (format !== 'binary_little_endian' && format !== 'binary_big_endian') {
+        throw new Error('Unsupported ply format');
     }
 
-    // read data
-    let readIndex = endHeaderIndex + endHeaderBytes.length;
-    let remaining = buf.length - readIndex;
-    let dataView = new DataView(buf.buffer);
+    // skip past header and compact the chunk data so the read operations
+    // fall nicely on aligned data boundaries
+    streamBuf.head = headerLength + endHeaderBytes.length;
+    streamBuf.compact();
 
+    // load compressed PLY with fast path
+    if (isCompressedPly(elements)) {
+        return await readCompressedPly(streamBuf, elements, format === 'binary_little_endian');
+    }
+
+    // allocate element storage
+    elements.forEach((e) => {
+        e.properties.forEach((p) => {
+            const storageType = dataTypeMap.get(p.type);
+            if (storageType) {
+                const storage = (!propertyFilter || propertyFilter(p.name)) ? new storageType(e.count) : null;
+                p.storage = storage;
+            }
+        });
+    });
+
+    // read and un-interleave the data
     for (let i = 0; i < elements.length; ++i) {
         const element = elements[i];
 
-        for (let e = 0; e < element.count; ++e) {
-            for (let j = 0; j < element.properties.length; ++j) {
-                const property = element.properties[j];
+        // calculate the size of an input element record
+        const inputSize = element.properties.reduce((a, p) => a + p.byteSize, 0);
+        let c = 0;
 
-                // if we've run out of data, load the next chunk
-                while (remaining < property.byteSize) {
-                    const { value, done } = await reader.read();
+        while (c < element.count) {
+            while (streamBuf.remaining < inputSize) {
+                /* eslint-disable no-await-in-loop */
+                await streamBuf.read();
+            }
 
-                    if (done) {
-                        throw new Error('Stream finished before end of data');
-                    }
+            const toRead = Math.min(element.count - c, Math.floor(streamBuf.remaining / inputSize));
 
-                    // create buffer with left-over data from previous chunk and the new data
-                    const tmp = new Uint8Array(remaining + value.byteLength);
-                    tmp.set(buf.slice(readIndex));
-                    tmp.set(value, remaining);
+            for (let n = 0; n < toRead; ++n) {
+                for (let j = 0; j < element.properties.length; ++j) {
+                    const property = element.properties[j];
 
-                    buf = tmp;
-                    dataView = new DataView(buf.buffer);
-                    readIndex = 0;
-                    remaining = buf.length;
-                }
-
-                if (property.storage) {
-                    switch (property.type) {
-                        case 'char':
-                            property.storage[e] = dataView.getInt8(readIndex);
-                            break;
-                        case 'uchar':
-                            property.storage[e] = dataView.getUint8(readIndex);
-                            break;
-                        case 'short':
-                            property.storage[e] = dataView.getInt16(readIndex, true);
-                            break;
-                        case 'ushort':
-                            property.storage[e] = dataView.getUint16(readIndex, true);
-                            break;
-                        case 'int':
-                            property.storage[e] = dataView.getInt32(readIndex, true);
-                            break;
-                        case 'uint':
-                            property.storage[e] = dataView.getUint32(readIndex, true);
-                            break;
-                        case 'float':
-                            property.storage[e] = dataView.getFloat32(readIndex, true);
-                            break;
-                        case 'double':
-                            property.storage[e] = dataView.getFloat64(readIndex, true);
-                            break;
+                    if (property.storage) {
+                        switch (property.type) {
+                            case 'char':   property.storage[c] = streamBuf.getInt8(); break;
+                            case 'uchar':  property.storage[c] = streamBuf.getUint8(); break;
+                            case 'short':  property.storage[c] = streamBuf.getInt16(); break;
+                            case 'ushort': property.storage[c] = streamBuf.getUint16(); break;
+                            case 'int':    property.storage[c] = streamBuf.getInt32(); break;
+                            case 'uint':   property.storage[c] = streamBuf.getUint32(); break;
+                            case 'float':  property.storage[c] = streamBuf.getFloat32(); break;
+                            case 'double': property.storage[c] = streamBuf.getFloat64(); break;
+                        }
+                    } else {
+                        streamBuf.head += property.byteSize;
                     }
                 }
-
-                readIndex += property.byteSize;
-                remaining -= property.byteSize;
+                c++;
             }
         }
     }
 
     // console.log(elements);
 
-    return elements;
+    return new GSplatData(elements);
 };
 
 // filter out element data we're not going to use
@@ -257,6 +466,8 @@ const defaultElements = [
 
 const defaultElementsSet = new Set(defaultElements);
 const defaultElementFilter = val => defaultElementsSet.has(val);
+
+const mat4 = new Mat4();
 
 class PlyParser {
     /** @type {import('../../platform/graphics/graphics-device.js').GraphicsDevice} */
@@ -293,12 +504,20 @@ class PlyParser {
             callback("Error loading resource", null);
         } else {
             readPly(response.body.getReader(), asset.data.elementFilter ?? defaultElementFilter)
-                .then((response) => {
-                    // construct the GSplatData object
-                    const gsplatData = new GSplatData(response, {
-                        performZScale: asset.data.performZScale,
-                        reorder: asset.data.reorder
-                    });
+                .then((gsplatData) => {
+                    if (!gsplatData.isCompressed) {
+
+                        // perform Z scale
+                        if (asset.data.performZScale ?? true) {
+                            mat4.setScale(-1, -1, 1);
+                            gsplatData.transform(mat4);
+                        }
+
+                        // reorder data
+                        if (asset.data.reorder ?? true) {
+                            gsplatData.reorderData();
+                        }
+                    }
 
                     // construct the resource
                     const resource = new GSplatResource(

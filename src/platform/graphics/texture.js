@@ -10,15 +10,25 @@ import {
     FILTER_LINEAR, FILTER_LINEAR_MIPMAP_LINEAR,
     FUNC_LESS,
     PIXELFORMAT_RGBA8,
-    PIXELFORMAT_RGB16F, PIXELFORMAT_RGBA16F, PIXELFORMAT_RGB32F, PIXELFORMAT_RGBA32F,
     TEXHINT_SHADOWMAP, TEXHINT_ASSET, TEXHINT_LIGHTMAP,
     TEXTURELOCK_WRITE,
     TEXTUREPROJECTION_NONE, TEXTUREPROJECTION_CUBE,
     TEXTURETYPE_DEFAULT, TEXTURETYPE_RGBM, TEXTURETYPE_RGBE, TEXTURETYPE_RGBP,
-    isIntegerPixelFormat, FILTER_NEAREST, TEXTURELOCK_NONE, TEXTURELOCK_READ
+    isIntegerPixelFormat, FILTER_NEAREST, TEXTURELOCK_NONE, TEXTURELOCK_READ,
+    isLinearFormat
 } from './constants.js';
 
 let id = 0;
+
+const PROPERTY_MIN_FILTER = 1;
+const PROPERTY_MAG_FILTER = 2;
+const PROPERTY_ADDRESS_U = 4;
+const PROPERTY_ADDRESS_V = 8;
+const PROPERTY_ADDRESS_W = 16;
+const PROPERTY_COMPARE_ON_READ = 32;
+const PROPERTY_COMPARE_FUNC = 64;
+const PROPERTY_ANISOTROPY = 128;
+const PROPERTY_ALL = 255; // 1 | 2 | 4 | 8 | 16 | 32 | 64 | 128
 
 /**
  * A texture is a container for texel data that can be utilized in a fragment shader. Typically,
@@ -416,7 +426,7 @@ class Texture {
                 Debug.warn("Texture#minFilter: minFilter property cannot be changed on an integer texture, will remain FILTER_NEAREST", this);
             } else {
                 this._minFilter = v;
-                this.propertyChanged(1);
+                this.propertyChanged(PROPERTY_MIN_FILTER);
             }
         }
     }
@@ -444,7 +454,7 @@ class Texture {
                 Debug.warn("Texture#magFilter: magFilter property cannot be changed on an integer texture, will remain FILTER_NEAREST", this);
             } else {
                 this._magFilter = v;
-                this.propertyChanged(2);
+                this.propertyChanged(PROPERTY_MAG_FILTER);
             }
         }
     }
@@ -470,7 +480,7 @@ class Texture {
     set addressU(v) {
         if (this._addressU !== v) {
             this._addressU = v;
-            this.propertyChanged(4);
+            this.propertyChanged(PROPERTY_ADDRESS_U);
         }
     }
 
@@ -495,7 +505,7 @@ class Texture {
     set addressV(v) {
         if (this._addressV !== v) {
             this._addressV = v;
-            this.propertyChanged(8);
+            this.propertyChanged(PROPERTY_ADDRESS_V);
         }
     }
 
@@ -524,7 +534,7 @@ class Texture {
         }
         if (addressW !== this._addressW) {
             this._addressW = addressW;
-            this.propertyChanged(16);
+            this.propertyChanged(PROPERTY_ADDRESS_W);
         }
     }
 
@@ -547,7 +557,7 @@ class Texture {
     set compareOnRead(v) {
         if (this._compareOnRead !== v) {
             this._compareOnRead = v;
-            this.propertyChanged(32);
+            this.propertyChanged(PROPERTY_COMPARE_ON_READ);
         }
     }
 
@@ -575,7 +585,7 @@ class Texture {
     set compareFunc(v) {
         if (this._compareFunc !== v) {
             this._compareFunc = v;
-            this.propertyChanged(64);
+            this.propertyChanged(PROPERTY_COMPARE_FUNC);
         }
     }
 
@@ -597,7 +607,7 @@ class Texture {
     set anisotropy(v) {
         if (this._anisotropy !== v) {
             this._anisotropy = v;
-            this.propertyChanged(128);
+            this.propertyChanged(PROPERTY_ANISOTROPY);
         }
     }
 
@@ -801,13 +811,9 @@ class Texture {
                 return 'rgbe';
             case TEXTURETYPE_RGBP:
                 return 'rgbp';
-            default:
-                return (this.format === PIXELFORMAT_RGB16F ||
-                        this.format === PIXELFORMAT_RGB32F ||
-                        this.format === PIXELFORMAT_RGBA16F ||
-                        this.format === PIXELFORMAT_RGBA32F ||
-                        isIntegerPixelFormat(this.format)) ? 'linear' : 'srgb';
         }
+
+        return isLinearFormat(this.format) ? 'linear' : 'srgb';
     }
 
     // Force a full resubmission of the texture to the GPU (used on a context restore event)
@@ -818,7 +824,7 @@ class Texture {
         this._needsMipmapsUpload = this._mipmaps;
         this._mipmapsUploaded = false;
 
-        this.propertyChanged(255);  // 1 | 2 | 4 | 8 | 16 | 32 | 64 | 128
+        this.propertyChanged(PROPERTY_ALL);
     }
 
     /**

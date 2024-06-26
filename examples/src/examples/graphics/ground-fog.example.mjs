@@ -66,7 +66,7 @@ assetListLoader.load(() => {
     app.scene.skyboxMip = 3;
     app.scene.envAtlas = assets.helipad.resource;
     app.scene.skyboxRotation = new pc.Quat().setFromEulerAngles(0, -70, 0);
-    app.scene.toneMapping = pc.TONEMAP_ACES;
+    app.scene.rendering.toneMapping = pc.TONEMAP_ACES;
 
     // disable skydome rendering
     const skyLayer = app.scene.layers.getLayerById(pc.LAYERID_SKYBOX);

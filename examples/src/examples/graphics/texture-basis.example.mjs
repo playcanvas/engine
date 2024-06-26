@@ -63,7 +63,7 @@ assetListLoader.load(() => {
     app.start();
 
     // Set skybox
-    app.scene.toneMapping = pc.TONEMAP_ACES;
+    app.scene.rendering.toneMapping = pc.TONEMAP_ACES;
     app.scene.skyboxMip = 1;
     app.scene.skyboxIntensity = 1.4;
     app.scene.envAtlas = assets.helipad.resource;

@@ -1,6 +1,6 @@
 import { Debug } from '../core/debug.js';
 import {
-    SHADER_FORWARD, SHADER_FORWARDHDR, SHADER_DEPTH, SHADER_PICK, SHADER_SHADOW, SHADER_PREPASS_VELOCITY
+    SHADER_FORWARD, SHADER_DEPTH, SHADER_PICK, SHADER_SHADOW, SHADER_PREPASS_VELOCITY
 } from './constants.js';
 
 import { DeviceCache } from '../platform/graphics/device-cache.js';
@@ -103,11 +103,10 @@ class ShaderPass {
 
         // add default passes in the required order, to match the constants
         add('forward', SHADER_FORWARD, { isForward: true });
-        add('forward_hdr', SHADER_FORWARDHDR, { isForward: true });
+        add('prepass', SHADER_PREPASS_VELOCITY);
         add('depth', SHADER_DEPTH);
         add('pick', SHADER_PICK);
         add('shadow', SHADER_SHADOW);
-        add('prepass', SHADER_PREPASS_VELOCITY);
     }
 
     /**

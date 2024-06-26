@@ -57,7 +57,7 @@ const assetListLoader = new pc.AssetListLoader(Object.values(assets), app.assets
 assetListLoader.load(() => {
     app.start();
 
-    app.scene.toneMapping = pc.TONEMAP_ACES;
+    app.scene.rendering.toneMapping = pc.TONEMAP_ACES;
 
     // get the instance of the gallery and set up with render component
     const galleryEntity = assets.gallery.resource.instantiateRenderEntity();
@@ -72,7 +72,6 @@ assetListLoader.load(() => {
 
     const createSplatInstance = (name, resource, px, py, pz, scale, vertex, fragment) => {
         const splat = resource.instantiate({
-            debugRender: false,
             fragment: fragment,
             vertex: vertex
         });

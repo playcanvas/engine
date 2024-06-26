@@ -8,7 +8,7 @@ import { Quat } from '../../core/math/quat.js';
  *
  * @callback XrAnchorPersistCallback
  * @param {Error|null} err - The Error object if failed to persist an anchor or null.
- * @param {string|null} uuid - unique string that can be used to restore {@link XRAnchor}
+ * @param {string|null} uuid - Unique string that can be used to restore {@link XrAnchor}
  * in another session.
  */
 
@@ -20,10 +20,10 @@ import { Quat } from '../../core/math/quat.js';
  */
 
 /**
- * An anchor keeps track of a position and rotation that is fixed relative to the real world.
- * This allows the application to adjust the location of the virtual objects placed in the
- * scene in a way that helps with maintaining the illusion that the placed objects are really
- * present in the user’s environment.
+ * An anchor keeps track of a position and rotation that is fixed relative to the real world. This
+ * allows the application to adjust the location of virtual objects placed in the scene in a way
+ * that helps with maintaining the illusion that the placed objects are really present in the
+ * user's environment.
  *
  * @category XR
  */
@@ -96,15 +96,15 @@ class XrAnchor extends EventHandler {
     _uuid = null;
 
     /**
-     * @type {string[]|null}
+     * @type {XrAnchorPersistCallback[]|null}
      * @private
      */
     _uuidRequests = null;
 
     /**
      * @param {import('./xr-anchors.js').XrAnchors} anchors - Anchor manager.
-     * @param {object} xrAnchor - native XRAnchor object that is provided by WebXR API
-     * @param {string|null} uuid - ID string associated with a persistent anchor
+     * @param {object} xrAnchor - Native XRAnchor object that is provided by WebXR API.
+     * @param {string|null} uuid - ID string associated with a persistent anchor.
      * @ignore
      */
     constructor(anchors, xrAnchor, uuid = null) {
@@ -127,7 +127,7 @@ class XrAnchor extends EventHandler {
     }
 
     /**
-     * @param {*} frame - XRFrame from requestAnimationFrame callback.
+     * @param {XRFrame} frame - XRFrame from requestAnimationFrame callback.
      * @ignore
      */
     update(frame) {
@@ -164,14 +164,22 @@ class XrAnchor extends EventHandler {
     }
 
     /**
-     * This method provides a way to persist anchor between WebXR sessions by
-     * providing a unique UUID of an anchor, that can be used later for restoring
-     * an anchor from underlying system.
-     * Bear in mind that underlying systems might have a limit on number of anchors
-     * allowed to be persisted per origin.
+     * Persists the anchor between WebXR sessions by generating a universally unique identifier
+     * (UUID) for the anchor. This UUID can be used later to restore the anchor from the underlying
+     * system. Note that the underlying system may have a limit on the number of anchors that can
+     * be persisted per origin.
      *
-     * @param {XrAnchorPersistCallback} [callback] - Callback to fire when anchor
-     * persistent UUID has been generated or error if failed.
+     * @param {XrAnchorPersistCallback} [callback] - Optional callback function to be called when
+     * the persistent UUID has been generated or if an error occurs.
+     * @example
+     * // Persist the anchor and log the UUID or error
+     * anchor.persist((err, uuid) => {
+     *     if (err) {
+     *         console.error('Failed to persist anchor:', err);
+     *     } else {
+     *         console.log('Anchor persisted with UUID:', uuid);
+     *     }
+     * });
      */
     persist(callback) {
         if (!this._anchors.persistence) {
@@ -196,26 +204,36 @@ class XrAnchor extends EventHandler {
                 this._uuid = uuid;
                 this._anchors._indexByUuid.set(this._uuid, this);
                 callback?.(null, uuid);
-                for (let i = 0; i < this._uuidRequests.length; i++) {
-                    this._uuidRequests[i](null, uuid);
+                for (const uuidRequest of this._uuidRequests) {
+                    uuidRequest(null, uuid);
                 }
                 this._uuidRequests = null;
                 this.fire('persist', uuid);
             })
             .catch((ex) => {
                 callback?.(ex, null);
-                for (let i = 0; i < this._uuidRequests.length; i++) {
-                    this._uuidRequests[i](ex);
+                for (const uuidRequest of this._uuidRequests) {
+                    uuidRequest(ex, null);
                 }
                 this._uuidRequests = null;
             });
     }
 
     /**
-     * Remove persistent UUID of an anchor from an underlying system.
+     * Removes the persistent UUID of an anchor from the underlying system. This effectively makes
+     * the anchor non-persistent, so it will not be restored in future WebXR sessions.
      *
-     * @param {XrAnchorForgetCallback} [callback] - Callback to fire when anchor has been
-     * forgotten or error if failed.
+     * @param {XrAnchorForgetCallback} [callback] - Optional callback function to be called when
+     * the anchor has been forgotten or if an error occurs.
+     * @example
+     * // Forget the anchor and log the result or error
+     * anchor.forget((err) => {
+     *     if (err) {
+     *         console.error('Failed to forget anchor:', err);
+     *     } else {
+     *         console.log('Anchor has been forgotten');
+     *     }
+     * });
      */
     forget(callback) {
         if (!this._uuid) {
@@ -231,7 +249,7 @@ class XrAnchor extends EventHandler {
     }
 
     /**
-     * UUID string of a persistent anchor or null if not persisted.
+     * Gets the UUID string of a persisted anchor or null if the anchor is not persisted.
      *
      * @type {null|string}
      */
@@ -240,7 +258,7 @@ class XrAnchor extends EventHandler {
     }
 
     /**
-     * True if an anchor is persistent.
+     * Gets whether an anchor is persistent.
      *
      * @type {boolean}
      */

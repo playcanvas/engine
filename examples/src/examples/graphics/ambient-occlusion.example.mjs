@@ -70,7 +70,7 @@ assetListLoader.load(() => {
     // setup skydome
     app.scene.envAtlas = assets.helipad.resource;
     app.scene.skyboxMip = 2;
-    app.scene.exposure = 5;
+    app.scene.exposure = 2.5;
 
     // get the instance of the laboratory
     const laboratoryEntity = assets.laboratory.resource.instantiateRenderEntity({
@@ -196,7 +196,6 @@ assetListLoader.load(() => {
         renderPassCamera.ssaoEnabled = currentOptions.ssaoEnabled;
 
         const composePass = renderPassCamera.composePass;
-        composePass.toneMapping = pc.TONEMAP_NEUTRAL;
         composePass.sharpness = 0;
 
         // and set up these rendering passes to be used by the camera, instead of its default rendering

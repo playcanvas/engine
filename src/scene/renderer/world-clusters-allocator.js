@@ -137,7 +137,7 @@ class WorldClustersAllocator {
         tempClusterArray.length = 0;
     }
 
-    update(renderPasses, gammaCorrection, lighting) {
+    update(renderPasses, lighting) {
 
         // assign clusters to render actions
         this.assign(renderPasses);
@@ -146,7 +146,7 @@ class WorldClustersAllocator {
         this._clusters.forEach((renderAction) => {
             const layer = renderAction.layer;
             const cluster = renderAction.lightClusters;
-            cluster.update(layer.clusteredLightsSet, gammaCorrection, lighting);
+            cluster.update(layer.clusteredLightsSet, lighting);
         });
     }
 }

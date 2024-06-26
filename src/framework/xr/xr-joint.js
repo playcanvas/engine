@@ -127,7 +127,7 @@ class XrJoint {
     }
 
     /**
-     * @param {*} pose - XRJointPose of this joint.
+     * @param {XRJointPose} pose - XRJointPose of this joint.
      * @ignore
      */
     update(pose) {

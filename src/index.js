@@ -27,7 +27,6 @@ import './polyfill/typedarray-fill.js';
 // CORE
 export * from './core/constants.js';
 export { apps, common, config, data, extend, revision, type, version } from './core/core.js';
-export { events } from './core/events.js';
 export { guid } from './core/guid.js';
 export { path } from './core/path.js';
 export { platform } from './core/platform.js';
@@ -184,6 +183,7 @@ export { SphereGeometry } from './scene/geometry/sphere-geometry.js';
 export { TorusGeometry } from './scene/geometry/torus-geometry.js';
 
 // SCENE / RENDERER
+export { RenderingParams } from './scene/renderer/rendering-params.js';
 export { RenderPassForward } from './scene/renderer/render-pass-forward.js';
 
 // SCENE / SHADER-LIB
@@ -356,10 +356,11 @@ export { ElementInput, ElementInputEvent, ElementMouseEvent, ElementSelectEvent,
 export { JsonStandardMaterialParser } from './framework/parsers/material/json-standard-material.js';
 
 // FRAMEWORK /SCRIPTS
-export { createScript, registerScript, getReservedScriptNames } from './framework/script/script.js';
+export { createScript, registerScript, getReservedScriptNames } from './framework/script/script-create.js';
 export { ScriptAttributes } from './framework/script/script-attributes.js';
 export { ScriptRegistry } from './framework/script/script-registry.js';
 export { ScriptType } from './framework/script/script-type.js';
+export { Script } from './framework/script/script.js';
 
 // FRAMEWORK / LOCALIZATION
 export { I18n } from './framework/i18n/i18n.js';

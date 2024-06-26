@@ -146,7 +146,6 @@ class CameraComponent extends Component {
      * equivalent to {@link SHADERPASS_FORWARD}. Can be:
      *
      * - {@link SHADERPASS_FORWARD}
-     * - {@link SHADERPASS_FORWARD_HDR}
      * - {@link SHADERPASS_ALBEDO}
      * - {@link SHADERPASS_OPACITY}
      * - {@link SHADERPASS_WORLDNORMAL}
@@ -198,6 +197,25 @@ class CameraComponent extends Component {
      */
     get renderPasses() {
         return this._camera.renderPasses;
+    }
+
+    /**
+     * Sets the rendering parameters. If this is not null, the camera will use these rendering
+     * parameters instead of those specified in the scene's rendering parameters
+     * {@link Scene#rendering}.
+     */
+    set rendering(value) {
+        this._camera.renderingParams = value;
+    }
+
+    /**
+     * Gets a {@link RenderingParams} that defines rendering parameters, or null if those are not
+     * set.
+     *
+     * @type {import('../../../scene/renderer/rendering-params.js').RenderingParams|null}
+     */
+    get rendering() {
+        return this._camera.renderingParams;
     }
 
     /**

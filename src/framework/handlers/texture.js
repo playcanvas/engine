@@ -219,6 +219,10 @@ class TextureHandler extends ResourceHandler {
                 options.flipY = !!assetData.flipY;
             }
 
+            if (assetData.hasOwnProperty('srgb')) {
+                options.srgb = !!assetData.srgb;
+            }
+
             // extract asset type (this is bit of a mess)
             if (assetData.hasOwnProperty('type')) {
                 options.type = JSON_TEXTURE_TYPE[assetData.type];
