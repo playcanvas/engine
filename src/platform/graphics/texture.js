@@ -195,6 +195,7 @@ class Texture {
      * of Uint8Array if options.arrayLength is defined and greater than zero.
      * @param {boolean} [options.storage] - Defines if texture can be used as a storage texture by
      * a compute shader. Defaults to false.
+     * @param {boolean} [options.immediate] - If set and true, the texture will be uploaded to the GPU immediately.
      * @example
      * // Create a 8x8x24-bit texture
      * const texture = new pc.Texture(graphicsDevice, {
@@ -277,7 +278,7 @@ class Texture {
 
         this._levels = options.levels;
         if (this._levels) {
-            this.upload();
+            this.upload(options.immediate ?? false);
         } else {
             this._levels = this._cubemap ? [[null, null, null, null, null, null]] : [null];
         }
@@ -884,8 +885,9 @@ class Texture {
      * @param {number} [mipLevel] - A non-negative integer specifying the image level of detail.
      * Defaults to 0, which represents the base image source. A level value of N, that is greater
      * than 0, represents the image source for the Nth mipmap reduction level.
+     * @param {boolean} [immediate] - When set to true it forces an immediate upload upon assignment. Defaults to false.
      */
-    setSource(source, mipLevel = 0) {
+    setSource(source, mipLevel = 0, immediate = false) {
         let invalid = false;
         let width, height;
 
@@ -965,7 +967,7 @@ class Texture {
             this._invalid = invalid;
 
             // reupload
-            this.upload();
+            this.upload(immediate);
         }
     }
 
@@ -985,15 +987,16 @@ class Texture {
 
     /**
      * Unlocks the currently locked mip level and uploads it to VRAM.
+     * @param {boolean} [immediate] - When set to true it forces an immediate upload upon unlocking. Defaults to false.
      */
-    unlock() {
+    unlock(immediate = false) {
         if (this._lockedMode === TEXTURELOCK_NONE) {
             Debug.warn("pc.Texture#unlock: Attempting to unlock a texture that is not locked.", this);
         }
 
         // Upload the new pixel data if locked in write mode (default)
         if (this._lockedMode === TEXTURELOCK_WRITE) {
-            this.upload();
+            this.upload(immediate);
         }
         this._lockedLevel = -1;
         this._lockedMode = TEXTURELOCK_NONE;
@@ -1001,15 +1004,16 @@ class Texture {
 
     /**
      * Forces a reupload of the textures pixel data to graphics memory. Ordinarily, this function
-     * is called by internally by {@link Texture#setSource} and {@link Texture#unlock}. However, it
+     * is called internally by {@link Texture#setSource} and {@link Texture#unlock}. However, it
      * still needs to be called explicitly in the case where an HTMLVideoElement is set as the
      * source of the texture.  Normally, this is done once every frame before video textured
      * geometry is rendered.
+     * @param {boolean} [immediate] - When set to true it forces an immediate upload. Defaults to false.
      */
-    upload() {
+    upload(immediate = false) {
         this._needsUpload = true;
         this._needsMipmapsUpload = this._mipmaps;
-        this.impl.uploadImmediate?.(this.device, this);
+        this.impl.uploadImmediate(this.device, this, immediate);
     }
 
     /**

@@ -147,11 +147,11 @@ assetListLoader.load(() => {
                 assets.aerialRocks.resource.getSource(),
                 assets.coastSand.resource.getSource()
             ]
-        ]
+        ],
+        immediate: true
     };
 
     const textureArray = new pc.Texture(app.graphicsDevice, textureArrayOptions);
-    textureArray.upload();
 
     // generate mipmaps for visualization
     const mipmaps = generateMipmaps(textureArrayOptions.width, textureArrayOptions.height);
