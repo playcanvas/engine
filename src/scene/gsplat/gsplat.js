@@ -88,7 +88,7 @@ class GSplat {
         result.setParameter('transformA', this.transformATexture);
         result.setParameter('transformB', this.transformBTexture);
         result.setParameter('transformC', this.transformCTexture);
-        result.setParameter('tex_params', new Float32Array([this.colorTexture.width, this.numSplats]));
+        result.setParameter('tex_params', new Float32Array([this.numSplats, this.colorTexture.width, 0, 0]));
         return result;
     }
 
