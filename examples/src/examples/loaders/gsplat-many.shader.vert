@@ -1,8 +1,6 @@
 uniform float uTime;
 varying float height;
 
-vec4 discardVec = vec4(0.0, 0.0, 2.0, 1.0);
-
 void animate() {
     // modify center
     float heightIntensity = center.y * 0.2;
@@ -11,6 +9,8 @@ void animate() {
     // output y-coordinate
     height = center.y;
 }
+
+vec4 discardVec = vec4(0.0, 0.0, 2.0, 1.0);
 
 void main(void)
 {
