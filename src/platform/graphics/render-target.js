@@ -484,7 +484,7 @@ class RenderTarget {
     }
 
     /**
-     * True if the first color buffer format is sRGB.
+     * Gets whether the first color buffer format is sRGB.
      *
      * @type {boolean}
      * @ignore
