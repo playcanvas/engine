@@ -395,14 +395,14 @@ class Gizmo extends EventHandler {
     }
 
     _getSelection(x, y) {
-        const start = this._camera.screenToWorld(x, y, 1);
+        const start = this._camera.screenToWorld(x, y, this._camera.nearClip);
         const end = this._camera.screenToWorld(x, y, this._camera.farClip);
         const dir = end.clone().sub(start).normalize();
 
         const selection = [];
         for (let i = 0; i < this.intersectData.length; i++) {
             const { triData, parent, meshInstances } = this.intersectData[i];
-            const wtm = parent.getWorldTransform().clone();
+            const wtm = parent.getWorldTransform();
             for (let j = 0; j < triData.length; j++) {
                 const { tris, ptm, priority } = triData[j];
                 tmpM1.copy(wtm).mul(ptm);

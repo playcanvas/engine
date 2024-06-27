@@ -50,7 +50,7 @@ const SHADER = {
                 // store z/w for later use in fragment shader
                 vZW = gl_Position.zw;
                 // disable depth clipping
-                gl_Position.z = 0.0;
+                // gl_Position.z = 0.0;
             #endif
         }`,
     frag: /* glsl */`
