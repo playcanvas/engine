@@ -193,8 +193,6 @@ class StandardMaterialOptionsBuilder {
     }
 
     _updateMaterialOptions(options, stdMat) {
-        const diffuseTint = (stdMat.diffuseTint || (!stdMat.diffuseMap && !stdMat.diffuseVertexColor));
-
         const useSpecular = !!(stdMat.useMetalness || stdMat.specularMap || stdMat.sphereMap || stdMat.cubeMap ||
                             notBlack(stdMat.specular) || (stdMat.specularityFactor > 0 && stdMat.useMetalness) ||
                             stdMat.enableGGXSpecular ||
@@ -215,7 +213,6 @@ class StandardMaterialOptionsBuilder {
 
         options.opacityTint = (stdMat.blendType !== BLEND_NONE || stdMat.alphaTest > 0 || stdMat.opacityDither !== DITHER_NONE) ? 1 : 0;
         options.ambientTint = stdMat.ambientTint;
-        options.diffuseTint = diffuseTint ? 2 : 0;
         options.specularTint = specularTint ? 2 : 0;
         options.specularityFactorTint = specularityFactorTint ? 1 : 0;
         options.metalnessTint = (stdMat.useMetalness && stdMat.metalness < 1) ? 1 : 0;

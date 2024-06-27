@@ -69,7 +69,6 @@ const STANDARD_MAT_PROPS = [
     ['diffuseMapRotation', 'number'],
     ['diffuseMapTiling', 'Vec2'],
     ['diffuseMapUv', 'number'],
-    ['diffuseTint', 'boolean'],
     ['diffuseVertexColor', 'boolean'],
     ['diffuseVertexColorChannel', 'string'],
     ['emissive', 'Color'],

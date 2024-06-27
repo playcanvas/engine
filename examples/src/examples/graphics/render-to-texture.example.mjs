@@ -175,7 +175,6 @@ assetListLoader.load(() => {
 
     // make the texture tiles and use anisotropic filtering to prevent blurring
     planeMaterial.diffuseMap = assets.checkerboard.resource;
-    planeMaterial.diffuseTint = true;
     planeMaterial.diffuseMapTiling.set(10, 10);
     planeMaterial.anisotropy = 16;
 
