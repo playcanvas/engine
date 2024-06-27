@@ -498,14 +498,6 @@ export const CUBEPROJ_NONE = 0;
 export const CUBEPROJ_BOX = 1;
 
 /**
- * Energy-conserving Blinn-Phong.
- *
- * @type {number}
- * @category Graphics
- */
-export const SPECULAR_BLINN = 1;
-
-/**
  * Multiply together the primary and secondary colors.
  *
  * @type {string}

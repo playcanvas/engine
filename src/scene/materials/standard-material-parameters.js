@@ -134,7 +134,6 @@ const standardMaterialParameterTypes = {
 
     cull: 'enum:cull',
     blendType: 'enum:blendType',
-    shadingModel: 'enum:shadingModel',
 
     useFog: 'boolean',
     useLighting: 'boolean',

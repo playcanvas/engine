@@ -50,7 +50,6 @@ class LitMaterialOptionsBuilder {
         litOptions.customFragmentShader = null;
         litOptions.pixelSnap = material.pixelSnap;
 
-        litOptions.shadingModel = material.shadingModel;
         litOptions.ambientSH = material.ambientSH;
         litOptions.fastTbn = material.fastTbn;
         litOptions.twoSidedLighting = material.twoSidedLighting;

@@ -1,4 +1,4 @@
-import { CUBEPROJ_NONE, DETAILMODE_MUL, DITHER_NONE, FRESNEL_SCHLICK, SPECOCC_AO, SPECULAR_BLINN } from '../../../src/scene/constants.js';
+import { CUBEPROJ_NONE, DETAILMODE_MUL, DITHER_NONE, FRESNEL_SCHLICK, SPECOCC_AO } from '../../../src/scene/constants.js';
 import { Color } from '../../../src/core/math/color.js';
 import { Material } from '../../../src/scene/materials/material.js';
 import { StandardMaterial } from '../../../src/scene/materials/standard-material.js';
@@ -240,7 +240,6 @@ describe('StandardMaterial', function () {
         expect(material.refraction).to.equal(0);
         expect(material.refractionIndex).to.equal(1.0 / 1.5);
         expect(material.dispersion).to.equal(0);
-        expect(material.shadingModel).to.equal(SPECULAR_BLINN);
 
         expect(material.specular).to.be.instanceof(Color);
         expect(material.specular.r).to.equal(0);

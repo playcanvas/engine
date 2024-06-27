@@ -1,5 +1,5 @@
 import { ShaderProcessorOptions } from '../../platform/graphics/shader-processor-options.js';
-import { DITHER_NONE, FRESNEL_SCHLICK, SPECOCC_AO, SPECULAR_BLINN } from "../constants.js";
+import { DITHER_NONE, FRESNEL_SCHLICK, SPECOCC_AO } from "../constants.js";
 import { Material } from './material.js';
 import { LitMaterialOptions } from './lit-material-options.js';
 import { LitMaterialOptionsBuilder } from './lit-material-options-builder.js';
@@ -32,8 +32,6 @@ class LitMaterial extends Material {
     useTonemap = true;
 
     useSkybox = true;
-
-    shadingModel = SPECULAR_BLINN;
 
     ambientSH = null;
 
