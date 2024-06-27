@@ -152,7 +152,6 @@ const STANDARD_MAT_PROPS = [
     ['refraction', 'number'],
     ['refractionIndex', 'number'],
     ['dispersion', 'number'],
-    ['shadingModel', 'number'],
     ['specular', 'Color'],
     ['specularMap', 'Texture|null'],
     ['specularMapChannel', 'string'],

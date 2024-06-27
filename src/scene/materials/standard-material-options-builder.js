@@ -259,7 +259,6 @@ class StandardMaterialOptionsBuilder {
         options.litOptions.customFragmentShader = stdMat.customFragmentShader;
         options.litOptions.pixelSnap = stdMat.pixelSnap;
 
-        options.litOptions.shadingModel = stdMat.shadingModel;
         options.litOptions.ambientSH = !!stdMat.ambientSH;
         options.litOptions.fastTbn = stdMat.fastTbn;
         options.litOptions.twoSidedLighting = stdMat.twoSidedLighting;

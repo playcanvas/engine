@@ -12,8 +12,7 @@ import {
     FRESNEL_SCHLICK,
     SHADER_DEPTH, SHADER_PICK,
     SHADER_PREPASS_VELOCITY,
-    SPECOCC_AO,
-    SPECULAR_BLINN
+    SPECOCC_AO
 } from '../constants.js';
 import { ShaderPass } from '../shader-pass.js';
 import { EnvLighting } from '../graphics/env-lighting.js';
@@ -519,8 +518,6 @@ const _tempColor = new Color();
  * @property {number} occludeSpecularIntensity Controls visibility of specular occlusion.
  * @property {boolean} occludeDirect Tells if AO should darken directional lighting. Defaults to
  * false.
- * @property {number} shadingModel Defines the shading model.
- * - {@link SPECULAR_BLINN}: Energy-conserving Blinn-Phong.
  * @property {number} fresnelModel Defines the formula used for Fresnel effect.
  * As a side-effect, enabling any Fresnel model changes the way diffuse and reflection components
  * are combined. When Fresnel is off, legacy non energy-conserving combining is used. When it is
@@ -1217,7 +1214,6 @@ function _defineMaterialProps() {
     _defineFlag('normalizeNormalMap', true);
     _defineFlag('opacityFadesSpecular', true);
     _defineFlag('occludeSpecular', SPECOCC_AO);
-    _defineFlag('shadingModel', SPECULAR_BLINN);
     _defineFlag('fresnelModel', FRESNEL_SCHLICK); // NOTE: this has been made to match the default shading model (to fix a bug)
     _defineFlag('useDynamicRefraction', false);
     _defineFlag('cubeMapProjection', CUBEPROJ_NONE);
