@@ -3,7 +3,6 @@ import { Debug } from '../../../core/debug.js';
 import {
     BLEND_NONE, DITHER_BAYER8, DITHER_NONE, FRESNEL_SCHLICK,
     SHADER_FORWARD,
-    SPECULAR_PHONG,
     SPRITE_RENDERMODE_SLICED, SPRITE_RENDERMODE_TILED
 } from '../../constants.js';
 import { ShaderPass } from '../../shader-pass.js';
@@ -258,12 +257,7 @@ class ShaderGeneratorStandard extends ShaderGenerator {
         litShader.generateVertexShader(useUv, useUnmodifiedUv, mapTransforms);
 
         // handle fragment shader
-        if (options.litOptions.shadingModel === SPECULAR_PHONG) {
-            options.litOptions.fresnelModel = 0;
-            options.litOptions.ambientSH = false;
-        } else {
-            options.litOptions.fresnelModel = (options.litOptions.fresnelModel === 0) ? FRESNEL_SCHLICK : options.litOptions.fresnelModel;
-        }
+        options.litOptions.fresnelModel = (options.litOptions.fresnelModel === 0) ? FRESNEL_SCHLICK : options.litOptions.fresnelModel;
 
         const decl = new ChunkBuilder();
         const code = new ChunkBuilder();

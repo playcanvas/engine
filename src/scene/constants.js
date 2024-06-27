@@ -498,15 +498,6 @@ export const CUBEPROJ_NONE = 0;
 export const CUBEPROJ_BOX = 1;
 
 /**
- * Phong without energy conservation. You should only use it as a backwards compatibility with
- * older projects.
- *
- * @type {number}
- * @category Graphics
- */
-export const SPECULAR_PHONG = 0;
-
-/**
  * Energy-conserving Blinn-Phong.
  *
  * @type {number}

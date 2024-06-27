@@ -11,7 +11,7 @@ import {
     BLEND_SUBTRACTIVE, BLEND_ADDITIVE, BLEND_NORMAL, BLEND_NONE, BLEND_PREMULTIPLIED,
     BLEND_MULTIPLICATIVE, BLEND_ADDITIVEALPHA, BLEND_MULTIPLICATIVE2X, BLEND_SCREEN,
     BLEND_MIN, BLEND_MAX,
-    SPECULAR_BLINN, SPECULAR_PHONG
+    SPECULAR_BLINN
 } from '../constants.js';
 
 import { standardMaterialParameterTypes, standardMaterialRemovedParameters } from './standard-material-parameters.js';
@@ -58,7 +58,6 @@ class StandardMaterialValidator {
                 FUNC_ALWAYS
             ]),
             shadingModel: this._createEnumValidator([
-                SPECULAR_PHONG,
                 SPECULAR_BLINN
             ])
         };
