@@ -102,7 +102,7 @@ export function parseConfig(script) {
     return config;
 }
 
-const DEVICE_TYPES = ['webgpu', 'webgl2'];
+const DEVICE_TYPES = ['webgpu', 'webgl2', 'null'];
 export let deviceType = 'webgl2';
 
 /**
