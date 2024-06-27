@@ -57,8 +57,6 @@ class LitMaterial extends Material {
 
     opacityShadowDither = DITHER_NONE;
 
-    conserveEnergy = true;
-
     ggxSpecular = false;
 
     fresnelModel = FRESNEL_SCHLICK;

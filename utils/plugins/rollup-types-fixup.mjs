@@ -52,7 +52,6 @@ const STANDARD_MAT_PROPS = [
     ['clearCoatNormalMapUv', 'number'],
     ['clearCoatVertexColor', 'boolean'],
     ['clearCoatVertexColorChannel', 'string'],
-    ['conserveEnergy', 'boolean'],
     ['cubeMap', 'Texture|null'],
     ['cubeMapProjection', 'number'],
     ['cubeMapProjectionBox', 'BoundingBox'],
