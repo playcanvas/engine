@@ -380,19 +380,21 @@ class Gizmo extends EventHandler {
         const selection = [];
         for (let i = 0; i < this.intersectData.length; i++) {
             const { triData, parent, meshInstances } = this.intersectData[i];
-            const wtm = parent.getWorldTransform();
+            const parentTM = parent.getWorldTransform();
             for (let j = 0; j < triData.length; j++) {
-                const { tris, ptm, priority } = triData[j];
-                tmpM1.copy(wtm).mul(ptm);
-                tmpM2.copy(tmpM1).invert();
-                tmpM2.transformPoint(start, tmpR1.origin);
-                tmpM2.transformVector(dir, tmpR1.direction);
-                tmpR1.direction.normalize();
+                const { tris, transform, priority } = triData[j];
+                const triWTM = tmpM1.copy(parentTM).mul(transform);
+                const invTriWTM = tmpM2.copy(triWTM).invert();
+
+                const ray = tmpR1;
+                invTriWTM.transformPoint(start, ray.origin);
+                invTriWTM.transformVector(dir, ray.direction);
+                ray.direction.normalize();
 
                 for (let k = 0; k < tris.length; k++) {
-                    if (tris[k].intersectsRay(tmpR1, tmpV1)) {
+                    if (tris[k].intersectsRay(ray, tmpV1)) {
                         selection.push({
-                            dist: tmpM1.transformPoint(tmpV1).sub(start).length(),
+                            dist: triWTM.transformPoint(tmpV1).sub(start).length(),
                             meshInstances: meshInstances,
                             priority: priority
                         });
