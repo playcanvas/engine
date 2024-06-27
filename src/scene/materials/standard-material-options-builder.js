@@ -10,7 +10,6 @@ import {
     SHADERDEF_DIRLM, SHADERDEF_INSTANCING, SHADERDEF_LM, SHADERDEF_MORPH_POSITION, SHADERDEF_MORPH_NORMAL, SHADERDEF_NOSHADOW, SHADERDEF_MORPH_TEXTURE_BASED,
     SHADERDEF_SCREENSPACE, SHADERDEF_SKIN, SHADERDEF_TANGENTS, SHADERDEF_UV0, SHADERDEF_UV1, SHADERDEF_VCOLOR, SHADERDEF_LMAMBIENT,
     TONEMAP_NONE,
-    SPECULAR_PHONG,
     DITHER_NONE
 } from '../constants.js';
 import { _matTex2D } from '../shader-lib/programs/standard.js';
@@ -277,7 +276,7 @@ class StandardMaterialOptionsBuilder {
         options.litOptions.cubeMapProjection = stdMat.cubeMapProjection;
 
         options.litOptions.occludeDirect = stdMat.occludeDirect;
-        options.litOptions.conserveEnergy = stdMat.conserveEnergy && stdMat.shadingModel !== SPECULAR_PHONG;
+        options.litOptions.conserveEnergy = stdMat.conserveEnergy;
         options.litOptions.useSpecular = useSpecular;
         options.litOptions.useSpecularityFactor = (specularityFactorTint || !!stdMat.specularityFactorMap) && stdMat.useMetalnessSpecularColor;
         options.litOptions.enableGGXSpecular = stdMat.enableGGXSpecular;
@@ -296,16 +295,14 @@ class StandardMaterialOptionsBuilder {
         options.litOptions.gamma = renderParams.gammaCorrection;
         options.litOptions.toneMap = stdMat.useTonemap ? renderParams.toneMapping : TONEMAP_NONE;
 
-        const isPhong = stdMat.shadingModel === SPECULAR_PHONG;
-
         let usingSceneEnv = false;
 
         // source of environment reflections is as follows:
-        if (stdMat.envAtlas && stdMat.cubeMap && !isPhong) {
+        if (stdMat.envAtlas && stdMat.cubeMap) {
             options.litOptions.reflectionSource = 'envAtlasHQ';
             options.litOptions.reflectionEncoding = stdMat.envAtlas.encoding;
             options.litOptions.reflectionCubemapEncoding = stdMat.cubeMap.encoding;
-        } else if (stdMat.envAtlas && !isPhong) {
+        } else if (stdMat.envAtlas) {
             options.litOptions.reflectionSource = 'envAtlas';
             options.litOptions.reflectionEncoding = stdMat.envAtlas.encoding;
         } else if (stdMat.cubeMap) {
@@ -314,12 +311,12 @@ class StandardMaterialOptionsBuilder {
         } else if (stdMat.sphereMap) {
             options.litOptions.reflectionSource = 'sphereMap';
             options.litOptions.reflectionEncoding = stdMat.sphereMap.encoding;
-        } else if (stdMat.useSkybox && scene.envAtlas && scene.skybox && !isPhong) {
+        } else if (stdMat.useSkybox && scene.envAtlas && scene.skybox) {
             options.litOptions.reflectionSource = 'envAtlasHQ';
             options.litOptions.reflectionEncoding = scene.envAtlas.encoding;
             options.litOptions.reflectionCubemapEncoding = scene.skybox.encoding;
             usingSceneEnv = true;
-        } else if (stdMat.useSkybox && scene.envAtlas && !isPhong) {
+        } else if (stdMat.useSkybox && scene.envAtlas) {
             options.litOptions.reflectionSource = 'envAtlas';
             options.litOptions.reflectionEncoding = scene.envAtlas.encoding;
             usingSceneEnv = true;
@@ -333,12 +330,12 @@ class StandardMaterialOptionsBuilder {
         }
 
         // source of environment ambient is as follows:
-        if (stdMat.ambientSH && !isPhong) {
+        if (stdMat.ambientSH) {
             options.litOptions.ambientSource = 'ambientSH';
             options.litOptions.ambientEncoding = null;
         } else {
             const envAtlas = stdMat.envAtlas || (stdMat.useSkybox && scene.envAtlas ? scene.envAtlas : null);
-            if (envAtlas && !isPhong) {
+            if (envAtlas) {
                 options.litOptions.ambientSource = 'envAtlas';
                 options.litOptions.ambientEncoding = envAtlas.encoding;
             } else {

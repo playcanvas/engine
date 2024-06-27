@@ -47,7 +47,6 @@ const chunkVersions = {
     lightSheenPS: CHUNKAPI_1_62,
     lightSpecularAnisoGGXPS: CHUNKAPI_1_62,
     lightSpecularBlinnPS: CHUNKAPI_1_62,
-    lightSpecularPhongPS: CHUNKAPI_1_62,
     ltcPS: CHUNKAPI_1_62,
     reflDirPS: CHUNKAPI_1_62,
     reflDirAnisoPS: CHUNKAPI_1_62,

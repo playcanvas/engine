@@ -3,7 +3,6 @@ import { http } from '../../platform/net/http.js';
 import { PIXELFORMAT_RGBA8 } from '../../platform/graphics/constants.js';
 import { Texture } from '../../platform/graphics/texture.js';
 
-import { SPECULAR_PHONG } from '../../scene/constants.js';
 import { standardMaterialCubemapParameters, standardMaterialTextureParameters } from '../../scene/materials/standard-material-parameters.js';
 
 import { AssetReference } from '../asset/asset-reference.js';
@@ -216,11 +215,6 @@ class MaterialHandler extends ResourceHandler {
     }
 
     _onCubemapAdd(parameterName, materialAsset, cubemapAsset) {
-        // phong based - so ensure we load individual faces
-        if (materialAsset.data.shadingModel === SPECULAR_PHONG) {
-            materialAsset.loadFaces = true;
-        }
-
         this._assets.load(cubemapAsset);
     }
 

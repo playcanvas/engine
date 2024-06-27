@@ -473,7 +473,6 @@ GraphicsDevice.prototype.getCullMode = function () {
 
 // SCENE
 
-export const PhongMaterial = StandardMaterial;
 export const LitOptions = LitShaderOptions;
 
 Object.defineProperty(Scene.prototype, 'defaultMaterial', {

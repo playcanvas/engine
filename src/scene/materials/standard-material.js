@@ -13,7 +13,7 @@ import {
     SHADER_DEPTH, SHADER_PICK,
     SHADER_PREPASS_VELOCITY,
     SPECOCC_AO,
-    SPECULAR_BLINN, SPECULAR_PHONG
+    SPECULAR_BLINN
 } from '../constants.js';
 import { ShaderPass } from '../shader-pass.js';
 import { EnvLighting } from '../graphics/env-lighting.js';
@@ -524,8 +524,6 @@ const _tempColor = new Color();
  * disable it in case when all reflection comes only from a few light sources, and you don't use an
  * environment map, therefore having mostly black reflection.
  * @property {number} shadingModel Defines the shading model.
- * - {@link SPECULAR_PHONG}: Phong without energy conservation. You should only use it as a
- * backwards compatibility with older projects.
  * - {@link SPECULAR_BLINN}: Energy-conserving Blinn-Phong.
  * @property {number} fresnelModel Defines the formula used for Fresnel effect.
  * As a side-effect, enabling any Fresnel model changes the way diffuse and reflection components
@@ -780,7 +778,7 @@ class StandardMaterial extends Material {
             this._setParameter('material_clearCoatBumpiness', this.clearCoatBumpiness);
         }
 
-        this._setParameter('material_gloss', getUniform('gloss'));
+        this._setParameter('material_gloss', this.gloss);
 
         if (!this.emissiveMap || this.emissiveTint) {
             this._setParameter('material_emissive', getUniform('emissive'));
@@ -844,13 +842,11 @@ class StandardMaterial extends Material {
             this._setParameter('material_heightMapFactor', getUniform('heightMapFactor'));
         }
 
-        const isPhong = this.shadingModel === SPECULAR_PHONG;
-
         // set overridden environment textures
-        if (this.envAtlas && this.cubeMap && !isPhong) {
+        if (this.envAtlas && this.cubeMap) {
             this._setParameter('texture_envAtlas', this.envAtlas);
             this._setParameter('texture_cubeMap', this.cubeMap);
-        } else if (this.envAtlas && !isPhong) {
+        } else if (this.envAtlas) {
             this._setParameter('texture_envAtlas', this.envAtlas);
         } else if (this.cubeMap) {
             this._setParameter('texture_cubeMap', this.cubeMap);
@@ -869,14 +865,13 @@ class StandardMaterial extends Material {
     }
 
     updateEnvUniforms(device, scene) {
-        const isPhong = this.shadingModel === SPECULAR_PHONG;
-        const hasLocalEnvOverride = (this.envAtlas && !isPhong) || this.cubeMap || this.sphereMap;
+        const hasLocalEnvOverride = this.envAtlas || this.cubeMap || this.sphereMap;
 
         if (!hasLocalEnvOverride && this.useSkybox) {
-            if (scene.envAtlas && scene.skybox && !isPhong) {
+            if (scene.envAtlas && scene.skybox) {
                 this._setParameter('texture_envAtlas', scene.envAtlas);
                 this._setParameter('texture_cubeMap', scene.skybox);
-            } else if (scene.envAtlas && !isPhong) {
+            } else if (scene.envAtlas) {
                 this._setParameter('texture_envAtlas', scene.envAtlas);
             } else if (scene.skybox) {
                 this._setParameter('texture_cubeMap', scene.skybox);
@@ -1154,13 +1149,7 @@ function _defineMaterialProps() {
     _defineFloat('emissiveIntensity', 1);
     _defineFloat('specularityFactor', 1);
     _defineFloat('sheenGloss', 0.0);
-
-    _defineFloat('gloss', 0.25, (material, device, scene) => {
-        return material.shadingModel === SPECULAR_PHONG ?
-            // legacy: expand back to specular power
-            Math.pow(2, material.gloss * 11) :
-            material.gloss;
-    });
+    _defineFloat('gloss', 0.25);
 
     _defineFloat('heightMapFactor', 1, (material, device, scene) => {
         return material.heightMapFactor * 0.025;
