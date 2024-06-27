@@ -5,8 +5,6 @@ import { TagsCache } from '../../core/tags-cache.js';
 
 import { standardMaterialTextureParameters } from '../../scene/materials/standard-material-parameters.js';
 
-import { script } from '../script.js';
-
 import { Asset } from './asset.js';
 
 /**
@@ -438,7 +436,7 @@ class AssetRegistry extends EventHandler {
                 this.fire('error:' + asset.id, err, asset);
                 asset.fire('error', err, asset);
             } else {
-                if (!script.legacy && asset.type === 'script') {
+                if (asset.type === 'script') {
                     const handler = this._loader.getHandler('script');
                     if (handler._cache[asset.id] && handler._cache[asset.id].parentNode === document.head) {
                         // remove old element

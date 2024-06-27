@@ -16,9 +16,14 @@ import { RenderPassBloom } from './render-pass-bloom.js';
 import { RenderPassCompose } from './render-pass-compose.js';
 import { RenderPassTAA } from './render-pass-taa.js';
 import { RenderPassPrepass } from './render-pass-prepass.js';
+import { RenderPassSsao } from './render-pass-ssao.js';
 
 /**
+ * Render pass implementation of a common camera frame rendering with integrated  post-processing
+ * effects.
+ *
  * @category Graphics
+ * @ignore
  */
 class RenderPassCameraFrame extends RenderPass {
     app;
@@ -31,9 +36,13 @@ class RenderPassCameraFrame extends RenderPass {
 
     bloomPass;
 
+    ssaoPass;
+
     taaPass;
 
-    _bloomEnabled = true;
+    _bloomEnabled = false;
+
+    _ssaoEnabled = false;
 
     _renderTargetScale = 1;
 
@@ -83,7 +92,14 @@ class RenderPassCameraFrame extends RenderPass {
             lastSceneLayerIsTransparent: true,
 
             // TAA
-            taaEnabled: false
+            taaEnabled: false,
+
+            // Bloom
+            bloomEnabled: false,
+
+            // SSAO
+            ssaoEnabled: false,
+            ssaoBlurEnabled: true
         };
 
         return Object.assign({}, defaults, options);
@@ -111,6 +127,18 @@ class RenderPassCameraFrame extends RenderPass {
 
     get bloomEnabled() {
         return this._bloomEnabled;
+    }
+
+    set ssaoEnabled(value) {
+        if (this._ssaoEnabled !== value) {
+            this._ssaoEnabled = value;
+            this.composePass.ssaoTexture = value ? this.ssaoPass.ssaoTexture : null;
+            this.ssaoPass.enabled = value;
+        }
+    }
+
+    get ssaoEnabled() {
+        return this._ssaoEnabled;
     }
 
     set lastMipLevel(value) {
@@ -175,13 +203,16 @@ class RenderPassCameraFrame extends RenderPass {
     collectPasses() {
 
         // use these prepared render passes in the order they should be executed
-        return [this.prePass, this.scenePass, this.colorGrabPass, this.scenePassTransparent, this.taaPass, this.bloomPass, this.composePass, this.afterPass];
+        return [this.prePass, this.ssaoPass, this.scenePass, this.colorGrabPass, this.scenePassTransparent, this.taaPass, this.bloomPass, this.composePass, this.afterPass];
     }
 
     createPasses(options) {
 
         // pre-pass
         this.setupScenePrepass(options);
+
+        // ssao
+        this.setupSsaoPass(options);
 
         // scene including color grab pass
         const scenePassesInfo = this.setupScenePass(options);
@@ -262,9 +293,18 @@ class RenderPassCameraFrame extends RenderPass {
         return ret;
     }
 
+    setupSsaoPass(options) {
+        const { camera, ssaoBlurEnabled, ssaoEnabled } = options;
+        if (ssaoEnabled) {
+            this.ssaoPass = new RenderPassSsao(this.device, this.sceneTexture, camera, ssaoBlurEnabled);
+        }
+    }
+
     setupBloomPass(inputTexture) {
-        // create a bloom pass, which generates bloom texture based on the just rendered scene texture
-        this.bloomPass = new RenderPassBloom(this.device, inputTexture, this.hdrFormat);
+        if (this.bloomEnabled) {
+            // create a bloom pass, which generates bloom texture based on the provided texture
+            this.bloomPass = new RenderPassBloom(this.device, inputTexture, this.hdrFormat);
+        }
     }
 
     setupTaaPass(options) {
@@ -280,9 +320,9 @@ class RenderPassCameraFrame extends RenderPass {
 
     setupComposePass(options) {
 
-        // create a compose pass, which combines the scene texture with the bloom texture
+        // create a compose pass, which combines the results of the scene and other passes
         this.composePass = new RenderPassCompose(this.device);
-        this.composePass.bloomTexture = this.bloomPass.bloomTexture;
+        this.composePass.bloomTexture = this.bloomPass?.bloomTexture;
         this.composePass.taaEnabled = options.taaEnabled;
 
         // compose pass renders directly to target renderTarget

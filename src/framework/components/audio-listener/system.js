@@ -31,7 +31,7 @@ class AudioListenerComponentSystem extends ComponentSystem {
         this.schema = _schema;
 
         this.manager = app.soundManager;
-        Debug.assert(this.manager, "AudioSourceComponentSystem cannot be created witout sound manager");
+        Debug.assert(this.manager, "AudioListenerComponentSystem cannot be created witout sound manager");
 
         this.current = null;
 

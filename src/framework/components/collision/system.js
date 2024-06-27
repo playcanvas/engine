@@ -355,7 +355,9 @@ class CollisionMeshSystemImpl extends CollisionSystemImpl {
         hull.recalcLocalAabb();
         hull.setMargin(0.01);   // Note: default margin is 0.04
 
-        shape.addChildShape(this.system._getNodeTransform(node), hull);
+        const transform = this.system._getNodeTransform(node);
+        shape.addChildShape(transform, hull);
+        Ammo.destroy(transform);
     }
 
     createAmmoMesh(mesh, node, shape, scale, checkDupes = true) {

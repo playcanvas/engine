@@ -45,10 +45,8 @@ Each example consists of two modules to define its behavior:
 ```js
 import * as pc from 'playcanvas';
 
-const canvas = document.getElementById('application-canvas');
-if (!(canvas instanceof HTMLCanvasElement)) {
-    throw new Error('No canvas found');
-}
+const canvas = /** @type {HTMLCanvasElement} */ (document.getElementById('application-canvas'));
+window.focus();
 
 const app = new pc.Application(canvas, {});
 

@@ -160,7 +160,7 @@
     "watch:esm:debug": "npm run build target:esm:debug -- -w",
     "docs": "typedoc",
     "lint": "eslint --ext .js,.mjs scripts src test utils rollup.config.mjs",
-    "publint": "publint",
+    "publint": "publint --level error",
     "serve": "serve build -l 51000 --cors",
     "test": "mocha --recursive --require test/fixtures.mjs",
     "test:coverage": "c8 npm test",
