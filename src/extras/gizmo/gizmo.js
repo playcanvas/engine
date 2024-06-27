@@ -341,13 +341,6 @@ class Gizmo extends EventHandler {
         return this._size;
     }
 
-    _getProjFrustumWidth() {
-        const gizmoPos = this.root.getPosition();
-        const cameraPos = this._camera.entity.getPosition();
-        const dist = tmpV1.copy(gizmoPos).sub(cameraPos).dot(this._camera.entity.forward);
-        return dist * Math.tan(0.5 * this._camera.fov * math.DEG_TO_RAD);
-    }
-
     _createGizmo() {
         this.root = new Entity('gizmo');
         this._app.root.addChild(this.root);
@@ -378,11 +371,10 @@ class Gizmo extends EventHandler {
 
     _updateScale() {
         if (this._camera.projection === PROJECTION_PERSPECTIVE) {
-            let canvasMult = 1;
-            if (this._device.width > 0 && this._device.height > 0) {
-                canvasMult = this._deviceStartSize / Math.min(this._device.width, this._device.height);
-            }
-            this._scale = this._getProjFrustumWidth() * canvasMult * PERS_SCALE_RATIO;
+            const gizmoPos = this.root.getPosition();
+            const cameraPos = this._camera.entity.getPosition();
+            const dist = gizmoPos.sub(cameraPos).length();
+            this._scale = Math.tan(0.5 * this._camera.fov * math.DEG_TO_RAD * Math.max(1, 1 / this._camera.aspectRatio)) * dist * PERS_SCALE_RATIO;
         } else {
             this._scale = this._camera.orthoHeight * ORTHO_SCALE_RATIO;
         }
