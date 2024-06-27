@@ -250,7 +250,9 @@ class Gizmo extends EventHandler {
         this._camera = camera;
         this._layer = layer;
 
-        this._createGizmo();
+        this.root = new Entity('gizmo');
+        this._app.root.addChild(this.root);
+        this.root.enabled = false;
 
         this._updateScale();
 
@@ -331,12 +333,6 @@ class Gizmo extends EventHandler {
      */
     get size() {
         return this._size;
-    }
-
-    _createGizmo() {
-        this.root = new Entity('gizmo');
-        this._app.root.addChild(this.root);
-        this.root.enabled = false;
     }
 
     _updatePosition() {
