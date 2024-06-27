@@ -593,11 +593,6 @@ class LitShader {
                 this.defines.push("LIT_SPECULAR_FRESNEL");
             }
 
-            // enable conserve energy path in clustered chunk
-            if (options.conserveEnergy) {
-                this.defines.push("LIT_CONSERVE_ENERGY");
-            }
-
             if (options.useSheen) {
                 this.defines.push("LIT_SHEEN");
             }
@@ -1019,7 +1014,7 @@ class LitShader {
 
         if (addAmbient) {
             backend.append("    addAmbient(litArgs_worldNormal);");
-            if (options.conserveEnergy && options.useSpecular) {
+            if (options.useSpecular) {
                 backend.append(`   dDiffuseLight = dDiffuseLight * (1.0 - litArgs_specularity);`);
             }
 
@@ -1306,7 +1301,7 @@ class LitShader {
                 if (lightShape !== LIGHTSHAPE_PUNCTUAL) {
 
                     // area light - they do not mix diffuse lighting into specular attenuation
-                    if (options.conserveEnergy && options.useSpecular) {
+                    if (options.useSpecular) {
                         backend.append("    dDiffuseLight += ((dAttenD * dAtten) * light" + i + "_color" + (usesCookieNow ? " * dAtten3" : "") + ") * (1.0 - dLTCSpecFres);");
                     } else {
                         backend.append("    dDiffuseLight += (dAttenD * dAtten) * light" + i + "_color" + (usesCookieNow ? " * dAtten3" : "") + ";");
@@ -1314,7 +1309,7 @@ class LitShader {
                 } else {
 
                     // punctual light
-                    if (hasAreaLights && options.conserveEnergy && options.useSpecular) {
+                    if (hasAreaLights && options.useSpecular) {
                         backend.append("    dDiffuseLight += (dAtten * light" + i + "_color" + (usesCookieNow ? " * dAtten3" : "") + ") * (1.0 - litArgs_specularity);");
                     } else {
                         backend.append("    dDiffuseLight += dAtten * light" + i + "_color" + (usesCookieNow ? " * dAtten3" : "") + ";");

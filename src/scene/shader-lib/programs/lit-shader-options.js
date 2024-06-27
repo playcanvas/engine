@@ -194,13 +194,6 @@ class LitShaderOptions {
     cubeMapProjection = 0;
 
     /**
-     * The value of {@link StandardMaterial#conserveEnergy}.
-     *
-     * @type {boolean}
-     */
-    conserveEnergy = false;
-
-    /**
      * If any specular or reflections are needed at all.
      *
      * @type {boolean}

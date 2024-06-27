@@ -50,7 +50,6 @@ const standardMaterialParameterTypes = {
     ..._textureParameter('metalness'),
     useMetalnessSpecularColor: 'boolean',
 
-    conserveEnergy: 'boolean',
     shininess: 'number',
     gloss: 'number',
     glossInvert: 'boolean',

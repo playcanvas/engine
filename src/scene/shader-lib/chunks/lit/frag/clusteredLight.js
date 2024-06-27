@@ -397,9 +397,7 @@ void evaluateLight(
                 vec3 areaDiffuse = (diffuseAttenuation * falloffAttenuation) * light.color * cookieAttenuation;
 
                 #if defined(LIT_SPECULAR)
-                    #if defined(LIT_CONSERVE_ENERGY)
-                        areaDiffuse = mix(areaDiffuse, vec3(0), dLTCSpecFres);
-                    #endif
+                    areaDiffuse = mix(areaDiffuse, vec3(0), dLTCSpecFres);
                 #endif
 
                 // area light diffuse - it does not mix diffuse lighting into specular attenuation
@@ -453,9 +451,7 @@ void evaluateLight(
 
                 #if defined(CLUSTER_AREALIGHTS)
                 #if defined(LIT_SPECULAR)
-                #if defined(LIT_CONSERVE_ENERGY)
                     punctualDiffuse = mix(punctualDiffuse, vec3(0), specularity);
-                #endif
                 #endif
                 #endif
 

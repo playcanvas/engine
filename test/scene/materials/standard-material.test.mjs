@@ -83,8 +83,6 @@ describe('StandardMaterial', function () {
         expect(material.clearCoatVertexColor).to.equal(false);
         expect(material.clearCoatVertexColorChannel).to.equal('g');
 
-        expect(material.conserveEnergy).to.equal(true);
-
         expect(material.cubeMap).to.be.null;
         expect(material.cubeMapProjection).to.equal(CUBEPROJ_NONE);
         expect(material.cubeMapProjectionBox).to.be.null;

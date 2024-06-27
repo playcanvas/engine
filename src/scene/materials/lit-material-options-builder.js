@@ -67,7 +67,6 @@ class LitMaterialOptionsBuilder {
 
         litOptions.cubeMapProjection = CUBEPROJ_NONE;
 
-        litOptions.conserveEnergy = material.conserveEnergy && material.shadingModel === SPECULAR_BLINN;
         litOptions.useSpecular = material.hasSpecular;
         litOptions.useSpecularityFactor = material.hasSpecularityFactor;
         litOptions.enableGGXSpecular = material.ggxSpecular;

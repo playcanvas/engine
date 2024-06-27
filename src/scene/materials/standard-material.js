@@ -519,16 +519,12 @@ const _tempColor = new Color();
  * @property {number} occludeSpecularIntensity Controls visibility of specular occlusion.
  * @property {boolean} occludeDirect Tells if AO should darken directional lighting. Defaults to
  * false.
- * @property {boolean} conserveEnergy Defines how diffuse and specular components are combined when
- * Fresnel is on. It is recommended that you leave this option enabled, although you may want to
- * disable it in case when all reflection comes only from a few light sources, and you don't use an
- * environment map, therefore having mostly black reflection.
  * @property {number} shadingModel Defines the shading model.
  * - {@link SPECULAR_BLINN}: Energy-conserving Blinn-Phong.
  * @property {number} fresnelModel Defines the formula used for Fresnel effect.
  * As a side-effect, enabling any Fresnel model changes the way diffuse and reflection components
  * are combined. When Fresnel is off, legacy non energy-conserving combining is used. When it is
- * on, combining behavior is defined by conserveEnergy parameter.
+ * on, combining behavior is energy-conserving.
  *
  * - {@link FRESNEL_NONE}: No Fresnel.
  * - {@link FRESNEL_SCHLICK}: Schlick's approximation of Fresnel (recommended). Parameterized by
@@ -1219,7 +1215,6 @@ function _defineMaterialProps() {
     _defineFlag('enableGGXSpecular', false);
     _defineFlag('occludeDirect', false);
     _defineFlag('normalizeNormalMap', true);
-    _defineFlag('conserveEnergy', true);
     _defineFlag('opacityFadesSpecular', true);
     _defineFlag('occludeSpecular', SPECOCC_AO);
     _defineFlag('shadingModel', SPECULAR_BLINN);
