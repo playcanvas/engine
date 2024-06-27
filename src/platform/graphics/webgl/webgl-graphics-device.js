@@ -1303,6 +1303,22 @@ class WebglGraphicsDevice extends GraphicsDevice {
         this.gpuProfiler.request();
     }
 
+    _uploadDirtyTextures() {
+
+        this.textures.forEach((texture) => {
+            if (texture._needsUpload || texture._needsMipmapsUpload) {
+                if (!texture.impl._glTexture) {
+                    texture.impl.initialize(this, texture);
+                }
+
+                this.bindTexture(texture);
+                texture.impl.upload(this, texture);
+                texture._needsUpload = false;
+                texture._needsMipmapsUpload = false;
+            }
+        });
+    }
+
     /**
      * Start a render pass.
      *
@@ -1313,6 +1329,8 @@ class WebglGraphicsDevice extends GraphicsDevice {
 
         DebugGraphics.pushGpuMarker(this, `Pass:${renderPass.name}`);
         DebugGraphics.pushGpuMarker(this, `START-PASS`);
+
+        this._uploadDirtyTextures();
 
         // set up render target
         const rt = renderPass.renderTarget ?? this.backBuffer;
@@ -1676,7 +1694,7 @@ class WebglGraphicsDevice extends GraphicsDevice {
         if (!impl._glTexture)
             impl.initialize(this, texture);
 
-        if (impl.dirtyParameterFlags > 0 || texture._needsUpload || texture._needsMipmapsUpload) {
+        if (impl.dirtyParameterFlags > 0) {
 
             // Ensure the specified texture unit is active
             this.activeTexture(textureUnit);
@@ -1687,12 +1705,6 @@ class WebglGraphicsDevice extends GraphicsDevice {
             if (impl.dirtyParameterFlags) {
                 this.setTextureParameters(texture);
                 impl.dirtyParameterFlags = 0;
-            }
-
-            if (texture._needsUpload || texture._needsMipmapsUpload) {
-                impl.upload(this, texture);
-                texture._needsUpload = false;
-                texture._needsMipmapsUpload = false;
             }
         } else {
             // Ensure the texture is currently bound to the correct target on the specified texture unit.
