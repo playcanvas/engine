@@ -199,9 +199,10 @@ class MiniStats {
     }
 
     /**
-     * Get/set the active size index. Setting the active size index will resize the overlay to the
+     * Sets the active size index. Setting the active size index will resize the overlay to the
      * size specified by the corresponding entry in the sizes array.
      *
+     * @type {number}
      * @ignore
      */
     set activeSizeIndex(value) {
@@ -210,28 +211,40 @@ class MiniStats {
         this.resize(this.sizes[value].width, this.sizes[value].height, this.sizes[value].graphs);
     }
 
-    /** @ignore */
+    /**
+     * Gets the active size index.
+     *
+     * @type {number}
+     * @ignore
+     */
     get activeSizeIndex() {
         return this._activeSizeIndex;
     }
 
     /**
-     * Get/set the opacity of the MiniStats overlay.
+     * Sets the opacity of the MiniStats overlay.
      *
+     * @type {number}
      * @ignore
      */
     set opacity(value) {
         this.clr[3] = value;
     }
 
-    /** @ignore */
+    /**
+     * Gets the opacity of the MiniStats overlay.
+     *
+     * @type {number}
+     * @ignore
+     */
     get opacity() {
         return this.clr[3];
     }
 
     /**
-     * Get the overall height of the MiniStats overlay.
+     * Gets the overall height of the MiniStats overlay.
      *
+     * @type {number}
      * @ignore
      */
     get overallHeight() {
@@ -241,7 +254,9 @@ class MiniStats {
     }
 
     /**
-     * Get/set the enabled state of the MiniStats overlay.
+     * Sets the enabled state of the MiniStats overlay.
+     *
+     * @type {boolean}
      */
     set enabled(value) {
         if (value !== this._enabled) {
@@ -253,6 +268,11 @@ class MiniStats {
         }
     }
 
+    /**
+     * Gets the enabled state of the MiniStats overlay.
+     *
+     * @type {boolean}
+     */
     get enabled() {
         return this._enabled;
     }

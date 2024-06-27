@@ -82,7 +82,7 @@ class AnimTrack {
 
 
     /**
-     * The animation events that will fire during the playback of this anim track.
+     * Sets the animation events that will fire during the playback of this anim track.
      *
      * @type {AnimEvents}
      */
@@ -90,6 +90,11 @@ class AnimTrack {
         this._animEvents = animEvents;
     }
 
+    /**
+     * Gets the animation events that will fire during the playback of this anim track.
+     *
+     * @type {AnimEvents}
+     */
     get events() {
         return this._animEvents.events;
     }

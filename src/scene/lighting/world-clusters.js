@@ -347,7 +347,7 @@ class WorldClusters {
     }
 
     // evaluate ranges of variables compressed to 8bit texture to allow their scaling to 0..1 range
-    evaluateCompressionLimits(gammaCorrection) {
+    evaluateCompressionLimits() {
 
         let maxAttenuation = 0;
         let maxColorValue = 0;
@@ -357,7 +357,7 @@ class WorldClusters {
             const light = usedLights[i].light;
             maxAttenuation = Math.max(light.attenuationEnd, maxAttenuation);
 
-            const color = gammaCorrection ? light._linearFinalColor : light._finalColor;
+            const color = light._colorLinear;
             maxColorValue = Math.max(color[0], maxColorValue);
             maxColorValue = Math.max(color[1], maxColorValue);
             maxColorValue = Math.max(color[2], maxColorValue);
@@ -370,7 +370,7 @@ class WorldClusters {
         this.lightsBuffer.setCompressionRanges(this._maxAttenuation, this._maxColorValue);
     }
 
-    updateClusters(gammaCorrection) {
+    updateClusters() {
 
         // clear clusters
         this.counts.fill(0);
@@ -392,7 +392,7 @@ class WorldClusters {
             const light = clusteredLight.light;
 
             // add light data into textures
-            this.lightsBuffer.addLightData(light, i, gammaCorrection);
+            this.lightsBuffer.addLightData(light, i);
 
             // light's bounds in cell space
             this.evalLightCellMinMax(clusteredLight, tempMin3, tempMax3);
@@ -436,13 +436,13 @@ class WorldClusters {
     }
 
     // internal update of the cluster data, executes once per frame
-    update(lights, gammaCorrection, lightingParams) {
+    update(lights, lightingParams) {
         this.updateParams(lightingParams);
         this.updateCells();
         this.collectLights(lights);
         this.evaluateBounds();
-        this.evaluateCompressionLimits(gammaCorrection);
-        this.updateClusters(gammaCorrection);
+        this.evaluateCompressionLimits();
+        this.updateClusters();
         this.uploadTextures();
     }
 

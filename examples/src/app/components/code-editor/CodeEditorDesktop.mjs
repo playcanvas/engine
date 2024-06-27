@@ -7,7 +7,7 @@ import { jsx } from '../../jsx.mjs';
 import { iframe } from '../../iframe.mjs';
 import { removeRedundantSpaces } from '../../strings.mjs';
 
-import '../../events.js';
+/** @typedef {import('../../events.js').StateEvent} StateEvent */
 
 loader.config({ paths: { vs: './modules/monaco-editor/min/vs' } });
 

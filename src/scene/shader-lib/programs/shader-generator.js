@@ -1,5 +1,5 @@
 import {
-    GAMMA_SRGB, GAMMA_SRGBFAST, GAMMA_SRGBHDR,
+    GAMMA_SRGB,
     TONEMAP_ACES, TONEMAP_ACES2, TONEMAP_FILMIC, TONEMAP_HEJL, TONEMAP_NEUTRAL, TONEMAP_LINEAR
 } from '../../constants.js';
 import { shaderChunks } from '../chunks/chunks.js';
@@ -19,22 +19,20 @@ class ShaderGenerator {
 
     static fogCode(value, chunks = shaderChunks) {
         if (value === 'linear') {
-            return chunks.fogLinearPS ? chunks.fogLinearPS : shaderChunks.fogLinearPS;
+            return chunks.fogLinearPS ?? shaderChunks.fogLinearPS;
         } else if (value === 'exp') {
-            return chunks.fogExpPS ? chunks.fogExpPS : shaderChunks.fogExpPS;
+            return chunks.fogExpPS ?? shaderChunks.fogExpPS;
         } else if (value === 'exp2') {
-            return chunks.fogExp2PS ? chunks.fogExp2PS : shaderChunks.fogExp2PS;
+            return chunks.fogExp2PS ?? shaderChunks.fogExp2PS;
         }
         return chunks.fogNonePS ? chunks.fogNonePS : shaderChunks.fogNonePS;
     }
 
     static gammaCode(value, chunks = shaderChunks) {
-        if (value === GAMMA_SRGB || value === GAMMA_SRGBFAST) {
-            return chunks.gamma2_2PS ? chunks.gamma2_2PS : shaderChunks.gamma2_2PS;
-        } else if (value === GAMMA_SRGBHDR) {
-            return "#define HDR\n" + (chunks.gamma2_2PS ? chunks.gamma2_2PS : shaderChunks.gamma2_2PS);
+        if (value === GAMMA_SRGB) {
+            return chunks.gamma2_2PS ?? shaderChunks.gamma2_2PS;
         }
-        return chunks.gamma1_0PS ? chunks.gamma1_0PS : shaderChunks.gamma1_0PS;
+        return chunks.gamma1_0PS ?? shaderChunks.gamma1_0PS;
     }
 
     static tonemapCode(value, chunks = shaderChunks) {

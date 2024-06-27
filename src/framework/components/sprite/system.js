@@ -81,7 +81,7 @@ class SpriteComponentSystem extends ComponentSystem {
             material.opacityTint = true;
             material.opacity = 0; // use non-1 opacity to compile shader correctly
             material.useLighting = false;
-            material.useGammaTonemap = false;
+            material.useTonemap = false;
             material.useFog = false;
             material.useSkybox = false;
             material.blendType = BLEND_PREMULTIPLIED;

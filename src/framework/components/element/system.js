@@ -372,7 +372,7 @@ class ElementComponentSystem extends ComponentSystem {
         //  defaultScreenSpaceBitmapTextMaterial
         material.name = 'default' + name;
         material.useLighting = false;
-        material.useGammaTonemap = false;
+        material.useTonemap = false;
         material.useFog = false;
         material.useSkybox = false;
         material.diffuse.set(0, 0, 0); // black diffuse color to prevent ambient light being included
@@ -399,7 +399,7 @@ class ElementComponentSystem extends ComponentSystem {
         material.opacityTint = true;
         material.opacity = 0; // use non-1 opacity to compile shader correctly
         material.useLighting = false;
-        material.useGammaTonemap = false;
+        material.useTonemap = false;
         material.useFog = false;
         material.useSkybox = false;
         material.blendType = BLEND_PREMULTIPLIED;

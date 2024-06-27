@@ -1,17 +1,38 @@
 import { CULLFACE_NONE } from "../../platform/graphics/constants.js";
 import { ShaderProcessorOptions } from "../../platform/graphics/shader-processor-options.js";
-import { BLEND_NONE, BLEND_NORMAL, DITHER_NONE, GAMMA_NONE, GAMMA_SRGBHDR, SHADER_FORWARDHDR, TONEMAP_LINEAR } from "../constants.js";
+import { BLEND_NONE, BLEND_NORMAL, DITHER_NONE } from "../constants.js";
 import { Material } from "../materials/material.js";
 import { getProgramLibrary } from "../shader-lib/get-program-library.js";
 import { gsplat } from "./shader-generator-gsplat.js";
 
 const splatMainVS = `
+    vec4 discardVec = vec4(0.0, 0.0, 2.0, 1.0);
+
     void main(void)
     {
-        vec3 centerLocal = evalCenter();
-        vec4 centerWorld = matrix_model * vec4(centerLocal, 1.0);
+        // calculate splat uv
+        if (!calcSplatUV()) {
+            gl_Position = discardVec;
+            return;
+        }
 
-        gl_Position = evalSplat(centerWorld);
+        // read data
+        readData();
+
+        vec4 pos;
+        if (!evalSplat(pos)) {
+            gl_Position = discardVec;
+            return;
+        }
+
+        gl_Position = pos;
+
+        texCoord = vertex_position.xy;
+        color = getColor();
+
+        #ifndef DITHER_NONE
+            id = float(splatId);
+        #endif
     }
 `;
 
@@ -27,6 +48,8 @@ const splatMainFS = `
  * @property {string} [vertex] - Custom vertex shader, see SPLAT MANY example.
  * @property {string} [fragment] - Custom fragment shader, see SPLAT MANY example.
  * @property {string} [dither] - Opacity dithering enum.
+ *
+ * @ignore
  */
 
 /**
@@ -44,12 +67,12 @@ const createGSplatMaterial = (options = {}) => {
     material.blendType = dither ? BLEND_NONE : BLEND_NORMAL;
     material.depthWrite = dither;
 
-    material.getShaderVariant = function (device, scene, defs, unused, pass, sortedLights, viewUniformFormat, viewBindGroupFormat) {
+    material.getShaderVariant = function (device, scene, defs, renderParams, pass, sortedLights, viewUniformFormat, viewBindGroupFormat) {
 
         const programOptions = {
             pass: pass,
-            gamma: (pass === SHADER_FORWARDHDR ? (scene.gammaCorrection ? GAMMA_SRGBHDR : GAMMA_NONE) : scene.gammaCorrection),
-            toneMapping: (pass === SHADER_FORWARDHDR ? TONEMAP_LINEAR : scene.toneMapping),
+            gamma: renderParams.gammaCorrection,
+            toneMapping: renderParams.toneMapping,
             vertex: options.vertex ?? splatMainVS,
             fragment: options.fragment ?? splatMainFS,
             dither: ditherEnum

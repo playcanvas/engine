@@ -21,7 +21,7 @@ import { http } from '../platform/net/http.js';
 
 import {
     LAYERID_DEPTH, LAYERID_IMMEDIATE, LAYERID_SKYBOX, LAYERID_UI, LAYERID_WORLD,
-    SORTMODE_NONE, SORTMODE_MANUAL, SPECULAR_BLINN
+    SORTMODE_NONE, SORTMODE_MANUAL
 } from '../scene/constants.js';
 import { setProgramLibrary } from '../scene/shader-lib/get-program-library.js';
 import { ProgramLibrary } from '../scene/shader-lib/program-library.js';
@@ -129,7 +129,7 @@ class AppBase extends EventHandler {
      *
      * @callback MakeTickCallback
      * @param {number} [timestamp] - The timestamp supplied by requestAnimationFrame.
-     * @param {*} [frame] - XRFrame from requestAnimationFrame callback.
+     * @param {XRFrame} [frame] - XRFrame from requestAnimationFrame callback.
      * @returns {void}
      */
 
@@ -237,28 +237,10 @@ class AppBase extends EventHandler {
          */
         this.renderNextFrame = false;
 
-        /**
-         * Enable if you want entity type script attributes to not be re-mapped when an entity is
-         * cloned.
-         *
-         * @type {boolean}
-         * @ignore
-         */
-        this.useLegacyScriptAttributeCloning = script.legacy;
-
         this._librariesLoaded = false;
         this._fillMode = FILLMODE_KEEP_ASPECT;
         this._resolutionMode = RESOLUTION_FIXED;
         this._allowResize = true;
-
-        /**
-         * For backwards compatibility with scripts 1.0.
-         *
-         * @type {AppBase}
-         * @deprecated
-         * @ignore
-         */
-        this.context = this;
     }
 
     /**
@@ -310,7 +292,7 @@ class AppBase extends EventHandler {
          * @type {Scene}
          * @example
          * // Set the tone mapping property of the application's scene
-         * this.app.scene.toneMapping = pc.TONEMAP_FILMIC;
+         * this.app.scene.rendering.toneMapping = pc.TONEMAP_FILMIC;
          */
         this.scene = new Scene(device);
         this._registerSceneImmediate(this.scene);
@@ -608,7 +590,6 @@ class AppBase extends EventHandler {
     _initDefaultMaterial() {
         const material = new StandardMaterial();
         material.name = "Default Material";
-        material.shadingModel = SPECULAR_BLINN;
         setDefaultMaterial(this.graphicsDevice, material);
     }
 
@@ -767,43 +748,7 @@ class AppBase extends EventHandler {
     }
 
     _preloadScripts(sceneData, callback) {
-        if (!script.legacy) {
-            callback();
-            return;
-        }
-
-        this.systems.script.preloading = true;
-
-        const scripts = this._getScriptReferences(sceneData);
-
-        const l = scripts.length;
-        const progress = new Progress(l);
-        const regex = /^http(s)?:\/\//;
-
-        if (l) {
-            const onLoad = (err, ScriptType) => {
-                if (err)
-                    console.error(err);
-
-                progress.inc();
-                if (progress.done()) {
-                    this.systems.script.preloading = false;
-                    callback();
-                }
-            };
-
-            for (let i = 0; i < l; i++) {
-                let scriptUrl = scripts[i];
-                // support absolute URLs (for now)
-                if (!regex.test(scriptUrl.toLowerCase()) && this._scriptPrefix)
-                    scriptUrl = path.join(this._scriptPrefix, scripts[i]);
-
-                this.loader.load(scriptUrl, 'script', onLoad);
-            }
-        } else {
-            this.systems.script.preloading = false;
-            callback();
-        }
+        callback();
     }
 
     // set application properties from data file
@@ -942,52 +887,32 @@ class AppBase extends EventHandler {
         const scriptsIndex = {};
         const bundlesIndex = {};
 
-        if (!script.legacy) {
-            // add scripts in order of loading first
-            for (let i = 0; i < this.scriptsOrder.length; i++) {
-                const id = this.scriptsOrder[i];
-                if (!assets[id])
-                    continue;
+        // add scripts in order of loading first
+        for (let i = 0; i < this.scriptsOrder.length; i++) {
+            const id = this.scriptsOrder[i];
+            if (!assets[id])
+                continue;
 
-                scriptsIndex[id] = true;
-                list.push(assets[id]);
-            }
+            scriptsIndex[id] = true;
+            list.push(assets[id]);
+        }
 
-            // then add bundles
-            if (this.enableBundles) {
-                for (const id in assets) {
-                    if (assets[id].type === 'bundle') {
-                        bundlesIndex[id] = true;
-                        list.push(assets[id]);
-                    }
+        // then add bundles
+        if (this.enableBundles) {
+            for (const id in assets) {
+                if (assets[id].type === 'bundle') {
+                    bundlesIndex[id] = true;
+                    list.push(assets[id]);
                 }
             }
+        }
 
-            // then add rest of assets
-            for (const id in assets) {
-                if (scriptsIndex[id] || bundlesIndex[id])
-                    continue;
+        // then add rest of assets
+        for (const id in assets) {
+            if (scriptsIndex[id] || bundlesIndex[id])
+                continue;
 
-                list.push(assets[id]);
-            }
-        } else {
-            if (this.enableBundles) {
-                // add bundles
-                for (const id in assets) {
-                    if (assets[id].type === 'bundle') {
-                        bundlesIndex[id] = true;
-                        list.push(assets[id]);
-                    }
-                }
-            }
-
-            // then add rest of assets
-            for (const id in assets) {
-                if (bundlesIndex[id])
-                    continue;
-
-                list.push(assets[id]);
-            }
+            list.push(assets[id]);
         }
 
         for (let i = 0; i < list.length; i++) {
@@ -1131,10 +1056,6 @@ class AppBase extends EventHandler {
         // #if _PROFILER
         this.stats.frame.updateStart = now();
         // #endif
-
-        // Perform ComponentSystem update
-        if (script.legacy)
-            this.systems.fire('fixedUpdate', 1.0 / 60.0);
 
         this.systems.fire(this._inTools ? 'toolsUpdate' : 'update', dt);
         this.systems.fire('animationUpdate', dt);
@@ -1535,7 +1456,7 @@ class AppBase extends EventHandler {
      * - {@link SHADOW_PCF3}: PCF 3x3 sampling.
      * - {@link SHADOW_PCF5}: PCF 5x5 sampling. Falls back to {@link SHADOW_PCF3} on WebGL 1.0.
      *
-     * @param {Vec3} settings.render.lightingCells - Number of cells along each world-space axis the space containing lights
+     * @param {Vec3} settings.render.lightingCells - Number of cells along each world space axis the space containing lights
      * is subdivided into.
      *
      * Only lights with bakeDir=true will be used for generating the dominant light direction.
@@ -1668,11 +1589,11 @@ class AppBase extends EventHandler {
     }
 
     /**
-     * Draws a single line. Line start and end coordinates are specified in world-space. The line
+     * Draws a single line. Line start and end coordinates are specified in world space. The line
      * will be flat-shaded with the specified color.
      *
-     * @param {Vec3} start - The start world-space coordinate of the line.
-     * @param {Vec3} end - The end world-space coordinate of the line.
+     * @param {Vec3} start - The start world space coordinate of the line.
+     * @param {Vec3} end - The end world space coordinate of the line.
      * @param {Color} [color] - The color of the line. It defaults to white if not specified.
      * @param {boolean} [depthTest] - Specifies if the line is depth tested against the depth
      * buffer. Defaults to true.
@@ -1894,7 +1815,7 @@ class AppBase extends EventHandler {
             material = new Material();
             material.cull = CULLFACE_NONE;
             material.setParameter("colorMap", texture);
-            material.shader = filterable ? this.scene.immediate.getTextureShader() : this.scene.immediate.getUnfilterableTextureShader();
+            material.shader = filterable ? this.scene.immediate.getTextureShader(texture.encoding) : this.scene.immediate.getUnfilterableTextureShader();
             material.update();
         }
 
@@ -2114,7 +2035,7 @@ const makeTick = function (_app) {
     const application = _app;
     /**
      * @param {number} [timestamp] - The timestamp supplied by requestAnimationFrame.
-     * @param {*} [frame] - XRFrame from requestAnimationFrame callback.
+     * @param {XRFrame} [frame] - XRFrame from requestAnimationFrame callback.
      */
     return function (timestamp, frame) {
         if (!application.graphicsDevice)

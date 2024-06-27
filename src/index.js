@@ -27,7 +27,6 @@ import './polyfill/typedarray-fill.js';
 // CORE
 export * from './core/constants.js';
 export { apps, common, config, data, extend, revision, type, version } from './core/core.js';
-export { events } from './core/events.js';
 export { guid } from './core/guid.js';
 export { path } from './core/path.js';
 export { platform } from './core/platform.js';
@@ -184,6 +183,7 @@ export { SphereGeometry } from './scene/geometry/sphere-geometry.js';
 export { TorusGeometry } from './scene/geometry/torus-geometry.js';
 
 // SCENE / RENDERER
+export { RenderingParams } from './scene/renderer/rendering-params.js';
 export { RenderPassForward } from './scene/renderer/render-pass-forward.js';
 
 // SCENE / SHADER-LIB
@@ -214,8 +214,6 @@ export { AnimComponentLayer } from './framework/components/anim/component-layer.
 export { AnimComponentSystem } from './framework/components/anim/system.js';
 export { AudioListenerComponent } from './framework/components/audio-listener/component.js';
 export { AudioListenerComponentSystem } from './framework/components/audio-listener/system.js';
-export { AudioSourceComponent } from './framework/components/audio-source/component.js';
-export { AudioSourceComponentSystem } from './framework/components/audio-source/system.js';
 export * from './framework/components/button/constants.js';
 export { ButtonComponent } from './framework/components/button/component.js';
 export { ButtonComponentSystem } from './framework/components/button/system.js';
@@ -264,8 +262,6 @@ export { ScreenComponent } from './framework/components/screen/component.js';
 export { ScreenComponentSystem } from './framework/components/screen/system.js';
 export { ScriptComponent } from './framework/components/script/component.js';
 export { ScriptComponentSystem } from './framework/components/script/system.js';
-export { ScriptLegacyComponent } from './framework/components/script-legacy/component.js';
-export { ScriptLegacyComponentSystem } from './framework/components/script-legacy/system.js';
 export { ScrollbarComponent } from './framework/components/scrollbar/component.js';
 export { ScrollbarComponentSystem } from './framework/components/scrollbar/system.js';
 export * from './framework/components/scroll-view/constants.js';
@@ -360,10 +356,11 @@ export { ElementInput, ElementInputEvent, ElementMouseEvent, ElementSelectEvent,
 export { JsonStandardMaterialParser } from './framework/parsers/material/json-standard-material.js';
 
 // FRAMEWORK /SCRIPTS
-export { createScript, registerScript, getReservedScriptNames } from './framework/script/script.js';
+export { createScript, registerScript, getReservedScriptNames } from './framework/script/script-create.js';
 export { ScriptAttributes } from './framework/script/script-attributes.js';
 export { ScriptRegistry } from './framework/script/script-registry.js';
 export { ScriptType } from './framework/script/script-type.js';
+export { Script } from './framework/script/script.js';
 
 // FRAMEWORK / LOCALIZATION
 export { I18n } from './framework/i18n/i18n.js';

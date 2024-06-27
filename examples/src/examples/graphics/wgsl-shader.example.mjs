@@ -4,10 +4,8 @@ import * as pc from 'playcanvas';
 import files from 'examples/files';
 import { deviceType, rootPath } from 'examples/utils';
 
-const canvas = document.getElementById('application-canvas');
-if (!(canvas instanceof HTMLCanvasElement)) {
-    throw new Error('No canvas found');
-}
+const canvas = /** @type {HTMLCanvasElement} */ (document.getElementById('application-canvas'));
+window.focus();
 
 // Even though we're using WGSL, we still need to provide glslang
 // and twgsl to compile shaders used internally by the engine.
@@ -19,6 +17,7 @@ const gfxOptions = {
 
 const device = await pc.createGraphicsDevice(canvas, gfxOptions);
 device.maxPixelRatio = Math.min(window.devicePixelRatio, 2);
+
 
 if (!device.isWebGPU) {
     throw new Error('WebGPU is required for this example.');

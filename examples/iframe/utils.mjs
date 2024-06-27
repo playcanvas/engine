@@ -69,6 +69,16 @@ export function localImport(name) {
 }
 
 /**
+ * Imports an absolute file as a module.
+ *
+ * @param {string} name - The name of the absolute file.
+ * @returns {Promise<any>} - The module exports.
+ */
+export function fileImport(name) {
+    return import(name);
+}
+
+/**
  * Clears all the blob URLs.
  */
 export function clearImports() {
@@ -92,7 +102,7 @@ export function parseConfig(script) {
     return config;
 }
 
-const DEVICE_TYPES = ['webgpu', 'webgl2'];
+const DEVICE_TYPES = ['webgpu', 'webgl2', 'null'];
 export let deviceType = 'webgl2';
 
 /**
@@ -105,6 +115,11 @@ export function updateDeviceType(config) {
         return;
     }
 
+    if (config.WEBGL_DISABLED && config.WEBGPU_DISABLED) {
+        console.warn('Both WebGL and WebGPU are disabled. Using NullGraphicsDevice instead.');
+        deviceType = 'null';
+        return;
+    }
     if (config.WEBGPU_DISABLED) {
         console.warn('WebGPU is disabled. Using WebGL2 instead.');
         deviceType = 'webgl2';

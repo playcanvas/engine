@@ -1,10 +1,8 @@
 // @config WEBGPU_DISABLED
 import * as pc from 'playcanvas';
 
-const canvas = document.getElementById('application-canvas');
-if (!(canvas instanceof HTMLCanvasElement)) {
-    throw new Error('No canvas found');
-}
+const canvas = /** @type {HTMLCanvasElement} */ (document.getElementById('application-canvas'));
+window.focus();
 
 /**
  * @param {string} msg - The message.
@@ -150,6 +148,7 @@ plane.render.material = materialDepth;
 plane.render.meshInstances[0].cull = false;
 plane.setLocalPosition(0, 0, -1);
 plane.setLocalEulerAngles(90, 0, 0);
+plane.enabled = false;
 camera.addChild(plane);
 
 if (app.xr.supported) {
@@ -204,6 +203,7 @@ if (app.xr.supported) {
     app.xr.on('end', function () {
         shaderUpdated = false;
         message('Immersive AR session has ended');
+        plane.enabled = false;
     });
     app.xr.on('available:' + pc.XRTYPE_AR, function (available) {
         if (available) {
@@ -225,15 +225,14 @@ if (app.xr.supported) {
                 updateShader(app.xr.views.list.length > 1, app.xr.views.depthPixelFormat === pc.PIXELFORMAT_R32F);
             }
 
-            for (let i = 0; i < app.xr.views.list.length; i++) {
-                const view = app.xr.views.list[i];
-                if (!view.textureDepth)
-                    // check if depth texture is available
-                    continue;
-
+            const view = app.xr.views.list?.[0];
+            if (view && view.textureDepth) {
                 materialDepth.setParameter('depthMap', view.textureDepth);
                 materialDepth.setParameter('matrix_depth_uv', view.depthUvMatrix.data);
                 materialDepth.setParameter('depth_raw_to_meters', view.depthValueToMeters);
+                plane.enabled = true;
+            } else {
+                plane.enabled = false;
             }
         }
     });

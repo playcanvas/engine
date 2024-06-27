@@ -86,7 +86,7 @@ class SoundInstance3d extends SoundInstance {
     }
 
     /**
-     * The position of the sound in 3D space.
+     * Sets the position of the sound in 3D space.
      *
      * @type {Vec3}
      */
@@ -102,17 +102,15 @@ class SoundInstance3d extends SoundInstance {
         }
     }
 
+    /**
+     * Gets the position of the sound in 3D space.
+     *
+     * @type {Vec3}
+     */
     get position() {
         return this._position;
     }
 
-    /**
-     * The velocity of the sound.
-     *
-     * @type {Vec3}
-     * @deprecated
-     * @ignore
-     */
     set velocity(velocity) {
         Debug.warn('SoundInstance3d#velocity is not implemented.');
         this._velocity.copy(velocity);
@@ -124,8 +122,8 @@ class SoundInstance3d extends SoundInstance {
     }
 
     /**
-     * The maximum distance from the listener at which audio falloff stops. Note the volume of the
-     * audio is not 0 after this distance, but just doesn't fall off anymore.
+     * Sets the maximum distance from the listener at which audio falloff stops. Note that the
+     * volume of the audio is not 0 after this distance, but just doesn't fall off anymore.
      *
      * @type {number}
      */
@@ -133,12 +131,17 @@ class SoundInstance3d extends SoundInstance {
         this.panner.maxDistance = value;
     }
 
+    /**
+     * Gets the maximum distance from the listener at which audio falloff stops.
+     *
+     * @type {number}
+     */
     get maxDistance() {
         return this.panner.maxDistance;
     }
 
     /**
-     * The reference distance for reducing volume as the sound source moves further from the
+     * Sets the reference distance for reducing volume as the sound source moves further from the
      * listener.
      *
      * @type {number}
@@ -147,12 +150,18 @@ class SoundInstance3d extends SoundInstance {
         this.panner.refDistance = value;
     }
 
+    /**
+     * Gets the reference distance for reducing volume as the sound source moves further from the
+     * listener.
+     *
+     * @type {number}
+     */
     get refDistance() {
         return this.panner.refDistance;
     }
 
     /**
-     * The factor used in the falloff equation.
+     * Sets the factor used in the falloff equation.
      *
      * @type {number}
      */
@@ -160,12 +169,17 @@ class SoundInstance3d extends SoundInstance {
         this.panner.rolloffFactor = value;
     }
 
+    /**
+     * Gets the factor used in the falloff equation.
+     *
+     * @type {number}
+     */
     get rollOffFactor() {
         return this.panner.rolloffFactor;
     }
 
     /**
-     * Determines which algorithm to use to reduce the volume of the audio as it moves away from
+     * Sets which algorithm to use to reduce the volume of the audio as it moves away from
      * the listener. Can be:
      *
      * - {@link DISTANCE_LINEAR}
@@ -180,6 +194,12 @@ class SoundInstance3d extends SoundInstance {
         this.panner.distanceModel = value;
     }
 
+    /**
+     * Gets which algorithm to use to reduce the volume of the audio as it moves away from
+     * the listener.
+     *
+     * @type {string}
+     */
     get distanceModel() {
         return this.panner.distanceModel;
     }

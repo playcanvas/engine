@@ -69,7 +69,6 @@ import lightmapDirPS from './standard/frag/lightmapDir.js';
 import lightmapSinglePS from './standard/frag/lightmapSingle.js';
 import lightSpecularAnisoGGXPS from './lit/frag/lightSpecularAnisoGGX.js';
 import lightSpecularBlinnPS from './lit/frag/lightSpecularBlinn.js';
-import lightSpecularPhongPS from './lit/frag/lightSpecularPhong.js';
 import lightSheenPS from './lit/frag/lightSheen.js';
 import linearizeDepthPS from './common/frag/linearizeDepth.js';
 import litShaderArgsPS from './standard/frag/litShaderArgs.js';
@@ -274,7 +273,6 @@ const shaderChunks = {
     lightmapSinglePS,
     lightSpecularAnisoGGXPS,
     lightSpecularBlinnPS,
-    lightSpecularPhongPS,
     lightSheenPS,
     linearizeDepthPS,
     litShaderArgsPS,

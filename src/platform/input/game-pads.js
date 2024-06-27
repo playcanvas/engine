@@ -460,7 +460,7 @@ class GamePad {
     }
 
     /**
-     * Whether the gamepad is connected.
+     * Gets whether the gamepad is connected.
      *
      * @type {boolean}
      */
@@ -621,7 +621,7 @@ class GamePad {
     }
 
     /**
-     * The values from analog axes present on the GamePad. Values are between -1 and 1.
+     * Gets the values from analog axes present on the GamePad. Values are between -1 and 1.
      *
      * @type {number[]}
      */
@@ -630,7 +630,7 @@ class GamePad {
     }
 
     /**
-     * The buttons present on the GamePad.
+     * Gets the buttons present on the GamePad.
      *
      * @type {GamePadButton[]}
      */
@@ -844,7 +844,7 @@ class GamePads extends EventHandler {
     }
 
     /**
-     * Threshold for axes to return values. Must be between 0 and 1.
+     * Sets the threshold for axes to return values. Must be between 0 and 1.
      *
      * @type {number}
      * @ignore
@@ -853,12 +853,18 @@ class GamePads extends EventHandler {
         deadZone = value;
     }
 
+    /**
+     * Gets the threshold for axes to return values.
+     *
+     * @type {number}
+     * @ignore
+     */
     get deadZone() {
         return deadZone;
     }
 
     /**
-     * The list of previous buttons states.
+     * Gets the list of previous button states.
      *
      * @type {boolean[][]}
      * @ignore

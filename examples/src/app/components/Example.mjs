@@ -13,7 +13,9 @@ import { iframePath } from '../paths.mjs';
 import { jsx, fragment } from '../jsx.mjs';
 import { iframe } from '../iframe.mjs';
 import { getOrientation } from '../utils.mjs';
-import '../events.js';
+
+/** @typedef {import('../events.js').StateEvent} StateEvent */
+/** @typedef {import('../events.js').LoadingEvent} LoadingEvent */
 
 /**
  * @template {Record<string, string>} [FILES=Record<string, string>]

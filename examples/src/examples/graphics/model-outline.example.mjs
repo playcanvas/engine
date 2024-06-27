@@ -1,10 +1,8 @@
 import * as pc from 'playcanvas';
 import { deviceType, rootPath } from 'examples/utils';
 
-const canvas = document.getElementById('application-canvas');
-if (!(canvas instanceof HTMLCanvasElement)) {
-    throw new Error('No canvas found');
-}
+const canvas = /** @type {HTMLCanvasElement} */ (document.getElementById('application-canvas'));
+window.focus();
 
 const assets = {
     outline: new pc.Asset('outline', 'script', { url: rootPath + '/static/scripts/posteffects/posteffect-outline.js' })
@@ -16,6 +14,7 @@ const gfxOptions = {
 };
 const device = await pc.createGraphicsDevice(canvas, gfxOptions);
 device.maxPixelRatio = Math.min(window.devicePixelRatio, 2);
+
 const createOptions = new pc.AppOptions();
 createOptions.graphicsDevice = device;
 createOptions.mouse = new pc.Mouse(document.body);
@@ -94,9 +93,9 @@ assetListLoader.load(() => {
 
     let renderTarget = createRenderTarget();
 
-    // create a layer for rendering to texture, and add it to the beginning of layers to render into it first
+    // create a layer for rendering to texture, and add it to the layers
     const outlineLayer = new pc.Layer({ name: 'OutlineLayer' });
-    app.scene.layers.insert(outlineLayer, 0);
+    app.scene.layers.push(outlineLayer);
 
     // get existing layers
     const worldLayer = app.scene.layers.getLayerByName('World');
@@ -114,7 +113,7 @@ assetListLoader.load(() => {
     createPrimitive('cone', new pc.Vec3(0, 1, -2), new pc.Vec3(2, 2, 2), new pc.Color(0, 1, 1), [worldLayer.id]);
 
     // Create main camera, which renders entities in world layer
-    const camera = new pc.Entity();
+    const camera = new pc.Entity('MainCamera');
     camera.addComponent('camera', {
         clearColor: new pc.Color(0.2, 0.2, 0.4),
         layers: [worldLayer.id, uiLayer.id]
@@ -123,11 +122,15 @@ assetListLoader.load(() => {
     camera.lookAt(pc.Vec3.ZERO);
 
     // Create outline camera, which renders entities in outline layer into the render target
-    const outlineCamera = new pc.Entity();
+    const outlineCamera = new pc.Entity('Outline Camera');
     outlineCamera.addComponent('camera', {
         clearColor: new pc.Color(0.0, 0.0, 0.0, 0.0),
         layers: [outlineLayer.id],
-        renderTarget: renderTarget
+        renderTarget: renderTarget,
+
+        // set the priority of outlineCamera to lower number than the priority of the main camera (which is at default 0)
+        // to make it rendered first each frame
+        priority: -1
     });
     app.root.addChild(outlineCamera);
 

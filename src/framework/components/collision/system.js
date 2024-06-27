@@ -353,7 +353,9 @@ class CollisionMeshSystemImpl extends CollisionSystemImpl {
         hull.recalcLocalAabb();
         hull.setMargin(0.01);   // Note: default margin is 0.04
 
-        shape.addChildShape(this.system._getNodeTransform(node), hull);
+        const transform = this.system._getNodeTransform(node);
+        shape.addChildShape(transform, hull);
+        Ammo.destroy(transform);
     }
 
     createAmmoMesh(mesh, node, shape, scale, checkDupes = true) {
@@ -421,7 +423,7 @@ class CollisionMeshSystemImpl extends CollisionSystemImpl {
                 return idx;
             };
 
-            for (var i = 0; i < numTriangles; i++) {
+            for (let i = 0; i < numTriangles; i++) {
                 i1 = addVertex(indices[base + i * 3]);
                 i2 = addVertex(indices[base + i * 3 + 1]);
                 i3 = addVertex(indices[base + i * 3 + 2]);

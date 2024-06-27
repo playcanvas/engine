@@ -21,6 +21,7 @@ const tmpBiases = {
     bias: 0,
     normalBias: 0
 };
+const tmpColor = new Color();
 
 const chanId = { r: 0, g: 1, b: 2, a: 3 };
 
@@ -147,7 +148,7 @@ class Light {
 
         // Light properties (defaults)
         this._type = LIGHTTYPE_DIRECTIONAL;
-        this._color = new Color(0.8, 0.8, 0.8);
+        this._color = new Color(0.8, 0.8, 0.8);     // color in sRGB space
         this._intensity = 1;
         this._affectSpecularity = true;
         this._luminance = 0;
@@ -193,10 +194,9 @@ class Light {
         // Light source shape properties
         this._shape = LIGHTSHAPE_PUNCTUAL;
 
-        // Cache of light property data in a format more friendly for shader uniforms
-        this._finalColor = new Float32Array([0.8, 0.8, 0.8]);
-        const c = Math.pow(this._finalColor[0], 2.2);
-        this._linearFinalColor = new Float32Array([c, c, c]);
+        // light color and intensity in the linear space
+        this._colorLinear = new Float32Array(3);
+        this._updateLinearColor();
 
         this._position = new Vec3(0, 0, 0);
         this._direction = new Vec3(0, 0, 0);
@@ -371,7 +371,7 @@ class Light {
     set usePhysicalUnits(value) {
         if (this._usePhysicalUnits !== value) {
             this._usePhysicalUnits = value;
-            this._updateFinalColor();
+            this._updateLinearColor();
         }
     }
 
@@ -493,7 +493,7 @@ class Light {
         this._innerConeAngle = value;
         this._innerConeAngleCos = Math.cos(value * Math.PI / 180);
         if (this._usePhysicalUnits) {
-            this._updateFinalColor();
+            this._updateLinearColor();
         }
     }
 
@@ -509,7 +509,7 @@ class Light {
         this._updateOuterAngle(value);
 
         if (this._usePhysicalUnits) {
-            this._updateFinalColor();
+            this._updateLinearColor();
         }
     }
 
@@ -534,7 +534,7 @@ class Light {
     set intensity(value) {
         if (this._intensity !== value) {
             this._intensity = value;
-            this._updateFinalColor();
+            this._updateLinearColor();
         }
     }
 
@@ -556,7 +556,7 @@ class Light {
     set luminance(value) {
         if (this._luminance !== value) {
             this._luminance = value;
-            this._updateFinalColor();
+            this._updateLinearColor();
         }
     }
 
@@ -897,34 +897,28 @@ class Light {
         }
     }
 
-    _updateFinalColor() {
-        const color = this._color;
-        const r = color.r;
-        const g = color.g;
-        const b = color.b;
+    _updateLinearColor() {
 
-        let i = this._intensity;
+        let intensity = this._intensity;
 
         // To calculate the lux, which is lm/m^2, we need to convert from luminous power
         if (this._usePhysicalUnits) {
-            i = this._luminance / Light.getLightUnitConversion(this._type, this._outerConeAngle * math.DEG_TO_RAD, this._innerConeAngle * math.DEG_TO_RAD);
+            intensity = this._luminance / Light.getLightUnitConversion(this._type, this._outerConeAngle * math.DEG_TO_RAD, this._innerConeAngle * math.DEG_TO_RAD);
         }
 
-        const finalColor = this._finalColor;
-        const linearFinalColor = this._linearFinalColor;
-
-        finalColor[0] = r * i;
-        finalColor[1] = g * i;
-        finalColor[2] = b * i;
-        if (i >= 1) {
-            linearFinalColor[0] = Math.pow(r, 2.2) * i;
-            linearFinalColor[1] = Math.pow(g, 2.2) * i;
-            linearFinalColor[2] = Math.pow(b, 2.2) * i;
+        // Note: This is slightly unconventional, ideally we'd convert color to linear space and then
+        // multiply by intensity, but keeping this for backwards compatibility
+        const color = this._color;
+        const colorLinear = this._colorLinear;
+        if (intensity >= 1) {
+            tmpColor.linear(color).mulScalar(intensity);
         } else {
-            linearFinalColor[0] = Math.pow(finalColor[0], 2.2);
-            linearFinalColor[1] = Math.pow(finalColor[1], 2.2);
-            linearFinalColor[2] = Math.pow(finalColor[2], 2.2);
+            tmpColor.copy(color).mulScalar(intensity).linear();
         }
+
+        colorLinear[0] = tmpColor.r;
+        colorLinear[1] = tmpColor.g;
+        colorLinear[2] = tmpColor.b;
     }
 
     setColor() {
@@ -934,7 +928,7 @@ class Light {
             this._color.set(arguments[0], arguments[1], arguments[2]);
         }
 
-        this._updateFinalColor();
+        this._updateLinearColor();
     }
 
     layersDirty() {

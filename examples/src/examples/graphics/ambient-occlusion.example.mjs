@@ -2,10 +2,8 @@ import * as pc from 'playcanvas';
 import { data } from 'examples/observer';
 import { deviceType, rootPath } from 'examples/utils';
 
-const canvas = document.getElementById('application-canvas');
-if (!(canvas instanceof HTMLCanvasElement)) {
-    throw new Error('No canvas found');
-}
+const canvas = /** @type {HTMLCanvasElement} */ (document.getElementById('application-canvas'));
+window.focus();
 
 // set up and load draco module, as the glb we load is draco compressed
 pc.WasmModule.setConfig('DracoDecoderModule', {
@@ -72,7 +70,7 @@ assetListLoader.load(() => {
     // setup skydome
     app.scene.envAtlas = assets.helipad.resource;
     app.scene.skyboxMip = 2;
-    app.scene.exposure = 1.5;
+    app.scene.exposure = 2.5;
 
     // get the instance of the laboratory
     const laboratoryEntity = assets.laboratory.resource.instantiateRenderEntity({
@@ -132,9 +130,10 @@ assetListLoader.load(() => {
     const light = new pc.Entity();
     light.addComponent('light', {
         type: 'directional',
-        intensity: 0.7,
+        intensity: 1,
         castShadows: true,
-        shadowBias: 0.2,
+        shadowResolution: 4096,
+        shadowBias: 0.4,
         normalOffsetBias: 0.06,
         shadowDistance: 600,
         shadowUpdateMode: pc.SHADOWUPDATE_THISFRAME
@@ -143,51 +142,132 @@ assetListLoader.load(() => {
     light.setLocalEulerAngles(35, 30, 0);
 
     // Create an Entity with a camera component
-    const camera = new pc.Entity();
-    camera.addComponent('camera', {
+    const cameraEntity = new pc.Entity();
+    cameraEntity.addComponent('camera', {
         clearColor: new pc.Color(0.4, 0.45, 0.5),
         nearClip: 1,
-        farClip: 500
+        farClip: 600
     });
 
     // add orbit camera script
-    camera.addComponent('script');
-    camera.script.create('orbitCamera', {
+    cameraEntity.addComponent('script');
+    cameraEntity.script.create('orbitCamera', {
         attributes: {
             inertiaFactor: 0.2,
             focusEntity: laboratoryEntity,
             distanceMax: 350
         }
     });
-    camera.script.create('orbitCameraInputMouse');
-    camera.script.create('orbitCameraInputTouch');
+    cameraEntity.script.create('orbitCameraInputMouse');
+    cameraEntity.script.create('orbitCameraInputTouch');
 
-    // add SSAO post-effect
-    data.set('scripts', {
-        ssao: {
-            enabled: true,
-            radius: 5,
-            samples: 16,
-            brightness: 0,
-            downscale: 1
+    // position the camera in the world
+    cameraEntity.setLocalPosition(-60, 30, 60);
+    app.root.addChild(cameraEntity);
+
+    // ------ Custom render passes set up ------
+
+    const currentOptions = {
+        camera: cameraEntity.camera, // camera used to render those passes
+        samples: 1, // number of samples for multi-sampling
+        sceneColorMap: false,
+        bloomEnabled: false,
+
+        // enable the pre-pass to generate the depth buffer, which is needed by the SSAO
+        prepassEnabled: true,
+
+        // enable temporal anti-aliasing
+        taaEnabled: false,
+
+        ssaoEnabled: true,
+        ssaoBlurEnabled: true
+    };
+
+    const setupRenderPass = () => {
+        // destroy existing pass if any
+        if (cameraEntity.camera.renderPasses.length > 0) {
+            cameraEntity.camera.renderPasses[0].destroy();
+        }
+
+        // Use a render pass camera frame, which is a render pass that implements typical rendering of a camera.
+        // Internally this sets up additional passes it needs, based on the options passed to it.
+        const renderPassCamera = new pc.RenderPassCameraFrame(app, currentOptions);
+
+        renderPassCamera.ssaoEnabled = currentOptions.ssaoEnabled;
+
+        const composePass = renderPassCamera.composePass;
+        composePass.sharpness = 0;
+
+        // and set up these rendering passes to be used by the camera, instead of its default rendering
+        cameraEntity.camera.renderPasses = [renderPassCamera];
+
+        // jitter the camera when TAA is enabled
+        cameraEntity.camera.jitter = currentOptions.taaEnabled ? 1 : 0;
+    };
+
+    const applySettings = () => {
+        // if settings require render passes to be re-created
+        const noPasses = cameraEntity.camera.renderPasses.length === 0;
+        const ssaoEnabled = data.get('data.ssao.enabled');
+        const blurEnabled = data.get('data.ssao.blurEnabled');
+        if (noPasses || ssaoEnabled !== currentOptions.ssaoEnabled || blurEnabled !== currentOptions.ssaoBlurEnabled) {
+            currentOptions.ssaoEnabled = ssaoEnabled;
+            currentOptions.ssaoBlurEnabled = blurEnabled;
+
+            // create new pass
+            setupRenderPass();
+        }
+
+        const renderPassCamera = cameraEntity.camera.renderPasses[0];
+
+        // ssao settings
+        const ssaoPass = renderPassCamera.ssaoPass;
+        if (ssaoPass) {
+
+            ssaoPass.intensity = data.get('data.ssao.intensity');
+            ssaoPass.power = data.get('data.ssao.power');
+            ssaoPass.radius = data.get('data.ssao.radius');
+            ssaoPass.sampleCount = data.get('data.ssao.samples');
+            ssaoPass.minAngle = data.get('data.ssao.minAngle');
+            ssaoPass.scale = data.get('data.ssao.scale');
+        }
+    };
+
+    // apply UI changes
+    let initialValuesSetup = false;
+    data.on('*:set', (/** @type {string} */ path, value) => {
+        if (initialValuesSetup)
+            applySettings();
+
+        const pathArray = path.split('.');
+        if (pathArray[2] === 'scale') {
+            // adjust min angle based on scale to avoid depth related artifacts
+            if (value < 0.6)
+                data.set('data.ssao.minAngle', 40);
+            else if (value < 0.8)
+                data.set('data.ssao.minAngle', 20);
+            else
+                data.set('data.ssao.minAngle', 10);
         }
     });
 
-    // position the camera in the world
-    camera.setLocalPosition(-60, 30, 60);
-    app.root.addChild(camera);
-
-    // handle UI values updates
-    Object.keys(data.get('scripts')).forEach((key) => {
-        camera.script.create(key, {
-            attributes: data.get(`scripts.${key}`)
-        });
+    // initial settings
+    data.set('data', {
+        ssao: {
+            enabled: true,
+            blurEnabled: true,
+            radius: 30,
+            samples: 12,
+            intensity: 0.4,
+            power: 6,
+            minAngle: 10,
+            scale: 1
+        }
     });
 
-    data.on('*:set', (/** @type {string} */ path, value) => {
-        const pathArray = path.split('.');
-        camera.script[pathArray[1]][pathArray[2]] = value;
-    });
+    // apply initial settings after all values are set
+    initialValuesSetup = true;
+    applySettings();
 });
 
 export { app };

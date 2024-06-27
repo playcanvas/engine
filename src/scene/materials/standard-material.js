@@ -12,8 +12,7 @@ import {
     FRESNEL_SCHLICK,
     SHADER_DEPTH, SHADER_PICK,
     SHADER_PREPASS_VELOCITY,
-    SPECOCC_AO,
-    SPECULAR_BLINN, SPECULAR_PHONG
+    SPECOCC_AO
 } from '../constants.js';
 import { ShaderPass } from '../shader-pass.js';
 import { EnvLighting } from '../graphics/env-lighting.js';
@@ -31,6 +30,8 @@ const _uniforms = {};
 
 // temporary set of params
 let _params = new Set();
+
+const _tempColor = new Color();
 
 /**
  * Callback used by {@link StandardMaterial#onUpdateShader}.
@@ -53,8 +54,6 @@ let _params = new Set();
  * (RGB), where each component is between 0 and 1.
  * @property {Color} diffuse The diffuse color of the material. This color value is 3-component
  * (RGB), where each component is between 0 and 1. Defines basic surface color (aka albedo).
- * @property {boolean} diffuseTint Multiply main (primary) diffuse map and/or diffuse vertex color
- * by the constant diffuse value.
  * @property {import('../../platform/graphics/texture.js').Texture|null} diffuseMap The main
  * (primary) diffuse map of the material (default is null).
  * @property {number} diffuseMapUv Main (primary) diffuse map UV channel.
@@ -65,8 +64,7 @@ let _params = new Set();
  * (primary) diffuse map.
  * @property {string} diffuseMapChannel Color channels of the main (primary) diffuse map to use.
  * Can be "r", "g", "b", "a", "rgb" or any swizzled combination.
- * @property {boolean} diffuseVertexColor Use mesh vertex colors for diffuse. If diffuseMap or are
- * diffuseTint are set, they'll be multiplied by vertex colors.
+ * @property {boolean} diffuseVertexColor Multiply diffuse by the mesh vertex colors.
  * @property {string} diffuseVertexColorChannel Vertex color channels to use for diffuse. Can be
  * "r", "g", "b", "a", "rgb" or any swizzled combination.
  * @property {import('../../platform/graphics/texture.js').Texture|null} diffuseDetailMap The
@@ -517,18 +515,10 @@ let _params = new Set();
  * @property {number} occludeSpecularIntensity Controls visibility of specular occlusion.
  * @property {boolean} occludeDirect Tells if AO should darken directional lighting. Defaults to
  * false.
- * @property {boolean} conserveEnergy Defines how diffuse and specular components are combined when
- * Fresnel is on. It is recommended that you leave this option enabled, although you may want to
- * disable it in case when all reflection comes only from a few light sources, and you don't use an
- * environment map, therefore having mostly black reflection.
- * @property {number} shadingModel Defines the shading model.
- * - {@link SPECULAR_PHONG}: Phong without energy conservation. You should only use it as a
- * backwards compatibility with older projects.
- * - {@link SPECULAR_BLINN}: Energy-conserving Blinn-Phong.
  * @property {number} fresnelModel Defines the formula used for Fresnel effect.
  * As a side-effect, enabling any Fresnel model changes the way diffuse and reflection components
  * are combined. When Fresnel is off, legacy non energy-conserving combining is used. When it is
- * on, combining behavior is defined by conserveEnergy parameter.
+ * on, combining behavior is energy-conserving.
  *
  * - {@link FRESNEL_NONE}: No Fresnel.
  * - {@link FRESNEL_SCHLICK}: Schlick's approximation of Fresnel (recommended). Parameterized by
@@ -537,8 +527,8 @@ let _params = new Set();
  * @property {boolean} useFog Apply fogging (as configured in scene settings)
  * @property {boolean} useLighting Apply lighting
  * @property {boolean} useSkybox Apply scene skybox as prefiltered environment map
- * @property {boolean} useGammaTonemap Apply gamma correction and tonemapping (as configured in
- * scene settings).
+ * @property {boolean} useTonemap Apply tonemapping (as configured in {@link Scene#rendering} or
+ * {@link CameraComponent.rendering}). Defaults to true.
  * @property {boolean} pixelSnap Align vertices to pixel coordinates when rendering. Useful for
  * pixel perfect 2D graphics.
  * @property {boolean} twoSidedLighting Calculate proper normals (and therefore lighting) on
@@ -739,10 +729,7 @@ class StandardMaterial extends Material {
         };
 
         this._setParameter('material_ambient', getUniform('ambient'));
-
-        if (!this.diffuseMap || this.diffuseTint) {
-            this._setParameter('material_diffuse', getUniform('diffuse'));
-        }
+        this._setParameter('material_diffuse', getUniform('diffuse'));
 
         if (this.useMetalness) {
             if (!this.metalnessMap || this.metalness < 1) {
@@ -778,7 +765,7 @@ class StandardMaterial extends Material {
             this._setParameter('material_clearCoatBumpiness', this.clearCoatBumpiness);
         }
 
-        this._setParameter('material_gloss', getUniform('gloss'));
+        this._setParameter('material_gloss', this.gloss);
 
         if (!this.emissiveMap || this.emissiveTint) {
             this._setParameter('material_emissive', getUniform('emissive'));
@@ -842,13 +829,11 @@ class StandardMaterial extends Material {
             this._setParameter('material_heightMapFactor', getUniform('heightMapFactor'));
         }
 
-        const isPhong = this.shadingModel === SPECULAR_PHONG;
-
         // set overridden environment textures
-        if (this.envAtlas && this.cubeMap && !isPhong) {
+        if (this.envAtlas && this.cubeMap) {
             this._setParameter('texture_envAtlas', this.envAtlas);
             this._setParameter('texture_cubeMap', this.cubeMap);
-        } else if (this.envAtlas && !isPhong) {
+        } else if (this.envAtlas) {
             this._setParameter('texture_envAtlas', this.envAtlas);
         } else if (this.cubeMap) {
             this._setParameter('texture_cubeMap', this.cubeMap);
@@ -867,14 +852,13 @@ class StandardMaterial extends Material {
     }
 
     updateEnvUniforms(device, scene) {
-        const isPhong = this.shadingModel === SPECULAR_PHONG;
-        const hasLocalEnvOverride = (this.envAtlas && !isPhong) || this.cubeMap || this.sphereMap;
+        const hasLocalEnvOverride = this.envAtlas || this.cubeMap || this.sphereMap;
 
         if (!hasLocalEnvOverride && this.useSkybox) {
-            if (scene.envAtlas && scene.skybox && !isPhong) {
+            if (scene.envAtlas && scene.skybox) {
                 this._setParameter('texture_envAtlas', scene.envAtlas);
                 this._setParameter('texture_cubeMap', scene.skybox);
-            } else if (scene.envAtlas && !isPhong) {
+            } else if (scene.envAtlas) {
                 this._setParameter('texture_envAtlas', scene.envAtlas);
             } else if (scene.skybox) {
                 this._setParameter('texture_cubeMap', scene.skybox);
@@ -884,7 +868,7 @@ class StandardMaterial extends Material {
         this._processParameters('_activeLightingParams');
     }
 
-    getShaderVariant(device, scene, objDefs, unused, pass, sortedLights, viewUniformFormat, viewBindGroupFormat, vertexFormat) {
+    getShaderVariant(device, scene, objDefs, renderParams, pass, sortedLights, viewUniformFormat, viewBindGroupFormat, vertexFormat) {
 
         // update prefiltered lighting data
         this.updateEnvUniforms(device, scene);
@@ -897,7 +881,7 @@ class StandardMaterial extends Material {
         if (minimalOptions)
             this.shaderOptBuilder.updateMinRef(options, scene, this, objDefs, pass, sortedLights);
         else
-            this.shaderOptBuilder.updateRef(options, scene, this, objDefs, pass, sortedLights);
+            this.shaderOptBuilder.updateRef(options, scene, renderParams, this, objDefs, pass, sortedLights);
 
         // execute user callback to modify the options
         if (this.onUpdateShader) {
@@ -1096,17 +1080,12 @@ function _defineColor(name, defaultValue) {
     defineUniform(name, (material, device, scene) => {
         const uniform = material._allocUniform(name, () => new Float32Array(3));
         const color = material[name];
-        const gamma = material.useGammaTonemap && scene.gammaCorrection;
 
-        if (gamma) {
-            uniform[0] = Math.pow(color.r, 2.2);
-            uniform[1] = Math.pow(color.g, 2.2);
-            uniform[2] = Math.pow(color.b, 2.2);
-        } else {
-            uniform[0] = color.r;
-            uniform[1] = color.g;
-            uniform[2] = color.b;
-        }
+        // uniforms are always in linear space
+        _tempColor.linear(color);
+        uniform[0] = _tempColor.r;
+        uniform[1] = _tempColor.g;
+        uniform[2] = _tempColor.b;
 
         return uniform;
     });
@@ -1157,13 +1136,7 @@ function _defineMaterialProps() {
     _defineFloat('emissiveIntensity', 1);
     _defineFloat('specularityFactor', 1);
     _defineFloat('sheenGloss', 0.0);
-
-    _defineFloat('gloss', 0.25, (material, device, scene) => {
-        return material.shadingModel === SPECULAR_PHONG ?
-            // legacy: expand back to specular power
-            Math.pow(2, material.gloss * 11) :
-            material.gloss;
-    });
+    _defineFloat('gloss', 0.25);
 
     _defineFloat('heightMapFactor', 1, (material, device, scene) => {
         return material.heightMapFactor * 0.025;
@@ -1221,7 +1194,7 @@ function _defineMaterialProps() {
     });
 
     _defineFlag('ambientTint', false);
-    _defineFlag('diffuseTint', false);
+    _defineFlag('sheenTint', false);
     _defineFlag('specularTint', false);
     _defineFlag('specularityFactorTint', false);
     _defineFlag('emissiveTint', false);
@@ -1232,17 +1205,15 @@ function _defineMaterialProps() {
     _defineFlag('enableGGXSpecular', false);
     _defineFlag('occludeDirect', false);
     _defineFlag('normalizeNormalMap', true);
-    _defineFlag('conserveEnergy', true);
     _defineFlag('opacityFadesSpecular', true);
     _defineFlag('occludeSpecular', SPECOCC_AO);
-    _defineFlag('shadingModel', SPECULAR_BLINN);
     _defineFlag('fresnelModel', FRESNEL_SCHLICK); // NOTE: this has been made to match the default shading model (to fix a bug)
     _defineFlag('useDynamicRefraction', false);
     _defineFlag('cubeMapProjection', CUBEPROJ_NONE);
     _defineFlag('customFragmentShader', null);
     _defineFlag('useFog', true);
     _defineFlag('useLighting', true);
-    _defineFlag('useGammaTonemap', true);
+    _defineFlag('useTonemap', true);
     _defineFlag('useSkybox', true);
     _defineFlag('forceUv1', false);
     _defineFlag('pixelSnap', false);

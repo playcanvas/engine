@@ -1,10 +1,8 @@
 import * as pc from 'playcanvas';
 import { deviceType, rootPath } from 'examples/utils';
 
-const canvas = document.getElementById('application-canvas');
-if (!(canvas instanceof HTMLCanvasElement)) {
-    throw new Error('No canvas found');
-}
+const canvas = /** @type {HTMLCanvasElement} */ (document.getElementById('application-canvas'));
+window.focus();
 
 const gfxOptions = {
     deviceTypes: [deviceType],
@@ -17,6 +15,7 @@ const gfxOptions = {
 
 const device = await pc.createGraphicsDevice(canvas, gfxOptions);
 device.maxPixelRatio = Math.min(window.devicePixelRatio, 2);
+
 const createOptions = new pc.AppOptions();
 createOptions.graphicsDevice = device;
 createOptions.mouse = new pc.Mouse(document.body);
@@ -54,7 +53,7 @@ const assetListLoader = new pc.AssetListLoader(Object.values(assets), app.assets
 assetListLoader.load(() => {
     app.start();
 
-    app.scene.toneMapping = pc.TONEMAP_ACES;
+    app.scene.rendering.toneMapping = pc.TONEMAP_ACES;
 
     // Create an Entity with a camera component
     const camera = new pc.Entity();
@@ -65,7 +64,6 @@ assetListLoader.load(() => {
 
     const createSplatInstance = (resource, px, py, pz, scale, vertex, fragment) => {
         const splat = resource.instantiate({
-            debugRender: false,
             fragment: fragment,
             vertex: vertex
         });

@@ -13,9 +13,11 @@ export { GltfExporter } from './exporters/gltf-exporter.js';
 // RENDER PASSES
 export { RenderPassCameraFrame } from './render-passes/render-pass-camera-frame.js';
 export { RenderPassCompose } from './render-passes/render-pass-compose.js';
+export { RenderPassDepthAwareBlur } from './render-passes/render-pass-depth-aware-blur.js';
 export { RenderPassDownsample } from './render-passes/render-pass-downsample.js';
 export { RenderPassUpsample } from './render-passes/render-pass-upsample.js';
 export { RenderPassBloom } from './render-passes/render-pass-bloom.js';
+export { RenderPassSsao } from './render-passes/render-pass-ssao.js';
 export { RenderPassTAA } from './render-passes/render-pass-taa.js';
 
 // GIZMOS

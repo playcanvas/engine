@@ -6,8 +6,6 @@ import { Texture } from '../../../platform/graphics/texture.js';
 
 import { BoundingBox } from '../../../core/shape/bounding-box.js';
 
-import { SPECULAR_BLINN, SPECULAR_PHONG } from '../../../scene/constants.js';
-
 import { StandardMaterial } from '../../../scene/materials/standard-material.js';
 import { StandardMaterialValidator } from '../../../scene/materials/standard-material-validator.js';
 import { standardMaterialParameterTypes } from '../../../scene/materials/standard-material-parameters.js';
@@ -96,14 +94,6 @@ class JsonStandardMaterialParser {
     // convert any properties that are out of date
     // or from old versions into current version
     migrate(data) {
-        // replace old shader property with new shadingModel property
-        if (data.shadingModel === undefined) {
-            if (data.shader === 'blinn') {
-                data.shadingModel = SPECULAR_BLINN;
-            } else {
-                data.shadingModel = SPECULAR_PHONG;
-            }
-        }
         if (data.shader) delete data.shader;
 
         // make JS style
@@ -129,7 +119,6 @@ class JsonStandardMaterialParser {
             ['glossMapVertexColor', 'glossVertexColor'],
             ['lightMapVertexColor', 'lightVertexColor'],
 
-            ['diffuseMapTint', 'diffuseTint'],
             ['specularMapTint', 'specularTint'],
             ['emissiveMapTint', 'emissiveTint'],
             ['metalnessMapTint', 'metalnessTint'],

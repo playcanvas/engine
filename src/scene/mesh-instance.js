@@ -21,12 +21,17 @@ import { GraphNode } from './graph-node.js';
 import { getDefaultMaterial } from './materials/default-material.js';
 import { LightmapCache } from './graphics/lightmap-cache.js';
 import { DebugGraphics } from '../platform/graphics/debug-graphics.js';
+import { hash32Fnv1a } from '../core/hash.js';
+import { array } from '../core/array-utils.js';
 
 let id = 0;
 const _tmpAabb = new BoundingBox();
 const _tempBoneAabb = new BoundingBox();
 const _tempSphere = new BoundingSphere();
 const _meshSet = new Set();
+
+// internal array used to evaluate the hash for the shader instance
+const lookupHashes = new Uint32Array(4);
 
 /**
  * Internal data structure used to store data used by hardware instancing.
@@ -71,6 +76,13 @@ class ShaderInstance {
      * @type {UniformBuffer|null}
      */
     uniformBuffer = null;
+
+    /**
+     * The full array of hashes used to lookup the pipeline, used in case of hash collision.
+     *
+     * @type {Uint32Array}
+     */
+    hashes;
 
     /**
      * Returns the mesh bind group for the shader.
@@ -127,26 +139,6 @@ class ShaderInstance {
 }
 
 /**
- * An entry in the shader cache, representing shaders for this mesh instance and a specific shader
- * pass.
- *
- * @ignore
- */
-class ShaderCacheEntry {
-    /**
-     * The shader instances. Looked up by lightHash, which represents an ordered set of lights.
-     *
-     * @type {Map<number, ShaderInstance>}
-     */
-    shaderInstances = new Map();
-
-    destroy() {
-        this.shaderInstances.forEach(instance => instance.destroy());
-        this.shaderInstances.clear();
-    }
-}
-
-/**
  * Callback used by {@link Layer} to calculate the "sort distance" for a {@link MeshInstance},
  * which determines its place in the render order.
  *
@@ -198,13 +190,11 @@ class MeshInstance {
     _material = null;
 
     /**
-     * An array of shader cache entries, indexed by the shader pass constant (SHADER_FORWARD..). The
-     * value stores all shaders and bind groups for the shader pass for various light combinations.
+     * The cache of shaders, indexed by a hash value.
      *
-     * @type {Array<ShaderCacheEntry|null>}
-     * @private
+     * @type {Map<number, ShaderInstance>}
      */
-    _shaderCache = [];
+    _shaderCache = new Map();
 
     /** @ignore */
     id = id++;
@@ -355,7 +345,7 @@ class MeshInstance {
     }
 
     /**
-     * The render style of the mesh instance. Can be:
+     * Sets the render style of the mesh instance. Can be:
      *
      * - {@link RENDERSTYLE_SOLID}
      * - {@link RENDERSTYLE_WIREFRAME}
@@ -370,12 +360,17 @@ class MeshInstance {
         this.mesh.prepareRenderState(renderStyle);
     }
 
+    /**
+     * Gets the render style of the mesh instance.
+     *
+     * @type {number}
+     */
     get renderStyle() {
         return this._renderStyle;
     }
 
     /**
-     * The graphics mesh being instanced.
+     * Sets the graphics mesh being instanced.
      *
      * @type {import('./mesh.js').Mesh}
      */
@@ -395,12 +390,17 @@ class MeshInstance {
         }
     }
 
+    /**
+     * Gets the graphics mesh being instanced.
+     *
+     * @type {import('./mesh.js').Mesh}
+     */
     get mesh() {
         return this._mesh;
     }
 
     /**
-     * The world space axis-aligned bounding box for this mesh instance.
+     * Sets the world space axis-aligned bounding box for this mesh instance.
      *
      * @type {BoundingBox}
      */
@@ -408,6 +408,11 @@ class MeshInstance {
         this._aabb = aabb;
     }
 
+    /**
+     * Gets the world space axis-aligned bounding box for this mesh instance.
+     *
+     * @type {BoundingBox}
+     */
     get aabb() {
         // use specified world space aabb
         if (!this._updateAabb) {
@@ -496,11 +501,10 @@ class MeshInstance {
      * @ignore
      */
     clearShaders() {
-        const shaderCache = this._shaderCache;
-        for (let i = 0; i < shaderCache.length; i++) {
-            shaderCache[i]?.destroy();
-            shaderCache[i] = null;
-        }
+        this._shaderCache.forEach((shaderInstance) => {
+            shaderInstance.destroy();
+        });
+        this._shaderCache.clear();
     }
 
     /**
@@ -510,6 +514,8 @@ class MeshInstance {
      * @param {number} shaderPass - The shader pass index.
      * @param {number} lightHash - The hash value of the lights that are affecting this mesh instance.
      * @param {import('./scene.js').Scene} scene - The scene.
+     * @param {import('./renderer/rendering-params.js').RenderingParams} renderParams - The rendering
+     * parameters.
      * @param {import('../platform/graphics/uniform-buffer-format.js').UniformBufferFormat} [viewUniformFormat] - The
      * format of the view uniform buffer.
      * @param {import('../platform/graphics/bind-group-format.js').BindGroupFormat} [viewBindGroupFormat] - The
@@ -518,26 +524,29 @@ class MeshInstance {
      * @returns {ShaderInstance} - the shader instance.
      * @ignore
      */
-    getShaderInstance(shaderPass, lightHash, scene, viewUniformFormat, viewBindGroupFormat, sortedLights) {
+    getShaderInstance(shaderPass, lightHash, scene, renderParams, viewUniformFormat, viewBindGroupFormat, sortedLights) {
 
-        let shaderInstance;
-        let passEntry = this._shaderCache[shaderPass];
-        if (passEntry) {
-            shaderInstance = passEntry.shaderInstances.get(lightHash);
-        } else {
-            passEntry = new ShaderCacheEntry();
-            this._shaderCache[shaderPass] = passEntry;
-        }
+        const shaderDefs = this._shaderDefs;
+
+        // unique hash for the required shader
+        lookupHashes[0] = shaderPass;
+        lookupHashes[1] = lightHash;
+        lookupHashes[2] = shaderDefs;
+        lookupHashes[3] = renderParams.hash;
+        const hash = hash32Fnv1a(lookupHashes);
+
+        // look up the cache
+        let shaderInstance = this._shaderCache.get(hash);
 
         // cache miss in the shader cache of the mesh instance
         if (!shaderInstance) {
 
-            // get the shader from the material
             const mat = this._material;
-            const shaderDefs = this._shaderDefs;
-            const variantKey = shaderPass + '_' + shaderDefs + '_' + lightHash;
+
+            // get the shader from the material
             shaderInstance = new ShaderInstance();
-            shaderInstance.shader = mat.variants.get(variantKey);
+            shaderInstance.shader = mat.variants.get(hash);
+            shaderInstance.hashes = new Uint32Array(lookupHashes);
 
             // cache miss in the material variants
             if (!shaderInstance.shader) {
@@ -545,26 +554,35 @@ class MeshInstance {
                 // marker to allow us to see the source node for shader alloc
                 DebugGraphics.pushGpuMarker(this.mesh.device, `Node: ${this.node.name}`);
 
-                const shader = mat.getShaderVariant(this.mesh.device, scene, shaderDefs, null, shaderPass, sortedLights,
+                const shader = mat.getShaderVariant(this.mesh.device, scene, shaderDefs, renderParams, shaderPass, sortedLights,
                                                     viewUniformFormat, viewBindGroupFormat, this._mesh.vertexBuffer?.format);
 
                 DebugGraphics.popGpuMarker(this.mesh.device);
 
                 // add it to the material variants cache
-                mat.variants.set(variantKey, shader);
+                mat.variants.set(hash, shader);
 
                 shaderInstance.shader = shader;
             }
 
             // add it to the mesh instance cache
-            passEntry.shaderInstances.set(lightHash, shaderInstance);
+            this._shaderCache.set(hash, shaderInstance);
         }
+
+        Debug.call(() => {
+            // due to a small number of shaders in the cache, and to avoid performance hit, we're not
+            // handling the hash collision. This is very unlikely but still possible. Check and report
+            // if it happens in the debug mode, allowing us to fix the issue.
+            if (!array.equals(shaderInstance.hashes, lookupHashes)) {
+                Debug.errorOnce('Hash collision in the shader cache for mesh instance. This is very unlikely but still possible. Please report this issue.');
+            }
+        });
 
         return shaderInstance;
     }
 
     /**
-     * The material used by this mesh instance.
+     * Sets the material used by this mesh instance.
      *
      * @type {import('./materials/material.js').Material}
      */
@@ -593,6 +611,11 @@ class MeshInstance {
         }
     }
 
+    /**
+     * Gets the material used by this mesh instance.
+     *
+     * @type {import('./materials/material.js').Material}
+     */
     get material() {
         return this._material;
     }
@@ -614,18 +637,24 @@ class MeshInstance {
     }
 
     /**
-     * In some circumstances mesh instances are sorted by a distance calculation to determine their
-     * rendering order. Set this callback to override the default distance calculation, which gives
-     * the dot product of the camera forward vector and the vector between the camera position and
-     * the center of the mesh instance's axis-aligned bounding box. This option can be particularly
-     * useful for rendering transparent meshes in a better order than default.
+     * Sets the callback to calculate sort distance. In some circumstances mesh instances are
+     * sorted by a distance calculation to determine their rendering order. Set this callback to
+     * override the default distance calculation, which gives the dot product of the camera forward
+     * vector and the vector between the camera position and the center of the mesh instance's
+     * axis-aligned bounding box. This option can be particularly useful for rendering transparent
+     * meshes in a better order than the default.
      *
-     * @type {CalculateSortDistanceCallback}
+     * @type {CalculateSortDistanceCallback|null}
      */
     set calculateSortDistance(calculateSortDistance) {
         this._calculateSortDistance = calculateSortDistance;
     }
 
+    /**
+     * Gets the callback to calculate sort distance.
+     *
+     * @type {CalculateSortDistanceCallback|null}
+     */
     get calculateSortDistance() {
         return this._calculateSortDistance;
     }
@@ -642,9 +671,10 @@ class MeshInstance {
     }
 
     /**
-     * The skin instance managing skinning of this mesh instance, or null if skinning is not used.
+     * Sets the skin instance managing skinning of this mesh instance. Set to null if skinning is
+     * not used.
      *
-     * @type {import('./skin-instance.js').SkinInstance}
+     * @type {import('./skin-instance.js').SkinInstance|null}
      */
     set skinInstance(val) {
         this._skinInstance = val;
@@ -652,14 +682,20 @@ class MeshInstance {
         this._setupSkinUpdate();
     }
 
+    /**
+     * Gets the skin instance managing skinning of this mesh instance.
+     *
+     * @type {import('./skin-instance.js').SkinInstance|null}
+     */
     get skinInstance() {
         return this._skinInstance;
     }
 
     /**
-     * The morph instance managing morphing of this mesh instance, or null if morphing is not used.
+     * Sets the morph instance managing morphing of this mesh instance. Set to null if morphing is
+     * not used.
      *
-     * @type {import('./morph-instance.js').MorphInstance}
+     * @type {import('./morph-instance.js').MorphInstance|null}
      */
     set morphInstance(val) {
 
@@ -676,6 +712,11 @@ class MeshInstance {
         this._updateShaderDefs(shaderDefs);
     }
 
+    /**
+     * Gets the morph instance managing morphing of this mesh instance.
+     *
+     * @type {import('./morph-instance.js').MorphInstance|null}
+     */
     get morphInstance() {
         return this._morphInstance;
     }
@@ -700,7 +741,7 @@ class MeshInstance {
     }
 
     /**
-     * Mask controlling which {@link LightComponent}s light this mesh instance, which
+     * Sets the mask controlling which {@link LightComponent}s light this mesh instance, which
      * {@link CameraComponent} sees it and in which {@link Layer} it is rendered. Defaults to 1.
      *
      * @type {number}
@@ -710,12 +751,18 @@ class MeshInstance {
         this._updateShaderDefs(toggles | (val << 16));
     }
 
+    /**
+     * Gets the mask controlling which {@link LightComponent}s light this mesh instance, which
+     * {@link CameraComponent} sees it and in which {@link Layer} it is rendered.
+     *
+     * @type {number}
+     */
     get mask() {
         return this._shaderDefs >> 16;
     }
 
     /**
-     * Number of instances when using hardware instancing to render the mesh.
+     * Sets the number of instances when using hardware instancing to render the mesh.
      *
      * @type {number}
      */
@@ -724,6 +771,11 @@ class MeshInstance {
             this.instancingData.count = value;
     }
 
+    /**
+     * Gets the number of instances when using hardware instancing to render the mesh.
+     *
+     * @type {number}
+     */
     get instancingCount() {
         return this.instancingData ? this.instancingData.count : 0;
     }

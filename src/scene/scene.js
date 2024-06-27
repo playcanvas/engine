@@ -9,11 +9,12 @@ import { Mat4 } from '../core/math/mat4.js';
 
 import { PIXELFORMAT_RGBA8, ADDRESS_CLAMP_TO_EDGE, FILTER_LINEAR } from '../platform/graphics/constants.js';
 
-import { BAKE_COLORDIR, FOG_NONE, GAMMA_SRGB, LAYERID_IMMEDIATE } from './constants.js';
+import { BAKE_COLORDIR, FOG_NONE, LAYERID_IMMEDIATE } from './constants.js';
 import { LightingParams } from './lighting/lighting-params.js';
 import { Sky } from './skybox/sky.js';
 import { Immediate } from './immediate/immediate.js';
 import { EnvLighting } from './graphics/env-lighting.js';
+import { RenderingParams } from './renderer/rendering-params.js';
 
 /**
  * A scene is graphical representation of an environment. It manages the scene hierarchy, all
@@ -39,7 +40,7 @@ class Scene extends EventHandler {
      *                 layer.onDisable = myOnDisableFunction;
      *                 break;
      *             case 'MyOtherLayer':
-     *                 layer.shaderPass = myShaderPass;
+     *                 layer.clearColorBuffer = true;
      *                 break;
      *         }
      *     }
@@ -85,7 +86,8 @@ class Scene extends EventHandler {
     ambientBakeOcclusionContrast = 0;
 
     /**
-     * The color of the scene's ambient light. Defaults to black (0, 0, 0).
+     * The color of the scene's ambient light, specified in sRGB color space. Defaults to black
+     * (0, 0, 0).
      *
      * @type {Color}
      */
@@ -106,7 +108,7 @@ class Scene extends EventHandler {
     exposure = 1;
 
     /**
-     * The color of the fog (if enabled). Defaults to black (0, 0, 0).
+     * The color of the fog (if enabled), specified in sRGB color space. Defaults to black (0, 0, 0).
      *
      * @type {Color}
      */
@@ -215,6 +217,13 @@ class Scene extends EventHandler {
     _skyboxCubeMap = null;
 
     /**
+     * The rendering parameters.
+     *
+     * @private
+     */
+    _renderingParams = new RenderingParams();
+
+    /**
      * Create a new Scene instance.
      *
      * @param {import('../platform/graphics/graphics-device.js').GraphicsDevice} graphicsDevice -
@@ -236,9 +245,6 @@ class Scene extends EventHandler {
         this._layers = null;
 
         this._fog = FOG_NONE;
-
-        this._gammaCorrection = GAMMA_SRGB;
-        this._toneMapping = 0;
 
         /**
          * Array of 6 prefiltered lighting data cubemaps.
@@ -300,18 +306,19 @@ class Scene extends EventHandler {
     }
 
     /**
-     * Returns the default layer used by the immediate drawing functions.
+     * Gets the default layer used by the immediate drawing functions.
      *
      * @type {import('./layer.js').Layer}
-     * @private
+     * @ignore
      */
     get defaultDrawLayer() {
         return this.layers.getLayerById(LAYERID_IMMEDIATE);
     }
 
     /**
-     * If {@link Scene#ambientBake} is true, this specifies the number of samples used to bake the
-     * ambient light into the lightmap. Defaults to 1. Maximum value is 255.
+     * Sets the number of samples used to bake the ambient light into the lightmap. Note that
+     * {@link Scene#ambientBake} must be true for this to have an effect. Defaults to 1. Maximum
+     * value is 255.
      *
      * @type {number}
      */
@@ -319,16 +326,21 @@ class Scene extends EventHandler {
         this._ambientBakeNumSamples = math.clamp(Math.floor(value), 1, 255);
     }
 
+    /**
+     * Gets the number of samples used to bake the ambient light into the lightmap.
+     *
+     * @type {number}
+     */
     get ambientBakeNumSamples() {
         return this._ambientBakeNumSamples;
     }
 
     /**
-     * If {@link Scene#ambientBake} is true, this specifies a part of the sphere which represents
-     * the source of ambient light. The valid range is 0..1, representing a part of the sphere from
-     * top to the bottom. A value of 0.5 represents the upper hemisphere. A value of 1 represents a
-     * full sphere. Defaults to 0.4, which is a smaller upper hemisphere as this requires fewer
-     * samples to bake.
+     * Sets the part of the sphere which represents the source of ambient light. Note that
+     * {@link Scene#ambientBake} must be true for this to have an effect. The valid range is 0..1,
+     * representing a part of the sphere from top to the bottom. A value of 0.5 represents the
+     * upper hemisphere. A value of 1 represents a full sphere. Defaults to 0.4, which is a smaller
+     * upper hemisphere as this requires fewer samples to bake.
      *
      * @type {number}
      */
@@ -336,12 +348,17 @@ class Scene extends EventHandler {
         this._ambientBakeSpherePart = math.clamp(value, 0.001, 1);
     }
 
+    /**
+     * Gets the part of the sphere which represents the source of ambient light.
+     *
+     * @type {number}
+     */
     get ambientBakeSpherePart() {
         return this._ambientBakeSpherePart;
     }
 
     /**
-     * True if the clustered lighting is enabled. Set to false before the first frame is rendered
+     * Sets whether clustered lighting is enabled. Set to false before the first frame is rendered
      * to use non-clustered lighting. Defaults to true.
      *
      * @type {boolean}
@@ -361,12 +378,17 @@ class Scene extends EventHandler {
         this._clusteredLightingEnabled = value;
     }
 
+    /**
+     * Gets whether clustered lighting is enabled.
+     *
+     * @type {boolean}
+     */
     get clusteredLightingEnabled() {
         return this._clusteredLightingEnabled;
     }
 
     /**
-     * The environment lighting atlas.
+     * Sets the environment lighting atlas.
      *
      * @type {import('../platform/graphics/texture.js').Texture}
      */
@@ -393,12 +415,17 @@ class Scene extends EventHandler {
         }
     }
 
+    /**
+     * Gets the environment lighting atlas.
+     *
+     * @type {import('../platform/graphics/texture.js').Texture}
+     */
     get envAtlas() {
         return this._envAtlas;
     }
 
     /**
-     * The type of fog used by the scene. Can be:
+     * Sets the type of fog used by the scene. Can be:
      *
      * - {@link FOG_NONE}
      * - {@link FOG_LINEAR}
@@ -416,33 +443,17 @@ class Scene extends EventHandler {
         }
     }
 
+    /**
+     * Gets the type of fog used by the scene.
+     *
+     * @type {string}
+     */
     get fog() {
         return this._fog;
     }
 
     /**
-     * The gamma correction to apply when rendering the scene. Can be:
-     *
-     * - {@link GAMMA_NONE}
-     * - {@link GAMMA_SRGB}
-     *
-     * Defaults to {@link GAMMA_SRGB}.
-     *
-     * @type {number}
-     */
-    set gammaCorrection(value) {
-        if (value !== this._gammaCorrection) {
-            this._gammaCorrection = value;
-            this.updateShaders = true;
-        }
-    }
-
-    get gammaCorrection() {
-        return this._gammaCorrection;
-    }
-
-    /**
-     * A {@link LayerComposition} that defines rendering order of this scene.
+     * Sets the {@link LayerComposition} that defines rendering order of this scene.
      *
      * @type {import('./composition/layer-composition.js').LayerComposition}
      */
@@ -452,6 +463,11 @@ class Scene extends EventHandler {
         this.fire('set:layers', prev, layers);
     }
 
+    /**
+     * Gets the {@link LayerComposition} that defines rendering order of this scene.
+     *
+     * @type {import('./composition/layer-composition.js').LayerComposition}
+     */
     get layers() {
         return this._layers;
     }
@@ -461,7 +477,7 @@ class Scene extends EventHandler {
     }
 
     /**
-     * A {@link LightingParams} that defines lighting parameters.
+     * Gets the {@link LightingParams} that define lighting parameters.
      *
      * @type {LightingParams}
      */
@@ -470,7 +486,16 @@ class Scene extends EventHandler {
     }
 
     /**
-     * A range parameter of the bilateral filter. It's used when {@link Scene#lightmapFilterEnabled}
+     * A {@link RenderingParams} that defines rendering parameters.
+     *
+     * @type {RenderingParams}
+     */
+    get rendering() {
+        return this._renderingParams;
+    }
+
+    /**
+     * Sets the range parameter of the bilateral filter. It's used when {@link Scene#lightmapFilterEnabled}
      * is enabled. Larger value applies more widespread blur. This needs to be a positive non-zero
      * value. Defaults to 10.
      *
@@ -480,12 +505,17 @@ class Scene extends EventHandler {
         this._lightmapFilterRange = Math.max(value, 0.001);
     }
 
+    /**
+     * Gets the range parameter of the bilateral filter.
+     *
+     * @type {number}
+     */
     get lightmapFilterRange() {
         return this._lightmapFilterRange;
     }
 
     /**
-     * A spatial parameter of the bilateral filter. It's used when {@link Scene#lightmapFilterEnabled}
+     * Sets the spatial parameter of the bilateral filter. It's used when {@link Scene#lightmapFilterEnabled}
      * is enabled. Larger value blurs less similar colors. This needs to be a positive non-zero
      * value. Defaults to 0.2.
      *
@@ -495,12 +525,17 @@ class Scene extends EventHandler {
         this._lightmapFilterSmoothness = Math.max(value, 0.001);
     }
 
+    /**
+     * Gets the spatial parameter of the bilateral filter.
+     *
+     * @type {number}
+     */
     get lightmapFilterSmoothness() {
         return this._lightmapFilterSmoothness;
     }
 
     /**
-     * Set of 6 prefiltered cubemaps.
+     * Sets the 6 prefiltered cubemaps acting as the source of image-based lighting.
      *
      * @type {import('../platform/graphics/texture.js').Texture[]}
      */
@@ -532,12 +567,17 @@ class Scene extends EventHandler {
         }
     }
 
+    /**
+     * Gets the 6 prefiltered cubemaps acting as the source of image-based lighting.
+     *
+     * @type {import('../platform/graphics/texture.js').Texture[]}
+     */
     get prefilteredCubemaps() {
         return this._prefilteredCubemaps;
     }
 
     /**
-     * The base cubemap texture used as the scene's skybox, if mip level is 0. Defaults to null.
+     * Sets the base cubemap texture used as the scene's skybox when skyboxMip is 0. Defaults to null.
      *
      * @type {import('../platform/graphics/texture.js').Texture}
      */
@@ -548,12 +588,17 @@ class Scene extends EventHandler {
         }
     }
 
+    /**
+     * Gets the base cubemap texture used as the scene's skybox when skyboxMip is 0.
+     *
+     * @type {import('../platform/graphics/texture.js').Texture}
+     */
     get skybox() {
         return this._skyboxCubeMap;
     }
 
     /**
-     * Multiplier for skybox intensity. Defaults to 1. Unused if physical units are used.
+     * Sets the multiplier for skybox intensity. Defaults to 1. Unused if physical units are used.
      *
      * @type {number}
      */
@@ -564,12 +609,17 @@ class Scene extends EventHandler {
         }
     }
 
+    /**
+     * Gets the multiplier for skybox intensity.
+     *
+     * @type {number}
+     */
     get skyboxIntensity() {
         return this._skyboxIntensity;
     }
 
     /**
-     * Luminance (in lm/m^2) of skybox. Defaults to 0. Only used if physical units are used.
+     * Sets the luminance (in lm/m^2) of the skybox. Defaults to 0. Only used if physical units are used.
      *
      * @type {number}
      */
@@ -580,12 +630,17 @@ class Scene extends EventHandler {
         }
     }
 
+    /**
+     * Gets the luminance (in lm/m^2) of the skybox.
+     *
+     * @type {number}
+     */
     get skyboxLuminance() {
         return this._skyboxLuminance;
     }
 
     /**
-     * The mip level of the skybox to be displayed. Only valid for prefiltered cubemap skyboxes.
+     * Sets the mip level of the skybox to be displayed. Only valid for prefiltered cubemap skyboxes.
      * Defaults to 0 (base level).
      *
      * @type {number}
@@ -597,12 +652,17 @@ class Scene extends EventHandler {
         }
     }
 
+    /**
+     * Gets the mip level of the skybox to be displayed.
+     *
+     * @type {number}
+     */
     get skyboxMip() {
         return this._skyboxMip;
     }
 
     /**
-     * The rotation of the skybox to be displayed. Defaults to {@link Quat.IDENTITY}.
+     * Sets the rotation of the skybox to be displayed. Defaults to {@link Quat.IDENTITY}.
      *
      * @type {Quat}
      */
@@ -627,33 +687,13 @@ class Scene extends EventHandler {
         }
     }
 
+    /**
+     * Gets the rotation of the skybox to be displayed.
+     *
+     * @type {Quat}
+     */
     get skyboxRotation() {
         return this._skyboxRotation;
-    }
-
-    /**
-     * The tonemapping transform to apply when writing fragments to the frame buffer. Can be:
-     *
-     * - {@link TONEMAP_LINEAR}
-     * - {@link TONEMAP_FILMIC}
-     * - {@link TONEMAP_HEJL}
-     * - {@link TONEMAP_ACES}
-     * - {@link TONEMAP_ACES2}
-     * - {@link TONEMAP_NEUTRAL}
-     *
-     * Defaults to {@link TONEMAP_LINEAR}.
-     *
-     * @type {number}
-     */
-    set toneMapping(value) {
-        if (value !== this._toneMapping) {
-            this._toneMapping = value;
-            this.updateShaders = true;
-        }
-    }
-
-    get toneMapping() {
-        return this._toneMapping;
     }
 
     destroy() {
@@ -690,8 +730,8 @@ class Scene extends EventHandler {
         this.fogStart = render.fog_start;
         this.fogEnd = render.fog_end;
         this.fogDensity = render.fog_density;
-        this._gammaCorrection = render.gamma_correction;
-        this._toneMapping = render.tonemapping;
+        this._renderingParams.gammaCorrection = render.gamma_correction;
+        this._renderingParams.toneMapping = render.tonemapping;
         this.lightmapSizeMultiplier = render.lightmapSizeMultiplier;
         this.lightmapMaxResolution = render.lightmapMaxResolution;
         this.lightmapMode = render.lightmapMode;
@@ -785,7 +825,7 @@ class Scene extends EventHandler {
     }
 
     /**
-     * The lightmap pixel format.
+     * Gets the lightmap pixel format.
      *
      * @type {number}
      */
