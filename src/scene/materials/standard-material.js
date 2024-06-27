@@ -54,8 +54,6 @@ const _tempColor = new Color();
  * (RGB), where each component is between 0 and 1.
  * @property {Color} diffuse The diffuse color of the material. This color value is 3-component
  * (RGB), where each component is between 0 and 1. Defines basic surface color (aka albedo).
- * @property {boolean} diffuseTint Multiply main (primary) diffuse map and/or diffuse vertex color
- * by the constant diffuse value.
  * @property {import('../../platform/graphics/texture.js').Texture|null} diffuseMap The main
  * (primary) diffuse map of the material (default is null).
  * @property {number} diffuseMapUv Main (primary) diffuse map UV channel.
@@ -66,8 +64,7 @@ const _tempColor = new Color();
  * (primary) diffuse map.
  * @property {string} diffuseMapChannel Color channels of the main (primary) diffuse map to use.
  * Can be "r", "g", "b", "a", "rgb" or any swizzled combination.
- * @property {boolean} diffuseVertexColor Use mesh vertex colors for diffuse. If diffuseMap or are
- * diffuseTint are set, they'll be multiplied by vertex colors.
+ * @property {boolean} diffuseVertexColor Multiply diffuse by the mesh vertex colors.
  * @property {string} diffuseVertexColorChannel Vertex color channels to use for diffuse. Can be
  * "r", "g", "b", "a", "rgb" or any swizzled combination.
  * @property {import('../../platform/graphics/texture.js').Texture|null} diffuseDetailMap The
@@ -732,10 +729,7 @@ class StandardMaterial extends Material {
         };
 
         this._setParameter('material_ambient', getUniform('ambient'));
-
-        if (!this.diffuseMap || this.diffuseTint) {
-            this._setParameter('material_diffuse', getUniform('diffuse'));
-        }
+        this._setParameter('material_diffuse', getUniform('diffuse'));
 
         if (this.useMetalness) {
             if (!this.metalnessMap || this.metalness < 1) {
@@ -1200,7 +1194,6 @@ function _defineMaterialProps() {
     });
 
     _defineFlag('ambientTint', false);
-    _defineFlag('diffuseTint', false);
     _defineFlag('sheenTint', false);
     _defineFlag('specularTint', false);
     _defineFlag('specularityFactorTint', false);
