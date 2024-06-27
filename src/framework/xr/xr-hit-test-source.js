@@ -89,7 +89,7 @@ class XrHitTestSource extends EventHandler {
      * Create a new XrHitTestSource instance.
      *
      * @param {import('./xr-manager.js').XrManager} manager - WebXR Manager.
-     * @param {*} xrHitTestSource - XRHitTestSource object that is created by WebXR API.
+     * @param {XRHitTestSource} xrHitTestSource - XRHitTestSource object that is created by WebXR API.
      * @param {boolean} transient - True if XRHitTestSource created for input source profile.
      * @param {null|import('./xr-input-source.js').XrInputSource} inputSource - Input Source for which hit test is created for, or null.
      * @ignore
@@ -127,7 +127,7 @@ class XrHitTestSource extends EventHandler {
     }
 
     /**
-     * @param {*} frame - XRFrame from requestAnimationFrame callback.
+     * @param {XRFrame} frame - XRFrame from requestAnimationFrame callback.
      * @ignore
      */
     update(frame) {

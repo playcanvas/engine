@@ -4,7 +4,14 @@ import { AssetReference } from '../../asset/asset-reference.js';
 import { Component } from '../component.js';
 
 /**
- * Enables an Entity to render a Gaussian Splat (asset of the 'gsplat' type).
+ * The GSplatComponent enables an {@link Entity} to render 3D Gaussian Splats. Splats are always
+ * loaded from {@link Asset}s rather than being created programmatically. The asset type is
+ * `gsplat` which are in the `.ply` file format.
+ *
+ * Relevant examples:
+ *
+ * - [Loading a Splat](https://playcanvas.github.io/#/loaders/gsplat)
+ * - [Custom Splat Shaders](https://playcanvas.github.io/#/loaders/gsplat-many)
  *
  * @category Graphics
  */
@@ -69,10 +76,9 @@ class GSplatComponent extends Component {
     }
 
     /**
-     * If set, the object space bounding box is used as a bounding box for visibility culling of
-     * attached gsplat. This allows a custom bounding box to be specified.
+     * Sets a custom object space bounding box for visibility culling of the attached gsplat.
      *
-     * @type {import('../../../core/shape/bounding-box.js').BoundingBox}
+     * @type {import('../../../core/shape/bounding-box.js').BoundingBox|null}
      */
     set customAabb(value) {
         this._customAabb = value;
@@ -81,13 +87,19 @@ class GSplatComponent extends Component {
         this._instance?.meshInstance?.setCustomAabb(this._customAabb);
     }
 
+    /**
+     * Gets the custom object space bounding box for visibility culling of the attached gsplat.
+     *
+     * @type {import('../../../core/shape/bounding-box.js').BoundingBox|null}
+     */
     get customAabb() {
         return this._customAabb;
     }
 
     /**
-     * A {@link GSplatInstance} contained in the component. If not set or loaded, it returns null.
+     * Sets a {@link GSplatInstance} on the component. If not set or loaded, it returns null.
      *
+     * @type {import('../../../scene/gsplat/gsplat-instance.js').GSplatInstance|null}
      * @ignore
      */
     set instance(value) {
@@ -118,6 +130,12 @@ class GSplatComponent extends Component {
         }
     }
 
+    /**
+     * Gets the {@link GSplatInstance} on the component.
+     *
+     * @type {import('../../../scene/gsplat/gsplat-instance.js').GSplatInstance|null}
+     * @ignore
+     */
     get instance() {
         return this._instance;
     }
@@ -136,7 +154,7 @@ class GSplatComponent extends Component {
     }
 
     /**
-     * Material used to render the gsplat.
+     * Gets the material used to render the gsplat.
      *
      * @type {import('../../../scene/materials/material.js').Material|undefined}
      */
@@ -145,8 +163,8 @@ class GSplatComponent extends Component {
     }
 
     /**
-     * An array of layer IDs ({@link Layer#id}) to which gsplats should belong. Don't push, pop,
-     * splice or modify this array, if you want to change it - set a new one instead.
+     * Sets an array of layer IDs ({@link Layer#id}) to which this gsplat should belong. Don't
+     * push, pop, splice or modify this array. If you want to change it, set a new one instead.
      *
      * @type {number[]}
      */
@@ -169,12 +187,17 @@ class GSplatComponent extends Component {
         this.addToLayers();
     }
 
+    /**
+     * Gets the array of layer IDs ({@link Layer#id}) to which this gsplat belongs.
+     *
+     * @type {number[]}
+     */
     get layers() {
         return this._layers;
     }
 
     /**
-     * The gsplat asset for the gsplat component - can also be an asset id.
+     * Sets the gsplat asset for this gsplat component. Can also be an asset id.
      *
      * @type {Asset|number}
      */
@@ -194,6 +217,11 @@ class GSplatComponent extends Component {
         }
     }
 
+    /**
+     * Gets the gsplat asset id for this gsplat component.
+     *
+     * @type {Asset|number}
+     */
     get asset() {
         return this._assetReference.id;
     }

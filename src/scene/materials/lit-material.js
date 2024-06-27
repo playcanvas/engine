@@ -1,5 +1,5 @@
 import { ShaderProcessorOptions } from '../../platform/graphics/shader-processor-options.js';
-import { DITHER_NONE, FRESNEL_SCHLICK, SPECOCC_AO, SPECULAR_BLINN } from "../constants.js";
+import { DITHER_NONE, FRESNEL_SCHLICK, SPECOCC_AO } from "../constants.js";
 import { Material } from './material.js';
 import { LitMaterialOptions } from './lit-material-options.js';
 import { LitMaterialOptionsBuilder } from './lit-material-options-builder.js';
@@ -29,11 +29,9 @@ class LitMaterial extends Material {
 
     useFog = true;
 
-    useGammaTonemap = true;
+    useTonemap = true;
 
     useSkybox = true;
-
-    shadingModel = SPECULAR_BLINN;
 
     ambientSH = null;
 
@@ -56,8 +54,6 @@ class LitMaterial extends Material {
     opacityDither = DITHER_NONE;
 
     opacityShadowDither = DITHER_NONE;
-
-    conserveEnergy = true;
 
     ggxSpecular = false;
 
@@ -90,11 +86,11 @@ class LitMaterial extends Material {
 
     hasClearCoatNormals = false;
 
-    getShaderVariant(device, scene, objDefs, unused, pass, sortedLights, viewUniformFormat, viewBindGroupFormat, vertexFormat) {
+    getShaderVariant(device, scene, objDefs, renderParams, pass, sortedLights, viewUniformFormat, viewBindGroupFormat, vertexFormat) {
         options.usedUvs = this.usedUvs.slice();
         options.shaderChunk = this.shaderChunk;
 
-        LitMaterialOptionsBuilder.update(options.litOptions, this, scene, objDefs, pass, sortedLights);
+        LitMaterialOptionsBuilder.update(options.litOptions, this, scene, renderParams, objDefs, pass, sortedLights);
         const processingOptions = new ShaderProcessorOptions(viewUniformFormat, viewBindGroupFormat, vertexFormat);
         const library = getProgramLibrary(device);
         library.register('lit', lit);

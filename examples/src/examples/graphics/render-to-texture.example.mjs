@@ -175,7 +175,6 @@ assetListLoader.load(() => {
 
     // make the texture tiles and use anisotropic filtering to prevent blurring
     planeMaterial.diffuseMap = assets.checkerboard.resource;
-    planeMaterial.diffuseTint = true;
     planeMaterial.diffuseMapTiling.set(10, 10);
     planeMaterial.anisotropy = 16;
 
@@ -257,7 +256,7 @@ assetListLoader.load(() => {
     app.scene.skyboxMip = 0;
     app.scene.envAtlas = assets.helipad.resource;
 
-    app.scene.toneMapping = pc.TONEMAP_ACES;
+    app.scene.rendering.toneMapping = pc.TONEMAP_ACES;
 
     // update things each frame
     let time = 0;

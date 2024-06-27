@@ -131,7 +131,7 @@ assetListLoader.load(() => {
 
     const textureArrayOptions = {
         name: 'textureArrayImages',
-        format: pc.PIXELFORMAT_R8_G8_B8_A8,
+        format: pc.PIXELFORMAT_RGBA8,
         width: 1024,
         height: 1024,
         arrayLength: 4, // array texture with 4 textures

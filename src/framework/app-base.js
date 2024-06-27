@@ -21,7 +21,7 @@ import { http } from '../platform/net/http.js';
 
 import {
     LAYERID_DEPTH, LAYERID_IMMEDIATE, LAYERID_SKYBOX, LAYERID_UI, LAYERID_WORLD,
-    SORTMODE_NONE, SORTMODE_MANUAL, SPECULAR_BLINN
+    SORTMODE_NONE, SORTMODE_MANUAL
 } from '../scene/constants.js';
 import { setProgramLibrary } from '../scene/shader-lib/get-program-library.js';
 import { ProgramLibrary } from '../scene/shader-lib/program-library.js';
@@ -129,7 +129,7 @@ class AppBase extends EventHandler {
      *
      * @callback MakeTickCallback
      * @param {number} [timestamp] - The timestamp supplied by requestAnimationFrame.
-     * @param {*} [frame] - XRFrame from requestAnimationFrame callback.
+     * @param {XRFrame} [frame] - XRFrame from requestAnimationFrame callback.
      * @returns {void}
      */
 
@@ -241,15 +241,6 @@ class AppBase extends EventHandler {
         this._fillMode = FILLMODE_KEEP_ASPECT;
         this._resolutionMode = RESOLUTION_FIXED;
         this._allowResize = true;
-
-        /**
-         * For backwards compatibility with scripts 1.0.
-         *
-         * @type {AppBase}
-         * @deprecated
-         * @ignore
-         */
-        this.context = this;
     }
 
     /**
@@ -301,7 +292,7 @@ class AppBase extends EventHandler {
          * @type {Scene}
          * @example
          * // Set the tone mapping property of the application's scene
-         * this.app.scene.toneMapping = pc.TONEMAP_FILMIC;
+         * this.app.scene.rendering.toneMapping = pc.TONEMAP_FILMIC;
          */
         this.scene = new Scene(device);
         this._registerSceneImmediate(this.scene);
@@ -599,7 +590,6 @@ class AppBase extends EventHandler {
     _initDefaultMaterial() {
         const material = new StandardMaterial();
         material.name = "Default Material";
-        material.shadingModel = SPECULAR_BLINN;
         setDefaultMaterial(this.graphicsDevice, material);
     }
 
@@ -1466,7 +1456,7 @@ class AppBase extends EventHandler {
      * - {@link SHADOW_PCF3}: PCF 3x3 sampling.
      * - {@link SHADOW_PCF5}: PCF 5x5 sampling. Falls back to {@link SHADOW_PCF3} on WebGL 1.0.
      *
-     * @param {Vec3} settings.render.lightingCells - Number of cells along each world-space axis the space containing lights
+     * @param {Vec3} settings.render.lightingCells - Number of cells along each world space axis the space containing lights
      * is subdivided into.
      *
      * Only lights with bakeDir=true will be used for generating the dominant light direction.
@@ -1599,11 +1589,11 @@ class AppBase extends EventHandler {
     }
 
     /**
-     * Draws a single line. Line start and end coordinates are specified in world-space. The line
+     * Draws a single line. Line start and end coordinates are specified in world space. The line
      * will be flat-shaded with the specified color.
      *
-     * @param {Vec3} start - The start world-space coordinate of the line.
-     * @param {Vec3} end - The end world-space coordinate of the line.
+     * @param {Vec3} start - The start world space coordinate of the line.
+     * @param {Vec3} end - The end world space coordinate of the line.
      * @param {Color} [color] - The color of the line. It defaults to white if not specified.
      * @param {boolean} [depthTest] - Specifies if the line is depth tested against the depth
      * buffer. Defaults to true.
@@ -1825,7 +1815,7 @@ class AppBase extends EventHandler {
             material = new Material();
             material.cull = CULLFACE_NONE;
             material.setParameter("colorMap", texture);
-            material.shader = filterable ? this.scene.immediate.getTextureShader() : this.scene.immediate.getUnfilterableTextureShader();
+            material.shader = filterable ? this.scene.immediate.getTextureShader(texture.encoding) : this.scene.immediate.getUnfilterableTextureShader();
             material.update();
         }
 
@@ -2045,7 +2035,7 @@ const makeTick = function (_app) {
     const application = _app;
     /**
      * @param {number} [timestamp] - The timestamp supplied by requestAnimationFrame.
-     * @param {*} [frame] - XRFrame from requestAnimationFrame callback.
+     * @param {XRFrame} [frame] - XRFrame from requestAnimationFrame callback.
      */
     return function (timestamp, frame) {
         if (!application.graphicsDevice)

@@ -18,6 +18,7 @@ class Tri {
     /**
      * The first 3-dimensional vector of the triangle.
      *
+     * @readonly
      * @type {Vec3}
      */
     v0 = new Vec3();
@@ -26,6 +27,7 @@ class Tri {
      * The second 3-dimensional vector of the triangle.
      *
      * @type {Vec3}
+     * @readonly
      */
     v1 = new Vec3();
 
@@ -33,6 +35,7 @@ class Tri {
      * The third 3-dimensional vector of the triangle.
      *
      * @type {Vec3}
+     * @readonly
      */
     v2 = new Vec3();
 

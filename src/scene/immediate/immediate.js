@@ -10,6 +10,7 @@ import { shaderChunks } from '../shader-lib/chunks/chunks.js';
 import { ImmediateBatches } from './immediate-batches.js';
 
 import { Vec3 } from '../../core/math/vec3.js';
+import { ChunkUtils } from '../shader-lib/chunk-utils.js';
 
 const tempPoints = [];
 const vec = new Vec3();
@@ -103,12 +104,15 @@ class Immediate {
     }
 
     // shader used to display texture
-    getTextureShader() {
-        return this.getShader('textureShader', /* glsl */ `
+    getTextureShader(encoding) {
+        const decodeFunc = ChunkUtils.decodeFunc(encoding);
+        return this.getShader(`textureShader-${encoding}`, shaderChunks.decodePS + shaderChunks.gamma2_2PS +
+        /* glsl */ `
             varying vec2 uv0;
             uniform sampler2D colorMap;
             void main (void) {
-                gl_FragColor = vec4(texture2D(colorMap, uv0).xyz, 1);
+                vec3 linearColor = ${decodeFunc}(texture2D(colorMap, uv0));
+                gl_FragColor = vec4(gammaCorrectOutput(linearColor), 1);
             }
         `);
     }

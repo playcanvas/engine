@@ -78,7 +78,7 @@ const assetListLoader = new pc.AssetListLoader(Object.values(assets), app.assets
 assetListLoader.load(() => {
     app.start();
 
-    app.scene.toneMapping = pc.TONEMAP_ACES;
+    app.scene.rendering.toneMapping = pc.TONEMAP_ACES;
     app.scene.skyboxMip = 1;
     app.scene.ambientLight.set(0, 0, 0);
     app.scene.ambientLuminance = 0;

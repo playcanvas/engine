@@ -70,7 +70,7 @@ assetListLoader.load(() => {
     // setup skydome
     app.scene.envAtlas = assets.helipad.resource;
     app.scene.skyboxMip = 2;
-    app.scene.exposure = 1.5;
+    app.scene.exposure = 2.5;
 
     // get the instance of the laboratory
     const laboratoryEntity = assets.laboratory.resource.instantiateRenderEntity({
@@ -130,7 +130,7 @@ assetListLoader.load(() => {
     const light = new pc.Entity();
     light.addComponent('light', {
         type: 'directional',
-        intensity: 0.7,
+        intensity: 1,
         castShadows: true,
         shadowResolution: 4096,
         shadowBias: 0.4,
@@ -171,6 +171,7 @@ assetListLoader.load(() => {
         camera: cameraEntity.camera, // camera used to render those passes
         samples: 1, // number of samples for multi-sampling
         sceneColorMap: false,
+        bloomEnabled: false,
 
         // enable the pre-pass to generate the depth buffer, which is needed by the SSAO
         prepassEnabled: true,
@@ -191,21 +192,14 @@ assetListLoader.load(() => {
         // Use a render pass camera frame, which is a render pass that implements typical rendering of a camera.
         // Internally this sets up additional passes it needs, based on the options passed to it.
         const renderPassCamera = new pc.RenderPassCameraFrame(app, currentOptions);
-        renderPassCamera.bloomEnabled = false;
 
         renderPassCamera.ssaoEnabled = currentOptions.ssaoEnabled;
 
         const composePass = renderPassCamera.composePass;
-        composePass.toneMapping = pc.TONEMAP_NEUTRAL;
         composePass.sharpness = 0;
 
         // and set up these rendering passes to be used by the camera, instead of its default rendering
         cameraEntity.camera.renderPasses = [renderPassCamera];
-
-        // the render passes render in HDR format, and so disable output tone mapping and gamma correction,
-        // as that is applied in the final compose pass
-        app.scene.toneMapping = pc.TONEMAP_LINEAR;
-        app.scene.gammaCorrection = pc.GAMMA_NONE;
 
         // jitter the camera when TAA is enabled
         cameraEntity.camera.jitter = currentOptions.taaEnabled ? 1 : 0;

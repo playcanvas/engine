@@ -1,5 +1,3 @@
-import { events } from '../core/events.js';
-
 import { getApplication } from './globals.js';
 
 /**
@@ -61,7 +59,5 @@ const script = {
         callback(app);
     }
 };
-
-events.attach(script);
 
 export { script };

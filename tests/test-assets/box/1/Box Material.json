@@ -61,7 +61,6 @@
     0
   ],
   "metalness": 1,
-  "conserveEnergy": true,
   "glossMapChannel": "r",
   "glossMapTiling": [
     1,
@@ -142,6 +141,6 @@
   "useFog": true,
   "useLighting": true,
   "useSkybox": true,
-  "useGammaTonemap": true,
+  "useTonemap": true,
   "mapping_format": "path"
 }

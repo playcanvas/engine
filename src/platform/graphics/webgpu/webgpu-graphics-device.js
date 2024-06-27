@@ -157,7 +157,6 @@ class WebgpuGraphicsDevice extends GraphicsDevice {
         this.textureFloatRenderable = true;
         this.textureHalfFloatRenderable = true;
         this.supportsImageBitmap = true;
-        this.supportsTextureFetch = true;
 
         // WebGPU currently only supports 1 and 4 samples
         this.samples = this.backBufferAntialias ? 4 : 1;
@@ -310,8 +309,8 @@ class WebgpuGraphicsDevice extends GraphicsDevice {
 
         this.gpuProfiler = new WebgpuGpuProfiler(this);
 
-        // init dynamic buffer using 1MB allocation
-        this.dynamicBuffers = new WebgpuDynamicBuffers(this, 1024 * 1024, this.limits.minUniformBufferOffsetAlignment);
+        // init dynamic buffer using 100kB allocation
+        this.dynamicBuffers = new WebgpuDynamicBuffers(this, 100 * 1024, this.limits.minUniformBufferOffsetAlignment);
 
         // empty bind group
         this.emptyBindGroup = new BindGroup(this, new BindGroupFormat(this, []));
@@ -985,8 +984,8 @@ class WebgpuGraphicsDevice extends GraphicsDevice {
      *
      * @param {RenderTarget} [source] - The source render target. Defaults to frame buffer.
      * @param {RenderTarget} [dest] - The destination render target. Defaults to frame buffer.
-     * @param {boolean} [color] - If true will copy the color buffer. Defaults to false.
-     * @param {boolean} [depth] - If true will copy the depth buffer. Defaults to false.
+     * @param {boolean} [color] - If true, will copy the color buffer. Defaults to false.
+     * @param {boolean} [depth] - If true, will copy the depth buffer. Defaults to false.
      * @returns {boolean} True if the copy was successful, false otherwise.
      */
     copyRenderTarget(source, dest, color, depth) {

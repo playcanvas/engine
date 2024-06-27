@@ -107,7 +107,6 @@ assetListLoader.load(() => {
     material.setParameter('texture_diffuseMap', assets.color.resource);
     material.setParameter('texture_glossMap', assets.gloss.resource);
     material.setParameter('texture_normalMap', assets.normal.resource);
-    material.shadingModel = pc.SPECULAR_BLINN;
     material.useSkybox = true;
     material.hasSpecular = true;
     material.hasSpecularityFactor = true;

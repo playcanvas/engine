@@ -1,4 +1,3 @@
-import { Debug } from '../debug.js';
 import { Mat4 } from '../math/mat4.js';
 import { Vec3 } from '../math/vec3.js';
 
@@ -17,7 +16,11 @@ const tmpMat4 = new Mat4();
  * @category Math
  */
 class OrientedBox {
-    halfExtents;
+    /**
+     * @type {Vec3}
+     * @private
+     */
+    halfExtents = new Vec3(0.5, 0.5, 0.5);
 
     /**
      * @type {Mat4}
@@ -41,15 +44,15 @@ class OrientedBox {
      * Create a new OrientedBox instance.
      *
      * @param {Mat4} [worldTransform] - Transform that has the orientation and position of the box.
-     * Scale is assumed to be one.
-     * @param {Vec3} [halfExtents] - Half the distance across the box in each local axis. The
-     * constructor takes a reference of this parameter.
+     * Scale is assumed to be one. Defaults to identity matrix.
+     * @param {Vec3} [halfExtents] - Half the distance across the box in each local axis. Defaults
+     * to (0.5, 0.5, 0.5).
      */
-    constructor(worldTransform = new Mat4(), halfExtents = new Vec3(0.5, 0.5, 0.5)) {
-        Debug.assert(!Object.isFrozen(worldTransform), 'The constructor of \'OrientedBox\' does not accept a constant (frozen) object as a \'worldTransform\' parameter');
-        Debug.assert(!Object.isFrozen(halfExtents), 'The constructor of \'OrientedBox\' does not accept a constant (frozen) object as a \'halfExtents\' parameter');
+    constructor(worldTransform = new Mat4(), halfExtents) {
 
-        this.halfExtents = halfExtents;
+        if (halfExtents) {
+            this.halfExtents.copy(halfExtents);
+        }
 
         this._modelTransform = worldTransform.clone().invert();
         this._worldTransform = worldTransform.clone();
@@ -57,7 +60,7 @@ class OrientedBox {
     }
 
     /**
-     * The world transform of the OBB.
+     * Sets the world transform of the OBB.
      *
      * @type {Mat4}
      */
@@ -66,6 +69,11 @@ class OrientedBox {
         this._modelTransform.copy(value).invert();
     }
 
+    /**
+     * Gets the world transform of the OBB.
+     *
+     * @type {Mat4}
+     */
     get worldTransform() {
         return this._worldTransform;
     }

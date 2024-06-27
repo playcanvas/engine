@@ -26,7 +26,7 @@ class GSplatCompressed {
 
     /**
      * @param {import('../../platform/graphics/graphics-device.js').GraphicsDevice} device - The graphics device.
-     * @param {import('./gsplat-data.js').GSplatData} gsplatData - The splat data.
+     * @param {import('./gsplat-compressed-data.js').GSplatCompressedData} gsplatData - The splat data.
      */
     constructor(device, gsplatData) {
         const numSplats = gsplatData.numSplats;
@@ -44,57 +44,13 @@ class GSplatCompressed {
         gsplatData.getCenters(this.centers);
 
         // initialize packed data
-        this.packedTexture = this.createTexture('packedData', PIXELFORMAT_RGBA32U, this.evalTextureSize(numSplats));
-
-        const position = gsplatData.getProp('packed_position');
-        const rotation = gsplatData.getProp('packed_rotation');
-        const scale = gsplatData.getProp('packed_scale');
-        const color = gsplatData.getProp('packed_color');
-
-        const packedData = this.packedTexture.lock();
-        for (let i = 0; i < numSplats; ++i) {
-            packedData[i * 4 + 0] = position[i];
-            packedData[i * 4 + 1] = rotation[i];
-            packedData[i * 4 + 2] = scale[i];
-            packedData[i * 4 + 3] = color[i];
-        }
-        this.packedTexture.unlock();
+        this.packedTexture = this.createTexture('packedData', PIXELFORMAT_RGBA32U, this.evalTextureSize(numSplats), gsplatData.vertexData);
 
         // initialize chunk data
         const chunkSize = this.evalTextureSize(numChunks);
         chunkSize.x *= 3;
 
-        this.chunkTexture = this.createTexture('chunkData', PIXELFORMAT_RGBA32F, chunkSize);
-
-        const minX = gsplatData.getProp('min_x', 'chunk');
-        const minY = gsplatData.getProp('min_y', 'chunk');
-        const minZ = gsplatData.getProp('min_z', 'chunk');
-        const maxX = gsplatData.getProp('max_x', 'chunk');
-        const maxY = gsplatData.getProp('max_y', 'chunk');
-        const maxZ = gsplatData.getProp('max_z', 'chunk');
-        const minScaleX = gsplatData.getProp('min_scale_x', 'chunk');
-        const minScaleY = gsplatData.getProp('min_scale_y', 'chunk');
-        const minScaleZ = gsplatData.getProp('min_scale_z', 'chunk');
-        const maxScaleX = gsplatData.getProp('max_scale_x', 'chunk');
-        const maxScaleY = gsplatData.getProp('max_scale_y', 'chunk');
-        const maxScaleZ = gsplatData.getProp('max_scale_z', 'chunk');
-
-        const chunkData = this.chunkTexture.lock();
-        for (let i = 0; i < numChunks; ++i) {
-            chunkData[i * 12 + 0] = minX[i];
-            chunkData[i * 12 + 1] = minY[i];
-            chunkData[i * 12 + 2] = minZ[i];
-            chunkData[i * 12 + 3] = maxX[i];
-            chunkData[i * 12 + 4] = maxY[i];
-            chunkData[i * 12 + 5] = maxZ[i];
-            chunkData[i * 12 + 6] = minScaleX[i];
-            chunkData[i * 12 + 7] = minScaleY[i];
-            chunkData[i * 12 + 8] = minScaleZ[i];
-            chunkData[i * 12 + 9] = maxScaleX[i];
-            chunkData[i * 12 + 10] = maxScaleY[i];
-            chunkData[i * 12 + 11] = maxScaleZ[i];
-        }
-        this.chunkTexture.unlock();
+        this.chunkTexture = this.createTexture('chunkData', PIXELFORMAT_RGBA32F, chunkSize, gsplatData.chunkData);
     }
 
     destroy() {
@@ -110,7 +66,7 @@ class GSplatCompressed {
         const result = createGSplatCompressedMaterial(options);
         result.setParameter('packedTexture', this.packedTexture);
         result.setParameter('chunkTexture', this.chunkTexture);
-        result.setParameter('bufferWidths', new Float32Array([this.packedTexture.width, this.chunkTexture.width / 3, 0, 0]));
+        result.setParameter('tex_params', new Float32Array([this.numSplats, this.packedTexture.width, this.chunkTexture.width / 3, 0]));
         return result;
     }
 
@@ -136,7 +92,7 @@ class GSplatCompressed {
      * @param {Vec2} size - The width and height of the texture.
      * @returns {Texture} The created texture instance.
      */
-    createTexture(name, format, size) {
+    createTexture(name, format, size, data) {
         return new Texture(this.device, {
             name: name,
             width: size.x,
@@ -147,7 +103,8 @@ class GSplatCompressed {
             minFilter: FILTER_NEAREST,
             magFilter: FILTER_NEAREST,
             addressU: ADDRESS_CLAMP_TO_EDGE,
-            addressV: ADDRESS_CLAMP_TO_EDGE
+            addressV: ADDRESS_CLAMP_TO_EDGE,
+            ...(data ? { levels: [data] } : { })
         });
     }
 }
