@@ -28,7 +28,15 @@
       "pcx": "readonly"
     },
     "rules": {
-      "import/no-unresolved": "off"
+      "import/no-unresolved": "off",
+      "jsdoc/check-tag-names": [
+        "error",
+        {
+          "definedTags": [
+            "attribute"
+          ]
+        }
+      ]
     }
   },
   "eslintIgnore": [

@@ -38,7 +38,7 @@ class SoundComponentSystem extends ComponentSystem {
          * @type {import('../../../platform/sound/manager.js').SoundManager}
          */
         this.manager = app.soundManager;
-        Debug.assert(this.manager, "AudioSourceComponentSystem cannot be created without sound manager");
+        Debug.assert(this.manager, "SoundComponentSystem cannot be created without sound manager");
 
         this.app.systems.on('update', this.onUpdate, this);
 
@@ -46,8 +46,8 @@ class SoundComponentSystem extends ComponentSystem {
     }
 
     /**
-     * Sets / gets the volume for the entire Sound system. All sounds will have their volume
-     * multiplied by this value. Valid between [0, 1].
+     * Sets the volume for the entire Sound system. All sounds will have their volume multiplied by
+     * this value. Valid between [0, 1].
      *
      * @type {number}
      */
@@ -55,6 +55,11 @@ class SoundComponentSystem extends ComponentSystem {
         this.manager.volume = volume;
     }
 
+    /**
+     * Gets the volume for the entire Sound system.
+     *
+     * @type {number}
+     */
     get volume() {
         return this.manager.volume;
     }

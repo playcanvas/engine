@@ -2,10 +2,8 @@ import * as pc from 'playcanvas';
 import { data } from 'examples/observer';
 import { deviceType, rootPath } from 'examples/utils';
 
-const canvas = document.getElementById('application-canvas');
-if (!(canvas instanceof HTMLCanvasElement)) {
-    throw new Error('No canvas found');
-}
+const canvas = /** @type {HTMLCanvasElement} */ (document.getElementById('application-canvas'));
+window.focus();
 
 const assets = {
     envAtlas: new pc.Asset(
@@ -30,6 +28,7 @@ const gfxOptions = {
 
 const device = await pc.createGraphicsDevice(canvas, gfxOptions);
 device.maxPixelRatio = Math.min(window.devicePixelRatio, 2);
+
 const createOptions = new pc.AppOptions();
 createOptions.graphicsDevice = device;
 createOptions.mouse = new pc.Mouse(document.body);
@@ -68,8 +67,7 @@ assetListLoader.load(() => {
     // setup skydome
     app.scene.envAtlas = assets.envAtlas.resource;
     app.scene.skyboxMip = 2;
-    app.scene.exposure = 1;
-    app.scene.toneMapping = pc.TONEMAP_ACES;
+    app.scene.exposure = 2.5;
 
     /**
      * Helper function to create a primitive with shape type, position, scale, color and layer.
@@ -167,6 +165,7 @@ assetListLoader.load(() => {
         camera: cameraEntity.camera, // camera used to render those passes
         samples: 0, // number of samples for multi-sampling
         sceneColorMap: true,
+        bloomEnabled: false,
 
         // enable the pre-pass to generate the depth buffer, which is needed by the TAA
         prepassEnabled: true,
@@ -184,19 +183,13 @@ assetListLoader.load(() => {
         // Use a render pass camera frame, which is a render pass that implements typical rendering of a camera.
         // Internally this sets up additional passes it needs, based on the options passed to it.
         const renderPassCamera = new pc.RenderPassCameraFrame(app, currentOptions);
-        renderPassCamera.bloomEnabled = false;
 
         const composePass = renderPassCamera.composePass;
-        composePass.toneMapping = data.get('data.scene.tonemapping');
+        composePass.toneMapping = pc.TONEMAP_ACES;
         composePass.sharpness = currentOptions.taaEnabled ? 1 : 0;
 
         // and set up these rendering passes to be used by the camera, instead of its default rendering
         cameraEntity.camera.renderPasses = [renderPassCamera];
-
-        // the render passes render in HDR format, and so disable output tone mapping and gamma correction,
-        // as that is applied in the final compose pass
-        app.scene.toneMapping = pc.TONEMAP_LINEAR;
-        app.scene.gammaCorrection = pc.GAMMA_NONE;
 
         // jitter the camera when TAA is enabled
         cameraEntity.camera.jitter = currentOptions.taaEnabled ? 1 : 0;

@@ -2,7 +2,8 @@ import { math } from '../../core/math/math.js';
 import { Color } from '../../core/math/color.js';
 import { RenderPassShaderQuad } from '../../scene/graphics/render-pass-shader-quad.js';
 import { shaderChunks } from '../../scene/shader-lib/chunks/chunks.js';
-import { TONEMAP_LINEAR, TONEMAP_FILMIC, TONEMAP_HEJL, TONEMAP_ACES, TONEMAP_ACES2, TONEMAP_NEUTRAL } from '../../scene/constants.js';
+import { TONEMAP_LINEAR } from '../../scene/constants.js';
+import { ShaderGenerator } from '../../scene/shader-lib/programs/shader-generator.js';
 
 
 // Contrast Adaptive Sharpening (CAS) is used to apply the sharpening. It's based on AMD's
@@ -19,6 +20,10 @@ const fragmentShader = /* glsl */ `
     #ifdef BLOOM
         uniform sampler2D bloomTexture;
         uniform float bloomIntensity;
+    #endif
+
+    #ifdef SSAO
+        uniform sampler2D ssaoTexture;
     #endif
 
     #ifdef GRADING
@@ -128,6 +133,10 @@ const fragmentShader = /* glsl */ `
             result = cas(result, uv, sharpness);
         #endif
 
+        #ifdef SSAO
+            result *= texture2DLodEXT(ssaoTexture, uv0, 0.0).r;
+        #endif
+
         #ifdef FRINGING
             result = fringing(uv, result);
         #endif
@@ -154,7 +163,10 @@ const fragmentShader = /* glsl */ `
 `;
 
 /**
+ * Render pass implementation of the final post-processing composition.
+ *
  * @category Graphics
+ * @ignore
  */
 class RenderPassCompose extends RenderPassShaderQuad {
     sceneTexture = null;
@@ -163,7 +175,9 @@ class RenderPassCompose extends RenderPassShaderQuad {
 
     _bloomTexture = null;
 
-    _toneMapping = TONEMAP_ACES2;
+    _ssaoTexture = null;
+
+    _toneMapping = TONEMAP_LINEAR;
 
     _gradingEnabled = false;
 
@@ -201,6 +215,7 @@ class RenderPassCompose extends RenderPassShaderQuad {
         const { scope } = graphicsDevice;
         this.sceneTextureId = scope.resolve('sceneTexture');
         this.bloomTextureId = scope.resolve('bloomTexture');
+        this.ssaoTextureId = scope.resolve('ssaoTexture');
         this.bloomIntensityId = scope.resolve('bloomIntensity');
         this.bcsId = scope.resolve('brightnessContrastSaturation');
         this.vignetterParamsId = scope.resolve('vignetterParams');
@@ -219,6 +234,17 @@ class RenderPassCompose extends RenderPassShaderQuad {
 
     get bloomTexture() {
         return this._bloomTexture;
+    }
+
+    set ssaoTexture(value) {
+        if (this._ssaoTexture !== value) {
+            this._ssaoTexture = value;
+            this._shaderDirty = true;
+        }
+    }
+
+    get ssaoTexture() {
+        return this._ssaoTexture;
     }
 
     set taaEnabled(value) {
@@ -276,18 +302,6 @@ class RenderPassCompose extends RenderPassShaderQuad {
         return this._toneMapping;
     }
 
-    get toneMapChunk() {
-        switch (this.toneMapping) {
-            case TONEMAP_LINEAR: return shaderChunks.tonemappingLinearPS;
-            case TONEMAP_FILMIC: return shaderChunks.tonemappingFilmicPS;
-            case TONEMAP_HEJL: return shaderChunks.tonemappingHejlPS;
-            case TONEMAP_ACES: return shaderChunks.tonemappingAcesPS;
-            case TONEMAP_ACES2: return shaderChunks.tonemappingAces2PS;
-            case TONEMAP_NEUTRAL: return shaderChunks.tonemappingNeutralPS;
-        }
-        return shaderChunks.tonemappingNonePS;
-    }
-
     set sharpness(value) {
         if (this._sharpness !== value) {
             this._sharpness = value;
@@ -317,6 +331,7 @@ class RenderPassCompose extends RenderPassShaderQuad {
 
             const key = `${this.toneMapping}` +
                 `-${this.bloomTexture ? 'bloom' : 'nobloom'}` +
+                `-${this.ssaoTexture ? 'ssao' : 'nossao'}` +
                 `-${this.gradingEnabled ? 'grading' : 'nograding'}` +
                 `-${this.vignetteEnabled ? 'vignette' : 'novignette'}` +
                 `-${this.fringingEnabled ? 'fringing' : 'nofringing'}` +
@@ -328,6 +343,7 @@ class RenderPassCompose extends RenderPassShaderQuad {
 
                 const defines =
                     (this.bloomTexture ? `#define BLOOM\n` : '') +
+                    (this.ssaoTexture ? `#define SSAO\n` : '') +
                     (this.gradingEnabled ? `#define GRADING\n` : '') +
                     (this.vignetteEnabled ? `#define VIGNETTE\n` : '') +
                     (this.fringingEnabled ? `#define FRINGING\n` : '') +
@@ -337,7 +353,7 @@ class RenderPassCompose extends RenderPassShaderQuad {
                 const fsChunks =
                 shaderChunks.decodePS +
                 shaderChunks.gamma2_2PS +
-                this.toneMapChunk;
+                ShaderGenerator.tonemapCode(this.toneMapping);
 
                 this.shader = this.createQuadShader(`ComposeShader-${key}`, defines + fsChunks + fragmentShader);
             }
@@ -354,6 +370,10 @@ class RenderPassCompose extends RenderPassShaderQuad {
         if (this._bloomTexture) {
             this.bloomTextureId.setValue(this._bloomTexture);
             this.bloomIntensityId.setValue(this.bloomIntensity);
+        }
+
+        if (this._ssaoTexture) {
+            this.ssaoTextureId.setValue(this._ssaoTexture);
         }
 
         if (this._gradingEnabled) {

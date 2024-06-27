@@ -7,7 +7,7 @@ import { playcanvasTheme } from '../../monaco/theme.mjs';
 import { jsRules } from '../../monaco/tokenizer-rules.mjs';
 import * as languages from '../../monaco/languages/index.mjs';
 
-import '../../events.js';
+/** @typedef {import('../../events.js').StateEvent} StateEvent */
 
 loader.config({ paths: { vs: './modules/monaco-editor/min/vs' } });
 

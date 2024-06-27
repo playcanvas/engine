@@ -1,10 +1,8 @@
 import * as pc from 'playcanvas';
 import { deviceType, rootPath } from 'examples/utils';
 
-const canvas = document.getElementById('application-canvas');
-if (!(canvas instanceof HTMLCanvasElement)) {
-    throw new Error('No canvas found');
-}
+const canvas = /** @type {HTMLCanvasElement} */ (document.getElementById('application-canvas'));
+window.focus();
 
 // Overview:
 // There are 3 layers used:
@@ -34,6 +32,7 @@ const gfxOptions = {
 
 const device = await pc.createGraphicsDevice(canvas, gfxOptions);
 device.maxPixelRatio = Math.min(window.devicePixelRatio, 2);
+
 const createOptions = new pc.AppOptions();
 createOptions.graphicsDevice = device;
 createOptions.mouse = new pc.Mouse(document.body);
@@ -176,7 +175,6 @@ assetListLoader.load(() => {
 
     // make the texture tiles and use anisotropic filtering to prevent blurring
     planeMaterial.diffuseMap = assets.checkerboard.resource;
-    planeMaterial.diffuseTint = true;
     planeMaterial.diffuseMapTiling.set(10, 10);
     planeMaterial.anisotropy = 16;
 
@@ -258,7 +256,7 @@ assetListLoader.load(() => {
     app.scene.skyboxMip = 0;
     app.scene.envAtlas = assets.helipad.resource;
 
-    app.scene.toneMapping = pc.TONEMAP_ACES;
+    app.scene.rendering.toneMapping = pc.TONEMAP_ACES;
 
     // update things each frame
     let time = 0;

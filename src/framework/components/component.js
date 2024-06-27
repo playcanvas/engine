@@ -6,6 +6,15 @@ import { EventHandler } from '../../core/event-handler.js';
  */
 class Component extends EventHandler {
     /**
+     * Component order. When an entity with multiple components gets enabled, this order specifies
+     * in which order the components get enabled. The lowest number gets enabled first.
+     *
+     * @type {number} - Component order number.
+     * @private
+     */
+    static order = 0;
+
+    /**
      * The ComponentSystem used to create this Component.
      *
      * @type {import('./system.js').ComponentSystem}
@@ -112,13 +121,18 @@ class Component extends EventHandler {
     }
 
     /**
-     * Enables or disables the component.
+     * Sets the enabled state of the component.
      *
      * @type {boolean}
      */
     set enabled(arg) {
     }
 
+    /**
+     * Gets the enabled state of the component.
+     *
+     * @type {boolean}
+     */
     get enabled() {
         return true;
     }

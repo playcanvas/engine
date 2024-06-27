@@ -498,23 +498,6 @@ export const CUBEPROJ_NONE = 0;
 export const CUBEPROJ_BOX = 1;
 
 /**
- * Phong without energy conservation. You should only use it as a backwards compatibility with
- * older projects.
- *
- * @type {number}
- * @category Graphics
- */
-export const SPECULAR_PHONG = 0;
-
-/**
- * Energy-conserving Blinn-Phong.
- *
- * @type {number}
- * @category Graphics
- */
-export const SPECULAR_BLINN = 1;
-
-/**
  * Multiply together the primary and secondary colors.
  *
  * @type {string}
@@ -579,25 +562,7 @@ export const GAMMA_NONE = 0;
 export const GAMMA_SRGB = 1;
 
 /**
- * Apply sRGB (fast) gamma correction.
- *
- * @type {number}
- * @deprecated
- * @ignore
- * @category Graphics
- */
-export const GAMMA_SRGBFAST = 2; // deprecated
-
-/**
- * Apply sRGB (HDR) gamma correction.
- *
- * @type {number}
- * @category Graphics
- */
-export const GAMMA_SRGBHDR = 3;
-
-/**
- * Linear tonemapping.
+ * Linear tonemapping. The colors are preserved, but the exposure is applied.
  *
  * @type {number}
  * @category Graphics
@@ -643,6 +608,14 @@ export const TONEMAP_ACES2 = 4;
  * @category Graphics
  */
 export const TONEMAP_NEUTRAL = 5;
+
+/**
+ * No tonemapping or exposure is applied. Used for HDR rendering.
+ *
+ * @type {number}
+ * @category Graphics
+ */
+export const TONEMAP_NONE = 6;
 
 /**
  * No specular occlusion.
@@ -717,20 +690,14 @@ export const MASK_AFFECT_LIGHTMAPPED = 2;
 export const MASK_BAKE = 4;
 
 /**
- * Render shaded materials with gamma correction and tonemapping.
+ * Render shaded materials using forward rendering.
  *
  * @type {number}
  * @category Graphics
  */
 export const SHADER_FORWARD = 0;
 
-/**
- * Render shaded materials without gamma correction and tonemapping.
- *
- * @type {number}
- * @category Graphics
- */
-export const SHADER_FORWARDHDR = 1;
+export const SHADER_PREPASS_VELOCITY = 1;
 
 /**
  * Render RGBA-encoded depth value.
@@ -746,8 +713,6 @@ export const SHADER_PICK = 3;
 // shadow pass used by the shadow rendering code
 export const SHADER_SHADOW = 4;
 
-export const SHADER_PREPASS_VELOCITY = 5;
-
 /**
  * Shader that performs forward rendering.
  *
@@ -755,15 +720,6 @@ export const SHADER_PREPASS_VELOCITY = 5;
  * @category Graphics
  */
 export const SHADERPASS_FORWARD = 'forward';
-
-/**
- * Shader that performs forward rendering in HDR mode (gamma correction and tonemapping are
- * disabled).
- *
- * @type {string}
- * @category Graphics
- */
-export const SHADERPASS_FORWARD_HDR = 'forward_hdr';
 
 /**
  * Shader used for debug rendering of albedo.

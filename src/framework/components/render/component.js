@@ -15,8 +15,44 @@ import { Component } from '../component.js';
 import { EntityReference } from '../../utils/entity-reference.js';
 
 /**
- * Enables an Entity to render a {@link Mesh} or a primitive shape. This component attaches
- * {@link MeshInstance} geometry to the Entity.
+ * The RenderComponent enables an {@link Entity} to render 3D meshes. The {@link RenderComponent#type}
+ * property can be set to one of several predefined shape types (such as `box`, `sphere`, `cone`
+ * and so on). Alternatively, the component can be configured to manage an arbitrary array of
+ * {@link MeshInstance} objects. These can either be created programmatically or loaded from an
+ * {@link Asset}.
+ *
+ * You should never need to use the RenderComponent constructor directly. To add a RenderComponent
+ * to an Entity, use {@link Entity#addComponent}:
+ *
+ * ```javascript
+ * // Add a render component to an entity with the default options
+ * const entity = new pc.Entity();
+ * entity.addComponent("render");  // This defaults to a 1x1x1 box
+ * ```
+ *
+ * To create an entity with a specific primitive shape:
+ *
+ * ```javascript
+ * entity.addComponent("render", {
+ *     type: "cone",
+ *     castShadows: false,
+ *     receiveShadows: false
+ * });
+ * ```
+ *
+ * Once the RenderComponent is added to the entity, you can set and get any of its properties:
+ *
+ * ```javascript
+ * entity.render.type = 'capsule';  // Set the render component's type
+ *
+ * console.log(entity.render.type); // Get the render component's type and print it
+ * ```
+ *
+ * Relevant examples:
+ *
+ * - [Spinning Cube](https://playcanvas.github.io/#/misc/hello-world)
+ * - [Primitive Shapes](https://playcanvas.github.io/#/graphics/shapes)
+ * - [Loading Render Assets](https://playcanvas.github.io/#/graphics/render-asset)
  *
  * @property {import('../../entity.js').Entity} rootBone A reference to the entity to be used as
  * the root bone for any skinned meshes that are rendered by this component.
@@ -144,7 +180,7 @@ class RenderComponent extends Component {
     }
 
     /**
-     * Set rendering of all {@link MeshInstance}s to the specified render style. Can be:
+     * Sets the render style of this component's {@link MeshInstance}s. Can be:
      *
      * - {@link RENDERSTYLE_SOLID}
      * - {@link RENDERSTYLE_WIREFRAME}
@@ -161,17 +197,22 @@ class RenderComponent extends Component {
         }
     }
 
+    /**
+     * Gets the render style of this component's {@link MeshInstance}s.
+     *
+     * @type {number}
+     */
     get renderStyle() {
         return this._renderStyle;
     }
 
     /**
-     * If set, the object space bounding box is used as a bounding box for visibility culling of
-     * attached mesh instances. This is an optimization, allowing oversized bounding box to be
-     * specified for skinned characters in order to avoid per frame bounding box computations based
-     * on bone positions.
+     * Sets the custom object space bounding box that is used for visibility culling of attached
+     * mesh instances. This is an optimization, allowing an oversized bounding box to be specified
+     * for skinned characters in order to avoid per frame bounding box computations based on bone
+     * positions.
      *
-     * @type {import('../../../core/shape/bounding-box.js').BoundingBox}
+     * @type {import('../../../core/shape/bounding-box.js').BoundingBox|null}
      */
     set customAabb(value) {
         this._customAabb = value;
@@ -185,12 +226,18 @@ class RenderComponent extends Component {
         }
     }
 
+    /**
+     * Gets the custom object space bounding box that is used for visibility culling of attached
+     * mesh instances.
+     *
+     * @type {import('../../../core/shape/bounding-box.js').BoundingBox|null}
+     */
     get customAabb() {
         return this._customAabb;
     }
 
     /**
-     * The type of the render. Can be one of the following:
+     * Sets the type of the component. Can be one of the following:
      *
      * - "asset": The component will render a render asset
      * - "box": The component will render a box (1 unit in each dimension)
@@ -226,13 +273,17 @@ class RenderComponent extends Component {
         }
     }
 
+    /**
+     * Gets the type of the component.
+     *
+     * @type {string}
+     */
     get type() {
         return this._type;
     }
 
     /**
-     * An array of meshInstances contained in the component. If meshes are not set or loaded for
-     * component it will return null.
+     * Sets the array of meshInstances contained in the component.
      *
      * @type {MeshInstance[]}
      */
@@ -266,12 +317,18 @@ class RenderComponent extends Component {
         }
     }
 
+    /**
+     * Gets the array of meshInstances contained in the component.
+     *
+     * @type {MeshInstance[]}
+     */
     get meshInstances() {
         return this._meshInstances;
     }
 
     /**
-     * If true, the meshes will be lightmapped after using lightmapper.bake().
+     * Sets whether the component is affected by the runtime lightmapper. If true, the meshes will
+     * be lightmapped after using lightmapper.bake().
      *
      * @type {boolean}
      */
@@ -288,12 +345,17 @@ class RenderComponent extends Component {
         }
     }
 
+    /**
+     * Gets whether the component is affected by the runtime lightmapper.
+     *
+     * @type {boolean}
+     */
     get lightmapped() {
         return this._lightmapped;
     }
 
     /**
-     * If true, attached meshes will cast shadows for lights that have shadow casting enabled.
+     * Sets whether attached meshes will cast shadows for lights that have shadow casting enabled.
      *
      * @type {boolean}
      */
@@ -332,12 +394,17 @@ class RenderComponent extends Component {
         }
     }
 
+    /**
+     * Gets whether attached meshes will cast shadows for lights that have shadow casting enabled.
+     *
+     * @type {boolean}
+     */
     get castShadows() {
         return this._castShadows;
     }
 
     /**
-     * If true, shadows will be cast on attached meshes.
+     * Sets whether shadows will be cast on attached meshes.
      *
      * @type {boolean}
      */
@@ -355,12 +422,17 @@ class RenderComponent extends Component {
         }
     }
 
+    /**
+     * Gets whether shadows will be cast on attached meshes.
+     *
+     * @type {boolean}
+     */
     get receiveShadows() {
         return this._receiveShadows;
     }
 
     /**
-     * If true, the meshes will cast shadows when rendering lightmaps.
+     * Sets whether meshes instances will cast shadows when rendering lightmaps.
      *
      * @type {boolean}
      */
@@ -368,12 +440,17 @@ class RenderComponent extends Component {
         this._castShadowsLightmap = value;
     }
 
+    /**
+     * Gets whether meshes instances will cast shadows when rendering lightmaps.
+     *
+     * @type {boolean}
+     */
     get castShadowsLightmap() {
         return this._castShadowsLightmap;
     }
 
     /**
-     * Lightmap resolution multiplier.
+     * Sets the lightmap resolution multiplier.
      *
      * @type {number}
      */
@@ -381,13 +458,18 @@ class RenderComponent extends Component {
         this._lightmapSizeMultiplier = value;
     }
 
+    /**
+     * Gets the lightmap resolution multiplier.
+     *
+     * @type {number}
+     */
     get lightmapSizeMultiplier() {
         return this._lightmapSizeMultiplier;
     }
 
     /**
-     * An array of layer IDs ({@link Layer#id}) to which the meshes should belong. Don't push, pop,
-     * splice or modify this array, if you want to change it - set a new one instead.
+     * Sets the array of layer IDs ({@link Layer#id}) to which the mesh instances belong. Don't
+     * push, pop, splice or modify this array. If you want to change it, set a new one instead.
      *
      * @type {number[]}
      */
@@ -423,12 +505,18 @@ class RenderComponent extends Component {
         }
     }
 
+    /**
+     * Gets the array of layer IDs ({@link Layer#id}) to which the mesh instances belong.
+     *
+     * @type {number[]}
+     */
     get layers() {
         return this._layers;
     }
 
     /**
-     * Assign meshes to a specific batch group (see {@link BatchGroup}). Default is -1 (no group).
+     * Sets the batch group for the mesh instances in this component (see {@link BatchGroup}).
+     * Default is -1 (no group).
      *
      * @type {number}
      */
@@ -451,13 +539,18 @@ class RenderComponent extends Component {
         }
     }
 
+    /**
+     * Gets the batch group for the mesh instances in this component (see {@link BatchGroup}).
+     *
+     * @type {number}
+     */
     get batchGroupId() {
         return this._batchGroupId;
     }
 
     /**
-     * The material {@link Material} that will be used to render the meshes (not used on renders of
-     * type 'asset').
+     * Sets the material {@link Material} that will be used to render the component. The material
+     * is ignored for renders of type 'asset'.
      *
      * @type {import('../../../scene/materials/material.js').Material}
      */
@@ -473,13 +566,18 @@ class RenderComponent extends Component {
         }
     }
 
+    /**
+     * Gets the material {@link Material} that will be used to render the component.
+     *
+     * @type {import('../../../scene/materials/material.js').Material}
+     */
     get material() {
         return this._material;
     }
 
     /**
-     * The material assets that will be used to render the meshes. Each material corresponds to the
-     * respective mesh instance.
+     * Sets the material assets that will be used to render the component. Each material
+     * corresponds to the respective mesh instance.
      *
      * @type {Asset[]|number[]}
      */
@@ -527,6 +625,11 @@ class RenderComponent extends Component {
         }
     }
 
+    /**
+     * Gets the material assets that will be used to render the component.
+     *
+     * @type {Asset[]|number[]}
+     */
     get materialAssets() {
         return this._materialReferences.map(function (ref) {
             return ref.id;
@@ -534,8 +637,8 @@ class RenderComponent extends Component {
     }
 
     /**
-     * The render asset for the render component (only applies to type 'asset') - can also be an
-     * asset id.
+     * Sets the render asset (or asset id) for the render component. This only applies to render components with
+     * type 'asset'.
      *
      * @type {Asset|number}
      */
@@ -554,6 +657,11 @@ class RenderComponent extends Component {
         }
     }
 
+    /**
+     * Gets the render asset id for the render component.
+     *
+     * @type {number}
+     */
     get asset() {
         return this._assetReference.id;
     }

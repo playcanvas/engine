@@ -299,7 +299,7 @@ class Gizmo extends EventHandler {
     }
 
     /**
-     * The gizmo coordinate space. Can be:
+     * Sets the gizmo coordinate space. Can be:
      *
      * - {@link GIZMO_LOCAL}
      * - {@link GIZMO_WORLD}
@@ -313,12 +313,17 @@ class Gizmo extends EventHandler {
         this._updateRotation();
     }
 
+    /**
+     * Gets the gizmo coordinate space.
+     *
+     * @type {string}
+     */
     get coordSpace() {
         return this._coordSpace;
     }
 
     /**
-     * The gizmo size. Defaults to 1.
+     * Sets the gizmo size. Defaults to 1.
      *
      * @type {number}
      */
@@ -327,6 +332,11 @@ class Gizmo extends EventHandler {
         this._updateScale();
     }
 
+    /**
+     * Gets the gizmo size.
+     *
+     * @type {number}
+     */
     get size() {
         return this._size;
     }

@@ -395,53 +395,6 @@ const generateNormals = (sourceDesc, indices) => {
     };
 };
 
-const flipTexCoordVs = (vertexBuffer) => {
-    let i, j;
-
-    const floatOffsets = [];
-    const shortOffsets = [];
-    const byteOffsets = [];
-    for (i = 0; i < vertexBuffer.format.elements.length; ++i) {
-        const element = vertexBuffer.format.elements[i];
-        if (element.name === SEMANTIC_TEXCOORD0 ||
-            element.name === SEMANTIC_TEXCOORD1) {
-            switch (element.dataType) {
-                case TYPE_FLOAT32:
-                    floatOffsets.push({ offset: element.offset / 4 + 1, stride: element.stride / 4 });
-                    break;
-                case TYPE_UINT16:
-                    shortOffsets.push({ offset: element.offset / 2 + 1, stride: element.stride / 2 });
-                    break;
-                case TYPE_UINT8:
-                    byteOffsets.push({ offset: element.offset + 1, stride: element.stride });
-                    break;
-            }
-        }
-    }
-
-    const flip = (offsets, type, one) => {
-        const typedArray = new type(vertexBuffer.storage);
-        for (i = 0; i < offsets.length; ++i) {
-            let index = offsets[i].offset;
-            const stride = offsets[i].stride;
-            for (j = 0; j < vertexBuffer.numVertices; ++j) {
-                typedArray[index] = one - typedArray[index];
-                index += stride;
-            }
-        }
-    };
-
-    if (floatOffsets.length > 0) {
-        flip(floatOffsets, Float32Array, 1.0);
-    }
-    if (shortOffsets.length > 0) {
-        flip(shortOffsets, Uint16Array, 65535);
-    }
-    if (byteOffsets.length > 0) {
-        flip(byteOffsets, Uint8Array, 255);
-    }
-};
-
 // given a texture, clone it
 // NOTE: CPU-side texture data will be shared but GPU memory will be duplicated
 const cloneTexture = (texture) => {
@@ -479,7 +432,7 @@ const cloneTextureAsset = (src) => {
     return result;
 };
 
-const createVertexBufferInternal = (device, sourceDesc, flipV) => {
+const createVertexBufferInternal = (device, sourceDesc) => {
     const positionDesc = sourceDesc[SEMANTIC_POSITION];
     if (!positionDesc) {
         // ignore meshes without positions
@@ -572,16 +525,12 @@ const createVertexBufferInternal = (device, sourceDesc, flipV) => {
         }
     }
 
-    if (flipV) {
-        flipTexCoordVs(vertexBuffer);
-    }
-
     vertexBuffer.unlock();
 
     return vertexBuffer;
 };
 
-const createVertexBuffer = (device, attributes, indices, accessors, bufferViews, flipV, vertexBufferDict) => {
+const createVertexBuffer = (device, attributes, indices, accessors, bufferViews, vertexBufferDict) => {
 
     // extract list of attributes to use
     const useAttributes = {};
@@ -630,7 +579,7 @@ const createVertexBuffer = (device, attributes, indices, accessors, bufferViews,
         }
 
         // create and store it in the dictionary
-        vb = createVertexBufferInternal(device, sourceDesc, flipV);
+        vb = createVertexBufferInternal(device, sourceDesc);
         vertexBufferDict[vbKey] = vb;
     }
 
@@ -777,7 +726,7 @@ const createDracoMesh = (device, primitive, accessors, bufferViews, meshVariants
     return result;
 };
 
-const createMesh = (device, gltfMesh, accessors, bufferViews, flipV, vertexBufferDict, meshVariants, meshDefaultMaterials, assetOptions, promises) => {
+const createMesh = (device, gltfMesh, accessors, bufferViews, vertexBufferDict, meshVariants, meshDefaultMaterials, assetOptions, promises) => {
     const meshes = [];
 
     gltfMesh.primitives.forEach((primitive) => {
@@ -788,7 +737,7 @@ const createMesh = (device, gltfMesh, accessors, bufferViews, flipV, vertexBuffe
         } else {
             // handle uncompressed mesh
             let indices = primitive.hasOwnProperty('indices') ? getAccessorData(accessors[primitive.indices], bufferViews, true) : null;
-            const vertexBuffer = createVertexBuffer(device, primitive.attributes, indices, accessors, bufferViews, flipV, vertexBufferDict);
+            const vertexBuffer = createVertexBuffer(device, primitive.attributes, indices, accessors, bufferViews, vertexBufferDict);
             const primitiveType = getPrimitiveType(primitive);
 
             // build the mesh
@@ -1006,7 +955,6 @@ const extensionUnlit = (data, material, textures) => {
 
     // copy diffuse into emissive
     material.emissive.copy(material.diffuse);
-    material.emissiveTint = material.diffuseTint;
     material.emissiveMap = material.diffuseMap;
     material.emissiveMapUv = material.diffuseMapUv;
     material.emissiveMapTiling.copy(material.diffuseMapTiling);
@@ -1021,8 +969,7 @@ const extensionUnlit = (data, material, textures) => {
     material.useSkybox = false;
 
     // blank diffuse
-    material.diffuse.set(0, 0, 0);
-    material.diffuseTint = false;
+    material.diffuse.set(1, 1, 1);
     material.diffuseMap = null;
     material.diffuseVertexColor = false;
 };
@@ -1163,13 +1110,12 @@ const extensionIridescence = (data, material, textures) => {
     }
 };
 
-const createMaterial = (gltfMaterial, textures, flipV) => {
+const createMaterial = (gltfMaterial, textures) => {
     const material = new StandardMaterial();
 
     // glTF doesn't define how to occlude specular
     material.occludeSpecular = SPECOCC_AO;
 
-    material.diffuseTint = true;
     material.diffuseVertexColor = true;
 
     material.specularTint = true;
@@ -1692,7 +1638,7 @@ const createSkins = (device, gltf, nodes, bufferViews) => {
     });
 };
 
-const createMeshes = (device, gltf, bufferViews, flipV, options) => {
+const createMeshes = (device, gltf, bufferViews, options) => {
     // dictionary of vertex buffers to avoid duplicates
     const vertexBufferDict = {};
     const meshVariants = {};
@@ -1701,7 +1647,7 @@ const createMeshes = (device, gltf, bufferViews, flipV, options) => {
 
     const valid = (!options.skipMeshes && gltf?.meshes?.length && gltf?.accessors?.length && gltf?.bufferViews?.length);
     const meshes = valid ? gltf.meshes.map((gltfMesh) => {
-        return createMesh(device, gltfMesh, gltf.accessors, bufferViews, flipV, vertexBufferDict, meshVariants, meshDefaultMaterials, options, promises);
+        return createMesh(device, gltfMesh, gltf.accessors, bufferViews, vertexBufferDict, meshVariants, meshDefaultMaterials, options, promises);
     }) : [];
 
     return {
@@ -1712,7 +1658,7 @@ const createMeshes = (device, gltf, bufferViews, flipV, options) => {
     };
 };
 
-const createMaterials = (gltf, textures, options, flipV) => {
+const createMaterials = (gltf, textures, options) => {
     if (!gltf.hasOwnProperty('materials') || gltf.materials.length === 0) {
         return [];
     }
@@ -1725,7 +1671,7 @@ const createMaterials = (gltf, textures, options, flipV) => {
         if (preprocess) {
             preprocess(gltfMaterial);
         }
-        const material = process(gltfMaterial, textures, flipV);
+        const material = process(gltfMaterial, textures);
         if (postprocess) {
             postprocess(gltfMaterial, material);
         }
@@ -1936,14 +1882,14 @@ const createResources = async (device, gltf, bufferViews, textures, options) => 
         preprocess(gltf);
     }
 
-    // The original version of FACT generated incorrectly flipped V texture
-    // coordinates. We must compensate by flipping V in this case. Once
-    // all models have been re-exported we can remove this flag.
-    const flipV = gltf.asset && gltf.asset.generator === 'PlayCanvas';
 
-    // We'd like to remove the flipV code at some point.
-    if (flipV) {
-        Debug.warn('glTF model may have flipped UVs. Please reconvert.');
+    // The very first version of FACT generated incorrectly flipped V texture
+    // coordinates. Since this first version was only ever available behind an
+    // editor flag there should be very few such GLB models in the wild.
+    // Instead of bloating the engine forevermore with code to handle this case,
+    // we now issue a warning and prompt user to reconvert their FBX.
+    if (gltf.asset && gltf.asset.generator === 'PlayCanvas') {
+        Debug.warn(`glTF model may have been generated with flipped UVs. Please reconvert.`);
     }
 
     const nodes = createNodes(gltf, options);
@@ -1954,13 +1900,13 @@ const createResources = async (device, gltf, bufferViews, textures, options) => 
 
     // buffer data must have finished loading in order to create meshes and animations
     const bufferViewData = await Promise.all(bufferViews);
-    const { meshes, meshVariants, meshDefaultMaterials, promises } = createMeshes(device, gltf, bufferViewData, flipV, options);
+    const { meshes, meshVariants, meshDefaultMaterials, promises } = createMeshes(device, gltf, bufferViewData, options);
     const animations = createAnimations(gltf, nodes, bufferViewData, options);
 
     // textures must have finished loading in order to create materials
     const textureAssets = await Promise.all(textures);
     const textureInstances = textureAssets.map(t => t.resource);
-    const materials = createMaterials(gltf, textureInstances, options, flipV);
+    const materials = createMaterials(gltf, textureInstances, options);
     const skins = createSkins(device, gltf, nodes, bufferViewData);
 
     // create renders to wrap meshes

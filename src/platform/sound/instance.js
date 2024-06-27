@@ -299,8 +299,8 @@ class SoundInstance extends EventHandler {
     }
 
     /**
-     * Gets or sets the current time of the sound that is playing. If the value provided is bigger
-     * than the duration of the instance it will wrap from the beginning.
+     * Sets the current time of the sound that is playing. If the value provided is bigger than the
+     * duration of the instance it will wrap from the beginning.
      *
      * @type {number}
      */
@@ -326,6 +326,11 @@ class SoundInstance extends EventHandler {
         }
     }
 
+    /**
+     * Gets the current time of the sound that is playing.
+     *
+     * @type {number}
+     */
     get currentTime() {
         // if the user has set the currentTime and we have not used it yet
         // then just return that
@@ -351,7 +356,7 @@ class SoundInstance extends EventHandler {
     }
 
     /**
-     * The duration of the sound that the instance will play starting from startTime.
+     * Sets the duration of the sound that the instance will play starting from startTime.
      *
      * @type {number}
      */
@@ -366,6 +371,11 @@ class SoundInstance extends EventHandler {
         }
     }
 
+    /**
+     * Gets the duration of the sound that the instance will play starting from startTime.
+     *
+     * @type {number}
+     */
     get duration() {
         if (!this._sound) {
             return 0;
@@ -377,7 +387,7 @@ class SoundInstance extends EventHandler {
     }
 
     /**
-     * Returns true if the instance is currently paused.
+     * Gets whether the instance is currently paused.
      *
      * @type {boolean}
      */
@@ -386,7 +396,7 @@ class SoundInstance extends EventHandler {
     }
 
     /**
-     * Returns true if the instance is currently playing.
+     * Gets whether the instance is currently playing.
      *
      * @type {boolean}
      */
@@ -395,7 +405,7 @@ class SoundInstance extends EventHandler {
     }
 
     /**
-     * Returns true if the instance is currently stopped.
+     * Gets whether the instance is currently stopped.
      *
      * @type {boolean}
      */
@@ -404,7 +414,7 @@ class SoundInstance extends EventHandler {
     }
 
     /**
-     * Returns true if the instance is currently suspended because the window is not focused.
+     * Gets whether the instance is currently suspended because the window is not focused.
      *
      * @type {boolean}
      */
@@ -413,7 +423,7 @@ class SoundInstance extends EventHandler {
     }
 
     /**
-     * If true the instance will restart when it finishes playing.
+     * Sets whether the instance will restart when it finishes playing.
      *
      * @type {boolean}
      */
@@ -424,12 +434,17 @@ class SoundInstance extends EventHandler {
         }
     }
 
+    /**
+     * Gets whether the instance will restart when it finishes playing.
+     *
+     * @type {boolean}
+     */
     get loop() {
         return this._loop;
     }
 
     /**
-     * The pitch modifier to play the sound with. Must be larger than 0.01.
+     * Sets the pitch modifier to play the sound with. Must be larger than 0.01.
      *
      * @type {number}
      */
@@ -446,12 +461,17 @@ class SoundInstance extends EventHandler {
         }
     }
 
+    /**
+     * Gets the pitch modifier to play the sound with.
+     *
+     * @type {number}
+     */
     get pitch() {
         return this._pitch;
     }
 
     /**
-     * The sound resource that the instance will play.
+     * Sets the sound resource that the instance will play.
      *
      * @type {import('./sound.js').Sound}
      */
@@ -465,12 +485,17 @@ class SoundInstance extends EventHandler {
         }
     }
 
+    /**
+     * Gets the sound resource that the instance will play.
+     *
+     * @type {import('./sound.js').Sound}
+     */
     get sound() {
         return this._sound;
     }
 
     /**
-     * The start time from which the sound will start playing.
+     * Sets the start time from which the sound will start playing.
      *
      * @type {number}
      */
@@ -485,12 +510,17 @@ class SoundInstance extends EventHandler {
         }
     }
 
+    /**
+     * Gets the start time from which the sound will start playing.
+     *
+     * @type {number}
+     */
     get startTime() {
         return this._startTime;
     }
 
     /**
-     * The volume modifier to play the sound with. In range 0-1.
+     * Sets the volume modifier to play the sound with. In range 0-1.
      *
      * @type {number}
      */
@@ -502,6 +532,11 @@ class SoundInstance extends EventHandler {
         }
     }
 
+    /**
+     * Gets the volume modifier to play the sound with. In range 0-1.
+     *
+     * @type {number}
+     */
     get volume() {
         return this._volume;
     }

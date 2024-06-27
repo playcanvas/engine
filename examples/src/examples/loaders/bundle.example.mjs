@@ -7,10 +7,8 @@ import { deviceType, rootPath } from 'examples/utils';
 // : cd engine/examples/
 // : tar cvf assets/bundles/bundle.tar assets/models/geometry-camera-light.glb assets/models/torus.png
 
-const canvas = document.getElementById('application-canvas');
-if (!(canvas instanceof HTMLCanvasElement)) {
-    throw new Error('No canvas found');
-}
+const canvas = /** @type {HTMLCanvasElement} */ (document.getElementById('application-canvas'));
+window.focus();
 
 const assets = {
     bundle: new pc.Asset('bundle', 'bundle', { url: '/static/assets/bundles/bundle.tar' }),
@@ -29,6 +27,7 @@ const gfxOptions = {
 
 const device = await pc.createGraphicsDevice(canvas, gfxOptions);
 device.maxPixelRatio = Math.min(window.devicePixelRatio, 2);
+
 const createOptions = new pc.AppOptions();
 createOptions.graphicsDevice = device;
 

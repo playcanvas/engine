@@ -1,10 +1,8 @@
 import * as pc from 'playcanvas';
 import { deviceType, rootPath } from 'examples/utils';
 
-const canvas = document.getElementById('application-canvas');
-if (!(canvas instanceof HTMLCanvasElement)) {
-    throw new Error('No canvas found');
-}
+const canvas = /** @type {HTMLCanvasElement} */ (document.getElementById('application-canvas'));
+window.focus();
 
 const assets = {
     helipad: new pc.Asset(
@@ -26,6 +24,7 @@ const gfxOptions = {
 
 const device = await pc.createGraphicsDevice(canvas, gfxOptions);
 device.maxPixelRatio = Math.min(window.devicePixelRatio, 2);
+
 const createOptions = new pc.AppOptions();
 createOptions.graphicsDevice = device;
 createOptions.mouse = new pc.Mouse(document.body);
@@ -52,7 +51,7 @@ const assetListLoader = new pc.AssetListLoader(Object.values(assets), app.assets
 assetListLoader.load(() => {
     app.start();
 
-    app.scene.toneMapping = pc.TONEMAP_ACES;
+    app.scene.rendering.toneMapping = pc.TONEMAP_ACES;
     app.scene.envAtlas = assets.helipad.resource;
     app.scene.skyboxMip = 1;
 
@@ -98,7 +97,6 @@ assetListLoader.load(() => {
     material.glossMapChannel = 'g';
     material.normalMap = assets.normal.resource;
     material.diffuse = new pc.Color(0.6, 0.6, 0.9);
-    material.diffuseTint = true;
     material.metalness = 1.0;
     material.gloss = 0.9;
     material.bumpiness = 0.7;
@@ -115,7 +113,6 @@ assetListLoader.load(() => {
     clearCoatMaterial.glossMapChannel = 'g';
     clearCoatMaterial.normalMap = assets.normal.resource;
     clearCoatMaterial.diffuse = new pc.Color(0.6, 0.6, 0.9);
-    clearCoatMaterial.diffuseTint = true;
     clearCoatMaterial.metalness = 1.0;
     clearCoatMaterial.gloss = 0.9;
     clearCoatMaterial.bumpiness = 0.7;

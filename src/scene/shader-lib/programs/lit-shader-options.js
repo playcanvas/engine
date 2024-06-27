@@ -103,13 +103,6 @@ class LitShaderOptions {
     pixelSnap = false;
 
     /**
-     * The value of {@link StandardMaterial#shadingModel}.
-     *
-     * @type {number}
-     */
-    shadingModel = 0;
-
-    /**
      * If ambient spherical harmonics are used. Ambient SH replace prefiltered cubemap ambient on
      * certain platforms (mostly Android) for performance reasons.
      *
@@ -192,13 +185,6 @@ class LitShaderOptions {
      * @type {number}
      */
     cubeMapProjection = 0;
-
-    /**
-     * The value of {@link StandardMaterial#conserveEnergy}.
-     *
-     * @type {boolean}
-     */
-    conserveEnergy = false;
 
     /**
      * If any specular or reflections are needed at all.

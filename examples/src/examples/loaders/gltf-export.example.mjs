@@ -2,16 +2,11 @@ import * as pc from 'playcanvas';
 import { data } from 'examples/observer';
 import { deviceType, rootPath } from 'examples/utils';
 
-const canvas = document.getElementById('application-canvas');
-if (!(canvas instanceof HTMLCanvasElement)) {
-    throw new Error('No canvas found');
-}
+const canvas = /** @type {HTMLCanvasElement} */ (document.getElementById('application-canvas'));
+window.focus();
 
 // add AR button to download the glb file
-const appInner = document.getElementById('appInner');
-if (!(appInner instanceof HTMLElement)) {
-    throw new Error('No appInner found');
-}
+const appInner = /** @type {HTMLElement} */ (document.getElementById('appInner'));
 const div = document.createElement('div');
 div.style.cssText = 'width:100%; position:absolute; top:10px';
 div.innerHTML = `<div style="text-align: center;">
@@ -28,7 +23,7 @@ pc.WasmModule.setConfig('DracoDecoderModule', {
     fallbackUrl: rootPath + '/static/lib/draco/draco.js'
 });
 await new Promise((resolve) => {
-    pc.WasmModule.getInstance('DracoDecoderModule', () => resolve());
+    pc.WasmModule.getInstance('DracoDecoderModule', () => resolve(true));
 });
 
 // initialize basis to allow to load compressed textures
@@ -60,6 +55,7 @@ const gfxOptions = {
 
 const device = await pc.createGraphicsDevice(canvas, gfxOptions);
 device.maxPixelRatio = Math.min(window.devicePixelRatio, 2);
+
 
 const createOptions = new pc.AppOptions();
 createOptions.graphicsDevice = device;
@@ -145,7 +141,7 @@ assetListLoader.load(() => {
 
     // set skybox
     app.scene.envAtlas = assets.helipad.resource;
-    app.scene.toneMapping = pc.TONEMAP_ACES;
+    app.scene.rendering.toneMapping = pc.TONEMAP_ACES;
     app.scene.skyboxMip = 1;
     app.scene.exposure = 1.5;
 

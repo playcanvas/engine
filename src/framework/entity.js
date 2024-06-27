@@ -6,10 +6,49 @@ import { GraphNode } from '../scene/graph-node.js';
 import { getApplication } from './globals.js';
 
 /**
+ * @typedef {import('./components/component.js').Component} Component
+ */
+
+/**
+ * @param {Component} a - First object with `order` property.
+ * @param {Component} b - Second object with `order` property.
+ * @returns {number} A number indicating the relative position.
+ * @ignore
+ */
+const cmpStaticOrder = (a, b) => a.constructor.order - b.constructor.order;
+
+/**
+ * @param {Array<Component>} arr - Array to be sorted in place where each element contains
+ * an object with a static `order` property.
+ * @returns {Array<Component>} In place sorted array.
+ * @ignore
+ */
+const sortStaticOrder = arr => arr.sort(cmpStaticOrder);
+
+/**
  * @type {GraphNode[]}
  * @ignore
  */
 const _enableList = [];
+
+/**
+ * @type {Array<Array<Component>>}
+ * @ignore
+ */
+const tmpPool = [];
+
+const getTempArray = () => {
+    return tmpPool.pop() ?? [];
+};
+
+/**
+ * @param {Array<Component>} a - Array to return back to pool.
+ * @ignore
+ */
+const releaseTempArray = (a) => {
+    a.length = 0;
+    tmpPool.push(a);
+};
 
 /**
  * The Entity is the core primitive of a PlayCanvas game. Generally speaking an object in your game
@@ -405,7 +444,7 @@ class Entity extends GraphNode {
      * has one. Returns undefined otherwise.
      * @example
      * // Get the first found "playerController" instance in the hierarchy tree that starts with this entity
-     * var controller = entity.findScript("playerController");
+     * const controller = entity.findScript("playerController");
      */
     findScript(nameOrType) {
         const entity = this.findOne(node => node.c?.script?.has(nameOrType));
@@ -420,7 +459,7 @@ class Entity extends GraphNode {
      * descendants. Returns empty array if none found.
      * @example
      * // Get all "playerController" instances in the hierarchy tree that starts with this entity
-     * var controllers = entity.findScripts("playerController");
+     * const controllers = entity.findScripts("playerController");
      */
     findScripts(nameOrType) {
         const entities = this.find(node => node.c?.script?.has(nameOrType));
@@ -503,30 +542,30 @@ class Entity extends GraphNode {
     _onHierarchyStateChanged(enabled) {
         super._onHierarchyStateChanged(enabled);
 
-        // enable / disable all the components
-        const components = this.c;
-        for (const type in components) {
-            if (components.hasOwnProperty(type)) {
-                const component = components[type];
-                if (component.enabled) {
-                    if (enabled) {
-                        component.onEnable();
-                    } else {
-                        component.onDisable();
-                    }
+        const components = this._getSortedComponents();
+        for (let i = 0; i < components.length; i++) {
+            const component = components[i];
+            if (component.enabled) {
+                if (enabled) {
+                    component.onEnable();
+                } else {
+                    component.onDisable();
                 }
             }
         }
+
+        releaseTempArray(components);
     }
 
     /** @private */
     _onHierarchyStatePostChanged() {
         // post enable all the components
-        const components = this.c;
-        for (const type in components) {
-            if (components.hasOwnProperty(type))
-                components[type].onPostStateChange();
+        const components = this._getSortedComponents();
+        for (let i = 0; i < components.length; i++) {
+            components[i].onPostStateChange();
         }
+
+        releaseTempArray(components);
     }
 
     /**
@@ -601,6 +640,25 @@ class Entity extends GraphNode {
         return clone;
     }
 
+    _getSortedComponents() {
+        const components = this.c;
+        const sortedArray = getTempArray();
+        let needSort = 0;
+        for (const type in components) {
+            if (components.hasOwnProperty(type)) {
+                const component = components[type];
+                needSort |= component.constructor.order !== 0;
+                sortedArray.push(component);
+            }
+        }
+
+        if (needSort && sortedArray.length > 1) {
+            sortStaticOrder(sortedArray);
+        }
+
+        return sortedArray;
+    }
+
     /**
      * @param {Object<string, Entity>} duplicatedIdsMap - A map of original entity GUIDs to cloned
      * entities.
@@ -667,7 +725,7 @@ function resolveDuplicatedEntityReferenceProperties(oldSubtreeRoot, oldEntity, n
         }
 
         // Handle entity script attributes
-        if (components.script && !newEntity._app.useLegacyScriptAttributeCloning) {
+        if (components.script) {
             newEntity.script.resolveDuplicatedEntityReferenceProperties(components.script, duplicatedIdsMap);
         }
 
