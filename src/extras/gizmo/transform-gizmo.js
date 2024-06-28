@@ -84,7 +84,6 @@ export const SHAPEAXIS_XYZ = 'xyz';
  */
 export const SHAPEAXIS_FACE = 'face';
 
-
 /**
  * Converts Color4 to Color3.
  *
@@ -314,7 +313,7 @@ class TransformGizmo extends Gizmo {
             this._drawGuideLines();
         });
 
-        this.on('pointer:down', (x, y, meshInstance) => {
+        this.on(Gizmo.EVENT_POINTERDOWN, (x, y, meshInstance) => {
             const shape = this._shapeMap.get(meshInstance);
             if (shape?.disabled) {
                 return;
@@ -339,7 +338,7 @@ class TransformGizmo extends Gizmo {
             this.fire(TransformGizmo.EVENT_TRANSFORMSTART);
         });
 
-        this.on('pointer:move', (x, y, meshInstance) => {
+        this.on(Gizmo.EVENT_POINTERMOVE, (x, y, meshInstance) => {
             const shape = this._shapeMap.get(meshInstance);
             if (shape?.disabled) {
                 return;
@@ -360,7 +359,7 @@ class TransformGizmo extends Gizmo {
             this._hoverIsPlane = false;
         });
 
-        this.on('pointer:up', () => {
+        this.on(Gizmo.EVENT_POINTERUP, () => {
             if (!this._dragging) {
                 return;
             }
@@ -371,12 +370,12 @@ class TransformGizmo extends Gizmo {
             this._selectedIsPlane = false;
         });
 
-        this.on('nodes:detach', () => {
+        this.on(Gizmo.EVENT_NODESDETACH, () => {
             this.snap = false;
             this._hoverAxis = '';
             this._hoverIsPlane = false;
-            this._hover(null);
-            this.fire('pointer:up');
+            this._hover();
+            this.fire(Gizmo.EVENT_POINTERUP);
         });
     }
 
@@ -404,7 +403,7 @@ class TransformGizmo extends Gizmo {
      * @type {Color}
      */
     set xAxisColor(value) {
-        this._updateAxisColor('x', value);
+        this._updateAxisColor(SHAPEAXIS_X, value);
     }
 
     /**
@@ -422,7 +421,7 @@ class TransformGizmo extends Gizmo {
      * @type {Color}
      */
     set yAxisColor(value) {
-        this._updateAxisColor('y', value);
+        this._updateAxisColor(SHAPEAXIS_Y, value);
     }
 
     /**
@@ -440,7 +439,7 @@ class TransformGizmo extends Gizmo {
      * @type {Color}
      */
     set zAxisColor(value) {
-        this._updateAxisColor('z', value);
+        this._updateAxisColor(SHAPEAXIS_Z, value);
     }
 
     /**
@@ -480,12 +479,22 @@ class TransformGizmo extends Gizmo {
         return this._colorAlpha;
     }
 
+    /**
+     * @param {Color} color - The color to set.
+     * @returns {Color} - The color with alpha applied.
+     * @private
+     */
     _colorSemi(color) {
         const clone = color.clone();
         clone.a = this._colorAlpha;
         return clone;
     }
 
+    /**
+     * @param {string} axis - The axis to update.
+     * @param {any} value - The value to set.
+     * @private
+     */
     _updateAxisColor(axis, value) {
         const color3 = color3from4(value);
         const color4 = this._colorSemi(value);
@@ -499,6 +508,11 @@ class TransformGizmo extends Gizmo {
         }
     }
 
+    /**
+     * @param {import('../../scene/mesh-instance.js').MeshInstance} [meshInstance] - The mesh instance.
+     * @returns {string} - The axis.
+     * @private
+     */
     _getAxis(meshInstance) {
         if (!meshInstance) {
             return '';
@@ -506,6 +520,11 @@ class TransformGizmo extends Gizmo {
         return meshInstance.node.name.split(":")[1];
     }
 
+    /**
+     * @param {import('../../scene/mesh-instance.js').MeshInstance} [meshInstance] - The mesh instance.
+     * @returns {boolean} - Whether the mesh instance is a plane.
+     * @private
+     */
     _getIsPlane(meshInstance) {
         if (!meshInstance) {
             return false;
@@ -513,13 +532,17 @@ class TransformGizmo extends Gizmo {
         return meshInstance.node.name.indexOf('plane') !== -1;
     }
 
+    /**
+     * @param {import('../../scene/mesh-instance.js').MeshInstance} [meshInstance] - The mesh instance.
+     * @private
+     */
     _hover(meshInstance) {
         if (this._dragging) {
             return;
         }
         this._hoverAxis = this._getAxis(meshInstance);
         this._hoverIsPlane = this._getIsPlane(meshInstance);
-        const shape = this._shapeMap.get(meshInstance) || null;
+        const shape = meshInstance ? this._shapeMap.get(meshInstance) || null : null;
         if (shape === this._hoverShape) {
             return;
         }
@@ -531,9 +554,14 @@ class TransformGizmo extends Gizmo {
             shape.hover(true);
             this._hoverShape = shape;
         }
-        this.fire('render:update');
+        this.fire(Gizmo.EVENT_RENDERUPDATE);
     }
 
+    /**
+     * @param {Vec3} mouseWPos - The mouse world position.
+     * @returns {Ray} - The ray.
+     * @protected
+     */
     _createRay(mouseWPos) {
         const cameraPos = this._camera.entity.getPosition();
         const cameraTransform = this._camera.entity.getWorldTransform();
@@ -551,6 +579,13 @@ class TransformGizmo extends Gizmo {
         return ray;
     }
 
+    /**
+     * @param {string} axis - The axis to create the plane for.
+     * @param {boolean} isFacing - Whether the axis is facing the camera.
+     * @param {boolean} isLine - Whether the axis is a line.
+     * @returns {Plane} - The plane.
+     * @protected
+     */
     _createPlane(axis, isFacing, isLine) {
         const cameraPos = this._camera.entity.getPosition();
 
@@ -575,6 +610,11 @@ class TransformGizmo extends Gizmo {
         return tmpP1.setFromPointNormal(this._rootStartPos, normal);
     }
 
+    /**
+     * @param {Vec3} point - The point to project.
+     * @param {string} axis - The axis to project to.
+     * @protected
+     */
     _projectToAxis(point, axis) {
         // set normal to axis and project position from plane onto normal
         tmpV1.set(0, 0, 0);
@@ -587,6 +627,14 @@ class TransformGizmo extends Gizmo {
         point[axis] = v;
     }
 
+    /**
+     * @param {number} x - The x coordinate.
+     * @param {number} y - The y coordinate.
+     * @param {boolean} isFacing - Whether the axis is facing the camera.
+     * @param {boolean} isLine - Whether the axis is a line.
+     * @returns {{ point: Vec3, angle: number }} - The point and angle.
+     * @protected
+     */
     _screenToPoint(x, y, isFacing = false, isLine = false) {
         const mouseWPos = this._camera.screenToWorld(x, y, 1);
 
@@ -602,6 +650,9 @@ class TransformGizmo extends Gizmo {
         return { point, angle };
     }
 
+    /**
+     * @private
+     */
     _drawGuideLines() {
         const gizmoPos = this.root.getPosition();
         const gizmoRot = tmpQ1.copy(this.root.getRotation());
@@ -609,7 +660,7 @@ class TransformGizmo extends Gizmo {
         const checkIsPlane = this._hoverIsPlane || this._selectedIsPlane;
         for (let i = 0; i < VEC3_AXES.length; i++) {
             const axis = VEC3_AXES[i];
-            if (checkAxis === 'xyz') {
+            if (checkAxis === SHAPEAXIS_XYZ) {
                 this._drawSpanLine(gizmoPos, gizmoRot, axis);
                 continue;
             }
@@ -625,6 +676,12 @@ class TransformGizmo extends Gizmo {
         }
     }
 
+    /**
+     * @param {Vec3} pos - The position.
+     * @param {Quat} rot - The rotation.
+     * @param {string} axis - The axis.
+     * @private
+     */
     _drawSpanLine(pos, rot, axis) {
         tmpV1.set(0, 0, 0);
         tmpV1[axis] = 1;
@@ -635,6 +692,9 @@ class TransformGizmo extends Gizmo {
         this._app.drawLine(tmpV1.add(pos), tmpV2.add(pos), this._guideColors[axis], true);
     }
 
+    /**
+     * @protected
+     */
     _createTransform() {
         // shapes
         for (const key in this._shapes) {
