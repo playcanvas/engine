@@ -19,6 +19,7 @@ const tmpQ2 = new Quat();
 // constants
 const FACING_THRESHOLD = 0.9;
 const ROTATE_SCALE = 900;
+const GUIDE_ANGLE_COLOR = new Color(0, 0, 0, 0.3);
 
 /**
  * Rotation gizmo.
@@ -91,7 +92,7 @@ class RotateGizmo extends TransformGizmo {
      * @type {Color}
      * @private
      */
-    _guideAngleStartColor = new Color(0, 0, 0, 0.3);
+    _guideAngleStartColor = GUIDE_ANGLE_COLOR.clone();
 
     /**
      * Internal vector for the start point of the guide line angle.
