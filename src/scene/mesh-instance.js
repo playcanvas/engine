@@ -156,15 +156,6 @@ class ShaderInstance {
  */
 class MeshInstance {
     /**
-     * Enable rendering for this mesh instance. Use visible property to enable/disable
-     * rendering without overhead of removing from scene. But note that the mesh instance is
-     * still in the hierarchy and still in the draw call list.
-     *
-     * @type {boolean}
-     */
-    visible = true;
-
-    /**
      * Enable shadow casting for this mesh instance. Use this property to enable/disable
      * shadow casting without overhead of removing from scene. Note that this property does not
      * add the mesh instance to appropriate list of shadow casters on a {@link Layer}, but
@@ -176,28 +167,82 @@ class MeshInstance {
     castShadow = false;
 
     /**
-     * True if the material of the mesh instance is transparent. Optimization to avoid accessing the
-     * material. Updated by the material instance itself.
+     * Controls whether the mesh instance can be culled by frustum culling (see
+     * {@link CameraComponent#frustumCulling}). Defaults to true.
      *
+     * @type {boolean}
+     */
+    cull = true;
+
+    /**
+     * Determines the rendering order of mesh instances. Only used when mesh instances are added to
+     * a {@link Layer} with {@link Layer#opaqueSortMode} or {@link Layer#transparentSortMode}
+     * (depending on the material) set to {@link SORTMODE_MANUAL}.
+     *
+     * @type {number}
+     */
+    drawOrder = 0;
+
+    /**
+     * The graph node defining the transform for this instance.
+     *
+     * @type {GraphNode}
+     */
+    node;
+
+    /**
+     * Enable rendering for this mesh instance. Use visible property to enable/disable
+     * rendering without overhead of removing from scene. But note that the mesh instance is
+     * still in the hierarchy and still in the draw call list.
+     *
+     * @type {boolean}
+     */
+    visible = true;
+
+    /**
+     * Read this value in {@link Layer#onPostCull} to determine if the object is actually going to
+     * be rendered.
+     *
+     * @type {boolean}
+     */
+    visibleThisFrame = false;
+
+    /**
+     * Negative scale batching support.
+     *
+     * @type {number}
      * @ignore
      */
-    transparent = false;
+    flipFacesFactor = 1;
 
     /**
-     * @type {import('./materials/material.js').Material|null}
-     * @private
+     * @type {import('./gsplat/gsplat-instance.js').GSplatInstance|null}
+     * @ignore
      */
-    _material = null;
-
-    /**
-     * The cache of shaders, indexed by a hash value.
-     *
-     * @type {Map<number, ShaderInstance>}
-     */
-    _shaderCache = new Map();
+    gsplatInstance = null;
 
     /** @ignore */
     id = id++;
+
+    /**
+     * Custom function used to customize culling (e.g. for 2D UI elements).
+     *
+     * @type {Function|null}
+     * @ignore
+     */
+    isVisibleFunc = null;
+
+    /**
+     * @type {InstancingData|null}
+     * @ignore
+     */
+    instancingData = null;
+
+    /**
+     * @type {Record<string, {scopeId: import('../platform/graphics/scope-id.js').ScopeId|null, data: any, passFlags: number}>}
+     * @ignore
+     */
+    parameters = {};
 
     /**
      * True if the mesh instance is pickable by the {@link Picker}. Defaults to true.
@@ -206,6 +251,105 @@ class MeshInstance {
      * @ignore
      */
     pick = true;
+
+    /**
+     * The stencil parameters for front faces or null if no stencil is enabled.
+     *
+     * @type {import('../platform/graphics/stencil-parameters.js').StencilParameters|null}
+     * @ignore
+     */
+    stencilFront = null;
+
+    /**
+     * The stencil parameters for back faces or null if no stencil is enabled.
+     *
+     * @type {import('../platform/graphics/stencil-parameters.js').StencilParameters|null}
+     * @ignore
+     */
+    stencilBack = null;
+
+    /**
+     * True if the material of the mesh instance is transparent. Optimization to avoid accessing the
+     * material. Updated by the material instance itself.
+     *
+     * @ignore
+     */
+    transparent = false;
+
+    /** @private */
+    _aabb = new BoundingBox();
+
+    /** @private */
+    _aabbVer = -1;
+
+    /** @private */
+    _aabbMeshVer = -1;
+
+    /**
+     * @type {BoundingBox|null}
+     * @private
+     */
+    _customAabb = null;
+
+    /** @private */
+    _updateAabb = true;
+
+    /** @private */
+    _updateAabbFunc = null;
+
+    /** @private */
+    _key = [0, 0];
+
+    /** @private */
+    _layer = LAYER_WORLD;
+
+    /**
+     * @type {import('./materials/material.js').Material|null}
+     * @private
+     */
+    _material = null;
+
+    /**
+     * @type {import('./skin-instance.js').SkinInstance|null}
+     * @private
+     */
+    _skinInstance = null;
+
+    /**
+     * @type {import('./morph-instance.js').MorphInstance|null}
+     * @private
+     */
+    _morphInstance = null;
+
+    /** @private */
+    _receiveShadow = true;
+
+    /** @private */
+    _renderStyle = RENDERSTYLE_SOLID;
+
+    /** @private */
+    _screenSpace = false;
+
+    /**
+     * The cache of shaders, indexed by a hash value.
+     *
+     * @type {Map<number, ShaderInstance>}
+     * @private
+     */
+    _shaderCache = new Map();
+
+    /**
+     * 2 byte toggles, 2 bytes light mask; Default value is no toggles and mask = pc.MASK_AFFECT_DYNAMIC
+     *
+     * @private
+     */
+    _shaderDefs = MASK_AFFECT_DYNAMIC << 16;
+
+    /**
+     * @type {CalculateSortDistanceCallback|null}
+     * @private
+     */
+    _calculateSortDistance = null;
 
     /**
      * Create a new MeshInstance instance.
@@ -240,19 +384,11 @@ class MeshInstance {
             node = temp;
         }
 
-        this._key = [0, 0];
-
-        /**
-         * The graph node defining the transform for this instance.
-         *
-         * @type {GraphNode}
-         */
         this.node = node;           // The node that defines the transform of the mesh instance
         this._mesh = mesh;          // The mesh that this instance renders
         mesh.incRefCount();
         this.material = material;   // The material with which to render this instance
 
-        this._shaderDefs = MASK_AFFECT_DYNAMIC << 16; // 2 byte toggles, 2 bytes light mask; Default value is no toggles and mask = pc.MASK_AFFECT_DYNAMIC
         if (mesh.vertexBuffer) {
             const format = mesh.vertexBuffer.format;
             this._shaderDefs |= format.hasUv0 ? SHADERDEF_UV0 : 0;
@@ -261,87 +397,8 @@ class MeshInstance {
             this._shaderDefs |= format.hasTangents ? SHADERDEF_TANGENTS : 0;
         }
 
-        // Render options
-        this.layer = LAYER_WORLD; // legacy
-        /** @private */
-        this._renderStyle = RENDERSTYLE_SOLID;
-        this._receiveShadow = true;
-        this._screenSpace = false;
-
-        /**
-         * Controls whether the mesh instance can be culled by frustum culling
-         * ({@link CameraComponent#frustumCulling}). Defaults to true.
-         *
-         * @type {boolean}
-         */
-        this.cull = true;
-
-        this._updateAabb = true;
-        this._updateAabbFunc = null;
-        this._calculateSortDistance = null;
-
         // 64-bit integer key that defines render order of this mesh instance
         this.updateKey();
-
-        /**
-         * @type {import('./skin-instance.js').SkinInstance|null}
-         * @private
-         */
-        this._skinInstance = null;
-
-        /**
-         * @type {import('./morph-instance.js').MorphInstance|null}
-         * @private
-         */
-        this._morphInstance = null;
-
-        /**
-         * @type {import('./gsplat/gsplat-instance.js').GSplatInstance|null}
-         * @ignore
-         */
-        this.gsplatInstance = null;
-
-        this.instancingData = null;
-
-        /**
-         * @type {BoundingBox|null}
-         * @private
-         */
-        this._customAabb = null;
-
-        // World space AABB
-        this.aabb = new BoundingBox();
-        this._aabbVer = -1;
-        this._aabbMeshVer = -1;
-
-        /**
-         * Use this value to affect rendering order of mesh instances. Only used when mesh
-         * instances are added to a {@link Layer} with {@link Layer#opaqueSortMode} or
-         * {@link Layer#transparentSortMode} (depending on the material) set to
-         * {@link SORTMODE_MANUAL}.
-         *
-         * @type {number}
-         */
-        this.drawOrder = 0;
-
-        /**
-         * Read this value in {@link Layer#onPostCull} to determine if the object is actually going
-         * to be rendered.
-         *
-         * @type {boolean}
-         */
-        this.visibleThisFrame = false;
-
-        // custom function used to customize culling (e.g. for 2D UI elements)
-        this.isVisibleFunc = null;
-
-        this.parameters = {};
-
-        this.stencilFront = null;
-        this.stencilBack = null;
-
-        // Negative scale batching support
-        this.flipFacesFactor = 1;
     }
 
     /**
@@ -629,6 +686,10 @@ class MeshInstance {
         return this._layer;
     }
 
+    /**
+     * @param {number} shaderDefs - The shader definitions to set.
+     * @private
+     */
     _updateShaderDefs(shaderDefs) {
         if (shaderDefs !== this._shaderDefs) {
             this._shaderDefs = shaderDefs;
@@ -834,8 +895,14 @@ class MeshInstance {
         }
     }
 
-    // test if meshInstance is visible by camera. It requires the frustum of the camera to be up to date, which forward-renderer
-    // takes care of. This function should  not be called elsewhere.
+    /**
+     * Test if meshInstance is visible by camera. It requires the frustum of the camera to be up to
+     * date, which forward-renderer takes care of. This function should  not be called elsewhere.
+     *
+     * @param {import('./camera.js').Camera} camera - The camera to test visibility against.
+     * @returns {boolean} - True if the mesh instance is visible by the camera, false otherwise.
+     * @ignore
+     */
     _isVisible(camera) {
 
         if (this.visible) {
@@ -848,7 +915,7 @@ class MeshInstance {
             _tempSphere.center = this.aabb.center;  // this line evaluates aabb
             _tempSphere.radius = this._aabb.halfExtents.length();
 
-            return camera.frustum.containsSphere(_tempSphere);
+            return camera.frustum.containsSphere(_tempSphere) > 0;
         }
 
         return false;
@@ -967,10 +1034,16 @@ class MeshInstance {
         }
     }
 
-    // a wrapper over settings parameter specifically for realtime baked lightmaps. This handles reference counting of lightmaps
-    // and releases them when no longer referenced
+    /**
+     * A wrapper over settings parameter specifically for realtime baked lightmaps. This handles
+     * reference counting of lightmaps and releases them when no longer referenced.
+     *
+     * @param {string} name - The name of the parameter to set.
+     * @param {import('../platform/graphics/texture.js').Texture|null} texture - The lightmap
+     * texture to set.
+     * @ignore
+     */
     setRealtimeLightmap(name, texture) {
-
         // no change
         const old = this.getParameter(name);
         if (old === texture)
@@ -1001,7 +1074,15 @@ class MeshInstance {
         }
     }
 
-    // used to apply parameters from this mesh instance into scope of uniforms, called internally by forward-renderer
+    /**
+     * Used to apply parameters from this mesh instance into scope of uniforms, called internally
+     * by forward-renderer.
+     *
+     * @param {import('../platform/graphics/graphics-device.js').GraphicsDevice} device - The
+     * graphics device.
+     * @param {number} passFlag - The pass flag for the current render pass.
+     * @ignore
+     */
     setParameters(device, passFlag) {
         const parameters = this.parameters;
         for (const paramName in parameters) {
@@ -1015,6 +1096,10 @@ class MeshInstance {
         }
     }
 
+    /**
+     * @param {boolean} value - True to enable lightmapped rendering, false to disable.
+     * @ignore
+     */
     setLightmapped(value) {
         if (value) {
             this.mask = (this.mask | MASK_AFFECT_LIGHTMAPPED) & ~(MASK_AFFECT_DYNAMIC | MASK_BAKE);
@@ -1026,8 +1111,12 @@ class MeshInstance {
         }
     }
 
+    /**
+     * @param {BoundingBox|null} aabb - The custom axis-aligned bounding box or null to reset to
+     * the mesh's bounding box.
+     * @ignore
+     */
     setCustomAabb(aabb) {
-
         if (aabb) {
             // store the override aabb
             if (this._customAabb) {
@@ -1044,8 +1133,8 @@ class MeshInstance {
         this._setupSkinUpdate();
     }
 
+    /** @private */
     _setupSkinUpdate() {
-
         // set if bones need to be updated before culling
         if (this._skinInstance) {
             this._skinInstance._updateBeforeCull = !this._customAabb;
