@@ -29,7 +29,6 @@ const standardMaterialParameterTypes = {
     aoDetailMode: 'string',
 
     diffuse: 'rgb',
-    diffuseTint: 'boolean',
     ..._textureParameter('diffuse'),
     ..._textureParameter('diffuseDetail', true, false),
     diffuseDetailMode: 'string',

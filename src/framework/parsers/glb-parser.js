@@ -955,7 +955,6 @@ const extensionUnlit = (data, material, textures) => {
 
     // copy diffuse into emissive
     material.emissive.copy(material.diffuse);
-    material.emissiveTint = material.diffuseTint;
     material.emissiveMap = material.diffuseMap;
     material.emissiveMapUv = material.diffuseMapUv;
     material.emissiveMapTiling.copy(material.diffuseMapTiling);
@@ -970,8 +969,7 @@ const extensionUnlit = (data, material, textures) => {
     material.useSkybox = false;
 
     // blank diffuse
-    material.diffuse.set(0, 0, 0);
-    material.diffuseTint = false;
+    material.diffuse.set(1, 1, 1);
     material.diffuseMap = null;
     material.diffuseVertexColor = false;
 };
@@ -1118,7 +1116,6 @@ const createMaterial = (gltfMaterial, textures) => {
     // glTF doesn't define how to occlude specular
     material.occludeSpecular = SPECOCC_AO;
 
-    material.diffuseTint = true;
     material.diffuseVertexColor = true;
 
     material.specularTint = true;

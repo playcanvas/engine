@@ -23,13 +23,6 @@ class StandardMaterialOptions {
     ambientTint = false;
 
     /**
-     * Defines if {@link StandardMaterial#diffuse} constant should affect diffuse color.
-     *
-     * @type {boolean}
-     */
-    diffuseTint = false;
-
-    /**
      * Defines if {@link StandardMaterial#specular} constant should affect specular color.
      *
      * @type {boolean}
