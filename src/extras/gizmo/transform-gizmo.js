@@ -22,8 +22,6 @@ const tmpQ1 = new Quat();
 const tmpR1 = new Ray();
 const tmpP1 = new Plane();
 
-const pointDelta = new Vec3();
-
 // constants
 const VEC3_AXES = Object.keys(tmpV1);
 const SPANLINE_SIZE = 1e3;
@@ -180,6 +178,14 @@ class TransformGizmo extends Gizmo {
         z: COLOR_BLUE.clone(),
         face: COLOR_YELLOW.clone()
     };
+
+    /**
+     * Internal point delta.
+     *
+     * @type {Vec3}
+     * @private
+     */
+    _pointDelta = new Vec3();
 
     /**
      * Internal gizmo starting rotation in world space.
@@ -351,9 +357,9 @@ class TransformGizmo extends Gizmo {
             }
 
             const pointInfo = this._screenToPoint(x, y);
-            pointDelta.copy(pointInfo.point).sub(this._selectionStartPoint);
+            this._pointDelta.copy(pointInfo.point).sub(this._selectionStartPoint);
             const angleDelta = pointInfo.angle - this._selectionStartAngle;
-            this.fire(TransformGizmo.EVENT_TRANSFORMMOVE, pointDelta, angleDelta);
+            this.fire(TransformGizmo.EVENT_TRANSFORMMOVE, this._pointDelta, angleDelta);
 
             this._hoverAxis = '';
             this._hoverIsPlane = false;
