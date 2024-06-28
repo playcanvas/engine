@@ -28,6 +28,8 @@ let id = 0;
 const _tmpAabb = new BoundingBox();
 const _tempBoneAabb = new BoundingBox();
 const _tempSphere = new BoundingSphere();
+
+/** @type {Set<import('./mesh.js').Mesh>} */
 const _meshSet = new Set();
 
 // internal array used to evaluate the hash for the shader instance
@@ -156,11 +158,10 @@ class ShaderInstance {
  */
 class MeshInstance {
     /**
-     * Enable shadow casting for this mesh instance. Use this property to enable/disable
-     * shadow casting without overhead of removing from scene. Note that this property does not
-     * add the mesh instance to appropriate list of shadow casters on a {@link Layer}, but
-     * allows mesh to be skipped from shadow casting while it is in the list already. Defaults to
-     * false.
+     * Enable shadow casting for this mesh instance. Use this property to enable/disable shadow
+     * casting without overhead of removing from scene. Note that this property does not add the
+     * mesh instance to appropriate list of shadow casters on a {@link Layer}, but allows mesh to
+     * be skipped from shadow casting while it is in the list already. Defaults to false.
      *
      * @type {boolean}
      */
@@ -191,9 +192,9 @@ class MeshInstance {
     node;
 
     /**
-     * Enable rendering for this mesh instance. Use visible property to enable/disable
-     * rendering without overhead of removing from scene. But note that the mesh instance is
-     * still in the hierarchy and still in the draw call list.
+     * Enable rendering for this mesh instance. Use visible property to enable/disable rendering
+     * without overhead of removing from scene. But note that the mesh instance is still in the
+     * hierarchy and still in the draw call list.
      *
      * @type {boolean}
      */
@@ -269,8 +270,8 @@ class MeshInstance {
     stencilBack = null;
 
     /**
-     * True if the material of the mesh instance is transparent. Optimization to avoid accessing the
-     * material. Updated by the material instance itself.
+     * True if the material of the mesh instance is transparent. Optimization to avoid accessing
+     * the material. Updated by the material instance itself.
      *
      * @ignore
      */
@@ -874,7 +875,13 @@ class MeshInstance {
     // shader uniform names for lightmaps
     static lightmapParamNames = ['texture_lightMap', 'texture_dirLightMap'];
 
-    // generates wireframes for an array of mesh instances
+    /**
+     * Sets the render style for an array of mesh instances.
+     *
+     * @param {MeshInstance[]} meshInstances - The mesh instances to set the render style for.
+     * @param {number} renderStyle - The render style to set.
+     * @ignore
+     */
     static _prepareRenderStyleForArray(meshInstances, renderStyle) {
 
         if (meshInstances) {
