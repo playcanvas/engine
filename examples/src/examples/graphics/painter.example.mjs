@@ -91,7 +91,6 @@ app.scene.layers.insert(paintLayer, 0);
 
 // create a material we use for the paint brush - it uses emissive color to control its color, which is assigned later
 const brushMaterial = new pc.StandardMaterial();
-brushMaterial.emissiveTint = true;
 brushMaterial.useLighting = false;
 brushMaterial.update();
 
@@ -142,6 +141,7 @@ app.root.addChild(camera);
 // material used to add render target into the world
 const material = new pc.StandardMaterial();
 material.emissiveMap = texture;
+material.emissive = pc.Color.WHITE;
 material.useLighting = false;
 material.update();
 

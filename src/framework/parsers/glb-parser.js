@@ -1196,10 +1196,8 @@ const createMaterial = (gltfMaterial, textures) => {
         color = gltfMaterial.emissiveFactor;
         // Convert from linear space to sRGB space
         material.emissive.set(Math.pow(color[0], 1 / 2.2), Math.pow(color[1], 1 / 2.2), Math.pow(color[2], 1 / 2.2));
-        material.emissiveTint = true;
     } else {
         material.emissive.set(0, 0, 0);
-        material.emissiveTint = false;
     }
 
     if (gltfMaterial.hasOwnProperty('emissiveTexture')) {

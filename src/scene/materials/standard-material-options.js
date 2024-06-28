@@ -44,13 +44,6 @@ class StandardMaterialOptions {
     glossTint = false;
 
     /**
-     * Defines if {@link StandardMaterial#emissive} constant should affect emissive color.
-     *
-     * @type {boolean}
-     */
-    emissiveTint = false;
-
-    /**
      * Defines if {@link StandardMaterial#opacity} constant should affect opacity value.
      *
      * @type {boolean}

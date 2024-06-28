@@ -232,6 +232,7 @@ assetListLoader.load(() => {
     const gameScreenMaterial = gameScreen.render.material;
     gameScreenMaterial.diffuse = pc.Color.BLACK;
     gameScreenMaterial.emissiveMap = outputTexture;
+    gameScreenMaterial.emissive = pc.Color.WHITE;
     gameScreenMaterial.useLighting = false;
     gameScreenMaterial.update();
     app.root.addChild(gameScreen);
