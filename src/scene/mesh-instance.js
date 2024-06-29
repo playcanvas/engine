@@ -904,7 +904,7 @@ class MeshInstance {
 
     /**
      * Test if meshInstance is visible by camera. It requires the frustum of the camera to be up to
-     * date, which forward-renderer takes care of. This function should  not be called elsewhere.
+     * date, which forward-renderer takes care of. This function should not be called elsewhere.
      *
      * @param {import('./camera.js').Camera} camera - The camera to test visibility against.
      * @returns {boolean} - True if the mesh instance is visible by the camera, false otherwise.
