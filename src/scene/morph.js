@@ -13,7 +13,7 @@ import {
 } from '../platform/graphics/constants.js';
 
 /**
- * Contains a list of {@link MorphTarget}, a combined delta AABB and some associated data.
+ * Contains a list of {@link MorphTarget}s, a combined delta AABB and some associated data.
  *
  * @category Graphics
  */
@@ -35,7 +35,7 @@ class Morph extends RefCountedObject {
      * The graphics device used to manage this morph target.
      * @param {object} [options] - Object for passing optional arguments.
      * @param {boolean} [options.preferHighPrecision] - True if high precision storage should be
-     * prefered. This is faster to create and allows higher precision, but takes more memory and
+     * preferred. This is faster to create and allows higher precision, but takes more memory and
      * might be slower to render. Defaults to false.
      */
     constructor(targets, graphicsDevice, { preferHighPrecision = false } = {}) {
@@ -298,7 +298,15 @@ class Morph extends RefCountedObject {
         }
     }
 
-    // creates texture. Used to create both source morph target data, as well as render target used to morph these into, positions and normals
+    /**
+     * Creates texture. Used to create both source morph target data, as well as render target used
+     * to morph these into, positions and normals.
+     *
+     * @param {string} name - The name of the texture.
+     * @param {number} format - The format of the texture.
+     * @returns {Texture} The created texture.
+     * @private
+     */
     _createTexture(name, format) {
         return new Texture(this.device, {
             width: this.morphTextureWidth,
