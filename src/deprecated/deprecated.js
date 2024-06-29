@@ -58,7 +58,7 @@ import {
     BODYTYPE_DYNAMIC, BODYTYPE_KINEMATIC, BODYTYPE_STATIC
 } from '../framework/components/rigid-body/constants.js';
 import { RigidBodyComponent } from '../framework/components/rigid-body/component.js';
-import { RigidBodyComponentSystem } from '../framework/components/rigid-body/system.js';
+import { RigidBodyComponentSystem, HitResult } from '../framework/components/rigid-body/system.js';
 import { LitShader } from '../scene/shader-lib/programs/lit-shader.js';
 import { Geometry } from '../scene/geometry/geometry.js';
 
@@ -771,6 +771,7 @@ Object.defineProperty(MouseEvent.prototype, 'wheel', {
 
 // FRAMEWORK
 
+export const RaycastResult = HitResult;
 export const RIGIDBODY_TYPE_STATIC = BODYTYPE_STATIC;
 export const RIGIDBODY_TYPE_DYNAMIC = BODYTYPE_DYNAMIC;
 export const RIGIDBODY_TYPE_KINEMATIC = BODYTYPE_KINEMATIC;
@@ -890,4 +891,14 @@ RigidBodyComponentSystem.prototype.setGravity = function () {
     } else {
         this.gravity.set(arguments[0], arguments[1], arguments[2]);
     }
+};
+
+RigidBodyComponentSystem.prototype.raycastFirst = function (start, end, options) {
+    Debug.deprecated('pc.RigidBodyComponentSystem#raycastFirst is deprecated. Use pc.RigidBodyComponentSystem#raycast instead.');
+    return this.raycast(start, end, options)[0] ?? null;
+};
+
+RigidBodyComponentSystem.prototype.raycastAll = function (start, end, options = {}) {
+    Debug.deprecated('pc.RigidBodyComponentSystem#raycastAll is deprecated. Use pc.RigidBodyComponentSystem#raycast with findAll option instead.');
+    return this.raycast(start, end, Object.assign(options, { findAll: true }));
 };
