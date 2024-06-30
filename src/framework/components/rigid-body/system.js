@@ -418,7 +418,9 @@ class RigidBodyComponentSystem extends ComponentSystem {
             'restitution',
             'type',
             'group',
-            'mask'
+            'mask',
+            'useGravity',
+            'gravity'
         ];
 
         for (const property of props) {
@@ -450,7 +452,9 @@ class RigidBodyComponentSystem extends ComponentSystem {
             restitution: rigidbody.restitution,
             type: rigidbody.type,
             group: rigidbody.group,
-            mask: rigidbody.mask
+            mask: rigidbody.mask,
+            useGravity: rigidbody.useGravity,
+            gravity: rigidbody.gravity
         };
 
         return this.addComponent(clone, data);
