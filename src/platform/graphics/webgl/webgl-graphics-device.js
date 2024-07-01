@@ -720,8 +720,6 @@ class WebglGraphicsDevice extends GraphicsDevice {
         // render to half float buffers support - either of these two extensions
         this.extColorBufferHalfFloat = this.extColorBufferHalfFloat || !!this.extColorBufferFloat;
 
-        this.supportsMorphTargetTexturesCore = (this.maxPrecision === "highp" && this.maxVertexTextures >= 2);
-
         this._textureFloatHighPrecision = undefined;
 
         this.postInit();

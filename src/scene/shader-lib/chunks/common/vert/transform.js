@@ -7,11 +7,6 @@ uniform vec4 uScreenSize;
 uniform float projectionFlipY;
 #endif
 
-#ifdef MORPHING
-uniform vec4 morph_weights_a;
-uniform vec4 morph_weights_b;
-#endif
-
 #ifdef MORPHING_TEXTURE_BASED
     uniform vec2 morph_tex_params;
 
@@ -31,7 +26,13 @@ uniform vec4 morph_weights_b;
 #endif
 
 #ifdef MORPHING_TEXTURE_BASED_POSITION
-uniform highp sampler2D morphPositionTex;
+    #ifdef MORPHING_TEXTURE_BASED_INT
+        uniform vec3 aabbSize;
+        uniform vec3 aabbMin;
+        uniform usampler2D morphPositionTex;
+    #else
+        uniform highp sampler2D morphPositionTex;
+    #endif
 #endif
 
 mat4 getModelMatrix() {
@@ -66,25 +67,16 @@ vec4 getPosition() {
     localPos = localPos.xzy;
     #endif
 
-    #ifdef MORPHING
-    #ifdef MORPHING_POS03
-    localPos.xyz += morph_weights_a[0] * morph_pos0;
-    localPos.xyz += morph_weights_a[1] * morph_pos1;
-    localPos.xyz += morph_weights_a[2] * morph_pos2;
-    localPos.xyz += morph_weights_a[3] * morph_pos3;
-    #endif // MORPHING_POS03
-    #ifdef MORPHING_POS47
-    localPos.xyz += morph_weights_b[0] * morph_pos4;
-    localPos.xyz += morph_weights_b[1] * morph_pos5;
-    localPos.xyz += morph_weights_b[2] * morph_pos6;
-    localPos.xyz += morph_weights_b[3] * morph_pos7;
-    #endif // MORPHING_POS47
-    #endif // MORPHING
-
     #ifdef MORPHING_TEXTURE_BASED_POSITION
 
         ivec2 morphUV = getTextureMorphCoords();
-        vec3 morphPos = texelFetch(morphPositionTex, ivec2(morphUV), 0).xyz;
+
+        #ifdef MORPHING_TEXTURE_BASED_INT
+            vec3 morphPos = vec3(texelFetch(morphPositionTex, ivec2(morphUV), 0).xyz) / 65535.0 * aabbSize + aabbMin;
+        #else
+            vec3 morphPos = texelFetch(morphPositionTex, ivec2(morphUV), 0).xyz;
+        #endif
+
         localPos += morphPos;
 
     #endif

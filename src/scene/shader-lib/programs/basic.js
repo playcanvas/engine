@@ -139,7 +139,7 @@ class ShaderGeneratorBasic extends ShaderGenerator {
         if (options.useInstancing)          key += '_inst';
         if (options.useMorphPosition)       key += '_morphp';
         if (options.useMorphNormal)         key += '_morphn';
-        if (options.useMorphTextureBased)   key += '_morpht';
+        if (options.useMorphTextureBasedInt)key += '_morphi';
 
         key += '_' + options.pass;
         return key;

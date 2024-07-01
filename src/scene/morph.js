@@ -9,7 +9,8 @@ import { VertexFormat } from '../platform/graphics/vertex-format.js';
 
 import {
     TYPE_UINT32, SEMANTIC_ATTR15, ADDRESS_CLAMP_TO_EDGE, FILTER_NEAREST,
-    PIXELFORMAT_RGBA16F, PIXELFORMAT_RGB32F, PIXELFORMAT_RGBA32F
+    PIXELFORMAT_RGBA16F, PIXELFORMAT_RGB32F, PIXELFORMAT_RGBA32F, PIXELFORMAT_RGBA16U,
+    isIntegerPixelFormat
 } from '../platform/graphics/constants.js';
 
 /**
@@ -52,22 +53,19 @@ class Morph extends RefCountedObject {
 
         // default to texture based morphing if available
         const device = this.device;
-        if (device.supportsMorphTargetTexturesCore) {
 
-            // renderable format
-            const renderableHalf = device.textureHalfFloatRenderable ? PIXELFORMAT_RGBA16F : undefined;
-            const renderableFloat = device.textureFloatRenderable ? PIXELFORMAT_RGBA32F : undefined;
-            this._renderTextureFormat = this.preferHighPrecision ?
-                (renderableFloat ?? renderableHalf) : (renderableHalf ?? renderableFloat);
+        // renderable format
+        const renderableHalf = device.textureHalfFloatRenderable ? PIXELFORMAT_RGBA16F : undefined;
+        const renderableFloat = device.textureFloatRenderable ? PIXELFORMAT_RGBA32F : undefined;
+        this._renderTextureFormat = this.preferHighPrecision ?
+            (renderableFloat ?? renderableHalf) : (renderableHalf ?? renderableFloat);
 
-            // texture format - both are always supported
-            this._textureFormat = this.preferHighPrecision ? PIXELFORMAT_RGB32F : PIXELFORMAT_RGBA16F;
+        // fallback to more limited int format
+        this._renderTextureFormat = this._renderTextureFormat ?? PIXELFORMAT_RGBA16U;
+        this.intRenderFormat = isIntegerPixelFormat(this._renderTextureFormat);
 
-            // if the render format is available, enable texture morphing
-            if (this._renderTextureFormat !== undefined) {
-                this._useTextureMorph = true;
-            }
-        }
+        // source texture format - both are always supported
+        this._textureFormat = this.preferHighPrecision ? PIXELFORMAT_RGB32F : PIXELFORMAT_RGBA16F;
 
         this._init();
         this._updateMorphFlags();
@@ -104,32 +102,10 @@ class Morph extends RefCountedObject {
         return this._morphNormals;
     }
 
-    get maxActiveTargets() {
-
-        // no limit when texture morph based
-        if (this._useTextureMorph)
-            return this._targets.length;
-
-        return (this._morphPositions && this._morphNormals) ? 4 : 8;
-    }
-
-    get useTextureMorph() {
-        return this._useTextureMorph;
-    }
-
     _init() {
 
-        // try to init texture based morphing
-        if (this._useTextureMorph) {
-            this._useTextureMorph = this._initTextureBased();
-        }
-
-        // if texture morphing is not set up, use attribute based morphing
-        if (!this._useTextureMorph) {
-            for (let i = 0; i < this._targets.length; i++) {
-                this._targets[i]._initVertexBuffers(this.device);
-            }
-        }
+        // texture based morphing
+        this._initTextureBased();
 
         // finalize init
         for (let i = 0; i < this._targets.length; i++) {

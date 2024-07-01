@@ -12,9 +12,10 @@ import {
     MASK_AFFECT_DYNAMIC, MASK_BAKE, MASK_AFFECT_LIGHTMAPPED,
     RENDERSTYLE_SOLID,
     SHADERDEF_UV0, SHADERDEF_UV1, SHADERDEF_VCOLOR, SHADERDEF_TANGENTS, SHADERDEF_NOSHADOW, SHADERDEF_SKIN,
-    SHADERDEF_SCREENSPACE, SHADERDEF_MORPH_POSITION, SHADERDEF_MORPH_NORMAL, SHADERDEF_MORPH_TEXTURE_BASED,
+    SHADERDEF_SCREENSPACE, SHADERDEF_MORPH_POSITION, SHADERDEF_MORPH_NORMAL,
     SHADERDEF_LM, SHADERDEF_DIRLM, SHADERDEF_LMAMBIENT, SHADERDEF_INSTANCING,
-    SORTKEY_FORWARD
+    SORTKEY_FORWARD,
+    SHADERDEF_MORPH_TEXTURE_BASED_INT
 } from './constants.js';
 
 import { GraphNode } from './graph-node.js';
@@ -768,9 +769,9 @@ class MeshInstance {
         this._morphInstance = val;
 
         let shaderDefs = this._shaderDefs;
-        shaderDefs = (val && val.morph.useTextureMorph) ? (shaderDefs | SHADERDEF_MORPH_TEXTURE_BASED) : (shaderDefs & ~SHADERDEF_MORPH_TEXTURE_BASED);
         shaderDefs = (val && val.morph.morphPositions) ? (shaderDefs | SHADERDEF_MORPH_POSITION) : (shaderDefs & ~SHADERDEF_MORPH_POSITION);
         shaderDefs = (val && val.morph.morphNormals) ? (shaderDefs | SHADERDEF_MORPH_NORMAL) : (shaderDefs & ~SHADERDEF_MORPH_NORMAL);
+        shaderDefs = (val && val.morph.intRenderFormat) ? (shaderDefs | SHADERDEF_MORPH_TEXTURE_BASED_INT) : (shaderDefs & ~SHADERDEF_MORPH_TEXTURE_BASED_INT);
         this._updateShaderDefs(shaderDefs);
     }
 
