@@ -334,7 +334,6 @@ function basisTranscode(device, url, data, callback, options) {
 
     if (!deviceDetails) {
         deviceDetails = {
-            webgl2: device.isWebGL2,
             formats: getCompressionFormats(device)
         };
     }
