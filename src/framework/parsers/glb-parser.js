@@ -1994,7 +1994,31 @@ const createImages = (gltf, bufferViews, urlBase, registry, options) => {
         'image/vnd-ms.dds': 'dds'
     };
 
-    const loadTexture = (gltfImage, url, bufferView, mimeType, options) => {
+    // a Set of image indices that use sRGB textures (base and emissive)
+    const getGammaTextures = (gltf) => {
+        const set = new Set();
+
+        if (gltf.hasOwnProperty('materials')) {
+            gltf.materials.forEach((gltfMaterial) => {
+
+                // base texture
+                if (gltfMaterial.hasOwnProperty('pbrMetallicRoughness')) {
+                    const pbrData = gltfMaterial.pbrMetallicRoughness;
+                    if (pbrData.hasOwnProperty('baseColorTexture')) {
+                        set.add(pbrData.baseColorTexture.index);
+                    }
+                }
+
+                // emissive
+                if (gltfMaterial.hasOwnProperty('emissiveTexture')) {
+                    set.add(gltfMaterial.emissiveTexture.index);
+                }
+            });
+        }
+        return set;
+    };
+
+    const loadTexture = (gltfImage, url, bufferView, mimeType, options, srgb) => {
         return new Promise((resolve, reject) => {
             const continuation = (bufferViewData) => {
                 const name = (gltfImage.name || 'gltf-texture') + '-' + gltfTextureUniqueId++;
@@ -2014,7 +2038,9 @@ const createImages = (gltf, bufferViews, urlBase, registry, options) => {
                 }
 
                 // create and load the asset
-                const asset = new Asset(name, 'texture', file, null, options);
+                const data = { srgb };
+
+                const asset = new Asset(name, 'texture', file, data, options);
                 asset.on('load', asset => resolve(asset));
                 asset.on('error', err => reject(err));
                 registry.add(asset);
@@ -2028,6 +2054,8 @@ const createImages = (gltf, bufferViews, urlBase, registry, options) => {
             }
         });
     };
+
+    const gammaTextures = getGammaTextures(gltf);
 
     return gltf.images.map((gltfImage, i) => {
         if (preprocess) {
@@ -2052,17 +2080,21 @@ const createImages = (gltf, bufferViews, urlBase, registry, options) => {
         }
 
         promise = promise.then((textureAsset) => {
+
+            // if the image uses sRGB, pass it as an option to the texture creation
+            const srgb = gammaTextures.has(i);
+
             if (textureAsset) {
                 return textureAsset;
             } else if (gltfImage.hasOwnProperty('uri')) {
                 // uri specified
                 if (isDataURI(gltfImage.uri)) {
-                    return loadTexture(gltfImage, gltfImage.uri, null, getDataURIMimeType(gltfImage.uri), null);
+                    return loadTexture(gltfImage, gltfImage.uri, null, getDataURIMimeType(gltfImage.uri), null, srgb);
                 }
-                return loadTexture(gltfImage, ABSOLUTE_URL.test(gltfImage.uri) ? gltfImage.uri : path.join(urlBase, gltfImage.uri), null, null, { crossOrigin: 'anonymous' });
+                return loadTexture(gltfImage, ABSOLUTE_URL.test(gltfImage.uri) ? gltfImage.uri : path.join(urlBase, gltfImage.uri), null, null, { crossOrigin: 'anonymous' }, srgb);
             } else if (gltfImage.hasOwnProperty('bufferView') && gltfImage.hasOwnProperty('mimeType')) {
                 // bufferview
-                return loadTexture(gltfImage, null, bufferViews[gltfImage.bufferView], gltfImage.mimeType, null);
+                return loadTexture(gltfImage, null, bufferViews[gltfImage.bufferView], gltfImage.mimeType, null, srgb);
             }
 
             // fail

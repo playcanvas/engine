@@ -156,7 +156,7 @@ function BasisWorker() {
     };
 
     // return true if the texture dimensions are valid for the target format
-    const dimensionsValid = (width, height, format, webgl2) => {
+    const dimensionsValid = (width, height, format) => {
         switch (format) {
             // etc1, 2
             case BASIS_FORMAT.cTFETC1:
@@ -171,7 +171,7 @@ function BasisWorker() {
             // pvrtc
             case BASIS_FORMAT.cTFPVRTC1_4_RGB:
             case BASIS_FORMAT.cTFPVRTC1_4_RGBA:
-                return isPOT(width, height) && ((width === height) || webgl2);
+                return isPOT(width, height);
             // astc
             case BASIS_FORMAT.cTFASTC_4x4:
                 return true;
@@ -221,7 +221,7 @@ function BasisWorker() {
             basisFormat = hasAlpha ? alphaMapping[format] : opaqueMapping[format];
 
             // if image dimensions don't work on target, fall back to uncompressed
-            if (!dimensionsValid(width, height, basisFormat, options.deviceDetails.webgl2)) {
+            if (!dimensionsValid(width, height, basisFormat)) {
                 basisFormat = hasAlpha ? BASIS_FORMAT.cTFRGBA32 : BASIS_FORMAT.cTFRGB565;
             }
         }
@@ -307,7 +307,7 @@ function BasisWorker() {
             basisFormat = hasAlpha ? alphaMapping[format] : opaqueMapping[format];
 
             // if image dimensions don't work on target, fall back to uncompressed
-            if (!dimensionsValid(width, height, basisFormat, options.deviceDetails.webgl2)) {
+            if (!dimensionsValid(width, height, basisFormat)) {
                 basisFormat = hasAlpha ? BASIS_FORMAT.cTFRGBA32 : BASIS_FORMAT.cTFRGB565;
             }
         }
