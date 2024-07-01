@@ -15,7 +15,7 @@ import {
     TEXTUREPROJECTION_NONE, TEXTUREPROJECTION_CUBE,
     TEXTURETYPE_DEFAULT, TEXTURETYPE_RGBM, TEXTURETYPE_RGBE, TEXTURETYPE_RGBP,
     isIntegerPixelFormat, FILTER_NEAREST, TEXTURELOCK_NONE, TEXTURELOCK_READ,
-    isColorSampleSrgb
+    requiresManualGamma
 } from './constants.js';
 
 let id = 0;
@@ -813,7 +813,7 @@ class Texture {
         }
 
         // note that the srgb part only makes sense for texture storing color data
-        return isColorSampleSrgb(this.format) ? 'srgb' : 'linear';
+        return requiresManualGamma(this.format) ? 'srgb' : 'linear';
     }
 
     // Force a full resubmission of the texture to the GPU (used on a context restore event)
