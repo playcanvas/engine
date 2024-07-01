@@ -1,6 +1,6 @@
 import { Debug } from '../core/debug.js';
 
-import { BLENDEQUATION_ADD, BLENDMODE_ONE, isIntegerPixelFormat } from '../platform/graphics/constants.js';
+import { BLENDEQUATION_ADD, BLENDMODE_ONE } from '../platform/graphics/constants.js';
 import { drawQuadWithShader } from './graphics/quad-render-utils.js';
 import { RenderTarget } from '../platform/graphics/render-target.js';
 import { DebugGraphics } from '../platform/graphics/debug-graphics.js';

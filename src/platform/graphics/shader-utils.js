@@ -176,7 +176,7 @@ class ShaderUtils {
 
         const precision = forcePrecision ? forcePrecision : device.precision;
 
-        let code = `
+        const code = `
             precision ${precision} float;
             precision ${precision} int;
             precision ${precision} usampler2D;
