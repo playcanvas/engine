@@ -29,7 +29,6 @@ const standardMaterialParameterTypes = {
     aoDetailMode: 'string',
 
     diffuse: 'rgb',
-    diffuseTint: 'boolean',
     ..._textureParameter('diffuse'),
     ..._textureParameter('diffuseDetail', true, false),
     diffuseDetailMode: 'string',
@@ -50,7 +49,6 @@ const standardMaterialParameterTypes = {
     ..._textureParameter('metalness'),
     useMetalnessSpecularColor: 'boolean',
 
-    conserveEnergy: 'boolean',
     shininess: 'number',
     gloss: 'number',
     glossInvert: 'boolean',
@@ -135,7 +133,6 @@ const standardMaterialParameterTypes = {
 
     cull: 'enum:cull',
     blendType: 'enum:blendType',
-    shadingModel: 'enum:shadingModel',
 
     useFog: 'boolean',
     useLighting: 'boolean',

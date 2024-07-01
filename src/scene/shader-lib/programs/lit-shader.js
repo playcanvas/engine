@@ -16,7 +16,6 @@ import {
     SHADER_DEPTH, SHADER_PICK,
     SHADOW_PCF1, SHADOW_PCF3, SHADOW_PCF5, SHADOW_VSM8, SHADOW_VSM16, SHADOW_VSM32, SHADOW_PCSS,
     SPECOCC_AO, SPECOCC_GLOSSDEPENDENT,
-    SPECULAR_PHONG,
     SPRITE_RENDERMODE_SLICED, SPRITE_RENDERMODE_TILED, shadowTypeToString, SHADER_PREPASS_VELOCITY
 } from '../../constants.js';
 import { LightsBuffer } from '../../lighting/lights-buffer.js';
@@ -594,11 +593,6 @@ class LitShader {
                 this.defines.push("LIT_SPECULAR_FRESNEL");
             }
 
-            // enable conserve energy path in clustered chunk
-            if (options.conserveEnergy) {
-                this.defines.push("LIT_CONSERVE_ENERGY");
-            }
-
             if (options.useSheen) {
                 this.defines.push("LIT_SHEEN");
             }
@@ -882,7 +876,7 @@ class LitShader {
         if (options.useSpecular) {
 
             if (this.lighting) {
-                func.append(options.shadingModel === SPECULAR_PHONG ? chunks.lightSpecularPhongPS : (options.enableGGXSpecular ? chunks.lightSpecularAnisoGGXPS : chunks.lightSpecularBlinnPS));
+                func.append(options.enableGGXSpecular ? chunks.lightSpecularAnisoGGXPS : chunks.lightSpecularBlinnPS);
             }
 
             if (!options.fresnelModel && !this.reflections && !options.diffuseMapEnabled) {
@@ -1020,7 +1014,7 @@ class LitShader {
 
         if (addAmbient) {
             backend.append("    addAmbient(litArgs_worldNormal);");
-            if (options.conserveEnergy && options.useSpecular) {
+            if (options.useSpecular) {
                 backend.append(`   dDiffuseLight = dDiffuseLight * (1.0 - litArgs_specularity);`);
             }
 
@@ -1307,7 +1301,7 @@ class LitShader {
                 if (lightShape !== LIGHTSHAPE_PUNCTUAL) {
 
                     // area light - they do not mix diffuse lighting into specular attenuation
-                    if (options.conserveEnergy && options.useSpecular) {
+                    if (options.useSpecular) {
                         backend.append("    dDiffuseLight += ((dAttenD * dAtten) * light" + i + "_color" + (usesCookieNow ? " * dAtten3" : "") + ") * (1.0 - dLTCSpecFres);");
                     } else {
                         backend.append("    dDiffuseLight += (dAttenD * dAtten) * light" + i + "_color" + (usesCookieNow ? " * dAtten3" : "") + ";");
@@ -1315,7 +1309,7 @@ class LitShader {
                 } else {
 
                     // punctual light
-                    if (hasAreaLights && options.conserveEnergy && options.useSpecular) {
+                    if (hasAreaLights && options.useSpecular) {
                         backend.append("    dDiffuseLight += (dAtten * light" + i + "_color" + (usesCookieNow ? " * dAtten3" : "") + ") * (1.0 - litArgs_specularity);");
                     } else {
                         backend.append("    dDiffuseLight += dAtten * light" + i + "_color" + (usesCookieNow ? " * dAtten3" : "") + ";");

@@ -252,7 +252,7 @@ class GraphNode extends EventHandler {
 
     /**
      * @type {GraphNode[]}
-     * @private
+     * @protected
      */
     _children = [];
 

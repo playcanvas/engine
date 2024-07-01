@@ -2,7 +2,7 @@ import {
     CUBEPROJ_NONE, LIGHTTYPE_DIRECTIONAL, LIGHTTYPE_OMNI, LIGHTTYPE_SPOT,
     MASK_AFFECT_DYNAMIC, TONEMAP_NONE, SHADERDEF_INSTANCING, SHADERDEF_MORPH_NORMAL,
     SHADERDEF_MORPH_POSITION, SHADERDEF_MORPH_TEXTURE_BASED, SHADERDEF_SCREENSPACE, SHADERDEF_SKIN,
-    SHADERDEF_NOSHADOW, SHADERDEF_TANGENTS, SPECULAR_BLINN, SPRITE_RENDERMODE_SIMPLE
+    SHADERDEF_NOSHADOW, SHADERDEF_TANGENTS, SPRITE_RENDERMODE_SIMPLE
 } from "../constants.js";
 
 class LitMaterialOptionsBuilder {
@@ -50,7 +50,6 @@ class LitMaterialOptionsBuilder {
         litOptions.customFragmentShader = null;
         litOptions.pixelSnap = material.pixelSnap;
 
-        litOptions.shadingModel = material.shadingModel;
         litOptions.ambientSH = material.ambientSH;
         litOptions.fastTbn = material.fastTbn;
         litOptions.twoSidedLighting = material.twoSidedLighting;
@@ -67,7 +66,6 @@ class LitMaterialOptionsBuilder {
 
         litOptions.cubeMapProjection = CUBEPROJ_NONE;
 
-        litOptions.conserveEnergy = material.conserveEnergy && material.shadingModel === SPECULAR_BLINN;
         litOptions.useSpecular = material.hasSpecular;
         litOptions.useSpecularityFactor = material.hasSpecularityFactor;
         litOptions.enableGGXSpecular = material.ggxSpecular;

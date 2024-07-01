@@ -7,13 +7,14 @@ import {
     DEVICETYPE_WEBGL2,
     DEVICETYPE_NULL
 } from '../constants.mjs';
-import '../events.js';
 
 const deviceTypeNames = {
     [DEVICETYPE_WEBGPU]: 'WebGPU',
     [DEVICETYPE_WEBGL2]: 'WebGL 2',
     [DEVICETYPE_NULL]: 'Null'
 };
+
+/** @typedef {import('../events.js').DeviceEvent} DeviceEvent */
 
 /**
  * @typedef {object} Props
@@ -87,8 +88,8 @@ class DeviceSelector extends TypedComponent {
     /**
      * If our preferred device was e.g. WebGPU, but our active device is suddenly e.g. WebGL 2,
      * then we basically infer that WebGPU wasn't supported and mark it like that.
-     * @param {DEVICETYPE_WEBGPU | DEVICETYPE_WEBGL2} preferredDevice - The preferred device.
-     * @param {DEVICETYPE_WEBGPU | DEVICETYPE_WEBGL2} activeDevice - The active device reported from
+     * @param {DEVICETYPE_WEBGPU | DEVICETYPE_WEBGL2 | DEVICETYPE_NULL} preferredDevice - The preferred device.
+     * @param {DEVICETYPE_WEBGPU | DEVICETYPE_WEBGL2 | DEVICETYPE_NULL} activeDevice - The active device reported from
      * the example iframe.
      */
     setDisabledOptions(preferredDevice = DEVICETYPE_WEBGPU, activeDevice) {
@@ -105,8 +106,9 @@ class DeviceSelector extends TypedComponent {
             };
             this.mergeState({ fallbackOrder, disabledOptions, activeDevice });
         } else {
+            const fallbackOrder = null;
             const disabledOptions = null;
-            this.mergeState({ disabledOptions, activeDevice });
+            this.mergeState({ fallbackOrder, disabledOptions, activeDevice });
         }
     }
 
@@ -123,7 +125,8 @@ class DeviceSelector extends TypedComponent {
     }
 
     /**
-     * @param {string} value - Is graphics device active
+     * @param {DEVICETYPE_WEBGPU | DEVICETYPE_WEBGL2 | DEVICETYPE_NULL} value - Is graphics device
+     * active
      */
     onSetActiveGraphicsDevice(value) {
         if (!this.preferredGraphicsDevice) {
@@ -134,7 +137,8 @@ class DeviceSelector extends TypedComponent {
     }
 
     /**
-     * @param {string} value - The newly picked graphics device.
+     * @param {DEVICETYPE_WEBGPU | DEVICETYPE_WEBGL2 | DEVICETYPE_NULL} value - The newly picked
+     * graphics device.
      */
     onSetPreferredGraphicsDevice(value) {
         this.mergeState({ disabledOptions: null, activeDevice: value });

@@ -21,7 +21,7 @@ import { http } from '../platform/net/http.js';
 
 import {
     LAYERID_DEPTH, LAYERID_IMMEDIATE, LAYERID_SKYBOX, LAYERID_UI, LAYERID_WORLD,
-    SORTMODE_NONE, SORTMODE_MANUAL, SPECULAR_BLINN
+    SORTMODE_NONE, SORTMODE_MANUAL
 } from '../scene/constants.js';
 import { setProgramLibrary } from '../scene/shader-lib/get-program-library.js';
 import { ProgramLibrary } from '../scene/shader-lib/program-library.js';
@@ -590,7 +590,6 @@ class AppBase extends EventHandler {
     _initDefaultMaterial() {
         const material = new StandardMaterial();
         material.name = "Default Material";
-        material.shadingModel = SPECULAR_BLINN;
         setDefaultMaterial(this.graphicsDevice, material);
     }
 

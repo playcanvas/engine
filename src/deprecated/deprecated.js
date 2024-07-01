@@ -473,7 +473,6 @@ GraphicsDevice.prototype.getCullMode = function () {
 
 // SCENE
 
-export const PhongMaterial = StandardMaterial;
 export const LitOptions = LitShaderOptions;
 
 Object.defineProperty(Scene.prototype, 'defaultMaterial', {
@@ -677,7 +676,19 @@ function _defineAlias(newName, oldName) {
     });
 }
 
-_defineAlias('diffuseTint', 'diffuseMapTint');
+function _deprecateTint(name) {
+    Object.defineProperty(StandardMaterial.prototype, name, {
+        get: function () {
+            Debug.deprecated(`pc.StandardMaterial#${name} is deprecated, and the behaviour is as if ${name} was always true`);
+            return true;
+        },
+        set: function (value) {
+            Debug.deprecated(`pc.StandardMaterial#${name} is deprecated, and the behaviour is as if ${name} was always true`);
+        }
+    });
+}
+
+_deprecateTint('diffuseTint');
 _defineAlias('specularTint', 'specularMapTint');
 _defineAlias('emissiveTint', 'emissiveMapTint');
 _defineAlias('aoVertexColor', 'aoMapVertexColor');

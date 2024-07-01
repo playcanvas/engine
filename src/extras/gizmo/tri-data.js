@@ -29,7 +29,7 @@ class TriData {
      *
      * @type {Mat4}
      */
-    _ptm = new Mat4();
+    _transform = new Mat4();
 
     /**
      * The array of triangles for the geometry.
@@ -47,8 +47,8 @@ class TriData {
         this._priority = priority;
     }
 
-    get ptm() {
-        return this._ptm;
+    get transform() {
+        return this._transform;
     }
 
     get priority() {
@@ -56,7 +56,7 @@ class TriData {
     }
 
     setTransform(pos = new Vec3(), rot = new Quat(), scale = new Vec3()) {
-        this.ptm.setTRS(pos, rot, scale);
+        this.transform.setTRS(pos, rot, scale);
     }
 
     calculateTris(geometry) {
