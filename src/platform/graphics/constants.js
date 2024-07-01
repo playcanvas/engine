@@ -1145,7 +1145,7 @@ export const pixelFormatLinearToGamma = (format) => {
  * @returns {boolean} Whether sampling the texture with this format returns a sRGB value.
  * @ignore
  */
-export const isColorSampleSrgb = (format) => {
+export const requiresManualGamma = (format) => {
     const info = pixelFormatInfo.get(format);
     return !!(info?.ldr && !info?.srgb);
 };
