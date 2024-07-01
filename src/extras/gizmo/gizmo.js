@@ -269,6 +269,7 @@ class Gizmo extends EventHandler {
             const selection = this._getSelection(e.offsetX, e.offsetY);
             if (selection[0]) {
                 e.preventDefault();
+                e.stopPropagation();
             }
             this.fire(Gizmo.EVENT_POINTERDOWN, e.offsetX, e.offsetY, selection[0]);
         };
@@ -279,6 +280,7 @@ class Gizmo extends EventHandler {
             const selection = this._getSelection(e.offsetX, e.offsetY);
             if (selection[0]) {
                 e.preventDefault();
+                e.stopPropagation();
             }
             this.fire(Gizmo.EVENT_POINTERMOVE, e.offsetX, e.offsetY, selection[0]);
         };
