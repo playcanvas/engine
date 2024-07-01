@@ -1,7 +1,7 @@
 import { Debug } from '../../../core/debug.js';
 import { ReadStream } from '../../../core/read-stream.js';
 
-import { ADDRESS_CLAMP_TO_EDGE, ADDRESS_REPEAT, TEXHINT_ASSET } from '../../../platform/graphics/constants.js';
+import { ADDRESS_CLAMP_TO_EDGE, ADDRESS_REPEAT, TEXHINT_ASSET, pixelFormatLinearToGamma } from '../../../platform/graphics/constants.js';
 import { Texture } from '../../../platform/graphics/texture.js';
 
 import { Asset } from '../../asset/asset.js';
@@ -37,6 +37,7 @@ class Ktx2Parser extends TextureParser {
     }
 
     open(url, data, device, textureOptions = {}) {
+        const format = textureOptions.srgb ? pixelFormatLinearToGamma(data.format) : data.format;
         const texture = new Texture(device, {
             name: url,
             // #if _PROFILER
@@ -46,7 +47,7 @@ class Ktx2Parser extends TextureParser {
             addressV: data.cubemap ? ADDRESS_CLAMP_TO_EDGE : ADDRESS_REPEAT,
             width: data.width,
             height: data.height,
-            format: data.format,
+            format: format,
             cubemap: data.cubemap,
             levels: data.levels,
 

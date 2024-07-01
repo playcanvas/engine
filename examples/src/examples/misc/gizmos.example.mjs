@@ -122,7 +122,8 @@ data.set('camera', {
 });
 const camera = new pc.Entity('camera');
 camera.addComponent('camera', {
-    clearColor: new pc.Color(0.1, 0.1, 0.1)
+    clearColor: new pc.Color(0.1, 0.1, 0.1),
+    farClip: 1000
 });
 camera.addComponent('script');
 const orbitCamera = camera.script.create('orbitCamera');

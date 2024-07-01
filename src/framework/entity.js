@@ -411,9 +411,7 @@ class Entity extends GraphNode {
      * const light = entity.findComponent("light");
      */
     findComponent(type) {
-        const entity = this.findOne(function (node) {
-            return node.c && node.c[type];
-        });
+        const entity = this.findOne(entity => entity?.c[type]);
         return entity && entity.c[type];
     }
 
@@ -428,12 +426,7 @@ class Entity extends GraphNode {
      * const lights = entity.findComponents("light");
      */
     findComponents(type) {
-        const entities = this.find(function (node) {
-            return node.c && node.c[type];
-        });
-        return entities.map(function (entity) {
-            return entity.c[type];
-        });
+        return this.find(entity => entity?.c[type]).map(entity => entity.c[type]);
     }
 
     /**
@@ -688,15 +681,23 @@ class Entity extends GraphNode {
     }
 }
 
-// When an entity that has properties that contain references to other
-// entities within its subtree is duplicated, the expectation of the
-// user is likely that those properties will be updated to point to
-// the corresponding entities within the newly-created duplicate subtree.
-//
-// To handle this, we need to search for properties that refer to entities
-// within the old duplicated structure, find their newly-cloned partners
-// within the new structure, and update the references accordingly. This
-// function implements that requirement.
+/**
+ * When an entity that has properties that contain references to other entities within its subtree
+ * is duplicated, the expectation of the user is likely that those properties will be updated to
+ * point to the corresponding entities within the newly-created duplicate subtree.
+ *
+ * To handle this, we need to search for properties that refer to entities within the old
+ * duplicated structure, find their newly-cloned partners within the new structure, and update the
+ * references accordingly. This function implements that requirement.
+ *
+ * @param {Entity} oldSubtreeRoot - The root of the duplicated entity subtree that is being
+ * resolved.
+ * @param {Entity} oldEntity - The entity within the old duplicated subtree that is being resolved.
+ * @param {Entity} newEntity - The entity within the new duplicated subtree that is being resolved.
+ * @param {Object<string, Entity>} duplicatedIdsMap - A map of original entity GUIDs to cloned
+ * entities.
+ * @private
+ */
 function resolveDuplicatedEntityReferenceProperties(oldSubtreeRoot, oldEntity, newEntity, duplicatedIdsMap) {
     if (oldEntity instanceof Entity) {
         const components = oldEntity.c;
@@ -739,16 +740,11 @@ function resolveDuplicatedEntityReferenceProperties(oldSubtreeRoot, oldEntity, n
             newEntity.anim.resolveDuplicatedEntityReferenceProperties(components.anim, duplicatedIdsMap);
         }
 
-        // Recurse into children. Note that we continue to pass in the same `oldSubtreeRoot`,
-        // in order to correctly handle cases where a child has an entity reference
-        // field that points to a parent or other ancestor that is still within the
-        // duplicated subtree.
-        const _old = oldEntity.children.filter(function (e) {
-            return (e instanceof Entity);
-        });
-        const _new = newEntity.children.filter(function (e) {
-            return (e instanceof Entity);
-        });
+        // Recurse into children. Note that we continue to pass in the same `oldSubtreeRoot`, in
+        // order to correctly handle cases where a child has an entity reference field that points
+        // to a parent or other ancestor that is still within the duplicated subtree.
+        const _old = oldEntity.children.filter(e => e instanceof Entity);
+        const _new = newEntity.children.filter(e => e instanceof Entity);
 
         for (let i = 0, len = _old.length; i < len; i++) {
             resolveDuplicatedEntityReferenceProperties(oldSubtreeRoot, _old[i], _new[i], duplicatedIdsMap);

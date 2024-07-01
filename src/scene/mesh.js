@@ -165,14 +165,73 @@ class GeometryVertexStream {
  */
 class Mesh extends RefCountedObject {
     /**
-     * Internal version of aabb, incremented when local aabb changes.
+     * An array of index buffers. For unindexed meshes, this array can be empty. The first index
+     * buffer in the array is used by {@link MeshInstance}s with a `renderStyle` property set to
+     * {@link RENDERSTYLE_SOLID}. The second index buffer in the array is used if `renderStyle` is
+     * set to {@link RENDERSTYLE_WIREFRAME}.
+     *
+     * @type {IndexBuffer[]}
+     */
+    indexBuffer = [null];
+
+    /**
+     * The vertex buffer holding the vertex data of the mesh.
+     *
+     * @type {VertexBuffer}
+     */
+    vertexBuffer = null;
+
+    /**
+     * Array of primitive objects defining how vertex (and index) data in the mesh should be
+     * interpreted by the graphics device.
+     *
+     * - `type` is the type of primitive to render. Can be:
+     *
+     *   - {@link PRIMITIVE_POINTS}
+     *   - {@link PRIMITIVE_LINES}
+     *   - {@link PRIMITIVE_LINELOOP}
+     *   - {@link PRIMITIVE_LINESTRIP}
+     *   - {@link PRIMITIVE_TRIANGLES}
+     *   - {@link PRIMITIVE_TRISTRIP}
+     *   - {@link PRIMITIVE_TRIFAN}
+     *
+     * - `base` is the offset of the first index or vertex to dispatch in the draw call.
+     * - `count` is the number of indices or vertices to dispatch in the draw call.
+     * - `indexed` specifies whether to interpret the primitive as indexed, thereby using the
+     * currently set index buffer.
+     *
+     * @type {{type: number, base: number, count: number, indexed?: boolean}[]}
+     */
+    primitive = [{
+        type: 0,
+        base: 0,
+        count: 0
+    }];
+
+    /**
+     * The skin data (if any) that drives skinned mesh animations for this mesh.
+     *
+     * @type {import('./skin.js').Skin|null}
+     */
+    skin = null;
+
+    /**
+     * Array of object space AABBs of vertices affected by each bone.
+     *
+     * @type {BoundingBox[]|null}
+     * @ignore
+     */
+    boneAabb = null;
+
+    /**
+     * Internal version of AABB, incremented when local AABB changes.
      *
      * @ignore
      */
     _aabbVer = 0;
 
     /**
-     * aabb representing object space bounds of the mesh.
+     * AABB representing object space bounds of the mesh.
      *
      * @type {BoundingBox}
      * @private
@@ -180,12 +239,16 @@ class Mesh extends RefCountedObject {
     _aabb = new BoundingBox();
 
     /**
-     * True if the created vertex buffer should be accessible as a storage buffer in compute shader.
-     *
-     * @type {boolean}
+     * @type {GeometryData|null}
      * @private
      */
-    _storageVertex = false;
+    _geometryData = null;
+
+    /**
+     * @type {import('./morph.js').Morph|null}
+     * @private
+     */
+    _morph = null;
 
     /**
      * True if the created index buffer should be accessible as a storage buffer in compute shader.
@@ -194,6 +257,14 @@ class Mesh extends RefCountedObject {
      * @private
      */
     _storageIndex = false;
+
+    /**
+     * True if the created vertex buffer should be accessible as a storage buffer in compute shader.
+     *
+     * @type {boolean}
+     * @private
+     */
+    _storageVertex = false;
 
     /**
      * Create a new Mesh instance.
@@ -214,63 +285,6 @@ class Mesh extends RefCountedObject {
 
         this._storageIndex = options?.storageIndex || false;
         this._storageVertex = options?.storageVertex || false;
-
-        /**
-         * The vertex buffer holding the vertex data of the mesh.
-         *
-         * @type {VertexBuffer}
-         */
-        this.vertexBuffer = null;
-
-        /**
-         * An array of index buffers. For unindexed meshes, this array can be empty. The first
-         * index buffer in the array is used by {@link MeshInstance}s with a renderStyle property
-         * set to {@link RENDERSTYLE_SOLID}. The second index buffer in the array is used if
-         * renderStyle is set to {@link RENDERSTYLE_WIREFRAME}.
-         *
-         * @type {IndexBuffer[]}
-         */
-        this.indexBuffer = [null];
-
-        /**
-         * Array of primitive objects defining how vertex (and index) data in the mesh should be
-         * interpreted by the graphics device.
-         *
-         * - `type` is the type of primitive to render. Can be:
-         *
-         *   - {@link PRIMITIVE_POINTS}
-         *   - {@link PRIMITIVE_LINES}
-         *   - {@link PRIMITIVE_LINELOOP}
-         *   - {@link PRIMITIVE_LINESTRIP}
-         *   - {@link PRIMITIVE_TRIANGLES}
-         *   - {@link PRIMITIVE_TRISTRIP}
-         *   - {@link PRIMITIVE_TRIFAN}
-         *
-         * - `base` is the offset of the first index or vertex to dispatch in the draw call.
-         * - `count` is the number of indices or vertices to dispatch in the draw call.
-         * - `indexed` specifies whether to interpret the primitive as indexed, thereby using the
-         * currently set index buffer.
-         *
-         * @type {{type: number, base: number, count: number, indexed?: boolean}[]}
-         */
-        this.primitive = [{
-            type: 0,
-            base: 0,
-            count: 0
-        }];
-
-        /**
-         * The skin data (if any) that drives skinned mesh animations for this mesh.
-         *
-         * @type {import('./skin.js').Skin|null}
-         */
-        this.skin = null;
-
-        this._morph = null;
-        this._geometryData = null;
-
-        // Array of object space AABBs of vertices affected by each bone
-        this.boneAabb = null;
     }
 
     /**
@@ -382,7 +396,7 @@ class Mesh extends RefCountedObject {
     }
 
     /**
-     * Destroys {@link VertexBuffer} and {@link IndexBuffer} associate with the mesh. This is
+     * Destroys the {@link VertexBuffer} and {@link IndexBuffer}s associated with the mesh. This is
      * normally called by {@link Model#destroy} and does not need to be called manually.
      */
     destroy() {
@@ -852,7 +866,7 @@ class Mesh extends RefCountedObject {
 
     /**
      * Applies any changes to vertex stream and indices to mesh. This allocates or reallocates
-     * {@link vertexBuffer} or {@link IndexBuffer} to fit all provided vertices and indices, and
+     * {@link vertexBuffer} or {@link indexBuffer} to fit all provided vertices and indices, and
      * fills them with data.
      *
      * @param {number} [primitiveType] - The type of primitive to render.  Can be:
@@ -865,11 +879,11 @@ class Mesh extends RefCountedObject {
      * - {@link PRIMITIVE_TRISTRIP}
      * - {@link PRIMITIVE_TRIFAN}
      *
-     * Defaults to {@link PRIMITIVE_TRIANGLES} if unspecified.
+     * Defaults to {@link PRIMITIVE_TRIANGLES} if not specified.
      * @param {boolean} [updateBoundingBox] - True to update bounding box. Bounding box is updated
-     * only if positions were set since last time update was called, and componentCount for
+     * only if positions were set since last time update was called, and `componentCount` for
      * position was 3, otherwise bounding box is not updated. See {@link Mesh#setPositions}.
-     * Defaults to true if unspecified. Set this to false to avoid update of the bounding box and
+     * Defaults to true if not specified. Set this to false to avoid update of the bounding box and
      * use aabb property to set it instead.
      */
     update(primitiveType = PRIMITIVE_TRIANGLES, updateBoundingBox = true) {
