@@ -2086,6 +2086,10 @@ class WebglGraphicsDevice extends GraphicsDevice {
                     this.gl.clearStencil(stencil);
                     this.clearStencil = stencil;
                 }
+
+                gl.stencilMask(0xFF);
+                this.stencilWriteMaskFront = 0xFF;
+                this.stencilWriteMaskBack = 0xFF;
             }
 
             // Clear the frame buffer
