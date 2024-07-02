@@ -913,9 +913,7 @@ class ImageElement {
         }
         // #endif
 
-        const r = value.r;
-        const g = value.g;
-        const b = value.b;
+        const { r, g, b } = value;
 
         if (this._color.r !== r || this._color.g !== g || this._color.b !== b) {
             this._color.r = r;
