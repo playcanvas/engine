@@ -3,7 +3,8 @@ import { Color } from '../../core/math/color.js';
 import { ShaderProcessorOptions } from '../../platform/graphics/shader-processor-options.js';
 
 import {
-    SHADERDEF_INSTANCING, SHADERDEF_MORPH_NORMAL, SHADERDEF_MORPH_POSITION, SHADERDEF_MORPH_TEXTURE_BASED,
+    SHADERDEF_INSTANCING, SHADERDEF_MORPH_NORMAL, SHADERDEF_MORPH_POSITION,
+    SHADERDEF_MORPH_TEXTURE_BASED_INT,
     SHADERDEF_SCREENSPACE, SHADERDEF_SKIN
 } from '../constants.js';
 import { getProgramLibrary } from '../shader-lib/get-program-library.js';
@@ -92,7 +93,7 @@ class BasicMaterial extends Material {
             useInstancing: objDefs && (objDefs & SHADERDEF_INSTANCING) !== 0,
             useMorphPosition: objDefs && (objDefs & SHADERDEF_MORPH_POSITION) !== 0,
             useMorphNormal: objDefs && (objDefs & SHADERDEF_MORPH_NORMAL) !== 0,
-            useMorphTextureBased: objDefs && (objDefs & SHADERDEF_MORPH_TEXTURE_BASED) !== 0,
+            useMorphTextureBasedInt: objDefs && (objDefs & SHADERDEF_MORPH_TEXTURE_BASED_INT) !== 0,
 
             alphaTest: this.alphaTest > 0,
             vertexColors: this.vertexColors,

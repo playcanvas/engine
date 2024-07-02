@@ -196,17 +196,6 @@ app.on('update', function (dt) {
     // orbit camera around
     camera.setLocalPosition(16 * Math.sin(time * 0.2), 4, 16 * Math.cos(time * 0.2));
     camera.lookAt(pc.Vec3.ZERO);
-
-    // debug display the morph target textures blended together
-    if (morphInstances[0].texturePositions) {
-        // @ts-ignore
-        app.drawTexture(-0.7, -0.7, 0.4, 0.4, morphInstances[0].texturePositions);
-    }
-
-    if (morphInstances[0].textureNormals) {
-        // @ts-ignore
-        app.drawTexture(0.7, -0.7, 0.4, 0.4, morphInstances[0].textureNormals);
-    }
 });
 
 export { app };

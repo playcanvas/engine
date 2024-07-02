@@ -1,8 +1,9 @@
 import {
     CUBEPROJ_NONE, LIGHTTYPE_DIRECTIONAL, LIGHTTYPE_OMNI, LIGHTTYPE_SPOT,
     MASK_AFFECT_DYNAMIC, TONEMAP_NONE, SHADERDEF_INSTANCING, SHADERDEF_MORPH_NORMAL,
-    SHADERDEF_MORPH_POSITION, SHADERDEF_MORPH_TEXTURE_BASED, SHADERDEF_SCREENSPACE, SHADERDEF_SKIN,
-    SHADERDEF_NOSHADOW, SHADERDEF_TANGENTS, SPRITE_RENDERMODE_SIMPLE
+    SHADERDEF_MORPH_POSITION, SHADERDEF_SCREENSPACE, SHADERDEF_SKIN,
+    SHADERDEF_NOSHADOW, SHADERDEF_TANGENTS, SPRITE_RENDERMODE_SIMPLE,
+    SHADERDEF_MORPH_TEXTURE_BASED_INT
 } from "../constants.js";
 
 class LitMaterialOptionsBuilder {
@@ -24,7 +25,7 @@ class LitMaterialOptionsBuilder {
         litOptions.useInstancing = objDefs && (objDefs & SHADERDEF_INSTANCING) !== 0;
         litOptions.useMorphPosition = objDefs && (objDefs & SHADERDEF_MORPH_POSITION) !== 0;
         litOptions.useMorphNormal = objDefs && (objDefs & SHADERDEF_MORPH_NORMAL) !== 0;
-        litOptions.useMorphTextureBased = objDefs && (objDefs & SHADERDEF_MORPH_TEXTURE_BASED) !== 0;
+        litOptions.useMorphTextureBasedInt = objDefs && (objDefs & SHADERDEF_MORPH_TEXTURE_BASED_INT) !== 0;
         litOptions.hasTangents = objDefs && ((objDefs & SHADERDEF_TANGENTS) !== 0);
 
         litOptions.nineSlicedMode = material.nineSlicedMode || SPRITE_RENDERMODE_SIMPLE;
@@ -90,7 +91,7 @@ class LitMaterialOptionsBuilder {
 
     static updateEnvOptions(litOptions, material, scene, renderParams) {
         litOptions.fog = material.useFog ? scene.fog : 'none';
-        litOptions.gamma = renderParams.gammaCorrection;
+        litOptions.gamma = renderParams.shaderOutputGamma;
         litOptions.toneMap = material.useTonemap ? renderParams.toneMapping : TONEMAP_NONE;
 
         // source of reflections

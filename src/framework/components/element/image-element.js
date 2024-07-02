@@ -32,6 +32,7 @@ import { FITMODE_STRETCH, FITMODE_CONTAIN, FITMODE_COVER } from './constants.js'
 
 import { Asset } from '../../asset/asset.js';
 
+const _tempColor = new Color();
 const _vertexFormatDeviceCache = new DeviceCache();
 
 class ImageRenderable {
@@ -301,7 +302,7 @@ class ImageElement {
         // set default colors
         this._color = new Color(1, 1, 1, 1);
         this._colorUniform = new Float32Array([1, 1, 1]);
-        this._renderable.setParameter('material_emissive', this._colorUniform);
+        this._updateRenderableEmissive();
         this._renderable.setParameter('material_opacity', 1);
 
         this._updateAabbFunc = this._updateAabb.bind(this);
@@ -895,10 +896,16 @@ class ImageElement {
         }
     }
 
+    _updateRenderableEmissive() {
+        // color uniforms are in linear space
+        _tempColor.linear(this._color);
+        this._colorUniform[0] = _tempColor.r;
+        this._colorUniform[1] = _tempColor.g;
+        this._colorUniform[2] = _tempColor.b;
+        this._renderable.setParameter('material_emissive', this._colorUniform);
+    }
+
     set color(value) {
-        const r = value.r;
-        const g = value.g;
-        const b = value.b;
 
         // #if _DEBUG
         if (this._color === value) {
@@ -906,15 +913,14 @@ class ImageElement {
         }
         // #endif
 
+        const { r, g, b } = value;
+
         if (this._color.r !== r || this._color.g !== g || this._color.b !== b) {
             this._color.r = r;
             this._color.g = g;
             this._color.b = b;
 
-            this._colorUniform[0] = r;
-            this._colorUniform[1] = g;
-            this._colorUniform[2] = b;
-            this._renderable.setParameter('material_emissive', this._colorUniform);
+            this._updateRenderableEmissive();
         }
 
         if (this._element) {
@@ -1029,10 +1035,7 @@ class ImageElement {
                 this._renderable.deleteParameter('material_emissive');
             } else {
                 // otherwise if we are back to the defaults reset the color and opacity
-                this._colorUniform[0] = this._color.r;
-                this._colorUniform[1] = this._color.g;
-                this._colorUniform[2] = this._color.b;
-                this._renderable.setParameter('material_emissive', this._colorUniform);
+                this._updateRenderableEmissive();
                 this._renderable.setParameter('material_opacity', this._color.a);
             }
         }
@@ -1100,10 +1103,7 @@ class ImageElement {
             // default texture just uses emissive and opacity maps
             this._renderable.setParameter('texture_emissiveMap', this._texture);
             this._renderable.setParameter('texture_opacityMap', this._texture);
-            this._colorUniform[0] = this._color.r;
-            this._colorUniform[1] = this._color.g;
-            this._colorUniform[2] = this._color.b;
-            this._renderable.setParameter('material_emissive', this._colorUniform);
+            this._updateRenderableEmissive();
             this._renderable.setParameter('material_opacity', this._color.a);
 
             // if texture's aspect ratio changed and the element needs to preserve aspect ratio, refresh the mesh

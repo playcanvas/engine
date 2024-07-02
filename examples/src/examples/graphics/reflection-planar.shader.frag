@@ -4,6 +4,10 @@ uniform vec4 uScreenSize;
 // reflection texture
 uniform sampler2D uDiffuseMap;
 
+vec3 gammaCorrectOutput(vec3 color) {
+    return pow(color + 0.0000001, vec3(1.0 / 2.2));
+}
+
 void main(void)
 {
     // sample reflection texture
@@ -11,5 +15,7 @@ void main(void)
     coord.y = 1.0 - coord.y;
     vec4 reflection = texture2D(uDiffuseMap, coord);
 
-    gl_FragColor = vec4(reflection.xyz * 0.7, 1);
+    vec3 linearColor = reflection.xyz * 0.4;
+    gl_FragColor.rgb = gammaCorrectOutput(linearColor);
+    gl_FragColor.a = 1.0;
 }

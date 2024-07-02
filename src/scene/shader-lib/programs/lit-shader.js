@@ -1,5 +1,5 @@
 import {
-    SEMANTIC_ATTR8, SEMANTIC_ATTR9, SEMANTIC_ATTR10, SEMANTIC_ATTR11, SEMANTIC_ATTR12, SEMANTIC_ATTR13, SEMANTIC_ATTR14, SEMANTIC_ATTR15,
+    SEMANTIC_ATTR8, SEMANTIC_ATTR9, SEMANTIC_ATTR12, SEMANTIC_ATTR13, SEMANTIC_ATTR14, SEMANTIC_ATTR15,
     SEMANTIC_BLENDINDICES, SEMANTIC_BLENDWEIGHT, SEMANTIC_COLOR, SEMANTIC_NORMAL, SEMANTIC_POSITION, SEMANTIC_TANGENT,
     SEMANTIC_TEXCOORD0, SEMANTIC_TEXCOORD1,
     SHADERTAG_MATERIAL
@@ -294,78 +294,23 @@ class LitShader {
         // morphing
         if (options.useMorphPosition || options.useMorphNormal) {
 
-            if (options.useMorphTextureBased) {
+            code += "#define MORPHING_TEXTURE_BASED\n";
 
-                code += "#define MORPHING_TEXTURE_BASED\n";
-
-                if (options.useMorphPosition) {
-                    code += "#define MORPHING_TEXTURE_BASED_POSITION\n";
-                }
-
-                if (options.useMorphNormal) {
-                    code += "#define MORPHING_TEXTURE_BASED_NORMAL\n";
-                }
-
-                // vertex ids attributes
-                this.attributes.morph_vertex_id = SEMANTIC_ATTR15;
-                code += `attribute uint morph_vertex_id;\n`;
-
-            } else {
-
-                // set up 8 slots for morphing. these are supported combinations: PPPPPPPP, NNNNNNNN, PPPPNNNN
-                code += "#define MORPHING\n";
-
-                // first 4 slots are either position or normal
-                if (options.useMorphPosition) {
-                    this.attributes.morph_pos0 = SEMANTIC_ATTR8;
-                    this.attributes.morph_pos1 = SEMANTIC_ATTR9;
-                    this.attributes.morph_pos2 = SEMANTIC_ATTR10;
-                    this.attributes.morph_pos3 = SEMANTIC_ATTR11;
-
-                    code += "#define MORPHING_POS03\n";
-                    code += "attribute vec3 morph_pos0;\n";
-                    code += "attribute vec3 morph_pos1;\n";
-                    code += "attribute vec3 morph_pos2;\n";
-                    code += "attribute vec3 morph_pos3;\n";
-
-                } else if (options.useMorphNormal) {
-                    this.attributes.morph_nrm0 = SEMANTIC_ATTR8;
-                    this.attributes.morph_nrm1 = SEMANTIC_ATTR9;
-                    this.attributes.morph_nrm2 = SEMANTIC_ATTR10;
-                    this.attributes.morph_nrm3 = SEMANTIC_ATTR11;
-
-                    code += "#define MORPHING_NRM03\n";
-                    code += "attribute vec3 morph_nrm0;\n";
-                    code += "attribute vec3 morph_nrm1;\n";
-                    code += "attribute vec3 morph_nrm2;\n";
-                    code += "attribute vec3 morph_nrm3;\n";
-                }
-
-                // next 4 slots are either position or normal
-                if (!options.useMorphNormal) {
-                    this.attributes.morph_pos4 = SEMANTIC_ATTR12;
-                    this.attributes.morph_pos5 = SEMANTIC_ATTR13;
-                    this.attributes.morph_pos6 = SEMANTIC_ATTR14;
-                    this.attributes.morph_pos7 = SEMANTIC_ATTR15;
-
-                    code += "#define MORPHING_POS47\n";
-                    code += "attribute vec3 morph_pos4;\n";
-                    code += "attribute vec3 morph_pos5;\n";
-                    code += "attribute vec3 morph_pos6;\n";
-                    code += "attribute vec3 morph_pos7;\n";
-                } else {
-                    this.attributes.morph_nrm4 = SEMANTIC_ATTR12;
-                    this.attributes.morph_nrm5 = SEMANTIC_ATTR13;
-                    this.attributes.morph_nrm6 = SEMANTIC_ATTR14;
-                    this.attributes.morph_nrm7 = SEMANTIC_ATTR15;
-
-                    code += "#define MORPHING_NRM47\n";
-                    code += "attribute vec3 morph_nrm4;\n";
-                    code += "attribute vec3 morph_nrm5;\n";
-                    code += "attribute vec3 morph_nrm6;\n";
-                    code += "attribute vec3 morph_nrm7;\n";
-                }
+            if (options.useMorphTextureBasedInt) {
+                code += "#define MORPHING_TEXTURE_BASED_INT\n";
             }
+
+            if (options.useMorphPosition) {
+                code += "#define MORPHING_TEXTURE_BASED_POSITION\n";
+            }
+
+            if (options.useMorphNormal) {
+                code += "#define MORPHING_TEXTURE_BASED_NORMAL\n";
+            }
+
+            // vertex ids attributes
+            this.attributes.morph_vertex_id = SEMANTIC_ATTR15;
+            code += `attribute uint morph_vertex_id;\n`;
         }
 
         if (options.skin) {

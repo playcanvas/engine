@@ -61,7 +61,7 @@ class LitShaderOptions {
      */
     useMorphNormal = false;
 
-    useMorphTextureBased = false;
+    useMorphTextureBasedInt = false;
 
     nineSlicedMode = 0;
 

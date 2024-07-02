@@ -1,5 +1,5 @@
 import { hashCode } from '../../core/hash.js';
-import { GAMMA_SRGB, TONEMAP_LINEAR } from '../constants.js';
+import { GAMMA_NONE, GAMMA_SRGB, TONEMAP_LINEAR } from '../constants.js';
 
 /**
  * Rendering parameters, allow configuration of the rendering parameters.
@@ -12,6 +12,9 @@ class RenderingParams {
 
     /** @private */
     _toneMapping = TONEMAP_LINEAR;
+
+    /** @private */
+    _srgbRenderTarget = false;
 
     /**
      * The hash of the rendering parameters, or undefined if the hash has not been computed yet.
@@ -29,7 +32,7 @@ class RenderingParams {
      */
     get hash() {
         if (this._hash === undefined) {
-            const key = `${this.gammaCorrection}_${this.toneMapping}`;
+            const key = `${this.gammaCorrection}_${this.toneMapping}_${this.srgbRenderTarget}`;
             this._hash = hashCode(key);
         }
         return this._hash;
@@ -83,6 +86,31 @@ class RenderingParams {
 
     get toneMapping() {
         return this._toneMapping;
+    }
+
+    set srgbRenderTarget(value) {
+        if (this._srgbRenderTarget !== value) {
+            this._srgbRenderTarget = value;
+            this.markDirty();
+        }
+    }
+
+    get srgbRenderTarget() {
+        return this._srgbRenderTarget;
+    }
+
+    /**
+     * Returns {@link GAMMA_SRGB} if the shader code needs to output gamma corrected color, otherwise
+     * returns {@link GAMMA_NONE}.
+     *
+     * @type {number}
+     * @ignore
+     */
+    get shaderOutputGamma() {
+        // if gamma rendering is enabled, but the render target does not have sRGB format,
+        // the shader needs to do the linear -> gamma conversion
+        const gammaOutput = this._gammaCorrection === GAMMA_SRGB && !this._srgbRenderTarget;
+        return gammaOutput ? GAMMA_SRGB : GAMMA_NONE;
     }
 }
 

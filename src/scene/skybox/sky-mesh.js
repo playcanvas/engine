@@ -38,7 +38,7 @@ class SkyMesh {
             const options = {
                 pass: pass,
                 encoding: texture.encoding,
-                gamma: renderParams.gammaCorrection,
+                gamma: renderParams.shaderOutputGamma,
                 toneMapping: renderParams.toneMapping,
                 skymesh: type
             };

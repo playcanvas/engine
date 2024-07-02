@@ -12,7 +12,7 @@ pc.basisInitialize({
 });
 
 const assets = {
-    color: new pc.Asset('color', 'texture', { url: rootPath + '/static/assets/textures/seaside-rocks01-color.basis' }),
+    color: new pc.Asset('color', 'texture', { url: rootPath + '/static/assets/textures/seaside-rocks01-color.basis' }, { srgb: true }),
     gloss: new pc.Asset('gloss', 'texture', { url: rootPath + '/static/assets/textures/seaside-rocks01-gloss.basis' }),
     normal: new pc.Asset(
         'normal',

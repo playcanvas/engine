@@ -49,7 +49,7 @@ CubemapRenderer.prototype.initialize = function () {
         name: this.entity.name + ':CubemapRenderer-' + resolution,
         width: resolution,
         height: resolution,
-        format: pc.PIXELFORMAT_RGBA8,
+        format: pc.PIXELFORMAT_SRGBA8,
         cubemap: true,
         mipmaps: this.mipmaps,
         minFilter: pc.FILTER_LINEAR_MIPMAP_LINEAR,
