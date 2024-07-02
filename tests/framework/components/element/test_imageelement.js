@@ -649,21 +649,24 @@ describe('pc.ImageElement', function () {
     });
 
     it('Image element initializes to color and opacity 1 specified in data', function () {
+
+        var color = new pc.Color(0.5, 0.6, 0.7);
+        var linear = color.clone().linear();
         var e = new pc.Entity();
         e.addComponent('element', {
             type: 'image',
-            color: [0.5, 0.6, 0.7],
+            color: color,
             opacity: 0.1
         });
 
-        expect(e.element.color.r).to.be.closeTo(0.5, 0.001);
-        expect(e.element.color.g).to.be.closeTo(0.6, 0.001);
-        expect(e.element.color.b).to.be.closeTo(0.7, 0.001);
+        expect(e.element.color.r).to.be.closeTo(color.r, 0.001);
+        expect(e.element.color.g).to.be.closeTo(color.g, 0.001);
+        expect(e.element.color.b).to.be.closeTo(color.b, 0.001);
 
         var emissive = e.element._image._renderable.meshInstance.getParameter('material_emissive').data;
-        expect(emissive[0]).to.be.closeTo(0.5, 0.001);
-        expect(emissive[1]).to.be.closeTo(0.6, 0.001);
-        expect(emissive[2]).to.be.closeTo(0.7, 0.001);
+        expect(emissive[0]).to.be.closeTo(linear.r, 0.001);
+        expect(emissive[1]).to.be.closeTo(linear.g, 0.001);
+        expect(emissive[2]).to.be.closeTo(linear.b, 0.001);
 
         var opacity = e.element._image._renderable.meshInstance.getParameter('material_opacity').data;
         expect(opacity).to.be.closeTo(0.1, 0.001);
@@ -706,10 +709,13 @@ describe('pc.ImageElement', function () {
     });
 
     it('Image element reverts back to the previous color, opacity and material if we clear its material', function () {
+        var color = new pc.Color(0.1, 0.2, 0.3);
+        var linear = color.clone().linear();
+
         var e = new pc.Entity();
         e.addComponent('element', {
             type: 'image',
-            color: [0.1, 0.2, 0.3],
+            color: color,
             opacity: 0.4
         });
 
@@ -720,9 +726,9 @@ describe('pc.ImageElement', function () {
         expect(e.element.material).to.equal(defaultMaterial);
 
         var emissive = e.element._image._renderable.meshInstance.getParameter('material_emissive').data;
-        expect(emissive[0]).to.be.closeTo(0.1, 0.001);
-        expect(emissive[1]).to.be.closeTo(0.2, 0.001);
-        expect(emissive[2]).to.be.closeTo(0.3, 0.001);
+        expect(emissive[0]).to.be.closeTo(linear.r, 0.001);
+        expect(emissive[1]).to.be.closeTo(linear.g, 0.001);
+        expect(emissive[2]).to.be.closeTo(linear.b, 0.001);
 
         var opacity = e.element._image._renderable.meshInstance.getParameter('material_opacity').data;
         expect(opacity).to.be.closeTo(0.4, 0.001);
@@ -730,10 +736,13 @@ describe('pc.ImageElement', function () {
     });
 
     it('Image element with mask reverts back to the previous color, opacity and material if we clear its material', function () {
+        var color = new pc.Color(0.1, 0.2, 0.3);
+        var linear = color.clone().linear();
+
         var e = new pc.Entity();
         e.addComponent('element', {
             type: 'image',
-            color: [0.1, 0.2, 0.3],
+            color: color,
             opacity: 0.4,
             mask: true
         });
@@ -745,9 +754,9 @@ describe('pc.ImageElement', function () {
         expect(e.element.material).to.equal(defaultMaterial);
 
         var emissive = e.element._image._renderable.meshInstance.getParameter('material_emissive').data;
-        expect(emissive[0]).to.be.closeTo(0.1, 0.001);
-        expect(emissive[1]).to.be.closeTo(0.2, 0.001);
-        expect(emissive[2]).to.be.closeTo(0.3, 0.001);
+        expect(emissive[0]).to.be.closeTo(linear.r, 0.001);
+        expect(emissive[1]).to.be.closeTo(linear.g, 0.001);
+        expect(emissive[2]).to.be.closeTo(linear.b, 0.001);
 
         var opacity = e.element._image._renderable.meshInstance.getParameter('material_opacity').data;
         expect(opacity).to.be.closeTo(0.4, 0.001);
@@ -761,10 +770,13 @@ describe('pc.ImageElement', function () {
         });
         app.root.addChild(screen);
 
+        var color = new pc.Color(0.1, 0.2, 0.3);
+        var linear = color.clone().linear();
+
         var e = new pc.Entity();
         e.addComponent('element', {
             type: 'image',
-            color: [0.1, 0.2, 0.3],
+            color: color,
             opacity: 0.4
         });
         screen.addChild(e);
@@ -776,9 +788,9 @@ describe('pc.ImageElement', function () {
         expect(e.element.material).to.equal(defaultMaterial);
 
         var emissive = e.element._image._renderable.meshInstance.getParameter('material_emissive').data;
-        expect(emissive[0]).to.be.closeTo(0.1, 0.001);
-        expect(emissive[1]).to.be.closeTo(0.2, 0.001);
-        expect(emissive[2]).to.be.closeTo(0.3, 0.001);
+        expect(emissive[0]).to.be.closeTo(linear.r, 0.001);
+        expect(emissive[1]).to.be.closeTo(linear.g, 0.001);
+        expect(emissive[2]).to.be.closeTo(linear.b, 0.001);
 
         var opacity = e.element._image._renderable.meshInstance.getParameter('material_opacity').data;
         expect(opacity).to.be.closeTo(0.4, 0.001);
@@ -792,10 +804,13 @@ describe('pc.ImageElement', function () {
         });
         app.root.addChild(screen);
 
+        var color = new pc.Color(0.1, 0.2, 0.3);
+        var linear = color.clone().linear();
+
         var e = new pc.Entity();
         e.addComponent('element', {
             type: 'image',
-            color: [0.1, 0.2, 0.3],
+            color: color,
             opacity: 0.4,
             mask: true
         });
@@ -808,9 +823,9 @@ describe('pc.ImageElement', function () {
         expect(e.element.material).to.equal(defaultMaterial);
 
         var emissive = e.element._image._renderable.meshInstance.getParameter('material_emissive').data;
-        expect(emissive[0]).to.be.closeTo(0.1, 0.001);
-        expect(emissive[1]).to.be.closeTo(0.2, 0.001);
-        expect(emissive[2]).to.be.closeTo(0.3, 0.001);
+        expect(emissive[0]).to.be.closeTo(linear.r, 0.001);
+        expect(emissive[1]).to.be.closeTo(linear.g, 0.001);
+        expect(emissive[2]).to.be.closeTo(linear.b, 0.001);
 
         var opacity = e.element._image._renderable.meshInstance.getParameter('material_opacity').data;
         expect(opacity).to.be.closeTo(0.4, 0.001);
