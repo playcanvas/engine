@@ -715,7 +715,7 @@ describe('pc.ImageElement', function () {
         var e = new pc.Entity();
         e.addComponent('element', {
             type: 'image',
-            color: [color.r, color.g, color.b],
+            color: color,
             opacity: 0.4
         });
 
