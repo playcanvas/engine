@@ -21,6 +21,7 @@ import { _matTex2D, standard } from '../shader-lib/programs/standard.js';
 import { Material } from './material.js';
 import { StandardMaterialOptionsBuilder } from './standard-material-options-builder.js';
 import { standardMaterialCubemapParameters, standardMaterialTextureParameters } from './standard-material-parameters.js';
+import { DebugGraphics } from '../../platform/graphics/debug-graphics.js';
 
 // properties that get created on a standard material
 const _props = {};
@@ -766,6 +767,12 @@ class StandardMaterial extends Material {
         }
 
         this._setParameter('material_gloss', this.gloss);
+
+        Debug.call(() => {
+            if (this.emissiveMap && this.emissive.r === 0 && this.emissive.g === 0 && this.emissive.b === 0) {
+                Debug.warnOnce(`Emissive map is set but emissive color is black, making the map invisible. Set emissive color to white to make the map visible. Rendering [${DebugGraphics.toString()}]`, this);
+            }
+        });
 
         this._setParameter('material_emissive', getUniform('emissive'));
         this._setParameter('material_emissiveIntensity', this.emissiveIntensity);

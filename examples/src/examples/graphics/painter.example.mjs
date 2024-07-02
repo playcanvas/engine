@@ -54,7 +54,7 @@ app.on('destroy', () => {
  */
 function createPrimitive(primitiveType, position, scale, layer, material) {
     // create primitive
-    const primitive = new pc.Entity();
+    const primitive = new pc.Entity(`Brush-${primitiveType}`);
     primitive.addComponent('render', {
         type: primitiveType,
         layers: layer,
@@ -140,6 +140,7 @@ app.root.addChild(camera);
 
 // material used to add render target into the world
 const material = new pc.StandardMaterial();
+material.name = 'EmissiveMaterial';
 material.emissiveMap = texture;
 material.emissive = pc.Color.WHITE;
 material.useLighting = false;
