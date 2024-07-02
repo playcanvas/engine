@@ -467,19 +467,24 @@ class XrManager extends EventHandler {
             if (options && options.depthSensing && this.depthSensing.supported) {
                 opts.optionalFeatures.push('depth-sensing');
 
-                const usagePreference = [XRDEPTHSENSINGUSAGE_CPU];
-                const dataFormatPreference = [XRDEPTHSENSINGFORMAT_L8A8];
+                const usagePreference = [];
+                const dataFormatPreference = [];
 
-                if (options.depthSensing.usagePreference) {
-                    const ind = usagePreference.indexOf(options.depthSensing.usagePreference);
-                    if (ind !== -1) usagePreference.splice(ind, 1);
-                    usagePreference.unshift(options.depthSensing.usagePreference);
-                }
+                if (!navigator.userAgent.includes('OculusBrowser')) {
+                    usagePreference.push(XRDEPTHSENSINGUSAGE_CPU);
+                    dataFormatPreference.push(XRDEPTHSENSINGFORMAT_L8A8);
 
-                if (options.depthSensing.dataFormatPreference) {
-                    const ind = dataFormatPreference.indexOf(options.depthSensing.dataFormatPreference);
-                    if (ind !== -1) dataFormatPreference.splice(ind, 1);
-                    dataFormatPreference.unshift(options.depthSensing.dataFormatPreference);
+                    if (options.depthSensing.usagePreference) {
+                        const ind = usagePreference.indexOf(options.depthSensing.usagePreference);
+                        if (ind !== -1) usagePreference.splice(ind, 1);
+                        usagePreference.unshift(options.depthSensing.usagePreference);
+                    }
+
+                    if (options.depthSensing.dataFormatPreference) {
+                        const ind = dataFormatPreference.indexOf(options.depthSensing.dataFormatPreference);
+                        if (ind !== -1) dataFormatPreference.splice(ind, 1);
+                        dataFormatPreference.unshift(options.depthSensing.dataFormatPreference);
+                    }
                 }
 
                 opts.depthSensing = {
