@@ -104,6 +104,7 @@ class ShaderUtils {
         const vertCode = ShaderUtils.versionCode(device) +
             getDefines(webgpuVS, gles3VS, true, options) +
             ShaderUtils.getDefinesCode(options.vertexDefines) +
+            ShaderUtils.precisionCode(device) + '\n' +
             sharedFS +
             ShaderUtils.getShaderNameCode(name) +
             options.vertexCode;
@@ -175,11 +176,13 @@ class ShaderUtils {
 
         const precision = forcePrecision ? forcePrecision : device.precision;
 
-        let code = `precision ${precision} float;\nprecision ${precision} int;\n`;
-
-        if (device.isWebGL2) {
-            code += `precision ${precision} sampler2DShadow;\n`;
-        }
+        const code = `
+            precision ${precision} float;
+            precision ${precision} int;
+            precision ${precision} usampler2D;
+            precision ${precision} isampler2D;
+            precision ${precision} sampler2DShadow;
+        `;
 
         return code;
     }

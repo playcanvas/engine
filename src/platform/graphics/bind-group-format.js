@@ -5,6 +5,7 @@ import {
     TEXTUREDIMENSION_2D, TEXTUREDIMENSION_CUBE, TEXTUREDIMENSION_3D, TEXTUREDIMENSION_2D_ARRAY,
     SAMPLETYPE_FLOAT, PIXELFORMAT_RGBA8, SAMPLETYPE_INT, SAMPLETYPE_UINT, SHADERSTAGE_COMPUTE, SHADERSTAGE_VERTEX
 } from './constants.js';
+import { DebugGraphics } from './debug-graphics.js';
 
 let id = 0;
 
@@ -306,7 +307,7 @@ class BindGroupFormat {
 
         this.impl = graphicsDevice.createBindGroupFormatImpl(this);
 
-        Debug.trace(TRACEID_BINDGROUPFORMAT_ALLOC, `Alloc: Id ${this.id}`, this);
+        Debug.trace(TRACEID_BINDGROUPFORMAT_ALLOC, `Alloc: Id ${this.id}, while rendering [${DebugGraphics.toString()}]`, this);
     }
 
     /**

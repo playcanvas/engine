@@ -654,8 +654,8 @@ export const SHADERDEF_SCREENSPACE = 256;
 export const SHADERDEF_TANGENTS = 512;
 export const SHADERDEF_MORPH_POSITION = 1024;
 export const SHADERDEF_MORPH_NORMAL = 2048;
-export const SHADERDEF_MORPH_TEXTURE_BASED = 4096;
-export const SHADERDEF_LMAMBIENT = 8192; // lightmaps contain ambient
+export const SHADERDEF_LMAMBIENT = 4096; // lightmaps contain ambient
+export const SHADERDEF_MORPH_TEXTURE_BASED_INT = 8192;
 
 /**
  * The shadow map is not to be updated.

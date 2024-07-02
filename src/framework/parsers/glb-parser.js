@@ -797,7 +797,6 @@ const createMesh = (device, gltfMesh, accessors, bufferViews, vertexBufferDict, 
                     if (target.hasOwnProperty('POSITION')) {
                         accessor = accessors[target.POSITION];
                         options.deltaPositions = getAccessorDataFloat32(accessor, bufferViews);
-                        options.deltaPositionsType = TYPE_FLOAT32;
                         options.aabb = getAccessorBoundingBox(accessor);
                     }
 
@@ -805,7 +804,6 @@ const createMesh = (device, gltfMesh, accessors, bufferViews, vertexBufferDict, 
                         accessor = accessors[target.NORMAL];
                         // NOTE: the morph targets can't currently accept quantized normals
                         options.deltaNormals = getAccessorDataFloat32(accessor, bufferViews);
-                        options.deltaNormalsType = TYPE_FLOAT32;
                     }
 
                     // name if specified

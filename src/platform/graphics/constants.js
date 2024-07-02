@@ -1358,9 +1358,6 @@ export const SEMANTIC_TEXCOORD6 = "TEXCOORD6";
  */
 export const SEMANTIC_TEXCOORD7 = "TEXCOORD7";
 
-// private semantic used for programmatic construction of individual attr semantics
-export const SEMANTIC_ATTR = "ATTR";
-
 /**
  * Vertex attribute with a user defined semantic.
  *

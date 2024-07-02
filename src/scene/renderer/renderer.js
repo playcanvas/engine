@@ -22,7 +22,6 @@ import {
     BINDGROUP_MESH, BINDGROUP_VIEW, UNIFORM_BUFFER_DEFAULT_SLOT_NAME,
     UNIFORMTYPE_MAT4, UNIFORMTYPE_MAT3, UNIFORMTYPE_VEC3, UNIFORMTYPE_VEC2, UNIFORMTYPE_FLOAT, UNIFORMTYPE_INT,
     SHADERSTAGE_VERTEX, SHADERSTAGE_FRAGMENT,
-    SEMANTIC_ATTR,
     CULLFACE_BACK, CULLFACE_FRONT, CULLFACE_NONE,
     TEXTUREDIMENSION_2D, SAMPLETYPE_UNFILTERABLE_FLOAT, SAMPLETYPE_FLOAT, SAMPLETYPE_DEPTH,
     BINDGROUP_MESH_UB
@@ -234,8 +233,6 @@ class Renderer {
         this.twoSidedLightingNegScaleFactorId = scope.resolve('twoSidedLightingNegScaleFactor');
         this.twoSidedLightingNegScaleFactorId.setValue(0);
 
-        this.morphWeightsA = scope.resolve('morph_weights_a');
-        this.morphWeightsB = scope.resolve('morph_weights_b');
         this.morphPositionTex = scope.resolve('morphPositionTex');
         this.morphNormalTex = scope.resolve('morphNormalTex');
         this.morphTexParams = scope.resolve('morph_tex_params');
@@ -721,39 +718,17 @@ class Renderer {
 
         if (morphInstance) {
 
-            if (morphInstance.morph.useTextureMorph) {
+            morphInstance.prepareRendering(device);
 
-                // vertex buffer with vertex ids
-                device.setVertexBuffer(morphInstance.morph.vertexBufferIds);
+            // vertex buffer with vertex ids
+            device.setVertexBuffer(morphInstance.morph.vertexBufferIds);
 
-                // textures
-                this.morphPositionTex.setValue(morphInstance.texturePositions);
-                this.morphNormalTex.setValue(morphInstance.textureNormals);
+            // textures
+            this.morphPositionTex.setValue(morphInstance.texturePositions);
+            this.morphNormalTex.setValue(morphInstance.textureNormals);
 
-                // texture params
-                this.morphTexParams.setValue(morphInstance._textureParams);
-
-            } else {    // vertex attributes based morphing
-
-                for (let t = 0; t < morphInstance._activeVertexBuffers.length; t++) {
-
-                    const vb = morphInstance._activeVertexBuffers[t];
-                    if (vb) {
-
-                        // patch semantic for the buffer to current ATTR slot (using ATTR8 - ATTR15 range)
-                        const semantic = SEMANTIC_ATTR + (t + 8);
-                        vb.format.elements[0].name = semantic;
-                        vb.format.elements[0].scopeId = device.scope.resolve(semantic);
-                        vb.format.update();
-
-                        device.setVertexBuffer(vb);
-                    }
-                }
-
-                // set all 8 weights
-                this.morphWeightsA.setValue(morphInstance._shaderMorphWeightsA);
-                this.morphWeightsB.setValue(morphInstance._shaderMorphWeightsB);
-            }
+            // texture params
+            this.morphTexParams.setValue(morphInstance._textureParams);
         }
     }
 
