@@ -102,7 +102,7 @@ PlanarRenderer.prototype.updateRenderTarget = function () {
             name: this.entity.name + ':PlanarRenderer-',
             width: width,
             height: height,
-            format: pc.PIXELFORMAT_RGBA8,
+            format: pc.PIXELFORMAT_SRGBA8,
             mipmaps: this.mipmaps,
             addressU: pc.ADDRESS_CLAMP_TO_EDGE,
             addressV: pc.ADDRESS_CLAMP_TO_EDGE,

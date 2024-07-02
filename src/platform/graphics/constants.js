@@ -1116,6 +1116,10 @@ export const isCompressedPixelFormat = (format) => {
     return pixelFormatInfo.get(format)?.blockSize !== undefined;
 };
 
+export const isSrgbPixelFormat = (format) => {
+    return pixelFormatInfo.get(format)?.srgb === true;
+};
+
 export const isIntegerPixelFormat = (format) => {
     return pixelFormatInfo.get(format)?.isInt === true;
 };

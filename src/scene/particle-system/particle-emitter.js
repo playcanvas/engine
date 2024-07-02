@@ -31,10 +31,12 @@ import { ShaderProcessorOptions } from '../../platform/graphics/shader-processor
 import {
     BLEND_NORMAL,
     EMITTERSHAPE_BOX,
+    GAMMA_NONE,
     PARTICLEMODE_GPU,
     PARTICLEORIENTATION_SCREEN, PARTICLEORIENTATION_WORLD,
     PARTICLESORT_NONE,
-    SHADER_FORWARD
+    SHADER_FORWARD,
+    TONEMAP_LINEAR
 } from '../constants.js';
 import { Mesh } from '../mesh.js';
 import { MeshInstance } from '../mesh-instance.js';
@@ -850,8 +852,8 @@ class ParticleEmitter {
                 alignToMotion: this.emitter.alignToMotion,
                 soft: this.emitter.depthSoftening,
                 mesh: this.emitter.useMesh,
-                gamma: renderParams?.gammaCorrection ?? 0,
-                toneMap: renderParams?.toneMapping ?? 0,
+                gamma: renderParams?.shaderOutputGamma ?? GAMMA_NONE,
+                toneMap: renderParams?.toneMapping ?? TONEMAP_LINEAR,
                 fog: (this.emitter.scene && !this.emitter.noFog) ? this.emitter.scene.fog : 'none',
                 wrap: this.emitter.wrap && this.emitter.wrapBounds,
                 localSpace: this.emitter.localSpace,

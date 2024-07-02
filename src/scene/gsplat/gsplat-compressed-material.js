@@ -369,7 +369,7 @@ const createGSplatCompressedMaterial = (options = {}) => {
 
         const programOptions = {
             pass: pass,
-            gamma: renderParams.gammaCorrection,
+            gamma: renderParams.shaderOutputGamma,
             toneMapping: renderParams.toneMapping,
             vertex: options.vertex ?? splatMainVS,
             fragment: options.fragment ?? splatMainFS,
