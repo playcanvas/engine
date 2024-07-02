@@ -376,9 +376,7 @@ class Mat3 {
     transformVector(vec, res = new Vec3()) {
         const m = this.data;
 
-        const x = vec.x;
-        const y = vec.y;
-        const z = vec.z;
+        const { x, y, z } = vec;
 
         res.x = x * m[0] + y * m[3] + z * m[6];
         res.y = x * m[1] + y * m[4] + z * m[7];

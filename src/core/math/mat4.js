@@ -393,9 +393,7 @@ class Mat4 {
     transformPoint(vec, res = new Vec3()) {
         const m = this.data;
 
-        const x = vec.x;
-        const y = vec.y;
-        const z = vec.z;
+        const { x, y, z } = vec;
 
         res.x = x * m[0] + y * m[4] + z * m[8] + m[12];
         res.y = x * m[1] + y * m[5] + z * m[9] + m[13];
@@ -423,9 +421,7 @@ class Mat4 {
     transformVector(vec, res = new Vec3()) {
         const m = this.data;
 
-        const x = vec.x;
-        const y = vec.y;
-        const z = vec.z;
+        const { x, y, z } = vec;
 
         res.x = x * m[0] + y * m[4] + z * m[8];
         res.y = x * m[1] + y * m[5] + z * m[9];
@@ -456,10 +452,7 @@ class Mat4 {
     transformVec4(vec, res = new Vec4()) {
         const m = this.data;
 
-        const x = vec.x;
-        const y = vec.y;
-        const z = vec.z;
-        const w = vec.w;
+        const { x, y, z, w } = vec;
 
         res.x = x * m[0] + y * m[4] + z * m[8] + w * m[12];
         res.y = x * m[1] + y * m[5] + z * m[9] + w * m[13];
@@ -642,9 +635,7 @@ class Mat4 {
     setFromAxisAngle(axis, angle) {
         angle *= math.DEG_TO_RAD;
 
-        const x = axis.x;
-        const y = axis.y;
-        const z = axis.z;
+        const { x, y, z } = axis;
         const c = Math.cos(angle);
         const s = Math.sin(angle);
         const t = 1 - c;
