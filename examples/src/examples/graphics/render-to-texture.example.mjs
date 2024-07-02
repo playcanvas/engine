@@ -247,9 +247,11 @@ assetListLoader.load(() => {
     tv.setLocalEulerAngles(90, 0, 0);
     tv.render.castShadows = false;
     tv.render.receiveShadows = false;
+
     /** @type {pc.StandardMaterial} */
     const material = tv.render.material;
     material.emissiveMap = texture; // assign the rendered texture as an emissive texture
+    material.emissive = pc.Color.WHITE;
     material.update();
 
     // setup skydome, use top mipmap level of cubemap (full resolution)

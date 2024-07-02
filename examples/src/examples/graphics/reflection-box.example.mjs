@@ -162,6 +162,7 @@ assetListLoader.load(() => {
     const screenMaterial = new pc.StandardMaterial();
     screenMaterial.useLighting = false;
     screenMaterial.emissiveMap = videoTexture;
+    screenMaterial.emissive = pc.Color.WHITE;
     screenMaterial.update();
 
     /**

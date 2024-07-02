@@ -74,7 +74,6 @@ const standardMaterialParameterTypes = {
     fresnelModel: 'number',
 
     emissive: 'rgb',
-    emissiveTint: 'boolean',
     ..._textureParameter('emissive'),
     emissiveIntensity: 'number',
 

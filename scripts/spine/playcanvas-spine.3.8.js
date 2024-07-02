@@ -1,4 +1,4 @@
-/* Copyright 2015-2023 PlayCanvas Ltd */
+/* Copyright 2015-2024 PlayCanvas Ltd */
 
 var spine = (function (pc) {
 	'use strict';
@@ -7837,10 +7837,7 @@ var spine = (function (pc) {
 	      f = !0,
 	      o = !1;
 	    try {
-	      if (i = (t = t.call(r)).next, 0 === l) {
-	        if (Object(t) !== t) return;
-	        f = !1;
-	      } else for (; !(f = (e = i.call(t)).done) && (a.push(e.value), a.length !== l); f = !0);
+	      if (i = (t = t.call(r)).next, 0 === l) ; else for (; !(f = (e = i.call(t)).done) && (a.push(e.value), a.length !== l); f = !0);
 	    } catch (r) {
 	      o = !0, n = r;
 	    } finally {
@@ -7852,307 +7849,6 @@ var spine = (function (pc) {
 	    }
 	    return a;
 	  }
-	}
-	function _regeneratorRuntime() {
-	  _regeneratorRuntime = function () {
-	    return e;
-	  };
-	  var t,
-	    e = {},
-	    r = Object.prototype,
-	    n = r.hasOwnProperty,
-	    o = Object.defineProperty || function (t, e, r) {
-	      t[e] = r.value;
-	    },
-	    i = "function" == typeof Symbol ? Symbol : {},
-	    a = i.iterator || "@@iterator",
-	    c = i.asyncIterator || "@@asyncIterator",
-	    u = i.toStringTag || "@@toStringTag";
-	  function define(t, e, r) {
-	    return Object.defineProperty(t, e, {
-	      value: r,
-	      enumerable: !0,
-	      configurable: !0,
-	      writable: !0
-	    }), t[e];
-	  }
-	  try {
-	    define({}, "");
-	  } catch (t) {
-	    define = function (t, e, r) {
-	      return t[e] = r;
-	    };
-	  }
-	  function wrap(t, e, r, n) {
-	    var i = e && e.prototype instanceof Generator ? e : Generator,
-	      a = Object.create(i.prototype),
-	      c = new Context(n || []);
-	    return o(a, "_invoke", {
-	      value: makeInvokeMethod(t, r, c)
-	    }), a;
-	  }
-	  function tryCatch(t, e, r) {
-	    try {
-	      return {
-	        type: "normal",
-	        arg: t.call(e, r)
-	      };
-	    } catch (t) {
-	      return {
-	        type: "throw",
-	        arg: t
-	      };
-	    }
-	  }
-	  e.wrap = wrap;
-	  var h = "suspendedStart",
-	    l = "suspendedYield",
-	    f = "executing",
-	    s = "completed",
-	    y = {};
-	  function Generator() {}
-	  function GeneratorFunction() {}
-	  function GeneratorFunctionPrototype() {}
-	  var p = {};
-	  define(p, a, function () {
-	    return this;
-	  });
-	  var d = Object.getPrototypeOf,
-	    v = d && d(d(values([])));
-	  v && v !== r && n.call(v, a) && (p = v);
-	  var g = GeneratorFunctionPrototype.prototype = Generator.prototype = Object.create(p);
-	  function defineIteratorMethods(t) {
-	    ["next", "throw", "return"].forEach(function (e) {
-	      define(t, e, function (t) {
-	        return this._invoke(e, t);
-	      });
-	    });
-	  }
-	  function AsyncIterator(t, e) {
-	    function invoke(r, o, i, a) {
-	      var c = tryCatch(t[r], t, o);
-	      if ("throw" !== c.type) {
-	        var u = c.arg,
-	          h = u.value;
-	        return h && "object" == typeof h && n.call(h, "__await") ? e.resolve(h.__await).then(function (t) {
-	          invoke("next", t, i, a);
-	        }, function (t) {
-	          invoke("throw", t, i, a);
-	        }) : e.resolve(h).then(function (t) {
-	          u.value = t, i(u);
-	        }, function (t) {
-	          return invoke("throw", t, i, a);
-	        });
-	      }
-	      a(c.arg);
-	    }
-	    var r;
-	    o(this, "_invoke", {
-	      value: function (t, n) {
-	        function callInvokeWithMethodAndArg() {
-	          return new e(function (e, r) {
-	            invoke(t, n, e, r);
-	          });
-	        }
-	        return r = r ? r.then(callInvokeWithMethodAndArg, callInvokeWithMethodAndArg) : callInvokeWithMethodAndArg();
-	      }
-	    });
-	  }
-	  function makeInvokeMethod(e, r, n) {
-	    var o = h;
-	    return function (i, a) {
-	      if (o === f) throw new Error("Generator is already running");
-	      if (o === s) {
-	        if ("throw" === i) throw a;
-	        return {
-	          value: t,
-	          done: !0
-	        };
-	      }
-	      for (n.method = i, n.arg = a;;) {
-	        var c = n.delegate;
-	        if (c) {
-	          var u = maybeInvokeDelegate(c, n);
-	          if (u) {
-	            if (u === y) continue;
-	            return u;
-	          }
-	        }
-	        if ("next" === n.method) n.sent = n._sent = n.arg;else if ("throw" === n.method) {
-	          if (o === h) throw o = s, n.arg;
-	          n.dispatchException(n.arg);
-	        } else "return" === n.method && n.abrupt("return", n.arg);
-	        o = f;
-	        var p = tryCatch(e, r, n);
-	        if ("normal" === p.type) {
-	          if (o = n.done ? s : l, p.arg === y) continue;
-	          return {
-	            value: p.arg,
-	            done: n.done
-	          };
-	        }
-	        "throw" === p.type && (o = s, n.method = "throw", n.arg = p.arg);
-	      }
-	    };
-	  }
-	  function maybeInvokeDelegate(e, r) {
-	    var n = r.method,
-	      o = e.iterator[n];
-	    if (o === t) return r.delegate = null, "throw" === n && e.iterator.return && (r.method = "return", r.arg = t, maybeInvokeDelegate(e, r), "throw" === r.method) || "return" !== n && (r.method = "throw", r.arg = new TypeError("The iterator does not provide a '" + n + "' method")), y;
-	    var i = tryCatch(o, e.iterator, r.arg);
-	    if ("throw" === i.type) return r.method = "throw", r.arg = i.arg, r.delegate = null, y;
-	    var a = i.arg;
-	    return a ? a.done ? (r[e.resultName] = a.value, r.next = e.nextLoc, "return" !== r.method && (r.method = "next", r.arg = t), r.delegate = null, y) : a : (r.method = "throw", r.arg = new TypeError("iterator result is not an object"), r.delegate = null, y);
-	  }
-	  function pushTryEntry(t) {
-	    var e = {
-	      tryLoc: t[0]
-	    };
-	    1 in t && (e.catchLoc = t[1]), 2 in t && (e.finallyLoc = t[2], e.afterLoc = t[3]), this.tryEntries.push(e);
-	  }
-	  function resetTryEntry(t) {
-	    var e = t.completion || {};
-	    e.type = "normal", delete e.arg, t.completion = e;
-	  }
-	  function Context(t) {
-	    this.tryEntries = [{
-	      tryLoc: "root"
-	    }], t.forEach(pushTryEntry, this), this.reset(!0);
-	  }
-	  function values(e) {
-	    if (e || "" === e) {
-	      var r = e[a];
-	      if (r) return r.call(e);
-	      if ("function" == typeof e.next) return e;
-	      if (!isNaN(e.length)) {
-	        var o = -1,
-	          i = function next() {
-	            for (; ++o < e.length;) if (n.call(e, o)) return next.value = e[o], next.done = !1, next;
-	            return next.value = t, next.done = !0, next;
-	          };
-	        return i.next = i;
-	      }
-	    }
-	    throw new TypeError(typeof e + " is not iterable");
-	  }
-	  return GeneratorFunction.prototype = GeneratorFunctionPrototype, o(g, "constructor", {
-	    value: GeneratorFunctionPrototype,
-	    configurable: !0
-	  }), o(GeneratorFunctionPrototype, "constructor", {
-	    value: GeneratorFunction,
-	    configurable: !0
-	  }), GeneratorFunction.displayName = define(GeneratorFunctionPrototype, u, "GeneratorFunction"), e.isGeneratorFunction = function (t) {
-	    var e = "function" == typeof t && t.constructor;
-	    return !!e && (e === GeneratorFunction || "GeneratorFunction" === (e.displayName || e.name));
-	  }, e.mark = function (t) {
-	    return Object.setPrototypeOf ? Object.setPrototypeOf(t, GeneratorFunctionPrototype) : (t.__proto__ = GeneratorFunctionPrototype, define(t, u, "GeneratorFunction")), t.prototype = Object.create(g), t;
-	  }, e.awrap = function (t) {
-	    return {
-	      __await: t
-	    };
-	  }, defineIteratorMethods(AsyncIterator.prototype), define(AsyncIterator.prototype, c, function () {
-	    return this;
-	  }), e.AsyncIterator = AsyncIterator, e.async = function (t, r, n, o, i) {
-	    void 0 === i && (i = Promise);
-	    var a = new AsyncIterator(wrap(t, r, n, o), i);
-	    return e.isGeneratorFunction(r) ? a : a.next().then(function (t) {
-	      return t.done ? t.value : a.next();
-	    });
-	  }, defineIteratorMethods(g), define(g, u, "Generator"), define(g, a, function () {
-	    return this;
-	  }), define(g, "toString", function () {
-	    return "[object Generator]";
-	  }), e.keys = function (t) {
-	    var e = Object(t),
-	      r = [];
-	    for (var n in e) r.push(n);
-	    return r.reverse(), function next() {
-	      for (; r.length;) {
-	        var t = r.pop();
-	        if (t in e) return next.value = t, next.done = !1, next;
-	      }
-	      return next.done = !0, next;
-	    };
-	  }, e.values = values, Context.prototype = {
-	    constructor: Context,
-	    reset: function (e) {
-	      if (this.prev = 0, this.next = 0, this.sent = this._sent = t, this.done = !1, this.delegate = null, this.method = "next", this.arg = t, this.tryEntries.forEach(resetTryEntry), !e) for (var r in this) "t" === r.charAt(0) && n.call(this, r) && !isNaN(+r.slice(1)) && (this[r] = t);
-	    },
-	    stop: function () {
-	      this.done = !0;
-	      var t = this.tryEntries[0].completion;
-	      if ("throw" === t.type) throw t.arg;
-	      return this.rval;
-	    },
-	    dispatchException: function (e) {
-	      if (this.done) throw e;
-	      var r = this;
-	      function handle(n, o) {
-	        return a.type = "throw", a.arg = e, r.next = n, o && (r.method = "next", r.arg = t), !!o;
-	      }
-	      for (var o = this.tryEntries.length - 1; o >= 0; --o) {
-	        var i = this.tryEntries[o],
-	          a = i.completion;
-	        if ("root" === i.tryLoc) return handle("end");
-	        if (i.tryLoc <= this.prev) {
-	          var c = n.call(i, "catchLoc"),
-	            u = n.call(i, "finallyLoc");
-	          if (c && u) {
-	            if (this.prev < i.catchLoc) return handle(i.catchLoc, !0);
-	            if (this.prev < i.finallyLoc) return handle(i.finallyLoc);
-	          } else if (c) {
-	            if (this.prev < i.catchLoc) return handle(i.catchLoc, !0);
-	          } else {
-	            if (!u) throw new Error("try statement without catch or finally");
-	            if (this.prev < i.finallyLoc) return handle(i.finallyLoc);
-	          }
-	        }
-	      }
-	    },
-	    abrupt: function (t, e) {
-	      for (var r = this.tryEntries.length - 1; r >= 0; --r) {
-	        var o = this.tryEntries[r];
-	        if (o.tryLoc <= this.prev && n.call(o, "finallyLoc") && this.prev < o.finallyLoc) {
-	          var i = o;
-	          break;
-	        }
-	      }
-	      i && ("break" === t || "continue" === t) && i.tryLoc <= e && e <= i.finallyLoc && (i = null);
-	      var a = i ? i.completion : {};
-	      return a.type = t, a.arg = e, i ? (this.method = "next", this.next = i.finallyLoc, y) : this.complete(a);
-	    },
-	    complete: function (t, e) {
-	      if ("throw" === t.type) throw t.arg;
-	      return "break" === t.type || "continue" === t.type ? this.next = t.arg : "return" === t.type ? (this.rval = this.arg = t.arg, this.method = "return", this.next = "end") : "normal" === t.type && e && (this.next = e), y;
-	    },
-	    finish: function (t) {
-	      for (var e = this.tryEntries.length - 1; e >= 0; --e) {
-	        var r = this.tryEntries[e];
-	        if (r.finallyLoc === t) return this.complete(r.completion, r.afterLoc), resetTryEntry(r), y;
-	      }
-	    },
-	    catch: function (t) {
-	      for (var e = this.tryEntries.length - 1; e >= 0; --e) {
-	        var r = this.tryEntries[e];
-	        if (r.tryLoc === t) {
-	          var n = r.completion;
-	          if ("throw" === n.type) {
-	            var o = n.arg;
-	            resetTryEntry(r);
-	          }
-	          return o;
-	        }
-	      }
-	      throw new Error("illegal catch attempt");
-	    },
-	    delegateYield: function (e, r, n) {
-	      return this.delegate = {
-	        iterator: values(e),
-	        resultName: r,
-	        nextLoc: n
-	      }, "next" === this.method && (this.arg = t), y;
-	    }
-	  }, e;
 	}
 	function _typeof(o) {
 	  "@babel/helpers - typeof";
@@ -8228,17 +7924,6 @@ var spine = (function (pc) {
 	  };
 	  return _setPrototypeOf(o, p);
 	}
-	function _isNativeReflectConstruct() {
-	  if (typeof Reflect === "undefined" || !Reflect.construct) return false;
-	  if (Reflect.construct.sham) return false;
-	  if (typeof Proxy === "function") return true;
-	  try {
-	    Boolean.prototype.valueOf.call(Reflect.construct(Boolean, [], function () {}));
-	    return true;
-	  } catch (e) {
-	    return false;
-	  }
-	}
 	function _assertThisInitialized(self) {
 	  if (self === void 0) {
 	    throw new ReferenceError("this hasn't been initialised - super() hasn't been called");
@@ -8253,20 +7938,6 @@ var spine = (function (pc) {
 	  }
 	  return _assertThisInitialized(self);
 	}
-	function _createSuper(Derived) {
-	  var hasNativeReflectConstruct = _isNativeReflectConstruct();
-	  return function _createSuperInternal() {
-	    var Super = _getPrototypeOf(Derived),
-	      result;
-	    if (hasNativeReflectConstruct) {
-	      var NewTarget = _getPrototypeOf(this).constructor;
-	      result = Reflect.construct(Super, arguments, NewTarget);
-	    } else {
-	      result = Super.apply(this, arguments);
-	    }
-	    return _possibleConstructorReturn(this, result);
-	  };
-	}
 	function _superPropBase(object, property) {
 	  while (!Object.prototype.hasOwnProperty.call(object, property)) {
 	    object = _getPrototypeOf(object);
@@ -8274,11 +7945,11 @@ var spine = (function (pc) {
 	  }
 	  return object;
 	}
-	function _get$1() {
+	function _get() {
 	  if (typeof Reflect !== "undefined" && Reflect.get) {
-	    _get$1 = Reflect.get.bind();
+	    _get = Reflect.get.bind();
 	  } else {
-	    _get$1 = function _get(target, property, receiver) {
+	    _get = function _get(target, property, receiver) {
 	      var base = _superPropBase(target, property);
 	      if (!base) return;
 	      var desc = Object.getOwnPropertyDescriptor(base, property);
@@ -8288,7 +7959,7 @@ var spine = (function (pc) {
 	      return desc.value;
 	    };
 	  }
-	  return _get$1.apply(this, arguments);
+	  return _get.apply(this, arguments);
 	}
 	function _slicedToArray(arr, i) {
 	  return _arrayWithHoles(arr) || _iterableToArrayLimit(arr, i) || _unsupportedIterableToArray(arr, i) || _nonIterableRest();
@@ -8327,7 +7998,7 @@ var spine = (function (pc) {
 	function _createForOfIteratorHelper(o, allowArrayLike) {
 	  var it = typeof Symbol !== "undefined" && o[Symbol.iterator] || o["@@iterator"];
 	  if (!it) {
-	    if (Array.isArray(o) || (it = _unsupportedIterableToArray(o)) || allowArrayLike && o && typeof o.length === "number") {
+	    if (Array.isArray(o) || (it = _unsupportedIterableToArray(o)) || allowArrayLike  ) {
 	      if (it) o = it;
 	      var i = 0;
 	      var F = function () {};
@@ -8379,11 +8050,11 @@ var spine = (function (pc) {
 	  if (typeof input !== "object" || input === null) return input;
 	  var prim = input[Symbol.toPrimitive];
 	  if (prim !== undefined) {
-	    var res = prim.call(input, hint || "default");
+	    var res = prim.call(input, hint );
 	    if (typeof res !== "object") return res;
 	    throw new TypeError("@@toPrimitive must return a primitive value.");
 	  }
-	  return (hint === "string" ? String : Number)(input);
+	  return (String )(input);
 	}
 	function _toPropertyKey(arg) {
 	  var key = _toPrimitive(arg, "string");
@@ -8412,7 +8083,7 @@ var spine = (function (pc) {
 	    };
 	    this.pcTexture = texture;
 	  }
-	  _createClass(SpineTextureWrapper, [{
+	  return _createClass(SpineTextureWrapper, [{
 	    key: "setFilters",
 	    value: function setFilters(minFilter, magFilter) {
 	      this.pcTexture.minFilter = TO_TEXTURE_FILTER[minFilter];
@@ -8435,7 +8106,6 @@ var spine = (function (pc) {
 	      this.pcTexture.destroy();
 	    }
 	  }]);
-	  return SpineTextureWrapper;
 	}();
 
 	function getDefaultExportFromCjs (x) {
@@ -8525,8 +8195,11 @@ var spine = (function (pc) {
 	  createToken('XRANGEPLAINLOOSE', "[v=\\s]*(".concat(src[t.XRANGEIDENTIFIERLOOSE], ")") + "(?:\\.(".concat(src[t.XRANGEIDENTIFIERLOOSE], ")") + "(?:\\.(".concat(src[t.XRANGEIDENTIFIERLOOSE], ")") + "(?:".concat(src[t.PRERELEASELOOSE], ")?").concat(src[t.BUILD], "?") + ")?)?");
 	  createToken('XRANGE', "^".concat(src[t.GTLT], "\\s*").concat(src[t.XRANGEPLAIN], "$"));
 	  createToken('XRANGELOOSE', "^".concat(src[t.GTLT], "\\s*").concat(src[t.XRANGEPLAINLOOSE], "$"));
-	  createToken('COERCE', "".concat('(^|[^\\d])' + '(\\d{1,').concat(MAX_SAFE_COMPONENT_LENGTH, "})") + "(?:\\.(\\d{1,".concat(MAX_SAFE_COMPONENT_LENGTH, "}))?") + "(?:\\.(\\d{1,".concat(MAX_SAFE_COMPONENT_LENGTH, "}))?") + "(?:$|[^\\d])");
+	  createToken('COERCEPLAIN', "".concat('(^|[^\\d])' + '(\\d{1,').concat(MAX_SAFE_COMPONENT_LENGTH, "})") + "(?:\\.(\\d{1,".concat(MAX_SAFE_COMPONENT_LENGTH, "}))?") + "(?:\\.(\\d{1,".concat(MAX_SAFE_COMPONENT_LENGTH, "}))?"));
+	  createToken('COERCE', "".concat(src[t.COERCEPLAIN], "(?:$|[^\\d])"));
+	  createToken('COERCEFULL', src[t.COERCEPLAIN] + "(?:".concat(src[t.PRERELEASE], ")?") + "(?:".concat(src[t.BUILD], ")?") + "(?:$|[^\\d])");
 	  createToken('COERCERTL', src[t.COERCE], true);
+	  createToken('COERCERTLFULL', src[t.COERCEFULL], true);
 	  createToken('LONETILDE', '(?:~>?)');
 	  createToken('TILDETRIM', "(\\s*)".concat(src[t.LONETILDE], "\\s+"), true);
 	  exports.tildeTrimReplace = '$1~';
@@ -8645,7 +8318,7 @@ var spine = (function (pc) {
 	    this.build = m[5] ? m[5].split('.') : [];
 	    this.format();
 	  }
-	  _createClass(SemVer, [{
+	  return _createClass(SemVer, [{
 	    key: "format",
 	    value: function format() {
 	      this.version = "".concat(this.major, ".").concat(this.minor, ".").concat(this.patch);
@@ -8723,7 +8396,7 @@ var spine = (function (pc) {
 	      do {
 	        var a = this.build[i];
 	        var b = other.build[i];
-	        debug('prerelease compare', i, a, b);
+	        debug('build compare', i, a, b);
 	        if (a === undefined && b === undefined) {
 	          return 0;
 	        } else if (b === undefined) {
@@ -8834,7 +8507,6 @@ var spine = (function (pc) {
 	      return this;
 	    }
 	  }]);
-	  return SemVer;
 	}();
 	var semver$1 = SemVer$3;
 	getDefaultExportFromCjs(semver$1);
@@ -8882,727 +8554,76 @@ var spine = (function (pc) {
 	  options = options || {};
 	  var match = null;
 	  if (!options.rtl) {
-	    match = version.match(re[t.COERCE]);
+	    match = version.match(options.includePrerelease ? re[t.COERCEFULL] : re[t.COERCE]);
 	  } else {
+	    var coerceRtlRegex = options.includePrerelease ? re[t.COERCERTLFULL] : re[t.COERCERTL];
 	    var next;
-	    while ((next = re[t.COERCERTL].exec(version)) && (!match || match.index + match[0].length !== version.length)) {
+	    while ((next = coerceRtlRegex.exec(version)) && (!match || match.index + match[0].length !== version.length)) {
 	      if (!match || next.index + next[0].length !== match.index + match[0].length) {
 	        match = next;
 	      }
-	      re[t.COERCERTL].lastIndex = next.index + next[1].length + next[2].length;
+	      coerceRtlRegex.lastIndex = next.index + next[1].length + next[2].length;
 	    }
-	    re[t.COERCERTL].lastIndex = -1;
+	    coerceRtlRegex.lastIndex = -1;
 	  }
 	  if (match === null) {
 	    return null;
 	  }
-	  return parse("".concat(match[2], ".").concat(match[3] || '0', ".").concat(match[4] || '0'), options);
+	  var major = match[2];
+	  var minor = match[3] || '0';
+	  var patch = match[4] || '0';
+	  var prerelease = options.includePrerelease && match[5] ? "-".concat(match[5]) : '';
+	  var build = options.includePrerelease && match[6] ? "+".concat(match[6]) : '';
+	  return parse("".concat(major, ".").concat(minor, ".").concat(patch).concat(prerelease).concat(build), options);
 	};
 	var coerce_1 = coerce;
 	var coerce$1 = getDefaultExportFromCjs(coerce_1);
 
-	var iterator;
-	var hasRequiredIterator;
-	function requireIterator() {
-	  if (hasRequiredIterator) return iterator;
-	  hasRequiredIterator = 1;
-	  iterator = function iterator(Yallist) {
-	    Yallist.prototype[Symbol.iterator] = _regeneratorRuntime().mark(function _callee() {
-	      var walker;
-	      return _regeneratorRuntime().wrap(function _callee$(_context) {
-	        while (1) switch (_context.prev = _context.next) {
-	          case 0:
-	            walker = this.head;
-	          case 1:
-	            if (!walker) {
-	              _context.next = 7;
-	              break;
-	            }
-	            _context.next = 4;
-	            return walker.value;
-	          case 4:
-	            walker = walker.next;
-	            _context.next = 1;
-	            break;
-	          case 7:
-	          case "end":
-	            return _context.stop();
-	        }
-	      }, _callee, this);
-	    });
-	  };
-	  return iterator;
-	}
-
-	var yallist = Yallist$1;
-	Yallist$1.Node = Node;
-	Yallist$1.create = Yallist$1;
-	function Yallist$1(list) {
-	  var self = this;
-	  if (!(self instanceof Yallist$1)) {
-	    self = new Yallist$1();
-	  }
-	  self.tail = null;
-	  self.head = null;
-	  self.length = 0;
-	  if (list && typeof list.forEach === 'function') {
-	    list.forEach(function (item) {
-	      self.push(item);
-	    });
-	  } else if (arguments.length > 0) {
-	    for (var i = 0, l = arguments.length; i < l; i++) {
-	      self.push(arguments[i]);
-	    }
-	  }
-	  return self;
-	}
-	Yallist$1.prototype.removeNode = function (node) {
-	  if (node.list !== this) {
-	    throw new Error('removing node which does not belong to this list');
-	  }
-	  var next = node.next;
-	  var prev = node.prev;
-	  if (next) {
-	    next.prev = prev;
-	  }
-	  if (prev) {
-	    prev.next = next;
-	  }
-	  if (node === this.head) {
-	    this.head = next;
-	  }
-	  if (node === this.tail) {
-	    this.tail = prev;
-	  }
-	  node.list.length--;
-	  node.next = null;
-	  node.prev = null;
-	  node.list = null;
-	  return next;
-	};
-	Yallist$1.prototype.unshiftNode = function (node) {
-	  if (node === this.head) {
-	    return;
-	  }
-	  if (node.list) {
-	    node.list.removeNode(node);
-	  }
-	  var head = this.head;
-	  node.list = this;
-	  node.next = head;
-	  if (head) {
-	    head.prev = node;
-	  }
-	  this.head = node;
-	  if (!this.tail) {
-	    this.tail = node;
-	  }
-	  this.length++;
-	};
-	Yallist$1.prototype.pushNode = function (node) {
-	  if (node === this.tail) {
-	    return;
-	  }
-	  if (node.list) {
-	    node.list.removeNode(node);
-	  }
-	  var tail = this.tail;
-	  node.list = this;
-	  node.prev = tail;
-	  if (tail) {
-	    tail.next = node;
-	  }
-	  this.tail = node;
-	  if (!this.head) {
-	    this.head = node;
-	  }
-	  this.length++;
-	};
-	Yallist$1.prototype.push = function () {
-	  for (var i = 0, l = arguments.length; i < l; i++) {
-	    push(this, arguments[i]);
-	  }
-	  return this.length;
-	};
-	Yallist$1.prototype.unshift = function () {
-	  for (var i = 0, l = arguments.length; i < l; i++) {
-	    unshift(this, arguments[i]);
-	  }
-	  return this.length;
-	};
-	Yallist$1.prototype.pop = function () {
-	  if (!this.tail) {
-	    return undefined;
-	  }
-	  var res = this.tail.value;
-	  this.tail = this.tail.prev;
-	  if (this.tail) {
-	    this.tail.next = null;
-	  } else {
-	    this.head = null;
-	  }
-	  this.length--;
-	  return res;
-	};
-	Yallist$1.prototype.shift = function () {
-	  if (!this.head) {
-	    return undefined;
-	  }
-	  var res = this.head.value;
-	  this.head = this.head.next;
-	  if (this.head) {
-	    this.head.prev = null;
-	  } else {
-	    this.tail = null;
-	  }
-	  this.length--;
-	  return res;
-	};
-	Yallist$1.prototype.forEach = function (fn, thisp) {
-	  thisp = thisp || this;
-	  for (var walker = this.head, i = 0; walker !== null; i++) {
-	    fn.call(thisp, walker.value, i, this);
-	    walker = walker.next;
-	  }
-	};
-	Yallist$1.prototype.forEachReverse = function (fn, thisp) {
-	  thisp = thisp || this;
-	  for (var walker = this.tail, i = this.length - 1; walker !== null; i--) {
-	    fn.call(thisp, walker.value, i, this);
-	    walker = walker.prev;
-	  }
-	};
-	Yallist$1.prototype.get = function (n) {
-	  for (var i = 0, walker = this.head; walker !== null && i < n; i++) {
-	    walker = walker.next;
-	  }
-	  if (i === n && walker !== null) {
-	    return walker.value;
-	  }
-	};
-	Yallist$1.prototype.getReverse = function (n) {
-	  for (var i = 0, walker = this.tail; walker !== null && i < n; i++) {
-	    walker = walker.prev;
-	  }
-	  if (i === n && walker !== null) {
-	    return walker.value;
-	  }
-	};
-	Yallist$1.prototype.map = function (fn, thisp) {
-	  thisp = thisp || this;
-	  var res = new Yallist$1();
-	  for (var walker = this.head; walker !== null;) {
-	    res.push(fn.call(thisp, walker.value, this));
-	    walker = walker.next;
-	  }
-	  return res;
-	};
-	Yallist$1.prototype.mapReverse = function (fn, thisp) {
-	  thisp = thisp || this;
-	  var res = new Yallist$1();
-	  for (var walker = this.tail; walker !== null;) {
-	    res.push(fn.call(thisp, walker.value, this));
-	    walker = walker.prev;
-	  }
-	  return res;
-	};
-	Yallist$1.prototype.reduce = function (fn, initial) {
-	  var acc;
-	  var walker = this.head;
-	  if (arguments.length > 1) {
-	    acc = initial;
-	  } else if (this.head) {
-	    walker = this.head.next;
-	    acc = this.head.value;
-	  } else {
-	    throw new TypeError('Reduce of empty list with no initial value');
-	  }
-	  for (var i = 0; walker !== null; i++) {
-	    acc = fn(acc, walker.value, i);
-	    walker = walker.next;
-	  }
-	  return acc;
-	};
-	Yallist$1.prototype.reduceReverse = function (fn, initial) {
-	  var acc;
-	  var walker = this.tail;
-	  if (arguments.length > 1) {
-	    acc = initial;
-	  } else if (this.tail) {
-	    walker = this.tail.prev;
-	    acc = this.tail.value;
-	  } else {
-	    throw new TypeError('Reduce of empty list with no initial value');
-	  }
-	  for (var i = this.length - 1; walker !== null; i--) {
-	    acc = fn(acc, walker.value, i);
-	    walker = walker.prev;
-	  }
-	  return acc;
-	};
-	Yallist$1.prototype.toArray = function () {
-	  var arr = new Array(this.length);
-	  for (var i = 0, walker = this.head; walker !== null; i++) {
-	    arr[i] = walker.value;
-	    walker = walker.next;
-	  }
-	  return arr;
-	};
-	Yallist$1.prototype.toArrayReverse = function () {
-	  var arr = new Array(this.length);
-	  for (var i = 0, walker = this.tail; walker !== null; i++) {
-	    arr[i] = walker.value;
-	    walker = walker.prev;
-	  }
-	  return arr;
-	};
-	Yallist$1.prototype.slice = function (from, to) {
-	  to = to || this.length;
-	  if (to < 0) {
-	    to += this.length;
-	  }
-	  from = from || 0;
-	  if (from < 0) {
-	    from += this.length;
-	  }
-	  var ret = new Yallist$1();
-	  if (to < from || to < 0) {
-	    return ret;
-	  }
-	  if (from < 0) {
-	    from = 0;
-	  }
-	  if (to > this.length) {
-	    to = this.length;
-	  }
-	  for (var i = 0, walker = this.head; walker !== null && i < from; i++) {
-	    walker = walker.next;
-	  }
-	  for (; walker !== null && i < to; i++, walker = walker.next) {
-	    ret.push(walker.value);
-	  }
-	  return ret;
-	};
-	Yallist$1.prototype.sliceReverse = function (from, to) {
-	  to = to || this.length;
-	  if (to < 0) {
-	    to += this.length;
-	  }
-	  from = from || 0;
-	  if (from < 0) {
-	    from += this.length;
-	  }
-	  var ret = new Yallist$1();
-	  if (to < from || to < 0) {
-	    return ret;
-	  }
-	  if (from < 0) {
-	    from = 0;
-	  }
-	  if (to > this.length) {
-	    to = this.length;
-	  }
-	  for (var i = this.length, walker = this.tail; walker !== null && i > to; i--) {
-	    walker = walker.prev;
-	  }
-	  for (; walker !== null && i > from; i--, walker = walker.prev) {
-	    ret.push(walker.value);
-	  }
-	  return ret;
-	};
-	Yallist$1.prototype.splice = function (start, deleteCount) {
-	  if (start > this.length) {
-	    start = this.length - 1;
-	  }
-	  if (start < 0) {
-	    start = this.length + start;
-	  }
-	  for (var i = 0, walker = this.head; walker !== null && i < start; i++) {
-	    walker = walker.next;
-	  }
-	  var ret = [];
-	  for (var i = 0; walker && i < deleteCount; i++) {
-	    ret.push(walker.value);
-	    walker = this.removeNode(walker);
-	  }
-	  if (walker === null) {
-	    walker = this.tail;
-	  }
-	  if (walker !== this.head && walker !== this.tail) {
-	    walker = walker.prev;
-	  }
-	  for (var i = 0; i < (arguments.length <= 2 ? 0 : arguments.length - 2); i++) {
-	    walker = insert(this, walker, i + 2 < 2 || arguments.length <= i + 2 ? undefined : arguments[i + 2]);
-	  }
-	  return ret;
-	};
-	Yallist$1.prototype.reverse = function () {
-	  var head = this.head;
-	  var tail = this.tail;
-	  for (var walker = head; walker !== null; walker = walker.prev) {
-	    var p = walker.prev;
-	    walker.prev = walker.next;
-	    walker.next = p;
-	  }
-	  this.head = tail;
-	  this.tail = head;
-	  return this;
-	};
-	function insert(self, node, value) {
-	  var inserted = node === self.head ? new Node(value, null, node, self) : new Node(value, node, node.next, self);
-	  if (inserted.next === null) {
-	    self.tail = inserted;
-	  }
-	  if (inserted.prev === null) {
-	    self.head = inserted;
-	  }
-	  self.length++;
-	  return inserted;
-	}
-	function push(self, item) {
-	  self.tail = new Node(item, self.tail, null, self);
-	  if (!self.head) {
-	    self.head = self.tail;
-	  }
-	  self.length++;
-	}
-	function unshift(self, item) {
-	  self.head = new Node(item, null, self.head, self);
-	  if (!self.tail) {
-	    self.tail = self.head;
-	  }
-	  self.length++;
-	}
-	function Node(value, prev, next, list) {
-	  if (!(this instanceof Node)) {
-	    return new Node(value, prev, next, list);
-	  }
-	  this.list = list;
-	  this.value = value;
-	  if (prev) {
-	    prev.next = this;
-	    this.prev = prev;
-	  } else {
-	    this.prev = null;
-	  }
-	  if (next) {
-	    next.prev = this;
-	    this.next = next;
-	  } else {
-	    this.next = null;
-	  }
-	}
-	try {
-	  requireIterator()(Yallist$1);
-	} catch (er) {}
-	getDefaultExportFromCjs(yallist);
-
-	var Yallist = yallist;
-	var MAX = Symbol('max');
-	var LENGTH = Symbol('length');
-	var LENGTH_CALCULATOR = Symbol('lengthCalculator');
-	var ALLOW_STALE = Symbol('allowStale');
-	var MAX_AGE = Symbol('maxAge');
-	var DISPOSE = Symbol('dispose');
-	var NO_DISPOSE_ON_SET = Symbol('noDisposeOnSet');
-	var LRU_LIST = Symbol('lruList');
-	var CACHE = Symbol('cache');
-	var UPDATE_AGE_ON_GET = Symbol('updateAgeOnGet');
-	var naiveLength = function naiveLength() {
-	  return 1;
-	};
 	var LRUCache = function () {
-	  function LRUCache(options) {
+	  function LRUCache() {
 	    _classCallCheck(this, LRUCache);
-	    if (typeof options === 'number') options = {
-	      max: options
-	    };
-	    if (!options) options = {};
-	    if (options.max && (typeof options.max !== 'number' || options.max < 0)) throw new TypeError('max must be a non-negative number');
-	    this[MAX] = options.max || Infinity;
-	    var lc = options.length || naiveLength;
-	    this[LENGTH_CALCULATOR] = typeof lc !== 'function' ? naiveLength : lc;
-	    this[ALLOW_STALE] = options.stale || false;
-	    if (options.maxAge && typeof options.maxAge !== 'number') throw new TypeError('maxAge must be a number');
-	    this[MAX_AGE] = options.maxAge || 0;
-	    this[DISPOSE] = options.dispose;
-	    this[NO_DISPOSE_ON_SET] = options.noDisposeOnSet || false;
-	    this[UPDATE_AGE_ON_GET] = options.updateAgeOnGet || false;
-	    this.reset();
+	    this.max = 1000;
+	    this.map = new Map();
 	  }
-	  _createClass(LRUCache, [{
-	    key: "max",
-	    get: function get() {
-	      return this[MAX];
-	    },
-	    set: function set(mL) {
-	      if (typeof mL !== 'number' || mL < 0) throw new TypeError('max must be a non-negative number');
-	      this[MAX] = mL || Infinity;
-	      trim(this);
-	    }
-	  }, {
-	    key: "allowStale",
-	    get: function get() {
-	      return this[ALLOW_STALE];
-	    },
-	    set: function set(allowStale) {
-	      this[ALLOW_STALE] = !!allowStale;
-	    }
-	  }, {
-	    key: "maxAge",
-	    get: function get() {
-	      return this[MAX_AGE];
-	    },
-	    set: function set(mA) {
-	      if (typeof mA !== 'number') throw new TypeError('maxAge must be a non-negative number');
-	      this[MAX_AGE] = mA;
-	      trim(this);
-	    }
-	  }, {
-	    key: "lengthCalculator",
-	    get: function get() {
-	      return this[LENGTH_CALCULATOR];
-	    },
-	    set: function set(lC) {
-	      var _this = this;
-	      if (typeof lC !== 'function') lC = naiveLength;
-	      if (lC !== this[LENGTH_CALCULATOR]) {
-	        this[LENGTH_CALCULATOR] = lC;
-	        this[LENGTH] = 0;
-	        this[LRU_LIST].forEach(function (hit) {
-	          hit.length = _this[LENGTH_CALCULATOR](hit.value, hit.key);
-	          _this[LENGTH] += hit.length;
-	        });
-	      }
-	      trim(this);
-	    }
-	  }, {
-	    key: "length",
-	    get: function get() {
-	      return this[LENGTH];
-	    }
-	  }, {
-	    key: "itemCount",
-	    get: function get() {
-	      return this[LRU_LIST].length;
-	    }
-	  }, {
-	    key: "rforEach",
-	    value: function rforEach(fn, thisp) {
-	      thisp = thisp || this;
-	      for (var walker = this[LRU_LIST].tail; walker !== null;) {
-	        var prev = walker.prev;
-	        forEachStep(this, fn, walker, thisp);
-	        walker = prev;
+	  return _createClass(LRUCache, [{
+	    key: "get",
+	    value: function get(key) {
+	      var value = this.map.get(key);
+	      if (value === undefined) {
+	        return undefined;
+	      } else {
+	        this.map.delete(key);
+	        this.map.set(key, value);
+	        return value;
 	      }
 	    }
 	  }, {
-	    key: "forEach",
-	    value: function forEach(fn, thisp) {
-	      thisp = thisp || this;
-	      for (var walker = this[LRU_LIST].head; walker !== null;) {
-	        var next = walker.next;
-	        forEachStep(this, fn, walker, thisp);
-	        walker = next;
+	    key: "delete",
+	    value: function _delete(key) {
+	      if (this.map.has(key)) {
+	        this.map.delete(key);
+	        return true;
+	      } else {
+	        return false;
 	      }
-	    }
-	  }, {
-	    key: "keys",
-	    value: function keys() {
-	      return this[LRU_LIST].toArray().map(function (k) {
-	        return k.key;
-	      });
-	    }
-	  }, {
-	    key: "values",
-	    value: function values() {
-	      return this[LRU_LIST].toArray().map(function (k) {
-	        return k.value;
-	      });
-	    }
-	  }, {
-	    key: "reset",
-	    value: function reset() {
-	      var _this2 = this;
-	      if (this[DISPOSE] && this[LRU_LIST] && this[LRU_LIST].length) {
-	        this[LRU_LIST].forEach(function (hit) {
-	          return _this2[DISPOSE](hit.key, hit.value);
-	        });
-	      }
-	      this[CACHE] = new Map();
-	      this[LRU_LIST] = new Yallist();
-	      this[LENGTH] = 0;
-	    }
-	  }, {
-	    key: "dump",
-	    value: function dump() {
-	      var _this3 = this;
-	      return this[LRU_LIST].map(function (hit) {
-	        return isStale(_this3, hit) ? false : {
-	          k: hit.key,
-	          v: hit.value,
-	          e: hit.now + (hit.maxAge || 0)
-	        };
-	      }).toArray().filter(function (h) {
-	        return h;
-	      });
-	    }
-	  }, {
-	    key: "dumpLru",
-	    value: function dumpLru() {
-	      return this[LRU_LIST];
 	    }
 	  }, {
 	    key: "set",
-	    value: function set(key, value, maxAge) {
-	      maxAge = maxAge || this[MAX_AGE];
-	      if (maxAge && typeof maxAge !== 'number') throw new TypeError('maxAge must be a number');
-	      var now = maxAge ? Date.now() : 0;
-	      var len = this[LENGTH_CALCULATOR](value, key);
-	      if (this[CACHE].has(key)) {
-	        if (len > this[MAX]) {
-	          _del(this, this[CACHE].get(key));
-	          return false;
+	    value: function set(key, value) {
+	      var deleted = this.delete(key);
+	      if (!deleted && value !== undefined) {
+	        if (this.map.size >= this.max) {
+	          var firstKey = this.map.keys().next().value;
+	          this.delete(firstKey);
 	        }
-	        var node = this[CACHE].get(key);
-	        var item = node.value;
-	        if (this[DISPOSE]) {
-	          if (!this[NO_DISPOSE_ON_SET]) this[DISPOSE](key, item.value);
-	        }
-	        item.now = now;
-	        item.maxAge = maxAge;
-	        item.value = value;
-	        this[LENGTH] += len - item.length;
-	        item.length = len;
-	        this.get(key);
-	        trim(this);
-	        return true;
+	        this.map.set(key, value);
 	      }
-	      var hit = new Entry(key, value, len, now, maxAge);
-	      if (hit.length > this[MAX]) {
-	        if (this[DISPOSE]) this[DISPOSE](key, value);
-	        return false;
-	      }
-	      this[LENGTH] += hit.length;
-	      this[LRU_LIST].unshift(hit);
-	      this[CACHE].set(key, this[LRU_LIST].head);
-	      trim(this);
-	      return true;
-	    }
-	  }, {
-	    key: "has",
-	    value: function has(key) {
-	      if (!this[CACHE].has(key)) return false;
-	      var hit = this[CACHE].get(key).value;
-	      return !isStale(this, hit);
-	    }
-	  }, {
-	    key: "get",
-	    value: function get(key) {
-	      return _get(this, key, true);
-	    }
-	  }, {
-	    key: "peek",
-	    value: function peek(key) {
-	      return _get(this, key, false);
-	    }
-	  }, {
-	    key: "pop",
-	    value: function pop() {
-	      var node = this[LRU_LIST].tail;
-	      if (!node) return null;
-	      _del(this, node);
-	      return node.value;
-	    }
-	  }, {
-	    key: "del",
-	    value: function del(key) {
-	      _del(this, this[CACHE].get(key));
-	    }
-	  }, {
-	    key: "load",
-	    value: function load(arr) {
-	      this.reset();
-	      var now = Date.now();
-	      for (var l = arr.length - 1; l >= 0; l--) {
-	        var hit = arr[l];
-	        var expiresAt = hit.e || 0;
-	        if (expiresAt === 0) this.set(hit.k, hit.v);else {
-	          var maxAge = expiresAt - now;
-	          if (maxAge > 0) {
-	            this.set(hit.k, hit.v, maxAge);
-	          }
-	        }
-	      }
-	    }
-	  }, {
-	    key: "prune",
-	    value: function prune() {
-	      var _this4 = this;
-	      this[CACHE].forEach(function (value, key) {
-	        return _get(_this4, key, false);
-	      });
+	      return this;
 	    }
 	  }]);
-	  return LRUCache;
 	}();
-	var _get = function _get(self, key, doUse) {
-	  var node = self[CACHE].get(key);
-	  if (node) {
-	    var hit = node.value;
-	    if (isStale(self, hit)) {
-	      _del(self, node);
-	      if (!self[ALLOW_STALE]) return undefined;
-	    } else {
-	      if (doUse) {
-	        if (self[UPDATE_AGE_ON_GET]) node.value.now = Date.now();
-	        self[LRU_LIST].unshiftNode(node);
-	      }
-	    }
-	    return hit.value;
-	  }
-	};
-	var isStale = function isStale(self, hit) {
-	  if (!hit || !hit.maxAge && !self[MAX_AGE]) return false;
-	  var diff = Date.now() - hit.now;
-	  return hit.maxAge ? diff > hit.maxAge : self[MAX_AGE] && diff > self[MAX_AGE];
-	};
-	var trim = function trim(self) {
-	  if (self[LENGTH] > self[MAX]) {
-	    for (var walker = self[LRU_LIST].tail; self[LENGTH] > self[MAX] && walker !== null;) {
-	      var prev = walker.prev;
-	      _del(self, walker);
-	      walker = prev;
-	    }
-	  }
-	};
-	var _del = function _del(self, node) {
-	  if (node) {
-	    var hit = node.value;
-	    if (self[DISPOSE]) self[DISPOSE](hit.key, hit.value);
-	    self[LENGTH] -= hit.length;
-	    self[CACHE].delete(hit.key);
-	    self[LRU_LIST].removeNode(node);
-	  }
-	};
-	var Entry = _createClass(function Entry(key, value, length, now, maxAge) {
-	  _classCallCheck(this, Entry);
-	  this.key = key;
-	  this.value = value;
-	  this.length = length;
-	  this.now = now;
-	  this.maxAge = maxAge || 0;
-	});
-	var forEachStep = function forEachStep(self, fn, node, thisp) {
-	  var hit = node.value;
-	  if (isStale(self, hit)) {
-	    _del(self, node);
-	    if (!self[ALLOW_STALE]) hit = undefined;
-	  }
-	  if (hit) fn.call(thisp, hit.value, hit.key, self);
-	};
-	var lruCache = LRUCache;
-	getDefaultExportFromCjs(lruCache);
+	var lrucache = LRUCache;
+	getDefaultExportFromCjs(lrucache);
 
 	var SemVer = semver$1;
 	var compare$6 = function compare(a, b, loose) {
@@ -9727,7 +8748,7 @@ var spine = (function (pc) {
 	      }
 	      debug('comp', this);
 	    }
-	    _createClass(Comparator, [{
+	    return _createClass(Comparator, [{
 	      key: "parse",
 	      value: function parse(comp) {
 	        var r = this.options.loose ? re[t.COMPARATORLOOSE] : re[t.COMPARATOR];
@@ -9813,7 +8834,6 @@ var spine = (function (pc) {
 	        return ANY;
 	      }
 	    }]);
-	    return Comparator;
 	  }();
 	  comparator = Comparator;
 	  var parseOptions = parseOptions_1;
@@ -9888,7 +8908,7 @@ var spine = (function (pc) {
 	      }
 	      this.format();
 	    }
-	    _createClass(Range, [{
+	    return _createClass(Range, [{
 	      key: "format",
 	      value: function format() {
 	        this.range = this.set.map(function (comps) {
@@ -9996,13 +9016,10 @@ var spine = (function (pc) {
 	        return false;
 	      }
 	    }]);
-	    return Range;
 	  }();
 	  range = Range;
-	  var LRU = lruCache;
-	  var cache = new LRU({
-	    max: 1000
-	  });
+	  var LRU = lrucache;
+	  var cache = new LRU();
 	  var parseOptions = parseOptions_1;
 	  var Comparator = requireComparator();
 	  var debug = debug_1;
@@ -10192,7 +9209,7 @@ var spine = (function (pc) {
 	    return comp.trim().replace(re[options.includePrerelease ? t.GTE0PRE : t.GTE0], '');
 	  };
 	  var hyphenReplace = function hyphenReplace(incPr) {
-	    return function ($0, from, fM, fm, fp, fpr, fb, to, tM, tm, tp, tpr, tb) {
+	    return function ($0, from, fM, fm, fp, fpr, fb, to, tM, tm, tp, tpr) {
 	      if (isX(fM)) {
 	        from = '';
 	      } else if (isX(fm)) {
@@ -10305,6 +9322,7 @@ var spine = (function (pc) {
 	    this.skeletonVersion = semver.valid(semver.coerce(_skeletonData.version));
 	    this._spine_3_6_0 = semver.satisfies(this.skeletonVersion, '<=3.6.0');
 	    this._spine_3_7_99 = semver.satisfies(this.skeletonVersion, '<=3.7.99');
+	    this._spine_4_0_X = semver.satisfies(this.skeletonVersion, '~4.0.0');
 	    this._spine_4_1_X = semver.satisfies(this.skeletonVersion, '~4.1.23');
 	    this.skeleton = new spine$1.Skeleton(_skeletonData);
 	    this.skeleton.updateWorldTransform();
@@ -10333,7 +9351,7 @@ var spine = (function (pc) {
 	    this.init();
 	    this._hidden = false;
 	  }
-	  _createClass(Spine, [{
+	  return _createClass(Spine, [{
 	    key: "destroy",
 	    value: function destroy() {
 	      this.removeFromLayers();
@@ -10420,6 +9438,7 @@ var spine = (function (pc) {
 	      var material = new pc__namespace.StandardMaterial();
 	      material.emissiveMap = texture;
 	      material.emissiveVertexColor = true;
+	      material.emissive = pc__namespace.Color.WHITE;
 	      material.opacityMap = texture;
 	      material.opacityVertexColor = true;
 	      material.depthWrite = false;
@@ -10443,26 +9462,32 @@ var spine = (function (pc) {
 	        } else if (attachment instanceof spine$1.MeshAttachment) {
 	          slot._active.type = ATTACHMENT_TYPE.MESH;
 	        }
-	        if (attachment.region && attachment.region.texture) {
-	          var texture = attachment.region.texture.pcTexture;
-	          if (texture) {
-	            if (texture instanceof pc__namespace.StandardMaterial) {
-	              this._materials[texture.name] = texture;
-	              slot.material = texture.name;
-	            } else {
-	              var key = null;
-	              if (texture.name) {
-	                key = texture.name;
-	              } else if (texture.getSource() instanceof Image) {
-	                key = texture.getSource().getAttribute('src');
+	        var texture = null;
+	        if (attachment.region) {
+	          if (attachment.region.texture) {
+	            texture = attachment.region.texture.pcTexture;
+	          }
+	          if (attachment.region.page && attachment.region.page.texture) {
+	            texture = attachment.region.page.texture.pcTexture;
+	          }
+	        }
+	        if (texture) {
+	          if (texture instanceof pc__namespace.StandardMaterial) {
+	            this._materials[texture.name] = texture;
+	            slot.material = texture.name;
+	          } else {
+	            var key = null;
+	            if (texture.name) {
+	              key = texture.name;
+	            } else if (texture.getSource() instanceof Image) {
+	              key = texture.getSource().getAttribute('src');
+	            }
+	            if (key) {
+	              if (this._materials[key] === undefined) {
+	                var material = this.createMaterial(texture);
+	                this._materials[key] = material;
 	              }
-	              if (key) {
-	                if (this._materials[key] === undefined) {
-	                  var material = this.createMaterial(texture);
-	                  this._materials[key] = material;
-	                }
-	                slot.material = key;
-	              }
+	              slot.material = key;
 	            }
 	          }
 	        }
@@ -10722,25 +9747,37 @@ var spine = (function (pc) {
 	      this.addToLayers();
 	    }
 	  }]);
-	  return Spine;
 	}();
 
-	var SpineComponent = function (_Component) {
-	  _inherits(SpineComponent, _Component);
-	  var _super = _createSuper(SpineComponent);
-	  function SpineComponent(system, entity) {
-	    var _this;
-	    _classCallCheck(this, SpineComponent);
-	    _this = _super.call(this, system, entity);
-	    _this.on('set_atlasAsset', _this.onSetAsset, _assertThisInitialized(_this));
-	    _this.on('set_textureAssets', _this.onSetAssets, _assertThisInitialized(_this));
-	    _this.on('set_skeletonAsset', _this.onSetAsset, _assertThisInitialized(_this));
-	    _this.on('set_atlasData', _this.onSetResource, _assertThisInitialized(_this));
-	    _this.on('set_textures', _this.onSetResource, _assertThisInitialized(_this));
-	    _this.on('set_skeletonData', _this.onSetResource, _assertThisInitialized(_this));
-	    return _this;
+	function _callSuper$1(_this, derived, args) {
+	  function isNativeReflectConstruct() {
+	    if (typeof Reflect === "undefined" || !Reflect.construct) return false;
+	    if (Reflect.construct.sham) return false;
+	    if (typeof Proxy === "function") return true;
+	    try {
+	      return !Boolean.prototype.valueOf.call(Reflect.construct(Boolean, [], function () {}));
+	    } catch (e) {
+	      return false;
+	    }
 	  }
-	  _createClass(SpineComponent, [{
+	  derived = _getPrototypeOf(derived);
+	  return _possibleConstructorReturn(_this, isNativeReflectConstruct() ? Reflect.construct(derived, args || [], _getPrototypeOf(_this).constructor) : derived.apply(_this, args));
+	}
+	var SpineComponent = function (_Component) {
+	  function SpineComponent(system, entity) {
+	    var _this2;
+	    _classCallCheck(this, SpineComponent);
+	    _this2 = _callSuper$1(this, SpineComponent, [system, entity]);
+	    _this2.on('set_atlasAsset', _this2.onSetAsset, _this2);
+	    _this2.on('set_textureAssets', _this2.onSetAssets, _this2);
+	    _this2.on('set_skeletonAsset', _this2.onSetAsset, _this2);
+	    _this2.on('set_atlasData', _this2.onSetResource, _this2);
+	    _this2.on('set_textures', _this2.onSetResource, _this2);
+	    _this2.on('set_skeletonData', _this2.onSetResource, _this2);
+	    return _this2;
+	  }
+	  _inherits(SpineComponent, _Component);
+	  return _createClass(SpineComponent, [{
 	    key: "_createSpine",
 	    value: function _createSpine() {
 	      if (this.data.spine) {
@@ -10922,7 +9959,6 @@ var spine = (function (pc) {
 	      }
 	    }
 	  }]);
-	  return SpineComponent;
 	}(pc.Component);
 
 	var SpineComponentData = _createClass(function SpineComponentData() {
@@ -10938,26 +9974,39 @@ var spine = (function (pc) {
 	  this.skeletonData = null;
 	});
 
-	var SpineComponentSystem = function (_ComponentSystem) {
-	  _inherits(SpineComponentSystem, _ComponentSystem);
-	  var _super = _createSuper(SpineComponentSystem);
-	  function SpineComponentSystem(app) {
-	    var _this;
-	    _classCallCheck(this, SpineComponentSystem);
-	    _this = _super.call(this, app);
-	    _this.id = 'spine';
-	    _this.ComponentType = SpineComponent;
-	    _this.DataType = SpineComponentData;
-	    _this.schema = ['enabled', 'atlasAsset', 'textureAssets', 'skeletonAsset', 'atlasData', 'textures', 'skeletonData', 'speed', 'spine'];
-	    _this.on('beforeremove', _this.onBeforeRemove, _assertThisInitialized(_this));
-	    _this.app.systems.on('update', _this.onUpdate, _assertThisInitialized(_this));
-	    return _this;
+	function _callSuper(_this, derived, args) {
+	  function isNativeReflectConstruct() {
+	    if (typeof Reflect === "undefined" || !Reflect.construct) return false;
+	    if (Reflect.construct.sham) return false;
+	    if (typeof Proxy === "function") return true;
+	    try {
+	      return !Boolean.prototype.valueOf.call(Reflect.construct(Boolean, [], function () {}));
+	    } catch (e) {
+	      return false;
+	    }
 	  }
-	  _createClass(SpineComponentSystem, [{
+	  derived = _getPrototypeOf(derived);
+	  return _possibleConstructorReturn(_this, isNativeReflectConstruct() ? Reflect.construct(derived, args || [], _getPrototypeOf(_this).constructor) : derived.apply(_this, args));
+	}
+	var SpineComponentSystem = function (_ComponentSystem) {
+	  function SpineComponentSystem(app) {
+	    var _this2;
+	    _classCallCheck(this, SpineComponentSystem);
+	    _this2 = _callSuper(this, SpineComponentSystem, [app]);
+	    _this2.id = 'spine';
+	    _this2.ComponentType = SpineComponent;
+	    _this2.DataType = SpineComponentData;
+	    _this2.schema = ['enabled', 'atlasAsset', 'textureAssets', 'skeletonAsset', 'atlasData', 'textures', 'skeletonData', 'speed', 'spine'];
+	    _this2.on('beforeremove', _this2.onBeforeRemove, _this2);
+	    _this2.app.systems.on('update', _this2.onUpdate, _this2);
+	    return _this2;
+	  }
+	  _inherits(SpineComponentSystem, _ComponentSystem);
+	  return _createClass(SpineComponentSystem, [{
 	    key: "initializeComponentData",
 	    value: function initializeComponentData(component, data, properties) {
 	      properties = ['enabled', 'atlasAsset', 'textureAssets', 'skeletonAsset', 'atlasData', 'textures', 'skeletonData', 'spine'];
-	      _get$1(_getPrototypeOf(SpineComponentSystem.prototype), "initializeComponentData", this).call(this, component, data, properties);
+	      _get(_getPrototypeOf(SpineComponentSystem.prototype), "initializeComponentData", this).call(this, component, data, properties);
 	    }
 	  }, {
 	    key: "onBeforeRemove",
@@ -10986,7 +10035,6 @@ var spine = (function (pc) {
 	      }
 	    }
 	  }]);
-	  return SpineComponentSystem;
 	}(pc.ComponentSystem);
 
 	(function () {

@@ -353,9 +353,8 @@ class ElementComponentSystem extends ComponentSystem {
             material.emissive.set(1, 1, 1);
         } else {
             name = "Bitmap" + name;
-            material.emissive.set(0.5, 0.5, 0.5); // set to non-(1,1,1) so that tint is actually applied
+            material.emissive.set(1, 1, 1);
             material.emissiveMap = this._defaultTexture;
-            material.emissiveTint = true;
             material.opacityMap = this._defaultTexture;
             material.opacityMapChannel = 'a';
         }
@@ -391,9 +390,8 @@ class ElementComponentSystem extends ComponentSystem {
         const material = new StandardMaterial();
 
         material.diffuse.set(0, 0, 0); // black diffuse color to prevent ambient light being included
-        material.emissive.set(0.5, 0.5, 0.5); // use non-white to compile shader correctly
+        material.emissive.set(1, 1, 1);
         material.emissiveMap = this._defaultTexture;
-        material.emissiveTint = true;
         material.opacityMap = this._defaultTexture;
         material.opacityMapChannel = 'a';
         material.opacityTint = true;

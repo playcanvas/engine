@@ -78,7 +78,6 @@ assetListLoader.load(() => {
     // Construct material
     const material = new pc.StandardMaterial();
     material.useMetalness = true;
-    material.diffuse = new pc.Color(0.3, 0.3, 0.3);
     material.gloss = 0.8;
     material.metalness = 0.7;
     material.diffuseMap = assets.color.resource;

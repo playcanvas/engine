@@ -170,7 +170,6 @@ class WorldClustersDebug {
                 material.useLighting = false;
                 material.emissive = new Color(1, 1, 1);
                 material.emissiveVertexColor = true;
-                material.emissiveTint = false;
                 material.blendType = BLEND_ADDITIVEALPHA;
                 material.depthWrite = false;
                 material.update();

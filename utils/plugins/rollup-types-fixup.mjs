@@ -79,7 +79,6 @@ const STANDARD_MAT_PROPS = [
     ['emissiveMapRotation', 'number'],
     ['emissiveMapTiling', 'Vec2'],
     ['emissiveMapUv', 'number'],
-    ['emissiveTint', 'boolean'],
     ['emissiveVertexColor', 'boolean'],
     ['emissiveVertexColorChannel', 'string'],
     ['enableGGXSpecular', 'boolean'],

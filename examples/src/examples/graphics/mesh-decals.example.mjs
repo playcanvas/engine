@@ -200,6 +200,7 @@ assetListLoader.load(() => {
     material.blendType = pc.BLEND_ADDITIVEALPHA; // additive alpha blend
     material.depthWrite = false; // optimization - no need to write to depth buffer, as decals are part of the ground plane
     material.emissiveMap = assets.heart.resource;
+    material.emissive = pc.Color.WHITE;
     material.opacityMap = assets.heart.resource;
     material.depthBias = -0.1; // depth biases to avoid z-fighting with ground plane
     material.slopeDepthBias = -0.1;
