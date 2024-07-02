@@ -369,7 +369,6 @@ export { I18n } from './framework/i18n/i18n.js';
 export * from './framework/xr/constants.js';
 export { XrAnchor } from './framework/xr/xr-anchor.js';
 export { XrAnchors } from './framework/xr/xr-anchors.js';
-export { XrDepthSensing } from './framework/xr/xr-depth-sensing.js';
 export { XrDomOverlay } from './framework/xr/xr-dom-overlay.js';
 export { XrFinger } from './framework/xr/xr-finger.js';
 export { XrHand } from './framework/xr/xr-hand.js';

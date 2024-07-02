@@ -7,7 +7,6 @@ import { Quat } from '../../core/math/quat.js';
 import { Vec3 } from '../../core/math/vec3.js';
 
 import { XRTYPE_INLINE, XRTYPE_VR, XRTYPE_AR, XRDEPTHSENSINGUSAGE_CPU, XRDEPTHSENSINGFORMAT_L8A8 } from './constants.js';
-import { XrDepthSensing } from './xr-depth-sensing.js';
 import { XrDomOverlay } from './xr-dom-overlay.js';
 import { XrHitTest } from './xr-hit-test.js';
 import { XrImageTracking } from './xr-image-tracking.js';
@@ -162,14 +161,6 @@ class XrManager extends EventHandler {
     _referenceSpace = null;
 
     /**
-     * Provides access to depth sensing capabilities.
-     *
-     * @type {XrDepthSensing}
-     * @ignore
-     */
-    depthSensing;
-
-    /**
      * Provides access to DOM overlay capabilities.
      *
      * @type {XrDomOverlay}
@@ -304,7 +295,6 @@ class XrManager extends EventHandler {
         this._available[XRTYPE_AR] = false;
 
         this.views = new XrViews(this);
-        this.depthSensing = new XrDepthSensing(this);
         this.domOverlay = new XrDomOverlay(this);
         this.hitTest = new XrHitTest(this);
         this.imageTracking = new XrImageTracking(this);
@@ -387,8 +377,8 @@ class XrManager extends EventHandler {
      * @param {XrErrorCallback} [options.callback] - Optional callback function called once session
      * is started. The callback has one argument Error - it is null if successfully started XR
      * session.
-     * @param {object} [options.depthSensing] - Optional object with depth sensing parameters to
-     * attempt to enable {@link XrDepthSensing}.
+     * @param {object} [options.depthSensing] - Optional object with parameters to
+     * attempt to enable Depth Sensing.
      * @param {string} [options.depthSensing.usagePreference] - Optional usage preference for depth
      * sensing, can be 'cpu-optimized' or 'gpu-optimized' (XRDEPTHSENSINGUSAGE_*), defaults to
      * 'cpu-optimized'. Most preferred and supported will be chosen by the underlying depth sensing
