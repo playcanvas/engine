@@ -82,7 +82,7 @@ class Curve {
      *
      * @param {number} time - Time to add new key.
      * @param {number} value - Value of new key.
-     * @returns {number[]} [time, value] pair.
+     * @returns {number[]} The newly created `[time, value]` pair.
      */
     add(time, value) {
         const keys = this.keys;
@@ -101,10 +101,10 @@ class Curve {
     }
 
     /**
-     * Gets the [time, value] pair at the specified index.
+     * Gets the `[time, value]` pair at the specified index.
      *
      * @param {number} index - The index of key to return.
-     * @returns {number[]} The [time, value] pair at the specified index.
+     * @returns {number[]} The `[time, value]` pair at the specified index.
      */
     get(index) {
         return this.keys[index];
