@@ -1,5 +1,3 @@
-import { extend } from '../core.js';
-
 import { CURVE_SMOOTHSTEP } from './constants.js';
 import { CurveEvaluator } from './curve-evaluator.js';
 
@@ -10,6 +8,12 @@ import { CurveEvaluator } from './curve-evaluator.js';
  * @category Math
  */
 class Curve {
+    /**
+     * The keys that define the curve. Each key is an array of two numbers with the time first and
+     * the value second.
+     *
+     * @type {number[][]}
+     */
     keys = [];
 
     /**
@@ -65,7 +69,7 @@ class Curve {
     }
 
     /**
-     * Get the number of keys in the curve.
+     * Gets the number of keys in the curve.
      *
      * @type {number}
      */
@@ -74,7 +78,7 @@ class Curve {
     }
 
     /**
-     * Add a new key to the curve.
+     * Adds a new key to the curve.
      *
      * @param {number} time - Time to add new key.
      * @param {number} value - Value of new key.
@@ -97,22 +101,20 @@ class Curve {
     }
 
     /**
-     * Return a specific key.
+     * Gets the [time, value] pair at the specified index.
      *
-     * @param {number} index - The index of the key to return.
-     * @returns {number[]} The key at the specified index.
+     * @param {number} index - The index of key to return.
+     * @returns {number[]} The [time, value] pair at the specified index.
      */
     get(index) {
         return this.keys[index];
     }
 
     /**
-     * Sort keys by time.
+     * Sorts keys by time.
      */
     sort() {
-        this.keys.sort(function (a, b) {
-            return a[0] - b[0];
-        });
+        this.keys.sort((a, b) => a[0] - b[0]);
     }
 
     /**
@@ -154,7 +156,7 @@ class Curve {
     clone() {
         /** @type {this} */
         const result = new this.constructor();
-        result.keys = extend(result.keys, this.keys);
+        result.keys = this.keys.map(key => [...key]);
         result.type = this.type;
         result.tension = this.tension;
         return result;
