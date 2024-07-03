@@ -1,4 +1,4 @@
-import { CURVE_CARDINAL, CURVE_CATMULL, CURVE_LINEAR, CURVE_SMOOTHSTEP, CURVE_SPLINE, CURVE_STEP } from './constants.js';
+import { CURVE_LINEAR, CURVE_SMOOTHSTEP, CURVE_SPLINE, CURVE_STEP } from './constants.js';
 import { math } from './math.js';
 
 /**
@@ -126,23 +126,11 @@ class CurveEvaluator {
                 this._recip = (isFinite(diff) ? diff : 0);
                 this._p0 = keys[index][1];
                 this._p1 = keys[index + 1][1];
-                if (this._isHermite()) {
+                if (this._curve.type === CURVE_SPLINE) {
                     this._calcTangents(keys, index);
                 }
             }
         }
-    }
-
-    /**
-     * Returns whether the curve is a hermite.
-     *
-     * @returns {boolean} True if the curve is a hermite and false otherwise.
-     * @private
-     */
-    _isHermite() {
-        return this._curve.type === CURVE_CATMULL ||
-               this._curve.type === CURVE_CARDINAL ||
-               this._curve.type === CURVE_SPLINE;
     }
 
     /**
@@ -187,7 +175,7 @@ class CurveEvaluator {
             const a_ = b[1] + (a[1] - b[1]) * (isFinite(s1) ? s1 : 0);
             const d_ = c[1] + (d[1] - c[1]) * (isFinite(s2) ? s2 : 0);
 
-            const tension = (this._curve.type === CURVE_CATMULL) ? 0.5 : this._curve.tension;
+            const tension = this._curve.tension;
 
             this._m0 = tension * (c[1] - a_);
             this._m1 = tension * (d_ - b[1]);
