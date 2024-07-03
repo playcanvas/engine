@@ -29,7 +29,7 @@ class Curve {
     /**
      * Controls how {@link CURVE_SPLINE} tangents are calculated. Valid range is between 0 and 1
      * where 0 results in a non-smooth curve (equivalent to linear interpolation) and 1 results in
-     * a very smooth curve. Use 0.5 for a Catmull-rom spline.
+     * a very smooth curve. Use 0.5 for a Catmull-Rom spline.
      *
      * @type {number}
      */
