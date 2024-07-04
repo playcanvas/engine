@@ -1,7 +1,9 @@
 import { Debug } from '../core/debug.js';
 
 /**
- * Event Handle that is created by {@link EventHandler} and can be used for easier event removal and management.
+ * Event Handle that is created by {@link EventHandler} and can be used for easier event removal
+ * and management.
+ *
  * @example
  * const evt = obj.on('test', (a, b) => {
  *     console.log(a + b);
