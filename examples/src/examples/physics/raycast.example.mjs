@@ -167,7 +167,7 @@ assetListLoader.load(() => {
         // Render the ray used in the raycast
         app.drawLine(start, end, white);
 
-        const result = app.systems.rigidbody.raycastFirst(start, end);
+        const result = app.systems.rigidbody.raycast(start, end)[0];
         if (result) {
             result.entity.render.material = red;
 
@@ -183,7 +183,7 @@ assetListLoader.load(() => {
         // Render the ray used in the raycast
         app.drawLine(start, end, white);
 
-        const results = app.systems.rigidbody.raycastAll(start, end);
+        const results = app.systems.rigidbody.raycast(start, end, { findAll: true });
         results.forEach(function (result) {
             result.entity.render.material = red;
 
@@ -217,8 +217,8 @@ assetListLoader.load(() => {
         app.root.addChild(text);
     };
 
-    createText(assets.font, 'raycastFirst', 0.5, 3.75, 0, 0);
-    createText(assets.font, 'raycastAll', 0.5, -0.25, 0, 0);
+    createText(assets.font, 'raycast', 0.5, 3.75, 0, 0);
+    createText(assets.font, 'raycast (with findAll)', 0.5, -0.25, 0, 0);
 });
 
 export { app };

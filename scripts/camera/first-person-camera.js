@@ -715,7 +715,7 @@
             const start = this.entity.getPosition();
             const end = tmpV1.copy(start).add(Vec3.DOWN);
             end.y -= 0.1;
-            this._grounded = !!this._rigidbody.system.raycastFirst(start, end);
+            this._grounded = !!this._rigidbody.system.raycast(start, end)[0];
         }
 
         /**

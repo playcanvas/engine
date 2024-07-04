@@ -250,7 +250,7 @@ export { RenderComponent } from './framework/components/render/component.js';
 export { RenderComponentSystem } from './framework/components/render/system.js';
 export * from './framework/components/rigid-body/constants.js';
 export { RigidBodyComponent } from './framework/components/rigid-body/component.js';
-export { RigidBodyComponentSystem, ContactPoint, ContactResult, RaycastResult, SingleContactResult } from './framework/components/rigid-body/system.js';
+export { RigidBodyComponentSystem, ContactPoint, ContactResult, HitResult, SingleContactResult } from './framework/components/rigid-body/system.js';
 export { SceneRegistry } from './framework/scene-registry.js';
 export { SceneRegistryItem } from './framework/scene-registry-item.js';
 export * from './framework/components/screen/constants.js';
