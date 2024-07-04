@@ -46,41 +46,19 @@ class Frustum {
         const vpm = matrix.data;
         const planes = this.planes;
 
-        // Extract the numbers for the RIGHT plane
-        let plane = planes[0];
-        plane.normal.set(vpm[3] - vpm[0], vpm[7] - vpm[4], vpm[11] - vpm[8]);
-        plane.distance = vpm[15] - vpm[12];
-        plane.normalize();
+        const setPlane = (plane, a, b, c, d) => {
+            plane.normal.set(vpm[3] + a * vpm[0], vpm[7] + b * vpm[4], vpm[11] + c * vpm[8]);
+            plane.distance = vpm[15] + d * vpm[12];
+            plane.normalize();
+        };
 
-        // Extract the numbers for the LEFT plane
-        plane = planes[1];
-        plane.normal.set(vpm[3] + vpm[0], vpm[7] + vpm[4], vpm[11] + vpm[8]);
-        plane.distance = vpm[15] + vpm[12];
-        plane.normalize();
-
-        // Extract the BOTTOM plane
-        plane = planes[2];
-        plane.normal.set(vpm[3] + vpm[1], vpm[7] + vpm[5], vpm[11] + vpm[9]);
-        plane.distance = vpm[15] + vpm[13];
-        plane.normalize();
-
-        // Extract the TOP plane
-        plane = planes[3];
-        plane.normal.set(vpm[3] - vpm[1], vpm[7] - vpm[5], vpm[11] - vpm[9]);
-        plane.distance = vpm[15] - vpm[13];
-        plane.normalize();
-
-        // Extract the FAR plane
-        plane = planes[4];
-        plane.normal.set(vpm[3] - vpm[2], vpm[7] - vpm[6], vpm[11] - vpm[10]);
-        plane.distance = vpm[15] - vpm[14];
-        plane.normalize();
-
-        // Extract the NEAR plane
-        plane = planes[5];
-        plane.normal.set(vpm[3] + vpm[2], vpm[7] + vpm[6], vpm[11] + vpm[10]);
-        plane.distance = vpm[15] + vpm[14];
-        plane.normalize();
+        // Extract the numbers for the planes
+        setPlane(planes[0], -1, -1, -1, -1); // RIGHT
+        setPlane(planes[1], 1, 1, 1, 1);     // LEFT
+        setPlane(planes[2], 1, 1, 1, 1);     // BOTTOM
+        setPlane(planes[3], -1, -1, -1, -1); // TOP
+        setPlane(planes[4], -1, -1, -1, -1); // FAR
+        setPlane(planes[5], 1, 1, 1, 1);     // NEAR
     }
 
     /**
