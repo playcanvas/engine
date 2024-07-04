@@ -23,6 +23,7 @@ class SkyMesh {
      * @param {import('../../platform/graphics/graphics-device.js').GraphicsDevice} device - The
      * graphics device.
      * @param {import('../scene.js').Scene} scene - The scene owning the sky.
+     * @param {import('../graph-node.js').GraphNode} node - The graph node of the sky mesh instance.
      * @param {import('../../platform/graphics/texture.js').Texture} texture - The texture of the sky.
      * @param {string} type - The type of the sky. One of the SKYMESH_* constants.
      */

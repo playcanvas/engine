@@ -14,6 +14,7 @@ class DeviceCache {
      * Returns the resources for the supplied device.
      *
      * @param {import('./graphics-device.js').GraphicsDevice} device - The graphics device.
+     * @param {() => any} onCreate - A function that creates the resource for the device.
      * @returns {any} The resource for the device.
      */
     get(device, onCreate) {

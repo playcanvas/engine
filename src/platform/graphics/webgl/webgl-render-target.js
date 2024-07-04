@@ -6,17 +6,32 @@ import { DebugGraphics } from "../debug-graphics.js";
  * A private class representing a pair of framebuffers, when MSAA is used.
  */
 class FramebufferPair {
-    /** Multi-sampled rendering framebuffer */
+    /**
+     * Multi-sampled rendering framebuffer.
+     *
+     * @type {WebGLFramebuffer|null}
+     */
     msaaFB;
 
-    /** Single-sampled resolve framebuffer */
+    /**
+     * Single-sampled resolve framebuffer.
+     *
+     * @type {WebGLFramebuffer|null}
+     */
     resolveFB;
 
+    /**
+     * @param {WebGLFramebuffer} msaaFB - Multi-sampled rendering framebuffer.
+     * @param {WebGLFramebuffer} resolveFB - Single-sampled resolve framebuffer.
+     */
     constructor(msaaFB, resolveFB) {
         this.msaaFB = msaaFB;
         this.resolveFB = resolveFB;
     }
 
+    /**
+     * @param {WebGLRenderingContext} gl - The WebGL rendering context.
+     */
     destroy(gl) {
         if (this.msaaFB) {
             gl.deleteRenderbuffer(this.msaaFB);
@@ -301,6 +316,9 @@ class WebglRenderTarget {
     /**
      * Checks the completeness status of the currently bound WebGLFramebuffer object.
      *
+     * @param {import('./webgl-graphics-device.js').WebglGraphicsDevice} device - The graphics device.
+     * @param {import('../render-target.js').RenderTarget} target - The render target.
+     * @param {string} [type] - An optional type string to append to the error message.
      * @private
      */
     _checkFbo(device, target, type = '') {

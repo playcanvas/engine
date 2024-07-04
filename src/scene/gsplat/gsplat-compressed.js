@@ -58,6 +58,7 @@ class GSplatCompressed {
     }
 
     /**
+     * @param {import('./gsplat-material.js').SplatMaterialOptions} options - The splat material options.
      * @returns {import('../materials/material.js').Material} material - The material to set up for
      * the splat rendering.
      */
@@ -89,6 +90,7 @@ class GSplatCompressed {
      * @param {string} name - The name of the texture to be created.
      * @param {number} format - The pixel format of the texture.
      * @param {Vec2} size - The width and height of the texture.
+     * @param {Uint8Array} [data] - The initial data to fill the texture with.
      * @returns {Texture} The created texture instance.
      */
     createTexture(name, format, size, data) {

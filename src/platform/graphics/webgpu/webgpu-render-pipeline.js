@@ -111,7 +111,6 @@ class WebgpuRenderPipeline extends WebgpuPipeline {
         this.cache = new Map();
     }
 
-    /** @private */
     get(primitive, vertexFormat0, vertexFormat1, shader, renderTarget, bindGroupFormats, blendState,
         depthState, cullMode, stencilEnabled, stencilFront, stencilBack) {
 
@@ -211,7 +210,6 @@ class WebgpuRenderPipeline extends WebgpuPipeline {
         return blend;
     }
 
-    /** @private */
     getDepthStencil(depthState, renderTarget, stencilEnabled, stencilFront, stencilBack) {
 
         /** @type {GPUDepthStencilState} */

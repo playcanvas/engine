@@ -277,6 +277,10 @@ class WebgpuRenderTarget {
     }
 
     /**
+     * @param {GPUDevice} wgpu - The WebGPU device.
+     * @param {import('../render-target.js').RenderTarget} renderTarget - The render target.
+     * @param {number} index - The color buffer index.
+     * @returns {GPURenderPassColorAttachment} The color attachment.
      * @private
      */
     initColor(wgpu, renderTarget, index) {

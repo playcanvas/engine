@@ -64,7 +64,11 @@ class WebgpuResolver {
         this.pipelineCache = null;
     }
 
-    /** @private */
+    /**
+     * @param {GPUTextureFormat} format - Texture format.
+     * @returns {GPURenderPipeline} Pipeline for the given format.
+     * @private
+     */
     getPipeline(format) {
         let pipeline = this.pipelineCache.get(format);
         if (!pipeline) {
@@ -74,7 +78,11 @@ class WebgpuResolver {
         return pipeline;
     }
 
-    /** @private */
+    /**
+     * @param {GPUTextureFormat} format - Texture format.
+     * @returns {GPURenderPipeline} Pipeline for the given format.
+     * @private
+     */
     createPipeline(format) {
 
         /** @type {import('./webgpu-shader.js').WebgpuShader} */
