@@ -1,5 +1,4 @@
 import { Plane } from './plane.js';
-import { Vec3 } from '../math/vec3.js';
 
 /**
  * A frustum is a shape that defines the viewing space of a camera. It can be used to determine
@@ -9,6 +8,12 @@ import { Vec3 } from '../math/vec3.js';
  * @category Math
  */
 class Frustum {
+    /**
+     * The six planes that make up the frustum.
+     *
+     * @type {Plane[]}
+     * @private
+     */
     planes = [];
 
     /**
