@@ -11,7 +11,6 @@ class Plane {
      * The normal of the plane.
      *
      * @type {Vec3}
-     * @readonly
      */
     normal = new Vec3();
 
@@ -36,15 +35,25 @@ class Plane {
     }
 
     /**
-     * Sets the plane based on a specified normal and a point on the plane.
+     * Returns a clone of the specified plane.
      *
-     * @param {Vec3} point - The point on the plane.
-     * @param {Vec3} normal - The normal of the plane.
+     * @returns {this} A duplicate plane.
+     */
+    clone() {
+        /** @type {this} */
+        const cstr = this.constructor;
+        return new cstr().copy(this);
+    }
+
+    /**
+     * Copies the contents of a source plane to a destination plane.
+     *
+     * @param {Plane} src - A source plane to copy to the destination plane.
      * @returns {Plane} Self for chaining.
      */
-    setFromPointNormal(point, normal) {
-        this.normal.copy(normal);
-        this.distance = -this.normal.dot(point);
+    copy(src) {
+        this.normal.copy(src.normal);
+        this.distance = src.distance;
         return this;
     }
 
@@ -92,26 +101,43 @@ class Plane {
     }
 
     /**
-     * Copies the contents of a source Plane.
+     * Normalize the normal of the plane.
      *
-     * @param {Plane} src - The Plane to copy from.
      * @returns {Plane} Self for chaining.
      */
-    copy(src) {
-        this.normal.copy(src.normal);
-        this.distance = src.distance;
+    normalize() {
+        const invLength = 1 / this.normal.length();
+        this.normal.mulScalar(invLength);
+        this.distance *= invLength;
         return this;
     }
 
     /**
-     * Returns a clone of the Plane.
+     * Sets the plane based on a normal and a distance from the origin.
      *
-     * @returns {this} A duplicate Plane.
+     * @param {number} nx - The x-component of the normal.
+     * @param {number} ny - The y-component of the normal.
+     * @param {number} nz - The z-component of the normal.
+     * @param {number} d - The distance from the origin.
+     * @returns {Plane} Self for chaining.
      */
-    clone() {
-        /** @type {this} */
-        const cstr = this.constructor;
-        return new cstr().copy(this);
+    set(nx, ny, nz, d) {
+        this.normal.set(nx, ny, nz);
+        this.distance = d;
+        return this;
+    }
+
+    /**
+     * Sets the plane based on a specified normal and a point on the plane.
+     *
+     * @param {Vec3} point - The point on the plane.
+     * @param {Vec3} normal - The normal of the plane.
+     * @returns {Plane} Self for chaining.
+     */
+    setFromPointNormal(point, normal) {
+        this.normal.copy(normal);
+        this.distance = -this.normal.dot(point);
+        return this;
     }
 }
 

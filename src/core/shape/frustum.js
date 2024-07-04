@@ -1,3 +1,5 @@
+import { Plane } from './plane.js';
+
 /**
  * A frustum is a shape that defines the viewing space of a camera. It can be used to determine
  * visibility of points and bounding spheres. Typically, you would not create a Frustum shape
@@ -6,6 +8,11 @@
  * @category Math
  */
 class Frustum {
+    /**
+     * The six planes that make up the frustum.
+     *
+     * @type {Plane[]}
+     */
     planes = [];
 
     /**
@@ -15,8 +22,40 @@ class Frustum {
      * const frustum = new pc.Frustum();
      */
     constructor() {
-        for (let i = 0; i < 6; i++)
-            this.planes[i] = [];
+        for (let i = 0; i < 6; i++) {
+            this.planes[i] = new Plane();
+        }
+    }
+
+    /**
+     * Returns a clone of the specified frustum.
+     *
+     * @returns {Frustum} A duplicate frustum.
+     * @example
+     * const frustum = new pc.Frustum();
+     * const clone = frustum.clone();
+     */
+    clone() {
+        /** @type {this} */
+        const cstr = this.constructor;
+        return new cstr().copy(this);
+    }
+
+    /**
+     * Copies the contents of a source frustum to a destination frustum.
+     *
+     * @param {Frustum} src - A source frustum to copy to the destination frustum.
+     * @returns {Frustum} Self for chaining.
+     * @example
+     * const src = entity.camera.frustum;
+     * const dst = new pc.Frustum();
+     * dst.copy(src);
+     */
+    copy(src) {
+        for (let i = 0; i < 6; i++) {
+            this.planes[i].copy(src.planes[i]);
+        }
+        return this;
     }
 
     /**
@@ -26,74 +65,28 @@ class Frustum {
      * frustum.
      * @example
      * // Create a perspective projection matrix
-     * const projMat = pc.Mat4();
-     * projMat.setPerspective(45, 16 / 9, 1, 1000);
+     * const projection = pc.Mat4();
+     * projection.setPerspective(45, 16 / 9, 1, 1000);
      *
      * // Create a frustum shape that is represented by the matrix
      * const frustum = new pc.Frustum();
-     * frustum.setFromMat4(projMat);
+     * frustum.setFromMat4(projection);
      */
     setFromMat4(matrix) {
-
-        const normalize = (plane) => {
-            const t = Math.sqrt(plane[0] * plane[0] + plane[1] * plane[1] + plane[2] * plane[2]);
-            const invT = 1 / t;
-            plane[0] *= invT;
-            plane[1] *= invT;
-            plane[2] *= invT;
-            plane[3] *= invT;
-        };
-
-        const vpm = matrix.data;
+        const [
+            m00, m01, m02, m03,
+            m10, m11, m12, m13,
+            m20, m21, m22, m23,
+            m30, m31, m32, m33
+        ] = matrix.data;
         const planes = this.planes;
 
-        // Extract the numbers for the RIGHT plane
-        let plane = planes[0];
-        plane[0] = vpm[3] - vpm[0];
-        plane[1] = vpm[7] - vpm[4];
-        plane[2] = vpm[11] - vpm[8];
-        plane[3] = vpm[15] - vpm[12];
-        normalize(plane);
-
-        // Extract the numbers for the LEFT plane
-        plane = planes[1];
-        plane[0] = vpm[3] + vpm[0];
-        plane[1] = vpm[7] + vpm[4];
-        plane[2] = vpm[11] + vpm[8];
-        plane[3] = vpm[15] + vpm[12];
-        normalize(plane);
-
-        // Extract the BOTTOM plane
-        plane = planes[2];
-        plane[0] = vpm[3] + vpm[1];
-        plane[1] = vpm[7] + vpm[5];
-        plane[2] = vpm[11] + vpm[9];
-        plane[3] = vpm[15] + vpm[13];
-        normalize(plane);
-
-        // Extract the TOP plane
-        plane = planes[3];
-        plane[0] = vpm[3] - vpm[1];
-        plane[1] = vpm[7] - vpm[5];
-        plane[2] = vpm[11] - vpm[9];
-        plane[3] = vpm[15] - vpm[13];
-        normalize(plane);
-
-        // Extract the FAR plane
-        plane = planes[4];
-        plane[0] = vpm[3] - vpm[2];
-        plane[1] = vpm[7] - vpm[6];
-        plane[2] = vpm[11] - vpm[10];
-        plane[3] = vpm[15] - vpm[14];
-        normalize(plane);
-
-        // Extract the NEAR plane
-        plane = planes[5];
-        plane[0] = vpm[3] + vpm[2];
-        plane[1] = vpm[7] + vpm[6];
-        plane[2] = vpm[11] + vpm[10];
-        plane[3] = vpm[15] + vpm[14];
-        normalize(plane);
+        planes[0].set(m03 - m00, m13 - m10, m23 - m20, m33 - m30).normalize(); // RIGHT
+        planes[1].set(m03 + m00, m13 + m10, m23 + m20, m33 + m30).normalize(); // LEFT
+        planes[2].set(m03 + m01, m13 + m11, m23 + m21, m33 + m31).normalize(); // BOTTOM
+        planes[3].set(m03 - m01, m13 - m11, m23 - m21, m33 - m31).normalize(); // TOP
+        planes[4].set(m03 - m02, m13 - m12, m23 - m22, m33 - m32).normalize(); // FAR
+        planes[5].set(m03 + m02, m13 + m12, m23 + m22, m33 + m32).normalize(); // NEAR
     }
 
     /**
@@ -105,8 +98,8 @@ class Frustum {
      */
     containsPoint(point) {
         for (let p = 0; p < 6; p++) {
-            const plane = this.planes[p];
-            if (plane[0] * point.x + plane[1] * point.y + plane[2] * point.z + plane[3] <= 0) {
+            const { normal, distance } = this.planes[p];
+            if (normal.dot(point) + distance <= 0) {
                 return false;
             }
         }
@@ -124,21 +117,15 @@ class Frustum {
      * frustum and 2 if it is contained by the frustum.
      */
     containsSphere(sphere) {
-
-        const sr = sphere.radius;
-        const sc = sphere.center;
-        const scx = sc.x;
-        const scy = sc.y;
-        const scz = sc.z;
-        const planes = this.planes;
+        const { center, radius } = sphere;
 
         let c = 0;
         for (let p = 0; p < 6; p++) {
-            const plane = planes[p];
-            const d = plane[0] * scx + plane[1] * scy + plane[2] * scz + plane[3];
-            if (d <= -sr)
+            const { normal, distance } = this.planes[p];
+            const d = normal.dot(center) + distance;
+            if (d <= -radius)
                 return 0;
-            if (d > sr)
+            if (d > radius)
                 c++;
         }
 
