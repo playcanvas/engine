@@ -23,7 +23,6 @@ import {
  * @param {HTMLImageElement} image - The image to downsample.
  * @param {number} size - The maximum allowed size of the image.
  * @returns {HTMLImageElement|HTMLCanvasElement} The downsampled image.
- * @ignore
  */
 function downsampleImage(image, size) {
     const srcW = image.width;
@@ -51,8 +50,6 @@ function downsampleImage(image, size) {
 
 /**
  * A WebGL implementation of the Texture.
- *
- * @ignore
  */
 class WebglTexture {
     _glTexture = null;

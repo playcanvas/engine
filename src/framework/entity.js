@@ -13,7 +13,6 @@ import { getApplication } from './globals.js';
  * @param {Component} a - First object with `order` property.
  * @param {Component} b - Second object with `order` property.
  * @returns {number} A number indicating the relative position.
- * @ignore
  */
 const cmpStaticOrder = (a, b) => a.constructor.order - b.constructor.order;
 
@@ -21,19 +20,16 @@ const cmpStaticOrder = (a, b) => a.constructor.order - b.constructor.order;
  * @param {Array<Component>} arr - Array to be sorted in place where each element contains
  * an object with a static `order` property.
  * @returns {Array<Component>} In place sorted array.
- * @ignore
  */
 const sortStaticOrder = arr => arr.sort(cmpStaticOrder);
 
 /**
  * @type {GraphNode[]}
- * @ignore
  */
 const _enableList = [];
 
 /**
  * @type {Array<Array<Component>>}
- * @ignore
  */
 const tmpPool = [];
 
@@ -43,7 +39,6 @@ const getTempArray = () => {
 
 /**
  * @param {Array<Component>} a - Array to return back to pool.
- * @ignore
  */
 const releaseTempArray = (a) => {
     a.length = 0;
@@ -496,7 +491,7 @@ class Entity extends GraphNode {
     /**
      * @param {GraphNode} node - The node to update.
      * @param {boolean} enabled - Enable or disable the node.
-     * @private
+     * @protected
      */
     _notifyHierarchyStateChanged(node, enabled) {
         let enableFirst = false;
@@ -530,7 +525,7 @@ class Entity extends GraphNode {
 
     /**
      * @param {boolean} enabled - Enable or disable the node.
-     * @private
+     * @protected
      */
     _onHierarchyStateChanged(enabled) {
         super._onHierarchyStateChanged(enabled);

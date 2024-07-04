@@ -3,8 +3,6 @@ import { Debug, DebugHelper } from '../../../core/debug.js';
 
 /**
  * A WebGPU implementation of the Buffer.
- *
- * @ignore
  */
 class WebgpuBuffer {
     /**

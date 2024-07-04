@@ -4,8 +4,6 @@ import { SHADER_FORWARD } from '../../scene/constants.js';
 
 /**
  * A render pass implementing rendering of mesh instance receivers for light-mapper.
- *
- * @ignore
  */
 class RenderPassLightmapper extends RenderPass {
     /** @type {import('../../platform/graphics/bind-group.js').BindGroup[]} */

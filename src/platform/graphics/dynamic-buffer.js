@@ -5,8 +5,6 @@ import { SHADERSTAGE_FRAGMENT, SHADERSTAGE_VERTEX, UNIFORM_BUFFER_DEFAULT_SLOT_N
 
 /**
  * A base class representing a single per platform buffer.
- *
- * @ignore
  */
 class DynamicBuffer {
     /** @type {import('./graphics-device.js').GraphicsDevice} */

@@ -40,8 +40,6 @@ const _fragmentShaderCache = new DeviceCache();
 
 /**
  * A WebGL implementation of the Shader.
- *
- * @ignore
  */
 class WebglShader {
     compileDuration = 0;

@@ -1,8 +1,6 @@
 /**
- * Internal graphics debug system - gpu markers and similar. Note that the functions only execute in the
- * debug build, and are stripped out in other builds.
- *
- * @ignore
+ * Internal graphics debug system - gpu markers and similar. Note that the functions only execute
+ * in the debug build, and are stripped out in other builds.
  */
 class DebugGraphics {
     /**

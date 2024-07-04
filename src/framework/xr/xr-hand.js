@@ -9,7 +9,6 @@ import { XrJoint } from './xr-joint.js';
 
 /**
  * @type {string[][]}
- * @ignore
  */
 let fingerJointIds = [];
 

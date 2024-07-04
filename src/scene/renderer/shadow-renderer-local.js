@@ -7,9 +7,6 @@ import {
 
 import { RenderPassShadowLocalNonClustered } from './render-pass-shadow-local-non-clustered.js';
 
-/**
- * @ignore
- */
 class ShadowRendererLocal {
     // temporary list to collect lights to render shadows for
     shadowLights = [];
@@ -110,6 +107,9 @@ class ShadowRendererLocal {
     /**
      * Prepare render passes for rendering of shadows for local non-clustered lights. Each shadow face
      * is a separate render pass as it renders to a separate render target.
+     *
+     * @param {import('../../scene/frame-graph.js').FrameGraph} frameGraph - The frame graph.
+     * @param {import('../../scene/light.js').Light[]} localLights - The list of local lights.
      */
     buildNonClusteredRenderPasses(frameGraph, localLights) {
 

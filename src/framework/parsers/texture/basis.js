@@ -8,8 +8,6 @@ import { TextureParser } from './texture.js';
 
 /**
  * Parser for basis files.
- *
- * @ignore
  */
 class BasisParser extends TextureParser {
     constructor(registry, device) {

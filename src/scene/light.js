@@ -44,8 +44,6 @@ let id = 0;
 
 /**
  * Class storing shadow rendering related private information
- *
- * @ignore
  */
 class LightRenderData {
     constructor(device, camera, face, light) {

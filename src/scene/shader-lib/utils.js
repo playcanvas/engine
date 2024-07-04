@@ -127,7 +127,6 @@ class ShaderGeneratorPassThrough extends ShaderGenerator {
  * @param {import('../../platform/graphics/shader-processor-options.js').ShaderProcessorOptions} processingOptions -
  * The shader processing options.
  * @returns {Shader} The processed shader.
- * @ignore
  */
 function processShader(shader, processingOptions) {
 

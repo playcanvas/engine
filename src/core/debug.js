@@ -1,10 +1,8 @@
 import { Tracing } from "./tracing.js";
 
 /**
- * Engine debug log system. Note that the logging only executes in the
- * debug build of the engine, and is stripped out in other builds.
- *
- * @ignore
+ * Engine debug log system. Note that the logging only executes in the debug build of the engine,
+ * and is stripped out in other builds.
  */
 class Debug {
     /**
@@ -161,8 +159,6 @@ class Debug {
 
 /**
  * A helper debug functionality.
- *
- * @ignore
  */
 class DebugHelper {
     /**

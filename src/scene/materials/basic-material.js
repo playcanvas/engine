@@ -37,7 +37,7 @@ class BasicMaterial extends Material {
      */
     color = new Color(1, 1, 1, 1);
 
-    /** @ignore */
+    /** @private */
     colorUniform = new Float32Array(4);
 
     /**

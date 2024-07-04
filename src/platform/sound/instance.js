@@ -14,7 +14,6 @@ const STATE_STOPPED = 2;
  * @param {number} time - The time.
  * @param {number} duration - The duration.
  * @returns {number} The time % duration.
- * @ignore
  */
 function capTime(time, duration) {
     return (time % duration) || 0;

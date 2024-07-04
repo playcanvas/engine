@@ -231,7 +231,6 @@ const dracoInitialize = (config) => {
  * @param {ArrayBuffer} buffer - The draco data to decode.
  * @param {Function} callback - Callback function to receive decoded result.
  * @returns {boolean} True if the draco worker was initialized and false otherwise.
- * @ignore
  */
 const dracoDecode = (buffer, callback) => {
     if (!initializeWorkers()) {

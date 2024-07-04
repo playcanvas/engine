@@ -54,9 +54,6 @@ const pixelOffset = new Float32Array(2);
 const blurScissorRect = new Vec4(1, 1, 0, 0);
 const viewportMatrix = new Mat4();
 
-/**
- * @ignore
- */
 class ShadowRenderer {
     /**
      * A cache of shadow passes. First index is looked up by light type, second by shadow type.
@@ -168,7 +165,6 @@ class ShadowRenderer {
      * @param {import('../camera.js').Camera} camera - The camera.
      * @param {import('../mesh-instance.js').MeshInstance[]} [casters] - Optional array of mesh
      * instances to use as casters.
-     * @ignore
      */
     cullShadowCasters(comp, light, visible, camera, casters) {
 

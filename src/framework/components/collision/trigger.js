@@ -5,8 +5,6 @@ let _ammoVec1, _ammoQuat, _ammoTransform;
 /**
  * Creates a trigger object used to create internal physics objects that interact with rigid bodies
  * and trigger collision events with no collision response.
- *
- * @ignore
  */
 class Trigger {
     /**

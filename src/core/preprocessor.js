@@ -36,8 +36,6 @@ const INCLUDE = /include[ \t]+"([\w-]+)"\r?(?:\n|$)/g;
 /**
  * Pure static class implementing subset of C-style preprocessor.
  * inspired by: https://github.com/dcodeIO/Preprocessor.js
- *
- * @ignore
  */
 class Preprocessor {
     /**
@@ -361,12 +359,18 @@ class Preprocessor {
 
     /**
      * Very simple expression evaluation, handles cases:
-     * expression
-     * defined(expression)
-     * !defined(expression)
+     *
+     * - expression
+     * - defined(expression)
+     * - !defined(expression)
      *
      * But does not handle more complex cases, which would require more complex system:
-     * defined(A) || defined(B)
+     *
+     * - defined(A) || defined(B)
+     *
+     * @param {string} expression - The expression to evaluate.
+     * @param {Map<string, string>} defines - A map containing key-value pairs of defines.
+     * @returns {object} Returns an object containing the result of the evaluation and an error flag.
      */
     static evaluate(expression, defines) {
 

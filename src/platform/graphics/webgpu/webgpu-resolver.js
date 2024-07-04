@@ -5,8 +5,6 @@ import { DebugGraphics } from "../debug-graphics.js";
 
 /**
  * A WebGPU helper class implementing custom resolve of multi-sampled textures.
- *
- * @ignore
  */
 class WebgpuResolver {
     /** @type {import('./webgpu-graphics-device.js').WebgpuGraphicsDevice} */
@@ -66,7 +64,11 @@ class WebgpuResolver {
         this.pipelineCache = null;
     }
 
-    /** @private */
+    /**
+     * @param {GPUTextureFormat} format - Texture format.
+     * @returns {GPURenderPipeline} Pipeline for the given format.
+     * @private
+     */
     getPipeline(format) {
         let pipeline = this.pipelineCache.get(format);
         if (!pipeline) {
@@ -76,7 +78,11 @@ class WebgpuResolver {
         return pipeline;
     }
 
-    /** @private */
+    /**
+     * @param {GPUTextureFormat} format - Texture format.
+     * @returns {GPURenderPipeline} Pipeline for the given format.
+     * @private
+     */
     createPipeline(format) {
 
         /** @type {import('./webgpu-shader.js').WebgpuShader} */

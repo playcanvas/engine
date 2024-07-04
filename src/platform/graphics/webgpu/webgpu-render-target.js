@@ -6,8 +6,6 @@ const stringIds = new StringIds();
 
 /**
  * Private class storing info about color buffer.
- *
- * @ignore
  */
 class ColorAttachment {
     /**
@@ -30,8 +28,6 @@ class ColorAttachment {
 
 /**
  * A WebGPU implementation of the RenderTarget.
- *
- * @ignore
  */
 class WebgpuRenderTarget {
     /** @type {boolean} */
@@ -281,6 +277,10 @@ class WebgpuRenderTarget {
     }
 
     /**
+     * @param {GPUDevice} wgpu - The WebGPU device.
+     * @param {import('../render-target.js').RenderTarget} renderTarget - The render target.
+     * @param {number} index - The color buffer index.
+     * @returns {GPURenderPassColorAttachment} The color attachment.
      * @private
      */
     initColor(wgpu, renderTarget, index) {

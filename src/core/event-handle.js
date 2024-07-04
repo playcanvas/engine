@@ -1,7 +1,9 @@
 import { Debug } from '../core/debug.js';
 
 /**
- * Event Handle that is created by {@link EventHandler} and can be used for easier event removal and management.
+ * Event Handle that is created by {@link EventHandler} and can be used for easier event removal
+ * and management.
+ *
  * @example
  * const evt = obj.on('test', (a, b) => {
  *     console.log(a + b);
@@ -12,16 +14,16 @@ import { Debug } from '../core/debug.js';
  * obj.fire('test'); // this will not trigger an event
  * @example
  * // store an array of event handles
- * let events = [ ];
+ * let events = [];
  *
- * events.push(objA.on('testA', () => { }));
- * events.push(objB.on('testB', () => { }));
+ * events.push(objA.on('testA', () => {}));
+ * events.push(objB.on('testB', () => {}));
  *
  * // when needed, remove all events
  * events.forEach((evt) => {
  *     evt.off();
  * });
- * events = [ ];
+ * events = [];
  */
 class EventHandle {
     /**
@@ -96,6 +98,7 @@ class EventHandle {
 
     /**
      * Mark if event has been removed.
+     *
      * @type {boolean}
      * @ignore
      */
@@ -106,7 +109,9 @@ class EventHandle {
 
     /**
      * True if event has been removed.
+     *
      * @type {boolean}
+     * @ignore
      */
     get removed() {
         return this._removed;

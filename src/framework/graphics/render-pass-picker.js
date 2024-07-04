@@ -9,8 +9,6 @@ const lights = [[], [], []];
 
 /**
  * A render pass implementing rendering of mesh instances into a pick buffer.
- *
- * @ignore
  */
 class RenderPassPicker extends RenderPass {
     /** @type {import('../../platform/graphics/bind-group.js').BindGroup[]} */

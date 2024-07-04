@@ -12,7 +12,6 @@ const defaultMaterialDeviceCache = new DeviceCache();
  * graphics device used to own the material.
  * @returns {import('./standard-material.js').StandardMaterial} The default instance of
  * {@link StandardMaterial}.
- * @ignore
  */
 function getDefaultMaterial(device) {
     const material = defaultMaterialDeviceCache.get(device);
@@ -27,7 +26,6 @@ function getDefaultMaterial(device) {
  * graphics device used to own the material.
  * @param {import('./standard-material.js').StandardMaterial} material - The instance of
  * {@link StandardMaterial}.
- * @ignore
  */
 function setDefaultMaterial(device, material) {
     Debug.assert(material);
