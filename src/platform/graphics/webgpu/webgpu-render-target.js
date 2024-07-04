@@ -6,8 +6,6 @@ const stringIds = new StringIds();
 
 /**
  * Private class storing info about color buffer.
- *
- * @ignore
  */
 class ColorAttachment {
     /**
@@ -30,8 +28,6 @@ class ColorAttachment {
 
 /**
  * A WebGPU implementation of the RenderTarget.
- *
- * @ignore
  */
 class WebgpuRenderTarget {
     /** @type {boolean} */

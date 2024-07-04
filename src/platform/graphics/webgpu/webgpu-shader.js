@@ -7,8 +7,6 @@ import { WebgpuDebug } from './webgpu-debug.js';
 
 /**
  * A WebGPU implementation of the Shader.
- *
- * @ignore
  */
 class WebgpuShader {
     /**

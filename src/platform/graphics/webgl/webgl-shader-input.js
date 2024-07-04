@@ -4,8 +4,6 @@ import { Version } from '../version.js';
 
 /**
  * Representation of a shader uniform.
- *
- * @ignore
  */
 class WebglShaderInput {
     /**

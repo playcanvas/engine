@@ -3,8 +3,6 @@ import { WebgpuBuffer } from "./webgpu-buffer.js";
 
 /**
  * A WebGPU implementation of the UniformBuffer.
- *
- * @ignore
  */
 class WebgpuUniformBuffer extends WebgpuBuffer {
     constructor(uniformBuffer) {

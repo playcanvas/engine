@@ -73,7 +73,6 @@ const _stencilOps = [
     'invert'                // STENCILOP_INVERT
 ];
 
-/** @ignore */
 class CacheEntry {
     /**
      * Render pipeline
@@ -91,9 +90,6 @@ class CacheEntry {
     hashes;
 }
 
-/**
- * @ignore
- */
 class WebgpuRenderPipeline extends WebgpuPipeline {
     lookupHashes = new Uint32Array(13);
 

@@ -7,8 +7,6 @@ const MAX_DUPLICATES = 5;
 /**
  * Internal WebGPU debug system. Note that the functions only execute in the debug build, and are
  * stripped out in other builds.
- *
- * @ignore
  */
 class WebgpuDebug {
     static _scopes = [];

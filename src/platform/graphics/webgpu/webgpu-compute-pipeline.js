@@ -5,9 +5,6 @@ import { WebgpuPipeline } from "./webgpu-pipeline.js";
 
 let _pipelineId = 0;
 
-/**
- * @ignore
- */
 class WebgpuComputePipeline extends WebgpuPipeline {
     /** @private */
     get(shader, bindGroupFormat) {

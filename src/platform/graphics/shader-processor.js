@@ -95,8 +95,6 @@ class UniformLine {
 /**
  * Pure static class implementing processing of GLSL shaders. It allocates fixed locations for
  * attributes, and handles conversion of uniforms to uniform buffers.
- *
- * @ignore
  */
 class ShaderProcessor {
     /**

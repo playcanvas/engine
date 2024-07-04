@@ -96,6 +96,7 @@ class EventHandle {
 
     /**
      * Mark if event has been removed.
+     *
      * @type {boolean}
      * @ignore
      */
@@ -106,7 +107,9 @@ class EventHandle {
 
     /**
      * True if event has been removed.
+     *
      * @type {boolean}
+     * @ignore
      */
     get removed() {
         return this._removed;

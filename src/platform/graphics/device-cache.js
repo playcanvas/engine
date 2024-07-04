@@ -1,8 +1,6 @@
 /**
  * A cache storing shared resources associated with a device. The resources are removed
  * from the cache when the device is destroyed.
- *
- * @ignore
  */
 class DeviceCache {
     /**

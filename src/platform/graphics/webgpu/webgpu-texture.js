@@ -37,8 +37,6 @@ const dummyUse = (thingOne) => {
 
 /**
  * A WebGPU implementation of the Texture.
- *
- * @ignore
  */
 class WebgpuTexture {
     /**

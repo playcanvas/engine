@@ -27,7 +27,6 @@ const USER_INPUT_EVENTS = [
 class SoundManager extends EventHandler {
     /**
      * Create a new SoundManager instance.
-     *
      */
     constructor() {
         super();

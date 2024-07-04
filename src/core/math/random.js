@@ -7,14 +7,12 @@ const _goldenAngle = 2.399963229728653;
  * Random API.
  *
  * @namespace
- * @ignore
  */
 const random = {
     /**
      * Return a pseudo-random 2D point inside a unit circle with uniform distribution.
      *
      * @param {import('./vec2.js').Vec2} point - The returned generated point.
-     * @ignore
      */
     circlePoint(point) {
         const r = Math.sqrt(Math.random());
@@ -30,7 +28,6 @@ const random = {
      * @param {import('./vec2.js').Vec2} point - The returned generated point.
      * @param {number} index - Index of the point to generate, in the range from 0 to numPoints - 1.
      * @param {number} numPoints - The total number of points of the set.
-     * @ignore
      */
     circlePointDeterministic(point, index, numPoints) {
         const theta = index * _goldenAngle;
@@ -54,7 +51,6 @@ const random = {
      * of 0 and 1. Defaults to 0.
      * @param {number} [end] - Part on the sphere along y axis to stop the points, in the range of
      * 0 and 1. Defaults to 1.
-     * @ignore
      */
     spherePointDeterministic(point, index, numPoints, start = 0, end = 1) {
 
@@ -81,7 +77,6 @@ const random = {
      *
      * @param {number} i - The index in the sequence to return.
      * @returns {number} The pseudo-random value.
-     * @ignore
      */
     radicalInverse(i) {
         let bits = ((i << 16) | (i >>> 16)) >>> 0;

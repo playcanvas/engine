@@ -10,7 +10,6 @@ const dummyArray = Object.freeze([]);
  *
  * @type {Function}
  * @returns {Gamepad[]} Retrieved gamepads from the device.
- * @ignore
  */
 let getGamepads = function () {
     return dummyArray;
@@ -216,7 +215,6 @@ const custom_maps = {};
  *
  * @param {Gamepad} pad - The HTML5 Gamepad object.
  * @returns {object} Object defining the order of buttons and axes for given HTML5 Gamepad.
- * @ignore
  */
 function getMap(pad) {
     const custom = custom_maps[pad.id];
@@ -255,7 +253,6 @@ let deadZone = 0.25;
 /**
  * @param {number} ms - Number of milliseconds to sleep for.
  * @returns {Promise<void>}
- * @ignore
  */
 function sleep(ms) {
     return new Promise((resolve) => {
@@ -407,7 +404,7 @@ class GamePad {
          * The buttons present on the GamePad. Order is provided by API, use GamePad#buttons instead.
          *
          * @type {GamePadButton[]}
-         * @ignore
+         * @private
          */
         this._buttons = gamepad.buttons.map(b => new GamePadButton(b));
 
@@ -415,7 +412,7 @@ class GamePad {
          * The axes values from the GamePad. Order is provided by API, use GamePad#axes instead.
          *
          * @type {number[]}
-         * @ignore
+         * @private
          */
         this._axes = [...gamepad.axes];
 
@@ -423,7 +420,7 @@ class GamePad {
          * Previous value for the analog axes present on the gamepad. Values are between -1 and 1.
          *
          * @type {number[]}
-         * @ignore
+         * @private
          */
         this._previousAxes = [...gamepad.axes];
 
@@ -830,7 +827,7 @@ class GamePads extends EventHandler {
          * The list of previous buttons states
          *
          * @type {boolean[][]}
-         * @ignore
+         * @private
          */
         this._previous = [];
 

@@ -24,9 +24,6 @@ gpuVertexFormatsNormalized[TYPE_UINT32] = 'uint32';    // there is no 32bit norm
 gpuVertexFormatsNormalized[TYPE_FLOAT32] = 'float32';  // there is no 32bit normalized float
 gpuVertexFormatsNormalized[TYPE_FLOAT16] = 'float16';  // there is no 16bit normalized half-float
 
-/**
- * @ignore
- */
 class WebgpuVertexBufferLayout {
     /**
      * @type {Map<string, GPUVertexBufferLayout[]>}

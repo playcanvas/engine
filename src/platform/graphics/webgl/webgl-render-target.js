@@ -4,8 +4,6 @@ import { DebugGraphics } from "../debug-graphics.js";
 
 /**
  * A private class representing a pair of framebuffers, when MSAA is used.
- *
- * @ignore
  */
 class FramebufferPair {
     /** Multi-sampled rendering framebuffer */
@@ -34,8 +32,6 @@ class FramebufferPair {
 
 /**
  * A WebGL implementation of the RenderTarget.
- *
- * @ignore
  */
 class WebglRenderTarget {
     _glFrameBuffer = null;

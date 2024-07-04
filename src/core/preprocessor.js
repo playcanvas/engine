@@ -36,8 +36,6 @@ const INCLUDE = /include[ \t]+"([\w-]+)"\r?(?:\n|$)/g;
 /**
  * Pure static class implementing subset of C-style preprocessor.
  * inspired by: https://github.com/dcodeIO/Preprocessor.js
- *
- * @ignore
  */
 class Preprocessor {
     /**
