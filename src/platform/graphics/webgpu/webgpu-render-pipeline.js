@@ -111,6 +111,25 @@ class WebgpuRenderPipeline extends WebgpuPipeline {
         this.cache = new Map();
     }
 
+    /**
+     * @param {object} primitive - The primitive.
+     * @param {import('../vertex-format.js').VertexFormat} vertexFormat0 - The first vertex format.
+     * @param {import('../vertex-format.js').VertexFormat} vertexFormat1 - The second vertex format.
+     * @param {import('../shader.js').Shader} shader - The shader.
+     * @param {import('../render-target.js').RenderTarget} renderTarget - The render target.
+     * @param {import('../bind-group-format.js').BindGroupFormat[]} bindGroupFormats - An array of
+     * bind group formats.
+     * @param {import('../blend-state.js').BlendState} blendState - The blend state.
+     * @param {import('../depth-state.js').DepthState} depthState - The depth state.
+     * @param {number} cullMode - The cull mode.
+     * @param {boolean} stencilEnabled - Whether stencil is enabled.
+     * @param {import('../stencil-parameters.js').StencilParameters} stencilFront - The stencil
+     * state for front faces.
+     * @param {import('../stencil-parameters.js').StencilParameters} stencilBack - The stencil
+     * state for back faces.
+     * @returns {GPURenderPipeline} Returns the render pipeline.
+     * @private
+     */
     get(primitive, vertexFormat0, vertexFormat1, shader, renderTarget, bindGroupFormats, blendState,
         depthState, cullMode, stencilEnabled, stencilFront, stencilBack) {
 
@@ -210,6 +229,17 @@ class WebgpuRenderPipeline extends WebgpuPipeline {
         return blend;
     }
 
+    /**
+     * @param {import('../depth-state.js').DepthState} depthState - The depth state.
+     * @param {import('../render-target.js').RenderTarget} renderTarget - The render target.
+     * @param {boolean} stencilEnabled - Whether stencil is enabled.
+     * @param {import('../stencil-parameters.js').StencilParameters} stencilFront - The stencil
+     * state for front faces.
+     * @param {import('../stencil-parameters.js').StencilParameters} stencilBack - The stencil
+     * state for back faces.
+     * @returns {object} Returns the depth stencil state.
+     * @private
+     */
     getDepthStencil(depthState, renderTarget, stencilEnabled, stencilFront, stencilBack) {
 
         /** @type {GPUDepthStencilState} */
