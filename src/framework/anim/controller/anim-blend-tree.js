@@ -5,8 +5,6 @@ import { AnimNode } from './anim-node.js';
  * of other AnimBlendTrees, in order to create a hierarchy of AnimNodes. It takes a blend type as
  * an argument which defines which function should be used to determine the weights of each of its
  * children, based on the current parameter value.
- *
- * @ignore
  */
 class AnimBlendTree extends AnimNode {
     /**

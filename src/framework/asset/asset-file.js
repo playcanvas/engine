@@ -1,7 +1,5 @@
 /**
  * Wraps a source of asset data.
- *
- * @ignore
  */
 class AssetFile {
     constructor(url = '', filename = '', hash = null, size = null, opt = null, contents = null) {

@@ -50,8 +50,6 @@ function createContainer(pixelFormat, buffer, byteOffset, byteSize) {
 
 /**
  * Texture parser for ktx files.
- *
- * @ignore
  */
 class KtxParser extends TextureParser {
     constructor(registry) {

@@ -15,8 +15,6 @@ import {
  * AnimNode or a AnimBlendTree of multiple AnimNodes, which will be used to animate the Entity
  * while the state is active. An AnimState will stay active and play as long as there is no
  * AnimTransition with its conditions met that has that AnimState as its source state.
- *
- * @ignore
  */
 class AnimState {
     /** @private */

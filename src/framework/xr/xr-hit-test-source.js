@@ -4,13 +4,11 @@ import { Vec3 } from '../../core/math/vec3.js';
 
 /**
  * @type {Vec3[]}
- * @ignore
  */
 const poolVec3 = [];
 
 /**
  * @type {Quat[]}
- * @ignore
  */
 const poolQuat = [];
 

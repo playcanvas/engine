@@ -2,8 +2,6 @@ import { getApplication } from './globals.js';
 
 /**
  * Records performance-related statistics related to the application.
- *
- * @ignore
  */
 class ApplicationStats {
     /**
