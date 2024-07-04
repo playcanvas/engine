@@ -1,3 +1,6 @@
+import { Plane } from './plane.js';
+import { Vec3 } from '../math/vec3.js';
+
 /**
  * A frustum is a shape that defines the viewing space of a camera. It can be used to determine
  * visibility of points and bounding spheres. Typically, you would not create a Frustum shape
@@ -15,8 +18,9 @@ class Frustum {
      * const frustum = new pc.Frustum();
      */
     constructor() {
-        for (let i = 0; i < 6; i++)
-            this.planes[i] = [];
+        for (let i = 0; i < 6; i++) {
+            this.planes[i] = new Plane();
+        }
     }
 
     /**
@@ -36,12 +40,13 @@ class Frustum {
     setFromMat4(matrix) {
 
         const normalize = (plane) => {
-            const t = Math.sqrt(plane[0] * plane[0] + plane[1] * plane[1] + plane[2] * plane[2]);
+            const normal = plane.normal;
+            const t = Math.sqrt(normal.x * normal.x + normal.y * normal.y + normal.z * normal.z);
             const invT = 1 / t;
-            plane[0] *= invT;
-            plane[1] *= invT;
-            plane[2] *= invT;
-            plane[3] *= invT;
+            normal.x *= invT;
+            normal.y *= invT;
+            normal.z *= invT;
+            plane.distance *= invT;
         };
 
         const vpm = matrix.data;
@@ -49,50 +54,38 @@ class Frustum {
 
         // Extract the numbers for the RIGHT plane
         let plane = planes[0];
-        plane[0] = vpm[3] - vpm[0];
-        plane[1] = vpm[7] - vpm[4];
-        plane[2] = vpm[11] - vpm[8];
-        plane[3] = vpm[15] - vpm[12];
+        plane.normal.set(vpm[3] - vpm[0], vpm[7] - vpm[4], vpm[11] - vpm[8]);
+        plane.distance = vpm[15] - vpm[12];
         normalize(plane);
 
         // Extract the numbers for the LEFT plane
         plane = planes[1];
-        plane[0] = vpm[3] + vpm[0];
-        plane[1] = vpm[7] + vpm[4];
-        plane[2] = vpm[11] + vpm[8];
-        plane[3] = vpm[15] + vpm[12];
+        plane.normal.set(vpm[3] + vpm[0], vpm[7] + vpm[4], vpm[11] + vpm[8]);
+        plane.distance = vpm[15] + vpm[12];
         normalize(plane);
 
         // Extract the BOTTOM plane
         plane = planes[2];
-        plane[0] = vpm[3] + vpm[1];
-        plane[1] = vpm[7] + vpm[5];
-        plane[2] = vpm[11] + vpm[9];
-        plane[3] = vpm[15] + vpm[13];
+        plane.normal.set(vpm[3] + vpm[1], vpm[7] + vpm[5], vpm[11] + vpm[9]);
+        plane.distance = vpm[15] + vpm[13];
         normalize(plane);
 
         // Extract the TOP plane
         plane = planes[3];
-        plane[0] = vpm[3] - vpm[1];
-        plane[1] = vpm[7] - vpm[5];
-        plane[2] = vpm[11] - vpm[9];
-        plane[3] = vpm[15] - vpm[13];
+        plane.normal.set(vpm[3] - vpm[1], vpm[7] - vpm[5], vpm[11] - vpm[9]);
+        plane.distance = vpm[15] - vpm[13];
         normalize(plane);
 
         // Extract the FAR plane
         plane = planes[4];
-        plane[0] = vpm[3] - vpm[2];
-        plane[1] = vpm[7] - vpm[6];
-        plane[2] = vpm[11] - vpm[10];
-        plane[3] = vpm[15] - vpm[14];
+        plane.normal.set(vpm[3] - vpm[2], vpm[7] - vpm[6], vpm[11] - vpm[10]);
+        plane.distance = vpm[15] - vpm[14];
         normalize(plane);
 
         // Extract the NEAR plane
         plane = planes[5];
-        plane[0] = vpm[3] + vpm[2];
-        plane[1] = vpm[7] + vpm[6];
-        plane[2] = vpm[11] + vpm[10];
-        plane[3] = vpm[15] + vpm[14];
+        plane.normal.set(vpm[3] + vpm[2], vpm[7] + vpm[6], vpm[11] + vpm[10]);
+        plane.distance = vpm[15] + vpm[14];
         normalize(plane);
     }
 
@@ -106,7 +99,7 @@ class Frustum {
     containsPoint(point) {
         for (let p = 0; p < 6; p++) {
             const plane = this.planes[p];
-            if (plane[0] * point.x + plane[1] * point.y + plane[2] * point.z + plane[3] <= 0) {
+            if (plane.normal.dot(point) + plane.distance <= 0) {
                 return false;
             }
         }
@@ -135,7 +128,7 @@ class Frustum {
         let c = 0;
         for (let p = 0; p < 6; p++) {
             const plane = planes[p];
-            const d = plane[0] * scx + plane[1] * scy + plane[2] * scz + plane[3];
+            const d = plane.normal.x * scx + plane.normal.y * scy + plane.normal.z * scz + plane.distance;
             if (d <= -sr)
                 return 0;
             if (d > sr)
