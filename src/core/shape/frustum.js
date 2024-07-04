@@ -12,7 +12,6 @@ class Frustum {
      * The six planes that make up the frustum.
      *
      * @type {Plane[]}
-     * @private
      */
     planes = [];
 
@@ -29,18 +28,49 @@ class Frustum {
     }
 
     /**
+     * Returns a clone of the specified frustum.
+     *
+     * @returns {Frustum} A duplicate frustum.
+     * @example
+     * const frustum = new pc.Frustum();
+     * const clone = frustum.clone();
+     */
+    clone() {
+        /** @type {this} */
+        const cstr = this.constructor;
+        return new cstr().copy(this);
+    }
+
+    /**
+     * Copies the contents of a source frustum to a destination frustum.
+     *
+     * @param {Frustum} src - A source frustum to copy to the destination frustum.
+     * @returns {Frustum} Self for chaining.
+     * @example
+     * const src = entity.camera.frustum;
+     * const dst = new pc.Frustum();
+     * dst.copy(src);
+     */
+    copy(src) {
+        for (let i = 0; i < 6; i++) {
+            this.planes[i].copy(src.planes[i]);
+        }
+        return this;
+    }
+
+    /**
      * Updates the frustum shape based on the supplied 4x4 matrix.
      *
      * @param {import('../math/mat4.js').Mat4} matrix - The matrix describing the shape of the
      * frustum.
      * @example
      * // Create a perspective projection matrix
-     * const projMat = pc.Mat4();
-     * projMat.setPerspective(45, 16 / 9, 1, 1000);
+     * const projection = pc.Mat4();
+     * projection.setPerspective(45, 16 / 9, 1, 1000);
      *
      * // Create a frustum shape that is represented by the matrix
      * const frustum = new pc.Frustum();
-     * frustum.setFromMat4(projMat);
+     * frustum.setFromMat4(projection);
      */
     setFromMat4(matrix) {
         const [

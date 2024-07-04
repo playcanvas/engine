@@ -35,9 +35,9 @@ class Plane {
     }
 
     /**
-     * Returns a clone of the Plane.
+     * Returns a clone of the specified plane.
      *
-     * @returns {this} A duplicate Plane.
+     * @returns {this} A duplicate plane.
      */
     clone() {
         /** @type {this} */
@@ -46,9 +46,9 @@ class Plane {
     }
 
     /**
-     * Copies the contents of a source Plane.
+     * Copies the contents of a source plane to a destination plane.
      *
-     * @param {Plane} src - The Plane to copy from.
+     * @param {Plane} src - A source plane to copy to the destination plane.
      * @returns {Plane} Self for chaining.
      */
     copy(src) {
