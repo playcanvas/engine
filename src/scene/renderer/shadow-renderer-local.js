@@ -7,9 +7,6 @@ import {
 
 import { RenderPassShadowLocalNonClustered } from './render-pass-shadow-local-non-clustered.js';
 
-/**
- * @ignore
- */
 class ShadowRendererLocal {
     // temporary list to collect lights to render shadows for
     shadowLights = [];

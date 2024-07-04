@@ -6,8 +6,6 @@ const tempClusterArray = [];
 /**
  * A class managing instances of world clusters used by the renderer for layers with
  * unique sets of clustered lights.
- *
- * @ignore
  */
 class WorldClustersAllocator {
     /**

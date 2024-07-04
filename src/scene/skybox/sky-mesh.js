@@ -10,8 +10,6 @@ import { SkyGeometry } from './sky-geometry.js';
 
 /**
  * A visual representation of the sky.
- *
- * @ignore
  */
 class SkyMesh {
     /**

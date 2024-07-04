@@ -6,7 +6,6 @@ import { Texture } from '../../platform/graphics/texture.js';
 import { BoundingBox } from '../../core/shape/bounding-box.js';
 import { createGSplatCompressedMaterial } from './gsplat-compressed-material.js';
 
-/** @ignore */
 class GSplatCompressed {
     device;
 

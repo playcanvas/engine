@@ -38,8 +38,6 @@ const lookupHashes = new Uint32Array(4);
 
 /**
  * Internal data structure used to store data used by hardware instancing.
- *
- * @ignore
  */
 class InstancingData {
     /** @type {import('../platform/graphics/vertex-buffer.js').VertexBuffer|null} */
@@ -55,8 +53,6 @@ class InstancingData {
 
 /**
  * Internal helper class for storing the shader and related mesh bind group in the shader cache.
- *
- * @ignore
  */
 class ShaderInstance {
     /**

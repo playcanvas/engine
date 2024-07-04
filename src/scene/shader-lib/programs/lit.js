@@ -22,7 +22,6 @@ class ShaderGeneratorLit extends ShaderGenerator {
      * graphics device.
      * @param {object} options - The options to be passed to the backend.
      * @returns {object} Returns the created shader definition.
-     * @ignore
      */
     createShaderDefinition(device, options) {
         const litShader = new LitShader(device, options.litOptions);

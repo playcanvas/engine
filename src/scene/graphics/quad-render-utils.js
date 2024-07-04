@@ -15,10 +15,10 @@ const _tempRect = new Vec4();
  * target. If undefined, target is the frame buffer.
  * @param {import('../../platform/graphics/shader.js').Shader} shader - The shader used for rendering the quad. Vertex
  * shader should contain `attribute vec2 vertex_position`.
- * @param {import('../../core/math/vec4.js').Vec4} [rect] - The viewport rectangle of the quad, in
- * pixels. Defaults to fullscreen (`0, 0, target.width, target.height`).
- * @param {import('../../core/math/vec4.js').Vec4} [scissorRect] - The scissor rectangle of the
- * quad, in pixels. Defaults to fullscreen (`0, 0, target.width, target.height`).
+ * @param {Vec4} [rect] - The viewport rectangle of the quad, in pixels. Defaults to fullscreen:
+ * `[0, 0, target.width, target.height]`.
+ * @param {Vec4} [scissorRect] - The scissor rectangle of the quad, in pixels. Defaults to fullscreen:
+ * `[0, 0, target.width, target.height]`.
  * @category Graphics
  */
 function drawQuadWithShader(device, target, shader, rect, scissorRect) {
@@ -74,11 +74,12 @@ function drawQuadWithShader(device, target, shader, rect, scissorRect) {
  * `uniform sampler2D * source` in shader.
  * @param {import('../../platform/graphics/render-target.js').RenderTarget} [target] - The destination render target.
  * Defaults to the frame buffer.
- * @param {import('../../platform/graphics/shader.js').Shader} [shader] - The optional custom shader used for rendering the texture.
- * @param {import('../../core/math/vec4.js').Vec4} [rect] - The viewport rectangle to use for the
- * texture, in pixels. Defaults to fullscreen (`0, 0, target.width, target.height`).
- * @param {import('../../core/math/vec4.js').Vec4} [scissorRect] - The scissor rectangle to use for
- * the texture, in pixels. Defaults to fullscreen (`0, 0, target.width, target.height`).
+ * @param {import('../../platform/graphics/shader.js').Shader} [shader] - The optional custom
+ * shader used for rendering the texture.
+ * @param {Vec4} [rect] - The viewport rectangle to use for the texture, in pixels. Defaults to
+ * fullscreen: `[0, 0, target.width, target.height]`.
+ * @param {Vec4} [scissorRect] - The scissor rectangle to use for the texture, in pixels. Defaults
+ * to fullscreen `[0, 0, target.width, target.height]`.
  * @category Graphics
  */
 function drawTexture(device, texture, target, shader, rect, scissorRect) {

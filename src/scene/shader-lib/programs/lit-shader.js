@@ -50,14 +50,13 @@ const builtinVaryings = {
 };
 
 class LitShader {
+    /**
+     * @param {import('../../../platform/graphics/graphics-device.js').GraphicsDevice} device - The
+     * graphics device.
+     * @param {import('./lit-shader-options.js').LitShaderOptions} options - The
+     * lit options.
+     */
     constructor(device, options) {
-        /**
-         * @param {import('../../../platform/graphics/graphics-device.js').GraphicsDevice} device - The
-         * graphics device.
-         * @param {import('./lit-shader-options.js').LitShaderOptions} options - The
-         * lit options.
-         * @ignore
-         */
         this.device = device;
         this.options = options;
 
@@ -1489,7 +1488,6 @@ class LitShader {
      * @param {string} frontendCode - Frontend code containing `getOpacity()` etc.
      * @param {string} frontendFunc - E.g. `evaluateFrontend();`
      * @param {string} lightingUv - E.g. `vUv0`
-     * @ignore
      */
     generateFragmentShader(frontendDecl, frontendCode, frontendFunc, lightingUv) {
         const options = this.options;

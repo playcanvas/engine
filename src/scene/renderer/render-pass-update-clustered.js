@@ -5,8 +5,6 @@ import { RenderPassShadowLocalClustered } from "./render-pass-shadow-local-clust
 
 /**
  * A render pass used to update clustered lighting data - shadows, cookies, world clusters.
- *
- * @ignore
  */
 class RenderPassUpdateClustered extends RenderPass {
     constructor(device, renderer, shadowRenderer, shadowRendererLocal, lightTextureAtlas) {
