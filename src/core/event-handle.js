@@ -14,16 +14,16 @@ import { Debug } from '../core/debug.js';
  * obj.fire('test'); // this will not trigger an event
  * @example
  * // store an array of event handles
- * let events = [ ];
+ * let events = [];
  *
- * events.push(objA.on('testA', () => { }));
- * events.push(objB.on('testB', () => { }));
+ * events.push(objA.on('testA', () => {}));
+ * events.push(objB.on('testB', () => {}));
  *
  * // when needed, remove all events
  * events.forEach((evt) => {
  *     evt.off();
  * });
- * events = [ ];
+ * events = [];
  */
 class EventHandle {
     /**
