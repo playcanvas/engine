@@ -43,22 +43,20 @@ class Frustum {
      * frustum.setFromMat4(projMat);
      */
     setFromMat4(matrix) {
-        const vpm = matrix.data;
+        const [
+            m00, m01, m02, m03,
+            m10, m11, m12, m13,
+            m20, m21, m22, m23,
+            m30, m31, m32, m33
+        ] = matrix.data;
         const planes = this.planes;
 
-        const setPlane = (plane, a, b, c, d) => {
-            plane.normal.set(vpm[3] + a * vpm[0], vpm[7] + b * vpm[4], vpm[11] + c * vpm[8]);
-            plane.distance = vpm[15] + d * vpm[12];
-            plane.normalize();
-        };
-
-        // Extract the numbers for the planes
-        setPlane(planes[0], -1, -1, -1, -1); // RIGHT
-        setPlane(planes[1], 1, 1, 1, 1);     // LEFT
-        setPlane(planes[2], 1, 1, 1, 1);     // BOTTOM
-        setPlane(planes[3], -1, -1, -1, -1); // TOP
-        setPlane(planes[4], -1, -1, -1, -1); // FAR
-        setPlane(planes[5], 1, 1, 1, 1);     // NEAR
+        planes[0].set(m03 - m00, m13 - m10, m23 - m20, m33 - m30).normalize(); // RIGHT
+        planes[1].set(m03 + m00, m13 + m10, m23 + m20, m33 + m30).normalize(); // LEFT
+        planes[2].set(m03 + m01, m13 + m11, m23 + m21, m33 + m31).normalize(); // BOTTOM
+        planes[3].set(m03 - m01, m13 - m11, m23 - m21, m33 - m31).normalize(); // TOP
+        planes[4].set(m03 - m02, m13 - m12, m23 - m22, m33 - m32).normalize(); // FAR
+        planes[5].set(m03 + m02, m13 + m12, m23 + m22, m33 + m32).normalize(); // NEAR
     }
 
     /**

@@ -48,6 +48,21 @@ class Plane {
     }
 
     /**
+     * Sets the plane based on a normal and a distance from the origin.
+     *
+     * @param {number} nx - The x-component of the normal.
+     * @param {number} ny - The y-component of the normal.
+     * @param {number} nz - The z-component of the normal.
+     * @param {number} d - The distance from the origin.
+     * @returns {Plane} Self for chaining.
+     */
+    set(nx, ny, nz, d) {
+        this.normal.set(nx, ny, nz);
+        this.distance = d;
+        return this;
+    }
+
+    /**
      * Sets the plane based on a specified normal and a point on the plane.
      *
      * @param {Vec3} point - The point on the plane.
