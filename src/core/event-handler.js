@@ -21,7 +21,7 @@ import { EventHandle } from './event-handle.js';
  * const obj = new EventHandlerSubclass();
  *
  * // subscribe to an event
- * obj.on('hello', function (str) {
+ * obj.on('hello', (str) => {
  *     console.log('event hello is fired', str);
  * });
  *
@@ -96,12 +96,12 @@ class EventHandler {
      * current this.
      * @returns {EventHandle} Can be used for removing event in the future.
      * @example
-     * obj.on('test', function (a, b) {
+     * obj.on('test', (a, b) => {
      *     console.log(a + b);
      * });
      * obj.fire('test', 1, 2); // prints 3 to the console
      * @example
-     * const evt = obj.on('test', function (a, b) {
+     * const evt = obj.on('test', (a, b) => {
      *     console.log(a + b);
      * });
      * // some time later
@@ -121,7 +121,7 @@ class EventHandler {
      * current this.
      * @returns {EventHandle} - can be used for removing event in the future.
      * @example
-     * obj.once('test', function (a, b) {
+     * obj.once('test', (a, b) => {
      *     console.log(a + b);
      * });
      * obj.fire('test', 1, 2); // prints 3 to the console
@@ -141,8 +141,7 @@ class EventHandler {
      * @param {object} [scope] - Scope that was used as the this when the event is fired.
      * @returns {EventHandler} Self for chaining.
      * @example
-     * const handler = function () {
-     * };
+     * const handler = () => {};
      * obj.on('test', handler);
      *
      * obj.off(); // Removes all events
@@ -288,7 +287,7 @@ class EventHandler {
      * @param {string} name - The name of the event to test.
      * @returns {boolean} True if the object has handlers bound to the specified event name.
      * @example
-     * obj.on('test', function () { }); // bind an event to 'test'
+     * obj.on('test', () => {}); // bind an event to 'test'
      * obj.hasEvent('test'); // returns true
      * obj.hasEvent('hello'); // returns false
      */
