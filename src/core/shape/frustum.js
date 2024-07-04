@@ -70,8 +70,8 @@ class Frustum {
      */
     containsPoint(point) {
         for (let p = 0; p < 6; p++) {
-            const plane = this.planes[p];
-            if (plane.normal.dot(point) + plane.distance <= 0) {
+            const { normal, distance } = this.planes[p];
+            if (normal.dot(point) + distance <= 0) {
                 return false;
             }
         }
@@ -89,21 +89,15 @@ class Frustum {
      * frustum and 2 if it is contained by the frustum.
      */
     containsSphere(sphere) {
-
-        const sr = sphere.radius;
-        const sc = sphere.center;
-        const scx = sc.x;
-        const scy = sc.y;
-        const scz = sc.z;
-        const planes = this.planes;
+        const { center, radius } = sphere;
 
         let c = 0;
         for (let p = 0; p < 6; p++) {
-            const plane = planes[p];
-            const d = plane.normal.x * scx + plane.normal.y * scy + plane.normal.z * scz + plane.distance;
-            if (d <= -sr)
+            const { normal, distance } = this.planes[p];
+            const d = normal.dot(center) + distance;
+            if (d <= -radius)
                 return 0;
-            if (d > sr)
+            if (d > radius)
                 c++;
         }
 
