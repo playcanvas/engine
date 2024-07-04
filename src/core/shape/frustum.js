@@ -43,17 +43,6 @@ class Frustum {
      * frustum.setFromMat4(projMat);
      */
     setFromMat4(matrix) {
-
-        const normalize = (plane) => {
-            const normal = plane.normal;
-            const t = Math.sqrt(normal.x * normal.x + normal.y * normal.y + normal.z * normal.z);
-            const invT = 1 / t;
-            normal.x *= invT;
-            normal.y *= invT;
-            normal.z *= invT;
-            plane.distance *= invT;
-        };
-
         const vpm = matrix.data;
         const planes = this.planes;
 
@@ -61,37 +50,37 @@ class Frustum {
         let plane = planes[0];
         plane.normal.set(vpm[3] - vpm[0], vpm[7] - vpm[4], vpm[11] - vpm[8]);
         plane.distance = vpm[15] - vpm[12];
-        normalize(plane);
+        plane.normalize();
 
         // Extract the numbers for the LEFT plane
         plane = planes[1];
         plane.normal.set(vpm[3] + vpm[0], vpm[7] + vpm[4], vpm[11] + vpm[8]);
         plane.distance = vpm[15] + vpm[12];
-        normalize(plane);
+        plane.normalize();
 
         // Extract the BOTTOM plane
         plane = planes[2];
         plane.normal.set(vpm[3] + vpm[1], vpm[7] + vpm[5], vpm[11] + vpm[9]);
         plane.distance = vpm[15] + vpm[13];
-        normalize(plane);
+        plane.normalize();
 
         // Extract the TOP plane
         plane = planes[3];
         plane.normal.set(vpm[3] - vpm[1], vpm[7] - vpm[5], vpm[11] - vpm[9]);
         plane.distance = vpm[15] - vpm[13];
-        normalize(plane);
+        plane.normalize();
 
         // Extract the FAR plane
         plane = planes[4];
         plane.normal.set(vpm[3] - vpm[2], vpm[7] - vpm[6], vpm[11] - vpm[10]);
         plane.distance = vpm[15] - vpm[14];
-        normalize(plane);
+        plane.normalize();
 
         // Extract the NEAR plane
         plane = planes[5];
         plane.normal.set(vpm[3] + vpm[2], vpm[7] + vpm[6], vpm[11] + vpm[10]);
         plane.distance = vpm[15] + vpm[14];
-        normalize(plane);
+        plane.normalize();
     }
 
     /**

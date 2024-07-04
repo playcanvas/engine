@@ -36,6 +36,18 @@ class Plane {
     }
 
     /**
+     * Normalize the normal of the plane.
+     *
+     * @returns {Plane} Self for chaining.
+     */
+    normalize() {
+        const invLength = 1 / this.normal.length();
+        this.normal.mulScalar(invLength);
+        this.distance *= invLength;
+        return this;
+    }
+
+    /**
      * Sets the plane based on a specified normal and a point on the plane.
      *
      * @param {Vec3} point - The point on the plane.
