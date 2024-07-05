@@ -94,21 +94,15 @@ class Application extends AppBase {
      *
      * @param {HTMLCanvasElement} canvas - The canvas element.
      * @param {object} [options] - The options object to configure the Application.
-     * @param {ElementInput} [options.elementInput] - Input
-     * handler for {@link ElementComponent}s.
-     * @param {Keyboard} [options.keyboard] - Keyboard
-     * handler for input.
-     * @param {Mouse} [options.mouse] - Mouse handler for
-     * input.
-     * @param {TouchDevice} [options.touch] - TouchDevice
-     * handler for input.
-     * @param {GamePads} [options.gamepads] - Gamepad
-     * handler for input.
+     * @param {ElementInput} [options.elementInput] - Input handler for {@link ElementComponent}s.
+     * @param {Keyboard} [options.keyboard] - Keyboard handler for input.
+     * @param {Mouse} [options.mouse] - Mouse handler for input.
+     * @param {TouchDevice} [options.touch] - TouchDevice handler for input.
+     * @param {GamePads} [options.gamepads] - Gamepad handler for input.
      * @param {string} [options.scriptPrefix] - Prefix to apply to script urls before loading.
      * @param {string} [options.assetPrefix] - Prefix to apply to asset urls before loading.
-     * @param {GraphicsDevice} [options.graphicsDevice] - The
-     * graphics device used by the application. If not provided, a WebGl graphics device will be
-     * created.
+     * @param {GraphicsDevice} [options.graphicsDevice] - The graphics device used by the
+     * application. If not provided, a WebGl graphics device will be created.
      * @param {object} [options.graphicsDeviceOptions] - Options object that is passed into the
      * {@link GraphicsDevice} constructor.
      * @param {string[]} [options.scriptsOrder] - Scripts in order of loading first.
