@@ -67,8 +67,7 @@ class Frustum {
     /**
      * Updates the frustum shape based on the supplied 4x4 matrix.
      *
-     * @param {Mat4} matrix - The matrix describing the shape of the
-     * frustum.
+     * @param {Mat4} matrix - The matrix describing the shape of the frustum.
      * @example
      * // Create a perspective projection matrix
      * const projection = pc.Mat4();
