@@ -105,7 +105,7 @@ class Plane {
     }
 
     /**
-     * Normalize the normal of the plane.
+     * Normalize the plane.
      *
      * @returns {Plane} Self for chaining.
      */
