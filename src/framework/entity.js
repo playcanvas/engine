@@ -300,8 +300,8 @@ class Entity extends GraphNode {
      * Create a new Entity.
      *
      * @param {string} [name] - The non-unique name of the entity, default is "Untitled".
-     * @param {AppBase} [app] - The application the entity belongs to,
-     * default is the current application.
+     * @param {AppBase} [app] - The application the entity belongs to, default is the current
+     * application.
      * @example
      * const entity = new pc.Entity();
      *
@@ -366,8 +366,8 @@ class Entity extends GraphNode {
      *
      * @param {object} [data] - The initialization data for the specific component type. Refer to
      * each specific component's API reference page for details on valid values for this parameter.
-     * @returns {Component|null} The new Component that was
-     * attached to the entity or null if there was an error.
+     * @returns {Component|null} The new Component that was attached to the entity or null if there
+     * was an error.
      * @example
      * const entity = new pc.Entity();
      *
@@ -420,8 +420,8 @@ class Entity extends GraphNode {
      * Search the entity and all of its descendants for the first component of specified type.
      *
      * @param {string} type - The name of the component type to retrieve.
-     * @returns {Component} A component of specified type, if
-     * the entity or any of its descendants has one. Returns undefined otherwise.
+     * @returns {Component} A component of specified type, if the entity or any of its descendants
+     * has one. Returns undefined otherwise.
      * @example
      * // Get the first found light component in the hierarchy tree that starts with this entity
      * const light = entity.findComponent("light");
@@ -435,8 +435,8 @@ class Entity extends GraphNode {
      * Search the entity and all of its descendants for all components of specified type.
      *
      * @param {string} type - The name of the component type to retrieve.
-     * @returns {Component[]} All components of specified type
-     * in the entity or any of its descendants. Returns empty array if none found.
+     * @returns {Component[]} All components of specified type in the entity or any of its
+     * descendants. Returns empty array if none found.
      * @example
      * // Get all light components in the hierarchy tree that starts with this entity
      * const lights = entity.findComponents("light");
@@ -449,8 +449,8 @@ class Entity extends GraphNode {
      * Search the entity and all of its descendants for the first script instance of specified type.
      *
      * @param {string|typeof ScriptType} nameOrType - The name or type of {@link ScriptType}.
-     * @returns {ScriptType|undefined} A script instance of specified type, if the entity or any of its descendants
-     * has one. Returns undefined otherwise.
+     * @returns {ScriptType|undefined} A script instance of specified type, if the entity or any of
+     * its descendants has one. Returns undefined otherwise.
      * @example
      * // Get the first found "playerController" instance in the hierarchy tree that starts with this entity
      * const controller = entity.findScript("playerController");
