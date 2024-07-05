@@ -229,11 +229,11 @@ class Gizmo extends EventHandler {
 
     /**
      * @typedef IntersectData
-     * @property {TriData[]} triData - The array of {@link TriData}
+     * @property {TriData[]} triData - The array of {@link TriData}.
      * @property {GraphNode} parent - The mesh parent node.
-     * @property {MeshInstance[]} meshInstances -
-     * array of mesh instances for rendering
+     * @property {MeshInstance[]} meshInstances - Array of mesh instances for rendering.
      */
+
     /**
      * The intersection data object.
      *
@@ -502,8 +502,7 @@ class Gizmo extends EventHandler {
     }
 
     /**
-     * Destroys the gizmo instance; detaches
-     * all graph nodes.
+     * Detaches all graph nodes and destroys the gizmo instance.
      *
      * @example
      * const gizmo = new pc.Gizmo(app, camera, layer);

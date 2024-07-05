@@ -151,7 +151,7 @@ class TransformGizmo extends Gizmo {
     _colorAlpha = 0.6;
 
     /**
-     * Internal color for meshs.
+     * Internal color for meshes.
      *
      * @type {Object}
      * @protected
@@ -729,14 +729,14 @@ class TransformGizmo extends Gizmo {
      *
      * @param {string} shapeAxis - The shape axis. Can be:
      *
-     * {@link SHAPEAXIS_X}
-     * {@link SHAPEAXIS_Y}
-     * {@link SHAPEAXIS_Z}
-     * {@link SHAPEAXIS_YZ}
-     * {@link SHAPEAXIS_XZ}
-     * {@link SHAPEAXIS_XY}
-     * {@link SHAPEAXIS_XYZ}
-     * {@link SHAPEAXIS_FACE}
+     * - {@link SHAPEAXIS_X}
+     * - {@link SHAPEAXIS_Y}
+     * - {@link SHAPEAXIS_Z}
+     * - {@link SHAPEAXIS_YZ}
+     * - {@link SHAPEAXIS_XZ}
+     * - {@link SHAPEAXIS_XY}
+     * - {@link SHAPEAXIS_XYZ}
+     * - {@link SHAPEAXIS_FACE}
      *
      * @param {boolean} enabled - The enabled state of shape.
      */
@@ -753,14 +753,14 @@ class TransformGizmo extends Gizmo {
      *
      * @param {string} shapeAxis - The shape axis. Can be:
      *
-     * {@link SHAPEAXIS_X}
-     * {@link SHAPEAXIS_Y}
-     * {@link SHAPEAXIS_Z}
-     * {@link SHAPEAXIS_YZ}
-     * {@link SHAPEAXIS_XZ}
-     * {@link SHAPEAXIS_XY}
-     * {@link SHAPEAXIS_XYZ}
-     * {@link SHAPEAXIS_FACE}
+     * - {@link SHAPEAXIS_X}
+     * - {@link SHAPEAXIS_Y}
+     * - {@link SHAPEAXIS_Z}
+     * - {@link SHAPEAXIS_YZ}
+     * - {@link SHAPEAXIS_XZ}
+     * - {@link SHAPEAXIS_XY}
+     * - {@link SHAPEAXIS_XYZ}
+     * - {@link SHAPEAXIS_FACE}
      *
      * @returns {boolean} - Then enabled state of the shape
      */
