@@ -12,10 +12,8 @@ const defaultMaterialDeviceCache = new DeviceCache();
 /**
  * Returns default material, which is a material used instead of null material.
  *
- * @param {GraphicsDevice} device - The
- * graphics device used to own the material.
- * @returns {StandardMaterial} The default instance of
- * {@link StandardMaterial}.
+ * @param {GraphicsDevice} device - The graphics device used to own the material.
+ * @returns {StandardMaterial} The default instance of {@link StandardMaterial}.
  */
 function getDefaultMaterial(device) {
     const material = defaultMaterialDeviceCache.get(device);
@@ -26,10 +24,8 @@ function getDefaultMaterial(device) {
 /**
  * Assigns the default material to device cache
  *
- * @param {GraphicsDevice} device - The
- * graphics device used to own the material.
- * @param {StandardMaterial} material - The instance of
- * {@link StandardMaterial}.
+ * @param {GraphicsDevice} device - The graphics device used to own the material.
+ * @param {StandardMaterial} material - The instance of {@link StandardMaterial}.
  */
 function setDefaultMaterial(device, material) {
     Debug.assert(material);

@@ -20,8 +20,7 @@ class WebgpuPipeline {
     // TODO: this could be cached using bindGroupKey
 
     /**
-     * @param {BindGroupFormat[]} bindGroupFormats - An array
-     * of bind group formats.
+     * @param {BindGroupFormat[]} bindGroupFormats - An array of bind group formats.
      * @returns {any} Returns the pipeline layout.
      */
     getPipelineLayout(bindGroupFormats) {

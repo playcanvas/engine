@@ -89,8 +89,7 @@ class WebgpuRenderTarget {
     renderPassDescriptor = {};
 
     /**
-     * @param {RenderTarget} renderTarget - The render target owning
-     * this implementation.
+     * @param {RenderTarget} renderTarget - The render target owning this implementation.
      */
     constructor(renderTarget) {
         this.renderTarget = renderTarget;
@@ -109,8 +108,7 @@ class WebgpuRenderTarget {
      * Release associated resources. Note that this needs to leave this instance in a state where
      * it can be re-initialized again, which is used by render target resizing.
      *
-     * @param {WebgpuGraphicsDevice} device - The
-     * graphics device.
+     * @param {WebgpuGraphicsDevice} device - The graphics device.
      */
     destroy(device) {
         this.initialized = false;
@@ -192,8 +190,7 @@ class WebgpuRenderTarget {
     /**
      * Initialize render target for rendering one time.
      *
-     * @param {WebgpuGraphicsDevice} device - The
-     * graphics device.
+     * @param {WebgpuGraphicsDevice} device - The graphics device.
      * @param {RenderTarget} renderTarget - The render target.
      */
     init(device, renderTarget) {

@@ -275,8 +275,7 @@ class WebgpuTexture {
     }
 
     /**
-     * @param {WebgpuGraphicsDevice} device - The graphics
-     * device.
+     * @param {WebgpuGraphicsDevice} device - The graphics device.
      * @param {Texture} texture - The texture.
      */
     uploadImmediate(device, texture) {

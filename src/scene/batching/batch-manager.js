@@ -23,6 +23,11 @@ import { SkinBatchInstance } from './skin-batch-instance.js';
  * @import {Scene} from '../scene.js'
  */
 
+const _triFanIndices = [0, 1, 3, 2, 3, 1];
+const _triStripIndices = [0, 1, 3, 0, 3, 2];
+
+const mat3 = new Mat3();
+
 function paramsIdentical(a, b) {
     if (a && !b) return false;
     if (!a && b) return false;
@@ -51,11 +56,6 @@ function equalParamSets(params1, params2) {
     return true;
 }
 
-const _triFanIndices = [0, 1, 3, 2, 3, 1];
-const _triStripIndices = [0, 1, 3, 0, 3, 2];
-
-const mat3 = new Mat3();
-
 function getScaleSign(mi) {
     return mi.node.worldTransform.scaleSign;
 }
@@ -69,10 +69,8 @@ class BatchManager {
     /**
      * Create a new BatchManager instance.
      *
-     * @param {GraphicsDevice} device - The
-     * graphics device used by the batch manager.
-     * @param {Entity} root - The entity under which batched
-     * models are added.
+     * @param {GraphicsDevice} device - The graphics device used by the batch manager.
+     * @param {Entity} root - The entity under which batched models are added.
      * @param {Scene} scene - The scene that the batch manager affects.
      */
     constructor(device, root, scene) {

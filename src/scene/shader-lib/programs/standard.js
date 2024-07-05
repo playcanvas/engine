@@ -202,8 +202,7 @@ class ShaderGeneratorStandard extends ShaderGenerator {
     }
 
     /**
-     * @param {GraphicsDevice} device - The
-     * graphics device.
+     * @param {GraphicsDevice} device - The graphics device.
      * @param {StandardMaterialOptions} options - The create options.
      * @returns {object} Returns the created shader definition.
      */

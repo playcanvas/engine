@@ -153,6 +153,7 @@ class BindTextureFormat extends BindBaseFormat {
  * A class to describe the format of the storage texture for {@link BindGroupFormat}. Storage
  * texture is a texture created with the storage flag set to true, which allows it to be used as an
  * output of a compute shader.
+ *
  * Note: At the current time, storage textures are only supported in compute shaders in a
  * write-only mode.
  *
@@ -234,10 +235,9 @@ class BindGroupFormat {
     /**
      * Create a new instance.
      *
-     * @param {GraphicsDevice} graphicsDevice - The graphics device
-     * used to manage this vertex format.
-     * @param {(BindTextureFormat|BindStorageTextureFormat|BindUniformBufferFormat|BindStorageBufferFormat)[]} formats
-     * - An array of bind formats. Note that each entry in the array uses up one slot. The exception
+     * @param {GraphicsDevice} graphicsDevice - The graphics device used to manage this vertex format.
+     * @param {(BindTextureFormat|BindStorageTextureFormat|BindUniformBufferFormat|BindStorageBufferFormat)[]} formats -
+     * An array of bind formats. Note that each entry in the array uses up one slot. The exception
      * is a texture format that has a sampler, which uses up two slots. The slots are allocated
      * sequentially, starting from 0.
      */

@@ -108,8 +108,7 @@ class XrHand extends EventHandler {
     /**
      * Represents a hand with fingers and joints.
      *
-     * @param {XrInputSource} inputSource - Input Source that hand
-     * is related to.
+     * @param {XrInputSource} inputSource - Input Source that hand is related to.
      * @ignore
      */
     constructor(inputSource) {

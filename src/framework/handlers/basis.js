@@ -320,8 +320,7 @@ let deviceDetails = null;
 /**
  * Enqueue a blob of basis data for transcoding.
  *
- * @param {GraphicsDevice} device - The
- * graphics device.
+ * @param {GraphicsDevice} device - The graphics device.
  * @param {string} url - URL of the basis file.
  * @param {object} data - The file data to transcode.
  * @param {Function} callback - Callback function to receive transcode result.

@@ -588,8 +588,7 @@ class Material {
      * Sets a shader parameter on a material.
      *
      * @param {string} name - The name of the parameter to set.
-     * @param {number|number[]|Float32Array|Texture} data -
-     * The value for the specified parameter.
+     * @param {number|number[]|Float32Array|Texture} data - The value for the specified parameter.
      */
     setParameter(name, data) {
 
@@ -672,8 +671,7 @@ class Material {
     /**
      * Registers mesh instance as referencing the material.
      *
-     * @param {MeshInstance} meshInstance - The mesh instance to
-     * register.
+     * @param {MeshInstance} meshInstance - The mesh instance to register.
      * @ignore
      */
     addMeshInstanceRef(meshInstance) {
@@ -683,8 +681,7 @@ class Material {
     /**
      * De-registers mesh instance as referencing the material.
      *
-     * @param {MeshInstance} meshInstance - The mesh instance to
-     * de-register.
+     * @param {MeshInstance} meshInstance - The mesh instance to de-register.
      * @ignore
      */
     removeMeshInstanceRef(meshInstance) {

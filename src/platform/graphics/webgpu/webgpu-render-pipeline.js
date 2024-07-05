@@ -127,16 +127,13 @@ class WebgpuRenderPipeline extends WebgpuPipeline {
      * @param {VertexFormat} vertexFormat1 - The second vertex format.
      * @param {Shader} shader - The shader.
      * @param {RenderTarget} renderTarget - The render target.
-     * @param {BindGroupFormat[]} bindGroupFormats - An array of
-     * bind group formats.
+     * @param {BindGroupFormat[]} bindGroupFormats - An array of bind group formats.
      * @param {BlendState} blendState - The blend state.
      * @param {DepthState} depthState - The depth state.
      * @param {number} cullMode - The cull mode.
      * @param {boolean} stencilEnabled - Whether stencil is enabled.
-     * @param {StencilParameters} stencilFront - The stencil
-     * state for front faces.
-     * @param {StencilParameters} stencilBack - The stencil
-     * state for back faces.
+     * @param {StencilParameters} stencilFront - The stencil state for front faces.
+     * @param {StencilParameters} stencilBack - The stencil state for back faces.
      * @returns {GPURenderPipeline} Returns the render pipeline.
      * @private
      */
@@ -243,10 +240,8 @@ class WebgpuRenderPipeline extends WebgpuPipeline {
      * @param {DepthState} depthState - The depth state.
      * @param {RenderTarget} renderTarget - The render target.
      * @param {boolean} stencilEnabled - Whether stencil is enabled.
-     * @param {StencilParameters} stencilFront - The stencil
-     * state for front faces.
-     * @param {StencilParameters} stencilBack - The stencil
-     * state for back faces.
+     * @param {StencilParameters} stencilFront - The stencil state for front faces.
+     * @param {StencilParameters} stencilBack - The stencil state for back faces.
      * @returns {object} Returns the depth stencil state.
      * @private
      */

@@ -73,8 +73,7 @@ class ShadowRenderer {
 
     /**
      * @param {Renderer} renderer - The renderer.
-     * @param {LightTextureAtlas} lightTextureAtlas - The
-     * shadow map atlas.
+     * @param {LightTextureAtlas} lightTextureAtlas - The shadow map atlas.
      */
     constructor(renderer, lightTextureAtlas) {
         this.device = renderer.device;
@@ -165,14 +164,13 @@ class ShadowRenderer {
     /**
      * Culls the list of shadow casters used by the light by the camera, storing visible mesh
      * instances in the specified array.
-     * @param {LayerComposition} comp - The layer
-     * composition used as a source of shadow casters, if those are not provided directly.
+     *
+     * @param {LayerComposition} comp - The layer composition used as a source of shadow casters,
+     * if those are not provided directly.
      * @param {Light} light - The light.
-     * @param {MeshInstance[]} visible - The array to store visible
-     * mesh instances in.
+     * @param {MeshInstance[]} visible - The array to store visible mesh instances in.
      * @param {Camera} camera - The camera.
-     * @param {MeshInstance[]} [casters] - Optional array of mesh
-     * instances to use as casters.
+     * @param {MeshInstance[]} [casters] - Optional array of mesh instances to use as casters.
      */
     cullShadowCasters(comp, light, visible, camera, casters) {
 
@@ -280,8 +278,7 @@ class ShadowRenderer {
     }
 
     /**
-     * @param {MeshInstance[]} visibleCasters - Visible mesh
-     * instances.
+     * @param {MeshInstance[]} visibleCasters - Visible mesh instances.
      * @param {Light} light - The light.
      */
     submitCasters(visibleCasters, light) {

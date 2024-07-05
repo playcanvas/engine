@@ -54,10 +54,8 @@ const builtinVaryings = {
 
 class LitShader {
     /**
-     * @param {GraphicsDevice} device - The
-     * graphics device.
-     * @param {LitShaderOptions} options - The
-     * lit options.
+     * @param {GraphicsDevice} device - The graphics device.
+     * @param {LitShaderOptions} options - The lit options.
      */
     constructor(device, options) {
         this.device = device;

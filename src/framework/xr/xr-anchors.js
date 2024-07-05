@@ -151,8 +151,8 @@ class XrAnchors extends EventHandler {
     _list = [];
 
     /**
-     * Map of callbacks to XRAnchors so that we can call its callback once
-     * an anchor is updated with a pose for the first time.
+     * Map of callbacks to XRAnchors so that we can call its callback once an anchor is updated
+     * with a pose for the first time.
      *
      * @type {Map<XrAnchor, XrAnchorCreateCallback>}
      * @private
@@ -240,12 +240,11 @@ class XrAnchors extends EventHandler {
     /**
      * Create an anchor using position and rotation, or from hit test result.
      *
-     * @param {Vec3|XRHitTestResult} position - Position for an anchor or
-     * a hit test result.
-     * @param {Quat|XrAnchorCreateCallback} [rotation] - Rotation for an
-     * anchor or a callback if creating from a hit test result.
-     * @param {XrAnchorCreateCallback} [callback] - Callback to fire when anchor was created or failed to be
-     * created.
+     * @param {Vec3|XRHitTestResult} position - Position for an anchor or a hit test result.
+     * @param {Quat|XrAnchorCreateCallback} [rotation] - Rotation for an anchor or a callback if
+     * creating from a hit test result.
+     * @param {XrAnchorCreateCallback} [callback] - Callback to fire when anchor was created or
+     * failed to be created.
      * @example
      * // create an anchor using a position and rotation
      * app.xr.anchors.create(position, rotation, function (err, anchor) {
@@ -306,7 +305,8 @@ class XrAnchors extends EventHandler {
      * Restore anchor using persistent UUID.
      *
      * @param {string} uuid - UUID string associated with persistent anchor.
-     * @param {XrAnchorCreateCallback} [callback] - Callback to fire when anchor was created or failed to be created.
+     * @param {XrAnchorCreateCallback} [callback] - Callback to fire when anchor was created or
+     * failed to be created.
      * @example
      * // restore an anchor using uuid string
      * app.xr.anchors.restore(uuid, function (err, anchor) {
@@ -353,8 +353,8 @@ class XrAnchors extends EventHandler {
      * Forget an anchor by removing its UUID from underlying systems.
      *
      * @param {string} uuid - UUID string associated with persistent anchor.
-     * @param {XrAnchorForgetCallback} [callback] - Callback to
-     * fire when anchor persistent data was removed or error if failed.
+     * @param {XrAnchorForgetCallback} [callback] - Callback to fire when anchor persistent data
+     * was removed or error if failed.
      * @example
      * // forget all available anchors
      * const uuids = app.xr.anchors.uuids;

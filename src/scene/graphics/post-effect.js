@@ -21,8 +21,7 @@ class PostEffect {
     /**
      * Create a new PostEffect instance.
      *
-     * @param {GraphicsDevice} graphicsDevice -
-     * The graphics device of the application.
+     * @param {GraphicsDevice} graphicsDevice - The graphics device of the application.
      */
     constructor(graphicsDevice) {
         /**
@@ -60,12 +59,11 @@ class PostEffect {
     /**
      * Render the post effect using the specified inputTarget to the specified outputTarget.
      *
-     * @param {RenderTarget} inputTarget - The
-     * input render target.
-     * @param {RenderTarget} outputTarget - The
-     * output render target. If null then this will be the screen.
-     * @param {Vec4} [rect] - The rect of the current camera. If
-     * not specified, it will default to [0, 0, 1, 1].
+     * @param {RenderTarget} inputTarget - The input render target.
+     * @param {RenderTarget} outputTarget - The output render target. If null then this will be the
+     * screen.
+     * @param {Vec4} [rect] - The rect of the current camera. If not specified, it will default to
+     * `[0, 0, 1, 1]`.
      */
     render(inputTarget, outputTarget, rect) {
     }
@@ -73,12 +71,10 @@ class PostEffect {
     /**
      * Draw a screen-space rectangle in a render target, using a specified shader.
      *
-     * @param {RenderTarget|null} target - The
-     * output render target.
-     * @param {Shader} shader - The shader to be used
-     * for drawing the rectangle.
-     * @param {Vec4} [rect] - The normalized screen-space position
-     * (rect.x, rect.y) and size (rect.z, rect.w) of the rectangle. Default is [0, 0, 1, 1].
+     * @param {RenderTarget|null} target - The output render target.
+     * @param {Shader} shader - The shader to be used for drawing the rectangle.
+     * @param {Vec4} [rect] - The normalized screen-space position (rect.x, rect.y) and size (rect.z,
+     * rect.w) of the rectangle. Default is `[0, 0, 1, 1]`.
      */
     drawQuad(target, shader, rect) {
         let viewport;

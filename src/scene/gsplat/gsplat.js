@@ -85,8 +85,7 @@ class GSplat {
     }
 
     /**
-     * @returns {Material} material - The material to set up for
-     * the splat rendering.
+     * @returns {Material} material - The material to set up for the splat rendering.
      */
     createMaterial(options) {
         const result = createGSplatMaterial(options);

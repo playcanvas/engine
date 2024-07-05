@@ -219,9 +219,8 @@ class VertexFormat {
     /**
      * The {@link VertexFormat} used to store matrices of type {@link Mat4} for hardware instancing.
      *
-     * @param {GraphicsDevice} graphicsDevice - The graphics device
-     * used to create this vertex format.
-     *
+     * @param {GraphicsDevice} graphicsDevice - The graphics device used to create this vertex
+     * format.
      * @returns {VertexFormat} The default instancing vertex format.
      */
     static getDefaultInstancingFormat(graphicsDevice) {

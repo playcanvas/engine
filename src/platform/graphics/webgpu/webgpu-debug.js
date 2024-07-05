@@ -23,8 +23,7 @@ class WebgpuDebug {
     /**
      * Start a validation error scope.
      *
-     * @param {WebgpuGraphicsDevice} device - The graphics
-     * device.
+     * @param {WebgpuGraphicsDevice} device - The graphics device.
      */
     static validate(device) {
         device.wgpu.pushErrorScope('validation');
@@ -35,8 +34,7 @@ class WebgpuDebug {
     /**
      * Start an out-of-memory error scope.
      *
-     * @param {WebgpuGraphicsDevice} device - The graphics
-     * device.
+     * @param {WebgpuGraphicsDevice} device - The graphics device.
      */
     static memory(device) {
         device.wgpu.pushErrorScope('out-of-memory');
@@ -47,8 +45,7 @@ class WebgpuDebug {
     /**
      * Start an internal error scope.
      *
-     * @param {WebgpuGraphicsDevice} device - The graphics
-     * device.
+     * @param {WebgpuGraphicsDevice} device - The graphics device.
      */
     static internal(device) {
         device.wgpu.pushErrorScope('internal');
@@ -59,8 +56,7 @@ class WebgpuDebug {
     /**
      * End the previous error scope, and print errors if any.
      *
-     * @param {WebgpuGraphicsDevice} device - The graphics
-     * device.
+     * @param {WebgpuGraphicsDevice} device - The graphics device.
      * @param {...any} args - Additional parameters that form the error message.
      */
     static end(device, ...args) {

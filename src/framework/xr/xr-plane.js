@@ -85,8 +85,7 @@ class XrPlane extends EventHandler {
     /**
      * Create a new XrPlane instance.
      *
-     * @param {XrPlaneDetection} planeDetection - Plane detection
-     * system.
+     * @param {XrPlaneDetection} planeDetection - Plane detection system.
      * @param {*} xrPlane - XRPlane that is instantiated by WebXR system.
      * @ignore
      */

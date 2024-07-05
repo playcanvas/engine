@@ -337,8 +337,8 @@ class XrManager extends EventHandler {
      * callback when session is created or failed to create. Integrated XR APIs need to be enabled
      * by providing relevant options.
      *
-     * @param {CameraComponent} camera - It will be
-     * used to render XR session and manipulated based on pose tracking.
+     * @param {CameraComponent} camera - It will be used to render XR session and manipulated based
+     * on pose tracking.
      * @param {string} type - Session type. Can be one of the following:
      *
      * - {@link XRTYPE_INLINE}: Inline - always available type of session. It has limited features
@@ -366,8 +366,8 @@ class XrManager extends EventHandler {
      *
      * @param {object} [options] - Object with additional options for XR session initialization.
      * @param {number} [options.framebufferScaleFactor] - Framebuffer scale factor should
-     * be higher than 0.0, by default 1.0 (no scaling). A value of 0.5 will reduce the resolution of
-     * an XR session in half, and a value of 2.0 will double the resolution.
+     * be higher than 0.0, by default 1.0 (no scaling). A value of 0.5 will reduce the resolution
+     * of an XR session in half, and a value of 2.0 will double the resolution.
      * @param {string[]} [options.optionalFeatures] - Optional features for XRSession start. It is
      * used for getting access to additional WebXR spec extensions.
      * @param {boolean} [options.anchors] - Set to true to attempt to enable
