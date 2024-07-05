@@ -1,4 +1,9 @@
 /**
+ * @import {Asset} from '../asset/asset.js'
+ * @import {AssetRegistry} from '../asset/asset-registry.js'
+ */
+
+/**
  * Keeps track of which assets are in bundles and loads files from bundles.
  *
  * @ignore
@@ -6,21 +11,21 @@
 class BundleRegistry {
     /**
      * Index of bundle assets.
-     * @type {Map<number, import('../asset/asset.js').Asset>}
+     * @type {Map<number, Asset>}
      * @private
      */
     _idToBundle = new Map();
 
     /**
      * Index of asset id to set of bundle assets.
-     * @type {Map<number, Set<import('../asset/asset.js').Asset>>}
+     * @type {Map<number, Set<Asset>>}
      * @private
      */
     _assetToBundles = new Map();
 
     /**
      * Index of file url to set of bundle assets.
-     * @type {Map<string, Set<import('../asset/asset.js').Asset>>}
+     * @type {Map<string, Set<Asset>>}
      * @private
      */
     _urlsToBundles = new Map();
@@ -35,7 +40,7 @@ class BundleRegistry {
     /**
      * Create a new BundleRegistry instance.
      *
-     * @param {import('../asset/asset-registry.js').AssetRegistry} assets - The asset registry.
+     * @param {AssetRegistry} assets - The asset registry.
      */
     constructor(assets) {
         this._assets = assets;
@@ -47,7 +52,7 @@ class BundleRegistry {
     /**
      * Called when asset is added to AssetRegistry.
      *
-     * @param {import('../asset/asset.js').Asset} asset - The asset that has been added.
+     * @param {Asset} asset - The asset that has been added.
      * @private
      */
     _onAssetAdd(asset) {
@@ -256,8 +261,8 @@ class BundleRegistry {
     /**
      * Lists all of the available bundles that reference the specified asset.
      *
-     * @param {import('../asset/asset.js').Asset} asset - The asset to search by.
-     * @returns {import('../asset/asset.js').Asset[]|null} An array of bundle assets or null if the
+     * @param {Asset} asset - The asset to search by.
+     * @returns {Asset[]|null} An array of bundle assets or null if the
      * asset is not in any bundle.
      */
     listBundlesForAsset(asset) {
@@ -269,7 +274,7 @@ class BundleRegistry {
     /**
      * Lists all bundle assets.
      *
-     * @returns {import('../asset/asset.js').Asset[]} An array of bundle assets.
+     * @returns {Asset[]} An array of bundle assets.
      */
     list() {
         return Array.from(this._idToBundle.values());

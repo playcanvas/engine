@@ -1,13 +1,38 @@
 import { EventHandler } from '../../core/event-handler.js';
 
 /**
+ * @import {AnimComponentSystem} from './anim/system.js'
+ * @import {AnimationComponentSystem} from './animation/system.js'
+ * @import {AudioListenerComponentSystem} from './audio-listener/system.js'
+ * @import {ButtonComponentSystem} from './button/system.js'
+ * @import {CameraComponentSystem} from './camera/system.js'
+ * @import {CollisionComponentSystem} from './collision/system.js'
+ * @import {ElementComponentSystem} from './element/system.js'
+ * @import {JointComponentSystem} from './joint/system.js'
+ * @import {LayoutChildComponentSystem} from './layout-child/system.js'
+ * @import {LayoutGroupComponentSystem} from './layout-group/system.js'
+ * @import {LightComponentSystem} from './light/system.js'
+ * @import {ModelComponentSystem} from './model/system.js'
+ * @import {ParticleSystemComponentSystem} from './particle-system/system.js'
+ * @import {RenderComponentSystem} from './render/system.js'
+ * @import {RigidBodyComponentSystem} from './rigid-body/system.js'
+ * @import {ScreenComponentSystem} from './screen/system.js'
+ * @import {ScriptComponentSystem} from './script/system.js'
+ * @import {ScrollViewComponentSystem} from './scroll-view/system.js'
+ * @import {ScrollbarComponentSystem} from './scrollbar/system.js'
+ * @import {SoundComponentSystem} from './sound/system.js'
+ * @import {SpriteComponentSystem} from './sprite/system.js'
+ * @import {ZoneComponentSystem} from './zone/system.js'
+ */
+
+/**
  * Store, access and delete instances of the various ComponentSystems.
  */
 class ComponentSystemRegistry extends EventHandler {
     /**
      * Gets the {@link AnimComponentSystem} from the registry.
      *
-     * @type {import('./anim/system.js').AnimComponentSystem|undefined}
+     * @type {AnimComponentSystem|undefined}
      * @readonly
      */
     anim;
@@ -15,7 +40,7 @@ class ComponentSystemRegistry extends EventHandler {
     /**
      * Gets the {@link AnimationComponentSystem} from the registry.
      *
-     * @type {import('./animation/system.js').AnimationComponentSystem|undefined}
+     * @type {AnimationComponentSystem|undefined}
      * @readonly
      */
     animation;
@@ -23,7 +48,7 @@ class ComponentSystemRegistry extends EventHandler {
     /**
      * Gets the {@link AudioListenerComponentSystem} from the registry.
      *
-     * @type {import('./audio-listener/system.js').AudioListenerComponentSystem|undefined}
+     * @type {AudioListenerComponentSystem|undefined}
      * @readonly
      */
     audiolistener;
@@ -31,7 +56,7 @@ class ComponentSystemRegistry extends EventHandler {
     /**
      * Gets the {@link ButtonComponentSystem} from the registry.
      *
-     * @type {import('./button/system.js').ButtonComponentSystem|undefined}
+     * @type {ButtonComponentSystem|undefined}
      * @readonly
      */
     button;
@@ -39,7 +64,7 @@ class ComponentSystemRegistry extends EventHandler {
     /**
      * Gets the {@link CameraComponentSystem} from the registry.
      *
-     * @type {import('./camera/system.js').CameraComponentSystem|undefined}
+     * @type {CameraComponentSystem|undefined}
      * @readonly
      */
     camera;
@@ -47,7 +72,7 @@ class ComponentSystemRegistry extends EventHandler {
     /**
      * Gets the {@link CollisionComponentSystem} from the registry.
      *
-     * @type {import('./collision/system.js').CollisionComponentSystem|undefined}
+     * @type {CollisionComponentSystem|undefined}
      * @readonly
      */
     collision;
@@ -55,7 +80,7 @@ class ComponentSystemRegistry extends EventHandler {
     /**
      * Gets the {@link ElementComponentSystem} from the registry.
      *
-     * @type {import('./element/system.js').ElementComponentSystem|undefined}
+     * @type {ElementComponentSystem|undefined}
      * @readonly
      */
     element;
@@ -63,7 +88,7 @@ class ComponentSystemRegistry extends EventHandler {
     /**
      * Gets the {@link JointComponentSystem} from the registry.
      *
-     * @type {import('./joint/system.js').JointComponentSystem|undefined}
+     * @type {JointComponentSystem|undefined}
      * @readonly
      * @ignore
      */
@@ -72,7 +97,7 @@ class ComponentSystemRegistry extends EventHandler {
     /**
      * Gets the {@link LayoutChildComponentSystem} from the registry.
      *
-     * @type {import('./layout-child/system.js').LayoutChildComponentSystem|undefined}
+     * @type {LayoutChildComponentSystem|undefined}
      * @readonly
      */
     layoutchild;
@@ -80,7 +105,7 @@ class ComponentSystemRegistry extends EventHandler {
     /**
      * Gets the {@link LayoutGroupComponentSystem} from the registry.
      *
-     * @type {import('./layout-group/system.js').LayoutGroupComponentSystem|undefined}
+     * @type {LayoutGroupComponentSystem|undefined}
      * @readonly
      */
     layoutgroup;
@@ -88,7 +113,7 @@ class ComponentSystemRegistry extends EventHandler {
     /**
      * Gets the {@link LightComponentSystem} from the registry.
      *
-     * @type {import('./light/system.js').LightComponentSystem|undefined}
+     * @type {LightComponentSystem|undefined}
      * @readonly
      */
     light;
@@ -96,7 +121,7 @@ class ComponentSystemRegistry extends EventHandler {
     /**
      * Gets the {@link ModelComponentSystem} from the registry.
      *
-     * @type {import('./model/system.js').ModelComponentSystem|undefined}
+     * @type {ModelComponentSystem|undefined}
      * @readonly
      */
     model;
@@ -104,7 +129,7 @@ class ComponentSystemRegistry extends EventHandler {
     /**
      * Gets the {@link ParticleSystemComponentSystem} from the registry.
      *
-     * @type {import('./particle-system/system.js').ParticleSystemComponentSystem|undefined}
+     * @type {ParticleSystemComponentSystem|undefined}
      * @readonly
      */
     particlesystem;
@@ -112,7 +137,7 @@ class ComponentSystemRegistry extends EventHandler {
     /**
      * Gets the {@link RenderComponentSystem} from the registry.
      *
-     * @type {import('./render/system.js').RenderComponentSystem|undefined}
+     * @type {RenderComponentSystem|undefined}
      * @readonly
      */
     render;
@@ -120,7 +145,7 @@ class ComponentSystemRegistry extends EventHandler {
     /**
      * Gets the {@link RigidBodyComponentSystem} from the registry.
      *
-     * @type {import('./rigid-body/system.js').RigidBodyComponentSystem|undefined}
+     * @type {RigidBodyComponentSystem|undefined}
      * @readonly
      */
     rigidbody;
@@ -128,7 +153,7 @@ class ComponentSystemRegistry extends EventHandler {
     /**
      * Gets the {@link ScreenComponentSystem} from the registry.
      *
-     * @type {import('./screen/system.js').ScreenComponentSystem|undefined}
+     * @type {ScreenComponentSystem|undefined}
      * @readonly
      */
     screen;
@@ -136,7 +161,7 @@ class ComponentSystemRegistry extends EventHandler {
     /**
      * Gets the {@link ScriptComponentSystem} from the registry.
      *
-     * @type {import('./script/system.js').ScriptComponentSystem|undefined}
+     * @type {ScriptComponentSystem|undefined}
      * @readonly
      */
     script;
@@ -144,7 +169,7 @@ class ComponentSystemRegistry extends EventHandler {
     /**
      * Gets the {@link ScrollbarComponentSystem} from the registry.
      *
-     * @type {import('./scrollbar/system.js').ScrollbarComponentSystem|undefined}
+     * @type {ScrollbarComponentSystem|undefined}
      * @readonly
      */
     scrollbar;
@@ -152,7 +177,7 @@ class ComponentSystemRegistry extends EventHandler {
     /**
      * Gets the {@link ScrollViewComponentSystem} from the registry.
      *
-     * @type {import('./scroll-view/system.js').ScrollViewComponentSystem|undefined}
+     * @type {ScrollViewComponentSystem|undefined}
      * @readonly
      */
     scrollview;
@@ -160,7 +185,7 @@ class ComponentSystemRegistry extends EventHandler {
     /**
      * Gets the {@link SoundComponentSystem} from the registry.
      *
-     * @type {import('./sound/system.js').SoundComponentSystem|undefined}
+     * @type {SoundComponentSystem|undefined}
      * @readonly
      */
     sound;
@@ -168,7 +193,7 @@ class ComponentSystemRegistry extends EventHandler {
     /**
      * Gets the {@link SpriteComponentSystem} from the registry.
      *
-     * @type {import('./sprite/system.js').SpriteComponentSystem|undefined}
+     * @type {SpriteComponentSystem|undefined}
      * @readonly
      */
     sprite;
@@ -176,7 +201,7 @@ class ComponentSystemRegistry extends EventHandler {
     /**
      * Gets the {@link ZoneComponentSystem} from the registry.
      *
-     * @type {import('./zone/system.js').ZoneComponentSystem|undefined}
+     * @type {ZoneComponentSystem|undefined}
      * @readonly
      * @ignore
      */

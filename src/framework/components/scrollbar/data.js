@@ -1,5 +1,9 @@
 import { ORIENTATION_HORIZONTAL } from '../../../scene/constants.js';
 
+/**
+ * @import {Entity} from '../../../framework/entity'
+ */
+
 class ScrollbarComponentData {
     enabled = true;
 
@@ -10,7 +14,7 @@ class ScrollbarComponentData {
     /** @type {number} */
     handleSize;
 
-    /** @type {import('../../../framework/entity').Entity} */
+    /** @type {Entity} */
     handleEntity;
 }
 

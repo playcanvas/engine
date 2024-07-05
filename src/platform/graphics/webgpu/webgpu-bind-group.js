@@ -2,6 +2,12 @@ import { Debug, DebugHelper } from '../../../core/debug.js';
 import { WebgpuDebug } from './webgpu-debug.js';
 
 /**
+ * @import {BindGroup} from '../bind-group.js'
+ * @import {WebgpuGraphicsDevice} from './webgpu-graphics-device.js'
+ * @import {WebgpuTexture} from './webgpu-texture.js'
+ */
+
+/**
  * A WebGPU implementation of the BindGroup, which is a wrapper over GPUBindGroup.
  */
 class WebgpuBindGroup {
@@ -38,8 +44,8 @@ class WebgpuBindGroup {
     /**
      * Creates a bind group descriptor in WebGPU format
      *
-     * @param {import('./webgpu-graphics-device.js').WebgpuGraphicsDevice} device - Graphics device.
-     * @param {import('../bind-group.js').BindGroup} bindGroup - Bind group to create the
+     * @param {WebgpuGraphicsDevice} device - Graphics device.
+     * @param {BindGroup} bindGroup - Bind group to create the
      * descriptor for.
      * @returns {object} - Returns the generated descriptor of type GPUBindGroupDescriptor, which
      * can be used to create a GPUBindGroup
@@ -79,7 +85,7 @@ class WebgpuBindGroup {
         const textureFormats = bindGroup.format.textureFormats;
         bindGroup.textures.forEach((tex, textureIndex) => {
 
-            /** @type {import('./webgpu-texture.js').WebgpuTexture} */
+            /** @type {WebgpuTexture} */
             const wgpuTexture = tex.impl;
             const textureFormat = format.textureFormats[textureIndex];
             const slot = textureFormats[textureIndex].slot;
@@ -115,7 +121,7 @@ class WebgpuBindGroup {
         const storageTextureFormats = bindGroup.format.storageTextureFormats;
         bindGroup.storageTextures.forEach((tex, textureIndex) => {
 
-            /** @type {import('./webgpu-texture.js').WebgpuTexture} */
+            /** @type {WebgpuTexture} */
             const wgpuTexture = tex.impl;
             const slot = storageTextureFormats[textureIndex].slot;
 

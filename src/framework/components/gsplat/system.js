@@ -1,11 +1,13 @@
 import { Vec3 } from '../../../core/math/vec3.js';
 import { BoundingBox } from '../../../core/shape/bounding-box.js';
-
 import { Component } from '../component.js';
 import { ComponentSystem } from '../system.js';
-
 import { GSplatComponent } from './component.js';
 import { GSplatComponentData } from './data.js';
+
+/**
+ * @import {AppBase} from '../../app-base.js'
+ */
 
 const _schema = [
     'enabled'
@@ -27,7 +29,7 @@ class GSplatComponentSystem extends ComponentSystem {
     /**
      * Create a new GSplatComponentSystem.
      *
-     * @param {import('../../app-base.js').AppBase} app - The Application.
+     * @param {AppBase} app - The Application.
      * @ignore
      */
     constructor(app) {

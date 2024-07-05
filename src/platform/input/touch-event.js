@@ -1,4 +1,8 @@
 /**
+ * @import {TouchDevice} from './touch-device.js'
+ */
+
+/**
  * This function takes a browser Touch object and returns the coordinates of the touch relative to
  * the target DOM element.
  *
@@ -123,7 +127,7 @@ class TouchEvent {
     /**
      * Create a new TouchEvent instance. It is created from an existing browser event.
      *
-     * @param {import('./touch-device.js').TouchDevice} device - The source device of the touch
+     * @param {TouchDevice} device - The source device of the touch
      * events.
      * @param {globalThis.TouchEvent} event - The original browser TouchEvent.
      */

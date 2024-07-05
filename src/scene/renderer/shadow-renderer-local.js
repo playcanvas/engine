@@ -1,23 +1,29 @@
 import { math } from '../../core/math/math.js';
-
-import { ShadowMap } from './shadow-map.js';
 import {
     LIGHTTYPE_OMNI, LIGHTTYPE_SPOT
 } from '../constants.js';
-
+import { ShadowMap } from './shadow-map.js';
 import { RenderPassShadowLocalNonClustered } from './render-pass-shadow-local-non-clustered.js';
+
+/**
+ * @import {FrameGraph} from '../../scene/frame-graph.js'
+ * @import {GraphicsDevice} from '../../platform/graphics/graphics-device.js'
+ * @import {Light[]} from '../../scene/light.js'
+ * @import {Renderer} from './renderer.js'
+ * @import {ShadowRenderer} from './shadow-renderer.js'
+ */
 
 class ShadowRendererLocal {
     // temporary list to collect lights to render shadows for
     shadowLights = [];
 
-    /** @type {import('./renderer.js').Renderer} */
+    /** @type {Renderer} */
     renderer;
 
-    /** @type {import('./shadow-renderer.js').ShadowRenderer} */
+    /** @type {ShadowRenderer} */
     shadowRenderer;
 
-    /** @type {import('../../platform/graphics/graphics-device.js').GraphicsDevice} */
+    /** @type {GraphicsDevice} */
     device;
 
     constructor(renderer, shadowRenderer) {
@@ -108,8 +114,8 @@ class ShadowRendererLocal {
      * Prepare render passes for rendering of shadows for local non-clustered lights. Each shadow face
      * is a separate render pass as it renders to a separate render target.
      *
-     * @param {import('../../scene/frame-graph.js').FrameGraph} frameGraph - The frame graph.
-     * @param {import('../../scene/light.js').Light[]} localLights - The list of local lights.
+     * @param {FrameGraph} frameGraph - The frame graph.
+     * @param {Light[]} localLights - The list of local lights.
      */
     buildNonClusteredRenderPasses(frameGraph, localLights) {
 

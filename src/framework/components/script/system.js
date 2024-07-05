@@ -1,9 +1,11 @@
 import { SortedLoopArray } from '../../../core/sorted-loop-array.js';
-
 import { ComponentSystem } from '../system.js';
-
 import { ScriptComponent } from './component.js';
 import { ScriptComponentData } from './data.js';
+
+/**
+ * @import {AppBase} from '../../app-base.js'
+ */
 
 const METHOD_INITIALIZE_ATTRIBUTES = '_onInitializeAttributes';
 const METHOD_INITIALIZE = '_onInitialize';
@@ -26,7 +28,7 @@ class ScriptComponentSystem extends ComponentSystem {
     /**
      * Create a new ScriptComponentSystem.
      *
-     * @param {import('../../app-base.js').AppBase} app - The application.
+     * @param {AppBase} app - The application.
      * @ignore
      */
     constructor(app) {

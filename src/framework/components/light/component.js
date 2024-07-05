@@ -1,13 +1,19 @@
 import { math } from '../../../core/math/math.js';
 import { Vec4 } from '../../../core/math/vec4.js';
-
 import { MASK_AFFECT_LIGHTMAPPED, MASK_AFFECT_DYNAMIC, MASK_BAKE } from '../../../scene/constants.js';
-
 import { Asset } from '../../asset/asset.js';
-
 import { Component } from '../component.js';
-
 import { properties } from './data.js';
+
+/**
+ * @import {Color} from '../../../core/math/color.js'
+ * @import {Entity} from '../../entity.js'
+ * @import {LightComponentData} from './data.js'
+ * @import {LightComponentSystem} from './system.js'
+ * @import {Light} from '../../../scene/light.js'
+ * @import {Texture} from '../../../platform/graphics/texture.js'
+ * @import {Vec2} from '../../../core/math/vec2.js'
+ */
 
 /**
  * The Light Component enables the Entity to light the scene. There are three types of light:
@@ -39,10 +45,8 @@ class LightComponent extends Component {
     /**
      * Creates a new LightComponent instance.
      *
-     * @param {import('./system.js').LightComponentSystem} system - The ComponentSystem that
-     * created this Component.
-     * @param {import('../../entity.js').Entity} entity - The Entity that this Component is
-     * attached to.
+     * @param {LightComponentSystem} system - The ComponentSystem that created this Component.
+     * @param {Entity} entity - The Entity that this Component is attached to.
      */
     constructor(system, entity) {
         super(system, entity);
@@ -55,7 +59,7 @@ class LightComponent extends Component {
 
     // TODO: Remove this override in upgrading component
     /**
-     * @type {import('./data.js').LightComponentData}
+     * @type {LightComponentData}
      * @ignore
      */
     get data() {
@@ -84,7 +88,7 @@ class LightComponent extends Component {
     }
 
     /**
-     * @type {import('../../../scene/light.js').Light}
+     * @type {Light}
      * @ignore
      */
     set light(arg) {
@@ -92,7 +96,7 @@ class LightComponent extends Component {
     }
 
     /**
-     * @type {import('../../../scene/light.js').Light}
+     * @type {Light}
      * @ignore
      */
     get light() {
@@ -131,7 +135,7 @@ class LightComponent extends Component {
      * Sets the color of the light. The alpha component of the color is ignored. Defaults to white
      * (`[1, 1, 1]`).
      *
-     * @type {import('../../../core/math/color.js').Color};
+     * @type {Color};
      */
     set color(arg) {
         this._setValue(
@@ -147,7 +151,7 @@ class LightComponent extends Component {
     /**
      * Gets the color of the light.
      *
-     * @type {import('../../../core/math/color.js').Color};
+     * @type {Color};
      */
     get color() {
         return this.data.color;
@@ -681,7 +685,7 @@ class LightComponent extends Component {
      * Sets the texture to be used as the cookie for this light. Only spot and omni lights can have
      * cookies. Defaults to null.
      *
-     * @type {import('../../../platform/graphics/texture.js').Texture|null}
+     * @type {Texture|null}
      */
     set cookie(arg) {
         this._setValue('cookie', arg, function (newValue, oldValue) {
@@ -692,7 +696,7 @@ class LightComponent extends Component {
     /**
      * Gets the texture to be used as the cookie for this light.
      *
-     * @type {import('../../../platform/graphics/texture.js').Texture|null}
+     * @type {Texture|null}
      */
     get cookie() {
         return this.data.cookie;
@@ -797,7 +801,7 @@ class LightComponent extends Component {
     /**
      * Sets the spotlight cookie scale.
      *
-     * @type {import('../../../core/math/vec2.js').Vec2|null}
+     * @type {Vec2|null}
      */
     set cookieScale(arg) {
         this._setValue(
@@ -823,7 +827,7 @@ class LightComponent extends Component {
     /**
      * Gets the spotlight cookie scale.
      *
-     * @type {import('../../../core/math/vec2.js').Vec2|null}
+     * @type {Vec2|null}
      */
     get cookieScale() {
         return this.data.cookieScale;
@@ -832,7 +836,7 @@ class LightComponent extends Component {
     /**
      * Sets the spotlight cookie position offset.
      *
-     * @type {import('../../../core/math/vec2.js').Vec2|null}
+     * @type {Vec2|null}
      */
     set cookieOffset(arg) {
         this._setValue(
@@ -848,7 +852,7 @@ class LightComponent extends Component {
     /**
      * Gets the spotlight cookie position offset.
      *
-     * @type {import('../../../core/math/vec2.js').Vec2|null}
+     * @type {Vec2|null}
      */
     get cookieOffset() {
         return this.data.cookieOffset;

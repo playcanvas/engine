@@ -1,12 +1,15 @@
 import { Debug } from '../core/debug.js';
-
 import { BLENDEQUATION_ADD, BLENDMODE_ONE } from '../platform/graphics/constants.js';
 import { drawQuadWithShader } from './graphics/quad-render-utils.js';
 import { RenderTarget } from '../platform/graphics/render-target.js';
 import { DebugGraphics } from '../platform/graphics/debug-graphics.js';
-
 import { createShaderFromCode } from './shader-lib/utils.js';
 import { BlendState } from '../platform/graphics/blend-state.js';
+
+/**
+ * @import {Morph} from './morph.js'
+ * @import {Shader} from '../platform/graphics/shader.js'
+ */
 
 // vertex shader used to add morph targets from textures into render target
 const textureMorphVertexShader = /* glsl */ `
@@ -33,13 +36,13 @@ class MorphInstance {
     /**
      * Create a new MorphInstance instance.
      *
-     * @param {import('./morph.js').Morph} morph - The {@link Morph} to instance.
+     * @param {Morph} morph - The {@link Morph} to instance.
      */
     constructor(morph) {
         /**
          * The morph with its targets, which is being instanced.
          *
-         * @type {import('./morph.js').Morph}
+         * @type {Morph}
          */
         this.morph = morph;
         morph.incRefCount();
@@ -249,7 +252,7 @@ class MorphInstance {
      * Create complete shader for texture based morphing.
      *
      * @param {number} count - Number of textures to blend.
-     * @returns {import('../platform/graphics/shader.js').Shader} Shader.
+     * @returns {Shader} Shader.
      * @private
      */
     _getShader(count) {

@@ -4,6 +4,13 @@ import { GSplatResource } from './gsplat-resource.js';
 import { Mat4 } from '../../core/math/mat4.js';
 
 /**
+ * @import {AssetRegistry} from '../asset/asset-registry.js'
+ * @import {Asset} from '../asset/asset.js'
+ * @import {GraphicsDevice} from '../../platform/graphics/graphics-device.js'
+ * @import {ResourceHandlerCallback} from '../handlers/handler.js'
+ */
+
+/**
  * @typedef {Int8Array|Uint8Array|Int16Array|Uint16Array|Int32Array|Uint32Array|Float32Array|Float64Array} DataType
  */
 
@@ -470,18 +477,18 @@ const defaultElementFilter = val => defaultElementsSet.has(val);
 const mat4 = new Mat4();
 
 class PlyParser {
-    /** @type {import('../../platform/graphics/graphics-device.js').GraphicsDevice} */
+    /** @type {GraphicsDevice} */
     device;
 
-    /** @type {import('../asset/asset-registry.js').AssetRegistry} */
+    /** @type {AssetRegistry} */
     assets;
 
     /** @type {number} */
     maxRetries;
 
     /**
-     * @param {import('../../platform/graphics/graphics-device.js').GraphicsDevice} device - The graphics device.
-     * @param {import('../asset/asset-registry.js').AssetRegistry} assets - The asset registry.
+     * @param {GraphicsDevice} device - The graphics device.
+     * @param {AssetRegistry} assets - The asset registry.
      * @param {number} maxRetries - Maximum amount of retries.
      */
     constructor(device, assets, maxRetries) {
@@ -494,9 +501,9 @@ class PlyParser {
      * @param {object} url - The URL of the resource to load.
      * @param {string} url.load - The URL to use for loading the resource.
      * @param {string} url.original - The original URL useful for identifying the resource type.
-     * @param {import('../handlers/handler.js').ResourceHandlerCallback} callback - The callback used when
+     * @param {ResourceHandlerCallback} callback - The callback used when
      * the resource is loaded or an error occurs.
-     * @param {import('../asset/asset.js').Asset} asset - Container asset.
+     * @param {Asset} asset - Container asset.
      */
     async load(url, callback, asset) {
         const response = await fetch(url.load);

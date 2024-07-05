@@ -2,6 +2,12 @@ import { Debug, DebugHelper } from '../../../core/debug.js';
 import { StringIds } from '../../../core/string-ids.js';
 import { WebgpuDebug } from './webgpu-debug.js';
 
+/**
+ * @import {RenderPass} from '../render-pass.js'
+ * @import {RenderTarget} from '../render-target.js'
+ * @import {WebgpuGraphicsDevice} from '../webgpu/webgpu-graphics-device.js'
+ */
+
 const stringIds = new StringIds();
 
 /**
@@ -83,7 +89,7 @@ class WebgpuRenderTarget {
     renderPassDescriptor = {};
 
     /**
-     * @param {import('../render-target.js').RenderTarget} renderTarget - The render target owning
+     * @param {RenderTarget} renderTarget - The render target owning
      * this implementation.
      */
     constructor(renderTarget) {
@@ -103,7 +109,7 @@ class WebgpuRenderTarget {
      * Release associated resources. Note that this needs to leave this instance in a state where
      * it can be re-initialized again, which is used by render target resizing.
      *
-     * @param {import('../webgpu/webgpu-graphics-device.js').WebgpuGraphicsDevice} device - The
+     * @param {WebgpuGraphicsDevice} device - The
      * graphics device.
      */
     destroy(device) {
@@ -186,9 +192,9 @@ class WebgpuRenderTarget {
     /**
      * Initialize render target for rendering one time.
      *
-     * @param {import('../webgpu/webgpu-graphics-device.js').WebgpuGraphicsDevice} device - The
+     * @param {WebgpuGraphicsDevice} device - The
      * graphics device.
-     * @param {import('../render-target.js').RenderTarget} renderTarget - The render target.
+     * @param {RenderTarget} renderTarget - The render target.
      */
     init(device, renderTarget) {
 
@@ -278,7 +284,7 @@ class WebgpuRenderTarget {
 
     /**
      * @param {GPUDevice} wgpu - The WebGPU device.
-     * @param {import('../render-target.js').RenderTarget} renderTarget - The render target.
+     * @param {RenderTarget} renderTarget - The render target.
      * @param {number} index - The color buffer index.
      * @returns {GPURenderPassColorAttachment} The color attachment.
      * @private
@@ -349,7 +355,7 @@ class WebgpuRenderTarget {
     /**
      * Update WebGPU render pass descriptor by RenderPass settings.
      *
-     * @param {import('../render-pass.js').RenderPass} renderPass - The render pass to start.
+     * @param {RenderPass} renderPass - The render pass to start.
      */
     setupForRenderPass(renderPass) {
 

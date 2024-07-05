@@ -4,12 +4,15 @@ import {
     SEMANTIC_TEXCOORD3, SEMANTIC_TEXCOORD4, SEMANTIC_TEXCOORD5, SEMANTIC_TEXCOORD6, SEMANTIC_TEXCOORD7,
     SEMANTIC_COLOR, SEMANTIC_BLENDINDICES, SEMANTIC_BLENDWEIGHT
 } from './constants.js';
-
 import gles3FS from './shader-chunks/frag/gles3.js';
 import gles3VS from './shader-chunks/vert/gles3.js';
 import webgpuFS from './shader-chunks/frag/webgpu.js';
 import webgpuVS from './shader-chunks/vert/webgpu.js';
 import sharedFS from './shader-chunks/frag/shared.js';
+
+/**
+ * @import {GraphicsDevice} from './graphics-device.js'
+ */
 
 const _attrib2Semantic = {
     vertex_position: SEMANTIC_POSITION,
@@ -37,7 +40,7 @@ class ShaderUtils {
     /**
      * Creates a shader definition.
      *
-     * @param {import('./graphics-device.js').GraphicsDevice} device - The graphics device.
+     * @param {GraphicsDevice} device - The graphics device.
      * @param {object} options - Object for passing optional arguments.
      * @param {string} [options.name] - A name of the shader.
      * @param {object} [options.attributes] - Attributes. Will be extracted from the vertexCode if

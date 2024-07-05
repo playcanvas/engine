@@ -1,3 +1,4 @@
+import { Color } from '../../../core/math/color.js';
 import {
     BLUR_GAUSSIAN,
     LAYERID_WORLD,
@@ -7,12 +8,14 @@ import {
     SHADOWUPDATE_REALTIME
 } from '../../../scene/constants.js';
 
-import { Color } from '../../../core/math/color.js';
+/**
+ * @import {Light} from '../../../scene/light.js'
+ */
 
 class LightComponentData {
     enabled = true;
 
-    /** @type {import('../../../scene/light.js').Light} */
+    /** @type {Light} */
     light;
 
     type = 'directional';

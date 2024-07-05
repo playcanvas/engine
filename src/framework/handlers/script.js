@@ -3,9 +3,12 @@ import { script } from '../script.js';
 import { ScriptTypes } from '../script/script-types.js';
 import { registerScript } from '../script/script-create.js';
 import { ResourceLoader } from './loader.js';
-
 import { ResourceHandler } from './handler.js';
 import { Script } from '../script/script.js';
+
+/**
+ * @import {AppBase} from '../app-base.js'
+ */
 
 const toLowerCamelCase = str => str[0].toLowerCase() + str.substring(1);
 
@@ -20,7 +23,7 @@ class ScriptHandler extends ResourceHandler {
     /**
      * Create a new ScriptHandler instance.
      *
-     * @param {import('../app-base.js').AppBase} app - The running {@link AppBase}.
+     * @param {AppBase} app - The running {@link AppBase}.
      * @ignore
      */
     constructor(app) {

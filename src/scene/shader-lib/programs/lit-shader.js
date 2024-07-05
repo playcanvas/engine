@@ -4,9 +4,6 @@ import {
     SEMANTIC_TEXCOORD0, SEMANTIC_TEXCOORD1,
     SHADERTAG_MATERIAL
 } from '../../../platform/graphics/constants.js';
-import { shaderChunks } from '../chunks/chunks.js';
-import { ChunkUtils } from '../chunk-utils.js';
-
 import {
     BLEND_ADDITIVEALPHA, BLEND_NORMAL, BLEND_PREMULTIPLIED,
     FRESNEL_SCHLICK,
@@ -18,14 +15,20 @@ import {
     SPECOCC_AO, SPECOCC_GLOSSDEPENDENT,
     SPRITE_RENDERMODE_SLICED, SPRITE_RENDERMODE_TILED, shadowTypeToString, SHADER_PREPASS_VELOCITY
 } from '../../constants.js';
+import { shaderChunks } from '../chunks/chunks.js';
+import { ChunkUtils } from '../chunk-utils.js';
 import { LightsBuffer } from '../../lighting/lights-buffer.js';
 import { ShaderPass } from '../../shader-pass.js';
-
 import { validateUserChunks } from '../chunks/chunk-validation.js';
 import { ShaderUtils } from '../../../platform/graphics/shader-utils.js';
 import { ChunkBuilder } from '../chunk-builder.js';
 import { ShaderGenerator } from './shader-generator.js';
 import { Debug } from '../../../core/debug.js';
+
+/**
+ * @import {GraphicsDevice} from '../../../platform/graphics/graphics-device.js'
+ * @import {LitShaderOptions} from './lit-shader-options.js'
+ */
 
 const builtinAttributes = {
     vertex_normal: SEMANTIC_NORMAL,
@@ -51,9 +54,9 @@ const builtinVaryings = {
 
 class LitShader {
     /**
-     * @param {import('../../../platform/graphics/graphics-device.js').GraphicsDevice} device - The
+     * @param {GraphicsDevice} device - The
      * graphics device.
-     * @param {import('./lit-shader-options.js').LitShaderOptions} options - The
+     * @param {LitShaderOptions} options - The
      * lit options.
      */
     constructor(device, options) {

@@ -4,10 +4,15 @@ import { Debug, DebugHelper } from "../../../core/debug.js";
 import { DebugGraphics } from "../debug-graphics.js";
 
 /**
+ * @import {WebgpuGraphicsDevice} from './webgpu-graphics-device.js'
+ * @import {WebgpuShader} from './webgpu-shader.js'
+ */
+
+/**
  * A WebGPU helper class implementing custom resolve of multi-sampled textures.
  */
 class WebgpuResolver {
-    /** @type {import('./webgpu-graphics-device.js').WebgpuGraphicsDevice} */
+    /** @type {WebgpuGraphicsDevice} */
     device;
 
     /**
@@ -85,7 +90,7 @@ class WebgpuResolver {
      */
     createPipeline(format) {
 
-        /** @type {import('./webgpu-shader.js').WebgpuShader} */
+        /** @type {WebgpuShader} */
         const webgpuShader = this.shader.impl;
 
         const pipeline = this.device.wgpu.createRenderPipeline({

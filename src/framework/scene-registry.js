@@ -1,16 +1,19 @@
 import { path } from '../core/path.js';
 import { Debug } from '../core/debug.js';
-
 import { ABSOLUTE_URL } from './asset/constants.js';
-
 import { SceneRegistryItem } from './scene-registry-item.js';
+
+/**
+ * @import {AppBase} from './app-base.js'
+ * @import {Entity} from './entity.js'
+ */
 
 /**
  * Callback used by {@link SceneRegistry#loadSceneHierarchy}.
  *
  * @callback LoadHierarchyCallback
  * @param {string|null} err - The error message in the case where the loading or parsing fails.
- * @param {import('./entity.js').Entity} [entity] - The loaded root entity if no errors were encountered.
+ * @param {Entity} [entity] - The loaded root entity if no errors were encountered.
  */
 
 /**
@@ -25,7 +28,7 @@ import { SceneRegistryItem } from './scene-registry-item.js';
  *
  * @callback ChangeSceneCallback
  * @param {string|null} err - The error message in the case where the loading or parsing fails.
- * @param {import('./entity.js').Entity} [entity] - The loaded root entity if no errors were encountered.
+ * @param {Entity} [entity] - The loaded root entity if no errors were encountered.
  */
 
 /**
@@ -33,7 +36,7 @@ import { SceneRegistryItem } from './scene-registry-item.js';
  *
  * @callback LoadSceneCallback
  * @param {string|null} err - The error message in the case where the loading or parsing fails.
- * @param {import('./entity.js').Entity} [entity] - The loaded root entity if no errors were encountered.
+ * @param {Entity} [entity] - The loaded root entity if no errors were encountered.
  */
 
 /**
@@ -52,7 +55,7 @@ import { SceneRegistryItem } from './scene-registry-item.js';
  */
 class SceneRegistry {
     /**
-     * @type {import('./app-base.js').AppBase}
+     * @type {AppBase}
      * @private
      */
     _app;
@@ -72,7 +75,7 @@ class SceneRegistry {
     /**
      * Create a new SceneRegistry instance.
      *
-     * @param {import('./app-base.js').AppBase} app - The application.
+     * @param {AppBase} app - The application.
      */
     constructor(app) {
         this._app = app;

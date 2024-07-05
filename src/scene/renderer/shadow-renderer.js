@@ -4,11 +4,9 @@ import { Color } from '../../core/math/color.js';
 import { Mat4 } from '../../core/math/mat4.js';
 import { Vec3 } from '../../core/math/vec3.js';
 import { Vec4 } from '../../core/math/vec4.js';
-
 import { SHADERSTAGE_FRAGMENT, SHADERSTAGE_VERTEX, UNIFORMTYPE_MAT4, UNIFORM_BUFFER_DEFAULT_SLOT_NAME } from '../../platform/graphics/constants.js';
 import { DebugGraphics } from '../../platform/graphics/debug-graphics.js';
 import { drawQuadWithShader } from '../graphics/quad-render-utils.js';
-
 import {
     BLUR_GAUSSIAN,
     LIGHTTYPE_DIRECTIONAL, LIGHTTYPE_OMNI,
@@ -25,6 +23,23 @@ import { UniformBufferFormat, UniformFormat } from '../../platform/graphics/unif
 import { BindUniformBufferFormat, BindGroupFormat } from '../../platform/graphics/bind-group-format.js';
 import { BlendState } from '../../platform/graphics/blend-state.js';
 import { RenderingParams } from './rendering-params.js';
+
+/**
+ * @import {Camera} from '../camera.js'
+ * @import {LayerComposition} from '../composition/layer-composition.js'
+ * @import {LightTextureAtlas} from '../lighting/light-texture-atlas.js'
+ * @import {Light} from '../light.js'
+ * @import {MeshInstance} from '../mesh-instance.js'
+ * @import {Renderer} from './renderer.js'
+ * @import {ShaderPassInfo} from '../shader-pass.js'
+ */
+
+const tempSet = new Set();
+const shadowCamView = new Mat4();
+const shadowCamViewProj = new Mat4();
+const pixelOffset = new Float32Array(2);
+const blurScissorRect = new Vec4(1, 1, 0, 0);
+const viewportMatrix = new Mat4();
 
 function gauss(x, sigma) {
     return Math.exp(-(x * x) / (2.0 * sigma * sigma));
@@ -47,34 +62,27 @@ function gaussWeights(kernelSize) {
     return values;
 }
 
-const tempSet = new Set();
-const shadowCamView = new Mat4();
-const shadowCamViewProj = new Mat4();
-const pixelOffset = new Float32Array(2);
-const blurScissorRect = new Vec4(1, 1, 0, 0);
-const viewportMatrix = new Mat4();
-
 class ShadowRenderer {
     /**
      * A cache of shadow passes. First index is looked up by light type, second by shadow type.
      *
-     * @type {import('../shader-pass.js').ShaderPassInfo[][]}
+     * @type {ShaderPassInfo[][]}
      * @private
      */
     shadowPassCache = [];
 
     /**
-     * @param {import('./renderer.js').Renderer} renderer - The renderer.
-     * @param {import('../lighting/light-texture-atlas.js').LightTextureAtlas} lightTextureAtlas - The
+     * @param {Renderer} renderer - The renderer.
+     * @param {LightTextureAtlas} lightTextureAtlas - The
      * shadow map atlas.
      */
     constructor(renderer, lightTextureAtlas) {
         this.device = renderer.device;
 
-        /** @type {import('./renderer.js').Renderer} */
+        /** @type {Renderer} */
         this.renderer = renderer;
 
-        /** @type {import('../lighting/light-texture-atlas.js').LightTextureAtlas} */
+        /** @type {LightTextureAtlas} */
         this.lightTextureAtlas = lightTextureAtlas;
 
         const scope = this.device.scope;
@@ -157,13 +165,13 @@ class ShadowRenderer {
     /**
      * Culls the list of shadow casters used by the light by the camera, storing visible mesh
      * instances in the specified array.
-     * @param {import('../composition/layer-composition.js').LayerComposition} comp - The layer
+     * @param {LayerComposition} comp - The layer
      * composition used as a source of shadow casters, if those are not provided directly.
-     * @param {import('../light.js').Light} light - The light.
-     * @param {import('../mesh-instance.js').MeshInstance[]} visible - The array to store visible
+     * @param {Light} light - The light.
+     * @param {MeshInstance[]} visible - The array to store visible
      * mesh instances in.
-     * @param {import('../camera.js').Camera} camera - The camera.
-     * @param {import('../mesh-instance.js').MeshInstance[]} [casters] - Optional array of mesh
+     * @param {Camera} camera - The camera.
+     * @param {MeshInstance[]} [casters] - Optional array of mesh
      * instances to use as casters.
      */
     cullShadowCasters(comp, light, visible, camera, casters) {
@@ -243,7 +251,7 @@ class ShadowRenderer {
     }
 
     /**
-     * @param {import('../light.js').Light} light - The light.
+     * @param {Light} light - The light.
      * @returns {number} Index of shadow pass info.
      */
     getShadowPass(light) {
@@ -272,9 +280,9 @@ class ShadowRenderer {
     }
 
     /**
-     * @param {import('../mesh-instance.js').MeshInstance[]} visibleCasters - Visible mesh
+     * @param {MeshInstance[]} visibleCasters - Visible mesh
      * instances.
-     * @param {import('../light.js').Light} light - The light.
+     * @param {Light} light - The light.
      */
     submitCasters(visibleCasters, light) {
 

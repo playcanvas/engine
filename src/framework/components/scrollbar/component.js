@@ -1,12 +1,15 @@
 import { math } from '../../../core/math/math.js';
-
 import { ORIENTATION_HORIZONTAL } from '../../../scene/constants.js';
-
 import { Component } from '../component.js';
-
 import { ElementDragHelper } from '../element/element-drag-helper.js';
-
 import { EntityReference } from '../../utils/entity-reference.js';
+
+/**
+ * @import {Entity} from '../../../framework/entity.js'
+ * @import {Entity} from '../../entity.js'
+ * @import {ScrollbarComponentData} from './data.js'
+ * @import {ScrollbarComponentSystem} from './system.js'
+ */
 
 /**
  * A ScrollbarComponent enables a group of entities to behave like a draggable scrollbar.
@@ -29,10 +32,8 @@ class ScrollbarComponent extends Component {
     /**
      * Create a new ScrollbarComponent.
      *
-     * @param {import('./system.js').ScrollbarComponentSystem} system - The ComponentSystem that
-     * created this Component.
-     * @param {import('../../entity.js').Entity} entity - The Entity that this Component is
-     * attached to.
+     * @param {ScrollbarComponentSystem} system - The ComponentSystem that created this Component.
+     * @param {Entity} entity - The Entity that this Component is attached to.
      */
     constructor(system, entity) {
         super(system, entity);
@@ -50,7 +51,7 @@ class ScrollbarComponent extends Component {
 
     // TODO: Remove this override in upgrading component
     /**
-     * @type {import('./data.js').ScrollbarComponentData}
+     * @type {ScrollbarComponentData}
      * @ignore
      */
     get data() {
@@ -141,7 +142,7 @@ class ScrollbarComponent extends Component {
      * Sets the entity to be used as the scrollbar handle. This entity must have a
      * {@link ScrollbarComponent}.
      *
-     * @type {import('../../../framework/entity.js').Entity}
+     * @type {Entity}
      */
     set handleEntity(arg) {
         this._setValue('handleEntity', arg);
@@ -150,7 +151,7 @@ class ScrollbarComponent extends Component {
     /**
      * Gets the entity to be used as the scrollbar handle.
      *
-     * @type {import('../../../framework/entity.js').Entity}
+     * @type {Entity}
      */
     get handleEntity() {
         return this.data.handleEntity;

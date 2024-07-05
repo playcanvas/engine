@@ -3,6 +3,12 @@ import { Tracing } from '../../core/tracing.js';
 import { Color } from '../../core/math/color.js';
 import { TRACEID_RENDER_PASS, TRACEID_RENDER_PASS_DETAIL } from '../../core/constants.js';
 
+/**
+ * @import {GraphicsDevice} from '../graphics/graphics-device.js'
+ * @import {RenderTarget} from '../graphics/render-target.js'
+ * @import {Texture} from './texture.js'
+ */
+
 class ColorAttachmentOps {
     /**
      * A color used to clear the color attachment when the clear is enabled.
@@ -16,12 +22,11 @@ class ColorAttachmentOps {
     clear = false;
 
     /**
-     * True if the attachment needs to be stored after the render pass. False
-     * if it can be discarded.
-     * Note: This relates to the surface that is getting rendered to, and can be either
-     * single or multi-sampled. Further, if a multi-sampled surface is used, the resolve
-     * flag further specifies if this gets resolved to a single-sampled surface. This
-     * behavior matches the WebGPU specification.
+     * True if the attachment needs to be stored after the render pass. False if it can be
+     * discarded. Note: This relates to the surface that is getting rendered to, and can be either
+     * single or multi-sampled. Further, if a multi-sampled surface is used, the resolve flag
+     * further specifies if this gets resolved to a single-sampled surface. This behavior matches
+     * the WebGPU specification.
      *
      * @type {boolean}
      */
@@ -95,7 +100,7 @@ class RenderPass {
     /**
      * The graphics device.
      *
-     * @type {import('../graphics/graphics-device.js').GraphicsDevice}
+     * @type {GraphicsDevice}
      */
     device;
 
@@ -115,10 +120,12 @@ class RenderPass {
 
     /**
      * The render target for this render pass:
-     *  - `undefined`: render pass does not render to any render target
-     *  - `null`: render pass renders to the backbuffer
-     *  - Otherwise, renders to the provided RT.
-     * @type {import('../graphics/render-target.js').RenderTarget|null|undefined}
+     *
+     * - `undefined`: render pass does not render to any render target
+     * - `null`: render pass renders to the backbuffer
+     * - Otherwise, renders to the provided RT.
+     *
+     * @type {RenderTarget|null|undefined}
      */
     renderTarget;
 
@@ -188,7 +195,7 @@ class RenderPass {
     /**
      * Creates an instance of the RenderPass.
      *
-     * @param {import('../graphics/graphics-device.js').GraphicsDevice} graphicsDevice - The
+     * @param {GraphicsDevice} graphicsDevice - The
      * graphics device.
      */
     constructor(graphicsDevice) {
@@ -221,14 +228,13 @@ class RenderPass {
     }
 
     /**
-     * @param {import('../graphics/render-target.js').RenderTarget|null} [renderTarget] - The render
-     * target to render into (output). This function should be called only for render passes which
-     * use render target, or passes which render directly into the default framebuffer, in which
-     * case a null or undefined render target is expected.
+     * @param {RenderTarget|null} [renderTarget] - The render target to render into (output). This
+     * function should be called only for render passes which use render target, or passes which
+     * render directly into the default framebuffer, in which case a null or undefined render
+     * target is expected.
      * @param {object} [options] - Object for passing optional arguments.
-     * @param {import('./texture.js').Texture} [options.resizeSource] - A texture to use as a source
-     * for the automatic render target resize operation. If not provided, no automatic resizing
-     * takes place.
+     * @param {Texture} [options.resizeSource] - A texture to use as a source for the automatic
+     * render target resize operation. If not provided, no automatic resizing takes place.
      * @param {number} [options.scaleX] - The scale factor for the render target width. Defaults to 1.
      * @param {number} [options.scaleY] - The scale factor for the render target height. Defaults to 1.
      */
@@ -347,8 +353,8 @@ class RenderPass {
     /**
      * Mark render pass as clearing the full stencil buffer.
      *
-     * @param {number|undefined} stencilValue - The stencil value to clear to, or undefined to preserve the
-     * existing content.
+     * @param {number|undefined} stencilValue - The stencil value to clear to, or undefined to
+     * preserve the existing content.
      */
     setClearStencil(stencilValue) {
         if (stencilValue)

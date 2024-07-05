@@ -1,6 +1,11 @@
 import { Vec3 } from './vec3.js';
 
 /**
+ * @import {Mat4} from './mat4.js'
+ * @import {Quat} from './quat.js'
+ */
+
+/**
  * A 3x3 matrix.
  *
  * @category Math
@@ -242,7 +247,7 @@ class Mat3 {
     /**
      * Converts the specified 4x4 matrix to a Mat3.
      *
-     * @param {import('./mat4.js').Mat4} m - The 4x4 matrix to convert.
+     * @param {Mat4} m - The 4x4 matrix to convert.
      * @returns {Mat3} Self for chaining.
      */
     setFromMat4(m) {
@@ -267,7 +272,7 @@ class Mat3 {
     /**
      * Sets this matrix to the given quaternion rotation.
      *
-     * @param {import('./quat.js').Quat} r - A quaternion rotation.
+     * @param {Quat} r - A quaternion rotation.
      * @returns {Mat3} Self for chaining.
      * @example
      * const r = new pc.Quat(1, 2, 3, 4).normalize();
@@ -314,7 +319,7 @@ class Mat3 {
     /**
      * Set the matrix to the inverse of the specified 4x4 matrix.
      *
-     * @param {import('./mat4.js').Mat4} src - The 4x4 matrix to invert.
+     * @param {Mat4} src - The 4x4 matrix to invert.
      * @returns {Mat3} Self for chaining.
      *
      * @ignore

@@ -1,11 +1,12 @@
 import { path } from '../../core/path.js';
 import { string } from '../../core/string.js';
-
 import { http } from '../../platform/net/http.js';
-
 import { Font } from '../font/font.js';
-
 import { ResourceHandler } from './handler.js';
+
+/**
+ * @import {AppBase} from '../app-base.js'
+ */
 
 function upgradeDataSchema(data) {
     // convert v1 and v2 to v3 font data schema
@@ -40,7 +41,7 @@ class FontHandler extends ResourceHandler {
     /**
      * Create a new FontHandler instance.
      *
-     * @param {import('../app-base.js').AppBase} app - The running {@link AppBase}.
+     * @param {AppBase} app - The running {@link AppBase}.
      * @ignore
      */
     constructor(app) {

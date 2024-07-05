@@ -1,6 +1,6 @@
 import { Quat } from '../../../core/math/quat.js';
 import { Vec3 } from '../../../core/math/vec3.js';
-
+import { Component } from '../component.js';
 import {
     BODYFLAG_KINEMATIC_OBJECT, BODYTYPE_STATIC,
     BODYGROUP_DYNAMIC, BODYGROUP_KINEMATIC, BODYGROUP_STATIC,
@@ -8,7 +8,11 @@ import {
     BODYSTATE_ACTIVE_TAG, BODYSTATE_DISABLE_DEACTIVATION, BODYSTATE_DISABLE_SIMULATION,
     BODYTYPE_DYNAMIC, BODYTYPE_KINEMATIC
 } from './constants.js';
-import { Component } from '../component.js';
+
+/**
+ * @import {Entity} from '../../entity.js'
+ * @import {RigidBodyComponentSystem} from './system.js'
+ */
 
 // Shared math variable to avoid excessive allocation
 let _ammoTransform;
@@ -164,9 +168,8 @@ class RigidBodyComponent extends Component {
     /**
      * Create a new RigidBodyComponent instance.
      *
-     * @param {import('./system.js').RigidBodyComponentSystem} system - The ComponentSystem that
-     * created this component.
-     * @param {import('../../entity.js').Entity} entity - The entity this component is attached to.
+     * @param {RigidBodyComponentSystem} system - The ComponentSystem that created this component.
+     * @param {Entity} entity - The entity this component is attached to.
      */
     constructor(system, entity) { // eslint-disable-line no-useless-constructor
         super(system, entity);

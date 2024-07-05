@@ -1,4 +1,9 @@
 /**
+ * @import {Asset} from './asset.js'
+ * @import {AssetRegistry} from './asset-registry.js'
+ */
+
+/**
  * An object that manages the case where an object holds a reference to an asset and needs to be
  * notified when changes occur in the asset. e.g. notifications include load, add and remove
  * events.
@@ -11,11 +16,9 @@ class AssetReference {
      *
      * @param {string} propertyName - The name of the property that the asset is stored under,
      * passed into callbacks to enable updating.
-     * @param {import('./asset.js').Asset|object} parent - The parent object that contains the
-     * asset reference, passed into callbacks to enable updating. Currently an asset, but could be
-     * component or other.
-     * @param {import('./asset-registry.js').AssetRegistry} registry - The asset registry that
-     * stores all assets.
+     * @param {Asset|object} parent - The parent object that contains the asset reference, passed
+     * into callbacks to enable updating. Currently an asset, but could be component or other.
+     * @param {AssetRegistry} registry - The asset registry that stores all assets.
      * @param {object} callbacks - A set of functions called when the asset state changes: load,
      * add, remove.
      * @param {object} [callbacks.load] - The function called when the asset loads

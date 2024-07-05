@@ -2,6 +2,7 @@ import { Debug } from '../../../core/debug.js';
 import { AnimBinder } from './anim-binder.js';
 import { AnimTarget } from '../evaluator/anim-target.js';
 import { Entity } from '../../entity.js';
+
 /**
  * Implementation of {@link AnimBinder} for animating a skeleton in the graph-node hierarchy.
  *

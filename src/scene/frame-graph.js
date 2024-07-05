@@ -1,24 +1,29 @@
 import { Debug } from '../core/debug.js';
 
 /**
+ * @import {RenderPass} from '../platform/graphics/render-pass.js'
+ * @import {RenderTarget} from '../platform/graphics/render-target.js'
+ * @import {Texture} from '../platform/graphics/texture.js'
+ */
+
+/**
  * A frame graph represents a single rendering frame as a sequence of render passes.
  */
 class FrameGraph {
-    /** @type {import('../platform/graphics/render-pass.js').RenderPass[]} */
+    /** @type {RenderPass[]} */
     renderPasses = [];
 
     /**
      * Map used during frame graph compilation. It maps a render target to its previous occurrence.
      *
-     *  @type {Map<import('../platform/graphics/render-target.js').RenderTarget, import('../platform/graphics/render-pass.js').RenderPass>}
+     *  @type {Map<RenderTarget, RenderPass>}
      */
     renderTargetMap = new Map();
 
     /**
      * Add a render pass to the frame.
      *
-     * @param {import('../platform/graphics/render-pass.js').RenderPass} renderPass - The render
-     * pass to add.
+     * @param {RenderPass} renderPass - The render pass to add.
      */
     addRenderPass(renderPass) {
         Debug.assert(renderPass);
@@ -89,9 +94,9 @@ class FrameGraph {
         // If those passes are separated only by passes not requiring cubemap (shadows ..),
         // we skip the mipmap generation till the last rendering to the cubemap, to avoid
         // mipmaps being generated after each face.
-        /** @type {import('../platform/graphics/texture.js').Texture} */
+        /** @type {Texture} */
         let lastCubeTexture = null;
-        /** @type {import('../platform/graphics/render-pass.js').RenderPass} */
+        /** @type {RenderPass} */
         let lastCubeRenderPass = null;
         for (let i = 0; i < renderPasses.length; i++) {
             const renderPass = renderPasses[i];

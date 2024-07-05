@@ -1,9 +1,14 @@
 import { Debug } from '../core/debug.js';
 import { math } from '../core/math/math.js';
 import { Mat4 } from '../core/math/mat4.js';
-
 import { FILTER_NEAREST, PIXELFORMAT_RGBA32F, TEXTURELOCK_READ } from '../platform/graphics/constants.js';
 import { Texture } from '../platform/graphics/texture.js';
+
+/**
+ * @import {Entity} from '../framework/entity.js'
+ * @import {GraphNode} from './graph-node.js'
+ * @import {Skin} from './skin.js'
+ */
 
 const _invMatrix = new Mat4();
 
@@ -17,7 +22,7 @@ class SkinInstance {
     /**
      * An array of nodes representing each bone in this skin instance.
      *
-     * @type {import('./graph-node.js').GraphNode[]}
+     * @type {GraphNode[]}
      */
     bones;
 
@@ -26,7 +31,7 @@ class SkinInstance {
     /**
      * Create a new SkinInstance instance.
      *
-     * @param {import('./skin.js').Skin} skin - The skin that will provide the inverse bind pose
+     * @param {Skin} skin - The skin that will provide the inverse bind pose
      * matrices to generate the final matrix palette.
      */
     constructor(skin) {
@@ -89,10 +94,9 @@ class SkinInstance {
     /**
      * Resolves skin bones to a hierarchy with the rootBone at its root.
      *
-     * @param {import('../framework/entity.js').Entity} rootBone - A reference to the entity to be used as
-     * the root bone.
-     * @param {import('../framework/entity.js').Entity} entity - Specifies the entity used if the
-     * bone match is not found in the hierarchy - usually the entity the render component is attached to.
+     * @param {Entity} rootBone - A reference to the entity to be used as the root bone.
+     * @param {Entity} entity - Specifies the entity used if the bone match is not found in the
+     * hierarchy - usually the entity the render component is attached to.
      * @ignore
      */
     resolve(rootBone, entity) {
@@ -104,7 +108,7 @@ class SkinInstance {
         const bones = [];
         for (let j = 0; j < skin.boneNames.length; j++) {
             const boneName = skin.boneNames[j];
-            /** @type {import('../framework/entity.js').Entity|import('./graph-node.js').GraphNode|null} */
+            /** @type {Entity|GraphNode|null} */
             let bone = rootBone.findByName(boneName);
 
             if (!bone) {
@@ -118,7 +122,7 @@ class SkinInstance {
     }
 
     /**
-     * @param {import('./skin.js').Skin} skin - The skin.
+     * @param {Skin} skin - The skin.
      */
     initSkin(skin) {
 

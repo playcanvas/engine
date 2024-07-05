@@ -1,5 +1,9 @@
 import { Vec3 } from '../math/vec3.js';
 
+/**
+ * @import {Ray} from './ray.js'
+ */
+
 const e1 = new Vec3();
 const e2 = new Vec3();
 const h = new Vec3();
@@ -83,7 +87,7 @@ class Tri {
     /**
      * Test if a ray intersects with the triangle.
      *
-     * @param {import('./ray.js').Ray} ray - Ray to test against (direction must be normalized).
+     * @param {Ray} ray - Ray to test against (direction must be normalized).
      * @param {Vec3} [point] - If there is an intersection, the intersection point will be copied
      * into here.
      * @returns {boolean} True if there is an intersection.

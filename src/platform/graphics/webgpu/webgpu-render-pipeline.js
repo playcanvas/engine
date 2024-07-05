@@ -2,12 +2,22 @@ import { Debug, DebugHelper } from "../../../core/debug.js";
 import { hash32Fnv1a } from "../../../core/hash.js";
 import { array } from "../../../core/array-utils.js";
 import { TRACEID_RENDERPIPELINE_ALLOC } from "../../../core/constants.js";
-
 import { WebgpuVertexBufferLayout } from "./webgpu-vertex-buffer-layout.js";
 import { WebgpuDebug } from "./webgpu-debug.js";
 import { WebgpuPipeline } from "./webgpu-pipeline.js";
 import { DebugGraphics } from "../debug-graphics.js";
 import { bindGroupNames } from "../constants.js";
+
+/**
+ * @import {BindGroupFormat} from '../bind-group-format.js'
+ * @import {BlendState} from '../blend-state.js'
+ * @import {DepthState} from '../depth-state.js'
+ * @import {RenderTarget} from '../render-target.js'
+ * @import {Shader} from '../shader.js'
+ * @import {StencilParameters} from '../stencil-parameters.js'
+ * @import {VertexFormat} from '../vertex-format.js'
+ * @import {WebgpuShader} from './webgpu-shader.js'
+ */
 
 let _pipelineId = 0;
 
@@ -113,19 +123,19 @@ class WebgpuRenderPipeline extends WebgpuPipeline {
 
     /**
      * @param {object} primitive - The primitive.
-     * @param {import('../vertex-format.js').VertexFormat} vertexFormat0 - The first vertex format.
-     * @param {import('../vertex-format.js').VertexFormat} vertexFormat1 - The second vertex format.
-     * @param {import('../shader.js').Shader} shader - The shader.
-     * @param {import('../render-target.js').RenderTarget} renderTarget - The render target.
-     * @param {import('../bind-group-format.js').BindGroupFormat[]} bindGroupFormats - An array of
+     * @param {VertexFormat} vertexFormat0 - The first vertex format.
+     * @param {VertexFormat} vertexFormat1 - The second vertex format.
+     * @param {Shader} shader - The shader.
+     * @param {RenderTarget} renderTarget - The render target.
+     * @param {BindGroupFormat[]} bindGroupFormats - An array of
      * bind group formats.
-     * @param {import('../blend-state.js').BlendState} blendState - The blend state.
-     * @param {import('../depth-state.js').DepthState} depthState - The depth state.
+     * @param {BlendState} blendState - The blend state.
+     * @param {DepthState} depthState - The depth state.
      * @param {number} cullMode - The cull mode.
      * @param {boolean} stencilEnabled - Whether stencil is enabled.
-     * @param {import('../stencil-parameters.js').StencilParameters} stencilFront - The stencil
+     * @param {StencilParameters} stencilFront - The stencil
      * state for front faces.
-     * @param {import('../stencil-parameters.js').StencilParameters} stencilBack - The stencil
+     * @param {StencilParameters} stencilBack - The stencil
      * state for back faces.
      * @returns {GPURenderPipeline} Returns the render pipeline.
      * @private
@@ -230,12 +240,12 @@ class WebgpuRenderPipeline extends WebgpuPipeline {
     }
 
     /**
-     * @param {import('../depth-state.js').DepthState} depthState - The depth state.
-     * @param {import('../render-target.js').RenderTarget} renderTarget - The render target.
+     * @param {DepthState} depthState - The depth state.
+     * @param {RenderTarget} renderTarget - The render target.
      * @param {boolean} stencilEnabled - Whether stencil is enabled.
-     * @param {import('../stencil-parameters.js').StencilParameters} stencilFront - The stencil
+     * @param {StencilParameters} stencilFront - The stencil
      * state for front faces.
-     * @param {import('../stencil-parameters.js').StencilParameters} stencilBack - The stencil
+     * @param {StencilParameters} stencilBack - The stencil
      * state for back faces.
      * @returns {object} Returns the depth stencil state.
      * @private
@@ -295,7 +305,7 @@ class WebgpuRenderPipeline extends WebgpuPipeline {
 
         const wgpu = this.device.wgpu;
 
-        /** @type {import('./webgpu-shader.js').WebgpuShader} */
+        /** @type {WebgpuShader} */
         const webgpuShader = shader.impl;
 
         /** @type {GPURenderPipelineDescriptor} */

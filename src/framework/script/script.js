@@ -3,6 +3,11 @@ import { EventHandler } from '../../core/event-handler.js';
 import { SCRIPT_INITIALIZE, SCRIPT_POST_INITIALIZE } from './constants.js';
 
 /**
+ * @import {AppBase} from '../app-base.js'
+ * @import {Entity} from '../entity.js'
+ */
+
+/**
  * The `Script` class is the fundamental base class for all scripts within PlayCanvas. It provides
  * the minimal interface required for a script to be compatible with both the Engine and the
  * Editor.
@@ -146,14 +151,14 @@ export class Script extends EventHandler {
     /**
      * The {@link AppBase} that the instance of this type belongs to.
      *
-     * @type {import('../app-base.js').AppBase}
+     * @type {AppBase}
      */
     app;
 
     /**
      * The {@link Entity} that the instance of this type belongs to.
      *
-     * @type {import('../entity.js').Entity}
+     * @type {Entity}
      */
     entity;
 
@@ -188,9 +193,9 @@ export class Script extends EventHandler {
      * Create a new Script instance.
      *
      * @param {object} args - The input arguments object.
-     * @param {import('../app-base.js').AppBase} args.app - The {@link AppBase} that is running the
+     * @param {AppBase} args.app - The {@link AppBase} that is running the
      * script.
-     * @param {import('../entity.js').Entity} args.entity - The {@link Entity} that the script is
+     * @param {Entity} args.entity - The {@link Entity} that the script is
      * attached to.
      */
     constructor(args) {
@@ -246,8 +251,8 @@ export class Script extends EventHandler {
     /**
      * @typedef {object} ScriptInitializationArgs
      * @property {boolean} [enabled] - True if the script instance is in running state.
-     * @property {import('../app-base.js').AppBase} app - The {@link AppBase} that is running the script.
-     * @property {import('../entity.js').Entity} entity - The {@link Entity} that the script is attached to.
+     * @property {AppBase} app - The {@link AppBase} that is running the script.
+     * @property {Entity} entity - The {@link Entity} that the script is attached to.
      */
 
     /**

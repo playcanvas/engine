@@ -1,5 +1,4 @@
 import { Debug } from '../../../core/debug.js';
-
 import {
     BLEND_NONE, DITHER_BAYER8, DITHER_NONE, FRESNEL_SCHLICK,
     SHADER_FORWARD,
@@ -12,6 +11,10 @@ import { ChunkUtils } from '../chunk-utils.js';
 import { StandardMaterialOptions } from '../../materials/standard-material-options.js';
 import { LitOptionsUtils } from './lit-options-utils.js';
 import { ShaderGenerator } from './shader-generator.js';
+
+/**
+ * @import {GraphicsDevice} from '../../../platform/graphics/graphics-device.js'
+ */
 
 const _matTex2D = [];
 
@@ -199,7 +202,7 @@ class ShaderGeneratorStandard extends ShaderGenerator {
     }
 
     /**
-     * @param {import('../../../platform/graphics/graphics-device.js').GraphicsDevice} device - The
+     * @param {GraphicsDevice} device - The
      * graphics device.
      * @param {StandardMaterialOptions} options - The create options.
      * @returns {object} Returns the created shader definition.

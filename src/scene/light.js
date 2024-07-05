@@ -4,7 +4,6 @@ import { Mat4 } from '../core/math/mat4.js';
 import { Vec2 } from '../core/math/vec2.js';
 import { Vec3 } from '../core/math/vec3.js';
 import { Vec4 } from '../core/math/vec4.js';
-
 import {
     BLUR_GAUSSIAN,
     LIGHTTYPE_DIRECTIONAL, LIGHTTYPE_OMNI, LIGHTTYPE_SPOT,
@@ -15,6 +14,11 @@ import {
 } from './constants.js';
 import { ShadowRenderer } from './renderer/shadow-renderer.js';
 import { DepthState } from '../platform/graphics/depth-state.js';
+
+/**
+ * @import {BindGroup} from '../platform/graphics/bind-group.js'
+ * @import {Layer} from './layer.js'
+ */
 
 const tmpVec = new Vec3();
 const tmpBiases = {
@@ -83,7 +87,7 @@ class LightRenderData {
         this.visibleCasters = [];
 
         // an array of view bind groups, single entry is used for shadows
-        /** @type {import('../platform/graphics/bind-group.js').BindGroup[]} */
+        /** @type {BindGroup[]} */
         this.viewBindGroups = [];
     }
 
@@ -121,7 +125,7 @@ class Light {
     /**
      * The Layers the light is on.
      *
-     * @type {Set<import('./layer.js').Layer>}
+     * @type {Set<Layer>}
      */
     layers = new Set();
 

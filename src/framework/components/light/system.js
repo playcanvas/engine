@@ -1,13 +1,14 @@
 import { Color } from '../../../core/math/color.js';
 import { Vec2 } from '../../../core/math/vec2.js';
-
 import { LIGHTSHAPE_PUNCTUAL } from '../../../scene/constants.js';
 import { Light, lightTypes } from '../../../scene/light.js';
-
 import { ComponentSystem } from '../system.js';
-
 import { LightComponent } from './component.js';
 import { properties, LightComponentData } from './data.js';
+
+/**
+ * @import {AppBase} from '../../app-base.js'
+ */
 
 /**
  * A Light Component is used to dynamically light the scene.
@@ -18,7 +19,7 @@ class LightComponentSystem extends ComponentSystem {
     /**
      * Create a new LightComponentSystem instance.
      *
-     * @param {import('../../app-base.js').AppBase} app - The application.
+     * @param {AppBase} app - The application.
      * @ignore
      */
     constructor(app) {

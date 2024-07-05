@@ -1,6 +1,14 @@
 import { Debug } from '../../core/debug.js';
 
 /**
+ * @import {AppBase} from '../app-base.js'
+ * @import {AssetRegistry} from '../asset/asset-registry.js'
+ * @import {Asset} from '../asset/asset.js'
+ * @import {BundlesFilterCallback} from '../asset/asset-registry.js'
+ * @import {ResourceHandler} from './handler.js'
+ */
+
+/**
  * Callback used by {@link ResourceLoader#load} when a resource is loaded (or an error occurs).
  *
  * @callback ResourceLoaderCallback
@@ -16,7 +24,7 @@ class ResourceLoader {
     /**
      * Create a new ResourceLoader instance.
      *
-     * @param {import('../app-base.js').AppBase} app - The application.
+     * @param {AppBase} app - The application.
      */
     constructor(app) {
         this._handlers = {};
@@ -48,7 +56,7 @@ class ResourceLoader {
      * - {@link ASSET_SCRIPT}
      * - {@link ASSET_CONTAINER}
      *
-     * @param {import('./handler.js').ResourceHandler} handler - An instance of a resource handler
+     * @param {ResourceHandler} handler - An instance of a resource handler
      * supporting at least `load()` and `open()`.
      * @example
      * const loader = new ResourceLoader();
@@ -72,7 +80,7 @@ class ResourceLoader {
      * Get a {@link ResourceHandler} for a resource type.
      *
      * @param {string} type - The name of the resource type that the handler is registered with.
-     * @returns {import('./handler.js').ResourceHandler|undefined} The registered handler, or
+     * @returns {ResourceHandler|undefined} The registered handler, or
      * undefined if the requested handler is not registered.
      */
     getHandler(type) {
@@ -92,12 +100,12 @@ class ResourceLoader {
      * @param {string} type - The type of resource expected.
      * @param {ResourceLoaderCallback} callback - The callback used when the resource is loaded or
      * an error occurs. Passed (err, resource) where err is null if there are no errors.
-     * @param {import('../asset/asset.js').Asset} [asset] - Optional asset that is passed into
+     * @param {Asset} [asset] - Optional asset that is passed into
      * handler.
      * @param {object} [options] - Additional options for loading.
      * @param {boolean} [options.bundlesIgnore] - If set to true, then asset will not try to load
      * from a bundle. Defaults to false.
-     * @param {import('../asset/asset-registry.js').BundlesFilterCallback} [options.bundlesFilter] - A callback that will be called
+     * @param {BundlesFilterCallback} [options.bundlesFilter] - A callback that will be called
      * when loading an asset that is contained in any of the bundles. It provides an array of
      * bundles and will ensure asset is loaded from bundle returned from a callback. By default
      * smallest filesize bundle is choosen.
@@ -281,8 +289,8 @@ class ResourceLoader {
      * Perform any operations on a resource, that requires a dependency on its asset data or any
      * other asset data.
      *
-     * @param {import('../asset/asset.js').Asset} asset - The asset to patch.
-     * @param {import('../asset/asset-registry.js').AssetRegistry} assets - The asset registry.
+     * @param {Asset} asset - The asset to patch.
+     * @param {AssetRegistry} assets - The asset registry.
      */
     patch(asset, assets) {
         const handler = this._handlers[asset.type];

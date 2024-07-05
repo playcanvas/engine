@@ -1,14 +1,18 @@
 import { now } from '../../../core/time.js';
-
 import { math } from '../../../core/math/math.js';
 import { Color } from '../../../core/math/color.js';
-
 import { EntityReference } from '../../utils/entity-reference.js';
-
 import { Component } from '../component.js';
-
 import { BUTTON_TRANSITION_MODE_SPRITE_CHANGE, BUTTON_TRANSITION_MODE_TINT } from './constants.js';
 import { ELEMENTTYPE_GROUP } from '../element/constants.js';
+
+/**
+ * @import {Asset} from '../../../framework/asset/asset.js'
+ * @import {ButtonComponentData} from './data.js'
+ * @import {ButtonComponentSystem} from './system.js'
+ * @import {Entity} from '../../entity.js'
+ * @import {Vec4} from '../../../core/math/vec4.js'
+ */
 
 const VisualState = {
     DEFAULT: 'DEFAULT',
@@ -242,10 +246,8 @@ class ButtonComponent extends Component {
     /**
      * Create a new ButtonComponent instance.
      *
-     * @param {import('./system.js').ButtonComponentSystem} system - The ComponentSystem that
-     * created this component.
-     * @param {import('../../entity.js').Entity} entity - The entity that this component is
-     * attached to.
+     * @param {ButtonComponentSystem} system - The ComponentSystem that created this component.
+     * @param {Entity} entity - The entity that this component is attached to.
      */
     constructor(system, entity) {
         super(system, entity);
@@ -273,7 +275,7 @@ class ButtonComponent extends Component {
 
     // TODO: Remove this override in upgrading component
     /**
-     * @type {import('./data.js').ButtonComponentData}
+     * @type {ButtonComponentData}
      * @ignore
      */
     get data() {
@@ -322,7 +324,7 @@ class ButtonComponent extends Component {
      * Sets the entity to be used as the button background. The entity must have an
      * {@link ElementComponent} configured as an image element.
      *
-     * @type {import('../../../framework/entity.js').Entity}
+     * @type {Entity}
      */
     set imageEntity(arg) {
         this._setValue('imageEntity', arg);
@@ -331,7 +333,7 @@ class ButtonComponent extends Component {
     /**
      * Gets the entity to be used as the button background.
      *
-     * @type {import('../../../framework/entity.js').Entity}
+     * @type {Entity}
      */
     get imageEntity() {
         return this.data.imageEntity;
@@ -341,7 +343,7 @@ class ButtonComponent extends Component {
      * Sets the padding to be used in hit-test calculations. Can be used to expand the bounding box
      * so that the button is easier to tap. Defaults to `[0, 0, 0, 0]`.
      *
-     * @type {import('../../../core/math/vec4.js').Vec4}
+     * @type {Vec4}
      */
     set hitPadding(arg) {
         this._setValue('hitPadding', arg);
@@ -350,7 +352,7 @@ class ButtonComponent extends Component {
     /**
      * Gets the padding to be used in hit-test calculations.
      *
-     * @type {import('../../../core/math/vec4.js').Vec4}
+     * @type {Vec4}
      */
     get hitPadding() {
         return this.data.hitPadding;
@@ -458,7 +460,7 @@ class ButtonComponent extends Component {
     /**
      * Sets the sprite to be used as the button image when the user hovers over it.
      *
-     * @type {import('../../../framework/asset/asset.js').Asset}
+     * @type {Asset}
      */
     set hoverSpriteAsset(arg) {
         this._setValue('hoverSpriteAsset', arg);
@@ -467,7 +469,7 @@ class ButtonComponent extends Component {
     /**
      * Gets the sprite to be used as the button image when the user hovers over it.
      *
-     * @type {import('../../../framework/asset/asset.js').Asset}
+     * @type {Asset}
      */
     get hoverSpriteAsset() {
         return this.data.hoverSpriteAsset;
@@ -494,7 +496,7 @@ class ButtonComponent extends Component {
     /**
      * Sets the sprite to be used as the button image when the user presses it.
      *
-     * @type {import('../../../framework/asset/asset.js').Asset}
+     * @type {Asset}
      */
     set pressedSpriteAsset(arg) {
         this._setValue('pressedSpriteAsset', arg);
@@ -503,7 +505,7 @@ class ButtonComponent extends Component {
     /**
      * Gets the sprite to be used as the button image when the user presses it.
      *
-     * @type {import('../../../framework/asset/asset.js').Asset}
+     * @type {Asset}
      */
     get pressedSpriteAsset() {
         return this.data.pressedSpriteAsset;
@@ -530,7 +532,7 @@ class ButtonComponent extends Component {
     /**
      * Sets the sprite to be used as the button image when the button is not interactive.
      *
-     * @type {import('../../../framework/asset/asset.js').Asset}
+     * @type {Asset}
      */
     set inactiveSpriteAsset(arg) {
         this._setValue('inactiveSpriteAsset', arg);
@@ -539,7 +541,7 @@ class ButtonComponent extends Component {
     /**
      * Gets the sprite to be used as the button image when the button is not interactive.
      *
-     * @type {import('../../../framework/asset/asset.js').Asset}
+     * @type {Asset}
      */
     get inactiveSpriteAsset() {
         return this.data.inactiveSpriteAsset;

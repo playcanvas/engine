@@ -5,6 +5,7 @@ import { Vec3 } from '../../core/math/vec3.js';
 import { Ray } from '../../core/shape/ray.js';
 import { Plane } from '../../core/shape/plane.js';
 import { PROJECTION_PERSPECTIVE } from '../../scene/constants.js';
+import { Gizmo } from "./gizmo.js";
 
 import {
     COLOR_RED,
@@ -13,7 +14,14 @@ import {
     COLOR_YELLOW,
     COLOR_GRAY
 } from './default-colors.js';
-import { Gizmo } from "./gizmo.js";
+
+/**
+ * @import {AppBase} from '../../framework/app-base.js'
+ * @import {AxisShape } from './axis-shapes.js'
+ * @import {CameraComponent} from '../../framework/components/camera/component.js'
+ * @import {Layer} from '../../scene/layer.js'
+ * @import {MeshInstance} from '../../scene/mesh-instance.js'
+ */
 
 // temporary variables
 const tmpV1 = new Vec3();
@@ -207,7 +215,7 @@ class TransformGizmo extends Gizmo {
     /**
      * Internal object containing the axis shapes to render.
      *
-     * @type {Object.<string, import('./axis-shapes.js').AxisShape>}
+     * @type {Object.<string, AxisShape>}
      * @protected
      */
     _shapes = {};
@@ -215,7 +223,7 @@ class TransformGizmo extends Gizmo {
     /**
      * Internal mapping of mesh instances to axis shapes.
      *
-     * @type {Map<import('../../scene/mesh-instance.js').MeshInstance, import('./axis-shapes.js').AxisShape>}
+     * @type {Map<MeshInstance, AxisShape>}
      * @private
      */
     _shapeMap = new Map();
@@ -223,7 +231,7 @@ class TransformGizmo extends Gizmo {
     /**
      * Internal currently hovered shape.
      *
-     * @type {import('./axis-shapes.js').AxisShape | null}
+     * @type {AxisShape | null}
      * @private
      */
     _hoverShape = null;
@@ -302,10 +310,10 @@ class TransformGizmo extends Gizmo {
     /**
      * Creates a new TransformGizmo object.
      *
-     * @param {import('../../framework/app-base.js').AppBase} app - The application instance.
-     * @param {import('../../framework/components/camera/component.js').CameraComponent} camera -
+     * @param {AppBase} app - The application instance.
+     * @param {CameraComponent} camera -
      * The camera component.
-     * @param {import('../../scene/layer.js').Layer} layer - The render layer.
+     * @param {Layer} layer - The render layer.
      * @example
      * const gizmo = new pc.TransformGizmo(app, camera, layer);
      */
@@ -515,7 +523,7 @@ class TransformGizmo extends Gizmo {
     }
 
     /**
-     * @param {import('../../scene/mesh-instance.js').MeshInstance} [meshInstance] - The mesh instance.
+     * @param {MeshInstance} [meshInstance] - The mesh instance.
      * @returns {string} - The axis.
      * @private
      */
@@ -527,7 +535,7 @@ class TransformGizmo extends Gizmo {
     }
 
     /**
-     * @param {import('../../scene/mesh-instance.js').MeshInstance} [meshInstance] - The mesh instance.
+     * @param {MeshInstance} [meshInstance] - The mesh instance.
      * @returns {boolean} - Whether the mesh instance is a plane.
      * @private
      */
@@ -539,7 +547,7 @@ class TransformGizmo extends Gizmo {
     }
 
     /**
-     * @param {import('../../scene/mesh-instance.js').MeshInstance} [meshInstance] - The mesh instance.
+     * @param {MeshInstance} [meshInstance] - The mesh instance.
      * @private
      */
     _hover(meshInstance) {

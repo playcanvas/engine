@@ -2,10 +2,14 @@ import { path } from '../../core/path.js';
 import { Debug } from '../../core/debug.js';
 import { EventHandler } from '../../core/event-handler.js';
 import { TagsCache } from '../../core/tags-cache.js';
-
 import { standardMaterialTextureParameters } from '../../scene/materials/standard-material-parameters.js';
-
 import { Asset } from './asset.js';
+
+/**
+ * @import {Bundle} from '../bundle/bundle.js'
+ * @import {BundleRegistry} from '../bundle/bundle-registry.js'
+ * @import {ResourceLoader} from '../handlers/loader.js'
+ */
 
 /**
  * Callback used by {@link AssetRegistry#filter} to filter assets.
@@ -29,7 +33,7 @@ import { Asset } from './asset.js';
  * to load from. Return a single bundle to ensure asset is loaded from it.
  *
  * @callback BundlesFilterCallback
- * @param {import('../bundle/bundle.js').Bundle[]} bundles - List of bundles which contain the asset.
+ * @param {Bundle[]} bundles - List of bundles which contain the asset.
  */
 
 /**
@@ -197,15 +201,14 @@ class AssetRegistry extends EventHandler {
     /**
      * BundleRegistry
      *
-     * @type {import('../bundle/bundle-registry.js').BundleRegistry|null}
+     * @type {BundleRegistry|null}
      */
     bundles = null;
 
     /**
      * Create an instance of an AssetRegistry.
      *
-     * @param {import('../handlers/loader.js').ResourceLoader} loader - The ResourceLoader used to
-     * load the asset files.
+     * @param {ResourceLoader} loader - The ResourceLoader used to load the asset files.
      */
     constructor(loader) {
         super();

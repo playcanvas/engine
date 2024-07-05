@@ -1,7 +1,10 @@
 import { SceneUtils } from './scene-utils.js';
 import { SceneParser } from '../parsers/scene.js';
-
 import { ResourceHandler } from './handler.js';
+
+/**
+ * @import {AppBase} from '../app-base.js'
+ */
 
 /**
  * Resource handler used for loading {@link Scene} resources.
@@ -12,7 +15,7 @@ class SceneHandler extends ResourceHandler {
     /**
      * Create a new SceneHandler instance.
      *
-     * @param {import('../app-base.js').AppBase} app - The running {@link AppBase}.
+     * @param {AppBase} app - The running {@link AppBase}.
      * @ignore
      */
     constructor(app) {

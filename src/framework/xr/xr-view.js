@@ -3,8 +3,11 @@ import { Texture } from '../../platform/graphics/texture.js';
 import { Vec4 } from "../../core/math/vec4.js";
 import { Mat3 } from "../../core/math/mat3.js";
 import { Mat4 } from "../../core/math/mat4.js";
-
 import { ADDRESS_CLAMP_TO_EDGE, FILTER_LINEAR, FILTER_NEAREST, PIXELFORMAT_RGB8 } from '../../platform/graphics/constants.js';
+
+/**
+ * @import {XrManager} from './xr-manager.js'
+ */
 
 /**
  * Represents an XR View which represents a screen (monoscopic scenario such as a mobile phone) or an eye
@@ -28,7 +31,7 @@ class XrView extends EventHandler {
     static EVENT_DEPTHRESIZE = 'depth:resize';
 
     /**
-     * @type {import('./xr-manager.js').XrManager}
+     * @type {XrManager}
      * @private
      */
     _manager;
@@ -132,7 +135,7 @@ class XrView extends EventHandler {
     /**
      * Create a new XrView instance.
      *
-     * @param {import('./xr-manager.js').XrManager} manager - WebXR Manager.
+     * @param {XrManager} manager - WebXR Manager.
      * @param {XRView} xrView - [XRView](https://developer.mozilla.org/en-US/docs/Web/API/XRView)
      * object that is created by WebXR API.
      * @param {number} viewsCount - Number of views available for the session.

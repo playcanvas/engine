@@ -2,6 +2,12 @@ import { Vec4 } from '../../core/math/vec4.js';
 import { BlendState } from '../../platform/graphics/blend-state.js';
 import { drawQuadWithShader } from './quad-render-utils.js';
 
+/**
+ * @import {GraphicsDevice} from '../../platform/graphics/graphics-device.js'
+ * @import {RenderTarget} from '../../platform/graphics/render-target.js'
+ * @import {Shader} from '../../platform/graphics/shader.js'
+ */
+
 const _viewport = new Vec4();
 
 /**
@@ -15,14 +21,14 @@ class PostEffect {
     /**
      * Create a new PostEffect instance.
      *
-     * @param {import('../../platform/graphics/graphics-device.js').GraphicsDevice} graphicsDevice -
+     * @param {GraphicsDevice} graphicsDevice -
      * The graphics device of the application.
      */
     constructor(graphicsDevice) {
         /**
          * The graphics device of the application.
          *
-         * @type {import('../../platform/graphics/graphics-device.js').GraphicsDevice}
+         * @type {GraphicsDevice}
          */
         this.device = graphicsDevice;
 
@@ -54,11 +60,11 @@ class PostEffect {
     /**
      * Render the post effect using the specified inputTarget to the specified outputTarget.
      *
-     * @param {import('../../platform/graphics/render-target.js').RenderTarget} inputTarget - The
+     * @param {RenderTarget} inputTarget - The
      * input render target.
-     * @param {import('../../platform/graphics/render-target.js').RenderTarget} outputTarget - The
+     * @param {RenderTarget} outputTarget - The
      * output render target. If null then this will be the screen.
-     * @param {import('../../core/math/vec4.js').Vec4} [rect] - The rect of the current camera. If
+     * @param {Vec4} [rect] - The rect of the current camera. If
      * not specified, it will default to [0, 0, 1, 1].
      */
     render(inputTarget, outputTarget, rect) {
@@ -67,11 +73,11 @@ class PostEffect {
     /**
      * Draw a screen-space rectangle in a render target, using a specified shader.
      *
-     * @param {import('../../platform/graphics/render-target.js').RenderTarget|null} target - The
+     * @param {RenderTarget|null} target - The
      * output render target.
-     * @param {import('../../platform/graphics/shader.js').Shader} shader - The shader to be used
+     * @param {Shader} shader - The shader to be used
      * for drawing the rectangle.
-     * @param {import('../../core/math/vec4.js').Vec4} [rect] - The normalized screen-space position
+     * @param {Vec4} [rect] - The normalized screen-space position
      * (rect.x, rect.y) and size (rect.z, rect.w) of the rectangle. Default is [0, 0, 1, 1].
      */
     drawQuad(target, shader, rect) {

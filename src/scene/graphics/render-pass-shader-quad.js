@@ -6,6 +6,11 @@ import { RenderPass } from "../../platform/graphics/render-pass.js";
 import { createShaderFromCode } from "../shader-lib/utils.js";
 
 /**
+ * @import {Shader} from '../../platform/graphics/shader.js'
+ * @import {StencilParameters} from '../../platform/graphics/stencil-parameters.js'
+ */
+
+/**
  * A render pass that implements rendering a quad with a shader, and exposes controls over the
  * render state. This is typically used as a base class for render passes that render a quad with
  * a shader, but can be used directly as well by specifying a shader.
@@ -39,14 +44,14 @@ class RenderPassShaderQuad extends RenderPass {
     /**
      * Stencil parameters for front faces to use when rendering the quad. Defaults to null.
      *
-     * @type {import('../../platform/graphics/stencil-parameters.js').StencilParameters|null}
+     * @type {StencilParameters|null}
      */
     stencilFront = null;
 
     /**
      * Stencil parameters for back faces to use when rendering the quad. Defaults to null.
      *
-     * @type {import('../../platform/graphics/stencil-parameters.js').StencilParameters|null}
+     * @type {StencilParameters|null}
      */
     stencilBack = null;
 
@@ -69,7 +74,7 @@ class RenderPassShaderQuad extends RenderPass {
     /**
      * Sets the shader used to render the quad.
      *
-     * @type {import('../../platform/graphics/shader.js').Shader}
+     * @type {Shader}
      * @ignore
      */
     set shader(shader) {

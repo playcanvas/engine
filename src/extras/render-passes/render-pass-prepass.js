@@ -1,3 +1,7 @@
+import { Texture } from '../../platform/graphics/texture.js';
+import { RenderPass } from '../../platform/graphics/render-pass.js';
+import { RenderTarget } from '../../platform/graphics/render-target.js';
+
 import {
     LAYERID_DEPTH,
     SHADER_PREPASS_VELOCITY
@@ -8,9 +12,10 @@ import {
     PIXELFORMAT_RGBA16F,
     ADDRESS_CLAMP_TO_EDGE
 } from '../../platform/graphics/constants.js';
-import { Texture } from '../../platform/graphics/texture.js';
-import { RenderPass } from '../../platform/graphics/render-pass.js';
-import { RenderTarget } from '../../platform/graphics/render-target.js';
+
+/**
+ * @import {BindGroup} from '../../platform/graphics/bind-group.js'
+ */
 
 const tempMeshInstances = [];
 
@@ -29,7 +34,7 @@ const VELOCITY_UNIFORM_NAME = 'uSceneVelocityMap';
  * @ignore
  */
 class RenderPassPrepass extends RenderPass {
-    /** @type {import('../../platform/graphics/bind-group.js').BindGroup[]} */
+    /** @type {BindGroup[]} */
     viewBindGroups = [];
 
     /** @type {Texture} */

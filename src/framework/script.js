@@ -1,17 +1,21 @@
 import { getApplication } from './globals.js';
 
 /**
+ * @import {AppBase} from './app-base.js'
+ */
+
+/**
  * Callback used by {@link script.createLoadingScreen}.
  *
  * @callback CreateScreenCallback
- * @param {import('./app-base.js').AppBase} app - The application.
+ * @param {AppBase} app - The application.
  */
 
 /**
  * Callback used by {@link script.create}.
  *
  * @callback CreateScriptCallback
- * @param {import('./app-base.js').AppBase} app - The application.
+ * @param {AppBase} app - The application.
  * @returns {object} Return the Type of the script resource to be instanced for each Entity.
  * @ignore
  */

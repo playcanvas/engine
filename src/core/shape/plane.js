@@ -1,6 +1,10 @@
 import { Vec3 } from '../math/vec3.js';
 
 /**
+ * @import {Ray} from './ray.js'
+ */
+
+/**
  * An infinite plane. Internally it's represented in a parametric equation form:
  * ax + by + cz + distance = 0.
  *
@@ -82,7 +86,7 @@ class Plane {
     /**
      * Test if a ray intersects with the infinite plane.
      *
-     * @param {import('./ray.js').Ray} ray - Ray to test against (direction must be normalized).
+     * @param {Ray} ray - Ray to test against (direction must be normalized).
      * @param {Vec3} [point] - If there is an intersection, the intersection point will be copied
      * into here.
      * @returns {boolean} True if there is an intersection.

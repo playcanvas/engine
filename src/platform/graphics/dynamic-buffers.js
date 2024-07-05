@@ -2,13 +2,18 @@ import { Debug } from '../../core/debug.js';
 import { math } from '../../core/math/math.js';
 
 /**
+ * @import {DynamicBuffer} from './dynamic-buffer.js'
+ * @import {GraphicsDevice} from './graphics-device.js'
+ */
+
+/**
  * A container for storing the used areas of a pair of staging and gpu buffers.
  */
 class UsedBuffer {
-    /** @type {import('./dynamic-buffer.js').DynamicBuffer} */
+    /** @type {DynamicBuffer} */
     gpuBuffer;
 
-    /** @type {import('./dynamic-buffer.js').DynamicBuffer} */
+    /** @type {DynamicBuffer} */
     stagingBuffer;
 
     /**
@@ -41,7 +46,7 @@ class DynamicBufferAllocation {
     /**
      * The gpu buffer this allocation will be copied to.
      *
-     * @type {import('./dynamic-buffer.js').DynamicBuffer}
+     * @type {DynamicBuffer}
      */
     gpuBuffer;
 
@@ -73,14 +78,14 @@ class DynamicBuffers {
     /**
      * Internally allocated gpu buffers.
      *
-     * @type {import('./dynamic-buffer.js').DynamicBuffer[]}
+     * @type {DynamicBuffer[]}
      */
     gpuBuffers = [];
 
     /**
      * Internally allocated staging buffers (CPU writable)
      *
-     * @type {import('./dynamic-buffer.js').DynamicBuffer[]}
+     * @type {DynamicBuffer[]}
      */
     stagingBuffers = [];
 
@@ -97,7 +102,7 @@ class DynamicBuffers {
     /**
      * Create the system of dynamic buffers.
      *
-     * @param {import('./graphics-device.js').GraphicsDevice} device - The graphics device.
+     * @param {GraphicsDevice} device - The graphics device.
      * @param {number} bufferSize - The size of the underlying large buffers.
      * @param {number} bufferAlignment - Alignment of each allocation.
      */

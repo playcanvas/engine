@@ -1,9 +1,12 @@
 import { AnimTrack } from '../../anim/evaluator/anim-track.js';
 import { Component } from '../component.js';
 import { ComponentSystem } from '../system.js';
-
 import { AnimComponent } from './component.js';
 import { AnimComponentData } from './data.js';
+
+/**
+ * @import {AppBase} from '../../app-base.js'
+ */
 
 const _schema = [
     'enabled'
@@ -18,7 +21,7 @@ class AnimComponentSystem extends ComponentSystem {
     /**
      * Create an AnimComponentSystem instance.
      *
-     * @param {import('../../app-base.js').AppBase} app - The application managing this system.
+     * @param {AppBase} app - The application managing this system.
      * @ignore
      */
     constructor(app) {

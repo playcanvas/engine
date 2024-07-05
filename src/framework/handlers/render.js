@@ -1,6 +1,9 @@
 import { Render } from '../../scene/render.js';
-
 import { ResourceHandler } from './handler.js';
+
+/**
+ * @import {AppBase} from '../app-base.js'
+ */
 
 // The scope of this function is the render asset
 function onContainerAssetLoaded(containerAsset) {
@@ -50,7 +53,7 @@ class RenderHandler extends ResourceHandler {
     /**
      * Create a new RenderHandler instance.
      *
-     * @param {import('../app-base.js').AppBase} app - The running {@link AppBase}.
+     * @param {AppBase} app - The running {@link AppBase}.
      * @ignore
      */
     constructor(app) {

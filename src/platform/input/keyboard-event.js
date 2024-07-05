@@ -1,4 +1,8 @@
 /**
+ * @import {Keyboard} from './keyboard.js'
+ */
+
+/**
  * The KeyboardEvent is passed into all event callbacks from the {@link Keyboard}. It corresponds
  * to a key press or release.
  *
@@ -29,8 +33,7 @@ class KeyboardEvent {
     /**
      * Create a new KeyboardEvent.
      *
-     * @param {import('./keyboard.js').Keyboard} keyboard - The keyboard object which is firing the
-     * event.
+     * @param {Keyboard} keyboard - The keyboard object which is firing the event.
      * @param {globalThis.KeyboardEvent} event - The original browser event that was fired.
      * @example
      * const onKeyDown = function (e) {

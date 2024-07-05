@@ -1,14 +1,16 @@
 import { path } from '../../core/path.js';
 import { Tags } from '../../core/tags.js';
-
 import { EventHandler } from '../../core/event-handler.js';
-
 import { findAvailableLocale } from '../i18n/utils.js';
-
 import { ABSOLUTE_URL } from './constants.js';
 import { AssetFile } from './asset-file.js';
 import { getApplication } from '../globals.js';
 import { http } from '../../platform/net/http.js';
+
+/**
+ * @import {AssetRegistry} from './asset-registry.js'
+ * @import {ResourceLoaderCallback} from '../handlers/loader.js'
+ */
 
 // auto incrementing number for asset ids
 let assetIdCounter = -1;
@@ -220,7 +222,7 @@ class Asset extends EventHandler {
         /**
          * The asset registry that this Asset belongs to.
          *
-         * @type {import('./asset-registry.js').AssetRegistry|null}
+         * @type {AssetRegistry|null}
          */
         this.registry = null;
 
@@ -599,8 +601,7 @@ class Asset extends EventHandler {
      * via http.
      *
      * @param {string} loadUrl - The URL as passed into the handler
-     * @param {import('../handlers/loader.js').ResourceLoaderCallback} callback - The callback
-     * function to receive results.
+     * @param {ResourceLoaderCallback} callback - The callback function to receive results.
      * @param {Asset} [asset] - The asset
      * @param {number} maxRetries - Number of retries if http download is required
      * @ignore

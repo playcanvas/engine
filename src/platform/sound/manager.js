@@ -1,13 +1,14 @@
 import { Debug } from '../../core/debug.js';
-
 import { EventHandler } from '../../core/event-handler.js';
-
 import { math } from '../../core/math/math.js';
-
 import { Channel } from '../audio/channel.js';
 import { Channel3d } from '../audio/channel3d.js';
-
 import { Listener } from './listener.js';
+
+/**
+ * @import {Sound} from './sound.js'
+ * @import {Vec3} from '../../core/math/vec3.js'
+ */
 
 const CONTEXT_STATE_RUNNING = 'running';
 
@@ -131,7 +132,7 @@ class SoundManager extends EventHandler {
     /**
      * Create a new {@link Channel} and begin playback of the sound.
      *
-     * @param {import('./sound.js').Sound} sound - The Sound object to play.
+     * @param {Sound} sound - The Sound object to play.
      * @param {object} [options] - Optional options object.
      * @param {number} [options.volume] - The volume to playback at, between 0 and 1.
      * @param {boolean} [options.loop] - Whether to loop the sound when it reaches the end.
@@ -150,8 +151,8 @@ class SoundManager extends EventHandler {
     /**
      * Create a new {@link Channel3d} and begin playback of the sound at the position specified.
      *
-     * @param {import('./sound.js').Sound} sound - The Sound object to play.
-     * @param {import('../../core/math/vec3.js').Vec3} position - The position of the sound in 3D space.
+     * @param {Sound} sound - The Sound object to play.
+     * @param {Vec3} position - The position of the sound in 3D space.
      * @param {object} options - Optional options object.
      * @param {number} [options.volume] - The volume to playback at, between 0 and 1.
      * @param {boolean} [options.loop] - Whether to loop the sound when it reaches the end.

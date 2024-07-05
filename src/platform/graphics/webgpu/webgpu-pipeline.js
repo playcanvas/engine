@@ -1,6 +1,11 @@
 import { TRACEID_PIPELINELAYOUT_ALLOC } from '../../../core/constants.js';
 import { Debug, DebugHelper } from '../../../core/debug.js';
 
+/**
+ * @import {BindGroupFormat} from '../bind-group-format.js'
+ * @import {WebgpuGraphicsDevice} from './webgpu-graphics-device.js'
+ */
+
 let _layoutId = 0;
 
 /**
@@ -8,14 +13,14 @@ let _layoutId = 0;
  */
 class WebgpuPipeline {
     constructor(device) {
-        /** @type {import('./webgpu-graphics-device.js').WebgpuGraphicsDevice} */
+        /** @type {WebgpuGraphicsDevice} */
         this.device = device;
     }
 
     // TODO: this could be cached using bindGroupKey
 
     /**
-     * @param {import('../bind-group-format.js').BindGroupFormat[]} bindGroupFormats - An array
+     * @param {BindGroupFormat[]} bindGroupFormats - An array
      * of bind group formats.
      * @returns {any} Returns the pipeline layout.
      */

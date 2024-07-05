@@ -1,6 +1,10 @@
 import { Debug } from '../../core/debug.js';
-
 import { DeviceCache } from '../../platform/graphics/device-cache.js';
+
+/**
+ * @import {GraphicsDevice} from '../../platform/graphics/graphics-device.js'
+ * @import {StandardMaterial} from './standard-material.js'
+ */
 
 // device cache storing default material
 const defaultMaterialDeviceCache = new DeviceCache();
@@ -8,9 +12,9 @@ const defaultMaterialDeviceCache = new DeviceCache();
 /**
  * Returns default material, which is a material used instead of null material.
  *
- * @param {import('../../platform/graphics/graphics-device.js').GraphicsDevice} device - The
+ * @param {GraphicsDevice} device - The
  * graphics device used to own the material.
- * @returns {import('./standard-material.js').StandardMaterial} The default instance of
+ * @returns {StandardMaterial} The default instance of
  * {@link StandardMaterial}.
  */
 function getDefaultMaterial(device) {
@@ -22,9 +26,9 @@ function getDefaultMaterial(device) {
 /**
  * Assigns the default material to device cache
  *
- * @param {import('../../platform/graphics/graphics-device.js').GraphicsDevice} device - The
+ * @param {GraphicsDevice} device - The
  * graphics device used to own the material.
- * @param {import('./standard-material.js').StandardMaterial} material - The instance of
+ * @param {StandardMaterial} material - The instance of
  * {@link StandardMaterial}.
  */
 function setDefaultMaterial(device, material) {

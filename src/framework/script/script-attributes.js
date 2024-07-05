@@ -8,6 +8,12 @@ import { Vec4 } from '../../core/math/vec4.js';
 import { GraphNode } from '../../scene/graph-node.js';
 import { Asset } from '../asset/asset.js';
 
+/**
+ * @import {Application} from '../../framework/application.js'
+ * @import {ScriptType} from './script-type.js'
+ * @import {Script} from '../../framework/script/script.js'
+ */
+
 const components = ['x', 'y', 'z', 'w'];
 const vecLookup = [undefined, undefined, Vec2, Vec3, Vec4];
 
@@ -155,7 +161,7 @@ function rawToValue(app, args, value, old) {
 /**
  * Takes an attribute schema, a value and current value, and return a new value.
  *
- * @param {import('../../framework/application.js').Application} app - The working application
+ * @param {Application} app - The working application
  * @param {AttributeSchema} schema - The attribute schema used to resolve properties
  * @param {*} value - The raw value to create
  * @param {*} current - The existing value
@@ -173,10 +179,10 @@ function attributeToValue(app, schema, value, current) {
  * Assigns values to a script instance based on a map of attributes schemas
  * and a corresponding map of data.
  *
- * @param {import('../../framework/application.js').Application} app - The application instance
+ * @param {Application} app - The application instance
  * @param {Object<string, AttributeSchema>} attributeSchemaMap - A map of names to Schemas
  * @param {Object<string, *>} data - A Map of data to assign to the Script instance
- * @param {import('../../framework/script/script.js').Script} script - A Script instance to assign values on
+ * @param {Script} script - A Script instance to assign values on
  */
 export function assignAttributesToScript(app, attributeSchemaMap, data, script) {
 
@@ -210,7 +216,7 @@ class ScriptAttributes {
     /**
      * Create a new ScriptAttributes instance.
      *
-     * @param {typeof import('./script-type.js').ScriptType} scriptType - Script Type that attributes relate to.
+     * @param {typeof ScriptType} scriptType - Script Type that attributes relate to.
      */
     constructor(scriptType) {
         this.scriptType = scriptType;

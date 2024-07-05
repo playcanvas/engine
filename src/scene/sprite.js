@@ -1,9 +1,13 @@
 import { EventHandler } from '../core/event-handler.js';
 import { Vec2 } from '../core/math/vec2.js';
-
 import { SPRITE_RENDERMODE_SIMPLE, SPRITE_RENDERMODE_SLICED, SPRITE_RENDERMODE_TILED } from './constants.js';
 import { Mesh } from './mesh.js';
 import { Geometry } from './geometry/geometry.js';
+
+/**
+ * @import {GraphicsDevice} from '../platform/graphics/graphics-device.js'
+ * @import {TextureAtlas} from './texture-atlas.js'
+ */
 
 // normals are the same for every mesh
 const spriteNormals = [
@@ -30,8 +34,7 @@ class Sprite extends EventHandler {
     /**
      * Create a new Sprite instance.
      *
-     * @param {import('../platform/graphics/graphics-device.js').GraphicsDevice} device - The
-     * graphics device of the application.
+     * @param {GraphicsDevice} device - The graphics device of the application.
      * @param {object} [options] - Options for creating the Sprite.
      * @param {number} [options.pixelsPerUnit] - The number of pixels that map to one PlayCanvas
      * unit. Defaults to 1.
@@ -42,8 +45,7 @@ class Sprite extends EventHandler {
      * - {@link SPRITE_RENDERMODE_TILED}
      *
      * Defaults to {@link SPRITE_RENDERMODE_SIMPLE}.
-     * @param {import('./texture-atlas.js').TextureAtlas} [options.atlas] - The texture atlas.
-     * Defaults to null.
+     * @param {TextureAtlas} [options.atlas] - The texture atlas. Defaults to null.
      * @param {string[]} [options.frameKeys] - The keys of the frames in the sprite atlas that this
      * sprite is using. Defaults to null.
      */
@@ -99,7 +101,7 @@ class Sprite extends EventHandler {
     /**
      * Sets the texture atlas.
      *
-     * @type {import('./texture-atlas.js').TextureAtlas}
+     * @type {TextureAtlas}
      */
     set atlas(value) {
         if (value === this._atlas) return;
@@ -129,7 +131,7 @@ class Sprite extends EventHandler {
     /**
      * Gets the texture atlas.
      *
-     * @type {import('./texture-atlas.js').TextureAtlas}
+     * @type {TextureAtlas}
      */
     get atlas() {
         return this._atlas;
@@ -206,7 +208,7 @@ class Sprite extends EventHandler {
     /**
      * An array that contains a mesh for each frame.
      *
-     * @type {import('./mesh.js').Mesh[]}
+     * @type {Mesh[]}
      */
     get meshes() {
         return this._meshes;

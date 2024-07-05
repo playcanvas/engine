@@ -3,6 +3,11 @@ import { Mat4 } from '../../core/math/mat4.js';
 import { Quat } from '../../core/math/quat.js';
 import { Vec3 } from '../../core/math/vec3.js';
 
+/**
+ * @import {XrFinger} from './xr-finger.js'
+ * @import {XrHand} from './xr-hand.js'
+ */
+
 const tipJointIds = platform.browser && window.XRHand ? [
     'thumb-tip',
     'index-finger-tip',
@@ -36,13 +41,13 @@ class XrJoint {
     _id;
 
     /**
-     * @type {import('./xr-hand.js').XrHand}
+     * @type {XrHand}
      * @private
      */
     _hand;
 
     /**
-     * @type {import('./xr-finger.js').XrFinger}
+     * @type {XrFinger}
      * @private
      */
     _finger;
@@ -112,8 +117,8 @@ class XrJoint {
      *
      * @param {number} index - Index of a joint within a finger.
      * @param {string} id - Id of a joint based on WebXR Hand Input Specs.
-     * @param {import('./xr-hand.js').XrHand} hand - Hand that joint relates to.
-     * @param {import('./xr-finger.js').XrFinger|null} finger - Finger that joint is related to.
+     * @param {XrHand} hand - Hand that joint relates to.
+     * @param {XrFinger|null} finger - Finger that joint is related to.
      * Can be null in the case of the wrist joint.
      * @ignore
      */
@@ -189,7 +194,7 @@ class XrJoint {
     /**
      * Hand that joint relates to.
      *
-     * @type {import('./xr-hand.js').XrHand}
+     * @type {XrHand}
      */
     get hand() {
         return this._hand;
@@ -198,7 +203,7 @@ class XrJoint {
     /**
      * Finger that joint relates to.
      *
-     * @type {import('./xr-finger.js').XrFinger|null}
+     * @type {XrFinger|null}
      */
     get finger() {
         return this._finger;

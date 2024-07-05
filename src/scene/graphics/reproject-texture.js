@@ -1,7 +1,6 @@
 import { Debug } from '../../core/debug.js';
 import { random } from '../../core/math/random.js';
 import { Vec3 } from '../../core/math/vec3.js';
-
 import {
     FILTER_NEAREST,
     TEXTUREPROJECTION_OCTAHEDRAL, TEXTUREPROJECTION_CUBE
@@ -9,14 +8,17 @@ import {
 import { DebugGraphics } from '../../platform/graphics/debug-graphics.js';
 import { DeviceCache } from '../../platform/graphics/device-cache.js';
 import { RenderTarget } from '../../platform/graphics/render-target.js';
-import { drawQuadWithShader } from './quad-render-utils.js';
 import { Texture } from '../../platform/graphics/texture.js';
-
 import { ChunkUtils } from '../shader-lib/chunk-utils.js';
 import { shaderChunks } from '../shader-lib/chunks/chunks.js';
 import { getProgramLibrary } from '../shader-lib/get-program-library.js';
 import { createShaderFromCode } from '../shader-lib/utils.js';
 import { BlendState } from '../../platform/graphics/blend-state.js';
+import { drawQuadWithShader } from './quad-render-utils.js';
+
+/**
+ * @import {Vec4} from '../../core/math/vec4.js'
+ */
 
 const getProjectionName = (projection) => {
     switch (projection) {
@@ -393,7 +395,7 @@ void main(void) {
  * @param {number} [options.face] - Optional cubemap face to update (default is update all faces).
  * @param {string} [options.distribution] - Specify convolution distribution - 'none', 'lambert',
  * 'phong', 'ggx'. Default depends on specularPower.
- * @param {import('../../core/math/vec4.js').Vec4} [options.rect] - Optional viewport rectangle.
+ * @param {Vec4} [options.rect] - Optional viewport rectangle.
  * @param {number} [options.seamPixels] - Optional number of seam pixels to render
  * @returns {boolean} True if the reprojection was applied and false otherwise (e.g. if rect is empty)
  * @category Graphics

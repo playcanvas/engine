@@ -1,11 +1,15 @@
 import { TRACEID_BINDGROUPFORMAT_ALLOC } from '../../core/constants.js';
 import { Debug, DebugHelper } from '../../core/debug.js';
-
 import {
     TEXTUREDIMENSION_2D, TEXTUREDIMENSION_CUBE, TEXTUREDIMENSION_3D, TEXTUREDIMENSION_2D_ARRAY,
     SAMPLETYPE_FLOAT, PIXELFORMAT_RGBA8, SAMPLETYPE_INT, SAMPLETYPE_UINT, SHADERSTAGE_COMPUTE, SHADERSTAGE_VERTEX
 } from './constants.js';
 import { DebugGraphics } from './debug-graphics.js';
+
+/**
+ * @import {GraphicsDevice} from './graphics-device.js'
+ * @import {ScopeId} from './scope-id.js'
+ */
 
 let id = 0;
 
@@ -29,7 +33,7 @@ class BindBaseFormat {
     slot = -1;
 
     /**
-     * @type {import('./scope-id.js').ScopeId|null}
+     * @type {ScopeId|null}
      * @ignore
      */
     scopeId = null;
@@ -230,7 +234,7 @@ class BindGroupFormat {
     /**
      * Create a new instance.
      *
-     * @param {import('./graphics-device.js').GraphicsDevice} graphicsDevice - The graphics device
+     * @param {GraphicsDevice} graphicsDevice - The graphics device
      * used to manage this vertex format.
      * @param {(BindTextureFormat|BindStorageTextureFormat|BindUniformBufferFormat|BindStorageBufferFormat)[]} formats
      * - An array of bind formats. Note that each entry in the array uses up one slot. The exception
@@ -266,7 +270,7 @@ class BindGroupFormat {
             }
         });
 
-        /** @type {import('./graphics-device.js').GraphicsDevice} */
+        /** @type {GraphicsDevice} */
         this.device = graphicsDevice;
         const scope = graphicsDevice.scope;
 

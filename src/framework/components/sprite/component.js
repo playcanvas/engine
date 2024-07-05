@@ -1,10 +1,8 @@
 import { Debug } from '../../../core/debug.js';
-
 import { math } from '../../../core/math/math.js';
 import { Color } from '../../../core/math/color.js';
 import { Vec2 } from '../../../core/math/vec2.js';
 import { Vec4 } from '../../../core/math/vec4.js';
-
 import {
     LAYERID_WORLD,
     SPRITE_RENDERMODE_SLICED, SPRITE_RENDERMODE_TILED
@@ -13,11 +11,16 @@ import { BatchGroup } from '../../../scene/batching/batch-group.js';
 import { GraphNode } from '../../../scene/graph-node.js';
 import { MeshInstance } from '../../../scene/mesh-instance.js';
 import { Model } from '../../../scene/model.js';
-
 import { Component } from '../component.js';
-
 import { SPRITETYPE_SIMPLE, SPRITETYPE_ANIMATED } from './constants.js';
 import { SpriteAnimationClip } from './sprite-animation-clip.js';
+
+/**
+ * @import {Asset} from '../../asset/asset.js'
+ * @import {Entity} from '../../entity.js'
+ * @import {SpriteComponentSystem} from './system.js'
+ * @import {Sprite} from '../../../scene/sprite.js'
+ */
 
 const PARAM_EMISSIVE_MAP = 'texture_emissiveMap';
 const PARAM_OPACITY_MAP = 'texture_opacityMap';
@@ -108,9 +111,9 @@ class SpriteComponent extends Component {
     /**
      * Create a new SpriteComponent instance.
      *
-     * @param {import('./system.js').SpriteComponentSystem} system - The ComponentSystem that
+     * @param {SpriteComponentSystem} system - The ComponentSystem that
      * created this Component.
-     * @param {import('../../entity.js').Entity} entity - The Entity that this Component is
+     * @param {Entity} entity - The Entity that this Component is
      * attached to.
      */
     constructor(system, entity) {
@@ -255,7 +258,7 @@ class SpriteComponent extends Component {
      * Sets the asset id or the {@link Asset} of the sprite to render. Only works for
      * {@link SPRITETYPE_SIMPLE} sprites.
      *
-     * @type {number|import('../../asset/asset.js').Asset}
+     * @type {number|Asset}
      */
     set spriteAsset(value) {
         this._defaultClip.spriteAsset = value;
@@ -264,7 +267,7 @@ class SpriteComponent extends Component {
     /**
      * Gets the asset id or the {@link Asset} of the sprite to render.
      *
-     * @type {number|import('../../asset/asset.js').Asset}
+     * @type {number|Asset}
      */
     get spriteAsset() {
         return this._defaultClip._spriteAsset;
@@ -273,7 +276,7 @@ class SpriteComponent extends Component {
     /**
      * Sets the current sprite.
      *
-     * @type {import('../../../scene/sprite.js').Sprite}
+     * @type {Sprite}
      */
     set sprite(value) {
         this._currentClip.sprite = value;
@@ -282,7 +285,7 @@ class SpriteComponent extends Component {
     /**
      * Gets the current sprite.
      *
-     * @type {import('../../../scene/sprite.js').Sprite}
+     * @type {Sprite}
      */
     get sprite() {
         return this._currentClip.sprite;
@@ -987,7 +990,7 @@ class SpriteComponent extends Component {
      * @param {string} [data.name] - The name of the new animation clip.
      * @param {number} [data.fps] - Frames per second for the animation clip.
      * @param {boolean} [data.loop] - Whether to loop the animation clip.
-     * @param {number|import('../../asset/asset.js').Asset} [data.spriteAsset] - The asset id or
+     * @param {number|Asset} [data.spriteAsset] - The asset id or
      * the {@link Asset} of the sprite that this clip will play.
      * @returns {SpriteAnimationClip} The new clip that was added.
      */

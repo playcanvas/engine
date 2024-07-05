@@ -1,15 +1,19 @@
 import { Color } from '../../core/math/color.js';
-
 import { ADDRESS_CLAMP_TO_EDGE, FILTER_NEAREST, PIXELFORMAT_RGBA8 } from '../../platform/graphics/constants.js';
 import { RenderTarget } from '../../platform/graphics/render-target.js';
 import { Texture } from '../../platform/graphics/texture.js';
-
 import { Layer } from '../../scene/layer.js';
-
 import { Debug } from '../../core/debug.js';
 import { RenderPassPicker } from './render-pass-picker.js';
 import { math } from '../../core/math/math.js';
 import { Vec4 } from '../../core/math/vec4.js';
+
+/**
+ * @import {AppBase} from '../app-base.js'
+ * @import {CameraComponent} from '../components/camera/component.js'
+ * @import {MeshInstance} from '../../scene/mesh-instance.js'
+ * @import {Scene} from '../../scene/scene.js'
+ */
 
 const tempSet = new Set();
 const _rect = new Vec4();
@@ -37,8 +41,7 @@ class Picker {
     /**
      * Create a new Picker instance.
      *
-     * @param {import('../app-base.js').AppBase} app - The application managing this picker
-     * instance.
+     * @param {AppBase} app - The application managing this picker instance.
      * @param {number} width - The width of the pick buffer in pixels.
      * @param {number} height - The height of the pick buffer in pixels.
      */
@@ -74,8 +77,7 @@ class Picker {
      * @param {number} y - The top edge of the rectangle.
      * @param {number} [width] - The width of the rectangle. Defaults to 1.
      * @param {number} [height] - The height of the rectangle. Defaults to 1.
-     * @returns {import('../../scene/mesh-instance.js').MeshInstance[]} An array of mesh instances
-     * that are in the selection.
+     * @returns {MeshInstance[]} An array of mesh instances that are in the selection.
      * @example
      * // Get the selection at the point (10,20)
      * const selection = picker.getSelection(10, 20);
@@ -117,8 +119,8 @@ class Picker {
      * @param {number} y - The top edge of the rectangle.
      * @param {number} [width] - The width of the rectangle. Defaults to 1.
      * @param {number} [height] - The height of the rectangle. Defaults to 1.
-     * @returns {Promise<import('../../scene/mesh-instance.js').MeshInstance[]>} - Promise that
-     * resolves with an array of mesh instances that are in the selection.
+     * @returns {Promise<MeshInstance[]>} - Promise that resolves with an array of mesh instances
+     * that are in the selection.
      * @example
      * // Get the mesh instances at the rectangle with start at (10,20) and size of (5,5)
      * picker.getSelectionAsync(10, 20, 5, 5).then((meshInstances) => {
@@ -221,11 +223,10 @@ class Picker {
      * be called multiple times on the same picker object. Therefore, if the models or camera do
      * not change in any way, {@link Picker#prepare} does not need to be called again.
      *
-     * @param {import('../components/camera/component.js').CameraComponent} camera - The camera
-     * component used to render the scene.
-     * @param {import('../../scene/scene.js').Scene} scene - The scene containing the pickable mesh
-     * instances.
-     * @param {Layer[]} [layers] - Layers from which objects will be picked. If not supplied, all layers of the specified camera will be used.
+     * @param {CameraComponent} camera - The camera component used to render the scene.
+     * @param {Scene} scene - The scene containing the pickable mesh instances.
+     * @param {Layer[]} [layers] - Layers from which objects will be picked. If not supplied, all
+     * layers of the specified camera will be used.
      */
     prepare(camera, scene, layers) {
 

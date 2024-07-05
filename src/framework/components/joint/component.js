@@ -1,13 +1,15 @@
 import { Debug } from '../../../core/debug.js';
-
 import { math } from '../../../core/math/math.js';
 import { Mat4 } from '../../../core/math/mat4.js';
 import { Quat } from '../../../core/math/quat.js';
 import { Vec2 } from '../../../core/math/vec2.js';
-
 import { Component } from '../component.js';
-
 import { MOTION_FREE, MOTION_LIMITED, MOTION_LOCKED } from './constants.js';
+
+/**
+ * @import {Entity} from '../../entity.js'
+ * @import {JointComponentSystem} from './system.js'
+ */
 
 const properties = [
     'angularDampingX', 'angularDampingY', 'angularDampingZ',
@@ -34,10 +36,8 @@ class JointComponent extends Component {
     /**
      * Create a new JointComponent instance.
      *
-     * @param {import('./system.js').JointComponentSystem} system - The ComponentSystem that
-     * created this Component.
-     * @param {import('../../entity.js').Entity} entity - The Entity that this Component is
-     * attached to.
+     * @param {JointComponentSystem} system - The ComponentSystem that created this Component.
+     * @param {Entity} entity - The Entity that this Component is attached to.
      */
     constructor(system, entity) {
         super(system, entity);

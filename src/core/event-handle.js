@@ -1,6 +1,11 @@
 import { Debug } from '../core/debug.js';
 
 /**
+ * @import {EventHandler} from './event-handler.js'
+ * @import {HandleEventCallback} from './event-handler.js'
+ */
+
+/**
  * Event Handle that is created by {@link EventHandler} and can be used for easier event removal
  * and management.
  *
@@ -27,7 +32,7 @@ import { Debug } from '../core/debug.js';
  */
 class EventHandle {
     /**
-     * @type {import('./event-handler.js').EventHandler}
+     * @type {EventHandler}
      * @private
      */
     handler;
@@ -39,7 +44,7 @@ class EventHandle {
     name;
 
     /**
-     * @type {import('./event-handler.js').HandleEventCallback}
+     * @type {HandleEventCallback}
      * @ignore
      */
     callback;
@@ -64,9 +69,9 @@ class EventHandle {
     _removed = false;
 
     /**
-     * @param {import('./event-handler.js').EventHandler} handler - source object of the event.
+     * @param {EventHandler} handler - source object of the event.
      * @param {string} name - Name of the event.
-     * @param {import('./event-handler.js').HandleEventCallback} callback - Function that is called when event is fired.
+     * @param {HandleEventCallback} callback - Function that is called when event is fired.
      * @param {object} scope - Object that is used as `this` when event is fired.
      * @param {boolean} [once] - If this is a single event and will be removed after event is fired.
      */

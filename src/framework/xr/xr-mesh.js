@@ -3,6 +3,10 @@ import { Vec3 } from "../../core/math/vec3.js";
 import { Quat } from "../../core/math/quat.js";
 
 /**
+ * @import {XrMeshDetection} from './xr-mesh-detection.js'
+ */
+
+/**
  * Detected Mesh instance that provides its transform (position, rotation),
  * triangles (vertices, indices) and its semantic label. Any of its properties can
  * change during its lifetime.
@@ -35,7 +39,7 @@ class XrMesh extends EventHandler {
     static EVENT_CHANGE = 'change';
 
     /**
-     * @type {import('./xr-mesh-detection.js').XrMeshDetection}
+     * @type {XrMeshDetection}
      * @private
      */
     _meshDetection;
@@ -67,7 +71,7 @@ class XrMesh extends EventHandler {
     /**
      * Create a new XrMesh instance.
      *
-     * @param {import('./xr-mesh-detection.js').XrMeshDetection} meshDetection - Mesh Detection
+     * @param {XrMeshDetection} meshDetection - Mesh Detection
      * interface.
      * @param {XRMesh} xrMesh - XRMesh that is instantiated by WebXR system.
      * @ignore

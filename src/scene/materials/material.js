@@ -1,5 +1,4 @@
 import { Debug } from '../../core/debug.js';
-
 import {
     BLENDMODE_ZERO, BLENDMODE_ONE, BLENDMODE_SRC_COLOR,
     BLENDMODE_DST_COLOR, BLENDMODE_ONE_MINUS_DST_COLOR, BLENDMODE_SRC_ALPHA,
@@ -11,7 +10,6 @@ import {
 import { BlendState } from '../../platform/graphics/blend-state.js';
 import { DepthState } from '../../platform/graphics/depth-state.js';
 import { ShaderProcessorOptions } from '../../platform/graphics/shader-processor-options.js';
-
 import {
     BLEND_ADDITIVE, BLEND_NORMAL, BLEND_NONE, BLEND_PREMULTIPLIED,
     BLEND_MULTIPLICATIVE, BLEND_ADDITIVEALPHA, BLEND_MULTIPLICATIVE2X, BLEND_SCREEN,
@@ -19,6 +17,13 @@ import {
 } from '../constants.js';
 import { processShader } from '../shader-lib/utils.js';
 import { getDefaultMaterial } from './default-material.js';
+
+/**
+ * @import {MeshInstance} from '../mesh-instance.js'
+ * @import {Shader} from '../../platform/graphics/shader.js'
+ * @import {StencilParameters} from '../../platform/graphics/stencil-parameters.js'
+ * @import {Texture} from '../../platform/graphics/texture.js'
+ */
 
 // blend mode mapping to op, srcBlend and dstBlend
 const blendModes = [];
@@ -48,7 +53,7 @@ class Material {
      * user specifies the shader. Most material types generate multiple shader variants, and do not
      * set this.
      *
-     * @type {import('../../platform/graphics/shader.js').Shader}
+     * @type {Shader}
      * @private
      */
     _shader = null;
@@ -56,7 +61,7 @@ class Material {
     /**
      * The mesh instances referencing this material
      *
-     * @type {import('../mesh-instance.js').MeshInstance[]}
+     * @type {MeshInstance[]}
      * @private
      */
     meshInstances = [];
@@ -83,7 +88,7 @@ class Material {
      * The cache of shader variants generated for this material. The key represents the unique
      * variant, the value is the shader.
      *
-     * @type {Map<number, import('../../platform/graphics/shader.js').Shader>}
+     * @type {Map<number, Shader>}
      * @ignore
      */
     variants = new Map();
@@ -137,14 +142,14 @@ class Material {
     /**
      * Stencil parameters for front faces (default is null).
      *
-     * @type {import('../../platform/graphics/stencil-parameters.js').StencilParameters|null}
+     * @type {StencilParameters|null}
      */
     stencilFront = null;
 
     /**
      * Stencil parameters for back faces (default is null).
      *
-     * @type {import('../../platform/graphics/stencil-parameters.js').StencilParameters|null}
+     * @type {StencilParameters|null}
      */
     stencilBack = null;
 
@@ -281,7 +286,7 @@ class Material {
     /**
      * Sets the shader used by this material to render mesh instances. Defaults to `null`.
      *
-     * @type {import('../../platform/graphics/shader.js').Shader|null}
+     * @type {Shader|null}
      */
     set shader(shader) {
         this._shader = shader;
@@ -290,7 +295,7 @@ class Material {
     /**
      * Gets the shader used by this material to render mesh instances.
      *
-     * @type {import('../../platform/graphics/shader.js').Shader|null}
+     * @type {Shader|null}
      */
     get shader() {
         return this._shader;
@@ -583,7 +588,7 @@ class Material {
      * Sets a shader parameter on a material.
      *
      * @param {string} name - The name of the parameter to set.
-     * @param {number|number[]|Float32Array|import('../../platform/graphics/texture.js').Texture} data -
+     * @param {number|number[]|Float32Array|Texture} data -
      * The value for the specified parameter.
      */
     setParameter(name, data) {
@@ -667,7 +672,7 @@ class Material {
     /**
      * Registers mesh instance as referencing the material.
      *
-     * @param {import('../mesh-instance.js').MeshInstance} meshInstance - The mesh instance to
+     * @param {MeshInstance} meshInstance - The mesh instance to
      * register.
      * @ignore
      */
@@ -678,7 +683,7 @@ class Material {
     /**
      * De-registers mesh instance as referencing the material.
      *
-     * @param {import('../mesh-instance.js').MeshInstance} meshInstance - The mesh instance to
+     * @param {MeshInstance} meshInstance - The mesh instance to
      * de-register.
      * @ignore
      */

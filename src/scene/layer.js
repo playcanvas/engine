@@ -1,6 +1,5 @@
 import { Debug } from '../core/debug.js';
 import { hash32Fnv1a } from '../core/hash.js';
-
 import {
     LIGHTTYPE_DIRECTIONAL,
     LAYER_FX,
@@ -8,6 +7,21 @@ import {
     SORTMODE_BACK2FRONT, SORTMODE_CUSTOM, SORTMODE_FRONT2BACK, SORTMODE_MATERIALMESH, SORTMODE_NONE
 } from './constants.js';
 import { Material } from './materials/material.js';
+
+/**
+ * @import {Camera} from './camera.js'
+ * @import {CameraComponent} from '../framework/components/camera/component.js'
+ * @import {Light} from './light.js'
+ * @import {LightComponent} from '../framework/components/light/component.js'
+ * @import {MeshInstance} from './mesh-instance.js'
+ * @import {Vec3} from '../core/math/vec3.js'
+ */
+
+// Layers
+let layerCounter = 0;
+
+const lightKeys = [];
+const _tempMaterials = new Set();
 
 function sortManual(drawCallA, drawCallB) {
     return drawCallA.drawOrder - drawCallB.drawOrder;
@@ -32,24 +46,18 @@ function sortFrontToBack(drawCallA, drawCallB) {
 
 const sortCallbacks = [null, sortManual, sortMaterialMesh, sortBackToFront, sortFrontToBack];
 
-// Layers
-let layerCounter = 0;
-
-const lightKeys = [];
-const _tempMaterials = new Set();
-
 class CulledInstances {
     /**
      * Visible opaque mesh instances.
      *
-     * @type {import('./mesh-instance.js').MeshInstance[]}
+     * @type {MeshInstance[]}
      */
     opaque = [];
 
     /**
      * Visible transparent mesh instances.
      *
-     * @type {import('./mesh-instance.js').MeshInstance[]}
+     * @type {MeshInstance[]}
      */
     transparent = [];
 }
@@ -65,7 +73,7 @@ class Layer {
     /**
      * Mesh instances assigned to this layer.
      *
-     * @type {import('./mesh-instance.js').MeshInstance[]}
+     * @type {MeshInstance[]}
      * @ignore
      */
     meshInstances = [];
@@ -73,7 +81,7 @@ class Layer {
     /**
      * Mesh instances assigned to this layer, stored in a set.
      *
-     * @type {Set<import('./mesh-instance.js').MeshInstance>}
+     * @type {Set<MeshInstance>}
      * @ignore
      */
     meshInstancesSet = new Set();
@@ -81,7 +89,7 @@ class Layer {
     /**
      * Shadow casting instances assigned to this layer.
      *
-     * @type {import('./mesh-instance.js').MeshInstance[]}
+     * @type {MeshInstance[]}
      * @ignore
      */
     shadowCasters = [];
@@ -89,7 +97,7 @@ class Layer {
     /**
      * Shadow casting instances assigned to this layer, stored in a set.
      *
-     * @type {Set<import('./mesh-instance.js').MeshInstance>}
+     * @type {Set<MeshInstance>}
      * @ignore
      */
     shadowCastersSet = new Set();
@@ -97,7 +105,7 @@ class Layer {
     /**
      * Visible (culled) mesh instances assigned to this layer. Looked up by the Camera.
      *
-     * @type {WeakMap<import('./camera.js').Camera, CulledInstances>}
+     * @type {WeakMap<Camera, CulledInstances>}
      * @private
      */
     _visibleInstances = new WeakMap();
@@ -105,7 +113,7 @@ class Layer {
     /**
      * All lights assigned to a layer.
      *
-     * @type {import('./light.js').Light[]}
+     * @type {Light[]}
      * @private
      */
     _lights = [];
@@ -113,7 +121,7 @@ class Layer {
     /**
      * All lights assigned to a layer stored in a set.
      *
-     * @type {Set<import('./light.js').Light>}
+     * @type {Set<Light>}
      * @private
      */
 
@@ -122,7 +130,7 @@ class Layer {
     /**
      * Set of light used by clustered lighting (omni and spot, but no directional).
      *
-     * @type {Set<import('./light.js').Light>}
+     * @type {Set<Light>}
      * @private
      */
     _clusteredLightsSet = new Set();
@@ -132,7 +140,7 @@ class Layer {
      * to match their order in _lightIdHash, so that their order matches the order expected by the
      * generated shader code.
      *
-     * @type {import('./light.js').Light[][]}
+     * @type {Light[][]}
      * @private
      */
     _splitLights = [[], [], []];
@@ -155,13 +163,13 @@ class Layer {
     requiresLightCube = false;
 
     /**
-     * @type {import('../framework/components/camera/component.js').CameraComponent[]}
+     * @type {CameraComponent[]}
      * @ignore
      */
     cameras = [];
 
     /**
-     * @type {Set<import('./camera.js').Camera>}
+     * @type {Set<Camera>}
      * @ignore
      */
     camerasSet = new Set();
@@ -525,7 +533,7 @@ class Layer {
     /**
      * Gets the lights used by clustered lighting in a set.
      *
-     * @type {Set<import('./light.js').Light>}
+     * @type {Set<Light>}
      * @ignore
      */
     get clusteredLightsSet() {
@@ -573,8 +581,7 @@ class Layer {
     /**
      * Adds an array of mesh instances to this layer.
      *
-     * @param {import('./mesh-instance.js').MeshInstance[]} meshInstances - Array of
-     * {@link MeshInstance}.
+     * @param {MeshInstance[]} meshInstances - Array of {@link MeshInstance}.
      * @param {boolean} [skipShadowCasters] - Set it to true if you don't want these mesh instances
      * to cast shadows in this layer. Defaults to false.
      */
@@ -618,8 +625,8 @@ class Layer {
     /**
      * Removes multiple mesh instances from this layer.
      *
-     * @param {import('./mesh-instance.js').MeshInstance[]} meshInstances - Array of
-     * {@link MeshInstance}. If they were added to this layer, they will be removed.
+     * @param {MeshInstance[]} meshInstances - Array of {@link MeshInstance}. If they were added to
+     * this layer, they will be removed.
      * @param {boolean} [skipShadowCasters] - Set it to true if you want to still cast shadows from
      * removed mesh instances or if they never did cast shadows before. Defaults to false.
      */
@@ -652,8 +659,7 @@ class Layer {
      * Adds an array of mesh instances to this layer, but only as shadow casters (they will not be
      * rendered anywhere, but only cast shadows on other objects).
      *
-     * @param {import('./mesh-instance.js').MeshInstance[]} meshInstances - Array of
-     * {@link MeshInstance}.
+     * @param {MeshInstance[]} meshInstances - Array of {@link MeshInstance}.
      */
     addShadowCasters(meshInstances) {
         const shadowCasters = this.shadowCasters;
@@ -672,8 +678,8 @@ class Layer {
      * Removes multiple mesh instances from the shadow casters list of this layer, meaning they
      * will stop casting shadows.
      *
-     * @param {import('./mesh-instance.js').MeshInstance[]} meshInstances - Array of
-     * {@link MeshInstance}. If they were added to this layer, they will be removed.
+     * @param {MeshInstance[]} meshInstances - Array of {@link MeshInstance}. If they were added to
+     * this layer, they will be removed.
      */
     removeShadowCasters(meshInstances) {
         const shadowCasters = this.shadowCasters;
@@ -716,8 +722,7 @@ class Layer {
     /**
      * Adds a light to this layer.
      *
-     * @param {import('../framework/components/light/component.js').LightComponent} light - A
-     * {@link LightComponent}.
+     * @param {LightComponent} light - A {@link LightComponent}.
      */
     addLight(light) {
 
@@ -738,8 +743,7 @@ class Layer {
     /**
      * Removes a light from this layer.
      *
-     * @param {import('../framework/components/light/component.js').LightComponent} light - A
-     * {@link LightComponent}.
+     * @param {LightComponent} light - A {@link LightComponent}.
      */
     removeLight(light) {
 
@@ -853,8 +857,7 @@ class Layer {
     /**
      * Adds a camera to this layer.
      *
-     * @param {import('../framework/components/camera/component.js').CameraComponent} camera - A
-     * {@link CameraComponent}.
+     * @param {CameraComponent} camera - A {@link CameraComponent}.
      */
     addCamera(camera) {
         if (!this.camerasSet.has(camera.camera)) {
@@ -867,8 +870,7 @@ class Layer {
     /**
      * Removes a camera from this layer.
      *
-     * @param {import('../framework/components/camera/component.js').CameraComponent} camera - A
-     * {@link CameraComponent}.
+     * @param {CameraComponent} camera - A {@link CameraComponent}.
      */
     removeCamera(camera) {
         if (this.camerasSet.has(camera.camera)) {
@@ -889,10 +891,10 @@ class Layer {
     }
 
     /**
-     * @param {import('./mesh-instance.js').MeshInstance[]} drawCalls - Array of mesh instances.
+     * @param {MeshInstance[]} drawCalls - Array of mesh instances.
      * @param {number} drawCallsCount - Number of mesh instances.
-     * @param {import('../core/math/vec3.js').Vec3} camPos - Camera position.
-     * @param {import('../core/math/vec3.js').Vec3} camFwd - Camera forward vector.
+     * @param {Vec3} camPos - Camera position.
+     * @param {Vec3} camFwd - Camera forward vector.
      * @private
      */
     _calculateSortDistances(drawCalls, drawCallsCount, camPos, camFwd) {
@@ -914,7 +916,7 @@ class Layer {
     /**
      * Get access to culled mesh instances for the provided camera.
      *
-     * @param {import('./camera.js').Camera} camera - The camera.
+     * @param {Camera} camera - The camera.
      * @returns {CulledInstances} The culled mesh instances.
      * @ignore
      */
@@ -928,8 +930,7 @@ class Layer {
     }
 
     /**
-     * @param {import('./camera.js').Camera} camera - The camera to sort the visible mesh instances
-     * for.
+     * @param {Camera} camera - The camera to sort the visible mesh instances for.
      * @param {boolean} transparent - True if transparent sorting should be used.
      * @ignore
      */

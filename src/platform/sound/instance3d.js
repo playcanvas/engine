@@ -1,11 +1,14 @@
 import { Debug } from '../../core/debug.js';
 import { math } from '../../core/math/math.js';
 import { Vec3 } from '../../core/math/vec3.js';
-
 import { DISTANCE_EXPONENTIAL, DISTANCE_INVERSE, DISTANCE_LINEAR } from '../audio/constants.js';
 import { hasAudioContext } from '../audio/capabilities.js';
-
 import { SoundInstance } from './instance.js';
+
+/**
+ * @import {SoundManager} from './manager.js'
+ * @import {Sound} from './sound.js'
+ */
 
 // default maxDistance, same as Web Audio API
 const MAX_DISTANCE = 10000;
@@ -31,8 +34,8 @@ class SoundInstance3d extends SoundInstance {
     /**
      * Create a new SoundInstance3d instance.
      *
-     * @param {import('./manager.js').SoundManager} manager - The sound manager.
-     * @param {import('./sound.js').Sound} sound - The sound to play.
+     * @param {SoundManager} manager - The sound manager.
+     * @param {Sound} sound - The sound to play.
      * @param {object} options - Options for the instance.
      * @param {number} [options.volume] - The playback volume, between 0 and 1. Defaults to 1.
      * @param {number} [options.pitch] - The relative pitch. Defaults to 1 (plays at normal pitch).

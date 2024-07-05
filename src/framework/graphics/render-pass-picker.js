@@ -1,8 +1,11 @@
 import { DebugGraphics } from '../../platform/graphics/debug-graphics.js';
 import { BlendState } from '../../platform/graphics/blend-state.js';
 import { RenderPass } from '../../platform/graphics/render-pass.js';
-
 import { SHADER_PICK } from '../../scene/constants.js';
+
+/**
+ * @import {BindGroup} from '../../platform/graphics/bind-group.js'
+ */
 
 const tempMeshInstances = [];
 const lights = [[], [], []];
@@ -11,7 +14,7 @@ const lights = [[], [], []];
  * A render pass implementing rendering of mesh instances into a pick buffer.
  */
 class RenderPassPicker extends RenderPass {
-    /** @type {import('../../platform/graphics/bind-group.js').BindGroup[]} */
+    /** @type {BindGroup[]} */
     viewBindGroups = [];
 
     constructor(device, renderer) {

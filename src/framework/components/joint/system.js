@@ -1,8 +1,11 @@
 import { Component } from '../component.js';
 import { ComponentSystem } from '../system.js';
-
 import { JointComponent } from './component.js';
 import { JointComponentData } from './data.js';
+
+/**
+ * @import {AppBase} from '../../app-base.js'
+ */
 
 const _schema = ['enabled'];
 
@@ -15,8 +18,7 @@ class JointComponentSystem extends ComponentSystem {
     /**
      * Create a new JointComponentSystem instance.
      *
-     * @param {import('../../app-base.js').AppBase} app - The application.
-     * @ignore
+     * @param {AppBase} app - The application.
      */
     constructor(app) {
         super(app);
