@@ -10,7 +10,6 @@ import { Component } from '../component.js';
 import { EVENT_MOUSEWHEEL } from '../../../platform/input/constants.js';
 
 /**
- * @import {Entity} from '../../../framework/entity.js'
  * @import {Entity} from '../../entity.js'
  * @import {ScrollViewComponentData} from './data.js'
  * @import {ScrollViewComponentSystem} from './system.js'
@@ -41,10 +40,8 @@ class ScrollViewComponent extends Component {
     /**
      * Create a new ScrollViewComponent.
      *
-     * @param {ScrollViewComponentSystem} system - The ComponentSystem that
-     * created this Component.
-     * @param {Entity} entity - The Entity that this Component is
-     * attached to.
+     * @param {ScrollViewComponentSystem} system - The ComponentSystem that created this Component.
+     * @param {Entity} entity - The Entity that this Component is attached to.
      */
     constructor(system, entity) {
         super(system, entity);
