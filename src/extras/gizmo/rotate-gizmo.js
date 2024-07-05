@@ -12,7 +12,6 @@ import { SHAPEAXIS_FACE, SHAPEAXIS_X, SHAPEAXIS_Y, SHAPEAXIS_Z, TransformGizmo }
  * @import {AppBase} from '../../framework/app-base.js'
  * @import {CameraComponent} from '../../framework/components/camera/component.js'
  * @import {GraphNode} from '../../scene/graph-node.js'
- * @import {GraphNode} from '../../scene/graph-node.js'
  * @import {Layer} from '../../scene/layer.js'
  */
 
@@ -126,8 +125,7 @@ class RotateGizmo extends TransformGizmo {
      * Creates a new RotateGizmo object.
      *
      * @param {AppBase} app - The application instance.
-     * @param {CameraComponent} camera -
-     * The camera component.
+     * @param {CameraComponent} camera - The camera component.
      * @param {Layer} layer - The render layer.
      * @example
      * const gizmo = new pc.RotateGizmo(app, camera, layer);

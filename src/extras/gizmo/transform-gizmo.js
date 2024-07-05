@@ -311,8 +311,7 @@ class TransformGizmo extends Gizmo {
      * Creates a new TransformGizmo object.
      *
      * @param {AppBase} app - The application instance.
-     * @param {CameraComponent} camera -
-     * The camera component.
+     * @param {CameraComponent} camera - The camera component.
      * @param {Layer} layer - The render layer.
      * @example
      * const gizmo = new pc.TransformGizmo(app, camera, layer);
