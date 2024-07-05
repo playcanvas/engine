@@ -1,3 +1,9 @@
+import {
+    FILTER_NEAREST,
+    PIXELFORMAT_RGBA32F,
+    PIXELFORMAT_RGBA16F,
+    ADDRESS_CLAMP_TO_EDGE
+} from '../../platform/graphics/constants.js';
 import { Texture } from '../../platform/graphics/texture.js';
 import { RenderPass } from '../../platform/graphics/render-pass.js';
 import { RenderTarget } from '../../platform/graphics/render-target.js';
@@ -6,12 +12,6 @@ import {
     LAYERID_DEPTH,
     SHADER_PREPASS_VELOCITY
 } from '../../scene/constants.js';
-import {
-    FILTER_NEAREST,
-    PIXELFORMAT_RGBA32F,
-    PIXELFORMAT_RGBA16F,
-    ADDRESS_CLAMP_TO_EDGE
-} from '../../platform/graphics/constants.js';
 
 /**
  * @import {BindGroup} from '../../platform/graphics/bind-group.js'
