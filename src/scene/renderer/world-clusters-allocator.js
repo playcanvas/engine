@@ -3,7 +3,7 @@ import { WorldClusters } from '../lighting/world-clusters.js';
 
 /**
  * @import {GraphicsDevice} from '../../platform/graphics/graphics-device.js'
- * @import {RenderAction>} from '../composition/render-action.js'
+ * @import {RenderAction} from '../composition/render-action.js'
  */
 
 const tempClusterArray = [];
