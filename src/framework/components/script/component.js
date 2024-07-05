@@ -698,7 +698,7 @@ class ScriptComponent extends Component {
                     attributes: args.attributes
                 });
 
-                if(args.properties && typeof args.properties === 'object') {
+                if (args.properties && typeof args.properties === 'object') {
                     Object.assign(scriptInstance, args.properties);
                 }
 
