@@ -6,9 +6,9 @@ import { standardMaterialTextureParameters } from '../../scene/materials/standar
 import { Asset } from './asset.js';
 
 /**
- * @import {Bundle} from '../bundle/bundle.js'
- * @import {BundleRegistry} from '../bundle/bundle-registry.js'
- * @import {ResourceLoader} from '../handlers/loader.js'
+ * @import { Bundle } from '../bundle/bundle.js'
+ * @import { BundleRegistry } from '../bundle/bundle-registry.js'
+ * @import { ResourceLoader } from '../handlers/loader.js'
  */
 
 /**

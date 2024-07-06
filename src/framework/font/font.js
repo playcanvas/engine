@@ -1,7 +1,7 @@
 import { FONT_MSDF } from './constants.js';
 
 /**
- * @import {Texture} from '../../platform/graphics/texture.js'
+ * @import { Texture } from '../../platform/graphics/texture.js'
  */
 
 /**

@@ -9,7 +9,7 @@ import { Keyboard } from './keyboard.js';
 import { Mouse } from './mouse.js';
 
 /**
- * @import {GamePads} from './game-pads.js'
+ * @import { GamePads } from './game-pads.js'
  */
 
 /**

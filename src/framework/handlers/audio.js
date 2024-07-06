@@ -6,7 +6,7 @@ import { Sound } from '../../platform/sound/sound.js';
 import { ResourceHandler } from './handler.js';
 
 /**
- * @import {AppBase} from '../app-base.js'
+ * @import { AppBase } from '../app-base.js'
  */
 
 // checks if user is running IE

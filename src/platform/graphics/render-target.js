@@ -5,7 +5,7 @@ import { DebugGraphics } from './debug-graphics.js';
 import { GraphicsDevice } from './graphics-device.js';
 
 /**
- * @import {Texture} from './texture.js'
+ * @import { Texture } from './texture.js'
  */
 
 let id = 0;

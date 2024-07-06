@@ -3,8 +3,8 @@ import { Vec4 } from '../../../core/math/vec4.js';
 import { BUTTON_TRANSITION_MODE_TINT } from './constants.js';
 
 /**
- * @import {Asset} from '../../../framework/asset/asset.js'
- * @import {Entity} from '../../../framework/entity.js'
+ * @import { Asset } from '../../../framework/asset/asset.js'
+ * @import { Entity } from '../../../framework/entity.js'
  */
 
 class ButtonComponentData {

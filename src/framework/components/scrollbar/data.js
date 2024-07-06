@@ -1,7 +1,7 @@
 import { ORIENTATION_HORIZONTAL } from '../../../scene/constants.js';
 
 /**
- * @import {Entity} from '../../../framework/entity'
+ * @import { Entity } from '../../../framework/entity'
  */
 
 class ScrollbarComponentData {

@@ -4,7 +4,7 @@ import { MorphInstance } from './morph-instance.js';
 import { SkinInstance } from './skin-instance.js';
 
 /**
- * @import {GraphNode} from './graph-node.js'
+ * @import { GraphNode } from './graph-node.js'
  */
 
 /**

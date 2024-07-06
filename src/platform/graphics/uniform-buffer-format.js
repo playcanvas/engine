@@ -13,8 +13,8 @@ import {
 } from './constants.js';
 
 /**
- * @import {GraphicsDevice} from './graphics-device.js'
- * @import {ScopeId} from './scope-id.js'
+ * @import { GraphicsDevice } from './graphics-device.js'
+ * @import { ScopeId } from './scope-id.js'
  */
 
 // map of UNIFORMTYPE_*** to number of 32bit components

@@ -10,9 +10,9 @@ import { Component } from '../component.js';
 import { EVENT_MOUSEWHEEL } from '../../../platform/input/constants.js';
 
 /**
- * @import {Entity} from '../../entity.js'
- * @import {ScrollViewComponentData} from './data.js'
- * @import {ScrollViewComponentSystem} from './system.js'
+ * @import { Entity } from '../../entity.js'
+ * @import { ScrollViewComponentData } from './data.js'
+ * @import { ScrollViewComponentSystem } from './system.js'
  */
 
 const _tempScrollValue = new Vec2();

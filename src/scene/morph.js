@@ -13,8 +13,8 @@ import { VertexBuffer } from '../platform/graphics/vertex-buffer.js';
 import { VertexFormat } from '../platform/graphics/vertex-format.js';
 
 /**
- * @import {GraphicsDevice} from '../platform/graphics/graphics-device.js'
- * @import {MorphTarget} from './morph-target.js'
+ * @import { GraphicsDevice } from '../platform/graphics/graphics-device.js'
+ * @import { MorphTarget } from './morph-target.js'
  */
 
 /**

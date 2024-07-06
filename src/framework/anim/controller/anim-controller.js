@@ -12,8 +12,8 @@ import { AnimNode } from './anim-node.js';
 import { AnimTransition } from './anim-transition.js';
 
 /**
- * @import {AnimEvaluator} from '../evaluator/anim-evaluator.js'
- * @import {EventHandler} from '../../../core/event-handler.js'
+ * @import { AnimEvaluator } from '../evaluator/anim-evaluator.js'
+ * @import { EventHandler } from '../../../core/event-handler.js'
  */
 
 /**

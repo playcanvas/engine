@@ -6,7 +6,7 @@ import { RenderTarget } from '../../platform/graphics/render-target.js';
 import { FILTER_LINEAR, ADDRESS_CLAMP_TO_EDGE, isCompressedPixelFormat, PIXELFORMAT_RGBA8 } from '../../platform/graphics/constants.js';
 
 /**
- * @import {Color} from '../../core/math/color.js'
+ * @import { Color } from '../../core/math/color.js'
  */
 
 const textureBlitVertexShader = /* glsl */`

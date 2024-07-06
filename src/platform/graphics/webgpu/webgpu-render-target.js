@@ -3,9 +3,9 @@ import { StringIds } from '../../../core/string-ids.js';
 import { WebgpuDebug } from './webgpu-debug.js';
 
 /**
- * @import {RenderPass} from '../render-pass.js'
- * @import {RenderTarget} from '../render-target.js'
- * @import {WebgpuGraphicsDevice} from '../webgpu/webgpu-graphics-device.js'
+ * @import { RenderPass } from '../render-pass.js'
+ * @import { RenderTarget } from '../render-target.js'
+ * @import { WebgpuGraphicsDevice } from '../webgpu/webgpu-graphics-device.js'
  */
 
 const stringIds = new StringIds();

@@ -16,8 +16,8 @@ import {
 } from '../constants.js';
 
 /**
- * @import {Texture} from '../texture.js'
- * @import {WebglGraphicsDevice} from './webgl-graphics-device.js'
+ * @import { Texture } from '../texture.js'
+ * @import { WebglGraphicsDevice } from './webgl-graphics-device.js'
  */
 
 /**

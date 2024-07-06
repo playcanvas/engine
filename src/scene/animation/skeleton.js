@@ -3,8 +3,8 @@ import { Quat } from '../../core/math/quat.js';
 import { Vec3 } from '../../core/math/vec3.js';
 
 /**
- * @import {Animation} from './animation.js'
- * @import {GraphNode} from '../graph-node.js'
+ * @import { Animation } from './animation.js'
+ * @import { GraphNode } from '../graph-node.js'
  */
 
 class InterpolatedKey {

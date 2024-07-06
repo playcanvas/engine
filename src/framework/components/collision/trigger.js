@@ -1,8 +1,8 @@
 import { BODYFLAG_NORESPONSE_OBJECT, BODYMASK_NOT_STATIC, BODYGROUP_TRIGGER, BODYSTATE_ACTIVE_TAG, BODYSTATE_DISABLE_SIMULATION } from '../rigid-body/constants.js';
 
 /**
- * @import {AppBase} from '../../app-base.js'
- * @import {Component} from '../component.js'
+ * @import { AppBase } from '../../app-base.js'
+ * @import { Component } from '../component.js'
  */
 
 let _ammoVec1, _ammoQuat, _ammoTransform;

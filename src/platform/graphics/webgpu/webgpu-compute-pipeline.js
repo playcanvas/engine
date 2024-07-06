@@ -4,7 +4,7 @@ import { WebgpuDebug } from "./webgpu-debug.js";
 import { WebgpuPipeline } from "./webgpu-pipeline.js";
 
 /**
- * @import {WebgpuShader} from './webgpu-shader.js'
+ * @import { WebgpuShader } from './webgpu-shader.js'
  */
 
 let _pipelineId = 0;

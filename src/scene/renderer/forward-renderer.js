@@ -16,16 +16,16 @@ import { RenderPassForward } from './render-pass-forward.js';
 import { RenderPassPostprocessing } from './render-pass-postprocessing.js';
 
 /**
- * @import {BindGroup} from '../../platform/graphics/bind-group.js'
- * @import {Camera} from '../camera.js'
- * @import {FrameGraph} from '../frame-graph.js'
- * @import {GraphicsDevice} from '../../platform/graphics/graphics-device.js'
- * @import {LayerComposition} from '../composition/layer-composition.js'
- * @import {Layer} from '../layer.js'
- * @import {MeshInstance} from '../mesh-instance.js'
- * @import {RenderTarget} from '../../platform/graphics/render-target.js'
- * @import {Scene} from '../scene.js'
- * @import {WorldClusters} from '../lighting/world-clusters.js'
+ * @import { BindGroup } from '../../platform/graphics/bind-group.js'
+ * @import { Camera } from '../camera.js'
+ * @import { FrameGraph } from '../frame-graph.js'
+ * @import { GraphicsDevice } from '../../platform/graphics/graphics-device.js'
+ * @import { LayerComposition } from '../composition/layer-composition.js'
+ * @import { Layer } from '../layer.js'
+ * @import { MeshInstance } from '../mesh-instance.js'
+ * @import { RenderTarget } from '../../platform/graphics/render-target.js'
+ * @import { Scene } from '../scene.js'
+ * @import { WorldClusters } from '../lighting/world-clusters.js'
  */
 
 const _noLights = [[], [], []];

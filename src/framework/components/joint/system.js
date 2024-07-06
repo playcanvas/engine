@@ -4,7 +4,7 @@ import { JointComponent } from './component.js';
 import { JointComponentData } from './data.js';
 
 /**
- * @import {AppBase} from '../../app-base.js'
+ * @import { AppBase } from '../../app-base.js'
  */
 
 const _schema = ['enabled'];

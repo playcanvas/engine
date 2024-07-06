@@ -4,7 +4,7 @@ import { Untar } from './untar.js';
 import { ResourceHandler } from './handler.js';
 
 /**
- * @import {AppBase} from '../app-base.js'
+ * @import { AppBase } from '../app-base.js'
  */
 
 /**

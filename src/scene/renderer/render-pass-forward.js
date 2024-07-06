@@ -9,11 +9,11 @@ import { RenderAction } from "../composition/render-action.js";
 import { SHADER_FORWARD } from "../constants.js";
 
 /**
- * @import {CameraComponent} from '../../framework/components/camera/component.js'
- * @import {LayerComposition} from '../composition/layer-composition.js'
- * @import {Layer} from '../layer.js'
- * @import {Renderer} from './renderer.js'
- * @import {Scene} from '../scene.js'
+ * @import { CameraComponent } from '../../framework/components/camera/component.js'
+ * @import { LayerComposition } from '../composition/layer-composition.js'
+ * @import { Layer } from '../layer.js'
+ * @import { Renderer } from './renderer.js'
+ * @import { Scene } from '../scene.js'
  */
 
 /**

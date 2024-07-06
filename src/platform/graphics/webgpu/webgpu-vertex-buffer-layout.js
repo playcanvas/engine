@@ -4,7 +4,7 @@ import {
 } from '../constants.js';
 
 /**
- * @import {VertexFormat} from '../vertex-format.js'
+ * @import { VertexFormat } from '../vertex-format.js'
  */
 
 // map of TYPE_*** to GPUVertexFormat

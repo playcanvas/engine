@@ -2,8 +2,8 @@ import { math } from '../../../core/math/math.js';
 import { AnimBlendTree } from './anim-blend-tree.js';
 
 /**
- * @import {AnimState} from './anim-state.js'
- * @import {Vec2} from '../../../core/math/vec2.js'
+ * @import { AnimState } from './anim-state.js'
+ * @import { Vec2 } from '../../../core/math/vec2.js'
  */
 
 /**

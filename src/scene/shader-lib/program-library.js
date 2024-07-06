@@ -8,7 +8,7 @@ import { StandardMaterialOptions } from '../materials/standard-material-options.
 import { RenderingParams } from '../renderer/rendering-params.js';
 
 /**
- * @import {ShaderGenerator} from './programs/shader-generator.js'
+ * @import { ShaderGenerator } from './programs/shader-generator.js'
  */
 
 /**

@@ -7,8 +7,8 @@ import { Component } from '../component.js';
 import { LayoutCalculator } from './layout-calculator.js';
 
 /**
- * @import {Entity} from '../../entity.js'
- * @import {LayoutGroupComponentSystem} from './system.js'
+ * @import { Entity } from '../../entity.js'
+ * @import { LayoutGroupComponentSystem } from './system.js'
  */
 
 function getElement(entity) {

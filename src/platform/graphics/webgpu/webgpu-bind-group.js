@@ -2,9 +2,9 @@ import { Debug, DebugHelper } from '../../../core/debug.js';
 import { WebgpuDebug } from './webgpu-debug.js';
 
 /**
- * @import {BindGroup} from '../bind-group.js'
- * @import {WebgpuGraphicsDevice} from './webgpu-graphics-device.js'
- * @import {WebgpuTexture} from './webgpu-texture.js'
+ * @import { BindGroup } from '../bind-group.js'
+ * @import { WebgpuGraphicsDevice } from './webgpu-graphics-device.js'
+ * @import { WebgpuTexture } from './webgpu-texture.js'
  */
 
 /**

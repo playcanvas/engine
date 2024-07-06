@@ -8,7 +8,7 @@ import { GlbParser } from '../parsers/glb-parser.js';
 import { ResourceHandler } from './handler.js';
 
 /**
- * @import {AppBase} from '../app-base.js'
+ * @import { AppBase } from '../app-base.js'
  */
 
 /**

@@ -3,7 +3,7 @@ import { ButtonComponent } from './component.js';
 import { ButtonComponentData } from './data.js';
 
 /**
- * @import {AppBase} from '../../app-base.js'
+ * @import { AppBase } from '../../app-base.js'
  */
 
 const _schema = [

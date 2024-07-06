@@ -4,10 +4,10 @@ import { GSplatResource } from './gsplat-resource.js';
 import { Mat4 } from '../../core/math/mat4.js';
 
 /**
- * @import {AssetRegistry} from '../asset/asset-registry.js'
- * @import {Asset} from '../asset/asset.js'
- * @import {GraphicsDevice} from '../../platform/graphics/graphics-device.js'
- * @import {ResourceHandlerCallback} from '../handlers/handler.js'
+ * @import { AssetRegistry } from '../asset/asset-registry.js'
+ * @import { Asset } from '../asset/asset.js'
+ * @import { GraphicsDevice } from '../../platform/graphics/graphics-device.js'
+ * @import { ResourceHandlerCallback } from '../handlers/handler.js'
  */
 
 /**

@@ -3,11 +3,11 @@ import { GlbContainerParser } from '../parsers/glb-container-parser.js';
 import { ResourceHandler } from './handler.js';
 
 /**
- * @import {AppBase} from '../app-base.js'
- * @import {Asset} from '../asset/asset.js'
- * @import {Entity} from '../entity.js'
- * @import {MeshInstance} from '../../scene/mesh-instance.js'
- * @import {ResourceHandlerCallback} from './handler.js'
+ * @import { AppBase } from '../app-base.js'
+ * @import { Asset } from '../asset/asset.js'
+ * @import { Entity } from '../entity.js'
+ * @import { MeshInstance } from '../../scene/mesh-instance.js'
+ * @import { ResourceHandlerCallback } from './handler.js'
  */
 
 /**

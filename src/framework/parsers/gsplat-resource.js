@@ -4,9 +4,9 @@ import { GSplat } from '../../scene/gsplat/gsplat.js';
 import { GSplatCompressed } from '../../scene/gsplat/gsplat-compressed.js';
 
 /**
- * @import {GSplatData} from '../../scene/gsplat/gsplat-data.js'
- * @import {GraphicsDevice} from '../../platform/graphics/graphics-device.js'
- * @import {SplatMaterialOptions} from '../../scene/gsplat/gsplat-material.js'
+ * @import { GSplatData } from '../../scene/gsplat/gsplat-data.js'
+ * @import { GraphicsDevice } from '../../platform/graphics/graphics-device.js'
+ * @import { SplatMaterialOptions } from '../../scene/gsplat/gsplat-material.js'
  */
 
 /**

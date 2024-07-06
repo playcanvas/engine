@@ -6,8 +6,8 @@ import { hasAudioContext } from './capabilities.js';
 import { Channel } from './channel.js';
 
 /**
- * @import {SoundManager} from '../sound/manager.js'
- * @import {Sound} from '../sound/sound.js'
+ * @import { SoundManager } from '../sound/manager.js'
+ * @import { Sound } from '../sound/sound.js'
  */
 
 // default maxDistance, same as Web Audio API

@@ -5,7 +5,7 @@ import { XRTYPE_AR, XRDEPTHSENSINGUSAGE_GPU, XRDEPTHSENSINGFORMAT_L8A8, XRDEPTHS
 import { PIXELFORMAT_LA8, PIXELFORMAT_R32F } from '../../platform/graphics/constants.js';
 
 /**
- * @import {XrManager} from './xr-manager.js'
+ * @import { XrManager } from './xr-manager.js'
  */
 
 /**

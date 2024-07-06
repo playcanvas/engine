@@ -6,7 +6,7 @@ import { Shader } from './shader.js';
 import { ShaderUtils } from './shader-utils.js';
 
 /**
- * @import {GraphicsDevice} from './graphics-device.js'
+ * @import { GraphicsDevice } from './graphics-device.js'
  */
 
 /**

@@ -3,9 +3,9 @@ import { BlendState } from '../../platform/graphics/blend-state.js';
 import { drawQuadWithShader } from './quad-render-utils.js';
 
 /**
- * @import {GraphicsDevice} from '../../platform/graphics/graphics-device.js'
- * @import {RenderTarget} from '../../platform/graphics/render-target.js'
- * @import {Shader} from '../../platform/graphics/shader.js'
+ * @import { GraphicsDevice } from '../../platform/graphics/graphics-device.js'
+ * @import { RenderTarget } from '../../platform/graphics/render-target.js'
+ * @import { Shader } from '../../platform/graphics/shader.js'
  */
 
 const _viewport = new Vec4();

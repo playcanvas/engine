@@ -1,9 +1,9 @@
 import { EventHandler } from '../../core/event-handler.js';
 
 /**
- * @import {AppBase} from '../app-base.js'
- * @import {AttributeSchema} from './script-attributes.js'
- * @import {ScriptType} from './script-type.js'
+ * @import { AppBase } from '../app-base.js'
+ * @import { AttributeSchema } from './script-attributes.js'
+ * @import { ScriptType } from './script-type.js'
  */
 
 /**

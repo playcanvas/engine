@@ -1,7 +1,7 @@
 import { getApplication } from './globals.js';
 
 /**
- * @import {AppBase} from './app-base.js'
+ * @import { AppBase } from './app-base.js'
  */
 
 /**

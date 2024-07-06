@@ -9,7 +9,7 @@ import {
 import { DeviceCache } from './device-cache.js';
 
 /**
- * @import {GraphicsDevice} from './graphics-device.js'
+ * @import { GraphicsDevice } from './graphics-device.js'
  */
 
 const stringIds = new StringIds();

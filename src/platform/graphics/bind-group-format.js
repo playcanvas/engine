@@ -7,8 +7,8 @@ import {
 import { DebugGraphics } from './debug-graphics.js';
 
 /**
- * @import {GraphicsDevice} from './graphics-device.js'
- * @import {ScopeId} from './scope-id.js'
+ * @import { GraphicsDevice } from './graphics-device.js'
+ * @import { ScopeId } from './scope-id.js'
  */
 
 let id = 0;

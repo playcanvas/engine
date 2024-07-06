@@ -17,7 +17,7 @@ import { BlendState } from '../../platform/graphics/blend-state.js';
 import { drawQuadWithShader } from './quad-render-utils.js';
 
 /**
- * @import {Vec4} from '../../core/math/vec4.js'
+ * @import { Vec4 } from '../../core/math/vec4.js'
  */
 
 const getProjectionName = (projection) => {

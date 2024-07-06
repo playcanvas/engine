@@ -4,8 +4,8 @@ import { Quat } from '../../core/math/quat.js';
 import { Vec3 } from '../../core/math/vec3.js';
 
 /**
- * @import {XrFinger} from './xr-finger.js'
- * @import {XrHand} from './xr-hand.js'
+ * @import { XrFinger } from './xr-finger.js'
+ * @import { XrHand } from './xr-hand.js'
  */
 
 const tipJointIds = platform.browser && window.XRHand ? [

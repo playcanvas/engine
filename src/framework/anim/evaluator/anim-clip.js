@@ -1,8 +1,8 @@
 import { AnimSnapshot } from './anim-snapshot.js';
 
 /**
- * @import {AnimTrack} from './anim-track.js'
- * @import {EventHandler} from '../../../core/event-handler.js'
+ * @import { AnimTrack } from './anim-track.js'
+ * @import { EventHandler } from '../../../core/event-handler.js'
  */
 
 // TODO: add configurable looping start/end times?

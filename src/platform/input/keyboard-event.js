@@ -1,5 +1,5 @@
 /**
- * @import {Keyboard} from './keyboard.js'
+ * @import { Keyboard } from './keyboard.js'
  */
 
 /**

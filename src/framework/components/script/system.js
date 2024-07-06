@@ -4,7 +4,7 @@ import { ScriptComponent } from './component.js';
 import { ScriptComponentData } from './data.js';
 
 /**
- * @import {AppBase} from '../../app-base.js'
+ * @import { AppBase } from '../../app-base.js'
  */
 
 const METHOD_INITIALIZE_ATTRIBUTES = '_onInitializeAttributes';

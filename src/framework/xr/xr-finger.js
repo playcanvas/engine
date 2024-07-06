@@ -1,6 +1,6 @@
 /**
- * @import {XrHand} from './xr-hand.js'
- * @import {XrJoint} from './xr-joint.js'
+ * @import { XrHand } from './xr-hand.js'
+ * @import { XrJoint } from './xr-joint.js'
  */
 
 /**

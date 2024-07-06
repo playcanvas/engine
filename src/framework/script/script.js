@@ -3,8 +3,8 @@ import { EventHandler } from '../../core/event-handler.js';
 import { SCRIPT_INITIALIZE, SCRIPT_POST_INITIALIZE } from './constants.js';
 
 /**
- * @import {AppBase} from '../app-base.js'
- * @import {Entity} from '../entity.js'
+ * @import { AppBase } from '../app-base.js'
+ * @import { Entity } from '../entity.js'
  */
 
 /**

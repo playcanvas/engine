@@ -3,7 +3,7 @@ import { RenderPass } from '../../platform/graphics/render-pass.js';
 import { SHADER_FORWARD } from '../../scene/constants.js';
 
 /**
- * @import {BindGroup} from '../../platform/graphics/bind-group.js'
+ * @import { BindGroup } from '../../platform/graphics/bind-group.js'
  */
 
 /**

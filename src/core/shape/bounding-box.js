@@ -1,9 +1,9 @@
 import { Vec3 } from '../math/vec3.js';
 
 /**
- * @import {BoundingSphere} from './bounding-sphere.js'
- * @import {Mat4} from '../math/mat4.js'
- * @import {Ray} from './ray.js'
+ * @import { BoundingSphere } from './bounding-sphere.js'
+ * @import { Mat4 } from '../math/mat4.js'
+ * @import { Ray } from './ray.js'
  */
 
 const tmpVecA = new Vec3();

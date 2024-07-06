@@ -5,7 +5,7 @@ import {
 } from './constants.js';
 
 /**
- * @import {GraphicsDevice} from '../platform/graphics/graphics-device.js'
+ * @import { GraphicsDevice } from '../platform/graphics/graphics-device.js'
  */
 
 // device cache storing shader pass data per device

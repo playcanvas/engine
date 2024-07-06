@@ -5,8 +5,8 @@ import { WebgpuUtils } from './webgpu-utils.js';
 import { gpuTextureFormats } from './constants.js';
 
 /**
- * @import {BindGroupFormat} from '../bind-group-format.js'
- * @import {WebgpuGraphicsDevice} from './webgpu-graphics-device.js'
+ * @import { BindGroupFormat } from '../bind-group-format.js'
+ * @import { WebgpuGraphicsDevice } from './webgpu-graphics-device.js'
  */
 
 const samplerTypes = [];

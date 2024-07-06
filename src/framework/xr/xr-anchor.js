@@ -3,7 +3,7 @@ import { Vec3 } from '../../core/math/vec3.js';
 import { Quat } from '../../core/math/quat.js';
 
 /**
- * @import {XrAnchors} from './xr-anchors.js'
+ * @import { XrAnchors } from './xr-anchors.js'
  */
 
 /**

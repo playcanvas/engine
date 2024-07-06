@@ -2,9 +2,9 @@ import { Debug } from '../../core/debug.js';
 import { typedArrayTypes } from './constants.js';
 
 /**
- * @import {ScopeId} from './scope-id.js'
- * @import {VertexBuffer} from './vertex-buffer.js'
- * @import {VertexFormat} from './vertex-format.js'
+ * @import { ScopeId } from './scope-id.js'
+ * @import { VertexBuffer } from './vertex-buffer.js'
+ * @import { VertexFormat } from './vertex-format.js'
  */
 
 function set1(a) {

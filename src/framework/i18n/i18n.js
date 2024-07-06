@@ -5,7 +5,7 @@ import { findAvailableLocale, getLang, getPluralFn, replaceLang } from './utils.
 import { I18nParser } from './i18n-parser.js';
 
 /**
- * @import {AppBase} from '../app-base.js'
+ * @import { AppBase } from '../app-base.js'
  */
 
 /**

@@ -4,9 +4,9 @@ import { Color } from '../../core/math/color.js';
 import { TRACEID_RENDER_PASS, TRACEID_RENDER_PASS_DETAIL } from '../../core/constants.js';
 
 /**
- * @import {GraphicsDevice} from '../graphics/graphics-device.js'
- * @import {RenderTarget} from '../graphics/render-target.js'
- * @import {Texture} from './texture.js'
+ * @import { GraphicsDevice } from '../graphics/graphics-device.js'
+ * @import { RenderTarget } from '../graphics/render-target.js'
+ * @import { Texture } from './texture.js'
  */
 
 class ColorAttachmentOps {

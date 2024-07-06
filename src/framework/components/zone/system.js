@@ -5,7 +5,7 @@ import { ZoneComponent } from './component.js';
 import { ZoneComponentData } from './data.js';
 
 /**
- * @import {AppBase} from '../../app-base.js'
+ * @import { AppBase } from '../../app-base.js'
  */
 
 const _schema = ['enabled'];

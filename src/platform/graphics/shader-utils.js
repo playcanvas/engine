@@ -11,7 +11,7 @@ import webgpuVS from './shader-chunks/vert/webgpu.js';
 import sharedFS from './shader-chunks/frag/shared.js';
 
 /**
- * @import {GraphicsDevice} from './graphics-device.js'
+ * @import { GraphicsDevice } from './graphics-device.js'
  */
 
 const _attrib2Semantic = {

@@ -1,5 +1,5 @@
 /**
- * @import {AnimTarget} from '../evaluator/anim-target.js'
+ * @import { AnimTarget } from '../evaluator/anim-target.js'
  */
 
 /**

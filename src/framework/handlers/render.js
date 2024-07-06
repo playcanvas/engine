@@ -2,7 +2,7 @@ import { Render } from '../../scene/render.js';
 import { ResourceHandler } from './handler.js';
 
 /**
- * @import {AppBase} from '../app-base.js'
+ * @import { AppBase } from '../app-base.js'
  */
 
 // The scope of this function is the render asset

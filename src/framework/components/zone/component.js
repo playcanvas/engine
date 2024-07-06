@@ -2,8 +2,8 @@ import { Vec3 } from '../../../core/math/vec3.js';
 import { Component } from '../component.js';
 
 /**
- * @import {Entity} from '../../entity.js'
- * @import {ZoneComponentSystem} from './system.js'
+ * @import { Entity } from '../../entity.js'
+ * @import { ZoneComponentSystem } from './system.js'
  */
 
 /**

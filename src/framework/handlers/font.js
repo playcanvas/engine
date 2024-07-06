@@ -5,7 +5,7 @@ import { Font } from '../font/font.js';
 import { ResourceHandler } from './handler.js';
 
 /**
- * @import {AppBase} from '../app-base.js'
+ * @import { AppBase } from '../app-base.js'
  */
 
 function upgradeDataSchema(data) {

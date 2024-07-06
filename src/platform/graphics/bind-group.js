@@ -4,11 +4,11 @@ import { UNIFORM_BUFFER_DEFAULT_SLOT_NAME } from './constants.js';
 import { DebugGraphics } from './debug-graphics.js';
 
 /**
- * @import {BindGroupFormat} from './bind-group-format.js'
- * @import {GraphicsDevice} from './graphics-device.js'
- * @import {StorageBuffer} from './storage-buffer.js'
- * @import {Texture} from './texture.js'
- * @import {UniformBuffer} from './uniform-buffer.js'
+ * @import { BindGroupFormat } from './bind-group-format.js'
+ * @import { GraphicsDevice } from './graphics-device.js'
+ * @import { StorageBuffer } from './storage-buffer.js'
+ * @import { Texture } from './texture.js'
+ * @import { UniformBuffer } from './uniform-buffer.js'
  */
 
 let id = 0;

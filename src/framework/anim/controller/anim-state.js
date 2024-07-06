@@ -10,7 +10,7 @@ import { AnimBlendTreeDirect } from './anim-blend-tree-direct.js';
 import { AnimNode } from './anim-node.js';
 
 /**
- * @import {AnimController} from './anim-controller.js'
+ * @import { AnimController } from './anim-controller.js'
  */
 
 /**

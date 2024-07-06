@@ -1,11 +1,11 @@
 import { Debug } from '../../core/debug.js';
 
 /**
- * @import {AppBase} from '../app-base.js'
- * @import {AssetRegistry} from '../asset/asset-registry.js'
- * @import {Asset} from '../asset/asset.js'
- * @import {BundlesFilterCallback} from '../asset/asset-registry.js'
- * @import {ResourceHandler} from './handler.js'
+ * @import { AppBase } from '../app-base.js'
+ * @import { AssetRegistry } from '../asset/asset-registry.js'
+ * @import { Asset } from '../asset/asset.js'
+ * @import { BundlesFilterCallback } from '../asset/asset-registry.js'
+ * @import { ResourceHandler } from './handler.js'
  */
 
 /**

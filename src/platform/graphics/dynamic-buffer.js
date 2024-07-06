@@ -4,7 +4,7 @@ import { BindGroup } from './bind-group.js';
 import { SHADERSTAGE_FRAGMENT, SHADERSTAGE_VERTEX, UNIFORM_BUFFER_DEFAULT_SLOT_NAME } from './constants.js';
 
 /**
- * @import {GraphicsDevice} from './graphics-device.js'
+ * @import { GraphicsDevice } from './graphics-device.js'
  */
 
 /**

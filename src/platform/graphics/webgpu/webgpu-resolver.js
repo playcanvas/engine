@@ -4,8 +4,8 @@ import { Debug, DebugHelper } from "../../../core/debug.js";
 import { DebugGraphics } from "../debug-graphics.js";
 
 /**
- * @import {WebgpuGraphicsDevice} from './webgpu-graphics-device.js'
- * @import {WebgpuShader} from './webgpu-shader.js'
+ * @import { WebgpuGraphicsDevice } from './webgpu-graphics-device.js'
+ * @import { WebgpuShader } from './webgpu-shader.js'
  */
 
 /**

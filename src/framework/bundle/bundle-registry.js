@@ -1,6 +1,6 @@
 /**
- * @import {Asset} from '../asset/asset.js'
- * @import {AssetRegistry} from '../asset/asset-registry.js'
+ * @import { Asset } from '../asset/asset.js'
+ * @import { AssetRegistry } from '../asset/asset-registry.js'
  */
 
 /**

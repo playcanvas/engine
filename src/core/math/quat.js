@@ -2,7 +2,7 @@ import { math } from './math.js';
 import { Vec3 } from './vec3.js';
 
 /**
- * @import {Mat4} from './mat4.js'
+ * @import { Mat4 } from './mat4.js'
  */
 
 /**

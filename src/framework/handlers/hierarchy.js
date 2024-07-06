@@ -3,7 +3,7 @@ import { SceneUtils } from './scene-utils.js';
 import { ResourceHandler } from './handler.js';
 
 /**
- * @import {AppBase} from '../app-base.js'
+ * @import { AppBase } from '../app-base.js'
  */
 
 class HierarchyHandler extends ResourceHandler {

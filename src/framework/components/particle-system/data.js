@@ -2,11 +2,11 @@ import { Vec3 } from '../../../core/math/vec3.js';
 import { BLEND_NORMAL, EMITTERSHAPE_BOX, LAYERID_WORLD, PARTICLEMODE_GPU, PARTICLEORIENTATION_SCREEN } from '../../../scene/constants.js';
 
 /**
- * @import {Asset} from '../../../framework/asset/asset.js'
- * @import {CurveSet} from '../../../core/math/curve-set.js'
- * @import {Curve} from '../../../core/math/curve.js'
- * @import {Mesh} from '../../../scene/mesh.js'
- * @import {Texture} from '../../../platform/graphics/texture.js'
+ * @import { Asset } from '../../../framework/asset/asset.js'
+ * @import { CurveSet } from '../../../core/math/curve-set.js'
+ * @import { Curve } from '../../../core/math/curve.js'
+ * @import { Mesh } from '../../../scene/mesh.js'
+ * @import { Texture } from '../../../platform/graphics/texture.js'
  */
 
 class ParticleSystemComponentData {

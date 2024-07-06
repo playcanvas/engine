@@ -3,7 +3,7 @@ import { EventHandler } from '../../core/event-handler.js';
 import { XrPlane } from './xr-plane.js';
 
 /**
- * @import {XrManager} from './xr-manager.js'
+ * @import { XrManager } from './xr-manager.js'
  */
 
 /**

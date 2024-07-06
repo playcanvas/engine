@@ -10,11 +10,11 @@ import { ShadowMap } from './shadow-map.js';
 import { RenderPassShadowDirectional } from './render-pass-shadow-directional.js';
 
 /**
- * @import {Camera} from '../camera.js'
- * @import {GraphicsDevice} from '../../platform/graphics/graphics-device.js'
- * @import {Light} from '../light.js'
- * @import {Renderer} from './renderer.js'
- * @import {ShadowRenderer} from './shadow-renderer.js'
+ * @import { Camera } from '../camera.js'
+ * @import { GraphicsDevice } from '../../platform/graphics/graphics-device.js'
+ * @import { Light } from '../light.js'
+ * @import { Renderer } from './renderer.js'
+ * @import { ShadowRenderer } from './shadow-renderer.js'
  */
 
 const visibleSceneAabb = new BoundingBox();

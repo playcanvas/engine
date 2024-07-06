@@ -56,12 +56,12 @@ import { TextureHandler } from './handlers/texture.js';
 import { XrManager } from './xr/xr-manager.js';
 
 /**
- * @import {ElementInput} from './input/element-input.js'
- * @import {GamePads} from '../platform/input/game-pads.js'
- * @import {GraphicsDevice} from '../platform/graphics/graphics-device.js'
- * @import {Keyboard} from '../platform/input/keyboard.js'
- * @import {Mouse} from '../platform/input/mouse.js'
- * @import {TouchDevice} from '../platform/input/touch-device.js'
+ * @import { ElementInput } from './input/element-input.js'
+ * @import { GamePads } from '../platform/input/game-pads.js'
+ * @import { GraphicsDevice } from '../platform/graphics/graphics-device.js'
+ * @import { Keyboard } from '../platform/input/keyboard.js'
+ * @import { Mouse } from '../platform/input/mouse.js'
+ * @import { TouchDevice } from '../platform/input/touch-device.js'
  */
 
 /**

@@ -6,8 +6,8 @@ import { RenderPass } from "../../platform/graphics/render-pass.js";
 import { createShaderFromCode } from "../shader-lib/utils.js";
 
 /**
- * @import {Shader} from '../../platform/graphics/shader.js'
- * @import {StencilParameters} from '../../platform/graphics/stencil-parameters.js'
+ * @import { Shader } from '../../platform/graphics/shader.js'
+ * @import { StencilParameters } from '../../platform/graphics/stencil-parameters.js'
  */
 
 /**

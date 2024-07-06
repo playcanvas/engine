@@ -4,7 +4,7 @@ import { Vec3 } from './vec3.js';
 import { Vec4 } from './vec4.js';
 
 /**
- * @import {Quat} from './quat.js'
+ * @import { Quat } from './quat.js'
  */
 
 const _halfSize = new Vec2();

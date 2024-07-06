@@ -3,7 +3,7 @@ import { platform } from '../../core/platform.js';
 import { XrInputSource } from './xr-input-source.js';
 
 /**
- * @import {XrManager} from './xr-manager.js'
+ * @import { XrManager } from './xr-manager.js'
  */
 
 /**

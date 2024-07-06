@@ -7,10 +7,10 @@ import { XrHand } from './xr-hand.js';
 import { now } from '../../core/time.js';
 
 /**
- * @import {Entity} from '../entity.js'
- * @import {XrHitTestSource} from './xr-hit-test-source.js'
- * @import {XrHitTestStartCallback} from './xr-hit-test.js'
- * @import {XrManager} from './xr-manager.js'
+ * @import { Entity } from '../entity.js'
+ * @import { XrHitTestSource } from './xr-hit-test-source.js'
+ * @import { XrHitTestStartCallback } from './xr-hit-test.js'
+ * @import { XrManager } from './xr-manager.js'
  */
 
 const vec3A = new Vec3();

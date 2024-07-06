@@ -1,8 +1,8 @@
 import { AnimNode } from './anim-node.js';
 
 /**
- * @import {AnimState} from './anim-state.js'
- * @import {Vec2} from '../../../core/math/vec2.js'
+ * @import { AnimState } from './anim-state.js'
+ * @import { Vec2 } from '../../../core/math/vec2.js'
  */
 
 /**

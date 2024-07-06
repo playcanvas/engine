@@ -8,8 +8,8 @@ import { getApplication } from '../globals.js';
 import { http } from '../../platform/net/http.js';
 
 /**
- * @import {AssetRegistry} from './asset-registry.js'
- * @import {ResourceLoaderCallback} from '../handlers/loader.js'
+ * @import { AssetRegistry } from './asset-registry.js'
+ * @import { ResourceLoaderCallback } from '../handlers/loader.js'
  */
 
 // auto incrementing number for asset ids

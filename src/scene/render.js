@@ -1,7 +1,7 @@
 import { EventHandler } from '../core/event-handler.js';
 
 /**
- * @import {Mesh} from './mesh.js'
+ * @import { Mesh } from './mesh.js'
  */
 
 /**

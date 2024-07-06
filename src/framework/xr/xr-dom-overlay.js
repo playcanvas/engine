@@ -1,7 +1,7 @@
 import { platform } from '../../core/platform.js';
 
 /**
- * @import {XrManager} from './xr-manager.js'
+ * @import { XrManager } from './xr-manager.js'
  */
 
 /**

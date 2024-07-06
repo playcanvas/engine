@@ -7,7 +7,7 @@ import { ResourceHandler } from './handler.js';
 import { Script } from '../script/script.js';
 
 /**
- * @import {AppBase} from '../app-base.js'
+ * @import { AppBase } from '../app-base.js'
  */
 
 const toLowerCamelCase = str => str[0].toLowerCase() + str.substring(1);

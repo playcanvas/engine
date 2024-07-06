@@ -7,7 +7,7 @@ import { Asset } from '../asset/asset.js';
 import { ResourceHandler } from './handler.js';
 
 /**
- * @import {AppBase} from '../app-base.js'
+ * @import { AppBase } from '../app-base.js'
  */
 
 /**

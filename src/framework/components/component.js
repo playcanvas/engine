@@ -1,8 +1,8 @@
 import { EventHandler } from '../../core/event-handler.js';
 
 /**
- * @import {ComponentSystem} from './system.js'
- * @import {Entity} from '../entity.js'
+ * @import { ComponentSystem } from './system.js'
+ * @import { Entity } from '../entity.js'
  */
 
 /**

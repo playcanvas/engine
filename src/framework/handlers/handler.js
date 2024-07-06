@@ -1,7 +1,7 @@
 /**
- * @import {AppBase} from '../app-base.js'
- * @import {AssetRegistry} from '../asset/asset-registry.js'
- * @import {Asset} from '../asset/asset.js'
+ * @import { AppBase } from '../app-base.js'
+ * @import { AssetRegistry } from '../asset/asset-registry.js'
+ * @import { Asset } from '../asset/asset.js'
  */
 
 /**

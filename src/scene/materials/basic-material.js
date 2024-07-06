@@ -10,9 +10,9 @@ import { basic } from '../shader-lib/programs/basic.js';
 import { Material } from './material.js';
 
 /**
- * @import {GraphicsDevice} from '../../platform/graphics/graphics-device.js'
- * @import {Scene} from '../scene.js'
- * @import {Texture} from '../../platform/graphics/texture.js'
+ * @import { GraphicsDevice } from '../../platform/graphics/graphics-device.js'
+ * @import { Scene } from '../scene.js'
+ * @import { Texture } from '../../platform/graphics/texture.js'
  */
 
 /**

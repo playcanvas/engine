@@ -6,7 +6,7 @@ import { LayoutGroupComponent } from './component.js';
 import { LayoutGroupComponentData } from './data.js';
 
 /**
- * @import {AppBase} from '../../app-base.js'
+ * @import { AppBase } from '../../app-base.js'
  */
 
 const _schema = ['enabled'];

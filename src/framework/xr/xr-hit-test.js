@@ -4,9 +4,9 @@ import { XRSPACE_VIEWER } from './constants.js';
 import { XrHitTestSource } from './xr-hit-test-source.js';
 
 /**
- * @import {Ray} from '../../core/shape/ray.js'
- * @import {XrInputSource} from './xr-input-source.js'
- * @import {XrManager} from './xr-manager.js'
+ * @import { Ray } from '../../core/shape/ray.js'
+ * @import { XrInputSource } from './xr-input-source.js'
+ * @import { XrManager } from './xr-manager.js'
  */
 
 /**

@@ -10,8 +10,8 @@ import { WordAtlas } from './word-atlas.js';
 import { Render2d } from './render2d.js';
 
 /**
- * @import {AppBase} from '../../framework/app-base.js'
- * @import {GraphicsDevice} from '../../platform/graphics/graphics-device.js'
+ * @import { AppBase } from '../../framework/app-base.js'
+ * @import { GraphicsDevice } from '../../platform/graphics/graphics-device.js'
  */
 
 /**

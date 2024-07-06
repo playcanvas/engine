@@ -5,7 +5,7 @@ import { AnimComponent } from './component.js';
 import { AnimComponentData } from './data.js';
 
 /**
- * @import {AppBase} from '../../app-base.js'
+ * @import { AppBase } from '../../app-base.js'
  */
 
 const _schema = [

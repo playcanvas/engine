@@ -12,9 +12,9 @@ import { RenderPassColorGrab } from './graphics/render-pass-color-grab.js';
 import { RenderPassDepthGrab } from './graphics/render-pass-depth-grab.js';
 
 /**
- * @import {RenderPass} from '../platform/graphics/render-pass.js'
- * @import {RenderingParams} from './renderer/rendering-params.js'
- * @import {ShaderPassInfo} from './shader-pass.js'
+ * @import { RenderPass } from '../platform/graphics/render-pass.js'
+ * @import { RenderingParams } from './renderer/rendering-params.js'
+ * @import { ShaderPassInfo } from './shader-pass.js'
  */
 
 // pre-allocated temp variables

@@ -6,7 +6,7 @@ import { SCALEMODE_BLEND, SCALEMODE_NONE } from './constants.js';
 import { Component } from '../component.js';
 
 /**
- * @import {ScreenComponentSystem} from './system.js'
+ * @import { ScreenComponentSystem } from './system.js'
  */
 
 const _transform = new Mat4();

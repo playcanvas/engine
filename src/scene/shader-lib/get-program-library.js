@@ -2,8 +2,8 @@ import { Debug } from '../../core/debug.js';
 import { DeviceCache } from '../../platform/graphics/device-cache.js';
 
 /**
- * @import {GraphicsDevice} from '../../platform/graphics/graphics-device.js'
- * @import {ProgramLibrary} from './program-library.js'
+ * @import { GraphicsDevice } from '../../platform/graphics/graphics-device.js'
+ * @import { ProgramLibrary } from './program-library.js'
  */
 
 // Device cache storing a program library

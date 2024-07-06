@@ -16,11 +16,11 @@ import {
 } from './default-colors.js';
 
 /**
- * @import {AppBase} from '../../framework/app-base.js'
- * @import {AxisShape } from './axis-shapes.js'
- * @import {CameraComponent} from '../../framework/components/camera/component.js'
- * @import {Layer} from '../../scene/layer.js'
- * @import {MeshInstance} from '../../scene/mesh-instance.js'
+ * @import { AppBase } from '../../framework/app-base.js'
+ * @import { AxisShape } from './axis-shapes.js'
+ * @import { CameraComponent } from '../../framework/components/camera/component.js'
+ * @import { Layer } from '../../scene/layer.js'
+ * @import { MeshInstance } from '../../scene/mesh-instance.js'
  */
 
 // temporary variables

@@ -2,8 +2,8 @@ import { math } from '../../core/math/math.js';
 import { hasAudioContext } from './capabilities.js';
 
 /**
- * @import {SoundManager} from '../sound/manager.js'
- * @import {Sound} from '../sound/sound.js'
+ * @import { SoundManager } from '../sound/manager.js'
+ * @import { Sound } from '../sound/sound.js'
  */
 
 /**

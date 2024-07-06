@@ -1,11 +1,11 @@
 /**
- * @import {GraphicsDevice} from './graphics-device.js'
- * @import {IndexBuffer} from './index-buffer.js'
- * @import {ScopeId} from './scope-id.js'
- * @import {Shader} from './shader.js'
- * @import {StorageBuffer} from './storage-buffer.js'
- * @import {Texture} from './texture.js'
- * @import {VertexBuffer} from './vertex-buffer.js'
+ * @import { GraphicsDevice } from './graphics-device.js'
+ * @import { IndexBuffer } from './index-buffer.js'
+ * @import { ScopeId } from './scope-id.js'
+ * @import { Shader } from './shader.js'
+ * @import { StorageBuffer } from './storage-buffer.js'
+ * @import { Texture } from './texture.js'
+ * @import { VertexBuffer } from './vertex-buffer.js'
  */
 
 /**

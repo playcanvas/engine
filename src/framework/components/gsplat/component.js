@@ -4,12 +4,12 @@ import { AssetReference } from '../../asset/asset-reference.js';
 import { Component } from '../component.js';
 
 /**
- * @import {BoundingBox} from '../../../core/shape/bounding-box.js'
- * @import {Entity} from '../../entity.js'
- * @import {GSplatComponentSystem} from './system.js'
- * @import {GSplatInstance} from '../../../scene/gsplat/gsplat-instance.js'
- * @import {Material} from '../../../scene/materials/material.js'
- * @import {SplatMaterialOptions} from '../../../scene/gsplat/gsplat-material.js'
+ * @import { BoundingBox } from '../../../core/shape/bounding-box.js'
+ * @import { Entity } from '../../entity.js'
+ * @import { GSplatComponentSystem } from './system.js'
+ * @import { GSplatInstance } from '../../../scene/gsplat/gsplat-instance.js'
+ * @import { Material } from '../../../scene/materials/material.js'
+ * @import { SplatMaterialOptions } from '../../../scene/gsplat/gsplat-material.js'
  */
 
 /**

@@ -7,8 +7,8 @@ import { Component } from '../component.js';
 import { MOTION_FREE, MOTION_LIMITED, MOTION_LOCKED } from './constants.js';
 
 /**
- * @import {Entity} from '../../entity.js'
- * @import {JointComponentSystem} from './system.js'
+ * @import { Entity } from '../../entity.js'
+ * @import { JointComponentSystem } from './system.js'
  */
 
 const properties = [

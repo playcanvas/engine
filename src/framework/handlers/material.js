@@ -7,7 +7,7 @@ import { JsonStandardMaterialParser } from '../parsers/material/json-standard-ma
 import { ResourceHandler } from './handler.js';
 
 /**
- * @import {AppBase} from '../app-base.js'
+ * @import { AppBase } from '../app-base.js'
  */
 
 const PLACEHOLDER_MAP = {

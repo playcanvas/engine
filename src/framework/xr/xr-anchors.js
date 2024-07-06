@@ -3,10 +3,10 @@ import { platform } from '../../core/platform.js';
 import { XrAnchor } from './xr-anchor.js';
 
 /**
- * @import {Quat} from '../../core/math/quat.js'
- * @import {Vec3} from '../../core/math/vec3.js'
- * @import {XrAnchorForgetCallback} from './xr-anchor.js'
- * @import {XrManager} from './xr-manager.js'
+ * @import { Quat } from '../../core/math/quat.js'
+ * @import { Vec3 } from '../../core/math/vec3.js'
+ * @import { XrAnchorForgetCallback } from './xr-anchor.js'
+ * @import { XrManager } from './xr-manager.js'
  */
 
 /**

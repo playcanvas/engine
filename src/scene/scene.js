@@ -15,11 +15,11 @@ import { EnvLighting } from './graphics/env-lighting.js';
 import { RenderingParams } from './renderer/rendering-params.js';
 
 /**
- * @import {Entity} from '../framework/entity.js'
- * @import {GraphicsDevice} from '../platform/graphics/graphics-device.js'
- * @import {LayerComposition} from './composition/layer-composition.js'
- * @import {Layer} from './layer.js'
- * @import {Texture} from '../platform/graphics/texture.js'
+ * @import { Entity } from '../framework/entity.js'
+ * @import { GraphicsDevice } from '../platform/graphics/graphics-device.js'
+ * @import { LayerComposition } from './composition/layer-composition.js'
+ * @import { Layer } from './layer.js'
+ * @import { Texture } from '../platform/graphics/texture.js'
  */
 
 /**

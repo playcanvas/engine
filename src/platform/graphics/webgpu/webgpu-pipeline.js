@@ -2,8 +2,8 @@ import { TRACEID_PIPELINELAYOUT_ALLOC } from '../../../core/constants.js';
 import { Debug, DebugHelper } from '../../../core/debug.js';
 
 /**
- * @import {BindGroupFormat} from '../bind-group-format.js'
- * @import {WebgpuGraphicsDevice} from './webgpu-graphics-device.js'
+ * @import { BindGroupFormat } from '../bind-group-format.js'
+ * @import { WebgpuGraphicsDevice } from './webgpu-graphics-device.js'
  */
 
 let _layoutId = 0;

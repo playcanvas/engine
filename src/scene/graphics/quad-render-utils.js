@@ -4,10 +4,10 @@ import { QuadRender } from './quad-render.js';
 import { RenderPassQuad } from './render-pass-quad.js';
 
 /**
- * @import {GraphicsDevice} from '../../platform/graphics/graphics-device.js'
- * @import {RenderTarget} from '../../platform/graphics/render-target.js'
- * @import {Shader} from '../../platform/graphics/shader.js'
- * @import {Texture} from '../../platform/graphics/texture.js'
+ * @import { GraphicsDevice } from '../../platform/graphics/graphics-device.js'
+ * @import { RenderTarget } from '../../platform/graphics/render-target.js'
+ * @import { Shader } from '../../platform/graphics/shader.js'
+ * @import { Texture } from '../../platform/graphics/texture.js'
  */
 
 const _tempRect = new Vec4();

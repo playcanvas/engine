@@ -54,20 +54,20 @@ import { ApplicationStats } from './stats.js';
 import { getApplication, setApplication } from './globals.js';
 
 /**
- * @import {AppOptions} from './app-options.js'
- * @import {BatchManager} from '../scene/batching/batch-manager.js'
- * @import {ElementInput} from './input/element-input.js'
- * @import {GamePads} from '../platform/input/game-pads.js'
- * @import {GraphicsDevice} from '../platform/graphics/graphics-device.js'
- * @import {Keyboard} from '../platform/input/keyboard.js'
- * @import {Lightmapper} from './lightmapper/lightmapper.js'
- * @import {MeshInstance} from '../scene/mesh-instance.js'
- * @import {Mesh} from '../scene/mesh.js'
- * @import {Mouse} from '../platform/input/mouse.js'
- * @import {SoundManager} from '../platform/sound/manager.js'
- * @import {Texture} from '../platform/graphics/texture.js'
- * @import {TouchDevice} from '../platform/input/touch-device.js'
- * @import {XrManager} from './xr/xr-manager.js'
+ * @import { AppOptions } from './app-options.js'
+ * @import { BatchManager } from '../scene/batching/batch-manager.js'
+ * @import { ElementInput } from './input/element-input.js'
+ * @import { GamePads } from '../platform/input/game-pads.js'
+ * @import { GraphicsDevice } from '../platform/graphics/graphics-device.js'
+ * @import { Keyboard } from '../platform/input/keyboard.js'
+ * @import { Lightmapper } from './lightmapper/lightmapper.js'
+ * @import { MeshInstance } from '../scene/mesh-instance.js'
+ * @import { Mesh } from '../scene/mesh.js'
+ * @import { Mouse } from '../platform/input/mouse.js'
+ * @import { SoundManager } from '../platform/sound/manager.js'
+ * @import { Texture } from '../platform/graphics/texture.js'
+ * @import { TouchDevice } from '../platform/input/touch-device.js'
+ * @import { XrManager } from './xr/xr-manager.js'
  */
 
 // Mini-object used to measure progress of loading sets

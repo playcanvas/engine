@@ -3,7 +3,7 @@ import { Vec3 } from "../../core/math/vec3.js";
 import { Quat } from "../../core/math/quat.js";
 
 /**
- * @import {XrMeshDetection} from './xr-mesh-detection.js'
+ * @import { XrMeshDetection } from './xr-mesh-detection.js'
  */
 
 /**

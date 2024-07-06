@@ -16,10 +16,10 @@ import { SPRITETYPE_SIMPLE, SPRITETYPE_ANIMATED } from './constants.js';
 import { SpriteAnimationClip } from './sprite-animation-clip.js';
 
 /**
- * @import {Asset} from '../../asset/asset.js'
- * @import {Entity} from '../../entity.js'
- * @import {SpriteComponentSystem} from './system.js'
- * @import {Sprite} from '../../../scene/sprite.js'
+ * @import { Asset } from '../../asset/asset.js'
+ * @import { Entity } from '../../entity.js'
+ * @import { SpriteComponentSystem } from './system.js'
+ * @import { Sprite } from '../../../scene/sprite.js'
  */
 
 const PARAM_EMISSIVE_MAP = 'texture_emissiveMap';

@@ -19,10 +19,10 @@ import { processShader } from '../shader-lib/utils.js';
 import { getDefaultMaterial } from './default-material.js';
 
 /**
- * @import {MeshInstance} from '../mesh-instance.js'
- * @import {Shader} from '../../platform/graphics/shader.js'
- * @import {StencilParameters} from '../../platform/graphics/stencil-parameters.js'
- * @import {Texture} from '../../platform/graphics/texture.js'
+ * @import { MeshInstance } from '../mesh-instance.js'
+ * @import { Shader } from '../../platform/graphics/shader.js'
+ * @import { StencilParameters } from '../../platform/graphics/stencil-parameters.js'
+ * @import { Texture } from '../../platform/graphics/texture.js'
  */
 
 // blend mode mapping to op, srcBlend and dstBlend

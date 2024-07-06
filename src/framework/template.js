@@ -1,8 +1,8 @@
 import { SceneParser } from './parsers/scene.js';
 
 /**
- * @import {AppBase} from './app-base.js'
- * @import {Entity} from './entity.js'
+ * @import { AppBase } from './app-base.js'
+ * @import { Entity } from './entity.js'
  */
 
 /**

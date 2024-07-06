@@ -4,9 +4,9 @@ import { Component } from '../component.js';
 import { SoundSlot } from './slot.js';
 
 /**
- * @import {Entity} from '../../entity.js'
- * @import {SoundComponentSystem} from './system.js'
- * @import {SoundInstance} from '../../../platform/sound/instance.js'
+ * @import { Entity } from '../../entity.js'
+ * @import { SoundComponentSystem } from './system.js'
+ * @import { SoundInstance } from '../../../platform/sound/instance.js'
  */
 
 /**

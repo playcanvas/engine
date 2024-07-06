@@ -26,8 +26,8 @@ import { ShaderGenerator } from './shader-generator.js';
 import { Debug } from '../../../core/debug.js';
 
 /**
- * @import {GraphicsDevice} from '../../../platform/graphics/graphics-device.js'
- * @import {LitShaderOptions} from './lit-shader-options.js'
+ * @import { GraphicsDevice } from '../../../platform/graphics/graphics-device.js'
+ * @import { LitShaderOptions } from './lit-shader-options.js'
  */
 
 const builtinAttributes = {

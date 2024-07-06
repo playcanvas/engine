@@ -8,10 +8,10 @@ import { skybox } from '../shader-lib/programs/skybox.js';
 import { SkyGeometry } from './sky-geometry.js';
 
 /**
- * @import {GraphNode} from '../graph-node.js'
- * @import {GraphicsDevice} from '../../platform/graphics/graphics-device.js'
- * @import {Scene} from '../scene.js'
- * @import {Texture} from '../../platform/graphics/texture.js'
+ * @import { GraphNode } from '../graph-node.js'
+ * @import { GraphicsDevice } from '../../platform/graphics/graphics-device.js'
+ * @import { Scene } from '../scene.js'
+ * @import { Texture } from '../../platform/graphics/texture.js'
  */
 
 /**

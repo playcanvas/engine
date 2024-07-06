@@ -6,7 +6,7 @@ import { ScreenComponent } from './component.js';
 import { ScreenComponentData } from './data.js';
 
 /**
- * @import {AppBase} from '../../app-base.js'
+ * @import { AppBase } from '../../app-base.js'
  */
 
 const _schema = ['enabled'];

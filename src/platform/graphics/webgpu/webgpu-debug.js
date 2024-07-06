@@ -2,7 +2,7 @@ import { Debug } from "../../../core/debug.js";
 import { DebugGraphics } from "../debug-graphics.js";
 
 /**
- * @import {WebgpuGraphicsDevice} from './webgpu-graphics-device.js'
+ * @import { WebgpuGraphicsDevice } from './webgpu-graphics-device.js'
  */
 
 // Maximum number of times a duplicate error message is logged.

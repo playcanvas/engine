@@ -11,9 +11,9 @@ import { UniformFormat, UniformBufferFormat } from './uniform-buffer-format.js';
 import { BindGroupFormat, BindTextureFormat } from './bind-group-format.js';
 
 /**
- * @import {GraphicsDevice} from './graphics-device.js'
- * @import {ShaderProcessorOptions} from './shader-processor-options.js'
- * @import {Shader} from './shader.js'
+ * @import { GraphicsDevice } from './graphics-device.js'
+ * @import { ShaderProcessorOptions } from './shader-processor-options.js'
+ * @import { Shader } from './shader.js'
  */
 
 // accepted keywords

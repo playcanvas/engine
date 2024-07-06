@@ -1,10 +1,10 @@
 import { BINDGROUP_VIEW } from "./constants.js";
 
 /**
- * @import {BindGroupFormat} from './bind-group-format.js'
- * @import {GraphicsDevice} from './graphics-device.js'
- * @import {UniformBufferFormat} from './uniform-buffer-format.js'
- * @import {VertexFormat} from './vertex-format.js'
+ * @import { BindGroupFormat } from './bind-group-format.js'
+ * @import { GraphicsDevice } from './graphics-device.js'
+ * @import { UniformBufferFormat } from './uniform-buffer-format.js'
+ * @import { VertexFormat } from './vertex-format.js'
  */
 
 /**

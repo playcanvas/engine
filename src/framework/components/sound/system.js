@@ -6,8 +6,8 @@ import { SoundComponent } from './component.js';
 import { SoundComponentData } from './data.js';
 
 /**
- * @import {AppBase} from '../../app-base.js'
- * @import {SoundManager} from '../../../platform/sound/manager.js'
+ * @import { AppBase } from '../../app-base.js'
+ * @import { SoundManager } from '../../../platform/sound/manager.js'
  */
 
 const _schema = ['enabled'];

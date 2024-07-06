@@ -19,14 +19,14 @@ import { VertexFormat } from './vertex-format.js';
 import { StencilParameters } from './stencil-parameters.js';
 
 /**
- * @import {Compute} from './compute.js'
- * @import {DEVICETYPE_WEBGL2, DEVICETYPE_WEBGPU } from './constants.js'
- * @import {DynamicBuffers} from './dynamic-buffers.js'
- * @import {GpuProfiler} from './gpu-profiler.js'
- * @import {IndexBuffer} from './index-buffer.js'
- * @import {RenderTarget} from './render-target.js'
- * @import {Shader} from './shader.js'
- * @import {Texture} from './texture.js'
+ * @import { Compute } from './compute.js'
+ * @import { DEVICETYPE_WEBGL2, DEVICETYPE_WEBGPU } from './constants.js'
+ * @import { DynamicBuffers } from './dynamic-buffers.js'
+ * @import { GpuProfiler } from './gpu-profiler.js'
+ * @import { IndexBuffer } from './index-buffer.js'
+ * @import { RenderTarget } from './render-target.js'
+ * @import { Shader } from './shader.js'
+ * @import { Texture } from './texture.js'
  */
 
 /**

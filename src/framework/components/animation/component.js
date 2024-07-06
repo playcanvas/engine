@@ -8,10 +8,10 @@ import { Asset } from '../../asset/asset.js';
 import { Component } from '../component.js';
 
 /**
- * @import {Animation} from '../../../scene/animation/animation.js'
- * @import {AnimationComponentSystem} from './system.js'
- * @import {Entity} from '../../entity.js'
- * @import {Model} from '../../../scene/model.js'
+ * @import { Animation } from '../../../scene/animation/animation.js'
+ * @import { AnimationComponentSystem } from './system.js'
+ * @import { Entity } from '../../entity.js'
+ * @import { Model } from '../../../scene/model.js'
  */
 
 /**

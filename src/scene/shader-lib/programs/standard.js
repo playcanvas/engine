@@ -13,7 +13,7 @@ import { LitOptionsUtils } from './lit-options-utils.js';
 import { ShaderGenerator } from './shader-generator.js';
 
 /**
- * @import {GraphicsDevice} from '../../../platform/graphics/graphics-device.js'
+ * @import { GraphicsDevice } from '../../../platform/graphics/graphics-device.js'
  */
 
 const _matTex2D = [];

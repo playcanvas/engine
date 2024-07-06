@@ -2,7 +2,7 @@ import { TRACEID_RENDER_QUEUE } from '../../../core/constants.js';
 import { Debug, DebugHelper } from '../../../core/debug.js';
 
 /**
- * @import {WebgpuGraphicsDevice} from './webgpu-graphics-device.js'
+ * @import { WebgpuGraphicsDevice } from './webgpu-graphics-device.js'
  */
 
 /**

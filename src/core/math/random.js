@@ -1,8 +1,8 @@
 import { math } from './math.js';
 
 /**
- * @import {Vec2} from './vec2.js'
- * @import {Vec3} from './vec3.js'
+ * @import { Vec2 } from './vec2.js'
+ * @import { Vec3 } from './vec3.js'
  */
 
 // golden angle in radians: PI * (3 - sqrt(5))

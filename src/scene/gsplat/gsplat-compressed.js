@@ -7,11 +7,11 @@ import {
 import { createGSplatCompressedMaterial } from './gsplat-compressed-material.js';
 
 /**
- * @import {BoundingBox} from '../../core/shape/bounding-box.js'
- * @import {GSplatCompressedData} from './gsplat-compressed-data.js'
- * @import {GraphicsDevice} from '../../platform/graphics/graphics-device.js'
- * @import {Material} from '../materials/material.js'
- * @import {SplatMaterialOptions} from './gsplat-material.js'
+ * @import { BoundingBox } from '../../core/shape/bounding-box.js'
+ * @import { GSplatCompressedData } from './gsplat-compressed-data.js'
+ * @import { GraphicsDevice } from '../../platform/graphics/graphics-device.js'
+ * @import { Material } from '../materials/material.js'
+ * @import { SplatMaterialOptions } from './gsplat-material.js'
  */
 
 class GSplatCompressed {

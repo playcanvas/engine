@@ -7,8 +7,8 @@ import { createShaderFromCode } from './shader-lib/utils.js';
 import { BlendState } from '../platform/graphics/blend-state.js';
 
 /**
- * @import {Morph} from './morph.js'
- * @import {Shader} from '../platform/graphics/shader.js'
+ * @import { Morph } from './morph.js'
+ * @import { Shader } from '../platform/graphics/shader.js'
  */
 
 // vertex shader used to add morph targets from textures into render target

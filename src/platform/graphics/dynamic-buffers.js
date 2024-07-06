@@ -2,8 +2,8 @@ import { Debug } from '../../core/debug.js';
 import { math } from '../../core/math/math.js';
 
 /**
- * @import {DynamicBuffer} from './dynamic-buffer.js'
- * @import {GraphicsDevice} from './graphics-device.js'
+ * @import { DynamicBuffer } from './dynamic-buffer.js'
+ * @import { GraphicsDevice } from './graphics-device.js'
  */
 
 /**

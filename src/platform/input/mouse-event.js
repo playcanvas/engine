@@ -1,7 +1,7 @@
 import { MOUSEBUTTON_NONE } from './constants.js';
 
 /**
- * @import {Mouse} from './mouse.js'
+ * @import { Mouse } from './mouse.js'
  */
 
 /**

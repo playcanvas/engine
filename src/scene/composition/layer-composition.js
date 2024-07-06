@@ -7,8 +7,8 @@ import { LAYERID_DEPTH } from '../constants.js';
 import { RenderAction } from './render-action.js';
 
 /**
- * @import {CameraComponent} from '../../framework/components/camera/component.js'
- * @import {Layer} from '../layer.js'
+ * @import { CameraComponent } from '../../framework/components/camera/component.js'
+ * @import { Layer } from '../layer.js'
  */
 
 /**

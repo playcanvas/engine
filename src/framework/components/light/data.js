@@ -9,7 +9,7 @@ import {
 } from '../../../scene/constants.js';
 
 /**
- * @import {Light} from '../../../scene/light.js'
+ * @import { Light } from '../../../scene/light.js'
  */
 
 class LightComponentData {

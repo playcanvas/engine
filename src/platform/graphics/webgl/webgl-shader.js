@@ -7,8 +7,8 @@ import { DeviceCache } from '../device-cache.js';
 import { DebugGraphics } from '../debug-graphics.js';
 
 /**
- * @import {Shader} from '../shader.js'
- * @import {WebglGraphicsDevice} from './webgl-graphics-device.js'
+ * @import { Shader } from '../shader.js'
+ * @import { WebglGraphicsDevice } from './webgl-graphics-device.js'
  */
 
 let _totalCompileTime = 0;

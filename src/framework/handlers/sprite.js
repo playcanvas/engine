@@ -4,7 +4,7 @@ import { Sprite } from '../../scene/sprite.js';
 import { ResourceHandler } from './handler.js';
 
 /**
- * @import {AppBase} from '../app-base.js'
+ * @import { AppBase } from '../app-base.js'
  */
 
 // The scope of this function is the sprite asset

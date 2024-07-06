@@ -21,9 +21,9 @@ import { StandardMaterialOptionsBuilder } from './standard-material-options-buil
 import { standardMaterialCubemapParameters, standardMaterialTextureParameters } from './standard-material-parameters.js';
 
 /**
- * @import {BoundingBox} from '../../core/shape/bounding-box.js'
- * @import {StandardMaterialOptions} from './standard-material-options.js'
- * @import {Texture} from '../../platform/graphics/texture.js'
+ * @import { BoundingBox } from '../../core/shape/bounding-box.js'
+ * @import { StandardMaterialOptions } from './standard-material-options.js'
+ * @import { Texture } from '../../platform/graphics/texture.js'
  */
 
 // properties that get created on a standard material

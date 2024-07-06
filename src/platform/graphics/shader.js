@@ -5,9 +5,9 @@ import { Preprocessor } from '../../core/preprocessor.js';
 import { DebugGraphics } from './debug-graphics.js';
 
 /**
- * @import {BindGroupFormat} from './bind-group-format.js'
- * @import {GraphicsDevice} from './graphics-device.js'
- * @import {UniformBufferFormat} from './uniform-buffer-format.js'
+ * @import { BindGroupFormat } from './bind-group-format.js'
+ * @import { GraphicsDevice } from './graphics-device.js'
+ * @import { UniformBufferFormat } from './uniform-buffer-format.js'
  */
 
 let id = 0;

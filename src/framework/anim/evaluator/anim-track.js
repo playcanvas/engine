@@ -1,8 +1,8 @@
 import { AnimEvents } from './anim-events.js';
 
 /**
- * @import {AnimCurve} from './anim-curve.js'
- * @import {AnimData} from './anim-data.js'
+ * @import { AnimCurve } from './anim-curve.js'
+ * @import { AnimData } from './anim-data.js'
  */
 
 /**

@@ -6,11 +6,11 @@ import { ShadowMap } from './shadow-map.js';
 import { RenderPassShadowLocalNonClustered } from './render-pass-shadow-local-non-clustered.js';
 
 /**
- * @import {FrameGraph} from '../../scene/frame-graph.js'
- * @import {GraphicsDevice} from '../../platform/graphics/graphics-device.js'
- * @import {Light} from '../../scene/light.js'
- * @import {Renderer} from './renderer.js'
- * @import {ShadowRenderer} from './shadow-renderer.js'
+ * @import { FrameGraph } from '../../scene/frame-graph.js'
+ * @import { GraphicsDevice } from '../../platform/graphics/graphics-device.js'
+ * @import { Light } from '../../scene/light.js'
+ * @import { Renderer } from './renderer.js'
+ * @import { ShadowRenderer } from './shadow-renderer.js'
  */
 
 class ShadowRendererLocal {

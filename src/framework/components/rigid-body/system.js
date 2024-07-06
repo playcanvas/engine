@@ -9,8 +9,8 @@ import { RigidBodyComponent } from './component.js';
 import { RigidBodyComponentData } from './data.js';
 
 /**
- * @import {AppBase} from '../../app-base.js'
- * @import {Entity} from '../../entity.js'
+ * @import { AppBase } from '../../app-base.js'
+ * @import { Entity } from '../../entity.js'
  */
 
 let ammoRayStart, ammoRayEnd;

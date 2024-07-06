@@ -1,6 +1,6 @@
 /**
- * @import {GraphicsDevice} from '../platform/graphics/graphics-device.js'
- * @import {Mat4} from '../core/math/mat4.js'
+ * @import { GraphicsDevice } from '../platform/graphics/graphics-device.js'
+ * @import { Mat4 } from '../core/math/mat4.js'
  */
 
 /**

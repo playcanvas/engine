@@ -3,8 +3,8 @@ import { PIXELFORMAT_RGBA8 } from "../constants.js";
 import { DebugGraphics } from "../debug-graphics.js";
 
 /**
- * @import {RenderTarget} from '../render-target.js'
- * @import {WebglGraphicsDevice} from './webgl-graphics-device.js'
+ * @import { RenderTarget } from '../render-target.js'
+ * @import { WebglGraphicsDevice } from './webgl-graphics-device.js'
  */
 
 /**

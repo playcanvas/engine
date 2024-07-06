@@ -9,10 +9,10 @@ import { math } from '../../core/math/math.js';
 import { Vec4 } from '../../core/math/vec4.js';
 
 /**
- * @import {AppBase} from '../app-base.js'
- * @import {CameraComponent} from '../components/camera/component.js'
- * @import {MeshInstance} from '../../scene/mesh-instance.js'
- * @import {Scene} from '../../scene/scene.js'
+ * @import { AppBase } from '../app-base.js'
+ * @import { CameraComponent } from '../components/camera/component.js'
+ * @import { MeshInstance } from '../../scene/mesh-instance.js'
+ * @import { Scene } from '../../scene/scene.js'
  */
 
 const tempSet = new Set();

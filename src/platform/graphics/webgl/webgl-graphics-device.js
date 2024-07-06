@@ -43,8 +43,8 @@ import { WebglGpuProfiler } from './webgl-gpu-profiler.js';
 import { TextureUtils } from '../texture-utils.js';
 
 /**
- * @import {RenderPass} from '../render-pass.js'
- * @import {VertexBuffer} from '../vertex-buffer.js'
+ * @import { RenderPass } from '../render-pass.js'
+ * @import { VertexBuffer } from '../vertex-buffer.js'
  */
 
 const invalidateAttachments = [];

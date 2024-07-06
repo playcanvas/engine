@@ -2,7 +2,7 @@ import { Debug } from '../../core/debug.js';
 import { TRACEID_VRAM_IB } from '../../core/constants.js';
 
 /**
- * @import {GraphicsDevice} from './graphics-device.js'
+ * @import { GraphicsDevice } from './graphics-device.js'
  */
 
 import {

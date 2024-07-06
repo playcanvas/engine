@@ -3,8 +3,8 @@ import { math } from '../../core/math/math.js';
 import { hasAudioContext } from '../audio/capabilities.js';
 
 /**
- * @import {SoundManager} from './manager.js'
- * @import {Sound} from './sound.js'
+ * @import { SoundManager } from './manager.js'
+ * @import { Sound } from './sound.js'
  */
 
 const STATE_PLAYING = 0;

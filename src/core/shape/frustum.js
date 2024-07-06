@@ -1,9 +1,9 @@
 import { Plane } from './plane.js';
 
 /**
- * @import {BoundingSphere} from './bounding-sphere.js'
- * @import {Mat4} from '../math/mat4.js'
- * @import {Vec3} from '../math/vec3.js'
+ * @import { BoundingSphere } from './bounding-sphere.js'
+ * @import { Mat4 } from '../math/mat4.js'
+ * @import { Vec3 } from '../math/vec3.js'
  */
 
 /**

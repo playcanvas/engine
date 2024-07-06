@@ -16,8 +16,8 @@ import { ShadowRenderer } from './renderer/shadow-renderer.js';
 import { DepthState } from '../platform/graphics/depth-state.js';
 
 /**
- * @import {BindGroup} from '../platform/graphics/bind-group.js'
- * @import {Layer} from './layer.js'
+ * @import { BindGroup } from '../platform/graphics/bind-group.js'
+ * @import { Layer } from './layer.js'
  */
 
 const tmpVec = new Vec3();

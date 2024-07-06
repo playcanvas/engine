@@ -7,7 +7,7 @@ import { LightComponent } from './component.js';
 import { properties, LightComponentData } from './data.js';
 
 /**
- * @import {AppBase} from '../../app-base.js'
+ * @import { AppBase } from '../../app-base.js'
  */
 
 /**

@@ -3,7 +3,7 @@ import { EventHandler } from "../../core/event-handler.js";
 import { XrMesh } from "./xr-mesh.js";
 
 /**
- * @import {XrManager} from './xr-manager.js'
+ * @import { XrManager } from './xr-manager.js'
  */
 
 /**

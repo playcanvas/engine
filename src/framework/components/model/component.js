@@ -9,12 +9,12 @@ import { Asset } from '../../asset/asset.js';
 import { Component } from '../component.js';
 
 /**
- * @import {BoundingBox} from '../../../core/shape/bounding-box.js'
- * @import {Entity} from '../../entity.js'
- * @import {LayerComposition} from '../../../scene/composition/layer-composition.js'
- * @import {Layer} from '../../../scene/layer.js'
- * @import {Material} from '../../../scene/materials/material.js'
- * @import {ModelComponentSystem} from './system.js'
+ * @import { BoundingBox } from '../../../core/shape/bounding-box.js'
+ * @import { Entity } from '../../entity.js'
+ * @import { LayerComposition } from '../../../scene/composition/layer-composition.js'
+ * @import { Layer } from '../../../scene/layer.js'
+ * @import { Material } from '../../../scene/materials/material.js'
+ * @import { ModelComponentSystem } from './system.js'
  */
 
 /**

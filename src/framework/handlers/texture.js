@@ -17,7 +17,7 @@ import { HdrParser } from '../parsers/texture/hdr.js';
 import { ResourceHandler } from './handler.js';
 
 /**
- * @import {AppBase} from '../app-base.js'
+ * @import { AppBase } from '../app-base.js'
  */
 
 const JSON_ADDRESS_MODE = {

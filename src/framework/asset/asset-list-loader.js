@@ -2,7 +2,7 @@ import { EventHandler } from '../../core/event-handler.js';
 import { Asset } from './asset.js';
 
 /**
- * @import {AssetRegistry} from './asset-registry.js'
+ * @import { AssetRegistry } from './asset-registry.js'
  */
 
 /**

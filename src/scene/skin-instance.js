@@ -5,9 +5,9 @@ import { FILTER_NEAREST, PIXELFORMAT_RGBA32F, TEXTURELOCK_READ } from '../platfo
 import { Texture } from '../platform/graphics/texture.js';
 
 /**
- * @import {Entity} from '../framework/entity.js'
- * @import {GraphNode} from './graph-node.js'
- * @import {Skin} from './skin.js'
+ * @import { Entity } from '../framework/entity.js'
+ * @import { GraphNode } from './graph-node.js'
+ * @import { Skin } from './skin.js'
  */
 
 const _invMatrix = new Mat4();

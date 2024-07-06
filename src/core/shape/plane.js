@@ -1,7 +1,7 @@
 import { Vec3 } from '../math/vec3.js';
 
 /**
- * @import {Ray} from './ray.js'
+ * @import { Ray } from './ray.js'
  */
 
 /**

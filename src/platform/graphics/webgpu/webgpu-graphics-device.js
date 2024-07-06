@@ -30,9 +30,9 @@ import { WebgpuCompute } from './webgpu-compute.js';
 import { WebgpuBuffer } from './webgpu-buffer.js';
 
 /**
- * @import {BindGroup} from '../bind-group.js'
- * @import {RenderPass} from '../render-pass.js'
- * @import {WebgpuBuffer} from './webgpu-buffer.js'
+ * @import { BindGroup } from '../bind-group.js'
+ * @import { RenderPass } from '../render-pass.js'
+ * @import { WebgpuBuffer } from './webgpu-buffer.js'
  */
 
 const _uniqueLocations = new Map();

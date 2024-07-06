@@ -4,8 +4,8 @@ import { AnimationComponent } from './component.js';
 import { AnimationComponentData } from './data.js';
 
 /**
- * @import {AppBase} from '../../app-base.js'
- * @import {Entity} from '../../entity.js'
+ * @import { AppBase } from '../../app-base.js'
+ * @import { Entity } from '../../entity.js'
  */
 
 const _schema = [

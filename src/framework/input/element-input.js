@@ -6,12 +6,12 @@ import { Mouse } from '../../platform/input/mouse.js';
 import { getApplication } from '../globals.js';
 
 /**
- * @import {CameraComponent} from '../components/camera/component.js'
- * @import {ElementComponent} from '../components/element/component.js'
- * @import {MouseEvent} from '../../platform/input/mouse-event.js'
- * @import {TouchEvent} from '../../platform/input/touch-event.js'
- * @import {Touch} from '../../platform/input/touch-event.js'
- * @import {XrInputSource} from '../xr/xr-input-source.js'
+ * @import { CameraComponent } from '../components/camera/component.js'
+ * @import { ElementComponent } from '../components/element/component.js'
+ * @import { MouseEvent } from '../../platform/input/mouse-event.js'
+ * @import { TouchEvent } from '../../platform/input/touch-event.js'
+ * @import { Touch } from '../../platform/input/touch-event.js'
+ * @import { XrInputSource } from '../xr/xr-input-source.js'
  */
 
 let targetX, targetY;

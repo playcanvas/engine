@@ -7,8 +7,8 @@ import { ShaderGenerator } from './programs/shader-generator.js';
 import { SHADERLANGUAGE_WGSL } from '../../platform/graphics/constants.js';
 
 /**
- * @import {GraphicsDevice} from '../../platform/graphics/graphics-device.js'
- * @import {ShaderProcessorOptions} from '../../platform/graphics/shader-processor-options.js'
+ * @import { GraphicsDevice } from '../../platform/graphics/graphics-device.js'
+ * @import { ShaderProcessorOptions } from '../../platform/graphics/shader-processor-options.js'
  */
 
 /**

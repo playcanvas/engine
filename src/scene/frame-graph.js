@@ -1,9 +1,9 @@
 import { Debug } from '../core/debug.js';
 
 /**
- * @import {RenderPass} from '../platform/graphics/render-pass.js'
- * @import {RenderTarget} from '../platform/graphics/render-target.js'
- * @import {Texture} from '../platform/graphics/texture.js'
+ * @import { RenderPass } from '../platform/graphics/render-pass.js'
+ * @import { RenderTarget } from '../platform/graphics/render-target.js'
+ * @import { Texture } from '../platform/graphics/texture.js'
  */
 
 /**

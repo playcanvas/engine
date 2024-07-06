@@ -8,7 +8,7 @@ import { UniformBuffer } from "../../platform/graphics/uniform-buffer.js";
 import { processShader } from "../shader-lib/utils.js";
 
 /**
- * @import {Shader} from '../../platform/graphics/shader.js'
+ * @import { Shader } from '../../platform/graphics/shader.js'
  */
 
 const _quadPrimitive = {

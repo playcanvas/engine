@@ -4,7 +4,7 @@ import { ScrollViewComponent } from './component.js';
 import { ScrollViewComponentData } from './data.js';
 
 /**
- * @import {AppBase} from '../../app-base.js'
+ * @import { AppBase } from '../../app-base.js'
  */
 
 const _schema = [

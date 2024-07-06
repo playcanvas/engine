@@ -5,9 +5,9 @@ import { Vec3 } from '../../core/math/vec3.js';
 import { Vec4 } from '../../core/math/vec4.js';
 
 /**
- * @import {AppBase} from '../app-base.js'
- * @import {Component} from './component.js'
- * @import {Entity} from '../entity.js'
+ * @import { AppBase } from '../app-base.js'
+ * @import { Component } from './component.js'
+ * @import { Entity } from '../entity.js'
  */
 
 /**

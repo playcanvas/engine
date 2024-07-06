@@ -11,11 +11,8 @@ import { ScriptType } from '../../script/script-type.js';
 import { getScriptName } from '../../script/script.js';
 
 /**
- * @import {ScriptComponentSystem} from './system.js'
- * @import {ScriptType[]} from '../../script/script-type.js'
- * @import {ScriptType} from '../../script/script-type.js'
- * @import {Script[]} from '../../script/script.js'
- * @import {Script} from '../../script/script.js'
+ * @import { ScriptComponentSystem } from './system.js'
+ * @import { Script } from '../../script/script.js'
  */
 
 const toLowerCamelCase = str => str[0].toLowerCase() + str.substring(1);

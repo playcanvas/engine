@@ -1,8 +1,8 @@
 /**
- * @import {Asset} from '../../asset/asset.js'
- * @import {GraphicsDevice} from '../../../platform/graphics/graphics-device.js'
- * @import {ResourceHandlerCallback} from '../../../framework/handlers/handler.js'
- * @import {Texture} from '../../../platform/graphics/texture.js'
+ * @import { Asset } from '../../asset/asset.js'
+ * @import { GraphicsDevice } from '../../../platform/graphics/graphics-device.js'
+ * @import { ResourceHandlerCallback } from '../../../framework/handlers/handler.js'
+ * @import { Texture } from '../../../platform/graphics/texture.js'
  */
 
 /**

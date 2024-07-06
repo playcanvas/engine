@@ -4,8 +4,8 @@ import { Asset } from '../../asset/asset.js';
 import { SPRITE_RENDERMODE_SIMPLE } from '../../../scene/constants.js';
 
 /**
- * @import {SpriteComponent} from './component.js'
- * @import {Sprite} from '../../../scene/sprite.js'
+ * @import { SpriteComponent } from './component.js'
+ * @import { Sprite } from '../../../scene/sprite.js'
  */
 
 /**

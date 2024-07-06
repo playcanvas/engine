@@ -6,7 +6,7 @@ import { Vec3 } from '../../core/math/vec3.js';
 import { XRTYPE_AR } from './constants.js';
 
 /**
- * @import {XrManager} from './xr-manager.js'
+ * @import { XrManager } from './xr-manager.js'
  */
 
 const vec3A = new Vec3();

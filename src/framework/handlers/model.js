@@ -6,7 +6,7 @@ import { JsonModelParser } from '../parsers/json-model.js';
 import { ResourceHandler } from './handler.js';
 
 /**
- * @import {AppBase} from '../app-base.js'
+ * @import { AppBase } from '../app-base.js'
  */
 
 /**

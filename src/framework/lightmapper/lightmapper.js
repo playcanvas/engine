@@ -46,11 +46,11 @@ import { DepthState } from '../../platform/graphics/depth-state.js';
 import { RenderPassLightmapper } from './render-pass-lightmapper.js';
 
 /**
- * @import {AssetRegistry} from '../asset/asset-registry.js'
- * @import {Entity} from '../entity.js'
- * @import {ForwardRenderer} from '../../scene/renderer/forward-renderer.js'
- * @import {GraphicsDevice} from '../../platform/graphics/graphics-device.js'
- * @import {Scene} from '../../scene/scene.js'
+ * @import { AssetRegistry } from '../asset/asset-registry.js'
+ * @import { Entity } from '../entity.js'
+ * @import { ForwardRenderer } from '../../scene/renderer/forward-renderer.js'
+ * @import { GraphicsDevice } from '../../platform/graphics/graphics-device.js'
+ * @import { Scene } from '../../scene/scene.js'
  */
 
 const MAX_LIGHTMAP_SIZE = 2048;

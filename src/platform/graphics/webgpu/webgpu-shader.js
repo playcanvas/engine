@@ -5,8 +5,8 @@ import { ShaderProcessor } from '../shader-processor.js';
 import { WebgpuDebug } from './webgpu-debug.js';
 
 /**
- * @import {GraphicsDevice} from '../graphics-device.js'
- * @import {Shader} from '../shader.js'
+ * @import { GraphicsDevice } from '../graphics-device.js'
+ * @import { Shader } from '../shader.js'
  */
 
 /**

@@ -5,13 +5,13 @@ import { Asset } from '../../asset/asset.js';
 import { Component } from '../component.js';
 
 /**
- * @import {CurveSet} from '../../../core/math/curve-set.js'
- * @import {Curve} from '../../../core/math/curve.js'
- * @import {Entity} from '../../entity.js'
- * @import {ParticleSystemComponentData} from './data.js'
- * @import {ParticleSystemComponentSystem} from './system.js'
- * @import {Texture} from '../../../platform/graphics/texture.js'
- * @import {Vec3} from '../../../core/math/vec3.js'
+ * @import { CurveSet } from '../../../core/math/curve-set.js'
+ * @import { Curve } from '../../../core/math/curve.js'
+ * @import { Entity } from '../../entity.js'
+ * @import { ParticleSystemComponentData } from './data.js'
+ * @import { ParticleSystemComponentSystem } from './system.js'
+ * @import { Texture } from '../../../platform/graphics/texture.js'
+ * @import { Vec3 } from '../../../core/math/vec3.js'
  */
 
 // properties that do not need rebuilding the particle system

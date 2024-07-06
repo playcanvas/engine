@@ -4,7 +4,7 @@ import { GraphNode } from "../graph-node.js";
 import { SkyMesh } from "./sky-mesh.js";
 
 /**
- * @import {Scene} from '../scene.js'
+ * @import { Scene } from '../scene.js'
  */
 
 /**

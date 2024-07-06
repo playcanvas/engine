@@ -1,7 +1,7 @@
 import { BoundingBox } from '../../core/shape/bounding-box.js';
 
 /**
- * @import {MeshInstance} from '../mesh-instance.js'
+ * @import { MeshInstance } from '../mesh-instance.js'
  */
 
 /**

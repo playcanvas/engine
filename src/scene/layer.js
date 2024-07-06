@@ -9,12 +9,12 @@ import {
 import { Material } from './materials/material.js';
 
 /**
- * @import {Camera} from './camera.js'
- * @import {CameraComponent} from '../framework/components/camera/component.js'
- * @import {Light} from './light.js'
- * @import {LightComponent} from '../framework/components/light/component.js'
- * @import {MeshInstance} from './mesh-instance.js'
- * @import {Vec3} from '../core/math/vec3.js'
+ * @import { Camera } from './camera.js'
+ * @import { CameraComponent } from '../framework/components/camera/component.js'
+ * @import { Light } from './light.js'
+ * @import { LightComponent } from '../framework/components/light/component.js'
+ * @import { MeshInstance } from './mesh-instance.js'
+ * @import { Vec3 } from '../core/math/vec3.js'
  */
 
 // Layers

@@ -7,7 +7,7 @@ import { CameraComponent } from './component.js';
 import { CameraComponentData } from './data.js';
 
 /**
- * @import {AppBase} from '../../app-base.js'
+ * @import { AppBase } from '../../app-base.js'
  */
 
 const _schema = ['enabled'];

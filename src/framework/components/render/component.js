@@ -12,10 +12,10 @@ import { Component } from '../component.js';
 import { EntityReference } from '../../utils/entity-reference.js';
 
 /**
- * @import {BoundingBox} from '../../../core/shape/bounding-box.js'
- * @import {Entity} from '../../entity.js'
- * @import {Material} from '../../../scene/materials/material.js'
- * @import {RenderComponentSystem} from './system.js'
+ * @import { BoundingBox } from '../../../core/shape/bounding-box.js'
+ * @import { Entity } from '../../entity.js'
+ * @import { Material } from '../../../scene/materials/material.js'
+ * @import { RenderComponentSystem } from './system.js'
  */
 
 /**

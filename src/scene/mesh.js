@@ -18,10 +18,10 @@ import { VertexIterator } from '../platform/graphics/vertex-iterator.js';
 import { RENDERSTYLE_SOLID, RENDERSTYLE_WIREFRAME, RENDERSTYLE_POINTS } from './constants.js';
 
 /**
- * @import {Geometry} from './geometry/geometry.js'
- * @import {GraphicsDevice} from '../platform/graphics/graphics-device.js'
- * @import {Morph} from './morph.js'
- * @import {Skin} from './skin.js'
+ * @import { Geometry } from './geometry/geometry.js'
+ * @import { GraphicsDevice } from '../platform/graphics/graphics-device.js'
+ * @import { Morph } from './morph.js'
+ * @import { Skin } from './skin.js'
  */
 
 let id = 0;

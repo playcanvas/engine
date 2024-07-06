@@ -14,9 +14,9 @@ import { BoundingBox } from '../../core/shape/bounding-box.js';
 import { createGSplatMaterial } from './gsplat-material.js';
 
 /**
- * @import {GSplatData} from './gsplat-data.js'
- * @import {GraphicsDevice} from '../../platform/graphics/graphics-device.js'
- * @import {Material} from '../materials/material.js'
+ * @import { GSplatData } from './gsplat-data.js'
+ * @import { GraphicsDevice } from '../../platform/graphics/graphics-device.js'
+ * @import { Material } from '../materials/material.js'
  */
 
 const _tmpVecA = new Vec3();

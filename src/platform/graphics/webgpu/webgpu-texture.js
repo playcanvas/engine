@@ -16,8 +16,8 @@ import { WebgpuDebug } from './webgpu-debug.js';
 import { gpuTextureFormats } from './constants.js';
 
 /**
- * @import {Texture} from '../texture.js'
- * @import {WebgpuGraphicsDevice} from './webgpu-graphics-device.js'
+ * @import { Texture } from '../texture.js'
+ * @import { WebgpuGraphicsDevice } from './webgpu-graphics-device.js'
  */
 
 // map of ADDRESS_*** to GPUAddressMode

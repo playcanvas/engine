@@ -7,11 +7,11 @@ import { BUTTON_TRANSITION_MODE_SPRITE_CHANGE, BUTTON_TRANSITION_MODE_TINT } fro
 import { ELEMENTTYPE_GROUP } from '../element/constants.js';
 
 /**
- * @import {Asset} from '../../../framework/asset/asset.js'
- * @import {ButtonComponentData} from './data.js'
- * @import {ButtonComponentSystem} from './system.js'
- * @import {Entity} from '../../entity.js'
- * @import {Vec4} from '../../../core/math/vec4.js'
+ * @import { Asset } from '../../../framework/asset/asset.js'
+ * @import { ButtonComponentData } from './data.js'
+ * @import { ButtonComponentSystem } from './system.js'
+ * @import { Entity } from '../../entity.js'
+ * @import { Vec4 } from '../../../core/math/vec4.js'
  */
 
 const VisualState = {

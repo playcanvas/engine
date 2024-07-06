@@ -1,5 +1,5 @@
 /**
- * @import {Entity} from '../../framework/entity.js'
+ * @import { Entity } from '../../framework/entity.js'
  */
 
 class CompressUtils {

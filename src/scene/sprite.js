@@ -5,8 +5,8 @@ import { Mesh } from './mesh.js';
 import { Geometry } from './geometry/geometry.js';
 
 /**
- * @import {GraphicsDevice} from '../platform/graphics/graphics-device.js'
- * @import {TextureAtlas} from './texture-atlas.js'
+ * @import { GraphicsDevice } from '../platform/graphics/graphics-device.js'
+ * @import { TextureAtlas } from './texture-atlas.js'
  */
 
 // normals are the same for every mesh

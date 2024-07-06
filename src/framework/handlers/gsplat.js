@@ -2,7 +2,7 @@ import { PlyParser } from '../parsers/ply.js';
 import { ResourceHandler } from './handler.js';
 
 /**
- * @import {AppBase} from '../app-base.js'
+ * @import { AppBase } from '../app-base.js'
  */
 
 class GSplatHandler extends ResourceHandler {

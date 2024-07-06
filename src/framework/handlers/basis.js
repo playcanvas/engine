@@ -5,7 +5,7 @@ import { BasisWorker } from './basis-worker.js';
 import { http } from '../../platform/net/http.js';
 
 /**
- * @import {GraphicsDevice} from '../../platform/graphics/graphics-device.js'
+ * @import { GraphicsDevice } from '../../platform/graphics/graphics-device.js'
  */
 
 // get the list of the device's supported compression formats

@@ -4,7 +4,7 @@ import { LayoutChildComponent } from './component.js';
 import { LayoutChildComponentData } from './data.js';
 
 /**
- * @import {AppBase} from '../../app-base.js'
+ * @import { AppBase } from '../../app-base.js'
  */
 
 const _schema = ['enabled'];

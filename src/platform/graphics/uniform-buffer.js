@@ -10,10 +10,10 @@ import { DebugGraphics } from './debug-graphics.js';
 import { DynamicBufferAllocation } from './dynamic-buffers.js';
 
 /**
- * @import {DynamicBindGroup} from './bind-group.js'
- * @import {GraphicsDevice} from './graphics-device.js'
- * @import {UniformBufferFormat} from './uniform-buffer-format.js'
- * @import {UniformFormat} from './uniform-buffer-format.js'
+ * @import { DynamicBindGroup } from './bind-group.js'
+ * @import { GraphicsDevice } from './graphics-device.js'
+ * @import { UniformBufferFormat } from './uniform-buffer-format.js'
+ * @import { UniformFormat } from './uniform-buffer-format.js'
  */
 
 // Uniform buffer set functions - only implemented for types for which the default

@@ -9,9 +9,9 @@ import { GraphNode } from '../../scene/graph-node.js';
 import { Asset } from '../asset/asset.js';
 
 /**
- * @import {Application} from '../../framework/application.js'
- * @import {ScriptType} from './script-type.js'
- * @import {Script} from '../../framework/script/script.js'
+ * @import { Application } from '../../framework/application.js'
+ * @import { ScriptType } from './script-type.js'
+ * @import { Script } from '../../framework/script/script.js'
  */
 
 const components = ['x', 'y', 'z', 'w'];

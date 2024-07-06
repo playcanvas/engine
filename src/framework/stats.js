@@ -1,7 +1,7 @@
 import { getApplication } from './globals.js';
 
 /**
- * @import {GraphicsDevice} from '../platform/graphics/graphics-device.js'
+ * @import { GraphicsDevice } from '../platform/graphics/graphics-device.js'
  */
 
 /**

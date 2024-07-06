@@ -7,13 +7,13 @@ import { PROJECTION_PERSPECTIVE } from '../../scene/constants.js';
 import { Entity } from '../../framework/entity.js';
 
 /**
- * @import {AppBase} from '../../framework/app-base.js'
- * @import {CameraComponent} from '../../framework/components/camera/component.js'
- * @import {GraphNode} from '../../scene/graph-node.js'
- * @import {GraphicsDevice} from '../../platform/graphics/graphics-device.js'
- * @import {Layer} from '../../scene/layer.js'
- * @import {MeshInstance} from '../../scene/mesh-instance.js'
- * @import {TriData} from './tri-data.js'
+ * @import { AppBase } from '../../framework/app-base.js'
+ * @import { CameraComponent } from '../../framework/components/camera/component.js'
+ * @import { GraphNode } from '../../scene/graph-node.js'
+ * @import { GraphicsDevice } from '../../platform/graphics/graphics-device.js'
+ * @import { Layer } from '../../scene/layer.js'
+ * @import { MeshInstance } from '../../scene/mesh-instance.js'
+ * @import { TriData } from './tri-data.js'
  */
 
 // temporary variables

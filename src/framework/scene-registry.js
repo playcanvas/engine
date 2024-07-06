@@ -4,8 +4,8 @@ import { ABSOLUTE_URL } from './asset/constants.js';
 import { SceneRegistryItem } from './scene-registry-item.js';
 
 /**
- * @import {AppBase} from './app-base.js'
- * @import {Entity} from './entity.js'
+ * @import { AppBase } from './app-base.js'
+ * @import { Entity } from './entity.js'
  */
 
 /**

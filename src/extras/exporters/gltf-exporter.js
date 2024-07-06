@@ -24,7 +24,7 @@ import { BasicMaterial } from '../../scene/materials/basic-material.js';
 import { BLEND_NONE, BLEND_NORMAL, PROJECTION_ORTHOGRAPHIC } from '../../scene/constants.js';
 
 /**
- * @import {Entity} from '../../framework/entity.js'
+ * @import { Entity } from '../../framework/entity.js'
  */
 
 const ARRAY_BUFFER = 34962;

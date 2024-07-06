@@ -1,8 +1,8 @@
 import { Component } from '../component.js';
 
 /**
- * @import {Entity} from '../../entity.js'
- * @import {LayoutChildComponentSystem} from './system.js'
+ * @import { Entity } from '../../entity.js'
+ * @import { LayoutChildComponentSystem } from './system.js'
  */
 
 /**

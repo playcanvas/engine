@@ -6,8 +6,8 @@ import { XrFinger } from './xr-finger.js';
 import { XrJoint } from './xr-joint.js';
 
 /**
- * @import {XrInputSource} from './xr-input-source.js'
- * @import {XrManager} from './xr-manager.js'
+ * @import { XrInputSource } from './xr-input-source.js'
+ * @import { XrManager } from './xr-manager.js'
  */
 
 /**

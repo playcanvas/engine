@@ -1,7 +1,7 @@
 import { Vec2 } from '../../../core/math/vec2.js';
 
 /**
- * @import {Entity} from '../../../framework/entity.js'
+ * @import { Entity } from '../../../framework/entity.js'
  */
 
 const DEFAULT_DRAG_THRESHOLD = 10;

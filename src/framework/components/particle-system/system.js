@@ -7,7 +7,7 @@ import { ParticleSystemComponent } from './component.js';
 import { ParticleSystemComponentData } from './data.js';
 
 /**
- * @import {AppBase} from '../../app-base.js'
+ * @import { AppBase } from '../../app-base.js'
  */
 
 const _schema = [

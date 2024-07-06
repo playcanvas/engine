@@ -9,14 +9,14 @@ import { DebugGraphics } from "../debug-graphics.js";
 import { bindGroupNames } from "../constants.js";
 
 /**
- * @import {BindGroupFormat} from '../bind-group-format.js'
- * @import {BlendState} from '../blend-state.js'
- * @import {DepthState} from '../depth-state.js'
- * @import {RenderTarget} from '../render-target.js'
- * @import {Shader} from '../shader.js'
- * @import {StencilParameters} from '../stencil-parameters.js'
- * @import {VertexFormat} from '../vertex-format.js'
- * @import {WebgpuShader} from './webgpu-shader.js'
+ * @import { BindGroupFormat } from '../bind-group-format.js'
+ * @import { BlendState } from '../blend-state.js'
+ * @import { DepthState } from '../depth-state.js'
+ * @import { RenderTarget } from '../render-target.js'
+ * @import { Shader } from '../shader.js'
+ * @import { StencilParameters } from '../stencil-parameters.js'
+ * @import { VertexFormat } from '../vertex-format.js'
+ * @import { WebgpuShader } from './webgpu-shader.js'
  */
 
 let _pipelineId = 0;

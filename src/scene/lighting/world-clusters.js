@@ -7,7 +7,7 @@ import { LightsBuffer } from './lights-buffer.js';
 import { Debug } from '../../core/debug.js';
 
 /**
- * @import {Texture} from '../../platform/graphics/texture.js'
+ * @import { Texture } from '../../platform/graphics/texture.js'
  */
 
 const tempVec3 = new Vec3();

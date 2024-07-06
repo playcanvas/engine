@@ -18,9 +18,9 @@ import { BatchGroup } from './batch-group.js';
 import { SkinBatchInstance } from './skin-batch-instance.js';
 
 /**
- * @import {Entity} from '../../framework/entity.js'
- * @import {GraphicsDevice} from '../../platform/graphics/graphics-device.js'
- * @import {Scene} from '../scene.js'
+ * @import { Entity } from '../../framework/entity.js'
+ * @import { GraphicsDevice } from '../../platform/graphics/graphics-device.js'
+ * @import { Scene } from '../scene.js'
  */
 
 const _triFanIndices = [0, 1, 3, 2, 3, 1];

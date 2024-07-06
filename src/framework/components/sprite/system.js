@@ -12,7 +12,7 @@ import { SpriteComponent } from './component.js';
 import { SpriteComponentData } from './data.js';
 
 /**
- * @import {AppBase} from '../../app-base.js'
+ * @import { AppBase } from '../../app-base.js'
  */
 
 const _schema = ['enabled'];

@@ -1,5 +1,5 @@
 /**
- * @import {TouchDevice} from './touch-device.js'
+ * @import { TouchDevice } from './touch-device.js'
  */
 
 /**

@@ -2,7 +2,7 @@ import { CURVE_LINEAR, CURVE_SMOOTHSTEP, CURVE_SPLINE, CURVE_STEP } from './cons
 import { math } from './math.js';
 
 /**
- * @import {Curve} from './curve.js'
+ * @import { Curve } from './curve.js'
  */
 
 /**

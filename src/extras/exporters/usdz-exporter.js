@@ -10,10 +10,10 @@ import {
 } from "../../platform/graphics/constants.js";
 
 /**
- * @import {Entity} from '../../framework/entity.js'
- * @import {Material} from '../../scene/materials/material.js'
- * @import {Mesh} from '../../scene/mesh.js'
- * @import {Texture} from '../../platform/graphics/texture.js'
+ * @import { Entity } from '../../framework/entity.js'
+ * @import { Material } from '../../scene/materials/material.js'
+ * @import { Mesh } from '../../scene/mesh.js'
+ * @import { Texture } from '../../platform/graphics/texture.js'
  */
 
 const ROOT_FILE_NAME = 'root';

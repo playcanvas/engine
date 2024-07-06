@@ -9,7 +9,7 @@ import {
 import { Texture } from '../../platform/graphics/texture.js';
 
 /**
- * @import {AppBase} from '../app-base.js'
+ * @import { AppBase } from '../app-base.js'
  */
 
 const MAX_TEXTURE_SIZE = 4096;

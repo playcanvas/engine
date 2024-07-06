@@ -3,7 +3,7 @@ import { TRACEID_VRAM_SB } from '../../core/constants.js';
 import { BUFFERUSAGE_STORAGE } from './constants.js';
 
 /**
- * @import {GraphicsDevice} from './graphics-device.js'
+ * @import { GraphicsDevice } from './graphics-device.js'
  */
 
 let id = 0;

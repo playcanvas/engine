@@ -1,8 +1,8 @@
 import { Debug } from '../core/debug.js';
 
 /**
- * @import {EventHandler} from './event-handler.js'
- * @import {HandleEventCallback} from './event-handler.js'
+ * @import { EventHandler } from './event-handler.js'
+ * @import { HandleEventCallback } from './event-handler.js'
  */
 
 /**

@@ -18,7 +18,7 @@ import {
 import { TextureUtils } from './texture-utils.js';
 
 /**
- * @import {GraphicsDevice} from './graphics-device.js'
+ * @import { GraphicsDevice } from './graphics-device.js'
  */
 
 let id = 0;

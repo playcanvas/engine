@@ -5,9 +5,9 @@ import { Vec3 } from '../../core/math/vec3.js';
 import { BoundingBox } from '../../core/shape/bounding-box.js';
 
 /**
- * @import {PlyElement} from '../../framework/parsers/ply.js'
- * @import {Scene} from '../scene.js'
- * @import {Vec4} from '../../core/math/vec4.js'
+ * @import { PlyElement } from '../../framework/parsers/ply.js'
+ * @import { Scene } from '../scene.js'
+ * @import { Vec4 } from '../../core/math/vec4.js'
  */
 
 const vec3 = new Vec3();

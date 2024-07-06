@@ -4,7 +4,7 @@ import { Vec4 } from '../../core/math/vec4.js';
 import { GSplatData } from './gsplat-data.js';
 
 /**
- * @import {BoundingBox} from '../../core/shape/bounding-box.js'
+ * @import { BoundingBox } from '../../core/shape/bounding-box.js'
  */
 
 const SH_C0 = 0.28209479177387814;

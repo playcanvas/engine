@@ -3,8 +3,8 @@ import { Quat } from '../../core/math/quat.js';
 import { Vec3 } from '../../core/math/vec3.js';
 
 /**
- * @import {XrInputSource} from './xr-input-source.js'
- * @import {XrManager} from './xr-manager.js'
+ * @import { XrInputSource } from './xr-input-source.js'
+ * @import { XrManager } from './xr-manager.js'
  */
 
 /**

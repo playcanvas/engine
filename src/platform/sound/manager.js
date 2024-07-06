@@ -6,8 +6,8 @@ import { Channel3d } from '../audio/channel3d.js';
 import { Listener } from './listener.js';
 
 /**
- * @import {Sound} from './sound.js'
- * @import {Vec3} from '../../core/math/vec3.js'
+ * @import { Sound } from './sound.js'
+ * @import { Vec3 } from '../../core/math/vec3.js'
  */
 
 const CONTEXT_STATE_RUNNING = 'running';

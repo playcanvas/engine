@@ -6,13 +6,13 @@ import { Component } from '../component.js';
 import { properties } from './data.js';
 
 /**
- * @import {Color} from '../../../core/math/color.js'
- * @import {Entity} from '../../entity.js'
- * @import {LightComponentData} from './data.js'
- * @import {LightComponentSystem} from './system.js'
- * @import {Light} from '../../../scene/light.js'
- * @import {Texture} from '../../../platform/graphics/texture.js'
- * @import {Vec2} from '../../../core/math/vec2.js'
+ * @import { Color } from '../../../core/math/color.js'
+ * @import { Entity } from '../../entity.js'
+ * @import { LightComponentData } from './data.js'
+ * @import { LightComponentSystem } from './system.js'
+ * @import { Light } from '../../../scene/light.js'
+ * @import { Texture } from '../../../platform/graphics/texture.js'
+ * @import { Vec2 } from '../../../core/math/vec2.js'
  */
 
 /**

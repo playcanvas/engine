@@ -2,8 +2,8 @@ import { AnimTargetValue } from './anim-target-value.js';
 import { AnimBlend } from './anim-blend.js';
 
 /**
- * @import {AnimBinder} from '../binder/anim-binder.js'
- * @import {AnimClip} from './anim-clip.js'
+ * @import { AnimBinder } from '../binder/anim-binder.js'
+ * @import { AnimClip } from './anim-clip.js'
  */
 
 /**

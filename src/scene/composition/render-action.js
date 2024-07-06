@@ -1,7 +1,7 @@
 /**
- * @import {BindGroup} from '../../platform/graphics/bind-group.js'
- * @import {Layer} from '../layer.js'
- * @import {RenderTarget} from '../../platform/graphics/render-target.js'
+ * @import { BindGroup } from '../../platform/graphics/bind-group.js'
+ * @import { Layer } from '../layer.js'
+ * @import { RenderTarget } from '../../platform/graphics/render-target.js'
  */
 
 /**

@@ -1,7 +1,7 @@
 import { AnimCache } from './anim-cache.js';
 
 /**
- * @import {AnimTrack} from './anim-track.js'
+ * @import { AnimTrack } from './anim-track.js'
  */
 
 /**

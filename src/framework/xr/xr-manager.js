@@ -16,9 +16,9 @@ import { XrMeshDetection } from './xr-mesh-detection.js';
 import { XrViews } from './xr-views.js';
 
 /**
- * @import {AppBase} from '../app-base.js'
- * @import {CameraComponent} from '../components/camera/component.js'
- * @import {Entity} from '../entity.js'
+ * @import { AppBase } from '../app-base.js'
+ * @import { CameraComponent } from '../components/camera/component.js'
+ * @import { Entity } from '../entity.js'
  */
 
 /**

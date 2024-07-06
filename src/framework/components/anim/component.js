@@ -13,7 +13,7 @@ import {
 import { AnimTrack } from '../../anim/evaluator/anim-track.js';
 
 /**
- * @import {AnimComponentSystem} from './system.js'
+ * @import { AnimComponentSystem } from './system.js'
  */
 
 /**

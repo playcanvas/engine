@@ -7,7 +7,7 @@ import { SoundInstance } from '../../../platform/sound/instance.js';
 import { SoundInstance3d } from '../../../platform/sound/instance3d.js';
 
 /**
- * @import {SoundComponent} from './component.js'
+ * @import { SoundComponent } from './component.js'
  */
 
 // temporary object for creating instances

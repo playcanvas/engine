@@ -11,7 +11,7 @@ import {
 } from '../constants.js';
 
 /**
- * @import {GraphicsDevice} from '../graphics-device.js'
+ * @import { GraphicsDevice } from '../graphics-device.js'
  */
 
 /**

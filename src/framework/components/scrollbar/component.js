@@ -5,10 +5,9 @@ import { ElementDragHelper } from '../element/element-drag-helper.js';
 import { EntityReference } from '../../utils/entity-reference.js';
 
 /**
- * @import {Entity} from '../../../framework/entity.js'
- * @import {Entity} from '../../entity.js'
- * @import {ScrollbarComponentData} from './data.js'
- * @import {ScrollbarComponentSystem} from './system.js'
+ * @import { Entity } from '../../entity.js'
+ * @import { ScrollbarComponentData } from './data.js'
+ * @import { ScrollbarComponentSystem } from './system.js'
  */
 
 /**

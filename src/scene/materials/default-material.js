@@ -2,8 +2,8 @@ import { Debug } from '../../core/debug.js';
 import { DeviceCache } from '../../platform/graphics/device-cache.js';
 
 /**
- * @import {GraphicsDevice} from '../../platform/graphics/graphics-device.js'
- * @import {StandardMaterial} from './standard-material.js'
+ * @import { GraphicsDevice } from '../../platform/graphics/graphics-device.js'
+ * @import { StandardMaterial } from './standard-material.js'
  */
 
 // device cache storing default material

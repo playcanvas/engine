@@ -39,14 +39,14 @@ import { WorldClustersAllocator } from './world-clusters-allocator.js';
 import { RenderPassUpdateClustered } from './render-pass-update-clustered.js';
 
 /**
- * @import {Camera} from '../camera.js'
- * @import {CulledInstances} from '../layer.js'
- * @import {GraphicsDevice} from '../../platform/graphics/graphics-device.js'
- * @import {LayerComposition} from '../composition/layer-composition.js'
- * @import {Light} from '../light.js'
- * @import {MeshInstance} from '../mesh-instance.js'
- * @import {RenderTarget} from '../../platform/graphics/render-target.js'
- * @import {Scene} from '../scene.js'
+ * @import { Camera } from '../camera.js'
+ * @import { CulledInstances } from '../layer.js'
+ * @import { GraphicsDevice } from '../../platform/graphics/graphics-device.js'
+ * @import { LayerComposition } from '../composition/layer-composition.js'
+ * @import { Light } from '../light.js'
+ * @import { MeshInstance } from '../mesh-instance.js'
+ * @import { RenderTarget } from '../../platform/graphics/render-target.js'
+ * @import { Scene } from '../scene.js'
  */
 
 let _skinUpdateIndex = 0;

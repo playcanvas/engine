@@ -25,13 +25,13 @@ import { BlendState } from '../../platform/graphics/blend-state.js';
 import { RenderingParams } from './rendering-params.js';
 
 /**
- * @import {Camera} from '../camera.js'
- * @import {LayerComposition} from '../composition/layer-composition.js'
- * @import {LightTextureAtlas} from '../lighting/light-texture-atlas.js'
- * @import {Light} from '../light.js'
- * @import {MeshInstance} from '../mesh-instance.js'
- * @import {Renderer} from './renderer.js'
- * @import {ShaderPassInfo} from '../shader-pass.js'
+ * @import { Camera } from '../camera.js'
+ * @import { LayerComposition } from '../composition/layer-composition.js'
+ * @import { LightTextureAtlas } from '../lighting/light-texture-atlas.js'
+ * @import { Light } from '../light.js'
+ * @import { MeshInstance } from '../mesh-instance.js'
+ * @import { Renderer } from './renderer.js'
+ * @import { ShaderPassInfo } from '../shader-pass.js'
  */
 
 const tempSet = new Set();

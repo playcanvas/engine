@@ -3,8 +3,8 @@ import { TRACEID_VRAM_VB } from '../../core/constants.js';
 import { BUFFER_STATIC } from './constants.js';
 
 /**
- * @import {GraphicsDevice} from './graphics-device.js'
- * @import {VertexFormat} from './vertex-format.js'
+ * @import { GraphicsDevice } from './graphics-device.js'
+ * @import { VertexFormat } from './vertex-format.js'
  */
 
 let id = 0;

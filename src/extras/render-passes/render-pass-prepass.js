@@ -14,7 +14,7 @@ import {
 } from '../../scene/constants.js';
 
 /**
- * @import {BindGroup} from '../../platform/graphics/bind-group.js'
+ * @import { BindGroup } from '../../platform/graphics/bind-group.js'
  */
 
 const tempMeshInstances = [];

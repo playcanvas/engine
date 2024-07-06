@@ -3,7 +3,7 @@ import { SceneParser } from '../parsers/scene.js';
 import { ResourceHandler } from './handler.js';
 
 /**
- * @import {AppBase} from '../app-base.js'
+ * @import { AppBase } from '../app-base.js'
  */
 
 /**
