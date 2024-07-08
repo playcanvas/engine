@@ -2,6 +2,10 @@ import { CURVE_LINEAR, CURVE_SMOOTHSTEP, CURVE_SPLINE, CURVE_STEP } from './cons
 import { math } from './math.js';
 
 /**
+ * @import { Curve } from './curve.js'
+ */
+
+/**
  * A class for evaluating a curve at a specific time.
  */
 class CurveEvaluator {
@@ -32,7 +36,7 @@ class CurveEvaluator {
     /**
      * Create a new CurveEvaluator instance.
      *
-     * @param {import('./curve.js').Curve} curve - The curve to evaluate.
+     * @param {Curve} curve - The curve to evaluate.
      * @param {number} time - The initial time to evaluate the curve at. Defaults to 0.
      */
     constructor(curve, time = 0) {

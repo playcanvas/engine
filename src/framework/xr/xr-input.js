@@ -3,6 +3,10 @@ import { platform } from '../../core/platform.js';
 import { XrInputSource } from './xr-input-source.js';
 
 /**
+ * @import { XrManager } from './xr-manager.js'
+ */
+
+/**
  * Provides access to input sources for WebXR.
  *
  * Input sources represent:
@@ -123,7 +127,7 @@ class XrInput extends EventHandler {
     static EVENT_SQUEEZEEND = 'squeezeend';
 
     /**
-     * @type {import('./xr-manager.js').XrManager}
+     * @type {XrManager}
      * @private
      */
     manager;
@@ -149,7 +153,7 @@ class XrInput extends EventHandler {
     /**
      * Create a new XrInput instance.
      *
-     * @param {import('./xr-manager.js').XrManager} manager - WebXR Manager.
+     * @param {XrManager} manager - WebXR Manager.
      * @ignore
      */
     constructor(manager) {

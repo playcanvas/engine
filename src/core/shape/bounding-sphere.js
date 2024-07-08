@@ -1,6 +1,10 @@
 import { Debug } from '../debug.js';
 import { Vec3 } from '../math/vec3.js';
 
+/**
+ * @import { Ray } from './ray.js'
+ */
+
 const tmpVecA = new Vec3();
 const tmpVecB = new Vec3();
 
@@ -51,7 +55,7 @@ class BoundingSphere {
     /**
      * Test if a ray intersects with the sphere.
      *
-     * @param {import('./ray.js').Ray} ray - Ray to test against (direction must be normalized).
+     * @param {Ray} ray - Ray to test against (direction must be normalized).
      * @param {Vec3} [point] - If there is an intersection, the intersection point will be copied
      * into here.
      * @returns {boolean} True if there is an intersection.

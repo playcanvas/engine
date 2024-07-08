@@ -1,7 +1,10 @@
 import { EventHandler } from '../../core/event-handler.js';
 import { platform } from '../../core/platform.js';
-
 import { XrTrackedImage } from './xr-tracked-image.js';
+
+/**
+ * @import { XrManager } from './xr-manager.js'
+ */
 
 /**
  * Image Tracking provides the ability to track real world images using provided image samples and
@@ -24,7 +27,7 @@ class XrImageTracking extends EventHandler {
     static EVENT_ERROR = 'error';
 
     /**
-     * @type {import('./xr-manager.js').XrManager}
+     * @type {XrManager}
      * @private
      */
     _manager;
@@ -51,7 +54,7 @@ class XrImageTracking extends EventHandler {
      * Image Tracking provides the ability to track real world images by provided image samples and
      * their estimate sizes.
      *
-     * @param {import('./xr-manager.js').XrManager} manager - WebXR Manager.
+     * @param {XrManager} manager - WebXR Manager.
      * @ignore
      */
     constructor(manager) {

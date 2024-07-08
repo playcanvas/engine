@@ -1,13 +1,13 @@
 import { path } from '../../core/path.js';
 import { Debug } from '../../core/debug.js';
-
 import { http, Http } from '../../platform/net/http.js';
-
 import { hasAudioContext } from '../../platform/audio/capabilities.js';
-
 import { Sound } from '../../platform/sound/sound.js';
-
 import { ResourceHandler } from './handler.js';
+
+/**
+ * @import { AppBase } from '../app-base.js'
+ */
 
 // checks if user is running IE
 const ie = (function () {
@@ -53,7 +53,7 @@ class AudioHandler extends ResourceHandler {
     /**
      * Create a new AudioHandler instance.
      *
-     * @param {import('../app-base.js').AppBase} app - The running {@link AppBase}.
+     * @param {AppBase} app - The running {@link AppBase}.
      * @ignore
      */
     constructor(app) {

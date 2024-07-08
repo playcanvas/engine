@@ -1,17 +1,25 @@
 import { Vec2 } from '../../core/math/vec2.js';
+import { Texture } from '../../platform/graphics/texture.js';
+import { BoundingBox } from '../../core/shape/bounding-box.js';
 import {
     ADDRESS_CLAMP_TO_EDGE, FILTER_NEAREST, PIXELFORMAT_RGBA32F, PIXELFORMAT_RGBA32U
 } from '../../platform/graphics/constants.js';
-import { Texture } from '../../platform/graphics/texture.js';
-import { BoundingBox } from '../../core/shape/bounding-box.js';
 import { createGSplatCompressedMaterial } from './gsplat-compressed-material.js';
+
+/**
+ * @import { BoundingBox } from '../../core/shape/bounding-box.js'
+ * @import { GSplatCompressedData } from './gsplat-compressed-data.js'
+ * @import { GraphicsDevice } from '../../platform/graphics/graphics-device.js'
+ * @import { Material } from '../materials/material.js'
+ * @import { SplatMaterialOptions } from './gsplat-material.js'
+ */
 
 class GSplatCompressed {
     device;
 
     numSplats;
 
-    /** @type {import('../../core/shape/bounding-box.js').BoundingBox} */
+    /** @type {BoundingBox} */
     aabb;
 
     /** @type {Float32Array} */
@@ -24,8 +32,8 @@ class GSplatCompressed {
     chunkTexture;
 
     /**
-     * @param {import('../../platform/graphics/graphics-device.js').GraphicsDevice} device - The graphics device.
-     * @param {import('./gsplat-compressed-data.js').GSplatCompressedData} gsplatData - The splat data.
+     * @param {GraphicsDevice} device - The graphics device.
+     * @param {GSplatCompressedData} gsplatData - The splat data.
      */
     constructor(device, gsplatData) {
         const numSplats = gsplatData.numSplats;
@@ -58,9 +66,8 @@ class GSplatCompressed {
     }
 
     /**
-     * @param {import('./gsplat-material.js').SplatMaterialOptions} options - The splat material options.
-     * @returns {import('../materials/material.js').Material} material - The material to set up for
-     * the splat rendering.
+     * @param {SplatMaterialOptions} options - The splat material options.
+     * @returns {Material} material - The material to set up for the splat rendering.
      */
     createMaterial(options) {
         const result = createGSplatCompressedMaterial(options);

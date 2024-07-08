@@ -1,8 +1,13 @@
 import { platform } from '../../core/platform.js';
 import { EventHandler } from '../../core/event-handler.js';
-
 import { XRSPACE_VIEWER } from './constants.js';
 import { XrHitTestSource } from './xr-hit-test-source.js';
+
+/**
+ * @import { Ray } from '../../core/shape/ray.js'
+ * @import { XrInputSource } from './xr-input-source.js'
+ * @import { XrManager } from './xr-manager.js'
+ */
 
 /**
  * Callback used by {@link XrHitTest#start} and {@link XrHitTest#startForInputSource}.
@@ -94,7 +99,7 @@ class XrHitTest extends EventHandler {
     static EVENT_ERROR = 'error';
 
     /**
-     * @type {import('./xr-manager.js').XrManager}
+     * @type {XrManager}
      * @private
      */
     manager;
@@ -127,7 +132,7 @@ class XrHitTest extends EventHandler {
     /**
      * Create a new XrHitTest instance.
      *
-     * @param {import('./xr-manager.js').XrManager} manager - WebXR Manager.
+     * @param {XrManager} manager - WebXR Manager.
      * @ignore
      */
     constructor(manager) {
@@ -213,7 +218,7 @@ class XrHitTest extends EventHandler {
      * - {@link XRTRACKABLE_MESH}: Mesh - indicates that the hit test results will be computed
      * based on the meshes detected by the underlying Augmented Reality system.
      *
-     * @param {import('../../core/shape/ray.js').Ray} [options.offsetRay] - Optional ray by which
+     * @param {Ray} [options.offsetRay] - Optional ray by which
      * hit test ray can be offset.
      * @param {XrHitTestStartCallback} [options.callback] - Optional callback function called once
      * hit test source is created or failed.
@@ -316,7 +321,7 @@ class XrHitTest extends EventHandler {
     /**
      * @param {XRHitTestSource} xrHitTestSource - Hit test source.
      * @param {boolean} transient - True if hit test source is created from transient input source.
-     * @param {import('./xr-input-source.js').XrInputSource|null} inputSource - Input Source with which hit test source is associated with.
+     * @param {XrInputSource|null} inputSource - Input Source with which hit test source is associated with.
      * @param {Function} callback - Callback called once hit test source is created.
      * @private
      */

@@ -1,7 +1,10 @@
 import { ComponentSystem } from '../system.js';
-
 import { ScrollbarComponent } from './component.js';
 import { ScrollbarComponentData } from './data.js';
+
+/**
+ * @import { AppBase } from '../../app-base.js'
+ */
 
 const _schema = [
     { name: 'enabled', type: 'boolean' },
@@ -20,7 +23,7 @@ class ScrollbarComponentSystem extends ComponentSystem {
     /**
      * Create a new ScrollbarComponentSystem.
      *
-     * @param {import('../../app-base.js').AppBase} app - The application.
+     * @param {AppBase} app - The application.
      * @ignore
      */
     constructor(app) {

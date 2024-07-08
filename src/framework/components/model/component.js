@@ -1,16 +1,21 @@
 import { Debug } from '../../../core/debug.js';
-import {
-    LAYERID_WORLD
-} from '../../../scene/constants.js';
+import { LAYERID_WORLD } from '../../../scene/constants.js';
 import { BatchGroup } from '../../../scene/batching/batch-group.js';
 import { GraphNode } from '../../../scene/graph-node.js';
 import { MeshInstance } from '../../../scene/mesh-instance.js';
 import { Model } from '../../../scene/model.js';
 import { getShapePrimitive } from '../../graphics/primitive-cache.js';
-
 import { Asset } from '../../asset/asset.js';
-
 import { Component } from '../component.js';
+
+/**
+ * @import { BoundingBox } from '../../../core/shape/bounding-box.js'
+ * @import { Entity } from '../../entity.js'
+ * @import { LayerComposition } from '../../../scene/composition/layer-composition.js'
+ * @import { Layer } from '../../../scene/layer.js'
+ * @import { Material } from '../../../scene/materials/material.js'
+ * @import { ModelComponentSystem } from './system.js'
+ */
 
 /**
  * Enables an Entity to render a model or a primitive shape. This Component attaches additional
@@ -62,7 +67,7 @@ class ModelComponent extends Component {
     _materialAsset = null;
 
     /**
-     * @type {import('../../../scene/materials/material.js').Material}
+     * @type {Material}
      * @private
      */
     _material;
@@ -105,7 +110,7 @@ class ModelComponent extends Component {
     _batchGroupId = -1;
 
     /**
-     * @type {import('../../../core/shape/bounding-box.js').BoundingBox|null}
+     * @type {BoundingBox|null}
      * @private
      */
     _customAabb = null;
@@ -127,10 +132,8 @@ class ModelComponent extends Component {
     /**
      * Create a new ModelComponent instance.
      *
-     * @param {import('./system.js').ModelComponentSystem} system - The ComponentSystem that
-     * created this Component.
-     * @param {import('../../entity.js').Entity} entity - The Entity that this Component is
-     * attached to.
+     * @param {ModelComponentSystem} system - The ComponentSystem that created this Component.
+     * @param {Entity} entity - The Entity that this Component is attached to.
      */
     constructor(system, entity) {
         super(system, entity);
@@ -174,7 +177,7 @@ class ModelComponent extends Component {
      * for skinned characters in order to avoid per frame bounding box computations based on bone
      * positions.
      *
-     * @type {import('../../../core/shape/bounding-box.js').BoundingBox|null}
+     * @type {BoundingBox|null}
      */
     set customAabb(value) {
         this._customAabb = value;
@@ -194,7 +197,7 @@ class ModelComponent extends Component {
      * Gets the custom object space bounding box that is used for visibility culling of attached
      * mesh instances.
      *
-     * @type {import('../../../core/shape/bounding-box.js').BoundingBox|null}
+     * @type {BoundingBox|null}
      */
     get customAabb() {
         return this._customAabb;
@@ -652,7 +655,7 @@ class ModelComponent extends Component {
      * Sets the {@link Material} that will be used to render the model. The material is ignored for
      * renders of type 'asset'.
      *
-     * @type {import('../../../scene/materials/material.js').Material}
+     * @type {Material}
      */
     set material(value) {
         if (this._material === value)
@@ -666,7 +669,7 @@ class ModelComponent extends Component {
     /**
      * Gets the {@link Material} that will be used to render the model.
      *
-     * @type {import('../../../scene/materials/material.js').Material}
+     * @type {Material}
      */
     get material() {
         return this._material;
@@ -774,10 +777,8 @@ class ModelComponent extends Component {
     }
 
     /**
-     * @param {import('../../../scene/composition/layer-composition.js').LayerComposition} oldComp - The
-     * old layer composition.
-     * @param {import('../../../scene/composition/layer-composition.js').LayerComposition} newComp - The
-     * new layer composition.
+     * @param {LayerComposition} oldComp - The old layer composition.
+     * @param {LayerComposition} newComp - The new layer composition.
      * @private
      */
     onLayersChanged(oldComp, newComp) {
@@ -789,7 +790,7 @@ class ModelComponent extends Component {
     }
 
     /**
-     * @param {import('../../../scene/layer.js').Layer} layer - The layer that was added.
+     * @param {Layer} layer - The layer that was added.
      * @private
      */
     onLayerAdded(layer) {
@@ -799,7 +800,7 @@ class ModelComponent extends Component {
     }
 
     /**
-     * @param {import('../../../scene/layer.js').Layer} layer - The layer that was removed.
+     * @param {Layer} layer - The layer that was removed.
      * @private
      */
     onLayerRemoved(layer) {
@@ -1185,8 +1186,7 @@ class ModelComponent extends Component {
     }
 
     /**
-     * @param {import('../../../scene/materials/material.js').Material} material - The material to
-     * be set.
+     * @param {Material} material - The material to be set.
      * @private
      */
     _setMaterial(material) {

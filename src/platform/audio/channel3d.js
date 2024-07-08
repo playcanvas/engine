@@ -1,10 +1,14 @@
 import { Debug } from '../../core/debug.js';
 import { math } from '../../core/math/math.js';
 import { Vec3 } from '../../core/math/vec3.js';
-
 import { DISTANCE_EXPONENTIAL, DISTANCE_INVERSE, DISTANCE_LINEAR } from './constants.js';
 import { hasAudioContext } from './capabilities.js';
 import { Channel } from './channel.js';
+
+/**
+ * @import { SoundManager } from '../sound/manager.js'
+ * @import { Sound } from '../sound/sound.js'
+ */
 
 // default maxDistance, same as Web Audio API
 const MAX_DISTANCE = 10000;
@@ -18,8 +22,8 @@ class Channel3d extends Channel {
     /**
      * Create a new Channel3d instance.
      *
-     * @param {import('../sound/manager.js').SoundManager} manager - The SoundManager instance.
-     * @param {import('../sound/sound.js').Sound} sound - The sound to playback.
+     * @param {SoundManager} manager - The SoundManager instance.
+     * @param {Sound} sound - The sound to playback.
      * @param {object} [options] - Optional options object.
      * @param {number} [options.volume] - The playback volume, between 0 and 1. Defaults to 1.
      * @param {number} [options.pitch] - The relative pitch. Defaults to 1 (plays at normal pitch).

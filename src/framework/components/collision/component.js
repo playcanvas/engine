@@ -1,9 +1,15 @@
 import { Quat } from '../../../core/math/quat.js';
 import { Vec3 } from '../../../core/math/vec3.js';
-
 import { Asset } from '../../asset/asset.js';
-
 import { Component } from '../component.js';
+
+/**
+ * @import { CollisionComponentData } from './data.js'
+ * @import { CollisionComponentSystem } from './system.js'
+ * @import { Entity } from '../../entity.js'
+ * @import { GraphNode } from '../../../scene/graph-node.js'
+ * @import { Model } from '../../../scene/model.js'
+ */
 
 const _vec3 = new Vec3();
 const _quat = new Quat();
@@ -91,10 +97,8 @@ class CollisionComponent extends Component {
     /**
      * Create a new CollisionComponent.
      *
-     * @param {import('./system.js').CollisionComponentSystem} system - The ComponentSystem that
-     * created this Component.
-     * @param {import('../../entity.js').Entity} entity - The Entity that this Component is
-     * attached to.
+     * @param {CollisionComponentSystem} system - The ComponentSystem that created this Component.
+     * @param {Entity} entity - The Entity that this Component is attached to.
      */
     constructor(system, entity) {
         super(system, entity);
@@ -121,7 +125,7 @@ class CollisionComponent extends Component {
 
     // TODO: Remove this override in upgrading component
     /**
-     * @type {import('./data.js').CollisionComponentData}
+     * @type {CollisionComponentData}
      * @ignore
      */
     get data() {
@@ -361,7 +365,7 @@ class CollisionComponent extends Component {
     /**
      * Sets the model that is added to the scene graph for the mesh collision volume.
      *
-     * @type {import('../../../scene/model.js').Model | null}
+     * @type {Model | null}
      */
     set model(arg) {
         this._setValue('model', arg);
@@ -370,7 +374,7 @@ class CollisionComponent extends Component {
     /**
      * Gets the model that is added to the scene graph for the mesh collision volume.
      *
-     * @type {import('../../../scene/model.js').Model | null}
+     * @type {Model | null}
      */
     get model() {
         return this.data.model;
@@ -637,7 +641,7 @@ class CollisionComponent extends Component {
     }
 
     /**
-     * @param {import('../../../scene/graph-node.js').GraphNode} parent - The parent node.
+     * @param {GraphNode} parent - The parent node.
      * @private
      */
     _onInsert(parent) {

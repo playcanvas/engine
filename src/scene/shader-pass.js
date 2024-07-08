@@ -1,9 +1,12 @@
 import { Debug } from '../core/debug.js';
+import { DeviceCache } from '../platform/graphics/device-cache.js';
 import {
     SHADER_FORWARD, SHADER_DEPTH, SHADER_PICK, SHADER_SHADOW, SHADER_PREPASS_VELOCITY
 } from './constants.js';
 
-import { DeviceCache } from '../platform/graphics/device-cache.js';
+/**
+ * @import { GraphicsDevice } from '../platform/graphics/graphics-device.js'
+ */
 
 // device cache storing shader pass data per device
 const shaderPassDeviceCache = new DeviceCache();
@@ -110,8 +113,7 @@ class ShaderPass {
     /**
      * Get access to the shader pass instance for the specified device.
      *
-     * @param {import('../platform/graphics/graphics-device.js').GraphicsDevice} device - The
-     * graphics device.
+     * @param {GraphicsDevice} device - The graphics device.
      * @returns { ShaderPass } The shader pass instance for the specified device.
      */
     static get(device) {

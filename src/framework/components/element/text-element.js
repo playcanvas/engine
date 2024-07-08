@@ -1,24 +1,23 @@
 import { Debug } from '../../../core/debug.js';
 import { string } from '../../../core/string.js';
-
 import { math } from '../../../core/math/math.js';
 import { Color } from '../../../core/math/color.js';
 import { Vec2 } from '../../../core/math/vec2.js';
-
 import { BoundingBox } from '../../../core/shape/bounding-box.js';
-
 import { SEMANTIC_POSITION, SEMANTIC_TEXCOORD0, SEMANTIC_COLOR, SEMANTIC_ATTR8, SEMANTIC_ATTR9, TYPE_FLOAT32 } from '../../../platform/graphics/constants.js';
 import { VertexIterator } from '../../../platform/graphics/vertex-iterator.js';
 import { GraphNode } from '../../../scene/graph-node.js';
 import { MeshInstance } from '../../../scene/mesh-instance.js';
 import { Model } from '../../../scene/model.js';
 import { Mesh } from '../../../scene/mesh.js';
-
 import { LocalizedAsset } from '../../asset/asset-localized.js';
-
 import { FONT_BITMAP, FONT_MSDF } from '../../font/constants.js';
-
 import { Markup } from './markup.js';
+
+/**
+ * @import { CanvasFont } from '../../../framework/font/canvas-font.js'
+ * @import { Font } from '../../../framework/font/font.js'
+ */
 
 class MeshInfo {
     constructor() {
@@ -139,7 +138,7 @@ class TextElement {
         this._fontAsset.on('change', this._onFontChange, this);
         this._fontAsset.on('remove', this._onFontRemove, this);
 
-        /** @type {import('../../../framework/font/font.js').Font | import('../../../framework/font/canvas-font.js').CanvasFont} */
+        /** @type {Font | CanvasFont} */
         this._font = null;
 
         this._color = new Color(1, 1, 1, 1);
@@ -1909,7 +1908,7 @@ class TextElement {
 
     // private
     /**
-     * @type {import('../../../core/shape/bounding-box.js').BoundingBox}
+     * @type {BoundingBox}
      */
     get aabb() {
         if (this._aabbDirty) {

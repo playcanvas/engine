@@ -1,12 +1,14 @@
 import { sortPriority } from '../../../core/sort.js';
 import { Color } from '../../../core/math/color.js';
 import { Vec4 } from '../../../core/math/vec4.js';
-
 import { Component } from '../component.js';
 import { ComponentSystem } from '../system.js';
-
 import { CameraComponent } from './component.js';
 import { CameraComponentData } from './data.js';
+
+/**
+ * @import { AppBase } from '../../app-base.js'
+ */
 
 const _schema = ['enabled'];
 
@@ -27,7 +29,7 @@ class CameraComponentSystem extends ComponentSystem {
     /**
      * Create a new CameraComponentSystem instance.
      *
-     * @param {import('../../app-base.js').AppBase} app - The Application.
+     * @param {AppBase} app - The Application.
      * @ignore
      */
     constructor(app) {

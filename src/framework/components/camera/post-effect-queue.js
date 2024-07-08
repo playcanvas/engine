@@ -2,8 +2,13 @@ import { ADDRESS_CLAMP_TO_EDGE, FILTER_NEAREST, PIXELFORMAT_RGBA16F, PIXELFORMAT
 import { DebugGraphics } from '../../../platform/graphics/debug-graphics.js';
 import { RenderTarget } from '../../../platform/graphics/render-target.js';
 import { Texture } from '../../../platform/graphics/texture.js';
-
 import { LAYERID_DEPTH } from '../../../scene/constants.js';
+
+/**
+ * @import { AppBase } from '../../app-base.js'
+ * @import { CameraComponent } from './component.js'
+ * @import { PostEffect } from '../../../scene/graphics/post-effect.js'
+ */
 
 class PostEffectEntry {
     constructor(effect, inputTarget) {
@@ -23,8 +28,8 @@ class PostEffectQueue {
     /**
      * Create a new PostEffectQueue instance.
      *
-     * @param {import('../../app-base.js').AppBase} app - The application.
-     * @param {import('./component.js').CameraComponent} camera - The camera component.
+     * @param {AppBase} app - The application.
+     * @param {CameraComponent} camera - The camera component.
      */
     constructor(app, camera) {
         this.app = app;
@@ -136,8 +141,7 @@ class PostEffectQueue {
      * Adds a post effect to the queue. If the queue is disabled adding a post effect will
      * automatically enable the queue.
      *
-     * @param {import('../../../scene/graphics/post-effect.js').PostEffect} effect - The post
-     * effect to add to the queue.
+     * @param {PostEffect} effect - The post effect to add to the queue.
      */
     addEffect(effect) {
         // first rendering of the scene requires depth buffer
@@ -169,8 +173,7 @@ class PostEffectQueue {
      * Removes a post effect from the queue. If the queue becomes empty it will be disabled
      * automatically.
      *
-     * @param {import('../../../scene/graphics/post-effect.js').PostEffect} effect - The post effect
-     * to remove.
+     * @param {PostEffect} effect - The post effect to remove.
      */
     removeEffect(effect) {
 

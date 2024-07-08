@@ -3,15 +3,19 @@ import { RefCountedObject } from '../core/ref-counted-object.js';
 import { Vec3 } from '../core/math/vec3.js';
 import { FloatPacking } from '../core/math/float-packing.js';
 import { BoundingBox } from '../core/shape/bounding-box.js';
-import { Texture } from '../platform/graphics/texture.js';
-import { VertexBuffer } from '../platform/graphics/vertex-buffer.js';
-import { VertexFormat } from '../platform/graphics/vertex-format.js';
-
 import {
     TYPE_UINT32, SEMANTIC_ATTR15, ADDRESS_CLAMP_TO_EDGE, FILTER_NEAREST,
     PIXELFORMAT_RGBA16F, PIXELFORMAT_RGB32F, PIXELFORMAT_RGBA32F, PIXELFORMAT_RGBA16U,
     isIntegerPixelFormat
 } from '../platform/graphics/constants.js';
+import { Texture } from '../platform/graphics/texture.js';
+import { VertexBuffer } from '../platform/graphics/vertex-buffer.js';
+import { VertexFormat } from '../platform/graphics/vertex-format.js';
+
+/**
+ * @import { GraphicsDevice } from '../platform/graphics/graphics-device.js'
+ * @import { MorphTarget } from './morph-target.js'
+ */
 
 /**
  * Contains a list of {@link MorphTarget}s, a combined delta AABB and some associated data.
@@ -31,9 +35,8 @@ class Morph extends RefCountedObject {
     /**
      * Create a new Morph instance.
      *
-     * @param {import('./morph-target.js').MorphTarget[]} targets - A list of morph targets.
-     * @param {import('../platform/graphics/graphics-device.js').GraphicsDevice} graphicsDevice -
-     * The graphics device used to manage this morph target.
+     * @param {MorphTarget[]} targets - A list of morph targets.
+     * @param {GraphicsDevice} graphicsDevice - The graphics device used to manage this morph target.
      * @param {object} [options] - Object for passing optional arguments.
      * @param {boolean} [options.preferHighPrecision] - True if high precision storage should be
      * preferred. This is faster to create and allows higher precision, but takes more memory and
@@ -252,7 +255,7 @@ class Morph extends RefCountedObject {
     /**
      * Gets the array of morph targets.
      *
-     * @type {import('./morph-target.js').MorphTarget[]}
+     * @type {MorphTarget[]}
      */
     get targets() {
         return this._targets;

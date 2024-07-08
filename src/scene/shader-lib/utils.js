@@ -7,10 +7,14 @@ import { ShaderGenerator } from './programs/shader-generator.js';
 import { SHADERLANGUAGE_WGSL } from '../../platform/graphics/constants.js';
 
 /**
+ * @import { GraphicsDevice } from '../../platform/graphics/graphics-device.js'
+ * @import { ShaderProcessorOptions } from '../../platform/graphics/shader-processor-options.js'
+ */
+
+/**
  * Create a shader from named shader chunks.
  *
- * @param {import('../../platform/graphics/graphics-device.js').GraphicsDevice} device - The
- * graphics device.
+ * @param {GraphicsDevice} device - The graphics device.
  * @param {string} vsName - The vertex shader chunk name.
  * @param {string} fsName - The fragment shader chunk name.
  * @param {boolean | Record<string, boolean | string | string[]>} [useTransformFeedback] - Whether
@@ -52,8 +56,7 @@ function createShader(device, vsName, fsName, useTransformFeedback = false, shad
  * compile on both WebGL and WebGPU. Specifically, these blocks are added, and should not be
  * part of provided vsCode and fsCode: shader version, shader precision, commonly used extensions.
  *
- * @param {import('../../platform/graphics/graphics-device.js').GraphicsDevice} device - The
- * graphics device.
+ * @param {GraphicsDevice} device - The graphics device.
  * @param {string} vsCode - The vertex shader code.
  * @param {string} fsCode - The fragment shader code.
  * @param {string} uniqueName - Unique name for the shader. If a shader with this name already
@@ -124,8 +127,7 @@ class ShaderGeneratorPassThrough extends ShaderGenerator {
  * Process shader using shader processing options, utilizing cache of the ProgramLibrary
  *
  * @param {Shader} shader - The shader to be processed.
- * @param {import('../../platform/graphics/shader-processor-options.js').ShaderProcessorOptions} processingOptions -
- * The shader processing options.
+ * @param {ShaderProcessorOptions} processingOptions - The shader processing options.
  * @returns {Shader} The processed shader.
  */
 function processShader(shader, processingOptions) {
