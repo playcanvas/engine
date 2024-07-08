@@ -291,8 +291,8 @@ class Gizmo extends EventHandler {
             this.fire(Gizmo.EVENT_POINTERUP);
         };
 
-        this._device.canvas.addEventListener('pointerdown', this._onPointerDown);
-        this._device.canvas.addEventListener('pointermove', this._onPointerMove);
+        this._device.canvas.addEventListener('pointerdown', this._onPointerDown, true);
+        this._device.canvas.addEventListener('pointermove', this._onPointerMove, true);
         this._device.canvas.addEventListener('pointerup', this._onPointerUp);
 
         app.on('update', () => this._updateScale());
