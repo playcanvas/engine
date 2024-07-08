@@ -58,22 +58,6 @@ import {
     setApplication
 } from './globals.js';
 
-// Mini-object used to measure progress of loading sets
-class Progress {
-    constructor(length) {
-        this.length = length;
-        this.count = 0;
-    }
-
-    inc() {
-        this.count++;
-    }
-
-    done() {
-        return (this.count === this.length);
-    }
-}
-
 /**
  * Gets the current application, if any.
  *
@@ -689,62 +673,34 @@ class AppBase extends EventHandler {
             preload: true
         });
 
-        const progress = new Progress(assets.length);
+        if (assets.length === 0) {
+            this.fire("preload:end");
+            callback();
+            return;
+        }
 
-        let _done = false;
+        let loadedCount = 0;
 
-        // check if all loading is done
-        const done = () => {
-            // do not proceed if application destroyed
-            if (!this.graphicsDevice) {
-                return;
-            }
+        const onAssetLoadOrError = () => {
+            loadedCount++;
+            this.fire('preload:progress', loadedCount / assets.length);
 
-            if (!_done && progress.done()) {
-                _done = true;
+            if (loadedCount === assets.length) {
                 this.fire("preload:end");
                 callback();
             }
         };
 
-        // totals loading progress of assets
-        const total = assets.length;
-
-        if (progress.length) {
-            const onAssetLoad = (asset) => {
-                progress.inc();
-                this.fire('preload:progress', progress.count / total);
-
-                if (progress.done())
-                    done();
-            };
-
-            const onAssetError = (err, asset) => {
-                progress.inc();
-                this.fire('preload:progress', progress.count / total);
-
-                if (progress.done())
-                    done();
-            };
-
-            // for each asset
-            for (let i = 0; i < assets.length; i++) {
-                if (!assets[i].loaded) {
-                    assets[i].once('load', onAssetLoad);
-                    assets[i].once('error', onAssetError);
-
-                    this.assets.load(assets[i]);
-                } else {
-                    progress.inc();
-                    this.fire("preload:progress", progress.count / total);
-
-                    if (progress.done())
-                        done();
-                }
+        // for each asset
+        assets.forEach((asset) => {
+            if (!asset.loaded) {
+                asset.once('load', onAssetLoadOrError);
+                asset.once('error', onAssetLoadOrError);
+                this.assets.load(asset);
+            } else {
+                onAssetLoadOrError();
             }
-        } else {
-            done();
-        }
+        });
     }
 
     _preloadScripts(sceneData, callback) {
