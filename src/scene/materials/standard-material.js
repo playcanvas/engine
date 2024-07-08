@@ -299,10 +299,10 @@ const _tempColor = new Color();
  * within the medium. Only used when useDynamicRefraction is enabled.
  * @property {Color} emissive The emissive color of the material. This color value is 3-component
  * (RGB), where each component is between 0 and 1.
- * @property {Texture|null} emissiveMap The emissive
- * map of the material (default is null). Can be HDR. When the emissive map is applied, the emissive
- * color is multiplied by the texel color in the map. Since the emissive color is black by default,
- * the emissive map won't be visible unless the emissive color is changed.
+ * @property {Texture|null} emissiveMap The emissive map of the material (default is null). Can be
+ * HDR. When the emissive map is applied, the emissive color is multiplied by the texel color in the
+ * map. Since the emissive color is black by default, the emissive map won't be visible unless the
+ * emissive color is changed.
  * @property {number} emissiveIntensity Emissive color multiplier.
  * @property {number} emissiveMapUv Emissive map UV channel.
  * @property {Vec2} emissiveMapTiling Controls the 2D tiling of the emissive map.
