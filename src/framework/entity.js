@@ -427,7 +427,7 @@ class Entity extends GraphNode {
      * const light = entity.findComponent("light");
      */
     findComponent(type) {
-        const entity = this.findOne(entity => entity?.c[type]);
+        const entity = this.findOne(entity => entity.c?.[type]);
         return entity && entity.c[type];
     }
 
@@ -442,7 +442,7 @@ class Entity extends GraphNode {
      * const lights = entity.findComponents("light");
      */
     findComponents(type) {
-        return this.find(entity => entity?.c[type]).map(entity => entity.c[type]);
+        return this.find(entity => entity.c?.[type]).map(entity => entity.c[type]);
     }
 
     /**
