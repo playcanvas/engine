@@ -3,6 +3,11 @@ import { PIXELFORMAT_RGBA8 } from "../constants.js";
 import { DebugGraphics } from "../debug-graphics.js";
 
 /**
+ * @import { RenderTarget } from '../render-target.js'
+ * @import { WebglGraphicsDevice } from './webgl-graphics-device.js'
+ */
+
+/**
  * A private class representing a pair of framebuffers, when MSAA is used.
  */
 class FramebufferPair {
@@ -316,8 +321,8 @@ class WebglRenderTarget {
     /**
      * Checks the completeness status of the currently bound WebGLFramebuffer object.
      *
-     * @param {import('./webgl-graphics-device.js').WebglGraphicsDevice} device - The graphics device.
-     * @param {import('../render-target.js').RenderTarget} target - The render target.
+     * @param {WebglGraphicsDevice} device - The graphics device.
+     * @param {RenderTarget} target - The render target.
      * @param {string} [type] - An optional type string to append to the error message.
      * @private
      */

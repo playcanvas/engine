@@ -1,13 +1,14 @@
 import { EventHandler } from '../../../core/event-handler.js';
 import { Debug } from '../../../core/debug.js';
-
 import { math } from '../../../core/math/math.js';
 import { Vec3 } from '../../../core/math/vec3.js';
-
 import { Asset } from '../../asset/asset.js';
-
 import { SoundInstance } from '../../../platform/sound/instance.js';
 import { SoundInstance3d } from '../../../platform/sound/instance3d.js';
+
+/**
+ * @import { SoundComponent } from './component.js'
+ */
 
 // temporary object for creating instances
 const instanceOptions = {
@@ -111,7 +112,7 @@ class SoundSlot extends EventHandler {
     /**
      * Create a new SoundSlot.
      *
-     * @param {import('./component.js').SoundComponent} component - The Component that created this
+     * @param {SoundComponent} component - The Component that created this
      * slot.
      * @param {string} [name] - The name of the slot. Defaults to 'Untitled'.
      * @param {object} [options] - Settings for the slot.

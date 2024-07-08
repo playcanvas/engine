@@ -1,14 +1,17 @@
 import { Debug } from '../../../core/debug.js';
 import { AnimTrack } from '../evaluator/anim-track.js';
-
+import {
+    ANIM_BLEND_1D, ANIM_BLEND_2D_CARTESIAN, ANIM_BLEND_2D_DIRECTIONAL, ANIM_BLEND_DIRECT, ANIM_CONTROL_STATES
+} from './constants.js';
 import { AnimBlendTree1D } from './anim-blend-tree-1d.js';
 import { AnimBlendTreeCartesian2D } from './anim-blend-tree-2d-cartesian.js';
 import { AnimBlendTreeDirectional2D } from './anim-blend-tree-2d-directional.js';
 import { AnimBlendTreeDirect } from './anim-blend-tree-direct.js';
 import { AnimNode } from './anim-node.js';
-import {
-    ANIM_BLEND_1D, ANIM_BLEND_2D_CARTESIAN, ANIM_BLEND_2D_DIRECTIONAL, ANIM_BLEND_DIRECT, ANIM_CONTROL_STATES
-} from './constants.js';
+
+/**
+ * @import { AnimController } from './anim-controller.js'
+ */
 
 /**
  * Defines a single state that the controller can be in. Each state contains either a single
@@ -26,7 +29,7 @@ class AnimState {
     /**
      * Create a new AnimState instance.
      *
-     * @param {import('./anim-controller.js').AnimController} controller - The controller this
+     * @param {AnimController} controller - The controller this
      * AnimState is associated with.
      * @param {string} name - The name of the state. Used to find this state when the controller
      * transitions between states and links animations.

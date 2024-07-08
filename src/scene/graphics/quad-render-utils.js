@@ -1,20 +1,25 @@
 import { Debug } from '../../core/debug.js';
 import { Vec4 } from '../../core/math/vec4.js';
-
 import { QuadRender } from './quad-render.js';
 import { RenderPassQuad } from './render-pass-quad.js';
+
+/**
+ * @import { GraphicsDevice } from '../../platform/graphics/graphics-device.js'
+ * @import { RenderTarget } from '../../platform/graphics/render-target.js'
+ * @import { Shader } from '../../platform/graphics/shader.js'
+ * @import { Texture } from '../../platform/graphics/texture.js'
+ */
 
 const _tempRect = new Vec4();
 
 /**
  * Draws a screen-space quad using a specific shader.
  *
- * @param {import('../../platform/graphics/graphics-device.js').GraphicsDevice} device - The graphics device used to draw
- * the quad.
- * @param {import('../../platform/graphics/render-target.js').RenderTarget|null} target - The destination render
- * target. If undefined, target is the frame buffer.
- * @param {import('../../platform/graphics/shader.js').Shader} shader - The shader used for rendering the quad. Vertex
- * shader should contain `attribute vec2 vertex_position`.
+ * @param {GraphicsDevice} device - The graphics device used to draw the quad.
+ * @param {RenderTarget|null} target - The destination render target. If undefined, target is the
+ * frame buffer.
+ * @param {Shader} shader - The shader used for rendering the quad. Vertex shader should contain
+ * `attribute vec2 vertex_position`.
  * @param {Vec4} [rect] - The viewport rectangle of the quad, in pixels. Defaults to fullscreen:
  * `[0, 0, target.width, target.height]`.
  * @param {Vec4} [scissorRect] - The scissor rectangle of the quad, in pixels. Defaults to fullscreen:
@@ -68,14 +73,11 @@ function drawQuadWithShader(device, target, shader, rect, scissorRect) {
 /**
  * Draws a texture in screen-space. Mostly used by post-effects.
  *
- * @param {import('../../platform/graphics/graphics-device.js').GraphicsDevice} device - The graphics device used to draw
- * the texture.
- * @param {import('../../platform/graphics/texture.js').Texture} texture - The source texture to be drawn. Accessible as
+ * @param {GraphicsDevice} device - The graphics device used to draw the texture.
+ * @param {Texture} texture - The source texture to be drawn. Accessible as
  * `uniform sampler2D * source` in shader.
- * @param {import('../../platform/graphics/render-target.js').RenderTarget} [target] - The destination render target.
- * Defaults to the frame buffer.
- * @param {import('../../platform/graphics/shader.js').Shader} [shader] - The optional custom
- * shader used for rendering the texture.
+ * @param {RenderTarget} [target] - The destination render target. Defaults to the frame buffer.
+ * @param {Shader} [shader] - The optional custom shader used for rendering the texture.
  * @param {Vec4} [rect] - The viewport rectangle to use for the texture, in pixels. Defaults to
  * fullscreen: `[0, 0, target.width, target.height]`.
  * @param {Vec4} [scissorRect] - The scissor rectangle to use for the texture, in pixels. Defaults

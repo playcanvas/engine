@@ -35,6 +35,10 @@ import { Material } from '../scene/materials/material.js';
 import { StandardMaterial } from '../scene/materials/standard-material.js';
 import { setDefaultMaterial } from '../scene/materials/default-material.js';
 
+import {
+    FILLMODE_FILL_WINDOW, FILLMODE_KEEP_ASPECT,
+    RESOLUTION_AUTO, RESOLUTION_FIXED
+} from './constants.js';
 import { Asset } from './asset/asset.js';
 import { AssetRegistry } from './asset/asset-registry.js';
 import { BundleRegistry } from './bundle/bundle-registry.js';
@@ -47,16 +51,24 @@ import { Entity } from './entity.js';
 import { SceneRegistry } from './scene-registry.js';
 import { script } from './script.js';
 import { ApplicationStats } from './stats.js';
+import { getApplication, setApplication } from './globals.js';
 
-import {
-    FILLMODE_FILL_WINDOW, FILLMODE_KEEP_ASPECT,
-    RESOLUTION_AUTO, RESOLUTION_FIXED
-} from './constants.js';
-
-import {
-    getApplication,
-    setApplication
-} from './globals.js';
+/**
+ * @import { AppOptions } from './app-options.js'
+ * @import { BatchManager } from '../scene/batching/batch-manager.js'
+ * @import { ElementInput } from './input/element-input.js'
+ * @import { GamePads } from '../platform/input/game-pads.js'
+ * @import { GraphicsDevice } from '../platform/graphics/graphics-device.js'
+ * @import { Keyboard } from '../platform/input/keyboard.js'
+ * @import { Lightmapper } from './lightmapper/lightmapper.js'
+ * @import { MeshInstance } from '../scene/mesh-instance.js'
+ * @import { Mesh } from '../scene/mesh.js'
+ * @import { Mouse } from '../platform/input/mouse.js'
+ * @import { SoundManager } from '../platform/sound/manager.js'
+ * @import { Texture } from '../platform/graphics/texture.js'
+ * @import { TouchDevice } from '../platform/input/touch-device.js'
+ * @import { XrManager } from './xr/xr-manager.js'
+ */
 
 /**
  * Gets the current application, if any.
@@ -230,7 +242,7 @@ class AppBase extends EventHandler {
     /**
      * Initialize the app.
      *
-     * @param {import('./app-options.js').AppOptions} appOptions - Options specifying the init
+     * @param {AppOptions} appOptions - Options specifying the init
      * parameters for the app.
      */
     init(appOptions) {
@@ -241,7 +253,7 @@ class AppBase extends EventHandler {
         /**
          * The graphics device used by the application.
          *
-         * @type {import('../platform/graphics/graphics-device.js').GraphicsDevice}
+         * @type {GraphicsDevice}
          */
         this.graphicsDevice = device;
 
@@ -250,7 +262,7 @@ class AppBase extends EventHandler {
         this.stats = new ApplicationStats(device);
 
         /**
-         * @type {import('../platform/sound/manager.js').SoundManager}
+         * @type {SoundManager}
          * @private
          */
         this._soundManager = appOptions.soundManager;
@@ -386,7 +398,7 @@ class AppBase extends EventHandler {
         /**
          * The run-time lightmapper.
          *
-         * @type {import('./lightmapper/lightmapper.js').Lightmapper}
+         * @type {Lightmapper}
          */
         this.lightmapper = null;
         if (appOptions.lightmapper) {
@@ -397,7 +409,7 @@ class AppBase extends EventHandler {
         /**
          * The application's batch manager.
          *
-         * @type {import('../scene/batching/batch-manager.js').BatchManager}
+         * @type {BatchManager}
          * @private
          */
         this._batcher = null;
@@ -409,35 +421,35 @@ class AppBase extends EventHandler {
         /**
          * The keyboard device.
          *
-         * @type {import('../platform/input/keyboard.js').Keyboard}
+         * @type {Keyboard}
          */
         this.keyboard = appOptions.keyboard || null;
 
         /**
          * The mouse device.
          *
-         * @type {import('../platform/input/mouse.js').Mouse}
+         * @type {Mouse}
          */
         this.mouse = appOptions.mouse || null;
 
         /**
          * Used to get touch events input.
          *
-         * @type {import('../platform/input/touch-device.js').TouchDevice}
+         * @type {TouchDevice}
          */
         this.touch = appOptions.touch || null;
 
         /**
          * Used to access GamePad input.
          *
-         * @type {import('../platform/input/game-pads.js').GamePads}
+         * @type {GamePads}
          */
         this.gamepads = appOptions.gamepads || null;
 
         /**
          * Used to handle input for {@link ElementComponent}s.
          *
-         * @type {import('./input/element-input.js').ElementInput}
+         * @type {ElementInput}
          */
         this.elementInput = appOptions.elementInput || null;
         if (this.elementInput)
@@ -446,7 +458,7 @@ class AppBase extends EventHandler {
         /**
          * The XR Manager that provides ability to start VR/AR sessions.
          *
-         * @type {import('./xr/xr-manager.js').XrManager}
+         * @type {XrManager}
          * @example
          * // check if VR is available
          * if (app.xr.isAvailable(pc.XRTYPE_VR)) {
@@ -584,7 +596,7 @@ class AppBase extends EventHandler {
     }
 
     /**
-     * @type {import('../platform/sound/manager.js').SoundManager}
+     * @type {SoundManager}
      * @ignore
      */
     get soundManager() {
@@ -595,7 +607,7 @@ class AppBase extends EventHandler {
      * The application's batch manager. The batch manager is used to merge mesh instances in
      * the scene, which reduces the overall number of draw calls, thereby boosting performance.
      *
-     * @type {import('../scene/batching/batch-manager.js').BatchManager}
+     * @type {BatchManager}
      */
     get batcher() {
         Debug.assert(this._batcher, "BatchManager has not been created and is required for correct functionality.");
@@ -1701,7 +1713,7 @@ class AppBase extends EventHandler {
     /**
      * Draw meshInstance at this frame
      *
-     * @param {import('../scene/mesh-instance.js').MeshInstance} meshInstance - The mesh instance
+     * @param {MeshInstance} meshInstance - The mesh instance
      * to draw.
      * @param {Layer} [layer] - The layer to render the mesh instance into. Defaults to
      * {@link LAYERID_IMMEDIATE}.
@@ -1714,7 +1726,7 @@ class AppBase extends EventHandler {
     /**
      * Draw mesh at this frame.
      *
-     * @param {import('../scene/mesh.js').Mesh} mesh - The mesh to draw.
+     * @param {Mesh} mesh - The mesh to draw.
      * @param {Material} material - The material to use to render the mesh.
      * @param {Mat4} matrix - The matrix to use to render the mesh.
      * @param {Layer} [layer] - The layer to render the mesh into. Defaults to {@link LAYERID_IMMEDIATE}.
@@ -1748,7 +1760,7 @@ class AppBase extends EventHandler {
      * range [0, 2].
      * @param {number} height - The height of the rectangle of the rendered texture. Should be in
      * the range [0, 2].
-     * @param {import('../platform/graphics/texture.js').Texture} texture - The texture to render.
+     * @param {Texture} texture - The texture to render.
      * @param {Material} material - The material used when rendering the texture.
      * @param {Layer} [layer] - The layer to render the texture into. Defaults to {@link LAYERID_IMMEDIATE}.
      * @param {boolean} [filterable] - Indicate if the texture can be sampled using filtering.

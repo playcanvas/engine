@@ -1,19 +1,12 @@
 import { EventHandler } from '../../core/event-handler.js';
-
 import { Asset } from '../asset/asset.js';
+import { DEFAULT_LOCALE, DEFAULT_LOCALE_FALLBACKS } from './constants.js';
+import { findAvailableLocale, getLang, getPluralFn, replaceLang } from './utils.js';
 import { I18nParser } from './i18n-parser.js';
 
-import {
-    DEFAULT_LOCALE,
-    DEFAULT_LOCALE_FALLBACKS
-} from './constants.js';
-
-import {
-    replaceLang,
-    getLang,
-    getPluralFn,
-    findAvailableLocale
-} from './utils.js';
+/**
+ * @import { AppBase } from '../app-base.js'
+ */
 
 /**
  * Handles localization. Responsible for loading localization assets and returning translations for
@@ -24,7 +17,7 @@ class I18n extends EventHandler {
     /**
      * Create a new I18n instance.
      *
-     * @param {import('../app-base.js').AppBase} app - The application.
+     * @param {AppBase} app - The application.
      */
     constructor(app) {
         super();

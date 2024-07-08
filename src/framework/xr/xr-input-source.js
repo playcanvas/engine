@@ -3,10 +3,15 @@ import { Mat4 } from '../../core/math/mat4.js';
 import { Quat } from '../../core/math/quat.js';
 import { Vec3 } from '../../core/math/vec3.js';
 import { Ray } from '../../core/shape/ray.js';
-
 import { XrHand } from './xr-hand.js';
-
 import { now } from '../../core/time.js';
+
+/**
+ * @import { Entity } from '../entity.js'
+ * @import { XrHitTestSource } from './xr-hit-test-source.js'
+ * @import { XrHitTestStartCallback } from './xr-hit-test.js'
+ * @import { XrManager } from './xr-manager.js'
+ */
 
 const vec3A = new Vec3();
 const quat = new Quat();
@@ -158,7 +163,7 @@ class XrInputSource extends EventHandler {
     _id;
 
     /**
-     * @type {import('./xr-manager.js').XrManager}
+     * @type {XrManager}
      * @private
      */
     _manager;
@@ -284,13 +289,13 @@ class XrInputSource extends EventHandler {
     _elementInput = true;
 
     /**
-     * @type {import('../entity.js').Entity|null}
+     * @type {Entity|null}
      * @private
      */
     _elementEntity = null;
 
     /**
-     * @type {import('./xr-hit-test-source.js').XrHitTestSource[]}
+     * @type {XrHitTestSource[]}
      * @private
      */
     _hitTestSources = [];
@@ -298,7 +303,7 @@ class XrInputSource extends EventHandler {
     /**
      * Create a new XrInputSource instance.
      *
-     * @param {import('./xr-manager.js').XrManager} manager - WebXR Manager.
+     * @param {XrManager} manager - WebXR Manager.
      * @param {XRInputSource} xrInputSource - A WebXR input source.
      * @ignore
      */
@@ -452,7 +457,7 @@ class XrInputSource extends EventHandler {
      * If {@link XrInputSource#elementInput} is true, this property will hold entity with Element
      * component at which this input source is hovering, or null if not hovering over any element.
      *
-     * @type {import('../entity.js').Entity|null}
+     * @type {Entity|null}
      */
     get elementEntity() {
         return this._elementEntity;
@@ -461,7 +466,7 @@ class XrInputSource extends EventHandler {
     /**
      * List of active {@link XrHitTestSource} instances associated with this input source.
      *
-     * @type {import('./xr-hit-test-source.js').XrHitTestSource[]}
+     * @type {XrHitTestSource[]}
      */
     get hitTestSources() {
         return this._hitTestSources;
@@ -663,8 +668,8 @@ class XrInputSource extends EventHandler {
      * based on the meshes detected by the underlying Augmented Reality system.
      *
      * @param {Ray} [options.offsetRay] - Optional ray by which hit test ray can be offset.
-     * @param {import('./xr-hit-test.js').XrHitTestStartCallback} [options.callback] - Optional
-     * callback function called once hit test source is created or failed.
+     * @param {XrHitTestStartCallback} [options.callback] - Optional callback function called once
+     * hit test source is created or failed.
      * @example
      * app.xr.input.on('add', function (inputSource) {
      *     inputSource.hitTestStart({
@@ -692,7 +697,7 @@ class XrInputSource extends EventHandler {
     }
 
     /**
-     * @param {import('./xr-hit-test-source.js').XrHitTestSource} hitTestSource - Hit test source
+     * @param {XrHitTestSource} hitTestSource - Hit test source
      * to be added.
      * @private
      */
@@ -712,7 +717,7 @@ class XrInputSource extends EventHandler {
     }
 
     /**
-     * @param {import('./xr-hit-test-source.js').XrHitTestSource} hitTestSource - Hit test source
+     * @param {XrHitTestSource} hitTestSource - Hit test source
      * to be removed.
      * @private
      */

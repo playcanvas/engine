@@ -1,7 +1,10 @@
 import { ComponentSystem } from '../system.js';
-
 import { ButtonComponent } from './component.js';
 import { ButtonComponentData } from './data.js';
+
+/**
+ * @import { AppBase } from '../../app-base.js'
+ */
 
 const _schema = [
     'enabled',
@@ -30,7 +33,7 @@ class ButtonComponentSystem extends ComponentSystem {
     /**
      * Create a new ButtonComponentSystem.
      *
-     * @param {import('../../app-base.js').AppBase} app - The application.
+     * @param {AppBase} app - The application.
      * @ignore
      */
     constructor(app) {

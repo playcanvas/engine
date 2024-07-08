@@ -4,10 +4,16 @@ import { Quat } from '../../core/math/quat.js';
 import { Mat4 } from '../../core/math/mat4.js';
 import { Vec3 } from '../../core/math/vec3.js';
 import { PROJECTION_ORTHOGRAPHIC, PROJECTION_PERSPECTIVE } from '../../scene/constants.js';
-
 import { AxisDisk } from './axis-shapes.js';
 import { GIZMO_LOCAL } from './gizmo.js';
 import { SHAPEAXIS_FACE, SHAPEAXIS_X, SHAPEAXIS_Y, SHAPEAXIS_Z, TransformGizmo } from "./transform-gizmo.js";
+
+/**
+ * @import { AppBase } from '../../framework/app-base.js'
+ * @import { CameraComponent } from '../../framework/components/camera/component.js'
+ * @import { GraphNode } from '../../scene/graph-node.js'
+ * @import { Layer } from '../../scene/layer.js'
+ */
 
 // temporary variables
 const tmpV1 = new Vec3();
@@ -65,7 +71,7 @@ class RotateGizmo extends TransformGizmo {
     /**
      * Internal mapping from each attached node to their starting rotation in local space.
      *
-     * @type {Map<import('../../scene/graph-node.js').GraphNode, Quat>}
+     * @type {Map<GraphNode, Quat>}
      * @private
      */
     _nodeLocalRotations = new Map();
@@ -73,7 +79,7 @@ class RotateGizmo extends TransformGizmo {
     /**
      * Internal mapping from each attached node to their starting rotation in world space.
      *
-     * @type {Map<import('../../scene/graph-node.js').GraphNode, Quat>}
+     * @type {Map<GraphNode, Quat>}
      * @private
      */
     _nodeRotations = new Map();
@@ -81,7 +87,7 @@ class RotateGizmo extends TransformGizmo {
     /**
      * Internal mapping from each attached node to their offset position from the gizmo.
      *
-     * @type {Map<import('../../scene/graph-node.js').GraphNode, Vec3>}
+     * @type {Map<GraphNode, Vec3>}
      * @private
      */
     _nodeOffsets = new Map();
@@ -118,10 +124,9 @@ class RotateGizmo extends TransformGizmo {
     /**
      * Creates a new RotateGizmo object.
      *
-     * @param {import('../../framework/app-base.js').AppBase} app - The application instance.
-     * @param {import('../../framework/components/camera/component.js').CameraComponent} camera -
-     * The camera component.
-     * @param {import('../../scene/layer.js').Layer} layer - The render layer.
+     * @param {AppBase} app - The application instance.
+     * @param {CameraComponent} camera - The camera component.
+     * @param {Layer} layer - The render layer.
      * @example
      * const gizmo = new pc.RotateGizmo(app, camera, layer);
      */

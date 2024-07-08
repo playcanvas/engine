@@ -1,14 +1,14 @@
 import { http } from '../../platform/net/http.js';
-
 import { PIXELFORMAT_RGBA8 } from '../../platform/graphics/constants.js';
 import { Texture } from '../../platform/graphics/texture.js';
-
 import { standardMaterialCubemapParameters, standardMaterialTextureParameters } from '../../scene/materials/standard-material-parameters.js';
-
 import { AssetReference } from '../asset/asset-reference.js';
 import { JsonStandardMaterialParser } from '../parsers/material/json-standard-material.js';
-
 import { ResourceHandler } from './handler.js';
+
+/**
+ * @import { AppBase } from '../app-base.js'
+ */
 
 const PLACEHOLDER_MAP = {
     aoMap: 'white',
@@ -40,7 +40,7 @@ class MaterialHandler extends ResourceHandler {
     /**
      * Create a new MaterialHandler instance.
      *
-     * @param {import('../app-base.js').AppBase} app - The running {@link AppBase}.
+     * @param {AppBase} app - The running {@link AppBase}.
      * @ignore
      */
     constructor(app) {
