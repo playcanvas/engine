@@ -1,7 +1,6 @@
 import { TRACEID_RENDER_QUEUE } from '../../../core/constants.js';
 import { Debug, DebugHelper } from '../../../core/debug.js';
 import { math } from '../../../core/math/math.js';
-
 import {
     pixelFormatInfo, isCompressedPixelFormat,
     ADDRESS_REPEAT, ADDRESS_CLAMP_TO_EDGE, ADDRESS_MIRRORED_REPEAT,
@@ -15,6 +14,11 @@ import {
 import { TextureUtils } from '../texture-utils.js';
 import { WebgpuDebug } from './webgpu-debug.js';
 import { gpuTextureFormats } from './constants.js';
+
+/**
+ * @import { Texture } from '../texture.js'
+ * @import { WebgpuGraphicsDevice } from './webgpu-graphics-device.js'
+ */
 
 // map of ADDRESS_*** to GPUAddressMode
 const gpuAddressModes = [];
@@ -37,8 +41,6 @@ const dummyUse = (thingOne) => {
 
 /**
  * A WebGPU implementation of the Texture.
- *
- * @ignore
  */
 class WebgpuTexture {
     /**
@@ -77,7 +79,7 @@ class WebgpuTexture {
     format;
 
     constructor(texture) {
-        /** @type {import('../texture.js').Texture} */
+        /** @type {Texture} */
         this.texture = texture;
 
         this.format = gpuTextureFormats[texture.format];
@@ -273,9 +275,8 @@ class WebgpuTexture {
     }
 
     /**
-     * @param {import('./webgpu-graphics-device.js').WebgpuGraphicsDevice} device - The graphics
-     * device.
-     * @param {import('../texture.js').Texture} texture - The texture.
+     * @param {WebgpuGraphicsDevice} device - The graphics device.
+     * @param {Texture} texture - The texture.
      */
     uploadImmediate(device, texture) {
 
@@ -288,7 +289,7 @@ class WebgpuTexture {
     }
 
     /**
-     * @param {import('./webgpu-graphics-device.js').WebgpuGraphicsDevice} device - The graphics
+     * @param {WebgpuGraphicsDevice} device - The graphics
      * device.
      */
     uploadData(device) {
@@ -520,7 +521,7 @@ class WebgpuTexture {
         const size = paddedBytesPerRow * height;
 
         // create a temporary staging buffer
-        /** @type {import('./webgpu-graphics-device.js').WebgpuGraphicsDevice} */
+        /** @type {WebgpuGraphicsDevice} */
         const device = texture.device;
         const stagingBuffer = device.createBufferImpl(BUFFERUSAGE_READ | BUFFERUSAGE_COPY_DST);
         stagingBuffer.allocate(device, size);

@@ -1,21 +1,23 @@
 import { BODYFLAG_NORESPONSE_OBJECT, BODYMASK_NOT_STATIC, BODYGROUP_TRIGGER, BODYSTATE_ACTIVE_TAG, BODYSTATE_DISABLE_SIMULATION } from '../rigid-body/constants.js';
 
+/**
+ * @import { AppBase } from '../../app-base.js'
+ * @import { Component } from '../component.js'
+ */
+
 let _ammoVec1, _ammoQuat, _ammoTransform;
 
 /**
  * Creates a trigger object used to create internal physics objects that interact with rigid bodies
  * and trigger collision events with no collision response.
- *
- * @ignore
  */
 class Trigger {
     /**
      * Create a new Trigger instance.
      *
-     * @param {import('../../app-base.js').AppBase} app - The running {@link AppBase}.
-     * @param {import('../component.js').Component} component - The component for which the trigger
-     * will be created.
-     * @param {ComponentData} data - The data for the component.
+     * @param {AppBase} app - The running {@link AppBase}.
+     * @param {Component} component - The component for which the trigger will be created.
+     * @param {object} data - The data for the component.
      */
     constructor(app, component, data) {
         this.entity = component.entity;

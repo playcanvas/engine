@@ -3,8 +3,6 @@ import { RenderPass } from "../../platform/graphics/render-pass.js";
 
 /**
  * A render pass used to render post-effects.
- *
- * @ignore
  */
 class RenderPassPostprocessing extends RenderPass {
     constructor(device, renderer, renderAction) {

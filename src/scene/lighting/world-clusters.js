@@ -6,6 +6,10 @@ import { LIGHTTYPE_DIRECTIONAL, LIGHTTYPE_SPOT, MASK_AFFECT_DYNAMIC, MASK_AFFECT
 import { LightsBuffer } from './lights-buffer.js';
 import { Debug } from '../../core/debug.js';
 
+/**
+ * @import { Texture } from '../../platform/graphics/texture.js'
+ */
+
 const tempVec3 = new Vec3();
 const tempMin3 = new Vec3();
 const tempMax3 = new Vec3();
@@ -29,7 +33,7 @@ class ClusterLight {
 // Main class implementing clustered lighting. Internally it organizes the omni / spot lights placement in world space 3d cell structure,
 // and also uses LightsBuffer class to store light properties in textures
 class WorldClusters {
-    /** @type {import('../../platform/graphics/texture.js').Texture} */
+    /** @type {Texture} */
     clusterTexture;
 
     constructor(device) {

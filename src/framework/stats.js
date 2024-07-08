@@ -1,15 +1,17 @@
 import { getApplication } from './globals.js';
 
 /**
+ * @import { GraphicsDevice } from '../platform/graphics/graphics-device.js'
+ */
+
+/**
  * Records performance-related statistics related to the application.
- *
- * @ignore
  */
 class ApplicationStats {
     /**
      * Create a new ApplicationStats instance.
      *
-     * @param {import('../platform/graphics/graphics-device.js').GraphicsDevice} device - The
+     * @param {GraphicsDevice} device - The
      * graphics device.
      */
     constructor(device) {

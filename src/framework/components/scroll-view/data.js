@@ -1,5 +1,9 @@
 import { Vec2 } from '../../../core/math/vec2.js';
 
+/**
+ * @import { Entity } from '../../../framework/entity.js'
+ */
+
 const DEFAULT_DRAG_THRESHOLD = 10;
 
 class ScrollViewComponentData {
@@ -32,16 +36,16 @@ class ScrollViewComponentData {
     /** @type {number} */
     verticalScrollbarVisibility;
 
-    /** @type {import('../../../framework/entity.js').Entity} */
+    /** @type {Entity} */
     viewportEntity;
 
-    /** @type {import('../../../framework/entity.js').Entity} */
+    /** @type {Entity} */
     contentEntity;
 
-    /** @type {import('../../../framework/entity.js').Entity} */
+    /** @type {Entity} */
     horizontalScrollbarEntity;
 
-    /** @type {import('../../../framework/entity.js').Entity} */
+    /** @type {Entity} */
     verticalScrollbarEntity;
 }
 

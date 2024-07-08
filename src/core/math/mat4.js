@@ -3,6 +3,10 @@ import { Vec2 } from './vec2.js';
 import { Vec3 } from './vec3.js';
 import { Vec4 } from './vec4.js';
 
+/**
+ * @import { Quat } from './quat.js'
+ */
+
 const _halfSize = new Vec2();
 const x = new Vec3();
 const y = new Vec3();
@@ -393,9 +397,7 @@ class Mat4 {
     transformPoint(vec, res = new Vec3()) {
         const m = this.data;
 
-        const x = vec.x;
-        const y = vec.y;
-        const z = vec.z;
+        const { x, y, z } = vec;
 
         res.x = x * m[0] + y * m[4] + z * m[8] + m[12];
         res.y = x * m[1] + y * m[5] + z * m[9] + m[13];
@@ -423,9 +425,7 @@ class Mat4 {
     transformVector(vec, res = new Vec3()) {
         const m = this.data;
 
-        const x = vec.x;
-        const y = vec.y;
-        const z = vec.z;
+        const { x, y, z } = vec;
 
         res.x = x * m[0] + y * m[4] + z * m[8];
         res.y = x * m[1] + y * m[5] + z * m[9];
@@ -456,10 +456,7 @@ class Mat4 {
     transformVec4(vec, res = new Vec4()) {
         const m = this.data;
 
-        const x = vec.x;
-        const y = vec.y;
-        const z = vec.z;
-        const w = vec.w;
+        const { x, y, z, w } = vec;
 
         res.x = x * m[0] + y * m[4] + z * m[8] + w * m[12];
         res.y = x * m[1] + y * m[5] + z * m[9] + w * m[13];
@@ -642,9 +639,7 @@ class Mat4 {
     setFromAxisAngle(axis, angle) {
         angle *= math.DEG_TO_RAD;
 
-        const x = axis.x;
-        const y = axis.y;
-        const z = axis.z;
+        const { x, y, z } = axis;
         const c = Math.cos(angle);
         const s = Math.sin(angle);
         const t = 1 - c;
@@ -953,7 +948,7 @@ class Mat4 {
      * scale.
      *
      * @param {Vec3} t - A 3-d vector translation.
-     * @param {import('./quat.js').Quat} r - A quaternion rotation.
+     * @param {Quat} r - A quaternion rotation.
      * @param {Vec3} s - A 3-d vector scale.
      * @returns {Mat4} Self for chaining.
      * @example

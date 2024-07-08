@@ -1,6 +1,5 @@
 import { CULLFACE_FRONT } from '../../platform/graphics/constants.js';
 import { ShaderProcessorOptions } from '../../platform/graphics/shader-processor-options.js';
-
 import { LAYERID_SKYBOX } from '../constants.js';
 import { Material } from '../materials/material.js';
 import { MeshInstance } from '../mesh-instance.js';
@@ -9,9 +8,14 @@ import { skybox } from '../shader-lib/programs/skybox.js';
 import { SkyGeometry } from './sky-geometry.js';
 
 /**
+ * @import { GraphNode } from '../graph-node.js'
+ * @import { GraphicsDevice } from '../../platform/graphics/graphics-device.js'
+ * @import { Scene } from '../scene.js'
+ * @import { Texture } from '../../platform/graphics/texture.js'
+ */
+
+/**
  * A visual representation of the sky.
- *
- * @ignore
  */
 class SkyMesh {
     /**
@@ -22,10 +26,10 @@ class SkyMesh {
     meshInstance = null;
 
     /**
-     * @param {import('../../platform/graphics/graphics-device.js').GraphicsDevice} device - The
-     * graphics device.
-     * @param {import('../scene.js').Scene} scene - The scene owning the sky.
-     * @param {import('../../platform/graphics/texture.js').Texture} texture - The texture of the sky.
+     * @param {GraphicsDevice} device - The graphics device.
+     * @param {Scene} scene - The scene owning the sky.
+     * @param {GraphNode} node - The graph node of the sky mesh instance.
+     * @param {Texture} texture - The texture of the sky.
      * @param {string} type - The type of the sky. One of the SKYMESH_* constants.
      */
     constructor(device, scene, node, texture, type) {

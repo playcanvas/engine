@@ -1,7 +1,5 @@
 import { Color } from '../../core/math/color.js';
-
 import { ShaderProcessorOptions } from '../../platform/graphics/shader-processor-options.js';
-
 import {
     SHADERDEF_INSTANCING, SHADERDEF_MORPH_NORMAL, SHADERDEF_MORPH_POSITION,
     SHADERDEF_MORPH_TEXTURE_BASED_INT,
@@ -10,6 +8,12 @@ import {
 import { getProgramLibrary } from '../shader-lib/get-program-library.js';
 import { basic } from '../shader-lib/programs/basic.js';
 import { Material } from './material.js';
+
+/**
+ * @import { GraphicsDevice } from '../../platform/graphics/graphics-device.js'
+ * @import { Scene } from '../scene.js'
+ * @import { Texture } from '../../platform/graphics/texture.js'
+ */
 
 /**
  * A BasicMaterial is for rendering unlit geometry, either using a constant color or a color map
@@ -37,14 +41,14 @@ class BasicMaterial extends Material {
      */
     color = new Color(1, 1, 1, 1);
 
-    /** @ignore */
+    /** @private */
     colorUniform = new Float32Array(4);
 
     /**
      * The color map of the material (default is null). If specified, the color map is
      * modulated by the color property.
      *
-     * @type {import('../../platform/graphics/texture.js').Texture|null}
+     * @type {Texture|null}
      */
     colorMap = null;
 
@@ -68,8 +72,8 @@ class BasicMaterial extends Material {
     }
 
     /**
-     * @param {import('../../platform/graphics/graphics-device.js').GraphicsDevice} device - The graphics device.
-     * @param {import('../scene.js').Scene} scene - The scene.
+     * @param {GraphicsDevice} device - The graphics device.
+     * @param {Scene} scene - The scene.
      * @ignore
      */
     updateUniforms(device, scene) {

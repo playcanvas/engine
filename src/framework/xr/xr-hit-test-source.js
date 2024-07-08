@@ -3,14 +3,17 @@ import { Quat } from '../../core/math/quat.js';
 import { Vec3 } from '../../core/math/vec3.js';
 
 /**
+ * @import { XrInputSource } from './xr-input-source.js'
+ * @import { XrManager } from './xr-manager.js'
+ */
+
+/**
  * @type {Vec3[]}
- * @ignore
  */
 const poolVec3 = [];
 
 /**
  * @type {Quat[]}
- * @ignore
  */
 const poolQuat = [];
 
@@ -62,7 +65,7 @@ class XrHitTestSource extends EventHandler {
     static EVENT_RESULT = 'result';
 
     /**
-     * @type {import('./xr-manager.js').XrManager}
+     * @type {XrManager}
      * @private
      */
     manager;
@@ -80,7 +83,7 @@ class XrHitTestSource extends EventHandler {
     _transient;
 
     /**
-     * @type {null|import('./xr-input-source.js').XrInputSource}
+     * @type {null|XrInputSource}
      * @private
      */
     _inputSource;
@@ -88,10 +91,10 @@ class XrHitTestSource extends EventHandler {
     /**
      * Create a new XrHitTestSource instance.
      *
-     * @param {import('./xr-manager.js').XrManager} manager - WebXR Manager.
+     * @param {XrManager} manager - WebXR Manager.
      * @param {XRHitTestSource} xrHitTestSource - XRHitTestSource object that is created by WebXR API.
      * @param {boolean} transient - True if XRHitTestSource created for input source profile.
-     * @param {null|import('./xr-input-source.js').XrInputSource} inputSource - Input Source for which hit test is created for, or null.
+     * @param {null|XrInputSource} inputSource - Input Source for which hit test is created for, or null.
      * @ignore
      */
     constructor(manager, xrHitTestSource, transient, inputSource = null) {
@@ -157,7 +160,7 @@ class XrHitTestSource extends EventHandler {
 
     /**
      * @param {XRTransientInputHitTestResult[]} results - Hit test results.
-     * @param {null|import('./xr-input-source.js').XrInputSource} inputSource - Input source.
+     * @param {null|XrInputSource} inputSource - Input source.
      * @private
      */
     updateHitResults(results, inputSource) {

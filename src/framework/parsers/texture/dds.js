@@ -17,8 +17,6 @@ import { TextureParser } from './texture.js';
 
 /**
  * Legacy texture parser for dds files.
- *
- * @ignore
  */
 class DdsParser extends TextureParser {
     constructor(registry) {

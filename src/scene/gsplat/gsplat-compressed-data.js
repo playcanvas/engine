@@ -3,6 +3,10 @@ import { Vec3 } from '../../core/math/vec3.js';
 import { Vec4 } from '../../core/math/vec4.js';
 import { GSplatData } from './gsplat-data.js';
 
+/**
+ * @import { BoundingBox } from '../../core/shape/bounding-box.js'
+ */
+
 const SH_C0 = 0.28209479177387814;
 
 // iterator for accessing compressed splat data
@@ -115,7 +119,7 @@ class GSplatCompressedData {
      * Calculate pessimistic scene aabb taking into account splat size. This is faster than
      * calculating an exact aabb.
      *
-     * @param {import('../../core/shape/bounding-box.js').BoundingBox} result - Where to store the resulting bounding box.
+     * @param {BoundingBox} result - Where to store the resulting bounding box.
      * @returns {boolean} - Whether the calculation was successful.
      */
     calcAabb(result) {

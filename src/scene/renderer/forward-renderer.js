@@ -1,11 +1,8 @@
 import { now } from '../../core/time.js';
 import { Debug } from '../../core/debug.js';
-
 import { Vec3 } from '../../core/math/vec3.js';
 import { Color } from '../../core/math/color.js';
-
 import { DebugGraphics } from '../../platform/graphics/debug-graphics.js';
-
 import {
     FOG_NONE, FOG_LINEAR,
     LIGHTTYPE_OMNI, LIGHTTYPE_SPOT, LIGHTTYPE_DIRECTIONAL,
@@ -13,11 +10,23 @@ import {
     LAYERID_DEPTH
 } from '../constants.js';
 import { WorldClustersDebug } from '../lighting/world-clusters-debug.js';
-
 import { Renderer } from './renderer.js';
 import { LightCamera } from './light-camera.js';
 import { RenderPassForward } from './render-pass-forward.js';
 import { RenderPassPostprocessing } from './render-pass-postprocessing.js';
+
+/**
+ * @import { BindGroup } from '../../platform/graphics/bind-group.js'
+ * @import { Camera } from '../camera.js'
+ * @import { FrameGraph } from '../frame-graph.js'
+ * @import { GraphicsDevice } from '../../platform/graphics/graphics-device.js'
+ * @import { LayerComposition } from '../composition/layer-composition.js'
+ * @import { Layer } from '../layer.js'
+ * @import { MeshInstance } from '../mesh-instance.js'
+ * @import { RenderTarget } from '../../platform/graphics/render-target.js'
+ * @import { Scene } from '../scene.js'
+ * @import { WorldClusters } from '../lighting/world-clusters.js'
+ */
 
 const _noLights = [[], [], []];
 const tmpColor = new Color();
@@ -64,8 +73,7 @@ class ForwardRenderer extends Renderer {
     /**
      * Create a new ForwardRenderer instance.
      *
-     * @param {import('../../platform/graphics/graphics-device.js').GraphicsDevice} graphicsDevice - The
-     * graphics device used by the renderer.
+     * @param {GraphicsDevice} graphicsDevice - The graphics device used by the renderer.
      */
     constructor(graphicsDevice) {
         super(graphicsDevice);
@@ -143,7 +151,7 @@ class ForwardRenderer extends Renderer {
     // #endif
 
     /**
-     * @param {import('../scene.js').Scene} scene - The scene.
+     * @param {Scene} scene - The scene.
      */
     dispatchGlobalLights(scene) {
         const ambientUniform = this.ambientColor;
@@ -488,7 +496,7 @@ class ForwardRenderer extends Renderer {
         const drawCallsCount = drawCalls.length;
         for (let i = 0; i < drawCallsCount; i++) {
 
-            /** @type {import('../mesh-instance.js').MeshInstance} */
+            /** @type {MeshInstance} */
             const drawCall = drawCalls[i];
 
             // #if _PROFILER
@@ -669,25 +677,22 @@ class ForwardRenderer extends Renderer {
      * Forward render mesh instances on a specified layer, using a camera and a render target.
      * Shaders used are based on the shaderPass provided, with optional clustered lighting support.
      *
-     * @param {import('../camera.js').Camera} camera - The
-     * camera.
-     * @param {import('../../platform/graphics/render-target.js').RenderTarget|undefined} renderTarget - The
-     * render target.
-     * @param {import('../layer.js').Layer} layer - The layer.
+     * @param {Camera} camera - The camera.
+     * @param {RenderTarget|undefined} renderTarget - The render target.
+     * @param {Layer} layer - The layer.
      * @param {boolean} transparent - True if transparent sublayer should be rendered, opaque
      * otherwise.
      * @param {number} shaderPass - A type of shader to use during rendering.
-     * @param {import('../../platform/graphics/bind-group.js').BindGroup[]} viewBindGroups - An array
-     * storing the view level bing groups (can be empty array, and this function populates if per
-     * view).
+     * @param {BindGroup[]} viewBindGroups - An array storing the view level bing groups (can be
+     * empty array, and this function populates if per view).
      * @param {object} [options] - Object for passing optional arguments.
      * @param {boolean} [options.clearColor] - True if the color buffer should be cleared.
      * @param {boolean} [options.clearDepth] - True if the depth buffer should be cleared.
      * @param {boolean} [options.clearStencil] - True if the stencil buffer should be cleared.
-     * @param {import('../lighting/world-clusters.js').WorldClusters} [options.lightClusters] - The
-     * world clusters object to be used for clustered lighting.
-     * @param {import('../mesh-instance.js').MeshInstance[]} [options.meshInstances] - The mesh
-     * instances to be rendered. Use when layer is not provided.
+     * @param {WorldClusters} [options.lightClusters] - The world clusters object to be used for
+     * clustered lighting.
+     * @param {MeshInstance[]} [options.meshInstances] - The mesh instances to be rendered. Use
+     * when layer is not provided.
      * @param {object} [options.splitLights] - The split lights to be used for clustered lighting.
      */
     renderForwardLayer(camera, renderTarget, layer, transparent, shaderPass, viewBindGroups, options = {}) {
@@ -817,9 +822,9 @@ class ForwardRenderer extends Renderer {
     /**
      * Builds a frame graph for the rendering of the whole frame.
      *
-     * @param {import('../frame-graph.js').FrameGraph} frameGraph - The frame-graph that is built.
-     * @param {import('../composition/layer-composition.js').LayerComposition} layerComposition - The
-     * layer composition used to build the frame graph.
+     * @param {FrameGraph} frameGraph - The frame-graph that is built.
+     * @param {LayerComposition} layerComposition - The layer composition used to build the frame
+     * graph.
      * @ignore
      */
     buildFrameGraph(frameGraph, layerComposition) {
@@ -914,9 +919,8 @@ class ForwardRenderer extends Renderer {
     }
 
     /**
-     * @param {import('../frame-graph.js').FrameGraph} frameGraph - The frame graph.
-     * @param {import('../composition/layer-composition.js').LayerComposition} layerComposition - The
-     * layer composition.
+     * @param {FrameGraph} frameGraph - The frame graph.
+     * @param {LayerComposition} layerComposition - The layer composition.
      */
     addMainRenderPass(frameGraph, layerComposition, renderTarget, startIndex, endIndex) {
 
@@ -932,8 +936,7 @@ class ForwardRenderer extends Renderer {
     }
 
     /**
-     * @param {import('../composition/layer-composition.js').LayerComposition} comp - The layer
-     * composition.
+     * @param {LayerComposition} comp - The layer composition.
      */
     update(comp) {
 

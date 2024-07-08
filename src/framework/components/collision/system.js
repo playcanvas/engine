@@ -1,19 +1,18 @@
 import { Debug } from '../../../core/debug.js';
-
 import { Mat4 } from '../../../core/math/mat4.js';
 import { Quat } from '../../../core/math/quat.js';
 import { Vec3 } from '../../../core/math/vec3.js';
-
 import { SEMANTIC_POSITION } from '../../../platform/graphics/constants.js';
-
 import { GraphNode } from '../../../scene/graph-node.js';
 import { Model } from '../../../scene/model.js';
-
 import { ComponentSystem } from '../system.js';
-
 import { CollisionComponent } from './component.js';
 import { CollisionComponentData } from './data.js';
 import { Trigger } from './trigger.js';
+
+/**
+ * @import { AppBase } from '../../app-base.js'
+ */
 
 const mat4 = new Mat4();
 const p1 = new Vec3();
@@ -654,7 +653,7 @@ class CollisionComponentSystem extends ComponentSystem {
     /**
      * Creates a new CollisionComponentSystem instance.
      *
-     * @param {import('../../app-base.js').AppBase} app - The running {@link AppBase}.
+     * @param {AppBase} app - The running {@link AppBase}.
      * @ignore
      */
     constructor(app) {

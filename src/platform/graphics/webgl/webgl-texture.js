@@ -1,5 +1,4 @@
 import { Debug } from '../../../core/debug.js';
-
 import {
     PIXELFORMAT_A8, PIXELFORMAT_L8, PIXELFORMAT_LA8, PIXELFORMAT_RGB565, PIXELFORMAT_RGBA5551, PIXELFORMAT_RGBA4,
     PIXELFORMAT_RGB8, PIXELFORMAT_RGBA8, PIXELFORMAT_DXT1, PIXELFORMAT_DXT3, PIXELFORMAT_DXT5,
@@ -17,13 +16,17 @@ import {
 } from '../constants.js';
 
 /**
+ * @import { Texture } from '../texture.js'
+ * @import { WebglGraphicsDevice } from './webgl-graphics-device.js'
+ */
+
+/**
  * Checks that an image's width and height do not exceed the max texture size. If they do, it will
  * be scaled down to that maximum size and returned as a canvas element.
  *
  * @param {HTMLImageElement} image - The image to downsample.
  * @param {number} size - The maximum allowed size of the image.
  * @returns {HTMLImageElement|HTMLCanvasElement} The downsampled image.
- * @ignore
  */
 function downsampleImage(image, size) {
     const srcW = image.width;
@@ -51,8 +54,6 @@ function downsampleImage(image, size) {
 
 /**
  * A WebGL implementation of the Texture.
- *
- * @ignore
  */
 class WebglTexture {
     _glTexture = null;
@@ -70,7 +71,7 @@ class WebglTexture {
     dirtyParameterFlags = 0;
 
     constructor(texture) {
-        /** @type {import('../texture.js').Texture} */
+        /** @type {Texture} */
         this.texture = texture;
     }
 
@@ -429,8 +430,8 @@ class WebglTexture {
     }
 
     /**
-     * @param {import('./webgl-graphics-device.js').WebglGraphicsDevice} device - The device.
-     * @param {import('../texture.js').Texture} texture - The texture to update.
+     * @param {WebglGraphicsDevice} device - The device.
+     * @param {Texture} texture - The texture to update.
      */
     upload(device, texture) {
 
@@ -783,7 +784,7 @@ class WebglTexture {
 
         const texture = this.texture;
 
-        /** @type {import('./webgl-graphics-device.js').WebglGraphicsDevice} */
+        /** @type {WebglGraphicsDevice} */
         const device = texture.device;
         return device.readTextureAsync(texture, x, y, width, height, options);
     }

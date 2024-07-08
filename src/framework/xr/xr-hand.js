@@ -1,15 +1,17 @@
 import { EventHandler } from '../../core/event-handler.js';
 import { platform } from '../../core/platform.js';
 import { Vec3 } from '../../core/math/vec3.js';
-
 import { XRHAND_LEFT } from './constants.js';
 import { XrFinger } from './xr-finger.js';
 import { XrJoint } from './xr-joint.js';
 
+/**
+ * @import { XrInputSource } from './xr-input-source.js'
+ * @import { XrManager } from './xr-manager.js'
+ */
 
 /**
  * @type {string[][]}
- * @ignore
  */
 let fingerJointIds = [];
 
@@ -56,13 +58,13 @@ class XrHand extends EventHandler {
     static EVENT_TRACKINGLOST = 'trackinglost';
 
     /**
-     * @type {import('./xr-manager.js').XrManager}
+     * @type {XrManager}
      * @private
      */
     _manager;
 
     /**
-     * @type {import('./xr-input-source.js').XrInputSource}
+     * @type {XrInputSource}
      * @private
      */
     _inputSource;
@@ -106,8 +108,7 @@ class XrHand extends EventHandler {
     /**
      * Represents a hand with fingers and joints.
      *
-     * @param {import('./xr-input-source.js').XrInputSource} inputSource - Input Source that hand
-     * is related to.
+     * @param {XrInputSource} inputSource - Input Source that hand is related to.
      * @ignore
      */
     constructor(inputSource) {

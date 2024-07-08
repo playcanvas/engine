@@ -10,6 +10,12 @@ import {
 import { UniformFormat, UniformBufferFormat } from './uniform-buffer-format.js';
 import { BindGroupFormat, BindTextureFormat } from './bind-group-format.js';
 
+/**
+ * @import { GraphicsDevice } from './graphics-device.js'
+ * @import { ShaderProcessorOptions } from './shader-processor-options.js'
+ * @import { Shader } from './shader.js'
+ */
+
 // accepted keywords
 // TODO: 'out' keyword is not in the list, as handling it is more complicated due
 // to 'out' keyword also being used to mark output only function parameters.
@@ -95,16 +101,14 @@ class UniformLine {
 /**
  * Pure static class implementing processing of GLSL shaders. It allocates fixed locations for
  * attributes, and handles conversion of uniforms to uniform buffers.
- *
- * @ignore
  */
 class ShaderProcessor {
     /**
      * Process the shader.
      *
-     * @param {import('./graphics-device.js').GraphicsDevice} device - The graphics device.
+     * @param {GraphicsDevice} device - The graphics device.
      * @param {object} shaderDefinition - The shader definition.
-     * @param {import('./shader.js').Shader} shader - The shader definition.
+     * @param {Shader} shader - The shader definition.
      * @returns {object} - The processed shader data.
      */
     static run(device, shaderDefinition, shader) {
@@ -229,11 +233,10 @@ class ShaderProcessor {
      * All leftover uniforms create uniform buffer and bind group for the mesh itself, containing
      * uniforms that change on the level of the mesh.
      *
-     * @param {import('./graphics-device.js').GraphicsDevice} device - The graphics device.
+     * @param {GraphicsDevice} device - The graphics device.
      * @param {Array<UniformLine>} uniforms - Lines containing uniforms.
-     * @param {import('./shader-processor-options.js').ShaderProcessorOptions} processingOptions -
-     * Uniform formats.
-     * @param {import('./shader.js').Shader} shader - The shader definition.
+     * @param {ShaderProcessorOptions} processingOptions - Uniform formats.
+     * @param {Shader} shader - The shader definition.
      * @returns {object} - The uniform data. Returns a shader code block containing uniforms, to be
      * inserted into the shader, as well as generated uniform format structures for the mesh level.
      */

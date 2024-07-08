@@ -4,6 +4,12 @@ import { platform } from '../../core/platform.js';
 import { Preprocessor } from '../../core/preprocessor.js';
 import { DebugGraphics } from './debug-graphics.js';
 
+/**
+ * @import { BindGroupFormat } from './bind-group-format.js'
+ * @import { GraphicsDevice } from './graphics-device.js'
+ * @import { UniformBufferFormat } from './uniform-buffer-format.js'
+ */
+
 let id = 0;
 
 /**
@@ -20,7 +26,7 @@ class Shader {
     /**
      * Format of the uniform buffer for mesh bind group.
      *
-     * @type {import('./uniform-buffer-format.js').UniformBufferFormat}
+     * @type {UniformBufferFormat}
      * @ignore
      */
     meshUniformBufferFormat;
@@ -28,7 +34,7 @@ class Shader {
     /**
      * Format of the bind group for the mesh bind group.
      *
-     * @type {import('./bind-group-format.js').BindGroupFormat}
+     * @type {BindGroupFormat}
      * @ignore
      */
     meshBindGroupFormat;
@@ -39,14 +45,13 @@ class Shader {
      * Consider {@link createShaderFromCode} as a simpler and more powerful way to create
      * a shader.
      *
-     * @param {import('./graphics-device.js').GraphicsDevice} graphicsDevice - The graphics device
-     * used to manage this shader.
+     * @param {GraphicsDevice} graphicsDevice - The graphics device used to manage this shader.
      * @param {object} definition - The shader definition from which to build the shader.
      * @param {string} [definition.name] - The name of the shader.
      * @param {Object<string, string>} [definition.attributes] - Object detailing the mapping of
      * vertex shader attribute names to semantics SEMANTIC_*. This enables the engine to match
-     * vertex buffer data as inputs to the shader. When not specified, rendering without
-     * vertex buffer is assumed.
+     * vertex buffer data as inputs to the shader. When not specified, rendering without vertex
+     * buffer is assumed.
      * @param {string} [definition.vshader] - Vertex shader source (GLSL code). Optional when
      * compute shader is specified.
      * @param {string} [definition.fshader] - Fragment shader source (GLSL code). Optional when

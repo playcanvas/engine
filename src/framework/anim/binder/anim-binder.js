@@ -1,4 +1,8 @@
 /**
+ * @import { AnimTarget } from '../evaluator/anim-target.js'
+ */
+
+/**
  * This interface is used by {@link AnimEvaluator} to resolve unique animation target path strings
  * into instances of {@link AnimTarget}.
  *
@@ -70,7 +74,7 @@ class AnimBinder {
      * handle setting the value, or return null if no such target exists.
      *
      * @param {string} path - The animation curve path to resolve.
-     * @returns {import('../evaluator/anim-target.js').AnimTarget|null} - Returns the target
+     * @returns {AnimTarget|null} - Returns the target
      * instance on success and null otherwise.
      */
     resolve(path) {

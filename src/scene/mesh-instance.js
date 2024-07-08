@@ -1,11 +1,8 @@
 import { Debug, DebugHelper } from '../core/debug.js';
-
 import { BoundingBox } from '../core/shape/bounding-box.js';
 import { BoundingSphere } from '../core/shape/bounding-sphere.js';
-
 import { BindGroup } from '../platform/graphics/bind-group.js';
 import { UniformBuffer } from '../platform/graphics/uniform-buffer.js';
-
 import {
     BLEND_NONE, BLEND_NORMAL,
     LAYER_WORLD,
@@ -17,7 +14,6 @@ import {
     SORTKEY_FORWARD,
     SHADERDEF_MORPH_TEXTURE_BASED_INT
 } from './constants.js';
-
 import { GraphNode } from './graph-node.js';
 import { getDefaultMaterial } from './materials/default-material.js';
 import { LightmapCache } from './graphics/lightmap-cache.js';
@@ -25,12 +21,32 @@ import { DebugGraphics } from '../platform/graphics/debug-graphics.js';
 import { hash32Fnv1a } from '../core/hash.js';
 import { array } from '../core/array-utils.js';
 
+/**
+ * @import { BindGroupFormat } from '../platform/graphics/bind-group-format.js'
+ * @import { Camera } from './camera.js'
+ * @import { GSplatInstance } from './gsplat/gsplat-instance.js'
+ * @import { GraphicsDevice } from '../platform/graphics/graphics-device.js'
+ * @import { Material } from './materials/material.js'
+ * @import { Mesh } from './mesh.js'
+ * @import { MorphInstance } from './morph-instance.js'
+ * @import { RenderingParams } from './renderer/rendering-params.js'
+ * @import { Scene } from './scene.js'
+ * @import { ScopeId } from '../platform/graphics/scope-id.js'
+ * @import { Shader } from '../platform/graphics/shader.js'
+ * @import { SkinInstance } from './skin-instance.js'
+ * @import { StencilParameters } from '../platform/graphics/stencil-parameters.js'
+ * @import { Texture } from '../platform/graphics/texture.js'
+ * @import { UniformBufferFormat } from '../platform/graphics/uniform-buffer-format.js'
+ * @import { Vec3 } from '../core/math/vec3.js'
+ * @import { VertexBuffer } from '../platform/graphics/vertex-buffer.js'
+ */
+
 let id = 0;
 const _tmpAabb = new BoundingBox();
 const _tempBoneAabb = new BoundingBox();
 const _tempSphere = new BoundingSphere();
 
-/** @type {Set<import('./mesh.js').Mesh>} */
+/** @type {Set<Mesh>} */
 const _meshSet = new Set();
 
 // internal array used to evaluate the hash for the shader instance
@@ -38,11 +54,9 @@ const lookupHashes = new Uint32Array(4);
 
 /**
  * Internal data structure used to store data used by hardware instancing.
- *
- * @ignore
  */
 class InstancingData {
-    /** @type {import('../platform/graphics/vertex-buffer.js').VertexBuffer|null} */
+    /** @type {VertexBuffer|null} */
     vertexBuffer = null;
 
     /**
@@ -55,14 +69,12 @@ class InstancingData {
 
 /**
  * Internal helper class for storing the shader and related mesh bind group in the shader cache.
- *
- * @ignore
  */
 class ShaderInstance {
     /**
      * A shader.
      *
-     * @type {import('../platform/graphics/shader.js').Shader|undefined}
+     * @type {Shader|undefined}
      */
     shader;
 
@@ -90,8 +102,7 @@ class ShaderInstance {
     /**
      * Returns the mesh bind group for the shader.
      *
-     * @param {import('../platform/graphics/graphics-device.js').GraphicsDevice} device - The
-     * graphics device.
+     * @param {GraphicsDevice} device - The graphics device.
      * @returns {BindGroup} - The mesh bind group.
      */
     getBindGroup(device) {
@@ -113,8 +124,7 @@ class ShaderInstance {
     /**
      * Returns the uniform buffer for the shader.
      *
-     * @param {import('../platform/graphics/graphics-device.js').GraphicsDevice} device - The
-     * graphics device.
+     * @param {GraphicsDevice} device - The graphics device.
      * @returns {UniformBuffer} - The uniform buffer.
      */
     getUniformBuffer(device) {
@@ -147,8 +157,8 @@ class ShaderInstance {
  *
  * @callback CalculateSortDistanceCallback
  * @param {MeshInstance} meshInstance - The mesh instance.
- * @param {import('../core/math/vec3.js').Vec3} cameraPosition - The position of the camera.
- * @param {import('../core/math/vec3.js').Vec3} cameraForward - The forward vector of the camera.
+ * @param {Vec3} cameraPosition - The position of the camera.
+ * @param {Vec3} cameraForward - The forward vector of the camera.
  */
 
 /**
@@ -218,7 +228,7 @@ class MeshInstance {
     flipFacesFactor = 1;
 
     /**
-     * @type {import('./gsplat/gsplat-instance.js').GSplatInstance|null}
+     * @type {GSplatInstance|null}
      * @ignore
      */
     gsplatInstance = null;
@@ -241,7 +251,7 @@ class MeshInstance {
     instancingData = null;
 
     /**
-     * @type {Record<string, {scopeId: import('../platform/graphics/scope-id.js').ScopeId|null, data: any, passFlags: number}>}
+     * @type {Record<string, {scopeId: ScopeId|null, data: any, passFlags: number}>}
      * @ignore
      */
     parameters = {};
@@ -257,7 +267,7 @@ class MeshInstance {
     /**
      * The stencil parameters for front faces or null if no stencil is enabled.
      *
-     * @type {import('../platform/graphics/stencil-parameters.js').StencilParameters|null}
+     * @type {StencilParameters|null}
      * @ignore
      */
     stencilFront = null;
@@ -265,7 +275,7 @@ class MeshInstance {
     /**
      * The stencil parameters for back faces or null if no stencil is enabled.
      *
-     * @type {import('../platform/graphics/stencil-parameters.js').StencilParameters|null}
+     * @type {StencilParameters|null}
      * @ignore
      */
     stencilBack = null;
@@ -306,19 +316,19 @@ class MeshInstance {
     _layer = LAYER_WORLD;
 
     /**
-     * @type {import('./materials/material.js').Material|null}
+     * @type {Material|null}
      * @private
      */
     _material = null;
 
     /**
-     * @type {import('./skin-instance.js').SkinInstance|null}
+     * @type {SkinInstance|null}
      * @private
      */
     _skinInstance = null;
 
     /**
-     * @type {import('./morph-instance.js').MorphInstance|null}
+     * @type {MorphInstance|null}
      * @private
      */
     _morphInstance = null;
@@ -356,9 +366,8 @@ class MeshInstance {
     /**
      * Create a new MeshInstance instance.
      *
-     * @param {import('./mesh.js').Mesh} mesh - The graphics mesh to instance.
-     * @param {import('./materials/material.js').Material} material - The material to use for this
-     * mesh instance.
+     * @param {Mesh} mesh - The graphics mesh to instance.
+     * @param {Material} material - The material to use for this mesh instance.
      * @param {GraphNode} [node] - The graph node defining the transform for this instance. This
      * parameter is optional when used with {@link RenderComponent} and will use the node the
      * component is attached to.
@@ -431,7 +440,7 @@ class MeshInstance {
     /**
      * Sets the graphics mesh being instanced.
      *
-     * @type {import('./mesh.js').Mesh}
+     * @type {Mesh}
      */
     set mesh(mesh) {
 
@@ -452,7 +461,7 @@ class MeshInstance {
     /**
      * Gets the graphics mesh being instanced.
      *
-     * @type {import('./mesh.js').Mesh}
+     * @type {Mesh}
      */
     get mesh() {
         return this._mesh;
@@ -572,13 +581,10 @@ class MeshInstance {
      *
      * @param {number} shaderPass - The shader pass index.
      * @param {number} lightHash - The hash value of the lights that are affecting this mesh instance.
-     * @param {import('./scene.js').Scene} scene - The scene.
-     * @param {import('./renderer/rendering-params.js').RenderingParams} renderParams - The rendering
-     * parameters.
-     * @param {import('../platform/graphics/uniform-buffer-format.js').UniformBufferFormat} [viewUniformFormat] - The
-     * format of the view uniform buffer.
-     * @param {import('../platform/graphics/bind-group-format.js').BindGroupFormat} [viewBindGroupFormat] - The
-     * format of the view bind group.
+     * @param {Scene} scene - The scene.
+     * @param {RenderingParams} renderParams - The rendering parameters.
+     * @param {UniformBufferFormat} [viewUniformFormat] - The format of the view uniform buffer.
+     * @param {BindGroupFormat} [viewBindGroupFormat] - The format of the view bind group.
      * @param {any} [sortedLights] - Array of arrays of lights.
      * @returns {ShaderInstance} - the shader instance.
      * @ignore
@@ -643,7 +649,7 @@ class MeshInstance {
     /**
      * Sets the material used by this mesh instance.
      *
-     * @type {import('./materials/material.js').Material}
+     * @type {Material}
      */
     set material(material) {
 
@@ -673,7 +679,7 @@ class MeshInstance {
     /**
      * Gets the material used by this mesh instance.
      *
-     * @type {import('./materials/material.js').Material}
+     * @type {Material}
      */
     get material() {
         return this._material;
@@ -737,7 +743,7 @@ class MeshInstance {
      * Sets the skin instance managing skinning of this mesh instance. Set to null if skinning is
      * not used.
      *
-     * @type {import('./skin-instance.js').SkinInstance|null}
+     * @type {SkinInstance|null}
      */
     set skinInstance(val) {
         this._skinInstance = val;
@@ -748,7 +754,7 @@ class MeshInstance {
     /**
      * Gets the skin instance managing skinning of this mesh instance.
      *
-     * @type {import('./skin-instance.js').SkinInstance|null}
+     * @type {SkinInstance|null}
      */
     get skinInstance() {
         return this._skinInstance;
@@ -758,7 +764,7 @@ class MeshInstance {
      * Sets the morph instance managing morphing of this mesh instance. Set to null if morphing is
      * not used.
      *
-     * @type {import('./morph-instance.js').MorphInstance|null}
+     * @type {MorphInstance|null}
      */
     set morphInstance(val) {
 
@@ -778,7 +784,7 @@ class MeshInstance {
     /**
      * Gets the morph instance managing morphing of this mesh instance.
      *
-     * @type {import('./morph-instance.js').MorphInstance|null}
+     * @type {MorphInstance|null}
      */
     get morphInstance() {
         return this._morphInstance;
@@ -907,7 +913,7 @@ class MeshInstance {
      * Test if meshInstance is visible by camera. It requires the frustum of the camera to be up to
      * date, which forward-renderer takes care of. This function should not be called elsewhere.
      *
-     * @param {import('./camera.js').Camera} camera - The camera to test visibility against.
+     * @param {Camera} camera - The camera to test visibility against.
      * @returns {boolean} - True if the mesh instance is visible by the camera, false otherwise.
      * @ignore
      */
@@ -951,9 +957,8 @@ class MeshInstance {
     /**
      * Sets up {@link MeshInstance} to be rendered using Hardware Instancing.
      *
-     * @param {import('../platform/graphics/vertex-buffer.js').VertexBuffer|null} vertexBuffer -
-     * Vertex buffer to hold per-instance vertex data (usually world matrices). Pass null to turn
-     * off hardware instancing.
+     * @param {VertexBuffer|null} vertexBuffer - Vertex buffer to hold per-instance vertex data
+     * (usually world matrices). Pass null to turn off hardware instancing.
      * @param {boolean} cull - Whether to perform frustum culling on this instance. If true, the whole
      * instance will be culled by the  camera frustum. This often involves setting
      * {@link RenderComponent#customAabb} containing all instances. Defaults to false, which means
@@ -1008,7 +1013,7 @@ class MeshInstance {
      * over parameter of the same name if set on Material this mesh instance uses for rendering.
      *
      * @param {string} name - The name of the parameter to set.
-     * @param {number|number[]|import('../platform/graphics/texture.js').Texture|Float32Array} data - The
+     * @param {number|number[]|Texture|Float32Array} data - The
      * value for the specified parameter.
      * @param {number} [passFlags] - Mask describing which passes the material should be included
      * in.
@@ -1047,8 +1052,7 @@ class MeshInstance {
      * reference counting of lightmaps and releases them when no longer referenced.
      *
      * @param {string} name - The name of the parameter to set.
-     * @param {import('../platform/graphics/texture.js').Texture|null} texture - The lightmap
-     * texture to set.
+     * @param {Texture|null} texture - The lightmap texture to set.
      * @ignore
      */
     setRealtimeLightmap(name, texture) {
@@ -1086,8 +1090,7 @@ class MeshInstance {
      * Used to apply parameters from this mesh instance into scope of uniforms, called internally
      * by forward-renderer.
      *
-     * @param {import('../platform/graphics/graphics-device.js').GraphicsDevice} device - The
-     * graphics device.
+     * @param {GraphicsDevice} device - The graphics device.
      * @param {number} passFlag - The pass flag for the current render pass.
      * @ignore
      */

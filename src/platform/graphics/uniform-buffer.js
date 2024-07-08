@@ -9,6 +9,13 @@ import {
 import { DebugGraphics } from './debug-graphics.js';
 import { DynamicBufferAllocation } from './dynamic-buffers.js';
 
+/**
+ * @import { DynamicBindGroup } from './bind-group.js'
+ * @import { GraphicsDevice } from './graphics-device.js'
+ * @import { UniformBufferFormat } from './uniform-buffer-format.js'
+ * @import { UniformFormat } from './uniform-buffer-format.js'
+ */
+
 // Uniform buffer set functions - only implemented for types for which the default
 // array to buffer copy does not work, or could be slower.
 const _updateFunctions = [];
@@ -197,8 +204,6 @@ _updateFunctions[UNIFORMTYPE_UVEC3ARRAY] = (uniformBuffer, value, offset, count)
 
 /**
  * A uniform buffer represents a GPU memory buffer storing the uniforms.
- *
- * @ignore
  */
 class UniformBuffer {
     device;
@@ -229,10 +234,9 @@ class UniformBuffer {
     /**
      * Create a new UniformBuffer instance.
      *
-     * @param {import('./graphics-device.js').GraphicsDevice} graphicsDevice - The graphics device
-     * used to manage this uniform buffer.
-     * @param {import('./uniform-buffer-format.js').UniformBufferFormat} format - Format of the
-     * uniform buffer.
+     * @param {GraphicsDevice} graphicsDevice - The graphics device used to manage this uniform
+     * buffer.
+     * @param {UniformBufferFormat} format - Format of the uniform buffer.
      * @param {boolean} [persistent] - Whether the buffer is persistent. Defaults to true.
      */
     constructor(graphicsDevice, format, persistent = true) {
@@ -291,8 +295,6 @@ class UniformBuffer {
 
     /**
      * Called when the rendering context was lost. It releases all context related resources.
-     *
-     * @ignore
      */
     loseContext() {
         this.impl?.loseContext();
@@ -302,8 +304,7 @@ class UniformBuffer {
      * Assign a value to the uniform specified by its format. This is the fast version of assigning
      * a value to a uniform, avoiding any lookups.
      *
-     * @param {import('./uniform-buffer-format.js').UniformFormat} uniformFormat - The format of
-     * the uniform.
+     * @param {UniformFormat} uniformFormat - The format of the uniform.
      * @param {any} value - The value to assign to the uniform.
      */
     setUniform(uniformFormat, value) {
@@ -373,11 +374,11 @@ class UniformBuffer {
     }
 
     /**
-     * @param {import('./bind-group.js').DynamicBindGroup} [dynamicBindGroup] - The function fills
-     * in the info about the dynamic bind group for this frame, which uses this uniform buffer. Only
-     * used if the uniform buffer is non-persistent. This allows the uniform buffer to be used
-     * without having to create a bind group for it. Note that the bind group can only contains
-     * this single uniform buffer, and no other resources.
+     * @param {DynamicBindGroup} [dynamicBindGroup] - The function fills in the info about the
+     * dynamic bind group for this frame, which uses this uniform buffer. Only used if the uniform
+     * buffer is non-persistent. This allows the uniform buffer to be used without having to create
+     * a bind group for it. Note that the bind group can only contains this single uniform buffer,
+     * and no other resources.
      */
     update(dynamicBindGroup) {
 

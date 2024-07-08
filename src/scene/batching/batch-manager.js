@@ -3,14 +3,12 @@ import { now } from '../../core/time.js';
 import { Mat3 } from '../../core/math/mat3.js';
 import { Vec3 } from '../../core/math/vec3.js';
 import { BoundingBox } from '../../core/shape/bounding-box.js';
-
 import {
     PRIMITIVE_TRIANGLES, PRIMITIVE_TRIFAN, PRIMITIVE_TRISTRIP,
     SEMANTIC_POSITION, SEMANTIC_NORMAL, SEMANTIC_TANGENT, SEMANTIC_BLENDINDICES,
     TYPE_FLOAT32,
     typedArrayIndexFormats, typedArrayTypes, typedArrayTypesByteSize
 } from '../../platform/graphics/constants.js';
-
 import { SPRITE_RENDERMODE_SIMPLE } from '../constants.js';
 import { Mesh } from '../mesh.js';
 import { MeshInstance } from '../mesh-instance.js';
@@ -18,6 +16,17 @@ import { shaderChunks } from '../shader-lib/chunks/chunks.js';
 import { Batch } from './batch.js';
 import { BatchGroup } from './batch-group.js';
 import { SkinBatchInstance } from './skin-batch-instance.js';
+
+/**
+ * @import { Entity } from '../../framework/entity.js'
+ * @import { GraphicsDevice } from '../../platform/graphics/graphics-device.js'
+ * @import { Scene } from '../scene.js'
+ */
+
+const _triFanIndices = [0, 1, 3, 2, 3, 1];
+const _triStripIndices = [0, 1, 3, 0, 3, 2];
+
+const mat3 = new Mat3();
 
 function paramsIdentical(a, b) {
     if (a && !b) return false;
@@ -47,11 +56,6 @@ function equalParamSets(params1, params2) {
     return true;
 }
 
-const _triFanIndices = [0, 1, 3, 2, 3, 1];
-const _triStripIndices = [0, 1, 3, 0, 3, 2];
-
-const mat3 = new Mat3();
-
 function getScaleSign(mi) {
     return mi.node.worldTransform.scaleSign;
 }
@@ -65,11 +69,9 @@ class BatchManager {
     /**
      * Create a new BatchManager instance.
      *
-     * @param {import('../../platform/graphics/graphics-device.js').GraphicsDevice} device - The
-     * graphics device used by the batch manager.
-     * @param {import('../../framework/entity.js').Entity} root - The entity under which batched
-     * models are added.
-     * @param {import('../scene.js').Scene} scene - The scene that the batch manager affects.
+     * @param {GraphicsDevice} device - The graphics device used by the batch manager.
+     * @param {Entity} root - The entity under which batched models are added.
+     * @param {Scene} scene - The scene that the batch manager affects.
      */
     constructor(device, root, scene) {
         this.device = device;

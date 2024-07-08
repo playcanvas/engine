@@ -1,9 +1,13 @@
 import { Debug, DebugHelper } from '../../../core/debug.js';
 import { StringIds } from '../../../core/string-ids.js';
 import { SAMPLETYPE_FLOAT, SAMPLETYPE_UNFILTERABLE_FLOAT, SAMPLETYPE_DEPTH, SAMPLETYPE_INT, SAMPLETYPE_UINT } from '../constants.js';
-
 import { WebgpuUtils } from './webgpu-utils.js';
 import { gpuTextureFormats } from './constants.js';
+
+/**
+ * @import { BindGroupFormat } from '../bind-group-format.js'
+ * @import { WebgpuGraphicsDevice } from './webgpu-graphics-device.js'
+ */
 
 const samplerTypes = [];
 samplerTypes[SAMPLETYPE_FLOAT] = 'filtering';
@@ -28,16 +32,14 @@ const stringIds = new StringIds();
 
 /**
  * A WebGPU implementation of the BindGroupFormat, which is a wrapper over GPUBindGroupLayout.
- *
- * @ignore
  */
 class WebgpuBindGroupFormat {
     /**
-     * @param {import('../bind-group-format.js').BindGroupFormat} bindGroupFormat - Bind group format.
+     * @param {BindGroupFormat} bindGroupFormat - Bind group format.
      */
     constructor(bindGroupFormat) {
 
-        /** @type {import('./webgpu-graphics-device.js').WebgpuGraphicsDevice} */
+        /** @type {WebgpuGraphicsDevice} */
         const device = bindGroupFormat.device;
 
         const { key, descr } = this.createDescriptor(bindGroupFormat);

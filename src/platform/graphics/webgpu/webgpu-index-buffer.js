@@ -4,8 +4,6 @@ import { WebgpuBuffer } from "./webgpu-buffer.js";
 
 /**
  * A WebGPU implementation of the IndexBuffer.
- *
- * @ignore
  */
 class WebgpuIndexBuffer extends WebgpuBuffer {
     format = null;

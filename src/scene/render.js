@@ -1,12 +1,14 @@
 import { EventHandler } from '../core/event-handler.js';
 
 /**
+ * @import { Mesh } from './mesh.js'
+ */
+
+/**
  * A `Render` contains an array of meshes that are referenced by a single hierarchy node in a GLB
  * scene, and are accessible using the {@link ContainerResource#renders} property. A `Render` is
  * the resource of a Render Asset. They are usually created by the GLB loader and not created by
  * hand.
- *
- * @ignore
  */
 class Render extends EventHandler {
     /**
@@ -25,7 +27,7 @@ class Render extends EventHandler {
      * Meshes are reference counted, and this class owns the references and is responsible for
      * releasing the meshes when they are no longer referenced.
      *
-     * @type {Array<import('./mesh.js').Mesh|null>|null}
+     * @type {Array<Mesh|null>|null}
      * @private
      */
     _meshes = null;
@@ -33,7 +35,7 @@ class Render extends EventHandler {
     /**
      * Sets the meshes that the render contains.
      *
-     * @type {Array<import('./mesh.js').Mesh|null>|null}
+     * @type {Array<Mesh|null>|null}
      */
     set meshes(value) {
         // decrement references on the existing meshes
@@ -49,7 +51,7 @@ class Render extends EventHandler {
     /**
      * Gets the meshes that the render contains.
      *
-     * @type {Array<import('./mesh.js').Mesh|null>|null}
+     * @type {Array<Mesh|null>|null}
      */
     get meshes() {
         return this._meshes;

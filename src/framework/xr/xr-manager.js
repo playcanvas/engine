@@ -1,13 +1,10 @@
 import { Debug } from "../../core/debug.js";
-
 import { EventHandler } from '../../core/event-handler.js';
 import { platform } from '../../core/platform.js';
 import { Mat4 } from '../../core/math/mat4.js';
 import { Quat } from '../../core/math/quat.js';
 import { Vec3 } from '../../core/math/vec3.js';
-
 import { XRTYPE_INLINE, XRTYPE_VR, XRTYPE_AR, XRDEPTHSENSINGUSAGE_CPU, XRDEPTHSENSINGFORMAT_L8A8 } from './constants.js';
-import { XrDepthSensing } from './xr-depth-sensing.js';
 import { XrDomOverlay } from './xr-dom-overlay.js';
 import { XrHitTest } from './xr-hit-test.js';
 import { XrImageTracking } from './xr-image-tracking.js';
@@ -17,6 +14,12 @@ import { XrPlaneDetection } from './xr-plane-detection.js';
 import { XrAnchors } from './xr-anchors.js';
 import { XrMeshDetection } from './xr-mesh-detection.js';
 import { XrViews } from './xr-views.js';
+
+/**
+ * @import { AppBase } from '../app-base.js'
+ * @import { CameraComponent } from '../components/camera/component.js'
+ * @import { Entity } from '../entity.js'
+ */
 
 /**
  * Callback used by {@link XrManager#endXr} and {@link XrManager#startXr}.
@@ -108,7 +111,7 @@ class XrManager extends EventHandler {
     static EVENT_ERROR = 'error';
 
     /**
-     * @type {import('../app-base.js').AppBase}
+     * @type {AppBase}
      * @ignore
      */
     app;
@@ -160,14 +163,6 @@ class XrManager extends EventHandler {
      * @ignore
      */
     _referenceSpace = null;
-
-    /**
-     * Provides access to depth sensing capabilities.
-     *
-     * @type {XrDepthSensing}
-     * @ignore
-     */
-    depthSensing;
 
     /**
      * Provides access to DOM overlay capabilities.
@@ -234,7 +229,7 @@ class XrManager extends EventHandler {
     anchors;
 
     /**
-     * @type {import('../components/camera/component.js').CameraComponent}
+     * @type {CameraComponent}
      * @private
      */
     _camera = null;
@@ -290,7 +285,7 @@ class XrManager extends EventHandler {
     /**
      * Create a new XrManager instance.
      *
-     * @param {import('../app-base.js').AppBase} app - The main application.
+     * @param {AppBase} app - The main application.
      * @ignore
      */
     constructor(app) {
@@ -304,7 +299,6 @@ class XrManager extends EventHandler {
         this._available[XRTYPE_AR] = false;
 
         this.views = new XrViews(this);
-        this.depthSensing = new XrDepthSensing(this);
         this.domOverlay = new XrDomOverlay(this);
         this.hitTest = new XrHitTest(this);
         this.imageTracking = new XrImageTracking(this);
@@ -343,8 +337,8 @@ class XrManager extends EventHandler {
      * callback when session is created or failed to create. Integrated XR APIs need to be enabled
      * by providing relevant options.
      *
-     * @param {import('../components/camera/component.js').CameraComponent} camera - It will be
-     * used to render XR session and manipulated based on pose tracking.
+     * @param {CameraComponent} camera - It will be used to render XR session and manipulated based
+     * on pose tracking.
      * @param {string} type - Session type. Can be one of the following:
      *
      * - {@link XRTYPE_INLINE}: Inline - always available type of session. It has limited features
@@ -372,8 +366,8 @@ class XrManager extends EventHandler {
      *
      * @param {object} [options] - Object with additional options for XR session initialization.
      * @param {number} [options.framebufferScaleFactor] - Framebuffer scale factor should
-     * be higher than 0.0, by default 1.0 (no scaling). A value of 0.5 will reduce the resolution of
-     * an XR session in half, and a value of 2.0 will double the resolution.
+     * be higher than 0.0, by default 1.0 (no scaling). A value of 0.5 will reduce the resolution
+     * of an XR session in half, and a value of 2.0 will double the resolution.
      * @param {string[]} [options.optionalFeatures] - Optional features for XRSession start. It is
      * used for getting access to additional WebXR spec extensions.
      * @param {boolean} [options.anchors] - Set to true to attempt to enable
@@ -387,8 +381,8 @@ class XrManager extends EventHandler {
      * @param {XrErrorCallback} [options.callback] - Optional callback function called once session
      * is started. The callback has one argument Error - it is null if successfully started XR
      * session.
-     * @param {object} [options.depthSensing] - Optional object with depth sensing parameters to
-     * attempt to enable {@link XrDepthSensing}.
+     * @param {object} [options.depthSensing] - Optional object with parameters to attempt to enable
+     * depth sensing.
      * @param {string} [options.depthSensing.usagePreference] - Optional usage preference for depth
      * sensing, can be 'cpu-optimized' or 'gpu-optimized' (XRDEPTHSENSINGUSAGE_*), defaults to
      * 'cpu-optimized'. Most preferred and supported will be chosen by the underlying depth sensing
@@ -477,19 +471,24 @@ class XrManager extends EventHandler {
             if (options && options.depthSensing && this.depthSensing.supported) {
                 opts.optionalFeatures.push('depth-sensing');
 
-                const usagePreference = [XRDEPTHSENSINGUSAGE_CPU];
-                const dataFormatPreference = [XRDEPTHSENSINGFORMAT_L8A8];
+                const usagePreference = [];
+                const dataFormatPreference = [];
 
-                if (options.depthSensing.usagePreference) {
-                    const ind = usagePreference.indexOf(options.depthSensing.usagePreference);
-                    if (ind !== -1) usagePreference.splice(ind, 1);
-                    usagePreference.unshift(options.depthSensing.usagePreference);
-                }
+                if (!navigator.userAgent.includes('OculusBrowser')) {
+                    usagePreference.push(XRDEPTHSENSINGUSAGE_CPU);
+                    dataFormatPreference.push(XRDEPTHSENSINGFORMAT_L8A8);
 
-                if (options.depthSensing.dataFormatPreference) {
-                    const ind = dataFormatPreference.indexOf(options.depthSensing.dataFormatPreference);
-                    if (ind !== -1) dataFormatPreference.splice(ind, 1);
-                    dataFormatPreference.unshift(options.depthSensing.dataFormatPreference);
+                    if (options.depthSensing.usagePreference) {
+                        const ind = usagePreference.indexOf(options.depthSensing.usagePreference);
+                        if (ind !== -1) usagePreference.splice(ind, 1);
+                        usagePreference.unshift(options.depthSensing.usagePreference);
+                    }
+
+                    if (options.depthSensing.dataFormatPreference) {
+                        const ind = dataFormatPreference.indexOf(options.depthSensing.dataFormatPreference);
+                        if (ind !== -1) dataFormatPreference.splice(ind, 1);
+                        dataFormatPreference.unshift(options.depthSensing.dataFormatPreference);
+                    }
                 }
 
                 opts.depthSensing = {
@@ -1046,7 +1045,7 @@ class XrManager extends EventHandler {
     /**
      * Active camera for which XR session is running or null.
      *
-     * @type {import('../entity.js').Entity|null}
+     * @type {Entity|null}
      */
     get camera() {
         return this._camera ? this._camera.entity : null;

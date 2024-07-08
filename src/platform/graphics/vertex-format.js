@@ -1,14 +1,16 @@
 import { Debug } from '../../core/debug.js';
 import { hashCode } from '../../core/hash.js';
-
 import { math } from '../../core/math/math.js';
 import { StringIds } from '../../core/string-ids.js';
-
 import {
     SEMANTIC_TEXCOORD0, SEMANTIC_TEXCOORD1, SEMANTIC_ATTR12, SEMANTIC_ATTR13, SEMANTIC_ATTR14, SEMANTIC_ATTR15,
     SEMANTIC_COLOR, SEMANTIC_TANGENT, TYPE_FLOAT32, typedArrayTypesByteSize, vertexTypesNames
 } from './constants.js';
 import { DeviceCache } from './device-cache.js';
+
+/**
+ * @import { GraphicsDevice } from './graphics-device.js'
+ */
 
 const stringIds = new StringIds();
 const webgpuValidElementSizes = [2, 4, 8, 12, 16];
@@ -111,8 +113,8 @@ class VertexFormat {
     /**
      * Create a new VertexFormat instance.
      *
-     * @param {import('./graphics-device.js').GraphicsDevice} graphicsDevice - The graphics device
-     * used to manage this vertex format.
+     * @param {GraphicsDevice} graphicsDevice - The graphics device used to manage this vertex
+     * format.
      * @param {AttributeDescription[]} description - An array of vertex attribute descriptions.
      * @param {number} [vertexCount] - When specified, vertex format will be set up for
      * non-interleaved format with a specified number of vertices. (example: PPPPNNNNCCCC), where
@@ -217,9 +219,8 @@ class VertexFormat {
     /**
      * The {@link VertexFormat} used to store matrices of type {@link Mat4} for hardware instancing.
      *
-     * @param {import('./graphics-device.js').GraphicsDevice} graphicsDevice - The graphics device
-     * used to create this vertex format.
-     *
+     * @param {GraphicsDevice} graphicsDevice - The graphics device used to create this vertex
+     * format.
      * @returns {VertexFormat} The default instancing vertex format.
      */
     static getDefaultInstancingFormat(graphicsDevice) {

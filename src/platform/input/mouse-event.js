@@ -1,10 +1,13 @@
 import { MOUSEBUTTON_NONE } from './constants.js';
 
 /**
+ * @import { Mouse } from './mouse.js'
+ */
+
+/**
  * Returns true if pointer lock is currently enabled.
  *
  * @returns {boolean} True if pointer lock is currently enabled.
- * @ignore
  */
 function isMousePointerLocked() {
     return !!(document.pointerLockElement || document.mozPointerLockElement || document.webkitPointerLockElement);
@@ -108,7 +111,7 @@ class MouseEvent {
     /**
      * Create a new MouseEvent instance.
      *
-     * @param {import('./mouse.js').Mouse} mouse - The Mouse device that is firing this event.
+     * @param {Mouse} mouse - The Mouse device that is firing this event.
      * @param {globalThis.MouseEvent|globalThis.WheelEvent} event - The original browser event that fired.
      */
     constructor(mouse, event) {

@@ -2,6 +2,10 @@ import { EventHandler } from '../../core/event-handler.js';
 import { Quat } from '../../core/math/quat.js';
 import { Vec3 } from '../../core/math/vec3.js';
 
+/**
+ * @import { XrPlaneDetection } from './xr-plane-detection.js'
+ */
+
 let ids = 0;
 
 /**
@@ -43,7 +47,7 @@ class XrPlane extends EventHandler {
     _id;
 
     /**
-     * @type {import('./xr-plane-detection.js').XrPlaneDetection}
+     * @type {XrPlaneDetection}
      * @private
      */
     _planeDetection;
@@ -81,8 +85,7 @@ class XrPlane extends EventHandler {
     /**
      * Create a new XrPlane instance.
      *
-     * @param {import('./xr-plane-detection.js').XrPlaneDetection} planeDetection - Plane detection
-     * system.
+     * @param {XrPlaneDetection} planeDetection - Plane detection system.
      * @param {*} xrPlane - XRPlane that is instantiated by WebXR system.
      * @ignore
      */

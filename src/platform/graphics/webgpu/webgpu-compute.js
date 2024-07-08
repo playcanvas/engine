@@ -5,8 +5,6 @@ import { UniformBuffer } from "../uniform-buffer.js";
 
 /**
  * A WebGPU implementation of the Compute.
- *
- * @ignore
  */
 class WebgpuCompute {
     /** @type {UniformBuffer[]} */

@@ -2,8 +2,6 @@ import { CompressUtils } from './compress-utils.js';
 
 /**
  * Reconstruct original object field names in a compressed scene.
- *
- * @ignore
  */
 class Decompress {
     /**

@@ -1,22 +1,12 @@
 import { Debug, DebugHelper } from '../../core/debug.js';
 import { now } from '../../core/time.js';
+import { BlueNoise } from '../../core/math/blue-noise.js';
 import { Vec2 } from '../../core/math/vec2.js';
 import { Vec3 } from '../../core/math/vec3.js';
 import { Vec4 } from '../../core/math/vec4.js';
 import { Mat3 } from '../../core/math/mat3.js';
 import { Mat4 } from '../../core/math/mat4.js';
 import { BoundingSphere } from '../../core/shape/bounding-sphere.js';
-
-import {
-    SORTKEY_DEPTH, SORTKEY_FORWARD,
-    VIEW_CENTER, PROJECTION_ORTHOGRAPHIC,
-    LIGHTTYPE_DIRECTIONAL, MASK_AFFECT_DYNAMIC, MASK_AFFECT_LIGHTMAPPED, MASK_BAKE,
-    SHADOWUPDATE_NONE, SHADOWUPDATE_THISFRAME
-} from '../constants.js';
-import { LightTextureAtlas } from '../lighting/light-texture-atlas.js';
-import { Material } from '../materials/material.js';
-import { LightCube } from '../graphics/light-cube.js';
-
 import {
     CLEARFLAG_COLOR, CLEARFLAG_DEPTH, CLEARFLAG_STENCIL,
     BINDGROUP_MESH, BINDGROUP_VIEW, UNIFORM_BUFFER_DEFAULT_SLOT_NAME,
@@ -31,15 +21,33 @@ import { UniformBuffer } from '../../platform/graphics/uniform-buffer.js';
 import { BindGroup, DynamicBindGroup } from '../../platform/graphics/bind-group.js';
 import { UniformFormat, UniformBufferFormat } from '../../platform/graphics/uniform-buffer-format.js';
 import { BindGroupFormat, BindUniformBufferFormat, BindTextureFormat } from '../../platform/graphics/bind-group-format.js';
-
+import {
+    SORTKEY_DEPTH, SORTKEY_FORWARD,
+    VIEW_CENTER, PROJECTION_ORTHOGRAPHIC,
+    LIGHTTYPE_DIRECTIONAL, MASK_AFFECT_DYNAMIC, MASK_AFFECT_LIGHTMAPPED, MASK_BAKE,
+    SHADOWUPDATE_NONE, SHADOWUPDATE_THISFRAME
+} from '../constants.js';
+import { LightCube } from '../graphics/light-cube.js';
+import { getBlueNoiseTexture } from '../graphics/noise-textures.js';
+import { LightTextureAtlas } from '../lighting/light-texture-atlas.js';
+import { Material } from '../materials/material.js';
 import { ShadowMapCache } from './shadow-map-cache.js';
 import { ShadowRendererLocal } from './shadow-renderer-local.js';
 import { ShadowRendererDirectional } from './shadow-renderer-directional.js';
 import { ShadowRenderer } from './shadow-renderer.js';
 import { WorldClustersAllocator } from './world-clusters-allocator.js';
 import { RenderPassUpdateClustered } from './render-pass-update-clustered.js';
-import { getBlueNoiseTexture } from '../graphics/noise-textures.js';
-import { BlueNoise } from '../../core/math/blue-noise.js';
+
+/**
+ * @import { Camera } from '../camera.js'
+ * @import { CulledInstances } from '../layer.js'
+ * @import { GraphicsDevice } from '../../platform/graphics/graphics-device.js'
+ * @import { LayerComposition } from '../composition/layer-composition.js'
+ * @import { Light } from '../light.js'
+ * @import { MeshInstance } from '../mesh-instance.js'
+ * @import { RenderTarget } from '../../platform/graphics/render-target.js'
+ * @import { Scene } from '../scene.js'
+ */
 
 let _skinUpdateIndex = 0;
 const viewProjMat = new Mat4();
@@ -104,7 +112,7 @@ class Renderer {
      * A set of visible mesh instances which need further processing before being rendered, e.g.
      * skinning or morphing. Extracted during culling.
      *
-     * @type {Set<import('../mesh-instance.js').MeshInstance>}
+     * @type {Set<MeshInstance>}
      * @private
      */
     processingMeshInstances = new Set();
@@ -118,14 +126,14 @@ class Renderer {
     /**
      * A list of all unique lights in the layer composition.
      *
-     * @type {import('../light.js').Light[]}
+     * @type {Light[]}
      */
     lights = [];
 
     /**
      * A list of all unique local lights (spot & omni) in the layer composition.
      *
-     * @type {import('../light.js').Light[]}
+     * @type {Light[]}
      */
     localLights = [];
 
@@ -133,7 +141,7 @@ class Renderer {
      * A list of unique directional shadow casting lights for each enabled camera. This is generated
      * each frame during light culling.
      *
-     * @type {Map<import('../camera.js').Camera, Array<import('../light.js').Light>>}
+     * @type {Map<Camera, Array<Light>>}
      */
     cameraDirShadowLights = new Map();
 
@@ -142,7 +150,7 @@ class Renderer {
      * is cleared each frame, and updated each time a directional light shadow is rendered for a
      * camera, and allows us to manually schedule shadow passes when a new camera needs a shadow.
      *
-     * @type {Map<import('../light.js').Light, import('../camera.js').Camera>}
+     * @type {Map<Light, Camera>}
      */
     dirLightShadows = new Map();
 
@@ -151,13 +159,12 @@ class Renderer {
     /**
      * Create a new instance.
      *
-     * @param {import('../../platform/graphics/graphics-device.js').GraphicsDevice} graphicsDevice - The
-     * graphics device used by the renderer.
+     * @param {GraphicsDevice} graphicsDevice - The graphics device used by the renderer.
      */
     constructor(graphicsDevice) {
         this.device = graphicsDevice;
 
-        /** @type {import('../scene.js').Scene|null} */
+        /** @type {Scene|null} */
         this.scene = null;
 
         // TODO: allocate only when the scene has clustered lighting enabled
@@ -304,10 +311,8 @@ class Renderer {
     /**
      * Set up the viewport and the scissor for camera rendering.
      *
-     * @param {import('../camera.js').Camera} camera - The camera containing the viewport
-     * information.
-     * @param {import('../../platform/graphics/render-target.js').RenderTarget} [renderTarget] - The
-     * render target. NULL for the default one.
+     * @param {Camera} camera - The camera containing the viewport information.
+     * @param {RenderTarget} [renderTarget] - The render target. NULL for the default one.
      */
     setupViewport(camera, renderTarget) {
 
@@ -468,7 +473,7 @@ class Renderer {
     /**
      * Clears the active render target. If the viewport is already set up, only its area is cleared.
      *
-     * @param {import('../camera.js').Camera} camera - The camera supplying the value to clear to.
+     * @param {Camera} camera - The camera supplying the value to clear to.
      * @param {boolean} [clearColor] - True if the color buffer should be cleared. Uses the value
      * from the camera if not supplied.
      * @param {boolean} [clearDepth] - True if the depth buffer should be cleared. Uses the value
@@ -633,8 +638,7 @@ class Renderer {
     /**
      * Update skin matrices ahead of rendering.
      *
-     * @param {import('../mesh-instance.js').MeshInstance[]|Set<import('../mesh-instance.js').MeshInstance>} drawCalls - MeshInstances
-     * containing skinInstance.
+     * @param {MeshInstance[]|Set<MeshInstance>} drawCalls - MeshInstances containing skinInstance.
      * @ignore
      */
     updateGpuSkinMatrices(drawCalls) {
@@ -659,8 +663,7 @@ class Renderer {
     /**
      * Update morphing ahead of rendering.
      *
-     * @param {import('../mesh-instance.js').MeshInstance[]|Set<import('../mesh-instance.js').MeshInstance>} drawCalls - MeshInstances
-     * containing morphInstance.
+     * @param {MeshInstance[]|Set<MeshInstance>} drawCalls - MeshInstances containing morphInstance.
      * @ignore
      */
     updateMorphing(drawCalls) {
@@ -683,8 +686,7 @@ class Renderer {
     /**
      * Update gsplats ahead of rendering.
      *
-     * @param {import('../mesh-instance.js').MeshInstance[]|Set<import('../mesh-instance.js').MeshInstance>} drawCalls - MeshInstances
-     * containing gsplatInstances.
+     * @param {MeshInstance[]|Set<MeshInstance>} drawCalls - MeshInstances containing gsplatInstances.
      * @ignore
      */
     updateGSplats(drawCalls) {
@@ -696,8 +698,7 @@ class Renderer {
     /**
      * Update draw calls ahead of rendering.
      *
-     * @param {import('../mesh-instance.js').MeshInstance[]|Set<import('../mesh-instance.js').MeshInstance>} drawCalls - MeshInstances
-     * requiring updates.
+     * @param {MeshInstance[]|Set<MeshInstance>} drawCalls - MeshInstances requiring updates.
      * @ignore
      */
     gpuUpdate(drawCalls) {
@@ -892,9 +893,9 @@ class Renderer {
     }
 
     /**
-     * @param {import('../camera.js').Camera} camera - The camera used for culling.
-     * @param {import('../mesh-instance.js').MeshInstance[]} drawCalls - Draw calls to cull.
-     * @param {import('../layer.js').CulledInstances} culledInstances - Stores culled instances.
+     * @param {Camera} camera - The camera used for culling.
+     * @param {MeshInstance[]} drawCalls - Draw calls to cull.
+     * @param {CulledInstances} culledInstances - Stores culled instances.
      */
     cull(camera, drawCalls, culledInstances) {
         // #if _PROFILER
@@ -1038,12 +1039,11 @@ class Renderer {
     }
 
     /**
-     * Shadow map culling for directional and visible local lights
-     * visible meshInstances are collected into light._renderData, and are marked as visible
-     * for directional lights also shadow camera matrix is set up
+     * Shadow map culling for directional and visible local lights visible meshInstances are
+     * collected into light._renderData, and are marked as visible for directional lights also
+     * shadow camera matrix is set up.
      *
-     * @param {import('../composition/layer-composition.js').LayerComposition} comp - The layer
-     * composition.
+     * @param {LayerComposition} comp - The layer composition.
      */
     cullShadowmaps(comp) {
 
@@ -1118,11 +1118,10 @@ class Renderer {
     }
 
     /**
-     * visibility culling of lights, meshInstances, shadows casters
-     * Also applies meshInstance.visible
+     * visibility culling of lights, meshInstances, shadows casters. Also applies
+     * `meshInstance.visible`.
      *
-     * @param {import('../composition/layer-composition.js').LayerComposition} comp - The layer
-     * composition.
+     * @param {LayerComposition} comp - The layer composition.
      */
     cullComposition(comp) {
 
@@ -1188,7 +1187,7 @@ class Renderer {
     }
 
     /**
-     * @param {import('../mesh-instance.js').MeshInstance[]} drawCalls - Mesh instances.
+     * @param {MeshInstance[]} drawCalls - Mesh instances.
      * @param {boolean} onlyLitShaders - Limits the update to shaders affected by lighting.
      */
     updateShaders(drawCalls, onlyLitShaders) {
@@ -1226,8 +1225,7 @@ class Renderer {
     }
 
     /**
-     * @param {import('../composition/layer-composition.js').LayerComposition} comp - The layer
-     * composition to update.
+     * @param {LayerComposition} comp - The layer composition to update.
      */
     beginFrame(comp) {
 
@@ -1299,8 +1297,7 @@ class Renderer {
     /**
      * Updates the layer composition for rendering.
      *
-     * @param {import('../composition/layer-composition.js').LayerComposition} comp - The layer
-     * composition to update.
+     * @param {LayerComposition} comp - The layer composition to update.
      */
     updateLayerComposition(comp) {
 

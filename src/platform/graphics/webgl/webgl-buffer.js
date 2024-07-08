@@ -2,8 +2,6 @@ import { BUFFER_DYNAMIC, BUFFER_GPUDYNAMIC, BUFFER_STATIC, BUFFER_STREAM } from 
 
 /**
  * A WebGL implementation of the Buffer.
- *
- * @ignore
  */
 class WebglBuffer {
     bufferId = null;

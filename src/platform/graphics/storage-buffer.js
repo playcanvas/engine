@@ -2,6 +2,10 @@ import { Debug } from '../../core/debug.js';
 import { TRACEID_VRAM_SB } from '../../core/constants.js';
 import { BUFFERUSAGE_STORAGE } from './constants.js';
 
+/**
+ * @import { GraphicsDevice } from './graphics-device.js'
+ */
+
 let id = 0;
 
 /**
@@ -17,11 +21,10 @@ class StorageBuffer {
     /**
      * Create a new StorageBuffer instance.
      *
-     * @param {import('./graphics-device.js').GraphicsDevice} graphicsDevice - The graphics device
-     * used to manage this storage buffer.
+     * @param {GraphicsDevice} graphicsDevice - The graphics device used to manage this storage buffer.
      * @param {number} byteSize - The size of the storage buffer in bytes.
-     * @param {number} [bufferUsage] - The usage type of the storage buffer. Can be a combination of
-     * {@link BUFFERUSAGE_READ}, {@link BUFFERUSAGE_WRITE}, {@link BUFFERUSAGE_COPY_SRC} and
+     * @param {number} [bufferUsage] - The usage type of the storage buffer. Can be a combination
+     * of {@link BUFFERUSAGE_READ}, {@link BUFFERUSAGE_WRITE}, {@link BUFFERUSAGE_COPY_SRC} and
      * {@link BUFFERUSAGE_COPY_DST} flags. This parameter can be omitted if no special usage is
      * required.
      */
@@ -64,12 +67,12 @@ class StorageBuffer {
      * @param {number} [offset] - The byte offset of data to read. Defaults to 0.
      * @param {number} [size] - The byte size of data to read. Defaults to the full size of the
      * buffer minus the offset.
-     * @param {ArrayBufferView|null} [data] - Typed array to populate with the data read from the storage
-     * buffer. When typed array is supplied, enough space needs to be reserved, otherwise only
-     * partial data is copied. If not specified, the data is returned in an Uint8Array. Defaults to
-     * null.
-     * @returns {Promise<ArrayBufferView>} A promise that resolves with the data read from the storage
-     * buffer.
+     * @param {ArrayBufferView|null} [data] - Typed array to populate with the data read from the
+     * storage buffer. When typed array is supplied, enough space needs to be reserved, otherwise
+     * only partial data is copied. If not specified, the data is returned in an Uint8Array.
+     * Defaults to null.
+     * @returns {Promise<ArrayBufferView>} A promise that resolves with the data read from the
+     * storage buffer.
      * @ignore
      */
     read(offset = 0, size = this.byteSize, data = null) {

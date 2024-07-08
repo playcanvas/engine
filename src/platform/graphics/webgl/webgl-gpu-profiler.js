@@ -2,8 +2,6 @@ import { GpuProfiler } from "../gpu-profiler.js";
 
 /**
  * Class holding information about the queries for a single frame.
- *
- * @ignore
  */
 class FrameQueriesInfo {
     /**
@@ -26,9 +24,6 @@ class FrameQueriesInfo {
     }
 }
 
-/**
- * @ignore
- */
 class WebglGpuProfiler extends GpuProfiler {
     device;
 
@@ -78,8 +73,6 @@ class WebglGpuProfiler extends GpuProfiler {
 
     /**
      * Called when the WebGL context was lost. It releases all context related resources.
-     *
-     * @ignore
      */
     loseContext() {
         super.loseContext();
