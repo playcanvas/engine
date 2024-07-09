@@ -1893,11 +1893,14 @@ class WebglGraphicsDevice extends GraphicsDevice {
 
                 // #if _DEBUG
                 const samplerName = sampler.scopeId.name;
-                if (samplerName === 'uSceneDepthMap' || samplerName === 'uDepthMap') {
-                    Debug.warnOnce(`A sampler ${samplerName} is used by the shader but a scene depth texture is not available. Use CameraComponent.requestSceneDepthMap / enable Depth Grabpass on the Camera Component to enable it.`);
+                Debug.assert(samplerName !== 'texture_grabPass', `Engine provided texture with sampler name 'texture_grabPass' is not longer supported, use 'uSceneColorMap' instead`);
+                Debug.assert(samplerName !== 'uDepthMap', `Engine provided texture with sampler name 'uDepthMap' is not longer supported, use 'uSceneDepthMap' instead`);
+
+                if (samplerName === 'uSceneDepthMap') {
+                    Debug.warnOnce('A sampler uSceneDepthMap is used by the shader but a scene depth texture is not available. Use CameraComponent.requestSceneDepthMap / enable Depth Grabpass on the Camera Component to enable it.');
                 }
-                if (samplerName === 'uSceneColorMap' || samplerName === 'texture_grabPass') {
-                    Debug.warnOnce(`A sampler ${samplerName} is used by the shader but a scene color texture is not available. Use CameraComponent.requestSceneColorMap / enable Color Grabpass on the Camera Component to enable it.`);
+                if (samplerName === 'uSceneColorMap') {
+                    Debug.warnOnce('A sampler uSceneColorMap is used by the shader but a scene color texture is not available. Use CameraComponent.requestSceneColorMap / enable Color Grabpass on the Camera Component to enable it.');
                 }
                 // #endif
 
