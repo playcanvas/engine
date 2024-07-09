@@ -19,6 +19,7 @@ import { _matTex2D, standard } from '../shader-lib/programs/standard.js';
 import { Material } from './material.js';
 import { StandardMaterialOptionsBuilder } from './standard-material-options-builder.js';
 import { standardMaterialCubemapParameters, standardMaterialTextureParameters } from './standard-material-parameters.js';
+import { DebugGraphics } from '../../platform/graphics/debug-graphics.js';
 
 /**
  * @import { BoundingBox } from '../../core/shape/bounding-box.js'
@@ -298,10 +299,10 @@ const _tempColor = new Color();
  * within the medium. Only used when useDynamicRefraction is enabled.
  * @property {Color} emissive The emissive color of the material. This color value is 3-component
  * (RGB), where each component is between 0 and 1.
- * @property {boolean} emissiveTint Multiply emissive map and/or emissive vertex color by the
- * constant emissive value.
  * @property {Texture|null} emissiveMap The emissive map of the material (default is null). Can be
- * HDR.
+ * HDR. When the emissive map is applied, the emissive color is multiplied by the texel color in the
+ * map. Since the emissive color is black by default, the emissive map won't be visible unless the
+ * emissive color is changed.
  * @property {number} emissiveIntensity Emissive color multiplier.
  * @property {number} emissiveMapUv Emissive map UV channel.
  * @property {Vec2} emissiveMapTiling Controls the 2D tiling of the emissive map.
@@ -312,7 +313,7 @@ const _tempColor = new Color();
  * @property {string} emissiveMapChannel Color channels of the emissive map to use. Can be "r",
  * "g", "b", "a", "rgb" or any swizzled combination.
  * @property {boolean} emissiveVertexColor Use mesh vertex colors for emission. If emissiveMap or
- * emissiveTint are set, they'll be multiplied by vertex colors.
+ * emissive are set, they'll be multiplied by vertex colors.
  * @property {string} emissiveVertexColorChannel Vertex color channels to use for emission. Can be
  * "r", "g", "b", "a", "rgb" or any swizzled combination.
  * @property {boolean} useSheen Toggle sheen specular effect on/off.
@@ -755,12 +756,14 @@ class StandardMaterial extends Material {
 
         this._setParameter('material_gloss', this.gloss);
 
-        if (!this.emissiveMap || this.emissiveTint) {
-            this._setParameter('material_emissive', getUniform('emissive'));
-        }
-        if (this.emissiveIntensity !== 1) {
-            this._setParameter('material_emissiveIntensity', this.emissiveIntensity);
-        }
+        Debug.call(() => {
+            if (this.emissiveMap && this.emissive.r === 0 && this.emissive.g === 0 && this.emissive.b === 0) {
+                Debug.warnOnce(`Emissive map is set but emissive color is black, making the map invisible. Set emissive color to white to make the map visible. Rendering [${DebugGraphics.toString()}]`, this);
+            }
+        });
+
+        this._setParameter('material_emissive', getUniform('emissive'));
+        this._setParameter('material_emissiveIntensity', this.emissiveIntensity);
 
         if (this.refraction > 0) {
             this._setParameter('material_refraction', this.refraction);
@@ -1185,7 +1188,6 @@ function _defineMaterialProps() {
     _defineFlag('sheenTint', false);
     _defineFlag('specularTint', false);
     _defineFlag('specularityFactorTint', false);
-    _defineFlag('emissiveTint', false);
     _defineFlag('fastTbn', false);
     _defineFlag('useMetalness', false);
     _defineFlag('useMetalnessSpecularColor', false);

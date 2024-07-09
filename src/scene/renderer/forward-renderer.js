@@ -527,8 +527,10 @@ class ForwardRenderer extends Renderer {
                 material._scene = scene;
 
                 if (material.dirty) {
+                    DebugGraphics.pushGpuMarker(device, `Node: ${drawCall.node.name}, Material: ${material.name}`);
                     material.updateUniforms(device, scene);
                     material.dirty = false;
+                    DebugGraphics.popGpuMarker(device);
                 }
             }
 

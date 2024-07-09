@@ -130,7 +130,6 @@ describe('StandardMaterial', function () {
         expect(material.emissiveMapTiling.x).to.equal(1);
         expect(material.emissiveMapTiling.y).to.equal(1);
         expect(material.emissiveMapUv).to.equal(0);
-        expect(material.emissiveTint).to.equal(false);
         expect(material.emissiveVertexColor).to.equal(false);
         expect(material.emissiveVertexColorChannel).to.equal('rgb');
 

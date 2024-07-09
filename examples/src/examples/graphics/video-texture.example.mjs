@@ -114,6 +114,7 @@ assetListLoader.load(() => {
     const material = new pc.StandardMaterial();
     material.useLighting = false;
     material.emissiveMap = videoTexture;
+    material.emissive = pc.Color.WHITE;
     material.update();
 
     // set the material on the screen mesh
