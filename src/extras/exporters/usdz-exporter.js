@@ -1,5 +1,6 @@
 import { CoreExporter } from "./core-exporter.js";
 import { zipSync, strToU8 } from 'fflate';
+import { Color } from '../../core/math/color.js';
 
 import {
     SEMANTIC_POSITION,
@@ -8,7 +9,12 @@ import {
     SEMANTIC_TEXCOORD1
 } from "../../platform/graphics/constants.js";
 
-import { Color } from '../../core/math/color.js';
+/**
+ * @import { Entity } from '../../framework/entity.js'
+ * @import { Material } from '../../scene/materials/material.js'
+ * @import { Mesh } from '../../scene/mesh.js'
+ * @import { Texture } from '../../platform/graphics/texture.js'
+ */
 
 const ROOT_FILE_NAME = 'root';
 
@@ -74,7 +80,7 @@ class UsdzExporter extends CoreExporter {
     /**
      * Maps a mesh to a reference (path) inside the usdz container
      *
-     * @type {Map<import('../../scene/mesh.js').Mesh, string>}
+     * @type {Map<Mesh, string>}
      * @ignore
      */
     meshMap;
@@ -82,7 +88,7 @@ class UsdzExporter extends CoreExporter {
     /**
      * Maps a material to a reference (path) inside the usdz container
      *
-     * @type {Map<import('../../scene/materials/material.js').Material, string>}
+     * @type {Map<Material, string>}
      * @ignore
      */
     materialMap;
@@ -97,7 +103,7 @@ class UsdzExporter extends CoreExporter {
     /**
      * A map of texture requests
      *
-     * @type {Map<import('../../platform/graphics/texture.js').Texture, string>}
+     * @type {Map<Texture, string>}
      * @ignore
      */
     textureMap;
@@ -140,7 +146,7 @@ class UsdzExporter extends CoreExporter {
     /**
      * Converts a hierarchy of entities to USDZ format.
      *
-     * @param {import('../../framework/entity.js').Entity} entity - The root of the entity hierarchy to convert.
+     * @param {Entity} entity - The root of the entity hierarchy to convert.
      * @param {object} options - Object for passing optional arguments.
      * @param {number} [options.maxTextureSize] - Maximum texture size. Texture is resized if over
      * the size.

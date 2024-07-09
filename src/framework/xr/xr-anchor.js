@@ -1,7 +1,10 @@
 import { EventHandler } from '../../core/event-handler.js';
-
 import { Vec3 } from '../../core/math/vec3.js';
 import { Quat } from '../../core/math/quat.js';
+
+/**
+ * @import { XrAnchors } from './xr-anchors.js'
+ */
 
 /**
  * Callback used by {@link XrAnchor#persist}.
@@ -102,7 +105,7 @@ class XrAnchor extends EventHandler {
     _uuidRequests = null;
 
     /**
-     * @param {import('./xr-anchors.js').XrAnchors} anchors - Anchor manager.
+     * @param {XrAnchors} anchors - Anchor manager.
      * @param {object} xrAnchor - Native XRAnchor object that is provided by WebXR API.
      * @param {string|null} uuid - ID string associated with a persistent anchor.
      * @ignore

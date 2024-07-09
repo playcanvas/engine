@@ -1,6 +1,10 @@
 import { platform } from '../../core/platform.js';
 
 /**
+ * @import { XrManager } from './xr-manager.js'
+ */
+
+/**
  * DOM Overlay provides the ability to use DOM elements as an overlay in a WebXR AR session. It
  * requires that the root DOM element is provided for session start. That way, input source select
  * events are first tested against DOM Elements and then propagated down to the XR Session. If this
@@ -25,7 +29,7 @@ import { platform } from '../../core/platform.js';
  */
 class XrDomOverlay {
     /**
-     * @type {import('./xr-manager.js').XrManager}
+     * @type {XrManager}
      * @private
      */
     _manager;
@@ -45,7 +49,7 @@ class XrDomOverlay {
     /**
      * Create a new XrDomOverlay instance.
      *
-     * @param {import('./xr-manager.js').XrManager} manager - WebXR Manager.
+     * @param {XrManager} manager - WebXR Manager.
      * @ignore
      */
     constructor(manager) {

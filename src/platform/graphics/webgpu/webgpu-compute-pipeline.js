@@ -3,6 +3,10 @@ import { TRACEID_COMPUTEPIPELINE_ALLOC } from "../../../core/constants.js";
 import { WebgpuDebug } from "./webgpu-debug.js";
 import { WebgpuPipeline } from "./webgpu-pipeline.js";
 
+/**
+ * @import { WebgpuShader } from './webgpu-shader.js'
+ */
+
 let _pipelineId = 0;
 
 class WebgpuComputePipeline extends WebgpuPipeline {
@@ -21,7 +25,7 @@ class WebgpuComputePipeline extends WebgpuPipeline {
 
         const wgpu = this.device.wgpu;
 
-        /** @type {import('./webgpu-shader.js').WebgpuShader} */
+        /** @type {WebgpuShader} */
         const webgpuShader = shader.impl;
 
         /** @type {GPUComputePipelineDescriptor} */

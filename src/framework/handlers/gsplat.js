@@ -1,12 +1,15 @@
 import { PlyParser } from '../parsers/ply.js';
-
 import { ResourceHandler } from './handler.js';
+
+/**
+ * @import { AppBase } from '../app-base.js'
+ */
 
 class GSplatHandler extends ResourceHandler {
     /**
      * Create a new GSplatHandler instance.
      *
-     * @param {import('../app-base.js').AppBase} app - The running {@link AppBase}.
+     * @param {AppBase} app - The running {@link AppBase}.
      * @ignore
      */
     constructor(app) {

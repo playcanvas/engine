@@ -6,6 +6,16 @@ import { EventHandler } from '../../core/event-handler.js';
 import { PROJECTION_PERSPECTIVE } from '../../scene/constants.js';
 import { Entity } from '../../framework/entity.js';
 
+/**
+ * @import { AppBase } from '../../framework/app-base.js'
+ * @import { CameraComponent } from '../../framework/components/camera/component.js'
+ * @import { GraphNode } from '../../scene/graph-node.js'
+ * @import { GraphicsDevice } from '../../platform/graphics/graphics-device.js'
+ * @import { Layer } from '../../scene/layer.js'
+ * @import { MeshInstance } from '../../scene/mesh-instance.js'
+ * @import { TriData } from './tri-data.js'
+ */
+
 // temporary variables
 const tmpV1 = new Vec3();
 const tmpM1 = new Mat4();
@@ -174,7 +184,7 @@ class Gizmo extends EventHandler {
     /**
      * Internal reference to the app containing the gizmo.
      *
-     * @type {import('../../framework/app-base.js').AppBase}
+     * @type {AppBase}
      * @protected
      */
     _app;
@@ -182,7 +192,7 @@ class Gizmo extends EventHandler {
     /**
      * Internal reference to the graphics device of the app.
      *
-     * @type {import('../../platform/graphics/graphics-device.js').GraphicsDevice}
+     * @type {GraphicsDevice}
      * @protected
      */
     _device;
@@ -190,7 +200,7 @@ class Gizmo extends EventHandler {
     /**
      * Internal reference to camera component to view the gizmo.
      *
-     * @type {import('../../framework/components/camera/component.js').CameraComponent}
+     * @type {CameraComponent}
      * @protected
      */
     _camera;
@@ -198,7 +208,7 @@ class Gizmo extends EventHandler {
     /**
      * Internal reference to layer to render the gizmo..
      *
-     * @type {import('../../scene/layer.js').Layer}
+     * @type {Layer}
      * @protected
      */
     _layer;
@@ -206,24 +216,24 @@ class Gizmo extends EventHandler {
     /**
      * The graph nodes attached to the gizmo.
      *
-     * @type {import('../../scene/graph-node.js').GraphNode[]}
+     * @type {GraphNode[]}
      */
     nodes = [];
 
     /**
      * The root gizmo entity.
      *
-     * @type {import('../../framework/entity.js').Entity}
+     * @type {Entity}
      */
     root;
 
     /**
      * @typedef IntersectData
-     * @property {import('./tri-data.js').TriData[]} triData - The array of {@link TriData}
-     * @property {import('../../scene/graph-node.js').GraphNode} parent - The mesh parent node.
-     * @property {import('../../scene/mesh-instance.js').MeshInstance[]} meshInstances -
-     * array of mesh instances for rendering
+     * @property {TriData[]} triData - The array of {@link TriData}.
+     * @property {GraphNode} parent - The mesh parent node.
+     * @property {MeshInstance[]} meshInstances - Array of mesh instances for rendering.
      */
+
     /**
      * The intersection data object.
      *
@@ -234,10 +244,9 @@ class Gizmo extends EventHandler {
     /**
      * Creates a new Gizmo object.
      *
-     * @param {import('../../framework/app-base.js').AppBase} app - The application instance.
-     * @param {import('../../framework/components/camera/component.js').CameraComponent} camera -
-     * The camera component.
-     * @param {import('../../scene/layer.js').Layer} layer - The render layer.
+     * @param {AppBase} app - The application instance.
+     * @param {CameraComponent} camera - The camera component.
+     * @param {Layer} layer - The render layer.
      * @example
      * const gizmo = new pc.Gizmo(app, camera, layer);
      */
@@ -259,8 +268,8 @@ class Gizmo extends EventHandler {
         this._onPointerMove = this._onPointerMove.bind(this);
         this._onPointerUp = this._onPointerUp.bind(this);
 
-        this._device.canvas.addEventListener('pointerdown', this._onPointerDown);
-        this._device.canvas.addEventListener('pointermove', this._onPointerMove);
+        this._device.canvas.addEventListener('pointerdown', this._onPointerDown, true);
+        this._device.canvas.addEventListener('pointermove', this._onPointerMove, true);
         this._device.canvas.addEventListener('pointerup', this._onPointerUp);
 
         app.on('update', () => this._updateScale());
@@ -402,7 +411,7 @@ class Gizmo extends EventHandler {
     /**
      * @param {number} x - The x coordinate.
      * @param {number} y - The y coordinate.
-     * @returns {import('../../scene/mesh-instance.js').MeshInstance[]} - The mesh instances.
+     * @returns {MeshInstance[]} - The mesh instances.
      * @private
      */
     _getSelection(x, y) {
@@ -454,7 +463,7 @@ class Gizmo extends EventHandler {
     /**
      * Attach an array of graph nodes to the gizmo.
      *
-     * @param {import('../../scene/graph-node.js').GraphNode[]} [nodes] - The graph nodes. Defaults to [].
+     * @param {GraphNode[]} [nodes] - The graph nodes. Defaults to [].
      * @example
      * const gizmo = new pc.Gizmo(app, camera, layer);
      * gizmo.attach([boxA, boxB]);
@@ -493,8 +502,7 @@ class Gizmo extends EventHandler {
     }
 
     /**
-     * Destroys the gizmo instance; detaches
-     * all graph nodes.
+     * Detaches all graph nodes and destroys the gizmo instance.
      *
      * @example
      * const gizmo = new pc.Gizmo(app, camera, layer);

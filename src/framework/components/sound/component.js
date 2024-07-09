@@ -1,10 +1,13 @@
 import { Debug } from '../../../core/debug.js';
-
 import { DISTANCE_LINEAR } from '../../../platform/audio/constants.js';
-
 import { Component } from '../component.js';
-
 import { SoundSlot } from './slot.js';
+
+/**
+ * @import { Entity } from '../../entity.js'
+ * @import { SoundComponentSystem } from './system.js'
+ * @import { SoundInstance } from '../../../platform/sound/instance.js'
+ */
 
 /**
  * The SoundComponent enables an {@link Entity} to play audio. The SoundComponent can manage
@@ -116,10 +119,8 @@ class SoundComponent extends Component {
     /**
      * Create a new Sound Component.
      *
-     * @param {import('./system.js').SoundComponentSystem} system - The ComponentSystem that
-     * created this component.
-     * @param {import('../../entity.js').Entity} entity - The entity that the Component is attached
-     * to.
+     * @param {SoundComponentSystem} system - The ComponentSystem that created this component.
+     * @param {Entity} entity - The entity that the Component is attached to.
      */
     constructor(system, entity) {
         super(system, entity);
@@ -521,7 +522,8 @@ class SoundComponent extends Component {
      *
      * @param {string} name - The name of the {@link SoundSlot} to look for.
      * @param {string} property - The name of the property to look for.
-     * @returns {*} The value from the looked property inside the slot with specified name. May be undefined if slot does not exist.
+     * @returns {*} The value from the looked property inside the slot with specified name. May be
+     * undefined if slot does not exist.
      * @private
      */
     _getSlotProperty(name, property) {
@@ -584,9 +586,9 @@ class SoundComponent extends Component {
      * created and played.
      *
      * @param {string} name - The name of the {@link SoundSlot} to play.
-     * @returns {import('../../../platform/sound/instance.js').SoundInstance|null} The sound
-     * instance that will be played. Returns null if the component or its parent entity is disabled
-     * or if the SoundComponent has no slot with the specified name.
+     * @returns {SoundInstance|null} The sound instance that will be played. Returns null if the
+     * component or its parent entity is disabled or if the SoundComponent has no slot with the
+     * specified name.
      * @example
      * // get asset by id
      * const asset = app.assets.get(10);

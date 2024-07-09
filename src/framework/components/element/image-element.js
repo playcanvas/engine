@@ -1,12 +1,10 @@
 import { Debug } from '../../../core/debug.js';
 import { TRACE_ID_ELEMENT } from '../../../core/constants.js';
-
 import { math } from '../../../core/math/math.js';
 import { Color } from '../../../core/math/color.js';
 import { Vec2 } from '../../../core/math/vec2.js';
 import { Vec3 } from '../../../core/math/vec3.js';
 import { Vec4 } from '../../../core/math/vec4.js';
-
 import {
     FUNC_EQUAL,
     PRIMITIVE_TRISTRIP,
@@ -17,7 +15,6 @@ import {
 import { VertexBuffer } from '../../../platform/graphics/vertex-buffer.js';
 import { VertexFormat } from '../../../platform/graphics/vertex-format.js';
 import { DeviceCache } from '../../../platform/graphics/device-cache.js';
-
 import {
     LAYER_HUD, LAYER_WORLD,
     SPRITE_RENDERMODE_SIMPLE, SPRITE_RENDERMODE_SLICED, SPRITE_RENDERMODE_TILED
@@ -27,10 +24,15 @@ import { Mesh } from '../../../scene/mesh.js';
 import { MeshInstance } from '../../../scene/mesh-instance.js';
 import { Model } from '../../../scene/model.js';
 import { StencilParameters } from '../../../platform/graphics/stencil-parameters.js';
-
 import { FITMODE_STRETCH, FITMODE_CONTAIN, FITMODE_COVER } from './constants.js';
-
 import { Asset } from '../../asset/asset.js';
+
+/**
+ * @import { BoundingBox } from '../../../core/shape/bounding-box.js'
+ * @import { Material } from '../../../scene/materials/material.js'
+ * @import { Sprite } from '../../../scene/sprite.js'
+ * @import { Texture } from '../../../platform/graphics/texture.js'
+ */
 
 const _tempColor = new Color();
 const _vertexFormatDeviceCache = new DeviceCache();
@@ -268,15 +270,15 @@ class ImageElement {
         // public
         /** @type {number} */
         this._textureAsset = null;
-        /** @type {import('../../../platform/graphics/texture.js').Texture} */
+        /** @type {Texture} */
         this._texture = null;
         /** @type {number} */
         this._materialAsset = null;
-        /** @type {import('../../../scene/materials/material.js').Material} */
+        /** @type {Material} */
         this._material = null;
         /** @type {number} */
         this._spriteAsset = null;
-        /** @type {import('../../../scene/sprite.js').Sprite} */
+        /** @type {Sprite} */
         this._sprite = null;
         this._spriteFrame = 0;
         /** @type {number} */
@@ -1321,7 +1323,7 @@ class ImageElement {
 
     // private
     /**
-     * @type {import('../../../core/shape/bounding-box.js').BoundingBox | null}
+     * @type {BoundingBox | null}
      */
     get aabb() {
         if (this._renderable.meshInstance) {

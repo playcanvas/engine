@@ -2,7 +2,6 @@ import { Debug } from '../core/debug.js';
 import { RefCountedObject } from '../core/ref-counted-object.js';
 import { Vec3 } from '../core/math/vec3.js';
 import { BoundingBox } from '../core/shape/bounding-box.js';
-
 import {
     BUFFER_DYNAMIC, BUFFER_STATIC,
     INDEXFORMAT_UINT16, INDEXFORMAT_UINT32,
@@ -16,8 +15,14 @@ import { IndexBuffer } from '../platform/graphics/index-buffer.js';
 import { VertexBuffer } from '../platform/graphics/vertex-buffer.js';
 import { VertexFormat } from '../platform/graphics/vertex-format.js';
 import { VertexIterator } from '../platform/graphics/vertex-iterator.js';
-
 import { RENDERSTYLE_SOLID, RENDERSTYLE_WIREFRAME, RENDERSTYLE_POINTS } from './constants.js';
+
+/**
+ * @import { Geometry } from './geometry/geometry.js'
+ * @import { GraphicsDevice } from '../platform/graphics/graphics-device.js'
+ * @import { Morph } from './morph.js'
+ * @import { Skin } from './skin.js'
+ */
 
 let id = 0;
 
@@ -211,7 +216,7 @@ class Mesh extends RefCountedObject {
     /**
      * The skin data (if any) that drives skinned mesh animations for this mesh.
      *
-     * @type {import('./skin.js').Skin|null}
+     * @type {Skin|null}
      */
     skin = null;
 
@@ -245,7 +250,7 @@ class Mesh extends RefCountedObject {
     _geometryData = null;
 
     /**
-     * @type {import('./morph.js').Morph|null}
+     * @type {Morph|null}
      * @private
      */
     _morph = null;
@@ -269,8 +274,7 @@ class Mesh extends RefCountedObject {
     /**
      * Create a new Mesh instance.
      *
-     * @param {import('../platform/graphics/graphics-device.js').GraphicsDevice} graphicsDevice -
-     * The graphics device used to manage this mesh.
+     * @param {GraphicsDevice} graphicsDevice - The graphics device used to manage this mesh.
      * @param {object} [options] - Object for passing optional arguments.
      * @param {boolean} [options.storageVertex] - Defines if the vertex buffer can be used as
      * a storage buffer by a compute shader. Defaults to false. Only supported on WebGPU.
@@ -289,10 +293,9 @@ class Mesh extends RefCountedObject {
 
     /**
      * Create a new Mesh instance from {@link Geometry} object.
-     * @param {import('../platform/graphics/graphics-device.js').GraphicsDevice} graphicsDevice -
-     * The graphics device used to manage this mesh.
-     * @param {import('./geometry/geometry.js').Geometry} geometry - The geometry object to create
-     * the mesh from.
+     *
+     * @param {GraphicsDevice} graphicsDevice - The graphics device used to manage this mesh.
+     * @param {Geometry} geometry - The geometry object to create the mesh from.
      * @param {object} [options] - An object that specifies optional inputs for the function as follows:
      * @param {boolean} [options.storageVertex] - Defines if the vertex buffer of the mesh can be used as
      * a storage buffer by a compute shader. Defaults to false. Only supported on WebGPU.
@@ -350,7 +353,7 @@ class Mesh extends RefCountedObject {
      * Sets the morph data that drives morph target animations for this mesh. Set to null if
      * morphing is not used.
      *
-     * @type {import('./morph.js').Morph|null}
+     * @type {Morph|null}
      */
     set morph(morph) {
 
@@ -370,7 +373,7 @@ class Mesh extends RefCountedObject {
     /**
      * Gets the morph data that drives morph target animations for this mesh.
      *
-     * @type {import('./morph.js').Morph|null}
+     * @type {Morph|null}
      */
     get morph() {
         return this._morph;
@@ -614,8 +617,7 @@ class Mesh extends RefCountedObject {
      *
      * @param {string} semantic - The meaning of the vertex element. For supported semantics, see
      * SEMANTIC_* in {@link VertexFormat}.
-     * @param {number[]|ArrayBufferView} data - Vertex
-     * data for the specified semantic.
+     * @param {number[]|ArrayBufferView} data - Vertex data for the specified semantic.
      * @param {number} componentCount - The number of values that form a single Vertex element. For
      * example when setting a 3D position represented by 3 numbers per vertex, number 3 should be
      * specified.
@@ -650,9 +652,9 @@ class Mesh extends RefCountedObject {
      *
      * @param {string} semantic - The semantic of the vertex element to get. For supported
      * semantics, see SEMANTIC_* in {@link VertexFormat}.
-     * @param {number[]|ArrayBufferView} data - An
-     * array to populate with the vertex data. When typed array is supplied, enough space needs to
-     * be reserved, otherwise only partial data is copied.
+     * @param {number[]|ArrayBufferView} data - An array to populate with the vertex data. When
+     * typed array is supplied, enough space needs to be reserved, otherwise only partial data is
+     * copied.
      * @returns {number} Returns the number of vertices populated.
      */
     getVertexStream(semantic, data) {
@@ -692,8 +694,7 @@ class Mesh extends RefCountedObject {
     /**
      * Sets the vertex positions array. Vertices are stored using {@link TYPE_FLOAT32} format.
      *
-     * @param {number[]|ArrayBufferView} positions - Vertex
-     * data containing positions.
+     * @param {number[]|ArrayBufferView} positions - Vertex data containing positions.
      * @param {number} [componentCount] - The number of values that form a single position element.
      * Defaults to 3 if not specified, corresponding to x, y and z coordinates.
      * @param {number} [numVertices] - The number of vertices to be used from data array. If not
@@ -706,8 +707,7 @@ class Mesh extends RefCountedObject {
     /**
      * Sets the vertex normals array. Normals are stored using {@link TYPE_FLOAT32} format.
      *
-     * @param {number[]|ArrayBufferView} normals - Vertex
-     * data containing normals.
+     * @param {number[]|ArrayBufferView} normals - Vertex data containing normals.
      * @param {number} [componentCount] - The number of values that form a single normal element.
      * Defaults to 3 if not specified, corresponding to x, y and z direction.
      * @param {number} [numVertices] - The number of vertices to be used from data array. If not
@@ -721,8 +721,7 @@ class Mesh extends RefCountedObject {
      * Sets the vertex uv array. Uvs are stored using {@link TYPE_FLOAT32} format.
      *
      * @param {number} channel - The uv channel in [0..7] range.
-     * @param {number[]|ArrayBufferView} uvs - Vertex
-     * data containing uv-coordinates.
+     * @param {number[]|ArrayBufferView} uvs - Vertex data containing uv-coordinates.
      * @param {number} [componentCount] - The number of values that form a single uv element.
      * Defaults to 2 if not specified, corresponding to u and v coordinates.
      * @param {number} [numVertices] - The number of vertices to be used from data array. If not
@@ -736,8 +735,7 @@ class Mesh extends RefCountedObject {
      * Sets the vertex color array. Colors are stored using {@link TYPE_FLOAT32} format, which is
      * useful for HDR colors.
      *
-     * @param {number[]|ArrayBufferView} colors - Vertex
-     * data containing colors.
+     * @param {number[]|ArrayBufferView} colors - Vertex data containing colors.
      * @param {number} [componentCount] - The number of values that form a single color element.
      * Defaults to 4 if not specified, corresponding to r, g, b and a.
      * @param {number} [numVertices] - The number of vertices to be used from data array. If not
@@ -752,9 +750,8 @@ class Mesh extends RefCountedObject {
      * useful for LDR colors. Values in the array are expected in [0..255] range, and are mapped to
      * [0..1] range in the shader.
      *
-     * @param {number[]|ArrayBufferView} colors - Vertex
-     * data containing colors. The array is expected to contain 4 components per vertex,
-     * corresponding to r, g, b and a.
+     * @param {number[]|ArrayBufferView} colors - Vertex data containing colors. The array is
+     * expected to contain 4 components per vertex, corresponding to r, g, b and a.
      * @param {number} [numVertices] - The number of vertices to be used from data array. If not
      * provided, the whole data array is used. This allows to use only part of the data array.
      */
@@ -781,9 +778,9 @@ class Mesh extends RefCountedObject {
     /**
      * Gets the vertex positions data.
      *
-     * @param {number[]|ArrayBufferView} positions - An
-     * array to populate with the vertex data. When typed array is supplied, enough space needs to
-     * be reserved, otherwise only partial data is copied.
+     * @param {number[]|ArrayBufferView} positions - An array to populate with the vertex data.
+     * When typed array is supplied, enough space needs to be reserved, otherwise only partial data
+     * is copied.
      * @returns {number} Returns the number of vertices populated.
      */
     getPositions(positions) {
@@ -793,9 +790,9 @@ class Mesh extends RefCountedObject {
     /**
      * Gets the vertex normals data.
      *
-     * @param {number[]|ArrayBufferView} normals - An
-     * array to populate with the vertex data. When typed array is supplied, enough space needs to
-     * be reserved, otherwise only partial data is copied.
+     * @param {number[]|ArrayBufferView} normals - An array to populate with the vertex data. When
+     * typed array is supplied, enough space needs to be reserved, otherwise only partial data is
+     * copied.
      * @returns {number} Returns the number of vertices populated.
      */
     getNormals(normals) {
@@ -806,9 +803,9 @@ class Mesh extends RefCountedObject {
      * Gets the vertex uv data.
      *
      * @param {number} channel - The uv channel in [0..7] range.
-     * @param {number[]|ArrayBufferView} uvs - An
-     * array to populate with the vertex data. When typed array is supplied, enough space needs to
-     * be reserved, otherwise only partial data is copied.
+     * @param {number[]|ArrayBufferView} uvs - An array to populate with the vertex data. When
+     * typed array is supplied, enough space needs to be reserved, otherwise only partial data is
+     * copied.
      * @returns {number} Returns the number of vertices populated.
      */
     getUvs(channel, uvs) {
@@ -818,9 +815,9 @@ class Mesh extends RefCountedObject {
     /**
      * Gets the vertex color data.
      *
-     * @param {number[]|ArrayBufferView} colors - An
-     * array to populate with the vertex data. When typed array is supplied, enough space needs to
-     * be reserved, otherwise only partial data is copied.
+     * @param {number[]|ArrayBufferView} colors - An array to populate with the vertex data. When
+     * typed array is supplied, enough space needs to be reserved, otherwise only partial data is
+     * copied.
      * @returns {number} Returns the number of vertices populated.
      */
     getColors(colors) {

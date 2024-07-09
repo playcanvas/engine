@@ -1,5 +1,4 @@
 import { Debug } from '../../../core/debug.js';
-
 import {
     PIXELFORMAT_A8, PIXELFORMAT_L8, PIXELFORMAT_LA8, PIXELFORMAT_RGB565, PIXELFORMAT_RGBA5551, PIXELFORMAT_RGBA4,
     PIXELFORMAT_RGB8, PIXELFORMAT_RGBA8, PIXELFORMAT_DXT1, PIXELFORMAT_DXT3, PIXELFORMAT_DXT5,
@@ -15,6 +14,11 @@ import {
     PIXELFORMAT_PVRTC_2BPP_SRGBA_1, PIXELFORMAT_PVRTC_4BPP_SRGB_1, PIXELFORMAT_PVRTC_4BPP_SRGBA_1,
     PIXELFORMAT_ETC2_SRGB, PIXELFORMAT_ETC2_SRGBA, PIXELFORMAT_ASTC_4x4_SRGB
 } from '../constants.js';
+
+/**
+ * @import { Texture } from '../texture.js'
+ * @import { WebglGraphicsDevice } from './webgl-graphics-device.js'
+ */
 
 /**
  * Checks that an image's width and height do not exceed the max texture size. If they do, it will
@@ -67,7 +71,7 @@ class WebglTexture {
     dirtyParameterFlags = 0;
 
     constructor(texture) {
-        /** @type {import('../texture.js').Texture} */
+        /** @type {Texture} */
         this.texture = texture;
     }
 
@@ -426,8 +430,8 @@ class WebglTexture {
     }
 
     /**
-     * @param {import('./webgl-graphics-device.js').WebglGraphicsDevice} device - The device.
-     * @param {import('../texture.js').Texture} texture - The texture to update.
+     * @param {WebglGraphicsDevice} device - The device.
+     * @param {Texture} texture - The texture to update.
      */
     upload(device, texture) {
 
@@ -780,7 +784,7 @@ class WebglTexture {
 
         const texture = this.texture;
 
-        /** @type {import('./webgl-graphics-device.js').WebglGraphicsDevice} */
+        /** @type {WebglGraphicsDevice} */
         const device = texture.device;
         return device.readTextureAsync(texture, x, y, width, height, options);
     }

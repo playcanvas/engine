@@ -4,6 +4,10 @@ import { AnimBlend } from './anim-blend.js';
 import { math } from '../../../core/math/math.js';
 
 /**
+ * @import { AnimComponent } from '../../components/anim/component.js'
+ */
+
+/**
  * Used to store and update the value of an animation target. This combines the values of multiple
  * layer targets into a single value.
  */

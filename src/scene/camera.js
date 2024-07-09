@@ -3,15 +3,19 @@ import { Mat4 } from '../core/math/mat4.js';
 import { Vec3 } from '../core/math/vec3.js';
 import { Vec4 } from '../core/math/vec4.js';
 import { math } from '../core/math/math.js';
-
 import { Frustum } from '../core/shape/frustum.js';
-
 import {
     ASPECT_AUTO, PROJECTION_PERSPECTIVE,
     LAYERID_WORLD, LAYERID_DEPTH, LAYERID_SKYBOX, LAYERID_UI, LAYERID_IMMEDIATE
 } from './constants.js';
 import { RenderPassColorGrab } from './graphics/render-pass-color-grab.js';
 import { RenderPassDepthGrab } from './graphics/render-pass-depth-grab.js';
+
+/**
+ * @import { RenderPass } from '../platform/graphics/render-pass.js'
+ * @import { RenderingParams } from './renderer/rendering-params.js'
+ * @import { ShaderPassInfo } from './shader-pass.js'
+ */
 
 // pre-allocated temp variables
 const _deviceCoord = new Vec3();
@@ -27,7 +31,7 @@ const _frustumPoints = [new Vec3(), new Vec3(), new Vec3(), new Vec3(), new Vec3
  */
 class Camera {
     /**
-     * @type {import('./shader-pass.js').ShaderPassInfo|null}
+     * @type {ShaderPassInfo|null}
      */
     shaderPassInfo = null;
 
@@ -37,14 +41,14 @@ class Camera {
     renderPassColorGrab = null;
 
     /**
-     * @type {import('../platform/graphics/render-pass.js').RenderPass|null}
+     * @type {RenderPass|null}
      */
     renderPassDepthGrab = null;
 
     /**
      * The rendering parameters.
      *
-     * @type {import('./renderer/rendering-params.js').RenderingParams|null}
+     * @type {RenderingParams|null}
      */
     renderingParams = null;
 
@@ -52,7 +56,7 @@ class Camera {
      * Render passes used to render this camera. If empty, the camera will render using the default
      * render passes.
      *
-     * @type {import('../platform/graphics/render-pass.js').RenderPass[]}
+     * @type {RenderPass[]}
      */
     renderPasses = [];
 

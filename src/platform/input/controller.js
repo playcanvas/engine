@@ -1,5 +1,4 @@
 import { type } from '../../core/core.js';
-
 import {
     ACTION_GAMEPAD, ACTION_KEYBOARD, ACTION_MOUSE,
     EVENT_MOUSEMOVE,
@@ -8,6 +7,10 @@ import {
 } from './constants.js';
 import { Keyboard } from './keyboard.js';
 import { Mouse } from './mouse.js';
+
+/**
+ * @import { GamePads } from './game-pads.js'
+ */
 
 /**
  * A general input handler which handles both mouse and keyboard input assigned to named actions.
@@ -29,7 +32,7 @@ class Controller {
     _mouse;
 
     /**
-     * @type {import('./game-pads.js').GamePads|null}
+     * @type {GamePads|null}
      * @private
      */
     _gamepads;
@@ -56,7 +59,7 @@ class Controller {
      * @param {object} [options] - Optional arguments.
      * @param {Keyboard} [options.keyboard] - A Keyboard object to use.
      * @param {Mouse} [options.mouse] - A Mouse object to use.
-     * @param {import('./game-pads.js').GamePads} [options.gamepads] - A Gamepads object to use.
+     * @param {GamePads} [options.gamepads] - A Gamepads object to use.
      * @example
      * const c = new pc.Controller(document);
      *

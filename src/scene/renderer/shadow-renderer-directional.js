@@ -3,13 +3,19 @@ import { math } from '../../core/math/math.js';
 import { Vec3 } from '../../core/math/vec3.js';
 import { Mat4 } from '../../core/math/mat4.js';
 import { BoundingBox } from '../../core/shape/bounding-box.js';
-
 import {
     LIGHTTYPE_DIRECTIONAL, SHADOWUPDATE_NONE
 } from '../constants.js';
-
 import { ShadowMap } from './shadow-map.js';
 import { RenderPassShadowDirectional } from './render-pass-shadow-directional.js';
+
+/**
+ * @import { Camera } from '../camera.js'
+ * @import { GraphicsDevice } from '../../platform/graphics/graphics-device.js'
+ * @import { Light } from '../light.js'
+ * @import { Renderer } from './renderer.js'
+ * @import { ShadowRenderer } from './shadow-renderer.js'
+ */
 
 const visibleSceneAabb = new BoundingBox();
 const center = new Vec3();
@@ -46,13 +52,13 @@ function getDepthRange(cameraViewMatrix, aabbMin, aabbMax) {
 }
 
 class ShadowRendererDirectional {
-    /** @type {import('./renderer.js').Renderer} */
+    /** @type {Renderer} */
     renderer;
 
-    /** @type {import('./shadow-renderer.js').ShadowRenderer} */
+    /** @type {ShadowRenderer} */
     shadowRenderer;
 
-    /** @type {import('../../platform/graphics/graphics-device.js').GraphicsDevice} */
+    /** @type {GraphicsDevice} */
     device;
 
     constructor(renderer, shadowRenderer) {
@@ -199,8 +205,8 @@ class ShadowRendererDirectional {
     /**
      * Create a render pass for directional light shadow rendering for a specified camera.
      *
-     * @param {import('../light.js').Light} light - The directional light.
-     * @param {import('../camera.js').Camera} camera - The camera.
+     * @param {Light} light - The directional light.
+     * @param {Camera} camera - The camera.
      * @returns {RenderPassShadowDirectional|null} - The render pass if the shadow rendering is
      * required, or null otherwise.
      */

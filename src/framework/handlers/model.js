@@ -1,13 +1,13 @@
 import { path } from '../../core/path.js';
-
 import { http, Http } from '../../platform/net/http.js';
-
 import { getDefaultMaterial } from '../../scene/materials/default-material.js';
-
 import { GlbModelParser } from '../parsers/glb-model.js';
 import { JsonModelParser } from '../parsers/json-model.js';
-
 import { ResourceHandler } from './handler.js';
+
+/**
+ * @import { AppBase } from '../app-base.js'
+ */
 
 /**
  * Callback used by {@link ModelHandler#addParser} to decide on which parser to use.
@@ -28,7 +28,7 @@ class ModelHandler extends ResourceHandler {
     /**
      * Create a new ModelHandler instance.
      *
-     * @param {import('../app-base.js').AppBase} app - The running {@link AppBase}.
+     * @param {AppBase} app - The running {@link AppBase}.
      * @ignore
      */
     constructor(app) {

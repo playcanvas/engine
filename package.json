@@ -77,8 +77,9 @@
         "error",
         {
           "definedTags": [
+            "attribute",
             "category",
-            "attribute"
+            "import"
           ]
         }
       ]
@@ -132,9 +133,9 @@
     "rollup-plugin-visualizer": "^5.12.0",
     "serve": "^14.2.2",
     "sinon": "^17.0.1",
-    "typedoc": "^0.25.13",
-    "typedoc-plugin-mdn-links": "^3.1.22",
-    "typescript": "^5.4.5",
+    "typedoc": "^0.26.3",
+    "typedoc-plugin-mdn-links": "^3.2.2",
+    "typescript": "^5.5.3",
     "xhr2": "^0.2.1"
   },
   "scripts": {

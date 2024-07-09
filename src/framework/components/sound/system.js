@@ -1,12 +1,14 @@
 import { Debug } from '../../../core/debug.js';
-
 import { hasAudioContext } from '../../../platform/audio/capabilities.js';
-
 import { Component } from '../component.js';
 import { ComponentSystem } from '../system.js';
-
 import { SoundComponent } from './component.js';
 import { SoundComponentData } from './data.js';
+
+/**
+ * @import { AppBase } from '../../app-base.js'
+ * @import { SoundManager } from '../../../platform/sound/manager.js'
+ */
 
 const _schema = ['enabled'];
 
@@ -19,7 +21,7 @@ class SoundComponentSystem extends ComponentSystem {
     /**
      * Create a SoundComponentSystem.
      *
-     * @param {import('../../app-base.js').AppBase} app - The Application.
+     * @param {AppBase} app - The Application.
      * @ignore
      */
     constructor(app) {
@@ -35,7 +37,7 @@ class SoundComponentSystem extends ComponentSystem {
         /**
          * Gets / sets the sound manager.
          *
-         * @type {import('../../../platform/sound/manager.js').SoundManager}
+         * @type {SoundManager}
          */
         this.manager = app.soundManager;
         Debug.assert(this.manager, "SoundComponentSystem cannot be created without sound manager");
