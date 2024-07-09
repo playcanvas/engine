@@ -10,11 +10,6 @@ const _colorUniformNames = ['uSceneColorMap', 'texture_grabPass'];
 /**
  * A render pass implementing grab of a color buffer.
  *
- * TODO: implement mipmapped color buffer support for WebGL 1 as well, which requires
- * the texture to be a power of two, by first downscaling the captured framebuffer
- * texture to smaller power of 2 texture, and then generate mipmaps and use it for rendering
- * TODO: or even better, implement blur filter to have smoother lower levels
- *
  * @ignore
  */
 class RenderPassColorGrab extends RenderPass {
@@ -135,22 +130,6 @@ class RenderPassColorGrab extends RenderPass {
             device.activeTexture(device.maxCombinedTextures - 1);
             device.bindTexture(colorBuffer);
             device.gl.generateMipmap(colorBuffer.impl._glTarget);
-
-        } else { // webgl 1
-
-            // initialize the texture
-            if (!colorBuffer.impl._glTexture) {
-                colorBuffer.impl.initialize(device, colorBuffer);
-            }
-
-            // copy framebuffer to it
-            device.bindTexture(colorBuffer);
-            const gl = device.gl;
-            gl.copyTexImage2D(gl.TEXTURE_2D, 0, colorBuffer.impl._glFormat, 0, 0, colorBuffer.width, colorBuffer.height, 0);
-
-            // stop the device from updating this texture further
-            colorBuffer._needsUpload = false;
-            colorBuffer._needsMipmapsUpload = false;
         }
 
         DebugGraphics.popGpuMarker(device);
