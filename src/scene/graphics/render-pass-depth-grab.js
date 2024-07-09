@@ -4,7 +4,7 @@ import { RenderPass } from "../../platform/graphics/render-pass.js";
 import { RenderTarget } from "../../platform/graphics/render-target.js";
 import { Texture } from "../../platform/graphics/texture.js";
 
-// uniform names (first is current name, second one is deprecated name for compatibility)
+// uniform name
 const _depthUniformName = 'uSceneDepthMap';
 
 /**
