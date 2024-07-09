@@ -4,8 +4,8 @@ import { RenderPass } from "../../platform/graphics/render-pass.js";
 import { RenderTarget } from "../../platform/graphics/render-target.js";
 import { Texture } from "../../platform/graphics/texture.js";
 
-// uniform names (first is current name, second one is deprecated name for compatibility)
-const _colorUniformNames = ['uSceneColorMap', 'texture_grabPass'];
+// uniform name
+const _colorUniformName = 'uSceneColorMap';
 
 /**
  * A render pass implementing grab of a color buffer.
@@ -45,7 +45,7 @@ class RenderPassColorGrab extends RenderPass {
         // allocate texture buffer
         const mipmaps = device.isWebGL2;
         const texture = new Texture(device, {
-            name: _colorUniformNames[0],
+            name: _colorUniformName,
             format,
             width: sourceRenderTarget ? sourceRenderTarget.colorBuffer.width : device.width,
             height: sourceRenderTarget ? sourceRenderTarget.colorBuffer.height : device.height,
@@ -103,7 +103,7 @@ class RenderPassColorGrab extends RenderPass {
 
         // assign uniform
         const colorBuffer = this.colorRenderTarget.colorBuffer;
-        _colorUniformNames.forEach(name => device.scope.resolve(name).setValue(colorBuffer));
+        device.scope.resolve(_colorUniformName).setValue(colorBuffer);
     }
 
     execute() {
