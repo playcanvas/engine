@@ -71,6 +71,32 @@ import { getApplication, setApplication } from './globals.js';
  */
 
 /**
+ * Callback used by {@link AppBase#configure} when configuration file is loaded and parsed (or an
+ * error occurs).
+ *
+ * @callback ConfigureAppCallback
+ * @param {string|null} err - The error message in the case where the loading or parsing fails.
+ * @returns {void}
+ */
+
+/**
+ * Callback used by {@link AppBase#preload} when all assets (marked as 'preload') are loaded.
+ *
+ * @callback PreloadAppCallback
+ * @returns {void}
+ */
+
+/**
+ * Callback used by {@link AppBase#start} and itself to request the rendering of a new animation
+ * frame.
+ *
+ * @callback MakeTickCallback
+ * @param {number} [timestamp] - The timestamp supplied by requestAnimationFrame.
+ * @param {XRFrame} [frame] - XRFrame from requestAnimationFrame callback.
+ * @returns {void}
+ */
+
+/**
  * Gets the current application, if any.
  *
  * @type {AppBase|null}
@@ -103,32 +129,6 @@ let app = null;
  * manually.
  */
 class AppBase extends EventHandler {
-    /**
-     * Callback used by {@link AppBase#configure} when configuration file is loaded and parsed (or
-     * an error occurs).
-     *
-     * @callback ConfigureAppCallback
-     * @param {string|null} err - The error message in the case where the loading or parsing fails.
-     * @returns {void}
-     */
-
-    /**
-     * Callback used by {@link AppBase#preload} when all assets (marked as 'preload') are loaded.
-     *
-     * @callback PreloadAppCallback
-     * @returns {void}
-     */
-
-    /**
-     * Callback used by {@link AppBase#start} and itself to request
-     * the rendering of a new animation frame.
-     *
-     * @callback MakeTickCallback
-     * @param {number} [timestamp] - The timestamp supplied by requestAnimationFrame.
-     * @param {XRFrame} [frame] - XRFrame from requestAnimationFrame callback.
-     * @returns {void}
-     */
-
     /**
      * The application's batch manager.
      *
