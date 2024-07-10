@@ -256,6 +256,13 @@ class AppBase extends EventHandler {
     renderer;
 
     /**
+     * Scripts in order of loading first.
+     *
+     * @type {string[]}
+     */
+    scriptsOrder = [];
+
+    /**
      * The application's performance stats.
      *
      * @type {ApplicationStats}
@@ -342,6 +349,14 @@ class AppBase extends EventHandler {
      * const vehicleAssets = this.app.assets.findByTag('vehicle');
      */
     assets;
+
+    /**
+     * The bundle registry managed by the application.
+     *
+     * @type {BundleRegistry}
+     * @ignore
+     */
+    bundles;
 
     /**
      * The scene registry managed by the application.
@@ -468,31 +483,27 @@ class AppBase extends EventHandler {
      * @param {AppOptions} appOptions - Options specifying the init parameters for the app.
      */
     init(appOptions) {
-        const device = appOptions.graphicsDevice;
+        const {
+            assetPrefix, batchManager, componentSystems, elementInput, gamepads, graphicsDevice, keyboard,
+            lightmapper, mouse, resourceHandlers, scriptsOrder, scriptPrefix, soundManager, touch, xr
+        } = appOptions;
 
-        Debug.assert(device, "The application cannot be created without a valid GraphicsDevice");
+        Debug.assert(graphicsDevice, "The application cannot be created without a valid GraphicsDevice");
 
-        this.graphicsDevice = device;
-
+        this.graphicsDevice = graphicsDevice;
         this._initDefaultMaterial();
         this._initProgramLibrary();
-        this.stats = new ApplicationStats(device);
+        this.stats = new ApplicationStats(graphicsDevice);
 
-        this._soundManager = appOptions.soundManager;
-
-        this.scene = new Scene(device);
+        this._soundManager = soundManager;
+        this.scene = new Scene(graphicsDevice);
         this._registerSceneImmediate(this.scene);
 
         this.assets = new AssetRegistry(this.loader);
-        if (appOptions.assetPrefix) this.assets.prefix = appOptions.assetPrefix;
+        if (assetPrefix) this.assets.prefix = assetPrefix;
 
-        /**
-         * @type {BundleRegistry}
-         * @ignore
-         */
         this.bundles = new BundleRegistry(this.assets);
-
-        this.scriptsOrder = appOptions.scriptsOrder || [];
+        this.scriptsOrder = scriptsOrder || [];
 
         this.defaultLayerWorld = new Layer({ name: "World", id: LAYERID_WORLD });
         this.defaultLayerDepth = new Layer({ name: "Depth", id: LAYERID_DEPTH, enabled: false, opaqueSortMode: SORTMODE_NONE });
@@ -510,50 +521,48 @@ class AppBase extends EventHandler {
         defaultLayerComposition.pushTransparent(this.defaultLayerUi);
         this.scene.layers = defaultLayerComposition;
 
-        // placeholder texture for area light LUTs
-        AreaLightLuts.createPlaceholder(device);
+        // Placeholder texture for area light LUTs
+        AreaLightLuts.createPlaceholder(graphicsDevice);
 
-        this.renderer = new ForwardRenderer(device);
+        this.renderer = new ForwardRenderer(graphicsDevice);
         this.renderer.scene = this.scene;
 
-        if (appOptions.lightmapper) {
-            this.lightmapper = new appOptions.lightmapper(device, this.root, this.scene, this.renderer, this.assets);
+        if (lightmapper) {
+            this.lightmapper = new lightmapper(graphicsDevice, this.root, this.scene, this.renderer, this.assets);
             this.once('prerender', this._firstBake, this);
         }
 
-        if (appOptions.batchManager) {
-            this._batcher = new appOptions.batchManager(device, this.root, this.scene);
+        if (batchManager) {
+            this._batcher = new batchManager(graphicsDevice, this.root, this.scene);
             this.once('prerender', this._firstBatch, this);
         }
 
-        if (appOptions.keyboard) this.keyboard = appOptions.keyboard;
-        if (appOptions.mouse) this.mouse = appOptions.mouse;
-        if (appOptions.touch) this.touch = appOptions.touch;
-        if (appOptions.gamepads) this.gamepads = appOptions.gamepads;
-        if (appOptions.elementInput) {
-            this.elementInput = appOptions.elementInput;
+        this.keyboard = keyboard || null;
+        this.mouse = mouse || null;
+        this.touch = touch || null;
+        this.gamepads = gamepads || null;
+        if (elementInput) {
+            this.elementInput = elementInput;
             this.elementInput.app = this;
         }
 
-        if (appOptions.xr) this.xr = new appOptions.xr(this);
+        this.xr = xr ? new xr(this) : null;
+        if (this.elementInput) this.elementInput.attachSelectEvents();
 
-        if (this.elementInput)
-            this.elementInput.attachSelectEvents();
-
-        if (appOptions.scriptPrefix) this._scriptPrefix = appOptions.scriptPrefix;
+        this._scriptPrefix = scriptPrefix || '';
 
         if (this.enableBundles) {
             this.loader.addHandler("bundle", new BundleHandler(this));
         }
 
-        // create and register all required resource handlers
-        appOptions.resourceHandlers.forEach((resourceHandler) => {
+        // Create and register all required resource handlers
+        resourceHandlers.forEach((resourceHandler) => {
             const handler = new resourceHandler(this);
             this.loader.addHandler(handler.handlerType, handler);
         });
 
-        // create and register all required component systems
-        appOptions.componentSystems.forEach((componentSystem) => {
+        // Create and register all required component systems
+        componentSystems.forEach((componentSystem) => {
             this.systems.add(new componentSystem(this));
         });
 
