@@ -138,7 +138,7 @@ class XrLightEstimation extends EventHandler {
      * fired.
      *
      * @example
-     * app.xr.on('start', function () {
+     * app.xr.on('start', () => {
      *     if (app.xr.lightEstimation.supported) {
      *         app.xr.lightEstimation.start();
      *     }

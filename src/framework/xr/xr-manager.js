@@ -392,11 +392,11 @@ class XrManager extends EventHandler {
      * (XRDEPTHSENSINGFORMAT_*), defaults to 'luminance-alpha'. Most preferred and supported will
      * be chosen by the underlying depth sensing system.
      * @example
-     * button.on('click', function () {
+     * button.on('click', () => {
      *     app.xr.start(camera, pc.XRTYPE_VR, pc.XRSPACE_LOCALFLOOR);
      * });
      * @example
-     * button.on('click', function () {
+     * button.on('click', () => {
      *     app.xr.start(camera, pc.XRTYPE_AR, pc.XRSPACE_LOCALFLOOR, {
      *         anchors: true,
      *         imageTracking: true,
@@ -554,7 +554,7 @@ class XrManager extends EventHandler {
      * started. The callback has one argument Error - it is null if successfully started XR
      * session.
      * @example
-     * app.keyboard.on('keydown', function (evt) {
+     * app.keyboard.on('keydown', (evt) => {
      *     if (evt.key === pc.KEY_ESCAPE && app.xr.active) {
      *         app.xr.end();
      *     }
@@ -574,7 +574,7 @@ class XrManager extends EventHandler {
     }
 
     /**
-     * Check if specific type of session is available.
+     * Check if the specified type of session is available.
      *
      * @param {string} type - Session type. Can be one of the following:
      *
@@ -589,7 +589,7 @@ class XrManager extends EventHandler {
      * if (app.xr.isAvailable(pc.XRTYPE_VR)) {
      *     // VR is available
      * }
-     * @returns {boolean} True if specified session type is available.
+     * @returns {boolean} True if the specified session type is available.
      */
     isAvailable(type) {
         return this._available[type];
@@ -730,7 +730,7 @@ class XrManager extends EventHandler {
         this._camera.on('set_farClip', onClipPlanesChange);
 
         // A framebufferScaleFactor scale of 1 is the full resolution of the display
-        // so we need to calculate this based on devicePixelRatio of the dislay and what
+        // so we need to calculate this based on devicePixelRatio of the display and what
         // we've set this in the graphics device
         Debug.assert(window, 'window is needed to scale the XR framebuffer. Are you running XR headless?');
 
@@ -849,7 +849,6 @@ class XrManager extends EventHandler {
 
     /**
      * @param {XRFrame} frame - XRFrame from requestAnimationFrame callback.
-     *
      * @returns {boolean} True if update was successful, false otherwise.
      * @ignore
      */
@@ -1015,10 +1014,10 @@ class XrManager extends EventHandler {
     }
 
     /**
-     * Set fixed foveation to the value between 0 and 1. Where 0 - no foveation, and 1 - highest
-     * foveation. It only can be set during an active XR session.
-     * Fixed foveation will reduce the resolution of the back buffer at the edges of the sceen,
-     * which can improve rendering performance.
+     * Set fixed foveation to the value between 0 and 1. Where 0 is no foveation and 1 is highest
+     * foveation. It only can be set during an active XR session. Fixed foveation will reduce the
+     * resolution of the back buffer at the edges of the screen, which can improve rendering
+     * performance.
      *
      * @type {number}
      */
@@ -1033,8 +1032,8 @@ class XrManager extends EventHandler {
     }
 
     /**
-     * Current fixed foveation level, which is between 0 and 1. 0 - no forveation, and 1 - highest
-     * foveation. If fixed foveation is not supported, this value returns null.
+     * Gets the current fixed foveation level, which is between 0 and 1. 0 is no forveation and 1
+     * is highest foveation. If fixed foveation is not supported, this value returns null.
      *
      * @type {number|null}
      */
@@ -1055,7 +1054,7 @@ class XrManager extends EventHandler {
      * Indicates whether WebXR content is currently visible to the user, and if it is, whether it's
      * the primary focus. Can be 'hidden', 'visible' or 'visible-blurred'.
      *
-     * @type {string}
+     * @type {"hidden"|"visible"|"visible-blurred"|null}
      * @ignore
      */
     get visibilityState() {

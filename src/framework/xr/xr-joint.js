@@ -118,8 +118,8 @@ class XrJoint {
      * @param {number} index - Index of a joint within a finger.
      * @param {string} id - Id of a joint based on WebXR Hand Input Specs.
      * @param {XrHand} hand - Hand that joint relates to.
-     * @param {XrFinger|null} finger - Finger that joint is related to.
-     * Can be null in the case of the wrist joint.
+     * @param {XrFinger|null} finger - Finger that joint is related to. Can be null in the case of
+     * the wrist joint.
      * @ignore
      */
     constructor(index, id, hand, finger = null) {

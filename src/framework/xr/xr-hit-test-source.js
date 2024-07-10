@@ -57,7 +57,7 @@ class XrHitTestSource extends EventHandler {
      *
      * @event
      * @example
-     * hitTestSource.on('result', (position, rotation, inputSource, hitTestReult) => {
+     * hitTestSource.on('result', (position, rotation, inputSource, hitTestResult) => {
      *     target.setPosition(position);
      *     target.setRotation(rotation);
      * });

@@ -267,7 +267,7 @@ class XrHand extends EventHandler {
     }
 
     /**
-     * List of fingers of a hand.
+     * Array of fingers of the hand.
      *
      * @type {XrFinger[]}
      */
@@ -276,7 +276,7 @@ class XrHand extends EventHandler {
     }
 
     /**
-     * List of joints of hand.
+     * Array of joints in the hand.
      *
      * @type {XrJoint[]}
      */
@@ -285,7 +285,7 @@ class XrHand extends EventHandler {
     }
 
     /**
-     * List of joints that are fingertips.
+     * Array of joints that are fingertips.
      *
      * @type {XrJoint[]}
      */

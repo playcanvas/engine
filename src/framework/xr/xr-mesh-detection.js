@@ -18,7 +18,7 @@ import { XrMesh } from "./xr-mesh.js";
  * ```
  *
  * ```javascript
- * app.xr.meshDetection.on('add', function (mesh) {
+ * app.xr.meshDetection.on('add', (mesh) => {
  *     // new mesh been added
  * });
  * ```

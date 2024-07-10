@@ -9,15 +9,15 @@ import { PIXELFORMAT_LA8, PIXELFORMAT_R32F } from '../../platform/graphics/const
  */
 
 /**
- * Provides access to list of {@link XrView}'s. And information about their capabilities,
- * such as support and availability of view's camera color texture, depth texture and other parameters.
+ * Provides access to list of {@link XrView}s and information about their capabilities, such as
+ * support and availability of view's camera color texture, depth texture and other parameters.
  *
  * @category XR
  */
 class XrViews extends EventHandler {
     /**
-     * Fired when view has been added. Views are not available straight away on session start
-     * and are added mid-session. They can be added/removed mid session by underlyng system. The
+     * Fired when a view has been added. Views are not available straight away on session start and
+     * are added mid-session. They can be added/removed mid session by the underlying system. The
      * handler is passed the {@link XrView} that has been added.
      *
      * @event
@@ -29,8 +29,8 @@ class XrViews extends EventHandler {
     static EVENT_ADD = 'add';
 
     /**
-     * Fired when view has been removed. They can be added/removed mid session by underlyng system.
-     * The handler is passed the {@link XrView} that has been removed.
+     * Fired when a view has been removed. They can be added/removed mid session by the underlying
+     * system. The handler is passed the {@link XrView} that has been removed.
      *
      * @event
      * @example
@@ -110,6 +110,8 @@ class XrViews extends EventHandler {
     };
 
     /**
+     * Create a new XrViews instance.
+     *
      * @param {XrManager} manager - WebXR Manager.
      * @ignore
      */
@@ -122,9 +124,9 @@ class XrViews extends EventHandler {
     }
 
     /**
-     * An array of {@link XrView}'s of this session. Views are not available straight
-     * away on session start, and can be added/removed mid-session. So use of add/remove
-     * events is required for accessing views.
+     * An array of {@link XrView}s of this session. Views are not available straight away on
+     * session start, and can be added/removed mid-session. So use of `add`/`remove` events is
+     * required for accessing views.
      *
      * @type {XrView[]}
      */
@@ -198,10 +200,12 @@ class XrViews extends EventHandler {
     }
 
     /**
-     * The depth sensing pixel format. Currently supported either:
-     * {@link PIXELFORMAT_LA8} or {@link PIXELFORMAT_R32F}
+     * The depth sensing pixel format. Can be:
      *
-     * @type {number|null}
+     * - {@link PIXELFORMAT_LA8}
+     * - {@link PIXELFORMAT_R32F}
+     *
+     * @type {PIXELFORMAT_LA8|PIXELFORMAT_R32F|null}
      */
     get depthPixelFormat() {
         return this._depthFormats[this._depthFormat] ?? null;

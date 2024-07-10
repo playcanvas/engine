@@ -160,6 +160,8 @@ class XrAnchors extends EventHandler {
     _callbacksAnchors = new Map();
 
     /**
+     * Create a new XrAnchors instance.
+     *
      * @param {XrManager} manager - WebXR Manager.
      * @ignore
      */
@@ -247,7 +249,7 @@ class XrAnchors extends EventHandler {
      * failed to be created.
      * @example
      * // create an anchor using a position and rotation
-     * app.xr.anchors.create(position, rotation, function (err, anchor) {
+     * app.xr.anchors.create(position, rotation, (err, anchor) => {
      *     if (!err) {
      *         // new anchor has been created
      *     }
@@ -358,7 +360,7 @@ class XrAnchors extends EventHandler {
      * @example
      * // forget all available anchors
      * const uuids = app.xr.anchors.uuids;
-     * for(let i = 0; i < uuids.length; i++) {
+     * for (let i = 0; i < uuids.length; i++) {
      *     app.xr.anchors.forget(uuids[i]);
      * }
      */
