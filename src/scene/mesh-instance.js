@@ -387,13 +387,7 @@ class MeshInstance {
      * this.app.scene.root.addChild(entity);
      */
     constructor(mesh, material, node = null) {
-        // if first parameter is of GraphNode type, handle previous constructor signature: (node, mesh, material)
-        if (mesh instanceof GraphNode) {
-            const temp = mesh;
-            mesh = material;
-            material = node;
-            node = temp;
-        }
+        Debug.assert(!(mesh instanceof GraphNode), "Incorrect parameters for MeshInstance's constructor. Use new MeshInstance(mesh, material, node)");
 
         this.node = node;           // The node that defines the transform of the mesh instance
         this._mesh = mesh;          // The mesh that this instance renders
