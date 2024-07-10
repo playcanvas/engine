@@ -1438,8 +1438,8 @@ class AppBase extends EventHandler {
         let asset;
 
         if (this.systems.rigidbody && typeof Ammo !== 'undefined') {
-            const gravity = settings.physics.gravity;
-            this.systems.rigidbody.gravity.set(gravity[0], gravity[1], gravity[2]);
+            const [x, y, z] = settings.physics.gravity;
+            this.systems.rigidbody.gravity.set(x, y, z);
         }
 
         this.scene.applySettings(settings);
