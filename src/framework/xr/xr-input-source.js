@@ -697,8 +697,7 @@ class XrInputSource extends EventHandler {
     }
 
     /**
-     * @param {XrHitTestSource} hitTestSource - Hit test source
-     * to be added.
+     * @param {XrHitTestSource} hitTestSource - Hit test source to be added.
      * @private
      */
     onHitTestSourceAdd(hitTestSource) {
@@ -717,8 +716,7 @@ class XrInputSource extends EventHandler {
     }
 
     /**
-     * @param {XrHitTestSource} hitTestSource - Hit test source
-     * to be removed.
+     * @param {XrHitTestSource} hitTestSource - Hit test source to be removed.
      * @private
      */
     onHitTestSourceRemove(hitTestSource) {

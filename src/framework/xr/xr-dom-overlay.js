@@ -6,10 +6,10 @@ import { platform } from '../../core/platform.js';
 
 /**
  * DOM Overlay provides the ability to use DOM elements as an overlay in a WebXR AR session. It
- * requires that the root DOM element is provided for session start. That way, input source select
- * events are first tested against DOM Elements and then propagated down to the XR Session. If this
- * propagation is not desirable, use the `beforexrselect` event on a DOM element and the
- * `preventDefault` function to stop propagation.
+ * requires that the root DOM element is provided for session start. That way, input source
+ * `select` events are first tested against DOM Elements and then propagated down to the XR
+ * Session. If this propagation is not desirable, use the `beforexrselect` event on a DOM element
+ * and the `preventDefault` function to stop propagation.
  *
  * ```javascript
  * app.xr.domOverlay.root = element;
@@ -20,7 +20,7 @@ import { platform } from '../../core/platform.js';
  * // Disable input source firing `select` event when some descendant element of DOM overlay root
  * // is touched/clicked. This is useful when the user interacts with UI elements and there should
  * // not be `select` events behind UI.
- * someElement.addEventListener('beforexrselect', function (evt) {
+ * someElement.addEventListener('beforexrselect', (evt) => {
  *     evt.preventDefault();
  * });
  * ```
@@ -76,18 +76,16 @@ class XrDomOverlay {
     }
 
     /**
-     * State of the DOM Overlay, which defines how the root DOM element is rendered. Possible
-     * options:
+     * State of the DOM Overlay, which defines how the root DOM element is rendered. Can be:
      *
-     * - screen - indicates that the DOM element is covering whole physical screen,
-     * matching XR viewports.
-     * - floating - indicates that the underlying platform renders the DOM element as
-     * floating in space, which can move during the WebXR session or allow the application to move
-     * the element.
-     * - head-locked - indicates that the DOM element follows the user's head movement
+     * - `screen` - indicates that the DOM element is covering the whole physical screen, matching
+     * XR viewports.
+     * - `floating` - indicates that the underlying platform renders the DOM element as floating in
+     * space, which can move during the WebXR session or allow the application to move the element.
+     * - `head-locked` - indicates that the DOM element follows the user's head movement
      * consistently, appearing similar to a helmet heads-up display.
      *
-     * @type {string|null}
+     * @type {"screen"|"floating"|"head-locked"|null}
      */
     get state() {
         if (!this._supported || !this._manager.active || !this._manager._session.domOverlayState)
@@ -97,7 +95,7 @@ class XrDomOverlay {
     }
 
     /**
-     * Sets the DOM element to be used as the root for DOM Overlay. Can be changed only when XR
+     * Sets the DOM element to be used as the root for DOM Overlay. Can be changed only when the XR
      * session is not running.
      *
      * @type {Element|null}

@@ -136,8 +136,7 @@ class XrView extends EventHandler {
      * Create a new XrView instance.
      *
      * @param {XrManager} manager - WebXR Manager.
-     * @param {XRView} xrView - [XRView](https://developer.mozilla.org/en-US/docs/Web/API/XRView)
-     * object that is created by WebXR API.
+     * @param {XRView} xrView - XRView object that is created by WebXR API.
      * @param {number} viewsCount - Number of views available for the session.
      * @ignore
      */
@@ -289,8 +288,8 @@ class XrView extends EventHandler {
     }
 
     /**
-     * A Vec4 (x, y, width, height) that represents a view's viewport. For monoscopic screen
-     * it will define fullscreen view, but for stereoscopic views (left/right eye) it will define
+     * A Vec4 (x, y, width, height) that represents a view's viewport. For a monoscopic screen,
+     * it will define fullscreen view. But for stereoscopic views (left/right eye), it will define
      * a part of a whole screen that view is occupying.
      *
      * @type {Vec4}
@@ -535,8 +534,8 @@ class XrView extends EventHandler {
     }
 
     /**
-     * Get depth value from depth information in meters. UV is in range of 0..1, with origin in
-     * top-left corner of a texture.
+     * Get a depth value from depth information in meters. The specified UV is in the range 0..1,
+     * with the origin in the top-left corner of the depth texture.
      *
      * @param {number} u - U coordinate of pixel in depth texture, which is in range from 0.0 to
      * 1.0 (left to right).
