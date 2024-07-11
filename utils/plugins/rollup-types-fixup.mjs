@@ -9,7 +9,6 @@ const TYPES_PATH = './build/playcanvas/src';
 const STANDARD_MAT_PROPS = [
     ['alphaFade', 'boolean'],
     ['ambient', 'Color'],
-    ['ambientTint', 'boolean'],
     ['anisotropy', 'number'],
     ['aoMap', 'Texture|null'],
     ['aoMapChannel', 'string'],

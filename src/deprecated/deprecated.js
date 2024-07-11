@@ -691,6 +691,7 @@ function _deprecateTint(name) {
 _deprecateTint('sheenTint');
 _deprecateTint('diffuseTint');
 _deprecateTint('emissiveTint');
+_deprecateTint('ambientTint');
 
 _defineAlias('specularTint', 'specularMapTint');
 _defineAlias('aoVertexColor', 'aoMapVertexColor');

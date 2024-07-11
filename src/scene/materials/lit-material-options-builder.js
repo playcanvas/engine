@@ -46,7 +46,6 @@ class LitMaterialOptionsBuilder {
     }
 
     static updateMaterialOptions(litOptions, material) {
-        litOptions.useAmbientTint = false;
         litOptions.separateAmbient = false;    // store ambient light color in separate variable, instead of adding it to diffuse directly
         litOptions.customFragmentShader = null;
         litOptions.pixelSnap = material.pixelSnap;

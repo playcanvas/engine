@@ -23,7 +23,6 @@ const standardMaterialParameterTypes = {
     _engine: 'boolean', // internal param for engine-only loading
 
     ambient: 'rgb',
-    ambientTint: 'boolean',
     ..._textureParameter('ao'),
     ..._textureParameter('aoDetail', true, false),
     aoDetailMode: 'string',
@@ -146,7 +145,6 @@ const standardMaterialParameterTypes = {
     // forceUv1
     // occludeDirect
     // occludeSpecularIntensity
-    // normalizeNormalMap
 
     // msdfMap
     // msdfMapChannel
