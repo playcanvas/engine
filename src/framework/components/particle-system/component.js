@@ -2070,6 +2070,19 @@ class ParticleSystemComponent extends Component {
     }
 
     /**
+     * Called by the Editor when the component is selected, to allow custom in Editor behavior.
+     *
+     * @private
+     */
+    setInTools() {
+        const { emitter } = this;
+        if (emitter && !emitter.inTools) {
+            emitter.inTools = true;
+            this.rebuild();
+        }
+    }
+
+    /**
      * Rebuilds all data used by this particle system.
      *
      * @private
@@ -2079,7 +2092,6 @@ class ParticleSystemComponent extends Component {
         this.enabled = false;
         if (this.emitter) {
             this.emitter.rebuild(); // worst case: required to rebuild buffers/shaders
-            this.emitter.meshInstance.node = this.entity;
         }
         this.enabled = enabled;
     }

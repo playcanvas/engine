@@ -663,7 +663,7 @@ class LitShader {
 
         if (hasTBN) {
             if (options.hasTangents) {
-                func.append(options.fastTbn ? chunks.TBNfastPS : chunks.TBNPS);
+                func.append(chunks.TBNPS);
             } else {
                 if (options.useNormals || options.useClearCoatNormals) {
                     func.append(chunks.TBNderivativePS.replace(/\$UV/g, this.lightingUv));

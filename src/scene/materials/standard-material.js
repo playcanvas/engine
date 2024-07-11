@@ -1188,7 +1188,6 @@ function _defineMaterialProps() {
     _defineFlag('sheenTint', false);
     _defineFlag('specularTint', false);
     _defineFlag('specularityFactorTint', false);
-    _defineFlag('fastTbn', false);
     _defineFlag('useMetalness', false);
     _defineFlag('useMetalnessSpecularColor', false);
     _defineFlag('useSheen', false);

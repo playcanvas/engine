@@ -68,7 +68,6 @@ const chunkVersions = {
     TBNPS: CHUNKAPI_1_62,
     TBNObjectSpacePS: CHUNKAPI_1_62,
     TBNderivativePS: CHUNKAPI_1_62,
-    TBNfastPS: CHUNKAPI_1_62,
 
     endPS: CHUNKAPI_1_65,
     metalnessModulatePS: CHUNKAPI_1_65,
