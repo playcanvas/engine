@@ -16,13 +16,6 @@ class StandardMaterialOptions {
     forceUv1 = false;
 
     /**
-     * The value of {@link StandardMaterial#ambientTint}.
-     *
-     * @type {boolean}
-     */
-    ambientTint = false;
-
-    /**
      * Defines if {@link StandardMaterial#specular} constant should affect specular color.
      *
      * @type {boolean}

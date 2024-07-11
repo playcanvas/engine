@@ -210,7 +210,6 @@ class StandardMaterialOptionsBuilder {
         const isPackedNormalMap = stdMat.normalMap ? (stdMat.normalMap.format === PIXELFORMAT_DXT5 || stdMat.normalMap.type === TEXTURETYPE_SWIZZLEGGGR) : false;
 
         options.opacityTint = (stdMat.blendType !== BLEND_NONE || stdMat.alphaTest > 0 || stdMat.opacityDither !== DITHER_NONE) ? 1 : 0;
-        options.ambientTint = stdMat.ambientTint;
         options.specularTint = specularTint ? 2 : 0;
         options.specularityFactorTint = specularityFactorTint ? 1 : 0;
         options.metalnessTint = (stdMat.useMetalness && stdMat.metalness < 1) ? 1 : 0;
@@ -249,7 +248,6 @@ class StandardMaterialOptionsBuilder {
 
         // LIT OPTIONS
         options.litOptions.separateAmbient = false;    // store ambient light color in separate variable, instead of adding it to diffuse directly
-        options.litOptions.useAmbientTint = stdMat.ambientTint;
         options.litOptions.customFragmentShader = stdMat.customFragmentShader;
         options.litOptions.pixelSnap = stdMat.pixelSnap;
 

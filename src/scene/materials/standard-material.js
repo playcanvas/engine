@@ -457,7 +457,6 @@ const _tempColor = new Color();
  * multiplied by vertex colors.
  * @property {string} lightVertexColorChannel Vertex color channels to use for baked lighting. Can
  * be "r", "g", "b", "a", "rgb" or any swizzled combination.
- * @property {boolean} ambientTint Enables scene ambient multiplication by material ambient color.
  * @property {Texture|null} aoMap The main (primary) baked ambient occlusion (AO) map (default is
  * null). Modulates ambient color.
  * @property {number} aoMapUv Main (primary) AO map UV channel
@@ -1118,7 +1117,7 @@ function _defineFlag(name, defaultValue) {
 }
 
 function _defineMaterialProps() {
-    _defineColor('ambient', new Color(0.7, 0.7, 0.7));
+    _defineColor('ambient', new Color(1, 1, 1));
     _defineColor('diffuse', new Color(1, 1, 1));
     _defineColor('specular', new Color(0, 0, 0));
     _defineColor('emissive', new Color(0, 0, 0));
@@ -1184,7 +1183,6 @@ function _defineMaterialProps() {
         return uniform;
     });
 
-    _defineFlag('ambientTint', false);
     _defineFlag('sheenTint', false);
     _defineFlag('specularTint', false);
     _defineFlag('specularityFactorTint', false);

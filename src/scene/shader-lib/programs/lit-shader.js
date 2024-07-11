@@ -853,7 +853,7 @@ class LitShader {
             }
         }
 
-        if (options.useAmbientTint && !useOldAmbient) {
+        if (!useOldAmbient) {
             decl.append("uniform vec3 material_ambient;");
         }
 
@@ -972,7 +972,7 @@ class LitShader {
             }
         }
 
-        if (options.useAmbientTint && !useOldAmbient) {
+        if (!useOldAmbient) {
             backend.append("    dDiffuseLight *= material_ambient;");
         }
 
