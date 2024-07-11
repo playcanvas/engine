@@ -111,14 +111,6 @@ class LitShaderOptions {
     ambientSH = false;
 
     /**
-     * Use slightly cheaper normal mapping code (skip tangent space normalization). Can look buggy
-     * sometimes.
-     *
-     * @type {boolean}
-     */
-    fastTbn = false;
-
-    /**
      * The value of {@link StandardMaterial#twoSidedLighting}.
      *
      * @type {boolean}
