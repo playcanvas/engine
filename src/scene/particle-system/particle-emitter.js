@@ -26,25 +26,18 @@ import { RenderTarget } from '../../platform/graphics/render-target.js';
 import { Texture } from '../../platform/graphics/texture.js';
 import { VertexBuffer } from '../../platform/graphics/vertex-buffer.js';
 import { VertexFormat } from '../../platform/graphics/vertex-format.js';
-import { ShaderProcessorOptions } from '../../platform/graphics/shader-processor-options.js';
 
 import {
     BLEND_NORMAL,
     EMITTERSHAPE_BOX,
-    GAMMA_NONE,
     PARTICLEMODE_GPU,
     PARTICLEORIENTATION_SCREEN, PARTICLEORIENTATION_WORLD,
-    PARTICLESORT_NONE,
-    SHADER_FORWARD,
-    TONEMAP_LINEAR
+    PARTICLESORT_NONE
 } from '../constants.js';
 import { Mesh } from '../mesh.js';
 import { MeshInstance } from '../mesh-instance.js';
-import { Material } from '../materials/material.js';
-import { getProgramLibrary } from '../shader-lib/get-program-library.js';
 import { createShaderFromCode } from '../shader-lib/utils.js';
 import { shaderChunks } from '../shader-lib/chunks/chunks.js';
-import { particle } from '../shader-lib/programs/particle.js';
 import { ParticleCPUUpdater } from './cpu-updater.js';
 import { ParticleGPUUpdater } from './gpu-updater.js';
 import { ParticleMaterial } from './particle-material.js';

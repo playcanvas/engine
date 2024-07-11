@@ -7,7 +7,7 @@ import {
     TONEMAP_LINEAR
 } from '../constants.js';
 import { getProgramLibrary } from '../shader-lib/get-program-library.js';
-import { Material } from '../materials/material.js'
+import { Material } from '../materials/material.js';
 import { particle } from '../shader-lib/programs/particle.js';
 
 /**
