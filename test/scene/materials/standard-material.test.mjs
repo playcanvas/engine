@@ -16,7 +16,6 @@ describe('StandardMaterial', function () {
         expect(material.ambient.r).to.equal(0.7);
         expect(material.ambient.g).to.equal(0.7);
         expect(material.ambient.b).to.equal(0.7);
-        expect(material.ambientTint).to.equal(false);
         expect(material.anisotropy).to.equal(0);
 
         expect(material.aoDetailMap).to.be.null;

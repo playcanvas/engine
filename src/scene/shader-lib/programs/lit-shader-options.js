@@ -91,8 +91,6 @@ class LitShaderOptions {
 
     diffuseMapEnabled = false;
 
-    useAmbientTint = false;
-
     /**
      * Replaced the whole fragment shader with this string.
      *

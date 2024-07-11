@@ -253,7 +253,6 @@ class Lightmapper {
                 ` + bakeLmEndChunk;
             } else {
                 material.ambient = new Color(0, 0, 0);    // don't bake ambient
-                material.ambientTint = true;
             }
             material.chunks.basePS = shaderChunks.basePS + (scene.lightmapPixelFormat === PIXELFORMAT_RGBA8 ? '\n#define LIGHTMAP_RGBM\n' : '');
             material.chunks.endPS = bakeLmEndChunk;
