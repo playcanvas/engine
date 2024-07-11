@@ -374,11 +374,13 @@ class WorldClusters {
         this.lightsBuffer.setCompressionRanges(this._maxAttenuation, this._maxColorValue);
     }
 
-    updateClusters() {
+    updateClusters(lightingParams) {
 
         // clear clusters
         this.counts.fill(0);
         this.clusters.fill(0);
+
+        this.lightsBuffer.areaLightsEnabled = lightingParams ? lightingParams.areaLightsEnabled : false;
 
         // local accessors
         const divX = this._cells.x;
@@ -440,13 +442,13 @@ class WorldClusters {
     }
 
     // internal update of the cluster data, executes once per frame
-    update(lights, lightingParams) {
+    update(lights, lightingParams = null) {
         this.updateParams(lightingParams);
         this.updateCells();
         this.collectLights(lights);
         this.evaluateBounds();
         this.evaluateCompressionLimits();
-        this.updateClusters();
+        this.updateClusters(lightingParams);
         this.uploadTextures();
     }
 
