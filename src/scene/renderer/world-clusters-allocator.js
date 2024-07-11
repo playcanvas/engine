@@ -72,7 +72,7 @@ class WorldClustersAllocator {
             empty.name = 'ClusterEmpty';
 
             // update it once to avoid doing it each frame
-            empty.update([], false, null);
+            empty.update([]);
             this._empty = empty;
         }
 
