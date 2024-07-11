@@ -1,4 +1,5 @@
 import * as pc from 'playcanvas';
+import { data } from 'examples/observer';
 import { deviceType, rootPath } from 'examples/utils';
 
 const canvas = /** @type {HTMLCanvasElement} */ (document.getElementById('application-canvas'));
@@ -162,6 +163,19 @@ assetListLoader.load(() => {
         lighting: true,
         halfLambert: true,
         alignToMotion: true
+    });
+
+    data.set('settings', {
+        lifetime: 1,
+        numParticles: 150,
+        lighting: true,
+        alignToMotion: true,
+        enabled: true
+    });
+
+    data.on('*:set', (/** @type {string} */ path, value) => {
+        const propertyName = path.split('.')[1];
+        entity.particlesystem[propertyName] = value;
     });
 });
 
