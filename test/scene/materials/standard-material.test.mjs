@@ -13,9 +13,9 @@ describe('StandardMaterial', function () {
         expect(material).to.be.an.instanceof(Material);
         expect(material.alphaFade).to.equal(1);
         expect(material.ambient).to.be.an.instanceof(Color);
-        expect(material.ambient.r).to.equal(0.7);
-        expect(material.ambient.g).to.equal(0.7);
-        expect(material.ambient.b).to.equal(0.7);
+        expect(material.ambient.r).to.equal(1);
+        expect(material.ambient.g).to.equal(1);
+        expect(material.ambient.b).to.equal(1);
         expect(material.anisotropy).to.equal(0);
 
         expect(material.aoDetailMap).to.be.null;
