@@ -273,7 +273,7 @@ export const LIGHTFALLOFF_LINEAR = 0;
 export const LIGHTFALLOFF_INVERSESQUARED = 1;
 
 /**
- * Render depth (color-packed on WebGL 1.0), can be used for PCF 3x3 sampling.
+ * Render depth buffer only, can be used for PCF 3x3 sampling.
  *
  * @type {number}
  * @category Graphics
@@ -309,8 +309,7 @@ export const SHADOW_VSM16 = 2;
 export const SHADOW_VSM32 = 3;
 
 /**
- * Render depth buffer only, can be used for hardware-accelerated PCF 5x5 sampling. Requires
- * WebGL 2. Falls back to {@link SHADOW_PCF3} on WebGL 1.
+ * Render depth buffer only, can be used for hardware-accelerated PCF 5x5 sampling.
  *
  * @type {number}
  * @category Graphics
@@ -318,7 +317,7 @@ export const SHADOW_VSM32 = 3;
 export const SHADOW_PCF5 = 4;
 
 /**
- * Render depth (color-packed on WebGL 1.0), can be used for PCF 1x1 sampling.
+ * Render depth buffer only, can be used for PCF 1x1 sampling.
  *
  * @type {number}
  * @category Graphics
