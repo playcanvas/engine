@@ -174,7 +174,6 @@ import storeEVSMPS from './lit/frag/storeEVSM.js';
 import tangentBinormalVS from './lit/vert/tangentBinormal.js';
 import TBNPS from './lit/frag/TBN.js';
 import TBNderivativePS from './lit/frag/TBNderivative.js';
-import TBNfastPS from './lit/frag/TBNfast.js';
 import TBNObjectSpacePS from './lit/frag/TBNObjectSpace.js';
 import thicknessPS from './standard/frag/thickness.js';
 import tonemappingAcesPS from './common/frag/tonemappingAces.js';
@@ -378,7 +377,6 @@ const shaderChunks = {
     tangentBinormalVS,
     TBNPS,
     TBNderivativePS,
-    TBNfastPS,
     TBNObjectSpacePS,
     thicknessPS,
     tonemappingAcesPS,

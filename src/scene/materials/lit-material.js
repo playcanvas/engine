@@ -39,8 +39,6 @@ class LitMaterial extends Material {
 
     nineSlicedMode = null;
 
-    fastTbn = false;
-
     twoSidedLighting = false;
 
     occludeDirect = false;

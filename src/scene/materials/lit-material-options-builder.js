@@ -52,7 +52,6 @@ class LitMaterialOptionsBuilder {
         litOptions.pixelSnap = material.pixelSnap;
 
         litOptions.ambientSH = material.ambientSH;
-        litOptions.fastTbn = material.fastTbn;
         litOptions.twoSidedLighting = material.twoSidedLighting;
         litOptions.occludeDirect = material.occludeDirect;
         litOptions.occludeSpecular = material.occludeSpecular;
