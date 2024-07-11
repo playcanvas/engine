@@ -489,8 +489,8 @@ class Gizmo extends EventHandler {
     destroy() {
         this.detach();
 
-        this._device.canvas.removeEventListener('pointerdown', this._onPointerDown);
-        this._device.canvas.removeEventListener('pointermove', this._onPointerMove);
+        this._device.canvas.removeEventListener('pointerdown', this._onPointerDown, true);
+        this._device.canvas.removeEventListener('pointermove', this._onPointerMove, true);
         this._device.canvas.removeEventListener('pointerup', this._onPointerUp);
 
         this.root.destroy();
