@@ -909,11 +909,7 @@ class WebglGraphicsDevice extends GraphicsDevice {
 
         this.textureRG11B10Renderable = true;
 
-        if (this.isWebGL2) {
-            this.extColorBufferFloat = this.getExtension('EXT_color_buffer_float');
-        } else {
-            this.extColorBufferFloat = null;
-        }
+        this.extColorBufferFloat = this.getExtension('EXT_color_buffer_float');
 
         this.extDebugRendererInfo = this.getExtension('WEBGL_debug_renderer_info');
 

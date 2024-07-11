@@ -1427,7 +1427,7 @@ class AppBase extends EventHandler {
      *
      * - {@link SHADOW_PCF1}: PCF 1x1 sampling.
      * - {@link SHADOW_PCF3}: PCF 3x3 sampling.
-     * - {@link SHADOW_PCF5}: PCF 5x5 sampling. Falls back to {@link SHADOW_PCF3} on WebGL 1.0.
+     * - {@link SHADOW_PCF5}: PCF 5x5 sampling.
      *
      * @param {Vec3} settings.render.lightingCells - Number of cells along each world space axis the space containing lights
      * is subdivided into.
