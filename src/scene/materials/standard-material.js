@@ -319,8 +319,6 @@ const _tempColor = new Color();
  * @property {boolean} useSheen Toggle sheen specular effect on/off.
  * @property {Color} sheen The specular color of the sheen (fabric) microfiber structure.
  * This color value is 3-component (RGB), where each component is between 0 and 1.
- * @property {boolean} sheenTint Multiply sheen map and/or sheen vertex color by the constant
- * sheen value.
  * @property {Texture|null} sheenMap The sheen microstructure color map of the material (default is
  * null).
  * @property {number} sheenMapUv Sheen map UV channel.
@@ -729,9 +727,9 @@ class StandardMaterial extends Material {
             if (!this.specularityFactorMap || this.specularityFactorTint) {
                 this._setParameter('material_specularityFactor', this.specularityFactor);
             }
-            if (!this.sheenMap || this.sheenTint) {
-                this._setParameter('material_sheen', getUniform('sheen'));
-            }
+
+            this._setParameter('material_sheen', getUniform('sheen'));
+
             if (!this.sheenGlossMap || this.sheenGlossTint) {
                 this._setParameter('material_sheenGloss', this.sheenGloss);
             }
@@ -1183,7 +1181,6 @@ function _defineMaterialProps() {
         return uniform;
     });
 
-    _defineFlag('sheenTint', false);
     _defineFlag('specularTint', false);
     _defineFlag('specularityFactorTint', false);
     _defineFlag('useMetalness', false);

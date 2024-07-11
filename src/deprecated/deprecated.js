@@ -688,6 +688,7 @@ function _deprecateTint(name) {
     });
 }
 
+_deprecateTint('sheenTint');
 _deprecateTint('diffuseTint');
 _deprecateTint('emissiveTint');
 _deprecateTint('ambientTint');

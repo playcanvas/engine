@@ -174,7 +174,6 @@ const STANDARD_MAT_PROPS = [
     ['sheenMapRotation', 'number'],
     ['sheenMapTiling', 'Vec2'],
     ['sheenMapUv', 'number'],
-    ['sheenTint', 'boolean'],
     ['sheenVertexColor', 'boolean'],
     ['sheenVertexColorChannel', 'string'],
     ['sphereMap', 'Texture|null'],
