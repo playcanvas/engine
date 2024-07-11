@@ -71,6 +71,32 @@ import { getApplication, setApplication } from './globals.js';
  */
 
 /**
+ * Callback used by {@link AppBase#configure} when configuration file is loaded and parsed (or an
+ * error occurs).
+ *
+ * @callback ConfigureAppCallback
+ * @param {string|null} err - The error message in the case where the loading or parsing fails.
+ * @returns {void}
+ */
+
+/**
+ * Callback used by {@link AppBase#preload} when all assets (marked as 'preload') are loaded.
+ *
+ * @callback PreloadAppCallback
+ * @returns {void}
+ */
+
+/**
+ * Callback used by {@link AppBase#start} and itself to request the rendering of a new animation
+ * frame.
+ *
+ * @callback MakeTickCallback
+ * @param {number} [timestamp] - The timestamp supplied by requestAnimationFrame.
+ * @param {XRFrame} [frame] - XRFrame from requestAnimationFrame callback.
+ * @returns {void}
+ */
+
+/**
  * Gets the current application, if any.
  *
  * @type {AppBase|null}
@@ -104,39 +130,18 @@ let app = null;
  */
 class AppBase extends EventHandler {
     /**
-     * Callback used by {@link AppBase#configure} when configuration file is loaded and parsed (or
-     * an error occurs).
+     * The application's batch manager.
      *
-     * @callback ConfigureAppCallback
-     * @param {string|null} err - The error message in the case where the loading or parsing fails.
-     * @returns {void}
+     * @type {BatchManager|null}
+     * @private
      */
-
-    /**
-     * Callback used by {@link AppBase#preload} when all assets (marked as 'preload') are loaded.
-     *
-     * @callback PreloadAppCallback
-     * @returns {void}
-     */
-
-    /**
-     * Callback used by {@link AppBase#start} and itself to request
-     * the rendering of a new animation frame.
-     *
-     * @callback MakeTickCallback
-     * @param {number} [timestamp] - The timestamp supplied by requestAnimationFrame.
-     * @param {XRFrame} [frame] - XRFrame from requestAnimationFrame callback.
-     * @returns {void}
-     */
+    _batcher = null;
 
     /** @private */
     _destroyRequested = false;
 
     /** @private */
     _inFrameUpdate = false;
-
-    /** @private */
-    _time = 0;
 
     /** @private */
     _librariesLoaded = false;
@@ -149,6 +154,53 @@ class AppBase extends EventHandler {
 
     /** @private */
     _allowResize = true;
+
+    /**
+     * @type {Asset|null}
+     * @private
+     */
+    _skyboxAsset = null;
+
+    /**
+     * @type {SoundManager}
+     * @private
+     */
+    _soundManager;
+
+    /** @private */
+    _visibilityChangeHandler;
+
+    /**
+     * Stores all entities that have been created for this app by guid.
+     *
+     * @type {Object<string, Entity>}
+     * @ignore
+     */
+    _entityIndex = {};
+
+    /**
+     * @type {boolean}
+     * @ignore
+     */
+    _inTools = false;
+
+    /**
+     * @type {string}
+     * @ignore
+     */
+    _scriptPrefix = '';
+
+    /** @ignore */
+    _time = 0;
+
+    /**
+     * Set this to false if you want to run without using bundles. We set it to true only if
+     * TextDecoder is available because we currently rely on it for untarring.
+     *
+     * @type {boolean}
+     * @ignore
+     */
+    enableBundles = (typeof TextDecoder !== 'undefined');
 
     /**
      * A request id returned by requestAnimationFrame, allowing us to cancel it.
@@ -188,6 +240,37 @@ class AppBase extends EventHandler {
     frame = 0;
 
     /**
+     * The frame graph.
+     *
+     * @type {FrameGraph}
+     * @ignore
+     */
+    frameGraph = new FrameGraph();
+
+    /**
+     * The forward renderer.
+     *
+     * @type {ForwardRenderer}
+     * @ignore
+     */
+    renderer;
+
+    /**
+     * Scripts in order of loading first.
+     *
+     * @type {string[]}
+     */
+    scriptsOrder = [];
+
+    /**
+     * The application's performance stats.
+     *
+     * @type {ApplicationStats}
+     * @ignore
+     */
+    stats;
+
+    /**
      * When true, the application's render function is called every frame. Setting autoRender to
      * false is useful to applications where the rendered image may often be unchanged over time.
      * This can heavily reduce the application's load on the CPU and GPU. Defaults to true.
@@ -217,6 +300,152 @@ class AppBase extends EventHandler {
     renderNextFrame = false;
 
     /**
+     * The graphics device used by the application.
+     *
+     * @type {GraphicsDevice}
+     */
+    graphicsDevice;
+
+    /**
+     * The root entity of the application.
+     *
+     * @type {Entity}
+     * @example
+     * // Return the first entity called 'Camera' in a depth-first search of the scene hierarchy
+     * const camera = this.app.root.findByName('Camera');
+     */
+    root;
+
+    /**
+     * The scene managed by the application.
+     *
+     * @type {Scene}
+     * @example
+     * // Set the tone mapping property of the application's scene
+     * this.app.scene.rendering.toneMapping = pc.TONEMAP_FILMIC;
+     */
+    scene;
+
+    /**
+     * The run-time lightmapper.
+     *
+     * @type {Lightmapper|null}
+     */
+    lightmapper = null;
+
+    /**
+     * The resource loader.
+     *
+     * @type {ResourceLoader}
+     */
+    loader = new ResourceLoader(this);
+
+    /**
+     * The asset registry managed by the application.
+     *
+     * @type {AssetRegistry}
+     * @example
+     * // Search the asset registry for all assets with the tag 'vehicle'
+     * const vehicleAssets = this.app.assets.findByTag('vehicle');
+     */
+    assets;
+
+    /**
+     * The bundle registry managed by the application.
+     *
+     * @type {BundleRegistry}
+     * @ignore
+     */
+    bundles;
+
+    /**
+     * The scene registry managed by the application.
+     *
+     * @type {SceneRegistry}
+     * @example
+     * // Search the scene registry for a item with the name 'racetrack1'
+     * const sceneItem = this.app.scenes.find('racetrack1');
+     *
+     * // Load the scene using the item's url
+     * this.app.scenes.loadScene(sceneItem.url);
+     */
+    scenes = new SceneRegistry(this);
+
+    /**
+     * The application's script registry.
+     *
+     * @type {ScriptRegistry}
+     */
+    scripts = new ScriptRegistry(this);
+
+    /**
+     * The application's component system registry.
+     *
+     * @type {ComponentSystemRegistry}
+     * @example
+     * // Set global gravity to zero
+     * this.app.systems.rigidbody.gravity.set(0, 0, 0);
+     * @example
+     * // Set the global sound volume to 50%
+     * this.app.systems.sound.volume = 0.5;
+     */
+    systems = new ComponentSystemRegistry();
+
+    /**
+     * Handles localization.
+     *
+     * @type {I18n}
+     */
+    i18n = new I18n(this);
+
+    /**
+     * The keyboard device.
+     *
+     * @type {Keyboard|null}
+     */
+    keyboard = null;
+
+    /**
+     * The mouse device.
+     *
+     * @type {Mouse|null}
+     */
+    mouse = null;
+
+    /**
+     * Used to get touch events input.
+     *
+     * @type {TouchDevice|null}
+     */
+    touch = null;
+
+    /**
+     * Used to access GamePad input.
+     *
+     * @type {GamePads|null}
+     */
+    gamepads = null;
+
+    /**
+     * Used to handle input for {@link ElementComponent}s.
+     *
+     * @type {ElementInput|null}
+     */
+    elementInput = null;
+
+    /**
+     * The XR Manager that provides ability to start VR/AR sessions.
+     *
+     * @type {XrManager|null}
+     * @example
+     * // check if VR is available
+     * if (app.xr.isAvailable(pc.XRTYPE_VR)) {
+     *     // VR is available
+     * }
+     */
+    xr = null;
+
+    /**
      * Create a new AppBase instance.
      *
      * @param {HTMLCanvasElement} canvas - The canvas element.
@@ -243,6 +472,9 @@ class AppBase extends EventHandler {
         setApplication(this);
 
         app = this;
+
+        this.root = new Entity();
+        this.root._enabledInHierarchy = true;
     }
 
     /**
@@ -251,118 +483,27 @@ class AppBase extends EventHandler {
      * @param {AppOptions} appOptions - Options specifying the init parameters for the app.
      */
     init(appOptions) {
-        const device = appOptions.graphicsDevice;
+        const {
+            assetPrefix, batchManager, componentSystems, elementInput, gamepads, graphicsDevice, keyboard,
+            lightmapper, mouse, resourceHandlers, scriptsOrder, scriptPrefix, soundManager, touch, xr
+        } = appOptions;
 
-        Debug.assert(device, "The application cannot be created without a valid GraphicsDevice");
+        Debug.assert(graphicsDevice, "The application cannot be created without a valid GraphicsDevice");
 
-        /**
-         * The graphics device used by the application.
-         *
-         * @type {GraphicsDevice}
-         */
-        this.graphicsDevice = device;
-
+        this.graphicsDevice = graphicsDevice;
         this._initDefaultMaterial();
         this._initProgramLibrary();
-        this.stats = new ApplicationStats(device);
+        this.stats = new ApplicationStats(graphicsDevice);
 
-        /**
-         * @type {SoundManager}
-         * @private
-         */
-        this._soundManager = appOptions.soundManager;
-
-        /**
-         * The resource loader.
-         *
-         * @type {ResourceLoader}
-         */
-        this.loader = new ResourceLoader(this);
-
-        /**
-         * Stores all entities that have been created for this app by guid.
-         *
-         * @type {Object<string, Entity>}
-         * @ignore
-         */
-        this._entityIndex = {};
-
-        /**
-         * The scene managed by the application.
-         *
-         * @type {Scene}
-         * @example
-         * // Set the tone mapping property of the application's scene
-         * this.app.scene.rendering.toneMapping = pc.TONEMAP_FILMIC;
-         */
-        this.scene = new Scene(device);
+        this._soundManager = soundManager;
+        this.scene = new Scene(graphicsDevice);
         this._registerSceneImmediate(this.scene);
 
-        /**
-         * The root entity of the application.
-         *
-         * @type {Entity}
-         * @example
-         * // Return the first entity called 'Camera' in a depth-first search of the scene hierarchy
-         * const camera = this.app.root.findByName('Camera');
-         */
-        this.root = new Entity();
-        this.root._enabledInHierarchy = true;
-
-        /**
-         * The asset registry managed by the application.
-         *
-         * @type {AssetRegistry}
-         * @example
-         * // Search the asset registry for all assets with the tag 'vehicle'
-         * const vehicleAssets = this.app.assets.findByTag('vehicle');
-         */
         this.assets = new AssetRegistry(this.loader);
-        if (appOptions.assetPrefix) this.assets.prefix = appOptions.assetPrefix;
+        if (assetPrefix) this.assets.prefix = assetPrefix;
 
-        /**
-         * @type {BundleRegistry}
-         * @ignore
-         */
         this.bundles = new BundleRegistry(this.assets);
-
-        /**
-         * Set this to false if you want to run without using bundles. We set it to true only if
-         * TextDecoder is available because we currently rely on it for untarring.
-         *
-         * @type {boolean}
-         * @ignore
-         */
-        this.enableBundles = (typeof TextDecoder !== 'undefined');
-
-        this.scriptsOrder = appOptions.scriptsOrder || [];
-
-        /**
-         * The application's script registry.
-         *
-         * @type {ScriptRegistry}
-         */
-        this.scripts = new ScriptRegistry(this);
-
-        /**
-         * Handles localization.
-         *
-         * @type {I18n}
-         */
-        this.i18n = new I18n(this);
-
-        /**
-         * The scene registry managed by the application.
-         *
-         * @type {SceneRegistry}
-         * @example
-         * // Search the scene registry for a item with the name 'racetrack1'
-         * const sceneItem = this.app.scenes.find('racetrack1');
-         *
-         * // Load the scene using the item's url
-         * this.app.scenes.loadScene(sceneItem.url);
-         */
-        this.scenes = new SceneRegistry(this);
+        this.scriptsOrder = scriptsOrder || [];
 
         this.defaultLayerWorld = new Layer({ name: "World", id: LAYERID_WORLD });
         this.defaultLayerDepth = new Layer({ name: "Depth", id: LAYERID_DEPTH, enabled: false, opaqueSortMode: SORTMODE_NONE });
@@ -380,170 +521,51 @@ class AppBase extends EventHandler {
         defaultLayerComposition.pushTransparent(this.defaultLayerUi);
         this.scene.layers = defaultLayerComposition;
 
-        // placeholder texture for area light LUTs
-        AreaLightLuts.createPlaceholder(device);
+        // Placeholder texture for area light LUTs
+        AreaLightLuts.createPlaceholder(graphicsDevice);
 
-        /**
-         * The forward renderer.
-         *
-         * @type {ForwardRenderer}
-         * @ignore
-         */
-        this.renderer = new ForwardRenderer(device);
+        this.renderer = new ForwardRenderer(graphicsDevice);
         this.renderer.scene = this.scene;
 
-        /**
-         * The frame graph.
-         *
-         * @type {FrameGraph}
-         * @ignore
-         */
-        this.frameGraph = new FrameGraph();
-
-        /**
-         * The run-time lightmapper.
-         *
-         * @type {Lightmapper}
-         */
-        this.lightmapper = null;
-        if (appOptions.lightmapper) {
-            this.lightmapper = new appOptions.lightmapper(device, this.root, this.scene, this.renderer, this.assets);
+        if (lightmapper) {
+            this.lightmapper = new lightmapper(graphicsDevice, this.root, this.scene, this.renderer, this.assets);
             this.once('prerender', this._firstBake, this);
         }
 
-        /**
-         * The application's batch manager.
-         *
-         * @type {BatchManager}
-         * @private
-         */
-        this._batcher = null;
-        if (appOptions.batchManager) {
-            this._batcher = new appOptions.batchManager(device, this.root, this.scene);
+        if (batchManager) {
+            this._batcher = new batchManager(graphicsDevice, this.root, this.scene);
             this.once('prerender', this._firstBatch, this);
         }
 
-        /**
-         * The keyboard device.
-         *
-         * @type {Keyboard}
-         */
-        this.keyboard = appOptions.keyboard || null;
-
-        /**
-         * The mouse device.
-         *
-         * @type {Mouse}
-         */
-        this.mouse = appOptions.mouse || null;
-
-        /**
-         * Used to get touch events input.
-         *
-         * @type {TouchDevice}
-         */
-        this.touch = appOptions.touch || null;
-
-        /**
-         * Used to access GamePad input.
-         *
-         * @type {GamePads}
-         */
-        this.gamepads = appOptions.gamepads || null;
-
-        /**
-         * Used to handle input for {@link ElementComponent}s.
-         *
-         * @type {ElementInput}
-         */
-        this.elementInput = appOptions.elementInput || null;
-        if (this.elementInput)
+        this.keyboard = keyboard || null;
+        this.mouse = mouse || null;
+        this.touch = touch || null;
+        this.gamepads = gamepads || null;
+        if (elementInput) {
+            this.elementInput = elementInput;
             this.elementInput.app = this;
+        }
 
-        /**
-         * The XR Manager that provides ability to start VR/AR sessions.
-         *
-         * @type {XrManager}
-         * @example
-         * // check if VR is available
-         * if (app.xr.isAvailable(pc.XRTYPE_VR)) {
-         *     // VR is available
-         * }
-         */
-        this.xr = appOptions.xr ? new appOptions.xr(this) : null;
+        this.xr = xr ? new xr(this) : null;
+        if (this.elementInput) this.elementInput.attachSelectEvents();
 
-        if (this.elementInput)
-            this.elementInput.attachSelectEvents();
-
-        /**
-         * @type {boolean}
-         * @ignore
-         */
-        this._inTools = false;
-
-        /**
-         * @type {Asset|null}
-         * @private
-         */
-        this._skyboxAsset = null;
-
-        /**
-         * @type {string}
-         * @ignore
-         */
-        this._scriptPrefix = appOptions.scriptPrefix || '';
+        this._scriptPrefix = scriptPrefix || '';
 
         if (this.enableBundles) {
             this.loader.addHandler("bundle", new BundleHandler(this));
         }
 
-        // create and register all required resource handlers
-        appOptions.resourceHandlers.forEach((resourceHandler) => {
+        // Create and register all required resource handlers
+        resourceHandlers.forEach((resourceHandler) => {
             const handler = new resourceHandler(this);
             this.loader.addHandler(handler.handlerType, handler);
         });
 
-        /**
-         * The application's component system registry. The Application constructor adds the
-         * following component systems to its component system registry:
-         *
-         * - anim ({@link AnimComponentSystem})
-         * - animation ({@link AnimationComponentSystem})
-         * - audiolistener ({@link AudioListenerComponentSystem})
-         * - button ({@link ButtonComponentSystem})
-         * - camera ({@link CameraComponentSystem})
-         * - collision ({@link CollisionComponentSystem})
-         * - element ({@link ElementComponentSystem})
-         * - layoutchild ({@link LayoutChildComponentSystem})
-         * - layoutgroup ({@link LayoutGroupComponentSystem})
-         * - light ({@link LightComponentSystem})
-         * - model ({@link ModelComponentSystem})
-         * - particlesystem ({@link ParticleSystemComponentSystem})
-         * - rigidbody ({@link RigidBodyComponentSystem})
-         * - render ({@link RenderComponentSystem})
-         * - screen ({@link ScreenComponentSystem})
-         * - script ({@link ScriptComponentSystem})
-         * - scrollbar ({@link ScrollbarComponentSystem})
-         * - scrollview ({@link ScrollViewComponentSystem})
-         * - sound ({@link SoundComponentSystem})
-         * - sprite ({@link SpriteComponentSystem})
-         *
-         * @type {ComponentSystemRegistry}
-         * @example
-         * // Set global gravity to zero
-         * this.app.systems.rigidbody.gravity.set(0, 0, 0);
-         * @example
-         * // Set the global sound volume to 50%
-         * this.app.systems.sound.volume = 0.5;
-         */
-        this.systems = new ComponentSystemRegistry();
-
-        // create and register all required component systems
-        appOptions.componentSystems.forEach((componentSystem) => {
+        // Create and register all required component systems
+        componentSystems.forEach((componentSystem) => {
             this.systems.add(new componentSystem(this));
         });
 
-        /** @private */
         this._visibilityChangeHandler = this.onVisibilityChange.bind(this);
 
         // Depending on browser add the correct visibilitychange event and store the name of the
@@ -907,45 +929,6 @@ class AppBase extends EventHandler {
             // registry
             this.assets.add(asset);
         }
-    }
-
-    /**
-     * @param {Scene} scene - The scene.
-     * @returns {Array} - The list of scripts that are referenced by the scene.
-     * @private
-     */
-    _getScriptReferences(scene) {
-        let priorityScripts = [];
-        if (scene.settings.priority_scripts) {
-            priorityScripts = scene.settings.priority_scripts;
-        }
-
-        const _scripts = [];
-        const _index = {};
-
-        // first add priority scripts
-        for (let i = 0; i < priorityScripts.length; i++) {
-            _scripts.push(priorityScripts[i]);
-            _index[priorityScripts[i]] = true;
-        }
-
-        // then iterate hierarchy to get referenced scripts
-        const entities = scene.entities;
-        for (const key in entities) {
-            if (!entities[key].components.script) {
-                continue;
-            }
-
-            const scripts = entities[key].components.script.scripts;
-            for (let i = 0; i < scripts.length; i++) {
-                if (_index[scripts[i].url])
-                    continue;
-                _scripts.push(scripts[i].url);
-                _index[scripts[i].url] = true;
-            }
-        }
-
-        return _scripts;
     }
 
     /**
@@ -1464,8 +1447,8 @@ class AppBase extends EventHandler {
         let asset;
 
         if (this.systems.rigidbody && typeof Ammo !== 'undefined') {
-            const gravity = settings.physics.gravity;
-            this.systems.rigidbody.gravity.set(gravity[0], gravity[1], gravity[2]);
+            const [x, y, z] = settings.physics.gravity;
+            this.systems.rigidbody.gravity.set(x, y, z);
         }
 
         this.scene.applySettings(settings);
