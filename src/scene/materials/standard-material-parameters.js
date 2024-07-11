@@ -147,7 +147,6 @@ const standardMaterialParameterTypes = {
     // forceUv1
     // occludeDirect
     // occludeSpecularIntensity
-    // normalizeNormalMap
 
     // msdfMap
     // msdfMapChannel

@@ -1193,7 +1193,6 @@ function _defineMaterialProps() {
     _defineFlag('useSheen', false);
     _defineFlag('enableGGXSpecular', false);
     _defineFlag('occludeDirect', false);
-    _defineFlag('normalizeNormalMap', true);
     _defineFlag('opacityFadesSpecular', true);
     _defineFlag('occludeSpecular', SPECOCC_AO);
     _defineFlag('fresnelModel', FRESNEL_SCHLICK); // NOTE: this has been made to match the default shading model (to fix a bug)
