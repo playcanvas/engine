@@ -184,7 +184,6 @@ class StandardMaterialOptionsBuilder {
     }
 
     _updateMinOptions(options, stdMat, pass) {
-        options.opacityTint = stdMat.blendType !== BLEND_NONE || stdMat.opacityShadowDither !== DITHER_NONE;
 
         // pre-pass uses the same dither setting as forward pass, otherwise shadow dither
         const isPrepass = pass === SHADER_PREPASS_VELOCITY;
@@ -209,7 +208,6 @@ class StandardMaterialOptionsBuilder {
 
         const isPackedNormalMap = stdMat.normalMap ? (stdMat.normalMap.format === PIXELFORMAT_DXT5 || stdMat.normalMap.type === TEXTURETYPE_SWIZZLEGGGR) : false;
 
-        options.opacityTint = (stdMat.blendType !== BLEND_NONE || stdMat.alphaTest > 0 || stdMat.opacityDither !== DITHER_NONE) ? 1 : 0;
         options.specularTint = specularTint ? 2 : 0;
         options.specularityFactorTint = specularityFactorTint ? 1 : 0;
         options.metalnessTint = (stdMat.useMetalness && stdMat.metalness < 1) ? 1 : 0;

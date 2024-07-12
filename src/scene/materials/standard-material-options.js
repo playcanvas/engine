@@ -36,13 +36,6 @@ class StandardMaterialOptions {
      */
     glossTint = false;
 
-    /**
-     * Defines if {@link StandardMaterial#opacity} constant should affect opacity value.
-     *
-     * @type {boolean}
-     */
-    opacityTint = false;
-
     emissiveEncoding = 'linear';
 
     lightMapEncoding = 'linear';
