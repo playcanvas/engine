@@ -1,4 +1,3 @@
-import { type } from '../../core/core.js';
 import {
     ACTION_GAMEPAD, ACTION_KEYBOARD, ACTION_MOUSE,
     EVENT_MOUSEMOVE,
@@ -392,7 +391,7 @@ class Controller {
         if (this._axes[name]) {
             const len = this._axes[name].length;
             for (let i = 0; i < len; i++) {
-                if (type(this._axes[name][i]) === 'function') {
+                if (typeof this._axes[name][i] === 'function') {
                     const v = this._axes[name][i]();
                     if (Math.abs(v) > Math.abs(value)) {
                         value = v;

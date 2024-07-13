@@ -26,7 +26,7 @@ import './polyfill/typedarray-fill.js';
 
 // CORE
 export * from './core/constants.js';
-export { extend, revision, type, version } from './core/core.js';
+export { extend, revision, version } from './core/core.js';
 export { guid } from './core/guid.js';
 export { path } from './core/path.js';
 export { platform } from './core/platform.js';
