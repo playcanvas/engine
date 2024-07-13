@@ -9,11 +9,6 @@ const version = '$_CURRENT_SDK_VERSION';
  */
 const revision = '$_CURRENT_SDK_REVISION';
 
-const config = { };
-const common = { };
-const apps = { }; // Storage for the applications using the PlayCanvas Engine
-const data = { }; // Storage for exported entity data
-
 const typeofs = ['undefined', 'number', 'string', 'boolean'];
 const objectTypes = {
     '[object Array]': 'array',
@@ -85,4 +80,4 @@ function extend(target, ex) {
     return target;
 }
 
-export { apps, common, config, data, extend, revision, type, version };
+export { extend, revision, type, version };
