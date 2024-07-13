@@ -446,4 +446,4 @@ class RenderPass {
     // #endif
 }
 
-export { RenderPass, ColorAttachmentOps, DepthStencilAttachmentOps };
+export { RenderPass };

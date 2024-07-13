@@ -403,4 +403,4 @@ class VertexIterator {
     }
 }
 
-export { VertexIterator, VertexIteratorAccessor };
+export { VertexIterator };
