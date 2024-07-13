@@ -38,10 +38,10 @@ function extend(target, ex) {
     for (const prop in ex) {
         const copy = ex[prop];
 
-        if (copy && typeof copy === 'object' && !Array.isArray(copy)) {
-            target[prop] = extend({}, copy);
-        } else if (Array.isArray(copy)) {
+        if (Array.isArray(copy)) {
             target[prop] = extend([], copy);
+        } else if (copy && typeof copy === 'object') {
+            target[prop] = extend({}, copy);
         } else {
             target[prop] = copy;
         }
