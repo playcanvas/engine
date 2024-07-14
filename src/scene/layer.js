@@ -124,7 +124,6 @@ class Layer {
      * @type {Set<Light>}
      * @private
      */
-
     _lightsSet = new Set();
 
     /**

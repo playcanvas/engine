@@ -845,7 +845,7 @@ class WebglGraphicsDevice extends GraphicsDevice {
      * getShaderPrecisionFormat is not guaranteed to be present (such as some instances of the
      * default Android browser). In this case, assume highp is available.
      *
-     * @returns {string} "highp", "mediump" or "lowp"
+     * @returns {"highp"|"mediump"|"lowp"} The highest precision supported by the WebGL context.
      * @ignore
      */
     getPrecision() {
@@ -2516,15 +2516,9 @@ class WebglGraphicsDevice extends GraphicsDevice {
      * Sets the active shader to be used during subsequent draw calls.
      *
      * @param {Shader} shader - The shader to assign to the device.
-     */
-
-    /**
-     * Sets the active shader to be used during subsequent draw calls.
-     *
-     * @param {Shader} shader - The shader to assign to the device.
-     * @param {boolean} asyncCompile - If true, rendering will be skipped until the shader is
-     * compiled, otherwise the rendering will wait for the shader compilation to finish. Defaults to
-     * false.
+     * @param {boolean} [asyncCompile] - If true, rendering will be skipped until the shader is
+     * compiled, otherwise the rendering will wait for the shader compilation to finish. Defaults
+     * to false.
      */
     setShader(shader, asyncCompile = false) {
         if (shader !== this.shader) {
