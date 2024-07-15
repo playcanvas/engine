@@ -2023,7 +2023,7 @@ const makeTick = function (_app) {
         if (application.xr?.session) {
             application.frameRequestId = application.xr.session.requestAnimationFrame(application.tick);
         } else {
-            application.frameRequestId = platform.browser ? window.requestAnimationFrame(application.tick) : null;
+            application.frameRequestId = platform.browser || platform.worker ? requestAnimationFrame(application.tick) : null;
         }
 
         if (application.graphicsDevice.contextLost)
