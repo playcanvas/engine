@@ -360,6 +360,7 @@ class GraphicsDevice extends EventHandler {
      * The current client rect.
      *
      * @type {{ width: number, height: number }}
+     * @ignore
      */
     clientRect = {
         width: 0,
@@ -762,15 +763,14 @@ class GraphicsDevice extends EventHandler {
     }
 
     updateClientRect() {
-        if (platform.browser) {
-            const rect = this.canvas.getBoundingClientRect();
-            this.clientRect.width = rect.width;
-            this.clientRect.height = rect.height;
-
-        } else if (platform.worker) {
+        if (platform.worker) {
             // Web Workers don't do page layout, so getBoundingClientRect is not available
             this.clientRect.width = this.canvas.width;
             this.clientRect.height = this.canvas.height;
+        } else {
+            const rect = this.canvas.getBoundingClientRect();
+            this.clientRect.width = rect.width;
+            this.clientRect.height = rect.height;
         }
     }
 
