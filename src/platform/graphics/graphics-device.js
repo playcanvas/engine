@@ -386,6 +386,17 @@ class GraphicsDevice extends EventHandler {
         flags: CLEARFLAG_COLOR | CLEARFLAG_DEPTH
     };
 
+    /**
+     * The current client rect.
+     *
+     * @type {{ width: number, height: number }}
+     * @ignore
+     */
+    clientRect = {
+        width: 0,
+        height: 0
+    };
+
     static EVENT_RESIZE = 'resizecanvas';
 
     constructor(canvas, options) {
@@ -786,7 +797,15 @@ class GraphicsDevice extends EventHandler {
     }
 
     updateClientRect() {
-        this.clientRect = this.canvas.getBoundingClientRect();
+        if (platform.worker) {
+            // Web Workers don't do page layout, so getBoundingClientRect is not available
+            this.clientRect.width = this.canvas.width;
+            this.clientRect.height = this.canvas.height;
+        } else {
+            const rect = this.canvas.getBoundingClientRect();
+            this.clientRect.width = rect.width;
+            this.clientRect.height = rect.height;
+        }
     }
 
     /**
