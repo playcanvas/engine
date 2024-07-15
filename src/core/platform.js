@@ -91,6 +91,7 @@ const platform = {
      * True if running in a Web Worker.
      *
      * @type {boolean}
+     * @ignore
      */
     worker: environment === 'worker',
 
