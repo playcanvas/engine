@@ -52,16 +52,6 @@ function loadAssets(assetList, assetRegistry) {
 await loadAssets(Object.values(assets), app.assets);
 
 app.start();
-/**
- * @param {pc.Color} color - The color.
- * @returns {pc.Material} - The standard material.
- */
-function createColorMaterial(color) {
-    const material = new pc.StandardMaterial();
-    material.diffuse = color;
-    material.update();
-    return material;
-}
 
 // scene settings
 app.scene.ambientLight = new pc.Color(0.2, 0.2, 0.2);
@@ -69,8 +59,7 @@ app.scene.ambientLight = new pc.Color(0.2, 0.2, 0.2);
 // create entities
 const box = new pc.Entity('box');
 box.addComponent('render', {
-    type: 'box',
-    material: createColorMaterial(new pc.Color(0.8, 0.8, 0.8))
+    type: 'box'
 });
 app.root.addChild(box);
 
