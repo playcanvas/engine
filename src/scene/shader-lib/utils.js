@@ -166,8 +166,4 @@ function processShader(shader, processingOptions) {
     return variant;
 }
 
-
-shaderChunks.createShader = createShader;
-shaderChunks.createShaderFromCode = createShaderFromCode;
-
 export { createShader, createShaderFromCode, processShader };

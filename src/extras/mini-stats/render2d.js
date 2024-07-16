@@ -18,7 +18,7 @@ import { Mesh } from '../../scene/mesh.js';
 import { IndexBuffer } from '../../platform/graphics/index-buffer.js';
 import { VertexBuffer } from '../../platform/graphics/vertex-buffer.js';
 import { VertexFormat } from '../../platform/graphics/vertex-format.js';
-import { shaderChunks } from '../../scene/shader-lib/chunks/chunks.js';
+import { createShaderFromCode } from '../../scene/shader-lib/utils.js';
 
 const vertexShader = /* glsl */ `
 attribute vec3 vertex_position;         // unnormalized xy, word flag
@@ -82,7 +82,7 @@ class Render2d {
             indices[i * 6 + 5] = i * 4 + 3;
         }
 
-        const shader = shaderChunks.createShaderFromCode(device, vertexShader, fragmentShader, 'mini-stats');
+        const shader = createShaderFromCode(device, vertexShader, fragmentShader, 'mini-stats');
 
         this.device = device;
         this.buffer = new VertexBuffer(device, format, maxQuads * 4, {
