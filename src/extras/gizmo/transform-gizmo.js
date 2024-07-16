@@ -35,60 +35,60 @@ const VEC3_AXES = Object.keys(tmpV1);
 const SPANLINE_SIZE = 1e3;
 
 /**
- * Shape axis for the line X.
+ * Gizmo axis for the line X.
  *
  * @type {string}
  */
-export const SHAPEAXIS_X = 'x';
+export const GIZMOAXIS_X = 'x';
 
 /**
- * Shape axis for the line Y.
+ * Gizmo axis for the line Y.
  *
  * @type {string}
  */
-export const SHAPEAXIS_Y = 'y';
+export const GIZMOAXIS_Y = 'y';
 
 /**
- * Shape axis for the line Z.
+ * Gizmo axis for the line Z.
  *
  * @type {string}
  */
-export const SHAPEAXIS_Z = 'z';
+export const GIZMOAXIS_Z = 'z';
 
 /**
- * Shape axis for the plane YZ.
+ * Gizmo axis for the plane YZ.
  *
  * @type {string}
  */
-export const SHAPEAXIS_YZ = 'yz';
+export const GIZMOAXIS_YZ = 'yz';
 
 /**
- * Shape axis for the plane XZ.
+ * Gizmo axis for the plane XZ.
  *
  * @type {string}
  */
-export const SHAPEAXIS_XZ = 'xz';
+export const GIZMOAXIS_XZ = 'xz';
 
 /**
- * Shape axis for the plane XY.
+ * Gizmo axis for the plane XY.
  *
  * @type {string}
  */
-export const SHAPEAXIS_XY = 'xy';
+export const GIZMOAXIS_XY = 'xy';
 
 /**
- * Shape axis for all directions XYZ.
+ * Gizmo axis for all directions XYZ.
  *
  * @type {string}
  */
-export const SHAPEAXIS_XYZ = 'xyz';
+export const GIZMOAXIS_XYZ = 'xyz';
 
 /**
- * Shape axis for facing the camera.
+ * Gizmo axis for facing the camera (F).
  *
  * @type {string}
  */
-export const SHAPEAXIS_FACE = 'face';
+export const GIZMOAXIS_F = 'f';
 
 /**
  * Converts Color4 to Color3.
@@ -162,14 +162,14 @@ class TransformGizmo extends Gizmo {
             y: this._colorSemi(COLOR_GREEN),
             z: this._colorSemi(COLOR_BLUE),
             xyz: this._colorSemi(Color.WHITE),
-            face: this._colorSemi(Color.WHITE)
+            f: this._colorSemi(Color.WHITE)
         },
         hover: {
             x: COLOR_RED.clone(),
             y: COLOR_GREEN.clone(),
             z: COLOR_BLUE.clone(),
             xyz: Color.WHITE.clone(),
-            face: COLOR_YELLOW.clone()
+            f: COLOR_YELLOW.clone()
         },
         disabled: COLOR_GRAY.clone()
     };
@@ -184,7 +184,7 @@ class TransformGizmo extends Gizmo {
         x: COLOR_RED.clone(),
         y: COLOR_GREEN.clone(),
         z: COLOR_BLUE.clone(),
-        face: COLOR_YELLOW.clone()
+        f: COLOR_YELLOW.clone()
     };
 
     /**
@@ -416,7 +416,7 @@ class TransformGizmo extends Gizmo {
      * @type {Color}
      */
     set xAxisColor(value) {
-        this._updateAxisColor(SHAPEAXIS_X, value);
+        this._updateAxisColor(GIZMOAXIS_X, value);
     }
 
     /**
@@ -434,7 +434,7 @@ class TransformGizmo extends Gizmo {
      * @type {Color}
      */
     set yAxisColor(value) {
-        this._updateAxisColor(SHAPEAXIS_Y, value);
+        this._updateAxisColor(GIZMOAXIS_Y, value);
     }
 
     /**
@@ -452,7 +452,7 @@ class TransformGizmo extends Gizmo {
      * @type {Color}
      */
     set zAxisColor(value) {
-        this._updateAxisColor(SHAPEAXIS_Z, value);
+        this._updateAxisColor(GIZMOAXIS_Z, value);
     }
 
     /**
@@ -476,7 +476,7 @@ class TransformGizmo extends Gizmo {
         this._meshColors.axis.y.copy(this._colorSemi(this._meshColors.axis.y));
         this._meshColors.axis.z.copy(this._colorSemi(this._meshColors.axis.z));
         this._meshColors.axis.xyz.copy(this._colorSemi(this._meshColors.axis.xyz));
-        this._meshColors.axis.face.copy(this._colorSemi(this._meshColors.axis.face));
+        this._meshColors.axis.f.copy(this._colorSemi(this._meshColors.axis.f));
 
         for (const name in this._shapes) {
             this._shapes[name].hover(!!this._hoverAxis);
@@ -673,7 +673,7 @@ class TransformGizmo extends Gizmo {
         const checkIsPlane = this._hoverIsPlane || this._selectedIsPlane;
         for (let i = 0; i < VEC3_AXES.length; i++) {
             const axis = VEC3_AXES[i];
-            if (checkAxis === SHAPEAXIS_XYZ) {
+            if (checkAxis === GIZMOAXIS_XYZ) {
                 this._drawSpanLine(gizmoPos, gizmoRot, axis);
                 continue;
             }
@@ -729,14 +729,14 @@ class TransformGizmo extends Gizmo {
      *
      * @param {string} shapeAxis - The shape axis. Can be:
      *
-     * - {@link SHAPEAXIS_X}
-     * - {@link SHAPEAXIS_Y}
-     * - {@link SHAPEAXIS_Z}
-     * - {@link SHAPEAXIS_YZ}
-     * - {@link SHAPEAXIS_XZ}
-     * - {@link SHAPEAXIS_XY}
-     * - {@link SHAPEAXIS_XYZ}
-     * - {@link SHAPEAXIS_FACE}
+     * - {@link GIZMOAXIS_X}
+     * - {@link GIZMOAXIS_Y}
+     * - {@link GIZMOAXIS_Z}
+     * - {@link GIZMOAXIS_YZ}
+     * - {@link GIZMOAXIS_XZ}
+     * - {@link GIZMOAXIS_XY}
+     * - {@link GIZMOAXIS_XYZ}
+     * - {@link GIZMOAXIS_F}
      *
      * @param {boolean} enabled - The enabled state of shape.
      */
@@ -753,14 +753,14 @@ class TransformGizmo extends Gizmo {
      *
      * @param {string} shapeAxis - The shape axis. Can be:
      *
-     * - {@link SHAPEAXIS_X}
-     * - {@link SHAPEAXIS_Y}
-     * - {@link SHAPEAXIS_Z}
-     * - {@link SHAPEAXIS_YZ}
-     * - {@link SHAPEAXIS_XZ}
-     * - {@link SHAPEAXIS_XY}
-     * - {@link SHAPEAXIS_XYZ}
-     * - {@link SHAPEAXIS_FACE}
+     * - {@link GIZMOAXIS_X}
+     * - {@link GIZMOAXIS_Y}
+     * - {@link GIZMOAXIS_Z}
+     * - {@link GIZMOAXIS_YZ}
+     * - {@link GIZMOAXIS_XZ}
+     * - {@link GIZMOAXIS_XY}
+     * - {@link GIZMOAXIS_XYZ}
+     * - {@link GIZMOAXIS_F}
      *
      * @returns {boolean} - Then enabled state of the shape
      */
