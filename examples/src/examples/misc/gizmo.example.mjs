@@ -86,13 +86,11 @@ camera.script.create('orbitCameraInputMouse');
 camera.script.create('orbitCameraInputTouch');
 camera.setPosition(1, 1, 1);
 app.root.addChild(camera);
-orbitCamera.distance = 5 * camera.camera?.aspectRatio;
+orbitCamera.distance = 5 * camera.camera.aspectRatio;
 
 // create light entity
 const light = new pc.Entity('light');
-light.addComponent('light', {
-    intensity: 1
-});
+light.addComponent('light');
 app.root.addChild(light);
 light.setEulerAngles(0, 0, -60);
 
@@ -123,31 +121,21 @@ resize();
 
 // grid lines
 const createGridLines = (size = 1) => {
-    /**
-     * @type {{ start: pc.Vec3; end: pc.Vec3; }[]}
-     */
     const lines = [];
     for (let i = -size; i < size + 1; i++) {
-        lines.push({
-            start: new pc.Vec3(-size, 0, i),
-            end: new pc.Vec3(size, 0, i)
-        });
-        lines.push({
-            start: new pc.Vec3(i, 0, -size),
-            end: new pc.Vec3(i, 0, size)
-        });
+        lines.push(
+            new pc.Vec3(-size, 0, i),
+            new pc.Vec3(size, 0, i),
+            new pc.Vec3(i, 0, -size),
+            new pc.Vec3(i, 0, size)
+        );
     }
-
     return lines;
 };
 
 const lines = createGridLines(2);
-const gridColor = new pc.Color(1, 1, 1, 0.5);
-app.on('update', () => {
-    for (const line of lines) {
-        app.drawLine(line.start, line.end, gridColor);
-    }
-});
+const gridCol = new pc.Color(1, 1, 1, 0.5);
+app.on('update', () => app.drawLines(lines, gridCol));
 
 app.on('destroy', () => {
     window.removeEventListener('resize', resize);
