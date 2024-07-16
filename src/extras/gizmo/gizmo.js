@@ -26,7 +26,6 @@ const tmpR1 = new Ray();
 const MIN_GIZMO_SCALE = 1e-4;
 const PERS_SCALE_RATIO = 0.3;
 const ORTHO_SCALE_RATIO = 0.32;
-const CANVAS_RATIO = 1024;
 
 /**
  * Local coordinate space.
@@ -404,9 +403,6 @@ class Gizmo extends EventHandler {
             this._scale = this._camera.orthoHeight * ORTHO_SCALE_RATIO;
         }
         this._scale = Math.max(this._scale * this._size, MIN_GIZMO_SCALE);
-
-        const bounds = this._device.canvas.getBoundingClientRect();
-        this._scale *= CANVAS_RATIO / Math.min(bounds.width, bounds.height);
 
         this.root.setLocalScale(this._scale, this._scale, this._scale);
 
