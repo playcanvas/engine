@@ -6,6 +6,8 @@ import { EventHandler } from '../../core/event-handler.js';
 import { PROJECTION_PERSPECTIVE } from '../../scene/constants.js';
 import { Entity } from '../../framework/entity.js';
 
+import { GIZMOCOORD_LOCAL, GIZMOCOORD_WORLD } from './constants.js';
+
 /**
  * @import { AppBase } from '../../framework/app-base.js'
  * @import { CameraComponent } from '../../framework/components/camera/component.js'
@@ -26,22 +28,6 @@ const tmpR1 = new Ray();
 const MIN_GIZMO_SCALE = 1e-4;
 const PERS_SCALE_RATIO = 0.3;
 const ORTHO_SCALE_RATIO = 0.32;
-
-/**
- * Local coordinate space.
- *
- * @type {string}
- * @category Gizmo
- */
-export const GIZMOCOORD_LOCAL = 'local';
-
-/**
- * World coordinate space.
- *
- * @type {string}
- * @category Gizmo
- */
-export const GIZMOCOORD_WORLD = 'world';
 
 /**
  * The base class for all gizmos.

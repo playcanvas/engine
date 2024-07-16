@@ -5,15 +5,18 @@ import { Vec3 } from '../../core/math/vec3.js';
 import { Ray } from '../../core/shape/ray.js';
 import { Plane } from '../../core/shape/plane.js';
 import { PROJECTION_PERSPECTIVE } from '../../scene/constants.js';
-import { Gizmo } from "./gizmo.js";
 
 import {
     COLOR_RED,
     COLOR_GREEN,
     COLOR_BLUE,
     COLOR_YELLOW,
-    COLOR_GRAY
-} from './default-colors.js';
+    COLOR_GRAY,
+    color3from4,
+    color4from3
+} from './color.js';
+import { GIZMOAXIS_X, GIZMOAXIS_XYZ, GIZMOAXIS_Y, GIZMOAXIS_Z } from './constants.js';
+import { Gizmo } from './gizmo.js';
 
 /**
  * @import { AppBase } from '../../framework/app-base.js'
@@ -33,72 +36,6 @@ const tmpP1 = new Plane();
 // constants
 const VEC3_AXES = Object.keys(tmpV1);
 const SPANLINE_SIZE = 1e3;
-
-/**
- * Gizmo axis for the line X.
- *
- * @type {string}
- */
-export const GIZMOAXIS_X = 'x';
-
-/**
- * Gizmo axis for the line Y.
- *
- * @type {string}
- */
-export const GIZMOAXIS_Y = 'y';
-
-/**
- * Gizmo axis for the line Z.
- *
- * @type {string}
- */
-export const GIZMOAXIS_Z = 'z';
-
-/**
- * Gizmo axis for the plane YZ.
- *
- * @type {string}
- */
-export const GIZMOAXIS_YZ = 'yz';
-
-/**
- * Gizmo axis for the plane XZ.
- *
- * @type {string}
- */
-export const GIZMOAXIS_XZ = 'xz';
-
-/**
- * Gizmo axis for the plane XY.
- *
- * @type {string}
- */
-export const GIZMOAXIS_XY = 'xy';
-
-/**
- * Gizmo axis for all directions XYZ.
- *
- * @type {string}
- */
-export const GIZMOAXIS_XYZ = 'xyz';
-
-/**
- * Gizmo axis for facing the camera (F).
- *
- * @type {string}
- */
-export const GIZMOAXIS_F = 'f';
-
-/**
- * Converts Color4 to Color3.
- *
- * @param {Color} color - Color4
- * @returns {Color} - Color3
- */
-function color3from4(color) {
-    return new Color(color.r, color.g, color.b);
-}
 
 /**
  * The base class for all transform gizmos.
@@ -498,9 +435,7 @@ class TransformGizmo extends Gizmo {
      * @private
      */
     _colorSemi(color) {
-        const clone = color.clone();
-        clone.a = this._colorAlpha;
-        return clone;
+        return color4from3(color, this._colorAlpha);
     }
 
     /**

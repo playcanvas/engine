@@ -1,15 +1,15 @@
 import { Vec3 } from '../../core/math/vec3.js';
 import { Quat } from '../../core/math/quat.js';
-import { AxisArrow, AxisPlane, AxisSphereCenter } from './axis-shapes.js';
-import { GIZMOCOORD_LOCAL } from './gizmo.js';
 
+import { AxisArrow, AxisPlane, AxisSphereCenter } from './axis-shapes.js';
 import {
+    GIZMOCOORD_LOCAL,
     GIZMOAXIS_F,
     GIZMOAXIS_X,
     GIZMOAXIS_Y,
-    GIZMOAXIS_Z,
-    TransformGizmo
-} from './transform-gizmo.js';
+    GIZMOAXIS_Z
+} from './constants.js';
+import { TransformGizmo } from './transform-gizmo.js';
 
 /**
  * @import { AppBase } from '../../framework/app-base.js'
