@@ -1,8 +1,9 @@
 import { Vec3 } from '../../core/math/vec3.js';
 import { Quat } from '../../core/math/quat.js';
+
 import { AxisBoxCenter, AxisBoxLine, AxisPlane } from './axis-shapes.js';
-import { GIZMO_LOCAL } from './gizmo.js';
-import { SHAPEAXIS_X, SHAPEAXIS_XYZ, SHAPEAXIS_Y, SHAPEAXIS_Z, TransformGizmo } from './transform-gizmo.js';
+import { GIZMOCOORD_LOCAL, GIZMOAXIS_X, GIZMOAXIS_XYZ, GIZMOAXIS_Y, GIZMOAXIS_Z } from './constants.js';
+import { TransformGizmo } from './transform-gizmo.js';
 
 /**
  * @import { AppBase } from '../../framework/app-base.js'
@@ -24,51 +25,51 @@ const tmpQ1 = new Quat();
 class ScaleGizmo extends TransformGizmo {
     _shapes = {
         xyz: new AxisBoxCenter(this._device, {
-            axis: SHAPEAXIS_XYZ,
+            axis: GIZMOAXIS_XYZ,
             layers: [this._layer.id],
             defaultColor: this._meshColors.axis.xyz,
             hoverColor: this._meshColors.hover.xyz
         }),
         yz: new AxisPlane(this._device, {
-            axis: SHAPEAXIS_X,
-            flipAxis: SHAPEAXIS_Y,
+            axis: GIZMOAXIS_X,
+            flipAxis: GIZMOAXIS_Y,
             layers: [this._layer.id],
             rotation: new Vec3(0, 0, -90),
             defaultColor: this._meshColors.axis.x,
             hoverColor: this._meshColors.hover.x
         }),
         xz: new AxisPlane(this._device, {
-            axis: SHAPEAXIS_Y,
-            flipAxis: SHAPEAXIS_Z,
+            axis: GIZMOAXIS_Y,
+            flipAxis: GIZMOAXIS_Z,
             layers: [this._layer.id],
             rotation: new Vec3(0, 0, 0),
             defaultColor: this._meshColors.axis.y,
             hoverColor: this._meshColors.hover.y
         }),
         xy: new AxisPlane(this._device, {
-            axis: SHAPEAXIS_Z,
-            flipAxis: SHAPEAXIS_X,
+            axis: GIZMOAXIS_Z,
+            flipAxis: GIZMOAXIS_X,
             layers: [this._layer.id],
             rotation: new Vec3(90, 0, 0),
             defaultColor: this._meshColors.axis.z,
             hoverColor: this._meshColors.hover.z
         }),
         x: new AxisBoxLine(this._device, {
-            axis: SHAPEAXIS_X,
+            axis: GIZMOAXIS_X,
             layers: [this._layer.id],
             rotation: new Vec3(0, 0, -90),
             defaultColor: this._meshColors.axis.x,
             hoverColor: this._meshColors.hover.x
         }),
         y: new AxisBoxLine(this._device, {
-            axis: SHAPEAXIS_Y,
+            axis: GIZMOAXIS_Y,
             layers: [this._layer.id],
             rotation: new Vec3(0, 0, 0),
             defaultColor: this._meshColors.axis.y,
             hoverColor: this._meshColors.hover.y
         }),
         z: new AxisBoxLine(this._device, {
-            axis: SHAPEAXIS_Z,
+            axis: GIZMOAXIS_Z,
             layers: [this._layer.id],
             rotation: new Vec3(90, 0, 0),
             defaultColor: this._meshColors.axis.z,
@@ -76,7 +77,7 @@ class ScaleGizmo extends TransformGizmo {
         })
     };
 
-    _coordSpace = GIZMO_LOCAL;
+    _coordSpace = GIZMOCOORD_LOCAL;
 
     /**
      * Internal mapping from each attached node to their starting scale.
@@ -380,7 +381,7 @@ class ScaleGizmo extends TransformGizmo {
         const axis = this._selectedAxis;
 
         const isPlane = this._selectedIsPlane;
-        const isScaleUniform = (this._useUniformScaling && isPlane) || axis === SHAPEAXIS_XYZ;
+        const isScaleUniform = (this._useUniformScaling && isPlane) || axis === GIZMOAXIS_XYZ;
 
         const ray = this._createRay(mouseWPos);
         const plane = this._createPlane(axis, isScaleUniform, !isPlane);
@@ -393,15 +394,15 @@ class ScaleGizmo extends TransformGizmo {
         if (isScaleUniform) {
             // calculate projecion vector for scale direction
             switch (axis) {
-                case SHAPEAXIS_X:
+                case GIZMOAXIS_X:
                     tmpV1.copy(this.root.up);
                     tmpV2.copy(this.root.forward).mulScalar(-1);
                     break;
-                case SHAPEAXIS_Y:
+                case GIZMOAXIS_Y:
                     tmpV1.copy(this.root.right);
                     tmpV2.copy(this.root.forward).mulScalar(-1);
                     break;
-                case SHAPEAXIS_Z:
+                case GIZMOAXIS_Z:
                     tmpV1.copy(this.root.up);
                     tmpV2.copy(this.root.right);
                     break;
@@ -418,7 +419,7 @@ class ScaleGizmo extends TransformGizmo {
             point.set(v, v, v);
 
             // keep scale of axis constant if not all axes are selected
-            if (axis !== SHAPEAXIS_XYZ) {
+            if (axis !== GIZMOAXIS_XYZ) {
                 point[axis] = 1;
             }
 

@@ -8,7 +8,7 @@ import { CULLFACE_NONE, CULLFACE_BACK, SEMANTIC_POSITION, SEMANTIC_COLOR } from 
 import { BLEND_NORMAL } from '../../scene/constants.js';
 import { createShaderFromCode } from '../../scene/shader-lib/utils.js';
 
-import { COLOR_GRAY } from './default-colors.js';
+import { COLOR_GRAY } from './color.js';
 import { TriData } from './tri-data.js';
 import { Mesh } from '../../scene/mesh.js';
 import { BoxGeometry } from '../../scene/geometry/box-geometry.js';
