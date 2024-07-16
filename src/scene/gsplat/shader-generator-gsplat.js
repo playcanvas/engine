@@ -46,7 +46,7 @@ const splatCoreVS = /* glsl */ `
         // calculate splat index
         orderId = vertex_id_attrib + uint(vertex_position.z);
 
-        if (orderId > numSplats) {
+        if (orderId >= numSplats) {
             return false;
         }
 
