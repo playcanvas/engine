@@ -403,6 +403,7 @@ class Gizmo extends EventHandler {
             this._scale = this._camera.orthoHeight * ORTHO_SCALE_RATIO;
         }
         this._scale = Math.max(this._scale * this._size, MIN_GIZMO_SCALE);
+
         this.root.setLocalScale(this._scale, this._scale, this._scale);
 
         this.fire(Gizmo.EVENT_SCALEUPDATE, this._scale);
