@@ -671,7 +671,7 @@ class TransformGizmo extends Gizmo {
      * - {@link GIZMOAXIS_XZ}
      * - {@link GIZMOAXIS_XY}
      * - {@link GIZMOAXIS_XYZ}
-     * - {@link GIZMOAXIS_F}
+     * - {@link GIZMOAXIS_FACE}
      *
      * @param {boolean} enabled - The enabled state of shape.
      */
@@ -695,7 +695,7 @@ class TransformGizmo extends Gizmo {
      * - {@link GIZMOAXIS_XZ}
      * - {@link GIZMOAXIS_XY}
      * - {@link GIZMOAXIS_XYZ}
-     * - {@link GIZMOAXIS_F}
+     * - {@link GIZMOAXIS_FACE}
      *
      * @returns {boolean} - Then enabled state of the shape
      */

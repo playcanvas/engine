@@ -4,7 +4,7 @@
  * @type {string}
  * @category Gizmo
  */
-export const GIZMOCOORD_LOCAL = 'local';
+export const GIZMOSPACE_LOCAL = 'local';
 
 /**
  * World coordinate space.
@@ -12,7 +12,7 @@ export const GIZMOCOORD_LOCAL = 'local';
  * @type {string}
  * @category Gizmo
  */
-export const GIZMOCOORD_WORLD = 'world';
+export const GIZMOSPACE_WORLD = 'world';
 
 /**
  * Gizmo axis for the line X.
@@ -64,8 +64,8 @@ export const GIZMOAXIS_XY = 'xy';
 export const GIZMOAXIS_XYZ = 'xyz';
 
 /**
- * Gizmo axis for facing the camera (F).
+ * Gizmo axis for facing the camera (facing the camera).
  *
  * @type {string}
  */
-export const GIZMOAXIS_F = 'f';
+export const GIZMOAXIS_FACE = 'face';
