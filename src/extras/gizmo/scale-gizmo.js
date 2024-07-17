@@ -2,7 +2,7 @@ import { Vec3 } from '../../core/math/vec3.js';
 import { Quat } from '../../core/math/quat.js';
 
 import { AxisBoxCenter, AxisBoxLine, AxisPlane } from './axis-shapes.js';
-import { GIZMOCOORD_LOCAL, GIZMOAXIS_X, GIZMOAXIS_XYZ, GIZMOAXIS_Y, GIZMOAXIS_Z } from './constants.js';
+import { GIZMOSPACE_LOCAL, GIZMOAXIS_X, GIZMOAXIS_XYZ, GIZMOAXIS_Y, GIZMOAXIS_Z } from './constants.js';
 import { TransformGizmo } from './transform-gizmo.js';
 
 /**
@@ -77,7 +77,7 @@ class ScaleGizmo extends TransformGizmo {
         })
     };
 
-    _coordSpace = GIZMOCOORD_LOCAL;
+    _coordSpace = GIZMOSPACE_LOCAL;
 
     /**
      * Internal mapping from each attached node to their starting scale.

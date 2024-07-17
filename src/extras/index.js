@@ -22,8 +22,8 @@ export { RenderPassTAA } from './render-passes/render-pass-taa.js';
 
 // GIZMOS
 export {
-    GIZMOCOORD_LOCAL,
-    GIZMOCOORD_WORLD,
+    GIZMOSPACE_LOCAL,
+    GIZMOSPACE_WORLD,
     GIZMOAXIS_X,
     GIZMOAXIS_Y,
     GIZMOAXIS_Z,
@@ -31,7 +31,7 @@ export {
     GIZMOAXIS_XZ,
     GIZMOAXIS_YZ,
     GIZMOAXIS_XYZ,
-    GIZMOAXIS_F
+    GIZMOAXIS_FACE
 } from "./gizmo/constants.js";
 export { Gizmo } from "./gizmo/gizmo.js";
 export { TransformGizmo } from "./gizmo/transform-gizmo.js";

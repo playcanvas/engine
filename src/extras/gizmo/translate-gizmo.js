@@ -3,8 +3,8 @@ import { Quat } from '../../core/math/quat.js';
 
 import { AxisArrow, AxisPlane, AxisSphereCenter } from './axis-shapes.js';
 import {
-    GIZMOCOORD_LOCAL,
-    GIZMOAXIS_F,
+    GIZMOSPACE_LOCAL,
+    GIZMOAXIS_FACE,
     GIZMOAXIS_X,
     GIZMOAXIS_Y,
     GIZMOAXIS_Z
@@ -30,8 +30,8 @@ const tmpQ1 = new Quat();
  */
 class TranslateGizmo extends TransformGizmo {
     _shapes = {
-        f: new AxisSphereCenter(this._device, {
-            axis: GIZMOAXIS_F,
+        face: new AxisSphereCenter(this._device, {
+            axis: GIZMOAXIS_FACE,
             layers: [this._layer.id],
             defaultColor: this._meshColors.axis.xyz,
             hoverColor: this._meshColors.hover.xyz
@@ -287,7 +287,7 @@ class TranslateGizmo extends TransformGizmo {
      * @type {number}
      */
     set axisCenterSize(value) {
-        this._shapes.f.size = value;
+        this._shapes.face.size = value;
     }
 
     /**
@@ -296,7 +296,7 @@ class TranslateGizmo extends TransformGizmo {
      * @type {number}
      */
     get axisCenterSize() {
-        return this._shapes.f.size;
+        return this._shapes.face.size;
     }
 
     /**
@@ -305,7 +305,7 @@ class TranslateGizmo extends TransformGizmo {
      * @type {number}
      */
     set axisCenterTolerance(value) {
-        this._shapes.f.tolerance = value;
+        this._shapes.face.tolerance = value;
     }
 
     /**
@@ -314,7 +314,7 @@ class TranslateGizmo extends TransformGizmo {
      * @type {number}
      */
     get axisCenterTolerance() {
-        return this._shapes.f.tolerance;
+        return this._shapes.face.tolerance;
     }
 
     /**
@@ -361,7 +361,7 @@ class TranslateGizmo extends TransformGizmo {
             if (!pos) {
                 continue;
             }
-            if (this._coordSpace === GIZMOCOORD_LOCAL) {
+            if (this._coordSpace === GIZMOSPACE_LOCAL) {
                 tmpV1.copy(pointDelta);
                 node.parent?.getWorldTransform().getScale(tmpV2);
                 tmpV2.x = 1 / tmpV2.x;
@@ -391,7 +391,7 @@ class TranslateGizmo extends TransformGizmo {
         const isPlane = this._selectedIsPlane;
 
         const ray = this._createRay(mouseWPos);
-        const plane = this._createPlane(axis, axis === GIZMOAXIS_F, !isPlane);
+        const plane = this._createPlane(axis, axis === GIZMOAXIS_FACE, !isPlane);
 
         const point = new Vec3();
         const angle = 0;
@@ -401,7 +401,7 @@ class TranslateGizmo extends TransformGizmo {
         // rotate point back to world coords
         tmpQ1.copy(this._rootStartRot).invert().transformVector(point, point);
 
-        if (!isPlane && axis !== GIZMOAXIS_F) {
+        if (!isPlane && axis !== GIZMOAXIS_FACE) {
             this._projectToAxis(point, axis);
         }
 
