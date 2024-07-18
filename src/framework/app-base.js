@@ -61,6 +61,7 @@ import { getApplication, setApplication } from './globals.js';
  * @import { GraphicsDevice } from '../platform/graphics/graphics-device.js'
  * @import { Keyboard } from '../platform/input/keyboard.js'
  * @import { Lightmapper } from './lightmapper/lightmapper.js'
+ * @import { Material } from '../scene/materials/material.js'
  * @import { MeshInstance } from '../scene/mesh-instance.js'
  * @import { Mesh } from '../scene/mesh.js'
  * @import { Mouse } from '../platform/input/mouse.js'
