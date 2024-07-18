@@ -48,43 +48,6 @@
     "type": "git",
     "url": "https://github.com/playcanvas/engine.git"
   },
-  "eslintConfig": {
-    "extends": "@playcanvas/eslint-config",
-    "globals": {
-      "Ammo": "readonly",
-      "earcut": "readonly",
-      "glslang": "readonly",
-      "GPUBufferUsage": "readonly",
-      "GPUColorWrite": "readonly",
-      "GPUMapMode": "readonly",
-      "GPUShaderStage": "readonly",
-      "GPUTextureUsage": "readonly",
-      "opentype": "readonly",
-      "pc": "readonly",
-      "TWEEN": "readonly",
-      "twgsl": "readonly",
-      "webkitAudioContext": "readonly",
-      "XRRay": "readonly",
-      "XRRigidTransform": "readonly",
-      "XRWebGLLayer": "readonly"
-    },
-    "parser": "@babel/eslint-parser",
-    "parserOptions": {
-      "requireConfigFile": false
-    },
-    "rules": {
-      "jsdoc/check-tag-names": [
-        "error",
-        {
-          "definedTags": [
-            "attribute",
-            "category",
-            "import"
-          ]
-        }
-      ]
-    }
-  },
   "eslintIgnore": [
     "examples/lib/*",
     "scripts/textmesh/earcut.min.js",
@@ -161,7 +124,7 @@
     "watch:esm:release": "npm run build target:esm:release -- -w",
     "watch:esm:debug": "npm run build target:esm:debug -- -w",
     "docs": "typedoc",
-    "lint": "eslint --ext .js,.mjs scripts src test utils rollup.config.mjs",
+    "lint": "eslint scripts src test utils rollup.config.mjs",
     "publint": "publint --level error",
     "serve": "serve build -l 51000 --cors",
     "test": "mocha --recursive --require test/fixtures.mjs",
