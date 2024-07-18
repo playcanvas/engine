@@ -9,13 +9,11 @@ import {
 } from '../../platform/graphics/constants.js';
 import { BlendState } from '../../platform/graphics/blend-state.js';
 import { DepthState } from '../../platform/graphics/depth-state.js';
-import { ShaderProcessorOptions } from '../../platform/graphics/shader-processor-options.js';
 import {
     BLEND_ADDITIVE, BLEND_NORMAL, BLEND_NONE, BLEND_PREMULTIPLIED,
     BLEND_MULTIPLICATIVE, BLEND_ADDITIVEALPHA, BLEND_MULTIPLICATIVE2X, BLEND_SCREEN,
     BLEND_MIN, BLEND_MAX, BLEND_SUBTRACTIVE
 } from '../constants.js';
-import { processShader } from '../shader-lib/utils.js';
 import { getDefaultMaterial } from './default-material.js';
 
 /**
