@@ -50,7 +50,7 @@ class Preprocessor {
     static run(source, includes = new Map(), stripUnusedColorAttachments = false) {
 
         // strips comments, handles // and many cases of /*
-        source = source.replace(/\/\*[\s\S]*?\*\/|([^\\:]|^)\/\/.*$/gm, '$1');
+        source = this.stripComments(source);
 
         // right trim each line
         source = source.split(/\r?\n/)
@@ -89,6 +89,9 @@ class Preprocessor {
             }
         });
 
+        // strip comments again after the includes have been resolved
+        source = this.stripComments(source);
+
         // remove empty lines
         source = this.RemoveEmptyLines(source);
 
@@ -96,6 +99,10 @@ class Preprocessor {
         source = this.processArraySize(source, intDefines);
 
         return source;
+    }
+
+    static stripComments(source) {
+        return source.replace(/\/\*[\s\S]*?\*\/|([^\\:]|^)\/\/.*$/gm, '$1');
     }
 
     static processArraySize(source, intDefines) {

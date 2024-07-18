@@ -146,7 +146,7 @@ class WebglShader {
 
         const definition = shader.definition;
         const attrs = definition.attributes;
-        if (device.isWebGL2 && definition.useTransformFeedback) {
+        if (definition.useTransformFeedback) {
             // Collect all "out_" attributes and use them for output
             const outNames = [];
             for (const attr in attrs) {

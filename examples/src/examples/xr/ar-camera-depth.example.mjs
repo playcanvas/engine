@@ -111,7 +111,7 @@ const fragShader = /* glsl */ `
         gl_FragColor = vec4(depth, depth, depth, 1.0);
     }`;
 
-const materialDepth = new pc.Material();
+const materialDepth = new pc.ShaderMaterial();
 
 /**
  * @param {boolean} array - If the depth information uses array texture.
@@ -130,11 +130,16 @@ const updateShader = (array, float) => {
 
     if (shaderDepthArray) frag = '#define XRDEPTH_FLOAT\n' + frag;
 
-    materialDepth.shader = pc.createShaderFromCode(app.graphicsDevice, vertShader, frag, key, {
-        aPosition: pc.SEMANTIC_POSITION,
-        aUv0: pc.SEMANTIC_TEXCOORD0
-    });
-    materialDepth.clearVariants();
+    materialDepth.shaderDescr = {
+        uniqueName: key,
+        vertexCode: vertShader,
+        fragmentCode: frag,
+        attributes: {
+            aPosition: pc.SEMANTIC_POSITION,
+            aUv0: pc.SEMANTIC_TEXCOORD0
+        }
+    };
+
     materialDepth.update();
 };
 

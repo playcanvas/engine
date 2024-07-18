@@ -65,8 +65,8 @@ class WebgpuShader {
             this._fragmentCode = definition.fshader ?? null;
             this._computeCode = definition.cshader ?? null;
 
-            this.meshUniformBufferFormat = definition.meshUniformBufferFormat;
-            this.meshBindGroupFormat = definition.meshBindGroupFormat;
+            shader.meshUniformBufferFormat = definition.meshUniformBufferFormat;
+            shader.meshBindGroupFormat = definition.meshBindGroupFormat;
 
             this.computeUniformBufferFormats = definition.computeUniformBufferFormats;
             this.computeBindGroupFormat = definition.computeBindGroupFormat;

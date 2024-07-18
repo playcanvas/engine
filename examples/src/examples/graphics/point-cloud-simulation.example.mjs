@@ -83,15 +83,17 @@ updateMesh(mesh);
 // set large bounding box so we don't need to update it each frame
 mesh.aabb = new pc.BoundingBox(new pc.Vec3(0, 0, 0), new pc.Vec3(15, 15, 15));
 
-// Create the shader from the vertex and fragment shaders
-const shader = pc.createShaderFromCode(app.graphicsDevice, files['shader.vert'], files['shader.frag'], 'myShader', {
-    aPosition: pc.SEMANTIC_POSITION,
-    aUv0: pc.SEMANTIC_TEXCOORD0
+// Create a new material with a custom shader
+const material = new pc.ShaderMaterial({
+    uniqueName: 'MyShader',
+    vertexCode: files['shader.vert'],
+    fragmentCode: files['shader.frag'],
+    attributes: {
+        aPosition: pc.SEMANTIC_POSITION,
+        aUv0: pc.SEMANTIC_TEXCOORD0
+    }
 });
 
-// Create a new material with the new shader and additive alpha blending
-const material = new pc.Material();
-material.shader = shader;
 material.blendType = pc.BLEND_ADDITIVEALPHA;
 material.depthWrite = false;
 

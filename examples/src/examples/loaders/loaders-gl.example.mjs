@@ -69,14 +69,16 @@ async function loadModel(url) {
     mesh.setColors32(colors32);
     mesh.update(pc.PRIMITIVE_POINTS);
 
-    const shader = pc.createShaderFromCode(app.graphicsDevice, files['shader.vert'], files['shader.frag'], 'MyShader', {
-        aPosition: pc.SEMANTIC_POSITION,
-        aColor: pc.SEMANTIC_COLOR
-    });
-
     // create material using the shader
-    const material = new pc.Material();
-    material.shader = shader;
+    const material = new pc.ShaderMaterial({
+        uniqueName: 'MyShader',
+        vertexCode: files['shader.vert'],
+        fragmentCode: files['shader.frag'],
+        attributes: {
+            aPosition: pc.SEMANTIC_POSITION,
+            aColor: pc.SEMANTIC_COLOR
+        }
+    });
     material.blendType = pc.BLENDMODE_ONE_MINUS_DST_ALPHA;
     material.cull = pc.CULLFACE_NONE;
 

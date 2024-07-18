@@ -49,16 +49,6 @@ let id = 0;
  */
 class Material {
     /**
-     * A shader used to render the material. Note that this is used only by materials where the
-     * user specifies the shader. Most material types generate multiple shader variants, and do not
-     * set this.
-     *
-     * @type {Shader}
-     * @private
-     */
-    _shader = null;
-
-    /**
      * The mesh instances referencing this material
      *
      * @type {MeshInstance[]}
@@ -152,6 +142,13 @@ class Material {
      * @type {StencilParameters|null}
      */
     stencilBack = null;
+
+    /** @protected */
+    constructor() {
+        if (new.target === Material) {
+            Debug.error('Material class cannot be instantiated, use ShaderMaterial instead');
+        }
+    }
 
     /**
      * Sets the offset for the output depth buffer value. Useful for decals to prevent z-fighting.
@@ -281,24 +278,6 @@ class Material {
      */
     get alphaWrite() {
         return this._blendState.alphaWrite;
-    }
-
-    /**
-     * Sets the shader used by this material to render mesh instances. Defaults to `null`.
-     *
-     * @type {Shader|null}
-     */
-    set shader(shader) {
-        this._shader = shader;
-    }
-
-    /**
-     * Gets the shader used by this material to render mesh instances.
-     *
-     * @type {Shader|null}
-     */
-    get shader() {
-        return this._shader;
     }
 
     // returns boolean depending on material being transparent
@@ -538,10 +517,7 @@ class Material {
     }
 
     getShaderVariant(device, scene, objDefs, renderParams, pass, sortedLights, viewUniformFormat, viewBindGroupFormat, vertexFormat) {
-
-        // generate shader variant - its the same shader, but with different processing options
-        const processingOptions = new ShaderProcessorOptions(viewUniformFormat, viewBindGroupFormat, vertexFormat);
-        return processShader(this._shader, processingOptions);
+        Debug.assert(false, 'Not implemented');
     }
 
     /**

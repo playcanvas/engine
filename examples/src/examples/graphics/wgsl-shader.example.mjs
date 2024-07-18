@@ -44,9 +44,10 @@ app.on('destroy', () => {
     window.removeEventListener('resize', resize);
 });
 
-const shaderDefinition = {
-    vshader: files['shader.wgsl'],
-    fshader: files['shader.wgsl'],
+const material = new pc.ShaderMaterial({
+    uniqueName: 'MyWGSLShader',
+    vertexCode: files['shader.wgsl'],
+    fragmentCode: files['shader.wgsl'],
     shaderLanguage: pc.SHADERLANGUAGE_WGSL,
 
     // For now WGSL shaders need to provide their own bind group formats as they aren't processed.
@@ -56,11 +57,7 @@ const shaderDefinition = {
         new pc.UniformFormat('amount', pc.UNIFORMTYPE_FLOAT)
     ]),
     meshBindGroupFormat: new pc.BindGroupFormat(app.graphicsDevice, [])
-};
-const shader = new pc.Shader(app.graphicsDevice, shaderDefinition);
-
-const material = new pc.Material();
-material.shader = shader;
+});
 
 // create box entity
 const box = new pc.Entity('cube');
