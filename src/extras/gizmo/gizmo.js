@@ -148,14 +148,6 @@ class Gizmo extends EventHandler {
     static EVENT_RENDERUPDATE = 'render:update';
 
     /**
-     * Internal device start size.
-     *
-     * @type {number}
-     * @private
-     */
-    _deviceStartSize;
-
-    /**
      * Internal version of the gizmo size. Defaults to 1.
      *
      * @type {number}
@@ -343,13 +335,6 @@ class Gizmo extends EventHandler {
         return this._size;
     }
 
-    _getProjFrustumWidth() {
-        const gizmoPos = this.root.getPosition();
-        const cameraPos = this._camera.entity.getPosition();
-        const dist = tmpV1.copy(gizmoPos).sub(cameraPos).dot(this._camera.entity.forward);
-        return dist * Math.tan(0.5 * this._camera.fov * math.DEG_TO_RAD);
-    }
-
     _createGizmo() {
         this.root = new Entity('gizmo');
         this._app.root.addChild(this.root);
@@ -380,11 +365,10 @@ class Gizmo extends EventHandler {
 
     _updateScale() {
         if (this._camera.projection === PROJECTION_PERSPECTIVE) {
-            let canvasMult = 1;
-            if (this._device.width > 0 && this._device.height > 0) {
-                canvasMult = this._deviceStartSize / Math.min(this._device.width, this._device.height);
-            }
-            this._scale = this._getProjFrustumWidth() * canvasMult * PERS_SCALE_RATIO;
+            const gizmoPos = this.root.getPosition();
+            const cameraPos = this._camera.entity.getPosition();
+            const dist = gizmoPos.distance(cameraPos);
+            this._scale = Math.tan(0.5 * this._camera.fov * math.DEG_TO_RAD) * dist * PERS_SCALE_RATIO;
         } else {
             this._scale = this._camera.orthoHeight * ORTHO_SCALE_RATIO;
         }
@@ -395,14 +379,14 @@ class Gizmo extends EventHandler {
     }
 
     _getSelection(x, y) {
-        const start = this._camera.screenToWorld(x, y, 1);
+        const start = this._camera.screenToWorld(x, y, this._camera.nearClip);
         const end = this._camera.screenToWorld(x, y, this._camera.farClip);
         const dir = end.clone().sub(start).normalize();
 
         const selection = [];
         for (let i = 0; i < this.intersectData.length; i++) {
             const { triData, parent, meshInstances } = this.intersectData[i];
-            const wtm = parent.getWorldTransform().clone();
+            const wtm = parent.getWorldTransform();
             for (let j = 0; j < triData.length; j++) {
                 const { tris, ptm, priority } = triData[j];
                 tmpM1.copy(wtm).mul(ptm);
