@@ -130,7 +130,7 @@ const updateShader = (array, float) => {
 
     if (shaderDepthArray) frag = '#define XRDEPTH_FLOAT\n' + frag;
 
-    materialDepth.shaderDescr = {
+    materialDepth.shaderDesc = {
         uniqueName: key,
         vertexCode: vertShader,
         fragmentCode: frag,

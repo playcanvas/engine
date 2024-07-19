@@ -15,7 +15,7 @@ const tempPoints = [];
 const vec = new Vec3();
 
 class Immediate {
-    shaderDescrs = new Map();
+    shaderDescs = new Map();
 
     constructor(device) {
         this.device = device;
@@ -86,8 +86,8 @@ class Immediate {
         return batches.getBatch(material, layer);
     }
 
-    getShaderDescr(id, fragment) {
-        if (!this.shaderDescrs.has(id)) {
+    getShaderDesc(id, fragment) {
+        if (!this.shaderDescs.has(id)) {
             // shared vertex shader for textured quad rendering
             const vertex = /* glsl */ `
                 attribute vec2 vertex_position;
@@ -99,20 +99,20 @@ class Immediate {
                 }
             `;
 
-            this.shaderDescrs.set(id, {
+            this.shaderDescs.set(id, {
                 uniqueName: `DebugShader:${id}`,
                 vertexCode: vertex,
                 fragmentCode: fragment,
                 attributes: { vertex_position: SEMANTIC_POSITION }
             });
         }
-        return this.shaderDescrs.get(id);
+        return this.shaderDescs.get(id);
     }
 
     // shader used to display texture
-    getTextureShaderDescr(encoding) {
+    getTextureShaderDesc(encoding) {
         const decodeFunc = ChunkUtils.decodeFunc(encoding);
-        return this.getShaderDescr(`textureShader-${encoding}`, shaderChunks.decodePS + shaderChunks.gamma2_2PS +
+        return this.getShaderDesc(`textureShader-${encoding}`, shaderChunks.decodePS + shaderChunks.gamma2_2PS +
         /* glsl */ `
             varying vec2 uv0;
             uniform sampler2D colorMap;
@@ -124,8 +124,8 @@ class Immediate {
     }
 
     // shader used to display infilterable texture sampled using texelFetch
-    getUnfilterableTextureShaderDescr() {
-        return this.getShaderDescr('textureShaderUnfilterable', /* glsl */ `
+    getUnfilterableTextureShaderDesc() {
+        return this.getShaderDesc('textureShaderUnfilterable', /* glsl */ `
             varying vec2 uv0;
             uniform highp sampler2D colorMap;
             void main (void) {
@@ -136,8 +136,8 @@ class Immediate {
     }
 
     // shader used to display depth texture
-    getDepthTextureShaderDescr() {
-        return this.getShaderDescr('depthTextureShader', /* glsl */ `
+    getDepthTextureShaderDesc() {
+        return this.getShaderDesc('depthTextureShader', /* glsl */ `
             ${shaderChunks.screenDepthPS}
             varying vec2 uv0;
             void main() {

@@ -16,11 +16,11 @@ const fShader = `
 
 class ShaderGeneratorShader extends ShaderGenerator {
     generateKey(options) {
-        const descr = options.shaderDescr;
-        const vsHash = descr.vertexCode ? hashCode(descr.vertexCode) : 0;
-        const fsHash = descr.fragmentCode ? hashCode(descr.fragmentCode) : 0;
+        const desc = options.shaderDesc;
+        const vsHash = desc.vertexCode ? hashCode(desc.vertexCode) : 0;
+        const fsHash = desc.fragmentCode ? hashCode(desc.fragmentCode) : 0;
 
-        let key = `${descr.uniqueName}_${vsHash}_${fsHash}`;
+        let key = `${desc.uniqueName}_${vsHash}_${fsHash}`;
         key += '_' + options.pass;
         key += '_' + options.gamma;
         key += '_' + options.toneMapping;
@@ -30,20 +30,20 @@ class ShaderGeneratorShader extends ShaderGenerator {
 
     createVertexDefinition(definitionOptions, options, shaderPassInfo) {
 
-        const descr = options.shaderDescr;
+        const desc = options.shaderDesc;
 
         if (definitionOptions.shaderLanguage === SHADERLANGUAGE_WGSL) {
 
             // TODO: WGSL doesn't have preprocessor connected at the moment, so we just directly use
             // the provided code. This will be fixed in the future.
-            definitionOptions.vertexCode = descr.vertexCode;
+            definitionOptions.vertexCode = desc.vertexCode;
 
         } else {
             const includes = new Map();
             const defines = new Map();
 
             includes.set('shaderPassDefines', shaderPassInfo.shaderDefines);
-            includes.set('userCode', descr.vertexCode);
+            includes.set('userCode', desc.vertexCode);
 
             definitionOptions.vertexCode = vShader;
             definitionOptions.vertexIncludes = includes;
@@ -53,20 +53,20 @@ class ShaderGeneratorShader extends ShaderGenerator {
 
     createFragmentDefinition(definitionOptions, options, shaderPassInfo) {
 
-        const descr = options.shaderDescr;
+        const desc = options.shaderDesc;
 
         if (definitionOptions.shaderLanguage === SHADERLANGUAGE_WGSL) {
 
             // TODO: WGSL doesn't have preprocessor connected at the moment, so we just directly use
             // the provided code. This will be fixed in the future.
-            definitionOptions.fragmentCode = descr.fragmentCode;
+            definitionOptions.fragmentCode = desc.fragmentCode;
 
         } else {
             const includes = new Map();
             const defines = new Map();
 
             includes.set('shaderPassDefines', shaderPassInfo.shaderDefines);
-            includes.set('userCode', descr.fragmentCode);
+            includes.set('userCode', desc.fragmentCode);
 
             definitionOptions.fragmentCode = fShader;
             definitionOptions.fragmentIncludes = includes;
@@ -77,15 +77,15 @@ class ShaderGeneratorShader extends ShaderGenerator {
     createShaderDefinition(device, options) {
 
         const shaderPassInfo = ShaderPass.get(device).getByIndex(options.pass);
-        const descr = options.shaderDescr;
+        const desc = options.shaderDesc;
 
         const definitionOptions = {
-            name: `ShaderMaterial-${descr.uniqueName}`,
-            attributes: descr.attributes,
-            shaderLanguage: descr.shaderLanguage,
-            fragmentOutputTypes: descr.fragmentOutputTypes,
-            meshUniformBufferFormat: descr.meshUniformBufferFormat,
-            meshBindGroupFormat: descr.meshBindGroupFormat
+            name: `ShaderMaterial-${desc.uniqueName}`,
+            attributes: desc.attributes,
+            shaderLanguage: desc.shaderLanguage,
+            fragmentOutputTypes: desc.fragmentOutputTypes,
+            meshUniformBufferFormat: desc.meshUniformBufferFormat,
+            meshBindGroupFormat: desc.meshBindGroupFormat
         };
 
         this.createVertexDefinition(definitionOptions, options, shaderPassInfo);

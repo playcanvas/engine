@@ -4,7 +4,7 @@ import { shaderGeneratorShader } from '../shader-lib/programs/shader-generator-s
 import { Material } from './material.js';
 
 /**
- * @typedef {object} ShaderDescr - The description of the shader used by the {@link ShaderMaterial}.
+ * @typedef {object} ShaderDesc - The description of the shader used by the {@link ShaderMaterial}.
  * @property {string} uniqueName - Unique name for the shader. If a shader with this name already
  * exists, it will be returned instead of a new shader instance.
  * @property {string} [vertexCode] - The vertex shader code.
@@ -44,41 +44,41 @@ import { Material } from './material.js';
  */
 class ShaderMaterial extends Material {
     /**
-     * @type {ShaderDescr|undefined}
+     * @type {ShaderDesc|undefined}
      * @private
      */
-    _shaderDescr;
+    _shaderDesc;
 
     /**
      * Create a new ShaderMaterial instance.
      *
-     * @param {ShaderDescr} [shaderDescr] - The description of the shader to be used by the material.
+     * @param {ShaderDesc} [shaderDesc] - The description of the shader to be used by the material.
      */
-    constructor(shaderDescr) {
+    constructor(shaderDesc) {
         super();
 
-        this.shaderDescr = shaderDescr;
+        this.shaderDesc = shaderDesc;
     }
 
     /**
      * Sets the shader description.
      *
-     * @type {ShaderDescr|undefined}
+     * @type {ShaderDesc|undefined}
      */
-    set shaderDescr(value) {
+    set shaderDesc(value) {
 
         // shallow clone the object
-        this._shaderDescr = value ? { ...value } : undefined;
+        this._shaderDesc = value ? { ...value } : undefined;
         this.clearVariants();
     }
 
     /**
      * Gets the shader description.
      *
-     * @type {ShaderDescr|undefined}
+     * @type {ShaderDesc|undefined}
      */
-    get shaderDescr() {
-        return this._shaderDescr;
+    get shaderDesc() {
+        return this._shaderDesc;
     }
 
     /**
@@ -89,7 +89,7 @@ class ShaderMaterial extends Material {
      */
     copy(source) {
         super.copy(source);
-        this.shaderDescr = source.shaderDescr;
+        this.shaderDesc = source.shaderDesc;
         return this;
     }
 
@@ -99,7 +99,7 @@ class ShaderMaterial extends Material {
             pass: pass,
             gamma: renderParams.shaderOutputGamma,
             toneMapping: renderParams.toneMapping,
-            shaderDescr: this.shaderDescr
+            shaderDesc: this.shaderDesc
         };
 
         const processingOptions = new ShaderProcessorOptions(viewUniformFormat, viewBindGroupFormat, vertexFormat);

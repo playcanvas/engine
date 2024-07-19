@@ -1772,7 +1772,7 @@ class AppBase extends EventHandler {
             material = new ShaderMaterial();
             material.cull = CULLFACE_NONE;
             material.setParameter("colorMap", texture);
-            material.shaderDescr = filterable ? this.scene.immediate.getTextureShaderDescr(texture.encoding) : this.scene.immediate.getUnfilterableTextureShaderDescr();
+            material.shaderDesc = filterable ? this.scene.immediate.getTextureShaderDesc(texture.encoding) : this.scene.immediate.getUnfilterableTextureShaderDesc();
             material.update();
         }
 
@@ -1797,7 +1797,7 @@ class AppBase extends EventHandler {
     drawDepthTexture(x, y, width, height, layer = this.scene.defaultDrawLayer) {
         const material = new ShaderMaterial();
         material.cull = CULLFACE_NONE;
-        material.shaderDescr = this.scene.immediate.getDepthTextureShaderDescr();
+        material.shaderDesc = this.scene.immediate.getDepthTextureShaderDesc();
         material.update();
 
         this.drawTexture(x, y, width, height, null, material, layer);
