@@ -613,10 +613,10 @@ GraphNode.prototype.setName = function (name) {
 
 Object.defineProperty(Material.prototype, 'shader', {
     set: function (value) {
-        Debug.deprecated(`pc.Material#sahder is deprecated, use pc.ShaderMaterial instead.`);
+        Debug.deprecated(`pc.Material#shader is deprecated, use pc.ShaderMaterial instead.`);
     },
     get: function () {
-        Debug.deprecated(`pc.Material#sahder is deprecated, use pc.ShaderMaterial instead.`);
+        Debug.deprecated(`pc.Material#shader is deprecated, use pc.ShaderMaterial instead.`);
         return null;
     }
 });
