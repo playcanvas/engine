@@ -3,6 +3,7 @@ import { Debug } from '../../core/debug.js';
 import { platform } from '../../core/platform.js';
 import { Preprocessor } from '../../core/preprocessor.js';
 import { DebugGraphics } from './debug-graphics.js';
+import { ShaderUtils } from './shader-utils.js';
 
 /**
  * @import { BindGroupFormat } from './bind-group-format.js'
@@ -118,6 +119,9 @@ class Shader {
 
             // pre-process shader sources
             definition.vshader = Preprocessor.run(definition.vshader, definition.vincludes);
+
+            // if not attributes are specified, try to extract the default names after the shader has been pre-processed
+            definition.attributes ??= ShaderUtils.collectAttributes(definition.vshader);
 
             // Strip unused color attachments from fragment shader.
             // Note: this is only needed for iOS 15 on WebGL2 where there seems to be a bug where color attachments that are not

@@ -384,6 +384,7 @@ class ShaderProcessor {
             if (shaderDefinitionAttributes.hasOwnProperty(name)) {
                 const semantic = shaderDefinitionAttributes[name];
                 const location = semanticToLocation[semantic];
+                Debug.assert(location !== undefined, `Semantic ${semantic} used by the attribute ${name} is not known - make sure it's one of the supported semantics.`);
 
                 Debug.assert(!usedLocations.hasOwnProperty(location),
                              `WARNING: Two vertex attributes are mapped to the same location in a shader: ${usedLocations[location]} and ${semantic}`);

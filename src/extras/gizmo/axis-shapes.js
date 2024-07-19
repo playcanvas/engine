@@ -1,12 +1,11 @@
 import { Color } from '../../core/math/color.js';
 import { Vec3 } from '../../core/math/vec3.js';
 import { Quat } from '../../core/math/quat.js';
-import { Material } from '../../scene/materials/material.js';
+import { ShaderMaterial } from '../../scene/materials/shader-material.js';
 import { MeshInstance } from '../../scene/mesh-instance.js';
 import { Entity } from '../../framework/entity.js';
 import { CULLFACE_NONE, CULLFACE_BACK, SEMANTIC_POSITION, SEMANTIC_COLOR } from '../../platform/graphics/constants.js';
 import { BLEND_NORMAL } from '../../scene/constants.js';
-import { createShaderFromCode } from '../../scene/shader-lib/utils.js';
 
 import { COLOR_GRAY } from './color.js';
 import { TriData } from './tri-data.js';
@@ -201,13 +200,15 @@ class AxisShape {
     }
 
     _addRenderMeshes(entity, meshes) {
-        const shader = createShaderFromCode(this.device, SHADER.vert, SHADER.frag, 'axis-shape', {
-            vertex_position: SEMANTIC_POSITION,
-            vertex_color: SEMANTIC_COLOR
+        const material = new ShaderMaterial({
+            uniqueName: 'axis-shape',
+            vertexCode: SHADER.vert,
+            fragmentCode: SHADER.frag,
+            attributes: {
+                vertex_position: SEMANTIC_POSITION,
+                vertex_color: SEMANTIC_COLOR
+            }
         });
-
-        const material = new Material();
-        material.shader = shader;
         material.cull = this._cull;
         material.blendType = BLEND_NORMAL;
         material.update();

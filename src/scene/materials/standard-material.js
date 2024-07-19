@@ -596,15 +596,6 @@ class StandardMaterial extends Material {
         this._uniformCache = { };
     }
 
-    set shader(shader) {
-        Debug.warn('StandardMaterial#shader property is not implemented, and should not be used.');
-    }
-
-    get shader() {
-        Debug.warn('StandardMaterial#shader property is not implemented, and should not be used.');
-        return null;
-    }
-
     /**
      * Object containing custom shader chunks that will replace default ones.
      *

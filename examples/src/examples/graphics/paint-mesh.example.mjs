@@ -129,16 +129,17 @@ assetListLoader.load(() => {
     const meshEntity = createHighQualitySphere(material, [worldLayer.id]);
     meshEntity.setLocalScale(15, 15, 15);
 
-    // Create the shader from the vertex and fragment shaders
-    const shader = pc.createShaderFromCode(app.graphicsDevice, files['shader.vert'], files['shader.frag'], 'myShader', {
-        aPosition: pc.SEMANTIC_POSITION,
-        aUv0: pc.SEMANTIC_TEXCOORD0
+    // Create a decal material with a custom shader
+    const decalMaterial = new pc.ShaderMaterial({
+        uniqueName: 'DecalShader',
+        vertexCode: files['shader.vert'],
+        fragmentCode: files['shader.frag'],
+        attributes: {
+            aPosition: pc.SEMANTIC_POSITION,
+            aUv0: pc.SEMANTIC_TEXCOORD0
+        }
     });
-
-    // Create a decal material with the new shader
-    const decalMaterial = new pc.Material();
     decalMaterial.cull = pc.CULLFACE_NONE;
-    decalMaterial.shader = shader;
     decalMaterial.blendType = pc.BLEND_NORMAL;
     decalMaterial.setParameter('uDecalMap', assets.decal.resource);
 

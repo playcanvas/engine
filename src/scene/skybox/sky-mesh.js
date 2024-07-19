@@ -1,7 +1,7 @@
 import { CULLFACE_FRONT } from '../../platform/graphics/constants.js';
 import { ShaderProcessorOptions } from '../../platform/graphics/shader-processor-options.js';
 import { LAYERID_SKYBOX } from '../constants.js';
-import { Material } from '../materials/material.js';
+import { ShaderMaterial } from '../materials/shader-material.js';
 import { MeshInstance } from '../mesh-instance.js';
 import { getProgramLibrary } from '../shader-lib/get-program-library.js';
 import { skybox } from '../shader-lib/programs/skybox.js';
@@ -34,7 +34,7 @@ class SkyMesh {
      */
     constructor(device, scene, node, texture, type) {
 
-        const material = new Material();
+        const material = new ShaderMaterial();
         material.name = 'SkyMaterial';
 
         material.getShaderVariant = function (dev, sc, defs, renderParams, pass, sortedLights, viewUniformFormat, viewBindGroupFormat) {

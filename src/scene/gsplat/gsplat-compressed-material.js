@@ -1,7 +1,7 @@
 import { CULLFACE_NONE, SEMANTIC_ATTR13, SEMANTIC_POSITION } from "../../platform/graphics/constants.js";
 import { ShaderProcessorOptions } from "../../platform/graphics/shader-processor-options.js";
 import { BLEND_NONE, BLEND_NORMAL, DITHER_NONE, TONEMAP_LINEAR } from "../constants.js";
-import { Material } from "../materials/material.js";
+import { ShaderMaterial } from "../materials/shader-material.js";
 import { getProgramLibrary } from "../shader-lib/get-program-library.js";
 
 import { hashCode } from "../../core/hash.js";
@@ -359,7 +359,7 @@ const createGSplatCompressedMaterial = (options = {}) => {
     const ditherEnum = options.dither ?? DITHER_NONE;
     const dither = ditherEnum !== DITHER_NONE;
 
-    const material = new Material();
+    const material = new ShaderMaterial();
     material.name = 'compressedSplatMaterial';
     material.cull = CULLFACE_NONE;
     material.blendType = dither ? BLEND_NONE : BLEND_NORMAL;

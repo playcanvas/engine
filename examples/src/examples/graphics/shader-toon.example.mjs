@@ -67,16 +67,17 @@ assetListLoader.load(() => {
     app.root.addChild(camera);
     app.root.addChild(light);
 
-    // Create the shader from the vertex and fragment shaders
-    const shader = pc.createShaderFromCode(app.graphicsDevice, files['shader.vert'], files['shader.frag'], 'myShader', {
-        aPosition: pc.SEMANTIC_POSITION,
-        aNormal: pc.SEMANTIC_NORMAL,
-        aUv: pc.SEMANTIC_TEXCOORD0
+    // Create a new material with a custom shader
+    const material = new pc.ShaderMaterial({
+        uniqueName: 'toon',
+        vertexCode: files['shader.vert'],
+        fragmentCode: files['shader.frag'],
+        attributes: {
+            aPosition: pc.SEMANTIC_POSITION,
+            aNormal: pc.SEMANTIC_NORMAL,
+            aUv: pc.SEMANTIC_TEXCOORD0
+        }
     });
-
-    // Create a new material with the new shader
-    const material = new pc.Material();
-    material.shader = shader;
 
     // create a hierarchy of entities with render components, representing the statue model
     const entity = assets.statue.resource.instantiateRenderEntity();
