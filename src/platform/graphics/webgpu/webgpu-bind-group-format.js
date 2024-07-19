@@ -42,7 +42,7 @@ class WebgpuBindGroupFormat {
         /** @type {WebgpuGraphicsDevice} */
         const device = bindGroupFormat.device;
 
-        const { key, desc: desc } = this.createDescriptor(bindGroupFormat);
+        const { key, desc } = this.createDescriptor(bindGroupFormat);
 
         /**
          * Unique key, used for caching
