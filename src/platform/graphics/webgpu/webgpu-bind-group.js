@@ -23,15 +23,15 @@ class WebgpuBindGroup {
         const device = bindGroup.device;
 
         /** @type {GPUBindGroupDescriptor} */
-        const descr = this.createDescriptor(device, bindGroup);
+        const desc = this.createDescriptor(device, bindGroup);
 
         WebgpuDebug.validate(device);
 
-        this.bindGroup = device.wgpu.createBindGroup(descr);
+        this.bindGroup = device.wgpu.createBindGroup(desc);
 
         WebgpuDebug.end(device, {
             debugFormat: this.debugFormat,
-            descr: descr,
+            desc: desc,
             format: bindGroup.format,
             bindGroup: bindGroup
         });
@@ -158,14 +158,14 @@ class WebgpuBindGroup {
             });
         });
 
-        const descr = {
+        const desc = {
             layout: bindGroup.format.impl.bindGroupLayout,
             entries: entries
         };
 
-        DebugHelper.setLabel(descr, bindGroup.name);
+        DebugHelper.setLabel(desc, bindGroup.name);
 
-        return descr;
+        return desc;
     }
 }
 

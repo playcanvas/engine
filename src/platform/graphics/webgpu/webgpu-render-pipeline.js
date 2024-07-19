@@ -304,7 +304,7 @@ class WebgpuRenderPipeline extends WebgpuPipeline {
         const webgpuShader = shader.impl;
 
         /** @type {GPURenderPipelineDescriptor} */
-        const descr = {
+        const desc = {
             vertex: {
                 module: webgpuShader.getVertexShaderModule(),
                 entryPoint: webgpuShader.vertexEntryPoint,
@@ -327,7 +327,7 @@ class WebgpuRenderPipeline extends WebgpuPipeline {
             layout: pipelineLayout
         };
 
-        descr.fragment = {
+        desc.fragment = {
             module: webgpuShader.getFragmentShaderModule(),
             entryPoint: webgpuShader.fragmentEntryPoint,
             targets: []
@@ -347,7 +347,7 @@ class WebgpuRenderPipeline extends WebgpuPipeline {
             const blend = this.getBlend(blendState);
 
             colorAttachments.forEach((attachment) => {
-                descr.fragment.targets.push({
+                desc.fragment.targets.push({
                     format: attachment.format,
                     writeMask: writeMask,
                     blend: blend
@@ -358,16 +358,16 @@ class WebgpuRenderPipeline extends WebgpuPipeline {
         WebgpuDebug.validate(this.device);
 
         _pipelineId++;
-        DebugHelper.setLabel(descr, `RenderPipelineDescr-${_pipelineId}`);
+        DebugHelper.setLabel(desc, `RenderPipelineDescr-${_pipelineId}`);
 
-        const pipeline = wgpu.createRenderPipeline(descr);
+        const pipeline = wgpu.createRenderPipeline(desc);
 
         DebugHelper.setLabel(pipeline, `RenderPipeline-${_pipelineId}`);
-        Debug.trace(TRACEID_RENDERPIPELINE_ALLOC, `Alloc: Id ${_pipelineId}, stack: ${DebugGraphics.toString()}`, descr);
+        Debug.trace(TRACEID_RENDERPIPELINE_ALLOC, `Alloc: Id ${_pipelineId}, stack: ${DebugGraphics.toString()}`, desc);
 
         WebgpuDebug.end(this.device, {
             renderPipeline: this,
-            descr,
+            desc: desc,
             shader
         });
 

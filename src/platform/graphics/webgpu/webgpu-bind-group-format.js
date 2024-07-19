@@ -42,7 +42,7 @@ class WebgpuBindGroupFormat {
         /** @type {WebgpuGraphicsDevice} */
         const device = bindGroupFormat.device;
 
-        const { key, descr } = this.createDescriptor(bindGroupFormat);
+        const { key, desc: desc } = this.createDescriptor(bindGroupFormat);
 
         /**
          * Unique key, used for caching
@@ -51,16 +51,16 @@ class WebgpuBindGroupFormat {
          */
         this.key = stringIds.get(key);
 
-        // keep descr in debug mode
+        // keep desc in debug mode
         Debug.call(() => {
-            this.descr = descr;
+            this.desc = desc;
         });
 
         /**
          * @type {GPUBindGroupLayout}
          * @private
          */
-        this.bindGroupLayout = device.wgpu.createBindGroupLayout(descr);
+        this.bindGroupLayout = device.wgpu.createBindGroupLayout(desc);
         DebugHelper.setLabel(this.bindGroupLayout, bindGroupFormat.name);
     }
 
@@ -211,13 +211,13 @@ class WebgpuBindGroupFormat {
         });
 
         /** @type {GPUBindGroupLayoutDescriptor} */
-        const descr = {
+        const desc = {
             entries: entries
         };
 
         return {
             key,
-            descr
+            desc
         };
     }
 }
