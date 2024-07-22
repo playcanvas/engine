@@ -7,10 +7,6 @@ uniform sampler2D uDiffuseMap;
 uniform sampler2D uHeightMap;
 uniform float uTime;
 
-vec3 gammaCorrectOutput(vec3 color) {
-    return pow(color + 0.0000001, vec3(1.0 / 2.2));
-}
-
 void main(void)
 {
     float height = texture2D(uHeightMap, vUv0).r;

@@ -11,9 +11,15 @@ import { TRACEID_RENDER_PASS, TRACEID_RENDER_PASS_DETAIL } from '../../core/cons
 
 class ColorAttachmentOps {
     /**
-     * A color used to clear the color attachment when the clear is enabled.
+     * A color used to clear the color attachment when the clear is enabled, specified in sRGB space.
      */
     clearValue = new Color(0, 0, 0, 1);
+
+    /**
+     * A color used to clear the color attachment when the clear is enabled, specified in linear
+     * space.
+     */
+    clearValueLinear = new Color(0, 0, 0, 1);
 
     /**
      * True if the attachment should be cleared before rendering, false to preserve
@@ -332,8 +338,10 @@ class RenderPass {
         const count = this.colorArrayOps.length;
         for (let i = 0; i < count; i++) {
             const colorOps = this.colorArrayOps[i];
-            if (color)
+            if (color) {
                 colorOps.clearValue.copy(color);
+                colorOps.clearValueLinear.linear(color);
+            }
             colorOps.clear = !!color;
         }
     }

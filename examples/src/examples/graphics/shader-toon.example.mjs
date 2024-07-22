@@ -87,26 +87,17 @@ assetListLoader.load(() => {
      * Set the new material on all meshes in the model, and use original texture from the model on the new material
      * @type {pc.Texture | null}
      */
-    let originalTexture = null;
     /** @type {Array<pc.RenderComponent>} */
     const renders = entity.findComponents('render');
     renders.forEach((render) => {
-        const meshInstances = render.meshInstances;
-        for (let i = 0; i < meshInstances.length; i++) {
-            const meshInstance = meshInstances[i];
-            if (!originalTexture) {
-                /** @type {pc.StandardMaterial} */
-                const originalMaterial = meshInstance.material;
-                originalTexture = originalMaterial.diffuseMap;
-            }
+        render.meshInstances.forEach(meshInstance => {
             meshInstance.material = material;
-        }
+        });
     });
 
     // material parameters
     const lightPosArray = [light.getPosition().x, light.getPosition().y, light.getPosition().z];
     material.setParameter('uLightPos', lightPosArray);
-    material.setParameter('uTexture', originalTexture);
     material.update();
 
     // rotate the statue

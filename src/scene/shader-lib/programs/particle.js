@@ -82,20 +82,10 @@ class ShaderGeneratorParticle extends ShaderGenerator {
         }
         if (options.soft) fshader += "\nvarying float vDepth;\n";
 
-        if ((options.normal === 0) && (options.fog === "none")) options.srgb = false; // don't have to perform all gamma conversions when no lighting and fogging is used
         fshader += shaderChunks.decodePS;
         fshader += ShaderGenerator.gammaCode(options.gamma);
         fshader += ShaderGenerator.tonemapCode(options.toneMap);
-
-        if (options.fog === 'linear') {
-            fshader += shaderChunks.fogLinearPS;
-        } else if (options.fog === 'exp') {
-            fshader += shaderChunks.fogExpPS;
-        } else if (options.fog === 'exp2') {
-            fshader += shaderChunks.fogExp2PS;
-        } else {
-            fshader += shaderChunks.fogNonePS;
-        }
+        fshader += ShaderGenerator.fogCode(options.fog);
 
         if (options.normal === 2) fshader += "\nuniform sampler2D normalMap;\n";
         if (options.soft > 0) fshader += shaderChunks.screenDepthPS;

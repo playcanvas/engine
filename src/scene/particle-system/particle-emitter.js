@@ -18,7 +18,9 @@ import {
     PRIMITIVE_TRIANGLES,
     SEMANTIC_ATTR0, SEMANTIC_ATTR1, SEMANTIC_ATTR2, SEMANTIC_ATTR3, SEMANTIC_ATTR4, SEMANTIC_TEXCOORD0,
     TYPE_FLOAT32,
-    typedArrayIndexFormats
+    typedArrayIndexFormats,
+    requiresManualGamma,
+    PIXELFORMAT_SRGBA8
 } from '../../platform/graphics/constants.js';
 import { DeviceCache } from '../../platform/graphics/device-cache.js';
 import { IndexBuffer } from '../../platform/graphics/index-buffer.js';
@@ -52,7 +54,7 @@ const particleVerts = [
 function _createTexture(device, width, height, pixelData, format = PIXELFORMAT_RGBA32F, mult8Bit, filter) {
 
     let mipFilter = FILTER_NEAREST;
-    if (filter && format === PIXELFORMAT_RGBA8)
+    if (filter && (format === PIXELFORMAT_RGBA8 || format === PIXELFORMAT_SRGBA8))
         mipFilter = FILTER_LINEAR;
 
     const texture = new Texture(device, {
@@ -70,7 +72,7 @@ function _createTexture(device, width, height, pixelData, format = PIXELFORMAT_R
 
     const pixels = texture.lock();
 
-    if (format === PIXELFORMAT_RGBA8) {
+    if (format === PIXELFORMAT_RGBA8 || format === PIXELFORMAT_SRGBA8) {
         const temp = new Uint8Array(pixelData.length);
         for (let i = 0; i < pixelData.length; i++) {
             temp[i] = pixelData[i] * mult8Bit * 255;
@@ -400,7 +402,7 @@ class ParticleEmitter {
                 }
             }
 
-            const texture = _createTexture(this.graphicsDevice, resolution, resolution, dtex, PIXELFORMAT_RGBA8, 1.0, true);
+            const texture = _createTexture(this.graphicsDevice, resolution, resolution, dtex, PIXELFORMAT_SRGBA8, 1.0, true);
             texture.minFilter = FILTER_LINEAR;
             texture.magFilter = FILTER_LINEAR;
             return texture;
@@ -698,7 +700,7 @@ class ParticleEmitter {
         this.meshInstance._updateAabb = false;
         this.meshInstance.visible = wasVisible;
 
-        this._initializeTextures();
+        this._setMaterialTextures();
 
         this.resetTime();
 
@@ -791,11 +793,18 @@ class ParticleEmitter {
             this.internalTex2 = _createTexture(gd, precision, 1, packTexture5Floats(this.qRotSpeed, this.qScale, this.qScaleDiv, this.qRotSpeedDiv, this.qAlphaDiv));
             this.internalTex3 = _createTexture(gd, precision, 1, packTexture2Floats(this.qRadialSpeed, this.qRadialSpeedDiv));
         }
-        this.colorParam = _createTexture(gd, precision, 1, packTextureRGBA(this.qColor, this.qAlpha), PIXELFORMAT_RGBA8, 1.0, true);
+        this.colorParam = _createTexture(gd, precision, 1, packTextureRGBA(this.qColor, this.qAlpha), PIXELFORMAT_SRGBA8, 1.0, true);
     }
 
-    _initializeTextures() {
+    _setMaterialTextures() {
         if (this.colorMap) {
+
+            Debug.call(() => {
+                if (requiresManualGamma(this.colorMap.format)) {
+                    Debug.warnOnce(`ParticleEmitter: colorMap texture [${this.colorMap.name}] is not using sRGB format. Please correct it for the correct rendering.`, this.colorMap);
+                }
+            });
+
             this.material.setParameter('colorMap', this.colorMap);
             if (this.lighting && this.normalMap) {
                 this.material.setParameter('normalMap', this.normalMap);
@@ -860,15 +869,8 @@ class ParticleEmitter {
             material.setParameter('wrapBounds', this.wrapBoundsUniform);
         }
 
-        if (this.colorMap) {
-            material.setParameter('colorMap', this.colorMap);
-        }
+        this._setMaterialTextures();
 
-        if (this.lighting) {
-            if (this.normalMap) {
-                material.setParameter('normalMap', this.normalMap);
-            }
-        }
         if (this.depthSoftening > 0) {
             material.setParameter('softening', 1.0 / (this.depthSoftening * this.depthSoftening * 100)); // remap to more perceptually linear
         }
@@ -1036,7 +1038,7 @@ class ParticleEmitter {
                 this.particleTex[i] = this.particleTexStart[i];
             }
         } else {
-            this._initializeTextures();
+            this._setMaterialTextures();
         }
         this.resetWorldBounds();
         this.resetTime();

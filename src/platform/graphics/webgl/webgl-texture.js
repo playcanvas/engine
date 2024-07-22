@@ -12,7 +12,7 @@ import {
     PIXELFORMAT_RGBA8I, PIXELFORMAT_RGBA8U, PIXELFORMAT_R16F, PIXELFORMAT_RG16F, PIXELFORMAT_R8, PIXELFORMAT_RG8,
     PIXELFORMAT_DXT1_SRGB, PIXELFORMAT_DXT3_SRGB, PIXELFORMAT_DXT5_SRGB, PIXELFORMAT_PVRTC_2BPP_SRGB_1,
     PIXELFORMAT_PVRTC_2BPP_SRGBA_1, PIXELFORMAT_PVRTC_4BPP_SRGB_1, PIXELFORMAT_PVRTC_4BPP_SRGBA_1,
-    PIXELFORMAT_ETC2_SRGB, PIXELFORMAT_ETC2_SRGBA, PIXELFORMAT_ASTC_4x4_SRGB
+    PIXELFORMAT_ETC2_SRGB, PIXELFORMAT_ETC2_SRGBA, PIXELFORMAT_ASTC_4x4_SRGB, PIXELFORMAT_SBGRA8
 } from '../constants.js';
 
 /**
@@ -163,6 +163,10 @@ class WebglTexture {
                 this._glFormat = gl.RGBA;
                 this._glInternalFormat = gl.RGBA8;
                 this._glPixelType = gl.UNSIGNED_BYTE;
+                break;
+            case PIXELFORMAT_BGRA8:
+            case PIXELFORMAT_SBGRA8:
+                Debug.error("BGRA8 and SBGRA8 texture formats are not supported by WebGL.");
                 break;
 
             // compressed formats ----
@@ -420,9 +424,6 @@ class WebglTexture {
                 this._glFormat = gl.RGBA_INTEGER;
                 this._glInternalFormat = gl.RGBA32UI;
                 this._glPixelType = gl.UNSIGNED_INT;
-                break;
-            case PIXELFORMAT_BGRA8:
-                Debug.error("BGRA8 texture format is not supported by WebGL.");
                 break;
         }
 

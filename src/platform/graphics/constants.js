@@ -762,7 +762,8 @@ export const PIXELFORMAT_ATC_RGB = 29;
 export const PIXELFORMAT_ATC_RGBA = 30;
 
 /**
- * 32-bit BGRA (8-bits for blue channel, 8 for green, 8 for red with 8-bit alpha).
+ * 32-bit BGRA (8-bits for blue channel, 8 for green, 8 for red with 8-bit alpha). This is an
+ * internal format used by the WebGPU's backbuffer only.
  *
  * @type {number}
  * @ignore
@@ -1027,6 +1028,15 @@ export const PIXELFORMAT_ETC2_SRGBA = 62;
 export const PIXELFORMAT_ASTC_4x4_SRGB = 63;
 
 /**
+ * 32-bit BGRA sRGB format. This is an internal format used by the WebGPU's backbuffer only.
+ *
+ * @type {number}
+ * @ignore
+ * @category Graphics
+ */
+export const PIXELFORMAT_SBGRA8 = 64;
+
+/**
  * Information about pixel formats.
  *
  * ldr: whether the format is low dynamic range (LDR), which typically means it's not HDR, and uses
@@ -1062,6 +1072,7 @@ export const pixelFormatInfo = new Map([
     [PIXELFORMAT_SRGB8,         { name: 'SRGB8', size: 4, ldr: true, srgb: true }],
     [PIXELFORMAT_SRGBA8,        { name: 'SRGBA8', size: 4, ldr: true, srgb: true }],
     [PIXELFORMAT_BGRA8,         { name: 'BGRA8', size: 4, ldr: true }],
+    [PIXELFORMAT_SBGRA8,         { name: 'SBGRA8', size: 4, ldr: true, srgb: true }],
 
     // compressed formats
     [PIXELFORMAT_DXT1,              { name: 'DXT1', blockSize: 8, ldr: true, srgbFormat: PIXELFORMAT_DXT1_SRGB }],
@@ -2180,6 +2191,37 @@ export const SHADERSTAGE_FRAGMENT = 2;
  * @category Graphics
  */
 export const SHADERSTAGE_COMPUTE = 4;
+
+/**
+ * Display format for low dynamic range data. This is always supported; however, due to the cost, it
+ * does not implement linear alpha blending on the main framebuffer. Instead, alpha blending occurs
+ * in sRGB space.
+ *
+ * @type {string}
+ * @category Graphics
+ */
+export const DISPLAYFORMAT_LDR = 'ldr';
+
+/**
+ * Display format for low dynamic range data in the sRGB color space. This format correctly
+ * implements linear alpha blending on the main framebuffer, with the alpha blending occurring in
+ * linear space. This is currently supported on WebGPU platform only. On unsupported platforms, it
+ * silently falls back to {@link DISPLAYFORMAT_LDR}.
+ *
+ * @type {string}
+ * @category Graphics
+ */
+export const DISPLAYFORMAT_LDR_SRGB = 'ldr_srgb';
+
+/**
+ * Display format for high dynamic range data, using 16bit floating point values.
+ * Note: This is not implemented yet, but is added to indicate the intended API.
+ *
+ * @type {string}
+ * @category Graphics
+ * @ignore
+ */
+export const DISPLAYFORMAT_HDR = 'hdr';
 
 // indices of commonly used bind groups, sorted from the least commonly changing to avoid internal rebinding
 export const BINDGROUP_VIEW = 0;        // view bind group, textures, samplers and uniforms
