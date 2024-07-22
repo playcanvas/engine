@@ -23,7 +23,10 @@ import {
     semanticToLocation, getPixelFormatArrayType,
     UNIFORMTYPE_TEXTURE2D_ARRAY,
     PRIMITIVE_TRISTRIP,
-    DEVICETYPE_WEBGL2
+    DEVICETYPE_WEBGL2,
+    PIXELFORMAT_SRGBA8,
+    DISPLAYFORMAT_LDR_SRGB,
+    PIXELFORMAT_SRGB8
 } from '../constants.js';
 import { GraphicsDevice } from '../graphics-device.js';
 import { RenderTarget } from '../render-target.js';
@@ -313,6 +316,35 @@ class WebglGraphicsDevice extends GraphicsDevice {
         if (!gl) {
             throw new Error("WebGL not supported");
         }
+
+        const displayFormat = this.initOptions.displayFormat;
+
+        // if sRGB display format is requested, set the drawing buffer to sRGB if supported
+        if (displayFormat === DISPLAYFORMAT_LDR_SRGB) {
+
+            if (typeof gl.drawingBufferStorage === 'function') {
+
+
+
+                gl.drawingBufferStorage(gl.SRGB8_ALPHA8, canvas.width, canvas.height);
+            }
+
+        }
+
+
+        // if (typeof gl.drawingBufferStorage === 'function') {
+        //     console.log('drawingBufferStorage is implemented.');
+
+        //     gl.drawingBufferStorage(gl.SRGB8_ALPHA8, canvas.width, canvas.height);
+
+        // } else {
+        //     console.log('drawingBufferStorage is not implemented.');
+        // }
+
+
+
+
+
 
         this.gl = gl;
         this.isWebGL2 = true;
@@ -772,12 +804,17 @@ class WebglGraphicsDevice extends GraphicsDevice {
         this.backBuffer.impl.suppliedColorFramebuffer = frameBuffer;
     }
 
-    // Update framebuffer format based on the current framebuffer, as this is use to create matching multi-sampled framebuffer
+    // Update framebuffer format based on the current framebuffer, as this is used to create a matching multi-sampled framebuffer
     updateBackbufferFormat(framebuffer) {
         const gl = this.gl;
         gl.bindFramebuffer(gl.FRAMEBUFFER, framebuffer);
         const alphaBits = this.gl.getParameter(this.gl.ALPHA_BITS);
-        this.backBufferFormat = alphaBits ? PIXELFORMAT_RGBA8 : PIXELFORMAT_RGB8;
+
+
+
+        //this.backBufferFormat = alphaBits ? PIXELFORMAT_RGBA8 : PIXELFORMAT_RGB8;
+        // this.backBufferFormat = PIXELFORMAT_SRGBA8;
+        this.backBufferFormat = PIXELFORMAT_SRGB8;
     }
 
     updateBackbuffer() {
@@ -1334,7 +1371,9 @@ class WebglGraphicsDevice extends GraphicsDevice {
 
             if (colorOps?.clear) {
                 clearFlags |= CLEARFLAG_COLOR;
-                clearOptions.color = [colorOps.clearValue.r, colorOps.clearValue.g, colorOps.clearValue.b, colorOps.clearValue.a];
+                const srgb = rt.isColorBufferSrgb(0);
+                const clearColor = srgb ? colorOps.clearValueLinear : colorOps.clearValue;
+                clearOptions.color = [clearColor.r, clearColor.g, clearColor.b, clearColor.a];
             }
 
             if (depthStencilOps.clearDepth) {
