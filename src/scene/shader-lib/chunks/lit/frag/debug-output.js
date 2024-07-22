@@ -1,6 +1,6 @@
 export default /* glsl */`
 #ifdef DEBUG_ALBEDO_PASS
-gl_FragColor = vec4(gammaCorrectOutput(litArgs_albedo), 1.0);
+gl_FragColor = vec4(gammaCorrectOutput(dAlbedo), 1.0);
 #endif
 
 #ifdef DEBUG_UV0_PASS
