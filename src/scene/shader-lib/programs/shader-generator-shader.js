@@ -2,6 +2,7 @@ import { hashCode } from '../../../core/hash.js';
 import { SHADERLANGUAGE_WGSL } from '../../../platform/graphics/constants.js';
 import { ShaderUtils } from '../../../platform/graphics/shader-utils.js';
 import { ShaderPass } from '../../shader-pass.js';
+import { shaderChunks } from '../chunks/chunks.js';
 import { ShaderGenerator } from './shader-generator.js';
 
 const vShader = `
@@ -11,6 +12,9 @@ const vShader = `
 
 const fShader = `
     #include "shaderPassDefines"
+    #include "decodePS"
+    #include "gamma"
+    #include "tonemapping"
     #include "userCode"
 `;
 
@@ -66,6 +70,9 @@ class ShaderGeneratorShader extends ShaderGenerator {
             const defines = new Map();
 
             includes.set('shaderPassDefines', shaderPassInfo.shaderDefines);
+            includes.set('decodePS', shaderChunks.decodePS);
+            includes.set('gamma', ShaderGenerator.gammaCode(options.gamma));
+            includes.set('tonemapping', ShaderGenerator.tonemapCode(options.toneMapping));
             includes.set('userCode', desc.fragmentCode);
 
             definitionOptions.fragmentCode = fShader;
