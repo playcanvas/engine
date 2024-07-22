@@ -73,7 +73,7 @@ class WebgpuMipmapRenderer {
     generate(webgpuTexture) {
 
         // ignore texture with no mipmaps
-        const textureDescr = webgpuTexture.descr;
+        const textureDescr = webgpuTexture.desc;
         if (textureDescr.mipLevelCount <= 1) {
             return;
         }

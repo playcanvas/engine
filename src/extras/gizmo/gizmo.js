@@ -6,6 +6,8 @@ import { EventHandler } from '../../core/event-handler.js';
 import { PROJECTION_PERSPECTIVE } from '../../scene/constants.js';
 import { Entity } from '../../framework/entity.js';
 
+import { GIZMOSPACE_LOCAL, GIZMOSPACE_WORLD } from './constants.js';
+
 /**
  * @import { AppBase } from '../../framework/app-base.js'
  * @import { CameraComponent } from '../../framework/components/camera/component.js'
@@ -26,22 +28,6 @@ const tmpR1 = new Ray();
 const MIN_GIZMO_SCALE = 1e-4;
 const PERS_SCALE_RATIO = 0.3;
 const ORTHO_SCALE_RATIO = 0.32;
-
-/**
- * Local coordinate space.
- *
- * @type {string}
- * @category Gizmo
- */
-export const GIZMO_LOCAL = 'local';
-
-/**
- * World coordinate space.
- *
- * @type {string}
- * @category Gizmo
- */
-export const GIZMO_WORLD = 'world';
 
 /**
  * The base class for all gizmos.
@@ -174,12 +160,12 @@ class Gizmo extends EventHandler {
     _scale = 1;
 
     /**
-     * Internal version of coordinate space. Defaults to {@link GIZMO_WORLD}.
+     * Internal version of coordinate space. Defaults to {@link GIZMOSPACE_WORLD}.
      *
      * @type {string}
      * @protected
      */
-    _coordSpace = GIZMO_WORLD;
+    _coordSpace = GIZMOSPACE_WORLD;
 
     /**
      * Internal reference to the app containing the gizmo.
@@ -280,15 +266,15 @@ class Gizmo extends EventHandler {
     /**
      * Sets the gizmo coordinate space. Can be:
      *
-     * - {@link GIZMO_LOCAL}
-     * - {@link GIZMO_WORLD}
+     * - {@link GIZMOSPACE_LOCAL}
+     * - {@link GIZMOSPACE_WORLD}
      *
-     * Defaults to {@link GIZMO_WORLD}.
+     * Defaults to {@link GIZMOSPACE_WORLD}.
      *
      * @type {string}
      */
     set coordSpace(value) {
-        this._coordSpace = value ?? GIZMO_WORLD;
+        this._coordSpace = value ?? GIZMOSPACE_WORLD;
         this._updateRotation();
     }
 
@@ -382,7 +368,7 @@ class Gizmo extends EventHandler {
      */
     _updateRotation() {
         tmpV1.set(0, 0, 0);
-        if (this._coordSpace === GIZMO_LOCAL && this.nodes.length !== 0) {
+        if (this._coordSpace === GIZMOSPACE_LOCAL && this.nodes.length !== 0) {
             tmpV1.copy(this.nodes[this.nodes.length - 1].getEulerAngles());
         }
         this.root.setEulerAngles(tmpV1);
@@ -403,6 +389,7 @@ class Gizmo extends EventHandler {
             this._scale = this._camera.orthoHeight * ORTHO_SCALE_RATIO;
         }
         this._scale = Math.max(this._scale * this._size, MIN_GIZMO_SCALE);
+
         this.root.setLocalScale(this._scale, this._scale, this._scale);
 
         this.fire(Gizmo.EVENT_SCALEUPDATE, this._scale);

@@ -124,16 +124,12 @@ assetListLoader.load(() => {
     app.root.addChild(dirLight);
     dirLight.setLocalEulerAngles(45, 350, 20);
 
-    // create a custom fog shader
-    // @ts-ignore
-    const vertex = `#define VERTEXSHADER\n` + pc.shaderChunks.screenDepthPS + files['shader.vert'];
-    // @ts-ignore
-    const fragment = pc.shaderChunks.screenDepthPS + files['shader.frag'];
-    const shader = pc.createShaderFromCode(app.graphicsDevice, vertex, fragment, 'GroundFogShader');
-
-    // and set up a material using this shader
-    const material = new pc.Material();
-    material.shader = shader;
+    // Create a new material with a fog shader
+    const material = new pc.ShaderMaterial({
+        uniqueName: 'GroundFogShader',
+        vertexCode: `#define VERTEXSHADER\n` + pc.shaderChunks.screenDepthPS + files['shader.vert'],
+        fragmentCode: pc.shaderChunks.screenDepthPS + files['shader.frag']
+    });
     material.setParameter('uTexture', assets.texture.resource);
     material.depthWrite = false;
     material.blendType = pc.BLEND_NORMAL;

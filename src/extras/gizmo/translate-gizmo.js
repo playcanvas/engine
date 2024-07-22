@@ -1,15 +1,15 @@
 import { Vec3 } from '../../core/math/vec3.js';
 import { Quat } from '../../core/math/quat.js';
-import { AxisArrow, AxisPlane, AxisSphereCenter } from './axis-shapes.js';
-import { GIZMO_LOCAL } from './gizmo.js';
 
+import { AxisArrow, AxisPlane, AxisSphereCenter } from './axis-shapes.js';
 import {
-    SHAPEAXIS_FACE,
-    SHAPEAXIS_X,
-    SHAPEAXIS_Y,
-    SHAPEAXIS_Z,
-    TransformGizmo
-} from './transform-gizmo.js';
+    GIZMOSPACE_LOCAL,
+    GIZMOAXIS_FACE,
+    GIZMOAXIS_X,
+    GIZMOAXIS_Y,
+    GIZMOAXIS_Z
+} from './constants.js';
+import { TransformGizmo } from './transform-gizmo.js';
 
 /**
  * @import { AppBase } from '../../framework/app-base.js'
@@ -31,51 +31,51 @@ const tmpQ1 = new Quat();
 class TranslateGizmo extends TransformGizmo {
     _shapes = {
         face: new AxisSphereCenter(this._device, {
-            axis: SHAPEAXIS_FACE,
+            axis: GIZMOAXIS_FACE,
             layers: [this._layer.id],
             defaultColor: this._meshColors.axis.xyz,
             hoverColor: this._meshColors.hover.xyz
         }),
         yz: new AxisPlane(this._device, {
-            axis: SHAPEAXIS_X,
-            flipAxis: SHAPEAXIS_Y,
+            axis: GIZMOAXIS_X,
+            flipAxis: GIZMOAXIS_Y,
             layers: [this._layer.id],
             rotation: new Vec3(0, 0, -90),
             defaultColor: this._meshColors.axis.x,
             hoverColor: this._meshColors.hover.x
         }),
         xz: new AxisPlane(this._device, {
-            axis: SHAPEAXIS_Y,
-            flipAxis: SHAPEAXIS_Z,
+            axis: GIZMOAXIS_Y,
+            flipAxis: GIZMOAXIS_Z,
             layers: [this._layer.id],
             rotation: new Vec3(0, 0, 0),
             defaultColor: this._meshColors.axis.y,
             hoverColor: this._meshColors.hover.y
         }),
         xy: new AxisPlane(this._device, {
-            axis: SHAPEAXIS_Z,
-            flipAxis: SHAPEAXIS_X,
+            axis: GIZMOAXIS_Z,
+            flipAxis: GIZMOAXIS_X,
             layers: [this._layer.id],
             rotation: new Vec3(90, 0, 0),
             defaultColor: this._meshColors.axis.z,
             hoverColor: this._meshColors.hover.z
         }),
         x: new AxisArrow(this._device, {
-            axis: SHAPEAXIS_X,
+            axis: GIZMOAXIS_X,
             layers: [this._layer.id],
             rotation: new Vec3(0, 0, -90),
             defaultColor: this._meshColors.axis.x,
             hoverColor: this._meshColors.hover.x
         }),
         y: new AxisArrow(this._device, {
-            axis: SHAPEAXIS_Y,
+            axis: GIZMOAXIS_Y,
             layers: [this._layer.id],
             rotation: new Vec3(0, 0, 0),
             defaultColor: this._meshColors.axis.y,
             hoverColor: this._meshColors.hover.y
         }),
         z: new AxisArrow(this._device, {
-            axis: SHAPEAXIS_Z,
+            axis: GIZMOAXIS_Z,
             layers: [this._layer.id],
             rotation: new Vec3(90, 0, 0),
             defaultColor: this._meshColors.axis.z,
@@ -361,7 +361,7 @@ class TranslateGizmo extends TransformGizmo {
             if (!pos) {
                 continue;
             }
-            if (this._coordSpace === GIZMO_LOCAL) {
+            if (this._coordSpace === GIZMOSPACE_LOCAL) {
                 tmpV1.copy(pointDelta);
                 node.parent?.getWorldTransform().getScale(tmpV2);
                 tmpV2.x = 1 / tmpV2.x;
@@ -391,7 +391,7 @@ class TranslateGizmo extends TransformGizmo {
         const isPlane = this._selectedIsPlane;
 
         const ray = this._createRay(mouseWPos);
-        const plane = this._createPlane(axis, axis === SHAPEAXIS_FACE, !isPlane);
+        const plane = this._createPlane(axis, axis === GIZMOAXIS_FACE, !isPlane);
 
         const point = new Vec3();
         const angle = 0;
@@ -401,7 +401,7 @@ class TranslateGizmo extends TransformGizmo {
         // rotate point back to world coords
         tmpQ1.copy(this._rootStartRot).invert().transformVector(point, point);
 
-        if (!isPlane && axis !== SHAPEAXIS_FACE) {
+        if (!isPlane && axis !== GIZMOAXIS_FACE) {
             this._projectToAxis(point, axis);
         }
 

@@ -1,13 +1,13 @@
 import { CULLFACE_BACK, FUNC_LESSEQUAL } from '../../../src/platform/graphics/constants.js';
 import { BLEND_NONE } from '../../../src/scene/constants.js';
-import { Material } from '../../../src/scene/materials/material.js';
+import { ShaderMaterial } from '../../../src/scene/materials/shader-material.js';
 
 import { expect } from 'chai';
 
 describe('Material', function () {
 
     function checkDefaultMaterial(material) {
-        expect(material).to.be.an.instanceof(Material);
+        expect(material).to.be.an.instanceof(ShaderMaterial);
         expect(material.alphaTest).to.equal(0);
         expect(material.alphaToCoverage).to.equal(false);
         expect(material.alphaWrite).to.equal(true);
@@ -21,7 +21,6 @@ describe('Material', function () {
         expect(material.greenWrite).to.equal(true);
         expect(material.name).to.equal('Untitled');
         expect(material.redWrite).to.equal(true);
-        expect(material.shader).to.be.null;
         expect(material.slopeDepthBias).to.equal(0);
         expect(material.stencilBack).to.not.exist;
         expect(material.stencilFront).to.not.exist;
@@ -30,7 +29,7 @@ describe('Material', function () {
     describe('#constructor()', function () {
 
         it('should create a new instance', function () {
-            const material = new Material();
+            const material = new ShaderMaterial();
             checkDefaultMaterial(material);
         });
 
@@ -39,7 +38,7 @@ describe('Material', function () {
     describe('#clone()', function () {
 
         it('should clone a material', function () {
-            const material = new Material();
+            const material = new ShaderMaterial();
             const clone = material.clone();
             checkDefaultMaterial(clone);
         });
@@ -49,8 +48,8 @@ describe('Material', function () {
     describe('#copy()', function () {
 
         it('should copy a material', function () {
-            const src = new Material();
-            const dst = new Material();
+            const src = new ShaderMaterial();
+            const dst = new ShaderMaterial();
             dst.copy(src);
             checkDefaultMaterial(dst);
         });

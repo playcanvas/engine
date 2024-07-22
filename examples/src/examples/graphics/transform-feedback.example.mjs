@@ -118,16 +118,14 @@ assetListLoader.load(() => {
         // set large bounding box so we don't need to update it each frame
         mesh.aabb = new pc.BoundingBox(new pc.Vec3(0, 0, 0), new pc.Vec3(100, 100, 100));
 
-        // Create the shader from the vertex and fragment shaders which is used to render point sprites
-        shader = new pc.Shader(app.graphicsDevice, {
-            attributes: { aPosition: pc.SEMANTIC_POSITION },
-            vshader: files['shaderCloud.vert'],
-            fshader: files['shaderCloud.frag']
+        // Create the material from the vertex and fragment shaders which is used to render point sprites
+        const material = new pc.ShaderMaterial({
+            uniqueName: 'TransformFeerback',
+            vertexCode: files['shaderCloud.vert'],
+            fragmentCode: files['shaderCloud.frag'],
+            attributes: { aPosition: pc.SEMANTIC_POSITION }
         });
 
-        // Create a new material with the new shader and additive alpha blending
-        const material = new pc.Material();
-        material.shader = shader;
         material.blendType = pc.BLEND_ADDITIVEALPHA;
         material.depthWrite = false;
 

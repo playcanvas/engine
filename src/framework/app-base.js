@@ -31,7 +31,7 @@ import { AreaLightLuts } from '../scene/area-light-luts.js';
 import { Layer } from '../scene/layer.js';
 import { LayerComposition } from '../scene/composition/layer-composition.js';
 import { Scene } from '../scene/scene.js';
-import { Material } from '../scene/materials/material.js';
+import { ShaderMaterial } from '../scene/materials/shader-material.js';
 import { StandardMaterial } from '../scene/materials/standard-material.js';
 import { setDefaultMaterial } from '../scene/materials/default-material.js';
 
@@ -61,6 +61,7 @@ import { getApplication, setApplication } from './globals.js';
  * @import { GraphicsDevice } from '../platform/graphics/graphics-device.js'
  * @import { Keyboard } from '../platform/input/keyboard.js'
  * @import { Lightmapper } from './lightmapper/lightmapper.js'
+ * @import { Material } from '../scene/materials/material.js'
  * @import { MeshInstance } from '../scene/mesh-instance.js'
  * @import { Mesh } from '../scene/mesh.js'
  * @import { Mouse } from '../platform/input/mouse.js'
@@ -1768,10 +1769,10 @@ class AppBase extends EventHandler {
         matrix.setTRS(new Vec3(x, y, 0.0), Quat.IDENTITY, new Vec3(width, -height, 0.0));
 
         if (!material) {
-            material = new Material();
+            material = new ShaderMaterial();
             material.cull = CULLFACE_NONE;
             material.setParameter("colorMap", texture);
-            material.shader = filterable ? this.scene.immediate.getTextureShader(texture.encoding) : this.scene.immediate.getUnfilterableTextureShader();
+            material.shaderDesc = filterable ? this.scene.immediate.getTextureShaderDesc(texture.encoding) : this.scene.immediate.getUnfilterableTextureShaderDesc();
             material.update();
         }
 
@@ -1794,9 +1795,9 @@ class AppBase extends EventHandler {
      * @ignore
      */
     drawDepthTexture(x, y, width, height, layer = this.scene.defaultDrawLayer) {
-        const material = new Material();
+        const material = new ShaderMaterial();
         material.cull = CULLFACE_NONE;
-        material.shader = this.scene.immediate.getDepthTextureShader();
+        material.shaderDesc = this.scene.immediate.getDepthTextureShaderDesc();
         material.update();
 
         this.drawTexture(x, y, width, height, null, material, layer);

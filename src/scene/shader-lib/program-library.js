@@ -180,7 +180,9 @@ class ProgramLibrary {
                 fincludes: generatedShaderDef.fincludes,
                 fshader: generatedShaderDef.fshader,
                 processingOptions: processingOptions,
-                shaderLanguage: generatedShaderDef.shaderLanguage
+                shaderLanguage: generatedShaderDef.shaderLanguage,
+                meshUniformBufferFormat: generatedShaderDef.meshUniformBufferFormat,
+                meshBindGroupFormat: generatedShaderDef.meshBindGroupFormat
             };
 
             // add new shader to the processed cache

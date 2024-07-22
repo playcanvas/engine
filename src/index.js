@@ -123,13 +123,11 @@ export { SoundInstance3d } from './platform/sound/instance3d.js';
 // SCENE
 export * from './scene/constants.js';
 export { drawQuadWithShader, drawTexture } from './scene/graphics/quad-render-utils.js';
-export { BasicMaterial } from './scene/materials/basic-material.js';
 export { Batch } from './scene/batching/batch.js';
 export { BatchGroup } from './scene/batching/batch-group.js';
 export { SkinBatchInstance } from './scene/batching/skin-batch-instance.js';
 export { BatchManager } from './scene/batching/batch-manager.js';
 export { Camera } from './scene/camera.js';
-export { LitMaterial } from './scene/materials/lit-material.js';
 export { WorldClusters } from './scene/lighting/world-clusters.js';
 export { ForwardRenderer } from './scene/renderer/forward-renderer.js';
 export { GraphNode } from './scene/graph-node.js';
@@ -137,7 +135,6 @@ export { Layer } from './scene/layer.js';
 export { LayerComposition } from './scene/composition/layer-composition.js';
 export { Light } from './scene/light.js';
 export { LightingParams } from './scene/lighting/lighting-params.js';
-export { Material } from './scene/materials/material.js';
 export { Mesh } from './scene/mesh.js';
 export { MeshInstance } from './scene/mesh-instance.js';
 export { Model } from './scene/model.js';
@@ -151,8 +148,6 @@ export { ShaderPass } from './scene/shader-pass.js';
 export { Skin } from './scene/skin.js';
 export { SkinInstance } from './scene/skin-instance.js';
 export { Sprite } from './scene/sprite.js';
-export { StandardMaterial } from './scene/materials/standard-material.js';
-export { StandardMaterialOptions } from './scene/materials/standard-material-options.js';
 export { StencilParameters } from './platform/graphics/stencil-parameters.js';
 export { TextureAtlas } from './scene/texture-atlas.js';
 
@@ -165,8 +160,15 @@ export { EnvLighting } from './scene/graphics/env-lighting.js';
 export { PostEffect } from './scene/graphics/post-effect.js';
 export { RenderPassColorGrab } from './scene/graphics/render-pass-color-grab.js';
 export { RenderPassShaderQuad } from './scene/graphics/render-pass-shader-quad.js';
-export { shFromCubemap } from './scene/graphics/prefilter-cubemap.js';
 export { reprojectTexture } from './scene/graphics/reproject-texture.js';
+
+// SCENE / MATERIALS
+export { BasicMaterial } from './scene/materials/basic-material.js';
+export { LitMaterial } from './scene/materials/lit-material.js';
+export { Material } from './scene/materials/material.js';
+export { ShaderMaterial } from './scene/materials/shader-material.js';
+export { StandardMaterial } from './scene/materials/standard-material.js';
+export { StandardMaterialOptions } from './scene/materials/standard-material-options.js';
 
 // SCENE / PROCEDURAL
 export { calculateNormals, calculateTangents } from './scene/geometry/geometry-utils.js';

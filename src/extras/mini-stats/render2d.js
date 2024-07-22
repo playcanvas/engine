@@ -13,12 +13,11 @@ import { DepthState } from '../../platform/graphics/depth-state.js';
 import { BlendState } from '../../platform/graphics/blend-state.js';
 import { GraphNode } from '../../scene/graph-node.js';
 import { MeshInstance } from '../../scene/mesh-instance.js';
-import { Material } from '../../scene/materials/material.js';
 import { Mesh } from '../../scene/mesh.js';
 import { IndexBuffer } from '../../platform/graphics/index-buffer.js';
 import { VertexBuffer } from '../../platform/graphics/vertex-buffer.js';
 import { VertexFormat } from '../../platform/graphics/vertex-format.js';
-import { createShaderFromCode } from '../../scene/shader-lib/utils.js';
+import { ShaderMaterial } from '../../scene/materials/shader-material.js';
 
 const vertexShader = /* glsl */ `
 attribute vec3 vertex_position;         // unnormalized xy, word flag
@@ -82,8 +81,6 @@ class Render2d {
             indices[i * 6 + 5] = i * 4 + 3;
         }
 
-        const shader = createShaderFromCode(device, vertexShader, fragmentShader, 'mini-stats');
-
         this.device = device;
         this.buffer = new VertexBuffer(device, format, maxQuads * 4, {
             usage: BUFFER_STREAM
@@ -103,10 +100,13 @@ class Render2d {
         this.mesh.indexBuffer[0] = this.indexBuffer;
         this.mesh.primitive = [this.prim];
 
-        const material = new Material();
+        const material = new ShaderMaterial({
+            uniqueName: 'MiniStats',
+            vertexCode: vertexShader,
+            fragmentCode: fragmentShader
+        });
         this.material = material;
         material.cull = CULLFACE_NONE;
-        material.shader = shader;
         material.depthState = DepthState.NODEPTH;
         material.blendState = new BlendState(true, BLENDEQUATION_ADD, BLENDMODE_SRC_ALPHA, BLENDMODE_ONE_MINUS_SRC_ALPHA,
                                              BLENDEQUATION_ADD, BLENDMODE_ONE, BLENDMODE_ONE);

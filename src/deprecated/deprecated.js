@@ -611,25 +611,15 @@ GraphNode.prototype.setName = function (name) {
     this.name = name;
 };
 
-Material.prototype.getName = function () {
-    Debug.deprecated('pc.Material#getName is deprecated. Use pc.Material#name instead.');
-    return this.name;
-};
-
-Material.prototype.setName = function (name) {
-    Debug.deprecated('pc.Material#setName is deprecated. Use pc.Material#name instead.');
-    this.name = name;
-};
-
-Material.prototype.getShader = function () {
-    Debug.deprecated('pc.Material#getShader is deprecated. Use pc.Material#shader instead.');
-    return this.shader;
-};
-
-Material.prototype.setShader = function (shader) {
-    Debug.deprecated('pc.Material#setShader is deprecated. Use pc.Material#shader instead.');
-    this.shader = shader;
-};
+Object.defineProperty(Material.prototype, 'shader', {
+    set: function (value) {
+        Debug.deprecated(`pc.Material#shader is deprecated, use pc.ShaderMaterial instead.`);
+    },
+    get: function () {
+        Debug.deprecated(`pc.Material#shader is deprecated, use pc.ShaderMaterial instead.`);
+        return null;
+    }
+});
 
 // Note: this is used by the Editor
 Object.defineProperty(Material.prototype, 'blend', {

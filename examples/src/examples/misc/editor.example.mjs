@@ -29,9 +29,7 @@ createOptions.componentSystems = [
     pc.RenderComponentSystem,
     pc.CameraComponentSystem,
     pc.LightComponentSystem,
-    pc.ScriptComponentSystem,
-    pc.ScreenComponentSystem,
-    pc.ElementComponentSystem
+    pc.ScriptComponentSystem
 ];
 createOptions.resourceHandlers = [pc.TextureHandler, pc.ContainerHandler, pc.ScriptHandler, pc.FontHandler];
 
@@ -41,10 +39,6 @@ app.init(createOptions);
 // set the canvas to fill the window and automatically change resolution to be the same as the canvas size
 app.setCanvasFillMode(pc.FILLMODE_FILL_WINDOW);
 app.setCanvasResolution(pc.RESOLUTION_AUTO);
-
-// ensure canvas is resized when window changes size
-const resize = () => app.resizeCanvas();
-window.addEventListener('resize', resize);
 
 // load assets
 const assets = {
@@ -157,6 +151,16 @@ const gizmoHandler = new GizmoHandler(app, camera.camera, gizmoLayer);
 gizmoHandler.switch('translate');
 gizmoHandler.add(box);
 window.focus();
+
+// ensure canvas is resized when window changes size + keep gizmo size consistent to canvas size
+const resize = () => {
+    app.resizeCanvas();
+    const bounds = canvas.getBoundingClientRect();
+    const dim = camera.camera.horizontalFov ? bounds.width : bounds.height;
+    gizmoHandler.gizmo.size = 1024 / dim;
+};
+window.addEventListener('resize', resize);
+resize();
 
 // wrappers for control state changes
 const setType = (/** @type {string} */ value) => {
