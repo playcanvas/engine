@@ -90,7 +90,7 @@ assetListLoader.load(() => {
     /** @type {Array<pc.RenderComponent>} */
     const renders = entity.findComponents('render');
     renders.forEach((render) => {
-        render.meshInstances.forEach(meshInstance => {
+        render.meshInstances.forEach((meshInstance) => {
             meshInstance.material = material;
         });
     });

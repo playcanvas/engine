@@ -17,7 +17,7 @@ const gfxOptions = {
     antialias: false,
 
     // use sRGB for display format (only supported on WebGPU, fallbacks to LDR on WebGL2)
-    displayFormat: pc.DISPLAYFORMAT_LDR_SRGB,
+    displayFormat: pc.DISPLAYFORMAT_LDR_SRGB
 };
 
 const device = await pc.createGraphicsDevice(canvas, gfxOptions);
