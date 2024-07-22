@@ -131,30 +131,36 @@ class GSplatData {
         const y = this.getProp('y');
         const z = this.getProp('z');
 
+        if (x && y && z) {
+            for (let i = 0; i < this.numSplats; ++i) {
+                // transform center
+                vec3.set(x[i], y[i], z[i]);
+                mat.transformPoint(vec3, vec3);
+                x[i] = vec3.x;
+                y[i] = vec3.y;
+                z[i] = vec3.z;
+            }
+        }
+
         const rx = this.getProp('rot_1');
         const ry = this.getProp('rot_2');
         const rz = this.getProp('rot_3');
         const rw = this.getProp('rot_0');
 
-        quat2.setFromMat4(mat);
+        if (rx && ry && rz && rw) {
+            quat2.setFromMat4(mat);
 
-        for (let i = 0; i < this.numSplats; ++i) {
-            // transform center
-            vec3.set(x[i], y[i], z[i]);
-            mat.transformPoint(vec3, vec3);
-            x[i] = vec3.x;
-            y[i] = vec3.y;
-            z[i] = vec3.z;
-
-            // transform orientation
-            quat.set(rx[i], ry[i], rz[i], rw[i]).mul2(quat2, quat);
-            rx[i] = quat.x;
-            ry[i] = quat.y;
-            rz[i] = quat.z;
-            rw[i] = quat.w;
-
-            // TODO: transform SH
+            for (let i = 0; i < this.numSplats; ++i) {
+                // transform orientation
+                quat.set(rx[i], ry[i], rz[i], rw[i]).mul2(quat2, quat);
+                rx[i] = quat.x;
+                ry[i] = quat.y;
+                rz[i] = quat.z;
+                rw[i] = quat.w;
+            }
         }
+
+        // TODO: transform SH
     }
 
     // access a named property
