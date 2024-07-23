@@ -235,8 +235,6 @@ class StandardMaterialOptionsBuilder {
 
         options.iridescenceTint = stdMat.iridescence !== 1.0 ? 1 : 0;
 
-        options.sheenGlossTint = 1;
-
         options.glossInvert = stdMat.glossInvert;
         options.sheenGlossInvert = stdMat.sheenGlossInvert;
         options.clearCoatGlossInvert = stdMat.clearCoatGlossInvert;
