@@ -46,18 +46,10 @@ function generateMipmaps(width, height) {
 }
 
 const assets = {
-    rockyTrail: new pc.Asset('rockyTrail', 'texture', {
-        url: rootPath + '/static/assets/textures/rocky_trail_diff_1k.jpg'
-    }),
-    rockBoulder: new pc.Asset('rockBoulder', 'texture', {
-        url: rootPath + '/static/assets/textures/rock_boulder_cracked_diff_1k.jpg'
-    }),
-    coastSand: new pc.Asset('coastSand', 'texture', {
-        url: rootPath + '/static/assets/textures/coast_sand_rocks_02_diff_1k.jpg'
-    }),
-    aerialRocks: new pc.Asset('aeralRocks', 'texture', {
-        url: rootPath + '/static/assets/textures/aerial_rocks_02_diff_1k.jpg'
-    }),
+    rockyTrail: new pc.Asset('rockyTrail', 'texture', { url: rootPath + '/static/assets/textures/rocky_trail_diff_1k.jpg' }, { srgb: true }),
+    rockBoulder: new pc.Asset('rockBoulder', 'texture', { url: rootPath + '/static/assets/textures/rock_boulder_cracked_diff_1k.jpg' }, { srgb: true }),
+    coastSand: new pc.Asset('coastSand', 'texture', { url: rootPath + '/static/assets/textures/coast_sand_rocks_02_diff_1k.jpg' }, { srgb: true }),
+    aerialRocks: new pc.Asset('aeralRocks', 'texture', { url: rootPath + '/static/assets/textures/aerial_rocks_02_diff_1k.jpg' }, { srgb: true }),
     script: new pc.Asset('script', 'script', { url: rootPath + '/static/scripts/camera/orbit-camera.js' })
 };
 
@@ -112,7 +104,7 @@ assetListLoader.load(() => {
 
     const textureArrayOptions = {
         name: 'textureArrayImages',
-        format: pc.PIXELFORMAT_RGBA8,
+        format: pc.PIXELFORMAT_SRGBA8,
         width: 1024,
         height: 1024,
         arrayLength: 4, // array texture with 4 textures

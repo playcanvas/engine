@@ -1,13 +1,12 @@
 
 precision mediump float;
-uniform sampler2D uTexture;
 varying float vertOutTexCoord;
 varying vec2 texCoord;
 void main(void)
 {
     float v = vertOutTexCoord;
     v = float(int(v * 6.0)) / 6.0;
-    // vec4 color = texture2D (uTexture, texCoord); // try this to use the diffuse color.
-    vec4 color = vec4(0.5, 0.47, 0.43, 1.0);
-    gl_FragColor = color * vec4(v, v, v, 1.0);
+    vec3 linearColor = vec3(0.218, 0.190, 0.156) * v;
+    gl_FragColor.rgb = gammaCorrectOutput(linearColor.rgb);
+    gl_FragColor.a = 1.0;
 }

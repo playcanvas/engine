@@ -26,6 +26,9 @@ void opacityDither(float alpha, float id) {
 
     #endif
 
+    // convert the noise to linear space, as that is specified in sRGB space (stores perceptual values)
+    noise = pow(noise, 2.2);
+
     if (alpha < noise)
         discard;
 }

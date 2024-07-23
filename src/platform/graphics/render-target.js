@@ -487,13 +487,18 @@ class RenderTarget {
     }
 
     /**
-     * Gets whether the first color buffer format is sRGB.
+     * Gets whether the format of the specified color buffer is sRGB.
      *
-     * @type {boolean}
+     * @param {number} index - The index of the color buffer.
+     * @returns {boolean} True if the color buffer is sRGB, false otherwise.
      * @ignore
      */
-    get srgb() {
-        return this.colorBuffer ? isSrgbPixelFormat(this.colorBuffer.format) : false;
+    isColorBufferSrgb(index = 0) {
+        if (this.device.backBuffer === this)
+            return isSrgbPixelFormat(this.device.backBufferFormat);
+
+        const colorBuffer = this.getColorBuffer(index);
+        return colorBuffer ? isSrgbPixelFormat(colorBuffer.format) : false;
     }
 }
 

@@ -36,8 +36,13 @@ const GEOMETRIES = {
     torus: TorusGeometry
 };
 
-const SHADER = {
-    vert: /* glsl */`
+const shaderDesc = {
+    uniqueName: 'axis-shape',
+    attributes: {
+        vertex_position: SEMANTIC_POSITION,
+        vertex_color: SEMANTIC_COLOR
+    },
+    vertexCode: /* glsl */`
         attribute vec3 vertex_position;
         attribute vec4 vertex_color;
         varying vec4 vColor;
@@ -51,16 +56,18 @@ const SHADER = {
             vZW = gl_Position.zw;
             // disable depth clipping
             // gl_Position.z = 0.0;
-        }`,
-    frag: /* glsl */`
+        }
+    `,
+    fragmentCode: /* glsl */`
         precision highp float;
         varying vec4 vColor;
         varying vec2 vZW;
         void main(void) {
-            gl_FragColor = vColor;
+            gl_FragColor = vec4(gammaCorrectOutput(decodeGamma(vColor)), vColor.w);
             // clamp depth in Z to [0, 1] range
             gl_FragDepth = max(0.0, min(1.0, (vZW.x / vZW.y + 1.0) * 0.5));
-        }`
+        }
+    `
 };
 
 // temporary variables
@@ -200,15 +207,7 @@ class AxisShape {
     }
 
     _addRenderMeshes(entity, meshes) {
-        const material = new ShaderMaterial({
-            uniqueName: 'axis-shape',
-            vertexCode: SHADER.vert,
-            fragmentCode: SHADER.frag,
-            attributes: {
-                vertex_position: SEMANTIC_POSITION,
-                vertex_color: SEMANTIC_COLOR
-            }
-        });
+        const material = new ShaderMaterial(shaderDesc);
         material.cull = this._cull;
         material.blendType = BLEND_NORMAL;
         material.update();

@@ -5,7 +5,7 @@ const canvas = /** @type {HTMLCanvasElement} */ (document.getElementById('applic
 window.focus();
 
 const assets = {
-    snowflake: new pc.Asset('snowflake', 'texture', { url: rootPath + '/static/assets/textures/snowflake.png' })
+    snowflake: new pc.Asset('snowflake', 'texture', { url: rootPath + '/static/assets/textures/snowflake.png' }, { srgb: true })
 };
 
 const gfxOptions = {

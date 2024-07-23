@@ -9,7 +9,8 @@ import { TRACEID_TEXTURES } from '../../core/constants.js';
 import {
     CULLFACE_BACK,
     CLEARFLAG_COLOR, CLEARFLAG_DEPTH,
-    PRIMITIVE_POINTS, PRIMITIVE_TRIFAN, SEMANTIC_POSITION, TYPE_FLOAT32, PIXELFORMAT_111110F, PIXELFORMAT_RGBA16F, PIXELFORMAT_RGBA32F
+    PRIMITIVE_POINTS, PRIMITIVE_TRIFAN, SEMANTIC_POSITION, TYPE_FLOAT32, PIXELFORMAT_111110F, PIXELFORMAT_RGBA16F, PIXELFORMAT_RGBA32F,
+    DISPLAYFORMAT_LDR
 } from './constants.js';
 import { BlendState } from './blend-state.js';
 import { DepthState } from './depth-state.js';
@@ -376,10 +377,12 @@ class GraphicsDevice extends EventHandler {
 
         // copy options and handle defaults
         this.initOptions = { ...options };
+        this.initOptions.alpha ??= true;
         this.initOptions.depth ??= true;
         this.initOptions.stencil ??= true;
         this.initOptions.antialias ??= true;
         this.initOptions.powerPreference ??= 'high-performance';
+        this.initOptions.displayFormat ??= DISPLAYFORMAT_LDR;
 
         // Some devices window.devicePixelRatio can be less than one
         // eg Oculus Quest 1 which returns a window.devicePixelRatio of 0.8

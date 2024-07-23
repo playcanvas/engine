@@ -282,7 +282,8 @@ class RenderPassForward extends RenderPass {
                 options.clearStencil = renderAction.clearStencil;
             }
 
-            renderer.renderForwardLayer(camera.camera, renderAction.renderTarget, layer, transparent,
+            const renderTarget = renderAction.renderTarget ?? device.backBuffer;
+            renderer.renderForwardLayer(camera.camera, renderTarget, layer, transparent,
                                         shaderPass, renderAction.viewBindGroups, options);
 
             // Revert temp frame stuff

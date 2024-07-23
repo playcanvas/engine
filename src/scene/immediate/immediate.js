@@ -30,7 +30,7 @@ const lineShaderDesc = {
     fragmentCode: /* glsl */ `
         varying vec4 color;
         void main(void) {
-            gl_FragColor = vec4(gammaCorrectOutput(gammaCorrectInput(color.rgb)), color.a);
+            gl_FragColor = vec4(gammaCorrectOutput(decodeGamma(color.rgb)), color.a);
         }
     `,
     attributes: {

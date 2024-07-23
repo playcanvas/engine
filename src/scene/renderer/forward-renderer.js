@@ -475,7 +475,7 @@ class ForwardRenderer extends Renderer {
         const renderParams = camera.renderingParams ?? this.scene.rendering;
 
         // output gamma correction is determined by the render target
-        renderParams.srgbRenderTarget = renderTarget?.srgb ?? false;
+        renderParams.srgbRenderTarget = renderTarget?.isColorBufferSrgb(0) ?? false;
 
         const addCall = (drawCall, shaderInstance, isNewMaterial, lightMaskChanged) => {
             _drawCallList.drawCalls.push(drawCall);
