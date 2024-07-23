@@ -9,8 +9,9 @@ const _tempPoint = new Vec3();
 
 // bake light representing an ambient light (cubemap or constant)
 class BakeLightAmbient extends BakeLight {
-    constructor(scene) {
+    constructor(lightmapper) {
 
+        const scene = lightmapper.scene;
         const lightEntity = new Entity('AmbientLight');
         lightEntity.addComponent('light', {
             type: 'directional',
@@ -29,7 +30,7 @@ class BakeLightAmbient extends BakeLight {
             bakeDir: false
         });
 
-        super(scene, lightEntity.light.light);
+        super(scene, lightEntity.light.light, lightmapper.lightingParams);
     }
 
     get numVirtualLights() {
