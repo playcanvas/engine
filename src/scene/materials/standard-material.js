@@ -335,8 +335,6 @@ const _tempColor = new Color();
  * This color value is a single value between 0 and 1.
  * @property {boolean} sheenGlossInvert Invert the sheen gloss component (default is false).
  * Enabling this flag results in material treating the sheen gloss members as roughness.
- * @property {boolean} sheenGlossTint Multiply sheen glossiness map and/or sheen glossiness vertex
- * value by the scalar sheen glossiness value.
  * @property {Texture|null} sheenGlossMap The sheen glossiness microstructure color map of the
  * material (default is null).
  * @property {number} sheenGlossMapUv Sheen map UV channel.
@@ -720,10 +718,7 @@ class StandardMaterial extends Material {
             }
 
             this._setParameter('material_sheen', getUniform('sheen'));
-
-            if (!this.sheenGlossMap || this.sheenGlossTint) {
-                this._setParameter('material_sheenGloss', this.sheenGloss);
-            }
+            this._setParameter('material_sheenGloss', this.sheenGloss);
 
             this._setParameter('material_refractionIndex', this.refractionIndex);
         } else {

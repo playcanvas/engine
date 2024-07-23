@@ -1041,11 +1041,9 @@ const extensionSheen = (data, material, textures) => {
         material.sheenEncoding = 'srgb';
         extractTextureTransform(data.sheenColorTexture, material, ['sheen']);
     }
-    if (data.hasOwnProperty('sheenRoughnessFactor')) {
-        material.sheenGloss = data.sheenRoughnessFactor;
-    } else {
-        material.sheenGloss = 0.0;
-    }
+
+    material.sheenGloss = data.hasOwnProperty('sheenRoughnessFactor') ? data.sheenRoughnessFactor : 0.0;
+
     if (data.hasOwnProperty('sheenRoughnessTexture')) {
         material.sheenGlossMap = textures[data.sheenRoughnessTexture.index];
         material.sheenGlossMapChannel = 'a';

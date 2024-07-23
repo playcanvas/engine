@@ -65,7 +65,6 @@ const standardMaterialParameterTypes = {
     sheen: 'rgb',
     ..._textureParameter('sheen'),
     sheenGloss: 'number',
-    sheenGlossTint: 'boolean',
     sheenGlossInvert: 'boolean',
     ..._textureParameter('sheenGloss'),
 
