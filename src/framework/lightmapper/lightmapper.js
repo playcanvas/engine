@@ -637,11 +637,11 @@ class Lightmapper {
         }
     }
 
-    prepareLightsToBake(layerComposition, allLights, bakeLights) {
+    prepareLightsToBake(allLights, bakeLights) {
 
         // ambient light
         if (this.scene.ambientBake) {
-            const ambientLight = new BakeLightAmbient(this.scene);
+            const ambientLight = new BakeLightAmbient(this);
             bakeLights.push(ambientLight);
         }
 
@@ -651,7 +651,7 @@ class Lightmapper {
             const light = sceneLights[i];
 
             // store all lights and their original settings we need to temporarily modify
-            const bakeLight = new BakeLightSimple(this.scene, light);
+            const bakeLight = new BakeLightSimple(this, light);
             allLights.push(bakeLight);
 
             // bake light
@@ -941,7 +941,7 @@ class Lightmapper {
         // Collect bakeable lights, and also keep allLights along with their properties we change to restore them later
         this.renderer.collectLights(comp);
         const allLights = [], bakeLights = [];
-        this.prepareLightsToBake(comp, allLights, bakeLights);
+        this.prepareLightsToBake(allLights, bakeLights);
 
         // update transforms
         this.updateTransforms(allNodes);
