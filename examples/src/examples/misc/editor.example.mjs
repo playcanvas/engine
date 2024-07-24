@@ -157,7 +157,8 @@ const resize = () => {
     app.resizeCanvas();
     const bounds = canvas.getBoundingClientRect();
     const dim = camera.camera.horizontalFov ? bounds.width : bounds.height;
-    gizmoHandler.gizmo.size = 1024 / dim;
+    gizmoHandler.size = 1024 / dim;
+    data.set('gizmo.size', gizmoHandler.size);
 };
 window.addEventListener('resize', resize);
 resize();
