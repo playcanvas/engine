@@ -9,6 +9,8 @@ import { dirname } from 'path';
 import { fileURLToPath } from 'url';
 import { spawn, execSync } from 'node:child_process';
 
+import { parseConfig } from './utils.mjs';
+
 import { exampleMetaData } from '../cache/metadata.mjs';
 
 // @ts-ignore
@@ -189,11 +191,19 @@ async function takeScreenshots(metadata) {
 
     const screenshotPromises = [];
     for (let i = 0; i < metadata.length; i++) {
-        const { categoryKebab, exampleNameKebab } = metadata[i];
+        const { categoryKebab, exampleNameKebab, path } = metadata[i];
+
+        // check if hidden
+        const script = fs.readFileSync(`${path}/${exampleNameKebab}.example.mjs`, 'utf-8');
+        const config = parseConfig(script);
+        if (config.HIDDEN) {
+            console.log(`skipped (hidden): ${categoryKebab}/${exampleNameKebab}`);
+            continue;
+        }
 
         // check if thumbnail exists
         if (fs.existsSync(`${MAIN_DIR}/thumbnails/${categoryKebab}_${exampleNameKebab}_large.webp`)) {
-            console.log(`skipped: ${categoryKebab}/${exampleNameKebab}`);
+            console.log(`skipped (cached): ${categoryKebab}/${exampleNameKebab}`);
             continue;
         }
 

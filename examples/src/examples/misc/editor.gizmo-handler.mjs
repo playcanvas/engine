@@ -80,6 +80,16 @@ class GizmoHandler {
         return this._skipSetFire;
     }
 
+    set size(value) {
+        for (const type in this._gizmos) {
+            this._gizmos[type].size = value;
+        }
+    }
+
+    get size() {
+        return this.gizmo.size;
+    }
+
     /**
      * @param {string} type - The transform gizmo type.
      */
