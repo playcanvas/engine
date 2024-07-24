@@ -138,10 +138,7 @@ function SortWorker() {
             const result = binarySearch(0, numVertices - 1, i => -dist(i));
             return Math.min(numVertices, Math.abs(result));
         };
-
         const count = dist(numVertices - 1) >= 0 ? findZero() : numVertices;
-
-        console.log(`count: ${count}`);
 
         // apply mapping
         if (mapping) {
