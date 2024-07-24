@@ -105,7 +105,7 @@ function SortWorker() {
 
         // generate per vertex distance to camera
         const range = maxDist - minDist;
-        const divider = 1 / range * (2 ** compareBits);
+        const divider = (range < 1e-6) ? 0 : 1 / range * (2 ** compareBits);
         for (let i = 0; i < numVertices; ++i) {
             const istride = i * 3;
             const x = centers[istride + 0] - px;
