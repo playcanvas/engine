@@ -491,6 +491,14 @@ class Material {
             this.stencilBack = source.stencilFront === source.stencilBack ? this.stencilFront : source.stencilBack.clone();
         }
 
+        // Shader parameters
+        this.clearParameters();
+        for (const name in source.parameters) {
+            if (source.parameters.hasOwnProperty(name)) {
+                this._setParameterSimple(name, source.parameters[name].data);
+            }
+        }
+
         return this;
     }
 
@@ -558,6 +566,18 @@ class Material {
         return this.parameters[name];
     }
 
+    _setParameterSimple(name, data) {
+        const param = this.parameters[name];
+        if (param) {
+            param.data = data;
+        } else {
+            this.parameters[name] = {
+                scopeId: null,
+                data: data
+            };
+        }
+    }
+
     /**
      * Sets a shader parameter on a material.
      *
@@ -578,15 +598,7 @@ class Material {
             data = uniformObject.value;
         }
 
-        const param = this.parameters[name];
-        if (param) {
-            param.data = data;
-        } else {
-            this.parameters[name] = {
-                scopeId: null,
-                data: data
-            };
-        }
+        this._setParameterSimple(name, data);
     }
 
     /**
