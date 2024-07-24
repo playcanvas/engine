@@ -1446,21 +1446,21 @@ class WebglGraphicsDevice extends GraphicsDevice {
 
         DebugGraphics.pushGpuMarker(this, 'COPY-RT');
 
-        if (this.isWebGL2 && dest) {
+        if (this.isWebGL2) {
             const prevRt = this.renderTarget;
             this.renderTarget = dest;
             this.updateBegin();
 
             // copy from single sampled framebuffer
             const src = source ? source.impl._glFrameBuffer : this.backBuffer?.impl._glFrameBuffer;
+            const dst = dest ? dest.impl._glFrameBuffer : this.backBuffer?.impl._glFrameBuffer;
 
-            const dst = dest.impl._glFrameBuffer;
             Debug.assert(src !== dst, 'Source and destination framebuffers must be different when blitting.');
 
             gl.bindFramebuffer(gl.READ_FRAMEBUFFER, src);
             gl.bindFramebuffer(gl.DRAW_FRAMEBUFFER, dst);
-            const w = source ? source.width : dest.width;
-            const h = source ? source.height : dest.height;
+            const w = source ? source.width : dest ? dest.width : this.width;
+            const h = source ? source.height : dest ? dest.height : this.height;
 
             gl.blitFramebuffer(0, 0, w, h,
                                0, 0, w, h,
