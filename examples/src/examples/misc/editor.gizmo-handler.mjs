@@ -94,34 +94,16 @@ class GizmoHandler {
      * @param {string} type - The transform gizmo type.
      */
     _updateData(type) {
-        /** @type {any} */
-        const gizmo = this.gizmo;
         this._skipSetFire = true;
         data.set('gizmo', {
             type: type,
-            size: gizmo.size,
-            snapIncrement: gizmo.snapIncrement,
-            xAxisColor: Object.values(gizmo.xAxisColor),
-            yAxisColor: Object.values(gizmo.yAxisColor),
-            zAxisColor: Object.values(gizmo.zAxisColor),
-            colorAlpha: gizmo.colorAlpha,
-            coordSpace: gizmo.coordSpace,
-            axisLineTolerance: gizmo.axisLineTolerance,
-            axisCenterTolerance: gizmo.axisCenterTolerance,
-            ringTolerance: gizmo.ringTolerance,
-            axisGap: gizmo.axisGap,
-            axisLineThickness: gizmo.axisLineThickness,
-            axisLineLength: gizmo.axisLineLength,
-            axisArrowThickness: gizmo.axisArrowThickness,
-            axisArrowLength: gizmo.axisArrowLength,
-            axisBoxSize: gizmo.axisBoxSize,
-            axisPlaneSize: gizmo.axisPlaneSize,
-            axisPlaneGap: gizmo.axisPlaneGap,
-            axisCenterSize: gizmo.axisCenterSize,
-            xyzTubeRadius: gizmo.xyzTubeRadius,
-            xyzRingRadius: gizmo.xyzRingRadius,
-            faceTubeRadius: gizmo.faceTubeRadius,
-            faceRingRadius: gizmo.faceRingRadius
+            size: this.gizmo.size,
+            snapIncrement: this.gizmo.snapIncrement,
+            xAxisColor: Object.values(this.gizmo.xAxisColor),
+            yAxisColor: Object.values(this.gizmo.yAxisColor),
+            zAxisColor: Object.values(this.gizmo.zAxisColor),
+            colorAlpha: this.gizmo.colorAlpha,
+            coordSpace: this.gizmo.coordSpace
         });
         this._skipSetFire = false;
     }
