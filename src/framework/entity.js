@@ -381,9 +381,6 @@ class Entity extends GraphNode {
      * });
      */
     addComponent(type, data) {
-        if (!this._app) {
-            throw new Error('addComponent: No application assigned to entity');
-        }
         const system = this._app.systems[type];
         if (!system) {
             Debug.error(`addComponent: System '${type}' doesn't exist`);
@@ -407,9 +404,6 @@ class Entity extends GraphNode {
      * entity.removeComponent("light"); // remove light component
      */
     removeComponent(type) {
-        if (!this._app) {
-            throw new Error('removeComponent: No application assigned to entity');
-        }
         const system = this._app.systems[type];
         if (!system) {
             Debug.error(`removeComponent: System '${type}' doesn't exist`);
