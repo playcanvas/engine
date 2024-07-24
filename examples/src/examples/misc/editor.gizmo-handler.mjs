@@ -1,5 +1,4 @@
 import * as pc from 'playcanvas';
-import { data } from 'examples/observer';
 
 class GizmoHandler {
     /**
@@ -27,20 +26,12 @@ class GizmoHandler {
     _nodes = [];
 
     /**
-     * Flag to ignore picker on gizmo pointer events.
+     * Flag to check if gizmo has captured pointer.
      *
      * @type {boolean}
      * @private
      */
-    _ignorePicker = false;
-
-    /**
-     * Flag to skip data set from firing event.
-     *
-     * @type {boolean}
-     * @private
-     */
-    _skipSetFire = false;
+    _hasPointer = false;
 
     /**
      * @param {pc.AppBase} app - The application.
@@ -56,28 +47,21 @@ class GizmoHandler {
 
         for (const type in this._gizmos) {
             const gizmo = this._gizmos[type];
-            gizmo.on(
-                'pointer:down',
-                (/** @type {number} */ x, /** @type {number} */ y, /** @type {pc.MeshInstance} */ meshInstance) => {
-                    this._ignorePicker = !!meshInstance;
-                }
-            );
+            gizmo.on('pointer:down', (x, y, /** @type {pc.MeshInstance} */ meshInstance) => {
+                this._hasPointer = !!meshInstance;
+            });
             gizmo.on('pointer:up', () => {
-                this._ignorePicker = false;
+                this._hasPointer = false;
             });
         }
     }
 
+    get type() {
+        return this._type;
+    }
+
     get gizmo() {
         return this._gizmos[this._type];
-    }
-
-    get ignorePicker() {
-        return this._ignorePicker;
-    }
-
-    get skipSetFire() {
-        return this._skipSetFire;
     }
 
     set size(value) {
@@ -90,22 +74,8 @@ class GizmoHandler {
         return this.gizmo.size;
     }
 
-    /**
-     * @param {string} type - The transform gizmo type.
-     */
-    _updateData(type) {
-        this._skipSetFire = true;
-        data.set('gizmo', {
-            type: type,
-            size: this.gizmo.size,
-            snapIncrement: this.gizmo.snapIncrement,
-            xAxisColor: Object.values(this.gizmo.xAxisColor),
-            yAxisColor: Object.values(this.gizmo.yAxisColor),
-            zAxisColor: Object.values(this.gizmo.zAxisColor),
-            colorAlpha: this.gizmo.colorAlpha,
-            coordSpace: this.gizmo.coordSpace
-        });
-        this._skipSetFire = false;
+    get hasPointer() {
+        return this._hasPointer;
     }
 
     /**
@@ -143,7 +113,6 @@ class GizmoHandler {
         this._type = type ?? 'translate';
         this.gizmo.attach(this._nodes);
         this.gizmo.coordSpace = coordSpace;
-        this._updateData(type);
     }
 
     destroy() {

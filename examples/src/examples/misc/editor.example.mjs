@@ -147,8 +147,24 @@ layers.push(gizmoLayer);
 camera.camera.layers = camera.camera.layers.concat(gizmoLayer.id);
 
 // create gizmo
+let skipObserverFire = false;
 const gizmoHandler = new GizmoHandler(app, camera.camera, gizmoLayer);
+const setGizmoControls = () => {
+    skipObserverFire = true;
+    data.set('gizmo', {
+        type: gizmoHandler.type,
+        size: gizmoHandler.gizmo.size,
+        snapIncrement: gizmoHandler.gizmo.snapIncrement,
+        xAxisColor: Object.values(gizmoHandler.gizmo.xAxisColor),
+        yAxisColor: Object.values(gizmoHandler.gizmo.yAxisColor),
+        zAxisColor: Object.values(gizmoHandler.gizmo.zAxisColor),
+        colorAlpha: gizmoHandler.gizmo.colorAlpha,
+        coordSpace: gizmoHandler.gizmo.coordSpace
+    });
+    skipObserverFire = false;
+};
 gizmoHandler.switch('translate');
+setGizmoControls();
 gizmoHandler.add(box);
 window.focus();
 
@@ -215,11 +231,10 @@ window.addEventListener('keyup', keyup);
 window.addEventListener('keypress', keypress);
 
 // gizmo and camera set handler
-const tmpC = new pc.Color();
 data.on('*:set', (/** @type {string} */ path, /** @type {any} */ value) => {
     const [category, key] = path.split('.');
     switch (category) {
-        case 'camera':
+        case 'camera': {
             switch (key) {
                 case 'proj':
                     camera.camera.projection = value - 1;
@@ -228,33 +243,29 @@ data.on('*:set', (/** @type {string} */ path, /** @type {any} */ value) => {
                     camera.camera.fov = value;
                     break;
             }
-            return;
-        case 'gizmo':
-            if (gizmoHandler.skipSetFire) {
+            break;
+        }
+        case 'gizmo': {
+            if (skipObserverFire) {
                 return;
             }
             if (key === 'type') {
                 gizmoHandler.switch(value);
+                setGizmoControls();
                 return;
             }
-
-            if (gizmoHandler[key] instanceof pc.Color) {
-                // @ts-ignore
-                gizmoHandler.gizmo[key] = tmpC.set(...value);
-                return;
-            }
-
             gizmoHandler.gizmo[key] = value;
+            break;
+        }
     }
 });
 
 // selector
 const selector = new Selector(app, camera.camera, [layers.getLayerByName('World')]);
 selector.on('select', (/** @type {pc.GraphNode} */ node, /** @type {boolean} */ clear) => {
-    if (gizmoHandler.ignorePicker) {
+    if (gizmoHandler.hasPointer) {
         return;
     }
-
     gizmoHandler.add(node, clear);
 });
 selector.on('deselect', () => {
