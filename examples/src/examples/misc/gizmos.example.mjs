@@ -42,10 +42,6 @@ app.init(createOptions);
 app.setCanvasFillMode(pc.FILLMODE_FILL_WINDOW);
 app.setCanvasResolution(pc.RESOLUTION_AUTO);
 
-// ensure canvas is resized when window changes size
-const resize = () => app.resizeCanvas();
-window.addEventListener('resize', resize);
-
 // load assets
 const assets = {
     script: new pc.Asset('script', 'script', { url: rootPath + '/static/scripts/camera/orbit-camera.js' }),
@@ -157,6 +153,17 @@ const gizmoHandler = new GizmoHandler(app, camera.camera, gizmoLayer);
 gizmoHandler.switch('translate');
 gizmoHandler.add(box);
 window.focus();
+
+// ensure canvas is resized when window changes size + keep gizmo size consistent to canvas size
+const resize = () => {
+    app.resizeCanvas();
+    const bounds = canvas.getBoundingClientRect();
+    const dim = camera.camera.horizontalFov ? bounds.width : bounds.height;
+    gizmoHandler.size = 1024 / dim;
+    data.set('gizmo.size', gizmoHandler.size);
+};
+window.addEventListener('resize', resize);
+resize();
 
 // wrappers for control state changes
 const setType = (/** @type {string} */ value) => {
