@@ -97,11 +97,11 @@ function SortWorker() {
             }
         }
 
-        if (!countBuffer)
+        if (!countBuffer) {
             countBuffer = new Uint32Array(bucketCount);
-
-        for (let i = 0; i < bucketCount; i++)
-            countBuffer[i] = 0;
+        } else {
+            countBuffer.fill(0);
+        }
 
         // generate per vertex distance to camera
         const range = maxDist - minDist;
@@ -121,8 +121,9 @@ function SortWorker() {
         }
 
         // Change countBuffer[i] so that it contains actual position of this digit in outputArray
-        for (let i = 1; i < bucketCount; i++)
+        for (let i = 1; i < bucketCount; i++) {
             countBuffer[i] += countBuffer[i - 1];
+        }
 
         // Build the output array
         for (let i = 0; i < numVertices; i++) {
@@ -138,6 +139,10 @@ function SortWorker() {
             return Math.min(numVertices, Math.abs(result));
         };
 
+        const count = dist(numVertices - 1) >= 0 ? findZero() : numVertices;
+
+        console.log(`count: ${count}`);
+
         // apply mapping
         if (mapping) {
             for (let i = 0; i < numVertices; ++i) {
@@ -148,7 +153,7 @@ function SortWorker() {
         // send results
         self.postMessage({
             order: order.buffer,
-            count: dist(numVertices - 1) >= 0 ? findZero() : numVertices
+            count
         }, [order.buffer]);
 
         order = null;
