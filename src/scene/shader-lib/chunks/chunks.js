@@ -79,7 +79,6 @@ import metalnessModulatePS from './lit/frag/metalnessModulate.js';
 import msdfVS from './common/vert/msdf.js';
 import normalVS from './lit/vert/normal.js';
 import normalDetailMapPS from './standard/frag/normalDetailMap.js';
-import normalInstancedVS from './lit/vert/normalInstanced.js';
 import normalMapPS from './standard/frag/normalMap.js';
 import normalXYPS from './standard/frag/normalXY.js';
 import normalXYZPS from './standard/frag/normalXYZ.js';
@@ -281,7 +280,6 @@ const shaderChunks = {
     msdfVS,
     normalVS,
     normalDetailMapPS,
-    normalInstancedVS,
     normalMapPS,
     normalXYPS,
     normalXYZPS,
