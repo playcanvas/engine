@@ -353,8 +353,6 @@ class ShaderProcessor {
 
             // generates: 'layout(location = 0) in vec4 position;'
             block += `layout(location = ${index}) ${op} ${type} ${name};\n`;
-
-            console.log(`layout(location = ${index}) ${op} ${type} ${name};`);
         });
         return block;
     }
