@@ -81,7 +81,6 @@ import normalVS from './lit/vert/normal.js';
 import normalDetailMapPS from './standard/frag/normalDetailMap.js';
 import normalInstancedVS from './lit/vert/normalInstanced.js';
 import normalMapPS from './standard/frag/normalMap.js';
-import normalSkinnedVS from './lit/vert/normalSkinned.js';
 import normalXYPS from './standard/frag/normalXY.js';
 import normalXYZPS from './standard/frag/normalXYZ.js';
 import opacityPS from './standard/frag/opacity.js';
@@ -284,7 +283,6 @@ const shaderChunks = {
     normalDetailMapPS,
     normalInstancedVS,
     normalMapPS,
-    normalSkinnedVS,
     normalXYPS,
     normalXYZPS,
     opacityPS,
