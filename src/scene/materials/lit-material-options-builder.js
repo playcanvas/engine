@@ -3,7 +3,8 @@ import {
     MASK_AFFECT_DYNAMIC, TONEMAP_NONE, SHADERDEF_INSTANCING, SHADERDEF_MORPH_NORMAL,
     SHADERDEF_MORPH_POSITION, SHADERDEF_SCREENSPACE, SHADERDEF_SKIN,
     SHADERDEF_NOSHADOW, SHADERDEF_TANGENTS, SPRITE_RENDERMODE_SIMPLE,
-    SHADERDEF_MORPH_TEXTURE_BASED_INT
+    SHADERDEF_MORPH_TEXTURE_BASED_INT,
+    FOG_NONE
 } from "../constants.js";
 
 class LitMaterialOptionsBuilder {
@@ -88,7 +89,7 @@ class LitMaterialOptionsBuilder {
     }
 
     static updateEnvOptions(litOptions, material, scene, renderParams) {
-        litOptions.fog = material.useFog ? scene.fog : 'none';
+        litOptions.fog = material.useFog ? scene.fog : FOG_NONE;
         litOptions.gamma = renderParams.shaderOutputGamma;
         litOptions.toneMap = material.useTonemap ? renderParams.toneMapping : TONEMAP_NONE;
 

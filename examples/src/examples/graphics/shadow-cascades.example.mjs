@@ -36,7 +36,11 @@ createOptions.componentSystems = [
     pc.LightComponentSystem,
     pc.ScriptComponentSystem
 ];
-createOptions.resourceHandlers = [pc.TextureHandler, pc.ContainerHandler, pc.ScriptHandler];
+createOptions.resourceHandlers = [
+    pc.TextureHandler,
+    pc.ContainerHandler,
+    pc.ScriptHandler
+];
 
 const app = new pc.AppBase(canvas);
 app.init(createOptions);

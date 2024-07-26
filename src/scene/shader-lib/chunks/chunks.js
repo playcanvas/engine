@@ -59,7 +59,6 @@ import glossPS from './standard/frag/gloss.js';
 import iridescenceDiffractionPS from './lit/frag/iridescenceDiffraction.js';
 import iridescencePS from './standard/frag/iridescence.js';
 import iridescenceThicknessPS from './standard/frag/iridescenceThickness.js';
-import instancingVS from './lit/vert/instancing.js';
 import iorPS from './standard/frag/ior.js';
 import lightDiffuseLambertPS from './lit/frag/lightDiffuseLambert.js';
 import lightDirPointPS from './lit/frag/lightDirPoint.js';
@@ -78,6 +77,7 @@ import msdfPS from './common/frag/msdf.js';
 import metalnessModulatePS from './lit/frag/metalnessModulate.js';
 import msdfVS from './common/vert/msdf.js';
 import normalVS from './lit/vert/normal.js';
+import normalCoreVS from './common/vert/normalCore.js';
 import normalDetailMapPS from './standard/frag/normalDetailMap.js';
 import normalMapPS from './standard/frag/normalMap.js';
 import normalXYPS from './standard/frag/normalXY.js';
@@ -182,6 +182,7 @@ import tonemappingLinearPS from './common/frag/tonemappingLinear.js';
 import tonemappingNeutralPS from './common/frag/tonemappingNeutral.js';
 import tonemappingNonePS from './common/frag/tonemappingNone.js';
 import transformVS from './common/vert/transform.js';
+import transformCoreVS from './common/vert/transformCore.js';
 import transformDeclVS from './common/vert/transformDecl.js';
 import transmissionPS from './standard/frag/transmission.js';
 import twoSidedLightingPS from './lit/frag/twoSidedLighting.js';
@@ -260,7 +261,6 @@ const shaderChunks = {
     iridescenceDiffractionPS,
     iridescencePS,
     iridescenceThicknessPS,
-    instancingVS,
     iorPS,
     lightDiffuseLambertPS,
     lightDirPointPS,
@@ -279,6 +279,7 @@ const shaderChunks = {
     msdfPS,
     msdfVS,
     normalVS,
+    normalCoreVS,
     normalDetailMapPS,
     normalMapPS,
     normalXYPS,
@@ -383,6 +384,7 @@ const shaderChunks = {
     tonemappingNeutralPS,
     tonemappingNonePS,
     transformVS,
+    transformCoreVS,
     transformDeclVS,
     transmissionPS,
     twoSidedLightingPS,

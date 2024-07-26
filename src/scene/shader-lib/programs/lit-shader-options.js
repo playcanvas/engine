@@ -39,6 +39,8 @@ class LitShaderOptions {
 
     skin = false;
 
+    batch = false;
+
     /**
      * If hardware instancing compatible shader should be generated. Transform is read from
      * per-instance {@link VertexBuffer} instead of shader's uniforms.

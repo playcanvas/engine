@@ -11,7 +11,8 @@ import {
     SHADERDEF_SCREENSPACE, SHADERDEF_SKIN, SHADERDEF_TANGENTS, SHADERDEF_UV0, SHADERDEF_UV1, SHADERDEF_VCOLOR, SHADERDEF_LMAMBIENT,
     TONEMAP_NONE,
     DITHER_NONE,
-    SHADERDEF_MORPH_TEXTURE_BASED_INT
+    SHADERDEF_MORPH_TEXTURE_BASED_INT, SHADERDEF_BATCH,
+    FOG_NONE
 } from '../constants.js';
 import { _matTex2D } from '../shader-lib/programs/standard.js';
 import { LitMaterialOptionsBuilder } from './lit-material-options-builder.js';
@@ -72,6 +73,7 @@ class StandardMaterialOptionsBuilder {
 
         options.litOptions.screenSpace = objDefs && (objDefs & SHADERDEF_SCREENSPACE) !== 0;
         options.litOptions.skin = objDefs && (objDefs & SHADERDEF_SKIN) !== 0;
+        options.litOptions.batch = objDefs && (objDefs & SHADERDEF_BATCH) !== 0;
         options.litOptions.useInstancing = objDefs && (objDefs & SHADERDEF_INSTANCING) !== 0;
         options.litOptions.useMorphPosition = objDefs && (objDefs & SHADERDEF_MORPH_POSITION) !== 0;
         options.litOptions.useMorphNormal = objDefs && (objDefs & SHADERDEF_MORPH_NORMAL) !== 0;
@@ -275,7 +277,7 @@ class StandardMaterialOptionsBuilder {
     }
 
     _updateEnvOptions(options, stdMat, scene, renderParams) {
-        options.litOptions.fog = stdMat.useFog ? scene.fog : 'none';
+        options.litOptions.fog = stdMat.useFog ? scene.fog : FOG_NONE;
         options.litOptions.gamma = renderParams.shaderOutputGamma;
         options.litOptions.toneMap = stdMat.useTonemap ? renderParams.toneMapping : TONEMAP_NONE;
 
