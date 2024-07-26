@@ -29,7 +29,7 @@ const assets = {
     hatch2: new pc.Asset('hatch2', 'texture', { url: rootPath + '/static/assets/textures/hatch-2.jpg' }, { srgb: true }),
     hatch3: new pc.Asset('hatch3', 'texture', { url: rootPath + '/static/assets/textures/hatch-3.jpg' }, { srgb: true }),
     hatch4: new pc.Asset('hatch4', 'texture', { url: rootPath + '/static/assets/textures/hatch-4.jpg' }, { srgb: true }),
-    hatch5: new pc.Asset('hatch5', 'texture', { url: rootPath + '/static/assets/textures/hatch-5.jpg' }, { srgb: true }),
+    hatch5: new pc.Asset('hatch5', 'texture', { url: rootPath + '/static/assets/textures/hatch-5.jpg' }, { srgb: true })
 };
 
 const gfxOptions = {
