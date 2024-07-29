@@ -133,6 +133,7 @@ import particle_softVS from './particle/vert/particle_soft.js';
 import particle_stretchVS from './particle/vert/particle_stretch.js';
 import particle_TBNVS from './particle/vert/particle_TBN.js';
 import particle_wrapVS from './particle/vert/particle_wrap.js';
+import pickPS from './common/frag/pick.js';
 import reflDirPS from './lit/frag/reflDir.js';
 import reflDirAnisoPS from './lit/frag/reflDirAniso.js';
 import reflectionCCPS from './lit/frag/reflectionCC.js';
@@ -335,6 +336,7 @@ const shaderChunks = {
     particle_stretchVS,
     particle_TBNVS,
     particle_wrapVS,
+    pickPS,
     reflDirPS,
     reflDirAnisoPS,
     reflectionCCPS,

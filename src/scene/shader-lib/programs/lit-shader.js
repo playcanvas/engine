@@ -369,15 +369,11 @@ class LitShader {
             ${this.varyingDefines}
             ${this.frontendDecl}
             ${this.frontendCode}
-            uniform uint meshInstanceId;
+            ${this.chunks.pickPS}
 
             void main(void) {
                 ${this.frontendFunc}
-                
-                const vec4 inv = vec4(1.0 / 255.0, 1.0 / 255.0, 1.0 / 255.0, 1.0 / 255.0);
-                const uvec4 shifts = uvec4(16, 8, 0, 24);
-                uvec4 col = (uvec4(meshInstanceId) >> shifts) & uvec4(0xff);
-                gl_FragColor = vec4(col) * inv;
+                gl_FragColor = getPickOutput();
             }
         `;
     }

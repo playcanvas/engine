@@ -115,6 +115,7 @@ class ShaderGeneratorShader extends ShaderGenerator {
             includes.set('tonemapping', ShaderGenerator.tonemapCode(options.toneMapping));
             includes.set('fog', ShaderGenerator.fogCode(options.fog));
             includes.set('userCode', desc.fragmentCode);
+            includes.set('pick', shaderChunks.pickPS);
 
             definitionOptions.fragmentCode = fShader;
             definitionOptions.fragmentIncludes = includes;
