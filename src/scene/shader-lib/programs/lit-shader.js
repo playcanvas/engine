@@ -141,11 +141,6 @@ class LitShader {
         return code;
     }
 
-    _vsAddTransformCode(code, device, chunks, options) {
-        code += this.chunks.transformVS;
-        return code;
-    }
-
     _setMapTransform(codes, name, id, uv) {
         const checkId = id + uv * 100;
         if (!codes[3][checkId]) {
@@ -204,8 +199,8 @@ class LitShader {
 
         let code = '';
         let codeBody = '';
+        let codeDefines = '';
 
-        // code += chunks.baseVS;
         code = this._vsAddBaseCode(code, chunks, options);
 
         codeBody += "   vPositionW    = getWorldPosition();\n";
@@ -232,7 +227,13 @@ class LitShader {
             this.attributes.instance_line2 = SEMANTIC_ATTR13;
             this.attributes.instance_line3 = SEMANTIC_ATTR14;
             this.attributes.instance_line4 = SEMANTIC_ATTR15;
-            code += chunks.instancingVS;
+        }
+
+        code += chunks.transformVS;
+
+        if (this.needsNormal) {
+            code += chunks.normalCoreVS;
+            code += chunks.normalVS;
         }
 
         if (this.needsNormal) {
@@ -294,44 +295,42 @@ class LitShader {
         // morphing
         if (options.useMorphPosition || options.useMorphNormal) {
 
-            code += "#define MORPHING_TEXTURE_BASED\n";
+            codeDefines += "#define MORPHING\n";
 
             if (options.useMorphTextureBasedInt) {
-                code += "#define MORPHING_TEXTURE_BASED_INT\n";
+                codeDefines += "#define MORPHING_INT\n";
             }
 
             if (options.useMorphPosition) {
-                code += "#define MORPHING_TEXTURE_BASED_POSITION\n";
+                codeDefines += "#define MORPHING_POSITION\n";
             }
 
             if (options.useMorphNormal) {
-                code += "#define MORPHING_TEXTURE_BASED_NORMAL\n";
+                codeDefines += "#define MORPHING_NORMAL\n";
             }
 
             // vertex ids attributes
             this.attributes.morph_vertex_id = SEMANTIC_ATTR15;
-            code += `attribute uint morph_vertex_id;\n`;
         }
 
         if (options.skin) {
-            this.attributes.vertex_boneWeights = SEMANTIC_BLENDWEIGHT;
+
             this.attributes.vertex_boneIndices = SEMANTIC_BLENDINDICES;
-            code += ShaderGenerator.skinCode(device, chunks);
-            code += "#define SKIN\n";
+
+            if (options.batch) {
+                codeDefines += "#define BATCH\n";
+            } else {
+                this.attributes.vertex_boneWeights = SEMANTIC_BLENDWEIGHT;
+                codeDefines += "#define SKIN\n";
+            }
         } else if (options.useInstancing) {
-            code += "#define INSTANCING\n";
+            codeDefines += "#define INSTANCING\n";
         }
         if (options.screenSpace) {
-            code += "#define SCREENSPACE\n";
+            codeDefines += "#define SCREENSPACE\n";
         }
         if (options.pixelSnap) {
-            code += "#define PIXELSNAP\n";
-        }
-
-        code = this._vsAddTransformCode(code, device, chunks, options);
-
-        if (this.needsNormal) {
-            code += chunks.normalVS;
+            codeDefines += "#define PIXELSNAP\n";
         }
 
         code += "\n";
@@ -349,7 +348,7 @@ class LitShader {
         });
 
         const shaderPassDefines = this.shaderPassInfo.shaderDefines;
-        this.vshader = shaderPassDefines + this.varyings + code;
+        this.vshader = shaderPassDefines + codeDefines + this.varyings + code;
     }
 
     _fsGetBeginCode() {
@@ -1515,11 +1514,19 @@ class LitShader {
     }
 
     getDefinition() {
+
+        const vIncludes = new Map();
+        vIncludes.set('transformCore', this.chunks.transformCoreVS);
+        vIncludes.set('skinTexVS', this.chunks.skinTexVS);
+        vIncludes.set('skinBatchTexVS', this.chunks.skinBatchTexVS);
+
         const definition = ShaderUtils.createDefinition(this.device, {
             name: 'LitShader',
             attributes: this.attributes,
             vertexCode: this.vshader,
-            fragmentCode: this.fshader
+            fragmentCode: this.fshader,
+            vertexIncludes: vIncludes
+
         });
 
         if (this.shaderPassInfo.isForward) {

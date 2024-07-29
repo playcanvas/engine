@@ -655,6 +655,7 @@ export const SHADERDEF_MORPH_POSITION = 1024;
 export const SHADERDEF_MORPH_NORMAL = 2048;
 export const SHADERDEF_LMAMBIENT = 4096; // lightmaps contain ambient
 export const SHADERDEF_MORPH_TEXTURE_BASED_INT = 8192;
+export const SHADERDEF_BATCH = 16384;
 
 /**
  * The shadow map is not to be updated.

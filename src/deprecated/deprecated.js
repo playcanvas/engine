@@ -174,12 +174,6 @@ export function drawFullscreenQuad(device, target, vertexBuffer, shader, rect) {
     drawQuadWithShader(device, target, shader, viewport);
 }
 
-Object.defineProperty(shaderChunks, 'transformSkinnedVS', {
-    get: function () {
-        return '#define SKIN\n' + shaderChunks.transformVS;
-    }
-});
-
 const deprecatedChunks = {
     'ambientPrefilteredCube.frag': 'ambientEnv.frag',
     'ambientPrefilteredCubeLod.frag': 'ambientEnv.frag',

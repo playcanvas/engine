@@ -9,10 +9,9 @@ import {
     MASK_AFFECT_DYNAMIC, MASK_BAKE, MASK_AFFECT_LIGHTMAPPED,
     RENDERSTYLE_SOLID,
     SHADERDEF_UV0, SHADERDEF_UV1, SHADERDEF_VCOLOR, SHADERDEF_TANGENTS, SHADERDEF_NOSHADOW, SHADERDEF_SKIN,
-    SHADERDEF_SCREENSPACE, SHADERDEF_MORPH_POSITION, SHADERDEF_MORPH_NORMAL,
-    SHADERDEF_LM, SHADERDEF_DIRLM, SHADERDEF_LMAMBIENT, SHADERDEF_INSTANCING,
-    SORTKEY_FORWARD,
-    SHADERDEF_MORPH_TEXTURE_BASED_INT
+    SHADERDEF_SCREENSPACE, SHADERDEF_MORPH_POSITION, SHADERDEF_MORPH_NORMAL, SHADERDEF_BATCH,
+    SHADERDEF_LM, SHADERDEF_DIRLM, SHADERDEF_LMAMBIENT, SHADERDEF_INSTANCING, SHADERDEF_MORPH_TEXTURE_BASED_INT,
+    SORTKEY_FORWARD
 } from './constants.js';
 import { GraphNode } from './graph-node.js';
 import { getDefaultMaterial } from './materials/default-material.js';
@@ -731,6 +730,14 @@ class MeshInstance {
 
     get receiveShadow() {
         return this._receiveShadow;
+    }
+
+    set batching(val) {
+        this._updateShaderDefs(val ? (this._shaderDefs | SHADERDEF_BATCH) : (this._shaderDefs & ~SHADERDEF_BATCH));
+    }
+
+    get batching() {
+        return (this._shaderDefs & SHADERDEF_BATCH) !== 0;
     }
 
     /**
