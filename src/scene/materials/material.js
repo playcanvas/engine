@@ -21,6 +21,13 @@ import { getDefaultMaterial } from './default-material.js';
  * @import { Shader } from '../../platform/graphics/shader.js'
  * @import { StencilParameters } from '../../platform/graphics/stencil-parameters.js'
  * @import { Texture } from '../../platform/graphics/texture.js'
+ * @import { GraphicsDevice } from '../../platform/graphics/graphics-device.js'
+ * @import { Scene } from '../scene.js'
+ * @import { RenderingParams } from '../renderer/rendering-params.js'
+ * @import { Light } from '../light.js';
+ * @import { VertexFormat } from '../../platform/graphics/vertex-format.js';
+ * @import { UniformBufferFormat } from '../../platform/graphics/uniform-buffer-format.js';
+ * @import { BindGroupFormat } from '../../platform/graphics/bind-group-format.js';
  */
 
 // blend mode mapping to op, srcBlend and dstBlend
@@ -38,6 +45,21 @@ blendModes[BLEND_MIN] = { src: BLENDMODE_ONE, dst: BLENDMODE_ONE, op: BLENDEQUAT
 blendModes[BLEND_MAX] = { src: BLENDMODE_ONE, dst: BLENDMODE_ONE, op: BLENDEQUATION_MAX };
 
 let id = 0;
+
+/**
+ * @typedef {object} ShaderVariantParams - The description of the parameters used by the
+ * Material#getShaderVariant function.
+ * @property {GraphicsDevice} device - The graphics device.
+ * @property {Scene} scene - The scene.
+ * @property {number} objDefs - The object definitions.
+ * @property {RenderingParams} renderParams - The render parameters.
+ * @property {number} pass - The shader pass.
+ * @property {Light[][]} sortedLights - The sorted lights.
+ * @property {UniformBufferFormat|undefined} viewUniformFormat - The view uniform format.
+ * @property {BindGroupFormat|undefined} viewBindGroupFormat - The view bind group format.
+ * @property {VertexFormat} vertexFormat - The vertex format.
+ * @ignore
+ */
 
 /**
  * A material determines how a particular mesh instance is rendered. It specifies the shader and
@@ -522,7 +544,11 @@ class Material {
     updateUniforms(device, scene) {
     }
 
-    getShaderVariant(device, scene, objDefs, renderParams, pass, sortedLights, viewUniformFormat, viewBindGroupFormat, vertexFormat) {
+    /**
+     * @param {ShaderVariantParams} params - The parameters used to generate the shader variant.
+     * @ignore
+     */
+    getShaderVariant(params) {
         Debug.assert(false, 'Not implemented');
     }
 

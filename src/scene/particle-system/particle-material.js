@@ -34,8 +34,9 @@ class ParticleMaterial extends Material {
         Debug.assert(emitter);
     }
 
-    getShaderVariant(device, scene, objDefs, renderParams, pass, sortedLights, viewUniformFormat, viewBindGroupFormat, vertexFormat) {
+    getShaderVariant(params) {
 
+        const { device, scene, renderParams } = params;
         const { emitter } = this;
         const options = {
             pass: SHADER_FORWARD,
@@ -48,7 +49,7 @@ class ParticleMaterial extends Material {
             mesh: this.emitter.useMesh,
             gamma: renderParams?.shaderOutputGamma ?? GAMMA_NONE,
             toneMap: renderParams?.toneMapping ?? TONEMAP_LINEAR,
-            fog: (this.emitter.scene && !this.emitter.noFog) ? this.emitter.scene.fog : 'none',
+            fog: (scene && !this.emitter.noFog) ? scene.fog : 'none',
             wrap: this.emitter.wrap && this.emitter.wrapBounds,
             localSpace: this.emitter.localSpace,
 
@@ -62,7 +63,7 @@ class ParticleMaterial extends Material {
             customFace: this.emitter.orientation !== PARTICLEORIENTATION_SCREEN
         };
 
-        const processingOptions = new ShaderProcessorOptions(viewUniformFormat, viewBindGroupFormat, vertexFormat);
+        const processingOptions = new ShaderProcessorOptions(params.viewUniformFormat, params.viewBindGroupFormat, params.vertexFormat);
 
         const library = getProgramLibrary(device);
         library.register('particle', particle);

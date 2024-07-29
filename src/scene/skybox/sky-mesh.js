@@ -37,10 +37,11 @@ class SkyMesh {
         const material = new ShaderMaterial();
         material.name = 'SkyMaterial';
 
-        material.getShaderVariant = function (dev, sc, defs, renderParams, pass, sortedLights, viewUniformFormat, viewBindGroupFormat) {
+        material.getShaderVariant = function (params) {
 
+            const { scene, renderParams } = params;
             const options = {
-                pass: pass,
+                pass: params.pass,
                 encoding: texture.encoding,
                 gamma: renderParams.shaderOutputGamma,
                 toneMapping: renderParams.toneMapping,
@@ -54,7 +55,7 @@ class SkyMesh {
                 options.type = 'envAtlas';
             }
 
-            const processingOptions = new ShaderProcessorOptions(viewUniformFormat, viewBindGroupFormat);
+            const processingOptions = new ShaderProcessorOptions(params.viewUniformFormat, params.viewBindGroupFormat);
 
             const library = getProgramLibrary(device);
             library.register('skybox', skybox);

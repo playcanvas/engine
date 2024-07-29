@@ -25,7 +25,7 @@ import { array } from '../core/array-utils.js';
  * @import { Camera } from './camera.js'
  * @import { GSplatInstance } from './gsplat/gsplat-instance.js'
  * @import { GraphicsDevice } from '../platform/graphics/graphics-device.js'
- * @import { Material } from './materials/material.js'
+ * @import { Material, ShaderVariantParams } from './materials/material.js'
  * @import { Mesh } from './mesh.js'
  * @import { MorphInstance } from './morph-instance.js'
  * @import { RenderingParams } from './renderer/rendering-params.js'
@@ -36,7 +36,6 @@ import { array } from '../core/array-utils.js';
  * @import { StencilParameters } from '../platform/graphics/stencil-parameters.js'
  * @import { Texture } from '../platform/graphics/texture.js'
  * @import { UniformBufferFormat } from '../platform/graphics/uniform-buffer-format.js'
- * @import { Vec3 } from '../core/math/vec3.js'
  * @import { VertexBuffer } from '../platform/graphics/vertex-buffer.js'
  */
 
@@ -612,8 +611,17 @@ class MeshInstance {
                 // marker to allow us to see the source node for shader alloc
                 DebugGraphics.pushGpuMarker(this.mesh.device, `Node: ${this.node.name}`);
 
-                const shader = mat.getShaderVariant(this.mesh.device, scene, shaderDefs, renderParams, shaderPass, sortedLights,
-                                                    viewUniformFormat, viewBindGroupFormat, this._mesh.vertexBuffer?.format);
+                const shader = mat.getShaderVariant({
+                    device: this.mesh.device,
+                    scene: scene,
+                    objDefs: shaderDefs,
+                    renderParams: renderParams,
+                    pass: shaderPass,
+                    sortedLights: sortedLights,
+                    viewUniformFormat: viewUniformFormat,
+                    viewBindGroupFormat: viewBindGroupFormat,
+                    vertexFormat: this.mesh.vertexBuffer?.format
+                });
 
                 DebugGraphics.popGpuMarker(this.mesh.device);
 

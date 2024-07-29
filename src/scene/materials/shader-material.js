@@ -94,8 +94,9 @@ class ShaderMaterial extends Material {
         return this;
     }
 
-    getShaderVariant(device, scene, objDefs, renderParams, pass, sortedLights, viewUniformFormat, viewBindGroupFormat, vertexFormat) {
+    getShaderVariant(params) {
 
+        const objDefs = params.objDefs;
         const options = {
             skin: (objDefs & SHADERDEF_SKIN) !== 0,
             useInstancing: (objDefs & SHADERDEF_INSTANCING) !== 0,
@@ -103,16 +104,16 @@ class ShaderMaterial extends Material {
             useMorphNormal: (objDefs & SHADERDEF_MORPH_NORMAL) !== 0,
             useMorphTextureBasedInt: (objDefs & SHADERDEF_MORPH_TEXTURE_BASED_INT) !== 0,
 
-            pass: pass,
-            gamma: renderParams.shaderOutputGamma,
-            toneMapping: renderParams.toneMapping,
-            fog: scene.fog,
+            pass: params.pass,
+            gamma: params.renderParams.shaderOutputGamma,
+            toneMapping: params.renderParams.toneMapping,
+            fog: params.scene.fog,
             shaderDesc: this.shaderDesc
         };
 
-        const processingOptions = new ShaderProcessorOptions(viewUniformFormat, viewBindGroupFormat, vertexFormat);
+        const processingOptions = new ShaderProcessorOptions(params.viewUniformFormat, params.viewBindGroupFormat, params.vertexFormat);
 
-        const library = getProgramLibrary(device);
+        const library = getProgramLibrary(params.device);
         library.register('shader-material', shaderGeneratorShader);
 
         return library.getProgram('shader-material', options, processingOptions, this.userId);
