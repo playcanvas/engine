@@ -97,11 +97,11 @@ class ShaderMaterial extends Material {
     getShaderVariant(device, scene, objDefs, renderParams, pass, sortedLights, viewUniformFormat, viewBindGroupFormat, vertexFormat) {
 
         const options = {
-            skin: objDefs && (objDefs & SHADERDEF_SKIN) !== 0,
-            useInstancing: objDefs && (objDefs & SHADERDEF_INSTANCING) !== 0,
-            useMorphPosition: objDefs && (objDefs & SHADERDEF_MORPH_POSITION) !== 0,
-            useMorphNormal: objDefs && (objDefs & SHADERDEF_MORPH_NORMAL) !== 0,
-            useMorphTextureBasedInt: objDefs && (objDefs & SHADERDEF_MORPH_TEXTURE_BASED_INT) !== 0,
+            skin: (objDefs & SHADERDEF_SKIN) !== 0,
+            useInstancing: (objDefs & SHADERDEF_INSTANCING) !== 0,
+            useMorphPosition: (objDefs & SHADERDEF_MORPH_POSITION) !== 0,
+            useMorphNormal: (objDefs & SHADERDEF_MORPH_NORMAL) !== 0,
+            useMorphTextureBasedInt: (objDefs & SHADERDEF_MORPH_TEXTURE_BASED_INT) !== 0,
 
             pass: pass,
             gamma: renderParams.shaderOutputGamma,
