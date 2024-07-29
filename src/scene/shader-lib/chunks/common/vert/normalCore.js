@@ -10,7 +10,7 @@ attribute vec3 vertex_normal;
     #endif
 #endif
 
-vec3 evalLocalNormal(vec3 vertexNormal) {
+vec3 getLocalNormal(vec3 vertexNormal) {
 
     vec3 localNormal = vertex_normal;
 

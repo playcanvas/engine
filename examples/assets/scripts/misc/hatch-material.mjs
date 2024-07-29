@@ -38,12 +38,12 @@ const createHatchMaterial = (device, textures) => {
             // include code transform shader functionality provided by the engine. It automatically
             // declares vertex_position attribute, and handles skinning and morphing if necessary.
             // It also adds uniforms: matrix_viewProjection, matrix_model, matrix_normal.
-            // Functions added: getModelMatrix, evalLocalPosition
+            // Functions added: getModelMatrix, getLocalPosition
             #include "transformCore"
 
             // include code for normal shader functionality provided by the engine. It automatically
             // declares vertex_normal attribute, and handles skinning and morphing if necessary.
-            // Functions added: getNormalMatrix, evalLocalNormal
+            // Functions added: getNormalMatrix, getLocalNormal
             #include "normalCore"
 
             // add additional attributes we need
@@ -64,12 +64,12 @@ const createHatchMaterial = (device, textures) => {
             {
                 // use functionality from transformCore to get a world position, which includes skinning and morphing as needed
                 mat4 modelMatrix = getModelMatrix();
-                vec3 localPos = evalLocalPosition(vertex_position.xyz);
+                vec3 localPos = getLocalPosition(vertex_position.xyz);
                 vec4 worldPos = modelMatrix * vec4(localPos, 1.0);
 
                 // use functionality from normalCore to get the world normal, which includes skinning and morphing as needed
                 mat3 normalMatrix = getNormalMatrix(modelMatrix);
-                vec3 localNormal = evalLocalNormal(vertex_normal);
+                vec3 localNormal = getLocalNormal(vertex_normal);
                 vec3 worldNormal = normalize(normalMatrix * localNormal);
 
                 // simple wrap-around diffuse lighting using normal and light direction

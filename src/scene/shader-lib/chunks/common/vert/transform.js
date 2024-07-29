@@ -9,7 +9,7 @@ uniform float projectionFlipY;
 
 vec4 evalWorldPosition(vec3 vertexPosition, mat4 modelMatrix) {
 
-    vec3 localPos = evalLocalPosition(vertexPosition);
+    vec3 localPos = getLocalPosition(vertexPosition);
 
     #ifdef NINESLICED
         // outer and inner vertices are at the same position, scale both

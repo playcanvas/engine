@@ -67,7 +67,7 @@ uniform mat3 matrix_normal;
 
 #endif
 
-vec3 evalLocalPosition(vec3 vertexPosition) {
+vec3 getLocalPosition(vec3 vertexPosition) {
 
     vec3 localPos = vertexPosition;
 
