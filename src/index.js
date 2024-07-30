@@ -163,7 +163,6 @@ export { RenderPassShaderQuad } from './scene/graphics/render-pass-shader-quad.j
 export { reprojectTexture } from './scene/graphics/reproject-texture.js';
 
 // SCENE / MATERIALS
-export { BasicMaterial } from './scene/materials/basic-material.js';
 export { LitMaterial } from './scene/materials/lit-material.js';
 export { Material } from './scene/materials/material.js';
 export { ShaderMaterial } from './scene/materials/shader-material.js';

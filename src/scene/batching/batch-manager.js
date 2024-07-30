@@ -12,7 +12,6 @@ import {
 import { SPRITE_RENDERMODE_SIMPLE } from '../constants.js';
 import { Mesh } from '../mesh.js';
 import { MeshInstance } from '../mesh-instance.js';
-import { shaderChunks } from '../shader-lib/chunks/chunks.js';
 import { Batch } from './batch.js';
 import { BatchGroup } from './batch-group.js';
 import { SkinBatchInstance } from './skin-batch-instance.js';
@@ -634,8 +633,6 @@ class BatchManager {
         // #endif
 
         if (!this._init) {
-            this.transformVS = '#define DYNAMICBATCH\n' + shaderChunks.transformVS;
-            this.skinTexVS = shaderChunks.skinBatchTexVS;
             this.vertexFormats = {};
             this._init = true;
         }
@@ -780,8 +777,6 @@ class BatchManager {
             // Patch the material
             if (dynamic) {
                 material = material.clone();
-                material.chunks.transformVS = this.transformVS;
-                material.chunks.skinTexVS = this.skinTexVS;
                 material.update();
             }
 
@@ -791,6 +786,7 @@ class BatchManager {
             meshInstance.parameters = batch.origMeshInstances[0].parameters;
             meshInstance.layer = batch.origMeshInstances[0].layer;
             meshInstance._shaderDefs = batch.origMeshInstances[0]._shaderDefs;
+            meshInstance.batching = true;
 
             // meshInstance culling - don't cull UI elements, as they use custom culling Component.isVisibleForCamera
             meshInstance.cull = batch.origMeshInstances[0].cull;
@@ -879,9 +875,6 @@ class BatchManager {
         if (batch.dynamic) {
             batch2.meshInstance.skinInstance = new SkinBatchInstance(this.device, nodes, this.rootNode);
         }
-
-        batch2.meshInstance.castShadow = batch.meshInstance.castShadow;
-        batch2.meshInstance._shader = batch.meshInstance._shader.slice();
 
         batch2.meshInstance.castShadow = batch.meshInstance.castShadow;
 

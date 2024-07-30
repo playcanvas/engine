@@ -9,10 +9,9 @@ import {
     MASK_AFFECT_DYNAMIC, MASK_BAKE, MASK_AFFECT_LIGHTMAPPED,
     RENDERSTYLE_SOLID,
     SHADERDEF_UV0, SHADERDEF_UV1, SHADERDEF_VCOLOR, SHADERDEF_TANGENTS, SHADERDEF_NOSHADOW, SHADERDEF_SKIN,
-    SHADERDEF_SCREENSPACE, SHADERDEF_MORPH_POSITION, SHADERDEF_MORPH_NORMAL,
-    SHADERDEF_LM, SHADERDEF_DIRLM, SHADERDEF_LMAMBIENT, SHADERDEF_INSTANCING,
-    SORTKEY_FORWARD,
-    SHADERDEF_MORPH_TEXTURE_BASED_INT
+    SHADERDEF_SCREENSPACE, SHADERDEF_MORPH_POSITION, SHADERDEF_MORPH_NORMAL, SHADERDEF_BATCH,
+    SHADERDEF_LM, SHADERDEF_DIRLM, SHADERDEF_LMAMBIENT, SHADERDEF_INSTANCING, SHADERDEF_MORPH_TEXTURE_BASED_INT,
+    SORTKEY_FORWARD
 } from './constants.js';
 import { GraphNode } from './graph-node.js';
 import { getDefaultMaterial } from './materials/default-material.js';
@@ -26,7 +25,7 @@ import { array } from '../core/array-utils.js';
  * @import { Camera } from './camera.js'
  * @import { GSplatInstance } from './gsplat/gsplat-instance.js'
  * @import { GraphicsDevice } from '../platform/graphics/graphics-device.js'
- * @import { Material } from './materials/material.js'
+ * @import { Material, ShaderVariantParams } from './materials/material.js'
  * @import { Mesh } from './mesh.js'
  * @import { MorphInstance } from './morph-instance.js'
  * @import { RenderingParams } from './renderer/rendering-params.js'
@@ -613,8 +612,17 @@ class MeshInstance {
                 // marker to allow us to see the source node for shader alloc
                 DebugGraphics.pushGpuMarker(this.mesh.device, `Node: ${this.node.name}`);
 
-                const shader = mat.getShaderVariant(this.mesh.device, scene, shaderDefs, renderParams, shaderPass, sortedLights,
-                                                    viewUniformFormat, viewBindGroupFormat, this._mesh.vertexBuffer?.format);
+                const shader = mat.getShaderVariant({
+                    device: this.mesh.device,
+                    scene: scene,
+                    objDefs: shaderDefs,
+                    renderParams: renderParams,
+                    pass: shaderPass,
+                    sortedLights: sortedLights,
+                    viewUniformFormat: viewUniformFormat,
+                    viewBindGroupFormat: viewBindGroupFormat,
+                    vertexFormat: this.mesh.vertexBuffer?.format
+                });
 
                 DebugGraphics.popGpuMarker(this.mesh.device);
 
@@ -731,6 +739,14 @@ class MeshInstance {
 
     get receiveShadow() {
         return this._receiveShadow;
+    }
+
+    set batching(val) {
+        this._updateShaderDefs(val ? (this._shaderDefs | SHADERDEF_BATCH) : (this._shaderDefs & ~SHADERDEF_BATCH));
+    }
+
+    get batching() {
+        return (this._shaderDefs & SHADERDEF_BATCH) !== 0;
     }
 
     /**

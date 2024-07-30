@@ -340,8 +340,8 @@ class ShaderProcessor {
         const op = isVertex ? 'out' : 'in';
         varyingLines.forEach((line, index) => {
             const words = ShaderProcessor.splitToWords(line);
-            const type = words[0];
-            const name = words[1];
+            const type = words.slice(0, -1).join(' ');
+            const name = words[words.length - 1];
 
             if (isVertex) {
                 // store it in the map

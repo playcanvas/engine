@@ -842,7 +842,9 @@ class StandardMaterial extends Material {
         this._processParameters('_activeLightingParams');
     }
 
-    getShaderVariant(device, scene, objDefs, renderParams, pass, sortedLights, viewUniformFormat, viewBindGroupFormat, vertexFormat) {
+    getShaderVariant(params) {
+
+        const { device, scene, pass, objDefs, sortedLights, renderParams } = params;
 
         // update prefiltered lighting data
         this.updateEnvUniforms(device, scene);
@@ -862,7 +864,7 @@ class StandardMaterial extends Material {
             options = this.onUpdateShader(options);
         }
 
-        const processingOptions = new ShaderProcessorOptions(viewUniformFormat, viewBindGroupFormat, vertexFormat);
+        const processingOptions = new ShaderProcessorOptions(params.viewUniformFormat, params.viewBindGroupFormat, params.vertexFormat);
 
         const library = getProgramLibrary(device);
         library.register('standard', standard);

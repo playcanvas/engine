@@ -335,7 +335,7 @@ class Preprocessor {
                             // process the just included test
                             KEYWORD.lastIndex = include.index;
                         } else {
-                            console.error(`Include not found: ${identifier}`);
+                            console.error(`Include "${identifier}" not resolved while preprocessing a shader`, { source: originalSource });
                             error = true;
                         }
                     }

@@ -68,7 +68,8 @@ class AnimComponentSystem extends ComponentSystem {
                     });
                 });
             });
-        } else if (data.animationAssets) {
+        }
+        if (data.animationAssets) {
             component.animationAssets = Object.assign(component.animationAssets, data.animationAssets);
         }
 
