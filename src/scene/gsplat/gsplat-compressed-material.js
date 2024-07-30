@@ -365,20 +365,20 @@ const createGSplatCompressedMaterial = (options = {}) => {
     material.blendType = dither ? BLEND_NONE : BLEND_NORMAL;
     material.depthWrite = dither;
 
-    material.getShaderVariant = function (device, scene, defs, renderParams, pass, sortedLights, viewUniformFormat, viewBindGroupFormat) {
+    material.getShaderVariant = function (params) {
 
         const programOptions = {
-            pass: pass,
-            gamma: renderParams.shaderOutputGamma,
-            toneMapping: renderParams.toneMapping,
+            pass: params.pass,
+            gamma: params.renderParams.shaderOutputGamma,
+            toneMapping: params.renderParams.toneMapping,
             vertex: options.vertex ?? splatMainVS,
             fragment: options.fragment ?? splatMainFS,
             dither: ditherEnum
         };
 
-        const processingOptions = new ShaderProcessorOptions(viewUniformFormat, viewBindGroupFormat);
+        const processingOptions = new ShaderProcessorOptions(params.viewUniformFormat, params.viewBindGroupFormat);
 
-        const library = getProgramLibrary(device);
+        const library = getProgramLibrary(params.device);
         library.register('splat-compressed', gsplatCompressed);
         return library.getProgram('splat-compressed', programOptions, processingOptions);
     };
