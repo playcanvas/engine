@@ -1,4 +1,5 @@
 export default /* glsl */`
+uniform float material_ao;
 
 void getAO() {
     dAo = 1.0;
@@ -11,5 +12,7 @@ void getAO() {
     #ifdef MAPVERTEX
     dAo *= saturate(vVertexColor.$VC);
     #endif
+
+    dAo = mix(1.0, dAo, material_ao);
 }
 `;
