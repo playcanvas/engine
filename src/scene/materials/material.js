@@ -497,7 +497,6 @@ class Material {
      */
     copy(source) {
         this.name = source.name;
-        this._shader = source._shader;
 
         // Render states
         this.alphaTest = source.alphaTest;
@@ -557,7 +556,6 @@ class Material {
      */
     update() {
         this.dirty = true;
-        if (this._shader) this._shader.failed = false;
     }
 
     // Parameter management
@@ -660,7 +658,6 @@ class Material {
      */
     destroy() {
         this.variants.clear();
-        this._shader = null;
 
         for (let i = 0; i < this.meshInstances.length; i++) {
             const meshInstance = this.meshInstances[i];
