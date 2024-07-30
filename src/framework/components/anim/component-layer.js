@@ -381,7 +381,7 @@ class AnimComponentLayer {
     }
 
     /**
-     * Returns the animation asset object that is associated with the given state.
+     * Returns an object holding the animation asset id that is associated with the given state.
      *
      * @param {string} stateName - The name of the state to get the asset for.
      * @returns {{ asset: number }} The animation asset object associated with the given state.
