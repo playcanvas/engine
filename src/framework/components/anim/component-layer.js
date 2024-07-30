@@ -381,14 +381,13 @@ class AnimComponentLayer {
     }
 
     /**
-     * Returns the asset that is associated with the given state.
+     * Returns the animation asset object that is associated with the given state.
      *
      * @param {string} stateName - The name of the state to get the asset for.
-     * @returns {Asset} The asset associated with the given state.
+     * @returns {{ asset: number }} The animation asset object associated with the given state.
      */
     getAnimationAsset(stateName) {
-        const assetId = this._component.animationAssets[`${this.name}:${stateName}`].asset;
-        return this._component.system.app.assets.get(assetId);
+        return this._component.animationAssets[`${this.name}:${stateName}`];
     }
 
     /**
