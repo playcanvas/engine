@@ -877,9 +877,6 @@ class BatchManager {
         }
 
         batch2.meshInstance.castShadow = batch.meshInstance.castShadow;
-        batch2.meshInstance._shader = batch.meshInstance._shader.slice();
-
-        batch2.meshInstance.castShadow = batch.meshInstance.castShadow;
 
         return batch2;
     }
