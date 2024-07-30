@@ -10,7 +10,7 @@ const STANDARD_MAT_PROPS = [
     ['alphaFade', 'boolean'],
     ['ambient', 'Color'],
     ['anisotropy', 'number'],
-    ['ao', 'number'],
+    ['aoIntensity', 'number'],
     ['aoMap', 'Texture|null'],
     ['aoMapChannel', 'string'],
     ['aoMapOffset', 'Vec2'],

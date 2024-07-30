@@ -1,5 +1,5 @@
 export default /* glsl */`
-uniform float material_ao;
+uniform float material_aoIntensity;
 
 void getAO() {
     dAo = 1.0;
@@ -13,6 +13,6 @@ void getAO() {
     dAo *= saturate(vVertexColor.$VC);
     #endif
 
-    dAo = mix(1.0, dAo, material_ao);
+    dAo = mix(1.0, dAo, material_aoIntensity);
 }
 `;
