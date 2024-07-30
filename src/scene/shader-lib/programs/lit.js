@@ -46,7 +46,7 @@ class ShaderGeneratorLit extends ShaderGenerator {
         litShader.generateVertexShader(usedUvSets, usedUvSets, mapTransforms);
         litShader.generateFragmentShader(decl.code, code.code, func.code, "vUv0");
 
-        return litShader.getDefinition();
+        return litShader.getDefinition(options);
     }
 }
 

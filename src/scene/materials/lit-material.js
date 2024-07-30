@@ -88,6 +88,7 @@ class LitMaterial extends Material {
 
         options.usedUvs = this.usedUvs.slice();
         options.shaderChunk = this.shaderChunk;
+        options.defines = this.defines;
 
         LitMaterialOptionsBuilder.update(options.litOptions, this, params.scene, params.renderParams, params.objDefs, params.pass, params.sortedLights);
         const processingOptions = new ShaderProcessorOptions(params.viewUniformFormat, params.viewBindGroupFormat, params.vertexFormat);

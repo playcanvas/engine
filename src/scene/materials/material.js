@@ -103,6 +103,14 @@ class Material {
      */
     variants = new Map();
 
+    /**
+     * The set of defines used to generate the shader variants.
+     *
+     * @type {Set<string>}
+     * @ignore
+     */
+    defines = new Set();
+
     parameters = {};
 
     /**
@@ -520,6 +528,10 @@ class Material {
             }
         }
 
+        // defines
+        this.defines.clear();
+        source.defines.forEach(define => this.defines.add(define));
+
         return this;
     }
 
@@ -650,6 +662,41 @@ class Material {
                 parameter.scopeId.setValue(parameter.data);
             }
         }
+    }
+
+    /**
+     * Enables or disables a define on the material. Defines are used to enable or disable various
+     * parts of the shader code.
+     *
+     * @param {string} name - The name of the define to set.
+     * @param {boolean} value - The value of the define.
+     */
+    setDefine(name, value) {
+        let modified = false;
+        const { defines } = this;
+
+        if (value) {
+            modified = !defines.has(name);
+            defines.add(name);
+        } else {
+            modified = defines.has(name);
+            defines.delete(name);
+        }
+
+        // if the define was modified, we need to rebuild the shaders
+        if (modified) {
+            this.clearVariants();
+        }
+    }
+
+    /**
+     * Returns true if a define is enabled on the material, otherwise false.
+     *
+     * @param {string} name - The name of the define to check.
+     * @returns {boolean} The value of the define.
+     */
+    getDefine(name) {
+        return this.defines.has(name);
     }
 
     /**

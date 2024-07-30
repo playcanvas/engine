@@ -1,3 +1,4 @@
+import { hashCode } from '../../../core/hash.js';
 import {
     GAMMA_SRGB,
     TONEMAP_ACES, TONEMAP_ACES2, TONEMAP_FILMIC, TONEMAP_HEJL, TONEMAP_NEUTRAL, TONEMAP_LINEAR
@@ -11,6 +12,16 @@ class ShaderGenerator {
 
     static end() {
         return '}\n';
+    }
+
+    /**
+     * @param {Set<string>} defines - the set of defines to be used in the shader.
+     * @returns {number} the hash code of the defines.
+     */
+    static definesHash(defines) {
+        const keys = Array.from(defines.keys()).sort();
+        const str = keys.join('_');
+        return hashCode(str);
     }
 
     static fogCode(value, chunks = shaderChunks) {

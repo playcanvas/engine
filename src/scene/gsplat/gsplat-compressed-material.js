@@ -271,7 +271,8 @@ class GSplatCompressedShaderGenerator {
     generateKey(options) {
         const vsHash = hashCode(options.vertex);
         const fsHash = hashCode(options.fragment);
-        return `splat-${options.pass}-${options.gamma}-${options.toneMapping}-${vsHash}-${fsHash}-${options.dither}}`;
+        const definesHash = ShaderGenerator.definesHash(options.defines);
+        return `splat-${options.pass}-${options.gamma}-${options.toneMapping}-${vsHash}-${fsHash}-${options.dither}-${definesHash}}`;
     }
 
     createShaderDefinition(device, options) {
@@ -291,6 +292,9 @@ class GSplatCompressedShaderGenerator {
             ShaderGenerator.gammaCode(options.gamma) +
             splatCoreFS + options.fragment;
 
+        const defineMap = new Map();
+        options.defines.forEach(value => defineMap.set(value, true));
+
         return ShaderUtils.createDefinition(device, {
             name: 'SplatShader',
             attributes: {
@@ -298,7 +302,9 @@ class GSplatCompressedShaderGenerator {
                 vertex_id_attrib: SEMANTIC_ATTR13
             },
             vertexCode: vs,
-            fragmentCode: fs
+            fragmentCode: fs,
+            fragmentDefines: defineMap,
+            vertexDefines: defineMap
         });
     }
 }
@@ -368,6 +374,7 @@ const createGSplatCompressedMaterial = (options = {}) => {
     material.getShaderVariant = function (params) {
 
         const programOptions = {
+            defines: material.defines,
             pass: params.pass,
             gamma: params.renderParams.shaderOutputGamma,
             toneMapping: params.renderParams.toneMapping,

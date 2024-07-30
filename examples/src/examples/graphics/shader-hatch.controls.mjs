@@ -51,11 +51,20 @@ export function controls({ observer, ReactPCUI, React, jsx, fragment }) {
             ),
             jsx(
                 LabelGroup,
-                { text: 'fog' },
+                { text: 'Fog' },
                 jsx(BooleanInput, {
                     type: 'toggle',
                     binding: new BindingTwoWay(),
                     link: { observer, path: 'data.fog' }
+                })
+            ),
+            jsx(
+                LabelGroup,
+                { text: 'Toon' },
+                jsx(BooleanInput, {
+                    type: 'toggle',
+                    binding: new BindingTwoWay(),
+                    link: { observer, path: 'data.toon' }
                 })
             )
         )

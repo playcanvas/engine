@@ -853,6 +853,7 @@ class StandardMaterial extends Material {
         const shaderPassInfo = ShaderPass.get(device).getByIndex(pass);
         const minimalOptions = pass === SHADER_DEPTH || pass === SHADER_PICK || pass === SHADER_PREPASS_VELOCITY || shaderPassInfo.isShadow;
         let options = minimalOptions ? standard.optionsContextMin : standard.optionsContext;
+        options.defines = this.defines;
 
         if (minimalOptions)
             this.shaderOptBuilder.updateMinRef(options, scene, this, objDefs, pass, sortedLights);
