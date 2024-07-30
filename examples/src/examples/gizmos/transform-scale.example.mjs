@@ -1,4 +1,5 @@
 import * as pc from 'playcanvas';
+import { data } from 'examples/observer';
 import { deviceType, rootPath } from 'examples/utils';
 
 const canvas = /** @type {HTMLCanvasElement} */ (document.getElementById('application-canvas'));
@@ -76,6 +77,10 @@ camera.script.create('orbitCameraInputTouch');
 camera.setPosition(1, 1, 1);
 app.root.addChild(camera);
 orbitCamera.distance = 5 * camera.camera.aspectRatio;
+data.set('camera', {
+    proj: camera.camera.projection + 1,
+    fov: camera.camera.fov
+});
 
 // create light entity
 const light = new pc.Entity('light');
@@ -95,15 +100,61 @@ layers.push(gizmoLayer);
 camera.camera.layers = camera.camera.layers.concat(gizmoLayer.id);
 
 // create gizmo
-const gizmo = new pc.TranslateGizmo(app, camera.camera, gizmoLayer);
+const gizmo = new pc.ScaleGizmo(app, camera.camera, gizmoLayer);
 gizmo.attach([box]);
+data.set('gizmo', {
+    size: gizmo.size,
+    snapIncrement: gizmo.snapIncrement,
+    xAxisColor: Object.values(gizmo.xAxisColor),
+    yAxisColor: Object.values(gizmo.yAxisColor),
+    zAxisColor: Object.values(gizmo.zAxisColor),
+    colorAlpha: gizmo.colorAlpha,
+    coordSpace: gizmo.coordSpace,
+    axisLineTolerance: gizmo.axisLineTolerance,
+    axisCenterTolerance: gizmo.axisCenterTolerance,
+    axisGap: gizmo.axisGap,
+    axisLineThickness: gizmo.axisLineThickness,
+    axisLineLength: gizmo.axisLineLength,
+    axisBoxSize: gizmo.axisBoxSize,
+    axisPlaneSize: gizmo.axisPlaneSize,
+    axisPlaneGap: gizmo.axisPlaneGap,
+    axisCenterSize: gizmo.axisCenterSize
+});
+
+// controls hook
+const tmpC = new pc.Color();
+data.on('*:set', (/** @type {string} */ path, /** @type {any} */ value) => {
+    const [category, key] = path.split('.');
+    switch (category) {
+        case 'camera':
+            switch (key) {
+                case 'proj':
+                    camera.camera.projection = value - 1;
+                    break;
+                case 'fov':
+                    camera.camera.fov = value;
+                    break;
+            }
+            return;
+        case 'gizmo':
+            // @ts-ignore
+            if (gizmo[key] instanceof pc.Color) {
+                // @ts-ignore
+                gizmo[key] = tmpC.set(...value);
+                return;
+            }
+
+            // @ts-ignore
+            gizmo[key] = value;
+    }
+});
 
 // ensure canvas is resized when window changes size + keep gizmo size consistent to canvas size
 const resize = () => {
     app.resizeCanvas();
     const bounds = canvas.getBoundingClientRect();
     const dim = camera.camera.horizontalFov ? bounds.width : bounds.height;
-    gizmo.size = 1024 / dim;
+    data.set('gizmo.size', 1024 / dim);
 };
 window.addEventListener('resize', resize);
 resize();
