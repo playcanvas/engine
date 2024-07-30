@@ -36,6 +36,7 @@ import { array } from '../core/array-utils.js';
  * @import { StencilParameters } from '../platform/graphics/stencil-parameters.js'
  * @import { Texture } from '../platform/graphics/texture.js'
  * @import { UniformBufferFormat } from '../platform/graphics/uniform-buffer-format.js'
+ * @import { Vec3 } from '../core/math/vec3.js'
  * @import { VertexBuffer } from '../platform/graphics/vertex-buffer.js'
  */
 
