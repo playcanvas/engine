@@ -13,10 +13,6 @@ class ShaderGenerator {
         return '}\n';
     }
 
-    static skinCode(device, chunks = shaderChunks) {
-        return chunks.skinTexVS;
-    }
-
     static fogCode(value, chunks = shaderChunks) {
         if (value === 'linear') {
             return chunks.fogLinearPS ?? shaderChunks.fogLinearPS;
