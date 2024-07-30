@@ -17,17 +17,17 @@ import {
 import { getDefaultMaterial } from './default-material.js';
 
 /**
+ * @import { BindGroupFormat } from '../../platform/graphics/bind-group-format.js';
+ * @import { GraphicsDevice } from '../../platform/graphics/graphics-device.js'
+ * @import { Light } from '../light.js';
  * @import { MeshInstance } from '../mesh-instance.js'
+ * @import { RenderingParams } from '../renderer/rendering-params.js'
+ * @import { Scene } from '../scene.js'
  * @import { Shader } from '../../platform/graphics/shader.js'
  * @import { StencilParameters } from '../../platform/graphics/stencil-parameters.js'
  * @import { Texture } from '../../platform/graphics/texture.js'
- * @import { GraphicsDevice } from '../../platform/graphics/graphics-device.js'
- * @import { Scene } from '../scene.js'
- * @import { RenderingParams } from '../renderer/rendering-params.js'
- * @import { Light } from '../light.js';
- * @import { VertexFormat } from '../../platform/graphics/vertex-format.js';
  * @import { UniformBufferFormat } from '../../platform/graphics/uniform-buffer-format.js';
- * @import { BindGroupFormat } from '../../platform/graphics/bind-group-format.js';
+ * @import { VertexFormat } from '../../platform/graphics/vertex-format.js';
  */
 
 // blend mode mapping to op, srcBlend and dstBlend
