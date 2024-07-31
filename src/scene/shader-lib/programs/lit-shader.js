@@ -223,10 +223,15 @@ class LitShader {
         }
 
         if (this.options.useInstancing) {
-            this.attributes.instance_line1 = SEMANTIC_ATTR12;
-            this.attributes.instance_line2 = SEMANTIC_ATTR13;
-            this.attributes.instance_line3 = SEMANTIC_ATTR14;
-            this.attributes.instance_line4 = SEMANTIC_ATTR15;
+
+            // only attach these if the default instancing chunk is used, otherwise expected user to provide them
+            // using material.setAttribute
+            if (this.chunks.transformInstancingVS === shaderChunks.transformInstancingVS) {
+                this.attributes.instance_line1 = SEMANTIC_ATTR12;
+                this.attributes.instance_line2 = SEMANTIC_ATTR13;
+                this.attributes.instance_line3 = SEMANTIC_ATTR14;
+                this.attributes.instance_line4 = SEMANTIC_ATTR15;
+            }
         }
 
         code += chunks.transformVS;
@@ -1513,6 +1518,7 @@ class LitShader {
 
         const vIncludes = new Map();
         vIncludes.set('transformCore', this.chunks.transformCoreVS);
+        vIncludes.set('transformInstancing', this.chunks.transformInstancingVS);
         vIncludes.set('skinTexVS', this.chunks.skinTexVS);
         vIncludes.set('skinBatchTexVS', this.chunks.skinBatchTexVS);
 

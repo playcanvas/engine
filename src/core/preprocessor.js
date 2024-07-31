@@ -329,7 +329,7 @@ class Preprocessor {
 
                         // cut out the include line and replace it with the included string
                         const includeSource = includes?.get(identifier);
-                        if (includeSource) {
+                        if (includeSource !== undefined) {
                             source = source.substring(0, include.index - 1) + includeSource + source.substring(INCLUDE.lastIndex);
 
                             // process the just included test
