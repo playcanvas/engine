@@ -1,3 +1,4 @@
+// @config DESCRIPTION This example demonstrates how a custom shader can be used to render instanced geometry, but also skinned, morphed and static geometry. A simple Gooch shading shader is used.
 import * as pc from 'playcanvas';
 import { deviceType, rootPath, fileImport } from 'examples/utils';
 
@@ -41,8 +42,7 @@ createOptions.componentSystems = [
 createOptions.resourceHandlers = [
     pc.TextureHandler,
     pc.ContainerHandler,
-    pc.AnimClipHandler,
-    pc.AnimStateGraphHandler
+    pc.AnimClipHandler
 ];
 
 const app = new pc.AppBase(canvas);
@@ -64,34 +64,30 @@ assetListLoader.load(() => {
     app.start();
 
     // a helper function to apply a material to all mesh instances of an entity
-    const applyMaterial = (entity, material) => {
+    const applyMaterial = (entity, materials) => {
         entity.findComponents('render').forEach((render) => {
             render.meshInstances.forEach((meshInstance) => {
-                meshInstance.material = material;
+                const goochMaterial = createGoochMaterial(meshInstance.material.diffuseMap);
+                meshInstance.material = goochMaterial;
+                materials.push(goochMaterial);
             });
         });
     };
 
     // setup skydome
     app.scene.skyboxMip = 2;
-    app.scene.exposure = 0.3;
     app.scene.envAtlas = assets.helipad.resource;
 
     // set up some general scene rendering properties
     app.scene.rendering.toneMapping = pc.TONEMAP_ACES;
-
-    app.scene.ambientLight = new pc.Color(0.1, 0.1, 0.1);
 
     // Create an Entity with a camera component
     const camera = new pc.Entity();
     camera.addComponent('camera', {});
     app.root.addChild(camera);
 
-    // Move the camera back to see the cubes
-    camera.translate(0, 0, 10);
-
-    // number of instances to render
-    const instanceCount = 150;
+    // number of instanced trees to render
+    const instanceCount = 500;
 
     // create static vertex buffer containing the instancing data
     const vbFormat = new pc.VertexFormat(app.graphicsDevice, [
@@ -106,7 +102,7 @@ assetListLoader.load(() => {
 
         // random points in the ring
         const radius0 = 2;
-        const radius1 = 5;
+        const radius1 = 10;
         const angle = Math.random() * 2 * Math.PI;
         const radius = Math.sqrt(Math.random() * (radius1 ** 2 - radius0 ** 2) + radius0 ** 2);
         const x = radius * Math.cos(angle);
@@ -123,57 +119,40 @@ assetListLoader.load(() => {
         data: data
     });
 
+    // create a forest by intantiating a tree model and setting it up for instancing
+    const forest = assets.tree.resource.instantiateRenderEntity();
+    app.root.addChild(forest);
 
-    const cylinder = assets.tree.resource.instantiateRenderEntity();
-    app.root.addChild(cylinder);
-
-    const meshInstance = cylinder.findComponent('render').meshInstances[0];
-    const texture = meshInstance.material.diffuseMap;
-    const material = createGoochMaterial(texture);
-
-    // initialize instancing using the vertex buffer on meshInstance of the created cylinder
-    meshInstance.setInstancing(vertexBuffer);
+    // find the mesh instance we want to instantiate, and swap its material for the custom gooch material,
+    // while preserving its texture
+    const meshInstance = forest.findComponent('render').meshInstances[0];
+    const material = createGoochMaterial(meshInstance.material.diffuseMap);
     meshInstance.material = material;
 
+    // initialize instancing using the vertex buffer on meshInstance
+    meshInstance.setInstancing(vertexBuffer);
 
-
-
-    // Create an Entity for the ground
-    const ground = new pc.Entity();
+    // Create an Entity for the ground - this is a static geometry. Create a new instance of the gooch material,
+    // without a texture.
+    const ground = new pc.Entity('Ground');
     const groundMaterial = createGoochMaterial(null, [0.13, 0.55, 0.13]); // no texture
     ground.addComponent('render', {
         type: 'box',
         material: groundMaterial
     });
-    ground.setLocalScale(20, 1, 20);
+    ground.setLocalScale(30, 1, 30);
     ground.setLocalPosition(0, -0.5, 0);
     app.root.addChild(ground);
 
-
-
-    // add a non-instanced sphere, using the same material. A non-instanced version of the shader
-    // is automatically created by the engine
-    const sphere = new pc.Entity('sphere');
-    const sphereMaterial = createGoochMaterial(null, [1, 0, 0]); // no texture
-    sphere.addComponent('render', {
-        type: 'sphere',
-        material: sphereMaterial
-    });
-    sphere.setLocalScale(2, 1, 2);
-    sphere.setLocalPosition(0, 0.5, 0);
-    app.root.addChild(sphere);
-
-
-
-
+    // store al materials to allow for easy modification
+    const materials = [material, groundMaterial];
 
     // animated / morphed bitmoji model
     const bitmojiEntity = assets.bitmoji.resource.instantiateRenderEntity({ castShadows: false });
-    bitmojiEntity.setLocalScale(2, 2, 2);
-    bitmojiEntity.setLocalPosition(0, 1, 0);
+    bitmojiEntity.setLocalScale(2.5, 2.5, 2.5);
+    bitmojiEntity.setLocalPosition(0, 0, 0);
     app.root.addChild(bitmojiEntity);
-    const bitmojiMaterial = createGoochMaterial(null, [1, 1, 0]);
-    applyMaterial(bitmojiEntity, bitmojiMaterial);
+    applyMaterial(bitmojiEntity, materials);
 
     // play the animation
     bitmojiEntity.addComponent('anim', { activate: true });
@@ -181,15 +160,9 @@ assetListLoader.load(() => {
     bitmojiEntity.anim.assignAnimation('Walk', walkTrack, undefined, 0.62);
 
 
-
-    // store al materials to allow for easy modification
-    const materials = [material, groundMaterial, sphereMaterial, bitmojiMaterial];
-
-
     // Set an update function on the app's update event
     let time = 0;
     app.on('update', function (dt) {
-        // orbit camera around
         time += dt;
 
         // generate a light direction that rotates around the scene, and set it on the materials
@@ -201,6 +174,7 @@ assetListLoader.load(() => {
             mat.update();
         });
 
+        // orbit the camera
         camera.setLocalPosition(8 * Math.sin(time * 0.01), 3, 8 * Math.cos(time * 0.01));
         camera.lookAt(new pc.Vec3(0, 1, 0));
     });

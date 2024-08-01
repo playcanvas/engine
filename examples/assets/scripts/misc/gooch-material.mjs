@@ -91,8 +91,8 @@ const createGoochMaterial = (texture, color) => {
             #endif
 
             // Good shading constants - could be exposed as uniforms instead
-            float diffuseCool = 0.3;
-            float diffuseWarm = 0.3;
+            float diffuseCool = 0.4;
+            float diffuseWarm = 0.4;
             vec3 cool = vec3(0, 0, 0.6);
             vec3 warm = vec3(0.6, 0, 0);
 

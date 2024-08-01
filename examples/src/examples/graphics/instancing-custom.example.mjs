@@ -1,3 +1,4 @@
+// @config DESCRIPTION This example demonstrates how to customize the shader handling the instancing of a StandardMaterial.
 import * as pc from 'playcanvas';
 import { deviceType, rootPath } from 'examples/utils';
 
@@ -8,7 +9,7 @@ const assets = {
     helipad: new pc.Asset(
         'helipad-env-atlas',
         'texture',
-        { url: rootPath + '/static/assets/cubemaps/helipad-env-atlas.png' },
+        { url: rootPath + '/static/assets/cubemaps/table-mountain-env-atlas.png' },
         { type: pc.TEXTURETYPE_RGBP, mipmaps: false }
     )
 };
@@ -48,24 +49,17 @@ assetListLoader.load(() => {
 
     // setup skydome
     app.scene.skyboxMip = 2;
-    app.scene.exposure = 0.3;
+    app.scene.exposure = 0.8;
     app.scene.envAtlas = assets.helipad.resource;
 
     // set up some general scene rendering properties
     app.scene.rendering.toneMapping = pc.TONEMAP_ACES;
-
     app.scene.ambientLight = new pc.Color(0.1, 0.1, 0.1);
 
     // Create an Entity with a camera component
     const camera = new pc.Entity();
     camera.addComponent('camera', {});
     app.root.addChild(camera);
-
-    // Move the camera back to see the cubes
-    camera.translate(0, 0, 10);
-
-    // number of instances to render
-    const instanceCount = 1000;
 
     // create static vertex buffer containing the instancing data
     const vbFormat = new pc.VertexFormat(app.graphicsDevice, [
@@ -74,13 +68,15 @@ assetListLoader.load(() => {
     ]);
 
     // store data for individual instances into array, 4 floats each
+    const instanceCount = 3000;
     const data = new Float32Array(instanceCount * 4);
 
+    const range = 10;
     for (let i = 0; i < instanceCount; i++) {
         const offset = i * 4;
-        data[offset + 0] = Math.random() * 5 - 5 * 0.5; // x
-        data[offset + 1] = Math.random() * 5 - 5 * 0.5; // y
-        data[offset + 2] = Math.random() * 5 - 5 * 0.5; // z
+        data[offset + 0] = Math.random() * range - range * 0.5; // x
+        data[offset + 1] = Math.random() * range - range * 0.5; // y
+        data[offset + 2] = Math.random() * range - range * 0.5; // z
         data[offset + 3] = 0.1 + Math.random() * 0.1; // scale
     }
 
@@ -88,53 +84,60 @@ assetListLoader.load(() => {
         data: data
     });
 
-    // create standard material
+    // create standard material - this will be used for instanced, but also non-instanced rendering
     const material = new pc.StandardMaterial();
-    material.gloss = 0.6;
-    material.metalness = 0.7;
+    material.gloss = 0.5;
+    material.metalness = 1;
+    material.diffuse = new pc.Color(0.7, 0.5, 0.7);
     material.useMetalness = true;
 
-
+    // set up additional attributes needed for instancing
     material.setAttribute('aInstPosition', pc.SEMANTIC_ATTR12);
     material.setAttribute('aInstScale', pc.SEMANTIC_ATTR13);
 
-
-
+    // and a custom instancing shader chunk, which will be used in case the mesh instance has instancing enabled
     material.chunks.transformInstancingVS = `
 
+        // instancing attributes
         attribute vec3 aInstPosition;
         attribute float aInstScale;
 
+        // uniforms
+        uniform float uTime;
+        uniform vec3 uCenter;
+
+        // all instancing chunk needs to do is to implement getModelMatrix function, which returns a world matrix for the instance
         mat4 getModelMatrix() {
+
+            // we have world position in aInstPosition, but modify it based on distance from uCenter for some displacement effect
+            vec3 direction = aInstPosition - uCenter;
+            float distanceFromCenter = length(direction);
+            float displacementIntensity = exp(-distanceFromCenter * 0.2) ; //* (1.9 + abs(sin(uTime * 1.5)));
+            vec3 worldPos = aInstPosition - direction * displacementIntensity;
+
+            // create matrix based on the modified poition, and scale
             return mat4(
                 vec4(aInstScale, 0.0, 0.0, 0.0),
                 vec4(0.0, aInstScale, 0.0, 0.0),
                 vec4(0.0, 0.0, aInstScale, 0.0),
-                vec4(aInstPosition, 1.0)
+                vec4(worldPos, 1.0)
             );
         }
-
-
     `;
-
 
     material.update();
 
-    // Create an Entity with a cylinder render component and the instancing material
-    const cylinder = new pc.Entity('InstancingEntity');
-    cylinder.addComponent('render', {
+    // Create an Entity with a sphere and the instancing material
+    const instancingEntity = new pc.Entity('InstancingEntity');
+    instancingEntity.addComponent('render', {
         material: material,
-        type: 'cylinder'
+        type: 'sphere'
     });
-    app.root.addChild(cylinder);
+    app.root.addChild(instancingEntity);
 
-    // initialize instancing using the vertex buffer on meshInstance of the created cylinder
-    const cylinderMeshInst = cylinder.render.meshInstances[0];
-    cylinderMeshInst.setInstancing(vertexBuffer);
-
-
-
-
+    // initialize instancing using the vertex buffer on meshInstance of the created mesh instance
+    const meshInst = instancingEntity.render.meshInstances[0];
+    meshInst.setInstancing(vertexBuffer);
 
     // add a non-instanced sphere, using the same material. A non-instanced version of the shader
     // is automatically created by the engine
@@ -146,15 +149,22 @@ assetListLoader.load(() => {
     sphere.setLocalScale(2, 2, 2);
     app.root.addChild(sphere);
 
-
-
-
-    // Set an update function on the app's update event
-    let angle = 0;
+    // An update function executes once per frame
+    let time = 0;
+    const spherePos = new pc.Vec3();
     app.on('update', function (dt) {
+        time += dt;
+
+        // move the large sphere up and down
+        spherePos.set(0, Math.sin(time) * 2, 0);
+        sphere.setLocalPosition(spherePos);
+
+        // update uniforms of the instancing material
+        material.setParameter('uTime', time);
+        material.setParameter('uCenter', [spherePos.x, spherePos.y, spherePos.z]);
+
         // orbit camera around
-        angle += dt * 0.2;
-        camera.setLocalPosition(8 * Math.sin(angle), 0, 8 * Math.cos(angle));
+        camera.setLocalPosition(8 * Math.sin(time * 0.1), 0, 8 * Math.cos(time * 0.1));
         camera.lookAt(pc.Vec3.ZERO);
     });
 });
