@@ -224,8 +224,8 @@ class LitShader {
 
         if (this.options.useInstancing) {
 
-            // only attach these if the default instancing chunk is used, otherwise expected user to provide them
-            // using material.setAttribute
+            // only attach these if the default instancing chunk is used, otherwise it is expected
+            // for the user to provide required attributes using material.setAttribute
             if (this.chunks.transformInstancingVS === shaderChunks.transformInstancingVS) {
                 this.attributes.instance_line1 = SEMANTIC_ATTR12;
                 this.attributes.instance_line2 = SEMANTIC_ATTR13;
