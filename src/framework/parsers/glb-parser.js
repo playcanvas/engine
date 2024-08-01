@@ -49,6 +49,7 @@ import { Asset } from '../asset/asset.js';
 import { ABSOLUTE_URL } from '../asset/constants.js';
 
 import { dracoDecode } from './draco-decoder.js';
+import { Quat } from '../../core/math/quat.js';
 
 // resources loaded from GLB file that the parser returns
 class GlbResources {
@@ -77,6 +78,8 @@ class GlbResources {
     lights;
 
     cameras;
+
+    nodeInstancingMap;
 
     destroy() {
         // render needs to dec ref meshes
@@ -1504,7 +1507,7 @@ const createAnimation = (gltfAnimation, animationIndex, gltfAccessors, bufferVie
 const tempMat = new Mat4();
 const tempVec = new Vec3();
 
-const createNode = (gltfNode, nodeIndex) => {
+const createNode = (gltfNode, nodeIndex, nodeInstancingMap) => {
     const entity = new GraphNode();
 
     if (gltfNode.hasOwnProperty('name') && gltfNode.name.length > 0) {
@@ -1537,6 +1540,12 @@ const createNode = (gltfNode, nodeIndex) => {
     if (gltfNode.hasOwnProperty('scale')) {
         const s = gltfNode.scale;
         entity.setLocalScale(s[0], s[1], s[2]);
+    }
+
+    if (gltfNode.hasOwnProperty('extensions') && gltfNode.extensions.EXT_mesh_gpu_instancing) {
+        nodeInstancingMap.set(gltfNode, {
+            ext: gltfNode.extensions.EXT_mesh_gpu_instancing
+        });
     }
 
     return entity;
@@ -1705,7 +1714,69 @@ const createAnimations = (gltf, nodes, bufferViews, options) => {
     });
 };
 
-const createNodes = (gltf, options) => {
+const createInstancing = (device, gltf, nodeInstancingMap, bufferViews) => {
+
+    const accessors = gltf.accessors;
+    nodeInstancingMap.forEach((data, entity) => {
+        const attributes = data.ext.attributes;
+
+        let translations;
+        if (attributes.hasOwnProperty('TRANSLATION')) {
+            const accessor = accessors[attributes.TRANSLATION];
+            translations = getAccessorDataFloat32(accessor, bufferViews);
+        }
+
+        let rotations;
+        if (attributes.hasOwnProperty('ROTATION')) {
+            const accessor = accessors[attributes.ROTATION];
+            rotations = getAccessorDataFloat32(accessor, bufferViews);
+        }
+
+        let scales;
+        if (attributes.hasOwnProperty('SCALE')) {
+            const accessor = accessors[attributes.SCALE];
+            scales = getAccessorDataFloat32(accessor, bufferViews);
+        }
+
+        const instanceCount = (translations ? translations.length / 3 : 0) ||
+            (rotations ? rotations.length / 4 : 0) ||
+            (scales ? scales.length / 3 : 0);
+
+        if (instanceCount) {
+
+            const matrices = new Float32Array(instanceCount * 16);
+            const pos = new Vec3();
+            const rot = new Quat();
+            const scl = new Vec3(1, 1, 1);
+            const matrix = new Mat4();
+            let matrixIndex = 0;
+
+            for (let i = 0; i < instanceCount; i++) {
+                const i3 = i * 3;
+                if (translations) {
+                    pos.set(translations[i3], translations[i3 + 1], translations[i3 + 2]);
+                }
+                if (rotations) {
+                    const i4 = i * 4;
+                    rot.set(rotations[i4], rotations[i4 + 1], rotations[i4 + 2], rotations[i4 + 3]);
+                }
+                if (scales) {
+                    scl.set(scales[i3], scales[i3 + 1], scales[i3 + 2]);
+                }
+
+                matrix.setTRS(pos, rot, scl);
+
+                // copy matrix elements into array of floats
+                for (let m = 0; m < 16; m++)
+                    matrices[matrixIndex++] = matrix.data[m];
+            }
+
+            data.matrices = matrices;
+        }
+    });
+};
+
+const createNodes = (gltf, options, nodeInstancingMap) => {
     if (!gltf.hasOwnProperty('nodes') || gltf.nodes.length === 0) {
         return [];
     }
@@ -1718,7 +1789,7 @@ const createNodes = (gltf, options) => {
         if (preprocess) {
             preprocess(gltfNode);
         }
-        const node = process(gltfNode, index);
+        const node = process(gltfNode, index, nodeInstancingMap);
         if (postprocess) {
             postprocess(gltfNode, node);
         }
@@ -1886,7 +1957,8 @@ const createResources = async (device, gltf, bufferViews, textures, options) => 
         Debug.warn(`glTF model may have been generated with flipped UVs. Please reconvert.`);
     }
 
-    const nodes = createNodes(gltf, options);
+    const nodeInstancingMap = new Map();
+    const nodes = createNodes(gltf, options, nodeInstancingMap);
     const scenes = createScenes(gltf, nodes);
     const lights = createLights(gltf, nodes, options);
     const cameras = createCameras(gltf, nodes, options);
@@ -1896,6 +1968,7 @@ const createResources = async (device, gltf, bufferViews, textures, options) => 
     const bufferViewData = await Promise.all(bufferViews);
     const { meshes, meshVariants, meshDefaultMaterials, promises } = createMeshes(device, gltf, bufferViewData, options);
     const animations = createAnimations(gltf, nodes, bufferViewData, options);
+    createInstancing(device, gltf, nodeInstancingMap, bufferViewData);
 
     // textures must have finished loading in order to create materials
     const textureAssets = await Promise.all(textures);
@@ -1927,6 +2000,7 @@ const createResources = async (device, gltf, bufferViews, textures, options) => 
     result.skins = skins;
     result.lights = lights;
     result.cameras = cameras;
+    result.nodeInstancingMap = nodeInstancingMap;
 
     if (postprocess) {
         postprocess(gltf, result);
