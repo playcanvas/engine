@@ -630,6 +630,9 @@ class StandardMaterial extends Material {
                 this._chunks[p] = source._chunks[p];
         }
 
+        // clone user attributes
+        this.userAttributes = new Map(source.userAttributes);
+
         return this;
     }
 
