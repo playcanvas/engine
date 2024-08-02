@@ -124,6 +124,10 @@ assetListLoader.load(() => {
         };
         biker1.gsplat.materialOptions = useCustomShader ? materialOptions : null;
         biker2.gsplat.materialOptions = useCustomShader ? materialOptions : null;
+
+        // biker 2 uses a different shader variant
+        biker2.gsplat.material.setDefine('CUTOUT', true);
+
         useCustomShader = !useCustomShader;
     });
 

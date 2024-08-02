@@ -219,6 +219,13 @@ assetListLoader.load(() => {
                 mat.update();
             });
         }
+        if (propertyName === 'toon') {
+            materials.forEach((mat) => {
+                // set a define that will be used inside the shader to switch between toon and hatch shading
+                mat.setDefine('TOON', value);
+                mat.update();
+            });
+        }
     });
 
     // initial values
@@ -226,7 +233,8 @@ assetListLoader.load(() => {
         color: 1,
         metalness: 0.5,
         tonemapping: 0,
-        fog: false
+        fog: false,
+        toon: false
     });
 });
 

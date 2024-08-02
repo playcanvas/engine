@@ -98,6 +98,7 @@ class ShaderMaterial extends Material {
 
         const objDefs = params.objDefs;
         const options = {
+            defines: this.defines,
             skin: (objDefs & SHADERDEF_SKIN) !== 0,
             useInstancing: (objDefs & SHADERDEF_INSTANCING) !== 0,
             useMorphPosition: (objDefs & SHADERDEF_MORPH_POSITION) !== 0,

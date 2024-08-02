@@ -42,7 +42,8 @@ class ShaderGeneratorStandard extends ShaderGenerator {
             props = buildPropertiesList(options);
         }
 
-        const key = "standard:\n" +
+        const definesHash = ShaderGenerator.definesHash(options.defines);
+        const key = "standard:\n" + definesHash + "\n" +
             props.map(prop => prop + options[prop]).join('\n') +
             LitOptionsUtils.generateKey(options.litOptions);
 
@@ -525,7 +526,7 @@ class ShaderGeneratorStandard extends ShaderGenerator {
 
         litShader.generateFragmentShader(decl.code, code.code, func.code, lightingUv);
 
-        return litShader.getDefinition();
+        return litShader.getDefinition(options);
     }
 }
 

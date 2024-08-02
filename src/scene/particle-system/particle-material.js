@@ -39,6 +39,7 @@ class ParticleMaterial extends Material {
         const { device, scene, renderParams } = params;
         const { emitter } = this;
         const options = {
+            defines: this.defines,
             pass: SHADER_FORWARD,
             useCpu: this.emitter.useCpu,
             normal: emitter.lighting ? ((emitter.normalMap !== null) ? 2 : 1) : 0,

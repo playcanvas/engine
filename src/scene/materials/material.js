@@ -103,6 +103,16 @@ class Material {
      */
     variants = new Map();
 
+    /**
+     * The set of defines used to generate the shader variants.
+     *
+     * @type {Map<string, string>}
+     * @ignore
+     */
+    defines = new Map();
+
+    _definesDirty = false;
+
     parameters = {};
 
     /**
@@ -520,6 +530,10 @@ class Material {
             }
         }
 
+        // defines
+        this.defines.clear();
+        source.defines.forEach(define => this.defines.add(define));
+
         return this;
     }
 
@@ -555,6 +569,12 @@ class Material {
      * Applies any changes made to the material's properties.
      */
     update() {
+        // if the defines were modified, we need to rebuild the shaders
+        if (this._definesDirty) {
+            this._definesDirty = false;
+            this.clearVariants();
+        }
+
         this.dirty = true;
     }
 
@@ -650,6 +670,39 @@ class Material {
                 parameter.scopeId.setValue(parameter.data);
             }
         }
+    }
+
+    /**
+     * Adds or removes a define on the material. Defines can be used to enable or disable various
+     * parts of the shader code.
+     *
+     * @param {string} name - The name of the define to set.
+     * @param {string|undefined|false} value - The value of the define. If undefined or false, the
+     * define is removed.
+     */
+    setDefine(name, value) {
+        let modified = false;
+        const { defines } = this;
+
+        if (value !== undefined && value !== false) {
+            modified = !defines.has(name) || defines.get(name) !== value;
+            defines.set(name, value);
+        } else {
+            modified = defines.has(name);
+            defines.delete(name);
+        }
+
+        this._definesDirty ||= modified;
+    }
+
+    /**
+     * Returns true if a define is enabled on the material, otherwise false.
+     *
+     * @param {string} name - The name of the define to check.
+     * @returns {boolean} The value of the define.
+     */
+    getDefine(name) {
+        return this.defines.has(name);
     }
 
     /**

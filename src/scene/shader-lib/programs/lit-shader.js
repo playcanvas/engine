@@ -1509,20 +1509,23 @@ class LitShader {
         this.handleCompatibility?.();
     }
 
-    getDefinition() {
+    getDefinition(options) {
 
         const vIncludes = new Map();
         vIncludes.set('transformCore', this.chunks.transformCoreVS);
         vIncludes.set('skinTexVS', this.chunks.skinTexVS);
         vIncludes.set('skinBatchTexVS', this.chunks.skinBatchTexVS);
 
+        const defines = new Map(options.defines);
+
         const definition = ShaderUtils.createDefinition(this.device, {
             name: 'LitShader',
             attributes: this.attributes,
             vertexCode: this.vshader,
             fragmentCode: this.fshader,
-            vertexIncludes: vIncludes
-
+            vertexIncludes: vIncludes,
+            fragmentDefines: defines,
+            vertexDefines: defines
         });
 
         if (this.shaderPassInfo.isForward) {

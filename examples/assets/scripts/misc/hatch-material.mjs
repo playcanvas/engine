@@ -101,17 +101,25 @@ const createHatchMaterial = (device, textures) => {
 
             void main(void)
             {
-                // brightness dictates the hatch texture level
-                float level = (1.0 - brightness) * uNumTextures;
+                #ifdef TOON
 
-                // sample the two nearest levels and interpolate between them
-                vec3 hatchUnder = texture(uDiffuseMap, vec3(uv0 * uDensity, floor(level))).xyz;
-                vec3 hatchAbove = texture(uDiffuseMap, vec3(uv0 * uDensity, min(ceil(level), uNumTextures - 1.0))).xyz;
-                vec3 hatchLinear = mix(hatchUnder, hatchAbove, fract(level)) * uColor;
+                    // just a simple toon shader - no texture sampling
+                    float level = float(int(brightness * uNumTextures)) / uNumTextures;
+                    vec3 colorLinear = level * uColor;
+
+                #else
+                    // brightness dictates the hatch texture level
+                    float level = (1.0 - brightness) * uNumTextures;
+
+                    // sample the two nearest levels and interpolate between them
+                    vec3 hatchUnder = texture(uDiffuseMap, vec3(uv0 * uDensity, floor(level))).xyz;
+                    vec3 hatchAbove = texture(uDiffuseMap, vec3(uv0 * uDensity, min(ceil(level), uNumTextures - 1.0))).xyz;
+                    vec3 colorLinear = mix(hatchUnder, hatchAbove, fract(level)) * uColor;
+                #endif
 
                 // handle standard color processing - the called functions are automatically attached to the
                 // shader based on the current fog / tone-mapping / gamma settings
-                vec3 fogged = addFog(hatchLinear);
+                vec3 fogged = addFog(colorLinear);
                 vec3 toneMapped = toneMap(fogged);
                 gl_FragColor.rgb = gammaCorrectOutput(toneMapped);
                 gl_FragColor.a = 1.0;

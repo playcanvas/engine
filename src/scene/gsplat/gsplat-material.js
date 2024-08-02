@@ -70,6 +70,7 @@ const createGSplatMaterial = (options = {}) => {
     material.getShaderVariant = function (params) {
 
         const programOptions = {
+            defines: material.defines,
             pass: params.pass,
             gamma: params.renderParams.shaderOutputGamma,
             toneMapping: params.renderParams.toneMapping,

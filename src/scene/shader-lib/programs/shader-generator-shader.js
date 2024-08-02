@@ -24,8 +24,9 @@ class ShaderGeneratorShader extends ShaderGenerator {
         const desc = options.shaderDesc;
         const vsHash = desc.vertexCode ? hashCode(desc.vertexCode) : 0;
         const fsHash = desc.fragmentCode ? hashCode(desc.fragmentCode) : 0;
+        const definesHash = ShaderGenerator.definesHash(options.defines);
 
-        let key = `${desc.uniqueName}_${vsHash}_${fsHash}`;
+        let key = `${desc.uniqueName}_${vsHash}_${fsHash}_${definesHash}`;
         key += '_' + options.pass;
         key += '_' + options.gamma;
         key += '_' + options.toneMapping;
@@ -72,7 +73,7 @@ class ShaderGeneratorShader extends ShaderGenerator {
 
         } else {
             const includes = new Map();
-            const defines = new Map();
+            const defines = new Map(options.defines);
 
             includes.set('shaderPassDefines', shaderPassInfo.shaderDefines);
             includes.set('userCode', desc.vertexCode);
@@ -107,7 +108,7 @@ class ShaderGeneratorShader extends ShaderGenerator {
 
         } else {
             const includes = new Map();
-            const defines = new Map();
+            const defines = new Map(options.defines);
 
             includes.set('shaderPassDefines', shaderPassInfo.shaderDefines);
             includes.set('decodePS', shaderChunks.decodePS);
