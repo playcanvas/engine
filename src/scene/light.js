@@ -886,16 +886,13 @@ class Light {
     }
 
     _updateShadowBias() {
-        const device = this.device;
-        if (device.isWebGL2 || device.isWebGPU) {
-            if (this._type === LIGHTTYPE_OMNI && !this.clusteredLighting) {
-                this.shadowDepthState.depthBias = 0;
-                this.shadowDepthState.depthBiasSlope = 0;
-            } else {
-                const bias = this.shadowBias * -1000.0;
-                this.shadowDepthState.depthBias = bias;
-                this.shadowDepthState.depthBiasSlope = bias;
-            }
+        if (this._type === LIGHTTYPE_OMNI && !this.clusteredLighting) {
+            this.shadowDepthState.depthBias = 0;
+            this.shadowDepthState.depthBiasSlope = 0;
+        } else {
+            const bias = this.shadowBias * -1000.0;
+            this.shadowDepthState.depthBias = bias;
+            this.shadowDepthState.depthBiasSlope = bias;
         }
     }
 
