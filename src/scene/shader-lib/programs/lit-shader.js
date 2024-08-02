@@ -408,7 +408,6 @@ class LitShader {
     }
 
     _fsGetShadowPassCode() {
-        const device = this.device;
         const options = this.options;
         const chunks = this.chunks;
         const varyings = this.varyings;
@@ -426,11 +425,7 @@ class LitShader {
         let code = this._fsGetBeginCode();
 
         if (shadowType === SHADOW_VSM32) {
-            if (device.textureFloatHighPrecision) {
-                code += '#define VSM_EXPONENT 15.0\n\n';
-            } else {
-                code += '#define VSM_EXPONENT 5.54\n\n';
-            }
+            code += '#define VSM_EXPONENT 15.0\n\n';
         } else if (shadowType === SHADOW_VSM16) {
             code += '#define VSM_EXPONENT 5.54\n\n';
         }
@@ -1157,11 +1152,7 @@ class LitShader {
                             break;
                         case SHADOW_VSM32:
                             shadowReadMode = "VSM32";
-                            if (device.textureFloatHighPrecision) {
-                                evsmExp = "15.0";
-                            } else {
-                                evsmExp = "5.54";
-                            }
+                            evsmExp = "15.0";
                             break;
                         case SHADOW_PCF1:
                             shadowReadMode = "PCF1x1";

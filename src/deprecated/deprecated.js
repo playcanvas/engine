@@ -310,6 +310,13 @@ Object.defineProperty(GraphicsDevice.prototype, 'webgl2', {
     }
 });
 
+Object.defineProperty(GraphicsDevice.prototype, 'textureFloatHighPrecision', {
+    get: function () {
+        Debug.deprecated('pc.GraphicsDevice#textureFloatHighPrecision is deprecated and always returns true.');
+        return true;
+    }
+});
+
 Object.defineProperty(GraphicsDevice.prototype, 'extBlendMinmax', {
     get: function () {
         Debug.deprecated('pc.GraphicsDevice#extBlendMinmax is deprecated as it is always true.');
