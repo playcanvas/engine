@@ -408,7 +408,6 @@ class LitShader {
     }
 
     _fsGetShadowPassCode() {
-        const device = this.device;
         const options = this.options;
         const chunks = this.chunks;
         const varyings = this.varyings;
