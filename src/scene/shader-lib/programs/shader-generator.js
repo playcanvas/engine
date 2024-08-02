@@ -15,13 +15,12 @@ class ShaderGenerator {
     }
 
     /**
-     * @param {Set<string>} defines - the set of defines to be used in the shader.
+     * @param {Map<string, string>} defines - the set of defines to be used in the shader.
      * @returns {number} the hash code of the defines.
      */
     static definesHash(defines) {
-        const keys = Array.from(defines.keys()).sort();
-        const str = keys.join('_');
-        return hashCode(str);
+        const sortedArray = Array.from(defines).sort((a, b) => (a[0] > b[0] ? 1 : -1));
+        return hashCode(JSON.stringify(sortedArray));
     }
 
     static fogCode(value, chunks = shaderChunks) {

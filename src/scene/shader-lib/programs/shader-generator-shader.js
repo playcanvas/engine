@@ -73,8 +73,7 @@ class ShaderGeneratorShader extends ShaderGenerator {
 
         } else {
             const includes = new Map();
-            const defines = new Map();
-            options.defines.forEach(value => defines.set(value, true));
+            const defines = new Map(options.defines);
 
             includes.set('shaderPassDefines', shaderPassInfo.shaderDefines);
             includes.set('userCode', desc.vertexCode);
@@ -111,8 +110,7 @@ class ShaderGeneratorShader extends ShaderGenerator {
 
         } else {
             const includes = new Map();
-            const defines = new Map();
-            options.defines.forEach(value => defines.set(value, true));
+            const defines = new Map(options.defines);
 
             includes.set('shaderPassDefines', shaderPassInfo.shaderDefines);
             includes.set('decodePS', shaderChunks.decodePS);

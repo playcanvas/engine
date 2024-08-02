@@ -1522,8 +1522,7 @@ class LitShader {
         vIncludes.set('skinTexVS', this.chunks.skinTexVS);
         vIncludes.set('skinBatchTexVS', this.chunks.skinBatchTexVS);
 
-        const defines = new Map();
-        options.defines.forEach(value => defines.set(value, true));
+        const defines = new Map(options.defines);
 
         const definition = ShaderUtils.createDefinition(this.device, {
             name: 'LitShader',
