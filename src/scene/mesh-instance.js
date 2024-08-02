@@ -38,10 +38,24 @@ class InstancingData {
     vertexBuffer = null;
 
     /**
+     * True if the vertex buffer is destroyed when the mesh instance is destroyed.
+     *
+     * @type {boolean}
+     */
+    _destroyVertexBuffer = false;
+
+    /**
      * @param {number} numObjects - The number of objects instanced.
      */
     constructor(numObjects) {
         this.count = numObjects;
+    }
+
+    destroy() {
+        if (this._destroyVertexBuffer) {
+            this.vertexBuffer?.destroy();
+        }
+        this.vertexBuffer = null;
     }
 }
 
@@ -785,6 +799,8 @@ class MeshInstance {
 
         // make sure material clears references to this meshInstance
         this.material = null;
+
+        this.instancingData?.destroy();
     }
 
     // shader uniform names for lightmaps
