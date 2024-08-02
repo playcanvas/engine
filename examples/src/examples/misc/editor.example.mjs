@@ -147,8 +147,24 @@ layers.push(gizmoLayer);
 camera.camera.layers = camera.camera.layers.concat(gizmoLayer.id);
 
 // create gizmo
+let skipObserverFire = false;
 const gizmoHandler = new GizmoHandler(app, camera.camera, gizmoLayer);
+const setGizmoControls = () => {
+    skipObserverFire = true;
+    data.set('gizmo', {
+        type: gizmoHandler.type,
+        size: gizmoHandler.gizmo.size,
+        snapIncrement: gizmoHandler.gizmo.snapIncrement,
+        xAxisColor: Object.values(gizmoHandler.gizmo.xAxisColor),
+        yAxisColor: Object.values(gizmoHandler.gizmo.yAxisColor),
+        zAxisColor: Object.values(gizmoHandler.gizmo.zAxisColor),
+        colorAlpha: gizmoHandler.gizmo.colorAlpha,
+        coordSpace: gizmoHandler.gizmo.coordSpace
+    });
+    skipObserverFire = false;
+};
 gizmoHandler.switch('translate');
+setGizmoControls();
 gizmoHandler.add(box);
 window.focus();
 
@@ -215,13 +231,11 @@ window.addEventListener('keyup', keyup);
 window.addEventListener('keypress', keypress);
 
 // gizmo and camera set handler
-const tmpC = new pc.Color();
 data.on('*:set', (/** @type {string} */ path, /** @type {any} */ value) => {
-    const pathArray = path.split('.');
-
-    switch (pathArray[0]) {
-        case 'camera':
-            switch (pathArray[1]) {
+    const [category, key] = path.split('.');
+    switch (category) {
+        case 'camera': {
+            switch (key) {
                 case 'proj':
                     camera.camera.projection = value - 1;
                     break;
@@ -229,37 +243,29 @@ data.on('*:set', (/** @type {string} */ path, /** @type {any} */ value) => {
                     camera.camera.fov = value;
                     break;
             }
-            return;
-        case 'gizmo':
-            if (gizmoHandler.skipSetFire) {
+            break;
+        }
+        case 'gizmo': {
+            if (skipObserverFire) {
                 return;
             }
-            switch (pathArray[1]) {
-                case 'type':
-                    gizmoHandler.switch(value);
-                    break;
-                case 'xAxisColor':
-                case 'yAxisColor':
-                case 'zAxisColor':
-                    // @ts-ignore
-                    tmpC.set(...value);
-                    gizmoHandler.gizmo[pathArray[1]] = tmpC;
-                    break;
-                default:
-                    gizmoHandler.gizmo[pathArray[1]] = value;
-                    break;
+            if (key === 'type') {
+                gizmoHandler.switch(value);
+                setGizmoControls();
+                return;
             }
+            gizmoHandler.gizmo[key] = value;
             break;
+        }
     }
 });
 
 // selector
 const selector = new Selector(app, camera.camera, [layers.getLayerByName('World')]);
 selector.on('select', (/** @type {pc.GraphNode} */ node, /** @type {boolean} */ clear) => {
-    if (gizmoHandler.ignorePicker) {
+    if (gizmoHandler.hasPointer) {
         return;
     }
-
     gizmoHandler.add(node, clear);
 });
 selector.on('deselect', () => {

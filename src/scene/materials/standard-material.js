@@ -453,6 +453,7 @@ const _tempColor = new Color();
  * multiplied by vertex colors.
  * @property {string} lightVertexColorChannel Vertex color channels to use for baked lighting. Can
  * be "r", "g", "b", "a", "rgb" or any swizzled combination.
+ * @property {number} aoIntensity Ambient occlusion intensity. Defaults to 1.
  * @property {Texture|null} aoMap The main (primary) baked ambient occlusion (AO) map (default is
  * null). Modulates ambient color.
  * @property {number} aoMapUv Main (primary) AO map UV channel
@@ -705,6 +706,7 @@ class StandardMaterial extends Material {
 
         this._setParameter('material_ambient', getUniform('ambient'));
         this._setParameter('material_diffuse', getUniform('diffuse'));
+        this._setParameter('material_aoIntensity', this.aoIntensity);
 
         if (this.useMetalness) {
             if (!this.metalnessMap || this.metalness < 1) {
@@ -1114,6 +1116,7 @@ function _defineMaterialProps() {
     _defineFloat('specularityFactor', 1);
     _defineFloat('sheenGloss', 0.0);
     _defineFloat('gloss', 0.25);
+    _defineFloat('aoIntensity', 1);
 
     _defineFloat('heightMapFactor', 1, (material, device, scene) => {
         return material.heightMapFactor * 0.025;
