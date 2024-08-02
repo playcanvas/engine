@@ -188,7 +188,7 @@ class WebglRenderTarget {
             } else if (target._depth) {
                 // --- Init a new depth/stencil buffer (optional) ---
                 // if device is a MSAA RT, and no buffer to resolve to, skip creating non-MSAA depth
-                const willRenderMsaa = target._samples > 1 && device.isWebGL2;
+                const willRenderMsaa = target._samples > 1;
                 if (!willRenderMsaa) {
                     if (!this._glDepthBuffer) {
                         this._glDepthBuffer = gl.createRenderbuffer();
@@ -198,8 +198,7 @@ class WebglRenderTarget {
                         gl.renderbufferStorage(gl.RENDERBUFFER, gl.DEPTH_STENCIL, target.width, target.height);
                         gl.framebufferRenderbuffer(gl.FRAMEBUFFER, gl.DEPTH_STENCIL_ATTACHMENT, gl.RENDERBUFFER, this._glDepthBuffer);
                     } else {
-                        const depthFormat = device.isWebGL2 ? gl.DEPTH_COMPONENT32F : gl.DEPTH_COMPONENT16;
-                        gl.renderbufferStorage(gl.RENDERBUFFER, depthFormat, target.width, target.height);
+                        gl.renderbufferStorage(gl.RENDERBUFFER, gl.DEPTH_COMPONENT32F, target.width, target.height);
                         gl.framebufferRenderbuffer(gl.FRAMEBUFFER, gl.DEPTH_ATTACHMENT, gl.RENDERBUFFER, this._glDepthBuffer);
                     }
                     gl.bindRenderbuffer(gl.RENDERBUFFER, null);
@@ -209,8 +208,8 @@ class WebglRenderTarget {
             Debug.call(() => this._checkFbo(device, target));
         }
 
-        // ##### Create MSAA FBO (WebGL2 only) #####
-        if (device.isWebGL2 && target._samples > 1) {
+        // ##### Create MSAA FBO #####
+        if (target._samples > 1) {
 
             Debug.call(() => {
                 if (target.width <= 0 || target.height <= 0) {
@@ -376,40 +375,37 @@ class WebglRenderTarget {
     }
 
     resolve(device, target, color, depth) {
-        if (device.isWebGL2) {
+        const gl = device.gl;
 
-            const gl = device.gl;
+        // if MRT is used, we need to resolve each buffer individually
+        if (this.colorMrtFramebuffers) {
 
-            // if MRT is used, we need to resolve each buffer individually
-            if (this.colorMrtFramebuffers) {
+            // color
+            if (color) {
+                for (let i = 0; i < this.colorMrtFramebuffers.length; i++) {
+                    const fbPair = this.colorMrtFramebuffers[i];
 
-                // color
-                if (color) {
-                    for (let i = 0; i < this.colorMrtFramebuffers.length; i++) {
-                        const fbPair = this.colorMrtFramebuffers[i];
-
-                        DebugGraphics.pushGpuMarker(device, `RESOLVE-MRT${i}`);
-                        this.internalResolve(device, fbPair.msaaFB, fbPair.resolveFB, target, gl.COLOR_BUFFER_BIT);
-                        DebugGraphics.popGpuMarker(device);
-                    }
-                }
-
-                // depth
-                if (depth) {
-                    DebugGraphics.pushGpuMarker(device, `RESOLVE-MRT-DEPTH`);
-                    this.internalResolve(device, this._glFrameBuffer, this._glResolveFrameBuffer, target, gl.DEPTH_BUFFER_BIT);
+                    DebugGraphics.pushGpuMarker(device, `RESOLVE-MRT${i}`);
+                    this.internalResolve(device, fbPair.msaaFB, fbPair.resolveFB, target, gl.COLOR_BUFFER_BIT);
                     DebugGraphics.popGpuMarker(device);
                 }
+            }
 
-            } else {
-                DebugGraphics.pushGpuMarker(device, `RESOLVE`);
-                this.internalResolve(device, this._glFrameBuffer, this._glResolveFrameBuffer, target,
-                                     (color ? gl.COLOR_BUFFER_BIT : 0) | (depth ? gl.DEPTH_BUFFER_BIT : 0));
+            // depth
+            if (depth) {
+                DebugGraphics.pushGpuMarker(device, `RESOLVE-MRT-DEPTH`);
+                this.internalResolve(device, this._glFrameBuffer, this._glResolveFrameBuffer, target, gl.DEPTH_BUFFER_BIT);
                 DebugGraphics.popGpuMarker(device);
             }
 
-            gl.bindFramebuffer(gl.FRAMEBUFFER, this._glFrameBuffer);
+        } else {
+            DebugGraphics.pushGpuMarker(device, `RESOLVE`);
+            this.internalResolve(device, this._glFrameBuffer, this._glResolveFrameBuffer, target,
+                                 (color ? gl.COLOR_BUFFER_BIT : 0) | (depth ? gl.DEPTH_BUFFER_BIT : 0));
+            DebugGraphics.popGpuMarker(device);
         }
+
+        gl.bindFramebuffer(gl.FRAMEBUFFER, this._glFrameBuffer);
     }
 }
 

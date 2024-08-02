@@ -1176,7 +1176,7 @@ class LitShader {
                         if (lightType === LIGHTTYPE_DIRECTIONAL) {
                             func.append("#define SHADOW_SAMPLE_ORTHO");
                         }
-                        if ((pcfShadows || pcssShadows) && device.isWebGL2 || device.isWebGPU) {
+                        if ((pcfShadows || pcssShadows) || device.isWebGPU) {
                             func.append("#define SHADOW_SAMPLE_SOURCE_ZBUFFER");
                         }
                         if (lightType === LIGHTTYPE_OMNI) {

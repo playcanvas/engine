@@ -43,14 +43,13 @@ class RenderPassColorGrab extends RenderPass {
     allocateRenderTarget(renderTarget, sourceRenderTarget, device, format) {
 
         // allocate texture buffer
-        const mipmaps = device.isWebGL2;
         const texture = new Texture(device, {
             name: _colorUniformName,
             format,
             width: sourceRenderTarget ? sourceRenderTarget.colorBuffer.width : device.width,
             height: sourceRenderTarget ? sourceRenderTarget.colorBuffer.height : device.height,
-            mipmaps,
-            minFilter: mipmaps ? FILTER_LINEAR_MIPMAP_LINEAR : FILTER_LINEAR,
+            mipmaps: true,
+            minFilter: FILTER_LINEAR_MIPMAP_LINEAR,
             magFilter: FILTER_LINEAR,
             addressU: ADDRESS_CLAMP_TO_EDGE,
             addressV: ADDRESS_CLAMP_TO_EDGE
@@ -122,7 +121,7 @@ class RenderPassColorGrab extends RenderPass {
             // generate mipmaps
             device.mipmapRenderer.generate(this.colorRenderTarget.colorBuffer.impl);
 
-        } else if (device.isWebGL2) {
+        } else {
 
             device.copyRenderTarget(sourceRt, this.colorRenderTarget, true, false);
 
