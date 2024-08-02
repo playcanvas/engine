@@ -106,10 +106,10 @@ class Material {
     /**
      * The set of defines used to generate the shader variants.
      *
-     * @type {Set<string>}
+     * @type {Map<string, string>}
      * @ignore
      */
-    defines = new Set();
+    defines = new Map();
 
     _definesDirty = false;
 
@@ -673,19 +673,20 @@ class Material {
     }
 
     /**
-     * Enables or disables a define on the material. Defines are used to enable or disable various
+     * Adds or removes a define on the material. Defines can be used to enable or disable various
      * parts of the shader code.
      *
      * @param {string} name - The name of the define to set.
-     * @param {boolean} value - The value of the define.
+     * @param {string|undefined|false} value - The value of the define. If undefined or false, the
+     * define is removed.
      */
     setDefine(name, value) {
         let modified = false;
         const { defines } = this;
 
-        if (value) {
-            modified = !defines.has(name);
-            defines.add(name);
+        if (value !== undefined && value !== false) {
+            modified = !defines.has(name) || defines.get(name) !== value;
+            defines.set(name, value);
         } else {
             modified = defines.has(name);
             defines.delete(name);
