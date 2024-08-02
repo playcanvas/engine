@@ -111,6 +111,8 @@ class Material {
      */
     defines = new Set();
 
+    _definesDirty = false;
+
     parameters = {};
 
     /**
@@ -567,6 +569,12 @@ class Material {
      * Applies any changes made to the material's properties.
      */
     update() {
+        // if the defines were modified, we need to rebuild the shaders
+        if (this._definesDirty) {
+            this._definesDirty = false;
+            this.clearVariants();
+        }
+
         this.dirty = true;
     }
 
@@ -683,10 +691,7 @@ class Material {
             defines.delete(name);
         }
 
-        // if the define was modified, we need to rebuild the shaders
-        if (modified) {
-            this.clearVariants();
-        }
+        this._definesDirty ||= modified;
     }
 
     /**
