@@ -252,25 +252,30 @@ class RenderPassSsao extends RenderPassShaderQuad {
         // main SSAO render pass
         this.shader = this.createQuadShader('SsaoShader', shaderChunks.screenDepthPS + fs);
 
-        const rt = this.createRenderTarget(`SsaoRawTexture`);
+        const rt = this.createRenderTarget(`SsaoFinalTexture`);
         this.ssaoTexture = rt.colorBuffer;
 
         this.init(rt, {
             resizeSource: this.sourceTexture
         });
 
-        // optional blur pass
+        // optional blur passes
         if (blurEnabled) {
 
-            const blurRT = this.createRenderTarget(`SsaoFinalTexture`);
-            this.ssaoTexture = blurRT.colorBuffer;
+            const blurRT = this.createRenderTarget(`SsaoTempTexture`);
 
-            const blurPass = new RenderPassDepthAwareBlur(device, rt.colorBuffer);
-            blurPass.init(blurRT, {
+            const blurPassHorizontal = new RenderPassDepthAwareBlur(device, rt.colorBuffer, true);
+            blurPassHorizontal.init(blurRT, {
                 resizeSource: rt.colorBuffer
             });
 
-            this.afterPasses.push(blurPass);
+            const blurPassVertical = new RenderPassDepthAwareBlur(device, blurRT.colorBuffer, false);
+            blurPassVertical.init(rt, {
+                resizeSource: rt.colorBuffer
+            });
+
+            this.afterPasses.push(blurPassHorizontal);
+            this.afterPasses.push(blurPassVertical);
         }
     }
 
@@ -281,12 +286,12 @@ class RenderPassSsao extends RenderPassShaderQuad {
         this.renderTarget = null;
 
         if (this.afterPasses.length > 0) {
-            const blurPass = this.afterPasses[0];
-            const blurRt = blurPass.renderTarget;
+            const blurRt = this.afterPasses[0].renderTarget;
             blurRt?.destroyTextureBuffers();
             blurRt?.destroy();
-            blurPass.destroy();
         }
+
+        this.afterPasses.forEach(pass => pass.destroy());
         this.afterPasses.length = 0;
 
         super.destroy();
