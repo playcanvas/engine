@@ -406,7 +406,7 @@ class Entity extends GraphNode {
     removeComponent(type) {
         const system = this._app.systems[type];
         if (!system) {
-            Debug.error(`addComponent: System '${type}' doesn't exist`);
+            Debug.error(`removeComponent: System '${type}' doesn't exist`);
             return;
         }
         if (!this.c[type]) {
