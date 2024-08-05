@@ -75,7 +75,22 @@ const tmpV1 = new Vec3();
 const tmpV2 = new Vec3();
 const tmpQ1 = new Quat();
 
-function createShadowMesh(device, entity, type, color = Color.WHITE, templateOpts) {
+const calculateShadow = (lightDir, numVertices, normals) => {
+    const shadow = [];
+    for (let i = 0; i < numVertices; i++) {
+        const x = normals[i * 3];
+        const y = normals[i * 3 + 1];
+        const z = normals[i * 3 + 2];
+        tmpV2.set(x, y, z);
+
+        const dot = lightDir.dot(tmpV2);
+        shadow.push(dot * SHADOW_DAMP_SCALE + SHADOW_DAMP_OFFSET);
+    }
+
+    return shadow;
+};
+
+const createShadowMesh = (device, entity, type, color = Color.WHITE, templateOpts) => {
     const Geometry = GEOMETRIES[type];
     if (!Geometry) {
         throw new Error('Invalid primitive type.');
@@ -103,24 +118,9 @@ function createShadowMesh(device, entity, type, color = Color.WHITE, templateOpt
     SHADOW_MESH_MAP.set(shadowMesh, shadow);
 
     return shadowMesh;
-}
+};
 
-function calculateShadow(lightDir, numVertices, normals) {
-    const shadow = [];
-    for (let i = 0; i < numVertices; i++) {
-        const x = normals[i * 3];
-        const y = normals[i * 3 + 1];
-        const z = normals[i * 3 + 2];
-        tmpV2.set(x, y, z);
-
-        const dot = lightDir.dot(tmpV2);
-        shadow.push(dot * SHADOW_DAMP_SCALE + SHADOW_DAMP_OFFSET);
-    }
-
-    return shadow;
-}
-
-function setShadowMeshColor(mesh, color) {
+const setShadowMeshColor = (mesh, color) => {
     if (!SHADOW_MESH_MAP.has(mesh)) {
         return;
     }
@@ -131,7 +131,7 @@ function setShadowMeshColor(mesh, color) {
     }
     mesh.setColors32(colors);
     mesh.update();
-}
+};
 
 class AxisShape {
     _position;
