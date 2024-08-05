@@ -64,8 +64,8 @@ class StencilParameters {
     _key;
 
     /**
-     * A comparison function that decides if the pixel should be written, based on the current
-     * stencil buffer value, reference value, and mask value. Can be:
+     * Sets the comparison function that decides if the pixel should be written, based on the
+     * current stencil buffer value, reference value, and mask value. Can be:
      *
      * - {@link FUNC_NEVER}: never pass
      * - {@link FUNC_LESS}: pass if (ref & mask) < (stencil & mask)
@@ -83,12 +83,17 @@ class StencilParameters {
         this._dirty = true;
     }
 
+    /**
+     * Sets the comparison function that decides if the pixel should be written.
+     *
+     * @type {number}
+     */
     get func() {
         return this._func;
     }
 
     /**
-     * Sets stencil test reference value used in comparisons.
+     * Sets the stencil test reference value used in comparisons.
      *
      * @type {number}
      */
@@ -97,12 +102,17 @@ class StencilParameters {
         this._dirty = true;
     }
 
+    /**
+     * Gets the stencil test reference value used in comparisons.
+     *
+     * @type {number}
+     */
     get ref() {
         return this._ref;
     }
 
     /**
-     * Operation to perform if stencil test is failed. Can be:
+     * Sets the operation to perform if stencil test is failed. Can be:
      *
      * - {@link STENCILOP_KEEP}: don't change the stencil buffer value
      * - {@link STENCILOP_ZERO}: set value to zero
@@ -122,12 +132,17 @@ class StencilParameters {
         this._dirty = true;
     }
 
+    /**
+     * Gets the operation to perform if stencil test is failed.
+     *
+     * @type {number}
+     */
     get fail() {
         return this._fail;
     }
 
     /**
-     * Operation to perform if depth test is failed. Accepts the same values as `fail`.
+     * Sets the operation to perform if depth test is failed. Accepts the same values as `fail`.
      *
      * @type {number}
      */
@@ -136,13 +151,18 @@ class StencilParameters {
         this._dirty = true;
     }
 
+    /**
+     * Gets the operation to perform if depth test is failed.
+     *
+     * @type {number}
+     */
     get zfail() {
         return this._zfail;
     }
 
     /**
-     * Operation to perform if both stencil and depth test are passed. Accepts the same values as
-     * `fail`.
+     * Sets the operation to perform if both stencil and depth test are passed. Accepts the same
+     * values as `fail`.
      *
      * @type {number}
      */
@@ -151,12 +171,17 @@ class StencilParameters {
         this._dirty = true;
     }
 
+    /**
+     * Gets the operation to perform if both stencil and depth test are passed.
+     *
+     * @type {number}
+     */
     get zpass() {
         return this._zpass;
     }
 
     /**
-     * Mask applied to stencil buffer value and reference value before comparison.
+     * Sets the mask applied to stencil buffer value and reference value before comparison.
      *
      * @type {number}
      */
@@ -165,12 +190,17 @@ class StencilParameters {
         this._dirty = true;
     }
 
+    /**
+     * Gets the mask applied to stencil buffer value and reference value before comparison.
+     *
+     * @type {number}
+     */
     get readMask() {
         return this._readMask;
     }
 
     /**
-     * A bit mask applied to the stencil value, when written.
+     * Sets the bit mask applied to the stencil value when written.
      *
      * @type {number}
      */
@@ -179,6 +209,11 @@ class StencilParameters {
         this._dirty = true;
     }
 
+    /**
+     * Gets the bit mask applied to the stencil value when written.
+     *
+     * @type {number}
+     */
     get writeMask() {
         return this._writeMask;
     }

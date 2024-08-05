@@ -451,7 +451,7 @@ class Layer {
     }
 
     /**
-     * Enable the layer. Disabled layers are skipped. Defaults to true.
+     * Sets the enabled state of the layer. Disabled layers are skipped. Defaults to true.
      *
      * @type {boolean}
      */
@@ -469,12 +469,17 @@ class Layer {
         }
     }
 
+    /**
+     * Gets the enabled state of the layer.
+     *
+     * @type {boolean}
+     */
     get enabled() {
         return this._enabled;
     }
 
     /**
-     * If true, the camera will clear the color buffer when it renders this layer.
+     * Sets whether the camera will clear the color buffer when it renders this layer.
      *
      * @type {boolean}
      */
@@ -483,12 +488,17 @@ class Layer {
         this._dirtyComposition = true;
     }
 
+    /**
+     * Gets whether the camera will clear the color buffer when it renders this layer.
+     *
+     * @type {boolean}
+     */
     get clearColorBuffer() {
         return this._clearColorBuffer;
     }
 
     /**
-     * If true, the camera will clear the depth buffer when it renders this layer.
+     * Sets whether the camera will clear the depth buffer when it renders this layer.
      *
      * @type {boolean}
      */
@@ -497,12 +507,17 @@ class Layer {
         this._dirtyComposition = true;
     }
 
+    /**
+     * Gets whether the camera will clear the depth buffer when it renders this layer.
+     *
+     * @type {boolean}
+     */
     get clearDepthBuffer() {
         return this._clearDepthBuffer;
     }
 
     /**
-     * If true, the camera will clear the stencil buffer when it renders this layer.
+     * Sets whether the camera will clear the stencil buffer when it renders this layer.
      *
      * @type {boolean}
      */
@@ -511,12 +526,17 @@ class Layer {
         this._dirtyComposition = true;
     }
 
+    /**
+     * Gets whether the camera will clear the stencil buffer when it renders this layer.
+     *
+     * @type {boolean}
+     */
     get clearStencilBuffer() {
         return this._clearStencilBuffer;
     }
 
     /**
-     * True if the layer contains omni or spot lights
+     * Gets whether the layer contains omni or spot lights.
      *
      * @type {boolean}
      * @ignore
@@ -526,7 +546,7 @@ class Layer {
     }
 
     /**
-     * Returns lights used by clustered lighting in a set.
+     * Gets the lights used by clustered lighting in a set.
      *
      * @type {Set<import('./light.js').Light>}
      * @ignore

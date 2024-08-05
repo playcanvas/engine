@@ -492,19 +492,24 @@ class XrManager extends EventHandler {
             if (options && options.depthSensing && this.depthSensing.supported) {
                 opts.optionalFeatures.push('depth-sensing');
 
-                const usagePreference = [XRDEPTHSENSINGUSAGE_CPU];
-                const dataFormatPreference = [XRDEPTHSENSINGFORMAT_L8A8];
+                const usagePreference = [];
+                const dataFormatPreference = [];
 
-                if (options.depthSensing.usagePreference) {
-                    const ind = usagePreference.indexOf(options.depthSensing.usagePreference);
-                    if (ind !== -1) usagePreference.splice(ind, 1);
-                    usagePreference.unshift(options.depthSensing.usagePreference);
-                }
+                if (!navigator.userAgent.includes('OculusBrowser')) {
+                    usagePreference.push(XRDEPTHSENSINGUSAGE_CPU);
+                    dataFormatPreference.push(XRDEPTHSENSINGFORMAT_L8A8);
 
-                if (options.depthSensing.dataFormatPreference) {
-                    const ind = dataFormatPreference.indexOf(options.depthSensing.dataFormatPreference);
-                    if (ind !== -1) dataFormatPreference.splice(ind, 1);
-                    dataFormatPreference.unshift(options.depthSensing.dataFormatPreference);
+                    if (options.depthSensing.usagePreference) {
+                        const ind = usagePreference.indexOf(options.depthSensing.usagePreference);
+                        if (ind !== -1) usagePreference.splice(ind, 1);
+                        usagePreference.unshift(options.depthSensing.usagePreference);
+                    }
+
+                    if (options.depthSensing.dataFormatPreference) {
+                        const ind = dataFormatPreference.indexOf(options.depthSensing.dataFormatPreference);
+                        if (ind !== -1) dataFormatPreference.splice(ind, 1);
+                        dataFormatPreference.unshift(options.depthSensing.dataFormatPreference);
+                    }
                 }
 
                 opts.depthSensing = {
@@ -821,7 +826,7 @@ class XrManager extends EventHandler {
         const deviceType = device.deviceType;
         if ((deviceType === DEVICETYPE_WEBGL1 || deviceType === DEVICETYPE_WEBGL2) && window.XRWebGLBinding) {
             try {
-                this.webglBinding = new XRWebGLBinding(this._session, device.gl); // eslint-disable-line no-undef
+                this.webglBinding = new XRWebGLBinding(this._session, device.gl);
             } catch (ex) {
                 this.fire('error', ex);
             }
@@ -868,7 +873,7 @@ class XrManager extends EventHandler {
     }
 
     /**
-     * @param {*} frame - XRFrame from requestAnimationFrame callback.
+     * @param {XRFrame} frame - XRFrame from requestAnimationFrame callback.
      *
      * @returns {boolean} True if update was successful, false otherwise.
      * @ignore

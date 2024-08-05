@@ -6,12 +6,33 @@ import { getProgramLibrary } from "../shader-lib/get-program-library.js";
 import { gsplat } from "./shader-generator-gsplat.js";
 
 const splatMainVS = `
+    vec4 discardVec = vec4(0.0, 0.0, 2.0, 1.0);
+
     void main(void)
     {
-        vec3 centerLocal = evalCenter();
-        vec4 centerWorld = matrix_model * vec4(centerLocal, 1.0);
+        // calculate splat uv
+        if (!calcSplatUV()) {
+            gl_Position = discardVec;
+            return;
+        }
 
-        gl_Position = evalSplat(centerWorld);
+        // read data
+        readData();
+
+        vec4 pos;
+        if (!evalSplat(pos)) {
+            gl_Position = discardVec;
+            return;
+        }
+
+        gl_Position = pos;
+
+        texCoord = vertex_position.xy;
+        color = getColor();
+
+        #ifndef DITHER_NONE
+            id = float(splatId);
+        #endif
     }
 `;
 
@@ -27,6 +48,8 @@ const splatMainFS = `
  * @property {string} [vertex] - Custom vertex shader, see SPLAT MANY example.
  * @property {string} [fragment] - Custom fragment shader, see SPLAT MANY example.
  * @property {string} [dither] - Opacity dithering enum.
+ *
+ * @ignore
  */
 
 /**

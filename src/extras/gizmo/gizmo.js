@@ -269,6 +269,7 @@ class Gizmo extends EventHandler {
             const selection = this._getSelection(e.offsetX, e.offsetY);
             if (selection[0]) {
                 e.preventDefault();
+                e.stopPropagation();
             }
             this.fire(Gizmo.EVENT_POINTERDOWN, e.offsetX, e.offsetY, selection[0]);
         };
@@ -279,6 +280,7 @@ class Gizmo extends EventHandler {
             const selection = this._getSelection(e.offsetX, e.offsetY);
             if (selection[0]) {
                 e.preventDefault();
+                e.stopPropagation();
             }
             this.fire(Gizmo.EVENT_POINTERMOVE, e.offsetX, e.offsetY, selection[0]);
         };
@@ -289,8 +291,8 @@ class Gizmo extends EventHandler {
             this.fire(Gizmo.EVENT_POINTERUP);
         };
 
-        this._device.canvas.addEventListener('pointerdown', this._onPointerDown);
-        this._device.canvas.addEventListener('pointermove', this._onPointerMove);
+        this._device.canvas.addEventListener('pointerdown', this._onPointerDown, true);
+        this._device.canvas.addEventListener('pointermove', this._onPointerMove, true);
         this._device.canvas.addEventListener('pointerup', this._onPointerUp);
 
         app.on('update', () => this._updateScale());
@@ -299,7 +301,7 @@ class Gizmo extends EventHandler {
     }
 
     /**
-     * The gizmo coordinate space. Can be:
+     * Sets the gizmo coordinate space. Can be:
      *
      * - {@link GIZMO_LOCAL}
      * - {@link GIZMO_WORLD}
@@ -313,12 +315,17 @@ class Gizmo extends EventHandler {
         this._updateRotation();
     }
 
+    /**
+     * Gets the gizmo coordinate space.
+     *
+     * @type {string}
+     */
     get coordSpace() {
         return this._coordSpace;
     }
 
     /**
-     * The gizmo size. Defaults to 1.
+     * Sets the gizmo size. Defaults to 1.
      *
      * @type {number}
      */
@@ -327,6 +334,11 @@ class Gizmo extends EventHandler {
         this._updateScale();
     }
 
+    /**
+     * Gets the gizmo size.
+     *
+     * @type {number}
+     */
     get size() {
         return this._size;
     }
@@ -477,8 +489,8 @@ class Gizmo extends EventHandler {
     destroy() {
         this.detach();
 
-        this._device.canvas.removeEventListener('pointerdown', this._onPointerDown);
-        this._device.canvas.removeEventListener('pointermove', this._onPointerMove);
+        this._device.canvas.removeEventListener('pointerdown', this._onPointerDown, true);
+        this._device.canvas.removeEventListener('pointermove', this._onPointerMove, true);
         this._device.canvas.removeEventListener('pointerup', this._onPointerUp);
 
         this.root.destroy();

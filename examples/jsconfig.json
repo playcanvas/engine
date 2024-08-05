@@ -1,20 +1,15 @@
 {
     "compilerOptions": {
-        "checkJs": true,
-        "outDir": "dist",
-        "noImplicitAny": true,
-        "strictNullChecks": true,
-        "module": "esnext",
-        "target": "es2020",
         "allowJs": true,
-        "jsx": "react",
-        "lib": [
-            "es2019",
-            "dom"
-        ],
         "allowSyntheticDefaultImports" : true,
+        "checkJs": true,
         "esModuleInterop" : true,
-        "moduleResolution" : "node"
+        "module": "Node16",
+        "moduleResolution": "Node16",
+        "noImplicitAny": true,
+        "outDir": "dist",
+        "strictNullChecks": true,
+        "target": "ESNext",
     },
     "include": ["src", "scripts", "iframe", "utils"],
     "exclude": ["node_modules", "src/lib"]

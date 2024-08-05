@@ -58,8 +58,8 @@ class SoundManager extends EventHandler {
     }
 
     /**
-     * Global volume for the manager. All {@link SoundInstance}s will scale their volume with this
-     * volume. Valid between [0, 1].
+     * Sets the global volume for the manager. All {@link SoundInstance}s will scale their volume
+     * with this volume. Valid between [0, 1].
      *
      * @type {number}
      */
@@ -69,6 +69,11 @@ class SoundManager extends EventHandler {
         this.fire('volumechange', volume);
     }
 
+    /**
+     * Gets the global volume for the manager.
+     *
+     * @type {number}
+     */
     get volume() {
         return this._volume;
     }

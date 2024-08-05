@@ -117,15 +117,15 @@ class SoundSlot extends EventHandler {
      * @param {object} [options] - Settings for the slot.
      * @param {number} [options.volume] - The playback volume, between 0 and 1.
      * @param {number} [options.pitch] - The relative pitch, default of 1, plays at normal pitch.
-     * @param {boolean} [options.loop] - If true the sound will restart when it reaches the end.
+     * @param {boolean} [options.loop] - If true, the sound will restart when it reaches the end.
      * @param {number} [options.startTime] - The start time from which the sound will start
      * playing.
      * @param {number} [options.duration] - The duration of the sound that the slot will play
      * starting from startTime.
-     * @param {boolean} [options.overlap] - If true then sounds played from slot will be played
+     * @param {boolean} [options.overlap] - If true, then sounds played from slot will be played
      * independently of each other. Otherwise the slot will first stop the current sound before
      * starting the new one.
-     * @param {boolean} [options.autoPlay] - If true the slot will start playing as soon as its
+     * @param {boolean} [options.autoPlay] - If true, the slot will start playing as soon as its
      * audio asset is loaded.
      * @param {number} [options.asset] - The asset id of the audio asset that is going to be played
      * by this slot.
@@ -500,7 +500,7 @@ class SoundSlot extends EventHandler {
     }
 
     /**
-     * The asset id.
+     * Sets the asset id.
      *
      * @type {number|null}
      */
@@ -526,12 +526,17 @@ class SoundSlot extends EventHandler {
         }
     }
 
+    /**
+     * Gets the asset id.
+     *
+     * @type {number|null}
+     */
     get asset() {
         return this._asset;
     }
 
     /**
-     * If true the slot will begin playing as soon as it is loaded.
+     * Sets whether the slot will begin playing as soon as it is loaded.
      *
      * @type {boolean}
      */
@@ -539,12 +544,17 @@ class SoundSlot extends EventHandler {
         this._autoPlay = !!value;
     }
 
+    /**
+     * Gets whether the slot will begin playing as soon as it is loaded.
+     *
+     * @type {boolean}
+     */
     get autoPlay() {
         return this._autoPlay;
     }
 
     /**
-     * The duration of the sound that the slot will play starting from startTime.
+     * Sets the duration of the sound that the slot will play starting from startTime.
      *
      * @type {number}
      */
@@ -560,6 +570,11 @@ class SoundSlot extends EventHandler {
         }
     }
 
+    /**
+     * Gets the duration of the sound that the slot will play starting from startTime.
+     *
+     * @type {number}
+     */
     get duration() {
         let assetDuration = 0;
         if (this._hasAsset()) {
@@ -575,7 +590,7 @@ class SoundSlot extends EventHandler {
     }
 
     /**
-     * Returns true if the asset of the slot is loaded.
+     * Gets whether the asset of the slot is loaded.
      *
      * @type {boolean}
      */
@@ -591,7 +606,7 @@ class SoundSlot extends EventHandler {
     }
 
     /**
-     * Returns true if the slot is currently paused.
+     * Gets whether the slot is currently paused.
      *
      * @type {boolean}
      */
@@ -610,7 +625,7 @@ class SoundSlot extends EventHandler {
     }
 
     /**
-     * Returns true if the slot is currently playing.
+     * Gets whether the slot is currently playing.
      *
      * @type {boolean}
      */
@@ -625,7 +640,7 @@ class SoundSlot extends EventHandler {
     }
 
     /**
-     * Returns true if the slot is currently stopped.
+     * Gets whether the slot is currently stopped.
      *
      * @type {boolean}
      */
@@ -640,7 +655,7 @@ class SoundSlot extends EventHandler {
     }
 
     /**
-     * If true the slot will restart when it finishes playing.
+     * Sets whether the slot will restart when it finishes playing.
      *
      * @type {boolean}
      */
@@ -654,13 +669,18 @@ class SoundSlot extends EventHandler {
         }
     }
 
+    /**
+     * Gets whether the slot will restart when it finishes playing.
+     *
+     * @type {boolean}
+     */
     get loop() {
         return this._loop;
     }
 
     /**
-     * If true then sounds played from slot will be played independently of each other. Otherwise
-     * the slot will first stop the current sound before starting the new one.
+     * Sets whether the sounds played from this slot will be played independently of each other.
+     * Otherwise, the slot will first stop the current sound before starting the new one.
      *
      * @type {boolean}
      */
@@ -668,12 +688,17 @@ class SoundSlot extends EventHandler {
         this._overlap = !!value;
     }
 
+    /**
+     * Gets whether the sounds played from this slot will be played independently of each other.
+     *
+     * @type {boolean}
+     */
     get overlap() {
         return this._overlap;
     }
 
     /**
-     * The pitch modifier to play the sound with. Must be larger than 0.01.
+     * Sets the pitch modifier to play the sound with. Must be larger than 0.01.
      *
      * @type {number}
      */
@@ -689,12 +714,17 @@ class SoundSlot extends EventHandler {
         }
     }
 
+    /**
+     * Gets the pitch modifier to play the sound with.
+     *
+     * @type {number}
+     */
     get pitch() {
         return this._pitch;
     }
 
     /**
-     * The start time from which the sound will start playing.
+     * Sets the start time from which the sound will start playing.
      *
      * @type {number}
      */
@@ -710,12 +740,17 @@ class SoundSlot extends EventHandler {
         }
     }
 
+    /**
+     * Gets the start time from which the sound will start playing.
+     *
+     * @type {number}
+     */
     get startTime() {
         return this._startTime;
     }
 
     /**
-     * The volume modifier to play the sound with. In range 0-1.
+     * Sets the volume modifier to play the sound with. In range 0-1.
      *
      * @type {number}
      */
@@ -731,6 +766,11 @@ class SoundSlot extends EventHandler {
         }
     }
 
+    /**
+     * Gets the volume modifier to play the sound with.
+     *
+     * @type {number}
+     */
     get volume() {
         return this._volume;
     }

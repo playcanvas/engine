@@ -145,8 +145,7 @@ class ModelComponent extends Component {
     }
 
     /**
-     * An array of meshInstances contained in the component's model. If model is not set or loaded
-     * for component it will return null.
+     * Sets the array of mesh instances contained in the component's model.
      *
      * @type {MeshInstance[]|null}
      */
@@ -157,6 +156,11 @@ class ModelComponent extends Component {
         this._model.meshInstances = value;
     }
 
+    /**
+     * Gets the array of mesh instances contained in the component's model.
+     *
+     * @type {MeshInstance[]|null}
+     */
     get meshInstances() {
         if (!this._model)
             return null;
@@ -165,10 +169,10 @@ class ModelComponent extends Component {
     }
 
     /**
-     * If set, the object space bounding box is used as a bounding box for visibility culling of
-     * attached mesh instances. This is an optimization, allowing oversized bounding box to be
-     * specified for skinned characters in order to avoid per frame bounding box computations based
-     * on bone positions.
+     * Sets the custom object space bounding box that is used for visibility culling of attached
+     * mesh instances. This is an optimization, allowing an oversized bounding box to be specified
+     * for skinned characters in order to avoid per frame bounding box computations based on bone
+     * positions.
      *
      * @type {import('../../../core/shape/bounding-box.js').BoundingBox|null}
      */
@@ -186,12 +190,18 @@ class ModelComponent extends Component {
         }
     }
 
+    /**
+     * Gets the custom object space bounding box that is used for visibility culling of attached
+     * mesh instances.
+     *
+     * @type {import('../../../core/shape/bounding-box.js').BoundingBox|null}
+     */
     get customAabb() {
         return this._customAabb;
     }
 
     /**
-     * The type of the model. Can be:
+     * Sets the type of the component. Can be one of the following:
      *
      * - "asset": The component will render a model asset
      * - "box": The component will render a box (1 unit in each dimension)
@@ -235,12 +245,18 @@ class ModelComponent extends Component {
         }
     }
 
+    /**
+     * Gets the type of the component.
+     *
+     * @type {string}
+     */
     get type() {
         return this._type;
     }
 
     /**
-     * The asset for the model (only applies to models of type 'asset') can also be an asset id.
+     * Sets the model asset (or asset id) for the component. This only applies to model components
+     * with type 'asset'.
      *
      * @type {Asset|number|null}
      */
@@ -278,12 +294,17 @@ class ModelComponent extends Component {
         }
     }
 
+    /**
+     * Gets the model asset id for the component.
+     *
+     * @type {Asset|number|null}
+     */
     get asset() {
         return this._asset;
     }
 
     /**
-     * The model that is added to the scene graph. It can be not set or loaded, so will return null.
+     * Sets the model owned by this component.
      *
      * @type {Model}
      */
@@ -353,12 +374,19 @@ class ModelComponent extends Component {
         }
     }
 
+    /**
+     * Gets the model owned by this component. In this case a model is not set or loaded, this will
+     * return null.
+     *
+     * @type {Model}
+     */
     get model() {
         return this._model;
     }
 
     /**
-     * If true, this model will be lightmapped after using lightmapper.bake().
+     * Sets whether the component is affected by the runtime lightmapper. If true, the meshes will
+     * be lightmapped after using lightmapper.bake().
      *
      * @type {boolean}
      */
@@ -376,12 +404,17 @@ class ModelComponent extends Component {
         }
     }
 
+    /**
+     * Gets whether the component is affected by the runtime lightmapper.
+     *
+     * @type {boolean}
+     */
     get lightmapped() {
         return this._lightmapped;
     }
 
     /**
-     * If true, this model will cast shadows for lights that have shadow casting enabled.
+     * Sets whether attached meshes will cast shadows for lights that have shadow casting enabled.
      *
      * @type {boolean}
      */
@@ -418,12 +451,17 @@ class ModelComponent extends Component {
         this._castShadows = value;
     }
 
+    /**
+     * Gets whether attached meshes will cast shadows for lights that have shadow casting enabled.
+     *
+     * @type {boolean}
+     */
     get castShadows() {
         return this._castShadows;
     }
 
     /**
-     * If true, shadows will be cast on this model.
+     * Sets whether shadows will be cast on attached meshes.
      *
      * @type {boolean}
      */
@@ -440,12 +478,17 @@ class ModelComponent extends Component {
         }
     }
 
+    /**
+     * Gets whether shadows will be cast on attached meshes.
+     *
+     * @type {boolean}
+     */
     get receiveShadows() {
         return this._receiveShadows;
     }
 
     /**
-     * If true, this model will cast shadows when rendering lightmaps.
+     * Sets whether meshes instances will cast shadows when rendering lightmaps.
      *
      * @type {boolean}
      */
@@ -453,12 +496,17 @@ class ModelComponent extends Component {
         this._castShadowsLightmap = value;
     }
 
+    /**
+     * Gets whether meshes instances will cast shadows when rendering lightmaps.
+     *
+     * @type {boolean}
+     */
     get castShadowsLightmap() {
         return this._castShadowsLightmap;
     }
 
     /**
-     * Lightmap resolution multiplier.
+     * Sets the lightmap resolution multiplier.
      *
      * @type {number}
      */
@@ -466,13 +514,18 @@ class ModelComponent extends Component {
         this._lightmapSizeMultiplier = value;
     }
 
+    /**
+     * Gets the lightmap resolution multiplier.
+     *
+     * @type {number}
+     */
     get lightmapSizeMultiplier() {
         return this._lightmapSizeMultiplier;
     }
 
     /**
-     * An array of layer IDs ({@link Layer#id}) to which this model should belong. Don't push, pop,
-     * splice or modify this array, if you want to change it - set a new one instead.
+     * Sets the array of layer IDs ({@link Layer#id}) to which the mesh instances belong. Don't
+     * push, pop, splice or modify this array. If you want to change it, set a new one instead.
      *
      * @type {number[]}
      */
@@ -505,12 +558,18 @@ class ModelComponent extends Component {
         }
     }
 
+    /**
+     * Gets the array of layer IDs ({@link Layer#id}) to which the mesh instances belong.
+     *
+     * @type {number[]}
+     */
     get layers() {
         return this._layers;
     }
 
     /**
-     * Assign model to a specific batch group (see {@link BatchGroup}). Default is -1 (no group).
+     * Sets the batch group for the mesh instances in this component (see {@link BatchGroup}).
+     * Default is -1 (no group).
      *
      * @type {number}
      */
@@ -532,13 +591,18 @@ class ModelComponent extends Component {
         this._batchGroupId = value;
     }
 
+    /**
+     * Gets the batch group for the mesh instances in this component (see {@link BatchGroup}).
+     *
+     * @type {number}
+     */
     get batchGroupId() {
         return this._batchGroupId;
     }
 
     /**
-     * The material {@link Asset} that will be used to render the model (not used on models of type
-     * 'asset').
+     * Sets the material {@link Asset} that will be used to render the component. The material is
+     * ignored for renders of type 'asset'.
      *
      * @type {Asset|number|null}
      */
@@ -575,13 +639,18 @@ class ModelComponent extends Component {
         }
     }
 
+    /**
+     * Gets the material {@link Asset} that will be used to render the component.
+     *
+     * @type {Asset|number|null}
+     */
     get materialAsset() {
         return this._materialAsset;
     }
 
     /**
-     * The material {@link Material} that will be used to render the model (not used on models of
-     * type 'asset').
+     * Sets the {@link Material} that will be used to render the model. The material is ignored for
+     * renders of type 'asset'.
      *
      * @type {import('../../../scene/materials/material.js').Material}
      */
@@ -594,14 +663,19 @@ class ModelComponent extends Component {
         this._setMaterial(value);
     }
 
+    /**
+     * Gets the {@link Material} that will be used to render the model.
+     *
+     * @type {import('../../../scene/materials/material.js').Material}
+     */
     get material() {
         return this._material;
     }
 
     /**
-     * A dictionary that holds material overrides for each mesh instance. Only applies to model
-     * components of type 'asset'. The mapping contains pairs of mesh instance index - material
-     * asset id.
+     * Sets the dictionary that holds material overrides for each mesh instance. Only applies to
+     * model components of type 'asset'. The mapping contains pairs of mesh instance index to
+     * material asset id.
      *
      * @type {Object<string, number>}
      */
@@ -651,6 +725,11 @@ class ModelComponent extends Component {
         }
     }
 
+    /**
+     * Gets the dictionary that holds material overrides for each mesh instance.
+     *
+     * @type {Object<string, number>}
+     */
     get mapping() {
         return this._mapping;
     }

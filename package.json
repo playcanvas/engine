@@ -1,6 +1,6 @@
 {
   "name": "playcanvas",
-  "version": "1.71.6-MAG_OB-3557",
+  "version": "1.73.1",
   "author": "PlayCanvas <support@playcanvas.com>",
   "homepage": "https://playcanvas.com",
   "description": "PlayCanvas WebGL game engine",
@@ -26,7 +26,18 @@
       "import": "./build/playcanvas/src/index.js",
       "require": "./build/playcanvas.js"
     },
-    "./build/*": "./build/*"
+    "./debug": {
+      "types": "./build/playcanvas.d.ts",
+      "import": "./build/playcanvas.dbg/src/index.js",
+      "require": "./build/playcanvas.dbg.js"
+    },
+    "./profiler": {
+      "types": "./build/playcanvas.d.ts",
+      "import": "./build/playcanvas.prf/src/index.js",
+      "require": "./build/playcanvas.prf.js"
+    },
+    "./build/*": "./build/*",
+    "./scripts/*": "./scripts/*"
   },
   "sideEffects": false,
   "type": "module",
@@ -87,7 +98,7 @@
     "README*.md"
   ],
   "dependencies": {
-    "@types/webxr": "^0.5.15",
+    "@types/webxr": "^0.5.16",
     "@webgpu/types": "^0.1.40"
   },
   "devDependencies": {
@@ -141,7 +152,6 @@
     "build:treenet": "npm run build target:umd treenet",
     "build:treesun": "npm run build target:umd treesun",
     "build:sourcemaps": "npm run build -- -m",
-    "build:publish": "npm run build && npm run publint",
     "watch": "npm run build -- -w",
     "watch:release": "npm run build target:release -- -w",
     "watch:debug": "npm run build target:debug -- -w",
@@ -152,7 +162,7 @@
     "watch:esm:debug": "npm run build target:esm:debug -- -w",
     "docs": "typedoc",
     "lint": "eslint --ext .js,.mjs scripts src test utils rollup.config.mjs",
-    "publint": "publint",
+    "publint": "publint --level error",
     "serve": "serve build -l 51000 --cors",
     "test": "mocha --recursive --require test/fixtures.mjs",
     "test:coverage": "c8 npm test",

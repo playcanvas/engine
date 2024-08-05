@@ -1,7 +1,7 @@
 // @config WEBGL1_DISABLED
 
 import * as pc from 'playcanvas';
-import { deviceType, rootPath } from '@examples/utils';
+import { deviceType, rootPath } from 'examples/utils';
 
 const canvas = document.getElementById('application-canvas');
 if (!(canvas instanceof HTMLCanvasElement)) {
@@ -67,7 +67,6 @@ assetListLoader.load(() => {
 
     const createSplatInstance = (resource, px, py, pz, scale, vertex, fragment) => {
         const splat = resource.instantiate({
-            debugRender: false,
             fragment: fragment,
             vertex: vertex
         });

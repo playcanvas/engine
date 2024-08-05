@@ -389,8 +389,8 @@ class RenderTarget {
      * anti-aliasing samples must match. Depth buffer can only be copied on WebGL 2.0.
      *
      * @param {RenderTarget} source - Source render target to copy from.
-     * @param {boolean} [color] - If true will copy the color buffer. Defaults to false.
-     * @param {boolean} [depth] - If true will copy the depth buffer. Defaults to false.
+     * @param {boolean} [color] - If true, will copy the color buffer. Defaults to false.
+     * @param {boolean} [depth] - If true, will copy the depth buffer. Defaults to false.
      * @returns {boolean} True if the copy was successful, false otherwise.
      */
     copy(source, color, depth) {

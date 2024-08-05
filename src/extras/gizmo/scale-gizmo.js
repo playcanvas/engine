@@ -136,7 +136,7 @@ class ScaleGizmo extends TransformGizmo {
     }
 
     /**
-     * Uniform scaling state for planes.
+     * Sets the uniform scaling state for planes.
      *
      * @type {boolean}
      */
@@ -144,12 +144,17 @@ class ScaleGizmo extends TransformGizmo {
         this._useUniformScaling = value ?? true;
     }
 
+    /**
+     * Gets the uniform scaling state for planes.
+     *
+     * @type {boolean}
+     */
     get uniform() {
         return this._useUniformScaling;
     }
 
     /**
-     * Axis gap.
+     * Sets the axis gap.
      *
      * @type {number}
      */
@@ -157,12 +162,17 @@ class ScaleGizmo extends TransformGizmo {
         this._setArrowProp('gap', value);
     }
 
+    /**
+     * Gets the axis gap.
+     *
+     * @type {number}
+     */
     get axisGap() {
         return this._shapes.x.gap;
     }
 
     /**
-     * Axis line thickness.
+     * Sets the axis line thickness.
      *
      * @type {number}
      */
@@ -170,12 +180,17 @@ class ScaleGizmo extends TransformGizmo {
         this._setArrowProp('lineThickness', value);
     }
 
+    /**
+     * Gets the axis line thickness.
+     *
+     * @type {number}
+     */
     get axisLineThickness() {
         return this._shapes.x.lineThickness;
     }
 
     /**
-     * Axis line length.
+     * Sets the axis line length.
      *
      * @type {number}
      */
@@ -183,12 +198,17 @@ class ScaleGizmo extends TransformGizmo {
         this._setArrowProp('lineLength', value);
     }
 
+    /**
+     * Gets the axis line length.
+     *
+     * @type {number}
+     */
     get axisLineLength() {
         return this._shapes.x.lineLength;
     }
 
     /**
-     * Axis line tolerance.
+     * Sets the axis line tolerance.
      *
      * @type {number}
      */
@@ -196,12 +216,17 @@ class ScaleGizmo extends TransformGizmo {
         this._setArrowProp('tolerance', value);
     }
 
+    /**
+     * Gets the axis line tolerance.
+     *
+     * @type {number}
+     */
     get axisLineTolerance() {
         return this._shapes.x.tolerance;
     }
 
     /**
-     * Axis box size.
+     * Sets the axis box size.
      *
      * @type {number}
      */
@@ -209,12 +234,17 @@ class ScaleGizmo extends TransformGizmo {
         this._setArrowProp('boxSize', value);
     }
 
+    /**
+     * Gets the axis box size.
+     *
+     * @type {number}
+     */
     get axisBoxSize() {
         return this._shapes.x.boxSize;
     }
 
     /**
-     * Plane size.
+     * Sets the plane size.
      *
      * @type {number}
      */
@@ -222,12 +252,17 @@ class ScaleGizmo extends TransformGizmo {
         this._setPlaneProp('size', value);
     }
 
+    /**
+     * Gets the plane size.
+     *
+     * @type {number}
+     */
     get axisPlaneSize() {
         return this._shapes.yz.size;
     }
 
     /**
-     * Plane gap.
+     * Sets the plane gap.
      *
      * @type {number}
      */
@@ -235,12 +270,17 @@ class ScaleGizmo extends TransformGizmo {
         this._setPlaneProp('gap', value);
     }
 
+    /**
+     * Gets the plane gap.
+     *
+     * @type {number}
+     */
     get axisPlaneGap() {
         return this._shapes.yz.gap;
     }
 
     /**
-     * Axis center size.
+     * Sets the axis center size.
      *
      * @type {number}
      */
@@ -248,12 +288,17 @@ class ScaleGizmo extends TransformGizmo {
         this._shapes.xyz.size = value;
     }
 
+    /**
+     * Gets the axis center size.
+     *
+     * @type {number}
+     */
     get axisCenterSize() {
         return this._shapes.xyz.size;
     }
 
     /**
-     * Axis center tolerance.
+     * Sets the axis center tolerance.
      *
      * @type {number}
      */
@@ -261,6 +306,11 @@ class ScaleGizmo extends TransformGizmo {
         this._shapes.xyz.tolerance = value;
     }
 
+    /**
+     * Gets the axis center tolerance.
+     *
+     * @type {number}
+     */
     get axisCenterTolerance() {
         return this._shapes.xyz.tolerance;
     }

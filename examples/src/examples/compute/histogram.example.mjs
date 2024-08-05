@@ -1,7 +1,7 @@
 // @config WEBGL_DISABLED
 import * as pc from 'playcanvas';
-import { deviceType, rootPath } from '@examples/utils';
-import files from '@examples/files';
+import { deviceType, rootPath } from 'examples/utils';
+import files from 'examples/files';
 
 // Note: the example is based on this article:
 // https://webgpufundamentals.org/webgpu/lessons/webgpu-compute-shaders-histogram.html
