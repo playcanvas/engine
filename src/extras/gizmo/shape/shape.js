@@ -14,6 +14,7 @@ import { ConeGeometry } from '../../../scene/geometry/cone-geometry.js';
 import { PlaneGeometry } from '../../../scene/geometry/plane-geometry.js';
 import { SphereGeometry } from '../../../scene/geometry/sphere-geometry.js';
 import { TorusGeometry } from '../../../scene/geometry/torus-geometry.js';
+import { Mat4 } from '../../../core/math/mat4.js';
 
 // constants
 const SHADOW_DAMP_SCALE = 0.25;
@@ -47,10 +48,6 @@ const shaderDesc = {
         void main(void) {
             gl_Position = matrix_viewProjection * matrix_model * vec4(vertex_position, 1.0);
             vColor = vertex_color;
-            // store z/w for later use in fragment shader
-            vZW = gl_Position.zw;
-            // disable depth clipping
-            // gl_Position.z = 0.0;
         }
     `,
     fragmentCode: /* glsl */`
@@ -59,25 +56,39 @@ const shaderDesc = {
         varying vec2 vZW;
         void main(void) {
             gl_FragColor = vec4(gammaCorrectOutput(decodeGamma(vColor)), vColor.w);
-            // clamp depth in Z to [0, 1] range
-            gl_FragDepth = max(0.0, min(1.0, (vZW.x / vZW.y + 1.0) * 0.5));
+            gl_FragDepth = gl_FragCoord.z;
         }
     `
 };
 
 const tmpV1 = new Vec3();
 const tmpV2 = new Vec3();
+const tmpM1 = new Mat4();
 
-const calculateShadow = (lightDir, numVertices, normals) => {
+const applyShadow = (geom, transform, color, lightDir) => {
+    // transform light direction to local space
+    const invMat = tmpM1.copy(transform).invert();
+    const localLightDir = invMat.transformVector(tmpV1.copy(lightDir), tmpV1).normalize();
+
+    // calculate shadow intensity and apply to color
+    geom.colors = [];
     const shadow = [];
+    const numVertices = geom.positions.length / 3;
     for (let i = 0; i < numVertices; i++) {
-        const x = normals[i * 3];
-        const y = normals[i * 3 + 1];
-        const z = normals[i * 3 + 2];
-        tmpV2.set(x, y, z);
+        const x = geom.normals[i * 3];
+        const y = geom.normals[i * 3 + 1];
+        const z = geom.normals[i * 3 + 2];
+        const normal = tmpV2.set(x, y, z);
 
-        const dot = lightDir.dot(tmpV2);
+        const dot = localLightDir.dot(normal);
         shadow.push(dot * SHADOW_DAMP_SCALE + SHADOW_DAMP_OFFSET);
+
+        geom.colors.push(
+            shadow[i] * color.r * 0xFF,
+            shadow[i] * color.g * 0xFF,
+            shadow[i] * color.b * 0xFF,
+            color.a * 0xFF
+        );
     }
 
     return shadow;
@@ -90,27 +101,12 @@ const createShadowMesh = (device, entity, type, color = Color.WHITE, templateOpt
     }
 
     const geom = new Geometry(templateOpts);
-    geom.colors = [];
+    const shadow = applyShadow(geom, entity.getWorldTransform(), color, LIGHT_DIR);
 
-    const wtm = entity.getWorldTransform().clone().invert();
-    tmpV1.copy(LIGHT_DIR);
-    wtm.transformVector(tmpV1, tmpV1);
-    tmpV1.normalize();
-    const numVertices = geom.positions.length / 3;
-    const shadow = calculateShadow(tmpV1, numVertices, geom.normals);
-    for (let i = 0; i < shadow.length; i++) {
-        geom.colors.push(
-            shadow[i] * color.r * 0xFF,
-            shadow[i] * color.g * 0xFF,
-            shadow[i] * color.b * 0xFF,
-            color.a * 0xFF
-        );
-    }
+    const mesh = Mesh.fromGeometry(device, geom);
+    SHADOW_MESH_MAP.set(mesh, shadow);
 
-    const shadowMesh = Mesh.fromGeometry(device, geom);
-    SHADOW_MESH_MAP.set(shadowMesh, shadow);
-
-    return shadowMesh;
+    return mesh;
 };
 
 const setShadowMeshColor = (mesh, color) => {
@@ -120,7 +116,10 @@ const setShadowMeshColor = (mesh, color) => {
     const shadow = SHADOW_MESH_MAP.get(mesh);
     const colors = [];
     for (let i = 0; i < shadow.length; i++) {
-        colors.push(shadow[i] * color.r * 255, shadow[i] * color.g * 255, shadow[i] * color.b * 255, color.a * 255);
+        colors.push(shadow[i] * color.r * 0xFF,
+                    shadow[i] * color.g * 0xFF,
+                    shadow[i] * color.b * 0xFF,
+                    color.a * 0xFF);
     }
     mesh.setColors32(colors);
     mesh.update();
