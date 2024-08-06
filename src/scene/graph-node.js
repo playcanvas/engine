@@ -29,7 +29,6 @@ const up = new Vec3();
  * @param {FindNodeCallback|string} attr - Attribute or lambda.
  * @param {*} [value] - Optional value in case of `attr` being a `string`
  * @returns {FindNodeCallback} Test function that receives a GraphNode and returns a boolean.
- * @ignore
  */
 function createTest(attr, value) {
     if (attr instanceof Function) {
@@ -51,7 +50,6 @@ function createTest(attr, value) {
  * @param {FindNodeCallback} test - Test function.
  * @returns {GraphNode|null} A graph node that matches the search criteria. Returns null if no
  * node is found.
- * @ignore
  */
 function findNode(node, test) {
     if (test(node))
@@ -252,7 +250,7 @@ class GraphNode extends EventHandler {
 
     /**
      * @type {GraphNode[]}
-     * @private
+     * @protected
      */
     _children = [];
 
@@ -445,7 +443,7 @@ class GraphNode extends EventHandler {
     /**
      * @param {GraphNode} node - Graph node to update.
      * @param {boolean} enabled - True if enabled in the hierarchy, false if disabled.
-     * @private
+     * @protected
      */
     _notifyHierarchyStateChanged(node, enabled) {
         node._onHierarchyStateChanged(enabled);
@@ -461,7 +459,7 @@ class GraphNode extends EventHandler {
      * Called when the enabled flag of the entity or one of its parents changes.
      *
      * @param {boolean} enabled - True if enabled in the hierarchy, false if disabled.
-     * @private
+     * @protected
      */
     _onHierarchyStateChanged(enabled) {
         // Override in derived classes

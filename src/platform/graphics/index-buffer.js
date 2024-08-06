@@ -1,5 +1,10 @@
 import { Debug } from '../../core/debug.js';
 import { TRACEID_VRAM_IB } from '../../core/constants.js';
+
+/**
+ * @import { GraphicsDevice } from './graphics-device.js'
+ */
+
 import {
     BUFFER_STATIC, INDEXFORMAT_UINT16, INDEXFORMAT_UINT32, typedArrayIndexFormatsByteSize
 } from './constants.js';
@@ -18,8 +23,7 @@ class IndexBuffer {
     /**
      * Create a new IndexBuffer instance.
      *
-     * @param {import('./graphics-device.js').GraphicsDevice} graphicsDevice - The graphics device
-     * used to manage this index buffer.
+     * @param {GraphicsDevice} graphicsDevice - The graphics device used to manage this index buffer.
      * @param {number} format - The type of each index to be stored in the index buffer. Can be:
      *
      * - {@link INDEXFORMAT_UINT8}

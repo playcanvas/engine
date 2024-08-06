@@ -1,19 +1,20 @@
 import { DebugGraphics } from '../../platform/graphics/debug-graphics.js';
 import { BlendState } from '../../platform/graphics/blend-state.js';
 import { RenderPass } from '../../platform/graphics/render-pass.js';
-
 import { SHADER_PICK } from '../../scene/constants.js';
+
+/**
+ * @import { BindGroup } from '../../platform/graphics/bind-group.js'
+ */
 
 const tempMeshInstances = [];
 const lights = [[], [], []];
 
 /**
  * A render pass implementing rendering of mesh instances into a pick buffer.
- *
- * @ignore
  */
 class RenderPassPicker extends RenderPass {
-    /** @type {import('../../platform/graphics/bind-group.js').BindGroup[]} */
+    /** @type {BindGroup[]} */
     viewBindGroups = [];
 
     constructor(device, renderer) {
@@ -95,7 +96,7 @@ class RenderPassPicker extends RenderPass {
                             renderer.setupViewUniformBuffers(this.viewBindGroups, renderer.viewUniformFormat, renderer.viewBindGroupFormat, 1);
                         }
 
-                        renderer.renderForward(camera.camera, tempMeshInstances, lights, SHADER_PICK, (meshInstance) => {
+                        renderer.renderForward(camera.camera, renderTarget, tempMeshInstances, lights, SHADER_PICK, (meshInstance) => {
                             device.setBlendState(BlendState.NOBLEND);
                         });
 

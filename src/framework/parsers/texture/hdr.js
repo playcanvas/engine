@@ -16,8 +16,6 @@ import { TextureParser } from './texture.js';
 
 /**
  * Texture parser for hdr files.
- *
- * @ignore
  */
 class HdrParser extends TextureParser {
     constructor(registry) {

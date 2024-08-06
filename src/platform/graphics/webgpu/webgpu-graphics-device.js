@@ -1,15 +1,16 @@
 import { TRACEID_RENDER_QUEUE } from '../../../core/constants.js';
 import { Debug, DebugHelper } from '../../../core/debug.js';
-
 import {
     PIXELFORMAT_RGBA8, PIXELFORMAT_BGRA8, DEVICETYPE_WEBGPU,
-    BUFFERUSAGE_READ, BUFFERUSAGE_COPY_DST, semanticToLocation
+    BUFFERUSAGE_READ, BUFFERUSAGE_COPY_DST, semanticToLocation,
+    PIXELFORMAT_SRGBA8, DISPLAYFORMAT_LDR_SRGB, PIXELFORMAT_SBGRA8
 } from '../constants.js';
-import { GraphicsDevice } from '../graphics-device.js';
+import { BindGroupFormat } from '../bind-group-format.js';
+import { BindGroup } from '../bind-group.js';
 import { DebugGraphics } from '../debug-graphics.js';
+import { GraphicsDevice } from '../graphics-device.js';
 import { RenderTarget } from '../render-target.js';
 import { StencilParameters } from '../stencil-parameters.js';
-
 import { WebgpuBindGroup } from './webgpu-bind-group.js';
 import { WebgpuBindGroupFormat } from './webgpu-bind-group-format.js';
 import { WebgpuIndexBuffer } from './webgpu-index-buffer.js';
@@ -28,8 +29,12 @@ import { WebgpuGpuProfiler } from './webgpu-gpu-profiler.js';
 import { WebgpuResolver } from './webgpu-resolver.js';
 import { WebgpuCompute } from './webgpu-compute.js';
 import { WebgpuBuffer } from './webgpu-buffer.js';
-import { BindGroupFormat } from '../bind-group-format.js';
-import { BindGroup } from '../bind-group.js';
+
+/**
+ * @import { BindGroup } from '../bind-group.js'
+ * @import { RenderPass } from '../render-pass.js'
+ * @import { WebgpuBuffer } from './webgpu-buffer.js'
+ */
 
 const _uniqueLocations = new Map();
 
@@ -150,7 +155,6 @@ class WebgpuGraphicsDevice extends GraphicsDevice {
         this.fragmentUniformsCount = limits.maxUniformBufferBindingSize / 16;
         this.vertexUniformsCount = limits.maxUniformBufferBindingSize / 16;
         this.supportsUniformBuffers = true;
-        this.supportsMorphTargetTexturesCore = true;
         this.supportsAreaLights = true;
         this.supportsGpuParticles = true;
         this.supportsCompute = true;
@@ -264,9 +268,20 @@ class WebgpuGraphicsDevice extends GraphicsDevice {
 
         this.gpuContext = this.canvas.getContext('webgpu');
 
-        // pixel format of the framebuffer is the most efficient one on the system
+        // pixel format of the framebuffer that is the most efficient one on the system
         const preferredCanvasFormat = navigator.gpu.getPreferredCanvasFormat();
-        this.backBufferFormat = preferredCanvasFormat === 'rgba8unorm' ? PIXELFORMAT_RGBA8 : PIXELFORMAT_BGRA8;
+
+        // display format the user asked for
+        const displayFormat = this.initOptions.displayFormat;
+
+        // combine requested display format with the preferred format
+        this.backBufferFormat = preferredCanvasFormat === 'rgba8unorm' ?
+            (displayFormat === DISPLAYFORMAT_LDR_SRGB ? PIXELFORMAT_SRGBA8 : PIXELFORMAT_RGBA8) :  // (S)RGBA
+            (displayFormat === DISPLAYFORMAT_LDR_SRGB ? PIXELFORMAT_SBGRA8 : PIXELFORMAT_BGRA8);   // (S)BGRA
+
+        // view format for the backbuffer. Backbuffer is always allocated without srgb conversion, and
+        // the view we create specifies srgb is needed to handle the conversion.
+        this.backBufferViewFormat = displayFormat === DISPLAYFORMAT_LDR_SRGB ? `${preferredCanvasFormat}-srgb` : preferredCanvasFormat;
 
         /**
          * Configuration of the main colorframebuffer we obtain using getCurrentTexture
@@ -286,7 +301,8 @@ class WebgpuGraphicsDevice extends GraphicsDevice {
             usage: GPUTextureUsage.RENDER_ATTACHMENT | GPUTextureUsage.COPY_SRC | GPUTextureUsage.COPY_DST,
 
             // formats that views created from textures returned by getCurrentTexture may use
-            viewFormats: []
+            // (this allows us to view the preferred format as srgb)
+            viewFormats: displayFormat === DISPLAYFORMAT_LDR_SRGB ? [this.backBufferViewFormat] : []
         };
         this.gpuContext.configure(this.canvasConfig);
 
@@ -326,6 +342,7 @@ class WebgpuGraphicsDevice extends GraphicsDevice {
             stencil: this.supportsStencil,
             samples: this.samples
         });
+        this.backBuffer.impl.isBackbuffer = true;
     }
 
     frameStart() {
@@ -358,12 +375,12 @@ class WebgpuGraphicsDevice extends GraphicsDevice {
         const wrt = rt.impl;
 
         // assign the format, allowing following init call to use it to allocate matching multisampled buffer
-        wrt.setColorAttachment(0, undefined, outColorBuffer.format);
+        wrt.setColorAttachment(0, undefined, this.backBufferViewFormat);
 
         this.initRenderTarget(rt);
 
         // assign current frame's render texture
-        wrt.assignColorTexture(outColorBuffer);
+        wrt.assignColorTexture(this, outColorBuffer);
 
         WebgpuDebug.end(this);
         WebgpuDebug.end(this);
@@ -423,7 +440,7 @@ class WebgpuGraphicsDevice extends GraphicsDevice {
 
     /**
      * @param {number} index - Index of the bind group slot
-     * @param {import('../bind-group.js').BindGroup} bindGroup - Bind group to attach
+     * @param {BindGroup} bindGroup - Bind group to attach
      * @param {number[]} [offsets] - Byte offsets for all uniform buffers in the bind group.
      */
     setBindGroup(index, bindGroup, offsets) {
@@ -611,7 +628,7 @@ class WebgpuGraphicsDevice extends GraphicsDevice {
     /**
      * Start a render pass.
      *
-     * @param {import('../render-pass.js').RenderPass} renderPass - The render pass to start.
+     * @param {RenderPass} renderPass - The render pass to start.
      * @ignore
      */
     startRenderPass(renderPass) {
@@ -640,7 +657,7 @@ class WebgpuGraphicsDevice extends GraphicsDevice {
         }
 
         // set up clear / store / load settings
-        wrt.setupForRenderPass(renderPass);
+        wrt.setupForRenderPass(renderPass, rt);
 
         const renderPassDesc = wrt.renderPassDescriptor;
 
@@ -680,7 +697,7 @@ class WebgpuGraphicsDevice extends GraphicsDevice {
     /**
      * End a render pass.
      *
-     * @param {import('../render-pass.js').RenderPass} renderPass - The render pass to end.
+     * @param {RenderPass} renderPass - The render pass to end.
      * @ignore
      */
     endRenderPass(renderPass) {
@@ -859,7 +876,7 @@ class WebgpuGraphicsDevice extends GraphicsDevice {
     /**
      * Clear the content of a storage buffer to 0.
      *
-     * @param {import('./webgpu-buffer.js').WebgpuBuffer} storageBuffer - The storage buffer.
+     * @param {WebgpuBuffer} storageBuffer - The storage buffer.
      * @param {number} [offset] - The offset of data to clear. Defaults to 0.
      * @param {number} [size] - The size of data to clear. Defaults to the full size of the buffer.
      * @ignore
@@ -883,7 +900,7 @@ class WebgpuGraphicsDevice extends GraphicsDevice {
     /**
      * Read a content of a storage buffer.
      *
-     * @param {import('./webgpu-buffer.js').WebgpuBuffer} storageBuffer - The storage buffer.
+     * @param {WebgpuBuffer} storageBuffer - The storage buffer.
      * @param {number} [offset] - The byte offset of data to read. Defaults to 0.
      * @param {number} [size] - The byte size of data to read. Defaults to the full size of the
      * buffer minus the offset.
@@ -965,7 +982,7 @@ class WebgpuGraphicsDevice extends GraphicsDevice {
     /**
      * Issues a write operation of the provided data into a storage buffer.
      *
-     * @param {import('./webgpu-buffer.js').WebgpuBuffer} storageBuffer - The storage buffer.
+     * @param {WebgpuBuffer} storageBuffer - The storage buffer.
      * @param {number} bufferOffset - The offset in bytes to start writing to the storage buffer.
      * @param {ArrayBufferView} data - The data to write to the storage buffer.
      * @param {number} dataOffset - Offset in data to begin writing from. Given in elements if data
@@ -1007,14 +1024,14 @@ class WebgpuGraphicsDevice extends GraphicsDevice {
             // read from supplied render target, or from the framebuffer
             /** @type {GPUImageCopyTexture} */
             const copySrc = {
-                texture: source ? source.colorBuffer.impl.gpuTexture : this.renderTarget.impl.assignedColorTexture,
+                texture: source ? source.colorBuffer.impl.gpuTexture : this.backBuffer.impl.assignedColorTexture,
                 mipLevel: 0
             };
 
             // write to supplied render target, or to the framebuffer
             /** @type {GPUImageCopyTexture} */
             const copyDst = {
-                texture: dest ? dest.colorBuffer.impl.gpuTexture : this.renderTarget.impl.assignedColorTexture,
+                texture: dest ? dest.colorBuffer.impl.gpuTexture : this.backBuffer.impl.assignedColorTexture,
                 mipLevel: 0
             };
 

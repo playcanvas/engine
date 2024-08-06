@@ -67,16 +67,17 @@ assetListLoader.load(() => {
     app.root.addChild(camera);
     app.root.addChild(light);
 
-    // Create the shader from the vertex and fragment shaders
-    const shader = pc.createShaderFromCode(app.graphicsDevice, files['shader.vert'], files['shader.frag'], 'myShader', {
-        aPosition: pc.SEMANTIC_POSITION,
-        aNormal: pc.SEMANTIC_NORMAL,
-        aUv: pc.SEMANTIC_TEXCOORD0
+    // Create a new material with a custom shader
+    const material = new pc.ShaderMaterial({
+        uniqueName: 'toon',
+        vertexCode: files['shader.vert'],
+        fragmentCode: files['shader.frag'],
+        attributes: {
+            aPosition: pc.SEMANTIC_POSITION,
+            aNormal: pc.SEMANTIC_NORMAL,
+            aUv: pc.SEMANTIC_TEXCOORD0
+        }
     });
-
-    // Create a new material with the new shader
-    const material = new pc.Material();
-    material.shader = shader;
 
     // create a hierarchy of entities with render components, representing the statue model
     const entity = assets.statue.resource.instantiateRenderEntity();
@@ -86,26 +87,17 @@ assetListLoader.load(() => {
      * Set the new material on all meshes in the model, and use original texture from the model on the new material
      * @type {pc.Texture | null}
      */
-    let originalTexture = null;
     /** @type {Array<pc.RenderComponent>} */
     const renders = entity.findComponents('render');
     renders.forEach((render) => {
-        const meshInstances = render.meshInstances;
-        for (let i = 0; i < meshInstances.length; i++) {
-            const meshInstance = meshInstances[i];
-            if (!originalTexture) {
-                /** @type {pc.StandardMaterial} */
-                const originalMaterial = meshInstance.material;
-                originalTexture = originalMaterial.diffuseMap;
-            }
+        render.meshInstances.forEach((meshInstance) => {
             meshInstance.material = material;
-        }
+        });
     });
 
     // material parameters
     const lightPosArray = [light.getPosition().x, light.getPosition().y, light.getPosition().z];
     material.setParameter('uLightPos', lightPosArray);
-    material.setParameter('uTexture', originalTexture);
     material.update();
 
     // rotate the statue

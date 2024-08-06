@@ -1,13 +1,15 @@
 import { Debug } from '../../core/debug.js';
 import { hashCode } from '../../core/hash.js';
 import { version, revision } from '../../core/core.js';
-
 import { Shader } from '../../platform/graphics/shader.js';
-
 import { SHADER_FORWARD, SHADER_DEPTH, SHADER_PICK, SHADER_SHADOW, SHADER_PREPASS_VELOCITY } from '../constants.js';
 import { ShaderPass } from '../shader-pass.js';
 import { StandardMaterialOptions } from '../materials/standard-material-options.js';
 import { RenderingParams } from '../renderer/rendering-params.js';
+
+/**
+ * @import { ShaderGenerator } from './programs/shader-generator.js'
+ */
 
 /**
  * A class responsible for creation and caching of required shaders.
@@ -35,7 +37,7 @@ class ProgramLibrary {
     /**
      * Named shader generators.
      *
-     * @type {Map<string, import('./programs/shader-generator.js').ShaderGenerator>}
+     * @type {Map<string, ShaderGenerator>}
      */
     _generators = new Map();
 
@@ -83,8 +85,8 @@ class ProgramLibrary {
     /**
      * Returns a generated shader definition for the specified options. They key is used to cache the
      * shader definition.
-     * @param {import('./programs/shader-generator.js').ShaderGenerator} generator - The generator
-     * to use.
+     *
+     * @param {ShaderGenerator} generator - The generator to use.
      * @param {string} name - The unique name of the shader generator.
      * @param {number} key - A unique key representing the shader options.
      * @param {object} options - The shader options.
@@ -178,7 +180,9 @@ class ProgramLibrary {
                 fincludes: generatedShaderDef.fincludes,
                 fshader: generatedShaderDef.fshader,
                 processingOptions: processingOptions,
-                shaderLanguage: generatedShaderDef.shaderLanguage
+                shaderLanguage: generatedShaderDef.shaderLanguage,
+                meshUniformBufferFormat: generatedShaderDef.meshUniformBufferFormat,
+                meshBindGroupFormat: generatedShaderDef.meshBindGroupFormat
             };
 
             // add new shader to the processed cache

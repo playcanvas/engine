@@ -1,5 +1,10 @@
 /**
- * Represents finger with related joints and index.
+ * @import { XrHand } from './xr-hand.js'
+ * @import { XrJoint } from './xr-joint.js'
+ */
+
+/**
+ * Represents a finger of a tracked {@link XrHand} with related joints and index.
  *
  * @category XR
  */
@@ -11,19 +16,19 @@ class XrFinger {
     _index;
 
     /**
-     * @type {import('./xr-hand.js').XrHand}
+     * @type {XrHand}
      * @private
      */
     _hand;
 
     /**
-     * @type {import('./xr-joint.js').XrJoint[]}
+     * @type {XrJoint[]}
      * @private
      */
     _joints = [];
 
     /**
-     * @type {import('./xr-joint.js').XrJoint|null}
+     * @type {XrJoint|null}
      * @private
      */
     _tip = null;
@@ -31,8 +36,8 @@ class XrFinger {
     /**
      * Create a new XrFinger instance.
      *
-     * @param {number} index - Index of a finger.
-     * @param {import('./xr-hand.js').XrHand} hand - Hand that finger relates to.
+     * @param {number} index - Index of the finger.
+     * @param {XrHand} hand - Hand that the finger belongs to.
      * @ignore
      */
     constructor(index, hand) {
@@ -42,7 +47,7 @@ class XrFinger {
     }
 
     /**
-     * Index of a finger, numeration is: thumb, index, middle, ring, little.
+     * Gets the index of the finger. Enumeration is: thumb, index, middle, ring, little.
      *
      * @type {number}
      */
@@ -51,28 +56,28 @@ class XrFinger {
     }
 
     /**
-     * Hand that finger relates to.
+     * Gets the hand that the finger belongs to.
      *
-     * @type {import('./xr-hand.js').XrHand}
+     * @type {XrHand}
      */
     get hand() {
         return this._hand;
     }
 
     /**
-     * List of joints that relates to this finger, starting from joint closest to wrist all the way
+     * Array of joints that belong to this finger, starting from joint closest to wrist all the way
      * to the tip of a finger.
      *
-     * @type {import('./xr-joint.js').XrJoint[]}
+     * @type {XrJoint[]}
      */
     get joints() {
         return this._joints;
     }
 
     /**
-     * Tip of a finger, or null if not available.
+     * Tip joint of the finger, or null if not available.
      *
-     * @type {import('./xr-joint.js').XrJoint|null}
+     * @type {XrJoint|null}
      */
     get tip() {
         return this._tip;

@@ -1,10 +1,15 @@
 import { TRACEID_BINDGROUPFORMAT_ALLOC } from '../../core/constants.js';
 import { Debug, DebugHelper } from '../../core/debug.js';
-
 import {
     TEXTUREDIMENSION_2D, TEXTUREDIMENSION_CUBE, TEXTUREDIMENSION_3D, TEXTUREDIMENSION_2D_ARRAY,
     SAMPLETYPE_FLOAT, PIXELFORMAT_RGBA8, SAMPLETYPE_INT, SAMPLETYPE_UINT, SHADERSTAGE_COMPUTE, SHADERSTAGE_VERTEX
 } from './constants.js';
+import { DebugGraphics } from './debug-graphics.js';
+
+/**
+ * @import { GraphicsDevice } from './graphics-device.js'
+ * @import { ScopeId } from './scope-id.js'
+ */
 
 let id = 0;
 
@@ -28,7 +33,7 @@ class BindBaseFormat {
     slot = -1;
 
     /**
-     * @type {import('./scope-id.js').ScopeId|null}
+     * @type {ScopeId|null}
      * @ignore
      */
     scopeId = null;
@@ -148,6 +153,7 @@ class BindTextureFormat extends BindBaseFormat {
  * A class to describe the format of the storage texture for {@link BindGroupFormat}. Storage
  * texture is a texture created with the storage flag set to true, which allows it to be used as an
  * output of a compute shader.
+ *
  * Note: At the current time, storage textures are only supported in compute shaders in a
  * write-only mode.
  *
@@ -229,10 +235,9 @@ class BindGroupFormat {
     /**
      * Create a new instance.
      *
-     * @param {import('./graphics-device.js').GraphicsDevice} graphicsDevice - The graphics device
-     * used to manage this vertex format.
-     * @param {(BindTextureFormat|BindStorageTextureFormat|BindUniformBufferFormat|BindStorageBufferFormat)[]} formats
-     * - An array of bind formats. Note that each entry in the array uses up one slot. The exception
+     * @param {GraphicsDevice} graphicsDevice - The graphics device used to manage this vertex format.
+     * @param {(BindTextureFormat|BindStorageTextureFormat|BindUniformBufferFormat|BindStorageBufferFormat)[]} formats -
+     * An array of bind formats. Note that each entry in the array uses up one slot. The exception
      * is a texture format that has a sampler, which uses up two slots. The slots are allocated
      * sequentially, starting from 0.
      */
@@ -265,7 +270,7 @@ class BindGroupFormat {
             }
         });
 
-        /** @type {import('./graphics-device.js').GraphicsDevice} */
+        /** @type {GraphicsDevice} */
         this.device = graphicsDevice;
         const scope = graphicsDevice.scope;
 
@@ -306,7 +311,7 @@ class BindGroupFormat {
 
         this.impl = graphicsDevice.createBindGroupFormatImpl(this);
 
-        Debug.trace(TRACEID_BINDGROUPFORMAT_ALLOC, `Alloc: Id ${this.id}`, this);
+        Debug.trace(TRACEID_BINDGROUPFORMAT_ALLOC, `Alloc: Id ${this.id}, while rendering [${DebugGraphics.toString()}]`, this);
     }
 
     /**

@@ -8,11 +8,13 @@ import { shaderChunks } from '../../scene/shader-lib/chunks/chunks.js';
  * @ignore
  */
 class RenderPassDepthAwareBlur extends RenderPassShaderQuad {
-    constructor(device, sourceTexture) {
+    constructor(device, sourceTexture, horizontal) {
         super(device);
         this.sourceTexture = sourceTexture;
 
-        this.shader = this.createQuadShader('DepthAwareBlurShader', shaderChunks.screenDepthPS + /* glsl */`
+        this.shader = this.createQuadShader(`DepthAware${horizontal ? 'Horizontal' : 'Vertical'}BlurShader`, shaderChunks.screenDepthPS + /* glsl */`
+
+            ${horizontal ? '#define HORIZONTAL' : ''}
 
             varying vec2 uv0;
 
@@ -51,12 +53,16 @@ class RenderPassDepthAwareBlur extends RenderPassShaderQuad {
                 float color = texture2D(sourceTexture, uv0 ).r;
                 float sum = color * totalWeight;
 
-                for (int x = -filterSize; x <= filterSize; x++) {
-                   for (int y = -filterSize; y < filterSize; y++) {
-                       float weight = 1.0;
-                       vec2 offset = vec2(x,y) * sourceInvResolution;
-                       tap(sum, totalWeight, weight, depth, uv0 + offset);
-                   }
+                for (int i = -filterSize; i <= filterSize; i++) {
+                    float weight = 1.0;
+
+                    #ifdef HORIZONTAL
+                        vec2 offset = vec2(i, 0) * sourceInvResolution;
+                    #else
+                        vec2 offset = vec2(0, i) * sourceInvResolution;
+                    #endif
+
+                    tap(sum, totalWeight, weight, depth, uv0 + offset);
                 }
 
                 float ao = sum / totalWeight;

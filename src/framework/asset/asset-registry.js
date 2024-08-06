@@ -2,10 +2,14 @@ import { path } from '../../core/path.js';
 import { Debug } from '../../core/debug.js';
 import { EventHandler } from '../../core/event-handler.js';
 import { TagsCache } from '../../core/tags-cache.js';
-
 import { standardMaterialTextureParameters } from '../../scene/materials/standard-material-parameters.js';
-
 import { Asset } from './asset.js';
+
+/**
+ * @import { Bundle } from '../bundle/bundle.js'
+ * @import { BundleRegistry } from '../bundle/bundle-registry.js'
+ * @import { ResourceLoader } from '../handlers/loader.js'
+ */
 
 /**
  * Callback used by {@link AssetRegistry#filter} to filter assets.
@@ -29,7 +33,7 @@ import { Asset } from './asset.js';
  * to load from. Return a single bundle to ensure asset is loaded from it.
  *
  * @callback BundlesFilterCallback
- * @param {import('../bundle/bundle.js').Bundle[]} bundles - List of bundles which contain the asset.
+ * @param {Bundle[]} bundles - List of bundles which contain the asset.
  */
 
 /**
@@ -163,6 +167,12 @@ class AssetRegistry extends EventHandler {
     _assets = new Set();
 
     /**
+     * @type {import('../handlers/loader.js').ResourceLoader}
+     * @private
+     */
+    _loader;
+
+    /**
      * @type {Map<number, Asset>}
      * @private
      */
@@ -197,15 +207,14 @@ class AssetRegistry extends EventHandler {
     /**
      * BundleRegistry
      *
-     * @type {import('../bundle/bundle-registry.js').BundleRegistry|null}
+     * @type {BundleRegistry|null}
      */
     bundles = null;
 
     /**
      * Create an instance of an AssetRegistry.
      *
-     * @param {import('../handlers/loader.js').ResourceLoader} loader - The ResourceLoader used to
-     * load the asset files.
+     * @param {ResourceLoader} loader - The ResourceLoader used to load the asset files.
      */
     constructor(loader) {
         super();
@@ -216,7 +225,8 @@ class AssetRegistry extends EventHandler {
     /**
      * Create a filtered list of assets from the registry.
      *
-     * @param {object} filters - Properties to filter on, currently supports: 'preload: true|false'.
+     * @param {object} [filters] - Filter options.
+     * @param {boolean} [filters.preload] - Filter by preload setting.
      * @returns {Asset[]} The filtered list of assets.
      */
     list(filters = {}) {
@@ -343,7 +353,7 @@ class AssetRegistry extends EventHandler {
     }
 
     /**
-     * Load the asset's file from a remote source. Listen for "load" events on the asset to find
+     * Load the asset's file from a remote source. Listen for `load` events on the asset to find
      * out when it is loaded.
      *
      * @param {Asset} asset - The asset to load.
@@ -355,7 +365,7 @@ class AssetRegistry extends EventHandler {
      * @param {BundlesFilterCallback} [options.bundlesFilter] - A callback that will be called
      * when loading an asset that is contained in any of the bundles. It provides an array of
      * bundles and will ensure asset is loaded from bundle returned from a callback. By default
-     * smallest filesize bundle is choosen.
+     * smallest filesize bundle is chosen.
      * @example
      * // load some assets
      * const assetsToLoad = [
@@ -702,8 +712,8 @@ class AssetRegistry extends EventHandler {
      * const assets = app.assets.findByTag(["level-1", "monster"], ["level-2", "monster"]);
      * // returns all assets that tagged by (`level-1` AND `monster`) OR (`level-2` AND `monster`)
      */
-    findByTag() {
-        return this._tags.find(arguments);
+    findByTag(...query) {
+        return this._tags.find(query);
     }
 
     /**

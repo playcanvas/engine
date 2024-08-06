@@ -12,7 +12,7 @@ pc.basisInitialize({
 });
 
 const assets = {
-    color: new pc.Asset('color', 'texture', { url: rootPath + '/static/assets/textures/seaside-rocks01-color.basis' }),
+    color: new pc.Asset('color', 'texture', { url: rootPath + '/static/assets/textures/seaside-rocks01-color.basis' }, { srgb: true }),
     gloss: new pc.Asset('gloss', 'texture', { url: rootPath + '/static/assets/textures/seaside-rocks01-gloss.basis' }),
     normal: new pc.Asset(
         'normal',
@@ -78,7 +78,6 @@ assetListLoader.load(() => {
     // Construct material
     const material = new pc.StandardMaterial();
     material.useMetalness = true;
-    material.diffuse = new pc.Color(0.3, 0.3, 0.3);
     material.gloss = 0.8;
     material.metalness = 0.7;
     material.diffuseMap = assets.color.resource;

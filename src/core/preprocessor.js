@@ -36,8 +36,6 @@ const INCLUDE = /include[ \t]+"([\w-]+)"\r?(?:\n|$)/g;
 /**
  * Pure static class implementing subset of C-style preprocessor.
  * inspired by: https://github.com/dcodeIO/Preprocessor.js
- *
- * @ignore
  */
 class Preprocessor {
     /**
@@ -52,7 +50,7 @@ class Preprocessor {
     static run(source, includes = new Map(), stripUnusedColorAttachments = false) {
 
         // strips comments, handles // and many cases of /*
-        source = source.replace(/\/\*[\s\S]*?\*\/|([^\\:]|^)\/\/.*$/gm, '$1');
+        source = this.stripComments(source);
 
         // right trim each line
         source = source.split(/\r?\n/)
@@ -91,6 +89,9 @@ class Preprocessor {
             }
         });
 
+        // strip comments again after the includes have been resolved
+        source = this.stripComments(source);
+
         // remove empty lines
         source = this.RemoveEmptyLines(source);
 
@@ -98,6 +99,10 @@ class Preprocessor {
         source = this.processArraySize(source, intDefines);
 
         return source;
+    }
+
+    static stripComments(source) {
+        return source.replace(/\/\*[\s\S]*?\*\/|([^\\:]|^)\/\/.*$/gm, '$1');
     }
 
     static processArraySize(source, intDefines) {
@@ -324,13 +329,13 @@ class Preprocessor {
 
                         // cut out the include line and replace it with the included string
                         const includeSource = includes?.get(identifier);
-                        if (includeSource) {
+                        if (includeSource !== undefined) {
                             source = source.substring(0, include.index - 1) + includeSource + source.substring(INCLUDE.lastIndex);
 
                             // process the just included test
                             KEYWORD.lastIndex = include.index;
                         } else {
-                            console.error(`Include not found: ${identifier}`);
+                            console.error(`Include "${identifier}" not resolved while preprocessing a shader`, { source: originalSource });
                             error = true;
                         }
                     }
@@ -361,12 +366,18 @@ class Preprocessor {
 
     /**
      * Very simple expression evaluation, handles cases:
-     * expression
-     * defined(expression)
-     * !defined(expression)
+     *
+     * - expression
+     * - defined(expression)
+     * - !defined(expression)
      *
      * But does not handle more complex cases, which would require more complex system:
-     * defined(A) || defined(B)
+     *
+     * - defined(A) || defined(B)
+     *
+     * @param {string} expression - The expression to evaluate.
+     * @param {Map<string, string>} defines - A map containing key-value pairs of defines.
+     * @returns {object} Returns an object containing the result of the evaluation and an error flag.
      */
     static evaluate(expression, defines) {
 

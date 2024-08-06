@@ -5,8 +5,6 @@ import { RenderPass } from "../../platform/graphics/render-pass.js";
 
 /**
  * A render pass implementing rendering of a QuadRender.
- *
- * @ignore
  */
 class RenderPassQuad extends RenderPass {
     constructor(device, quad, rect, scissorRect) {

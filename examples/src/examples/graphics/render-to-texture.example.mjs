@@ -142,7 +142,7 @@ assetListLoader.load(() => {
     const texture = new pc.Texture(app.graphicsDevice, {
         width: 512,
         height: 256,
-        format: pc.PIXELFORMAT_RGB8,
+        format: pc.PIXELFORMAT_SRGBA8,
         mipmaps: true,
         minFilter: pc.FILTER_LINEAR,
         magFilter: pc.FILTER_LINEAR,
@@ -175,7 +175,6 @@ assetListLoader.load(() => {
 
     // make the texture tiles and use anisotropic filtering to prevent blurring
     planeMaterial.diffuseMap = assets.checkerboard.resource;
-    planeMaterial.diffuseTint = true;
     planeMaterial.diffuseMapTiling.set(10, 10);
     planeMaterial.anisotropy = 16;
 
@@ -248,9 +247,11 @@ assetListLoader.load(() => {
     tv.setLocalEulerAngles(90, 0, 0);
     tv.render.castShadows = false;
     tv.render.receiveShadows = false;
+
     /** @type {pc.StandardMaterial} */
     const material = tv.render.material;
     material.emissiveMap = texture; // assign the rendered texture as an emissive texture
+    material.emissive = pc.Color.WHITE;
     material.update();
 
     // setup skydome, use top mipmap level of cubemap (full resolution)

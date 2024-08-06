@@ -3,8 +3,6 @@ import { WebgpuBuffer } from "./webgpu-buffer.js";
 
 /**
  * A WebGPU implementation of the VertexBuffer.
- *
- * @ignore
  */
 class WebgpuVertexBuffer extends WebgpuBuffer {
     constructor(vertexBuffer, format, options) {

@@ -1,6 +1,11 @@
 import { Component } from '../component.js';
 
 /**
+ * @import { Entity } from '../../entity.js'
+ * @import { LayoutChildComponentSystem } from './system.js'
+ */
+
+/**
  * A LayoutChildComponent enables the Entity to control the sizing applied to it by its parent
  * {@link LayoutGroupComponent}.
  *
@@ -10,10 +15,8 @@ class LayoutChildComponent extends Component {
     /**
      * Create a new LayoutChildComponent.
      *
-     * @param {import('./system.js').LayoutChildComponentSystem} system - The ComponentSystem that
-     * created this Component.
-     * @param {import('../../entity.js').Entity} entity - The Entity that this Component is
-     * attached to.
+     * @param {LayoutChildComponentSystem} system - The ComponentSystem that created this Component.
+     * @param {Entity} entity - The Entity that this Component is attached to.
      */
     constructor(system, entity) {
         super(system, entity);

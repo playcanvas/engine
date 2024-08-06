@@ -174,12 +174,6 @@ export function drawFullscreenQuad(device, target, vertexBuffer, shader, rect) {
     drawQuadWithShader(device, target, shader, viewport);
 }
 
-Object.defineProperty(shaderChunks, 'transformSkinnedVS', {
-    get: function () {
-        return '#define SKIN\n' + shaderChunks.transformVS;
-    }
-});
-
 const deprecatedChunks = {
     'ambientPrefilteredCube.frag': 'ambientEnv.frag',
     'ambientPrefilteredCubeLod.frag': 'ambientEnv.frag',
@@ -313,6 +307,13 @@ Object.defineProperty(GraphicsDevice.prototype, 'webgl2', {
     get: function () {
         Debug.deprecated('pc.GraphicsDevice#webgl2 is deprecated, use pc.GraphicsDevice#isWebGL2 instead.');
         return this.isWebGL2;
+    }
+});
+
+Object.defineProperty(GraphicsDevice.prototype, 'textureFloatHighPrecision', {
+    get: function () {
+        Debug.deprecated('pc.GraphicsDevice#textureFloatHighPrecision is deprecated and always returns true.');
+        return true;
     }
 });
 
@@ -473,7 +474,6 @@ GraphicsDevice.prototype.getCullMode = function () {
 
 // SCENE
 
-export const PhongMaterial = StandardMaterial;
 export const LitOptions = LitShaderOptions;
 
 Object.defineProperty(Scene.prototype, 'defaultMaterial', {
@@ -612,25 +612,15 @@ GraphNode.prototype.setName = function (name) {
     this.name = name;
 };
 
-Material.prototype.getName = function () {
-    Debug.deprecated('pc.Material#getName is deprecated. Use pc.Material#name instead.');
-    return this.name;
-};
-
-Material.prototype.setName = function (name) {
-    Debug.deprecated('pc.Material#setName is deprecated. Use pc.Material#name instead.');
-    this.name = name;
-};
-
-Material.prototype.getShader = function () {
-    Debug.deprecated('pc.Material#getShader is deprecated. Use pc.Material#shader instead.');
-    return this.shader;
-};
-
-Material.prototype.setShader = function (shader) {
-    Debug.deprecated('pc.Material#setShader is deprecated. Use pc.Material#shader instead.');
-    this.shader = shader;
-};
+Object.defineProperty(Material.prototype, 'shader', {
+    set: function (value) {
+        Debug.deprecated(`pc.Material#shader is deprecated, use pc.ShaderMaterial instead.`);
+    },
+    get: function () {
+        Debug.deprecated(`pc.Material#shader is deprecated, use pc.ShaderMaterial instead.`);
+        return null;
+    }
+});
 
 // Note: this is used by the Editor
 Object.defineProperty(Material.prototype, 'blend', {
@@ -677,9 +667,24 @@ function _defineAlias(newName, oldName) {
     });
 }
 
-_defineAlias('diffuseTint', 'diffuseMapTint');
+function _deprecateTint(name) {
+    Object.defineProperty(StandardMaterial.prototype, name, {
+        get: function () {
+            Debug.deprecated(`pc.StandardMaterial#${name} is deprecated, and the behaviour is as if ${name} was always true`);
+            return true;
+        },
+        set: function (value) {
+            Debug.deprecated(`pc.StandardMaterial#${name} is deprecated, and the behaviour is as if ${name} was always true`);
+        }
+    });
+}
+
+_deprecateTint('sheenTint');
+_deprecateTint('diffuseTint');
+_deprecateTint('emissiveTint');
+_deprecateTint('ambientTint');
+
 _defineAlias('specularTint', 'specularMapTint');
-_defineAlias('emissiveTint', 'emissiveMapTint');
 _defineAlias('aoVertexColor', 'aoMapVertexColor');
 _defineAlias('diffuseVertexColor', 'diffuseMapVertexColor');
 _defineAlias('specularVertexColor', 'specularMapVertexColor');

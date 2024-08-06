@@ -4,12 +4,16 @@ import { Debug, DebugHelper } from "../../../core/debug.js";
 import { DebugGraphics } from "../debug-graphics.js";
 
 /**
+ * @import { WebgpuGraphicsDevice } from './webgpu-graphics-device.js'
+ * @import { WebgpuShader } from './webgpu-shader.js'
+ * @import { WebgpuTexture } from './webgpu-texture.js'
+ */
+
+/**
  * A WebGPU helper class implementing texture mipmap generation.
- *
- * @ignore
  */
 class WebgpuMipmapRenderer {
-    /** @type {import('./webgpu-graphics-device.js').WebgpuGraphicsDevice} */
+    /** @type {WebgpuGraphicsDevice} */
     device;
 
     constructor(device) {
@@ -64,12 +68,12 @@ class WebgpuMipmapRenderer {
     /**
      * Generates mipmaps for the specified WebGPU texture.
      *
-     * @param {import('./webgpu-texture.js').WebgpuTexture} webgpuTexture - The texture to generate mipmaps for.
+     * @param {WebgpuTexture} webgpuTexture - The texture to generate mipmaps for.
      */
     generate(webgpuTexture) {
 
         // ignore texture with no mipmaps
-        const textureDescr = webgpuTexture.descr;
+        const textureDescr = webgpuTexture.desc;
         if (textureDescr.mipLevelCount <= 1) {
             return;
         }
@@ -83,7 +87,7 @@ class WebgpuMipmapRenderer {
         const device = this.device;
         const wgpu = device.wgpu;
 
-        /** @type {import('./webgpu-shader.js').WebgpuShader} */
+        /** @type {WebgpuShader} */
         const webgpuShader = this.shader.impl;
 
         const pipeline = wgpu.createRenderPipeline({

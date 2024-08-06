@@ -1,18 +1,25 @@
 import { Vec2 } from '../../core/math/vec2.js';
+import { Texture } from '../../platform/graphics/texture.js';
+import { BoundingBox } from '../../core/shape/bounding-box.js';
 import {
     ADDRESS_CLAMP_TO_EDGE, FILTER_NEAREST, PIXELFORMAT_RGBA32F, PIXELFORMAT_RGBA32U
 } from '../../platform/graphics/constants.js';
-import { Texture } from '../../platform/graphics/texture.js';
-import { BoundingBox } from '../../core/shape/bounding-box.js';
 import { createGSplatCompressedMaterial } from './gsplat-compressed-material.js';
 
-/** @ignore */
+/**
+ * @import { BoundingBox } from '../../core/shape/bounding-box.js'
+ * @import { GSplatCompressedData } from './gsplat-compressed-data.js'
+ * @import { GraphicsDevice } from '../../platform/graphics/graphics-device.js'
+ * @import { Material } from '../materials/material.js'
+ * @import { SplatMaterialOptions } from './gsplat-material.js'
+ */
+
 class GSplatCompressed {
     device;
 
     numSplats;
 
-    /** @type {import('../../core/shape/bounding-box.js').BoundingBox} */
+    /** @type {BoundingBox} */
     aabb;
 
     /** @type {Float32Array} */
@@ -25,8 +32,8 @@ class GSplatCompressed {
     chunkTexture;
 
     /**
-     * @param {import('../../platform/graphics/graphics-device.js').GraphicsDevice} device - The graphics device.
-     * @param {import('./gsplat-compressed-data.js').GSplatCompressedData} gsplatData - The splat data.
+     * @param {GraphicsDevice} device - The graphics device.
+     * @param {GSplatCompressedData} gsplatData - The splat data.
      */
     constructor(device, gsplatData) {
         const numSplats = gsplatData.numSplats;
@@ -59,14 +66,14 @@ class GSplatCompressed {
     }
 
     /**
-     * @returns {import('../materials/material.js').Material} material - The material to set up for
-     * the splat rendering.
+     * @param {SplatMaterialOptions} options - The splat material options.
+     * @returns {Material} material - The material to set up for the splat rendering.
      */
     createMaterial(options) {
         const result = createGSplatCompressedMaterial(options);
         result.setParameter('packedTexture', this.packedTexture);
         result.setParameter('chunkTexture', this.chunkTexture);
-        result.setParameter('bufferWidths', new Float32Array([this.packedTexture.width, this.chunkTexture.width / 3, this.numSplats, 0]));
+        result.setParameter('tex_params', new Float32Array([this.numSplats, this.packedTexture.width, this.chunkTexture.width / 3, 0]));
         return result;
     }
 
@@ -90,6 +97,7 @@ class GSplatCompressed {
      * @param {string} name - The name of the texture to be created.
      * @param {number} format - The pixel format of the texture.
      * @param {Vec2} size - The width and height of the texture.
+     * @param {Uint8Array} [data] - The initial data to fill the texture with.
      * @returns {Texture} The created texture instance.
      */
     createTexture(name, format, size, data) {

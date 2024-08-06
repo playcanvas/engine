@@ -4,6 +4,10 @@ import { PIXELFORMAT_RGB565, PIXELFORMAT_RGBA4 } from '../../platform/graphics/c
 import { BasisWorker } from './basis-worker.js';
 import { http } from '../../platform/net/http.js';
 
+/**
+ * @import { GraphicsDevice } from '../../platform/graphics/graphics-device.js'
+ */
+
 // get the list of the device's supported compression formats
 const getCompressionFormats = (device) => {
     return {
@@ -316,8 +320,7 @@ let deviceDetails = null;
 /**
  * Enqueue a blob of basis data for transcoding.
  *
- * @param {import('../../platform/graphics/graphics-device.js').GraphicsDevice} device - The
- * graphics device.
+ * @param {GraphicsDevice} device - The graphics device.
  * @param {string} url - URL of the basis file.
  * @param {object} data - The file data to transcode.
  * @param {Function} callback - Callback function to receive transcode result.
@@ -334,7 +337,6 @@ function basisTranscode(device, url, data, callback, options) {
 
     if (!deviceDetails) {
         deviceDetails = {
-            webgl2: device.isWebGL2,
             formats: getCompressionFormats(device)
         };
     }

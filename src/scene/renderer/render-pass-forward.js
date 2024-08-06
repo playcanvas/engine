@@ -2,12 +2,19 @@ import { TRACEID_RENDER_PASS_DETAIL } from "../../core/constants.js";
 import { Debug } from "../../core/debug.js";
 import { now } from "../../core/time.js";
 import { Tracing } from "../../core/tracing.js";
-
 import { BlendState } from "../../platform/graphics/blend-state.js";
 import { DebugGraphics } from "../../platform/graphics/debug-graphics.js";
 import { RenderPass } from "../../platform/graphics/render-pass.js";
 import { RenderAction } from "../composition/render-action.js";
 import { SHADER_FORWARD } from "../constants.js";
+
+/**
+ * @import { CameraComponent } from '../../framework/components/camera/component.js'
+ * @import { LayerComposition } from '../composition/layer-composition.js'
+ * @import { Layer } from '../layer.js'
+ * @import { Renderer } from './renderer.js'
+ * @import { Scene } from '../scene.js'
+ */
 
 /**
  * A render pass used render a set of layers using a camera.
@@ -16,22 +23,22 @@ import { SHADER_FORWARD } from "../constants.js";
  */
 class RenderPassForward extends RenderPass {
     /**
-     * @type {import('../composition/layer-composition.js').LayerComposition}
+     * @type {LayerComposition}
      */
     layerComposition;
 
     /**
-     * @type {import('../scene.js').Scene}
+     * @type {Scene}
      */
     scene;
 
     /**
-     * @type {import('./renderer.js').Renderer}
+     * @type {Renderer}
      */
     renderer;
 
     /**
-     * @type {import('../composition/render-action.js').RenderAction[]}
+     * @type {RenderAction[]}
      */
     renderActions = [];
 
@@ -58,9 +65,9 @@ class RenderPassForward extends RenderPass {
     /**
      * Adds a layer to be rendered by this render pass.
      *
-     * @param {import('../../framework/components/camera/component.js').CameraComponent} cameraComponent -
-     * The camera component that is used to render the layers.
-     * @param {import('../layer.js').Layer} layer - The layer to be added.
+     * @param {CameraComponent} cameraComponent - The camera component that is used to render the
+     * layers.
+     * @param {Layer} layer - The layer to be added.
      * @param {boolean} transparent - True if the layer is transparent.
      * @param {boolean} autoClears - True if the render target should be cleared based on the camera
      * and layer clear flags. Defaults to true.
@@ -92,10 +99,10 @@ class RenderPassForward extends RenderPass {
      * given id and transparency is reached (inclusive). Note that only layers that are enabled
      * and are rendered by the specified camera are added.
      *
-     * @param {import('../composition/layer-composition.js').LayerComposition} composition - The
-     * layer composition containing the layers to be added, typically the scene layer composition.
-     * @param {import('../../framework/components/camera/component.js').CameraComponent} cameraComponent -
-     * The camera component that is used to render the layers.
+     * @param {LayerComposition} composition - The layer composition containing the layers to be
+     * added, typically the scene layer composition.
+     * @param {CameraComponent} cameraComponent - The camera component that is used to render the
+     * layers.
      * @param {number} startIndex - The index of the first layer to be considered for adding.
      * @param {boolean} firstLayerClears - True if the first layer added should clear the render
      * target.
@@ -225,8 +232,7 @@ class RenderPassForward extends RenderPass {
     }
 
     /**
-     * @param {import('../composition/render-action.js').RenderAction} renderAction - The render
-     * action.
+     * @param {RenderAction} renderAction - The render action.
      * @param {boolean} firstRenderAction - True if this is the first render action in the render pass.
      */
     renderRenderAction(renderAction, firstRenderAction) {
@@ -276,7 +282,8 @@ class RenderPassForward extends RenderPass {
                 options.clearStencil = renderAction.clearStencil;
             }
 
-            renderer.renderForwardLayer(camera.camera, renderAction.renderTarget, layer, transparent,
+            const renderTarget = renderAction.renderTarget ?? device.backBuffer;
+            renderer.renderForwardLayer(camera.camera, renderTarget, layer, transparent,
                                         shaderPass, renderAction.viewBindGroups, options);
 
             // Revert temp frame stuff

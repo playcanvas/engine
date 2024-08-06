@@ -3,12 +3,14 @@ import { RenderPass } from '../../platform/graphics/render-pass.js';
 import { SHADER_FORWARD } from '../../scene/constants.js';
 
 /**
+ * @import { BindGroup } from '../../platform/graphics/bind-group.js'
+ */
+
+/**
  * A render pass implementing rendering of mesh instance receivers for light-mapper.
- *
- * @ignore
  */
 class RenderPassLightmapper extends RenderPass {
-    /** @type {import('../../platform/graphics/bind-group.js').BindGroup[]} */
+    /** @type {BindGroup[]} */
     viewBindGroups = [];
 
     constructor(device, renderer, camera, worldClusters, receivers, lightArray) {

@@ -1,8 +1,11 @@
 import { EventHandler } from '../../core/event-handler.js';
-
 import { math } from '../../core/math/math.js';
-
 import { hasAudioContext } from '../audio/capabilities.js';
+
+/**
+ * @import { SoundManager } from './manager.js'
+ * @import { Sound } from './sound.js'
+ */
 
 const STATE_PLAYING = 0;
 const STATE_PAUSED = 1;
@@ -14,7 +17,6 @@ const STATE_STOPPED = 2;
  * @param {number} time - The time.
  * @param {number} duration - The duration.
  * @returns {number} The time % duration.
- * @ignore
  */
 function capTime(time, duration) {
     return (time % duration) || 0;
@@ -93,8 +95,8 @@ class SoundInstance extends EventHandler {
     /**
      * Create a new SoundInstance instance.
      *
-     * @param {import('./manager.js').SoundManager} manager - The sound manager.
-     * @param {import('./sound.js').Sound} sound - The sound to play.
+     * @param {SoundManager} manager - The sound manager.
+     * @param {Sound} sound - The sound to play.
      * @param {object} options - Options for the instance.
      * @param {number} [options.volume] - The playback volume, between 0 and 1. Defaults to 1.
      * @param {number} [options.pitch] - The relative pitch. Defaults to 1 (plays at normal pitch).
@@ -114,7 +116,7 @@ class SoundInstance extends EventHandler {
         super();
 
         /**
-         * @type {import('./manager.js').SoundManager}
+         * @type {SoundManager}
          * @private
          */
         this._manager = manager;
@@ -138,7 +140,7 @@ class SoundInstance extends EventHandler {
         this._loop = !!(options.loop !== undefined ? options.loop : false);
 
         /**
-         * @type {import('./sound.js').Sound}
+         * @type {Sound}
          * @private
          */
         this._sound = sound;
@@ -473,7 +475,7 @@ class SoundInstance extends EventHandler {
     /**
      * Sets the sound resource that the instance will play.
      *
-     * @type {import('./sound.js').Sound}
+     * @type {Sound}
      */
     set sound(value) {
         this._sound = value;
@@ -488,7 +490,7 @@ class SoundInstance extends EventHandler {
     /**
      * Gets the sound resource that the instance will play.
      *
-     * @type {import('./sound.js').Sound}
+     * @type {Sound}
      */
     get sound() {
         return this._sound;

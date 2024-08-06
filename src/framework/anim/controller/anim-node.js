@@ -1,20 +1,22 @@
 import { Vec2 } from '../../../core/math/vec2.js';
 
 /**
+ * @import { AnimBlendTree } from './anim-blend-tree.js'
+ * @import { AnimState } from './anim-state.js'
+ */
+
+/**
  * AnimNodes are used to represent a single animation track in the current state. Each state can
  * contain multiple AnimNodes, in which case they are stored in a BlendTree hierarchy, which will
  * control the weight (contribution to the states final animation) of its child AnimNodes.
- *
- * @ignore
  */
 class AnimNode {
     /**
      * Create a new AnimNode instance.
      *
-     * @param {import('./anim-state.js').AnimState} state - The AnimState that this BlendTree
-     * belongs to.
-     * @param {import('./anim-blend-tree.js').AnimBlendTree|null} parent - The parent of the AnimNode.
-     * If not null, the AnimNode is stored as part of an {@link AnimBlendTree} hierarchy.
+     * @param {AnimState} state - The AnimState that this BlendTree belongs to.
+     * @param {AnimBlendTree|null} parent - The parent of the AnimNode. If not null, the AnimNode
+     * is stored as part of an {@link AnimBlendTree} hierarchy.
      * @param {string} name - The name of the AnimNode. Used when assigning an {@link AnimTrack} to
      * it.
      * @param {number[]|number} point - The coordinate/vector thats used to determine the weight of

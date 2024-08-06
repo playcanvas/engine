@@ -4,7 +4,6 @@ import { Color } from '../../core/math/color.js';
 import { math } from '../../core/math/math.js';
 import { Vec3 } from '../../core/math/vec3.js';
 import { BoundingBox } from '../../core/shape/bounding-box.js';
-
 import {
     ADDRESS_CLAMP_TO_EDGE,
     CHUNKAPI_1_65,
@@ -18,13 +17,6 @@ import { DebugGraphics } from '../../platform/graphics/debug-graphics.js';
 import { RenderTarget } from '../../platform/graphics/render-target.js';
 import { drawQuadWithShader } from '../../scene/graphics/quad-render-utils.js';
 import { Texture } from '../../platform/graphics/texture.js';
-
-import { MeshInstance } from '../../scene/mesh-instance.js';
-import { LightingParams } from '../../scene/lighting/lighting-params.js';
-import { WorldClusters } from '../../scene/lighting/world-clusters.js';
-import { shaderChunks } from '../../scene/shader-lib/chunks/chunks.js';
-import { shaderChunksLightmapper } from '../../scene/shader-lib/chunks/chunks-lightmapper.js';
-
 import {
     BAKE_COLORDIR,
     FOG_NONE, GAMMA_NONE, TONEMAP_LINEAR,
@@ -35,10 +27,15 @@ import {
     SHADOWUPDATE_REALTIME, SHADOWUPDATE_THISFRAME,
     SHADER_FORWARD
 } from '../../scene/constants.js';
+import { MeshInstance } from '../../scene/mesh-instance.js';
+import { LightingParams } from '../../scene/lighting/lighting-params.js';
+import { WorldClusters } from '../../scene/lighting/world-clusters.js';
+import { RenderingParams } from '../../scene/renderer/rendering-params.js';
+import { shaderChunks } from '../../scene/shader-lib/chunks/chunks.js';
+import { shaderChunksLightmapper } from '../../scene/shader-lib/chunks/chunks-lightmapper.js';
 import { Camera } from '../../scene/camera.js';
 import { GraphNode } from '../../scene/graph-node.js';
 import { StandardMaterial } from '../../scene/materials/standard-material.js';
-
 import { BakeLightSimple } from './bake-light-simple.js';
 import { BakeLightAmbient } from './bake-light-ambient.js';
 import { BakeMeshNode } from './bake-mesh-node.js';
@@ -47,7 +44,14 @@ import { LightmapFilters } from './lightmap-filters.js';
 import { BlendState } from '../../platform/graphics/blend-state.js';
 import { DepthState } from '../../platform/graphics/depth-state.js';
 import { RenderPassLightmapper } from './render-pass-lightmapper.js';
-import { RenderingParams } from '../../scene/renderer/rendering-params.js';
+
+/**
+ * @import { AssetRegistry } from '../asset/asset-registry.js'
+ * @import { Entity } from '../entity.js'
+ * @import { ForwardRenderer } from '../../scene/renderer/forward-renderer.js'
+ * @import { GraphicsDevice } from '../../platform/graphics/graphics-device.js'
+ * @import { Scene } from '../../scene/scene.js'
+ */
 
 const MAX_LIGHTMAP_SIZE = 2048;
 
@@ -65,14 +69,11 @@ class Lightmapper {
     /**
      * Create a new Lightmapper instance.
      *
-     * @param {import('../../platform/graphics/graphics-device.js').GraphicsDevice} device - The
-     * graphics device used by the lightmapper.
-     * @param {import('../entity.js').Entity} root - The root entity of the scene.
-     * @param {import('../../scene/scene.js').Scene} scene - The scene to lightmap.
-     * @param {import('../../scene/renderer/forward-renderer.js').ForwardRenderer} renderer - The
-     * renderer.
-     * @param {import('../asset/asset-registry.js').AssetRegistry} assets - Registry of assets to
-     * lightmap.
+     * @param {GraphicsDevice} device - The graphics device used by the lightmapper.
+     * @param {Entity} root - The root entity of the scene.
+     * @param {Scene} scene - The scene to lightmap.
+     * @param {ForwardRenderer} renderer - The renderer.
+     * @param {AssetRegistry} assets - Registry of assets to lightmap.
      * @ignore
      */
     constructor(device, root, scene, renderer, assets) {
@@ -252,7 +253,6 @@ class Lightmapper {
                 ` + bakeLmEndChunk;
             } else {
                 material.ambient = new Color(0, 0, 0);    // don't bake ambient
-                material.ambientTint = true;
             }
             material.chunks.basePS = shaderChunks.basePS + (scene.lightmapPixelFormat === PIXELFORMAT_RGBA8 ? '\n#define LIGHTMAP_RGBM\n' : '');
             material.chunks.endPS = bakeLmEndChunk;
@@ -509,8 +509,8 @@ class Lightmapper {
     /**
      * Generates and applies the lightmaps.
      *
-     * @param {import('../entity.js').Entity[]|null} nodes - An array of entities (with model or
-     * render components) to render lightmaps for. If not supplied, the entire scene will be baked.
+     * @param {Entity[]|null} nodes - An array of entities (with model or render components) to
+     * render lightmaps for. If not supplied, the entire scene will be baked.
      * @param {number} [mode] - Baking mode. Can be:
      *
      * - {@link BAKE_COLOR}: single color lightmap
@@ -645,11 +645,11 @@ class Lightmapper {
         }
     }
 
-    prepareLightsToBake(layerComposition, allLights, bakeLights) {
+    prepareLightsToBake(allLights, bakeLights) {
 
         // ambient light
         if (this.scene.ambientBake) {
-            const ambientLight = new BakeLightAmbient(this.scene);
+            const ambientLight = new BakeLightAmbient(this);
             bakeLights.push(ambientLight);
         }
 
@@ -659,7 +659,7 @@ class Lightmapper {
             const light = sceneLights[i];
 
             // store all lights and their original settings we need to temporarily modify
-            const bakeLight = new BakeLightSimple(this.scene, light);
+            const bakeLight = new BakeLightSimple(this, light);
             allLights.push(bakeLight);
 
             // bake light
@@ -949,7 +949,7 @@ class Lightmapper {
         // Collect bakeable lights, and also keep allLights along with their properties we change to restore them later
         this.renderer.collectLights(comp);
         const allLights = [], bakeLights = [];
-        this.prepareLightsToBake(comp, allLights, bakeLights);
+        this.prepareLightsToBake(allLights, bakeLights);
 
         // update transforms
         this.updateTransforms(allNodes);
@@ -1126,7 +1126,7 @@ class Lightmapper {
                             this.renderer._forwardTime = 0;
                             this.renderer._shadowMapTime = 0;
 
-                            this.renderer.renderForward(this.camera, rcv, lightArray, SHADER_FORWARD);
+                            this.renderer.renderForward(this.camera, tempRT, rcv, lightArray, SHADER_FORWARD);
 
                             device.updateEnd();
                         }

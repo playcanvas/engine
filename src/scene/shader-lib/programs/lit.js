@@ -3,6 +3,10 @@ import { LitShader } from './lit-shader.js';
 import { LitOptionsUtils } from './lit-options-utils.js';
 import { ShaderGenerator } from './shader-generator.js';
 
+/**
+ * @import { GraphicsDevice } from '../../../platform/graphics/graphics-device.js'
+ */
+
 const dummyUvs = [0, 1, 2, 3, 4, 5, 6, 7];
 
 class ShaderGeneratorLit extends ShaderGenerator {
@@ -18,11 +22,9 @@ class ShaderGeneratorLit extends ShaderGenerator {
     }
 
     /**
-     * @param {import('../../../platform/graphics/graphics-device.js').GraphicsDevice} device - The
-     * graphics device.
+     * @param {GraphicsDevice} device - The graphics device.
      * @param {object} options - The options to be passed to the backend.
      * @returns {object} Returns the created shader definition.
-     * @ignore
      */
     createShaderDefinition(device, options) {
         const litShader = new LitShader(device, options.litOptions);
@@ -44,7 +46,7 @@ class ShaderGeneratorLit extends ShaderGenerator {
         litShader.generateVertexShader(usedUvSets, usedUvSets, mapTransforms);
         litShader.generateFragmentShader(decl.code, code.code, func.code, "vUv0");
 
-        return litShader.getDefinition();
+        return litShader.getDefinition(options);
     }
 }
 

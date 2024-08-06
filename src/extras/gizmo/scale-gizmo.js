@@ -2,8 +2,15 @@ import { Vec3 } from '../../core/math/vec3.js';
 import { Quat } from '../../core/math/quat.js';
 
 import { AxisBoxCenter, AxisBoxLine, AxisPlane } from './axis-shapes.js';
-import { GIZMO_LOCAL } from './gizmo.js';
-import { TransformGizmo } from "./transform-gizmo.js";
+import { GIZMOSPACE_LOCAL, GIZMOAXIS_X, GIZMOAXIS_XYZ, GIZMOAXIS_Y, GIZMOAXIS_Z } from './constants.js';
+import { TransformGizmo } from './transform-gizmo.js';
+
+/**
+ * @import { AppBase } from '../../framework/app-base.js'
+ * @import { CameraComponent } from '../../framework/components/camera/component.js'
+ * @import { GraphNode } from '../../scene/graph-node.js'
+ * @import { Layer } from '../../scene/layer.js'
+ */
 
 // temporary variables
 const tmpV1 = new Vec3();
@@ -18,51 +25,51 @@ const tmpQ1 = new Quat();
 class ScaleGizmo extends TransformGizmo {
     _shapes = {
         xyz: new AxisBoxCenter(this._device, {
-            axis: 'xyz',
+            axis: GIZMOAXIS_XYZ,
             layers: [this._layer.id],
             defaultColor: this._meshColors.axis.xyz,
             hoverColor: this._meshColors.hover.xyz
         }),
         yz: new AxisPlane(this._device, {
-            axis: 'x',
-            flipAxis: 'y',
+            axis: GIZMOAXIS_X,
+            flipAxis: GIZMOAXIS_Y,
             layers: [this._layer.id],
             rotation: new Vec3(0, 0, -90),
             defaultColor: this._meshColors.axis.x,
             hoverColor: this._meshColors.hover.x
         }),
         xz: new AxisPlane(this._device, {
-            axis: 'y',
-            flipAxis: 'z',
+            axis: GIZMOAXIS_Y,
+            flipAxis: GIZMOAXIS_Z,
             layers: [this._layer.id],
             rotation: new Vec3(0, 0, 0),
             defaultColor: this._meshColors.axis.y,
             hoverColor: this._meshColors.hover.y
         }),
         xy: new AxisPlane(this._device, {
-            axis: 'z',
-            flipAxis: 'x',
+            axis: GIZMOAXIS_Z,
+            flipAxis: GIZMOAXIS_X,
             layers: [this._layer.id],
             rotation: new Vec3(90, 0, 0),
             defaultColor: this._meshColors.axis.z,
             hoverColor: this._meshColors.hover.z
         }),
         x: new AxisBoxLine(this._device, {
-            axis: 'x',
+            axis: GIZMOAXIS_X,
             layers: [this._layer.id],
             rotation: new Vec3(0, 0, -90),
             defaultColor: this._meshColors.axis.x,
             hoverColor: this._meshColors.hover.x
         }),
         y: new AxisBoxLine(this._device, {
-            axis: 'y',
+            axis: GIZMOAXIS_Y,
             layers: [this._layer.id],
             rotation: new Vec3(0, 0, 0),
             defaultColor: this._meshColors.axis.y,
             hoverColor: this._meshColors.hover.y
         }),
         z: new AxisBoxLine(this._device, {
-            axis: 'z',
+            axis: GIZMOAXIS_Z,
             layers: [this._layer.id],
             rotation: new Vec3(90, 0, 0),
             defaultColor: this._meshColors.axis.z,
@@ -70,12 +77,12 @@ class ScaleGizmo extends TransformGizmo {
         })
     };
 
-    _coordSpace = GIZMO_LOCAL;
+    _coordSpace = GIZMOSPACE_LOCAL;
 
     /**
      * Internal mapping from each attached node to their starting scale.
      *
-     * @type {Map<import('../../scene/graph-node.js').GraphNode, Vec3>}
+     * @type {Map<GraphNode, Vec3>}
      * @private
      */
     _nodeScales = new Map();
@@ -96,10 +103,9 @@ class ScaleGizmo extends TransformGizmo {
     /**
      * Creates a new ScaleGizmo object.
      *
-     * @param {import('../../framework/app-base.js').AppBase} app - The application instance.
-     * @param {import('../../framework/components/camera/component.js').CameraComponent} camera -
-     * The camera component.
-     * @param {import('../../scene/layer.js').Layer} layer - The render layer.
+     * @param {AppBase} app - The application instance.
+     * @param {CameraComponent} camera - The camera component.
+     * @param {Layer} layer - The render layer.
      * @example
      * const gizmo = new pc.ScaleGizmo(app, camera, layer);
      */
@@ -108,12 +114,12 @@ class ScaleGizmo extends TransformGizmo {
 
         this._createTransform();
 
-        this.on('transform:start', () => {
+        this.on(TransformGizmo.EVENT_TRANSFORMSTART, () => {
             this._selectionStartPoint.sub(Vec3.ONE);
             this._storeNodeScales();
         });
 
-        this.on('transform:move', (pointDelta) => {
+        this.on(TransformGizmo.EVENT_TRANSFORMMOVE, (pointDelta) => {
             if (this.snap) {
                 pointDelta.mulScalar(1 / this.snapIncrement);
                 pointDelta.round();
@@ -122,7 +128,7 @@ class ScaleGizmo extends TransformGizmo {
             this._setNodeScales(pointDelta);
         });
 
-        this.on('nodes:detach', () => {
+        this.on(TransformGizmo.EVENT_NODESDETACH, () => {
             this._nodeScales.clear();
         });
     }
@@ -315,18 +321,31 @@ class ScaleGizmo extends TransformGizmo {
         return this._shapes.xyz.tolerance;
     }
 
+    /**
+     * @param {string} prop - The property name.
+     * @param {any} value - The property value.
+     * @private
+     */
     _setArrowProp(prop, value) {
         this._shapes.x[prop] = value;
         this._shapes.y[prop] = value;
         this._shapes.z[prop] = value;
     }
 
+    /**
+     * @param {string} prop - The property name.
+     * @param {any} value - The property value.
+     * @private
+     */
     _setPlaneProp(prop, value) {
         this._shapes.yz[prop] = value;
         this._shapes.xz[prop] = value;
         this._shapes.xy[prop] = value;
     }
 
+    /**
+     * @private
+     */
     _storeNodeScales() {
         for (let i = 0; i < this.nodes.length; i++) {
             const node = this.nodes[i];
@@ -334,13 +353,27 @@ class ScaleGizmo extends TransformGizmo {
         }
     }
 
+    /**
+     * @param {Vec3} pointDelta - The point delta.
+     * @private
+     */
     _setNodeScales(pointDelta) {
         for (let i = 0; i < this.nodes.length; i++) {
             const node = this.nodes[i];
-            node.setLocalScale(this._nodeScales.get(node).clone().mul(pointDelta));
+            const scale = this._nodeScales.get(node);
+            if (!scale) {
+                continue;
+            }
+            node.setLocalScale(scale.clone().mul(pointDelta));
         }
     }
 
+    /**
+     * @param {number} x - The x coordinate.
+     * @param {number} y - The y coordinate.
+     * @returns {{ point: Vec3, angle: number }} The point and angle.
+     * @protected
+     */
     _screenToPoint(x, y) {
         const gizmoPos = this.root.getPosition();
         const mouseWPos = this._camera.screenToWorld(x, y, 1);
@@ -348,7 +381,7 @@ class ScaleGizmo extends TransformGizmo {
         const axis = this._selectedAxis;
 
         const isPlane = this._selectedIsPlane;
-        const isScaleUniform = (this._useUniformScaling && isPlane) || axis === 'xyz';
+        const isScaleUniform = (this._useUniformScaling && isPlane) || axis === GIZMOAXIS_XYZ;
 
         const ray = this._createRay(mouseWPos);
         const plane = this._createPlane(axis, isScaleUniform, !isPlane);
@@ -361,15 +394,15 @@ class ScaleGizmo extends TransformGizmo {
         if (isScaleUniform) {
             // calculate projecion vector for scale direction
             switch (axis) {
-                case 'x':
+                case GIZMOAXIS_X:
                     tmpV1.copy(this.root.up);
                     tmpV2.copy(this.root.forward).mulScalar(-1);
                     break;
-                case 'y':
+                case GIZMOAXIS_Y:
                     tmpV1.copy(this.root.right);
                     tmpV2.copy(this.root.forward).mulScalar(-1);
                     break;
-                case 'z':
+                case GIZMOAXIS_Z:
                     tmpV1.copy(this.root.up);
                     tmpV2.copy(this.root.right);
                     break;
@@ -386,7 +419,7 @@ class ScaleGizmo extends TransformGizmo {
             point.set(v, v, v);
 
             // keep scale of axis constant if not all axes are selected
-            if (axis !== 'xyz') {
+            if (axis !== GIZMOAXIS_XYZ) {
                 point[axis] = 1;
             }
 

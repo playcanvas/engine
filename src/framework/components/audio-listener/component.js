@@ -1,6 +1,11 @@
 import { Component } from '../component.js';
 
 /**
+ * @import { AudioListenerComponentSystem } from './system.js'
+ * @import { Entity } from '../../entity.js'
+ */
+
+/**
  * Represents the audio listener in the 3D world, so that 3D positioned audio sources are heard
  * correctly.
  *
@@ -10,10 +15,8 @@ class AudioListenerComponent extends Component {
     /**
      * Create a new AudioListenerComponent instance.
      *
-     * @param {import('./system.js').AudioListenerComponentSystem} system - The ComponentSystem
-     * that created this component.
-     * @param {import('../../entity.js').Entity} entity - The Entity that this component is
-     * attached to.
+     * @param {AudioListenerComponentSystem} system - The ComponentSystem that created this component.
+     * @param {Entity} entity - The Entity that this component is attached to.
      */
     constructor(system, entity) { // eslint-disable-line no-useless-constructor
         super(system, entity);

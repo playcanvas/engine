@@ -16,20 +16,6 @@ class StandardMaterialOptions {
     forceUv1 = false;
 
     /**
-     * The value of {@link StandardMaterial#ambientTint}.
-     *
-     * @type {boolean}
-     */
-    ambientTint = false;
-
-    /**
-     * Defines if {@link StandardMaterial#diffuse} constant should affect diffuse color.
-     *
-     * @type {boolean}
-     */
-    diffuseTint = false;
-
-    /**
      * Defines if {@link StandardMaterial#specular} constant should affect specular color.
      *
      * @type {boolean}
@@ -49,20 +35,6 @@ class StandardMaterialOptions {
      * @type {boolean}
      */
     glossTint = false;
-
-    /**
-     * Defines if {@link StandardMaterial#emissive} constant should affect emissive color.
-     *
-     * @type {boolean}
-     */
-    emissiveTint = false;
-
-    /**
-     * Defines if {@link StandardMaterial#opacity} constant should affect opacity value.
-     *
-     * @type {boolean}
-     */
-    opacityTint = false;
 
     emissiveEncoding = 'linear';
 

@@ -3,13 +3,13 @@ import { TRACEID_COMPUTEPIPELINE_ALLOC } from "../../../core/constants.js";
 import { WebgpuDebug } from "./webgpu-debug.js";
 import { WebgpuPipeline } from "./webgpu-pipeline.js";
 
+/**
+ * @import { WebgpuShader } from './webgpu-shader.js'
+ */
+
 let _pipelineId = 0;
 
-/**
- * @ignore
- */
 class WebgpuComputePipeline extends WebgpuPipeline {
-    /** @private */
     get(shader, bindGroupFormat) {
 
         // pipeline layout
@@ -25,11 +25,11 @@ class WebgpuComputePipeline extends WebgpuPipeline {
 
         const wgpu = this.device.wgpu;
 
-        /** @type {import('./webgpu-shader.js').WebgpuShader} */
+        /** @type {WebgpuShader} */
         const webgpuShader = shader.impl;
 
         /** @type {GPUComputePipelineDescriptor} */
-        const descr = {
+        const desc = {
             compute: {
                 module: webgpuShader.getComputeShaderModule(),
                 entryPoint: webgpuShader.computeEntryPoint
@@ -42,16 +42,16 @@ class WebgpuComputePipeline extends WebgpuPipeline {
         WebgpuDebug.validate(this.device);
 
         _pipelineId++;
-        DebugHelper.setLabel(descr, `ComputePipelineDescr-${_pipelineId}`);
+        DebugHelper.setLabel(desc, `ComputePipelineDescr-${_pipelineId}`);
 
-        const pipeline = wgpu.createComputePipeline(descr);
+        const pipeline = wgpu.createComputePipeline(desc);
 
         DebugHelper.setLabel(pipeline, `ComputePipeline-${_pipelineId}`);
-        Debug.trace(TRACEID_COMPUTEPIPELINE_ALLOC, `Alloc: Id ${_pipelineId}`, descr);
+        Debug.trace(TRACEID_COMPUTEPIPELINE_ALLOC, `Alloc: Id ${_pipelineId}`, desc);
 
         WebgpuDebug.end(this.device, {
             computePipeline: this,
-            descr,
+            desc: desc,
             shader
         });
 

@@ -1,8 +1,12 @@
 import { Debug } from '../../core/debug.js';
 import { TRACEID_RENDER_TARGET_ALLOC } from '../../core/constants.js';
-import { PIXELFORMAT_DEPTH, PIXELFORMAT_DEPTHSTENCIL } from './constants.js';
+import { PIXELFORMAT_DEPTH, PIXELFORMAT_DEPTHSTENCIL, isSrgbPixelFormat } from './constants.js';
 import { DebugGraphics } from './debug-graphics.js';
 import { GraphicsDevice } from './graphics-device.js';
+
+/**
+ * @import { Texture } from './texture.js'
+ */
 
 let id = 0;
 
@@ -20,25 +24,25 @@ class RenderTarget {
     name;
 
     /**
-     * @type {import('./graphics-device.js').GraphicsDevice}
+     * @type {GraphicsDevice}
      * @private
      */
     _device;
 
     /**
-     * @type {import('./texture.js').Texture}
+     * @type {Texture}
      * @private
      */
     _colorBuffer;
 
     /**
-     * @type {import('./texture.js').Texture[]}
+     * @type {Texture[]}
      * @private
      */
     _colorBuffers;
 
     /**
-     * @type {import('./texture.js').Texture}
+     * @type {Texture}
      * @private
      */
     _depthBuffer;
@@ -79,17 +83,16 @@ class RenderTarget {
      * @param {object} [options] - Object for passing optional arguments.
      * @param {boolean} [options.autoResolve] - If samples > 1, enables or disables automatic MSAA
      * resolve after rendering to this RT (see {@link RenderTarget#resolve}). Defaults to true.
-     * @param {import('./texture.js').Texture} [options.colorBuffer] - The texture that this render
-     * target will treat as a rendering surface.
-     * @param {import('./texture.js').Texture[]} [options.colorBuffers] - The textures that this
-     * render target will treat as a rendering surfaces. If this option is set, the colorBuffer
-     * option is ignored.
+     * @param {Texture} [options.colorBuffer] - The texture that this render target will treat as a
+     * rendering surface.
+     * @param {Texture[]} [options.colorBuffers] - The textures that this render target will treat
+     * as a rendering surfaces. If this option is set, the colorBuffer option is ignored.
      * @param {boolean} [options.depth] - If set to true, depth buffer will be created. Defaults to
      * true. Ignored if depthBuffer is defined.
-     * @param {import('./texture.js').Texture} [options.depthBuffer] - The texture that this render
-     * target will treat as a depth/stencil surface (WebGL2 only). If set, the 'depth' and
-     * 'stencil' properties are ignored. Texture must have {@link PIXELFORMAT_DEPTH} or
-     * {@link PIXELFORMAT_DEPTHSTENCIL} format.
+     * @param {Texture} [options.depthBuffer] - The texture that this render target will treat as a
+     * depth/stencil surface (WebGL2 only). If set, the 'depth' and 'stencil' properties are
+     * ignored. Texture must have {@link PIXELFORMAT_DEPTH} or {@link PIXELFORMAT_DEPTHSTENCIL}
+     * format.
      * @param {number} [options.face] - If the colorBuffer parameter is a cubemap, use this option
      * to specify the face of the cubemap to render to. Can be:
      *
@@ -422,7 +425,7 @@ class RenderTarget {
     /**
      * Color buffer set up on the render target.
      *
-     * @type {import('./texture.js').Texture}
+     * @type {Texture}
      */
     get colorBuffer() {
         return this._colorBuffer;
@@ -432,7 +435,7 @@ class RenderTarget {
      * Accessor for multiple render target color buffers.
      *
      * @param {*} index - Index of the color buffer to get.
-     * @returns {import('./texture.js').Texture} - Color buffer at the specified index.
+     * @returns {Texture} - Color buffer at the specified index.
      */
     getColorBuffer(index) {
         return this._colorBuffers?.[index];
@@ -442,7 +445,7 @@ class RenderTarget {
      * Depth buffer set up on the render target. Only available, if depthBuffer was set in
      * constructor. Not available if depth property was used instead.
      *
-     * @type {import('./texture.js').Texture}
+     * @type {Texture}
      */
     get depthBuffer() {
         return this._depthBuffer;
@@ -481,6 +484,21 @@ class RenderTarget {
      */
     get height() {
         return this._colorBuffer?.height || this._depthBuffer?.height || this._device.height;
+    }
+
+    /**
+     * Gets whether the format of the specified color buffer is sRGB.
+     *
+     * @param {number} index - The index of the color buffer.
+     * @returns {boolean} True if the color buffer is sRGB, false otherwise.
+     * @ignore
+     */
+    isColorBufferSrgb(index = 0) {
+        if (this.device.backBuffer === this)
+            return isSrgbPixelFormat(this.device.backBufferFormat);
+
+        const colorBuffer = this.getColorBuffer(index);
+        return colorBuffer ? isSrgbPixelFormat(colorBuffer.format) : false;
     }
 }
 

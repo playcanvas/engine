@@ -2,13 +2,17 @@ import { math } from '../../core/math/math.js';
 import { Texture } from '../../platform/graphics/texture.js';
 import { ADDRESS_REPEAT, FILTER_NEAREST } from '../../platform/graphics/constants.js';
 import { LAYERID_UI } from '../../scene/constants.js';
-
 import { CpuTimer } from './cpu-timer.js';
 import { GpuTimer } from './gpu-timer.js';
 import { StatsTimer } from './stats-timer.js';
 import { Graph } from './graph.js';
 import { WordAtlas } from './word-atlas.js';
 import { Render2d } from './render2d.js';
+
+/**
+ * @import { AppBase } from '../../framework/app-base.js'
+ * @import { GraphicsDevice } from '../../platform/graphics/graphics-device.js'
+ */
 
 /**
  * MiniStats is a small graphical overlay that displays realtime performance metrics. By default,
@@ -19,7 +23,7 @@ class MiniStats {
     /**
      * Create a new MiniStats instance.
      *
-     * @param {import('../../framework/app-base.js').AppBase} app - The application.
+     * @param {AppBase} app - The application.
      * @param {object} [options] - Options for the MiniStats instance.
      * @param {object[]} [options.sizes] - Sizes of area to render individual graphs in and spacing
      * between individual graphs.
@@ -280,8 +284,8 @@ class MiniStats {
     /**
      * Create the graphs requested by the user and add them to the MiniStats instance.
      *
-     * @param {import('../../framework/app-base.js').AppBase} app - The application.
-     * @param {import('../../platform/graphics/graphics-device.js').GraphicsDevice} device - The graphics device.
+     * @param {AppBase} app - The application.
+     * @param {GraphicsDevice} device - The graphics device.
      * @param {object} options - Options for the MiniStats instance.
      * @private
      */

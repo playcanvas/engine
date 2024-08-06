@@ -1,24 +1,23 @@
 import { Debug } from '../../../core/debug.js';
 import { string } from '../../../core/string.js';
-
 import { math } from '../../../core/math/math.js';
 import { Color } from '../../../core/math/color.js';
 import { Vec2 } from '../../../core/math/vec2.js';
-
 import { BoundingBox } from '../../../core/shape/bounding-box.js';
-
 import { SEMANTIC_POSITION, SEMANTIC_TEXCOORD0, SEMANTIC_COLOR, SEMANTIC_ATTR8, SEMANTIC_ATTR9, TYPE_FLOAT32 } from '../../../platform/graphics/constants.js';
 import { VertexIterator } from '../../../platform/graphics/vertex-iterator.js';
 import { GraphNode } from '../../../scene/graph-node.js';
 import { MeshInstance } from '../../../scene/mesh-instance.js';
 import { Model } from '../../../scene/model.js';
 import { Mesh } from '../../../scene/mesh.js';
-
 import { LocalizedAsset } from '../../asset/asset-localized.js';
-
 import { FONT_BITMAP, FONT_MSDF } from '../../font/constants.js';
-
 import { Markup } from './markup.js';
+
+/**
+ * @import { CanvasFont } from '../../../framework/font/canvas-font.js'
+ * @import { Font } from '../../../framework/font/font.js'
+ */
 
 class MeshInfo {
     constructor() {
@@ -113,6 +112,7 @@ const CONTROL_GLYPH_DATA = {
 
 const colorTmp = new Color();
 const vec2Tmp = new Vec2();
+const _tempColor = new Color();
 
 class TextElement {
     constructor(element) {
@@ -138,7 +138,7 @@ class TextElement {
         this._fontAsset.on('change', this._onFontChange, this);
         this._fontAsset.on('remove', this._onFontRemove, this);
 
-        /** @type {import('../../../framework/font/font.js').Font | import('../../../framework/font/canvas-font.js').CanvasFont} */
+        /** @type {Font | CanvasFont} */
         this._font = null;
 
         this._color = new Color(1, 1, 1, 1);
@@ -771,9 +771,10 @@ class TextElement {
             this._colorUniform[1] = 1;
             this._colorUniform[2] = 1;
         } else {
-            this._colorUniform[0] = this._color.r;
-            this._colorUniform[1] = this._color.g;
-            this._colorUniform[2] = this._color.b;
+            _tempColor.linear(this._color);
+            this._colorUniform[0] = _tempColor.r;
+            this._colorUniform[1] = _tempColor.g;
+            this._colorUniform[2] = _tempColor.b;
         }
     }
 
@@ -785,10 +786,11 @@ class TextElement {
             this._outlineColorUniform[2] = 0;
             this._outlineColorUniform[3] = 1;
         } else {
-            this._outlineColorUniform[0] = this._outlineColor.r;
-            this._outlineColorUniform[1] = this._outlineColor.g;
-            this._outlineColorUniform[2] = this._outlineColor.b;
-            this._outlineColorUniform[3] = this._outlineColor.a;
+            _tempColor.linear(this._outlineColor);
+            this._outlineColorUniform[0] = _tempColor.r;
+            this._outlineColorUniform[1] = _tempColor.g;
+            this._outlineColorUniform[2] = _tempColor.b;
+            this._outlineColorUniform[3] = _tempColor.a;
         }
     }
 
@@ -800,10 +802,11 @@ class TextElement {
             this._shadowColorUniform[2] = 0;
             this._shadowColorUniform[3] = 0;
         } else {
-            this._shadowColorUniform[0] = this._shadowColor.r;
-            this._shadowColorUniform[1] = this._shadowColor.g;
-            this._shadowColorUniform[2] = this._shadowColor.b;
-            this._shadowColorUniform[3] = this._shadowColor.a;
+            _tempColor.linear(this._shadowColor);
+            this._shadowColorUniform[0] = _tempColor.r;
+            this._shadowColorUniform[1] = _tempColor.g;
+            this._shadowColorUniform[2] = _tempColor.b;
+            this._shadowColorUniform[3] = _tempColor.a;
         }
     }
 
@@ -1618,9 +1621,12 @@ class TextElement {
                 this._updateText();
             }
         } else {
-            this._colorUniform[0] = this._color.r;
-            this._colorUniform[1] = this._color.g;
-            this._colorUniform[2] = this._color.b;
+
+            // color uniforms are in linear space
+            _tempColor.linear(this._color);
+            this._colorUniform[0] = _tempColor.r;
+            this._colorUniform[1] = _tempColor.g;
+            this._colorUniform[2] = _tempColor.b;
 
             for (let i = 0, len = this._model.meshInstances.length; i < len; i++) {
                 const mi = this._model.meshInstances[i];
@@ -1902,7 +1908,7 @@ class TextElement {
 
     // private
     /**
-     * @type {import('../../../core/shape/bounding-box.js').BoundingBox}
+     * @type {BoundingBox}
      */
     get aabb() {
         if (this._aabbDirty) {
@@ -1957,10 +1963,11 @@ class TextElement {
                 this._updateText();
             }
         } else {
-            this._outlineColorUniform[0] = this._outlineColor.r;
-            this._outlineColorUniform[1] = this._outlineColor.g;
-            this._outlineColorUniform[2] = this._outlineColor.b;
-            this._outlineColorUniform[3] = this._outlineColor.a;
+            _tempColor.linear(this._outlineColor);
+            this._outlineColorUniform[0] = _tempColor.r;
+            this._outlineColorUniform[1] = _tempColor.g;
+            this._outlineColorUniform[2] = _tempColor.b;
+            this._outlineColorUniform[3] = _tempColor.a;
 
             for (let i = 0, len = this._model.meshInstances.length; i < len; i++) {
                 const mi = this._model.meshInstances[i];
@@ -2037,10 +2044,11 @@ class TextElement {
                 this._updateText();
             }
         } else {
-            this._shadowColorUniform[0] = this._shadowColor.r;
-            this._shadowColorUniform[1] = this._shadowColor.g;
-            this._shadowColorUniform[2] = this._shadowColor.b;
-            this._shadowColorUniform[3] = this._shadowColor.a;
+            _tempColor.linear(this._shadowColor);
+            this._shadowColorUniform[0] = _tempColor.r;
+            this._shadowColorUniform[1] = _tempColor.g;
+            this._shadowColorUniform[2] = _tempColor.b;
+            this._shadowColorUniform[3] = _tempColor.a;
 
             for (let i = 0, len = this._model.meshInstances.length; i < len; i++) {
                 const mi = this._model.meshInstances[i];

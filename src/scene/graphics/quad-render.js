@@ -7,6 +7,10 @@ import { ShaderProcessorOptions } from "../../platform/graphics/shader-processor
 import { UniformBuffer } from "../../platform/graphics/uniform-buffer.js";
 import { processShader } from "../shader-lib/utils.js";
 
+/**
+ * @import { Shader } from '../../platform/graphics/shader.js'
+ */
+
 const _quadPrimitive = {
     type: PRIMITIVE_TRISTRIP,
     base: 0,
@@ -48,7 +52,7 @@ class QuadRender {
     /**
      * Create a new QuadRender instance.
      *
-     * @param {import('../../platform/graphics/shader.js').Shader} shader - The shader to be used to render the quad.
+     * @param {Shader} shader - The shader to be used to render the quad.
      */
     constructor(shader) {
 
@@ -91,10 +95,10 @@ class QuadRender {
      * Renders the quad. If the viewport is provided, the original viewport and scissor is restored
      * after the rendering.
      *
-     * @param {import('../../core/math/vec4.js').Vec4} [viewport] - The viewport rectangle of the
-     * quad, in pixels. The viewport is not changed if not provided.
-     * @param {import('../../core/math/vec4.js').Vec4} [scissor] - The scissor rectangle of the
-     * quad, in pixels. Used only if the viewport is provided.
+     * @param {Vec4} [viewport] - The viewport rectangle of the quad, in pixels. The viewport is
+     * not changed if not provided.
+     * @param {Vec4} [scissor] - The scissor rectangle of the quad, in pixels. Used only if the
+     * viewport is provided.
      */
     render(viewport, scissor) {
 

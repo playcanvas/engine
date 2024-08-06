@@ -10,8 +10,7 @@ import {
     SPECOCC_AO, SPECOCC_GLOSSDEPENDENT, SPECOCC_NONE,
     BLEND_SUBTRACTIVE, BLEND_ADDITIVE, BLEND_NORMAL, BLEND_NONE, BLEND_PREMULTIPLIED,
     BLEND_MULTIPLICATIVE, BLEND_ADDITIVEALPHA, BLEND_MULTIPLICATIVE2X, BLEND_SCREEN,
-    BLEND_MIN, BLEND_MAX,
-    SPECULAR_BLINN, SPECULAR_PHONG
+    BLEND_MIN, BLEND_MAX
 } from '../constants.js';
 
 import { standardMaterialParameterTypes, standardMaterialRemovedParameters } from './standard-material-parameters.js';
@@ -56,10 +55,6 @@ class StandardMaterialValidator {
                 FUNC_NOTEQUAL,
                 FUNC_GREATEREQUAL,
                 FUNC_ALWAYS
-            ]),
-            shadingModel: this._createEnumValidator([
-                SPECULAR_PHONG,
-                SPECULAR_BLINN
             ])
         };
     }

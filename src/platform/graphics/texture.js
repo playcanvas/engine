@@ -1,8 +1,6 @@
 import { Debug } from '../../core/debug.js';
 import { TRACEID_TEXTURE_ALLOC, TRACEID_VRAM_TEXTURE } from '../../core/constants.js';
 import { math } from '../../core/math/math.js';
-
-import { TextureUtils } from './texture-utils.js';
 import {
     isCompressedPixelFormat,
     getPixelFormatArrayType,
@@ -15,8 +13,13 @@ import {
     TEXTUREPROJECTION_NONE, TEXTUREPROJECTION_CUBE,
     TEXTURETYPE_DEFAULT, TEXTURETYPE_RGBM, TEXTURETYPE_RGBE, TEXTURETYPE_RGBP,
     isIntegerPixelFormat, FILTER_NEAREST, TEXTURELOCK_NONE, TEXTURELOCK_READ,
-    isLinearFormat
+    requiresManualGamma
 } from './constants.js';
+import { TextureUtils } from './texture-utils.js';
+
+/**
+ * @import { GraphicsDevice } from './graphics-device.js'
+ */
 
 let id = 0;
 
@@ -95,8 +98,7 @@ class Texture {
     /**
      * Create a new Texture instance.
      *
-     * @param {import('./graphics-device.js').GraphicsDevice} graphicsDevice - The graphics device
-     * used to manage this texture.
+     * @param {GraphicsDevice} graphicsDevice - The graphics device used to manage this texture.
      * @param {object} [options] - Object for passing optional arguments.
      * @param {string} [options.name] - The name of the texture. Defaults to null.
      * @param {number} [options.width] - The width of the texture in pixels. Defaults to 4.
@@ -813,7 +815,8 @@ class Texture {
                 return 'rgbp';
         }
 
-        return isLinearFormat(this.format) ? 'linear' : 'srgb';
+        // note that the srgb part only makes sense for texture storing color data
+        return requiresManualGamma(this.format) ? 'srgb' : 'linear';
     }
 
     // Force a full resubmission of the texture to the GPU (used on a context restore event)

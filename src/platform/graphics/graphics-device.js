@@ -6,11 +6,11 @@ import { Vec2 } from '../../core/math/vec2.js';
 import { Tracing } from '../../core/tracing.js';
 import { Color } from '../../core/math/color.js';
 import { TRACEID_TEXTURES } from '../../core/constants.js';
-
 import {
     CULLFACE_BACK,
     CLEARFLAG_COLOR, CLEARFLAG_DEPTH,
-    PRIMITIVE_POINTS, PRIMITIVE_TRIFAN, SEMANTIC_POSITION, TYPE_FLOAT32, PIXELFORMAT_111110F, PIXELFORMAT_RGBA16F, PIXELFORMAT_RGBA32F
+    PRIMITIVE_POINTS, PRIMITIVE_TRIFAN, SEMANTIC_POSITION, TYPE_FLOAT32, PIXELFORMAT_111110F, PIXELFORMAT_RGBA16F, PIXELFORMAT_RGBA32F,
+    DISPLAYFORMAT_LDR
 } from './constants.js';
 import { BlendState } from './blend-state.js';
 import { DepthState } from './depth-state.js';
@@ -18,6 +18,17 @@ import { ScopeSpace } from './scope-space.js';
 import { VertexBuffer } from './vertex-buffer.js';
 import { VertexFormat } from './vertex-format.js';
 import { StencilParameters } from './stencil-parameters.js';
+
+/**
+ * @import { Compute } from './compute.js'
+ * @import { DEVICETYPE_WEBGL2, DEVICETYPE_WEBGPU } from './constants.js'
+ * @import { DynamicBuffers } from './dynamic-buffers.js'
+ * @import { GpuProfiler } from './gpu-profiler.js'
+ * @import { IndexBuffer } from './index-buffer.js'
+ * @import { RenderTarget } from './render-target.js'
+ * @import { Shader } from './shader.js'
+ * @import { Texture } from './texture.js'
+ */
 
 /**
  * The graphics device manages the underlying graphics context. It is responsible for submitting
@@ -50,7 +61,7 @@ class GraphicsDevice extends EventHandler {
     /**
      * The render target representing the main back-buffer.
      *
-     * @type {import('./render-target.js').RenderTarget|null}
+     * @type {RenderTarget|null}
      * @ignore
      */
     backBuffer = null;
@@ -191,7 +202,7 @@ class GraphicsDevice extends EventHandler {
     /**
      * Currently active render target.
      *
-     * @type {import('./render-target.js').RenderTarget|null}
+     * @type {RenderTarget|null}
      * @ignore
      */
     renderTarget = null;
@@ -199,7 +210,7 @@ class GraphicsDevice extends EventHandler {
     /**
      * Array of objects that need to be re-initialized after a context restore event
      *
-     * @type {import('./shader.js').Shader[]}
+     * @type {Shader[]}
      * @ignore
      */
     shaders = [];
@@ -207,7 +218,7 @@ class GraphicsDevice extends EventHandler {
     /**
      * An array of currently created textures.
      *
-     * @type {import('./texture.js').Texture[]}
+     * @type {Texture[]}
      * @ignore
      */
     textures = [];
@@ -215,7 +226,7 @@ class GraphicsDevice extends EventHandler {
     /**
      * A set of currently created render targets.
      *
-     * @type {Set<import('./render-target.js').RenderTarget>}
+     * @type {Set<RenderTarget>}
      * @ignore
      */
     targets = new Set();
@@ -327,7 +338,7 @@ class GraphicsDevice extends EventHandler {
     /**
      * The dynamic buffer manager.
      *
-     * @type {import('./dynamic-buffers.js').DynamicBuffers}
+     * @type {DynamicBuffers}
      * @ignore
      */
     dynamicBuffers;
@@ -335,7 +346,7 @@ class GraphicsDevice extends EventHandler {
     /**
      * The GPU profiler.
      *
-     * @type {import('./gpu-profiler.js').GpuProfiler}
+     * @type {GpuProfiler}
      */
     gpuProfiler;
 
@@ -344,6 +355,17 @@ class GraphicsDevice extends EventHandler {
         depth: 1,
         stencil: 0,
         flags: CLEARFLAG_COLOR | CLEARFLAG_DEPTH
+    };
+
+    /**
+     * The current client rect.
+     *
+     * @type {{ width: number, height: number }}
+     * @ignore
+     */
+    clientRect = {
+        width: 0,
+        height: 0
     };
 
     static EVENT_RESIZE = 'resizecanvas';
@@ -355,10 +377,12 @@ class GraphicsDevice extends EventHandler {
 
         // copy options and handle defaults
         this.initOptions = { ...options };
+        this.initOptions.alpha ??= true;
         this.initOptions.depth ??= true;
         this.initOptions.stencil ??= true;
         this.initOptions.antialias ??= true;
         this.initOptions.powerPreference ??= 'high-performance';
+        this.initOptions.displayFormat ??= DISPLAYFORMAT_LDR;
 
         // Some devices window.devicePixelRatio can be less than one
         // eg Oculus Quest 1 which returns a window.devicePixelRatio of 0.8
@@ -596,8 +620,7 @@ class GraphicsDevice extends EventHandler {
      * Sets the specified render target on the device. If null is passed as a parameter, the back
      * buffer becomes the current target for all rendering operations.
      *
-     * @param {import('./render-target.js').RenderTarget|null} renderTarget - The render target to
-     * activate.
+     * @param {RenderTarget|null} renderTarget - The render target to activate.
      * @example
      * // Set a render target to receive all rendering output
      * device.setRenderTarget(renderTarget);
@@ -614,8 +637,7 @@ class GraphicsDevice extends EventHandler {
      * {@link GraphicsDevice#draw}, the specified index buffer will be used to provide index data
      * for any indexed primitives.
      *
-     * @param {import('./index-buffer.js').IndexBuffer|null} indexBuffer - The index buffer to assign to
-     * the device.
+     * @param {IndexBuffer|null} indexBuffer - The index buffer to assign to the device.
      */
     setIndexBuffer(indexBuffer) {
         // Store the index buffer
@@ -627,8 +649,7 @@ class GraphicsDevice extends EventHandler {
      * {@link GraphicsDevice#draw}, the specified vertex buffer(s) will be used to provide vertex
      * data for any primitives.
      *
-     * @param {import('./vertex-buffer.js').VertexBuffer} vertexBuffer - The vertex buffer to
-     * assign to the device.
+     * @param {VertexBuffer} vertexBuffer - The vertex buffer to assign to the device.
      */
     setVertexBuffer(vertexBuffer) {
 
@@ -649,7 +670,7 @@ class GraphicsDevice extends EventHandler {
     /**
      * Queries the currently set render target on the device.
      *
-     * @returns {import('./render-target.js').RenderTarget} The current render target.
+     * @returns {RenderTarget} The current render target.
      * @example
      * // Get the current render target
      * const renderTarget = device.getRenderTarget();
@@ -661,8 +682,7 @@ class GraphicsDevice extends EventHandler {
     /**
      * Initialize render target before it can be used.
      *
-     * @param {import('./render-target.js').RenderTarget} target - The render target to be
-     * initialized.
+     * @param {RenderTarget} target - The render target to be initialized.
      * @ignore
      */
     initRenderTarget(target) {
@@ -746,7 +766,15 @@ class GraphicsDevice extends EventHandler {
     }
 
     updateClientRect() {
-        this.clientRect = this.canvas.getBoundingClientRect();
+        if (platform.worker) {
+            // Web Workers don't do page layout, so getBoundingClientRect is not available
+            this.clientRect.width = this.canvas.width;
+            this.clientRect.height = this.canvas.height;
+        } else {
+            const rect = this.canvas.getBoundingClientRect();
+            this.clientRect.width = rect.width;
+            this.clientRect.height = rect.height;
+        }
     }
 
     /**
@@ -810,7 +838,7 @@ class GraphicsDevice extends EventHandler {
      * - {@link DEVICETYPE_WEBGL2}
      * - {@link DEVICETYPE_WEBGPU}
      *
-     * @type {import('./constants.js').DEVICETYPE_WEBGL2 | import('./constants.js').DEVICETYPE_WEBGPU}
+     * @type {DEVICETYPE_WEBGL2|DEVICETYPE_WEBGPU}
      */
     get deviceType() {
         return this._deviceType;
@@ -868,8 +896,7 @@ class GraphicsDevice extends EventHandler {
     /**
      * Dispatch multiple compute shaders inside a single compute shader pass.
      *
-     * @param {Array<import('./compute.js').Compute>} computes - An array of compute shaders to
-     * dispatch.
+     * @param {Array<Compute>} computes - An array of compute shaders to dispatch.
      */
     computeDispatch(computes) {
     }
@@ -878,6 +905,7 @@ class GraphicsDevice extends EventHandler {
      * Get a renderable HDR pixel format supported by the graphics device.
      *
      * Note:
+     *
      * - When the `filterable` parameter is set to false, this function returns one of the supported
      * formats on the majority of devices apart from some very old iOS and Android devices (99%).
      * - When the `filterable` parameter is set to true, the function returns a format on a

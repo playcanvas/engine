@@ -3,10 +3,12 @@ import {
     TEXTURETYPE_DEFAULT, TEXTURETYPE_RGBM
 } from '../../platform/graphics/constants.js';
 import { Texture } from '../../platform/graphics/texture.js';
-
 import { Asset } from '../asset/asset.js';
-
 import { ResourceHandler } from './handler.js';
+
+/**
+ * @import { AppBase } from '../app-base.js'
+ */
 
 /**
  * Resource handler used for loading cubemap {@link Texture} resources.
@@ -17,7 +19,7 @@ class CubemapHandler extends ResourceHandler {
     /**
      * Create a new CubemapHandler instance.
      *
-     * @param {import('../app-base.js').AppBase} app - The running {@link AppBase}.
+     * @param {AppBase} app - The running {@link AppBase}.
      * @ignore
      */
     constructor(app) {

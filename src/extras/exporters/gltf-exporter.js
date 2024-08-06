@@ -1,5 +1,10 @@
 import { CoreExporter } from './core-exporter.js';
-
+import { math } from '../../core/math/math.js';
+import { Vec2 } from '../../core/math/vec2.js';
+import { Vec3 } from '../../core/math/vec3.js';
+import { Quat } from '../../core/math/quat.js';
+import { Color } from '../../core/math/color.js';
+import { BoundingBox } from '../../core/shape/bounding-box.js';
 import {
     CULLFACE_NONE,
     INDEXFORMAT_UINT8, INDEXFORMAT_UINT16, INDEXFORMAT_UINT32,
@@ -12,17 +17,14 @@ import {
     TYPE_UINT8, TYPE_INT16, TYPE_UINT16,
     TYPE_INT32, TYPE_UINT32, TYPE_FLOAT32
 } from '../../platform/graphics/constants.js';
-import { math } from '../../core/math/math.js';
-import { Vec2 } from '../../core/math/vec2.js';
-import { Vec3 } from '../../core/math/vec3.js';
-import { Quat } from '../../core/math/quat.js';
-import { Color } from '../../core/math/color.js';
-import { BoundingBox } from '../../core/shape/bounding-box.js';
 import { IndexBuffer } from '../../platform/graphics/index-buffer.js';
 import { VertexBuffer } from '../../platform/graphics/vertex-buffer.js';
 import { StandardMaterial } from '../../scene/materials/standard-material.js';
-import { BasicMaterial } from '../../scene/materials/basic-material.js';
 import { BLEND_NONE, BLEND_NORMAL, PROJECTION_ORTHOGRAPHIC } from '../../scene/constants.js';
+
+/**
+ * @import { Entity } from '../../framework/entity.js'
+ */
 
 const ARRAY_BUFFER = 34962;
 const ELEMENT_ARRAY_BUFFER = 34963;
@@ -403,18 +405,6 @@ class GltfExporter extends CoreExporter {
         }
     }
 
-    writeBasicMaterial(resources, mat, output, json) {
-
-        const { color } = mat;
-        const pbr = output.pbrMetallicRoughness;
-
-        if (!color.equals(Color.WHITE)) {
-            pbr.baseColorFactor = [color.r, color.g, color.b, color];
-        }
-
-        this.attachTexture(resources, mat, pbr, 'baseColorTexture', 'colorMap', json);
-    }
-
     writeMaterials(resources, json) {
 
         if (resources.materials.length > 0) {
@@ -430,10 +420,6 @@ class GltfExporter extends CoreExporter {
 
                 if (mat instanceof StandardMaterial) {
                     this.writeStandardMaterial(resources, mat, material, json);
-                }
-
-                if (mat instanceof BasicMaterial) {
-                    this.writeBasicMaterial(resources, mat, material, json);
                 }
 
                 if (blendType === BLEND_NORMAL) {
@@ -759,7 +745,7 @@ class GltfExporter extends CoreExporter {
     /**
      * Converts a hierarchy of entities to GLB format.
      *
-     * @param {import('playcanvas').Entity} entity - The root of the entity hierarchy to convert.
+     * @param {Entity} entity - The root of the entity hierarchy to convert.
      * @param {object} options - Object for passing optional arguments.
      * @param {number} [options.maxTextureSize] - Maximum texture size. Texture is resized if over
      * the size.

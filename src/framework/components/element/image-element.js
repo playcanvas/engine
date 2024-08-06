@@ -1,12 +1,10 @@
 import { Debug } from '../../../core/debug.js';
 import { TRACE_ID_ELEMENT } from '../../../core/constants.js';
-
 import { math } from '../../../core/math/math.js';
 import { Color } from '../../../core/math/color.js';
 import { Vec2 } from '../../../core/math/vec2.js';
 import { Vec3 } from '../../../core/math/vec3.js';
 import { Vec4 } from '../../../core/math/vec4.js';
-
 import {
     FUNC_EQUAL,
     PRIMITIVE_TRISTRIP,
@@ -17,7 +15,6 @@ import {
 import { VertexBuffer } from '../../../platform/graphics/vertex-buffer.js';
 import { VertexFormat } from '../../../platform/graphics/vertex-format.js';
 import { DeviceCache } from '../../../platform/graphics/device-cache.js';
-
 import {
     LAYER_HUD, LAYER_WORLD,
     SPRITE_RENDERMODE_SIMPLE, SPRITE_RENDERMODE_SLICED, SPRITE_RENDERMODE_TILED
@@ -27,11 +24,17 @@ import { Mesh } from '../../../scene/mesh.js';
 import { MeshInstance } from '../../../scene/mesh-instance.js';
 import { Model } from '../../../scene/model.js';
 import { StencilParameters } from '../../../platform/graphics/stencil-parameters.js';
-
 import { FITMODE_STRETCH, FITMODE_CONTAIN, FITMODE_COVER } from './constants.js';
-
 import { Asset } from '../../asset/asset.js';
 
+/**
+ * @import { BoundingBox } from '../../../core/shape/bounding-box.js'
+ * @import { Material } from '../../../scene/materials/material.js'
+ * @import { Sprite } from '../../../scene/sprite.js'
+ * @import { Texture } from '../../../platform/graphics/texture.js'
+ */
+
+const _tempColor = new Color();
 const _vertexFormatDeviceCache = new DeviceCache();
 
 class ImageRenderable {
@@ -267,15 +270,15 @@ class ImageElement {
         // public
         /** @type {number} */
         this._textureAsset = null;
-        /** @type {import('../../../platform/graphics/texture.js').Texture} */
+        /** @type {Texture} */
         this._texture = null;
         /** @type {number} */
         this._materialAsset = null;
-        /** @type {import('../../../scene/materials/material.js').Material} */
+        /** @type {Material} */
         this._material = null;
         /** @type {number} */
         this._spriteAsset = null;
-        /** @type {import('../../../scene/sprite.js').Sprite} */
+        /** @type {Sprite} */
         this._sprite = null;
         this._spriteFrame = 0;
         /** @type {number} */
@@ -301,7 +304,7 @@ class ImageElement {
         // set default colors
         this._color = new Color(1, 1, 1, 1);
         this._colorUniform = new Float32Array([1, 1, 1]);
-        this._renderable.setParameter('material_emissive', this._colorUniform);
+        this._updateRenderableEmissive();
         this._renderable.setParameter('material_opacity', 1);
 
         this._updateAabbFunc = this._updateAabb.bind(this);
@@ -895,10 +898,16 @@ class ImageElement {
         }
     }
 
+    _updateRenderableEmissive() {
+        // color uniforms are in linear space
+        _tempColor.linear(this._color);
+        this._colorUniform[0] = _tempColor.r;
+        this._colorUniform[1] = _tempColor.g;
+        this._colorUniform[2] = _tempColor.b;
+        this._renderable.setParameter('material_emissive', this._colorUniform);
+    }
+
     set color(value) {
-        const r = value.r;
-        const g = value.g;
-        const b = value.b;
 
         // #if _DEBUG
         if (this._color === value) {
@@ -906,15 +915,14 @@ class ImageElement {
         }
         // #endif
 
+        const { r, g, b } = value;
+
         if (this._color.r !== r || this._color.g !== g || this._color.b !== b) {
             this._color.r = r;
             this._color.g = g;
             this._color.b = b;
 
-            this._colorUniform[0] = r;
-            this._colorUniform[1] = g;
-            this._colorUniform[2] = b;
-            this._renderable.setParameter('material_emissive', this._colorUniform);
+            this._updateRenderableEmissive();
         }
 
         if (this._element) {
@@ -1029,10 +1037,7 @@ class ImageElement {
                 this._renderable.deleteParameter('material_emissive');
             } else {
                 // otherwise if we are back to the defaults reset the color and opacity
-                this._colorUniform[0] = this._color.r;
-                this._colorUniform[1] = this._color.g;
-                this._colorUniform[2] = this._color.b;
-                this._renderable.setParameter('material_emissive', this._colorUniform);
+                this._updateRenderableEmissive();
                 this._renderable.setParameter('material_opacity', this._color.a);
             }
         }
@@ -1100,10 +1105,7 @@ class ImageElement {
             // default texture just uses emissive and opacity maps
             this._renderable.setParameter('texture_emissiveMap', this._texture);
             this._renderable.setParameter('texture_opacityMap', this._texture);
-            this._colorUniform[0] = this._color.r;
-            this._colorUniform[1] = this._color.g;
-            this._colorUniform[2] = this._color.b;
-            this._renderable.setParameter('material_emissive', this._colorUniform);
+            this._updateRenderableEmissive();
             this._renderable.setParameter('material_opacity', this._color.a);
 
             // if texture's aspect ratio changed and the element needs to preserve aspect ratio, refresh the mesh
@@ -1321,7 +1323,7 @@ class ImageElement {
 
     // private
     /**
-     * @type {import('../../../core/shape/bounding-box.js').BoundingBox | null}
+     * @type {BoundingBox | null}
      */
     get aabb() {
         if (this._renderable.meshInstance) {

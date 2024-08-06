@@ -1,17 +1,23 @@
 import { path } from '../../core/path.js';
-
 import { GlbContainerParser } from '../parsers/glb-container-parser.js';
-
 import { ResourceHandler } from './handler.js';
+
+/**
+ * @import { AppBase } from '../app-base.js'
+ * @import { Asset } from '../asset/asset.js'
+ * @import { Entity } from '../entity.js'
+ * @import { MeshInstance } from '../../scene/mesh-instance.js'
+ * @import { ResourceHandlerCallback } from './handler.js'
+ */
 
 /**
  * @interface
  * @name ContainerResource
  * @description Container for a list of animations, textures, materials, renders and a model.
- * @property {import('../asset/asset.js').Asset[]} renders An array of the Render assets.
- * @property {import('../asset/asset.js').Asset[]} materials An array of {@link Material} and/or {@link StandardMaterial} assets.
- * @property {import('../asset/asset.js').Asset[]} textures An array of the {@link Texture} assets.
- * @property {import('../asset/asset.js').Asset[]} animations An array of the {@link Animation} assets.
+ * @property {Asset[]} renders An array of the Render assets.
+ * @property {Asset[]} materials An array of {@link Material} and/or {@link StandardMaterial} assets.
+ * @property {Asset[]} textures An array of the {@link Texture} assets.
+ * @property {Asset[]} animations An array of the {@link Animation} assets.
  * @category Graphics
  */
 class ContainerResource {
@@ -20,8 +26,8 @@ class ContainerResource {
      *
      * @param {object} [options] - The initialization data for the model component type
      * {@link ModelComponent}.
-     * @returns {import('../entity.js').Entity} A single entity with a model component. Model
-     * component internally contains a hierarchy based on {@link GraphNode}.
+     * @returns {Entity} A single entity with a model component. Model component internally
+     * contains a hierarchy based on {@link GraphNode}.
      * @example
      * // load a glb file and instantiate an entity with a model component based on it
      * app.assets.loadFromUrl("statue.glb", "container", function (err, asset) {
@@ -40,8 +46,8 @@ class ContainerResource {
      *
      * @param {object} [options] - The initialization data for the render component type
      * {@link RenderComponent}.
-     * @returns {import('../entity.js').Entity} A hierarchy of entities with render components on
-     * entities containing renderable geometry.
+     * @returns {Entity} A hierarchy of entities with render components on entities containing
+     * renderable geometry.
      * @example
      * // load a glb file and instantiate an entity with a render component based on it
      * app.assets.loadFromUrl("statue.glb", "container", function (err, asset) {
@@ -76,10 +82,9 @@ class ContainerResource {
     /**
      * Applies a material variant to an entity hierarchy.
      *
-     * @param {import('../entity.js').Entity} entity - The entity root to which material variants
-     * will be applied.
-     * @param {string} [name] - The name of the variant, as queried from getMaterialVariants,
-     * if null the variant will be reset to the default.
+     * @param {Entity} entity - The entity root to which material variants will be applied.
+     * @param {string} [name] - The name of the variant, as queried from getMaterialVariants, if
+     * null the variant will be reset to the default.
      * @example
      * // load a glb file and instantiate an entity with a render component based on it
      * app.assets.loadFromUrl("statue.glb", "container", function (err, asset) {
@@ -97,10 +102,9 @@ class ContainerResource {
      * this method allows for setting the variant on a specific set of mesh instances instead of the
      * whole entity.
      *
-     * @param {import('../../scene/mesh-instance').MeshInstance[]} instances - An array of mesh
-     * instances.
-     * @param {string} [name] - The name of the variant, as queried by getMaterialVariants. If
-     * null, the variant will be reset to the default.
+     * @param {MeshInstance[]} instances - An array of mesh instances.
+     * @param {string} [name] - The name of the variant, as queried by getMaterialVariants. If null,
+     * the variant will be reset to the default.
      * @example
      * // load a glb file and instantiate an entity with a render component based on it
      * app.assets.loadFromUrl("statue.glb", "container", function (err, asset) {
@@ -166,7 +170,7 @@ class ContainerHandler extends ResourceHandler {
     /**
      * Create a new ContainerResource instance.
      *
-     * @param {import('../app-base.js').AppBase} app - The running {@link AppBase}.
+     * @param {AppBase} app - The running {@link AppBase}.
      * @ignore
      */
     constructor(app) {
@@ -214,10 +218,9 @@ class ContainerHandler extends ResourceHandler {
      * @param {string} [url.load] - The URL to be used for loading the resource.
      * @param {string} [url.original] - The original URL to be used for identifying the resource
      * format. This is necessary when loading, for example from blob.
-     * @param {import('./handler.js').ResourceHandlerCallback} callback - The callback used when
-     * the resource is loaded or an error occurs.
-     * @param {import('../asset/asset.js').Asset} [asset] - Optional asset that is passed by
-     * ResourceLoader.
+     * @param {ResourceHandlerCallback} callback - The callback used when the resource is loaded or
+     * an error occurs.
+     * @param {Asset} [asset] - Optional asset that is passed by ResourceLoader.
      */
     load(url, callback, asset) {
         if (typeof url === 'string') {
@@ -233,8 +236,7 @@ class ContainerHandler extends ResourceHandler {
     /**
      * @param {string} url - The URL of the resource to open.
      * @param {*} data - The raw resource data passed by callback from {@link ResourceHandler#load}.
-     * @param {import('../asset/asset.js').Asset} [asset] - Optional asset that is passed by
-     * ResourceLoader.
+     * @param {Asset} [asset] - Optional asset that is passed by ResourceLoader.
      * @returns {*} The parsed resource data.
      */
     open(url, data, asset) {

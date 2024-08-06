@@ -4,10 +4,13 @@ import { GraphNode } from "../graph-node.js";
 import { SkyMesh } from "./sky-mesh.js";
 
 /**
+ * @import { Scene } from '../scene.js'
+ */
+
+/**
  * Implementation of the sky.
  *
  * @category Graphics
- * @ignore
  */
 class Sky {
     /**
@@ -46,8 +49,7 @@ class Sky {
     /**
      * Constructs a new sky.
      *
-     * @param {import('../scene.js').Scene} scene - The scene owning the sky.
-     * @ignore
+     * @param {Scene} scene - The scene owning the sky.
      */
     constructor(scene) {
         this.device = scene.device;
@@ -59,7 +61,6 @@ class Sky {
         this.centerArray = new Float32Array(3);
         this.projectedSkydomeCenterId = this.device.scope.resolve('projectedSkydomeCenter');
     }
-
 
     applySettings(render) {
         this.type = render.skyType ?? SKYTYPE_INFINITE;

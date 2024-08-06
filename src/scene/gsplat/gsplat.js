@@ -13,6 +13,12 @@ import { Texture } from '../../platform/graphics/texture.js';
 import { BoundingBox } from '../../core/shape/bounding-box.js';
 import { createGSplatMaterial } from './gsplat-material.js';
 
+/**
+ * @import { GSplatData } from './gsplat-data.js'
+ * @import { GraphicsDevice } from '../../platform/graphics/graphics-device.js'
+ * @import { Material } from '../materials/material.js'
+ */
+
 const _tmpVecA = new Vec3();
 const _tmpVecB = new Vec3();
 const _tmpVecC = new Vec3();
@@ -29,7 +35,7 @@ class GSplat {
     /** @type {Float32Array} */
     centers;
 
-    /** @type {import('../../core/shape/bounding-box.js').BoundingBox} */
+    /** @type {BoundingBox} */
     aabb;
 
     /** @type {Texture} */
@@ -45,8 +51,8 @@ class GSplat {
     transformCTexture;
 
     /**
-     * @param {import('../../platform/graphics/graphics-device.js').GraphicsDevice} device - The graphics device.
-     * @param {import('./gsplat-data.js').GSplatData} gsplatData - The splat data.
+     * @param {GraphicsDevice} device - The graphics device.
+     * @param {GSplatData} gsplatData - The splat data.
      */
     constructor(device, gsplatData) {
         const numSplats = gsplatData.numSplats;
@@ -79,8 +85,7 @@ class GSplat {
     }
 
     /**
-     * @returns {import('../materials/material.js').Material} material - The material to set up for
-     * the splat rendering.
+     * @returns {Material} material - The material to set up for the splat rendering.
      */
     createMaterial(options) {
         const result = createGSplatMaterial(options);
@@ -88,9 +93,7 @@ class GSplat {
         result.setParameter('transformA', this.transformATexture);
         result.setParameter('transformB', this.transformBTexture);
         result.setParameter('transformC', this.transformCTexture);
-
-        const { width, height } = this.colorTexture;
-        result.setParameter('tex_params', new Float32Array([width, height, 1 / width, 1 / height]));
+        result.setParameter('tex_params', new Float32Array([this.numSplats, this.colorTexture.width, 0, 0]));
         return result;
     }
 
@@ -136,7 +139,7 @@ class GSplat {
      * Assumes that the texture is using an RGBA format where RGB are color components influenced
      * by SH spherical harmonics and A is opacity after a sigmoid transformation.
      *
-     * @param {import('./gsplat-data.js').GSplatData} gsplatData - The source data
+     * @param {GSplatData} gsplatData - The source data
      */
     updateColorData(gsplatData) {
         const texture = this.colorTexture;
@@ -160,7 +163,7 @@ class GSplat {
     }
 
     /**
-     * @param {import('./gsplat-data.js').GSplatData} gsplatData - The source data
+     * @param {GSplatData} gsplatData - The source data
      */
     updateTransformData(gsplatData) {
 

@@ -11,5 +11,7 @@ void main(void)
     coord.y = 1.0 - coord.y;
     vec4 reflection = texture2D(uDiffuseMap, coord);
 
-    gl_FragColor = vec4(reflection.xyz * 0.7, 1);
+    vec3 linearColor = reflection.xyz * 0.4;
+    gl_FragColor.rgb = gammaCorrectOutput(linearColor);
+    gl_FragColor.a = 1.0;
 }

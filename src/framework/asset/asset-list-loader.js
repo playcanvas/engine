@@ -1,6 +1,9 @@
 import { EventHandler } from '../../core/event-handler.js';
-
 import { Asset } from './asset.js';
+
+/**
+ * @import { AssetRegistry } from './asset-registry.js'
+ */
 
 /**
  * Used to load a group of assets and fires a callback when all assets are loaded.
@@ -24,10 +27,44 @@ import { Asset } from './asset.js';
  */
 class AssetListLoader extends EventHandler {
     /**
-     * Create a new AssetListLoader using a list of assets to load and the asset registry used to load and manage them.
+     * @type {Set<Asset>}
+     * @private
+     */
+    _assets = new Set();
+
+    /**
+     * @type {Set<Asset>}
+     * @private
+     */
+    _loadingAssets = new Set();
+
+    /**
+     * @type {Set<Asset>}
+     * @private
+     */
+    _waitingAssets = new Set();
+
+    /** @private */
+    _loading = false;
+
+    /** @private */
+    _loaded = false;
+
+    /**
+     * Array of assets that failed to load.
      *
-     * @param {Asset[]|number[]} assetList - An array of {@link Asset} objects to load or an array of Asset IDs to load.
-     * @param {import('./asset-registry.js').AssetRegistry} assetRegistry - The application's asset registry.
+     * @type {Asset[]}
+     * @private
+     */
+    _failed = [];
+
+    /**
+     * Create a new AssetListLoader using a list of assets to load and the asset registry used to
+     * load and manage them.
+     *
+     * @param {Asset[]|number[]} assetList - An array of {@link Asset} objects to load or an array
+     * of Asset IDs to load.
+     * @param {AssetRegistry} assetRegistry - The application's asset registry.
      * @example
      * const assetListLoader = new pc.AssetListLoader([
      *     new pc.Asset("texture1", "texture", { url: 'http://example.com/my/assets/here/texture1.png') }),
@@ -36,13 +73,8 @@ class AssetListLoader extends EventHandler {
      */
     constructor(assetList, assetRegistry) {
         super();
-        this._assets = new Set();
-        this._loadingAssets = new Set();
-        this._waitingAssets = new Set();
+
         this._registry = assetRegistry;
-        this._loading = false;
-        this._loaded = false;
-        this._failed = []; // list of assets that failed to load
 
         assetList.forEach((a) => {
             if (a instanceof Asset) {
@@ -66,13 +98,11 @@ class AssetListLoader extends EventHandler {
      */
     destroy() {
         // remove any outstanding listeners
-        const self = this;
-
         this._registry.off("load", this._onLoad);
         this._registry.off("error", this._onError);
 
-        this._waitingAssets.forEach(function (id) {
-            self._registry.off("add:" + id, this._onAddAsset);
+        this._waitingAssets.forEach((id) => {
+            this._registry.off("add:" + id, this._onAddAsset);
         });
 
         this.off("progress");
@@ -84,9 +114,11 @@ class AssetListLoader extends EventHandler {
     }
 
     /**
-     * Start loading asset list, call done() when all assets have loaded or failed to load.
+     * Start loading asset list and call `done()` when all assets have loaded or failed to load.
      *
-     * @param {Function} done - Callback called when all assets in the list are loaded. Passed (err, failed) where err is the undefined if no errors are encountered and failed contains a list of assets that failed to load.
+     * @param {Function} done - Callback called when all assets in the list are loaded. Passed
+     * `(err, failed)` where `err` is `undefined` if no errors are encountered and failed contains
+     * an array of assets that failed to load.
      * @param {object} [scope] - Scope to use when calling callback.
      */
     load(done, scope) {
@@ -143,7 +175,7 @@ class AssetListLoader extends EventHandler {
         if (this._loaded) {
             done.call(scope, Array.from(this._assets));
         } else {
-            this.once("load", function (assets) {
+            this.once("load", (assets) => {
                 done.call(scope, assets);
             });
         }
@@ -182,7 +214,7 @@ class AssetListLoader extends EventHandler {
             // this to be fired after any other
             // asset load events
             setTimeout(() => {
-                this._loadingComplete(this._failed);
+                this._loadingComplete();
             }, 0);
         }
     }
@@ -200,7 +232,7 @@ class AssetListLoader extends EventHandler {
             // this to be fired after any other
             // asset load events
             setTimeout(() => {
-                this._loadingComplete(this._failed);
+                this._loadingComplete();
             }, 0);
         }
     }

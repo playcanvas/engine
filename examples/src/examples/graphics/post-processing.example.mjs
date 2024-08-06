@@ -189,7 +189,11 @@ assetListLoader.load(() => {
         const label = new pc.Entity(name);
         label.addComponent('element', {
             text: text,
-            color: new pc.Color(100, 50, 80), // very bright color to affect the bloom
+
+            // very bright color to affect the bloom - this is not correct, as this is sRGB color that
+            // is valid only in 0..1 range, but UI does not expose emissive intensity currently
+            color: new pc.Color(18, 15, 5),
+
             anchor: new pc.Vec4(x, y, 0.5, 0.5),
             fontAsset: assets.font,
             fontSize: 28,

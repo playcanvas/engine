@@ -1,3 +1,7 @@
+/** @typedef {import('./constants.mjs').DEVICETYPE_WEBGPU} DEVICETYPE_WEBGPU  */
+/** @typedef {import('./constants.mjs').DEVICETYPE_WEBGL2} DEVICETYPE_WEBGL2  */
+/** @typedef {import('./constants.mjs').DEVICETYPE_NULL} DEVICETYPE_NULL  */
+
 /**
  * @typedef {object} LoadingEventDetail
  * @property {boolean} showDeviceSelector - Show device selector
@@ -16,7 +20,7 @@
 
 /**
  * @typedef {object} DeviceEventDetail
- * @property {string} deviceType - The device type.
+ * @property {DEVICETYPE_WEBGPU | DEVICETYPE_WEBGL2 | DEVICETYPE_NULL} deviceType - The device type.
  *
  * @typedef {CustomEvent<DeviceEventDetail>} DeviceEvent
  */

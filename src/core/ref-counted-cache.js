@@ -1,7 +1,5 @@
 /**
  * Class implementing reference counting cache for objects.
- *
- * @ignore
  */
 class RefCountedCache {
     /**

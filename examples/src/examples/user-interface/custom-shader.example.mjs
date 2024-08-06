@@ -69,21 +69,16 @@ assetListLoader.load(() => {
     });
     app.root.addChild(screen);
 
-    // Create the shader from the vertex and fragment shader
-    const shader = pc.createShaderFromCode(
-        app.graphicsDevice,
-        files['shader.vert'],
-        files['shader.frag'],
-        'myUIShader',
-        {
+    // Create a new material with the new shader and additive alpha blending
+    const material = new pc.ShaderMaterial({
+        uniqueName: 'myUIShader',
+        vertexCode: files['shader.vert'],
+        fragmentCode: files['shader.frag'],
+        attributes: {
             vertex_position: pc.SEMANTIC_POSITION,
             vertex_texCoord0: pc.SEMANTIC_TEXCOORD0
         }
-    );
-
-    // Create a new material with the new shader and additive alpha blending
-    const material = new pc.Material();
-    material.shader = shader;
+    });
     material.blendType = pc.BLEND_ADDITIVEALPHA;
     material.depthWrite = true;
     material.setParameter('uDiffuseMap', assets.playcanvas.resource);

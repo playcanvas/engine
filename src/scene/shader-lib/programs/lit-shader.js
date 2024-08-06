@@ -1,12 +1,9 @@
 import {
-    SEMANTIC_ATTR8, SEMANTIC_ATTR9, SEMANTIC_ATTR10, SEMANTIC_ATTR11, SEMANTIC_ATTR12, SEMANTIC_ATTR13, SEMANTIC_ATTR14, SEMANTIC_ATTR15,
+    SEMANTIC_ATTR8, SEMANTIC_ATTR9, SEMANTIC_ATTR12, SEMANTIC_ATTR13, SEMANTIC_ATTR14, SEMANTIC_ATTR15,
     SEMANTIC_BLENDINDICES, SEMANTIC_BLENDWEIGHT, SEMANTIC_COLOR, SEMANTIC_NORMAL, SEMANTIC_POSITION, SEMANTIC_TANGENT,
     SEMANTIC_TEXCOORD0, SEMANTIC_TEXCOORD1,
     SHADERTAG_MATERIAL
 } from '../../../platform/graphics/constants.js';
-import { shaderChunks } from '../chunks/chunks.js';
-import { ChunkUtils } from '../chunk-utils.js';
-
 import {
     BLEND_ADDITIVEALPHA, BLEND_NORMAL, BLEND_PREMULTIPLIED,
     FRESNEL_SCHLICK,
@@ -16,17 +13,22 @@ import {
     SHADER_DEPTH, SHADER_PICK,
     SHADOW_PCF1, SHADOW_PCF3, SHADOW_PCF5, SHADOW_VSM8, SHADOW_VSM16, SHADOW_VSM32, SHADOW_PCSS,
     SPECOCC_AO, SPECOCC_GLOSSDEPENDENT,
-    SPECULAR_PHONG,
     SPRITE_RENDERMODE_SLICED, SPRITE_RENDERMODE_TILED, shadowTypeToString, SHADER_PREPASS_VELOCITY
 } from '../../constants.js';
+import { shaderChunks } from '../chunks/chunks.js';
+import { ChunkUtils } from '../chunk-utils.js';
 import { LightsBuffer } from '../../lighting/lights-buffer.js';
 import { ShaderPass } from '../../shader-pass.js';
-
 import { validateUserChunks } from '../chunks/chunk-validation.js';
 import { ShaderUtils } from '../../../platform/graphics/shader-utils.js';
 import { ChunkBuilder } from '../chunk-builder.js';
 import { ShaderGenerator } from './shader-generator.js';
 import { Debug } from '../../../core/debug.js';
+
+/**
+ * @import { GraphicsDevice } from '../../../platform/graphics/graphics-device.js'
+ * @import { LitShaderOptions } from './lit-shader-options.js'
+ */
 
 const builtinAttributes = {
     vertex_normal: SEMANTIC_NORMAL,
@@ -51,14 +53,11 @@ const builtinVaryings = {
 };
 
 class LitShader {
+    /**
+     * @param {GraphicsDevice} device - The graphics device.
+     * @param {LitShaderOptions} options - The lit options.
+     */
     constructor(device, options) {
-        /**
-         * @param {import('../../../platform/graphics/graphics-device.js').GraphicsDevice} device - The
-         * graphics device.
-         * @param {import('./lit-shader-options.js').LitShaderOptions} options - The
-         * lit options.
-         * @ignore
-         */
         this.device = device;
         this.options = options;
 
@@ -142,11 +141,6 @@ class LitShader {
         return code;
     }
 
-    _vsAddTransformCode(code, device, chunks, options) {
-        code += this.chunks.transformVS;
-        return code;
-    }
-
     _setMapTransform(codes, name, id, uv) {
         const checkId = id + uv * 100;
         if (!codes[3][checkId]) {
@@ -205,8 +199,8 @@ class LitShader {
 
         let code = '';
         let codeBody = '';
+        let codeDefines = '';
 
-        // code += chunks.baseVS;
         code = this._vsAddBaseCode(code, chunks, options);
 
         codeBody += "   vPositionW    = getWorldPosition();\n";
@@ -229,11 +223,22 @@ class LitShader {
         }
 
         if (this.options.useInstancing) {
-            this.attributes.instance_line1 = SEMANTIC_ATTR12;
-            this.attributes.instance_line2 = SEMANTIC_ATTR13;
-            this.attributes.instance_line3 = SEMANTIC_ATTR14;
-            this.attributes.instance_line4 = SEMANTIC_ATTR15;
-            code += chunks.instancingVS;
+
+            // only attach these if the default instancing chunk is used, otherwise it is expected
+            // for the user to provide required attributes using material.setAttribute
+            if (this.chunks.transformInstancingVS === shaderChunks.transformInstancingVS) {
+                this.attributes.instance_line1 = SEMANTIC_ATTR12;
+                this.attributes.instance_line2 = SEMANTIC_ATTR13;
+                this.attributes.instance_line3 = SEMANTIC_ATTR14;
+                this.attributes.instance_line4 = SEMANTIC_ATTR15;
+            }
+        }
+
+        code += chunks.transformVS;
+
+        if (this.needsNormal) {
+            code += chunks.normalCoreVS;
+            code += chunks.normalVS;
         }
 
         if (this.needsNormal) {
@@ -295,99 +300,42 @@ class LitShader {
         // morphing
         if (options.useMorphPosition || options.useMorphNormal) {
 
-            if (options.useMorphTextureBased) {
+            codeDefines += "#define MORPHING\n";
 
-                code += "#define MORPHING_TEXTURE_BASED\n";
-
-                if (options.useMorphPosition) {
-                    code += "#define MORPHING_TEXTURE_BASED_POSITION\n";
-                }
-
-                if (options.useMorphNormal) {
-                    code += "#define MORPHING_TEXTURE_BASED_NORMAL\n";
-                }
-
-                // vertex ids attributes
-                this.attributes.morph_vertex_id = SEMANTIC_ATTR15;
-                code += `attribute uint morph_vertex_id;\n`;
-
-            } else {
-
-                // set up 8 slots for morphing. these are supported combinations: PPPPPPPP, NNNNNNNN, PPPPNNNN
-                code += "#define MORPHING\n";
-
-                // first 4 slots are either position or normal
-                if (options.useMorphPosition) {
-                    this.attributes.morph_pos0 = SEMANTIC_ATTR8;
-                    this.attributes.morph_pos1 = SEMANTIC_ATTR9;
-                    this.attributes.morph_pos2 = SEMANTIC_ATTR10;
-                    this.attributes.morph_pos3 = SEMANTIC_ATTR11;
-
-                    code += "#define MORPHING_POS03\n";
-                    code += "attribute vec3 morph_pos0;\n";
-                    code += "attribute vec3 morph_pos1;\n";
-                    code += "attribute vec3 morph_pos2;\n";
-                    code += "attribute vec3 morph_pos3;\n";
-
-                } else if (options.useMorphNormal) {
-                    this.attributes.morph_nrm0 = SEMANTIC_ATTR8;
-                    this.attributes.morph_nrm1 = SEMANTIC_ATTR9;
-                    this.attributes.morph_nrm2 = SEMANTIC_ATTR10;
-                    this.attributes.morph_nrm3 = SEMANTIC_ATTR11;
-
-                    code += "#define MORPHING_NRM03\n";
-                    code += "attribute vec3 morph_nrm0;\n";
-                    code += "attribute vec3 morph_nrm1;\n";
-                    code += "attribute vec3 morph_nrm2;\n";
-                    code += "attribute vec3 morph_nrm3;\n";
-                }
-
-                // next 4 slots are either position or normal
-                if (!options.useMorphNormal) {
-                    this.attributes.morph_pos4 = SEMANTIC_ATTR12;
-                    this.attributes.morph_pos5 = SEMANTIC_ATTR13;
-                    this.attributes.morph_pos6 = SEMANTIC_ATTR14;
-                    this.attributes.morph_pos7 = SEMANTIC_ATTR15;
-
-                    code += "#define MORPHING_POS47\n";
-                    code += "attribute vec3 morph_pos4;\n";
-                    code += "attribute vec3 morph_pos5;\n";
-                    code += "attribute vec3 morph_pos6;\n";
-                    code += "attribute vec3 morph_pos7;\n";
-                } else {
-                    this.attributes.morph_nrm4 = SEMANTIC_ATTR12;
-                    this.attributes.morph_nrm5 = SEMANTIC_ATTR13;
-                    this.attributes.morph_nrm6 = SEMANTIC_ATTR14;
-                    this.attributes.morph_nrm7 = SEMANTIC_ATTR15;
-
-                    code += "#define MORPHING_NRM47\n";
-                    code += "attribute vec3 morph_nrm4;\n";
-                    code += "attribute vec3 morph_nrm5;\n";
-                    code += "attribute vec3 morph_nrm6;\n";
-                    code += "attribute vec3 morph_nrm7;\n";
-                }
+            if (options.useMorphTextureBasedInt) {
+                codeDefines += "#define MORPHING_INT\n";
             }
+
+            if (options.useMorphPosition) {
+                codeDefines += "#define MORPHING_POSITION\n";
+            }
+
+            if (options.useMorphNormal) {
+                codeDefines += "#define MORPHING_NORMAL\n";
+            }
+
+            // vertex ids attributes
+            this.attributes.morph_vertex_id = SEMANTIC_ATTR15;
         }
 
         if (options.skin) {
-            this.attributes.vertex_boneWeights = SEMANTIC_BLENDWEIGHT;
+
             this.attributes.vertex_boneIndices = SEMANTIC_BLENDINDICES;
-            code += ShaderGenerator.skinCode(device, chunks);
-            code += "#define SKIN\n";
+
+            if (options.batch) {
+                codeDefines += "#define BATCH\n";
+            } else {
+                this.attributes.vertex_boneWeights = SEMANTIC_BLENDWEIGHT;
+                codeDefines += "#define SKIN\n";
+            }
         } else if (options.useInstancing) {
-            code += "#define INSTANCING\n";
+            codeDefines += "#define INSTANCING\n";
         }
         if (options.screenSpace) {
-            code += "#define SCREENSPACE\n";
+            codeDefines += "#define SCREENSPACE\n";
         }
         if (options.pixelSnap) {
-            code += "#define PIXELSNAP\n";
-        }
-
-        code = this._vsAddTransformCode(code, device, chunks, options);
-
-        if (this.needsNormal) {
-            code += chunks.normalVS;
+            codeDefines += "#define PIXELSNAP\n";
         }
 
         code += "\n";
@@ -405,7 +353,7 @@ class LitShader {
         });
 
         const shaderPassDefines = this.shaderPassInfo.shaderDefines;
-        this.vshader = shaderPassDefines + this.varyings + code;
+        this.vshader = shaderPassDefines + codeDefines + this.varyings + code;
     }
 
     _fsGetBeginCode() {
@@ -426,15 +374,11 @@ class LitShader {
             ${this.varyingDefines}
             ${this.frontendDecl}
             ${this.frontendCode}
-            uniform uint meshInstanceId;
+            ${this.chunks.pickPS}
 
             void main(void) {
                 ${this.frontendFunc}
-                
-                const vec4 inv = vec4(1.0 / 255.0, 1.0 / 255.0, 1.0 / 255.0, 1.0 / 255.0);
-                const uvec4 shifts = uvec4(16, 8, 0, 24);
-                uvec4 col = (uvec4(meshInstanceId) >> shifts) & uvec4(0xff);
-                gl_FragColor = vec4(col) * inv;
+                gl_FragColor = getPickOutput();
             }
         `;
     }
@@ -464,7 +408,6 @@ class LitShader {
     }
 
     _fsGetShadowPassCode() {
-        const device = this.device;
         const options = this.options;
         const chunks = this.chunks;
         const varyings = this.varyings;
@@ -482,11 +425,7 @@ class LitShader {
         let code = this._fsGetBeginCode();
 
         if (shadowType === SHADOW_VSM32) {
-            if (device.textureFloatHighPrecision) {
-                code += '#define VSM_EXPONENT 15.0\n\n';
-            } else {
-                code += '#define VSM_EXPONENT 5.54\n\n';
-            }
+            code += '#define VSM_EXPONENT 15.0\n\n';
         } else if (shadowType === SHADOW_VSM16) {
             code += '#define VSM_EXPONENT 5.54\n\n';
         }
@@ -592,11 +531,6 @@ class LitShader {
 
             if (options.fresnelModel > 0) {
                 this.defines.push("LIT_SPECULAR_FRESNEL");
-            }
-
-            // enable conserve energy path in clustered chunk
-            if (options.conserveEnergy) {
-                this.defines.push("LIT_CONSERVE_ENERGY");
             }
 
             if (options.useSheen) {
@@ -724,7 +658,7 @@ class LitShader {
 
         if (hasTBN) {
             if (options.hasTangents) {
-                func.append(options.fastTbn ? chunks.TBNfastPS : chunks.TBNPS);
+                func.append(chunks.TBNPS);
             } else {
                 if (options.useNormals || options.useClearCoatNormals) {
                     func.append(chunks.TBNderivativePS.replace(/\$UV/g, this.lightingUv));
@@ -882,7 +816,7 @@ class LitShader {
         if (options.useSpecular) {
 
             if (this.lighting) {
-                func.append(options.shadingModel === SPECULAR_PHONG ? chunks.lightSpecularPhongPS : (options.enableGGXSpecular ? chunks.lightSpecularAnisoGGXPS : chunks.lightSpecularBlinnPS));
+                func.append(options.enableGGXSpecular ? chunks.lightSpecularAnisoGGXPS : chunks.lightSpecularBlinnPS);
             }
 
             if (!options.fresnelModel && !this.reflections && !options.diffuseMapEnabled) {
@@ -914,7 +848,7 @@ class LitShader {
             }
         }
 
-        if (options.useAmbientTint && !useOldAmbient) {
+        if (!useOldAmbient) {
             decl.append("uniform vec3 material_ambient;");
         }
 
@@ -1020,7 +954,7 @@ class LitShader {
 
         if (addAmbient) {
             backend.append("    addAmbient(litArgs_worldNormal);");
-            if (options.conserveEnergy && options.useSpecular) {
+            if (options.useSpecular) {
                 backend.append(`   dDiffuseLight = dDiffuseLight * (1.0 - litArgs_specularity);`);
             }
 
@@ -1033,7 +967,7 @@ class LitShader {
             }
         }
 
-        if (options.useAmbientTint && !useOldAmbient) {
+        if (!useOldAmbient) {
             backend.append("    dDiffuseLight *= material_ambient;");
         }
 
@@ -1218,11 +1152,7 @@ class LitShader {
                             break;
                         case SHADOW_VSM32:
                             shadowReadMode = "VSM32";
-                            if (device.textureFloatHighPrecision) {
-                                evsmExp = "15.0";
-                            } else {
-                                evsmExp = "5.54";
-                            }
+                            evsmExp = "15.0";
                             break;
                         case SHADOW_PCF1:
                             shadowReadMode = "PCF1x1";
@@ -1246,7 +1176,7 @@ class LitShader {
                         if (lightType === LIGHTTYPE_DIRECTIONAL) {
                             func.append("#define SHADOW_SAMPLE_ORTHO");
                         }
-                        if ((pcfShadows || pcssShadows) && device.isWebGL2 || device.isWebGPU) {
+                        if ((pcfShadows || pcssShadows) || device.isWebGPU) {
                             func.append("#define SHADOW_SAMPLE_SOURCE_ZBUFFER");
                         }
                         if (lightType === LIGHTTYPE_OMNI) {
@@ -1307,7 +1237,7 @@ class LitShader {
                 if (lightShape !== LIGHTSHAPE_PUNCTUAL) {
 
                     // area light - they do not mix diffuse lighting into specular attenuation
-                    if (options.conserveEnergy && options.useSpecular) {
+                    if (options.useSpecular) {
                         backend.append("    dDiffuseLight += ((dAttenD * dAtten) * light" + i + "_color" + (usesCookieNow ? " * dAtten3" : "") + ") * (1.0 - dLTCSpecFres);");
                     } else {
                         backend.append("    dDiffuseLight += (dAttenD * dAtten) * light" + i + "_color" + (usesCookieNow ? " * dAtten3" : "") + ";");
@@ -1315,7 +1245,7 @@ class LitShader {
                 } else {
 
                     // punctual light
-                    if (hasAreaLights && options.conserveEnergy && options.useSpecular) {
+                    if (hasAreaLights && options.useSpecular) {
                         backend.append("    dDiffuseLight += (dAtten * light" + i + "_color" + (usesCookieNow ? " * dAtten3" : "") + ") * (1.0 - litArgs_specularity);");
                     } else {
                         backend.append("    dDiffuseLight += dAtten * light" + i + "_color" + (usesCookieNow ? " * dAtten3" : "") + ";");
@@ -1550,7 +1480,6 @@ class LitShader {
      * @param {string} frontendCode - Frontend code containing `getOpacity()` etc.
      * @param {string} frontendFunc - E.g. `evaluateFrontend();`
      * @param {string} lightingUv - E.g. `vUv0`
-     * @ignore
      */
     generateFragmentShader(frontendDecl, frontendCode, frontendFunc, lightingUv) {
         const options = this.options;
@@ -1576,12 +1505,24 @@ class LitShader {
         this.handleCompatibility?.();
     }
 
-    getDefinition() {
+    getDefinition(options) {
+
+        const vIncludes = new Map();
+        vIncludes.set('transformCore', this.chunks.transformCoreVS);
+        vIncludes.set('transformInstancing', this.chunks.transformInstancingVS);
+        vIncludes.set('skinTexVS', this.chunks.skinTexVS);
+        vIncludes.set('skinBatchTexVS', this.chunks.skinBatchTexVS);
+
+        const defines = new Map(options.defines);
+
         const definition = ShaderUtils.createDefinition(this.device, {
             name: 'LitShader',
             attributes: this.attributes,
             vertexCode: this.vshader,
-            fragmentCode: this.fshader
+            fragmentCode: this.fshader,
+            vertexIncludes: vIncludes,
+            fragmentDefines: defines,
+            vertexDefines: defines
         });
 
         if (this.shaderPassInfo.isForward) {

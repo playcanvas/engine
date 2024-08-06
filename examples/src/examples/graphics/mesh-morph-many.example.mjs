@@ -93,12 +93,6 @@ assetListLoader.load(() => {
         for (let i = 0; i < targetsCount; i++) {
             morphInstance.setWeight(i, Math.abs(Math.sin(time + i * 0.4)));
         }
-
-        // debug display the morph target textures blended together
-        if (morphInstance.texturePositions) {
-            // @ts-ignore
-            app.drawTexture(-0.7, -0.7, 0.4, 0.4, morphInstance.texturePositions);
-        }
     });
 });
 

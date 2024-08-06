@@ -3,8 +3,11 @@ import { Texture } from '../../platform/graphics/texture.js';
 import { Vec4 } from "../../core/math/vec4.js";
 import { Mat3 } from "../../core/math/mat3.js";
 import { Mat4 } from "../../core/math/mat4.js";
-
 import { ADDRESS_CLAMP_TO_EDGE, FILTER_LINEAR, FILTER_NEAREST, PIXELFORMAT_RGB8 } from '../../platform/graphics/constants.js';
+
+/**
+ * @import { XrManager } from './xr-manager.js'
+ */
 
 /**
  * Represents an XR View which represents a screen (monoscopic scenario such as a mobile phone) or an eye
@@ -28,7 +31,7 @@ class XrView extends EventHandler {
     static EVENT_DEPTHRESIZE = 'depth:resize';
 
     /**
-     * @type {import('./xr-manager.js').XrManager}
+     * @type {XrManager}
      * @private
      */
     _manager;
@@ -132,9 +135,8 @@ class XrView extends EventHandler {
     /**
      * Create a new XrView instance.
      *
-     * @param {import('./xr-manager.js').XrManager} manager - WebXR Manager.
-     * @param {XRView} xrView - [XRView](https://developer.mozilla.org/en-US/docs/Web/API/XRView)
-     * object that is created by WebXR API.
+     * @param {XrManager} manager - WebXR Manager.
+     * @param {XRView} xrView - XRView object that is created by WebXR API.
      * @param {number} viewsCount - Number of views available for the session.
      * @ignore
      */
@@ -286,8 +288,8 @@ class XrView extends EventHandler {
     }
 
     /**
-     * A Vec4 (x, y, width, height) that represents a view's viewport. For monoscopic screen
-     * it will define fullscreen view, but for stereoscopic views (left/right eye) it will define
+     * A Vec4 (x, y, width, height) that represents a view's viewport. For a monoscopic screen,
+     * it will define fullscreen view. But for stereoscopic views (left/right eye), it will define
      * a part of a whole screen that view is occupying.
      *
      * @type {Vec4}
@@ -532,8 +534,8 @@ class XrView extends EventHandler {
     }
 
     /**
-     * Get depth value from depth information in meters. UV is in range of 0..1, with origin in
-     * top-left corner of a texture.
+     * Get a depth value from depth information in meters. The specified UV is in the range 0..1,
+     * with the origin in the top-left corner of the depth texture.
      *
      * @param {number} u - U coordinate of pixel in depth texture, which is in range from 0.0 to
      * 1.0 (left to right).

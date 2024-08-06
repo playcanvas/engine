@@ -1,14 +1,13 @@
 import { Color } from '../../core/math/color.js';
 import { Vec3 } from '../../core/math/vec3.js';
 import { Quat } from '../../core/math/quat.js';
-import { Material } from '../../scene/materials/material.js';
+import { ShaderMaterial } from '../../scene/materials/shader-material.js';
 import { MeshInstance } from '../../scene/mesh-instance.js';
 import { Entity } from '../../framework/entity.js';
 import { CULLFACE_NONE, CULLFACE_BACK, SEMANTIC_POSITION, SEMANTIC_COLOR } from '../../platform/graphics/constants.js';
 import { BLEND_NORMAL } from '../../scene/constants.js';
-import { createShaderFromCode } from '../../scene/shader-lib/utils.js';
 
-import { COLOR_GRAY } from './default-colors.js';
+import { COLOR_GRAY } from './color.js';
 import { TriData } from './tri-data.js';
 import { Mesh } from '../../scene/mesh.js';
 import { BoxGeometry } from '../../scene/geometry/box-geometry.js';
@@ -37,8 +36,13 @@ const GEOMETRIES = {
     torus: TorusGeometry
 };
 
-const SHADER = {
-    vert: /* glsl */`
+const shaderDesc = {
+    uniqueName: 'axis-shape',
+    attributes: {
+        vertex_position: SEMANTIC_POSITION,
+        vertex_color: SEMANTIC_COLOR
+    },
+    vertexCode: /* glsl */`
         attribute vec3 vertex_position;
         attribute vec4 vertex_color;
         varying vec4 vColor;
@@ -51,17 +55,19 @@ const SHADER = {
             // store z/w for later use in fragment shader
             vZW = gl_Position.zw;
             // disable depth clipping
-            gl_Position.z = 0.0;
-        }`,
-    frag: /* glsl */`
+            // gl_Position.z = 0.0;
+        }
+    `,
+    fragmentCode: /* glsl */`
         precision highp float;
         varying vec4 vColor;
         varying vec2 vZW;
         void main(void) {
-            gl_FragColor = vColor;
+            gl_FragColor = vec4(gammaCorrectOutput(decodeGamma(vColor)), vColor.w);
             // clamp depth in Z to [0, 1] range
             gl_FragDepth = max(0.0, min(1.0, (vZW.x / vZW.y + 1.0) * 0.5));
-        }`
+        }
+    `
 };
 
 // temporary variables
@@ -201,13 +207,7 @@ class AxisShape {
     }
 
     _addRenderMeshes(entity, meshes) {
-        const shader = createShaderFromCode(this.device, SHADER.vert, SHADER.frag, 'axis-shape', {
-            vertex_position: SEMANTIC_POSITION,
-            vertex_color: SEMANTIC_COLOR
-        });
-
-        const material = new Material();
-        material.shader = shader;
+        const material = new ShaderMaterial(shaderDesc);
         material.cull = this._cull;
         material.blendType = BLEND_NORMAL;
         material.update();

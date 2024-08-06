@@ -59,7 +59,7 @@ class Tags extends EventHandler {
     /**
      * Add a tag, duplicates are ignored. Can be array or comma separated arguments for multiple tags.
      *
-     * @param {...*} name - Name of a tag, or array of tags.
+     * @param {...*} args - Name of a tag, or array of tags.
      * @returns {boolean} True if any tag were added.
      * @example
      * tags.add('level-1');
@@ -68,9 +68,9 @@ class Tags extends EventHandler {
      * @example
      * tags.add(['level-2', 'mob']);
      */
-    add() {
+    add(...args) {
         let changed = false;
-        const tags = this._processArguments(arguments, true);
+        const tags = this._processArguments(args, true);
 
         if (!tags.length)
             return changed;
@@ -96,7 +96,7 @@ class Tags extends EventHandler {
     /**
      * Remove tag.
      *
-     * @param {...*} name - Name of a tag or array of tags.
+     * @param {...*} args - Name of a tag or array of tags.
      * @returns {boolean} True if any tag were removed.
      * @example
      * tags.remove('level-1');
@@ -105,13 +105,13 @@ class Tags extends EventHandler {
      * @example
      * tags.remove(['level-2', 'mob']);
      */
-    remove() {
+    remove(...args) {
         let changed = false;
 
         if (!this._list.length)
             return changed;
 
-        const tags = this._processArguments(arguments, true);
+        const tags = this._processArguments(args, true);
 
         if (!tags.length)
             return changed;
@@ -171,11 +171,11 @@ class Tags extends EventHandler {
      * @example
      * tags.has(['ui', 'settings'], ['ui', 'levels']); // (ui AND settings) OR (ui AND levels)
      */
-    has() {
+    has(...query) {
         if (!this._list.length)
             return false;
 
-        return this._has(this._processArguments(arguments));
+        return this._has(this._processArguments(query));
     }
 
     /**
@@ -222,7 +222,7 @@ class Tags extends EventHandler {
     }
 
     /**
-     * @param {IArguments} args - Arguments to process.
+     * @param {Array} args - Arguments to process.
      * @param {boolean} [flat] - If true, will flatten array of tags. Defaults to false.
      * @returns {string[]|string[][]} Array of tags.
      * @private

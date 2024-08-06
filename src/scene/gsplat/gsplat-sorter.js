@@ -12,10 +12,13 @@ function SortWorker() {
     // number of buckets for count sorting to represent each unique distance using compareBits bits
     const bucketCount = (2 ** compareBits) + 1;
 
-    let data;
+    let order;
     let centers;
+    let mapping;
     let cameraPosition;
     let cameraDirection;
+
+    let forceUpdate = false;
 
     const lastCameraPosition = { x: 0, y: 0, z: 0 };
     const lastCameraDirection = { x: 0, y: 0, z: 0 };
@@ -24,7 +27,6 @@ function SortWorker() {
     const boundMax = { x: 0, y: 0, z: 0 };
 
     let distances;
-    let target;
     let countBuffer;
 
     const binarySearch = (m, n, compare_fn) => {
@@ -43,7 +45,7 @@ function SortWorker() {
     };
 
     const update = () => {
-        if (!centers || !data || !cameraPosition || !cameraDirection) return;
+        if (!order || !centers || !cameraPosition || !cameraDirection) return;
 
         const px = cameraPosition.x;
         const py = cameraPosition.y;
@@ -54,7 +56,8 @@ function SortWorker() {
 
         const epsilon = 0.001;
 
-        if (Math.abs(px - lastCameraPosition.x) < epsilon &&
+        if (!forceUpdate &&
+            Math.abs(px - lastCameraPosition.x) < epsilon &&
             Math.abs(py - lastCameraPosition.y) < epsilon &&
             Math.abs(pz - lastCameraPosition.z) < epsilon &&
             Math.abs(dx - lastCameraDirection.x) < epsilon &&
@@ -62,6 +65,8 @@ function SortWorker() {
             Math.abs(dz - lastCameraDirection.z) < epsilon) {
             return;
         }
+
+        forceUpdate = false;
 
         lastCameraPosition.x = px;
         lastCameraPosition.y = py;
@@ -76,18 +81,14 @@ function SortWorker() {
             distances = new Uint32Array(numVertices);
         }
 
-        if (target?.length !== data.length) {
-            target = data.slice();
-        }
-
         // calc min/max distance using bound
         let minDist;
         let maxDist;
         for (let i = 0; i < 8; ++i) {
-            const x = i & 1 ? boundMin.x : boundMax.x;
-            const y = i & 2 ? boundMin.y : boundMax.y;
-            const z = i & 4 ? boundMin.z : boundMax.z;
-            const d = (x - px) * dx + (y - py) * dy + (z - pz) * dz;
+            const x = (i & 1 ? boundMin.x : boundMax.x) - px;
+            const y = (i & 2 ? boundMin.y : boundMax.y) - py;
+            const z = (i & 4 ? boundMin.z : boundMax.z) - pz;
+            const d = x * dx + y * dy + z * dz;
             if (i === 0) {
                 minDist = maxDist = d;
             } else {
@@ -96,20 +97,21 @@ function SortWorker() {
             }
         }
 
-        if (!countBuffer)
+        if (!countBuffer) {
             countBuffer = new Uint32Array(bucketCount);
-
-        for (let i = 0; i < bucketCount; i++)
-            countBuffer[i] = 0;
+        } else {
+            countBuffer.fill(0);
+        }
 
         // generate per vertex distance to camera
         const range = maxDist - minDist;
-        const divider = 1 / range * (2 ** compareBits);
+        const divider = (range < 1e-6) ? 0 : 1 / range * (2 ** compareBits);
         for (let i = 0; i < numVertices; ++i) {
             const istride = i * 3;
-            const d = (centers[istride + 0] - px) * dx +
-                      (centers[istride + 1] - py) * dy +
-                      (centers[istride + 2] - pz) * dz;
+            const x = centers[istride + 0] - px;
+            const y = centers[istride + 1] - py;
+            const z = centers[istride + 2] - pz;
+            const d = x * dx + y * dy + z * dz;
             const sortKey = Math.floor((d - minDist) * divider);
 
             distances[i] = sortKey;
@@ -119,40 +121,44 @@ function SortWorker() {
         }
 
         // Change countBuffer[i] so that it contains actual position of this digit in outputArray
-        for (let i = 1; i < bucketCount; i++)
+        for (let i = 1; i < bucketCount; i++) {
             countBuffer[i] += countBuffer[i - 1];
+        }
 
         // Build the output array
         for (let i = 0; i < numVertices; i++) {
             const distance = distances[i];
             const destIndex = --countBuffer[distance];
-            target[destIndex] = i;
+            order[destIndex] = i;
         }
 
-        // find splat with distance 0 to limit rendering
-        const dist = i => distances[target[i]] / divider + minDist;
+        // find splat with distance 0 to limit rendering behind the camera
+        const dist = i => distances[order[i]] / divider + minDist;
         const findZero = () => {
             const result = binarySearch(0, numVertices - 1, i => -dist(i));
             return Math.min(numVertices, Math.abs(result));
         };
+        const count = dist(numVertices - 1) >= 0 ? findZero() : numVertices;
 
-        // swap
-        const tmp = data;
-        data = target;
-        target = tmp;
+        // apply mapping
+        if (mapping) {
+            for (let i = 0; i < numVertices; ++i) {
+                order[i] = mapping[order[i]];
+            }
+        }
 
         // send results
         self.postMessage({
-            data: data.buffer,
-            count: dist(numVertices - 1) >= 0 ? findZero() : numVertices
-        }, [data.buffer]);
+            order: order.buffer,
+            count
+        }, [order.buffer]);
 
-        data = null;
+        order = null;
     };
 
     self.onmessage = (message) => {
-        if (message.data.data) {
-            data = new Uint32Array(message.data.data);
+        if (message.data.order) {
+            order = new Uint32Array(message.data.order);
         }
         if (message.data.centers) {
             centers = new Float32Array(message.data.centers);
@@ -176,6 +182,11 @@ function SortWorker() {
                 boundMax.y = Math.max(boundMax.y, y);
                 boundMax.z = Math.max(boundMax.z, z);
             }
+            forceUpdate = true;
+        }
+        if (message.data.hasOwnProperty('mapping')) {
+            mapping = message.data.mapping ? new Uint32Array(message.data.mapping) : null;
+            forceUpdate = true;
         }
         if (message.data.cameraPosition) cameraPosition = message.data.cameraPosition;
         if (message.data.cameraDirection) cameraDirection = message.data.cameraDirection;
@@ -189,6 +200,8 @@ class GSplatSorter extends EventHandler {
 
     orderTexture;
 
+    centers;
+
     constructor() {
         super();
 
@@ -197,16 +210,16 @@ class GSplatSorter extends EventHandler {
         })));
 
         this.worker.onmessage = (message) => {
-            const newData = message.data.data;
-            const oldData = this.orderTexture._levels[0].buffer;
+            const newOrder = message.data.order;
+            const oldOrder = this.orderTexture._levels[0].buffer;
 
             // send vertex storage to worker to start the next frame
             this.worker.postMessage({
-                data: oldData
-            }, [oldData]);
+                order: oldOrder
+            }, [oldOrder]);
 
-            // set new data directly on texture
-            this.orderTexture._levels[0] = new Uint32Array(newData);
+            // write the new order data to gpu texture memory
+            this.orderTexture._levels[0] = new Uint32Array(newOrder);
             this.orderTexture.upload();
 
             // set new data directly on texture
@@ -221,18 +234,46 @@ class GSplatSorter extends EventHandler {
 
     init(orderTexture, centers) {
         this.orderTexture = orderTexture;
+        this.centers = centers.slice();
 
         // get the texture's storage buffer and make a copy
-        const buf = this.orderTexture.lock({
+        const orderBuffer = this.orderTexture.lock({
             mode: TEXTURELOCK_READ
         }).buffer.slice();
         this.orderTexture.unlock();
 
         // send the initial buffer to worker
         this.worker.postMessage({
-            data: buf,
+            order: orderBuffer,
             centers: centers.buffer
-        }, [buf, centers.buffer]);
+        }, [orderBuffer, centers.buffer]);
+    }
+
+    setMapping(mapping) {
+        if (mapping) {
+            // create new centers array
+            const centers = new Float32Array(mapping.length * 3);
+            for (let i = 0; i < mapping.length; ++i) {
+                const src = mapping[i] * 3;
+                const dst = i * 3;
+                centers[dst + 0] = this.centers[src + 0];
+                centers[dst + 1] = this.centers[src + 1];
+                centers[dst + 2] = this.centers[src + 2];
+            }
+
+            // update worker with new centers and mapping for the subset of splats
+            this.worker.postMessage({
+                centers: centers.buffer,
+                mapping: mapping.buffer
+            }, [centers.buffer, mapping.buffer]);
+        } else {
+            // restore original centers
+            const centers = this.centers.slice();
+            this.worker.postMessage({
+                centers: centers.buffer,
+                mapping: null
+            }, [centers.buffer]);
+        }
     }
 
     setCamera(pos, dir) {

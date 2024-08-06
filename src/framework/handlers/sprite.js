@@ -1,10 +1,11 @@
 import { path } from '../../core/path.js';
-
 import { http } from '../../platform/net/http.js';
-
 import { Sprite } from '../../scene/sprite.js';
-
 import { ResourceHandler } from './handler.js';
+
+/**
+ * @import { AppBase } from '../app-base.js'
+ */
 
 // The scope of this function is the sprite asset
 function onTextureAtlasLoaded(atlasAsset) {
@@ -29,7 +30,7 @@ class SpriteHandler extends ResourceHandler {
     /**
      * Create a new SpriteHandler instance.
      *
-     * @param {import('../app-base.js').AppBase} app - The running {@link AppBase}.
+     * @param {AppBase} app - The running {@link AppBase}.
      * @ignore
      */
     constructor(app) {

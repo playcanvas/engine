@@ -2,9 +2,11 @@ import { TRACEID_RENDER_QUEUE } from '../../../core/constants.js';
 import { Debug, DebugHelper } from '../../../core/debug.js';
 
 /**
+ * @import { WebgpuGraphicsDevice } from './webgpu-graphics-device.js'
+ */
+
+/**
  * A WebGPU implementation of the Buffer.
- *
- * @ignore
  */
 class WebgpuBuffer {
     /**
@@ -42,7 +44,7 @@ class WebgpuBuffer {
     }
 
     /**
-     * @param {import('./webgpu-graphics-device.js').WebgpuGraphicsDevice} device - Graphics device.
+     * @param {WebgpuGraphicsDevice} device - Graphics device.
      * @param {*} storage -
      */
     unlock(device, storage) {

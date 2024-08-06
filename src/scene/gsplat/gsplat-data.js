@@ -4,6 +4,12 @@ import { Quat } from '../../core/math/quat.js';
 import { Vec3 } from '../../core/math/vec3.js';
 import { BoundingBox } from '../../core/shape/bounding-box.js';
 
+/**
+ * @import { PlyElement } from '../../framework/parsers/ply.js'
+ * @import { Scene } from '../scene.js'
+ * @import { Vec4 } from '../../core/math/vec4.js'
+ */
+
 const vec3 = new Vec3();
 const mat4 = new Mat4();
 const quat = new Quat();
@@ -89,14 +95,14 @@ const calcSplatMat = (result, p, r) => {
 };
 
 class GSplatData {
-    // /** @type {import('./ply-reader').PlyElement[]} */
+    /** @type {PlyElement[]} */
     elements;
 
     numSplats;
 
-    // /**
-    //  * @param {import('./ply-reader').PlyElement[]} elements - The elements.
-    //  */
+    /**
+     * @param {PlyElement[]} elements - The elements.
+     */
     constructor(elements) {
         this.elements = elements;
         this.numSplats = this.getElement('vertex').count;
@@ -125,30 +131,36 @@ class GSplatData {
         const y = this.getProp('y');
         const z = this.getProp('z');
 
+        if (x && y && z) {
+            for (let i = 0; i < this.numSplats; ++i) {
+                // transform center
+                vec3.set(x[i], y[i], z[i]);
+                mat.transformPoint(vec3, vec3);
+                x[i] = vec3.x;
+                y[i] = vec3.y;
+                z[i] = vec3.z;
+            }
+        }
+
         const rx = this.getProp('rot_1');
         const ry = this.getProp('rot_2');
         const rz = this.getProp('rot_3');
         const rw = this.getProp('rot_0');
 
-        quat2.setFromMat4(mat);
+        if (rx && ry && rz && rw) {
+            quat2.setFromMat4(mat);
 
-        for (let i = 0; i < this.numSplats; ++i) {
-            // transform center
-            vec3.set(x[i], y[i], z[i]);
-            mat.transformPoint(vec3, vec3);
-            x[i] = vec3.x;
-            y[i] = vec3.y;
-            z[i] = vec3.z;
-
-            // transform orientation
-            quat.set(rx[i], ry[i], rz[i], rw[i]).mul2(quat2, quat);
-            rx[i] = quat.x;
-            ry[i] = quat.y;
-            rz[i] = quat.z;
-            rw[i] = quat.w;
-
-            // TODO: transform SH
+            for (let i = 0; i < this.numSplats; ++i) {
+                // transform orientation
+                quat.set(rx[i], ry[i], rz[i], rw[i]).mul2(quat2, quat);
+                rx[i] = quat.x;
+                ry[i] = quat.y;
+                rz[i] = quat.z;
+                rw[i] = quat.w;
+            }
         }
+
+        // TODO: transform SH
     }
 
     // access a named property
@@ -177,7 +189,7 @@ class GSplatData {
      * @param {Vec3|null} [p] - the vector to receive splat position
      * @param {Quat|null} [r] - the quaternion to receive splat rotation
      * @param {Vec3|null} [s] - the vector to receive splat scale
-     * @param {import('../../core/math/vec4.js').Vec4|null} [c] - the vector to receive splat color
+     * @param {Vec4|null} [c] - the vector to receive splat color
      * @returns {SplatIterator} - The iterator
      */
     createIter(p, r, s, c) {
@@ -319,7 +331,7 @@ class GSplatData {
     }
 
     /**
-     * @param {import('../scene.js').Scene} scene - The application's scene.
+     * @param {Scene} scene - The application's scene.
      * @param {Mat4} worldMat - The world matrix.
      */
     renderWireframeBounds(scene, worldMat) {

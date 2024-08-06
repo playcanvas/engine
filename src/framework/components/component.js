@@ -1,6 +1,11 @@
 import { EventHandler } from '../../core/event-handler.js';
 
 /**
+ * @import { ComponentSystem } from './system.js'
+ * @import { Entity } from '../entity.js'
+ */
+
+/**
  * Components are used to attach functionality on a {@link Entity}. Components can receive update
  * events each frame, and expose properties to the PlayCanvas Editor.
  */
@@ -17,24 +22,22 @@ class Component extends EventHandler {
     /**
      * The ComponentSystem used to create this Component.
      *
-     * @type {import('./system.js').ComponentSystem}
+     * @type {ComponentSystem}
      */
     system;
 
     /**
      * The Entity that this Component is attached to.
      *
-     * @type {import('../entity.js').Entity}
+     * @type {Entity}
      */
     entity;
 
     /**
      * Base constructor for a Component.
      *
-     * @param {import('./system.js').ComponentSystem} system - The ComponentSystem used to create
-     * this Component.
-     * @param {import('../entity.js').Entity} entity - The Entity that this Component is attached
-     * to.
+     * @param {ComponentSystem} system - The ComponentSystem used to create this component.
+     * @param {Entity} entity - The Entity that this Component is attached to.
      */
     constructor(system, entity) {
         super();

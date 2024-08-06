@@ -3,6 +3,10 @@ import { platform } from '../../core/platform.js';
 import { XrInputSource } from './xr-input-source.js';
 
 /**
+ * @import { XrManager } from './xr-manager.js'
+ */
+
+/**
  * Provides access to input sources for WebXR.
  *
  * Input sources represent:
@@ -41,7 +45,7 @@ class XrInput extends EventHandler {
     /**
      * Fired when {@link XrInputSource} has triggered primary action. This could be pressing a
      * trigger button, or touching a screen. The handler is passed the {@link XrInputSource} that
-     * triggered the select event and the XRInputSourceEvent event from the WebXR API.
+     * triggered the `select` event and the XRInputSourceEvent event from the WebXR API.
      *
      * @event
      * @example
@@ -57,7 +61,7 @@ class XrInput extends EventHandler {
 
     /**
      * Fired when {@link XrInputSource} has started to trigger primary action. The handler is
-     * passed the {@link XrInputSource} that triggered the selectstart event and the
+     * passed the {@link XrInputSource} that triggered the `selectstart` event and the
      * XRInputSourceEvent event from the WebXR API.
      *
      * @event
@@ -70,7 +74,7 @@ class XrInput extends EventHandler {
 
     /**
      * Fired when {@link XrInputSource} has ended triggering primary action. The handler is passed
-     * the {@link XrInputSource} that triggered the selectend event and the XRInputSourceEvent
+     * the {@link XrInputSource} that triggered the `selectend` event and the XRInputSourceEvent
      * event from the WebXR API.
      *
      * @event
@@ -84,7 +88,7 @@ class XrInput extends EventHandler {
     /**
      * Fired when {@link XrInputSource} has triggered squeeze action. This is associated with
      * "grabbing" action on the controllers. The handler is passed the {@link XrInputSource} that
-     * triggered the squeeze event and the XRInputSourceEvent event from the WebXR API.
+     * triggered the `squeeze` event and the XRInputSourceEvent event from the WebXR API.
      *
      * @event
      * @example
@@ -95,8 +99,8 @@ class XrInput extends EventHandler {
     static EVENT_SQUEEZE = 'squeeze';
 
     /**
-     * Fired when {@link XrInputSource} has started to trigger sqeeze action. The handler is
-     * passed the {@link XrInputSource} that triggered the squeezestart event and the
+     * Fired when {@link XrInputSource} has started to trigger squeeze action. The handler is
+     * passed the {@link XrInputSource} that triggered the `squeezestart` event and the
      * XRInputSourceEvent event from the WebXR API.
      *
      * @event
@@ -110,8 +114,8 @@ class XrInput extends EventHandler {
     static EVENT_SQUEEZESTART = 'squeezestart';
 
     /**
-     * Fired when {@link XrInputSource} has ended triggering sqeeze action. The handler is passed
-     * the {@link XrInputSource} that triggered the squeezeend event and the XRInputSourceEvent
+     * Fired when {@link XrInputSource} has ended triggering squeeze action. The handler is passed
+     * the {@link XrInputSource} that triggered the `squeezeend` event and the XRInputSourceEvent
      * event from the WebXR API.
      *
      * @event
@@ -123,7 +127,7 @@ class XrInput extends EventHandler {
     static EVENT_SQUEEZEEND = 'squeezeend';
 
     /**
-     * @type {import('./xr-manager.js').XrManager}
+     * @type {XrManager}
      * @private
      */
     manager;
@@ -149,7 +153,7 @@ class XrInput extends EventHandler {
     /**
      * Create a new XrInput instance.
      *
-     * @param {import('./xr-manager.js').XrManager} manager - WebXR Manager.
+     * @param {XrManager} manager - WebXR Manager.
      * @ignore
      */
     constructor(manager) {
