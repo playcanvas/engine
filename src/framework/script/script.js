@@ -338,7 +338,8 @@ export class Script extends EventHandler {
      */
 }
 
-const funcNameRegex = new RegExp('^\\s*function(?:\\s|\\s*\\/\\*.*\\*\\/\\s*)+([^(\\s/]*)\\s*');
+// eslint-disable-next-line regexp/no-super-linear-backtracking, regexp/no-useless-escape
+const funcNameRegex = /^\s*function(?:\s|\s*\/\*.*\*\/\s*)+([^(\s\/]*)\s*/;
 
 /**
  * @param {Function} constructorFn - The constructor function of the script type.

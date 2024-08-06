@@ -22,6 +22,7 @@ import { BindGroupFormat, BindTextureFormat } from './bind-group-format.js';
 const KEYWORD = /[ \t]*(\battribute\b|\bvarying\b|\buniform\b)/g;
 
 // match 'attribute' and anything else till ';'
+// eslint-disable-next-line regexp/no-unused-capturing-group, regexp/no-super-linear-backtracking
 const KEYWORD_LINE = /(\battribute\b|\bvarying\b|\bout\b|\buniform\b)[ \t]*([^;]+)(;+)/g;
 
 // marker for a place in the source code to be replaced by code

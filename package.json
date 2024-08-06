@@ -68,7 +68,7 @@
       "XRRigidTransform": "readonly",
       "XRWebGLLayer": "readonly"
     },
-    "ignores": ["tests/**/*.js"],
+    "ignorePatterns": ["tests/**/*"],
     "parser": "@babel/eslint-parser",
     "parserOptions": {
       "requireConfigFile": false

@@ -833,7 +833,7 @@ class AppBase extends EventHandler {
         const len = urls.length;
         let count = len;
 
-        const regex = /^http(s)?:\/\//;
+        const regex = /^https?:\/\//;
 
         if (len) {
             const onLoad = (err, script) => {

@@ -7,15 +7,18 @@ const TRACEID = 'Preprocessor';
 const KEYWORD = /[ \t]*#(ifn?def|if|endif|else|elif|define|undef|extension|include)/g;
 
 // #define EXPRESSION
+// eslint-disable-next-line regexp/no-super-linear-backtracking, regexp/optimal-quantifier-concatenation
 const DEFINE = /define[ \t]+([^\n]+)\r?(?:\n|$)/g;
 
 // #extension IDENTIFIER : enabled
 const EXTENSION = /extension[ \t]+([\w-]+)[ \t]*:[ \t]*(enable|require)/g;
 
 // #undef EXPRESSION
+// eslint-disable-next-line regexp/no-super-linear-backtracking, regexp/optimal-quantifier-concatenation
 const UNDEF = /undef[ \t]+([^\n]+)\r?(?:\n|$)/g;
 
 // #ifdef/#ifndef SOMEDEFINE, #if EXPRESSION
+// eslint-disable-next-line regexp/no-super-linear-backtracking, regexp/no-unused-capturing-group
 const IF = /(ifdef|ifndef|if)[ \t]*([^\r\n]+)\r?\n/g;
 
 // #endif/#else or #elif EXPRESSION

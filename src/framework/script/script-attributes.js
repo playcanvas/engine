@@ -101,7 +101,7 @@ function rawToValue(app, args, value, old) {
                 old.a = (value.length === 3) ? 1 : value[3];
 
                 return old;
-            } else if (typeof value === 'string' && /#([0-9a-f]{2}){3,4}/i.test(value)) {
+            } else if (typeof value === 'string' && /#(?:[0-9a-f]{2}){3,4}/i.test(value)) {
                 if (!old) {
                     old = new Color();
                 }

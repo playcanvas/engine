@@ -12,6 +12,7 @@ import { ArrayType, Converter, DeclarationReflection, IntrinsicType, ReflectionF
  */
 function getProperties(filePath) {
     const data = readFileSync(resolve(process.cwd(), filePath), 'utf-8');
+    // eslint-disable-next-line regexp/no-dupe-disjunctions
     const docBlocks = data.match(/\/\*\*([^*]|[\r\n]|(\*+([^*/]|[\r\n])))*\*+\//g);
     const properties = new Map();
 

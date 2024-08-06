@@ -453,7 +453,7 @@ class TextElement {
                             // color is already in the palette
                             color = paletteMap[hex];
                         } else {
-                            if (/^([0-9a-f]{2}){3}$/.test(hex)) {
+                            if (/^[0-9a-f]{6}$/.test(hex)) {
                                 // new color
                                 color = this._colorPalette.length / 3;
                                 paletteMap[hex] = color;

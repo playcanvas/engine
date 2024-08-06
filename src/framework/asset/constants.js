@@ -4,6 +4,7 @@ export const ABSOLUTE_URL = new RegExp(
     '(?:' +  // beginning of a non-captured regex group
         // `{protocol}://`
         '(?:' +  // beginning of protocol scheme (non-captured regex group)
+            // eslint-disable-next-line regexp/no-super-linear-backtracking, regexp/optimal-quantifier-concatenation
             '[a-z]+[a-z0-9\\-+.]*' + // protocol scheme must (RFC 3986) consist of "a letter and followed by any combination of letters, digits, plus ("+"), period ("."), or hyphen ("-")."
             ':' + // protocol scheme must end with colon character
         ')?' + // end of optional scheme group, the group is optional since the string may be a protocol-relative absolute URL
