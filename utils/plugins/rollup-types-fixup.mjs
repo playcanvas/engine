@@ -1,8 +1,8 @@
 import * as fs from 'node:fs';
 
 const GREEN_OUT = '\x1b[32m';
-const BOLD_OUT = `\x1b[1m`;
-const REGULAR_OUT = `\x1b[22m`;
+const BOLD_OUT = '\x1b[1m';
+const REGULAR_OUT = '\x1b[22m';
 
 const TYPES_PATH = './build/playcanvas/src';
 

@@ -73,6 +73,7 @@
       "requireConfigFile": false
     },
     "rules": {
+      "import/order": "off",
       "jsdoc/check-tag-names": [
         "error",
         {

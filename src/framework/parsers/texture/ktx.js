@@ -134,7 +134,7 @@ class KtxParser extends TextureParser {
 
         // only support subset of pixel formats
         if (format === undefined) {
-            Debug.warn('Unknown glInternalFormat: ' + header.glInternalFormat);
+            Debug.warn(`Unknown glInternalFormat: ${header.glInternalFormat}`);
             return null;
         }
 

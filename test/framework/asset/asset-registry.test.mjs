@@ -11,27 +11,27 @@ import { HTMLCanvasElement } from '@playcanvas/canvas-mock';
 import { expect } from 'chai';
 import { restore, spy } from 'sinon';
 
-describe('AssetRegistry', function () {
+describe('AssetRegistry', () => {
 
     let app;
     let retryDelay;
 
-    beforeEach(function () {
+    beforeEach(() => {
         retryDelay = Http.retryDelay;
         Http.retryDelay = 1;
         const canvas = new HTMLCanvasElement(500, 500);
         app = new Application(canvas, { graphicsDevice: new NullGraphicsDevice(canvas) });
     });
 
-    afterEach(function () {
+    afterEach(() => {
         app.destroy();
         Http.retryDelay = retryDelay;
         restore();
     });
 
-    describe('#constructor', function () {
+    describe('#constructor', () => {
 
-        it('instantiates correctly', function () {
+        it('instantiates correctly', () => {
             const resourceLoader = new ResourceLoader(app);
             const assetRegistry = new AssetRegistry(resourceLoader);
 
@@ -40,9 +40,9 @@ describe('AssetRegistry', function () {
 
     });
 
-    describe('#add', function () {
+    describe('#add', () => {
 
-        it('adds an asset', function () {
+        it('adds an asset', () => {
             const asset = new Asset('Test Asset', 'text', {
                 url: 'fake/url/file.txt'
             });
@@ -55,9 +55,9 @@ describe('AssetRegistry', function () {
 
     });
 
-    describe('#find', function () {
+    describe('#find', () => {
 
-        it('works after removing an asset', function () {
+        it('works after removing an asset', () => {
             const asset1 = new Asset('Asset 1', 'text', {
                 url: 'fake/one/file.txt'
             });
@@ -81,9 +81,9 @@ describe('AssetRegistry', function () {
 
     });
 
-    describe('#find + rename', function () {
+    describe('#find + rename', () => {
 
-        it('works after renaming an asset', function () {
+        it('works after renaming an asset', () => {
             const asset1 = new Asset('Asset 1', 'text', {
                 url: 'fake/one/file.txt'
             });
@@ -105,9 +105,9 @@ describe('AssetRegistry', function () {
 
     });
 
-    describe('#find + type', function () {
+    describe('#find + type', () => {
 
-        it('finds assets by name filtered by type', function () {
+        it('finds assets by name filtered by type', () => {
             const asset1 = new Asset('Asset 1', 'text', {
                 url: 'fake/one/file.txt'
             });
@@ -124,9 +124,9 @@ describe('AssetRegistry', function () {
 
     });
 
-    describe('#findAll + type', function () {
+    describe('#findAll + type', () => {
 
-        it('finds all assets by name filtered by type', function () {
+        it('finds all assets by name filtered by type', () => {
             const asset1 = new Asset('Asset 1', 'text', {
                 url: 'fake/one/file.txt'
             });
@@ -156,9 +156,9 @@ describe('AssetRegistry', function () {
 
     });
 
-    describe('#get', function () {
+    describe('#get', () => {
 
-        it('retrieves an asset by id', function () {
+        it('retrieves an asset by id', () => {
             const asset = new Asset('Test Asset', 'text', {
                 url: 'fake/url/file.txt'
             });
@@ -171,9 +171,9 @@ describe('AssetRegistry', function () {
 
     });
 
-    describe('#getByUrl', function () {
+    describe('#getByUrl', () => {
 
-        it('retrieves an asset by url', function () {
+        it('retrieves an asset by url', () => {
             const asset = new Asset('Test Asset', 'text', {
                 url: 'fake/url/file.txt'
             });
@@ -184,7 +184,7 @@ describe('AssetRegistry', function () {
             expect(asset).to.equal(assetFromRegistry);
         });
 
-        it('works after removing an asset', function () {
+        it('works after removing an asset', () => {
             const asset1 = new Asset('Asset 1', 'text', {
                 url: 'fake/one/file.txt'
             });
@@ -208,9 +208,9 @@ describe('AssetRegistry', function () {
 
     });
 
-    describe('#list', function () {
+    describe('#list', () => {
 
-        it('lists all assets', function () {
+        it('lists all assets', () => {
             const asset1 = new Asset('Asset 1', 'text', {
                 url: 'fake/one/file.txt'
             });
@@ -234,12 +234,12 @@ describe('AssetRegistry', function () {
 
     });
 
-    describe('#loadFromUrl', function () {
+    describe('#loadFromUrl', () => {
 
         const assetPath = 'http://localhost:3000/test/test-assets/';
 
-        it('loads binary assets', function (done) {
-            app.assets.loadFromUrl(`${assetPath}test.bin`, 'binary', function (err, asset) {
+        it('loads binary assets', (done) => {
+            app.assets.loadFromUrl(`${assetPath}test.bin`, 'binary', (err, asset) => {
                 expect(err).to.be.null;
                 expect(asset).to.be.instanceof(Asset);
                 expect(asset.resource).to.be.instanceof(ArrayBuffer);
@@ -252,8 +252,8 @@ describe('AssetRegistry', function () {
             });
         });
 
-        it('loads container assets', function (done) {
-            app.assets.loadFromUrl(`${assetPath}test.glb`, 'container', function (err, asset) {
+        it('loads container assets', (done) => {
+            app.assets.loadFromUrl(`${assetPath}test.glb`, 'container', (err, asset) => {
                 expect(err).to.be.null;
                 expect(asset).to.be.instanceof(Asset);
                 expect(asset.resource).to.be.instanceof(GlbContainerResource);
@@ -261,17 +261,17 @@ describe('AssetRegistry', function () {
             });
         });
 
-        it('supports retry loading of container assets', function (done) {
+        it('supports retry loading of container assets', (done) => {
             spy(http, 'request');
             app.loader.enableRetry(2);
-            app.assets.loadFromUrl(`${assetPath}someurl.glb`, 'container', function (err, asset) {
+            app.assets.loadFromUrl(`${assetPath}someurl.glb`, 'container', (err, asset) => {
                 expect(http.request.callCount).to.equal(3);
                 done();
             });
         });
 
-        it('loads css assets', function (done) {
-            app.assets.loadFromUrl(`${assetPath}test.css`, 'css', function (err, asset) {
+        it('loads css assets', (done) => {
+            app.assets.loadFromUrl(`${assetPath}test.css`, 'css', (err, asset) => {
                 expect(err).to.be.null;
                 expect(asset).to.be.instanceof(Asset);
                 expect(asset.resource).to.be.a('string');
@@ -280,8 +280,8 @@ describe('AssetRegistry', function () {
             });
         });
 
-        it.skip('loads html assets', function (done) {
-            app.assets.loadFromUrl(`${assetPath}test.html`, 'html', function (err, asset) {
+        it.skip('loads html assets', (done) => {
+            app.assets.loadFromUrl(`${assetPath}test.html`, 'html', (err, asset) => {
                 expect(err).to.be.null;
                 expect(asset).to.be.instanceof(Asset);
                 expect(asset.resource).to.be.a('string');
@@ -289,8 +289,8 @@ describe('AssetRegistry', function () {
             });
         });
 
-        it('loads json assets', function (done) {
-            app.assets.loadFromUrl(`${assetPath}test.json`, 'json', function (err, asset) {
+        it('loads json assets', (done) => {
+            app.assets.loadFromUrl(`${assetPath}test.json`, 'json', (err, asset) => {
                 expect(err).to.be.null;
                 expect(asset).to.be.instanceof(Asset);
                 expect(asset.resource).to.be.an.instanceof(Object);
@@ -301,8 +301,8 @@ describe('AssetRegistry', function () {
             });
         });
 
-        it('loads shader assets', function (done) {
-            app.assets.loadFromUrl(`${assetPath}test.glsl`, 'shader', function (err, asset) {
+        it('loads shader assets', (done) => {
+            app.assets.loadFromUrl(`${assetPath}test.glsl`, 'shader', (err, asset) => {
                 expect(err).to.be.null;
                 expect(asset).to.be.instanceof(Asset);
                 expect(asset.resource).to.be.a('string');
@@ -310,8 +310,8 @@ describe('AssetRegistry', function () {
             });
         });
 
-        it('loads text assets', function (done) {
-            app.assets.loadFromUrl(`${assetPath}test.txt`, 'text', function (err, asset) {
+        it('loads text assets', (done) => {
+            app.assets.loadFromUrl(`${assetPath}test.txt`, 'text', (err, asset) => {
                 expect(err).to.be.null;
                 expect(asset).to.be.instanceof(Asset);
                 expect(asset.resource).to.be.a('string');
@@ -322,9 +322,9 @@ describe('AssetRegistry', function () {
 
     });
 
-    describe('#remove', function () {
+    describe('#remove', () => {
 
-        it('removes by id', function () {
+        it('removes by id', () => {
             const asset1 = new Asset('Asset 1', 'text', {
                 url: 'fake/one/file.txt'
             });

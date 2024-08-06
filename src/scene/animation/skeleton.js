@@ -70,8 +70,9 @@ class Skeleton {
             this._interpolatedKeyDict[node.name] = interpKey;
             this._currKeyIndices[node.name] = 0;
 
-            for (let i = 0; i < node._children.length; i++)
+            for (let i = 0; i < node._children.length; i++) {
                 addInterpolatedKeys(node._children[i]);
+            }
         };
 
         addInterpolatedKeys(graph);
@@ -293,8 +294,9 @@ class Skeleton {
                     transform.localRotation.copy(interpKey._quat);
                     transform.localScale.copy(interpKey._scale);
 
-                    if (!transform._dirtyLocal)
+                    if (!transform._dirtyLocal) {
                         transform._dirtifyLocal();
+                    }
 
                     interpKey._written = false;
                 }

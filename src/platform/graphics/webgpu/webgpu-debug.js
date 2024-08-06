@@ -1,5 +1,5 @@
-import { Debug } from "../../../core/debug.js";
-import { DebugGraphics } from "../debug-graphics.js";
+import { Debug } from '../../../core/debug.js';
+import { DebugGraphics } from '../debug-graphics.js';
 
 /**
  * @import { WebgpuGraphicsDevice } from './webgpu-graphics-device.js'
@@ -70,7 +70,7 @@ class WebgpuDebug {
                 if (count < MAX_DUPLICATES) {
                     const tooMany = count === MAX_DUPLICATES - 1 ? ' (Too many errors, ignoring this one from now)' : '';
                     WebgpuDebug._loggedMessages.set(error.message, count + 1);
-                    console.error(`WebGPU ${header} error: ${error.message}`, tooMany, "while rendering", marker, ...args);
+                    console.error(`WebGPU ${header} error: ${error.message}`, tooMany, 'while rendering', marker, ...args);
                 }
             }
         });

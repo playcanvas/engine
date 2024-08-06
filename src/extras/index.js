@@ -32,9 +32,9 @@ export {
     GIZMOAXIS_YZ,
     GIZMOAXIS_XYZ,
     GIZMOAXIS_FACE
-} from "./gizmo/constants.js";
-export { Gizmo } from "./gizmo/gizmo.js";
-export { TransformGizmo } from "./gizmo/transform-gizmo.js";
-export { TranslateGizmo } from "./gizmo/translate-gizmo.js";
-export { RotateGizmo } from "./gizmo/rotate-gizmo.js";
-export { ScaleGizmo } from "./gizmo/scale-gizmo.js";
+} from './gizmo/constants.js';
+export { Gizmo } from './gizmo/gizmo.js';
+export { TransformGizmo } from './gizmo/transform-gizmo.js';
+export { TranslateGizmo } from './gizmo/translate-gizmo.js';
+export { RotateGizmo } from './gizmo/rotate-gizmo.js';
+export { ScaleGizmo } from './gizmo/scale-gizmo.js';

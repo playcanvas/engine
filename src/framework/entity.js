@@ -516,20 +516,23 @@ class Entity extends GraphNode {
      */
     _notifyHierarchyStateChanged(node, enabled) {
         let enableFirst = false;
-        if (node === this && _enableList.length === 0)
+        if (node === this && _enableList.length === 0) {
             enableFirst = true;
+        }
 
         node._beingEnabled = true;
 
         node._onHierarchyStateChanged(enabled);
 
-        if (node._onHierarchyStatePostChanged)
+        if (node._onHierarchyStatePostChanged) {
             _enableList.push(node);
+        }
 
         const c = node._children;
         for (let i = 0, len = c.length; i < len; i++) {
-            if (c[i]._enabled)
+            if (c[i]._enabled) {
                 this._notifyHierarchyStateChanged(c[i], enabled);
+            }
         }
 
         node._beingEnabled = false;

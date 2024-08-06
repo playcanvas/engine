@@ -1,7 +1,7 @@
-import { Shader } from "../shader.js";
-import { SHADERLANGUAGE_WGSL } from "../constants.js";
-import { Debug, DebugHelper } from "../../../core/debug.js";
-import { DebugGraphics } from "../debug-graphics.js";
+import { Shader } from '../shader.js';
+import { SHADERLANGUAGE_WGSL } from '../constants.js';
+import { Debug, DebugHelper } from '../../../core/debug.js';
+import { DebugGraphics } from '../debug-graphics.js';
 
 /**
  * @import { WebgpuGraphicsDevice } from './webgpu-graphics-device.js'
@@ -160,7 +160,7 @@ class WebgpuResolver {
                     storeOp: 'store'
                 }]
             });
-            DebugHelper.setLabel(passEncoder, `DepthResolve-PassEncoder`);
+            DebugHelper.setLabel(passEncoder, 'DepthResolve-PassEncoder');
 
             // no need for a sampler when using textureLoad
             const bindGroup = wgpu.createBindGroup({

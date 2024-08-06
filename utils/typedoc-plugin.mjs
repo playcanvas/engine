@@ -17,7 +17,7 @@ function getProperties(filePath) {
 
     if (docBlocks) {
         docBlocks.forEach((block) => {
-            const propertyLines = block.match(/@property\s*\{[^}]+\}\s*[^*]*/g);
+            const propertyLines = block.match(/@property\s*\{[^}]+\}[^*]*/g);
 
             if (propertyLines) {
                 propertyLines.forEach((line) => {

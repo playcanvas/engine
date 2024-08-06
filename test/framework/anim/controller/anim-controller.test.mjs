@@ -12,12 +12,12 @@ import { NullGraphicsDevice } from '../../../../src/platform/graphics/null/null-
 import { HTMLCanvasElement } from '@playcanvas/canvas-mock';
 import { expect } from 'chai';
 
-describe('AnimController', function () {
+describe('AnimController', () => {
 
     let app;
     let controller;
 
-    beforeEach(function () {
+    beforeEach(() => {
         const canvas = new HTMLCanvasElement(500, 500);
         app = new Application(canvas, { graphicsDevice: new NullGraphicsDevice(canvas) });
         const states = [
@@ -99,64 +99,64 @@ describe('AnimController', function () {
         controller.assignAnimation('Other State 2', new AnimTrack('otherState2Track', 4, inputs, outputs, curves), 1, true);
     });
 
-    afterEach(function () {
+    afterEach(() => {
         app.destroy();
     });
 
-    describe('#constructor', function () {
+    describe('#constructor', () => {
 
-        it('instantiates correctly', function () {
+        it('instantiates correctly', () => {
             expect(controller).to.be.ok;
         });
 
     });
 
-    describe('#_getActiveStateProgressForTime', function () {
+    describe('#_getActiveStateProgressForTime', () => {
 
-        it('returns 1 when the controller is in the START state', function () {
+        it('returns 1 when the controller is in the START state', () => {
             controller.activeState = 'START';
             expect(controller._getActiveStateProgressForTime(0)).to.equal(1);
         });
 
-        it('returns 1 when the controller is in the ANY state', function () {
+        it('returns 1 when the controller is in the ANY state', () => {
             controller.activeState = 'ANY';
             expect(controller._getActiveStateProgressForTime(0)).to.equal(1);
         });
 
-        it('returns 1 when the controller is in the END state', function () {
+        it('returns 1 when the controller is in the END state', () => {
             controller.activeState = 'END';
             expect(controller._getActiveStateProgressForTime(0)).to.equal(1);
         });
 
-        it('returns a progress of 0 when the controller is at the start of a states timeline', function () {
+        it('returns a progress of 0 when the controller is at the start of a states timeline', () => {
             controller.update(0);
             expect(controller._getActiveStateProgressForTime(0)).to.equal(0);
         });
 
-        it('returns a progress of 0.5 when the controller is halfway through a states duration', function () {
+        it('returns a progress of 0.5 when the controller is halfway through a states duration', () => {
             controller.update(0);
             expect(controller._getActiveStateProgressForTime(2)).to.equal(0.5);
         });
 
-        it('returns a progress of 1 when the controller is at the end of a states timeline', function () {
+        it('returns a progress of 1 when the controller is at the end of a states timeline', () => {
             controller.update(0);
             expect(controller._getActiveStateProgressForTime(4)).to.equal(1);
         });
 
     });
 
-    describe('#_findTransitionsFromState', function () {
+    describe('#_findTransitionsFromState', () => {
 
-        it('returns the transitions for a given state', function () {
+        it('returns the transitions for a given state', () => {
             expect(controller._findTransitionsFromState('START').length).to.equal(1);
             expect(controller._findTransitionsFromState('START')[0].to).to.equal('Initial State');
         });
 
-        it('returns an empty array when a state has no transitions', function () {
+        it('returns an empty array when a state has no transitions', () => {
             expect(controller._findTransitionsFromState('Initial State').length).to.equal(0);
         });
 
-        it('returns transitions sorted by priority', function () {
+        it('returns transitions sorted by priority', () => {
             expect(controller._findTransitionsFromState('Other State 1').length).to.equal(2);
             expect(controller._findTransitionsFromState('Other State 1')[0].priority).to.equal(1);
             expect(controller._findTransitionsFromState('Other State 1')[1].priority).to.equal(2);
@@ -164,13 +164,13 @@ describe('AnimController', function () {
 
     });
 
-    describe('#_findTransitionsBetweenStates', function () {
+    describe('#_findTransitionsBetweenStates', () => {
 
-        it('returns the transitions between two states', function () {
+        it('returns the transitions between two states', () => {
             expect(controller._findTransitionsBetweenStates('Other State 1', 'Other State 2').length).to.equal(2);
         });
 
-        it('returns transitions sorted by priority', function () {
+        it('returns transitions sorted by priority', () => {
             expect(controller._findTransitionsBetweenStates('Other State 1', 'Other State 2').length).to.equal(2);
             expect(controller._findTransitionsBetweenStates('Other State 1', 'Other State 2')[0].priority).to.equal(1);
             expect(controller._findTransitionsBetweenStates('Other State 1', 'Other State 2')[1].priority).to.equal(2);
@@ -178,46 +178,46 @@ describe('AnimController', function () {
 
     });
 
-    describe('#_transitionHasConditionsMet', function () {
+    describe('#_transitionHasConditionsMet', () => {
 
-        it('returns true when no conditions are present', function () {
+        it('returns true when no conditions are present', () => {
             expect(controller._transitionHasConditionsMet(controller._findTransitionsBetweenStates('START', 'Initial State')[0])).to.equal(true);
         });
 
-        it('returns true when a condition is present and met', function () {
+        it('returns true when a condition is present and met', () => {
             expect(controller._transitionHasConditionsMet(controller._findTransitionsBetweenStates('Other State 1', 'Other State 2')[1])).to.equal(true);
         });
 
-        it('returns false when a condition is present but not met', function () {
+        it('returns false when a condition is present but not met', () => {
             expect(controller._transitionHasConditionsMet(controller._findTransitionsBetweenStates('Other State 1', 'Other State 2')[0])).to.equal(false);
         });
 
     });
 
-    describe('#_findTransition', function () {
+    describe('#_findTransition', () => {
 
-        it('returns a transition with the correct from state when from and to are supplied', function () {
+        it('returns a transition with the correct from state when from and to are supplied', () => {
             const transition = controller._findTransition('START', 'Initial State');
             expect(transition.from).to.equal('START');
         });
 
-        it('returns a transition with the correct source state when from and to are supplied', function () {
+        it('returns a transition with the correct source state when from and to are supplied', () => {
             const transition = controller._findTransition('START', 'Initial State');
             expect(transition.from).to.equal('START');
         });
 
-        it('returns a transition with the correct destination state when from and to are supplied', function () {
+        it('returns a transition with the correct destination state when from and to are supplied', () => {
             const transition = controller._findTransition('START', 'Initial State');
             expect(transition.to).to.equal('Initial State');
         });
 
-        it('returns a transition when the from param is given and the controller is not transitioning', function () {
+        it('returns a transition when the from param is given and the controller is not transitioning', () => {
             expect(controller._isTransitioning).to.equal(false);
             const transition = controller._findTransition('START');
             expect(transition.from).to.equal('START');
         });
 
-        it('returns null when controller is transitioning and the interruption source is "none"', function () {
+        it('returns null when controller is transitioning and the interruption source is "none"', () => {
             controller._isTransitioning = true;
             expect(controller._isTransitioning).to.equal(true);
             expect(controller._transitionInterruptionSource).to.equal('NONE');
@@ -225,7 +225,7 @@ describe('AnimController', function () {
             expect(transition).to.equal(null);
         });
 
-        it('returns null when controller is transitioning and the interruption source is "none"', function () {
+        it('returns null when controller is transitioning and the interruption source is "none"', () => {
             controller._isTransitioning = true;
             expect(controller._isTransitioning).to.equal(true);
             expect(controller._transitionInterruptionSource).to.equal('NONE');
@@ -233,7 +233,7 @@ describe('AnimController', function () {
             expect(transition).to.equal(null);
         });
 
-        it('returns a transition from the previous state when controller is transitioning and the interruption source is "PREV_STATE"', function () {
+        it('returns a transition from the previous state when controller is transitioning and the interruption source is "PREV_STATE"', () => {
             controller._isTransitioning = true;
             controller._transitionInterruptionSource = 'PREV_STATE';
             controller._previousStateName = 'Other State 1';
@@ -243,7 +243,7 @@ describe('AnimController', function () {
             expect(transition.from).to.equal('Other State 1');
         });
 
-        it('returns a transition from the ANY state when controller is transitioning and the interruption source is "PREV_STATE" with no matching previous state', function () {
+        it('returns a transition from the ANY state when controller is transitioning and the interruption source is "PREV_STATE" with no matching previous state', () => {
             controller._isTransitioning = true;
             controller._transitionInterruptionSource = 'PREV_STATE';
             expect(controller._isTransitioning).to.equal(true);
@@ -252,7 +252,7 @@ describe('AnimController', function () {
             expect(transition.from).to.equal('ANY');
         });
 
-        it('returns a transition from the next state when controller is transitioning and the interruption source is "NEXT_STATE"', function () {
+        it('returns a transition from the next state when controller is transitioning and the interruption source is "NEXT_STATE"', () => {
             controller._isTransitioning = true;
             controller._transitionInterruptionSource = 'NEXT_STATE';
             controller._activeStateName = 'Other State 1';
@@ -262,7 +262,7 @@ describe('AnimController', function () {
             expect(transition.from).to.equal('Other State 1');
         });
 
-        it('returns a transition from the ANY state when controller is transitioning and the interruption source is "NEXT_STATE" with no matching next state', function () {
+        it('returns a transition from the ANY state when controller is transitioning and the interruption source is "NEXT_STATE" with no matching next state', () => {
             controller.update(0);
             controller._isTransitioning = true;
             controller._transitionInterruptionSource = 'NEXT_STATE';
@@ -272,7 +272,7 @@ describe('AnimController', function () {
             expect(transition.from).to.equal('ANY');
         });
 
-        it('returns a transition from the next state when controller is transitioning and the interruption source is "PREV_STATE_NEXT_STATE"', function () {
+        it('returns a transition from the next state when controller is transitioning and the interruption source is "PREV_STATE_NEXT_STATE"', () => {
             controller._isTransitioning = true;
             controller._transitionInterruptionSource = 'PREV_STATE_NEXT_STATE';
             controller._activeStateName = 'Other State 1';
@@ -282,7 +282,7 @@ describe('AnimController', function () {
             expect(transition.from).to.equal('Other State 1');
         });
 
-        it('returns a transition from the previous state when controller is transitioning and the interruption source is "PREV_STATE_NEXT_STATE"', function () {
+        it('returns a transition from the previous state when controller is transitioning and the interruption source is "PREV_STATE_NEXT_STATE"', () => {
             controller._isTransitioning = true;
             controller._transitionInterruptionSource = 'PREV_STATE_NEXT_STATE';
             controller._previousStateName = 'Other State 1';
@@ -292,7 +292,7 @@ describe('AnimController', function () {
             expect(transition.from).to.equal('Other State 1');
         });
 
-        it('returns a transition from the ANY state when controller is transitioning and the interruption source is "PREV_STATE_NEXT_STATE"', function () {
+        it('returns a transition from the ANY state when controller is transitioning and the interruption source is "PREV_STATE_NEXT_STATE"', () => {
             controller.update(0);
             controller._isTransitioning = true;
             controller._transitionInterruptionSource = 'PREV_STATE_NEXT_STATE';
@@ -302,7 +302,7 @@ describe('AnimController', function () {
             expect(transition.from).to.equal('ANY');
         });
 
-        it('returns a transition from the next state when controller is transitioning and the interruption source is "NEXT_STATE_PREV_STATE"', function () {
+        it('returns a transition from the next state when controller is transitioning and the interruption source is "NEXT_STATE_PREV_STATE"', () => {
             controller._isTransitioning = true;
             controller._transitionInterruptionSource = 'NEXT_STATE_PREV_STATE';
             controller._activeStateName = 'Other State 1';
@@ -312,7 +312,7 @@ describe('AnimController', function () {
             expect(transition.from).to.equal('Other State 1');
         });
 
-        it('returns a transition from the previous state when controller is transitioning and the interruption source is "NEXT_STATE_PREV_STATE"', function () {
+        it('returns a transition from the previous state when controller is transitioning and the interruption source is "NEXT_STATE_PREV_STATE"', () => {
             controller._isTransitioning = true;
             controller._transitionInterruptionSource = 'NEXT_STATE_PREV_STATE';
             controller._previousStateName = 'Other State 1';
@@ -323,7 +323,7 @@ describe('AnimController', function () {
             expect(transition.from).to.equal('Other State 1');
         });
 
-        it('returns a transition from the ANY state when controller is transitioning and the interruption source is "NEXT_STATE_PREV_STATE"', function () {
+        it('returns a transition from the ANY state when controller is transitioning and the interruption source is "NEXT_STATE_PREV_STATE"', () => {
             controller.update(0);
             controller._isTransitioning = true;
             controller._transitionInterruptionSource = 'NEXT_STATE_PREV_STATE';
@@ -335,62 +335,62 @@ describe('AnimController', function () {
 
     });
 
-    describe('#updateStateFromTransition', function () {
+    describe('#updateStateFromTransition', () => {
 
-        it('begins transitions to the destination state', function () {
+        it('begins transitions to the destination state', () => {
             const transition = controller._findTransitionsBetweenStates('Other State 1', 'Other State 2')[0];
             controller.updateStateFromTransition(transition);
             expect(controller.activeStateName).to.equal('Other State 2');
         });
 
-        it('sets the currently active state as the previous state', function () {
+        it('sets the currently active state as the previous state', () => {
             const previousActiveState = controller.activeStateName;
             const transition = controller._findTransitionsBetweenStates('Other State 1', 'Other State 2')[0];
             controller.updateStateFromTransition(transition);
             expect(controller.previousStateName).to.equal(previousActiveState);
         });
 
-        it('adds a new clip for the newly active state to the evaluator', function () {
+        it('adds a new clip for the newly active state to the evaluator', () => {
             const transition = controller._findTransitionsBetweenStates('Other State 1', 'Other State 2')[0];
             controller.updateStateFromTransition(transition);
             expect(controller._animEvaluator.clips[0].track.name).to.equal('otherState2Track');
         });
 
-        it('sets the controller _isTransitoning property to true', function () {
+        it('sets the controller _isTransitoning property to true', () => {
             const transition = controller._findTransitionsBetweenStates('Other State 1', 'Other State 2')[0];
             expect(controller._isTransitioning).to.equal(false);
             controller.updateStateFromTransition(transition);
             expect(controller._isTransitioning).to.equal(true);
         });
 
-        it('sets the current transition time to 0', function () {
+        it('sets the current transition time to 0', () => {
             const transition = controller._findTransitionsBetweenStates('Other State 1', 'Other State 2')[0];
             controller.updateStateFromTransition(transition);
             expect(controller._currTransitionTime).to.equal(0);
         });
 
-        it('sets the time in state correctly if a transition offset is supplied', function () {
+        it('sets the time in state correctly if a transition offset is supplied', () => {
             const transition = controller._findTransitionsBetweenStates('Other State 1', 'Other State 2')[0];
             transition._transitionOffset = 0.5;
             controller.updateStateFromTransition(transition);
             expect(controller._timeInState).to.equal(2);
         });
 
-        it('sets the time in state before correctly if a transition offset is supplied', function () {
+        it('sets the time in state before correctly if a transition offset is supplied', () => {
             const transition = controller._findTransitionsBetweenStates('Other State 1', 'Other State 2')[0];
             transition._transitionOffset = 0.5;
             controller.updateStateFromTransition(transition);
             expect(controller._timeInStateBefore).to.equal(2);
         });
 
-        it('sets the new clips time correctly if a transition offset is supplied', function () {
+        it('sets the new clips time correctly if a transition offset is supplied', () => {
             const transition = controller._findTransitionsBetweenStates('Other State 1', 'Other State 2')[0];
             transition._transitionOffset = 0.5;
             controller.updateStateFromTransition(transition);
             expect(controller._animEvaluator.clips[0].time).to.equal(2);
         });
 
-        it('sets the new clips time correctly if a transition offset is not supplied', function () {
+        it('sets the new clips time correctly if a transition offset is not supplied', () => {
             const transition = controller._findTransitionsBetweenStates('Other State 1', 'Other State 2')[0];
             controller.updateStateFromTransition(transition);
             expect(controller._animEvaluator.clips[0].time).to.equal(0);

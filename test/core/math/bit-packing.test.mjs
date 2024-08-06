@@ -2,11 +2,11 @@ import { BitPacking } from '../../../src/core/math/bit-packing.js';
 
 import { expect } from 'chai';
 
-describe('BitPacking', function () {
+describe('BitPacking', () => {
 
-    describe('#set', function () {
+    describe('#set', () => {
 
-        it('sets bits', function () {
+        it('sets bits', () => {
 
             let d = 0;
             d = BitPacking.set(d, 0b11, 1, 0b11);
@@ -18,8 +18,8 @@ describe('BitPacking', function () {
         });
     });
 
-    describe('#get', function () {
-        it('gets bits', function () {
+    describe('#get', () => {
+        it('gets bits', () => {
 
             const d = 0b110011;
             expect(BitPacking.get(d, 0, 0b111111)).to.equal(d);
@@ -29,8 +29,8 @@ describe('BitPacking', function () {
         });
     });
 
-    describe('#any', function () {
-        it('any', function () {
+    describe('#any', () => {
+        it('any', () => {
 
             const d = 0b110011;
             expect(BitPacking.any(d, 0, 0b111111)).to.equal(true);
@@ -39,8 +39,8 @@ describe('BitPacking', function () {
         });
     });
 
-    describe('#all', function () {
-        it('all', function () {
+    describe('#all', () => {
+        it('all', () => {
 
             const d = 0b110011;
             expect(BitPacking.all(d, 0, 0b111111)).to.equal(false);

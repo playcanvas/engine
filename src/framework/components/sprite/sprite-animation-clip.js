@@ -272,7 +272,7 @@ class SpriteAnimationClip extends EventHandler {
                 const asset = assets.get(this._spriteAsset);
                 if (!asset) {
                     this.sprite = null;
-                    assets.on('add:' + this._spriteAsset, this._onSpriteAssetAdded, this);
+                    assets.on(`add:${this._spriteAsset}`, this._onSpriteAssetAdded, this);
                 } else {
                     this._bindSpriteAsset(asset);
                 }
@@ -317,7 +317,7 @@ class SpriteAnimationClip extends EventHandler {
 
     // When sprite asset is added bind it
     _onSpriteAssetAdded(asset) {
-        this._component.system.app.assets.off('add:' + asset.id, this._onSpriteAssetAdded, this);
+        this._component.system.app.assets.off(`add:${asset.id}`, this._onSpriteAssetAdded, this);
         if (this._spriteAsset === asset.id) {
             this._bindSpriteAsset(asset);
         }
@@ -345,7 +345,7 @@ class SpriteAnimationClip extends EventHandler {
 
         // unbind atlas
         if (asset.resource && !asset.resource.atlas) {
-            this._component.system.app.assets.off('load:' + asset.data.textureAtlasAsset, this._onTextureAtlasLoad, this);
+            this._component.system.app.assets.off(`load:${asset.data.textureAtlasAsset}`, this._onTextureAtlasLoad, this);
         }
     }
 
@@ -358,8 +358,8 @@ class SpriteAnimationClip extends EventHandler {
             if (!asset.resource.atlas) {
                 const atlasAssetId = asset.data.textureAtlasAsset;
                 const assets = this._component.system.app.assets;
-                assets.off('load:' + atlasAssetId, this._onTextureAtlasLoad, this);
-                assets.once('load:' + atlasAssetId, this._onTextureAtlasLoad, this);
+                assets.off(`load:${atlasAssetId}`, this._onTextureAtlasLoad, this);
+                assets.once(`load:${atlasAssetId}`, this._onTextureAtlasLoad, this);
             } else {
                 this.sprite = asset.resource;
             }
@@ -491,8 +491,9 @@ class SpriteAnimationClip extends EventHandler {
      * Plays the animation. If it's already playing then this does nothing.
      */
     play() {
-        if (this._playing)
+        if (this._playing) {
             return;
+        }
 
         this._playing = true;
         this._paused = false;
@@ -506,8 +507,9 @@ class SpriteAnimationClip extends EventHandler {
      * Pauses the animation.
      */
     pause() {
-        if (!this._playing || this._paused)
+        if (!this._playing || this._paused) {
             return;
+        }
 
         this._paused = true;
 

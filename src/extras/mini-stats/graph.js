@@ -83,11 +83,11 @@ class Graph {
 
     render(render2d, x, y, w, h) {
         render2d.quad(x + w, y, -w, h,
-                      this.enabled ? this.cursor : 0,
-                      this.enabled ? 0.5 + this.yOffset : this.texture.height - 1,
-                      -w, 0,
-                      this.texture,
-                      0);
+            this.enabled ? this.cursor : 0,
+            this.enabled ? 0.5 + this.yOffset : this.texture.height - 1,
+            -w, 0,
+            this.texture,
+            0);
     }
 }
 

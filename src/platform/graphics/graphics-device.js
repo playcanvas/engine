@@ -267,12 +267,12 @@ class GraphicsDevice extends EventHandler {
      */
     textureFloatRenderable;
 
-     /**
-      * True if 16-bit floating-point textures can be used as a frame buffer.
-      *
-      * @type {boolean}
-      * @readonly
-      */
+    /**
+     * True if 16-bit floating-point textures can be used as a frame buffer.
+     *
+     * @type {boolean}
+     * @readonly
+     */
     textureHalfFloatRenderable;
 
     /**
@@ -284,12 +284,12 @@ class GraphicsDevice extends EventHandler {
      */
     textureRG11B10Renderable = false;
 
-     /**
-      * True if filtering can be applied when sampling float textures.
-      *
-      * @type {boolean}
-      * @readonly
-      */
+    /**
+     * True if filtering can be applied when sampling float textures.
+     *
+     * @type {boolean}
+     * @readonly
+     */
     textureFloatFilterable = false;
 
     /**
@@ -424,9 +424,9 @@ class GraphicsDevice extends EventHandler {
         this._renderTargetCreationTime = 0;
 
         // Create the ScopeNamespace for shader attributes and variables
-        this.scope = new ScopeSpace("Device");
+        this.scope = new ScopeSpace('Device');
 
-        this.textureBias = this.scope.resolve("textureBias");
+        this.textureBias = this.scope.resolve('textureBias');
         this.textureBias.setValue(0.0);
     }
 
@@ -801,7 +801,7 @@ class GraphicsDevice extends EventHandler {
      * @type {boolean}
      */
     set fullscreen(fullscreen) {
-        Debug.error("GraphicsDevice.fullscreen is not implemented on current device.");
+        Debug.error('GraphicsDevice.fullscreen is not implemented on current device.');
     }
 
     /**
@@ -810,7 +810,7 @@ class GraphicsDevice extends EventHandler {
      * @type {boolean}
      */
     get fullscreen() {
-        Debug.error("GraphicsDevice.fullscreen is not implemented on current device.");
+        Debug.error('GraphicsDevice.fullscreen is not implemented on current device.');
         return false;
     }
 
@@ -928,8 +928,9 @@ class GraphicsDevice extends EventHandler {
             switch (format) {
 
                 case PIXELFORMAT_111110F: {
-                    if (this.textureRG11B10Renderable)
+                    if (this.textureRG11B10Renderable) {
                         return format;
+                    }
                     break;
                 }
 

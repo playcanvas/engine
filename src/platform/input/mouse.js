@@ -178,8 +178,9 @@ class Mouse extends EventHandler {
      */
     enablePointerLock(success, error) {
         if (!document.body.requestPointerLock) {
-            if (error)
+            if (error) {
                 error();
+            }
 
             return;
         }

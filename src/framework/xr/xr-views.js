@@ -1,7 +1,7 @@
 import { platform } from '../../core/platform.js';
-import { EventHandler } from "../../core/event-handler.js";
-import { XrView } from "./xr-view.js";
-import { XRTYPE_AR, XRDEPTHSENSINGUSAGE_GPU, XRDEPTHSENSINGFORMAT_L8A8, XRDEPTHSENSINGFORMAT_F32 } from "./constants.js";
+import { EventHandler } from '../../core/event-handler.js';
+import { XrView } from './xr-view.js';
+import { XRTYPE_AR, XRDEPTHSENSINGUSAGE_GPU, XRDEPTHSENSINGFORMAT_L8A8, XRDEPTHSENSINGFORMAT_F32 } from './constants.js';
 import { PIXELFORMAT_LA8, PIXELFORMAT_R32F } from '../../platform/graphics/constants.js';
 
 /**
@@ -239,8 +239,9 @@ class XrViews extends EventHandler {
 
         // remove views
         for (const [eye, view] of this._index) {
-            if (this._indexTmp.has(eye))
+            if (this._indexTmp.has(eye)) {
                 continue;
+            }
 
             view.destroy();
             this._index.delete(eye);
@@ -266,11 +267,13 @@ class XrViews extends EventHandler {
      * @private
      */
     _onSessionStart() {
-        if (this._manager.type !== XRTYPE_AR)
+        if (this._manager.type !== XRTYPE_AR) {
             return;
+        }
 
-        if (!this._manager.session.enabledFeatures)
+        if (!this._manager.session.enabledFeatures) {
             return;
+        }
 
         this._availableColor = this._manager.session.enabledFeatures.indexOf('camera-access') !== -1;
         this._availableDepth = this._manager.session.enabledFeatures.indexOf('depth-sensing') !== -1;

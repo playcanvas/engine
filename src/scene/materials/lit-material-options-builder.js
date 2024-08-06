@@ -5,7 +5,7 @@ import {
     SHADERDEF_NOSHADOW, SHADERDEF_TANGENTS, SPRITE_RENDERMODE_SIMPLE,
     SHADERDEF_MORPH_TEXTURE_BASED_INT,
     FOG_NONE
-} from "../constants.js";
+} from '../constants.js';
 
 class LitMaterialOptionsBuilder {
     static update(litOptions, material, scene, renderParams, objDefs, pass, sortedLights) {

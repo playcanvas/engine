@@ -18,11 +18,11 @@ import { HTMLCanvasElement } from '@playcanvas/canvas-mock';
 
 import { expect } from 'chai';
 
-describe('Application', function () {
+describe('Application', () => {
 
-    describe('#constructor', function () {
+    describe('#constructor', () => {
 
-        it('support no options', function () {
+        it('support no options', () => {
             const canvas = new HTMLCanvasElement(500, 500);
             const app = new Application(canvas, { graphicsDevice: new NullGraphicsDevice(canvas) });
 
@@ -53,14 +53,14 @@ describe('Application', function () {
 
     });
 
-    describe('#destroy', function () {
+    describe('#destroy', () => {
 
-        it('destroys the application', function () {
+        it('destroys the application', () => {
             const canvas = new HTMLCanvasElement(500, 500);
             const app = new Application(canvas, { graphicsDevice: new NullGraphicsDevice(canvas) });
 
             app.destroy();
-//            expect(app.assets).to.be.null;
+            //            expect(app.assets).to.be.null;
             expect(app.batcher).to.be.null;
             expect(app.elementInput).to.be.null;
             expect(app.gamepads).to.be.null;
@@ -76,7 +76,7 @@ describe('Application', function () {
             expect(app.scripts).to.be.null;
             expect(app.systems).to.be.null;
             expect(app.touch).to.be.null;
-//            expect(app.xr).to.be.null;
+            //            expect(app.xr).to.be.null;
         });
 
     });

@@ -253,8 +253,9 @@ class Asset extends EventHandler {
      * @type {string}
      */
     set name(value) {
-        if (this._name === value)
+        if (this._name === value) {
             return;
+        }
         const old = this._name;
         this._name = value;
         this.fire('name', this, this._name, old);
@@ -338,8 +339,9 @@ class Asset extends EventHandler {
         if (value !== old) {
             this.fire('change', this, 'data', value, old);
 
-            if (this.loaded)
+            if (this.loaded) {
                 this.registry._loader.patch(this, this.registry);
+            }
         }
     }
 
@@ -401,12 +403,14 @@ class Asset extends EventHandler {
      */
     set preload(value) {
         value = !!value;
-        if (this._preload === value)
+        if (this._preload === value) {
             return;
+        }
 
         this._preload = value;
-        if (this._preload && !this.loaded && !this.loading && this.registry)
+        if (this._preload && !this.loaded && !this.loading && this.registry) {
             this.registry.load(this);
+        }
     }
 
     /**
@@ -426,8 +430,9 @@ class Asset extends EventHandler {
             // the loadFaces property should be part of the asset data block
             // because changing the flag should result in asset patch being invoked.
             // here we must invoke it manually instead.
-            if (this.loaded)
+            if (this.loaded) {
                 this.registry._loader.patch(this, this.registry);
+            }
         }
     }
 
@@ -446,18 +451,20 @@ class Asset extends EventHandler {
     getFileUrl() {
         const file = this.file;
 
-        if (!file || !file.url)
+        if (!file || !file.url) {
             return null;
+        }
 
         let url = file.url;
 
-        if (this.registry && this.registry.prefix && !ABSOLUTE_URL.test(url))
+        if (this.registry && this.registry.prefix && !ABSOLUTE_URL.test(url)) {
             url = this.registry.prefix + url;
+        }
 
         // add file hash to avoid hard-caching problems
         if (this.type !== 'script' && file.hash) {
             const separator = url.indexOf('?') !== -1 ? '&' : '?';
-            url += separator + 't=' + file.hash;
+            url += `${separator}t=${file.hash}`;
         }
 
         return url;
@@ -541,7 +548,7 @@ class Asset extends EventHandler {
         if (this.loaded) {
             callback.call(scope, this);
         } else {
-            this.once('load', function (asset) {
+            this.once('load', (asset) => {
                 callback.call(scope, asset);
             });
         }
@@ -564,11 +571,12 @@ class Asset extends EventHandler {
      * // asset.resource is null
      */
     unload() {
-        if (!this.loaded && this._resources.length === 0)
+        if (!this.loaded && this._resources.length === 0) {
             return;
+        }
 
         this.fire('unload', this);
-        this.registry.fire('unload:' + this.id, this);
+        this.registry.fire(`unload:${this.id}`, this);
 
         const old = this._resources;
 

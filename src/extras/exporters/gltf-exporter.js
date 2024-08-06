@@ -626,41 +626,41 @@ class GltfExporter extends CoreExporter {
 
             promises.push(
                 this.getBlob(canvas, mimeType)
-                    .then((blob) => {
-                        const reader = new FileReader();
-                        reader.readAsArrayBuffer(blob);
+                .then((blob) => {
+                    const reader = new FileReader();
+                    reader.readAsArrayBuffer(blob);
 
-                        return new Promise((resolve) => {
-                            reader.onloadend = () => {
-                                resolve(reader);
-                            };
-                        });
-                    })
-                    .then((reader) => {
-                        const buffer = this.getPaddedArrayBuffer(reader.result);
-
-                        GltfExporter.writeBufferView(resources, json, buffer);
-                        resources.buffers.push(buffer);
-
-                        const bufferView = resources.bufferViewMap.get(buffer);
-
-                        json.images[i] = {
-                            mimeType: mimeType,
-                            bufferView: bufferView[0]
+                    return new Promise((resolve) => {
+                        reader.onloadend = () => {
+                            resolve(reader);
                         };
+                    });
+                })
+                .then((reader) => {
+                    const buffer = this.getPaddedArrayBuffer(reader.result);
 
-                        json.samplers[i] = {
-                            minFilter: getFilter(texture.minFilter),
-                            magFilter: getFilter(texture.magFilter),
-                            wrapS: getWrap(texture.addressU),
-                            wrapT: getWrap(texture.addressV)
-                        };
+                    GltfExporter.writeBufferView(resources, json, buffer);
+                    resources.buffers.push(buffer);
 
-                        json.textures[i] = {
-                            sampler: i,
-                            source: i
-                        };
-                    })
+                    const bufferView = resources.bufferViewMap.get(buffer);
+
+                    json.images[i] = {
+                        mimeType: mimeType,
+                        bufferView: bufferView[0]
+                    };
+
+                    json.samplers[i] = {
+                        minFilter: getFilter(texture.minFilter),
+                        magFilter: getFilter(texture.magFilter),
+                        wrapS: getWrap(texture.addressU),
+                        wrapT: getWrap(texture.addressV)
+                    };
+
+                    json.textures[i] = {
+                        sampler: i,
+                        source: i
+                    };
+                })
             );
         }
 

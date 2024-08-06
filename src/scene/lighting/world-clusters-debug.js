@@ -43,12 +43,13 @@ class WorldClustersDebug {
                 for (let b = 0; b <= countB; b++) {
                     const aa = minA + a * deltaA;
                     const bb = minB + b * deltaB;
-                    if (order === 0)
+                    if (order === 0) {
                         gridPositions.push(aa, minC, bb, aa, maxC, bb);
-                    else if (order === 1)
+                    } else if (order === 1) {
                         gridPositions.push(aa, bb, minC, aa, bb, maxC);
-                    else if (order === 2)
+                    } else if (order === 2) {
                         gridPositions.push(minC, aa, bb, maxC, aa, bb);
+                    }
                 }
             }
         };

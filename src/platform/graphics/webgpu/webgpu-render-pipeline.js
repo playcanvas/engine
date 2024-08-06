@@ -1,12 +1,12 @@
-import { Debug, DebugHelper } from "../../../core/debug.js";
-import { hash32Fnv1a } from "../../../core/hash.js";
-import { array } from "../../../core/array-utils.js";
-import { TRACEID_RENDERPIPELINE_ALLOC } from "../../../core/constants.js";
-import { WebgpuVertexBufferLayout } from "./webgpu-vertex-buffer-layout.js";
-import { WebgpuDebug } from "./webgpu-debug.js";
-import { WebgpuPipeline } from "./webgpu-pipeline.js";
-import { DebugGraphics } from "../debug-graphics.js";
-import { bindGroupNames } from "../constants.js";
+import { Debug, DebugHelper } from '../../../core/debug.js';
+import { hash32Fnv1a } from '../../../core/hash.js';
+import { array } from '../../../core/array-utils.js';
+import { TRACEID_RENDERPIPELINE_ALLOC } from '../../../core/constants.js';
+import { WebgpuVertexBufferLayout } from './webgpu-vertex-buffer-layout.js';
+import { WebgpuDebug } from './webgpu-debug.js';
+import { WebgpuPipeline } from './webgpu-pipeline.js';
+import { DebugGraphics } from '../debug-graphics.js';
+import { bindGroupNames } from '../constants.js';
 
 /**
  * @import { BindGroupFormat } from '../bind-group-format.js'
@@ -180,7 +180,7 @@ class WebgpuRenderPipeline extends WebgpuPipeline {
 
         // no match or a hash collision, so create a new pipeline
         const primitiveTopology = _primitiveTopology[primitive.type];
-        Debug.assert(primitiveTopology, `Unsupported primitive topology`, primitive);
+        Debug.assert(primitiveTopology, 'Unsupported primitive topology', primitive);
 
         // pipeline layout
         const pipelineLayout = this.getPipelineLayout(bindGroupFormats);
@@ -192,7 +192,7 @@ class WebgpuRenderPipeline extends WebgpuPipeline {
         const cacheEntry = new CacheEntry();
         cacheEntry.hashes = new Uint32Array(lookupHashes);
         cacheEntry.pipeline = this.create(primitiveTopology, shader, renderTarget, pipelineLayout, blendState,
-                                          depthState, vertexBufferLayout, cullMode, stencilEnabled, stencilFront, stencilBack);
+            depthState, vertexBufferLayout, cullMode, stencilEnabled, stencilFront, stencilBack);
 
         // add to cache
         if (cacheEntries) {

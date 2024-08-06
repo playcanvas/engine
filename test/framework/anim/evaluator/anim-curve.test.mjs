@@ -2,7 +2,7 @@ import { AnimCurve } from '../../../../src/framework/anim/evaluator/anim-curve.j
 import { INTERPOLATION_CUBIC } from '../../../../src/framework/anim/constants.js';
 import { expect } from 'chai';
 
-describe('AnimCurve', function () {
+describe('AnimCurve', () => {
     const animCurve = new AnimCurve(
         ['path/to/entity1', 'path/to/entity2'],
         1,
@@ -10,42 +10,42 @@ describe('AnimCurve', function () {
         INTERPOLATION_CUBIC
     );
 
-    describe('#constructor', function () {
+    describe('#constructor', () => {
 
-        it('instantiates correctly', function () {
+        it('instantiates correctly', () => {
             expect(animCurve).to.be.ok;
         });
 
     });
 
-    describe('#paths', function () {
+    describe('#paths', () => {
 
-        it('can retrieve the curve paths', function () {
+        it('can retrieve the curve paths', () => {
             expect(animCurve.paths.length).to.equal(2);
             expect(animCurve.paths).to.deep.equal(['path/to/entity1', 'path/to/entity2']);
         });
 
     });
 
-    describe('#input', function () {
+    describe('#input', () => {
 
-        it('can retrieve the input value', function () {
+        it('can retrieve the input value', () => {
             expect(animCurve.input).to.equal(1);
         });
 
     });
 
-    describe('#output', function () {
+    describe('#output', () => {
 
-        it('can retrieve the output value', function () {
+        it('can retrieve the output value', () => {
             expect(animCurve.output).to.equal(2);
         });
 
     });
 
-    describe('#interpolation', function () {
+    describe('#interpolation', () => {
 
-        it('can retrieve the interpolation value', function () {
+        it('can retrieve the interpolation value', () => {
             expect(animCurve.interpolation).to.equal(INTERPOLATION_CUBIC);
         });
 

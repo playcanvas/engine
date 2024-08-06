@@ -83,12 +83,12 @@ class Scene extends EventHandler {
      */
     ambientBakeOcclusionBrightness = 0;
 
-     /**
-      * If {@link Scene#ambientBake} is true, this specifies the contrast of ambient occlusion.
-      * Typical range is -1 to 1. Defaults to 0, representing no change to contrast.
-      *
-      * @type {number}
-      */
+    /**
+     * If {@link Scene#ambientBake} is true, this specifies the contrast of ambient occlusion.
+     * Typical range is -1 to 1. Defaults to 0, representing no change to contrast.
+     *
+     * @type {number}
+     */
     ambientBakeOcclusionContrast = 0;
 
     /**
@@ -238,7 +238,7 @@ class Scene extends EventHandler {
     constructor(graphicsDevice) {
         super();
 
-        Debug.assert(graphicsDevice, "Scene constructor takes a GraphicsDevice as a parameter, and it was not provided.");
+        Debug.assert(graphicsDevice, 'Scene constructor takes a GraphicsDevice as a parameter, and it was not provided.');
         this.device = graphicsDevice;
 
         this._gravity = new Vec3(0, -9.8, 0);

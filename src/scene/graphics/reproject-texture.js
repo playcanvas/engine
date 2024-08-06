@@ -23,11 +23,11 @@ import { drawQuadWithShader } from './quad-render-utils.js';
 const getProjectionName = (projection) => {
     switch (projection) {
         case TEXTUREPROJECTION_CUBE:
-            return "Cubemap";
+            return 'Cubemap';
         case TEXTUREPROJECTION_OCTAHEDRAL:
-            return "Octahedral";
+            return 'Octahedral';
         default: // for anything else, assume equirect
-            return "Equirect";
+            return 'Equirect';
     }
 };
 
@@ -219,33 +219,33 @@ const calculateRequiredSamplesGGX = () => {
 // required for the sets of (numSamples, specularPowers) pairs we expect to
 // encounter at runtime.
 const requiredSamplesGGX = {
-    "16": {
-        "2": 26,
-        "8": 20,
-        "32": 17,
-        "128": 16,
-        "512": 16
+    '16': {
+        '2': 26,
+        '8': 20,
+        '32': 17,
+        '128': 16,
+        '512': 16
     },
-    "32": {
-        "2": 53,
-        "8": 40,
-        "32": 34,
-        "128": 32,
-        "512": 32
+    '32': {
+        '2': 53,
+        '8': 40,
+        '32': 34,
+        '128': 32,
+        '512': 32
     },
-    "128": {
-        "2": 214,
-        "8": 163,
-        "32": 139,
-        "128": 130,
-        "512": 128
+    '128': {
+        '2': 214,
+        '8': 163,
+        '32': 139,
+        '128': 130,
+        '512': 128
     },
-    "1024": {
-        "2": 1722,
-        "8": 1310,
-        "32": 1114,
-        "128": 1041,
-        "512": 1025
+    '1024': {
+        '2': 1722,
+        '8': 1310,
+        '32': 1114,
+        '128': 1041,
+        '512': 1025
     }
 };
 
@@ -441,10 +441,10 @@ function reprojectTexture(source, target, options = {}) {
     let shader = getProgramLibrary(device).getCachedShader(shaderKey);
     if (!shader) {
         const defines =
-            `#define PROCESS_FUNC ${processFunc}\n` +
-            (prefilterSamples ? `#define USE_SAMPLES_TEX\n` : '') +
-            (source.cubemap ? `#define CUBEMAP_SOURCE\n` : '') +
-            `#define DECODE_FUNC ${decodeFunc}\n` +
+            `#define PROCESS_FUNC ${processFunc}\n${
+                prefilterSamples ? '#define USE_SAMPLES_TEX\n' : ''
+            }${source.cubemap ? '#define CUBEMAP_SOURCE\n' : ''
+            }#define DECODE_FUNC ${decodeFunc}\n` +
             `#define ENCODE_FUNC ${encodeFunc}\n` +
             `#define SOURCE_FUNC ${sourceFunc}\n` +
             `#define TARGET_FUNC ${targetFunc}\n` +
@@ -459,19 +459,19 @@ function reprojectTexture(source, target, options = {}) {
         );
     }
 
-    DebugGraphics.pushGpuMarker(device, "ReprojectTexture");
+    DebugGraphics.pushGpuMarker(device, 'ReprojectTexture');
 
     // render state
     // TODO: set up other render state here to expected state
     device.setBlendState(BlendState.NOBLEND);
 
-    const constantSource = device.scope.resolve(source.cubemap ? "sourceCube" : "sourceTex");
+    const constantSource = device.scope.resolve(source.cubemap ? 'sourceCube' : 'sourceTex');
     Debug.assert(constantSource);
     constantSource.setValue(source);
 
-    const constantParams = device.scope.resolve("params");
+    const constantParams = device.scope.resolve('params');
 
-    const uvModParam = device.scope.resolve("uvMod");
+    const uvModParam = device.scope.resolve('uvMod');
     if (seamPixels > 0) {
         uvModParam.setValue([
             (innerWidth + seamPixels * 2) / innerWidth,
@@ -497,8 +497,8 @@ function reprojectTexture(source, target, options = {}) {
             (distribution === 'ggx') ? generateGGXSamplesTex(device, numSamples, specularPower, sourceTotalPixels) :
                 ((distribution === 'lambert') ? generateLambertSamplesTex(device, numSamples, sourceTotalPixels) :
                     generatePhongSamplesTex(device, numSamples, specularPower));
-        device.scope.resolve("samplesTex").setValue(samplesTex);
-        device.scope.resolve("samplesTexInverseSize").setValue([1.0 / samplesTex.width, 1.0 / samplesTex.height]);
+        device.scope.resolve('samplesTex').setValue(samplesTex);
+        device.scope.resolve('samplesTexInverseSize').setValue([1.0 / samplesTex.width, 1.0 / samplesTex.height]);
     }
 
     for (let f = 0; f < (target.cubemap ? 6 : 1); f++) {

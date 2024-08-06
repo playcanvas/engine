@@ -1,4 +1,4 @@
-import { Tracing } from "./tracing.js";
+import { Tracing } from './tracing.js';
 
 /**
  * Engine debug log system. Note that the logging only executes in the debug build of the engine,
@@ -21,7 +21,7 @@ class Debug {
     static deprecated(message) {
         if (!Debug._loggedMessages.has(message)) {
             Debug._loggedMessages.add(message);
-            console.warn('DEPRECATED: ' + message);
+            console.warn(`DEPRECATED: ${message}`);
         }
     }
 

@@ -58,8 +58,9 @@ class ScriptType extends Script {
      * @param {boolean} [force] - Set to true to force initialization of the attributes.
      */
     __initializeAttributes(force) {
-        if (!force && !this.__attributesRaw)
+        if (!force && !this.__attributesRaw) {
             return;
+        }
 
         // set attributes values
         for (const key in this.__scriptType.attributes.index) {
@@ -95,8 +96,9 @@ class ScriptType extends Script {
      */
     static extend(methods) {
         for (const key in methods) {
-            if (!methods.hasOwnProperty(key))
+            if (!methods.hasOwnProperty(key)) {
                 continue;
+            }
 
             this.prototype[key] = methods[key];
         }

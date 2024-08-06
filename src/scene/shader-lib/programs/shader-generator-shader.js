@@ -27,10 +27,10 @@ class ShaderGeneratorShader extends ShaderGenerator {
         const definesHash = ShaderGenerator.definesHash(options.defines);
 
         let key = `${desc.uniqueName}_${vsHash}_${fsHash}_${definesHash}`;
-        key += '_' + options.pass;
-        key += '_' + options.gamma;
-        key += '_' + options.toneMapping;
-        key += '_' + options.fog;
+        key += `_${options.pass}`;
+        key += `_${options.gamma}`;
+        key += `_${options.toneMapping}`;
+        key += `_${options.fog}`;
 
         if (options.skin)                       key += '_skin';
         if (options.useInstancing)              key += '_inst';

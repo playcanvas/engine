@@ -92,7 +92,7 @@ class Picker {
             return [];
         }
 
-        Debug.assert(typeof x !== 'object', `Picker.getSelection:param 'rect' is deprecated, use 'x, y, width, height' instead.`);
+        Debug.assert(typeof x !== 'object', 'Picker.getSelection:param \'rect\' is deprecated, use \'x, y, width, height\' instead.');
 
         y = this.renderTarget.height - (y + height);
         const rect = this.sanitizeRect(x, y, width, height);
@@ -178,8 +178,9 @@ class Picker {
 
             // return the content of the set as an array
             tempSet.forEach((meshInstance) => {
-                if (meshInstance)
+                if (meshInstance) {
                     selection.push(meshInstance);
+                }
             });
             tempSet.clear();
         }

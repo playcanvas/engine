@@ -11,11 +11,11 @@ class Sound {
      */
     audio;
 
-     /**
-      * If the Web Audio API is supported this contains the audio data.
-      *
-      * @type {AudioBuffer|undefined}
-      */
+    /**
+     * If the Web Audio API is supported this contains the audio data.
+     *
+     * @type {AudioBuffer|undefined}
+     */
     buffer;
 
     /**

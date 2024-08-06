@@ -177,8 +177,9 @@ class Sprite extends EventHandler {
      * @type {number}
      */
     set renderMode(value) {
-        if (this._renderMode === value)
+        if (this._renderMode === value) {
             return;
+        }
 
         const prev = this._renderMode;
         this._renderMode = value;
@@ -388,8 +389,9 @@ class Sprite extends EventHandler {
      */
     destroy() {
         for (const mesh of this._meshes) {
-            if (mesh)
+            if (mesh) {
                 mesh.destroy();
+            }
         }
         this._meshes.length = 0;
     }

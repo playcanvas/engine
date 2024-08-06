@@ -12,7 +12,7 @@ export function dynamicImportLegacyBrowserSupport() {
         name: 'dynamic-import-old-browsers',
         transform(code, id) {
             return {
-                code: code.replace(/([^\w])import\(/g, '$1new Function("modulePath", "return import(modulePath)")('),
+                code: code.replace(/(\W)import\(/g, '$1new Function("modulePath", "return import(modulePath)")('),
                 map: null
             };
         }

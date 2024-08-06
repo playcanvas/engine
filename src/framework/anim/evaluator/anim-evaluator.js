@@ -205,10 +205,10 @@ class AnimEvaluator {
         const clips = this._clips;
 
         // stable sort order
-        const order = clips.map(function (c, i) {
+        const order = clips.map((c, i) => {
             return i;
         });
-        AnimBlend.stableSort(order, function (a, b) {
+        AnimBlend.stableSort(order, (a, b) => {
             return clips[a].blendOrder < clips[b].blendOrder;
         });
 

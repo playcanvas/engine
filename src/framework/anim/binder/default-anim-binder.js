@@ -151,7 +151,7 @@ class DefaultAnimBinder {
             let currEntityPath = rootNodeNames[j];
             if (this._isPathInMask(currEntityPath, path.entityPath.length === 1)) return true;
             for (let i = 1; i < path.entityPath.length; i++) {
-                currEntityPath += '/' + path.entityPath[i];
+                currEntityPath += `/${path.entityPath[i]}`;
                 if (this._isPathInMask(currEntityPath, i === path.entityPath.length - 1)) return true;
             }
         }
@@ -172,10 +172,10 @@ class DefaultAnimBinder {
             }
         }
         if (!node) {
-            node = this.nodes[path.entityPath[path.entityPath.length - 1] || ""];
+            node = this.nodes[path.entityPath[path.entityPath.length - 1] || ''];
 
             // #if _DEBUG
-            const fallbackGraphPath = AnimBinder.encode(path.entityPath[path.entityPath.length - 1] || "", 'graph', path.propertyPath);
+            const fallbackGraphPath = AnimBinder.encode(path.entityPath[path.entityPath.length - 1] || '', 'graph', path.propertyPath);
             if (this.visitedFallbackGraphPaths[fallbackGraphPath] === 1) {
                 Debug.warn(`Anim Binder: Multiple animation curves with the path ${fallbackGraphPath} are present in the ${this.graph.path} graph which may result in the incorrect binding of animations`);
             }
@@ -227,10 +227,11 @@ class DefaultAnimBinder {
     }
 
     unresolve(path) {
-        if (path.component !== 'graph')
+        if (path.component !== 'graph') {
             return;
+        }
 
-        const node = this.nodes[path.entityPath[path.entityPath.length - 1] || ""];
+        const node = this.nodes[path.entityPath[path.entityPath.length - 1] || ''];
 
         this.nodeCounts[node.path]--;
         if (this.nodeCounts[node.path] === 0) {

@@ -149,7 +149,7 @@ export const TRACEID_PIPELINELAYOUT_ALLOC = 'PipelineLayoutAlloc';
  * @type {string}
  * @category Debug
  */
-export const TRACE_ID_ELEMENT = "Element";
+export const TRACE_ID_ELEMENT = 'Element';
 
 /**
  * Logs the vram use by all textures in memory.

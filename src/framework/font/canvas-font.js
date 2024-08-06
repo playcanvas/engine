@@ -270,7 +270,7 @@ class CanvasFont extends EventHandler {
             const code = string.getCodePoint(symbols[i]);
 
             let fs = this.fontSize;
-            atlas.ctx.font = this.fontWeight + ' ' + fs.toString() + 'px ' + this.fontName;
+            atlas.ctx.font = `${this.fontWeight} ${fs.toString()}px ${this.fontName}`;
             atlas.ctx.textAlign = TEXT_ALIGN;
             atlas.ctx.textBaseline = TEXT_BASELINE;
 
@@ -278,7 +278,7 @@ class CanvasFont extends EventHandler {
 
             if (width > fs) {
                 fs = this.fontSize * this.fontSize / width;
-                atlas.ctx.font = this.fontWeight + ' ' + fs.toString() + 'px ' + this.fontName;
+                atlas.ctx.font = `${this.fontWeight} ${fs.toString()}px ${this.fontName}`;
                 width = this.fontSize;
             }
 
@@ -430,7 +430,7 @@ class CanvasFont extends EventHandler {
         const div = document.createElement('div');
         div.appendChild(textSpan);
         div.appendChild(block);
-        div.style.font = this.fontSize + 'px ' + this.fontName;
+        div.style.font = `${this.fontSize}px ${this.fontName}`;
 
         const body = document.body;
         body.appendChild(div);

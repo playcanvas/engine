@@ -5,16 +5,16 @@ import { AnimSnapshot } from '../../../../src/framework/anim/evaluator/anim-snap
 import { INTERPOLATION_LINEAR } from '../../../../src/framework/anim/constants.js';
 import { expect } from 'chai';
 
-describe('AnimSnapshot', function () {
+describe('AnimSnapshot', () => {
     const curves = [new AnimCurve(['path/to/entity'], 0, 0, INTERPOLATION_LINEAR)];
     const inputs = [new AnimData(1, [0, 1, 2])];
     const outputs = [new AnimData(3, [0, 0, 0, 1, 2, 3, 2, 4, 6])];
     const animTrack = new AnimTrack('track', 2, inputs, outputs, curves);
     const animSnapshot = new AnimSnapshot(animTrack);
 
-    describe('#constructor', function () {
+    describe('#constructor', () => {
 
-        it('instantiates correctly', function () {
+        it('instantiates correctly', () => {
             expect(animSnapshot).to.be.ok;
             expect(animSnapshot._name).to.equal('trackSnapshot');
             expect(animSnapshot._time).to.equal(-1);
