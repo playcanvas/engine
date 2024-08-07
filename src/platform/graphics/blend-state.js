@@ -1,4 +1,4 @@
-import { BitPacking } from "../../core/math/bit-packing.js";
+import { BitPacking } from '../../core/math/bit-packing.js';
 import { BLENDEQUATION_ADD, BLENDMODE_ONE, BLENDMODE_ZERO, BLENDMODE_SRC_ALPHA, BLENDMODE_ONE_MINUS_SRC_ALPHA } from '../../platform/graphics/constants.js';
 
 // masks (to only keep relevant bits)

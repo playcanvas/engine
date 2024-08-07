@@ -250,7 +250,7 @@ class Lightmapper {
                     dDiffuseLight += vec3(${scene.ambientBakeOcclusionBrightness.toFixed(1)});
                     dDiffuseLight = saturate(dDiffuseLight);
                     dDiffuseLight *= dAmbientLight;
-                ` + bakeLmEndChunk;
+                ${bakeLmEndChunk}`;
             } else {
                 material.ambient = new Color(0, 0, 0);    // don't bake ambient
             }
@@ -258,7 +258,7 @@ class Lightmapper {
             material.chunks.endPS = bakeLmEndChunk;
             material.lightMap = this.blackTex;
         } else {
-            material.chunks.basePS = shaderChunks.basePS + '\nuniform sampler2D texture_dirLightMap;\nuniform float bakeDir;\n';
+            material.chunks.basePS = `${shaderChunks.basePS}\nuniform sampler2D texture_dirLightMap;\nuniform float bakeDir;\n`;
             material.chunks.endPS = shaderChunksLightmapper.bakeDirLmEndPS;
         }
 
@@ -625,7 +625,7 @@ class Lightmapper {
 
             // texture and render target for each pass, stored per node
             for (let pass = 0; pass < passCount; pass++) {
-                const tex = this.createTexture(size, ('lightmapper_lightmap_' + i));
+                const tex = this.createTexture(size, (`lightmapper_lightmap_${i}`));
                 LightmapCache.incRef(tex);
                 bakeNode.renderTargets[pass] = new RenderTarget({
                     colorBuffer: tex,
@@ -635,7 +635,7 @@ class Lightmapper {
 
             // single temporary render target of each size
             if (!this.renderTargets.has(size)) {
-                const tex = this.createTexture(size, ('lightmapper_temp_lightmap_' + size));
+                const tex = this.createTexture(size, (`lightmapper_temp_lightmap_${size}`));
                 LightmapCache.incRef(tex);
                 this.renderTargets.set(size, new RenderTarget({
                     colorBuffer: tex,
@@ -1107,8 +1107,8 @@ class Lightmapper {
                             // some global per frame / per camera constants are not set up or similar, that
                             // renderForward sets up.
                             const renderPass = new RenderPassLightmapper(device, this.renderer, this.camera,
-                                                                         clusteredLightingEnabled ? this.worldClusters : null,
-                                                                         rcv, lightArray);
+                                clusteredLightingEnabled ? this.worldClusters : null,
+                                rcv, lightArray);
                             renderPass.init(tempRT);
                             renderPass.render();
                             renderPass.destroy();

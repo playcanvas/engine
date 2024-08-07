@@ -89,7 +89,7 @@ class AnimState {
 
     addAnimation(path, animTrack) {
         const pathString = path.join('.');
-        const indexOfAnimation = this._animationList.findIndex(function (animation) {
+        const indexOfAnimation = this._animationList.findIndex((animation) => {
             return animation.path === pathString;
         });
         if (indexOfAnimation >= 0) {
@@ -150,7 +150,7 @@ class AnimState {
 
     get looping() {
         if (this.animations.length > 0) {
-            const trackClipName = this.name + '.' + this.animations[0].animTrack.name;
+            const trackClipName = `${this.name}.${this.animations[0].animTrack.name}`;
             const trackClip = this._controller.animEvaluator.findClip(trackClipName);
             if (trackClip) {
                 return trackClip.loop;

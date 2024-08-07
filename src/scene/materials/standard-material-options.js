@@ -1,4 +1,4 @@
-import { LitShaderOptions } from "../shader-lib/programs/lit-shader-options.js";
+import { LitShaderOptions } from '../shader-lib/programs/lit-shader-options.js';
 
 /**
  * The standard material options define a set of options used to control the shader frontend shader

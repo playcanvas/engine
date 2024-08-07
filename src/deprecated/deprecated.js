@@ -108,42 +108,42 @@ ContextCreationError.prototype = Error.prototype;
 const _viewport = new Vec4();
 
 export function createSphere(device, opts) {
-    Debug.deprecated(`pc.createSphere is deprecated. Use 'pc.Mesh.fromGeometry(device, new SphereGeometry(options);' format instead.`);
+    Debug.deprecated('pc.createSphere is deprecated. Use \'pc.Mesh.fromGeometry(device, new SphereGeometry(options);\' format instead.');
     return Mesh.fromGeometry(device, new SphereGeometry(opts));
 }
 
 export function createPlane(device, opts) {
-    Debug.deprecated(`pc.createPlane is deprecated. Use 'pc.Mesh.fromGeometry(device, new PlaneGeometry(options);' format instead.`);
+    Debug.deprecated('pc.createPlane is deprecated. Use \'pc.Mesh.fromGeometry(device, new PlaneGeometry(options);\' format instead.');
     return Mesh.fromGeometry(device, new PlaneGeometry(opts));
 }
 
 export function createBox(device, opts) {
-    Debug.deprecated(`pc.createBox is deprecated. Use 'pc.Mesh.fromGeometry(device, new BoxGeometry(options);' format instead.`);
+    Debug.deprecated('pc.createBox is deprecated. Use \'pc.Mesh.fromGeometry(device, new BoxGeometry(options);\' format instead.');
     return Mesh.fromGeometry(device, new BoxGeometry(opts));
 }
 
 export function createTorus(device, opts) {
-    Debug.deprecated(`pc.createTorus is deprecated. Use 'pc.Mesh.fromGeometry(device, new TorusGeometry(options);' format instead.`);
+    Debug.deprecated('pc.createTorus is deprecated. Use \'pc.Mesh.fromGeometry(device, new TorusGeometry(options);\' format instead.');
     return Mesh.fromGeometry(device, new TorusGeometry(opts));
 }
 
 export function createCapsule(device, opts) {
-    Debug.deprecated(`pc.createCapsule is deprecated. Use 'pc.Mesh.fromGeometry(device, new CapsuleGeometry(options);' format instead.`);
+    Debug.deprecated('pc.createCapsule is deprecated. Use \'pc.Mesh.fromGeometry(device, new CapsuleGeometry(options);\' format instead.');
     return Mesh.fromGeometry(device, new CapsuleGeometry(opts));
 }
 
 export function createCone(device, opts) {
-    Debug.deprecated(`pc.createCone is deprecated. Use 'pc.Mesh.fromGeometry(device, new ConeGeometry(options);' format instead.`);
+    Debug.deprecated('pc.createCone is deprecated. Use \'pc.Mesh.fromGeometry(device, new ConeGeometry(options);\' format instead.');
     return Mesh.fromGeometry(device, new ConeGeometry(opts));
 }
 
 export function createCylinder(device, opts) {
-    Debug.deprecated(`pc.createCylinder is deprecated. Use 'pc.Mesh.fromGeometry(device, new CylinderGeometry(options);' format instead.`);
+    Debug.deprecated('pc.createCylinder is deprecated. Use \'pc.Mesh.fromGeometry(device, new CylinderGeometry(options);\' format instead.');
     return Mesh.fromGeometry(device, new CylinderGeometry(opts));
 }
 
 export function createMesh(device, positions, opts = {}) {
-    Debug.deprecated(`pc.createMesh is deprecated. Use 'pc.Mesh.fromGeometry(device, new Geometry();' format instead.`);
+    Debug.deprecated('pc.createMesh is deprecated. Use \'pc.Mesh.fromGeometry(device, new Geometry();\' format instead.');
 
     const geom = new Geometry();
     geom.positions = positions;
@@ -161,7 +161,7 @@ export function createMesh(device, positions, opts = {}) {
 
 export function drawFullscreenQuad(device, target, vertexBuffer, shader, rect) {
 
-    Debug.deprecated(`pc.drawFullscreenQuad is deprecated. When used as part of PostEffect, use PostEffect#drawQuad instead.`);
+    Debug.deprecated('pc.drawFullscreenQuad is deprecated. When used as part of PostEffect, use PostEffect#drawQuad instead.');
 
     // convert rect in normalized space to viewport in pixel space
     let viewport;
@@ -216,8 +216,9 @@ Object.keys(deprecatedChunks).forEach((chunkName) => {
  */
 function compatibilityForLitArgs(src) {
     if (src.includes('litShaderArgs')) {
-        src = src.replace(/litShaderArgs([\.a-zA-Z]+)+/g, (a, b) => {
-            const newSource = 'litArgs' + b.replace(/\./g, '_');
+        // eslint-disable-next-line regexp/no-misleading-capturing-group
+        src = src.replace(/litShaderArgs([.a-zA-Z]+)+/g, (a, b) => {
+            const newSource = `litArgs${b.replace(/\./g, '_')}`;
             Debug.deprecated(`Nested struct property access is deprecated, because it's crashing some devices. Please update your custom chunks manually. In particular ${a} should be ${newSource} now.`);
             return newSource;
         });
@@ -310,6 +311,13 @@ Object.defineProperty(GraphicsDevice.prototype, 'webgl2', {
     }
 });
 
+Object.defineProperty(GraphicsDevice.prototype, 'textureFloatHighPrecision', {
+    get: function () {
+        Debug.deprecated('pc.GraphicsDevice#textureFloatHighPrecision is deprecated and always returns true.');
+        return true;
+    }
+});
+
 Object.defineProperty(GraphicsDevice.prototype, 'extBlendMinmax', {
     get: function () {
         Debug.deprecated('pc.GraphicsDevice#extBlendMinmax is deprecated as it is always true.');
@@ -386,7 +394,7 @@ const _tempBlendState = new BlendState();
 const _tempDepthState = new DepthState();
 
 GraphicsDevice.prototype.setBlendFunction = function (blendSrc, blendDst) {
-    Debug.deprecated(`pc.GraphicsDevice#setBlendFunction is deprecated, use pc.GraphicsDevice.setBlendState instead.`);
+    Debug.deprecated('pc.GraphicsDevice#setBlendFunction is deprecated, use pc.GraphicsDevice.setBlendState instead.');
     const currentBlendState = this.blendState;
     _tempBlendState.copy(currentBlendState);
     _tempBlendState.setColorBlend(currentBlendState.colorOp, blendSrc, blendDst);
@@ -395,7 +403,7 @@ GraphicsDevice.prototype.setBlendFunction = function (blendSrc, blendDst) {
 };
 
 GraphicsDevice.prototype.setBlendFunctionSeparate = function (blendSrc, blendDst, blendSrcAlpha, blendDstAlpha) {
-    Debug.deprecated(`pc.GraphicsDevice#setBlendFunctionSeparate is deprecated, use pc.GraphicsDevice.setBlendState instead.`);
+    Debug.deprecated('pc.GraphicsDevice#setBlendFunctionSeparate is deprecated, use pc.GraphicsDevice.setBlendState instead.');
     const currentBlendState = this.blendState;
     _tempBlendState.copy(currentBlendState);
     _tempBlendState.setColorBlend(currentBlendState.colorOp, blendSrc, blendDst);
@@ -404,7 +412,7 @@ GraphicsDevice.prototype.setBlendFunctionSeparate = function (blendSrc, blendDst
 };
 
 GraphicsDevice.prototype.setBlendEquation = function (blendEquation) {
-    Debug.deprecated(`pc.GraphicsDevice#setBlendEquation is deprecated, use pc.GraphicsDevice.setBlendState instead.`);
+    Debug.deprecated('pc.GraphicsDevice#setBlendEquation is deprecated, use pc.GraphicsDevice.setBlendState instead.');
     const currentBlendState = this.blendState;
     _tempBlendState.copy(currentBlendState);
     _tempBlendState.setColorBlend(blendEquation, currentBlendState.colorSrcFactor, currentBlendState.colorDstFactor);
@@ -413,7 +421,7 @@ GraphicsDevice.prototype.setBlendEquation = function (blendEquation) {
 };
 
 GraphicsDevice.prototype.setBlendEquationSeparate = function (blendEquation, blendAlphaEquation) {
-    Debug.deprecated(`pc.GraphicsDevice#setBlendEquationSeparate is deprecated, use pc.GraphicsDevice.setBlendState instead.`);
+    Debug.deprecated('pc.GraphicsDevice#setBlendEquationSeparate is deprecated, use pc.GraphicsDevice.setBlendState instead.');
     const currentBlendState = this.blendState;
     _tempBlendState.copy(currentBlendState);
     _tempBlendState.setColorBlend(blendEquation, currentBlendState.colorSrcFactor, currentBlendState.colorDstFactor);
@@ -422,7 +430,7 @@ GraphicsDevice.prototype.setBlendEquationSeparate = function (blendEquation, ble
 };
 
 GraphicsDevice.prototype.setColorWrite = function (redWrite, greenWrite, blueWrite, alphaWrite) {
-    Debug.deprecated(`pc.GraphicsDevice#setColorWrite is deprecated, use pc.GraphicsDevice.setBlendState instead.`);
+    Debug.deprecated('pc.GraphicsDevice#setColorWrite is deprecated, use pc.GraphicsDevice.setBlendState instead.');
     const currentBlendState = this.blendState;
     _tempBlendState.copy(currentBlendState);
     _tempBlendState.setColorWrite(redWrite, greenWrite, blueWrite, alphaWrite);
@@ -434,28 +442,28 @@ GraphicsDevice.prototype.getBlending = function () {
 };
 
 GraphicsDevice.prototype.setBlending = function (blending) {
-    Debug.deprecated(`pc.GraphicsDevice#setBlending is deprecated, use pc.GraphicsDevice.setBlendState instead.`);
+    Debug.deprecated('pc.GraphicsDevice#setBlending is deprecated, use pc.GraphicsDevice.setBlendState instead.');
     _tempBlendState.copy(this.blendState);
     _tempBlendState.blend = blending;
     this.setBlendState(_tempBlendState);
 };
 
 GraphicsDevice.prototype.setDepthWrite = function (write) {
-    Debug.deprecated(`pc.GraphicsDevice#setDepthWrite is deprecated, use pc.GraphicsDevice.setDepthState instead.`);
+    Debug.deprecated('pc.GraphicsDevice#setDepthWrite is deprecated, use pc.GraphicsDevice.setDepthState instead.');
     _tempDepthState.copy(this.depthState);
     _tempDepthState.write = write;
     this.setDepthState(_tempDepthState);
 };
 
 GraphicsDevice.prototype.setDepthFunc = function (func) {
-    Debug.deprecated(`pc.GraphicsDevice#setDepthFunc is deprecated, use pc.GraphicsDevice.setDepthState instead.`);
+    Debug.deprecated('pc.GraphicsDevice#setDepthFunc is deprecated, use pc.GraphicsDevice.setDepthState instead.');
     _tempDepthState.copy(this.depthState);
     _tempDepthState.func = func;
     this.setDepthState(_tempDepthState);
 };
 
 GraphicsDevice.prototype.setDepthTest = function (test) {
-    Debug.deprecated(`pc.GraphicsDevice#setDepthTest is deprecated, use pc.GraphicsDevice.setDepthState instead.`);
+    Debug.deprecated('pc.GraphicsDevice#setDepthTest is deprecated, use pc.GraphicsDevice.setDepthState instead.');
     _tempDepthState.copy(this.depthState);
     _tempDepthState.test = test;
     this.setDepthState(_tempDepthState);
@@ -538,7 +546,7 @@ Object.defineProperty(Scene.prototype, 'models', {
 
 Object.defineProperty(Layer.prototype, 'renderTarget', {
     set: function (rt) {
-        Debug.deprecated(`pc.Layer#renderTarget is deprecated. Set the render target on the camera instead.`);
+        Debug.deprecated('pc.Layer#renderTarget is deprecated. Set the render target on the camera instead.');
         this._renderTarget = rt;
         this._dirtyComposition = true;
     },
@@ -607,10 +615,10 @@ GraphNode.prototype.setName = function (name) {
 
 Object.defineProperty(Material.prototype, 'shader', {
     set: function (value) {
-        Debug.deprecated(`pc.Material#shader is deprecated, use pc.ShaderMaterial instead.`);
+        Debug.deprecated('pc.Material#shader is deprecated, use pc.ShaderMaterial instead.');
     },
     get: function () {
-        Debug.deprecated(`pc.Material#shader is deprecated, use pc.ShaderMaterial instead.`);
+        Debug.deprecated('pc.Material#shader is deprecated, use pc.ShaderMaterial instead.');
         return null;
     }
 });
@@ -618,7 +626,7 @@ Object.defineProperty(Material.prototype, 'shader', {
 // Note: this is used by the Editor
 Object.defineProperty(Material.prototype, 'blend', {
     set: function (value) {
-        Debug.deprecated(`pc.Material#blend is deprecated, use pc.Material.blendState.`);
+        Debug.deprecated('pc.Material#blend is deprecated, use pc.Material.blendState.');
         this.blendState.blend = value;
     },
     get: function () {

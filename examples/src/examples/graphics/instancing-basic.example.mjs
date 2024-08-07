@@ -1,3 +1,4 @@
+// @config DESCRIPTION This example shows how to use the instancing feature of a StandardMaterial to render multiple copies of a mesh.
 import * as pc from 'playcanvas';
 import { deviceType, rootPath } from 'examples/utils';
 

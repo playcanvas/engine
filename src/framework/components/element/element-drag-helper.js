@@ -78,7 +78,7 @@ class ElementDragHelper extends EventHandler {
         }
 
         if (axis && axis !== 'x' && axis !== 'y') {
-            throw new Error('Unrecognized axis: ' + axis);
+            throw new Error(`Unrecognized axis: ${axis}`);
         }
 
         this._element = element;

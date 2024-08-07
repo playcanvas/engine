@@ -37,7 +37,7 @@ vec3 getLocalNormal(vec3 vertexNormal) {
     }
 #elif defined(INSTANCING)
     mat3 getNormalMatrix(mat4 modelMatrix) {
-        return mat3(instance_line1.xyz, instance_line2.xyz, instance_line3.xyz);
+        return mat3(modelMatrix[0].xyz, modelMatrix[1].xyz, modelMatrix[2].xyz);
     }
 #else
     mat3 getNormalMatrix(mat4 modelMatrix) {

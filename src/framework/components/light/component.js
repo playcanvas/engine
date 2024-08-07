@@ -650,8 +650,9 @@ class LightComponent extends Component {
             if (
                 this._cookieAssetId &&
                 ((newValue instanceof Asset && newValue.id === this._cookieAssetId) || newValue === this._cookieAssetId)
-            )
+            ) {
                 return;
+            }
             this.onCookieAssetRemove();
             this._cookieAssetId = null;
             if (newValue instanceof Asset) {
@@ -665,7 +666,7 @@ class LightComponent extends Component {
                     this.onCookieAssetAdd(asset);
                 } else {
                     this._cookieAssetAdd = true;
-                    this.system.app.assets.on('add:' + this._cookieAssetId, this.onCookieAssetAdd, this);
+                    this.system.app.assets.on(`add:${this._cookieAssetId}`, this.onCookieAssetAdd, this);
                 }
             }
         });
@@ -1212,7 +1213,7 @@ class LightComponent extends Component {
         }
 
         if (this._cookieAssetAdd) {
-            this.system.app.assets.off('add:' + this._cookieAssetId, this.onCookieAssetAdd, this);
+            this.system.app.assets.off(`add:${this._cookieAssetId}`, this.onCookieAssetAdd, this);
             this._cookieAssetAdd = false;
         }
 

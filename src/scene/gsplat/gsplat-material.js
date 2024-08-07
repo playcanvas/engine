@@ -1,9 +1,9 @@
-import { CULLFACE_NONE } from "../../platform/graphics/constants.js";
-import { ShaderProcessorOptions } from "../../platform/graphics/shader-processor-options.js";
-import { BLEND_NONE, BLEND_NORMAL, DITHER_NONE } from "../constants.js";
-import { ShaderMaterial } from "../materials/shader-material.js";
-import { getProgramLibrary } from "../shader-lib/get-program-library.js";
-import { gsplat } from "./shader-generator-gsplat.js";
+import { CULLFACE_NONE } from '../../platform/graphics/constants.js';
+import { ShaderProcessorOptions } from '../../platform/graphics/shader-processor-options.js';
+import { BLEND_NONE, BLEND_NORMAL, DITHER_NONE } from '../constants.js';
+import { ShaderMaterial } from '../materials/shader-material.js';
+import { getProgramLibrary } from '../shader-lib/get-program-library.js';
+import { gsplat } from './shader-generator-gsplat.js';
 
 const splatMainVS = `
     vec4 discardVec = vec4(0.0, 0.0, 2.0, 1.0);
@@ -70,6 +70,7 @@ const createGSplatMaterial = (options = {}) => {
     material.getShaderVariant = function (params) {
 
         const programOptions = {
+            defines: material.defines,
             pass: params.pass,
             gamma: params.renderParams.shaderOutputGamma,
             toneMapping: params.renderParams.toneMapping,

@@ -229,7 +229,7 @@ function BasisWorker() {
         if (!basisFile.startTranscoding()) {
             basisFile.close();
             basisFile.delete();
-            throw new Error('Failed to start transcoding url=' + url);
+            throw new Error(`Failed to start transcoding url=${url}`);
         }
 
         let i;
@@ -242,7 +242,7 @@ function BasisWorker() {
             if (!basisFile.transcodeImage(dst, mip, 0, 0, basisFormat, 0, -1, -1)) {
                 basisFile.close();
                 basisFile.delete();
-                throw new Error('Failed to transcode image url=' + url);
+                throw new Error(`Failed to transcode image url=${url}`);
             }
 
             const is16BitFormat = (basisFormat === BASIS_FORMAT.cTFRGB565 || basisFormat === BASIS_FORMAT.cTFRGBA4444);
@@ -315,7 +315,7 @@ function BasisWorker() {
         if (!basisFile.startTranscoding()) {
             basisFile.close();
             basisFile.delete();
-            throw new Error('Failed to start transcoding url=' + url);
+            throw new Error(`Failed to start transcoding url=${url}`);
         }
 
         let i;
@@ -332,11 +332,11 @@ function BasisWorker() {
                     // fails to transcode. this is a workaround which copies the previous mip
                     // level data instead of failing.
                     dst.set(new Uint8Array(levelData[mip - 1].buffer));
-                    console.warn('Failed to transcode last mipmap level, using previous level instead url=' + url);
+                    console.warn(`Failed to transcode last mipmap level, using previous level instead url=${url}`);
                 } else {
                     basisFile.close();
                     basisFile.delete();
-                    throw new Error('Failed to transcode image url=' + url);
+                    throw new Error(`Failed to transcode image url=${url}`);
                 }
             }
 
@@ -388,26 +388,26 @@ function BasisWorker() {
         // initialize the wasm module
         const instantiateWasmFunc = (imports, successCallback) => {
             WebAssembly.instantiate(config.module, imports)
-                .then((result) => {
-                    successCallback(result);
-                })
-                .catch((reason) => {
-                    console.error('instantiate failed + ' + reason);
-                });
+            .then((result) => {
+                successCallback(result);
+            })
+            .catch((reason) => {
+                console.error(`instantiate failed + ${reason}`);
+            });
             return {};
         };
 
         self.BASIS(config.module ? { instantiateWasm: instantiateWasmFunc } : null)
-            .then((instance) => {
-                instance.initializeBasis();
+        .then((instance) => {
+            instance.initializeBasis();
 
-                // set globals
-                basis = instance;
-                rgbPriority = config.rgbPriority;
-                rgbaPriority = config.rgbaPriority;
+            // set globals
+            basis = instance;
+            rgbPriority = config.rgbPriority;
+            rgbaPriority = config.rgbaPriority;
 
-                callback(null);
-            });
+            callback(null);
+        });
     };
 
     // handle incoming worker requests

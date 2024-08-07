@@ -779,8 +779,9 @@ class Layer {
             this._splitLightsDirty = false;
 
             const splitLights = this._splitLights;
-            for (let i = 0; i < splitLights.length; i++)
+            for (let i = 0; i < splitLights.length; i++) {
                 splitLights[i].length = 0;
+            }
 
             const lights = this._lights;
             for (let i = 0; i < lights.length; i++) {
@@ -792,8 +793,9 @@ class Layer {
 
             // sort the lights by their key, as the order of lights is used to generate shader generation key,
             // and this avoids new shaders being generated when lights are reordered
-            for (let i = 0; i < splitLights.length; i++)
+            for (let i = 0; i < splitLights.length; i++) {
                 splitLights[i].sort((a, b) => a.key - b.key);
+            }
         }
 
         return this._splitLights;
@@ -935,8 +937,9 @@ class Layer {
      */
     sortVisible(camera, transparent) {
         const sortMode = transparent ? this.transparentSortMode : this.opaqueSortMode;
-        if (sortMode === SORTMODE_NONE)
+        if (sortMode === SORTMODE_NONE) {
             return;
+        }
 
         const culledInstances = this.getCulledInstances(camera);
         const instances = transparent ? culledInstances.transparent : culledInstances.opaque;

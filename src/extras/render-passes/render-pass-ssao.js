@@ -252,25 +252,30 @@ class RenderPassSsao extends RenderPassShaderQuad {
         // main SSAO render pass
         this.shader = this.createQuadShader('SsaoShader', shaderChunks.screenDepthPS + fs);
 
-        const rt = this.createRenderTarget(`SsaoRawTexture`);
+        const rt = this.createRenderTarget('SsaoFinalTexture');
         this.ssaoTexture = rt.colorBuffer;
 
         this.init(rt, {
             resizeSource: this.sourceTexture
         });
 
-        // optional blur pass
+        // optional blur passes
         if (blurEnabled) {
 
-            const blurRT = this.createRenderTarget(`SsaoFinalTexture`);
-            this.ssaoTexture = blurRT.colorBuffer;
+            const blurRT = this.createRenderTarget('SsaoTempTexture');
 
-            const blurPass = new RenderPassDepthAwareBlur(device, rt.colorBuffer);
-            blurPass.init(blurRT, {
+            const blurPassHorizontal = new RenderPassDepthAwareBlur(device, rt.colorBuffer, true);
+            blurPassHorizontal.init(blurRT, {
                 resizeSource: rt.colorBuffer
             });
 
-            this.afterPasses.push(blurPass);
+            const blurPassVertical = new RenderPassDepthAwareBlur(device, blurRT.colorBuffer, false);
+            blurPassVertical.init(rt, {
+                resizeSource: rt.colorBuffer
+            });
+
+            this.afterPasses.push(blurPassHorizontal);
+            this.afterPasses.push(blurPassVertical);
         }
     }
 
@@ -281,12 +286,12 @@ class RenderPassSsao extends RenderPassShaderQuad {
         this.renderTarget = null;
 
         if (this.afterPasses.length > 0) {
-            const blurPass = this.afterPasses[0];
-            const blurRt = blurPass.renderTarget;
+            const blurRt = this.afterPasses[0].renderTarget;
             blurRt?.destroyTextureBuffers();
             blurRt?.destroy();
-            blurPass.destroy();
         }
+
+        this.afterPasses.forEach(pass => pass.destroy());
         this.afterPasses.length = 0;
 
         super.destroy();
@@ -330,13 +335,13 @@ class RenderPassSsao extends RenderPassShaderQuad {
         const { width, height } = this.renderTarget.colorBuffer;
         const scope = device.scope;
 
-        scope.resolve("uAspect").setValue(width / height);
-        scope.resolve("uInvResolution").setValue([1.0 / width, 1.0 / height]);
+        scope.resolve('uAspect').setValue(width / height);
+        scope.resolve('uInvResolution').setValue([1.0 / width, 1.0 / height]);
 
-        scope.resolve("uSampleCount").setValue([sampleCount, 1.0 / sampleCount]);
+        scope.resolve('uSampleCount').setValue([sampleCount, 1.0 / sampleCount]);
 
         const minAngleSin = Math.sin(minAngle * Math.PI / 180.0);
-        scope.resolve("uMinHorizonAngleSineSquared").setValue(minAngleSin * minAngleSin);
+        scope.resolve('uMinHorizonAngleSineSquared').setValue(minAngleSin * minAngleSin);
 
         const spiralTurns = 10.0;
         const step = (1.0 / (sampleCount - 0.5)) * spiralTurns * 2.0 * 3.141;
@@ -345,15 +350,15 @@ class RenderPassSsao extends RenderPassShaderQuad {
         const peak = 0.1 * radius;
         const intensity = 2 * (peak * 2.0 * 3.141) * this.intensity / sampleCount;
         const projectionScale = 0.5 * sourceTexture.height * scale;
-        scope.resolve("uSpiralTurns").setValue(spiralTurns);
-        scope.resolve("uAngleIncCosSin").setValue([Math.cos(step), Math.sin(step)]);
-        scope.resolve("uMaxLevel").setValue(0.0);
-        scope.resolve("uInvRadiusSquared").setValue(1.0 / (radius * radius));
-        scope.resolve("uBias").setValue(bias);
-        scope.resolve("uPeak2").setValue(peak * peak);
-        scope.resolve("uIntensity").setValue(intensity);
-        scope.resolve("uPower").setValue(this.power);
-        scope.resolve("uProjectionScaleRadius").setValue(projectionScale * radius);
+        scope.resolve('uSpiralTurns').setValue(spiralTurns);
+        scope.resolve('uAngleIncCosSin').setValue([Math.cos(step), Math.sin(step)]);
+        scope.resolve('uMaxLevel').setValue(0.0);
+        scope.resolve('uInvRadiusSquared').setValue(1.0 / (radius * radius));
+        scope.resolve('uBias').setValue(bias);
+        scope.resolve('uPeak2').setValue(peak * peak);
+        scope.resolve('uIntensity').setValue(intensity);
+        scope.resolve('uPower').setValue(this.power);
+        scope.resolve('uProjectionScaleRadius').setValue(projectionScale * radius);
 
         super.execute();
     }

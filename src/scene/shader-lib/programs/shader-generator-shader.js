@@ -24,12 +24,13 @@ class ShaderGeneratorShader extends ShaderGenerator {
         const desc = options.shaderDesc;
         const vsHash = desc.vertexCode ? hashCode(desc.vertexCode) : 0;
         const fsHash = desc.fragmentCode ? hashCode(desc.fragmentCode) : 0;
+        const definesHash = ShaderGenerator.definesHash(options.defines);
 
-        let key = `${desc.uniqueName}_${vsHash}_${fsHash}`;
-        key += '_' + options.pass;
-        key += '_' + options.gamma;
-        key += '_' + options.toneMapping;
-        key += '_' + options.fog;
+        let key = `${desc.uniqueName}_${vsHash}_${fsHash}_${definesHash}`;
+        key += `_${options.pass}`;
+        key += `_${options.gamma}`;
+        key += `_${options.toneMapping}`;
+        key += `_${options.fog}`;
 
         if (options.skin)                       key += '_skin';
         if (options.useInstancing)              key += '_inst';
@@ -72,16 +73,18 @@ class ShaderGeneratorShader extends ShaderGenerator {
 
         } else {
             const includes = new Map();
-            const defines = new Map();
+            const defines = new Map(options.defines);
 
             includes.set('shaderPassDefines', shaderPassInfo.shaderDefines);
             includes.set('userCode', desc.vertexCode);
             includes.set('transformCore', shaderChunks.transformCoreVS);
+            includes.set('transformInstancing', ''); // no default instancing, needs to be implemented in the user shader
             includes.set('normalCore', shaderChunks.normalCoreVS);
             includes.set('skinCode', shaderChunks.skinTexVS);
             includes.set('skinTexVS', shaderChunks.skinTexVS);
 
             if (options.skin) defines.set('SKIN', true);
+            if (options.useInstancing) defines.set('INSTANCING', true);
             if (options.useMorphPosition || options.useMorphNormal) {
                 defines.set('MORPHING', true);
                 if (options.useMorphTextureBasedInt) defines.set('MORPHING_INT', true);
@@ -107,7 +110,7 @@ class ShaderGeneratorShader extends ShaderGenerator {
 
         } else {
             const includes = new Map();
-            const defines = new Map();
+            const defines = new Map(options.defines);
 
             includes.set('shaderPassDefines', shaderPassInfo.shaderDefines);
             includes.set('decodePS', shaderChunks.decodePS);

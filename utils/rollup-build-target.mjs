@@ -52,7 +52,7 @@ const STRIP_FUNCTIONS = [
     'Debug.trace',
     'DebugHelper.setName',
     'DebugHelper.setLabel',
-    `DebugHelper.setDestroyed`,
+    'DebugHelper.setDestroyed',
     'DebugGraphics.toString',
     'DebugGraphics.clearGpuMarkers',
     'DebugGraphics.pushGpuMarker',
@@ -210,7 +210,7 @@ function buildTarget({ moduleFormat, buildType, bundleState, input = 'src/index.
                 plugins: getOutPlugins(),
                 file: `${dir}/${OUT_PREFIX[buildType]}${isUMD ? '.js' : '.mjs'}`
             },
-            context: isUMD ? "this" : undefined
+            context: isUMD ? 'this' : undefined
         };
 
         HISTORY.set(`${buildType}-${moduleFormat}-${bundled}`, target);

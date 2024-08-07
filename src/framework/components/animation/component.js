@@ -159,8 +159,9 @@ class AnimationComponent extends Component {
 
                         const animName = this.animationsIndex[asset.id];
 
-                        if (this.currAnim === animName)
+                        if (this.currAnim === animName) {
                             this._stopCurrentAnimation();
+                        }
 
                         delete this.animations[animName];
                         delete this.animationsIndex[asset.id];
@@ -239,7 +240,7 @@ class AnimationComponent extends Component {
             return this.animations[this.currAnim].duration;
         }
 
-        Debug.warn(`No animation is playing to get a duration. Returning 0.`);
+        Debug.warn('No animation is playing to get a duration. Returning 0.');
         return 0;
     }
 
@@ -436,8 +437,9 @@ class AnimationComponent extends Component {
      * @private
      */
     loadAnimationAssets(ids) {
-        if (!ids || !ids.length)
+        if (!ids || !ids.length) {
             return;
+        }
 
         const assets = this.system.app.assets;
 
@@ -467,8 +469,9 @@ class AnimationComponent extends Component {
                 onAssetReady(asset);
             } else {
                 asset.once('load', onAssetReady, this);
-                if (this.enabled && this.entity.enabled)
+                if (this.enabled && this.entity.enabled) {
                     assets.load(asset);
+                }
             }
         };
 
@@ -477,7 +480,7 @@ class AnimationComponent extends Component {
             if (asset) {
                 onAssetAdd(asset);
             } else {
-                assets.on('add:' + ids[i], onAssetAdd);
+                assets.on(`add:${ids[i]}`, onAssetAdd);
             }
         }
     }
@@ -579,13 +582,15 @@ class AnimationComponent extends Component {
             if (asset.resources.length > 1) {
                 for (let i = 0; i < asset.resources.length; i++) {
                     delete this.animations[asset.resources[i].name];
-                    if (this.currAnim === asset.resources[i].name)
+                    if (this.currAnim === asset.resources[i].name) {
                         this._stopCurrentAnimation();
+                    }
                 }
             } else {
                 delete this.animations[asset.name];
-                if (this.currAnim === asset.name)
+                if (this.currAnim === asset.name) {
                     this._stopCurrentAnimation();
+                }
             }
             delete this.animationsIndex[asset.id];
         }
@@ -618,11 +623,13 @@ class AnimationComponent extends Component {
         if (assets) {
             for (let i = 0, len = assets.length; i < len; i++) {
                 let asset = assets[i];
-                if (!(asset instanceof Asset))
+                if (!(asset instanceof Asset)) {
                     asset = registry.get(asset);
+                }
 
-                if (asset && !asset.resource)
+                if (asset && !asset.resource) {
                     registry.load(asset);
+                }
             }
         }
 

@@ -70,8 +70,9 @@ class LightingParams {
         this.cookieAtlasResolution = render.lightingCookieAtlasResolution ?? this.cookieAtlasResolution;
         this.maxLightsPerCell = render.lightingMaxLightsPerCell ?? this.maxLightsPerCell;
         this.shadowType = render.lightingShadowType ?? this.shadowType;
-        if (render.lightingCells)
+        if (render.lightingCells) {
             this.cell = new Vec3(render.lightingCells);
+        }
     }
 
     /**

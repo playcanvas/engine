@@ -174,7 +174,7 @@ class RotateGizmo extends TransformGizmo {
             if (this._dragging) {
                 const gizmoPos = this.root.getPosition();
                 this._drawGuideAngleLine(gizmoPos, this._selectedAxis,
-                                         this._guideAngleStart, this._guideAngleStartColor);
+                    this._guideAngleStart, this._guideAngleStartColor);
                 this._drawGuideAngleLine(gizmoPos, this._selectedAxis, this._guideAngleEnd);
             }
         });

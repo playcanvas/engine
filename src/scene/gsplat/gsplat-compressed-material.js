@@ -1,14 +1,14 @@
-import { CULLFACE_NONE, SEMANTIC_ATTR13, SEMANTIC_POSITION } from "../../platform/graphics/constants.js";
-import { ShaderProcessorOptions } from "../../platform/graphics/shader-processor-options.js";
-import { BLEND_NONE, BLEND_NORMAL, DITHER_NONE, TONEMAP_LINEAR } from "../constants.js";
-import { ShaderMaterial } from "../materials/shader-material.js";
-import { getProgramLibrary } from "../shader-lib/get-program-library.js";
+import { CULLFACE_NONE, SEMANTIC_ATTR13, SEMANTIC_POSITION } from '../../platform/graphics/constants.js';
+import { ShaderProcessorOptions } from '../../platform/graphics/shader-processor-options.js';
+import { BLEND_NONE, BLEND_NORMAL, DITHER_NONE, TONEMAP_LINEAR } from '../constants.js';
+import { ShaderMaterial } from '../materials/shader-material.js';
+import { getProgramLibrary } from '../shader-lib/get-program-library.js';
 
-import { hashCode } from "../../core/hash.js";
-import { ShaderUtils } from "../../platform/graphics/shader-utils.js";
-import { shaderChunks } from "../shader-lib/chunks/chunks.js";
-import { ShaderGenerator } from "../shader-lib/programs/shader-generator.js";
-import { ShaderPass } from "../shader-pass.js";
+import { hashCode } from '../../core/hash.js';
+import { ShaderUtils } from '../../platform/graphics/shader-utils.js';
+import { shaderChunks } from '../shader-lib/chunks/chunks.js';
+import { ShaderGenerator } from '../shader-lib/programs/shader-generator.js';
+import { ShaderPass } from '../shader-pass.js';
 
 const splatCoreVS = /* glsl */ `
     uniform mat4 matrix_model;
@@ -271,7 +271,8 @@ class GSplatCompressedShaderGenerator {
     generateKey(options) {
         const vsHash = hashCode(options.vertex);
         const fsHash = hashCode(options.fragment);
-        return `splat-${options.pass}-${options.gamma}-${options.toneMapping}-${vsHash}-${fsHash}-${options.dither}}`;
+        const definesHash = ShaderGenerator.definesHash(options.defines);
+        return `splat-${options.pass}-${options.gamma}-${options.toneMapping}-${vsHash}-${fsHash}-${options.dither}-${definesHash}}`;
     }
 
     createShaderDefinition(device, options) {
@@ -280,8 +281,8 @@ class GSplatCompressedShaderGenerator {
         const shaderPassDefines = shaderPassInfo.shaderDefines;
 
         const defines =
-            shaderPassDefines +
-            `#define DITHER_${options.dither.toUpperCase()}\n` +
+            `${shaderPassDefines
+            }#define DITHER_${options.dither.toUpperCase()}\n` +
             `#define TONEMAP_${options.toneMapping === TONEMAP_LINEAR ? 'DISABLED' : 'ENABLED'}\n`;
 
         const vs = defines + splatCoreVS + options.vertex;
@@ -291,6 +292,9 @@ class GSplatCompressedShaderGenerator {
             ShaderGenerator.gammaCode(options.gamma) +
             splatCoreFS + options.fragment;
 
+        const defineMap = new Map();
+        options.defines.forEach(value => defineMap.set(value, true));
+
         return ShaderUtils.createDefinition(device, {
             name: 'SplatShader',
             attributes: {
@@ -298,7 +302,9 @@ class GSplatCompressedShaderGenerator {
                 vertex_id_attrib: SEMANTIC_ATTR13
             },
             vertexCode: vs,
-            fragmentCode: fs
+            fragmentCode: fs,
+            fragmentDefines: defineMap,
+            vertexDefines: defineMap
         });
     }
 }
@@ -368,6 +374,7 @@ const createGSplatCompressedMaterial = (options = {}) => {
     material.getShaderVariant = function (params) {
 
         const programOptions = {
+            defines: material.defines,
             pass: params.pass,
             gamma: params.renderParams.shaderOutputGamma,
             toneMapping: params.renderParams.toneMapping,

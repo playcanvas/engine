@@ -258,8 +258,9 @@ class AssetRegistry extends EventHandler {
             this._urlToAsset.set(asset.file.url, asset);
         }
 
-        if (!this._nameToAsset.has(asset.name))
+        if (!this._nameToAsset.has(asset.name)) {
             this._nameToAsset.set(asset.name, new Set());
+        }
 
         this._nameToAsset.get(asset.name).add(asset);
 
@@ -273,13 +274,14 @@ class AssetRegistry extends EventHandler {
         asset.tags.on('remove', this._onTagRemove, this);
 
         this.fire('add', asset);
-        this.fire('add:' + asset.id, asset);
+        this.fire(`add:${asset.id}`, asset);
         if (asset.file?.url) {
-            this.fire('add:url:' + asset.file.url, asset);
+            this.fire(`add:url:${asset.file.url}`, asset);
         }
 
-        if (asset.preload)
+        if (asset.preload) {
             this.load(asset);
+        }
     }
 
     /**
@@ -319,9 +321,9 @@ class AssetRegistry extends EventHandler {
 
         asset.fire('remove', asset);
         this.fire('remove', asset);
-        this.fire('remove:' + asset.id, asset);
+        this.fire(`remove:${asset.id}`, asset);
         if (asset.file?.url) {
-            this.fire('remove:url:' + asset.file.url, asset);
+            this.fire(`remove:url:${asset.file.url}`, asset);
         }
 
         return true;
@@ -395,9 +397,10 @@ class AssetRegistry extends EventHandler {
 
         const _fireLoad = () => {
             this.fire('load', asset);
-            this.fire('load:' + asset.id, asset);
-            if (file && file.url)
-                this.fire('load:url:' + file.url, asset);
+            this.fire(`load:${asset.id}`, asset);
+            if (file && file.url) {
+                this.fire(`load:url:${file.url}`, asset);
+            }
             asset.fire('load', asset);
         };
 
@@ -425,9 +428,10 @@ class AssetRegistry extends EventHandler {
                     _fireLoad();
                 } else {
                     this.fire('load:start', asset);
-                    this.fire('load:start:' + asset.id, asset);
-                    if (file && file.url)
-                        this.fire('load:start:url:' + file.url, asset);
+                    this.fire(`load:start:${asset.id}`, asset);
+                    if (file && file.url) {
+                        this.fire(`load:start:url:${file.url}`, asset);
+                    }
                     asset.fire('load:start', asset);
                     asset.resource.on('load', _fireLoad);
                 }
@@ -443,7 +447,7 @@ class AssetRegistry extends EventHandler {
 
             if (err) {
                 this.fire('error', err, asset);
-                this.fire('error:' + asset.id, err, asset);
+                this.fire(`error:${asset.id}`, err, asset);
                 asset.fire('error', err, asset);
             } else {
                 if (asset.type === 'script') {
@@ -462,7 +466,7 @@ class AssetRegistry extends EventHandler {
         if (file || asset.type === 'cubemap') {
             // start loading the resource
             this.fire('load:start', asset);
-            this.fire('load:' + asset.id + ':start', asset);
+            this.fire(`load:${asset.id}:start`, asset);
 
             asset.loading = true;
 
@@ -473,11 +477,13 @@ class AssetRegistry extends EventHandler {
                 const assetIds = asset.data.assets;
                 for (let i = 0; i < assetIds.length; i++) {
                     const assetInBundle = this._idToAsset.get(assetIds[i]);
-                    if (!assetInBundle)
+                    if (!assetInBundle) {
                         continue;
+                    }
 
-                    if (assetInBundle.loaded || assetInBundle.resource || assetInBundle.loading)
+                    if (assetInBundle.loaded || assetInBundle.resource || assetInBundle.loading) {
                         continue;
+                    }
 
                     assetInBundle.loading = true;
                 }
@@ -685,8 +691,9 @@ class AssetRegistry extends EventHandler {
         }
 
         // add
-        if (!this._nameToAsset.has(asset.name))
+        if (!this._nameToAsset.has(asset.name)) {
             this._nameToAsset.set(asset.name, new Set());
+        }
 
         this._nameToAsset.get(asset.name).add(asset);
     }

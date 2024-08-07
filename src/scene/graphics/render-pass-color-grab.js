@@ -1,8 +1,8 @@
-import { ADDRESS_CLAMP_TO_EDGE, FILTER_LINEAR, FILTER_LINEAR_MIPMAP_LINEAR } from "../../platform/graphics/constants.js";
-import { DebugGraphics } from "../../platform/graphics/debug-graphics.js";
-import { RenderPass } from "../../platform/graphics/render-pass.js";
-import { RenderTarget } from "../../platform/graphics/render-target.js";
-import { Texture } from "../../platform/graphics/texture.js";
+import { ADDRESS_CLAMP_TO_EDGE, FILTER_LINEAR, FILTER_LINEAR_MIPMAP_LINEAR } from '../../platform/graphics/constants.js';
+import { DebugGraphics } from '../../platform/graphics/debug-graphics.js';
+import { RenderPass } from '../../platform/graphics/render-pass.js';
+import { RenderTarget } from '../../platform/graphics/render-target.js';
+import { Texture } from '../../platform/graphics/texture.js';
 
 // uniform name
 const _colorUniformName = 'uSceneColorMap';
@@ -31,8 +31,9 @@ class RenderPassColorGrab extends RenderPass {
 
         // need to reallocate if format does not match
         const targetFormat = targetRT?.colorBuffer.format;
-        if (targetFormat !== sourceFormat)
+        if (targetFormat !== sourceFormat) {
             return true;
+        }
 
         // need to reallocate if dimensions don't match
         const width = sourceTexture?.width || this.device.width;
@@ -43,14 +44,13 @@ class RenderPassColorGrab extends RenderPass {
     allocateRenderTarget(renderTarget, sourceRenderTarget, device, format) {
 
         // allocate texture buffer
-        const mipmaps = device.isWebGL2;
         const texture = new Texture(device, {
             name: _colorUniformName,
             format,
             width: sourceRenderTarget ? sourceRenderTarget.colorBuffer.width : device.width,
             height: sourceRenderTarget ? sourceRenderTarget.colorBuffer.height : device.height,
-            mipmaps,
-            minFilter: mipmaps ? FILTER_LINEAR_MIPMAP_LINEAR : FILTER_LINEAR,
+            mipmaps: true,
+            minFilter: FILTER_LINEAR_MIPMAP_LINEAR,
             magFilter: FILTER_LINEAR,
             addressU: ADDRESS_CLAMP_TO_EDGE,
             addressV: ADDRESS_CLAMP_TO_EDGE
@@ -122,7 +122,7 @@ class RenderPassColorGrab extends RenderPass {
             // generate mipmaps
             device.mipmapRenderer.generate(this.colorRenderTarget.colorBuffer.impl);
 
-        } else if (device.isWebGL2) {
+        } else {
 
             device.copyRenderTarget(sourceRt, this.colorRenderTarget, true, false);
 

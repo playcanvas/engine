@@ -626,9 +626,13 @@ class StandardMaterial extends Material {
 
         // clone chunks
         for (const p in source._chunks) {
-            if (source._chunks.hasOwnProperty(p))
+            if (source._chunks.hasOwnProperty(p)) {
                 this._chunks[p] = source._chunks[p];
+            }
         }
+
+        // clone user attributes
+        this.userAttributes = new Map(source.userAttributes);
 
         return this;
     }
@@ -672,12 +676,12 @@ class StandardMaterial extends Material {
     }
 
     _updateMap(p) {
-        const mname = p + 'Map';
+        const mname = `${p}Map`;
         const map = this[mname];
         if (map) {
-            this._setParameter('texture_' + mname, map);
+            this._setParameter(`texture_${mname}`, map);
 
-            const tname = mname + 'Transform';
+            const tname = `${mname}Transform`;
             const uniform = this.getUniform(tname);
             if (uniform) {
                 this._setParameters(uniform);
@@ -855,11 +859,13 @@ class StandardMaterial extends Material {
         const shaderPassInfo = ShaderPass.get(device).getByIndex(pass);
         const minimalOptions = pass === SHADER_DEPTH || pass === SHADER_PICK || pass === SHADER_PREPASS_VELOCITY || shaderPassInfo.isShadow;
         let options = minimalOptions ? standard.optionsContextMin : standard.optionsContext;
+        options.defines = this.defines;
 
-        if (minimalOptions)
+        if (minimalOptions) {
             this.shaderOptBuilder.updateMinRef(options, scene, this, objDefs, pass, sortedLights);
-        else
+        } else {
             this.shaderOptBuilder.updateRef(options, scene, renderParams, this, objDefs, pass, sortedLights);
+        }
 
         // execute user callback to modify the options
         if (this.onUpdateShader) {
@@ -946,7 +952,7 @@ const defineProp = (prop) => {
     return prop.defaultValue && prop.defaultValue.clone ? defineAggProp(prop) : defineValueProp(prop);
 };
 
-function _defineTex2D(name, channel = "rgb", vertexColor = true, uv = 0) {
+function _defineTex2D(name, channel = 'rgb', vertexColor = true, uv = 0) {
     // store texture name
     _matTex2D[name] = channel.length || -1;
 

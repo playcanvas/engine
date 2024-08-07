@@ -45,7 +45,7 @@ class Morph extends RefCountedObject {
     constructor(targets, graphicsDevice, { preferHighPrecision = false } = {}) {
         super();
 
-        Debug.assert(graphicsDevice, "Morph constructor takes a GraphicsDevice as a parameter, and it was not provided.");
+        Debug.assert(graphicsDevice, 'Morph constructor takes a GraphicsDevice as a parameter, and it was not provided.');
         this.device = graphicsDevice;
 
         this.preferHighPrecision = preferHighPrecision;

@@ -41,6 +41,7 @@ class SkyMesh {
 
             const { scene, renderParams } = params;
             const options = {
+                defines: this.defines,
                 pass: params.pass,
                 encoding: texture.encoding,
                 gamma: renderParams.shaderOutputGamma,

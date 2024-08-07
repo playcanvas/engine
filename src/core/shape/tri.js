@@ -135,7 +135,7 @@ class Tri {
      * console.log(t.toString());
      */
     toString() {
-        return '[' + this.v0.toString() + ', ' + this.v1.toString() + ', ' + this.v2.toString() + ']';
+        return `[${this.v0.toString()}, ${this.v1.toString()}, ${this.v2.toString()}]`;
     }
 }
 

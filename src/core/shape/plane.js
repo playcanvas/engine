@@ -77,8 +77,9 @@ class Plane {
 
         const t = d0 / (d0 - d1);
         const intersects = t >= 0 && t <= 1;
-        if (intersects && point)
+        if (intersects && point) {
             point.lerp(start, end, t);
+        }
 
         return intersects;
     }
@@ -93,8 +94,9 @@ class Plane {
      */
     intersectsRay(ray, point) {
         const denominator = this.normal.dot(ray.direction);
-        if (denominator === 0)
+        if (denominator === 0) {
             return false;
+        }
 
         const t = -(this.normal.dot(ray.origin) + this.distance) / denominator;
         if (t >= 0 && point) {

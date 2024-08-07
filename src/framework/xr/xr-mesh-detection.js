@@ -1,6 +1,6 @@
-import { platform } from "../../core/platform.js";
-import { EventHandler } from "../../core/event-handler.js";
-import { XrMesh } from "./xr-mesh.js";
+import { platform } from '../../core/platform.js';
+import { EventHandler } from '../../core/event-handler.js';
+import { XrMesh } from './xr-mesh.js';
 
 /**
  * @import { XrManager } from './xr-manager.js'
@@ -149,8 +149,9 @@ class XrMeshDetection extends EventHandler {
 
         // remove meshes
         for (const mesh of this._index.values()) {
-            if (frame.detectedMeshes.has(mesh.xrMesh))
+            if (frame.detectedMeshes.has(mesh.xrMesh)) {
                 continue;
+            }
 
             this._removeMesh(mesh);
         }
@@ -182,8 +183,9 @@ class XrMeshDetection extends EventHandler {
         if (!this._available) return;
         this._available = false;
 
-        for (const mesh of this._index.values())
+        for (const mesh of this._index.values()) {
             this._removeMesh(mesh);
+        }
 
         this.fire('unavailable');
     }

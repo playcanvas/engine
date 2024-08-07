@@ -2,11 +2,11 @@ import { IndexedList } from '../../src/core/indexed-list.js';
 
 import { expect } from 'chai';
 
-describe('IndexedList', function () {
+describe('IndexedList', () => {
 
-    describe('#constructor', function () {
+    describe('#constructor', () => {
 
-        it('creates an empty list', function () {
+        it('creates an empty list', () => {
             const list = new IndexedList();
 
             expect(list.list().length).to.equal(0);
@@ -14,9 +14,9 @@ describe('IndexedList', function () {
 
     });
 
-    describe('#clear', function () {
+    describe('#clear', () => {
 
-        it('removes all values', function () {
+        it('removes all values', () => {
             const list = new IndexedList();
 
             const key1 = 'key1';
@@ -58,9 +58,9 @@ describe('IndexedList', function () {
 
     });
 
-    describe('#has', function () {
+    describe('#has', () => {
 
-        it('returns true if the key exists', function () {
+        it('returns true if the key exists', () => {
             const list = new IndexedList();
 
             const key1 = 'key1';
@@ -88,7 +88,7 @@ describe('IndexedList', function () {
             expect(list.has(key5)).to.equal(true);
         });
 
-        it('returns false if the key does not exist', function () {
+        it('returns false if the key does not exist', () => {
             const list = new IndexedList();
 
             const key1 = 'key1';
@@ -118,9 +118,9 @@ describe('IndexedList', function () {
 
     });
 
-    describe('#push', function () {
+    describe('#push', () => {
 
-        it('adds an key-value pair to the list', function () {
+        it('adds an key-value pair to the list', () => {
             const list = new IndexedList();
 
             const key = 'key';
@@ -136,9 +136,9 @@ describe('IndexedList', function () {
 
     });
 
-    describe('#get', function () {
+    describe('#get', () => {
 
-        it('returns the value for the key', function () {
+        it('returns the value for the key', () => {
             const list = new IndexedList();
 
             const key = 'key';
@@ -149,7 +149,7 @@ describe('IndexedList', function () {
             expect(list.get(key)).to.equal(value);
         });
 
-        it('returns null if the key does not exist', function () {
+        it('returns null if the key does not exist', () => {
             const list = new IndexedList();
 
             const key = 'key';
@@ -163,9 +163,9 @@ describe('IndexedList', function () {
 
     });
 
-    describe('#list', function () {
+    describe('#list', () => {
 
-        it('returns list in order', function () {
+        it('returns list in order', () => {
             const list = new IndexedList();
 
             const key1 = 'key1';
@@ -197,9 +197,9 @@ describe('IndexedList', function () {
 
     });
 
-    describe('#remove', function () {
+    describe('#remove', () => {
 
-        it('removes the key', function () {
+        it('removes the key', () => {
             const list = new IndexedList();
 
             const key = 'key';
@@ -213,7 +213,7 @@ describe('IndexedList', function () {
         });
 
 
-        it('does not affect surrounding keys', function () {
+        it('does not affect surrounding keys', () => {
             const list = new IndexedList();
 
             const key1 = 'key1';

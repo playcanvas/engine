@@ -98,7 +98,7 @@ class ScriptRegistry extends EventHandler {
                     this._scripts[scriptName] = script;
 
                     this.fire('swap', scriptName, script);
-                    this.fire('swap:' + scriptName, script);
+                    this.fire(`swap:${scriptName}`, script);
                 } else {
                     console.warn(`script registry already has '${scriptName}' script, define 'swap' method for new script type to enable code hot swapping`);
                 }
@@ -110,13 +110,14 @@ class ScriptRegistry extends EventHandler {
         this._list.push(script);
 
         this.fire('add', scriptName, script);
-        this.fire('add:' + scriptName, script);
+        this.fire(`add:${scriptName}`, script);
 
         // for all components awaiting Script Type
         // create script instance
         setTimeout(() => {
-            if (!this._scripts.hasOwnProperty(scriptName))
+            if (!this._scripts.hasOwnProperty(scriptName)) {
                 return;
+            }
 
             // this is a check for a possible error
             // that might happen if the app has been destroyed before
@@ -134,8 +135,9 @@ class ScriptRegistry extends EventHandler {
                 const component = components.items[components.loopIndex];
                 // check if awaiting for script
                 if (component._scriptsIndex[scriptName] && component._scriptsIndex[scriptName].awaiting) {
-                    if (component._scriptsData && component._scriptsData[scriptName])
+                    if (component._scriptsData && component._scriptsData[scriptName]) {
                         attributes = component._scriptsData[scriptName].attributes;
+                    }
 
                     const scriptInstance = component.create(scriptName, {
                         preloading: true,
@@ -143,8 +145,9 @@ class ScriptRegistry extends EventHandler {
                         attributes: attributes
                     });
 
-                    if (scriptInstance)
+                    if (scriptInstance) {
                         scriptInstances.push(scriptInstance);
+                    }
 
                     // initialize attributes
                     for (const script of component.scripts) {
@@ -160,8 +163,9 @@ class ScriptRegistry extends EventHandler {
 
                     scriptInstancesInitialized.push(scriptInstances[i]);
 
-                    if (scriptInstances[i].initialize)
+                    if (scriptInstances[i].initialize) {
                         scriptInstances[i].initialize();
+                    }
                 }
             }
 
@@ -173,8 +177,9 @@ class ScriptRegistry extends EventHandler {
 
                 scriptInstancesInitialized[i]._postInitialized = true;
 
-                if (scriptInstancesInitialized[i].postInitialize)
+                if (scriptInstancesInitialized[i].postInitialize) {
                     scriptInstancesInitialized[i].postInitialize();
+                }
             }
         });
 
@@ -200,15 +205,16 @@ class ScriptRegistry extends EventHandler {
             scriptType = this.get(scriptName);
         }
 
-        if (this.get(scriptName) !== scriptType)
+        if (this.get(scriptName) !== scriptType) {
             return false;
+        }
 
         delete this._scripts[scriptName];
         const ind = this._list.indexOf(scriptType);
         this._list.splice(ind, 1);
 
         this.fire('remove', scriptName, scriptType);
-        this.fire('remove:' + scriptName, scriptType);
+        this.fire(`remove:${scriptName}`, scriptType);
 
         return true;
     }

@@ -3,31 +3,31 @@ import { AnimData } from '../../../../src/framework/anim/evaluator/anim-data.js'
 import { INTERPOLATION_STEP, INTERPOLATION_LINEAR } from '../../../../src/framework/anim/constants.js';
 import { expect } from 'chai';
 
-describe('AnimCache', function () {
+describe('AnimCache', () => {
     const animCache = new AnimCache();
     const input = new AnimData(1, [0, 1, 2]);
     const output = new AnimData(3, [0, 0, 0, 1, 2, 3, 2, 4, 6]);
 
-    describe('#constructor', function () {
+    describe('#constructor', () => {
 
-        it('instantiates correctly', function () {
+        it('instantiates correctly', () => {
             expect(animCache).to.be.ok;
         });
 
     });
 
-    describe('#update', function () {
+    describe('#update', () => {
 
-        it('can update the normalized time of the cache', function () {
+        it('can update the normalized time of the cache', () => {
             animCache.update(1.25, input.data);
             expect(animCache._t).to.equal(0.25);
         });
 
     });
 
-    describe('#eval', function () {
+    describe('#eval', () => {
 
-        it('can retrieve the step output keyframe value for a given input key', function () {
+        it('can retrieve the step output keyframe value for a given input key', () => {
             const result = [0, 0, 0];
             animCache.update(0, input.data);
             animCache.eval(result, INTERPOLATION_STEP, output);
@@ -43,7 +43,7 @@ describe('AnimCache', function () {
             expect(result).to.deep.equal([1, 2, 3]);
         });
 
-        it('can retrieve the linear output keyframe value for a given input key', function () {
+        it('can retrieve the linear output keyframe value for a given input key', () => {
             const result = [0, 0, 0];
             animCache.update(0, input.data);
             animCache.eval(result, INTERPOLATION_LINEAR, output);

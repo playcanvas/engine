@@ -71,7 +71,7 @@ function createTextMesh(device, meshInfo) {
 
 const LINE_BREAK_CHAR = /^[\r\n]$/;
 const WHITESPACE_CHAR = /^[ \t]$/;
-const WORD_BOUNDARY_CHAR = /^[ \t\-]|[\u200b]$/; // NB \u200b is zero width space
+const WORD_BOUNDARY_CHAR = /^[ \t\-]|\u200b$/; // NB \u200b is zero width space
 const ALPHANUMERIC_CHAR = /^[a-z0-9]$/i;
 
 // 1100—11FF Hangul Jamo
@@ -81,7 +81,7 @@ const ALPHANUMERIC_CHAR = /^[a-z0-9]$/i;
 // A960—A97F Hangul Jamo Extended-A
 // AC00—D7AF Hangul Syllables
 // D7B0—D7FF Hangul Jamo Extended-B
-const CJK_CHAR = /^[\u1100-\u11ff]|[\u3000-\u9fff]|[\ua960-\ua97f]|[\uac00-\ud7ff]$/;
+const CJK_CHAR = /^[\u1100-\u11ff]|[\u3000-\u9fff\ua960-\ua97f]|[\uac00-\ud7ff]$/;
 const NO_LINE_BREAK_CJK_CHAR = /^[〕〉》」』】〙〗〟ヽヾーァィゥェォッャュョヮヵヶぁぃぅぇぉっゃゅょゎゕゖㇰㇱㇲㇳㇴㇵㇶㇷㇸㇹㇺㇻㇼㇽㇾㇿ々〻]$/;
 
 // unicode bidi control characters https://en.wikipedia.org/wiki/Unicode_control_characters
@@ -273,8 +273,9 @@ class TextElement {
     }
 
     _onPivotChange(pivot) {
-        if (this._font)
+        if (this._font) {
             this._updateText();
+        }
     }
 
     _onLocaleSet(locale) {
@@ -365,7 +366,7 @@ class TextElement {
 
                 // reorder tags if they exist, according to unicode reorder mapping
                 if (tags) {
-                    tags = results.mapping.map(function (v) {
+                    tags = results.mapping.map((v) => {
                         return tags[v];
                     });
                 }
@@ -424,10 +425,10 @@ class TextElement {
 
             paletteMap[this._color.toString(false).toLowerCase()] = 0;
             outlinePaletteMap[
-                getColorThicknessHash(this._outlineColor, this._outlineThickness)
+            getColorThicknessHash(this._outlineColor, this._outlineThickness)
             ] = 0;
             shadowPaletteMap[
-                getColorOffsetHash(this._shadowColor, this._shadowOffset)
+            getColorOffsetHash(this._shadowColor, this._shadowOffset)
             ] = 0;
 
             for (let i = 0, len = this._symbols.length; i < len; ++i) {
@@ -452,7 +453,7 @@ class TextElement {
                             // color is already in the palette
                             color = paletteMap[hex];
                         } else {
-                            if (/^([0-9a-f]{2}){3}$/.test(hex)) {
+                            if (/^[0-9a-f]{6}$/.test(hex)) {
                                 // new color
                                 color = this._colorPalette.length / 3;
                                 paletteMap[hex] = color;
@@ -659,7 +660,7 @@ class TextElement {
                 const mesh = createTextMesh(this._system.app.graphicsDevice, meshInfo);
 
                 const mi = new MeshInstance(mesh, this._material, this._node);
-                mi.name = 'Text Element: ' + this._entity.name;
+                mi.name = `Text Element: ${this._entity.name}`;
                 mi.castShadow = false;
                 mi.receiveShadow = false;
                 mi.cull = !screenSpace;
@@ -722,8 +723,9 @@ class TextElement {
         meshInstance.destroy();
 
         const idx = this._model.meshInstances.indexOf(meshInstance);
-        if (idx !== -1)
+        if (idx !== -1) {
             this._model.meshInstances.splice(idx, 1);
+        }
     }
 
     _setMaterial(material) {
@@ -1352,15 +1354,15 @@ class TextElement {
                     it.element[SEMANTIC_POSITION].set(this._meshInfo[i].positions[v * 3 + 0], this._meshInfo[i].positions[v * 3 + 1], this._meshInfo[i].positions[v * 3 + 2]);
                     it.element[SEMANTIC_TEXCOORD0].set(this._meshInfo[i].uvs[v * 2 + 0], this._meshInfo[i].uvs[v * 2 + 1]);
                     it.element[SEMANTIC_COLOR].set(this._meshInfo[i].colors[v * 4 + 0],
-                                                   this._meshInfo[i].colors[v * 4 + 1],
-                                                   this._meshInfo[i].colors[v * 4 + 2],
-                                                   this._meshInfo[i].colors[v * 4 + 3]);
+                        this._meshInfo[i].colors[v * 4 + 1],
+                        this._meshInfo[i].colors[v * 4 + 2],
+                        this._meshInfo[i].colors[v * 4 + 3]);
                     it.element[SEMANTIC_ATTR8].set(this._meshInfo[i].outlines[v * 3 + 0],
-                                                   this._meshInfo[i].outlines[v * 3 + 1],
-                                                   this._meshInfo[i].outlines[v * 3 + 2]);
+                        this._meshInfo[i].outlines[v * 3 + 1],
+                        this._meshInfo[i].outlines[v * 3 + 2]);
                     it.element[SEMANTIC_ATTR9].set(this._meshInfo[i].shadows[v * 3 + 0],
-                                                   this._meshInfo[i].shadows[v * 3 + 1],
-                                                   this._meshInfo[i].shadows[v * 3 + 2]);
+                        this._meshInfo[i].shadows[v * 3 + 1],
+                        this._meshInfo[i].shadows[v * 3 + 2]);
                 }
                 it.next();
             }
@@ -1805,8 +1807,9 @@ class TextElement {
             }
         }
 
-        if (this._meshInfo.length > this._font.textures.length)
+        if (this._meshInfo.length > this._font.textures.length) {
             this._meshInfo.length = this._font.textures.length;
+        }
 
         this._updateText();
     }
@@ -1822,8 +1825,9 @@ class TextElement {
             this._alignment.set(value[0], value[1]);
         }
 
-        if (this._font)
+        if (this._font) {
             this._updateText();
+        }
     }
 
     get alignment() {

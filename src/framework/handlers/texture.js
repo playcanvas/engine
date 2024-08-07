@@ -250,8 +250,9 @@ class TextureHandler extends ResourceHandler {
     }
 
     open(url, data, asset) {
-        if (!url)
+        if (!url) {
             return undefined;
+        }
 
         const textureOptions = this._getTextureOptions(asset);
         let texture = this._getParser(url).open(url, data, this._device, textureOptions);

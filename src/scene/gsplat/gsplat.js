@@ -143,8 +143,9 @@ class GSplat {
      */
     updateColorData(gsplatData) {
         const texture = this.colorTexture;
-        if (!texture)
+        if (!texture) {
             return;
+        }
         const data = texture.lock();
 
         const c = new Vec4();
@@ -169,8 +170,9 @@ class GSplat {
 
         const float2Half = FloatPacking.float2Half;
 
-        if (!this.transformATexture)
+        if (!this.transformATexture) {
             return;
+        }
 
         const dataA = this.transformATexture.lock();
         const dataB = this.transformBTexture.lock();

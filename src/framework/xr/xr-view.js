@@ -1,8 +1,8 @@
 import { EventHandler } from '../../core/event-handler.js';
 import { Texture } from '../../platform/graphics/texture.js';
-import { Vec4 } from "../../core/math/vec4.js";
-import { Mat3 } from "../../core/math/mat3.js";
-import { Mat4 } from "../../core/math/mat4.js";
+import { Vec4 } from '../../core/math/vec4.js';
+import { Mat3 } from '../../core/math/mat3.js';
+import { Mat4 } from '../../core/math/mat4.js';
 import { ADDRESS_CLAMP_TO_EDGE, FILTER_LINEAR, FILTER_NEAREST, PIXELFORMAT_RGB8 } from '../../platform/graphics/constants.js';
 
 /**
@@ -190,8 +190,9 @@ class XrView extends EventHandler {
             this._textureDepth.upload();
         }
 
-        if (this._textureColor || this._textureDepth)
+        if (this._textureColor || this._textureDepth) {
             device.on('devicelost', this._onDeviceLost, this);
+        }
     }
 
     /**
@@ -353,8 +354,9 @@ class XrView extends EventHandler {
      */
     update(frame, xrView) {
         this._xrView = xrView;
-        if (this._manager.views.availableColor)
+        if (this._manager.views.availableColor) {
             this._xrCamera = this._xrView.camera;
+        }
 
         const layer = frame.session.renderState.baseLayer;
 
@@ -378,16 +380,19 @@ class XrView extends EventHandler {
      * @private
      */
     _updateTextureColor() {
-        if (!this._manager.views.availableColor || !this._xrCamera || !this._textureColor)
+        if (!this._manager.views.availableColor || !this._xrCamera || !this._textureColor) {
             return;
+        }
 
         const binding = this._manager.webglBinding;
-        if (!binding)
+        if (!binding) {
             return;
+        }
 
         const texture = binding.getCameraImage(this._xrCamera);
-        if (!texture)
+        if (!texture) {
             return;
+        }
 
         const device = this._manager.app.graphicsDevice;
         const gl = device.gl;
@@ -437,8 +442,9 @@ class XrView extends EventHandler {
      * @private
      */
     _updateDepth(frame) {
-        if (!this._manager.views.availableDepth || !this._textureDepth)
+        if (!this._manager.views.availableDepth || !this._textureDepth) {
             return;
+        }
 
         const gpu = this._manager.views.depthGpuOptimized;
 
@@ -550,8 +556,9 @@ class XrView extends EventHandler {
      * }
      */
     getDepth(u, v) {
-        if (this._manager.views.depthGpuOptimized)
+        if (this._manager.views.depthGpuOptimized) {
             return null;
+        }
 
         return this._depthInfo?.getDepthInMeters(u, v) ?? null;
     }

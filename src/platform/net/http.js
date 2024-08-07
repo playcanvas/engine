@@ -349,9 +349,9 @@ class Http {
 
             uri = new URI(url);
             if (!uri.query) {
-                uri.query = 'ts=' + timestamp;
+                uri.query = `ts=${timestamp}`;
             } else {
-                uri.query = uri.query + '&ts=' + timestamp;
+                uri.query = `${uri.query}&ts=${timestamp}`;
             }
             url = uri.toString();
         }

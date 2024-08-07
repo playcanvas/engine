@@ -14,7 +14,7 @@ class AnimBinder {
     static joinPath(pathSegments, character) {
         character = character || '.';
         const escape = function (string) {
-            return string.replace(/\\/g, '\\\\').replace(new RegExp('\\' + character, 'g'), '\\' + character);
+            return string.replace(/\\/g, '\\\\').replace(new RegExp(`\\${character}`, 'g'), `\\${character}`);
         };
         return pathSegments.map(escape).join(character);
     }
@@ -23,7 +23,7 @@ class AnimBinder {
     static splitPath(path, character) {
         character = character || '.';
         const result = [];
-        let curr = "";
+        let curr = '';
         let i = 0;
         while (i < path.length) {
             let c = path[i++];
@@ -33,7 +33,7 @@ class AnimBinder {
                 if (c === '\\' || c === character) {
                     curr += c;
                 } else {
-                    curr += '\\' + c;
+                    curr += `\\${c}`;
                 }
             } else if (c === character) {
                 result.push(curr);

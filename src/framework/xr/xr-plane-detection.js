@@ -164,8 +164,9 @@ class XrPlaneDetection extends EventHandler {
 
         // iterate through indexed planes
         for (const [xrPlane, plane] of this._planesIndex) {
-            if (detectedPlanes.has(xrPlane))
+            if (detectedPlanes.has(xrPlane)) {
                 continue;
+            }
 
             // if indexed plane is not listed in detectedPlanes anymore
             // then remove it

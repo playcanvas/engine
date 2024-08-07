@@ -1,7 +1,7 @@
-import { Debug, DebugHelper } from "../../../core/debug.js";
-import { TRACEID_COMPUTEPIPELINE_ALLOC } from "../../../core/constants.js";
-import { WebgpuDebug } from "./webgpu-debug.js";
-import { WebgpuPipeline } from "./webgpu-pipeline.js";
+import { Debug, DebugHelper } from '../../../core/debug.js';
+import { TRACEID_COMPUTEPIPELINE_ALLOC } from '../../../core/constants.js';
+import { WebgpuDebug } from './webgpu-debug.js';
+import { WebgpuPipeline } from './webgpu-pipeline.js';
 
 /**
  * @import { WebgpuShader } from './webgpu-shader.js'

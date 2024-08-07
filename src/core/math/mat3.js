@@ -206,7 +206,7 @@ class Mat3 {
      * console.log(m.toString());
      */
     toString() {
-        return '[' + this.data.join(', ') + ']';
+        return `[${this.data.join(', ')}]`;
     }
 
     /**

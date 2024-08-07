@@ -98,15 +98,15 @@ class AssetListLoader extends EventHandler {
      */
     destroy() {
         // remove any outstanding listeners
-        this._registry.off("load", this._onLoad);
-        this._registry.off("error", this._onError);
+        this._registry.off('load', this._onLoad);
+        this._registry.off('error', this._onError);
 
         this._waitingAssets.forEach((id) => {
-            this._registry.off("add:" + id, this._onAddAsset);
+            this._registry.off(`add:${id}`, this._onAddAsset);
         });
 
-        this.off("progress");
-        this.off("load");
+        this.off('progress');
+        this.off('load');
     }
 
     _assetHasDependencies(asset) {
@@ -124,7 +124,7 @@ class AssetListLoader extends EventHandler {
     load(done, scope) {
         if (this._loading) {
             // #if _DEBUG
-            console.debug("AssetListLoader: Load function called multiple times.");
+            console.debug('AssetListLoader: Load function called multiple times.');
             // #endif
             return;
         }
@@ -132,8 +132,8 @@ class AssetListLoader extends EventHandler {
         this._callback = done;
         this._scope = scope;
 
-        this._registry.on("load", this._onLoad, this);
-        this._registry.on("error", this._onError, this);
+        this._registry.on('load', this._onLoad, this);
+        this._registry.on('error', this._onError, this);
 
         let loadingAssets = false;
         this._assets.forEach((asset) => {
@@ -175,7 +175,7 @@ class AssetListLoader extends EventHandler {
         if (this._loaded) {
             done.call(scope, Array.from(this._assets));
         } else {
-            this.once("load", (assets) => {
+            this.once('load', (assets) => {
                 done.call(scope, assets);
             });
         }
@@ -185,19 +185,19 @@ class AssetListLoader extends EventHandler {
     _loadingComplete() {
         if (this._loaded) return;
         this._loaded = true;
-        this._registry.off("load", this._onLoad, this);
-        this._registry.off("error", this._onError, this);
+        this._registry.off('load', this._onLoad, this);
+        this._registry.off('error', this._onError, this);
 
         if (this._failed.length) {
             if (this._callback) {
-                this._callback.call(this._scope, "Failed to load some assets", this._failed);
+                this._callback.call(this._scope, 'Failed to load some assets', this._failed);
             }
-            this.fire("error", this._failed);
+            this.fire('error', this._failed);
         } else {
             if (this._callback) {
                 this._callback.call(this._scope);
             }
-            this.fire("load", Array.from(this._assets));
+            this.fire('load', Array.from(this._assets));
         }
     }
 
@@ -205,7 +205,7 @@ class AssetListLoader extends EventHandler {
     _onLoad(asset) {
         // check this is an asset we care about
         if (this._loadingAssets.has(asset)) {
-            this.fire("progress", asset);
+            this.fire('progress', asset);
             this._loadingAssets.delete(asset);
         }
 
@@ -251,7 +251,7 @@ class AssetListLoader extends EventHandler {
 
     _waitForAsset(assetId) {
         this._waitingAssets.add(assetId);
-        this._registry.once('add:' + assetId, this._onAddAsset, this);
+        this._registry.once(`add:${assetId}`, this._onAddAsset, this);
     }
 }
 

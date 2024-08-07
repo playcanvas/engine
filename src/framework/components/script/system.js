@@ -110,8 +110,9 @@ class ScriptComponentSystem extends ComponentSystem {
             order.push(scriptName);
 
             const attributes = { };
-            for (const key in scriptInstance.__attributes)
+            for (const key in scriptInstance.__attributes) {
                 attributes[key] = scriptInstance.__attributes[key];
+            }
 
             scripts[scriptName] = {
                 enabled: scriptInstance._enabled,

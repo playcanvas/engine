@@ -1,5 +1,5 @@
-import { BUFFERUSAGE_UNIFORM } from "../constants.js";
-import { WebgpuBuffer } from "./webgpu-buffer.js";
+import { BUFFERUSAGE_UNIFORM } from '../constants.js';
+import { WebgpuBuffer } from './webgpu-buffer.js';
 
 /**
  * A WebGPU implementation of the UniformBuffer.

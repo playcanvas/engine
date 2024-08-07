@@ -400,7 +400,7 @@ class MeshInstance {
      * this.app.scene.root.addChild(entity);
      */
     constructor(mesh, material, node = null) {
-        Debug.assert(!(mesh instanceof GraphNode), "Incorrect parameters for MeshInstance's constructor. Use new MeshInstance(mesh, material, node)");
+        Debug.assert(!(mesh instanceof GraphNode), 'Incorrect parameters for MeshInstance\'s constructor. Use new MeshInstance(mesh, material, node)');
 
         this.node = node;           // The node that defines the transform of the mesh instance
         this._mesh = mesh;          // The mesh that this instance renders
@@ -451,8 +451,9 @@ class MeshInstance {
      */
     set mesh(mesh) {
 
-        if (mesh === this._mesh)
+        if (mesh === this._mesh) {
             return;
+        }
 
         if (this._mesh) {
             this._mesh.decRefCount();
@@ -860,8 +861,9 @@ class MeshInstance {
      * @type {number}
      */
     set instancingCount(value) {
-        if (this.instancingData)
+        if (this.instancingData) {
             this.instancingData.count = value;
+        }
     }
 
     /**
@@ -1084,8 +1086,9 @@ class MeshInstance {
     setRealtimeLightmap(name, texture) {
         // no change
         const old = this.getParameter(name);
-        if (old === texture)
+        if (old === texture) {
             return;
+        }
 
         // remove old
         if (old) {
@@ -1101,11 +1104,11 @@ class MeshInstance {
         }
     }
 
-     /**
-      * Deletes a shader parameter on a mesh instance.
-      *
-      * @param {string} name - The name of the parameter to delete.
-      */
+    /**
+     * Deletes a shader parameter on a mesh instance.
+     *
+     * @param {string} name - The name of the parameter to delete.
+     */
     deleteParameter(name) {
         if (this.parameters[name]) {
             delete this.parameters[name];
