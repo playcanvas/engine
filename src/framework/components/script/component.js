@@ -664,6 +664,7 @@ class ScriptComponent extends Component {
      * true.
      * @param {object} [args.attributes] - Object with values for attributes (if any), where key is
      * name of an attribute.
+     * @param {object} [args.properties] - Object with values that are **assigned** to the script instance.
      * @param {boolean} [args.preloading] - If script instance is created during preload. If true,
      * script and attributes must be initialized manually. Defaults to false.
      * @param {number} [args.ind] - The index where to insert the script instance at. Defaults to
@@ -702,6 +703,9 @@ class ScriptComponent extends Component {
                     attributes: args.attributes
                 });
 
+                if (args.properties && typeof args.properties === 'object') {
+                    Object.assign(scriptInstance, args.properties);
+                }
 
                 // If the script is not a ScriptType then we must store attribute data on the component
                 if (!(scriptInstance instanceof ScriptType)) {
