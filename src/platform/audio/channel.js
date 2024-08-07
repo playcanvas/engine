@@ -143,8 +143,9 @@ class Channel {
         this.manager.on('resume', this.onManagerResume, this);
 
         // suspend immediately if manager is suspended
-        if (this.manager.suspended)
+        if (this.manager.suspended) {
             this.onManagerSuspend();
+        }
     }
 
     /**
@@ -263,8 +264,9 @@ if (!hasAudioContext()) {
             this.manager.on('resume', this.onManagerResume, this);
 
             // suspend immediately if manager is suspended
-            if (this.manager.suspended)
+            if (this.manager.suspended) {
                 this.onManagerSuspend();
+            }
 
         },
 

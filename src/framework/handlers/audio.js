@@ -60,7 +60,7 @@ class AudioHandler extends ResourceHandler {
         super(app, 'audio');
 
         this.manager = app.soundManager;
-        Debug.assert(this.manager, "AudioSourceComponentSystem cannot be created without sound manager");
+        Debug.assert(this.manager, 'AudioSourceComponentSystem cannot be created without sound manager');
     }
 
     _isSupported(url) {
@@ -82,9 +82,9 @@ class AudioHandler extends ResourceHandler {
         };
 
         const error = function (err) {
-            let msg = 'Error loading audio url: ' + url.original;
+            let msg = `Error loading audio url: ${url.original}`;
             if (err) {
-                msg += ': ' + (err.message || err);
+                msg += `: ${err.message || err}`;
             }
             console.warn(msg);
             callback(msg);
@@ -132,7 +132,7 @@ class AudioHandler extends ResourceHandler {
                 options.responseType = Http.ResponseType.ARRAY_BUFFER;
             }
 
-            http.get(url, options, function (err, response) {
+            http.get(url, options, (err, response) => {
                 if (err) {
                     error(err);
                     return;

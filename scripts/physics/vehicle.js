@@ -47,7 +47,7 @@ Vehicle.prototype.initialize = function () {
     var wheelDirection = new Ammo.btVector3(0, -1, 0);
     var connectionPoint = new Ammo.btVector3(0, 0, 0);
 
-    this.wheels.forEach(function (wheelEntity) {
+    this.wheels.forEach((wheelEntity) => {
         var wheelScript = wheelEntity.script.vehicleWheel;
 
         var frictionSlip = wheelScript.frictionSlip;
@@ -84,15 +84,15 @@ Vehicle.prototype.initialize = function () {
     this.steering = 0;
 
     // Event handling
-    this.on("enable", function () {
+    this.on('enable', () => {
         dynamicsWorld.addAction(vehicle);
     });
 
-    this.on("disable", function () {
+    this.on('disable', () => {
         dynamicsWorld.removeAction(vehicle);
     });
 
-    this.on("destroy", function () {
+    this.on('destroy', () => {
         dynamicsWorld.removeAction(vehicle);
 
         Ammo.destroy(vehicleRayCaster);

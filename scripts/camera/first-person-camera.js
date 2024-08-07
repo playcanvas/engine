@@ -35,9 +35,9 @@ CharacterController.prototype.jump = function () {
         this.entity.rigidbody.applyImpulse(0, this.jumpImpulse, 0);
         this.onGround = false;
         this.jumping = true;
-        setTimeout(function () {
+        setTimeout(() => {
             this.jumping = false;
-        }.bind(this), 500);
+        }, 500);
     }
 };
 
@@ -507,12 +507,12 @@ GamePadInput.prototype.initialize = function () {
 
     // Manage DOM event listeners
     var addEventListeners = function () {
-        window.addEventListener("gamepadconnected", function (e) {});
-        window.addEventListener("gamepaddisconnected", function (e) {});
+        window.addEventListener('gamepadconnected', (e) => {});
+        window.addEventListener('gamepaddisconnected', (e) => {});
     };
     var removeEventListeners = function () {
-        window.removeEventListener("gamepadconnected", function (e) {});
-        window.removeEventListener("gamepaddisconnected", function (e) {});
+        window.removeEventListener('gamepadconnected', (e) => {});
+        window.removeEventListener('gamepaddisconnected', (e) => {});
     };
 
     this.on('enable', addEventListeners);

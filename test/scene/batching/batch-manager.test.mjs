@@ -6,7 +6,7 @@ import { HTMLCanvasElement } from '@playcanvas/canvas-mock';
 
 import { expect } from 'chai';
 
-describe('BatchManager', function () {
+describe('BatchManager', () => {
 
     beforeEach(function () {
         const canvas = new HTMLCanvasElement(500, 500);

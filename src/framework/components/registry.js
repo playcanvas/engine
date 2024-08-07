@@ -191,9 +191,9 @@ class ComponentSystemRegistry extends EventHandler {
      */
     zone;
 
-     /**
-      * Create a new ComponentSystemRegistry instance.
-      */
+    /**
+     * Create a new ComponentSystemRegistry instance.
+     */
     constructor() {
         super();
 

@@ -19,10 +19,10 @@ function onContainerAssetLoaded(containerAsset) {
 function onContainerAssetAdded(containerAsset) {
     const renderAsset = this;
 
-    renderAsset.registry.off('load:' + containerAsset.id, onContainerAssetLoaded, renderAsset);
-    renderAsset.registry.on('load:' + containerAsset.id, onContainerAssetLoaded, renderAsset);
-    renderAsset.registry.off('remove:' + containerAsset.id, onContainerAssetRemoved, renderAsset);
-    renderAsset.registry.once('remove:' + containerAsset.id, onContainerAssetRemoved, renderAsset);
+    renderAsset.registry.off(`load:${containerAsset.id}`, onContainerAssetLoaded, renderAsset);
+    renderAsset.registry.on(`load:${containerAsset.id}`, onContainerAssetLoaded, renderAsset);
+    renderAsset.registry.off(`remove:${containerAsset.id}`, onContainerAssetRemoved, renderAsset);
+    renderAsset.registry.once(`remove:${containerAsset.id}`, onContainerAssetRemoved, renderAsset);
 
     if (!containerAsset.resource) {
         renderAsset.registry.load(containerAsset);
@@ -34,7 +34,7 @@ function onContainerAssetAdded(containerAsset) {
 function onContainerAssetRemoved(containerAsset) {
     const renderAsset = this;
 
-    renderAsset.registry.off('load:' + containerAsset.id, onContainerAssetLoaded, renderAsset);
+    renderAsset.registry.off(`load:${containerAsset.id}`, onContainerAssetLoaded, renderAsset);
 
     if (renderAsset.resource) {
         renderAsset.resource.destroy();
@@ -64,12 +64,13 @@ class RenderHandler extends ResourceHandler {
     }
 
     patch(asset, registry) {
-        if (!asset.data.containerAsset)
+        if (!asset.data.containerAsset) {
             return;
+        }
 
         const containerAsset = registry.get(asset.data.containerAsset);
         if (!containerAsset) {
-            registry.once('add:' + asset.data.containerAsset, onContainerAssetAdded, asset);
+            registry.once(`add:${asset.data.containerAsset}`, onContainerAssetAdded, asset);
             return;
         }
 

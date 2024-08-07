@@ -140,8 +140,9 @@ class GSplat {
     getTextureFormat(device, preferHighPrecision) {
 
         // on WebGL1 R32F is not supported, always use half precision
-        if (device.isWebGL1)
+        if (device.isWebGL1) {
             preferHighPrecision = false;
+        }
 
         const halfSupported = device.extTextureHalfFloat && device.textureHalfFloatUpdatable;
         const floatSupported = device.extTextureFloat;
@@ -174,8 +175,9 @@ class GSplat {
      */
     updateColorData(gsplatData) {
         const texture = this.colorTexture;
-        if (!texture)
+        if (!texture) {
             return;
+        }
         const data = texture.lock();
 
         const c = new Vec4();
@@ -200,8 +202,9 @@ class GSplat {
 
         const float2Half = FloatPacking.float2Half;
 
-        if (!this.transformATexture)
+        if (!this.transformATexture) {
             return;
+        }
 
         const dataA = this.transformATexture.lock();
         const dataB = this.transformBTexture.lock();

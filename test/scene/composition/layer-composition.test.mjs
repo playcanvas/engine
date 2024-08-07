@@ -18,7 +18,7 @@ describe('LayerComposition', function () {
         this.composition = null;
     });
 
-    describe('#constructor', function () {
+    describe('#constructor', () => {
 
         it('creates a new LayerComposition', function () {
             expect(this.composition).to.be.an.instanceof(LayerComposition);
@@ -26,7 +26,7 @@ describe('LayerComposition', function () {
 
     });
 
-    describe('#getLayerById', function () {
+    describe('#getLayerById', () => {
 
         it('should work after push()', function () {
             this.composition.push(this.layer);
@@ -78,7 +78,7 @@ describe('LayerComposition', function () {
 
     });
 
-    describe('#getOpaqueIndex', function () {
+    describe('#getOpaqueIndex', () => {
 
         it('should return correct index after push()', function () {
             this.composition.push(this.layer);
@@ -103,7 +103,7 @@ describe('LayerComposition', function () {
 
     });
 
-    describe('#getTransparentIndex', function () {
+    describe('#getTransparentIndex', () => {
 
         it('should return correct index after push()', function () {
             this.composition.push(this.layer);
@@ -128,7 +128,7 @@ describe('LayerComposition', function () {
 
     });
 
-    describe('#getLayerByName', function () {
+    describe('#getLayerByName', () => {
 
         it('should return layer', function () {
             this.composition.push(this.layer);
@@ -141,7 +141,7 @@ describe('LayerComposition', function () {
 
     });
 
-    describe('#sortTransparentLayers', function () {
+    describe('#sortTransparentLayers', () => {
 
         it('should return negative if the first layers are on top of the second layers', function () {
             const layerFront = new Layer({ id: 2 });
@@ -259,7 +259,7 @@ describe('LayerComposition', function () {
 
     });
 
-    describe('#sortOpaqueLayers', function () {
+    describe('#sortOpaqueLayers', () => {
 
         it('should return negative if the first layers are on top of the second layers', function () {
             const layerFront = new Layer({ id: 2 });

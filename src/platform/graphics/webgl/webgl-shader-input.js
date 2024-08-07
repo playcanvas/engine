@@ -28,7 +28,7 @@ class WebglShaderInput {
         this.version = new Version();
 
         // custom data type for arrays
-        if (name.substring(name.length - 3) === "[0]") {
+        if (name.substring(name.length - 3) === '[0]') {
             switch (type) {
                 case UNIFORMTYPE_FLOAT: type = UNIFORMTYPE_FLOATARRAY; break;
                 case UNIFORMTYPE_INT: type = UNIFORMTYPE_INTARRAY; break;

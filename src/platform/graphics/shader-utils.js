@@ -1,4 +1,4 @@
-import { Debug } from "../../core/debug.js";
+import { Debug } from '../../core/debug.js';
 import {
     SEMANTIC_POSITION, SEMANTIC_NORMAL, SEMANTIC_TANGENT, SEMANTIC_TEXCOORD0, SEMANTIC_TEXCOORD1, SEMANTIC_TEXCOORD2,
     SEMANTIC_TEXCOORD3, SEMANTIC_TEXCOORD4, SEMANTIC_TEXCOORD5, SEMANTIC_TEXCOORD6, SEMANTIC_TEXCOORD7,
@@ -112,14 +112,14 @@ class ShaderUtils {
             options.vertexCode;
 
         // fragment code
-        const fragCode = (options.fragmentPreamble || '') +
+        const fragCode = `${(options.fragmentPreamble || '') +
             ShaderUtils.versionCode(device) +
             getDefines(webgpuFS, gles3FS, gles2FS, false, options) +
             ShaderUtils.getDefinesCode(options.fragmentDefines) +
-            ShaderUtils.precisionCode(device) + '\n' +
-            sharedFS +
-            ShaderUtils.getShaderNameCode(name) +
-            (options.fragmentCode || ShaderUtils.dummyFragmentCode());
+            ShaderUtils.precisionCode(device)}\n${
+            sharedFS
+        }${ShaderUtils.getShaderNameCode(name)
+        }${options.fragmentCode || ShaderUtils.dummyFragmentCode()}`;
 
         // attributes
         const attribs = options.attributes ?? ShaderUtils.collectAttributes(options.vertexCode);
@@ -162,15 +162,15 @@ class ShaderUtils {
 
             // extensions used by default
             if (device.extStandardDerivatives) {
-                code += "#extension GL_OES_standard_derivatives : enable\n";
+                code += '#extension GL_OES_standard_derivatives : enable\n';
             }
             if (device.extTextureLod) {
-                code += "#extension GL_EXT_shader_texture_lod : enable\n";
-                code += "#define SUPPORTS_TEXLOD\n";
+                code += '#extension GL_EXT_shader_texture_lod : enable\n';
+                code += '#define SUPPORTS_TEXLOD\n';
             }
             if (device.extDrawBuffers) {
-                code += "#extension GL_EXT_draw_buffers : require\n";
-                code += "#define SUPPORTS_MRT\n";
+                code += '#extension GL_EXT_draw_buffers : require\n';
+                code += '#define SUPPORTS_MRT\n';
             }
         }
 
@@ -178,14 +178,14 @@ class ShaderUtils {
     }
 
     static dummyFragmentCode() {
-        return "void main(void) {gl_FragColor = vec4(0.0);}";
+        return 'void main(void) {gl_FragColor = vec4(0.0);}';
     }
 
     static versionCode(device) {
         if (device.isWebGPU) {
             return '#version 450\n';
         }
-        return device.isWebGL2 ? "#version 300 es\n" : "";
+        return device.isWebGL2 ? '#version 300 es\n' : '';
     }
 
     static precisionCode(device, forcePrecision) {
@@ -234,9 +234,9 @@ class ShaderUtils {
         const attribs = {};
         let attrs = 0;
 
-        let found = vsCode.indexOf("attribute");
+        let found = vsCode.indexOf('attribute');
         while (found >= 0) {
-            if (found > 0 && vsCode[found - 1] === "/") break;
+            if (found > 0 && vsCode[found - 1] === '/') break;
             const endOfLine = vsCode.indexOf(';', found);
             const startOfAttribName = vsCode.lastIndexOf(' ', endOfLine);
             const attribName = vsCode.substring(startOfAttribName + 1, endOfLine);
@@ -249,12 +249,12 @@ class ShaderUtils {
                 if (semantic !== undefined) {
                     attribs[attribName] = semantic;
                 } else {
-                    attribs[attribName] = "ATTR" + attrs;
+                    attribs[attribName] = `ATTR${attrs}`;
                     attrs++;
                 }
             }
 
-            found = vsCode.indexOf("attribute", found + 1);
+            found = vsCode.indexOf('attribute', found + 1);
         }
 
         return attribs;

@@ -1,14 +1,14 @@
-import { CULLFACE_NONE, SEMANTIC_ATTR13, SEMANTIC_POSITION } from "../../platform/graphics/constants.js";
-import { ShaderProcessorOptions } from "../../platform/graphics/shader-processor-options.js";
-import { BLEND_NONE, BLEND_NORMAL, DITHER_NONE, GAMMA_NONE, GAMMA_SRGBHDR, SHADER_FORWARDHDR, TONEMAP_LINEAR } from "../constants.js";
-import { Material } from "../materials/material.js";
-import { getProgramLibrary } from "../shader-lib/get-program-library.js";
+import { CULLFACE_NONE, SEMANTIC_ATTR13, SEMANTIC_POSITION } from '../../platform/graphics/constants.js';
+import { ShaderProcessorOptions } from '../../platform/graphics/shader-processor-options.js';
+import { BLEND_NONE, BLEND_NORMAL, DITHER_NONE, GAMMA_NONE, GAMMA_SRGBHDR, SHADER_FORWARDHDR, TONEMAP_LINEAR } from '../constants.js';
+import { Material } from '../materials/material.js';
+import { getProgramLibrary } from '../shader-lib/get-program-library.js';
 
-import { hashCode } from "../../core/hash.js";
-import { ShaderUtils } from "../../platform/graphics/shader-utils.js";
-import { shaderChunks } from "../shader-lib/chunks/chunks.js";
-import { ShaderGenerator } from "../shader-lib/programs/shader-generator.js";
-import { ShaderPass } from "../shader-pass.js";
+import { hashCode } from '../../core/hash.js';
+import { ShaderUtils } from '../../platform/graphics/shader-utils.js';
+import { shaderChunks } from '../shader-lib/chunks/chunks.js';
+import { ShaderGenerator } from '../shader-lib/programs/shader-generator.js';
+import { ShaderPass } from '../shader-pass.js';
 
 const splatCoreVS = /* glsl */ `
     uniform mat4 matrix_model;
@@ -280,8 +280,8 @@ class GSplatCompressedShaderGenerator {
         const shaderPassDefines = shaderPassInfo.shaderDefines;
 
         const defines =
-            shaderPassDefines +
-            `#define DITHER_${options.dither.toUpperCase()}\n` +
+            `${shaderPassDefines
+            }#define DITHER_${options.dither.toUpperCase()}\n` +
             `#define TONEMAP_${options.toneMapping === TONEMAP_LINEAR ? 'DISABLED' : 'ENABLED'}\n`;
 
         const vs = defines + splatCoreVS + options.vertex;

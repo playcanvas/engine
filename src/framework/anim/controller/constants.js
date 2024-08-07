@@ -88,12 +88,12 @@ export const ANIM_EQUAL_TO = 'EQUAL_TO';
  */
 export const ANIM_NOT_EQUAL_TO = 'NOT_EQUAL_TO';
 
- /**
-  * Used to set an anim state graph parameter as type integer.
-  *
-  * @type {string}
-  * @category Animation
-  */
+/**
+ * Used to set an anim state graph parameter as type integer.
+ *
+ * @type {string}
+ * @category Animation
+ */
 export const ANIM_PARAMETER_INTEGER = 'INTEGER';
 
 /**

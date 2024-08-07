@@ -17,7 +17,7 @@ class ShaderGenerator {
         if (device.supportsBoneTextures) {
             return chunks.skinTexVS;
         }
-        return "#define BONE_LIMIT " + device.getBoneLimit() + "\n" + chunks.skinConstVS;
+        return `#define BONE_LIMIT ${device.getBoneLimit()}\n${chunks.skinConstVS}`;
     }
 
     static fogCode(value, chunks = shaderChunks) {
@@ -35,7 +35,7 @@ class ShaderGenerator {
         if (value === GAMMA_SRGB || value === GAMMA_SRGBFAST) {
             return chunks.gamma2_2PS ? chunks.gamma2_2PS : shaderChunks.gamma2_2PS;
         } else if (value === GAMMA_SRGBHDR) {
-            return "#define HDR\n" + (chunks.gamma2_2PS ? chunks.gamma2_2PS : shaderChunks.gamma2_2PS);
+            return `#define HDR\n${chunks.gamma2_2PS ? chunks.gamma2_2PS : shaderChunks.gamma2_2PS}`;
         }
         return chunks.gamma1_0PS ? chunks.gamma1_0PS : shaderChunks.gamma1_0PS;
     }

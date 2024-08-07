@@ -7,12 +7,12 @@ const dummyUvs = [0, 1, 2, 3, 4, 5, 6, 7];
 
 class ShaderGeneratorLit extends ShaderGenerator {
     generateKey(options) {
-        const key = "lit" +
+        const key = `lit${
             dummyUvs.map((dummy, index) => {
-                return options.usedUvs[index] ? "1" : "0";
-            }).join("") +
-            options.shaderChunk +
-            LitOptionsUtils.generateKey(options.litOptions);
+                return options.usedUvs[index] ? '1' : '0';
+            }).join('')
+        }${options.shaderChunk
+        }${LitOptionsUtils.generateKey(options.litOptions)}`;
 
         return key;
     }
@@ -32,17 +32,17 @@ class ShaderGeneratorLit extends ShaderGenerator {
         const func = new ChunkBuilder();
 
         // global texture bias for standard textures
-        decl.append(`uniform float textureBias;`);
+        decl.append('uniform float textureBias;');
 
         decl.append(litShader.chunks.litShaderArgsPS);
         code.append(options.shaderChunk);
-        func.code = `evaluateFrontend();`;
+        func.code = 'evaluateFrontend();';
 
         func.code = `\n${func.code.split('\n').map(l => `    ${l}`).join('\n')}\n\n`;
         const usedUvSets = options.usedUvs || [true];
         const mapTransforms = [];
         litShader.generateVertexShader(usedUvSets, usedUvSets, mapTransforms);
-        litShader.generateFragmentShader(decl.code, code.code, func.code, "vUv0");
+        litShader.generateFragmentShader(decl.code, code.code, func.code, 'vUv0');
 
         return litShader.getDefinition();
     }

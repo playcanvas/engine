@@ -1,8 +1,8 @@
-import { ADDRESS_CLAMP_TO_EDGE, FILTER_NEAREST, PIXELFORMAT_DEPTH, PIXELFORMAT_DEPTHSTENCIL, PIXELFORMAT_R32F } from "../../platform/graphics/constants.js";
-import { DebugGraphics } from "../../platform/graphics/debug-graphics.js";
-import { RenderPass } from "../../platform/graphics/render-pass.js";
-import { RenderTarget } from "../../platform/graphics/render-target.js";
-import { Texture } from "../../platform/graphics/texture.js";
+import { ADDRESS_CLAMP_TO_EDGE, FILTER_NEAREST, PIXELFORMAT_DEPTH, PIXELFORMAT_DEPTHSTENCIL, PIXELFORMAT_R32F } from '../../platform/graphics/constants.js';
+import { DebugGraphics } from '../../platform/graphics/debug-graphics.js';
+import { RenderPass } from '../../platform/graphics/render-pass.js';
+import { RenderTarget } from '../../platform/graphics/render-target.js';
+import { Texture } from '../../platform/graphics/texture.js';
 
 // uniform names (first is current name, second one is deprecated name for compatibility)
 const _depthUniformNames = ['uSceneDepthMap', 'uDepthMap'];

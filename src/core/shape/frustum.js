@@ -15,8 +15,9 @@ class Frustum {
      * const frustum = new pc.Frustum();
      */
     constructor() {
-        for (let i = 0; i < 6; i++)
+        for (let i = 0; i < 6; i++) {
             this.planes[i] = [];
+        }
     }
 
     /**
@@ -162,10 +163,12 @@ class Frustum {
         for (p = 0; p < 6; p++) {
             plane = planes[p];
             d = plane[0] * scx + plane[1] * scy + plane[2] * scz + plane[3];
-            if (d <= -sr)
+            if (d <= -sr) {
                 return 0;
-            if (d > sr)
+            }
+            if (d > sr) {
                 c++;
+            }
         }
 
         return (c === 6) ? 2 : 1;

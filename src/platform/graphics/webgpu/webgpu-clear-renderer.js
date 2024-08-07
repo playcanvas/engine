@@ -1,17 +1,17 @@
-import { Debug, DebugHelper } from "../../../core/debug.js";
-import { BindUniformBufferFormat, BindGroupFormat } from "../bind-group-format.js";
-import { UniformBufferFormat, UniformFormat } from "../uniform-buffer-format.js";
-import { BlendState } from "../blend-state.js";
+import { Debug, DebugHelper } from '../../../core/debug.js';
+import { BindUniformBufferFormat, BindGroupFormat } from '../bind-group-format.js';
+import { UniformBufferFormat, UniformFormat } from '../uniform-buffer-format.js';
+import { BlendState } from '../blend-state.js';
 import {
     CULLFACE_NONE,
     PRIMITIVE_TRISTRIP, SHADERLANGUAGE_WGSL, SHADERSTAGE_FRAGMENT, SHADERSTAGE_VERTEX,
     UNIFORMTYPE_FLOAT, UNIFORMTYPE_VEC4, UNIFORM_BUFFER_DEFAULT_SLOT_NAME, BINDGROUP_MESH, CLEARFLAG_COLOR, CLEARFLAG_DEPTH, CLEARFLAG_STENCIL
-} from "../constants.js";
-import { Shader } from "../shader.js";
-import { BindGroup } from "../bind-group.js";
-import { UniformBuffer } from "../uniform-buffer.js";
-import { DebugGraphics } from "../debug-graphics.js";
-import { DepthState } from "../depth-state.js";
+} from '../constants.js';
+import { Shader } from '../shader.js';
+import { BindGroup } from '../bind-group.js';
+import { UniformBuffer } from '../uniform-buffer.js';
+import { DebugGraphics } from '../debug-graphics.js';
+import { DepthState } from '../depth-state.js';
 
 const primitive = {
     type: PRIMITIVE_TRISTRIP,
@@ -135,7 +135,7 @@ class WebgpuClearRenderer {
 
             // setup stencil clear
             if ((flags & CLEARFLAG_STENCIL) && renderTarget.stencil) {
-                Debug.warnOnce("ClearRenderer does not support stencil clear at the moment");
+                Debug.warnOnce('ClearRenderer does not support stencil clear at the moment');
             }
 
             device.setCullMode(CULLFACE_NONE);

@@ -48,7 +48,7 @@ class AnimNode {
     }
 
     get path() {
-        return this._parent ? this._parent.path + '.' + this._name : this._name;
+        return this._parent ? `${this._parent.path}.${this._name}` : this._name;
     }
 
     get point() {

@@ -62,8 +62,9 @@ const script = {
      * @ignore
      */
     create(name, callback) {
-        if (!_legacy)
+        if (!_legacy) {
             return;
+        }
 
         // get the ScriptType from the callback
         const ScriptType = callback(script.app);
@@ -74,7 +75,7 @@ const script = {
         // Push this onto loading stack
         ScriptTypes.push(ScriptType, _legacy);
 
-        this.fire("created", name, callback);
+        this.fire('created', name, callback);
     },
 
     /**
@@ -155,8 +156,9 @@ const script = {
      * });
      */
     createLoadingScreen(callback) {
-        if (_createdLoadingScreen)
+        if (_createdLoadingScreen) {
             return;
+        }
 
         _createdLoadingScreen = true;
 

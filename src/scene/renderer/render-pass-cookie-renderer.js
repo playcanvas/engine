@@ -9,7 +9,7 @@ import { LightCamera } from './light-camera.js';
 import { BlendState } from '../../platform/graphics/blend-state.js';
 import { QuadRender } from '../graphics/quad-render.js';
 import { DepthState } from '../../platform/graphics/depth-state.js';
-import { RenderPass } from "../../platform/graphics/render-pass.js";
+import { RenderPass } from '../../platform/graphics/render-pass.js';
 
 const textureBlitVertexShader = /* glsl */ `
     attribute vec2 vertex_position;
@@ -106,16 +106,19 @@ class RenderPassCookieRenderer extends RenderPass {
             const light = lights[i];
 
             // skip directional lights
-            if (light._type === LIGHTTYPE_DIRECTIONAL)
+            if (light._type === LIGHTTYPE_DIRECTIONAL) {
                 continue;
+            }
 
             // skip clustered cookies with no assigned atlas slot
-            if (!light.atlasViewportAllocated)
+            if (!light.atlasViewportAllocated) {
                 continue;
+            }
 
             // only render cookie when the slot is reassigned (assuming the cookie texture is static)
-            if (!light.atlasSlotUpdated)
+            if (!light.atlasSlotUpdated) {
                 continue;
+            }
 
             if (light.enabled && light.cookie && light.visibleThisFrame) {
                 filteredLights.push(light);
@@ -136,7 +139,7 @@ class RenderPassCookieRenderer extends RenderPass {
 
     get quadRenderer2D() {
         if (!this._quadRenderer2D) {
-            const shader = createShaderFromCode(this.device, textureBlitVertexShader, textureBlitFragmentShader, `cookieRenderer2d`);
+            const shader = createShaderFromCode(this.device, textureBlitVertexShader, textureBlitFragmentShader, 'cookieRenderer2d');
             this._quadRenderer2D = new QuadRender(shader);
         }
         return this._quadRenderer2D;
@@ -144,7 +147,7 @@ class RenderPassCookieRenderer extends RenderPass {
 
     get quadRendererCube() {
         if (!this._quadRendererCube) {
-            const shader = createShaderFromCode(this.device, textureBlitVertexShader, textureCubeBlitFragmentShader, `cookieRendererCube`);
+            const shader = createShaderFromCode(this.device, textureBlitVertexShader, textureCubeBlitFragmentShader, 'cookieRendererCube');
             this._quadRendererCube = new QuadRender(shader);
         }
         return this._quadRendererCube;

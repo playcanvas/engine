@@ -93,16 +93,16 @@ function createGraphicsDevice(canvas, options = {}) {
                 reject(new Error('Failed to create a graphics device'));
             } else {
                 Promise.resolve(deviceCreateFuncs[attempt++]())
-                    .then((device) => {
-                        if (device) {
-                            resolve(device);
-                        } else {
-                            next();
-                        }
-                    }).catch((err) => {
-                        console.log(err);
+                .then((device) => {
+                    if (device) {
+                        resolve(device);
+                    } else {
                         next();
-                    });
+                    }
+                }).catch((err) => {
+                    console.log(err);
+                    next();
+                });
             }
         };
         next();

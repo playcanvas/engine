@@ -322,8 +322,9 @@ class SoundComponent extends Component {
                 for (let i = oldLength - 1; i >= 0; i--) {
                     const isPlaying = instances[i].isPlaying || instances[i].isSuspended;
                     const currentTime = instances[i].currentTime;
-                    if (isPlaying)
+                    if (isPlaying) {
                         instances[i].stop();
+                    }
 
                     const instance = slot._createInstance();
                     if (isPlaying) {
@@ -377,8 +378,9 @@ class SoundComponent extends Component {
         this._slots = slots;
 
         // call onEnable in order to start autoPlay slots
-        if (this.enabled && this.entity.enabled)
+        if (this.enabled && this.entity.enabled) {
             this.onEnable();
+        }
     }
 
     /**

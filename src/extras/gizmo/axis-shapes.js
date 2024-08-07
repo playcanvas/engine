@@ -192,7 +192,7 @@ class AxisShape {
     }
 
     _createRoot(name) {
-        this.entity = new Entity(name + ':' + this.axis);
+        this.entity = new Entity(`${name}:${this.axis}`);
         this._updateRootTransform();
     }
 
@@ -334,13 +334,13 @@ class AxisArrow extends AxisShape {
         this._createRoot('arrow');
 
         // head
-        this._head = new Entity('head:' + this.axis);
+        this._head = new Entity(`head:${this.axis}`);
         this.entity.addChild(this._head);
         this._updateHead();
         this._addRenderShadowMesh(this._head, 'cone');
 
         // line
-        this._line = new Entity('line:' + this.axis);
+        this._line = new Entity(`line:${this.axis}`);
         this.entity.addChild(this._line);
         this._updateLine();
         this._addRenderShadowMesh(this._line, 'cylinder');
@@ -491,13 +491,13 @@ class AxisBoxLine extends AxisShape {
         this._createRoot('boxLine');
 
         // box
-        this._box = new Entity('box:' + this.axis);
+        this._box = new Entity(`box:${this.axis}`);
         this.entity.addChild(this._box);
         this._updateBox();
         this._addRenderShadowMesh(this._box, 'box');
 
         // line
-        this._line = new Entity('line:' + this.axis);
+        this._line = new Entity(`line:${this.axis}`);
         this.entity.addChild(this._line);
         this._updateLine();
         this._addRenderShadowMesh(this._line, 'cylinder');

@@ -77,7 +77,7 @@ class Picker {
     getSelection(x, y, width = 1, height = 1) {
         const device = this.device;
 
-        Debug.assert(typeof x !== 'object', `Picker.getSelection:param 'rect' is deprecated, use 'x, y, width, height' instead.`);
+        Debug.assert(typeof x !== 'object', 'Picker.getSelection:param \'rect\' is deprecated, use \'x, y, width, height\' instead.');
 
         y = this.renderTarget.height - (y + height);
 

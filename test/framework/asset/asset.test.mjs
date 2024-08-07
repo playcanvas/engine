@@ -5,16 +5,16 @@ import { HTMLCanvasElement } from '@playcanvas/canvas-mock';
 
 import { expect } from 'chai';
 
-describe('Asset', function () {
+describe('Asset', () => {
 
     let app;
 
-    beforeEach(function () {
+    beforeEach(() => {
         const canvas = new HTMLCanvasElement(500, 500);
         app = new Application(canvas);
     });
 
-    afterEach(function () {
+    afterEach(() => {
         app.destroy();
     });
 
@@ -29,15 +29,15 @@ describe('Asset', function () {
         'ja': 'ja-JP'
     };
 
-    describe('#getLocalizedAssetId', function () {
+    describe('#getLocalizedAssetId', () => {
 
-        it('should return null if no localizations exist', function () {
+        it('should return null if no localizations exist', () => {
             const asset = new Asset('asset', 'font');
             asset.id = 1000;
             expect(asset.getLocalizedAssetId('en')).to.equal(null);
         });
 
-        it('should return fallback language if available', function () {
+        it('should return fallback language if available', () => {
             const asset = new Asset('asset', 'font');
 
             let id = 1000;
@@ -53,7 +53,7 @@ describe('Asset', function () {
             }
         });
 
-        it('should return fallback language if available', function () {
+        it('should return fallback language if available', () => {
             const asset = new Asset('asset', 'font');
 
             let id = 1000;
@@ -69,12 +69,12 @@ describe('Asset', function () {
             }
         });
 
-        it('should return fallback language if available', function () {
+        it('should return fallback language if available', () => {
             const asset = new Asset('asset', 'font');
 
             let id = 1;
             for (const key in DEFAULT_LOCALE_FALLBACKS) {
-                asset.addLocalizedAssetId(key + '-test', 1000 + id); // add other locale with same language which shouldn't be used
+                asset.addLocalizedAssetId(`${key}-test`, 1000 + id); // add other locale with same language which shouldn't be used
                 asset.addLocalizedAssetId(DEFAULT_LOCALE_FALLBACKS[key], 2000 + id);
                 id++;
             }
@@ -86,7 +86,7 @@ describe('Asset', function () {
             }
         });
 
-        it('zh-HK should return zh-HK if it exists', function () {
+        it('zh-HK should return zh-HK if it exists', () => {
             const asset = new Asset('asset', 'font');
 
             asset.addLocalizedAssetId('zh-CN', 1);
@@ -96,7 +96,7 @@ describe('Asset', function () {
             expect(asset.getLocalizedAssetId('zh-HK')).to.equal(2);
         });
 
-        it('zh-HK should fallback to zh-TW', function () {
+        it('zh-HK should fallback to zh-TW', () => {
             const asset = new Asset('asset', 'font');
 
             asset.addLocalizedAssetId('zh-CN', 1);
@@ -105,7 +105,7 @@ describe('Asset', function () {
             expect(asset.getLocalizedAssetId('zh-HK')).to.equal(2);
         });
 
-        it('zh-TW should fallback to zh-HK', function () {
+        it('zh-TW should fallback to zh-HK', () => {
             const asset = new Asset('asset', 'font');
 
             asset.addLocalizedAssetId('zh-CN', 1);
@@ -114,7 +114,7 @@ describe('Asset', function () {
             expect(asset.getLocalizedAssetId('zh-TW')).to.equal(2);
         });
 
-        it('zh-SG should fallback to zh-CN', function () {
+        it('zh-SG should fallback to zh-CN', () => {
             const asset = new Asset('asset', 'font');
 
             asset.addLocalizedAssetId('zh-HK', 1);

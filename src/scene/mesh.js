@@ -209,7 +209,7 @@ class Mesh extends RefCountedObject {
     constructor(graphicsDevice, options) {
         super();
         this.id = id++;
-        Debug.assert(graphicsDevice, "Mesh constructor takes a GraphicsDevice as a parameter, and it was not provided.");
+        Debug.assert(graphicsDevice, 'Mesh constructor takes a GraphicsDevice as a parameter, and it was not provided.');
         this.device = graphicsDevice;
 
         this._storageIndex = options?.storageIndex || false;

@@ -1,10 +1,10 @@
-import { Color } from "../../core/math/color.js";
-import { ADDRESS_CLAMP_TO_EDGE, FILTER_NEAREST, PIXELFORMAT_RGBA8 } from "../../platform/graphics/constants.js";
-import { Texture } from "../../platform/graphics/texture.js";
-import { RenderPass } from "../../platform/graphics/render-pass.js";
-import { BlendState } from "../../platform/graphics/blend-state.js";
-import { RenderTarget } from "../../platform/graphics/render-target.js";
-import { LAYERID_DEPTH, SHADER_DEPTH } from "../constants.js";
+import { Color } from '../../core/math/color.js';
+import { ADDRESS_CLAMP_TO_EDGE, FILTER_NEAREST, PIXELFORMAT_RGBA8 } from '../../platform/graphics/constants.js';
+import { Texture } from '../../platform/graphics/texture.js';
+import { RenderPass } from '../../platform/graphics/render-pass.js';
+import { BlendState } from '../../platform/graphics/blend-state.js';
+import { RenderTarget } from '../../platform/graphics/render-target.js';
+import { LAYERID_DEPTH, SHADER_DEPTH } from '../constants.js';
 
 const webgl1DepthClearColor = new Color(254.0 / 255, 254.0 / 255, 254.0 / 255, 254.0 / 255);
 const tempMeshInstances = [];
@@ -94,8 +94,9 @@ class RenderPassDepth extends RenderPass {
                 if (layer.camerasSet.has(camera)) {
 
                     // only render the layers before the depth layer
-                    if (layer.id === LAYERID_DEPTH)
+                    if (layer.id === LAYERID_DEPTH) {
                         break;
+                    }
 
                     const culledInstances = layer.getCulledInstances(camera);
                     const meshInstances = isTransparent[i] ? culledInstances.transparent : culledInstances.opaque;

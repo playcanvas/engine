@@ -190,10 +190,10 @@ class Texture {
      */
     constructor(graphicsDevice, options = {}) {
         this.device = graphicsDevice;
-        Debug.assert(this.device, "Texture constructor requires a graphicsDevice to be valid");
-        Debug.assert(!options.width || Number.isInteger(options.width), "Texture width must be an integer number, got", options);
-        Debug.assert(!options.height || Number.isInteger(options.height), "Texture height must be an integer number, got", options);
-        Debug.assert(!options.depth || Number.isInteger(options.depth), "Texture depth must be an integer number, got", options);
+        Debug.assert(this.device, 'Texture constructor requires a graphicsDevice to be valid');
+        Debug.assert(!options.width || Number.isInteger(options.width), 'Texture width must be an integer number, got', options);
+        Debug.assert(!options.height || Number.isInteger(options.height), 'Texture height must be an integer number, got', options);
+        Debug.assert(!options.depth || Number.isInteger(options.depth), 'Texture depth must be an integer number, got', options);
 
         this.name = options.name ?? '';
 
@@ -240,10 +240,10 @@ class Texture {
         if (options.hasOwnProperty('type')) {
             this.type = options.type;
         } else if (options.hasOwnProperty('rgbm')) {
-            Debug.deprecated("options.rgbm is deprecated. Use options.type instead.");
+            Debug.deprecated('options.rgbm is deprecated. Use options.type instead.');
             this.type = options.rgbm ? TEXTURETYPE_RGBM : TEXTURETYPE_DEFAULT;
         } else if (options.hasOwnProperty('swizzleGGGR')) {
-            Debug.deprecated("options.swizzleGGGR is deprecated. Use options.type instead.");
+            Debug.deprecated('options.swizzleGGGR is deprecated. Use options.type instead.');
             this.type = options.swizzleGGGR ? TEXTURETYPE_SWIZZLEGGGR : TEXTURETYPE_DEFAULT;
         }
 
@@ -409,7 +409,7 @@ class Texture {
     set minFilter(v) {
         if (this._minFilter !== v) {
             if (isIntegerPixelFormat(this._format)) {
-                Debug.warn("Texture#minFilter: minFilter property cannot be changed on an integer texture, will remain FILTER_NEAREST", this);
+                Debug.warn('Texture#minFilter: minFilter property cannot be changed on an integer texture, will remain FILTER_NEAREST', this);
             } else {
                 this._minFilter = v;
                 this.propertyChanged(1);
@@ -437,7 +437,7 @@ class Texture {
     set magFilter(v) {
         if (this._magFilter !== v) {
             if (isIntegerPixelFormat(this._format)) {
-                Debug.warn("Texture#magFilter: magFilter property cannot be changed on an integer texture, will remain FILTER_NEAREST", this);
+                Debug.warn('Texture#magFilter: magFilter property cannot be changed on an integer texture, will remain FILTER_NEAREST', this);
             } else {
                 this._magFilter = v;
                 this.propertyChanged(2);
@@ -516,7 +516,7 @@ class Texture {
     set addressW(addressW) {
         if (!this.device.supportsVolumeTextures) return;
         if (!this._volume) {
-            Debug.warn("pc.Texture#addressW: Can't set W addressing mode for a non-3D texture.");
+            Debug.warn('pc.Texture#addressW: Can\'t set W addressing mode for a non-3D texture.');
             return;
         }
         if (addressW !== this._addressW) {
@@ -616,9 +616,9 @@ class Texture {
         if (this._mipmaps !== v) {
 
             if (this.device.isWebGPU) {
-                Debug.warn("Texture#mipmaps: mipmap property is currently not allowed to be changed on WebGPU, create the texture appropriately.", this);
+                Debug.warn('Texture#mipmaps: mipmap property is currently not allowed to be changed on WebGPU, create the texture appropriately.', this);
             } else if (isIntegerPixelFormat(this._format)) {
-                Debug.warn("Texture#mipmaps: mipmap property cannot be changed on an integer texture, will remain false", this);
+                Debug.warn('Texture#mipmaps: mipmap property cannot be changed on an integer texture, will remain false', this);
             } else {
                 this._mipmaps = v;
             }
@@ -907,19 +907,22 @@ class Texture {
             if (!invalid) {
                 // mark levels as updated
                 for (let i = 0; i < 6; i++) {
-                    if (this._levels[mipLevel][i] !== source[i])
+                    if (this._levels[mipLevel][i] !== source[i]) {
                         this._levelsUpdated[mipLevel][i] = true;
+                    }
                 }
             }
         } else {
             // check if source is valid type of element
-            if (!this.device._isBrowserInterface(source))
+            if (!this.device._isBrowserInterface(source)) {
                 invalid = true;
+            }
 
             if (!invalid) {
                 // mark level as updated
-                if (source !== this._levels[mipLevel])
+                if (source !== this._levels[mipLevel]) {
                     this._levelsUpdated[mipLevel] = true;
+                }
 
                 width = source.width;
                 height = source.height;
@@ -981,7 +984,7 @@ class Texture {
      */
     unlock() {
         if (this._lockedMode === TEXTURELOCK_NONE) {
-            Debug.warn("pc.Texture#unlock: Attempting to unlock a texture that is not locked.", this);
+            Debug.warn('pc.Texture#unlock: Attempting to unlock a texture that is not locked.', this);
         }
 
         // Upload the new pixel data if locked in write mode (default)
@@ -1032,7 +1035,7 @@ class Texture {
             level = this.lock({ face: i });
 
             const promise = this.device.readPixelsAsync?.(0, 0, this.width, this.height, level)
-                .then(() => renderTarget.destroy());
+            .then(() => renderTarget.destroy());
 
             promises.push(promise);
         }

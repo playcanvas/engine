@@ -333,8 +333,9 @@ class Light {
     }
 
     set type(value) {
-        if (this._type === value)
+        if (this._type === value) {
             return;
+        }
 
         this._type = value;
         this._destroyShadowMap();
@@ -352,8 +353,9 @@ class Light {
     }
 
     set shape(value) {
-        if (this._shape === value)
+        if (this._shape === value) {
             return;
+        }
 
         this._shape = value;
         this._destroyShadowMap();
@@ -380,13 +382,15 @@ class Light {
     }
 
     set shadowType(value) {
-        if (this._shadowType === value)
+        if (this._shadowType === value) {
             return;
+        }
 
         const device = this.device;
 
-        if (this._type === LIGHTTYPE_OMNI && value !== SHADOW_PCF3 && value !== SHADOW_PCSS)
-            value = SHADOW_PCF3; // VSM or HW PCF for omni lights is not supported yet
+        if (this._type === LIGHTTYPE_OMNI && value !== SHADOW_PCF3 && value !== SHADOW_PCSS) {
+            value = SHADOW_PCF3;
+        } // VSM or HW PCF for omni lights is not supported yet
 
         const supportsDepthShadow = device.supportsDepthShadow;
         if (value === SHADOW_PCF5 && !supportsDepthShadow) {
@@ -394,12 +398,14 @@ class Light {
         }
 
         // fallback from vsm32 to vsm16
-        if (value === SHADOW_VSM32 && (!device.textureFloatRenderable || !device.textureFloatFilterable))
+        if (value === SHADOW_VSM32 && (!device.textureFloatRenderable || !device.textureFloatFilterable)) {
             value = SHADOW_VSM16;
+        }
 
         // fallback from vsm16 to vsm8
-        if (value === SHADOW_VSM16 && !device.textureHalfFloatRenderable)
+        if (value === SHADOW_VSM16 && !device.textureHalfFloatRenderable) {
             value = SHADOW_VSM8;
+        }
 
         this._isVsm = value >= SHADOW_VSM8 && value <= SHADOW_VSM32;
         this._isPcf = value === SHADOW_PCF1 || value === SHADOW_PCF3 || value === SHADOW_PCF5;
@@ -454,8 +460,9 @@ class Light {
     }
 
     set vsmBlurSize(value) {
-        if (this._vsmBlurSize === value)
+        if (this._vsmBlurSize === value) {
             return;
+        }
 
         if (value % 2 === 0) value++; // don't allow even size
         this._vsmBlurSize = value;
@@ -466,8 +473,9 @@ class Light {
     }
 
     set normalOffsetBias(value) {
-        if (this._normalOffsetBias === value)
+        if (this._normalOffsetBias === value) {
             return;
+        }
 
         if ((!this._normalOffsetBias && value) || (this._normalOffsetBias && !value)) {
             this.updateKey();
@@ -480,8 +488,9 @@ class Light {
     }
 
     set falloffMode(value) {
-        if (this._falloffMode === value)
+        if (this._falloffMode === value) {
             return;
+        }
 
         this._falloffMode = value;
         this.updateKey();
@@ -492,8 +501,9 @@ class Light {
     }
 
     set innerConeAngle(value) {
-        if (this._innerConeAngle === value)
+        if (this._innerConeAngle === value) {
             return;
+        }
 
         this._innerConeAngle = value;
         this._innerConeAngleCos = Math.cos(value * Math.PI / 180);
@@ -507,8 +517,9 @@ class Light {
     }
 
     set outerConeAngle(value) {
-        if (this._outerConeAngle === value)
+        if (this._outerConeAngle === value) {
             return;
+        }
 
         this._outerConeAngle = value;
         this._updateOuterAngle(value);
@@ -584,8 +595,9 @@ class Light {
     }
 
     set cookie(value) {
-        if (this._cookie === value)
+        if (this._cookie === value) {
             return;
+        }
 
         this._cookie = value;
         this.updateKey();
@@ -596,8 +608,9 @@ class Light {
     }
 
     set cookieFalloff(value) {
-        if (this._cookieFalloff === value)
+        if (this._cookieFalloff === value) {
             return;
+        }
 
         this._cookieFalloff = value;
         this.updateKey();
@@ -608,14 +621,16 @@ class Light {
     }
 
     set cookieChannel(value) {
-        if (this._cookieChannel === value)
+        if (this._cookieChannel === value) {
             return;
+        }
 
         if (value.length < 3) {
             const chr = value.charAt(value.length - 1);
             const addLen = 3 - value.length;
-            for (let i = 0; i < addLen; i++)
+            for (let i = 0; i < addLen; i++) {
                 value += chr;
+            }
         }
         this._cookieChannel = value;
         this.updateKey();
@@ -626,8 +641,9 @@ class Light {
     }
 
     set cookieTransform(value) {
-        if (this._cookieTransform === value)
+        if (this._cookieTransform === value) {
             return;
+        }
 
         this._cookieTransform = value;
         this._cookieTransformSet = !!value;
@@ -643,8 +659,9 @@ class Light {
     }
 
     set cookieOffset(value) {
-        if (this._cookieOffset === value)
+        if (this._cookieOffset === value) {
             return;
+        }
 
         const xformNew = !!(this._cookieTransformSet || value);
         if (xformNew && !value && this._cookieOffset) {

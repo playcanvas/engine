@@ -327,12 +327,12 @@ class RenderPassCompose extends RenderPassShaderQuad {
                 this._key = key;
 
                 const defines =
-                    (this.bloomTexture ? `#define BLOOM\n` : '') +
-                    (this.gradingEnabled ? `#define GRADING\n` : '') +
-                    (this.vignetteEnabled ? `#define VIGNETTE\n` : '') +
-                    (this.fringingEnabled ? `#define FRINGING\n` : '') +
-                    (this.taaEnabled ? `#define TAA\n` : '') +
-                    (this.isSharpnessEnabled ? `#define CAS\n` : '');
+                    (this.bloomTexture ? '#define BLOOM\n' : '') +
+                    (this.gradingEnabled ? '#define GRADING\n' : '') +
+                    (this.vignetteEnabled ? '#define VIGNETTE\n' : '') +
+                    (this.fringingEnabled ? '#define FRINGING\n' : '') +
+                    (this.taaEnabled ? '#define TAA\n' : '') +
+                    (this.isSharpnessEnabled ? '#define CAS\n' : '');
 
                 const fsChunks =
                 shaderChunks.decodePS +

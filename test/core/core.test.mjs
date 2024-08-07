@@ -2,11 +2,11 @@ import { extend, type } from '../../src/core/core.js';
 
 import { expect } from 'chai';
 
-describe('core', function () {
+describe('core', () => {
 
-    describe('#type', function () {
+    describe('#type', () => {
 
-        it('returns the correct types', function () {
+        it('returns the correct types', () => {
             const types = [
                 null,
                 1,
@@ -37,9 +37,9 @@ describe('core', function () {
 
     });
 
-    describe('#extend', function () {
+    describe('#extend', () => {
 
-        it('combines two objects', function () {
+        it('combines two objects', () => {
             const o1 = {
                 a: 'a',
                 b: 'b'
@@ -57,7 +57,7 @@ describe('core', function () {
             expect(o3.d).to.equal('d');
         });
 
-        it('combines two arrays', function () {
+        it('combines two arrays', () => {
             const a1 = [1, 2, 3];
             const a2 = [4, 5, 6];
 
@@ -68,7 +68,7 @@ describe('core', function () {
             expect(a3[2]).to.equal(a2[2]);
         });
 
-        it('combines and object and an array', function () {
+        it('combines and object and an array', () => {
             const o1 = { a: 'a' };
             const a1 = [1, 2];
 
@@ -78,7 +78,7 @@ describe('core', function () {
             expect(o2[1]).to.equal(2);
         });
 
-        it('deep combines two objects', function () {
+        it('deep combines two objects', () => {
             const o1 = {
                 A: 'A'
             };
@@ -95,7 +95,7 @@ describe('core', function () {
             expect(o3.A).to.equal('A');
         });
 
-        it('deep combines two objects and does not copy references', function () {
+        it('deep combines two objects and does not copy references', () => {
             const o1 = {
                 A: 'A'
             };

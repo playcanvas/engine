@@ -38,7 +38,7 @@ class SoundComponentSystem extends ComponentSystem {
          * @type {import('../../../platform/sound/manager.js').SoundManager}
          */
         this.manager = app.soundManager;
-        Debug.assert(this.manager, "AudioSourceComponentSystem cannot be created without sound manager");
+        Debug.assert(this.manager, 'AudioSourceComponentSystem cannot be created without sound manager');
 
         this.app.systems.on('update', this.onUpdate, this);
 

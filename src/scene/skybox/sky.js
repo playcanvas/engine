@@ -1,7 +1,7 @@
-import { Vec3 } from "../../core/math/vec3.js";
-import { SKYTYPE_INFINITE } from "../constants.js";
-import { GraphNode } from "../graph-node.js";
-import { SkyMesh } from "./sky-mesh.js";
+import { Vec3 } from '../../core/math/vec3.js';
+import { SKYTYPE_INFINITE } from '../constants.js';
+import { GraphNode } from '../graph-node.js';
+import { SkyMesh } from './sky-mesh.js';
 
 /**
  * Implementation of the sky.

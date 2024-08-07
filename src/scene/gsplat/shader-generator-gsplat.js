@@ -1,10 +1,10 @@
-import { hashCode } from "../../core/hash.js";
-import { SEMANTIC_ATTR13, SEMANTIC_POSITION } from "../../platform/graphics/constants.js";
-import { ShaderUtils } from "../../platform/graphics/shader-utils.js";
-import { DITHER_NONE, TONEMAP_LINEAR } from "../constants.js";
-import { shaderChunks } from "../shader-lib/chunks/chunks.js";
-import { ShaderGenerator } from "../shader-lib/programs/shader-generator.js";
-import { ShaderPass } from "../shader-pass.js";
+import { hashCode } from '../../core/hash.js';
+import { SEMANTIC_ATTR13, SEMANTIC_POSITION } from '../../platform/graphics/constants.js';
+import { ShaderUtils } from '../../platform/graphics/shader-utils.js';
+import { DITHER_NONE, TONEMAP_LINEAR } from '../constants.js';
+import { shaderChunks } from '../shader-lib/chunks/chunks.js';
+import { ShaderGenerator } from '../shader-lib/programs/shader-generator.js';
+import { ShaderPass } from '../shader-pass.js';
 
 const splatCoreVS = /* glsl */ `
     uniform mat4 matrix_model;
@@ -185,8 +185,8 @@ class GSplatShaderGenerator {
         const shaderPassDefines = shaderPassInfo.shaderDefines;
 
         const defines =
-            shaderPassDefines +
-            `#define DITHER_${options.dither.toUpperCase()}\n` +
+            `${shaderPassDefines
+            }#define DITHER_${options.dither.toUpperCase()}\n` +
             `#define TONEMAP_${options.toneMapping === TONEMAP_LINEAR ? 'DISABLED' : 'ENABLED'}\n`;
 
         const vs = defines + splatCoreVS + options.vertex;

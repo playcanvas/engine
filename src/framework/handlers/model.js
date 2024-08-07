@@ -39,10 +39,10 @@ class ModelHandler extends ResourceHandler {
         this.assets = app.assets;
         this.defaultMaterial = getDefaultMaterial(this.device);
 
-        this.addParser(new JsonModelParser(this), function (url, data) {
+        this.addParser(new JsonModelParser(this), (url, data) => {
             return (path.getExtension(url) === '.json');
         });
-        this.addParser(new GlbModelParser(this), function (url, data) {
+        this.addParser(new GlbModelParser(this), (url, data) => {
             return (path.getExtension(url) === '.glb');
         });
     }
@@ -70,8 +70,9 @@ class ModelHandler extends ResourceHandler {
         }
 
         http.get(url.load, options, (err, response) => {
-            if (!callback)
+            if (!callback) {
                 return;
+            }
 
             if (!err) {
                 // parse the model
@@ -89,7 +90,7 @@ class ModelHandler extends ResourceHandler {
                         return;
                     }
                 }
-                callback("No parsers found");
+                callback('No parsers found');
             } else {
                 callback(`Error loading model: ${url.original} [${err}]`);
             }
@@ -102,13 +103,14 @@ class ModelHandler extends ResourceHandler {
     }
 
     patch(asset, assets) {
-        if (!asset.resource)
+        if (!asset.resource) {
             return;
+        }
 
         const data = asset.data;
 
         const self = this;
-        asset.resource.meshInstances.forEach(function (meshInstance, i) {
+        asset.resource.meshInstances.forEach((meshInstance, i) => {
             if (data.mapping) {
                 const handleMaterial = function (asset) {
                     if (asset.resource) {
@@ -118,7 +120,7 @@ class ModelHandler extends ResourceHandler {
                         assets.load(asset);
                     }
 
-                    asset.once('remove', function (asset) {
+                    asset.once('remove', (asset) => {
                         if (meshInstance.material === asset.resource) {
                             meshInstance.material = self.defaultMaterial;
                         }
@@ -142,7 +144,7 @@ class ModelHandler extends ResourceHandler {
                         if (material) {
                             handleMaterial(material);
                         } else {
-                            assets.once('add:' + id, handleMaterial);
+                            assets.once(`add:${id}`, handleMaterial);
                         }
                     }
                 } else if (url) {
@@ -153,7 +155,7 @@ class ModelHandler extends ResourceHandler {
                     if (material) {
                         handleMaterial(material);
                     } else {
-                        assets.once('add:url:' + path, handleMaterial);
+                        assets.once(`add:url:${path}`, handleMaterial);
                     }
                 }
             }

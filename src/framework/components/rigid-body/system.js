@@ -1025,8 +1025,9 @@ class RigidBodyComponentSystem extends ComponentSystem {
             dynamic[i]._updateDynamic();
         }
 
-        if (!this.dynamicsWorld.setInternalTickCallback)
+        if (!this.dynamicsWorld.setInternalTickCallback) {
             this._checkForCollisions(Ammo.getPointer(this.dynamicsWorld), dt);
+        }
 
         // #if _PROFILER
         this._stats.physicsTime = now() - this._stats.physicsStart;

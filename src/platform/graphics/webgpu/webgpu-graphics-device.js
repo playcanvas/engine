@@ -178,7 +178,7 @@ class WebgpuGraphicsDevice extends GraphicsDevice {
         }
 
         // temporary message to confirm Webgpu is being used
-        Debug.log("WebgpuGraphicsDevice initialization ..");
+        Debug.log('WebgpuGraphicsDevice initialization ..');
 
         // build a full URL from a relative or absolute path
         const buildUrl = (srcPath) => {
@@ -233,7 +233,7 @@ class WebgpuGraphicsDevice extends GraphicsDevice {
         if (adapterLimits) {
             for (const limitName in adapterLimits) {
                 // skip these as they fail on Windows Chrome and are not part of spec currently
-                if (limitName === "minSubgroupSize" || limitName === "maxSubgroupSize") {
+                if (limitName === 'minSubgroupSize' || limitName === 'maxSubgroupSize') {
                     continue;
                 }
                 requiredLimits[limitName] = adapterLimits[limitName];
@@ -504,8 +504,8 @@ class WebgpuGraphicsDevice extends GraphicsDevice {
 
             // render pipeline
             const pipeline = this.renderPipeline.get(primitive, vb0?.format, vb1?.format, this.shader, this.renderTarget,
-                                                     this.bindGroupFormats, this.blendState, this.depthState, this.cullMode,
-                                                     this.stencilEnabled, this.stencilFront, this.stencilBack);
+                this.bindGroupFormats, this.blendState, this.depthState, this.cullMode,
+                this.stencilEnabled, this.stencilFront, this.stencilBack);
             Debug.assert(pipeline);
 
             if (this.pipeline !== pipeline) {

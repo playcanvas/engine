@@ -598,7 +598,7 @@ class ElementComponent extends Component {
         }
 
         if (value > 0xFFFFFF) {
-            Debug.warn('Element.drawOrder larger than max size of: ' + 0xFFFFFF);
+            Debug.warn(`Element.drawOrder larger than max size of: ${0xFFFFFF}`);
             value = 0xFFFFFF;
         }
 
@@ -2154,7 +2154,7 @@ class ElementComponent extends Component {
                 // transform element hierarchy
                 if (this._parent.element) {
                     element._screenToWorld.mul2(this._parent.element._modelTransform,
-                                                element._anchorTransform);
+                        element._anchorTransform);
                 } else {
                     element._screenToWorld.copy(element._anchorTransform);
                 }
@@ -2186,16 +2186,16 @@ class ElementComponent extends Component {
 
                     const pivotOffset = vecB;
                     pivotOffset.set(element._absLeft + element._pivot.x * element.calculatedWidth,
-                                    element._absBottom + element._pivot.y * element.calculatedHeight, 0);
+                        element._absBottom + element._pivot.y * element.calculatedHeight, 0);
 
                     matA.setTranslate(-pivotOffset.x, -pivotOffset.y, -pivotOffset.z);
                     matB.setTRS(depthOffset, this.getLocalRotation(), this.getLocalScale());
                     matC.setTranslate(pivotOffset.x, pivotOffset.y, pivotOffset.z);
 
                     element._screenTransform
-                        .mul2(element._parentWorldTransform, matC)
-                        .mul(matB)
-                        .mul(matA);
+                    .mul2(element._parentWorldTransform, matC)
+                    .mul(matB)
+                    .mul(matA);
 
                     element._cornersDirty = true;
                     element._canvasCornersDirty = true;
@@ -2243,7 +2243,7 @@ class ElementComponent extends Component {
                 if (j < 0) {
                     this.system._prerender.push(current);
                 }
-                Debug.trace(TRACE_ID_ELEMENT, 'set prerender root to: ' + current.name);
+                Debug.trace(TRACE_ID_ELEMENT, `set prerender root to: ${current.name}`);
             }
 
             current = next;
@@ -2253,7 +2253,7 @@ class ElementComponent extends Component {
     _onPrerender() {
         for (let i = 0; i < this.system._prerender.length; i++) {
             const mask = this.system._prerender[i];
-            Debug.trace(TRACE_ID_ELEMENT, 'prerender from: ' + mask.name);
+            Debug.trace(TRACE_ID_ELEMENT, `prerender from: ${mask.name}`);
 
             // prevent call if element has been removed since being added
             if (mask.element) {
@@ -2324,7 +2324,7 @@ class ElementComponent extends Component {
 
         if (mask) {
             const ref = mask.element._image._maskRef;
-            Debug.trace(TRACE_ID_ELEMENT, 'masking: ' + this.entity.name + ' with ' + ref);
+            Debug.trace(TRACE_ID_ELEMENT, `masking: ${this.entity.name} with ${ref}`);
 
             // if this is image or text, set the stencil parameters
             renderableElement?._setStencil(new StencilParameters({
@@ -2334,7 +2334,7 @@ class ElementComponent extends Component {
 
             this._maskedBy = mask;
         } else {
-            Debug.trace(TRACE_ID_ELEMENT, 'no masking on: ' + this.entity.name);
+            Debug.trace(TRACE_ID_ELEMENT, `no masking on: ${this.entity.name}`);
 
             // remove stencil params if this is image or text
             renderableElement?._setStencil(null);
@@ -2363,7 +2363,7 @@ class ElementComponent extends Component {
                 // increment counter to count mask depth
                 depth++;
 
-                Debug.trace(TRACE_ID_ELEMENT, 'masking from: ' + this.entity.name + ' with ' + (sp.ref + 1));
+                Debug.trace(TRACE_ID_ELEMENT, `masking from: ${this.entity.name} with ${sp.ref + 1}`);
                 Debug.trace(TRACE_ID_ELEMENT, 'depth++ to: ', depth);
 
                 currentMask = this.entity;
@@ -2393,7 +2393,7 @@ class ElementComponent extends Component {
                 // increment mask counter to count depth of masks
                 depth++;
 
-                Debug.trace(TRACE_ID_ELEMENT, 'masking from: ' + this.entity.name + ' with ' + sp.ref);
+                Debug.trace(TRACE_ID_ELEMENT, `masking from: ${this.entity.name} with ${sp.ref}`);
                 Debug.trace(TRACE_ID_ELEMENT, 'depth++ to: ', depth);
 
                 currentMask = this.entity;
@@ -2481,7 +2481,7 @@ class ElementComponent extends Component {
         }
 
         this._localAnchor.set(this._anchor.x * resx, this._anchor.y * resy, this._anchor.z * resx,
-                              this._anchor.w * resy);
+            this._anchor.w * resy);
     }
 
     // internal - apply offset x,y to local position and find point in world space

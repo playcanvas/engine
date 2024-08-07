@@ -16,7 +16,7 @@ function upgradeDataSchema(data) {
                 height: data.info.height
             }];
         }
-        data.chars = Object.keys(data.chars || {}).reduce(function (newChars, key) {
+        data.chars = Object.keys(data.chars || {}).reduce((newChars, key) => {
             const existing = data.chars[key];
             // key by letter instead of char code
             const newKey = existing.letter !== undefined ? existing.letter : string.fromCodePoint(key);
@@ -64,11 +64,11 @@ class FontHandler extends ResourceHandler {
             http.get(url.load, {
                 retry: this.maxRetries > 0,
                 maxRetries: this.maxRetries
-            }, function (err, response) {
+            }, (err, response) => {
                 // update asset data
                 if (!err) {
                     const data = upgradeDataSchema(response);
-                    self._loadTextures(url.load.replace('.json', '.png'), data, function (err, textures) {
+                    self._loadTextures(url.load.replace('.json', '.png'), data, (err, textures) => {
                         if (err) {
                             callback(err);
                         } else {
@@ -121,12 +121,13 @@ class FontHandler extends ResourceHandler {
             if (index === 0) {
                 loader.load(url, 'texture', onLoaded);
             } else {
-                loader.load(url.replace('.png', index + '.png'), 'texture', onLoaded);
+                loader.load(url.replace('.png', `${index}.png`), 'texture', onLoaded);
             }
         };
 
-        for (let i = 0; i < numTextures; i++)
+        for (let i = 0; i < numTextures; i++) {
             loadTexture(i);
+        }
     }
 
     open(url, data, asset) {

@@ -150,7 +150,7 @@ class AudioSourceComponent extends Component {
             }
         }
 
-         // Only load audio data if we are not in the tools and if changes have been made
+        // Only load audio data if we are not in the tools and if changes have been made
         if (!this.system._inTools && newAssets.length) {
             this.loadAudioSourceAssets(newAssets);
         }
@@ -271,8 +271,9 @@ class AudioSourceComponent extends Component {
 
             for (let i = 0, len = assets.length; i < len; i++) {
                 let asset = assets[i];
-                if (!(asset instanceof Asset))
+                if (!(asset instanceof Asset)) {
                     asset = registry.get(asset);
+                }
 
                 if (asset && !asset.resource) {
                     registry.load(asset);
@@ -340,8 +341,9 @@ class AudioSourceComponent extends Component {
                     }
                 });
 
-                if (!asset.resource && this.enabled && this.entity.enabled)
+                if (!asset.resource && this.enabled && this.entity.enabled) {
                     this.system.app.assets.load(asset);
+                }
             } else {
                 // don't wait for assets that aren't in the registry
                 count--;
@@ -349,13 +351,14 @@ class AudioSourceComponent extends Component {
                     _done();
                 }
                 // but if they are added insert them into source list
-                this.system.app.assets.on('add:' + ids[index], (asset) => {
+                this.system.app.assets.on(`add:${ids[index]}`, (asset) => {
                     asset.ready((asset) => {
                         this.data.sources[asset.name] = asset.resource;
                     });
 
-                    if (!asset.resource)
+                    if (!asset.resource) {
                         this.system.app.assets.load(asset);
+                    }
                 });
             }
         });

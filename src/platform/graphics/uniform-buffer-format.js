@@ -156,8 +156,9 @@ class UniformFormat {
         this.count = count;
         Debug.assert(!isNaN(count), `Unsupported uniform: ${name}[${count}]`);
         Debug.call(() => {
-            if (isNaN(count))
+            if (isNaN(count)) {
                 this.invalid = true;
+            }
         });
 
         let componentSize = this.numComponents;
@@ -168,8 +169,9 @@ class UniformFormat {
         }
 
         this.byteSize = componentSize * 4;
-        if (count)
+        if (count) {
             this.byteSize *= count;
+        }
 
         Debug.assert(this.byteSize, `Unknown byte size for uniform format ${type} used for ${name}`);
     }
@@ -182,8 +184,9 @@ class UniformFormat {
         let alignment = this.byteSize <= 8 ? this.byteSize : 16;
 
         // arrays have vec4 alignments
-        if (this.count)
+        if (this.count) {
             alignment = 16;
+        }
 
         // align the start offset
         offset = math.roundUp(offset, alignment);
@@ -257,7 +260,7 @@ class UniformBufferFormat {
             code += `    ${typeString} ${uniform.shortName}${uniform.count ? `[${uniform.count}]` : ''};\n`;
         });
 
-        return code + '};\n';
+        return `${code}};\n`;
     }
 }
 

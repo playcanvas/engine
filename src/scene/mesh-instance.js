@@ -364,8 +364,9 @@ class MeshInstance {
      */
     set mesh(mesh) {
 
-        if (mesh === this._mesh)
+        if (mesh === this._mesh) {
             return;
+        }
 
         if (this._mesh) {
             this._mesh.decRefCount();
@@ -528,7 +529,7 @@ class MeshInstance {
             // get the shader from the material
             const mat = this._material;
             const shaderDefs = this._shaderDefs;
-            const variantKey = shaderPass + '_' + shaderDefs + '_' + lightHash;
+            const variantKey = `${shaderPass}_${shaderDefs}_${lightHash}`;
             shaderInstance = new ShaderInstance();
             shaderInstance.shader = mat.variants.get(variantKey);
 
@@ -539,7 +540,7 @@ class MeshInstance {
                 DebugGraphics.pushGpuMarker(this.mesh.device, `Node: ${this.node.name}`);
 
                 const shader = mat.getShaderVariant(this.mesh.device, scene, shaderDefs, null, shaderPass, sortedLights,
-                                                    viewUniformFormat, viewBindGroupFormat, this._mesh.vertexBuffer?.format);
+                    viewUniformFormat, viewBindGroupFormat, this._mesh.vertexBuffer?.format);
 
                 DebugGraphics.popGpuMarker(this.mesh.device);
 
@@ -742,8 +743,9 @@ class MeshInstance {
      * @type {number}
      */
     set instancingCount(value) {
-        if (this.instancingData)
+        if (this.instancingData) {
             this.instancingData.count = value;
+        }
     }
 
     /**
@@ -948,8 +950,9 @@ class MeshInstance {
 
         // no change
         const old = this.getParameter(name);
-        if (old === texture)
+        if (old === texture) {
             return;
+        }
 
         // remove old
         if (old) {
@@ -965,11 +968,11 @@ class MeshInstance {
         }
     }
 
-     /**
-      * Deletes a shader parameter on a mesh instance.
-      *
-      * @param {string} name - The name of the parameter to delete.
-      */
+    /**
+     * Deletes a shader parameter on a mesh instance.
+     *
+     * @param {string} name - The name of the parameter to delete.
+     */
     deleteParameter(name) {
         if (this.parameters[name]) {
             delete this.parameters[name];

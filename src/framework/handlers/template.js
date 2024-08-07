@@ -29,9 +29,9 @@ class TemplateHandler extends ResourceHandler {
             maxRetries: this.maxRetries
         };
 
-        http.get(url.load, options, function (err, response) {
+        http.get(url.load, options, (err, response) => {
             if (err) {
-                callback('Error requesting template: ' + url.original);
+                callback(`Error requesting template: ${url.original}`);
             } else {
                 callback(err, response);
             }

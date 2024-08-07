@@ -34,7 +34,7 @@ class WebgpuBuffer {
     }
 
     allocate(device, size) {
-        Debug.assert(!this.buffer, "Buffer already allocated");
+        Debug.assert(!this.buffer, 'Buffer already allocated');
         this.buffer = device.wgpu.createBuffer({
             size,
             usage: this.usageFlags
@@ -61,11 +61,11 @@ class WebgpuBuffer {
             this.allocate(device, size);
 
             DebugHelper.setLabel(this.buffer,
-                                 this.usageFlags & GPUBufferUsage.VERTEX ? 'VertexBuffer' :
-                                     this.usageFlags & GPUBufferUsage.INDEX ? 'IndexBuffer' :
-                                         this.usageFlags & GPUBufferUsage.UNIFORM ? "UniformBuffer" :
-                                             this.usageFlags & GPUBufferUsage.STORAGE ? "StorageBuffer" :
-                                                 ''
+                this.usageFlags & GPUBufferUsage.VERTEX ? 'VertexBuffer' :
+                    this.usageFlags & GPUBufferUsage.INDEX ? 'IndexBuffer' :
+                        this.usageFlags & GPUBufferUsage.UNIFORM ? 'UniformBuffer' :
+                            this.usageFlags & GPUBufferUsage.STORAGE ? 'StorageBuffer' :
+                                ''
             );
 
 

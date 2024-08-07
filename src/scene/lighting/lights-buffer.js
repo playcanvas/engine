@@ -114,8 +114,8 @@ class LightsBuffer {
             // converts object with properties to a list of these as an example: "#define CLUSTER_TEXTURE_8_BLAH 1.5"
             const buildShaderDefines = (device, object, prefix, floatOffset) => {
                 return Object.keys(object)
-                    .map(key => `#define ${prefix}${key} ${object[key]}${floatOffset}`)
-                    .join('\n');
+                .map(key => `#define ${prefix}${key} ${object[key]}${floatOffset}`)
+                .join('\n');
             };
 
             const lightTextureFormat = LightsBuffer.getLightTextureFormat(device);
@@ -336,8 +336,10 @@ class LightsBuffer {
 
     addLightDataLightProjMatrix(data8, index, lightProjectionMatrix) {
         const matData = lightProjectionMatrix.data;
-        for (let m = 0; m < 12; m++)    // these are in -2..2 range
+        // these are in -2..2 range
+        for (let m = 0; m < 12; m++) {
             FloatPacking.float2BytesRange(matData[m], data8, index + 4 * m, -2, 2, 4);
+        }
         for (let m = 12; m < 16; m++) {  // these are full float range
             FloatPacking.float2MantissaExponent(matData[m], data8, index + 4 * m, 4);
         }
@@ -447,8 +449,9 @@ class LightsBuffer {
             // light projection matrix
             if (lightProjectionMatrix) {
                 const matData = lightProjectionMatrix.data;
-                for (let m = 0; m < 16; m++)
+                for (let m = 0; m < 16; m++) {
                     dataFloat[dataFloatStart + 4 * TextureIndexFloat.PROJ_MAT_0 + m] = matData[m];
+                }
             }
 
             if (atlasViewport) {

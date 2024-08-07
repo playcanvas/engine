@@ -1,5 +1,5 @@
-import { BitPacking } from "../../core/math/bit-packing.js";
-import { StringIds } from "../../core/string-ids.js";
+import { BitPacking } from '../../core/math/bit-packing.js';
+import { StringIds } from '../../core/string-ids.js';
 import {
     FUNC_LESSEQUAL, FUNC_ALWAYS
 } from './constants.js';

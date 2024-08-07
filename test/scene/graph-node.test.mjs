@@ -6,17 +6,17 @@ import { Vec3 } from '../../src/core/math/vec3.js';
 
 import { expect } from 'chai';
 
-describe('GraphNode', function () {
+describe('GraphNode', () => {
 
-    describe('#children', function () {
+    describe('#children', () => {
 
-        it('should be an empty array by default', function () {
+        it('should be an empty array by default', () => {
             const root = new GraphNode();
             expect(root.children).to.be.an('array');
             expect(root.children).to.be.empty;
         });
 
-        it('should be an array of GraphNode', function () {
+        it('should be an array of GraphNode', () => {
             const root = new GraphNode();
             const child = new GraphNode();
             root.addChild(child);
@@ -26,30 +26,30 @@ describe('GraphNode', function () {
 
     });
 
-    describe('#enabled', function () {
+    describe('#enabled', () => {
 
-        it('should be false by default', function () {
+        it('should be false by default', () => {
             const root = new GraphNode();
             expect(root.enabled).to.be.false;
         });
 
     });
 
-    describe('#graphDepth', function () {
+    describe('#graphDepth', () => {
 
-        it('should be 0 by default', function () {
+        it('should be 0 by default', () => {
             const root = new GraphNode();
             expect(root.graphDepth).to.equal(0);
         });
 
-        it('should be 1 if the node is a child', function () {
+        it('should be 1 if the node is a child', () => {
             const root = new GraphNode();
             const child = new GraphNode();
             root.addChild(child);
             expect(child.graphDepth).to.equal(1);
         });
 
-        it('should be 2 if the node is a grandchild', function () {
+        it('should be 2 if the node is a grandchild', () => {
             const root = new GraphNode();
             const child = new GraphNode();
             const grandChild = new GraphNode();
@@ -60,14 +60,14 @@ describe('GraphNode', function () {
 
     });
 
-    describe('#parent', function () {
+    describe('#parent', () => {
 
-        it('should be null by default', function () {
+        it('should be null by default', () => {
             const node = new GraphNode();
             expect(node.parent).to.be.null;
         });
 
-        it('should be set to the parent node', function () {
+        it('should be set to the parent node', () => {
             const parent = new GraphNode();
             const child = new GraphNode();
             parent.addChild(child);
@@ -76,19 +76,19 @@ describe('GraphNode', function () {
 
     });
 
-    describe('#name', function () {
+    describe('#name', () => {
 
-        it('should be an \'Untitled\' by default', function () {
+        it('should be an \'Untitled\' by default', () => {
             const node = new GraphNode();
             expect(node.name).to.equal('Untitled');
         });
 
-        it('can be set via the constructor', function () {
+        it('can be set via the constructor', () => {
             const node = new GraphNode('root');
             expect(node.name).to.equal('root');
         });
 
-        it('can be set to a new name', function () {
+        it('can be set to a new name', () => {
             const node = new GraphNode('node');
             node.name = 'root';
             expect(node.name).to.equal('root');
@@ -96,21 +96,21 @@ describe('GraphNode', function () {
 
     });
 
-    describe('#path', function () {
+    describe('#path', () => {
 
-        it('returns empty string for root node', function () {
+        it('returns empty string for root node', () => {
             const root = new GraphNode('root');
             expect(root.path).to.equal('');
         });
 
-        it('returns path to child node', function () {
+        it('returns path to child node', () => {
             const root = new GraphNode('root');
             const child = new GraphNode('child');
             root.addChild(child);
             expect(child.path).to.equal('child');
         });
 
-        it('returns path to grandchild node', function () {
+        it('returns path to grandchild node', () => {
             const root = new GraphNode('root');
             const child = new GraphNode('child');
             const grandchild = new GraphNode('grandchild');
@@ -121,21 +121,21 @@ describe('GraphNode', function () {
 
     });
 
-    describe('#root', function () {
+    describe('#root', () => {
 
-        it('returns itself for root node', function () {
+        it('returns itself for root node', () => {
             const root = new GraphNode('root');
             expect(root.root).to.equal(root);
         });
 
-        it('returns root node for child node', function () {
+        it('returns root node for child node', () => {
             const root = new GraphNode('root');
             const child = new GraphNode('child');
             root.addChild(child);
             expect(child.root).to.equal(root);
         });
 
-        it('returns root node for grandchild node', function () {
+        it('returns root node for grandchild node', () => {
             const root = new GraphNode('root');
             const child = new GraphNode('child');
             const grandchild = new GraphNode('grandchild');
@@ -146,9 +146,9 @@ describe('GraphNode', function () {
 
     });
 
-    describe('#tags', function () {
+    describe('#tags', () => {
 
-        it('should be empty by default', function () {
+        it('should be empty by default', () => {
             const node = new GraphNode();
             expect(node.tags).to.be.an.instanceof(Tags);
             expect(node.tags.size).to.equal(0);
@@ -156,9 +156,9 @@ describe('GraphNode', function () {
 
     });
 
-    describe('#constructor()', function () {
+    describe('#constructor()', () => {
 
-        it('supports zero arguments', function () {
+        it('supports zero arguments', () => {
             const node = new GraphNode();
             expect(node.children).to.be.an('array').with.lengthOf(0);
             expect(node.enabled).to.equal(false);
@@ -171,7 +171,7 @@ describe('GraphNode', function () {
             expect(node.up).to.be.an.instanceof(Vec3);
         });
 
-        it('supports one argument', function () {
+        it('supports one argument', () => {
             const node = new GraphNode('root');
             expect(node.children).to.be.an('array').with.lengthOf(0);
             expect(node.enabled).to.equal(false);
@@ -185,9 +185,9 @@ describe('GraphNode', function () {
         });
     });
 
-    describe('#addChild()', function () {
+    describe('#addChild()', () => {
 
-        it('adds a child node', function () {
+        it('adds a child node', () => {
             const root = new GraphNode();
             const child = new GraphNode();
             root.addChild(child);
@@ -198,8 +198,8 @@ describe('GraphNode', function () {
 
     });
 
-    describe('#clone', function () {
-        it('ensures that an instance of a subclass keeps its class prototype', function () {
+    describe('#clone', () => {
+        it('ensures that an instance of a subclass keeps its class prototype', () => {
             class UserGraphNode extends GraphNode {}
             const a = new UserGraphNode();
             const b = a.clone();
@@ -207,9 +207,9 @@ describe('GraphNode', function () {
         });
     });
 
-    describe('#find()', function () {
+    describe('#find()', () => {
 
-        it('finds a node by property', function () {
+        it('finds a node by property', () => {
             const root = new GraphNode();
             const child = new GraphNode('Child');
             root.addChild(child);
@@ -227,25 +227,25 @@ describe('GraphNode', function () {
             expect(res).to.be.an('array').with.lengthOf(0);
         });
 
-        it('finds a node by filter function', function () {
+        it('finds a node by filter function', () => {
             const root = new GraphNode();
             const child = new GraphNode('Child');
             root.addChild(child);
 
             let res;
-            res = root.find(function (node) {
+            res = root.find((node) => {
                 return node.name === 'Untitled';
             });
             expect(res).to.be.an('array').with.lengthOf(1);
             expect(res[0]).to.equal(root);
 
-            res = root.find(function (node) {
+            res = root.find((node) => {
                 return node.name === 'Child';
             });
             expect(res).to.be.an('array').with.lengthOf(1);
             expect(res[0]).to.equal(child);
 
-            res = root.find(function (node) {
+            res = root.find((node) => {
                 return node.name === 'Not Found';
             });
             expect(res).to.be.an('array').with.lengthOf(0);
@@ -253,23 +253,23 @@ describe('GraphNode', function () {
 
     });
 
-    describe('#findByName()', function () {
+    describe('#findByName()', () => {
 
-        it('finds root by name', function () {
+        it('finds root by name', () => {
             const root = new GraphNode('root');
             const child = new GraphNode('child');
             root.addChild(child);
             expect(root.findByName('root')).to.equal(root);
         });
 
-        it('finds child by name', function () {
+        it('finds child by name', () => {
             const root = new GraphNode('root');
             const child = new GraphNode('child');
             root.addChild(child);
             expect(root.findByName('child')).to.equal(child);
         });
 
-        it('returns null if no node is found', function () {
+        it('returns null if no node is found', () => {
             const root = new GraphNode('root');
             const child = new GraphNode('child');
             root.addChild(child);
@@ -278,16 +278,16 @@ describe('GraphNode', function () {
 
     });
 
-    describe('#findByPath()', function () {
+    describe('#findByPath()', () => {
 
-        it('finds a child by path', function () {
+        it('finds a child by path', () => {
             const root = new GraphNode('root');
             const child = new GraphNode('child');
             root.addChild(child);
             expect(root.findByPath('child')).to.equal(child);
         });
 
-        it('finds a grandchild by path (string argument)', function () {
+        it('finds a grandchild by path (string argument)', () => {
             const root = new GraphNode('root');
             const child = new GraphNode('child');
             const grandchild = new GraphNode('grandchild');
@@ -296,7 +296,7 @@ describe('GraphNode', function () {
             expect(root.findByPath('child/grandchild')).to.equal(grandchild);
         });
 
-        it('finds a grandchild by path (array argument)', function () {
+        it('finds a grandchild by path (array argument)', () => {
             const root = new GraphNode('root');
             const child = new GraphNode('child');
             const grandchild = new GraphNode('grandchild');
@@ -305,7 +305,7 @@ describe('GraphNode', function () {
             expect(root.findByPath(['child', 'grandchild'])).to.equal(grandchild);
         });
 
-        it('returns null if no node is found', function () {
+        it('returns null if no node is found', () => {
             const root = new GraphNode('root');
             const child = new GraphNode('child');
             root.addChild(child);
@@ -314,16 +314,16 @@ describe('GraphNode', function () {
 
     });
 
-    describe('#findByTag()', function () {
+    describe('#findByTag()', () => {
 
-        it('does not search the root node', function () {
+        it('does not search the root node', () => {
             const root = new GraphNode('root');
             root.tags.add('tag');
             const result = root.findByTag('tag');
             expect(result).to.be.an('array').with.lengthOf(0);
         });
 
-        it('returns an array of nodes that have the query tag', function () {
+        it('returns an array of nodes that have the query tag', () => {
             const root = new GraphNode('root');
             const child = new GraphNode('child');
             root.addChild(child);
@@ -333,7 +333,7 @@ describe('GraphNode', function () {
             expect(result[0]).to.equal(child);
         });
 
-        it('returns an array of nodes that have at least one of the query tags', function () {
+        it('returns an array of nodes that have at least one of the query tags', () => {
             const root = new GraphNode('root');
             const child = new GraphNode('child');
             const grandchild = new GraphNode('grandchild');
@@ -347,7 +347,7 @@ describe('GraphNode', function () {
             expect(result[0]).to.equal(grandchild);
         });
 
-        it('returns an array of nodes that have all of the supplied tags', function () {
+        it('returns an array of nodes that have all of the supplied tags', () => {
             const root = new GraphNode('root');
             const child = new GraphNode('child');
             const grandchild = new GraphNode('grandchild');
@@ -361,7 +361,7 @@ describe('GraphNode', function () {
             expect(result[0]).to.equal(grandchild);
         });
 
-        it('returns an empty array if the search fails', function () {
+        it('returns an empty array if the search fails', () => {
             const root = new GraphNode('root');
             const child = new GraphNode('child');
             root.addChild(child);
@@ -371,9 +371,9 @@ describe('GraphNode', function () {
 
     });
 
-    describe('#findOne()', function () {
+    describe('#findOne()', () => {
 
-        it('finds a node by property', function () {
+        it('finds a node by property', () => {
             const root = new GraphNode();
             const child = new GraphNode('Child');
             root.addChild(child);
@@ -389,23 +389,23 @@ describe('GraphNode', function () {
             expect(res).to.be.null;
         });
 
-        it('finds a node by filter function', function () {
+        it('finds a node by filter function', () => {
             const root = new GraphNode();
             const child = new GraphNode('Child');
             root.addChild(child);
 
             let res;
-            res = root.findOne(function (node) {
+            res = root.findOne((node) => {
                 return node.name === 'Untitled';
             });
             expect(res).to.equal(root);
 
-            res = root.findOne(function (node) {
+            res = root.findOne((node) => {
                 return node.name === 'Child';
             });
             expect(res).to.equal(child);
 
-            res = root.findOne(function (node) {
+            res = root.findOne((node) => {
                 return node.name === 'Not Found';
             });
             expect(res).to.be.null;
@@ -413,9 +413,9 @@ describe('GraphNode', function () {
 
     });
 
-    describe('#forEach()', function () {
+    describe('#forEach()', () => {
 
-        it('iterates over all nodes', function () {
+        it('iterates over all nodes', () => {
             const root = new GraphNode();
             const child1 = new GraphNode();
             const child2 = new GraphNode();
@@ -433,9 +433,9 @@ describe('GraphNode', function () {
 
     });
 
-    describe('#getEulerAngles()', function () {
+    describe('#getEulerAngles()', () => {
 
-        it('returns the euler angles', function () {
+        it('returns the euler angles', () => {
             const node = new GraphNode();
             const angles = node.getEulerAngles();
             expect(angles).to.be.an.instanceof(Vec3);
@@ -446,9 +446,9 @@ describe('GraphNode', function () {
 
     });
 
-    describe('#getLocalScale()', function () {
+    describe('#getLocalScale()', () => {
 
-        it('returns the default local scale of a node', function () {
+        it('returns the default local scale of a node', () => {
             const node = new GraphNode();
             const scale = node.getLocalScale();
             expect(scale).to.be.an.instanceof(Vec3);
@@ -457,7 +457,7 @@ describe('GraphNode', function () {
             expect(scale.z).to.equal(1);
         });
 
-        it('returns the local scale last set on a node', function () {
+        it('returns the local scale last set on a node', () => {
             const node = new GraphNode();
             node.setLocalScale(2, 3, 4);
             const scale = node.getLocalScale();
@@ -469,16 +469,16 @@ describe('GraphNode', function () {
 
     });
 
-    describe('#getLocalTransform()', function () {
+    describe('#getLocalTransform()', () => {
 
-        it('returns an identity matrix for a newly created node', function () {
+        it('returns an identity matrix for a newly created node', () => {
             const node = new GraphNode();
             const transform = node.getLocalTransform();
             expect(transform).to.be.an.instanceof(Mat4);
             expect(transform.equals(Mat4.IDENTITY)).to.be.true;
         });
 
-        it('returns the local transform matrix of a transformed node', function () {
+        it('returns the local transform matrix of a transformed node', () => {
             const node = new GraphNode();
             node.setLocalPosition(1, 2, 3);
             node.setLocalScale(4, 5, 6);
@@ -489,16 +489,16 @@ describe('GraphNode', function () {
 
     });
 
-    describe('#getWorldTransform()', function () {
+    describe('#getWorldTransform()', () => {
 
-        it('returns an identity matrix for a newly created node', function () {
+        it('returns an identity matrix for a newly created node', () => {
             const node = new GraphNode();
             const transform = node.getWorldTransform();
             expect(transform).to.be.an.instanceof(Mat4);
             expect(transform.equals(Mat4.IDENTITY)).to.be.true;
         });
 
-        it('returns the world transform matrix of a transformed node', function () {
+        it('returns the world transform matrix of a transformed node', () => {
             const node = new GraphNode();
             node.setLocalPosition(1, 2, 3);
             node.setLocalScale(4, 5, 6);
@@ -507,7 +507,7 @@ describe('GraphNode', function () {
             expect(transform.data).to.deep.equal(expected);
         });
 
-        it('returns the world transform matrix of a transformed child node', function () {
+        it('returns the world transform matrix of a transformed child node', () => {
             const root = new GraphNode();
             const child = new GraphNode();
             root.addChild(child);
@@ -533,9 +533,9 @@ describe('GraphNode', function () {
 
     });
 
-    describe('#insertChild()', function () {
+    describe('#insertChild()', () => {
 
-        it('inserts a single child node', function () {
+        it('inserts a single child node', () => {
             const root = new GraphNode();
             const child = new GraphNode();
             root.insertChild(child, 0);
@@ -544,7 +544,7 @@ describe('GraphNode', function () {
             expect(child.parent).to.equal(root);
         });
 
-        it('inserts a child node at the beginning', function () {
+        it('inserts a child node at the beginning', () => {
             const root = new GraphNode();
             const child1 = new GraphNode();
             const child2 = new GraphNode();
@@ -557,7 +557,7 @@ describe('GraphNode', function () {
             expect(child2.parent).to.equal(root);
         });
 
-        it('inserts a child node at the end', function () {
+        it('inserts a child node at the end', () => {
             const root = new GraphNode();
             const child1 = new GraphNode();
             const child2 = new GraphNode();
@@ -572,16 +572,16 @@ describe('GraphNode', function () {
 
     });
 
-    describe('#isAncestorOf()', function () {
+    describe('#isAncestorOf()', () => {
 
-        it('returns true if a parent node is an ancestor of a child node', function () {
+        it('returns true if a parent node is an ancestor of a child node', () => {
             const root = new GraphNode();
             const child = new GraphNode();
             root.addChild(child);
             expect(root.isAncestorOf(child)).to.be.true;
         });
 
-        it('returns true if a grandparent node is an ancestor of a grandchild node', function () {
+        it('returns true if a grandparent node is an ancestor of a grandchild node', () => {
             const root = new GraphNode();
             const child = new GraphNode();
             const grandchild = new GraphNode();
@@ -590,29 +590,29 @@ describe('GraphNode', function () {
             expect(root.isAncestorOf(grandchild)).to.be.true;
         });
 
-        it('returns false if a node is not an ancestor of another node', function () {
+        it('returns false if a node is not an ancestor of another node', () => {
             const root = new GraphNode();
             const child = new GraphNode();
             expect(root.isAncestorOf(child)).to.be.false;
         });
 
-        it('asserts that nodes are not ancestors of themselves', function () {
+        it('asserts that nodes are not ancestors of themselves', () => {
             const node = new GraphNode();
             expect(node.isAncestorOf(node)).to.be.false;
         });
 
     });
 
-    describe('#isDescendantOf()', function () {
+    describe('#isDescendantOf()', () => {
 
-        it('returns true if a child node is a descendant of a parent node', function () {
+        it('returns true if a child node is a descendant of a parent node', () => {
             const root = new GraphNode();
             const child = new GraphNode();
             root.addChild(child);
             expect(child.isDescendantOf(root)).to.be.true;
         });
 
-        it('returns true if a grandchild node is an descendant of a grandparent node', function () {
+        it('returns true if a grandchild node is an descendant of a grandparent node', () => {
             const root = new GraphNode();
             const child = new GraphNode();
             const grandchild = new GraphNode();
@@ -621,22 +621,22 @@ describe('GraphNode', function () {
             expect(grandchild.isDescendantOf(root)).to.be.true;
         });
 
-        it('returns false if a node is not a descendant of another node', function () {
+        it('returns false if a node is not a descendant of another node', () => {
             const root = new GraphNode();
             const child = new GraphNode();
             expect(child.isDescendantOf(root)).to.be.false;
         });
 
-        it('asserts that nodes are not descendants of themselves', function () {
+        it('asserts that nodes are not descendants of themselves', () => {
             const node = new GraphNode();
             expect(node.isDescendantOf(node)).to.be.false;
         });
 
     });
 
-    describe('#remove', function () {
+    describe('#remove', () => {
 
-        it('removes the node from its parent, unparenting it', function () {
+        it('removes the node from its parent, unparenting it', () => {
             const node = new GraphNode();
             const child = new GraphNode();
             node.addChild(child);
@@ -647,9 +647,9 @@ describe('GraphNode', function () {
 
     });
 
-    describe('#removeChild()', function () {
+    describe('#removeChild()', () => {
 
-        it('removes a child node', function () {
+        it('removes a child node', () => {
             const node = new GraphNode();
             const child = new GraphNode();
             node.addChild(child);
@@ -660,9 +660,9 @@ describe('GraphNode', function () {
 
     });
 
-    describe('#reparent()', function () {
+    describe('#reparent()', () => {
 
-        it('reparents a child node', function () {
+        it('reparents a child node', () => {
             const node = new GraphNode();
             const child = new GraphNode();
             node.addChild(child);
@@ -676,9 +676,9 @@ describe('GraphNode', function () {
 
     });
 
-    describe('#rotate()', function () {
+    describe('#rotate()', () => {
 
-        it('leaves rotation unchanged for a zero rotation (number inputs)', function () {
+        it('leaves rotation unchanged for a zero rotation (number inputs)', () => {
             const node = new GraphNode();
             const anglesPre = node.getEulerAngles().clone();
             node.rotate(0, 0, 0);
@@ -686,7 +686,7 @@ describe('GraphNode', function () {
             expect(anglesPre.equals(anglesPost)).to.be.true;
         });
 
-        it('leaves rotation unchanged for a zero rotation (vector input)', function () {
+        it('leaves rotation unchanged for a zero rotation (vector input)', () => {
             const node = new GraphNode();
             const anglesPre = node.getEulerAngles().clone();
             node.rotate(Vec3.ZERO);
@@ -694,7 +694,7 @@ describe('GraphNode', function () {
             expect(anglesPre.equals(anglesPost)).to.be.true;
         });
 
-        it('accumulates rotations in a node', function () {
+        it('accumulates rotations in a node', () => {
             const node = new GraphNode();
             node.rotate(1, 0, 0);
             node.rotate(2, 0, 0);
@@ -706,7 +706,7 @@ describe('GraphNode', function () {
             expect(angles.z).to.be.closeTo(0, 0.00001);
         });
 
-        it('accumulates rotations in a hierarchy', function () {
+        it('accumulates rotations in a hierarchy', () => {
             const root = new GraphNode();
             const child = new GraphNode();
             root.addChild(child);
@@ -727,9 +727,9 @@ describe('GraphNode', function () {
 
     });
 
-    describe('#rotateLocal()', function () {
+    describe('#rotateLocal()', () => {
 
-        it('leaves rotation unchanged for a zero rotation (number inputs)', function () {
+        it('leaves rotation unchanged for a zero rotation (number inputs)', () => {
             const node = new GraphNode();
             const anglesPre = node.getEulerAngles().clone();
             node.rotateLocal(0, 0, 0);
@@ -737,7 +737,7 @@ describe('GraphNode', function () {
             expect(anglesPre.equals(anglesPost)).to.be.true;
         });
 
-        it('leaves rotation unchanged for a zero rotation (vector input)', function () {
+        it('leaves rotation unchanged for a zero rotation (vector input)', () => {
             const node = new GraphNode();
             const anglesPre = node.getEulerAngles().clone();
             node.rotateLocal(Vec3.ZERO);
@@ -745,7 +745,7 @@ describe('GraphNode', function () {
             expect(anglesPre.equals(anglesPost)).to.be.true;
         });
 
-        it('accumulates rotations in a node', function () {
+        it('accumulates rotations in a node', () => {
             const node = new GraphNode();
             node.rotateLocal(1, 0, 0);
             node.rotateLocal(2, 0, 0);
@@ -757,7 +757,7 @@ describe('GraphNode', function () {
             expect(angles.z).to.be.closeTo(0, 0.00001);
         });
 
-        it('accumulates rotations in a hierarchy', function () {
+        it('accumulates rotations in a hierarchy', () => {
             const root = new GraphNode();
             const child = new GraphNode();
             root.addChild(child);
@@ -778,9 +778,9 @@ describe('GraphNode', function () {
 
     });
 
-    describe('#translate()', function () {
+    describe('#translate()', () => {
 
-        it('translates hierarchical nodes with number arguments', function () {
+        it('translates hierarchical nodes with number arguments', () => {
             const root = new GraphNode();
             const child = new GraphNode();
             root.addChild(child);
@@ -802,7 +802,7 @@ describe('GraphNode', function () {
             expect(pos.z).to.equal(9);
         });
 
-        it('translates hierarchical nodes with a vector argument', function () {
+        it('translates hierarchical nodes with a vector argument', () => {
             const root = new GraphNode();
             const child = new GraphNode();
             root.addChild(child);
@@ -826,9 +826,9 @@ describe('GraphNode', function () {
 
     });
 
-    describe('#translateLocal()', function () {
+    describe('#translateLocal()', () => {
 
-        it('GraphNode: translateLocal in hierarchy', function () {
+        it('GraphNode: translateLocal in hierarchy', () => {
             const root = new GraphNode('root');
             const child = new GraphNode('child');
             root.addChild(child);

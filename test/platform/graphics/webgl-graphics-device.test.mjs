@@ -4,15 +4,15 @@ import { HTMLCanvasElement } from '@playcanvas/canvas-mock';
 
 import { expect } from 'chai';
 
-describe('WebglGraphicsDevice', function () {
+describe('WebglGraphicsDevice', () => {
 
-    describe('#constructor', function () {
+    describe('#constructor', () => {
 
-        it('no options', function () {
+        it('no options', () => {
             const canvas = new HTMLCanvasElement(500, 500);
             const gd = new WebglGraphicsDevice(canvas);
             expect(gd.canvas).to.equal(canvas);
-//            expect(gd.fullscreen).to.be.false;
+            //            expect(gd.fullscreen).to.be.false;
             expect(gd.height).to.equal(500);
             expect(gd.gl).to.be.ok;
             expect(gd.maxAnisotropy).to.equal(1);

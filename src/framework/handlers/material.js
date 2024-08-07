@@ -67,7 +67,7 @@ class MaterialHandler extends ResourceHandler {
         http.get(url.load, {
             retry: this.maxRetries > 0,
             maxRetries: this.maxRetries
-        }, function (err, response) {
+        }, (err, response) => {
             if (!err) {
                 if (callback) {
                     response._engine = true;
@@ -106,8 +106,9 @@ class MaterialHandler extends ResourceHandler {
         };
 
         for (const key in textures) {
-            if (!textures.hasOwnProperty(key))
+            if (!textures.hasOwnProperty(key)) {
                 continue;
+            }
 
             // create texture
             this._placeholderTextures[key] = new Texture(this._device, {

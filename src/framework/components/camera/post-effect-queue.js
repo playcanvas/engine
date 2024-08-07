@@ -105,7 +105,7 @@ class PostEffectQueue {
 
         const device = this.app.graphicsDevice;
         const format = hdr && device.getRenderableHdrFormat([PIXELFORMAT_RGBA16F, PIXELFORMAT_RGBA32F], true) || PIXELFORMAT_RGBA8;
-        const name = this.camera.entity.name + '-posteffect-' + this.effects.length;
+        const name = `${this.camera.entity.name}-posteffect-${this.effects.length}`;
 
         const colorBuffer = this._allocateColorBuffer(format, name);
 
@@ -224,8 +224,9 @@ class PostEffectQueue {
     _requestDepthMaps() {
         for (let i = 0, len = this.effects.length; i < len; i++) {
             const effect = this.effects[i].effect;
-            if (this._newPostEffect === effect)
+            if (this._newPostEffect === effect) {
                 continue;
+            }
 
             if (effect.needsDepthBuffer) {
                 this._requestDepthMap();

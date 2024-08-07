@@ -372,7 +372,7 @@ class Entity extends GraphNode {
      * const light = entity.findComponent("light");
      */
     findComponent(type) {
-        const entity = this.findOne(function (node) {
+        const entity = this.findOne((node) => {
             return node.c && node.c[type];
         });
         return entity && entity.c[type];
@@ -389,10 +389,10 @@ class Entity extends GraphNode {
      * const lights = entity.findComponents("light");
      */
     findComponents(type) {
-        const entities = this.find(function (node) {
+        const entities = this.find((node) => {
             return node.c && node.c[type];
         });
-        return entities.map(function (entity) {
+        return entities.map((entity) => {
             return entity.c[type];
         });
     }
@@ -468,20 +468,23 @@ class Entity extends GraphNode {
      */
     _notifyHierarchyStateChanged(node, enabled) {
         let enableFirst = false;
-        if (node === this && _enableList.length === 0)
+        if (node === this && _enableList.length === 0) {
             enableFirst = true;
+        }
 
         node._beingEnabled = true;
 
         node._onHierarchyStateChanged(enabled);
 
-        if (node._onHierarchyStatePostChanged)
+        if (node._onHierarchyStatePostChanged) {
             _enableList.push(node);
+        }
 
         const c = node._children;
         for (let i = 0, len = c.length; i < len; i++) {
-            if (c[i]._enabled)
+            if (c[i]._enabled) {
                 this._notifyHierarchyStateChanged(c[i], enabled);
+            }
         }
 
         node._beingEnabled = false;
@@ -524,8 +527,9 @@ class Entity extends GraphNode {
         // post enable all the components
         const components = this.c;
         for (const type in components) {
-            if (components.hasOwnProperty(type))
+            if (components.hasOwnProperty(type)) {
                 components[type].onPostStateChange();
+            }
         }
     }
 
@@ -685,10 +689,10 @@ function resolveDuplicatedEntityReferenceProperties(oldSubtreeRoot, oldEntity, n
         // in order to correctly handle cases where a child has an entity reference
         // field that points to a parent or other ancestor that is still within the
         // duplicated subtree.
-        const _old = oldEntity.children.filter(function (e) {
+        const _old = oldEntity.children.filter((e) => {
             return (e instanceof Entity);
         });
-        const _new = newEntity.children.filter(function (e) {
+        const _new = newEntity.children.filter((e) => {
             return (e instanceof Entity);
         });
 

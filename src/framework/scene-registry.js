@@ -101,7 +101,7 @@ class SceneRegistry {
      */
     add(name, url) {
         if (this._index.hasOwnProperty(name)) {
-            Debug.warn('pc.SceneRegistry: trying to add more than one scene called: ' + name);
+            Debug.warn(`pc.SceneRegistry: trying to add more than one scene called: ${name}`);
             return false;
         }
 
@@ -198,7 +198,7 @@ class SceneRegistry {
         url = sceneItem.url;
 
         if (!url) {
-            callback("Cannot find scene to load");
+            callback('Cannot find scene to load');
             return;
         }
 
@@ -218,7 +218,7 @@ class SceneRegistry {
         if (!sceneItem._loading) {
             // Because we need to load scripts before we instance the hierarchy (i.e. before we
             // create script components), split loading into load and open
-            const handler = app.loader.getHandler("hierarchy");
+            const handler = app.loader.getHandler('hierarchy');
 
             handler.load(url, (err, data) => {
                 sceneItem.data = data;
@@ -300,7 +300,7 @@ class SceneRegistry {
             const _loaded = () => {
                 // Because we need to load scripts before we instance the hierarchy (i.e. before we create script components)
                 // Split loading into load and open
-                const handler = app.loader.getHandler("hierarchy");
+                const handler = app.loader.getHandler('hierarchy');
 
                 app.systems.script.preloading = true;
                 const entity = handler.open(sceneItem.url, sceneItem.data);
@@ -308,7 +308,7 @@ class SceneRegistry {
                 app.systems.script.preloading = false;
 
                 // clear from cache because this data is modified by entity operations (e.g. destroy)
-                app.loader.clearCache(sceneItem.url, "hierarchy");
+                app.loader.clearCache(sceneItem.url, 'hierarchy');
 
                 // add to hierarchy
                 app.root.addChild(entity);
@@ -424,7 +424,7 @@ class SceneRegistry {
     loadScene(url, callback) {
         const app = this._app;
 
-        const handler = app.loader.getHandler("scene");
+        const handler = app.loader.getHandler('scene');
 
         // include asset prefix if present
         if (app.assets && app.assets.prefix && !ABSOLUTE_URL.test(url)) {
@@ -448,11 +448,11 @@ class SceneRegistry {
 
                     // clear scene from cache because we'll destroy it when we load another one
                     // so data will be invalid
-                    app.loader.clearCache(url, "scene");
+                    app.loader.clearCache(url, 'scene');
 
                     app.loader.patch({
                         resource: scene,
-                        type: "scene"
+                        type: 'scene'
                     }, app.assets);
 
                     app.root.addChild(scene.root);

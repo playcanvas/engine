@@ -1,4 +1,4 @@
-import { BINDGROUP_VIEW } from "./constants.js";
+import { BINDGROUP_VIEW } from './constants.js';
 
 /**
  * Options to drive shader processing to add support for bind groups and uniform buffers.

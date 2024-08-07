@@ -182,8 +182,9 @@ class XrAnchors extends EventHandler {
 
         // clear anchor creation queue
         for (let i = 0; i < this._creationQueue.length; i++) {
-            if (!this._creationQueue[i].callback)
+            if (!this._creationQueue[i].callback) {
                 continue;
+            }
 
             this._creationQueue[i].callback(new Error('session ended'), null);
         }
@@ -278,15 +279,15 @@ class XrAnchors extends EventHandler {
             }
 
             hitResult.createAnchor()
-                .then((xrAnchor) => {
-                    const anchor = this._createAnchor(xrAnchor);
-                    callback?.(null, anchor);
-                    this.fire('add', anchor);
-                })
-                .catch((ex) => {
-                    callback?.(ex, null);
-                    this.fire('error', ex);
-                });
+            .then((xrAnchor) => {
+                const anchor = this._createAnchor(xrAnchor);
+                callback?.(null, anchor);
+                this.fire('add', anchor);
+            })
+            .catch((ex) => {
+                callback?.(ex, null);
+                this.fire('error', ex);
+            });
         } else {
             this._creationQueue.push({
                 transform: new XRRigidTransform(position, rotation),
@@ -331,15 +332,15 @@ class XrAnchors extends EventHandler {
         }
 
         this.manager.session.restorePersistentAnchor(uuid)
-            .then((xrAnchor) => {
-                const anchor = this._createAnchor(xrAnchor, uuid);
-                callback?.(null, anchor);
-                this.fire('add', anchor);
-            })
-            .catch((ex) => {
-                callback?.(ex, null);
-                this.fire('error', ex);
-            });
+        .then((xrAnchor) => {
+            const anchor = this._createAnchor(xrAnchor, uuid);
+            callback?.(null, anchor);
+            this.fire('add', anchor);
+        })
+        .catch((ex) => {
+            callback?.(ex, null);
+            this.fire('error', ex);
+        });
     }
 
     /**
@@ -372,13 +373,13 @@ class XrAnchors extends EventHandler {
         }
 
         this.manager.session.deletePersistentAnchor(uuid)
-            .then(() => {
-                callback?.(null);
-            })
-            .catch((ex) => {
-                callback?.(ex);
-                this.fire('error', ex);
-            });
+        .then(() => {
+            callback?.(null);
+        })
+        .catch((ex) => {
+            callback?.(ex);
+            this.fire('error', ex);
+        });
     }
 
     /**
@@ -392,15 +393,15 @@ class XrAnchors extends EventHandler {
                 this._checkingAvailability = true;
 
                 frame.createAnchor(new XRRigidTransform(), this.manager._referenceSpace)
-                    .then((xrAnchor) => {
-                        // successfully created an anchor - feature is available
-                        xrAnchor.delete();
-                        if (this.manager.active) {
-                            this._available = true;
-                            this.fire('available');
-                        }
-                    })
-                    .catch(() => { }); // stay unavailable
+                .then((xrAnchor) => {
+                    // successfully created an anchor - feature is available
+                    xrAnchor.delete();
+                    if (this.manager.active) {
+                        this._available = true;
+                        this.fire('available');
+                    }
+                })
+                .catch(() => { }); // stay unavailable
             }
             return;
         }
@@ -411,16 +412,18 @@ class XrAnchors extends EventHandler {
                 const request = this._creationQueue[i];
 
                 frame.createAnchor(request.transform, this.manager._referenceSpace)
-                    .then((xrAnchor) => {
-                        if (request.callback)
-                            this._callbacksAnchors.set(xrAnchor, request.callback);
-                    })
-                    .catch((ex) => {
-                        if (request.callback)
-                            request.callback(ex, null);
+                .then((xrAnchor) => {
+                    if (request.callback) {
+                        this._callbacksAnchors.set(xrAnchor, request.callback);
+                    }
+                })
+                .catch((ex) => {
+                    if (request.callback) {
+                        request.callback(ex, null);
+                    }
 
-                        this.fire('error', ex);
-                    });
+                    this.fire('error', ex);
+                });
             }
 
             this._creationQueue.length = 0;
@@ -428,8 +431,9 @@ class XrAnchors extends EventHandler {
 
         // check if destroyed
         for (const [xrAnchor, anchor] of this._index) {
-            if (frame.trackedAnchors.has(xrAnchor))
+            if (frame.trackedAnchors.has(xrAnchor)) {
                 continue;
+            }
 
             this._index.delete(xrAnchor);
             anchor.destroy();
@@ -442,8 +446,9 @@ class XrAnchors extends EventHandler {
 
         // check if added
         for (const xrAnchor of frame.trackedAnchors) {
-            if (this._index.has(xrAnchor))
+            if (this._index.has(xrAnchor)) {
                 continue;
+            }
 
             try {
                 const tmp = xrAnchor.anchorSpace; // eslint-disable-line no-unused-vars
@@ -499,14 +504,17 @@ class XrAnchors extends EventHandler {
      * @type {null|string[]}
      */
     get uuids() {
-        if (!this._available)
+        if (!this._available) {
             return null;
+        }
 
-        if (!this._persistence)
+        if (!this._persistence) {
             return null;
+        }
 
-        if (!this.manager.active)
+        if (!this.manager.active) {
             return null;
+        }
 
         return this.manager.session.persistentAnchors;
     }

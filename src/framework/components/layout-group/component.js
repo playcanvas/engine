@@ -70,11 +70,11 @@ class LayoutGroupComponent extends Component {
         // Listen for ElementComponents and LayoutChildComponents being added
         // to self or to children - covers cases where they are not already
         // present at the point when this component is constructed.
-        Debug.assert(system.app.systems.element, `System 'element' doesn't exist`);
+        Debug.assert(system.app.systems.element, 'System \'element\' doesn\'t exist');
         system.app.systems.element.on('add', this._onElementOrLayoutComponentAdd, this);
         system.app.systems.element.on('beforeremove', this._onElementOrLayoutComponentRemove, this);
 
-        Debug.assert(system.app.systems.layoutchild, `System 'layoutchild' doesn't exist`);
+        Debug.assert(system.app.systems.layoutchild, 'System \'layoutchild\' doesn\'t exist');
         system.app.systems.layoutchild.on('add', this._onElementOrLayoutComponentAdd, this);
         system.app.systems.layoutchild.on('beforeremove', this._onElementOrLayoutComponentRemove, this);
     }

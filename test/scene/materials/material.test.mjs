@@ -4,7 +4,7 @@ import { Material } from '../../../src/scene/materials/material.js';
 
 import { expect } from 'chai';
 
-describe('Material', function () {
+describe('Material', () => {
 
     function checkDefaultMaterial(material) {
         expect(material).to.be.an.instanceof(Material);
@@ -27,18 +27,18 @@ describe('Material', function () {
         expect(material.stencilFront).to.not.exist;
     }
 
-    describe('#constructor()', function () {
+    describe('#constructor()', () => {
 
-        it('should create a new instance', function () {
+        it('should create a new instance', () => {
             const material = new Material();
             checkDefaultMaterial(material);
         });
 
     });
 
-    describe('#clone()', function () {
+    describe('#clone()', () => {
 
-        it('should clone a material', function () {
+        it('should clone a material', () => {
             const material = new Material();
             const clone = material.clone();
             checkDefaultMaterial(clone);
@@ -46,9 +46,9 @@ describe('Material', function () {
 
     });
 
-    describe('#copy()', function () {
+    describe('#copy()', () => {
 
-        it('should copy a material', function () {
+        it('should copy a material', () => {
             const src = new Material();
             const dst = new Material();
             dst.copy(src);

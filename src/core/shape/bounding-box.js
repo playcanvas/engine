@@ -177,8 +177,9 @@ class BoundingBox {
 
         const intersects = minMax >= maxMin && maxMin >= 0;
 
-        if (intersects)
+        if (intersects) {
             point.copy(ray.direction).mulScalar(maxMin).add(ray.origin);
+        }
 
         return intersects;
     }
@@ -196,27 +197,33 @@ class BoundingBox {
 
         prod.mul2(diff, rayDir);
 
-        if (absDiff.x > this.halfExtents.x && prod.x >= 0)
+        if (absDiff.x > this.halfExtents.x && prod.x >= 0) {
             return false;
+        }
 
-        if (absDiff.y > this.halfExtents.y && prod.y >= 0)
+        if (absDiff.y > this.halfExtents.y && prod.y >= 0) {
             return false;
+        }
 
-        if (absDiff.z > this.halfExtents.z && prod.z >= 0)
+        if (absDiff.z > this.halfExtents.z && prod.z >= 0) {
             return false;
+        }
 
         absDir.set(Math.abs(rayDir.x), Math.abs(rayDir.y), Math.abs(rayDir.z));
         cross.cross(rayDir, diff);
         cross.set(Math.abs(cross.x), Math.abs(cross.y), Math.abs(cross.z));
 
-        if (cross.x > this.halfExtents.y * absDir.z + this.halfExtents.z * absDir.y)
+        if (cross.x > this.halfExtents.y * absDir.z + this.halfExtents.z * absDir.y) {
             return false;
+        }
 
-        if (cross.y > this.halfExtents.x * absDir.z + this.halfExtents.z * absDir.x)
+        if (cross.y > this.halfExtents.x * absDir.z + this.halfExtents.z * absDir.x) {
             return false;
+        }
 
-        if (cross.z > this.halfExtents.x * absDir.y + this.halfExtents.y * absDir.x)
+        if (cross.z > this.halfExtents.x * absDir.y + this.halfExtents.y * absDir.x) {
             return false;
+        }
 
         return true;
     }

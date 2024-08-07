@@ -37,12 +37,14 @@ function paramsIdentical(a, b) {
 
 function equalParamSets(params1, params2) {
     for (const param in params1) { // compare A -> B
-        if (params1.hasOwnProperty(param) && !paramsIdentical(params1[param], params2[param]))
+        if (params1.hasOwnProperty(param) && !paramsIdentical(params1[param], params2[param])) {
             return false;
+        }
     }
     for (const param in params2) { // compare B -> A
-        if (params2.hasOwnProperty(param) && !paramsIdentical(params2[param], params1[param]))
+        if (params2.hasOwnProperty(param) && !paramsIdentical(params2[param], params1[param])) {
             return false;
+        }
     }
     return true;
 }
@@ -448,7 +450,7 @@ class BatchManager {
         const lists = [];
         let j = 0;
         if (translucent) {
-            meshInstances.sort(function (a, b) {
+            meshInstances.sort((a, b) => {
                 return a.drawOrder - b.drawOrder;
             });
         }
@@ -568,8 +570,9 @@ class BatchManager {
                     // special case of fan / strip non-indexed primitive used by UI
                     const primitiveType = mesh.primitive[0].type;
                     if (primitiveType === PRIMITIVE_TRIFAN || primitiveType === PRIMITIVE_TRISTRIP) {
-                        if (mesh.primitive[0].count === 4)
+                        if (mesh.primitive[0].count === 4) {
                             batchNumIndices += 6;
+                        }
                     }
                 }
 
@@ -632,8 +635,8 @@ class BatchManager {
         // #endif
 
         if (!this._init) {
-            const boneLimit = '#define BONE_LIMIT ' + this.device.getBoneLimit() + '\n';
-            this.transformVS = boneLimit + '#define DYNAMICBATCH\n' + shaderChunks.transformVS;
+            const boneLimit = `#define BONE_LIMIT ${this.device.getBoneLimit()}\n`;
+            this.transformVS = `${boneLimit}#define DYNAMICBATCH\n${shaderChunks.transformVS}`;
             this.skinTexVS = shaderChunks.skinBatchTexVS;
             this.skinConstVS = shaderChunks.skinBatchConstVS;
             this.vertexFormats = {};
@@ -679,8 +682,9 @@ class BatchManager {
 
             // build vertex and index data for final mesh
             for (let i = 0; i < meshInstances.length; i++) {
-                if (!meshInstances[i].visible)
+                if (!meshInstances[i].visible) {
                     continue;
+                }
 
                 mesh = meshInstances[i].mesh;
                 numVerts = mesh.vertexBuffer.numVertices;
@@ -729,8 +733,9 @@ class BatchManager {
                 // bone index is mesh index
                 if (dynamic) {
                     stream = streams[SEMANTIC_BLENDINDICES];
-                    for (let j = 0; j < numVerts; j++)
+                    for (let j = 0; j < numVerts; j++) {
                         stream.buffer[stream.count++] = i;
+                    }
                 }
 
                 // index buffer
@@ -772,8 +777,9 @@ class BatchManager {
                 mesh.setVertexStream(semantic, stream.buffer, stream.numComponents, undefined, stream.dataType, stream.normalize);
             }
 
-            if (indices.length > 0)
+            if (indices.length > 0) {
                 mesh.setIndices(indices);
+            }
 
             mesh.update(PRIMITIVE_TRIANGLES, false);
 
@@ -796,8 +802,9 @@ class BatchManager {
             // meshInstance culling - don't cull UI elements, as they use custom culling Component.isVisibleForCamera
             meshInstance.cull = batch.origMeshInstances[0].cull;
             const batchGroup = this._batchGroups[batchGroupId];
-            if (batchGroup && batchGroup._ui)
+            if (batchGroup && batchGroup._ui) {
                 meshInstance.cull = false;
+            }
 
             if (dynamic) {
                 // Create skinInstance

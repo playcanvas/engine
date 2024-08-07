@@ -3,7 +3,7 @@ import { Quat } from '../../core/math/quat.js';
 
 import { AxisArrow, AxisPlane } from './axis-shapes.js';
 import { GIZMO_LOCAL } from './gizmo.js';
-import { TransformGizmo } from "./transform-gizmo.js";
+import { TransformGizmo } from './transform-gizmo.js';
 
 // temporary variables
 const tmpV1 = new Vec3();
