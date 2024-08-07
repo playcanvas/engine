@@ -1,6 +1,6 @@
-import { SphereGeometry } from "../../../scene/geometry/sphere-geometry.js";
-import { TriData } from "../tri-data.js";
-import { Shape } from "./shape.js";
+import { SphereGeometry } from '../../../scene/geometry/sphere-geometry.js';
+import { TriData } from '../tri-data.js';
+import { Shape } from './shape.js';
 
 class SphereShape extends Shape {
     _size = 0.12;

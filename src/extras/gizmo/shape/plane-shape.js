@@ -1,8 +1,8 @@
-import { Vec3 } from "../../../core/math/vec3.js";
-import { CULLFACE_NONE } from "../../../platform/graphics/constants.js";
-import { PlaneGeometry } from "../../../scene/geometry/plane-geometry.js";
-import { TriData } from "../tri-data.js";
-import { Shape } from "./shape.js";
+import { Vec3 } from '../../../core/math/vec3.js';
+import { CULLFACE_NONE } from '../../../platform/graphics/constants.js';
+import { PlaneGeometry } from '../../../scene/geometry/plane-geometry.js';
+import { TriData } from '../tri-data.js';
+import { Shape } from './shape.js';
 
 class PlaneShape extends Shape {
     _cull = CULLFACE_NONE;

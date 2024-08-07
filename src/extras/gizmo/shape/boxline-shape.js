@@ -1,10 +1,10 @@
-import { Quat } from "../../../core/math/quat.js";
-import { Vec3 } from "../../../core/math/vec3.js";
-import { Entity } from "../../../framework/entity.js";
-import { BoxGeometry } from "../../../scene/geometry/box-geometry.js";
-import { CylinderGeometry } from "../../../scene/geometry/cylinder-geometry.js";
-import { TriData } from "../tri-data.js";
-import { Shape } from "./shape.js";
+import { Quat } from '../../../core/math/quat.js';
+import { Vec3 } from '../../../core/math/vec3.js';
+import { Entity } from '../../../framework/entity.js';
+import { BoxGeometry } from '../../../scene/geometry/box-geometry.js';
+import { CylinderGeometry } from '../../../scene/geometry/cylinder-geometry.js';
+import { TriData } from '../tri-data.js';
+import { Shape } from './shape.js';
 
 const tmpV1 = new Vec3();
 const tmpV2 = new Vec3();
@@ -88,13 +88,13 @@ class BoxLineShape extends Shape {
         this._createRoot('boxLine');
 
         // box
-        this._box = new Entity('box:' + this.axis);
+        this._box = new Entity(`box:${this.axis}`);
         this.entity.addChild(this._box);
         this._updateBox();
         this._addRenderShadowMesh(this._box, 'box');
 
         // line
-        this._line = new Entity('line:' + this.axis);
+        this._line = new Entity(`line:${this.axis}`);
         this.entity.addChild(this._line);
         this._updateLine();
         this._addRenderShadowMesh(this._line, 'cylinder');

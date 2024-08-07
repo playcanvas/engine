@@ -1,6 +1,6 @@
-import { TorusGeometry } from "../../../scene/geometry/torus-geometry.js";
-import { TriData } from "../tri-data.js";
-import { createShadowMesh, Shape } from "./shape.js";
+import { TorusGeometry } from '../../../scene/geometry/torus-geometry.js';
+import { TriData } from '../tri-data.js';
+import { createShadowMesh, Shape } from './shape.js';
 
 const TORUS_RENDER_SEGMENTS = 80;
 const TORUS_INTERSECT_SEGMENTS = 20;

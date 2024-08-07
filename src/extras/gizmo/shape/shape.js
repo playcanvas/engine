@@ -117,9 +117,9 @@ const setShadowMeshColor = (mesh, color) => {
     const colors = [];
     for (let i = 0; i < shadow.length; i++) {
         colors.push(shadow[i] * color.r * 0xFF,
-                    shadow[i] * color.g * 0xFF,
-                    shadow[i] * color.b * 0xFF,
-                    color.a * 0xFF);
+            shadow[i] * color.g * 0xFF,
+            shadow[i] * color.b * 0xFF,
+            color.a * 0xFF);
     }
     mesh.setColors32(colors);
     mesh.update();
@@ -188,7 +188,7 @@ class Shape {
     }
 
     _createRoot(name) {
-        this.entity = new Entity(name + ':' + this.axis);
+        this.entity = new Entity(`${name}:${this.axis}`);
         this._updateRootTransform();
     }
 

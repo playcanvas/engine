@@ -1,6 +1,6 @@
-import { BoxGeometry } from "../../../scene/geometry/box-geometry.js";
-import { TriData } from "../tri-data.js";
-import { Shape } from "./shape.js";
+import { BoxGeometry } from '../../../scene/geometry/box-geometry.js';
+import { TriData } from '../tri-data.js';
+import { Shape } from './shape.js';
 
 class BoxShape extends Shape {
     _size = 0.12;

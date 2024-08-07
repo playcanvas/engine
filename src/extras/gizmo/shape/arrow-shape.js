@@ -1,10 +1,10 @@
-import { Quat } from "../../../core/math/quat.js";
-import { Vec3 } from "../../../core/math/vec3.js";
-import { Entity } from "../../../framework/entity.js";
-import { ConeGeometry } from "../../../scene/geometry/cone-geometry.js";
-import { CylinderGeometry } from "../../../scene/geometry/cylinder-geometry.js";
-import { TriData } from "../tri-data.js";
-import { Shape } from "./shape.js";
+import { Quat } from '../../../core/math/quat.js';
+import { Vec3 } from '../../../core/math/vec3.js';
+import { Entity } from '../../../framework/entity.js';
+import { ConeGeometry } from '../../../scene/geometry/cone-geometry.js';
+import { CylinderGeometry } from '../../../scene/geometry/cylinder-geometry.js';
+import { TriData } from '../tri-data.js';
+import { Shape } from './shape.js';
 
 const tmpV1 = new Vec3();
 const tmpV2 = new Vec3();
@@ -99,13 +99,13 @@ class ArrowShape extends Shape {
         this._createRoot('arrow');
 
         // head
-        this._head = new Entity('head:' + this.axis);
+        this._head = new Entity(`head:${this.axis}`);
         this.entity.addChild(this._head);
         this._updateHead();
         this._addRenderShadowMesh(this._head, 'cone');
 
         // line
-        this._line = new Entity('line:' + this.axis);
+        this._line = new Entity(`line:${this.axis}`);
         this.entity.addChild(this._line);
         this._updateLine();
         this._addRenderShadowMesh(this._line, 'cylinder');
