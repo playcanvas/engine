@@ -12,7 +12,7 @@ class RenderPassDepthAwareBlur extends RenderPassShaderQuad {
         super(device);
         this.sourceTexture = sourceTexture;
 
-        this.shader = this.createQuadShader(`DepthAware${horizontal ? 'Horizontal' : 'Vertical'}BlurShader`, shaderChunks.screenDepthPS + /* glsl */`
+        this.shader = this.createQuadShader(`DepthAware${horizontal ? 'Horizontal' : 'Vertical'}BlurShader`, `${shaderChunks.screenDepthPS /* glsl */}
 
             ${horizontal ? '#define HORIZONTAL' : ''}
 

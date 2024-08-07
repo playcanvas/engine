@@ -68,11 +68,13 @@
       "XRRigidTransform": "readonly",
       "XRWebGLLayer": "readonly"
     },
+    "ignorePatterns": ["tests/**/*"],
     "parser": "@babel/eslint-parser",
     "parserOptions": {
       "requireConfigFile": false
     },
     "rules": {
+      "import/order": "off",
       "jsdoc/check-tag-names": [
         "error",
         {
@@ -108,7 +110,7 @@
     "@babel/eslint-parser": "^7.24.1",
     "@babel/preset-env": "^7.24.4",
     "@playcanvas/canvas-mock": "^1.0.1",
-    "@playcanvas/eslint-config": "^1.7.1",
+    "@playcanvas/eslint-config": "^1.7.4",
     "@rollup/plugin-babel": "^6.0.4",
     "@rollup/plugin-node-resolve": "^15.2.3",
     "@rollup/plugin-strip": "^3.0.4",

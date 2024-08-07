@@ -2,11 +2,11 @@ import { Color } from '../../../src/core/math/color.js';
 
 import { expect } from 'chai';
 
-describe('Color', function () {
+describe('Color', () => {
 
-    describe('#constructor', function () {
+    describe('#constructor', () => {
 
-        it('supports zero arguments', function () {
+        it('supports zero arguments', () => {
             const c = new Color();
             expect(c.r).to.equal(0);
             expect(c.g).to.equal(0);
@@ -14,7 +14,7 @@ describe('Color', function () {
             expect(c.a).to.equal(1);
         });
 
-        it('supports number arguments', function () {
+        it('supports number arguments', () => {
             const c = new Color(0.1, 0.2, 0.3, 0.4);
             expect(c.r).to.equal(0.1);
             expect(c.g).to.equal(0.2);
@@ -22,7 +22,7 @@ describe('Color', function () {
             expect(c.a).to.equal(0.4);
         });
 
-        it('supports a 3 element array argument', function () {
+        it('supports a 3 element array argument', () => {
             const c = new Color([0.1, 0.2, 0.3]);
             expect(c.r).to.equal(0.1);
             expect(c.g).to.equal(0.2);
@@ -30,7 +30,7 @@ describe('Color', function () {
             expect(c.a).to.equal(1);
         });
 
-        it('supports a 4 element array argument', function () {
+        it('supports a 4 element array argument', () => {
             const c = new Color([0.1, 0.2, 0.3, 0.4]);
             expect(c.r).to.equal(0.1);
             expect(c.g).to.equal(0.2);
@@ -40,9 +40,9 @@ describe('Color', function () {
 
     });
 
-    describe('#clone', function () {
+    describe('#clone', () => {
 
-        it('clones a color', function () {
+        it('clones a color', () => {
             const c1 = new Color(0.1, 0.2, 0.3, 0.4);
             const c2 = c1.clone();
             expect(c2).to.not.equal(c1);
@@ -52,7 +52,7 @@ describe('Color', function () {
             expect(c2.a).to.equal(0.4);
         });
 
-        it('ensures that an instance of a subclass keeps its class prototype', function () {
+        it('ensures that an instance of a subclass keeps its class prototype', () => {
             class UserColor extends Color {}
             const a = new UserColor();
             const b = a.clone();
@@ -61,9 +61,9 @@ describe('Color', function () {
 
     });
 
-    describe('#copy', function () {
+    describe('#copy', () => {
 
-        it('copies a color', function () {
+        it('copies a color', () => {
             const c1 = new Color(0.1, 0.2, 0.3, 0.4);
             const c2 = new Color();
             c2.copy(c1);
@@ -76,15 +76,15 @@ describe('Color', function () {
 
     });
 
-    describe('#equals', function () {
+    describe('#equals', () => {
 
-        it('returns true if colors are equal', function () {
+        it('returns true if colors are equal', () => {
             const c1 = new Color(0.1, 0.2, 0.3, 0.4);
             const c2 = new Color(0.1, 0.2, 0.3, 0.4);
             expect(c1.equals(c2)).to.be.true;
         });
 
-        it('returns false if colors are not equal', function () {
+        it('returns false if colors are not equal', () => {
             const c1 = new Color(0.1, 0.2, 0.3, 0.4);
             const c2 = new Color(0.5, 0.6, 0.7, 0.8);
             expect(c1.equals(c2)).to.be.false;
@@ -92,9 +92,9 @@ describe('Color', function () {
 
     });
 
-    describe('#fromString', function () {
+    describe('#fromString', () => {
 
-        it('parses a lower case hex string', function () {
+        it('parses a lower case hex string', () => {
             const c = new Color();
             c.fromString('#ff00ff');
             expect(c.r).to.equal(1);
@@ -103,7 +103,7 @@ describe('Color', function () {
             expect(c.a).to.equal(1);
         });
 
-        it('parses a lower case hex string with alpha', function () {
+        it('parses a lower case hex string with alpha', () => {
             const c = new Color();
             c.fromString('#ff00ff80');
             expect(c.r).to.equal(1);
@@ -112,7 +112,7 @@ describe('Color', function () {
             expect(c.a).to.closeTo(0.5019607843137255, 0.0001);
         });
 
-        it('parses a upper case hex string with alpha', function () {
+        it('parses a upper case hex string with alpha', () => {
             const c = new Color();
             c.fromString('#FF00FF80');
             expect(c.r).to.equal(1);
@@ -123,9 +123,9 @@ describe('Color', function () {
 
     });
 
-    describe('#lerp', function () {
+    describe('#lerp', () => {
 
-        it('linearly interpolates between two colors with alpha of 0', function () {
+        it('linearly interpolates between two colors with alpha of 0', () => {
             const c1 = new Color(0.1, 0.2, 0.3, 0.4);
             const c2 = new Color(0.5, 0.6, 0.7, 0.8);
             const c3 = new Color();
@@ -136,7 +136,7 @@ describe('Color', function () {
             expect(c3.a).to.equal(0.4);
         });
 
-        it('linearly interpolates between two colors with alpha of 0.5', function () {
+        it('linearly interpolates between two colors with alpha of 0.5', () => {
             const c1 = new Color(0.1, 0.2, 0.3, 0.4);
             const c2 = new Color(0.5, 0.6, 0.7, 0.8);
             const c3 = new Color();
@@ -147,7 +147,7 @@ describe('Color', function () {
             expect(c3.a).to.be.closeTo(0.6, 0.0001);
         });
 
-        it('linearly interpolates between two colors with alpha of 1', function () {
+        it('linearly interpolates between two colors with alpha of 1', () => {
             const c1 = new Color(0.1, 0.2, 0.3, 0.4);
             const c2 = new Color(0.5, 0.6, 0.7, 0.8);
             const c3 = new Color();
@@ -160,9 +160,9 @@ describe('Color', function () {
 
     });
 
-    describe('#set', function () {
+    describe('#set', () => {
 
-        it('sets a color', function () {
+        it('sets a color', () => {
             const c = new Color();
             c.set(0.1, 0.2, 0.3, 0.4);
             expect(c.r).to.equal(0.1);
@@ -173,27 +173,27 @@ describe('Color', function () {
 
     });
 
-    describe('#toString', function () {
+    describe('#toString', () => {
 
-        it('returns a string representation of black (no alpha)', function () {
+        it('returns a string representation of black (no alpha)', () => {
             expect(Color.BLACK.toString()).to.equal('#000000');
         });
 
-        it('returns a string representation of white (no alpha)', function () {
+        it('returns a string representation of white (no alpha)', () => {
             expect(Color.WHITE.toString()).to.equal('#ffffff');
         });
 
-        it('returns a string representation of an arbitrary color (no alpha)', function () {
+        it('returns a string representation of an arbitrary color (no alpha)', () => {
             const c = new Color(0.1, 0.2, 0.3, 0.4);
             expect(c.toString()).to.equal('#1a334d');
         });
 
-        it('returns a string representation of an arbitrary color (with single digit alpha)', function () {
+        it('returns a string representation of an arbitrary color (with single digit alpha)', () => {
             const c = new Color(0.1, 0.2, 0.3, 0.05);
             expect(c.toString(true)).to.equal('#1a334d0d');
         });
 
-        it('returns a string representation of an arbitrary color (with double digit alpha)', function () {
+        it('returns a string representation of an arbitrary color (with double digit alpha)', () => {
             const c = new Color(0.1, 0.2, 0.3, 0.4);
             expect(c.toString(true)).to.equal('#1a334d66');
         });

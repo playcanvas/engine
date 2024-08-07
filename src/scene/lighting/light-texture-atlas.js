@@ -356,8 +356,9 @@ class LightTextureAtlas {
             for (let i = 0; i < assignCount; i++) {
                 const light = lights[i];
 
-                if (light.castShadows)
+                if (light.castShadows) {
                     light._shadowMap = this.shadowAtlas;
+                }
 
                 // if currently assigned slot is the same size as what is needed, and was last used by this light, reuse it
                 const previousSlot = slots[light.atlasSlotIndex];
@@ -374,8 +375,9 @@ class LightTextureAtlas {
             for (let i = 0; i < assignCount; i++) {
 
                 // skip already used slots
-                while (usedCount < slots.length && slots[usedCount].used)
+                while (usedCount < slots.length && slots[usedCount].used) {
                     usedCount++;
+                }
 
                 const light = lights[i];
                 if (!light.atlasViewportAllocated) {

@@ -844,7 +844,7 @@
 
     GamePadInputScript.attributes.add('deadZoneLow', {
         title: 'Low Dead Zone',
-        description: "Radial thickness of inner dead zone of pad's joysticks. This dead zone ensures that all pads report a value of 0 for each joystick axis when untouched.",
+        description: 'Radial thickness of inner dead zone of pad\'s joysticks. This dead zone ensures that all pads report a value of 0 for each joystick axis when untouched.',
         type: 'number',
         min: 0,
         max: 0.4,
@@ -852,7 +852,7 @@
     });
     GamePadInputScript.attributes.add('deadZoneHigh', {
         title: 'High Dead Zone',
-        description: "Radial thickness of outer dead zone of pad's joysticks. This dead zone ensures that all pads can reach the -1 and 1 limits of each joystick axis.",
+        description: 'Radial thickness of outer dead zone of pad\'s joysticks. This dead zone ensures that all pads can reach the -1 and 1 limits of each joystick axis.',
         type: 'number',
         min: 0,
         max: 0.4,

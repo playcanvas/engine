@@ -214,8 +214,9 @@ class RenderPass {
     }
 
     get name() {
-        if (!this._name)
+        if (!this._name) {
             this._name = this.constructor.name;
+        }
         return this._name;
     }
 
@@ -353,8 +354,9 @@ class RenderPass {
      * the existing content.
      */
     setClearDepth(depthValue) {
-        if (depthValue)
+        if (depthValue) {
             this.depthStencilOps.clearDepthValue = depthValue;
+        }
         this.depthStencilOps.clearDepth = depthValue !== undefined;
     }
 
@@ -365,8 +367,9 @@ class RenderPass {
      * preserve the existing content.
      */
     setClearStencil(stencilValue) {
-        if (stencilValue)
+        if (stencilValue) {
             this.depthStencilOps.clearStencilValue = stencilValue;
+        }
         this.depthStencilOps.clearStencil = stencilValue !== undefined;
     }
 
@@ -419,12 +422,12 @@ class RenderPass {
                 `${hasDepth ? '[Depth]' : ''}` +
                 `${hasStencil ? '[Stencil]' : ''}` +
                 ` ${rt.width} x ${rt.height}` +
-                `${(this.samples > 0 ? ' samples: ' + this.samples : '')}`;
+                `${(this.samples > 0 ? ` samples: ${this.samples}` : '')}`;
 
             Debug.trace(TRACEID_RENDER_PASS,
-                        `${index.toString().padEnd(2, ' ')}: ${this.name.padEnd(20, ' ')}` +
-                        `${this.executeEnabled ? '' : ' DISABLED '}` +
-                        rtInfo.padEnd(30));
+                `${index.toString().padEnd(2, ' ')}: ${this.name.padEnd(20, ' ')}` +
+                        `${this.executeEnabled ? '' : ' DISABLED '}${
+                            rtInfo.padEnd(30)}`);
 
             for (let i = 0; i < numColor; i++) {
                 const colorOps = this.colorArrayOps[i];
@@ -438,13 +441,13 @@ class RenderPass {
             if (this.depthStencilOps) {
 
                 if (hasDepth) {
-                    Debug.trace(TRACEID_RENDER_PASS_DETAIL, `    depthOps: ` +
+                    Debug.trace(TRACEID_RENDER_PASS_DETAIL, '    depthOps: ' +
                                 `${this.depthStencilOps.clearDepth ? 'clear' : 'load'}->` +
                                 `${this.depthStencilOps.storeDepth ? 'store' : 'discard'}`);
                 }
 
                 if (hasStencil) {
-                    Debug.trace(TRACEID_RENDER_PASS_DETAIL, `    stencOps: ` +
+                    Debug.trace(TRACEID_RENDER_PASS_DETAIL, '    stencOps: ' +
                                 `${this.depthStencilOps.clearStencil ? 'clear' : 'load'}->` +
                                 `${this.depthStencilOps.storeStencil ? 'store' : 'discard'}`);
                 }

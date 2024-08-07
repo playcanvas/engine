@@ -66,20 +66,23 @@ class BoundingSphere {
         const c = m.dot(m) - this.radius * this.radius;
 
         // exit if ray's origin outside of sphere (c > 0) and ray pointing away from s (b > 0)
-        if (c > 0 && b > 0)
+        if (c > 0 && b > 0) {
             return false;
+        }
 
         const discr = b * b - c;
         // a negative discriminant corresponds to ray missing sphere
-        if (discr < 0)
+        if (discr < 0) {
             return false;
+        }
 
         // ray intersects sphere, compute smallest t value of intersection
         const t = Math.abs(-b - Math.sqrt(discr));
 
         // if t is negative, ray started inside sphere so clamp t to zero
-        if (point)
+        if (point) {
             point.copy(ray.direction).mulScalar(t).add(ray.origin);
+        }
 
         return true;
     }

@@ -1515,7 +1515,7 @@ class ParticleSystemComponent extends Component {
             if (asset) {
                 this._bindColorMapAsset(asset);
             } else {
-                assets.once('add:' + newValue, (asset) => {
+                assets.once(`add:${newValue}`, (asset) => {
                     this._bindColorMapAsset(asset);
                 });
             }
@@ -1580,7 +1580,7 @@ class ParticleSystemComponent extends Component {
             if (asset) {
                 this._bindNormalMapAsset(asset);
             } else {
-                assets.once('add:' + newValue, (asset) => {
+                assets.once(`add:${newValue}`, (asset) => {
                     this._bindNormalMapAsset(asset);
                 });
             }

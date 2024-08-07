@@ -1,4 +1,4 @@
-import { BINDGROUP_VIEW } from "./constants.js";
+import { BINDGROUP_VIEW } from './constants.js';
 
 /**
  * @import { BindGroupFormat } from './bind-group-format.js'

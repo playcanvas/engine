@@ -465,7 +465,7 @@ class TransformGizmo extends Gizmo {
         if (!meshInstance) {
             return '';
         }
-        return meshInstance.node.name.split(":")[1];
+        return meshInstance.node.name.split(':')[1];
     }
 
     /**

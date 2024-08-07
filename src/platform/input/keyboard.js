@@ -189,10 +189,10 @@ class Keyboard extends EventHandler {
         let hex = keyCode.toString(16).toUpperCase();
         const length = hex.length;
         for (let count = 0; count < (4 - length); count++) {
-            hex = '0' + hex;
+            hex = `0${hex}`;
         }
 
-        return 'U+' + hex;
+        return `U+${hex}`;
     }
 
     /**

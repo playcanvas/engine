@@ -1,4 +1,4 @@
-import { GpuProfiler } from "../gpu-profiler.js";
+import { GpuProfiler } from '../gpu-profiler.js';
 
 /**
  * Class holding information about the queries for a single frame.

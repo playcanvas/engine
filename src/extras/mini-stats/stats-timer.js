@@ -6,8 +6,9 @@ class StatsTimer {
 
         // supporting up to 3 stats
         this.statNames = statNames;
-        if (this.statNames.length > 3)
+        if (this.statNames.length > 3) {
             this.statNames.length = 3;
+        }
 
         this.unitsName = unitsName;
         this.decimalPlaces = decimalPlaces;

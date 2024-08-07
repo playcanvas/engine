@@ -420,7 +420,7 @@ class AnimComponent extends Component {
             for (let j = 0; j < layer.states.length; j++) {
                 const stateName = layer.states[j];
                 if (ANIM_CONTROL_STATES.indexOf(stateName) === -1) {
-                    const stateKey = layerName + ':' + stateName;
+                    const stateKey = `${layerName}:${stateName}`;
                     if (!this._animationAssets[stateKey]) {
                         this._animationAssets[stateKey] = {
                             asset: null
@@ -438,7 +438,7 @@ class AnimComponent extends Component {
             for (let j = 0; j < layer.states.length; j++) {
                 const stateName = layer.states[j];
                 if (ANIM_CONTROL_STATES.indexOf(stateName) !== -1) continue;
-                const animationAsset = this._animationAssets[layer.name + ':' + stateName];
+                const animationAsset = this._animationAssets[`${layer.name}:${stateName}`];
                 if (!animationAsset || !animationAsset.asset) {
                     this.findAnimationLayer(layer.name).assignAnimation(stateName, AnimTrack.EMPTY);
                     continue;

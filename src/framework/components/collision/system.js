@@ -79,8 +79,9 @@ class CollisionSystemImpl {
                 if (component._compoundParent) {
                     this.system._removeCompoundChild(component._compoundParent, data.shape);
 
-                    if (component._compoundParent.entity.rigidbody)
+                    if (component._compoundParent.entity.rigidbody) {
                         component._compoundParent.entity.rigidbody.activate();
+                    }
                 }
 
                 this.destroyShape(data);
@@ -119,8 +120,9 @@ class CollisionSystemImpl {
                     } else {
                         this.system.updateCompoundChildTransform(entity);
 
-                        if (component._compoundParent.entity.rigidbody)
+                        if (component._compoundParent.entity.rigidbody) {
                             component._compoundParent.entity.rigidbody.activate();
+                        }
                     }
                 }
             }
@@ -167,8 +169,9 @@ class CollisionSystemImpl {
             if (component._compoundParent && !component._compoundParent.entity._destroying) {
                 this.system._removeCompoundChild(component._compoundParent, component.data.shape);
 
-                if (component._compoundParent.entity.rigidbody)
+                if (component._compoundParent.entity.rigidbody) {
                     component._compoundParent.entity.rigidbody.activate();
+                }
             }
 
             component._compoundParent = null;
@@ -292,8 +295,9 @@ class CollisionCylinderSystemImpl extends CollisionSystemImpl {
             }
         }
 
-        if (halfExtents)
+        if (halfExtents) {
             Ammo.destroy(halfExtents);
+        }
 
         return shape;
     }
@@ -537,7 +541,7 @@ class CollisionMeshSystemImpl extends CollisionSystemImpl {
         if (asset) {
             loadAndHandleAsset(asset);
         } else {
-            assets.once('add:' + id, loadAndHandleAsset);
+            assets.once(`add:${id}`, loadAndHandleAsset);
         }
     }
 
@@ -588,8 +592,9 @@ class CollisionMeshSystemImpl extends CollisionSystemImpl {
     }
 
     destroyShape(data) {
-        if (!data.shape)
+        if (!data.shape) {
             return;
+        }
 
         const numShapes = data.shape.getNumChildShapes();
         for (let i = 0; i < numShapes; i++) {
@@ -612,8 +617,9 @@ class CollisionCompoundSystemImpl extends CollisionSystemImpl {
     }
 
     _addEachDescendant(entity) {
-        if (!entity.collision || entity.rigidbody)
+        if (!entity.collision || entity.rigidbody) {
             return;
+        }
 
         entity.collision._compoundParent = this;
 
@@ -623,11 +629,13 @@ class CollisionCompoundSystemImpl extends CollisionSystemImpl {
     }
 
     _updateEachDescendant(entity) {
-        if (!entity.collision)
+        if (!entity.collision) {
             return;
+        }
 
-        if (entity.collision._compoundParent !== this)
+        if (entity.collision._compoundParent !== this) {
             return;
+        }
 
         entity.collision._compoundParent = null;
 
@@ -637,8 +645,9 @@ class CollisionCompoundSystemImpl extends CollisionSystemImpl {
     }
 
     _updateEachDescendantTransform(entity) {
-        if (!entity.collision || entity.collision._compoundParent !== this.collision._compoundParent)
+        if (!entity.collision || entity.collision._compoundParent !== this.collision._compoundParent) {
             return;
+        }
 
         this.collision.system.updateCompoundChildTransform(entity);
     }

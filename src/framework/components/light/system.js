@@ -36,8 +36,9 @@ class LightComponentSystem extends ComponentSystem {
     initializeComponentData(component, _data) {
         // duplicate because we're modifying the data
         const data = { ..._data };
-        if (!data.type)
+        if (!data.type) {
             data.type = component.data.type;
+        }
 
         component.data.type = data.type;
 
@@ -45,14 +46,17 @@ class LightComponentSystem extends ComponentSystem {
             data.layers = data.layers.slice(0);
         }
 
-        if (data.color && Array.isArray(data.color))
+        if (data.color && Array.isArray(data.color)) {
             data.color = new Color(data.color[0], data.color[1], data.color[2]);
+        }
 
-        if (data.cookieOffset && data.cookieOffset instanceof Array)
+        if (data.cookieOffset && data.cookieOffset instanceof Array) {
             data.cookieOffset = new Vec2(data.cookieOffset[0], data.cookieOffset[1]);
+        }
 
-        if (data.cookieScale && data.cookieScale instanceof Array)
+        if (data.cookieScale && data.cookieScale instanceof Array) {
             data.cookieScale = new Vec2(data.cookieScale[0], data.cookieScale[1]);
+        }
 
         if (data.enable) {
             console.warn('WARNING: enable: Property is deprecated. Set enabled property instead.');

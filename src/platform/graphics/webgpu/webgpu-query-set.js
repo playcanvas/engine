@@ -1,4 +1,4 @@
-import { DebugHelper } from "../../../core/debug.js";
+import { DebugHelper } from '../../../core/debug.js';
 
 /**
  * A wrapper over the GpuQuerySet object, allowing timestamp and occlusion queries. The results

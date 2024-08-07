@@ -563,7 +563,7 @@ function createCalculator(orientation) {
     }
 
     function sumValues(items, propertyName) {
-        return items.reduce(function (accumulator, current) {
+        return items.reduce((accumulator, current) => {
             return accumulator + current[propertyName];
         }, 0);
     }
@@ -606,11 +606,11 @@ function createCalculator(orientation) {
         items.forEach(assignIndex);
 
         return items
-            .slice()
-            .sort(function (itemA, itemB) {
-                return descending ? itemB[orderBy] - itemA[orderBy] : itemA[orderBy] - itemB[orderBy];
-            })
-            .map(getIndex);
+        .slice()
+        .sort((itemA, itemB) => {
+            return descending ? itemB[orderBy] - itemA[orderBy] : itemA[orderBy] - itemB[orderBy];
+        })
+        .map(getIndex);
     }
 
     function assignIndex(item, index) {
@@ -653,7 +653,7 @@ class LayoutCalculator {
         const calculateFn = CALCULATE_FNS[options.orientation];
 
         if (!calculateFn) {
-            throw new Error('Unrecognized orientation value: ' + options.orientation);
+            throw new Error(`Unrecognized orientation value: ${options.orientation}`);
         } else {
             return calculateFn(elements, options);
         }

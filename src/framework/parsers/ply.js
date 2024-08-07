@@ -379,9 +379,9 @@ const readPly = async (reader, propertyFilter = null) => {
 
     // decode buffer header text and split into lines and remove comments
     const lines = new TextDecoder('ascii')
-        .decode(streamBuf.data.subarray(0, headerLength))
-        .split('\n')
-        .filter(line => !line.startsWith('comment '));
+    .decode(streamBuf.data.subarray(0, headerLength))
+    .split('\n')
+    .filter(line => !line.startsWith('comment '));
 
     // decode header and build element and property list
     const { elements, format } = parseHeader(lines);
@@ -508,35 +508,35 @@ class PlyParser {
     async load(url, callback, asset) {
         const response = await fetch(url.load);
         if (!response || !response.body) {
-            callback("Error loading resource", null);
+            callback('Error loading resource', null);
         } else {
             readPly(response.body.getReader(), asset.data.elementFilter ?? defaultElementFilter)
-                .then((gsplatData) => {
-                    if (!gsplatData.isCompressed) {
+            .then((gsplatData) => {
+                if (!gsplatData.isCompressed) {
 
-                        // perform Z scale
-                        if (asset.data.performZScale ?? true) {
-                            mat4.setScale(-1, -1, 1);
-                            gsplatData.transform(mat4);
-                        }
-
-                        // reorder data
-                        if (asset.data.reorder ?? true) {
-                            gsplatData.reorderData();
-                        }
+                    // perform Z scale
+                    if (asset.data.performZScale ?? true) {
+                        mat4.setScale(-1, -1, 1);
+                        gsplatData.transform(mat4);
                     }
 
-                    // construct the resource
-                    const resource = new GSplatResource(
-                        this.device,
-                        gsplatData.isCompressed && asset.data.decompress ? gsplatData.decompress() : gsplatData
-                    );
+                    // reorder data
+                    if (asset.data.reorder ?? true) {
+                        gsplatData.reorderData();
+                    }
+                }
 
-                    callback(null, resource);
-                })
-                .catch((err) => {
-                    callback(err, null);
-                });
+                // construct the resource
+                const resource = new GSplatResource(
+                    this.device,
+                    gsplatData.isCompressed && asset.data.decompress ? gsplatData.decompress() : gsplatData
+                );
+
+                callback(null, resource);
+            })
+            .catch((err) => {
+                callback(err, null);
+            });
         }
     }
 

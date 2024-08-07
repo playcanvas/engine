@@ -5,15 +5,15 @@ import { AnimSnapshot } from '../../../../src/framework/anim/evaluator/anim-snap
 import { INTERPOLATION_LINEAR } from '../../../../src/framework/anim/constants.js';
 import { expect } from 'chai';
 
-describe('AnimTrack', function () {
+describe('AnimTrack', () => {
     const curves = [new AnimCurve(['path/to/entity'], 0, 0, INTERPOLATION_LINEAR)];
     const inputs = [new AnimData(1, [0, 1, 2])];
     const outputs = [new AnimData(3, [0, 0, 0, 1, 2, 3, 2, 4, 6])];
     const animTrack = new AnimTrack('track', 2, inputs, outputs, curves);
 
-    describe('#constructor', function () {
+    describe('#constructor', () => {
 
-        it('instantiates correctly', function () {
+        it('instantiates correctly', () => {
             expect(animTrack).to.be.ok;
             expect(animTrack.name).to.equal('track');
             expect(animTrack.duration).to.equal(2);
@@ -24,9 +24,9 @@ describe('AnimTrack', function () {
 
     });
 
-    describe('#eval', function () {
+    describe('#eval', () => {
 
-        it('correctly updates a given snapshot', function () {
+        it('correctly updates a given snapshot', () => {
             const snapshot = new AnimSnapshot(animTrack);
             animTrack.eval(0, snapshot);
             expect(snapshot._results[0]).to.deep.equal([0, 0, 0]);
@@ -40,12 +40,12 @@ describe('AnimTrack', function () {
 
 });
 
-describe('EmptyAnimTrack', function () {
+describe('EmptyAnimTrack', () => {
     const emptyAnimTrack = AnimTrack.EMPTY;
 
-    describe('#constructor', function () {
+    describe('#constructor', () => {
 
-        it('instantiates correctly', function () {
+        it('instantiates correctly', () => {
             expect(emptyAnimTrack).to.be.ok;
             expect(emptyAnimTrack.name).to.equal('empty');
             expect(emptyAnimTrack.duration).to.equal(Number.MAX_VALUE);

@@ -208,8 +208,9 @@ class IndexBuffer {
                 indices.set(data);
             } else {
                 // data is array, copy right amount manually
-                for (let i = 0; i < count; i++)
+                for (let i = 0; i < count; i++) {
                     indices[i] = data[i];
+                }
             }
         } else {
             // copy whole data
@@ -237,8 +238,9 @@ class IndexBuffer {
         } else {
             // data is array, copy right amount manually
             data.length = 0;
-            for (let i = 0; i < count; i++)
+            for (let i = 0; i < count; i++) {
                 data[i] = indices[i];
+            }
         }
 
         return count;

@@ -291,7 +291,7 @@ class RenderComponent extends Component {
      */
     set meshInstances(value) {
 
-        Debug.assert(Array.isArray(value), `MeshInstances set to a Render component must be an array.`);
+        Debug.assert(Array.isArray(value), 'MeshInstances set to a Render component must be an array.');
         this.destroyMeshInstances();
 
         this._meshInstances = value;
@@ -633,7 +633,7 @@ class RenderComponent extends Component {
      * @type {Asset[]|number[]}
      */
     get materialAssets() {
-        return this._materialReferences.map(function (ref) {
+        return this._materialReferences.map((ref) => {
             return ref.id;
         });
     }

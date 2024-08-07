@@ -37,8 +37,9 @@ class ScriptHandler extends ResourceHandler {
         for (const key in this._cache) {
             const element = this._cache[key];
             const parent = element.parentNode;
-            if (parent)
+            if (parent) {
                 parent.removeChild(element);
+            }
         }
         this._cache = {};
     }
@@ -59,8 +60,9 @@ class ScriptHandler extends ResourceHandler {
             if (!err) {
                 const obj = { };
 
-                for (let i = 0; i < ScriptTypes._types.length; i++)
+                for (let i = 0; i < ScriptTypes._types.length; i++) {
                     obj[ScriptTypes._types[i].name] = ScriptTypes._types[i];
+                }
 
                 ScriptTypes._types.length = 0;
 
@@ -110,7 +112,7 @@ class ScriptHandler extends ResourceHandler {
         // use async=false to force scripts to execute in order
         element.async = false;
 
-        element.addEventListener('error', function (e) {
+        element.addEventListener('error', (e) => {
             callback(`Script: ${e.target.src} failed to load`);
         }, false);
 

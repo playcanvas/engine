@@ -54,8 +54,9 @@ const script = {
      * });
      */
     createLoadingScreen(callback) {
-        if (_createdLoadingScreen)
+        if (_createdLoadingScreen) {
             return;
+        }
 
         _createdLoadingScreen = true;
 

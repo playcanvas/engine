@@ -268,8 +268,9 @@ class XrHitTest extends EventHandler {
             return;
         }
 
-        if (!options.profile && !options.spaceType)
+        if (!options.profile && !options.spaceType) {
             options.spaceType = XRSPACE_VIEWER;
+        }
 
         let xrRay;
         const offsetRay = options.offsetRay;
@@ -346,8 +347,9 @@ class XrHitTest extends EventHandler {
      * @ignore
      */
     update(frame) {
-        if (!this._available)
+        if (!this._available) {
             return;
+        }
 
         for (let i = 0; i < this.sources.length; i++) {
             this.sources[i].update(frame);

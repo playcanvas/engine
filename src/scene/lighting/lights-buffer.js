@@ -57,8 +57,8 @@ class LightsBuffer {
         // converts object with properties to a list of these as an example: "#define CLUSTER_TEXTURE_8_BLAH 1"
         const buildShaderDefines = (object, prefix) => {
             return Object.keys(object)
-                .map(key => `#define ${prefix}${key} ${object[key]}`)
-                .join('\n');
+            .map(key => `#define ${prefix}${key} ${object[key]}`)
+            .join('\n');
         };
 
         if (!_defines) {
@@ -309,8 +309,9 @@ class LightsBuffer {
         // light projection matrix
         if (lightProjectionMatrix) {
             const matData = lightProjectionMatrix.data;
-            for (let m = 0; m < 16; m++)
+            for (let m = 0; m < 16; m++) {
                 dataFloat[dataFloatStart + 4 * TextureIndexFloat.PROJ_MAT_0 + m] = matData[m];
+            }
         }
 
         if (atlasViewport) {

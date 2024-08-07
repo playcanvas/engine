@@ -258,8 +258,9 @@ const math = {
      * @returns {number} A number rounded up to nearest multiple.
      */
     roundUp(numToRound, multiple) {
-        if (multiple === 0)
+        if (multiple === 0) {
             return numToRound;
+        }
         return Math.ceil(numToRound / multiple) * multiple;
     },
 

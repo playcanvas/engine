@@ -275,8 +275,9 @@ class XrInput extends EventHandler {
      * @private
      */
     _addInputSource(xrInputSource) {
-        if (this._getByInputSource(xrInputSource))
+        if (this._getByInputSource(xrInputSource)) {
             return;
+        }
 
         const inputSource = new XrInputSource(this.manager, xrInputSource);
         this._inputSources.push(inputSource);
@@ -289,8 +290,9 @@ class XrInput extends EventHandler {
      */
     _removeInputSource(xrInputSource) {
         for (let i = 0; i < this._inputSources.length; i++) {
-            if (this._inputSources[i].inputSource !== xrInputSource)
+            if (this._inputSources[i].inputSource !== xrInputSource) {
                 continue;
+            }
 
             const inputSource = this._inputSources[i];
             this._inputSources.splice(i, 1);

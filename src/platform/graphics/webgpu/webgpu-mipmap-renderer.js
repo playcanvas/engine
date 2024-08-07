@@ -1,7 +1,7 @@
-import { Shader } from "../shader.js";
-import { SHADERLANGUAGE_WGSL } from "../constants.js";
-import { Debug, DebugHelper } from "../../../core/debug.js";
-import { DebugGraphics } from "../debug-graphics.js";
+import { Shader } from '../shader.js';
+import { SHADERLANGUAGE_WGSL } from '../constants.js';
+import { Debug, DebugHelper } from '../../../core/debug.js';
+import { DebugGraphics } from '../debug-graphics.js';
 
 /**
  * @import { WebgpuGraphicsDevice } from './webgpu-graphics-device.js'

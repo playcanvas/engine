@@ -34,7 +34,7 @@ class AnimClipHandler extends ResourceHandler {
             options.responseType = Http.ResponseType.JSON;
         }
 
-        http.get(url.load, options, function (err, response) {
+        http.get(url.load, options, (err, response) => {
             if (err) {
                 callback(`Error loading animation clip resource: ${url.original} [${err}]`);
             } else {
@@ -46,13 +46,13 @@ class AnimClipHandler extends ResourceHandler {
     open(url, data) {
         const name = data.name;
         const duration = data.duration;
-        const inputs = data.inputs.map(function (input) {
+        const inputs = data.inputs.map((input) => {
             return new AnimData(1, input);
         });
-        const outputs = data.outputs.map(function (output) {
+        const outputs = data.outputs.map((output) => {
             return new AnimData(output.components, output.data);
         });
-        const curves = data.curves.map(function (curve) {
+        const curves = data.curves.map((curve) => {
             return new AnimCurve(
                 [curve.path],
                 curve.inputIndex,

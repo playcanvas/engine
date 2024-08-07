@@ -14,7 +14,7 @@ import { expect } from 'chai';
 
 /** @typedef {import('../../../../src/framework/components/element/component.js').ElementComponent} ElementComponent */
 
-describe('LayoutCalculator', function () {
+describe('LayoutCalculator', () => {
     /** @type {Application} */
     let app;
     /** @type {LayoutCalculator} */
@@ -32,7 +32,7 @@ describe('LayoutCalculator', function () {
     let mixedHeightElementsWithLayoutChildComponents; // eslint-disable-line no-unused-vars
 
     const applyProperties = function (object, properties) {
-        Object.keys(properties).forEach(function (propertyName) {
+        Object.keys(properties).forEach((propertyName) => {
             object[propertyName] = properties[propertyName];
         });
     };
@@ -56,12 +56,12 @@ describe('LayoutCalculator', function () {
     };
 
     const buildElements = function (elementSpecs) {
-        return elementSpecs.map(function (properties) {
+        return elementSpecs.map((properties) => {
             return buildElement(properties);
         });
     };
 
-    beforeEach(function () {
+    beforeEach(() => {
         const canvas = new HTMLCanvasElement(500, 500);
         app = new Application(canvas, { graphicsDevice: new NullGraphicsDevice(canvas) });
         calculator = new LayoutCalculator();
@@ -242,7 +242,7 @@ describe('LayoutCalculator', function () {
         ]);
     });
 
-    afterEach(function () {
+    afterEach(() => {
         app.destroy();
     });
 
@@ -253,7 +253,7 @@ describe('LayoutCalculator', function () {
     const assertValues = function (property, values, options) {
         options = options || {};
 
-        elements.forEach(function (element, i) {
+        elements.forEach((element, i) => {
             let propertyValue;
             if (property === 'x' || property === 'y') {
                 propertyValue = element.entity.localPosition[property];
@@ -269,15 +269,15 @@ describe('LayoutCalculator', function () {
         });
     };
 
-    it('throws an error if provided with an unrecognized orientation', function () {
-        expect(function () {
+    it('throws an error if provided with an unrecognized orientation', () => {
+        expect(() => {
             elements = mixedWidthElements;
             options.orientation = 42;
             calculate();
         }).to.throw('Unrecognized orientation value: 42');
     });
 
-    it('lays children out horizontally when orientation is ORIENTATION_HORIZONTAL', function () {
+    it('lays children out horizontally when orientation is ORIENTATION_HORIZONTAL', () => {
         elements = mixedWidthElements;
         options.orientation = ORIENTATION_HORIZONTAL;
 
@@ -287,7 +287,7 @@ describe('LayoutCalculator', function () {
         assertValues('y', [0,   0,   0,   0,   0]);
     });
 
-    it('lays children out vertically when orientation is ORIENTATION_VERTICAL', function () {
+    it('lays children out vertically when orientation is ORIENTATION_VERTICAL', () => {
         elements = mixedHeightElements;
         options.orientation = ORIENTATION_VERTICAL;
 
@@ -297,7 +297,7 @@ describe('LayoutCalculator', function () {
         assertValues('y', [0, 100, 150, 250, 270]);
     });
 
-    it('takes into account each element\'s pivot when calculating horizontal positions', function () {
+    it('takes into account each element\'s pivot when calculating horizontal positions', () => {
         elements = mixedWidthElements;
         options.orientation = ORIENTATION_HORIZONTAL;
 
@@ -310,7 +310,7 @@ describe('LayoutCalculator', function () {
         assertValues('y', [10,  10,   0,   0,   0], { approx: true });
     });
 
-    it('takes into account each element\'s pivot when calculating vertical positions', function () {
+    it('takes into account each element\'s pivot when calculating vertical positions', () => {
         elements = mixedHeightElements;
         options.orientation = ORIENTATION_VERTICAL;
 
@@ -323,7 +323,7 @@ describe('LayoutCalculator', function () {
         assertValues('y', [50, 110, 150, 250, 270], { approx: true });
     });
 
-    it('returns a layoutInfo object containing the layout bounds', function () {
+    it('returns a layoutInfo object containing the layout bounds', () => {
         elements = mixedWidthElementsWithLayoutChildComponents;
         options.wrap = true;
         options.orientation = ORIENTATION_HORIZONTAL;
@@ -363,7 +363,7 @@ describe('LayoutCalculator', function () {
         expect(layoutInfo.bounds.w).to.equal(100);
     });
 
-    it('{ wrap: false } FITTING_NONE does not adjust the size or position of elements to match the container size', function () {
+    it('{ wrap: false } FITTING_NONE does not adjust the size or position of elements to match the container size', () => {
         elements = mixedWidthElements;
         options.orientation = ORIENTATION_HORIZONTAL;
         options.widthFitting = FITTING_NONE;
@@ -377,7 +377,7 @@ describe('LayoutCalculator', function () {
         assertValues('calculatedHeight', [100, 100, 100, 100, 100]);
     });
 
-    it('{ wrap: false } FITTING_STRETCH uses natural widths when total is larger than container size', function () {
+    it('{ wrap: false } FITTING_STRETCH uses natural widths when total is larger than container size', () => {
         elements = mixedWidthElementsWithLayoutChildComponents;
         options.orientation = ORIENTATION_HORIZONTAL;
         options.widthFitting = FITTING_STRETCH;
@@ -392,7 +392,7 @@ describe('LayoutCalculator', function () {
         assertValues('calculatedHeight', [100, 100, 100, 100, 100]);
     });
 
-    it('{ wrap: false } FITTING_STRETCH stretches elements proportionally when natural widths are less than container size', function () {
+    it('{ wrap: false } FITTING_STRETCH stretches elements proportionally when natural widths are less than container size', () => {
         elements = mixedWidthElementsWithLayoutChildComponents;
         options.orientation = ORIENTATION_HORIZONTAL;
         options.widthFitting = FITTING_STRETCH;
@@ -407,7 +407,7 @@ describe('LayoutCalculator', function () {
         assertValues('calculatedHeight', [100, 100, 100, 100, 100]);
     });
 
-    it('{ wrap: false } FITTING_STRETCH does not make any elements wider than their maxWidth when increasing widths', function () {
+    it('{ wrap: false } FITTING_STRETCH does not make any elements wider than their maxWidth when increasing widths', () => {
         elements = mixedWidthElementsWithLayoutChildComponents;
         options.orientation = ORIENTATION_HORIZONTAL;
         options.widthFitting = FITTING_STRETCH;
@@ -422,7 +422,7 @@ describe('LayoutCalculator', function () {
         assertValues('calculatedHeight', [100, 100, 100, 100, 100]);
     });
 
-    it('{ wrap: false } FITTING_STRETCH distributes additional space among remaining elements when one element\'s maxWidth is very small', function () {
+    it('{ wrap: false } FITTING_STRETCH distributes additional space among remaining elements when one element\'s maxWidth is very small', () => {
         elements = mixedWidthElementsWithLayoutChildComponents;
         options.orientation = ORIENTATION_HORIZONTAL;
         options.widthFitting = FITTING_STRETCH;
@@ -444,7 +444,7 @@ describe('LayoutCalculator', function () {
         assertValues('calculatedHeight', [100, 100, 100,     100,     100]);
     });
 
-    it('{ wrap: false } FITTING_STRETCH includes spacing and padding in calculations', function () {
+    it('{ wrap: false } FITTING_STRETCH includes spacing and padding in calculations', () => {
         elements = mixedWidthElementsWithLayoutChildComponents;
         options.orientation = ORIENTATION_HORIZONTAL;
         options.widthFitting = FITTING_STRETCH;
@@ -462,7 +462,7 @@ describe('LayoutCalculator', function () {
         assertValues('calculatedHeight', [100, 100,     100, 100, 100]);
     });
 
-    it('{ wrap: false } FITTING_SHRINK uses natural widths when total is less than container size', function () {
+    it('{ wrap: false } FITTING_SHRINK uses natural widths when total is less than container size', () => {
         elements = mixedWidthElementsWithLayoutChildComponents;
         options.orientation = ORIENTATION_HORIZONTAL;
         options.widthFitting = FITTING_SHRINK;
@@ -477,7 +477,7 @@ describe('LayoutCalculator', function () {
         assertValues('calculatedHeight', [100, 100, 100, 100, 100]);
     });
 
-    it('{ wrap: false } FITTING_SHRINK shrinks elements proportionally when natural widths are greater than than container size', function () {
+    it('{ wrap: false } FITTING_SHRINK shrinks elements proportionally when natural widths are greater than than container size', () => {
         elements = mixedWidthElementsWithLayoutChildComponents;
         options.orientation = ORIENTATION_HORIZONTAL;
         options.widthFitting = FITTING_SHRINK;
@@ -492,7 +492,7 @@ describe('LayoutCalculator', function () {
         assertValues('calculatedHeight', [100,  100,   100,   100, 100]);
     });
 
-    it('{ wrap: false } FITTING_SHRINK does not make any elements smaller than their minWidth when reducing widths', function () {
+    it('{ wrap: false } FITTING_SHRINK does not make any elements smaller than their minWidth when reducing widths', () => {
         elements = mixedWidthElementsWithLayoutChildComponents;
         options.orientation = ORIENTATION_HORIZONTAL;
         options.widthFitting = FITTING_SHRINK;
@@ -507,7 +507,7 @@ describe('LayoutCalculator', function () {
         assertValues('calculatedHeight', [100, 100, 100, 100, 100]);
     });
 
-    it('{ wrap: false } FITTING_SHRINK distributes additional size reduction among remaining elements when one element\'s minWidth is very large', function () {
+    it('{ wrap: false } FITTING_SHRINK distributes additional size reduction among remaining elements when one element\'s minWidth is very large', () => {
         elements = mixedWidthElementsWithLayoutChildComponents;
         options.orientation = ORIENTATION_HORIZONTAL;
         options.widthFitting = FITTING_SHRINK;
@@ -528,7 +528,7 @@ describe('LayoutCalculator', function () {
         assertValues('calculatedHeight', [100,    100, 100, 100, 100]);
     });
 
-    it('{ wrap: false } FITTING_SHRINK includes spacing and padding in calculations', function () {
+    it('{ wrap: false } FITTING_SHRINK includes spacing and padding in calculations', () => {
         elements = mixedWidthElementsWithLayoutChildComponents;
         options.orientation = ORIENTATION_HORIZONTAL;
         options.widthFitting = FITTING_SHRINK;
@@ -546,7 +546,7 @@ describe('LayoutCalculator', function () {
         assertValues('calculatedHeight', [100, 100,  100, 100, 100]);
     });
 
-    it('{ wrap: false } FITTING_BOTH stretches elements proportionally when natural widths are less than container size', function () {
+    it('{ wrap: false } FITTING_BOTH stretches elements proportionally when natural widths are less than container size', () => {
         elements = mixedWidthElementsWithLayoutChildComponents;
         options.orientation = ORIENTATION_HORIZONTAL;
         options.widthFitting = FITTING_BOTH;
@@ -561,7 +561,7 @@ describe('LayoutCalculator', function () {
         assertValues('calculatedHeight', [100, 100, 100, 100, 100]);
     });
 
-    it('{ wrap: false } FITTING_BOTH shrinks elements proportionally when natural widths are greater than than container size', function () {
+    it('{ wrap: false } FITTING_BOTH shrinks elements proportionally when natural widths are greater than than container size', () => {
         elements = mixedWidthElementsWithLayoutChildComponents;
         options.orientation = ORIENTATION_HORIZONTAL;
         options.widthFitting = FITTING_BOTH;
@@ -576,7 +576,7 @@ describe('LayoutCalculator', function () {
         assertValues('calculatedHeight', [100,  100,   100,   100, 100]);
     });
 
-    it('{ wrap: false } can reverse elements on the x axis', function () {
+    it('{ wrap: false } can reverse elements on the x axis', () => {
         elements = mixedWidthElements;
         options.reverseX = true;
         options.orientation = ORIENTATION_HORIZONTAL;
@@ -589,7 +589,7 @@ describe('LayoutCalculator', function () {
         assertValues('y', [0,     0,  0,  0, 0]);
     });
 
-    it('{ wrap: false } can reverse elements on the y axis', function () {
+    it('{ wrap: false } can reverse elements on the y axis', () => {
         elements = mixedHeightElements;
         options.reverseY = true;
         options.orientation = ORIENTATION_VERTICAL;
@@ -602,7 +602,7 @@ describe('LayoutCalculator', function () {
         assertValues('y', [200, 150, 50, 30, 0]);
     });
 
-    it('{ wrap: false } can align to [1, 0.5]', function () {
+    it('{ wrap: false } can align to [1, 0.5]', () => {
         elements = mixedWidthElementsWithLayoutChildComponents;
         options.orientation = ORIENTATION_HORIZONTAL;
         options.widthFitting = FITTING_NONE;
@@ -617,7 +617,7 @@ describe('LayoutCalculator', function () {
         assertValues('y', [150, 150, 150, 150, 150]);
     });
 
-    it('{ wrap: false } can align to [0.5, 1]', function () {
+    it('{ wrap: false } can align to [0.5, 1]', () => {
         elements = mixedWidthElementsWithLayoutChildComponents;
         options.orientation = ORIENTATION_HORIZONTAL;
         options.widthFitting = FITTING_NONE;
@@ -632,7 +632,7 @@ describe('LayoutCalculator', function () {
         assertValues('y', [300, 300, 300, 300, 300]);
     });
 
-    it('{ wrap: false } can exclude elements from the layout', function () {
+    it('{ wrap: false } can exclude elements from the layout', () => {
         elements = mixedWidthElementsWithLayoutChildComponents;
         options.orientation = ORIENTATION_HORIZONTAL;
 
@@ -644,7 +644,7 @@ describe('LayoutCalculator', function () {
         assertValues('y', [0, 0,   0,   0,   0]);
     });
 
-    it('{ wrap: true } FITTING_NONE does not adjust the size or position of elements to match the container size', function () {
+    it('{ wrap: true } FITTING_NONE does not adjust the size or position of elements to match the container size', () => {
         elements = mixedWidthElements;
         options.wrap = true;
         options.orientation = ORIENTATION_HORIZONTAL;
@@ -660,7 +660,7 @@ describe('LayoutCalculator', function () {
         assertValues('calculatedHeight', [100, 100, 100, 100, 100]);
     });
 
-    it('{ wrap: true } FITTING_NONE calculates line positions based on the largest element on the line', function () {
+    it('{ wrap: true } FITTING_NONE calculates line positions based on the largest element on the line', () => {
         elements = mixedWidthElements;
         options.wrap = true;
         options.orientation = ORIENTATION_HORIZONTAL;
@@ -678,7 +678,7 @@ describe('LayoutCalculator', function () {
         assertValues('calculatedHeight', [100, 100, 200, 100, 100]);
     });
 
-    it('{ wrap: true } FITTING_NONE does not adjust the size or position of elements to match the container size', function () {
+    it('{ wrap: true } FITTING_NONE does not adjust the size or position of elements to match the container size', () => {
         elements = mixedWidthElements;
         options.wrap = true;
         options.orientation = ORIENTATION_HORIZONTAL;
@@ -694,7 +694,7 @@ describe('LayoutCalculator', function () {
         assertValues('calculatedHeight', [100, 100, 100, 100, 100]);
     });
 
-    it('{ wrap: true } FITTING_NONE includes spacing and padding in calculations', function () {
+    it('{ wrap: true } FITTING_NONE includes spacing and padding in calculations', () => {
         elements = mixedWidthElements;
         options.wrap = true;
         options.orientation = ORIENTATION_HORIZONTAL;
@@ -714,7 +714,7 @@ describe('LayoutCalculator', function () {
         assertValues('calculatedHeight', [100, 100, 100, 100, 100]);
     });
 
-    it('{ wrap: true } FITTING_NONE includes spacing when calculating line breaks', function () {
+    it('{ wrap: true } FITTING_NONE includes spacing when calculating line breaks', () => {
         elements = mixedWidthElements;
         elements[0].width = 100;
         elements[1].width = 100;
@@ -734,7 +734,7 @@ describe('LayoutCalculator', function () {
         assertValues('y', [0,    0,  0,   0, 100]);
     });
 
-    it('{ wrap: true } FITTING_STRETCH stretches elements proportionally when natural widths are less than container size', function () {
+    it('{ wrap: true } FITTING_STRETCH stretches elements proportionally when natural widths are less than container size', () => {
         elements = mixedWidthElementsWithLayoutChildComponents;
         options.wrap = true;
         options.orientation = ORIENTATION_HORIZONTAL;
@@ -750,7 +750,7 @@ describe('LayoutCalculator', function () {
         assertValues('calculatedHeight', [100,    100,     100, 100, 100]);
     });
 
-    it('{ wrap: true } FITTING_SHRINK stretches elements proportionally when natural widths are less than container size', function () {
+    it('{ wrap: true } FITTING_SHRINK stretches elements proportionally when natural widths are less than container size', () => {
         elements = mixedWidthElementsWithLayoutChildComponents;
         options.wrap = true;
         options.orientation = ORIENTATION_HORIZONTAL;
@@ -766,7 +766,7 @@ describe('LayoutCalculator', function () {
         assertValues('calculatedHeight', [100,    100,    100,    100, 100]);
     });
 
-    it('{ wrap: true } FITTING_BOTH stretches elements proportionally when natural widths are less than container size', function () {
+    it('{ wrap: true } FITTING_BOTH stretches elements proportionally when natural widths are less than container size', () => {
         elements = mixedWidthElementsWithLayoutChildComponents;
         options.wrap = true;
         options.orientation = ORIENTATION_HORIZONTAL;
@@ -782,7 +782,7 @@ describe('LayoutCalculator', function () {
         assertValues('calculatedHeight', [100,    100,     100, 100, 100]);
     });
 
-    it('{ wrap: true } can reverse elements on the x axis', function () {
+    it('{ wrap: true } can reverse elements on the x axis', () => {
         elements = mixedWidthElements;
         options.wrap = true;
         options.reverseX = true;
@@ -796,7 +796,7 @@ describe('LayoutCalculator', function () {
         assertValues('y', [0,   0,  0, 100, 100]);
     });
 
-    it('{ wrap: true } can reverse elements on the y axis', function () {
+    it('{ wrap: true } can reverse elements on the y axis', () => {
         elements = mixedWidthElements;
         options.wrap = true;
         options.reverseY = true;
@@ -810,7 +810,7 @@ describe('LayoutCalculator', function () {
         assertValues('y', [100, 100, 100, 0, 0]);
     });
 
-    it('{ wrap: true } can reverse elements both axes', function () {
+    it('{ wrap: true } can reverse elements both axes', () => {
         elements = mixedWidthElements;
         options.wrap = true;
         options.reverseX = true;
@@ -825,7 +825,7 @@ describe('LayoutCalculator', function () {
         assertValues('y', [100, 100, 100,  0, 0]);
     });
 
-    it('{ wrap: true } can align to [1, 0.5]', function () {
+    it('{ wrap: true } can align to [1, 0.5]', () => {
         elements = mixedWidthElementsWithLayoutChildComponents;
         options.wrap = true;
         options.orientation = ORIENTATION_HORIZONTAL;
@@ -842,7 +842,7 @@ describe('LayoutCalculator', function () {
         assertValues('y', [100, 100, 100, 200, 200]);
     });
 
-    it('{ wrap: true } can align to [0.5, 1]', function () {
+    it('{ wrap: true } can align to [0.5, 1]', () => {
         elements = mixedWidthElementsWithLayoutChildComponents;
         options.wrap = true;
         options.orientation = ORIENTATION_HORIZONTAL;
@@ -859,7 +859,7 @@ describe('LayoutCalculator', function () {
         assertValues('y', [200, 200, 200, 300, 300]);
     });
 
-    it('{ wrap: false } can exclude elements from the layout', function () {
+    it('{ wrap: false } can exclude elements from the layout', () => {
         elements = mixedWidthElementsWithLayoutChildComponents;
         options.wrap = true;
         options.orientation = ORIENTATION_HORIZONTAL;

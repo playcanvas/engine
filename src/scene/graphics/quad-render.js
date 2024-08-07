@@ -1,11 +1,11 @@
-import { Debug, DebugHelper } from "../../core/debug.js";
-import { Vec4 } from "../../core/math/vec4.js";
-import { BindGroup, DynamicBindGroup } from "../../platform/graphics/bind-group.js";
-import { BINDGROUP_MESH, BINDGROUP_MESH_UB, BINDGROUP_VIEW, PRIMITIVE_TRISTRIP } from "../../platform/graphics/constants.js";
-import { DebugGraphics } from "../../platform/graphics/debug-graphics.js";
-import { ShaderProcessorOptions } from "../../platform/graphics/shader-processor-options.js";
-import { UniformBuffer } from "../../platform/graphics/uniform-buffer.js";
-import { processShader } from "../shader-lib/utils.js";
+import { Debug, DebugHelper } from '../../core/debug.js';
+import { Vec4 } from '../../core/math/vec4.js';
+import { BindGroup, DynamicBindGroup } from '../../platform/graphics/bind-group.js';
+import { BINDGROUP_MESH, BINDGROUP_MESH_UB, BINDGROUP_VIEW, PRIMITIVE_TRISTRIP } from '../../platform/graphics/constants.js';
+import { DebugGraphics } from '../../platform/graphics/debug-graphics.js';
+import { ShaderProcessorOptions } from '../../platform/graphics/shader-processor-options.js';
+import { UniformBuffer } from '../../platform/graphics/uniform-buffer.js';
+import { processShader } from '../shader-lib/utils.js';
 
 /**
  * @import { Shader } from '../../platform/graphics/shader.js'
@@ -103,7 +103,7 @@ class QuadRender {
     render(viewport, scissor) {
 
         const device = this.shader.device;
-        DebugGraphics.pushGpuMarker(device, "QuadRender");
+        DebugGraphics.pushGpuMarker(device, 'QuadRender');
 
         // only modify viewport or scissor if viewport supplied
         if (viewport) {

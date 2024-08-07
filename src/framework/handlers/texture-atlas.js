@@ -67,11 +67,11 @@ class TextureAtlasHandler extends ResourceHandler {
             http.get(url.load, {
                 retry: this.maxRetries > 0,
                 maxRetries: this.maxRetries
-            }, function (err, response) {
+            }, (err, response) => {
                 if (!err) {
                     // load texture
                     const textureUrl = url.original.replace('.json', '.png');
-                    self._loader.load(textureUrl, 'texture', function (err, texture) {
+                    self._loader.load(textureUrl, 'texture', (err, texture) => {
                         if (err) {
                             callback(err);
                         } else {
@@ -131,23 +131,29 @@ class TextureAtlasHandler extends ResourceHandler {
         if (texture) {
             texture.name = asset.name;
 
-            if (asset.data.hasOwnProperty('minfilter') && texture.minFilter !== JSON_FILTER_MODE[asset.data.minfilter])
+            if (asset.data.hasOwnProperty('minfilter') && texture.minFilter !== JSON_FILTER_MODE[asset.data.minfilter]) {
                 texture.minFilter = JSON_FILTER_MODE[asset.data.minfilter];
+            }
 
-            if (asset.data.hasOwnProperty('magfilter') && texture.magFilter !== JSON_FILTER_MODE[asset.data.magfilter])
+            if (asset.data.hasOwnProperty('magfilter') && texture.magFilter !== JSON_FILTER_MODE[asset.data.magfilter]) {
                 texture.magFilter = JSON_FILTER_MODE[asset.data.magfilter];
+            }
 
-            if (asset.data.hasOwnProperty('addressu') && texture.addressU !== JSON_ADDRESS_MODE[asset.data.addressu])
+            if (asset.data.hasOwnProperty('addressu') && texture.addressU !== JSON_ADDRESS_MODE[asset.data.addressu]) {
                 texture.addressU = JSON_ADDRESS_MODE[asset.data.addressu];
+            }
 
-            if (asset.data.hasOwnProperty('addressv') && texture.addressV !== JSON_ADDRESS_MODE[asset.data.addressv])
+            if (asset.data.hasOwnProperty('addressv') && texture.addressV !== JSON_ADDRESS_MODE[asset.data.addressv]) {
                 texture.addressV = JSON_ADDRESS_MODE[asset.data.addressv];
+            }
 
-            if (asset.data.hasOwnProperty('mipmaps') && texture.mipmaps !== asset.data.mipmaps)
+            if (asset.data.hasOwnProperty('mipmaps') && texture.mipmaps !== asset.data.mipmaps) {
                 texture.mipmaps = asset.data.mipmaps;
+            }
 
-            if (asset.data.hasOwnProperty('anisotropy') && texture.anisotropy !== asset.data.anisotropy)
+            if (asset.data.hasOwnProperty('anisotropy') && texture.anisotropy !== asset.data.anisotropy) {
                 texture.anisotropy = asset.data.anisotropy;
+            }
 
             if (asset.data.hasOwnProperty('rgbm')) {
                 const type = asset.data.rgbm ? TEXTURETYPE_RGBM : TEXTURETYPE_DEFAULT;

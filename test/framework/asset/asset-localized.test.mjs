@@ -7,20 +7,20 @@ import { HTMLCanvasElement } from '@playcanvas/canvas-mock';
 
 import { expect } from 'chai';
 
-describe('LocalizedAsset', function () {
+describe('LocalizedAsset', () => {
 
     let app;
 
-    beforeEach(function () {
+    beforeEach(() => {
         const canvas = new HTMLCanvasElement(500, 500);
         app = new Application(canvas, { graphicsDevice: new NullGraphicsDevice(canvas) });
     });
 
-    afterEach(function () {
+    afterEach(() => {
         app.destroy();
     });
 
-    it('sets defaultAsset and localizedAsset to the same id if defaultAsset has no localization', function () {
+    it('sets defaultAsset and localizedAsset to the same id if defaultAsset has no localization', () => {
         const asset = new Asset('Default Asset', 'texture');
 
         app.assets.add(asset);
@@ -32,7 +32,7 @@ describe('LocalizedAsset', function () {
         expect(la.localizedAsset).to.equal(asset.id);
     });
 
-    it('does not add load and change events to the asset when autoLoad is false', function () {
+    it('does not add load and change events to the asset when autoLoad is false', () => {
         const asset = new Asset('Default Asset', 'texture');
 
         app.assets.add(asset);
@@ -44,7 +44,7 @@ describe('LocalizedAsset', function () {
         expect(asset.hasEvent('change')).to.equal(false);
     });
 
-    it('adds load, change and remove events to the asset when autoLoad is true', function () {
+    it('adds load, change and remove events to the asset when autoLoad is true', () => {
         const asset = new Asset('Default Asset', 'texture');
 
         app.assets.add(asset);
@@ -58,7 +58,7 @@ describe('LocalizedAsset', function () {
         expect(asset.hasEvent('remove')).to.equal(true);
     });
 
-    it('adds events to the asset when autoLoad becomes true later', function () {
+    it('adds events to the asset when autoLoad becomes true later', () => {
         const asset = new Asset('Default Asset', 'texture');
 
         app.assets.add(asset);
@@ -73,7 +73,7 @@ describe('LocalizedAsset', function () {
         expect(asset.hasEvent('remove')).to.equal(true);
     });
 
-    it('picks the correct localizedAsset when the locale is already different', function () {
+    it('picks the correct localizedAsset when the locale is already different', () => {
         const asset = new Asset('Default Asset', 'texture');
         const asset2 = new Asset('Localized Asset', 'texture');
 
@@ -91,7 +91,7 @@ describe('LocalizedAsset', function () {
         expect(la.localizedAsset).to.equal(asset2.id);
     });
 
-    it('changes the localized asset after defaultAsset and then the locale change', function () {
+    it('changes the localized asset after defaultAsset and then the locale change', () => {
         const asset = new Asset('Default Asset', 'texture');
         const asset2 = new Asset('Localized Asset', 'texture');
 
@@ -110,7 +110,7 @@ describe('LocalizedAsset', function () {
         expect(la.localizedAsset).to.equal(asset2.id);
     });
 
-    it('removes events from the defaultAsset and localizedAsset is changed', function () {
+    it('removes events from the defaultAsset and localizedAsset is changed', () => {
         const asset = new Asset('Default Asset', 'texture');
         const asset2 = new Asset('Localized Asset', 'texture');
 
@@ -142,7 +142,7 @@ describe('LocalizedAsset', function () {
         expect(asset2.hasEvent('remove')).to.equal(true);
     });
 
-    it('propagates asset events to LocalizedAsset', function () {
+    it('propagates asset events to LocalizedAsset', () => {
         const asset = new Asset('Default Asset', 'texture');
 
         app.assets.add(asset);
@@ -155,15 +155,15 @@ describe('LocalizedAsset', function () {
         let changeFired = false;
         let removeFired = false;
 
-        la.on('load', function () {
+        la.on('load', () => {
             loadFired = true;
         });
 
-        la.on('change', function () {
+        la.on('change', () => {
             changeFired = true;
         });
 
-        la.on('remove', function () {
+        la.on('remove', () => {
             removeFired = true;
         });
 
@@ -176,7 +176,7 @@ describe('LocalizedAsset', function () {
         expect(removeFired).to.equal(true);
     });
 
-    it('uses only the defaultAsset when disableLocalization is true', function () {
+    it('uses only the defaultAsset when disableLocalization is true', () => {
         const asset = new Asset('Default Asset', 'texture');
         const asset2 = new Asset('Localized Asset', 'texture');
 
@@ -195,7 +195,7 @@ describe('LocalizedAsset', function () {
         expect(la.localizedAsset).to.equal(asset.id);
     });
 
-    it('falls back to defaultAsset when a null asset is set for a locale', function () {
+    it('falls back to defaultAsset when a null asset is set for a locale', () => {
         const asset = new Asset('Default Asset', 'texture');
         const asset2 = new Asset('Localized Asset', 'texture');
 
@@ -213,11 +213,11 @@ describe('LocalizedAsset', function () {
         expect(la.localizedAsset).to.equal(asset.id);
     });
 
-    it('fires add:localized on setting a new locale', function (done) {
+    it('fires add:localized on setting a new locale', (done) => {
         const asset = new Asset('Default Asset', 'texture');
         const asset2 = new Asset('Localized Asset', 'texture');
 
-        asset.on('add:localized', function (locale, assetId) {
+        asset.on('add:localized', (locale, assetId) => {
             expect(locale).to.equal('fr');
             expect(assetId).to.equal(asset2.id);
             done();
@@ -226,13 +226,13 @@ describe('LocalizedAsset', function () {
         asset.addLocalizedAssetId('fr', asset2.id);
     });
 
-    it('fires remove:localized on removing a locale', function (done) {
+    it('fires remove:localized on removing a locale', (done) => {
         const asset = new Asset('Default Asset', 'texture');
         const asset2 = new Asset('Localized Asset', 'texture');
 
         asset.addLocalizedAssetId('fr', asset2.id);
 
-        asset.on('remove:localized', function (locale, assetId) {
+        asset.on('remove:localized', (locale, assetId) => {
             expect(locale).to.equal('fr');
             expect(assetId).to.equal(asset2.id);
             done();
@@ -241,7 +241,7 @@ describe('LocalizedAsset', function () {
         asset.removeLocalizedAssetId('fr');
     });
 
-    it('updates the localizedAsset on setting a localized asset for the current locale', function () {
+    it('updates the localizedAsset on setting a localized asset for the current locale', () => {
         const asset = new Asset('Default Asset', 'texture');
         app.assets.add(asset);
         const asset2 = new Asset('Localized Asset', 'texture');
@@ -256,7 +256,7 @@ describe('LocalizedAsset', function () {
         expect(la.localizedAsset).to.equal(asset2.id);
     });
 
-    it('updates the localizedAsset to the defaultAsset on removing a localized asset for the current locale', function () {
+    it('updates the localizedAsset to the defaultAsset on removing a localized asset for the current locale', () => {
         const asset = new Asset('Default Asset', 'texture');
         app.assets.add(asset);
         const asset2 = new Asset('Localized Asset', 'texture');
@@ -273,7 +273,7 @@ describe('LocalizedAsset', function () {
         expect(la.localizedAsset).to.equal(asset.id);
     });
 
-    it('updates the localizedAsset on setting a localized asset for the current locale even if defaultAsset is added to the registry later', function () {
+    it('updates the localizedAsset on setting a localized asset for the current locale even if defaultAsset is added to the registry later', () => {
         const asset = new Asset('Default Asset', 'texture');
         const asset2 = new Asset('Localized Asset', 'texture');
         app.assets.add(asset2);
@@ -290,7 +290,7 @@ describe('LocalizedAsset', function () {
     });
 
 
-    it('switches LocalizedAsset to the defaultAsset by removing a localized asset from the registry', function () {
+    it('switches LocalizedAsset to the defaultAsset by removing a localized asset from the registry', () => {
         const asset = new Asset('Default Asset', 'texture');
         app.assets.add(asset);
         const asset2 = new Asset('Localized Asset', 'texture');
@@ -308,7 +308,7 @@ describe('LocalizedAsset', function () {
         expect(la.localizedAsset).to.equal(asset.id);
     });
 
-    it('keeps same localizedAsset and adds "add" event handler on removing the defaultAsset from the registry', function () {
+    it('keeps same localizedAsset and adds "add" event handler on removing the defaultAsset from the registry', () => {
         const asset = new Asset('Default Asset', 'texture');
         app.assets.add(asset);
         const asset2 = new Asset('Localized Asset', 'texture');
@@ -322,34 +322,34 @@ describe('LocalizedAsset', function () {
         la.defaultAsset = asset;
         expect(la.localizedAsset).to.equal(asset2.id);
 
-        expect(app.assets.hasEvent('add:' + asset.id)).to.equal(false);
+        expect(app.assets.hasEvent(`add:${asset.id}`)).to.equal(false);
 
         app.assets.remove(asset);
         expect(la.localizedAsset).to.equal(asset2.id);
 
-        expect(app.assets.hasEvent('add:' + asset.id)).to.equal(true);
+        expect(app.assets.hasEvent(`add:${asset.id}`)).to.equal(true);
     });
 
-    describe('#destroy', function () {
+    describe('#destroy', () => {
 
-        it('removes asset references and events', function () {
+        it('removes asset references and events', () => {
             const asset = new Asset('Default Asset', 'texture');
 
             const la = new LocalizedAsset(app);
             la.defaultAsset = asset.id;
 
-            la.on('load', function () {});
-            la.on('change', function () {});
-            la.on('remove', function () {});
+            la.on('load', () => {});
+            la.on('change', () => {});
+            la.on('remove', () => {});
 
-            expect(app.assets.hasEvent('add:' + asset.id)).to.equal(true);
+            expect(app.assets.hasEvent(`add:${asset.id}`)).to.equal(true);
             expect(la.hasEvent('load')).to.equal(true);
             expect(la.hasEvent('change')).to.equal(true);
             expect(la.hasEvent('remove')).to.equal(true);
 
             la.destroy();
 
-            expect(app.assets.hasEvent('add:' + asset.id)).to.equal(false);
+            expect(app.assets.hasEvent(`add:${asset.id}`)).to.equal(false);
             expect(la.hasEvent('load')).to.equal(false);
             expect(la.hasEvent('change')).to.equal(false);
             expect(la.hasEvent('remove')).to.equal(false);
@@ -358,11 +358,11 @@ describe('LocalizedAsset', function () {
             la2.defaultAsset = asset.id;
             la2.autoLoad = true;
 
-            expect(app.assets.hasEvent('add:' + asset.id)).to.equal(true);
+            expect(app.assets.hasEvent(`add:${asset.id}`)).to.equal(true);
 
             app.assets.add(asset);
 
-            expect(app.assets.hasEvent('add:' + asset.id)).to.equal(false);
+            expect(app.assets.hasEvent(`add:${asset.id}`)).to.equal(false);
 
             expect(asset.hasEvent('load')).to.equal(true);
             expect(asset.hasEvent('change')).to.equal(true);

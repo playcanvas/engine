@@ -1,4 +1,4 @@
-import { Debug } from "../../core/debug.js";
+import { Debug } from '../../core/debug.js';
 import {
     SEMANTIC_POSITION, SEMANTIC_NORMAL, SEMANTIC_TANGENT, SEMANTIC_TEXCOORD0, SEMANTIC_TEXCOORD1, SEMANTIC_TEXCOORD2,
     SEMANTIC_TEXCOORD3, SEMANTIC_TEXCOORD4, SEMANTIC_TEXCOORD5, SEMANTIC_TEXCOORD6, SEMANTIC_TEXCOORD7,
@@ -114,23 +114,23 @@ class ShaderUtils {
         } else {
 
             // vertex code
-            vertCode = ShaderUtils.versionCode(device) +
+            vertCode = `${ShaderUtils.versionCode(device) +
                 getDefines(webgpuVS, gles3VS, true, options) +
                 ShaderUtils.getDefinesCode(options.vertexDefines) +
-                ShaderUtils.precisionCode(device) + '\n' +
-                sharedFS +
-                ShaderUtils.getShaderNameCode(name) +
-                options.vertexCode;
+                ShaderUtils.precisionCode(device)}\n${
+                sharedFS
+            }${ShaderUtils.getShaderNameCode(name)
+            }${options.vertexCode}`;
 
             // fragment code
-            fragCode = (options.fragmentPreamble || '') +
+            fragCode = `${(options.fragmentPreamble || '') +
                 ShaderUtils.versionCode(device) +
                 getDefines(webgpuFS, gles3FS, false, options) +
                 ShaderUtils.getDefinesCode(options.fragmentDefines) +
-                ShaderUtils.precisionCode(device) + '\n' +
-                sharedFS +
-                ShaderUtils.getShaderNameCode(name) +
-                (options.fragmentCode || ShaderUtils.dummyFragmentCode());
+                ShaderUtils.precisionCode(device)}\n${
+                sharedFS
+            }${ShaderUtils.getShaderNameCode(name)
+            }${options.fragmentCode || ShaderUtils.dummyFragmentCode()}`;
         }
 
         return {
@@ -166,7 +166,7 @@ class ShaderUtils {
     }
 
     static dummyFragmentCode() {
-        return "void main(void) {gl_FragColor = vec4(0.0);}";
+        return 'void main(void) {gl_FragColor = vec4(0.0);}';
     }
 
     static versionCode(device) {
@@ -213,9 +213,9 @@ class ShaderUtils {
         const attribs = {};
         let attrs = 0;
 
-        let found = vsCode.indexOf("attribute");
+        let found = vsCode.indexOf('attribute');
         while (found >= 0) {
-            if (found > 0 && vsCode[found - 1] === "/") break;
+            if (found > 0 && vsCode[found - 1] === '/') break;
 
             // skip the 'attribute' word inside the #define which we add to the shader
             let ignore = false;
@@ -223,8 +223,9 @@ class ShaderUtils {
                 let startOfLine = vsCode.lastIndexOf('\n', found);
                 startOfLine = startOfLine !== -1 ? startOfLine + 1 : 0;
                 const lineStartString = vsCode.substring(startOfLine, found);
-                if (lineStartString.includes('#'))
+                if (lineStartString.includes('#')) {
                     ignore = true;
+                }
             }
 
             if (!ignore) {
@@ -240,13 +241,13 @@ class ShaderUtils {
                     if (semantic !== undefined) {
                         attribs[attribName] = semantic;
                     } else {
-                        attribs[attribName] = "ATTR" + attrs;
+                        attribs[attribName] = `ATTR${attrs}`;
                         attrs++;
                     }
                 }
             }
 
-            found = vsCode.indexOf("attribute", found + 1);
+            found = vsCode.indexOf('attribute', found + 1);
         }
 
         return attribs;

@@ -96,18 +96,20 @@ class ParticleCPUUpdater {
             randomPos.y = edgeY * (max === Math.abs(randomPos.y) ? Math.sign(randomPos.y) : 2 * randomPos.y);
             randomPos.z = edgeZ * (max === Math.abs(randomPos.z) ? Math.sign(randomPos.z) : 2 * randomPos.z);
 
-            if (!emitter.localSpace)
+            if (!emitter.localSpace) {
                 randomPosTformed.copy(emitterPos).add(spawnMatrix.transformPoint(randomPos));
-            else
+            } else {
                 randomPosTformed.copy(spawnMatrix.transformPoint(randomPos));
+            }
         } else {
             randomPos.normalize();
             const spawnBoundsSphereInnerRatio = (emitter.emitterRadius === 0) ? 0 : emitter.emitterRadiusInner / emitter.emitterRadius;
             const r = rW * (1.0 - spawnBoundsSphereInnerRatio) + spawnBoundsSphereInnerRatio;
-            if (!emitter.localSpace)
+            if (!emitter.localSpace) {
                 randomPosTformed.copy(emitterPos).add(randomPos.mulScalar(r * emitter.emitterRadius));
-            else
+            } else {
                 randomPosTformed.copy(randomPos.mulScalar(r * emitter.emitterRadius));
+            }
         }
 
         const particleRate = math.lerp(emitter.rate, emitter.rate2, rX);
@@ -258,10 +260,11 @@ class ParticleCPUUpdater {
                 particlePosPrev.y = particleTex[id * particleTexChannels + 1];
                 particlePosPrev.z = particleTex[id * particleTexChannels + 2];
 
-                if (!emitter.localSpace)
+                if (!emitter.localSpace) {
                     radialVelocityVec.copy(particlePosPrev).sub(emitterPos);
-                else
+                } else {
                     radialVelocityVec.copy(particlePosPrev);
+                }
                 radialVelocityVec.normalize().mulScalar(radialSpeed);
 
                 cf *= 3;
@@ -361,13 +364,15 @@ class ParticleCPUUpdater {
                 particleTex[id * particleTexChannels + 3] += rotSpeed * delta;
 
                 if (emitter.wrap && emitter.wrapBounds) {
-                    if (!emitter.localSpace)
+                    if (!emitter.localSpace) {
                         particleFinalPos.sub(emitterPos);
+                    }
                     particleFinalPos.x = glMod(particleFinalPos.x, emitter.wrapBounds.x) - emitter.wrapBounds.x * 0.5;
                     particleFinalPos.y = glMod(particleFinalPos.y, emitter.wrapBounds.y) - emitter.wrapBounds.y * 0.5;
                     particleFinalPos.z = glMod(particleFinalPos.z, emitter.wrapBounds.z) - emitter.wrapBounds.z * 0.5;
-                    if (!emitter.localSpace)
+                    if (!emitter.localSpace) {
                         particleFinalPos.add(emitterPos);
+                    }
                 }
 
                 if (emitter.sort > 0) {
@@ -402,8 +407,9 @@ class ParticleCPUUpdater {
                     particleTex[id * particleTexChannels + 3 + emitter.numParticlesPot * 2 * particleTexChannels] = 1;
                 }
             }
-            if (particleTex[id * particleTexChannels + 3 + emitter.numParticlesPot * 2 * particleTexChannels] < 0)
+            if (particleTex[id * particleTexChannels + 3 + emitter.numParticlesPot * 2 * particleTexChannels] < 0) {
                 particleEnabled = false;
+            }
             particleTex[id * particleTexChannels + 3 + emitter.numParticlesPot * particleTexChannels] = life;
 
             for (let v = 0; v < emitter.numParticleVerts; v++) {
@@ -449,7 +455,7 @@ class ParticleCPUUpdater {
 
             emitter.vbOld.set(emitter.vbCPU);
 
-            vbToSort.sort(function (p1, p2) {
+            vbToSort.sort((p1, p2) => {
                 return p1[1] - p2[1];
             });
 

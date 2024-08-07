@@ -91,7 +91,7 @@ class BindStorageBufferFormat extends BindBaseFormat {
 
         // whether the buffer is read-only
         this.readOnly = readOnly;
-        Debug.assert(readOnly || !(visibility & SHADERSTAGE_VERTEX), "Storage buffer can only be used in read-only mode in SHADERSTAGE_VERTEX.");
+        Debug.assert(readOnly || !(visibility & SHADERSTAGE_VERTEX), 'Storage buffer can only be used in read-only mode in SHADERSTAGE_VERTEX.');
     }
 }
 
@@ -358,7 +358,7 @@ class BindGroupFormat {
         this.textureFormats.forEach((format) => {
 
             let textureType = textureDimensionInfo[format.textureDimension];
-            Debug.assert(textureType, "Unsupported texture type", format.textureDimension);
+            Debug.assert(textureType, 'Unsupported texture type', format.textureDimension);
 
             // handle texture2DArray by renaming the texture object and defining a replacement macro
             let namePostfix = '';

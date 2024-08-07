@@ -1,5 +1,5 @@
-import { DebugHelper } from "../../core/debug.js";
-import { RenderPass } from "../../platform/graphics/render-pass.js";
+import { DebugHelper } from '../../core/debug.js';
+import { RenderPass } from '../../platform/graphics/render-pass.js';
 
 /**
  * A render pass used to render local non-clustered shadows. It represents rendering to a single

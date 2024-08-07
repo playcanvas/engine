@@ -96,7 +96,7 @@ class TransformFeedback {
         const gl = this.device.gl;
 
         Debug.assert(inputBuffer.format.interleaved || inputBuffer.format.elements.length <= 1,
-                     "Vertex buffer used by TransformFeedback needs to be interleaved.");
+            'Vertex buffer used by TransformFeedback needs to be interleaved.');
 
         this._inputBuffer = inputBuffer;
         if (usage === BUFFER_GPUDYNAMIC && inputBuffer.usage !== usage) {
@@ -146,7 +146,7 @@ class TransformFeedback {
     process(shader, swap = true) {
         const device = this.device;
 
-        DebugGraphics.pushGpuMarker(device, "TransformFeedback");
+        DebugGraphics.pushGpuMarker(device, 'TransformFeedback');
 
         const oldRt = device.getRenderTarget();
         device.setRenderTarget(null);

@@ -1,4 +1,4 @@
-import { Debug } from "../../core/debug.js";
+import { Debug } from '../../core/debug.js';
 import { EventHandler } from '../../core/event-handler.js';
 import { platform } from '../../core/platform.js';
 import { Mat4 } from '../../core/math/mat4.js';
@@ -407,8 +407,9 @@ class XrManager extends EventHandler {
     start(camera, type, spaceType, options) {
         let callback = options;
 
-        if (typeof options === 'object')
+        if (typeof options === 'object') {
             callback = options.callback;
+        }
 
         if (!this._available[type]) {
             if (callback) callback(new Error('XR is not available'));
@@ -449,14 +450,17 @@ class XrManager extends EventHandler {
             opts.optionalFeatures.push('hit-test');
 
             if (options) {
-                if (options.imageTracking && this.imageTracking.supported)
+                if (options.imageTracking && this.imageTracking.supported) {
                     opts.optionalFeatures.push('image-tracking');
+                }
 
-                if (options.planeDetection)
+                if (options.planeDetection) {
                     opts.optionalFeatures.push('plane-detection');
+                }
 
-                if (options.meshDetection)
+                if (options.meshDetection) {
                     opts.optionalFeatures.push('mesh-detection');
+                }
             }
 
             if (this.domOverlay.supported && this.domOverlay.root) {
@@ -504,8 +508,9 @@ class XrManager extends EventHandler {
 
         opts.optionalFeatures.push('hand-tracking');
 
-        if (options && options.optionalFeatures)
+        if (options && options.optionalFeatures) {
             opts.optionalFeatures = opts.optionalFeatures.concat(options.optionalFeatures);
+        }
 
         if (this.imageTracking.supported && this.imageTracking.images.length) {
             this.imageTracking.prepareImages((err, trackedImages) => {
@@ -515,8 +520,9 @@ class XrManager extends EventHandler {
                     return;
                 }
 
-                if (trackedImages !== null)
+                if (trackedImages !== null) {
                     opts.trackedImages = trackedImages;
+                }
 
                 this._onStartOptionsReady(type, spaceType, opts, callback);
             });
@@ -652,12 +658,12 @@ class XrManager extends EventHandler {
         }
 
         this._session.updateTargetFrameRate(frameRate)
-            .then(() => {
-                callback?.();
-            })
-            .catch((err) => {
-                callback?.(err);
-            });
+        .then(() => {
+            callback?.();
+        })
+        .catch((err) => {
+            callback?.(err);
+        });
     }
 
     /**
@@ -666,12 +672,13 @@ class XrManager extends EventHandler {
      */
     _sessionSupportCheck(type) {
         navigator.xr.isSessionSupported(type).then((available) => {
-            if (this._available[type] === available)
+            if (this._available[type] === available) {
                 return;
+            }
 
             this._available[type] = available;
             this.fire('available', type, available);
-            this.fire('available:' + type, available);
+            this.fire(`available:${type}`, available);
         }).catch((ex) => {
             this.fire('error', ex);
         });
@@ -719,8 +726,9 @@ class XrManager extends EventHandler {
 
             // old requestAnimationFrame will never be triggered,
             // so queue up new tick
-            if (this.app.systems)
+            if (this.app.systems) {
                 this.app.tick();
+            }
         };
 
         session.addEventListener('end', onEnd);
@@ -770,14 +778,16 @@ class XrManager extends EventHandler {
      * @private
      */
     _setClipPlanes(near, far) {
-        if (this._depthNear === near && this._depthFar === far)
+        if (this._depthNear === near && this._depthFar === far) {
             return;
+        }
 
         this._depthNear = near;
         this._depthFar = far;
 
-        if (!this._session)
+        if (!this._session) {
             return;
+        }
 
         // if session is available,
         // queue up render state update
@@ -816,11 +826,13 @@ class XrManager extends EventHandler {
 
     /** @private */
     _onDeviceLost() {
-        if (!this._session)
+        if (!this._session) {
             return;
+        }
 
-        if (this.webglBinding)
+        if (this.webglBinding) {
             this.webglBinding = null;
+        }
 
         this._baseLayer = null;
 
@@ -833,17 +845,18 @@ class XrManager extends EventHandler {
 
     /** @private */
     _onDeviceRestored() {
-        if (!this._session)
+        if (!this._session) {
             return;
+        }
 
         setTimeout(() => {
             this.app.graphicsDevice.gl.makeXRCompatible()
-                .then(() => {
-                    this._createBaseLayer();
-                })
-                .catch((ex) => {
-                    this.fire('error', ex);
-                });
+            .then(() => {
+                this._createBaseLayer();
+            })
+            .catch((ex) => {
+                this.fire('error', ex);
+            });
         }, 0);
     }
 
@@ -910,26 +923,33 @@ class XrManager extends EventHandler {
         this.input.update(frame);
 
         if (this._type === XRTYPE_AR) {
-            if (this.hitTest.supported)
+            if (this.hitTest.supported) {
                 this.hitTest.update(frame);
+            }
 
-            if (this.lightEstimation.supported)
+            if (this.lightEstimation.supported) {
                 this.lightEstimation.update(frame);
+            }
 
-            if (this.imageTracking.supported)
+            if (this.imageTracking.supported) {
                 this.imageTracking.update(frame);
+            }
 
-            if (this.anchors.supported)
+            if (this.anchors.supported) {
                 this.anchors.update(frame);
+            }
 
-            if (this.planeDetection.supported)
+            if (this.planeDetection.supported) {
                 this.planeDetection.update(frame);
+            }
 
-            if (this.depthSensing.supported)
+            if (this.depthSensing.supported) {
                 this.depthSensing.update();
+            }
 
-            if (this.meshDetection.supported)
+            if (this.meshDetection.supported) {
                 this.meshDetection.update(frame);
+            }
         }
 
         this.fire('update', frame);
@@ -1058,8 +1078,9 @@ class XrManager extends EventHandler {
      * @ignore
      */
     get visibilityState() {
-        if (!this._session)
+        if (!this._session) {
             return null;
+        }
 
         return this._session.visibilityState;
     }

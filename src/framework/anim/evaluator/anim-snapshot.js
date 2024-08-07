@@ -16,7 +16,7 @@ class AnimSnapshot {
      * @param {AnimTrack} animTrack - The source track.
      */
     constructor(animTrack) {
-        this._name = animTrack.name + 'Snapshot';
+        this._name = `${animTrack.name}Snapshot`;
         this._time = -1;
 
         // per-curve input cache

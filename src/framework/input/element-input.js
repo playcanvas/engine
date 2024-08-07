@@ -71,12 +71,14 @@ function intersectLineQuad(p, q, corners) {
     if (v >= 0) {
         // Test intersection against triangle abc
         u = -_pb.dot(_m);
-        if (u < 0)
+        if (u < 0) {
             return -1;
+        }
 
         w = scalarTriple(_pq, _pb, _pa);
-        if (w < 0)
+        if (w < 0) {
             return -1;
+        }
 
         const denom = 1.0 / (u + v + w);
 
@@ -88,12 +90,14 @@ function intersectLineQuad(p, q, corners) {
         // Test intersection against triangle dac
         _pd.sub2(corners[3], p);
         u = _pd.dot(_m);
-        if (u < 0)
+        if (u < 0) {
             return -1;
+        }
 
         w = scalarTriple(_pq, _pa, _pd);
-        if (w < 0)
+        if (w < 0) {
             return -1;
+        }
 
         v = -v;
 
@@ -387,8 +391,9 @@ class ElementInput {
         this._useXr = !options || options.useXr !== false;
         this._selectEventsAttached = false;
 
-        if (platform.touch)
+        if (platform.touch) {
             this._clickedEntities = {};
+        }
 
         this.attach(domElement);
     }
@@ -445,8 +450,9 @@ class ElementInput {
 
     attachSelectEvents() {
         if (!this._selectEventsAttached && this._useXr && this.app && this.app.xr && this.app.xr.supported) {
-            if (!this._clickedEntities)
+            if (!this._clickedEntities) {
                 this._clickedEntities = {};
+            }
 
             this._selectEventsAttached = true;
             this.app.xr.on('start', this._onXrStart, this);
@@ -496,8 +502,9 @@ class ElementInput {
      * ElementComponent.
      */
     addElement(element) {
-        if (this._elements.indexOf(element) === -1)
+        if (this._elements.indexOf(element) === -1) {
             this._elements.push(element);
+        }
     }
 
     /**
@@ -509,15 +516,17 @@ class ElementInput {
      */
     removeElement(element) {
         const idx = this._elements.indexOf(element);
-        if (idx !== -1)
+        if (idx !== -1) {
             this._elements.splice(idx, 1);
+        }
     }
 
     _handleUp(event) {
         if (!this._enabled) return;
 
-        if (Mouse.isPointerLocked())
+        if (Mouse.isPointerLocked()) {
             return;
+        }
 
         this._calcMouseCoords(event);
 
@@ -527,8 +536,9 @@ class ElementInput {
     _handleDown(event) {
         if (!this._enabled) return;
 
-        if (Mouse.isPointerLocked())
+        if (Mouse.isPointerLocked()) {
             return;
+        }
 
         this._calcMouseCoords(event);
 
@@ -631,8 +641,9 @@ class ElementInput {
         for (let i = 0, len = event.changedTouches.length; i < len; i++) {
             const touch = event.changedTouches[i];
             const touchInfo = this._touchedElements[touch.identifier];
-            if (!touchInfo)
+            if (!touchInfo) {
                 continue;
+            }
 
             const element = touchInfo.element;
             const camera = touchInfo.camera;
@@ -713,8 +724,9 @@ class ElementInput {
             camera = cameras[i];
 
             element = this._getTargetElementByCoords(camera, targetX, targetY);
-            if (element)
+            if (element) {
                 break;
+            }
         }
 
         // currently hovered element is whatever's being pointed by mouse (which may be null)
@@ -829,8 +841,9 @@ class ElementInput {
                 camera = cameras[i];
 
                 element = this._getTargetElementByRay(rayC, camera);
-                if (element)
+                if (element) {
                     break;
+                }
             }
         }
 
@@ -882,15 +895,18 @@ class ElementInput {
         let element = evt.element;
         while (true) {
             element.fire(name, evt);
-            if (evt._stopPropagation)
+            if (evt._stopPropagation) {
                 break;
+            }
 
-            if (!element.entity.parent)
+            if (!element.entity.parent) {
                 break;
+            }
 
             element = element.entity.parent.element;
-            if (!element)
+            if (!element) {
                 break;
+            }
         }
     }
 
@@ -928,17 +944,22 @@ class ElementInput {
         const layerOrder = this.app.scene.layers.sortTransparentLayers(a.layers, b.layers);
         if (layerOrder !== 0) return layerOrder;
 
-        if (a.screen && !b.screen)
+        if (a.screen && !b.screen) {
             return -1;
-        if (!a.screen && b.screen)
+        }
+        if (!a.screen && b.screen) {
             return 1;
-        if (!a.screen && !b.screen)
+        }
+        if (!a.screen && !b.screen) {
             return 0;
+        }
 
-        if (a.screen.screen.screenSpace && !b.screen.screen.screenSpace)
+        if (a.screen.screen.screenSpace && !b.screen.screen.screenSpace) {
             return -1;
-        if (b.screen.screen.screenSpace && !a.screen.screen.screenSpace)
+        }
+        if (b.screen.screen.screenSpace && !a.screen.screen.screenSpace) {
             return 1;
+        }
         return b.drawOrder - a.drawOrder;
     }
 

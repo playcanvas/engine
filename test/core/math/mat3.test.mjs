@@ -11,24 +11,24 @@ const increasingTransposed = [1, 4, 7, 2, 5, 8, 3, 6, 9];
 
 const increasingMat4 = [1, 2, 3, 4, 5, 6, 7, 8, 9, 10, 11, 12, 13, 14, 15, 16];
 
-describe('Mat3', function () {
+describe('Mat3', () => {
 
-    describe('#data', function () {
-        it('is a Float32Array of length 9', function () {
+    describe('#data', () => {
+        it('is a Float32Array of length 9', () => {
             const m = new Mat3();
             expect(m.data).to.be.an.instanceof(Float32Array);
             expect(m.data).to.have.length(9);
         });
 
-        it('is initialized to the identity matrix', function () {
+        it('is initialized to the identity matrix', () => {
             const m = new Mat3();
             expect(m.data).to.deep.equal(new Float32Array(identity));
         });
     });
 
-    describe('#equals', function () {
+    describe('#equals', () => {
 
-        it('returns true for the same matrix', function () {
+        it('returns true for the same matrix', () => {
             const m = new Mat3();
             m.data.set(increasing);
             const n = new Mat3();
@@ -36,7 +36,7 @@ describe('Mat3', function () {
             expect(m.equals(n)).to.be.true;
         });
 
-        it('returns false for different matrices', function () {
+        it('returns false for different matrices', () => {
             const m = new Mat3();
             m.data.set(increasing);
             const n = new Mat3();
@@ -46,8 +46,8 @@ describe('Mat3', function () {
 
     });
 
-    describe('#clone', function () {
-        it('clones correctly', function () {
+    describe('#clone', () => {
+        it('clones correctly', () => {
             const m = new Mat3();
             m.data.set(increasing);
             const n = m.clone();
@@ -55,8 +55,8 @@ describe('Mat3', function () {
         });
     });
 
-    describe('#copy', function () {
-        it('copies correctly', function () {
+    describe('#copy', () => {
+        it('copies correctly', () => {
             const m = new Mat3();
             m.data.set(increasing);
             const n = new Mat3();
@@ -65,8 +65,8 @@ describe('Mat3', function () {
         });
     });
 
-    describe('#set', function () {
-        it('sets the matrix correctly', function () {
+    describe('#set', () => {
+        it('sets the matrix correctly', () => {
             const m = new Mat3();
             m.set(increasing);
             const n = new Mat3();
@@ -75,21 +75,21 @@ describe('Mat3', function () {
         });
     });
 
-    describe('#isIdentity', function () {
-        it('is true for the identity matrix', function () {
+    describe('#isIdentity', () => {
+        it('is true for the identity matrix', () => {
             const m = new Mat3();
             expect(m.isIdentity()).to.be.true;
         });
 
-        it('is false for a non-identity matrix', function () {
+        it('is false for a non-identity matrix', () => {
             const m = new Mat3();
             m.data.set([1, 2, 3, 4, 5, 6, 7, 8, 9]);
             expect(m.isIdentity()).to.be.false;
         });
     });
 
-    describe('#setIdentity', function () {
-        it('sets the matrix to the identity matrix', function () {
+    describe('#setIdentity', () => {
+        it('sets the matrix to the identity matrix', () => {
             const m = new Mat3();
             m.set(increasing);
             expect(m.isIdentity()).to.be.false;
@@ -98,15 +98,15 @@ describe('Mat3', function () {
         });
     });
 
-    describe('#transpose', function () {
+    describe('#transpose', () => {
 
-        it('transposes the identity matrix to the identity matrix', function () {
+        it('transposes the identity matrix to the identity matrix', () => {
             const m = new Mat3();
             m.transpose();
             expect(m.isIdentity()).to.be.true;
         });
 
-        it('transposes a non-identity matrix correctly', function () {
+        it('transposes a non-identity matrix correctly', () => {
             const m = new Mat3();
             m.set(increasing);
             m.transpose();
@@ -114,7 +114,7 @@ describe('Mat3', function () {
             expect(m.data).to.deep.equal(new Float32Array(increasingTransposed));
         });
 
-        it('transposes a non-identity matrix correctly given a source matrix', function () {
+        it('transposes a non-identity matrix correctly given a source matrix', () => {
             const m = new Mat3();
             m.set(increasing);
             const n = new Mat3();
@@ -123,8 +123,8 @@ describe('Mat3', function () {
         });
     });
 
-    describe('#setFromMat4', function () {
-        it('sets the matrix correctly', function () {
+    describe('#setFromMat4', () => {
+        it('sets the matrix correctly', () => {
             const m = new Mat4();
             m.set(increasingMat4);
 
@@ -135,8 +135,8 @@ describe('Mat3', function () {
         });
     });
 
-    describe('#invertMat4', function () {
-        it('inverts the matrix correctly', function () {
+    describe('#invertMat4', () => {
+        it('inverts the matrix correctly', () => {
             const m = new Mat4();
             m.set([2, 0, 0, 0, 0, 2, 0, 0, 0, 0, 2, 0, 0, 0, 0, 1]);
 
@@ -147,8 +147,8 @@ describe('Mat3', function () {
         });
     });
 
-    describe('#transformVector', function () {
-        it('transforms a vector correctly', function () {
+    describe('#transformVector', () => {
+        it('transforms a vector correctly', () => {
             const m = new Mat4();
             m.setScale(2, 2, 2);
 

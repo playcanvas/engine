@@ -74,8 +74,9 @@ class BakeLight {
 
         if (light.shadowMap) {
             // return shadow map to the cache
-            if (light.shadowMap.cached)
+            if (light.shadowMap.cached) {
                 shadowMapCache.add(light, light.shadowMap);
+            }
 
             light.shadowMap = null;
         }

@@ -2,11 +2,11 @@ import { path } from '../../src/core/path.js';
 
 import { expect } from 'chai';
 
-describe('path', function () {
+describe('path', () => {
 
-    describe('#extractPath', function () {
+    describe('#extractPath', () => {
 
-        it('removes from filename from paths', function () {
+        it('removes from filename from paths', () => {
             expect(path.extractPath('path/to/file')).to.equal('./path/to');
             expect(path.extractPath('./path/to/file')).to.equal('./path/to');
             expect(path.extractPath('../path/to/file')).to.equal('../path/to');
@@ -16,9 +16,9 @@ describe('path', function () {
 
     });
 
-    describe('#getBasename', function () {
+    describe('#getBasename', () => {
 
-        it('returns basename from filename', function () {
+        it('returns basename from filename', () => {
 
             expect(path.getBasename('path/to/file.txt')).to.equal('file.txt');
             expect(path.getBasename('path/to/directory')).to.equal('directory');
@@ -27,9 +27,9 @@ describe('path', function () {
 
     });
 
-    describe('#getDirectory', function () {
+    describe('#getDirectory', () => {
 
-        it('handles various paths', function () {
+        it('handles various paths', () => {
             expect(path.getDirectory('folder/file.txt')).to.equal('folder');
             expect(path.getDirectory('folder/another')).to.equal('folder');
             expect(path.getDirectory('folder/another/')).to.equal('folder/another');
@@ -40,45 +40,45 @@ describe('path', function () {
     });
 
 
-    describe('#getExtension', function () {
+    describe('#getExtension', () => {
 
-        it('returns the extension of a file', function () {
+        it('returns the extension of a file', () => {
             expect(path.getExtension('file.txt')).to.equal('.txt');
         });
 
-        it('returns the extension of a file with a path', function () {
+        it('returns the extension of a file with a path', () => {
             expect(path.getExtension('path/to/file.txt')).to.equal('.txt');
         });
 
-        it('returns the extension of a file with a path and query string', function () {
+        it('returns the extension of a file with a path and query string', () => {
             expect(path.getExtension('path/to/file.txt?query=string')).to.equal('.txt');
         });
 
-        it('returns the empty string if the file has no extension', function () {
+        it('returns the empty string if the file has no extension', () => {
             expect(path.getExtension('file')).to.equal('');
         });
 
     });
 
-    describe('#isRelativePath', function () {
+    describe('#isRelativePath', () => {
 
-        it('returns true for relative paths', function () {
+        it('returns true for relative paths', () => {
             expect(path.isRelativePath('path/to/file')).to.be.true;
             expect(path.isRelativePath('./path/to/file')).to.be.true;
             expect(path.isRelativePath('../path/to/file')).to.be.true;
             expect(path.isRelativePath('path/../path/to/file.txt')).to.be.true;
         });
 
-        it('returns false for absolute paths', function () {
+        it('returns false for absolute paths', () => {
             expect(path.isRelativePath('/path/to/file')).to.be.false;
             expect(path.isRelativePath('/path/../path/to/file.txt')).to.be.false;
         });
 
     });
 
-    describe('#join', function () {
+    describe('#join', () => {
 
-        it('handles two path sections', function () {
+        it('handles two path sections', () => {
             expect(path.join('a', 'b')).to.equal('a/b');
             expect(path.join('a', '/b')).to.equal('/b');
             expect(path.join('/a', 'b')).to.equal('/a/b');
@@ -92,7 +92,7 @@ describe('path', function () {
             expect(path.join('a/b', '')).to.equal('a/b');
         });
 
-        it('handles more than two path sections', function () {
+        it('handles more than two path sections', () => {
             expect(path.join('a', 'b', 'c')).to.equal('a/b/c');
             expect(path.join('a', '/b', 'c')).to.equal('/b/c');
             expect(path.join('/a', 'b', 'c')).to.equal('/a/b/c');
@@ -108,17 +108,17 @@ describe('path', function () {
             expect(path.join('a', 'b', 'c', 'd')).to.equal('a/b/c/d');
         });
 
-        it('handles invalid values', function () {
-            expect(function () {
+        it('handles invalid values', () => {
+            expect(() => {
                 path.join('a', undefined);
             }).to.throw();
         });
 
     });
 
-    describe('#normalize', function () {
+    describe('#normalize', () => {
 
-        it('normalizes any path', function () {
+        it('normalizes any path', () => {
             expect(path.normalize('a/b/c')).to.equal('a/b/c');
             expect(path.normalize('/a/b/c')).to.equal('/a/b/c');
             expect(path.normalize('a//b/c')).to.equal('a/b/c');
@@ -127,21 +127,21 @@ describe('path', function () {
             expect(path.normalize('a/b/c/..')).to.equal('a/b');
             expect(path.normalize('a/b/c/')).to.equal('a/b/c/');
             expect(path.normalize('../a/b/c/')).to.equal('../a/b/c/');
-//            expect(path.normalize('../../a/b/c')).to.equal('../../a/b/c');
+            //            expect(path.normalize('../../a/b/c')).to.equal('../../a/b/c');
             expect(path.normalize('/')).to.equal('/');
             expect(path.normalize('../')).to.equal('../');
-//            expect(path.normalize('./')).to.equal('./');
-//            expect(path.normalize('././')).to.equal('./');
-//            expect(path.normalize('../../')).to.equal('../../');
-//            expect(path.normalize('.')).to.equal('.');
+            //            expect(path.normalize('./')).to.equal('./');
+            //            expect(path.normalize('././')).to.equal('./');
+            //            expect(path.normalize('../../')).to.equal('../../');
+            //            expect(path.normalize('.')).to.equal('.');
             expect(path.normalize('./../.')).to.equal('..');
         });
 
     });
 
-    describe('#split', function () {
+    describe('#split', () => {
 
-        it('splits a path into path and filename', function () {
+        it('splits a path into path and filename', () => {
             expect(path.split('path/to/file.txt')).to.deep.equal(['path/to', 'file.txt']);
         });
 

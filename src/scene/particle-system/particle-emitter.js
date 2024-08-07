@@ -54,8 +54,9 @@ const particleVerts = [
 function _createTexture(device, width, height, pixelData, format = PIXELFORMAT_RGBA32F, mult8Bit, filter) {
 
     let mipFilter = FILTER_NEAREST;
-    if (filter && (format === PIXELFORMAT_RGBA8 || format === PIXELFORMAT_SRGBA8))
+    if (filter && (format === PIXELFORMAT_RGBA8 || format === PIXELFORMAT_SRGBA8)) {
         mipFilter = FILTER_LINEAR;
+    }
 
     const texture = new Texture(device, {
         width: width,
@@ -277,7 +278,7 @@ class ParticleEmitter {
         setProperty('alignToMotion', false);
         setProperty('depthSoftening', 0);
         setProperty('mesh', null);                              // Mesh to be used as particle. Vertex buffer is supposed to hold vertex position in first 3 floats of each vertex
-                                                                // Leave undefined to use simple quads
+        // Leave undefined to use simple quads
         setProperty('particleNormal', new Vec3(0, 1, 0));
         setProperty('orientation', PARTICLEORIENTATION_SCREEN);
 
@@ -894,8 +895,9 @@ class ParticleEmitter {
                 n = emitterMat.transformVector(this.particleNormal).normalize();
             }
             const t = new Vec3(1, 0, 0);
-            if (Math.abs(t.dot(n)) === 1)
+            if (Math.abs(t.dot(n)) === 1) {
                 t.set(0, 0, 1);
+            }
             const b = new Vec3().cross(n, t).normalize();
             t.cross(b, n).normalize();
             tangent = new Float32Array([t.x, t.y, t.z]);
