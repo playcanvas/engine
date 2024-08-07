@@ -50,8 +50,9 @@ function getCodePointData(string, i = 0) {
 }
 
 function isCodeBetween(string, begin, end) {
-    if (!string)
+    if (!string) {
         return false;
+    }
     const codeData = getCodePointData(string);
     if (codeData) {
         const code = codeData.code;

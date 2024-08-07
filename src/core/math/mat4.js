@@ -1238,8 +1238,9 @@ class Mat4 {
         const sy = scale.y;
         const sz = scale.z;
 
-        if (sx === 0 || sy === 0 || sz === 0)
+        if (sx === 0 || sy === 0 || sz === 0) {
             return eulers.set(0, 0, 0);
+        }
 
         const m = this.data;
 
@@ -1276,7 +1277,7 @@ class Mat4 {
      * console.log(m.toString());
      */
     toString() {
-        return '[' + this.data.join(', ') + ']';
+        return `[${this.data.join(', ')}]`;
     }
 
     /**

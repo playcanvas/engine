@@ -63,7 +63,7 @@ class ScriptLegacyComponent extends Component {
 
             // get the urls
             const scripts = newValue;
-            const urls = scripts.map(function (s) {
+            const urls = scripts.map((s) => {
                 return s.url;
             });
 
@@ -110,7 +110,7 @@ class ScriptLegacyComponent extends Component {
         const cached = [];
 
         const prefix = this.system.app._scriptPrefix || '';
-        const regex = /^http(s)?:\/\//i;
+        const regex = /^https?:\/\//i;
 
         for (let i = 0, len = urls.length; i < len; i++) {
             let url = urls[i];

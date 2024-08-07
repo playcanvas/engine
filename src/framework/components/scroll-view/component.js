@@ -576,7 +576,7 @@ class ScrollViewComponent extends Component {
                 return scrollValue;
 
             default:
-                console.warn('Unhandled scroll mode:' + this.scrollMode);
+                console.warn(`Unhandled scroll mode:${this.scrollMode}`);
                 return scrollValue;
         }
     }
@@ -657,7 +657,7 @@ class ScrollViewComponent extends Component {
                     return;
 
                 default:
-                    console.warn('Unhandled scrollbar visibility:' + requestedVisibility);
+                    console.warn(`Unhandled scrollbar visibility:${requestedVisibility}`);
                     entity.enabled = isScrollingEnabled;
             }
         }

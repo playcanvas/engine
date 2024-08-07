@@ -1,12 +1,12 @@
-import { TRACEID_RENDER_PASS_DETAIL } from "../../core/constants.js";
-import { Debug } from "../../core/debug.js";
-import { now } from "../../core/time.js";
-import { Tracing } from "../../core/tracing.js";
+import { TRACEID_RENDER_PASS_DETAIL } from '../../core/constants.js';
+import { Debug } from '../../core/debug.js';
+import { now } from '../../core/time.js';
+import { Tracing } from '../../core/tracing.js';
 
-import { BlendState } from "../../platform/graphics/blend-state.js";
-import { DebugGraphics } from "../../platform/graphics/debug-graphics.js";
-import { RenderPass } from "../../platform/graphics/render-pass.js";
-import { RenderAction } from "../composition/render-action.js";
+import { BlendState } from '../../platform/graphics/blend-state.js';
+import { DebugGraphics } from '../../platform/graphics/debug-graphics.js';
+import { RenderPass } from '../../platform/graphics/render-pass.js';
+import { RenderAction } from '../composition/render-action.js';
 
 /**
  * A render pass used render a set of layers using a camera.
@@ -67,7 +67,7 @@ class RenderPassForward extends RenderPass {
     addLayer(cameraComponent, layer, transparent, autoClears = true) {
 
         Debug.assert(cameraComponent);
-        Debug.assert(this.renderTarget !== undefined, `Render pass needs to be initialized before adding layers`);
+        Debug.assert(this.renderTarget !== undefined, 'Render pass needs to be initialized before adding layers');
         Debug.assert(cameraComponent.camera.layersSet.has(layer.id), `Camera ${cameraComponent.entity.name} does not render layer ${layer.name}.`);
 
         const ra = new RenderAction();
@@ -276,7 +276,7 @@ class RenderPassForward extends RenderPass {
             }
 
             renderer.renderForwardLayer(camera.camera, renderAction.renderTarget, layer, transparent,
-                                        shaderPass, renderAction.viewBindGroups, options);
+                shaderPass, renderAction.viewBindGroups, options);
 
             // Revert temp frame stuff
             // TODO: this should not be here, as each rendering / clearing should explicitly set up what
@@ -321,12 +321,12 @@ class RenderPassForward extends RenderPass {
                 const enabled = layer.enabled && layerComposition.isEnabled(layer, ra.transparent);
                 const camera = ra.camera;
 
-                Debug.trace(TRACEID_RENDER_PASS_DETAIL, `    ${index}:` +
-                    (' Cam: ' + (camera ? camera.entity.name : '-')).padEnd(22, ' ') +
-                    (' Lay: ' + layer.name).padEnd(22, ' ') +
-                    (ra.transparent ? ' TRANSP' : ' OPAQUE') +
-                    (enabled ? ' ENABLED' : ' DISABLED') +
-                    (' Meshes: ' + layer.meshInstances.length).padEnd(5, ' ')
+                Debug.trace(TRACEID_RENDER_PASS_DETAIL, `    ${index}:${
+                    (` Cam: ${camera ? camera.entity.name : '-'}`).padEnd(22, ' ')
+                }${(` Lay: ${layer.name}`).padEnd(22, ' ')
+                }${ra.transparent ? ' TRANSP' : ' OPAQUE'
+                }${enabled ? ' ENABLED' : ' DISABLED'
+                }${(` Meshes: ${layer.meshInstances.length}`).padEnd(5, ' ')}`
                 );
             });
         }

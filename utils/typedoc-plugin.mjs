@@ -12,12 +12,13 @@ import { ArrayType, Converter, DeclarationReflection, IntrinsicType, ReflectionF
  */
 function getProperties(filePath) {
     const data = readFileSync(resolve(process.cwd(), filePath), 'utf-8');
+    // eslint-disable-next-line regexp/no-dupe-disjunctions
     const docBlocks = data.match(/\/\*\*([^*]|[\r\n]|(\*+([^*/]|[\r\n])))*\*+\//g);
     const properties = new Map();
 
     if (docBlocks) {
         docBlocks.forEach((block) => {
-            const propertyLines = block.match(/@property\s*\{[^}]+\}\s*[^*]*/g);
+            const propertyLines = block.match(/@property\s*\{[^}]+\}[^*]*/g);
 
             if (propertyLines) {
                 propertyLines.forEach((line) => {

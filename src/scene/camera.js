@@ -585,7 +585,7 @@ class Camera {
             this._updateViewProjMat();
             _invViewProjMat.copy(this._viewProjMat).invert();
 
-                // Transform to world space
+            // Transform to world space
             _invViewProjMat.transformPoint(_deviceCoord, worldCoord);
         }
 

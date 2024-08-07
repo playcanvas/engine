@@ -85,7 +85,7 @@ const MAPS = {
             'PAD_LEFT',
             'PAD_RIGHT',
 
-             // Vendor specific button
+            // Vendor specific button
             'PAD_VENDOR'
         ],
 
@@ -118,7 +118,7 @@ const MAPS = {
             'PAD_L_STICK_BUTTON',
             'PAD_R_STICK_BUTTON',
 
-             // Vendor specific button
+            // Vendor specific button
             'PAD_VENDOR'
         ],
 
@@ -229,7 +229,7 @@ function getMap(pad) {
             const product = PRODUCT_CODES[code];
 
             if (!pad.mapping) {
-                const raw = MAPS['RAW_' + product];
+                const raw = MAPS[`RAW_${product}`];
 
                 if (raw) {
                     return raw;

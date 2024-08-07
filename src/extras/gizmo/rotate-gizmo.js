@@ -7,7 +7,7 @@ import { PROJECTION_ORTHOGRAPHIC, PROJECTION_PERSPECTIVE } from '../../scene/con
 
 import { AxisDisk } from './axis-shapes.js';
 import { GIZMO_LOCAL } from './gizmo.js';
-import { TransformGizmo } from "./transform-gizmo.js";
+import { TransformGizmo } from './transform-gizmo.js';
 
 // temporary variables
 const tmpV1 = new Vec3();
@@ -167,7 +167,7 @@ class RotateGizmo extends TransformGizmo {
             if (this._dragging) {
                 const gizmoPos = this.root.getPosition();
                 this._drawGuideAngleLine(gizmoPos, this._selectedAxis,
-                                         this._guideAngleStart, this._guideAngleStartColor);
+                    this._guideAngleStart, this._guideAngleStartColor);
                 this._drawGuideAngleLine(gizmoPos, this._selectedAxis, this._guideAngleEnd);
             }
         });

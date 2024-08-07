@@ -73,8 +73,9 @@ class XrDepthSensing extends EventHandler {
 
     /** @private */
     _onSessionStart() {
-        if (this._views.availableDepth)
+        if (this._views.availableDepth) {
             this._evtDepthResize = this._views.list[0]?.on('depth:resize', this._onDepthResize, this);
+        }
     }
 
     /** @private */

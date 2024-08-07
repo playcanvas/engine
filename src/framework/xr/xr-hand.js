@@ -160,8 +160,9 @@ class XrHand extends EventHandler {
             if (jointSpace) {
                 let pose;
 
-                if (frame.session.visibilityState !== 'hidden')
+                if (frame.session.visibilityState !== 'hidden') {
                     pose = frame.getJointPose(jointSpace, this._manager._referenceSpace);
+                }
 
                 if (pose) {
                     joint.update(pose);

@@ -45,7 +45,7 @@ class ImageRenderable {
 
         this.mesh = mesh;
         this.meshInstance = new MeshInstance(this.mesh, material, this.node);
-        this.meshInstance.name = 'ImageElement: ' + entity.name;
+        this.meshInstance.name = `ImageElement: ${entity.name}`;
         this.meshInstance.castShadow = false;
         this.meshInstance.receiveShadow = false;
 
@@ -90,7 +90,7 @@ class ImageRenderable {
 
         if (mask) {
             this.unmaskMeshInstance = new MeshInstance(this.mesh, this.meshInstance.material, this.node);
-            this.unmaskMeshInstance.name = 'Unmask: ' + this._entity.name;
+            this.unmaskMeshInstance.name = `Unmask: ${this._entity.name}`;
             this.unmaskMeshInstance.castShadow = false;
             this.unmaskMeshInstance.receiveShadow = false;
             this.unmaskMeshInstance.pick = false;
@@ -191,8 +191,9 @@ class ImageRenderable {
     }
 
     setDrawOrder(drawOrder) {
-        if (!this.meshInstance)
+        if (!this.meshInstance) {
             return;
+        }
 
         Debug.trace(TRACE_ID_ELEMENT, 'setDrawOrder: ', this.meshInstance.name, drawOrder);
 
@@ -492,9 +493,9 @@ class ImageElement {
 
             const tex = this.sprite.atlas.texture;
             this._atlasRect.set(frameData.rect.x / tex.width,
-                                frameData.rect.y / tex.height,
-                                frameData.rect.z / tex.width,
-                                frameData.rect.w / tex.height);
+                frameData.rect.y / tex.height,
+                frameData.rect.z / tex.width,
+                frameData.rect.w / tex.height);
 
             // scale: apply PPU
             const ppu = this._pixelsPerUnit !== null ? this._pixelsPerUnit : this.sprite.pixelsPerUnit;
@@ -655,7 +656,7 @@ class ImageElement {
     }
 
     _onMaterialAdded(asset) {
-        this._system.app.assets.off('add:' + asset.id, this._onMaterialAdded, this);
+        this._system.app.assets.off(`add:${asset.id}`, this._onMaterialAdded, this);
         if (this._materialAsset === asset.id) {
             this._bindMaterialAsset(asset);
         }
@@ -690,7 +691,7 @@ class ImageElement {
     }
 
     _onTextureAdded(asset) {
-        this._system.app.assets.off('add:' + asset.id, this._onTextureAdded, this);
+        this._system.app.assets.off(`add:${asset.id}`, this._onTextureAdded, this);
         if (this._textureAsset === asset.id) {
             this._bindTextureAsset(asset);
         }
@@ -730,7 +731,7 @@ class ImageElement {
 
     // When sprite asset is added bind it
     _onSpriteAssetAdded(asset) {
-        this._system.app.assets.off('add:' + asset.id, this._onSpriteAssetAdded, this);
+        this._system.app.assets.off(`add:${asset.id}`, this._onSpriteAssetAdded, this);
         if (this._spriteAsset === asset.id) {
             this._bindSpriteAsset(asset);
         }
@@ -757,7 +758,7 @@ class ImageElement {
         asset.off('remove', this._onSpriteAssetRemove, this);
 
         if (asset.data.textureAtlasAsset) {
-            this._system.app.assets.off('load:' + asset.data.textureAtlasAsset, this._onTextureAtlasLoad, this);
+            this._system.app.assets.off(`load:${asset.data.textureAtlasAsset}`, this._onTextureAtlasLoad, this);
         }
     }
 
@@ -771,8 +772,8 @@ class ImageElement {
                 const atlasAssetId = asset.data.textureAtlasAsset;
                 if (atlasAssetId) {
                     const assets = this._system.app.assets;
-                    assets.off('load:' + atlasAssetId, this._onTextureAtlasLoad, this);
-                    assets.once('load:' + atlasAssetId, this._onTextureAtlasLoad, this);
+                    assets.off(`load:${atlasAssetId}`, this._onTextureAtlasLoad, this);
+                    assets.once(`load:${atlasAssetId}`, this._onTextureAtlasLoad, this);
                 }
             } else {
                 this.sprite = asset.resource;
@@ -987,7 +988,7 @@ class ImageElement {
     _removeMaterialAssetEvents() {
         if (this._materialAsset) {
             const assets = this._system.app.assets;
-            assets.off('add:' + this._materialAsset, this._onMaterialAdded, this);
+            assets.off(`add:${this._materialAsset}`, this._onMaterialAdded, this);
             const asset = assets.get(this._materialAsset);
             if (asset) {
                 asset.off('load', this._onMaterialLoad, this);
@@ -1061,7 +1062,7 @@ class ImageElement {
                     this.material = null;
 
                     this._materialAsset = _id;
-                    assets.on('add:' + this._materialAsset, this._onMaterialAdded, this);
+                    assets.on(`add:${this._materialAsset}`, this._onMaterialAdded, this);
                 } else {
                     this._bindMaterialAsset(asset);
                 }
@@ -1143,7 +1144,7 @@ class ImageElement {
 
         if (this._textureAsset !== _id) {
             if (this._textureAsset) {
-                assets.off('add:' + this._textureAsset, this._onTextureAdded, this);
+                assets.off(`add:${this._textureAsset}`, this._onTextureAdded, this);
                 const _prev = assets.get(this._textureAsset);
                 if (_prev) {
                     _prev.off('load', this._onTextureLoad, this);
@@ -1157,7 +1158,7 @@ class ImageElement {
                 const asset = assets.get(this._textureAsset);
                 if (!asset) {
                     this.texture = null;
-                    assets.on('add:' + this._textureAsset, this._onTextureAdded, this);
+                    assets.on(`add:${this._textureAsset}`, this._onTextureAdded, this);
                 } else {
                     this._bindTextureAsset(asset);
                 }
@@ -1181,7 +1182,7 @@ class ImageElement {
 
         if (this._spriteAsset !== _id) {
             if (this._spriteAsset) {
-                assets.off('add:' + this._spriteAsset, this._onSpriteAssetAdded, this);
+                assets.off(`add:${this._spriteAsset}`, this._onSpriteAssetAdded, this);
                 const _prev = assets.get(this._spriteAsset);
                 if (_prev) {
                     this._unbindSpriteAsset(_prev);
@@ -1193,7 +1194,7 @@ class ImageElement {
                 const asset = assets.get(this._spriteAsset);
                 if (!asset) {
                     this.sprite = null;
-                    assets.on('add:' + this._spriteAsset, this._onSpriteAssetAdded, this);
+                    assets.on(`add:${this._spriteAsset}`, this._onSpriteAssetAdded, this);
                 } else {
                     this._bindSpriteAsset(asset);
                 }

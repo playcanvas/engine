@@ -1,12 +1,12 @@
-import { Vec2 } from "../../core/math/vec2.js";
-import { CapsuleGeometry } from "../../scene/geometry/capsule-geometry.js";
-import { ConeGeometry } from "../../scene/geometry/cone-geometry.js";
-import { CylinderGeometry } from "../../scene/geometry/cylinder-geometry.js";
-import { TorusGeometry } from "../../scene/geometry/torus-geometry.js";
-import { Mesh } from "../../scene/mesh.js";
-import { BoxGeometry } from "../../scene/geometry/box-geometry.js";
-import { SphereGeometry } from "../../scene/geometry/sphere-geometry.js";
-import { PlaneGeometry } from "../../scene/geometry/plane-geometry.js";
+import { Vec2 } from '../../core/math/vec2.js';
+import { CapsuleGeometry } from '../../scene/geometry/capsule-geometry.js';
+import { ConeGeometry } from '../../scene/geometry/cone-geometry.js';
+import { CylinderGeometry } from '../../scene/geometry/cylinder-geometry.js';
+import { TorusGeometry } from '../../scene/geometry/torus-geometry.js';
+import { Mesh } from '../../scene/mesh.js';
+import { BoxGeometry } from '../../scene/geometry/box-geometry.js';
+import { SphereGeometry } from '../../scene/geometry/sphere-geometry.js';
+import { PlaneGeometry } from '../../scene/geometry/plane-geometry.js';
 
 // cached mesh primitives
 const shapePrimitives = [];
@@ -64,7 +64,7 @@ function getShapePrimitive(device, type) {
                 break;
 
             default:
-                throw new Error('Invalid primitive type: ' + type);
+                throw new Error(`Invalid primitive type: ${type}`);
         }
 
         // inc reference to keep primitive alive

@@ -1,5 +1,5 @@
-import { Debug } from "../../core/debug.js";
-import { RenderPass } from "../../platform/graphics/render-pass.js";
+import { Debug } from '../../core/debug.js';
+import { RenderPass } from '../../platform/graphics/render-pass.js';
 
 /**
  * A render pass used to render post-effects.

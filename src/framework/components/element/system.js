@@ -343,7 +343,7 @@ class ElementComponentSystem extends ComponentSystem {
             return material;
         }
 
-        let name = "TextMaterial";
+        let name = 'TextMaterial';
 
         material = new StandardMaterial();
 
@@ -352,7 +352,7 @@ class ElementComponentSystem extends ComponentSystem {
             material.msdfTextAttribute = textAttibutes;
             material.emissive.set(1, 1, 1);
         } else {
-            name = "Bitmap" + name;
+            name = `Bitmap${name}`;
             material.emissive.set(0.5, 0.5, 0.5); // set to non-(1,1,1) so that tint is actually applied
             material.emissiveMap = this._defaultTexture;
             material.emissiveTint = true;
@@ -361,7 +361,7 @@ class ElementComponentSystem extends ComponentSystem {
         }
 
         if (screenSpace) {
-            name = 'ScreenSpace' + name;
+            name = `ScreenSpace${name}`;
             material.depthTest = false;
         }
 
@@ -370,7 +370,7 @@ class ElementComponentSystem extends ComponentSystem {
         //  defaultBitmapTextMaterial
         //  defaultScreenSpaceTextMaterial
         //  defaultScreenSpaceBitmapTextMaterial
-        material.name = 'default' + name;
+        material.name = `default${name}`;
         material.useLighting = false;
         material.useGammaTonemap = false;
         material.useFog = false;

@@ -130,7 +130,7 @@ class ShaderGeneratorBasic extends ShaderGenerator {
         if (options.useMorphNormal)         key += '_morphn';
         if (options.useMorphTextureBased)   key += '_morpht';
 
-        key += '_' + options.pass;
+        key += `_${options.pass}`;
         return key;
     }
 

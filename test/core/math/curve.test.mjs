@@ -3,16 +3,16 @@ import { Curve } from '../../../src/core/math/curve.js';
 
 import { expect } from 'chai';
 
-describe('Curve', function () {
+describe('Curve', () => {
 
-    describe('#constructor', function () {
+    describe('#constructor', () => {
 
-        it('supports zero arguments', function () {
+        it('supports zero arguments', () => {
             const c = new Curve();
             expect(c.keys.length).to.equal(0);
         });
 
-        it('supports array argument already sorted by time', function () {
+        it('supports array argument already sorted by time', () => {
             const c = new Curve([
                 0, 0,        // At 0 time, value of 0
                 0.33, 2,     // At 0.33 time, value of 2
@@ -32,7 +32,7 @@ describe('Curve', function () {
             expect(c.keys[3][1]).to.equal(3);
         });
 
-        it('supports array argument not sorted by time', function () {
+        it('supports array argument not sorted by time', () => {
             const c = new Curve([
                 0, 0,        // At 0 time, value of 0
                 0.33, 2,     // At 0.33 time, value of 2
@@ -54,9 +54,9 @@ describe('Curve', function () {
 
     });
 
-    describe('#add', function () {
+    describe('#add', () => {
 
-        it('adds a new key to an empty curve', function () {
+        it('adds a new key to an empty curve', () => {
             const c = new Curve();
             c.add(0.5, 1);
             expect(c.length).to.equal(1);
@@ -64,7 +64,7 @@ describe('Curve', function () {
             expect(c.keys[0][1]).to.equal(1);
         });
 
-        it('inserts a new key to a curve with existing keys at the correct index', function () {
+        it('inserts a new key to a curve with existing keys at the correct index', () => {
             const c = new Curve([
                 0, 0,        // At 0 time, value of 0
                 0.33, 2,     // At 0.33 time, value of 2
@@ -87,9 +87,9 @@ describe('Curve', function () {
 
     });
 
-    describe('#clone', function () {
+    describe('#clone', () => {
 
-        it('clones an empty curve', function () {
+        it('clones an empty curve', () => {
             const c = new Curve();
             const clone = c.clone();
             expect(clone.length).to.equal(c.length);
@@ -97,7 +97,7 @@ describe('Curve', function () {
             expect(clone.tension).to.equal(c.tension);
         });
 
-        it('clones a curve with keys', function () {
+        it('clones a curve with keys', () => {
             const c = new Curve([
                 0, 0,        // At 0 time, value of 0
                 0.33, 2,     // At 0.33 time, value of 2
@@ -113,7 +113,7 @@ describe('Curve', function () {
             }
         });
 
-        it('ensures that an instance of a subclass keeps its class prototype', function () {
+        it('ensures that an instance of a subclass keeps its class prototype', () => {
             class UserCurve extends Curve {}
             const a = new UserCurve();
             const b = a.clone();
@@ -122,9 +122,9 @@ describe('Curve', function () {
 
     });
 
-    describe('#get', function () {
+    describe('#get', () => {
 
-        it('returns the key at the given index', function () {
+        it('returns the key at the given index', () => {
             const c = new Curve([
                 0, 0,        // At 0 time, value of 0
                 0.33, 2,     // At 0.33 time, value of 2
@@ -138,7 +138,7 @@ describe('Curve', function () {
             expect(c.get(3)).to.deep.equal([1, 3]);
         });
 
-        it('returns undefined if the index is out of range', function () {
+        it('returns undefined if the index is out of range', () => {
             const c = new Curve([
                 0, 0,        // At 0 time, value of 0
                 0.33, 2,     // At 0.33 time, value of 2
@@ -152,9 +152,9 @@ describe('Curve', function () {
 
     });
 
-    describe('#quantize', function () {
+    describe('#quantize', () => {
 
-        it('returns the interpolated values at the given intervals (CURVE_LINEAR)', function () {
+        it('returns the interpolated values at the given intervals (CURVE_LINEAR)', () => {
             const c = new Curve([
                 0, 0,
                 0.25, 1,
@@ -178,7 +178,7 @@ describe('Curve', function () {
             expect(values[10]).to.be.closeTo(0, 0.00001);
         });
 
-        it('returns the interpolated values at the given intervals (CURVE_SMOOTHSTEP)', function () {
+        it('returns the interpolated values at the given intervals (CURVE_SMOOTHSTEP)', () => {
             const c = new Curve([
                 0, 0,
                 0.25, 1,
@@ -201,7 +201,7 @@ describe('Curve', function () {
             expect(values[10]).to.be.closeTo(0, 0.00001);
         });
 
-        it('returns the interpolated values at the given intervals (CURVE_SPLINE})', function () {
+        it('returns the interpolated values at the given intervals (CURVE_SPLINE})', () => {
             const c = new Curve([
                 0, 0,
                 0.25, 1,
@@ -225,7 +225,7 @@ describe('Curve', function () {
             expect(values[10]).to.be.closeTo(0, 0.00001);
         });
 
-        it('returns the interpolated values at the given intervals (CURVE_STEP)', function () {
+        it('returns the interpolated values at the given intervals (CURVE_STEP)', () => {
             const c = new Curve([
                 0, 0,
                 0.25, 1,
@@ -251,9 +251,9 @@ describe('Curve', function () {
 
     });
 
-    describe('#value', function () {
+    describe('#value', () => {
 
-        it('returns the interpolated value at the given time (CURVE_LINEAR)', function () {
+        it('returns the interpolated value at the given time (CURVE_LINEAR)', () => {
             const c = new Curve([
                 0, 0,
                 0.25, 1,
@@ -275,7 +275,7 @@ describe('Curve', function () {
             expect(c.value(1)).to.be.closeTo(0, 0.00001);
         });
 
-        it('returns the interpolated value at the given time (CURVE_SMOOTHSTEP)', function () {
+        it('returns the interpolated value at the given time (CURVE_SMOOTHSTEP)', () => {
             const c = new Curve([
                 0, 0,
                 0.25, 1,
@@ -296,7 +296,7 @@ describe('Curve', function () {
             expect(c.value(1)).to.be.closeTo(0, 0.00001);
         });
 
-        it('returns the interpolated value at the given time (CURVE_SPLINE})', function () {
+        it('returns the interpolated value at the given time (CURVE_SPLINE})', () => {
             const c = new Curve([
                 0, 0,
                 0.25, 1,
@@ -318,7 +318,7 @@ describe('Curve', function () {
             expect(c.value(1)).to.be.closeTo(0, 0.00001);
         });
 
-        it('returns the interpolated value at the given time (CURVE_STEP)', function () {
+        it('returns the interpolated value at the given time (CURVE_STEP)', () => {
             const c = new Curve([
                 0, 0,
                 0.25, 1,

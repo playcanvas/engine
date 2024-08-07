@@ -72,7 +72,7 @@ class AnimationHandler extends ResourceHandler {
                         }
                     });
                 } else {
-                    callback(null, this['_parseAnimationV' + response.animation.version](response));
+                    callback(null, this[`_parseAnimationV${response.animation.version}`](response));
                 }
             }
         });

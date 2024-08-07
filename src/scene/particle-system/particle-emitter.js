@@ -55,8 +55,9 @@ const particleVerts = [
 function _createTexture(device, width, height, pixelData, format = PIXELFORMAT_RGBA32F, mult8Bit, filter) {
 
     let mipFilter = FILTER_NEAREST;
-    if (filter && format === PIXELFORMAT_RGBA8)
+    if (filter && format === PIXELFORMAT_RGBA8) {
         mipFilter = FILTER_LINEAR;
+    }
 
     const texture = new Texture(device, {
         width: width,
@@ -263,7 +264,7 @@ class ParticleEmitter {
         setProperty('alignToMotion', false);
         setProperty('depthSoftening', 0);
         setProperty('mesh', null);                              // Mesh to be used as particle. Vertex buffer is supposed to hold vertex position in first 3 floats of each vertex
-                                                                // Leave undefined to use simple quads
+        // Leave undefined to use simple quads
         setProperty('particleNormal', new Vec3(0, 1, 0));
         setProperty('orientation', PARTICLEORIENTATION_SCREEN);
 
@@ -667,10 +668,10 @@ class ParticleEmitter {
 
         // Note: createShaderFromCode can return a shader from the cache (not a new shader) so we *should not* delete these shaders
         // when the particle emitter is destroyed
-        const params = this.emitterShape + '' + this.pack8 + '' + this.localSpace;
-        this.shaderParticleUpdateRespawn = createShaderFromCode(gd, shaderChunks.fullscreenQuadVS, shaderCodeRespawn, 'fsQuad0' + params);
-        this.shaderParticleUpdateNoRespawn = createShaderFromCode(gd, shaderChunks.fullscreenQuadVS, shaderCodeNoRespawn, 'fsQuad1' + params);
-        this.shaderParticleUpdateOnStop = createShaderFromCode(gd, shaderChunks.fullscreenQuadVS, shaderCodeOnStop, 'fsQuad2' + params);
+        const params = `${this.emitterShape}${this.pack8}${this.localSpace}`;
+        this.shaderParticleUpdateRespawn = createShaderFromCode(gd, shaderChunks.fullscreenQuadVS, shaderCodeRespawn, `fsQuad0${params}`);
+        this.shaderParticleUpdateNoRespawn = createShaderFromCode(gd, shaderChunks.fullscreenQuadVS, shaderCodeNoRespawn, `fsQuad1${params}`);
+        this.shaderParticleUpdateOnStop = createShaderFromCode(gd, shaderChunks.fullscreenQuadVS, shaderCodeOnStop, `fsQuad2${params}`);
 
         this.numParticleVerts = this.useMesh ? this.mesh.vertexBuffer.numVertices : 4;
         this.numParticleIndices = this.useMesh ? this.mesh.indexBuffer[0].numIndices : 6;
@@ -953,8 +954,9 @@ class ParticleEmitter {
                 n = emitterMat.transformVector(this.particleNormal).normalize();
             }
             const t = new Vec3(1, 0, 0);
-            if (Math.abs(t.dot(n)) === 1)
+            if (Math.abs(t.dot(n)) === 1) {
                 t.set(0, 0, 1);
+            }
             const b = new Vec3().cross(n, t).normalize();
             t.cross(b, n).normalize();
             tangent = new Float32Array([t.x, t.y, t.z]);

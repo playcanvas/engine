@@ -160,7 +160,7 @@ class VertexFormat {
 
             // WebGPU has limited element size support (for example uint16x3 is not supported)
             Debug.assert(VertexFormat.isElementValid(graphicsDevice, elementDesc),
-                         `WebGPU does not support the format of vertex element ${elementDesc.semantic} : ${vertexTypesNames[elementDesc.type]} x ${elementDesc.components}`);
+                `WebGPU does not support the format of vertex element ${elementDesc.semantic} : ${vertexTypesNames[elementDesc.type]} x ${elementDesc.components}`);
 
             // align up the offset to elementSize (when vertexCount is specified only - case of non-interleaved format)
             if (vertexCount) {
@@ -169,7 +169,7 @@ class VertexFormat {
                 // non-interleaved format with elementSize not multiple of 4 might be slower on some platforms - padding is recommended to align its size
                 // example: use 4 x TYPE_UINT8 instead of 3 x TYPE_UINT8
                 Debug.assert((elementSize % 4) === 0,
-                             `Non-interleaved vertex format with element size not multiple of 4 can have performance impact on some platforms. Element size: ${elementSize}`);
+                    `Non-interleaved vertex format with element size not multiple of 4 can have performance impact on some platforms. Element size: ${elementSize}`);
             }
 
             const asInt = elementDesc.asInt ?? false;
@@ -237,8 +237,9 @@ class VertexFormat {
 
     static isElementValid(graphicsDevice, elementDesc) {
         const elementSize = elementDesc.components * typedArrayTypesByteSize[elementDesc.type];
-        if (graphicsDevice.isWebGPU && !webgpuValidElementSizes.includes(elementSize))
+        if (graphicsDevice.isWebGPU && !webgpuValidElementSizes.includes(elementSize)) {
             return false;
+        }
         return true;
     }
 
@@ -249,7 +250,7 @@ class VertexFormat {
      */
     update() {
         // Note that this is used only by vertex attribute morphing on the WebGL.
-        Debug.assert(!this.device.isWebGPU, `VertexFormat#update is not supported on WebGPU and VertexFormat cannot be modified.`);
+        Debug.assert(!this.device.isWebGPU, 'VertexFormat#update is not supported on WebGPU and VertexFormat cannot be modified.');
         this._evaluateHash();
     }
 

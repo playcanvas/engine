@@ -67,7 +67,7 @@ class ScriptLegacyComponentSystem extends ComponentSystem {
 
         // convert attributes array to dictionary
         if (data.scripts && data.scripts.length) {
-            data.scripts.forEach(function (script) {
+            data.scripts.forEach((script) => {
                 if (script.attributes && Array.isArray(script.attributes)) {
                     const dict = {};
                     for (let i = 0; i < script.attributes.length; i++) {
@@ -350,8 +350,9 @@ class ScriptLegacyComponentSystem extends ComponentSystem {
         const result = {};
 
         for (const key in attributes) {
-            if (!attributes.hasOwnProperty(key))
+            if (!attributes.hasOwnProperty(key)) {
                 continue;
+            }
 
             if (attributes[key].type !== 'entity') {
                 result[key] = extend({}, attributes[key]);
@@ -478,20 +479,24 @@ class ScriptLegacyComponentSystem extends ComponentSystem {
                     new Color(attribute.value[0], attribute.value[1], attribute.value[2], attribute.value[3]);
             }
         } else if (attribute.type === 'vec2') {
-            if (Array.isArray(attribute.value))
+            if (Array.isArray(attribute.value)) {
                 attribute.value = new Vec2(attribute.value[0], attribute.value[1]);
+            }
 
         } else if (attribute.type === 'vec3' || attribute.type === 'vector') {
-            if (Array.isArray(attribute.value))
+            if (Array.isArray(attribute.value)) {
                 attribute.value = new Vec3(attribute.value[0], attribute.value[1], attribute.value[2]);
+            }
 
         } else if (attribute.type === 'vec4') {
-            if (Array.isArray(attribute.value))
+            if (Array.isArray(attribute.value)) {
                 attribute.value = new Vec4(attribute.value[0], attribute.value[1], attribute.value[2], attribute.value[3]);
+            }
 
         } else if (attribute.type === 'entity') {
-            if (attribute.value !== null && typeof attribute.value === 'string')
+            if (attribute.value !== null && typeof attribute.value === 'string') {
                 attribute.value = this.app.root.findByGuid(attribute.value);
+            }
 
         } else if (attribute.type === 'curve' || attribute.type === 'colorcurve') {
             const curveType = attribute.value.keys[0] instanceof Array ? CurveSet : Curve;

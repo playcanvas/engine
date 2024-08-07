@@ -85,8 +85,9 @@ function rawToValue(app, args, value, old) {
                 return value.clone();
             } else if (value instanceof Array && value.length >= 3 && value.length <= 4) {
                 for (let i = 0; i < value.length; i++) {
-                    if (typeof value[i] !== 'number')
+                    if (typeof value[i] !== 'number') {
                         return null;
+                    }
                 }
                 if (!old) old = new Color();
 
@@ -96,9 +97,10 @@ function rawToValue(app, args, value, old) {
                 old.a = (value.length === 3) ? 1 : value[3];
 
                 return old;
-            } else if (typeof value === 'string' && /#([0-9abcdef]{2}){3,4}/i.test(value)) {
-                if (!old)
+            } else if (typeof value === 'string' && /#(?:[0-9a-f]{2}){3,4}/i.test(value)) {
+                if (!old) {
                     old = new Color();
+                }
 
                 old.fromString(value);
                 return old;
@@ -118,13 +120,15 @@ function rawToValue(app, args, value, old) {
                 return value.clone();
             } else if (value instanceof Array && value.length === len) {
                 for (let i = 0; i < value.length; i++) {
-                    if (typeof value[i] !== 'number')
+                    if (typeof value[i] !== 'number') {
                         return null;
+                    }
                 }
                 if (!old) old = new vecType();
 
-                for (let i = 0; i < len; i++)
+                for (let i = 0; i < len; i++) {
                     old[components[i]] = value[i];
+                }
 
                 return old;
             }
@@ -278,7 +282,7 @@ class ScriptAttributes {
             },
             set: function (raw) {
                 const evt = 'attr';
-                const evtName = 'attr:' + name;
+                const evtName = `attr:${name}`;
 
                 const old = this.__attributes[name];
                 // keep copy of old for the event below
@@ -321,8 +325,9 @@ class ScriptAttributes {
      * PlayerController.attributes.remove('fullName');
      */
     remove(name) {
-        if (!this.index[name])
+        if (!this.index[name]) {
             return false;
+        }
 
         delete this.index[name];
         delete this.scriptType.prototype[name];

@@ -1,6 +1,6 @@
-import { Debug } from "../../../core/debug.js";
-import { PIXELFORMAT_RGBA8 } from "../constants.js";
-import { DebugGraphics } from "../debug-graphics.js";
+import { Debug } from '../../../core/debug.js';
+import { PIXELFORMAT_RGBA8 } from '../constants.js';
+import { DebugGraphics } from '../debug-graphics.js';
 
 /**
  * A private class representing a pair of framebuffers, when MSAA is used.
@@ -70,8 +70,9 @@ class WebglRenderTarget {
         this._isInitialized = false;
 
         if (this._glFrameBuffer) {
-            if (this._glFrameBuffer !== this.suppliedColorFramebuffer)
+            if (this._glFrameBuffer !== this.suppliedColorFramebuffer) {
                 gl.deleteFramebuffer(this._glFrameBuffer);
+            }
             this._glFrameBuffer = null;
         }
 
@@ -81,8 +82,9 @@ class WebglRenderTarget {
         }
 
         if (this._glResolveFrameBuffer) {
-            if (this._glResolveFrameBuffer !== this.suppliedColorFramebuffer)
+            if (this._glResolveFrameBuffer !== this.suppliedColorFramebuffer) {
                 gl.deleteFramebuffer(this._glResolveFrameBuffer);
+            }
             this._glResolveFrameBuffer = null;
         }
 
@@ -164,12 +166,12 @@ class WebglRenderTarget {
                 // Attach
                 if (target._stencil) {
                     gl.framebufferTexture2D(gl.FRAMEBUFFER, gl.DEPTH_STENCIL_ATTACHMENT,
-                                            depthBuffer._cubemap ? gl.TEXTURE_CUBE_MAP_POSITIVE_X + target._face : gl.TEXTURE_2D,
-                                            target._depthBuffer.impl._glTexture, 0);
+                        depthBuffer._cubemap ? gl.TEXTURE_CUBE_MAP_POSITIVE_X + target._face : gl.TEXTURE_2D,
+                        target._depthBuffer.impl._glTexture, 0);
                 } else {
                     gl.framebufferTexture2D(gl.FRAMEBUFFER, gl.DEPTH_ATTACHMENT,
-                                            depthBuffer._cubemap ? gl.TEXTURE_CUBE_MAP_POSITIVE_X + target._face : gl.TEXTURE_2D,
-                                            target._depthBuffer.impl._glTexture, 0);
+                        depthBuffer._cubemap ? gl.TEXTURE_CUBE_MAP_POSITIVE_X + target._face : gl.TEXTURE_2D,
+                        target._depthBuffer.impl._glTexture, 0);
                 }
             } else if (target._depth) {
                 // --- Init a new depth/stencil buffer (optional) ---
@@ -293,9 +295,9 @@ class WebglRenderTarget {
             const dstFramebuffer = gl.createFramebuffer();
             device.setFramebuffer(dstFramebuffer);
             gl.framebufferTexture2D(gl.FRAMEBUFFER, gl.COLOR_ATTACHMENT0,
-                                    colorBuffer._cubemap ? gl.TEXTURE_CUBE_MAP_POSITIVE_X + target._face : gl.TEXTURE_2D,
-                                    colorBuffer.impl._glTexture,
-                                    0
+                colorBuffer._cubemap ? gl.TEXTURE_CUBE_MAP_POSITIVE_X + target._face : gl.TEXTURE_2D,
+                colorBuffer.impl._glTexture,
+                0
             );
 
             this.colorMrtFramebuffers[i] = new FramebufferPair(srcFramebuffer, dstFramebuffer);
@@ -353,9 +355,9 @@ class WebglRenderTarget {
         gl.bindFramebuffer(gl.READ_FRAMEBUFFER, src);
         gl.bindFramebuffer(gl.DRAW_FRAMEBUFFER, dst);
         gl.blitFramebuffer(0, 0, target.width, target.height,
-                           0, 0, target.width, target.height,
-                           mask,
-                           gl.NEAREST);
+            0, 0, target.width, target.height,
+            mask,
+            gl.NEAREST);
     }
 
     resolve(device, target, color, depth) {
@@ -379,15 +381,15 @@ class WebglRenderTarget {
 
                 // depth
                 if (depth) {
-                    DebugGraphics.pushGpuMarker(device, `RESOLVE-MRT-DEPTH`);
+                    DebugGraphics.pushGpuMarker(device, 'RESOLVE-MRT-DEPTH');
                     this.internalResolve(device, this._glFrameBuffer, this._glResolveFrameBuffer, target, gl.DEPTH_BUFFER_BIT);
                     DebugGraphics.popGpuMarker(device);
                 }
 
             } else {
-                DebugGraphics.pushGpuMarker(device, `RESOLVE`);
+                DebugGraphics.pushGpuMarker(device, 'RESOLVE');
                 this.internalResolve(device, this._glFrameBuffer, this._glResolveFrameBuffer, target,
-                                     (color ? gl.COLOR_BUFFER_BIT : 0) | (depth ? gl.DEPTH_BUFFER_BIT : 0));
+                    (color ? gl.COLOR_BUFFER_BIT : 0) | (depth ? gl.DEPTH_BUFFER_BIT : 0));
                 DebugGraphics.popGpuMarker(device);
             }
 

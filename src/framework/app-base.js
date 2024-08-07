@@ -270,7 +270,7 @@ class AppBase extends EventHandler {
     init(appOptions) {
         const device = appOptions.graphicsDevice;
 
-        Debug.assert(device, "The application cannot be created without a valid GraphicsDevice");
+        Debug.assert(device, 'The application cannot be created without a valid GraphicsDevice');
 
         /**
          * The graphics device used by the application.
@@ -381,13 +381,13 @@ class AppBase extends EventHandler {
          */
         this.scenes = new SceneRegistry(this);
 
-        this.defaultLayerWorld = new Layer({ name: "World", id: LAYERID_WORLD });
-        this.defaultLayerDepth = new Layer({ name: "Depth", id: LAYERID_DEPTH, enabled: false, opaqueSortMode: SORTMODE_NONE });
-        this.defaultLayerSkybox = new Layer({ name: "Skybox", id: LAYERID_SKYBOX, opaqueSortMode: SORTMODE_NONE });
-        this.defaultLayerUi = new Layer({ name: "UI", id: LAYERID_UI, transparentSortMode: SORTMODE_MANUAL });
-        this.defaultLayerImmediate = new Layer({ name: "Immediate", id: LAYERID_IMMEDIATE, opaqueSortMode: SORTMODE_NONE });
+        this.defaultLayerWorld = new Layer({ name: 'World', id: LAYERID_WORLD });
+        this.defaultLayerDepth = new Layer({ name: 'Depth', id: LAYERID_DEPTH, enabled: false, opaqueSortMode: SORTMODE_NONE });
+        this.defaultLayerSkybox = new Layer({ name: 'Skybox', id: LAYERID_SKYBOX, opaqueSortMode: SORTMODE_NONE });
+        this.defaultLayerUi = new Layer({ name: 'UI', id: LAYERID_UI, transparentSortMode: SORTMODE_MANUAL });
+        this.defaultLayerImmediate = new Layer({ name: 'Immediate', id: LAYERID_IMMEDIATE, opaqueSortMode: SORTMODE_NONE });
 
-        const defaultLayerComposition = new LayerComposition("default");
+        const defaultLayerComposition = new LayerComposition('default');
         defaultLayerComposition.pushOpaque(this.defaultLayerWorld);
         defaultLayerComposition.pushOpaque(this.defaultLayerDepth);
         defaultLayerComposition.pushOpaque(this.defaultLayerSkybox);
@@ -474,8 +474,9 @@ class AppBase extends EventHandler {
          * @type {import('./input/element-input.js').ElementInput}
          */
         this.elementInput = appOptions.elementInput || null;
-        if (this.elementInput)
+        if (this.elementInput) {
             this.elementInput.app = this;
+        }
 
         /**
          * The XR Manager that provides ability to start VR/AR sessions.
@@ -489,8 +490,9 @@ class AppBase extends EventHandler {
          */
         this.xr = appOptions.xr ? new appOptions.xr(this) : null;
 
-        if (this.elementInput)
+        if (this.elementInput) {
             this.elementInput.attachSelectEvents();
+        }
 
         /**
          * @type {boolean}
@@ -511,7 +513,7 @@ class AppBase extends EventHandler {
         this._scriptPrefix = appOptions.scriptPrefix || '';
 
         if (this.enableBundles) {
-            this.loader.addHandler("bundle", new BundleHandler(this));
+            this.loader.addHandler('bundle', new BundleHandler(this));
         }
 
         // create and register all required resource handlers
@@ -607,7 +609,7 @@ class AppBase extends EventHandler {
     /** @private */
     _initDefaultMaterial() {
         const material = new StandardMaterial();
-        material.name = "Default Material";
+        material.name = 'Default Material';
         material.shadingModel = SPECULAR_BLINN;
         setDefaultMaterial(this.graphicsDevice, material);
     }
@@ -633,7 +635,7 @@ class AppBase extends EventHandler {
      * @type {import('../scene/batching/batch-manager.js').BatchManager}
      */
     get batcher() {
-        Debug.assert(this._batcher, "BatchManager has not been created and is required for correct functionality.");
+        Debug.assert(this._batcher, 'BatchManager has not been created and is required for correct functionality.');
         return this._batcher;
     }
 
@@ -701,7 +703,7 @@ class AppBase extends EventHandler {
      * @param {PreloadAppCallback} callback - Function called when all assets are loaded.
      */
     preload(callback) {
-        this.fire("preload:start");
+        this.fire('preload:start');
 
         // get list of assets to preload
         const assets = this.assets.list({
@@ -721,7 +723,7 @@ class AppBase extends EventHandler {
 
             if (!_done && progress.done()) {
                 _done = true;
-                this.fire("preload:end");
+                this.fire('preload:end');
                 callback();
             }
         };
@@ -734,16 +736,18 @@ class AppBase extends EventHandler {
                 progress.inc();
                 this.fire('preload:progress', progress.count / total);
 
-                if (progress.done())
+                if (progress.done()) {
                     done();
+                }
             };
 
             const onAssetError = (err, asset) => {
                 progress.inc();
                 this.fire('preload:progress', progress.count / total);
 
-                if (progress.done())
+                if (progress.done()) {
                     done();
+                }
             };
 
             // for each asset
@@ -755,10 +759,11 @@ class AppBase extends EventHandler {
                     this.assets.load(assets[i]);
                 } else {
                     progress.inc();
-                    this.fire("preload:progress", progress.count / total);
+                    this.fire('preload:progress', progress.count / total);
 
-                    if (progress.done())
+                    if (progress.done()) {
                         done();
+                    }
                 }
             }
         } else {
@@ -778,12 +783,13 @@ class AppBase extends EventHandler {
 
         const l = scripts.length;
         const progress = new Progress(l);
-        const regex = /^http(s)?:\/\//;
+        const regex = /^https?:\/\//;
 
         if (l) {
             const onLoad = (err, ScriptType) => {
-                if (err)
+                if (err) {
                     console.error(err);
+                }
 
                 progress.inc();
                 if (progress.done()) {
@@ -795,8 +801,9 @@ class AppBase extends EventHandler {
             for (let i = 0; i < l; i++) {
                 let scriptUrl = scripts[i];
                 // support absolute URLs (for now)
-                if (!regex.test(scriptUrl.toLowerCase()) && this._scriptPrefix)
+                if (!regex.test(scriptUrl.toLowerCase()) && this._scriptPrefix) {
                     scriptUrl = path.join(this._scriptPrefix, scripts[i]);
+                }
 
                 this.loader.load(scriptUrl, 'script', onLoad);
             }
@@ -814,12 +821,15 @@ class AppBase extends EventHandler {
         }
 
         // TODO: remove this temporary block after migrating properties
-        if (!props.useDevicePixelRatio)
+        if (!props.useDevicePixelRatio) {
             props.useDevicePixelRatio = props.use_device_pixel_ratio;
-        if (!props.resolutionMode)
+        }
+        if (!props.resolutionMode) {
             props.resolutionMode = props.resolution_mode;
-        if (!props.fillMode)
+        }
+        if (!props.fillMode) {
             props.fillMode = props.fill_mode;
+        }
 
         this._width = props.width;
         this._height = props.height;
@@ -832,7 +842,7 @@ class AppBase extends EventHandler {
 
         // set up layers
         if (props.layers && props.layerOrder) {
-            const composition = new LayerComposition("application");
+            const composition = new LayerComposition('application');
 
             const layers = {};
             for (const key in props.layers) {
@@ -889,7 +899,7 @@ class AppBase extends EventHandler {
         const len = urls.length;
         let count = len;
 
-        const regex = /^http(s)?:\/\//;
+        const regex = /^https?:\/\//;
 
         if (len) {
             const onLoad = (err, script) => {
@@ -905,8 +915,9 @@ class AppBase extends EventHandler {
             for (let i = 0; i < len; ++i) {
                 let url = urls[i];
 
-                if (!regex.test(url.toLowerCase()) && this._scriptPrefix)
+                if (!regex.test(url.toLowerCase()) && this._scriptPrefix) {
                     url = path.join(this._scriptPrefix, url);
+                }
 
                 this.loader.load(url, 'script', onLoad);
             }
@@ -946,8 +957,9 @@ class AppBase extends EventHandler {
             // add scripts in order of loading first
             for (let i = 0; i < this.scriptsOrder.length; i++) {
                 const id = this.scriptsOrder[i];
-                if (!assets[id])
+                if (!assets[id]) {
                     continue;
+                }
 
                 scriptsIndex[id] = true;
                 list.push(assets[id]);
@@ -965,8 +977,9 @@ class AppBase extends EventHandler {
 
             // then add rest of assets
             for (const id in assets) {
-                if (scriptsIndex[id] || bundlesIndex[id])
+                if (scriptsIndex[id] || bundlesIndex[id]) {
                     continue;
+                }
 
                 list.push(assets[id]);
             }
@@ -983,8 +996,9 @@ class AppBase extends EventHandler {
 
             // then add rest of assets
             for (const id in assets) {
-                if (bundlesIndex[id])
+                if (bundlesIndex[id]) {
                     continue;
+                }
 
                 list.push(assets[id]);
             }
@@ -1040,8 +1054,9 @@ class AppBase extends EventHandler {
 
             const scripts = entities[key].components.script.scripts;
             for (let i = 0; i < scripts.length; i++) {
-                if (_index[scripts[i].url])
+                if (_index[scripts[i].url]) {
                     continue;
+                }
                 _scripts.push(scripts[i].url);
                 _index[scripts[i].url] = true;
             }
@@ -1069,13 +1084,13 @@ class AppBase extends EventHandler {
     start() {
 
         Debug.call(() => {
-            Debug.assert(!this._alreadyStarted, "The application can be started only one time.");
+            Debug.assert(!this._alreadyStarted, 'The application can be started only one time.');
             this._alreadyStarted = true;
         });
 
         this.frame = 0;
 
-        this.fire("start", {
+        this.fire('start', {
             timestamp: now(),
             target: this
         });
@@ -1133,15 +1148,16 @@ class AppBase extends EventHandler {
         // #endif
 
         // Perform ComponentSystem update
-        if (script.legacy)
+        if (script.legacy) {
             this.systems.fire('fixedUpdate', 1.0 / 60.0);
+        }
 
         this.systems.fire(this._inTools ? 'toolsUpdate' : 'update', dt);
         this.systems.fire('animationUpdate', dt);
         this.systems.fire('postUpdate', dt);
 
         // fire update event
-        this.fire("update", dt);
+        this.fire('update', dt);
 
         // update input devices
         this.inputUpdate(dt);
@@ -1382,8 +1398,9 @@ class AppBase extends EventHandler {
         if (!this._allowResize) return undefined; // prevent resizing (e.g. if presenting in VR HMD)
 
         // prevent resizing when in XR session
-        if (this.xr && this.xr.session)
+        if (this.xr && this.xr.session) {
             return undefined;
+        }
 
         const windowWidth = window.innerWidth;
         const windowHeight = window.innerHeight;
@@ -1405,8 +1422,8 @@ class AppBase extends EventHandler {
         }
         // OTHERWISE: FILLMODE_NONE use width and height that are provided
 
-        this.graphicsDevice.canvas.style.width = width + 'px';
-        this.graphicsDevice.canvas.style.height = height + 'px';
+        this.graphicsDevice.canvas.style.width = `${width}px`;
+        this.graphicsDevice.canvas.style.height = `${height}px`;
 
         this.updateCanvasSize();
 
@@ -1579,7 +1596,7 @@ class AppBase extends EventHandler {
                 if (asset) {
                     this.setSkybox(asset);
                 } else {
-                    this.assets.once('add:' + settings.render.skybox, this.setSkybox, this);
+                    this.assets.once(`add:${settings.render.skybox}`, this.setSkybox, this);
                 }
             } else {
                 this.setSkybox(null);
@@ -1598,7 +1615,7 @@ class AppBase extends EventHandler {
         if (ltcMat1 && ltcMat2) {
             AreaLightLuts.set(this.graphicsDevice, ltcMat1, ltcMat2);
         } else {
-            Debug.warn("setAreaLightLuts: LUTs for area light are not valid");
+            Debug.warn('setAreaLightLuts: LUTs for area light are not valid');
         }
     }
 
@@ -1619,16 +1636,16 @@ class AppBase extends EventHandler {
 
             // cleanup previous asset
             if (this._skyboxAsset) {
-                this.assets.off('load:' + this._skyboxAsset.id, onSkyboxChanged, this);
-                this.assets.off('remove:' + this._skyboxAsset.id, onSkyboxRemoved, this);
+                this.assets.off(`load:${this._skyboxAsset.id}`, onSkyboxChanged, this);
+                this.assets.off(`remove:${this._skyboxAsset.id}`, onSkyboxRemoved, this);
                 this._skyboxAsset.off('change', onSkyboxChanged, this);
             }
 
             // set new asset
             this._skyboxAsset = asset;
             if (this._skyboxAsset) {
-                this.assets.on('load:' + this._skyboxAsset.id, onSkyboxChanged, this);
-                this.assets.once('remove:' + this._skyboxAsset.id, onSkyboxRemoved, this);
+                this.assets.on(`load:${this._skyboxAsset.id}`, onSkyboxChanged, this);
+                this.assets.once(`remove:${this._skyboxAsset.id}`, onSkyboxRemoved, this);
                 this._skyboxAsset.on('change', onSkyboxChanged, this);
 
                 if (this.scene.skyboxMip === 0 && !this._skyboxAsset.loadFaces) {
@@ -1879,8 +1896,9 @@ class AppBase extends EventHandler {
 
         // only WebGPU supports filterable parameter to be false, allowing a depth texture / shadow
         // map to be fetched (without filtering) and rendered
-        if (filterable === false && !this.graphicsDevice.isWebGPU)
+        if (filterable === false && !this.graphicsDevice.isWebGPU) {
             return;
+        }
 
         // TODO: if this is used for anything other than debug texture display, we should optimize this to avoid allocations
         const matrix = new Mat4();
@@ -1889,7 +1907,7 @@ class AppBase extends EventHandler {
         if (!material) {
             material = new Material();
             material.cull = CULLFACE_NONE;
-            material.setParameter("colorMap", texture);
+            material.setParameter('colorMap', texture);
             material.shader = filterable ? this.scene.immediate.getTextureShader() : this.scene.immediate.getUnfilterableTextureShader();
             material.update();
         }
@@ -2113,8 +2131,9 @@ const makeTick = function (_app) {
      * @param {XRFrame} [frame] - XRFrame from requestAnimationFrame callback.
      */
     return function (timestamp, frame) {
-        if (!application.graphicsDevice)
+        if (!application.graphicsDevice) {
             return;
+        }
 
         // cancel any hanging rAF to avoid multiple rAF callbacks per frame
         if (application.frameRequestId) {
@@ -2145,8 +2164,9 @@ const makeTick = function (_app) {
             application.frameRequestId = platform.browser || platform.worker ? requestAnimationFrame(application.tick) : null;
         }
 
-        if (application.graphicsDevice.contextLost)
+        if (application.graphicsDevice.contextLost) {
             return;
+        }
 
         application._fillFrameStatsBasic(currentTime, dt, ms);
 
@@ -2154,7 +2174,7 @@ const makeTick = function (_app) {
         application._fillFrameStats();
         // #endif
 
-        application.fire("frameupdate", ms);
+        application.fire('frameupdate', ms);
 
         let shouldRenderFrame = true;
 
@@ -2172,7 +2192,7 @@ const makeTick = function (_app) {
 
             application.update(dt);
 
-            application.fire("framerender");
+            application.fire('framerender');
 
 
             if (application.autoRender || application.renderNextFrame) {
@@ -2192,7 +2212,7 @@ const makeTick = function (_app) {
             _frameEndData.timestamp = now();
             _frameEndData.target = application;
 
-            application.fire("frameend", _frameEndData);
+            application.fire('frameend', _frameEndData);
         }
 
         application._inFrameUpdate = false;

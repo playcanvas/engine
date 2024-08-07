@@ -418,10 +418,10 @@ class JointComponent extends Component {
 
             for (let i = 0; i < 6; i++) {
                 const type = i < 3 ? '_linear' : '_angular';
-                this._constraint.enableSpring(i, this[type + 'Spring' + axis[i]]);
-                this._constraint.setDamping(i, this[type + 'Damping' + axis[i]]);
-                this._constraint.setEquilibriumPoint(i, this[type + 'Equilibrium' + axis[i]]);
-                this._constraint.setStiffness(i, this[type + 'Stiffness' + axis[i]]);
+                this._constraint.enableSpring(i, this[`${type}Spring${axis[i]}`]);
+                this._constraint.setDamping(i, this[`${type}Damping${axis[i]}`]);
+                this._constraint.setEquilibriumPoint(i, this[`${type}Equilibrium${axis[i]}`]);
+                this._constraint.setStiffness(i, this[`${type}Stiffness${axis[i]}`]);
             }
 
             this._constraint.setBreakingImpulseThreshold(this._breakForce);
@@ -450,9 +450,9 @@ class JointComponent extends Component {
         for (const prop of properties) {
             if (data.hasOwnProperty(prop)) {
                 if (data[prop] instanceof Vec2) {
-                    this['_' + prop].copy(data[prop]);
+                    this[`_${prop}`].copy(data[prop]);
                 } else {
-                    this['_' + prop] = data[prop];
+                    this[`_${prop}`] = data[prop];
                 }
             }
         }
@@ -488,7 +488,7 @@ const functionMap = {
     ['Damping', 'Equilibrium', 'Spring', 'Stiffness'].forEach((name) => {
         ['X', 'Y', 'Z'].forEach((axis) => {
             const prop = type + name + axis;
-            const propInternal = '_' + prop;
+            const propInternal = `_${prop}`;
 
             let index = (type === 'linear') ? 0 : 3;
             if (axis === 'Y') index += 1;

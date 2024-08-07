@@ -4,7 +4,8 @@ import { EventHandler } from '../../core/event-handler.js';
 import { SCRIPT_INITIALIZE, SCRIPT_POST_INITIALIZE } from './constants.js';
 import { ScriptAttributes } from './script-attributes.js';
 
-const funcNameRegex = new RegExp('^\\s*function(?:\\s|\\s*\\/\\*.*\\*\\/\\s*)+([^\\(\\s\\/]*)\\s*');
+// eslint-disable-next-line regexp/no-super-linear-backtracking, regexp/no-useless-escape
+const funcNameRegex = /^\s*function(?:\s|\s*\/\*.*\*\/\s*)+([^(\s\/]*)\s*/;
 
 /**
  * Represents the type of a script. It is returned by {@link createScript}. Also referred to as
@@ -213,8 +214,9 @@ class ScriptType extends EventHandler {
 
             this.__initializeAttributes(true);
 
-            if (this.initialize)
+            if (this.initialize) {
                 this.entity.script._scriptMethod(this, SCRIPT_INITIALIZE);
+            }
         }
 
         // post initialize script if not post initialized yet and still enabled
@@ -225,8 +227,9 @@ class ScriptType extends EventHandler {
         if (this._initialized && !this._postInitialized && this.enabled && !this.entity.script._beingEnabled) {
             this._postInitialized = true;
 
-            if (this.postInitialize)
+            if (this.postInitialize) {
                 this.entity.script._scriptMethod(this, SCRIPT_POST_INITIALIZE);
+            }
         }
     }
 
@@ -278,7 +281,7 @@ class ScriptType extends EventHandler {
         if (typeof constructorFn !== 'function') return undefined;
         if ('name' in Function.prototype) return constructorFn.name;
         if (constructorFn === Function || constructorFn === Function.prototype.constructor) return 'Function';
-        const match = ('' + constructorFn).match(funcNameRegex);
+        const match = (`${constructorFn}`).match(funcNameRegex);
         return match ? match[1] : undefined;
     }
 
@@ -315,8 +318,9 @@ class ScriptType extends EventHandler {
      * @private
      */
     __initializeAttributes(force) {
-        if (!force && !this.__attributesRaw)
+        if (!force && !this.__attributesRaw) {
             return;
+        }
 
         // set attributes values
         for (const key in this.__scriptType.attributes.index) {
@@ -352,8 +356,9 @@ class ScriptType extends EventHandler {
      */
     static extend(methods) {
         for (const key in methods) {
-            if (!methods.hasOwnProperty(key))
+            if (!methods.hasOwnProperty(key)) {
                 continue;
+            }
 
             this.prototype[key] = methods[key];
         }

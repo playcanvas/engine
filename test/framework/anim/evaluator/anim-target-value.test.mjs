@@ -2,11 +2,11 @@ import { AnimTargetValue } from '../../../../src/framework/anim/evaluator/anim-t
 import { ANIM_LAYER_ADDITIVE, ANIM_LAYER_OVERWRITE } from '../../../../src/framework/anim/controller/constants.js';
 import { expect } from 'chai';
 
-describe('AnimTargetValue', function () {
+describe('AnimTargetValue', () => {
 
-    describe('#constructor', function () {
+    describe('#constructor', () => {
 
-        it('instantiates correctly with an object', function () {
+        it('instantiates correctly with an object', () => {
             const mockComponent = {
                 layers: [
                     {
@@ -25,9 +25,9 @@ describe('AnimTargetValue', function () {
 
     });
 
-    describe('#setMask', function () {
+    describe('#setMask', () => {
 
-        it('sets dirty to true if normalizeWeights is true', function () {
+        it('sets dirty to true if normalizeWeights is true', () => {
             const mockComponent = {
                 normalizeWeights: true,
                 layers: [
@@ -47,7 +47,7 @@ describe('AnimTargetValue', function () {
             expect(animTargetValue.dirty).to.equal(true);
         });
 
-        it('doesn\'t set dirty to true if normalizeWeights is false', function () {
+        it('doesn\'t set dirty to true if normalizeWeights is false', () => {
             const mockComponent = {
                 normalizeWeights: false,
                 layers: [
@@ -67,7 +67,7 @@ describe('AnimTargetValue', function () {
             expect(animTargetValue.dirty).to.equal(false);
         });
 
-        it('sets the indexed mask value to the given value', function () {
+        it('sets the indexed mask value to the given value', () => {
             const mockComponent = {
                 normalizeWeights: false,
                 layers: [
@@ -87,7 +87,7 @@ describe('AnimTargetValue', function () {
             expect(animTargetValue.mask[0]).to.equal(1);
         });
 
-        it('sets the previous mask values to 0 if normalizeWeights is true and the layers blend type is overwrite', function () {
+        it('sets the previous mask values to 0 if normalizeWeights is true and the layers blend type is overwrite', () => {
             const mockComponent = {
                 normalizeWeights: true,
                 layers: [
@@ -107,7 +107,7 @@ describe('AnimTargetValue', function () {
             expect(animTargetValue.mask[0]).to.equal(0);
         });
 
-        it('doesn\'t set the previous mask value to 0 if normalizeWeights is true and the layers blend type is additive', function () {
+        it('doesn\'t set the previous mask value to 0 if normalizeWeights is true and the layers blend type is additive', () => {
             const mockComponent = {
                 normalizeWeights: true,
                 layers: [
@@ -127,7 +127,7 @@ describe('AnimTargetValue', function () {
             expect(animTargetValue.mask[0]).to.equal(1);
         });
 
-        it('doesn\'t set the previous mask value to 0 if normalizeWeights is false and the layers blend type is overwrite', function () {
+        it('doesn\'t set the previous mask value to 0 if normalizeWeights is false and the layers blend type is overwrite', () => {
             const mockComponent = {
                 normalizeWeights: false,
                 layers: [
@@ -147,7 +147,7 @@ describe('AnimTargetValue', function () {
             expect(animTargetValue.mask[0]).to.equal(1);
         });
 
-        it('doesn\'t set the previous mask value to 0 if normalizeWeights is false and the layers blend type is additive', function () {
+        it('doesn\'t set the previous mask value to 0 if normalizeWeights is false and the layers blend type is additive', () => {
             const mockComponent = {
                 normalizeWeights: false,
                 layers: [
@@ -169,9 +169,9 @@ describe('AnimTargetValue', function () {
 
     });
 
-    describe('#updateWeights', function () {
+    describe('#updateWeights', () => {
 
-        it('sets the instances weights to that of the component\'s layers weights', function () {
+        it('sets the instances weights to that of the component\'s layers weights', () => {
             const mockComponent = {
                 layers: [
                     {
@@ -190,7 +190,7 @@ describe('AnimTargetValue', function () {
             expect(animTargetValue.weights).to.deep.equal(new Float32Array([1, 2]));
         });
 
-        it('sets the total weight to the sum of all the component\'s layers weights and their masks', function () {
+        it('sets the total weight to the sum of all the component\'s layers weights and their masks', () => {
             const mockComponent = {
                 layers: [
                     {
@@ -215,9 +215,9 @@ describe('AnimTargetValue', function () {
 
     });
 
-    describe('#getWeight', function () {
+    describe('#getWeight', () => {
 
-        it('calls updateWeights if dirty is true', function () {
+        it('calls updateWeights if dirty is true', () => {
             const mockComponent = {
                 layers: [
                     {
@@ -240,7 +240,7 @@ describe('AnimTargetValue', function () {
             expect(updateWeightsCalled).to.equal(true);
         });
 
-        it('does not call updateWeights if dirty is false', function () {
+        it('does not call updateWeights if dirty is false', () => {
             const mockComponent = {
                 layers: [
                     {
@@ -263,7 +263,7 @@ describe('AnimTargetValue', function () {
             expect(updateWeightsCalled).to.equal(false);
         });
 
-        it('returns 0 when the indexed mask is 0', function () {
+        it('returns 0 when the indexed mask is 0', () => {
             const mockComponent = {
                 layers: [
                     {
@@ -281,7 +281,7 @@ describe('AnimTargetValue', function () {
             expect(animTargetValue.getWeight(0)).to.equal(0);
         });
 
-        it('returns 1 when the indexed mask is 1', function () {
+        it('returns 1 when the indexed mask is 1', () => {
             const mockComponent = {
                 normalizeWeights: true,
                 layers: [
@@ -300,7 +300,7 @@ describe('AnimTargetValue', function () {
             expect(animTargetValue.getWeight(0)).to.equal(1);
         });
 
-        it('returns 0 when normalizeWeights is true and totalWeight is 0', function () {
+        it('returns 0 when normalizeWeights is true and totalWeight is 0', () => {
             const mockComponent = {
                 normalizeWeights: true,
                 layers: [
@@ -322,7 +322,7 @@ describe('AnimTargetValue', function () {
             expect(weight).to.equal(0);
         });
 
-        it('returns a normalized weight when normalizeWeights is true and totalWeight is non 0', function () {
+        it('returns a normalized weight when normalizeWeights is true and totalWeight is non 0', () => {
             const mockComponent = {
                 normalizeWeights: true,
                 layers: [
@@ -344,7 +344,7 @@ describe('AnimTargetValue', function () {
             expect(weight).to.equal(0.2);
         });
 
-        it('returns a weight when normalizeWeights is false and totalWeight is non 0', function () {
+        it('returns a weight when normalizeWeights is false and totalWeight is non 0', () => {
             const mockComponent = {
                 normalizeWeights: false,
                 layers: [
@@ -368,9 +368,9 @@ describe('AnimTargetValue', function () {
 
     });
 
-    describe('#updateValue', function () {
+    describe('#updateValue', () => {
 
-        it('can set a vector', function () {
+        it('can set a vector', () => {
             const mockComponent = {
                 layers: [
                     {
@@ -386,7 +386,7 @@ describe('AnimTargetValue', function () {
             expect(animTargetValue.value).to.deep.equal([1, 1, 1]);
         });
 
-        it('can set a normalized vector', function () {
+        it('can set a normalized vector', () => {
             const mockComponent = {
                 normalizeWeights: true,
                 layers: [
@@ -403,7 +403,7 @@ describe('AnimTargetValue', function () {
             expect(animTargetValue.value).to.deep.equal([1, 1, 1]);
         });
 
-        it('can set a quat', function () {
+        it('can set a quat', () => {
             const mockComponent = {
                 layers: [
                     {
@@ -419,7 +419,7 @@ describe('AnimTargetValue', function () {
             expect(animTargetValue.value).to.deep.equal([1, 0, 0, 0]);
         });
 
-        it('can set a normalized quat', function () {
+        it('can set a normalized quat', () => {
             const mockComponent = {
                 normalizeWeights: true,
                 layers: [
@@ -436,7 +436,7 @@ describe('AnimTargetValue', function () {
             expect(animTargetValue.value).to.deep.equal([1, 0, 0, 0]);
         });
 
-        it('can blend two additive vectors together', function () {
+        it('can blend two additive vectors together', () => {
             const mockComponent = {
                 layers: [
                     {
@@ -459,7 +459,7 @@ describe('AnimTargetValue', function () {
             expect(animTargetValue.value).to.deep.equal([3, 3, 3]);
         });
 
-        it('can blend two additive vectors together with normalized weights', function () {
+        it('can blend two additive vectors together with normalized weights', () => {
             const mockComponent = {
                 normalizeWeights: true,
                 layers: [
@@ -483,7 +483,7 @@ describe('AnimTargetValue', function () {
             expect(animTargetValue.value).to.deep.equal([1.25, 1.25, 1.25]);
         });
 
-        it('can blend two additive quats together', function () {
+        it('can blend two additive quats together', () => {
             const mockComponent = {
                 layers: [
                     {
@@ -506,7 +506,7 @@ describe('AnimTargetValue', function () {
             expect(animTargetValue.value).to.deep.equal([0, 0, 1, 0]);
         });
 
-        it('can blend two additive quats together with normalized weights', function () {
+        it('can blend two additive quats together with normalized weights', () => {
             const mockComponent = {
                 normalizeWeights: true,
                 layers: [
@@ -536,7 +536,7 @@ describe('AnimTargetValue', function () {
         });
 
 
-        it('can blend two overwrite vectors together', function () {
+        it('can blend two overwrite vectors together', () => {
             const mockComponent = {
                 layers: [
                     {
@@ -559,7 +559,7 @@ describe('AnimTargetValue', function () {
             expect(animTargetValue.value).to.deep.equal([2, 2, 2]);
         });
 
-        it('can blend two overwrite vectors together with normalized weights', function () {
+        it('can blend two overwrite vectors together with normalized weights', () => {
             const mockComponent = {
                 normalizeWeights: true,
                 layers: [
@@ -583,7 +583,7 @@ describe('AnimTargetValue', function () {
             expect(animTargetValue.value).to.deep.equal([2, 2, 2]);
         });
 
-        it('can blend two overwrite quats together', function () {
+        it('can blend two overwrite quats together', () => {
             const mockComponent = {
                 layers: [
                     {
@@ -606,7 +606,7 @@ describe('AnimTargetValue', function () {
             expect(animTargetValue.value).to.deep.equal([0, 1, 0, 0]);
         });
 
-        it('can blend two overwrite quats together with normalized weights', function () {
+        it('can blend two overwrite quats together with normalized weights', () => {
             const mockComponent = {
                 normalizeWeights: true,
                 layers: [
@@ -630,7 +630,7 @@ describe('AnimTargetValue', function () {
             expect(animTargetValue.value).to.deep.equal([0, 1, 0, 0]);
         });
 
-        it('can blend one additive and one overwrite vector together', function () {
+        it('can blend one additive and one overwrite vector together', () => {
             const mockComponent = {
                 layers: [
                     {
@@ -653,7 +653,7 @@ describe('AnimTargetValue', function () {
             expect(animTargetValue.value).to.deep.equal([2, 2, 2]);
         });
 
-        it('can blend one additive and one overwrite vector together', function () {
+        it('can blend one additive and one overwrite vector together', () => {
             const mockComponent = {
                 layers: [
                     {
@@ -676,7 +676,7 @@ describe('AnimTargetValue', function () {
             expect(animTargetValue.value).to.deep.equal([2, 2, 2]);
         });
 
-        it('can blend one additive and one overwrite vector together with normalized weights', function () {
+        it('can blend one additive and one overwrite vector together with normalized weights', () => {
             const mockComponent = {
                 normalizeWeights: true,
                 layers: [
@@ -700,7 +700,7 @@ describe('AnimTargetValue', function () {
             expect(animTargetValue.value).to.deep.equal([2, 2, 2]);
         });
 
-        it('can blend one additive and one overwrite quat together', function () {
+        it('can blend one additive and one overwrite quat together', () => {
             const mockComponent = {
                 layers: [
                     {
@@ -723,7 +723,7 @@ describe('AnimTargetValue', function () {
             expect(animTargetValue.value).to.deep.equal([0, 1, 0, 0]);
         });
 
-        it('can blend one additive and one overwrite quat together with normalized weights', function () {
+        it('can blend one additive and one overwrite quat together with normalized weights', () => {
             const mockComponent = {
                 normalizeWeights: true,
                 layers: [
@@ -747,7 +747,7 @@ describe('AnimTargetValue', function () {
             expect(animTargetValue.value).to.deep.equal([0, 1, 0, 0]);
         });
 
-        it('can blend one overwrite and one additive vector together', function () {
+        it('can blend one overwrite and one additive vector together', () => {
             const mockComponent = {
                 layers: [
                     {
@@ -770,7 +770,7 @@ describe('AnimTargetValue', function () {
             expect(animTargetValue.value).to.deep.equal([3, 3, 3]);
         });
 
-        it('can blend one overwrite and one additive vector together with normalized weights', function () {
+        it('can blend one overwrite and one additive vector together with normalized weights', () => {
             const mockComponent = {
                 normalizeWeights: true,
                 layers: [
@@ -794,7 +794,7 @@ describe('AnimTargetValue', function () {
             expect(animTargetValue.value).to.deep.equal([1.25, 1.25, 1.25]);
         });
 
-        it('can blend one overwrite and one additive quat together', function () {
+        it('can blend one overwrite and one additive quat together', () => {
             const mockComponent = {
                 layers: [
                     {
@@ -817,7 +817,7 @@ describe('AnimTargetValue', function () {
             expect(animTargetValue.value).to.deep.equal([0, 0, 1, 0]);
         });
 
-        it('can blend one overwrite and one additive quat together with normalized weights', function () {
+        it('can blend one overwrite and one additive quat together with normalized weights', () => {
             const mockComponent = {
                 normalizeWeights: true,
                 layers: [

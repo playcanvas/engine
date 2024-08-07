@@ -131,13 +131,15 @@ class XrAnchor extends EventHandler {
      * @ignore
      */
     update(frame) {
-        if (!this._xrAnchor)
+        if (!this._xrAnchor) {
             return;
+        }
 
         const pose = frame.getPose(this._xrAnchor.anchorSpace, this._anchors.manager._referenceSpace);
         if (pose) {
-            if (this._position.equals(pose.transform.position) && this._rotation.equals(pose.transform.orientation))
+            if (this._position.equals(pose.transform.position) && this._rotation.equals(pose.transform.orientation)) {
                 return;
+            }
 
             this._position.copy(pose.transform.position);
             this._rotation.copy(pose.transform.orientation);
@@ -200,23 +202,23 @@ class XrAnchor extends EventHandler {
         this._uuidRequests = [];
 
         this._xrAnchor.requestPersistentHandle()
-            .then((uuid) => {
-                this._uuid = uuid;
-                this._anchors._indexByUuid.set(this._uuid, this);
-                callback?.(null, uuid);
-                for (const uuidRequest of this._uuidRequests) {
-                    uuidRequest(null, uuid);
-                }
-                this._uuidRequests = null;
-                this.fire('persist', uuid);
-            })
-            .catch((ex) => {
-                callback?.(ex, null);
-                for (const uuidRequest of this._uuidRequests) {
-                    uuidRequest(ex, null);
-                }
-                this._uuidRequests = null;
-            });
+        .then((uuid) => {
+            this._uuid = uuid;
+            this._anchors._indexByUuid.set(this._uuid, this);
+            callback?.(null, uuid);
+            for (const uuidRequest of this._uuidRequests) {
+                uuidRequest(null, uuid);
+            }
+            this._uuidRequests = null;
+            this.fire('persist', uuid);
+        })
+        .catch((ex) => {
+            callback?.(ex, null);
+            for (const uuidRequest of this._uuidRequests) {
+                uuidRequest(ex, null);
+            }
+            this._uuidRequests = null;
+        });
     }
 
     /**

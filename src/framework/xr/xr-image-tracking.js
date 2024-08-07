@@ -35,10 +35,10 @@ class XrImageTracking extends EventHandler {
      */
     _supported = platform.browser && !!window.XRImageTrackingResult;
 
-     /**
-      * @type {boolean}
-      * @private
-      */
+    /**
+     * @type {boolean}
+     * @private
+     */
     _available = false;
 
     /**
@@ -144,11 +144,11 @@ class XrImageTracking extends EventHandler {
      */
     prepareImages(callback) {
         if (this._images.length) {
-            Promise.all(this._images.map(function (trackedImage) {
+            Promise.all(this._images.map((trackedImage) => {
                 return trackedImage.prepare();
-            })).then(function (bitmaps) {
+            })).then((bitmaps) => {
                 callback(null, bitmaps);
-            }).catch(function (err) {
+            }).catch((err) => {
                 callback(err, null);
             });
         } else {

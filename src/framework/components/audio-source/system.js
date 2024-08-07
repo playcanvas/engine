@@ -50,7 +50,7 @@ class AudioSourceComponentSystem extends ComponentSystem {
         this.schema = _schema;
 
         this.manager = app.soundManager;
-        Debug.assert(this.manager, "AudioSourceComponentSystem cannot be created witout sound manager");
+        Debug.assert(this.manager, 'AudioSourceComponentSystem cannot be created witout sound manager');
 
         this.initialized = false;
 

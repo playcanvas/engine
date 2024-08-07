@@ -1,9 +1,9 @@
-import { CULLFACE_NONE } from "../../platform/graphics/constants.js";
-import { ShaderProcessorOptions } from "../../platform/graphics/shader-processor-options.js";
-import { BLEND_NONE, BLEND_NORMAL, DITHER_NONE, GAMMA_NONE, GAMMA_SRGBHDR, SHADER_FORWARDHDR, TONEMAP_LINEAR } from "../constants.js";
-import { Material } from "../materials/material.js";
-import { getProgramLibrary } from "../shader-lib/get-program-library.js";
-import { gsplat } from "./shader-generator-gsplat.js";
+import { CULLFACE_NONE } from '../../platform/graphics/constants.js';
+import { ShaderProcessorOptions } from '../../platform/graphics/shader-processor-options.js';
+import { BLEND_NONE, BLEND_NORMAL, DITHER_NONE, GAMMA_NONE, GAMMA_SRGBHDR, SHADER_FORWARDHDR, TONEMAP_LINEAR } from '../constants.js';
+import { Material } from '../materials/material.js';
+import { getProgramLibrary } from '../shader-lib/get-program-library.js';
+import { gsplat } from './shader-generator-gsplat.js';
 
 const splatMainVS = `
     vec4 discardVec = vec4(0.0, 0.0, 2.0, 1.0);

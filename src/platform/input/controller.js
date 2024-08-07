@@ -256,37 +256,37 @@ class Controller {
         const bind = function (controller, source, value, key) {
             switch (source) {
                 case 'mousex':
-                    controller._mouse.on(EVENT_MOUSEMOVE, function (e) {
+                    controller._mouse.on(EVENT_MOUSEMOVE, (e) => {
                         controller._axesValues[name][i] = e.dx / 10;
                     });
                     break;
                 case 'mousey':
-                    controller._mouse.on(EVENT_MOUSEMOVE, function (e) {
+                    controller._mouse.on(EVENT_MOUSEMOVE, (e) => {
                         controller._axesValues[name][i] = e.dy / 10;
                     });
                     break;
                 case 'key':
-                    controller._axes[name].push(function () {
+                    controller._axes[name].push(() => {
                         return controller._keyboard.isPressed(key) ? value : 0;
                     });
                     break;
                 case 'padrx':
-                    controller._axes[name].push(function () {
+                    controller._axes[name].push(() => {
                         return controller._gamepads.getAxis(options.pad, PAD_R_STICK_X);
                     });
                     break;
                 case 'padry':
-                    controller._axes[name].push(function () {
+                    controller._axes[name].push(() => {
                         return controller._gamepads.getAxis(options.pad, PAD_R_STICK_Y);
                     });
                     break;
                 case 'padlx':
-                    controller._axes[name].push(function () {
+                    controller._axes[name].push(() => {
                         return controller._gamepads.getAxis(options.pad, PAD_L_STICK_X);
                     });
                     break;
                 case 'padly':
-                    controller._axes[name].push(function () {
+                    controller._axes[name].push(() => {
                         return controller._gamepads.getAxis(options.pad, PAD_L_STICK_Y);
                     });
                     break;

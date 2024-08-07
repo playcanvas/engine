@@ -132,13 +132,13 @@ class StandardMaterialOptionsBuilder {
         const isOpacity = p === 'opacity';
 
         if (!minimalOptions || isOpacity) {
-            const mname = p + 'Map';
-            const vname = p + 'VertexColor';
-            const vcname = p + 'VertexColorChannel';
-            const cname = mname + 'Channel';
-            const tname = mname + 'Transform';
-            const uname = mname + 'Uv';
-            const iname = mname + 'Identifier';
+            const mname = `${p}Map`;
+            const vname = `${p}VertexColor`;
+            const vcname = `${p}VertexColorChannel`;
+            const cname = `${mname}Channel`;
+            const tname = `${mname}Transform`;
+            const uname = `${mname}Uv`;
+            const iname = `${mname}Identifier`;
 
             // Avoid overriding previous lightMap properties
             if (p !== 'light') {

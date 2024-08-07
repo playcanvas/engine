@@ -1123,7 +1123,7 @@ export const PRIMITIVE_TRIFAN = 6;
  * @type {string}
  * @category Graphics
  */
-export const SEMANTIC_POSITION = "POSITION";
+export const SEMANTIC_POSITION = 'POSITION';
 
 /**
  * Vertex attribute to be treated as a normal.
@@ -1131,7 +1131,7 @@ export const SEMANTIC_POSITION = "POSITION";
  * @type {string}
  * @category Graphics
  */
-export const SEMANTIC_NORMAL = "NORMAL";
+export const SEMANTIC_NORMAL = 'NORMAL';
 
 /**
  * Vertex attribute to be treated as a tangent.
@@ -1139,7 +1139,7 @@ export const SEMANTIC_NORMAL = "NORMAL";
  * @type {string}
  * @category Graphics
  */
-export const SEMANTIC_TANGENT = "TANGENT";
+export const SEMANTIC_TANGENT = 'TANGENT';
 
 /**
  * Vertex attribute to be treated as skin blend weights.
@@ -1147,7 +1147,7 @@ export const SEMANTIC_TANGENT = "TANGENT";
  * @type {string}
  * @category Graphics
  */
-export const SEMANTIC_BLENDWEIGHT = "BLENDWEIGHT";
+export const SEMANTIC_BLENDWEIGHT = 'BLENDWEIGHT';
 
 /**
  * Vertex attribute to be treated as skin blend indices.
@@ -1155,7 +1155,7 @@ export const SEMANTIC_BLENDWEIGHT = "BLENDWEIGHT";
  * @type {string}
  * @category Graphics
  */
-export const SEMANTIC_BLENDINDICES = "BLENDINDICES";
+export const SEMANTIC_BLENDINDICES = 'BLENDINDICES';
 
 /**
  * Vertex attribute to be treated as a color.
@@ -1163,10 +1163,10 @@ export const SEMANTIC_BLENDINDICES = "BLENDINDICES";
  * @type {string}
  * @category Graphics
  */
-export const SEMANTIC_COLOR = "COLOR";
+export const SEMANTIC_COLOR = 'COLOR';
 
 // private semantic used for programmatic construction of individual texcoord semantics
-export const SEMANTIC_TEXCOORD = "TEXCOORD";
+export const SEMANTIC_TEXCOORD = 'TEXCOORD';
 
 /**
  * Vertex attribute to be treated as a texture coordinate (set 0).
@@ -1174,7 +1174,7 @@ export const SEMANTIC_TEXCOORD = "TEXCOORD";
  * @type {string}
  * @category Graphics
  */
-export const SEMANTIC_TEXCOORD0 = "TEXCOORD0";
+export const SEMANTIC_TEXCOORD0 = 'TEXCOORD0';
 
 /**
  * Vertex attribute to be treated as a texture coordinate (set 1).
@@ -1182,7 +1182,7 @@ export const SEMANTIC_TEXCOORD0 = "TEXCOORD0";
  * @type {string}
  * @category Graphics
  */
-export const SEMANTIC_TEXCOORD1 = "TEXCOORD1";
+export const SEMANTIC_TEXCOORD1 = 'TEXCOORD1';
 
 /**
  * Vertex attribute to be treated as a texture coordinate (set 2).
@@ -1190,7 +1190,7 @@ export const SEMANTIC_TEXCOORD1 = "TEXCOORD1";
  * @type {string}
  * @category Graphics
  */
-export const SEMANTIC_TEXCOORD2 = "TEXCOORD2";
+export const SEMANTIC_TEXCOORD2 = 'TEXCOORD2';
 
 /**
  * Vertex attribute to be treated as a texture coordinate (set 3).
@@ -1198,7 +1198,7 @@ export const SEMANTIC_TEXCOORD2 = "TEXCOORD2";
  * @type {string}
  * @category Graphics
  */
-export const SEMANTIC_TEXCOORD3 = "TEXCOORD3";
+export const SEMANTIC_TEXCOORD3 = 'TEXCOORD3';
 
 /**
  * Vertex attribute to be treated as a texture coordinate (set 4).
@@ -1206,7 +1206,7 @@ export const SEMANTIC_TEXCOORD3 = "TEXCOORD3";
  * @type {string}
  * @category Graphics
  */
-export const SEMANTIC_TEXCOORD4 = "TEXCOORD4";
+export const SEMANTIC_TEXCOORD4 = 'TEXCOORD4';
 
 /**
  * Vertex attribute to be treated as a texture coordinate (set 5).
@@ -1214,7 +1214,7 @@ export const SEMANTIC_TEXCOORD4 = "TEXCOORD4";
  * @type {string}
  * @category Graphics
  */
-export const SEMANTIC_TEXCOORD5 = "TEXCOORD5";
+export const SEMANTIC_TEXCOORD5 = 'TEXCOORD5';
 
 /**
  * Vertex attribute to be treated as a texture coordinate (set 6).
@@ -1222,7 +1222,7 @@ export const SEMANTIC_TEXCOORD5 = "TEXCOORD5";
  * @type {string}
  * @category Graphics
  */
-export const SEMANTIC_TEXCOORD6 = "TEXCOORD6";
+export const SEMANTIC_TEXCOORD6 = 'TEXCOORD6';
 
 /**
  * Vertex attribute to be treated as a texture coordinate (set 7).
@@ -1230,10 +1230,10 @@ export const SEMANTIC_TEXCOORD6 = "TEXCOORD6";
  * @type {string}
  * @category Graphics
  */
-export const SEMANTIC_TEXCOORD7 = "TEXCOORD7";
+export const SEMANTIC_TEXCOORD7 = 'TEXCOORD7';
 
 // private semantic used for programmatic construction of individual attr semantics
-export const SEMANTIC_ATTR = "ATTR";
+export const SEMANTIC_ATTR = 'ATTR';
 
 /**
  * Vertex attribute with a user defined semantic.
@@ -1241,7 +1241,7 @@ export const SEMANTIC_ATTR = "ATTR";
  * @type {string}
  * @category Graphics
  */
-export const SEMANTIC_ATTR0 = "ATTR0";
+export const SEMANTIC_ATTR0 = 'ATTR0';
 
 /**
  * Vertex attribute with a user defined semantic.
@@ -1249,7 +1249,7 @@ export const SEMANTIC_ATTR0 = "ATTR0";
  * @type {string}
  * @category Graphics
  */
-export const SEMANTIC_ATTR1 = "ATTR1";
+export const SEMANTIC_ATTR1 = 'ATTR1';
 
 /**
  * Vertex attribute with a user defined semantic.
@@ -1257,7 +1257,7 @@ export const SEMANTIC_ATTR1 = "ATTR1";
  * @type {string}
  * @category Graphics
  */
-export const SEMANTIC_ATTR2 = "ATTR2";
+export const SEMANTIC_ATTR2 = 'ATTR2';
 
 /**
  * Vertex attribute with a user defined semantic.
@@ -1265,7 +1265,7 @@ export const SEMANTIC_ATTR2 = "ATTR2";
  * @type {string}
  * @category Graphics
  */
-export const SEMANTIC_ATTR3 = "ATTR3";
+export const SEMANTIC_ATTR3 = 'ATTR3';
 
 /**
  * Vertex attribute with a user defined semantic.
@@ -1273,7 +1273,7 @@ export const SEMANTIC_ATTR3 = "ATTR3";
  * @type {string}
  * @category Graphics
  */
-export const SEMANTIC_ATTR4 = "ATTR4";
+export const SEMANTIC_ATTR4 = 'ATTR4';
 
 /**
  * Vertex attribute with a user defined semantic.
@@ -1281,7 +1281,7 @@ export const SEMANTIC_ATTR4 = "ATTR4";
  * @type {string}
  * @category Graphics
  */
-export const SEMANTIC_ATTR5 = "ATTR5";
+export const SEMANTIC_ATTR5 = 'ATTR5';
 
 /**
  * Vertex attribute with a user defined semantic.
@@ -1289,7 +1289,7 @@ export const SEMANTIC_ATTR5 = "ATTR5";
  * @type {string}
  * @category Graphics
  */
-export const SEMANTIC_ATTR6 = "ATTR6";
+export const SEMANTIC_ATTR6 = 'ATTR6';
 
 /**
  * Vertex attribute with a user defined semantic.
@@ -1297,7 +1297,7 @@ export const SEMANTIC_ATTR6 = "ATTR6";
  * @type {string}
  * @category Graphics
  */
-export const SEMANTIC_ATTR7 = "ATTR7";
+export const SEMANTIC_ATTR7 = 'ATTR7';
 
 /**
  * Vertex attribute with a user defined semantic.
@@ -1305,7 +1305,7 @@ export const SEMANTIC_ATTR7 = "ATTR7";
  * @type {string}
  * @category Graphics
  */
-export const SEMANTIC_ATTR8 = "ATTR8";
+export const SEMANTIC_ATTR8 = 'ATTR8';
 
 /**
  * Vertex attribute with a user defined semantic.
@@ -1313,7 +1313,7 @@ export const SEMANTIC_ATTR8 = "ATTR8";
  * @type {string}
  * @category Graphics
  */
-export const SEMANTIC_ATTR9 = "ATTR9";
+export const SEMANTIC_ATTR9 = 'ATTR9';
 
 /**
  * Vertex attribute with a user defined semantic.
@@ -1321,7 +1321,7 @@ export const SEMANTIC_ATTR9 = "ATTR9";
  * @type {string}
  * @category Graphics
  */
-export const SEMANTIC_ATTR10 = "ATTR10";
+export const SEMANTIC_ATTR10 = 'ATTR10';
 
 /**
  * Vertex attribute with a user defined semantic.
@@ -1329,7 +1329,7 @@ export const SEMANTIC_ATTR10 = "ATTR10";
  * @type {string}
  * @category Graphics
  */
-export const SEMANTIC_ATTR11 = "ATTR11";
+export const SEMANTIC_ATTR11 = 'ATTR11';
 
 /**
  * Vertex attribute with a user defined semantic.
@@ -1337,7 +1337,7 @@ export const SEMANTIC_ATTR11 = "ATTR11";
  * @type {string}
  * @category Graphics
  */
-export const SEMANTIC_ATTR12 = "ATTR12";
+export const SEMANTIC_ATTR12 = 'ATTR12';
 
 /**
  * Vertex attribute with a user defined semantic.
@@ -1345,7 +1345,7 @@ export const SEMANTIC_ATTR12 = "ATTR12";
  * @type {string}
  * @category Graphics
  */
-export const SEMANTIC_ATTR13 = "ATTR13";
+export const SEMANTIC_ATTR13 = 'ATTR13';
 
 /**
  * Vertex attribute with a user defined semantic.
@@ -1353,7 +1353,7 @@ export const SEMANTIC_ATTR13 = "ATTR13";
  * @type {string}
  * @category Graphics
  */
-export const SEMANTIC_ATTR14 = "ATTR14";
+export const SEMANTIC_ATTR14 = 'ATTR14';
 
 /**
  * Vertex attribute with a user defined semantic.
@@ -1361,7 +1361,7 @@ export const SEMANTIC_ATTR14 = "ATTR14";
  * @type {string}
  * @category Graphics
  */
-export const SEMANTIC_ATTR15 = "ATTR15";
+export const SEMANTIC_ATTR15 = 'ATTR15';
 
 export const SHADERTAG_MATERIAL = 1;
 
@@ -1595,7 +1595,7 @@ export const SAMPLETYPE_UINT = 4;
  * @type {string}
  * @category Graphics
  */
-export const TEXTUREPROJECTION_NONE = "none";
+export const TEXTUREPROJECTION_NONE = 'none';
 
 /**
  * Texture data is stored in cubemap projection format.
@@ -1603,7 +1603,7 @@ export const TEXTUREPROJECTION_NONE = "none";
  * @type {string}
  * @category Graphics
  */
-export const TEXTUREPROJECTION_CUBE = "cube";
+export const TEXTUREPROJECTION_CUBE = 'cube';
 
 /**
  * Texture data is stored in equirectangular projection format.
@@ -1611,7 +1611,7 @@ export const TEXTUREPROJECTION_CUBE = "cube";
  * @type {string}
  * @category Graphics
  */
-export const TEXTUREPROJECTION_EQUIRECT = "equirect";
+export const TEXTUREPROJECTION_EQUIRECT = 'equirect';
 
 /**
  * Texture data is stored in octahedral projection format.
@@ -1619,7 +1619,7 @@ export const TEXTUREPROJECTION_EQUIRECT = "equirect";
  * @type {string}
  * @category Graphics
  */
-export const TEXTUREPROJECTION_OCTAHEDRAL = "octahedral";
+export const TEXTUREPROJECTION_OCTAHEDRAL = 'octahedral';
 
 /**
  * Shader source code uses GLSL language.
@@ -2080,13 +2080,13 @@ export const vertexTypesNames = ['INT8', 'UINT8', 'INT16', 'UINT16', 'INT32', 'U
 
 // map of typed array to engine TYPE_***
 export const typedArrayToType = {
-    "Int8Array": TYPE_INT8,
-    "Uint8Array": TYPE_UINT8,
-    "Int16Array": TYPE_INT16,
-    "Uint16Array": TYPE_UINT16,
-    "Int32Array": TYPE_INT32,
-    "Uint32Array": TYPE_UINT32,
-    "Float32Array": TYPE_FLOAT32
+    'Int8Array': TYPE_INT8,
+    'Uint8Array': TYPE_UINT8,
+    'Int16Array': TYPE_INT16,
+    'Uint16Array': TYPE_UINT16,
+    'Int32Array': TYPE_INT32,
+    'Uint32Array': TYPE_UINT32,
+    'Float32Array': TYPE_FLOAT32
 };
 
 // map of engine INDEXFORMAT_*** to their corresponding typed array constructors and byte sizes

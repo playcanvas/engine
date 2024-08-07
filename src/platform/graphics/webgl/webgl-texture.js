@@ -289,7 +289,7 @@ class WebglTexture {
                 }
                 break;
             case PIXELFORMAT_111110F: // WebGL2 only
-                Debug.assert(device.isWebGL2, "PIXELFORMAT_111110F texture format is not supported by WebGL1.");
+                Debug.assert(device.isWebGL2, 'PIXELFORMAT_111110F texture format is not supported by WebGL1.');
                 this._glFormat = gl.RGB;
                 this._glInternalFormat = gl.R11F_G11F_B10F;
                 this._glPixelType = gl.UNSIGNED_INT_10F_11F_11F_REV;
@@ -398,7 +398,7 @@ class WebglTexture {
                 this._glPixelType = gl.UNSIGNED_INT;
                 break;
             case PIXELFORMAT_BGRA8:
-                Debug.error("BGRA8 texture format is not supported by WebGL.");
+                Debug.error('BGRA8 texture format is not supported by WebGL.');
                 break;
         }
 
@@ -411,11 +411,12 @@ class WebglTexture {
      */
     upload(device, texture) {
 
-        Debug.assert(texture.device, "Attempting to use a texture that has been destroyed.", texture);
+        Debug.assert(texture.device, 'Attempting to use a texture that has been destroyed.', texture);
         const gl = device.gl;
 
-        if (!texture._needsUpload && ((texture._needsMipmapsUpload && texture._mipmapsUploaded) || !texture.pot))
+        if (!texture._needsUpload && ((texture._needsMipmapsUpload && texture._mipmapsUploaded) || !texture.pot)) {
             return;
+        }
 
         let mipLevel = 0;
         let mipObject;
@@ -426,11 +427,11 @@ class WebglTexture {
         if (texture.array) {
             // for texture arrays we reserve the space in advance
             gl.texStorage3D(gl.TEXTURE_2D_ARRAY,
-                            requiredMipLevels,
-                            this._glInternalFormat,
-                            texture._width,
-                            texture._height,
-                            texture._arrayLength);
+                requiredMipLevels,
+                this._glInternalFormat,
+                texture._width,
+                texture._height,
+                texture._arrayLength);
         }
 
         // Upload all existing mip levels. Initialize 0 mip anyway.
@@ -461,8 +462,9 @@ class WebglTexture {
                 if (device._isBrowserInterface(mipObject[0])) {
                     // Upload the image, canvas or video
                     for (face = 0; face < 6; face++) {
-                        if (!texture._levelsUpdated[0][face])
+                        if (!texture._levelsUpdated[0][face]) {
                             continue;
+                        }
 
                         let src = mipObject[face];
                         // Downsize images that are too large to be used as cube maps
@@ -503,8 +505,9 @@ class WebglTexture {
                     // Upload the byte array
                     resMult = 1 / Math.pow(2, mipLevel);
                     for (face = 0; face < 6; face++) {
-                        if (!texture._levelsUpdated[0][face])
+                        if (!texture._levelsUpdated[0][face]) {
                             continue;
+                        }
 
                         const texData = mipObject[face];
                         if (texture._compressed) {
@@ -564,28 +567,28 @@ class WebglTexture {
                 // Upload the byte array
                 if (texture._compressed) {
                     gl.compressedTexImage3D(gl.TEXTURE_3D,
-                                            mipLevel,
-                                            this._glInternalFormat,
-                                            Math.max(texture._width * resMult, 1),
-                                            Math.max(texture._height * resMult, 1),
-                                            Math.max(texture._depth * resMult, 1),
-                                            0,
-                                            mipObject);
+                        mipLevel,
+                        this._glInternalFormat,
+                        Math.max(texture._width * resMult, 1),
+                        Math.max(texture._height * resMult, 1),
+                        Math.max(texture._depth * resMult, 1),
+                        0,
+                        mipObject);
                 } else {
                     device.setUnpackFlipY(false);
                     device.setUnpackPremultiplyAlpha(texture._premultiplyAlpha);
                     gl.texImage3D(gl.TEXTURE_3D,
-                                  mipLevel,
-                                  this._glInternalFormat,
-                                  Math.max(texture._width * resMult, 1),
-                                  Math.max(texture._height * resMult, 1),
-                                  Math.max(texture._depth * resMult, 1),
-                                  0,
-                                  this._glFormat,
-                                  this._glPixelType,
-                                  mipObject);
+                        mipLevel,
+                        this._glInternalFormat,
+                        Math.max(texture._width * resMult, 1),
+                        Math.max(texture._height * resMult, 1),
+                        Math.max(texture._depth * resMult, 1),
+                        0,
+                        this._glFormat,
+                        this._glPixelType,
+                        mipObject);
                 }
-            } else if (texture.array && typeof mipObject === "object") {
+            } else if (texture.array && typeof mipObject === 'object') {
                 if (texture._arrayLength === mipObject.length) {
                     if (texture._compressed) {
                         for (let index = 0; index < texture._arrayLength; index++) {
@@ -733,8 +736,9 @@ class WebglTexture {
 
         if (texture._needsUpload) {
             if (texture._cubemap) {
-                for (let i = 0; i < 6; i++)
+                for (let i = 0; i < 6; i++) {
                     texture._levelsUpdated[0][i] = false;
+                }
             } else {
                 texture._levelsUpdated[0] = false;
             }

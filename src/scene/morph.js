@@ -41,7 +41,7 @@ class Morph extends RefCountedObject {
     constructor(targets, graphicsDevice, { preferHighPrecision = false } = {}) {
         super();
 
-        Debug.assert(graphicsDevice, "Morph constructor takes a GraphicsDevice as a parameter, and it was not provided.");
+        Debug.assert(graphicsDevice, 'Morph constructor takes a GraphicsDevice as a parameter, and it was not provided.');
         this.device = graphicsDevice;
 
         this.preferHighPrecision = preferHighPrecision;
@@ -110,8 +110,9 @@ class Morph extends RefCountedObject {
     get maxActiveTargets() {
 
         // no limit when texture morph based
-        if (this._useTextureMorph)
+        if (this._useTextureMorph) {
             return this._targets.length;
+        }
 
         return (this._morphPositions && this._morphNormals) ? 4 : 8;
     }

@@ -191,8 +191,9 @@ class SpriteComponent extends Component {
      * @type {string}
      */
     set type(value) {
-        if (this._type === value)
+        if (this._type === value) {
             return;
+        }
 
         this._type = value;
         if (this._type === SPRITETYPE_SIMPLE) {
@@ -541,8 +542,9 @@ class SpriteComponent extends Component {
      * @type {number}
      */
     set batchGroupId(value) {
-        if (this._batchGroupId === value)
+        if (this._batchGroupId === value) {
             return;
+        }
 
         const prev = this._batchGroupId;
         this._batchGroupId = value;
@@ -663,8 +665,9 @@ class SpriteComponent extends Component {
         }
 
         this._showModel();
-        if (this._autoPlayClip)
+        if (this._autoPlayClip) {
             this._tryAutoPlay();
+        }
 
         if (this._batchGroupId >= 0) {
             app.batcher?.insert(BatchGroup.SPRITE, this._batchGroupId, this.entity);
@@ -835,9 +838,9 @@ class SpriteComponent extends Component {
 
                 const tex = this.sprite.atlas.texture;
                 this._atlasRect.set(frameData.rect.x / tex.width,
-                                    frameData.rect.y / tex.height,
-                                    frameData.rect.z / tex.width,
-                                    frameData.rect.w / tex.height
+                    frameData.rect.y / tex.height,
+                    frameData.rect.z / tex.width,
+                    frameData.rect.w / tex.height
                 );
 
             } else {
@@ -1001,8 +1004,9 @@ class SpriteComponent extends Component {
 
         this._clips[data.name] = clip;
 
-        if (clip.name && clip.name === this._autoPlayClip)
+        if (clip.name && clip.name === this._autoPlayClip) {
             this._tryAutoPlay();
+        }
 
         return clip;
     }

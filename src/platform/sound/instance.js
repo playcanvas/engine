@@ -545,32 +545,36 @@ class SoundInstance extends EventHandler {
     _onPlay() {
         this.fire('play');
 
-        if (this._onPlayCallback)
+        if (this._onPlayCallback) {
             this._onPlayCallback(this);
+        }
     }
 
     /** @private */
     _onPause() {
         this.fire('pause');
 
-        if (this._onPauseCallback)
+        if (this._onPauseCallback) {
             this._onPauseCallback(this);
+        }
     }
 
     /** @private */
     _onResume() {
         this.fire('resume');
 
-        if (this._onResumeCallback)
+        if (this._onResumeCallback) {
             this._onResumeCallback(this);
+        }
     }
 
     /** @private */
     _onStop() {
         this.fire('stop');
 
-        if (this._onStopCallback)
+        if (this._onStopCallback) {
             this._onStopCallback(this);
+        }
     }
 
     /** @private */
@@ -585,8 +589,9 @@ class SoundInstance extends EventHandler {
 
         this.fire('end');
 
-        if (this._onEndCallback)
+        if (this._onEndCallback) {
             this._onEndCallback(this);
+        }
 
         this.stop();
     }
@@ -733,8 +738,9 @@ class SoundInstance extends EventHandler {
         // no need for this anymore
         this._playWhenLoaded = false;
 
-        if (this._state !== STATE_PLAYING)
+        if (this._state !== STATE_PLAYING) {
             return false;
+        }
 
         // set state to paused
         this._state = STATE_PAUSED;
@@ -756,8 +762,9 @@ class SoundInstance extends EventHandler {
         // reset user-set start offset
         this._startOffset = null;
 
-        if (!this._suspendInstanceEvents)
+        if (!this._suspendInstanceEvents) {
             this._onPause();
+        }
 
         return true;
     }
@@ -813,8 +820,9 @@ class SoundInstance extends EventHandler {
         this.pitch = this._pitch;
         this._playWhenLoaded = false;
 
-        if (!this._suspendInstanceEvents)
+        if (!this._suspendInstanceEvents) {
             this._onResume();
+        }
 
         return true;
     }
@@ -828,8 +836,9 @@ class SoundInstance extends EventHandler {
     stop() {
         this._playWhenLoaded = false;
 
-        if (this._state === STATE_STOPPED)
+        if (this._state === STATE_STOPPED) {
             return false;
+        }
 
         // set state to stopped
         const wasPlaying = this._state === STATE_PLAYING;
@@ -859,8 +868,9 @@ class SoundInstance extends EventHandler {
         }
         this.source = null;
 
-        if (!this._suspendInstanceEvents)
+        if (!this._suspendInstanceEvents) {
             this._onStop();
+        }
 
         return true;
     }
@@ -1041,19 +1051,22 @@ if (!hasAudioContext()) {
             this._manager.on('destroy', this._onManagerDestroy, this);
 
             // suspend immediately if manager is suspended
-            if (this._manager.suspended)
+            if (this._manager.suspended) {
                 this._onManagerSuspend();
+            }
 
-            if (!this._suspendInstanceEvents)
+            if (!this._suspendInstanceEvents) {
                 this._onPlay();
+            }
 
             return true;
 
         },
 
         pause: function () {
-            if (!this.source || this._state !== STATE_PLAYING)
+            if (!this.source || this._state !== STATE_PLAYING) {
                 return false;
+            }
 
             this._suspendEndEvent++;
             this.source.pause();
@@ -1061,31 +1074,35 @@ if (!hasAudioContext()) {
             this._state = STATE_PAUSED;
             this._startOffset = null;
 
-            if (!this._suspendInstanceEvents)
+            if (!this._suspendInstanceEvents) {
                 this._onPause();
+            }
 
             return true;
         },
 
         resume: function () {
-            if (!this.source || this._state !== STATE_PAUSED)
+            if (!this.source || this._state !== STATE_PAUSED) {
                 return false;
+            }
 
             this._state = STATE_PLAYING;
             this._playWhenLoaded = false;
             if (this.source.paused) {
                 this.source.play();
 
-                if (!this._suspendInstanceEvents)
+                if (!this._suspendInstanceEvents) {
                     this._onResume();
+                }
             }
 
             return true;
         },
 
         stop: function () {
-            if (!this.source || this._state === STATE_STOPPED)
+            if (!this.source || this._state === STATE_STOPPED) {
                 return false;
+            }
 
             this._manager.off('volumechange', this._onManagerVolumeChange, this);
             this._manager.off('suspend', this._onManagerSuspend, this);
@@ -1098,8 +1115,9 @@ if (!hasAudioContext()) {
             this._state = STATE_STOPPED;
             this._startOffset = null;
 
-            if (!this._suspendInstanceEvents)
+            if (!this._suspendInstanceEvents) {
                 this._onStop();
+            }
 
             return true;
         },
@@ -1150,8 +1168,9 @@ if (!hasAudioContext()) {
 
         // called every time the 'currentTime' is changed
         _onTimeUpdate: function () {
-            if (!this._duration)
+            if (!this._duration) {
                 return;
+            }
 
             // if the currentTime passes the end then if looping go back to the beginning
             // otherwise manually stop

@@ -13,7 +13,7 @@ import {
     COLOR_YELLOW,
     COLOR_GRAY
 } from './default-colors.js';
-import { Gizmo } from "./gizmo.js";
+import { Gizmo } from './gizmo.js';
 
 // temporary variables
 const tmpV1 = new Vec3();
@@ -493,7 +493,7 @@ class TransformGizmo extends Gizmo {
         if (!meshInstance) {
             return '';
         }
-        return meshInstance.node.name.split(":")[1];
+        return meshInstance.node.name.split(':')[1];
     }
 
     _getIsPlane(meshInstance) {

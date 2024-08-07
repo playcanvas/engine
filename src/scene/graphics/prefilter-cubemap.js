@@ -47,11 +47,11 @@ function texelCoordSolidAngle(u, v, size) {
 
 function shFromCubemap(device, source, dontFlipX) {
     if (source.format !== PIXELFORMAT_RGBA8) {
-        Debug.error("ERROR: SH: cubemap must be RGBA8");
+        Debug.error('ERROR: SH: cubemap must be RGBA8');
         return null;
     }
     if (!source._levels[0] || !source._levels[0][0]) {
-        Debug.error("ERROR: SH: cubemap must be synced to CPU");
+        Debug.error('ERROR: SH: cubemap must be synced to CPU');
         return null;
     }
 
@@ -62,10 +62,10 @@ function shFromCubemap(device, source, dontFlipX) {
         if (source._levels[0][0] instanceof HTMLImageElement) {
             // Cubemap is made of imgs - convert to arrays
             const shader = createShaderFromCode(device,
-                                                shaderChunks.fullscreenQuadVS,
-                                                shaderChunks.fullscreenQuadPS,
-                                                "fsQuadSimple");
-            const constantTexSource = device.scope.resolve("source");
+                shaderChunks.fullscreenQuadVS,
+                shaderChunks.fullscreenQuadPS,
+                'fsQuadSimple');
+            const constantTexSource = device.scope.resolve('source');
             for (let face = 0; face < 6; face++) {
                 const img = source._levels[0][face];
 
@@ -108,7 +108,7 @@ function shFromCubemap(device, source, dontFlipX) {
                 source._levels[0][face] = pixels;
             }
         } else {
-            Debug.error("ERROR: SH: cubemap must be composed of arrays or images");
+            Debug.error('ERROR: SH: cubemap must be composed of arrays or images');
             return null;
         }
     }

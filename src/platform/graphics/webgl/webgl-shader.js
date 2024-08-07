@@ -121,8 +121,9 @@ class WebglShader {
     link(device, shader) {
 
         // if the shader was already linked
-        if (this.glProgram)
+        if (this.glProgram) {
             return;
+        }
 
         // if the device is lost, silently ignore
         const gl = device.gl;
@@ -149,7 +150,7 @@ class WebglShader {
             const outNames = [];
             for (const attr in attrs) {
                 if (attrs.hasOwnProperty(attr)) {
-                    outNames.push("out_" + attr);
+                    outNames.push(`out_${attr}`);
                 }
             }
             gl.transformFeedbackVaryings(glProgram, outNames, gl.INTERLEAVED_ATTRIBS);
@@ -282,13 +283,15 @@ class WebglShader {
         if (!linkStatus) {
 
             // Check for compilation errors
-            if (!this._isCompiled(device, shader, this.glVertexShader, definition.vshader, "vertex"))
+            if (!this._isCompiled(device, shader, this.glVertexShader, definition.vshader, 'vertex')) {
                 return false;
+            }
 
-            if (!this._isCompiled(device, shader, this.glFragmentShader, definition.fshader, "fragment"))
+            if (!this._isCompiled(device, shader, this.glFragmentShader, definition.fshader, 'fragment')) {
                 return false;
+            }
 
-            const message = "Failed to link shader program. Error: " + gl.getProgramInfoLog(glProgram);
+            const message = `Failed to link shader program. Error: ${gl.getProgramInfoLog(glProgram)}`;
 
             // #if _DEBUG
 
@@ -311,8 +314,9 @@ class WebglShader {
             const location = gl.getAttribLocation(glProgram, info.name);
 
             // a built-in attributes for which we do not need to provide any data
-            if (_vertexShaderBuiltins.has(info.name))
+            if (_vertexShaderBuiltins.has(info.name)) {
                 continue;
+            }
 
             // Check attributes are correctly linked up
             if (definition.attributes[info.name] === undefined) {
@@ -429,7 +433,7 @@ class WebglShader {
 
             // if error is in the code, only show nearby lines instead of whole shader code
             if (infoLog && infoLog.startsWith('ERROR:')) {
-                const match = infoLog.match(/^ERROR:\s([0-9]+):([0-9]+):\s*(.+)/);
+                const match = infoLog.match(/^ERROR:\s(\d+):(\d+):\s*(.+)/);
                 if (match) {
                     error.message = match[3];
                     error.line = parseInt(match[2], 10);
@@ -441,7 +445,7 @@ class WebglShader {
 
             // Chrome reports shader errors on lines indexed from 1
             for (let i = from; i < to; i++) {
-                code += (i + 1) + ":\t" + lines[i] + '\n';
+                code += `${i + 1}:\t${lines[i]}\n`;
             }
 
             error.source = src;

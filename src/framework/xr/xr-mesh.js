@@ -1,6 +1,6 @@
-import { EventHandler } from "../../core/event-handler.js";
-import { Vec3 } from "../../core/math/vec3.js";
-import { Quat } from "../../core/math/quat.js";
+import { EventHandler } from '../../core/event-handler.js';
+import { Vec3 } from '../../core/math/vec3.js';
+import { Quat } from '../../core/math/quat.js';
 
 /**
  * Detected Mesh instance that provides its transform (position, rotation),

@@ -52,7 +52,7 @@ class AnimComponentSystem extends ComponentSystem {
                 layer._controller.states.forEach((stateKey) => {
                     layer._controller._states[stateKey]._animationList.forEach((node) => {
                         if (!node.animTrack || node.animTrack === AnimTrack.EMPTY) {
-                            const animationAsset = this.app.assets.get(layer._component._animationAssets[layer.name + ':' + node.name].asset);
+                            const animationAsset = this.app.assets.get(layer._component._animationAssets[`${layer.name}:${node.name}`].asset);
                             // If there is an animation asset that hasn't been loaded, assign it once it has loaded. If it is already loaded it will be assigned already.
                             if (animationAsset && !animationAsset.loaded) {
                                 animationAsset.once('load', () => {

@@ -186,8 +186,9 @@ class ParticleGPUUpdater {
 
         emitter.prevWorldBoundsSize.copy(emitter.worldBoundsSize);
         emitter.prevWorldBoundsCenter.copy(emitter.worldBounds.center);
-        if (emitter.pack8)
+        if (emitter.pack8) {
             this._setInputBounds();
+        }
 
         DebugGraphics.popGpuMarker(device);
     }

@@ -72,9 +72,9 @@ class BundleRegistry {
     }
 
     _unbindAssetEvents(id) {
-        this._assets.off('load:start:' + id, this._onBundleLoadStart, this);
-        this._assets.off('load:' + id, this._onBundleLoad, this);
-        this._assets.off('error:' + id, this._onBundleError, this);
+        this._assets.off(`load:start:${id}`, this._onBundleLoadStart, this);
+        this._assets.off(`load:${id}`, this._onBundleLoad, this);
+        this._assets.off(`error:${id}`, this._onBundleError, this);
     }
 
     // Index the specified asset id and its file URLs so that
@@ -118,7 +118,7 @@ class BundleRegistry {
         if (asset.type === 'font') {
             const numFiles = asset.data.info.maps.length;
             for (let i = 1; i < numFiles; i++) {
-                urls.push(url.replace('.png', i + '.png'));
+                urls.push(url.replace('.png', `${i}.png`));
             }
         }
 
@@ -144,8 +144,9 @@ class BundleRegistry {
                 if (bundles.size === 0) {
                     this._assetToBundles.delete(assetIds[i]);
                     for (const [url, otherBundles] of this._urlsToBundles) {
-                        if (otherBundles !== bundles)
+                        if (otherBundles !== bundles) {
                             continue;
+                        }
                         this._urlsToBundles.delete(url);
                     }
                 }
@@ -191,8 +192,9 @@ class BundleRegistry {
         }
 
         // make sure the registry hasn't been destroyed already
-        if (!this._fileRequests)
+        if (!this._fileRequests) {
             return;
+        }
 
         for (const [url, requests] of this._fileRequests) {
             const bundles = this._urlsToBundles.get(url);
@@ -226,8 +228,9 @@ class BundleRegistry {
         for (const [url, requests] of this._fileRequests) {
             const bundle = this._findLoadedOrLoadingBundleForUrl(url);
             if (!bundle) {
-                for (let i = 0; i < requests.length; i++)
+                for (let i = 0; i < requests.length; i++) {
                     requests[i](err);
+                }
 
                 this._fileRequests.delete(url);
             }

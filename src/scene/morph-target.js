@@ -95,8 +95,9 @@ class MorphTarget {
         // lazy evaluation, which allows us to skip this completely if customAABB is used
         if (!this._aabb) {
             this._aabb = new BoundingBox();
-            if (this.deltaPositions)
+            if (this.deltaPositions) {
                 this._aabb.compute(this.deltaPositions);
+            }
         }
 
         return this._aabb;

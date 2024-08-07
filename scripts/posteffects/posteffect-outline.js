@@ -14,37 +14,37 @@ function OutlineEffect(graphicsDevice, thickness) {
     pc.PostEffect.call(this, graphicsDevice);
 
     var fshader = [
-        "#define THICKNESS " + (thickness ? thickness.toFixed(0) : 1),
-        "uniform float uWidth;",
-        "uniform float uHeight;",
-        "uniform vec4 uOutlineCol;",
-        "uniform sampler2D uColorBuffer;",
-        "uniform sampler2D uOutlineTex;",
-        "",
-        "varying vec2 vUv0;",
-        "",
-        "void main(void)",
-        "{",
-        "    vec4 texel1 = texture2D(uColorBuffer, vUv0);",
-        "    float sample0 = texture2D(uOutlineTex, vUv0).a;",
-        "    float outline = 0.0;",
-        "    if (sample0==0.0)",
-        "    {",
-        "        for (int x=-THICKNESS;x<=THICKNESS;x++)",
-        "        {",
-        "            for (int y=-THICKNESS;y<=THICKNESS;y++)",
-        "            {    ",
-        "                float tex=texture2DLodEXT(uOutlineTex, vUv0 + vec2(float(x)/uWidth, float(y)/uHeight), 0.0).a;",
-        "                if (tex>0.0)",
-        "                {",
-        "                    outline=1.0;",
-        "                }",
-        "            }",
-        "        } ",
-        "    }",
-        "    gl_FragColor = mix(texel1, uOutlineCol, outline * uOutlineCol.a);",
-        "}"
-    ].join("\n");
+        `#define THICKNESS ${thickness ? thickness.toFixed(0) : 1}`,
+        'uniform float uWidth;',
+        'uniform float uHeight;',
+        'uniform vec4 uOutlineCol;',
+        'uniform sampler2D uColorBuffer;',
+        'uniform sampler2D uOutlineTex;',
+        '',
+        'varying vec2 vUv0;',
+        '',
+        'void main(void)',
+        '{',
+        '    vec4 texel1 = texture2D(uColorBuffer, vUv0);',
+        '    float sample0 = texture2D(uOutlineTex, vUv0).a;',
+        '    float outline = 0.0;',
+        '    if (sample0==0.0)',
+        '    {',
+        '        for (int x=-THICKNESS;x<=THICKNESS;x++)',
+        '        {',
+        '            for (int y=-THICKNESS;y<=THICKNESS;y++)',
+        '            {    ',
+        '                float tex=texture2DLodEXT(uOutlineTex, vUv0 + vec2(float(x)/uWidth, float(y)/uHeight), 0.0).a;',
+        '                if (tex>0.0)',
+        '                {',
+        '                    outline=1.0;',
+        '                }',
+        '            }',
+        '        } ',
+        '    }',
+        '    gl_FragColor = mix(texel1, uOutlineCol, outline * uOutlineCol.a);',
+        '}'
+    ].join('\n');
 
     this.shader = pc.createShaderFromCode(graphicsDevice, pc.PostEffect.quadVertexShader, fshader, 'OutlineShader', {
         aPosition: pc.SEMANTIC_POSITION
@@ -70,11 +70,11 @@ Object.assign(OutlineEffect.prototype, {
         this._colorData[2] = this.color.b;
         this._colorData[3] = this.color.a;
 
-        scope.resolve("uWidth").setValue(inputTarget.width);
-        scope.resolve("uHeight").setValue(inputTarget.height);
-        scope.resolve("uOutlineCol").setValue(this._colorData);
-        scope.resolve("uColorBuffer").setValue(inputTarget.colorBuffer);
-        scope.resolve("uOutlineTex").setValue(this.texture);
+        scope.resolve('uWidth').setValue(inputTarget.width);
+        scope.resolve('uHeight').setValue(inputTarget.height);
+        scope.resolve('uOutlineCol').setValue(this._colorData);
+        scope.resolve('uColorBuffer').setValue(inputTarget.colorBuffer);
+        scope.resolve('uOutlineTex').setValue(this.texture);
         this.drawQuad(outputTarget, this.shader, rect);
     }
 });
@@ -88,14 +88,14 @@ Outline.attributes.add('color', {
     title: 'Color'
 });
 
-Outline.attributes.add("thickness", {
-    type: "number",
+Outline.attributes.add('thickness', {
+    type: 'number',
     default: 1.0,
     min: 1.0,
     max: 10,
     precision: 0,
-    title: "Thickness",
-    description: "Note: Changing the thickness requires reloading the effect."
+    title: 'Thickness',
+    description: 'Note: Changing the thickness requires reloading the effect.'
 });
 
 Outline.attributes.add('texture', {

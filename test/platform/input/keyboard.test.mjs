@@ -3,35 +3,35 @@ import { EVENT_KEYDOWN, EVENT_KEYUP, KEY_UP } from '../../../src/platform/input/
 
 import { expect } from 'chai';
 
-describe('Keyboard', function () {
+describe('Keyboard', () => {
 
     /** @type { Keyboard } */
     let keyboard;
 
-    beforeEach(function () {
+    beforeEach(() => {
         keyboard = new Keyboard();
         keyboard.attach(window);
     });
 
-    afterEach(function () {
+    afterEach(() => {
         keyboard.detach();
     });
 
-    describe('#constructor', function () {
+    describe('#constructor', () => {
 
-        it('should create a new instance', function () {
+        it('should create a new instance', () => {
             expect(keyboard).to.be.an.instanceOf(Keyboard);
         });
 
     });
 
-    describe('#isPressed', function () {
+    describe('#isPressed', () => {
 
-        it('should return false for a key that is not pressed', function () {
+        it('should return false for a key that is not pressed', () => {
             expect(keyboard.isPressed(KEY_UP)).to.be.false;
         });
 
-        it('should return true for a key that is pressed', function () {
+        it('should return true for a key that is pressed', () => {
             const keyDownEvent = new KeyboardEvent('keydown', {
                 keyCode: 38 // Up arrow
             });
@@ -53,10 +53,10 @@ describe('Keyboard', function () {
 
     });
 
-    describe('#on', function () {
+    describe('#on', () => {
 
-        it('should handle keydown events', function (done) {
-            keyboard.on(EVENT_KEYDOWN, function (event) {
+        it('should handle keydown events', (done) => {
+            keyboard.on(EVENT_KEYDOWN, (event) => {
                 expect(event.key).to.equal(KEY_UP);
                 expect(event.element).to.equal(window);
                 expect(event.event).to.be.an.instanceOf(KeyboardEvent);
@@ -70,8 +70,8 @@ describe('Keyboard', function () {
             window.dispatchEvent(keyDownEvent);
         });
 
-        it('should handle keyup events', function (done) {
-            keyboard.on(EVENT_KEYUP, function (event) {
+        it('should handle keyup events', (done) => {
+            keyboard.on(EVENT_KEYUP, (event) => {
                 expect(event.key).to.equal(KEY_UP);
                 expect(event.element).to.equal(window);
                 expect(event.event).to.be.an.instanceOf(KeyboardEvent);
@@ -87,13 +87,13 @@ describe('Keyboard', function () {
 
     });
 
-    describe('#wasPressed', function () {
+    describe('#wasPressed', () => {
 
-        it('should return false for a key that was not pressed', function () {
+        it('should return false for a key that was not pressed', () => {
             expect(keyboard.wasPressed(KEY_UP)).to.be.false;
         });
 
-        it('should return true for a key that was pressed since the last update', function () {
+        it('should return true for a key that was pressed since the last update', () => {
             const keyDownEvent = new KeyboardEvent('keydown', {
                 keyCode: 38 // Up arrow
             });
@@ -108,13 +108,13 @@ describe('Keyboard', function () {
 
     });
 
-    describe('#wasReleased', function () {
+    describe('#wasReleased', () => {
 
-        it('should return false for a key that was not released', function () {
+        it('should return false for a key that was not released', () => {
             expect(keyboard.wasReleased(KEY_UP)).to.be.false;
         });
 
-        it('should return true for a key that was released since the last update', function () {
+        it('should return true for a key that was released since the last update', () => {
             const keyDownEvent = new KeyboardEvent('keydown', {
                 keyCode: 38 // Up arrow
             });

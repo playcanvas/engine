@@ -310,8 +310,9 @@ class XrInputSource extends EventHandler {
         this._manager = manager;
         this._xrInputSource = xrInputSource;
 
-        if (xrInputSource.hand)
+        if (xrInputSource.hand) {
             this._hand = new XrHand(this);
+        }
     }
 
     /**
@@ -430,13 +431,15 @@ class XrInputSource extends EventHandler {
      * @type {boolean}
      */
     set elementInput(value) {
-        if (this._elementInput === value)
+        if (this._elementInput === value) {
             return;
+        }
 
         this._elementInput = value;
 
-        if (!this._elementInput)
+        if (!this._elementInput) {
             this._elementEntity = null;
+        }
     }
 
     /**
@@ -621,8 +624,9 @@ class XrInputSource extends EventHandler {
      * @returns {Vec3|null} The world space linear velocity of the handheld input source.
      */
     getLinearVelocity() {
-        if (!this._velocitiesAvailable)
+        if (!this._velocitiesAvailable) {
             return null;
+        }
 
         return this._linearVelocity;
     }

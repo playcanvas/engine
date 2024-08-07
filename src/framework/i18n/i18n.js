@@ -58,7 +58,7 @@ class I18n extends EventHandler {
         while (i--) {
             const id = this._assets[i];
             if (!index[id]) {
-                this._app.assets.off('add:' + id, this._onAssetAdd, this);
+                this._app.assets.off(`add:${id}`, this._onAssetAdd, this);
                 const asset = this._app.assets.get(id);
                 if (asset) {
                     this._onAssetRemove(asset);
@@ -75,7 +75,7 @@ class I18n extends EventHandler {
             this._assets.push(idNum);
             const asset = this._app.assets.get(idNum);
             if (!asset) {
-                this._app.assets.once('add:' + idNum, this._onAssetAdd, this);
+                this._app.assets.once(`add:${idNum}`, this._onAssetAdd, this);
             } else {
                 this._onAssetAdd(asset);
             }
@@ -436,7 +436,7 @@ class I18n extends EventHandler {
             this.removeData(asset.resource);
         }
 
-        this._app.assets.once('add:' + asset.id, this._onAssetAdd, this);
+        this._app.assets.once(`add:${asset.id}`, this._onAssetAdd, this);
     }
 
     _onAssetUnload(asset) {

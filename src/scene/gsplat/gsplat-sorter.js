@@ -1,5 +1,5 @@
-import { EventHandler } from "../../core/event-handler.js";
-import { TEXTURELOCK_READ } from "../../platform/graphics/constants.js";
+import { EventHandler } from '../../core/event-handler.js';
+import { TEXTURELOCK_READ } from '../../platform/graphics/constants.js';
 
 // sort blind set of data
 function SortWorker() {

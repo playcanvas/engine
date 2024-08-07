@@ -111,8 +111,9 @@ class RenderPassPrepass extends RenderPass {
                 if (layer.camerasSet.has(camera)) {
 
                     // only render the layers before the depth layer
-                    if (layer.id === LAYERID_DEPTH)
+                    if (layer.id === LAYERID_DEPTH) {
                         break;
+                    }
 
                     const culledInstances = layer.getCulledInstances(camera);
                     const meshInstances = isTransparent[i] ? culledInstances.transparent : culledInstances.opaque;

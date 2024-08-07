@@ -124,8 +124,9 @@ class ShadowRendererDirectional {
             let radius = 0;
             for (let i = 0; i < 8; i++) {
                 const dist = frustumPoints[i].sub(center).length();
-                if (dist > radius)
+                if (dist > radius) {
                     radius = dist;
+                }
             }
 
             // axis of light coordinate system
@@ -223,8 +224,9 @@ class ShadowRendererDirectional {
             let shadowCamera;
             for (let face = 0; face < faceCount; face++) {
 
-                if (shadowUpdateOverrides?.[face] === SHADOWUPDATE_NONE)
+                if (shadowUpdateOverrides?.[face] === SHADOWUPDATE_NONE) {
                     allCascadesRendering = false;
+                }
 
                 shadowCamera = this.shadowRenderer.prepareFace(light, camera, face);
             }

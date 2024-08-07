@@ -173,8 +173,9 @@ class ScreenComponent extends Component {
 
         this._calcProjectionMatrix();
 
-        if (!this.entity._dirtyLocal)
+        if (!this.entity._dirtyLocal) {
             this.entity._dirtifyLocal();
+        }
 
         this.fire('set:resolution', this._resolution);
         this._elements.forEach(element => element._onScreenResize(this._resolution));
@@ -202,8 +203,9 @@ class ScreenComponent extends Component {
         this._updateScale();
         this._calcProjectionMatrix();
 
-        if (!this.entity._dirtyLocal)
+        if (!this.entity._dirtyLocal) {
             this.entity._dirtifyLocal();
+        }
 
         this.fire('set:referenceresolution', this._resolution);
         this._elements.forEach(element => element._onScreenResize(this._resolution));
@@ -234,8 +236,9 @@ class ScreenComponent extends Component {
         }
         this.resolution = this._resolution; // force update either way
 
-        if (!this.entity._dirtyLocal)
+        if (!this.entity._dirtyLocal) {
             this.entity._dirtifyLocal();
+        }
 
         this.fire('set:screenspace', this._screenSpace);
 
@@ -294,8 +297,9 @@ class ScreenComponent extends Component {
         this._updateScale();
         this._calcProjectionMatrix();
 
-        if (!this.entity._dirtyLocal)
+        if (!this.entity._dirtyLocal) {
             this.entity._dirtifyLocal();
+        }
 
         this.fire('set:scaleblend', this._scaleBlend);
 

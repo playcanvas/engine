@@ -1,5 +1,5 @@
-import { Debug } from "../../core/debug.js";
-import { calculateNormals, calculateTangents } from "./geometry-utils.js";
+import { Debug } from '../../core/debug.js';
+import { calculateNormals, calculateTangents } from './geometry-utils.js';
 
 /**
  * The Geometry class serves as a container for storing geometric information. It encapsulates data

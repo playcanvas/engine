@@ -173,7 +173,7 @@ class Renderer {
 
         // clustered passes
         this._renderPassUpdateClustered = new RenderPassUpdateClustered(this.device, this, this.shadowRenderer,
-                                                                        this._shadowRendererLocal, this.lightTextureAtlas);
+            this._shadowRendererLocal, this.lightTextureAtlas);
 
         // view bind group format with its uniform buffer format
         this.viewUniformFormat = null;
@@ -785,26 +785,26 @@ class Renderer {
 
             // format of the view uniform buffer
             const uniforms = [
-                new UniformFormat("matrix_viewProjection", UNIFORMTYPE_MAT4),
-                new UniformFormat("cubeMapRotationMatrix", UNIFORMTYPE_MAT3),
-                new UniformFormat("view_position", UNIFORMTYPE_VEC3),
-                new UniformFormat("skyboxIntensity", UNIFORMTYPE_FLOAT),
-                new UniformFormat("exposure", UNIFORMTYPE_FLOAT),
-                new UniformFormat("textureBias", UNIFORMTYPE_FLOAT)
+                new UniformFormat('matrix_viewProjection', UNIFORMTYPE_MAT4),
+                new UniformFormat('cubeMapRotationMatrix', UNIFORMTYPE_MAT3),
+                new UniformFormat('view_position', UNIFORMTYPE_VEC3),
+                new UniformFormat('skyboxIntensity', UNIFORMTYPE_FLOAT),
+                new UniformFormat('exposure', UNIFORMTYPE_FLOAT),
+                new UniformFormat('textureBias', UNIFORMTYPE_FLOAT)
             ];
 
             if (isClustered) {
                 uniforms.push(...[
-                    new UniformFormat("clusterCellsCountByBoundsSize", UNIFORMTYPE_VEC3),
-                    new UniformFormat("clusterTextureSize", UNIFORMTYPE_VEC3),
-                    new UniformFormat("clusterBoundsMin", UNIFORMTYPE_VEC3),
-                    new UniformFormat("clusterBoundsDelta", UNIFORMTYPE_VEC3),
-                    new UniformFormat("clusterCellsDot", UNIFORMTYPE_VEC3),
-                    new UniformFormat("clusterCellsMax", UNIFORMTYPE_VEC3),
-                    new UniformFormat("clusterCompressionLimit0", UNIFORMTYPE_VEC2),
-                    new UniformFormat("shadowAtlasParams", UNIFORMTYPE_VEC2),
-                    new UniformFormat("clusterMaxCells", UNIFORMTYPE_INT),
-                    new UniformFormat("clusterSkip", UNIFORMTYPE_FLOAT)
+                    new UniformFormat('clusterCellsCountByBoundsSize', UNIFORMTYPE_VEC3),
+                    new UniformFormat('clusterTextureSize', UNIFORMTYPE_VEC3),
+                    new UniformFormat('clusterBoundsMin', UNIFORMTYPE_VEC3),
+                    new UniformFormat('clusterBoundsDelta', UNIFORMTYPE_VEC3),
+                    new UniformFormat('clusterCellsDot', UNIFORMTYPE_VEC3),
+                    new UniformFormat('clusterCellsMax', UNIFORMTYPE_VEC3),
+                    new UniformFormat('clusterCompressionLimit0', UNIFORMTYPE_VEC2),
+                    new UniformFormat('shadowAtlasParams', UNIFORMTYPE_VEC2),
+                    new UniformFormat('clusterMaxCells', UNIFORMTYPE_INT),
+                    new UniformFormat('clusterSkip', UNIFORMTYPE_FLOAT)
                 ]);
             }
 
@@ -837,10 +837,10 @@ class Renderer {
 
     setupViewUniformBuffers(viewBindGroups, viewUniformFormat, viewBindGroupFormat, viewCount) {
 
-        Debug.assert(Array.isArray(viewBindGroups), "viewBindGroups must be an array");
+        Debug.assert(Array.isArray(viewBindGroups), 'viewBindGroups must be an array');
 
         const device = this.device;
-        Debug.assert(viewCount === 1, "This code does not handle the viewCount yet");
+        Debug.assert(viewCount === 1, 'This code does not handle the viewCount yet');
 
         while (viewBindGroups.length < viewCount) {
             const ub = new UniformBuffer(device, viewUniformFormat, false);
@@ -1230,8 +1230,9 @@ class Renderer {
 
                         if (onlyLitShaders) {
                             // skip materials not using lighting
-                            if (!mat.useLighting || (mat.emitter && !mat.emitter.lighting))
+                            if (!mat.useLighting || (mat.emitter && !mat.emitter.lighting)) {
                                 continue;
+                            }
                         }
 
                         // clear shader variants on the material and also on mesh instances that use it

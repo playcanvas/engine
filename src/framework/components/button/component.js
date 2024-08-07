@@ -940,18 +940,21 @@ class ButtonComponent extends Component {
             !tintColor ||
             !this._imageReference.hasComponent('element') ||
             this._imageReference.entity.element.type === ELEMENTTYPE_GROUP
-        )
+        ) {
             return;
+        }
 
         const color3 = toColor3(tintColor);
 
         this._isApplyingTint = true;
 
-        if (!color3.equals(this._imageReference.entity.element.color))
+        if (!color3.equals(this._imageReference.entity.element.color)) {
             this._imageReference.entity.element.color = color3;
+        }
 
-        if (this._imageReference.entity.element.opacity !== tintColor.a)
+        if (this._imageReference.entity.element.opacity !== tintColor.a) {
             this._imageReference.entity.element.opacity = tintColor.a;
+        }
 
         this._isApplyingTint = false;
     }
@@ -961,8 +964,9 @@ class ButtonComponent extends Component {
             !tintColor ||
             !this._imageReference.hasComponent('element') ||
             this._imageReference.entity.element.type === ELEMENTTYPE_GROUP
-        )
+        ) {
             return;
+        }
 
         const color3 = toColor3(tintColor);
         const color = this._imageReference.entity.element.color;

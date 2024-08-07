@@ -13,36 +13,36 @@ Mouse.prototype._getTargetCoords = function (event) {
     return { x: 0, y: 0 };
 };
 
-describe('Mouse', function () {
+describe('Mouse', () => {
 
     /** @type { Mouse } */
     let mouse;
 
-    beforeEach(function () {
+    beforeEach(() => {
         mouse = new Mouse(document.body);
     });
 
-    afterEach(function () {
+    afterEach(() => {
         mouse.detach();
     });
 
-    describe('#constructor', function () {
+    describe('#constructor', () => {
 
-        it('should create a new instance', function () {
+        it('should create a new instance', () => {
             expect(mouse).to.be.an.instanceOf(Mouse);
         });
 
     });
 
-    describe('#isPressed', function () {
+    describe('#isPressed', () => {
 
-        it('should return false for all buttons by default', function () {
+        it('should return false for all buttons by default', () => {
             for (const button of buttons) {
                 expect(mouse.isPressed(button)).to.be.false;
             }
         });
 
-        it('should return true for a mouse button that is pressed', function () {
+        it('should return true for a mouse button that is pressed', () => {
             for (const button of buttons) {
                 const mouseDownEvent = new MouseEvent('mousedown', { button });
                 window.dispatchEvent(mouseDownEvent);
@@ -58,10 +58,10 @@ describe('Mouse', function () {
 
     });
 
-    describe('#on', function () {
+    describe('#on', () => {
 
-        it('should handle mousedown events', function (done) {
-            mouse.on(EVENT_MOUSEDOWN, function (event) {
+        it('should handle mousedown events', (done) => {
+            mouse.on(EVENT_MOUSEDOWN, (event) => {
                 expect(event.button).to.equal(MOUSEBUTTON_LEFT);
                 expect(event.event).to.be.an.instanceOf(MouseEvent);
 
@@ -72,8 +72,8 @@ describe('Mouse', function () {
             window.dispatchEvent(mouseDownEvent);
         });
 
-        it('should handle mouseup events', function (done) {
-            mouse.on(EVENT_MOUSEUP, function (event) {
+        it('should handle mouseup events', (done) => {
+            mouse.on(EVENT_MOUSEUP, (event) => {
                 expect(event.button).to.equal(MOUSEBUTTON_LEFT);
                 expect(event.event).to.be.an.instanceOf(MouseEvent);
 
@@ -86,15 +86,15 @@ describe('Mouse', function () {
 
     });
 
-    describe('#wasPressed', function () {
+    describe('#wasPressed', () => {
 
-        it('should return false for all buttons by default', function () {
+        it('should return false for all buttons by default', () => {
             for (const button of buttons) {
                 expect(mouse.wasPressed(button)).to.be.false;
             }
         });
 
-        it('should return true for a mouse button that was pressed', function () {
+        it('should return true for a mouse button that was pressed', () => {
             for (const button of buttons) {
                 const mouseDownEvent = new MouseEvent('mousedown', { button });
                 window.dispatchEvent(mouseDownEvent);
@@ -109,15 +109,15 @@ describe('Mouse', function () {
 
     });
 
-    describe('#wasReleased', function () {
+    describe('#wasReleased', () => {
 
-        it('should return false for all buttons by default', function () {
+        it('should return false for all buttons by default', () => {
             for (const button of buttons) {
                 expect(mouse.wasReleased(button)).to.be.false;
             }
         });
 
-        it('should return true for a mouse button that was released', function () {
+        it('should return true for a mouse button that was released', () => {
             for (const button of buttons) {
                 const mouseDownEvent = new MouseEvent('mousedown', { button });
                 window.dispatchEvent(mouseDownEvent);

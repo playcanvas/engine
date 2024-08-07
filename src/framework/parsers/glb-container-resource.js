@@ -60,7 +60,7 @@ class GlbContainerResource {
     }
 
     static createAsset(assetName, type, resource, index) {
-        const subAsset = new Asset(assetName + '/' + type + '/' + index, type, {
+        const subAsset = new Asset(`${assetName}/${type}/${index}`, type, {
             url: ''
         });
         subAsset.resource = resource;
@@ -207,7 +207,7 @@ class GlbContainerResource {
             Debug.warn(`No variant named ${name} exists in resource`);
             return;
         }
-        const renders = entity.findComponents("render");
+        const renders = entity.findComponents('render');
         for (let i = 0; i < renders.length; i++) {
             const renderComponent = renders[i];
             this._applyMaterialVariant(variant, renderComponent.meshInstances);
@@ -327,7 +327,7 @@ class GlbContainerResource {
         };
 
         const destroyAssets = function (assets) {
-            assets.forEach(function (asset) {
+            assets.forEach((asset) => {
                 destroyAsset(asset);
             });
         };

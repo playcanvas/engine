@@ -5,22 +5,22 @@ import { HTMLCanvasElement } from '@playcanvas/canvas-mock';
 
 import { expect } from 'chai';
 
-describe('SceneRegistry', function () {
+describe('SceneRegistry', () => {
 
     let app;
 
-    beforeEach(function () {
+    beforeEach(() => {
         const canvas = new HTMLCanvasElement(500, 500);
         app = new Application(canvas);
     });
 
-    afterEach(function () {
+    afterEach(() => {
         app.destroy();
     });
 
-    describe('#constructor', function () {
+    describe('#constructor', () => {
 
-        it('creates a new scene registry', function () {
+        it('creates a new scene registry', () => {
             const registry = new SceneRegistry(app);
 
             expect(registry.list().length).to.equal(0);
@@ -28,9 +28,9 @@ describe('SceneRegistry', function () {
 
     });
 
-    describe('#add', function () {
+    describe('#add', () => {
 
-        it('adds a single scene to the registry', function () {
+        it('adds a single scene to the registry', () => {
             const registry = new SceneRegistry(app);
 
             registry.add('New Scene', '/test.json');
@@ -38,7 +38,7 @@ describe('SceneRegistry', function () {
             expect(registry.list().length).to.equal(1);
         });
 
-        it('adds multiple scenes to the registry', function () {
+        it('adds multiple scenes to the registry', () => {
             const registry = new SceneRegistry(app);
             registry.add('New Scene 1', '/test1.json');
             registry.add('New Scene 2', '/test2.json');
@@ -56,9 +56,9 @@ describe('SceneRegistry', function () {
 
     });
 
-    describe('#find', function () {
+    describe('#find', () => {
 
-        it('find', function () {
+        it('find', () => {
             const registry = new SceneRegistry(app);
             registry.add('New Scene', '/test.json');
 
@@ -70,9 +70,9 @@ describe('SceneRegistry', function () {
 
     });
 
-    describe('#findByUrl', function () {
+    describe('#findByUrl', () => {
 
-        it('url index', function () {
+        it('url index', () => {
             const registry = new SceneRegistry(app);
             registry.add('New Scene 1', '/test1.json');
 
@@ -83,9 +83,9 @@ describe('SceneRegistry', function () {
 
     });
 
-    describe('#list', function () {
+    describe('#list', () => {
 
-        it('lists the scenes in the registry', function () {
+        it('lists the scenes in the registry', () => {
             const registry = new SceneRegistry(app);
             registry.add('New Scene 1', '/test1.json');
             registry.add('New Scene 2', '/test2.json');
@@ -100,8 +100,8 @@ describe('SceneRegistry', function () {
     });
 
     const promisedLoadSceneData = function (registry, sceneItemOrNameOrUrl) {
-        return new Promise(function (resolve, reject) {
-            registry.loadSceneData(sceneItemOrNameOrUrl, function (err, sceneItem) {
+        return new Promise((resolve, reject) => {
+            registry.loadSceneData(sceneItemOrNameOrUrl, (err, sceneItem) => {
                 if (err) {
                     resolve(err);
                 }
@@ -111,11 +111,11 @@ describe('SceneRegistry', function () {
         });
     };
 
-    describe('#loadSceneData', function () {
+    describe('#loadSceneData', () => {
 
         const assetPath = 'http://localhost:3000/test/test-assets/';
 
-        it('load and cache, check data is valid, unload data, check data is removed with SceneItem', async function () {
+        it('load and cache, check data is valid, unload data, check data is removed with SceneItem', async () => {
             const registry = new SceneRegistry(app);
             registry.add('New Scene 1', `${assetPath}scene.json`);
 
@@ -131,7 +131,7 @@ describe('SceneRegistry', function () {
             expect(sceneItem._loading).to.equal(false);
         });
 
-        it('load and cache, check data is valid, unload data, check data is removed with Urls', async function () {
+        it('load and cache, check data is valid, unload data, check data is removed with Urls', async () => {
             const registry = new SceneRegistry(app);
             const sceneUrl = `${assetPath}scene.json`;
             registry.add('New Scene 1', sceneUrl);
@@ -146,7 +146,7 @@ describe('SceneRegistry', function () {
             expect(sceneItem._loading).to.equal(false);
         });
 
-        it('try to load scene data that by name', async function () {
+        it('try to load scene data that by name', async () => {
             const registry = new SceneRegistry(app);
             registry.add('New Scene 1', `${assetPath}scene.json`);
 
@@ -157,7 +157,7 @@ describe('SceneRegistry', function () {
             expect(sceneItem._loading).to.equal(false);
         });
 
-        it('try to load scene data that by URL', async function () {
+        it('try to load scene data that by URL', async () => {
             const registry = new SceneRegistry(app);
             registry.add('New Scene 1', `${assetPath}scene.json`);
 
@@ -169,9 +169,9 @@ describe('SceneRegistry', function () {
         });
     });
 
-    describe('#remove', function () {
+    describe('#remove', () => {
 
-        it('remove', function () {
+        it('remove', () => {
             const registry = new SceneRegistry(app);
             registry.add('New Scene', '/test.json');
 
@@ -181,7 +181,7 @@ describe('SceneRegistry', function () {
             expect(registry.find('New Scene')).to.equal(null);
         });
 
-        it('remove middle value', function () {
+        it('remove middle value', () => {
             const registry = new SceneRegistry(app);
             registry.add('New Scene 1', '/test1.json');
             registry.add('New Scene 2', '/test2.json');
@@ -197,7 +197,7 @@ describe('SceneRegistry', function () {
             expect(registry.find('New Scene 3').url).to.equal('/test3.json');
         });
 
-        it('remove middle, url index', function () {
+        it('remove middle, url index', () => {
             const registry = new SceneRegistry(app);
             registry.add('New Scene 1', '/test1.json');
             registry.add('New Scene 2', '/test2.json');
