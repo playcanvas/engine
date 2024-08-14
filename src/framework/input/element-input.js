@@ -4,6 +4,7 @@ import { Vec4 } from '../../core/math/vec4.js';
 import { Ray } from '../../core/shape/ray.js';
 
 import { Mouse } from '../../platform/input/mouse.js';
+import { getTouchTargetCoords } from '../../platform/input/touch-event.js';
 
 import { getApplication } from '../globals.js';
 
@@ -578,7 +579,7 @@ class ElementInput {
                     continue;
                 }
 
-                const coords = this._calcTouchCoords(event.changedTouches[j]);
+                const coords = getTouchTargetCoords(event.changedTouches[j]);
 
                 const element = this._getTargetElementByCoords(camera, coords.x, coords.y);
                 if (element) {
@@ -651,7 +652,7 @@ class ElementInput {
 
             // check if touch was released over previously touch
             // element in order to fire click event
-            const coords = this._calcTouchCoords(touch);
+            const coords = getTouchTargetCoords(touch);
 
             for (let c = cameras.length - 1; c >= 0; c--) {
                 const hovered = this._getTargetElementByCoords(cameras[c], coords.x, coords.y);
@@ -684,7 +685,7 @@ class ElementInput {
             const oldTouchInfo = this._touchedElements[touch.identifier];
 
             if (oldTouchInfo) {
-                const coords = this._calcTouchCoords(touch);
+                const coords = getTouchTargetCoords(touch);
 
                 // Fire touchleave if we've left the previously touched element
                 if ((!newTouchInfo || newTouchInfo.element !== oldTouchInfo.element) && !this._touchesForWhichTouchLeaveHasFired[touch.identifier]) {
@@ -912,28 +913,6 @@ class ElementInput {
         const top = Math.floor(rect.top);
         targetX = (event.clientX - left);
         targetY = (event.clientY - top);
-    }
-
-    _calcTouchCoords(touch) {
-        let totalOffsetX = 0;
-        let totalOffsetY = 0;
-        let target = touch.target;
-        while (!(target instanceof HTMLElement)) {
-            target = target.parentNode;
-        }
-        let currentElement = target;
-
-        do {
-            totalOffsetX += currentElement.offsetLeft - currentElement.scrollLeft;
-            totalOffsetY += currentElement.offsetTop - currentElement.scrollTop;
-            currentElement = currentElement.offsetParent;
-        } while (currentElement);
-
-        // calculate coords and scale them to the graphicsDevice size
-        return {
-            x: (touch.pageX - totalOffsetX),
-            y: (touch.pageY - totalOffsetY)
-        };
     }
 
     _sortElements(a, b) {
