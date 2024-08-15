@@ -16,14 +16,10 @@ function getTouchTargetCoords(touch) {
         target = target.parentNode;
     }
 
-    if (target) {
-        let currentElement = target;
-
-        do {
-            totalOffsetX += currentElement.offsetLeft - currentElement.scrollLeft;
-            totalOffsetY += currentElement.offsetTop - currentElement.scrollTop;
-            currentElement = currentElement.offsetParent;
-        } while (currentElement);
+    while(target) {
+        totalOffsetX += target.offsetLeft - target.scrollLeft;
+        totalOffsetY += target.offsetTop - target.scrollTop;
+        target = target.offsetParent;
     }
 
     return {
