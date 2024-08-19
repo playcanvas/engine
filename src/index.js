@@ -122,7 +122,7 @@ export { SoundInstance3d } from './platform/sound/instance3d.js';
 
 // SCENE
 export * from './scene/constants.js';
-export { drawQuadWithShader, drawTexture } from './scene/graphics/quad-render-utils.js';
+export { drawQuadWithShader } from './scene/graphics/quad-render-utils.js';
 export { Batch } from './scene/batching/batch.js';
 export { BatchGroup } from './scene/batching/batch-group.js';
 export { SkinBatchInstance } from './scene/batching/skin-batch-instance.js';

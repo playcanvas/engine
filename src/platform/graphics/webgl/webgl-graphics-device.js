@@ -1114,9 +1114,9 @@ class WebglGraphicsDevice extends GraphicsDevice {
         const h = source ? source.height : dest ? dest.height : this.height;
 
         gl.blitFramebuffer(0, 0, w, h,
-            0, 0, w, h,
-            (color ? gl.COLOR_BUFFER_BIT : 0) | (depth ? gl.DEPTH_BUFFER_BIT : 0),
-            gl.NEAREST);
+                           0, 0, w, h,
+                           (color ? gl.COLOR_BUFFER_BIT : 0) | (depth ? gl.DEPTH_BUFFER_BIT : 0),
+                           gl.NEAREST);
 
         // TODO: not sure we need to restore the prev target, as this only should run in-between render passes
         this.renderTarget = prevRt;
@@ -1125,38 +1125,6 @@ class WebglGraphicsDevice extends GraphicsDevice {
         DebugGraphics.popGpuMarker(this);
 
         return true;
-    }
-
-    /**
-     * Get copy shader for efficient rendering of fullscreen-quad with texture.
-     *
-     * @returns {Shader} The copy shader (based on `fullscreenQuadVS` and `outputTex2DPS` in
-     * `shaderChunks`).
-     * @ignore
-     */
-    getCopyShader() {
-        if (!this._copyShader) {
-            this._copyShader = new Shader(this, ShaderUtils.createDefinition(this, {
-                name: 'outputTex2D',
-                vertexCode: /* glsl */`
-                    attribute vec2 vertex_position;
-                    varying vec2 vUv0;
-                    void main(void)
-                    {
-                        gl_Position = vec4(vertex_position, 0.5, 1.0);
-                        vUv0 = vertex_position.xy*0.5+0.5;
-                    }
-                `,
-                fragmentCode: /* glsl */`
-                    varying vec2 vUv0;
-                    uniform sampler2D source;
-                    void main(void) {
-                        gl_FragColor = texture2D(source, vUv0);
-                    }
-                `
-            }));
-        }
-        return this._copyShader;
     }
 
     frameStart() {
