@@ -8,8 +8,7 @@ import {
     BLENDMODE_CONSTANT, BLENDMODE_ONE_MINUS_CONSTANT,
     PIXELFORMAT_LA8, PIXELFORMAT_RGB565, PIXELFORMAT_RGBA5551, PIXELFORMAT_RGBA4, PIXELFORMAT_RGB8, PIXELFORMAT_RGBA8,
     PIXELFORMAT_SRGB8, PIXELFORMAT_SRGBA8,
-    TEXTURETYPE_DEFAULT, TEXTURETYPE_RGBM, TEXTURETYPE_SWIZZLEGGGR,
-    TYPE_INT8, TYPE_UINT8, TYPE_INT16, TYPE_UINT16, TYPE_INT32, TYPE_UINT32, TYPE_FLOAT32
+    TEXTURETYPE_DEFAULT, TEXTURETYPE_RGBM, TEXTURETYPE_SWIZZLEGGGR
 } from '../platform/graphics/constants.js';
 import { drawQuadWithShader } from '../scene/graphics/quad-render-utils.js';
 import { shaderChunks } from '../scene/shader-lib/chunks/chunks.js';
@@ -62,11 +61,6 @@ import { RigidBodyComponentSystem } from '../framework/components/rigid-body/sys
 import { LitShader } from '../scene/shader-lib/programs/lit-shader.js';
 import { Geometry } from '../scene/geometry/geometry.js';
 
-// CORE
-export const LINEBATCH_WORLD = 0;
-export const LINEBATCH_OVERLAY = 1;
-export const LINEBATCH_GIZMO = 2;
-
 // MATH
 
 Vec2.prototype.scale = Vec2.prototype.mulScalar;
@@ -76,14 +70,6 @@ Vec3.prototype.scale = Vec3.prototype.mulScalar;
 Vec4.prototype.scale = Vec4.prototype.mulScalar;
 
 // GRAPHICS
-
-export const ELEMENTTYPE_INT8 = TYPE_INT8;
-export const ELEMENTTYPE_UINT8 = TYPE_UINT8;
-export const ELEMENTTYPE_INT16 = TYPE_INT16;
-export const ELEMENTTYPE_UINT16 = TYPE_UINT16;
-export const ELEMENTTYPE_INT32 = TYPE_INT32;
-export const ELEMENTTYPE_UINT32 = TYPE_UINT32;
-export const ELEMENTTYPE_FLOAT32 = TYPE_FLOAT32;
 
 export const PIXELFORMAT_L8_A8 = PIXELFORMAT_LA8;
 export const PIXELFORMAT_R5_G6_B5 = PIXELFORMAT_RGB565;
@@ -98,12 +84,6 @@ export const BLENDMODE_CONSTANT_COLOR = BLENDMODE_CONSTANT;
 export const BLENDMODE_ONE_MINUS_CONSTANT_COLOR = BLENDMODE_ONE_MINUS_CONSTANT;
 export const BLENDMODE_CONSTANT_ALPHA = BLENDMODE_CONSTANT;
 export const BLENDMODE_ONE_MINUS_CONSTANT_ALPHA = BLENDMODE_ONE_MINUS_CONSTANT;
-
-export function ContextCreationError(message) {
-    this.name = 'ContextCreationError';
-    this.message = (message || '');
-}
-ContextCreationError.prototype = Error.prototype;
 
 const _viewport = new Vec4();
 
@@ -282,17 +262,6 @@ Object.defineProperties(Texture.prototype, {
         get: function () {
             Debug.deprecated('pc.Texture#_glTexture is no longer available, use Use pc.Texture.impl._glTexture instead.');
             return this.impl._glTexture;
-        }
-    },
-
-    autoMipmap: {
-        get: function () {
-            Debug.deprecated('pc.Texture#autoMipmap is deprecated, use pc.Texture#mipmaps instead.');
-            return this._mipmaps;
-        },
-        set: function (value) {
-            Debug.deprecated('pc.Texture#autoMipmap is deprecated, use pc.Texture#mipmaps instead.');
-            this._mipmaps = value;
         }
     }
 });
