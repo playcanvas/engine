@@ -35,8 +35,6 @@ import { WebglIndexBuffer } from './webgl-index-buffer.js';
 import { WebglShader } from './webgl-shader.js';
 import { WebglTexture } from './webgl-texture.js';
 import { WebglRenderTarget } from './webgl-render-target.js';
-import { ShaderUtils } from '../shader-utils.js';
-import { Shader } from '../shader.js';
 import { BlendState } from '../blend-state.js';
 import { DepthState } from '../depth-state.js';
 import { StencilParameters } from '../stencil-parameters.js';
@@ -1114,9 +1112,9 @@ class WebglGraphicsDevice extends GraphicsDevice {
         const h = source ? source.height : dest ? dest.height : this.height;
 
         gl.blitFramebuffer(0, 0, w, h,
-                           0, 0, w, h,
-                           (color ? gl.COLOR_BUFFER_BIT : 0) | (depth ? gl.DEPTH_BUFFER_BIT : 0),
-                           gl.NEAREST);
+            0, 0, w, h,
+            (color ? gl.COLOR_BUFFER_BIT : 0) | (depth ? gl.DEPTH_BUFFER_BIT : 0),
+            gl.NEAREST);
 
         // TODO: not sure we need to restore the prev target, as this only should run in-between render passes
         this.renderTarget = prevRt;
