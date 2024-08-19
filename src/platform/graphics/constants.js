@@ -2223,6 +2223,17 @@ export const DISPLAYFORMAT_LDR_SRGB = 'ldr_srgb';
  */
 export const DISPLAYFORMAT_HDR = 'hdr';
 
+// internal flags of the texture properties
+export const TEXPROPERTY_MIN_FILTER = 1;
+export const TEXPROPERTY_MAG_FILTER = 2;
+export const TEXPROPERTY_ADDRESS_U = 4;
+export const TEXPROPERTY_ADDRESS_V = 8;
+export const TEXPROPERTY_ADDRESS_W = 16;
+export const TEXPROPERTY_COMPARE_ON_READ = 32;
+export const TEXPROPERTY_COMPARE_FUNC = 64;
+export const TEXPROPERTY_ANISOTROPY = 128;
+export const TEXPROPERTY_ALL = 255; // 1 | 2 | 4 | 8 | 16 | 32 | 64 | 128
+
 // indices of commonly used bind groups, sorted from the least commonly changing to avoid internal rebinding
 export const BINDGROUP_VIEW = 0;        // view bind group, textures, samplers and uniforms
 export const BINDGROUP_MESH = 1;        // mesh bind group - textures and samplers
