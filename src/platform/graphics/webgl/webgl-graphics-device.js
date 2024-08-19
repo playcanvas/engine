@@ -22,7 +22,9 @@ import {
     UNIFORMTYPE_IVEC4ARRAY, UNIFORMTYPE_BVEC4ARRAY, UNIFORMTYPE_UVEC4ARRAY, UNIFORMTYPE_MAT4ARRAY,
     semanticToLocation, getPixelFormatArrayType,
     UNIFORMTYPE_TEXTURE2D_ARRAY,
-    DEVICETYPE_WEBGL2
+    DEVICETYPE_WEBGL2,
+    TEXPROPERTY_MIN_FILTER, TEXPROPERTY_MAG_FILTER, TEXPROPERTY_ADDRESS_U, TEXPROPERTY_ADDRESS_V,
+    TEXPROPERTY_ADDRESS_W, TEXPROPERTY_COMPARE_ON_READ, TEXPROPERTY_COMPARE_FUNC, TEXPROPERTY_ANISOTROPY
 } from '../constants.js';
 import { GraphicsDevice } from '../graphics-device.js';
 import { RenderTarget } from '../render-target.js';
@@ -1494,7 +1496,7 @@ class WebglGraphicsDevice extends GraphicsDevice {
         const flags = texture.impl.dirtyParameterFlags;
         const target = texture.impl._glTarget;
 
-        if (flags & 1) {
+        if (flags & TEXPROPERTY_MIN_FILTER) {
             let filter = texture._minFilter;
             if (!texture._mipmaps || (texture._compressed && texture._levels.length === 1)) {
                 if (filter === FILTER_NEAREST_MIPMAP_NEAREST || filter === FILTER_NEAREST_MIPMAP_LINEAR) {
@@ -1505,25 +1507,25 @@ class WebglGraphicsDevice extends GraphicsDevice {
             }
             gl.texParameteri(target, gl.TEXTURE_MIN_FILTER, this.glFilter[filter]);
         }
-        if (flags & 2) {
+        if (flags & TEXPROPERTY_MAG_FILTER) {
             gl.texParameteri(target, gl.TEXTURE_MAG_FILTER, this.glFilter[texture._magFilter]);
         }
-        if (flags & 4) {
+        if (flags & TEXPROPERTY_ADDRESS_U) {
             gl.texParameteri(target, gl.TEXTURE_WRAP_S, this.glAddress[texture._addressU]);
         }
-        if (flags & 8) {
+        if (flags & TEXPROPERTY_ADDRESS_V) {
             gl.texParameteri(target, gl.TEXTURE_WRAP_T, this.glAddress[texture._addressV]);
         }
-        if (flags & 16) {
+        if (flags & TEXPROPERTY_ADDRESS_W) {
             gl.texParameteri(target, gl.TEXTURE_WRAP_R, this.glAddress[texture._addressW]);
         }
-        if (flags & 32) {
+        if (flags & TEXPROPERTY_COMPARE_ON_READ) {
             gl.texParameteri(target, gl.TEXTURE_COMPARE_MODE, texture._compareOnRead ? gl.COMPARE_REF_TO_TEXTURE : gl.NONE);
         }
-        if (flags & 64) {
+        if (flags & TEXPROPERTY_COMPARE_FUNC) {
             gl.texParameteri(target, gl.TEXTURE_COMPARE_FUNC, this.glComparison[texture._compareFunc]);
         }
-        if (flags & 128) {
+        if (flags & TEXPROPERTY_ANISOTROPY) {
             const ext = this.extTextureFilterAnisotropic;
             if (ext) {
                 gl.texParameterf(target, ext.TEXTURE_MAX_ANISOTROPY_EXT, math.clamp(Math.round(texture._anisotropy), 1, this.maxAnisotropy));
