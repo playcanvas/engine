@@ -21,7 +21,7 @@ class BakeLight {
 
         if (this.scene.clusteredLightingEnabled) {
             // if clustered shadows are disabled, disable them on the light
-            light.castShadows = light.castShadows && lightingParams.shadowsEnabled;
+            light.castShadows = light.bakeShadows && lightingParams.shadowsEnabled;
         }
 
         // bounds for non-directional light
