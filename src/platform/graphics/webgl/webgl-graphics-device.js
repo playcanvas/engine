@@ -43,6 +43,7 @@ import { TextureUtils } from '../texture-utils.js';
 
 /**
  * @import { RenderPass } from '../render-pass.js'
+ * @import { Shader } from '../shader.js'
  * @import { VertexBuffer } from '../vertex-buffer.js'
  */
 
