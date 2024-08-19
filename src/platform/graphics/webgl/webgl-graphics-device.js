@@ -35,8 +35,6 @@ import { WebglIndexBuffer } from './webgl-index-buffer.js';
 import { WebglShader } from './webgl-shader.js';
 import { WebglTexture } from './webgl-texture.js';
 import { WebglRenderTarget } from './webgl-render-target.js';
-import { ShaderUtils } from '../shader-utils.js';
-import { Shader } from '../shader.js';
 import { BlendState } from '../blend-state.js';
 import { DepthState } from '../depth-state.js';
 import { StencilParameters } from '../stencil-parameters.js';
@@ -45,6 +43,7 @@ import { TextureUtils } from '../texture-utils.js';
 
 /**
  * @import { RenderPass } from '../render-pass.js'
+ * @import { Shader } from '../shader.js'
  * @import { VertexBuffer } from '../vertex-buffer.js'
  */
 
@@ -1125,38 +1124,6 @@ class WebglGraphicsDevice extends GraphicsDevice {
         DebugGraphics.popGpuMarker(this);
 
         return true;
-    }
-
-    /**
-     * Get copy shader for efficient rendering of fullscreen-quad with texture.
-     *
-     * @returns {Shader} The copy shader (based on `fullscreenQuadVS` and `outputTex2DPS` in
-     * `shaderChunks`).
-     * @ignore
-     */
-    getCopyShader() {
-        if (!this._copyShader) {
-            this._copyShader = new Shader(this, ShaderUtils.createDefinition(this, {
-                name: 'outputTex2D',
-                vertexCode: /* glsl */`
-                    attribute vec2 vertex_position;
-                    varying vec2 vUv0;
-                    void main(void)
-                    {
-                        gl_Position = vec4(vertex_position, 0.5, 1.0);
-                        vUv0 = vertex_position.xy*0.5+0.5;
-                    }
-                `,
-                fragmentCode: /* glsl */`
-                    varying vec2 vUv0;
-                    uniform sampler2D source;
-                    void main(void) {
-                        gl_FragColor = texture2D(source, vUv0);
-                    }
-                `
-            }));
-        }
-        return this._copyShader;
     }
 
     frameStart() {
