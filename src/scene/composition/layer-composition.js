@@ -77,7 +77,7 @@ class LayerComposition extends EventHandler {
     subLayerEnabled = []; // more granular control on top of layer.enabled (ANDed)
 
     /**
-     * An array of {@link CameraComponent}
+     * An array of {@link CameraComponent}s.
      *
      * @type {CameraComponent[]}
      * @ignore
