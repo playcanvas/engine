@@ -225,7 +225,7 @@ class MeshInstance {
     visible = true;
 
     /**
-     * Read this value in {@link Layer#onPostCull} to determine if the object is actually going to
+     * Read this value in {@link CameraComponent#onPostCull} to determine if the object is actually going to
      * be rendered.
      *
      * @type {boolean}

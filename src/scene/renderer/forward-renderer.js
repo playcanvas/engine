@@ -779,7 +779,7 @@ class ForwardRenderer extends Renderer {
             visible,
             splitLights,
             shaderPass,
-            layer?.onDrawCall,
+            null,
             layer,
             flipFaces);
 
