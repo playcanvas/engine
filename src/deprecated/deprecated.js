@@ -513,16 +513,30 @@ Object.defineProperty(Scene.prototype, 'models', {
     }
 });
 
-Object.defineProperty(Layer.prototype, 'renderTarget', {
-    set: function (rt) {
-        Debug.deprecated('pc.Layer#renderTarget is deprecated. Set the render target on the camera instead.');
-        this._renderTarget = rt;
-        this._dirtyComposition = true;
-    },
-    get: function () {
-        return this._renderTarget;
-    }
-});
+// A helper function to add deprecated set and get property on a Layer
+function _removedLayerProperty(name) {
+    Object.defineProperty(Layer.prototype, name, {
+        set: function (value) {
+            Debug.errorOnce(`pc.Layer#${name} has been removed.`);
+        },
+        get: function () {
+            Debug.errorOnce(`pc.Layer#${name} has been removed.`);
+            return undefined;
+        }
+    });
+}
+
+_removedLayerProperty('renderTarget');
+_removedLayerProperty('onPreCull');
+_removedLayerProperty('onPreRender');
+_removedLayerProperty('onPreRenderOpaque');
+_removedLayerProperty('onPreRenderTransparent');
+_removedLayerProperty('onPostCull');
+_removedLayerProperty('onPostRender');
+_removedLayerProperty('onPostRenderOpaque');
+_removedLayerProperty('onPostRenderTransparent');
+_removedLayerProperty('onDrawCall');
+_removedLayerProperty('layerReference');
 
 Object.defineProperty(Batch.prototype, 'model', {
     get: function () {

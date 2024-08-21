@@ -276,98 +276,6 @@ class Layer {
         this._clearStencilBuffer = !!options.clearStencilBuffer;
 
         /**
-         * Custom function that is called before visibility culling is performed for this layer.
-         * Useful, for example, if you want to modify camera projection while still using the same
-         * camera and make frustum culling work correctly with it (see
-         * {@link CameraComponent#calculateTransform} and {@link CameraComponent#calculateProjection}).
-         * This function will receive camera index as the only argument. You can get the actual
-         * camera being used by looking up {@link LayerComposition#cameras} with this index.
-         *
-         * @type {Function}
-         */
-        this.onPreCull = options.onPreCull;
-
-        /**
-         * Custom function that is called before this layer is rendered. Useful, for example, for
-         * reacting on screen size changes. This function is called before the first occurrence of
-         * this layer in {@link LayerComposition}. It will receive camera index as the only
-         * argument. You can get the actual camera being used by looking up
-         * {@link LayerComposition#cameras} with this index.
-         *
-         * @type {Function}
-         */
-        this.onPreRender = options.onPreRender;
-
-        /**
-         * Custom function that is called before opaque mesh instances (not semi-transparent) in
-         * this layer are rendered. This function will receive camera index as the only argument.
-         * You can get the actual camera being used by looking up {@link LayerComposition#cameras}
-         * with this index.
-         *
-         * @type {Function}
-         */
-        this.onPreRenderOpaque = options.onPreRenderOpaque;
-
-        /**
-         * Custom function that is called before semi-transparent mesh instances in this layer are
-         * rendered. This function will receive camera index as the only argument. You can get the
-         * actual camera being used by looking up {@link LayerComposition#cameras} with this index.
-         *
-         * @type {Function}
-         */
-        this.onPreRenderTransparent = options.onPreRenderTransparent;
-
-        /**
-         * Custom function that is called after visibility culling is performed for this layer.
-         * Useful for reverting changes done in {@link Layer#onPreCull} and determining final mesh
-         * instance visibility (see {@link MeshInstance#visibleThisFrame}). This function will
-         * receive camera index as the only argument. You can get the actual camera being used by
-         * looking up {@link LayerComposition#cameras} with this index.
-         *
-         * @type {Function}
-         */
-        this.onPostCull = options.onPostCull;
-
-        /**
-         * Custom function that is called after this layer is rendered. Useful to revert changes
-         * made in {@link Layer#onPreRender}. This function is called after the last occurrence of this
-         * layer in {@link LayerComposition}. It will receive camera index as the only argument.
-         * You can get the actual camera being used by looking up {@link LayerComposition#cameras}
-         * with this index.
-         *
-         * @type {Function}
-         */
-        this.onPostRender = options.onPostRender;
-
-        /**
-         * Custom function that is called after opaque mesh instances (not semi-transparent) in
-         * this layer are rendered. This function will receive camera index as the only argument.
-         * You can get the actual camera being used by looking up {@link LayerComposition#cameras}
-         * with this index.
-         *
-         * @type {Function}
-         */
-        this.onPostRenderOpaque = options.onPostRenderOpaque;
-
-        /**
-         * Custom function that is called after semi-transparent mesh instances in this layer are
-         * rendered. This function will receive camera index as the only argument. You can get the
-         * actual camera being used by looking up {@link LayerComposition#cameras} with this index.
-         *
-         * @type {Function}
-         */
-        this.onPostRenderTransparent = options.onPostRenderTransparent;
-
-        /**
-         * Custom function that is called before every mesh instance in this layer is rendered. It
-         * is not recommended to set this function when rendering many objects every frame due to
-         * performance reasons.
-         *
-         * @type {Function}
-         */
-        this.onDrawCall = options.onDrawCall;
-
-        /**
          * Custom function that is called after the layer has been enabled. This happens when:
          *
          * - The layer is created with {@link Layer#enabled} set to true (which is the default value).
@@ -395,19 +303,11 @@ class Layer {
         }
 
         /**
-         * Make this layer render the same mesh instances that another layer does instead of having
-         * its own mesh instance list. Both layers must share cameras. Frustum culling is only
-         * performed for one layer. Useful for rendering multiple passes using different shaders.
-         *
-         * @type {Layer}
-         */
-        this.layerReference = options.layerReference; // should use the same camera
-
-        /**
          * @type {Function|null}
          * @ignore
          */
         this.customSortCallback = null;
+
         /**
          * @type {Function|null}
          * @ignore

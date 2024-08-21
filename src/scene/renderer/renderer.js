@@ -1133,12 +1133,18 @@ class Renderer {
 
         // for all cameras
         const numCameras = comp.cameras.length;
+        this._camerasRendered += numCameras;
+
         for (let i = 0; i < numCameras; i++) {
             const camera = comp.cameras[i];
 
-            let currentRenderTarget;
-            let cameraChanged = true;
-            this._camerasRendered++;
+            // callback before the camera is culling
+            camera.onPreCull?.();
+
+            // update camera and frustum
+            const renderTarget = camera.renderTarget;
+            camera.frameUpdate(renderTarget);
+            this.updateCameraFrustum(camera.camera);
 
             // for all of its enabled layers
             const layerIds = camera.layers;
@@ -1146,30 +1152,18 @@ class Renderer {
                 const layer = comp.getLayerById(layerIds[j]);
                 if (layer && layer.enabled) {
 
-                    // update camera and frustum when the render target changes
-                    // TODO: This is done here to handle the backwards compatibility with the deprecated Layer.renderTarget,
-                    // when this is no longer needed, this code can be moved up to execute once per camera.
-                    const renderTarget = camera.renderTarget ?? layer.renderTarget;
-                    if (cameraChanged || renderTarget !== currentRenderTarget) {
-                        cameraChanged = false;
-                        currentRenderTarget = renderTarget;
-                        camera.frameUpdate(renderTarget);
-                        this.updateCameraFrustum(camera.camera);
-                    }
-
                     // cull each layer's non-directional lights once with each camera
                     // lights aren't collected anywhere, but marked as visible
                     this.cullLights(camera.camera, layer._lights);
 
                     // cull mesh instances
-                    layer.onPreCull?.(comp.camerasMap.get(camera));
-
                     const culledInstances = layer.getCulledInstances(camera.camera);
                     this.cull(camera.camera, layer.meshInstances, culledInstances);
-
-                    layer.onPostCull?.(comp.camerasMap.get(camera));
                 }
             }
+
+            // callback after the camera is done with culling
+            camera.onPostCull?.();
         }
 
         // update shadow / cookie atlas allocation for the visible lights. Update it after the ligthts were culled,
@@ -1307,10 +1301,6 @@ class Renderer {
         // #endif
 
         const len = comp.layerList.length;
-        for (let i = 0; i < len; i++) {
-            comp.layerList[i]._postRenderCounter = 0;
-        }
-
         const scene = this.scene;
         const shaderVersion = scene._shaderVersion;
         for (let i = 0; i < len; i++) {
@@ -1322,16 +1312,6 @@ class Renderer {
             layer._shadowDrawCalls = 0;
             layer._renderTime = 0;
             // #endif
-
-            layer._preRenderCalledForCameras = 0;
-            layer._postRenderCalledForCameras = 0;
-            const transparent = comp.subLayerList[i];
-            if (transparent) {
-                layer._postRenderCounter |= 2;
-            } else {
-                layer._postRenderCounter |= 1;
-            }
-            layer._postRenderCounterMax = layer._postRenderCounter;
         }
 
         // update composition
