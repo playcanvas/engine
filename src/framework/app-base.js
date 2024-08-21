@@ -1925,8 +1925,6 @@ class AppBase extends EventHandler {
 
         this._entityIndex = {};
 
-        this.defaultLayerDepth.onPreRenderOpaque = null;
-        this.defaultLayerDepth.onPostRenderOpaque = null;
         this.defaultLayerDepth.onDisable = null;
         this.defaultLayerDepth.onEnable = null;
         this.defaultLayerDepth = null;

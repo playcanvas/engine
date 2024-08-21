@@ -56,7 +56,7 @@ class CameraComponent extends Component {
     /**
      * Custom function that is called when postprocessing should execute.
      *
-     * @type {Function}
+     * @type {Function|null}
      * @ignore
      */
     onPostprocessing = null;
@@ -64,16 +64,30 @@ class CameraComponent extends Component {
     /**
      * Custom function that is called before the camera renders the scene.
      *
-     * @type {Function}
+     * @type {Function|null}
      */
     onPreRender = null;
 
     /**
      * Custom function that is called after the camera renders the scene.
      *
-     * @type {Function}
+     * @type {Function|null}
      */
     onPostRender = null;
+
+    /**
+     * Custom function that is called before visibility culling is performed for this camera.
+     *
+     * @type {Function|null}
+     */
+    onPreCull = null;
+
+    /**
+     * Custom function that is called after visibility culling is performed for this camera.
+     *
+     * @type {Function|null}
+     */
+    onPostCull = null;
 
     /**
      * A counter of requests of depth map rendering.

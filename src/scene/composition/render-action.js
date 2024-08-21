@@ -22,7 +22,7 @@ class RenderAction {
         this.camera = null;
 
         /**
-         * render target this render action renders to (taken from either camera or layer)
+         * render target this render action renders to
          *
          * @type {RenderTarget|null}
          */
