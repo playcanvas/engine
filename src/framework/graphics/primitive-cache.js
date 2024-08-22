@@ -7,20 +7,29 @@ import { Mesh } from '../../scene/mesh.js';
 import { BoxGeometry } from '../../scene/geometry/box-geometry.js';
 import { SphereGeometry } from '../../scene/geometry/sphere-geometry.js';
 import { PlaneGeometry } from '../../scene/geometry/plane-geometry.js';
+import { DeviceCache } from '../../platform/graphics/device-cache.js';
 
-// cached mesh primitives
-const shapePrimitives = [];
+// class used to hold primitives in the device cache
+class PrimitivesCache {
+    map = new Map();
+
+    // destroy all created primitives when the device is destroyed
+    destroy(device) {
+        this.map.forEach(primData => primData.mesh.destroy());
+    }
+}
+
+const _primitivesCache = new DeviceCache();
 
 // returns Primitive data, used by ModelComponent and RenderComponent
-function getShapePrimitive(device, type) {
+const getShapePrimitive = (device, type) => {
 
-    // find in cache
-    let primData = null;
-    for (let i = 0; i < shapePrimitives.length; i++) {
-        if (shapePrimitives[i].type === type && shapePrimitives[i].device === device) {
-            primData = shapePrimitives[i].primData;
-        }
-    }
+    // cache for the device
+    const cache = _primitivesCache.get(device, () => {
+        return new PrimitivesCache();
+    });
+
+    let primData = cache.map.get(type);
 
     // not in cache, create new
     if (!primData) {
@@ -72,15 +81,11 @@ function getShapePrimitive(device, type) {
 
         primData = { mesh: mesh, area: area };
 
-        // add to cache
-        shapePrimitives.push({
-            type: type,
-            device: device,
-            primData: primData
-        });
+        cache.map.set(type, primData);
+
     }
 
     return primData;
-}
+};
 
 export { getShapePrimitive };

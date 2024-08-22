@@ -22,7 +22,9 @@ import {
     UNIFORMTYPE_IVEC4ARRAY, UNIFORMTYPE_BVEC4ARRAY, UNIFORMTYPE_UVEC4ARRAY, UNIFORMTYPE_MAT4ARRAY,
     semanticToLocation, getPixelFormatArrayType,
     UNIFORMTYPE_TEXTURE2D_ARRAY,
-    DEVICETYPE_WEBGL2
+    DEVICETYPE_WEBGL2,
+    TEXPROPERTY_MIN_FILTER, TEXPROPERTY_MAG_FILTER, TEXPROPERTY_ADDRESS_U, TEXPROPERTY_ADDRESS_V,
+    TEXPROPERTY_ADDRESS_W, TEXPROPERTY_COMPARE_ON_READ, TEXPROPERTY_COMPARE_FUNC, TEXPROPERTY_ANISOTROPY
 } from '../constants.js';
 import { GraphicsDevice } from '../graphics-device.js';
 import { RenderTarget } from '../render-target.js';
@@ -33,8 +35,6 @@ import { WebglIndexBuffer } from './webgl-index-buffer.js';
 import { WebglShader } from './webgl-shader.js';
 import { WebglTexture } from './webgl-texture.js';
 import { WebglRenderTarget } from './webgl-render-target.js';
-import { ShaderUtils } from '../shader-utils.js';
-import { Shader } from '../shader.js';
 import { BlendState } from '../blend-state.js';
 import { DepthState } from '../depth-state.js';
 import { StencilParameters } from '../stencil-parameters.js';
@@ -43,6 +43,7 @@ import { TextureUtils } from '../texture-utils.js';
 
 /**
  * @import { RenderPass } from '../render-pass.js'
+ * @import { Shader } from '../shader.js'
  * @import { VertexBuffer } from '../vertex-buffer.js'
  */
 
@@ -1125,38 +1126,6 @@ class WebglGraphicsDevice extends GraphicsDevice {
         return true;
     }
 
-    /**
-     * Get copy shader for efficient rendering of fullscreen-quad with texture.
-     *
-     * @returns {Shader} The copy shader (based on `fullscreenQuadVS` and `outputTex2DPS` in
-     * `shaderChunks`).
-     * @ignore
-     */
-    getCopyShader() {
-        if (!this._copyShader) {
-            this._copyShader = new Shader(this, ShaderUtils.createDefinition(this, {
-                name: 'outputTex2D',
-                vertexCode: /* glsl */`
-                    attribute vec2 vertex_position;
-                    varying vec2 vUv0;
-                    void main(void)
-                    {
-                        gl_Position = vec4(vertex_position, 0.5, 1.0);
-                        vUv0 = vertex_position.xy*0.5+0.5;
-                    }
-                `,
-                fragmentCode: /* glsl */`
-                    varying vec2 vUv0;
-                    uniform sampler2D source;
-                    void main(void) {
-                        gl_FragColor = texture2D(source, vUv0);
-                    }
-                `
-            }));
-        }
-        return this._copyShader;
-    }
-
     frameStart() {
         super.frameStart();
 
@@ -1494,7 +1463,7 @@ class WebglGraphicsDevice extends GraphicsDevice {
         const flags = texture.impl.dirtyParameterFlags;
         const target = texture.impl._glTarget;
 
-        if (flags & 1) {
+        if (flags & TEXPROPERTY_MIN_FILTER) {
             let filter = texture._minFilter;
             if (!texture._mipmaps || (texture._compressed && texture._levels.length === 1)) {
                 if (filter === FILTER_NEAREST_MIPMAP_NEAREST || filter === FILTER_NEAREST_MIPMAP_LINEAR) {
@@ -1505,25 +1474,25 @@ class WebglGraphicsDevice extends GraphicsDevice {
             }
             gl.texParameteri(target, gl.TEXTURE_MIN_FILTER, this.glFilter[filter]);
         }
-        if (flags & 2) {
+        if (flags & TEXPROPERTY_MAG_FILTER) {
             gl.texParameteri(target, gl.TEXTURE_MAG_FILTER, this.glFilter[texture._magFilter]);
         }
-        if (flags & 4) {
+        if (flags & TEXPROPERTY_ADDRESS_U) {
             gl.texParameteri(target, gl.TEXTURE_WRAP_S, this.glAddress[texture._addressU]);
         }
-        if (flags & 8) {
+        if (flags & TEXPROPERTY_ADDRESS_V) {
             gl.texParameteri(target, gl.TEXTURE_WRAP_T, this.glAddress[texture._addressV]);
         }
-        if (flags & 16) {
+        if (flags & TEXPROPERTY_ADDRESS_W) {
             gl.texParameteri(target, gl.TEXTURE_WRAP_R, this.glAddress[texture._addressW]);
         }
-        if (flags & 32) {
+        if (flags & TEXPROPERTY_COMPARE_ON_READ) {
             gl.texParameteri(target, gl.TEXTURE_COMPARE_MODE, texture._compareOnRead ? gl.COMPARE_REF_TO_TEXTURE : gl.NONE);
         }
-        if (flags & 64) {
+        if (flags & TEXPROPERTY_COMPARE_FUNC) {
             gl.texParameteri(target, gl.TEXTURE_COMPARE_FUNC, this.glComparison[texture._compareFunc]);
         }
-        if (flags & 128) {
+        if (flags & TEXPROPERTY_ANISOTROPY) {
             const ext = this.extTextureFilterAnisotropic;
             if (ext) {
                 gl.texParameterf(target, ext.TEXTURE_MAX_ANISOTROPY_EXT, math.clamp(Math.round(texture._anisotropy), 1, this.maxAnisotropy));
