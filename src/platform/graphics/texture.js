@@ -229,10 +229,10 @@ class Texture {
      */
     constructor(graphicsDevice, options = {}) {
         this.device = graphicsDevice;
-        Debug.assert(this.device, "Texture constructor requires a graphicsDevice to be valid");
-        Debug.assert(!options.width || Number.isInteger(options.width), "Texture width must be an integer number, got", options);
-        Debug.assert(!options.height || Number.isInteger(options.height), "Texture height must be an integer number, got", options);
-        Debug.assert(!options.layers || Number.isInteger(options.layers), "Texture layers must be an integer number, got", options);
+        Debug.assert(this.device, 'Texture constructor requires a graphicsDevice to be valid');
+        Debug.assert(!options.width || Number.isInteger(options.width), 'Texture width must be an integer number, got', options);
+        Debug.assert(!options.height || Number.isInteger(options.height), 'Texture height must be an integer number, got', options);
+        Debug.assert(!options.layers || Number.isInteger(options.layers), 'Texture layers must be an integer number, got', options);
 
         this.name = options.name ?? '';
 
@@ -246,7 +246,7 @@ class Texture {
 
         this._layers = Math.floor(options.layers ?? (this._dimension === TEXTUREDIMENSION_CUBE ? 6 : 1));
 
-        Debug.assert((this._dimension === TEXTUREDIMENSION_CUBE ? this._layers === 6 : true), "Texture cube map must have 6 layers");
+        Debug.assert((this._dimension === TEXTUREDIMENSION_CUBE ? this._layers === 6 : true), 'Texture cube map must have 6 layers');
 
         this._format = options.format ?? PIXELFORMAT_RGBA8;
         this._compressed = isCompressedPixelFormat(this._format);
@@ -970,8 +970,9 @@ class Texture {
             if (!invalid) {
                 // mark levels as updated
                 for (let i = 0; i < this._layers; i++) {
-                    if (this._levels[0][i] !== source[i])
+                    if (this._levels[0][i] !== source[i]) {
                         this._levelsUpdated[0][i] = true;
+                    }
                 }
             }
         } else {
@@ -982,8 +983,9 @@ class Texture {
 
             if (!invalid) {
                 // mark level as updated
-                if (source !== this._levels[0])
+                if (source !== this._levels[0]) {
                     this._levelsUpdated[0] = true;
+                }
 
                 if (source instanceof HTMLVideoElement) {
                     width = source.videoWidth;

@@ -649,11 +649,12 @@ class WebglTexture {
                         this._glPixelType,
                         mipObject);
                 }
-            } else if (texture.array && typeof mipObject === "object") {
+            } else if (texture.array && typeof mipObject === 'object') {
                 if (texture._compressed) {
                     for (let index = 0; index < texture._layers; index++) {
-                        if (!texture._levelsUpdated[0][index] || !mipObject[index])
+                        if (!texture._levelsUpdated[0][index] || !mipObject[index]) {
                             continue;
+                        }
                         gl.compressedTexSubImage3D(
                             gl.TEXTURE_2D_ARRAY,
                             mipLevel,
@@ -669,8 +670,9 @@ class WebglTexture {
                     }
                 } else {
                     for (let index = 0; index < texture.layers; index++) {
-                        if (!texture._levelsUpdated[0][index] || !mipObject[index])
+                        if (!texture._levelsUpdated[0][index] || !mipObject[index]) {
                             continue;
+                        }
                         gl.texSubImage3D(
                             gl.TEXTURE_2D_ARRAY,
                             mipLevel,
