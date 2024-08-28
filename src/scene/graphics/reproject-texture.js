@@ -499,14 +499,8 @@ function reprojectTexture(source, target, options = {}) {
 
     const params = [
         0,
-        specularPower,
         source.fixCubemapSeams ? 1.0 / source.width : 0.0,          // source seam scale
         target.fixCubemapSeams ? 1.0 / target.width : 0.0           // target seam scale
-    ];
-
-    const params2 = [
-        target.width * target.height * (target.cubemap ? 6 : 1),
-        source.width * source.height * (source.cubemap ? 6 : 1)
     ];
 
     if (prefilterSamples) {
@@ -530,7 +524,6 @@ function reprojectTexture(source, target, options = {}) {
             });
             params[0] = f;
             constantParams.setValue(params);
-            constantParams2.setValue(params2);
 
             drawQuadWithShader(device, renderTarget, shader, options?.rect);
 

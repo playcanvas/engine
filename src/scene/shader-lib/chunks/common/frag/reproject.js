@@ -31,23 +31,13 @@ varying vec2 vUv0;
 
 // params:
 // x - target cubemap face 0..6
-// y - specular power (when prefiltering)
-// z - source cubemap seam scale (0 to disable)
-// w - target cubemap size for seam calc (0 to disable)
-uniform vec4 params;
-
-// params2:
-// x - target image total pixels
-// y - source cubemap size
-uniform vec2 params2;
+// y - source cubemap seam scale (0 to disable)
+// z - target cubemap size for seam calc (0 to disable)
+uniform vec3 params;
 
 float targetFace() { return params.x; }
-float specularPower() { return params.y; }
-float sourceCubeSeamScale() { return params.z; }
-float targetCubeSeamScale() { return params.w; }
-
-float targetTotalPixels() { return params2.x; }
-float sourceTotalPixels() { return params2.y; }
+float sourceCubeSeamScale() { return params.y; }
+float targetCubeSeamScale() { return params.z; }
 
 float PI = 3.141592653589793;
 
