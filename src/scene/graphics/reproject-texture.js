@@ -485,7 +485,6 @@ function reprojectTexture(source, target, options = {}) {
 
     const params = [
         0,
-        specularPower,
         target.width * target.height * (target.cubemap ? 6 : 1),
         source.width * source.height * (source.cubemap ? 6 : 1)
     ];
