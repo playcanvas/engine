@@ -166,6 +166,16 @@ class GSplatInstance {
         const device = this.splat.device;
         viewport[0] = device.width;
         viewport[1] = device.height;
+
+        // adjust viewport for stereoscopic VR sessions
+        if (this.cameras.length > 0) {
+            const camera = this.cameras[0];
+            const xr = camera.xr;
+            if (xr && xr.active && xr.views.list.length === 2) {
+                viewport[0] /= 2;
+            }
+        }
+
         this.material.setParameter('viewport', viewport);
     }
 
