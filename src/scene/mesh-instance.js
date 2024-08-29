@@ -1041,26 +1041,11 @@ class MeshInstance {
      * over parameter of the same name if set on Material this mesh instance uses for rendering.
      *
      * @param {string} name - The name of the parameter to set.
-     * @param {number|number[]|Texture|Float32Array} data - The
-     * value for the specified parameter.
+     * @param {number|number[]|Texture|Float32Array} data - The value for the specified parameter.
      * @param {number} [passFlags] - Mask describing which passes the material should be included
-     * in.
+     * in. Defaults to 0xFFFFFFFF (all passes).
      */
-    setParameter(name, data, passFlags = -262141) {
-
-        // note on -262141: All bits set except 2 - 19 range
-
-        if (data === undefined && typeof name === 'object') {
-            const uniformObject = name;
-            if (uniformObject.length) {
-                for (let i = 0; i < uniformObject.length; i++) {
-                    this.setParameter(uniformObject[i]);
-                }
-                return;
-            }
-            name = uniformObject.name;
-            data = uniformObject.value;
-        }
+    setParameter(name, data, passFlags = 0xFFFFFFFF) {
 
         const param = this.parameters[name];
         if (param) {

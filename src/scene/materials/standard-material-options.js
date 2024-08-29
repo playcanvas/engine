@@ -8,6 +8,13 @@ import { LitShaderOptions } from '../shader-lib/programs/lit-shader-options.js';
  */
 class StandardMaterialOptions {
     /**
+     * The set of defines used to generate the shader.
+     *
+     * @type {Map<string, string>}
+     */
+    defines = new Map();
+
+    /**
      * If UV1 (second set of texture coordinates) is required in the shader. Will be declared as
      * "vUv1" and passed to the fragment shader.
      *

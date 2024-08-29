@@ -30,6 +30,14 @@ import { PostEffectQueue } from './post-effect-queue.js';
  */
 
 /**
+ * Callback used by {@link CameraComponent#onPreRenderLayer} and {@link CameraComponent#onPostRenderLayer}.
+ *
+ * @callback RenderLayerCallback
+ * @param {Layer} layer - The layer.
+ * @param {boolean} transparent - True for transparent sublayer, otherwise opaque sublayer.
+ */
+
+/**
  * The Camera Component enables an Entity to render the scene. A scene requires at least one
  * enabled camera component to be rendered. Note that multiple camera components can be enabled
  * simultaneously (for split-screen or offscreen rendering, for example).
@@ -69,11 +77,29 @@ class CameraComponent extends Component {
     onPreRender = null;
 
     /**
+     * Custom function that is called before the camera renders a layer. This is called during
+     * rendering to a render target or a default framebuffer, and additional rendering can be
+     * performed here, for example using ${@link QuadRender#render}.
+     *
+     * @type {RenderLayerCallback|null}
+     */
+    onPreRenderLayer = null;
+
+    /**
      * Custom function that is called after the camera renders the scene.
      *
      * @type {Function|null}
      */
     onPostRender = null;
+
+    /**
+     * Custom function that is called after the camera renders a layer. This is called during
+     * rendering to a render target or a default framebuffer, and additional rendering can be
+     * performed here, for example using ${@link QuadRender#render}.
+     *
+     * @type {RenderLayerCallback|null}
+     */
+    onPostRenderLayer = null;
 
     /**
      * Custom function that is called before visibility culling is performed for this camera.
