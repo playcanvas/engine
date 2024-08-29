@@ -251,6 +251,9 @@ class RenderPassForward extends RenderPass {
 
         if (camera) {
 
+            // layer post render callback
+            camera.onPreRenderLayer?.(layer, transparent);
+
             const options = {
                 lightClusters: renderAction.lightClusters
             };
@@ -276,6 +279,9 @@ class RenderPassForward extends RenderPass {
             device.setBlendState(BlendState.NOBLEND);
             device.setStencilState(null, null);
             device.setAlphaToCoverage(false);
+
+            // layer post render callback
+            camera.onPostRenderLayer?.(layer, transparent);
         }
 
         DebugGraphics.popGpuMarker(this.device);

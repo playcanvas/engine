@@ -6,6 +6,9 @@
 
 export { MiniStats } from './mini-stats/mini-stats.js';
 
+// RENDERERS
+export { OutlineRenderer } from './renderers/outline-renderer.js';
+
 // EXPORTERS
 export { UsdzExporter } from './exporters/usdz-exporter.js';
 export { GltfExporter } from './exporters/gltf-exporter.js';
