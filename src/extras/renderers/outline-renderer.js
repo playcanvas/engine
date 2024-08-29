@@ -294,7 +294,8 @@ class OutlineRenderer {
         // render target
         return new RenderTarget({
             colorBuffer: texture,
-            depth: depth
+            depth: depth,
+            flipY: this.app.graphicsDevice.isWebGPU
         });
     }
 
