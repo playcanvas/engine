@@ -1,20 +1,20 @@
-import { Color } from "../../core/math/color.js";
-import { Entity } from "../../framework/entity.js";
-import { BlendState } from "../../platform/graphics/blend-state.js";
+import { Color } from '../../core/math/color.js';
+import { Entity } from '../../framework/entity.js';
+import { BlendState } from '../../platform/graphics/blend-state.js';
 import {
     ADDRESS_CLAMP_TO_EDGE, BLENDEQUATION_ADD, BLENDMODE_ONE_MINUS_SRC_ALPHA, BLENDMODE_SRC_ALPHA,
     CULLFACE_NONE,
     FILTER_LINEAR, FILTER_LINEAR_MIPMAP_LINEAR, PIXELFORMAT_SRGBA8
-} from "../../platform/graphics/constants.js";
-import { DepthState } from "../../platform/graphics/depth-state.js";
-import { RenderTarget } from "../../platform/graphics/render-target.js";
-import { Texture } from "../../platform/graphics/texture.js";
-import { drawQuadWithShader } from "../../scene/graphics/quad-render-utils.js";
-import { QuadRender } from "../../scene/graphics/quad-render.js";
-import { StandardMaterialOptions } from "../../scene/materials/standard-material-options.js";
-import { StandardMaterial } from "../../scene/materials/standard-material.js";
-import { shaderChunks } from "../../scene/shader-lib/chunks/chunks.js";
-import { createShaderFromCode } from "../../scene/shader-lib/utils.js";
+} from '../../platform/graphics/constants.js';
+import { DepthState } from '../../platform/graphics/depth-state.js';
+import { RenderTarget } from '../../platform/graphics/render-target.js';
+import { Texture } from '../../platform/graphics/texture.js';
+import { drawQuadWithShader } from '../../scene/graphics/quad-render-utils.js';
+import { QuadRender } from '../../scene/graphics/quad-render.js';
+import { StandardMaterialOptions } from '../../scene/materials/standard-material-options.js';
+import { StandardMaterial } from '../../scene/materials/standard-material.js';
+import { shaderChunks } from '../../scene/shader-lib/chunks/chunks.js';
+import { createShaderFromCode } from '../../scene/shader-lib/utils.js';
 
 /**
  * @import { AppBase } from '../../framework/app-base.js'
