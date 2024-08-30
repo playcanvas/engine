@@ -7,7 +7,7 @@ import { math } from '../core/math/math.js';
 import { Mat3 } from '../core/math/mat3.js';
 import { Mat4 } from '../core/math/mat4.js';
 import { PIXELFORMAT_RGBA8, ADDRESS_CLAMP_TO_EDGE, FILTER_LINEAR } from '../platform/graphics/constants.js';
-import { BAKE_COLORDIR, FOG_NONE, LAYERID_IMMEDIATE } from './constants.js';
+import { BAKE_COLORDIR, LAYERID_IMMEDIATE } from './constants.js';
 import { LightingParams } from './lighting/lighting-params.js';
 import { Sky } from './skybox/sky.js';
 import { Immediate } from './immediate/immediate.js';
