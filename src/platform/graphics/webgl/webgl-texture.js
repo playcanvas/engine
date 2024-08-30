@@ -12,7 +12,7 @@ import {
     PIXELFORMAT_RGBA8I, PIXELFORMAT_RGBA8U, PIXELFORMAT_R16F, PIXELFORMAT_RG16F, PIXELFORMAT_R8, PIXELFORMAT_RG8,
     PIXELFORMAT_DXT1_SRGB, PIXELFORMAT_DXT3_SRGB, PIXELFORMAT_DXT5_SRGB, PIXELFORMAT_PVRTC_2BPP_SRGB_1,
     PIXELFORMAT_PVRTC_2BPP_SRGBA_1, PIXELFORMAT_PVRTC_4BPP_SRGB_1, PIXELFORMAT_PVRTC_4BPP_SRGBA_1,
-    PIXELFORMAT_ETC2_SRGB, PIXELFORMAT_ETC2_SRGBA, PIXELFORMAT_ASTC_4x4_SRGB
+    PIXELFORMAT_ETC2_SRGB, PIXELFORMAT_ETC2_SRGBA, PIXELFORMAT_ASTC_4x4_SRGB, PIXELFORMAT_SBGRA8
 } from '../constants.js';
 
 /**
@@ -164,8 +164,12 @@ class WebglTexture {
                 this._glInternalFormat = gl.RGBA8;
                 this._glPixelType = gl.UNSIGNED_BYTE;
                 break;
+            case PIXELFORMAT_BGRA8:
+            case PIXELFORMAT_SBGRA8:
+                Debug.error('BGRA8 and SBGRA8 texture formats are not supported by WebGL.');
+                break;
 
-            // compressed formats ----
+                // compressed formats ----
 
             case PIXELFORMAT_DXT1:
                 this._glFormat = gl.RGB;
@@ -220,7 +224,7 @@ class WebglTexture {
                 this._glInternalFormat = device.extCompressedTextureATC.COMPRESSED_RGBA_ATC_INTERPOLATED_ALPHA_WEBGL;
                 break;
 
-            // compressed sRGB formats ----
+                // compressed sRGB formats ----
 
             case PIXELFORMAT_DXT1_SRGB:
                 this._glFormat = gl.SRGB;
@@ -263,7 +267,7 @@ class WebglTexture {
                 this._glInternalFormat = device.extCompressedTextureASTC.COMPRESSED_SRGB8_ALPHA8_ASTC_4x4_KHR;
                 break;
 
-            // ------------------
+                // ------------------
 
             case PIXELFORMAT_R16F:
                 this._glFormat = gl.RED;
@@ -421,9 +425,6 @@ class WebglTexture {
                 this._glInternalFormat = gl.RGBA32UI;
                 this._glPixelType = gl.UNSIGNED_INT;
                 break;
-            case PIXELFORMAT_BGRA8:
-                Debug.error("BGRA8 texture format is not supported by WebGL.");
-                break;
         }
 
         this._glCreated = false;
@@ -435,11 +436,12 @@ class WebglTexture {
      */
     upload(device, texture) {
 
-        Debug.assert(texture.device, "Attempting to use a texture that has been destroyed.", texture);
+        Debug.assert(texture.device, 'Attempting to use a texture that has been destroyed.', texture);
         const gl = device.gl;
 
-        if (!texture._needsUpload && ((texture._needsMipmapsUpload && texture._mipmapsUploaded) || !texture.pot))
+        if (!texture._needsUpload && ((texture._needsMipmapsUpload && texture._mipmapsUploaded) || !texture.pot)) {
             return;
+        }
 
         let mipLevel = 0;
         let mipObject;
@@ -450,11 +452,11 @@ class WebglTexture {
         if (texture.array) {
             // for texture arrays we reserve the space in advance
             gl.texStorage3D(gl.TEXTURE_2D_ARRAY,
-                            requiredMipLevels,
-                            this._glInternalFormat,
-                            texture._width,
-                            texture._height,
-                            texture._arrayLength);
+                requiredMipLevels,
+                this._glInternalFormat,
+                texture._width,
+                texture._height,
+                texture._arrayLength);
         }
 
         // Upload all existing mip levels. Initialize 0 mip anyway.
@@ -485,8 +487,9 @@ class WebglTexture {
                 if (device._isBrowserInterface(mipObject[0])) {
                     // Upload the image, canvas or video
                     for (face = 0; face < 6; face++) {
-                        if (!texture._levelsUpdated[0][face])
+                        if (!texture._levelsUpdated[0][face]) {
                             continue;
+                        }
 
                         let src = mipObject[face];
                         // Downsize images that are too large to be used as cube maps
@@ -527,8 +530,9 @@ class WebglTexture {
                     // Upload the byte array
                     resMult = 1 / Math.pow(2, mipLevel);
                     for (face = 0; face < 6; face++) {
-                        if (!texture._levelsUpdated[0][face])
+                        if (!texture._levelsUpdated[0][face]) {
                             continue;
+                        }
 
                         const texData = mipObject[face];
                         if (texture._compressed) {
@@ -588,28 +592,28 @@ class WebglTexture {
                 // Upload the byte array
                 if (texture._compressed) {
                     gl.compressedTexImage3D(gl.TEXTURE_3D,
-                                            mipLevel,
-                                            this._glInternalFormat,
-                                            Math.max(texture._width * resMult, 1),
-                                            Math.max(texture._height * resMult, 1),
-                                            Math.max(texture._depth * resMult, 1),
-                                            0,
-                                            mipObject);
+                        mipLevel,
+                        this._glInternalFormat,
+                        Math.max(texture._width * resMult, 1),
+                        Math.max(texture._height * resMult, 1),
+                        Math.max(texture._depth * resMult, 1),
+                        0,
+                        mipObject);
                 } else {
                     device.setUnpackFlipY(false);
                     device.setUnpackPremultiplyAlpha(texture._premultiplyAlpha);
                     gl.texImage3D(gl.TEXTURE_3D,
-                                  mipLevel,
-                                  this._glInternalFormat,
-                                  Math.max(texture._width * resMult, 1),
-                                  Math.max(texture._height * resMult, 1),
-                                  Math.max(texture._depth * resMult, 1),
-                                  0,
-                                  this._glFormat,
-                                  this._glPixelType,
-                                  mipObject);
+                        mipLevel,
+                        this._glInternalFormat,
+                        Math.max(texture._width * resMult, 1),
+                        Math.max(texture._height * resMult, 1),
+                        Math.max(texture._depth * resMult, 1),
+                        0,
+                        this._glFormat,
+                        this._glPixelType,
+                        mipObject);
                 }
-            } else if (texture.array && typeof mipObject === "object") {
+            } else if (texture.array && typeof mipObject === 'object') {
                 if (texture._arrayLength === mipObject.length) {
                     if (texture._compressed) {
                         for (let index = 0; index < texture._arrayLength; index++) {
@@ -757,8 +761,9 @@ class WebglTexture {
 
         if (texture._needsUpload) {
             if (texture._cubemap) {
-                for (let i = 0; i < 6; i++)
+                for (let i = 0; i < 6; i++) {
                     texture._levelsUpdated[0][i] = false;
+                }
             } else {
                 texture._levelsUpdated[0] = false;
             }

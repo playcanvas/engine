@@ -25,13 +25,13 @@ RenderPhysics.attributes.add('castShadows', {
 RenderPhysics.prototype.initialize = function () {
     // Handle attribute change events
     this.on('attr:castShadows', function (value, prev) {
-        this.debugRoot.children.forEach(function (child) {
+        this.debugRoot.children.forEach((child) => {
             child.model.castShadows = value;
         });
     }, this);
     this.on('attr:opacity', function (value, prev) {
-        this.debugRoot.children.forEach(function (child) {
-            child.model.meshInstances.forEach(function (meshInstance) {
+        this.debugRoot.children.forEach((child) => {
+            child.model.meshInstances.forEach((meshInstance) => {
                 var material = meshInstance.material;
                 material.opacity = value;
                 material.update();
@@ -50,7 +50,7 @@ RenderPhysics.prototype.initialize = function () {
 
     this.on('disable', function () {
         var collisionComponents = this.app.root.findComponents('collision');
-        collisionComponents.forEach(function (collision) {
+        collisionComponents.forEach((collision) => {
             if (collision.hasOwnProperty('_debugShape')) {
                 delete collision._debugShape;
             }
@@ -70,7 +70,7 @@ RenderPhysics.prototype.createModel = function (mesh, material) {
 
 RenderPhysics.prototype.postUpdate = function (dt) {
     // For any existing debug shapes, mark them as not updated (yet)
-    this.debugRoot.children.forEach(function (child) {
+    this.debugRoot.children.forEach((child) => {
         child.updated = false;
     });
 
@@ -217,7 +217,7 @@ RenderPhysics.prototype.postUpdate = function (dt) {
 
     // If a debug shape was not updated this frame, the source collision component
     // isn't around any more so we can delete it
-    this.debugRoot.children.forEach(function (child) {
+    this.debugRoot.children.forEach((child) => {
         if (!child.updated) {
             delete child._collision._debugShape;
             delete child._collision;

@@ -2,7 +2,8 @@ import { TRACEID_RENDER_QUEUE } from '../../../core/constants.js';
 import { Debug, DebugHelper } from '../../../core/debug.js';
 import {
     PIXELFORMAT_RGBA8, PIXELFORMAT_BGRA8, DEVICETYPE_WEBGPU,
-    BUFFERUSAGE_READ, BUFFERUSAGE_COPY_DST, semanticToLocation
+    BUFFERUSAGE_READ, BUFFERUSAGE_COPY_DST, semanticToLocation,
+    PIXELFORMAT_SRGBA8, DISPLAYFORMAT_LDR_SRGB, PIXELFORMAT_SBGRA8
 } from '../constants.js';
 import { BindGroupFormat } from '../bind-group-format.js';
 import { BindGroup } from '../bind-group.js';
@@ -176,7 +177,7 @@ class WebgpuGraphicsDevice extends GraphicsDevice {
         }
 
         // temporary message to confirm Webgpu is being used
-        Debug.log("WebgpuGraphicsDevice initialization ..");
+        Debug.log('WebgpuGraphicsDevice initialization ..');
 
         // build a full URL from a relative or absolute path
         const buildUrl = (srcPath) => {
@@ -231,7 +232,7 @@ class WebgpuGraphicsDevice extends GraphicsDevice {
         if (adapterLimits) {
             for (const limitName in adapterLimits) {
                 // skip these as they fail on Windows Chrome and are not part of spec currently
-                if (limitName === "minSubgroupSize" || limitName === "maxSubgroupSize") {
+                if (limitName === 'minSubgroupSize' || limitName === 'maxSubgroupSize') {
                     continue;
                 }
                 requiredLimits[limitName] = adapterLimits[limitName];
@@ -267,9 +268,20 @@ class WebgpuGraphicsDevice extends GraphicsDevice {
 
         this.gpuContext = this.canvas.getContext('webgpu');
 
-        // pixel format of the framebuffer is the most efficient one on the system
+        // pixel format of the framebuffer that is the most efficient one on the system
         const preferredCanvasFormat = navigator.gpu.getPreferredCanvasFormat();
-        this.backBufferFormat = preferredCanvasFormat === 'rgba8unorm' ? PIXELFORMAT_RGBA8 : PIXELFORMAT_BGRA8;
+
+        // display format the user asked for
+        const displayFormat = this.initOptions.displayFormat;
+
+        // combine requested display format with the preferred format
+        this.backBufferFormat = preferredCanvasFormat === 'rgba8unorm' ?
+            (displayFormat === DISPLAYFORMAT_LDR_SRGB ? PIXELFORMAT_SRGBA8 : PIXELFORMAT_RGBA8) :  // (S)RGBA
+            (displayFormat === DISPLAYFORMAT_LDR_SRGB ? PIXELFORMAT_SBGRA8 : PIXELFORMAT_BGRA8);   // (S)BGRA
+
+        // view format for the backbuffer. Backbuffer is always allocated without srgb conversion, and
+        // the view we create specifies srgb is needed to handle the conversion.
+        this.backBufferViewFormat = displayFormat === DISPLAYFORMAT_LDR_SRGB ? `${preferredCanvasFormat}-srgb` : preferredCanvasFormat;
 
         /**
          * Configuration of the main colorframebuffer we obtain using getCurrentTexture
@@ -289,7 +301,8 @@ class WebgpuGraphicsDevice extends GraphicsDevice {
             usage: GPUTextureUsage.RENDER_ATTACHMENT | GPUTextureUsage.COPY_SRC | GPUTextureUsage.COPY_DST,
 
             // formats that views created from textures returned by getCurrentTexture may use
-            viewFormats: []
+            // (this allows us to view the preferred format as srgb)
+            viewFormats: displayFormat === DISPLAYFORMAT_LDR_SRGB ? [this.backBufferViewFormat] : []
         };
         this.gpuContext.configure(this.canvasConfig);
 
@@ -329,6 +342,7 @@ class WebgpuGraphicsDevice extends GraphicsDevice {
             stencil: this.supportsStencil,
             samples: this.samples
         });
+        this.backBuffer.impl.isBackbuffer = true;
     }
 
     frameStart() {
@@ -361,12 +375,12 @@ class WebgpuGraphicsDevice extends GraphicsDevice {
         const wrt = rt.impl;
 
         // assign the format, allowing following init call to use it to allocate matching multisampled buffer
-        wrt.setColorAttachment(0, undefined, outColorBuffer.format);
+        wrt.setColorAttachment(0, undefined, this.backBufferViewFormat);
 
         this.initRenderTarget(rt);
 
         // assign current frame's render texture
-        wrt.assignColorTexture(outColorBuffer);
+        wrt.assignColorTexture(this, outColorBuffer);
 
         WebgpuDebug.end(this);
         WebgpuDebug.end(this);
@@ -507,8 +521,8 @@ class WebgpuGraphicsDevice extends GraphicsDevice {
 
             // render pipeline
             const pipeline = this.renderPipeline.get(primitive, vb0?.format, vb1?.format, this.shader, this.renderTarget,
-                                                     this.bindGroupFormats, this.blendState, this.depthState, this.cullMode,
-                                                     this.stencilEnabled, this.stencilFront, this.stencilBack);
+                this.bindGroupFormats, this.blendState, this.depthState, this.cullMode,
+                this.stencilEnabled, this.stencilFront, this.stencilBack);
             Debug.assert(pipeline);
 
             if (this.pipeline !== pipeline) {
@@ -643,7 +657,7 @@ class WebgpuGraphicsDevice extends GraphicsDevice {
         }
 
         // set up clear / store / load settings
-        wrt.setupForRenderPass(renderPass);
+        wrt.setupForRenderPass(renderPass, rt);
 
         const renderPassDesc = wrt.renderPassDescriptor;
 
@@ -1010,14 +1024,14 @@ class WebgpuGraphicsDevice extends GraphicsDevice {
             // read from supplied render target, or from the framebuffer
             /** @type {GPUImageCopyTexture} */
             const copySrc = {
-                texture: source ? source.colorBuffer.impl.gpuTexture : this.renderTarget.impl.assignedColorTexture,
+                texture: source ? source.colorBuffer.impl.gpuTexture : this.backBuffer.impl.assignedColorTexture,
                 mipLevel: 0
             };
 
             // write to supplied render target, or to the framebuffer
             /** @type {GPUImageCopyTexture} */
             const copyDst = {
-                texture: dest ? dest.colorBuffer.impl.gpuTexture : this.renderTarget.impl.assignedColorTexture,
+                texture: dest ? dest.colorBuffer.impl.gpuTexture : this.backBuffer.impl.assignedColorTexture,
                 mipLevel: 0
             };
 

@@ -1,6 +1,6 @@
-import { TRACEID_GPU_TIMINGS } from "../../core/constants.js";
-import { Debug } from "../../core/debug.js";
-import { Tracing } from "../../core/tracing.js";
+import { TRACEID_GPU_TIMINGS } from '../../core/constants.js';
+import { Debug } from '../../core/debug.js';
+import { Tracing } from '../../core/tracing.js';
 
 /**
  * Base class of a simple GPU profiler.

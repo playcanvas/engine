@@ -1,5 +1,5 @@
-import { GpuProfiler } from "../gpu-profiler.js";
-import { WebgpuQuerySet } from "./webgpu-query-set.js";
+import { GpuProfiler } from '../gpu-profiler.js';
+import { WebgpuQuerySet } from './webgpu-query-set.js';
 
 class WebgpuGpuProfiler extends GpuProfiler {
     device;

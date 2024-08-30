@@ -343,8 +343,9 @@ class VertexIterator {
                         element.array.set(data);
                     } else {
                         // data is array, copy right amount manually
-                        for (let i = 0; i < copyCount; i++)
+                        for (let i = 0; i < copyCount; i++) {
                             element.array[i] = data[i];
+                        }
                     }
                 } else {
                     // copy whole data
@@ -376,8 +377,9 @@ class VertexIterator {
             if (this.vertexBuffer.getFormat().interleaved) {
 
                 // extract data from interleaved buffer by looping over vertices and copying them manually
-                if (Array.isArray(data))
+                if (Array.isArray(data)) {
                     data.length = 0;
+                }
 
                 element.index = 0;
                 let offset = 0;
@@ -393,8 +395,9 @@ class VertexIterator {
                     // destination data is array
                     data.length = 0;
                     const copyCount = count * numComponents;
-                    for (i = 0; i < copyCount; i++)
+                    for (i = 0; i < copyCount; i++) {
                         data[i] = element.array[i];
+                    }
                 }
             }
         }
@@ -403,4 +406,4 @@ class VertexIterator {
     }
 }
 
-export { VertexIterator, VertexIteratorAccessor };
+export { VertexIterator };

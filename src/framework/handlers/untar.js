@@ -182,8 +182,9 @@ class Untar extends EventHandler {
 
             // bytes padding
             const bytesRemained = this.bytesRead % this.paddingSize;
-            if (bytesRemained !== 0)
+            if (bytesRemained !== 0) {
                 this.bytesRead += this.paddingSize - bytesRemained;
+            }
 
             return true;
         }

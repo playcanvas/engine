@@ -3,8 +3,9 @@ import {
     MASK_AFFECT_DYNAMIC, TONEMAP_NONE, SHADERDEF_INSTANCING, SHADERDEF_MORPH_NORMAL,
     SHADERDEF_MORPH_POSITION, SHADERDEF_SCREENSPACE, SHADERDEF_SKIN,
     SHADERDEF_NOSHADOW, SHADERDEF_TANGENTS, SPRITE_RENDERMODE_SIMPLE,
-    SHADERDEF_MORPH_TEXTURE_BASED_INT
-} from "../constants.js";
+    SHADERDEF_MORPH_TEXTURE_BASED_INT,
+    FOG_NONE
+} from '../constants.js';
 
 class LitMaterialOptionsBuilder {
     static update(litOptions, material, scene, renderParams, objDefs, pass, sortedLights) {
@@ -46,13 +47,11 @@ class LitMaterialOptionsBuilder {
     }
 
     static updateMaterialOptions(litOptions, material) {
-        litOptions.useAmbientTint = false;
         litOptions.separateAmbient = false;    // store ambient light color in separate variable, instead of adding it to diffuse directly
         litOptions.customFragmentShader = null;
         litOptions.pixelSnap = material.pixelSnap;
 
         litOptions.ambientSH = material.ambientSH;
-        litOptions.fastTbn = material.fastTbn;
         litOptions.twoSidedLighting = material.twoSidedLighting;
         litOptions.occludeDirect = material.occludeDirect;
         litOptions.occludeSpecular = material.occludeSpecular;
@@ -90,7 +89,7 @@ class LitMaterialOptionsBuilder {
     }
 
     static updateEnvOptions(litOptions, material, scene, renderParams) {
-        litOptions.fog = material.useFog ? scene.fog : 'none';
+        litOptions.fog = material.useFog ? scene.fog : FOG_NONE;
         litOptions.gamma = renderParams.shaderOutputGamma;
         litOptions.toneMap = material.useTonemap ? renderParams.toneMapping : TONEMAP_NONE;
 

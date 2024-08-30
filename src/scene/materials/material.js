@@ -9,27 +9,32 @@ import {
 } from '../../platform/graphics/constants.js';
 import { BlendState } from '../../platform/graphics/blend-state.js';
 import { DepthState } from '../../platform/graphics/depth-state.js';
-import { ShaderProcessorOptions } from '../../platform/graphics/shader-processor-options.js';
 import {
     BLEND_ADDITIVE, BLEND_NORMAL, BLEND_NONE, BLEND_PREMULTIPLIED,
     BLEND_MULTIPLICATIVE, BLEND_ADDITIVEALPHA, BLEND_MULTIPLICATIVE2X, BLEND_SCREEN,
     BLEND_MIN, BLEND_MAX, BLEND_SUBTRACTIVE
 } from '../constants.js';
-import { processShader } from '../shader-lib/utils.js';
 import { getDefaultMaterial } from './default-material.js';
 
 /**
+ * @import { BindGroupFormat } from '../../platform/graphics/bind-group-format.js';
+ * @import { GraphicsDevice } from '../../platform/graphics/graphics-device.js'
+ * @import { Light } from '../light.js';
  * @import { MeshInstance } from '../mesh-instance.js'
+ * @import { RenderingParams } from '../renderer/rendering-params.js'
+ * @import { Scene } from '../scene.js'
  * @import { Shader } from '../../platform/graphics/shader.js'
  * @import { StencilParameters } from '../../platform/graphics/stencil-parameters.js'
  * @import { Texture } from '../../platform/graphics/texture.js'
+ * @import { UniformBufferFormat } from '../../platform/graphics/uniform-buffer-format.js';
+ * @import { VertexFormat } from '../../platform/graphics/vertex-format.js';
  */
 
 // blend mode mapping to op, srcBlend and dstBlend
 const blendModes = [];
 blendModes[BLEND_SUBTRACTIVE] = { src: BLENDMODE_ONE, dst: BLENDMODE_ONE, op: BLENDEQUATION_REVERSE_SUBTRACT };
 blendModes[BLEND_NONE] = { src: BLENDMODE_ONE, dst: BLENDMODE_ZERO, op: BLENDEQUATION_ADD };
-blendModes[BLEND_NORMAL] = { src: BLENDMODE_SRC_ALPHA, dst: BLENDMODE_ONE_MINUS_SRC_ALPHA, op: BLENDEQUATION_ADD };
+blendModes[BLEND_NORMAL] = { src: BLENDMODE_SRC_ALPHA, dst: BLENDMODE_ONE_MINUS_SRC_ALPHA, op: BLENDEQUATION_ADD, alphaSrc: BLENDMODE_ONE };
 blendModes[BLEND_PREMULTIPLIED] = { src: BLENDMODE_ONE, dst: BLENDMODE_ONE_MINUS_SRC_ALPHA, op: BLENDEQUATION_ADD };
 blendModes[BLEND_ADDITIVE] = { src: BLENDMODE_ONE, dst: BLENDMODE_ONE, op: BLENDEQUATION_ADD };
 blendModes[BLEND_ADDITIVEALPHA] = { src: BLENDMODE_SRC_ALPHA, dst: BLENDMODE_ONE, op: BLENDEQUATION_ADD };
@@ -42,22 +47,27 @@ blendModes[BLEND_MAX] = { src: BLENDMODE_ONE, dst: BLENDMODE_ONE, op: BLENDEQUAT
 let id = 0;
 
 /**
+ * @typedef {object} ShaderVariantParams - The description of the parameters used by the
+ * Material#getShaderVariant function.
+ * @property {GraphicsDevice} device - The graphics device.
+ * @property {Scene} scene - The scene.
+ * @property {number} objDefs - The object definitions.
+ * @property {RenderingParams} renderParams - The render parameters.
+ * @property {number} pass - The shader pass.
+ * @property {Light[][]} sortedLights - The sorted lights.
+ * @property {UniformBufferFormat|undefined} viewUniformFormat - The view uniform format.
+ * @property {BindGroupFormat|undefined} viewBindGroupFormat - The view bind group format.
+ * @property {VertexFormat} vertexFormat - The vertex format.
+ * @ignore
+ */
+
+/**
  * A material determines how a particular mesh instance is rendered. It specifies the shader and
  * render state that is set before the mesh instance is submitted to the graphics device.
  *
  * @category Graphics
  */
 class Material {
-    /**
-     * A shader used to render the material. Note that this is used only by materials where the
-     * user specifies the shader. Most material types generate multiple shader variants, and do not
-     * set this.
-     *
-     * @type {Shader}
-     * @private
-     */
-    _shader = null;
-
     /**
      * The mesh instances referencing this material
      *
@@ -92,6 +102,16 @@ class Material {
      * @ignore
      */
     variants = new Map();
+
+    /**
+     * The set of defines used to generate the shader variants.
+     *
+     * @type {Map<string, string>}
+     * @ignore
+     */
+    defines = new Map();
+
+    _definesDirty = false;
 
     parameters = {};
 
@@ -152,6 +172,13 @@ class Material {
      * @type {StencilParameters|null}
      */
     stencilBack = null;
+
+    /** @protected */
+    constructor() {
+        if (new.target === Material) {
+            Debug.error('Material class cannot be instantiated, use ShaderMaterial instead');
+        }
+    }
 
     /**
      * Sets the offset for the output depth buffer value. Useful for decals to prevent z-fighting.
@@ -283,24 +310,6 @@ class Material {
         return this._blendState.alphaWrite;
     }
 
-    /**
-     * Sets the shader used by this material to render mesh instances. Defaults to `null`.
-     *
-     * @type {Shader|null}
-     */
-    set shader(shader) {
-        this._shader = shader;
-    }
-
-    /**
-     * Gets the shader used by this material to render mesh instances.
-     *
-     * @type {Shader|null}
-     */
-    get shader() {
-        return this._shader;
-    }
-
     // returns boolean depending on material being transparent
     get transparent() {
         return this._blendState.blend;
@@ -367,7 +376,7 @@ class Material {
         const blendMode = blendModes[type];
         Debug.assert(blendMode, `Unknown blend mode ${type}`);
         this._blendState.setColorBlend(blendMode.op, blendMode.src, blendMode.dst);
-        this._blendState.setAlphaBlend(blendMode.op, blendMode.src, blendMode.dst);
+        this._blendState.setAlphaBlend(blendMode.alphaOp ?? blendMode.op, blendMode.alphaSrc ?? blendMode.src, blendMode.alphaDst ?? blendMode.dst);
 
         const blend = type !== BLEND_NONE;
         if (this._blendState.blend !== blend) {
@@ -498,7 +507,6 @@ class Material {
      */
     copy(source) {
         this.name = source.name;
-        this._shader = source._shader;
 
         // Render states
         this.alphaTest = source.alphaTest;
@@ -513,6 +521,18 @@ class Material {
         if (source.stencilBack) {
             this.stencilBack = source.stencilFront === source.stencilBack ? this.stencilFront : source.stencilBack.clone();
         }
+
+        // Shader parameters
+        this.clearParameters();
+        for (const name in source.parameters) {
+            if (source.parameters.hasOwnProperty(name)) {
+                this._setParameterSimple(name, source.parameters[name].data);
+            }
+        }
+
+        // defines
+        this.defines.clear();
+        source.defines.forEach(define => this.defines.add(define));
 
         return this;
     }
@@ -537,19 +557,25 @@ class Material {
     updateUniforms(device, scene) {
     }
 
-    getShaderVariant(device, scene, objDefs, renderParams, pass, sortedLights, viewUniformFormat, viewBindGroupFormat, vertexFormat) {
-
-        // generate shader variant - its the same shader, but with different processing options
-        const processingOptions = new ShaderProcessorOptions(viewUniformFormat, viewBindGroupFormat, vertexFormat);
-        return processShader(this._shader, processingOptions);
+    /**
+     * @param {ShaderVariantParams} params - The parameters used to generate the shader variant.
+     * @ignore
+     */
+    getShaderVariant(params) {
+        Debug.assert(false, 'Not implemented');
     }
 
     /**
      * Applies any changes made to the material's properties.
      */
     update() {
+        // if the defines were modified, we need to rebuild the shaders
+        if (this._definesDirty) {
+            this._definesDirty = false;
+            this.clearVariants();
+        }
+
         this.dirty = true;
-        if (this._shader) this._shader.failed = false;
     }
 
     // Parameter management
@@ -584,6 +610,18 @@ class Material {
         return this.parameters[name];
     }
 
+    _setParameterSimple(name, data) {
+        const param = this.parameters[name];
+        if (param) {
+            param.data = data;
+        } else {
+            this.parameters[name] = {
+                scopeId: null,
+                data: data
+            };
+        }
+    }
+
     /**
      * Sets a shader parameter on a material.
      *
@@ -604,15 +642,7 @@ class Material {
             data = uniformObject.value;
         }
 
-        const param = this.parameters[name];
-        if (param) {
-            param.data = data;
-        } else {
-            this.parameters[name] = {
-                scopeId: null,
-                data: data
-            };
-        }
+        this._setParameterSimple(name, data);
     }
 
     /**
@@ -643,12 +673,44 @@ class Material {
     }
 
     /**
+     * Adds or removes a define on the material. Defines can be used to enable or disable various
+     * parts of the shader code.
+     *
+     * @param {string} name - The name of the define to set.
+     * @param {string|undefined|false} value - The value of the define. If undefined or false, the
+     * define is removed.
+     */
+    setDefine(name, value) {
+        let modified = false;
+        const { defines } = this;
+
+        if (value !== undefined && value !== false) {
+            modified = !defines.has(name) || defines.get(name) !== value;
+            defines.set(name, value);
+        } else {
+            modified = defines.has(name);
+            defines.delete(name);
+        }
+
+        this._definesDirty ||= modified;
+    }
+
+    /**
+     * Returns true if a define is enabled on the material, otherwise false.
+     *
+     * @param {string} name - The name of the define to check.
+     * @returns {boolean} The value of the define.
+     */
+    getDefine(name) {
+        return this.defines.has(name);
+    }
+
+    /**
      * Removes this material from the scene and possibly frees up memory from its shaders (if there
      * are no other materials using it).
      */
     destroy() {
         this.variants.clear();
-        this._shader = null;
 
         for (let i = 0; i < this.meshInstances.length; i++) {
             const meshInstance = this.meshInstances[i];

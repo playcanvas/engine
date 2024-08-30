@@ -7,19 +7,22 @@ const TRACEID = 'Preprocessor';
 const KEYWORD = /[ \t]*#(ifn?def|if|endif|else|elif|define|undef|extension|include)/g;
 
 // #define EXPRESSION
+// eslint-disable-next-line regexp/no-super-linear-backtracking, regexp/optimal-quantifier-concatenation
 const DEFINE = /define[ \t]+([^\n]+)\r?(?:\n|$)/g;
 
 // #extension IDENTIFIER : enabled
 const EXTENSION = /extension[ \t]+([\w-]+)[ \t]*:[ \t]*(enable|require)/g;
 
 // #undef EXPRESSION
+// eslint-disable-next-line regexp/no-super-linear-backtracking, regexp/optimal-quantifier-concatenation
 const UNDEF = /undef[ \t]+([^\n]+)\r?(?:\n|$)/g;
 
 // #ifdef/#ifndef SOMEDEFINE, #if EXPRESSION
+// eslint-disable-next-line regexp/no-super-linear-backtracking, regexp/no-unused-capturing-group
 const IF = /(ifdef|ifndef|if)[ \t]*([^\r\n]+)\r?\n/g;
 
 // #endif/#else or #elif EXPRESSION
-const ENDIF = /(endif|else|elif)([ \t]+[^\r\n]+)?\r?(?:\n|$)/g;
+const ENDIF = /(endif|else|elif)([ \t][^\r\n]+)?\r?(?:\n|$)/g;
 
 // identifier
 const IDENTIFIER = /([\w-]+)/;
@@ -50,12 +53,12 @@ class Preprocessor {
     static run(source, includes = new Map(), stripUnusedColorAttachments = false) {
 
         // strips comments, handles // and many cases of /*
-        source = source.replace(/\/\*[\s\S]*?\*\/|([^\\:]|^)\/\/.*$/gm, '$1');
+        source = this.stripComments(source);
 
         // right trim each line
         source = source.split(/\r?\n/)
-            .map(line => line.trimEnd())
-            .join('\n');
+        .map(line => line.trimEnd())
+        .join('\n');
 
         // generate defines to remove unused color attachments
         const defines = new Map();
@@ -89,6 +92,9 @@ class Preprocessor {
             }
         });
 
+        // strip comments again after the includes have been resolved
+        source = this.stripComments(source);
+
         // remove empty lines
         source = this.RemoveEmptyLines(source);
 
@@ -96,6 +102,10 @@ class Preprocessor {
         source = this.processArraySize(source, intDefines);
 
         return source;
+    }
+
+    static stripComments(source) {
+        return source.replace(/\/\*[\s\S]*?\*\/|([^\\:]|^)\/\/.*$/gm, '$1');
     }
 
     static processArraySize(source, intDefines) {
@@ -116,12 +126,12 @@ class Preprocessor {
         if (source !== null) {
             source = source.split(/\r?\n/)
 
-                // convert lines with only white space into empty string
-                .map(line => (line.trim() === '' ? '' : line))
-                .join('\n');
+            // convert lines with only white space into empty string
+            .map(line => (line.trim() === '' ? '' : line))
+            .join('\n');
 
             // remove more than 1 consecutive empty lines
-            source = source.replace(/(\n\n){3,}/gm, '\n\n');
+            source = source.replace(/(\n\n){3,}/g, '\n\n');
         }
 
         return source;
@@ -167,7 +177,7 @@ class Preprocessor {
                     const identifierValue = IDENTIFIER.exec(expression);
                     const identifier = identifierValue[1];
                     let value = expression.substring(identifier.length).trim();
-                    if (value === "") value = "true";
+                    if (value === '') value = 'true';
 
                     // are we inside if-blocks that are accepted
                     const keep = Preprocessor._keep(stack);
@@ -176,7 +186,7 @@ class Preprocessor {
                         defines.set(identifier, value);
                     }
 
-                    Debug.trace(TRACEID, `${keyword}: [${identifier}] ${value} ${keep ? "" : "IGNORED"}`);
+                    Debug.trace(TRACEID, `${keyword}: [${identifier}] ${value} ${keep ? '' : 'IGNORED'}`);
 
                     // continue on the next line
                     KEYWORD.lastIndex = define.index + define[0].length;
@@ -198,7 +208,7 @@ class Preprocessor {
                         defines.delete(identifier);
                     }
 
-                    Debug.trace(TRACEID, `${keyword}: [${identifier}] ${keep ? "" : "IGNORED"}`);
+                    Debug.trace(TRACEID, `${keyword}: [${identifier}] ${keep ? '' : 'IGNORED'}`);
 
                     // continue on the next line
                     KEYWORD.lastIndex = undef.index + undef[0].length;
@@ -217,10 +227,10 @@ class Preprocessor {
                         const keep = Preprocessor._keep(stack);
 
                         if (keep) {
-                            defines.set(identifier, "true");
+                            defines.set(identifier, 'true');
                         }
 
-                        Debug.trace(TRACEID, `${keyword}: [${identifier}] ${keep ? "" : "IGNORED"}`);
+                        Debug.trace(TRACEID, `${keyword}: [${identifier}] ${keep ? '' : 'IGNORED'}`);
                     }
 
                     // continue on the next line
@@ -271,8 +281,8 @@ class Preprocessor {
                     const blockInfo = stack.pop();
 
                     // code between if and endif
-                    const blockCode = blockInfo.keep ? source.substring(blockInfo.end, match.index) : "";
-                    Debug.trace(TRACEID, `${keyword}: [previous block] => ${blockCode !== ""}`);
+                    const blockCode = blockInfo.keep ? source.substring(blockInfo.end, match.index) : '';
+                    Debug.trace(TRACEID, `${keyword}: [previous block] => ${blockCode !== ''}`);
 
                     // cut out the IF and ENDIF lines, leave block if required
                     source = source.substring(0, blockInfo.start) + blockCode + source.substring(ENDIF.lastIndex);
@@ -322,25 +332,25 @@ class Preprocessor {
 
                         // cut out the include line and replace it with the included string
                         const includeSource = includes?.get(identifier);
-                        if (includeSource) {
+                        if (includeSource !== undefined) {
                             source = source.substring(0, include.index - 1) + includeSource + source.substring(INCLUDE.lastIndex);
 
                             // process the just included test
                             KEYWORD.lastIndex = include.index;
                         } else {
-                            console.error(`Include not found: ${identifier}`);
+                            console.error(`Include "${identifier}" not resolved while preprocessing a shader`, { source: originalSource });
                             error = true;
                         }
                     }
 
-                    Debug.trace(TRACEID, `${keyword}: [${identifier}] ${keep ? "" : "IGNORED"}`);
+                    Debug.trace(TRACEID, `${keyword}: [${identifier}] ${keep ? '' : 'IGNORED'}`);
                     break;
                 }
             }
         }
 
         if (error) {
-            console.warn("Failed to preprocess shader: ", { source: originalSource });
+            console.warn('Failed to preprocess shader: ', { source: originalSource });
             return originalSource;
         }
 
@@ -350,8 +360,9 @@ class Preprocessor {
     // function returns true if the evaluation is inside keep branches
     static _keep(stack) {
         for (let i = 0; i < stack.length; i++) {
-            if (!stack[i].keep)
+            if (!stack[i].keep) {
                 return false;
+            }
         }
 
         return true;

@@ -1,10 +1,10 @@
-import { hashCode } from "../../core/hash.js";
-import { SEMANTIC_ATTR13, SEMANTIC_POSITION } from "../../platform/graphics/constants.js";
-import { ShaderUtils } from "../../platform/graphics/shader-utils.js";
-import { DITHER_NONE, TONEMAP_LINEAR } from "../constants.js";
-import { shaderChunks } from "../shader-lib/chunks/chunks.js";
-import { ShaderGenerator } from "../shader-lib/programs/shader-generator.js";
-import { ShaderPass } from "../shader-pass.js";
+import { hashCode } from '../../core/hash.js';
+import { SEMANTIC_ATTR13, SEMANTIC_POSITION } from '../../platform/graphics/constants.js';
+import { ShaderUtils } from '../../platform/graphics/shader-utils.js';
+import { DITHER_NONE, TONEMAP_LINEAR } from '../constants.js';
+import { shaderChunks } from '../shader-lib/chunks/chunks.js';
+import { ShaderGenerator } from '../shader-lib/programs/shader-generator.js';
+import { ShaderPass } from '../shader-pass.js';
 
 const splatCoreVS = /* glsl */ `
     uniform mat4 matrix_model;
@@ -46,7 +46,7 @@ const splatCoreVS = /* glsl */ `
         // calculate splat index
         orderId = vertex_id_attrib + uint(vertex_position.z);
 
-        if (orderId > numSplats) {
+        if (orderId >= numSplats) {
             return false;
         }
 
@@ -176,7 +176,8 @@ class GSplatShaderGenerator {
     generateKey(options) {
         const vsHash = hashCode(options.vertex);
         const fsHash = hashCode(options.fragment);
-        return `splat-${options.pass}-${options.gamma}-${options.toneMapping}-${vsHash}-${fsHash}-${options.dither}}`;
+        const definesHash = ShaderGenerator.definesHash(options.defines);
+        return `splat-${options.pass}-${options.gamma}-${options.toneMapping}-${vsHash}-${fsHash}-${options.dither}-${definesHash}`;
     }
 
     createShaderDefinition(device, options) {
@@ -185,8 +186,8 @@ class GSplatShaderGenerator {
         const shaderPassDefines = shaderPassInfo.shaderDefines;
 
         const defines =
-            shaderPassDefines +
-            `#define DITHER_${options.dither.toUpperCase()}\n` +
+            `${shaderPassDefines
+            }#define DITHER_${options.dither.toUpperCase()}\n` +
             `#define TONEMAP_${options.toneMapping === TONEMAP_LINEAR ? 'DISABLED' : 'ENABLED'}\n`;
 
         const vs = defines + splatCoreVS + options.vertex;
@@ -196,6 +197,9 @@ class GSplatShaderGenerator {
             ShaderGenerator.gammaCode(options.gamma) +
             splatCoreFS + options.fragment;
 
+        const defineMap = new Map();
+        options.defines.forEach(value => defineMap.set(value, true));
+
         return ShaderUtils.createDefinition(device, {
             name: 'SplatShader',
             attributes: {
@@ -203,7 +207,9 @@ class GSplatShaderGenerator {
                 vertex_id_attrib: SEMANTIC_ATTR13
             },
             vertexCode: vs,
-            fragmentCode: fs
+            fragmentCode: fs,
+            fragmentDefines: defineMap,
+            vertexDefines: defineMap
         });
     }
 }

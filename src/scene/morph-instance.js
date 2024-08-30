@@ -106,7 +106,7 @@ class MorphInstance {
 
         // resolve possible texture names
         for (let i = 0; i < this.maxSubmitCount; i++) {
-            this['morphBlendTex' + i] = this.device.scope.resolve('morphBlendTex' + i);
+            this[`morphBlendTex${i}`] = this.device.scope.resolve(`morphBlendTex${i}`);
         }
 
         this.morphFactor = this.device.scope.resolve('morphFactor[0]');
@@ -263,7 +263,7 @@ class MorphInstance {
         if (!shader) {
             const fs = this._getFragmentShader(count);
             const outputType = this.morph.intRenderFormat ? 'uvec4' : 'vec4';
-            shader = createShaderFromCode(this.device, textureMorphVertexShader, fs, 'textureMorph' + count, undefined, { fragmentOutputTypes: [outputType] });
+            shader = createShaderFromCode(this.device, textureMorphVertexShader, fs, `textureMorph${count}`, undefined, { fragmentOutputTypes: [outputType] });
             this.shaderCache[count] = shader;
         }
 
@@ -300,7 +300,7 @@ class MorphInstance {
             if (tex) {
 
                 // texture
-                this['morphBlendTex' + usedCount].setValue(tex);
+                this[`morphBlendTex${usedCount}`].setValue(tex);
 
                 // weight
                 this._shaderMorphWeights[usedCount] = activeTarget.weight;
@@ -332,11 +332,13 @@ class MorphInstance {
         if (this._activeTargets.length > 0 || !this.zeroTextures) {
 
             // blend morph targets into render targets
-            if (this.rtPositions)
+            if (this.rtPositions) {
                 this._updateTextureRenderTarget(this.rtPositions, 'texturePositions', true);
+            }
 
-            if (this.rtNormals)
+            if (this.rtNormals) {
                 this._updateTextureRenderTarget(this.rtNormals, 'textureNormals', false);
+            }
 
             // textures were cleared if no active targets
             this.zeroTextures = this._activeTargets.length === 0;
@@ -389,7 +391,7 @@ class MorphInstance {
             if (this._activeTargets.length > this.maxSubmitCount) {
 
                 // sort them by absWeight
-                this._activeTargets.sort(function (l, r) {
+                this._activeTargets.sort((l, r) => {
                     return (l.absWeight < r.absWeight) ? 1 : (r.absWeight < l.absWeight ? -1 : 0);
                 });
 

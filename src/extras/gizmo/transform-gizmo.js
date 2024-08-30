@@ -5,15 +5,18 @@ import { Vec3 } from '../../core/math/vec3.js';
 import { Ray } from '../../core/shape/ray.js';
 import { Plane } from '../../core/shape/plane.js';
 import { PROJECTION_PERSPECTIVE } from '../../scene/constants.js';
-import { Gizmo } from "./gizmo.js";
 
 import {
     COLOR_RED,
     COLOR_GREEN,
     COLOR_BLUE,
     COLOR_YELLOW,
-    COLOR_GRAY
-} from './default-colors.js';
+    COLOR_GRAY,
+    color3from4,
+    color4from3
+} from './color.js';
+import { GIZMOAXIS_X, GIZMOAXIS_XYZ, GIZMOAXIS_Y, GIZMOAXIS_Z } from './constants.js';
+import { Gizmo } from './gizmo.js';
 
 /**
  * @import { AppBase } from '../../framework/app-base.js'
@@ -33,72 +36,6 @@ const tmpP1 = new Plane();
 // constants
 const VEC3_AXES = Object.keys(tmpV1);
 const SPANLINE_SIZE = 1e3;
-
-/**
- * Shape axis for the line X.
- *
- * @type {string}
- */
-export const SHAPEAXIS_X = 'x';
-
-/**
- * Shape axis for the line Y.
- *
- * @type {string}
- */
-export const SHAPEAXIS_Y = 'y';
-
-/**
- * Shape axis for the line Z.
- *
- * @type {string}
- */
-export const SHAPEAXIS_Z = 'z';
-
-/**
- * Shape axis for the plane YZ.
- *
- * @type {string}
- */
-export const SHAPEAXIS_YZ = 'yz';
-
-/**
- * Shape axis for the plane XZ.
- *
- * @type {string}
- */
-export const SHAPEAXIS_XZ = 'xz';
-
-/**
- * Shape axis for the plane XY.
- *
- * @type {string}
- */
-export const SHAPEAXIS_XY = 'xy';
-
-/**
- * Shape axis for all directions XYZ.
- *
- * @type {string}
- */
-export const SHAPEAXIS_XYZ = 'xyz';
-
-/**
- * Shape axis for facing the camera.
- *
- * @type {string}
- */
-export const SHAPEAXIS_FACE = 'face';
-
-/**
- * Converts Color4 to Color3.
- *
- * @param {Color} color - Color4
- * @returns {Color} - Color3
- */
-function color3from4(color) {
-    return new Color(color.r, color.g, color.b);
-}
 
 /**
  * The base class for all transform gizmos.
@@ -162,14 +99,14 @@ class TransformGizmo extends Gizmo {
             y: this._colorSemi(COLOR_GREEN),
             z: this._colorSemi(COLOR_BLUE),
             xyz: this._colorSemi(Color.WHITE),
-            face: this._colorSemi(Color.WHITE)
+            f: this._colorSemi(Color.WHITE)
         },
         hover: {
             x: COLOR_RED.clone(),
             y: COLOR_GREEN.clone(),
             z: COLOR_BLUE.clone(),
             xyz: Color.WHITE.clone(),
-            face: COLOR_YELLOW.clone()
+            f: COLOR_YELLOW.clone()
         },
         disabled: COLOR_GRAY.clone()
     };
@@ -184,7 +121,7 @@ class TransformGizmo extends Gizmo {
         x: COLOR_RED.clone(),
         y: COLOR_GREEN.clone(),
         z: COLOR_BLUE.clone(),
-        face: COLOR_YELLOW.clone()
+        f: COLOR_YELLOW.clone()
     };
 
     /**
@@ -416,7 +353,7 @@ class TransformGizmo extends Gizmo {
      * @type {Color}
      */
     set xAxisColor(value) {
-        this._updateAxisColor(SHAPEAXIS_X, value);
+        this._updateAxisColor(GIZMOAXIS_X, value);
     }
 
     /**
@@ -434,7 +371,7 @@ class TransformGizmo extends Gizmo {
      * @type {Color}
      */
     set yAxisColor(value) {
-        this._updateAxisColor(SHAPEAXIS_Y, value);
+        this._updateAxisColor(GIZMOAXIS_Y, value);
     }
 
     /**
@@ -452,7 +389,7 @@ class TransformGizmo extends Gizmo {
      * @type {Color}
      */
     set zAxisColor(value) {
-        this._updateAxisColor(SHAPEAXIS_Z, value);
+        this._updateAxisColor(GIZMOAXIS_Z, value);
     }
 
     /**
@@ -476,7 +413,7 @@ class TransformGizmo extends Gizmo {
         this._meshColors.axis.y.copy(this._colorSemi(this._meshColors.axis.y));
         this._meshColors.axis.z.copy(this._colorSemi(this._meshColors.axis.z));
         this._meshColors.axis.xyz.copy(this._colorSemi(this._meshColors.axis.xyz));
-        this._meshColors.axis.face.copy(this._colorSemi(this._meshColors.axis.face));
+        this._meshColors.axis.f.copy(this._colorSemi(this._meshColors.axis.f));
 
         for (const name in this._shapes) {
             this._shapes[name].hover(!!this._hoverAxis);
@@ -498,9 +435,7 @@ class TransformGizmo extends Gizmo {
      * @private
      */
     _colorSemi(color) {
-        const clone = color.clone();
-        clone.a = this._colorAlpha;
-        return clone;
+        return color4from3(color, this._colorAlpha);
     }
 
     /**
@@ -530,7 +465,7 @@ class TransformGizmo extends Gizmo {
         if (!meshInstance) {
             return '';
         }
-        return meshInstance.node.name.split(":")[1];
+        return meshInstance.node.name.split(':')[1];
     }
 
     /**
@@ -673,7 +608,7 @@ class TransformGizmo extends Gizmo {
         const checkIsPlane = this._hoverIsPlane || this._selectedIsPlane;
         for (let i = 0; i < VEC3_AXES.length; i++) {
             const axis = VEC3_AXES[i];
-            if (checkAxis === SHAPEAXIS_XYZ) {
+            if (checkAxis === GIZMOAXIS_XYZ) {
                 this._drawSpanLine(gizmoPos, gizmoRot, axis);
                 continue;
             }
@@ -729,14 +664,14 @@ class TransformGizmo extends Gizmo {
      *
      * @param {string} shapeAxis - The shape axis. Can be:
      *
-     * - {@link SHAPEAXIS_X}
-     * - {@link SHAPEAXIS_Y}
-     * - {@link SHAPEAXIS_Z}
-     * - {@link SHAPEAXIS_YZ}
-     * - {@link SHAPEAXIS_XZ}
-     * - {@link SHAPEAXIS_XY}
-     * - {@link SHAPEAXIS_XYZ}
-     * - {@link SHAPEAXIS_FACE}
+     * - {@link GIZMOAXIS_X}
+     * - {@link GIZMOAXIS_Y}
+     * - {@link GIZMOAXIS_Z}
+     * - {@link GIZMOAXIS_YZ}
+     * - {@link GIZMOAXIS_XZ}
+     * - {@link GIZMOAXIS_XY}
+     * - {@link GIZMOAXIS_XYZ}
+     * - {@link GIZMOAXIS_FACE}
      *
      * @param {boolean} enabled - The enabled state of shape.
      */
@@ -753,14 +688,14 @@ class TransformGizmo extends Gizmo {
      *
      * @param {string} shapeAxis - The shape axis. Can be:
      *
-     * - {@link SHAPEAXIS_X}
-     * - {@link SHAPEAXIS_Y}
-     * - {@link SHAPEAXIS_Z}
-     * - {@link SHAPEAXIS_YZ}
-     * - {@link SHAPEAXIS_XZ}
-     * - {@link SHAPEAXIS_XY}
-     * - {@link SHAPEAXIS_XYZ}
-     * - {@link SHAPEAXIS_FACE}
+     * - {@link GIZMOAXIS_X}
+     * - {@link GIZMOAXIS_Y}
+     * - {@link GIZMOAXIS_Z}
+     * - {@link GIZMOAXIS_YZ}
+     * - {@link GIZMOAXIS_XZ}
+     * - {@link GIZMOAXIS_XY}
+     * - {@link GIZMOAXIS_XYZ}
+     * - {@link GIZMOAXIS_FACE}
      *
      * @returns {boolean} - Then enabled state of the shape
      */

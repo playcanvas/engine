@@ -7,21 +7,21 @@ import { HTMLCanvasElement } from '@playcanvas/canvas-mock';
 
 import { expect } from 'chai';
 
-describe('ElementComponent', function () {
+describe('ElementComponent', () => {
     let app;
 
-    beforeEach(function () {
+    beforeEach(() => {
         const canvas = new HTMLCanvasElement(500, 500);
         app = new Application(canvas, { graphicsDevice: new NullGraphicsDevice(canvas) });
     });
 
-    afterEach(function () {
+    afterEach(() => {
         app.destroy();
     });
 
-    describe('#constructor', function () {
+    describe('#constructor', () => {
 
-        it('creates a default element component', function () {
+        it('creates a default element component', () => {
             const e = new Entity();
             e.addComponent('element');
 
@@ -123,7 +123,7 @@ describe('ElementComponent', function () {
 
     });
 
-    it('unbinds screen component on reparent', function () {
+    it('unbinds screen component on reparent', () => {
         const screen = new Entity();
         screen.addComponent('screen');
         app.root.addChild(screen);
@@ -140,7 +140,7 @@ describe('ElementComponent', function () {
         expect(screen.screen._elements).to.not.include(e.element);
     });
 
-    it('unbinds screen component on destroy', function () {
+    it('unbinds screen component on destroy', () => {
         const screen = new Entity();
         screen.addComponent('screen');
         app.root.addChild(screen);

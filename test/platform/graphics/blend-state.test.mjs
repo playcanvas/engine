@@ -6,11 +6,11 @@ import {
 
 import { expect } from 'chai';
 
-describe('BlendState', function () {
+describe('BlendState', () => {
 
-    describe('#constructor', function () {
+    describe('#constructor', () => {
 
-        it('empty', function () {
+        it('empty', () => {
             const bs = new BlendState();
             expect(bs.blend).to.equal(false);
             expect(bs.colorOp).to.equal(BLENDEQUATION_ADD);
@@ -25,7 +25,7 @@ describe('BlendState', function () {
             expect(bs.alphaWrite).to.equal(true);
         });
 
-        it('minimal parameters', function () {
+        it('minimal parameters', () => {
             const bs = new BlendState(true, BLENDEQUATION_ADD, BLENDMODE_ONE, BLENDMODE_ZERO);
             expect(bs.blend).to.equal(true);
             expect(bs.colorOp).to.equal(BLENDEQUATION_ADD);
@@ -40,10 +40,10 @@ describe('BlendState', function () {
             expect(bs.alphaWrite).to.equal(true);
         });
 
-        it('full parameters', function () {
+        it('full parameters', () => {
             const bs = new BlendState(true, BLENDEQUATION_MIN, BLENDMODE_ONE, BLENDMODE_ZERO,
-                                      BLENDEQUATION_MAX, BLENDMODE_ONE_MINUS_DST_COLOR, BLENDMODE_SRC_ALPHA_SATURATE,
-                                      false, false, false, false);
+                BLENDEQUATION_MAX, BLENDMODE_ONE_MINUS_DST_COLOR, BLENDMODE_SRC_ALPHA_SATURATE,
+                false, false, false, false);
             expect(bs.blend).to.equal(true);
             expect(bs.colorOp).to.equal(BLENDEQUATION_MIN);
             expect(bs.colorSrcFactor).to.equal(BLENDMODE_ONE);

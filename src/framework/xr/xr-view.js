@@ -1,8 +1,8 @@
 import { EventHandler } from '../../core/event-handler.js';
 import { Texture } from '../../platform/graphics/texture.js';
-import { Vec4 } from "../../core/math/vec4.js";
-import { Mat3 } from "../../core/math/mat3.js";
-import { Mat4 } from "../../core/math/mat4.js";
+import { Vec4 } from '../../core/math/vec4.js';
+import { Mat3 } from '../../core/math/mat3.js';
+import { Mat4 } from '../../core/math/mat4.js';
 import { ADDRESS_CLAMP_TO_EDGE, FILTER_LINEAR, FILTER_NEAREST, PIXELFORMAT_RGB8 } from '../../platform/graphics/constants.js';
 
 /**
@@ -136,8 +136,7 @@ class XrView extends EventHandler {
      * Create a new XrView instance.
      *
      * @param {XrManager} manager - WebXR Manager.
-     * @param {XRView} xrView - [XRView](https://developer.mozilla.org/en-US/docs/Web/API/XRView)
-     * object that is created by WebXR API.
+     * @param {XRView} xrView - XRView object that is created by WebXR API.
      * @param {number} viewsCount - Number of views available for the session.
      * @ignore
      */
@@ -191,8 +190,9 @@ class XrView extends EventHandler {
             this._textureDepth.upload();
         }
 
-        if (this._textureColor || this._textureDepth)
+        if (this._textureColor || this._textureDepth) {
             device.on('devicelost', this._onDeviceLost, this);
+        }
     }
 
     /**
@@ -289,8 +289,8 @@ class XrView extends EventHandler {
     }
 
     /**
-     * A Vec4 (x, y, width, height) that represents a view's viewport. For monoscopic screen
-     * it will define fullscreen view, but for stereoscopic views (left/right eye) it will define
+     * A Vec4 (x, y, width, height) that represents a view's viewport. For a monoscopic screen,
+     * it will define fullscreen view. But for stereoscopic views (left/right eye), it will define
      * a part of a whole screen that view is occupying.
      *
      * @type {Vec4}
@@ -354,8 +354,9 @@ class XrView extends EventHandler {
      */
     update(frame, xrView) {
         this._xrView = xrView;
-        if (this._manager.views.availableColor)
+        if (this._manager.views.availableColor) {
             this._xrCamera = this._xrView.camera;
+        }
 
         const layer = frame.session.renderState.baseLayer;
 
@@ -379,16 +380,19 @@ class XrView extends EventHandler {
      * @private
      */
     _updateTextureColor() {
-        if (!this._manager.views.availableColor || !this._xrCamera || !this._textureColor)
+        if (!this._manager.views.availableColor || !this._xrCamera || !this._textureColor) {
             return;
+        }
 
         const binding = this._manager.webglBinding;
-        if (!binding)
+        if (!binding) {
             return;
+        }
 
         const texture = binding.getCameraImage(this._xrCamera);
-        if (!texture)
+        if (!texture) {
             return;
+        }
 
         const device = this._manager.app.graphicsDevice;
         const gl = device.gl;
@@ -438,8 +442,9 @@ class XrView extends EventHandler {
      * @private
      */
     _updateDepth(frame) {
-        if (!this._manager.views.availableDepth || !this._textureDepth)
+        if (!this._manager.views.availableDepth || !this._textureDepth) {
             return;
+        }
 
         const gpu = this._manager.views.depthGpuOptimized;
 
@@ -535,8 +540,8 @@ class XrView extends EventHandler {
     }
 
     /**
-     * Get depth value from depth information in meters. UV is in range of 0..1, with origin in
-     * top-left corner of a texture.
+     * Get a depth value from depth information in meters. The specified UV is in the range 0..1,
+     * with the origin in the top-left corner of the depth texture.
      *
      * @param {number} u - U coordinate of pixel in depth texture, which is in range from 0.0 to
      * 1.0 (left to right).
@@ -551,8 +556,9 @@ class XrView extends EventHandler {
      * }
      */
     getDepth(u, v) {
-        if (this._manager.views.depthGpuOptimized)
+        if (this._manager.views.depthGpuOptimized) {
             return null;
+        }
 
         return this._depthInfo?.getDepthInMeters(u, v) ?? null;
     }

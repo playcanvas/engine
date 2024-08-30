@@ -90,7 +90,7 @@ class ShadowRenderer {
         this.sourceId = scope.resolve('source');
         this.pixelOffsetId = scope.resolve('pixelOffset');
         this.weightId = scope.resolve('weight[0]');
-        this.blurVsmShaderCode = [shaderChunks.blurVSMPS, '#define GAUSS\n' + shaderChunks.blurVSMPS];
+        this.blurVsmShaderCode = [shaderChunks.blurVSMPS, `#define GAUSS\n${shaderChunks.blurVSMPS}`];
         const packed = '#define PACKED\n';
         this.blurPackedVsmShaderCode = [packed + this.blurVsmShaderCode[0], packed + this.blurVsmShaderCode[1]];
 
@@ -210,10 +210,9 @@ class ShadowRenderer {
 
         // Set standard shadowmap states
         const isClustered = this.renderer.scene.clusteredLightingEnabled;
-        const gpuOrGl2 = device.isWebGL2 || device.isWebGPU;
         const useShadowSampler = isClustered ?
-            light._isPcf && gpuOrGl2 :     // both spot and omni light are using shadow sampler on webgl2 when clustered
-            light._isPcf && gpuOrGl2 && light._type !== LIGHTTYPE_OMNI;    // for non-clustered, point light is using depth encoded in color buffer (should change to shadow sampler)
+            light._isPcf :     // both spot and omni light are using shadow sampler when clustered
+            light._isPcf && light._type !== LIGHTTYPE_OMNI;    // for non-clustered, point light is using depth encoded in color buffer (should change to shadow sampler)
 
         device.setBlendState(useShadowSampler ? this.blendStateNoWrite : this.blendStateWrite);
         device.setDepthState(light.shadowDepthState);
@@ -269,8 +268,9 @@ class ShadowRenderer {
             });
 
             // add it to the cache
-            if (!this.shadowPassCache[lightType])
+            if (!this.shadowPassCache[lightType]) {
                 this.shadowPassCache[lightType] = [];
+            }
             this.shadowPassCache[lightType][shadowType] = shadowPassInfo;
         }
 
@@ -491,13 +491,13 @@ class ShadowRenderer {
             this.blurVsmWeights[filterSize] = gaussWeights(filterSize);
 
             const blurVS = shaderChunks.fullscreenQuadVS;
-            let blurFS = '#define SAMPLES ' + filterSize + '\n';
+            let blurFS = `#define SAMPLES ${filterSize}\n`;
             if (isVsm8) {
                 blurFS += this.blurPackedVsmShaderCode[blurMode];
             } else {
                 blurFS += this.blurVsmShaderCode[blurMode];
             }
-            const blurShaderName = 'blurVsm' + blurMode + '' + filterSize + '' + isVsm8;
+            const blurShaderName = `blurVsm${blurMode}${filterSize}${isVsm8}`;
             blurShader = createShaderFromCode(this.device, blurVS, blurFS, blurShaderName);
 
             if (isVsm8) {
@@ -564,7 +564,7 @@ class ShadowRenderer {
 
             // format of the view uniform buffer
             this.viewUniformFormat = new UniformBufferFormat(this.device, [
-                new UniformFormat("matrix_viewProjection", UNIFORMTYPE_MAT4)
+                new UniformFormat('matrix_viewProjection', UNIFORMTYPE_MAT4)
             ]);
 
             // format of the view bind group - contains single uniform buffer, and no textures

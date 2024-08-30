@@ -50,8 +50,9 @@ class Bundle extends EventHandler {
      * @ignore
      */
     addFile(url, data) {
-        if (this._index.has(url))
+        if (this._index.has(url)) {
             return;
+        }
         this._index.set(url, data);
         this.fire('add', url, data);
     }
@@ -90,8 +91,9 @@ class Bundle extends EventHandler {
      * @type {boolean}
      */
     set loaded(value) {
-        if (!value || this._loaded)
+        if (!value || this._loaded) {
             return;
+        }
 
         this._loaded = true;
         this.fire('load');

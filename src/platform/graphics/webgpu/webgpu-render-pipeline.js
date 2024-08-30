@@ -1,12 +1,12 @@
-import { Debug, DebugHelper } from "../../../core/debug.js";
-import { hash32Fnv1a } from "../../../core/hash.js";
-import { array } from "../../../core/array-utils.js";
-import { TRACEID_RENDERPIPELINE_ALLOC } from "../../../core/constants.js";
-import { WebgpuVertexBufferLayout } from "./webgpu-vertex-buffer-layout.js";
-import { WebgpuDebug } from "./webgpu-debug.js";
-import { WebgpuPipeline } from "./webgpu-pipeline.js";
-import { DebugGraphics } from "../debug-graphics.js";
-import { bindGroupNames } from "../constants.js";
+import { Debug, DebugHelper } from '../../../core/debug.js';
+import { hash32Fnv1a } from '../../../core/hash.js';
+import { array } from '../../../core/array-utils.js';
+import { TRACEID_RENDERPIPELINE_ALLOC } from '../../../core/constants.js';
+import { WebgpuVertexBufferLayout } from './webgpu-vertex-buffer-layout.js';
+import { WebgpuDebug } from './webgpu-debug.js';
+import { WebgpuPipeline } from './webgpu-pipeline.js';
+import { DebugGraphics } from '../debug-graphics.js';
+import { bindGroupNames } from '../constants.js';
 
 /**
  * @import { BindGroupFormat } from '../bind-group-format.js'
@@ -180,7 +180,7 @@ class WebgpuRenderPipeline extends WebgpuPipeline {
 
         // no match or a hash collision, so create a new pipeline
         const primitiveTopology = _primitiveTopology[primitive.type];
-        Debug.assert(primitiveTopology, `Unsupported primitive topology`, primitive);
+        Debug.assert(primitiveTopology, 'Unsupported primitive topology', primitive);
 
         // pipeline layout
         const pipelineLayout = this.getPipelineLayout(bindGroupFormats);
@@ -192,7 +192,7 @@ class WebgpuRenderPipeline extends WebgpuPipeline {
         const cacheEntry = new CacheEntry();
         cacheEntry.hashes = new Uint32Array(lookupHashes);
         cacheEntry.pipeline = this.create(primitiveTopology, shader, renderTarget, pipelineLayout, blendState,
-                                          depthState, vertexBufferLayout, cullMode, stencilEnabled, stencilFront, stencilBack);
+            depthState, vertexBufferLayout, cullMode, stencilEnabled, stencilFront, stencilBack);
 
         // add to cache
         if (cacheEntries) {
@@ -304,7 +304,7 @@ class WebgpuRenderPipeline extends WebgpuPipeline {
         const webgpuShader = shader.impl;
 
         /** @type {GPURenderPipelineDescriptor} */
-        const descr = {
+        const desc = {
             vertex: {
                 module: webgpuShader.getVertexShaderModule(),
                 entryPoint: webgpuShader.vertexEntryPoint,
@@ -327,7 +327,7 @@ class WebgpuRenderPipeline extends WebgpuPipeline {
             layout: pipelineLayout
         };
 
-        descr.fragment = {
+        desc.fragment = {
             module: webgpuShader.getFragmentShaderModule(),
             entryPoint: webgpuShader.fragmentEntryPoint,
             targets: []
@@ -347,7 +347,7 @@ class WebgpuRenderPipeline extends WebgpuPipeline {
             const blend = this.getBlend(blendState);
 
             colorAttachments.forEach((attachment) => {
-                descr.fragment.targets.push({
+                desc.fragment.targets.push({
                     format: attachment.format,
                     writeMask: writeMask,
                     blend: blend
@@ -358,16 +358,16 @@ class WebgpuRenderPipeline extends WebgpuPipeline {
         WebgpuDebug.validate(this.device);
 
         _pipelineId++;
-        DebugHelper.setLabel(descr, `RenderPipelineDescr-${_pipelineId}`);
+        DebugHelper.setLabel(desc, `RenderPipelineDescr-${_pipelineId}`);
 
-        const pipeline = wgpu.createRenderPipeline(descr);
+        const pipeline = wgpu.createRenderPipeline(desc);
 
         DebugHelper.setLabel(pipeline, `RenderPipeline-${_pipelineId}`);
-        Debug.trace(TRACEID_RENDERPIPELINE_ALLOC, `Alloc: Id ${_pipelineId}, stack: ${DebugGraphics.toString()}`, descr);
+        Debug.trace(TRACEID_RENDERPIPELINE_ALLOC, `Alloc: Id ${_pipelineId}, stack: ${DebugGraphics.toString()}`, desc);
 
         WebgpuDebug.end(this.device, {
             renderPipeline: this,
-            descr,
+            desc: desc,
             shader
         });
 

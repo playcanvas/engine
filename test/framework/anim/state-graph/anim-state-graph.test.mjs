@@ -1,11 +1,11 @@
 import { AnimStateGraph } from '../../../../src/framework/anim/state-graph/anim-state-graph.js';
 import { expect } from 'chai';
 
-describe('AnimStateGraph', function () {
+describe('AnimStateGraph', () => {
 
-    describe('#constructor', function () {
+    describe('#constructor', () => {
 
-        it('instantiates correctly with data layers as an object', function () {
+        it('instantiates correctly with data layers as an object', () => {
             const data = {
                 'layers': {
                     '0': {
@@ -42,7 +42,7 @@ describe('AnimStateGraph', function () {
             expect(animStateGraph.layers[0].states[1].name).to.equal('New State');
         });
 
-        it('instantiates correctly with data layers as an array', function () {
+        it('instantiates correctly with data layers as an array', () => {
             const data = {
                 'layers': [
                     {

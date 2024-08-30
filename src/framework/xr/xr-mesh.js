@@ -1,15 +1,14 @@
-import { EventHandler } from "../../core/event-handler.js";
-import { Vec3 } from "../../core/math/vec3.js";
-import { Quat } from "../../core/math/quat.js";
+import { EventHandler } from '../../core/event-handler.js';
+import { Vec3 } from '../../core/math/vec3.js';
+import { Quat } from '../../core/math/quat.js';
 
 /**
  * @import { XrMeshDetection } from './xr-mesh-detection.js'
  */
 
 /**
- * Detected Mesh instance that provides its transform (position, rotation),
- * triangles (vertices, indices) and its semantic label. Any of its properties can
- * change during its lifetime.
+ * Detected Mesh instance that provides its transform (position, rotation), triangles (vertices,
+ * indices) and its semantic label. Any of its properties can change during its lifetime.
  *
  * @category XR
  * @ignore
@@ -93,8 +92,8 @@ class XrMesh extends EventHandler {
     }
 
     /**
-     * Semantic Label of a mesh that is provided by underlying system.
-     * Current list includes (but not limited to): https://github.com/immersive-web/semantic-labels/blob/master/labels.json
+     * Semantic Label of a mesh that is provided by underlying system. Current list includes (but
+     * not limited to): https://github.com/immersive-web/semantic-labels/blob/master/labels.json
      *
      * @type {string}
      */
@@ -103,7 +102,7 @@ class XrMesh extends EventHandler {
     }
 
     /**
-     * Float 32 array of mesh vertices. This array contains 3 components per vertex: x,y,z coordinates.
+     * Array of mesh vertices. This array contains 3 components per vertex (`x, y, z`).
      *
      * @type {Float32Array}
      */
@@ -112,7 +111,7 @@ class XrMesh extends EventHandler {
     }
 
     /**
-     * Uint 32 array of mesh indices.
+     * Array of mesh indices.
      *
      * @type {Uint32Array}
      */

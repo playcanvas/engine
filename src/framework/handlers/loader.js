@@ -151,8 +151,9 @@ class ResourceLoader {
 
                 if (urlObj.load instanceof DataView) {
                     if (handler.openBinary) {
-                        if (!self._requests[key])
+                        if (!self._requests[key]) {
                             return;
+                        }
 
                         try {
                             const data = handler.openBinary(urlObj.load);
@@ -165,13 +166,14 @@ class ResourceLoader {
 
                     urlObj.load = URL.createObjectURL(new Blob([urlObj.load]));
                     if (asset) {
-                        if (asset.urlObject)
+                        if (asset.urlObject) {
                             URL.revokeObjectURL(asset.urlObject);
+                        }
                         asset.urlObject = urlObj.load;
                     }
                 }
 
-                handler.load(urlObj, function (err, data, extra) {
+                handler.load(urlObj, (err, data, extra) => {
                     // make sure key exists because loader
                     // might have been destroyed by now
                     if (!self._requests[key]) {
@@ -213,7 +215,7 @@ class ResourceLoader {
                     if (bundle) this._app.assets?.load(bundle);
                 }
 
-                this._app.bundles.loadUrl(normalizedUrl, function (err, fileUrlFromBundle) {
+                this._app.bundles.loadUrl(normalizedUrl, (err, fileUrlFromBundle) => {
                     handleLoad(err, {
                         load: fileUrlFromBundle,
                         original: normalizedUrl
@@ -277,7 +279,7 @@ class ResourceLoader {
     open(type, data) {
         const handler = this._handlers[type];
         if (!handler) {
-            console.warn('No resource handler found for: ' + type);
+            console.warn(`No resource handler found for: ${type}`);
             return data;
         }
 
@@ -295,7 +297,7 @@ class ResourceLoader {
     patch(asset, assets) {
         const handler = this._handlers[asset.type];
         if (!handler)  {
-            console.warn('No resource handler found for: ' + asset.type);
+            console.warn(`No resource handler found for: ${asset.type}`);
             return;
         }
 

@@ -34,7 +34,7 @@ CubemapRenderer.prototype.initialize = function () {
     // this entity needs to have camera component as well
     var camera = this.entity.camera;
     if (!camera) {
-        console.error("CubemapRenderer component requires Camera component to be created on the Entity.");
+        console.error('CubemapRenderer component requires Camera component to be created on the Entity.');
         return;
     }
 
@@ -46,7 +46,7 @@ CubemapRenderer.prototype.initialize = function () {
 
     // Create cubemap render target with specified resolution and mipmap generation
     this.cubeMap = new pc.Texture(this.app.graphicsDevice, {
-        name: this.entity.name + ':CubemapRenderer-' + resolution,
+        name: `${this.entity.name}:CubemapRenderer-${resolution}`,
         width: resolution,
         height: resolution,
         format: pc.PIXELFORMAT_SRGBA8,
@@ -71,7 +71,7 @@ CubemapRenderer.prototype.initialize = function () {
 
         // render target, connected to cubemap texture face
         var renderTarget = new pc.RenderTarget({
-            name: 'CubemapRenderer-Face' + i,
+            name: `CubemapRenderer-Face${i}`,
             colorBuffer: this.cubeMap,
             depth: this.depth,
             face: i,
@@ -79,7 +79,7 @@ CubemapRenderer.prototype.initialize = function () {
         });
 
         // create a child entity with the camera for this face
-        var e = new pc.Entity("CubeMapCamera_" + i);
+        var e = new pc.Entity(`CubeMapCamera_${i}`);
         e.addComponent('camera', {
             aspectRatio: 1,
             fov: 90,

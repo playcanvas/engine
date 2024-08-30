@@ -77,21 +77,12 @@ class LayerComposition extends EventHandler {
     subLayerEnabled = []; // more granular control on top of layer.enabled (ANDed)
 
     /**
-     * A read-only array of {@link CameraComponent} that can be used during rendering. e.g.
-     * Inside {@link Layer#onPreCull}, {@link Layer#onPostCull}, {@link Layer#onPreRender},
-     * {@link Layer#onPostRender}.
+     * An array of {@link CameraComponent}s.
      *
      * @type {CameraComponent[]}
-     */
-    cameras = [];
-
-    /**
-     * A mapping of {@link CameraComponent} to its index in {@link LayerComposition#cameras}.
-     *
-     * @type {Map<CameraComponent, number>}
      * @ignore
      */
-    camerasMap = new Map();
+    cameras = [];
 
     /**
      * The actual rendering sequence, generated based on layers and cameras
@@ -170,12 +161,6 @@ class LayerComposition extends EventHandler {
                 sortPriority(this.cameras);
             }
 
-            // update camera map
-            this.camerasMap.clear();
-            for (let i = 0; i < this.cameras.length; i++) {
-                this.camerasMap.set(this.cameras[i], i);
-            }
-
             // collect a list of layers this camera renders
             const cameraLayers = [];
 
@@ -236,7 +221,7 @@ class LayerComposition extends EventHandler {
                                 // add render action to describe rendering step
                                 const isTransparent = this.subLayerList[j];
                                 lastRenderAction = this.addRenderAction(renderActionCount, layer, isTransparent, camera,
-                                                                        cameraFirstRenderAction, postProcessMarked);
+                                    cameraFirstRenderAction, postProcessMarked);
                                 renderActionCount++;
                                 cameraFirstRenderAction = false;
                             }
@@ -283,13 +268,8 @@ class LayerComposition extends EventHandler {
     // function adds new render action to a list, while trying to limit allocation and reuse already allocated objects
     addRenderAction(renderActionIndex, layer, isTransparent, camera, cameraFirstRenderAction, postProcessMarked) {
 
-        // render target from the camera takes precedence over the render target from the layer
-        let rt = layer.renderTarget;
-        if (camera && camera.renderTarget) {
-            if (layer.id !== LAYERID_DEPTH) {   // ignore depth layer
-                rt = camera.renderTarget;
-            }
-        }
+        // camera's render target, ignoring depth layer
+        let rt = layer.id !== LAYERID_DEPTH ? camera.renderTarget : null;
 
         // was camera and render target combo used already
         let used = false;
@@ -371,28 +351,28 @@ class LayerComposition extends EventHandler {
 
         // #if _DEBUG
         if (Tracing.get(TRACEID_RENDER_ACTION)) {
-            Debug.trace(TRACEID_RENDER_ACTION, 'Render Actions for composition: ' + this.name);
+            Debug.trace(TRACEID_RENDER_ACTION, `Render Actions for composition: ${this.name}`);
             for (let i = 0; i < this._renderActions.length; i++) {
                 const ra = this._renderActions[i];
                 const camera = ra.camera;
                 if (ra.useCameraPasses) {
-                    Debug.trace(TRACEID_RENDER_ACTION, i +
-                        ('CustomPasses Cam: ' + (camera ? camera.entity.name : '-')));
+                    Debug.trace(TRACEID_RENDER_ACTION, `${i
+                    }CustomPasses Cam: ${camera ? camera.entity.name : '-'}`);
                 } else {
                     const layer = ra.layer;
                     const enabled = layer.enabled && this.isEnabled(layer, ra.transparent);
                     const clear = (ra.clearColor ? 'Color ' : '..... ') + (ra.clearDepth ? 'Depth ' : '..... ') + (ra.clearStencil ? 'Stencil' : '.......');
 
-                    Debug.trace(TRACEID_RENDER_ACTION, i +
-                        (' Cam: ' + (camera ? camera.entity.name : '-')).padEnd(22, ' ') +
-                        (' Lay: ' + layer.name).padEnd(22, ' ') +
+                    Debug.trace(TRACEID_RENDER_ACTION, `${i +
+                        (` Cam: ${camera ? camera.entity.name : '-'}`).padEnd(22, ' ') +
+                        (` Lay: ${layer.name}`).padEnd(22, ' ') +
                         (ra.transparent ? ' TRANSP' : ' OPAQUE') +
                         (enabled ? ' ENABLED ' : ' DISABLED') +
-                        (' RT: ' + (ra.renderTarget ? ra.renderTarget.name : '-')).padEnd(30, ' ') +
-                        ' Clear: ' + clear +
-                        (ra.firstCameraUse ? ' CAM-FIRST' : '') +
-                        (ra.lastCameraUse ? ' CAM-LAST' : '') +
-                        (ra.triggerPostprocess ? ' POSTPROCESS' : '')
+                        (` RT: ${ra.renderTarget ? ra.renderTarget.name : '-'}`).padEnd(30, ' ')
+                    } Clear: ${clear
+                    }${ra.firstCameraUse ? ' CAM-FIRST' : ''
+                    }${ra.lastCameraUse ? ' CAM-LAST' : ''
+                    }${ra.triggerPostprocess ? ' POSTPROCESS' : ''}`
                     );
                 }
             }

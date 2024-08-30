@@ -128,10 +128,12 @@ class Frustum {
         for (let p = 0; p < 6; p++) {
             const { normal, distance } = this.planes[p];
             const d = normal.dot(center) + distance;
-            if (d <= -radius)
+            if (d <= -radius) {
                 return 0;
-            if (d > radius)
+            }
+            if (d > radius) {
                 c++;
+            }
         }
 
         return (c === 6) ? 2 : 1;

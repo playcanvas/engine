@@ -9,6 +9,8 @@ import { SkinInstanceCache } from '../../scene/skin-instance-cache.js';
 
 import { Entity } from '../entity.js';
 import { Asset } from '../asset/asset.js';
+import { VertexFormat } from '../../platform/graphics/vertex-format.js';
+import { VertexBuffer } from '../../platform/graphics/vertex-buffer.js';
 
 // Container resource returned by the GlbParser. Implements the ContainerResource interface.
 class GlbContainerResource {
@@ -60,7 +62,7 @@ class GlbContainerResource {
     }
 
     static createAsset(assetName, type, resource, index) {
-        const subAsset = new Asset(assetName + '/' + type + '/' + index, type, {
+        const subAsset = new Asset(`${assetName}/${type}/${index}`, type, {
             url: ''
         });
         subAsset.resource = resource;
@@ -79,7 +81,7 @@ class GlbContainerResource {
         const defaultMaterial = this._defaultMaterial;
         const skinnedMeshInstances = [];
 
-        const createMeshInstance = function (root, entity, mesh, materials, meshDefaultMaterials, skins, gltfNode) {
+        const createMeshInstance = function (root, entity, mesh, materials, meshDefaultMaterials, skins, gltfNode, nodeInstancingMap) {
 
             // clone mesh instance
             const materialIndex = meshDefaultMaterials[mesh.id];
@@ -98,6 +100,21 @@ class GlbContainerResource {
                     rootBone: root,
                     entity: entity
                 });
+            }
+
+            // if the node is instanced, hook up instancing
+            const instData = nodeInstancingMap.get(gltfNode);
+            if (instData) {
+
+                const matrices = instData.matrices;
+                const vbFormat = VertexFormat.getDefaultInstancingFormat(mesh.device);
+                const vb = new VertexBuffer(mesh.device, vbFormat, matrices.length / 16, {
+                    data: matrices
+                });
+                meshInstance.setInstancing(vb);
+
+                // mark the vertex buffer for destruction when the mesh instance is destroyed
+                meshInstance.instancingData._destroyVertexBuffer = true;
             }
 
             return meshInstance;
@@ -127,7 +144,7 @@ class GlbContainerResource {
                         for (let mi = 0; mi < meshGroup.length; mi++) {
                             const mesh = meshGroup[mi];
                             if (mesh) {
-                                const cloneMi = createMeshInstance(root, entity, mesh, glb.materials, glb.meshDefaultMaterials, glb.skins, gltfNode);
+                                const cloneMi = createMeshInstance(root, entity, mesh, glb.materials, glb.meshDefaultMaterials, glb.skins, gltfNode, glb.nodeInstancingMap);
 
                                 // add it to list
                                 if (!attachedMi) {
@@ -207,7 +224,7 @@ class GlbContainerResource {
             Debug.warn(`No variant named ${name} exists in resource`);
             return;
         }
-        const renders = entity.findComponents("render");
+        const renders = entity.findComponents('render');
         for (let i = 0; i < renders.length; i++) {
             const renderComponent = renders[i];
             this._applyMaterialVariant(variant, renderComponent.meshInstances);
@@ -327,7 +344,7 @@ class GlbContainerResource {
         };
 
         const destroyAssets = function (assets) {
-            assets.forEach(function (asset) {
+            assets.forEach((asset) => {
                 destroyAsset(asset);
             });
         };

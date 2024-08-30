@@ -138,7 +138,7 @@ class XrLightEstimation extends EventHandler {
      * fired.
      *
      * @example
-     * app.xr.on('start', function () {
+     * app.xr.on('start', () => {
      *     if (app.xr.lightEstimation.supported) {
      *         app.xr.lightEstimation.start();
      *     }
@@ -147,17 +147,21 @@ class XrLightEstimation extends EventHandler {
     start() {
         let err;
 
-        if (!this._manager.session)
+        if (!this._manager.session) {
             err = new Error('XR session is not running');
+        }
 
-        if (!err && this._manager.type !== XRTYPE_AR)
+        if (!err && this._manager.type !== XRTYPE_AR) {
             err = new Error('XR session type is not AR');
+        }
 
-        if (!err && !this._supported)
+        if (!err && !this._supported) {
             err = new Error('light-estimation is not supported');
+        }
 
-        if (!err && this._lightProbe || this._lightProbeRequested)
+        if (!err && this._lightProbe || this._lightProbeRequested) {
             err = new Error('light estimation is already requested');
+        }
 
         if (err) {
             this.fire('error', err);

@@ -11,8 +11,7 @@ class ApplicationStats {
     /**
      * Create a new ApplicationStats instance.
      *
-     * @param {GraphicsDevice} device - The
-     * graphics device.
+     * @param {GraphicsDevice} device - The graphics device.
      */
     constructor(device) {
         this.frame = {

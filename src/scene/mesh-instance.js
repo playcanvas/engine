@@ -9,10 +9,9 @@ import {
     MASK_AFFECT_DYNAMIC, MASK_BAKE, MASK_AFFECT_LIGHTMAPPED,
     RENDERSTYLE_SOLID,
     SHADERDEF_UV0, SHADERDEF_UV1, SHADERDEF_VCOLOR, SHADERDEF_TANGENTS, SHADERDEF_NOSHADOW, SHADERDEF_SKIN,
-    SHADERDEF_SCREENSPACE, SHADERDEF_MORPH_POSITION, SHADERDEF_MORPH_NORMAL,
-    SHADERDEF_LM, SHADERDEF_DIRLM, SHADERDEF_LMAMBIENT, SHADERDEF_INSTANCING,
-    SORTKEY_FORWARD,
-    SHADERDEF_MORPH_TEXTURE_BASED_INT
+    SHADERDEF_SCREENSPACE, SHADERDEF_MORPH_POSITION, SHADERDEF_MORPH_NORMAL, SHADERDEF_BATCH,
+    SHADERDEF_LM, SHADERDEF_DIRLM, SHADERDEF_LMAMBIENT, SHADERDEF_INSTANCING, SHADERDEF_MORPH_TEXTURE_BASED_INT,
+    SORTKEY_FORWARD
 } from './constants.js';
 import { GraphNode } from './graph-node.js';
 import { getDefaultMaterial } from './materials/default-material.js';
@@ -26,7 +25,7 @@ import { array } from '../core/array-utils.js';
  * @import { Camera } from './camera.js'
  * @import { GSplatInstance } from './gsplat/gsplat-instance.js'
  * @import { GraphicsDevice } from '../platform/graphics/graphics-device.js'
- * @import { Material } from './materials/material.js'
+ * @import { Material, ShaderVariantParams } from './materials/material.js'
  * @import { Mesh } from './mesh.js'
  * @import { MorphInstance } from './morph-instance.js'
  * @import { RenderingParams } from './renderer/rendering-params.js'
@@ -60,10 +59,24 @@ class InstancingData {
     vertexBuffer = null;
 
     /**
+     * True if the vertex buffer is destroyed when the mesh instance is destroyed.
+     *
+     * @type {boolean}
+     */
+    _destroyVertexBuffer = false;
+
+    /**
      * @param {number} numObjects - The number of objects instanced.
      */
     constructor(numObjects) {
         this.count = numObjects;
+    }
+
+    destroy() {
+        if (this._destroyVertexBuffer) {
+            this.vertexBuffer?.destroy();
+        }
+        this.vertexBuffer = null;
     }
 }
 
@@ -212,7 +225,7 @@ class MeshInstance {
     visible = true;
 
     /**
-     * Read this value in {@link Layer#onPostCull} to determine if the object is actually going to
+     * Read this value in {@link CameraComponent#onPostCull} to determine if the object is actually going to
      * be rendered.
      *
      * @type {boolean}
@@ -387,13 +400,7 @@ class MeshInstance {
      * this.app.scene.root.addChild(entity);
      */
     constructor(mesh, material, node = null) {
-        // if first parameter is of GraphNode type, handle previous constructor signature: (node, mesh, material)
-        if (mesh instanceof GraphNode) {
-            const temp = mesh;
-            mesh = material;
-            material = node;
-            node = temp;
-        }
+        Debug.assert(!(mesh instanceof GraphNode), 'Incorrect parameters for MeshInstance\'s constructor. Use new MeshInstance(mesh, material, node)');
 
         this.node = node;           // The node that defines the transform of the mesh instance
         this._mesh = mesh;          // The mesh that this instance renders
@@ -444,8 +451,9 @@ class MeshInstance {
      */
     set mesh(mesh) {
 
-        if (mesh === this._mesh)
+        if (mesh === this._mesh) {
             return;
+        }
 
         if (this._mesh) {
             this._mesh.decRefCount();
@@ -619,8 +627,17 @@ class MeshInstance {
                 // marker to allow us to see the source node for shader alloc
                 DebugGraphics.pushGpuMarker(this.mesh.device, `Node: ${this.node.name}`);
 
-                const shader = mat.getShaderVariant(this.mesh.device, scene, shaderDefs, renderParams, shaderPass, sortedLights,
-                                                    viewUniformFormat, viewBindGroupFormat, this._mesh.vertexBuffer?.format);
+                const shader = mat.getShaderVariant({
+                    device: this.mesh.device,
+                    scene: scene,
+                    objDefs: shaderDefs,
+                    renderParams: renderParams,
+                    pass: shaderPass,
+                    sortedLights: sortedLights,
+                    viewUniformFormat: viewUniformFormat,
+                    viewBindGroupFormat: viewBindGroupFormat,
+                    vertexFormat: this.mesh.vertexBuffer?.format
+                });
 
                 DebugGraphics.popGpuMarker(this.mesh.device);
 
@@ -739,6 +756,14 @@ class MeshInstance {
         return this._receiveShadow;
     }
 
+    set batching(val) {
+        this._updateShaderDefs(val ? (this._shaderDefs | SHADERDEF_BATCH) : (this._shaderDefs & ~SHADERDEF_BATCH));
+    }
+
+    get batching() {
+        return (this._shaderDefs & SHADERDEF_BATCH) !== 0;
+    }
+
     /**
      * Sets the skin instance managing skinning of this mesh instance. Set to null if skinning is
      * not used.
@@ -836,8 +861,9 @@ class MeshInstance {
      * @type {number}
      */
     set instancingCount(value) {
-        if (this.instancingData)
+        if (this.instancingData) {
             this.instancingData.count = value;
+        }
     }
 
     /**
@@ -877,6 +903,8 @@ class MeshInstance {
 
         // make sure material clears references to this meshInstance
         this.material = null;
+
+        this.instancingData?.destroy();
     }
 
     // shader uniform names for lightmaps
@@ -1013,26 +1041,11 @@ class MeshInstance {
      * over parameter of the same name if set on Material this mesh instance uses for rendering.
      *
      * @param {string} name - The name of the parameter to set.
-     * @param {number|number[]|Texture|Float32Array} data - The
-     * value for the specified parameter.
+     * @param {number|number[]|Texture|Float32Array} data - The value for the specified parameter.
      * @param {number} [passFlags] - Mask describing which passes the material should be included
-     * in.
+     * in. Defaults to 0xFFFFFFFF (all passes).
      */
-    setParameter(name, data, passFlags = -262141) {
-
-        // note on -262141: All bits set except 2 - 19 range
-
-        if (data === undefined && typeof name === 'object') {
-            const uniformObject = name;
-            if (uniformObject.length) {
-                for (let i = 0; i < uniformObject.length; i++) {
-                    this.setParameter(uniformObject[i]);
-                }
-                return;
-            }
-            name = uniformObject.name;
-            data = uniformObject.value;
-        }
+    setParameter(name, data, passFlags = 0xFFFFFFFF) {
 
         const param = this.parameters[name];
         if (param) {
@@ -1058,8 +1071,9 @@ class MeshInstance {
     setRealtimeLightmap(name, texture) {
         // no change
         const old = this.getParameter(name);
-        if (old === texture)
+        if (old === texture) {
             return;
+        }
 
         // remove old
         if (old) {
@@ -1075,11 +1089,11 @@ class MeshInstance {
         }
     }
 
-     /**
-      * Deletes a shader parameter on a mesh instance.
-      *
-      * @param {string} name - The name of the parameter to delete.
-      */
+    /**
+     * Deletes a shader parameter on a mesh instance.
+     *
+     * @param {string} name - The name of the parameter to delete.
+     */
     deleteParameter(name) {
         if (this.parameters[name]) {
             delete this.parameters[name];

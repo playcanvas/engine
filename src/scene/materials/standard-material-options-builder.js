@@ -11,7 +11,8 @@ import {
     SHADERDEF_SCREENSPACE, SHADERDEF_SKIN, SHADERDEF_TANGENTS, SHADERDEF_UV0, SHADERDEF_UV1, SHADERDEF_VCOLOR, SHADERDEF_LMAMBIENT,
     TONEMAP_NONE,
     DITHER_NONE,
-    SHADERDEF_MORPH_TEXTURE_BASED_INT
+    SHADERDEF_MORPH_TEXTURE_BASED_INT, SHADERDEF_BATCH,
+    FOG_NONE
 } from '../constants.js';
 import { _matTex2D } from '../shader-lib/programs/standard.js';
 import { LitMaterialOptionsBuilder } from './lit-material-options-builder.js';
@@ -72,6 +73,7 @@ class StandardMaterialOptionsBuilder {
 
         options.litOptions.screenSpace = objDefs && (objDefs & SHADERDEF_SCREENSPACE) !== 0;
         options.litOptions.skin = objDefs && (objDefs & SHADERDEF_SKIN) !== 0;
+        options.litOptions.batch = objDefs && (objDefs & SHADERDEF_BATCH) !== 0;
         options.litOptions.useInstancing = objDefs && (objDefs & SHADERDEF_INSTANCING) !== 0;
         options.litOptions.useMorphPosition = objDefs && (objDefs & SHADERDEF_MORPH_POSITION) !== 0;
         options.litOptions.useMorphNormal = objDefs && (objDefs & SHADERDEF_MORPH_NORMAL) !== 0;
@@ -127,13 +129,13 @@ class StandardMaterialOptionsBuilder {
         const isOpacity = p === 'opacity';
 
         if (!minimalOptions || isOpacity) {
-            const mname = p + 'Map';
-            const vname = p + 'VertexColor';
-            const vcname = p + 'VertexColorChannel';
-            const cname = mname + 'Channel';
-            const tname = mname + 'Transform';
-            const uname = mname + 'Uv';
-            const iname = mname + 'Identifier';
+            const mname = `${p}Map`;
+            const vname = `${p}VertexColor`;
+            const vcname = `${p}VertexColorChannel`;
+            const cname = `${mname}Channel`;
+            const tname = `${mname}Transform`;
+            const uname = `${mname}Uv`;
+            const iname = `${mname}Identifier`;
 
             // Avoid overriding previous lightMap properties
             if (p !== 'light') {
@@ -184,7 +186,6 @@ class StandardMaterialOptionsBuilder {
     }
 
     _updateMinOptions(options, stdMat, pass) {
-        options.opacityTint = stdMat.blendType !== BLEND_NONE || stdMat.opacityShadowDither !== DITHER_NONE;
 
         // pre-pass uses the same dither setting as forward pass, otherwise shadow dither
         const isPrepass = pass === SHADER_PREPASS_VELOCITY;
@@ -207,18 +208,12 @@ class StandardMaterialOptionsBuilder {
         const specularityFactorTint = useSpecular && stdMat.useMetalnessSpecularColor &&
                                       (stdMat.specularityFactorTint || (stdMat.specularityFactor < 1 && !stdMat.specularityFactorMap));
 
-        const emissiveTintColor = !stdMat.emissiveMap || (notWhite(stdMat.emissive) && stdMat.emissiveTint);
-        const emissiveTintIntensity = (stdMat.emissiveIntensity !== 1);
-
         const isPackedNormalMap = stdMat.normalMap ? (stdMat.normalMap.format === PIXELFORMAT_DXT5 || stdMat.normalMap.type === TEXTURETYPE_SWIZZLEGGGR) : false;
 
-        options.opacityTint = (stdMat.blendType !== BLEND_NONE || stdMat.alphaTest > 0 || stdMat.opacityDither !== DITHER_NONE) ? 1 : 0;
-        options.ambientTint = stdMat.ambientTint;
         options.specularTint = specularTint ? 2 : 0;
         options.specularityFactorTint = specularityFactorTint ? 1 : 0;
         options.metalnessTint = (stdMat.useMetalness && stdMat.metalness < 1) ? 1 : 0;
         options.glossTint = 1;
-        options.emissiveTint = (emissiveTintColor ? 2 : 0) + (emissiveTintIntensity ? 1 : 0);
         options.diffuseEncoding = stdMat.diffuseMap?.encoding;
         options.diffuseDetailEncoding = stdMat.diffuseDetailMap?.encoding;
         options.emissiveEncoding = stdMat.emissiveMap?.encoding;
@@ -242,9 +237,6 @@ class StandardMaterialOptionsBuilder {
 
         options.iridescenceTint = stdMat.iridescence !== 1.0 ? 1 : 0;
 
-        options.sheenTint = (stdMat.useSheen && notWhite(stdMat.sheen)) ? 2 : 0;
-        options.sheenGlossTint = 1;
-
         options.glossInvert = stdMat.glossInvert;
         options.sheenGlossInvert = stdMat.sheenGlossInvert;
         options.clearCoatGlossInvert = stdMat.clearCoatGlossInvert;
@@ -253,12 +245,10 @@ class StandardMaterialOptionsBuilder {
 
         // LIT OPTIONS
         options.litOptions.separateAmbient = false;    // store ambient light color in separate variable, instead of adding it to diffuse directly
-        options.litOptions.useAmbientTint = stdMat.ambientTint;
         options.litOptions.customFragmentShader = stdMat.customFragmentShader;
         options.litOptions.pixelSnap = stdMat.pixelSnap;
 
         options.litOptions.ambientSH = !!stdMat.ambientSH;
-        options.litOptions.fastTbn = stdMat.fastTbn;
         options.litOptions.twoSidedLighting = stdMat.twoSidedLighting;
         options.litOptions.occludeSpecular = stdMat.occludeSpecular;
         options.litOptions.occludeSpecularFloat = (stdMat.occludeSpecularIntensity !== 1.0);
@@ -287,7 +277,7 @@ class StandardMaterialOptionsBuilder {
     }
 
     _updateEnvOptions(options, stdMat, scene, renderParams) {
-        options.litOptions.fog = stdMat.useFog ? scene.fog : 'none';
+        options.litOptions.fog = stdMat.useFog ? scene.fog : FOG_NONE;
         options.litOptions.gamma = renderParams.shaderOutputGamma;
         options.litOptions.toneMap = stdMat.useTonemap ? renderParams.toneMapping : TONEMAP_NONE;
 

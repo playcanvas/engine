@@ -181,7 +181,7 @@ class Renderer {
 
         // clustered passes
         this._renderPassUpdateClustered = new RenderPassUpdateClustered(this.device, this, this.shadowRenderer,
-                                                                        this._shadowRendererLocal, this.lightTextureAtlas);
+            this._shadowRendererLocal, this.lightTextureAtlas);
 
         // view bind group format with its uniform buffer format
         this.viewUniformFormat = null;
@@ -759,26 +759,26 @@ class Renderer {
 
             // format of the view uniform buffer
             const uniforms = [
-                new UniformFormat("matrix_viewProjection", UNIFORMTYPE_MAT4),
-                new UniformFormat("cubeMapRotationMatrix", UNIFORMTYPE_MAT3),
-                new UniformFormat("view_position", UNIFORMTYPE_VEC3),
-                new UniformFormat("skyboxIntensity", UNIFORMTYPE_FLOAT),
-                new UniformFormat("exposure", UNIFORMTYPE_FLOAT),
-                new UniformFormat("textureBias", UNIFORMTYPE_FLOAT)
+                new UniformFormat('matrix_viewProjection', UNIFORMTYPE_MAT4),
+                new UniformFormat('cubeMapRotationMatrix', UNIFORMTYPE_MAT3),
+                new UniformFormat('view_position', UNIFORMTYPE_VEC3),
+                new UniformFormat('skyboxIntensity', UNIFORMTYPE_FLOAT),
+                new UniformFormat('exposure', UNIFORMTYPE_FLOAT),
+                new UniformFormat('textureBias', UNIFORMTYPE_FLOAT)
             ];
 
             if (isClustered) {
                 uniforms.push(...[
-                    new UniformFormat("clusterCellsCountByBoundsSize", UNIFORMTYPE_VEC3),
-                    new UniformFormat("clusterTextureSize", UNIFORMTYPE_VEC3),
-                    new UniformFormat("clusterBoundsMin", UNIFORMTYPE_VEC3),
-                    new UniformFormat("clusterBoundsDelta", UNIFORMTYPE_VEC3),
-                    new UniformFormat("clusterCellsDot", UNIFORMTYPE_VEC3),
-                    new UniformFormat("clusterCellsMax", UNIFORMTYPE_VEC3),
-                    new UniformFormat("clusterCompressionLimit0", UNIFORMTYPE_VEC2),
-                    new UniformFormat("shadowAtlasParams", UNIFORMTYPE_VEC2),
-                    new UniformFormat("clusterMaxCells", UNIFORMTYPE_INT),
-                    new UniformFormat("clusterSkip", UNIFORMTYPE_FLOAT)
+                    new UniformFormat('clusterCellsCountByBoundsSize', UNIFORMTYPE_VEC3),
+                    new UniformFormat('clusterTextureSize', UNIFORMTYPE_VEC3),
+                    new UniformFormat('clusterBoundsMin', UNIFORMTYPE_VEC3),
+                    new UniformFormat('clusterBoundsDelta', UNIFORMTYPE_VEC3),
+                    new UniformFormat('clusterCellsDot', UNIFORMTYPE_VEC3),
+                    new UniformFormat('clusterCellsMax', UNIFORMTYPE_VEC3),
+                    new UniformFormat('clusterCompressionLimit0', UNIFORMTYPE_VEC2),
+                    new UniformFormat('shadowAtlasParams', UNIFORMTYPE_VEC2),
+                    new UniformFormat('clusterMaxCells', UNIFORMTYPE_INT),
+                    new UniformFormat('clusterSkip', UNIFORMTYPE_FLOAT)
                 ]);
             }
 
@@ -811,10 +811,10 @@ class Renderer {
 
     setupViewUniformBuffers(viewBindGroups, viewUniformFormat, viewBindGroupFormat, viewCount) {
 
-        Debug.assert(Array.isArray(viewBindGroups), "viewBindGroups must be an array");
+        Debug.assert(Array.isArray(viewBindGroups), 'viewBindGroups must be an array');
 
         const device = this.device;
-        Debug.assert(viewCount === 1, "This code does not handle the viewCount yet");
+        Debug.assert(viewCount === 1, 'This code does not handle the viewCount yet');
 
         while (viewBindGroups.length < viewCount) {
             const ub = new UniformBuffer(device, viewUniformFormat, false);
@@ -1133,12 +1133,18 @@ class Renderer {
 
         // for all cameras
         const numCameras = comp.cameras.length;
+        this._camerasRendered += numCameras;
+
         for (let i = 0; i < numCameras; i++) {
             const camera = comp.cameras[i];
 
-            let currentRenderTarget;
-            let cameraChanged = true;
-            this._camerasRendered++;
+            // callback before the camera is culling
+            camera.onPreCull?.();
+
+            // update camera and frustum
+            const renderTarget = camera.renderTarget;
+            camera.frameUpdate(renderTarget);
+            this.updateCameraFrustum(camera.camera);
 
             // for all of its enabled layers
             const layerIds = camera.layers;
@@ -1146,30 +1152,18 @@ class Renderer {
                 const layer = comp.getLayerById(layerIds[j]);
                 if (layer && layer.enabled) {
 
-                    // update camera and frustum when the render target changes
-                    // TODO: This is done here to handle the backwards compatibility with the deprecated Layer.renderTarget,
-                    // when this is no longer needed, this code can be moved up to execute once per camera.
-                    const renderTarget = camera.renderTarget ?? layer.renderTarget;
-                    if (cameraChanged || renderTarget !== currentRenderTarget) {
-                        cameraChanged = false;
-                        currentRenderTarget = renderTarget;
-                        camera.frameUpdate(renderTarget);
-                        this.updateCameraFrustum(camera.camera);
-                    }
-
                     // cull each layer's non-directional lights once with each camera
                     // lights aren't collected anywhere, but marked as visible
                     this.cullLights(camera.camera, layer._lights);
 
                     // cull mesh instances
-                    layer.onPreCull?.(comp.camerasMap.get(camera));
-
                     const culledInstances = layer.getCulledInstances(camera.camera);
                     this.cull(camera.camera, layer.meshInstances, culledInstances);
-
-                    layer.onPostCull?.(comp.camerasMap.get(camera));
                 }
             }
+
+            // callback after the camera is done with culling
+            camera.onPostCull?.();
         }
 
         // update shadow / cookie atlas allocation for the visible lights. Update it after the ligthts were culled,
@@ -1204,8 +1198,9 @@ class Renderer {
 
                         if (onlyLitShaders) {
                             // skip materials not using lighting
-                            if (!mat.useLighting || (mat.emitter && !mat.emitter.lighting))
+                            if (!mat.useLighting || (mat.emitter && !mat.emitter.lighting)) {
                                 continue;
+                            }
                         }
 
                         // clear shader variants on the material and also on mesh instances that use it
@@ -1306,10 +1301,6 @@ class Renderer {
         // #endif
 
         const len = comp.layerList.length;
-        for (let i = 0; i < len; i++) {
-            comp.layerList[i]._postRenderCounter = 0;
-        }
-
         const scene = this.scene;
         const shaderVersion = scene._shaderVersion;
         for (let i = 0; i < len; i++) {
@@ -1321,16 +1312,6 @@ class Renderer {
             layer._shadowDrawCalls = 0;
             layer._renderTime = 0;
             // #endif
-
-            layer._preRenderCalledForCameras = 0;
-            layer._postRenderCalledForCameras = 0;
-            const transparent = comp.subLayerList[i];
-            if (transparent) {
-                layer._postRenderCounter |= 2;
-            } else {
-                layer._postRenderCounter |= 1;
-            }
-            layer._postRenderCounterMax = layer._postRenderCounter;
         }
 
         // update composition

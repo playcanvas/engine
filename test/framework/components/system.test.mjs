@@ -10,26 +10,26 @@ import { HTMLCanvasElement } from '@playcanvas/canvas-mock';
 
 import { expect } from 'chai';
 
-describe('ComponentSystem', function () {
+describe('ComponentSystem', () => {
     /** @type {Application} */
     let app;
     /** @type {ComponentSystem} */
     let system;
 
-    beforeEach(function () {
+    beforeEach(() => {
         const canvas = new HTMLCanvasElement(500, 500);
         app = new Application(canvas, { graphicsDevice: new NullGraphicsDevice(canvas) });
 
         system = new ComponentSystem(app);
     });
 
-    afterEach(function () {
+    afterEach(() => {
         app.destroy();
     });
 
-    describe('#initializeComponentData()', function () {
+    describe('#initializeComponentData()', () => {
 
-        it('works with a flat list of property names', function () {
+        it('works with a flat list of property names', () => {
             const component = {};
             const data = {
                 foo: 42,
@@ -43,7 +43,7 @@ describe('ComponentSystem', function () {
             expect(component.bar).to.equal(84);
         });
 
-        it('works with a list of property descriptor objects', function () {
+        it('works with a list of property descriptor objects', () => {
             const component = {};
             const data = {
                 rgbProperty: new Color(1, 2, 3),
@@ -102,7 +102,7 @@ describe('ComponentSystem', function () {
             expect(component.entityProperty).to.equal('abcde-12345');
         });
 
-        it('handles nulls', function () {
+        it('handles nulls', () => {
             const component = {};
             const data = {
                 rgbProperty: null,
@@ -140,7 +140,7 @@ describe('ComponentSystem', function () {
             expect(component.entityProperty).to.be.null;
         });
 
-        it('handles vec values being delivered as arrays', function () {
+        it('handles vec values being delivered as arrays', () => {
             const component = {};
             const data = {
                 rgbProperty: [1, 2, 3],
@@ -165,7 +165,7 @@ describe('ComponentSystem', function () {
             expect(component.vec4Property).to.not.equal(data.vec4Property);
         });
 
-        it('works if a normal value comes after an object value', function () {
+        it('works if a normal value comes after an object value', () => {
             const component = {};
             const data = {
                 vec: [1, 2, 3, 4],
@@ -185,7 +185,7 @@ describe('ComponentSystem', function () {
             expect(component.num).to.equal(42);
         });
 
-        it('throws if provided an unknown type', function () {
+        it('throws if provided an unknown type', () => {
             const component = {};
             const data = {
                 foo: 42
@@ -194,16 +194,16 @@ describe('ComponentSystem', function () {
                 { name: 'foo', type: 'something' }
             ];
 
-            expect(function () {
+            expect(() => {
                 system.initializeComponentData(component, data, properties);
             }).to.throw('Could not convert unhandled type: something');
         });
 
     });
 
-    describe('#getPropertiesOfType()', function () {
+    describe('#getPropertiesOfType()', () => {
 
-        it('returns properties of the specified type', function () {
+        it('returns properties of the specified type', () => {
             system.schema = [
                 { name: 'foo', type: 'typeA' },
                 { name: 'bar', type: 'typeA' },
@@ -217,7 +217,7 @@ describe('ComponentSystem', function () {
             ]);
         });
 
-        it('returns an empty array if no properties match the specified type', function () {
+        it('returns an empty array if no properties match the specified type', () => {
             system.schema = [
                 { name: 'foo', type: 'typeA' },
                 { name: 'bar', type: 'typeA' },
@@ -228,7 +228,7 @@ describe('ComponentSystem', function () {
             expect(system.getPropertiesOfType('typeC')).to.deep.equal([]);
         });
 
-        it('doesn\'t throw an error if the system doesn\'t have a schema', function () {
+        it('doesn\'t throw an error if the system doesn\'t have a schema', () => {
             system.schema = null;
 
             expect(system.getPropertiesOfType('typeA')).to.deep.equal([]);

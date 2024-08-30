@@ -9,7 +9,8 @@ import { TRACEID_TEXTURES } from '../../core/constants.js';
 import {
     CULLFACE_BACK,
     CLEARFLAG_COLOR, CLEARFLAG_DEPTH,
-    PRIMITIVE_POINTS, PRIMITIVE_TRIFAN, SEMANTIC_POSITION, TYPE_FLOAT32, PIXELFORMAT_111110F, PIXELFORMAT_RGBA16F, PIXELFORMAT_RGBA32F
+    PRIMITIVE_POINTS, PRIMITIVE_TRIFAN, SEMANTIC_POSITION, TYPE_FLOAT32, PIXELFORMAT_111110F, PIXELFORMAT_RGBA16F, PIXELFORMAT_RGBA32F,
+    DISPLAYFORMAT_LDR
 } from './constants.js';
 import { BlendState } from './blend-state.js';
 import { DepthState } from './depth-state.js';
@@ -266,12 +267,12 @@ class GraphicsDevice extends EventHandler {
      */
     textureFloatRenderable;
 
-     /**
-      * True if 16-bit floating-point textures can be used as a frame buffer.
-      *
-      * @type {boolean}
-      * @readonly
-      */
+    /**
+     * True if 16-bit floating-point textures can be used as a frame buffer.
+     *
+     * @type {boolean}
+     * @readonly
+     */
     textureHalfFloatRenderable;
 
     /**
@@ -283,12 +284,12 @@ class GraphicsDevice extends EventHandler {
      */
     textureRG11B10Renderable = false;
 
-     /**
-      * True if filtering can be applied when sampling float textures.
-      *
-      * @type {boolean}
-      * @readonly
-      */
+    /**
+     * True if filtering can be applied when sampling float textures.
+     *
+     * @type {boolean}
+     * @readonly
+     */
     textureFloatFilterable = false;
 
     /**
@@ -356,6 +357,17 @@ class GraphicsDevice extends EventHandler {
         flags: CLEARFLAG_COLOR | CLEARFLAG_DEPTH
     };
 
+    /**
+     * The current client rect.
+     *
+     * @type {{ width: number, height: number }}
+     * @ignore
+     */
+    clientRect = {
+        width: 0,
+        height: 0
+    };
+
     static EVENT_RESIZE = 'resizecanvas';
 
     constructor(canvas, options) {
@@ -365,10 +377,12 @@ class GraphicsDevice extends EventHandler {
 
         // copy options and handle defaults
         this.initOptions = { ...options };
+        this.initOptions.alpha ??= true;
         this.initOptions.depth ??= true;
         this.initOptions.stencil ??= true;
         this.initOptions.antialias ??= true;
         this.initOptions.powerPreference ??= 'high-performance';
+        this.initOptions.displayFormat ??= DISPLAYFORMAT_LDR;
 
         // Some devices window.devicePixelRatio can be less than one
         // eg Oculus Quest 1 which returns a window.devicePixelRatio of 0.8
@@ -410,9 +424,9 @@ class GraphicsDevice extends EventHandler {
         this._renderTargetCreationTime = 0;
 
         // Create the ScopeNamespace for shader attributes and variables
-        this.scope = new ScopeSpace("Device");
+        this.scope = new ScopeSpace('Device');
 
-        this.textureBias = this.scope.resolve("textureBias");
+        this.textureBias = this.scope.resolve('textureBias');
         this.textureBias.setValue(0.0);
     }
 
@@ -752,7 +766,15 @@ class GraphicsDevice extends EventHandler {
     }
 
     updateClientRect() {
-        this.clientRect = this.canvas.getBoundingClientRect();
+        if (platform.worker) {
+            // Web Workers don't do page layout, so getBoundingClientRect is not available
+            this.clientRect.width = this.canvas.width;
+            this.clientRect.height = this.canvas.height;
+        } else {
+            const rect = this.canvas.getBoundingClientRect();
+            this.clientRect.width = rect.width;
+            this.clientRect.height = rect.height;
+        }
     }
 
     /**
@@ -779,7 +801,7 @@ class GraphicsDevice extends EventHandler {
      * @type {boolean}
      */
     set fullscreen(fullscreen) {
-        Debug.error("GraphicsDevice.fullscreen is not implemented on current device.");
+        Debug.error('GraphicsDevice.fullscreen is not implemented on current device.');
     }
 
     /**
@@ -788,7 +810,7 @@ class GraphicsDevice extends EventHandler {
      * @type {boolean}
      */
     get fullscreen() {
-        Debug.error("GraphicsDevice.fullscreen is not implemented on current device.");
+        Debug.error('GraphicsDevice.fullscreen is not implemented on current device.');
         return false;
     }
 
@@ -906,8 +928,9 @@ class GraphicsDevice extends EventHandler {
             switch (format) {
 
                 case PIXELFORMAT_111110F: {
-                    if (this.textureRG11B10Renderable)
+                    if (this.textureRG11B10Renderable) {
                         return format;
+                    }
                     break;
                 }
 

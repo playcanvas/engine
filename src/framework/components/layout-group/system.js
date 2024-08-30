@@ -108,7 +108,7 @@ class LayoutGroupComponentSystem extends ComponentSystem {
             // Sort in ascending order of depth within the graph (i.e. outermost first), so that
             // any layout groups which are children of other layout groups will always have their
             // new size set before their own reflow is calculated.
-            queue.sort(function (componentA, componentB) {
+            queue.sort((componentA, componentB) => {
                 return (componentA.entity.graphDepth - componentB.entity.graphDepth);
             });
 

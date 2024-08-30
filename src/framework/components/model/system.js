@@ -123,8 +123,9 @@ class ModelComponentSystem extends ComponentSystem {
             component._clonedModel = true;
         }
 
-        if (!data.materialAsset)
+        if (!data.materialAsset) {
             component.material = material;
+        }
 
         // TODO: we should copy all relevant mesh instance properties here
         if (entity.model.model) {

@@ -224,8 +224,9 @@ class ParticleSystemComponentSystem extends ComponentSystem {
                         const layers = data.layers;
                         for (let i = 0; i < layers.length; i++) {
                             const layer = composition.getLayerById(layers[i]);
-                            if (layer)
+                            if (layer) {
                                 layer.requiresLightCube = true;
+                            }
                         }
                     }
 

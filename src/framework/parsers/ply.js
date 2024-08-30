@@ -379,9 +379,9 @@ const readPly = async (reader, propertyFilter = null) => {
 
     // decode buffer header text and split into lines and remove comments
     const lines = new TextDecoder('ascii')
-        .decode(streamBuf.data.subarray(0, headerLength))
-        .split('\n')
-        .filter(line => !line.startsWith('comment '));
+    .decode(streamBuf.data.subarray(0, headerLength))
+    .split('\n')
+    .filter(line => !line.startsWith('comment '));
 
     // decode header and build element and property list
     const { elements, format } = parseHeader(lines);
@@ -418,6 +418,25 @@ const readPly = async (reader, propertyFilter = null) => {
 
         // calculate the size of an input element record
         const inputSize = element.properties.reduce((a, p) => a + p.byteSize, 0);
+        const propertyParsingFunctions = element.properties.map((p) => {
+            /* eslint-disable brace-style */
+            if (p.storage) {
+                switch (p.type) {
+                    case 'char':   return (streamBuf, c) => { p.storage[c] = streamBuf.getInt8(); };
+                    case 'uchar':  return (streamBuf, c) => { p.storage[c] = streamBuf.getUint8(); };
+                    case 'short':  return (streamBuf, c) => { p.storage[c] = streamBuf.getInt16(); };
+                    case 'ushort': return (streamBuf, c) => { p.storage[c] = streamBuf.getUint16(); };
+                    case 'int':    return (streamBuf, c) => { p.storage[c] = streamBuf.getInt32(); };
+                    case 'uint':   return (streamBuf, c) => { p.storage[c] = streamBuf.getUint32(); };
+                    case 'float':  return (streamBuf, c) => { p.storage[c] = streamBuf.getFloat32(); };
+                    case 'double': return (streamBuf, c) => { p.storage[c] = streamBuf.getFloat64(); };
+                    default: throw new Error(`Unsupported property data type '${p.type}' in ply header`);
+                }
+            } else {
+                return (streamBuf) => { streamBuf.head += p.byteSize; };
+            }
+            /* eslint-enable brace-style */
+        });
         let c = 0;
 
         while (c < element.count) {
@@ -430,22 +449,7 @@ const readPly = async (reader, propertyFilter = null) => {
 
             for (let n = 0; n < toRead; ++n) {
                 for (let j = 0; j < element.properties.length; ++j) {
-                    const property = element.properties[j];
-
-                    if (property.storage) {
-                        switch (property.type) {
-                            case 'char':   property.storage[c] = streamBuf.getInt8(); break;
-                            case 'uchar':  property.storage[c] = streamBuf.getUint8(); break;
-                            case 'short':  property.storage[c] = streamBuf.getInt16(); break;
-                            case 'ushort': property.storage[c] = streamBuf.getUint16(); break;
-                            case 'int':    property.storage[c] = streamBuf.getInt32(); break;
-                            case 'uint':   property.storage[c] = streamBuf.getUint32(); break;
-                            case 'float':  property.storage[c] = streamBuf.getFloat32(); break;
-                            case 'double': property.storage[c] = streamBuf.getFloat64(); break;
-                        }
-                    } else {
-                        streamBuf.head += property.byteSize;
-                    }
+                    propertyParsingFunctions[j](streamBuf, c);
                 }
                 c++;
             }
@@ -508,35 +512,35 @@ class PlyParser {
     async load(url, callback, asset) {
         const response = await fetch(url.load);
         if (!response || !response.body) {
-            callback("Error loading resource", null);
+            callback('Error loading resource', null);
         } else {
             readPly(response.body.getReader(), asset.data.elementFilter ?? defaultElementFilter)
-                .then((gsplatData) => {
-                    if (!gsplatData.isCompressed) {
+            .then((gsplatData) => {
+                if (!gsplatData.isCompressed) {
 
-                        // perform Z scale
-                        if (asset.data.performZScale ?? true) {
-                            mat4.setScale(-1, -1, 1);
-                            gsplatData.transform(mat4);
-                        }
-
-                        // reorder data
-                        if (asset.data.reorder ?? true) {
-                            gsplatData.reorderData();
-                        }
+                    // perform Z scale
+                    if (asset.data.performZScale ?? true) {
+                        mat4.setScale(-1, -1, 1);
+                        gsplatData.transform(mat4);
                     }
 
-                    // construct the resource
-                    const resource = new GSplatResource(
-                        this.device,
-                        gsplatData.isCompressed && asset.data.decompress ? gsplatData.decompress() : gsplatData
-                    );
+                    // reorder data
+                    if (asset.data.reorder ?? true) {
+                        gsplatData.reorderData();
+                    }
+                }
 
-                    callback(null, resource);
-                })
-                .catch((err) => {
-                    callback(err, null);
-                });
+                // construct the resource
+                const resource = new GSplatResource(
+                    this.device,
+                    gsplatData.isCompressed && asset.data.decompress ? gsplatData.decompress() : gsplatData
+                );
+
+                callback(null, resource);
+            })
+            .catch((err) => {
+                callback(err, null);
+            });
         }
     }
 

@@ -70,33 +70,4 @@ function drawQuadWithShader(device, target, shader, rect, scissorRect) {
     quad.destroy();
 }
 
-/**
- * Draws a texture in screen-space. Mostly used by post-effects.
- *
- * @param {GraphicsDevice} device - The graphics device used to draw the texture.
- * @param {Texture} texture - The source texture to be drawn. Accessible as
- * `uniform sampler2D * source` in shader.
- * @param {RenderTarget} [target] - The destination render target. Defaults to the frame buffer.
- * @param {Shader} [shader] - The optional custom shader used for rendering the texture.
- * @param {Vec4} [rect] - The viewport rectangle to use for the texture, in pixels. Defaults to
- * fullscreen: `[0, 0, target.width, target.height]`.
- * @param {Vec4} [scissorRect] - The scissor rectangle to use for the texture, in pixels. Defaults
- * to fullscreen `[0, 0, target.width, target.height]`.
- * @category Graphics
- */
-function drawTexture(device, texture, target, shader, rect, scissorRect) {
-    Debug.assert(!device.isWebGPU, 'pc.drawTexture is not currently supported on WebGPU platform.');
-
-    const useBlend = arguments[6];
-    Debug.call(() => {
-        if (useBlend !== undefined) {
-            Debug.warnOnce('pc.drawTexture no longer accepts useBlend parameter, and blending state needs to be set up using GraphicsDevice.setBlendState.');
-        }
-    });
-
-    shader = shader || device.getCopyShader();
-    device.constantTexSource.setValue(texture);
-    drawQuadWithShader(device, target, shader, rect, scissorRect);
-}
-
-export { drawQuadWithShader, drawTexture };
+export { drawQuadWithShader };

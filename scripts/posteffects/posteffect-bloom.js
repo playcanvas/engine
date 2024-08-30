@@ -72,70 +72,70 @@ function BloomEffect(graphicsDevice) {
     // Pixel shader extracts the brighter areas of an image.
     // This is the first step in applying a bloom postprocess.
     var extractFrag = [
-        "varying vec2 vUv0;",
-        "",
-        "uniform sampler2D uBaseTexture;",
-        "uniform float uBloomThreshold;",
-        "",
-        "void main(void)",
-        "{",
-                // Look up the original image color.
-        "    vec4 color = texture2D(uBaseTexture, vUv0);",
-        "",
-                // Adjust it to keep only values brighter than the specified threshold.
-        "    gl_FragColor = clamp((color - uBloomThreshold) / (1.0 - uBloomThreshold), 0.0, 1.0);",
-        "}"
-    ].join("\n");
+        'varying vec2 vUv0;',
+        '',
+        'uniform sampler2D uBaseTexture;',
+        'uniform float uBloomThreshold;',
+        '',
+        'void main(void)',
+        '{',
+        // Look up the original image color.
+        '    vec4 color = texture2D(uBaseTexture, vUv0);',
+        '',
+        // Adjust it to keep only values brighter than the specified threshold.
+        '    gl_FragColor = clamp((color - uBloomThreshold) / (1.0 - uBloomThreshold), 0.0, 1.0);',
+        '}'
+    ].join('\n');
 
     // Pixel shader applies a one dimensional gaussian blur filter.
     // This is used twice by the bloom postprocess, first to
     // blur horizontally, and then again to blur vertically.
     var gaussianBlurFrag = [
-        "#define SAMPLE_COUNT " + SAMPLE_COUNT,
-        "",
-        "varying vec2 vUv0;",
-        "",
-        "uniform sampler2D uBloomTexture;",
-        "uniform vec2 uBlurOffsets[" + SAMPLE_COUNT + "];",
-        "uniform float uBlurWeights[" + SAMPLE_COUNT + "];",
-        "",
-        "void main(void)",
-        "{",
-        "    vec4 color = vec4(0.0);",
-                // Combine a number of weighted image filter taps.
-        "    for (int i = 0; i < SAMPLE_COUNT; i++)",
-        "    {",
-        "        color += texture2D(uBloomTexture, vUv0 + uBlurOffsets[i]) * uBlurWeights[i];",
-        "    }",
-        "",
-        "    gl_FragColor = color;",
-        "}"
-    ].join("\n");
+        `#define SAMPLE_COUNT ${SAMPLE_COUNT}`,
+        '',
+        'varying vec2 vUv0;',
+        '',
+        'uniform sampler2D uBloomTexture;',
+        `uniform vec2 uBlurOffsets[${SAMPLE_COUNT}];`,
+        `uniform float uBlurWeights[${SAMPLE_COUNT}];`,
+        '',
+        'void main(void)',
+        '{',
+        '    vec4 color = vec4(0.0);',
+        // Combine a number of weighted image filter taps.
+        '    for (int i = 0; i < SAMPLE_COUNT; i++)',
+        '    {',
+        '        color += texture2D(uBloomTexture, vUv0 + uBlurOffsets[i]) * uBlurWeights[i];',
+        '    }',
+        '',
+        '    gl_FragColor = color;',
+        '}'
+    ].join('\n');
 
     // Pixel shader combines the bloom image with the original
     // scene, using tweakable intensity levels.
     // This is the final step in applying a bloom postprocess.
     var combineFrag = [
-        "varying vec2 vUv0;",
-        "",
-        "uniform float uBloomEffectIntensity;",
-        "uniform sampler2D uBaseTexture;",
-        "uniform sampler2D uBloomTexture;",
-        "",
-        "void main(void)",
-        "{",
-                // Look up the bloom and original base image colors.
-        "    vec4 bloom = texture2D(uBloomTexture, vUv0) * uBloomEffectIntensity;",
-        "    vec4 base = texture2D(uBaseTexture, vUv0);",
-        "",
-                // Darken down the base image in areas where there is a lot of bloom,
-                // to prevent things looking excessively burned-out.
-        "    base *= (1.0 - clamp(bloom, 0.0, 1.0));",
-        "",
-                // Combine the two images.
-        "    gl_FragColor = base + bloom;",
-        "}"
-    ].join("\n");
+        'varying vec2 vUv0;',
+        '',
+        'uniform float uBloomEffectIntensity;',
+        'uniform sampler2D uBaseTexture;',
+        'uniform sampler2D uBloomTexture;',
+        '',
+        'void main(void)',
+        '{',
+        // Look up the bloom and original base image colors.
+        '    vec4 bloom = texture2D(uBloomTexture, vUv0) * uBloomEffectIntensity;',
+        '    vec4 base = texture2D(uBaseTexture, vUv0);',
+        '',
+        // Darken down the base image in areas where there is a lot of bloom,
+        // to prevent things looking excessively burned-out.
+        '    base *= (1.0 - clamp(bloom, 0.0, 1.0));',
+        '',
+        // Combine the two images.
+        '    gl_FragColor = base + bloom;',
+        '}'
+    ].join('\n');
 
     this.extractShader = pc.createShaderFromCode(graphicsDevice, pc.PostEffect.quadVertexShader, extractFrag, 'BloomExtractShader', attributes);
     this.blurShader = pc.createShaderFromCode(graphicsDevice, pc.PostEffect.quadVertexShader, gaussianBlurFrag, 'BloomBlurShader', attributes);
@@ -172,8 +172,9 @@ BloomEffect.prototype._resize = function (target) {
     var width = target.colorBuffer.width;
     var height = target.colorBuffer.height;
 
-    if (width === this.width && height === this.height)
+    if (width === this.width && height === this.height) {
         return;
+    }
 
     this.width = width;
     this.height = height;
@@ -184,7 +185,7 @@ BloomEffect.prototype._resize = function (target) {
     var i;
     for (i = 0; i < 2; i++) {
         var colorBuffer = new pc.Texture(this.device, {
-            name: "Bloom Texture" + i,
+            name: `Bloom Texture${i}`,
             format: pc.PIXELFORMAT_RGBA8,
             width: width >> 1,
             height: height >> 1,
@@ -194,9 +195,9 @@ BloomEffect.prototype._resize = function (target) {
         colorBuffer.magFilter = pc.FILTER_LINEAR;
         colorBuffer.addressU = pc.ADDRESS_CLAMP_TO_EDGE;
         colorBuffer.addressV = pc.ADDRESS_CLAMP_TO_EDGE;
-        colorBuffer.name = 'pe-bloom-' + i;
+        colorBuffer.name = `pe-bloom-${i}`;
         var bloomTarget = new pc.RenderTarget({
-            name: "Bloom Render Target " + i,
+            name: `Bloom Render Target ${i}`,
             colorBuffer: colorBuffer,
             depth: false
         });
@@ -215,32 +216,32 @@ Object.assign(BloomEffect.prototype, {
 
         // Pass 1: draw the scene into rendertarget 1, using a
         // shader that extracts only the brightest parts of the image.
-        scope.resolve("uBloomThreshold").setValue(this.bloomThreshold);
-        scope.resolve("uBaseTexture").setValue(inputTarget.colorBuffer);
+        scope.resolve('uBloomThreshold').setValue(this.bloomThreshold);
+        scope.resolve('uBaseTexture').setValue(inputTarget.colorBuffer);
         this.drawQuad(this.targets[0], this.extractShader);
 
         // Pass 2: draw from rendertarget 1 into rendertarget 2,
         // using a shader to apply a horizontal gaussian blur filter.
         calculateBlurValues(this.sampleWeights, this.sampleOffsets, 1.0 / this.targets[1].width, 0, this.blurAmount);
-        scope.resolve("uBlurWeights[0]").setValue(this.sampleWeights);
-        scope.resolve("uBlurOffsets[0]").setValue(this.sampleOffsets);
-        scope.resolve("uBloomTexture").setValue(this.targets[0].colorBuffer);
+        scope.resolve('uBlurWeights[0]').setValue(this.sampleWeights);
+        scope.resolve('uBlurOffsets[0]').setValue(this.sampleOffsets);
+        scope.resolve('uBloomTexture').setValue(this.targets[0].colorBuffer);
         this.drawQuad(this.targets[1], this.blurShader);
 
         // Pass 3: draw from rendertarget 2 back into rendertarget 1,
         // using a shader to apply a vertical gaussian blur filter.
         calculateBlurValues(this.sampleWeights, this.sampleOffsets, 0, 1.0 / this.targets[0].height, this.blurAmount);
-        scope.resolve("uBlurWeights[0]").setValue(this.sampleWeights);
-        scope.resolve("uBlurOffsets[0]").setValue(this.sampleOffsets);
-        scope.resolve("uBloomTexture").setValue(this.targets[1].colorBuffer);
+        scope.resolve('uBlurWeights[0]').setValue(this.sampleWeights);
+        scope.resolve('uBlurOffsets[0]').setValue(this.sampleOffsets);
+        scope.resolve('uBloomTexture').setValue(this.targets[1].colorBuffer);
         this.drawQuad(this.targets[0], this.blurShader);
 
         // Pass 4: draw both rendertarget 1 and the original scene
         // image back into the main backbuffer, using a shader that
         // combines them to produce the final bloomed result.
-        scope.resolve("uBloomEffectIntensity").setValue(this.bloomIntensity);
-        scope.resolve("uBloomTexture").setValue(this.targets[0].colorBuffer);
-        scope.resolve("uBaseTexture").setValue(inputTarget.colorBuffer);
+        scope.resolve('uBloomEffectIntensity').setValue(this.bloomIntensity);
+        scope.resolve('uBloomTexture').setValue(this.targets[0].colorBuffer);
+        scope.resolve('uBaseTexture').setValue(inputTarget.colorBuffer);
         this.drawQuad(outputTarget, this.combineShader, rect);
     }
 });

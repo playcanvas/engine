@@ -1,16 +1,16 @@
 import * as fs from 'node:fs';
 
 const GREEN_OUT = '\x1b[32m';
-const BOLD_OUT = `\x1b[1m`;
-const REGULAR_OUT = `\x1b[22m`;
+const BOLD_OUT = '\x1b[1m';
+const REGULAR_OUT = '\x1b[22m';
 
 const TYPES_PATH = './build/playcanvas/src';
 
 const STANDARD_MAT_PROPS = [
     ['alphaFade', 'boolean'],
     ['ambient', 'Color'],
-    ['ambientTint', 'boolean'],
     ['anisotropy', 'number'],
+    ['aoIntensity', 'number'],
     ['aoMap', 'Texture|null'],
     ['aoMapChannel', 'string'],
     ['aoMapOffset', 'Vec2'],
@@ -79,7 +79,6 @@ const STANDARD_MAT_PROPS = [
     ['emissiveMapRotation', 'number'],
     ['emissiveMapTiling', 'Vec2'],
     ['emissiveMapUv', 'number'],
-    ['emissiveTint', 'boolean'],
     ['emissiveVertexColor', 'boolean'],
     ['emissiveVertexColorChannel', 'string'],
     ['enableGGXSpecular', 'boolean'],
@@ -176,7 +175,6 @@ const STANDARD_MAT_PROPS = [
     ['sheenMapRotation', 'number'],
     ['sheenMapTiling', 'Vec2'],
     ['sheenMapUv', 'number'],
-    ['sheenTint', 'boolean'],
     ['sheenVertexColor', 'boolean'],
     ['sheenVertexColorChannel', 'string'],
     ['sphereMap', 'Texture|null'],

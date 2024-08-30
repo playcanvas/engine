@@ -57,8 +57,8 @@ class LightsBuffer {
         // converts object with properties to a list of these as an example: "#define CLUSTER_TEXTURE_8_BLAH 1"
         const buildShaderDefines = (object, prefix) => {
             return Object.keys(object)
-                .map(key => `#define ${prefix}${key} ${object[key]}`)
-                .join('\n');
+            .map(key => `#define ${prefix}${key} ${object[key]}`)
+            .join('\n');
         };
 
         if (!_defines) {
@@ -70,6 +70,8 @@ class LightsBuffer {
 
         return _defines;
     }
+
+    areaLightsEnabled = false;
 
     constructor(device) {
 
@@ -184,8 +186,8 @@ class LightsBuffer {
 
     addLightDataFlags(data8, index, light, isSpot, castShadows, shadowIntensity) {
         data8[index + 0] = isSpot ? 255 : 0;
-        data8[index + 1] = light._shape * 64;           // value 0..3
-        data8[index + 2] = light._falloffMode * 255;    // value 0..1
+        data8[index + 1] = this.areaLightsEnabled ? light._shape * 64 : 0;   // value 0..3
+        data8[index + 2] = light._falloffMode * 255;                         // value 0..1
         data8[index + 3] = castShadows ? shadowIntensity * 255 : 0;
     }
 
@@ -307,8 +309,9 @@ class LightsBuffer {
         // light projection matrix
         if (lightProjectionMatrix) {
             const matData = lightProjectionMatrix.data;
-            for (let m = 0; m < 16; m++)
+            for (let m = 0; m < 16; m++) {
                 dataFloat[dataFloatStart + 4 * TextureIndexFloat.PROJ_MAT_0 + m] = matData[m];
+            }
         }
 
         if (atlasViewport) {

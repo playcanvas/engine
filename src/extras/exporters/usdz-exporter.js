@@ -1,4 +1,4 @@
-import { CoreExporter } from "./core-exporter.js";
+import { CoreExporter } from './core-exporter.js';
 import { zipSync, strToU8 } from 'fflate';
 import { Color } from '../../core/math/color.js';
 
@@ -7,7 +7,7 @@ import {
     SEMANTIC_NORMAL,
     SEMANTIC_TEXCOORD0,
     SEMANTIC_TEXCOORD1
-} from "../../platform/graphics/constants.js";
+} from '../../platform/graphics/constants.js';
 
 /**
  * @import { Entity } from '../../framework/entity.js'
@@ -162,7 +162,7 @@ class UsdzExporter extends CoreExporter {
         // find all mesh instances
         const allMeshInstances = [];
         if (entity) {
-            const renders = entity.findComponents("render");
+            const renders = entity.findComponents('render');
             renders.forEach((render) => {
                 allMeshInstances.push(...render.meshInstances);
             });
@@ -265,7 +265,7 @@ class UsdzExporter extends CoreExporter {
     getFileIds(category, name, ref, extension = 'usda') {
 
         // filename inside the zip archive
-        const fileName = (category ? `${category}/` : '') + `${name}.${extension}`;
+        const fileName = `${category ? `${category}/` : ''}${name}.${extension}`;
 
         // string representing a reference to the file and the refName object inside it
         const refName = `@./${fileName}@</${ref}>`;
@@ -282,7 +282,7 @@ class UsdzExporter extends CoreExporter {
         // prepare the content with the header
         let contentU8 = null;
         if (content) {
-            content = header + '\n' + content;
+            content = `${header}\n${content}`;
             contentU8 = strToU8(content);
         }
 
@@ -400,7 +400,7 @@ class UsdzExporter extends CoreExporter {
                 const textureIds = this.getTextureFileIds(texture);
                 this.textureMap.set(texture, textureIds.refName);
 
-                const channel = material[textureSlot + 'Channel'] || 'rgb';
+                const channel = material[`${textureSlot}Channel`] || 'rgb';
                 const textureValue = materialPropertyPath(`/${textureIds.name}_${valueName}.outputs:${channel}`);
                 inputs.push(materialValueTemplate(propType, `${propName}.connect`, textureValue));
 
@@ -411,12 +411,12 @@ class UsdzExporter extends CoreExporter {
                     }
                 }
 
-                const tiling = material[textureSlot + 'Tiling'];
-                const offset = material[textureSlot + 'Offset'];
-                const rotation = material[textureSlot + 'Rotation'];
+                const tiling = material[`${textureSlot}Tiling`];
+                const offset = material[`${textureSlot}Offset`];
+                const rotation = material[`${textureSlot}Rotation`];
 
                 // which texture coordinate set to use
-                const uvChannel = material[textureSlot + 'Uv'] === 1 ? 'st1' : 'st';
+                const uvChannel = material[`${textureSlot}Uv`] === 1 ? 'st1' : 'st';
 
                 // texture tint
                 const tintColor = tintTexture && uniform ? uniform : Color.WHITE;
@@ -500,8 +500,9 @@ ${inputs.join('\n')}
 
         // face indices if no index buffer
         if (!indices.length) {
-            for (let i = 0; i < indicesCount; i++)
+            for (let i = 0; i < indicesCount; i++) {
                 indices[i] = i;
+            }
         }
 
         // missing normals or uvs

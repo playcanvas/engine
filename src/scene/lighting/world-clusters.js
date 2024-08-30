@@ -179,7 +179,7 @@ class WorldClusters {
 
             // if the texture is allowed size
             Debug.assert(width <= maxTextureSize && height <= maxTextureSize,
-                         'Clustered lights parameters cause the texture size to be over the limit, please adjust them.');
+                'Clustered lights parameters cause the texture size to be over the limit, please adjust them.');
 
             // maximum range of cells
             this._clusterCellsMaxData[0] = cx;
@@ -374,11 +374,13 @@ class WorldClusters {
         this.lightsBuffer.setCompressionRanges(this._maxAttenuation, this._maxColorValue);
     }
 
-    updateClusters() {
+    updateClusters(lightingParams) {
 
         // clear clusters
         this.counts.fill(0);
         this.clusters.fill(0);
+
+        this.lightsBuffer.areaLightsEnabled = lightingParams ? lightingParams.areaLightsEnabled : false;
 
         // local accessors
         const divX = this._cells.x;
@@ -431,8 +433,8 @@ class WorldClusters {
         if (tooManyLights) {
             const reportLimit = 5;
             if (this.reportCount < reportLimit) {
-                console.warn('Too many lights in light cluster ' + this.name + ', please adjust parameters.' +
-                (this.reportCount === reportLimit - 1 ? ' Giving up on reporting it.' : ''));
+                console.warn(`Too many lights in light cluster ${this.name}, please adjust parameters.${
+                    this.reportCount === reportLimit - 1 ? ' Giving up on reporting it.' : ''}`);
                 this.reportCount++;
             }
         }
@@ -440,13 +442,13 @@ class WorldClusters {
     }
 
     // internal update of the cluster data, executes once per frame
-    update(lights, lightingParams) {
+    update(lights, lightingParams = null) {
         this.updateParams(lightingParams);
         this.updateCells();
         this.collectLights(lights);
         this.evaluateBounds();
         this.evaluateCompressionLimits();
-        this.updateClusters();
+        this.updateClusters(lightingParams);
         this.uploadTextures();
     }
 

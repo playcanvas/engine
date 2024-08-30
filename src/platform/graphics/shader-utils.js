@@ -1,8 +1,9 @@
-import { Debug } from "../../core/debug.js";
+import { Debug } from '../../core/debug.js';
 import {
     SEMANTIC_POSITION, SEMANTIC_NORMAL, SEMANTIC_TANGENT, SEMANTIC_TEXCOORD0, SEMANTIC_TEXCOORD1, SEMANTIC_TEXCOORD2,
     SEMANTIC_TEXCOORD3, SEMANTIC_TEXCOORD4, SEMANTIC_TEXCOORD5, SEMANTIC_TEXCOORD6, SEMANTIC_TEXCOORD7,
-    SEMANTIC_COLOR, SEMANTIC_BLENDINDICES, SEMANTIC_BLENDWEIGHT
+    SEMANTIC_COLOR, SEMANTIC_BLENDINDICES, SEMANTIC_BLENDWEIGHT,
+    SHADERLANGUAGE_WGSL
 } from './constants.js';
 import gles3FS from './shader-chunks/frag/gles3.js';
 import gles3VS from './shader-chunks/vert/gles3.js';
@@ -102,37 +103,47 @@ class ShaderUtils {
         };
 
         const name = options.name ?? 'Untitled';
+        let vertCode;
+        let fragCode;
 
-        // vertex code
-        const vertCode = ShaderUtils.versionCode(device) +
-            getDefines(webgpuVS, gles3VS, true, options) +
-            ShaderUtils.getDefinesCode(options.vertexDefines) +
-            ShaderUtils.precisionCode(device) + '\n' +
-            sharedFS +
-            ShaderUtils.getShaderNameCode(name) +
-            options.vertexCode;
+        if (options.shaderLanguage === SHADERLANGUAGE_WGSL) {
 
-        // fragment code
-        const fragCode = (options.fragmentPreamble || '') +
-            ShaderUtils.versionCode(device) +
-            getDefines(webgpuFS, gles3FS, false, options) +
-            ShaderUtils.getDefinesCode(options.fragmentDefines) +
-            ShaderUtils.precisionCode(device) + '\n' +
-            sharedFS +
-            ShaderUtils.getShaderNameCode(name) +
-            (options.fragmentCode || ShaderUtils.dummyFragmentCode());
+            vertCode = options.vertexCode;
+            fragCode = options.fragmentCode;
 
-        // attributes
-        const attribs = options.attributes ?? ShaderUtils.collectAttributes(options.vertexCode);
+        } else {
+
+            // vertex code
+            vertCode = `${ShaderUtils.versionCode(device) +
+                getDefines(webgpuVS, gles3VS, true, options) +
+                ShaderUtils.getDefinesCode(options.vertexDefines) +
+                ShaderUtils.precisionCode(device)}\n${
+                sharedFS
+            }${ShaderUtils.getShaderNameCode(name)
+            }${options.vertexCode}`;
+
+            // fragment code
+            fragCode = `${(options.fragmentPreamble || '') +
+                ShaderUtils.versionCode(device) +
+                getDefines(webgpuFS, gles3FS, false, options) +
+                ShaderUtils.getDefinesCode(options.fragmentDefines) +
+                ShaderUtils.precisionCode(device)}\n${
+                sharedFS
+            }${ShaderUtils.getShaderNameCode(name)
+            }${options.fragmentCode || ShaderUtils.dummyFragmentCode()}`;
+        }
 
         return {
             name: name,
-            attributes: attribs,
+            shaderLanguage: options.shaderLanguage,
+            attributes: options.attributes,
             vshader: vertCode,
             vincludes: options.vertexIncludes,
             fincludes: options.fragmentIncludes,
             fshader: fragCode,
-            useTransformFeedback: options.useTransformFeedback
+            useTransformFeedback: options.useTransformFeedback,
+            meshUniformBufferFormat: options.meshUniformBufferFormat,
+            meshBindGroupFormat: options.meshBindGroupFormat
         };
     }
 
@@ -155,7 +166,7 @@ class ShaderUtils {
     }
 
     static dummyFragmentCode() {
-        return "void main(void) {gl_FragColor = vec4(0.0);}";
+        return 'void main(void) {gl_FragColor = vec4(0.0);}';
     }
 
     static versionCode(device) {
@@ -185,6 +196,7 @@ class ShaderUtils {
             precision ${precision} usampler2D;
             precision ${precision} isampler2D;
             precision ${precision} sampler2DShadow;
+            precision ${precision} sampler2DArray;
         `;
 
         return code;
@@ -201,27 +213,41 @@ class ShaderUtils {
         const attribs = {};
         let attrs = 0;
 
-        let found = vsCode.indexOf("attribute");
+        let found = vsCode.indexOf('attribute');
         while (found >= 0) {
-            if (found > 0 && vsCode[found - 1] === "/") break;
-            const endOfLine = vsCode.indexOf(';', found);
-            const startOfAttribName = vsCode.lastIndexOf(' ', endOfLine);
-            const attribName = vsCode.substring(startOfAttribName + 1, endOfLine);
+            if (found > 0 && vsCode[found - 1] === '/') break;
 
-            // if the attribute already exists in the semantic map
-            if (attribs[attribName]) {
-                Debug.warn(`Attribute [${attribName}] already exists when extracting the attributes from the vertex shader, ignoring.`, { vsCode });
-            } else {
-                const semantic = _attrib2Semantic[attribName];
-                if (semantic !== undefined) {
-                    attribs[attribName] = semantic;
-                } else {
-                    attribs[attribName] = "ATTR" + attrs;
-                    attrs++;
+            // skip the 'attribute' word inside the #define which we add to the shader
+            let ignore = false;
+            if (found > 0) {
+                let startOfLine = vsCode.lastIndexOf('\n', found);
+                startOfLine = startOfLine !== -1 ? startOfLine + 1 : 0;
+                const lineStartString = vsCode.substring(startOfLine, found);
+                if (lineStartString.includes('#')) {
+                    ignore = true;
                 }
             }
 
-            found = vsCode.indexOf("attribute", found + 1);
+            if (!ignore) {
+                const endOfLine = vsCode.indexOf(';', found);
+                const startOfAttribName = vsCode.lastIndexOf(' ', endOfLine);
+                const attribName = vsCode.substring(startOfAttribName + 1, endOfLine);
+
+                // if the attribute already exists in the semantic map
+                if (attribs[attribName]) {
+                    Debug.warn(`Attribute [${attribName}] already exists when extracting the attributes from the vertex shader, ignoring.`, { vsCode });
+                } else {
+                    const semantic = _attrib2Semantic[attribName];
+                    if (semantic !== undefined) {
+                        attribs[attribName] = semantic;
+                    } else {
+                        attribs[attribName] = `ATTR${attrs}`;
+                        attrs++;
+                    }
+                }
+            }
+
+            found = vsCode.indexOf('attribute', found + 1);
         }
 
         return attribs;

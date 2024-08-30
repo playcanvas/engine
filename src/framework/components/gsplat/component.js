@@ -187,8 +187,9 @@ class GSplatComponent extends Component {
         }
 
         // don't add into layers until we're enabled
-        if (!this.enabled || !this.entity.enabled)
+        if (!this.enabled || !this.entity.enabled) {
             return;
+        }
 
         // add the mesh instance to new layers
         this.addToLayers();
@@ -366,8 +367,9 @@ class GSplatComponent extends Component {
     }
 
     _onGSplatAssetAdded() {
-        if (!this._assetReference.asset)
+        if (!this._assetReference.asset) {
             return;
+        }
 
         if (this._assetReference.asset.resource) {
             this._onGSplatAssetLoad();

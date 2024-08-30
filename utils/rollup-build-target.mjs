@@ -19,6 +19,15 @@ import { version, revision } from './rollup-version-revision.mjs';
 import { getBanner } from './rollup-get-banner.mjs';
 import { babelOptions } from './rollup-babel-options.mjs';
 
+import { dirname, resolve as pathResolve } from 'path';
+import { fileURLToPath } from 'url';
+
+// Find path to the repo root
+// @ts-ignore import.meta not allowed by tsconfig module:es6, but it works
+const __filename = fileURLToPath(import.meta.url);
+const __dirname = dirname(__filename);
+const rootDir = pathResolve(__dirname, '..');
+
 /** @typedef {import('rollup').RollupOptions} RollupOptions */
 /** @typedef {import('rollup').OutputOptions} OutputOptions */
 /** @typedef {import('rollup').ModuleFormat} ModuleFormat */
@@ -43,7 +52,7 @@ const STRIP_FUNCTIONS = [
     'Debug.trace',
     'DebugHelper.setName',
     'DebugHelper.setLabel',
-    `DebugHelper.setDestroyed`,
+    'DebugHelper.setDestroyed',
     'DebugGraphics.toString',
     'DebugGraphics.clearGpuMarkers',
     'DebugGraphics.pushGpuMarker',
@@ -201,7 +210,7 @@ function buildTarget({ moduleFormat, buildType, bundleState, input = 'src/index.
                 plugins: getOutPlugins(),
                 file: `${dir}/${OUT_PREFIX[buildType]}${isUMD ? '.js' : '.mjs'}`
             },
-            context: isUMD ? "this" : undefined
+            context: isUMD ? 'this' : undefined
         };
 
         HISTORY.set(`${buildType}-${moduleFormat}-${bundled}`, target);
@@ -223,6 +232,7 @@ function buildTarget({ moduleFormat, buildType, bundleState, input = 'src/index.
             sourcemap: bundled && isDebug && 'inline',
             name: 'pc',
             preserveModules: !bundled,
+            preserveModulesRoot: !bundled ? rootDir : undefined,
             file: bundled ? `${dir}/${OUT_PREFIX[buildType]}${isUMD ? '.js' : '.mjs'}` : undefined,
             dir: !bundled ? `${dir}/${OUT_PREFIX[buildType]}` : undefined,
             entryFileNames: chunkInfo => `${chunkInfo.name.replace(/node_modules/g, 'modules')}.js`

@@ -30,18 +30,18 @@ class WebgpuPipeline {
             bindGroupLayouts.push(format.bindGroupLayout);
         });
 
-        const descr = {
+        const desc = {
             bindGroupLayouts: bindGroupLayouts
         };
 
         _layoutId++;
-        DebugHelper.setLabel(descr, `PipelineLayoutDescr-${_layoutId}`);
+        DebugHelper.setLabel(desc, `PipelineLayoutDescr-${_layoutId}`);
 
         /** @type {GPUPipelineLayout} */
-        const pipelineLayout = this.device.wgpu.createPipelineLayout(descr);
+        const pipelineLayout = this.device.wgpu.createPipelineLayout(desc);
         DebugHelper.setLabel(pipelineLayout, `PipelineLayout-${_layoutId}`);
         Debug.trace(TRACEID_PIPELINELAYOUT_ALLOC, `Alloc: Id ${_layoutId}`, {
-            descr,
+            desc: desc,
             bindGroupFormats
         });
 

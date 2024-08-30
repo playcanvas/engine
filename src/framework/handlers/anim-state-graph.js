@@ -31,7 +31,7 @@ class AnimStateGraphHandler extends ResourceHandler {
             options.responseType = Http.ResponseType.JSON;
         }
 
-        http.get(url.load, options, function (err, response) {
+        http.get(url.load, options, (err, response) => {
             if (err) {
                 callback(`Error loading animation state graph resource: ${url.original} [${err}]`);
             } else {

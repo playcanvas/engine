@@ -1,4 +1,3 @@
-import { Debug } from '../../core/debug.js';
 import { Mat4 } from '../../core/math/mat4.js';
 import { Vec3 } from '../../core/math/vec3.js';
 
@@ -21,12 +20,6 @@ class Listener {
      * @private
      */
     position = new Vec3();
-
-    /**
-     * @type {Vec3}
-     * @private
-     */
-    velocity = new Vec3();
 
     /**
      * @type {Mat4}
@@ -69,27 +62,6 @@ class Listener {
                 listener.setPosition(position.x, position.y, position.z);
             }
         }
-    }
-
-    /**
-     * Get the velocity of the listener.
-     *
-     * @returns {Vec3} The velocity of the listener.
-     * @deprecated
-     */
-    getVelocity() {
-        Debug.warn('Listener#getVelocity is not implemented.');
-        return this.velocity;
-    }
-
-    /**
-     * Set the velocity of the listener.
-     *
-     * @param {Vec3} velocity - The new velocity of the listener.
-     * @deprecated
-     */
-    setVelocity(velocity) {
-        Debug.warn('Listener#setVelocity is not implemented.');
     }
 
     /**

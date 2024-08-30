@@ -19,6 +19,7 @@ import { _matTex2D, standard } from '../shader-lib/programs/standard.js';
 import { Material } from './material.js';
 import { StandardMaterialOptionsBuilder } from './standard-material-options-builder.js';
 import { standardMaterialCubemapParameters, standardMaterialTextureParameters } from './standard-material-parameters.js';
+import { DebugGraphics } from '../../platform/graphics/debug-graphics.js';
 
 /**
  * @import { BoundingBox } from '../../core/shape/bounding-box.js'
@@ -298,10 +299,10 @@ const _tempColor = new Color();
  * within the medium. Only used when useDynamicRefraction is enabled.
  * @property {Color} emissive The emissive color of the material. This color value is 3-component
  * (RGB), where each component is between 0 and 1.
- * @property {boolean} emissiveTint Multiply emissive map and/or emissive vertex color by the
- * constant emissive value.
  * @property {Texture|null} emissiveMap The emissive map of the material (default is null). Can be
- * HDR.
+ * HDR. When the emissive map is applied, the emissive color is multiplied by the texel color in the
+ * map. Since the emissive color is black by default, the emissive map won't be visible unless the
+ * emissive color is changed.
  * @property {number} emissiveIntensity Emissive color multiplier.
  * @property {number} emissiveMapUv Emissive map UV channel.
  * @property {Vec2} emissiveMapTiling Controls the 2D tiling of the emissive map.
@@ -312,14 +313,12 @@ const _tempColor = new Color();
  * @property {string} emissiveMapChannel Color channels of the emissive map to use. Can be "r",
  * "g", "b", "a", "rgb" or any swizzled combination.
  * @property {boolean} emissiveVertexColor Use mesh vertex colors for emission. If emissiveMap or
- * emissiveTint are set, they'll be multiplied by vertex colors.
+ * emissive are set, they'll be multiplied by vertex colors.
  * @property {string} emissiveVertexColorChannel Vertex color channels to use for emission. Can be
  * "r", "g", "b", "a", "rgb" or any swizzled combination.
  * @property {boolean} useSheen Toggle sheen specular effect on/off.
  * @property {Color} sheen The specular color of the sheen (fabric) microfiber structure.
  * This color value is 3-component (RGB), where each component is between 0 and 1.
- * @property {boolean} sheenTint Multiply sheen map and/or sheen vertex color by the constant
- * sheen value.
  * @property {Texture|null} sheenMap The sheen microstructure color map of the material (default is
  * null).
  * @property {number} sheenMapUv Sheen map UV channel.
@@ -336,8 +335,6 @@ const _tempColor = new Color();
  * This color value is a single value between 0 and 1.
  * @property {boolean} sheenGlossInvert Invert the sheen gloss component (default is false).
  * Enabling this flag results in material treating the sheen gloss members as roughness.
- * @property {boolean} sheenGlossTint Multiply sheen glossiness map and/or sheen glossiness vertex
- * value by the scalar sheen glossiness value.
  * @property {Texture|null} sheenGlossMap The sheen glossiness microstructure color map of the
  * material (default is null).
  * @property {number} sheenGlossMapUv Sheen map UV channel.
@@ -456,7 +453,7 @@ const _tempColor = new Color();
  * multiplied by vertex colors.
  * @property {string} lightVertexColorChannel Vertex color channels to use for baked lighting. Can
  * be "r", "g", "b", "a", "rgb" or any swizzled combination.
- * @property {boolean} ambientTint Enables scene ambient multiplication by material ambient color.
+ * @property {number} aoIntensity Ambient occlusion intensity. Defaults to 1.
  * @property {Texture|null} aoMap The main (primary) baked ambient occlusion (AO) map (default is
  * null). Modulates ambient color.
  * @property {number} aoMapUv Main (primary) AO map UV channel
@@ -598,15 +595,6 @@ class StandardMaterial extends Material {
         this._uniformCache = { };
     }
 
-    set shader(shader) {
-        Debug.warn('StandardMaterial#shader property is not implemented, and should not be used.');
-    }
-
-    get shader() {
-        Debug.warn('StandardMaterial#shader property is not implemented, and should not be used.');
-        return null;
-    }
-
     /**
      * Object containing custom shader chunks that will replace default ones.
      *
@@ -638,9 +626,13 @@ class StandardMaterial extends Material {
 
         // clone chunks
         for (const p in source._chunks) {
-            if (source._chunks.hasOwnProperty(p))
+            if (source._chunks.hasOwnProperty(p)) {
                 this._chunks[p] = source._chunks[p];
+            }
         }
+
+        // clone user attributes
+        this.userAttributes = new Map(source.userAttributes);
 
         return this;
     }
@@ -684,12 +676,12 @@ class StandardMaterial extends Material {
     }
 
     _updateMap(p) {
-        const mname = p + 'Map';
+        const mname = `${p}Map`;
         const map = this[mname];
         if (map) {
-            this._setParameter('texture_' + mname, map);
+            this._setParameter(`texture_${mname}`, map);
 
-            const tname = mname + 'Transform';
+            const tname = `${mname}Transform`;
             const uniform = this.getUniform(tname);
             if (uniform) {
                 this._setParameters(uniform);
@@ -718,6 +710,7 @@ class StandardMaterial extends Material {
 
         this._setParameter('material_ambient', getUniform('ambient'));
         this._setParameter('material_diffuse', getUniform('diffuse'));
+        this._setParameter('material_aoIntensity', this.aoIntensity);
 
         if (this.useMetalness) {
             if (!this.metalnessMap || this.metalness < 1) {
@@ -729,12 +722,9 @@ class StandardMaterial extends Material {
             if (!this.specularityFactorMap || this.specularityFactorTint) {
                 this._setParameter('material_specularityFactor', this.specularityFactor);
             }
-            if (!this.sheenMap || this.sheenTint) {
-                this._setParameter('material_sheen', getUniform('sheen'));
-            }
-            if (!this.sheenGlossMap || this.sheenGlossTint) {
-                this._setParameter('material_sheenGloss', this.sheenGloss);
-            }
+
+            this._setParameter('material_sheen', getUniform('sheen'));
+            this._setParameter('material_sheenGloss', this.sheenGloss);
 
             this._setParameter('material_refractionIndex', this.refractionIndex);
         } else {
@@ -755,12 +745,14 @@ class StandardMaterial extends Material {
 
         this._setParameter('material_gloss', this.gloss);
 
-        if (!this.emissiveMap || this.emissiveTint) {
-            this._setParameter('material_emissive', getUniform('emissive'));
-        }
-        if (this.emissiveIntensity !== 1) {
-            this._setParameter('material_emissiveIntensity', this.emissiveIntensity);
-        }
+        Debug.call(() => {
+            if (this.emissiveMap && this.emissive.r === 0 && this.emissive.g === 0 && this.emissive.b === 0) {
+                Debug.warnOnce(`Emissive map is set but emissive color is black, making the map invisible. Set emissive color to white to make the map visible. Rendering [${DebugGraphics.toString()}]`, this);
+            }
+        });
+
+        this._setParameter('material_emissive', getUniform('emissive'));
+        this._setParameter('material_emissiveIntensity', this.emissiveIntensity);
 
         if (this.refraction > 0) {
             this._setParameter('material_refraction', this.refraction);
@@ -856,7 +848,9 @@ class StandardMaterial extends Material {
         this._processParameters('_activeLightingParams');
     }
 
-    getShaderVariant(device, scene, objDefs, renderParams, pass, sortedLights, viewUniformFormat, viewBindGroupFormat, vertexFormat) {
+    getShaderVariant(params) {
+
+        const { device, scene, pass, objDefs, sortedLights, renderParams } = params;
 
         // update prefiltered lighting data
         this.updateEnvUniforms(device, scene);
@@ -865,18 +859,20 @@ class StandardMaterial extends Material {
         const shaderPassInfo = ShaderPass.get(device).getByIndex(pass);
         const minimalOptions = pass === SHADER_DEPTH || pass === SHADER_PICK || pass === SHADER_PREPASS_VELOCITY || shaderPassInfo.isShadow;
         let options = minimalOptions ? standard.optionsContextMin : standard.optionsContext;
+        options.defines = this.defines;
 
-        if (minimalOptions)
+        if (minimalOptions) {
             this.shaderOptBuilder.updateMinRef(options, scene, this, objDefs, pass, sortedLights);
-        else
+        } else {
             this.shaderOptBuilder.updateRef(options, scene, renderParams, this, objDefs, pass, sortedLights);
+        }
 
         // execute user callback to modify the options
         if (this.onUpdateShader) {
             options = this.onUpdateShader(options);
         }
 
-        const processingOptions = new ShaderProcessorOptions(viewUniformFormat, viewBindGroupFormat, vertexFormat);
+        const processingOptions = new ShaderProcessorOptions(params.viewUniformFormat, params.viewBindGroupFormat, params.vertexFormat);
 
         const library = getProgramLibrary(device);
         library.register('standard', standard);
@@ -956,7 +952,7 @@ const defineProp = (prop) => {
     return prop.defaultValue && prop.defaultValue.clone ? defineAggProp(prop) : defineValueProp(prop);
 };
 
-function _defineTex2D(name, channel = "rgb", vertexColor = true, uv = 0) {
+function _defineTex2D(name, channel = 'rgb', vertexColor = true, uv = 0) {
     // store texture name
     _matTex2D[name] = channel.length || -1;
 
@@ -1115,7 +1111,7 @@ function _defineFlag(name, defaultValue) {
 }
 
 function _defineMaterialProps() {
-    _defineColor('ambient', new Color(0.7, 0.7, 0.7));
+    _defineColor('ambient', new Color(1, 1, 1));
     _defineColor('diffuse', new Color(1, 1, 1));
     _defineColor('specular', new Color(0, 0, 0));
     _defineColor('emissive', new Color(0, 0, 0));
@@ -1125,6 +1121,7 @@ function _defineMaterialProps() {
     _defineFloat('specularityFactor', 1);
     _defineFloat('sheenGloss', 0.0);
     _defineFloat('gloss', 0.25);
+    _defineFloat('aoIntensity', 1);
 
     _defineFloat('heightMapFactor', 1, (material, device, scene) => {
         return material.heightMapFactor * 0.025;
@@ -1181,18 +1178,13 @@ function _defineMaterialProps() {
         return uniform;
     });
 
-    _defineFlag('ambientTint', false);
-    _defineFlag('sheenTint', false);
     _defineFlag('specularTint', false);
     _defineFlag('specularityFactorTint', false);
-    _defineFlag('emissiveTint', false);
-    _defineFlag('fastTbn', false);
     _defineFlag('useMetalness', false);
     _defineFlag('useMetalnessSpecularColor', false);
     _defineFlag('useSheen', false);
     _defineFlag('enableGGXSpecular', false);
     _defineFlag('occludeDirect', false);
-    _defineFlag('normalizeNormalMap', true);
     _defineFlag('opacityFadesSpecular', true);
     _defineFlag('occludeSpecular', SPECOCC_AO);
     _defineFlag('fresnelModel', FRESNEL_SCHLICK); // NOTE: this has been made to match the default shading model (to fix a bug)

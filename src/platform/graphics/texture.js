@@ -13,7 +13,10 @@ import {
     TEXTUREPROJECTION_NONE, TEXTUREPROJECTION_CUBE,
     TEXTURETYPE_DEFAULT, TEXTURETYPE_RGBM, TEXTURETYPE_RGBE, TEXTURETYPE_RGBP,
     isIntegerPixelFormat, FILTER_NEAREST, TEXTURELOCK_NONE, TEXTURELOCK_READ,
-    requiresManualGamma
+    TEXPROPERTY_MIN_FILTER, TEXPROPERTY_MAG_FILTER, TEXPROPERTY_ADDRESS_U, TEXPROPERTY_ADDRESS_V,
+    TEXPROPERTY_ADDRESS_W, TEXPROPERTY_COMPARE_ON_READ, TEXPROPERTY_COMPARE_FUNC, TEXPROPERTY_ANISOTROPY,
+    TEXPROPERTY_ALL, requiresManualGamma
+
 } from './constants.js';
 import { TextureUtils } from './texture-utils.js';
 
@@ -22,16 +25,6 @@ import { TextureUtils } from './texture-utils.js';
  */
 
 let id = 0;
-
-const PROPERTY_MIN_FILTER = 1;
-const PROPERTY_MAG_FILTER = 2;
-const PROPERTY_ADDRESS_U = 4;
-const PROPERTY_ADDRESS_V = 8;
-const PROPERTY_ADDRESS_W = 16;
-const PROPERTY_COMPARE_ON_READ = 32;
-const PROPERTY_COMPARE_FUNC = 64;
-const PROPERTY_ANISOTROPY = 128;
-const PROPERTY_ALL = 255; // 1 | 2 | 4 | 8 | 16 | 32 | 64 | 128
 
 /**
  * A texture is a container for texel data that can be utilized in a fragment shader. Typically,
@@ -219,10 +212,10 @@ class Texture {
      */
     constructor(graphicsDevice, options = {}) {
         this.device = graphicsDevice;
-        Debug.assert(this.device, "Texture constructor requires a graphicsDevice to be valid");
-        Debug.assert(!options.width || Number.isInteger(options.width), "Texture width must be an integer number, got", options);
-        Debug.assert(!options.height || Number.isInteger(options.height), "Texture height must be an integer number, got", options);
-        Debug.assert(!options.depth || Number.isInteger(options.depth), "Texture depth must be an integer number, got", options);
+        Debug.assert(this.device, 'Texture constructor requires a graphicsDevice to be valid');
+        Debug.assert(!options.width || Number.isInteger(options.width), 'Texture width must be an integer number, got', options);
+        Debug.assert(!options.height || Number.isInteger(options.height), 'Texture height must be an integer number, got', options);
+        Debug.assert(!options.depth || Number.isInteger(options.depth), 'Texture depth must be an integer number, got', options);
 
         this.name = options.name ?? '';
 
@@ -424,10 +417,10 @@ class Texture {
     set minFilter(v) {
         if (this._minFilter !== v) {
             if (isIntegerPixelFormat(this._format)) {
-                Debug.warn("Texture#minFilter: minFilter property cannot be changed on an integer texture, will remain FILTER_NEAREST", this);
+                Debug.warn('Texture#minFilter: minFilter property cannot be changed on an integer texture, will remain FILTER_NEAREST', this);
             } else {
                 this._minFilter = v;
-                this.propertyChanged(PROPERTY_MIN_FILTER);
+                this.propertyChanged(TEXPROPERTY_MIN_FILTER);
             }
         }
     }
@@ -452,10 +445,10 @@ class Texture {
     set magFilter(v) {
         if (this._magFilter !== v) {
             if (isIntegerPixelFormat(this._format)) {
-                Debug.warn("Texture#magFilter: magFilter property cannot be changed on an integer texture, will remain FILTER_NEAREST", this);
+                Debug.warn('Texture#magFilter: magFilter property cannot be changed on an integer texture, will remain FILTER_NEAREST', this);
             } else {
                 this._magFilter = v;
-                this.propertyChanged(PROPERTY_MAG_FILTER);
+                this.propertyChanged(TEXPROPERTY_MAG_FILTER);
             }
         }
     }
@@ -481,7 +474,7 @@ class Texture {
     set addressU(v) {
         if (this._addressU !== v) {
             this._addressU = v;
-            this.propertyChanged(PROPERTY_ADDRESS_U);
+            this.propertyChanged(TEXPROPERTY_ADDRESS_U);
         }
     }
 
@@ -506,7 +499,7 @@ class Texture {
     set addressV(v) {
         if (this._addressV !== v) {
             this._addressV = v;
-            this.propertyChanged(PROPERTY_ADDRESS_V);
+            this.propertyChanged(TEXPROPERTY_ADDRESS_V);
         }
     }
 
@@ -530,12 +523,12 @@ class Texture {
      */
     set addressW(addressW) {
         if (!this._volume) {
-            Debug.warn("pc.Texture#addressW: Can't set W addressing mode for a non-3D texture.");
+            Debug.warn('pc.Texture#addressW: Can\'t set W addressing mode for a non-3D texture.');
             return;
         }
         if (addressW !== this._addressW) {
             this._addressW = addressW;
-            this.propertyChanged(PROPERTY_ADDRESS_W);
+            this.propertyChanged(TEXPROPERTY_ADDRESS_W);
         }
     }
 
@@ -558,7 +551,7 @@ class Texture {
     set compareOnRead(v) {
         if (this._compareOnRead !== v) {
             this._compareOnRead = v;
-            this.propertyChanged(PROPERTY_COMPARE_ON_READ);
+            this.propertyChanged(TEXPROPERTY_COMPARE_ON_READ);
         }
     }
 
@@ -586,7 +579,7 @@ class Texture {
     set compareFunc(v) {
         if (this._compareFunc !== v) {
             this._compareFunc = v;
-            this.propertyChanged(PROPERTY_COMPARE_FUNC);
+            this.propertyChanged(TEXPROPERTY_COMPARE_FUNC);
         }
     }
 
@@ -608,7 +601,7 @@ class Texture {
     set anisotropy(v) {
         if (this._anisotropy !== v) {
             this._anisotropy = v;
-            this.propertyChanged(PROPERTY_ANISOTROPY);
+            this.propertyChanged(TEXPROPERTY_ANISOTROPY);
         }
     }
 
@@ -630,9 +623,9 @@ class Texture {
         if (this._mipmaps !== v) {
 
             if (this.device.isWebGPU) {
-                Debug.warn("Texture#mipmaps: mipmap property is currently not allowed to be changed on WebGPU, create the texture appropriately.", this);
+                Debug.warn('Texture#mipmaps: mipmap property is currently not allowed to be changed on WebGPU, create the texture appropriately.', this);
             } else if (isIntegerPixelFormat(this._format)) {
-                Debug.warn("Texture#mipmaps: mipmap property cannot be changed on an integer texture, will remain false", this);
+                Debug.warn('Texture#mipmaps: mipmap property cannot be changed on an integer texture, will remain false', this);
             } else {
                 this._mipmaps = v;
             }
@@ -826,7 +819,7 @@ class Texture {
         this._needsMipmapsUpload = this._mipmaps;
         this._mipmapsUploaded = false;
 
-        this.propertyChanged(PROPERTY_ALL);
+        this.propertyChanged(TEXPROPERTY_ALL);
     }
 
     /**
@@ -917,19 +910,22 @@ class Texture {
             if (!invalid) {
                 // mark levels as updated
                 for (let i = 0; i < 6; i++) {
-                    if (this._levels[mipLevel][i] !== source[i])
+                    if (this._levels[mipLevel][i] !== source[i]) {
                         this._levelsUpdated[mipLevel][i] = true;
+                    }
                 }
             }
         } else {
             // check if source is valid type of element
-            if (!this.device._isBrowserInterface(source))
+            if (!this.device._isBrowserInterface(source)) {
                 invalid = true;
+            }
 
             if (!invalid) {
                 // mark level as updated
-                if (source !== this._levels[mipLevel])
+                if (source !== this._levels[mipLevel]) {
                     this._levelsUpdated[mipLevel] = true;
+                }
 
                 width = source.width;
                 height = source.height;
@@ -991,7 +987,7 @@ class Texture {
      */
     unlock() {
         if (this._lockedMode === TEXTURELOCK_NONE) {
-            Debug.warn("pc.Texture#unlock: Attempting to unlock a texture that is not locked.", this);
+            Debug.warn('pc.Texture#unlock: Attempting to unlock a texture that is not locked.', this);
         }
 
         // Upload the new pixel data if locked in write mode (default)

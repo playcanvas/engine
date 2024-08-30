@@ -20,7 +20,6 @@ import {
 import { IndexBuffer } from '../../platform/graphics/index-buffer.js';
 import { VertexBuffer } from '../../platform/graphics/vertex-buffer.js';
 import { StandardMaterial } from '../../scene/materials/standard-material.js';
-import { BasicMaterial } from '../../scene/materials/basic-material.js';
 import { BLEND_NONE, BLEND_NORMAL, PROJECTION_ORTHOGRAPHIC } from '../../scene/constants.js';
 
 /**
@@ -406,18 +405,6 @@ class GltfExporter extends CoreExporter {
         }
     }
 
-    writeBasicMaterial(resources, mat, output, json) {
-
-        const { color } = mat;
-        const pbr = output.pbrMetallicRoughness;
-
-        if (!color.equals(Color.WHITE)) {
-            pbr.baseColorFactor = [color.r, color.g, color.b, color];
-        }
-
-        this.attachTexture(resources, mat, pbr, 'baseColorTexture', 'colorMap', json);
-    }
-
     writeMaterials(resources, json) {
 
         if (resources.materials.length > 0) {
@@ -433,10 +420,6 @@ class GltfExporter extends CoreExporter {
 
                 if (mat instanceof StandardMaterial) {
                     this.writeStandardMaterial(resources, mat, material, json);
-                }
-
-                if (mat instanceof BasicMaterial) {
-                    this.writeBasicMaterial(resources, mat, material, json);
                 }
 
                 if (blendType === BLEND_NORMAL) {
@@ -643,41 +626,41 @@ class GltfExporter extends CoreExporter {
 
             promises.push(
                 this.getBlob(canvas, mimeType)
-                    .then((blob) => {
-                        const reader = new FileReader();
-                        reader.readAsArrayBuffer(blob);
+                .then((blob) => {
+                    const reader = new FileReader();
+                    reader.readAsArrayBuffer(blob);
 
-                        return new Promise((resolve) => {
-                            reader.onloadend = () => {
-                                resolve(reader);
-                            };
-                        });
-                    })
-                    .then((reader) => {
-                        const buffer = this.getPaddedArrayBuffer(reader.result);
-
-                        GltfExporter.writeBufferView(resources, json, buffer);
-                        resources.buffers.push(buffer);
-
-                        const bufferView = resources.bufferViewMap.get(buffer);
-
-                        json.images[i] = {
-                            mimeType: mimeType,
-                            bufferView: bufferView[0]
+                    return new Promise((resolve) => {
+                        reader.onloadend = () => {
+                            resolve(reader);
                         };
+                    });
+                })
+                .then((reader) => {
+                    const buffer = this.getPaddedArrayBuffer(reader.result);
 
-                        json.samplers[i] = {
-                            minFilter: getFilter(texture.minFilter),
-                            magFilter: getFilter(texture.magFilter),
-                            wrapS: getWrap(texture.addressU),
-                            wrapT: getWrap(texture.addressV)
-                        };
+                    GltfExporter.writeBufferView(resources, json, buffer);
+                    resources.buffers.push(buffer);
 
-                        json.textures[i] = {
-                            sampler: i,
-                            source: i
-                        };
-                    })
+                    const bufferView = resources.bufferViewMap.get(buffer);
+
+                    json.images[i] = {
+                        mimeType: mimeType,
+                        bufferView: bufferView[0]
+                    };
+
+                    json.samplers[i] = {
+                        minFilter: getFilter(texture.minFilter),
+                        magFilter: getFilter(texture.magFilter),
+                        wrapS: getWrap(texture.addressU),
+                        wrapT: getWrap(texture.addressV)
+                    };
+
+                    json.textures[i] = {
+                        sampler: i,
+                        source: i
+                    };
+                })
             );
         }
 

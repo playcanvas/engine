@@ -177,7 +177,7 @@ class RenderTarget {
 
         // device, from one of the buffers
         const device = this._colorBuffer?.device || this._depthBuffer?.device || options.graphicsDevice;
-        Debug.assert(device, "Failed to obtain the device, colorBuffer nor depthBuffer store it.");
+        Debug.assert(device, 'Failed to obtain the device, colorBuffer nor depthBuffer store it.');
         this._device = device;
 
         const { maxSamples } = this._device;
@@ -199,7 +199,7 @@ class RenderTarget {
             this.name = this._depthBuffer?.name;
         }
         if (!this.name) {
-            this.name = "Untitled";
+            this.name = 'Untitled';
         }
 
         // render image flipped in Y
@@ -383,7 +383,7 @@ class RenderTarget {
             if (source._device) {
                 this._device = source._device;
             } else {
-                Debug.error("Render targets are not initialized");
+                Debug.error('Render targets are not initialized');
                 return false;
             }
         }
@@ -487,13 +487,19 @@ class RenderTarget {
     }
 
     /**
-     * Gets whether the first color buffer format is sRGB.
+     * Gets whether the format of the specified color buffer is sRGB.
      *
-     * @type {boolean}
+     * @param {number} index - The index of the color buffer.
+     * @returns {boolean} True if the color buffer is sRGB, false otherwise.
      * @ignore
      */
-    get srgb() {
-        return this.colorBuffer ? isSrgbPixelFormat(this.colorBuffer.format) : false;
+    isColorBufferSrgb(index = 0) {
+        if (this.device.backBuffer === this) {
+            return isSrgbPixelFormat(this.device.backBufferFormat);
+        }
+
+        const colorBuffer = this.getColorBuffer(index);
+        return colorBuffer ? isSrgbPixelFormat(colorBuffer.format) : false;
     }
 }
 

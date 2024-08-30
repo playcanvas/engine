@@ -1,7 +1,7 @@
 import { CULLFACE_FRONT } from '../../platform/graphics/constants.js';
 import { ShaderProcessorOptions } from '../../platform/graphics/shader-processor-options.js';
 import { LAYERID_SKYBOX } from '../constants.js';
-import { Material } from '../materials/material.js';
+import { ShaderMaterial } from '../materials/shader-material.js';
 import { MeshInstance } from '../mesh-instance.js';
 import { getProgramLibrary } from '../shader-lib/get-program-library.js';
 import { skybox } from '../shader-lib/programs/skybox.js';
@@ -34,13 +34,15 @@ class SkyMesh {
      */
     constructor(device, scene, node, texture, type) {
 
-        const material = new Material();
+        const material = new ShaderMaterial();
         material.name = 'SkyMaterial';
 
-        material.getShaderVariant = function (dev, sc, defs, renderParams, pass, sortedLights, viewUniformFormat, viewBindGroupFormat) {
+        material.getShaderVariant = function (params) {
 
+            const { scene, renderParams } = params;
             const options = {
-                pass: pass,
+                defines: this.defines,
+                pass: params.pass,
                 encoding: texture.encoding,
                 gamma: renderParams.shaderOutputGamma,
                 toneMapping: renderParams.toneMapping,
@@ -54,7 +56,7 @@ class SkyMesh {
                 options.type = 'envAtlas';
             }
 
-            const processingOptions = new ShaderProcessorOptions(viewUniformFormat, viewBindGroupFormat);
+            const processingOptions = new ShaderProcessorOptions(params.viewUniformFormat, params.viewBindGroupFormat);
 
             const library = getProgramLibrary(device);
             library.register('skybox', skybox);

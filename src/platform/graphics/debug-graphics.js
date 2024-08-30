@@ -52,7 +52,7 @@ class DebugGraphics {
      * @returns {string} String representation of current markers.
      */
     static toString() {
-        return DebugGraphics.markers.join(" | ");
+        return DebugGraphics.markers.join(' | ');
     }
 }
 

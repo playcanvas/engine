@@ -39,6 +39,8 @@ class LitShaderOptions {
 
     skin = false;
 
+    batch = false;
+
     /**
      * If hardware instancing compatible shader should be generated. Transform is read from
      * per-instance {@link VertexBuffer} instead of shader's uniforms.
@@ -91,8 +93,6 @@ class LitShaderOptions {
 
     diffuseMapEnabled = false;
 
-    useAmbientTint = false;
-
     /**
      * Replaced the whole fragment shader with this string.
      *
@@ -109,14 +109,6 @@ class LitShaderOptions {
      * @type {boolean}
      */
     ambientSH = false;
-
-    /**
-     * Use slightly cheaper normal mapping code (skip tangent space normalization). Can look buggy
-     * sometimes.
-     *
-     * @type {boolean}
-     */
-    fastTbn = false;
 
     /**
      * The value of {@link StandardMaterial#twoSidedLighting}.

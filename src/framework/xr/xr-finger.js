@@ -4,7 +4,7 @@
  */
 
 /**
- * Represents finger with related joints and index.
+ * Represents a finger of a tracked {@link XrHand} with related joints and index.
  *
  * @category XR
  */
@@ -36,8 +36,8 @@ class XrFinger {
     /**
      * Create a new XrFinger instance.
      *
-     * @param {number} index - Index of a finger.
-     * @param {XrHand} hand - Hand that finger relates to.
+     * @param {number} index - Index of the finger.
+     * @param {XrHand} hand - Hand that the finger belongs to.
      * @ignore
      */
     constructor(index, hand) {
@@ -47,7 +47,7 @@ class XrFinger {
     }
 
     /**
-     * Index of a finger, numeration is: thumb, index, middle, ring, little.
+     * Gets the index of the finger. Enumeration is: thumb, index, middle, ring, little.
      *
      * @type {number}
      */
@@ -56,7 +56,7 @@ class XrFinger {
     }
 
     /**
-     * Hand that finger relates to.
+     * Gets the hand that the finger belongs to.
      *
      * @type {XrHand}
      */
@@ -65,7 +65,7 @@ class XrFinger {
     }
 
     /**
-     * List of joints that relates to this finger, starting from joint closest to wrist all the way
+     * Array of joints that belong to this finger, starting from joint closest to wrist all the way
      * to the tip of a finger.
      *
      * @type {XrJoint[]}
@@ -75,7 +75,7 @@ class XrFinger {
     }
 
     /**
-     * Tip of a finger, or null if not available.
+     * Tip joint of the finger, or null if not available.
      *
      * @type {XrJoint|null}
      */

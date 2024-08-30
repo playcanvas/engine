@@ -139,10 +139,14 @@ class GSplatInstance {
             this.sorter = new GSplatSorter();
             this.sorter.init(this.orderTexture, this.centers);
             this.sorter.on('updated', (count) => {
-                // limit splat render count to exclude those behind the camera.
-                // NOTE: the last instance rendered may include non-existant splat
-                // data. this should be ok though as the data is filled with 0's.
+                // limit splat render count to exclude those behind the camera
                 this.meshInstance.instancingCount = Math.ceil(count / splatInstanceSize);
+
+                // update splat count on the material
+                const tex_params = this.material.getParameter('tex_params');
+                if (tex_params?.data) {
+                    tex_params.data[0] = count;
+                }
             });
         }
     }
@@ -170,6 +174,16 @@ class GSplatInstance {
         const device = this.splat.device;
         viewport[0] = device.width;
         viewport[1] = device.height;
+
+        // adjust viewport for stereoscopic VR sessions
+        if (this.cameras.length > 0) {
+            const camera = this.cameras[0];
+            const xr = camera.xr;
+            if (xr && xr.active && xr.views.list.length === 2) {
+                viewport[0] /= 2;
+            }
+        }
+
         this.material.setParameter('viewport', viewport);
     }
 

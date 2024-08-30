@@ -37,8 +37,8 @@ Object.assign(ObjModelParser.prototype, {
                 indices: []
             }
         };
-        var group = "default"; // current group
-        var lines = input.split("\n");
+        var group = 'default'; // current group
+        var lines = input.split('\n');
         var verts = [], normals = [], uvs = [];
         var i;
 
@@ -71,10 +71,12 @@ Object.assign(ObjModelParser.prototype, {
                     for (p = 1; p < parts.length; p++) {
                         r = this._parseIndices(parts[p]);
                         parsed[group].verts.push(verts[r[0] * 3], verts[r[0] * 3 + 1], verts[r[0] * 3 + 2]); // expand uvs from indices
-                        if (r[1] * 2 < uvs.length)
-                            parsed[group].uvs.push(uvs[r[1] * 2], uvs[r[1] * 2 + 1]); // expand uvs from indices
-                        if (r[2] * 3 < normals.length)
-                            parsed[group].normals.push(normals[r[2] * 3], normals[r[2] * 3 + 1], normals[r[2] * 3 + 2]); // expand normals from indices
+                        if (r[1] * 2 < uvs.length) {
+                            parsed[group].uvs.push(uvs[r[1] * 2], uvs[r[1] * 2 + 1]);
+                        } // expand uvs from indices
+                        if (r[2] * 3 < normals.length) {
+                            parsed[group].normals.push(normals[r[2] * 3], normals[r[2] * 3 + 1], normals[r[2] * 3 + 2]);
+                        } // expand normals from indices
                     }
 
                 } else if (parts.length === 5) {
@@ -84,13 +86,15 @@ Object.assign(ObjModelParser.prototype, {
                         p = order[o];
                         r = this._parseIndices(parts[p]);
                         parsed[group].verts.push(verts[r[0] * 3], verts[r[0] * 3 + 1], verts[r[0] * 3 + 2]); // expand uvs from indices
-                        if (r[1] * 2 < uvs.length)
-                            parsed[group].uvs.push(uvs[r[1] * 2], uvs[r[1] * 2 + 1]); // expand uvs from indices
-                        if (r[2] * 3 < normals.length)
-                            parsed[group].normals.push(normals[r[2] * 3], normals[r[2] * 3 + 1], normals[r[2] * 3 + 2]); // expand normals from indices
+                        if (r[1] * 2 < uvs.length) {
+                            parsed[group].uvs.push(uvs[r[1] * 2], uvs[r[1] * 2 + 1]);
+                        } // expand uvs from indices
+                        if (r[2] * 3 < normals.length) {
+                            parsed[group].normals.push(normals[r[2] * 3], normals[r[2] * 3 + 1], normals[r[2] * 3 + 2]);
+                        } // expand normals from indices
                     }
                 } else {
-                    console.error(pc.string.format("OBJ uses unsupported {0}-gons", parts.length - 1));
+                    console.error(pc.string.format('OBJ uses unsupported {0}-gons', parts.length - 1));
                 }
             }
         }
@@ -103,15 +107,17 @@ Object.assign(ObjModelParser.prototype, {
             var currentGroup = parsed[groupNames[i]];
             if (!currentGroup.verts.length) continue;
             if (currentGroup.verts.length > 65535) {
-                console.warn("Warning: mesh with more than 65535 vertices");
+                console.warn('Warning: mesh with more than 65535 vertices');
             }
 
             var geom = new pc.Geometry();
             geom.positions = currentGroup.verts;
-            if (currentGroup.normals.length > 0)
+            if (currentGroup.normals.length > 0) {
                 geom.normals = currentGroup.normals;
-            if (currentGroup.uvs.length > 0)
+            }
+            if (currentGroup.uvs.length > 0) {
                 geom.uvs = currentGroup.uvs;
+            }
 
             var mesh = pc.Mesh.fromGeometry(this._device, geom);
 
@@ -126,7 +132,7 @@ Object.assign(ObjModelParser.prototype, {
 
     _parseIndices: function (str) {
         var result = [];
-        var indices = str.split("/");
+        var indices = str.split('/');
         for (var i = 0; i < 3; i++) {
             if (indices[i]) {
                 result[i] = parseInt(indices[i], 10) - 1; // convert to 0-indexed

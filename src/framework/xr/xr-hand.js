@@ -161,8 +161,9 @@ class XrHand extends EventHandler {
             if (jointSpace) {
                 let pose;
 
-                if (frame.session.visibilityState !== 'hidden')
+                if (frame.session.visibilityState !== 'hidden') {
                     pose = frame.getJointPose(jointSpace, this._manager._referenceSpace);
+                }
 
                 if (pose) {
                     joint.update(pose);
@@ -267,7 +268,7 @@ class XrHand extends EventHandler {
     }
 
     /**
-     * List of fingers of a hand.
+     * Array of fingers of the hand.
      *
      * @type {XrFinger[]}
      */
@@ -276,7 +277,7 @@ class XrHand extends EventHandler {
     }
 
     /**
-     * List of joints of hand.
+     * Array of joints in the hand.
      *
      * @type {XrJoint[]}
      */
@@ -285,7 +286,7 @@ class XrHand extends EventHandler {
     }
 
     /**
-     * List of joints that are fingertips.
+     * Array of joints that are fingertips.
      *
      * @type {XrJoint[]}
      */

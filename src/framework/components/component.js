@@ -50,7 +50,7 @@ class Component extends EventHandler {
         }
 
         this.on('set', function (name, oldValue, newValue) {
-            this.fire('set_' + name, name, oldValue, newValue);
+            this.fire(`set_${name}`, name, oldValue, newValue);
         });
 
         this.on('set_enabled', this.onSetEnabled, this);
@@ -59,7 +59,7 @@ class Component extends EventHandler {
     /** @ignore */
     static _buildAccessors(obj, schema) {
         // Create getter/setter pairs for each property defined in the schema
-        schema.forEach(function (descriptor) {
+        schema.forEach((descriptor) => {
             // If the property descriptor is an object, it should have a `name`
             // member. If not, it should just be the plain property name.
             const name = (typeof descriptor === 'object') ? descriptor.name : descriptor;

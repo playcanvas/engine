@@ -49,6 +49,7 @@ import { Asset } from '../asset/asset.js';
 import { ABSOLUTE_URL } from '../asset/constants.js';
 
 import { dracoDecode } from './draco-decoder.js';
+import { Quat } from '../../core/math/quat.js';
 
 // resources loaded from GLB file that the parser returns
 class GlbResources {
@@ -78,6 +79,8 @@ class GlbResources {
 
     cameras;
 
+    nodeInstancingMap;
+
     destroy() {
         // render needs to dec ref meshes
         if (this.renders) {
@@ -89,7 +92,7 @@ class GlbResources {
 }
 
 const isDataURI = (uri) => {
-    return /^data:.*,.*$/i.test(uri);
+    return /^data:[^\n\r,\u2028\u2029]*,.*$/i.test(uri);
 };
 
 const getDataURIMimeType = (uri) => {
@@ -257,7 +260,7 @@ const getAccessorData = (gltfAccessor, bufferViews, flatten = false) => {
             }
         }
     } else {
-        if (gltfAccessor.hasOwnProperty("bufferView")) {
+        if (gltfAccessor.hasOwnProperty('bufferView')) {
             const bufferView = bufferViews[gltfAccessor.bufferView];
             if (flatten && bufferView.hasOwnProperty('byteStride')) {
                 // flatten stridden data
@@ -277,8 +280,8 @@ const getAccessorData = (gltfAccessor, bufferViews, flatten = false) => {
                 result = new dataType(storage);
             } else {
                 result = new dataType(bufferView.buffer,
-                                      bufferView.byteOffset + (gltfAccessor.byteOffset || 0),
-                                      gltfAccessor.count * numComponents);
+                    bufferView.byteOffset + (gltfAccessor.byteOffset || 0),
+                    gltfAccessor.count * numComponents);
             }
         } else {
             result = new dataType(gltfAccessor.count * numComponents);
@@ -421,11 +424,11 @@ const cloneTexture = (texture) => {
 
 // given a texture asset, clone it
 const cloneTextureAsset = (src) => {
-    const result = new Asset(src.name + '_clone',
-                             src.type,
-                             src.file,
-                             src.data,
-                             src.options);
+    const result = new Asset(`${src.name}_clone`,
+        src.type,
+        src.file,
+        src.data,
+        src.options);
     result.loaded = true;
     result.resource = cloneTexture(src.resource);
     src.registry.add(result);
@@ -496,8 +499,8 @@ const createVertexBufferInternal = (device, sourceDesc) => {
     if (isCorrectlyInterleaved) {
         // copy data
         sourceArray = new Uint32Array(positionDesc.buffer,
-                                      positionDesc.offset,
-                                      numVertices * vertexBuffer.format.size / 4);
+            positionDesc.offset,
+            numVertices * vertexBuffer.format.size / 4);
         targetArray.set(sourceArray);
     } else {
         let targetStride, sourceStride;
@@ -541,7 +544,7 @@ const createVertexBuffer = (device, attributes, indices, accessors, bufferViews,
             useAttributes[attrib] = attributes[attrib];
 
             // build unique id for each attribute in format: Semantic:accessorIndex
-            attribIds.push(attrib + ':' + attributes[attrib]);
+            attribIds.push(`${attrib}:${attributes[attrib]}`);
         }
     }
 
@@ -771,7 +774,7 @@ const createMesh = (device, gltfMesh, accessors, bufferViews, vertexBufferDict, 
                 mesh.primitive[0].count = vertexBuffer.numVertices;
             }
 
-            if (primitive.hasOwnProperty("extensions") && primitive.extensions.hasOwnProperty("KHR_materials_variants")) {
+            if (primitive.hasOwnProperty('extensions') && primitive.extensions.hasOwnProperty('KHR_materials_variants')) {
                 const variants = primitive.extensions.KHR_materials_variants;
                 const tempMapping = {};
                 variants.mappings.forEach((mapping) => {
@@ -840,7 +843,7 @@ const extractTextureTransform = (source, material, maps) => {
     const texCoord = source.texCoord;
     if (texCoord) {
         for (map = 0; map < maps.length; ++map) {
-            material[maps[map] + 'MapUv'] = texCoord;
+            material[`${maps[map]}MapUv`] = texCoord;
         }
     }
 
@@ -1041,11 +1044,9 @@ const extensionSheen = (data, material, textures) => {
         material.sheenEncoding = 'srgb';
         extractTextureTransform(data.sheenColorTexture, material, ['sheen']);
     }
-    if (data.hasOwnProperty('sheenRoughnessFactor')) {
-        material.sheenGloss = data.sheenRoughnessFactor;
-    } else {
-        material.sheenGloss = 0.0;
-    }
+
+    material.sheenGloss = data.hasOwnProperty('sheenRoughnessFactor') ? data.sheenRoughnessFactor : 0.0;
+
     if (data.hasOwnProperty('sheenRoughnessTexture')) {
         material.sheenGlossMap = textures[data.sheenRoughnessTexture.index];
         material.sheenGlossMapChannel = 'a';
@@ -1194,10 +1195,8 @@ const createMaterial = (gltfMaterial, textures) => {
         color = gltfMaterial.emissiveFactor;
         // Convert from linear space to sRGB space
         material.emissive.set(Math.pow(color[0], 1 / 2.2), Math.pow(color[1], 1 / 2.2), Math.pow(color[2], 1 / 2.2));
-        material.emissiveTint = true;
     } else {
         material.emissive.set(0, 0, 0);
-        material.emissiveTint = false;
     }
 
     if (gltfMaterial.hasOwnProperty('emissiveTexture')) {
@@ -1242,17 +1241,17 @@ const createMaterial = (gltfMaterial, textures) => {
 
     // Provide list of supported extensions and their functions
     const extensions = {
-        "KHR_materials_clearcoat": extensionClearCoat,
-        "KHR_materials_emissive_strength": extensionEmissiveStrength,
-        "KHR_materials_ior": extensionIor,
-        "KHR_materials_dispersion": extensionDispersion,
-        "KHR_materials_iridescence": extensionIridescence,
-        "KHR_materials_pbrSpecularGlossiness": extensionPbrSpecGlossiness,
-        "KHR_materials_sheen": extensionSheen,
-        "KHR_materials_specular": extensionSpecular,
-        "KHR_materials_transmission": extensionTransmission,
-        "KHR_materials_unlit": extensionUnlit,
-        "KHR_materials_volume": extensionVolume
+        'KHR_materials_clearcoat': extensionClearCoat,
+        'KHR_materials_emissive_strength': extensionEmissiveStrength,
+        'KHR_materials_ior': extensionIor,
+        'KHR_materials_dispersion': extensionDispersion,
+        'KHR_materials_iridescence': extensionIridescence,
+        'KHR_materials_pbrSpecularGlossiness': extensionPbrSpecGlossiness,
+        'KHR_materials_sheen': extensionSheen,
+        'KHR_materials_specular': extensionSpecular,
+        'KHR_materials_transmission': extensionTransmission,
+        'KHR_materials_unlit': extensionUnlit,
+        'KHR_materials_volume': extensionVolume
     };
 
     // Handle extensions
@@ -1498,7 +1497,7 @@ const createAnimation = (gltfAnimation, animationIndex, gltfAccessors, bufferVie
     }
 
     return new AnimTrack(
-        gltfAnimation.hasOwnProperty('name') ? gltfAnimation.name : ('animation_' + animationIndex),
+        gltfAnimation.hasOwnProperty('name') ? gltfAnimation.name : (`animation_${animationIndex}`),
         duration,
         inputs,
         outputs,
@@ -1508,13 +1507,13 @@ const createAnimation = (gltfAnimation, animationIndex, gltfAccessors, bufferVie
 const tempMat = new Mat4();
 const tempVec = new Vec3();
 
-const createNode = (gltfNode, nodeIndex) => {
+const createNode = (gltfNode, nodeIndex, nodeInstancingMap) => {
     const entity = new GraphNode();
 
     if (gltfNode.hasOwnProperty('name') && gltfNode.name.length > 0) {
         entity.name = gltfNode.name;
     } else {
-        entity.name = 'node_' + nodeIndex;
+        entity.name = `node_${nodeIndex}`;
     }
 
     // Parse transformation properties
@@ -1541,6 +1540,12 @@ const createNode = (gltfNode, nodeIndex) => {
     if (gltfNode.hasOwnProperty('scale')) {
         const s = gltfNode.scale;
         entity.setLocalScale(s[0], s[1], s[2]);
+    }
+
+    if (gltfNode.hasOwnProperty('extensions') && gltfNode.extensions.EXT_mesh_gpu_instancing) {
+        nodeInstancingMap.set(gltfNode, {
+            ext: gltfNode.extensions.EXT_mesh_gpu_instancing
+        });
     }
 
     return entity;
@@ -1609,7 +1614,7 @@ const createLight = (gltfLight, node) => {
 
     // glTF stores light already in energy/area, but we need to provide the light with only the energy parameter,
     // so we need the intensities in candela back to lumen
-    if (gltfLight.hasOwnProperty("intensity")) {
+    if (gltfLight.hasOwnProperty('intensity')) {
         lightProps.luminance = gltfLight.intensity * Light.getLightUnitConversion(lightTypes[lightProps.type], lightProps.outerConeAngle, lightProps.innerConeAngle);
     }
 
@@ -1678,8 +1683,9 @@ const createMaterials = (gltf, textures, options) => {
 };
 
 const createVariants = (gltf) => {
-    if (!gltf.hasOwnProperty("extensions") || !gltf.extensions.hasOwnProperty("KHR_materials_variants"))
+    if (!gltf.hasOwnProperty('extensions') || !gltf.extensions.hasOwnProperty('KHR_materials_variants')) {
         return null;
+    }
 
     const data = gltf.extensions.KHR_materials_variants.variants;
     const variants = {};
@@ -1709,7 +1715,70 @@ const createAnimations = (gltf, nodes, bufferViews, options) => {
     });
 };
 
-const createNodes = (gltf, options) => {
+const createInstancing = (device, gltf, nodeInstancingMap, bufferViews) => {
+
+    const accessors = gltf.accessors;
+    nodeInstancingMap.forEach((data, entity) => {
+        const attributes = data.ext.attributes;
+
+        let translations;
+        if (attributes.hasOwnProperty('TRANSLATION')) {
+            const accessor = accessors[attributes.TRANSLATION];
+            translations = getAccessorDataFloat32(accessor, bufferViews);
+        }
+
+        let rotations;
+        if (attributes.hasOwnProperty('ROTATION')) {
+            const accessor = accessors[attributes.ROTATION];
+            rotations = getAccessorDataFloat32(accessor, bufferViews);
+        }
+
+        let scales;
+        if (attributes.hasOwnProperty('SCALE')) {
+            const accessor = accessors[attributes.SCALE];
+            scales = getAccessorDataFloat32(accessor, bufferViews);
+        }
+
+        const instanceCount = (translations ? translations.length / 3 : 0) ||
+            (rotations ? rotations.length / 4 : 0) ||
+            (scales ? scales.length / 3 : 0);
+
+        if (instanceCount) {
+
+            const matrices = new Float32Array(instanceCount * 16);
+            const pos = new Vec3();
+            const rot = new Quat();
+            const scl = new Vec3(1, 1, 1);
+            const matrix = new Mat4();
+            let matrixIndex = 0;
+
+            for (let i = 0; i < instanceCount; i++) {
+                const i3 = i * 3;
+                if (translations) {
+                    pos.set(translations[i3], translations[i3 + 1], translations[i3 + 2]);
+                }
+                if (rotations) {
+                    const i4 = i * 4;
+                    rot.set(rotations[i4], rotations[i4 + 1], rotations[i4 + 2], rotations[i4 + 3]);
+                }
+                if (scales) {
+                    scl.set(scales[i3], scales[i3 + 1], scales[i3 + 2]);
+                }
+
+                matrix.setTRS(pos, rot, scl);
+
+                // copy matrix elements into array of floats
+                for (let m = 0; m < 16; m++) {
+                    matrices[matrixIndex++] = matrix.data[m];
+                }
+            }
+
+            data.matrices = matrices;
+        }
+    });
+};
+
+const createNodes = (gltf, options, nodeInstancingMap) => {
     if (!gltf.hasOwnProperty('nodes') || gltf.nodes.length === 0) {
         return [];
     }
@@ -1722,7 +1791,7 @@ const createNodes = (gltf, options) => {
         if (preprocess) {
             preprocess(gltfNode);
         }
-        const node = process(gltfNode, index);
+        const node = process(gltfNode, index, nodeInstancingMap);
         if (postprocess) {
             postprocess(gltfNode, node);
         }
@@ -1887,10 +1956,11 @@ const createResources = async (device, gltf, bufferViews, textures, options) => 
     // Instead of bloating the engine forevermore with code to handle this case,
     // we now issue a warning and prompt user to reconvert their FBX.
     if (gltf.asset && gltf.asset.generator === 'PlayCanvas') {
-        Debug.warn(`glTF model may have been generated with flipped UVs. Please reconvert.`);
+        Debug.warn('glTF model may have been generated with flipped UVs. Please reconvert.');
     }
 
-    const nodes = createNodes(gltf, options);
+    const nodeInstancingMap = new Map();
+    const nodes = createNodes(gltf, options, nodeInstancingMap);
     const scenes = createScenes(gltf, nodes);
     const lights = createLights(gltf, nodes, options);
     const cameras = createCameras(gltf, nodes, options);
@@ -1900,6 +1970,7 @@ const createResources = async (device, gltf, bufferViews, textures, options) => 
     const bufferViewData = await Promise.all(bufferViews);
     const { meshes, meshVariants, meshDefaultMaterials, promises } = createMeshes(device, gltf, bufferViewData, options);
     const animations = createAnimations(gltf, nodes, bufferViewData, options);
+    createInstancing(device, gltf, nodeInstancingMap, bufferViewData);
 
     // textures must have finished loading in order to create materials
     const textureAssets = await Promise.all(textures);
@@ -1931,6 +2002,7 @@ const createResources = async (device, gltf, bufferViews, textures, options) => 
     result.skins = skins;
     result.lights = lights;
     result.cameras = cameras;
+    result.nodeInstancingMap = nodeInstancingMap;
 
     if (postprocess) {
         postprocess(gltf, result);
@@ -2021,7 +2093,7 @@ const createImages = (gltf, bufferViews, urlBase, registry, options) => {
     const loadTexture = (gltfImage, url, bufferView, mimeType, options, srgb) => {
         return new Promise((resolve, reject) => {
             const continuation = (bufferViewData) => {
-                const name = (gltfImage.name || 'gltf-texture') + '-' + gltfTextureUniqueId++;
+                const name = `${gltfImage.name || 'gltf-texture'}-${gltfTextureUniqueId++}`;
 
                 // construct the asset file
                 const file = {
@@ -2033,7 +2105,7 @@ const createImages = (gltf, bufferViews, urlBase, registry, options) => {
                 if (mimeType) {
                     const extension = mimeTypeFileExtensions[mimeType];
                     if (extension) {
-                        file.filename = file.url + '.' + extension;
+                        file.filename = `${file.url}.${extension}`;
                     }
                 }
 
@@ -2067,10 +2139,11 @@ const createImages = (gltf, bufferViews, urlBase, registry, options) => {
         if (processAsync) {
             promise = new Promise((resolve, reject) => {
                 processAsync(gltfImage, (err, textureAsset) => {
-                    if (err)
+                    if (err) {
                         reject(err);
-                    else
+                    } else {
                         resolve(textureAsset);
+                    }
                 });
             });
         } else {
@@ -2135,10 +2208,11 @@ const createTextures = (gltf, images, options) => {
         if (processAsync) {
             promise = new Promise((resolve, reject) => {
                 processAsync(gltfTexture, gltf.images, (err, gltfImageIndex) => {
-                    if (err)
+                    if (err) {
                         reject(err);
-                    else
+                    } else {
                         resolve(gltfImageIndex);
+                    }
                 });
             });
         } else {
@@ -2195,10 +2269,11 @@ const loadBuffers = (gltf, binaryChunk, urlBase, options) => {
         if (processAsync) {
             promise = new Promise((resolve, reject) => {
                 processAsync(gltfBuffer, (err, arrayBuffer) => {
-                    if (err)
+                    if (err) {
                         reject(err);
-                    else
+                    } else {
                         resolve(arrayBuffer);
+                    }
                 });
             });
         } else {
@@ -2232,10 +2307,11 @@ const loadBuffers = (gltf, binaryChunk, urlBase, options) => {
                         ABSOLUTE_URL.test(gltfBuffer.uri) ? gltfBuffer.uri : path.join(urlBase, gltfBuffer.uri),
                         { cache: true, responseType: 'arraybuffer', retry: false },
                         (err, result) => {                         // eslint-disable-line no-loop-func
-                            if (err)
+                            if (err) {
                                 reject(err);
-                            else
+                            } else {
                                 resolve(new Uint8Array(result));
+                            }
                         }
                     );
                 });
@@ -2293,17 +2369,17 @@ const parseGlb = (glbData, callback) => {
     const length = data.getUint32(8, true);
 
     if (magic !== 0x46546C67) {
-        callback('Invalid magic number found in glb header. Expected 0x46546C67, found 0x' + magic.toString(16));
+        callback(`Invalid magic number found in glb header. Expected 0x46546C67, found 0x${magic.toString(16)}`);
         return;
     }
 
     if (version !== 2) {
-        callback('Invalid version number found in glb header. Expected 2, found ' + version);
+        callback(`Invalid version number found in glb header. Expected 2, found ${version}`);
         return;
     }
 
     if (length <= 0 || length > data.byteLength) {
-        callback('Invalid length found in glb header. Found ' + length);
+        callback(`Invalid length found in glb header. Found ${length}`);
         return;
     }
 
@@ -2386,10 +2462,11 @@ const createBufferViews = (gltf, buffers, options) => {
         if (processAsync) {
             promise = new Promise((resolve, reject) => {
                 processAsync(gltfBufferView, buffers, (err, result) => {
-                    if (err)
+                    if (err) {
                         reject(err);
-                    else
+                    } else {
                         resolve(result);
+                    }
                 });
             });
         } else {
@@ -2406,8 +2483,8 @@ const createBufferViews = (gltf, buffers, options) => {
             // convert buffer to typed array
             return buffers[gltfBufferView.buffer].then((buffer) => {
                 return new Uint8Array(buffer.buffer,
-                                      buffer.byteOffset + (gltfBufferView.byteOffset || 0),
-                                      gltfBufferView.byteLength);
+                    buffer.byteOffset + (gltfBufferView.byteOffset || 0),
+                    gltfBufferView.byteLength);
             });
         });
 
@@ -2455,8 +2532,8 @@ class GlbParser {
                 const textures = createTextures(gltf, images, options);
 
                 createResources(device, gltf, bufferViews, textures, options)
-                    .then(result => callback(null, result))
-                    .catch(err => callback(err));
+                .then(result => callback(null, result))
+                .catch(err => callback(err));
             });
         });
     }

@@ -159,7 +159,7 @@ class ComponentSystem extends EventHandler {
         const matchingProperties = [];
         const schema = this.schema || [];
 
-        schema.forEach(function (descriptor) {
+        schema.forEach((descriptor) => {
             if (descriptor && typeof descriptor === 'object' && descriptor.type === type) {
                 matchingProperties.push(descriptor);
             }
@@ -211,7 +211,7 @@ function convertValue(value, type) {
         case 'entity':
             return value; // Entity fields should just be a string guid
         default:
-            throw new Error('Could not convert unhandled type: ' + type);
+            throw new Error(`Could not convert unhandled type: ${type}`);
     }
 }
 

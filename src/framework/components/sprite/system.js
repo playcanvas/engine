@@ -73,13 +73,10 @@ class SpriteComponentSystem extends ComponentSystem {
 
             const material = new StandardMaterial();
             material.diffuse.set(0, 0, 0); // black diffuse color to prevent ambient light being included
-            material.emissive.set(0.5, 0.5, 0.5); // use non-white to compile shader correctly
+            material.emissive.set(1, 1, 1);
             material.emissiveMap = texture;
-            material.emissiveTint = true;
             material.opacityMap = texture;
             material.opacityMapChannel = 'a';
-            material.opacityTint = true;
-            material.opacity = 0; // use non-1 opacity to compile shader correctly
             material.useLighting = false;
             material.useTonemap = false;
             material.useFog = false;

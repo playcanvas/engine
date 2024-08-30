@@ -57,7 +57,7 @@ class XrHitTestSource extends EventHandler {
      *
      * @event
      * @example
-     * hitTestSource.on('result', (position, rotation, inputSource, hitTestReult) => {
+     * hitTestSource.on('result', (position, rotation, inputSource, hitTestResult) => {
      *     target.setPosition(position);
      *     target.setRotation(rotation);
      * });
@@ -110,8 +110,9 @@ class XrHitTestSource extends EventHandler {
      * Stop and remove hit test source.
      */
     remove() {
-        if (!this._xrHitTestSource)
+        if (!this._xrHitTestSource) {
             return;
+        }
 
         const sources = this.manager.hitTest.sources;
         const ind = sources.indexOf(this);
@@ -139,20 +140,23 @@ class XrHitTestSource extends EventHandler {
             for (let i = 0; i < transientResults.length; i++) {
                 const transientResult = transientResults[i];
 
-                if (!transientResult.results.length)
+                if (!transientResult.results.length) {
                     continue;
+                }
 
                 let inputSource;
 
-                if (transientResult.inputSource)
+                if (transientResult.inputSource) {
                     inputSource = this.manager.input._getByInputSource(transientResult.inputSource);
+                }
 
                 this.updateHitResults(transientResult.results, inputSource);
             }
         } else {
             const results = frame.getHitTestResults(this._xrHitTestSource);
-            if (!results.length)
+            if (!results.length) {
                 return;
+            }
 
             this.updateHitResults(results);
         }
@@ -164,8 +168,9 @@ class XrHitTestSource extends EventHandler {
      * @private
      */
     updateHitResults(results, inputSource) {
-        if (this._inputSource && this._inputSource !== inputSource)
+        if (this._inputSource && this._inputSource !== inputSource) {
             return;
+        }
 
         const origin = poolVec3.pop() ?? new Vec3();
 
@@ -185,8 +190,9 @@ class XrHitTestSource extends EventHandler {
             const pose = results[i].getPose(this.manager._referenceSpace);
 
             const distance = origin.distance(pose.transform.position);
-            if (distance >= candidateDistance)
+            if (distance >= candidateDistance) {
                 continue;
+            }
 
             candidateDistance = distance;
             candidateHitTestResult = results[i];

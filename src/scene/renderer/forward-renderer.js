@@ -174,34 +174,34 @@ class ForwardRenderer extends Renderer {
     }
 
     _resolveLight(scope, i) {
-        const light = 'light' + i;
-        this.lightColorId[i] = scope.resolve(light + '_color');
+        const light = `light${i}`;
+        this.lightColorId[i] = scope.resolve(`${light}_color`);
         this.lightDir[i] = new Float32Array(3);
-        this.lightDirId[i] = scope.resolve(light + '_direction');
-        this.lightShadowMapId[i] = scope.resolve(light + '_shadowMap');
-        this.lightShadowMatrixId[i] = scope.resolve(light + '_shadowMatrix');
-        this.lightShadowParamsId[i] = scope.resolve(light + '_shadowParams');
-        this.lightShadowIntensity[i] = scope.resolve(light + '_shadowIntensity');
-        this.lightShadowSearchAreaId[i] = scope.resolve(light + '_shadowSearchArea');
-        this.lightRadiusId[i] = scope.resolve(light + '_radius');
+        this.lightDirId[i] = scope.resolve(`${light}_direction`);
+        this.lightShadowMapId[i] = scope.resolve(`${light}_shadowMap`);
+        this.lightShadowMatrixId[i] = scope.resolve(`${light}_shadowMatrix`);
+        this.lightShadowParamsId[i] = scope.resolve(`${light}_shadowParams`);
+        this.lightShadowIntensity[i] = scope.resolve(`${light}_shadowIntensity`);
+        this.lightShadowSearchAreaId[i] = scope.resolve(`${light}_shadowSearchArea`);
+        this.lightRadiusId[i] = scope.resolve(`${light}_radius`);
         this.lightPos[i] = new Float32Array(3);
-        this.lightPosId[i] = scope.resolve(light + '_position');
+        this.lightPosId[i] = scope.resolve(`${light}_position`);
         this.lightWidth[i] = new Float32Array(3);
-        this.lightWidthId[i] = scope.resolve(light + '_halfWidth');
+        this.lightWidthId[i] = scope.resolve(`${light}_halfWidth`);
         this.lightHeight[i] = new Float32Array(3);
-        this.lightHeightId[i] = scope.resolve(light + '_halfHeight');
-        this.lightInAngleId[i] = scope.resolve(light + '_innerConeAngle');
-        this.lightOutAngleId[i] = scope.resolve(light + '_outerConeAngle');
-        this.lightCookieId[i] = scope.resolve(light + '_cookie');
-        this.lightCookieIntId[i] = scope.resolve(light + '_cookieIntensity');
-        this.lightCookieMatrixId[i] = scope.resolve(light + '_cookieMatrix');
-        this.lightCookieOffsetId[i] = scope.resolve(light + '_cookieOffset');
-        this.lightCameraParamsId[i] = scope.resolve(light + '_cameraParams');
+        this.lightHeightId[i] = scope.resolve(`${light}_halfHeight`);
+        this.lightInAngleId[i] = scope.resolve(`${light}_innerConeAngle`);
+        this.lightOutAngleId[i] = scope.resolve(`${light}_outerConeAngle`);
+        this.lightCookieId[i] = scope.resolve(`${light}_cookie`);
+        this.lightCookieIntId[i] = scope.resolve(`${light}_cookieIntensity`);
+        this.lightCookieMatrixId[i] = scope.resolve(`${light}_cookieMatrix`);
+        this.lightCookieOffsetId[i] = scope.resolve(`${light}_cookieOffset`);
+        this.lightCameraParamsId[i] = scope.resolve(`${light}_cameraParams`);
 
         // shadow cascades
-        this.shadowMatrixPaletteId[i] = scope.resolve(light + '_shadowMatrixPalette[0]');
-        this.shadowCascadeDistancesId[i] = scope.resolve(light + '_shadowCascadeDistances[0]');
-        this.shadowCascadeCountId[i] = scope.resolve(light + '_shadowCascadeCount');
+        this.shadowMatrixPaletteId[i] = scope.resolve(`${light}_shadowMatrixPalette[0]`);
+        this.shadowCascadeDistancesId[i] = scope.resolve(`${light}_shadowCascadeDistances[0]`);
+        this.shadowCascadeCountId[i] = scope.resolve(`${light}_shadowCascadeCount`);
     }
 
     setLTCDirectionalLight(wtm, cnt, dir, campos, far) {
@@ -267,8 +267,11 @@ class ForwardRenderer extends Renderer {
                 this.lightShadowIntensity[cnt].setValue(directional.shadowIntensity);
 
                 const projectionCompensation = (50.0 / lightRenderData.projectionCompensation);
-                const pixelsPerMeter = directional.penumbraSize / lightRenderData.shadowCamera.renderTarget.width;
-                this.lightShadowSearchAreaId[cnt].setValue(pixelsPerMeter * projectionCompensation);
+                const shadowRT = lightRenderData.shadowCamera.renderTarget;
+                if (shadowRT) {
+                    const pixelsPerMeter = directional.penumbraSize / shadowRT.width;
+                    this.lightShadowSearchAreaId[cnt].setValue(pixelsPerMeter * projectionCompensation);
+                }
 
                 const cameraParams = directional._shadowCameraParams;
                 cameraParams.length = 4;
@@ -475,7 +478,7 @@ class ForwardRenderer extends Renderer {
         const renderParams = camera.renderingParams ?? this.scene.rendering;
 
         // output gamma correction is determined by the render target
-        renderParams.srgbRenderTarget = renderTarget?.srgb ?? false;
+        renderParams.srgbRenderTarget = renderTarget?.isColorBufferSrgb(0) ?? false;
 
         const addCall = (drawCall, shaderInstance, isNewMaterial, lightMaskChanged) => {
             _drawCallList.drawCalls.push(drawCall);
@@ -501,13 +504,15 @@ class ForwardRenderer extends Renderer {
 
             // #if _PROFILER
             if (camera === ForwardRenderer.skipRenderCamera) {
-                if (ForwardRenderer._skipRenderCounter >= ForwardRenderer.skipRenderAfter)
+                if (ForwardRenderer._skipRenderCounter >= ForwardRenderer.skipRenderAfter) {
                     continue;
+                }
                 ForwardRenderer._skipRenderCounter++;
             }
             if (layer) {
-                if (layer._skipRenderCounter >= layer.skipRenderAfter)
+                if (layer._skipRenderCounter >= layer.skipRenderAfter) {
                     continue;
+                }
                 layer._skipRenderCounter++;
             }
             // #endif
@@ -527,8 +532,10 @@ class ForwardRenderer extends Renderer {
                 material._scene = scene;
 
                 if (material.dirty) {
+                    DebugGraphics.pushGpuMarker(device, `Node: ${drawCall.node.name}, Material: ${material.name}`);
                     material.updateUniforms(device, scene);
                     material.dirty = false;
+                    DebugGraphics.popGpuMarker(device);
                 }
             }
 
@@ -768,16 +775,17 @@ class ForwardRenderer extends Renderer {
 
         const forwardDrawCalls = this._forwardDrawCalls;
         this.renderForward(camera,
-                           renderTarget,
-                           visible,
-                           splitLights,
-                           shaderPass,
-                           layer?.onDrawCall,
-                           layer,
-                           flipFaces);
+            renderTarget,
+            visible,
+            splitLights,
+            shaderPass,
+            null,
+            layer,
+            flipFaces);
 
-        if (layer)
+        if (layer) {
             layer._forwardDrawCalls += this._forwardDrawCalls - forwardDrawCalls;
+        }
     }
 
     setSceneConstants() {

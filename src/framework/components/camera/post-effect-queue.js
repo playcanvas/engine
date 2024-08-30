@@ -1,4 +1,4 @@
-import { ADDRESS_CLAMP_TO_EDGE, FILTER_NEAREST, PIXELFORMAT_RGBA16F, PIXELFORMAT_RGBA32F, PIXELFORMAT_RGBA8 } from '../../../platform/graphics/constants.js';
+import { ADDRESS_CLAMP_TO_EDGE, FILTER_NEAREST, PIXELFORMAT_RGBA16F, PIXELFORMAT_RGBA32F, PIXELFORMAT_RGBA8, PIXELFORMAT_SRGBA8 } from '../../../platform/graphics/constants.js';
 import { DebugGraphics } from '../../../platform/graphics/debug-graphics.js';
 import { RenderTarget } from '../../../platform/graphics/render-target.js';
 import { Texture } from '../../../platform/graphics/texture.js';
@@ -109,8 +109,14 @@ class PostEffectQueue {
     _createOffscreenTarget(useDepth, hdr) {
 
         const device = this.app.graphicsDevice;
-        const format = hdr && device.getRenderableHdrFormat([PIXELFORMAT_RGBA16F, PIXELFORMAT_RGBA32F], true) || PIXELFORMAT_RGBA8;
-        const name = this.camera.entity.name + '-posteffect-' + this.effects.length;
+
+        // use srgb LDR format if backbuffer is srgb
+        const outputRt = this.destinationRenderTarget ?? device.backBuffer;
+        const srgb = outputRt.isColorBufferSrgb(0);
+
+        const format = (hdr && device.getRenderableHdrFormat([PIXELFORMAT_RGBA16F, PIXELFORMAT_RGBA32F], true)) ??
+            (srgb ? PIXELFORMAT_SRGBA8 : PIXELFORMAT_RGBA8);
+        const name = `${this.camera.entity.name}-posteffect-${this.effects.length}`;
 
         const colorBuffer = this._allocateColorBuffer(format, name);
 
@@ -227,8 +233,9 @@ class PostEffectQueue {
     _requestDepthMaps() {
         for (let i = 0, len = this.effects.length; i < len; i++) {
             const effect = this.effects[i].effect;
-            if (this._newPostEffect === effect)
+            if (this._newPostEffect === effect) {
                 continue;
+            }
 
             if (effect.needsDepthBuffer) {
                 this._requestDepthMap();
@@ -339,7 +346,7 @@ class PostEffectQueue {
 
             this._destroyOffscreenTarget(this._sourceTarget);
 
-            this.camera.renderTarget = null;
+            this.camera.renderTarget = this.destinationRenderTarget;
             this.camera.onPostprocessing = null;
         }
     }

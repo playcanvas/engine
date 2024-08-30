@@ -92,7 +92,30 @@ class Application extends AppBase {
     /**
      * Create a new Application instance.
      *
-     * @param {HTMLCanvasElement} canvas - The canvas element.
+     * Automatically registers these component systems with the application's component system registry:
+     *
+     * - anim ({@link AnimComponentSystem})
+     * - animation ({@link AnimationComponentSystem})
+     * - audiolistener ({@link AudioListenerComponentSystem})
+     * - button ({@link ButtonComponentSystem})
+     * - camera ({@link CameraComponentSystem})
+     * - collision ({@link CollisionComponentSystem})
+     * - element ({@link ElementComponentSystem})
+     * - layoutchild ({@link LayoutChildComponentSystem})
+     * - layoutgroup ({@link LayoutGroupComponentSystem})
+     * - light ({@link LightComponentSystem})
+     * - model ({@link ModelComponentSystem})
+     * - particlesystem ({@link ParticleSystemComponentSystem})
+     * - rigidbody ({@link RigidBodyComponentSystem})
+     * - render ({@link RenderComponentSystem})
+     * - screen ({@link ScreenComponentSystem})
+     * - script ({@link ScriptComponentSystem})
+     * - scrollbar ({@link ScrollbarComponentSystem})
+     * - scrollview ({@link ScrollViewComponentSystem})
+     * - sound ({@link SoundComponentSystem})
+     * - sprite ({@link SpriteComponentSystem})
+     *
+     * @param {HTMLCanvasElement | OffscreenCanvas} canvas - The canvas element.
      * @param {object} [options] - The options object to configure the Application.
      * @param {ElementInput} [options.elementInput] - Input handler for {@link ElementComponent}s.
      * @param {Keyboard} [options.keyboard] - Keyboard handler for input.

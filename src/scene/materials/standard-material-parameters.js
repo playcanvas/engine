@@ -23,7 +23,6 @@ const standardMaterialParameterTypes = {
     _engine: 'boolean', // internal param for engine-only loading
 
     ambient: 'rgb',
-    ambientTint: 'boolean',
     ..._textureParameter('ao'),
     ..._textureParameter('aoDetail', true, false),
     aoDetailMode: 'string',
@@ -64,17 +63,14 @@ const standardMaterialParameterTypes = {
 
     useSheen: 'boolean',
     sheen: 'rgb',
-    sheenTint: 'boolean',
     ..._textureParameter('sheen'),
     sheenGloss: 'number',
-    sheenGlossTint: 'boolean',
     sheenGlossInvert: 'boolean',
     ..._textureParameter('sheenGloss'),
 
     fresnelModel: 'number',
 
     emissive: 'rgb',
-    emissiveTint: 'boolean',
     ..._textureParameter('emissive'),
     emissiveIntensity: 'number',
 
@@ -148,8 +144,6 @@ const standardMaterialParameterTypes = {
     // forceUv1
     // occludeDirect
     // occludeSpecularIntensity
-    // fastTbn
-    // normalizeNormalMap
 
     // msdfMap
     // msdfMapChannel
