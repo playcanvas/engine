@@ -208,7 +208,7 @@ assetListLoader.load(() => {
         }
         if (propertyName === 'fog') {
             // turn on/off fog and set up its properties
-            app.scene.fog = value ? pc.FOG_LINEAR : pc.FOG_NONE;
+            app.scene.rendering.fog = value ? pc.FOG_LINEAR : pc.FOG_NONE;
             app.scene.fogColor = new pc.Color(0.8, 0.8, 0.8);
             app.scene.fogStart = 100;
             app.scene.fogEnd = 300;

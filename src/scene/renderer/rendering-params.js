@@ -1,5 +1,5 @@
 import { hashCode } from '../../core/hash.js';
-import { GAMMA_NONE, GAMMA_SRGB, TONEMAP_LINEAR } from '../constants.js';
+import { FOG_NONE, GAMMA_NONE, GAMMA_SRGB, TONEMAP_LINEAR } from '../constants.js';
 
 /**
  * Rendering parameters, allow configuration of the rendering parameters.
@@ -15,6 +15,9 @@ class RenderingParams {
 
     /** @private */
     _srgbRenderTarget = false;
+
+    /** @private */
+    _fog = FOG_NONE;
 
     /**
      * The hash of the rendering parameters, or undefined if the hash has not been computed yet.
@@ -32,7 +35,7 @@ class RenderingParams {
      */
     get hash() {
         if (this._hash === undefined) {
-            const key = `${this.gammaCorrection}_${this.toneMapping}_${this.srgbRenderTarget}`;
+            const key = `${this.gammaCorrection}_${this.toneMapping}_${this.srgbRenderTarget}_${this.fog}`;
             this._hash = hashCode(key);
         }
         return this._hash;
@@ -40,6 +43,34 @@ class RenderingParams {
 
     markDirty() {
         this._hash = undefined;
+    }
+
+    /**
+     * Sets the type of fog used by the scene. Can be:
+     *
+     * - {@link FOG_NONE}
+     * - {@link FOG_LINEAR}
+     * - {@link FOG_EXP}
+     * - {@link FOG_EXP2}
+     *
+     * Defaults to {@link FOG_NONE}.
+     *
+     * @type {string}
+     */
+    set fog(type) {
+        if (this._fog !== type) {
+            this._fog = type;
+            this.markDirty();
+        }
+    }
+
+    /**
+     * Gets the type of fog used by the scene.
+     *
+     * @type {string}
+     */
+    get fog() {
+        return this._fog;
     }
 
     /**

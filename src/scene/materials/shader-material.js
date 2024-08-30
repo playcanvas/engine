@@ -108,7 +108,7 @@ class ShaderMaterial extends Material {
             pass: params.pass,
             gamma: params.renderParams.shaderOutputGamma,
             toneMapping: params.renderParams.toneMapping,
-            fog: params.scene.fog,
+            fog: params.renderParams.fog,
             shaderDesc: this.shaderDesc
         };
 

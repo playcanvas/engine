@@ -453,6 +453,17 @@ Object.defineProperty(Scene.prototype, 'defaultMaterial', {
     }
 });
 
+Object.defineProperty(Scene.prototype, 'fog', {
+    set: function (value) {
+        Debug.deprecated('Scene#fog is deprecated. Use Scene#rendering.fog instead.');
+        this.rendering.fog = value;
+    },
+    get: function () {
+        Debug.deprecated('Scene#fog is deprecated. Use Scene#rendering.fog instead.');
+        return this.rendering.fog;
+    }
+});
+
 Object.defineProperty(Scene.prototype, 'toneMapping', {
     set: function (value) {
         Debug.deprecated('Scene#toneMapping is deprecated. Use Scene#rendering.toneMapping instead.');

@@ -757,6 +757,8 @@ class ForwardRenderer extends Renderer {
         // Set the not very clever global variable which is only useful when there's just one camera
         scene._activeCamera = camera;
 
+        const renderParams = camera.renderingParams ?? scene.rendering;
+        this.setFogConstants(renderParams);
         const viewCount = this.setCameraUniforms(camera, renderTarget);
         if (device.supportsUniformBuffers) {
             this.setupViewUniformBuffers(viewBindGroups, this.viewUniformFormat, this.viewBindGroupFormat, viewCount);
@@ -788,14 +790,11 @@ class ForwardRenderer extends Renderer {
         }
     }
 
-    setSceneConstants() {
-        const scene = this.scene;
+    setFogConstants(renderParams) {
 
-        // Set up ambient/exposure
-        this.dispatchGlobalLights(scene);
+        if (renderParams.fog !== FOG_NONE) {
 
-        // Set up the fog
-        if (scene.fog !== FOG_NONE) {
+            const scene = this.scene;
 
             // color in linear space
             tmpColor.linear(scene.fogColor);
@@ -805,13 +804,20 @@ class ForwardRenderer extends Renderer {
             fogUniform[2] = tmpColor.b;
             this.fogColorId.setValue(fogUniform);
 
-            if (scene.fog === FOG_LINEAR) {
+            if (renderParams.fog === FOG_LINEAR) {
                 this.fogStartId.setValue(scene.fogStart);
                 this.fogEndId.setValue(scene.fogEnd);
             } else {
                 this.fogDensityId.setValue(scene.fogDensity);
             }
         }
+    }
+
+    setSceneConstants() {
+        const scene = this.scene;
+
+        // Set up ambient/exposure
+        this.dispatchGlobalLights(scene);
 
         // Set up screen size // should be RT size?
         const device = this.device;

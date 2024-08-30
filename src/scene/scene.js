@@ -249,8 +249,6 @@ class Scene extends EventHandler {
          */
         this._layers = null;
 
-        this._fog = FOG_NONE;
-
         /**
          * Array of 6 prefiltered lighting data cubemaps.
          *
@@ -427,34 +425,6 @@ class Scene extends EventHandler {
      */
     get envAtlas() {
         return this._envAtlas;
-    }
-
-    /**
-     * Sets the type of fog used by the scene. Can be:
-     *
-     * - {@link FOG_NONE}
-     * - {@link FOG_LINEAR}
-     * - {@link FOG_EXP}
-     * - {@link FOG_EXP2}
-     *
-     * Defaults to {@link FOG_NONE}.
-     *
-     * @type {string}
-     */
-    set fog(type) {
-        if (type !== this._fog) {
-            this._fog = type;
-            this.updateShaders = true;
-        }
-    }
-
-    /**
-     * Gets the type of fog used by the scene.
-     *
-     * @type {string}
-     */
-    get fog() {
-        return this._fog;
     }
 
     /**
@@ -730,7 +700,7 @@ class Scene extends EventHandler {
         this._gravity.set(physics.gravity[0], physics.gravity[1], physics.gravity[2]);
         this.ambientLight.set(render.global_ambient[0], render.global_ambient[1], render.global_ambient[2]);
         this.ambientLuminance = render.ambientLuminance;
-        this._fog = render.fog;
+        this._renderingParams.fog = render.fog;
         this.fogColor.set(render.fog_color[0], render.fog_color[1], render.fog_color[2]);
         this.fogStart = render.fog_start;
         this.fogEnd = render.fog_end;

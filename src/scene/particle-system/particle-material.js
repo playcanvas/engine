@@ -50,7 +50,7 @@ class ParticleMaterial extends Material {
             mesh: this.emitter.useMesh,
             gamma: renderParams?.shaderOutputGamma ?? GAMMA_NONE,
             toneMap: renderParams?.toneMapping ?? TONEMAP_LINEAR,
-            fog: (scene && !this.emitter.noFog) ? scene.fog : 'none',
+            fog: (scene && !this.emitter.noFog) ? scene.rendering.fog : 'none',
             wrap: this.emitter.wrap && this.emitter.wrapBounds,
             localSpace: this.emitter.localSpace,
 
