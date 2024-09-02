@@ -89,7 +89,7 @@ class LitMaterialOptionsBuilder {
     }
 
     static updateEnvOptions(litOptions, material, scene, renderParams) {
-        litOptions.fog = material.useFog ? scene.fog : FOG_NONE;
+        litOptions.fog = material.useFog ? renderParams.fog : FOG_NONE;
         litOptions.gamma = renderParams.shaderOutputGamma;
         litOptions.toneMap = material.useTonemap ? renderParams.toneMapping : TONEMAP_NONE;
 

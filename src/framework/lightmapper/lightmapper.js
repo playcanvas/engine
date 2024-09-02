@@ -684,11 +684,11 @@ class Lightmapper {
     setupScene() {
 
         // backup
-        this.fog = this.scene.fog;
+        this.fog = this.scene.rendering.fog;
         this.ambientLight.copy(this.scene.ambientLight);
 
         // set up scene
-        this.scene.fog = FOG_NONE;
+        this.scene.rendering.fog = FOG_NONE;
 
         // if not baking ambient, set it to black
         if (!this.scene.ambientBake) {
@@ -701,7 +701,7 @@ class Lightmapper {
 
     restoreScene() {
 
-        this.scene.fog = this.fog;
+        this.scene.rendering.fog = this.fog;
         this.scene.ambientLight.copy(this.ambientLight);
     }
 

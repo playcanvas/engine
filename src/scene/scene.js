@@ -7,7 +7,7 @@ import { math } from '../core/math/math.js';
 import { Mat3 } from '../core/math/mat3.js';
 import { Mat4 } from '../core/math/mat4.js';
 import { PIXELFORMAT_RGBA8, ADDRESS_CLAMP_TO_EDGE, FILTER_LINEAR } from '../platform/graphics/constants.js';
-import { BAKE_COLORDIR, FOG_NONE, LAYERID_IMMEDIATE } from './constants.js';
+import { BAKE_COLORDIR, LAYERID_IMMEDIATE } from './constants.js';
 import { LightingParams } from './lighting/lighting-params.js';
 import { Sky } from './skybox/sky.js';
 import { Immediate } from './immediate/immediate.js';
@@ -114,37 +114,6 @@ class Scene extends EventHandler {
     exposure = 1;
 
     /**
-     * The color of the fog (if enabled), specified in sRGB color space. Defaults to black (0, 0, 0).
-     *
-     * @type {Color}
-     */
-    fogColor = new Color(0, 0, 0);
-
-    /**
-     * The density of the fog (if enabled). This property is only valid if the fog property is set
-     * to {@link FOG_EXP} or {@link FOG_EXP2}. Defaults to 0.
-     *
-     * @type {number}
-     */
-    fogDensity = 0;
-
-    /**
-     * The distance from the viewpoint where linear fog reaches its maximum. This property is only
-     * valid if the fog property is set to {@link FOG_LINEAR}. Defaults to 1000.
-     *
-     * @type {number}
-     */
-    fogEnd = 1000;
-
-    /**
-     * The distance from the viewpoint where linear fog begins. This property is only valid if the
-     * fog property is set to {@link FOG_LINEAR}. Defaults to 1.
-     *
-     * @type {number}
-     */
-    fogStart = 1;
-
-    /**
      * The lightmap resolution multiplier. Defaults to 1.
      *
      * @type {number}
@@ -248,8 +217,6 @@ class Scene extends EventHandler {
          * @private
          */
         this._layers = null;
-
-        this._fog = FOG_NONE;
 
         /**
          * Array of 6 prefiltered lighting data cubemaps.
@@ -427,34 +394,6 @@ class Scene extends EventHandler {
      */
     get envAtlas() {
         return this._envAtlas;
-    }
-
-    /**
-     * Sets the type of fog used by the scene. Can be:
-     *
-     * - {@link FOG_NONE}
-     * - {@link FOG_LINEAR}
-     * - {@link FOG_EXP}
-     * - {@link FOG_EXP2}
-     *
-     * Defaults to {@link FOG_NONE}.
-     *
-     * @type {string}
-     */
-    set fog(type) {
-        if (type !== this._fog) {
-            this._fog = type;
-            this.updateShaders = true;
-        }
-    }
-
-    /**
-     * Gets the type of fog used by the scene.
-     *
-     * @type {string}
-     */
-    get fog() {
-        return this._fog;
     }
 
     /**
@@ -730,11 +669,11 @@ class Scene extends EventHandler {
         this._gravity.set(physics.gravity[0], physics.gravity[1], physics.gravity[2]);
         this.ambientLight.set(render.global_ambient[0], render.global_ambient[1], render.global_ambient[2]);
         this.ambientLuminance = render.ambientLuminance;
-        this._fog = render.fog;
-        this.fogColor.set(render.fog_color[0], render.fog_color[1], render.fog_color[2]);
-        this.fogStart = render.fog_start;
-        this.fogEnd = render.fog_end;
-        this.fogDensity = render.fog_density;
+        this._renderingParams.fog = render.fog;
+        this._renderingParams.fogColor.set(render.fog_color[0], render.fog_color[1], render.fog_color[2]);
+        this._renderingParams.fogStart = render.fog_start;
+        this._renderingParams.fogEnd = render.fog_end;
+        this._renderingParams.fogDensity = render.fog_density;
         this._renderingParams.gammaCorrection = render.gamma_correction;
         this._renderingParams.toneMapping = render.tonemapping;
         this.lightmapSizeMultiplier = render.lightmapSizeMultiplier;
