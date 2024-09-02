@@ -114,37 +114,6 @@ class Scene extends EventHandler {
     exposure = 1;
 
     /**
-     * The color of the fog (if enabled), specified in sRGB color space. Defaults to black (0, 0, 0).
-     *
-     * @type {Color}
-     */
-    fogColor = new Color(0, 0, 0);
-
-    /**
-     * The density of the fog (if enabled). This property is only valid if the fog property is set
-     * to {@link FOG_EXP} or {@link FOG_EXP2}. Defaults to 0.
-     *
-     * @type {number}
-     */
-    fogDensity = 0;
-
-    /**
-     * The distance from the viewpoint where linear fog reaches its maximum. This property is only
-     * valid if the fog property is set to {@link FOG_LINEAR}. Defaults to 1000.
-     *
-     * @type {number}
-     */
-    fogEnd = 1000;
-
-    /**
-     * The distance from the viewpoint where linear fog begins. This property is only valid if the
-     * fog property is set to {@link FOG_LINEAR}. Defaults to 1.
-     *
-     * @type {number}
-     */
-    fogStart = 1;
-
-    /**
      * The lightmap resolution multiplier. Defaults to 1.
      *
      * @type {number}
@@ -701,10 +670,10 @@ class Scene extends EventHandler {
         this.ambientLight.set(render.global_ambient[0], render.global_ambient[1], render.global_ambient[2]);
         this.ambientLuminance = render.ambientLuminance;
         this._renderingParams.fog = render.fog;
-        this.fogColor.set(render.fog_color[0], render.fog_color[1], render.fog_color[2]);
-        this.fogStart = render.fog_start;
-        this.fogEnd = render.fog_end;
-        this.fogDensity = render.fog_density;
+        this._renderingParams.fogColor.set(render.fog_color[0], render.fog_color[1], render.fog_color[2]);
+        this._renderingParams.fogStart = render.fog_start;
+        this._renderingParams.fogEnd = render.fog_end;
+        this._renderingParams.fogDensity = render.fog_density;
         this._renderingParams.gammaCorrection = render.gamma_correction;
         this._renderingParams.toneMapping = render.tonemapping;
         this.lightmapSizeMultiplier = render.lightmapSizeMultiplier;
