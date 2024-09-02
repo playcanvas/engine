@@ -29,7 +29,7 @@ class BasisParser extends TextureParser {
             );
 
             if (!basisModuleFound) {
-                callback(`Basis module not found. Asset '${asset.name}' basis texture variant will not be loaded.`);
+                callback(`Basis module not found. Asset [${asset.name}](${asset.getFileUrl()}) basis texture variant will not be loaded.`);
             }
         };
 

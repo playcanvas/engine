@@ -102,7 +102,8 @@ assetListLoader.load(() => {
 
     // a render component with a sphere and cone primitives
     const material = new pc.StandardMaterial();
-    material.diffuse = pc.Color.RED;
+    material.diffuse = pc.Color.YELLOW;
+    material.diffuseMap = assets.color.resource;
     material.update();
 
     const entity = new pc.Entity('TwoMeshInstances');
