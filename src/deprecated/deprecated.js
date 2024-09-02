@@ -35,7 +35,6 @@ import { Morph } from '../scene/morph.js';
 import { MeshInstance } from '../scene/mesh-instance.js';
 import { Scene } from '../scene/scene.js';
 import { StandardMaterial } from '../scene/materials/standard-material.js';
-import { Batch } from '../scene/batching/batch.js';
 import { getDefaultMaterial } from '../scene/materials/default-material.js';
 import { StandardMaterialOptions } from '../scene/materials/standard-material-options.js';
 import { LitShaderOptions } from '../scene/shader-lib/programs/lit-shader-options.js';
@@ -592,13 +591,6 @@ _removedLayerProperty('onPostRenderOpaque');
 _removedLayerProperty('onPostRenderTransparent');
 _removedLayerProperty('onDrawCall');
 _removedLayerProperty('layerReference');
-
-Object.defineProperty(Batch.prototype, 'model', {
-    get: function () {
-        Debug.deprecated('pc.Batch#model is deprecated. Use pc.Batch#meshInstance to access batched mesh instead.');
-        return null;
-    }
-});
 
 ForwardRenderer.prototype.renderComposition = function (comp) {
     Debug.deprecated('pc.ForwardRenderer#renderComposition is deprecated. Use pc.AppBase.renderComposition instead.');

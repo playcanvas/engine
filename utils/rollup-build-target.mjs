@@ -49,6 +49,7 @@ const STRIP_FUNCTIONS = [
     'Debug.errorOnce',
     'Debug.log',
     'Debug.logOnce',
+    'Debug.removed',
     'Debug.trace',
     'DebugHelper.setName',
     'DebugHelper.setLabel',
