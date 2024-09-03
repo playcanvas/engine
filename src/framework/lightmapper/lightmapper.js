@@ -1107,6 +1107,8 @@ class Lightmapper {
 
                         } else {    // use the old path for WebGL till the render pass way above is fixed
 
+                            device._uploadDirtyTextures();
+
                             // ping-ponging output
                             this.renderer.setCamera(this.camera, tempRT, true);
 
