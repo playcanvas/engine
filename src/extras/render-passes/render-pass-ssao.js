@@ -277,6 +277,8 @@ class RenderPassSsao extends RenderPassShaderQuad {
             this.afterPasses.push(blurPassHorizontal);
             this.afterPasses.push(blurPassVertical);
         }
+
+        this.ssaoTextureId = device.scope.resolve('ssaoTexture');
     }
 
     destroy() {
@@ -361,6 +363,10 @@ class RenderPassSsao extends RenderPassShaderQuad {
         scope.resolve('uProjectionScaleRadius').setValue(projectionScale * radius);
 
         super.execute();
+    }
+
+    after() {
+        this.ssaoTextureId.setValue(this.ssaoTexture);
     }
 }
 

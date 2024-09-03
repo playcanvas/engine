@@ -20,6 +20,10 @@ import { RenderPassSsao } from './render-pass-ssao.js';
 import { RenderingParams } from '../../scene/renderer/rendering-params.js';
 import { Debug } from '../../core/debug.js';
 
+export const SSAOTYPE_NONE = 'none';
+export const SSAOTYPE_LIGHTING = 'lighting';
+export const SSAOTYPE_COMBINE = 'combine';
+
 /**
  * Render pass implementation of a common camera frame rendering with integrated  post-processing
  * effects.
@@ -44,7 +48,7 @@ class RenderPassCameraFrame extends RenderPass {
 
     _bloomEnabled = false;
 
-    _ssaoEnabled = false;
+    _ssaoType = SSAOTYPE_NONE;
 
     _renderTargetScale = 1;
 
@@ -100,7 +104,7 @@ class RenderPassCameraFrame extends RenderPass {
             bloomEnabled: false,
 
             // SSAO
-            ssaoEnabled: false,
+            ssaoType: SSAOTYPE_NONE,
             ssaoBlurEnabled: true
         };
 
@@ -123,16 +127,20 @@ class RenderPassCameraFrame extends RenderPass {
         return this._bloomEnabled;
     }
 
-    set ssaoEnabled(value) {
-        if (this._ssaoEnabled !== value) {
-            this._ssaoEnabled = value;
-            this.composePass.ssaoTexture = value ? this.ssaoPass.ssaoTexture : null;
-            this.ssaoPass.enabled = value;
-        }
+    set ssaoType(value) {
+
+        this._ssaoType = value;
+
+        // SSAO is applied in the compose pass
+        this.composePass.ssaoTexture = this.ssaoType === SSAOTYPE_COMBINE ? this.ssaoPass.ssaoTexture : null;
+
+        // SSAO is applied during lighting
+        const cameraComponent = this.options.camera;
+        cameraComponent.rendering.ssaoEnabled = this.ssaoType === SSAOTYPE_LIGHTING;
     }
 
-    get ssaoEnabled() {
-        return this._ssaoEnabled;
+    get ssaoType() {
+        return this._ssaoType;
     }
 
     set lastMipLevel(value) {
@@ -156,6 +164,7 @@ class RenderPassCameraFrame extends RenderPass {
             const renderingParams = new RenderingParams();
             renderingParams.gammaCorrection = GAMMA_NONE;
             renderingParams.toneMapping = TONEMAP_NONE;
+            renderingParams.ssaoEnabled = options.ssaoType === SSAOTYPE_LIGHTING;
             cameraComponent.rendering = renderingParams;
         }
 
@@ -303,8 +312,8 @@ class RenderPassCameraFrame extends RenderPass {
     }
 
     setupSsaoPass(options) {
-        const { camera, ssaoBlurEnabled, ssaoEnabled } = options;
-        if (ssaoEnabled) {
+        const { camera, ssaoBlurEnabled, ssaoType } = options;
+        if (ssaoType !== SSAOTYPE_NONE) {
             this.ssaoPass = new RenderPassSsao(this.device, this.sceneTexture, camera, ssaoBlurEnabled);
         }
     }

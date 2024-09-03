@@ -10,11 +10,16 @@ export function controls({ observer, ReactPCUI, React, jsx, fragment }) {
             { headerText: 'Ambient Occlusion' },
             jsx(
                 LabelGroup,
-                { text: 'enabled' },
-                jsx(BooleanInput, {
-                    type: 'toggle',
+                { text: 'Type' },
+                jsx(SelectInput, {
                     binding: new BindingTwoWay(),
-                    link: { observer, path: 'data.ssao.enabled' }
+                    link: { observer, path: 'data.ssao.type' },
+                    type: 'string',
+                    options: [
+                        { v: pc.SSAOTYPE_NONE, t: 'None' },
+                        { v: pc.SSAOTYPE_LIGHTING, t: 'Lighting' },
+                        { v: pc.SSAOTYPE_COMBINE, t: 'Combine' }
+                    ]
                 })
             ),
             jsx(

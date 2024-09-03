@@ -436,7 +436,8 @@ class ShaderGeneratorStandard extends ShaderGenerator {
             if (options.aoDetail) {
                 code.append(this._addMap('aoDetail', 'aoDetailMapPS', options, litShader.chunks, textureMapping));
             }
-            if (options.aoMap || options.aoVertexColor) {
+            if (options.aoMap || options.aoVertexColor || options.ssao) {
+                if (options.ssao) code.append('#define MAPSSAO');
                 decl.append('float dAo;');
                 code.append(this._addMap('ao', 'aoPS', options, litShader.chunks, textureMapping));
                 func.append('getAO();');

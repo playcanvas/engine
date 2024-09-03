@@ -179,7 +179,7 @@ assetListLoader.load(() => {
         // enable temporal anti-aliasing
         taaEnabled: false,
 
-        ssaoEnabled: true,
+        ssaoType: pc.SSAOTYPE_LIGHTING,
         ssaoBlurEnabled: true
     };
 
@@ -193,7 +193,7 @@ assetListLoader.load(() => {
         // Internally this sets up additional passes it needs, based on the options passed to it.
         const renderPassCamera = new pc.RenderPassCameraFrame(app, currentOptions);
 
-        renderPassCamera.ssaoEnabled = currentOptions.ssaoEnabled;
+        renderPassCamera.ssaoType = currentOptions.ssaoType;
 
         const composePass = renderPassCamera.composePass;
         composePass.sharpness = 0;
@@ -206,12 +206,14 @@ assetListLoader.load(() => {
     };
 
     const applySettings = () => {
+
+        const ssaoType = data.get('data.ssao.type');
+
         // if settings require render passes to be re-created
         const noPasses = cameraEntity.camera.renderPasses.length === 0;
-        const ssaoEnabled = data.get('data.ssao.enabled');
         const blurEnabled = data.get('data.ssao.blurEnabled');
-        if (noPasses || ssaoEnabled !== currentOptions.ssaoEnabled || blurEnabled !== currentOptions.ssaoBlurEnabled) {
-            currentOptions.ssaoEnabled = ssaoEnabled;
+        if (noPasses || ssaoType !== currentOptions.ssaoType || blurEnabled !== currentOptions.ssaoBlurEnabled) {
+            currentOptions.ssaoType = ssaoType;
             currentOptions.ssaoBlurEnabled = blurEnabled;
 
             // create new pass
@@ -254,7 +256,7 @@ assetListLoader.load(() => {
     // initial settings
     data.set('data', {
         ssao: {
-            enabled: true,
+            type: pc.SSAOTYPE_LIGHTING,
             blurEnabled: true,
             radius: 30,
             samples: 12,

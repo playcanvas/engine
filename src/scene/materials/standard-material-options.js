@@ -76,6 +76,13 @@ class StandardMaterialOptions {
     clearCoatGlossInvert = false;
 
     /**
+     * Apply SSAO during the lighting.
+     *
+     * @type {boolean}
+     */
+    ssao = false;
+
+    /**
      * Storage for the options for lit the shader and material.
      *
      * @type {LitShaderOptions}
