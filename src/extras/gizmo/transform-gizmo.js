@@ -37,6 +37,63 @@ const tmpP1 = new Plane();
 const VEC3_AXES = Object.keys(tmpV1);
 const SPANLINE_SIZE = 1e3;
 
+// Magnopus Patched - export axis shape constants
+/**
+ * Shape axis for the line X.
+ *
+ * @type {string}
+ */
+export const SHAPEAXIS_X = 'x';
+
+/**
+ * Shape axis for the line Y.
+ *
+ * @type {string}
+ */
+export const SHAPEAXIS_Y = 'y';
+
+/**
+ * Shape axis for the line Z.
+ *
+ * @type {string}
+ */
+export const SHAPEAXIS_Z = 'z';
+
+/**
+ * Shape axis for the plane YZ.
+ *
+ * @type {string}
+ */
+export const SHAPEAXIS_YZ = 'yz';
+
+/**
+ * Shape axis for the plane XZ.
+ *
+ * @type {string}
+ */
+export const SHAPEAXIS_XZ = 'xz';
+
+/**
+ * Shape axis for the plane XY.
+ *
+ * @type {string}
+ */
+export const SHAPEAXIS_XY = 'xy';
+
+/**
+ * Shape axis for all directions XYZ.
+ *
+ * @type {string}
+ */
+export const SHAPEAXIS_XYZ = 'xyz';
+
+/**
+ * Shape axis for facing the camera.
+ *
+ * @type {string}
+ */
+export const SHAPEAXIS_FACE = 'face';
+
 /**
  * The base class for all transform gizmos.
  *
@@ -599,7 +656,7 @@ class TransformGizmo extends Gizmo {
     }
 
     /**
-     * @private
+     * magnopus patched - make public
      */
     _drawGuideLines() {
         const gizmoPos = this.root.getPosition();

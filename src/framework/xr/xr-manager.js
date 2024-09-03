@@ -276,6 +276,19 @@ class XrManager extends EventHandler {
      */
     _height = 0;
 
+    // Magnopus patched - start
+    /**
+     * Magnopus added
+     *
+     * Indicates whether tracking is currently happening for the XR session, i.e. whether WebXR has
+     * returned a non-null pose for the current XR frame.
+     *
+     * @type {boolean}
+     * @private
+     */
+    _tracking = false;
+    // Magnopus patched - end
+
     /**
      * @type {number}
      * @private
@@ -695,6 +708,9 @@ class XrManager extends EventHandler {
 
         this._session = session;
 
+        // Magnopus patched
+        this._tracking = false;
+
         const onVisibilityChange = () => {
             this.fire('visibility:change', session.visibilityState);
         };
@@ -879,7 +895,15 @@ class XrManager extends EventHandler {
 
         const pose = frame.getViewerPose(this._referenceSpace);
 
-        if (!pose) return false;
+        // Magnopus patched - start
+        if (!pose) {
+            this._tracking = false;
+            return false;
+        }
+
+        this._tracking = true;
+
+        // Magnopus patched - end
 
         const lengthOld = this.views.list.length;
 
@@ -1084,6 +1108,20 @@ class XrManager extends EventHandler {
 
         return this._session.visibilityState;
     }
+
+    // Magnopus patched - start
+    /**
+     * Magnopus added
+     *
+     * Indicates whether tracking is currently happening for the XR session, i.e. whether WebXR has
+     * returned a non-null pose for the current XR frame.
+     *
+     * @type {boolean}
+     */
+    get tracking() {
+        return this.active && this._tracking;
+    }
+    // Magnopus patched - end
 }
 
 export { XrManager };

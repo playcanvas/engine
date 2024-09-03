@@ -151,6 +151,7 @@
   },
   "scripts": {
     "build": "node build.mjs",
+    "deploy": "npm run build:esm:profiler && npm run build:types && cp -rf build/playcanvas.d.ts ../oly-web-client/libs/overrides/playcanvas/build/playcanvas.d.ts && cp -rf build/playcanvas.prf.mjs ../oly-web-client/libs/overrides/playcanvas/build/playcanvas.mjs && cp LICENSE ../oly-web-client/libs/overrides/playcanvas && rm -rf ../oly-web-client/libs/overrides/playcanvas/scripts && cp -rf scripts ../oly-web-client/libs/overrides/playcanvas && cat package.json | sed -e 's?\"module\": \"build/playcanvas.mjs/index.js\"?\"module\": \"build/playcanvas.mjs\"?' > ../oly-web-client/libs/overrides/playcanvas/package.json",
     "build:release": "npm run build target:release",
     "build:debug": "npm run build target:debug",
     "build:profiler": "npm run build target:profiler",
@@ -158,6 +159,7 @@
     "build:umd": "npm run build target:umd",
     "build:esm": "npm run build target:esm",
     "build:esm:release": "npm run build target:esm:release",
+    "build:esm:profiler": "npm run build target:esm:profiler",
     "build:esm:debug": "npm run build target:esm:debug",
     "build:treemap": "npm run build target:umd treemap",
     "build:treenet": "npm run build target:umd treenet",

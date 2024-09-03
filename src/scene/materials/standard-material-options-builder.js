@@ -331,8 +331,10 @@ class StandardMaterialOptionsBuilder {
         }
 
         // TODO: add a test for if non skybox cubemaps have rotation (when this is supported) - for now assume no non-skybox cubemap rotation
-        options.litOptions.skyboxIntensity = usingSceneEnv;
-        options.litOptions.useCubeMapRotation = usingSceneEnv && scene._skyboxRotationShaderInclude;
+        // magnopus patched, allow skyboxIntensity intensity on all cubemaps
+        options.litOptions.skyboxIntensity = true;
+        // magnopus patched, allow cubemap rotation on all cubemaps
+        options.litOptions.useCubeMapRotation = scene._skyboxRotationShaderInclude;
     }
 
     _updateLightOptions(options, scene, stdMat, objDefs, sortedLights) {

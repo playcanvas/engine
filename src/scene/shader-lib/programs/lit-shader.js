@@ -2,6 +2,10 @@ import {
     SEMANTIC_ATTR8, SEMANTIC_ATTR9, SEMANTIC_ATTR12, SEMANTIC_ATTR13, SEMANTIC_ATTR14, SEMANTIC_ATTR15,
     SEMANTIC_BLENDINDICES, SEMANTIC_BLENDWEIGHT, SEMANTIC_COLOR, SEMANTIC_NORMAL, SEMANTIC_POSITION, SEMANTIC_TANGENT,
     SEMANTIC_TEXCOORD0, SEMANTIC_TEXCOORD1,
+    // Magnopus patched
+    SEMANTIC_TEXCOORD2,
+    SEMANTIC_TEXCOORD3,
+    SEMANTIC_TEXCOORD4,
     SHADERTAG_MATERIAL
 } from '../../../platform/graphics/constants.js';
 import {
@@ -35,6 +39,10 @@ const builtinAttributes = {
     vertex_tangent: SEMANTIC_TANGENT,
     vertex_texCoord0: SEMANTIC_TEXCOORD0,
     vertex_texCoord1: SEMANTIC_TEXCOORD1,
+    // Magnopus patched: additional UV channels, needed for lightmaps
+    vertex_texCoord2: SEMANTIC_TEXCOORD2,
+    vertex_texCoord3: SEMANTIC_TEXCOORD3,
+    vertex_texCoord4: SEMANTIC_TEXCOORD4,
     vertex_color: SEMANTIC_COLOR,
     vertex_boneWeights: SEMANTIC_BLENDWEIGHT,
     vertex_boneIndices: SEMANTIC_BLENDINDICES
@@ -259,8 +267,8 @@ class LitShader {
                 codeBody += '   vObjectSpaceUpW = normalize(dNormalMatrix * vec3(0, 1, 0));\n';
             }
         }
-
-        const maxUvSets = 2;
+        // Magnopus patched: up max num of uvs
+        const maxUvSets = 5;
 
         for (let i = 0; i < maxUvSets; i++) {
             if (useUv[i]) {
@@ -513,7 +521,8 @@ class LitShader {
         const func = new ChunkBuilder();
         const backend = new ChunkBuilder();
         const code = new ChunkBuilder();
-
+        // magnopus check patch, ensure HDR define is set and gamma functions are available
+        // func.append(chunks.decodePS);
         if (options.opacityFadesSpecular === false) {
             decl.append('uniform float material_alphaFade;');
         }

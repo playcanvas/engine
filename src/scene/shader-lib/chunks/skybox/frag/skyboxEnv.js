@@ -13,3 +13,22 @@ void main(void) {
     gl_FragColor = vec4(gammaCorrectOutput(toneMap(processEnvironment(linear))), 1.0);
 }
 `;
+
+
+// magnopus check patch
+/*
+
+void main(void) {
+    vec3 dir = vViewDir * vec3(-1.0, 1.0, 1.0);
+    vec2 uv = toSphericalUv(normalize(dir));
+
+    vec3 linear = SKYBOX_DECODE_FNC(texture2D(texture_envAtlas, mapRoughnessUv(uv, mipLevel)));
+    // Magnopus patched
+    // when rendering with bloom
+    #ifdef HDR
+      gl_FragColor = vec4(linear, 1.0);
+    #else
+      gl_FragColor = vec4(gammaCorrectOutput(toneMap(processEnvironment(linear))), 1.0);
+    #endif
+}
+*/

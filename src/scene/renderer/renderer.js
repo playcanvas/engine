@@ -901,7 +901,8 @@ class Renderer {
         // #if _PROFILER
         const cullTime = now();
         // #endif
-
+        // magnopus patched
+        let cleanupNeeded = false;
         const opaque = culledInstances.opaque;
         opaque.length = 0;
         const transparent = culledInstances.transparent;
@@ -912,7 +913,9 @@ class Renderer {
 
         for (let i = 0; i < count; i++) {
             const drawCall = drawCalls[i];
-            if (drawCall.visible) {
+            // magnopus patched: if mesh is null, we need to cleanup the layer
+            cleanupNeeded = cleanupNeeded || !drawCall.mesh;
+            if (!cleanupNeeded && drawCall.visible) {
 
                 const visible = !doCull || !drawCall.cull || drawCall._isVisible(camera);
                 if (visible) {
@@ -938,6 +941,8 @@ class Renderer {
         this._cullTime += now() - cullTime;
         this._numDrawCallsCulled += doCull ? count : 0;
         // #endif
+        // magnopus patched
+        return cleanupNeeded;
     }
 
     collectLights(comp) {

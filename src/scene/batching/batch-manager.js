@@ -793,7 +793,8 @@ class BatchManager {
             meshInstance.layer = batch.origMeshInstances[0].layer;
             meshInstance._shaderDefs = batch.origMeshInstances[0]._shaderDefs;
             meshInstance.batching = true;
-
+            // Magnopus Patched - ensure renderStyle is copied
+            meshInstance.renderStyle = batch.origMeshInstances[0].renderStyle;
             // meshInstance culling - don't cull UI elements, as they use custom culling Component.isVisibleForCamera
             meshInstance.cull = batch.origMeshInstances[0].cull;
             const batchGroup = this._batchGroups[batchGroupId];

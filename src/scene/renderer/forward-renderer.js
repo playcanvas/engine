@@ -501,6 +501,12 @@ class ForwardRenderer extends Renderer {
 
             /** @type {MeshInstance} */
             const drawCall = drawCalls[i];
+            // magnopus patched.  ensure empty drawcalls are skipped
+            if (!drawCall.mesh) continue;
+            // magnopus patched apply visibility override
+            if (camera.cullingMask && drawCall.mask && !(camera.cullingMask & drawCall.mask)) {
+                continue;
+            }
 
             // #if _PROFILER
             if (camera === ForwardRenderer.skipRenderCamera) {

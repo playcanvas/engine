@@ -6,6 +6,8 @@ import { Mat3 } from '../core/math/mat3.js';
 import { Mat4 } from '../core/math/mat4.js';
 import { Quat } from '../core/math/quat.js';
 import { Vec3 } from '../core/math/vec3.js';
+import { getApplication } from '../framework/globals.js';
+import { Application } from '../framework/application.js';
 
 const scaleCompensatePosTransform = new Mat4();
 const scaleCompensatePos = new Vec3();
@@ -286,14 +288,18 @@ class GraphNode extends EventHandler {
      */
     scaleCompensation = false;
 
+    _appRef = undefined;
+
     /**
      * Create a new GraphNode instance.
      *
      * @param {string} [name] - The non-unique name of a graph node. Defaults to 'Untitled'.
+     * @param {Application} [app] - The current app instance.
      */
-    constructor(name = 'Untitled') {
+    constructor(name = 'Untitled', app) {
         super();
-
+        // Magnopus Patched OB-3070
+        this._appRef = app ?? getApplication();
         this.name = name;
     }
 
@@ -478,6 +484,7 @@ class GraphNode extends EventHandler {
      */
     _cloneInternal(clone) {
         clone.name = this.name;
+        clone._appRef = this._appRef;
 
         const tags = this.tags._list;
         clone.tags.clear();
@@ -516,7 +523,7 @@ class GraphNode extends EventHandler {
      * @returns {this} A clone of the specified graph node.
      */
     clone() {
-        const clone = new this.constructor();
+        const clone = new this.constructor(this.name, this._appRef);
         this._cloneInternal(clone);
         return clone;
     }
@@ -1117,6 +1124,10 @@ class GraphNode extends EventHandler {
     _dirtifyWorldInternal() {
         if (!this._dirtyWorld) {
             this._frozen = false;
+            if (this._appRef) {
+                this._appRef._dirtyZoneEntities.push(this);
+            }
+            this._dirtyZone = true;
             this._dirtyWorld = true;
             for (let i = 0; i < this._children.length; i++) {
                 if (!this._children[i]._dirtyWorld) {

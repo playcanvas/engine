@@ -30,3 +30,34 @@ void main(void) {
     gl_FragColor = vec4(gammaCorrectOutput(toneMap(processEnvironment(linear))), 1.0);
 }
 `;
+
+/*
+magnopus check patch
+
+
+void main(void) {
+
+    #ifdef SKYMESH
+
+        // get vector from world space pos to tripod origin
+        vec3 envDir = normalize(vWorldPos - projectedSkydomeCenter);
+        vec3 dir = envDir * cubeMapRotationMatrix;
+
+    #else
+
+        vec3 dir = vViewDir;
+
+    #endif
+
+    dir.x *= -1.0;
+    vec3 linear = SKYBOX_DECODE_FNC(textureCube(texture_cubeMap, fixSeamsStatic(dir, SKYBOX_MIP)));
+    // Magnopus patched
+    // when rendering with bloom
+    #ifdef HDR
+      gl_FragColor = vec4(linear, 1.0);
+    #else
+      gl_FragColor = vec4(gammaCorrectOutput(toneMap(processEnvironment(linear))), 1.0);
+    #endif
+}
+
+*/

@@ -19,6 +19,7 @@ import {
 
 } from './constants.js';
 import { TextureUtils } from './texture-utils.js';
+import { RenderTarget } from './render-target.js';
 
 /**
  * @import { GraphicsDevice } from './graphics-device.js'
@@ -1039,6 +1040,20 @@ class Texture {
      */
     read(x, y, width, height, options = {}) {
         return this.impl.read?.(x, y, width, height, options);
+    }
+
+    /**
+     * Download texture's top level data from graphics memory to local memory.
+     *
+     * @ignore
+     */
+    async downloadAsync() {
+        const promises = [];
+        for (let i = 0; i < (this.cubemap ? 6 : 1); i++) {
+            const promise = this.read(0, 0, this.width, this.height, { face: i });
+            promises.push(promise);
+        }
+        await Promise.all(promises);
     }
 }
 

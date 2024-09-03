@@ -1,6 +1,9 @@
 export default /* glsl */`
 uniform vec3 view_position;
-
+// magnopus patched
+#ifdef LOD_PASS
+uniform int lod_level;
+#endif
 uniform vec3 light_globalAmbient;
 
 float square(float x) {

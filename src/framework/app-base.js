@@ -163,6 +163,13 @@ class AppBase extends EventHandler {
     _skyboxAsset = null;
 
     /**
+     * @type {Entity[]}
+     * magnopus patched - track entities that need to be checked by zone component
+     * @private
+     */
+    _dirtyZoneEntities = [];
+
+    /**
      * @type {SoundManager}
      * @private
      */

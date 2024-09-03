@@ -22,6 +22,7 @@ float shinyMipLevel(vec2 uv) {
 }
 
 vec3 calcReflection(vec3 reflDir, float gloss) {
+    // Magnopus patched, fix Rotation
     vec3 dir = cubeMapProject(reflDir) * vec3(-1.0, 1.0, 1.0);
     vec2 uv = toSphericalUv(dir);
 
