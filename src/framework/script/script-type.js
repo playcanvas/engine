@@ -10,7 +10,7 @@ import { Script } from './script.js';
  */
 class ScriptType extends Script {
     /** @private */
-    __attributes;
+    __attributes = {};
 
     /** @private */
     __attributesRaw;
