@@ -1,5 +1,6 @@
 import { hashCode } from '../../core/hash.js';
-import { GAMMA_NONE, GAMMA_SRGB, TONEMAP_LINEAR } from '../constants.js';
+import { Color } from '../../core/math/color.js';
+import { FOG_NONE, GAMMA_NONE, GAMMA_SRGB, TONEMAP_LINEAR } from '../constants.js';
 
 /**
  * Rendering parameters, allow configuration of the rendering parameters.
@@ -15,6 +16,40 @@ class RenderingParams {
 
     /** @private */
     _srgbRenderTarget = false;
+
+    /** @private */
+    _fog = FOG_NONE;
+
+    /**
+     * The color of the fog (if enabled), specified in sRGB color space. Defaults to black (0, 0, 0).
+     *
+     * @type {Color}
+     */
+    fogColor = new Color(0, 0, 0);
+
+    /**
+     * The density of the fog (if enabled). This property is only valid if the fog property is set
+     * to {@link FOG_EXP} or {@link FOG_EXP2}. Defaults to 0.
+     *
+     * @type {number}
+     */
+    fogDensity = 0;
+
+    /**
+     * The distance from the viewpoint where linear fog reaches its maximum. This property is only
+     * valid if the fog property is set to {@link FOG_LINEAR}. Defaults to 1000.
+     *
+     * @type {number}
+     */
+    fogEnd = 1000;
+
+    /**
+     * The distance from the viewpoint where linear fog begins. This property is only valid if the
+     * fog property is set to {@link FOG_LINEAR}. Defaults to 1.
+     *
+     * @type {number}
+     */
+    fogStart = 1;
 
     /**
      * The hash of the rendering parameters, or undefined if the hash has not been computed yet.
@@ -32,7 +67,7 @@ class RenderingParams {
      */
     get hash() {
         if (this._hash === undefined) {
-            const key = `${this.gammaCorrection}_${this.toneMapping}_${this.srgbRenderTarget}`;
+            const key = `${this.gammaCorrection}_${this.toneMapping}_${this.srgbRenderTarget}_${this.fog}`;
             this._hash = hashCode(key);
         }
         return this._hash;
@@ -40,6 +75,34 @@ class RenderingParams {
 
     markDirty() {
         this._hash = undefined;
+    }
+
+    /**
+     * Sets the type of fog used by the scene. Can be:
+     *
+     * - {@link FOG_NONE}
+     * - {@link FOG_LINEAR}
+     * - {@link FOG_EXP}
+     * - {@link FOG_EXP2}
+     *
+     * Defaults to {@link FOG_NONE}.
+     *
+     * @type {string}
+     */
+    set fog(type) {
+        if (this._fog !== type) {
+            this._fog = type;
+            this.markDirty();
+        }
+    }
+
+    /**
+     * Gets the type of fog used by the scene.
+     *
+     * @type {string}
+     */
+    get fog() {
+        return this._fog;
     }
 
     /**

@@ -26,6 +26,18 @@ class Debug {
     }
 
     /**
+     * Removed warning message.
+     *
+     * @param {string} message - The message to log.
+     */
+    static removed(message) {
+        if (!Debug._loggedMessages.has(message)) {
+            Debug._loggedMessages.add(message);
+            console.warn(`REMOVED: ${message}`);
+        }
+    }
+
+    /**
      * Assertion deprecated message. If the assertion is false, the deprecated message is written to the log.
      *
      * @param {boolean|object} assertion - The assertion to check.

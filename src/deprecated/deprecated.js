@@ -35,7 +35,6 @@ import { Morph } from '../scene/morph.js';
 import { MeshInstance } from '../scene/mesh-instance.js';
 import { Scene } from '../scene/scene.js';
 import { StandardMaterial } from '../scene/materials/standard-material.js';
-import { Batch } from '../scene/batching/batch.js';
 import { getDefaultMaterial } from '../scene/materials/default-material.js';
 import { StandardMaterialOptions } from '../scene/materials/standard-material-options.js';
 import { LitShaderOptions } from '../scene/shader-lib/programs/lit-shader-options.js';
@@ -453,6 +452,61 @@ Object.defineProperty(Scene.prototype, 'defaultMaterial', {
     }
 });
 
+Object.defineProperty(Scene.prototype, 'fog', {
+    set: function (value) {
+        Debug.deprecated('Scene#fog is deprecated. Use Scene#rendering.fog instead.');
+        this.rendering.fog = value;
+    },
+    get: function () {
+        Debug.deprecated('Scene#fog is deprecated. Use Scene#rendering.fog instead.');
+        return this.rendering.fog;
+    }
+});
+
+Object.defineProperty(Scene.prototype, 'fogColor', {
+    set: function (value) {
+        Debug.deprecated('Scene#fogColor is deprecated. Use Scene#rendering.fogColor instead.');
+        this.rendering.fogColor = value;
+    },
+    get: function () {
+        Debug.deprecated('Scene#fogColor is deprecated. Use Scene#rendering.fogColor instead.');
+        return this.rendering.fogColor;
+    }
+});
+
+Object.defineProperty(Scene.prototype, 'fogEnd', {
+    set: function (value) {
+        Debug.deprecated('Scene#fogEnd is deprecated. Use Scene#rendering.fogEnd instead.');
+        this.rendering.fogEnd = value;
+    },
+    get: function () {
+        Debug.deprecated('Scene#fogEnd is deprecated. Use Scene#rendering.fogEnd instead.');
+        return this.rendering.fogEnd;
+    }
+});
+
+Object.defineProperty(Scene.prototype, 'fogStart', {
+    set: function (value) {
+        Debug.deprecated('Scene#fogStart is deprecated. Use Scene#rendering.fogStart instead.');
+        this.rendering.fogStart = value;
+    },
+    get: function () {
+        Debug.deprecated('Scene#fogStart is deprecated. Use Scene#rendering.fogStart instead.');
+        return this.rendering.fogStart;
+    }
+});
+
+Object.defineProperty(Scene.prototype, 'fogDensity', {
+    set: function (value) {
+        Debug.deprecated('Scene#fogDensity is deprecated. Use Scene#rendering.fogDensity instead.');
+        this.rendering.fogDensity = value;
+    },
+    get: function () {
+        Debug.deprecated('Scene#fogDensity is deprecated. Use Scene#rendering.fogDensity instead.');
+        return this.rendering.fogDensity;
+    }
+});
+
 Object.defineProperty(Scene.prototype, 'toneMapping', {
     set: function (value) {
         Debug.deprecated('Scene#toneMapping is deprecated. Use Scene#rendering.toneMapping instead.');
@@ -537,13 +591,6 @@ _removedLayerProperty('onPostRenderOpaque');
 _removedLayerProperty('onPostRenderTransparent');
 _removedLayerProperty('onDrawCall');
 _removedLayerProperty('layerReference');
-
-Object.defineProperty(Batch.prototype, 'model', {
-    get: function () {
-        Debug.deprecated('pc.Batch#model is deprecated. Use pc.Batch#meshInstance to access batched mesh instead.');
-        return null;
-    }
-});
 
 ForwardRenderer.prototype.renderComposition = function (comp) {
     Debug.deprecated('pc.ForwardRenderer#renderComposition is deprecated. Use pc.AppBase.renderComposition instead.');

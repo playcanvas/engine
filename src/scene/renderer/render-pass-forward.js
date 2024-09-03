@@ -251,7 +251,7 @@ class RenderPassForward extends RenderPass {
 
         if (camera) {
 
-            // layer post render callback
+            // layer pre render callback
             camera.onPreRenderLayer?.(layer, transparent);
 
             const options = {

@@ -277,7 +277,7 @@ class StandardMaterialOptionsBuilder {
     }
 
     _updateEnvOptions(options, stdMat, scene, renderParams) {
-        options.litOptions.fog = stdMat.useFog ? scene.fog : FOG_NONE;
+        options.litOptions.fog = stdMat.useFog ? renderParams.fog : FOG_NONE;
         options.litOptions.gamma = renderParams.shaderOutputGamma;
         options.litOptions.toneMap = stdMat.useTonemap ? renderParams.toneMapping : TONEMAP_NONE;
 
