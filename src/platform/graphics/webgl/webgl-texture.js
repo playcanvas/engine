@@ -228,15 +228,15 @@ class WebglTexture {
 
             case PIXELFORMAT_DXT1_SRGB:
                 this._glFormat = gl.SRGB;
-                this._glInternalFormat = device.extCompressedTextureS3TC.COMPRESSED_SRGB_S3TC_DXT1_EXT;
+                this._glInternalFormat = device.extCompressedTextureS3TC_SRGB.COMPRESSED_SRGB_S3TC_DXT1_EXT;
                 break;
             case PIXELFORMAT_DXT3_SRGB:
                 this._glFormat = gl.SRGB_ALPHA;
-                this._glInternalFormat = device.extCompressedTextureS3TC.COMPRESSED_SRGB_ALPHA_S3TC_DXT3_EXT;
+                this._glInternalFormat = device.extCompressedTextureS3TC_SRGB.COMPRESSED_SRGB_ALPHA_S3TC_DXT3_EXT;
                 break;
             case PIXELFORMAT_DXT5_SRGB:
                 this._glFormat = gl.SRGB_ALPHA;
-                this._glInternalFormat = device.extCompressedTextureS3TC.COMPRESSED_SRGB_ALPHA_S3TC_DXT5_EXT;
+                this._glInternalFormat = device.extCompressedTextureS3TC_SRGB.COMPRESSED_SRGB_ALPHA_S3TC_DXT5_EXT;
                 break;
             case PIXELFORMAT_PVRTC_2BPP_SRGB_1:
                 this._glFormat = gl.SRGB;

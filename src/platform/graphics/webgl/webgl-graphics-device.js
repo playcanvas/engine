@@ -788,6 +788,7 @@ class WebglGraphicsDevice extends GraphicsDevice {
         this.extCompressedTextureETC = this.getExtension('WEBGL_compressed_texture_etc');
         this.extCompressedTexturePVRTC = this.getExtension('WEBGL_compressed_texture_pvrtc', 'WEBKIT_WEBGL_compressed_texture_pvrtc');
         this.extCompressedTextureS3TC = this.getExtension('WEBGL_compressed_texture_s3tc', 'WEBKIT_WEBGL_compressed_texture_s3tc');
+        this.extCompressedTextureS3TC_SRGB = this.getExtension('WEBGL_compressed_texture_s3tc_srgb');
         this.extCompressedTextureATC = this.getExtension('WEBGL_compressed_texture_atc');
         this.extCompressedTextureASTC = this.getExtension('WEBGL_compressed_texture_astc');
 
