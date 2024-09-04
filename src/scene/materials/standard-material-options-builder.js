@@ -115,8 +115,9 @@ class StandardMaterialOptionsBuilder {
         }
         this._mapXForms = null;
 
-        // true if ssao is applied directly in the forward shaders
-        options.ssao = renderParams?.ssaoEnabled;
+        // true if ssao is applied directly in the lit shaders. Also ensure the AO part is generated in the front end
+        options.litOptions.ssao = renderParams?.ssaoEnabled;
+        options.useAO = true;
 
         // All texture related lit options
         options.litOptions.lightMapEnabled = options.lightMap;
@@ -124,7 +125,7 @@ class StandardMaterialOptionsBuilder {
         options.litOptions.useHeights = options.heightMap;
         options.litOptions.useNormals = options.normalMap;
         options.litOptions.useClearCoatNormals = options.clearCoatNormalMap;
-        options.litOptions.useAo = options.aoMap || options.aoVertexColor || options.ssao;
+        options.litOptions.useAo = options.aoMap || options.aoVertexColor || options.litOptions.ssao;
         options.litOptions.diffuseMapEnabled = options.diffuseMap;
     }
 

@@ -76,11 +76,11 @@ class StandardMaterialOptions {
     clearCoatGlossInvert = false;
 
     /**
-     * Apply SSAO during the lighting.
+     * True to include AO variables even if AO is not used, which allows SSAO to be used in the lit shader.
      *
      * @type {boolean}
      */
-    ssao = false;
+    useAO = false;
 
     /**
      * Storage for the options for lit the shader and material.
