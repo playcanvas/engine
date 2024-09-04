@@ -909,7 +909,6 @@ class CollisionComponentSystem extends ComponentSystem {
 
         transform.setRotation(ammoQuat);
         Ammo.destroy(ammoQuat);
-        Ammo.destroy(origin);
 
         return transform;
     }
