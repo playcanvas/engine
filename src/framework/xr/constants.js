@@ -213,7 +213,7 @@ export const XRDEPTHSENSINGUSAGE_GPU = 'gpu-optimized';
 export const XRDEPTHSENSINGFORMAT_L8A8 = 'luminance-alpha';
 
 /**
- * Unsigned Short - indicates that depth sensing preferred raw data format as Unsigned Short 16 bit.
+ * Unsigned Short - indicates that depth sensing preferred raw data format is Unsigned Short (16 bit).
  *
  * @type {string}
  * @category XR
