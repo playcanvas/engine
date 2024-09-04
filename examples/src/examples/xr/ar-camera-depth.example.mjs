@@ -116,7 +116,6 @@ const updateShader = (array, float) => {
     shaderDepthFloat = float;
 
     const key = 'textureDepthSensing_' + array + float;
-    let frag = fragShader;
 
     if (shaderDepthArray) materialDepth.setDefine('XRDEPTH_ARRAY', true);
     if (shaderDepthFloat) materialDepth.setDefine('XRDEPTH_FLOAT', true);
@@ -124,7 +123,7 @@ const updateShader = (array, float) => {
     materialDepth.shaderDesc = {
         uniqueName: key,
         vertexCode: vertShader,
-        fragmentCode: frag,
+        fragmentCode: fragShader,
         attributes: {
             aPosition: pc.SEMANTIC_POSITION,
             aUv0: pc.SEMANTIC_TEXCOORD0
