@@ -61,20 +61,13 @@ let shaderDepthFloat = null;
 
 const vertShader = /* glsl */ `
     attribute vec3 aPosition;
-    attribute vec2 aUv0;
     uniform mat4 matrix_model;
     uniform mat4 matrix_viewProjection;
-    varying vec2 vUv0;
-    void main(void)
-    {
-        vec4 screenPosition = matrix_viewProjection * matrix_model * vec4(aPosition, 1.0);
-        gl_Position = screenPosition;
-        vUv0 = screenPosition.xy;
-    }
-    `;
+    void main(void) {
+        gl_Position = matrix_viewProjection * matrix_model * vec4(aPosition, 1.0);
+    }`;
 
 const fragShader = /* glsl */ `
-    varying vec2 vUv0;
     uniform vec4 uScreenSize;
     uniform mat4 matrix_depth_uv;
     uniform float depth_raw_to_meters;
@@ -89,7 +82,7 @@ const fragShader = /* glsl */ `
     void main (void) {
         vec2 uvScreen = gl_FragCoord.xy * uScreenSize.zw;
 
-        // use texture array for multi-view 
+        // use texture array for multi-view
         #ifdef XRDEPTH_ARRAY
             uvScreen = uvScreen * vec2(2.0, 1.0) - vec2(view_index, 0.0);
             vec3 uv = vec3((matrix_depth_uv * vec4(uvScreen.xy, 0.0, 1.0)).xy, view_index);
@@ -107,7 +100,6 @@ const fragShader = /* glsl */ `
 
         depth *= depth_raw_to_meters;
 
-        // depth = 1.0 - min(depth / 2.0, 1.0); // 0..1 = 0m..4m
         gl_FragColor = vec4(depth, depth, depth, 1.0);
     }`;
 
@@ -126,9 +118,8 @@ const updateShader = (array, float) => {
     const key = 'textureDepthSensing_' + array + float;
     let frag = fragShader;
 
-    if (shaderDepthArray) frag = '#define XRDEPTH_ARRAY\n' + frag;
-
-    if (shaderDepthArray) frag = '#define XRDEPTH_FLOAT\n' + frag;
+    if (shaderDepthArray) materialDepth.setDefine('XRDEPTH_ARRAY', true);
+    if (shaderDepthFloat) materialDepth.setDefine('XRDEPTH_FLOAT', true);
 
     materialDepth.shaderDesc = {
         uniqueName: key,
@@ -227,7 +218,7 @@ if (app.xr.supported) {
         if (app.xr.views.availableDepth) {
             if (!shaderUpdated && app.xr.active) {
                 shaderUpdated = true;
-                updateShader(app.xr.views.list.length > 1, app.xr.views.depthPixelFormat === pc.PIXELFORMAT_R32F);
+                updateShader(app.xr.views.list.length > 1, app.xr.views.depthPixelFormat !== pc.PIXELFORMAT_LA8);
             }
 
             const view = app.xr.views.list?.[0];

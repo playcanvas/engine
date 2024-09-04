@@ -204,7 +204,7 @@ export const XRDEPTHSENSINGUSAGE_CPU = 'cpu-optimized';
 export const XRDEPTHSENSINGUSAGE_GPU = 'gpu-optimized';
 
 /**
- * Luminance Alpha - indicates that depth sensing preferred raw data format is Luminance Alpha.
+ * Luminance Alpha - indicates that depth sensing preferred raw data format is Luminance Alpha (8bit + 8bit).
  * This format is guaranteed to be supported.
  *
  * @type {string}
@@ -213,7 +213,15 @@ export const XRDEPTHSENSINGUSAGE_GPU = 'gpu-optimized';
 export const XRDEPTHSENSINGFORMAT_L8A8 = 'luminance-alpha';
 
 /**
- * Float 32 - indicates that depth sensing preferred raw data format is Float 32.
+ * Unsigned Short - indicates that depth sensing preferred raw data format as Unsigned Short 16 bit.
+ *
+ * @type {string}
+ * @category XR
+ */
+export const XRDEPTHSENSINGFORMAT_R16U = 'unsigned-short';
+
+/**
+ * Float 32 - indicates that depth sensing preferred raw data format is Float 32 bit.
  *
  * @type {string}
  * @category XR
