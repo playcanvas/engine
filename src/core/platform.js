@@ -23,7 +23,7 @@ const environment = typeof window !== 'undefined' ? 'browser' :
 // detect platform
 const platformName =
     (/android/i.test(ua) ? 'android' :
-        (/ip([ao]d|hone)/i.test(ua) ? 'ios' :
+        (/ip(?:[ao]d|hone)/i.test(ua) ? 'ios' :
             (/windows/i.test(ua) ? 'windows' :
                 (/mac os/i.test(ua) ? 'osx' :
                     (/linux/i.test(ua) ? 'linux' :
@@ -32,7 +32,7 @@ const platformName =
 // detect browser
 const browserName =
     (environment !== 'browser') ? null :
-        (/(Chrome\/|Chromium\/|Edg.*\/)/.test(ua) ? 'chrome' :  // chrome, chromium, edge
+        (/Chrome\/|Chromium\/|Edg.*\//.test(ua) ? 'chrome' :  // chrome, chromium, edge
             (/Safari\//.test(ua) ? 'safari' :                   // safari, ios chrome/firefox
                 (/Firefox\//.test(ua) ? 'firefox' :
                     'other')));
@@ -86,6 +86,14 @@ const platform = {
      * @type {boolean}
      */
     browser: environment === 'browser',
+
+    /**
+     * True if running in a Web Worker.
+     *
+     * @type {boolean}
+     * @ignore
+     */
+    worker: environment === 'worker',
 
     /**
      * True if running on a desktop or laptop device.

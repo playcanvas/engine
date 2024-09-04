@@ -3,11 +3,17 @@ import { EventHandler } from '../../core/event-handler.js';
 import { SCRIPT_INITIALIZE, SCRIPT_POST_INITIALIZE } from './constants.js';
 
 /**
+ * @import { AppBase } from '../app-base.js'
+ * @import { Entity } from '../entity.js'
+ */
+
+/**
  * The `Script` class is the fundamental base class for all scripts within PlayCanvas. It provides
  * the minimal interface required for a script to be compatible with both the Engine and the
  * Editor.
  *
- * At its core, a script is simply a collection of methods that are called at various points in the Engine's lifecycle. These methods are:
+ * At its core, a script is simply a collection of methods that are called at various points in the
+ * Engine's lifecycle. These methods are:
  *
  * {@link Script#initialize} - Called once when the script is initialized
  * {@link Script#postInitialize} - Called once after all scripts have been initialized
@@ -15,7 +21,8 @@ import { SCRIPT_INITIALIZE, SCRIPT_POST_INITIALIZE } from './constants.js';
  * {@link Script#postUpdate} - Called every frame, after all scripts have been updated
  * {@link Script#swap} - Called when a script is redefined
  *
- * These methods are entirely optional, but provide a useful way to manage the lifecycle of a script and perform any necessary setup and cleanup.
+ * These methods are entirely optional, but provide a useful way to manage the lifecycle of a
+ * script and perform any necessary setup and cleanup.
  *
  * Below is a simple example of a script that rotates an entity every frame.
  * @example
@@ -27,7 +34,8 @@ import { SCRIPT_INITIALIZE, SCRIPT_POST_INITIALIZE } from './constants.js';
  * }
  * ```
  *
- * When this script is attached to an entity, the update will be called every frame, slowly rotating the entity around the Y-axis.
+ * When this script is attached to an entity, the update will be called every frame, slowly
+ * rotating the entity around the Y-axis.
  *
  * For more information on how to create scripts, see the [Scripting Overview](https://developer.playcanvas.com/user-manual/scripting/).
  *
@@ -97,7 +105,8 @@ export class Script extends EventHandler {
     static EVENT_DESTROY = 'destroy';
 
     /**
-     * Fired when script attributes have changed. This event is available in two forms. They are as follows:
+     * Fired when script attributes have changed. This event is available in two forms. They are as
+     * follows:
      *
      * 1. `attr` - Fired for any attribute change. The handler is passed the name of the attribute
      * that changed, the value of the attribute before the change and the value of the attribute
@@ -146,14 +155,14 @@ export class Script extends EventHandler {
     /**
      * The {@link AppBase} that the instance of this type belongs to.
      *
-     * @type {import('../app-base.js').AppBase}
+     * @type {AppBase}
      */
     app;
 
     /**
      * The {@link Entity} that the instance of this type belongs to.
      *
-     * @type {import('../entity.js').Entity}
+     * @type {Entity}
      */
     entity;
 
@@ -188,10 +197,8 @@ export class Script extends EventHandler {
      * Create a new Script instance.
      *
      * @param {object} args - The input arguments object.
-     * @param {import('../app-base.js').AppBase} args.app - The {@link AppBase} that is running the
-     * script.
-     * @param {import('../entity.js').Entity} args.entity - The {@link Entity} that the script is
-     * attached to.
+     * @param {AppBase} args.app - The {@link AppBase} that is running the script.
+     * @param {Entity} args.entity - The {@link Entity} that the script is attached to.
      */
     constructor(args) {
         super();
@@ -222,8 +229,9 @@ export class Script extends EventHandler {
 
             this.fire('preInitialize');
 
-            if (this.initialize)
+            if (this.initialize) {
                 this.entity.script._scriptMethod(this, SCRIPT_INITIALIZE);
+            }
         }
 
         // post initialize script if not post initialized yet and still enabled
@@ -234,8 +242,9 @@ export class Script extends EventHandler {
         if (this._initialized && !this._postInitialized && this.enabled && !this.entity.script._beingEnabled) {
             this._postInitialized = true;
 
-            if (this.postInitialize)
+            if (this.postInitialize) {
                 this.entity.script._scriptMethod(this, SCRIPT_POST_INITIALIZE);
+            }
         }
     }
 
@@ -246,8 +255,8 @@ export class Script extends EventHandler {
     /**
      * @typedef {object} ScriptInitializationArgs
      * @property {boolean} [enabled] - True if the script instance is in running state.
-     * @property {import('../app-base.js').AppBase} app - The {@link AppBase} that is running the script.
-     * @property {import('../entity.js').Entity} entity - The {@link Entity} that the script is attached to.
+     * @property {AppBase} app - The {@link AppBase} that is running the script.
+     * @property {Entity} entity - The {@link Entity} that the script is attached to.
      */
 
     /**
@@ -329,7 +338,8 @@ export class Script extends EventHandler {
      */
 }
 
-const funcNameRegex = new RegExp('^\\s*function(?:\\s|\\s*\\/\\*.*\\*\\/\\s*)+([^\\(\\s\\/]*)\\s*');
+// eslint-disable-next-line regexp/no-super-linear-backtracking, regexp/no-useless-escape
+const funcNameRegex = /^\s*function(?:\s|\s*\/\*.*\*\/\s*)+([^(\s\/]*)\s*/;
 
 /**
  * @param {Function} constructorFn - The constructor function of the script type.
@@ -339,6 +349,6 @@ export function getScriptName(constructorFn) {
     if (typeof constructorFn !== 'function') return undefined;
     if ('name' in Function.prototype) return constructorFn.name;
     if (constructorFn === Function || constructorFn === Function.prototype.constructor) return 'Function';
-    const match = ('' + constructorFn).match(funcNameRegex);
+    const match = (`${constructorFn}`).match(funcNameRegex);
     return match ? match[1] : undefined;
 }

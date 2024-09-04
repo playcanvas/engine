@@ -1,16 +1,15 @@
 import { path } from '../../core/path.js';
-
 import { Quat } from '../../core/math/quat.js';
 import { Vec3 } from '../../core/math/vec3.js';
-
 import { http, Http } from '../../platform/net/http.js';
-
 import { Animation, Key, Node } from '../../scene/animation/animation.js';
 import { AnimEvents } from '../anim/evaluator/anim-events.js';
-
 import { GlbParser } from '../parsers/glb-parser.js';
-
 import { ResourceHandler } from './handler.js';
+
+/**
+ * @import { AppBase } from '../app-base.js'
+ */
 
 /**
  * Resource handler used for loading {@link Animation} resources.
@@ -19,7 +18,7 @@ import { ResourceHandler } from './handler.js';
  */
 class AnimationHandler extends ResourceHandler {
     /**
-     * @param {import('../app-base.js').AppBase} app - The running {@link AppBase}.
+     * @param {AppBase} app - The running {@link AppBase}.
      * @ignore
      */
     constructor(app) {
@@ -72,7 +71,7 @@ class AnimationHandler extends ResourceHandler {
                         }
                     });
                 } else {
-                    callback(null, this['_parseAnimationV' + response.animation.version](response));
+                    callback(null, this[`_parseAnimationV${response.animation.version}`](response));
                 }
             }
         });

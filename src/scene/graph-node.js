@@ -29,7 +29,6 @@ const up = new Vec3();
  * @param {FindNodeCallback|string} attr - Attribute or lambda.
  * @param {*} [value] - Optional value in case of `attr` being a `string`
  * @returns {FindNodeCallback} Test function that receives a GraphNode and returns a boolean.
- * @ignore
  */
 function createTest(attr, value) {
     if (attr instanceof Function) {
@@ -51,18 +50,19 @@ function createTest(attr, value) {
  * @param {FindNodeCallback} test - Test function.
  * @returns {GraphNode|null} A graph node that matches the search criteria. Returns null if no
  * node is found.
- * @ignore
  */
 function findNode(node, test) {
-    if (test(node))
+    if (test(node)) {
         return node;
+    }
 
     const children = node._children;
     const len = children.length;
     for (let i = 0; i < len; ++i) {
         const result = findNode(children[i], test);
-        if (result)
+        if (result) {
             return result;
+        }
     }
 
     return null;
@@ -252,7 +252,7 @@ class GraphNode extends EventHandler {
 
     /**
      * @type {GraphNode[]}
-     * @private
+     * @protected
      */
     _children = [];
 
@@ -445,15 +445,16 @@ class GraphNode extends EventHandler {
     /**
      * @param {GraphNode} node - Graph node to update.
      * @param {boolean} enabled - True if enabled in the hierarchy, false if disabled.
-     * @private
+     * @protected
      */
     _notifyHierarchyStateChanged(node, enabled) {
         node._onHierarchyStateChanged(enabled);
 
         const c = node._children;
         for (let i = 0, len = c.length; i < len; i++) {
-            if (c[i]._enabled)
+            if (c[i]._enabled) {
                 this._notifyHierarchyStateChanged(c[i], enabled);
+            }
         }
     }
 
@@ -461,13 +462,14 @@ class GraphNode extends EventHandler {
      * Called when the enabled flag of the entity or one of its parents changes.
      *
      * @param {boolean} enabled - True if enabled in the hierarchy, false if disabled.
-     * @private
+     * @protected
      */
     _onHierarchyStateChanged(enabled) {
         // Override in derived classes
         this._enabledInHierarchy = enabled;
-        if (enabled && !this._frozen)
+        if (enabled && !this._frozen) {
             this._unfreezeParentToRoot();
+        }
     }
 
     /**
@@ -479,8 +481,9 @@ class GraphNode extends EventHandler {
 
         const tags = this.tags._list;
         clone.tags.clear();
-        for (let i = 0; i < tags.length; i++)
+        for (let i = 0; i < tags.length; i++) {
             clone.tags.add(tags[i]);
+        }
 
         clone.localPosition.copy(this.localPosition);
         clone.localRotation.copy(this.localRotation);
@@ -592,8 +595,9 @@ class GraphNode extends EventHandler {
         const test = createTest(attr, value);
 
         this.forEach((node) => {
-            if (test(node))
+            if (test(node)) {
                 results.push(node);
+            }
         });
 
         return results;
@@ -744,8 +748,9 @@ class GraphNode extends EventHandler {
     isDescendantOf(node) {
         let parent = this._parent;
         while (parent) {
-            if (parent === node)
+            if (parent === node) {
                 return true;
+            }
 
             parent = parent._parent;
         }
@@ -916,11 +921,13 @@ class GraphNode extends EventHandler {
      * const transform = this.entity.getWorldTransform();
      */
     getWorldTransform() {
-        if (!this._dirtyLocal && !this._dirtyWorld)
+        if (!this._dirtyLocal && !this._dirtyWorld) {
             return this.worldTransform;
+        }
 
-        if (this._parent)
+        if (this._parent) {
             this._parent.getWorldTransform();
+        }
 
         this._sync();
 
@@ -987,8 +994,9 @@ class GraphNode extends EventHandler {
     setLocalEulerAngles(x, y, z) {
         this.localRotation.setFromEulerAngles(x, y, z);
 
-        if (!this._dirtyLocal)
+        if (!this._dirtyLocal) {
             this._dirtifyLocal();
+        }
     }
 
     /**
@@ -1015,8 +1023,9 @@ class GraphNode extends EventHandler {
             this.localPosition.set(x, y, z);
         }
 
-        if (!this._dirtyLocal)
+        if (!this._dirtyLocal) {
             this._dirtifyLocal();
+        }
     }
 
     /**
@@ -1044,8 +1053,9 @@ class GraphNode extends EventHandler {
             this.localRotation.set(x, y, z, w);
         }
 
-        if (!this._dirtyLocal)
+        if (!this._dirtyLocal) {
             this._dirtifyLocal();
+        }
     }
 
     /**
@@ -1071,16 +1081,18 @@ class GraphNode extends EventHandler {
             this.localScale.set(x, y, z);
         }
 
-        if (!this._dirtyLocal)
+        if (!this._dirtyLocal) {
             this._dirtifyLocal();
+        }
     }
 
     /** @private */
     _dirtifyLocal() {
         if (!this._dirtyLocal) {
             this._dirtyLocal = true;
-            if (!this._dirtyWorld)
+            if (!this._dirtyWorld) {
                 this._dirtifyWorld();
+            }
         }
     }
 
@@ -1095,8 +1107,9 @@ class GraphNode extends EventHandler {
 
     /** @private */
     _dirtifyWorld() {
-        if (!this._dirtyWorld)
+        if (!this._dirtyWorld) {
             this._unfreezeParentToRoot();
+        }
         this._dirtifyWorldInternal();
     }
 
@@ -1106,8 +1119,9 @@ class GraphNode extends EventHandler {
             this._frozen = false;
             this._dirtyWorld = true;
             for (let i = 0; i < this._children.length; i++) {
-                if (!this._children[i]._dirtyWorld)
+                if (!this._children[i]._dirtyWorld) {
                     this._children[i]._dirtifyWorldInternal();
+                }
             }
         }
         this._dirtyNormal = true;
@@ -1146,8 +1160,9 @@ class GraphNode extends EventHandler {
             invParentWtm.transformPoint(position, this.localPosition);
         }
 
-        if (!this._dirtyLocal)
+        if (!this._dirtyLocal) {
             this._dirtifyLocal();
+        }
     }
 
     /**
@@ -1183,8 +1198,9 @@ class GraphNode extends EventHandler {
             this.localRotation.copy(invParentRot).mul(rotation);
         }
 
-        if (!this._dirtyLocal)
+        if (!this._dirtyLocal) {
             this._dirtifyLocal();
+        }
     }
 
     /**
@@ -1209,8 +1225,9 @@ class GraphNode extends EventHandler {
             this.localRotation.setFromMat4(invParentWtm).mul(rotation);
         }
 
-        if (!this._dirtyLocal)
+        if (!this._dirtyLocal) {
             this._dirtifyLocal();
+        }
     }
 
     /**
@@ -1240,8 +1257,9 @@ class GraphNode extends EventHandler {
             this.localRotation.mul2(invParentRot, this.localRotation);
         }
 
-        if (!this._dirtyLocal)
+        if (!this._dirtyLocal) {
             this._dirtifyLocal();
+        }
     }
 
     /**
@@ -1360,8 +1378,9 @@ class GraphNode extends EventHandler {
         // The child (plus subhierarchy) will need world transforms to be recalculated
         node._dirtifyWorld();
         // node might be already marked as dirty, in that case the whole chain stays frozen, so let's enforce unfreeze
-        if (this._frozen)
+        if (this._frozen) {
             node._unfreezeParentToRoot();
+        }
 
         // alert an entity hierarchy that it has been inserted
         node._fireOnHierarchy('insert', 'inserthierarchy', this);
@@ -1459,8 +1478,8 @@ class GraphNode extends EventHandler {
                     if (parent.scaleCompensation) {
                         scaleCompensateScaleForParent.mul2(parentWorldScale, parent.getLocalScale());
                         scaleCompensatePosTransform.setTRS(parent.worldTransform.getTranslation(scaleCompensatePos),
-                                                           scaleCompensateRot2,
-                                                           scaleCompensateScaleForParent);
+                            scaleCompensateRot2,
+                            scaleCompensateScaleForParent);
                         tmatrix = scaleCompensatePosTransform;
                     }
                     tmatrix.transformPoint(this.localPosition, scaleCompensatePos);
@@ -1482,11 +1501,13 @@ class GraphNode extends EventHandler {
      * @ignore
      */
     syncHierarchy() {
-        if (!this._enabled)
+        if (!this._enabled) {
             return;
+        }
 
-        if (this._frozen)
+        if (this._frozen) {
             return;
+        }
         this._frozen = true;
 
         if (this._dirtyLocal || this._dirtyWorld) {
@@ -1603,8 +1624,9 @@ class GraphNode extends EventHandler {
         this.localRotation.transformVector(position, position);
         this.localPosition.add(position);
 
-        if (!this._dirtyLocal)
+        if (!this._dirtyLocal) {
             this._dirtifyLocal();
+        }
     }
 
     /**
@@ -1638,8 +1660,9 @@ class GraphNode extends EventHandler {
             this.localRotation.mul2(rotation, rot);
         }
 
-        if (!this._dirtyLocal)
+        if (!this._dirtyLocal) {
             this._dirtifyLocal();
+        }
     }
 
     /**
@@ -1664,8 +1687,9 @@ class GraphNode extends EventHandler {
 
         this.localRotation.mul(rotation);
 
-        if (!this._dirtyLocal)
+        if (!this._dirtyLocal) {
             this._dirtifyLocal();
+        }
     }
 }
 

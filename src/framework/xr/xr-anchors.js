@@ -3,6 +3,13 @@ import { platform } from '../../core/platform.js';
 import { XrAnchor } from './xr-anchor.js';
 
 /**
+ * @import { Quat } from '../../core/math/quat.js'
+ * @import { Vec3 } from '../../core/math/vec3.js'
+ * @import { XrAnchorForgetCallback } from './xr-anchor.js'
+ * @import { XrManager } from './xr-manager.js'
+ */
+
+/**
  * Callback used by {@link XrAnchors#create}.
  *
  * @callback XrAnchorCreateCallback
@@ -84,7 +91,7 @@ class XrAnchors extends EventHandler {
     static EVENT_DESTROY = 'destroy';
 
     /**
-     * @type {import('./xr-manager.js').XrManager}
+     * @type {XrManager}
      * @ignore
      */
     manager;
@@ -144,8 +151,8 @@ class XrAnchors extends EventHandler {
     _list = [];
 
     /**
-     * Map of callbacks to XRAnchors so that we can call its callback once
-     * an anchor is updated with a pose for the first time.
+     * Map of callbacks to XRAnchors so that we can call its callback once an anchor is updated
+     * with a pose for the first time.
      *
      * @type {Map<XrAnchor, XrAnchorCreateCallback>}
      * @private
@@ -153,7 +160,9 @@ class XrAnchors extends EventHandler {
     _callbacksAnchors = new Map();
 
     /**
-     * @param {import('./xr-manager.js').XrManager} manager - WebXR Manager.
+     * Create a new XrAnchors instance.
+     *
+     * @param {XrManager} manager - WebXR Manager.
      * @ignore
      */
     constructor(manager) {
@@ -182,8 +191,9 @@ class XrAnchors extends EventHandler {
 
         // clear anchor creation queue
         for (let i = 0; i < this._creationQueue.length; i++) {
-            if (!this._creationQueue[i].callback)
+            if (!this._creationQueue[i].callback) {
                 continue;
+            }
 
             this._creationQueue[i].callback(new Error('session ended'), null);
         }
@@ -233,15 +243,14 @@ class XrAnchors extends EventHandler {
     /**
      * Create an anchor using position and rotation, or from hit test result.
      *
-     * @param {import('../../core/math/vec3.js').Vec3|XRHitTestResult} position - Position for an anchor or
-     * a hit test result.
-     * @param {import('../../core/math/quat.js').Quat|XrAnchorCreateCallback} [rotation] - Rotation for an
-     * anchor or a callback if creating from a hit test result.
-     * @param {XrAnchorCreateCallback} [callback] - Callback to fire when anchor was created or failed to be
-     * created.
+     * @param {Vec3|XRHitTestResult} position - Position for an anchor or a hit test result.
+     * @param {Quat|XrAnchorCreateCallback} [rotation] - Rotation for an anchor or a callback if
+     * creating from a hit test result.
+     * @param {XrAnchorCreateCallback} [callback] - Callback to fire when anchor was created or
+     * failed to be created.
      * @example
      * // create an anchor using a position and rotation
-     * app.xr.anchors.create(position, rotation, function (err, anchor) {
+     * app.xr.anchors.create(position, rotation, (err, anchor) => {
      *     if (!err) {
      *         // new anchor has been created
      *     }
@@ -278,15 +287,15 @@ class XrAnchors extends EventHandler {
             }
 
             hitResult.createAnchor()
-                .then((xrAnchor) => {
-                    const anchor = this._createAnchor(xrAnchor);
-                    callback?.(null, anchor);
-                    this.fire('add', anchor);
-                })
-                .catch((ex) => {
-                    callback?.(ex, null);
-                    this.fire('error', ex);
-                });
+            .then((xrAnchor) => {
+                const anchor = this._createAnchor(xrAnchor);
+                callback?.(null, anchor);
+                this.fire('add', anchor);
+            })
+            .catch((ex) => {
+                callback?.(ex, null);
+                this.fire('error', ex);
+            });
         } else {
             this._creationQueue.push({
                 transform: new XRRigidTransform(position, rotation),
@@ -299,7 +308,8 @@ class XrAnchors extends EventHandler {
      * Restore anchor using persistent UUID.
      *
      * @param {string} uuid - UUID string associated with persistent anchor.
-     * @param {XrAnchorCreateCallback} [callback] - Callback to fire when anchor was created or failed to be created.
+     * @param {XrAnchorCreateCallback} [callback] - Callback to fire when anchor was created or
+     * failed to be created.
      * @example
      * // restore an anchor using uuid string
      * app.xr.anchors.restore(uuid, function (err, anchor) {
@@ -331,27 +341,27 @@ class XrAnchors extends EventHandler {
         }
 
         this.manager.session.restorePersistentAnchor(uuid)
-            .then((xrAnchor) => {
-                const anchor = this._createAnchor(xrAnchor, uuid);
-                callback?.(null, anchor);
-                this.fire('add', anchor);
-            })
-            .catch((ex) => {
-                callback?.(ex, null);
-                this.fire('error', ex);
-            });
+        .then((xrAnchor) => {
+            const anchor = this._createAnchor(xrAnchor, uuid);
+            callback?.(null, anchor);
+            this.fire('add', anchor);
+        })
+        .catch((ex) => {
+            callback?.(ex, null);
+            this.fire('error', ex);
+        });
     }
 
     /**
      * Forget an anchor by removing its UUID from underlying systems.
      *
      * @param {string} uuid - UUID string associated with persistent anchor.
-     * @param {import('./xr-anchor.js').XrAnchorForgetCallback} [callback] - Callback to
-     * fire when anchor persistent data was removed or error if failed.
+     * @param {XrAnchorForgetCallback} [callback] - Callback to fire when anchor persistent data
+     * was removed or error if failed.
      * @example
      * // forget all available anchors
      * const uuids = app.xr.anchors.uuids;
-     * for(let i = 0; i < uuids.length; i++) {
+     * for (let i = 0; i < uuids.length; i++) {
      *     app.xr.anchors.forget(uuids[i]);
      * }
      */
@@ -372,13 +382,13 @@ class XrAnchors extends EventHandler {
         }
 
         this.manager.session.deletePersistentAnchor(uuid)
-            .then(() => {
-                callback?.(null);
-            })
-            .catch((ex) => {
-                callback?.(ex);
-                this.fire('error', ex);
-            });
+        .then(() => {
+            callback?.(null);
+        })
+        .catch((ex) => {
+            callback?.(ex);
+            this.fire('error', ex);
+        });
     }
 
     /**
@@ -392,15 +402,15 @@ class XrAnchors extends EventHandler {
                 this._checkingAvailability = true;
 
                 frame.createAnchor(new XRRigidTransform(), this.manager._referenceSpace)
-                    .then((xrAnchor) => {
-                        // successfully created an anchor - feature is available
-                        xrAnchor.delete();
-                        if (this.manager.active) {
-                            this._available = true;
-                            this.fire('available');
-                        }
-                    })
-                    .catch(() => { }); // stay unavailable
+                .then((xrAnchor) => {
+                    // successfully created an anchor - feature is available
+                    xrAnchor.delete();
+                    if (this.manager.active) {
+                        this._available = true;
+                        this.fire('available');
+                    }
+                })
+                .catch(() => { }); // stay unavailable
             }
             return;
         }
@@ -411,16 +421,18 @@ class XrAnchors extends EventHandler {
                 const request = this._creationQueue[i];
 
                 frame.createAnchor(request.transform, this.manager._referenceSpace)
-                    .then((xrAnchor) => {
-                        if (request.callback)
-                            this._callbacksAnchors.set(xrAnchor, request.callback);
-                    })
-                    .catch((ex) => {
-                        if (request.callback)
-                            request.callback(ex, null);
+                .then((xrAnchor) => {
+                    if (request.callback) {
+                        this._callbacksAnchors.set(xrAnchor, request.callback);
+                    }
+                })
+                .catch((ex) => {
+                    if (request.callback) {
+                        request.callback(ex, null);
+                    }
 
-                        this.fire('error', ex);
-                    });
+                    this.fire('error', ex);
+                });
             }
 
             this._creationQueue.length = 0;
@@ -428,8 +440,9 @@ class XrAnchors extends EventHandler {
 
         // check if destroyed
         for (const [xrAnchor, anchor] of this._index) {
-            if (frame.trackedAnchors.has(xrAnchor))
+            if (frame.trackedAnchors.has(xrAnchor)) {
                 continue;
+            }
 
             this._index.delete(xrAnchor);
             anchor.destroy();
@@ -442,8 +455,9 @@ class XrAnchors extends EventHandler {
 
         // check if added
         for (const xrAnchor of frame.trackedAnchors) {
-            if (this._index.has(xrAnchor))
+            if (this._index.has(xrAnchor)) {
                 continue;
+            }
 
             try {
                 const tmp = xrAnchor.anchorSpace; // eslint-disable-line no-unused-vars
@@ -499,14 +513,17 @@ class XrAnchors extends EventHandler {
      * @type {null|string[]}
      */
     get uuids() {
-        if (!this._available)
+        if (!this._available) {
             return null;
+        }
 
-        if (!this._persistence)
+        if (!this._persistence) {
             return null;
+        }
 
-        if (!this.manager.active)
+        if (!this.manager.active) {
             return null;
+        }
 
         return this.manager.session.persistentAnchors;
     }

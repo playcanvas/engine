@@ -74,6 +74,4 @@ layout(location = 7) out highp outType_7 pc_fragColor7;
 
 #define GL2
 #define WEBGPU
-#define SUPPORTS_TEXLOD
-#define SUPPORTS_MRT
 `;

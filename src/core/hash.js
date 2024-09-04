@@ -3,7 +3,6 @@
  *
  * @param {string} str - String.
  * @returns {number} Hash value.
- * @ignore
  */
 function hashCode(str) {
     let hash = 0;
@@ -22,7 +21,6 @@ function hashCode(str) {
  *.
  * @param {number[]|Uint32Array} array - Array of 32bit integer numbers to hash.
  * @returns {number} 32bit unsigned integer hash value.
- * @ignore
  */
 function hash32Fnv1a(array) {
     const prime = 16777619;

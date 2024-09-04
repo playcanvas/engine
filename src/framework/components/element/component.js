@@ -1,24 +1,30 @@
 import { Debug } from '../../../core/debug.js';
 import { TRACE_ID_ELEMENT } from '../../../core/constants.js';
-
 import { Mat4 } from '../../../core/math/mat4.js';
 import { Vec2 } from '../../../core/math/vec2.js';
 import { Vec3 } from '../../../core/math/vec3.js';
 import { Vec4 } from '../../../core/math/vec4.js';
-
 import { FUNC_ALWAYS, FUNC_EQUAL, STENCILOP_INCREMENT, STENCILOP_REPLACE } from '../../../platform/graphics/constants.js';
-
 import { LAYERID_UI } from '../../../scene/constants.js';
 import { BatchGroup } from '../../../scene/batching/batch-group.js';
 import { StencilParameters } from '../../../platform/graphics/stencil-parameters.js';
-
 import { Entity } from '../../entity.js';
-
 import { Component } from '../component.js';
-
 import { ELEMENTTYPE_GROUP, ELEMENTTYPE_IMAGE, ELEMENTTYPE_TEXT, FITMODE_STRETCH } from './constants.js';
 import { ImageElement } from './image-element.js';
 import { TextElement } from './text-element.js';
+
+/**
+ * @import { BoundingBox } from '../../../core/shape/bounding-box.js'
+ * @import { CanvasFont } from '../../../framework/font/canvas-font.js'
+ * @import { Color } from '../../../core/math/color.js'
+ * @import { ElementComponentData } from './data.js'
+ * @import { ElementComponentSystem } from './system.js'
+ * @import { Font } from '../../../framework/font/font.js'
+ * @import { Material } from '../../../scene/materials/material.js'
+ * @import { Sprite } from '../../../scene/sprite.js'
+ * @import { Texture } from '../../../platform/graphics/texture.js'
+ */
 
 const position = new Vec3();
 const invParentWtm = new Mat4();
@@ -215,8 +221,7 @@ class ElementComponent extends Component {
     /**
      * Create a new ElementComponent instance.
      *
-     * @param {import('./system.js').ElementComponentSystem} system - The ComponentSystem that
-     * created this Component.
+     * @param {ElementComponentSystem} system - The ComponentSystem that created this Component.
      * @param {Entity} entity - The Entity that this Component is attached to.
      */
     constructor(system, entity) {
@@ -309,7 +314,7 @@ class ElementComponent extends Component {
 
     // TODO: Remove this override in upgrading component
     /**
-     * @type {import('./data.js').ElementComponentData}
+     * @type {ElementComponentData}
      * @ignore
      */
     get data() {
@@ -389,7 +394,7 @@ class ElementComponent extends Component {
     /**
      * Gets the world space axis-aligned bounding box for this element component.
      *
-     * @type {import('../../../core/shape/bounding-box.js').BoundingBox | null}
+     * @type {BoundingBox | null}
      */
     get aabb() {
         if (this._image) {
@@ -598,7 +603,7 @@ class ElementComponent extends Component {
         }
 
         if (value > 0xFFFFFF) {
-            Debug.warn('Element.drawOrder larger than max size of: ' + 0xFFFFFF);
+            Debug.warn(`Element.drawOrder larger than max size of: ${0xFFFFFF}`);
             value = 0xFFFFFF;
         }
 
@@ -1260,7 +1265,7 @@ class ElementComponent extends Component {
      * Sets the color of the image for {@link ELEMENTTYPE_IMAGE} types or the color of the text for
      * {@link ELEMENTTYPE_TEXT} types.
      *
-     * @type {import('../../../core/math/color.js').Color}
+     * @type {Color}
      */
     set color(arg) {
         this._setValue('color', arg);
@@ -1269,7 +1274,7 @@ class ElementComponent extends Component {
     /**
      * Gets the color of the element.
      *
-     * @type {import('../../../core/math/color.js').Color}
+     * @type {Color}
      */
     get color() {
         if (this._text) {
@@ -1286,7 +1291,7 @@ class ElementComponent extends Component {
     /**
      * Sets the font used for rendering the text. Only works for {@link ELEMENTTYPE_TEXT} types.
      *
-     * @type {import('../../../framework/font/font.js').Font | import('../../../framework/font/canvas-font.js').CanvasFont}
+     * @type {Font|CanvasFont}
      */
     set font(arg) {
         this._setValue('font', arg);
@@ -1295,7 +1300,7 @@ class ElementComponent extends Component {
     /**
      * Gets the font used for rendering the text.
      *
-     * @type {import('../../../framework/font/font.js').Font | import('../../../framework/font/canvas-font.js').CanvasFont}
+     * @type {Font|CanvasFont}
      */
     get font() {
         if (this._text) {
@@ -1590,7 +1595,7 @@ class ElementComponent extends Component {
     /**
      * Sets the texture to render. Only works for {@link ELEMENTTYPE_IMAGE} types.
      *
-     * @type {import('../../../platform/graphics/texture.js').Texture}
+     * @type {Texture}
      */
     set texture(arg) {
         this._setValue('texture', arg);
@@ -1599,7 +1604,7 @@ class ElementComponent extends Component {
     /**
      * Gets the texture to render.
      *
-     * @type {import('../../../platform/graphics/texture.js').Texture}
+     * @type {Texture}
      */
     get texture() {
         if (this._image) {
@@ -1634,7 +1639,7 @@ class ElementComponent extends Component {
     /**
      * Sets the material to use when rendering an image. Only works for {@link ELEMENTTYPE_IMAGE} types.
      *
-     * @type {import('../../../scene/materials/material.js').Material}
+     * @type {Material}
      */
     set material(arg) {
         this._setValue('material', arg);
@@ -1643,7 +1648,7 @@ class ElementComponent extends Component {
     /**
      * Gets the material to use when rendering an image.
      *
-     * @type {import('../../../scene/materials/material.js').Material}
+     * @type {Material}
      */
     get material() {
         if (this._image) {
@@ -1680,7 +1685,7 @@ class ElementComponent extends Component {
      * Sets the sprite to render. Only works for {@link ELEMENTTYPE_IMAGE} types which can render
      * either a texture or a sprite.
      *
-     * @type {import('../../../scene/sprite.js').Sprite}
+     * @type {Sprite}
      */
     set sprite(arg) {
         this._setValue('sprite', arg);
@@ -1689,7 +1694,7 @@ class ElementComponent extends Component {
     /**
      * Gets the sprite to render.
      *
-     * @type {import('../../../scene/sprite.js').Sprite}
+     * @type {Sprite}
      */
     get sprite() {
         if (this._image) {
@@ -1844,7 +1849,7 @@ class ElementComponent extends Component {
     /**
      * Sets the text outline effect color and opacity. Only works for {@link ELEMENTTYPE_TEXT} types.
      *
-     * @type {import('../../../core/math/color.js').Color}
+     * @type {Color}
      */
     set outlineColor(arg) {
         this._setValue('outlineColor', arg);
@@ -1853,7 +1858,7 @@ class ElementComponent extends Component {
     /**
      * Gets the text outline effect color and opacity.
      *
-     * @type {import('../../../core/math/color.js').Color}
+     * @type {Color}
      */
     get outlineColor() {
         if (this._text) {
@@ -1887,7 +1892,7 @@ class ElementComponent extends Component {
     /**
      * Sets the text shadow effect color and opacity. Only works for {@link ELEMENTTYPE_TEXT} types.
      *
-     * @type {import('../../../core/math/color.js').Color}
+     * @type {Color}
      */
     set shadowColor(arg) {
         this._setValue('shadowColor', arg);
@@ -1896,7 +1901,7 @@ class ElementComponent extends Component {
     /**
      * Gets the text shadow effect color and opacity.
      *
-     * @type {import('../../../core/math/color.js').Color}
+     * @type {Color}
      */
     get shadowColor() {
         if (this._text) {
@@ -2154,7 +2159,7 @@ class ElementComponent extends Component {
                 // transform element hierarchy
                 if (this._parent.element) {
                     element._screenToWorld.mul2(this._parent.element._modelTransform,
-                                                element._anchorTransform);
+                        element._anchorTransform);
                 } else {
                     element._screenToWorld.copy(element._anchorTransform);
                 }
@@ -2186,16 +2191,16 @@ class ElementComponent extends Component {
 
                     const pivotOffset = vecB;
                     pivotOffset.set(element._absLeft + element._pivot.x * element.calculatedWidth,
-                                    element._absBottom + element._pivot.y * element.calculatedHeight, 0);
+                        element._absBottom + element._pivot.y * element.calculatedHeight, 0);
 
                     matA.setTranslate(-pivotOffset.x, -pivotOffset.y, -pivotOffset.z);
                     matB.setTRS(depthOffset, this.getLocalRotation(), this.getLocalScale());
                     matC.setTranslate(pivotOffset.x, pivotOffset.y, pivotOffset.z);
 
                     element._screenTransform
-                        .mul2(element._parentWorldTransform, matC)
-                        .mul(matB)
-                        .mul(matA);
+                    .mul2(element._parentWorldTransform, matC)
+                    .mul(matB)
+                    .mul(matA);
 
                     element._cornersDirty = true;
                     element._canvasCornersDirty = true;
@@ -2243,7 +2248,7 @@ class ElementComponent extends Component {
                 if (j < 0) {
                     this.system._prerender.push(current);
                 }
-                Debug.trace(TRACE_ID_ELEMENT, 'set prerender root to: ' + current.name);
+                Debug.trace(TRACE_ID_ELEMENT, `set prerender root to: ${current.name}`);
             }
 
             current = next;
@@ -2253,7 +2258,7 @@ class ElementComponent extends Component {
     _onPrerender() {
         for (let i = 0; i < this.system._prerender.length; i++) {
             const mask = this.system._prerender[i];
-            Debug.trace(TRACE_ID_ELEMENT, 'prerender from: ' + mask.name);
+            Debug.trace(TRACE_ID_ELEMENT, `prerender from: ${mask.name}`);
 
             // prevent call if element has been removed since being added
             if (mask.element) {
@@ -2324,7 +2329,7 @@ class ElementComponent extends Component {
 
         if (mask) {
             const ref = mask.element._image._maskRef;
-            Debug.trace(TRACE_ID_ELEMENT, 'masking: ' + this.entity.name + ' with ' + ref);
+            Debug.trace(TRACE_ID_ELEMENT, `masking: ${this.entity.name} with ${ref}`);
 
             // if this is image or text, set the stencil parameters
             renderableElement?._setStencil(new StencilParameters({
@@ -2334,7 +2339,7 @@ class ElementComponent extends Component {
 
             this._maskedBy = mask;
         } else {
-            Debug.trace(TRACE_ID_ELEMENT, 'no masking on: ' + this.entity.name);
+            Debug.trace(TRACE_ID_ELEMENT, `no masking on: ${this.entity.name}`);
 
             // remove stencil params if this is image or text
             renderableElement?._setStencil(null);
@@ -2363,7 +2368,7 @@ class ElementComponent extends Component {
                 // increment counter to count mask depth
                 depth++;
 
-                Debug.trace(TRACE_ID_ELEMENT, 'masking from: ' + this.entity.name + ' with ' + (sp.ref + 1));
+                Debug.trace(TRACE_ID_ELEMENT, `masking from: ${this.entity.name} with ${sp.ref + 1}`);
                 Debug.trace(TRACE_ID_ELEMENT, 'depth++ to: ', depth);
 
                 currentMask = this.entity;
@@ -2393,7 +2398,7 @@ class ElementComponent extends Component {
                 // increment mask counter to count depth of masks
                 depth++;
 
-                Debug.trace(TRACE_ID_ELEMENT, 'masking from: ' + this.entity.name + ' with ' + sp.ref);
+                Debug.trace(TRACE_ID_ELEMENT, `masking from: ${this.entity.name} with ${sp.ref}`);
                 Debug.trace(TRACE_ID_ELEMENT, 'depth++ to: ', depth);
 
                 currentMask = this.entity;
@@ -2481,7 +2486,7 @@ class ElementComponent extends Component {
         }
 
         this._localAnchor.set(this._anchor.x * resx, this._anchor.y * resy, this._anchor.z * resx,
-                              this._anchor.w * resy);
+            this._anchor.w * resy);
     }
 
     // internal - apply offset x,y to local position and find point in world space

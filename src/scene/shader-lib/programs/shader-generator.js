@@ -1,3 +1,4 @@
+import { hashCode } from '../../../core/hash.js';
 import {
     GAMMA_SRGB,
     TONEMAP_ACES, TONEMAP_ACES2, TONEMAP_FILMIC, TONEMAP_HEJL, TONEMAP_NEUTRAL, TONEMAP_LINEAR
@@ -13,8 +14,13 @@ class ShaderGenerator {
         return '}\n';
     }
 
-    static skinCode(device, chunks = shaderChunks) {
-        return chunks.skinTexVS;
+    /**
+     * @param {Map<string, string>} defines - the set of defines to be used in the shader.
+     * @returns {number} the hash code of the defines.
+     */
+    static definesHash(defines) {
+        const sortedArray = Array.from(defines).sort((a, b) => (a[0] > b[0] ? 1 : -1));
+        return hashCode(JSON.stringify(sortedArray));
     }
 
     static fogCode(value, chunks = shaderChunks) {

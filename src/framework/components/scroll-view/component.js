@@ -1,18 +1,19 @@
 import { Debug } from '../../../core/debug.js';
-
 import { math } from '../../../core/math/math.js';
 import { Vec2 } from '../../../core/math/vec2.js';
 import { Vec3 } from '../../../core/math/vec3.js';
-
 import { ORIENTATION_HORIZONTAL, ORIENTATION_VERTICAL } from '../../../scene/constants.js';
-
 import { EntityReference } from '../../utils/entity-reference.js';
-
 import { ElementDragHelper } from '../element/element-drag-helper.js';
-
 import { SCROLL_MODE_BOUNCE, SCROLL_MODE_CLAMP, SCROLL_MODE_INFINITE, SCROLLBAR_VISIBILITY_SHOW_ALWAYS, SCROLLBAR_VISIBILITY_SHOW_WHEN_REQUIRED } from './constants.js';
 import { Component } from '../component.js';
 import { EVENT_MOUSEWHEEL } from '../../../platform/input/constants.js';
+
+/**
+ * @import { Entity } from '../../entity.js'
+ * @import { ScrollViewComponentData } from './data.js'
+ * @import { ScrollViewComponentSystem } from './system.js'
+ */
 
 const _tempScrollValue = new Vec2();
 
@@ -39,10 +40,8 @@ class ScrollViewComponent extends Component {
     /**
      * Create a new ScrollViewComponent.
      *
-     * @param {import('./system.js').ScrollViewComponentSystem} system - The ComponentSystem that
-     * created this Component.
-     * @param {import('../../entity.js').Entity} entity - The Entity that this Component is
-     * attached to.
+     * @param {ScrollViewComponentSystem} system - The ComponentSystem that created this Component.
+     * @param {Entity} entity - The Entity that this Component is attached to.
      */
     constructor(system, entity) {
         super(system, entity);
@@ -86,7 +85,7 @@ class ScrollViewComponent extends Component {
 
     // TODO: Remove this override in upgrading component
     /**
-     * @type {import('./data.js').ScrollViewComponentData}
+     * @type {ScrollViewComponentData}
      * @ignore
      */
     get data() {
@@ -301,7 +300,7 @@ class ScrollViewComponent extends Component {
      * Sets the entity to be used as the masked viewport area, within which the content will scroll.
      * This entity must have an ElementGroup component.
      *
-     * @type {import('../../../framework/entity.js').Entity}
+     * @type {Entity}
      */
     set viewportEntity(arg) {
         this._setValue('viewportEntity', arg);
@@ -310,7 +309,7 @@ class ScrollViewComponent extends Component {
     /**
      * Gets the entity to be used as the masked viewport area, within which the content will scroll.
      *
-     * @type {import('../../../framework/entity.js').Entity}
+     * @type {Entity}
      */
     get viewportEntity() {
         return this.data.viewportEntity;
@@ -320,7 +319,7 @@ class ScrollViewComponent extends Component {
      * Sets the entity which contains the scrolling content itself. This entity must have an
      * {@link ElementComponent}.
      *
-     * @type {import('../../../framework/entity.js').Entity}
+     * @type {Entity}
      */
     set contentEntity(arg) {
         this._setValue('contentEntity', arg);
@@ -329,7 +328,7 @@ class ScrollViewComponent extends Component {
     /**
      * Gets the entity which contains the scrolling content itself.
      *
-     * @type {import('../../../framework/entity.js').Entity}
+     * @type {Entity}
      */
     get contentEntity() {
         return this.data.contentEntity;
@@ -339,7 +338,7 @@ class ScrollViewComponent extends Component {
      * Sets the entity to be used as the horizontal scrollbar. This entity must have a
      * {@link ScrollbarComponent}.
      *
-     * @type {import('../../../framework/entity.js').Entity}
+     * @type {Entity}
      */
     set horizontalScrollbarEntity(arg) {
         this._setValue('horizontalScrollbarEntity', arg);
@@ -348,7 +347,7 @@ class ScrollViewComponent extends Component {
     /**
      * Gets the entity to be used as the horizontal scrollbar.
      *
-     * @type {import('../../../framework/entity.js').Entity}
+     * @type {Entity}
      */
     get horizontalScrollbarEntity() {
         return this.data.horizontalScrollbarEntity;
@@ -358,7 +357,7 @@ class ScrollViewComponent extends Component {
      * Sets the entity to be used as the vertical scrollbar. This entity must have a
      * {@link ScrollbarComponent}.
      *
-     * @type {import('../../../framework/entity.js').Entity}
+     * @type {Entity}
      */
     set verticalScrollbarEntity(arg) {
         this._setValue('verticalScrollbarEntity', arg);
@@ -367,7 +366,7 @@ class ScrollViewComponent extends Component {
     /**
      * Gets the entity to be used as the vertical scrollbar.
      *
-     * @type {import('../../../framework/entity.js').Entity}
+     * @type {Entity}
      */
     get verticalScrollbarEntity() {
         return this.data.verticalScrollbarEntity;
@@ -401,7 +400,7 @@ class ScrollViewComponent extends Component {
 
     /**
      * @param {string} onOrOff - 'on' or 'off'.
-     * @param {import('./system.js').ScrollViewComponentSystem} system - The ComponentSystem that
+     * @param {ScrollViewComponentSystem} system - The ComponentSystem that
      * created this Component.
      * @private
      */
@@ -576,7 +575,7 @@ class ScrollViewComponent extends Component {
                 return scrollValue;
 
             default:
-                console.warn('Unhandled scroll mode:' + this.scrollMode);
+                console.warn(`Unhandled scroll mode:${this.scrollMode}`);
                 return scrollValue;
         }
     }
@@ -657,7 +656,7 @@ class ScrollViewComponent extends Component {
                     return;
 
                 default:
-                    console.warn('Unhandled scrollbar visibility:' + requestedVisibility);
+                    console.warn(`Unhandled scrollbar visibility:${requestedVisibility}`);
                     entity.enabled = isScrollingEnabled;
             }
         }

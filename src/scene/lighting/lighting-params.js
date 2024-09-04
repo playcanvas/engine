@@ -70,8 +70,9 @@ class LightingParams {
         this.cookieAtlasResolution = render.lightingCookieAtlasResolution ?? this.cookieAtlasResolution;
         this.maxLightsPerCell = render.lightingMaxLightsPerCell ?? this.maxLightsPerCell;
         this.shadowType = render.lightingShadowType ?? this.shadowType;
-        if (render.lightingCells)
+        if (render.lightingCells) {
             this.cell = new Vec3(render.lightingCells);
+        }
     }
 
     /**
@@ -155,7 +156,7 @@ class LightingParams {
      *
      * - {@link SHADOW_PCF1}: PCF 1x1 sampling.
      * - {@link SHADOW_PCF3}: PCF 3x3 sampling.
-     * - {@link SHADOW_PCF5}: PCF 5x5 sampling. Falls back to {@link SHADOW_PCF3} on WebGL 1.0.
+     * - {@link SHADOW_PCF5}: PCF 5x5 sampling.
      *
      * Defaults to {@link SHADOW_PCF3}
      *

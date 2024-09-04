@@ -1,12 +1,10 @@
-import { now } from "../../core/time.js";
-import { RenderPass } from "../../platform/graphics/render-pass.js";
-import { RenderPassCookieRenderer } from "./render-pass-cookie-renderer.js";
-import { RenderPassShadowLocalClustered } from "./render-pass-shadow-local-clustered.js";
+import { now } from '../../core/time.js';
+import { RenderPass } from '../../platform/graphics/render-pass.js';
+import { RenderPassCookieRenderer } from './render-pass-cookie-renderer.js';
+import { RenderPassShadowLocalClustered } from './render-pass-shadow-local-clustered.js';
 
 /**
  * A render pass used to update clustered lighting data - shadows, cookies, world clusters.
- *
- * @ignore
  */
 class RenderPassUpdateClustered extends RenderPass {
     constructor(device, renderer, shadowRenderer, shadowRendererLocal, lightTextureAtlas) {

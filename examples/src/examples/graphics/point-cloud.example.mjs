@@ -55,15 +55,16 @@ assetListLoader.load(() => {
     const entity = assets.statue.resource.instantiateRenderEntity();
     app.root.addChild(entity);
 
-    // Create the shader definition and shader from the vertex and fragment shaders
-    const shader = pc.createShaderFromCode(app.graphicsDevice, files['shader.vert'], files['shader.frag'], 'myShader', {
-        aPosition: pc.SEMANTIC_POSITION,
-        aUv0: pc.SEMANTIC_TEXCOORD0
+    // Create a new material with a custom shader
+    const material = new pc.ShaderMaterial({
+        uniqueName: 'MyShader',
+        vertexCode: files['shader.vert'],
+        fragmentCode: files['shader.frag'],
+        attributes: {
+            aPosition: pc.SEMANTIC_POSITION,
+            aUv0: pc.SEMANTIC_TEXCOORD0
+        }
     });
-
-    // Create a new material with the new shader
-    const material = new pc.Material();
-    material.shader = shader;
 
     // find all render components
     const renderComponents = entity.findComponents('render');

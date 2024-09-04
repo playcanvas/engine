@@ -1,19 +1,20 @@
 import { Debug } from '../../../core/debug.js';
 import { Asset } from '../../asset/asset.js';
-
 import { AnimEvaluator } from '../../anim/evaluator/anim-evaluator.js';
 import { AnimController } from '../../anim/controller/anim-controller.js';
-
 import { Component } from '../component.js';
-
-import {
-    ANIM_PARAMETER_BOOLEAN, ANIM_PARAMETER_FLOAT, ANIM_PARAMETER_INTEGER, ANIM_PARAMETER_TRIGGER, ANIM_CONTROL_STATES
-} from '../../anim/controller/constants.js';
 import { AnimComponentBinder } from './component-binder.js';
 import { AnimComponentLayer } from './component-layer.js';
 import { AnimStateGraph } from '../../anim/state-graph/anim-state-graph.js';
 import { Entity } from '../../entity.js';
+import {
+    ANIM_PARAMETER_BOOLEAN, ANIM_PARAMETER_FLOAT, ANIM_PARAMETER_INTEGER, ANIM_PARAMETER_TRIGGER, ANIM_CONTROL_STATES
+} from '../../anim/controller/constants.js';
 import { AnimTrack } from '../../anim/evaluator/anim-track.js';
+
+/**
+ * @import { AnimComponentSystem } from './system.js'
+ */
 
 /**
  * The Anim Component allows an Entity to playback animations on models and entity properties.
@@ -24,8 +25,7 @@ class AnimComponent extends Component {
     /**
      * Create a new AnimComponent instance.
      *
-     * @param {import('./system.js').AnimComponentSystem} system - The {@link ComponentSystem} that
-     * created this Component.
+     * @param {AnimComponentSystem} system - The {@link ComponentSystem} that created this Component.
      * @param {Entity} entity - The Entity that this Component is attached to.
      */
     constructor(system, entity) {
@@ -420,7 +420,7 @@ class AnimComponent extends Component {
             for (let j = 0; j < layer.states.length; j++) {
                 const stateName = layer.states[j];
                 if (ANIM_CONTROL_STATES.indexOf(stateName) === -1) {
-                    const stateKey = layerName + ':' + stateName;
+                    const stateKey = `${layerName}:${stateName}`;
                     if (!this._animationAssets[stateKey]) {
                         this._animationAssets[stateKey] = {
                             asset: null
@@ -438,7 +438,7 @@ class AnimComponent extends Component {
             for (let j = 0; j < layer.states.length; j++) {
                 const stateName = layer.states[j];
                 if (ANIM_CONTROL_STATES.indexOf(stateName) !== -1) continue;
-                const animationAsset = this._animationAssets[layer.name + ':' + stateName];
+                const animationAsset = this._animationAssets[`${layer.name}:${stateName}`];
                 if (!animationAsset || !animationAsset.asset) {
                     this.findAnimationLayer(layer.name).assignAnimation(stateName, AnimTrack.EMPTY);
                     continue;

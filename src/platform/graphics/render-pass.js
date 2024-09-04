@@ -3,11 +3,23 @@ import { Tracing } from '../../core/tracing.js';
 import { Color } from '../../core/math/color.js';
 import { TRACEID_RENDER_PASS, TRACEID_RENDER_PASS_DETAIL } from '../../core/constants.js';
 
+/**
+ * @import { GraphicsDevice } from '../graphics/graphics-device.js'
+ * @import { RenderTarget } from '../graphics/render-target.js'
+ * @import { Texture } from './texture.js'
+ */
+
 class ColorAttachmentOps {
     /**
-     * A color used to clear the color attachment when the clear is enabled.
+     * A color used to clear the color attachment when the clear is enabled, specified in sRGB space.
      */
     clearValue = new Color(0, 0, 0, 1);
+
+    /**
+     * A color used to clear the color attachment when the clear is enabled, specified in linear
+     * space.
+     */
+    clearValueLinear = new Color(0, 0, 0, 1);
 
     /**
      * True if the attachment should be cleared before rendering, false to preserve
@@ -16,12 +28,11 @@ class ColorAttachmentOps {
     clear = false;
 
     /**
-     * True if the attachment needs to be stored after the render pass. False
-     * if it can be discarded.
-     * Note: This relates to the surface that is getting rendered to, and can be either
-     * single or multi-sampled. Further, if a multi-sampled surface is used, the resolve
-     * flag further specifies if this gets resolved to a single-sampled surface. This
-     * behavior matches the WebGPU specification.
+     * True if the attachment needs to be stored after the render pass. False if it can be
+     * discarded. Note: This relates to the surface that is getting rendered to, and can be either
+     * single or multi-sampled. Further, if a multi-sampled surface is used, the resolve flag
+     * further specifies if this gets resolved to a single-sampled surface. This behavior matches
+     * the WebGPU specification.
      *
      * @type {boolean}
      */
@@ -95,7 +106,7 @@ class RenderPass {
     /**
      * The graphics device.
      *
-     * @type {import('../graphics/graphics-device.js').GraphicsDevice}
+     * @type {GraphicsDevice}
      */
     device;
 
@@ -115,10 +126,12 @@ class RenderPass {
 
     /**
      * The render target for this render pass:
-     *  - `undefined`: render pass does not render to any render target
-     *  - `null`: render pass renders to the backbuffer
-     *  - Otherwise, renders to the provided RT.
-     * @type {import('../graphics/render-target.js').RenderTarget|null|undefined}
+     *
+     * - `undefined`: render pass does not render to any render target
+     * - `null`: render pass renders to the backbuffer
+     * - Otherwise, renders to the provided RT.
+     *
+     * @type {RenderTarget|null|undefined}
      */
     renderTarget;
 
@@ -188,7 +201,7 @@ class RenderPass {
     /**
      * Creates an instance of the RenderPass.
      *
-     * @param {import('../graphics/graphics-device.js').GraphicsDevice} graphicsDevice - The
+     * @param {GraphicsDevice} graphicsDevice - The
      * graphics device.
      */
     constructor(graphicsDevice) {
@@ -201,8 +214,9 @@ class RenderPass {
     }
 
     get name() {
-        if (!this._name)
+        if (!this._name) {
             this._name = this.constructor.name;
+        }
         return this._name;
     }
 
@@ -221,14 +235,13 @@ class RenderPass {
     }
 
     /**
-     * @param {import('../graphics/render-target.js').RenderTarget|null} [renderTarget] - The render
-     * target to render into (output). This function should be called only for render passes which
-     * use render target, or passes which render directly into the default framebuffer, in which
-     * case a null or undefined render target is expected.
+     * @param {RenderTarget|null} [renderTarget] - The render target to render into (output). This
+     * function should be called only for render passes which use render target, or passes which
+     * render directly into the default framebuffer, in which case a null or undefined render
+     * target is expected.
      * @param {object} [options] - Object for passing optional arguments.
-     * @param {import('./texture.js').Texture} [options.resizeSource] - A texture to use as a source
-     * for the automatic render target resize operation. If not provided, no automatic resizing
-     * takes place.
+     * @param {Texture} [options.resizeSource] - A texture to use as a source for the automatic
+     * render target resize operation. If not provided, no automatic resizing takes place.
      * @param {number} [options.scaleX] - The scale factor for the render target width. Defaults to 1.
      * @param {number} [options.scaleY] - The scale factor for the render target height. Defaults to 1.
      */
@@ -326,8 +339,10 @@ class RenderPass {
         const count = this.colorArrayOps.length;
         for (let i = 0; i < count; i++) {
             const colorOps = this.colorArrayOps[i];
-            if (color)
+            if (color) {
                 colorOps.clearValue.copy(color);
+                colorOps.clearValueLinear.linear(color);
+            }
             colorOps.clear = !!color;
         }
     }
@@ -339,20 +354,22 @@ class RenderPass {
      * the existing content.
      */
     setClearDepth(depthValue) {
-        if (depthValue)
+        if (depthValue) {
             this.depthStencilOps.clearDepthValue = depthValue;
+        }
         this.depthStencilOps.clearDepth = depthValue !== undefined;
     }
 
     /**
      * Mark render pass as clearing the full stencil buffer.
      *
-     * @param {number|undefined} stencilValue - The stencil value to clear to, or undefined to preserve the
-     * existing content.
+     * @param {number|undefined} stencilValue - The stencil value to clear to, or undefined to
+     * preserve the existing content.
      */
     setClearStencil(stencilValue) {
-        if (stencilValue)
+        if (stencilValue) {
             this.depthStencilOps.clearStencilValue = stencilValue;
+        }
         this.depthStencilOps.clearStencil = stencilValue !== undefined;
     }
 
@@ -405,12 +422,12 @@ class RenderPass {
                 `${hasDepth ? '[Depth]' : ''}` +
                 `${hasStencil ? '[Stencil]' : ''}` +
                 ` ${rt.width} x ${rt.height}` +
-                `${(this.samples > 0 ? ' samples: ' + this.samples : '')}`;
+                `${(this.samples > 0 ? ` samples: ${this.samples}` : '')}`;
 
             Debug.trace(TRACEID_RENDER_PASS,
-                        `${index.toString().padEnd(2, ' ')}: ${this.name.padEnd(20, ' ')}` +
-                        `${this.executeEnabled ? '' : ' DISABLED '}` +
-                        rtInfo.padEnd(30));
+                `${index.toString().padEnd(2, ' ')}: ${this.name.padEnd(20, ' ')}` +
+                        `${this.executeEnabled ? '' : ' DISABLED '}${
+                            rtInfo.padEnd(30)}`);
 
             for (let i = 0; i < numColor; i++) {
                 const colorOps = this.colorArrayOps[i];
@@ -424,13 +441,13 @@ class RenderPass {
             if (this.depthStencilOps) {
 
                 if (hasDepth) {
-                    Debug.trace(TRACEID_RENDER_PASS_DETAIL, `    depthOps: ` +
+                    Debug.trace(TRACEID_RENDER_PASS_DETAIL, '    depthOps: ' +
                                 `${this.depthStencilOps.clearDepth ? 'clear' : 'load'}->` +
                                 `${this.depthStencilOps.storeDepth ? 'store' : 'discard'}`);
                 }
 
                 if (hasStencil) {
-                    Debug.trace(TRACEID_RENDER_PASS_DETAIL, `    stencOps: ` +
+                    Debug.trace(TRACEID_RENDER_PASS_DETAIL, '    stencOps: ' +
                                 `${this.depthStencilOps.clearStencil ? 'clear' : 'load'}->` +
                                 `${this.depthStencilOps.storeStencil ? 'store' : 'discard'}`);
                 }
@@ -440,4 +457,4 @@ class RenderPass {
     // #endif
 }
 
-export { RenderPass, ColorAttachmentOps, DepthStencilAttachmentOps };
+export { RenderPass };

@@ -6,15 +6,21 @@ import { Quat } from '../core/math/quat.js';
 import { math } from '../core/math/math.js';
 import { Mat3 } from '../core/math/mat3.js';
 import { Mat4 } from '../core/math/mat4.js';
-
 import { PIXELFORMAT_RGBA8, ADDRESS_CLAMP_TO_EDGE, FILTER_LINEAR } from '../platform/graphics/constants.js';
-
-import { BAKE_COLORDIR, FOG_NONE, LAYERID_IMMEDIATE } from './constants.js';
+import { BAKE_COLORDIR, LAYERID_IMMEDIATE } from './constants.js';
 import { LightingParams } from './lighting/lighting-params.js';
 import { Sky } from './skybox/sky.js';
 import { Immediate } from './immediate/immediate.js';
 import { EnvLighting } from './graphics/env-lighting.js';
 import { RenderingParams } from './renderer/rendering-params.js';
+
+/**
+ * @import { Entity } from '../framework/entity.js'
+ * @import { GraphicsDevice } from '../platform/graphics/graphics-device.js'
+ * @import { LayerComposition } from './composition/layer-composition.js'
+ * @import { Layer } from './layer.js'
+ * @import { Texture } from '../platform/graphics/texture.js'
+ */
 
 /**
  * A scene is graphical representation of an environment. It manages the scene hierarchy, all
@@ -77,12 +83,12 @@ class Scene extends EventHandler {
      */
     ambientBakeOcclusionBrightness = 0;
 
-     /**
-      * If {@link Scene#ambientBake} is true, this specifies the contrast of ambient occlusion.
-      * Typical range is -1 to 1. Defaults to 0, representing no change to contrast.
-      *
-      * @type {number}
-      */
+    /**
+     * If {@link Scene#ambientBake} is true, this specifies the contrast of ambient occlusion.
+     * Typical range is -1 to 1. Defaults to 0, representing no change to contrast.
+     *
+     * @type {number}
+     */
     ambientBakeOcclusionContrast = 0;
 
     /**
@@ -106,37 +112,6 @@ class Scene extends EventHandler {
      * @type {number}
      */
     exposure = 1;
-
-    /**
-     * The color of the fog (if enabled), specified in sRGB color space. Defaults to black (0, 0, 0).
-     *
-     * @type {Color}
-     */
-    fogColor = new Color(0, 0, 0);
-
-    /**
-     * The density of the fog (if enabled). This property is only valid if the fog property is set
-     * to {@link FOG_EXP} or {@link FOG_EXP2}. Defaults to 0.
-     *
-     * @type {number}
-     */
-    fogDensity = 0;
-
-    /**
-     * The distance from the viewpoint where linear fog reaches its maximum. This property is only
-     * valid if the fog property is set to {@link FOG_LINEAR}. Defaults to 1000.
-     *
-     * @type {number}
-     */
-    fogEnd = 1000;
-
-    /**
-     * The distance from the viewpoint where linear fog begins. This property is only valid if the
-     * fog property is set to {@link FOG_LINEAR}. Defaults to 1.
-     *
-     * @type {number}
-     */
-    fogStart = 1;
 
     /**
      * The lightmap resolution multiplier. Defaults to 1.
@@ -189,7 +164,7 @@ class Scene extends EventHandler {
      * The root entity of the scene, which is usually the only child to the {@link Application}
      * root entity.
      *
-     * @type {import('../framework/entity.js').Entity}
+     * @type {Entity}
      */
     root = null;
 
@@ -203,7 +178,7 @@ class Scene extends EventHandler {
     /**
      * Environment lighting atlas
      *
-     * @type {import('../platform/graphics/texture.js').Texture|null}
+     * @type {Texture|null}
      * @private
      */
     _envAtlas = null;
@@ -211,7 +186,7 @@ class Scene extends EventHandler {
     /**
      * The skybox cubemap as set by user (gets used when skyboxMip === 0)
      *
-     * @type {import('../platform/graphics/texture.js').Texture|null}
+     * @type {Texture|null}
      * @private
      */
     _skyboxCubeMap = null;
@@ -226,30 +201,27 @@ class Scene extends EventHandler {
     /**
      * Create a new Scene instance.
      *
-     * @param {import('../platform/graphics/graphics-device.js').GraphicsDevice} graphicsDevice -
-     * The graphics device used to manage this scene.
+     * @param {GraphicsDevice} graphicsDevice - The graphics device used to manage this scene.
      * @ignore
      */
     constructor(graphicsDevice) {
         super();
 
-        Debug.assert(graphicsDevice, "Scene constructor takes a GraphicsDevice as a parameter, and it was not provided.");
+        Debug.assert(graphicsDevice, 'Scene constructor takes a GraphicsDevice as a parameter, and it was not provided.');
         this.device = graphicsDevice;
 
         this._gravity = new Vec3(0, -9.8, 0);
 
         /**
-         * @type {import('./composition/layer-composition.js').LayerComposition}
+         * @type {LayerComposition}
          * @private
          */
         this._layers = null;
 
-        this._fog = FOG_NONE;
-
         /**
          * Array of 6 prefiltered lighting data cubemaps.
          *
-         * @type {import('../platform/graphics/texture.js').Texture[]}
+         * @type {Texture[]}
          * @private
          */
         this._prefilteredCubemaps = [];
@@ -308,7 +280,7 @@ class Scene extends EventHandler {
     /**
      * Gets the default layer used by the immediate drawing functions.
      *
-     * @type {import('./layer.js').Layer}
+     * @type {Layer}
      * @ignore
      */
     get defaultDrawLayer() {
@@ -390,7 +362,7 @@ class Scene extends EventHandler {
     /**
      * Sets the environment lighting atlas.
      *
-     * @type {import('../platform/graphics/texture.js').Texture}
+     * @type {Texture}
      */
     set envAtlas(value) {
         if (value !== this._envAtlas) {
@@ -418,44 +390,16 @@ class Scene extends EventHandler {
     /**
      * Gets the environment lighting atlas.
      *
-     * @type {import('../platform/graphics/texture.js').Texture}
+     * @type {Texture}
      */
     get envAtlas() {
         return this._envAtlas;
     }
 
     /**
-     * Sets the type of fog used by the scene. Can be:
-     *
-     * - {@link FOG_NONE}
-     * - {@link FOG_LINEAR}
-     * - {@link FOG_EXP}
-     * - {@link FOG_EXP2}
-     *
-     * Defaults to {@link FOG_NONE}.
-     *
-     * @type {string}
-     */
-    set fog(type) {
-        if (type !== this._fog) {
-            this._fog = type;
-            this.updateShaders = true;
-        }
-    }
-
-    /**
-     * Gets the type of fog used by the scene.
-     *
-     * @type {string}
-     */
-    get fog() {
-        return this._fog;
-    }
-
-    /**
      * Sets the {@link LayerComposition} that defines rendering order of this scene.
      *
-     * @type {import('./composition/layer-composition.js').LayerComposition}
+     * @type {LayerComposition}
      */
     set layers(layers) {
         const prev = this._layers;
@@ -466,7 +410,7 @@ class Scene extends EventHandler {
     /**
      * Gets the {@link LayerComposition} that defines rendering order of this scene.
      *
-     * @type {import('./composition/layer-composition.js').LayerComposition}
+     * @type {LayerComposition}
      */
     get layers() {
         return this._layers;
@@ -537,7 +481,7 @@ class Scene extends EventHandler {
     /**
      * Sets the 6 prefiltered cubemaps acting as the source of image-based lighting.
      *
-     * @type {import('../platform/graphics/texture.js').Texture[]}
+     * @type {Texture[]}
      */
     set prefilteredCubemaps(value) {
         value = value || [];
@@ -570,7 +514,7 @@ class Scene extends EventHandler {
     /**
      * Gets the 6 prefiltered cubemaps acting as the source of image-based lighting.
      *
-     * @type {import('../platform/graphics/texture.js').Texture[]}
+     * @type {Texture[]}
      */
     get prefilteredCubemaps() {
         return this._prefilteredCubemaps;
@@ -579,7 +523,7 @@ class Scene extends EventHandler {
     /**
      * Sets the base cubemap texture used as the scene's skybox when skyboxMip is 0. Defaults to null.
      *
-     * @type {import('../platform/graphics/texture.js').Texture}
+     * @type {Texture}
      */
     set skybox(value) {
         if (value !== this._skyboxCubeMap) {
@@ -591,7 +535,7 @@ class Scene extends EventHandler {
     /**
      * Gets the base cubemap texture used as the scene's skybox when skyboxMip is 0.
      *
-     * @type {import('../platform/graphics/texture.js').Texture}
+     * @type {Texture}
      */
     get skybox() {
         return this._skyboxCubeMap;
@@ -725,11 +669,11 @@ class Scene extends EventHandler {
         this._gravity.set(physics.gravity[0], physics.gravity[1], physics.gravity[2]);
         this.ambientLight.set(render.global_ambient[0], render.global_ambient[1], render.global_ambient[2]);
         this.ambientLuminance = render.ambientLuminance;
-        this._fog = render.fog;
-        this.fogColor.set(render.fog_color[0], render.fog_color[1], render.fog_color[2]);
-        this.fogStart = render.fog_start;
-        this.fogEnd = render.fog_end;
-        this.fogDensity = render.fog_density;
+        this._renderingParams.fog = render.fog;
+        this._renderingParams.fogColor.set(render.fog_color[0], render.fog_color[1], render.fog_color[2]);
+        this._renderingParams.fogStart = render.fog_start;
+        this._renderingParams.fogEnd = render.fog_end;
+        this._renderingParams.fogDensity = render.fog_density;
         this._renderingParams.gammaCorrection = render.gamma_correction;
         this._renderingParams.toneMapping = render.tonemapping;
         this.lightmapSizeMultiplier = render.lightmapSizeMultiplier;
@@ -801,12 +745,11 @@ class Scene extends EventHandler {
     /**
      * Sets the cubemap for the scene skybox.
      *
-     * @param {import('../platform/graphics/texture.js').Texture[]} [cubemaps] - An array of
-     * cubemaps corresponding to the skybox at different mip levels. If undefined, scene will
-     * remove skybox. Cubemap array should be of size 7, with the first element (index 0)
-     * corresponding to the base cubemap (mip level 0) with original resolution. Each remaining
-     * element (index 1-6) corresponds to a fixed prefiltered resolution (128x128, 64x64, 32x32,
-     * 16x16, 8x8, 4x4).
+     * @param {Texture[]} [cubemaps] - An array of cubemaps corresponding to the skybox at
+     * different mip levels. If undefined, scene will remove skybox. Cubemap array should be of
+     * size 7, with the first element (index 0) corresponding to the base cubemap (mip level 0)
+     * with original resolution. Each remaining element (index 1-6) corresponds to a fixed
+     * prefiltered resolution (128x128, 64x64, 32x32, 16x16, 8x8, 4x4).
      */
     setSkybox(cubemaps) {
         if (!cubemaps) {

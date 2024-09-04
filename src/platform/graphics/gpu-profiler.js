@@ -1,11 +1,9 @@
-import { TRACEID_GPU_TIMINGS } from "../../core/constants.js";
-import { Debug } from "../../core/debug.js";
-import { Tracing } from "../../core/tracing.js";
+import { TRACEID_GPU_TIMINGS } from '../../core/constants.js';
+import { Debug } from '../../core/debug.js';
+import { Tracing } from '../../core/tracing.js';
 
 /**
  * Base class of a simple GPU profiler.
- *
- * @ignore
  */
 class GpuProfiler {
     /**
@@ -32,13 +30,15 @@ class GpuProfiler {
 
     /**
      * The enable request for the next frame.
-     * @ignore
+     *
+     * @private
      */
     _enableRequest = false;
 
     /**
-     * The time it took to render the last frame on GPU, or 0 if the profiler is not enabled
-     * @ignore
+     * The time it took to render the last frame on GPU, or 0 if the profiler is not enabled.
+     *
+     * @private
      */
     _frameTime = 0;
 
@@ -100,6 +100,7 @@ class GpuProfiler {
     /**
      * Allocate a slot for GPU timing during the frame. This slot is valid only for the current
      * frame. This allows multiple timers to be used during the frame, each with a unique name.
+     *
      * @param {string} name - The name of the slot.
      * @returns {number} The assigned slot index.
      * @ignore

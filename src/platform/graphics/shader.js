@@ -3,6 +3,13 @@ import { Debug } from '../../core/debug.js';
 import { platform } from '../../core/platform.js';
 import { Preprocessor } from '../../core/preprocessor.js';
 import { DebugGraphics } from './debug-graphics.js';
+import { ShaderUtils } from './shader-utils.js';
+
+/**
+ * @import { BindGroupFormat } from './bind-group-format.js'
+ * @import { GraphicsDevice } from './graphics-device.js'
+ * @import { UniformBufferFormat } from './uniform-buffer-format.js'
+ */
 
 let id = 0;
 
@@ -20,7 +27,7 @@ class Shader {
     /**
      * Format of the uniform buffer for mesh bind group.
      *
-     * @type {import('./uniform-buffer-format.js').UniformBufferFormat}
+     * @type {UniformBufferFormat}
      * @ignore
      */
     meshUniformBufferFormat;
@@ -28,7 +35,7 @@ class Shader {
     /**
      * Format of the bind group for the mesh bind group.
      *
-     * @type {import('./bind-group-format.js').BindGroupFormat}
+     * @type {BindGroupFormat}
      * @ignore
      */
     meshBindGroupFormat;
@@ -39,14 +46,13 @@ class Shader {
      * Consider {@link createShaderFromCode} as a simpler and more powerful way to create
      * a shader.
      *
-     * @param {import('./graphics-device.js').GraphicsDevice} graphicsDevice - The graphics device
-     * used to manage this shader.
+     * @param {GraphicsDevice} graphicsDevice - The graphics device used to manage this shader.
      * @param {object} definition - The shader definition from which to build the shader.
      * @param {string} [definition.name] - The name of the shader.
      * @param {Object<string, string>} [definition.attributes] - Object detailing the mapping of
      * vertex shader attribute names to semantics SEMANTIC_*. This enables the engine to match
-     * vertex buffer data as inputs to the shader. When not specified, rendering without
-     * vertex buffer is assumed.
+     * vertex buffer data as inputs to the shader. When not specified, rendering without vertex
+     * buffer is assumed.
      * @param {string} [definition.vshader] - Vertex shader source (GLSL code). Optional when
      * compute shader is specified.
      * @param {string} [definition.fshader] - Fragment shader source (GLSL code). Optional when
@@ -113,6 +119,9 @@ class Shader {
 
             // pre-process shader sources
             definition.vshader = Preprocessor.run(definition.vshader, definition.vincludes);
+
+            // if not attributes are specified, try to extract the default names after the shader has been pre-processed
+            definition.attributes ??= ShaderUtils.collectAttributes(definition.vshader);
 
             // Strip unused color attachments from fragment shader.
             // Note: this is only needed for iOS 15 on WebGL2 where there seems to be a bug where color attachments that are not

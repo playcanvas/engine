@@ -54,7 +54,7 @@ class LocalizedAsset extends EventHandler {
         }
 
         if (this._localizedAsset) {
-            this._app.assets.off('add:' + this._localizedAsset, this._onLocalizedAssetAdd, this);
+            this._app.assets.off(`add:${this._localizedAsset}`, this._onLocalizedAssetAdd, this);
             this._unbindLocalizedAsset();
         }
 
@@ -63,7 +63,7 @@ class LocalizedAsset extends EventHandler {
         if (this._localizedAsset) {
             const asset = this._app.assets.get(this._localizedAsset);
             if (!asset) {
-                this._app.assets.once('add:' + this._localizedAsset, this._onLocalizedAssetAdd, this);
+                this._app.assets.once(`add:${this._localizedAsset}`, this._onLocalizedAssetAdd, this);
             } else {
                 this._bindLocalizedAsset();
             }
@@ -105,7 +105,7 @@ class LocalizedAsset extends EventHandler {
     _bindDefaultAsset() {
         const asset = this._app.assets.get(this._defaultAsset);
         if (!asset) {
-            this._app.assets.once('add:' + this._defaultAsset, this._onDefaultAssetAdd, this);
+            this._app.assets.once(`add:${this._defaultAsset}`, this._onDefaultAssetAdd, this);
         } else {
             this._onDefaultAssetAdd(asset);
         }
@@ -114,7 +114,7 @@ class LocalizedAsset extends EventHandler {
     _unbindDefaultAsset() {
         if (!this._defaultAsset) return;
 
-        this._app.assets.off('add:' + this._defaultAsset, this._onDefaultAssetAdd, this);
+        this._app.assets.off(`add:${this._defaultAsset}`, this._onDefaultAssetAdd, this);
 
         const asset = this._app.assets.get(this._defaultAsset);
         if (!asset) return;
@@ -136,7 +136,7 @@ class LocalizedAsset extends EventHandler {
         if (this._defaultAsset !== asset.id) return;
         asset.off('add:localized', this._onLocaleAdd, this);
         asset.off('remove:localized', this._onLocaleAdd, this);
-        this._app.assets.once('add:' + this._defaultAsset, this._onDefaultAssetAdd, this);
+        this._app.assets.once(`add:${this._defaultAsset}`, this._onDefaultAssetAdd, this);
     }
 
     _bindLocalizedAsset() {

@@ -5,11 +5,11 @@ import { Vec4 } from '../../../src/core/math/vec4.js';
 
 import { expect } from 'chai';
 
-describe('Mat4', function () {
+describe('Mat4', () => {
 
-    describe('#data', function () {
+    describe('#data', () => {
 
-        it('is a Float32Array of length 16', function () {
+        it('is a Float32Array of length 16', () => {
             const m = new Mat4();
             expect(m.data).to.be.an.instanceof(Float32Array);
             expect(m.data).to.have.length(16);
@@ -17,9 +17,9 @@ describe('Mat4', function () {
 
     });
 
-    describe('#constructor()', function () {
+    describe('#constructor()', () => {
 
-        it('creates an identity matrix', function () {
+        it('creates an identity matrix', () => {
             const m = new Mat4();
             const identity = new Float32Array([1, 0, 0, 0, 0, 1, 0, 0, 0, 0, 1, 0, 0, 0, 0, 1]);
             expect(m.data).to.deep.equal(identity);
@@ -27,9 +27,9 @@ describe('Mat4', function () {
 
     });
 
-    describe('#add()', function () {
+    describe('#add()', () => {
 
-        it('adds one matrix to another in place', function () {
+        it('adds one matrix to another in place', () => {
             const m1 = new Mat4();
             m1.set([0, 1, 2, 3, 4, 5, 6, 7, 8, 9, 10, 11, 12, 13, 14, 15]);
             const m2 = new Mat4();
@@ -39,7 +39,7 @@ describe('Mat4', function () {
             expect(m1.data).to.deep.equal(result);
         });
 
-        it('returns this', function () {
+        it('returns this', () => {
             const m1 = new Mat4();
             const m2 = new Mat4();
             expect(m1.add(m2)).to.equal(m1);
@@ -47,9 +47,9 @@ describe('Mat4', function () {
 
     });
 
-    describe('#add2()', function () {
+    describe('#add2()', () => {
 
-        it('adds two matrices together and writes result to a third matrix', function () {
+        it('adds two matrices together and writes result to a third matrix', () => {
             const m1 = new Mat4();
             m1.set([0, 1, 2, 3, 4, 5, 6, 7, 8, 9, 10, 11, 12, 13, 14, 15]);
             const m2 = new Mat4();
@@ -60,7 +60,7 @@ describe('Mat4', function () {
             expect(m3.data).to.deep.equal(result);
         });
 
-        it('returns this', function () {
+        it('returns this', () => {
             const m1 = new Mat4();
             const m2 = new Mat4();
             const m3 = new Mat4();
@@ -69,16 +69,16 @@ describe('Mat4', function () {
 
     });
 
-    describe('#clone()', function () {
+    describe('#clone()', () => {
 
-        it('clones a matrix', function () {
+        it('clones a matrix', () => {
             const m1 = new Mat4();
             m1.set([0, 1, 2, 3, 4, 5, 6, 7, 8, 9, 10, 11, 12, 13, 14, 15]);
             const m2 = m1.clone();
             expect(m2.data).to.deep.equal(m1.data);
         });
 
-        it('ensures that an instance of a subclass keeps its class prototype', function () {
+        it('ensures that an instance of a subclass keeps its class prototype', () => {
             class UserMat4 extends Mat4 {}
             const a = new UserMat4();
             const b = a.clone();
@@ -87,9 +87,9 @@ describe('Mat4', function () {
 
     });
 
-    describe('#copy()', function () {
+    describe('#copy()', () => {
 
-        it('copies a matrix', function () {
+        it('copies a matrix', () => {
             const m1 = new Mat4();
             m1.set([0, 1, 2, 3, 4, 5, 6, 7, 8, 9, 10, 11, 12, 13, 14, 15]);
             const m2 = new Mat4();
@@ -97,7 +97,7 @@ describe('Mat4', function () {
             expect(m2.data).to.deep.equal(m1.data);
         });
 
-        it('returns this', function () {
+        it('returns this', () => {
             const m1 = new Mat4();
             const m2 = new Mat4();
             expect(m2.copy(m1)).to.equal(m2);
@@ -105,9 +105,9 @@ describe('Mat4', function () {
 
     });
 
-    describe('#equals()', function () {
+    describe('#equals()', () => {
 
-        it('checks for equality', function () {
+        it('checks for equality', () => {
             const m1 = new Mat4();
             m1.set([0, 1, 2, 3, 4, 5, 6, 7, 8, 9, 10, 11, 12, 13, 14, 15]);
             const m2 = new Mat4();
@@ -120,9 +120,9 @@ describe('Mat4', function () {
 
     });
 
-    describe('#getEulerAngles()', function () {
+    describe('#getEulerAngles()', () => {
 
-        it('gets euler angles from an identity matrix', function () {
+        it('gets euler angles from an identity matrix', () => {
             const m = new Mat4();
             const angles = m.getEulerAngles();
             expect(angles.x).to.equal(0);
@@ -130,7 +130,7 @@ describe('Mat4', function () {
             expect(angles.z).to.equal(0);
         });
 
-        it('gets euler angles from an identity matrix (no allocation)', function () {
+        it('gets euler angles from an identity matrix (no allocation)', () => {
             const m = new Mat4();
             const angles = new Vec3();
             m.getEulerAngles(angles);
@@ -139,7 +139,7 @@ describe('Mat4', function () {
             expect(angles.z).to.equal(0);
         });
 
-        it('gets a 90 rotation around x', function () {
+        it('gets a 90 rotation around x', () => {
             const m = new Mat4();
             m.set([1, 0, 0, 0, 0, 0, 1, 0, 0, -1, 0, 0, 0, 0, 0, 1]);
             const angles = m.getEulerAngles();
@@ -148,7 +148,7 @@ describe('Mat4', function () {
             expect(angles.z).to.equal(0);
         });
 
-        it('gets a -45 rotation around x', function () {
+        it('gets a -45 rotation around x', () => {
             const m = new Mat4();
             m.set([1, 0, 0, 0, 0, 0.7071067811865476, -0.7071067811865476, 0, 0, 0.7071067811865476, 0.7071067811865476, 0, 0, 0, 0, 1]);
             const angles = m.getEulerAngles();
@@ -157,7 +157,7 @@ describe('Mat4', function () {
             expect(angles.z).to.be.closeTo(0, 0.00001);
         });
 
-        it('gets a -45 rotation around y', function () {
+        it('gets a -45 rotation around y', () => {
             const m = new Mat4();
             m.set([0.7071067811865476, 0, 0.7071067811865476, 0, 0, 1, 0, 0, -0.7071067811865476, 0, 0.7071067811865476, 0, 0, 0, 0, 1]);
             const angles = m.getEulerAngles();
@@ -166,7 +166,7 @@ describe('Mat4', function () {
             expect(angles.z).to.be.closeTo(0, 0.00001);
         });
 
-        it('gets a -45 rotation around z', function () {
+        it('gets a -45 rotation around z', () => {
             const m = new Mat4();
             m.set([0.7071067811865476, -0.7071067811865476, 0, 0, 0.7071067811865476, 0.7071067811865476, 0, 0, 0, 0, 1, 0, 0, 0, 0, 1]);
             const angles = m.getEulerAngles();
@@ -177,9 +177,9 @@ describe('Mat4', function () {
 
     });
 
-    describe('#getScale()', function () {
+    describe('#getScale()', () => {
 
-        it('gets scale from an identity matrix', function () {
+        it('gets scale from an identity matrix', () => {
             const m = new Mat4();
             const scale = m.getScale();
             expect(scale.x).to.equal(1);
@@ -187,7 +187,7 @@ describe('Mat4', function () {
             expect(scale.z).to.equal(1);
         });
 
-        it('gets scale from an identity matrix (no allocation)', function () {
+        it('gets scale from an identity matrix (no allocation)', () => {
             const m = new Mat4();
             const scale = new Vec3();
             m.getScale(scale);
@@ -196,7 +196,7 @@ describe('Mat4', function () {
             expect(scale.z).to.equal(1);
         });
 
-        it('gets scale from a scaled matrix', function () {
+        it('gets scale from a scaled matrix', () => {
             const m = new Mat4();
             m.set([2, 0, 0, 0, 0, 2, 0, 0, 0, 0, 2, 0, 0, 0, 0, 1]);
             const scale = m.getScale();
@@ -205,7 +205,7 @@ describe('Mat4', function () {
             expect(scale.z).to.equal(2);
         });
 
-        it('gets scale from a scaled matrix (no allocation)', function () {
+        it('gets scale from a scaled matrix (no allocation)', () => {
             const m = new Mat4();
             m.set([2, 0, 0, 0, 0, 2, 0, 0, 0, 0, 2, 0, 0, 0, 0, 1]);
             const scale = new Vec3();
@@ -217,9 +217,9 @@ describe('Mat4', function () {
 
     });
 
-    describe('#getTranslation()', function () {
+    describe('#getTranslation()', () => {
 
-        it('gets translation from an identity matrix', function () {
+        it('gets translation from an identity matrix', () => {
             const m = new Mat4();
             const translation = m.getTranslation();
             expect(translation.x).to.equal(0);
@@ -227,7 +227,7 @@ describe('Mat4', function () {
             expect(translation.z).to.equal(0);
         });
 
-        it('gets translation from an identity matrix (no allocation)', function () {
+        it('gets translation from an identity matrix (no allocation)', () => {
             const m = new Mat4();
             const translation = new Vec3();
             m.getTranslation(translation);
@@ -236,7 +236,7 @@ describe('Mat4', function () {
             expect(translation.z).to.equal(0);
         });
 
-        it('gets translation from a translated matrix', function () {
+        it('gets translation from a translated matrix', () => {
             const m = new Mat4();
             m.set([1, 0, 0, 0, 0, 1, 0, 0, 0, 0, 1, 0, 10, 20, 30, 1]);
             const translation = m.getTranslation();
@@ -245,7 +245,7 @@ describe('Mat4', function () {
             expect(translation.z).to.equal(30);
         });
 
-        it('gets translation from a translated matrix (no allocation)', function () {
+        it('gets translation from a translated matrix (no allocation)', () => {
             const m = new Mat4();
             m.set([1, 0, 0, 0, 0, 1, 0, 0, 0, 0, 1, 0, 10, 20, 30, 1]);
             const translation = new Vec3();
@@ -257,9 +257,9 @@ describe('Mat4', function () {
 
     });
 
-    describe('#getX()', function () {
+    describe('#getX()', () => {
 
-        it('gets x axis from a matrix', function () {
+        it('gets x axis from a matrix', () => {
             const m = new Mat4();
             m.set([0, 1, 2, 3, 4, 5, 6, 7, 8, 9, 10, 11, 12, 13, 14, 15]);
             const axis = m.getX();
@@ -268,7 +268,7 @@ describe('Mat4', function () {
             expect(axis.z).to.equal(2);
         });
 
-        it('gets x axis from a matrix (no allocation)', function () {
+        it('gets x axis from a matrix (no allocation)', () => {
             const m = new Mat4();
             m.set([0, 1, 2, 3, 4, 5, 6, 7, 8, 9, 10, 11, 12, 13, 14, 15]);
             const axis = new Vec3();
@@ -280,9 +280,9 @@ describe('Mat4', function () {
 
     });
 
-    describe('#getY()', function () {
+    describe('#getY()', () => {
 
-        it('gets y axis from a matrix', function () {
+        it('gets y axis from a matrix', () => {
             const m = new Mat4();
             m.set([0, 1, 2, 3, 4, 5, 6, 7, 8, 9, 10, 11, 12, 13, 14, 15]);
             const axis = m.getY();
@@ -291,7 +291,7 @@ describe('Mat4', function () {
             expect(axis.z).to.equal(6);
         });
 
-        it('gets y axis from a matrix (no allocation)', function () {
+        it('gets y axis from a matrix (no allocation)', () => {
             const m = new Mat4();
             m.set([0, 1, 2, 3, 4, 5, 6, 7, 8, 9, 10, 11, 12, 13, 14, 15]);
             const axis = new Vec3();
@@ -303,9 +303,9 @@ describe('Mat4', function () {
 
     });
 
-    describe('#getZ()', function () {
+    describe('#getZ()', () => {
 
-        it('gets z axis from a matrix', function () {
+        it('gets z axis from a matrix', () => {
             const m = new Mat4();
             m.set([0, 1, 2, 3, 4, 5, 6, 7, 8, 9, 10, 11, 12, 13, 14, 15]);
             const axis = m.getZ();
@@ -314,7 +314,7 @@ describe('Mat4', function () {
             expect(axis.z).to.equal(10);
         });
 
-        it('gets z axis from a matrix (no allocation)', function () {
+        it('gets z axis from a matrix (no allocation)', () => {
             const m = new Mat4();
             m.set([0, 1, 2, 3, 4, 5, 6, 7, 8, 9, 10, 11, 12, 13, 14, 15]);
             const axis = new Vec3();
@@ -326,15 +326,15 @@ describe('Mat4', function () {
 
     });
 
-    describe('#invert()', function () {
+    describe('#invert()', () => {
 
-        it('inverts an identity matrix to the identity matrix', function () {
+        it('inverts an identity matrix to the identity matrix', () => {
             const m = new Mat4();
             m.invert();
             expect(m.isIdentity()).to.be.true;
         });
 
-        it('inverts a translation matrix to the inverse translation matrix', function () {
+        it('inverts a translation matrix to the inverse translation matrix', () => {
             const m = new Mat4();
             m.set([1, 0, 0, 0, 0, 1, 0, 0, 0, 0, 1, 0, 10, 20, 30, 1]);
             m.invert();
@@ -343,7 +343,7 @@ describe('Mat4', function () {
             expect(m.data).to.deep.equal(new Float32Array(result));
         });
 
-        it('inverts a translation matrix to the inverse translation matrix given a source matrix', function () {
+        it('inverts a translation matrix to the inverse translation matrix given a source matrix', () => {
             const m = new Mat4();
             m.set([1, 0, 0, 0, 0, 1, 0, 0, 0, 0, 1, 0, 10, 20, 30, 1]);
 
@@ -354,21 +354,21 @@ describe('Mat4', function () {
             expect(n.data).to.deep.equal(new Float32Array(result));
         });
 
-        it('returns this', function () {
+        it('returns this', () => {
             const m = new Mat4();
             expect(m.invert()).to.equal(m);
         });
 
     });
 
-    describe('#isIdentity()', function () {
+    describe('#isIdentity()', () => {
 
-        it('returns true for an identity matrix', function () {
+        it('returns true for an identity matrix', () => {
             const m = new Mat4();
             expect(m.isIdentity()).to.be.true;
         });
 
-        it('returns false for a non-identity matrix', function () {
+        it('returns false for a non-identity matrix', () => {
             const m = new Mat4();
             m.set([1, 2, 3, 4, 5, 6, 7, 8, 9, 10, 11, 12, 13, 14, 15, 16]);
             expect(m.isIdentity()).to.be.false;
@@ -376,16 +376,16 @@ describe('Mat4', function () {
 
     });
 
-    describe('#mul()', function () {
+    describe('#mul()', () => {
 
-        it('sets the identity when multiplying the identity by the identity (I * I = I)', function () {
+        it('sets the identity when multiplying the identity by the identity (I * I = I)', () => {
             const m1 = new Mat4();
             const m2 = new Mat4();
             m1.mul(m2);
             expect(m1.isIdentity()).to.be.true;
         });
 
-        it('leaves matrix unchanged when multiplying by the identity ( A * I = A )', function () {
+        it('leaves matrix unchanged when multiplying by the identity ( A * I = A )', () => {
             const m1 = new Mat4();
             const data = [1, 2, 3, 4, 5, 6, 7, 8, 9, 10, 11, 12, 13, 14, 15, 16];
             m1.set(data);
@@ -394,7 +394,7 @@ describe('Mat4', function () {
             expect(m1.data).to.deep.equal(new Float32Array(data));
         });
 
-        it('sets a matrix to the right hand side when left hand side is identity ( I * A = A )', function () {
+        it('sets a matrix to the right hand side when left hand side is identity ( I * A = A )', () => {
             const m1 = new Mat4();
             const m2 = new Mat4();
             const data = [1, 2, 3, 4, 5, 6, 7, 8, 9, 10, 11, 12, 13, 14, 15, 16];
@@ -403,7 +403,7 @@ describe('Mat4', function () {
             expect(m1.data).to.deep.equal(new Float32Array(data));
         });
 
-        it('multiplies an arbitrary matrix with another in place', function () {
+        it('multiplies an arbitrary matrix with another in place', () => {
             const m1 = new Mat4();
             m1.set([1, 2, 3, 4, 5, 6, 7, 8, 9, 10, 11, 12, 13, 14, 15, 16]);
             const m2 = new Mat4();
@@ -413,7 +413,7 @@ describe('Mat4', function () {
             expect(m1.data).to.deep.equal(new Float32Array(result));
         });
 
-        it('returns this', function () {
+        it('returns this', () => {
             const m1 = new Mat4();
             const m2 = new Mat4();
             expect(m1.mul(m2)).to.equal(m1);
@@ -421,9 +421,9 @@ describe('Mat4', function () {
 
     });
 
-    describe('#mul2()', function () {
+    describe('#mul2()', () => {
 
-        it('sets the identity when multiplying the identity by the identity (I * I = I)', function () {
+        it('sets the identity when multiplying the identity by the identity (I * I = I)', () => {
             const m1 = new Mat4();
             const m2 = new Mat4();
             const m3 = new Mat4();
@@ -431,7 +431,7 @@ describe('Mat4', function () {
             expect(m1.isIdentity()).to.be.true;
         });
 
-        it('leaves matrix unchanged when multiplying by the identity ( A * I = A )', function () {
+        it('leaves matrix unchanged when multiplying by the identity ( A * I = A )', () => {
             const m1 = new Mat4();
             const m2 = new Mat4();
             const data = [1, 2, 3, 4, 5, 6, 7, 8, 9, 10, 11, 12, 13, 14, 15, 16];
@@ -441,7 +441,7 @@ describe('Mat4', function () {
             expect(m1.data).to.deep.equal(new Float32Array(data));
         });
 
-        it('sets a matrix to the right hand side when left hand side is identity ( I * A = A )', function () {
+        it('sets a matrix to the right hand side when left hand side is identity ( I * A = A )', () => {
             const m1 = new Mat4();
             const m2 = new Mat4();
             const m3 = new Mat4();
@@ -451,7 +451,7 @@ describe('Mat4', function () {
             expect(m1.data).to.deep.equal(new Float32Array(data));
         });
 
-        it('multiplies two arbitrary matrices together and writes result to a third', function () {
+        it('multiplies two arbitrary matrices together and writes result to a third', () => {
             const m1 = new Mat4();
             const m2 = new Mat4();
             m2.set([1, 2, 3, 4, 5, 6, 7, 8, 9, 10, 11, 12, 13, 14, 15, 16]);
@@ -462,7 +462,7 @@ describe('Mat4', function () {
             expect(m1.data).to.deep.equal(new Float32Array(result));
         });
 
-        it('returns this', function () {
+        it('returns this', () => {
             const m1 = new Mat4();
             const m2 = new Mat4();
             const m3 = new Mat4();
@@ -471,9 +471,9 @@ describe('Mat4', function () {
 
     });
 
-    describe('#mulAffine2()', function () {
+    describe('#mulAffine2()', () => {
 
-        it('sets the identity when multiplying the identity by the identity (I * I = I)', function () {
+        it('sets the identity when multiplying the identity by the identity (I * I = I)', () => {
             const m1 = new Mat4();
             const m2 = new Mat4();
             const m3 = new Mat4();
@@ -481,7 +481,7 @@ describe('Mat4', function () {
             expect(m1.isIdentity()).to.be.true;
         });
 
-        it('leaves matrix unchanged when multiplying by the identity ( A * I = A )', function () {
+        it('leaves matrix unchanged when multiplying by the identity ( A * I = A )', () => {
             const m1 = new Mat4();
             const m2 = new Mat4();
             const data = [1, 2, 3, 0, 5, 6, 7, 0, 9, 10, 11, 0, 13, 14, 15, 1];
@@ -491,7 +491,7 @@ describe('Mat4', function () {
             expect(m1.data).to.deep.equal(new Float32Array(data));
         });
 
-        it('sets a matrix to the right hand side when left hand side is identity ( I * A = A )', function () {
+        it('sets a matrix to the right hand side when left hand side is identity ( I * A = A )', () => {
             const m1 = new Mat4();
             const m2 = new Mat4();
             const m3 = new Mat4();
@@ -501,7 +501,7 @@ describe('Mat4', function () {
             expect(m1.data).to.deep.equal(new Float32Array(data));
         });
 
-        it('multiplies two arbitrary matrices together and writes result to a third', function () {
+        it('multiplies two arbitrary matrices together and writes result to a third', () => {
             const m1 = new Mat4();
             const m2 = new Mat4();
             m2.set([1, 2, 3, 0, 5, 6, 7, 0, 9, 10, 11, 0, 13, 14, 15, 1]);
@@ -512,7 +512,7 @@ describe('Mat4', function () {
             expect(m1.data).to.deep.equal(new Float32Array(result));
         });
 
-        it('returns this', function () {
+        it('returns this', () => {
             const m1 = new Mat4();
             const m2 = new Mat4();
             const m3 = new Mat4();
@@ -521,16 +521,16 @@ describe('Mat4', function () {
 
     });
 
-    describe('#set()', function () {
+    describe('#set()', () => {
 
-        it('sets a matrix', function () {
+        it('sets a matrix', () => {
             const m = new Mat4();
             const data = [1, 2, 3, 4, 5, 6, 7, 8, 9, 10, 11, 12, 13, 14, 15, 16];
             m.set(data);
             expect(m.data).to.deep.equal(new Float32Array(data));
         });
 
-        it('returns this', function () {
+        it('returns this', () => {
             const m = new Mat4();
             const data = [1, 2, 3, 4, 5, 6, 7, 8, 9, 10, 11, 12, 13, 14, 15, 16];
             expect(m.set(data)).to.equal(m);
@@ -538,15 +538,15 @@ describe('Mat4', function () {
 
     });
 
-    describe('#setFromAxisAngle()', function () {
+    describe('#setFromAxisAngle()', () => {
 
-        it('sets the identity matrix when passing a zero angle', function () {
+        it('sets the identity matrix when passing a zero angle', () => {
             const m = new Mat4();
             m.setFromAxisAngle(Vec3.UP, 0);
             expect(m.isIdentity()).to.be.true;
         });
 
-        it('sets an approximation of the identity matrix when passing a multiple of 360', function () {
+        it('sets an approximation of the identity matrix when passing a multiple of 360', () => {
             const m = new Mat4();
             m.setFromAxisAngle(Vec3.UP, 360);
             expect(m.data[0]).to.be.closeTo(1, 0.001);
@@ -567,7 +567,7 @@ describe('Mat4', function () {
             expect(m.data[15]).to.be.closeTo(1, 0.001);
         });
 
-        it('set a rotation matrix of 90 around the x axis', function () {
+        it('set a rotation matrix of 90 around the x axis', () => {
             const m = new Mat4();
             m.setFromAxisAngle(Vec3.RIGHT, 90);
             expect(m.data[0]).to.be.closeTo(1, 0.001);
@@ -588,22 +588,22 @@ describe('Mat4', function () {
             expect(m.data[15]).to.be.closeTo(1, 0.001);
         });
 
-        it('returns this', function () {
+        it('returns this', () => {
             const m = new Mat4();
             expect(m.setFromAxisAngle(Vec3.UP, 0)).to.equal(m);
         });
 
     });
 
-    describe('#setFromEulerAngles()', function () {
+    describe('#setFromEulerAngles()', () => {
 
-        it('sets the identity matrix when zeros are passed', function () {
+        it('sets the identity matrix when zeros are passed', () => {
             const m = new Mat4();
             m.setFromEulerAngles(0, 0, 0);
             expect(m.isIdentity()).to.be.true;
         });
 
-        it('set a rotation matrix from arbitrary euler angles', function () {
+        it('set a rotation matrix from arbitrary euler angles', () => {
             const m = new Mat4();
             m.setFromEulerAngles(10, 20, 30);
             expect(m.data[0]).to.be.closeTo(0.813797652721405, 0.00001);
@@ -624,16 +624,16 @@ describe('Mat4', function () {
             expect(m.data[15]).to.equal(1);
         });
 
-        it('returns this', function () {
+        it('returns this', () => {
             const m = new Mat4();
             expect(m.setFromEulerAngles(0, 0, 0)).to.equal(m);
         });
 
     });
 
-    describe('#setIdentity()', function () {
+    describe('#setIdentity()', () => {
 
-        it('sets an identity matrix', function () {
+        it('sets an identity matrix', () => {
             const m = new Mat4();
             m.setIdentity();
 
@@ -641,22 +641,22 @@ describe('Mat4', function () {
             expect(m.data).to.deep.equal(identity);
         });
 
-        it('returns this', function () {
+        it('returns this', () => {
             const m = new Mat4();
             expect(m.setIdentity()).to.equal(m);
         });
 
     });
 
-    describe('#setLookAt()', function () {
+    describe('#setLookAt()', () => {
 
-        it('sets the identity matrix when eye is at origin looking down negative z', function () {
+        it('sets the identity matrix when eye is at origin looking down negative z', () => {
             const m = new Mat4();
             m.setLookAt(Vec3.ZERO, Vec3.FORWARD, Vec3.UP);
             expect(m.isIdentity()).to.be.true;
         });
 
-        it('sets matrix translation to eye position', function () {
+        it('sets matrix translation to eye position', () => {
             const m = new Mat4();
             m.setLookAt(new Vec3(10, 20, 30), Vec3.FORWARD, Vec3.UP);
             expect(m.data[12]).to.equal(10);
@@ -664,7 +664,7 @@ describe('Mat4', function () {
             expect(m.data[14]).to.equal(30);
         });
 
-        it('sets matrix from arbitrary inputs', function () {
+        it('sets matrix from arbitrary inputs', () => {
             const m = new Mat4();
             m.setLookAt(new Vec3(10, 20, 30), new Vec3(40, 50, 60), Vec3.RIGHT);
             expect(m.data[0]).to.equal(0);
@@ -685,22 +685,22 @@ describe('Mat4', function () {
             expect(m.data[15]).to.equal(1);
         });
 
-        it('returns this', function () {
+        it('returns this', () => {
             const m = new Mat4();
             expect(m.setLookAt(Vec3.ZERO, Vec3.FORWARD, Vec3.UP)).to.equal(m);
         });
 
     });
 
-    describe('#setOrtho()', function () {
+    describe('#setOrtho()', () => {
 
-        it('sets a normalized orthographic matrix', function () {
+        it('sets a normalized orthographic matrix', () => {
             const m = new Mat4();
             m.setOrtho(-1, 1, -1, 1, 1, -1);
             expect(m.isIdentity()).to.be.true;
         });
 
-        it('sets a non-normalized orthographic matrix', function () {
+        it('sets a non-normalized orthographic matrix', () => {
             const m = new Mat4();
             m.setOrtho(-10, 10, -5, 5, 2, -2);
             expect(m.data[0]).to.be.closeTo(0.1, 0.001);
@@ -723,9 +723,9 @@ describe('Mat4', function () {
 
     });
 
-    describe('#setPerspective()', function () {
+    describe('#setPerspective()', () => {
 
-        it('sets a perspective matrix', function () {
+        it('sets a perspective matrix', () => {
             const m = new Mat4();
             m.setPerspective(90, 1, 1, 10);
             expect(m.data[0]).to.equal(1);
@@ -748,15 +748,15 @@ describe('Mat4', function () {
 
     });
 
-    describe('#setScale()', function () {
+    describe('#setScale()', () => {
 
-        it('sets an identity matrix when ones are passed in', function () {
+        it('sets an identity matrix when ones are passed in', () => {
             const m = new Mat4();
             m.setScale(1, 1, 1);
             expect(m.isIdentity()).to.be.true;
         });
 
-        it('sets a scale matrix', function () {
+        it('sets a scale matrix', () => {
             const m = new Mat4();
             m.setScale(10, 20, 30);
 
@@ -764,22 +764,22 @@ describe('Mat4', function () {
             expect(m.data).to.deep.equal(result);
         });
 
-        it('returns this', function () {
+        it('returns this', () => {
             const m = new Mat4();
             expect(m.setScale(1, 2, 3)).to.equal(m);
         });
 
     });
 
-    describe('#setTranslate()', function () {
+    describe('#setTranslate()', () => {
 
-        it('sets an identity matrix when zeros are passed in', function () {
+        it('sets an identity matrix when zeros are passed in', () => {
             const m = new Mat4();
             m.setTranslate(0, 0, 0);
             expect(m.isIdentity()).to.be.true;
         });
 
-        it('sets a translation matrix', function () {
+        it('sets a translation matrix', () => {
             const m = new Mat4();
             m.setTranslate(1, 2, 3);
 
@@ -787,22 +787,22 @@ describe('Mat4', function () {
             expect(m.data).to.deep.equal(result);
         });
 
-        it('returns this', function () {
+        it('returns this', () => {
             const m = new Mat4();
             expect(m.setTranslate(1, 2, 3)).to.equal(m);
         });
 
     });
 
-    describe('#setTRS()', function () {
+    describe('#setTRS()', () => {
 
-        it('sets a matrix from identity translation, rotation and scale', function () {
+        it('sets a matrix from identity translation, rotation and scale', () => {
             const m = new Mat4();
             m.setTRS(Vec3.ZERO, Quat.IDENTITY, Vec3.ONE);
             expect(m.equals(Mat4.IDENTITY)).to.be.true;
         });
 
-        it('sets a matrix from translation, rotation and scale', function () {
+        it('sets a matrix from translation, rotation and scale', () => {
             const m = new Mat4();
             const t = new Vec3(1, 2, 3);
             const r = new Quat().setFromEulerAngles(10, 20, 30);
@@ -826,32 +826,32 @@ describe('Mat4', function () {
             expect(m.data[15]).to.equal(1);
         });
 
-        it('returns this', function () {
+        it('returns this', () => {
             const m = new Mat4();
             expect(m.setTRS(Vec3.ZERO, Quat.IDENTITY, Vec3.ONE)).to.equal(m);
         });
 
     });
 
-    describe('#toString()', function () {
+    describe('#toString()', () => {
 
-        it('returns a string representation of a matrix', function () {
+        it('returns a string representation of a matrix', () => {
             const m = new Mat4();
             expect(m.toString()).to.equal('[1, 0, 0, 0, 0, 1, 0, 0, 0, 0, 1, 0, 0, 0, 0, 1]');
         });
 
     });
 
-    describe('#transformPoint()', function () {
+    describe('#transformPoint()', () => {
 
-        it('leaves point unchanged when transforming by the identity matrix', function () {
+        it('leaves point unchanged when transforming by the identity matrix', () => {
             const p = new Vec3(1, 2, 3);
             const m = new Mat4();
             const r = m.transformPoint(p);
             expect(p.equals(r)).to.be.true;
         });
 
-        it('leaves point unchanged when transforming by the identity matrix (no allocation)', function () {
+        it('leaves point unchanged when transforming by the identity matrix (no allocation)', () => {
             const p = new Vec3(1, 2, 3);
             const m = new Mat4();
             const r = new Vec3();
@@ -859,7 +859,7 @@ describe('Mat4', function () {
             expect(p.equals(r)).to.be.true;
         });
 
-        it('transforms a point by a 90 degree rotation around the z axis', function () {
+        it('transforms a point by a 90 degree rotation around the z axis', () => {
             const p = new Vec3(1, 0, 0);
             const m = new Mat4();
             const r = new Vec3();
@@ -872,7 +872,7 @@ describe('Mat4', function () {
             expect(r.z).to.be.closeTo(0, 0.00001);
         });
 
-        it('transforms a point by a 90 degree rotation around the z axis (input and output vectors are the same)', function () {
+        it('transforms a point by a 90 degree rotation around the z axis (input and output vectors are the same)', () => {
             const p = new Vec3(1, 0, 0);
             const m = new Mat4();
 
@@ -884,7 +884,7 @@ describe('Mat4', function () {
             expect(p.z).to.be.closeTo(0, 0.00001);
         });
 
-        it('takes translation component of a matrix into account', function () {
+        it('takes translation component of a matrix into account', () => {
             const p = new Vec3(1, 2, 3);
             const m = new Mat4();
             m.setTranslate(10, 20, 30);
@@ -896,16 +896,16 @@ describe('Mat4', function () {
 
     });
 
-    describe('#transformVec4()', function () {
+    describe('#transformVec4()', () => {
 
-        it('leaves vector unchanged when transforming by the identity matrix', function () {
+        it('leaves vector unchanged when transforming by the identity matrix', () => {
             const v = new Vec4(1, 2, 3, 4);
             const m = new Mat4();
             const r = m.transformVec4(v);
             expect(v.equals(r)).to.be.true;
         });
 
-        it('leaves vector unchanged when transforming by the identity matrix (no allocation)', function () {
+        it('leaves vector unchanged when transforming by the identity matrix (no allocation)', () => {
             const v = new Vec4(1, 2, 3, 4);
             const m = new Mat4();
             const r = new Vec4();
@@ -913,7 +913,7 @@ describe('Mat4', function () {
             expect(v.equals(r)).to.be.true;
         });
 
-        it('transforms a vector by a 90 degree rotation around the z axis', function () {
+        it('transforms a vector by a 90 degree rotation around the z axis', () => {
             const v = new Vec4(1, 0, 0, 0);
             const m = new Mat4();
             const r = new Vec4();
@@ -927,7 +927,7 @@ describe('Mat4', function () {
             expect(r.w).to.equal(0);
         });
 
-        it('transforms a vector by a 90 degree rotation around the z axis (input and output vectors are the same)', function () {
+        it('transforms a vector by a 90 degree rotation around the z axis (input and output vectors are the same)', () => {
             const v = new Vec4(1, 0, 0, 0);
             const m = new Mat4();
 
@@ -942,16 +942,16 @@ describe('Mat4', function () {
 
     });
 
-    describe('#transformVector()', function () {
+    describe('#transformVector()', () => {
 
-        it('leaves vector unchanged when transforming by the identity matrix', function () {
+        it('leaves vector unchanged when transforming by the identity matrix', () => {
             const v = new Vec3(1, 2, 3);
             const m = new Mat4();
             const r = m.transformVector(v);
             expect(v.equals(r)).to.be.true;
         });
 
-        it('leaves vector unchanged when transforming by the identity matrix (no allocation)', function () {
+        it('leaves vector unchanged when transforming by the identity matrix (no allocation)', () => {
             const v = new Vec3(1, 2, 3);
             const m = new Mat4();
             const r = new Vec3();
@@ -959,7 +959,7 @@ describe('Mat4', function () {
             expect(v.equals(r)).to.be.true;
         });
 
-        it('transforms a vector by a 90 degree rotation around the z axis', function () {
+        it('transforms a vector by a 90 degree rotation around the z axis', () => {
             const v = new Vec3(1, 0, 0);
             const m = new Mat4();
             const r = new Vec3();
@@ -972,7 +972,7 @@ describe('Mat4', function () {
             expect(r.z).to.be.closeTo(0, 0.00001);
         });
 
-        it('transforms a vector by a 90 degree rotation around the z axis (input and output vectors are the same)', function () {
+        it('transforms a vector by a 90 degree rotation around the z axis (input and output vectors are the same)', () => {
             const v = new Vec3(1, 0, 0);
             const m = new Mat4();
 
@@ -984,7 +984,7 @@ describe('Mat4', function () {
             expect(v.z).to.be.closeTo(0, 0.00001);
         });
 
-        it('ignores the translation component of a matrix', function () {
+        it('ignores the translation component of a matrix', () => {
             const v = new Vec3(1, 2, 3);
             const m = new Mat4();
             m.setTranslate(10, 20, 30);
@@ -994,15 +994,15 @@ describe('Mat4', function () {
 
     });
 
-    describe('#transpose()', function () {
+    describe('#transpose()', () => {
 
-        it('transposes the identity matrix to the identity matrix', function () {
+        it('transposes the identity matrix to the identity matrix', () => {
             const m = new Mat4();
             m.transpose();
             expect(m.isIdentity()).to.be.true;
         });
 
-        it('flips a matrix along its top-left to bottom-right diagonal', function () {
+        it('flips a matrix along its top-left to bottom-right diagonal', () => {
             const m = new Mat4();
             m.set([1, 2, 3, 4, 5, 6, 7, 8, 9, 10, 11, 12, 13, 14, 15, 16]);
             m.transpose();
@@ -1010,7 +1010,7 @@ describe('Mat4', function () {
             expect(m.data).to.deep.equal(new Float32Array(result));
         });
 
-        it('flips a matrix along its top-left to bottom-right diagonal given a source matrix', function () {
+        it('flips a matrix along its top-left to bottom-right diagonal given a source matrix', () => {
             const m = new Mat4();
             m.set([1, 2, 3, 4, 5, 6, 7, 8, 9, 10, 11, 12, 13, 14, 15, 16]);
 
@@ -1021,7 +1021,7 @@ describe('Mat4', function () {
             expect(n.data).to.deep.equal(new Float32Array(result));
         });
 
-        it('returns this', function () {
+        it('returns this', () => {
             const m = new Mat4();
             expect(m.transpose()).to.equal(m);
         });

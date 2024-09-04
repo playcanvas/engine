@@ -1,20 +1,18 @@
 import { Color } from '../../../core/math/color.js';
 import { Vec2 } from '../../../core/math/vec2.js';
 import { Vec4 } from '../../../core/math/vec4.js';
-
-import {
-    PIXELFORMAT_RGBA8
-} from '../../../platform/graphics/constants.js';
+import { PIXELFORMAT_RGBA8 } from '../../../platform/graphics/constants.js';
 import { Texture } from '../../../platform/graphics/texture.js';
-
 import { BLEND_PREMULTIPLIED, SPRITE_RENDERMODE_SLICED, SPRITE_RENDERMODE_TILED } from '../../../scene/constants.js';
 import { StandardMaterial } from '../../../scene/materials/standard-material.js';
-
 import { ComponentSystem } from '../system.js';
-
 import { ELEMENTTYPE_IMAGE, ELEMENTTYPE_TEXT } from './constants.js';
 import { ElementComponent } from './component.js';
 import { ElementComponentData } from './data.js';
+
+/**
+ * @import { AppBase } from '../../app-base.js'
+ */
 
 const _schema = ['enabled'];
 
@@ -27,7 +25,7 @@ class ElementComponentSystem extends ComponentSystem {
     /**
      * Create a new ElementComponentSystem instance.
      *
-     * @param {import('../../app-base.js').AppBase} app - The application.
+     * @param {AppBase} app - The application.
      * @ignore
      */
     constructor(app) {
@@ -343,7 +341,7 @@ class ElementComponentSystem extends ComponentSystem {
             return material;
         }
 
-        let name = "TextMaterial";
+        let name = 'TextMaterial';
 
         material = new StandardMaterial();
 
@@ -352,16 +350,15 @@ class ElementComponentSystem extends ComponentSystem {
             material.msdfTextAttribute = textAttibutes;
             material.emissive.set(1, 1, 1);
         } else {
-            name = "Bitmap" + name;
-            material.emissive.set(0.5, 0.5, 0.5); // set to non-(1,1,1) so that tint is actually applied
+            name = `Bitmap${name}`;
+            material.emissive.set(1, 1, 1);
             material.emissiveMap = this._defaultTexture;
-            material.emissiveTint = true;
             material.opacityMap = this._defaultTexture;
             material.opacityMapChannel = 'a';
         }
 
         if (screenSpace) {
-            name = 'ScreenSpace' + name;
+            name = `ScreenSpace${name}`;
             material.depthTest = false;
         }
 
@@ -370,7 +367,7 @@ class ElementComponentSystem extends ComponentSystem {
         //  defaultBitmapTextMaterial
         //  defaultScreenSpaceTextMaterial
         //  defaultScreenSpaceBitmapTextMaterial
-        material.name = 'default' + name;
+        material.name = `default${name}`;
         material.useLighting = false;
         material.useTonemap = false;
         material.useFog = false;
@@ -391,13 +388,10 @@ class ElementComponentSystem extends ComponentSystem {
         const material = new StandardMaterial();
 
         material.diffuse.set(0, 0, 0); // black diffuse color to prevent ambient light being included
-        material.emissive.set(0.5, 0.5, 0.5); // use non-white to compile shader correctly
+        material.emissive.set(1, 1, 1);
         material.emissiveMap = this._defaultTexture;
-        material.emissiveTint = true;
         material.opacityMap = this._defaultTexture;
         material.opacityMapChannel = 'a';
-        material.opacityTint = true;
-        material.opacity = 0; // use non-1 opacity to compile shader correctly
         material.useLighting = false;
         material.useTonemap = false;
         material.useFog = false;

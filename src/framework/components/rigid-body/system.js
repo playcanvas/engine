@@ -1,15 +1,17 @@
 import { now } from '../../../core/time.js';
 import { ObjectPool } from '../../../core/object-pool.js';
 import { Debug } from '../../../core/debug.js';
-
 import { Vec3 } from '../../../core/math/vec3.js';
-
 import { Component } from '../component.js';
 import { ComponentSystem } from '../system.js';
-
 import { BODYFLAG_NORESPONSE_OBJECT } from './constants.js';
 import { RigidBodyComponent } from './component.js';
 import { RigidBodyComponentData } from './data.js';
+
+/**
+ * @import { AppBase } from '../../app-base.js'
+ * @import { Entity } from '../../entity.js'
+ */
 
 let ammoRayStart, ammoRayEnd;
 
@@ -22,7 +24,7 @@ class RaycastResult {
     /**
      * The entity that was hit.
      *
-     * @type {import('../../entity.js').Entity}
+     * @type {Entity}
      */
     entity;
 
@@ -51,7 +53,7 @@ class RaycastResult {
     /**
      * Create a new RaycastResult instance.
      *
-     * @param {import('../../entity.js').Entity} entity - The entity that was hit.
+     * @param {Entity} entity - The entity that was hit.
      * @param {Vec3} point - The point at which the ray hit the entity in world space.
      * @param {Vec3} normal - The normal vector of the surface where the ray hit in world space.
      * @param {number} hitFraction - The normalized distance (between 0 and 1) at which the ray hit
@@ -75,14 +77,14 @@ class SingleContactResult {
     /**
      * The first entity involved in the contact.
      *
-     * @type {import('../../entity.js').Entity}
+     * @type {Entity}
      */
     a;
 
     /**
      * The second entity involved in the contact.
      *
-     * @type {import('../../entity.js').Entity}
+     * @type {Entity}
      */
     b;
 
@@ -132,8 +134,8 @@ class SingleContactResult {
     /**
      * Create a new SingleContactResult instance.
      *
-     * @param {import('../../entity.js').Entity} a - The first entity involved in the contact.
-     * @param {import('../../entity.js').Entity} b - The second entity involved in the contact.
+     * @param {Entity} a - The first entity involved in the contact.
+     * @param {Entity} b - The second entity involved in the contact.
      * @param {ContactPoint} contactPoint - The contact point between the two entities.
      * @ignore
      */
@@ -244,7 +246,7 @@ class ContactResult {
     /**
      * The entity that was involved in the contact with this entity.
      *
-     * @type {import('../../entity.js').Entity}
+     * @type {Entity}
      */
     other;
 
@@ -258,8 +260,7 @@ class ContactResult {
     /**
      * Create a new ContactResult instance.
      *
-     * @param {import('../../entity.js').Entity} other - The entity that was involved in the
-     * contact with this entity.
+     * @param {Entity} other - The entity that was involved in the contact with this entity.
      * @param {ContactPoint[]} contacts - An array of ContactPoints with the other entity.
      * @ignore
      */
@@ -345,7 +346,7 @@ class RigidBodyComponentSystem extends ComponentSystem {
     /**
      * Create a new RigidBodyComponentSystem.
      *
-     * @param {import('../../app-base.js').AppBase} app - The Application.
+     * @param {AppBase} app - The Application.
      * @ignore
      */
     constructor(app) {
@@ -670,9 +671,8 @@ class RigidBodyComponentSystem extends ComponentSystem {
      * Stores a collision between the entity and other in the contacts map and returns true if it
      * is a new collision.
      *
-     * @param {import('../../entity.js').Entity} entity - The entity.
-     * @param {import('../../entity.js').Entity} other - The entity that collides with the first
-     * entity.
+     * @param {Entity} entity - The entity.
+     * @param {Entity} other - The entity that collides with the first entity.
      * @returns {boolean} True if this is a new collision, false otherwise.
      * @private
      */
@@ -803,7 +803,7 @@ class RigidBodyComponentSystem extends ComponentSystem {
     /**
      * Returns true if the entity has a contact event attached and false otherwise.
      *
-     * @param {import('../../entity.js').Entity} entity - Entity to test.
+     * @param {Entity} entity - Entity to test.
      * @returns {boolean} True if the entity has a contact and false otherwise.
      * @private
      */
@@ -1025,8 +1025,9 @@ class RigidBodyComponentSystem extends ComponentSystem {
             dynamic[i]._updateDynamic();
         }
 
-        if (!this.dynamicsWorld.setInternalTickCallback)
+        if (!this.dynamicsWorld.setInternalTickCallback) {
             this._checkForCollisions(Ammo.getPointer(this.dynamicsWorld), dt);
+        }
 
         // #if _PROFILER
         this._stats.physicsTime = now() - this._stats.physicsStart;
@@ -1044,11 +1045,16 @@ class RigidBodyComponentSystem extends ComponentSystem {
             Ammo.destroy(this.overlappingPairCache);
             Ammo.destroy(this.dispatcher);
             Ammo.destroy(this.collisionConfiguration);
+            Ammo.destroy(ammoRayStart);
+            Ammo.destroy(ammoRayEnd);
             this.dynamicsWorld = null;
             this.solver = null;
             this.overlappingPairCache = null;
             this.dispatcher = null;
             this.collisionConfiguration = null;
+            ammoRayStart = null;
+            ammoRayEnd = null;
+            RigidBodyComponent.onAppDestroy();
         }
     }
 }

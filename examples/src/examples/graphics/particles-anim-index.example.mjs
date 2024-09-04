@@ -7,7 +7,7 @@ window.focus();
 const assets = {
     particlesNumbers: new pc.Asset('particlesNumbers', 'texture', {
         url: rootPath + '/static/assets/textures/particles-numbers.png'
-    })
+    }, { srgb: true })
 };
 
 const gfxOptions = {

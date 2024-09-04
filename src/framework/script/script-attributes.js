@@ -8,6 +8,12 @@ import { Vec4 } from '../../core/math/vec4.js';
 import { GraphNode } from '../../scene/graph-node.js';
 import { Asset } from '../asset/asset.js';
 
+/**
+ * @import { Application } from '../../framework/application.js'
+ * @import { ScriptType } from './script-type.js'
+ * @import { Script } from '../../framework/script/script.js'
+ */
+
 const components = ['x', 'y', 'z', 'w'];
 const vecLookup = [undefined, undefined, Vec2, Vec3, Vec4];
 
@@ -83,8 +89,9 @@ function rawToValue(app, args, value, old) {
                 return value.clone();
             } else if (value instanceof Array && value.length >= 3 && value.length <= 4) {
                 for (let i = 0; i < value.length; i++) {
-                    if (typeof value[i] !== 'number')
+                    if (typeof value[i] !== 'number') {
                         return null;
+                    }
                 }
                 if (!old) old = new Color();
 
@@ -94,9 +101,10 @@ function rawToValue(app, args, value, old) {
                 old.a = (value.length === 3) ? 1 : value[3];
 
                 return old;
-            } else if (typeof value === 'string' && /#([0-9abcdef]{2}){3,4}/i.test(value)) {
-                if (!old)
+            } else if (typeof value === 'string' && /#(?:[0-9a-f]{2}){3,4}/i.test(value)) {
+                if (!old) {
                     old = new Color();
+                }
 
                 old.fromString(value);
                 return old;
@@ -116,13 +124,15 @@ function rawToValue(app, args, value, old) {
                 return value.clone();
             } else if (value instanceof Array && value.length === len) {
                 for (let i = 0; i < value.length; i++) {
-                    if (typeof value[i] !== 'number')
+                    if (typeof value[i] !== 'number') {
                         return null;
+                    }
                 }
                 if (!old) old = new vecType();
 
-                for (let i = 0; i < len; i++)
+                for (let i = 0; i < len; i++) {
                     old[components[i]] = value[i];
+                }
 
                 return old;
             }
@@ -155,7 +165,7 @@ function rawToValue(app, args, value, old) {
 /**
  * Takes an attribute schema, a value and current value, and return a new value.
  *
- * @param {import('../../framework/application.js').Application} app - The working application
+ * @param {Application} app - The working application
  * @param {AttributeSchema} schema - The attribute schema used to resolve properties
  * @param {*} value - The raw value to create
  * @param {*} current - The existing value
@@ -173,20 +183,25 @@ function attributeToValue(app, schema, value, current) {
  * Assigns values to a script instance based on a map of attributes schemas
  * and a corresponding map of data.
  *
- * @param {import('../../framework/application.js').Application} app - The application instance
+ * @param {Application} app - The application instance
  * @param {Object<string, AttributeSchema>} attributeSchemaMap - A map of names to Schemas
  * @param {Object<string, *>} data - A Map of data to assign to the Script instance
- * @param {import('../../framework/script/script.js').Script} script - A Script instance to assign values on
+ * @param {Script} script - A Script instance to assign values on
  */
 export function assignAttributesToScript(app, attributeSchemaMap, data, script) {
+
+    if (!data) return;
 
     // Iterate over the schema and assign corresponding data
     for (const attributeName in attributeSchemaMap) {
         const attributeSchema = attributeSchemaMap[attributeName];
         const dataToAssign = data[attributeName];
 
+        // Skip if the data is not defined
+        if (dataToAssign === undefined) continue;
+
         // Assign the value to the script based on the attribute schema
-        script[attributeName] =  attributeToValue(app, attributeSchema, dataToAssign, script);
+        script[attributeName] =  attributeToValue(app, attributeSchema, dataToAssign, script[attributeName]);
     }
 }
 
@@ -200,10 +215,12 @@ export function assignAttributesToScript(app, attributeSchemaMap, data, script) 
 class ScriptAttributes {
     static assignAttributesToScript = assignAttributesToScript;
 
+    static attributeToValue = attributeToValue;
+
     /**
      * Create a new ScriptAttributes instance.
      *
-     * @param {typeof import('./script-type.js').ScriptType} scriptType - Script Type that attributes relate to.
+     * @param {typeof ScriptType} scriptType - Script Type that attributes relate to.
      */
     constructor(scriptType) {
         this.scriptType = scriptType;
@@ -322,7 +339,7 @@ class ScriptAttributes {
             },
             set: function (raw) {
                 const evt = 'attr';
-                const evtName = 'attr:' + name;
+                const evtName = `attr:${name}`;
 
                 const old = this.__attributes[name];
                 // keep copy of old for the event below
@@ -365,8 +382,9 @@ class ScriptAttributes {
      * PlayerController.attributes.remove('fullName');
      */
     remove(name) {
-        if (!this.index[name])
+        if (!this.index[name]) {
             return false;
+        }
 
         delete this.index[name];
         delete this.scriptType.prototype[name];

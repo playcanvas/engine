@@ -8,6 +8,15 @@ import { GSplatSorter } from './gsplat-sorter.js';
 import { VertexFormat } from '../../platform/graphics/vertex-format.js';
 import { VertexBuffer } from '../../platform/graphics/vertex-buffer.js';
 
+/**
+ * @import { Camera } from '../camera.js'
+ * @import { GSplat } from './gsplat.js'
+ * @import { GraphNode } from '../graph-node.js'
+ * @import { Material } from '../materials/material.js'
+ * @import { SplatMaterialOptions } from './gsplat-material.js'
+ * @import { Texture } from '../../platform/graphics/texture.js'
+ */
+
 const mat = new Mat4();
 const cameraPosition = new Vec3();
 const cameraDirection = new Vec3();
@@ -15,7 +24,7 @@ const viewport = [0, 0];
 
 /** @ignore */
 class GSplatInstance {
-    /** @type {import('./gsplat.js').GSplat} */
+    /** @type {GSplat} */
     splat;
 
     /** @type {Mesh} */
@@ -24,10 +33,10 @@ class GSplatInstance {
     /** @type {MeshInstance} */
     meshInstance;
 
-    /** @type {import('../materials/material.js').Material} */
+    /** @type {Material} */
     material;
 
-    /** @type {import('../../platform/graphics/texture.js').Texture} */
+    /** @type {Texture} */
     orderTexture;
 
     options = {};
@@ -42,14 +51,14 @@ class GSplatInstance {
     /**
      * List of cameras this instance is visible for. Updated every frame by the renderer.
      *
-     * @type {import('../camera.js').Camera[]}
+     * @type {Camera[]}
      * @ignore
      */
     cameras = [];
 
     /**
-     * @param {import('./gsplat.js').GSplat} splat - The splat instance.
-     * @param {import('./gsplat-material.js').SplatMaterialOptions} options - The options.
+     * @param {GSplat} splat - The splat instance.
+     * @param {SplatMaterialOptions} options - The options.
      */
     constructor(splat, options) {
         this.splat = splat;
@@ -130,10 +139,14 @@ class GSplatInstance {
             this.sorter = new GSplatSorter();
             this.sorter.init(this.orderTexture, this.centers);
             this.sorter.on('updated', (count) => {
-                // limit splat render count to exclude those behind the camera.
-                // NOTE: the last instance rendered may include non-existant splat
-                // data. this should be ok though as the data is filled with 0's.
+                // limit splat render count to exclude those behind the camera
                 this.meshInstance.instancingCount = Math.ceil(count / splatInstanceSize);
+
+                // update splat count on the material
+                const tex_params = this.material.getParameter('tex_params');
+                if (tex_params?.data) {
+                    tex_params.data[0] = count;
+                }
             });
         }
     }
@@ -161,12 +174,22 @@ class GSplatInstance {
         const device = this.splat.device;
         viewport[0] = device.width;
         viewport[1] = device.height;
+
+        // adjust viewport for stereoscopic VR sessions
+        if (this.cameras.length > 0) {
+            const camera = this.cameras[0];
+            const xr = camera.xr;
+            if (xr && xr.active && xr.views.list.length === 2) {
+                viewport[0] /= 2;
+            }
+        }
+
         this.material.setParameter('viewport', viewport);
     }
 
     /**
      * Sorts the GS vertices based on the given camera.
-     * @param {import('../graph-node.js').GraphNode} cameraNode - The camera node used for sorting.
+     * @param {GraphNode} cameraNode - The camera node used for sorting.
      */
     sort(cameraNode) {
         if (this.sorter) {

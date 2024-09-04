@@ -1,15 +1,18 @@
-import { Shader } from "../shader.js";
-import { SHADERLANGUAGE_WGSL } from "../constants.js";
-import { Debug, DebugHelper } from "../../../core/debug.js";
-import { DebugGraphics } from "../debug-graphics.js";
+import { Shader } from '../shader.js';
+import { SHADERLANGUAGE_WGSL } from '../constants.js';
+import { Debug, DebugHelper } from '../../../core/debug.js';
+import { DebugGraphics } from '../debug-graphics.js';
+
+/**
+ * @import { WebgpuGraphicsDevice } from './webgpu-graphics-device.js'
+ * @import { WebgpuShader } from './webgpu-shader.js'
+ */
 
 /**
  * A WebGPU helper class implementing custom resolve of multi-sampled textures.
- *
- * @ignore
  */
 class WebgpuResolver {
-    /** @type {import('./webgpu-graphics-device.js').WebgpuGraphicsDevice} */
+    /** @type {WebgpuGraphicsDevice} */
     device;
 
     /**
@@ -66,7 +69,11 @@ class WebgpuResolver {
         this.pipelineCache = null;
     }
 
-    /** @private */
+    /**
+     * @param {GPUTextureFormat} format - Texture format.
+     * @returns {GPURenderPipeline} Pipeline for the given format.
+     * @private
+     */
     getPipeline(format) {
         let pipeline = this.pipelineCache.get(format);
         if (!pipeline) {
@@ -76,10 +83,14 @@ class WebgpuResolver {
         return pipeline;
     }
 
-    /** @private */
+    /**
+     * @param {GPUTextureFormat} format - Texture format.
+     * @returns {GPURenderPipeline} Pipeline for the given format.
+     * @private
+     */
     createPipeline(format) {
 
-        /** @type {import('./webgpu-shader.js').WebgpuShader} */
+        /** @type {WebgpuShader} */
         const webgpuShader = this.shader.impl;
 
         const pipeline = this.device.wgpu.createRenderPipeline({
@@ -149,7 +160,7 @@ class WebgpuResolver {
                     storeOp: 'store'
                 }]
             });
-            DebugHelper.setLabel(passEncoder, `DepthResolve-PassEncoder`);
+            DebugHelper.setLabel(passEncoder, 'DepthResolve-PassEncoder');
 
             // no need for a sampler when using textureLoad
             const bindGroup = wgpu.createBindGroup({

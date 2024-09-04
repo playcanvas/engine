@@ -1,19 +1,23 @@
 import { platform } from '../../core/platform.js';
-import { EventHandler } from "../../core/event-handler.js";
-import { XrView } from "./xr-view.js";
-import { XRTYPE_AR, XRDEPTHSENSINGUSAGE_GPU, XRDEPTHSENSINGFORMAT_L8A8, XRDEPTHSENSINGFORMAT_F32 } from "./constants.js";
+import { EventHandler } from '../../core/event-handler.js';
+import { XrView } from './xr-view.js';
+import { XRTYPE_AR, XRDEPTHSENSINGUSAGE_GPU, XRDEPTHSENSINGFORMAT_L8A8, XRDEPTHSENSINGFORMAT_F32 } from './constants.js';
 import { PIXELFORMAT_LA8, PIXELFORMAT_R32F } from '../../platform/graphics/constants.js';
 
 /**
- * Provides access to list of {@link XrView}'s. And information about their capabilities,
- * such as support and availability of view's camera color texture, depth texture and other parameters.
+ * @import { XrManager } from './xr-manager.js'
+ */
+
+/**
+ * Provides access to list of {@link XrView}s and information about their capabilities, such as
+ * support and availability of view's camera color texture, depth texture and other parameters.
  *
  * @category XR
  */
 class XrViews extends EventHandler {
     /**
-     * Fired when view has been added. Views are not available straight away on session start
-     * and are added mid-session. They can be added/removed mid session by underlyng system. The
+     * Fired when a view has been added. Views are not available straight away on session start and
+     * are added mid-session. They can be added/removed mid session by the underlying system. The
      * handler is passed the {@link XrView} that has been added.
      *
      * @event
@@ -25,8 +29,8 @@ class XrViews extends EventHandler {
     static EVENT_ADD = 'add';
 
     /**
-     * Fired when view has been removed. They can be added/removed mid session by underlyng system.
-     * The handler is passed the {@link XrView} that has been removed.
+     * Fired when a view has been removed. They can be added/removed mid session by the underlying
+     * system. The handler is passed the {@link XrView} that has been removed.
      *
      * @event
      * @example
@@ -37,7 +41,7 @@ class XrViews extends EventHandler {
     static EVENT_REMOVE = 'remove';
 
     /**
-     * @type {import('./xr-manager.js').XrManager}
+     * @type {XrManager}
      * @private
      */
     _manager;
@@ -106,7 +110,9 @@ class XrViews extends EventHandler {
     };
 
     /**
-     * @param {import('./xr-manager.js').XrManager} manager - WebXR Manager.
+     * Create a new XrViews instance.
+     *
+     * @param {XrManager} manager - WebXR Manager.
      * @ignore
      */
     constructor(manager) {
@@ -118,9 +124,9 @@ class XrViews extends EventHandler {
     }
 
     /**
-     * An array of {@link XrView}'s of this session. Views are not available straight
-     * away on session start, and can be added/removed mid-session. So use of add/remove
-     * events is required for accessing views.
+     * An array of {@link XrView}s of this session. Views are not available straight away on
+     * session start, and can be added/removed mid-session. So use of `add`/`remove` events is
+     * required for accessing views.
      *
      * @type {XrView[]}
      */
@@ -194,10 +200,12 @@ class XrViews extends EventHandler {
     }
 
     /**
-     * The depth sensing pixel format. Currently supported either:
-     * {@link PIXELFORMAT_LA8} or {@link PIXELFORMAT_R32F}
+     * The depth sensing pixel format. Can be:
      *
-     * @type {number|null}
+     * - {@link PIXELFORMAT_LA8}
+     * - {@link PIXELFORMAT_R32F}
+     *
+     * @type {PIXELFORMAT_LA8|PIXELFORMAT_R32F|null}
      */
     get depthPixelFormat() {
         return this._depthFormats[this._depthFormat] ?? null;
@@ -231,8 +239,9 @@ class XrViews extends EventHandler {
 
         // remove views
         for (const [eye, view] of this._index) {
-            if (this._indexTmp.has(eye))
+            if (this._indexTmp.has(eye)) {
                 continue;
+            }
 
             view.destroy();
             this._index.delete(eye);
@@ -258,11 +267,13 @@ class XrViews extends EventHandler {
      * @private
      */
     _onSessionStart() {
-        if (this._manager.type !== XRTYPE_AR)
+        if (this._manager.type !== XRTYPE_AR) {
             return;
+        }
 
-        if (!this._manager.session.enabledFeatures)
+        if (!this._manager.session.enabledFeatures) {
             return;
+        }
 
         this._availableColor = this._manager.session.enabledFeatures.indexOf('camera-access') !== -1;
         this._availableDepth = this._manager.session.enabledFeatures.indexOf('depth-sensing') !== -1;

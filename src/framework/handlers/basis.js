@@ -1,8 +1,12 @@
-import { WasmModule } from "../../core/wasm-module.js";
+import { WasmModule } from '../../core/wasm-module.js';
 import { Debug } from '../../core/debug.js';
 import { PIXELFORMAT_RGB565, PIXELFORMAT_RGBA4 } from '../../platform/graphics/constants.js';
 import { BasisWorker } from './basis-worker.js';
 import { http } from '../../platform/net/http.js';
+
+/**
+ * @import { GraphicsDevice } from '../../platform/graphics/graphics-device.js'
+ */
 
 // get the list of the device's supported compression formats
 const getCompressionFormats = (device) => {
@@ -22,8 +26,8 @@ const prepareWorkerModules = (config, callback) => {
         const code = [
             '/* basis */',
             basisCode,
-            "",
-            '(' + BasisWorker.toString() + ')()\n\n'
+            '',
+            `(${BasisWorker.toString()})()\n\n`
         ].join('\n');
         return new Blob([code], { type: 'application/javascript' });
     };
@@ -32,8 +36,9 @@ const prepareWorkerModules = (config, callback) => {
         try {
             if (typeof WebAssembly === 'object' && typeof WebAssembly.instantiate === 'function') {
                 const module = new WebAssembly.Module(Uint8Array.of(0x0, 0x61, 0x73, 0x6d, 0x01, 0x00, 0x00, 0x00));
-                if (module instanceof WebAssembly.Module)
+                if (module instanceof WebAssembly.Module) {
                     return new WebAssembly.Instance(module) instanceof WebAssembly.Instance;
+                }
             }
         } catch (e) { }
         return false;
@@ -76,34 +81,34 @@ const prepareWorkerModules = (config, callback) => {
 
         const compileManual = () => {
             fetchPromise
-                .then(result => result.arrayBuffer())
-                .then(buffer => WebAssembly.compile(buffer))
-                .then((module_) => {
-                    if (basisCode) {
-                        sendResponse(basisCode, module_);
-                    } else {
-                        module = module_;
-                    }
-                })
-                .catch((err) => {
-                    callback(err, null);
-                });
+            .then(result => result.arrayBuffer())
+            .then(buffer => WebAssembly.compile(buffer))
+            .then((module_) => {
+                if (basisCode) {
+                    sendResponse(basisCode, module_);
+                } else {
+                    module = module_;
+                }
+            })
+            .catch((err) => {
+                callback(err, null);
+            });
         };
 
         // download and compile wasm module
         if (WebAssembly.compileStreaming) {
             WebAssembly.compileStreaming(fetchPromise)
-                .then((module_) => {
-                    if (basisCode) {
-                        sendResponse(basisCode, module_);
-                    } else {
-                        module = module_;
-                    }
-                })
-                .catch((err) => {
-                    Debug.warn(`compileStreaming() failed for ${config.wasmUrl} (${err}), falling back to arraybuffer download.`);
-                    compileManual();
-                });
+            .then((module_) => {
+                if (basisCode) {
+                    sendResponse(basisCode, module_);
+                } else {
+                    module = module_;
+                }
+            })
+            .catch((err) => {
+                Debug.warn(`compileStreaming() failed for ${config.wasmUrl} (${err}), falling back to arraybuffer download.`);
+                compileManual();
+            });
         } else {
             compileManual();
         }
@@ -167,12 +172,12 @@ class BasisQueue {
             // (re)create typed array from the returned array buffers
             if (data.format === PIXELFORMAT_RGB565 || data.format === PIXELFORMAT_RGBA4) {
                 // handle 16 bit formats
-                data.levels = data.levels.map(function (v) {
+                data.levels = data.levels.map((v) => {
                     return new Uint16Array(v);
                 });
             } else {
                 // all other
-                data.levels = data.levels.map(function (v) {
+                data.levels = data.levels.map((v) => {
                     return new Uint8Array(v);
                 });
             }
@@ -316,8 +321,7 @@ let deviceDetails = null;
 /**
  * Enqueue a blob of basis data for transcoding.
  *
- * @param {import('../../platform/graphics/graphics-device.js').GraphicsDevice} device - The
- * graphics device.
+ * @param {GraphicsDevice} device - The graphics device.
  * @param {string} url - URL of the basis file.
  * @param {object} data - The file data to transcode.
  * @param {Function} callback - Callback function to receive transcode result.
@@ -334,7 +338,6 @@ function basisTranscode(device, url, data, callback, options) {
 
     if (!deviceDetails) {
         deviceDetails = {
-            webgl2: device.isWebGL2,
             formats: getCompressionFormats(device)
         };
     }

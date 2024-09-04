@@ -1,11 +1,15 @@
-import { Debug, DebugHelper } from "../../core/debug.js";
-import { Vec4 } from "../../core/math/vec4.js";
-import { BindGroup, DynamicBindGroup } from "../../platform/graphics/bind-group.js";
-import { BINDGROUP_MESH, BINDGROUP_MESH_UB, BINDGROUP_VIEW, PRIMITIVE_TRISTRIP } from "../../platform/graphics/constants.js";
-import { DebugGraphics } from "../../platform/graphics/debug-graphics.js";
-import { ShaderProcessorOptions } from "../../platform/graphics/shader-processor-options.js";
-import { UniformBuffer } from "../../platform/graphics/uniform-buffer.js";
-import { processShader } from "../shader-lib/utils.js";
+import { Debug, DebugHelper } from '../../core/debug.js';
+import { Vec4 } from '../../core/math/vec4.js';
+import { BindGroup, DynamicBindGroup } from '../../platform/graphics/bind-group.js';
+import { BINDGROUP_MESH, BINDGROUP_MESH_UB, BINDGROUP_VIEW, PRIMITIVE_TRISTRIP } from '../../platform/graphics/constants.js';
+import { DebugGraphics } from '../../platform/graphics/debug-graphics.js';
+import { ShaderProcessorOptions } from '../../platform/graphics/shader-processor-options.js';
+import { UniformBuffer } from '../../platform/graphics/uniform-buffer.js';
+import { processShader } from '../shader-lib/utils.js';
+
+/**
+ * @import { Shader } from '../../platform/graphics/shader.js'
+ */
 
 const _quadPrimitive = {
     type: PRIMITIVE_TRISTRIP,
@@ -48,7 +52,7 @@ class QuadRender {
     /**
      * Create a new QuadRender instance.
      *
-     * @param {import('../../platform/graphics/shader.js').Shader} shader - The shader to be used to render the quad.
+     * @param {Shader} shader - The shader to be used to render the quad.
      */
     constructor(shader) {
 
@@ -91,15 +95,15 @@ class QuadRender {
      * Renders the quad. If the viewport is provided, the original viewport and scissor is restored
      * after the rendering.
      *
-     * @param {import('../../core/math/vec4.js').Vec4} [viewport] - The viewport rectangle of the
-     * quad, in pixels. The viewport is not changed if not provided.
-     * @param {import('../../core/math/vec4.js').Vec4} [scissor] - The scissor rectangle of the
-     * quad, in pixels. Used only if the viewport is provided.
+     * @param {Vec4} [viewport] - The viewport rectangle of the quad, in pixels. The viewport is
+     * not changed if not provided.
+     * @param {Vec4} [scissor] - The scissor rectangle of the quad, in pixels. Used only if the
+     * viewport is provided.
      */
     render(viewport, scissor) {
 
         const device = this.shader.device;
-        DebugGraphics.pushGpuMarker(device, "QuadRender");
+        DebugGraphics.pushGpuMarker(device, 'QuadRender');
 
         // only modify viewport or scissor if viewport supplied
         if (viewport) {

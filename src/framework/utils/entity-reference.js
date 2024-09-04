@@ -155,7 +155,7 @@ class EntityReference extends EventHandler {
     }
 
     _parseEventListenerConfig(eventConfig, prefix, scope) {
-        return Object.keys(eventConfig).map(function (listenerDescription, index) {
+        return Object.keys(eventConfig).map((listenerDescription, index) => {
             const listenerDescriptionParts = listenerDescription.split('#');
             const sourceName = listenerDescriptionParts[0];
             const eventName = listenerDescriptionParts[1];
@@ -164,15 +164,15 @@ class EntityReference extends EventHandler {
             if (listenerDescriptionParts.length !== 2 ||
                 typeof sourceName !== 'string' || sourceName.length === 0 ||
                 typeof eventName !== 'string' || eventName.length === 0) {
-                throw new Error('Invalid event listener description: `' + listenerDescription + '`');
+                throw new Error(`Invalid event listener description: \`${listenerDescription}\``);
             }
 
             if (typeof callback !== 'function') {
-                throw new Error('Invalid or missing callback for event listener `' + listenerDescription + '`');
+                throw new Error(`Invalid or missing callback for event listener \`${listenerDescription}\``);
             }
 
             return {
-                id: prefix + '_' + index + '_' + listenerDescription,
+                id: `${prefix}_${index}_${listenerDescription}`,
                 sourceName: sourceName,
                 eventName: eventName,
                 callback: callback,
@@ -182,7 +182,7 @@ class EntityReference extends EventHandler {
     }
 
     _toggleLifecycleListeners(onOrOff) {
-        this._parentComponent[onOrOff]('set_' + this._entityPropertyName, this._onSetEntity, this);
+        this._parentComponent[onOrOff](`set_${this._entityPropertyName}`, this._onSetEntity, this);
         this._parentComponent.system[onOrOff]('beforeremove', this._onParentComponentRemove, this);
 
         this._app.systems[onOrOff]('postPostInitialize', this._updateEntityReference, this);
@@ -222,7 +222,7 @@ class EntityReference extends EventHandler {
             this._updateEntityReference();
         } else {
             if (newValue !== null && newValue !== undefined && typeof newValue !== 'string') {
-                console.warn("Entity field `" + this._entityPropertyName + "` was set to unexpected type '" + (typeof newValue) + "'");
+                console.warn(`Entity field \`${this._entityPropertyName}\` was set to unexpected type '${typeof newValue}'`);
                 return;
             }
 
@@ -378,7 +378,7 @@ class EntityReference extends EventHandler {
         }
 
         if (!isDestroying) {
-            console.warn('Entity has no component with name ' + sourceName);
+            console.warn(`Entity has no component with name ${sourceName}`);
         }
 
         return null;

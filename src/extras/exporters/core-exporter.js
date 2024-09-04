@@ -5,6 +5,10 @@ import { drawQuadWithShader } from '../../scene/graphics/quad-render-utils.js';
 import { RenderTarget } from '../../platform/graphics/render-target.js';
 import { FILTER_LINEAR, ADDRESS_CLAMP_TO_EDGE, isCompressedPixelFormat, PIXELFORMAT_RGBA8 } from '../../platform/graphics/constants.js';
 
+/**
+ * @import { Color } from '../../core/math/color.js'
+ */
+
 const textureBlitVertexShader = /* glsl */`
     attribute vec2 vertex_position;
     varying vec2 uv0;
@@ -38,7 +42,7 @@ class CoreExporter {
      *
      * @param {Texture} texture - The source texture to be converted.
      * @param {object} options - Object for passing optional arguments.
-     * @param {import('../../core/math/color.js').Color} [options.color] - The tint color to modify the texture with.
+     * @param {Color} [options.color] - The tint color to modify the texture with.
      * @param {number} [options.maxTextureSize] - Maximum texture size. Texture is resized if over the size.
      * @returns {Promise<HTMLCanvasElement>|Promise<undefined>} - The canvas element containing the image.
      *

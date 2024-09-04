@@ -1,12 +1,13 @@
 import { Debug } from '../../../core/debug.js';
-
 import { Mat4 } from '../../../core/math/mat4.js';
 import { Vec2 } from '../../../core/math/vec2.js';
-
 import { Entity } from '../../entity.js';
-
 import { SCALEMODE_BLEND, SCALEMODE_NONE } from './constants.js';
 import { Component } from '../component.js';
+
+/**
+ * @import { ScreenComponentSystem } from './system.js'
+ */
 
 const _transform = new Mat4();
 
@@ -20,8 +21,7 @@ class ScreenComponent extends Component {
     /**
      * Create a new ScreenComponent.
      *
-     * @param {import('./system.js').ScreenComponentSystem} system - The ComponentSystem that
-     * created this Component.
+     * @param {ScreenComponentSystem} system - The ComponentSystem that created this Component.
      * @param {Entity} entity - The Entity that this Component is attached to.
      */
     constructor(system, entity) {
@@ -173,8 +173,9 @@ class ScreenComponent extends Component {
 
         this._calcProjectionMatrix();
 
-        if (!this.entity._dirtyLocal)
+        if (!this.entity._dirtyLocal) {
             this.entity._dirtifyLocal();
+        }
 
         this.fire('set:resolution', this._resolution);
         this._elements.forEach(element => element._onScreenResize(this._resolution));
@@ -202,8 +203,9 @@ class ScreenComponent extends Component {
         this._updateScale();
         this._calcProjectionMatrix();
 
-        if (!this.entity._dirtyLocal)
+        if (!this.entity._dirtyLocal) {
             this.entity._dirtifyLocal();
+        }
 
         this.fire('set:referenceresolution', this._resolution);
         this._elements.forEach(element => element._onScreenResize(this._resolution));
@@ -234,8 +236,9 @@ class ScreenComponent extends Component {
         }
         this.resolution = this._resolution; // force update either way
 
-        if (!this.entity._dirtyLocal)
+        if (!this.entity._dirtyLocal) {
             this.entity._dirtifyLocal();
+        }
 
         this.fire('set:screenspace', this._screenSpace);
 
@@ -294,8 +297,9 @@ class ScreenComponent extends Component {
         this._updateScale();
         this._calcProjectionMatrix();
 
-        if (!this.entity._dirtyLocal)
+        if (!this.entity._dirtyLocal) {
             this.entity._dirtifyLocal();
+        }
 
         this.fire('set:scaleblend', this._scaleBlend);
 

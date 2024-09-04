@@ -156,7 +156,9 @@ const fragmentShader = /* glsl */ `
             result *= vignette(uv);
         #endif
 
-        result = gammaCorrectOutput(result);
+        #ifdef GAMMA_CORRECT_OUTPUT
+            result = gammaCorrectOutput(result);
+        #endif
 
         gl_FragColor = vec4(result, scene.a);
     }
@@ -206,6 +208,8 @@ class RenderPassCompose extends RenderPassShaderQuad {
     _taaEnabled = false;
 
     _sharpness = 0.5;
+
+    _srgb = false;
 
     _key = '';
 
@@ -326,6 +330,15 @@ class RenderPassCompose extends RenderPassShaderQuad {
 
     frameUpdate() {
 
+        // detect if the render target is srgb vs execute manual srgb conversion
+        const rt = this.renderTarget ?? this.device.backBuffer;
+        const srgb = rt.isColorBufferSrgb(0);
+        if (this._srgb !== srgb) {
+            this._srgb = srgb;
+            this._shaderDirty = true;
+        }
+
+        // need to rebuild shader
         if (this._shaderDirty) {
             this._shaderDirty = false;
 
@@ -336,19 +349,21 @@ class RenderPassCompose extends RenderPassShaderQuad {
                 `-${this.vignetteEnabled ? 'vignette' : 'novignette'}` +
                 `-${this.fringingEnabled ? 'fringing' : 'nofringing'}` +
                 `-${this.taaEnabled ? 'taa' : 'notaa'}` +
-                `-${this.isSharpnessEnabled ? 'cas' : 'nocas'}`;
+                `-${this.isSharpnessEnabled ? 'cas' : 'nocas'}` +
+                `-${this._srgb ? 'srgb' : 'linear'}`;
 
             if (this._key !== key) {
                 this._key = key;
 
                 const defines =
-                    (this.bloomTexture ? `#define BLOOM\n` : '') +
-                    (this.ssaoTexture ? `#define SSAO\n` : '') +
-                    (this.gradingEnabled ? `#define GRADING\n` : '') +
-                    (this.vignetteEnabled ? `#define VIGNETTE\n` : '') +
-                    (this.fringingEnabled ? `#define FRINGING\n` : '') +
-                    (this.taaEnabled ? `#define TAA\n` : '') +
-                    (this.isSharpnessEnabled ? `#define CAS\n` : '');
+                    (this.bloomTexture ? '#define BLOOM\n' : '') +
+                    (this.ssaoTexture ? '#define SSAO\n' : '') +
+                    (this.gradingEnabled ? '#define GRADING\n' : '') +
+                    (this.vignetteEnabled ? '#define VIGNETTE\n' : '') +
+                    (this.fringingEnabled ? '#define FRINGING\n' : '') +
+                    (this.taaEnabled ? '#define TAA\n' : '') +
+                    (this.isSharpnessEnabled ? '#define CAS\n' : '') +
+                    (this._srgb ? '' : '#define GAMMA_CORRECT_OUTPUT\n');
 
                 const fsChunks =
                 shaderChunks.decodePS +

@@ -13,14 +13,10 @@ vec3 evalRefractionColor(vec3 refractionVector, float gloss, float refractionInd
     // use built-in getGrabScreenPos function to convert screen position to grab texture uv coords
     vec2 uv = getGrabScreenPos(projectionPoint);
 
-    #ifdef SUPPORTS_TEXLOD
-        // Use IOR and roughness to select mip
-        float iorToRoughness = (1.0 - gloss) * clamp((1.0 / refractionIndex) * 2.0 - 2.0, 0.0, 1.0);
-        float refractionLod = log2(uScreenSize.x) * iorToRoughness;
-        vec3 refraction = texture2DLodEXT(uSceneColorMap, uv, refractionLod).rgb;
-    #else
-        vec3 refraction = texture2D(uSceneColorMap, uv).rgb;
-    #endif
+    // Use IOR and roughness to select mip
+    float iorToRoughness = (1.0 - gloss) * clamp((1.0 / refractionIndex) * 2.0 - 2.0, 0.0, 1.0);
+    float refractionLod = log2(uScreenSize.x) * iorToRoughness;
+    vec3 refraction = texture2DLodEXT(uSceneColorMap, uv, refractionLod).rgb;
 
     return refraction;
 }

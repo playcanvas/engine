@@ -2,11 +2,11 @@ import { createURI, URI } from '../../src/core/uri.js';
 
 import { expect } from 'chai';
 
-describe('URI', function () {
+describe('URI', () => {
 
-    describe('#constructor', function () {
+    describe('#constructor', () => {
 
-        it('handles all sections', function () {
+        it('handles all sections', () => {
             const s = 'http://a/b/c/d;p?q=r#l';
 
             const uri = new URI(s);
@@ -18,7 +18,7 @@ describe('URI', function () {
             expect(uri.fragment).to.equal('l');
         });
 
-        it('handles no scheme', function () {
+        it('handles no scheme', () => {
             const s = '//a/b/c/d;p?q=r#l';
             const uri = new URI(s);
 
@@ -29,7 +29,7 @@ describe('URI', function () {
             expect(uri.fragment).to.equal('l');
         });
 
-        it('handles no authority', function () {
+        it('handles no authority', () => {
             const s = '/b/c/d;p?q=r#l';
             const uri = new URI(s);
 
@@ -40,7 +40,7 @@ describe('URI', function () {
             expect(uri.fragment).to.equal('l');
         });
 
-        it('handles no query', function () {
+        it('handles no query', () => {
             const s = 'http://a/b/c/d;p#l';
             const uri = new URI(s);
 
@@ -51,7 +51,7 @@ describe('URI', function () {
             expect(uri.fragment).to.equal('l');
         });
 
-        it('handles no fragment', function () {
+        it('handles no fragment', () => {
             const s = 'http://a/b/c/d;p?q=r';
             const uri = new URI(s);
 
@@ -64,9 +64,9 @@ describe('URI', function () {
 
     });
 
-    describe('#toString', function () {
+    describe('#toString', () => {
 
-        it('matches the URI passed to the constructor', function () {
+        it('matches the URI passed to the constructor', () => {
             const s = 'http://a/b/c/d;p?q=r#l';
             const uri = new URI(s);
             const r = uri.toString();
@@ -74,7 +74,7 @@ describe('URI', function () {
             expect(s).to.equal(r);
         });
 
-        it('handles an edit to the query', function () {
+        it('handles an edit to the query', () => {
             const s = 'http://example.com';
             const uri = new URI(s);
             uri.query = 'q=abc';
@@ -87,9 +87,9 @@ describe('URI', function () {
 
     });
 
-    describe('#getQuery', function () {
+    describe('#getQuery', () => {
 
-        it('correctly parses the query string', function () {
+        it('correctly parses the query string', () => {
             const s = 'http://example.com/test?a=1&b=string&c=something%20spaced';
             const uri = new URI(s);
 
@@ -100,7 +100,7 @@ describe('URI', function () {
             expect(q.c).to.equal('something spaced');
         });
 
-        it('handles an empty query string', function () {
+        it('handles an empty query string', () => {
             const s = 'http://example.com/test';
             const uri = new URI(s);
 
@@ -111,9 +111,9 @@ describe('URI', function () {
 
     });
 
-    describe('#setQuery', function () {
+    describe('#setQuery', () => {
 
-        it('adds a query string', function () {
+        it('adds a query string', () => {
             const uri = new URI('http://example.com/test');
             const q = {
                 key: 'value'
@@ -124,7 +124,7 @@ describe('URI', function () {
         });
 
 
-        it('adds a query string with spaces and quotes', function () {
+        it('adds a query string with spaces and quotes', () => {
             const uri = new URI('http://example.com/test');
             const q = {
                 'key': 'value',
@@ -138,9 +138,9 @@ describe('URI', function () {
 
 });
 
-describe('createURI', function () {
+describe('createURI', () => {
 
-    it('correctly constructs URIs', function () {
+    it('correctly constructs URIs', () => {
         let uri;
 
         uri = createURI({
@@ -170,36 +170,36 @@ describe('createURI', function () {
 
     });
 
-    it('throws exceptions', function () {
-        expect(function () {
+    it('throws exceptions', () => {
+        expect(() => {
             createURI({
                 scheme: 'http',
                 host: 'http://test.com'
             });
         }).to.throw();
 
-        expect(function () {
+        expect(() => {
             createURI({
                 authority: 'http',
                 host: 'http://test.com'
             });
         }).to.throw();
 
-        expect(function () {
+        expect(() => {
             createURI({
                 scheme: 'http',
                 hostpath: 'http://test.com'
             });
         }).to.throw();
 
-        expect(function () {
+        expect(() => {
             createURI({
                 authority: 'http',
                 hostpath: 'http://test.com'
             });
         }).to.throw();
 
-        expect(function () {
+        expect(() => {
             createURI({
                 scheme: 'http',
                 authority: 'e.com',
@@ -207,7 +207,7 @@ describe('createURI', function () {
             });
         }).to.throw();
 
-        expect(function () {
+        expect(() => {
             createURI({
                 scheme: 'abc',
                 authority: 'http',
@@ -215,14 +215,14 @@ describe('createURI', function () {
             });
         }).to.throw();
 
-        expect(function () {
+        expect(() => {
             createURI({
                 host: 'http://test.com',
                 hostpath: 'http://test.com'
             });
         }).to.throw();
 
-        expect(function () {
+        expect(() => {
             createURI({
                 path: '/abc',
                 hostpath: 'http://test.com/abc'

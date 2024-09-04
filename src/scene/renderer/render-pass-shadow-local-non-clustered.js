@@ -1,11 +1,9 @@
-import { DebugHelper } from "../../core/debug.js";
-import { RenderPass } from "../../platform/graphics/render-pass.js";
+import { DebugHelper } from '../../core/debug.js';
+import { RenderPass } from '../../platform/graphics/render-pass.js';
 
 /**
  * A render pass used to render local non-clustered shadows. It represents rendering to a single
  * face of shadow map, as each face is a separate render target.
- *
- * @ignore
  */
 class RenderPassShadowLocalNonClustered extends RenderPass {
     constructor(device, shadowRenderer, light, face, applyVsm) {

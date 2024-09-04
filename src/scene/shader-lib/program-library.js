@@ -1,13 +1,15 @@
 import { Debug } from '../../core/debug.js';
 import { hashCode } from '../../core/hash.js';
 import { version, revision } from '../../core/core.js';
-
 import { Shader } from '../../platform/graphics/shader.js';
-
 import { SHADER_FORWARD, SHADER_DEPTH, SHADER_PICK, SHADER_SHADOW, SHADER_PREPASS_VELOCITY } from '../constants.js';
 import { ShaderPass } from '../shader-pass.js';
 import { StandardMaterialOptions } from '../materials/standard-material-options.js';
 import { RenderingParams } from '../renderer/rendering-params.js';
+
+/**
+ * @import { ShaderGenerator } from './programs/shader-generator.js'
+ */
 
 /**
  * A class responsible for creation and caching of required shaders.
@@ -35,7 +37,7 @@ class ProgramLibrary {
     /**
      * Named shader generators.
      *
-     * @type {Map<string, import('./programs/shader-generator.js').ShaderGenerator>}
+     * @type {Map<string, ShaderGenerator>}
      */
     _generators = new Map();
 
@@ -83,8 +85,8 @@ class ProgramLibrary {
     /**
      * Returns a generated shader definition for the specified options. They key is used to cache the
      * shader definition.
-     * @param {import('./programs/shader-generator.js').ShaderGenerator} generator - The generator
-     * to use.
+     *
+     * @param {ShaderGenerator} generator - The generator to use.
      * @param {string} name - The unique name of the shader generator.
      * @param {number} key - A unique key representing the shader options.
      * @param {object} options - The shader options.
@@ -96,7 +98,7 @@ class ProgramLibrary {
             let lights;
             if (options.litOptions?.lights) {
                 lights = options.litOptions.lights;
-                options.litOptions.lights = lights.map(function (l) {
+                options.litOptions.lights = lights.map((l) => {
                     // TODO: refactor this to avoid creating a clone of the light.
                     const lcopy = l.clone ? l.clone() : l;
                     lcopy.key = l.key;
@@ -106,11 +108,13 @@ class ProgramLibrary {
 
             this.storeNewProgram(name, options);
 
-            if (options.litOptions?.lights)
+            if (options.litOptions?.lights) {
                 options.litOptions.lights = lights;
+            }
 
-            if (this._precached)
+            if (this._precached) {
                 Debug.log(`ProgramLibrary#getProgram: Cache miss for shader ${name} key ${key} after shaders precaching`);
+            }
 
             const device = this._device;
             def = generator.createShaderDefinition(device, options);
@@ -178,7 +182,9 @@ class ProgramLibrary {
                 fincludes: generatedShaderDef.fincludes,
                 fshader: generatedShaderDef.fshader,
                 processingOptions: processingOptions,
-                shaderLanguage: generatedShaderDef.shaderLanguage
+                shaderLanguage: generatedShaderDef.shaderLanguage,
+                meshUniformBufferFormat: generatedShaderDef.meshUniformBufferFormat,
+                meshBindGroupFormat: generatedShaderDef.meshBindGroupFormat
             };
 
             // add new shader to the processed cache
@@ -198,13 +204,14 @@ class ProgramLibrary {
 
     storeNewProgram(name, options) {
         let opt = {};
-        if (name === "standard") {
+        if (name === 'standard') {
             // For standard material saving all default values is overkill, so we store only diff
             const defaultMat = this._getDefaultStdMatOptions(options.pass);
 
             for (const p in options) {
-                if ((options.hasOwnProperty(p) && defaultMat[p] !== options[p]) || p === "pass")
+                if ((options.hasOwnProperty(p) && defaultMat[p] !== options[p]) || p === 'pass') {
                     opt[p] = options[p];
+                }
             }
 
             // Note: this was added in #4792 and it does not filter out the default values, like the loop above
@@ -223,18 +230,19 @@ class ProgramLibrary {
     dumpPrograms() {
         let text = 'let device = pc.app ? pc.app.graphicsDevice : pc.Application.getApplication().graphicsDevice;\n';
         text += 'let shaders = [';
-        if (this._programsCollection[0])
-            text += '\n\t' + this._programsCollection[0];
+        if (this._programsCollection[0]) {
+            text += `\n\t${this._programsCollection[0]}`;
+        }
         for (let i = 1; i < this._programsCollection.length; ++i) {
-            text += ',\n\t' + this._programsCollection[i];
+            text += `,\n\t${this._programsCollection[i]}`;
         }
         text += '\n];\n';
         text += 'pc.getProgramLibrary(device).precompile(shaders);\n';
-        text += 'if (pc.version != \"' + version + '\" || pc.revision != \"' + revision + '\")\n';
+        text += `if (pc.version != \"${version}\" || pc.revision != \"${revision}\")\n`;
         text += '\tconsole.warn(\"precompile-shaders.js: engine version mismatch, rebuild shaders lib with current engine\");';
 
         const element = document.createElement('a');
-        element.setAttribute('href', 'data:text/plain;charset=utf-8,' + encodeURIComponent(text));
+        element.setAttribute('href', `data:text/plain;charset=utf-8,${encodeURIComponent(text)}`);
         element.setAttribute('download', 'precompile-shaders.js');
         element.style.display = 'none';
         document.body.appendChild(element);
@@ -261,8 +269,9 @@ class ProgramLibrary {
      */
     removeFromCache(shader) {
         // don't delete by one when clearing whole cache
-        if (this._isClearingCache)
+        if (this._isClearingCache) {
             return;
+        }
 
         this.processedCache.forEach((cachedShader, key) => {
             if (shader === cachedShader) {
@@ -284,12 +293,13 @@ class ProgramLibrary {
 
                 // default options for the standard materials are not stored, and so they are inserted
                 // back into the loaded options
-                if (cache[i].name === "standard") {
+                if (cache[i].name === 'standard') {
                     const opt = cache[i].options;
                     const defaultMat = this._getDefaultStdMatOptions(opt.pass);
                     for (const p in defaultMat) {
-                        if (defaultMat.hasOwnProperty(p) && opt[p] === undefined)
+                        if (defaultMat.hasOwnProperty(p) && opt[p] === undefined) {
                             opt[p] = defaultMat[p];
+                        }
                     }
                 }
 

@@ -1,11 +1,9 @@
-import { DebugHelper } from "../../core/debug.js";
-import { RenderPass } from "../../platform/graphics/render-pass.js";
-import { SHADOWUPDATE_NONE, SHADOWUPDATE_THISFRAME } from "../constants.js";
+import { DebugHelper } from '../../core/debug.js';
+import { RenderPass } from '../../platform/graphics/render-pass.js';
+import { SHADOWUPDATE_NONE, SHADOWUPDATE_THISFRAME } from '../constants.js';
 
 /**
  * A render pass used to render directional shadows.
- *
- * @ignore
  */
 class RenderPassShadowDirectional extends RenderPass {
     constructor(device, shadowRenderer, light, camera, allCascadesRendering) {

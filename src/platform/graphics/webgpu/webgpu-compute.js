@@ -1,12 +1,10 @@
-import { Debug, DebugHelper } from "../../../core/debug.js";
-import { BindGroup } from "../bind-group.js";
-import { DebugGraphics } from "../debug-graphics.js";
-import { UniformBuffer } from "../uniform-buffer.js";
+import { Debug, DebugHelper } from '../../../core/debug.js';
+import { BindGroup } from '../bind-group.js';
+import { DebugGraphics } from '../debug-graphics.js';
+import { UniformBuffer } from '../uniform-buffer.js';
 
 /**
  * A WebGPU implementation of the Compute.
- *
- * @ignore
  */
 class WebgpuCompute {
     /** @type {UniformBuffer[]} */

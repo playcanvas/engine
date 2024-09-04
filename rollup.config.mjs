@@ -14,9 +14,9 @@ import { typesFixup } from './utils/plugins/rollup-types-fixup.mjs';
 
 const BLUE_OUT = '\x1b[34m';
 const RED_OUT = '\x1b[31m';
-const BOLD_OUT = `\x1b[1m`;
-const REGULAR_OUT = `\x1b[22m`;
-const RESET_OUT = `\x1b[0m`;
+const BOLD_OUT = '\x1b[1m';
+const REGULAR_OUT = '\x1b[22m';
+const RESET_OUT = '\x1b[0m';
 
 /**
  * @type {['release', 'debug', 'profiler', 'min']}
@@ -54,7 +54,7 @@ const TYPES_TARGET = [{
 const envTarget = process.env.target ? process.env.target.toLowerCase() : null;
 
 const title = [
-    `Building PlayCanvas Engine`,
+    'Building PlayCanvas Engine',
     `version ${BOLD_OUT}v${version}${REGULAR_OUT}`,
     `revision ${BOLD_OUT}${revision}${REGULAR_OUT}`,
     `target ${BOLD_OUT}${envTarget ?? 'all'}${REGULAR_OUT}`

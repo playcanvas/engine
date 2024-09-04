@@ -1,9 +1,14 @@
-import { QuadRender } from "./quad-render.js";
-import { BlendState } from "../../platform/graphics/blend-state.js";
-import { CULLFACE_NONE, SEMANTIC_POSITION } from "../../platform/graphics/constants.js";
-import { DepthState } from "../../platform/graphics/depth-state.js";
-import { RenderPass } from "../../platform/graphics/render-pass.js";
-import { createShaderFromCode } from "../shader-lib/utils.js";
+import { QuadRender } from './quad-render.js';
+import { BlendState } from '../../platform/graphics/blend-state.js';
+import { CULLFACE_NONE, SEMANTIC_POSITION } from '../../platform/graphics/constants.js';
+import { DepthState } from '../../platform/graphics/depth-state.js';
+import { RenderPass } from '../../platform/graphics/render-pass.js';
+import { createShaderFromCode } from '../shader-lib/utils.js';
+
+/**
+ * @import { Shader } from '../../platform/graphics/shader.js'
+ * @import { StencilParameters } from '../../platform/graphics/stencil-parameters.js'
+ */
 
 /**
  * A render pass that implements rendering a quad with a shader, and exposes controls over the
@@ -39,14 +44,14 @@ class RenderPassShaderQuad extends RenderPass {
     /**
      * Stencil parameters for front faces to use when rendering the quad. Defaults to null.
      *
-     * @type {import('../../platform/graphics/stencil-parameters.js').StencilParameters|null}
+     * @type {StencilParameters|null}
      */
     stencilFront = null;
 
     /**
      * Stencil parameters for back faces to use when rendering the quad. Defaults to null.
      *
-     * @type {import('../../platform/graphics/stencil-parameters.js').StencilParameters|null}
+     * @type {StencilParameters|null}
      */
     stencilBack = null;
 
@@ -69,7 +74,7 @@ class RenderPassShaderQuad extends RenderPass {
     /**
      * Sets the shader used to render the quad.
      *
-     * @type {import('../../platform/graphics/shader.js').Shader}
+     * @type {Shader}
      * @ignore
      */
     set shader(shader) {
@@ -81,8 +86,9 @@ class RenderPassShaderQuad extends RenderPass {
 
         // handle new
         this._shader = shader;
-        if (shader)
+        if (shader) {
             this.quadRender = new QuadRender(shader);
+        }
     }
 
     get shader() {

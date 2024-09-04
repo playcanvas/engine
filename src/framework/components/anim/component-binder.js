@@ -99,8 +99,9 @@ class AnimComponentBinder extends DefaultAnimBinder {
             default:
                 entity = this._getEntityFromHierarchy(path.entityPath);
                 propertyComponent = entity.findComponent(path.component);
-                if (!propertyComponent)
+                if (!propertyComponent) {
                     return null;
+                }
                 targetPath = AnimBinder.encode(
                     entity.path,
                     path.component,
@@ -154,10 +155,10 @@ class AnimComponentBinder extends DefaultAnimBinder {
         const key = path[path.length - 1];
 
         // if the object has a setter function, use it
-        const setterFuncName = 'set' + key.substring(0, 1).toUpperCase() + key.substring(1);
+        const setterFuncName = `set${key.substring(0, 1).toUpperCase()}${key.substring(1)}`;
         if (obj[setterFuncName]) {
             // if the object has a setter function, use it
-            const getterFunc = obj['get' + key.substring(0, 1).toUpperCase() + key.substring(1)].bind(obj);
+            const getterFunc = obj[`get${key.substring(0, 1).toUpperCase()}${key.substring(1)}`].bind(obj);
             let baseValues = getterFunc();
             baseValues = [baseValues.x, baseValues.y, baseValues.z, baseValues.w];
             const setterFunc = obj[setterFuncName].bind(obj);
@@ -210,8 +211,9 @@ class AnimComponentBinder extends DefaultAnimBinder {
 
         const property = this._resolvePath(propertyComponent, propertyHierarchy, true);
 
-        if (typeof property === 'undefined')
+        if (typeof property === 'undefined') {
             return null;
+        }
 
         let setter;
         let animDataType;
@@ -259,7 +261,7 @@ class AnimComponentBinder extends DefaultAnimBinder {
 
         // materials must have update called after changing settings
         if (propertyHierarchy.indexOf('material') !== -1) {
-            return new AnimTarget(function (values) {
+            return new AnimTarget((values) => {
                 setter(values);
                 propertyComponent.material.update();
             }, animDataType, animDataComponents, targetPath);

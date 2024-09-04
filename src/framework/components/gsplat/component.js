@@ -4,6 +4,15 @@ import { AssetReference } from '../../asset/asset-reference.js';
 import { Component } from '../component.js';
 
 /**
+ * @import { BoundingBox } from '../../../core/shape/bounding-box.js'
+ * @import { Entity } from '../../entity.js'
+ * @import { GSplatComponentSystem } from './system.js'
+ * @import { GSplatInstance } from '../../../scene/gsplat/gsplat-instance.js'
+ * @import { Material } from '../../../scene/materials/material.js'
+ * @import { SplatMaterialOptions } from '../../../scene/gsplat/gsplat-material.js'
+ */
+
+/**
  * The GSplatComponent enables an {@link Entity} to render 3D Gaussian Splats. Splats are always
  * loaded from {@link Asset}s rather than being created programmatically. The asset type is
  * `gsplat` which are in the `.ply` file format.
@@ -20,13 +29,13 @@ class GSplatComponent extends Component {
     _layers = [LAYERID_WORLD]; // assign to the default world layer
 
     /**
-     * @type {import('../../../scene/gsplat/gsplat-instance.js').GSplatInstance|null}
+     * @type {GSplatInstance|null}
      * @private
      */
     _instance = null;
 
     /**
-     * @type {import('../../../core/shape/bounding-box.js').BoundingBox|null}
+     * @type {BoundingBox|null}
      * @private
      */
     _customAabb = null;
@@ -38,7 +47,7 @@ class GSplatComponent extends Component {
     _assetReference;
 
     /**
-     * @type {import('../../../scene/gsplat/gsplat-material.js').SplatMaterialOptions|null}
+     * @type {SplatMaterialOptions|null}
      * @private
      */
     _materialOptions = null;
@@ -46,10 +55,8 @@ class GSplatComponent extends Component {
     /**
      * Create a new GSplatComponent.
      *
-     * @param {import('./system.js').GSplatComponentSystem} system - The ComponentSystem that
-     * created this Component.
-     * @param {import('../../entity.js').Entity} entity - The Entity that this Component is
-     * attached to.
+     * @param {GSplatComponentSystem} system - The ComponentSystem that created this Component.
+     * @param {Entity} entity - The Entity that this Component is attached to.
      */
     constructor(system, entity) {
         super(system, entity);
@@ -78,7 +85,7 @@ class GSplatComponent extends Component {
     /**
      * Sets a custom object space bounding box for visibility culling of the attached gsplat.
      *
-     * @type {import('../../../core/shape/bounding-box.js').BoundingBox|null}
+     * @type {BoundingBox|null}
      */
     set customAabb(value) {
         this._customAabb = value;
@@ -90,7 +97,7 @@ class GSplatComponent extends Component {
     /**
      * Gets the custom object space bounding box for visibility culling of the attached gsplat.
      *
-     * @type {import('../../../core/shape/bounding-box.js').BoundingBox|null}
+     * @type {BoundingBox|null}
      */
     get customAabb() {
         return this._customAabb;
@@ -99,7 +106,7 @@ class GSplatComponent extends Component {
     /**
      * Sets a {@link GSplatInstance} on the component. If not set or loaded, it returns null.
      *
-     * @type {import('../../../scene/gsplat/gsplat-instance.js').GSplatInstance|null}
+     * @type {GSplatInstance|null}
      * @ignore
      */
     set instance(value) {
@@ -133,7 +140,7 @@ class GSplatComponent extends Component {
     /**
      * Gets the {@link GSplatInstance} on the component.
      *
-     * @type {import('../../../scene/gsplat/gsplat-instance.js').GSplatInstance|null}
+     * @type {GSplatInstance|null}
      * @ignore
      */
     get instance() {
@@ -156,7 +163,7 @@ class GSplatComponent extends Component {
     /**
      * Gets the material used to render the gsplat.
      *
-     * @type {import('../../../scene/materials/material.js').Material|undefined}
+     * @type {Material|undefined}
      */
     get material() {
         return this._instance?.material;
@@ -180,8 +187,9 @@ class GSplatComponent extends Component {
         }
 
         // don't add into layers until we're enabled
-        if (!this.enabled || !this.entity.enabled)
+        if (!this.enabled || !this.entity.enabled) {
             return;
+        }
 
         // add the mesh instance to new layers
         this.addToLayers();
@@ -359,8 +367,9 @@ class GSplatComponent extends Component {
     }
 
     _onGSplatAssetAdded() {
-        if (!this._assetReference.asset)
+        if (!this._assetReference.asset) {
             return;
+        }
 
         if (this._assetReference.asset.resource) {
             this._onGSplatAssetLoad();

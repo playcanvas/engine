@@ -1,19 +1,12 @@
 import { EventHandler } from '../../core/event-handler.js';
-
 import { Asset } from '../asset/asset.js';
+import { DEFAULT_LOCALE, DEFAULT_LOCALE_FALLBACKS } from './constants.js';
+import { findAvailableLocale, getLang, getPluralFn, replaceLang } from './utils.js';
 import { I18nParser } from './i18n-parser.js';
 
-import {
-    DEFAULT_LOCALE,
-    DEFAULT_LOCALE_FALLBACKS
-} from './constants.js';
-
-import {
-    replaceLang,
-    getLang,
-    getPluralFn,
-    findAvailableLocale
-} from './utils.js';
+/**
+ * @import { AppBase } from '../app-base.js'
+ */
 
 /**
  * Handles localization. Responsible for loading localization assets and returning translations for
@@ -24,7 +17,7 @@ class I18n extends EventHandler {
     /**
      * Create a new I18n instance.
      *
-     * @param {import('../app-base.js').AppBase} app - The application.
+     * @param {AppBase} app - The application.
      */
     constructor(app) {
         super();
@@ -58,7 +51,7 @@ class I18n extends EventHandler {
         while (i--) {
             const id = this._assets[i];
             if (!index[id]) {
-                this._app.assets.off('add:' + id, this._onAssetAdd, this);
+                this._app.assets.off(`add:${id}`, this._onAssetAdd, this);
                 const asset = this._app.assets.get(id);
                 if (asset) {
                     this._onAssetRemove(asset);
@@ -75,7 +68,7 @@ class I18n extends EventHandler {
             this._assets.push(idNum);
             const asset = this._app.assets.get(idNum);
             if (!asset) {
-                this._app.assets.once('add:' + idNum, this._onAssetAdd, this);
+                this._app.assets.once(`add:${idNum}`, this._onAssetAdd, this);
             } else {
                 this._onAssetAdd(asset);
             }
@@ -436,7 +429,7 @@ class I18n extends EventHandler {
             this.removeData(asset.resource);
         }
 
-        this._app.assets.once('add:' + asset.id, this._onAssetAdd, this);
+        this._app.assets.once(`add:${asset.id}`, this._onAssetAdd, this);
     }
 
     _onAssetUnload(asset) {

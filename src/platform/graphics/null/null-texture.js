@@ -1,7 +1,5 @@
 /**
- * A NULL implementation of the Texture.
- *
- * @ignore
+ * A Null implementation of the Texture.
  */
 class NullTexture {
     destroy(device) {

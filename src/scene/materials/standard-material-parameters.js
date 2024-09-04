@@ -23,13 +23,11 @@ const standardMaterialParameterTypes = {
     _engine: 'boolean', // internal param for engine-only loading
 
     ambient: 'rgb',
-    ambientTint: 'boolean',
     ..._textureParameter('ao'),
     ..._textureParameter('aoDetail', true, false),
     aoDetailMode: 'string',
 
     diffuse: 'rgb',
-    diffuseTint: 'boolean',
     ..._textureParameter('diffuse'),
     ..._textureParameter('diffuseDetail', true, false),
     diffuseDetailMode: 'string',
@@ -50,7 +48,6 @@ const standardMaterialParameterTypes = {
     ..._textureParameter('metalness'),
     useMetalnessSpecularColor: 'boolean',
 
-    conserveEnergy: 'boolean',
     shininess: 'number',
     gloss: 'number',
     glossInvert: 'boolean',
@@ -66,17 +63,14 @@ const standardMaterialParameterTypes = {
 
     useSheen: 'boolean',
     sheen: 'rgb',
-    sheenTint: 'boolean',
     ..._textureParameter('sheen'),
     sheenGloss: 'number',
-    sheenGlossTint: 'boolean',
     sheenGlossInvert: 'boolean',
     ..._textureParameter('sheenGloss'),
 
     fresnelModel: 'number',
 
     emissive: 'rgb',
-    emissiveTint: 'boolean',
     ..._textureParameter('emissive'),
     emissiveIntensity: 'number',
 
@@ -135,7 +129,6 @@ const standardMaterialParameterTypes = {
 
     cull: 'enum:cull',
     blendType: 'enum:blendType',
-    shadingModel: 'enum:shadingModel',
 
     useFog: 'boolean',
     useLighting: 'boolean',
@@ -151,8 +144,6 @@ const standardMaterialParameterTypes = {
     // forceUv1
     // occludeDirect
     // occludeSpecularIntensity
-    // fastTbn
-    // normalizeNormalMap
 
     // msdfMap
     // msdfMapChannel

@@ -1,13 +1,14 @@
 import { EventHandler } from '../../../core/event-handler.js';
 import { Debug } from '../../../core/debug.js';
-
 import { math } from '../../../core/math/math.js';
 import { Vec3 } from '../../../core/math/vec3.js';
-
 import { Asset } from '../../asset/asset.js';
-
 import { SoundInstance } from '../../../platform/sound/instance.js';
 import { SoundInstance3d } from '../../../platform/sound/instance3d.js';
+
+/**
+ * @import { SoundComponent } from './component.js'
+ */
 
 // temporary object for creating instances
 const instanceOptions = {
@@ -111,7 +112,7 @@ class SoundSlot extends EventHandler {
     /**
      * Create a new SoundSlot.
      *
-     * @param {import('./component.js').SoundComponent} component - The Component that created this
+     * @param {SoundComponent} component - The Component that created this
      * slot.
      * @param {string} [name] - The name of the slot. Defaults to 'Untitled'.
      * @param {object} [options] - Settings for the slot.
@@ -232,8 +233,9 @@ class SoundSlot extends EventHandler {
 
         const instances = this.instances;
         for (let i = 0, len = instances.length; i < len; i++) {
-            if (instances[i].resume())
+            if (instances[i].resume()) {
                 resumed = true;
+            }
         }
 
         return resumed;
@@ -266,13 +268,14 @@ class SoundSlot extends EventHandler {
      * Loads the asset assigned to this slot.
      */
     load() {
-        if (!this._hasAsset())
+        if (!this._hasAsset()) {
             return;
+        }
 
         const asset = this._assets.get(this._asset);
         if (!asset) {
-            this._assets.off('add:' + this._asset, this._onAssetAdd, this);
-            this._assets.once('add:' + this._asset, this._onAssetAdd, this);
+            this._assets.off(`add:${this._asset}`, this._onAssetAdd, this);
+            this._assets.once(`add:${this._asset}`, this._onAssetAdd, this);
             return;
         }
 
@@ -488,7 +491,7 @@ class SoundSlot extends EventHandler {
 
     _onAssetRemoved(asset) {
         asset.off('remove', this._onAssetRemoved, this);
-        this._assets.off('add:' + asset.id, this._onAssetAdd, this);
+        this._assets.off(`add:${asset.id}`, this._onAssetAdd, this);
         this.stop();
     }
 
@@ -508,7 +511,7 @@ class SoundSlot extends EventHandler {
         const old = this._asset;
 
         if (old) {
-            this._assets.off('add:' + old, this._onAssetAdd, this);
+            this._assets.off(`add:${old}`, this._onAssetAdd, this);
             const oldAsset = this._assets.get(old);
             if (oldAsset) {
                 oldAsset.off('remove', this._onAssetRemoved, this);
@@ -613,12 +616,14 @@ class SoundSlot extends EventHandler {
     get isPaused() {
         const instances = this.instances;
         const len = instances.length;
-        if (len === 0)
+        if (len === 0) {
             return false;
+        }
 
         for (let i = 0; i < len; i++) {
-            if (!instances[i].isPaused)
+            if (!instances[i].isPaused) {
                 return false;
+            }
         }
 
         return true;
@@ -632,8 +637,9 @@ class SoundSlot extends EventHandler {
     get isPlaying() {
         const instances = this.instances;
         for (let i = 0, len = instances.length; i < len; i++) {
-            if (instances[i].isPlaying)
+            if (instances[i].isPlaying) {
                 return true;
+            }
         }
 
         return false;
@@ -647,8 +653,9 @@ class SoundSlot extends EventHandler {
     get isStopped() {
         const instances = this.instances;
         for (let i = 0, len = instances.length; i < len; i++) {
-            if (!instances[i].isStopped)
+            if (!instances[i].isStopped) {
                 return false;
+            }
         }
 
         return true;

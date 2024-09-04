@@ -5,7 +5,7 @@ const canvas = /** @type {HTMLCanvasElement} */ (document.getElementById('applic
 window.focus();
 
 const assets = {
-    spark: new pc.Asset('spark', 'texture', { url: rootPath + '/static/assets/textures/spark.png' })
+    spark: new pc.Asset('spark', 'texture', { url: rootPath + '/static/assets/textures/spark.png' }, { srgb: true })
 };
 
 const gfxOptions = {

@@ -21,7 +21,7 @@ import { EventHandle } from './event-handle.js';
  * const obj = new EventHandlerSubclass();
  *
  * // subscribe to an event
- * obj.on('hello', function (str) {
+ * obj.on('hello', (str) => {
  *     console.log('event hello is fired', str);
  * });
  *
@@ -65,12 +65,14 @@ class EventHandler {
      */
     _addCallback(name, callback, scope, once) {
         // #if _DEBUG
-        if (!name || typeof name !== 'string' || !callback)
+        if (!name || typeof name !== 'string' || !callback) {
             console.warn(`EventHandler: subscribing to an event (${name}) with missing arguments`, callback);
+        }
         // #endif
 
-        if (!this._callbacks.has(name))
+        if (!this._callbacks.has(name)) {
             this._callbacks.set(name, []);
+        }
 
         // if we are adding a callback to the list that is executing right now
         // ensure we preserve initial list before modifications
@@ -96,12 +98,12 @@ class EventHandler {
      * current this.
      * @returns {EventHandle} Can be used for removing event in the future.
      * @example
-     * obj.on('test', function (a, b) {
+     * obj.on('test', (a, b) => {
      *     console.log(a + b);
      * });
      * obj.fire('test', 1, 2); // prints 3 to the console
      * @example
-     * const evt = obj.on('test', function (a, b) {
+     * const evt = obj.on('test', (a, b) => {
      *     console.log(a + b);
      * });
      * // some time later
@@ -121,7 +123,7 @@ class EventHandler {
      * current this.
      * @returns {EventHandle} - can be used for removing event in the future.
      * @example
-     * obj.once('test', function (a, b) {
+     * obj.once('test', (a, b) => {
      *     console.log(a + b);
      * });
      * obj.fire('test', 1, 2); // prints 3 to the console
@@ -141,8 +143,7 @@ class EventHandler {
      * @param {object} [scope] - Scope that was used as the this when the event is fired.
      * @returns {EventHandler} Self for chaining.
      * @example
-     * const handler = function () {
-     * };
+     * const handler = () => {};
      * obj.on('test', handler);
      *
      * obj.off(); // Removes all events
@@ -154,17 +155,20 @@ class EventHandler {
         if (name) {
             // if we are removing a callback from the list that is executing right now
             // ensure we preserve initial list before modifications
-            if (this._callbackActive.has(name) && this._callbackActive.get(name) === this._callbacks.get(name))
+            if (this._callbackActive.has(name) && this._callbackActive.get(name) === this._callbacks.get(name)) {
                 this._callbackActive.set(name, this._callbackActive.get(name).slice());
+            }
         } else {
             // if we are removing a callback from any list that is executing right now
             // ensure we preserve these initial lists before modifications
             for (const [key, callbacks] of this._callbackActive) {
-                if (!this._callbacks.has(key))
+                if (!this._callbacks.has(key)) {
                     continue;
+                }
 
-                if (this._callbacks.get(key) !== callbacks)
+                if (this._callbacks.get(key) !== callbacks) {
                     continue;
+                }
 
                 this._callbackActive.set(key, callbacks.slice());
             }
@@ -189,25 +193,29 @@ class EventHandler {
             }
         } else {
             const callbacks = this._callbacks.get(name);
-            if (!callbacks)
+            if (!callbacks) {
                 return this;
+            }
 
             for (let i = 0; i < callbacks.length; i++) {
                 // remove all events with a specific name and a callback
-                if (callbacks[i].callback !== callback)
+                if (callbacks[i].callback !== callback) {
                     continue;
+                }
 
                 // could be a specific scope as well
-                if (scope && callbacks[i].scope !== scope)
+                if (scope && callbacks[i].scope !== scope) {
                     continue;
+                }
 
                 callbacks[i].removed = true;
                 callbacks.splice(i, 1);
                 i--;
             }
 
-            if (callbacks.length === 0)
+            if (callbacks.length === 0) {
                 this._callbacks.delete(name);
+            }
         }
 
         return this;
@@ -230,12 +238,14 @@ class EventHandler {
      * obj.fire('test', 'This is the message');
      */
     fire(name, arg1, arg2, arg3, arg4, arg5, arg6, arg7, arg8) {
-        if (!name)
+        if (!name) {
             return this;
+        }
 
         const callbacksInitial = this._callbacks.get(name);
-        if (!callbacksInitial)
+        if (!callbacksInitial) {
             return this;
+        }
 
         let callbacks;
 
@@ -262,22 +272,25 @@ class EventHandler {
                 const ind = existingCallback ? existingCallback.indexOf(evt) : -1;
 
                 if (ind !== -1) {
-                    if (this._callbackActive.get(name) === existingCallback)
+                    if (this._callbackActive.get(name) === existingCallback) {
                         this._callbackActive.set(name, this._callbackActive.get(name).slice());
+                    }
 
                     const callbacks = this._callbacks.get(name);
                     if (!callbacks) continue;
                     callbacks[ind].removed = true;
                     callbacks.splice(ind, 1);
 
-                    if (callbacks.length === 0)
+                    if (callbacks.length === 0) {
                         this._callbacks.delete(name);
+                    }
                 }
             }
         }
 
-        if (!callbacks)
+        if (!callbacks) {
             this._callbackActive.delete(name);
+        }
 
         return this;
     }
@@ -288,7 +301,7 @@ class EventHandler {
      * @param {string} name - The name of the event to test.
      * @returns {boolean} True if the object has handlers bound to the specified event name.
      * @example
-     * obj.on('test', function () { }); // bind an event to 'test'
+     * obj.on('test', () => {}); // bind an event to 'test'
      * obj.hasEvent('test'); // returns true
      * obj.hasEvent('hello'); // returns false
      */

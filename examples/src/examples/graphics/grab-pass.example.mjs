@@ -129,11 +129,12 @@ assetListLoader.load(() => {
     glass.render.castShadows = false;
     glass.render.receiveShadows = false;
 
-    const shader = pc.createShaderFromCode(app.graphicsDevice, files['shader.vert'], files['shader.frag'], 'myShader');
-
     // reflection material using the shader
-    const refractionMaterial = new pc.Material();
-    refractionMaterial.shader = shader;
+    const refractionMaterial = new pc.ShaderMaterial({
+        uniqueName: 'RefractionShader',
+        vertexCode: files['shader.vert'],
+        fragmentCode: files['shader.frag']
+    });
     glass.render.material = refractionMaterial;
 
     // set an offset map on the material

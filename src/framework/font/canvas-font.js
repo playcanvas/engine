@@ -1,14 +1,16 @@
 import { string } from '../../core/string.js';
 import { EventHandler } from '../../core/event-handler.js';
-
 import { Color } from '../../core/math/color.js';
-
 import {
     ADDRESS_CLAMP_TO_EDGE,
     FILTER_LINEAR, FILTER_LINEAR_MIPMAP_LINEAR,
     PIXELFORMAT_RGBA8
 } from '../../platform/graphics/constants.js';
 import { Texture } from '../../platform/graphics/texture.js';
+
+/**
+ * @import { AppBase } from '../app-base.js'
+ */
 
 const MAX_TEXTURE_SIZE = 4096;
 const DEFAULT_TEXTURE_SIZE = 512;
@@ -62,7 +64,7 @@ class CanvasFont extends EventHandler {
     /**
      * Create a new CanvasFont instance.
      *
-     * @param {import('../app-base.js').AppBase} app - The application.
+     * @param {AppBase} app - The application.
      * @param {object} options - The font options.
      * @param {string} [options.fontName] - The name of the font. CSS font names are supported.
      * Defaults to 'Arial'.
@@ -268,7 +270,7 @@ class CanvasFont extends EventHandler {
             const code = string.getCodePoint(symbols[i]);
 
             let fs = this.fontSize;
-            atlas.ctx.font = this.fontWeight + ' ' + fs.toString() + 'px ' + this.fontName;
+            atlas.ctx.font = `${this.fontWeight} ${fs.toString()}px ${this.fontName}`;
             atlas.ctx.textAlign = TEXT_ALIGN;
             atlas.ctx.textBaseline = TEXT_BASELINE;
 
@@ -276,7 +278,7 @@ class CanvasFont extends EventHandler {
 
             if (width > fs) {
                 fs = this.fontSize * this.fontSize / width;
-                atlas.ctx.font = this.fontWeight + ' ' + fs.toString() + 'px ' + this.fontName;
+                atlas.ctx.font = `${this.fontWeight} ${fs.toString()}px ${this.fontName}`;
                 width = this.fontSize;
             }
 
@@ -428,7 +430,7 @@ class CanvasFont extends EventHandler {
         const div = document.createElement('div');
         div.appendChild(textSpan);
         div.appendChild(block);
-        div.style.font = this.fontSize + 'px ' + this.fontName;
+        div.style.font = `${this.fontSize}px ${this.fontName}`;
 
         const body = document.body;
         body.appendChild(div);

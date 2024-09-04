@@ -6,6 +6,9 @@
 
 export { MiniStats } from './mini-stats/mini-stats.js';
 
+// RENDERERS
+export { OutlineRenderer } from './renderers/outline-renderer.js';
+
 // EXPORTERS
 export { UsdzExporter } from './exporters/usdz-exporter.js';
 export { GltfExporter } from './exporters/gltf-exporter.js';
@@ -21,8 +24,20 @@ export { RenderPassSsao } from './render-passes/render-pass-ssao.js';
 export { RenderPassTAA } from './render-passes/render-pass-taa.js';
 
 // GIZMOS
-export { Gizmo, GIZMO_LOCAL, GIZMO_WORLD } from "./gizmo/gizmo.js";
-export { TransformGizmo } from "./gizmo/transform-gizmo.js";
-export { TranslateGizmo } from "./gizmo/translate-gizmo.js";
-export { RotateGizmo } from "./gizmo/rotate-gizmo.js";
-export { ScaleGizmo } from "./gizmo/scale-gizmo.js";
+export {
+    GIZMOSPACE_LOCAL,
+    GIZMOSPACE_WORLD,
+    GIZMOAXIS_X,
+    GIZMOAXIS_Y,
+    GIZMOAXIS_Z,
+    GIZMOAXIS_XY,
+    GIZMOAXIS_XZ,
+    GIZMOAXIS_YZ,
+    GIZMOAXIS_XYZ,
+    GIZMOAXIS_FACE
+} from './gizmo/constants.js';
+export { Gizmo } from './gizmo/gizmo.js';
+export { TransformGizmo } from './gizmo/transform-gizmo.js';
+export { TranslateGizmo } from './gizmo/translate-gizmo.js';
+export { RotateGizmo } from './gizmo/rotate-gizmo.js';
+export { ScaleGizmo } from './gizmo/scale-gizmo.js';

@@ -1,10 +1,11 @@
 import { path } from '../../core/path.js';
-
 import { http } from '../../platform/net/http.js';
-
 import { Sprite } from '../../scene/sprite.js';
-
 import { ResourceHandler } from './handler.js';
+
+/**
+ * @import { AppBase } from '../app-base.js'
+ */
 
 // The scope of this function is the sprite asset
 function onTextureAtlasLoaded(atlasAsset) {
@@ -29,7 +30,7 @@ class SpriteHandler extends ResourceHandler {
     /**
      * Create a new SpriteHandler instance.
      *
-     * @param {import('../app-base.js').AppBase} app - The running {@link AppBase}.
+     * @param {AppBase} app - The running {@link AppBase}.
      * @ignore
      */
     constructor(app) {
@@ -52,7 +53,7 @@ class SpriteHandler extends ResourceHandler {
             http.get(url.load, {
                 retry: this.maxRetries > 0,
                 maxRetries: this.maxRetries
-            }, function (err, response) {
+            }, (err, response) => {
                 if (!err) {
                     callback(null, response);
                 } else {
@@ -90,7 +91,7 @@ class SpriteHandler extends ResourceHandler {
                 if (atlas) {
                     asset.data.textureAtlasAsset = atlas.id;
                 } else {
-                    console.warn('Could not find textureatlas with url: ' + sprite.__data.textureAtlasAsset);
+                    console.warn(`Could not find textureatlas with url: ${sprite.__data.textureAtlasAsset}`);
                 }
             }
 
@@ -117,16 +118,16 @@ class SpriteHandler extends ResourceHandler {
             return;
         }
 
-        this._assets.off('load:' + asset.data.textureAtlasAsset, onTextureAtlasLoaded, asset);
-        this._assets.on('load:' + asset.data.textureAtlasAsset, onTextureAtlasLoaded, asset);
+        this._assets.off(`load:${asset.data.textureAtlasAsset}`, onTextureAtlasLoaded, asset);
+        this._assets.on(`load:${asset.data.textureAtlasAsset}`, onTextureAtlasLoaded, asset);
 
         const atlasAsset = this._assets.get(asset.data.textureAtlasAsset);
         if (atlasAsset && atlasAsset.resource) {
             sprite.atlas = atlasAsset.resource;
         } else {
             if (!atlasAsset) {
-                this._assets.off('add:' + asset.data.textureAtlasAsset, onTextureAtlasAdded, asset);
-                this._assets.on('add:' + asset.data.textureAtlasAsset, onTextureAtlasAdded, asset);
+                this._assets.off(`add:${asset.data.textureAtlasAsset}`, onTextureAtlasAdded, asset);
+                this._assets.on(`add:${asset.data.textureAtlasAsset}`, onTextureAtlasAdded, asset);
             } else {
                 this._assets.load(atlasAsset);
             }
@@ -137,8 +138,8 @@ class SpriteHandler extends ResourceHandler {
         if (attribute === 'data') {
             // if the texture atlas changed, clear events for old atlas asset
             if (value && value.textureAtlasAsset && oldValue && value.textureAtlasAsset !== oldValue.textureAtlasAsset) {
-                this._assets.off('load:' + oldValue.textureAtlasAsset, onTextureAtlasLoaded, asset);
-                this._assets.off('add:' + oldValue.textureAtlasAsset, onTextureAtlasAdded, asset);
+                this._assets.off(`load:${oldValue.textureAtlasAsset}`, onTextureAtlasLoaded, asset);
+                this._assets.off(`add:${oldValue.textureAtlasAsset}`, onTextureAtlasAdded, asset);
             }
         }
     }

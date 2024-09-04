@@ -6,13 +6,17 @@ import { MorphInstance } from '../../../scene/morph-instance.js';
 import { getShapePrimitive } from '../../graphics/primitive-cache.js';
 import { GraphNode } from '../../../scene/graph-node.js';
 import { SkinInstanceCache } from '../../../scene/skin-instance-cache.js';
-
 import { Asset } from '../../asset/asset.js';
 import { AssetReference } from '../../asset/asset-reference.js';
-
 import { Component } from '../component.js';
-
 import { EntityReference } from '../../utils/entity-reference.js';
+
+/**
+ * @import { BoundingBox } from '../../../core/shape/bounding-box.js'
+ * @import { Entity } from '../../entity.js'
+ * @import { Material } from '../../../scene/materials/material.js'
+ * @import { RenderComponentSystem } from './system.js'
+ */
 
 /**
  * The RenderComponent enables an {@link Entity} to render 3D meshes. The {@link RenderComponent#type}
@@ -54,8 +58,8 @@ import { EntityReference } from '../../utils/entity-reference.js';
  * - [Primitive Shapes](https://playcanvas.github.io/#/graphics/shapes)
  * - [Loading Render Assets](https://playcanvas.github.io/#/graphics/render-asset)
  *
- * @property {import('../../entity.js').Entity} rootBone A reference to the entity to be used as
- * the root bone for any skinned meshes that are rendered by this component.
+ * @property {Entity} rootBone A reference to the entity to be used as the root bone for any
+ * skinned meshes that are rendered by this component.
  *
  * @category Graphics
  */
@@ -101,7 +105,7 @@ class RenderComponent extends Component {
     _meshInstances = [];
 
     /**
-     * @type {import('../../../core/shape/bounding-box.js').BoundingBox|null}
+     * @type {BoundingBox|null}
      * @private
      */
     _customAabb = null;
@@ -130,7 +134,7 @@ class RenderComponent extends Component {
      * Material used to render meshes other than asset type. It gets priority when set to
      * something else than defaultMaterial, otherwise materialASsets[0] is used.
      *
-     * @type {import('../../../scene/materials/material.js').Material}
+     * @type {Material}
      * @private
      */
     _material;
@@ -144,10 +148,8 @@ class RenderComponent extends Component {
     /**
      * Create a new RenderComponent.
      *
-     * @param {import('./system.js').RenderComponentSystem} system - The ComponentSystem that
-     * created this Component.
-     * @param {import('../../entity.js').Entity} entity - The Entity that this Component is
-     * attached to.
+     * @param {RenderComponentSystem} system - The ComponentSystem that created this Component.
+     * @param {Entity} entity - The Entity that this Component is attached to.
      */
     constructor(system, entity) {
         super(system, entity);
@@ -212,7 +214,7 @@ class RenderComponent extends Component {
      * for skinned characters in order to avoid per frame bounding box computations based on bone
      * positions.
      *
-     * @type {import('../../../core/shape/bounding-box.js').BoundingBox|null}
+     * @type {BoundingBox|null}
      */
     set customAabb(value) {
         this._customAabb = value;
@@ -230,7 +232,7 @@ class RenderComponent extends Component {
      * Gets the custom object space bounding box that is used for visibility culling of attached
      * mesh instances.
      *
-     * @type {import('../../../core/shape/bounding-box.js').BoundingBox|null}
+     * @type {BoundingBox|null}
      */
     get customAabb() {
         return this._customAabb;
@@ -289,7 +291,7 @@ class RenderComponent extends Component {
      */
     set meshInstances(value) {
 
-        Debug.assert(Array.isArray(value), `MeshInstances set to a Render component must be an array.`);
+        Debug.assert(Array.isArray(value), 'MeshInstances set to a Render component must be an array.');
         this.destroyMeshInstances();
 
         this._meshInstances = value;
@@ -552,7 +554,7 @@ class RenderComponent extends Component {
      * Sets the material {@link Material} that will be used to render the component. The material
      * is ignored for renders of type 'asset'.
      *
-     * @type {import('../../../scene/materials/material.js').Material}
+     * @type {Material}
      */
     set material(value) {
         if (this._material !== value) {
@@ -569,7 +571,7 @@ class RenderComponent extends Component {
     /**
      * Gets the material {@link Material} that will be used to render the component.
      *
-     * @type {import('../../../scene/materials/material.js').Material}
+     * @type {Material}
      */
     get material() {
         return this._material;
@@ -631,7 +633,7 @@ class RenderComponent extends Component {
      * @type {Asset[]|number[]}
      */
     get materialAssets() {
-        return this._materialReferences.map(function (ref) {
+        return this._materialReferences.map((ref) => {
             return ref.id;
         });
     }
@@ -679,7 +681,7 @@ class RenderComponent extends Component {
     }
 
     /**
-     * @param {import('../../entity.js').Entity} entity - The entity set as the root bone.
+     * @param {Entity} entity - The entity set as the root bone.
      * @private
      */
     _onSetRootBone(entity) {

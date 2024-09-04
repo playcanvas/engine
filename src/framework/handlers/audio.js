@@ -1,13 +1,13 @@
 import { path } from '../../core/path.js';
 import { Debug } from '../../core/debug.js';
-
 import { http, Http } from '../../platform/net/http.js';
-
 import { hasAudioContext } from '../../platform/audio/capabilities.js';
-
 import { Sound } from '../../platform/sound/sound.js';
-
 import { ResourceHandler } from './handler.js';
+
+/**
+ * @import { AppBase } from '../app-base.js'
+ */
 
 // checks if user is running IE
 const ie = (function () {
@@ -53,14 +53,14 @@ class AudioHandler extends ResourceHandler {
     /**
      * Create a new AudioHandler instance.
      *
-     * @param {import('../app-base.js').AppBase} app - The running {@link AppBase}.
+     * @param {AppBase} app - The running {@link AppBase}.
      * @ignore
      */
     constructor(app) {
         super(app, 'audio');
 
         this.manager = app.soundManager;
-        Debug.assert(this.manager, "AudioHandler cannot be created without sound manager");
+        Debug.assert(this.manager, 'AudioHandler cannot be created without sound manager');
     }
 
     _isSupported(url) {
@@ -82,9 +82,9 @@ class AudioHandler extends ResourceHandler {
         };
 
         const error = function (err) {
-            let msg = 'Error loading audio url: ' + url.original;
+            let msg = `Error loading audio url: ${url.original}`;
             if (err) {
-                msg += ': ' + (err.message || err);
+                msg += `: ${err.message || err}`;
             }
             console.warn(msg);
             callback(msg);
@@ -132,7 +132,7 @@ class AudioHandler extends ResourceHandler {
                 options.responseType = Http.ResponseType.ARRAY_BUFFER;
             }
 
-            http.get(url, options, function (err, response) {
+            http.get(url, options, (err, response) => {
                 if (err) {
                     error(err);
                     return;

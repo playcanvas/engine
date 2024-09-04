@@ -1,16 +1,19 @@
 import { Debug } from '../../../core/debug.js';
 import { SortedLoopArray } from '../../../core/sorted-loop-array.js';
-
 import { ScriptAttributes, assignAttributesToScript } from '../../script/script-attributes.js';
+import { Component } from '../component.js';
+import { Entity } from '../../entity.js';
 import {
     SCRIPT_INITIALIZE, SCRIPT_POST_INITIALIZE, SCRIPT_UPDATE,
     SCRIPT_POST_UPDATE, SCRIPT_SWAP
 } from '../../script/constants.js';
-
-import { Component } from '../component.js';
-import { Entity } from '../../entity.js';
 import { ScriptType } from '../../script/script-type.js';
 import { getScriptName } from '../../script/script.js';
+
+/**
+ * @import { ScriptComponentSystem } from './system.js'
+ * @import { Script } from '../../script/script.js'
+ */
 
 const toLowerCamelCase = str => str[0].toLowerCase() + str.substring(1);
 
@@ -156,8 +159,7 @@ class ScriptComponent extends Component {
     /**
      * Create a new ScriptComponent instance.
      *
-     * @param {import('./system.js').ScriptComponentSystem} system - The ComponentSystem that
-     * created this Component.
+     * @param {ScriptComponentSystem} system - The ComponentSystem that created this Component.
      * @param {Entity} entity - The Entity that this Component is attached to.
      */
     constructor(system, entity) {
@@ -166,7 +168,7 @@ class ScriptComponent extends Component {
         /**
          * Holds all script instances for this component.
          *
-         * @type {import('../../script/script-type.js').ScriptType[]}
+         * @type {ScriptType[]}
          * @private
          */
         this._scripts = [];
@@ -203,14 +205,15 @@ class ScriptComponent extends Component {
      * Sets the array of all script instances attached to an entity. This array is read-only and
      * should not be modified by developer.
      *
-     * @type {import('../../script/script.js').Script[]}
+     * @type {Script[]}
      */
     set scripts(value) {
         this._scriptsData = value;
 
         for (const key in value) {
-            if (!value.hasOwnProperty(key))
+            if (!value.hasOwnProperty(key)) {
                 continue;
+            }
 
             const script = this._scriptsIndex[key];
             if (script) {
@@ -229,14 +232,16 @@ class ScriptComponent extends Component {
                 // attributes
                 if (typeof value[key].attributes === 'object') {
                     for (const attr in value[key].attributes) {
-                        if (ScriptAttributes.reservedNames.has(attr))
+                        if (ScriptAttributes.reservedNames.has(attr)) {
                             continue;
+                        }
 
                         if (!script.__attributes.hasOwnProperty(attr)) {
                             // new attribute
                             const scriptType = this.system.app.scripts.get(key);
-                            if (scriptType)
+                            if (scriptType) {
                                 scriptType.attributes.add(attr, { });
+                            }
                         }
 
                         // update attribute
@@ -254,7 +259,7 @@ class ScriptComponent extends Component {
     /**
      * Gets the array of all script instances attached to an entity.
      *
-     * @type {import('../../script/script-type.js').ScriptType[]}
+     * @type {ScriptType[]}
      */
     get scripts() {
         return this._scripts;
@@ -294,8 +299,9 @@ class ScriptComponent extends Component {
             if (script._initialized && !script._postInitialized && script.enabled) {
                 script._postInitialized = true;
 
-                if (script.postInitialize)
+                if (script.postInitialize) {
                     this._scriptMethod(script, SCRIPT_POST_INITIALIZE);
+                }
             }
         }
 
@@ -330,8 +336,9 @@ class ScriptComponent extends Component {
 
     _checkState() {
         const state = this.enabled && this.entity.enabled;
-        if (state === this._oldState)
+        if (state === this._oldState) {
             return;
+        }
 
         this._oldState = state;
 
@@ -455,8 +462,9 @@ class ScriptComponent extends Component {
             const script = scripts[i];
             if (!script._initialized && script.enabled) {
                 script._initialized = true;
-                if (script.initialize)
+                if (script.initialize) {
                     this._scriptMethod(script, SCRIPT_INITIALIZE);
+                }
             }
         }
 
@@ -604,8 +612,7 @@ class ScriptComponent extends Component {
     /**
      * Detect if script is attached to an entity.
      *
-     * @param {string|typeof import('../../script/script-type.js').ScriptType} nameOrType - The
-     * name or type of {@link ScriptType}.
+     * @param {string|typeof ScriptType} nameOrType - The name or type of {@link ScriptType}.
      * @returns {boolean} If script is attached to an entity.
      * @example
      * if (entity.script.has('playerController')) {
@@ -628,10 +635,9 @@ class ScriptComponent extends Component {
     /**
      * Get a script instance (if attached).
      *
-     * @param {string|typeof import('../../script/script-type.js').ScriptType} nameOrType - The
-     * name or type of {@link ScriptType}.
-     * @returns {import('../../script/script-type.js').ScriptType|null} If script is attached, the
-     * instance is returned. Otherwise null is returned.
+     * @param {string|typeof ScriptType} nameOrType - The name or type of {@link ScriptType}.
+     * @returns {ScriptType|null} If script is attached, the instance is returned. Otherwise null
+     * is returned.
      * @example
      * const controller = entity.script.get('playerController');
      */
@@ -652,21 +658,21 @@ class ScriptComponent extends Component {
     /**
      * Create a script instance and attach to an entity script component.
      *
-     * @param {string|typeof import('../../script/script.js').Script} nameOrType - The
-     * name or type of {@link Script}.
+     * @param {string|typeof Script} nameOrType - The name or type of {@link Script}.
      * @param {object} [args] - Object with arguments for a script.
      * @param {boolean} [args.enabled] - If script instance is enabled after creation. Defaults to
      * true.
      * @param {object} [args.attributes] - Object with values for attributes (if any), where key is
      * name of an attribute.
+     * @param {object} [args.properties] - Object with values that are **assigned** to the script instance.
      * @param {boolean} [args.preloading] - If script instance is created during preload. If true,
      * script and attributes must be initialized manually. Defaults to false.
      * @param {number} [args.ind] - The index where to insert the script instance at. Defaults to
      * -1, which means append it at the end.
-     * @returns {import('../../script/script-type.js').ScriptType|null} Returns an instance of a
-     * {@link ScriptType} if successfully attached to an entity, or null if it failed because a
-     * script with a same name has already been added or if the {@link ScriptType} cannot be found
-     * by name in the {@link ScriptRegistry}.
+     * @returns {ScriptType|null} Returns an instance of a {@link ScriptType} if successfully
+     * attached to an entity, or null if it failed because a script with a same name has already
+     * been added or if the {@link ScriptType} cannot be found by name in the
+     * {@link ScriptRegistry}.
      * @example
      * entity.script.create('playerController', {
      *     attributes: {
@@ -697,6 +703,9 @@ class ScriptComponent extends Component {
                     attributes: args.attributes
                 });
 
+                if (args.properties && typeof args.properties === 'object') {
+                    Object.assign(scriptInstance, args.properties);
+                }
 
                 // If the script is not a ScriptType then we must store attribute data on the component
                 if (!(scriptInstance instanceof ScriptType)) {
@@ -708,8 +717,9 @@ class ScriptComponent extends Component {
 
                 const len = this._scripts.length;
                 let ind = -1;
-                if (typeof args.ind === 'number' && args.ind !== -1 && len > args.ind)
+                if (typeof args.ind === 'number' && args.ind !== -1 && len > args.ind) {
                     ind = args.ind;
+                }
 
                 this._insertScriptInstance(scriptInstance, ind, len);
 
@@ -722,27 +732,30 @@ class ScriptComponent extends Component {
 
                 this[scriptName] = scriptInstance;
 
-                if (!args.preloading)
+                if (!args.preloading) {
                     this.initializeAttributes(scriptInstance);
+                }
 
                 this.fire('create', scriptName, scriptInstance);
-                this.fire('create:' + scriptName, scriptInstance);
+                this.fire(`create:${scriptName}`, scriptInstance);
 
-                this.system.app.scripts.on('swap:' + scriptName, this._scriptsIndex[scriptName].onSwap);
+                this.system.app.scripts.on(`swap:${scriptName}`, this._scriptsIndex[scriptName].onSwap);
 
                 if (!args.preloading) {
 
                     if (scriptInstance.enabled && !scriptInstance._initialized) {
                         scriptInstance._initialized = true;
 
-                        if (scriptInstance.initialize)
+                        if (scriptInstance.initialize) {
                             this._scriptMethod(scriptInstance, SCRIPT_INITIALIZE);
+                        }
                     }
 
                     if (scriptInstance.enabled && !scriptInstance._postInitialized) {
                         scriptInstance._postInitialized = true;
-                        if (scriptInstance.postInitialize)
+                        if (scriptInstance.postInitialize) {
                             this._scriptMethod(scriptInstance, SCRIPT_POST_INITIALIZE);
+                        }
                     }
                 }
 
@@ -766,8 +779,7 @@ class ScriptComponent extends Component {
     /**
      * Destroy the script instance that is attached to an entity.
      *
-     * @param {string|typeof import('../../script/script-type.js').ScriptType} nameOrType - The
-     * name or type of {@link ScriptType}.
+     * @param {string|typeof ScriptType} nameOrType - The name or type of {@link ScriptType}.
      * @returns {boolean} If it was successfully destroyed.
      * @example
      * entity.script.destroy('playerController');
@@ -809,15 +821,16 @@ class ScriptComponent extends Component {
         }
 
         // remove swap event
-        this.system.app.scripts.off('swap:' + scriptName, scriptData.onSwap);
+        this.system.app.scripts.off(`swap:${scriptName}`, scriptData.onSwap);
 
         delete this[scriptName];
 
         this.fire('destroy', scriptName, scriptInstance || null);
-        this.fire('destroy:' + scriptName, scriptInstance || null);
+        this.fire(`destroy:${scriptName}`, scriptInstance || null);
 
-        if (scriptInstance)
+        if (scriptInstance) {
             scriptInstance.fire('destroy');
+        }
 
         return true;
     }
@@ -825,8 +838,7 @@ class ScriptComponent extends Component {
     /**
      * Swap the script instance.
      *
-     * @param {string|typeof import('../../script/script-type.js').ScriptType} nameOrType - The
-     * name or type of {@link ScriptType}.
+     * @param {string|typeof ScriptType} nameOrType - The name or type of {@link ScriptType}.
      * @returns {boolean} If it was successfully swapped.
      * @private
      */
@@ -854,8 +866,9 @@ class ScriptComponent extends Component {
             attributes: scriptInstanceOld.__attributes
         });
 
-        if (!scriptInstance.swap)
+        if (!scriptInstance.swap) {
             return false;
+        }
 
         this.initializeAttributes(scriptInstance);
 
@@ -884,7 +897,7 @@ class ScriptComponent extends Component {
         this._scriptMethod(scriptInstance, SCRIPT_SWAP, scriptInstanceOld);
 
         this.fire('swap', scriptName, scriptInstance);
-        this.fire('swap:' + scriptName, scriptInstance);
+        this.fire(`swap:${scriptName}`, scriptInstance);
 
         return true;
     }
@@ -996,8 +1009,7 @@ class ScriptComponent extends Component {
     /**
      * Move script instance to different position to alter update order of scripts within entity.
      *
-     * @param {string|typeof import('../../script/script-type.js').ScriptType} nameOrType - The
-     * name or type of {@link ScriptType}.
+     * @param {string|typeof ScriptType} nameOrType - The name or type of {@link ScriptType}.
      * @param {number} ind - New position index.
      * @returns {boolean} If it was successfully moved.
      * @example
@@ -1005,8 +1017,9 @@ class ScriptComponent extends Component {
      */
     move(nameOrType, ind) {
         const len = this._scripts.length;
-        if (ind >= len || ind < 0)
+        if (ind >= len || ind < 0) {
             return false;
+        }
 
         let scriptType = nameOrType;
         let scriptName = nameOrType;
@@ -1018,17 +1031,20 @@ class ScriptComponent extends Component {
         }
 
         const scriptData = this._scriptsIndex[scriptName];
-        if (!scriptData || !scriptData.instance)
+        if (!scriptData || !scriptData.instance) {
             return false;
+        }
 
         // if script type specified, make sure instance of said type
         const scriptInstance = scriptData.instance;
-        if (scriptType && !(scriptInstance instanceof scriptType))
+        if (scriptType && !(scriptInstance instanceof scriptType)) {
             return false;
+        }
 
         const indOld = this._scripts.indexOf(scriptInstance);
-        if (indOld === -1 || indOld === ind)
+        if (indOld === -1 || indOld === ind) {
             return false;
+        }
 
         // move script to another position
         this._scripts.splice(ind, 0, this._scripts.splice(indOld, 1)[0]);
@@ -1039,7 +1055,7 @@ class ScriptComponent extends Component {
         this._postUpdateList.sort();
 
         this.fire('move', scriptName, scriptInstance, ind, indOld);
-        this.fire('move:' + scriptName, scriptInstance, ind, indOld);
+        this.fire(`move:${scriptName}`, scriptInstance, ind, indOld);
 
         return true;
     }

@@ -1,6 +1,6 @@
-import { WasmModule } from "../../core/wasm-module.js";
-import { DracoWorker } from "./draco-worker.js";
-import { Debug } from "../../core/debug.js";
+import { WasmModule } from '../../core/wasm-module.js';
+import { DracoWorker } from './draco-worker.js';
+import { Debug } from '../../core/debug.js';
 import { http } from '../../platform/net/http.js';
 
 const downloadMaxRetries = 3;
@@ -123,16 +123,16 @@ const downloadScript = (url) => {
 const compileModule = (url) => {
     const compileManual = () => {
         return fetch(url)
-            .then(result => result.arrayBuffer())
-            .then(buffer => WebAssembly.compile(buffer));
+        .then(result => result.arrayBuffer())
+        .then(buffer => WebAssembly.compile(buffer));
     };
 
     const compileStreaming = () => {
         return WebAssembly.compileStreaming(fetch(url))
-            .catch((err) => {
-                Debug.warn(`compileStreaming() failed for ${url} (${err}), falling back to arraybuffer download.`);
-                return compileManual();
-            });
+        .catch((err) => {
+            Debug.warn(`compileStreaming() failed for ${url} (${err}), falling back to arraybuffer download.`);
+            return compileManual();
+        });
     };
 
     // download and compile wasm module
@@ -179,30 +179,30 @@ const initializeWorkers = (config) => {
 
     // worker urls must be absolute
     Promise.all([downloadScript(config.jsUrl), compileModule(config.wasmUrl)])
-        .then(([dracoSource, dracoModule]) => {
-            // build worker source
-            const code = [
-                '/* draco */',
-                dracoSource,
-                '/* worker */',
-                `(\n${DracoWorker.toString()}\n)()\n\n`
-            ].join('\n');
-            const blob = new Blob([code], { type: 'application/javascript' });
-            const workerUrl = URL.createObjectURL(blob);
-            const numWorkers = Math.max(1, Math.min(16, config.numWorkers || defaultNumWorkers));
+    .then(([dracoSource, dracoModule]) => {
+        // build worker source
+        const code = [
+            '/* draco */',
+            dracoSource,
+            '/* worker */',
+            `(\n${DracoWorker.toString()}\n)()\n\n`
+        ].join('\n');
+        const blob = new Blob([code], { type: 'application/javascript' });
+        const workerUrl = URL.createObjectURL(blob);
+        const numWorkers = Math.max(1, Math.min(16, config.numWorkers || defaultNumWorkers));
 
-            // create worker instances
-            const workers = [];
-            for (let i = 0; i < numWorkers; ++i) {
-                const worker = new Worker(workerUrl);
-                worker.postMessage({
-                    type: 'init',
-                    module: dracoModule
-                });
-                workers.push(worker);
-            }
-            jobQueue.init(workers);
-        });
+        // create worker instances
+        const workers = [];
+        for (let i = 0; i < numWorkers; ++i) {
+            const worker = new Worker(workerUrl);
+            worker.postMessage({
+                type: 'init',
+                module: dracoModule
+            });
+            workers.push(worker);
+        }
+        jobQueue.init(workers);
+    });
 
     return true;
 };
@@ -231,7 +231,6 @@ const dracoInitialize = (config) => {
  * @param {ArrayBuffer} buffer - The draco data to decode.
  * @param {Function} callback - Callback function to receive decoded result.
  * @returns {boolean} True if the draco worker was initialized and false otherwise.
- * @ignore
  */
 const dracoDecode = (buffer, callback) => {
     if (!initializeWorkers()) {

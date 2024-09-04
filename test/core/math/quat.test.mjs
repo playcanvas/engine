@@ -4,11 +4,11 @@ import { Vec3 } from '../../../src/core/math/vec3.js';
 
 import { expect } from 'chai';
 
-describe('Quat', function () {
+describe('Quat', () => {
 
-    describe('#constructor()', function () {
+    describe('#constructor()', () => {
 
-        it('supports zero arguments', function () {
+        it('supports zero arguments', () => {
             const q = new Quat();
             expect(q.x).to.equal(0);
             expect(q.y).to.equal(0);
@@ -16,7 +16,7 @@ describe('Quat', function () {
             expect(q.w).to.equal(1);
         });
 
-        it('supports number arguments', function () {
+        it('supports number arguments', () => {
             const q = new Quat(0.1, 0.2, 0.3, 0.4);
             expect(q.x).to.equal(0.1);
             expect(q.y).to.equal(0.2);
@@ -24,7 +24,7 @@ describe('Quat', function () {
             expect(q.w).to.equal(0.4);
         });
 
-        it('supports a 4 element array argument', function () {
+        it('supports a 4 element array argument', () => {
             const q = new Quat([0.1, 0.2, 0.3, 0.4]);
             expect(q.x).to.equal(0.1);
             expect(q.y).to.equal(0.2);
@@ -34,9 +34,9 @@ describe('Quat', function () {
 
     });
 
-    describe('#clone()', function () {
+    describe('#clone()', () => {
 
-        it('clones a quaternion', function () {
+        it('clones a quaternion', () => {
             const q1 = new Quat(0.1, 0.2, 0.3, 0.4);
             const q2 = q1.clone();
             expect(q2).to.not.equal(q1);
@@ -46,7 +46,7 @@ describe('Quat', function () {
             expect(q2.w).to.equal(0.4);
         });
 
-        it('ensures that an instance of a subclass keeps its class prototype', function () {
+        it('ensures that an instance of a subclass keeps its class prototype', () => {
             class UserQuat extends Quat {}
             const a = new UserQuat();
             const b = a.clone();
@@ -55,9 +55,9 @@ describe('Quat', function () {
 
     });
 
-    describe('#copy()', function () {
+    describe('#copy()', () => {
 
-        it('copies a quaternion', function () {
+        it('copies a quaternion', () => {
             const q1 = new Quat(0.1, 0.2, 0.3, 0.4);
             const q2 = new Quat();
             q2.copy(q1);
@@ -68,7 +68,7 @@ describe('Quat', function () {
             expect(q2.w).to.equal(0.4);
         });
 
-        it('returns this', function () {
+        it('returns this', () => {
             const q1 = new Quat();
             const q2 = new Quat();
             expect(q1.copy(q2)).to.equal(q1);
@@ -76,26 +76,26 @@ describe('Quat', function () {
 
     });
 
-    describe('#equals()', function () {
+    describe('#equals()', () => {
 
-        it('checks for equality of the same quaternion', function () {
+        it('checks for equality of the same quaternion', () => {
             const q = new Quat(0.1, 0.2, 0.3, 0.4);
             expect(q.equals(q)).to.be.true;
         });
 
-        it('checks for equality of two different quaternions with the same values', function () {
+        it('checks for equality of two different quaternions with the same values', () => {
             const q1 = new Quat(0.1, 0.2, 0.3, 0.4);
             const q2 = new Quat(0.1, 0.2, 0.3, 0.4);
             expect(q1.equals(q2)).to.be.true;
         });
 
-        it('checks for equality of two different quaternions with different values', function () {
+        it('checks for equality of two different quaternions with different values', () => {
             const q1 = new Quat(0.1, 0.2, 0.3, 0.4);
             const q2 = new Quat(0.5, 0.6, 0.7, 0.8);
             expect(q1.equals(q2)).to.be.false;
         });
 
-        it('checks for equality of different quaternions that are close enough', function () {
+        it('checks for equality of different quaternions that are close enough', () => {
             const q1 = new Quat(0.1, 0.2, 0.3, 0.4);
             const q2 = new Quat(0.10000000000000001, 0.2, 0.3, 0.4);
             const epsilon = 0.000001;
@@ -111,9 +111,9 @@ describe('Quat', function () {
 
     });
 
-    describe('#getAxisAngle()', function () {
+    describe('#getAxisAngle()', () => {
 
-        it('returns the x axis and 0 angle for an identity quaternion', function () {
+        it('returns the x axis and 0 angle for an identity quaternion', () => {
             const q = new Quat();
             const axis = new Vec3();
             const angle = q.getAxisAngle(axis);
@@ -123,7 +123,7 @@ describe('Quat', function () {
             expect(axis.z).to.equal(0);
         });
 
-        it('returns what is set with setFromAxisAngle', function () {
+        it('returns what is set with setFromAxisAngle', () => {
             const q = new Quat();
             q.setFromAxisAngle(Vec3.UP, Math.PI / 2);
             const axis = new Vec3();
@@ -136,9 +136,9 @@ describe('Quat', function () {
 
     });
 
-    describe('#getEulerAngles()', function () {
+    describe('#getEulerAngles()', () => {
 
-        it('returns zeroes for an identity quaternion', function () {
+        it('returns zeroes for an identity quaternion', () => {
             const q = new Quat();
             const eulers = q.getEulerAngles();
             expect(eulers.x).to.equal(0);
@@ -146,7 +146,7 @@ describe('Quat', function () {
             expect(eulers.z).to.equal(0);
         });
 
-        it('returns zeroes for an identity quaternion (no allocation)', function () {
+        it('returns zeroes for an identity quaternion (no allocation)', () => {
             const q = new Quat();
             const eulers = new Vec3();
             q.getEulerAngles(eulers);
@@ -155,7 +155,7 @@ describe('Quat', function () {
             expect(eulers.z).to.equal(0);
         });
 
-        it('extracts a 180° turn around x axis', function () {
+        it('extracts a 180° turn around x axis', () => {
             const q = new Quat(1, 0, 0, 0);
             const eulers = new Vec3();
             q.getEulerAngles(eulers);
@@ -164,7 +164,7 @@ describe('Quat', function () {
             expect(eulers.z).to.equal(0);
         });
 
-        it('extracts a 180° turn around y axis', function () {
+        it('extracts a 180° turn around y axis', () => {
             const q = new Quat(0, 1, 0, 0);
             const eulers = new Vec3();
             q.getEulerAngles(eulers);
@@ -174,7 +174,7 @@ describe('Quat', function () {
             expect(eulers.z).to.equal(180);
         });
 
-        it('extracts a 180° turn around z axis', function () {
+        it('extracts a 180° turn around z axis', () => {
             const q = new Quat(0, 0, 1, 0);
             const eulers = new Vec3();
             q.getEulerAngles(eulers);
@@ -183,7 +183,7 @@ describe('Quat', function () {
             expect(eulers.z).to.equal(180);
         });
 
-        it('extracts a 90° turn around z axis', function () {
+        it('extracts a 90° turn around z axis', () => {
             const q = new Quat(Math.sqrt(0.5), 0, 0, Math.sqrt(0.5));
             const eulers = new Vec3();
             q.getEulerAngles(eulers);
@@ -192,7 +192,7 @@ describe('Quat', function () {
             expect(eulers.z).to.equal(0);
         });
 
-        it('extracts a 90° turn around y axis', function () {
+        it('extracts a 90° turn around y axis', () => {
             const q = new Quat(0, Math.sqrt(0.5), 0, Math.sqrt(0.5));
             const eulers = new Vec3();
             q.getEulerAngles(eulers);
@@ -201,7 +201,7 @@ describe('Quat', function () {
             expect(eulers.z).to.equal(0);
         });
 
-        it('extracts a 90° turn around z axis', function () {
+        it('extracts a 90° turn around z axis', () => {
             const q = new Quat(0, 0, Math.sqrt(0.5), Math.sqrt(0.5));
             const eulers = new Vec3();
             q.getEulerAngles(eulers);
@@ -210,7 +210,7 @@ describe('Quat', function () {
             expect(eulers.z).to.be.closeTo(90, 0.00001);
         });
 
-        it('extracts a -90° turn around x axis', function () {
+        it('extracts a -90° turn around x axis', () => {
             const q = new Quat(-Math.sqrt(0.5), 0, 0, Math.sqrt(0.5));
             const eulers = new Vec3();
             q.getEulerAngles(eulers);
@@ -219,7 +219,7 @@ describe('Quat', function () {
             expect(eulers.z).to.equal(0);
         });
 
-        it('extracts a -90° turn around y axis', function () {
+        it('extracts a -90° turn around y axis', () => {
             const q = new Quat(0, -Math.sqrt(0.5), 0, Math.sqrt(0.5));
             const eulers = new Vec3();
             q.getEulerAngles(eulers);
@@ -228,7 +228,7 @@ describe('Quat', function () {
             expect(eulers.z).to.equal(0);
         });
 
-        it('extracts a -90° turn around z axis', function () {
+        it('extracts a -90° turn around z axis', () => {
             const q = new Quat(0, 0, -Math.sqrt(0.5), Math.sqrt(0.5));
             const eulers = new Vec3();
             q.getEulerAngles(eulers);
@@ -239,15 +239,15 @@ describe('Quat', function () {
 
     });
 
-    describe('#invert()', function () {
+    describe('#invert()', () => {
 
-        it('leaves the identity quaternion unchanged', function () {
+        it('leaves the identity quaternion unchanged', () => {
             const q = new Quat();
             q.invert();
             expect(q.equals(Quat.IDENTITY)).to.be.true;
         });
 
-        it('leaves the quaternion unchanged if applied twice', function () {
+        it('leaves the quaternion unchanged if applied twice', () => {
             const q = new Quat();
             q.setFromEulerAngles(10, 20, 30);
             const original = q.clone();
@@ -256,51 +256,51 @@ describe('Quat', function () {
             expect(q.equals(original)).to.be.true;
         });
 
-        it('returns this', function () {
+        it('returns this', () => {
             const q = new Quat();
             expect(q.invert()).to.equal(q);
         });
 
     });
 
-    describe('#length()', function () {
+    describe('#length()', () => {
 
-        it('returns 1 for the identity quaternion', function () {
+        it('returns 1 for the identity quaternion', () => {
             const q = new Quat();
             expect(q.length()).to.equal(1);
         });
 
-        it('returns the correct length for a non-identity quaternion', function () {
+        it('returns the correct length for a non-identity quaternion', () => {
             const q = new Quat(1, 2, 3, 4);
             expect(q.length()).to.equal(Math.sqrt(30));
         });
 
     });
 
-    describe('#lengthSq()', function () {
+    describe('#lengthSq()', () => {
 
-        it('returns 1 for the identity quaternion', function () {
+        it('returns 1 for the identity quaternion', () => {
             const q = new Quat();
             expect(q.lengthSq()).to.equal(1);
         });
 
-        it('returns the correct squared length for a non-identity quaternion', function () {
+        it('returns the correct squared length for a non-identity quaternion', () => {
             const q = new Quat(1, 2, 3, 4);
             expect(q.lengthSq()).to.equal(30);
         });
 
     });
 
-    describe('#mul()', function () {
+    describe('#mul()', () => {
 
-        it('sets the identity when multiplying the identity by the identity (I * I = I)', function () {
+        it('sets the identity when multiplying the identity by the identity (I * I = I)', () => {
             const q1 = new Quat();
             const q2 = new Quat();
             q1.mul(q2);
             expect(q1.equals(Quat.IDENTITY)).to.be.true;
         });
 
-        it('leaves matrix unchanged when multiplying by the identity ( A * I = A )', function () {
+        it('leaves matrix unchanged when multiplying by the identity ( A * I = A )', () => {
             const q1 = new Quat();
             q1.setFromEulerAngles(10, 20, 30);
             const q2 = new Quat();
@@ -311,7 +311,7 @@ describe('Quat', function () {
             expect(eulers.z).to.be.closeTo(30, 0.00001);
         });
 
-        it('sets a quaternion to the right hand side when left hand side is identity ( I * A = A )', function () {
+        it('sets a quaternion to the right hand side when left hand side is identity ( I * A = A )', () => {
             const q1 = new Quat();
             const q2 = new Quat();
             q2.setFromEulerAngles(10, 20, 30);
@@ -322,7 +322,7 @@ describe('Quat', function () {
             expect(eulers.z).to.be.closeTo(30, 0.00001);
         });
 
-        it('multiplies an arbitrary quaternion with another in place', function () {
+        it('multiplies an arbitrary quaternion with another in place', () => {
             const q1 = new Quat();
             q1.setFromEulerAngles(10, 20, 30);
             const q2 = new Quat();
@@ -334,7 +334,7 @@ describe('Quat', function () {
             expect(eulers.z).to.be.closeTo(113.547040698283, 0.00001);
         });
 
-        it('sets the identity quaternion when multiplying by the inverse', function () {
+        it('sets the identity quaternion when multiplying by the inverse', () => {
             const q1 = new Quat();
             q1.setFromEulerAngles(10, 20, 30);
             const q2 = q1.clone().invert();
@@ -345,7 +345,7 @@ describe('Quat', function () {
             expect(q1.w).to.be.closeTo(1, 0.00001);
         });
 
-        it('returns this', function () {
+        it('returns this', () => {
             const q1 = new Quat();
             const q2 = new Quat();
             expect(q1.mul(q2)).to.equal(q1);
@@ -353,9 +353,9 @@ describe('Quat', function () {
 
     });
 
-    describe('#mul2()', function () {
+    describe('#mul2()', () => {
 
-        it('sets the identity when multiplying the identity by the identity (I * I = I)', function () {
+        it('sets the identity when multiplying the identity by the identity (I * I = I)', () => {
             const q1 = new Quat();
             const q2 = new Quat();
             const q3 = new Quat();
@@ -363,7 +363,7 @@ describe('Quat', function () {
             expect(q1.equals(Quat.IDENTITY)).to.be.true;
         });
 
-        it('leaves matrix unchanged when multiplying by the identity ( A * I = A )', function () {
+        it('leaves matrix unchanged when multiplying by the identity ( A * I = A )', () => {
             const q1 = new Quat();
             const q2 = new Quat();
             q2.setFromEulerAngles(10, 20, 30);
@@ -375,7 +375,7 @@ describe('Quat', function () {
             expect(eulers.z).to.be.closeTo(30, 0.00001);
         });
 
-        it('sets a quaternion to the right hand side when left hand side is identity ( I * A = A )', function () {
+        it('sets a quaternion to the right hand side when left hand side is identity ( I * A = A )', () => {
             const q1 = new Quat();
             const q2 = new Quat();
             const q3 = new Quat();
@@ -387,7 +387,7 @@ describe('Quat', function () {
             expect(eulers.z).to.be.closeTo(30, 0.00001);
         });
 
-        it('multiplies an arbitrary quaternion with another in place', function () {
+        it('multiplies an arbitrary quaternion with another in place', () => {
             const q1 = new Quat();
             const q2 = new Quat();
             q2.setFromEulerAngles(10, 20, 30);
@@ -400,7 +400,7 @@ describe('Quat', function () {
             expect(eulers.z).to.be.closeTo(113.547040698283, 0.00001);
         });
 
-        it('sets the identity quaternion when multiplying by the inverse', function () {
+        it('sets the identity quaternion when multiplying by the inverse', () => {
             const q1 = new Quat();
             const q2 = new Quat();
             q2.setFromEulerAngles(10, 20, 30);
@@ -412,7 +412,7 @@ describe('Quat', function () {
             expect(q1.w).to.be.closeTo(1, 0.00001);
         });
 
-        it('returns this', function () {
+        it('returns this', () => {
             const q1 = new Quat();
             const q2 = new Quat();
             const q3 = new Quat();
@@ -421,30 +421,30 @@ describe('Quat', function () {
 
     });
 
-    describe('#normalize()', function () {
+    describe('#normalize()', () => {
 
-        it('leaves the identity quaternion unchanged', function () {
+        it('leaves the identity quaternion unchanged', () => {
             const q = new Quat();
             q.normalize();
             expect(q.equals(Quat.IDENTITY)).to.be.true;
         });
 
-        it('makes an arbitrary quaternion have length 1', function () {
+        it('makes an arbitrary quaternion have length 1', () => {
             const q = new Quat(1, 2, 3, 4);
             q.normalize();
             expect(q.length()).to.be.closeTo(1, 0.00001);
         });
 
-        it('returns this', function () {
+        it('returns this', () => {
             const q = new Quat();
             expect(q.normalize()).to.equal(q);
         });
 
     });
 
-    describe('#set()', function () {
+    describe('#set()', () => {
 
-        it('sets the quaternion', function () {
+        it('sets the quaternion', () => {
             const q = new Quat();
             q.set(0.1, 0.2, 0.3, 0.4);
             expect(q.x).to.equal(0.1);
@@ -453,22 +453,22 @@ describe('Quat', function () {
             expect(q.w).to.equal(0.4);
         });
 
-        it('returns this', function () {
+        it('returns this', () => {
             const q = new Quat();
             expect(q.set(0.1, 0.2, 0.3, 0.4)).to.equal(q);
         });
 
     });
 
-    describe('#setFromAxisAngle()', function () {
+    describe('#setFromAxisAngle()', () => {
 
-        it('sets the identity quaternion when passing a zero angle', function () {
+        it('sets the identity quaternion when passing a zero angle', () => {
             const q = new Quat();
             q.setFromAxisAngle(Vec3.UP, 0);
             expect(q.equals(Quat.IDENTITY)).to.be.true;
         });
 
-        it('sets an approximation of the identity quaternion when passing a multiple of 360', function () {
+        it('sets an approximation of the identity quaternion when passing a multiple of 360', () => {
             const q = new Quat();
             q.setFromAxisAngle(Vec3.UP, 720);
             expect(q.x).to.be.closeTo(0, 0.00001);
@@ -477,7 +477,7 @@ describe('Quat', function () {
             expect(q.w).to.be.closeTo(1, 0.00001);
         });
 
-        it('set a quaternion of 90 around the x axis', function () {
+        it('set a quaternion of 90 around the x axis', () => {
             const q = new Quat();
             q.setFromAxisAngle(Vec3.RIGHT, 90);
             expect(q.x).to.be.closeTo(0.7071067811865475, 0.00001);
@@ -486,14 +486,14 @@ describe('Quat', function () {
             expect(q.w).to.be.closeTo(0.7071067811865476, 0.00001);
         });
 
-        it('returns this', function () {
+        it('returns this', () => {
             const q = new Quat();
             expect(q.setFromAxisAngle(Vec3.UP, 0)).to.equal(q);
         });
 
     });
 
-    describe('#setFromEulerAngles()', function () {
+    describe('#setFromEulerAngles()', () => {
 
         [
             [0, 0, 0],
@@ -503,8 +503,8 @@ describe('Quat', function () {
             [0, 0, 0.3],
             [1, 2, 3],
             [10, 10, 0]
-        ].forEach(function ([x, y, z]) {
-            it('sets the quaternion from ' + x + '°, ' + y + '°, ' + z + '°', function () {
+        ].forEach(([x, y, z]) => {
+            it(`sets the quaternion from ${x}°, ${y}°, ${z}°`, () => {
                 const q1 = new Quat();
                 const q2 = new Quat();
                 const q3 = new Quat();
@@ -527,16 +527,16 @@ describe('Quat', function () {
             });
         });
 
-        it('returns this', function () {
+        it('returns this', () => {
             const q = new Quat();
             expect(q.setFromEulerAngles(0, 0, 0)).to.equal(q);
         });
 
     });
 
-    describe('#setFromMat4()', function () {
+    describe('#setFromMat4()', () => {
 
-        it('set the identity quaternion from an identity matrix', function () {
+        it('set the identity quaternion from an identity matrix', () => {
             const q = new Quat();
             const m = new Mat4();
             q.setFromMat4(m);
@@ -569,7 +569,7 @@ describe('Quat', function () {
             return result;
         };
 
-        it('set the quaternion from a non-identity matrix', function () {
+        it('set the quaternion from a non-identity matrix', () => {
             const q = new Quat();
             const m = new Mat4();
             m.setFromEulerAngles(10, 20, 30);
@@ -580,14 +580,14 @@ describe('Quat', function () {
             expect(eulers.z).to.be.closeTo(30, 0.00001);
         });
 
-        it('converts rot180', function () {
+        it('converts rot180', () => {
             expect(quatToMatToQuat(1, 0, 0, 0)).to.be.true;
             expect(quatToMatToQuat(0, 1, 0, 0)).to.be.true;
             expect(quatToMatToQuat(0, 0, 1, 0)).to.be.true;
             expect(quatToMatToQuat(0, 0, 0, 1)).to.be.true;
         });
 
-        it('converts rot180n', function () {
+        it('converts rot180n', () => {
             expect(quatToMatToQuat(-1, 0, 0, 0)).to.be.true;
             expect(quatToMatToQuat(-1e-20, -1, 0, 0)).to.be.true;
             expect(quatToMatToQuat(-1e-20, 0, -1, 0)).to.be.true;
@@ -596,7 +596,7 @@ describe('Quat', function () {
 
         const s2 = 1 / Math.sqrt(2);
 
-        it('converts rot90', function () {
+        it('converts rot90', () => {
             expect(quatToMatToQuat(s2, s2, 0, 0)).to.be.true;
             expect(quatToMatToQuat(s2, -s2, 0, 0)).to.be.true;
             expect(quatToMatToQuat(s2, 0, s2, 0)).to.be.true;
@@ -605,7 +605,7 @@ describe('Quat', function () {
             expect(quatToMatToQuat(s2, 0, 0, -s2)).to.be.true;
         });
 
-        it('converts rot90n', function () {
+        it('converts rot90n', () => {
             expect(quatToMatToQuat(-s2, s2, 0, 0)).to.be.true;
             expect(quatToMatToQuat(-s2, -s2, 0, 0)).to.be.true;
             expect(quatToMatToQuat(-s2, 0, s2, 0)).to.be.true;
@@ -614,7 +614,7 @@ describe('Quat', function () {
             expect(quatToMatToQuat(-s2, 0, 0, -s2)).to.be.true;
         });
 
-        it('converts suit', function () {
+        it('converts suit', () => {
             const vals = [0.9999, -0.002, -0.999, 0.01, 0, 1];
 
             vals.forEach((x) => {
@@ -628,7 +628,7 @@ describe('Quat', function () {
             });
         });
 
-        it('returns this', function () {
+        it('returns this', () => {
             const q = new Quat();
             const m = new Mat4();
             expect(q.setFromMat4(m)).to.equal(q);
@@ -636,9 +636,9 @@ describe('Quat', function () {
 
     });
 
-    describe('#setFromDirections()', function () {
+    describe('#setFromDirections()', () => {
 
-        it('set the identity quaternion from equal directions', function () {
+        it('set the identity quaternion from equal directions', () => {
             const v1 = new Vec3(1, 0, 0);
             const v2 = new Vec3(1, 0, 0);
 
@@ -653,7 +653,7 @@ describe('Quat', function () {
             expect(q2.equals(Quat.IDENTITY)).to.be.true;
         });
 
-        it('set a quaternion from different directions', function () {
+        it('set a quaternion from different directions', () => {
             const v1 = new Vec3(1, 0, 0);
             const v2 = new Vec3(0, 1, 0);
 
@@ -675,7 +675,7 @@ describe('Quat', function () {
 
         });
 
-        it('returns this', function () {
+        it('returns this', () => {
             const q = new Quat();
             const v1 = new Vec3();
             const v2 = new Vec3();
@@ -684,9 +684,9 @@ describe('Quat', function () {
 
     });
 
-    describe('#slerp()', function () {
+    describe('#slerp()', () => {
 
-        it('return first quaternion when alpha is 0', function () {
+        it('return first quaternion when alpha is 0', () => {
             const q1 = new Quat();
             q1.setFromEulerAngles(10, 20, 30);
             const q2 = new Quat();
@@ -699,7 +699,7 @@ describe('Quat', function () {
             expect(q.w).to.be.closeTo(q1.w, 0.00001);
         });
 
-        it('return second quaternion when alpha is 1', function () {
+        it('return second quaternion when alpha is 1', () => {
             const q1 = new Quat();
             q1.setFromEulerAngles(10, 20, 30);
             const q2 = new Quat();
@@ -712,7 +712,7 @@ describe('Quat', function () {
             expect(q.w).to.be.closeTo(q2.w, 0.00001);
         });
 
-        it('returns the correct quaternion when alpha is 0.5', function () {
+        it('returns the correct quaternion when alpha is 0.5', () => {
             const q1 = new Quat();
             q1.setFromEulerAngles(0, 0, 10);
             const q2 = new Quat();
@@ -725,7 +725,7 @@ describe('Quat', function () {
             expect(eulers.z).to.be.closeTo(15, 0.00001);
         });
 
-        it('returns this', function () {
+        it('returns this', () => {
             const q1 = new Quat();
             const q2 = new Quat();
             const q = new Quat();
@@ -734,25 +734,25 @@ describe('Quat', function () {
 
     });
 
-    describe('#toString()', function () {
+    describe('#toString()', () => {
 
-        it('returns a string representation of the quaternion', function () {
+        it('returns a string representation of the quaternion', () => {
             const q = new Quat(0.1, 0.2, 0.3, 0.4);
             expect(q.toString()).to.equal('[0.1, 0.2, 0.3, 0.4]');
         });
 
     });
 
-    describe('#transformVector()', function () {
+    describe('#transformVector()', () => {
 
-        it('leaves vector unchanged when transforming by the identity quaternion', function () {
+        it('leaves vector unchanged when transforming by the identity quaternion', () => {
             const v = new Vec3(1, 2, 3);
             const q = new Quat();
             const r = q.transformVector(v);
             expect(v.equals(r)).to.be.true;
         });
 
-        it('leaves vector unchanged when transforming by the identity quaternion (no allocation)', function () {
+        it('leaves vector unchanged when transforming by the identity quaternion (no allocation)', () => {
             const v = new Vec3(1, 2, 3);
             const q = new Quat();
             const r = new Vec3();
@@ -760,7 +760,7 @@ describe('Quat', function () {
             expect(v.equals(r)).to.be.true;
         });
 
-        it('transforms a vector by a 90 degree rotation around the z axis', function () {
+        it('transforms a vector by a 90 degree rotation around the z axis', () => {
             const v = new Vec3(1, 0, 0);
             const q = new Quat();
             const r = new Vec3();
@@ -773,7 +773,7 @@ describe('Quat', function () {
             expect(r.z).to.be.closeTo(0, 0.00001);
         });
 
-        it('transforms a vector by a 90 degree rotation around the z axis (input and output vectors are the same)', function () {
+        it('transforms a vector by a 90 degree rotation around the z axis (input and output vectors are the same)', () => {
             const v = new Vec3(1, 0, 0);
             const q = new Quat();
 

@@ -1,4 +1,9 @@
 /**
+ * @import { Asset } from '../asset/asset.js'
+ * @import { AssetRegistry } from '../asset/asset-registry.js'
+ */
+
+/**
  * Keeps track of which assets are in bundles and loads files from bundles.
  *
  * @ignore
@@ -6,21 +11,21 @@
 class BundleRegistry {
     /**
      * Index of bundle assets.
-     * @type {Map<number, import('../asset/asset.js').Asset>}
+     * @type {Map<number, Asset>}
      * @private
      */
     _idToBundle = new Map();
 
     /**
      * Index of asset id to set of bundle assets.
-     * @type {Map<number, Set<import('../asset/asset.js').Asset>>}
+     * @type {Map<number, Set<Asset>>}
      * @private
      */
     _assetToBundles = new Map();
 
     /**
      * Index of file url to set of bundle assets.
-     * @type {Map<string, Set<import('../asset/asset.js').Asset>>}
+     * @type {Map<string, Set<Asset>>}
      * @private
      */
     _urlsToBundles = new Map();
@@ -35,7 +40,7 @@ class BundleRegistry {
     /**
      * Create a new BundleRegistry instance.
      *
-     * @param {import('../asset/asset-registry.js').AssetRegistry} assets - The asset registry.
+     * @param {AssetRegistry} assets - The asset registry.
      */
     constructor(assets) {
         this._assets = assets;
@@ -47,7 +52,7 @@ class BundleRegistry {
     /**
      * Called when asset is added to AssetRegistry.
      *
-     * @param {import('../asset/asset.js').Asset} asset - The asset that has been added.
+     * @param {Asset} asset - The asset that has been added.
      * @private
      */
     _onAssetAdd(asset) {
@@ -72,9 +77,9 @@ class BundleRegistry {
     }
 
     _unbindAssetEvents(id) {
-        this._assets.off('load:start:' + id, this._onBundleLoadStart, this);
-        this._assets.off('load:' + id, this._onBundleLoad, this);
-        this._assets.off('error:' + id, this._onBundleError, this);
+        this._assets.off(`load:start:${id}`, this._onBundleLoadStart, this);
+        this._assets.off(`load:${id}`, this._onBundleLoad, this);
+        this._assets.off(`error:${id}`, this._onBundleError, this);
     }
 
     // Index the specified asset id and its file URLs so that
@@ -118,7 +123,7 @@ class BundleRegistry {
         if (asset.type === 'font') {
             const numFiles = asset.data.info.maps.length;
             for (let i = 1; i < numFiles; i++) {
-                urls.push(url.replace('.png', i + '.png'));
+                urls.push(url.replace('.png', `${i}.png`));
             }
         }
 
@@ -144,8 +149,9 @@ class BundleRegistry {
                 if (bundles.size === 0) {
                     this._assetToBundles.delete(assetIds[i]);
                     for (const [url, otherBundles] of this._urlsToBundles) {
-                        if (otherBundles !== bundles)
+                        if (otherBundles !== bundles) {
                             continue;
+                        }
                         this._urlsToBundles.delete(url);
                     }
                 }
@@ -191,8 +197,9 @@ class BundleRegistry {
         }
 
         // make sure the registry hasn't been destroyed already
-        if (!this._fileRequests)
+        if (!this._fileRequests) {
             return;
+        }
 
         for (const [url, requests] of this._fileRequests) {
             const bundles = this._urlsToBundles.get(url);
@@ -226,8 +233,9 @@ class BundleRegistry {
         for (const [url, requests] of this._fileRequests) {
             const bundle = this._findLoadedOrLoadingBundleForUrl(url);
             if (!bundle) {
-                for (let i = 0; i < requests.length; i++)
+                for (let i = 0; i < requests.length; i++) {
                     requests[i](err);
+                }
 
                 this._fileRequests.delete(url);
             }
@@ -256,8 +264,8 @@ class BundleRegistry {
     /**
      * Lists all of the available bundles that reference the specified asset.
      *
-     * @param {import('../asset/asset.js').Asset} asset - The asset to search by.
-     * @returns {import('../asset/asset.js').Asset[]|null} An array of bundle assets or null if the
+     * @param {Asset} asset - The asset to search by.
+     * @returns {Asset[]|null} An array of bundle assets or null if the
      * asset is not in any bundle.
      */
     listBundlesForAsset(asset) {
@@ -269,7 +277,7 @@ class BundleRegistry {
     /**
      * Lists all bundle assets.
      *
-     * @returns {import('../asset/asset.js').Asset[]} An array of bundle assets.
+     * @returns {Asset[]} An array of bundle assets.
      */
     list() {
         return Array.from(this._idToBundle.values());

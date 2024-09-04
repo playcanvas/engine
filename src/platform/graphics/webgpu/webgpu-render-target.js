@@ -2,12 +2,16 @@ import { Debug, DebugHelper } from '../../../core/debug.js';
 import { StringIds } from '../../../core/string-ids.js';
 import { WebgpuDebug } from './webgpu-debug.js';
 
+/**
+ * @import { RenderPass } from '../render-pass.js'
+ * @import { RenderTarget } from '../render-target.js'
+ * @import { WebgpuGraphicsDevice } from '../webgpu/webgpu-graphics-device.js'
+ */
+
 const stringIds = new StringIds();
 
 /**
  * Private class storing info about color buffer.
- *
- * @ignore
  */
 class ColorAttachment {
     /**
@@ -30,8 +34,6 @@ class ColorAttachment {
 
 /**
  * A WebGPU implementation of the RenderTarget.
- *
- * @ignore
  */
 class WebgpuRenderTarget {
     /** @type {boolean} */
@@ -87,8 +89,14 @@ class WebgpuRenderTarget {
     renderPassDescriptor = {};
 
     /**
-     * @param {import('../render-target.js').RenderTarget} renderTarget - The render target owning
-     * this implementation.
+     * True if this is the backbuffer of the device.
+     *
+     * @type {boolean}
+     */
+    isBackbuffer = false;
+
+    /**
+     * @param {RenderTarget} renderTarget - The render target owning this implementation.
      */
     constructor(renderTarget) {
         this.renderTarget = renderTarget;
@@ -107,8 +115,7 @@ class WebgpuRenderTarget {
      * Release associated resources. Note that this needs to leave this instance in a state where
      * it can be re-initialized again, which is used by render target resizing.
      *
-     * @param {import('../webgpu/webgpu-graphics-device.js').WebgpuGraphicsDevice} device - The
-     * graphics device.
+     * @param {WebgpuGraphicsDevice} device - The graphics device.
      */
     destroy(device) {
         this.initialized = false;
@@ -149,14 +156,17 @@ class WebgpuRenderTarget {
      * Assign a color buffer. This allows the color buffer of the main framebuffer
      * to be swapped each frame to a buffer provided by the context.
      *
+     * @param {import('./webgpu-graphics-device.js').WebgpuGraphicsDevice} device - The WebGPU
+     * graphics device.
      * @param {any} gpuTexture - The color buffer.
      */
-    assignColorTexture(gpuTexture) {
+    assignColorTexture(device, gpuTexture) {
 
         Debug.assert(gpuTexture);
         this.assignedColorTexture = gpuTexture;
 
-        const view = gpuTexture.createView();
+        // create view (optionally handles srgb conversion)
+        const view = gpuTexture.createView({ format: device.backBufferViewFormat });
         DebugHelper.setLabel(view, 'Framebuffer.assignedColor');
 
         // use it as render buffer or resolve target
@@ -169,7 +179,8 @@ class WebgpuRenderTarget {
         }
 
         // for main framebuffer, this is how the format is obtained
-        this.setColorAttachment(0, undefined, gpuTexture.format);
+        this.setColorAttachment(0, undefined, device.backBufferViewFormat);
+
         this.updateKey();
     }
 
@@ -190,9 +201,8 @@ class WebgpuRenderTarget {
     /**
      * Initialize render target for rendering one time.
      *
-     * @param {import('../webgpu/webgpu-graphics-device.js').WebgpuGraphicsDevice} device - The
-     * graphics device.
-     * @param {import('../render-target.js').RenderTarget} renderTarget - The render target.
+     * @param {WebgpuGraphicsDevice} device - The graphics device.
+     * @param {RenderTarget} renderTarget - The render target.
      */
     init(device, renderTarget) {
 
@@ -209,7 +219,7 @@ class WebgpuRenderTarget {
         this.renderPassDescriptor.colorAttachments = [];
         const count = renderTarget._colorBuffers?.length ?? 1;
         for (let i = 0; i < count; ++i) {
-            const colorAttachment = this.initColor(wgpu, renderTarget, i);
+            const colorAttachment = this.initColor(device, wgpu, renderTarget, i);
 
             // default framebuffer, buffer gets assigned later
             const isDefaultFramebuffer = i === 0 && this.colorAttachments[0]?.format;
@@ -281,9 +291,14 @@ class WebgpuRenderTarget {
     }
 
     /**
+     * @param {WebgpuGraphicsDevice} device - The graphics device.
+     * @param {GPUDevice} wgpu - The WebGPU device.
+     * @param {RenderTarget} renderTarget - The render target.
+     * @param {number} index - The color buffer index.
+     * @returns {GPURenderPassColorAttachment} The color attachment.
      * @private
      */
-    initColor(wgpu, renderTarget, index) {
+    initColor(device, wgpu, renderTarget, index) {
         // Single-sampled color buffer gets passed in:
         // - for normal render target, constructor takes the color buffer as an option
         // - for the main framebuffer, the device supplies the buffer each frame
@@ -319,12 +334,14 @@ class WebgpuRenderTarget {
         // multi-sampled color buffer
         if (samples > 1) {
 
+            const format = this.isBackbuffer ? device.backBufferViewFormat : colorBuffer.impl.format;
+
             /** @type {GPUTextureDescriptor} */
             const multisampledTextureDesc = {
                 size: [width, height, 1],
                 dimension: '2d',
                 sampleCount: samples,
-                format: this.colorAttachments[index]?.format ?? colorBuffer.impl.format,
+                format: format,
                 usage: GPUTextureUsage.RENDER_ATTACHMENT
             };
 
@@ -349,9 +366,10 @@ class WebgpuRenderTarget {
     /**
      * Update WebGPU render pass descriptor by RenderPass settings.
      *
-     * @param {import('../render-pass.js').RenderPass} renderPass - The render pass to start.
+     * @param {RenderPass} renderPass - The render pass to start.
+     * @param {RenderTarget} renderTarget - The render target to render to.
      */
-    setupForRenderPass(renderPass) {
+    setupForRenderPass(renderPass, renderTarget) {
 
         Debug.assert(this.renderPassDescriptor);
 
@@ -359,7 +377,8 @@ class WebgpuRenderTarget {
         for (let i = 0; i < count; ++i) {
             const colorAttachment = this.renderPassDescriptor.colorAttachments[i];
             const colorOps = renderPass.colorArrayOps[i];
-            colorAttachment.clearValue = colorOps.clearValue;
+            const srgb = renderTarget.isColorBufferSrgb(i);
+            colorAttachment.clearValue = srgb ? colorOps.clearValueLinear : colorOps.clearValue;
             colorAttachment.loadOp = colorOps.clear ? 'clear' : 'load';
             colorAttachment.storeOp = colorOps.store ? 'store' : 'discard';
         }

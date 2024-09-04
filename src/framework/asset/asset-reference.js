@@ -1,4 +1,9 @@
 /**
+ * @import { Asset } from './asset.js'
+ * @import { AssetRegistry } from './asset-registry.js'
+ */
+
+/**
  * An object that manages the case where an object holds a reference to an asset and needs to be
  * notified when changes occur in the asset. e.g. notifications include load, add and remove
  * events.
@@ -11,11 +16,9 @@ class AssetReference {
      *
      * @param {string} propertyName - The name of the property that the asset is stored under,
      * passed into callbacks to enable updating.
-     * @param {import('./asset.js').Asset|object} parent - The parent object that contains the
-     * asset reference, passed into callbacks to enable updating. Currently an asset, but could be
-     * component or other.
-     * @param {import('./asset-registry.js').AssetRegistry} registry - The asset registry that
-     * stores all assets.
+     * @param {Asset|object} parent - The parent object that contains the asset reference, passed
+     * into callbacks to enable updating. Currently an asset, but could be component or other.
+     * @param {AssetRegistry} registry - The asset registry that stores all assets.
      * @param {object} callbacks - A set of functions called when the asset state changes: load,
      * add, remove.
      * @param {object} [callbacks.load] - The function called when the asset loads
@@ -106,30 +109,30 @@ class AssetReference {
 
     _bind() {
         if (this.id) {
-            if (this._onAssetLoad) this._registry.on('load:' + this.id, this._onLoad, this);
-            if (this._onAssetAdd) this._registry.once('add:' + this.id, this._onAdd, this);
-            if (this._onAssetRemove) this._registry.on('remove:' + this.id, this._onRemove, this);
-            if (this._onAssetUnload) this._registry.on('unload:' + this.id, this._onUnload, this);
+            if (this._onAssetLoad) this._registry.on(`load:${this.id}`, this._onLoad, this);
+            if (this._onAssetAdd) this._registry.once(`add:${this.id}`, this._onAdd, this);
+            if (this._onAssetRemove) this._registry.on(`remove:${this.id}`, this._onRemove, this);
+            if (this._onAssetUnload) this._registry.on(`unload:${this.id}`, this._onUnload, this);
         }
 
         if (this.url) {
-            if (this._onAssetLoad) this._registry.on('load:url:' + this.url, this._onLoad, this);
-            if (this._onAssetAdd) this._registry.once('add:url:' + this.url, this._onAdd, this);
-            if (this._onAssetRemove) this._registry.on('remove:url:' + this.url, this._onRemove, this);
+            if (this._onAssetLoad) this._registry.on(`load:url:${this.url}`, this._onLoad, this);
+            if (this._onAssetAdd) this._registry.once(`add:url:${this.url}`, this._onAdd, this);
+            if (this._onAssetRemove) this._registry.on(`remove:url:${this.url}`, this._onRemove, this);
         }
     }
 
     _unbind() {
         if (this.id) {
-            if (this._onAssetLoad) this._registry.off('load:' + this.id, this._onLoad, this);
-            if (this._onAssetAdd) this._registry.off('add:' + this.id, this._onAdd, this);
-            if (this._onAssetRemove) this._registry.off('remove:' + this.id, this._onRemove, this);
-            if (this._onAssetUnload) this._registry.off('unload:' + this.id, this._onUnload, this);
+            if (this._onAssetLoad) this._registry.off(`load:${this.id}`, this._onLoad, this);
+            if (this._onAssetAdd) this._registry.off(`add:${this.id}`, this._onAdd, this);
+            if (this._onAssetRemove) this._registry.off(`remove:${this.id}`, this._onRemove, this);
+            if (this._onAssetUnload) this._registry.off(`unload:${this.id}`, this._onUnload, this);
         }
         if (this.url) {
-            if (this._onAssetLoad) this._registry.off('load:' + this.url, this._onLoad, this);
-            if (this._onAssetAdd) this._registry.off('add:' + this.url, this._onAdd, this);
-            if (this._onAssetRemove) this._registry.off('remove:' + this.url, this._onRemove, this);
+            if (this._onAssetLoad) this._registry.off(`load:${this.url}`, this._onLoad, this);
+            if (this._onAssetAdd) this._registry.off(`add:${this.url}`, this._onAdd, this);
+            if (this._onAssetRemove) this._registry.off(`remove:${this.url}`, this._onRemove, this);
         }
     }
 

@@ -1,9 +1,12 @@
 import { Debug } from '../core/debug.js';
+import { DeviceCache } from '../platform/graphics/device-cache.js';
 import {
     SHADER_FORWARD, SHADER_DEPTH, SHADER_PICK, SHADER_SHADOW, SHADER_PREPASS_VELOCITY
 } from './constants.js';
 
-import { DeviceCache } from '../platform/graphics/device-cache.js';
+/**
+ * @import { GraphicsDevice } from '../platform/graphics/graphics-device.js'
+ */
 
 // device cache storing shader pass data per device
 const shaderPassDeviceCache = new DeviceCache();
@@ -12,8 +15,6 @@ const shaderPassDeviceCache = new DeviceCache();
  * Info about a shader pass. Shader pass is represented by a unique index and a name, and the
  * index is used to access the shader required for the pass, from an array stored in the
  * material or mesh instance.
- *
- * @ignore
  */
 class ShaderPassInfo {
     /** @type {number} */
@@ -37,7 +38,7 @@ class ShaderPassInfo {
      */
     constructor(name, index, options = {}) {
 
-        Debug.assert(/^[a-zA-Z][_a-zA-Z0-9]*$/.test(name), `ShaderPass name can only contain letters, numbers and underscores and start with a letter: ${name}`);
+        Debug.assert(/^[a-z]\w*$/i.test(name), `ShaderPass name can only contain letters, numbers and underscores and start with a letter: ${name}`);
 
         this.name = name;
         this.index = index;
@@ -112,8 +113,7 @@ class ShaderPass {
     /**
      * Get access to the shader pass instance for the specified device.
      *
-     * @param {import('../platform/graphics/graphics-device.js').GraphicsDevice} device - The
-     * graphics device.
+     * @param {GraphicsDevice} device - The graphics device.
      * @returns { ShaderPass } The shader pass instance for the specified device.
      */
     static get(device) {

@@ -1,4 +1,4 @@
-import { SphereGeometry } from "./sphere-geometry.js";
+import { SphereGeometry } from './sphere-geometry.js';
 
 /**
  * A procedural dome-shaped geometry.
