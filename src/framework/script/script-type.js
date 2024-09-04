@@ -9,11 +9,26 @@ import { Script } from './script.js';
  * @category Script
  */
 class ScriptType extends Script {
+
     /** @private */
-    __attributes = {};
+    __attributes;
 
     /** @private */
     __attributesRaw;
+
+    /**
+     * Create a new ScriptType instance.
+     *
+     * @param {object} args - The input arguments object.
+     * @param {import('../app-base.js').AppBase} args.app - The {@link AppBase} that is running the
+     * script.
+     * @param {import('../entity.js').Entity} args.entity - The {@link Entity} that the script is
+     * attached to.
+     */
+    constructor(args) {
+        super(args);
+        this.initScriptType(args);
+    }
 
     /**
      * The interface to define attributes for Script Types. Refer to {@link ScriptAttributes}.
