@@ -221,7 +221,7 @@ export const XRDEPTHSENSINGFORMAT_L8A8 = 'luminance-alpha';
 export const XRDEPTHSENSINGFORMAT_R16U = 'unsigned-short';
 
 /**
- * Float 32 - indicates that depth sensing preferred raw data format is Float 32 bit.
+ * Float 32 - indicates that depth sensing preferred raw data format is Float (32 bit).
  *
  * @type {string}
  * @category XR
