@@ -186,6 +186,18 @@ class RigidBodyComponent extends Component {
         }
     }
 
+    /** @ignore */
+    static onAppDestroy() {
+        Ammo.destroy(_ammoTransform);
+        Ammo.destroy(_ammoVec1);
+        Ammo.destroy(_ammoVec2);
+        Ammo.destroy(_ammoQuat);
+        _ammoTransform = null;
+        _ammoVec1 = null;
+        _ammoVec2 = null;
+        _ammoQuat = null;
+    }
+
     /**
      * Sets the rate at which a body loses angular velocity over time.
      *
