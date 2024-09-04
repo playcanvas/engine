@@ -9,7 +9,6 @@ import { Script } from './script.js';
  * @category Script
  */
 class ScriptType extends Script {
-
     /** @private */
     __attributes;
 
