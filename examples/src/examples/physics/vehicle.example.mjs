@@ -94,7 +94,7 @@ assetListLoader.load(() => {
         { name: 'Front Right Wheel', pos: new pc.Vec3(-0.8, 0.4, 1.2), front: true },
         { name: 'Back Left Wheel', pos: new pc.Vec3(0.8, 0.4, -1.2), front: false },
         { name: 'Back Right Wheel', pos: new pc.Vec3(-0.8, 0.4, -1.2), front: false }
-    ].map(function (wheelDef) {
+    ].map((wheelDef) => {
         // Create a wheel
         const wheel = new pc.Entity(wheelDef.name);
         wheel.addComponent('script');
