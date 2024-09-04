@@ -117,7 +117,7 @@ class StandardMaterialOptionsBuilder {
 
         // true if ssao is applied directly in the lit shaders. Also ensure the AO part is generated in the front end
         options.litOptions.ssao = renderParams?.ssaoEnabled;
-        options.useAO = true;
+        options.useAO = options.litOptions.ssao;
 
         // All texture related lit options
         options.litOptions.lightMapEnabled = options.lightMap;

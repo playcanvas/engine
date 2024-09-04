@@ -18,7 +18,7 @@ class RenderingParams {
     _srgbRenderTarget = false;
 
     /** @private */
-    _ssaoEnabled = true;
+    _ssaoEnabled = false;
 
     /** @private */
     _fog = FOG_NONE;
