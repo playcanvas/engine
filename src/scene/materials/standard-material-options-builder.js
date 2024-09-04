@@ -55,7 +55,7 @@ class StandardMaterialOptionsBuilder {
         this._updateMaterialOptions(options, stdMat);
         options.litOptions.hasTangents = objDefs && ((objDefs & SHADERDEF_TANGENTS) !== 0);
         this._updateLightOptions(options, scene, stdMat, objDefs, sortedLights);
-        this._updateUVOptions(options, stdMat, objDefs, false);
+        this._updateUVOptions(options, stdMat, objDefs, false, renderParams);
     }
 
     _updateSharedOptions(options, scene, stdMat, objDefs, pass) {
@@ -96,7 +96,7 @@ class StandardMaterialOptionsBuilder {
         }
     }
 
-    _updateUVOptions(options, stdMat, objDefs, minimalOptions) {
+    _updateUVOptions(options, stdMat, objDefs, minimalOptions, renderParams) {
         let hasUv0 = false;
         let hasUv1 = false;
         let hasVcolor = false;
@@ -115,13 +115,17 @@ class StandardMaterialOptionsBuilder {
         }
         this._mapXForms = null;
 
+        // true if ssao is applied directly in the lit shaders. Also ensure the AO part is generated in the front end
+        options.litOptions.ssao = renderParams?.ssaoEnabled;
+        options.useAO = true;
+
         // All texture related lit options
         options.litOptions.lightMapEnabled = options.lightMap;
         options.litOptions.dirLightMapEnabled = options.dirLightMap;
         options.litOptions.useHeights = options.heightMap;
         options.litOptions.useNormals = options.normalMap;
         options.litOptions.useClearCoatNormals = options.clearCoatNormalMap;
-        options.litOptions.useAo = options.aoMap || options.aoVertexColor;
+        options.litOptions.useAo = options.aoMap || options.aoVertexColor || options.litOptions.ssao;
         options.litOptions.diffuseMapEnabled = options.diffuseMap;
     }
 

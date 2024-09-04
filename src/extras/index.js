@@ -14,6 +14,7 @@ export { UsdzExporter } from './exporters/usdz-exporter.js';
 export { GltfExporter } from './exporters/gltf-exporter.js';
 
 // RENDER PASSES
+export { SSAOTYPE_NONE, SSAOTYPE_LIGHTING, SSAOTYPE_COMBINE } from './render-passes/render-pass-camera-frame.js';
 export { RenderPassCameraFrame } from './render-passes/render-pass-camera-frame.js';
 export { RenderPassCompose } from './render-passes/render-pass-compose.js';
 export { RenderPassDepthAwareBlur } from './render-passes/render-pass-depth-aware-blur.js';
