@@ -19,10 +19,10 @@ const splatCoreVS = /* glsl */ `
     uniform highp sampler2D transformB;
     uniform highp sampler2D transformC;
 
-    attribute mediump vec3 vertex_position;
+    attribute vec3 vertex_position;
     attribute uint vertex_id_attrib;
 
-    varying mediump vec2 texCoord;
+    varying vec2 texCoord;
 
     #ifndef DITHER_NONE
         varying float id;
@@ -113,8 +113,8 @@ const splatCoreVS = /* glsl */ `
 `;
 
 const splatCoreFS = /* glsl */ `
-    varying mediump vec2 texCoord;
-    varying mediump vec4 color;
+    varying vec2 texCoord;
+    varying vec4 color;
 
     #ifndef DITHER_NONE
         varying float id;

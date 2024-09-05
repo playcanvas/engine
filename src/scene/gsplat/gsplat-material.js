@@ -8,7 +8,7 @@ import { gsplat } from './shader-generator-gsplat.js';
 const splatMainVS = /* glsl */ `
     uniform sampler2D splatColor;
 
-    varying mediump vec4 color;
+    varying vec4 color;
 
     vec4 discardVec = vec4(0.0, 0.0, 2.0, 1.0);
 
