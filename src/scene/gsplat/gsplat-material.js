@@ -19,16 +19,22 @@ const splatMainVS = `
         // read data
         readData();
 
+        color = getColor();
+
+        // size the quad based on alpha
+        // float scale = 1.0;
+        // float scale = min(1.0, sqrt(-log(1.0 / 255.0 / color.a)) / 2.0);
+        float scale = sqrt(1.0 - pow(1.0 / 255.0 / color.a, 1.0 / 3.6));
+
         vec4 pos;
-        if (!evalSplat(pos)) {
+        if (!evalSplat(pos, scale)) {
             gl_Position = discardVec;
             return;
         }
 
         gl_Position = pos;
 
-        texCoord = vertex_position.xy;
-        color = getColor();
+        texCoord = vertex_position.xy * scale / 2.0;
 
         #ifndef DITHER_NONE
             id = float(splatId);

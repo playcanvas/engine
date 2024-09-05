@@ -20,11 +20,11 @@ const splatCoreVS = /* glsl */ `
     uniform highp sampler2D transformC;
     uniform sampler2D splatColor;
 
-    attribute vec3 vertex_position;
+    attribute mediump vec3 vertex_position;
     attribute uint vertex_id_attrib;
 
-    varying vec2 texCoord;
-    varying vec4 color;
+    varying mediump vec2 texCoord;
+    varying mediump vec4 color;
 
     #ifndef DITHER_NONE
         varying float id;
@@ -81,7 +81,7 @@ const splatCoreVS = /* glsl */ `
     }
 
     // evaluate the splat position
-    bool evalSplat(out vec4 result)
+    bool evalSplat(out vec4 result, float scale)
     {
         vec4 centerWorld = matrix_model * vec4(center, 1.0);
         vec4 splat_cam = matrix_view * centerWorld;
@@ -132,15 +132,15 @@ const splatCoreVS = /* glsl */ `
             return false;
         }
 
-        result = splat_proj + vec4((vertex_position.x * v1 + vertex_position.y * v2) / viewport * splat_proj.w, 0, 0);
+        result = splat_proj + vec4((vertex_position.x * v1 + vertex_position.y * v2) / viewport * splat_proj.w * scale, 0, 0);
 
         return true;
     }
 `;
 
 const splatCoreFS = /* glsl */ `
-    varying vec2 texCoord;
-    varying vec4 color;
+    varying mediump vec2 texCoord;
+    varying mediump vec4 color;
 
     #ifndef DITHER_NONE
         varying float id;
@@ -151,9 +151,17 @@ const splatCoreFS = /* glsl */ `
     #endif
 
     vec4 evalSplat() {
-        float A = -dot(texCoord, texCoord);
-        if (A < -4.0) discard;
-        float B = exp(A) * color.a;
+        mediump float A = dot(texCoord, texCoord);
+        if (A > 1.0) {
+            // return vec4(1.0, 0.0, 0.0, 1.0);
+            discard;
+        }
+        mediump float B = exp(-A * 4.0) * color.a;
+        // float B = pow(1.0 - A, 3.6) * color.a;
+        if (B < 1.0 / 255.0) {
+            // return vec4(0.0, 1.0, 0.0, 1.0);
+            discard;
+        }
 
         #ifdef PICK_PASS
             if (B < 0.3) discard;
