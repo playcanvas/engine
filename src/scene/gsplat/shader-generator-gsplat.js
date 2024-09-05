@@ -18,13 +18,11 @@ const splatCoreVS = /* glsl */ `
     uniform highp sampler2D transformA;
     uniform highp sampler2D transformB;
     uniform highp sampler2D transformC;
-    uniform sampler2D splatColor;
 
     attribute mediump vec3 vertex_position;
     attribute uint vertex_id_attrib;
 
     varying mediump vec2 texCoord;
-    varying mediump vec4 color;
 
     #ifndef DITHER_NONE
         varying float id;
@@ -33,10 +31,6 @@ const splatCoreVS = /* glsl */ `
     uint orderId;
     uint splatId;
     ivec2 splatUV;
-
-    vec3 center;
-    vec3 covA;
-    vec3 covB;
 
     // calculate the current splat index and uv
     bool calcSplatUV() {
@@ -65,33 +59,23 @@ const splatCoreVS = /* glsl */ `
         return true;
     }
 
-    // read chunk and packed data from textures
-    void readData() {
-        vec4 tA = texelFetch(transformA, splatUV, 0);
-        vec4 tB = texelFetch(transformB, splatUV, 0);
-        vec4 tC = texelFetch(transformC, splatUV, 0);
+    vec4 tA;
 
+    void readCenter(out vec3 center) {
+        tA = texelFetch(transformA, splatUV, 0);
         center = tA.xyz;
+    }
+
+    void readCovariance(out vec3 covA, out vec3 covB) {
+        vec4 tB = texelFetch(transformB, splatUV, 0);
+        float tC = texelFetch(transformC, splatUV, 0).x;
+
         covA = tB.xyz;
-        covB = vec3(tA.w, tB.w, tC.x);
+        covB = vec3(tA.w, tB.w, tC);
     }
 
-    vec4 getColor() {
-        return texelFetch(splatColor, splatUV, 0);
-    }
-
-    // evaluate the splat position
-    bool evalSplat(out vec4 result, float scale)
-    {
-        vec4 centerWorld = matrix_model * vec4(center, 1.0);
-        vec4 splat_cam = matrix_view * centerWorld;
-        vec4 splat_proj = matrix_projection * splat_cam;
-
-        // cull behind camera
-        if (splat_proj.z < -splat_proj.w) {
-            return false;
-        }
-
+    // calculate 2d covariance vectors
+    void calcV1V2(in vec3 splat_cam, in vec3 covA, in vec3 covB, out vec2 v1, out vec2 v2) {
         mat3 Vrk = mat3(
             covA.x, covA.y, covA.z, 
             covA.y, covB.x, covB.y,
@@ -122,19 +106,9 @@ const splatCoreVS = /* glsl */ `
         float lambda1 = mid + radius;
         float lambda2 = max(mid - radius, 0.1);
         vec2 diagonalVector = normalize(vec2(offDiagonal, lambda1 - diagonal1));
-        vec2 v1 = min(sqrt(2.0 * lambda1), 1024.0) * diagonalVector;
-        vec2 v2 = min(sqrt(2.0 * lambda2), 1024.0) * vec2(diagonalVector.y, -diagonalVector.x);
 
-        // early out tiny splats
-        // TODO: figure out length units and expose as uniform parameter
-        // TODO: perhaps make this a shader compile-time option
-        if (dot(v1, v1) < 4.0 && dot(v2, v2) < 4.0) {
-            return false;
-        }
-
-        result = splat_proj + vec4((vertex_position.x * v1 + vertex_position.y * v2) / viewport * splat_proj.w * scale, 0, 0);
-
-        return true;
+        v1 = min(sqrt(2.0 * lambda1), 1024.0) * diagonalVector;
+        v2 = min(sqrt(2.0 * lambda2), 1024.0) * vec2(diagonalVector.y, -diagonalVector.x);
     }
 `;
 
@@ -151,15 +125,13 @@ const splatCoreFS = /* glsl */ `
     #endif
 
     vec4 evalSplat() {
-        mediump float A = dot(texCoord, texCoord);
+        float A = dot(texCoord, texCoord);
         if (A > 1.0) {
-            // return vec4(1.0, 0.0, 0.0, 1.0);
             discard;
         }
-        mediump float B = exp(-A * 4.0) * color.a;
-        // float B = pow(1.0 - A, 3.6) * color.a;
+
+        float B = exp(-A * 4.0) * color.a;
         if (B < 1.0 / 255.0) {
-            // return vec4(0.0, 1.0, 0.0, 1.0);
             discard;
         }
 

@@ -5,7 +5,11 @@ import { Material } from '../materials/material.js';
 import { getProgramLibrary } from '../shader-lib/get-program-library.js';
 import { gsplat } from './shader-generator-gsplat.js';
 
-const splatMainVS = `
+const splatMainVS = /* glsl */ `
+    uniform sampler2D splatColor;
+
+    varying mediump vec4 color;
+
     vec4 discardVec = vec4(0.0, 0.0, 2.0, 1.0);
 
     void main(void)
@@ -16,23 +20,45 @@ const splatMainVS = `
             return;
         }
 
-        // read data
-        readData();
+        // read center
+        vec3 center;
+        readCenter(center);
 
-        color = getColor();
+        // transform center to camera space
+        vec4 splat_cam = (matrix_view * matrix_model) * vec4(center, 1.0);
 
-        // size the quad based on alpha
-        // float scale = 1.0;
-        // float scale = min(1.0, sqrt(-log(1.0 / 255.0 / color.a)) / 2.0);
-        float scale = sqrt(1.0 - pow(1.0 / 255.0 / color.a, 1.0 / 3.6));
+        // transform center to clip space
+        vec4 splat_proj = matrix_projection * splat_cam;
 
-        vec4 pos;
-        if (!evalSplat(pos, scale)) {
+        // cull behind camera
+        if (splat_proj.z < -splat_proj.w) {
             gl_Position = discardVec;
             return;
         }
 
-        gl_Position = pos;
+        // read covariance
+        vec3 covA, covB;
+        readCovariance(covA, covB);
+
+        vec2 v1, v2;
+        calcV1V2(splat_cam.xyz, covA, covB, v1, v2);
+
+        // read color
+        color = texelFetch(splatColor, splatUV, 0);
+
+        // calculate scale based on alpha
+        float scale = min(1.0, sqrt(-log(1.0 / 255.0 / color.a)) / 2.0);
+
+        v1 *= scale;
+        v2 *= scale;
+    
+        // early out tiny splats
+        if (dot(v1, v1) < 4.0 && dot(v2, v2) < 4.0) {
+            gl_Position = discardVec;
+            return;
+        }
+
+        gl_Position = splat_proj + vec4((vertex_position.x * v1 + vertex_position.y * v2) / viewport * splat_proj.w, 0, 0);
 
         texCoord = vertex_position.xy * scale / 2.0;
 
@@ -42,7 +68,7 @@ const splatMainVS = `
     }
 `;
 
-const splatMainFS = `
+const splatMainFS = /* glsl */ `
     void main(void)
     {
         gl_FragColor = evalSplat();
