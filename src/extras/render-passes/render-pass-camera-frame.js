@@ -149,7 +149,7 @@ class RenderPassCameraFrame extends RenderPass {
             options.ssaoBlurEnabled !== currentOptions.ssaoBlurEnabled ||
             options.taaEnabled !== currentOptions.taaEnabled ||
             options.bloomEnabled !== currentOptions.bloomEnabled ||
-            options.prepassEnabled !== currentOptions.prepassEnabled
+            options.prepassEnabled !== currentOptions.prepassEnabled;
     }
 
     // manually called, applies changes
