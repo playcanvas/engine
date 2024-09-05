@@ -6,7 +6,7 @@ import { Vec3 } from '../../core/math/vec3.js';
 import { Vec4 } from '../../core/math/vec4.js';
 import { Mat3 } from '../../core/math/mat3.js';
 import {
-    ADDRESS_CLAMP_TO_EDGE, FILTER_NEAREST, PIXELFORMAT_R16F, PIXELFORMAT_RGBA16F, PIXELFORMAT_RGBA32F,
+    ADDRESS_CLAMP_TO_EDGE, FILTER_NEAREST, PIXELFORMAT_RGBA16F, PIXELFORMAT_RGBA32U,
     PIXELFORMAT_RGBA8
 } from '../../platform/graphics/constants.js';
 import { Texture } from '../../platform/graphics/texture.js';
@@ -41,9 +41,6 @@ class GSplat {
     /** @type {Texture} */
     transformBTexture;
 
-    /** @type {Texture} */
-    transformCTexture;
-
     /**
      * @param {import('../../platform/graphics/graphics-device.js').GraphicsDevice} device - The graphics device.
      * @param {import('./gsplat-data.js').GSplatData} gsplatData - The splat data.
@@ -62,9 +59,8 @@ class GSplat {
 
         const size = this.evalTextureSize(numSplats);
         this.colorTexture = this.createTexture('splatColor', PIXELFORMAT_RGBA8, size);
-        this.transformATexture = this.createTexture('transformA', PIXELFORMAT_RGBA32F, size);
+        this.transformATexture = this.createTexture('transformA', PIXELFORMAT_RGBA32U, size);
         this.transformBTexture = this.createTexture('transformB', PIXELFORMAT_RGBA16F, size);
-        this.transformCTexture = this.createTexture('transformC', PIXELFORMAT_R16F, size);
 
         // write texture data
         this.updateColorData(gsplatData);
@@ -75,7 +71,6 @@ class GSplat {
         this.colorTexture?.destroy();
         this.transformATexture?.destroy();
         this.transformBTexture?.destroy();
-        this.transformCTexture?.destroy();
     }
 
     /**
@@ -87,7 +82,6 @@ class GSplat {
         result.setParameter('splatColor', this.colorTexture);
         result.setParameter('transformA', this.transformATexture);
         result.setParameter('transformB', this.transformBTexture);
-        result.setParameter('transformC', this.transformCTexture);
         result.setParameter('tex_params', new Float32Array([this.numSplats, this.colorTexture.width, 0, 0]));
         return result;
     }
@@ -207,8 +201,8 @@ class GSplat {
         }
 
         const dataA = this.transformATexture.lock();
+        const dataAFloat32 = new Float32Array(dataA.buffer);
         const dataB = this.transformBTexture.lock();
-        const dataC = this.transformCTexture.lock();
 
         const p = new Vec3();
         const r = new Quat();
@@ -227,22 +221,19 @@ class GSplat {
 
             this.computeCov3d(mat, s, cA, cB);
 
-            dataA[i * 4 + 0] = p.x;
-            dataA[i * 4 + 1] = p.y;
-            dataA[i * 4 + 2] = p.z;
-            dataA[i * 4 + 3] = cB.x;
+            dataAFloat32[i * 4 + 0] = p.x;
+            dataAFloat32[i * 4 + 1] = p.y;
+            dataAFloat32[i * 4 + 2] = p.z;
+            dataA[i * 4 + 3] = float2Half(cB.x) | (float2Half(cB.y) << 16);
 
             dataB[i * 4 + 0] = float2Half(cA.x);
             dataB[i * 4 + 1] = float2Half(cA.y);
             dataB[i * 4 + 2] = float2Half(cA.z);
-            dataB[i * 4 + 3] = float2Half(cB.y);
-
-            dataC[i] = float2Half(cB.z);
+            dataB[i * 4 + 3] = float2Half(cB.z);
         }
 
         this.transformATexture.unlock();
         this.transformBTexture.unlock();
-        this.transformCTexture.unlock();
     }
 
     /**

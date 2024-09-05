@@ -15,9 +15,8 @@ const splatCoreVS = /* glsl */ `
     uniform vec4 tex_params;            // num splats, texture width
 
     uniform highp usampler2D splatOrder;
-    uniform highp sampler2D transformA;
+    uniform highp usampler2D transformA;
     uniform highp sampler2D transformB;
-    uniform highp sampler2D transformC;
 
     attribute vec3 vertex_position;
     attribute uint vertex_id_attrib;
@@ -59,19 +58,19 @@ const splatCoreVS = /* glsl */ `
         return true;
     }
 
-    vec4 tA;
+    uvec4 tA;
 
     void readCenter(out vec3 center) {
         tA = texelFetch(transformA, splatUV, 0);
-        center = tA.xyz;
+        center = uintBitsToFloat(tA.xyz);
     }
 
     void readCovariance(out vec3 covA, out vec3 covB) {
         vec4 tB = texelFetch(transformB, splatUV, 0);
-        float tC = texelFetch(transformC, splatUV, 0).x;
+        vec2 tC = unpackHalf2x16(tA.w);
 
         covA = tB.xyz;
-        covB = vec3(tA.w, tB.w, tC);
+        covB = vec3(tC.x, tC.y, tB.w);
     }
 
     // calculate 2d covariance vectors
