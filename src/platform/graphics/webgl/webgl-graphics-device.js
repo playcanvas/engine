@@ -1252,7 +1252,7 @@ class WebglGraphicsDevice extends GraphicsDevice {
             }
 
             // resolve the color buffer (this resolves all MRT color buffers at once)
-            if (renderPass.colorOps?.resolve) {
+            if (colorBufferCount && renderPass.colorOps?.resolve) {
                 if (renderPass.samples > 1 && target.autoResolve) {
                     target.resolve(true, false);
                 }

@@ -276,7 +276,7 @@ class RenderPass {
         }
 
         // color
-        const numColorOps = rt?._colorBuffers?.length ?? 1;
+        const numColorOps = rt ? rt._colorBuffers?.length : 1;
         this.colorArrayOps.length = 0;
         for (let i = 0; i < numColorOps; i++) {
             const colorOps = new ColorAttachmentOps();
