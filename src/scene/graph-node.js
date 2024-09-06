@@ -7,7 +7,6 @@ import { Mat4 } from '../core/math/mat4.js';
 import { Quat } from '../core/math/quat.js';
 import { Vec3 } from '../core/math/vec3.js';
 import { getApplication } from '../framework/globals.js';
-import { Application } from '../framework/application.js';
 
 const scaleCompensatePosTransform = new Mat4();
 const scaleCompensatePos = new Vec3();
