@@ -181,6 +181,17 @@ class AnimComponent extends Component {
         return this._playing;
     }
 
+    // magnopus patched: Move the animation from one entity to another, used by lods
+    transferOwnership(entity, opts) {
+        // change the animation skeleton to the new mesh
+        this.rootBone = entity;
+        this.animationFrameSkip = opts.animationFrameSkip;
+        // ensure the new mesh is in sync
+        this.update(0);
+        this._mi = undefined;
+        this.setupDelayed = false;
+    }
+
     /**
      * Sets the entity that this anim component should use as the root of the animation hierarchy.
      *
