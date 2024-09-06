@@ -1043,7 +1043,7 @@ class WebgpuGraphicsDevice extends GraphicsDevice {
 
             // read from supplied render target, or from the framebuffer
             const sourceRT = source ? source : this.renderTarget;
-            const sourceTexture = sourceRT.impl.depthTexture;
+            const sourceTexture = sourceRT.impl.depthAttachment.depthTexture;
 
             if (source.samples > 1) {
 
@@ -1054,7 +1054,7 @@ class WebgpuGraphicsDevice extends GraphicsDevice {
             } else {
 
                 // write to supplied render target, or to the framebuffer
-                const destTexture = dest ? dest.depthBuffer.impl.gpuTexture : this.renderTarget.impl.depthTexture;
+                const destTexture = dest ? dest.depthBuffer.impl.gpuTexture : this.renderTarget.impl.depthAttachment.depthTexture;
 
                 /** @type {GPUImageCopyTexture} */
                 const copySrc = {
