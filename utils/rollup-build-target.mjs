@@ -124,7 +124,6 @@ function getJSCCOptions(buildType, isUMD) {
  */
 function getOutPlugins() {
     const plugins = [
-        // terser()
     ];
 
     if (process.env.treemap) {
@@ -206,6 +205,9 @@ function buildTarget({ moduleFormat, buildType, bundleState, input = 'src/index.
          */
         const target = {
             input: release.output.file,
+            plugins: [
+                swc({ swc: swcOptions(isDebug, isUMD, isMin)}),
+            ],
             output: {
                 plugins: getOutPlugins(),
                 file: `${dir}/${OUT_PREFIX[buildType]}${isUMD ? '.js' : '.mjs'}`
@@ -244,8 +246,8 @@ function buildTarget({ moduleFormat, buildType, bundleState, input = 'src/index.
             isUMD ? dynamicImportLegacyBrowserSupport() : undefined,
             !isDebug ? shaderChunks() : undefined,
             isDebug ? engineLayerImportValidation(input) : undefined,
-            !isDebug ? strip({ functions: STRIP_FUNCTIONS }) : undefined,
-            swc({ swc: swcOptions(isUMD, isMin)}),
+            // !isDebug ? strip({ functions: STRIP_FUNCTIONS }) : undefined,
+            swc({ swc: swcOptions(isDebug, isUMD, isMin)}),
             // swc({ swc: {
             //     jsc: {
             //         externalHelpers: true,
