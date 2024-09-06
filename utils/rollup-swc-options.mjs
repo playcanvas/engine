@@ -10,23 +10,22 @@
  */
 function swcOptions(isDebug, isUMD, minify) {
     return {
-        minify,
+        minify: minify,
         jsc: {
-            minify: { 
-                mangle: true,
+            minify: {
                 format: {
-                    comments: isDebug ? 'all' : false,
+                    comments: isDebug ? 'all' : false
                 },
-                compress: {
-                    drop_console: !isDebug,
-                }
+                compress: minify && isDebug ? {
+                    drop_console: false
+                } : undefined
             },
             externalHelpers: false
         },
-        env: {
+        env: isUMD ? {
             loose: true,
             targets: isUMD ? 'fully supports webgl, > 0.1%, not dead' : undefined
-        }
+        } : undefined
     };
 
 }

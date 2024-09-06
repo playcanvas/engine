@@ -140,7 +140,7 @@
     "karma-spec-reporter": "^0.0.36",
     "mocha": "^10.4.0",
     "publint": "^0.2.7",
-    "rollup": "^4.16.4",
+    "rollup": "^4.21.2",
     "rollup-plugin-dts": "^6.0.2",
     "rollup-plugin-jscc": "2.0.0",
     "rollup-plugin-visualizer": "^5.12.0",

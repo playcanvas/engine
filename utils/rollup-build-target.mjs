@@ -1,6 +1,6 @@
 // official package plugins
 import resolve from '@rollup/plugin-node-resolve';
-import strip from '@rollup/plugin-strip';
+// import strip from '@rollup/plugin-strip';
 import swc from '@rollup/plugin-swc';
 
 // unoffical package plugins
@@ -16,7 +16,7 @@ import { treeshakeIgnore } from './plugins/rollup-treeshake-ignore.mjs';
 
 import { version, revision } from './rollup-version-revision.mjs';
 import { getBanner } from './rollup-get-banner.mjs';
-import { swcOptions } from './rollup-babel-options.mjs';
+import { swcOptions } from './rollup-swc-options.mjs';
 
 import { dirname, resolve as pathResolve } from 'path';
 import { fileURLToPath } from 'url';
@@ -246,18 +246,7 @@ function buildTarget({ moduleFormat, buildType, bundleState, input = 'src/index.
             isUMD ? dynamicImportLegacyBrowserSupport() : undefined,
             !isDebug ? shaderChunks() : undefined,
             isDebug ? engineLayerImportValidation(input) : undefined,
-            // !isDebug ? strip({ functions: STRIP_FUNCTIONS }) : undefined,
             swc({ swc: swcOptions(isDebug, isUMD, isMin)}),
-            // swc({ swc: {
-            //     jsc: {
-            //         externalHelpers: true,
-            //         target: 'es2020',
-            //         parser: {
-            //             syntax: 'typescript',
-            //             decorators: true
-            //         }
-            //     }
-            // }}),
             !isUMD ? dynamicImportBundlerSuppress() : undefined,
             !isDebug ? spacesToTabs() : undefined
         ]
