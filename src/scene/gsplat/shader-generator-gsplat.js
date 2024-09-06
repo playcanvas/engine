@@ -74,7 +74,7 @@ const splatCoreVS = /* glsl */ `
     }
 
     // calculate 2d covariance vectors
-    void calcV1V2(in vec3 splat_cam, in vec3 covA, in vec3 covB, out vec2 v1, out vec2 v2) {
+    vec4 calcV1V2(in vec3 splat_cam, in vec3 covA, in vec3 covB, mat3 W) {
         mat3 Vrk = mat3(
             covA.x, covA.y, covA.z, 
             covA.y, covB.x, covB.y,
@@ -91,8 +91,6 @@ const splatCoreVS = /* glsl */ `
             0., 0., 0.
         );
 
-        mat3 W = transpose(mat3(matrix_view) * mat3(matrix_model));
-
         mat3 T = W * J;
         mat3 cov = transpose(T) * Vrk * T;
 
@@ -106,8 +104,10 @@ const splatCoreVS = /* glsl */ `
         float lambda2 = max(mid - radius, 0.1);
         vec2 diagonalVector = normalize(vec2(offDiagonal, lambda1 - diagonal1));
 
-        v1 = min(sqrt(2.0 * lambda1), 1024.0) * diagonalVector;
-        v2 = min(sqrt(2.0 * lambda2), 1024.0) * vec2(diagonalVector.y, -diagonalVector.x);
+        vec2 v1 = min(sqrt(2.0 * lambda1), 1024.0) * diagonalVector;
+        vec2 v2 = min(sqrt(2.0 * lambda2), 1024.0) * vec2(diagonalVector.y, -diagonalVector.x);
+
+        return vec4(v1, v2);
     }
 `;
 

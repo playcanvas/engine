@@ -24,8 +24,10 @@ const splatMainVS = /* glsl */ `
         vec3 center;
         readCenter(center);
 
+        mat4 modelView = matrix_view * matrix_model;
+
         // transform center to camera space
-        vec4 splat_cam = (matrix_view * matrix_model) * vec4(center, 1.0);
+        vec4 splat_cam = modelView * vec4(center, 1.0);
 
         // transform center to clip space
         vec4 splat_proj = matrix_projection * splat_cam;
@@ -40,8 +42,7 @@ const splatMainVS = /* glsl */ `
         vec3 covA, covB;
         readCovariance(covA, covB);
 
-        vec2 v1, v2;
-        calcV1V2(splat_cam.xyz, covA, covB, v1, v2);
+        vec4 v1v2 = calcV1V2(splat_cam.xyz, covA, covB, transpose(mat3(modelView)));
 
         // read color
         color = texelFetch(splatColor, splatUV, 0);
@@ -49,16 +50,15 @@ const splatMainVS = /* glsl */ `
         // calculate scale based on alpha
         float scale = min(1.0, sqrt(-log(1.0 / 255.0 / color.a)) / 2.0);
 
-        v1 *= scale;
-        v2 *= scale;
+        v1v2 *= scale;
     
         // early out tiny splats
-        if (dot(v1, v1) < 4.0 && dot(v2, v2) < 4.0) {
+        if (dot(v1v2.xy, v1v2.xy) < 4.0 && dot(v1v2.zw, v1v2.zw) < 4.0) {
             gl_Position = discardVec;
             return;
         }
 
-        gl_Position = splat_proj + vec4((vertex_position.x * v1 + vertex_position.y * v2) / viewport * splat_proj.w, 0, 0);
+        gl_Position = splat_proj + vec4((vertex_position.x * v1v2.xy + vertex_position.y * v1v2.zw) / viewport * splat_proj.w, 0, 0);
 
         texCoord = vertex_position.xy * scale / 2.0;
 
