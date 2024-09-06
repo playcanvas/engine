@@ -12,10 +12,13 @@ const stringIds = new StringIds();
 
 /**
  * Private class storing info about color buffer.
+ *
+ * @private
  */
 class ColorAttachment {
     /**
      * @type {GPUTextureFormat}
+     * @private
      */
     format;
 
@@ -33,10 +36,13 @@ class ColorAttachment {
 
 /**
  * Private class storing info about depth-stencil buffer.
+ *
+ * @private
  */
 class DepthAttachment {
     /**
      * @type {GPUTextureFormat}
+     * @private
      */
     format;
 
@@ -45,6 +51,7 @@ class DepthAttachment {
 
     /**
      * @type {GPUTexture|null}
+     * @private
      */
     depthTexture = null;
 
@@ -59,11 +66,12 @@ class DepthAttachment {
      * Multi-sampled depth buffer allocated over the user provided depth buffer.
      *
      * @type {GPUTexture|null}
+     * @private
      */
     multisampledDepthBuffer = null;
 
     /**
-     * @param {GPUTextureFormat} gpuFormat - The WebGPU format.
+     * @param {string} gpuFormat - The WebGPU format (GPUTextureFormat).
      */
     constructor(gpuFormat) {
         Debug.assert(gpuFormat);
