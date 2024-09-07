@@ -19,25 +19,14 @@ export default [
                 ...globals.node,
                 'Ammo': false,
                 'earcut': false,
-                'glslang': false,
-                'GPUBufferUsage': false,
-                'GPUColorWrite': false,
-                'GPUMapMode': false,
-                'GPUShaderStage': false,
-                'GPUTextureUsage': false,
                 'opentype': false,
                 'pc': false,
                 'TWEEN': false,
                 'twgsl': false,
-                'webkitAudioContext': false,
-                'XRRay': false,
-                'XRRigidTransform': false,
-                'XRWebGLBinding': false,
-                'XRWebGLLayer': false
+                'webkitAudioContext': false
             }
         },
         rules: {
-            'no-unused-vars': ['error', { 'args': 'none', 'caughtErrors': 'none' }],
             'import/order': 'off'
         }
     },
