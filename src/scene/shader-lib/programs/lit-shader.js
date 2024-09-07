@@ -1221,7 +1221,7 @@ class LitShader {
                             backend.append(`    fadeShadow(light${i}_shadowCascadeDistances);`);
                         }
 
-                        var shadowCoordArgs = `SHADOWMAP_PASS(light${i}_shadowMap), dShadowCoord, light${i}_shadowParams`;
+                        let shadowCoordArgs = `SHADOWMAP_PASS(light${i}_shadowMap), dShadowCoord, light${i}_shadowParams`;
 
                         if (vsmShadows) {
                             // VSM
@@ -1283,7 +1283,7 @@ class LitShader {
                         }
 
                     } else {
-                        var calcFresnel = false;
+                        let calcFresnel = false;
                         if (lightType === LIGHTTYPE_DIRECTIONAL && options.fresnelModel > 0) {
                             calcFresnel = true;
                         }
