@@ -80,7 +80,7 @@ ScriptAttributes.reservedNames.forEach((value, value2, set) => {
 });
 createScript.reservedAttributes = reservedAttributes;
 
-/* eslint-disable jsdoc/check-examples */
+
 /**
  * Register a existing class type as a Script Type to {@link ScriptRegistry}. Useful when defining
  * a ES6 script class that extends {@link ScriptType} (see example).
@@ -142,6 +142,6 @@ function registerScript(script, name, app) {
 
     ScriptTypes.push(script);
 }
-/* eslint-enable jsdoc/check-examples */
+
 
 export { createScript, registerScript, getReservedScriptNames };

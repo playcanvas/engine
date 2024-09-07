@@ -2306,7 +2306,7 @@ const loadBuffers = (gltf, binaryChunk, urlBase, options) => {
                     http.get(
                         ABSOLUTE_URL.test(gltfBuffer.uri) ? gltfBuffer.uri : path.join(urlBase, gltfBuffer.uri),
                         { cache: true, responseType: 'arraybuffer', retry: false },
-                        (err, result) => {                         // eslint-disable-line no-loop-func
+                        (err, result) => {
                             if (err) {
                                 reject(err);
                             } else {

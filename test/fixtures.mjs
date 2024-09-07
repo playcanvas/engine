@@ -2,7 +2,7 @@ import handler from 'serve-handler';
 import http from 'http';
 import XMLHttpRequest from 'xhr2';
 
-import 'global-jsdom/register'; // eslint-disable-line import/no-unresolved,import/extensions
+import 'global-jsdom/register';
 
 let server;
 
