@@ -81,6 +81,7 @@
     "eslint": "^9.10.0",
     "fflate": "^0.8.2",
     "global-jsdom": "^24.0.0",
+    "globals": "^15.9.0",
     "jsdom": "^24.0.0",
     "karma": "^6.4.3",
     "karma-chrome-launcher": "^3.2.0",
