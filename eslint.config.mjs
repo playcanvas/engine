@@ -31,10 +31,15 @@ export default [
         }
     },
     {
+        files: ['scripts/**/*.js'],
+        rules: {
+            'no-var': 'off'
+        }
+    },
+    {
         files: ['test/**/*.mjs'],
         rules: {
-            'no-unused-expressions': 'off',
-            'no-var': 'error'
+            'no-unused-expressions': 'off'
         }
     },
     {
