@@ -205,7 +205,6 @@ class XrView extends EventHandler {
         return this._textureColor;
     }
 
-
     /**
      * Texture that contains packed depth information which is reconstructed using the underlying
      * AR system. This texture can be used (not limited to) for reconstructing real world
@@ -251,7 +250,6 @@ class XrView extends EventHandler {
     get textureDepth() {
         return this._textureDepth;
     }
-
 
     /**
      * 4x4 matrix that should be used to transform depth texture UVs to normalized UVs in a shader.
