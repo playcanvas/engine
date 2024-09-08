@@ -121,7 +121,7 @@ class Trigger {
 
         const system = this.app.systems.rigidbody;
         const idx = system._triggers.indexOf(this);
-        if (idx === -1) {
+        if (idx < 0) {
             system.addBody(body, BODYGROUP_TRIGGER, BODYMASK_NOT_STATIC ^ BODYGROUP_TRIGGER);
             system._triggers.push(this);
         }
