@@ -32,7 +32,6 @@ describe('ElementComponent Masks', function () {
         expect(!e.element).to.exist;
     });
 
-
     it('masked children', function () {
         const m1 = new Entity();
         m1.addComponent('element', {
@@ -85,9 +84,11 @@ describe('ElementComponent Masks', function () {
     });
 
     it('sibling masks, correct maskref', function () {
+
         // m1   m2
         // |    |
         // c1   c2
+
         const m1 = new Entity('m1');
         m1.addComponent('element', {
             type: 'image',
@@ -122,10 +123,10 @@ describe('ElementComponent Masks', function () {
 
         expect(m1.element._image._maskRef).to.equal(1);
         expect(m2.element._image._maskRef).to.equal(1);
-
     });
 
     it('sub-masked and sibling children', function () {
+
         //    top
         // /        \
         // m11       m12
@@ -133,6 +134,7 @@ describe('ElementComponent Masks', function () {
         // m21       m22
         // |  \     |
         // c31 c32  d31
+
         const top = new Entity('top');
         top.addComponent('element', {
             type: 'group'
@@ -211,7 +213,6 @@ describe('ElementComponent Masks', function () {
         // c1   d1
         //
 
-
         const m11 = new Entity('m11');
         m11.addComponent('element', {
             type: 'image',
@@ -268,12 +269,12 @@ describe('ElementComponent Masks', function () {
     });
 
     it('sub-masked and later children', function () {
+
         // m1
         // |  \
         // m2 c2
         // |
         // c1
-
 
         const m1 = new Entity('m1');
         m1.addComponent('element', {
@@ -314,12 +315,12 @@ describe('ElementComponent Masks', function () {
 
 
     it('multiple child masks and later children', function () {
+
         //    m1
         // /  |  \
         // m2 m3 c2
         // |
         // c1
-
 
         const m1 = new Entity('m1');
         m1.addComponent('element', {
@@ -412,7 +413,6 @@ describe('ElementComponent Masks', function () {
         app.update(0.1);
         app.render();
         expect(e.element.isVisibleForCamera(camera.camera.camera)).to.be.true;
-
     });
 
     it('TextElement outside a mask is culled', function () {
@@ -461,7 +461,6 @@ describe('ElementComponent Masks', function () {
         app.update(0.1);
         app.render();
         expect(e.element.isVisibleForCamera(camera.camera.camera)).to.be.true;
-
     });
 
 });

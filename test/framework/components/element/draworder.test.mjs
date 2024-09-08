@@ -76,7 +76,6 @@ describe('ElementComponent Draw Order', function () {
         expect(c1.element.drawOrder).to.equal(3);
     });
 
-
     it('add screen late', function () {
         const screen = new Entity('screen');
 
@@ -121,7 +120,6 @@ describe('ElementComponent Draw Order', function () {
         expect(p1.element.drawOrder).to.equal(1);
         expect(c1.element.drawOrder).to.equal(2);
     });
-
 
     it('single call to _processDrawOrderSync', function () {
         let count = 0;
@@ -219,7 +217,6 @@ describe('ElementComponent Draw Order', function () {
         expect(m3Unmask < c1DrawOrder).to.equal(true, 'unmask for m3 drawn before c1');
         expect(m3Unmask < m1Unmask).to.equal(true, 'unmask for m1 drawn before unmask m2');
         expect(m3Unmask < m2Unmask).to.equal(true, 'unmask for m1 drawn before unmask m3');
-
     });
 
     it('Unmask drawOrder - draw order remains the same for repeated calls', function () {
