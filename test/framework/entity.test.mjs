@@ -99,7 +99,7 @@ describe('Entity', function () {
     describe('#addComponent', function () {
 
         for (const name in components) {
-            it(`adds a ${name} component`, () => {
+            it(`adds a ${name} component`, function () {
                 // Create an entity and verify that it does not already have the component
                 const entity = new Entity();
                 expect(entity[name]).to.be.undefined;

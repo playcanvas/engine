@@ -504,7 +504,7 @@ describe('Quat', function () {
             [1, 2, 3],
             [10, 10, 0]
         ].forEach(([x, y, z]) => {
-            it(`sets the quaternion from ${x}°, ${y}°, ${z}°`, () => {
+            it(`sets the quaternion from ${x}°, ${y}°, ${z}°`, function () {
                 const q1 = new Quat();
                 const q2 = new Quat();
                 const q3 = new Quat();
