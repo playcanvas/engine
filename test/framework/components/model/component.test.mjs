@@ -46,7 +46,7 @@ describe('ModelComponent', function () {
         });
     };
 
-    beforeEach((done) => {
+    beforeEach(function (done) {
         const canvas = createCanvas(500, 500);
         app = new Application(canvas, { graphicsDevice: new NullGraphicsDevice(canvas) });
 
