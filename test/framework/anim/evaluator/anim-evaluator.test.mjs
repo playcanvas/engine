@@ -14,9 +14,9 @@ import { HTMLCanvasElement } from '@playcanvas/canvas-mock';
 
 import { expect } from 'chai';
 
-describe('AnimEvaluator', () => {
+describe('AnimEvaluator', function () {
 
-    it('AnimEvaluator: update with clip blending', () => {
+    it('AnimEvaluator: update with clip blending', function () {
         const canvas = new HTMLCanvasElement(500, 500);
         const app = new Application(canvas, { graphicsDevice: new NullGraphicsDevice(canvas) });
 
@@ -89,7 +89,7 @@ describe('AnimEvaluator', () => {
         expect(child1.localPosition.z).to.equal(0);
     });
 
-    it('AnimEvaluator: update without clip blending', () => {
+    it('AnimEvaluator: update without clip blending', function () {
         const canvas = new HTMLCanvasElement(500, 500);
         const app = new Application(canvas, { graphicsDevice: new NullGraphicsDevice(canvas) });
 

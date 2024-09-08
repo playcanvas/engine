@@ -7,7 +7,7 @@ import { HTMLCanvasElement } from '@playcanvas/canvas-mock';
 
 import { expect } from 'chai';
 
-describe('AssetListLoader', () => {
+describe('AssetListLoader', function () {
 
     let app;
     const assetPath = 'http://localhost:3000/test/test-assets/';
@@ -21,14 +21,14 @@ describe('AssetListLoader', () => {
         app.destroy();
     });
 
-    describe('#constructor', () => {
+    describe('#constructor', function () {
 
-        it('instantiates correctly', () => {
+        it('instantiates correctly', function () {
             const assetListLoader = new AssetListLoader([], app.assets);
             expect(assetListLoader).to.be.ok;
         });
 
-        it('stores a single asset', () => {
+        it('stores a single asset', function () {
             const assets = [
                 new Asset('model', 'container', { url: `${assetPath}test.glb` })
             ];
@@ -36,7 +36,7 @@ describe('AssetListLoader', () => {
             expect(assetListLoader._assets.has(assets[0])).to.equal(true);
         });
 
-        it('stores multiple assets', () => {
+        it('stores multiple assets', function () {
             const assets = [
                 new Asset('model', 'container', { url: `${assetPath}test.glb` }),
                 new Asset('styling', 'css', { url: `${assetPath}test.css` })
@@ -46,7 +46,7 @@ describe('AssetListLoader', () => {
             expect(assetListLoader._assets.has(assets[1])).to.equal(true);
         });
 
-        it('stores single copies of duplicated assets', () => {
+        it('stores single copies of duplicated assets', function () {
             const assets = [
                 new Asset('model', 'container', { url: `${assetPath}test.glb` })
             ];
@@ -54,7 +54,7 @@ describe('AssetListLoader', () => {
             expect(assetListLoader._assets.size).to.equal(1);
         });
 
-        it('adds the supplied registry to any assets that do not have one', () => {
+        it('adds the supplied registry to any assets that do not have one', function () {
             const assets = [
                 new Asset('model', 'container', { url: `${assetPath}test.glb` })
             ];
@@ -67,7 +67,7 @@ describe('AssetListLoader', () => {
 
     });
 
-    describe('#ready', () => {
+    describe('#ready', function () {
 
         it('can return a single loaded asset', (done) => {
             const asset = new Asset('model', 'container', { url: `${assetPath}test.glb` });
@@ -112,7 +112,7 @@ describe('AssetListLoader', () => {
 
     });
 
-    describe('#load', () => {
+    describe('#load', function () {
 
         it('can call the ready callback if an asset is already loaded', (done) => {
             const asset = new Asset('model', 'container', { url: `${assetPath}test.glb` });

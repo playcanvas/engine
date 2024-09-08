@@ -2,11 +2,11 @@ import { SortedLoopArray } from '../../src/core/sorted-loop-array.js';
 
 import { expect } from 'chai';
 
-describe('SortedLoopArray', () => {
+describe('SortedLoopArray', function () {
 
-    describe('#constructor', () => {
+    describe('#constructor', function () {
 
-        it('creates a new sorted loop array', () => {
+        it('creates a new sorted loop array', function () {
             const array = new SortedLoopArray({
                 sortBy: 'priority'
             });
@@ -17,9 +17,9 @@ describe('SortedLoopArray', () => {
 
     });
 
-    describe('#append()', () => {
+    describe('#append()', function () {
 
-        it('adds item to array', () => {
+        it('adds item to array', function () {
             const arr = new SortedLoopArray({ sortBy: 'priority' });
             expect(arr.items.length).to.equal(0);
 
@@ -32,14 +32,14 @@ describe('SortedLoopArray', () => {
             expect(arr.items[0]).to.equal(item);
         });
 
-        it('increases length', () => {
+        it('increases length', function () {
             const arr = new SortedLoopArray({ sortBy: 'priority' });
             expect(arr.length).to.equal(0);
             arr.append({ priority: 1 });
             expect(arr.length).to.equal(1);
         });
 
-        it('does not modify loopIndex', () => {
+        it('does not modify loopIndex', function () {
             const arr = new SortedLoopArray({ sortBy: 'priority' });
             const a = {
                 priority: 1
@@ -59,7 +59,7 @@ describe('SortedLoopArray', () => {
             expect(arr.loopIndex).to.equal(1);
         });
 
-        it('always adds item to the end', () => {
+        it('always adds item to the end', function () {
             const arr = new SortedLoopArray({ sortBy: 'priority' });
             const a = {
                 priority: 1
@@ -82,9 +82,9 @@ describe('SortedLoopArray', () => {
 
     });
 
-    describe('#insert()', () => {
+    describe('#insert()', function () {
 
-        it('adds item to array', () => {
+        it('adds item to array', function () {
             const arr = new SortedLoopArray({ sortBy: 'priority' });
             expect(arr.items.length).to.equal(0);
 
@@ -97,7 +97,7 @@ describe('SortedLoopArray', () => {
             expect(arr.items[0]).to.equal(item);
         });
 
-        it('adds item after items with lower priority', () => {
+        it('adds item after items with lower priority', function () {
             const arr = new SortedLoopArray({ sortBy: 'priority' });
             const a = {
                 priority: 1
@@ -113,7 +113,7 @@ describe('SortedLoopArray', () => {
             expect(arr.items[1]).to.equal(b);
         });
 
-        it('adds item after items with equal priority', () => {
+        it('adds item after items with equal priority', function () {
             const arr = new SortedLoopArray({ sortBy: 'priority' });
             const a = {
                 priority: 1
@@ -129,7 +129,7 @@ describe('SortedLoopArray', () => {
             expect(arr.items[1]).to.equal(b);
         });
 
-        it('adds item between items with lower and higher priority', () => {
+        it('adds item between items with lower and higher priority', function () {
             const arr = new SortedLoopArray({ sortBy: 'priority' });
             const a = {
                 priority: 1
@@ -150,7 +150,7 @@ describe('SortedLoopArray', () => {
             expect(arr.items[2]).to.equal(c);
         });
 
-        it('adds item after items with lower and equal priority', () => {
+        it('adds item after items with lower and equal priority', function () {
             const arr = new SortedLoopArray({ sortBy: 'priority' });
             const a = {
                 priority: 1
@@ -171,7 +171,7 @@ describe('SortedLoopArray', () => {
             expect(arr.items[2]).to.equal(c);
         });
 
-        it('adds item before items with higher priority', () => {
+        it('adds item before items with higher priority', function () {
             const arr = new SortedLoopArray({ sortBy: 'priority' });
             const a = {
                 priority: 1
@@ -192,7 +192,7 @@ describe('SortedLoopArray', () => {
             expect(arr.items[2]).to.equal(c);
         });
 
-        it('does not modify loopIndex for item added after it', () => {
+        it('does not modify loopIndex for item added after it', function () {
             const arr = new SortedLoopArray({ sortBy: 'priority' });
             const a = {
                 priority: 1
@@ -212,7 +212,7 @@ describe('SortedLoopArray', () => {
             expect(arr.loopIndex).to.equal(1);
         });
 
-        it('modifies loopIndex for item added before it', () => {
+        it('modifies loopIndex for item added before it', function () {
             const arr = new SortedLoopArray({ sortBy: 'priority' });
             const a = {
                 priority: 1
@@ -232,7 +232,7 @@ describe('SortedLoopArray', () => {
             expect(arr.loopIndex).to.equal(2);
         });
 
-        it('modifies loopIndex for item added on the same slot', () => {
+        it('modifies loopIndex for item added on the same slot', function () {
             const arr = new SortedLoopArray({ sortBy: 'priority' });
             const a = {
                 priority: 1
@@ -252,7 +252,7 @@ describe('SortedLoopArray', () => {
             expect(arr.loopIndex).to.equal(1);
         });
 
-        it('increases length', () => {
+        it('increases length', function () {
             const arr = new SortedLoopArray({ sortBy: 'priority' });
             expect(arr.length).to.equal(0);
             arr.insert({ priority: 1 });
@@ -261,9 +261,9 @@ describe('SortedLoopArray', () => {
 
     });
 
-    describe('#remove()', () => {
+    describe('#remove()', function () {
 
-        it('removes item from array', () => {
+        it('removes item from array', function () {
             const arr = new SortedLoopArray({ sortBy: 'priority' });
             expect(arr.items.length).to.equal(0);
 
@@ -280,7 +280,7 @@ describe('SortedLoopArray', () => {
             expect(arr.items.length).to.equal(0);
         });
 
-        it('decreases length', () => {
+        it('decreases length', function () {
             const arr = new SortedLoopArray({ sortBy: 'priority' });
             const item = { priority: 1 };
             expect(arr.length).to.equal(0);
@@ -294,7 +294,7 @@ describe('SortedLoopArray', () => {
             expect(arr.length).to.equal(0);
         });
 
-        it('does not modify loopIndex for item removed after it', () => {
+        it('does not modify loopIndex for item removed after it', function () {
             const arr = new SortedLoopArray({ sortBy: 'priority' });
             const a = {
                 priority: 1
@@ -315,7 +315,7 @@ describe('SortedLoopArray', () => {
             expect(arr.loopIndex).to.equal(1);
         });
 
-        it('modifies loopIndex for item removed before it', () => {
+        it('modifies loopIndex for item removed before it', function () {
             const arr = new SortedLoopArray({ sortBy: 'priority' });
             const a = {
                 priority: 1
@@ -336,7 +336,7 @@ describe('SortedLoopArray', () => {
             expect(arr.loopIndex).to.equal(0);
         });
 
-        it('modifies loopIndex when item it points to was removed', () => {
+        it('modifies loopIndex when item it points to was removed', function () {
             const arr = new SortedLoopArray({ sortBy: 'priority' });
             const a = {
                 priority: 1
@@ -357,7 +357,7 @@ describe('SortedLoopArray', () => {
             expect(arr.loopIndex).to.equal(0);
         });
 
-        it('does not modify loopIndex if element does not exist', () => {
+        it('does not modify loopIndex if element does not exist', function () {
             const arr = new SortedLoopArray({ sortBy: 'priority' });
             const a = {
                 priority: 1
@@ -379,9 +379,9 @@ describe('SortedLoopArray', () => {
 
     });
 
-    describe('#sort', () => {
+    describe('#sort', function () {
 
-        it('sorts items', () => {
+        it('sorts items', function () {
             const arr = new SortedLoopArray({ sortBy: 'priority' });
             const a = {
                 priority: 1
@@ -401,7 +401,7 @@ describe('SortedLoopArray', () => {
             expect(arr.items[2]).to.equal(c);
         });
 
-        it('updates loopIndex', () => {
+        it('updates loopIndex', function () {
             const arr = new SortedLoopArray({ sortBy: 'priority' });
             const a = {
                 priority: 1
@@ -419,7 +419,7 @@ describe('SortedLoopArray', () => {
             expect(arr.loopIndex).to.equal(2);
         });
 
-        it('does not update loopIndex if it cannot find element it\'s pointing to', () => {
+        it('does not update loopIndex if it cannot find element it\'s pointing to', function () {
             const arr = new SortedLoopArray({ sortBy: 'priority' });
             const a = {
                 priority: 1

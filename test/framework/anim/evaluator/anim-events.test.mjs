@@ -1,7 +1,7 @@
 import { AnimEvents } from '../../../../src/framework/anim/evaluator/anim-events.js';
 import { expect } from 'chai';
 
-describe('AnimEvents', () => {
+describe('AnimEvents', function () {
     const animEvents = new AnimEvents([
         {
             name: 'event2',
@@ -15,26 +15,26 @@ describe('AnimEvents', () => {
         }
     ]);
 
-    describe('#constructor', () => {
+    describe('#constructor', function () {
 
-        it('instantiates correctly', () => {
+        it('instantiates correctly', function () {
             expect(animEvents).to.be.ok;
         });
 
     });
 
-    describe('#constructor', () => {
+    describe('#constructor', function () {
 
-        it('sorts the events', () => {
+        it('sorts the events', function () {
             expect(animEvents.events[0].name).to.equal('event1');
             expect(animEvents.events[1].name).to.equal('event2');
         });
 
     });
 
-    describe('#events', () => {
+    describe('#events', function () {
 
-        it('returns the events stored in the instance', () => {
+        it('returns the events stored in the instance', function () {
             expect(animEvents.events[0].name).to.equal('event1');
             expect(animEvents.events[0].time).to.equal(0.5);
             expect(animEvents.events[0].property).to.equal(false);

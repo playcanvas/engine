@@ -3,11 +3,11 @@ import { Vec3 } from '../../../src/core/math/vec3.js';
 
 import { expect } from 'chai';
 
-describe('Plane', () => {
+describe('Plane', function () {
 
-    describe('#constructor', () => {
+    describe('#constructor', function () {
 
-        it('supports zero arguments', () => {
+        it('supports zero arguments', function () {
             const p = new Plane();
             expect(p.normal.x).to.equal(Vec3.UP.x);
             expect(p.normal.y).to.equal(Vec3.UP.y);
@@ -15,7 +15,7 @@ describe('Plane', () => {
             expect(p.distance).to.equal(0);
         });
 
-        it('supports arguments', () => {
+        it('supports arguments', function () {
             const p = new Plane(Vec3.UP, 5);
             expect(p.normal.x).to.equal(0);
             expect(p.normal.y).to.equal(1);
@@ -25,7 +25,7 @@ describe('Plane', () => {
 
     });
 
-    describe('#setFromPointNormal', () => {
+    describe('#setFromPointNormal', function () {
 
         const p = new Plane();
         p.setFromPointNormal(new Vec3(1, 2, 3), Vec3.UP);
@@ -36,7 +36,7 @@ describe('Plane', () => {
 
     });
 
-    describe('#intersectsLine', () => {
+    describe('#intersectsLine', function () {
 
         const p = new Plane();
         p.setFromPointNormal(new Vec3(0, 5, 0), Vec3.UP);

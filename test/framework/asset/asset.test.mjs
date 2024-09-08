@@ -6,7 +6,7 @@ import { HTMLCanvasElement } from '@playcanvas/canvas-mock';
 
 import { expect } from 'chai';
 
-describe('Asset', () => {
+describe('Asset', function () {
 
     let app;
 
@@ -30,15 +30,15 @@ describe('Asset', () => {
         'ja': 'ja-JP'
     };
 
-    describe('#getLocalizedAssetId', () => {
+    describe('#getLocalizedAssetId', function () {
 
-        it('should return null if no localizations exist', () => {
+        it('should return null if no localizations exist', function () {
             const asset = new Asset('asset', 'font');
             asset.id = 1000;
             expect(asset.getLocalizedAssetId('en')).to.equal(null);
         });
 
-        it('should return fallback language if available', () => {
+        it('should return fallback language if available', function () {
             const asset = new Asset('asset', 'font');
 
             let id = 1000;
@@ -54,7 +54,7 @@ describe('Asset', () => {
             }
         });
 
-        it('should return fallback language if available', () => {
+        it('should return fallback language if available', function () {
             const asset = new Asset('asset', 'font');
 
             let id = 1000;
@@ -70,7 +70,7 @@ describe('Asset', () => {
             }
         });
 
-        it('should return fallback language if available', () => {
+        it('should return fallback language if available', function () {
             const asset = new Asset('asset', 'font');
 
             let id = 1;
@@ -87,7 +87,7 @@ describe('Asset', () => {
             }
         });
 
-        it('zh-HK should return zh-HK if it exists', () => {
+        it('zh-HK should return zh-HK if it exists', function () {
             const asset = new Asset('asset', 'font');
 
             asset.addLocalizedAssetId('zh-CN', 1);
@@ -97,7 +97,7 @@ describe('Asset', () => {
             expect(asset.getLocalizedAssetId('zh-HK')).to.equal(2);
         });
 
-        it('zh-HK should fallback to zh-TW', () => {
+        it('zh-HK should fallback to zh-TW', function () {
             const asset = new Asset('asset', 'font');
 
             asset.addLocalizedAssetId('zh-CN', 1);
@@ -106,7 +106,7 @@ describe('Asset', () => {
             expect(asset.getLocalizedAssetId('zh-HK')).to.equal(2);
         });
 
-        it('zh-TW should fallback to zh-HK', () => {
+        it('zh-TW should fallback to zh-HK', function () {
             const asset = new Asset('asset', 'font');
 
             asset.addLocalizedAssetId('zh-CN', 1);
@@ -115,7 +115,7 @@ describe('Asset', () => {
             expect(asset.getLocalizedAssetId('zh-TW')).to.equal(2);
         });
 
-        it('zh-SG should fallback to zh-CN', () => {
+        it('zh-SG should fallback to zh-CN', function () {
             const asset = new Asset('asset', 'font');
 
             asset.addLocalizedAssetId('zh-HK', 1);

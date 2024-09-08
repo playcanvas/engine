@@ -1,11 +1,11 @@
 import { AnimTransition } from '../../../../src/framework/anim/controller/anim-transition.js';
 import { expect } from 'chai';
 
-describe('AnimTransition', () => {
+describe('AnimTransition', function () {
 
-    describe('#constructor', () => {
+    describe('#constructor', function () {
 
-        it('instantiates correctly', () => {
+        it('instantiates correctly', function () {
             const animTransition = new AnimTransition({
                 from: 'fromState',
                 to: 'toState'
