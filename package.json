@@ -124,7 +124,7 @@
     "watch:esm:release": "npm run build target:esm:release -- -w",
     "watch:esm:debug": "npm run build target:esm:debug -- -w",
     "docs": "typedoc",
-    "lint": "eslint scripts src test utils eslint.config.mjs rollup.config.mjs",
+    "lint": "eslint scripts src test utils build.mjs eslint.config.mjs rollup.config.mjs",
     "publint": "publint --level error",
     "serve": "serve build -l 51000 --cors",
     "test": "mocha --recursive --require test/fixtures.mjs",
