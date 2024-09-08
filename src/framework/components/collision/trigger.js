@@ -120,7 +120,7 @@ class Trigger {
         if (!body) return;
 
         const system = this.app.systems.rigidbody;
-        const exists = system._triggers.find(trigger => trigger === this);
+        const exists = system._triggers.indexOf(trigger) !== -1;
 
         if (!exists) {
             system.addBody(body, BODYGROUP_TRIGGER, BODYMASK_NOT_STATIC ^ BODYGROUP_TRIGGER);
