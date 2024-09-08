@@ -6,19 +6,19 @@ import { HTMLCanvasElement } from '@playcanvas/canvas-mock';
 
 import { expect } from 'chai';
 
-describe('ElementComponent Masks', () => {
+describe('ElementComponent Masks', function () {
     let app;
 
-    beforeEach(() => {
+    beforeEach(function () {
         const canvas = new HTMLCanvasElement(500, 500);
         app = new Application(canvas, { graphicsDevice: new NullGraphicsDevice(canvas) });
     });
 
-    afterEach(() => {
+    afterEach(function () {
         app.destroy();
     });
 
-    it('add / remove', () => {
+    it('add / remove', function () {
         const e = new Entity();
         e.addComponent('element', {
             type: 'image',
@@ -33,7 +33,7 @@ describe('ElementComponent Masks', () => {
     });
 
 
-    it('masked children', () => {
+    it('masked children', function () {
         const m1 = new Entity();
         m1.addComponent('element', {
             type: 'image',
@@ -53,7 +53,7 @@ describe('ElementComponent Masks', () => {
         expect(c1.element.maskedBy.name).to.equal(m1.name);
     });
 
-    it('sub-masked children', () => {
+    it('sub-masked children', function () {
         const m1 = new Entity('m1');
         m1.addComponent('element', {
             type: 'image',
@@ -84,7 +84,7 @@ describe('ElementComponent Masks', () => {
         expect(c1.element._image._maskRef).to.equal(2);
     });
 
-    it('sibling masks, correct maskref', () => {
+    it('sibling masks, correct maskref', function () {
         // m1   m2
         // |    |
         // c1   c2
@@ -125,7 +125,7 @@ describe('ElementComponent Masks', () => {
 
     });
 
-    it('sub-masked and sibling children', () => {
+    it('sub-masked and sibling children', function () {
         //    top
         // /        \
         // m11       m12
@@ -202,7 +202,7 @@ describe('ElementComponent Masks', () => {
         expect(d31.element.maskedBy.name).to.equal(m22.name);
     });
 
-    it('parallel parents - sub-masked and sibling children', () => {
+    it('parallel parents - sub-masked and sibling children', function () {
 
         // m11  m12
         // |    |
@@ -267,7 +267,7 @@ describe('ElementComponent Masks', () => {
         expect(d1.element.maskedBy.name).to.equal(m22.name);
     });
 
-    it('sub-masked and later children', () => {
+    it('sub-masked and later children', function () {
         // m1
         // |  \
         // m2 c2
@@ -313,7 +313,7 @@ describe('ElementComponent Masks', () => {
     });
 
 
-    it('multiple child masks and later children', () => {
+    it('multiple child masks and later children', function () {
         //    m1
         // /  |  \
         // m2 m3 c2
@@ -366,7 +366,7 @@ describe('ElementComponent Masks', () => {
         expect(c2.element.maskedBy.name).to.equal(m1.name);
     });
 
-    it('ImageElement outside a mask is culled', () => {
+    it('ImageElement outside a mask is culled', function () {
         const screen = new Entity();
         screen.addComponent('screen', {
             screenSpace: true
@@ -415,7 +415,7 @@ describe('ElementComponent Masks', () => {
 
     });
 
-    it('TextElement outside a mask is culled', () => {
+    it('TextElement outside a mask is culled', function () {
         const screen = new Entity();
         screen.addComponent('screen', {
             screenSpace: true

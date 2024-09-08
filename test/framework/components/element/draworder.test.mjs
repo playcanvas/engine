@@ -7,19 +7,19 @@ import { HTMLCanvasElement } from '@playcanvas/canvas-mock';
 
 import { expect } from 'chai';
 
-describe('ElementComponent Draw Order', () => {
+describe('ElementComponent Draw Order', function () {
     let app;
 
-    beforeEach(() => {
+    beforeEach(function () {
         const canvas = new HTMLCanvasElement(500, 500);
         app = new Application(canvas, { graphicsDevice: new NullGraphicsDevice(canvas) });
     });
 
-    afterEach(() => {
+    afterEach(function () {
         app.destroy();
     });
 
-    it('basic hierarchy', () => {
+    it('basic hierarchy', function () {
         const screen = new Entity('screen');
         screen.addComponent('screen');
 
@@ -40,7 +40,7 @@ describe('ElementComponent Draw Order', () => {
         expect(c1.element.drawOrder).to.equal(2);
     });
 
-    it('clamp max drawOrder', () => {
+    it('clamp max drawOrder', function () {
         const p1 = new Entity('p1');
         p1.addComponent('element');
         p1.element.drawOrder = 0x1FFFFFF;
@@ -48,7 +48,7 @@ describe('ElementComponent Draw Order', () => {
         expect(p1.element.drawOrder).to.equal(0xFFFFFF);
     });
 
-    it('reorder children', () => {
+    it('reorder children', function () {
         const screen = new Entity('screen');
         screen.addComponent('screen');
 
@@ -77,7 +77,7 @@ describe('ElementComponent Draw Order', () => {
     });
 
 
-    it('add screen late', () => {
+    it('add screen late', function () {
         const screen = new Entity('screen');
 
         const p1 = new Entity('p1');
@@ -99,7 +99,7 @@ describe('ElementComponent Draw Order', () => {
         expect(c1.element.drawOrder).to.equal(2);
     });
 
-    it('reparent to screen', () => {
+    it('reparent to screen', function () {
         const screen = new Entity('screen');
         screen.addComponent('screen');
 
@@ -123,7 +123,7 @@ describe('ElementComponent Draw Order', () => {
     });
 
 
-    it('single call to _processDrawOrderSync', () => {
+    it('single call to _processDrawOrderSync', function () {
         let count = 0;
         // patch to count
         const _processDrawOrderSync = ScreenComponent.prototype._processDrawOrderSync;
@@ -154,7 +154,7 @@ describe('ElementComponent Draw Order', () => {
         ScreenComponent.prototype._processDrawOrderSync = _processDrawOrderSync;
     });
 
-    it('Unmask drawOrder', () => {
+    it('Unmask drawOrder', function () {
         const screen = new Entity('screen');
         screen.addComponent('screen');
 
@@ -222,7 +222,7 @@ describe('ElementComponent Draw Order', () => {
 
     });
 
-    it('Unmask drawOrder - draw order remains the same for repeated calls', () => {
+    it('Unmask drawOrder - draw order remains the same for repeated calls', function () {
         const screen = new Entity('screen');
         screen.addComponent('screen');
 
