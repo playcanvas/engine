@@ -3,14 +3,14 @@ import { Entity } from '../../../src/framework/entity.js';
 import { NullGraphicsDevice } from '../../../src/platform/graphics/null/null-graphics-device.js';
 import { LAYERID_WORLD } from '../../../src/scene/constants.js';
 
-import { HTMLCanvasElement } from '@playcanvas/canvas-mock';
+import { createCanvas } from 'canvas';
 
 import { expect } from 'chai';
 
 describe('BatchManager', function () {
 
     beforeEach(function () {
-        const canvas = new HTMLCanvasElement(500, 500);
+        const canvas = createCanvas(500, 500);
         this.app = new Application(canvas, { graphicsDevice: new NullGraphicsDevice(canvas) });
 
         this.bg = this.app.batcher.addGroup('Test Group', false, 100);

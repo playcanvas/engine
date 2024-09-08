@@ -29,7 +29,7 @@ import { NullGraphicsDevice } from '../../src/platform/graphics/null/null-graphi
 
 import { DummyComponentSystem } from './test-component/system.mjs';
 
-import { HTMLCanvasElement } from '@playcanvas/canvas-mock';
+import { createCanvas } from 'canvas';
 
 import { expect } from 'chai';
 import { stub } from 'sinon';
@@ -38,14 +38,14 @@ describe('Entity', function () {
 
     let app;
 
-    beforeEach(() => {
-        const canvas = new HTMLCanvasElement(500, 500);
+    beforeEach(function () {
+        const canvas = createCanvas(500, 500);
         app = new Application(canvas, { graphicsDevice: new NullGraphicsDevice(canvas) });
 
         app.systems.add(new DummyComponentSystem(app));
     });
 
-    afterEach(() => {
+    afterEach(function () {
         app.destroy();
     });
 

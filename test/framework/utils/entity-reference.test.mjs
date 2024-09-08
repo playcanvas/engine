@@ -5,7 +5,7 @@ import { NullGraphicsDevice } from '../../../src/platform/graphics/null/null-gra
 
 import { DummyComponentSystem } from '../test-component/system.mjs';
 
-import { HTMLCanvasElement } from '@playcanvas/canvas-mock';
+import { createCanvas } from 'canvas';
 
 import { expect } from 'chai';
 import { restore, spy, stub } from 'sinon';
@@ -24,8 +24,8 @@ describe('EntityReference', function () {
     /** @type {Entity} */
     let otherEntity2;
 
-    beforeEach(() => {
-        const canvas = new HTMLCanvasElement(500, 500);
+    beforeEach(function () {
+        const canvas = createCanvas(500, 500);
         app = new Application(canvas, { graphicsDevice: new NullGraphicsDevice(canvas) });
 
         app.systems.add(new DummyComponentSystem(app));
@@ -42,7 +42,7 @@ describe('EntityReference', function () {
         app.root.addChild(otherEntity2);
     });
 
-    afterEach(() => {
+    afterEach(function () {
         restore();
         app.destroy();
     });

@@ -1,12 +1,15 @@
+import globalJsdom from 'global-jsdom';
 import handler from 'serve-handler';
 import http from 'http';
 import XMLHttpRequest from 'xhr2';
 
-import 'global-jsdom/register';
-
 let server;
 
 export const mochaGlobalSetup = () => {
+    globalJsdom(undefined, {
+        resources: 'usable'
+    });
+
     // Provide a polyfill for XMLHttpRequest required by the engine
     global.XMLHttpRequest = XMLHttpRequest;
 

@@ -4,7 +4,7 @@ import { Entity } from '../../../../src/framework/entity.js';
 import { LAYERID_WORLD, LAYERID_UI } from '../../../../src/scene/constants.js';
 import { NullGraphicsDevice } from '../../../../src/platform/graphics/null/null-graphics-device.js';
 
-import { HTMLCanvasElement } from '@playcanvas/canvas-mock';
+import { createCanvas } from 'canvas';
 
 import { expect } from 'chai';
 
@@ -47,7 +47,7 @@ describe('ModelComponent', function () {
     };
 
     beforeEach((done) => {
-        const canvas = new HTMLCanvasElement(500, 500);
+        const canvas = createCanvas(500, 500);
         app = new Application(canvas, { graphicsDevice: new NullGraphicsDevice(canvas) });
 
         loadAssets(() => {
@@ -55,7 +55,7 @@ describe('ModelComponent', function () {
         });
     });
 
-    afterEach(() => {
+    afterEach(function () {
         app.destroy();
         assets = {};
     });
