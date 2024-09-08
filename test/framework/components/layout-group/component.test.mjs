@@ -10,7 +10,7 @@ import { restore, spy, stub } from 'sinon';
 
 /** @typedef {import('../../../../src/framework/components/layout-group/system.js').LayoutGroupComponentSystem} LayoutGroupComponentSystem */
 
-describe('LayoutGroupComponent', () => {
+describe('LayoutGroupComponent', function () {
     /** @type {Application} */
     let app;
     /** @type {LayoutGroupComponentSystem} */
@@ -56,7 +56,7 @@ describe('LayoutGroupComponent', () => {
         app.destroy();
     });
 
-    it('reflows in ascending order of graph depth', () => {
+    it('reflows in ascending order of graph depth', function () {
         system.scheduleReflow(entity0_0.layoutgroup);
         system.scheduleReflow(entity0.layoutgroup);
         system.scheduleReflow(entity0_0_0.layoutgroup);
@@ -71,7 +71,7 @@ describe('LayoutGroupComponent', () => {
         expect(entity0_0.layoutgroup.reflow.calledBefore(entity0_0_0.layoutgroup.reflow)).to.be.true;
     });
 
-    it('reflows additional groups that are pushed during the reflow', () => {
+    it('reflows additional groups that are pushed during the reflow', function () {
         system.scheduleReflow(entity0.layoutgroup);
 
         let done = false;
@@ -95,7 +95,7 @@ describe('LayoutGroupComponent', () => {
         expect(entity0_0.layoutgroup.reflow.calledBefore(entity0_0_0.layoutgroup.reflow)).to.be.true;
     });
 
-    it('does not allow the same group to be pushed to the queue twice', () => {
+    it('does not allow the same group to be pushed to the queue twice', function () {
         system.scheduleReflow(entity0.layoutgroup);
         system.scheduleReflow(entity0.layoutgroup);
 
@@ -104,7 +104,7 @@ describe('LayoutGroupComponent', () => {
         expect(entity0.layoutgroup.reflow.callCount).to.equal(1);
     });
 
-    it('bails if the maximum iteration count is reached', () => {
+    it('bails if the maximum iteration count is reached', function () {
         stub(console, 'warn');
 
         system.scheduleReflow(entity0.layoutgroup);

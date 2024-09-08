@@ -6,7 +6,7 @@ import { AnimBlendTreeDirectional2D } from '../../../../src/framework/anim/contr
 import { AnimState } from '../../../../src/framework/anim/controller/anim-state.js';
 import { expect } from 'chai';
 
-describe('AnimBlendTree', () => {
+describe('AnimBlendTree', function () {
     const findParameter = () => {};
     const animState = new AnimState({ findParameter }, 'state', 1, true, null);
     const animBlendTree = new AnimBlendTree(animState, null, 'blendTree', 1, ['blendParam'], [
@@ -20,38 +20,38 @@ describe('AnimBlendTree', () => {
         }
     ], false, animState._createTree, findParameter);
 
-    describe('#constructor', () => {
+    describe('#constructor', function () {
 
-        it('instantiates correctly', () => {
+        it('instantiates correctly', function () {
             expect(animBlendTree).to.be.ok;
         });
 
     });
 
-    describe('#getChild', () => {
+    describe('#getChild', function () {
 
-        it('can retrieve a child by name', () => {
+        it('can retrieve a child by name', function () {
             expect(animBlendTree.getChild('child1').name).to.equal('child1');
             expect(animBlendTree.getChild('child2').name).to.equal('child2');
         });
 
-        it('returns null when a child is not found', () => {
+        it('returns null when a child is not found', function () {
             expect(animBlendTree.getChild('child3')).to.equal(null);
         });
 
     });
 
-    describe('#getNodeCount', () => {
+    describe('#getNodeCount', function () {
 
-        it('returns the count of children in the blend tree', () => {
+        it('returns the count of children in the blend tree', function () {
             expect(animBlendTree.getNodeCount()).to.equal(2);
         });
 
     });
 
-    describe('#updateParameterValues', () => {
+    describe('#updateParameterValues', function () {
 
-        it('parameters are not set before it is called', () => {
+        it('parameters are not set before it is called', function () {
             const params = {
                 'param1': {
                     value: 'value1'
@@ -70,7 +70,7 @@ describe('AnimBlendTree', () => {
             expect(animBlendTree._parameterValues[1]).to.not.be.equal('value2');
         });
 
-        it('can set any updated parameters in the blend tree', () => {
+        it('can set any updated parameters in the blend tree', function () {
             const params = {
                 'param1': {
                     value: 'value1'
@@ -93,7 +93,7 @@ describe('AnimBlendTree', () => {
             expect(animBlendTree._parameterValues[1]).to.equal('value3');
         });
 
-        it('returns false when stored parameters are already up to date', () => {
+        it('returns false when stored parameters are already up to date', function () {
             const params = {
                 'param1': {
                     value: 'value1'
@@ -112,7 +112,7 @@ describe('AnimBlendTree', () => {
             expect(result).to.equal(false);
         });
 
-        it('returns true when stored parameters are already up to date', () => {
+        it('returns true when stored parameters are already up to date', function () {
             const params = {
                 'param1': {
                     value: 'value1'
@@ -137,7 +137,7 @@ describe('AnimBlendTree', () => {
 
 });
 
-describe('AnimBlendTree1D', () => {
+describe('AnimBlendTree1D', function () {
     const params = {
         'blendParam': {
             value: 0.5
@@ -158,22 +158,22 @@ describe('AnimBlendTree1D', () => {
         }
     ], false, animState._createTree, findParameter);
 
-    describe('#calculateWeights', () => {
+    describe('#calculateWeights', function () {
 
-        it('produces equal weights when the parameter is at the midpoint of both children', () => {
+        it('produces equal weights when the parameter is at the midpoint of both children', function () {
             animBlendTree.calculateWeights();
             expect(animBlendTree.getChild('child1').weight).to.equal(0.5);
             expect(animBlendTree.getChild('child2').weight).to.equal(0.5);
         });
 
-        it('produces unequal weights when the parameter is not the midpoint of both children', () => {
+        it('produces unequal weights when the parameter is not the midpoint of both children', function () {
             params.blendParam.value = 0.25;
             animBlendTree.calculateWeights();
             expect(animBlendTree.getChild('child1').weight).to.equal(0.75);
             expect(animBlendTree.getChild('child2').weight).to.equal(0.25);
         });
 
-        it('produces correct results when a parameter is the same as a childs point', () => {
+        it('produces correct results when a parameter is the same as a childs point', function () {
             params.blendParam.value = 1;
             animBlendTree.calculateWeights();
             expect(animBlendTree.getChild('child1').weight).to.equal(0);
@@ -183,7 +183,7 @@ describe('AnimBlendTree1D', () => {
     });
 });
 
-describe('AnimBlendTreeDirect', () => {
+describe('AnimBlendTreeDirect', function () {
     const params = {
         'blendParam1': {
             value: 0.5
@@ -205,15 +205,15 @@ describe('AnimBlendTreeDirect', () => {
         }
     ], false, animState._createTree, findParameter);
 
-    describe('#calculateWeights', () => {
+    describe('#calculateWeights', function () {
 
-        it('produces equal weights when the parameters are equal', () => {
+        it('produces equal weights when the parameters are equal', function () {
             animBlendTree.calculateWeights();
             expect(animBlendTree.getChild('child1').weight).to.equal(0.5);
             expect(animBlendTree.getChild('child2').weight).to.equal(0.5);
         });
 
-        it('produces unequal weights when the parameters are not equal', () => {
+        it('produces unequal weights when the parameters are not equal', function () {
             params.blendParam1.value = 0.75;
             params.blendParam2.value = 0.25;
             animBlendTree.calculateWeights();
@@ -221,7 +221,7 @@ describe('AnimBlendTreeDirect', () => {
             expect(animBlendTree.getChild('child2').weight).to.equal(0.25);
         });
 
-        it('produces a zero weight for single parameters that are zero', () => {
+        it('produces a zero weight for single parameters that are zero', function () {
             params.blendParam1.value = 1;
             params.blendParam2.value = 0;
             animBlendTree.calculateWeights();
@@ -229,7 +229,7 @@ describe('AnimBlendTreeDirect', () => {
             expect(animBlendTree.getChild('child2').weight).to.equal(0);
         });
 
-        it('produces zero weights when all parameters are zero', () => {
+        it('produces zero weights when all parameters are zero', function () {
             params.blendParam1.value = 0;
             params.blendParam2.value = 0;
             animBlendTree.calculateWeights();
@@ -241,7 +241,7 @@ describe('AnimBlendTreeDirect', () => {
 
 });
 
-describe('AnimBlendTreeCartesian2D', () => {
+describe('AnimBlendTreeCartesian2D', function () {
     const params = {
         'blendParam1': {
             value: 0
@@ -265,29 +265,29 @@ describe('AnimBlendTreeCartesian2D', () => {
         }
     ], false, animState._createTree, findParameter);
 
-    describe('#calculateWeights', () => {
+    describe('#calculateWeights', function () {
 
-        it('produces equal weights when the parameters are equal', () => {
+        it('produces equal weights when the parameters are equal', function () {
             animBlendTree.calculateWeights();
             expect(animBlendTree.getChild('child1').weight).to.equal(0.5);
             expect(animBlendTree.getChild('child2').weight).to.equal(0.5);
         });
 
-        it('produces unequal weights when the parameters are not equal', () => {
+        it('produces unequal weights when the parameters are not equal', function () {
             params.blendParam2.value = 0.5;
             animBlendTree.calculateWeights();
             expect(animBlendTree.getChild('child1').weight).to.equal(0.75);
             expect(animBlendTree.getChild('child2').weight).to.equal(0.25);
         });
 
-        it('produces a zero weight for single parameters that are zero', () => {
+        it('produces a zero weight for single parameters that are zero', function () {
             params.blendParam2.value = 1;
             animBlendTree.calculateWeights();
             expect(animBlendTree.getChild('child1').weight).to.equal(1);
             expect(animBlendTree.getChild('child2').weight).to.equal(0);
         });
 
-        it('produces a zero weights when all parameters are zero', () => {
+        it('produces a zero weights when all parameters are zero', function () {
             params.blendParam1.value = 0;
             params.blendParam2.value = 0;
             animBlendTree._children[0]._point = [0, 0];
@@ -301,7 +301,7 @@ describe('AnimBlendTreeCartesian2D', () => {
 
 });
 
-describe('AnimBlendTreeDirectional2D', () => {
+describe('AnimBlendTreeDirectional2D', function () {
     const params = {
         'blendParam1': {
             value: 0
@@ -325,29 +325,29 @@ describe('AnimBlendTreeDirectional2D', () => {
         }
     ], false, animState._createTree, findParameter);
 
-    describe('#calculateWeights', () => {
+    describe('#calculateWeights', function () {
 
-        it('produces equal weights when the parameters are equal', () => {
+        it('produces equal weights when the parameters are equal', function () {
             animBlendTree.calculateWeights();
             expect(animBlendTree.getChild('child1').weight).to.equal(0.5);
             expect(animBlendTree.getChild('child2').weight).to.equal(0.5);
         });
 
-        it('produces unequal weights when the parameters are not equal', () => {
+        it('produces unequal weights when the parameters are not equal', function () {
             params.blendParam2.value = 0.5;
             animBlendTree.calculateWeights();
             expect(animBlendTree.getChild('child1').weight).to.equal(1);
             expect(animBlendTree.getChild('child2').weight).to.equal(0);
         });
 
-        it('produces a zero weight for single parameters that are zero', () => {
+        it('produces a zero weight for single parameters that are zero', function () {
             params.blendParam2.value = 1;
             animBlendTree.calculateWeights();
             expect(animBlendTree.getChild('child1').weight).to.equal(1);
             expect(animBlendTree.getChild('child2').weight).to.equal(0);
         });
 
-        it('produces a zero weights when all parameters are zero', () => {
+        it('produces a zero weights when all parameters are zero', function () {
             params.blendParam1.value = 0;
             params.blendParam2.value = 0;
             animBlendTree._children[0]._point = [0, 0];

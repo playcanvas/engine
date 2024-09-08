@@ -6,7 +6,7 @@ import { Vec2 } from '../../../src/core/math/vec2.js';
 
 import { expect } from 'chai';
 
-describe('StandardMaterial', () => {
+describe('StandardMaterial', function () {
 
     function checkDefaultMaterial(material) {
         expect(material).to.be.an.instanceof(StandardMaterial);
@@ -282,18 +282,18 @@ describe('StandardMaterial', () => {
         expect(material.useSkybox).to.equal(true);
     }
 
-    describe('#constructor()', () => {
+    describe('#constructor()', function () {
 
-        it('should create a new instance', () => {
+        it('should create a new instance', function () {
             const material = new StandardMaterial();
             checkDefaultMaterial(material);
         });
 
     });
 
-    describe('#clone()', () => {
+    describe('#clone()', function () {
 
-        it('should clone a material', () => {
+        it('should clone a material', function () {
             const material = new StandardMaterial();
             const clone = material.clone();
             checkDefaultMaterial(clone);
@@ -301,9 +301,9 @@ describe('StandardMaterial', () => {
 
     });
 
-    describe('#copy()', () => {
+    describe('#copy()', function () {
 
-        it('should copy a material', () => {
+        it('should copy a material', function () {
             const src = new StandardMaterial();
             const dst = new StandardMaterial();
             dst.copy(src);

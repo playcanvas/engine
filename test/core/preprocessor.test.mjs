@@ -2,7 +2,7 @@ import { Preprocessor } from '../../src/core/preprocessor.js';
 
 import { expect } from 'chai';
 
-describe('Preprocessor', () => {
+describe('Preprocessor', function () {
 
     const includes = new Map([
         ['inc1', `
@@ -75,83 +75,83 @@ describe('Preprocessor', () => {
         #endif
     `;
 
-    it('returns false for MORPH_A', () => {
+    it('returns false for MORPH_A', function () {
         expect(Preprocessor.run(srcData, includes).includes('MORPH_A')).to.equal(false);
     });
 
-    it('returns false for MORPH_B', () => {
+    it('returns false for MORPH_B', function () {
         expect(Preprocessor.run(srcData, includes).includes('MORPH_B')).to.equal(false);
     });
 
-    it('returns true for $', () => {
+    it('returns true for $', function () {
         expect(Preprocessor.run(srcData, includes).includes('$')).to.equal(true);
     });
 
-    it('returns true for TEST1', () => {
+    it('returns true for TEST1', function () {
         expect(Preprocessor.run(srcData, includes).includes('TEST1')).to.equal(true);
     });
 
-    it('returns true for TEST2', () => {
+    it('returns true for TEST2', function () {
         expect(Preprocessor.run(srcData, includes).includes('TEST2')).to.equal(true);
     });
 
-    it('returns true for TEST3', () => {
+    it('returns true for TEST3', function () {
         expect(Preprocessor.run(srcData, includes).includes('TEST3')).to.equal(true);
     });
 
-    it('returns true for TEST4', () => {
+    it('returns true for TEST4', function () {
         expect(Preprocessor.run(srcData, includes).includes('TEST4')).to.equal(true);
     });
 
-    it('returns false for TEST5', () => {
+    it('returns false for TEST5', function () {
         expect(Preprocessor.run(srcData, includes).includes('TEST5')).to.equal(false);
     });
 
-    it('returns true for TEST6', () => {
+    it('returns true for TEST6', function () {
         expect(Preprocessor.run(srcData, includes).includes('TEST6')).to.equal(true);
     });
 
-    it('returns false for TEST7', () => {
+    it('returns false for TEST7', function () {
         expect(Preprocessor.run(srcData, includes).includes('TEST7')).to.equal(false);
     });
 
-    it('returns false for TEST8', () => {
+    it('returns false for TEST8', function () {
         expect(Preprocessor.run(srcData, includes).includes('TEST8')).to.equal(false);
     });
 
-    it('returns false for TEST9', () => {
+    it('returns false for TEST9', function () {
         expect(Preprocessor.run(srcData, includes).includes('TEST9')).to.equal(false);
     });
 
-    it('returns true for TEST10', () => {
+    it('returns true for TEST10', function () {
         expect(Preprocessor.run(srcData, includes).includes('TEST10')).to.equal(true);
     });
 
-    it('returns false for TEST11', () => {
+    it('returns false for TEST11', function () {
         expect(Preprocessor.run(srcData, includes).includes('TEST11')).to.equal(false);
     });
 
-    it('returns false for TEST12', () => {
+    it('returns false for TEST12', function () {
         expect(Preprocessor.run(srcData, includes).includes('TEST12')).to.equal(false);
     });
 
-    it('returns true for TEST13', () => {
+    it('returns true for TEST13', function () {
         expect(Preprocessor.run(srcData, includes).includes('TEST13')).to.equal(true);
     });
 
-    it('returns false for TEST14', () => {
+    it('returns false for TEST14', function () {
         expect(Preprocessor.run(srcData, includes).includes('TEST14')).to.equal(false);
     });
 
-    it('returns true for INC1', () => {
+    it('returns true for INC1', function () {
         expect(Preprocessor.run(srcData, includes).includes('block1')).to.equal(true);
     });
 
-    it('returns false for INC2', () => {
+    it('returns false for INC2', function () {
         expect(Preprocessor.run(srcData, includes).includes('block2')).to.equal(false);
     });
 
-    it('returns true for nested', () => {
+    it('returns true for nested', function () {
         expect(Preprocessor.run(srcData, includes).includes('nested')).to.equal(true);
     });
 });

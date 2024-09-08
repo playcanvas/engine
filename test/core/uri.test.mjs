@@ -2,11 +2,11 @@ import { createURI, URI } from '../../src/core/uri.js';
 
 import { expect } from 'chai';
 
-describe('URI', () => {
+describe('URI', function () {
 
-    describe('#constructor', () => {
+    describe('#constructor', function () {
 
-        it('handles all sections', () => {
+        it('handles all sections', function () {
             const s = 'http://a/b/c/d;p?q=r#l';
 
             const uri = new URI(s);
@@ -18,7 +18,7 @@ describe('URI', () => {
             expect(uri.fragment).to.equal('l');
         });
 
-        it('handles no scheme', () => {
+        it('handles no scheme', function () {
             const s = '//a/b/c/d;p?q=r#l';
             const uri = new URI(s);
 
@@ -29,7 +29,7 @@ describe('URI', () => {
             expect(uri.fragment).to.equal('l');
         });
 
-        it('handles no authority', () => {
+        it('handles no authority', function () {
             const s = '/b/c/d;p?q=r#l';
             const uri = new URI(s);
 
@@ -40,7 +40,7 @@ describe('URI', () => {
             expect(uri.fragment).to.equal('l');
         });
 
-        it('handles no query', () => {
+        it('handles no query', function () {
             const s = 'http://a/b/c/d;p#l';
             const uri = new URI(s);
 
@@ -51,7 +51,7 @@ describe('URI', () => {
             expect(uri.fragment).to.equal('l');
         });
 
-        it('handles no fragment', () => {
+        it('handles no fragment', function () {
             const s = 'http://a/b/c/d;p?q=r';
             const uri = new URI(s);
 
@@ -64,9 +64,9 @@ describe('URI', () => {
 
     });
 
-    describe('#toString', () => {
+    describe('#toString', function () {
 
-        it('matches the URI passed to the constructor', () => {
+        it('matches the URI passed to the constructor', function () {
             const s = 'http://a/b/c/d;p?q=r#l';
             const uri = new URI(s);
             const r = uri.toString();
@@ -74,7 +74,7 @@ describe('URI', () => {
             expect(s).to.equal(r);
         });
 
-        it('handles an edit to the query', () => {
+        it('handles an edit to the query', function () {
             const s = 'http://example.com';
             const uri = new URI(s);
             uri.query = 'q=abc';
@@ -87,9 +87,9 @@ describe('URI', () => {
 
     });
 
-    describe('#getQuery', () => {
+    describe('#getQuery', function () {
 
-        it('correctly parses the query string', () => {
+        it('correctly parses the query string', function () {
             const s = 'http://example.com/test?a=1&b=string&c=something%20spaced';
             const uri = new URI(s);
 
@@ -100,7 +100,7 @@ describe('URI', () => {
             expect(q.c).to.equal('something spaced');
         });
 
-        it('handles an empty query string', () => {
+        it('handles an empty query string', function () {
             const s = 'http://example.com/test';
             const uri = new URI(s);
 
@@ -111,9 +111,9 @@ describe('URI', () => {
 
     });
 
-    describe('#setQuery', () => {
+    describe('#setQuery', function () {
 
-        it('adds a query string', () => {
+        it('adds a query string', function () {
             const uri = new URI('http://example.com/test');
             const q = {
                 key: 'value'
@@ -124,7 +124,7 @@ describe('URI', () => {
         });
 
 
-        it('adds a query string with spaces and quotes', () => {
+        it('adds a query string with spaces and quotes', function () {
             const uri = new URI('http://example.com/test');
             const q = {
                 'key': 'value',
@@ -138,9 +138,9 @@ describe('URI', () => {
 
 });
 
-describe('createURI', () => {
+describe('createURI', function () {
 
-    it('correctly constructs URIs', () => {
+    it('correctly constructs URIs', function () {
         let uri;
 
         uri = createURI({
@@ -170,7 +170,7 @@ describe('createURI', () => {
 
     });
 
-    it('throws exceptions', () => {
+    it('throws exceptions', function () {
         expect(() => {
             createURI({
                 scheme: 'http',

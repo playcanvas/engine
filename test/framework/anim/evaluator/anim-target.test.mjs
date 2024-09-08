@@ -1,11 +1,11 @@
 import { AnimTarget } from '../../../../src/framework/anim/evaluator/anim-target.js';
 import { expect } from 'chai';
 
-describe('AnimTarget', () => {
+describe('AnimTarget', function () {
 
-    describe('#constructor', () => {
+    describe('#constructor', function () {
 
-        it('instantiates correctly with an object', () => {
+        it('instantiates correctly with an object', function () {
             const func = {
                 set: 'set',
                 get: 'get'
@@ -21,7 +21,7 @@ describe('AnimTarget', () => {
             expect(animTarget.isTransform).to.equal(false);
         });
 
-        it('instantiates correctly with a function', () => {
+        it('instantiates correctly with a function', function () {
             const func = () => {};
             const animTarget = new AnimTarget(func, 'vector', 3, 'path/to/entity');
 
@@ -34,7 +34,7 @@ describe('AnimTarget', () => {
             expect(animTarget.isTransform).to.equal(false);
         });
 
-        it('instantiates correctly with a transform path', () => {
+        it('instantiates correctly with a transform path', function () {
             const func = () => {};
             const animTarget = new AnimTarget(func, 'vector', 3, 'path/to/entity/localScale');
 
