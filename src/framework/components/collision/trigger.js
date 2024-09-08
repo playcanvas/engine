@@ -119,9 +119,13 @@ class Trigger {
         const body = this.body;
         if (!body) return;
 
-        const systems = this.app.systems;
-        systems.rigidbody.addBody(body, BODYGROUP_TRIGGER, BODYMASK_NOT_STATIC ^ BODYGROUP_TRIGGER);
-        systems.rigidbody._triggers.push(this);
+        const system = this.app.systems.rigidbody;
+        const exists = system._triggers.find(trigger => trigger === this);
+
+        if (!exists) {
+            system.addBody(body, BODYGROUP_TRIGGER, BODYMASK_NOT_STATIC ^ BODYGROUP_TRIGGER);
+            system._triggers.push(this);
+        }
 
         // set the body's activation state to active so that it is
         // simulated properly again
