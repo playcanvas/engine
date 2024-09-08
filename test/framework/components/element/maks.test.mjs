@@ -1,20 +1,25 @@
-describe("pc.Element: Masks", function () {
-    var app;
-    var canvas;
+import { Application } from '../../../../src/framework/application.js';
+import { Entity } from '../../../../src/framework/entity.js';
+import { NullGraphicsDevice } from '../../../../src/platform/graphics/null/null-graphics-device.js';
 
-    beforeEach(function () {
-        canvas = document.createElement("canvas")
-        app = new pc.Application(canvas);
+import { HTMLCanvasElement } from '@playcanvas/canvas-mock';
+
+import { expect } from 'chai';
+
+describe('ElementComponent Masks', () => {
+    let app;
+
+    beforeEach(() => {
+        const canvas = new HTMLCanvasElement(500, 500);
+        app = new Application(canvas, { graphicsDevice: new NullGraphicsDevice(canvas) });
     });
 
-    afterEach(function () {
+    afterEach(() => {
         app.destroy();
-        app = null;
-        canvas = null;
     });
 
-    it("add / remove", function () {
-        var e = new pc.Entity();
+    it('add / remove', () => {
+        const e = new Entity();
         e.addComponent('element', {
             type: 'image',
             mask: true
@@ -28,16 +33,16 @@ describe("pc.Element: Masks", function () {
     });
 
 
-    it("masked children", function () {
-        var m1 = new pc.Entity();
+    it('masked children', () => {
+        const m1 = new Entity();
         m1.addComponent('element', {
             type: 'image',
             mask: true
         });
 
-        var c1 = new pc.Entity();
+        const c1 = new Entity();
         c1.addComponent('element', {
-            type: 'image',
+            type: 'image'
         });
 
         m1.addChild(c1);
@@ -48,22 +53,22 @@ describe("pc.Element: Masks", function () {
         expect(c1.element.maskedBy.name).to.equal(m1.name);
     });
 
-    it("sub-masked children", function () {
-        var m1 = new pc.Entity("m1");
+    it('sub-masked children', () => {
+        const m1 = new Entity('m1');
         m1.addComponent('element', {
             type: 'image',
             mask: true
         });
 
-        var c1 = new pc.Entity("c1");
+        const c1 = new Entity('c1');
         c1.addComponent('element', {
             type: 'image',
             mask: true
         });
 
-        var c2 = new pc.Entity("c2");
+        const c2 = new Entity('c2');
         c2.addComponent('element', {
-            type: 'image',
+            type: 'image'
         });
 
         c1.addChild(c2);
@@ -79,30 +84,30 @@ describe("pc.Element: Masks", function () {
         expect(c1.element._image._maskRef).to.equal(2);
     });
 
-    it("sibling masks, correct maskref", function () {
+    it('sibling masks, correct maskref', () => {
         // m1   m2
         // |    |
         // c1   c2
-        var m1 = new pc.Entity("m1");
+        const m1 = new Entity('m1');
         m1.addComponent('element', {
             type: 'image',
             mask: true
         });
 
-        var m2 = new pc.Entity("m2");
+        const m2 = new Entity('m2');
         m2.addComponent('element', {
             type: 'image',
             mask: true
         });
 
-        var c1 = new pc.Entity("c1");
+        const c1 = new Entity('c1');
         c1.addComponent('element', {
             type: 'image'
         });
 
-        var c2 = new pc.Entity("c2");
+        const c2 = new Entity('c2');
         c2.addComponent('element', {
-            type: 'image',
+            type: 'image'
         });
 
         m1.addChild(c1);
@@ -120,7 +125,7 @@ describe("pc.Element: Masks", function () {
 
     });
 
-    it("sub-masked and sibling children", function () {
+    it('sub-masked and sibling children', () => {
         //    top
         // /        \
         // m11       m12
@@ -128,48 +133,48 @@ describe("pc.Element: Masks", function () {
         // m21       m22
         // |  \     |
         // c31 c32  d31
-        var top = new pc.Entity("top")
+        const top = new Entity('top');
         top.addComponent('element', {
             type: 'group'
         });
 
-        var m11 = new pc.Entity("m11");
+        const m11 = new Entity('m11');
         m11.addComponent('element', {
             type: 'image',
             mask: true
         });
 
-        var m12 = new pc.Entity("m12");
+        const m12 = new Entity('m12');
         m12.addComponent('element', {
             type: 'image',
             mask: true
         });
 
-        var m21 = new pc.Entity("m21");
+        const m21 = new Entity('m21');
         m21.addComponent('element', {
             type: 'image',
             mask: true
         });
 
-        var c31 = new pc.Entity("c31");
+        const c31 = new Entity('c31');
         c31.addComponent('element', {
-            type: 'image',
+            type: 'image'
         });
 
-        var c32 = new pc.Entity("c32");
+        const c32 = new Entity('c32');
         c32.addComponent('element', {
-            type: 'image',
+            type: 'image'
         });
 
-        var m22 = new pc.Entity("m22");
+        const m22 = new Entity('m22');
         m22.addComponent('element', {
             type: 'image',
             mask: true
         });
 
-        var d31 = new pc.Entity("d31");
+        const d31 = new Entity('d31');
         d31.addComponent('element', {
-            type: 'image',
+            type: 'image'
         });
 
         m21.addChild(c31);
@@ -197,7 +202,7 @@ describe("pc.Element: Masks", function () {
         expect(d31.element.maskedBy.name).to.equal(m22.name);
     });
 
-    it("parallel parents - sub-masked and sibling children", function () {
+    it('parallel parents - sub-masked and sibling children', () => {
 
         // m11  m12
         // |    |
@@ -207,38 +212,38 @@ describe("pc.Element: Masks", function () {
         //
 
 
-        var m11 = new pc.Entity("m11");
+        const m11 = new Entity('m11');
         m11.addComponent('element', {
             type: 'image',
             mask: true
         });
 
-        var m12 = new pc.Entity("m12");
+        const m12 = new Entity('m12');
         m12.addComponent('element', {
             type: 'image',
             mask: true
         });
 
-        var m21 = new pc.Entity("m21");
+        const m21 = new Entity('m21');
         m21.addComponent('element', {
             type: 'image',
             mask: true
         });
 
-        var c1 = new pc.Entity("c1");
+        const c1 = new Entity('c1');
         c1.addComponent('element', {
-            type: 'image',
+            type: 'image'
         });
 
-        var m22 = new pc.Entity("m22");
+        const m22 = new Entity('m22');
         m22.addComponent('element', {
             type: 'image',
             mask: true
         });
 
-        var d1 = new pc.Entity("d1");
+        const d1 = new Entity('d1');
         d1.addComponent('element', {
-            type: 'image',
+            type: 'image'
         });
 
         m21.addChild(c1);
@@ -262,7 +267,7 @@ describe("pc.Element: Masks", function () {
         expect(d1.element.maskedBy.name).to.equal(m22.name);
     });
 
-    it("sub-masked and later children", function () {
+    it('sub-masked and later children', () => {
         // m1
         // |  \
         // m2 c2
@@ -270,26 +275,26 @@ describe("pc.Element: Masks", function () {
         // c1
 
 
-        var m1 = new pc.Entity("m1");
+        const m1 = new Entity('m1');
         m1.addComponent('element', {
             type: 'image',
             mask: true
         });
 
-        var m2 = new pc.Entity("m2");
+        const m2 = new Entity('m2');
         m2.addComponent('element', {
             type: 'image',
             mask: true
         });
 
-        var c1 = new pc.Entity("c1");
+        const c1 = new Entity('c1');
         c1.addComponent('element', {
-            type: 'image',
+            type: 'image'
         });
 
-        var c2 = new pc.Entity("c2");
+        const c2 = new Entity('c2');
         c2.addComponent('element', {
-            type: 'image',
+            type: 'image'
         });
 
         m2.addChild(c1);
@@ -308,7 +313,7 @@ describe("pc.Element: Masks", function () {
     });
 
 
-    it("multiple child masks and later children", function () {
+    it('multiple child masks and later children', () => {
         //    m1
         // /  |  \
         // m2 m3 c2
@@ -316,32 +321,32 @@ describe("pc.Element: Masks", function () {
         // c1
 
 
-        var m1 = new pc.Entity("m1");
+        const m1 = new Entity('m1');
         m1.addComponent('element', {
             type: 'image',
             mask: true
         });
 
-        var m2 = new pc.Entity("m2");
+        const m2 = new Entity('m2');
         m2.addComponent('element', {
             type: 'image',
             mask: true
         });
 
-        var m3 = new pc.Entity("m3");
+        const m3 = new Entity('m3');
         m3.addComponent('element', {
             type: 'image',
             mask: true
         });
 
-        var c1 = new pc.Entity("c1");
+        const c1 = new Entity('c1');
         c1.addComponent('element', {
-            type: 'image',
+            type: 'image'
         });
 
-        var c2 = new pc.Entity("c2");
+        const c2 = new Entity('c2');
         c2.addComponent('element', {
-            type: 'image',
+            type: 'image'
         });
 
         m2.addChild(c1);
@@ -361,34 +366,34 @@ describe("pc.Element: Masks", function () {
         expect(c2.element.maskedBy.name).to.equal(m1.name);
     });
 
-    it("ImageElement outside a mask is culled", function () {
-        var screen = new pc.Entity();
+    it('ImageElement outside a mask is culled', () => {
+        const screen = new Entity();
         screen.addComponent('screen', {
             screenSpace: true
         });
         app.root.addChild(screen);
 
-        var mask = new pc.Entity();
+        const mask = new Entity();
         mask.addComponent('element', {
             type: 'image',
             width: 100,
             height: 100,
-            pivot: [0.5,0.5],
+            pivot: [0.5, 0.5],
             mask: true
         });
         screen.addChild(mask);
 
-        var e = new pc.Entity();
+        const e = new Entity();
         e.addComponent('element', {
             type: 'image',
             width: 50,
             height: 50,
-            anchor: [0.5,0.5,0.5,0.5],
-            pivot: [0.5,0.5],
+            anchor: [0.5, 0.5, 0.5, 0.5],
+            pivot: [0.5, 0.5]
         });
         mask.addChild(e);
 
-        var camera = new pc.Entity();
+        const camera = new Entity();
         camera.addComponent('camera');
         app.root.addChild(camera);
 
@@ -410,34 +415,34 @@ describe("pc.Element: Masks", function () {
 
     });
 
-    it("TextElement outside a mask is culled", function () {
-        var screen = new pc.Entity();
+    it('TextElement outside a mask is culled', () => {
+        const screen = new Entity();
         screen.addComponent('screen', {
             screenSpace: true
         });
         app.root.addChild(screen);
 
-        var mask = new pc.Entity();
+        const mask = new Entity();
         mask.addComponent('element', {
             type: 'image',
             width: 100,
             height: 100,
-            pivot: [0.5,0.5],
+            pivot: [0.5, 0.5],
             mask: true
         });
         screen.addChild(mask);
 
-        var e = new pc.Entity();
+        const e = new Entity();
         e.addComponent('element', {
             type: 'text',
             width: 50,
             height: 50,
-            anchor: [0.5,0.5,0.5,0.5],
-            pivot: [0.5,0.5],
+            anchor: [0.5, 0.5, 0.5, 0.5],
+            pivot: [0.5, 0.5]
         });
         mask.addChild(e);
 
-        var camera = new pc.Entity();
+        const camera = new Entity();
         camera.addComponent('camera');
         app.root.addChild(camera);
 
@@ -459,6 +464,4 @@ describe("pc.Element: Masks", function () {
 
     });
 
-
 });
-
