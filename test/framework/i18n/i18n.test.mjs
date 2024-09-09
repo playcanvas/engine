@@ -3,21 +3,21 @@ import { Asset } from '../../../src/framework/asset/asset.js';
 import { JsonHandler } from '../../../src/framework/handlers/json.js';
 import { NullGraphicsDevice } from '../../../src/platform/graphics/null/null-graphics-device.js';
 
-import { HTMLCanvasElement } from '@playcanvas/canvas-mock';
+import { createCanvas } from 'canvas';
 
 import { expect } from 'chai';
 import { restore, stub } from 'sinon';
 
-describe('I18n', () => {
+describe('I18n', function () {
 
     let app;
 
-    beforeEach(() => {
-        const canvas = new HTMLCanvasElement(500, 500);
+    beforeEach(function () {
+        const canvas = createCanvas(500, 500);
         app = new Application(canvas, { graphicsDevice: new NullGraphicsDevice(canvas) });
     });
 
-    afterEach(() => {
+    afterEach(function () {
         app.destroy();
         restore();
     });
@@ -60,21 +60,21 @@ describe('I18n', () => {
         return data;
     };
 
-    describe('#assets', () => {
+    describe('#assets', function () {
 
-        it('returns same ids for assets after setting array of asset ids', () => {
+        it('returns same ids for assets after setting array of asset ids', function () {
             app.i18n.assets = [1, 2];
             expect(app.i18n.assets).to.deep.equal([1, 2]);
         });
 
-        it('returns same ids for assets after setting array of assets', () => {
+        it('returns same ids for assets after setting array of assets', function () {
             const a1 = new Asset('a1', 'json');
             const a2 = new Asset('a2', 'json');
             app.i18n.assets = [a1, a2];
             expect(app.i18n.assets).to.deep.equal([a1.id, a2.id]);
         });
 
-        it('removes old assets when setting new array', () => {
+        it('removes old assets when setting new array', function () {
             app.i18n.assets = [1, 2];
             app.i18n.assets = [2, 3];
             expect(app.i18n.assets).to.deep.equal([2, 3]);
@@ -82,61 +82,61 @@ describe('I18n', () => {
 
     });
 
-    describe('#findAvailableLocale', () => {
+    describe('#findAvailableLocale', function () {
 
-        it('should find locale if translations have been provided for it', () => {
+        it('should find locale if translations have been provided for it', function () {
             addText('no-IT', 'key', 'norwegian');
             expect(app.i18n.findAvailableLocale('no-IT')).to.equal('no-IT');
         });
 
-        it('should fallback to en-US if translations have not been provided for the desired locale', () => {
+        it('should fallback to en-US if translations have not been provided for the desired locale', function () {
             addText('no-IT', 'key', 'norwegian');
             expect(app.i18n.findAvailableLocale('de-DE')).to.equal('en-US');
         });
 
-        it('should fallback to zh-CN if translations are provided and zh-SG is the desired locale', () => {
+        it('should fallback to zh-CN if translations are provided and zh-SG is the desired locale', function () {
             addText('zh-CN', 'key', 'Chinese');
             expect(app.i18n.findAvailableLocale('zh-SG')).to.equal('zh-CN');
         });
 
-        it('should fallback to en-GB if translations are provided and en-US is the desired locale', () => {
+        it('should fallback to en-GB if translations are provided and en-US is the desired locale', function () {
             addText('en-GB', 'key', 'British');
             expect(app.i18n.findAvailableLocale('en-US')).to.equal('en-GB');
         });
 
     });
 
-    describe('#getPluralText', () => {
+    describe('#getPluralText', function () {
 
-        it('should return key when no translations exist for that locale', () => {
+        it('should return key when no translations exist for that locale', function () {
             expect(app.i18n.getPluralText('key')).to.equal('key');
 
             addText('no-NO', 'key', ['translated']);
             expect(app.i18n.getPluralText('key')).to.equal('key');
         });
 
-        it('should return key if the desired locale has other translations but not that key', () => {
+        it('should return key if the desired locale has other translations but not that key', function () {
             addText('no-NO', 'key', ['norwegian']);
             expect(app.i18n.getPluralText('key2', 'no-NO')).to.equal('key2');
             app.i18n.locale = 'no-NO';
             expect(app.i18n.getPluralText('key2')).to.equal('key2');
         });
 
-        it('should return en-US translation if the desired locale has no translations', () => {
+        it('should return en-US translation if the desired locale has no translations', function () {
             addText('en-US', 'key', ['english one', 'english other']);
             expect(app.i18n.getPluralText('key', 1, 'no-NO')).to.equal('english one');
             app.i18n.locale = 'no-NO';
             expect(app.i18n.getPluralText('key', 1)).to.equal('english one');
         });
 
-        it('should return en-US plural form if the desired locale does not exist', () => {
+        it('should return en-US plural form if the desired locale does not exist', function () {
             addText('en-US', 'key', ['english one', 'english other']);
             expect(app.i18n.getPluralText('key', 1, 'ar')).to.equal('english one');
             app.i18n.locale = 'ar';
             expect(app.i18n.getPluralText('key', 1)).to.equal('english one');
         });
 
-        it('returns empty string if the empty string is a valid translation', () => {
+        it('returns empty string if the empty string is a valid translation', function () {
             addText('en-US', 'key', ['', '']);
             expect(app.i18n.getPluralText('key', 0)).to.equal('');
             expect(app.i18n.getPluralText('key', 1)).to.equal('');
@@ -159,7 +159,7 @@ describe('I18n', () => {
             });
         });
 
-        it('returns key is translation is null', () => {
+        it('returns key is translation is null', function () {
             addText('en-US', 'key', [null, null]);
             expect(app.i18n.getPluralText('key', 0)).to.equal('key');
             expect(app.i18n.getPluralText('key', 1)).to.equal('key');
@@ -185,7 +185,7 @@ describe('I18n', () => {
             expect(app.i18n.getPluralText('key', 2, 'es-ES')).to.equal('key');
         });
 
-        it('should fall back to default locale for that language if the specific locale does not exist', () => {
+        it('should fall back to default locale for that language if the specific locale does not exist', function () {
             for (const lang in DEFAULT_LOCALE_FALLBACKS) {
                 addText(DEFAULT_LOCALE_FALLBACKS[lang], 'key', [`language ${lang}`]);
             }
@@ -203,7 +203,7 @@ describe('I18n', () => {
 
         });
 
-        it('should fall back to default locale for that language if you just pass the language', () => {
+        it('should fall back to default locale for that language if you just pass the language', function () {
             for (const lang in DEFAULT_LOCALE_FALLBACKS) {
                 addText(DEFAULT_LOCALE_FALLBACKS[lang], 'key', [`language ${lang}`]);
             }
@@ -220,14 +220,14 @@ describe('I18n', () => {
             expect(app.i18n.getPluralText('key', 1)).to.equal('language no');
         });
 
-        it('should fall back to first available locale for that language if no default fallback exists', () => {
+        it('should fall back to first available locale for that language if no default fallback exists', function () {
             addText('no-IT', 'key', ['norwegian']);
             expect(app.i18n.getPluralText('key', 1, 'no-NO')).to.equal('norwegian');
             app.i18n.locale = 'no-NO';
             expect(app.i18n.getPluralText('key', 1)).to.equal('norwegian');
         });
 
-        it('should return correct plural forms for \"ja, ko, th, vi, zh\"', () => {
+        it('should return correct plural forms for \"ja, ko, th, vi, zh\"', function () {
             const locales = ['ja-JP', 'ko-KO', 'th-TH', 'vi-VI', 'zh-ZH'];
             locales.forEach((locale) => {
                 addText(locale, 'key', ['other']);
@@ -243,7 +243,7 @@ describe('I18n', () => {
             });
         });
 
-        it('should return correct plural forms for \"fa, hi\"', () => {
+        it('should return correct plural forms for \"fa, hi\"', function () {
             const locales = ['fa-FA', 'hi-HI'];
             locales.forEach((locale) => {
                 addText(locale, 'key', ['one', 'other']);
@@ -265,7 +265,7 @@ describe('I18n', () => {
             });
         });
 
-        it('should return correct plural forms for \"fr\"', () => {
+        it('should return correct plural forms for \"fr\"', function () {
             const locales = ['fr-FR'];
             locales.forEach((locale) => {
                 addText(locale, 'key', ['one', 'other']);
@@ -287,7 +287,7 @@ describe('I18n', () => {
         });
 
 
-        it('should return correct plural forms for \"en, de, it, el, es, tr\"', () => {
+        it('should return correct plural forms for \"en, de, it, el, es, tr\"', function () {
             const locales = ['en-US', 'en-GB', 'de-DE', 'it-IT', 'el-GR', 'es-ES', 'tr-TR'];
             locales.forEach((locale) => {
                 addText(locale, 'key', ['one', 'other']);
@@ -308,7 +308,7 @@ describe('I18n', () => {
             });
         });
 
-        it('should return correct plural forms for \"ru, uk\"', () => {
+        it('should return correct plural forms for \"ru, uk\"', function () {
             const locales = ['ru-RU', 'uk-UK'];
             locales.forEach((locale) => {
                 addText(locale, 'key', ['one', 'few', 'many', 'other']);
@@ -347,7 +347,7 @@ describe('I18n', () => {
             });
         });
 
-        it('should return correct plural forms for \"ar\"', () => {
+        it('should return correct plural forms for \"ar\"', function () {
             const locales = ['ar-AR'];
             locales.forEach((locale) => {
                 addText(locale, 'key', ['zero', 'one', 'two', 'few', 'many', 'other']);
@@ -386,7 +386,7 @@ describe('I18n', () => {
             });
         });
 
-        it('zh-HK should use zh-HK if it exists', () => {
+        it('zh-HK should use zh-HK if it exists', function () {
             addText('zh-CN', 'key', ['cn']);
             addText('zh-HK', 'key', ['hk']);
             addText('zh-TW', 'key', ['tw']);
@@ -394,21 +394,21 @@ describe('I18n', () => {
             expect(app.i18n.getPluralText('key')).to.equal('hk');
         });
 
-        it('zh-HK should fall back to zh-TW', () => {
+        it('zh-HK should fall back to zh-TW', function () {
             addText('zh-CN', 'key', ['cn']);
             addText('zh-TW', 'key', ['hk']);
             app.i18n.locale = 'zh-HK';
             expect(app.i18n.getPluralText('key')).to.equal('hk');
         });
 
-        it('zh-TW should fall back to zh-HK', () => {
+        it('zh-TW should fall back to zh-HK', function () {
             addText('zh-CN', 'key', ['cn']);
             addText('zh-HK', 'key', ['tw']);
             app.i18n.locale = 'zh-TW';
             expect(app.i18n.getPluralText('key')).to.equal('tw');
         });
 
-        it('zh-SG should fall back to zh-CN', () => {
+        it('zh-SG should fall back to zh-CN', function () {
             addText('zh-HK', 'key', ['hk']);
             addText('zh-CN', 'key', ['cn']);
             addText('zh-TW', 'key', ['tw']);
@@ -418,23 +418,23 @@ describe('I18n', () => {
 
     });
 
-    describe('#getText', () => {
+    describe('#getText', function () {
 
-        it('should return key when no translations exist for that locale', () => {
+        it('should return key when no translations exist for that locale', function () {
             expect(app.i18n.getText('key')).to.equal('key');
 
             addText('no-NO', 'key', 'translated');
             expect(app.i18n.getText('key')).to.equal('key');
         });
 
-        it('should return localized text when translation exists', () => {
+        it('should return localized text when translation exists', function () {
             addText('no-NO', 'key', 'translated');
             expect(app.i18n.getText('key', 'no-NO')).to.equal('translated');
             app.i18n.locale = 'no-NO';
             expect(app.i18n.getText('key')).to.equal('translated');
         });
 
-        it('should return en-US translation if the desired locale has no translations', () => {
+        it('should return en-US translation if the desired locale has no translations', function () {
             addText('en-US', 'key', 'english');
             expect(app.i18n.getText('key', 'no-NO')).to.equal('english');
             app.i18n.locale = 'no-NO';
@@ -445,42 +445,42 @@ describe('I18n', () => {
             expect(app.i18n.getText('key')).to.equal('norwegian');
         });
 
-        it('should return key if the desired locale has other translations but not that key', () => {
+        it('should return key if the desired locale has other translations but not that key', function () {
             addText('no-NO', 'key', 'norwegian');
             expect(app.i18n.getText('key2', 'no-NO')).to.equal('key2');
             app.i18n.locale = 'no-NO';
             expect(app.i18n.getText('key2')).to.equal('key2');
         });
 
-        it('should fall back to default locale for that language if the specific locale does not exist', () => {
+        it('should fall back to default locale for that language if the specific locale does not exist', function () {
             addText('no-NO', 'key', 'norwegian');
             expect(app.i18n.getText('key', 'no-IT')).to.equal('norwegian');
             app.i18n.locale = 'no-IT';
             expect(app.i18n.getText('key')).to.equal('norwegian');
         });
 
-        it('should fall back to default locale for that language if you just pass the language', () => {
+        it('should fall back to default locale for that language if you just pass the language', function () {
             addText('no-NO', 'key', 'norwegian');
             expect(app.i18n.getText('key', 'no')).to.equal('norwegian');
             app.i18n.locale = 'no';
             expect(app.i18n.getText('key')).to.equal('norwegian');
         });
 
-        it('should fall back to first available locale for that language if no default fallback exists', () => {
+        it('should fall back to first available locale for that language if no default fallback exists', function () {
             addText('no-IT', 'key', 'norwegian');
             expect(app.i18n.getText('key', 'no-NO')).to.equal('norwegian');
             app.i18n.locale = 'no-NO';
             expect(app.i18n.getText('key')).to.equal('norwegian');
         });
 
-        it('when called on plural key should return the first entry', () => {
+        it('when called on plural key should return the first entry', function () {
             addText('no-IT', 'key', ['one', 'other']);
             expect(app.i18n.getText('key', 'no-NO')).to.equal('one');
             app.i18n.locale = 'no-NO';
             expect(app.i18n.getText('key')).to.equal('one');
         });
 
-        it('returns empty string if the empty string is a valid translation', () => {
+        it('returns empty string if the empty string is a valid translation', function () {
             addText('en-US', 'key', '');
             expect(app.i18n.getText('key')).to.equal('');
             expect(app.i18n.getText('key', 'no-NO')).to.equal('');
@@ -488,7 +488,7 @@ describe('I18n', () => {
             expect(app.i18n.getText('key')).to.equal('');
         });
 
-        it('returns key if the translation is null', () => {
+        it('returns key if the translation is null', function () {
             addText('en-US', 'key', null);
             expect(app.i18n.getText('key')).to.equal('key');
             expect(app.i18n.getText('key', 'no-NO')).to.equal('key');
@@ -496,7 +496,7 @@ describe('I18n', () => {
             expect(app.i18n.getText('key')).to.equal('key');
         });
 
-        it('zh-HK should use zh-HK if it exists', () => {
+        it('zh-HK should use zh-HK if it exists', function () {
             addText('zh-CN', 'key', 'cn');
             addText('zh-HK', 'key', 'hk');
             addText('zh-TW', 'key', 'tw');
@@ -504,21 +504,21 @@ describe('I18n', () => {
             expect(app.i18n.getText('key')).to.equal('hk');
         });
 
-        it('zh-HK should fall back to zh-TW', () => {
+        it('zh-HK should fall back to zh-TW', function () {
             addText('zh-CN', 'key', 'cn');
             addText('zh-TW', 'key', 'hk');
             app.i18n.locale = 'zh-HK';
             expect(app.i18n.getText('key')).to.equal('hk');
         });
 
-        it('zh-TW should fall back to zh-HK', () => {
+        it('zh-TW should fall back to zh-HK', function () {
             addText('zh-CN', 'key', 'cn');
             addText('zh-HK', 'key', 'tw');
             app.i18n.locale = 'zh-TW';
             expect(app.i18n.getText('key')).to.equal('tw');
         });
 
-        it('zh-SG should fall back to zh-CN', () => {
+        it('zh-SG should fall back to zh-CN', function () {
             addText('zh-HK', 'key', 'hk');
             addText('zh-CN', 'key', 'cn');
             addText('zh-TW', 'key', 'tw');
@@ -528,9 +528,9 @@ describe('I18n', () => {
 
     });
 
-    describe('#locale', () => {
+    describe('#locale', function () {
 
-        it('ensures locale for Indonesian always starts with "id"', () => {
+        it('ensures locale for Indonesian always starts with "id"', function () {
             app.i18n.locale = 'id';
             expect(app.i18n.locale).to.equal('id');
 
@@ -553,9 +553,9 @@ describe('I18n', () => {
 
     });
 
-    describe('removeData', () => {
+    describe('removeData', function () {
 
-        it('removes all data correctly', () => {
+        it('removes all data correctly', function () {
             const data1 = addText('en-US', 'key', 'translation');
             const data2 = addText('en-US', 'key2', 'translation2');
             const data3 = addText('no-IT', 'key3', 'translation3');
@@ -591,7 +591,7 @@ describe('I18n', () => {
         const asset = new Asset('a1', 'json', { url: '/fake/url.json' });
         app.i18n.assets = [asset];
 
-        app.i18n.on('data:add', () => {
+        app.i18n.on('data:add', function () {
             expect(app.i18n.getText('key')).to.equal('translation');
             done();
         });
@@ -610,7 +610,7 @@ describe('I18n', () => {
 
         app.i18n.assets = [asset];
 
-        app.i18n.on('data:add', () => {
+        app.i18n.on('data:add', function () {
             expect(app.i18n.getText('key')).to.equal('translation');
             done();
         });
@@ -623,13 +623,13 @@ describe('I18n', () => {
             callback(null, createTranslation('en-US', 'key', 'translation'));
         });
 
-        app.i18n.on('data:add', () => {
+        app.i18n.on('data:add', function () {
             expect(app.i18n.getText('key')).to.equal('translation');
             done();
         });
 
         const asset = new Asset('a1', 'json', { url: '/fake/url.json' });
-        asset.on('load', () => {
+        asset.on('load', function () {
             app.i18n.assets = [asset];
         });
 
@@ -644,13 +644,13 @@ describe('I18n', () => {
 
         const asset = new Asset('a1', 'json', { url: '/fake/url.json' });
 
-        app.i18n.on('data:add', () => {
+        app.i18n.on('data:add', function () {
             asset.unload();
             expect(app.i18n.getText('key')).to.equal('key');
             done();
         });
 
-        asset.on('load', () => {
+        asset.on('load', function () {
             app.i18n.assets = [asset];
         });
 
@@ -665,13 +665,13 @@ describe('I18n', () => {
 
         const asset = new Asset('a1', 'json', { url: '/fake/url.json' });
 
-        app.i18n.on('data:add', () => {
+        app.i18n.on('data:add', function () {
             app.assets.remove(asset);
             expect(app.i18n.getText('key')).to.equal('key');
             done();
         });
 
-        asset.on('load', () => {
+        asset.on('load', function () {
             app.i18n.assets = [asset];
         });
 
@@ -686,7 +686,7 @@ describe('I18n', () => {
 
         const asset = new Asset('a1', 'json', { url: '/fake/url.json' });
 
-        app.i18n.once('data:add', () => {
+        app.i18n.once('data:add', function () {
             app.assets.remove(asset);
 
             setTimeout(() => {
@@ -696,7 +696,7 @@ describe('I18n', () => {
             });
         });
 
-        asset.once('load', () => {
+        asset.once('load', function () {
             app.i18n.assets = [asset];
         });
 
@@ -711,11 +711,11 @@ describe('I18n', () => {
 
         const asset = new Asset('a1', 'json', { url: '/fake/url.json' });
 
-        app.i18n.once('data:add', () => {
+        app.i18n.once('data:add', function () {
             expect(app.i18n.getText('key')).to.equal('translation');
 
             setTimeout(() => {
-                app.i18n.once('data:add', () => {
+                app.i18n.once('data:add', function () {
                     expect(app.i18n.getText('key')).to.equal('changed');
                     done();
                 });
@@ -724,7 +724,7 @@ describe('I18n', () => {
             });
         });
 
-        asset.once('load', () => {
+        asset.once('load', function () {
             app.i18n.assets = [asset];
         });
 

@@ -3,20 +3,20 @@ import { http, Http } from '../../../src/platform/net/http.js';
 import { expect } from 'chai';
 import { restore, spy } from 'sinon';
 
-describe('Http', () => {
+describe('Http', function () {
     let retryDelay;
 
-    beforeEach(() => {
+    beforeEach(function () {
         retryDelay = Http.retryDelay;
         Http.retryDelay = 1;
     });
 
-    afterEach(() => {
+    afterEach(function () {
         Http.retryDelay = retryDelay;
         restore();
     });
 
-    describe('#get()', () => {
+    describe('#get()', function () {
 
         it('returns resource', (done) => {
             http.get('http://localhost:3000/test/test-assets/test.json', (err, data) => {

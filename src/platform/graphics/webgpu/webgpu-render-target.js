@@ -12,6 +12,8 @@ const stringIds = new StringIds();
 
 /**
  * Private class storing info about color buffer.
+ *
+ * @private
  */
 class ColorAttachment {
     /**
@@ -33,6 +35,62 @@ class ColorAttachment {
 }
 
 /**
+ * Private class storing info about depth-stencil buffer.
+ *
+ * @private
+ */
+class DepthAttachment {
+    /**
+     * @type {GPUTextureFormat}
+     * @private
+     */
+    format;
+
+    /** @type {boolean} */
+    hasStencil;
+
+    /**
+     * @type {GPUTexture|null}
+     * @private
+     */
+    depthTexture = null;
+
+    /**
+     * True if the depthTexture is internally allocated / owned
+     *
+     * @type {boolean}
+     */
+    depthTextureInternal = false;
+
+    /**
+     * Multi-sampled depth buffer allocated over the user provided depth buffer.
+     *
+     * @type {GPUTexture|null}
+     * @private
+     */
+    multisampledDepthBuffer = null;
+
+    /**
+     * @param {string} gpuFormat - The WebGPU format (GPUTextureFormat).
+     */
+    constructor(gpuFormat) {
+        Debug.assert(gpuFormat);
+        this.format = gpuFormat;
+        this.hasStencil = gpuFormat === 'depth24plus-stencil8';
+    }
+
+    destroy() {
+        if (this.depthTextureInternal) {
+            this.depthTexture?.destroy();
+            this.depthTexture = null;
+        }
+
+        this.multisampledDepthBuffer?.destroy();
+        this.multisampledDepthBuffer = null;
+    }
+}
+
+/**
  * A WebGPU implementation of the RenderTarget.
  */
 class WebgpuRenderTarget {
@@ -49,27 +107,8 @@ class WebgpuRenderTarget {
     /** @type {ColorAttachment[]} */
     colorAttachments = [];
 
-    /**
-     * @type {GPUTextureFormat}
-     * @private
-     */
-    depthFormat;
-
-    /** @type {boolean} */
-    hasStencil;
-
-    /**
-     * @type {GPUTexture}
-     * @private
-     */
-    depthTexture = null;
-
-    /**
-     * True if the depthTexture is internally allocated / owned
-     *
-     * @type {boolean}
-     */
-    depthTextureInternal = false;
+    /** @type {DepthAttachment|null} */
+    depthAttachment = null;
 
     /**
      * Texture assigned each frame, and not owned by this render target. This is used on the
@@ -120,36 +159,28 @@ class WebgpuRenderTarget {
     destroy(device) {
         this.initialized = false;
 
-        if (this.depthTextureInternal) {
-            this.depthTexture?.destroy();
-            this.depthTexture = null;
-        }
-
         this.assignedColorTexture = null;
 
         this.colorAttachments.forEach((colorAttachment) => {
             colorAttachment.destroy();
         });
         this.colorAttachments.length = 0;
+
+        this.depthAttachment?.destroy();
+        this.depthAttachment = null;
     }
 
     updateKey() {
         const rt = this.renderTarget;
 
         // key used by render pipeline creation
-        let key = `${rt.samples}:${rt.depth ? this.depthFormat : 'nodepth'}`;
+        let key = `${rt.samples}:${this.depthAttachment ? this.depthAttachment.format : 'nodepth'}`;
         this.colorAttachments.forEach((colorAttachment) => {
             key += `:${colorAttachment.format}`;
         });
 
         // convert string to a unique number
         this.key = stringIds.get(key);
-    }
-
-    setDepthFormat(depthFormat) {
-        Debug.assert(depthFormat);
-        this.depthFormat = depthFormat;
-        this.hasStencil = depthFormat === 'depth24plus-stencil8';
     }
 
     /**
@@ -244,18 +275,21 @@ class WebgpuRenderTarget {
         // depth buffer as we don't currently resolve it. This might need to change in the future.
         if (depth || depthBuffer) {
 
+            // the depth texture view the rendering will write to
+            let renderingView;
+
             // allocate depth buffer if not provided
             if (!depthBuffer) {
 
                 // TODO: support rendering to 32bit depth without a stencil as well
-                this.setDepthFormat('depth24plus-stencil8');
+                this.depthAttachment = new DepthAttachment('depth24plus-stencil8');
 
                 /** @type {GPUTextureDescriptor} */
                 const depthTextureDesc = {
                     size: [width, height, 1],
                     dimension: '2d',
                     sampleCount: samples,
-                    format: this.depthFormat,
+                    format: this.depthAttachment.format,
                     usage: GPUTextureUsage.RENDER_ATTACHMENT
                 };
 
@@ -270,22 +304,53 @@ class WebgpuRenderTarget {
                 }
 
                 // allocate depth buffer
-                this.depthTexture = wgpu.createTexture(depthTextureDesc);
-                this.depthTextureInternal = true;
+                const depthTexture = wgpu.createTexture(depthTextureDesc);
+                DebugHelper.setLabel(depthTexture, `${renderTarget.name}.autoDepthTexture`);
+                this.depthAttachment.depthTexture = depthTexture;
+                this.depthAttachment.depthTextureInternal = true;
 
-            } else {
+                renderingView = depthTexture.createView();
+                DebugHelper.setLabel(renderingView, `${renderTarget.name}.autoDepthView`);
 
-                // use provided depth buffer
-                this.depthTexture = depthBuffer.impl.gpuTexture;
-                this.setDepthFormat(depthBuffer.impl.format);
+            } else {  // use provided depth buffer
+
+                this.depthAttachment = new DepthAttachment(depthBuffer.impl.format);
+
+                if (samples > 1) {
+
+                    // user provided depth buffer, but we need to create a multi-sampled depth buffer
+
+                    /** @type {GPUTextureDescriptor} */
+                    const multisampledDepthDesc = {
+                        size: [width, height, 1],
+                        dimension: '2d',
+                        sampleCount: samples,
+                        format: depthBuffer.impl.format,
+                        usage: GPUTextureUsage.RENDER_ATTACHMENT
+                    };
+
+                    // allocate multi-sampled depth buffer
+                    const multisampledDepthBuffer = wgpu.createTexture(multisampledDepthDesc);
+                    DebugHelper.setLabel(multisampledDepthBuffer, `${renderTarget.name}.multisampledDepth`);
+                    this.depthAttachment.multisampledDepthBuffer = multisampledDepthBuffer;
+
+                    renderingView = multisampledDepthBuffer.createView();
+                    DebugHelper.setLabel(renderingView, `${renderTarget.name}.multisampledDepthView`);
+
+                } else {
+
+                    // use provided depth buffer
+                    const depthTexture = depthBuffer.impl.gpuTexture;
+                    this.depthAttachment.depthTexture = depthTexture;
+
+                    renderingView = depthTexture.createView();
+                    DebugHelper.setLabel(renderingView, `${renderTarget.name}.depthView`);
+                }
             }
 
-            Debug.assert(this.depthTexture);
-            DebugHelper.setLabel(this.depthTexture, `${renderTarget.name}.depthTexture`);
-
-            // @type {GPURenderPassDepthStencilAttachment}
+            Debug.assert(renderingView);
             this.renderPassDescriptor.depthStencilAttachment = {
-                view: this.depthTexture.createView()
+                view: renderingView
             };
         }
     }
@@ -390,7 +455,7 @@ class WebgpuRenderTarget {
             depthAttachment.depthStoreOp = renderPass.depthStencilOps.storeDepth ? 'store' : 'discard';
             depthAttachment.depthReadOnly = false;
 
-            if (this.hasStencil) {
+            if (this.depthAttachment.hasStencil) {
                 depthAttachment.stencilClearValue = renderPass.depthStencilOps.clearStencilValue;
                 depthAttachment.stencilLoadOp = renderPass.depthStencilOps.clearStencil ? 'clear' : 'load';
                 depthAttachment.stencilStoreOp = renderPass.depthStencilOps.storeStencil ? 'store' : 'discard';

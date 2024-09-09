@@ -255,11 +255,28 @@ class RenderPass {
         // defaults depend on multisampling
         this.samples = Math.max(this.renderTarget ? this.renderTarget.samples : this.device.samples, 1);
 
-        // allocate ops only when render target is used
+        // allocate ops only when render target is used (when this function was called)
+        this.allocateAttachments();
+
+        // allow for post-init setup
+        this.postInit();
+    }
+
+    allocateAttachments() {
+
+        const rt = this.renderTarget;
+
+        // depth
         this.depthStencilOps = new DepthStencilAttachmentOps();
 
-        const numColorOps = renderTarget ? renderTarget._colorBuffers?.length : 1;
+        // if a RT is used (so not a backbuffer) that was created with a user supplied depth buffer,
+        // assume the user wants to use its content, and so store it by default
+        if (rt?.depthBuffer) {
+            this.depthStencilOps.storeDepth = true;
+        }
 
+        // color
+        const numColorOps = rt ? (rt._colorBuffers?.length ?? 0) : 1;
         this.colorArrayOps.length = 0;
         for (let i = 0; i < numColorOps; i++) {
             const colorOps = new ColorAttachmentOps();
@@ -276,8 +293,6 @@ class RenderPass {
                 colorOps.mipmaps = true;
             }
         }
-
-        this.postInit();
     }
 
     destroy() {

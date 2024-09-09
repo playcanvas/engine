@@ -4,11 +4,11 @@ import { Entity } from '../../../../src/framework/entity.js';
 import { LAYERID_WORLD, LAYERID_UI } from '../../../../src/scene/constants.js';
 import { NullGraphicsDevice } from '../../../../src/platform/graphics/null/null-graphics-device.js';
 
-import { HTMLCanvasElement } from '@playcanvas/canvas-mock';
+import { createCanvas } from 'canvas';
 
 import { expect } from 'chai';
 
-describe('ModelComponent', () => {
+describe('ModelComponent', function () {
     let app;
     let assets = {};
 
@@ -46,8 +46,8 @@ describe('ModelComponent', () => {
         });
     };
 
-    beforeEach((done) => {
-        const canvas = new HTMLCanvasElement(500, 500);
+    beforeEach(function (done) {
+        const canvas = createCanvas(500, 500);
         app = new Application(canvas, { graphicsDevice: new NullGraphicsDevice(canvas) });
 
         loadAssets(() => {
@@ -55,12 +55,12 @@ describe('ModelComponent', () => {
         });
     });
 
-    afterEach(() => {
+    afterEach(function () {
         app.destroy();
         assets = {};
     });
 
-    it('Create default model component', () => {
+    it('Create default model component', function () {
         const e = new Entity();
         e.addComponent('model');
 
@@ -79,7 +79,7 @@ describe('ModelComponent', () => {
 
     });
 
-    it('Set modelAsset and model', () => {
+    it('Set modelAsset and model', function () {
         const e = new Entity();
         e.addComponent('model', {
             asset: assets.model
@@ -91,7 +91,7 @@ describe('ModelComponent', () => {
         expect(e.model.model).to.not.be.null;
     });
 
-    it('Default cloned model component is identical', () => {
+    it('Default cloned model component is identical', function () {
         const e = new Entity();
         e.addComponent('model', {
             asset: assets.model
@@ -115,7 +115,7 @@ describe('ModelComponent', () => {
     });
 
 
-    it('Cloned model component with flags set has correct meshinstance flags', () => {
+    it('Cloned model component with flags set has correct meshinstance flags', function () {
         const e = new Entity();
         e.addComponent('model', {
             asset: assets.model,
@@ -144,7 +144,7 @@ describe('ModelComponent', () => {
     });
 
 
-    it('Cloned model component with flags set directly on mesh instance is identical', () => {
+    it('Cloned model component with flags set directly on mesh instance is identical', function () {
         const e = new Entity();
         e.addComponent('model', {
             asset: assets.model
@@ -173,7 +173,7 @@ describe('ModelComponent', () => {
         }
     });
 
-    it('ModelAsset unbinds on destroy', () => {
+    it('ModelAsset unbinds on destroy', function () {
         const e = new Entity();
         app.root.addChild(e);
         e.addComponent('model', {
@@ -193,7 +193,7 @@ describe('ModelComponent', () => {
         expect(assets.model.hasEvent('unload')).to.be.false;
     });
 
-    it('ModelAsset unbinds on reset', () => {
+    it('ModelAsset unbinds on reset', function () {
         const e = new Entity();
         app.root.addChild(e);
         e.addComponent('model', {
@@ -213,7 +213,7 @@ describe('ModelComponent', () => {
         expect(assets.model.hasEvent('unload')).to.be.false;
     });
 
-    it('Material Asset unbinds on destroy', () => {
+    it('Material Asset unbinds on destroy', function () {
         const e = new Entity();
         app.root.addChild(e);
         e.addComponent('model', {
@@ -234,7 +234,7 @@ describe('ModelComponent', () => {
         expect(assets.material.hasEvent('remove')).to.be.false;
     });
 
-    it('Material Asset unbinds on reset', () => {
+    it('Material Asset unbinds on reset', function () {
         const e = new Entity();
         app.root.addChild(e);
         e.addComponent('model', {
@@ -276,7 +276,7 @@ describe('ModelComponent', () => {
 
         app.assets.load(boxAsset);
 
-        boxAsset.on('load', () => {
+        boxAsset.on('load', function () {
             const e = new Entity();
             e.addComponent('model', {
                 asset: boxAsset
@@ -301,7 +301,7 @@ describe('ModelComponent', () => {
         app.assets.add(boxAsset);
         app.assets.load(boxAsset);
 
-        boxAsset.on('load', () => {
+        boxAsset.on('load', function () {
             const e = new Entity();
             e.addComponent('model', {
                 asset: boxAsset
@@ -311,7 +311,7 @@ describe('ModelComponent', () => {
 
             expect(app.assets.hasEvent(`add:${materialAsset.id}`)).to.be.true;
 
-            materialAsset.on('load', () => {
+            materialAsset.on('load', function () {
                 // do checks after the 'load' handler on the asset has been executed
                 // by other engine event handlers
                 setTimeout(() => {
@@ -338,7 +338,7 @@ describe('ModelComponent', () => {
         app.assets.add(boxAsset);
         app.assets.load(boxAsset);
 
-        boxAsset.on('load', () => {
+        boxAsset.on('load', function () {
             const e = new Entity();
             e.addComponent('model', {
                 asset: boxAsset
@@ -358,7 +358,7 @@ describe('ModelComponent', () => {
         });
     });
 
-    it('Layers are initialized before model is set', () => {
+    it('Layers are initialized before model is set', function () {
         const e = new Entity();
         e.addComponent('model', {
             layers: [LAYERID_UI]

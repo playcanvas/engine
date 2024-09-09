@@ -3,35 +3,35 @@ import { EVENT_KEYDOWN, EVENT_KEYUP, KEY_UP } from '../../../src/platform/input/
 
 import { expect } from 'chai';
 
-describe('Keyboard', () => {
+describe('Keyboard', function () {
 
     /** @type { Keyboard } */
     let keyboard;
 
-    beforeEach(() => {
+    beforeEach(function () {
         keyboard = new Keyboard();
         keyboard.attach(window);
     });
 
-    afterEach(() => {
+    afterEach(function () {
         keyboard.detach();
     });
 
-    describe('#constructor', () => {
+    describe('#constructor', function () {
 
-        it('should create a new instance', () => {
+        it('should create a new instance', function () {
             expect(keyboard).to.be.an.instanceOf(Keyboard);
         });
 
     });
 
-    describe('#isPressed', () => {
+    describe('#isPressed', function () {
 
-        it('should return false for a key that is not pressed', () => {
+        it('should return false for a key that is not pressed', function () {
             expect(keyboard.isPressed(KEY_UP)).to.be.false;
         });
 
-        it('should return true for a key that is pressed', () => {
+        it('should return true for a key that is pressed', function () {
             const keyDownEvent = new KeyboardEvent('keydown', {
                 keyCode: 38 // Up arrow
             });
@@ -53,7 +53,7 @@ describe('Keyboard', () => {
 
     });
 
-    describe('#on', () => {
+    describe('#on', function () {
 
         it('should handle keydown events', (done) => {
             keyboard.on(EVENT_KEYDOWN, (event) => {
@@ -87,13 +87,13 @@ describe('Keyboard', () => {
 
     });
 
-    describe('#wasPressed', () => {
+    describe('#wasPressed', function () {
 
-        it('should return false for a key that was not pressed', () => {
+        it('should return false for a key that was not pressed', function () {
             expect(keyboard.wasPressed(KEY_UP)).to.be.false;
         });
 
-        it('should return true for a key that was pressed since the last update', () => {
+        it('should return true for a key that was pressed since the last update', function () {
             const keyDownEvent = new KeyboardEvent('keydown', {
                 keyCode: 38 // Up arrow
             });
@@ -108,13 +108,13 @@ describe('Keyboard', () => {
 
     });
 
-    describe('#wasReleased', () => {
+    describe('#wasReleased', function () {
 
-        it('should return false for a key that was not released', () => {
+        it('should return false for a key that was not released', function () {
             expect(keyboard.wasReleased(KEY_UP)).to.be.false;
         });
 
-        it('should return true for a key that was released since the last update', () => {
+        it('should return true for a key that was released since the last update', function () {
             const keyDownEvent = new KeyboardEvent('keydown', {
                 keyCode: 38 // Up arrow
             });

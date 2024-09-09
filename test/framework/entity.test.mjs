@@ -29,23 +29,23 @@ import { NullGraphicsDevice } from '../../src/platform/graphics/null/null-graphi
 
 import { DummyComponentSystem } from './test-component/system.mjs';
 
-import { HTMLCanvasElement } from '@playcanvas/canvas-mock';
+import { createCanvas } from 'canvas';
 
 import { expect } from 'chai';
 import { stub } from 'sinon';
 
-describe('Entity', () => {
+describe('Entity', function () {
 
     let app;
 
-    beforeEach(() => {
-        const canvas = new HTMLCanvasElement(500, 500);
+    beforeEach(function () {
+        const canvas = createCanvas(500, 500);
         app = new Application(canvas, { graphicsDevice: new NullGraphicsDevice(canvas) });
 
         app.systems.add(new DummyComponentSystem(app));
     });
 
-    afterEach(() => {
+    afterEach(function () {
         app.destroy();
     });
 
@@ -74,21 +74,21 @@ describe('Entity', () => {
         zone: ZoneComponent
     };
 
-    describe('#constructor', () => {
+    describe('#constructor', function () {
 
-        it('supports zero arguments', () => {
+        it('supports zero arguments', function () {
             const entity = new Entity();
             expect(entity).to.be.an.instanceof(Entity);
             expect(entity.name).to.equal('Untitled');
         });
 
-        it('supports one argument', () => {
+        it('supports one argument', function () {
             const entity = new Entity('Test');
             expect(entity).to.be.an.instanceof(Entity);
             expect(entity.name).to.equal('Test');
         });
 
-        it('supports two arguments', () => {
+        it('supports two arguments', function () {
             const entity = new Entity('Test', app);
             expect(entity).to.be.an.instanceof(Entity);
             expect(entity.name).to.equal('Test');
@@ -96,10 +96,10 @@ describe('Entity', () => {
 
     });
 
-    describe('#addComponent', () => {
+    describe('#addComponent', function () {
 
         for (const name in components) {
-            it(`adds a ${name} component`, () => {
+            it(`adds a ${name} component`, function () {
                 // Create an entity and verify that it does not already have the component
                 const entity = new Entity();
                 expect(entity[name]).to.be.undefined;
@@ -122,7 +122,7 @@ describe('Entity', () => {
             });
         }
 
-        it('respects components order on disable', () => {
+        it('respects components order on disable', function () {
             const entity = new Entity();
             entity.enabled = true;
 
@@ -150,7 +150,7 @@ describe('Entity', () => {
             entity.destroy();
         });
 
-        it('respects components order on enable', () => {
+        it('respects components order on enable', function () {
             const entity = new Entity('Child');
             const parent = new Entity('Parent');
 
@@ -233,9 +233,9 @@ describe('Entity', () => {
         };
     };
 
-    describe('#clone', () => {
+    describe('#clone', function () {
 
-        it('clones an entity', () => {
+        it('clones an entity', function () {
             const entity = new Entity('Test');
             for (const name in components) {
                 entity.addComponent(name);
@@ -250,7 +250,7 @@ describe('Entity', () => {
             }
         });
 
-        it('clones an entity hierarchy', () => {
+        it('clones an entity hierarchy', function () {
             const root = new Entity('Test');
             const child = new Entity('Child');
             root.addChild(child);
@@ -277,7 +277,7 @@ describe('Entity', () => {
             root.destroy();
         });
 
-        it('returns a deep clone of the entity\'s subtree, including all components', () => {
+        it('returns a deep clone of the entity\'s subtree, including all components', function () {
             const subtree1 = createSubtree();
             const subtree2 = cloneSubtree(subtree1);
 
@@ -332,7 +332,7 @@ describe('Entity', () => {
             expect(subtree1.a_a_b.getGuid()).to.not.equal(subtree2.a_a_b.getGuid());
         });
 
-        it('resolves entity property references that refer to entities within the duplicated subtree', () => {
+        it('resolves entity property references that refer to entities within the duplicated subtree', function () {
             const subtree1 = createSubtree();
             subtree1.a.addComponent('dummy', { myEntity1: subtree1.a_a.getGuid(), myEntity2: subtree1.a_a_b.getGuid() });
             subtree1.a_a_a.addComponent('dummy', { myEntity1: subtree1.a.getGuid(), myEntity2: subtree1.a_b.getGuid() });
@@ -344,7 +344,7 @@ describe('Entity', () => {
             expect(subtree2.a_a_a.dummy.myEntity2).to.equal(subtree2.a_b.getGuid());
         });
 
-        it('resolves entity property references that refer to the cloned entity itself', () => {
+        it('resolves entity property references that refer to the cloned entity itself', function () {
             const subtree1 = createSubtree();
             subtree1.a.addComponent('dummy', { myEntity1: subtree1.a.getGuid() });
             subtree1.a_a_a.addComponent('dummy', { myEntity1: subtree1.a_a_a.getGuid() });
@@ -354,7 +354,7 @@ describe('Entity', () => {
             expect(subtree2.a_a_a.dummy.myEntity1).to.equal(subtree2.a_a_a.getGuid());
         });
 
-        it('does not attempt to resolve entity property references that refer to entities outside of the duplicated subtree', () => {
+        it('does not attempt to resolve entity property references that refer to entities outside of the duplicated subtree', function () {
             const root = new Entity('root', app);
             const sibling = new Entity('sibling', app);
 
@@ -369,7 +369,7 @@ describe('Entity', () => {
             expect(subtree2.a.dummy.myEntity2).to.equal(sibling.getGuid());
         });
 
-        it('ignores null and undefined entity property references', () => {
+        it('ignores null and undefined entity property references', function () {
             const subtree1 = createSubtree();
             subtree1.a.addComponent('dummy', { myEntity1: null, myEntity2: undefined });
 
@@ -378,7 +378,7 @@ describe('Entity', () => {
             expect(subtree2.a.dummy.myEntity2).to.be.undefined;
         });
 
-        it('resolves entity script attributes that refer to entities within the duplicated subtree', () => {
+        it('resolves entity script attributes that refer to entities within the duplicated subtree', function () {
             const TestScript = createScript('test');
             TestScript.attributes.add('entityAttr', { type: 'entity' });
             TestScript.attributes.add('entityArrayAttr', { type: 'entity', array: true });
@@ -425,7 +425,7 @@ describe('Entity', () => {
             expect(subtree2.a_a.script.test.entityArrayAttr[1].getGuid()).to.equal(subtree2.a_a_a.getGuid());
         });
 
-        it('resolves entity script attributes that refer to entities within the duplicated subtree after preloading has finished', () => {
+        it('resolves entity script attributes that refer to entities within the duplicated subtree after preloading has finished', function () {
             const TestScript = createScript('test');
             TestScript.attributes.add('entityAttr', { type: 'entity' });
             TestScript.attributes.add('entityArrayAttr', { type: 'entity', array: true });
@@ -475,7 +475,7 @@ describe('Entity', () => {
             expect(subtree2.a_a.script.test.entityArrayAttr[1].getGuid()).to.equal(subtree2.a_a_a.getGuid());
         });
 
-        it('does not attempt to resolve entity script attributes that refer to entities outside of the duplicated subtree', () => {
+        it('does not attempt to resolve entity script attributes that refer to entities outside of the duplicated subtree', function () {
             const TestScript = createScript('test');
             TestScript.attributes.add('entityAttr', { type: 'entity' });
             TestScript.attributes.add('entityArrayAttr', { type: 'entity', array: true });
@@ -506,7 +506,7 @@ describe('Entity', () => {
             expect(subtree2.a_a.script.test.entityArrayAttr[1].getGuid()).to.equal(app.root.getGuid());
         });
 
-        it('ensures that an instance of a subclass keeps its class prototype', () => {
+        it('ensures that an instance of a subclass keeps its class prototype', function () {
             class UserEntity extends Entity {}
             const a = new UserEntity();
             const b = a.clone();
@@ -514,13 +514,13 @@ describe('Entity', () => {
         });
     });
 
-    describe('#destroy', () => {
+    describe('#destroy', function () {
 
-        it('destroys the entity', () => {
+        it('destroys the entity', function () {
             const entity = new Entity();
 
             let destroyed = false;
-            entity.on('destroy', () => {
+            entity.on('destroy', function () {
                 destroyed = true;
             });
             entity.destroy();
@@ -530,21 +530,21 @@ describe('Entity', () => {
 
     });
 
-    describe('#findByGuid', () => {
+    describe('#findByGuid', function () {
 
-        it('returns same entity', () => {
+        it('returns same entity', function () {
             const e = new Entity();
             expect(e.findByGuid(e.getGuid())).to.equal(e);
         });
 
-        it('returns direct child entity', () => {
+        it('returns direct child entity', function () {
             const e = new Entity();
             const c = new Entity();
             e.addChild(c);
             expect(e.findByGuid(c.getGuid())).to.equal(c);
         });
 
-        it('returns child of child entity', () => {
+        it('returns child of child entity', function () {
             const e = new Entity();
             const c = new Entity();
             const c2 = new Entity();
@@ -553,14 +553,14 @@ describe('Entity', () => {
             expect(e.findByGuid(c2.getGuid())).to.equal(c2);
         });
 
-        it('does not return parent', () => {
+        it('does not return parent', function () {
             const e = new Entity();
             const c = new Entity();
             e.addChild(c);
             expect(c.findByGuid(e.getGuid())).to.equal(null);
         });
 
-        it('does not return destroyed entity', () => {
+        it('does not return destroyed entity', function () {
             const e = new Entity();
             const c = new Entity();
             e.addChild(c);
@@ -568,7 +568,7 @@ describe('Entity', () => {
             expect(e.findByGuid(c.getGuid())).to.equal(null);
         });
 
-        it('does not return entity that was removed from hierarchy', () => {
+        it('does not return entity that was removed from hierarchy', function () {
             const e = new Entity();
             const c = new Entity();
             e.addChild(c);
@@ -576,29 +576,29 @@ describe('Entity', () => {
             expect(e.findByGuid(c.getGuid())).to.equal(null);
         });
 
-        it('does not return entity that does not exist', () => {
+        it('does not return entity that does not exist', function () {
             expect(app.root.findByGuid('missing')).to.equal(null);
         });
 
     });
 
-    describe('#findComponent', () => {
+    describe('#findComponent', function () {
 
-        it('finds component on single entity', () => {
+        it('finds component on single entity', function () {
             const e = new Entity();
             e.addComponent('anim');
             const component = e.findComponent('anim');
             expect(component).to.be.an.instanceof(AnimComponent);
         });
 
-        it('returns null when component is not found', () => {
+        it('returns null when component is not found', function () {
             const e = new Entity();
             e.addComponent('anim');
             const component = e.findComponent('render');
             expect(component).to.be.null;
         });
 
-        it('finds component on child entity', () => {
+        it('finds component on child entity', function () {
             const root = new Entity();
             const child = new Entity();
             root.addChild(child);
@@ -607,7 +607,7 @@ describe('Entity', () => {
             expect(component).to.be.an.instanceof(AnimComponent);
         });
 
-        it('finds component on grandchild entity', () => {
+        it('finds component on grandchild entity', function () {
             const root = new Entity();
             const child = new Entity();
             const grandchild = new Entity();
@@ -618,7 +618,7 @@ describe('Entity', () => {
             expect(component).to.be.an.instanceof(AnimComponent);
         });
 
-        it('does not find component on parent entity', () => {
+        it('does not find component on parent entity', function () {
             const root = new Entity();
             const child = new Entity();
             root.addChild(child);
@@ -629,9 +629,9 @@ describe('Entity', () => {
 
     });
 
-    describe('#findComponents', () => {
+    describe('#findComponents', function () {
 
-        it('finds components on single entity', () => {
+        it('finds components on single entity', function () {
             const e = new Entity();
             e.addComponent('anim');
             const components = e.findComponents('anim');
@@ -640,7 +640,7 @@ describe('Entity', () => {
             expect(components[0]).to.be.an.instanceof(AnimComponent);
         });
 
-        it('returns empty array when no components are found', () => {
+        it('returns empty array when no components are found', function () {
             const e = new Entity();
             e.addComponent('anim');
             const components = e.findComponents('render');
@@ -648,7 +648,7 @@ describe('Entity', () => {
             expect(components.length).to.equal(0);
         });
 
-        it('finds components on child entity', () => {
+        it('finds components on child entity', function () {
             const root = new Entity();
             const child = new Entity();
             root.addChild(child);
@@ -659,7 +659,7 @@ describe('Entity', () => {
             expect(components[0]).to.be.an.instanceof(AnimComponent);
         });
 
-        it('finds components on 3 entity hierarchy', () => {
+        it('finds components on 3 entity hierarchy', function () {
             const root = new Entity();
             const child = new Entity();
             const grandchild = new Entity();
@@ -676,7 +676,7 @@ describe('Entity', () => {
             expect(components[2]).to.be.an.instanceof(AnimComponent);
         });
 
-        it('does not find components on parent entity', () => {
+        it('does not find components on parent entity', function () {
             const root = new Entity();
             const child = new Entity();
             root.addChild(child);
@@ -688,9 +688,9 @@ describe('Entity', () => {
 
     });
 
-    describe('#findScript', () => {
+    describe('#findScript', function () {
 
-        it('finds script on single entity', () => {
+        it('finds script on single entity', function () {
             const MyScript = createScript('myScript');
             const e = new Entity();
             e.addComponent('script');
@@ -699,7 +699,7 @@ describe('Entity', () => {
             expect(script).to.be.an.instanceof(MyScript);
         });
 
-        it('returns undefined when script is not found', () => {
+        it('returns undefined when script is not found', function () {
             const root = new Entity();
             const child = new Entity();
             root.addChild(child);
@@ -708,7 +708,7 @@ describe('Entity', () => {
             expect(script).to.be.undefined;
         });
 
-        it('returns undefined when script component is not found', () => {
+        it('returns undefined when script component is not found', function () {
             const root = new Entity();
             const child = new Entity();
             root.addChild(child);
@@ -716,7 +716,7 @@ describe('Entity', () => {
             expect(script).to.be.undefined;
         });
 
-        it('finds script on child entity', () => {
+        it('finds script on child entity', function () {
             const MyScript = createScript('myScript');
             const root = new Entity();
             const child = new Entity();
@@ -727,7 +727,7 @@ describe('Entity', () => {
             expect(script).to.be.an.instanceof(MyScript);
         });
 
-        it('finds script on grandchild entity', () => {
+        it('finds script on grandchild entity', function () {
             const MyScript = createScript('myScript');
             const root = new Entity();
             const child = new Entity();
@@ -740,7 +740,7 @@ describe('Entity', () => {
             expect(script).to.be.an.instanceof(MyScript);
         });
 
-        it('does not find script on parent entity', () => {
+        it('does not find script on parent entity', function () {
             createScript('myScript');
             const root = new Entity();
             const child = new Entity();
@@ -753,9 +753,9 @@ describe('Entity', () => {
 
     });
 
-    describe('#findScripts', () => {
+    describe('#findScripts', function () {
 
-        it('finds scripts on single entity', () => {
+        it('finds scripts on single entity', function () {
             const MyScript = createScript('myScript');
             const e = new Entity();
             e.addComponent('script');
@@ -766,7 +766,7 @@ describe('Entity', () => {
             expect(scripts[0]).to.be.an.instanceof(MyScript);
         });
 
-        it('returns empty array when no scripts are found', () => {
+        it('returns empty array when no scripts are found', function () {
             const root = new Entity();
             const child = new Entity();
             root.addChild(child);
@@ -776,7 +776,7 @@ describe('Entity', () => {
             expect(scripts.length).to.equal(0);
         });
 
-        it('returns empty array when no script component are found', () => {
+        it('returns empty array when no script component are found', function () {
             const root = new Entity();
             const child = new Entity();
             root.addChild(child);
@@ -785,7 +785,7 @@ describe('Entity', () => {
             expect(scripts.length).to.equal(0);
         });
 
-        it('finds scripts on child entity', () => {
+        it('finds scripts on child entity', function () {
             const MyScript = createScript('myScript');
             const root = new Entity();
             const child = new Entity();
@@ -798,7 +798,7 @@ describe('Entity', () => {
             expect(scripts[0]).to.be.an.instanceof(MyScript);
         });
 
-        it('finds scripts on 3 entity hierarchy', () => {
+        it('finds scripts on 3 entity hierarchy', function () {
             const MyScript = createScript('myScript');
             const root = new Entity();
             const child = new Entity();
@@ -819,7 +819,7 @@ describe('Entity', () => {
             expect(scripts[2]).to.be.an.instanceof(MyScript);
         });
 
-        it('does not find scripts on parent entity', () => {
+        it('does not find scripts on parent entity', function () {
             createScript('myScript');
             const root = new Entity();
             const child = new Entity();
@@ -833,9 +833,9 @@ describe('Entity', () => {
 
     });
 
-    describe('#removeComponent', () => {
+    describe('#removeComponent', function () {
 
-        it('removes a component from the entity', () => {
+        it('removes a component from the entity', function () {
             const entity = new Entity();
             expect(entity.anim).to.be.undefined;
             entity.addComponent('anim');

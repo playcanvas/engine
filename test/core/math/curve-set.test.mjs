@@ -3,25 +3,25 @@ import { CurveSet } from '../../../src/core/math/curve-set.js';
 
 import { expect } from 'chai';
 
-describe('CurveSet', () => {
+describe('CurveSet', function () {
 
-    describe('#constructor', () => {
+    describe('#constructor', function () {
 
-        it('supports zero arguments', () => {
+        it('supports zero arguments', function () {
             const curveSet = new CurveSet();
 
             expect(curveSet.length).to.equal(1);
             expect(curveSet.type).to.equal(CURVE_SMOOTHSTEP);
         });
 
-        it('supports one number argument', () => {
+        it('supports one number argument', function () {
             const curveSet = new CurveSet(3);
 
             expect(curveSet.length).to.equal(3);
             expect(curveSet.type).to.equal(CURVE_SMOOTHSTEP);
         });
 
-        it('supports one array argument', () => {
+        it('supports one array argument', function () {
             const curveSet = new CurveSet([
                 [
                     0, 0,        // At 0 time, value of 0
@@ -43,15 +43,15 @@ describe('CurveSet', () => {
 
     });
 
-    describe('#type', () => {
+    describe('#type', function () {
 
-        it('is CURVE_SMOOTHSTEP by default', () => {
+        it('is CURVE_SMOOTHSTEP by default', function () {
             const curveSet = new CurveSet();
 
             expect(curveSet.type).to.equal(CURVE_SMOOTHSTEP);
         });
 
-        it('can be set to CURVE_LINEAR', () => {
+        it('can be set to CURVE_LINEAR', function () {
             const curveSet = new CurveSet();
 
             curveSet.type = CURVE_LINEAR;
@@ -59,7 +59,7 @@ describe('CurveSet', () => {
             expect(curveSet.type).to.equal(CURVE_LINEAR);
         });
 
-        it('can be set to CURVE_SMOOTHSTEP', () => {
+        it('can be set to CURVE_SMOOTHSTEP', function () {
             const curveSet = new CurveSet();
 
             curveSet.type = CURVE_SMOOTHSTEP;
@@ -67,7 +67,7 @@ describe('CurveSet', () => {
             expect(curveSet.type).to.equal(CURVE_SMOOTHSTEP);
         });
 
-        it('can be set to CURVE_SPLINE', () => {
+        it('can be set to CURVE_SPLINE', function () {
             const curveSet = new CurveSet();
 
             curveSet.type = CURVE_SPLINE;
@@ -75,7 +75,7 @@ describe('CurveSet', () => {
             expect(curveSet.type).to.equal(CURVE_SPLINE);
         });
 
-        it('can be set to CURVE_STEP', () => {
+        it('can be set to CURVE_STEP', function () {
             const curveSet = new CurveSet();
 
             curveSet.type = CURVE_STEP;
@@ -83,7 +83,7 @@ describe('CurveSet', () => {
             expect(curveSet.type).to.equal(CURVE_STEP);
         });
 
-        it('sets the type property of all curves in the curve set', () => {
+        it('sets the type property of all curves in the curve set', function () {
             const curveSet = new CurveSet([
                 [
                     0, 0,        // At 0 time, value of 0
@@ -130,9 +130,9 @@ describe('CurveSet', () => {
 
     });
 
-    describe('#clone()', () => {
+    describe('#clone()', function () {
 
-        it('clones a simple curve set', () => {
+        it('clones a simple curve set', function () {
             const curveSet = new CurveSet();
             const clone = curveSet.clone();
 
@@ -141,7 +141,7 @@ describe('CurveSet', () => {
             expect(clone.type).to.equal(curveSet.type);
         });
 
-        it('clones a complex curve set', () => {
+        it('clones a complex curve set', function () {
             const curveSet = new CurveSet([
                 [
                     0, 0,        // At 0 time, value of 0
@@ -181,7 +181,7 @@ describe('CurveSet', () => {
             }
         });
 
-        it('ensures that an instance of a subclass keeps its class prototype', () => {
+        it('ensures that an instance of a subclass keeps its class prototype', function () {
             class UserCurveSet extends CurveSet {}
             const a = new UserCurveSet();
             const b = a.clone();
@@ -189,9 +189,9 @@ describe('CurveSet', () => {
         });
     });
 
-    describe('#get()', () => {
+    describe('#get()', function () {
 
-        it('returns the curve at the given index', () => {
+        it('returns the curve at the given index', function () {
             const curveSet = new CurveSet([
                 [
                     0, 0,        // At 0 time, value of 0
@@ -225,9 +225,9 @@ describe('CurveSet', () => {
 
     });
 
-    describe('#value()', () => {
+    describe('#value()', function () {
 
-        it('returns the optional array parameter', () => {
+        it('returns the optional array parameter', function () {
             const curveSet = new CurveSet([
                 [
                     0, 0,
@@ -246,7 +246,7 @@ describe('CurveSet', () => {
             expect(input).to.equal(output);
         });
 
-        it('fills a supplied array with interpolated values based on the specified time (linear)', () => {
+        it('fills a supplied array with interpolated values based on the specified time (linear)', function () {
             const curveSet = new CurveSet([
                 [
                     0, 0,
@@ -279,7 +279,7 @@ describe('CurveSet', () => {
             expect(result).to.deep.equal([0, 1]);
         });
 
-        it('fills a supplied array with interpolated values based on the specified time (smoothstep)', () => {
+        it('fills a supplied array with interpolated values based on the specified time (smoothstep)', function () {
             const curveSet = new CurveSet([
                 [
                     0, 0,
@@ -308,7 +308,7 @@ describe('CurveSet', () => {
             expect(result).to.deep.equal([0.5, 0.5]);
         });
 
-        it('fills a supplied array with interpolated values based on the specified time (spline)', () => {
+        it('fills a supplied array with interpolated values based on the specified time (spline)', function () {
             const curveSet = new CurveSet([
                 [
                     0, 0,
@@ -341,7 +341,7 @@ describe('CurveSet', () => {
             expect(result).to.deep.equal([0, 1]);
         });
 
-        it('fills a supplied array with interpolated values based on the specified time (step)', () => {
+        it('fills a supplied array with interpolated values based on the specified time (step)', function () {
             const curveSet = new CurveSet([
                 [
                     0, 0,

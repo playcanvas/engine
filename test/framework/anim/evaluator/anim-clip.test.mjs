@@ -6,10 +6,10 @@ import { AnimEvents } from '../../../../src/framework/anim/evaluator/anim-events
 import { INTERPOLATION_LINEAR } from '../../../../src/framework/anim/constants.js';
 import { expect } from 'chai';
 
-describe('AnimClip', () => {
+describe('AnimClip', function () {
     let animClip;
 
-    beforeEach(() => {
+    beforeEach(function () {
         const curves = [new AnimCurve(['path/to/entity'], 0, 0, INTERPOLATION_LINEAR)];
         const inputs = [new AnimData(1, [0, 1, 2])];
         const outputs = [new AnimData(3, [0, 0, 0, 1, 2, 3, 2, 4, 6])];
@@ -24,9 +24,9 @@ describe('AnimClip', () => {
         });
     });
 
-    describe('#constructor', () => {
+    describe('#constructor', function () {
 
-        it('instantiates correctly', () => {
+        it('instantiates correctly', function () {
             expect(animClip).to.be.ok;
             expect(animClip.name).to.equal('track');
             expect(animClip.track.name).to.equal('track');
@@ -38,18 +38,18 @@ describe('AnimClip', () => {
 
     });
 
-    describe('#_update', () => {
+    describe('#_update', function () {
 
-        it('can update the clip\'s snapshot by a given deltaTime', () => {
+        it('can update the clip\'s snapshot by a given deltaTime', function () {
             animClip._update(0.5);
             expect(animClip.snapshot._results[0]).to.deep.equal([0.5, 1, 1.5]);
         });
 
     });
 
-    describe('#pause', () => {
+    describe('#pause', function () {
 
-        it('can stop the clip from updating', () => {
+        it('can stop the clip from updating', function () {
             animClip.pause();
             animClip._update(0.5);
             expect(animClip.snapshot._results[0]).to.deep.equal([0, 0, 0]);
@@ -57,9 +57,9 @@ describe('AnimClip', () => {
 
     });
 
-    describe('#stop', () => {
+    describe('#stop', function () {
 
-        it('pauses the clip and moves the cursor to the start', () => {
+        it('pauses the clip and moves the cursor to the start', function () {
             animClip._update(0.5);
             animClip.stop();
             animClip._update(0.5);
@@ -68,9 +68,9 @@ describe('AnimClip', () => {
 
     });
 
-    describe('#reset', () => {
+    describe('#reset', function () {
 
-        it('moves the cursor to the start', () => {
+        it('moves the cursor to the start', function () {
             animClip._update(0.5);
             animClip.reset();
             animClip._update(0);
@@ -79,9 +79,9 @@ describe('AnimClip', () => {
 
     });
 
-    describe('#resume', () => {
+    describe('#resume', function () {
 
-        it('moves the cursor to the start', () => {
+        it('moves the cursor to the start', function () {
             animClip.pause();
             animClip.resume();
             animClip._update(0.5);
@@ -90,9 +90,9 @@ describe('AnimClip', () => {
 
     });
 
-    describe('#play', () => {
+    describe('#play', function () {
 
-        it('plays the clip from the beginning', () => {
+        it('plays the clip from the beginning', function () {
             animClip._update(0.5);
             animClip.pause();
             animClip.play();
@@ -102,9 +102,9 @@ describe('AnimClip', () => {
 
     });
 
-    describe('#time', () => {
+    describe('#time', function () {
 
-        it('aligns the clips eventCursor property when setting the time', () => {
+        it('aligns the clips eventCursor property when setting the time', function () {
             expect(animClip.eventCursor).to.equal(0);
             animClip.time = 1.1;
             expect(animClip.eventCursor).to.equal(2);
@@ -114,7 +114,7 @@ describe('AnimClip', () => {
             expect(animClip.eventCursor).to.equal(0);
         });
 
-        it('updates the clips eventCursor property as the clip updates forwards', () => {
+        it('updates the clips eventCursor property as the clip updates forwards', function () {
             expect(animClip.time).to.equal(0);
             expect(animClip.eventCursor).to.equal(0);
             animClip._update(0.55);
@@ -131,7 +131,7 @@ describe('AnimClip', () => {
             expect(animClip.eventCursor).to.equal(0);
         });
 
-        it('updates the clips eventCursor property as the clip updates backwards', () => {
+        it('updates the clips eventCursor property as the clip updates backwards', function () {
             animClip.speed = -1;
             animClip.time = 2;
             expect(animClip.time).to.equal(2);

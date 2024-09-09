@@ -5,14 +5,14 @@ import { NullGraphicsDevice } from '../../../src/platform/graphics/null/null-gra
 
 import { DummyComponentSystem } from '../test-component/system.mjs';
 
-import { HTMLCanvasElement } from '@playcanvas/canvas-mock';
+import { createCanvas } from 'canvas';
 
 import { expect } from 'chai';
 import { restore, spy, stub } from 'sinon';
 
 /** @typedef {import('../../../../src/framework/components/component.js').Component} Component */
 
-describe('EntityReference', () => {
+describe('EntityReference', function () {
     /** @type {Application} */
     let app;
     /** @type {Entity} */
@@ -24,8 +24,8 @@ describe('EntityReference', () => {
     /** @type {Entity} */
     let otherEntity2;
 
-    beforeEach(() => {
-        const canvas = new HTMLCanvasElement(500, 500);
+    beforeEach(function () {
+        const canvas = createCanvas(500, 500);
         app = new Application(canvas, { graphicsDevice: new NullGraphicsDevice(canvas) });
 
         app.systems.add(new DummyComponentSystem(app));
@@ -42,7 +42,7 @@ describe('EntityReference', () => {
         app.root.addChild(otherEntity2);
     });
 
-    afterEach(() => {
+    afterEach(function () {
         restore();
         app.destroy();
     });
@@ -67,7 +67,7 @@ describe('EntityReference', () => {
         return entity._callbacks.get(eventName)?.length || 0;
     }
 
-    it('provides a reference to the entity once the guid is populated', () => {
+    it('provides a reference to the entity once the guid is populated', function () {
         const reference = new EntityReference(testComponent, 'myEntity1');
         expect(reference.entity).to.equal(null);
 
@@ -75,7 +75,7 @@ describe('EntityReference', () => {
         expect(reference.entity).to.equal(otherEntity1);
     });
 
-    it('does not attempt to resolve the entity reference if the parent component is not on the scene graph yet', () => {
+    it('does not attempt to resolve the entity reference if the parent component is not on the scene graph yet', function () {
         app.root.removeChild(testEntity);
 
         spy(app.root, 'findByGuid');
@@ -87,7 +87,7 @@ describe('EntityReference', () => {
         expect(app.root.findByGuid.callCount).to.equal(0);
     });
 
-    it('resolves the entity reference when onParentComponentEnable() is called', () => {
+    it('resolves the entity reference when onParentComponentEnable() is called', function () {
         app.root.removeChild(testEntity);
 
         const reference = new EntityReference(testComponent, 'myEntity1');
@@ -100,7 +100,7 @@ describe('EntityReference', () => {
         expect(reference.entity).to.equal(otherEntity1);
     });
 
-    it('nullifies the reference when the guid is nullified', () => {
+    it('nullifies the reference when the guid is nullified', function () {
         const reference = new EntityReference(testComponent, 'myEntity1');
         testComponent.myEntity1 = otherEntity1.getGuid();
         expect(reference.entity).to.equal(otherEntity1);
@@ -109,7 +109,7 @@ describe('EntityReference', () => {
         expect(reference.entity).to.equal(null);
     });
 
-    it('nullifies the reference when the referenced entity is destroyed', () => {
+    it('nullifies the reference when the referenced entity is destroyed', function () {
         const reference = new EntityReference(testComponent, 'myEntity1');
         testComponent.myEntity1 = otherEntity1.getGuid();
         expect(reference.entity).to.equal(otherEntity1);
@@ -118,7 +118,7 @@ describe('EntityReference', () => {
         expect(reference.entity).to.equal(null);
     });
 
-    it('removes all entity and component listeners when the guid is reassigned', () => {
+    it('removes all entity and component listeners when the guid is reassigned', function () {
         const reference = new EntityReference(testComponent, 'myEntity1', {
             'entity#foo': stub(),
             'dummy#bar': stub()
@@ -134,7 +134,7 @@ describe('EntityReference', () => {
         expect(getNumListenersForEvent(otherEntity1.dummy, 'bar')).to.equal(0);
     });
 
-    it('removes all entity and component listeners when the parent component is removed', () => {
+    it('removes all entity and component listeners when the parent component is removed', function () {
         const reference = new EntityReference(testComponent, 'myEntity1', {
             'entity#foo': stub(),
             'dummy#bar': stub()
@@ -154,7 +154,7 @@ describe('EntityReference', () => {
         expect(getNumListenersForEvent(app.systems.dummy, 'beforeremove')).to.equal(0);
     });
 
-    it('removes all entity and component listeners when the parent component\'s entity is destroyed', () => {
+    it('removes all entity and component listeners when the parent component\'s entity is destroyed', function () {
         const reference = new EntityReference(testComponent, 'myEntity1', {
             'entity#foo': stub(),
             'dummy#bar': stub()
@@ -174,7 +174,7 @@ describe('EntityReference', () => {
         expect(getNumListenersForEvent(app.systems.dummy, 'beforeremove')).to.equal(0);
     });
 
-    it('fires component gain events when a guid is first assigned, if the referenced entity already has the component', () => {
+    it('fires component gain events when a guid is first assigned, if the referenced entity already has the component', function () {
         const gainListener = stub();
 
         const reference = new EntityReference(testComponent, 'myEntity1', {
@@ -187,7 +187,7 @@ describe('EntityReference', () => {
         expect(gainListener.callCount).to.equal(1);
     });
 
-    it('fires component gain events once a component is added', () => {
+    it('fires component gain events once a component is added', function () {
         const gainListener = stub();
 
         const reference = new EntityReference(testComponent, 'myEntity2', {
@@ -204,7 +204,7 @@ describe('EntityReference', () => {
         expect(gainListener.callCount).to.equal(1);
     });
 
-    it('fires component lose and gain events when a component is removed and re-added', () => {
+    it('fires component lose and gain events when a component is removed and re-added', function () {
         const gainListener = stub();
         const loseListener = stub();
 
@@ -230,7 +230,7 @@ describe('EntityReference', () => {
         expect(loseListener.callCount).to.equal(1);
     });
 
-    it('fires component lose events when the guid is reassigned, but only for component types that the entity had', () => {
+    it('fires component lose events when the guid is reassigned, but only for component types that the entity had', function () {
         const dummyLoseListener = stub();
         const lightLoseListener = stub();
 
@@ -251,7 +251,7 @@ describe('EntityReference', () => {
         expect(lightLoseListener.callCount).to.equal(0);
     });
 
-    it('forwards any events dispatched by a component', () => {
+    it('forwards any events dispatched by a component', function () {
         const fooListener = stub();
         const barListener = stub();
 
@@ -276,7 +276,7 @@ describe('EntityReference', () => {
         expect(barListener.getCall(0).args[1]).to.equal('d');
     });
 
-    it('correctly handles component event forwarding across component removal and subsequent re-addition', () => {
+    it('correctly handles component event forwarding across component removal and subsequent re-addition', function () {
         const fooListener = stub();
         const barListener = stub();
 
@@ -305,7 +305,7 @@ describe('EntityReference', () => {
         expect(barListener.callCount).to.equal(1);
     });
 
-    it('forwards any events dispatched by the entity', () => {
+    it('forwards any events dispatched by the entity', function () {
         const fooListener = stub();
         const barListener = stub();
 
@@ -330,7 +330,7 @@ describe('EntityReference', () => {
         expect(barListener.getCall(0).args[1]).to.equal('d');
     });
 
-    it('correctly handles entity event forwarding across entity nullification and subsequent reassignment', () => {
+    it('correctly handles entity event forwarding across entity nullification and subsequent reassignment', function () {
         const fooListener = stub();
         const barListener = stub();
 
@@ -357,7 +357,7 @@ describe('EntityReference', () => {
         expect(barListener.callCount).to.equal(1);
     });
 
-    it('validates the event map', () => {
+    it('validates the event map', function () {
         function testEventMap(eventMap) {
             const reference = new EntityReference(testComponent, 'myEntity1', eventMap);
             expect(reference).to.be.ok;
@@ -382,7 +382,7 @@ describe('EntityReference', () => {
         }).to.throw('Invalid or missing callback for event listener `foo#bar`');
     });
 
-    it('logs a warning if the entity property is set to anything other than a string, undefined or null', () => {
+    it('logs a warning if the entity property is set to anything other than a string, undefined or null', function () {
         stub(console, 'warn');
 
         const reference = new EntityReference(testComponent, 'myEntity1');
@@ -400,7 +400,7 @@ describe('EntityReference', () => {
         expect(console.warn.getCall(0).args[0]).to.equal('Entity field `myEntity1` was set to unexpected type \'object\'');
     });
 
-    it('set reference to a Entity instead of guid, converts property to guid', () => {
+    it('set reference to a Entity instead of guid, converts property to guid', function () {
         const reference = new EntityReference(testComponent, 'myEntity1');
         testComponent.myEntity1 = otherEntity1;
 
@@ -408,7 +408,7 @@ describe('EntityReference', () => {
         expect(reference.entity).to.equal(otherEntity1);
     });
 
-    it('set reference to a Entity that is not in hierarchy, converts property to guid', () => {
+    it('set reference to a Entity that is not in hierarchy, converts property to guid', function () {
         const reference = new EntityReference(testComponent, 'myEntity1');
         const entity = new Entity();
         testComponent.myEntity1 = entity;
@@ -417,13 +417,13 @@ describe('EntityReference', () => {
         expect(reference.entity).to.equal(entity);
     });
 
-    it('hasComponent() returns false if the entity is not present', () => {
+    it('hasComponent() returns false if the entity is not present', function () {
         const reference = new EntityReference(testComponent, 'myEntity1');
 
         expect(reference.hasComponent('dummy')).to.equal(false);
     });
 
-    it('hasComponent() returns false if the entity is present but does not have a component of the provided type', () => {
+    it('hasComponent() returns false if the entity is present but does not have a component of the provided type', function () {
         const reference = new EntityReference(testComponent, 'myEntity1');
         testComponent.myEntity1 = otherEntity1.getGuid();
         otherEntity1.removeComponent('dummy');
@@ -431,7 +431,7 @@ describe('EntityReference', () => {
         expect(reference.hasComponent('dummy')).to.equal(false);
     });
 
-    it('hasComponent() returns true if the entity is present and has a component of the provided type', () => {
+    it('hasComponent() returns true if the entity is present and has a component of the provided type', function () {
         const reference = new EntityReference(testComponent, 'myEntity1');
         testComponent.myEntity1 = otherEntity1.getGuid();
 

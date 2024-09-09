@@ -18,7 +18,7 @@ function babelOptions(isDebug, isUMD) {
             [
                 '@babel/preset-env', {
                     bugfixes: !isUMD,
-                    loose: true, // DECPRECATED IN BABEL 8
+                    loose: true, // DEPRECATED IN BABEL 8
                     modules: false,
                     targets: {
                         esmodules: !isUMD,

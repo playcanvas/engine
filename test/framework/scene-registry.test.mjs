@@ -2,26 +2,26 @@ import { Application } from '../../src/framework/application.js';
 import { SceneRegistry } from '../../src/framework/scene-registry.js';
 import { NullGraphicsDevice } from '../../src/platform/graphics/null/null-graphics-device.js';
 
-import { HTMLCanvasElement } from '@playcanvas/canvas-mock';
+import { createCanvas } from 'canvas';
 
 import { expect } from 'chai';
 
-describe('SceneRegistry', () => {
+describe('SceneRegistry', function () {
 
     let app;
 
-    beforeEach(() => {
-        const canvas = new HTMLCanvasElement(500, 500);
+    beforeEach(function () {
+        const canvas = createCanvas(500, 500);
         app = new Application(canvas, { graphicsDevice: new NullGraphicsDevice(canvas) });
     });
 
-    afterEach(() => {
+    afterEach(function () {
         app.destroy();
     });
 
-    describe('#constructor', () => {
+    describe('#constructor', function () {
 
-        it('creates a new scene registry', () => {
+        it('creates a new scene registry', function () {
             const registry = new SceneRegistry(app);
 
             expect(registry.list().length).to.equal(0);
@@ -29,9 +29,9 @@ describe('SceneRegistry', () => {
 
     });
 
-    describe('#add', () => {
+    describe('#add', function () {
 
-        it('adds a single scene to the registry', () => {
+        it('adds a single scene to the registry', function () {
             const registry = new SceneRegistry(app);
 
             registry.add('New Scene', '/test.json');
@@ -39,7 +39,7 @@ describe('SceneRegistry', () => {
             expect(registry.list().length).to.equal(1);
         });
 
-        it('adds multiple scenes to the registry', () => {
+        it('adds multiple scenes to the registry', function () {
             const registry = new SceneRegistry(app);
             registry.add('New Scene 1', '/test1.json');
             registry.add('New Scene 2', '/test2.json');
@@ -57,9 +57,9 @@ describe('SceneRegistry', () => {
 
     });
 
-    describe('#find', () => {
+    describe('#find', function () {
 
-        it('find', () => {
+        it('find', function () {
             const registry = new SceneRegistry(app);
             registry.add('New Scene', '/test.json');
 
@@ -71,9 +71,9 @@ describe('SceneRegistry', () => {
 
     });
 
-    describe('#findByUrl', () => {
+    describe('#findByUrl', function () {
 
-        it('url index', () => {
+        it('url index', function () {
             const registry = new SceneRegistry(app);
             registry.add('New Scene 1', '/test1.json');
 
@@ -84,9 +84,9 @@ describe('SceneRegistry', () => {
 
     });
 
-    describe('#list', () => {
+    describe('#list', function () {
 
-        it('lists the scenes in the registry', () => {
+        it('lists the scenes in the registry', function () {
             const registry = new SceneRegistry(app);
             registry.add('New Scene 1', '/test1.json');
             registry.add('New Scene 2', '/test2.json');
@@ -112,7 +112,7 @@ describe('SceneRegistry', () => {
         });
     };
 
-    describe('#loadSceneData', () => {
+    describe('#loadSceneData', function () {
 
         const assetPath = 'http://localhost:3000/test/test-assets/';
 
@@ -170,9 +170,9 @@ describe('SceneRegistry', () => {
         });
     });
 
-    describe('#remove', () => {
+    describe('#remove', function () {
 
-        it('remove', () => {
+        it('remove', function () {
             const registry = new SceneRegistry(app);
             registry.add('New Scene', '/test.json');
 
@@ -182,7 +182,7 @@ describe('SceneRegistry', () => {
             expect(registry.find('New Scene')).to.equal(null);
         });
 
-        it('remove middle value', () => {
+        it('remove middle value', function () {
             const registry = new SceneRegistry(app);
             registry.add('New Scene 1', '/test1.json');
             registry.add('New Scene 2', '/test2.json');
@@ -198,7 +198,7 @@ describe('SceneRegistry', () => {
             expect(registry.find('New Scene 3').url).to.equal('/test3.json');
         });
 
-        it('remove middle, url index', () => {
+        it('remove middle, url index', function () {
             const registry = new SceneRegistry(app);
             registry.add('New Scene 1', '/test1.json');
             registry.add('New Scene 2', '/test2.json');

@@ -4,7 +4,7 @@ import { ShaderMaterial } from '../../../src/scene/materials/shader-material.js'
 
 import { expect } from 'chai';
 
-describe('Material', () => {
+describe('Material', function () {
 
     function checkDefaultMaterial(material) {
         expect(material).to.be.an.instanceof(ShaderMaterial);
@@ -26,18 +26,18 @@ describe('Material', () => {
         expect(material.stencilFront).to.not.exist;
     }
 
-    describe('#constructor()', () => {
+    describe('#constructor()', function () {
 
-        it('should create a new instance', () => {
+        it('should create a new instance', function () {
             const material = new ShaderMaterial();
             checkDefaultMaterial(material);
         });
 
     });
 
-    describe('#clone()', () => {
+    describe('#clone()', function () {
 
-        it('should clone a material', () => {
+        it('should clone a material', function () {
             const material = new ShaderMaterial();
             const clone = material.clone();
             checkDefaultMaterial(clone);
@@ -45,9 +45,9 @@ describe('Material', () => {
 
     });
 
-    describe('#copy()', () => {
+    describe('#copy()', function () {
 
-        it('should copy a material', () => {
+        it('should copy a material', function () {
             const src = new ShaderMaterial();
             const dst = new ShaderMaterial();
             dst.copy(src);

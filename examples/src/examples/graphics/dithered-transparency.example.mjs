@@ -161,47 +161,20 @@ assetListLoader.load(() => {
 
     // ------ Custom render passes set up ------
 
-    const currentOptions = {
-        camera: cameraEntity.camera, // camera used to render those passes
-        samples: 0, // number of samples for multi-sampling
-        sceneColorMap: true,
-        bloomEnabled: false,
+    const currentOptions = new pc.CameraFrameOptions();
+    currentOptions.sceneColorMap = true;
+    currentOptions.taaEnabled = true;
 
-        // enable the pre-pass to generate the depth buffer, which is needed by the TAA
-        prepassEnabled: true,
-
-        // enable temporal anti-aliasing
-        taaEnabled: true
-    };
-
-    const setupRenderPass = () => {
-        // destroy existing pass if any
-        if (cameraEntity.camera.renderPasses.length > 0) {
-            cameraEntity.camera.renderPasses[0].destroy();
-        }
-
-        // Use a render pass camera frame, which is a render pass that implements typical rendering of a camera.
-        // Internally this sets up additional passes it needs, based on the options passed to it.
-        const renderPassCamera = new pc.RenderPassCameraFrame(app, currentOptions);
-
-        const composePass = renderPassCamera.composePass;
-        composePass.toneMapping = pc.TONEMAP_ACES;
-        composePass.sharpness = currentOptions.taaEnabled ? 1 : 0;
-
-        // and set up these rendering passes to be used by the camera, instead of its default rendering
-        cameraEntity.camera.renderPasses = [renderPassCamera];
-
-        // jitter the camera when TAA is enabled
-        cameraEntity.camera.jitter = currentOptions.taaEnabled ? 1 : 0;
-    };
-
-    setupRenderPass();
+    // and set up these rendering passes to be used by the camera, instead of its default rendering
+    const renderPassCamera = new pc.RenderPassCameraFrame(app, cameraEntity.camera, currentOptions);
+    cameraEntity.camera.renderPasses = [renderPassCamera];
 
     // ------
 
     // handle UI changes
     data.on('*:set', (/** @type {string} */ path, value) => {
         const propertyName = path.split('.')[1];
+
         materials.forEach((material) => {
             // apply the value to the material
             material[propertyName] = value;
@@ -215,15 +188,19 @@ assetListLoader.load(() => {
             }
 
             material.update();
-
-            // if TAA property changes, we need to set up render passes again
-            if (propertyName === 'taa') {
-                if (currentOptions.taaEnabled !== value) {
-                    currentOptions.taaEnabled = value;
-                    setupRenderPass();
-                }
-            }
         });
+
+        // if TAA property changes
+        if (propertyName === 'taa') {
+            currentOptions.taaEnabled = data.get('data.taa');
+            renderPassCamera.update(currentOptions);
+
+            const composePass = renderPassCamera.composePass;
+            composePass.sharpness = currentOptions.taaEnabled ? 1 : 0;
+
+            // jitter the camera when TAA is enabled
+            cameraEntity.camera.jitter = currentOptions.taaEnabled ? 1 : 0;
+        }
     });
 
     // initial values

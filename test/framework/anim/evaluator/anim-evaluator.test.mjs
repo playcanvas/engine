@@ -10,14 +10,14 @@ import { DefaultAnimBinder } from '../../../../src/framework/anim/binder/default
 import { GraphNode } from '../../../../src/scene/graph-node.js';
 import { NullGraphicsDevice } from '../../../../src/platform/graphics/null/null-graphics-device.js';
 
-import { HTMLCanvasElement } from '@playcanvas/canvas-mock';
+import { createCanvas } from 'canvas';
 
 import { expect } from 'chai';
 
-describe('AnimEvaluator', () => {
+describe('AnimEvaluator', function () {
 
-    it('AnimEvaluator: update with clip blending', () => {
-        const canvas = new HTMLCanvasElement(500, 500);
+    it('AnimEvaluator: update with clip blending', function () {
+        const canvas = createCanvas(500, 500);
         const app = new Application(canvas, { graphicsDevice: new NullGraphicsDevice(canvas) });
 
         // build the graph to be animated
@@ -89,8 +89,8 @@ describe('AnimEvaluator', () => {
         expect(child1.localPosition.z).to.equal(0);
     });
 
-    it('AnimEvaluator: update without clip blending', () => {
-        const canvas = new HTMLCanvasElement(500, 500);
+    it('AnimEvaluator: update without clip blending', function () {
+        const canvas = createCanvas(500, 500);
         const app = new Application(canvas, { graphicsDevice: new NullGraphicsDevice(canvas) });
 
         // build the graph to be animated

@@ -14,16 +14,16 @@ import { ScriptRegistry } from '../../src/framework/script/script-registry.js';
 import { XrManager } from '../../src/framework/xr/xr-manager.js';
 import { NullGraphicsDevice } from '../../src/platform/graphics/null/null-graphics-device.js';
 
-import { HTMLCanvasElement } from '@playcanvas/canvas-mock';
+import { createCanvas } from 'canvas';
 
 import { expect } from 'chai';
 
-describe('Application', () => {
+describe('Application', function () {
 
-    describe('#constructor', () => {
+    describe('#constructor', function () {
 
-        it('support no options', () => {
-            const canvas = new HTMLCanvasElement(500, 500);
+        it('support no options', function () {
+            const canvas = createCanvas(500, 500);
             const app = new Application(canvas, { graphicsDevice: new NullGraphicsDevice(canvas) });
 
             expect(app.assets).to.be.instanceOf(AssetRegistry);
@@ -53,10 +53,10 @@ describe('Application', () => {
 
     });
 
-    describe('#destroy', () => {
+    describe('#destroy', function () {
 
-        it('destroys the application', () => {
-            const canvas = new HTMLCanvasElement(500, 500);
+        it('destroys the application', function () {
+            const canvas = createCanvas(500, 500);
             const app = new Application(canvas, { graphicsDevice: new NullGraphicsDevice(canvas) });
 
             app.destroy();
