@@ -18,11 +18,11 @@ describe('Mouse', function () {
     /** @type { Mouse } */
     let mouse;
 
-    beforeEach(() => {
+    beforeEach(function () {
         mouse = new Mouse(document.body);
     });
 
-    afterEach(() => {
+    afterEach(function () {
         mouse.detach();
     });
 

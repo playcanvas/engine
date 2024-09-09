@@ -9,7 +9,7 @@ import { expect } from 'chai';
 describe('AnimClip', function () {
     let animClip;
 
-    beforeEach(() => {
+    beforeEach(function () {
         const curves = [new AnimCurve(['path/to/entity'], 0, 0, INTERPOLATION_LINEAR)];
         const inputs = [new AnimData(1, [0, 1, 2])];
         const outputs = [new AnimData(3, [0, 0, 0, 1, 2, 3, 2, 4, 6])];

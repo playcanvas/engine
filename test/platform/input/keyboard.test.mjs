@@ -8,12 +8,12 @@ describe('Keyboard', function () {
     /** @type { Keyboard } */
     let keyboard;
 
-    beforeEach(() => {
+    beforeEach(function () {
         keyboard = new Keyboard();
         keyboard.attach(window);
     });
 
-    afterEach(() => {
+    afterEach(function () {
         keyboard.detach();
     });
 
