@@ -1,5 +1,7 @@
 import { Debug, DebugHelper } from '../../../core/debug.js';
+import { RefCountedKeyCache } from '../../../core/ref-counted-key-cache.js';
 import { StringIds } from '../../../core/string-ids.js';
+import { DeviceCache } from '../device-cache.js';
 import { WebgpuDebug } from './webgpu-debug.js';
 
 /**
@@ -71,6 +73,11 @@ class DepthAttachment {
     multisampledDepthBuffer = null;
 
     /**
+     * Key used to store multisampledDepthBuffer in the cache.
+     */
+    multisampledDepthBufferKey;
+
+    /**
      * @param {string} gpuFormat - The WebGPU format (GPUTextureFormat).
      */
     constructor(gpuFormat) {
@@ -79,16 +86,42 @@ class DepthAttachment {
         this.hasStencil = gpuFormat === 'depth24plus-stencil8';
     }
 
-    destroy() {
+    destroy(device) {
         if (this.depthTextureInternal) {
             this.depthTexture?.destroy();
             this.depthTexture = null;
         }
 
-        this.multisampledDepthBuffer?.destroy();
-        this.multisampledDepthBuffer = null;
+        // release multi-sampled depth buffer
+        if (this.multisampledDepthBuffer) {
+
+            this.multisampledDepthBuffer = null;
+
+            // cache its stored in
+            const msTextures = _multisampledTextureCache.get(device, () => {
+                return null;
+            });
+
+            // release reference to the texture, as its ref-counted
+            msTextures.release(this.multisampledDepthBufferKey);
+        }
     }
 }
+
+/**
+ * Reference counted cache storing multi-sampled versions of depth buffers, which are reference
+ * counted and shared between render targets using the same user-specified depth-buffer. This is
+ * needed for in cases where the user provided depth buffer is used for depth-pre-pass and then
+ * the main render pass - those need to share the same multi-sampled depth buffer.
+ */
+class MultisampledTextureCache extends RefCountedKeyCache{
+    loseContext(device) {
+        this.clear(); // just clear the cache when the context is lost
+    }
+}
+
+// a device cache storing per device instance of MultisampledTextureCache
+const _multisampledTextureCache = new DeviceCache();
 
 /**
  * A WebGPU implementation of the RenderTarget.
@@ -166,7 +199,7 @@ class WebgpuRenderTarget {
         });
         this.colorAttachments.length = 0;
 
-        this.depthAttachment?.destroy();
+        this.depthAttachment?.destroy(device);
         this.depthAttachment = null;
     }
 
@@ -244,11 +277,11 @@ class WebgpuRenderTarget {
         WebgpuDebug.validate(device);
 
         // initialize depth/stencil
-        this.initDepthStencil(wgpu, renderTarget);
+        this.initDepthStencil(device, wgpu, renderTarget);
 
         // initialize color attachments
         this.renderPassDescriptor.colorAttachments = [];
-        const count = renderTarget._colorBuffers?.length ?? 1;
+        const count = this.isBackbuffer ? 1 : (renderTarget._colorBuffers?.length ?? 0);
         for (let i = 0; i < count; ++i) {
             const colorAttachment = this.initColor(device, wgpu, renderTarget, i);
 
@@ -267,7 +300,7 @@ class WebgpuRenderTarget {
         WebgpuDebug.end(device, { renderTarget });
     }
 
-    initDepthStencil(wgpu, renderTarget) {
+    initDepthStencil(device, wgpu, renderTarget) {
 
         const { samples, width, height, depth, depthBuffer } = renderTarget;
 
@@ -316,25 +349,41 @@ class WebgpuRenderTarget {
 
                 this.depthAttachment = new DepthAttachment(depthBuffer.impl.format);
 
-                if (samples > 1) {
+                if (samples > 1) {  // create a multi-sampled depth buffer for the provided depth buffer
 
-                    // user provided depth buffer, but we need to create a multi-sampled depth buffer
+                    // key for matching multi-sampled depth buffer
+                    const key = `${depthBuffer.id}:${width}:${height}:${samples}:${depthBuffer.impl.format}`;
+                    
+                    // cache for the device
+                    const msTextures = _multisampledTextureCache.get(device, () => {
+                        return new MultisampledTextureCache();
+                    });
 
-                    /** @type {GPUTextureDescriptor} */
-                    const multisampledDepthDesc = {
-                        size: [width, height, 1],
-                        dimension: '2d',
-                        sampleCount: samples,
-                        format: depthBuffer.impl.format,
-                        usage: GPUTextureUsage.RENDER_ATTACHMENT
-                    };
+                    // check if we have already allocated a multi-sampled depth buffer for the depth buffer
+                    let msDepthTexture = msTextures.get(key); // this incRefs it if found      
+                    if (!msDepthTexture) {
 
-                    // allocate multi-sampled depth buffer
-                    const multisampledDepthBuffer = wgpu.createTexture(multisampledDepthDesc);
-                    DebugHelper.setLabel(multisampledDepthBuffer, `${renderTarget.name}.multisampledDepth`);
-                    this.depthAttachment.multisampledDepthBuffer = multisampledDepthBuffer;
+                        /** @type {GPUTextureDescriptor} */
+                        const multisampledDepthDesc = {
+                            size: [width, height, 1],
+                            dimension: '2d',
+                            sampleCount: samples,
+                            format: depthBuffer.impl.format,
+                            usage: GPUTextureUsage.RENDER_ATTACHMENT
+                        };
 
-                    renderingView = multisampledDepthBuffer.createView();
+                        // allocate multi-sampled depth buffer
+                        msDepthTexture = wgpu.createTexture(multisampledDepthDesc);
+                        DebugHelper.setLabel(msDepthTexture, `${renderTarget.name}.multisampledDepth`);
+
+                        // store it in the cache
+                        msTextures.set(key, msDepthTexture);
+                    }
+
+                    this.depthAttachment.multisampledDepthBuffer = msDepthTexture;
+                    this.depthAttachment.multisampledDepthBufferKey = key;
+
+                    renderingView = msDepthTexture.createView();
                     DebugHelper.setLabel(renderingView, `${renderTarget.name}.multisampledDepthView`);
 
                 } else {

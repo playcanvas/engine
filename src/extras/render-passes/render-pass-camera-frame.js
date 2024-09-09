@@ -271,7 +271,7 @@ class RenderPassCameraFrame extends RenderPass {
             const { app, device, cameraComponent } = this;
             const { scene, renderer } = app;
 
-            this.prePass = new RenderPassPrepass(device, scene, renderer, cameraComponent, this.sceneDepth, this.sceneOptions);
+            this.prePass = new RenderPassPrepass(device, scene, renderer, cameraComponent, this.sceneDepth, this.sceneOptions, options.samples);
         }
     }
 

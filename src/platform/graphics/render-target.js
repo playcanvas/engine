@@ -360,7 +360,7 @@ class RenderTarget {
         // TODO: consider adding support for MRT to this function.
 
         if (this._device && this._samples > 1) {
-            DebugGraphics.pushGpuMarker(this._device, `RESOLVE-RT:${this.name}`);
+            DebugGraphics.pushGpuMarker(this._device, `RESOLVE-RT:${this.name}:${color ? '[color]' : ''}:${depth ? '[depth]' : ''}`);
             this.impl.resolve(this._device, this, color, depth);
             DebugGraphics.popGpuMarker(this._device);
         }
