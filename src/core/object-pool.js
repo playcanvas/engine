@@ -1,6 +1,7 @@
 /**
  * A pool of reusable objects of the same type. Designed to promote reuse of objects to reduce
  * garbage collection.
+ *
  * @template {new (...args: any[]) => any} T
  */
 class ObjectPool {
