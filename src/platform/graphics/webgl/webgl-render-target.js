@@ -174,7 +174,7 @@ class WebglRenderTarget {
                 const attachmentPoint = target._stencil ? gl.DEPTH_STENCIL_ATTACHMENT : gl.DEPTH_ATTACHMENT;
 
                 if (depthBuffer) {
-                    // --- Init the provided depth/stencil buffer (optional, WebGL2 only) ---
+                    // --- Init the optionally provided depth/stencil buffer ---
                     if (!depthBuffer.impl._glTexture) {
                         // Clamp the render buffer size to the maximum supported by the device
                         depthBuffer._width = Math.min(depthBuffer.width, device.maxRenderBufferSize);
