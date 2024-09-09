@@ -36,34 +36,6 @@ const TREESHAKE_IGNORE_REGEXES = [
     /polyfill/
 ];
 
-const STRIP_FUNCTIONS = [
-    'Debug.assert',
-    'Debug.assertDeprecated',
-    'Debug.assertDestroyed',
-    'Debug.call',
-    'Debug.deprecated',
-    'Debug.warn',
-    'Debug.warnOnce',
-    'Debug.error',
-    'Debug.errorOnce',
-    'Debug.log',
-    'Debug.logOnce',
-    'Debug.removed',
-    'Debug.trace',
-    'DebugHelper.setName',
-    'DebugHelper.setLabel',
-    'DebugHelper.setDestroyed',
-    'DebugGraphics.toString',
-    'DebugGraphics.clearGpuMarkers',
-    'DebugGraphics.pushGpuMarker',
-    'DebugGraphics.popGpuMarker',
-    'WebgpuDebug.validate',
-    'WebgpuDebug.memory',
-    'WebgpuDebug.internal',
-    'WebgpuDebug.end',
-    'WorldClustersDebug.render'
-];
-
 const BANNER = {
     debug: ' (DEBUG)',
     release: ' (RELEASE)',
@@ -206,7 +178,7 @@ function buildTarget({ moduleFormat, buildType, bundleState, input = 'src/index.
         const target = {
             input: release.output.file,
             plugins: [
-                swc({ swc: swcOptions(isDebug, isUMD, isMin)}),
+                swc({ swc: swcOptions(isDebug, isUMD, isMin) })
             ],
             output: {
                 plugins: getOutPlugins(),
@@ -246,7 +218,7 @@ function buildTarget({ moduleFormat, buildType, bundleState, input = 'src/index.
             isUMD ? dynamicImportLegacyBrowserSupport() : undefined,
             !isDebug ? shaderChunks() : undefined,
             isDebug ? engineLayerImportValidation(input) : undefined,
-            swc({ swc: swcOptions(isDebug, isUMD, isMin)}),
+            swc({ swc: swcOptions(isDebug, isUMD, isMin) }),
             !isUMD ? dynamicImportBundlerSuppress() : undefined,
             !isDebug ? spacesToTabs() : undefined
         ]

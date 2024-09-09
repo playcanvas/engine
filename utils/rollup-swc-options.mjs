@@ -10,22 +10,29 @@
  */
 function swcOptions(isDebug, isUMD, minify) {
     return {
-        minify: minify,
+        minify,
+        module: {
+            type: 'es6' // Keep ES module syntax (equivalent to Babel's modules: false)
+        },
         jsc: {
+            'parser': {
+                'syntax': 'ecmascript'
+            },
             minify: {
                 format: {
-                    comments: isDebug ? 'all' : false
+                    comments: isDebug ? 'some' : false
                 },
                 compress: minify && isDebug ? {
-                    drop_console: false
+                    drop_console: false,
+                    pure_funcs: []
                 } : undefined
             },
             externalHelpers: false
         },
-        env: isUMD ? {
+        env: {
             loose: true,
-            targets: isUMD ? 'fully supports webgl, > 0.1%, not dead' : undefined
-        } : undefined
+            targets: isUMD ? 'fully supports webgl, > 0.1%, not dead' : 'chrome 63'
+        }
     };
 
 }
