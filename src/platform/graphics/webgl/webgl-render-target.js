@@ -169,41 +169,39 @@ class WebglRenderTarget {
             gl.drawBuffers(buffers);
 
             const depthBuffer = target._depthBuffer;
-            if (depthBuffer) {
-                // --- Init the provided depth/stencil buffer (optional, WebGL2 only) ---
-                if (!depthBuffer.impl._glTexture) {
-                    // Clamp the render buffer size to the maximum supported by the device
-                    depthBuffer._width = Math.min(depthBuffer.width, device.maxRenderBufferSize);
-                    depthBuffer._height = Math.min(depthBuffer.height, device.maxRenderBufferSize);
-                    device.setTexture(depthBuffer, 0);
-                }
-                // Attach
-                if (target._stencil) {
-                    gl.framebufferTexture2D(gl.FRAMEBUFFER, gl.DEPTH_STENCIL_ATTACHMENT,
+            if (depthBuffer || target._depth) {
+
+                const attachmentPoint = target._stencil ? gl.DEPTH_STENCIL_ATTACHMENT : gl.DEPTH_ATTACHMENT;
+
+                if (depthBuffer) {
+                    // --- Init the provided depth/stencil buffer (optional, WebGL2 only) ---
+                    if (!depthBuffer.impl._glTexture) {
+                        // Clamp the render buffer size to the maximum supported by the device
+                        depthBuffer._width = Math.min(depthBuffer.width, device.maxRenderBufferSize);
+                        depthBuffer._height = Math.min(depthBuffer.height, device.maxRenderBufferSize);
+                        device.setTexture(depthBuffer, 0);
+                    }
+
+                    // Attach
+                    gl.framebufferTexture2D(gl.FRAMEBUFFER, attachmentPoint,
                         depthBuffer._cubemap ? gl.TEXTURE_CUBE_MAP_POSITIVE_X + target._face : gl.TEXTURE_2D,
                         target._depthBuffer.impl._glTexture, 0);
+
                 } else {
-                    gl.framebufferTexture2D(gl.FRAMEBUFFER, gl.DEPTH_ATTACHMENT,
-                        depthBuffer._cubemap ? gl.TEXTURE_CUBE_MAP_POSITIVE_X + target._face : gl.TEXTURE_2D,
-                        target._depthBuffer.impl._glTexture, 0);
-                }
-            } else if (target._depth) {
-                // --- Init a new depth/stencil buffer (optional) ---
-                // if device is a MSAA RT, and no buffer to resolve to, skip creating non-MSAA depth
-                const willRenderMsaa = target._samples > 1;
-                if (!willRenderMsaa) {
-                    if (!this._glDepthBuffer) {
-                        this._glDepthBuffer = gl.createRenderbuffer();
+                    // --- Init a new depth/stencil buffer (optional) ---
+                    // if device is a MSAA RT, and no buffer to resolve to, skip creating non-MSAA depth
+                    const willRenderMsaa = target._samples > 1;
+                    if (!willRenderMsaa) {
+                        if (!this._glDepthBuffer) {
+                            this._glDepthBuffer = gl.createRenderbuffer();
+                        }
+
+                        const internalFormat = target._stencil ? gl.DEPTH24_STENCIL8 : gl.DEPTH_COMPONENT32F;
+                        gl.bindRenderbuffer(gl.RENDERBUFFER, this._glDepthBuffer);
+                        gl.renderbufferStorage(gl.RENDERBUFFER, internalFormat, target.width, target.height);
+                        gl.framebufferRenderbuffer(gl.FRAMEBUFFER, attachmentPoint, gl.RENDERBUFFER, this._glDepthBuffer);
+                        gl.bindRenderbuffer(gl.RENDERBUFFER, null);
                     }
-                    gl.bindRenderbuffer(gl.RENDERBUFFER, this._glDepthBuffer);
-                    if (target._stencil) {
-                        gl.renderbufferStorage(gl.RENDERBUFFER, gl.DEPTH_STENCIL, target.width, target.height);
-                        gl.framebufferRenderbuffer(gl.FRAMEBUFFER, gl.DEPTH_STENCIL_ATTACHMENT, gl.RENDERBUFFER, this._glDepthBuffer);
-                    } else {
-                        gl.renderbufferStorage(gl.RENDERBUFFER, gl.DEPTH_COMPONENT32F, target.width, target.height);
-                        gl.framebufferRenderbuffer(gl.FRAMEBUFFER, gl.DEPTH_ATTACHMENT, gl.RENDERBUFFER, this._glDepthBuffer);
-                    }
-                    gl.bindRenderbuffer(gl.RENDERBUFFER, null);
                 }
             }
 
@@ -260,14 +258,13 @@ class WebglRenderTarget {
                 if (!this._glMsaaDepthBuffer) {
                     this._glMsaaDepthBuffer = gl.createRenderbuffer();
                 }
+
+                const internalFormat = target._stencil ? gl.DEPTH24_STENCIL8 : gl.DEPTH_COMPONENT32F;
+                const attachmentPoint = target._stencil ? gl.DEPTH_STENCIL_ATTACHMENT : gl.DEPTH_ATTACHMENT;
+
                 gl.bindRenderbuffer(gl.RENDERBUFFER, this._glMsaaDepthBuffer);
-                if (target._stencil) {
-                    gl.renderbufferStorageMultisample(gl.RENDERBUFFER, target._samples, gl.DEPTH24_STENCIL8, target.width, target.height);
-                    gl.framebufferRenderbuffer(gl.FRAMEBUFFER, gl.DEPTH_STENCIL_ATTACHMENT, gl.RENDERBUFFER, this._glMsaaDepthBuffer);
-                } else {
-                    gl.renderbufferStorageMultisample(gl.RENDERBUFFER, target._samples, gl.DEPTH_COMPONENT32F, target.width, target.height);
-                    gl.framebufferRenderbuffer(gl.FRAMEBUFFER, gl.DEPTH_ATTACHMENT, gl.RENDERBUFFER, this._glMsaaDepthBuffer);
-                }
+                gl.renderbufferStorageMultisample(gl.RENDERBUFFER, target._samples, internalFormat, target.width, target.height);
+                gl.framebufferRenderbuffer(gl.FRAMEBUFFER, attachmentPoint, gl.RENDERBUFFER, this._glMsaaDepthBuffer);
             }
 
             Debug.call(() => this._checkFbo(device, target, 'MSAA'));
