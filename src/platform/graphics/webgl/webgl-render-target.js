@@ -1,6 +1,7 @@
 import { Debug } from '../../../core/debug.js';
 import { PIXELFORMAT_RGBA8 } from '../constants.js';
 import { DebugGraphics } from '../debug-graphics.js';
+import { getMultisampledTextureCache } from '../multi-sampled-texture-cache.js';
 
 /**
  * @import { RenderTarget } from '../render-target.js'
@@ -128,7 +129,9 @@ class WebglRenderTarget {
     init(device, target) {
         const gl = device.gl;
 
+        Debug.assert(!this._isInitialized, 'Render target already initialized.');
         this._isInitialized = true;
+
         const buffers = [];
 
         if (this.suppliedColorFramebuffer !== undefined) {
@@ -255,15 +258,40 @@ class WebglRenderTarget {
 
             // Optionally add a MSAA depth/stencil buffer
             if (target._depth) {
-                if (!this._glMsaaDepthBuffer) {
-                    this._glMsaaDepthBuffer = gl.createRenderbuffer();
-                }
 
+                Debug.assert(!this._glMsaaDepthBuffer);
                 const internalFormat = target._stencil ? gl.DEPTH24_STENCIL8 : gl.DEPTH_COMPONENT32F;
                 const attachmentPoint = target._stencil ? gl.DEPTH_STENCIL_ATTACHMENT : gl.DEPTH_ATTACHMENT;
 
-                gl.bindRenderbuffer(gl.RENDERBUFFER, this._glMsaaDepthBuffer);
-                gl.renderbufferStorageMultisample(gl.RENDERBUFFER, target._samples, internalFormat, target.width, target.height);
+                // for user specified depth buffer, shader multi-sampled depth buffer instead of allocating a new one
+                let key;
+                const depthBuffer = target._depthBuffer;
+                if (depthBuffer) {
+
+                    // key for matching multi-sampled depth buffer
+                    key = `${depthBuffer.id}:${target.width}:${target.height}:${target._samples}:${internalFormat}:${attachmentPoint}`;
+
+                    // check if we have already allocated a multi-sampled depth buffer for the depth buffer
+                    this._glMsaaDepthBuffer = getMultisampledTextureCache(device).get(key); // this incRefs it if found
+                }
+
+                // if we don't have a multi-sampled depth buffer, create one
+                if (!this._glMsaaDepthBuffer) {
+
+                    this._glMsaaDepthBuffer = gl.createRenderbuffer();
+                    gl.bindRenderbuffer(gl.RENDERBUFFER, this._glMsaaDepthBuffer);
+                    gl.renderbufferStorageMultisample(gl.RENDERBUFFER, target._samples, internalFormat, target.width, target.height);
+
+                    // store it in the cache
+                    if (depthBuffer) {
+                        getMultisampledTextureCache(device).set(key, this._glMsaaDepthBuffer);
+                    }
+                } else {
+
+                    this._glMsaaDepthBuffer = this._glMsaaDepthBuffer;
+                }
+
+                // add the depth buffer to the FBO
                 gl.framebufferRenderbuffer(gl.FRAMEBUFFER, attachmentPoint, gl.RENDERBUFFER, this._glMsaaDepthBuffer);
             }
 

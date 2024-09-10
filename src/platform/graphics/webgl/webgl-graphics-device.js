@@ -1258,6 +1258,13 @@ class WebglGraphicsDevice extends GraphicsDevice {
                 }
             }
 
+            // resolve depth/stencil buffer
+            if (target.depthBuffer && renderPass.depthStencilOps.resolveDepth) {
+                if (renderPass.samples > 1 && target.autoResolve) {
+                    target.resolve(false, true);
+                }
+            }
+
             // generate mipmaps
             for (let i = 0; i < colorBufferCount; i++) {
                 const colorOps = renderPass.colorArrayOps[i];
