@@ -2046,6 +2046,14 @@ const applySampler = (texture, gltfSampler) => {
 };
 
 let gltfTextureUniqueId = 0;
+const getTextureSource = gltfTexture => gltfTexture.extensions?.KHR_texture_basisu?.source ??
+    gltfTexture.extensions?.EXT_texture_webp?.source ??
+    gltfTexture.source;
+
+const getImageIndexFromTextureIndex = (gltf, index) => {
+    const gltfTexture = gltf.textures[index];
+    return getTextureSource(gltfTexture);
+};
 
 // create gltf images. returns an array of promises that resolve to texture assets.
 const createImages = (gltf, bufferViews, urlBase, registry, options) => {
@@ -2069,12 +2077,7 @@ const createImages = (gltf, bufferViews, urlBase, registry, options) => {
     // a Set of image indices that use sRGB textures (base and emissive)
     const getGammaTextures = (gltf) => {
         const set = new Set();
-        const getImageIndex = (index) => {
-            const gltfTexture = gltf.textures[index];
-            return gltfTexture?.extensions?.KHR_texture_basisu?.source ??
-                             gltfTexture?.extensions?.EXT_texture_webp?.source ??
-                             gltfTexture.source;
-        };
+
         if (gltf.hasOwnProperty('materials')) {
             gltf.materials.forEach((gltfMaterial) => {
 
@@ -2082,13 +2085,15 @@ const createImages = (gltf, bufferViews, urlBase, registry, options) => {
                 if (gltfMaterial.hasOwnProperty('pbrMetallicRoughness')) {
                     const pbrData = gltfMaterial.pbrMetallicRoughness;
                     if (pbrData.hasOwnProperty('baseColorTexture')) {
-                        set.add(getImageIndex(pbrData.baseColorTexture.index));
+                        const textureIndex = getImageIndexFromTextureIndex(gltf, pbrData.baseColorTexture.index);
+                        set.add(textureIndex);
                     }
                 }
 
                 // emissive
                 if (gltfMaterial.hasOwnProperty('emissiveTexture')) {
-                    set.add(getImageIndex(gltfMaterial.emissiveTexture.index));
+                    const textureIndex = getImageIndexFromTextureIndex(gltf, gltfMaterial.emissiveTexture.index);
+                    set.add(textureIndex);
                 }
             });
         }
@@ -2229,9 +2234,7 @@ const createTextures = (gltf, images, options) => {
         promise = promise.then((gltfImageIndex) => {
             // resolve image index
             gltfImageIndex = gltfImageIndex ??
-                             gltfTexture?.extensions?.KHR_texture_basisu?.source ??
-                             gltfTexture?.extensions?.EXT_texture_webp?.source ??
-                             gltfTexture.source;
+                getTextureSource(gltfTexture);
 
             const cloneAsset = seenImages.has(gltfImageIndex);
             seenImages.add(gltfImageIndex);
@@ -2311,7 +2314,7 @@ const loadBuffers = (gltf, binaryChunk, urlBase, options) => {
                     http.get(
                         ABSOLUTE_URL.test(gltfBuffer.uri) ? gltfBuffer.uri : path.join(urlBase, gltfBuffer.uri),
                         { cache: true, responseType: 'arraybuffer', retry: false },
-                        (err, result) => {                         // eslint-disable-line no-loop-func
+                        (err, result) => {
                             if (err) {
                                 reject(err);
                             } else {
