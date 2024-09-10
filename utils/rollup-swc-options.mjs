@@ -9,29 +9,27 @@
  * @returns {SWCOptions} The swc options.
  */
 function swcOptions(isDebug, isUMD, minify) {
+
     return {
         minify,
-        module: {
-            type: 'es6' // Keep ES module syntax (equivalent to Babel's modules: false)
-        },
         jsc: {
-            'parser': {
-                'syntax': 'ecmascript'
-            },
             minify: {
-                format: {
-                    comments: isDebug ? 'some' : false
-                },
-                compress: minify && isDebug ? {
-                    drop_console: false,
-                    pure_funcs: []
+                // format: {
+                //     comments: !isDebug || minify ? false : 'some'
+                // },
+                mangle: minify,
+                compress: (!isDebug && minify) ? {
+                    reduce_funcs: true,
+                    drop_console: true,
+                    pure_funcs: [],
+                    inline: 3,
                 } : undefined
             },
-            externalHelpers: false
+            externalHelpers: false,
+            loose: true,
         },
         env: {
-            loose: true,
-            targets: isUMD ? 'fully supports webgl, > 0.1%, not dead' : 'chrome 63'
+            targets: isUMD ? 'fully supports webgl and > 0.1% and not dead' : 'supports es6-module'
         }
     };
 
