@@ -124,8 +124,9 @@ class WebglRenderTarget {
             this._glMsaaDepthBuffer = null;
 
             // release reference to the texture, as its ref-counted
-            if (this.msaaDepthBufferKey)
+            if (this.msaaDepthBufferKey) {
                 getMultisampledTextureCache(device).release(this.msaaDepthBufferKey);
+            }
         }
 
         this.suppliedColorFramebuffer = undefined;
@@ -292,7 +293,7 @@ class WebglRenderTarget {
                     gl.renderbufferStorageMultisample(gl.RENDERBUFFER, target._samples, internalFormat, target.width, target.height);
 
                     // add 'destroy' method to the renderbuffer, allowing it to be destroyed by the cache
-                    this._glMsaaDepthBuffer.destroy = function() {
+                    this._glMsaaDepthBuffer.destroy = function () {
                         gl.deleteRenderbuffer(this);
                     };
 
