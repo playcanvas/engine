@@ -189,6 +189,9 @@ import transmissionPS from './standard/frag/transmission.js';
 import twoSidedLightingPS from './lit/frag/twoSidedLighting.js';
 import uv0VS from './lit/vert/uv0.js';
 import uv1VS from './lit/vert/uv1.js';
+import uv2VS from './lit/vert/uv2.js';
+import uv3VS from './lit/vert/uv3.js';
+import uv4VS from './lit/vert/uv4.js';
 import viewDirPS from './lit/frag/viewDir.js';
 import viewNormalVS from './lit/vert/viewNormal.js';
 import webgpuPS from '../../../platform/graphics/shader-chunks/frag/webgpu.js';
@@ -392,6 +395,9 @@ const shaderChunks = {
     twoSidedLightingPS,
     uv0VS,
     uv1VS,
+    uv2VS,
+    uv3VS,
+    uv4VS,
     viewDirPS,
     viewNormalVS,
     webgpuPS,

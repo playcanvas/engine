@@ -222,7 +222,7 @@ class Texture {
 
         this._width = Math.floor(options.width ?? 4);
         this._height = Math.floor(options.height ?? 4);
-
+        if (this.name.includes('HQ')) debugger;
         this._format = options.format ?? PIXELFORMAT_RGBA8;
         this._compressed = isCompressedPixelFormat(this._format);
         this._integerFormat = isIntegerPixelFormat(this._format);

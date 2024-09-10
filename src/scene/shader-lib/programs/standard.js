@@ -65,7 +65,6 @@ class ShaderGeneratorStandard extends ShaderGenerator {
         const transformId = options[transformPropName];
         const uvChannel = options[uVPropName];
         const isMainPass = options.litOptions.pass === SHADER_FORWARD;
-
         let expression;
         if (isMainPass && options.litOptions.nineSlicedMode === SPRITE_RENDERMODE_SLICED) {
             expression = 'nineSlicedUv';
@@ -113,6 +112,7 @@ class ShaderGeneratorStandard extends ShaderGenerator {
      * @private
      */
     _addMap(propName, chunkName, options, chunks, mapping, encoding = null) {
+      if (propName === 'light') console.log(options.lightMapUv)
         const mapPropName = `${propName}Map`;
         const uVPropName = `${mapPropName}Uv`;
         const identifierPropName = `${mapPropName}Identifier`;
@@ -134,7 +134,6 @@ class ShaderGeneratorStandard extends ShaderGenerator {
 
         if (textureOption) {
             const uv = this._getUvSourceExpression(transformPropName, uVPropName, options);
-
             subCode = subCode.replace(/\$UV/g, uv).replace(/\$CH/g, options[channelPropName]);
 
             if (mapping && subCode.search(/\$SAMPLER/g) !== -1) {
@@ -217,7 +216,7 @@ class ShaderGeneratorStandard extends ShaderGenerator {
         const useUv = [];
         const useUnmodifiedUv = [];
         const mapTransforms = [];
-        const maxUvSets = 2;
+        const maxUvSets = 5;
         const textureMapping = {};
 
         for (const p in _matTex2D) {
@@ -253,7 +252,13 @@ class ShaderGeneratorStandard extends ShaderGenerator {
 
         if (options.forceUv1) {
             useUv[1] = true;
+            useUv[2] = true;
+            useUv[3] = true;
+            useUv[4] = true;
             useUnmodifiedUv[1] = (useUnmodifiedUv[1] !== undefined) ? useUnmodifiedUv[1] : true;
+            useUnmodifiedUv[2] = (useUnmodifiedUv[2] !== undefined) ? useUnmodifiedUv[2] : true;
+            useUnmodifiedUv[3] = (useUnmodifiedUv[3] !== undefined) ? useUnmodifiedUv[3] : true;
+            useUnmodifiedUv[4] = (useUnmodifiedUv[4] !== undefined) ? useUnmodifiedUv[4] : true;
         }
 
         litShader.generateVertexShader(useUv, useUnmodifiedUv, mapTransforms);
@@ -476,6 +481,8 @@ class ShaderGeneratorStandard extends ShaderGenerator {
                 if (lightmapDir) {
                     decl.append('vec3 dLightmapDir;');
                 }
+   
+                console.log(options.lightMapUv);
                 code.append(this._addMap('light', lightmapChunkPropName, options, litShader.chunks, textureMapping, options.lightMapEncoding));
                 func.append('getLightMap();');
                 args.append('litArgs_lightmap = dLightmap;');

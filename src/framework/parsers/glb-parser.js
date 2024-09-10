@@ -2069,7 +2069,12 @@ const createImages = (gltf, bufferViews, urlBase, registry, options) => {
     // a Set of image indices that use sRGB textures (base and emissive)
     const getGammaTextures = (gltf) => {
         const set = new Set();
-
+        const getImageIndex = (index) => {
+            const gltfTexture = gltf.textures[index];
+            return gltfTexture?.extensions?.KHR_texture_basisu?.source ??
+                             gltfTexture?.extensions?.EXT_texture_webp?.source ??
+                             gltfTexture.source;
+        };
         if (gltf.hasOwnProperty('materials')) {
             gltf.materials.forEach((gltfMaterial) => {
 
@@ -2077,13 +2082,13 @@ const createImages = (gltf, bufferViews, urlBase, registry, options) => {
                 if (gltfMaterial.hasOwnProperty('pbrMetallicRoughness')) {
                     const pbrData = gltfMaterial.pbrMetallicRoughness;
                     if (pbrData.hasOwnProperty('baseColorTexture')) {
-                        set.add(pbrData.baseColorTexture.index);
+                        set.add(getImageIndex(pbrData.baseColorTexture.index));
                     }
                 }
 
                 // emissive
                 if (gltfMaterial.hasOwnProperty('emissiveTexture')) {
-                    set.add(gltfMaterial.emissiveTexture.index);
+                    set.add(getImageIndex(gltfMaterial.emissiveTexture.index));
                 }
             });
         }

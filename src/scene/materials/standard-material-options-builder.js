@@ -8,7 +8,7 @@ import {
     MASK_AFFECT_DYNAMIC,
     SHADER_PREPASS_VELOCITY,
     SHADERDEF_DIRLM, SHADERDEF_INSTANCING, SHADERDEF_LM, SHADERDEF_MORPH_POSITION, SHADERDEF_MORPH_NORMAL, SHADERDEF_NOSHADOW,
-    SHADERDEF_SCREENSPACE, SHADERDEF_SKIN, SHADERDEF_TANGENTS, SHADERDEF_UV0, SHADERDEF_UV1, SHADERDEF_VCOLOR, SHADERDEF_LMAMBIENT,
+    SHADERDEF_SCREENSPACE, SHADERDEF_SKIN, SHADERDEF_TANGENTS, SHADERDEF_UV0, SHADERDEF_UV1,  SHADERDEF_VCOLOR, SHADERDEF_LMAMBIENT,
     TONEMAP_NONE,
     DITHER_NONE,
     SHADERDEF_MORPH_TEXTURE_BASED_INT, SHADERDEF_BATCH,
@@ -349,9 +349,9 @@ class StandardMaterialOptionsBuilder {
             options.litOptions.noShadow = (objDefs & SHADERDEF_NOSHADOW) !== 0;
 
             if ((objDefs & SHADERDEF_LM) !== 0) {
-                options.lightMapEncoding = scene.lightmapPixelFormat === PIXELFORMAT_RGBA8 ? 'rgbm' : 'linear';
+                options.lightMapEncoding = 'linear';
                 options.lightMap = true;
-                options.lightMapChannel = 'rgb';
+                options.lightMapChannel = 'rgba';
                 options.lightMapUv = 1;
                 options.lightMapTransform = 0;
                 options.litOptions.lightMapWithoutAmbient = !stdMat.lightMap;

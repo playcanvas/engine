@@ -4,7 +4,10 @@ import { math } from '../../core/math/math.js';
 import { StringIds } from '../../core/string-ids.js';
 import {
     SEMANTIC_TEXCOORD0, SEMANTIC_TEXCOORD1, SEMANTIC_ATTR12, SEMANTIC_ATTR13, SEMANTIC_ATTR14, SEMANTIC_ATTR15,
-    SEMANTIC_COLOR, SEMANTIC_TANGENT, TYPE_FLOAT32, typedArrayTypesByteSize, vertexTypesNames
+    SEMANTIC_COLOR, SEMANTIC_TANGENT, TYPE_FLOAT32, typedArrayTypesByteSize, vertexTypesNames,
+    SEMANTIC_TEXCOORD2,
+    SEMANTIC_TEXCOORD3,
+    SEMANTIC_TEXCOORD4
 } from './constants.js';
 import { DeviceCache } from './device-cache.js';
 
@@ -140,6 +143,11 @@ class VertexFormat {
         this._elements = [];
         this.hasUv0 = false;
         this.hasUv1 = false;
+        this.hasUv3 = false;
+        this.hasUv4 = false;
+        this.hasUv5 = false;
+        this.hasUv6 = false;
+        this.hasUv7 = false;
         this.hasColor = false;
         this.hasTangents = false;
         this.verticesByteSize = 0;
@@ -198,6 +206,12 @@ class VertexFormat {
                 this.hasUv0 = true;
             } else if (elementDesc.semantic === SEMANTIC_TEXCOORD1) {
                 this.hasUv1 = true;
+            } else if (elementDesc.semantic === SEMANTIC_TEXCOORD2) {
+                this.hasUv2 = true;
+            } else if (elementDesc.semantic === SEMANTIC_TEXCOORD3) {
+                this.hasUv3 = true;
+            } else if (elementDesc.semantic === SEMANTIC_TEXCOORD4) {
+                this.hasUv4 = true;
             } else if (elementDesc.semantic === SEMANTIC_COLOR) {
                 this.hasColor = true;
             } else if (elementDesc.semantic === SEMANTIC_TANGENT) {

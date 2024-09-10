@@ -57,7 +57,10 @@ const builtinVaryings = {
     vBinormalW: 'vec3',
     vObjectSpaceUpW: 'vec3',
     vUv0: 'vec2',
-    vUv1: 'vec2'
+    vUv1: 'vec2',
+    vUv2: 'vec2',
+    vUv3: 'vec2',
+    vUv4: 'vec2'
 };
 
 class LitShader {
