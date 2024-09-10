@@ -25,9 +25,6 @@ const splatCoreVS = /* glsl */ `
     attribute vec3 vertex_position;
     attribute uint vertex_id_attrib;
 
-    varying vec2 texCoord;
-    varying vec4 color;
-
     #ifndef DITHER_NONE
         varying float id;
     #endif
@@ -205,8 +202,8 @@ const splatCoreVS = /* glsl */ `
 `;
 
 const splatCoreFS = /* glsl */ `
-    varying vec2 texCoord;
-    varying vec4 color;
+    varying mediump vec2 texCoord;
+    varying mediump vec4 color;
 
     #ifndef DITHER_NONE
         varying float id;
@@ -217,12 +214,12 @@ const splatCoreFS = /* glsl */ `
     #endif
 
     vec4 evalSplat() {
-        float A = dot(texCoord, texCoord);
+        mediump float A = dot(texCoord, texCoord);
         if (A > 1.0) {
             discard;
         }
 
-        float B = exp(-A * 4.0) * color.a;
+        mediump float B = exp(-A * 4.0) * color.a;
         if (B < 1.0 / 255.0) {
             discard;
         }
@@ -283,7 +280,10 @@ class GSplatCompressedShaderGenerator {
 const gsplatCompressed = new GSplatCompressedShaderGenerator();
 
 const splatMainVS = /* glsl */ `
-    vec4 discardVec = vec4(0.0, 0.0, 2.0, 1.0);
+    varying mediump vec2 texCoord;
+    varying mediump vec4 color;
+
+    mediump vec4 discardVec = vec4(0.0, 0.0, 2.0, 1.0);
 
     void main(void)
     {

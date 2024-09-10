@@ -8,9 +8,10 @@ import { gsplat } from './shader-generator-gsplat.js';
 const splatMainVS = /* glsl */ `
     uniform sampler2D splatColor;
 
-    varying vec4 color;
+    varying mediump vec2 texCoord;
+    varying mediump vec4 color;
 
-    vec4 discardVec = vec4(0.0, 0.0, 2.0, 1.0);
+    mediump vec4 discardVec = vec4(0.0, 0.0, 2.0, 1.0);
 
     void main(void)
     {
@@ -51,7 +52,7 @@ const splatMainVS = /* glsl */ `
         float scale = min(1.0, sqrt(-log(1.0 / 255.0 / color.a)) / 2.0);
 
         v1v2 *= scale;
-    
+
         // early out tiny splats
         if (dot(v1v2.xy, v1v2.xy) < 4.0 && dot(v1v2.zw, v1v2.zw) < 4.0) {
             gl_Position = discardVec;
