@@ -6,12 +6,12 @@ import { restore, spy } from 'sinon';
 describe('Http', function () {
     let retryDelay;
 
-    beforeEach(function () {
+    beforeEach(() => {
         retryDelay = Http.retryDelay;
         Http.retryDelay = 1;
     });
 
-    afterEach(function () {
+    afterEach(() => {
         Http.retryDelay = retryDelay;
         restore();
     });
