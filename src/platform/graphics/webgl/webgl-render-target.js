@@ -286,9 +286,6 @@ class WebglRenderTarget {
                     if (depthBuffer) {
                         getMultisampledTextureCache(device).set(key, this._glMsaaDepthBuffer);
                     }
-                } else {
-
-                    this._glMsaaDepthBuffer = this._glMsaaDepthBuffer;
                 }
 
                 // add the depth buffer to the FBO

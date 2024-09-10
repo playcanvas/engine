@@ -1,5 +1,5 @@
-import { RefCountedKeyCache } from "../../core/ref-counted-key-cache.js";
-import { DeviceCache } from "./device-cache.js";
+import { RefCountedKeyCache } from '../../core/ref-counted-key-cache.js';
+import { DeviceCache } from './device-cache.js';
 
 /**
  * Reference counted cache storing multi-sampled versions of depth buffers, which are reference

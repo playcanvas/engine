@@ -96,13 +96,8 @@ class DepthAttachment {
 
             this.multisampledDepthBuffer = null;
 
-            // cache its stored in
-            const msTextures = multisampledTextureCache.get(device, () => {
-                return null;
-            });
-
             // release reference to the texture, as its ref-counted
-            msTextures.release(this.multisampledDepthBufferKey);
+            getMultisampledTextureCache(device).release(this.multisampledDepthBufferKey);
         }
     }
 }
