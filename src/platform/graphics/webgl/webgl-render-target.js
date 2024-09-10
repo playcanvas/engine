@@ -74,6 +74,11 @@ class WebglRenderTarget {
     _glMsaaDepthBuffer = null;
 
     /**
+     * Key used to store _glMsaaDepthBuffer in the cache.
+     */
+    msaaDepthBufferKey;
+
+    /**
      * The supplied single-sampled framebuffer for rendering. Undefined represents no supplied
      * framebuffer. Null represents the default framebuffer. A value represents a user-supplied
      * framebuffer.
@@ -116,9 +121,13 @@ class WebglRenderTarget {
         this.colorMrtFramebuffers = null;
 
         if (this._glMsaaDepthBuffer) {
-            gl.deleteRenderbuffer(this._glMsaaDepthBuffer);
             this._glMsaaDepthBuffer = null;
+
+            // release reference to the texture, as its ref-counted
+            if (this.msaaDepthBufferKey)
+                getMultisampledTextureCache(device).release(this.msaaDepthBufferKey);
         }
+
         this.suppliedColorFramebuffer = undefined;
     }
 
@@ -282,11 +291,19 @@ class WebglRenderTarget {
                     gl.bindRenderbuffer(gl.RENDERBUFFER, this._glMsaaDepthBuffer);
                     gl.renderbufferStorageMultisample(gl.RENDERBUFFER, target._samples, internalFormat, target.width, target.height);
 
+                    // add 'destroy' method to the renderbuffer, allowing it to be destroyed by the cache
+                    this._glMsaaDepthBuffer.destroy = function() {
+                        gl.deleteRenderbuffer(this);
+                    };
+
                     // store it in the cache
                     if (depthBuffer) {
                         getMultisampledTextureCache(device).set(key, this._glMsaaDepthBuffer);
                     }
                 }
+
+                // store the key needed to release the depth buffer from the cache
+                this.msaaDepthBufferKey = key;
 
                 // add the depth buffer to the FBO
                 gl.framebufferRenderbuffer(gl.FRAMEBUFFER, attachmentPoint, gl.RENDERBUFFER, this._glMsaaDepthBuffer);
@@ -377,6 +394,7 @@ class WebglRenderTarget {
         this._glResolveFrameBuffer = null;
         this._glMsaaColorBuffers.length = 0;
         this._glMsaaDepthBuffer = null;
+        this.msaaDepthBufferKey = undefined;
         this.colorMrtFramebuffers = null;
         this.suppliedColorFramebuffer = undefined;
         this._isInitialized = false;
