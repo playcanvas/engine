@@ -112,7 +112,6 @@ class ShaderGeneratorStandard extends ShaderGenerator {
      * @private
      */
     _addMap(propName, chunkName, options, chunks, mapping, encoding = null) {
-      if (propName === 'light') console.log(options.lightMapUv)
         const mapPropName = `${propName}Map`;
         const uVPropName = `${mapPropName}Uv`;
         const identifierPropName = `${mapPropName}Identifier`;
@@ -482,7 +481,6 @@ class ShaderGeneratorStandard extends ShaderGenerator {
                     decl.append('vec3 dLightmapDir;');
                 }
    
-                console.log(options.lightMapUv);
                 code.append(this._addMap('light', lightmapChunkPropName, options, litShader.chunks, textureMapping, options.lightMapEncoding));
                 func.append('getLightMap();');
                 args.append('litArgs_lightmap = dLightmap;');
