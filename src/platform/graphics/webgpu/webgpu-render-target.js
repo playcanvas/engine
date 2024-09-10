@@ -13,6 +13,21 @@ import { WebgpuDebug } from './webgpu-debug.js';
 const stringIds = new StringIds();
 
 /**
+ * Reference counted cache storing multi-sampled versions of depth buffers, which are reference
+ * counted and shared between render targets using the same user-specified depth-buffer. This is
+ * needed for in cases where the user provided depth buffer is used for depth-pre-pass and then
+ * the main render pass - those need to share the same multi-sampled depth buffer.
+ */
+class MultisampledTextureCache extends RefCountedKeyCache {
+    loseContext(device) {
+        this.clear(); // just clear the cache when the context is lost
+    }
+}
+
+// a device cache storing per device instance of MultisampledTextureCache
+const _multisampledTextureCache = new DeviceCache();
+
+/**
  * Private class storing info about color buffer.
  *
  * @private
@@ -107,21 +122,6 @@ class DepthAttachment {
         }
     }
 }
-
-/**
- * Reference counted cache storing multi-sampled versions of depth buffers, which are reference
- * counted and shared between render targets using the same user-specified depth-buffer. This is
- * needed for in cases where the user provided depth buffer is used for depth-pre-pass and then
- * the main render pass - those need to share the same multi-sampled depth buffer.
- */
-class MultisampledTextureCache extends RefCountedKeyCache{
-    loseContext(device) {
-        this.clear(); // just clear the cache when the context is lost
-    }
-}
-
-// a device cache storing per device instance of MultisampledTextureCache
-const _multisampledTextureCache = new DeviceCache();
 
 /**
  * A WebGPU implementation of the RenderTarget.
@@ -353,14 +353,14 @@ class WebgpuRenderTarget {
 
                     // key for matching multi-sampled depth buffer
                     const key = `${depthBuffer.id}:${width}:${height}:${samples}:${depthBuffer.impl.format}`;
-                    
+
                     // cache for the device
                     const msTextures = _multisampledTextureCache.get(device, () => {
                         return new MultisampledTextureCache();
                     });
 
                     // check if we have already allocated a multi-sampled depth buffer for the depth buffer
-                    let msDepthTexture = msTextures.get(key); // this incRefs it if found      
+                    let msDepthTexture = msTextures.get(key); // this incRefs it if found
                     if (!msDepthTexture) {
 
                         /** @type {GPUTextureDescriptor} */

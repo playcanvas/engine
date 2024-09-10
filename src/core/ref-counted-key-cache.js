@@ -1,33 +1,32 @@
-import { Debug } from "./debug.js";
-import { RefCountedObject } from "./ref-counted-object.js";
+import { Debug } from './debug.js';
+import { RefCountedObject } from './ref-counted-object.js';
 
 /**
  * An entry in the RefCountedKeyCache cache, which wraps the object with a reference count.
  */
 class Entry extends RefCountedObject {
-	object;
+    object;
 
     constructor(obj) {
         super();
         this.object = obj;
         this.incRefCount();
     }
-};
+}
 
 /**
  * Class implementing reference counting cache for objects accessed by a key. Reference counting is
  * separate from the stored object.
  */
 class RefCountedKeyCache {
-	
-	/**
+    /**
      * Map storing the cache. They key is a look up key for the object, the value is an instance
      * of the Entry class, which wraps the object with a reference count.
      *
      * {@type <object, Entry>}
      * @private
-     * */
-	cache = new Map();
+     */
+    cache = new Map();
 
     /**
      * Destroy all stored objects.
@@ -49,11 +48,11 @@ class RefCountedKeyCache {
     /**
      * Get the object from the cache with the given key, while incrementing the reference count. If
      * the object is not in the cache, returns null.
-     * 
+     *
      * @param {object} key - The key to look up the object.
      * @returns {object} The object, or null if not found.
      */
-	get(key) {
+    get(key) {
         const entry = this.cache.get(key);
         if (entry) {
             entry.incRefCount();
@@ -70,7 +69,7 @@ class RefCountedKeyCache {
      * @param {object} object - The object to store.
      */
     set(key, object) {
-        Debug.assert(!this.cache.has(key), `RefCountedKeyCache: Trying to put object with key that already exists in the cache`, { key, object });
+        Debug.assert(!this.cache.has(key), 'RefCountedKeyCache: Trying to put object with key that already exists in the cache', { key, object });
         this.cache.set(key, new Entry(object));
     }
 
@@ -80,7 +79,7 @@ class RefCountedKeyCache {
      *
      * @param {object} key - The key to remove the object under.
      */
-	release(key) {
+    release(key) {
         const entry = this.cache.get(key);
         if (entry) {
             entry.decRefCount();
@@ -91,9 +90,9 @@ class RefCountedKeyCache {
                 entry.object?.destroy(); // destroy the object
             }
         } else {
-            Debug.warn(`RefCountedKeyCache: Trying to release object that is not in the cache`, { key });
+            Debug.warn('RefCountedKeyCache: Trying to release object that is not in the cache', { key });
         }
-	}
-};
+    }
+}
 
 export { RefCountedKeyCache };
