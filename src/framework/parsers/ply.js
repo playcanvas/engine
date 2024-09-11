@@ -1,7 +1,6 @@
 import { GSplatData } from '../../scene/gsplat/gsplat-data.js';
 import { GSplatCompressedData } from '../../scene/gsplat/gsplat-compressed-data.js';
 import { GSplatResource } from './gsplat-resource.js';
-import { Mat4 } from '../../core/math/mat4.js';
 
 /**
  * @typedef {Int8Array|Uint8Array|Int16Array|Uint16Array|Int32Array|Uint32Array|Float32Array|Float64Array} DataType
@@ -457,8 +456,6 @@ const readPly = async (reader, propertyFilter = null) => {
 // by default load everything
 const defaultElementFilter = val => true;
 
-const mat4 = new Mat4();
-
 class PlyParser {
     /** @type {import('../../platform/graphics/graphics-device.js').GraphicsDevice} */
     device;
@@ -496,13 +493,6 @@ class PlyParser {
             readPly(response.body.getReader(), asset.data.elementFilter ?? defaultElementFilter)
             .then((gsplatData) => {
                 if (!gsplatData.isCompressed) {
-
-                    // perform Z scale
-                    if (asset.data.performZScale ?? false) {
-                        mat4.setFromEulerAngles(0, 0, 180);
-                        gsplatData.transform(mat4);
-                    }
-
                     // reorder data
                     if (asset.data.reorder ?? true) {
                         gsplatData.reorderData();

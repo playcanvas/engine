@@ -125,10 +125,10 @@ class GSplat {
         result.setParameter('transformB', this.transformBTexture);
         result.setParameter('tex_params', new Float32Array([this.numSplats, this.colorTexture.width, 0, 0]));
         if (this.hasSH) {
-            result.setParameter(`splatSH_1to3`, this.sh1to3Texture);
-            result.setParameter(`splatSH_4to7`, this.sh4to7Texture);
-            result.setParameter(`splatSH_8to11`, this.sh8to11Texture);
-            result.setParameter(`splatSH_12to15`, this.sh12to15Texture);
+            result.setParameter('splatSH_1to3', this.sh1to3Texture);
+            result.setParameter('splatSH_4to7', this.sh4to7Texture);
+            result.setParameter('splatSH_8to11', this.sh8to11Texture);
+            result.setParameter('splatSH_12to15', this.sh12to15Texture);
         }
         return result;
     }
@@ -328,9 +328,9 @@ class GSplat {
         const src = getSHData(gsplatData);
 
         /**
-         * @param {number} value 
-         * @param {number} bits 
-         * @returns number
+         * @param {number} value - The value to pack.
+         * @param {number} bits - The number of bits to use.
+         * @returns {number} The packed value.
          */
         const packUnorm = (value, bits) => {
             const t = (1 << bits) - 1;
@@ -338,13 +338,13 @@ class GSplat {
         };
 
         /**
-         * @param {number} coef 
-         * @param {number} idx 
-         * @param {number} m 
-         * @returns number
+         * @param {number} coef - Index of the coefficient to pack
+         * @param {number} idx - Index of the splat to pack
+         * @param {number} m - Scaling factor to normalize the set of coefficients
+         * @returns {number} The packed value.
          */
         const pack = (coef, idx, m) => {
-            const r = src[coef     ][idx] / m;
+            const r = src[coef][idx] / m;
             const g = src[coef + 15][idx] / m;
             const b = src[coef + 30][idx] / m;
 
