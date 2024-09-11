@@ -1149,13 +1149,13 @@ class WebglGraphicsDevice extends GraphicsDevice {
      */
     startRenderPass(renderPass) {
 
-        DebugGraphics.pushGpuMarker(this, `Pass:${renderPass.name}`);
-        DebugGraphics.pushGpuMarker(this, 'START-PASS');
-
         // set up render target
         const rt = renderPass.renderTarget ?? this.backBuffer;
         this.renderTarget = rt;
         Debug.assert(rt);
+
+        DebugGraphics.pushGpuMarker(this, `Pass:${renderPass.name} RT:${rt.name}`);
+        DebugGraphics.pushGpuMarker(this, 'START-PASS');
 
         this.updateBegin();
 
