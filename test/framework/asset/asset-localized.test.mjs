@@ -3,7 +3,7 @@ import { Application } from '../../../src/framework/application.js';
 import { Asset } from '../../../src/framework/asset/asset.js';
 import { NullGraphicsDevice } from '../../../src/platform/graphics/null/null-graphics-device.js';
 
-import { createCanvas } from 'canvas';
+import { HTMLCanvasElement } from '@playcanvas/canvas-mock';
 
 import { expect } from 'chai';
 
@@ -11,12 +11,12 @@ describe('LocalizedAsset', function () {
 
     let app;
 
-    beforeEach(function () {
-        const canvas = createCanvas(500, 500);
+    beforeEach(() => {
+        const canvas = new HTMLCanvasElement(500, 500);
         app = new Application(canvas, { graphicsDevice: new NullGraphicsDevice(canvas) });
     });
 
-    afterEach(function () {
+    afterEach(() => {
         app.destroy();
     });
 

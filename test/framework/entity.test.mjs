@@ -29,7 +29,7 @@ import { NullGraphicsDevice } from '../../src/platform/graphics/null/null-graphi
 
 import { DummyComponentSystem } from './test-component/system.mjs';
 
-import { createCanvas } from 'canvas';
+import { HTMLCanvasElement } from '@playcanvas/canvas-mock';
 
 import { expect } from 'chai';
 import { stub } from 'sinon';
@@ -38,14 +38,14 @@ describe('Entity', function () {
 
     let app;
 
-    beforeEach(function () {
-        const canvas = createCanvas(500, 500);
+    beforeEach(() => {
+        const canvas = new HTMLCanvasElement(500, 500);
         app = new Application(canvas, { graphicsDevice: new NullGraphicsDevice(canvas) });
 
         app.systems.add(new DummyComponentSystem(app));
     });
 
-    afterEach(function () {
+    afterEach(() => {
         app.destroy();
     });
 
@@ -99,7 +99,7 @@ describe('Entity', function () {
     describe('#addComponent', function () {
 
         for (const name in components) {
-            it(`adds a ${name} component`, function () {
+            it(`adds a ${name} component`, () => {
                 // Create an entity and verify that it does not already have the component
                 const entity = new Entity();
                 expect(entity[name]).to.be.undefined;

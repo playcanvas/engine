@@ -6,7 +6,7 @@ import { Vec3 } from '../../../src/core/math/vec3.js';
 import { Vec4 } from '../../../src/core/math/vec4.js';
 import { NullGraphicsDevice } from '../../../src/platform/graphics/null/null-graphics-device.js';
 
-import { createCanvas } from 'canvas';
+import { HTMLCanvasElement } from '@playcanvas/canvas-mock';
 
 import { expect } from 'chai';
 
@@ -16,14 +16,14 @@ describe('ComponentSystem', function () {
     /** @type {ComponentSystem} */
     let system;
 
-    beforeEach(function () {
-        const canvas = createCanvas(500, 500);
+    beforeEach(() => {
+        const canvas = new HTMLCanvasElement(500, 500);
         app = new Application(canvas, { graphicsDevice: new NullGraphicsDevice(canvas) });
 
         system = new ComponentSystem(app);
     });
 
-    afterEach(function () {
+    afterEach(() => {
         app.destroy();
     });
 
