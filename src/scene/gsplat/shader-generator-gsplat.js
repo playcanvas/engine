@@ -58,12 +58,12 @@ const splatCoreVS = /* glsl */ `
 
     uvec4 tA;
 
-    void readCenter(out vec3 center) {
+    vec3 getCenter() {
         tA = texelFetch(transformA, splatUV, 0);
-        center = uintBitsToFloat(tA.xyz);
+        return uintBitsToFloat(tA.xyz);
     }
 
-    void readCovariance(out vec3 covA, out vec3 covB) {
+    void getCovariance(out vec3 covA, out vec3 covB) {
         vec4 tB = texelFetch(transformB, splatUV, 0);
         vec2 tC = unpackHalf2x16(tA.w);
 
