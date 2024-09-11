@@ -10,14 +10,14 @@ import { DefaultAnimBinder } from '../../../../src/framework/anim/binder/default
 import { GraphNode } from '../../../../src/scene/graph-node.js';
 import { NullGraphicsDevice } from '../../../../src/platform/graphics/null/null-graphics-device.js';
 
-import { createCanvas } from 'canvas';
+import { Canvas } from 'skia-canvas';
 
 import { expect } from 'chai';
 
 describe('AnimEvaluator', function () {
 
     it('AnimEvaluator: update with clip blending', function () {
-        const canvas = createCanvas(500, 500);
+        const canvas = new Canvas(500, 500);
         const app = new Application(canvas, { graphicsDevice: new NullGraphicsDevice(canvas) });
 
         // build the graph to be animated
@@ -90,7 +90,7 @@ describe('AnimEvaluator', function () {
     });
 
     it('AnimEvaluator: update without clip blending', function () {
-        const canvas = createCanvas(500, 500);
+        const canvas = new Canvas(500, 500);
         const app = new Application(canvas, { graphicsDevice: new NullGraphicsDevice(canvas) });
 
         // build the graph to be animated

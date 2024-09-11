@@ -9,7 +9,7 @@ import { AnimCurve } from '../../../../src/framework/anim/evaluator/anim-curve.j
 import { INTERPOLATION_LINEAR } from '../../../../src/framework/anim/constants.js';
 import { ANIM_LESS_THAN } from '../../../../src/framework/anim/controller/constants.js';
 import { NullGraphicsDevice } from '../../../../src/platform/graphics/null/null-graphics-device.js';
-import { createCanvas } from 'canvas';
+import { Canvas } from 'skia-canvas';
 import { expect } from 'chai';
 
 describe('AnimController', function () {
@@ -18,7 +18,7 @@ describe('AnimController', function () {
     let controller;
 
     beforeEach(function () {
-        const canvas = createCanvas(500, 500);
+        const canvas = new Canvas(500, 500);
         app = new Application(canvas, { graphicsDevice: new NullGraphicsDevice(canvas) });
         const states = [
             {

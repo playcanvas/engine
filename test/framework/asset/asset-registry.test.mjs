@@ -7,7 +7,7 @@ import { Texture } from '../../../src/platform/graphics/texture.js';
 import { http, Http } from '../../../src/platform/net/http.js';
 import { NullGraphicsDevice } from '../../../src/platform/graphics/null/null-graphics-device.js';
 
-import { createCanvas } from 'canvas';
+import { Canvas } from 'skia-canvas';
 
 import { expect } from 'chai';
 import { restore, spy } from 'sinon';
@@ -20,7 +20,7 @@ describe('AssetRegistry', function () {
     beforeEach(function () {
         retryDelay = Http.retryDelay;
         Http.retryDelay = 1;
-        const canvas = createCanvas(500, 500);
+        const canvas = new Canvas(500, 500);
         app = new Application(canvas, { graphicsDevice: new NullGraphicsDevice(canvas) });
     });
 
@@ -321,13 +321,25 @@ describe('AssetRegistry', function () {
             });
         });
 
-        it('loads texture assets', (done) => {
-            app.assets.loadFromUrl(`${assetPath}test.png`, 'texture', (err, asset) => {
-                expect(err).to.be.null;
-                expect(asset).to.be.instanceof(Asset);
-                expect(asset.resource).to.be.instanceof(Texture);
-                done();
+        // it('loads texture assets', (done) => {
+        //     app.assets.loadFromUrl(`${assetPath}test.png`, 'texture', (err, asset) => {
+        //         expect(err).to.be.null;
+        //         expect(asset).to.be.instanceof(Asset);
+        //         expect(asset.resource).to.be.instanceof(Texture);
+        //         done();
+        //     });
+        // });
+
+        it('loads texture assets', async () => {
+            const asset = await new Promise((resolve, reject) => {
+                app.assets.loadFromUrl(`${assetPath}test.png`, 'texture', (err, asset) => {
+                    if (err) reject(err);
+                    else resolve(asset);
+                });
             });
+        
+            expect(asset).to.be.instanceof(Asset);
+            expect(asset.resource).to.be.instanceof(Texture);
         });
 
     });
