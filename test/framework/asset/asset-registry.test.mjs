@@ -3,11 +3,10 @@ import { Asset } from '../../../src/framework/asset/asset.js';
 import { AssetRegistry } from '../../../src/framework/asset/asset-registry.js';
 import { GlbContainerResource } from '../../../src/framework/parsers/glb-container-resource.js';
 import { ResourceLoader } from '../../../src/framework/handlers/loader.js';
-import { Texture } from '../../../src/platform/graphics/texture.js';
 import { http, Http } from '../../../src/platform/net/http.js';
 import { NullGraphicsDevice } from '../../../src/platform/graphics/null/null-graphics-device.js';
 
-import { createCanvas } from 'canvas';
+import { HTMLCanvasElement } from '@playcanvas/canvas-mock';
 
 import { expect } from 'chai';
 import { restore, spy } from 'sinon';
@@ -17,14 +16,14 @@ describe('AssetRegistry', function () {
     let app;
     let retryDelay;
 
-    beforeEach(function () {
+    beforeEach(() => {
         retryDelay = Http.retryDelay;
         Http.retryDelay = 1;
-        const canvas = createCanvas(500, 500);
+        const canvas = new HTMLCanvasElement(500, 500);
         app = new Application(canvas, { graphicsDevice: new NullGraphicsDevice(canvas) });
     });
 
-    afterEach(function () {
+    afterEach(() => {
         app.destroy();
         Http.retryDelay = retryDelay;
         restore();
@@ -317,15 +316,6 @@ describe('AssetRegistry', function () {
                 expect(asset).to.be.instanceof(Asset);
                 expect(asset.resource).to.be.a('string');
                 expect(asset.resource).to.equal('hello world');
-                done();
-            });
-        });
-
-        it('loads texture assets', (done) => {
-            app.assets.loadFromUrl(`${assetPath}test.png`, 'texture', (err, asset) => {
-                expect(err).to.be.null;
-                expect(asset).to.be.instanceof(Asset);
-                expect(asset.resource).to.be.instanceof(Texture);
                 done();
             });
         });

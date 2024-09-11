@@ -33,7 +33,7 @@ varying vec2 vUv0;
 // x - target cubemap face 0..6
 // y - target image total pixels
 // z - source cubemap size
-uniform vec4 params;
+uniform vec3 params;
 
 float targetFace() { return params.x; }
 float targetTotalPixels() { return params.y; }

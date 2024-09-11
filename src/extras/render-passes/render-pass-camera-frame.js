@@ -1,10 +1,7 @@
 import { LAYERID_SKYBOX, LAYERID_IMMEDIATE, TONEMAP_NONE, GAMMA_NONE } from '../../scene/constants.js';
 import {
-    ADDRESS_CLAMP_TO_EDGE,
-    FILTER_LINEAR,
-    FILTER_NEAREST,
-    PIXELFORMAT_DEPTH,
-    PIXELFORMAT_RGBA8
+    ADDRESS_CLAMP_TO_EDGE, FILTER_LINEAR, FILTER_NEAREST,
+    PIXELFORMAT_DEPTH, PIXELFORMAT_R32F, PIXELFORMAT_RGBA8
 } from '../../platform/graphics/constants.js';
 import { Texture } from '../../platform/graphics/texture.js';
 import { RenderPass } from '../../platform/graphics/render-pass.js';
@@ -205,11 +202,19 @@ class RenderPassCameraFrame extends RenderPass {
             addressV: ADDRESS_CLAMP_TO_EDGE
         });
 
+        // TODO: handle stencil support
+        let depthFormat = PIXELFORMAT_DEPTH;
+        if (options.prepassEnabled && device.isWebGPU && options.samples > 1) {
+            // on WebGPU the depth format cannot be resolved, so we need to use a float format in that case
+            // TODO: ideally we expose this using some option or similar public API to hide this implementation detail
+            depthFormat = PIXELFORMAT_R32F;
+        }
+
         this.sceneDepth = new Texture(device, {
             name: 'SceneDepth',
             width: 4,
             height: 4,
-            format: PIXELFORMAT_DEPTH,  // TODO: handle stencil support
+            format: depthFormat,
             mipmaps: false,
             minFilter: FILTER_NEAREST,
             magFilter: FILTER_NEAREST,
@@ -271,7 +276,10 @@ class RenderPassCameraFrame extends RenderPass {
             const { app, device, cameraComponent } = this;
             const { scene, renderer } = app;
 
-            this.prePass = new RenderPassPrepass(device, scene, renderer, cameraComponent, this.sceneDepth, this.sceneOptions);
+            // ssao & taa need resolved depth
+            const resolveDepth = this.options.ssaoType !== SSAOTYPE_NONE || this.options.taaEnabled;
+
+            this.prePass = new RenderPassPrepass(device, scene, renderer, cameraComponent, this.sceneDepth, resolveDepth, this.sceneOptions, options.samples);
         }
     }
 

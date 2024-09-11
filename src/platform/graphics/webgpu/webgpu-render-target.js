@@ -1,5 +1,6 @@
 import { Debug, DebugHelper } from '../../../core/debug.js';
 import { StringIds } from '../../../core/string-ids.js';
+import { getMultisampledTextureCache } from '../multi-sampled-texture-cache.js';
 import { WebgpuDebug } from './webgpu-debug.js';
 
 /**
@@ -71,6 +72,11 @@ class DepthAttachment {
     multisampledDepthBuffer = null;
 
     /**
+     * Key used to store multisampledDepthBuffer in the cache.
+     */
+    multisampledDepthBufferKey;
+
+    /**
      * @param {string} gpuFormat - The WebGPU format (GPUTextureFormat).
      */
     constructor(gpuFormat) {
@@ -79,14 +85,20 @@ class DepthAttachment {
         this.hasStencil = gpuFormat === 'depth24plus-stencil8';
     }
 
-    destroy() {
+    destroy(device) {
         if (this.depthTextureInternal) {
             this.depthTexture?.destroy();
             this.depthTexture = null;
         }
 
-        this.multisampledDepthBuffer?.destroy();
-        this.multisampledDepthBuffer = null;
+        // release multi-sampled depth buffer
+        if (this.multisampledDepthBuffer) {
+
+            this.multisampledDepthBuffer = null;
+
+            // release reference to the texture, as its ref-counted
+            getMultisampledTextureCache(device).release(this.multisampledDepthBufferKey);
+        }
     }
 }
 
@@ -166,7 +178,7 @@ class WebgpuRenderTarget {
         });
         this.colorAttachments.length = 0;
 
-        this.depthAttachment?.destroy();
+        this.depthAttachment?.destroy(device);
         this.depthAttachment = null;
     }
 
@@ -244,11 +256,11 @@ class WebgpuRenderTarget {
         WebgpuDebug.validate(device);
 
         // initialize depth/stencil
-        this.initDepthStencil(wgpu, renderTarget);
+        this.initDepthStencil(device, wgpu, renderTarget);
 
         // initialize color attachments
         this.renderPassDescriptor.colorAttachments = [];
-        const count = renderTarget._colorBuffers?.length ?? 1;
+        const count = this.isBackbuffer ? 1 : (renderTarget._colorBuffers?.length ?? 0);
         for (let i = 0; i < count; ++i) {
             const colorAttachment = this.initColor(device, wgpu, renderTarget, i);
 
@@ -267,7 +279,7 @@ class WebgpuRenderTarget {
         WebgpuDebug.end(device, { renderTarget });
     }
 
-    initDepthStencil(wgpu, renderTarget) {
+    initDepthStencil(device, wgpu, renderTarget) {
 
         const { samples, width, height, depth, depthBuffer } = renderTarget;
 
@@ -316,25 +328,45 @@ class WebgpuRenderTarget {
 
                 this.depthAttachment = new DepthAttachment(depthBuffer.impl.format);
 
-                if (samples > 1) {
+                if (samples > 1) {  // create a multi-sampled depth buffer for the provided depth buffer
 
-                    // user provided depth buffer, but we need to create a multi-sampled depth buffer
+                    // single-sampled depthBuffer.impl.format can be R32F in some cases, but that cannot be used as a depth
+                    // buffer, only as a texture to resolve it to. We always use depth24plus-stencil8 for msaa depth buffers.
+                    const depthFormat = 'depth24plus-stencil8';
+                    this.depthAttachment.format = depthFormat;
+                    this.depthAttachment.hasStencil = depthFormat === 'depth24plus-stencil8';
 
-                    /** @type {GPUTextureDescriptor} */
-                    const multisampledDepthDesc = {
-                        size: [width, height, 1],
-                        dimension: '2d',
-                        sampleCount: samples,
-                        format: depthBuffer.impl.format,
-                        usage: GPUTextureUsage.RENDER_ATTACHMENT
-                    };
+                    // key for matching multi-sampled depth buffer
+                    const key = `${depthBuffer.id}:${width}:${height}:${samples}:${depthFormat}`;
 
-                    // allocate multi-sampled depth buffer
-                    const multisampledDepthBuffer = wgpu.createTexture(multisampledDepthDesc);
-                    DebugHelper.setLabel(multisampledDepthBuffer, `${renderTarget.name}.multisampledDepth`);
-                    this.depthAttachment.multisampledDepthBuffer = multisampledDepthBuffer;
+                    // check if we have already allocated a multi-sampled depth buffer for the depth buffer
+                    const msTextures = getMultisampledTextureCache(device);
+                    let msDepthTexture = msTextures.get(key); // this incRefs it if found
+                    if (!msDepthTexture) {
 
-                    renderingView = multisampledDepthBuffer.createView();
+                        /** @type {GPUTextureDescriptor} */
+                        const multisampledDepthDesc = {
+                            size: [width, height, 1],
+                            dimension: '2d',
+                            sampleCount: samples,
+                            format: depthFormat,
+                            usage: GPUTextureUsage.RENDER_ATTACHMENT |
+                                // if msaa and resolve targets are different formats, we need to be able to bind the msaa target as a texture for manual shader resolve
+                                (depthFormat !== depthBuffer.impl.format ? GPUTextureUsage.TEXTURE_BINDING : 0)
+                        };
+
+                        // allocate multi-sampled depth buffer
+                        msDepthTexture = wgpu.createTexture(multisampledDepthDesc);
+                        DebugHelper.setLabel(msDepthTexture, `${renderTarget.name}.multisampledDepth`);
+
+                        // store it in the cache
+                        msTextures.set(key, msDepthTexture);
+                    }
+
+                    this.depthAttachment.multisampledDepthBuffer = msDepthTexture;
+                    this.depthAttachment.multisampledDepthBufferKey = key;
+
+                    renderingView = msDepthTexture.createView();
                     DebugHelper.setLabel(renderingView, `${renderTarget.name}.multisampledDepthView`);
 
                 } else {

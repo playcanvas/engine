@@ -85,6 +85,13 @@ class DepthStencilAttachmentOps {
     storeDepth = false;
 
     /**
+     * True if the depth attachment needs to be resolved.
+     *
+     * @type {boolean}
+     */
+    resolveDepth = false;
+
+    /**
      * True if the stencil attachment needs to be stored after the render pass. False
      * if it can be discarded.
      *
@@ -458,7 +465,8 @@ class RenderPass {
                 if (hasDepth) {
                     Debug.trace(TRACEID_RENDER_PASS_DETAIL, '    depthOps: ' +
                                 `${this.depthStencilOps.clearDepth ? 'clear' : 'load'}->` +
-                                `${this.depthStencilOps.storeDepth ? 'store' : 'discard'}`);
+                                `${this.depthStencilOps.storeDepth ? 'store' : 'discard'}` +
+                                `${this.depthStencilOps.resolveDepth ? ' resolve' : ''}`);
                 }
 
                 if (hasStencil) {
