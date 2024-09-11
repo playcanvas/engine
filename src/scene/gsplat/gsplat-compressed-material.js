@@ -25,9 +25,6 @@ const splatCoreVS = /* glsl */ `
     attribute vec3 vertex_position;
     attribute uint vertex_id_attrib;
 
-    varying vec2 texCoord;
-    varying vec4 color;
-
     #ifndef DITHER_NONE
         varying float id;
     #endif
@@ -82,9 +79,6 @@ const splatCoreVS = /* glsl */ `
         chunkDataA = texelFetch(chunkTexture, chunkUV, 0);
         chunkDataB = texelFetch(chunkTexture, ivec2(chunkUV.x + 1, chunkUV.y), 0);
         chunkDataC = texelFetch(chunkTexture, ivec2(chunkUV.x + 2, chunkUV.y), 0);
-
-        // TODO: early out based on chunk data (before reading the huge packed data)
-
         packedData = texelFetch(packedTexture, packedUV, 0);
     }
 
@@ -120,7 +114,7 @@ const splatCoreVS = /* glsl */ `
         return vec4(a, b, c, m);
     }
 
-    vec3 getPosition() {
+    vec3 getCenter() {
         return mix(chunkDataA.xyz, vec3(chunkDataA.w, chunkDataB.xy), unpack111011(packedData.x));
     }
 
@@ -143,38 +137,44 @@ const splatCoreVS = /* glsl */ `
         float w = R.w;
         return mat3(
             1.0 - 2.0 * (z * z + w * w),
-                2.0 * (y * z + x * w),
-                2.0 * (y * w - x * z),
-                2.0 * (y * z - x * w),
+                  2.0 * (y * z + x * w),
+                  2.0 * (y * w - x * z),
+                  2.0 * (y * z - x * w),
             1.0 - 2.0 * (y * y + w * w),
-                2.0 * (z * w + x * y),
-                2.0 * (y * w + x * z),
-                2.0 * (z * w - x * y),
+                  2.0 * (z * w + x * y),
+                  2.0 * (y * w + x * z),
+                  2.0 * (z * w - x * y),
             1.0 - 2.0 * (y * y + z * z)
         );
     }
 
     // Given a rotation matrix and scale vector, compute 3d covariance A and B
-    void calcCov3d(mat3 rot, vec3 scale, out vec3 covA, out vec3 covB) {
+    void getCovariance(out vec3 covA, out vec3 covB) {
+        mat3 rot = quatToMat3(getRotation());
+        vec3 scale = getScale();
+
         // M = S * R
         mat3 M = transpose(mat3(
             scale.x * rot[0],
             scale.y * rot[1],
             scale.z * rot[2]
         ));
+
         covA = vec3(dot(M[0], M[0]), dot(M[0], M[1]), dot(M[0], M[2]));
         covB = vec3(dot(M[1], M[1]), dot(M[1], M[2]), dot(M[2], M[2]));
     }
 
     // given the splat center (view space) and covariance A and B vectors, calculate
     // the v1 and v2 vectors for this view.
-    vec4 calcV1V2(vec3 centerView, vec3 covA, vec3 covB, float focal, mat3 W) {
+    vec4 calcV1V2(vec3 centerView, vec3 covA, vec3 covB, mat3 W) {
 
         mat3 Vrk = mat3(
             covA.x, covA.y, covA.z, 
             covA.y, covB.x, covB.y,
             covA.z, covB.y, covB.z
         );
+
+        float focal = viewport.x * matrix_projection[0][0];
 
         float J1 = focal / centerView.z;
         vec2 J2 = -J1 / centerView.z * centerView.xy;
@@ -202,40 +202,11 @@ const splatCoreVS = /* glsl */ `
 
         return vec4(v1, v2);
     }
-
-    // evaluate the splat position
-    bool evalSplat(out vec4 result) {
-        mat4 modelView = matrix_view * matrix_model;
-        vec4 centerView = modelView * vec4(getPosition(), 1.0);
-        vec4 centerClip = matrix_projection * centerView;
-
-        // cull behind camera
-        if (centerClip.z < -centerClip.w) {
-            return false;
-        }
-
-        // calculate the 3d covariance vectors from rotation and scale
-        vec3 covA, covB;
-        calcCov3d(quatToMat3(getRotation()), getScale(), covA, covB);
-
-        vec4 v1v2 = calcV1V2(centerView.xyz, covA, covB, viewport.x * matrix_projection[0][0], transpose(mat3(modelView)));
-
-        // early out tiny splats
-        // TODO: figure out length units and expose as uniform parameter
-        // TODO: perhaps make this a shader compile-time option
-        if (dot(v1v2.xy, v1v2.xy) < 4.0 && dot(v1v2.zw, v1v2.zw) < 4.0) {
-            return false;
-        }
-
-        result = centerClip + vec4((vertex_position.x * v1v2.xy + vertex_position.y * v1v2.zw) / viewport * centerClip.w, 0, 0);
-
-        return true;
-    }
 `;
 
 const splatCoreFS = /* glsl */ `
-    varying vec2 texCoord;
-    varying vec4 color;
+    varying mediump vec2 texCoord;
+    varying mediump vec4 color;
 
     #ifndef DITHER_NONE
         varying float id;
@@ -246,9 +217,15 @@ const splatCoreFS = /* glsl */ `
     #endif
 
     vec4 evalSplat() {
-        float A = -dot(texCoord, texCoord);
-        if (A < -4.0) discard;
-        float B = exp(A) * color.a;
+        mediump float A = dot(texCoord, texCoord);
+        if (A > 1.0) {
+            discard;
+        }
+
+        mediump float B = exp(-A * 4.0) * color.a;
+        if (B < 1.0 / 255.0) {
+            discard;
+        }
 
         #ifdef PICK_PASS
             if (B < 0.3) discard;
@@ -311,8 +288,11 @@ class GSplatCompressedShaderGenerator {
 
 const gsplatCompressed = new GSplatCompressedShaderGenerator();
 
-const splatMainVS = `
-    vec4 discardVec = vec4(0.0, 0.0, 2.0, 1.0);
+const splatMainVS = /* glsl */ `
+    varying mediump vec2 texCoord;
+    varying mediump vec4 color;
+
+    mediump vec4 discardVec = vec4(0.0, 0.0, 2.0, 1.0);
 
     void main(void)
     {
@@ -322,19 +302,46 @@ const splatMainVS = `
             return;
         }
 
-        // read data
+        // read chunk data and packed data
         readData();
 
-        vec4 pos;
-        if (!evalSplat(pos)) {
+        // get center
+        vec3 center = getCenter();
+
+        // handle transforms
+        mat4 model_view = matrix_view * matrix_model;
+        vec4 splat_cam = model_view * vec4(center, 1.0);
+        vec4 splat_proj = matrix_projection * splat_cam;
+
+        // cull behind camera
+        if (splat_proj.z < -splat_proj.w) {
             gl_Position = discardVec;
             return;
         }
 
-        gl_Position = pos;
+        // get covariance
+        vec3 covA, covB;
+        getCovariance(covA, covB);
 
-        texCoord = vertex_position.xy;
+        vec4 v1v2 = calcV1V2(splat_cam.xyz, covA, covB, transpose(mat3(model_view)));
+
+        // get color
         color = getColor();
+
+        // calculate scale based on alpha
+        float scale = min(1.0, sqrt(-log(1.0 / 255.0 / color.a)) / 2.0);
+
+        v1v2 *= scale;
+
+        // early out tiny splats
+        if (dot(v1v2.xy, v1v2.xy) < 4.0 && dot(v1v2.zw, v1v2.zw) < 4.0) {
+            gl_Position = discardVec;
+            return;
+        }
+
+        gl_Position = splat_proj + vec4((vertex_position.x * v1v2.xy + vertex_position.y * v1v2.zw) / viewport * splat_proj.w, 0, 0);
+
+        texCoord = vertex_position.xy * scale / 2.0;
 
         #ifndef DITHER_NONE
             id = float(splatId);
@@ -342,7 +349,7 @@ const splatMainVS = `
     }
 `;
 
-const splatMainFS = `
+const splatMainFS = /* glsl */ `
     void main(void)
     {
         gl_FragColor = evalSplat();
