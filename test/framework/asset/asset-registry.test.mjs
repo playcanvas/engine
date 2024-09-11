@@ -321,25 +321,13 @@ describe('AssetRegistry', function () {
             });
         });
 
-        // it('loads texture assets', (done) => {
-        //     app.assets.loadFromUrl(`${assetPath}test.png`, 'texture', (err, asset) => {
-        //         expect(err).to.be.null;
-        //         expect(asset).to.be.instanceof(Asset);
-        //         expect(asset.resource).to.be.instanceof(Texture);
-        //         done();
-        //     });
-        // });
-
-        it('loads texture assets', async () => {
-            const asset = await new Promise((resolve, reject) => {
-                app.assets.loadFromUrl(`${assetPath}test.png`, 'texture', (err, asset) => {
-                    if (err) reject(err);
-                    else resolve(asset);
-                });
+        it('loads texture assets', (done) => {
+            app.assets.loadFromUrl(`${assetPath}test.png`, 'texture', (err, asset) => {
+                expect(err).to.be.null;
+                expect(asset).to.be.instanceof(Asset);
+                expect(asset.resource).to.be.instanceof(Texture);
+                done();
             });
-        
-            expect(asset).to.be.instanceof(Asset);
-            expect(asset.resource).to.be.instanceof(Texture);
         });
 
     });
