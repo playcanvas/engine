@@ -679,7 +679,7 @@ class WebgpuGraphicsDevice extends GraphicsDevice {
         DebugHelper.setLabel(this.passEncoder, renderPass.name);
 
         // push marker to the passEncoder
-        DebugGraphics.pushGpuMarker(this, `Pass:${renderPass.name}`);
+        DebugGraphics.pushGpuMarker(this, `Pass:${renderPass.name} RT:${rt.name}`);
 
         this.setupPassEncoderDefaults();
 
