@@ -136,7 +136,7 @@ class RenderTarget {
         this.id = id++;
 
         // device, from one of the buffers
-        const device = options.colorBuffer?.device || options.depthBuffer?.device || options.graphicsDevice;
+        const device = options.colorBuffer?.device ?? options.colorBuffers?.[0].device ?? options.depthBuffer?.device ?? options.graphicsDevice;
         Debug.assert(device, 'Failed to obtain the device, colorBuffer nor depthBuffer store it.');
         this._device = device;
 
