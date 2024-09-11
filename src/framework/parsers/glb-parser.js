@@ -442,7 +442,8 @@ const createVertexBufferInternal = (device, sourceDesc) => {
         return null;
     }
     const numVertices = positionDesc.count;
-
+    // magnopus patched - don't create empty buffers
+    if (numVertices === 0) return;
     // generate vertexDesc elements
     const vertexDesc = [];
     for (const semantic in sourceDesc) {
@@ -741,96 +742,99 @@ const createMesh = (device, gltfMesh, accessors, bufferViews, vertexBufferDict, 
             // handle uncompressed mesh
             let indices = primitive.hasOwnProperty('indices') ? getAccessorData(accessors[primitive.indices], bufferViews, true) : null;
             const vertexBuffer = createVertexBuffer(device, primitive.attributes, indices, accessors, bufferViews, vertexBufferDict);
-            const primitiveType = getPrimitiveType(primitive);
+            // magnopus patched - ignore empty mesh
+            if (vertexBuffer) {
+                const primitiveType = getPrimitiveType(primitive);
 
-            // build the mesh
-            const mesh = new Mesh(device);
-            mesh.vertexBuffer = vertexBuffer;
-            mesh.primitive[0].type = primitiveType;
-            mesh.primitive[0].base = 0;
-            mesh.primitive[0].indexed = (indices !== null);
+                // build the mesh
+                const mesh = new Mesh(device);
+                mesh.vertexBuffer = vertexBuffer;
+                mesh.primitive[0].type = primitiveType;
+                mesh.primitive[0].base = 0;
+                mesh.primitive[0].indexed = (indices !== null);
 
-            // index buffer
-            if (indices !== null) {
-                let indexFormat;
-                if (indices instanceof Uint8Array) {
-                    indexFormat = INDEXFORMAT_UINT8;
-                } else if (indices instanceof Uint16Array) {
-                    indexFormat = INDEXFORMAT_UINT16;
-                } else {
-                    indexFormat = INDEXFORMAT_UINT32;
-                }
-
-                if (indexFormat === INDEXFORMAT_UINT8 && device.isWebGPU) {
-                    // silently convert to 16bit
-                    indexFormat = INDEXFORMAT_UINT16;
-                    indices = new Uint16Array(indices);
-                }
-
-                const indexBuffer = new IndexBuffer(device, indexFormat, indices.length, BUFFER_STATIC, indices);
-                mesh.indexBuffer[0] = indexBuffer;
-                mesh.primitive[0].count = indices.length;
-            } else {
-                mesh.primitive[0].count = vertexBuffer.numVertices;
-            }
-
-            if (primitive.hasOwnProperty('extensions') && primitive.extensions.hasOwnProperty('KHR_materials_variants')) {
-                const variants = primitive.extensions.KHR_materials_variants;
-                const tempMapping = {};
-                variants.mappings.forEach((mapping) => {
-                    mapping.variants.forEach((variant) => {
-                        tempMapping[variant] = mapping.material;
-                    });
-                });
-                meshVariants[mesh.id] = tempMapping;
-            }
-
-            meshDefaultMaterials[mesh.id] = primitive.material;
-
-            let accessor = accessors[primitive.attributes.POSITION];
-            mesh.aabb = getAccessorBoundingBox(accessor);
-
-            // morph targets
-            if (primitive.hasOwnProperty('targets')) {
-                const targets = [];
-
-                primitive.targets.forEach((target, index) => {
-                    const options = {};
-
-                    if (target.hasOwnProperty('POSITION')) {
-                        accessor = accessors[target.POSITION];
-                        options.deltaPositions = getAccessorDataFloat32(accessor, bufferViews);
-                        options.aabb = getAccessorBoundingBox(accessor);
-                    }
-
-                    if (target.hasOwnProperty('NORMAL')) {
-                        accessor = accessors[target.NORMAL];
-                        // NOTE: the morph targets can't currently accept quantized normals
-                        options.deltaNormals = getAccessorDataFloat32(accessor, bufferViews);
-                    }
-
-                    // name if specified
-                    if (gltfMesh.hasOwnProperty('extras') &&
-                        gltfMesh.extras.hasOwnProperty('targetNames')) {
-                        options.name = gltfMesh.extras.targetNames[index];
+                // index buffer
+                if (indices !== null) {
+                    let indexFormat;
+                    if (indices instanceof Uint8Array) {
+                        indexFormat = INDEXFORMAT_UINT8;
+                    } else if (indices instanceof Uint16Array) {
+                        indexFormat = INDEXFORMAT_UINT16;
                     } else {
-                        options.name = index.toString(10);
+                        indexFormat = INDEXFORMAT_UINT32;
                     }
 
-                    // default weight if specified
-                    if (gltfMesh.hasOwnProperty('weights')) {
-                        options.defaultWeight = gltfMesh.weights[index];
+                    if (indexFormat === INDEXFORMAT_UINT8 && device.isWebGPU) {
+                    // silently convert to 16bit
+                        indexFormat = INDEXFORMAT_UINT16;
+                        indices = new Uint16Array(indices);
                     }
 
-                    options.preserveData = assetOptions.morphPreserveData;
-                    targets.push(new MorphTarget(options));
-                });
+                    const indexBuffer = new IndexBuffer(device, indexFormat, indices.length, BUFFER_STATIC, indices);
+                    mesh.indexBuffer[0] = indexBuffer;
+                    mesh.primitive[0].count = indices.length;
+                } else {
+                    mesh.primitive[0].count = vertexBuffer.numVertices;
+                }
 
-                mesh.morph = new Morph(targets, device, {
-                    preferHighPrecision: assetOptions.morphPreferHighPrecision
-                });
+                if (primitive.hasOwnProperty('extensions') && primitive.extensions.hasOwnProperty('KHR_materials_variants')) {
+                    const variants = primitive.extensions.KHR_materials_variants;
+                    const tempMapping = {};
+                    variants.mappings.forEach((mapping) => {
+                        mapping.variants.forEach((variant) => {
+                            tempMapping[variant] = mapping.material;
+                        });
+                    });
+                    meshVariants[mesh.id] = tempMapping;
+                }
+
+                meshDefaultMaterials[mesh.id] = primitive.material;
+
+                let accessor = accessors[primitive.attributes.POSITION];
+                mesh.aabb = getAccessorBoundingBox(accessor);
+
+                // morph targets
+                if (primitive.hasOwnProperty('targets')) {
+                    const targets = [];
+
+                    primitive.targets.forEach((target, index) => {
+                        const options = {};
+
+                        if (target.hasOwnProperty('POSITION')) {
+                            accessor = accessors[target.POSITION];
+                            options.deltaPositions = getAccessorDataFloat32(accessor, bufferViews);
+                            options.aabb = getAccessorBoundingBox(accessor);
+                        }
+
+                        if (target.hasOwnProperty('NORMAL')) {
+                            accessor = accessors[target.NORMAL];
+                            // NOTE: the morph targets can't currently accept quantized normals
+                            options.deltaNormals = getAccessorDataFloat32(accessor, bufferViews);
+                        }
+
+                        // name if specified
+                        if (gltfMesh.hasOwnProperty('extras') &&
+                        gltfMesh.extras.hasOwnProperty('targetNames')) {
+                            options.name = gltfMesh.extras.targetNames[index];
+                        } else {
+                            options.name = index.toString(10);
+                        }
+
+                        // default weight if specified
+                        if (gltfMesh.hasOwnProperty('weights')) {
+                            options.defaultWeight = gltfMesh.weights[index];
+                        }
+
+                        options.preserveData = assetOptions.morphPreserveData;
+                        targets.push(new MorphTarget(options));
+                    });
+
+                    mesh.morph = new Morph(targets, device, {
+                        preferHighPrecision: assetOptions.morphPreferHighPrecision
+                    });
+                }
+                meshes.push(mesh);
             }
-            meshes.push(mesh);
         }
     });
 
@@ -2077,7 +2081,6 @@ const createImages = (gltf, bufferViews, urlBase, registry, options) => {
     // a Set of image indices that use sRGB textures (base and emissive)
     const getGammaTextures = (gltf) => {
         const set = new Set();
-
         if (gltf.hasOwnProperty('materials')) {
             gltf.materials.forEach((gltfMaterial) => {
 

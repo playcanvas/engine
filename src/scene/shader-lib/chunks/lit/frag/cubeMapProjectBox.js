@@ -4,7 +4,7 @@ uniform vec3 envBoxMax;
 
 vec3 cubeMapProject(vec3 nrdir) {
     // magnopus patched, disable box rotation for now, instead rotate the texture
-     nrdir = cubeMapRotate(nrdir);
+    // nrdir = cubeMapRotate(nrdir);
 
     vec3 rbmax = (envBoxMax - vPositionW) / nrdir;
     vec3 rbmin = (envBoxMin - vPositionW) / nrdir;

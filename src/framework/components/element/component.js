@@ -2812,6 +2812,16 @@ class ElementComponent extends Component {
         return true;
     }
 
+    // magnopus patched - accessor for meshinstance for element components
+    get meshInstances() {
+        if (this._text) {
+            return this._text._model.meshInstances;
+        } else if (this._image) {
+            return [this._image._renderable.meshInstance];
+        }
+        return [];
+    }
+
     _isScreenSpace() {
         if (this.screen && this.screen.screen) {
             return this.screen.screen.screenSpace;
