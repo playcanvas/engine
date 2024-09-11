@@ -296,7 +296,7 @@ const splatMainVS = /* glsl */ `
             return;
         }
 
-        // read chunk data
+        // read chunk data and packed data
         readData();
 
         // get center
