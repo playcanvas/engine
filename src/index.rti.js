@@ -26,11 +26,11 @@ Object.assign(customTypes, {
         // Used in src/framework/components/collision/trigger.js
         // Why do we neither use @implements nor `extends` for such type?
         // Testable via animation/locomotion example.
-        return value?.constructor?.name?.endsWith("ComponentData");
+        return value?.constructor?.name?.endsWith('ComponentData');
     },
     Renderer(value) {
         // E.g. instance of `ForwardRenderer`
-        return value?.constructor?.name?.endsWith("Renderer");
+        return value?.constructor?.name?.endsWith('Renderer');
     }
 });
 // For quickly checking props of Vec2/Vec3/Vec4/Quat/Mat3/Mat4 without GC
