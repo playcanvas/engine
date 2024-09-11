@@ -107,6 +107,117 @@ const splatCoreVS = /* glsl */ `
 
         return vec4(v1, v2);
     }
+
+
+    // Spherical Harmonics
+
+    vec3 unpack111011(uint bits) {
+        return vec3(
+            float(bits >> 21u) / 2047.0,
+            float((bits >> 11u) & 0x3ffu) / 1023.0,
+            float(bits & 0x7ffu) / 2047.0
+        );
+    }
+
+    // fetch quantized spherical harmonic coefficients
+    void fetchScale(in highp usampler2D sampler, out float scale, out vec3 a, out vec3 b, out vec3 c) {
+        uvec4 t = texelFetch(sampler, splatUV, 0);
+        scale = uintBitsToFloat(t.x);
+        a = unpack111011(t.y) * 2.0 - 1.0;
+        b = unpack111011(t.z) * 2.0 - 1.0;
+        c = unpack111011(t.w) * 2.0 - 1.0;
+    }
+
+    // fetch quantized spherical harmonic coefficients
+    void fetch(in highp usampler2D sampler, out vec3 a, out vec3 b, out vec3 c, out vec3 d) {
+        uvec4 t = texelFetch(sampler, splatUV, 0);
+        a = unpack111011(t.x) * 2.0 - 1.0;
+        b = unpack111011(t.y) * 2.0 - 1.0;
+        c = unpack111011(t.z) * 2.0 - 1.0;
+        d = unpack111011(t.w) * 2.0 - 1.0;
+    }
+
+    #if defined(USE_SH1)
+        #define SH_C1 0.4886025119029199f
+
+        uniform highp usampler2D splatSH_1to3;
+    #if defined(USE_SH2)
+        #define SH_C2_0 1.0925484305920792f
+        #define SH_C2_1 -1.0925484305920792f
+        #define SH_C2_2 0.31539156525252005f
+        #define SH_C2_3 -1.0925484305920792f
+        #define SH_C2_4 0.5462742152960396f
+
+        uniform highp usampler2D splatSH_4to7;
+        uniform highp usampler2D splatSH_8to11;
+    #if defined(USE_SH3)
+        #define SH_C3_0 -0.5900435899266435f
+        #define SH_C3_1 2.890611442640554f
+        #define SH_C3_2 -0.4570457994644658f
+        #define SH_C3_3 0.3731763325901154f
+        #define SH_C3_4 -0.4570457994644658f
+        #define SH_C3_5 1.445305721320277f
+        #define SH_C3_6 -0.5900435899266435f
+
+        uniform highp usampler2D splatSH_12to15;
+    #endif
+    #endif
+    #endif
+
+    vec3 evalSH(in vec3 dir) {
+        vec3 result = vec3(0.0);
+
+        // see https://github.com/graphdeco-inria/gaussian-splatting/blob/main/utils/sh_utils.py
+    #if defined(USE_SH1)
+        // 1st degree
+        float x = dir.x;
+        float y = dir.y;
+        float z = dir.z;
+
+        float scale;
+        vec3 sh1, sh2, sh3;
+        fetchScale(splatSH_1to3, scale, sh1, sh2, sh3);
+        result += SH_C1 * (-sh1 * y + sh2 * z - sh3 * x);
+
+    #if defined(USE_SH2)
+        // 2nd degree
+        float xx = x * x;
+        float yy = y * y;
+        float zz = z * z;
+        float xy = x * y;
+        float yz = y * z;
+        float xz = x * z;
+
+        vec3 sh4, sh5, sh6, sh7;
+        vec3 sh8, sh9, sh10, sh11;
+        fetch(splatSH_4to7, sh4, sh5, sh6, sh7);
+        fetch(splatSH_8to11, sh8, sh9, sh10, sh11);
+        result +=
+            sh4 * (SH_C2_0 * xy) *  +
+            sh5 * (SH_C2_1 * yz) +
+            sh6 * (SH_C2_2 * (2.0 * zz - xx - yy)) +
+            sh7 * (SH_C2_3 * xz) +
+            sh8 * (SH_C2_4 * (xx - yy));
+
+    #if defined(USE_SH3)
+        // 3rd degree
+        vec3 sh12, sh13, sh14, sh15;
+        fetch(splatSH_12to15, sh12, sh13, sh14, sh15);
+        result +=
+            sh9  * (SH_C3_0 * y * (3.0 * xx - yy)) +
+            sh10 * (SH_C3_1 * xy * z) +
+            sh11 * (SH_C3_2 * y * (4.0 * zz - xx - yy)) +
+            sh12 * (SH_C3_3 * z * (2.0 * zz - 3.0 * xx - 3.0 * yy)) +
+            sh13 * (SH_C3_4 * x * (4.0 * zz - xx - yy)) +
+            sh14 * (SH_C3_5 * z * (xx - yy)) +
+            sh15 * (SH_C3_6 * x * (xx - 3.0 * yy));
+    #endif
+    #endif
+        result *= scale;
+    #endif
+
+        return result;
+    }
 `;
 
 const splatCoreFS = /* glsl */ `
@@ -153,17 +264,20 @@ class GSplatShaderGenerator {
     generateKey(options) {
         const vsHash = hashCode(options.vertex);
         const fsHash = hashCode(options.fragment);
-        return `splat-${options.pass}-${options.gamma}-${options.toneMapping}-${vsHash}-${fsHash}-${options.dither}}`;
+        const defines = (options.defines ?? []).sort().join('-');
+        return `splat-${options.pass}-${options.gamma}-${options.toneMapping}-${vsHash}-${fsHash}-${options.dither}-${defines}`;
     }
 
     createShaderDefinition(device, options) {
 
         const shaderPassInfo = ShaderPass.get(device).getByIndex(options.pass);
         const shaderPassDefines = shaderPassInfo.shaderDefines;
+        const optionDefines = (options.defines ?? []).map(d => `#define ${d}`).join('\n');
 
         const defines =
-            `${shaderPassDefines
-            }#define DITHER_${options.dither.toUpperCase()}\n` +
+            `${shaderPassDefines}\n` +
+            `${optionDefines}\n` +
+            `#define DITHER_${options.dither.toUpperCase()}\n` +
             `#define TONEMAP_${options.toneMapping === TONEMAP_LINEAR ? 'DISABLED' : 'ENABLED'}\n`;
 
         const vs = defines + splatCoreVS + options.vertex;

@@ -1,10 +1,13 @@
 import { Color } from '../../core/math/color.js';
+import { Mat3 } from '../../core/math/mat3.js';
 import { Mat4 } from '../../core/math/mat4.js';
 import { Quat } from '../../core/math/quat.js';
 import { Vec3 } from '../../core/math/vec3.js';
 import { BoundingBox } from '../../core/shape/bounding-box.js';
+import { SHRotation } from './sh-utils.js';
 
 const vec3 = new Vec3();
+const mat3 = new Mat3();
 const mat4 = new Mat4();
 const quat = new Quat();
 const quat2 = new Quat();
@@ -130,6 +133,17 @@ class GSplatData {
         const rz = this.getProp('rot_3');
         const rw = this.getProp('rot_0');
 
+        // initialize SH data
+        const shData = [];
+        for (let i = 0; i < 45; ++i) {
+            shData.push(this.getProp(`f_rest_${i}`));
+        }
+
+        const hasSH = shData.every((x) => x);
+
+        const shRot = hasSH ? new SHRotation(mat3.setFromMat4(mat)) : null;
+        const coeffs = [0];
+
         quat2.setFromMat4(mat);
 
         for (let i = 0; i < this.numSplats; ++i) {
@@ -147,7 +161,20 @@ class GSplatData {
             rz[i] = quat.z;
             rw[i] = quat.w;
 
-            // TODO: transform SH
+            // transform SH data
+            if (shRot) {
+                for (let c = 0; c < 3; ++c) {
+                    for (let d = 0; d < 15; ++d) {
+                        coeffs[d + 1] = shData[c * 15 + d][i];
+                    }
+
+                    shRot.apply(coeffs, coeffs);
+
+                    for (let d = 0; d < 15; ++d) {
+                        shData[c * 15 + d][i] = coeffs[d + 1];
+                    }
+                }
+            }
         }
     }
 

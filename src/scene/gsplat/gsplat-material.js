@@ -6,6 +6,8 @@ import { getProgramLibrary } from '../shader-lib/get-program-library.js';
 import { gsplat } from './shader-generator-gsplat.js';
 
 const splatMainVS = /* glsl */ `
+    uniform vec3 view_position;
+
     uniform sampler2D splatColor;
 
     varying mediump vec2 texCoord;
@@ -63,6 +65,12 @@ const splatMainVS = /* glsl */ `
 
         texCoord = vertex_position.xy * scale / 2.0;
 
+        #ifdef USE_SH1
+            vec4 worldCenter = matrix_model * vec4(center, 1.0);
+            vec3 viewDir = normalize((worldCenter.xyz / worldCenter.w - view_position) * mat3(matrix_model));
+            color.xyz = max(color.xyz + evalSH(viewDir), 0.0);
+        #endif
+
         #ifndef DITHER_NONE
             id = float(splatId);
         #endif
@@ -81,6 +89,7 @@ const splatMainFS = /* glsl */ `
  * @property {string} [vertex] - Custom vertex shader, see SPLAT MANY example.
  * @property {string} [fragment] - Custom fragment shader, see SPLAT MANY example.
  * @property {string} [dither] - Opacity dithering enum.
+ * @property {string[]} [defines] - List of shader defines.
  *
  * @ignore
  */
@@ -108,7 +117,8 @@ const createGSplatMaterial = (options = {}) => {
             toneMapping: (pass === SHADER_FORWARDHDR ? TONEMAP_LINEAR : scene.toneMapping),
             vertex: options.vertex ?? splatMainVS,
             fragment: options.fragment ?? splatMainFS,
-            dither: ditherEnum
+            dither: ditherEnum,
+            defines: options.defines
         };
 
         const processingOptions = new ShaderProcessorOptions(viewUniformFormat, viewBindGroupFormat);
