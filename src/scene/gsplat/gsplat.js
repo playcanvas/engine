@@ -26,6 +26,14 @@ const _m0 = new Vec3();
 const _m1 = new Vec3();
 const _m2 = new Vec3();
 
+const getSHData = (gsplatData) => {
+    const result = [];
+    for (let i = 0; i < 45; ++i) {
+        result.push(gsplatData.getProp(`f_rest_${i}`));
+    }
+    return result;
+};
+
 /** @ignore */
 class GSplat {
     device;
@@ -46,6 +54,21 @@ class GSplat {
 
     /** @type {Texture} */
     transformBTexture;
+
+    /** @type {Boolean} */
+    hasSH;
+
+    /** @type {Texture | undefined} */
+    sh1to3Texture;
+
+    /** @type {Texture | undefined} */
+    sh4to7Texture;
+
+    /** @type {Texture | undefined} */
+    sh8to11Texture;
+
+    /** @type {Texture | undefined} */
+    sh12to15Texture;
 
     /**
      * @param {GraphicsDevice} device - The graphics device.
@@ -71,23 +94,47 @@ class GSplat {
         // write texture data
         this.updateColorData(gsplatData);
         this.updateTransformData(gsplatData);
+
+        // initialize SH data
+        this.hasSH = getSHData(gsplatData).every(x => x);
+        if (this.hasSH) {
+            this.sh1to3Texture = this.createTexture('splatSH_1to3', PIXELFORMAT_RGBA32U, size);
+            this.sh4to7Texture = this.createTexture('splatSH_4to7', PIXELFORMAT_RGBA32U, size);
+            this.sh8to11Texture = this.createTexture('splatSH_8to11', PIXELFORMAT_RGBA32U, size);
+            this.sh12to15Texture = this.createTexture('splatSH_12to15', PIXELFORMAT_RGBA32U, size);
+
+            this.updateSHData(gsplatData);
+        }
     }
 
     destroy() {
         this.colorTexture?.destroy();
         this.transformATexture?.destroy();
         this.transformBTexture?.destroy();
+        this.sh1to3Texture?.destroy();
+        this.sh4to7Texture?.destroy();
+        this.sh8to11Texture?.destroy();
+        this.sh12to15Texture?.destroy();
     }
 
     /**
      * @returns {Material} material - The material to set up for the splat rendering.
      */
     createMaterial(options) {
-        const result = createGSplatMaterial(options);
+        const result = createGSplatMaterial({
+            ...(this.hasSH ? { defines: ['USE_SH1', 'USE_SH2', 'USE_SH3'] } : {}),
+            ...options
+        });
         result.setParameter('splatColor', this.colorTexture);
         result.setParameter('transformA', this.transformATexture);
         result.setParameter('transformB', this.transformBTexture);
         result.setParameter('tex_params', new Float32Array([this.numSplats, this.colorTexture.width, 0, 0]));
+        if (this.hasSH) {
+            result.setParameter('splatSH_1to3', this.sh1to3Texture);
+            result.setParameter('splatSH_4to7', this.sh4to7Texture);
+            result.setParameter('splatSH_8to11', this.sh8to11Texture);
+            result.setParameter('splatSH_12to15', this.sh12to15Texture);
+        }
         return result;
     }
 
@@ -235,6 +282,85 @@ class GSplat {
             _m1.dot(_m2),
             _m2.dot(_m2)
         );
+    }
+
+    /**
+     * @param {import('./gsplat-data.js').GSplatData} gsplatData - The source data
+     */
+    updateSHData(gsplatData) {
+        const sh1to3Data = this.sh1to3Texture.lock();
+        const sh4to7Data = this.sh4to7Texture.lock();
+        const sh8to11Data = this.sh8to11Texture.lock();
+        const sh12to15Data = this.sh12to15Texture.lock();
+
+        const src = getSHData(gsplatData);
+
+        /**
+         * @param {number} value - The value to pack.
+         * @param {number} bits - The number of bits to use.
+         * @returns {number} The packed value.
+         */
+        const packUnorm = (value, bits) => {
+            const t = (1 << bits) - 1;
+            return Math.max(0, Math.min(t, Math.floor(value * t + 0.5)));
+        };
+
+        /**
+         * @param {number} coef - Index of the coefficient to pack
+         * @param {number} idx - Index of the splat to pack
+         * @param {number} m - Scaling factor to normalize the set of coefficients
+         * @returns {number} The packed value.
+         */
+        const pack = (coef, idx, m) => {
+            const r = src[coef][idx] / m;
+            const g = src[coef + 15][idx] / m;
+            const b = src[coef + 30][idx] / m;
+
+            return packUnorm(r * 0.5 + 0.5, 11) << 21 |
+                   packUnorm(g * 0.5 + 0.5, 10) << 11 |
+                   packUnorm(b * 0.5 + 0.5, 11);
+        };
+
+        const float32 = new Float32Array(1);
+        const uint32 = new Uint32Array(float32.buffer);
+
+        for (let i = 0; i < gsplatData.numSplats; ++i) {
+            let m = Math.abs(src[0][i]);
+            for (let j = 1; j < 45; ++j) {
+                m = Math.max(m, Math.abs(src[j][i]));
+            }
+
+            if (m === 0) {
+                continue;
+            }
+
+            float32[0] = m;
+
+            sh1to3Data[i * 4 + 0] = uint32[0];
+            sh1to3Data[i * 4 + 1] = pack(0, i, m);
+            sh1to3Data[i * 4 + 2] = pack(1, i, m);
+            sh1to3Data[i * 4 + 3] = pack(2, i, m);
+
+            sh4to7Data[i * 4 + 0] = pack(3, i, m);
+            sh4to7Data[i * 4 + 1] = pack(4, i, m);
+            sh4to7Data[i * 4 + 2] = pack(5, i, m);
+            sh4to7Data[i * 4 + 3] = pack(6, i, m);
+
+            sh8to11Data[i * 4 + 0] = pack(7, i, m);
+            sh8to11Data[i * 4 + 1] = pack(8, i, m);
+            sh8to11Data[i * 4 + 2] = pack(9, i, m);
+            sh8to11Data[i * 4 + 3] = pack(10, i, m);
+
+            sh12to15Data[i * 4 + 0] = pack(11, i, m);
+            sh12to15Data[i * 4 + 1] = pack(12, i, m);
+            sh12to15Data[i * 4 + 2] = pack(13, i, m);
+            sh12to15Data[i * 4 + 3] = pack(14, i, m);
+        }
+
+        this.sh1to3Texture.unlock();
+        this.sh4to7Texture.unlock();
+        this.sh8to11Texture.unlock();
+        this.sh12to15Texture.unlock();
     }
 }
 

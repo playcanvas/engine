@@ -1,7 +1,6 @@
 import { GSplatData } from '../../scene/gsplat/gsplat-data.js';
 import { GSplatCompressedData } from '../../scene/gsplat/gsplat-compressed-data.js';
 import { GSplatResource } from './gsplat-resource.js';
-import { Mat4 } from '../../core/math/mat4.js';
 
 /**
  * @import { AssetRegistry } from '../asset/asset-registry.js'
@@ -461,24 +460,8 @@ const readPly = async (reader, propertyFilter = null) => {
     return new GSplatData(elements);
 };
 
-// filter out element data we're not going to use
-const defaultElements = [
-    'x', 'y', 'z',
-    'f_dc_0', 'f_dc_1', 'f_dc_2', 'opacity',
-    'rot_0', 'rot_1', 'rot_2', 'rot_3',
-    'scale_0', 'scale_1', 'scale_2',
-    // compressed format elements
-    'min_x', 'min_y', 'min_z',
-    'max_x', 'max_y', 'max_z',
-    'min_scale_x', 'min_scale_y', 'min_scale_z',
-    'max_scale_x', 'max_scale_y', 'max_scale_z',
-    'packed_position', 'packed_rotation', 'packed_scale', 'packed_color'
-];
-
-const defaultElementsSet = new Set(defaultElements);
-const defaultElementFilter = val => defaultElementsSet.has(val);
-
-const mat4 = new Mat4();
+// by default load everything
+const defaultElementFilter = val => true;
 
 class PlyParser {
     /** @type {GraphicsDevice} */
@@ -517,13 +500,6 @@ class PlyParser {
             readPly(response.body.getReader(), asset.data.elementFilter ?? defaultElementFilter)
             .then((gsplatData) => {
                 if (!gsplatData.isCompressed) {
-
-                    // perform Z scale
-                    if (asset.data.performZScale ?? true) {
-                        mat4.setScale(-1, -1, 1);
-                        gsplatData.transform(mat4);
-                    }
-
                     // reorder data
                     if (asset.data.reorder ?? true) {
                         gsplatData.reorderData();

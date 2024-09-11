@@ -10,10 +10,8 @@ import { BoundingBox } from '../../core/shape/bounding-box.js';
  * @import { Vec4 } from '../../core/math/vec4.js'
  */
 
-const vec3 = new Vec3();
 const mat4 = new Mat4();
 const quat = new Quat();
-const quat2 = new Quat();
 const aabb = new BoundingBox();
 const aabb2 = new BoundingBox();
 
@@ -119,48 +117,6 @@ class GSplatData {
         aabb.center.set(0, 0, 0);
         aabb.halfExtents.set(s.x * 2, s.y * 2, s.z * 2);
         result.setFromTransformedAabb(aabb, mat4);
-    }
-
-    /**
-     * Transform splat data by the given matrix.
-     *
-     * @param {Mat4} mat - The matrix.
-     */
-    transform(mat) {
-        const x = this.getProp('x');
-        const y = this.getProp('y');
-        const z = this.getProp('z');
-
-        if (x && y && z) {
-            for (let i = 0; i < this.numSplats; ++i) {
-                // transform center
-                vec3.set(x[i], y[i], z[i]);
-                mat.transformPoint(vec3, vec3);
-                x[i] = vec3.x;
-                y[i] = vec3.y;
-                z[i] = vec3.z;
-            }
-        }
-
-        const rx = this.getProp('rot_1');
-        const ry = this.getProp('rot_2');
-        const rz = this.getProp('rot_3');
-        const rw = this.getProp('rot_0');
-
-        if (rx && ry && rz && rw) {
-            quat2.setFromMat4(mat);
-
-            for (let i = 0; i < this.numSplats; ++i) {
-                // transform orientation
-                quat.set(rx[i], ry[i], rz[i], rw[i]).mul2(quat2, quat);
-                rx[i] = quat.x;
-                ry[i] = quat.y;
-                rz[i] = quat.z;
-                rw[i] = quat.w;
-            }
-        }
-
-        // TODO: transform SH
     }
 
     // access a named property
