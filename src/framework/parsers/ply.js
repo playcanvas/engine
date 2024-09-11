@@ -498,8 +498,8 @@ class PlyParser {
                 if (!gsplatData.isCompressed) {
 
                     // perform Z scale
-                    if (asset.data.performZScale ?? true) {
-                        mat4.setScale(-1, -1, 1);
+                    if (asset.data.performZScale ?? false) {
+                        mat4.setFromEulerAngles(0, 0, 180);
                         gsplatData.transform(mat4);
                     }
 
