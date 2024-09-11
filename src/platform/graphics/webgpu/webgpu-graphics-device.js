@@ -713,6 +713,32 @@ class WebgpuGraphicsDevice extends GraphicsDevice {
         // each render pass can use different number of bind groups
         this.bindGroupFormats.length = 0;
 
+        
+        
+        
+        
+        
+        
+        const target = this.renderTarget;
+        if (target) {
+            // resolve depth/stencil buffer
+            if (target.depthBuffer && renderPass.depthStencilOps.resolveDepth) {
+                if (renderPass.samples > 1 && target.autoResolve) {
+                    //target.resolve(false, true);
+
+                    console.log("resolve depth - commented out");
+                    const depthAttachment = target.impl.depthAttachment;
+                    const destTexture = target.depthBuffer.impl.gpuTexture;
+                    if (depthAttachment && destTexture) {
+                        this.resolver.resolveDepth(this.commandEncoder, depthAttachment.multisampledDepthBuffer, destTexture);
+                    }
+                }
+            }
+        }
+
+
+
+
         // generate mipmaps using the same command buffer encoder
         for (let i = 0; i < renderPass.colorArrayOps.length; i++) {
             const colorOps = renderPass.colorArrayOps[i];
