@@ -23,16 +23,12 @@ const splatMainVS = /* glsl */ `
             return;
         }
 
-        // read center
-        vec3 center;
-        readCenter(center);
+        // get center
+        vec3 center = getCenter();
 
-        mat4 modelView = matrix_view * matrix_model;
-
-        // transform center to camera space
-        vec4 splat_cam = modelView * vec4(center, 1.0);
-
-        // transform center to clip space
+        // handle transforms
+        mat4 model_view = matrix_view * matrix_model;
+        vec4 splat_cam = model_view * vec4(center, 1.0);
         vec4 splat_proj = matrix_projection * splat_cam;
 
         // cull behind camera
@@ -41,13 +37,13 @@ const splatMainVS = /* glsl */ `
             return;
         }
 
-        // read covariance
+        // get covariance
         vec3 covA, covB;
-        readCovariance(covA, covB);
+        getCovariance(covA, covB);
 
-        vec4 v1v2 = calcV1V2(splat_cam.xyz, covA, covB, transpose(mat3(modelView)));
+        vec4 v1v2 = calcV1V2(splat_cam.xyz, covA, covB, transpose(mat3(model_view)));
 
-        // read color
+        // get color
         color = texelFetch(splatColor, splatUV, 0);
 
         // calculate scale based on alpha

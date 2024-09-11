@@ -75,13 +75,10 @@ const splatCoreVS = /* glsl */ `
     }
 
     // read chunk and packed data from textures
-    void readChunkData() {
+    void readData() {
         chunkDataA = texelFetch(chunkTexture, chunkUV, 0);
         chunkDataB = texelFetch(chunkTexture, ivec2(chunkUV.x + 1, chunkUV.y), 0);
         chunkDataC = texelFetch(chunkTexture, ivec2(chunkUV.x + 2, chunkUV.y), 0);
-    }
-
-    void readPackedData() {
         packedData = texelFetch(packedTexture, packedUV, 0);
     }
 
@@ -152,26 +149,32 @@ const splatCoreVS = /* glsl */ `
     }
 
     // Given a rotation matrix and scale vector, compute 3d covariance A and B
-    void calcCov3d(mat3 rot, vec3 scale, out vec3 covA, out vec3 covB) {
+    void getCovariance(out vec3 covA, out vec3 covB) {
+        mat3 rot = quatToMat3(getRotation());
+        vec3 scale = getScale();
+
         // M = S * R
         mat3 M = transpose(mat3(
             scale.x * rot[0],
             scale.y * rot[1],
             scale.z * rot[2]
         ));
+
         covA = vec3(dot(M[0], M[0]), dot(M[0], M[1]), dot(M[0], M[2]));
         covB = vec3(dot(M[1], M[1]), dot(M[1], M[2]), dot(M[2], M[2]));
     }
 
     // given the splat center (view space) and covariance A and B vectors, calculate
     // the v1 and v2 vectors for this view.
-    vec4 calcV1V2(vec3 centerView, vec3 covA, vec3 covB, mat3 W, float focal) {
+    vec4 calcV1V2(vec3 centerView, vec3 covA, vec3 covB, mat3 W) {
 
         mat3 Vrk = mat3(
             covA.x, covA.y, covA.z, 
             covA.y, covB.x, covB.y,
             covA.z, covB.y, covB.z
         );
+
+        float focal = viewport.x * matrix_projection[0][0];
 
         float J1 = focal / centerView.z;
         vec2 J2 = -J1 / centerView.z * centerView.xy;
@@ -293,18 +296,15 @@ const splatMainVS = /* glsl */ `
             return;
         }
 
-        // read chunk data
-        readChunkData();
+        // read chunk data and packed data
+        readData();
 
-        // read packed data
-        readPackedData();
+        // get center
+        vec3 center = getCenter();
 
-        mat4 modelView = matrix_view * matrix_model;
-
-        // transform center to camera space
-        vec4 splat_cam = modelView * vec4(getCenter(), 1.0);
-
-        // transform center to clip space
+        // handle transforms
+        mat4 model_view = matrix_view * matrix_model;
+        vec4 splat_cam = model_view * vec4(center, 1.0);
         vec4 splat_proj = matrix_projection * splat_cam;
 
         // cull behind camera
@@ -313,11 +313,11 @@ const splatMainVS = /* glsl */ `
             return;
         }
 
-        // calculate the 3d covariance vectors from rotation and scale
+        // get covariance
         vec3 covA, covB;
-        calcCov3d(quatToMat3(getRotation()), getScale(), covA, covB);
+        getCovariance(covA, covB);
 
-        vec4 v1v2 = calcV1V2(splat_cam.xyz, covA, covB, transpose(mat3(modelView)), viewport.x * matrix_projection[0][0]);
+        vec4 v1v2 = calcV1V2(splat_cam.xyz, covA, covB, transpose(mat3(model_view)));
 
         // get color
         color = getColor();
