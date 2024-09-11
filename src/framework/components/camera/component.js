@@ -216,8 +216,8 @@ class CameraComponent extends Component {
             isForward: true
         }) : null;
         this._camera.shaderPassInfo = shaderPassInfo;
-
-        return shaderPassInfo.index;
+        // magnopus patched - null is a valid value (the default)
+        return shaderPassInfo?.index ?? null;
     }
 
     /**
