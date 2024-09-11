@@ -330,8 +330,14 @@ class WebgpuRenderTarget {
 
                 if (samples > 1) {  // create a multi-sampled depth buffer for the provided depth buffer
 
+                    // single-sampled depthBuffer.impl.format can be R32F in some cases, but that cannot be used as a depth
+                    // buffer, only as a texture to resolve it to. We always use depth24plus-stencil8 for msaa depth buffers.
+                    const depthFormat = 'depth24plus-stencil8';
+                    this.depthAttachment.format = depthFormat;
+                    this.depthAttachment.hasStencil = depthFormat === 'depth24plus-stencil8';
+
                     // key for matching multi-sampled depth buffer
-                    const key = `${depthBuffer.id}:${width}:${height}:${samples}:${depthBuffer.impl.format}`;
+                    const key = `${depthBuffer.id}:${width}:${height}:${samples}:${depthFormat}`;
 
                     // check if we have already allocated a multi-sampled depth buffer for the depth buffer
                     const msTextures = getMultisampledTextureCache(device);
@@ -343,8 +349,10 @@ class WebgpuRenderTarget {
                             size: [width, height, 1],
                             dimension: '2d',
                             sampleCount: samples,
-                            format: depthBuffer.impl.format,
-                            usage: GPUTextureUsage.RENDER_ATTACHMENT
+                            format: depthFormat,
+                            usage: GPUTextureUsage.RENDER_ATTACHMENT |
+                                // if msaa and resolve targets are different formats, we need to be able to bind the msaa target as a texture for manual shader resolve
+                                (depthFormat !== depthBuffer.impl.format ? GPUTextureUsage.TEXTURE_BINDING : 0)
                         };
 
                         // allocate multi-sampled depth buffer
