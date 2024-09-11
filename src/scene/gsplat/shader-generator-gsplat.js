@@ -264,7 +264,7 @@ class GSplatShaderGenerator {
     generateKey(options) {
         const vsHash = hashCode(options.vertex);
         const fsHash = hashCode(options.fragment);
-        const defines = (options.defines ?? []).sort().join('-');
+        const defines = options.defines?.sort().join('-') ?? '';
         return `splat-${options.pass}-${options.gamma}-${options.toneMapping}-${vsHash}-${fsHash}-${options.dither}-${defines}`;
     }
 
