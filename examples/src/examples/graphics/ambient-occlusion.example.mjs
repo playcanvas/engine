@@ -168,7 +168,7 @@ assetListLoader.load(() => {
     // ------ Custom render passes set up ------
 
     const currentOptions = new pc.CameraFrameOptions();
-    currentOptions.samples = 1;
+    currentOptions.samples = 4;
     currentOptions.sceneColorMap = false;
     currentOptions.ssaoType = pc.SSAOTYPE_LIGHTING;
     currentOptions.ssaoBlurEnabled = true;
