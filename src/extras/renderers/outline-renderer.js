@@ -261,7 +261,8 @@ class OutlineRenderer {
         const { width, height } = rt;
 
         // horizontal extend pass
-        _tempFloatArray[0] = 1.0 / width / 2.0;
+        // magnopus patched - make it thicc
+        _tempFloatArray[0] = 1.5 / width / 2.0;
         _tempFloatArray[1] = 0;
         uOffset.setValue(_tempFloatArray);
         uColorBuffer.setValue(rt.colorBuffer);
@@ -270,7 +271,8 @@ class OutlineRenderer {
 
         // vertical extend pass
         _tempFloatArray[0] = 0;
-        _tempFloatArray[1] = 1.0 / height / 2.0;
+        // magnopus patched - make it thicc
+        _tempFloatArray[1] = 1.5 / height / 2.0;
         uOffset.setValue(_tempFloatArray);
         uColorBuffer.setValue(tempRt.colorBuffer);
         uSrcMultiplier.setValue(1.0);

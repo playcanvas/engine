@@ -2050,14 +2050,6 @@ const applySampler = (texture, gltfSampler) => {
 };
 
 let gltfTextureUniqueId = 0;
-const getTextureSource = gltfTexture => gltfTexture.extensions?.KHR_texture_basisu?.source ??
-    gltfTexture.extensions?.EXT_texture_webp?.source ??
-    gltfTexture.source;
-
-const getImageIndexFromTextureIndex = (gltf, index) => {
-    const gltfTexture = gltf.textures[index];
-    return getTextureSource(gltfTexture);
-};
 
 const getTextureSource = gltfTexture => gltfTexture.extensions?.KHR_texture_basisu?.source ??
     gltfTexture.extensions?.EXT_texture_webp?.source ??
