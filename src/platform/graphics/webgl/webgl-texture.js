@@ -328,7 +328,6 @@ class WebglTexture {
                 this._glFormat = gl.RGBA;
                 this._glInternalFormat = gl.SRGB8_ALPHA8;
                 this._glPixelType = gl.UNSIGNED_BYTE;
-                console.log(this.texture.name, 'srgb');
                 break;
 
             // Integer texture formats (R)
