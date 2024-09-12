@@ -17,7 +17,7 @@ class RenderPassQuad extends RenderPass {
 
     execute() {
         const { device } = this;
-        DebugGraphics.pushGpuMarker(device, 'drawQuadWithShader');
+        DebugGraphics.pushGpuMarker(device, `${this.name}:${this.quad.shader.name}`);
 
         device.setCullMode(CULLFACE_NONE);
         device.setDepthState(DepthState.NODEPTH);

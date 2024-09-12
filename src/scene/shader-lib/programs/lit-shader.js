@@ -945,6 +945,15 @@ class LitShader {
         // invoke frontend functions
         code.append(this.frontendFunc);
 
+        // apply SSAO
+        if (options.ssao) {
+            func.append(`
+                    uniform sampler2D ssaoTexture;
+                    uniform vec2 ssaoTextureSizeInv;
+                `);
+            backend.append('litArgs_ao *= texture2DLodEXT(ssaoTexture, gl_FragCoord.xy * ssaoTextureSizeInv, 0.0).r;');
+        }
+
         // transform tangent space normals to world space
         if (this.needsNormal) {
             if (options.useSpecular) {
@@ -1223,7 +1232,7 @@ class LitShader {
                             backend.append(`    fadeShadow(light${i}_shadowCascadeDistances);`);
                         }
 
-                        var shadowCoordArgs = `SHADOWMAP_PASS(light${i}_shadowMap), dShadowCoord, light${i}_shadowParams`;
+                        let shadowCoordArgs = `SHADOWMAP_PASS(light${i}_shadowMap), dShadowCoord, light${i}_shadowParams`;
 
                         if (vsmShadows) {
                             // VSM
@@ -1285,7 +1294,7 @@ class LitShader {
                         }
 
                     } else {
-                        var calcFresnel = false;
+                        let calcFresnel = false;
                         if (lightType === LIGHTTYPE_DIRECTIONAL && options.fresnelModel > 0) {
                             calcFresnel = true;
                         }

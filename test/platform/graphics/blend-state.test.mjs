@@ -6,11 +6,11 @@ import {
 
 import { expect } from 'chai';
 
-describe('BlendState', () => {
+describe('BlendState', function () {
 
-    describe('#constructor', () => {
+    describe('#constructor', function () {
 
-        it('empty', () => {
+        it('empty', function () {
             const bs = new BlendState();
             expect(bs.blend).to.equal(false);
             expect(bs.colorOp).to.equal(BLENDEQUATION_ADD);
@@ -25,7 +25,7 @@ describe('BlendState', () => {
             expect(bs.alphaWrite).to.equal(true);
         });
 
-        it('minimal parameters', () => {
+        it('minimal parameters', function () {
             const bs = new BlendState(true, BLENDEQUATION_ADD, BLENDMODE_ONE, BLENDMODE_ZERO);
             expect(bs.blend).to.equal(true);
             expect(bs.colorOp).to.equal(BLENDEQUATION_ADD);
@@ -40,7 +40,7 @@ describe('BlendState', () => {
             expect(bs.alphaWrite).to.equal(true);
         });
 
-        it('full parameters', () => {
+        it('full parameters', function () {
             const bs = new BlendState(true, BLENDEQUATION_MIN, BLENDMODE_ONE, BLENDMODE_ZERO,
                 BLENDEQUATION_MAX, BLENDMODE_ONE_MINUS_DST_COLOR, BLENDMODE_SRC_ALPHA_SATURATE,
                 false, false, false, false);

@@ -1,6 +1,6 @@
 import { Debug } from '../../core/debug.js';
 import { TRACEID_RENDER_TARGET_ALLOC } from '../../core/constants.js';
-import { PIXELFORMAT_DEPTH, PIXELFORMAT_DEPTHSTENCIL, isSrgbPixelFormat } from './constants.js';
+import { PIXELFORMAT_DEPTH, PIXELFORMAT_DEPTHSTENCIL, PIXELFORMAT_R32F, isSrgbPixelFormat } from './constants.js';
 import { DebugGraphics } from './debug-graphics.js';
 import { GraphicsDevice } from './graphics-device.js';
 
@@ -135,6 +135,19 @@ class RenderTarget {
         Debug.assert(!(options instanceof GraphicsDevice), 'pc.RenderTarget constructor no longer accepts GraphicsDevice parameter.');
         this.id = id++;
 
+        // device, from one of the buffers
+        const device = options.colorBuffer?.device ?? options.colorBuffers?.[0].device ?? options.depthBuffer?.device ?? options.graphicsDevice;
+        Debug.assert(device, 'Failed to obtain the device, colorBuffer nor depthBuffer store it.');
+        this._device = device;
+
+        // samples
+        const { maxSamples } = this._device;
+        this._samples = Math.min(options.samples ?? 1, maxSamples);
+        if (device.isWebGPU) {
+            // WebGPU only supports values of 1 or 4 for samples
+            this._samples = this._samples > 1 ? maxSamples : 1;
+        }
+
         // Use the single colorBuffer in the colorBuffers array. This allows us to always just use the array internally.
         this._colorBuffer = options.colorBuffer;
         if (options.colorBuffer) {
@@ -153,6 +166,11 @@ class RenderTarget {
             } else if (format === PIXELFORMAT_DEPTHSTENCIL) {
                 this._depth = true;
                 this._stencil = true;
+            } else if (format === PIXELFORMAT_R32F && this._depthBuffer.device.isWebGPU && this._samples > 1) {
+                // on WebGPU, when multisampling is enabled, we use R32F format for the specified buffer,
+                // which we can resolve depth to using a shader
+                this._depth = true;
+                this._stencil = false;
             } else {
                 Debug.warn('Incorrect depthBuffer format. Must be pc.PIXELFORMAT_DEPTH or pc.PIXELFORMAT_DEPTHSTENCIL');
                 this._depth = false;
@@ -173,19 +191,6 @@ class RenderTarget {
                 // set the main color buffer to point to 0 index
                 this._colorBuffer = options.colorBuffers[0];
             }
-        }
-
-        // device, from one of the buffers
-        const device = this._colorBuffer?.device || this._depthBuffer?.device || options.graphicsDevice;
-        Debug.assert(device, 'Failed to obtain the device, colorBuffer nor depthBuffer store it.');
-        this._device = device;
-
-        const { maxSamples } = this._device;
-        this._samples = Math.min(options.samples ?? 1, maxSamples);
-
-        // WebGPU only supports values of 1 or 4 for samples
-        if (device.isWebGPU) {
-            this._samples = this._samples > 1 ? maxSamples : 1;
         }
 
         this.autoResolve = options.autoResolve ?? true;
@@ -360,7 +365,7 @@ class RenderTarget {
         // TODO: consider adding support for MRT to this function.
 
         if (this._device && this._samples > 1) {
-            DebugGraphics.pushGpuMarker(this._device, `RESOLVE-RT:${this.name}`);
+            DebugGraphics.pushGpuMarker(this._device, `RESOLVE-RT:${this.name}:${color ? '[color]' : ''}:${depth ? '[depth]' : ''}`);
             this.impl.resolve(this._device, this, color, depth);
             DebugGraphics.popGpuMarker(this._device);
         }

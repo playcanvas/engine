@@ -89,17 +89,12 @@ assetListLoader.load(() => {
     app.root.addChild(ground);
 
     // Create 4 wheels for our vehicle
-    /**
-     * @todo use .map ...
-     * @type {pc.Entity[]}
-     */
-    const wheels = [];
-    [
+    const wheels = [
         { name: 'Front Left Wheel', pos: new pc.Vec3(0.8, 0.4, 1.2), front: true },
         { name: 'Front Right Wheel', pos: new pc.Vec3(-0.8, 0.4, 1.2), front: true },
         { name: 'Back Left Wheel', pos: new pc.Vec3(0.8, 0.4, -1.2), front: false },
         { name: 'Back Right Wheel', pos: new pc.Vec3(-0.8, 0.4, -1.2), front: false }
-    ].forEach(function (wheelDef) {
+    ].map((wheelDef) => {
         // Create a wheel
         const wheel = new pc.Entity(wheelDef.name);
         wheel.addComponent('script');
@@ -110,7 +105,7 @@ assetListLoader.load(() => {
             }
         });
         wheel.setLocalPosition(wheelDef.pos);
-        wheels.push(wheel);
+        return wheel;
     });
 
     // Create a physical vehicle

@@ -1,5 +1,7 @@
 /**
- * Class implementing reference counting cache for objects.
+ * Class implementing reference counting cache for objects. The objects itself is used as the key.
+ * If you need a reference counted cache for objects accessed by a key, use
+ * {@link RefCountedKeyCache}.
  */
 class RefCountedCache {
     /**

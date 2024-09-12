@@ -5,17 +5,17 @@ import {
 
 import { expect } from 'chai';
 
-describe('DepthState', () => {
+describe('DepthState', function () {
 
-    describe('#constructor', () => {
+    describe('#constructor', function () {
 
-        it('empty', () => {
+        it('empty', function () {
             const ds = new DepthState();
             expect(ds.func).to.equal(FUNC_LESSEQUAL);
             expect(ds.write).to.equal(true);
         });
 
-        it('full parameters', () => {
+        it('full parameters', function () {
             const ds = new DepthState(FUNC_NOTEQUAL, false);
             expect(ds.func).to.equal(FUNC_NOTEQUAL);
             expect(ds.write).to.equal(false);
@@ -23,16 +23,16 @@ describe('DepthState', () => {
 
     });
 
-    describe('#test property', () => {
+    describe('#test property', function () {
 
-        it('test enabled', () => {
+        it('test enabled', function () {
             const ds = new DepthState();
             ds.test = true;
             expect(ds.func).to.equal(FUNC_LESSEQUAL);
             expect(ds.test).to.equal(true);
         });
 
-        it('test disabled', () => {
+        it('test disabled', function () {
             const ds = new DepthState();
             ds.test = false;
             expect(ds.func).to.equal(FUNC_ALWAYS);

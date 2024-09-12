@@ -215,52 +215,26 @@ assetListLoader.load(() => {
 
     // ------ Custom render passes set up ------
 
-    const currentOptions = {
-        camera: cameraEntity.camera, // camera used to render those passes
-        samples: 0, // number of samples for multi-sampling
-        sceneColorMap: true, // true if the scene color should be captured
-        bloomEnabled: true,
+    const currentOptions = new pc.CameraFrameOptions();
+    currentOptions.sceneColorMap = true;
+    currentOptions.bloomEnabled = true;
+    currentOptions.taaEnabled = false;          // disabled TAA as it currently does not handle dynamic objects
 
-        // disabled TAA as it currently does not handle dynamic objects
-        prepassEnabled: false,
-        taaEnabled: false
-    };
-
-    const setupRenderPass = () => {
-        // destroy existing pass if any
-        if (cameraEntity.camera.renderPasses.length > 0) {
-            cameraEntity.camera.renderPasses[0].destroy();
-        }
-
-        // Use a render pass camera frame, which is a render pass that implements typical rendering of a camera.
-        // Internally this sets up additional passes it needs, based on the options passed to it.
-        const renderPassCamera = new pc.RenderPassCameraFrame(app, currentOptions);
-
-        // and set up these rendering passes to be used by the camera, instead of its default rendering
-        cameraEntity.camera.renderPasses = [renderPassCamera];
-    };
+    // and set up these rendering passes to be used by the camera, instead of its default rendering
+    const renderPassCamera = new pc.RenderPassCameraFrame(app, cameraEntity.camera, currentOptions);
+    cameraEntity.camera.renderPasses = [renderPassCamera];
 
     // ------
 
     const applySettings = () => {
-        // if settings require render passes to be re-created
-        const noPasses = cameraEntity.camera.renderPasses.length === 0;
-        const taaEnabled = data.get('data.taa.enabled');
-        const bloomEnabled = data.get('data.bloom.enabled');
 
-        if (noPasses || taaEnabled !== currentOptions.taaEnabled || bloomEnabled !== currentOptions.bloomEnabled) {
-            currentOptions.taaEnabled = taaEnabled;
-            currentOptions.bloomEnabled = bloomEnabled;
-            currentOptions.prepassEnabled = taaEnabled;
+        // update current options and apply them
+        currentOptions.taaEnabled = data.get('data.taa.enabled');
+        currentOptions.bloomEnabled = data.get('data.bloom.enabled');
+        renderPassCamera.update(currentOptions);
 
-            // create new pass
-            setupRenderPass();
-        }
-
-        const renderPassCamera = cameraEntity.camera.renderPasses[0];
+        // apply options on the other passes
         const composePass = renderPassCamera.composePass;
-
-        // apply all runtime settings
 
         // SCENE
         composePass.toneMapping = data.get('data.scene.tonemapping');
@@ -281,11 +255,12 @@ assetListLoader.load(() => {
         });
 
         // taa - enable camera jitter if taa is enabled
-        cameraEntity.camera.jitter = taaEnabled ? data.get('data.taa.jitter') : 0;
+        cameraEntity.camera.jitter = currentOptions.taaEnabled ? data.get('data.taa.jitter') : 0;
 
         // bloom
-        if (bloomEnabled) {
-            renderPassCamera.lastMipLevel = data.get('data.bloom.lastMipLevel');
+        if (currentOptions.bloomEnabled) {
+            const bloomPass = renderPassCamera.bloomPass;
+            bloomPass.lastMipLevel = data.get('data.bloom.lastMipLevel');
             composePass.bloomIntensity = pc.math.lerp(0, 0.1, data.get('data.bloom.intensity') / 100);
         }
 
@@ -308,9 +283,8 @@ assetListLoader.load(() => {
     };
 
     // apply UI changes
-    let initialValuesSetup = false;
     data.on('*:set', () => {
-        if (initialValuesSetup) applySettings();
+        applySettings();
     });
 
     // set initial values
@@ -348,10 +322,6 @@ assetListLoader.load(() => {
             jitter: 1
         }
     });
-
-    // apply initial settings after all values are set
-    initialValuesSetup = true;
-    applySettings();
 
     // update things every frame
     let angle = 0;

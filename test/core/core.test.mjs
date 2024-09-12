@@ -2,11 +2,11 @@ import { extend } from '../../src/core/core.js';
 
 import { expect } from 'chai';
 
-describe('core', () => {
+describe('core', function () {
 
-    describe('#extend', () => {
+    describe('#extend', function () {
 
-        it('combines two objects', () => {
+        it('combines two objects', function () {
             const o1 = {
                 a: 'a',
                 b: 'b'
@@ -24,7 +24,7 @@ describe('core', () => {
             expect(o3.d).to.equal('d');
         });
 
-        it('combines two arrays', () => {
+        it('combines two arrays', function () {
             const a1 = [1, 2, 3];
             const a2 = [4, 5, 6];
 
@@ -35,7 +35,7 @@ describe('core', () => {
             expect(a3[2]).to.equal(a2[2]);
         });
 
-        it('combines and object and an array', () => {
+        it('combines and object and an array', function () {
             const o1 = { a: 'a' };
             const a1 = [1, 2];
 
@@ -45,7 +45,7 @@ describe('core', () => {
             expect(o2[1]).to.equal(2);
         });
 
-        it('deep combines two objects', () => {
+        it('deep combines two objects', function () {
             const o1 = {
                 A: 'A'
             };
@@ -62,7 +62,7 @@ describe('core', () => {
             expect(o3.A).to.equal('A');
         });
 
-        it('deep combines two objects and does not copy references', () => {
+        it('deep combines two objects and does not copy references', function () {
             const o1 = {
                 A: 'A'
             };

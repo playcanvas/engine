@@ -6,18 +6,18 @@ import { AnimCurve } from '../../../../src/framework/anim/evaluator/anim-curve.j
 import { AnimData } from '../../../../src/framework/anim/evaluator/anim-data.js';
 import { AnimTrack } from '../../../../src/framework/anim/evaluator/anim-track.js';
 
-describe('AnimState', () => {
+describe('AnimState', function () {
 
-    describe('#constructor', () => {
+    describe('#constructor', function () {
 
-        it('instantiates correctly', () => {
+        it('instantiates correctly', function () {
             const animState = new AnimState({ findParameter: () => {} }, 'state', 1, true, null);
             expect(animState).to.be.ok;
             expect(animState.name).to.equal('state');
             expect(animState.nodeCount).to.equal(1);
         });
 
-        it('instansiates correctly with a blend tree', () => {
+        it('instansiates correctly with a blend tree', function () {
             const animState = new AnimState({ findParameter: () => {} }, 'state', 1, true, {
                 type: ANIM_BLEND_1D,
                 parameter: 'param',
@@ -30,9 +30,9 @@ describe('AnimState', () => {
 
     });
 
-    describe('#addAnimation', () => {
+    describe('#addAnimation', function () {
 
-        it('can add an animation to the AnimState instance', () => {
+        it('can add an animation to the AnimState instance', function () {
 
             const curves = [new AnimCurve(['path/to/entity'], 0, 0, INTERPOLATION_LINEAR)];
             const inputs = [new AnimData(1, [0, 1, 2])];

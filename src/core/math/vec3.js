@@ -681,6 +681,14 @@ class Vec3 {
     static ZERO = Object.freeze(new Vec3(0, 0, 0));
 
     /**
+     * A constant vector set to [0.5, 0.5, 0.5].
+     *
+     * @type {Vec3}
+     * @readonly
+     */
+    static HALF = Object.freeze(new Vec3(0.5, 0.5, 0.5));
+
+    /**
      * A constant vector set to [1, 1, 1].
      *
      * @type {Vec3}

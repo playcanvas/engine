@@ -4,7 +4,7 @@ import { platform } from '../../core/platform.js';
 import { Mat4 } from '../../core/math/mat4.js';
 import { Quat } from '../../core/math/quat.js';
 import { Vec3 } from '../../core/math/vec3.js';
-import { XRTYPE_INLINE, XRTYPE_VR, XRTYPE_AR, XRDEPTHSENSINGUSAGE_CPU, XRDEPTHSENSINGFORMAT_L8A8 } from './constants.js';
+import { XRTYPE_INLINE, XRTYPE_VR, XRTYPE_AR, XRDEPTHSENSINGUSAGE_CPU, XRDEPTHSENSINGUSAGE_GPU, XRDEPTHSENSINGFORMAT_L8A8, XRDEPTHSENSINGFORMAT_R16U, XRDEPTHSENSINGFORMAT_F32 } from './constants.js';
 import { XrDomOverlay } from './xr-dom-overlay.js';
 import { XrHitTest } from './xr-hit-test.js';
 import { XrImageTracking } from './xr-image-tracking.js';
@@ -485,27 +485,25 @@ class XrManager extends EventHandler {
                 opts.optionalFeatures.push('anchors');
             }
 
-            if (options && options.depthSensing && this.depthSensing.supported) {
+            if (options && options.depthSensing && this.views.supportedDepth) {
                 opts.optionalFeatures.push('depth-sensing');
 
                 const usagePreference = [];
                 const dataFormatPreference = [];
 
-                if (!navigator.userAgent.includes('OculusBrowser')) {
-                    usagePreference.push(XRDEPTHSENSINGUSAGE_CPU);
-                    dataFormatPreference.push(XRDEPTHSENSINGFORMAT_L8A8);
+                usagePreference.push(XRDEPTHSENSINGUSAGE_GPU, XRDEPTHSENSINGUSAGE_CPU);
+                dataFormatPreference.push(XRDEPTHSENSINGFORMAT_F32, XRDEPTHSENSINGFORMAT_L8A8, XRDEPTHSENSINGFORMAT_R16U);
 
-                    if (options.depthSensing.usagePreference) {
-                        const ind = usagePreference.indexOf(options.depthSensing.usagePreference);
-                        if (ind !== -1) usagePreference.splice(ind, 1);
-                        usagePreference.unshift(options.depthSensing.usagePreference);
-                    }
+                if (options.depthSensing.usagePreference) {
+                    const ind = usagePreference.indexOf(options.depthSensing.usagePreference);
+                    if (ind !== -1) usagePreference.splice(ind, 1);
+                    usagePreference.unshift(options.depthSensing.usagePreference);
+                }
 
-                    if (options.depthSensing.dataFormatPreference) {
-                        const ind = dataFormatPreference.indexOf(options.depthSensing.dataFormatPreference);
-                        if (ind !== -1) dataFormatPreference.splice(ind, 1);
-                        dataFormatPreference.unshift(options.depthSensing.dataFormatPreference);
-                    }
+                if (options.depthSensing.dataFormatPreference) {
+                    const ind = dataFormatPreference.indexOf(options.depthSensing.dataFormatPreference);
+                    if (ind !== -1) dataFormatPreference.splice(ind, 1);
+                    dataFormatPreference.unshift(options.depthSensing.dataFormatPreference);
                 }
 
                 opts.depthSensing = {
@@ -965,10 +963,6 @@ class XrManager extends EventHandler {
 
             if (this.planeDetection.supported) {
                 this.planeDetection.update(frame);
-            }
-
-            if (this.depthSensing.supported) {
-                this.depthSensing.update();
             }
 
             if (this.meshDetection.supported) {

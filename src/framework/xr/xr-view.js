@@ -3,7 +3,7 @@ import { Texture } from '../../platform/graphics/texture.js';
 import { Vec4 } from '../../core/math/vec4.js';
 import { Mat3 } from '../../core/math/mat3.js';
 import { Mat4 } from '../../core/math/mat4.js';
-import { ADDRESS_CLAMP_TO_EDGE, FILTER_LINEAR, FILTER_NEAREST, PIXELFORMAT_RGB8 } from '../../platform/graphics/constants.js';
+import { ADDRESS_CLAMP_TO_EDGE, FILTER_LINEAR, FILTER_NEAREST, PIXELFORMAT_R32F, PIXELFORMAT_DEPTH, PIXELFORMAT_RGB8 } from '../../platform/graphics/constants.js';
 
 /**
  * @import { XrManager } from './xr-manager.js'
@@ -205,16 +205,15 @@ class XrView extends EventHandler {
         return this._textureColor;
     }
 
-    /* eslint-disable jsdoc/check-examples */
     /**
      * Texture that contains packed depth information which is reconstructed using the underlying
      * AR system. This texture can be used (not limited to) for reconstructing real world
      * geometry, virtual object placement, occlusion of virtual object by the real world geometry,
      * and more.
-     * The format of this texture is {@link PIXELFORMAT_LA8} or {@link PIXELFORMAT_R32F}
-     * based on {@link XrViews#depthFormat}. It is UV transformed based on the underlying AR
-     * system which can be normalized using {@link XrView#depthUvMatrix}. Equals to null if camera
-     * depth is not supported.
+     * The format of this texture is any of {@link PIXELFORMAT_LA8}, {@link PIXELFORMAT_DEPTH}, or
+     * {@link PIXELFORMAT_R32F} based on {@link XrViews#depthFormat}. It is UV transformed based
+     * on the underlying AR system which can be normalized using {@link XrView#depthUvMatrix}.
+     * Equals to null if camera depth is not supported.
      *
      * @type {Texture|null}
      * @example
@@ -224,6 +223,7 @@ class XrView extends EventHandler {
      * material.setParameter('depth_to_meters', view.depthValueToMeters);
      * @example
      * // GLSL shader to unpack depth texture
+     * // when depth information is provided in form of LA8
      * varying vec2 vUv0;
      *
      * uniform sampler2D texture_depthSensingMap;
@@ -250,7 +250,6 @@ class XrView extends EventHandler {
     get textureDepth() {
         return this._textureDepth;
     }
-    /* eslint-enable jsdoc/check-examples */
 
     /**
      * 4x4 matrix that should be used to transform depth texture UVs to normalized UVs in a shader.
@@ -491,11 +490,28 @@ class XrView extends EventHandler {
                 // gpu
                 if (this._depthInfo.texture) {
                     const gl = this._manager.app.graphicsDevice.gl;
+
                     this._textureDepth.impl._glTexture = this._depthInfo.texture;
-                    this._textureDepth.impl._glTarget = gl.TEXTURE_2D_ARRAY;
-                    this._textureDepth.impl._glFormat = gl.RED;
-                    this._textureDepth.impl._glInternalFormat = gl.R32F;
-                    this._textureDepth.impl._glPixelType = gl.FLOAT;
+
+                    if (this._depthInfo.textureType === 'texture-array') {
+                        this._textureDepth.impl._glTarget = gl.TEXTURE_2D_ARRAY;
+                    } else {
+                        this._textureDepth.impl._glTarget = gl.TEXTURE_2D;
+                    }
+
+                    switch (this._manager.views.depthPixelFormat) {
+                        case PIXELFORMAT_R32F:
+                            this._textureDepth.impl._glInternalFormat = gl.R32F;
+                            this._textureDepth.impl._glPixelType = gl.FLOAT;
+                            this._textureDepth.impl._glFormat = gl.RED;
+                            break;
+                        case PIXELFORMAT_DEPTH:
+                            this._textureDepth.impl._glInternalFormat = gl.DEPTH_COMPONENT16;
+                            this._textureDepth.impl._glPixelType = gl.UNSIGNED_SHORT;
+                            this._textureDepth.impl._glFormat = gl.DEPTH_COMPONENT;
+                            break;
+                    }
+
                     this._textureDepth.impl._glCreated = true;
                 }
             } else {

@@ -11,7 +11,7 @@ import { HTMLCanvasElement } from '@playcanvas/canvas-mock';
 import { expect } from 'chai';
 import { restore, spy } from 'sinon';
 
-describe('AssetRegistry', () => {
+describe('AssetRegistry', function () {
 
     let app;
     let retryDelay;
@@ -29,9 +29,9 @@ describe('AssetRegistry', () => {
         restore();
     });
 
-    describe('#constructor', () => {
+    describe('#constructor', function () {
 
-        it('instantiates correctly', () => {
+        it('instantiates correctly', function () {
             const resourceLoader = new ResourceLoader(app);
             const assetRegistry = new AssetRegistry(resourceLoader);
 
@@ -40,9 +40,9 @@ describe('AssetRegistry', () => {
 
     });
 
-    describe('#add', () => {
+    describe('#add', function () {
 
-        it('adds an asset', () => {
+        it('adds an asset', function () {
             const asset = new Asset('Test Asset', 'text', {
                 url: 'fake/url/file.txt'
             });
@@ -55,9 +55,9 @@ describe('AssetRegistry', () => {
 
     });
 
-    describe('#find', () => {
+    describe('#find', function () {
 
-        it('works after removing an asset', () => {
+        it('works after removing an asset', function () {
             const asset1 = new Asset('Asset 1', 'text', {
                 url: 'fake/one/file.txt'
             });
@@ -81,9 +81,9 @@ describe('AssetRegistry', () => {
 
     });
 
-    describe('#find + rename', () => {
+    describe('#find + rename', function () {
 
-        it('works after renaming an asset', () => {
+        it('works after renaming an asset', function () {
             const asset1 = new Asset('Asset 1', 'text', {
                 url: 'fake/one/file.txt'
             });
@@ -105,9 +105,9 @@ describe('AssetRegistry', () => {
 
     });
 
-    describe('#find + type', () => {
+    describe('#find + type', function () {
 
-        it('finds assets by name filtered by type', () => {
+        it('finds assets by name filtered by type', function () {
             const asset1 = new Asset('Asset 1', 'text', {
                 url: 'fake/one/file.txt'
             });
@@ -124,9 +124,9 @@ describe('AssetRegistry', () => {
 
     });
 
-    describe('#findAll + type', () => {
+    describe('#findAll + type', function () {
 
-        it('finds all assets by name filtered by type', () => {
+        it('finds all assets by name filtered by type', function () {
             const asset1 = new Asset('Asset 1', 'text', {
                 url: 'fake/one/file.txt'
             });
@@ -156,9 +156,9 @@ describe('AssetRegistry', () => {
 
     });
 
-    describe('#get', () => {
+    describe('#get', function () {
 
-        it('retrieves an asset by id', () => {
+        it('retrieves an asset by id', function () {
             const asset = new Asset('Test Asset', 'text', {
                 url: 'fake/url/file.txt'
             });
@@ -171,9 +171,9 @@ describe('AssetRegistry', () => {
 
     });
 
-    describe('#getByUrl', () => {
+    describe('#getByUrl', function () {
 
-        it('retrieves an asset by url', () => {
+        it('retrieves an asset by url', function () {
             const asset = new Asset('Test Asset', 'text', {
                 url: 'fake/url/file.txt'
             });
@@ -184,7 +184,7 @@ describe('AssetRegistry', () => {
             expect(asset).to.equal(assetFromRegistry);
         });
 
-        it('works after removing an asset', () => {
+        it('works after removing an asset', function () {
             const asset1 = new Asset('Asset 1', 'text', {
                 url: 'fake/one/file.txt'
             });
@@ -208,9 +208,9 @@ describe('AssetRegistry', () => {
 
     });
 
-    describe('#list', () => {
+    describe('#list', function () {
 
-        it('lists all assets', () => {
+        it('lists all assets', function () {
             const asset1 = new Asset('Asset 1', 'text', {
                 url: 'fake/one/file.txt'
             });
@@ -234,7 +234,7 @@ describe('AssetRegistry', () => {
 
     });
 
-    describe('#loadFromUrl', () => {
+    describe('#loadFromUrl', function () {
 
         const assetPath = 'http://localhost:3000/test/test-assets/';
 
@@ -322,9 +322,9 @@ describe('AssetRegistry', () => {
 
     });
 
-    describe('#remove', () => {
+    describe('#remove', function () {
 
-        it('removes by id', () => {
+        it('removes by id', function () {
             const asset1 = new Asset('Asset 1', 'text', {
                 url: 'fake/one/file.txt'
             });

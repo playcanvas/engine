@@ -300,7 +300,7 @@ class CodeEditorDesktop extends CodeEditorBase {
                             const examplePath =
                                 location.hash === '#/' ? 'misc/hello-world' : location.hash.replace('#/', '');
                             window.open(
-                                `https://github.com/playcanvas/engine/blob/main/examples/src/examples/${examplePath}.mjs`
+                                `https://github.com/playcanvas/engine/blob/main/examples/src/examples/${examplePath}.example.mjs`
                             );
                         }
                     })
