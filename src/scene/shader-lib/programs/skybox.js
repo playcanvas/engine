@@ -40,8 +40,6 @@ class ShaderGeneratorSkybox extends ShaderGenerator {
         // includes
         const includes = new Map();
         includes.set('decodePS', shaderChunks.decodePS);
-        // magnopus check patched, ensure HDR define is set
-        // if (options.gamma === GAMMA_SRGBHDR) defines.set('HDR', '');
         includes.set('gamma', ShaderGenerator.gammaCode(options.gamma));
         includes.set('tonemapping', ShaderGenerator.tonemapCode(options.toneMapping));
         includes.set('envMultiplyPS', shaderChunks.envMultiplyPS);
