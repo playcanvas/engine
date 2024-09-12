@@ -141,6 +141,7 @@ class ScriptRegistry extends EventHandler {
 
                     if (scriptInstance) {
                         scriptInstances.push(scriptInstance);
+                    }
 
                     // initialize attributes
                     for (const script of component.scripts) {

@@ -32,7 +32,6 @@ import { SCRIPT_INITIALIZE, SCRIPT_POST_INITIALIZE } from './constants.js';
  * For more information on how to create scripts, see the [Scripting Overview](https://developer.playcanvas.com/user-manual/scripting/).
  *
  * @category Script
- * @alpha
  */
 export class Script extends EventHandler {
     /**
@@ -223,8 +222,9 @@ export class Script extends EventHandler {
 
             this.fire('preInitialize');
 
-            if (this.initialize)
+            if (this.initialize) {
                 this.entity.script._scriptMethod(this, SCRIPT_INITIALIZE);
+            }
         }
 
         // post initialize script if not post initialized yet and still enabled
@@ -235,8 +235,9 @@ export class Script extends EventHandler {
         if (this._initialized && !this._postInitialized && this.enabled && !this.entity.script._beingEnabled) {
             this._postInitialized = true;
 
-            if (this.postInitialize)
+            if (this.postInitialize) {
                 this.entity.script._scriptMethod(this, SCRIPT_POST_INITIALIZE);
+            }
         }
     }
 
@@ -330,7 +331,8 @@ export class Script extends EventHandler {
      */
 }
 
-const funcNameRegex = new RegExp('^\\s*function(?:\\s|\\s*\\/\\*.*\\*\\/\\s*)+([^\\(\\s\\/]*)\\s*');
+// eslint-disable-next-line regexp/no-super-linear-backtracking, regexp/no-useless-escape
+const funcNameRegex = /^\s*function(?:\s|\s*\/\*.*\*\/\s*)+([^(\s\/]*)\s*/;
 
 /**
  * @param {Function} constructorFn - The constructor function of the script type.
@@ -340,6 +342,6 @@ export function getScriptName(constructorFn) {
     if (typeof constructorFn !== 'function') return undefined;
     if ('name' in Function.prototype) return constructorFn.name;
     if (constructorFn === Function || constructorFn === Function.prototype.constructor) return 'Function';
-    const match = ('' + constructorFn).match(funcNameRegex);
+    const match = (`${constructorFn}`).match(funcNameRegex);
     return match ? match[1] : undefined;
 }

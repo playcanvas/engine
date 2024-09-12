@@ -729,8 +729,9 @@ class ScriptComponent extends Component {
 
                 this[scriptName] = scriptInstance;
 
-                if (!args.preloading)
+                if (!args.preloading) {
                     this.initializeAttributes(scriptInstance);
+                }
 
                 this.fire('create', scriptName, scriptInstance);
                 this.fire(`create:${scriptName}`, scriptInstance);
