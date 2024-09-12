@@ -32,6 +32,7 @@ import { SCRIPT_INITIALIZE, SCRIPT_POST_INITIALIZE } from './constants.js';
  * For more information on how to create scripts, see the [Scripting Overview](https://developer.playcanvas.com/user-manual/scripting/).
  *
  * @category Script
+ * @alpha
  */
 export class Script extends EventHandler {
     /**
