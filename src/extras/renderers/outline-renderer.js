@@ -16,6 +16,8 @@ import { StandardMaterial } from '../../scene/materials/standard-material.js';
 import { shaderChunks } from '../../scene/shader-lib/chunks/chunks.js';
 import { createShaderFromCode } from '../../scene/shader-lib/utils.js';
 
+const THICKNESS = 3.25;
+
 /**
  * @import { AppBase } from '../../framework/app-base.js'
  * @import { Layer } from "../../scene/layer.js"
@@ -262,7 +264,7 @@ class OutlineRenderer {
 
         // horizontal extend pass
         // magnopus patched - make it thicc
-        _tempFloatArray[0] = 1.5 / width / 2.0;
+        _tempFloatArray[0] = THICKNESS / width / 2.0;
         _tempFloatArray[1] = 0;
         uOffset.setValue(_tempFloatArray);
         uColorBuffer.setValue(rt.colorBuffer);
@@ -272,7 +274,7 @@ class OutlineRenderer {
         // vertical extend pass
         _tempFloatArray[0] = 0;
         // magnopus patched - make it thicc
-        _tempFloatArray[1] = 1.5 / height / 2.0;
+        _tempFloatArray[1] = THICKNESS / height / 2.0;
         uOffset.setValue(_tempFloatArray);
         uColorBuffer.setValue(tempRt.colorBuffer);
         uSrcMultiplier.setValue(1.0);
@@ -297,6 +299,8 @@ class OutlineRenderer {
         return new RenderTarget({
             colorBuffer: texture,
             depth: depth,
+            // magnopus patched - antialias
+            samples: 4,
             flipY: this.app.graphicsDevice.isWebGPU
         });
     }

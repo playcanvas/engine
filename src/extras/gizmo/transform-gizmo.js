@@ -694,7 +694,7 @@ class TransformGizmo extends Gizmo {
         tmpV2.copy(tmpV1).mulScalar(-1);
         rot.transformVector(tmpV1, tmpV1);
         rot.transformVector(tmpV2, tmpV2);
-        this._app.drawLine(tmpV1.add(pos), tmpV2.add(pos), this._guideColors[axis], true);
+        this._app.drawLine(tmpV1.add(pos), tmpV2.add(pos), this._guideColors[axis], true, this._layer);
     }
 
     /**
