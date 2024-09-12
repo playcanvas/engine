@@ -21,6 +21,14 @@ class ScriptRegistry extends EventHandler {
     _list = [];
 
     /**
+     * A Map of script names to attribute schemas.
+     *
+     * @type {Map<string, import('./script-attributes.js').AttributeSchema>}
+     * @private
+     */
+    _scriptSchemas = new Map();
+
+    /**
      * Create a new ScriptRegistry instance.
      *
      * @param {import('../app-base.js').AppBase} app - Application to attach registry to.
@@ -34,6 +42,27 @@ class ScriptRegistry extends EventHandler {
     destroy() {
         this.app = null;
         this.off();
+    }
+
+    /**
+     * Registers a schema against a script instance.
+     *
+     * @param {string} id - The key to use to store the schema
+     * @param {import('./script-attributes.js').AttributeSchema} schema - An schema definition for the script
+     */
+    addSchema(id, schema) {
+        if (!schema) return;
+        this._scriptSchemas.set(id, schema);
+    }
+
+    /**
+     * Returns a schema for a given script name.
+     *
+     * @param {string} id - The key to store the schema under
+     * @returns {import('./script-attributes.js').AttributeSchema | undefined} - The schema stored under the key
+     */
+    getSchema(id) {
+        return this._scriptSchemas.get(id);
     }
 
     /**
@@ -112,13 +141,12 @@ class ScriptRegistry extends EventHandler {
 
                     if (scriptInstance) {
                         scriptInstances.push(scriptInstance);
+
+                    // initialize attributes
+                    for (const script of component.scripts) {
+                        component.initializeAttributes(script);
                     }
                 }
-            }
-
-            // initialize attributes
-            for (let i = 0; i < scriptInstances.length; i++) {
-                scriptInstances[i].__initializeAttributes();
             }
 
             // call initialize()

@@ -5,9 +5,7 @@ import { CurveSet } from '../../core/math/curve-set.js';
 import { Vec2 } from '../../core/math/vec2.js';
 import { Vec3 } from '../../core/math/vec3.js';
 import { Vec4 } from '../../core/math/vec4.js';
-
 import { GraphNode } from '../../scene/graph-node.js';
-
 import { Asset } from '../asset/asset.js';
 
 const components = ['x', 'y', 'z', 'w'];
@@ -153,6 +151,50 @@ function rawToValue(app, args, value, old) {
 }
 
 /**
+ * @typedef {Object} AttributeSchema
+ * @property {"boolean"|"number"|"string"|"json"|"asset"|"entity"|"rgb"|"rgba"|"vec2"|"vec3"|"vec4"|"curve"} type - The Attribute type
+ * @property {boolean} [array] - True if this attribute is an array of `type`
+ */
+
+/**
+ * Takes an attribute schema, a value and current value, and return a new value.
+ *
+ * @param {import('../../framework/application.js').Application} app - The working application
+ * @param {AttributeSchema} schema - The attribute schema used to resolve properties
+ * @param {*} value - The raw value to create
+ * @param {*} current - The existing value
+ * @returns {*} The return value
+ */
+function attributeToValue(app, schema, value, current) {
+    if (schema.array) {
+        return value.map((item, index) => rawToValue(app, schema, item, current ? current[index] : null));
+    }
+
+    return rawToValue(app, schema, value, current);
+}
+
+/**
+ * Assigns values to a script instance based on a map of attributes schemas
+ * and a corresponding map of data.
+ *
+ * @param {import('../../framework/application.js').Application} app - The application instance
+ * @param {Object<string, AttributeSchema>} attributeSchemaMap - A map of names to Schemas
+ * @param {Object<string, *>} data - A Map of data to assign to the Script instance
+ * @param {import('../../framework/script/script.js').Script} script - A Script instance to assign values on
+ */
+export function assignAttributesToScript(app, attributeSchemaMap, data, script) {
+
+    // Iterate over the schema and assign corresponding data
+    for (const attributeName in attributeSchemaMap) {
+        const attributeSchema = attributeSchemaMap[attributeName];
+        const dataToAssign = data[attributeName];
+
+        // Assign the value to the script based on the attribute schema
+        script[attributeName] =  attributeToValue(app, attributeSchema, dataToAssign, script);
+    }
+}
+
+/**
  * Container of Script Attribute definitions. Implements an interface to add/remove attributes and
  * store their definition for a {@link ScriptType}. Note: An instance of ScriptAttributes is
  * created automatically by each {@link ScriptType}.
@@ -160,6 +202,8 @@ function rawToValue(app, args, value, old) {
  * @category Script
  */
 class ScriptAttributes {
+    static assignAttributesToScript = assignAttributesToScript;
+
     /**
      * Create a new ScriptAttributes instance.
      *
