@@ -58,8 +58,6 @@ class MiniStats {
 
         options = options || MiniStats.getDefaultOptions();
 
-        // Magnopus patched
-        this.xOffset = options?.xOffset ?? 64;
         // create graphs
         this.initGraphs(app, device, options);
 
@@ -78,8 +76,7 @@ class MiniStats {
         // create click region so we can resize
         const div = document.createElement('div');
         div.setAttribute('id', 'mini-stats');
-        // Magnopus patched
-        div.style.cssText = `position:fixed;bottom:0;left:${this.xOffset}px;background:transparent;`;
+        div.style.cssText = 'position:fixed;bottom:0;left:0;background:transparent;';
         document.body.appendChild(div);
 
         div.addEventListener('mouseenter', (event) => {
@@ -358,7 +355,7 @@ class MiniStats {
             let y = i * (height + gspacing);
 
             // render the graph
-            graph.render(render2d, this.xOffset, y, width, height);
+            graph.render(render2d, 0, y, width, height);
 
             // render the text
             let x = 1;
@@ -411,8 +408,7 @@ class MiniStats {
      */
     updateDiv() {
         const rect = this.device.canvas.getBoundingClientRect();
-        // Magnopus patched
-        this.div.style.left = this.xOffset + rect.left + 'px';
+        this.div.style.left = `${rect.left}px`;
         this.div.style.bottom = `${window.innerHeight - rect.bottom}px`;
         this.div.style.width = `${this.width}px`;
         this.div.style.height = `${this.overallHeight}px`;
