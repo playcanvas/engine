@@ -1,4 +1,4 @@
-import { createScript } from '../../src/framework/script/script.js';
+import { createScript } from '../../src/framework/script/script-create.js';
 import { Color } from '../../src/core/math/color.js';
 
 import { AnimComponent } from '../../src/framework/components/anim/component.js';

@@ -1,12 +1,11 @@
 import { platform } from '../../core/platform.js';
 import { script } from '../script.js';
-import { ScriptType } from '../script/script-type.js';
 import { ScriptTypes } from '../script/script-types.js';
-import { registerScript } from '../script/script.js';
+import { registerScript } from '../script/script-create.js';
 import { ResourceLoader } from './loader.js';
 
 import { ResourceHandler } from './handler.js';
-import { ScriptAttributes } from '../script/script-attributes.js';
+import { Script } from '../script/script.js';
 
 const toLowerCamelCase = str => str[0].toLowerCase() + str.substring(1);
 
@@ -154,21 +153,22 @@ class ScriptHandler extends ResourceHandler {
         // @ts-ignore
         import(importUrl.toString()).then((module) => {
 
+            const filename = importUrl.pathname.split('/').pop();
+            const scriptSchema = this._app.assets.find(filename, 'script').data.scripts;
+
             for (const key in module) {
                 const scriptClass = module[key];
-                const extendsScriptType = scriptClass.prototype instanceof ScriptType;
+                const extendsScriptType = scriptClass.prototype instanceof Script;
 
                 if (extendsScriptType) {
 
-                    // Check if attributes is defined directly on the class and not inherited
-                    if (scriptClass.hasOwnProperty('attributes')) {
-                        const attributes = new ScriptAttributes(scriptClass);
-                        for (const key in scriptClass.attributes) {
-                            attributes.add(key, scriptClass.attributes[key]);
-                        }
-                        scriptClass.attributes = attributes;
-                    }
-                    registerScript(scriptClass, toLowerCamelCase(scriptClass.name));
+                    const scriptName = toLowerCamelCase(scriptClass.name);
+
+                    // Register the script name
+                    registerScript(scriptClass, scriptName);
+
+                    // Store any schema associated with the script
+                    this._app.scripts.addSchema(scriptName, scriptSchema[scriptName]);
                 }
             }
 
