@@ -22,11 +22,11 @@ function swcOptions(isDebug, isUMD, minify) {
                     reduce_funcs: true,
                     drop_console: true,
                     pure_funcs: [],
-                    inline: 3,
+                    inline: 3
                 } : undefined
             },
             externalHelpers: false,
-            loose: true,
+            loose: true
         },
         env: {
             targets: isUMD ? 'fully supports webgl and > 0.1% and not dead' : 'supports es6-module'
