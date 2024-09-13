@@ -18,6 +18,9 @@ class RenderingParams {
     _srgbRenderTarget = false;
 
     /** @private */
+    _ssaoEnabled = false;
+
+    /** @private */
     _fog = FOG_NONE;
 
     /**
@@ -67,7 +70,7 @@ class RenderingParams {
      */
     get hash() {
         if (this._hash === undefined) {
-            const key = `${this.gammaCorrection}_${this.toneMapping}_${this.srgbRenderTarget}_${this.fog}`;
+            const key = `${this.gammaCorrection}_${this.toneMapping}_${this.srgbRenderTarget}_${this.fog}_${this.ssaoEnabled}`;
             this._hash = hashCode(key);
         }
         return this._hash;
@@ -103,6 +106,17 @@ class RenderingParams {
      */
     get fog() {
         return this._fog;
+    }
+
+    set ssaoEnabled(value) {
+        if (this._ssaoEnabled !== value) {
+            this._ssaoEnabled = value;
+            this.markDirty();
+        }
+    }
+
+    get ssaoEnabled() {
+        return this._ssaoEnabled;
     }
 
     /**

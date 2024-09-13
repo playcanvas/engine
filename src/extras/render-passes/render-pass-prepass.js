@@ -40,13 +40,14 @@ class RenderPassPrepass extends RenderPass {
     /** @type {Texture} */
     velocityTexture;
 
-    constructor(device, scene, renderer, camera, depthBuffer, options) {
+    constructor(device, scene, renderer, camera, depthBuffer, resolveDepth, options, samples) {
         super(device);
         this.scene = scene;
         this.renderer = renderer;
         this.camera = camera;
+        this.samples = samples;
 
-        this.setupRenderTarget(depthBuffer, options);
+        this.setupRenderTarget(depthBuffer, resolveDepth, options);
     }
 
     destroy() {
@@ -63,7 +64,7 @@ class RenderPassPrepass extends RenderPass {
         this.viewBindGroups.length = 0;
     }
 
-    setupRenderTarget(depthBuffer, options) {
+    setupRenderTarget(depthBuffer, resolveDepth, options) {
 
         const { device } = this;
 
@@ -84,11 +85,16 @@ class RenderPassPrepass extends RenderPass {
         const renderTarget = new RenderTarget({
             name: 'PrepassRT',
             // colorBuffer: this.velocityTexture,
-            depthBuffer: depthBuffer
+            depthBuffer: depthBuffer,
+            samples: this.samples
         });
 
         this.init(renderTarget, options);
         this.depthStencilOps.storeDepth = true;
+
+        if (resolveDepth) {
+            this.depthStencilOps.resolveDepth = true;
+        }
     }
 
     after() {

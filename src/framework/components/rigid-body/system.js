@@ -1045,11 +1045,16 @@ class RigidBodyComponentSystem extends ComponentSystem {
             Ammo.destroy(this.overlappingPairCache);
             Ammo.destroy(this.dispatcher);
             Ammo.destroy(this.collisionConfiguration);
+            Ammo.destroy(ammoRayStart);
+            Ammo.destroy(ammoRayEnd);
             this.dynamicsWorld = null;
             this.solver = null;
             this.overlappingPairCache = null;
             this.dispatcher = null;
             this.collisionConfiguration = null;
+            ammoRayStart = null;
+            ammoRayEnd = null;
+            RigidBodyComponent.onAppDestroy();
         }
     }
 }

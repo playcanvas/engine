@@ -679,7 +679,7 @@ class WebgpuGraphicsDevice extends GraphicsDevice {
         DebugHelper.setLabel(this.passEncoder, renderPass.name);
 
         // push marker to the passEncoder
-        DebugGraphics.pushGpuMarker(this, `Pass:${renderPass.name}`);
+        DebugGraphics.pushGpuMarker(this, `Pass:${renderPass.name} RT:${rt.name}`);
 
         this.setupPassEncoderDefaults();
 
@@ -712,6 +712,22 @@ class WebgpuGraphicsDevice extends GraphicsDevice {
 
         // each render pass can use different number of bind groups
         this.bindGroupFormats.length = 0;
+
+        // resolve depth if needed after the pass has finished
+        const target = this.renderTarget;
+        if (target) {
+
+            // resolve depth buffer (stencil resolve is not yet implemented)
+            if (target.depthBuffer && renderPass.depthStencilOps.resolveDepth) {
+                if (renderPass.samples > 1 && target.autoResolve) {
+                    const depthAttachment = target.impl.depthAttachment;
+                    const destTexture = target.depthBuffer.impl.gpuTexture;
+                    if (depthAttachment && destTexture) {
+                        this.resolver.resolveDepth(this.commandEncoder, depthAttachment.multisampledDepthBuffer, destTexture);
+                    }
+                }
+            }
+        }
 
         // generate mipmaps using the same command buffer encoder
         for (let i = 0; i < renderPass.colorArrayOps.length; i++) {
@@ -1043,7 +1059,7 @@ class WebgpuGraphicsDevice extends GraphicsDevice {
 
             // read from supplied render target, or from the framebuffer
             const sourceRT = source ? source : this.renderTarget;
-            const sourceTexture = sourceRT.impl.depthTexture;
+            const sourceTexture = sourceRT.impl.depthAttachment.depthTexture;
 
             if (source.samples > 1) {
 
@@ -1054,7 +1070,7 @@ class WebgpuGraphicsDevice extends GraphicsDevice {
             } else {
 
                 // write to supplied render target, or to the framebuffer
-                const destTexture = dest ? dest.depthBuffer.impl.gpuTexture : this.renderTarget.impl.depthTexture;
+                const destTexture = dest ? dest.depthBuffer.impl.gpuTexture : this.renderTarget.impl.depthAttachment.depthTexture;
 
                 /** @type {GPUImageCopyTexture} */
                 const copySrc = {

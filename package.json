@@ -55,55 +55,6 @@
     "type": "git",
     "url": "https://github.com/playcanvas/engine.git"
   },
-  "eslintConfig": {
-    "extends": "@playcanvas/eslint-config",
-    "globals": {
-      "Ammo": "readonly",
-      "earcut": "readonly",
-      "glslang": "readonly",
-      "GPUBufferUsage": "readonly",
-      "GPUColorWrite": "readonly",
-      "GPUMapMode": "readonly",
-      "GPUShaderStage": "readonly",
-      "GPUTextureUsage": "readonly",
-      "opentype": "readonly",
-      "pc": "readonly",
-      "TWEEN": "readonly",
-      "twgsl": "readonly",
-      "webkitAudioContext": "readonly",
-      "XRRay": "readonly",
-      "XRRigidTransform": "readonly",
-      "XRWebGLLayer": "readonly"
-    },
-    "ignorePatterns": [
-      "tests/**/*"
-    ],
-    "parser": "@babel/eslint-parser",
-    "parserOptions": {
-      "requireConfigFile": false
-    },
-    "rules": {
-      "import/order": "off",
-      "jsdoc/check-tag-names": [
-        "error",
-        {
-          "definedTags": [
-            "attribute",
-            "category",
-            "import"
-          ]
-        }
-      ]
-    }
-  },
-  "eslintIgnore": [
-    "examples/lib/*",
-    "scripts/textmesh/earcut.min.js",
-    "scripts/textmesh/opentype.min.js",
-    "src/polyfill/*",
-    "scripts/spine/playcanvas-spine.3.8.js",
-    "scripts/spine/playcanvas-spine.3.8.mjs"
-  ],
   "files": [
     "build/playcanvas*",
     "build/playcanvas*/*",
@@ -116,10 +67,10 @@
   },
   "devDependencies": {
     "@babel/core": "^7.24.4",
-    "@babel/eslint-parser": "^7.24.1",
+    "@babel/eslint-parser": "^7.25.1",
     "@babel/preset-env": "^7.24.4",
     "@playcanvas/canvas-mock": "^1.0.1",
-    "@playcanvas/eslint-config": "^1.7.4",
+    "@playcanvas/eslint-config": "^2.0.2",
     "@rollup/plugin-babel": "^6.0.4",
     "@rollup/plugin-node-resolve": "^15.2.3",
     "@rollup/plugin-strip": "^3.0.4",
@@ -129,10 +80,11 @@
     "@swc/core": "^1.7.23",
     "c8": "^9.1.0",
     "chai": "^5.1.0",
-    "eslint": "^8.57.0",
+    "eslint": "^9.10.0",
     "fflate": "^0.8.2",
     "global-jsdom": "^24.0.0",
-    "jsdom": "^24.0.0",
+    "globals": "^15.9.0",
+    "jsdom": "^24.1.3",
     "karma": "^6.4.3",
     "karma-chrome-launcher": "^3.2.0",
     "karma-mocha": "^2.0.1",
@@ -145,7 +97,7 @@
     "rollup-plugin-jscc": "2.0.0",
     "rollup-plugin-visualizer": "^5.12.0",
     "serve": "^14.2.2",
-    "sinon": "^17.0.1",
+    "sinon": "^18.0.0",
     "typedoc": "^0.26.3",
     "typedoc-plugin-mdn-links": "^3.2.2",
     "typescript": "^5.5.3",
@@ -174,7 +126,7 @@
     "watch:esm:release": "npm run build target:esm:release -- -w",
     "watch:esm:debug": "npm run build target:esm:debug -- -w",
     "docs": "typedoc",
-    "lint": "eslint --ext .js,.mjs scripts src test utils rollup.config.mjs",
+    "lint": "eslint scripts src test utils build.mjs eslint.config.mjs rollup.config.mjs",
     "publint": "publint --level error",
     "serve": "serve build -l 51000 --cors",
     "test": "mocha --recursive --require test/fixtures.mjs",

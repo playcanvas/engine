@@ -167,60 +167,24 @@ assetListLoader.load(() => {
 
     // ------ Custom render passes set up ------
 
-    const currentOptions = {
-        camera: cameraEntity.camera, // camera used to render those passes
-        samples: 1, // number of samples for multi-sampling
-        sceneColorMap: false,
-        bloomEnabled: false,
+    const currentOptions = new pc.CameraFrameOptions();
+    currentOptions.samples = 4;
+    currentOptions.sceneColorMap = false;
+    currentOptions.ssaoType = pc.SSAOTYPE_LIGHTING;
+    currentOptions.ssaoBlurEnabled = true;
 
-        // enable the pre-pass to generate the depth buffer, which is needed by the SSAO
-        prepassEnabled: true,
-
-        // enable temporal anti-aliasing
-        taaEnabled: false,
-
-        ssaoEnabled: true,
-        ssaoBlurEnabled: true
-    };
-
-    const setupRenderPass = () => {
-        // destroy existing pass if any
-        if (cameraEntity.camera.renderPasses.length > 0) {
-            cameraEntity.camera.renderPasses[0].destroy();
-        }
-
-        // Use a render pass camera frame, which is a render pass that implements typical rendering of a camera.
-        // Internally this sets up additional passes it needs, based on the options passed to it.
-        const renderPassCamera = new pc.RenderPassCameraFrame(app, currentOptions);
-
-        renderPassCamera.ssaoEnabled = currentOptions.ssaoEnabled;
-
-        const composePass = renderPassCamera.composePass;
-        composePass.sharpness = 0;
-
-        // and set up these rendering passes to be used by the camera, instead of its default rendering
-        cameraEntity.camera.renderPasses = [renderPassCamera];
-
-        // jitter the camera when TAA is enabled
-        cameraEntity.camera.jitter = currentOptions.taaEnabled ? 1 : 0;
-    };
+    // and set up these rendering passes to be used by the camera, instead of its default rendering
+    const renderPassCamera = new pc.RenderPassCameraFrame(app, cameraEntity.camera, currentOptions);
+    cameraEntity.camera.renderPasses = [renderPassCamera];
 
     const applySettings = () => {
-        // if settings require render passes to be re-created
-        const noPasses = cameraEntity.camera.renderPasses.length === 0;
-        const ssaoEnabled = data.get('data.ssao.enabled');
-        const blurEnabled = data.get('data.ssao.blurEnabled');
-        if (noPasses || ssaoEnabled !== currentOptions.ssaoEnabled || blurEnabled !== currentOptions.ssaoBlurEnabled) {
-            currentOptions.ssaoEnabled = ssaoEnabled;
-            currentOptions.ssaoBlurEnabled = blurEnabled;
 
-            // create new pass
-            setupRenderPass();
-        }
+        // update current options and apply them
+        currentOptions.ssaoType = data.get('data.ssao.type');
+        currentOptions.ssaoBlurEnabled = data.get('data.ssao.blurEnabled');
+        renderPassCamera.update(currentOptions);
 
-        const renderPassCamera = cameraEntity.camera.renderPasses[0];
-
-        // ssao settings
+        // apply options on the other passes
         const ssaoPass = renderPassCamera.ssaoPass;
         if (ssaoPass) {
 
@@ -234,14 +198,13 @@ assetListLoader.load(() => {
     };
 
     // apply UI changes
-    let initialValuesSetup = false;
     data.on('*:set', (/** @type {string} */ path, value) => {
-        if (initialValuesSetup)
-            applySettings();
 
+        applySettings();
+
+        // if scale has changed, adjust min angle based on scale to avoid depth related artifacts
         const pathArray = path.split('.');
         if (pathArray[2] === 'scale') {
-            // adjust min angle based on scale to avoid depth related artifacts
             if (value < 0.6)
                 data.set('data.ssao.minAngle', 40);
             else if (value < 0.8)
@@ -254,7 +217,7 @@ assetListLoader.load(() => {
     // initial settings
     data.set('data', {
         ssao: {
-            enabled: true,
+            type: pc.SSAOTYPE_LIGHTING,
             blurEnabled: true,
             radius: 30,
             samples: 12,
@@ -264,10 +227,6 @@ assetListLoader.load(() => {
             scale: 1
         }
     });
-
-    // apply initial settings after all values are set
-    initialValuesSetup = true;
-    applySettings();
 });
 
 export { app };

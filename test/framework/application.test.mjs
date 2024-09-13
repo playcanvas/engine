@@ -18,11 +18,11 @@ import { HTMLCanvasElement } from '@playcanvas/canvas-mock';
 
 import { expect } from 'chai';
 
-describe('Application', () => {
+describe('Application', function () {
 
-    describe('#constructor', () => {
+    describe('#constructor', function () {
 
-        it('support no options', () => {
+        it('support no options', function () {
             const canvas = new HTMLCanvasElement(500, 500);
             const app = new Application(canvas, { graphicsDevice: new NullGraphicsDevice(canvas) });
 
@@ -53,9 +53,9 @@ describe('Application', () => {
 
     });
 
-    describe('#destroy', () => {
+    describe('#destroy', function () {
 
-        it('destroys the application', () => {
+        it('destroys the application', function () {
             const canvas = new HTMLCanvasElement(500, 500);
             const app = new Application(canvas, { graphicsDevice: new NullGraphicsDevice(canvas) });
 

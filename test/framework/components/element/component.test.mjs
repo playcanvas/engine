@@ -7,7 +7,7 @@ import { HTMLCanvasElement } from '@playcanvas/canvas-mock';
 
 import { expect } from 'chai';
 
-describe('ElementComponent', () => {
+describe('ElementComponent', function () {
     let app;
 
     beforeEach(() => {
@@ -19,9 +19,9 @@ describe('ElementComponent', () => {
         app.destroy();
     });
 
-    describe('#constructor', () => {
+    describe('#constructor', function () {
 
-        it('creates a default element component', () => {
+        it('creates a default element component', function () {
             const e = new Entity();
             e.addComponent('element');
 
@@ -123,7 +123,7 @@ describe('ElementComponent', () => {
 
     });
 
-    it('unbinds screen component on reparent', () => {
+    it('unbinds screen component on reparent', function () {
         const screen = new Entity();
         screen.addComponent('screen');
         app.root.addChild(screen);
@@ -140,7 +140,7 @@ describe('ElementComponent', () => {
         expect(screen.screen._elements).to.not.include(e.element);
     });
 
-    it('unbinds screen component on destroy', () => {
+    it('unbinds screen component on destroy', function () {
         const screen = new Entity();
         screen.addComponent('screen');
         app.root.addChild(screen);

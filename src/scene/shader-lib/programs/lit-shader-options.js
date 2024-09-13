@@ -111,6 +111,13 @@ class LitShaderOptions {
     ambientSH = false;
 
     /**
+     * Apply SSAO during the lighting.
+     *
+     * @type {boolean}
+     */
+    ssao = false;
+
+    /**
      * The value of {@link StandardMaterial#twoSidedLighting}.
      *
      * @type {boolean}

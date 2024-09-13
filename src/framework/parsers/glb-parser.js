@@ -2047,6 +2047,10 @@ const applySampler = (texture, gltfSampler) => {
 
 let gltfTextureUniqueId = 0;
 
+const getTextureSource = gltfTexture => gltfTexture.extensions?.KHR_texture_basisu?.source ??
+    gltfTexture.extensions?.EXT_texture_webp?.source ??
+    gltfTexture.source;
+
 // create gltf images. returns an array of promises that resolve to texture assets.
 const createImages = (gltf, bufferViews, urlBase, registry, options) => {
     if (!gltf.images || gltf.images.length === 0) {
@@ -2077,13 +2081,15 @@ const createImages = (gltf, bufferViews, urlBase, registry, options) => {
                 if (gltfMaterial.hasOwnProperty('pbrMetallicRoughness')) {
                     const pbrData = gltfMaterial.pbrMetallicRoughness;
                     if (pbrData.hasOwnProperty('baseColorTexture')) {
-                        set.add(pbrData.baseColorTexture.index);
+                        const gltfTexture = gltf.textures[pbrData.baseColorTexture.index];
+                        set.add(getTextureSource(gltfTexture));
                     }
                 }
 
                 // emissive
                 if (gltfMaterial.hasOwnProperty('emissiveTexture')) {
-                    set.add(gltfMaterial.emissiveTexture.index);
+                    const gltfTexture = gltf.textures[gltfMaterial.emissiveTexture.index];
+                    set.add(getTextureSource(gltfTexture));
                 }
             });
         }
@@ -2224,9 +2230,7 @@ const createTextures = (gltf, images, options) => {
         promise = promise.then((gltfImageIndex) => {
             // resolve image index
             gltfImageIndex = gltfImageIndex ??
-                             gltfTexture?.extensions?.KHR_texture_basisu?.source ??
-                             gltfTexture?.extensions?.EXT_texture_webp?.source ??
-                             gltfTexture.source;
+                getTextureSource(gltfTexture);
 
             const cloneAsset = seenImages.has(gltfImageIndex);
             seenImages.add(gltfImageIndex);
@@ -2306,7 +2310,7 @@ const loadBuffers = (gltf, binaryChunk, urlBase, options) => {
                     http.get(
                         ABSOLUTE_URL.test(gltfBuffer.uri) ? gltfBuffer.uri : path.join(urlBase, gltfBuffer.uri),
                         { cache: true, responseType: 'arraybuffer', retry: false },
-                        (err, result) => {                         // eslint-disable-line no-loop-func
+                        (err, result) => {
                             if (err) {
                                 reject(err);
                             } else {

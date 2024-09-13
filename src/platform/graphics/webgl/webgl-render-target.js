@@ -1,6 +1,7 @@
 import { Debug } from '../../../core/debug.js';
 import { PIXELFORMAT_RGBA8 } from '../constants.js';
 import { DebugGraphics } from '../debug-graphics.js';
+import { getMultisampledTextureCache } from '../multi-sampled-texture-cache.js';
 
 /**
  * @import { RenderTarget } from '../render-target.js'
@@ -73,6 +74,11 @@ class WebglRenderTarget {
     _glMsaaDepthBuffer = null;
 
     /**
+     * Key used to store _glMsaaDepthBuffer in the cache.
+     */
+    msaaDepthBufferKey;
+
+    /**
      * The supplied single-sampled framebuffer for rendering. Undefined represents no supplied
      * framebuffer. Null represents the default framebuffer. A value represents a user-supplied
      * framebuffer.
@@ -115,9 +121,14 @@ class WebglRenderTarget {
         this.colorMrtFramebuffers = null;
 
         if (this._glMsaaDepthBuffer) {
-            gl.deleteRenderbuffer(this._glMsaaDepthBuffer);
             this._glMsaaDepthBuffer = null;
+
+            // release reference to the texture, as its ref-counted
+            if (this.msaaDepthBufferKey) {
+                getMultisampledTextureCache(device).release(this.msaaDepthBufferKey);
+            }
         }
+
         this.suppliedColorFramebuffer = undefined;
     }
 
@@ -128,7 +139,9 @@ class WebglRenderTarget {
     init(device, target) {
         const gl = device.gl;
 
+        Debug.assert(!this._isInitialized, 'Render target already initialized.');
         this._isInitialized = true;
+
         const buffers = [];
 
         if (this.suppliedColorFramebuffer !== undefined) {
@@ -169,41 +182,39 @@ class WebglRenderTarget {
             gl.drawBuffers(buffers);
 
             const depthBuffer = target._depthBuffer;
-            if (depthBuffer) {
-                // --- Init the provided depth/stencil buffer (optional, WebGL2 only) ---
-                if (!depthBuffer.impl._glTexture) {
-                    // Clamp the render buffer size to the maximum supported by the device
-                    depthBuffer._width = Math.min(depthBuffer.width, device.maxRenderBufferSize);
-                    depthBuffer._height = Math.min(depthBuffer.height, device.maxRenderBufferSize);
-                    device.setTexture(depthBuffer, 0);
-                }
-                // Attach
-                if (target._stencil) {
-                    gl.framebufferTexture2D(gl.FRAMEBUFFER, gl.DEPTH_STENCIL_ATTACHMENT,
+            if (depthBuffer || target._depth) {
+
+                const attachmentPoint = target._stencil ? gl.DEPTH_STENCIL_ATTACHMENT : gl.DEPTH_ATTACHMENT;
+
+                if (depthBuffer) {
+                    // --- Init the optionally provided depth/stencil buffer ---
+                    if (!depthBuffer.impl._glTexture) {
+                        // Clamp the render buffer size to the maximum supported by the device
+                        depthBuffer._width = Math.min(depthBuffer.width, device.maxRenderBufferSize);
+                        depthBuffer._height = Math.min(depthBuffer.height, device.maxRenderBufferSize);
+                        device.setTexture(depthBuffer, 0);
+                    }
+
+                    // Attach
+                    gl.framebufferTexture2D(gl.FRAMEBUFFER, attachmentPoint,
                         depthBuffer._cubemap ? gl.TEXTURE_CUBE_MAP_POSITIVE_X + target._face : gl.TEXTURE_2D,
                         target._depthBuffer.impl._glTexture, 0);
+
                 } else {
-                    gl.framebufferTexture2D(gl.FRAMEBUFFER, gl.DEPTH_ATTACHMENT,
-                        depthBuffer._cubemap ? gl.TEXTURE_CUBE_MAP_POSITIVE_X + target._face : gl.TEXTURE_2D,
-                        target._depthBuffer.impl._glTexture, 0);
-                }
-            } else if (target._depth) {
-                // --- Init a new depth/stencil buffer (optional) ---
-                // if device is a MSAA RT, and no buffer to resolve to, skip creating non-MSAA depth
-                const willRenderMsaa = target._samples > 1;
-                if (!willRenderMsaa) {
-                    if (!this._glDepthBuffer) {
-                        this._glDepthBuffer = gl.createRenderbuffer();
+                    // --- Init a new depth/stencil buffer (optional) ---
+                    // if device is a MSAA RT, and no buffer to resolve to, skip creating non-MSAA depth
+                    const willRenderMsaa = target._samples > 1;
+                    if (!willRenderMsaa) {
+                        if (!this._glDepthBuffer) {
+                            this._glDepthBuffer = gl.createRenderbuffer();
+                        }
+
+                        const internalFormat = target._stencil ? gl.DEPTH24_STENCIL8 : gl.DEPTH_COMPONENT32F;
+                        gl.bindRenderbuffer(gl.RENDERBUFFER, this._glDepthBuffer);
+                        gl.renderbufferStorage(gl.RENDERBUFFER, internalFormat, target.width, target.height);
+                        gl.framebufferRenderbuffer(gl.FRAMEBUFFER, attachmentPoint, gl.RENDERBUFFER, this._glDepthBuffer);
+                        gl.bindRenderbuffer(gl.RENDERBUFFER, null);
                     }
-                    gl.bindRenderbuffer(gl.RENDERBUFFER, this._glDepthBuffer);
-                    if (target._stencil) {
-                        gl.renderbufferStorage(gl.RENDERBUFFER, gl.DEPTH_STENCIL, target.width, target.height);
-                        gl.framebufferRenderbuffer(gl.FRAMEBUFFER, gl.DEPTH_STENCIL_ATTACHMENT, gl.RENDERBUFFER, this._glDepthBuffer);
-                    } else {
-                        gl.renderbufferStorage(gl.RENDERBUFFER, gl.DEPTH_COMPONENT32F, target.width, target.height);
-                        gl.framebufferRenderbuffer(gl.FRAMEBUFFER, gl.DEPTH_ATTACHMENT, gl.RENDERBUFFER, this._glDepthBuffer);
-                    }
-                    gl.bindRenderbuffer(gl.RENDERBUFFER, null);
                 }
             }
 
@@ -257,17 +268,46 @@ class WebglRenderTarget {
 
             // Optionally add a MSAA depth/stencil buffer
             if (target._depth) {
+
+                Debug.assert(!this._glMsaaDepthBuffer);
+                const internalFormat = target._stencil ? gl.DEPTH24_STENCIL8 : gl.DEPTH_COMPONENT32F;
+                const attachmentPoint = target._stencil ? gl.DEPTH_STENCIL_ATTACHMENT : gl.DEPTH_ATTACHMENT;
+
+                // for user specified depth buffer, shader multi-sampled depth buffer instead of allocating a new one
+                let key;
+                const depthBuffer = target._depthBuffer;
+                if (depthBuffer) {
+
+                    // key for matching multi-sampled depth buffer
+                    key = `${depthBuffer.id}:${target.width}:${target.height}:${target._samples}:${internalFormat}:${attachmentPoint}`;
+
+                    // check if we have already allocated a multi-sampled depth buffer for the depth buffer
+                    this._glMsaaDepthBuffer = getMultisampledTextureCache(device).get(key); // this incRefs it if found
+                }
+
+                // if we don't have a multi-sampled depth buffer, create one
                 if (!this._glMsaaDepthBuffer) {
+
                     this._glMsaaDepthBuffer = gl.createRenderbuffer();
+                    gl.bindRenderbuffer(gl.RENDERBUFFER, this._glMsaaDepthBuffer);
+                    gl.renderbufferStorageMultisample(gl.RENDERBUFFER, target._samples, internalFormat, target.width, target.height);
+
+                    // add 'destroy' method to the renderbuffer, allowing it to be destroyed by the cache
+                    this._glMsaaDepthBuffer.destroy = function () {
+                        gl.deleteRenderbuffer(this);
+                    };
+
+                    // store it in the cache
+                    if (depthBuffer) {
+                        getMultisampledTextureCache(device).set(key, this._glMsaaDepthBuffer);
+                    }
                 }
-                gl.bindRenderbuffer(gl.RENDERBUFFER, this._glMsaaDepthBuffer);
-                if (target._stencil) {
-                    gl.renderbufferStorageMultisample(gl.RENDERBUFFER, target._samples, gl.DEPTH24_STENCIL8, target.width, target.height);
-                    gl.framebufferRenderbuffer(gl.FRAMEBUFFER, gl.DEPTH_STENCIL_ATTACHMENT, gl.RENDERBUFFER, this._glMsaaDepthBuffer);
-                } else {
-                    gl.renderbufferStorageMultisample(gl.RENDERBUFFER, target._samples, gl.DEPTH_COMPONENT32F, target.width, target.height);
-                    gl.framebufferRenderbuffer(gl.FRAMEBUFFER, gl.DEPTH_ATTACHMENT, gl.RENDERBUFFER, this._glMsaaDepthBuffer);
-                }
+
+                // store the key needed to release the depth buffer from the cache
+                this.msaaDepthBufferKey = key;
+
+                // add the depth buffer to the FBO
+                gl.framebufferRenderbuffer(gl.FRAMEBUFFER, attachmentPoint, gl.RENDERBUFFER, this._glMsaaDepthBuffer);
             }
 
             Debug.call(() => this._checkFbo(device, target, 'MSAA'));
@@ -355,6 +395,7 @@ class WebglRenderTarget {
         this._glResolveFrameBuffer = null;
         this._glMsaaColorBuffers.length = 0;
         this._glMsaaDepthBuffer = null;
+        this.msaaDepthBufferKey = undefined;
         this.colorMrtFramebuffers = null;
         this.suppliedColorFramebuffer = undefined;
         this._isInitialized = false;

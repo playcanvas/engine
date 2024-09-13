@@ -254,7 +254,7 @@ class WebgpuRenderPipeline extends WebgpuPipeline {
 
             // format of depth-stencil attachment
             depthStencil = {
-                format: renderTarget.impl.depthFormat
+                format: renderTarget.impl.depthAttachment.format
             };
 
             // depth

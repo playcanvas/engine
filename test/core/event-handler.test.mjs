@@ -2,37 +2,37 @@ import { EventHandler } from '../../src/core/event-handler.js';
 
 import { expect } from 'chai';
 
-describe('EventHandler', () => {
+describe('EventHandler', function () {
 
-    describe('#hasEvent', () => {
+    describe('#hasEvent', function () {
 
-        it('returns true if the event is registered', () => {
+        it('returns true if the event is registered', function () {
             const e = new EventHandler();
-            e.on('test', () => { });
+            e.on('test', function () { });
             expect(e.hasEvent('test')).to.be.true;
         });
 
-        it('returns false if the event is not registered', () => {
+        it('returns false if the event is not registered', function () {
             const e = new EventHandler();
-            e.on('test', () => { });
+            e.on('test', function () { });
             expect(e.hasEvent('hello')).to.be.false;
         });
 
     });
 
-    describe('#on', () => {
+    describe('#on', function () {
 
-        it('calls handler on fire', () => {
+        it('calls handler on fire', function () {
             const e = new EventHandler();
             let called = false;
-            e.on('test', () => {
+            e.on('test', function () {
                 called = true;
             });
             e.fire('test');
             expect(called).to.be.true;
         });
 
-        it('calls handler with up to 8 arguments on fire', () => {
+        it('calls handler with up to 8 arguments on fire', function () {
             const e = new EventHandler();
             let called = false;
             e.on('test', (arg1, arg2, arg3, arg4, arg5, arg6, arg7, arg8, arg9) => {
@@ -53,12 +53,12 @@ describe('EventHandler', () => {
 
     });
 
-    describe('#once', () => {
+    describe('#once', function () {
 
-        it('unregisters itself after the first fire', () => {
+        it('unregisters itself after the first fire', function () {
             const e = new EventHandler();
             let count = 0;
-            e.once('test', () => {
+            e.once('test', function () {
                 count++;
             });
             expect(e.hasEvent('test')).to.be.true;
@@ -70,7 +70,7 @@ describe('EventHandler', () => {
 
     });
 
-    describe('#off', () => {
+    describe('#off', function () {
 
         it('unregisters event handler with specified callback and scope', function () {
             const e = new EventHandler();
@@ -86,7 +86,7 @@ describe('EventHandler', () => {
             expect(called).to.be.false;
         });
 
-        it('unregisters event handler with specified callback', () => {
+        it('unregisters event handler with specified callback', function () {
             const e = new EventHandler();
             let called = false;
             const callback = function () {
@@ -100,10 +100,10 @@ describe('EventHandler', () => {
             expect(called).to.be.false;
         });
 
-        it('unregisters all event handlers', () => {
+        it('unregisters all event handlers', function () {
             const e = new EventHandler();
             let called = false;
-            e.on('test', () => {
+            e.on('test', function () {
                 called = true;
             });
             expect(e.hasEvent('test')).to.be.true;

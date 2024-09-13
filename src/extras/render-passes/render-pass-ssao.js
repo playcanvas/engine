@@ -1,3 +1,4 @@
+import { Color } from '../../core/math/color.js';
 import { ADDRESS_CLAMP_TO_EDGE, FILTER_NEAREST, PIXELFORMAT_R8 } from '../../platform/graphics/constants.js';
 import { RenderTarget } from '../../platform/graphics/render-target.js';
 import { Texture } from '../../platform/graphics/texture.js';
@@ -259,6 +260,10 @@ class RenderPassSsao extends RenderPassShaderQuad {
             resizeSource: this.sourceTexture
         });
 
+        // clear the color to avoid load op
+        const clearColor = new Color(0, 0, 0, 0);
+        this.setClearColor(clearColor);
+
         // optional blur passes
         if (blurEnabled) {
 
@@ -268,15 +273,20 @@ class RenderPassSsao extends RenderPassShaderQuad {
             blurPassHorizontal.init(blurRT, {
                 resizeSource: rt.colorBuffer
             });
+            blurPassHorizontal.setClearColor(clearColor);
 
             const blurPassVertical = new RenderPassDepthAwareBlur(device, blurRT.colorBuffer, false);
             blurPassVertical.init(rt, {
                 resizeSource: rt.colorBuffer
             });
+            blurPassVertical.setClearColor(clearColor);
 
             this.afterPasses.push(blurPassHorizontal);
             this.afterPasses.push(blurPassVertical);
         }
+
+        this.ssaoTextureId = device.scope.resolve('ssaoTexture');
+        this.ssaoTextureSizeInvId = device.scope.resolve('ssaoTextureSizeInv');
     }
 
     destroy() {
@@ -361,6 +371,13 @@ class RenderPassSsao extends RenderPassShaderQuad {
         scope.resolve('uProjectionScaleRadius').setValue(projectionScale * radius);
 
         super.execute();
+    }
+
+    after() {
+        this.ssaoTextureId.setValue(this.ssaoTexture);
+
+        const srcTexture = this.sourceTexture;
+        this.ssaoTextureSizeInvId.setValue([1.0 / srcTexture.width, 1.0 / srcTexture.height]);
     }
 }
 

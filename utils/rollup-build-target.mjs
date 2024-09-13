@@ -3,7 +3,7 @@ import resolve from '@rollup/plugin-node-resolve';
 // import strip from '@rollup/plugin-strip';
 import swc from '@rollup/plugin-swc';
 
-// unoffical package plugins
+// unofficial package plugins
 import jscc from 'rollup-plugin-jscc';
 import { visualizer } from 'rollup-plugin-visualizer';
 

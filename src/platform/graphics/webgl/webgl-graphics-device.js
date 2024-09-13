@@ -1149,13 +1149,13 @@ class WebglGraphicsDevice extends GraphicsDevice {
      */
     startRenderPass(renderPass) {
 
-        DebugGraphics.pushGpuMarker(this, `Pass:${renderPass.name}`);
-        DebugGraphics.pushGpuMarker(this, 'START-PASS');
-
         // set up render target
         const rt = renderPass.renderTarget ?? this.backBuffer;
         this.renderTarget = rt;
         Debug.assert(rt);
+
+        DebugGraphics.pushGpuMarker(this, `Pass:${renderPass.name} RT:${rt.name}`);
+        DebugGraphics.pushGpuMarker(this, 'START-PASS');
 
         this.updateBegin();
 
@@ -1252,9 +1252,16 @@ class WebglGraphicsDevice extends GraphicsDevice {
             }
 
             // resolve the color buffer (this resolves all MRT color buffers at once)
-            if (renderPass.colorOps?.resolve) {
+            if (colorBufferCount && renderPass.colorOps?.resolve) {
                 if (renderPass.samples > 1 && target.autoResolve) {
                     target.resolve(true, false);
+                }
+            }
+
+            // resolve depth/stencil buffer
+            if (target.depthBuffer && renderPass.depthStencilOps.resolveDepth) {
+                if (renderPass.samples > 1 && target.autoResolve) {
+                    target.resolve(false, true);
                 }
             }
 
