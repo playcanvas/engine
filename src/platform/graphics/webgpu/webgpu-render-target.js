@@ -151,15 +151,6 @@ class WebgpuRenderTarget {
      */
     constructor(renderTarget) {
         this.renderTarget = renderTarget;
-
-        // color formats are based on the textures
-        if (renderTarget._colorBuffers) {
-            renderTarget._colorBuffers.forEach((colorBuffer, index) => {
-                this.setColorAttachment(index, undefined, colorBuffer.impl.format);
-            });
-        }
-
-        this.updateKey();
     }
 
     /**
@@ -259,6 +250,14 @@ class WebgpuRenderTarget {
         this.initDepthStencil(device, wgpu, renderTarget);
 
         // initialize color attachments
+
+        // color formats are based on the textures
+        if (renderTarget._colorBuffers) {
+            renderTarget._colorBuffers.forEach((colorBuffer, index) => {
+                this.setColorAttachment(index, undefined, colorBuffer.impl.format);
+            });
+        }
+
         this.renderPassDescriptor.colorAttachments = [];
         const count = this.isBackbuffer ? 1 : (renderTarget._colorBuffers?.length ?? 0);
         for (let i = 0; i < count; ++i) {
@@ -272,6 +271,8 @@ class WebgpuRenderTarget {
                 this.renderPassDescriptor.colorAttachments.push(colorAttachment);
             }
         }
+
+        this.updateKey();
 
         this.initialized = true;
 
