@@ -74,9 +74,12 @@ const splatMainVS = /* glsl */ `
 `;
 
 const splatMainFS = /* glsl */ `
+    varying mediump vec2 texCoord;
+    varying mediump vec4 color;
+
     void main(void)
     {
-        gl_FragColor = evalSplat();
+        gl_FragColor = evalSplat(texCoord, color);
     }
 `;
 
