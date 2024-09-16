@@ -344,7 +344,7 @@ class GSplat {
         for (let i = 0; i < gsplatData.numSplats; ++i) {
             // get coefficients
             for (let j = 0; j < 45; ++j) {
-                c[j] = src[0][i];
+                c[j] = src[j][i];
             }
 
             // calculate maximum absolute value
