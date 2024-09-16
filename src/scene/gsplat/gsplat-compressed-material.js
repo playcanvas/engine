@@ -164,10 +164,8 @@ const splatCoreVS = /* glsl */ `
         covB = vec3(dot(M[1], M[1]), dot(M[1], M[2]), dot(M[2], M[2]));
     }
 
-    // given the splat center (view space) and covariance A and B vectors, calculate
-    // the v1 and v2 vectors for this view.
-    vec4 calcV1V2(vec3 centerView, vec3 covA, vec3 covB, mat3 W) {
-
+    // calculate 2d covariance vectors
+    vec4 calcV1V2(in vec3 splat_cam, in vec3 covA, in vec3 covB, mat3 W) {
         mat3 Vrk = mat3(
             covA.x, covA.y, covA.z, 
             covA.y, covB.x, covB.y,
@@ -176,8 +174,8 @@ const splatCoreVS = /* glsl */ `
 
         float focal = viewport.x * matrix_projection[0][0];
 
-        float J1 = focal / centerView.z;
-        vec2 J2 = -J1 / centerView.z * centerView.xy;
+        float J1 = focal / splat_cam.z;
+        vec2 J2 = -J1 / splat_cam.z * splat_cam.xy;
         mat3 J = mat3(
             J1, 0.0, J2.x, 
             0.0, J1, J2.y, 
@@ -205,9 +203,6 @@ const splatCoreVS = /* glsl */ `
 `;
 
 const splatCoreFS = /* glsl */ `
-    varying mediump vec2 texCoord;
-    varying mediump vec4 color;
-
     #ifndef DITHER_NONE
         varying float id;
     #endif
@@ -216,7 +211,7 @@ const splatCoreFS = /* glsl */ `
         uniform vec4 uColor;
     #endif
 
-    vec4 evalSplat() {
+    vec4 evalSplat(vec2 texCoord, vec4 color) {
         mediump float A = dot(texCoord, texCoord);
         if (A > 1.0) {
             discard;
@@ -228,8 +223,10 @@ const splatCoreFS = /* glsl */ `
         }
 
         #ifdef PICK_PASS
-            if (B < 0.3) discard;
-            return(uColor);
+            if (B < 0.3) {
+                discard;
+            }
+            return uColor;
         #endif
 
         #ifndef DITHER_NONE
@@ -344,9 +341,12 @@ const splatMainVS = /* glsl */ `
 `;
 
 const splatMainFS = /* glsl */ `
+    varying mediump vec2 texCoord;
+    varying mediump vec4 color;
+
     void main(void)
     {
-        gl_FragColor = evalSplat();
+        gl_FragColor = evalSplat(texCoord, color);
     }
 `;
 

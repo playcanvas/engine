@@ -66,6 +66,12 @@ class GSplatResource {
             instance: splatInstance
         });
 
+        // the ply scene data no longer gets automatically rotated on load, so do
+        // it here instead.
+        if (!this.splatData.isCompressed) {
+            entity.setLocalEulerAngles(0, 0, 180);
+        }
+
         // set custom aabb
         component.customAabb = splatInstance.splat.aabb.clone();
 

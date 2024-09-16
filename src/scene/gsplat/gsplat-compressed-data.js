@@ -35,10 +35,10 @@ class SplatCompressedIterator {
             const m = Math.sqrt(1.0 - (a * a + b * b + c * c));
 
             switch (value >>> 30) {
-                case 0: result.set(m, a, b, c); break;
-                case 1: result.set(a, m, b, c); break;
-                case 2: result.set(a, b, m, c); break;
-                case 3: result.set(a, b, c, m); break;
+                case 0: result.set(a, b, c, m); break;
+                case 1: result.set(m, b, c, a); break;
+                case 2: result.set(b, m, c, a); break;
+                case 3: result.set(b, c, m, a); break;
             }
         };
 
@@ -222,17 +222,25 @@ class GSplatCompressedData {
 
         const iter = this.createIter(p, r, s, c);
 
+        // the compressed data is stored "right way up" so must
+        // be flipped upside down during decompression to match
+        // uncompressed orientation.
+        const q = new Quat().setFromEulerAngles(0, 0, 180);
+
         for (let i = 0; i < this.numSplats; ++i) {
             iter.read(i);
+
+            q.transformVector(p, p);
+            r.mul2(q, r);
 
             data.x[i] = p.x;
             data.y[i] = p.y;
             data.z[i] = p.z;
 
-            data.rot_0[i] = r.x;
-            data.rot_1[i] = r.y;
-            data.rot_2[i] = r.z;
-            data.rot_3[i] = r.w;
+            data.rot_1[i] = r.x;
+            data.rot_2[i] = r.y;
+            data.rot_3[i] = r.z;
+            data.rot_0[i] = r.w;
 
             data.scale_0[i] = s.x;
             data.scale_1[i] = s.y;
