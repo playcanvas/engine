@@ -84,9 +84,9 @@ const splatCoreVS = /* glsl */ `
         float J1 = focal / splat_cam.z;
         vec2 J2 = -J1 / splat_cam.z * splat_cam.xy;
         mat3 J = mat3(
-            J1, 0., J2.x, 
-            0., J1, J2.y, 
-            0., 0., 0.
+            J1, 0.0, J2.x, 
+            0.0, J1, J2.y, 
+            0.0, 0.0, 0.0
         );
 
         mat3 T = W * J;
@@ -221,9 +221,6 @@ const splatCoreVS = /* glsl */ `
 `;
 
 const splatCoreFS = /* glsl */ `
-    varying mediump vec2 texCoord;
-    varying mediump vec4 color;
-
     #ifndef DITHER_NONE
         varying float id;
     #endif
@@ -232,7 +229,7 @@ const splatCoreFS = /* glsl */ `
         uniform vec4 uColor;
     #endif
 
-    vec4 evalSplat() {
+    vec4 evalSplat(vec2 texCoord, vec4 color) {
         mediump float A = dot(texCoord, texCoord);
         if (A > 1.0) {
             discard;
@@ -244,8 +241,10 @@ const splatCoreFS = /* glsl */ `
         }
 
         #ifdef PICK_PASS
-            if (B < 0.3) discard;
-            return(uColor);
+            if (B < 0.3) {
+                discard;
+            }
+            return uColor;
         #endif
 
         #ifndef DITHER_NONE

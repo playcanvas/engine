@@ -164,35 +164,39 @@ class GSplatData {
         let mx, my, mz, Mx, My, Mz;
         let first = true;
 
-        const p = new Vec3();
-        const s = new Vec3();
-
-        const iter = this.createIter(p, null, s);
+        const x = this.getProp('x');
+        const y = this.getProp('y');
+        const z = this.getProp('z');
+        const sx = this.getProp('scale_0');
+        const sy = this.getProp('scale_1');
+        const sz = this.getProp('scale_2');
 
         for (let i = 0; i < this.numSplats; ++i) {
             if (pred && !pred(i)) {
                 continue;
             }
 
-            iter.read(i);
+            const scaleVal = 2.0 * Math.exp(Math.max(sx[i], sy[i], sz[i]));
 
-            const scaleVal = 2.0 * Math.max(s.x, s.y, s.z);
+            const px = x[i];
+            const py = y[i];
+            const pz = z[i];
 
             if (first) {
                 first = false;
-                mx = p.x - scaleVal;
-                my = p.y - scaleVal;
-                mz = p.z - scaleVal;
-                Mx = p.x + scaleVal;
-                My = p.y + scaleVal;
-                Mz = p.z + scaleVal;
+                mx = px - scaleVal;
+                my = py - scaleVal;
+                mz = pz - scaleVal;
+                Mx = px + scaleVal;
+                My = py + scaleVal;
+                Mz = pz + scaleVal;
             } else {
-                mx = Math.min(mx, p.x - scaleVal);
-                my = Math.min(my, p.y - scaleVal);
-                mz = Math.min(mz, p.z - scaleVal);
-                Mx = Math.max(Mx, p.x + scaleVal);
-                My = Math.max(My, p.y + scaleVal);
-                Mz = Math.max(Mz, p.z + scaleVal);
+                mx = Math.min(mx, px - scaleVal);
+                my = Math.min(my, py - scaleVal);
+                mz = Math.min(mz, pz - scaleVal);
+                Mx = Math.max(Mx, px + scaleVal);
+                My = Math.max(My, py + scaleVal);
+                Mz = Math.max(Mz, pz + scaleVal);
             }
         }
 
@@ -244,15 +248,14 @@ class GSplatData {
      * @param {Float32Array} result - Array containing the centers.
      */
     getCenters(result) {
-        const p = new Vec3();
-        const iter = this.createIter(p);
+        const x = this.getProp('x');
+        const y = this.getProp('y');
+        const z = this.getProp('z');
 
         for (let i = 0; i < this.numSplats; ++i) {
-            iter.read(i);
-
-            result[i * 3 + 0] = p.x;
-            result[i * 3 + 1] = p.y;
-            result[i * 3 + 2] = p.z;
+            result[i * 3 + 0] = x[i];
+            result[i * 3 + 1] = y[i];
+            result[i * 3 + 2] = z[i];
         }
     }
 
@@ -261,9 +264,12 @@ class GSplatData {
      * @param {Function} pred - Predicate given index for skipping.
      */
     calcFocalPoint(result, pred) {
-        const p = new Vec3();
-        const s = new Vec3();
-        const iter = this.createIter(p, null, s, null);
+        const x = this.getProp('x');
+        const y = this.getProp('y');
+        const z = this.getProp('z');
+        const sx = this.getProp('scale_0');
+        const sy = this.getProp('scale_1');
+        const sz = this.getProp('scale_2');
 
         result.x = 0;
         result.y = 0;
@@ -275,12 +281,10 @@ class GSplatData {
                 continue;
             }
 
-            iter.read(i);
-
-            const weight = 1.0 / (1.0 + Math.max(s.x, s.y, s.z));
-            result.x += p.x * weight;
-            result.y += p.y * weight;
-            result.z += p.z * weight;
+            const weight = 1.0 / (1.0 + Math.exp(Math.max(sx[i], sy[i], sz[i])));
+            result.x += x[i] * weight;
+            result.y += y[i] * weight;
+            result.z += z[i] * weight;
             sum += weight;
         }
         result.mulScalar(1 / sum);
