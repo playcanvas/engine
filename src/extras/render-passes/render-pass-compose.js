@@ -30,12 +30,18 @@ const fragmentShader = /* glsl */ `
         uniform vec3 brightnessContrastSaturation;
 
         // for all parameters, 1.0 is the no-change value
-        vec3 contrastSaturationBrightness(vec3 color, float brt, float sat, float con)
+        vec3 colorGradingHDR(vec3 color, float brt, float sat, float con)
         {
+            // brightness
             color = color * brt;
+
+            // saturation
             float grey = dot(color, vec3(0.3, 0.59, 0.11));
-            color  = mix(vec3(grey), color, sat);
-            return max(mix(vec3(0.5), color, con), 0.0);
+            grey = grey / max(1.0, max(color.r, max(color.g, color.b)));    // Normalize luminance in HDR to preserve intensity (optional)
+            color = mix(vec3(grey), color, sat);
+
+            // contrast
+            return mix(vec3(0.5), color, con);
         }
     
     #endif
@@ -147,7 +153,8 @@ const fragmentShader = /* glsl */ `
         #endif
 
         #ifdef GRADING
-            result = contrastSaturationBrightness(result, brightnessContrastSaturation.x, brightnessContrastSaturation.z, brightnessContrastSaturation.y);
+            // color grading takes place in HDR space before tone mapping
+            result = colorGradingHDR(result, brightnessContrastSaturation.x, brightnessContrastSaturation.z, brightnessContrastSaturation.y);
         #endif
 
         result = toneMap(result);
