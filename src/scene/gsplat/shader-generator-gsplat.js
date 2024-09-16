@@ -271,11 +271,9 @@ class GSplatShaderGenerator {
 
         const shaderPassInfo = ShaderPass.get(device).getByIndex(options.pass);
         const shaderPassDefines = shaderPassInfo.shaderDefines;
-        const optionDefines = (options.defines ?? []).map(d => `#define ${d}`).join('\n');
 
         const defines =
             `${shaderPassDefines}\n` +
-            `${optionDefines}\n` +
             `#define DITHER_${options.dither.toUpperCase()}\n` +
             `#define TONEMAP_${options.toneMapping === TONEMAP_LINEAR ? 'DISABLED' : 'ENABLED'}\n`;
 

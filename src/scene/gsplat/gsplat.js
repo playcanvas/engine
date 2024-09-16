@@ -106,15 +106,15 @@ class GSplat {
      * @returns {Material} material - The material to set up for the splat rendering.
      */
     createMaterial(options) {
-        const result = createGSplatMaterial({
-            ...(this.hasSH ? { defines: ['USE_SH1', 'USE_SH2', 'USE_SH3'] } : {}),
-            ...options
-        });
+        const result = createGSplatMaterial(options);
         result.setParameter('splatColor', this.colorTexture);
         result.setParameter('transformA', this.transformATexture);
         result.setParameter('transformB', this.transformBTexture);
         result.setParameter('tex_params', new Float32Array([this.numSplats, this.colorTexture.width, 0, 0]));
         if (this.hasSH) {
+            result.setDefine('USE_SH1', true);
+            result.setDefine('USE_SH2', true);
+            result.setDefine('USE_SH3', true);
             result.setParameter('splatSH_1to3', this.sh1to3Texture);
             result.setParameter('splatSH_4to7', this.sh4to7Texture);
             result.setParameter('splatSH_8to11', this.sh8to11Texture);

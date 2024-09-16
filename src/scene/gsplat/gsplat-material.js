@@ -117,8 +117,7 @@ const createGSplatMaterial = (options = {}) => {
             toneMapping: params.renderParams.toneMapping,
             vertex: options.vertex ?? splatMainVS,
             fragment: options.fragment ?? splatMainFS,
-            dither: ditherEnum,
-            defines: options.defines
+            dither: ditherEnum
         };
 
         const processingOptions = new ShaderProcessorOptions(params.viewUniformFormat, params.viewBindGroupFormat);
