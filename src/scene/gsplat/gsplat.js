@@ -11,6 +11,12 @@ import { Texture } from '../../platform/graphics/texture.js';
 import { BoundingBox } from '../../core/shape/bounding-box.js';
 import { createGSplatMaterial } from './gsplat-material.js';
 
+/**
+ * @import { GSplatData } from './gsplat-data.js'
+ * @import { GraphicsDevice } from '../../platform/graphics/graphics-device.js'
+ * @import { Material } from '../materials/material.js'
+ */
+
 const getSHData = (gsplatData) => {
     const result = [];
     for (let i = 0; i < 45; ++i) {
@@ -306,7 +312,7 @@ class GSplat {
         for (let i = 0; i < gsplatData.numSplats; ++i) {
             // get coefficients
             for (let j = 0; j < 45; ++j) {
-                c[j] = src[0][i];
+                c[j] = src[j][i];
             }
 
             // calculate maximum absolute value
