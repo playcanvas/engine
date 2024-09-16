@@ -340,7 +340,7 @@ const readFloatPly = async (streamBuf, elements, littleEndian) => {
         streamBuf.head += toRead * inputSize;
     }
 
-    return new GSplatData(elements); 
+    return new GSplatData(elements);
 };
 
 const readGeneralPly = async (streamBuf, elements, littleEndian) => {
@@ -390,7 +390,7 @@ const readGeneralPly = async (streamBuf, elements, littleEndian) => {
 
     // console.log(elements);
 
-    return new GSplatData(elements);    
+    return new GSplatData(elements);
 };
 
 /**
@@ -490,24 +490,26 @@ const readPly = async (reader, propertyFilter = null) => {
     // load compressed PLY with fast path
     if (isCompressedPly(elements)) {
         return await readCompressedPly(streamBuf, elements, format === 'binary_little_endian');
-    } else {
-        // allocate element storage
-        elements.forEach((e) => {
-            e.properties.forEach((p) => {
-                const storageType = dataTypeMap.get(p.type);
-                if (storageType) {
-                    const storage = (!propertyFilter || propertyFilter(p.name)) ? new storageType(e.count) : null;
-                    p.storage = storage;
-                }
-            });
-        });
-
-        if (isFloatPly(elements)) {
-            return await readFloatPly(streamBuf, elements, format === 'binary_little_endian');
-        } else {
-            return await readGeneralPly(streamBuf, elements, format === 'binary_little_endian');
-        }
     }
+
+    // allocate element storage
+    elements.forEach((e) => {
+        e.properties.forEach((p) => {
+            const storageType = dataTypeMap.get(p.type);
+            if (storageType) {
+                const storage = (!propertyFilter || propertyFilter(p.name)) ? new storageType(e.count) : null;
+                p.storage = storage;
+            }
+        });
+    });
+
+    // load float32 PLY with fast path
+    if (isFloatPly(elements)) {
+        return await readFloatPly(streamBuf, elements, format === 'binary_little_endian');
+    }
+
+    // fallback, general case
+    return await readGeneralPly(streamBuf, elements, format === 'binary_little_endian');
 };
 
 // by default load everything

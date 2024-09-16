@@ -319,66 +319,72 @@ class GSplat {
 
         const src = getSHData(gsplatData);
 
-        /**
-         * @param {number} value - The value to pack.
-         * @param {number} bits - The number of bits to use.
-         * @returns {number} The packed value.
-         */
-        const packUnorm = (value, bits) => {
-            const t = (1 << bits) - 1;
-            return Math.max(0, Math.min(t, Math.floor(value * t + 0.5)));
-        };
+        const t11 = (1 << 11) - 1;
+        const t10 = (1 << 10) - 1;
+        const pack = (r, g, b) => {
+            const rb = Math.floor(r * t11 + 0.5);
+            const gb = Math.floor(g * t10 + 0.5);
+            const bb = Math.floor(b * t11 + 0.5);
 
-        /**
-         * @param {number} coef - Index of the coefficient to pack
-         * @param {number} idx - Index of the splat to pack
-         * @param {number} m - Scaling factor to normalize the set of coefficients
-         * @returns {number} The packed value.
-         */
-        const pack = (coef, idx, m) => {
-            const r = src[coef][idx] / m;
-            const g = src[coef + 15][idx] / m;
-            const b = src[coef + 30][idx] / m;
-
-            return packUnorm(r * 0.5 + 0.5, 11) << 21 |
-                   packUnorm(g * 0.5 + 0.5, 10) << 11 |
-                   packUnorm(b * 0.5 + 0.5, 11);
+            return (rb < 0 ? 0 : rb > t11 ? t11 : rb) << 21 |
+                   (gb < 0 ? 0 : gb > t10 ? t10 : gb) << 11 |
+                   (bb < 0 ? 0 : bb > t11 ? t11 : bb);
         };
 
         const float32 = new Float32Array(1);
         const uint32 = new Uint32Array(float32.buffer);
 
+        // coefficients
+        const c = [
+            0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0,
+            0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0,
+            0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0
+        ];
+
         for (let i = 0; i < gsplatData.numSplats; ++i) {
-            let m = Math.abs(src[0][i]);
+            // get coefficients
+            for (let j = 0; j < 45; ++j) {
+                c[j] = src[0][i];
+            }
+
+            // calculate maximum absolute value
+            let m = Math.abs(c[0]);
             for (let j = 1; j < 45; ++j) {
-                m = Math.max(m, Math.abs(src[j][i]));
+                const as = Math.abs(c[j]);
+                if (as > m) m = as;
             }
 
             if (m === 0) {
                 continue;
             }
 
+            // normalize
+            for (let j = 0; j < 45; ++j) {
+                c[j] = (c[j] / m) * 0.5 + 0.5;
+            }
+
+            // pack
             float32[0] = m;
 
             sh1to3Data[i * 4 + 0] = uint32[0];
-            sh1to3Data[i * 4 + 1] = pack(0, i, m);
-            sh1to3Data[i * 4 + 2] = pack(1, i, m);
-            sh1to3Data[i * 4 + 3] = pack(2, i, m);
+            sh1to3Data[i * 4 + 1] = pack(c[0], c[15], c[30]);
+            sh1to3Data[i * 4 + 2] = pack(c[1], c[16], c[31]);
+            sh1to3Data[i * 4 + 3] = pack(c[2], c[17], c[32]);
 
-            sh4to7Data[i * 4 + 0] = pack(3, i, m);
-            sh4to7Data[i * 4 + 1] = pack(4, i, m);
-            sh4to7Data[i * 4 + 2] = pack(5, i, m);
-            sh4to7Data[i * 4 + 3] = pack(6, i, m);
+            sh4to7Data[i * 4 + 0] = pack(c[3], c[18], c[33]);
+            sh4to7Data[i * 4 + 1] = pack(c[4], c[19], c[34]);
+            sh4to7Data[i * 4 + 2] = pack(c[5], c[20], c[35]);
+            sh4to7Data[i * 4 + 3] = pack(c[6], c[21], c[36]);
 
-            sh8to11Data[i * 4 + 0] = pack(7, i, m);
-            sh8to11Data[i * 4 + 1] = pack(8, i, m);
-            sh8to11Data[i * 4 + 2] = pack(9, i, m);
-            sh8to11Data[i * 4 + 3] = pack(10, i, m);
+            sh8to11Data[i * 4 + 0] = pack(c[7], c[22], c[37]);
+            sh8to11Data[i * 4 + 1] = pack(c[8], c[23], c[38]);
+            sh8to11Data[i * 4 + 2] = pack(c[9], c[24], c[39]);
+            sh8to11Data[i * 4 + 3] = pack(c[10], c[25], c[40]);
 
-            sh12to15Data[i * 4 + 0] = pack(11, i, m);
-            sh12to15Data[i * 4 + 1] = pack(12, i, m);
-            sh12to15Data[i * 4 + 2] = pack(13, i, m);
-            sh12to15Data[i * 4 + 3] = pack(14, i, m);
+            sh12to15Data[i * 4 + 0] = pack(c[11], c[26], c[41]);
+            sh12to15Data[i * 4 + 1] = pack(c[12], c[27], c[42]);
+            sh12to15Data[i * 4 + 2] = pack(c[13], c[28], c[43]);
+            sh12to15Data[i * 4 + 3] = pack(c[14], c[29], c[44]);
         }
 
         this.sh1to3Texture.unlock();
