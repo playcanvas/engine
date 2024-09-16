@@ -1,9 +1,7 @@
 import { FloatPacking } from '../../core/math/float-packing.js';
-import { math } from '../../core/math/math.js';
 import { Quat } from '../../core/math/quat.js';
 import { Vec2 } from '../../core/math/vec2.js';
 import { Vec3 } from '../../core/math/vec3.js';
-import { Vec4 } from '../../core/math/vec4.js';
 import { Mat3 } from '../../core/math/mat3.js';
 import {
     ADDRESS_CLAMP_TO_EDGE, FILTER_NEAREST, PIXELFORMAT_RGBA16F, PIXELFORMAT_RGBA32U,
@@ -12,13 +10,6 @@ import {
 import { Texture } from '../../platform/graphics/texture.js';
 import { BoundingBox } from '../../core/shape/bounding-box.js';
 import { createGSplatMaterial } from './gsplat-material.js';
-
-const _tmpVecA = new Vec3();
-const _tmpVecB = new Vec3();
-const _tmpVecC = new Vec3();
-const _m0 = new Vec3();
-const _m1 = new Vec3();
-const _m2 = new Vec3();
 
 const getSHData = (gsplatData) => {
     const result = [];
@@ -221,16 +212,23 @@ class GSplat {
         }
         const data = texture.lock();
 
-        const c = new Vec4();
-        const iter = gsplatData.createIter(null, null, null, c);
+        const cr = gsplatData.getProp('f_dc_0');
+        const cg = gsplatData.getProp('f_dc_1');
+        const cb = gsplatData.getProp('f_dc_2');
+        const ca = gsplatData.getProp('opacity');
+
+        const SH_C0 = 0.28209479177387814;
 
         for (let i = 0; i < this.numSplats; ++i) {
-            iter.read(i);
+            const r = (cr[i] * SH_C0 + 0.5) * 255;
+            const g = (cg[i] * SH_C0 + 0.5) * 255;
+            const b = (cb[i] * SH_C0 + 0.5) * 255;
+            const a = 255 / (1 + Math.exp(-ca[i]));
 
-            data[i * 4 + 0] = math.clamp(c.x * 255, 0, 255);
-            data[i * 4 + 1] = math.clamp(c.y * 255, 0, 255);
-            data[i * 4 + 2] = math.clamp(c.z * 255, 0, 255);
-            data[i * 4 + 3] = math.clamp(c.w * 255, 0, 255);
+            data[i * 4 + 0] = r < 0 ? 0 : r > 255 ? 255 : r;
+            data[i * 4 + 1] = g < 0 ? 0 : g > 255 ? 255 : g;
+            data[i * 4 + 2] = b < 0 ? 0 : b > 255 ? 255 : b;
+            data[i * 4 + 3] = a < 0 ? 0 : a > 255 ? 255 : a;
         }
 
         texture.unlock();
@@ -292,28 +290,22 @@ class GSplat {
      * @param {Vec3} covB - The second covariance vector.
      */
     computeCov3d(rot, scale, covA, covB) {
+        const sx = scale.x;
+        const sy = scale.y;
+        const sz = scale.z;
 
-        // scaled rotation matrix axis
-        const r0 = rot.getX(_tmpVecA).mulScalar(scale.x);
-        const r1 = rot.getY(_tmpVecB).mulScalar(scale.y);
-        const r2 = rot.getZ(_tmpVecC).mulScalar(scale.z);
+        const data = rot.data;
+        const r00 = data[0] * sx; const r01 = data[1] * sx; const r02 = data[2] * sx;
+        const r10 = data[3] * sy; const r11 = data[4] * sy; const r12 = data[5] * sy;
+        const r20 = data[6] * sz; const r21 = data[7] * sz; const r22 = data[8] * sz;
 
-        // transpose the [r0, r1, r2] matrix
-        _m0.set(r0.x, r1.x, r2.x);
-        _m1.set(r0.y, r1.y, r2.y);
-        _m2.set(r0.z, r1.z, r2.z);
+        covA.x = r00 * r00 + r10 * r10 + r20 * r20;
+        covA.y = r00 * r01 + r10 * r11 + r20 * r21;
+        covA.z = r00 * r02 + r10 * r12 + r20 * r22;
 
-        covA.set(
-            _m0.dot(_m0),
-            _m0.dot(_m1),
-            _m0.dot(_m2)
-        );
-
-        covB.set(
-            _m1.dot(_m1),
-            _m1.dot(_m2),
-            _m2.dot(_m2)
-        );
+        covB.x = r01 * r01 + r11 * r11 + r21 * r21;
+        covB.y = r01 * r02 + r11 * r12 + r21 * r22;
+        covB.z = r02 * r02 + r12 * r12 + r22 * r22;
     }
 
     /**
