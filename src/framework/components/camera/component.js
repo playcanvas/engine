@@ -238,6 +238,8 @@ class CameraComponent extends Component {
      */
     set renderPasses(passes) {
         this._camera.renderPasses = passes;
+        this.dirtyLayerCompositionCameras();
+        this.system.app.scene.updateShaders = true;
     }
 
     /**
@@ -254,6 +256,8 @@ class CameraComponent extends Component {
      * Sets the rendering parameters. If this is not null, the camera will use these rendering
      * parameters instead of those specified in the scene's rendering parameters
      * {@link Scene#rendering}.
+     *
+     * @type {RenderingParams|null}
      */
     set rendering(value) {
         this._camera.renderingParams = value;

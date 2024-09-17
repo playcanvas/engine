@@ -15,16 +15,11 @@ const splatCoreVS = /* glsl */ `
     uniform vec4 tex_params;            // num splats, texture width
 
     uniform highp usampler2D splatOrder;
-    uniform highp sampler2D transformA;
+    uniform highp usampler2D transformA;
     uniform highp sampler2D transformB;
-    uniform highp sampler2D transformC;
-    uniform sampler2D splatColor;
 
     attribute vec3 vertex_position;
     attribute uint vertex_id_attrib;
-
-    varying vec2 texCoord;
-    varying vec4 color;
 
     #ifndef DITHER_NONE
         varying float id;
@@ -33,10 +28,6 @@ const splatCoreVS = /* glsl */ `
     uint orderId;
     uint splatId;
     ivec2 splatUV;
-
-    vec3 center;
-    vec3 covA;
-    vec3 covB;
 
     // calculate the current splat index and uv
     bool calcSplatUV() {
@@ -65,33 +56,23 @@ const splatCoreVS = /* glsl */ `
         return true;
     }
 
-    // read chunk and packed data from textures
-    void readData() {
-        vec4 tA = texelFetch(transformA, splatUV, 0);
+    uvec4 tA;
+
+    vec3 getCenter() {
+        tA = texelFetch(transformA, splatUV, 0);
+        return uintBitsToFloat(tA.xyz);
+    }
+
+    void getCovariance(out vec3 covA, out vec3 covB) {
         vec4 tB = texelFetch(transformB, splatUV, 0);
-        vec4 tC = texelFetch(transformC, splatUV, 0);
+        vec2 tC = unpackHalf2x16(tA.w);
 
-        center = tA.xyz;
         covA = tB.xyz;
-        covB = vec3(tA.w, tB.w, tC.x);
+        covB = vec3(tC.x, tC.y, tB.w);
     }
 
-    vec4 getColor() {
-        return texelFetch(splatColor, splatUV, 0);
-    }
-
-    // evaluate the splat position
-    bool evalSplat(out vec4 result)
-    {
-        vec4 centerWorld = matrix_model * vec4(center, 1.0);
-        vec4 splat_cam = matrix_view * centerWorld;
-        vec4 splat_proj = matrix_projection * splat_cam;
-
-        // cull behind camera
-        if (splat_proj.z < -splat_proj.w) {
-            return false;
-        }
-
+    // calculate 2d covariance vectors
+    vec4 calcV1V2(in vec3 splat_cam, in vec3 covA, in vec3 covB, mat3 W) {
         mat3 Vrk = mat3(
             covA.x, covA.y, covA.z, 
             covA.y, covB.x, covB.y,
@@ -103,12 +84,10 @@ const splatCoreVS = /* glsl */ `
         float J1 = focal / splat_cam.z;
         vec2 J2 = -J1 / splat_cam.z * splat_cam.xy;
         mat3 J = mat3(
-            J1, 0., J2.x, 
-            0., J1, J2.y, 
-            0., 0., 0.
+            J1, 0.0, J2.x, 
+            0.0, J1, J2.y, 
+            0.0, 0.0, 0.0
         );
-
-        mat3 W = transpose(mat3(matrix_view) * mat3(matrix_model));
 
         mat3 T = W * J;
         mat3 cov = transpose(T) * Vrk * T;
@@ -122,26 +101,126 @@ const splatCoreVS = /* glsl */ `
         float lambda1 = mid + radius;
         float lambda2 = max(mid - radius, 0.1);
         vec2 diagonalVector = normalize(vec2(offDiagonal, lambda1 - diagonal1));
+
         vec2 v1 = min(sqrt(2.0 * lambda1), 1024.0) * diagonalVector;
         vec2 v2 = min(sqrt(2.0 * lambda2), 1024.0) * vec2(diagonalVector.y, -diagonalVector.x);
 
-        // early out tiny splats
-        // TODO: figure out length units and expose as uniform parameter
-        // TODO: perhaps make this a shader compile-time option
-        if (dot(v1, v1) < 4.0 && dot(v2, v2) < 4.0) {
-            return false;
-        }
+        return vec4(v1, v2);
+    }
 
-        result = splat_proj + vec4((vertex_position.x * v1 + vertex_position.y * v2) / viewport * splat_proj.w, 0, 0);
 
-        return true;
+    // Spherical Harmonics
+
+    vec3 unpack111011(uint bits) {
+        return vec3(
+            float(bits >> 21u) / 2047.0,
+            float((bits >> 11u) & 0x3ffu) / 1023.0,
+            float(bits & 0x7ffu) / 2047.0
+        );
+    }
+
+    // fetch quantized spherical harmonic coefficients
+    void fetchScale(in highp usampler2D sampler, out float scale, out vec3 a, out vec3 b, out vec3 c) {
+        uvec4 t = texelFetch(sampler, splatUV, 0);
+        scale = uintBitsToFloat(t.x);
+        a = unpack111011(t.y) * 2.0 - 1.0;
+        b = unpack111011(t.z) * 2.0 - 1.0;
+        c = unpack111011(t.w) * 2.0 - 1.0;
+    }
+
+    // fetch quantized spherical harmonic coefficients
+    void fetch(in highp usampler2D sampler, out vec3 a, out vec3 b, out vec3 c, out vec3 d) {
+        uvec4 t = texelFetch(sampler, splatUV, 0);
+        a = unpack111011(t.x) * 2.0 - 1.0;
+        b = unpack111011(t.y) * 2.0 - 1.0;
+        c = unpack111011(t.z) * 2.0 - 1.0;
+        d = unpack111011(t.w) * 2.0 - 1.0;
+    }
+
+    #if defined(USE_SH1)
+        #define SH_C1 0.4886025119029199f
+
+        uniform highp usampler2D splatSH_1to3;
+    #if defined(USE_SH2)
+        #define SH_C2_0 1.0925484305920792f
+        #define SH_C2_1 -1.0925484305920792f
+        #define SH_C2_2 0.31539156525252005f
+        #define SH_C2_3 -1.0925484305920792f
+        #define SH_C2_4 0.5462742152960396f
+
+        uniform highp usampler2D splatSH_4to7;
+        uniform highp usampler2D splatSH_8to11;
+    #if defined(USE_SH3)
+        #define SH_C3_0 -0.5900435899266435f
+        #define SH_C3_1 2.890611442640554f
+        #define SH_C3_2 -0.4570457994644658f
+        #define SH_C3_3 0.3731763325901154f
+        #define SH_C3_4 -0.4570457994644658f
+        #define SH_C3_5 1.445305721320277f
+        #define SH_C3_6 -0.5900435899266435f
+
+        uniform highp usampler2D splatSH_12to15;
+    #endif
+    #endif
+    #endif
+
+    vec3 evalSH(in vec3 dir) {
+        vec3 result = vec3(0.0);
+
+        // see https://github.com/graphdeco-inria/gaussian-splatting/blob/main/utils/sh_utils.py
+    #if defined(USE_SH1)
+        // 1st degree
+        float x = dir.x;
+        float y = dir.y;
+        float z = dir.z;
+
+        float scale;
+        vec3 sh1, sh2, sh3;
+        fetchScale(splatSH_1to3, scale, sh1, sh2, sh3);
+        result += SH_C1 * (-sh1 * y + sh2 * z - sh3 * x);
+
+    #if defined(USE_SH2)
+        // 2nd degree
+        float xx = x * x;
+        float yy = y * y;
+        float zz = z * z;
+        float xy = x * y;
+        float yz = y * z;
+        float xz = x * z;
+
+        vec3 sh4, sh5, sh6, sh7;
+        vec3 sh8, sh9, sh10, sh11;
+        fetch(splatSH_4to7, sh4, sh5, sh6, sh7);
+        fetch(splatSH_8to11, sh8, sh9, sh10, sh11);
+        result +=
+            sh4 * (SH_C2_0 * xy) *  +
+            sh5 * (SH_C2_1 * yz) +
+            sh6 * (SH_C2_2 * (2.0 * zz - xx - yy)) +
+            sh7 * (SH_C2_3 * xz) +
+            sh8 * (SH_C2_4 * (xx - yy));
+
+    #if defined(USE_SH3)
+        // 3rd degree
+        vec3 sh12, sh13, sh14, sh15;
+        fetch(splatSH_12to15, sh12, sh13, sh14, sh15);
+        result +=
+            sh9  * (SH_C3_0 * y * (3.0 * xx - yy)) +
+            sh10 * (SH_C3_1 * xy * z) +
+            sh11 * (SH_C3_2 * y * (4.0 * zz - xx - yy)) +
+            sh12 * (SH_C3_3 * z * (2.0 * zz - 3.0 * xx - 3.0 * yy)) +
+            sh13 * (SH_C3_4 * x * (4.0 * zz - xx - yy)) +
+            sh14 * (SH_C3_5 * z * (xx - yy)) +
+            sh15 * (SH_C3_6 * x * (xx - 3.0 * yy));
+    #endif
+    #endif
+        result *= scale;
+    #endif
+
+        return result;
     }
 `;
 
 const splatCoreFS = /* glsl */ `
-    varying vec2 texCoord;
-    varying vec4 color;
-
     #ifndef DITHER_NONE
         varying float id;
     #endif
@@ -150,14 +229,22 @@ const splatCoreFS = /* glsl */ `
         uniform vec4 uColor;
     #endif
 
-    vec4 evalSplat() {
-        float A = -dot(texCoord, texCoord);
-        if (A < -4.0) discard;
-        float B = exp(A) * color.a;
+    vec4 evalSplat(vec2 texCoord, vec4 color) {
+        mediump float A = dot(texCoord, texCoord);
+        if (A > 1.0) {
+            discard;
+        }
+
+        mediump float B = exp(-A * 4.0) * color.a;
+        if (B < 1.0 / 255.0) {
+            discard;
+        }
 
         #ifdef PICK_PASS
-            if (B < 0.3) discard;
-            return(uColor);
+            if (B < 0.3) {
+                discard;
+            }
+            return uColor;
         #endif
 
         #ifndef DITHER_NONE
@@ -186,8 +273,8 @@ class GSplatShaderGenerator {
         const shaderPassDefines = shaderPassInfo.shaderDefines;
 
         const defines =
-            `${shaderPassDefines
-            }#define DITHER_${options.dither.toUpperCase()}\n` +
+            `${shaderPassDefines}\n` +
+            `#define DITHER_${options.dither.toUpperCase()}\n` +
             `#define TONEMAP_${options.toneMapping === TONEMAP_LINEAR ? 'DISABLED' : 'ENABLED'}\n`;
 
         const vs = defines + splatCoreVS + options.vertex;
