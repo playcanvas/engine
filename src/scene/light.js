@@ -443,6 +443,10 @@ class Light {
         return this._castShadows && this._mask !== MASK_BAKE && this._mask !== 0;
     }
 
+    get bakeShadows() {
+        return this._castShadows && this._mask === MASK_BAKE;
+    }
+
     set shadowResolution(value) {
         if (this._shadowResolution !== value) {
             if (this._type === LIGHTTYPE_OMNI) {

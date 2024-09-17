@@ -69,7 +69,6 @@ for (let i = 0; i < 40; i++) {
 const ground = new pc.Entity();
 ground.addComponent('render', {
     castShadows: false,
-    castShadowsLightmap: false,
     lightmapped: true,
     type: 'plane',
     material: material
