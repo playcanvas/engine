@@ -115,7 +115,7 @@ export function controls({ observer, ReactPCUI, React, jsx, fragment }) {
                     binding: new BindingTwoWay(),
                     link: { observer, path: 'data.grading.saturation' },
                     min: 0,
-                    max: 3,
+                    max: 2,
                     precision: 2
                 })
             ),
@@ -136,8 +136,8 @@ export function controls({ observer, ReactPCUI, React, jsx, fragment }) {
                 jsx(SliderInput, {
                     binding: new BindingTwoWay(),
                     link: { observer, path: 'data.grading.contrast' },
-                    min: 0,
-                    max: 3,
+                    min: 0.5,
+                    max: 1.5,
                     precision: 2
                 })
             )
