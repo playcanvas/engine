@@ -3,7 +3,7 @@ import { Entity } from '../../../../src/framework/entity.js';
 import { NullGraphicsDevice } from '../../../../src/platform/graphics/null/null-graphics-device.js';
 import { ScreenComponent } from '../../../../src/framework/components/screen/component.js';
 
-import { HTMLCanvasElement } from '@playcanvas/canvas-mock';
+import { Canvas } from 'skia-canvas';
 
 import { expect } from 'chai';
 
@@ -11,7 +11,8 @@ describe('ElementComponent Draw Order', function () {
     let app;
 
     beforeEach(function () {
-        const canvas = new HTMLCanvasElement(500, 500);
+        const canvas = new Canvas(500, 500);
+        canvas.getBoundingClientRect = () => ({ left: 0, top: 0, width: 500, height: 500 });
         app = new Application(canvas, { graphicsDevice: new NullGraphicsDevice(canvas) });
     });
 

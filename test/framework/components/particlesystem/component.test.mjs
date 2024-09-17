@@ -1,12 +1,45 @@
-describe("pc.ParticleSystemComponent", function () {
-    var app;
-    var assets = {};
+import { Application } from '../../../../src/framework/application.js';
+import { Asset } from '../../../../src/framework/asset/asset.js';
+import { AssetListLoader } from '../../../../src/framework/asset/asset-list-loader.js';
+import { Entity } from '../../../../src/framework/entity.js';
+import { NullGraphicsDevice } from '../../../../src/platform/graphics/null/null-graphics-device.js';
+
+import { Canvas } from 'skia-canvas';
+
+import { expect } from 'chai';
+
+describe('ParticleSystemComponent', function () {
+    let app;
+    let assets = {};
+
+    const loadAssets = function (cb) {
+        const assetList = [
+            new Asset('Box', 'model', {
+                url: 'http://localhost:3000/test/test-assets/box/box.json'
+            }),
+            new Asset('ColorMap', 'texture', {
+                url: 'http://localhost:3000/test/test-assets/test.png'
+            }, {
+                srgb: true
+            }),
+            new Asset('NormalMap', 'texture', {
+                url: 'http://localhost:3000/test/test-assets/test.png'
+            })
+        ];
+        const loader = new AssetListLoader(assetList, app.assets);
+        loader.ready(function () {
+            assets.mesh = assetList[0];
+            assets.colorMap = assetList[1];
+            assets.normalMap = assetList[2];
+            cb();
+        });
+        loader.load();
+    };
 
     beforeEach(function (done) {
-        app = new pc.Application(document.createElement('canvas'));
-        loadAssets(function () {
-            done();
-        });
+        const canvas = new Canvas(500, 500);
+        app = new Application(canvas, { graphicsDevice: new NullGraphicsDevice(canvas) });
+        loadAssets(done);
     });
 
     afterEach(function () {
@@ -14,63 +47,25 @@ describe("pc.ParticleSystemComponent", function () {
         assets = {};
     });
 
-    var loadAssetList = function (list, cb) {
-        // listen for asset load events and fire cb() when all assets are loaded
-        var count = 0;
-        app.assets.on('load', function (asset) {
-            count++;
-            if (count === list.length) {
-                cb();
-            }
-        });
+    it('Add particlesystem', function () {
+        const e = new Entity();
 
-        // add and load assets
-        for (var i = 0; i < list.length; i++) {
-            app.assets.add(list[i]);
-            app.assets.load(list[i]);
-        }
-    };
-
-    var loadAssets = function (cb) {
-        var assetlist = [
-            new pc.Asset('Box', 'model', {
-                url: 'base/tests/test-assets/box/box.json'
-            }),
-            new pc.Asset('ColorMap', 'texture', {
-                url: 'base/tests/test-assets/particlesystem/colormap.png'
-            }),
-            new pc.Asset('NormalMap', 'texture', {
-                url: 'base/tests/test-assets/particlesystem/normalmap.png'
-            })
-        ];
-
-        loadAssetList(assetlist, function () {
-            assets.mesh = assetlist[0];
-            assets.colorMap = assetlist[1];
-            assets.normalMap = assetlist[2];
-            cb();
-        });
-    };
-
-    it("Add particlesystem", function () {
-        var e = new pc.Entity();
-
-        e.addComponent("particlesystem");
+        e.addComponent('particlesystem');
 
         expect(e.particlesystem).to.exist;
     });
 
-    it("Remove particlesystem", function () {
-        var e = new pc.Entity();
+    it('Remove particlesystem', function () {
+        const e = new Entity();
 
-        e.addComponent("particlesystem");
-        e.removeComponent("particlesystem");
+        e.addComponent('particlesystem');
+        e.removeComponent('particlesystem');
 
         expect(e.particlesystem).to.not.exist;
     });
 
     it('ColorMap Asset unbinds on destroy', function () {
-        var e = new pc.Entity();
+        const e = new Entity();
         app.root.addChild(e);
         e.addComponent('particlesystem', {
             colorMapAsset: assets.colorMap.id
@@ -90,7 +85,7 @@ describe("pc.ParticleSystemComponent", function () {
     });
 
     it('ColorMap Asset unbinds on reset', function () {
-        var e = new pc.Entity();
+        const e = new Entity();
         app.root.addChild(e);
         e.addComponent('particlesystem', {
             colorMapAsset: assets.colorMap.id
@@ -110,7 +105,7 @@ describe("pc.ParticleSystemComponent", function () {
     });
 
     it('NormalMap Asset unbinds on destroy', function () {
-        var e = new pc.Entity();
+        const e = new Entity();
         app.root.addChild(e);
         e.addComponent('particlesystem', {
             normalMapAsset: assets.normalMap.id
@@ -130,7 +125,7 @@ describe("pc.ParticleSystemComponent", function () {
     });
 
     it('NormalMap Asset unbinds on reset', function () {
-        var e = new pc.Entity();
+        const e = new Entity();
         app.root.addChild(e);
         e.addComponent('particlesystem', {
             normalMapAsset: assets.normalMap.id
@@ -150,7 +145,7 @@ describe("pc.ParticleSystemComponent", function () {
     });
 
     it('Mesh Asset unbinds on destroy', function () {
-        var e = new pc.Entity();
+        const e = new Entity();
         app.root.addChild(e);
         e.addComponent('particlesystem', {
             meshAsset: assets.mesh.id
@@ -170,7 +165,7 @@ describe("pc.ParticleSystemComponent", function () {
     });
 
     it('Mesh Asset unbinds on reset', function () {
-        var e = new pc.Entity();
+        const e = new Entity();
         app.root.addChild(e);
         e.addComponent('particlesystem', {
             meshAsset: assets.mesh.id
