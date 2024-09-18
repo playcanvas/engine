@@ -584,7 +584,7 @@ class WebglGraphicsDevice extends GraphicsDevice {
         this.textureFloatRenderable = !!this.extColorBufferFloat;
 
         // render to half float buffers support - either of these two extensions
-        this.extColorBufferHalfFloat = this.extColorBufferHalfFloat || !!this.extColorBufferFloat;
+        this.textureHalfFloatRenderable = this.extColorBufferHalfFloat || !!this.extColorBufferFloat;
 
         this.postInit();
     }
