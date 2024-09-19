@@ -146,8 +146,7 @@ class RenderPassCameraFrame extends RenderPass {
         const currentOptions = this.options;
 
         // helper to compare arrays
-        const arraysNotEqual = (arr1, arr2) =>
-            arr1 !== arr2 &&
+        const arraysNotEqual = (arr1, arr2) => arr1 !== arr2 &&
             (!(Array.isArray(arr1) && Array.isArray(arr2)) ||
             arr1.length !== arr2.length ||
             !arr1.every((value, index) => value === arr2[index]));
