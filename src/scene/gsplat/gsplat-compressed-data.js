@@ -42,7 +42,9 @@ class SplatCompressedIterator {
             }
         };
 
-        const lerp = (a, b, t) => a === b ? a : a * (1 - t) + b * t;
+        const lerp = (a, b, t) => {
+            return (a === b) ? a : a * (1 - t) + b * t;
+        };
 
         const chunkData = gsplatData.chunkData;
         const vertexData = gsplatData.vertexData;
