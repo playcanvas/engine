@@ -120,7 +120,7 @@ class RenderPassPrepass extends RenderPass {
             if (layer.id === LAYERID_DEPTH) {
                 break;
             }
-            
+
             if (layer.enabled && subLayerEnabled[i]) {
 
                 // if the layer is rendered by the camera
