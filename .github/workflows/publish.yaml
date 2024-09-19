@@ -29,6 +29,6 @@ jobs:
         run: npm run publint
       
       - name: Publish to npm
-        run: npm publish
+        run: npm publish --tag lts
         env:
           NODE_AUTH_TOKEN: ${{ secrets.NPM_TOKEN }}
