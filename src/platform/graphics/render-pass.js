@@ -2,6 +2,7 @@ import { Debug } from '../../core/debug.js';
 import { Tracing } from '../../core/tracing.js';
 import { Color } from '../../core/math/color.js';
 import { TRACEID_RENDER_PASS, TRACEID_RENDER_PASS_DETAIL } from '../../core/constants.js';
+import { pixelFormatInfo } from './constants.js';
 
 /**
  * @import { GraphicsDevice } from '../graphics/graphics-device.js'
@@ -453,26 +454,32 @@ class RenderPass {
 
             for (let i = 0; i < numColor; i++) {
                 const colorOps = this.colorArrayOps[i];
+                const colorFormat = pixelFormatInfo.get(isBackBuffer ? device.backBufferFormat : rt.getColorBuffer(i).format)?.name;
                 Debug.trace(TRACEID_RENDER_PASS_DETAIL, `    color[${i}]: ` +
                             `${colorOps.clear ? 'clear' : 'load'}->` +
                             `${colorOps.store ? 'store' : 'discard'} ` +
                             `${colorOps.resolve ? 'resolve ' : ''}` +
-                            `${colorOps.mipmaps ? 'mipmaps ' : ''}`);
+                            `${colorOps.mipmaps ? 'mipmaps ' : ''}` +
+                            ` [format: ${colorFormat}]`);
             }
 
             if (this.depthStencilOps) {
+
+                const depthFormat = `${rt.depthBuffer ?  ' [format: ' + pixelFormatInfo.get(rt.depthBuffer.format)?.name + ']' : ''}`
 
                 if (hasDepth) {
                     Debug.trace(TRACEID_RENDER_PASS_DETAIL, '    depthOps: ' +
                                 `${this.depthStencilOps.clearDepth ? 'clear' : 'load'}->` +
                                 `${this.depthStencilOps.storeDepth ? 'store' : 'discard'}` +
-                                `${this.depthStencilOps.resolveDepth ? ' resolve' : ''}`);
+                                `${this.depthStencilOps.resolveDepth ? ' resolve' : ''}` +
+                                `${depthFormat}`);
                 }
 
                 if (hasStencil) {
                     Debug.trace(TRACEID_RENDER_PASS_DETAIL, '    stencOps: ' +
                                 `${this.depthStencilOps.clearStencil ? 'clear' : 'load'}->` +
-                                `${this.depthStencilOps.storeStencil ? 'store' : 'discard'}`);
+                                `${this.depthStencilOps.storeStencil ? 'store' : 'discard'}` +
+                                `${depthFormat}`);
                 }
             }
         }
