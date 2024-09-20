@@ -465,7 +465,7 @@ class RenderPass {
 
             if (this.depthStencilOps) {
 
-                const depthFormat = `${rt.depthBuffer ?  ' [format: ' + pixelFormatInfo.get(rt.depthBuffer.format)?.name + ']' : ''}`
+                const depthFormat = `${rt.depthBuffer ? ` [format: ${pixelFormatInfo.get(rt.depthBuffer.format)?.name}]` : ''}`;
 
                 if (hasDepth) {
                     Debug.trace(TRACEID_RENDER_PASS_DETAIL, '    depthOps: ' +
