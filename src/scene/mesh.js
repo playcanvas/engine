@@ -206,11 +206,12 @@ class Mesh extends RefCountedObject {
      * - `indexed` specifies whether to interpret the primitive as indexed, thereby using the
      * currently set index buffer.
      *
-     * @type {{type: number, base: number, count: number, baseVertex?: number, indexed?: boolean}[]}
+     * @type {{type: number, base: number, count: number, baseVertex: number, indexed?: boolean}[]}
      */
     primitive = [{
         type: 0,
         base: 0,
+        baseVertex: 0,
         count: 0
     }];
 
