@@ -738,7 +738,7 @@ class BatchManager {
                 // index buffer
                 if (mesh.primitive[0].indexed) {
                     indexBase = mesh.primitive[0].base;
-                    indexBaseVertex = mesh.primitive[0].baseVertex;
+                    indexBaseVertex = mesh.primitive[0].baseVertex || 0;
                     numIndices = mesh.primitive[0].count;
 
                     // source index buffer data mapped to its format

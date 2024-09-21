@@ -1046,6 +1046,7 @@ class Mesh extends RefCountedObject {
             this.primitive[RENDERSTYLE_POINTS] = {
                 type: PRIMITIVE_POINTS,
                 base: 0,
+                baseVertex: 0,
                 count: this.vertexBuffer ? this.vertexBuffer.numVertices : 0,
                 indexed: false
             };

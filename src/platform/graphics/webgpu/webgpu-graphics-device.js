@@ -497,6 +497,43 @@ class WebgpuGraphicsDevice extends GraphicsDevice {
         _uniqueLocations.clear();
     }
 
+    /**
+     * Submits a graphical primitive to the hardware for immediate rendering.
+     *
+     * @param {object} primitive - Primitive object describing how to submit current vertex/index
+     * buffers.
+     * @param {number} primitive.type - The type of primitive to render. Can be:
+     *
+     * - {@link PRIMITIVE_POINTS}
+     * - {@link PRIMITIVE_LINES}
+     * - {@link PRIMITIVE_LINELOOP}
+     * - {@link PRIMITIVE_LINESTRIP}
+     * - {@link PRIMITIVE_TRIANGLES}
+     * - {@link PRIMITIVE_TRISTRIP}
+     * - {@link PRIMITIVE_TRIFAN}
+     *
+     * @param {number} primitive.base - The offset of the first index or vertex to dispatch in the
+     * draw call.
+     * @param {number} primitive.baseVertex - The number added to each index value before indexing into
+     * the vertex buffers.
+     * @param {number} primitive.count - The number of indices or vertices to dispatch in the draw
+     * call.
+     * @param {boolean} [primitive.indexed] - True to interpret the primitive as indexed, thereby
+     * using the currently set index buffer and false otherwise.
+     * @param {number} [numInstances] - The number of instances to render when using instancing.
+     * Defaults to 1.
+     * @param {boolean} [keepBuffers] - Optionally keep the current set of vertex / index buffers /
+     * VAO. This is used when rendering of multiple views, for example under WebXR.
+     * @example
+     * // Render a single, unindexed triangle
+     * device.draw({
+     *     type: pc.PRIMITIVE_TRIANGLES,
+     *     base: 0,
+     *     baseVertex: 0,
+     *     count: 3,
+     *     indexed: false
+     * });
+     */
     draw(primitive, numInstances = 1, keepBuffers) {
 
         if (this.shader.ready && !this.shader.failed) {
@@ -535,7 +572,7 @@ class WebgpuGraphicsDevice extends GraphicsDevice {
             if (ib) {
                 this.indexBuffer = null;
                 passEncoder.setIndexBuffer(ib.impl.buffer, ib.impl.format);
-                passEncoder.drawIndexed(primitive.count, numInstances, primitive.base, primitive.baseVertex, 0);
+                passEncoder.drawIndexed(primitive.count, numInstances, primitive.base, primitive.baseVertex || 0, 0);
             } else {
                 passEncoder.draw(primitive.count, numInstances, primitive.base, 0);
             }
