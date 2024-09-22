@@ -763,7 +763,7 @@ class BatchManager {
                 }
 
                 for (let j = 0; j < numIndices; j++) {
-                    indices[j + indexOffset] = indexData[indexBase + indexBaseVertex + j] + verticesOffset;
+                    indices[j + indexOffset] = indexData[indexBase + j] + indexBaseVertex + verticesOffset;
                 }
 
                 indexOffset += numIndices;
