@@ -2215,11 +2215,13 @@ export const DISPLAYFORMAT_LDR_SRGB = 'ldr_srgb';
 
 /**
  * Display format for high dynamic range data, using 16bit floating point values.
- * Note: This is not implemented yet, but is added to indicate the intended API.
+ * Note: This is supported on WebGPU platform only, and ignored on other platforms. On displays
+ * without HDR support, it silently falls back to {@link DISPLAYFORMAT_LDR}. Use
+ * {@link GraphicsDevice.isHdr} to see if the HDR format is used. When it is, it's recommended to
+ * use {@link TONEMAP_NONE} for the tonemapping mode, to avoid it clipping the high dynamic range.
  *
  * @type {string}
  * @category Graphics
- * @ignore
  */
 export const DISPLAYFORMAT_HDR = 'hdr';
 

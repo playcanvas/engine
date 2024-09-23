@@ -11,7 +11,10 @@ const assets = {
 const gfxOptions = {
     deviceTypes: [deviceType],
     glslangUrl: rootPath + '/static/lib/glslang/glslang.js',
-    twgslUrl: rootPath + '/static/lib/twgsl/twgsl.js'
+    twgslUrl: rootPath + '/static/lib/twgsl/twgsl.js',
+
+    // enable HDR rendering if supported
+    displayFormat: pc.DISPLAYFORMAT_HDR
 };
 
 const device = await pc.createGraphicsDevice(canvas, gfxOptions);
@@ -42,6 +45,10 @@ assetListLoader.load(() => {
     app.start();
 
     app.scene.ambientLight = new pc.Color(0.2, 0.2, 0.2);
+
+    // if the device renders in HDR mode, disable tone mapping to output HDR values without any processing
+    app.scene.rendering.toneMapping = device.isHdr ? pc.TONEMAP_NONE : pc.TONEMAP_ACES;
+    app.scene.rendering.gammaCorrection = pc.GAMMA_SRGB;
 
     // create material for the plane
     const planeMaterial = new pc.StandardMaterial();
@@ -201,6 +208,7 @@ assetListLoader.load(() => {
     material.depthWrite = false; // optimization - no need to write to depth buffer, as decals are part of the ground plane
     material.emissiveMap = assets.heart.resource;
     material.emissive = pc.Color.WHITE;
+    material.emissiveIntensity = 10;    // bright emissive to make it really bright on HDR displays
     material.opacityMap = assets.heart.resource;
     material.depthBias = -0.1; // depth biases to avoid z-fighting with ground plane
     material.slopeDepthBias = -0.1;
