@@ -106,9 +106,9 @@ class GraphicsDevice extends EventHandler {
 
     /**
      * True if the back-buffer is using HDR format, which means that the browser will display the
-     * rendered images in high dynamic range mode. This is true if the displayFormat is set to
-     * {@link DISPLAYFORMAT_HDR} when creating the graphics device, and HDR is supported by the
-     * device.
+     * rendered images in high dynamic range mode. This is true if the options.displayFormat is set
+     * to {@link DISPLAYFORMAT_HDR} when creating the graphics device using
+     * {@link createGraphicsDevice}, and HDR is supported by the device.
      */
     isHdr = false;
 
