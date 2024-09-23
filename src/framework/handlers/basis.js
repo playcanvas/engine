@@ -87,7 +87,15 @@ const prepareWorkerModules = (config, callback) => {
                 }
             })
             .catch((err) => {
-                callback(err, null);
+                Debug.warn(`compile() failed for ${config.wasmUrl} (${err}), using fallback script.`);
+
+                http.get(config.fallbackUrl, options, (err, response) => {
+                    if (err) {
+                        callback(err, null);
+                    } else {
+                        sendResponse(response, null);
+                    }
+                });
             });
         };
 
