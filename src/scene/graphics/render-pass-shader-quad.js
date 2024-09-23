@@ -82,7 +82,6 @@ class RenderPassShaderQuad extends RenderPass {
         // destroy old
         this.quadRender?.destroy();
         this.quadRender = null;
-        this._shader?.destroy();
 
         // handle new
         this._shader = shader;
@@ -118,11 +117,6 @@ class RenderPassShaderQuad extends RenderPass {
             { aPosition: SEMANTIC_POSITION },
             shaderDefinitionOptions
         );
-    }
-
-    destroy() {
-        this.shader?.destroy();
-        this.shader = null;
     }
 
     execute() {
