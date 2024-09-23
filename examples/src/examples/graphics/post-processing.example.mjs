@@ -33,7 +33,11 @@ const gfxOptions = {
     // The scene is rendered to an antialiased texture, so we disable antialiasing on the canvas
     // to avoid the additional cost. This is only used for the UI which renders on top of the
     // post-processed scene, and we're typically happy with some aliasing on the UI.
-    antialias: false
+    antialias: false,
+
+
+
+    displayFormat: pc.DISPLAYFORMAT_HDR
 };
 
 const device = await pc.createGraphicsDevice(canvas, gfxOptions);
@@ -96,7 +100,19 @@ assetListLoader.load(() => {
     });
 
     // add an instance of the mosquito mesh
-    const mosquitoEntity = assets.mosquito.resource.instantiateRenderEntity();
+    //const mosquitoEntity = assets.mosquito.resource.instantiateRenderEntity();
+
+
+    // use sphere instead
+    const mosquitoEntity = new pc.Entity();
+    mosquitoEntity.addComponent('render', {
+        type: 'sphere',
+        material: new pc.StandardMaterial()
+    });
+
+
+
+
     mosquitoEntity.setLocalScale(600, 600, 600);
     mosquitoEntity.setLocalPosition(0, 20, 0);
     app.root.addChild(mosquitoEntity);
@@ -216,8 +232,8 @@ assetListLoader.load(() => {
     // ------ Custom render passes set up ------
 
     const currentOptions = new pc.CameraFrameOptions();
-    currentOptions.sceneColorMap = true;
-    currentOptions.bloomEnabled = true;
+    currentOptions.sceneColorMap = false; // true;
+    currentOptions.bloomEnabled = false; // true;
     currentOptions.taaEnabled = false;          // disabled TAA as it currently does not handle dynamic objects
 
     // and set up these rendering passes to be used by the camera, instead of its default rendering
@@ -229,15 +245,15 @@ assetListLoader.load(() => {
     const applySettings = () => {
 
         // update current options and apply them
-        currentOptions.taaEnabled = data.get('data.taa.enabled');
-        currentOptions.bloomEnabled = data.get('data.bloom.enabled');
+        currentOptions.taaEnabled = false; // data.get('data.taa.enabled');
+        currentOptions.bloomEnabled = false; // data.get('data.bloom.enabled');
         renderPassCamera.update(currentOptions);
 
         // apply options on the other passes
         const composePass = renderPassCamera.composePass;
 
         // SCENE
-        composePass.toneMapping = data.get('data.scene.tonemapping');
+        composePass.toneMapping = pc.TONEMAP_NONE;// data.get('data.scene.tonemapping');
         renderPassCamera.renderTargetScale = data.get('data.scene.scale');
 
         const background = data.get('data.scene.background');
@@ -326,6 +342,14 @@ assetListLoader.load(() => {
     // update things every frame
     let angle = 0;
     app.on('update', function (/** @type {number} */ dt) {
+
+
+        const ll = angle < 1 && angle + dt >= 1;
+        pc.Tracing.set(pc.TRACEID_RENDER_PASS, ll);
+        pc.Tracing.set(pc.TRACEID_RENDER_PASS_DETAIL, ll);
+
+
+
         angle += dt;
 
         // scale the boxes
