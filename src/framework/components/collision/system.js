@@ -820,7 +820,7 @@ class CollisionComponentSystem extends ComponentSystem {
             const transform = this._getNodeTransform(entity, parentComponent.entity);
             const idx = parentComponent._getCompoundChildShapeIndex(entity.collision.shape);
             if (idx === null) {
-                entity.collision._compoundParent.shape.addChildShape(transform, entity.collision.data.shape);
+                parentComponent.shape.addChildShape(transform, entity.collision.data.shape);
             } else {
                 parentComponent.shape.updateChildTransform(idx, transform, true);
             }
