@@ -36,7 +36,6 @@ const gfxOptions = {
     antialias: false,
 
 
-
     displayFormat: pc.DISPLAYFORMAT_HDR
 };
 
@@ -100,7 +99,7 @@ assetListLoader.load(() => {
     });
 
     // add an instance of the mosquito mesh
-    //const mosquitoEntity = assets.mosquito.resource.instantiateRenderEntity();
+    // const mosquitoEntity = assets.mosquito.resource.instantiateRenderEntity();
 
 
     // use sphere instead
@@ -109,8 +108,6 @@ assetListLoader.load(() => {
         type: 'sphere',
         material: new pc.StandardMaterial()
     });
-
-
 
 
     mosquitoEntity.setLocalScale(600, 600, 600);
@@ -347,7 +344,6 @@ assetListLoader.load(() => {
         const ll = angle < 1 && angle + dt >= 1;
         pc.Tracing.set(pc.TRACEID_RENDER_PASS, ll);
         pc.Tracing.set(pc.TRACEID_RENDER_PASS_DETAIL, ll);
-
 
 
         angle += dt;
