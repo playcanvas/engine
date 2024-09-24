@@ -227,8 +227,6 @@ function BasisWorker() {
             throw new Error(`Failed to start transcoding url=${url}`);
         }
 
-        let i;
-
         const levelData = [];
         for (let mip = 0; mip < levels; ++mip) {
             if (!options.deviceDetails.webgl2 && mip > 0 && !isPOT(width, height)) {
