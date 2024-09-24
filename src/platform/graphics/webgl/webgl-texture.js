@@ -283,7 +283,7 @@ class WebglTexture {
                 this._glFormat = gl.RGBA;
                 this._glInternalFormat = device.extTextureCompressionBPTC.COMPRESSED_SRGB_ALPHA_BPTC_UNORM_EXT;
                 break;
-    
+
                 // ------------------
 
             case PIXELFORMAT_R16F:
