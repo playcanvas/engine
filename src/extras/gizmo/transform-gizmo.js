@@ -516,7 +516,8 @@ class TransformGizmo extends Gizmo {
     /**
      * @param {MeshInstance} [meshInstance] - The mesh instance.
      * @returns {string} - The axis.
-     * @private
+     * // magnopus patched, make protected
+     * @protected
      */
     _getAxis(meshInstance) {
         if (!meshInstance) {
