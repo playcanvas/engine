@@ -6,11 +6,7 @@ function BasisWorker() {
         cTFETC2: 1,                         // etc2
         cTFBC1: 2,                          // dxt1
         cTFBC3: 3,                          // dxt5
-        cTFPVRTC1_4_RGB: 8,                 // PVRTC1 rgb
-        cTFPVRTC1_4_RGBA: 9,                // PVRTC1 rgba
         cTFASTC_4x4: 10,                    // ASTC
-        cTFATC_RGB: 11,                     // ATC rgb
-        cTFATC_RGBA_INTERPOLATED_ALPHA: 12, // ATC rgba
         // uncompressed (fallback) formats
         cTFRGBA32: 13,                      // rgba 8888
         cTFRGB565: 14,                      // rgb 565
@@ -23,8 +19,6 @@ function BasisWorker() {
         dxt: BASIS_FORMAT.cTFBC1,
         etc1: BASIS_FORMAT.cTFETC1,
         etc2: BASIS_FORMAT.cTFETC1,
-        pvr: BASIS_FORMAT.cTFPVRTC1_4_RGB,
-        atc: BASIS_FORMAT.cTFATC_RGB,
         none: BASIS_FORMAT.cTFRGB565
     };
 
@@ -34,8 +28,6 @@ function BasisWorker() {
         dxt: BASIS_FORMAT.cTFBC3,
         etc1: BASIS_FORMAT.cTFRGBA4444,
         etc2: BASIS_FORMAT.cTFETC2,
-        pvr: BASIS_FORMAT.cTFPVRTC1_4_RGBA,
-        atc: BASIS_FORMAT.cTFATC_RGBA_INTERPOLATED_ALPHA,
         none: BASIS_FORMAT.cTFRGBA4444
     };
 
@@ -72,43 +64,6 @@ function BasisWorker() {
             case BASIS_FORMAT.cTFRGB565: return PIXEL_FORMAT.R5_G6_B5;
             case BASIS_FORMAT.cTFRGBA4444: return PIXEL_FORMAT.R4_G4_B4_A4;
         }
-    };
-
-    // unswizzle two-component gggr8888 normal data into rgba8888
-    const unswizzleGGGR = (data) => {
-        // given R and G generate B
-        const genB = function (R, G) {
-            const r = R * (2.0 / 255.0) - 1.0;
-            const g = G * (2.0 / 255.0) - 1.0;
-            const b = Math.sqrt(1.0 - Math.min(1.0, r * r + g * g));
-            return Math.max(0, Math.min(255, Math.floor(((b + 1.0) * 0.5) * 255.0)));
-        };
-
-        for (let offset = 0; offset < data.length; offset += 4) {
-            const R = data[offset + 3];
-            const G = data[offset + 1];
-            data[offset + 0] = R;
-            data[offset + 2] = genB(R, G);
-            data[offset + 3] = 255;
-        }
-
-        return data;
-    };
-
-    // pack rgba8888 data into rgb565
-    const pack565 = (data) => {
-        const result = new Uint16Array(data.length / 4);
-
-        for (let offset = 0; offset < data.length; offset += 4) {
-            const R = data[offset + 0];
-            const G = data[offset + 1];
-            const B = data[offset + 2];
-            result[offset / 4] = ((R & 0xf8) << 8) |  // 5
-                                 ((G & 0xfc) << 3) |  // 6
-                                 ((B >> 3));          // 5
-        }
-
-        return result;
     };
 
     const isPOT = (width, height) => {
@@ -156,33 +111,15 @@ function BasisWorker() {
     };
 
     // return true if the texture dimensions are valid for the target format
-    const dimensionsValid = (width, height, format, webgl2) => {
+    const dimensionsValid = (width, height, format) => {
         switch (format) {
-            // etc1, 2
-            case BASIS_FORMAT.cTFETC1:
-            case BASIS_FORMAT.cTFETC2:
-                // no size restrictions
-                return true;
             // dxt1, 5
             case BASIS_FORMAT.cTFBC1:
             case BASIS_FORMAT.cTFBC3:
                 // width and height must be multiple of 4
                 return ((width & 0x3) === 0) && ((height & 0x3) === 0);
-            // pvrtc
-            case BASIS_FORMAT.cTFPVRTC1_4_RGB:
-            case BASIS_FORMAT.cTFPVRTC1_4_RGBA:
-                return isPOT(width, height) && ((width === height) || webgl2);
-            // astc
-            case BASIS_FORMAT.cTFASTC_4x4:
-                return true;
-            // atc
-            case BASIS_FORMAT.cTFATC_RGB:
-            case BASIS_FORMAT.cTFATC_RGBA_INTERPOLATED_ALPHA:
-                // TODO: remove atc support? looks like it's been removed from the webgl spec, see
-                // https://www.khronos.org/registry/webgl/extensions/rejected/WEBGL_compressed_texture_atc/
-                return true;
         }
-        return false;
+        return true;
     };
 
     const transcodeKTX2 = (url, data, options) => {
@@ -208,22 +145,12 @@ function BasisWorker() {
         // choose the target format
         const format = chooseTargetFormat(options.deviceDetails, hasAlpha, isUASTC);
 
-        // unswizzle gggr textures under pvr compression
-        const unswizzle = !!options.isGGGR && format === 'pvr';
-
         // convert to basis format taking into consideration platform restrictions
-        let basisFormat;
-        if (unswizzle) {
-            // in order to unswizzle we need gggr8888
-            basisFormat = BASIS_FORMAT.cTFRGBA32;
-        } else {
-            // select output format based on supported formats
-            basisFormat = hasAlpha ? alphaMapping[format] : opaqueMapping[format];
+        let basisFormat = hasAlpha ? alphaMapping[format] : opaqueMapping[format];
 
-            // if image dimensions don't work on target, fall back to uncompressed
-            if (!dimensionsValid(width, height, basisFormat, options.deviceDetails.webgl2)) {
-                basisFormat = hasAlpha ? BASIS_FORMAT.cTFRGBA32 : BASIS_FORMAT.cTFRGB565;
-            }
+        // if image dimensions don't work on target, fall back to uncompressed
+        if (!dimensionsValid(width, height, basisFormat)) {
+            basisFormat = hasAlpha ? BASIS_FORMAT.cTFRGBA32 : BASIS_FORMAT.cTFRGB565;
         }
 
         if (!basisFile.startTranscoding()) {
@@ -232,10 +159,11 @@ function BasisWorker() {
             throw new Error(`Failed to start transcoding url=${url}`);
         }
 
-        let i;
-
         const levelData = [];
         for (let mip = 0; mip < levels; ++mip) {
+            if (!options.deviceDetails.webgl2 && mip > 0 && !isPOT(width, height)) {
+                break;
+            }
             const dstSize = basisFile.getImageTranscodedSizeInBytes(mip, 0, 0, basisFormat);
             const dst = new Uint8Array(dstSize);
 
@@ -253,14 +181,6 @@ function BasisWorker() {
         basisFile.close();
         basisFile.delete();
 
-        // handle unswizzle option
-        if (unswizzle) {
-            basisFormat = BASIS_FORMAT.cTFRGB565;
-            for (i = 0; i < levelData.length; ++i) {
-                levelData[i] = pack565(unswizzleGGGR(levelData[i]));
-            }
-        }
-
         return {
             format: basisToEngineMapping(basisFormat, options.deviceDetails),
             width: width,
@@ -268,8 +188,7 @@ function BasisWorker() {
             levels: levelData,
             cubemap: false,
             transcodeTime: performanceNow() - funcStart,
-            url: url,
-            unswizzledGGGR: unswizzle
+            url: url
         };
     };
 
@@ -294,22 +213,12 @@ function BasisWorker() {
         // choose the target format
         const format = chooseTargetFormat(options.deviceDetails, hasAlpha, isUASTC);
 
-        // unswizzle gggr textures under pvr compression
-        const unswizzle = !!options.isGGGR && format === 'pvr';
-
         // convert to basis format taking into consideration platform restrictions
-        let basisFormat;
-        if (unswizzle) {
-            // in order to unswizzle we need gggr8888
-            basisFormat = BASIS_FORMAT.cTFRGBA32;
-        } else {
-            // select output format based on supported formats
-            basisFormat = hasAlpha ? alphaMapping[format] : opaqueMapping[format];
+        let basisFormat = hasAlpha ? alphaMapping[format] : opaqueMapping[format];
 
-            // if image dimensions don't work on target, fall back to uncompressed
-            if (!dimensionsValid(width, height, basisFormat, options.deviceDetails.webgl2)) {
-                basisFormat = hasAlpha ? BASIS_FORMAT.cTFRGBA32 : BASIS_FORMAT.cTFRGB565;
-            }
+        // if image dimensions don't work on target, fall back to uncompressed
+        if (!dimensionsValid(width, height, basisFormat)) {
+            basisFormat = hasAlpha ? BASIS_FORMAT.cTFRGBA32 : BASIS_FORMAT.cTFRGB565;
         }
 
         if (!basisFile.startTranscoding()) {
@@ -322,6 +231,9 @@ function BasisWorker() {
 
         const levelData = [];
         for (let mip = 0; mip < levels; ++mip) {
+            if (!options.deviceDetails.webgl2 && mip > 0 && !isPOT(width, height)) {
+                break;
+            }
             const dstSize = basisFile.getImageTranscodedSizeInBytes(0, mip, basisFormat);
             const dst = new Uint8Array(dstSize);
 
@@ -348,14 +260,6 @@ function BasisWorker() {
         basisFile.close();
         basisFile.delete();
 
-        // handle unswizzle option
-        if (unswizzle) {
-            basisFormat = BASIS_FORMAT.cTFRGB565;
-            for (i = 0; i < levelData.length; ++i) {
-                levelData[i] = pack565(unswizzleGGGR(levelData[i]));
-            }
-        }
-
         return {
             format: basisToEngineMapping(basisFormat, options.deviceDetails),
             width: width,
@@ -363,8 +267,7 @@ function BasisWorker() {
             levels: levelData,
             cubemap: false,
             transcodeTime: performanceNow() - funcStart,
-            url: url,
-            unswizzledGGGR: unswizzle
+            url: url
         };
     };
 
@@ -396,8 +299,7 @@ function BasisWorker() {
             });
             return {};
         };
-
-        self.BASIS(config.module ? { instantiateWasm: instantiateWasmFunc } : null)
+        self.BASIS(config.module ? { instantiateWasm: instantiateWasmFunc } : undefined)
         .then((instance) => {
             instance.initializeBasis();
 

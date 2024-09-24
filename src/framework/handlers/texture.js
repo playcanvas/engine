@@ -262,11 +262,6 @@ class TextureHandler extends ResourceHandler {
             // check if the texture has only a partial mipmap chain specified and generate the
             // missing levels if possible.
             _completePartialMipmapChain(texture);
-
-            // if the basis transcoder unswizzled a GGGR texture, remove the flag from the asset
-            if (data.unswizzledGGGR) {
-                asset.file.variants.basis.opt &= ~8;
-            }
         }
 
         return texture;

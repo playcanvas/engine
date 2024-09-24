@@ -8,11 +8,9 @@ import { http } from '../../platform/net/http.js';
 const getCompressionFormats = (device) => {
     return {
         astc: !!device.extCompressedTextureASTC,
-        atc: !!device.extCompressedTextureATC,
         dxt: !!device.extCompressedTextureS3TC,
         etc1: !!device.extCompressedTextureETC1,
-        etc2: !!device.extCompressedTextureETC,
-        pvr: !!device.extCompressedTexturePVRTC
+        etc2: !!device.extCompressedTextureETC
     };
 };
 
@@ -234,8 +232,8 @@ class BasisClient {
 
 // defaults
 const defaultNumWorkers = 1;
-const defaultRgbPriority = ['etc1', 'etc2', 'astc', 'dxt', 'pvr', 'atc'];
-const defaultRgbaPriority = ['astc', 'dxt', 'etc2', 'pvr', 'atc'];
+const defaultRgbPriority = ['etc1', 'etc2', 'astc', 'dxt'];
+const defaultRgbaPriority = ['astc', 'dxt', 'etc2'];
 const defaultMaxRetries = 5;
 
 // global state
@@ -265,11 +263,11 @@ let initializing = false;
  * to workers only when their previous job has completed. This will result in balanced workloads
  * across workers, however workers can be idle for a short time between jobs.
  * @param {string[]} [config.rgbPriority] - Array of texture compression formats in priority order
- * for textures without alpha. The supported compressed formats are: 'astc', 'atc', 'dxt', 'etc1',
- * 'etc2', 'pvr'.
+ * for textures without alpha. The supported compressed formats are: 'astc', 'dxt', 'etc1',
+ * 'etc2'.
  * @param {string[]} [config.rgbaPriority] - Array of texture compression formats in priority order
- * for textures with alpha. The supported compressed formats are: 'astc', 'atc', 'dxt', 'etc1',
- * 'etc2', 'pvr'.
+ * for textures with alpha. The supported compressed formats are: 'astc', 'dxt', 'etc1',
+ * 'etc2'.
  * @param {number} [config.maxRetries] - Number of http load retry attempts. Defaults to 5.
  */
 function basisInitialize(config) {
@@ -331,8 +329,6 @@ let deviceDetails = null;
  * @param {object} data - The file data to transcode.
  * @param {Function} callback - Callback function to receive transcode result.
  * @param {object} [options] - Options structure
- * @param {boolean} [options.isGGGR] - Indicates this is a GGGR swizzled texture. Under some
- * circumstances the texture will be unswizzled during transcoding.
  * @param {boolean} [options.isKTX2] - Indicates the image is KTX2 format. Otherwise
  * basis format is assumed.
  * @returns {boolean} True if the basis worker was initialized and false otherwise.
@@ -350,7 +346,6 @@ function basisTranscode(device, url, data, callback, options) {
 
     queue.enqueueJob(url, data, callback, {
         deviceDetails: deviceDetails,
-        isGGGR: !!options?.isGGGR,
         isKTX2: !!options?.isKTX2
     });
 

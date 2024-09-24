@@ -26,8 +26,7 @@ class BasisParser extends TextureParser {
                 device,
                 url.load,
                 data,
-                callback,
-                { isGGGR: (asset?.file?.variants?.basis?.opt & 8) !== 0 }
+                callback
             );
 
             if (!basisModuleFound) {

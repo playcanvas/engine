@@ -122,10 +122,7 @@ class Ktx2Parser extends TextureParser {
                 url.load,
                 arraybuffer,
                 callback,
-                {
-                    isGGGR: (asset?.file?.variants?.basis?.opt & 8) !== 0,
-                    isKTX2: true
-                }
+                { isKTX2: true }
             );
 
             if (!basisModuleFound) {
