@@ -5,7 +5,7 @@ import * as pc from 'playcanvas';
  * @returns {JSX.Element} The returned JSX Element.
  */
 export function controls({ observer, ReactPCUI, React, jsx, fragment }) {
-    const { BindingTwoWay, LabelGroup, Panel, ColorPicker, SliderInput, SelectInput } = ReactPCUI;
+    const { BindingTwoWay, LabelGroup, Panel, ColorPicker, SliderInput, SelectInput, BooleanInput } = ReactPCUI;
 
     const [proj, setProj] = React.useState(pc.PROJECTION_PERSPECTIVE);
 
@@ -83,6 +83,15 @@ export function controls({ observer, ReactPCUI, React, jsx, fragment }) {
                     min: 0,
                     max: 1,
                     precision: 2
+                })
+            ),
+            jsx(
+                LabelGroup,
+                { text: 'Shadows' },
+                jsx(BooleanInput, {
+                    type: 'toggle',
+                    binding: new BindingTwoWay(),
+                    link: { observer, path: 'gizmo.shadows' }
                 })
             )
         ),

@@ -109,6 +109,7 @@ data.set('gizmo', {
     yAxisColor: Object.values(gizmo.yAxisColor),
     zAxisColor: Object.values(gizmo.zAxisColor),
     colorAlpha: gizmo.colorAlpha,
+    shadows: gizmo.shadows,
     coordSpace: gizmo.coordSpace,
     ringTolerance: gizmo.ringTolerance,
     xyzTubeRadius: gizmo.xyzTubeRadius,

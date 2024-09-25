@@ -40,13 +40,13 @@ class ArcShape extends Shape {
     }
 
     _createTorusMesh(sectorAngle) {
-        const color = this._disabled ? this._disabledColor : this._defaultColor;
-        return this._createMesh('torus', color, this._shadows, {
+        const geom = new TorusGeometry({
             tubeRadius: this._tubeRadius,
             ringRadius: this._ringRadius,
             sectorAngle: sectorAngle,
             segments: TORUS_RENDER_SEGMENTS
         });
+        return this._createMesh(geom, this._shadows);
     }
 
     _createDisk() {

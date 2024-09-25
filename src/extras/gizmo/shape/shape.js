@@ -8,6 +8,7 @@ import { BLEND_NORMAL } from '../../../scene/constants.js';
 
 import { COLOR_GRAY } from '../color.js';
 import { Mesh } from '../../../scene/mesh.js';
+import { Geometry } from '../../../scene/geometry/geometry.js';
 import { BoxGeometry } from '../../../scene/geometry/box-geometry.js';
 import { CylinderGeometry } from '../../../scene/geometry/cylinder-geometry.js';
 import { ConeGeometry } from '../../../scene/geometry/cone-geometry.js';
@@ -16,14 +17,17 @@ import { SphereGeometry } from '../../../scene/geometry/sphere-geometry.js';
 import { TorusGeometry } from '../../../scene/geometry/torus-geometry.js';
 import { Mat4 } from '../../../core/math/mat4.js';
 
-/** @import { Geometry } from '../../../scene/geometry/geometry.js' */
-
 // constants
 const SHADOW_DAMP_SCALE = 0.25;
 const SHADOW_DAMP_OFFSET = 0.75;
 const SHADOW_MESH_MAP = new Map();
 
 const LIGHT_DIR = new Vec3(1, 2, 3);
+
+// temporary variables
+const tmpG = new Geometry();
+tmpG.positions = [];
+tmpG.normals = [];
 
 const GEOMETRIES = {
     box: BoxGeometry,
@@ -224,15 +228,20 @@ class Shape {
     }
 
     set shadows(value) {
-        for (let i = 0; i < this.meshInstances.length; i++) {
-            SHADOW_MESH_MAP.delete(this.meshInstances[i].mesh);
-            const color = this._disabled ? this._disabledColor : this._defaultColor;
-            const shadow = value ?
-                applyShadowColor(this.meshInstances[i].mesh, this.entity.getWorldTransform(), color, LIGHT_DIR) :
-                applyColor(this.meshInstances[i].mesh, color);
-            SHADOW_MESH_MAP.set(this.meshInstances[i].mesh, shadow);
-        }
         this._shadows = value ?? true;
+
+        const color = this._disabled ? this._disabledColor : this._defaultColor;
+        for (let i = 0; i < this.meshInstances.length; i++) {
+            const mesh = this.meshInstances[i].mesh;
+            mesh.getPositions(tmpG.positions);
+            mesh.getNormals(tmpG.normals);
+            const shadow = this._shadows ?
+                applyShadowColor(tmpG, this.entity.getWorldTransform(), this._defaultColor, LIGHT_DIR) :
+                applyColor(tmpG, this._defaultColor);
+
+            SHADOW_MESH_MAP.set(mesh, shadow);
+            setMeshColor(this.meshInstances[i].mesh, color);
+        }
     }
 
     get shadows() {
@@ -241,10 +250,6 @@ class Shape {
 
     _createRoot(name) {
         this.entity = new Entity(`${name}:${this.axis}`);
-        this._updateRootTransform();
-    }
-
-    _updateRootTransform() {
         this.entity.setLocalPosition(this._position);
         this.entity.setLocalEulerAngles(this._rotation);
         this.entity.setLocalScale(this._scale);
@@ -253,21 +258,14 @@ class Shape {
     /**
      * Create a mesh from a primitive.
      *
-     * @param {string} type - The type of primitive to create.
-     * @param {Color} color - The color of the primitive.
+     * @param {Geometry} geom - The geometry to create the mesh from.
      * @param {boolean} shadows - Whether to apply shadows to the primitive.
-     * @param {object} [templateOpts] - The options to use for the primitive.
      * @returns {Mesh} The mesh created from the primitive.
      * @throws {Error} If the primitive type is invalid.
      * @protected
      */
-    _createMesh(type, color = Color.WHITE, shadows = true, templateOpts) {
-        const Geometry = GEOMETRIES[type];
-        if (!Geometry) {
-            throw new Error('Invalid primitive type.');
-        }
-
-        const geom = new Geometry(templateOpts);
+    _createMesh(geom, shadows = true) {
+        const color = this._disabled ? this._disabledColor : this._defaultColor;
         const shadow = shadows ?
             applyShadowColor(geom, this.entity.getWorldTransform(), color, LIGHT_DIR) :
             applyColor(geom, color);
@@ -278,6 +276,13 @@ class Shape {
         return mesh;
     }
 
+    /**
+     * Create a render component for an entity.
+     *
+     * @param {Entity} entity - The entity to create the render component for.
+     * @param {Mesh[]} meshes - The meshes to create the render component with.
+     * @protected
+     */
     _createRenderComponent(entity, meshes) {
         const material = new ShaderMaterial(shaderDesc);
         material.cull = this._cull;
@@ -297,10 +302,23 @@ class Shape {
         });
     }
 
+    /**
+     * Add a render mesh to an entity.
+     *
+     * @param {Entity} entity - The entity to add the render mesh to.
+     * @param {string} type - The type of primitive to create.
+     * @param {boolean} shadows - Whether to apply shadows to the primitive.
+     * @throws {Error} If the primitive type is invalid.
+     * @protected
+     */
     _addRenderMesh(entity, type, shadows) {
-        const color = this._disabled ? this._disabledColor : this._defaultColor;
-        const mesh = this._createMesh(type, color, shadows);
-        this._createRenderComponent(entity, [mesh]);
+        const Geometry = GEOMETRIES[type];
+        if (!Geometry) {
+            throw new Error('Invalid primitive type.');
+        }
+        this._createRenderComponent(entity, [
+            this._createMesh(new Geometry(), shadows)
+        ]);
     }
 
     hover(state) {
