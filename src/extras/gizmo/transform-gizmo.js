@@ -19,7 +19,6 @@ import { GIZMOAXIS_X, GIZMOAXIS_XYZ, GIZMOAXIS_Y, GIZMOAXIS_Z } from './constant
 import { Gizmo } from './gizmo.js';
 
 /**
- * @import { AppBase } from '../../framework/app-base.js'
  * @import { AxisShape } from './axis-shapes.js'
  * @import { CameraComponent } from '../../framework/components/camera/component.js'
  * @import { Layer } from '../../scene/layer.js'

@@ -12,7 +12,6 @@ import {
 import { TransformGizmo } from './transform-gizmo.js';
 
 /**
- * @import { AppBase } from '../../framework/app-base.js'
  * @import { CameraComponent } from '../../framework/components/camera/component.js'
  * @import { GraphNode } from '../../scene/graph-node.js'
  * @import { Layer } from '../../scene/layer.js'
