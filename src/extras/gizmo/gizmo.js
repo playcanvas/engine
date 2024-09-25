@@ -476,17 +476,20 @@ class Gizmo extends EventHandler {
     /**
      * Attach an array of graph nodes to the gizmo.
      *
-     * @param {GraphNode[]} [nodes] - The graph nodes. Defaults to [].
+     * @param {GraphNode[] | GraphNode} [nodes] - The graph nodes. Defaults to [].
      * @example
      * const gizmo = new pc.Gizmo(app, camera, layer);
      * gizmo.attach([boxA, boxB]);
      */
     attach(nodes = []) {
-        if (nodes.length === 0) {
-            return;
+        if (Array.isArray(nodes)) {
+            if (nodes.length === 0) {
+                return;
+            }
+            this.nodes = nodes;
+        } else {
+            this.nodes = [nodes];
         }
-
-        this.nodes = nodes;
         this._updatePosition();
         this._updateRotation();
 

@@ -90,7 +90,7 @@ light.setEulerAngles(0, 0, -60);
 
 // create gizmo
 const gizmo = new pc.RotateGizmo(camera.camera);
-gizmo.attach([box]);
+gizmo.attach(box);
 data.set('gizmo', {
     size: gizmo.size,
     snapIncrement: gizmo.snapIncrement,
