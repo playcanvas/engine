@@ -35,13 +35,12 @@ class GizmoHandler {
 
     /**
      * @param {pc.CameraComponent} camera - The camera component.
-     * @param {pc.Layer} layer - The gizmo layer
      */
-    constructor(camera, layer) {
+    constructor(camera) {
         this._gizmos = {
-            translate: new pc.TranslateGizmo(camera, layer),
-            rotate: new pc.RotateGizmo(camera, layer),
-            scale: new pc.ScaleGizmo(camera, layer)
+            translate: new pc.TranslateGizmo(camera),
+            rotate: new pc.RotateGizmo(camera),
+            scale: new pc.ScaleGizmo(camera)
         };
 
         for (const type in this._gizmos) {
