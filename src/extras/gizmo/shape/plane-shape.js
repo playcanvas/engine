@@ -33,7 +33,7 @@ class PlaneShape extends Shape {
         this._updateTransform();
 
         // plane
-        this._addRenderMesh(this.entity, 'plane', this._shadows);
+        this._addRenderMesh(this.entity, 'plane', this._shading);
     }
 
     set size(value) {

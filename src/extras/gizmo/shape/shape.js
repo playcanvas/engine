@@ -171,7 +171,7 @@ class Shape {
 
     _layers = [];
 
-    _shadows = true;
+    _shading = true;
 
     _disabled;
 
@@ -203,7 +203,7 @@ class Shape {
         this._disabled = options.disabled ?? false;
 
         this._layers = options.layers ?? this._layers;
-        this._shadows = options.shadows ?? this._shadows;
+        this._shading = options.shading ?? this._shading;
 
         if (options.defaultColor instanceof Color) {
             this._defaultColor = options.defaultColor;
@@ -227,15 +227,15 @@ class Shape {
         return this._disabled;
     }
 
-    set shadows(value) {
-        this._shadows = value ?? true;
+    set shading(value) {
+        this._shading = value ?? true;
 
         const color = this._disabled ? this._disabledColor : this._defaultColor;
         for (let i = 0; i < this.meshInstances.length; i++) {
             const mesh = this.meshInstances[i].mesh;
             mesh.getPositions(tmpG.positions);
             mesh.getNormals(tmpG.normals);
-            const shadow = this._shadows ?
+            const shadow = this._shading ?
                 applyShadowColor(tmpG, this.entity.getWorldTransform(), this._defaultColor, LIGHT_DIR) :
                 applyColor(tmpG, this._defaultColor);
 
@@ -244,8 +244,8 @@ class Shape {
         }
     }
 
-    get shadows() {
-        return this._shadows;
+    get shading() {
+        return this._shading;
     }
 
     _createRoot(name) {
@@ -259,14 +259,14 @@ class Shape {
      * Create a mesh from a primitive.
      *
      * @param {Geometry} geom - The geometry to create the mesh from.
-     * @param {boolean} shadows - Whether to apply shadows to the primitive.
+     * @param {boolean} shading - Whether to apply shading to the primitive.
      * @returns {Mesh} The mesh created from the primitive.
      * @throws {Error} If the primitive type is invalid.
      * @protected
      */
-    _createMesh(geom, shadows = true) {
+    _createMesh(geom, shading = true) {
         const color = this._disabled ? this._disabledColor : this._defaultColor;
-        const shadow = shadows ?
+        const shadow = shading ?
             applyShadowColor(geom, this.entity.getWorldTransform(), color, LIGHT_DIR) :
             applyColor(geom, color);
 
@@ -307,17 +307,17 @@ class Shape {
      *
      * @param {Entity} entity - The entity to add the render mesh to.
      * @param {string} type - The type of primitive to create.
-     * @param {boolean} shadows - Whether to apply shadows to the primitive.
+     * @param {boolean} shading - Whether to apply shading to the primitive.
      * @throws {Error} If the primitive type is invalid.
      * @protected
      */
-    _addRenderMesh(entity, type, shadows) {
+    _addRenderMesh(entity, type, shading) {
         const Geometry = GEOMETRIES[type];
         if (!Geometry) {
             throw new Error('Invalid primitive type.');
         }
         this._createRenderComponent(entity, [
-            this._createMesh(new Geometry(), shadows)
+            this._createMesh(new Geometry(), shading)
         ]);
     }
 

@@ -46,7 +46,7 @@ class ArcShape extends Shape {
             sectorAngle: sectorAngle,
             segments: TORUS_RENDER_SEGMENTS
         });
-        return this._createMesh(geom, this._shadows);
+        return this._createMesh(geom, this._shading);
     }
 
     _createDisk() {

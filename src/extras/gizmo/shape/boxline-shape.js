@@ -91,13 +91,13 @@ class BoxLineShape extends Shape {
         this._box = new Entity(`box:${this.axis}`);
         this.entity.addChild(this._box);
         this._updateBox();
-        this._addRenderMesh(this._box, 'box', this._shadows);
+        this._addRenderMesh(this._box, 'box', this._shading);
 
         // line
         this._line = new Entity(`line:${this.axis}`);
         this.entity.addChild(this._line);
         this._updateLine();
-        this._addRenderMesh(this._line, 'cylinder', this._shadows);
+        this._addRenderMesh(this._line, 'cylinder', this._shading);
 
     }
 

@@ -22,7 +22,7 @@ class SphereShape extends Shape {
         this._updateTransform();
 
         // box
-        this._addRenderMesh(this.entity, 'sphere', this._shadows);
+        this._addRenderMesh(this.entity, 'sphere', this._shading);
     }
 
     set size(value) {

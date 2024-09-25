@@ -22,7 +22,7 @@ class BoxShape extends Shape {
         this._updateTransform();
 
         // box
-        this._addRenderMesh(this.entity, 'box', this._shadows);
+        this._addRenderMesh(this.entity, 'box', this._shading);
     }
 
     set size(value) {
