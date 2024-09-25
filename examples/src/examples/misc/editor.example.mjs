@@ -148,7 +148,7 @@ camera.camera.layers = camera.camera.layers.concat(gizmoLayer.id);
 
 // create gizmo
 let skipObserverFire = false;
-const gizmoHandler = new GizmoHandler(app, camera.camera, gizmoLayer);
+const gizmoHandler = new GizmoHandler(camera.camera, gizmoLayer);
 const setGizmoControls = () => {
     skipObserverFire = true;
     data.set('gizmo', {

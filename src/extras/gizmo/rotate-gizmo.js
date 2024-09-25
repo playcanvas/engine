@@ -125,14 +125,13 @@ class RotateGizmo extends TransformGizmo {
     /**
      * Creates a new RotateGizmo object.
      *
-     * @param {AppBase} app - The application instance.
      * @param {CameraComponent} camera - The camera component.
      * @param {Layer} layer - The render layer.
      * @example
      * const gizmo = new pc.RotateGizmo(app, camera, layer);
      */
-    constructor(app, camera, layer) {
-        super(app, camera, layer);
+    constructor(camera, layer) {
+        super(camera, layer);
 
         this._createTransform();
 
@@ -167,7 +166,7 @@ class RotateGizmo extends TransformGizmo {
             this._nodeOffsets.clear();
         });
 
-        app.on('update', () => {
+        this._app.on('update', () => {
             this._faceAxisLookAtCamera();
             this._xyzAxisLookAtCamera();
 

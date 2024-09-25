@@ -100,7 +100,7 @@ layers.push(gizmoLayer);
 camera.camera.layers = camera.camera.layers.concat(gizmoLayer.id);
 
 // create gizmo
-const gizmo = new pc.ScaleGizmo(app, camera.camera, gizmoLayer);
+const gizmo = new pc.ScaleGizmo(camera.camera, gizmoLayer);
 gizmo.attach([box]);
 data.set('gizmo', {
     size: gizmo.size,

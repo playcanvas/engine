@@ -230,18 +230,17 @@ class Gizmo extends EventHandler {
     /**
      * Creates a new Gizmo object.
      *
-     * @param {AppBase} app - The application instance.
      * @param {CameraComponent} camera - The camera component.
      * @param {Layer} layer - The render layer.
      * @example
      * const gizmo = new pc.Gizmo(app, camera, layer);
      */
-    constructor(app, camera, layer) {
+    constructor(camera, layer) {
         super();
 
-        this._app = app;
-        this._device = app.graphicsDevice;
         this._camera = camera;
+        this._app = camera.system.app;
+        this._device = this._app.graphicsDevice;
         this._layer = layer;
 
         this.root = new Entity('gizmo');
@@ -258,9 +257,9 @@ class Gizmo extends EventHandler {
         this._device.canvas.addEventListener('pointermove', this._onPointerMove, true);
         this._device.canvas.addEventListener('pointerup', this._onPointerUp);
 
-        app.on('update', () => this._updateScale());
+        this._app.on('update', () => this._updateScale());
 
-        app.on('destroy', () => this.destroy());
+        this._app.on('destroy', () => this.destroy());
     }
 
     /**
