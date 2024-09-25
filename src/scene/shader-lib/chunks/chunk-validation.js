@@ -104,7 +104,7 @@ const removedChunks = {
     specularAaToksvigPS: CHUNKAPI_1_55,
     specularAaToksvigFastPS: CHUNKAPI_1_55,
     skyboxEnvPS: CHUNKAPI_2_1,
-    skyboxHDRPS: CHUNKAPI_2_1,
+    skyboxHDRPS: CHUNKAPI_2_1
 };
 
 // compare two "major.minor" semantic version strings and return true if a is a smaller version than b.
