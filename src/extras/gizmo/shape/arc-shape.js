@@ -1,6 +1,6 @@
 import { TorusGeometry } from '../../../scene/geometry/torus-geometry.js';
 import { TriData } from '../tri-data.js';
-import { createShadowMesh, Shape } from './shape.js';
+import { Shape } from './shape.js';
 
 const TORUS_RENDER_SEGMENTS = 80;
 const TORUS_INTERSECT_SEGMENTS = 20;
@@ -41,7 +41,7 @@ class ArcShape extends Shape {
 
     _createTorusMesh(sectorAngle) {
         const color = this._disabled ? this._disabledColor : this._defaultColor;
-        return createShadowMesh(this.device, this.entity, 'torus', color, {
+        return this._createMesh('torus', color, true, {
             tubeRadius: this._tubeRadius,
             ringRadius: this._ringRadius,
             sectorAngle: sectorAngle,

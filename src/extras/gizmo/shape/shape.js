@@ -16,6 +16,8 @@ import { SphereGeometry } from '../../../scene/geometry/sphere-geometry.js';
 import { TorusGeometry } from '../../../scene/geometry/torus-geometry.js';
 import { Mat4 } from '../../../core/math/mat4.js';
 
+/** @import { Geometry } from '../../../scene/geometry/geometry.js' */
+
 // constants
 const SHADOW_DAMP_SCALE = 0.25;
 const SHADOW_DAMP_OFFSET = 0.75;
@@ -65,7 +67,20 @@ const tmpV1 = new Vec3();
 const tmpV2 = new Vec3();
 const tmpM1 = new Mat4();
 
+/**
+ * Apply shadow to a geometry.
+ *
+ * @param {Geometry} geom - The geometry to apply shadow to.
+ * @param {Mat4} transform - The transform of the geometry.
+ * @param {Color} color - The color of the geometry.
+ * @param {Vec3} lightDir - The direction of the light.
+ * @returns {number[]} The shadow data.
+ */
 const applyShadow = (geom, transform, color, lightDir) => {
+    if (!geom.normals || !geom.positions) {
+        return [];
+    }
+
     // transform light direction to local space
     const invMat = tmpM1.copy(transform).invert();
     const localLightDir = invMat.transformVector(tmpV1.copy(lightDir), tmpV1).normalize();
@@ -94,32 +109,24 @@ const applyShadow = (geom, transform, color, lightDir) => {
     return shadow;
 };
 
-const createShadowMesh = (device, entity, type, color = Color.WHITE, templateOpts) => {
-    const Geometry = GEOMETRIES[type];
-    if (!Geometry) {
-        throw new Error('Invalid primitive type.');
-    }
-
-    const geom = new Geometry(templateOpts);
-    const shadow = applyShadow(geom, entity.getWorldTransform(), color, LIGHT_DIR);
-
-    const mesh = Mesh.fromGeometry(device, geom);
-    SHADOW_MESH_MAP.set(mesh, shadow);
-
-    return mesh;
-};
-
-const setShadowMeshColor = (mesh, color) => {
-    if (!SHADOW_MESH_MAP.has(mesh)) {
-        return;
-    }
-    const shadow = SHADOW_MESH_MAP.get(mesh);
+/**
+ * Set the color of a mesh.
+ *
+ * @param {Mesh} mesh - The mesh to set the color of.
+ * @param {Color} color - The color to set the mesh to.
+ */
+const setMeshColor = (mesh, color) => {
+    const data = SHADOW_MESH_MAP.get(mesh) ?? [];
     const colors = [];
-    for (let i = 0; i < shadow.length; i++) {
-        colors.push(shadow[i] * color.r * 0xFF,
-            shadow[i] * color.g * 0xFF,
-            shadow[i] * color.b * 0xFF,
-            color.a * 0xFF);
+    const vertexCount = mesh.vertexBuffer.numVertices;
+    for (let i = 0; i < vertexCount; i++) {
+        const shadow = data[i] ?? 1;
+        colors.push(
+            shadow * color.r * 0xFF,
+            shadow * color.g * 0xFF,
+            shadow * color.b * 0xFF,
+            color.a * 0xFF
+        );
     }
     mesh.setColors32(colors);
     mesh.update();
@@ -154,6 +161,31 @@ class Shape {
 
     meshInstances = [];
 
+    /**
+     * Create a mesh from a primitive.
+     *
+     * @param {Shape} shape - The shape to create the mesh for.
+     * @param {string} type - The type of primitive to create.
+     * @param {Color} color - The color of the primitive.
+     * @param {boolean} shadow - Whether to create a shadow mesh.
+     * @param {object} [templateOpts] - The options to use for the primitive.
+     * @returns {Mesh} The mesh created from the primitive.
+     */
+    static createMesh(shape, type, color = Color.WHITE, shadow = true, templateOpts) {
+        const Geometry = GEOMETRIES[type];
+        if (!Geometry) {
+            throw new Error('Invalid primitive type.');
+        }
+
+        const geom = new Geometry(templateOpts);
+        const data = shadow ? applyShadow(geom, shape.entity.getWorldTransform(), color, LIGHT_DIR) : [];
+
+        const mesh = Mesh.fromGeometry(shape.device, geom);
+        SHADOW_MESH_MAP.set(mesh, data);
+
+        return mesh;
+    }
+
     constructor(device, options) {
         this.device = device;
         this.axis = options.axis ?? 'x';
@@ -178,7 +210,7 @@ class Shape {
 
     set disabled(value) {
         for (let i = 0; i < this.meshInstances.length; i++) {
-            setShadowMeshColor(this.meshInstances[i].mesh, value ? this._disabledColor : this._defaultColor);
+            setMeshColor(this.meshInstances[i].mesh, value ? this._disabledColor : this._defaultColor);
         }
         this._disabled = value ?? false;
     }
@@ -196,6 +228,32 @@ class Shape {
         this.entity.setLocalPosition(this._position);
         this.entity.setLocalEulerAngles(this._rotation);
         this.entity.setLocalScale(this._scale);
+    }
+
+    /**
+     * Create a mesh from a primitive.
+     *
+     * @param {string} type - The type of primitive to create.
+     * @param {Color} color - The color of the primitive.
+     * @param {boolean} shadow - Whether to create a shadow mesh.
+     * @param {object} [templateOpts] - The options to use for the primitive.
+     * @returns {Mesh} The mesh created from the primitive.
+     * @throws {Error} If the primitive type is invalid.
+     * @protected
+     */
+    _createMesh(type, color = Color.WHITE, shadow = true, templateOpts) {
+        const Geometry = GEOMETRIES[type];
+        if (!Geometry) {
+            throw new Error('Invalid primitive type.');
+        }
+
+        const geom = new Geometry(templateOpts);
+        const data = shadow ? applyShadow(geom, this.entity.getWorldTransform(), color, LIGHT_DIR) : [];
+
+        const mesh = Mesh.fromGeometry(this.device, geom);
+        SHADOW_MESH_MAP.set(mesh, data);
+
+        return mesh;
     }
 
     _addRenderMeshes(entity, meshes) {
@@ -217,9 +275,9 @@ class Shape {
         });
     }
 
-    _addRenderShadowMesh(entity, type) {
+    _addRenderShadowMesh(entity, type, shadow) {
         const color = this._disabled ? this._disabledColor : this._defaultColor;
-        const mesh = createShadowMesh(this.device, entity, type, color);
+        const mesh = this._createMesh(type, color, shadow);
         this._addRenderMeshes(entity, [mesh]);
     }
 
@@ -230,7 +288,7 @@ class Shape {
 
         for (let i = 0; i < this.meshInstances.length; i++) {
             const color = state ? this._hoverColor : this._defaultColor;
-            setShadowMeshColor(this.meshInstances[i].mesh, color);
+            setMeshColor(this.meshInstances[i].mesh, color);
         }
     }
 
@@ -239,4 +297,4 @@ class Shape {
     }
 }
 
-export { createShadowMesh, Shape };
+export { Shape };
