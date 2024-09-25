@@ -609,7 +609,7 @@ class Scene extends EventHandler {
     /**
      * Sets the highlight multiplier for the skybox. The HDR skybox can represent brightness levels
      * up to a maximum of 64, with any values beyond this being clipped. This limitation prevents
-     * the accurate representation of extremely bright sources, such as the sun, which can affect
+     * the accurate representation of extremely bright sources, such as the Sun, which can affect
      * HDR bloom rendering by not producing enough bloom. The multiplier adjusts the brightness
      * after clipping, enhancing the bloom effect for bright sources. Defaults to 1.
      *
