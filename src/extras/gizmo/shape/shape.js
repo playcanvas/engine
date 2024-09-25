@@ -223,6 +223,22 @@ class Shape {
         return this._disabled;
     }
 
+    set shadows(value) {
+        for (let i = 0; i < this.meshInstances.length; i++) {
+            SHADOW_MESH_MAP.delete(this.meshInstances[i].mesh);
+            const color = this._disabled ? this._disabledColor : this._defaultColor;
+            const shadow = value ?
+                applyShadowColor(this.meshInstances[i].mesh, this.entity.getWorldTransform(), color, LIGHT_DIR) :
+                applyColor(this.meshInstances[i].mesh, color);
+            SHADOW_MESH_MAP.set(this.meshInstances[i].mesh, shadow);
+        }
+        this._shadows = value ?? true;
+    }
+
+    get shadows() {
+        return this._shadows;
+    }
+
     _createRoot(name) {
         this.entity = new Entity(`${name}:${this.axis}`);
         this._updateRootTransform();
