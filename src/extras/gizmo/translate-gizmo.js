@@ -34,6 +34,7 @@ class TranslateGizmo extends TransformGizmo {
         face: new SphereShape(this._device, {
             axis: GIZMOAXIS_FACE,
             layers: [this._layer.id],
+            shadows: this._shadows,
             defaultColor: this._meshColors.axis.xyz,
             hoverColor: this._meshColors.hover.xyz
         }),
@@ -41,6 +42,7 @@ class TranslateGizmo extends TransformGizmo {
             axis: GIZMOAXIS_X,
             flipAxis: GIZMOAXIS_Y,
             layers: [this._layer.id],
+            shadows: this._shadows,
             rotation: new Vec3(0, 0, -90),
             defaultColor: this._meshColors.axis.x,
             hoverColor: this._meshColors.hover.x
@@ -49,6 +51,7 @@ class TranslateGizmo extends TransformGizmo {
             axis: GIZMOAXIS_Y,
             flipAxis: GIZMOAXIS_Z,
             layers: [this._layer.id],
+            shadows: this._shadows,
             rotation: new Vec3(0, 0, 0),
             defaultColor: this._meshColors.axis.y,
             hoverColor: this._meshColors.hover.y
@@ -57,6 +60,7 @@ class TranslateGizmo extends TransformGizmo {
             axis: GIZMOAXIS_Z,
             flipAxis: GIZMOAXIS_X,
             layers: [this._layer.id],
+            shadows: this._shadows,
             rotation: new Vec3(90, 0, 0),
             defaultColor: this._meshColors.axis.z,
             hoverColor: this._meshColors.hover.z
@@ -64,6 +68,7 @@ class TranslateGizmo extends TransformGizmo {
         x: new ArrowShape(this._device, {
             axis: GIZMOAXIS_X,
             layers: [this._layer.id],
+            shadows: this._shadows,
             rotation: new Vec3(0, 0, -90),
             defaultColor: this._meshColors.axis.x,
             hoverColor: this._meshColors.hover.x
@@ -71,6 +76,7 @@ class TranslateGizmo extends TransformGizmo {
         y: new ArrowShape(this._device, {
             axis: GIZMOAXIS_Y,
             layers: [this._layer.id],
+            shadows: this._shadows,
             rotation: new Vec3(0, 0, 0),
             defaultColor: this._meshColors.axis.y,
             hoverColor: this._meshColors.hover.y
@@ -78,6 +84,7 @@ class TranslateGizmo extends TransformGizmo {
         z: new ArrowShape(this._device, {
             axis: GIZMOAXIS_Z,
             layers: [this._layer.id],
+            shadows: this._shadows,
             rotation: new Vec3(90, 0, 0),
             defaultColor: this._meshColors.axis.z,
             hoverColor: this._meshColors.hover.z

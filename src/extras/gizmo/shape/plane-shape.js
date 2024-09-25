@@ -18,7 +18,7 @@ class PlaneShape extends Shape {
             new TriData(new PlaneGeometry())
         ];
 
-        this._createPlane(options.shadows);
+        this._createPlane();
     }
 
     _getPosition() {
@@ -28,12 +28,12 @@ class PlaneShape extends Shape {
         return position;
     }
 
-    _createPlane(shadows = true) {
+    _createPlane() {
         this._createRoot('plane');
         this._updateTransform();
 
         // plane
-        this._addRenderMesh(this.entity, 'plane', shadows);
+        this._addRenderMesh(this.entity, 'plane', this._shadows);
     }
 
     set size(value) {

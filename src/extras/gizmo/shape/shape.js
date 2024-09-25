@@ -167,6 +167,8 @@ class Shape {
 
     _layers = [];
 
+    _shadows = true;
+
     _disabled;
 
     _defaultColor = Color.WHITE;
@@ -197,6 +199,7 @@ class Shape {
         this._disabled = options.disabled ?? false;
 
         this._layers = options.layers ?? this._layers;
+        this._shadows = options.shadows ?? this._shadows;
 
         if (options.defaultColor instanceof Color) {
             this._defaultColor = options.defaultColor;

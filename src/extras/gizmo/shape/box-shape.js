@@ -14,15 +14,15 @@ class BoxShape extends Shape {
             new TriData(new BoxGeometry(), 2)
         ];
 
-        this._createCenter(options.shadows);
+        this._createCenter();
     }
 
-    _createCenter(shadows = true) {
+    _createCenter() {
         this._createRoot('boxCenter');
         this._updateTransform();
 
         // box
-        this._addRenderMesh(this.entity, 'box', shadows);
+        this._addRenderMesh(this.entity, 'box', this._shadows);
     }
 
     set size(value) {

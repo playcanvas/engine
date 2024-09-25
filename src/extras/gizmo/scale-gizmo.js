@@ -28,6 +28,7 @@ class ScaleGizmo extends TransformGizmo {
         xyz: new BoxShape(this._device, {
             axis: GIZMOAXIS_XYZ,
             layers: [this._layer.id],
+            shadows: this._shadows,
             defaultColor: this._meshColors.axis.xyz,
             hoverColor: this._meshColors.hover.xyz
         }),
@@ -35,6 +36,7 @@ class ScaleGizmo extends TransformGizmo {
             axis: GIZMOAXIS_X,
             flipAxis: GIZMOAXIS_Y,
             layers: [this._layer.id],
+            shadows: this._shadows,
             rotation: new Vec3(0, 0, -90),
             defaultColor: this._meshColors.axis.x,
             hoverColor: this._meshColors.hover.x
@@ -43,6 +45,7 @@ class ScaleGizmo extends TransformGizmo {
             axis: GIZMOAXIS_Y,
             flipAxis: GIZMOAXIS_Z,
             layers: [this._layer.id],
+            shadows: this._shadows,
             rotation: new Vec3(0, 0, 0),
             defaultColor: this._meshColors.axis.y,
             hoverColor: this._meshColors.hover.y
@@ -51,6 +54,7 @@ class ScaleGizmo extends TransformGizmo {
             axis: GIZMOAXIS_Z,
             flipAxis: GIZMOAXIS_X,
             layers: [this._layer.id],
+            shadows: this._shadows,
             rotation: new Vec3(90, 0, 0),
             defaultColor: this._meshColors.axis.z,
             hoverColor: this._meshColors.hover.z
@@ -58,6 +62,7 @@ class ScaleGizmo extends TransformGizmo {
         x: new BoxLineShape(this._device, {
             axis: GIZMOAXIS_X,
             layers: [this._layer.id],
+            shadows: this._shadows,
             rotation: new Vec3(0, 0, -90),
             defaultColor: this._meshColors.axis.x,
             hoverColor: this._meshColors.hover.x
@@ -65,6 +70,7 @@ class ScaleGizmo extends TransformGizmo {
         y: new BoxLineShape(this._device, {
             axis: GIZMOAXIS_Y,
             layers: [this._layer.id],
+            shadows: this._shadows,
             rotation: new Vec3(0, 0, 0),
             defaultColor: this._meshColors.axis.y,
             hoverColor: this._meshColors.hover.y
@@ -72,6 +78,7 @@ class ScaleGizmo extends TransformGizmo {
         z: new BoxLineShape(this._device, {
             axis: GIZMOAXIS_Z,
             layers: [this._layer.id],
+            shadows: this._shadows,
             rotation: new Vec3(90, 0, 0),
             defaultColor: this._meshColors.axis.z,
             hoverColor: this._meshColors.hover.z

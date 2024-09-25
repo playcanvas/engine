@@ -33,7 +33,7 @@ class BoxLineShape extends Shape {
             new TriData(new CylinderGeometry(), 1)
         ];
 
-        this._createBoxLine(options.shadows);
+        this._createBoxLine();
     }
 
     set gap(value) {
@@ -84,20 +84,20 @@ class BoxLineShape extends Shape {
         return this._tolerance;
     }
 
-    _createBoxLine(shadows = true) {
+    _createBoxLine() {
         this._createRoot('boxLine');
 
         // box
         this._box = new Entity(`box:${this.axis}`);
         this.entity.addChild(this._box);
         this._updateBox();
-        this._addRenderMesh(this._box, 'box', shadows);
+        this._addRenderMesh(this._box, 'box', this._shadows);
 
         // line
         this._line = new Entity(`line:${this.axis}`);
         this.entity.addChild(this._line);
         this._updateLine();
-        this._addRenderMesh(this._line, 'cylinder', shadows);
+        this._addRenderMesh(this._line, 'cylinder', this._shadows);
 
     }
 

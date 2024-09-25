@@ -149,6 +149,14 @@ class TransformGizmo extends Gizmo {
     _rootStartRot = new Quat();
 
     /**
+     * Internal state of if shadows are enabled. Defaults to true.
+     *
+     * @type {boolean}
+     * @protected
+     */
+    _shadows = true;
+
+    /**
      * Internal object containing the gizmo shapes to render.
      *
      * @type {Object.<string, Shape>}
@@ -325,6 +333,28 @@ class TransformGizmo extends Gizmo {
             this._hover();
             this.fire(Gizmo.EVENT_POINTERUP);
         });
+    }
+
+    /**
+     * Sets whether shadows are enabled. Defaults to true.
+     *
+     * @type {boolean}
+     */
+    set shadows(value) {
+        this._shadows = this.root.enabled && value;
+
+        for (const name in this._shapes) {
+            this._shapes[name].shadows = this._shadows;
+        }
+    }
+
+    /**
+     * Gets whether shadows are enabled. Defaults to true.
+     *
+     * @type {boolean}
+     */
+    get shadows() {
+        return this._shadows;
     }
 
     /**

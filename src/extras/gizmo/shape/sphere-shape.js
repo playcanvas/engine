@@ -14,15 +14,15 @@ class SphereShape extends Shape {
             new TriData(new SphereGeometry(), 2)
         ];
 
-        this._createCenter(options.shadows);
+        this._createCenter();
     }
 
-    _createCenter(shadows = true) {
+    _createCenter() {
         this._createRoot('sphereCenter');
         this._updateTransform();
 
         // box
-        this._addRenderMesh(this.entity, 'sphere', shadows);
+        this._addRenderMesh(this.entity, 'sphere', this._shadows);
     }
 
     set size(value) {

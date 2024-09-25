@@ -27,7 +27,7 @@ class ArcShape extends Shape {
             new TriData(this._createTorusGeometry())
         ];
 
-        this._createDisk(options.shadows);
+        this._createDisk();
     }
 
     _createTorusGeometry() {
@@ -39,9 +39,9 @@ class ArcShape extends Shape {
         });
     }
 
-    _createTorusMesh(sectorAngle, shadows = true) {
+    _createTorusMesh(sectorAngle) {
         const color = this._disabled ? this._disabledColor : this._defaultColor;
-        return this._createMesh('torus', color, shadows, {
+        return this._createMesh('torus', color, this._shadows, {
             tubeRadius: this._tubeRadius,
             ringRadius: this._ringRadius,
             sectorAngle: sectorAngle,
@@ -49,13 +49,13 @@ class ArcShape extends Shape {
         });
     }
 
-    _createDisk(shadows = true) {
+    _createDisk() {
         this._createRoot('disk');
 
         // arc/circle
         this._createRenderComponent(this.entity, [
-            this._createTorusMesh(this._sectorAngle, shadows),
-            this._createTorusMesh(360, shadows)
+            this._createTorusMesh(this._sectorAngle),
+            this._createTorusMesh(360)
         ]);
         this.drag(false);
     }
