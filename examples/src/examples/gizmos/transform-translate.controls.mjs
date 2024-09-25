@@ -87,11 +87,11 @@ export function controls({ observer, ReactPCUI, React, jsx, fragment }) {
             ),
             jsx(
                 LabelGroup,
-                { text: 'Shadows' },
+                { text: 'Shading' },
                 jsx(BooleanInput, {
                     type: 'toggle',
                     binding: new BindingTwoWay(),
-                    link: { observer, path: 'gizmo.shadows' }
+                    link: { observer, path: 'gizmo.shading' }
                 })
             )
         ),
