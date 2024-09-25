@@ -35,7 +35,7 @@ class ArrowShape extends Shape {
             new TriData(new CylinderGeometry(), 1)
         ];
 
-        this._createArrow();
+        this._createArrow(options.shadows);
     }
 
     set gap(value) {
@@ -95,20 +95,20 @@ class ArrowShape extends Shape {
         return this._tolerance;
     }
 
-    _createArrow() {
+    _createArrow(shadows = true) {
         this._createRoot('arrow');
 
         // head
         this._head = new Entity(`head:${this.axis}`);
         this.entity.addChild(this._head);
         this._updateHead();
-        this._addRenderShadowMesh(this._head, 'cone');
+        this._addRenderMesh(this._head, 'cone', shadows);
 
         // line
         this._line = new Entity(`line:${this.axis}`);
         this.entity.addChild(this._line);
         this._updateLine();
-        this._addRenderShadowMesh(this._line, 'cylinder');
+        this._addRenderMesh(this._line, 'cylinder', shadows);
     }
 
     _updateHead() {
