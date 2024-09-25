@@ -19,7 +19,7 @@ import { GIZMOAXIS_X, GIZMOAXIS_XYZ, GIZMOAXIS_Y, GIZMOAXIS_Z } from './constant
 import { Gizmo } from './gizmo.js';
 
 /**
- * @import { AxisShape } from './axis-shapes.js'
+ * @import { Shape } from './shape/shape.js'
  * @import { CameraComponent } from '../../framework/components/camera/component.js'
  * @import { Layer } from '../../scene/layer.js'
  * @import { MeshInstance } from '../../scene/mesh-instance.js'
@@ -149,17 +149,17 @@ class TransformGizmo extends Gizmo {
     _rootStartRot = new Quat();
 
     /**
-     * Internal object containing the axis shapes to render.
+     * Internal object containing the gizmo shapes to render.
      *
-     * @type {Object.<string, AxisShape>}
+     * @type {Object.<string, Shape>}
      * @protected
      */
     _shapes = {};
 
     /**
-     * Internal mapping of mesh instances to axis shapes.
+     * Internal mapping of mesh instances to gizmo shapes.
      *
-     * @type {Map<MeshInstance, AxisShape>}
+     * @type {Map<MeshInstance, Shape>}
      * @private
      */
     _shapeMap = new Map();
@@ -167,7 +167,7 @@ class TransformGizmo extends Gizmo {
     /**
      * Internal currently hovered shape.
      *
-     * @type {AxisShape | null}
+     * @type {Shape | null}
      * @private
      */
     _hoverShape = null;

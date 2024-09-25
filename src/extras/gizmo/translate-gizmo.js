@@ -1,7 +1,6 @@
 import { Vec3 } from '../../core/math/vec3.js';
 import { Quat } from '../../core/math/quat.js';
 
-import { AxisArrow, AxisPlane, AxisSphereCenter } from './axis-shapes.js';
 import {
     GIZMOSPACE_LOCAL,
     GIZMOAXIS_FACE,
@@ -10,6 +9,9 @@ import {
     GIZMOAXIS_Z
 } from './constants.js';
 import { TransformGizmo } from './transform-gizmo.js';
+import { PlaneShape } from './shape/plane-shape.js';
+import { ArrowShape } from './shape/arrow-shape.js';
+import { SphereShape } from './shape/sphere-shape.js';
 
 /**
  * @import { CameraComponent } from '../../framework/components/camera/component.js'
@@ -29,13 +31,13 @@ const tmpQ1 = new Quat();
  */
 class TranslateGizmo extends TransformGizmo {
     _shapes = {
-        face: new AxisSphereCenter(this._device, {
+        face: new SphereShape(this._device, {
             axis: GIZMOAXIS_FACE,
             layers: [this._layer.id],
             defaultColor: this._meshColors.axis.xyz,
             hoverColor: this._meshColors.hover.xyz
         }),
-        yz: new AxisPlane(this._device, {
+        yz: new PlaneShape(this._device, {
             axis: GIZMOAXIS_X,
             flipAxis: GIZMOAXIS_Y,
             layers: [this._layer.id],
@@ -43,7 +45,7 @@ class TranslateGizmo extends TransformGizmo {
             defaultColor: this._meshColors.axis.x,
             hoverColor: this._meshColors.hover.x
         }),
-        xz: new AxisPlane(this._device, {
+        xz: new PlaneShape(this._device, {
             axis: GIZMOAXIS_Y,
             flipAxis: GIZMOAXIS_Z,
             layers: [this._layer.id],
@@ -51,7 +53,7 @@ class TranslateGizmo extends TransformGizmo {
             defaultColor: this._meshColors.axis.y,
             hoverColor: this._meshColors.hover.y
         }),
-        xy: new AxisPlane(this._device, {
+        xy: new PlaneShape(this._device, {
             axis: GIZMOAXIS_Z,
             flipAxis: GIZMOAXIS_X,
             layers: [this._layer.id],
@@ -59,21 +61,21 @@ class TranslateGizmo extends TransformGizmo {
             defaultColor: this._meshColors.axis.z,
             hoverColor: this._meshColors.hover.z
         }),
-        x: new AxisArrow(this._device, {
+        x: new ArrowShape(this._device, {
             axis: GIZMOAXIS_X,
             layers: [this._layer.id],
             rotation: new Vec3(0, 0, -90),
             defaultColor: this._meshColors.axis.x,
             hoverColor: this._meshColors.hover.x
         }),
-        y: new AxisArrow(this._device, {
+        y: new ArrowShape(this._device, {
             axis: GIZMOAXIS_Y,
             layers: [this._layer.id],
             rotation: new Vec3(0, 0, 0),
             defaultColor: this._meshColors.axis.y,
             hoverColor: this._meshColors.hover.y
         }),
-        z: new AxisArrow(this._device, {
+        z: new ArrowShape(this._device, {
             axis: GIZMOAXIS_Z,
             layers: [this._layer.id],
             rotation: new Vec3(90, 0, 0),

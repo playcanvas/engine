@@ -5,7 +5,7 @@ import { Mat4 } from '../../core/math/mat4.js';
 import { Vec3 } from '../../core/math/vec3.js';
 import { PROJECTION_ORTHOGRAPHIC, PROJECTION_PERSPECTIVE } from '../../scene/constants.js';
 
-import { AxisDisk } from './axis-shapes.js';
+import { ArcShape } from './shape/arc-shape.js';
 import { GIZMOSPACE_LOCAL, GIZMOAXIS_FACE, GIZMOAXIS_X, GIZMOAXIS_Y, GIZMOAXIS_Z } from './constants.js';
 import { TransformGizmo } from './transform-gizmo.js';
 
@@ -34,7 +34,7 @@ const GUIDE_ANGLE_COLOR = new Color(0, 0, 0, 0.3);
  */
 class RotateGizmo extends TransformGizmo {
     _shapes = {
-        z: new AxisDisk(this._device, {
+        z: new ArcShape(this._device, {
             axis: GIZMOAXIS_Z,
             layers: [this._layer.id],
             rotation: new Vec3(90, 0, 90),
@@ -42,7 +42,7 @@ class RotateGizmo extends TransformGizmo {
             hoverColor: this._meshColors.hover.z,
             sectorAngle: 180
         }),
-        x: new AxisDisk(this._device, {
+        x: new ArcShape(this._device, {
             axis: GIZMOAXIS_X,
             layers: [this._layer.id],
             rotation: new Vec3(0, 0, -90),
@@ -50,7 +50,7 @@ class RotateGizmo extends TransformGizmo {
             hoverColor: this._meshColors.hover.x,
             sectorAngle: 180
         }),
-        y: new AxisDisk(this._device, {
+        y: new ArcShape(this._device, {
             axis: GIZMOAXIS_Y,
             layers: [this._layer.id],
             rotation: new Vec3(0, 0, 0),
@@ -58,7 +58,7 @@ class RotateGizmo extends TransformGizmo {
             hoverColor: this._meshColors.hover.y,
             sectorAngle: 180
         }),
-        face: new AxisDisk(this._device, {
+        face: new ArcShape(this._device, {
             axis: GIZMOAXIS_FACE,
             layers: [this._layer.id],
             rotation: this._getLookAtEulerAngles(this._camera.entity.getPosition()),
