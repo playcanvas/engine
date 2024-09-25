@@ -25,6 +25,7 @@ const tmpM2 = new Mat4();
 const tmpR1 = new Ray();
 
 // constants
+const LAYER_NAME = 'Gizmo';
 const MIN_GIZMO_SCALE = 1e-4;
 const PERS_SCALE_RATIO = 0.3;
 const ORTHO_SCALE_RATIO = 0.32;
@@ -245,14 +246,19 @@ class Gizmo extends EventHandler {
         if (layer) {
             this._layer = layer;
         } else {
-            this._layer = new Layer({
-                name: 'Gizmo',
-                clearDepthBuffer: true,
-                opaqueSortMode: SORTMODE_NONE,
-                transparentSortMode: SORTMODE_NONE
-            });
-            this._app.scene.layers.push(this._layer);
-            this._camera.layers = this._camera.layers.concat(this._layer.id);
+            const layers = this._app.scene.layers;
+            if (layers.layerNameMap.has(LAYER_NAME)) {
+                this._layer = /** @type {Layer} */ (layers.layerNameMap.get(LAYER_NAME));
+            } else {
+                this._layer = new Layer({
+                    name: LAYER_NAME,
+                    clearDepthBuffer: true,
+                    opaqueSortMode: SORTMODE_NONE,
+                    transparentSortMode: SORTMODE_NONE
+                });
+                this._app.scene.layers.push(this._layer);
+                this._camera.layers = this._camera.layers.concat(this._layer.id);
+            }
         }
 
         this.root = new Entity('gizmo');
