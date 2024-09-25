@@ -3,8 +3,9 @@ import { Vec3 } from '../../core/math/vec3.js';
 import { Mat4 } from '../../core/math/mat4.js';
 import { Ray } from '../../core/shape/ray.js';
 import { EventHandler } from '../../core/event-handler.js';
-import { PROJECTION_PERSPECTIVE } from '../../scene/constants.js';
+import { PROJECTION_PERSPECTIVE, SORTMODE_NONE } from '../../scene/constants.js';
 import { Entity } from '../../framework/entity.js';
+import { Layer } from '../../scene/layer.js';
 
 import { GIZMOSPACE_LOCAL, GIZMOSPACE_WORLD } from './constants.js';
 
@@ -13,7 +14,6 @@ import { GIZMOSPACE_LOCAL, GIZMOSPACE_WORLD } from './constants.js';
  * @import { CameraComponent } from '../../framework/components/camera/component.js'
  * @import { GraphNode } from '../../scene/graph-node.js'
  * @import { GraphicsDevice } from '../../platform/graphics/graphics-device.js'
- * @import { Layer } from '../../scene/layer.js'
  * @import { MeshInstance } from '../../scene/mesh-instance.js'
  * @import { TriData } from './tri-data.js'
  */
@@ -231,7 +231,7 @@ class Gizmo extends EventHandler {
      * Creates a new Gizmo object.
      *
      * @param {CameraComponent} camera - The camera component.
-     * @param {Layer} layer - The render layer.
+     * @param {Layer} [layer] - The render layer.
      * @example
      * const gizmo = new pc.Gizmo(app, camera, layer);
      */
@@ -241,7 +241,19 @@ class Gizmo extends EventHandler {
         this._camera = camera;
         this._app = camera.system.app;
         this._device = this._app.graphicsDevice;
-        this._layer = layer;
+
+        if (layer) {
+            this._layer = layer;
+        } else {
+            this._layer = new Layer({
+                name: 'Gizmo',
+                clearDepthBuffer: true,
+                opaqueSortMode: SORTMODE_NONE,
+                transparentSortMode: SORTMODE_NONE
+            });
+            this._app.scene.layers.push(this._layer);
+            this._camera.layers = this._camera.layers.concat(this._layer.id);
+        }
 
         this.root = new Entity('gizmo');
         this._app.root.addChild(this.root);
@@ -260,6 +272,15 @@ class Gizmo extends EventHandler {
         this._app.on('update', () => this._updateScale());
 
         this._app.on('destroy', () => this.destroy());
+    }
+
+    /**
+     * Sets the gizmo render layer.
+     *
+     * @type {Layer}
+     */
+    get layer() {
+        return this._layer;
     }
 
     /**

@@ -88,19 +88,8 @@ light.addComponent('light');
 app.root.addChild(light);
 light.setEulerAngles(0, 0, -60);
 
-// create layers
-const gizmoLayer = new pc.Layer({
-    name: 'Gizmo',
-    clearDepthBuffer: true,
-    opaqueSortMode: pc.SORTMODE_NONE,
-    transparentSortMode: pc.SORTMODE_NONE
-});
-const layers = app.scene.layers;
-layers.push(gizmoLayer);
-camera.camera.layers = camera.camera.layers.concat(gizmoLayer.id);
-
 // create gizmo
-const gizmo = new pc.ScaleGizmo(camera.camera, gizmoLayer);
+const gizmo = new pc.ScaleGizmo(camera.camera);
 gizmo.attach([box]);
 data.set('gizmo', {
     size: gizmo.size,
