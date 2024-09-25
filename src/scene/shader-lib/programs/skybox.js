@@ -6,21 +6,6 @@ import { ShaderUtils } from '../../../platform/graphics/shader-utils.js';
 import { ShaderGenerator } from './shader-generator.js';
 import { SKYTYPE_INFINITE } from '../../constants.js';
 
-const fShader = `
-    #include "decodePS"
-    #include "gamma"
-    #include "tonemapping"
-    #include "envMultiplyPS"
-
-    #ifdef SKY_CUBEMAP
-        #include "skyboxHDRPS"
-    #else
-        #include "sphericalPS"
-        #include "envAtlasPS"
-        #include "skyboxEnvPS"
-    #endif
-`;
-
 class ShaderGeneratorSkybox extends ShaderGenerator {
     generateKey(options) {
         const sharedKey = `skybox-${options.type}-${options.encoding}-${options.gamma}-${options.toneMapping}-${options.skymesh}`;
@@ -44,12 +29,9 @@ class ShaderGeneratorSkybox extends ShaderGenerator {
         includes.set('tonemapping', ShaderGenerator.tonemapCode(options.toneMapping));
         includes.set('envMultiplyPS', shaderChunks.envMultiplyPS);
 
-        if (options.type === 'cubemap') {
-            includes.set('skyboxHDRPS', shaderChunks.skyboxHDRPS);
-        } else {
+        if (options.type !== 'cubemap') {
             includes.set('sphericalPS', shaderChunks.sphericalPS);
             includes.set('envAtlasPS', shaderChunks.envAtlasPS);
-            includes.set('skyboxEnvPS', shaderChunks.skyboxEnvPS);
         }
 
         return ShaderUtils.createDefinition(device, {
@@ -59,7 +41,7 @@ class ShaderGeneratorSkybox extends ShaderGenerator {
             },
             vertexCode: shaderChunks.skyboxVS,
             vertexDefines: defines,
-            fragmentCode: fShader,
+            fragmentCode: shaderChunks.skyboxPS,
             fragmentDefines: defines,
             fragmentIncludes: includes
         });
