@@ -34,7 +34,6 @@ class ScaleGizmo extends TransformGizmo {
         }),
         yz: new PlaneShape(this._device, {
             axis: GIZMOAXIS_X,
-            flipAxis: GIZMOAXIS_Y,
             layers: [this._layer.id],
             shading: this._shading,
             rotation: new Vec3(0, 0, -90),
@@ -43,7 +42,6 @@ class ScaleGizmo extends TransformGizmo {
         }),
         xz: new PlaneShape(this._device, {
             axis: GIZMOAXIS_Y,
-            flipAxis: GIZMOAXIS_Z,
             layers: [this._layer.id],
             shading: this._shading,
             rotation: new Vec3(0, 0, 0),
@@ -52,7 +50,6 @@ class ScaleGizmo extends TransformGizmo {
         }),
         xy: new PlaneShape(this._device, {
             axis: GIZMOAXIS_Z,
-            flipAxis: GIZMOAXIS_X,
             layers: [this._layer.id],
             shading: this._shading,
             rotation: new Vec3(90, 0, 0),
