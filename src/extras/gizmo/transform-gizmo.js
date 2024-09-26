@@ -154,7 +154,7 @@ class TransformGizmo extends Gizmo {
      * @type {boolean}
      * @protected
      */
-    _shading = true;
+    _shading = false;
 
     /**
      * Internal object containing the gizmo shapes to render.
