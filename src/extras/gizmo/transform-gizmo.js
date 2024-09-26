@@ -739,11 +739,11 @@ class TransformGizmo extends Gizmo {
      * @override
      */
     destroy() {
+        super.destroy();
+
         for (const key in this._shapes) {
             this._shapes[key].destroy();
         }
-
-        super.destroy();
     }
 }
 
