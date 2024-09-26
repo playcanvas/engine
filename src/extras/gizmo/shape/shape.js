@@ -19,6 +19,7 @@ import { Mat4 } from '../../../core/math/mat4.js';
 
 /**
  * @import { GraphicsDevice } from '../../../platform/graphics/graphics-device.js';
+ * @import { TriData } from '../tri-data.js';
  */
 
 // constants
