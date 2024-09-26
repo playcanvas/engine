@@ -89,7 +89,7 @@ class TransformGizmo extends Gizmo {
     /**
      * Internal color for meshes.
      *
-     * @type {Object}
+     * @type {{ axis: Record<string, Color>, hover: Record<string, Color>, disabled: Color }}
      * @protected
      */
     _meshColors = {
@@ -113,7 +113,7 @@ class TransformGizmo extends Gizmo {
     /**
      * Internal version of the guide line color.
      *
-     * @type {Object<string, Color>}
+     * @type {Record<string, Color>}
      * @protected
      */
     _guideColors = {
