@@ -22,7 +22,7 @@ class BoundingBoxGizmo extends Gizmo {
     /**
      * @type {Color}
      */
-    _color = new Color(1, 1, 1, 1);
+    _color = new Color().fromString('#ff0000');
 
     /**
      * Creates a new TransformGizmo object.
@@ -48,27 +48,27 @@ class BoundingBoxGizmo extends Gizmo {
             x: new PlaneShape(this._device, {
                 axis: GIZMOAXIS_X,
                 layers: [this._layer.id],
-                defaultColor: this._color,
-                hoverColor: this._color
+                rotation: new Vec3(0, 0, -90),
+                defaultColor: this._color
             }),
             y: new PlaneShape(this._device, {
                 axis: GIZMOAXIS_Y,
                 layers: [this._layer.id],
-                defaultColor: this._color,
-                hoverColor: this._color
+                rotation: new Vec3(0, 0, 0),
+                defaultColor: this._color
             }),
             z: new PlaneShape(this._device, {
                 axis: GIZMOAXIS_Z,
                 layers: [this._layer.id],
-                defaultColor: this._color,
-                hoverColor: this._color
+                rotation: new Vec3(90, 0, 0),
+                defaultColor: this._color
             })
         };
 
         for (const key in shapes) {
             const shape = shapes[key];
-            shape.gap = 0;
-            shape.size = 2;
+            shape.gap = -0.5;
+            shape.size = 1;
             this.root.addChild(shape.entity);
         }
     }
