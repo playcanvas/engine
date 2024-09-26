@@ -17,6 +17,10 @@ import { SphereGeometry } from '../../../scene/geometry/sphere-geometry.js';
 import { TorusGeometry } from '../../../scene/geometry/torus-geometry.js';
 import { Mat4 } from '../../../core/math/mat4.js';
 
+/**
+ * @import { GraphicsDevice } from '../../../platform/graphics/graphics-device.js';
+ */
+
 // constants
 const SHADING_DAMP_SCALE = 0.25;
 const SHADING_DAMP_OFFSET = 0.75;
@@ -159,14 +163,40 @@ class Shape {
 
     _cull = CULLFACE_BACK;
 
+    /**
+     * The graphics device.
+     *
+     * @type {GraphicsDevice}
+     */
     device;
 
+    /**
+     * The axis of the shape.
+     *
+     * @type {string}
+     */
     axis;
 
+    /**
+     * The entity of the shape.
+     *
+     * @type {Entity}
+     */
     entity;
 
+
+    /**
+     * The triangle data of the shape.
+     *
+     * @type {TriData[]}
+     */
     triData = [];
 
+    /**
+     * The mesh instances of the shape.
+     *
+     * @type {MeshInstance[]}
+     */
     meshInstances = [];
 
     constructor(device, options) {
@@ -303,10 +333,10 @@ class Shape {
         if (this._disabled) {
             return;
         }
-
         for (let i = 0; i < this.meshInstances.length; i++) {
             const color = state ? this._hoverColor : this._defaultColor;
-            setMeshColor(this.meshInstances[i].mesh, color);
+            const mesh = this.meshInstances[i].mesh;
+            setMeshColor(mesh, color);
         }
     }
 
