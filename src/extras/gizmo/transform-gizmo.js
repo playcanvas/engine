@@ -518,7 +518,7 @@ class TransformGizmo extends Gizmo {
         }
         this._hoverAxis = this._getAxis(meshInstance);
         this._hoverIsPlane = this._getIsPlane(meshInstance);
-        const shape = meshInstance ? this._shapeMap.get(meshInstance) || null : null;
+        const shape = meshInstance ? this._shapeMap.get(meshInstance) ?? null : null;
         if (shape === this._hoverShape) {
             return;
         }
@@ -739,11 +739,11 @@ class TransformGizmo extends Gizmo {
      * @override
      */
     destroy() {
+        super.destroy();
+
         for (const key in this._shapes) {
             this._shapes[key].destroy();
         }
-
-        super.destroy();
     }
 }
 

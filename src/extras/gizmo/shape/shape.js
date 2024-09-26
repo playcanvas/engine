@@ -17,17 +17,16 @@ import { SphereGeometry } from '../../../scene/geometry/sphere-geometry.js';
 import { TorusGeometry } from '../../../scene/geometry/torus-geometry.js';
 import { Mat4 } from '../../../core/math/mat4.js';
 
+/**
+ * @import { GraphicsDevice } from '../../../platform/graphics/graphics-device.js';
+ * @import { TriData } from '../tri-data.js';
+ */
+
 // constants
-const SHADOW_DAMP_SCALE = 0.25;
-const SHADOW_DAMP_OFFSET = 0.75;
-const SHADOW_MESH_MAP = new Map();
+const SHADING_DAMP_SCALE = 0.25;
+const SHADING_DAMP_OFFSET = 0.75;
 
 const LIGHT_DIR = new Vec3(1, 2, 3);
-
-// temporary variables
-const tmpG = new Geometry();
-tmpG.positions = [];
-tmpG.normals = [];
 
 const GEOMETRIES = {
     box: BoxGeometry,
@@ -67,76 +66,60 @@ const shaderDesc = {
     `
 };
 
+const shadingMeshMap = new Map();
+
 const tmpV1 = new Vec3();
 const tmpV2 = new Vec3();
 const tmpM1 = new Mat4();
+const tmpG = new Geometry();
+tmpG.positions = [];
+tmpG.normals = [];
 
 /**
  * Apply shadow to a geometry.
  *
  * @param {Geometry} geom - The geometry to apply shadow to.
- * @param {Mat4} transform - The transform of the geometry.
  * @param {Color} color - The color of the geometry.
- * @param {Vec3} lightDir - The direction of the light.
+ * @param {Mat4} [transform] - The transform of the geometry.
  * @returns {number[]} The shadow data.
  */
-const applyShadowColor = (geom, transform, color, lightDir) => {
+const applyShadowColor = (geom, color, transform) => {
     if (!geom.normals || !geom.positions) {
         return [];
     }
 
     // transform light direction to local space
-    const invMat = tmpM1.copy(transform).invert();
-    const localLightDir = invMat.transformVector(tmpV1.copy(lightDir), tmpV1).normalize();
+    let localLightDir;
+    if (transform) {
+        localLightDir = tmpM1.copy(transform).invert()
+        .transformVector(tmpV1.copy(LIGHT_DIR), tmpV1)
+        .normalize();
+    }
 
-    // calculate shadow intensity and apply to color
+    // calculate shading intensity and apply to color
     geom.colors = [];
-    const shadow = [];
+    const shading = [];
     const numVertices = geom.positions.length / 3;
     for (let i = 0; i < numVertices; i++) {
-        const x = geom.normals[i * 3];
-        const y = geom.normals[i * 3 + 1];
-        const z = geom.normals[i * 3 + 2];
-        const normal = tmpV2.set(x, y, z);
-
-        const dot = localLightDir.dot(normal);
-        shadow.push(dot * SHADOW_DAMP_SCALE + SHADOW_DAMP_OFFSET);
-
+        let strength = 1;
+        if (localLightDir) {
+            const x = geom.normals[i * 3];
+            const y = geom.normals[i * 3 + 1];
+            const z = geom.normals[i * 3 + 2];
+            const normal = tmpV2.set(x, y, z);
+            const dot = localLightDir.dot(normal);
+            strength = dot * SHADING_DAMP_SCALE + SHADING_DAMP_OFFSET;
+        }
+        shading.push(strength);
         geom.colors.push(
-            shadow[i] * color.r * 0xFF,
-            shadow[i] * color.g * 0xFF,
-            shadow[i] * color.b * 0xFF,
+            strength * color.r * 0xFF,
+            strength * color.g * 0xFF,
+            strength * color.b * 0xFF,
             color.a * 0xFF
         );
     }
 
-    return shadow;
-};
-
-/**
- * Apply a color to a geometry.
- *
- * @param {Geometry} geom - The geometry to apply the color to.
- * @param {Color} color - The color to apply.
- * @returns {number[]} The shadow data.
- */
-const applyColor = (geom, color) => {
-    if (!geom.positions) {
-        return [];
-    }
-
-    const colors = [];
-    const vertexCount = geom.positions.length / 3;
-    for (let i = 0; i < vertexCount; i++) {
-        colors.push(
-            color.r * 0xFF,
-            color.g * 0xFF,
-            color.b * 0xFF,
-            color.a * 0xFF
-        );
-    }
-    geom.colors = colors;
-    return [];
+    return shading;
 };
 
 /**
@@ -146,15 +129,13 @@ const applyColor = (geom, color) => {
  * @param {Color} color - The color to set the mesh to.
  */
 const setMeshColor = (mesh, color) => {
-    const shadow = SHADOW_MESH_MAP.get(mesh) ?? [];
+    const shading = shadingMeshMap.get(mesh);
     const colors = [];
-    const vertexCount = mesh.vertexBuffer.numVertices;
-    for (let i = 0; i < vertexCount; i++) {
-        const s = shadow[i] ?? 1;
+    for (let i = 0; i < shading.length; i++) {
         colors.push(
-            s * color.r * 0xFF,
-            s * color.g * 0xFF,
-            s * color.b * 0xFF,
+            shading[i] * color.r * 0xFF,
+            shading[i] * color.g * 0xFF,
+            shading[i] * color.b * 0xFF,
             color.a * 0xFF
         );
     }
@@ -183,14 +164,40 @@ class Shape {
 
     _cull = CULLFACE_BACK;
 
+    /**
+     * The graphics device.
+     *
+     * @type {GraphicsDevice}
+     */
     device;
 
+    /**
+     * The axis of the shape.
+     *
+     * @type {string}
+     */
     axis;
 
+    /**
+     * The entity of the shape.
+     *
+     * @type {Entity}
+     */
     entity;
 
+
+    /**
+     * The triangle data of the shape.
+     *
+     * @type {TriData[]}
+     */
     triData = [];
 
+    /**
+     * The mesh instances of the shape.
+     *
+     * @type {MeshInstance[]}
+     */
     meshInstances = [];
 
     constructor(device, options) {
@@ -235,12 +242,13 @@ class Shape {
             const mesh = this.meshInstances[i].mesh;
             mesh.getPositions(tmpG.positions);
             mesh.getNormals(tmpG.normals);
-            const shadow = this._shading ?
-                applyShadowColor(tmpG, this.entity.getWorldTransform(), this._defaultColor, LIGHT_DIR) :
-                applyColor(tmpG, this._defaultColor);
-
-            SHADOW_MESH_MAP.set(mesh, shadow);
-            setMeshColor(this.meshInstances[i].mesh, color);
+            const shadow = applyShadowColor(
+                tmpG,
+                color,
+                this._shading ? this.entity.getWorldTransform() : undefined
+            );
+            shadingMeshMap.set(mesh, shadow);
+            setMeshColor(mesh, color);
         }
     }
 
@@ -266,12 +274,13 @@ class Shape {
      */
     _createMesh(geom, shading = true) {
         const color = this._disabled ? this._disabledColor : this._defaultColor;
-        const shadow = shading ?
-            applyShadowColor(geom, this.entity.getWorldTransform(), color, LIGHT_DIR) :
-            applyColor(geom, color);
-
+        const shadow = applyShadowColor(
+            geom,
+            color,
+            shading ? this.entity.getWorldTransform() : undefined
+        );
         const mesh = Mesh.fromGeometry(this.device, geom);
-        SHADOW_MESH_MAP.set(mesh, shadow);
+        shadingMeshMap.set(mesh, shadow);
 
         return mesh;
     }
@@ -325,10 +334,10 @@ class Shape {
         if (this._disabled) {
             return;
         }
-
         for (let i = 0; i < this.meshInstances.length; i++) {
             const color = state ? this._hoverColor : this._defaultColor;
-            setMeshColor(this.meshInstances[i].mesh, color);
+            const mesh = this.meshInstances[i].mesh;
+            setMeshColor(mesh, color);
         }
     }
 
