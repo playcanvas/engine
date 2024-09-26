@@ -27,9 +27,10 @@ const tmpR1 = new Ray();
 
 // constants
 const LAYER_NAME = 'Gizmo';
-const MIN_GIZMO_SCALE = 1e-4;
+const MIN_SCALE = 1e-4;
 const PERS_SCALE_RATIO = 0.3;
 const ORTHO_SCALE_RATIO = 0.32;
+const UPDATE_EPSILON = 1e-6;
 
 let gizmoLayer = null;
 let gizmoLayerRefs = 0;
@@ -392,8 +393,12 @@ class Gizmo extends EventHandler {
             tmpV1.add(node.getPosition());
         }
         tmpV1.mulScalar(1.0 / (this.nodes.length || 1));
-        this.root.setPosition(tmpV1);
 
+        if (tmpV1.distance(this.root.getPosition()) < UPDATE_EPSILON) {
+            return;
+        }
+
+        this.root.setPosition(tmpV1);
         this.fire(Gizmo.EVENT_POSITIONUPDATE, tmpV1);
     }
 
@@ -405,8 +410,12 @@ class Gizmo extends EventHandler {
         if (this._coordSpace === GIZMOSPACE_LOCAL && this.nodes.length !== 0) {
             tmpV1.copy(this.nodes[this.nodes.length - 1].getEulerAngles());
         }
-        this.root.setEulerAngles(tmpV1);
 
+        if (tmpV1.distance(this.root.getEulerAngles()) < UPDATE_EPSILON) {
+            return;
+        }
+
+        this.root.setEulerAngles(tmpV1);
         this.fire(Gizmo.EVENT_ROTATIONUPDATE, tmpV1);
     }
 
@@ -422,10 +431,13 @@ class Gizmo extends EventHandler {
         } else {
             this._scale = this._camera.orthoHeight * ORTHO_SCALE_RATIO;
         }
-        this._scale = Math.max(this._scale * this._size, MIN_GIZMO_SCALE);
+        this._scale = Math.max(this._scale * this._size, MIN_SCALE);
+
+        if (Math.abs(this._scale - this.root.getLocalScale().x) < UPDATE_EPSILON) {
+            return;
+        }
 
         this.root.setLocalScale(this._scale, this._scale, this._scale);
-
         this.fire(Gizmo.EVENT_SCALEUPDATE, this._scale);
     }
 
@@ -500,6 +512,7 @@ class Gizmo extends EventHandler {
         }
         this._updatePosition();
         this._updateRotation();
+        this._updateScale();
 
         this.fire(Gizmo.EVENT_NODESATTACH);
 
