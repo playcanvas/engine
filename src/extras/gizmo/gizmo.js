@@ -275,7 +275,11 @@ class Gizmo extends EventHandler {
         this._device.canvas.addEventListener('pointermove', this._onPointerMove, true);
         this._device.canvas.addEventListener('pointerup', this._onPointerUp);
 
-        this._app.on('update', () => this._updateScale());
+        this._app.on('update', () => {
+            this._updatePosition();
+            this._updateRotation();
+            this._updateScale();
+        });
 
         this._app.on('destroy', () => this.destroy());
     }
@@ -384,7 +388,7 @@ class Gizmo extends EventHandler {
             tmpV1.add(node.getPosition());
         }
         tmpV1.mulScalar(1.0 / (this.nodes.length || 1));
-        this.root.setPosition(tmpV1);
+        this.root.setLocalPosition(tmpV1);
 
         this.fire(Gizmo.EVENT_POSITIONUPDATE, tmpV1);
     }
@@ -397,7 +401,7 @@ class Gizmo extends EventHandler {
         if (this._coordSpace === GIZMOSPACE_LOCAL && this.nodes.length !== 0) {
             tmpV1.copy(this.nodes[this.nodes.length - 1].getEulerAngles());
         }
-        this.root.setEulerAngles(tmpV1);
+        this.root.setLocalEulerAngles(tmpV1);
 
         this.fire(Gizmo.EVENT_ROTATIONUPDATE, tmpV1);
     }
