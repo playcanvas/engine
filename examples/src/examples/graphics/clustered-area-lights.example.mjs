@@ -13,7 +13,6 @@ data.set('settings', {
 });
 
 const assets = {
-    bloom: new pc.Asset('bloom', 'script', { url: rootPath + '/static/scripts/posteffects/posteffect-bloom.js' }),
     script: new pc.Asset('script', 'script', { url: rootPath + '/static/scripts/camera/orbit-camera.js' }),
     color: new pc.Asset('color', 'texture', { url: rootPath + '/static/assets/textures/seaside-rocks01-color.jpg' }),
     normal: new pc.Asset('normal', 'texture', { url: rootPath + '/static/assets/textures/seaside-rocks01-normal.jpg' }),
@@ -24,7 +23,10 @@ const assets = {
 const gfxOptions = {
     deviceTypes: [deviceType],
     glslangUrl: rootPath + '/static/lib/glslang/glslang.js',
-    twgslUrl: rootPath + '/static/lib/twgsl/twgsl.js'
+    twgslUrl: rootPath + '/static/lib/twgsl/twgsl.js',
+
+    // enable HDR rendering if supported
+    displayFormat: pc.DISPLAYFORMAT_HDR
 };
 
 const device = await pc.createGraphicsDevice(canvas, gfxOptions);
@@ -61,8 +63,9 @@ const assetListLoader = new pc.AssetListLoader(Object.values(assets), app.assets
 assetListLoader.load(() => {
     app.start();
 
-    // set up some general scene rendering properties
-    app.scene.rendering.toneMapping = pc.TONEMAP_ACES;
+    // if the device renders in HDR mode, disable tone mapping to output HDR values without any processing
+    app.scene.rendering.toneMapping = device.isHdr ? pc.TONEMAP_NONE : pc.TONEMAP_NEUTRAL;
+    app.scene.rendering.gammaCorrection = pc.GAMMA_SRGB;
 
     // enabled clustered lighting. This is a temporary API and will change in the future
     app.scene.clusteredLightingEnabled = true;
@@ -163,7 +166,7 @@ assetListLoader.load(() => {
 
         // emissive material that is the light source color
         const brightMaterial = new pc.StandardMaterial();
-        brightMaterial.emissive = new pc.Color(color.r * 0.8, color.g * 0.8, color.b * 0.8);
+        brightMaterial.emissive = new pc.Color(color.r * 2, color.g * 2, color.b * 2);
         brightMaterial.useLighting = false;
         brightMaterial.update();
 
@@ -203,9 +206,6 @@ assetListLoader.load(() => {
     const luts = assets.luts.resource;
     app.setAreaLightLuts(luts.LTC_MAT_1, luts.LTC_MAT_2);
 
-    // set up some general scene rendering properties
-    app.scene.rendering.toneMapping = pc.TONEMAP_ACES;
-
     // create ground plane
     const ground = createPrimitive('plane', new pc.Vec3(0, 0, 0), new pc.Vec3(45, 1, 45), assets);
 
@@ -232,15 +232,6 @@ assetListLoader.load(() => {
     camera.script.create('orbitCameraInputTouch');
     app.root.addChild(camera);
 
-    // add bloom postprocessing
-    camera.script.create('bloom', {
-        attributes: {
-            bloomIntensity: 1.5,
-            bloomThreshold: 0.6,
-            blurAmount: 6
-        }
-    });
-
     // generate a grid of area lights of sphere, disk and rect shapes
     for (let x = -20; x <= 20; x += 5) {
         for (let y = -20; y <= 20; y += 5) {
@@ -248,11 +239,11 @@ assetListLoader.load(() => {
             const color = new pc.Color(0.3 + Math.random() * 0.7, 0.3 + Math.random() * 0.7, 0.3 + Math.random() * 0.7);
             const rand = Math.random();
             if (rand < 0.3) {
-                createAreaLight('omni', pc.LIGHTSHAPE_SPHERE, pos, new pc.Vec3(1.5, 1.5, 1.5), color, 2, 6);
+                createAreaLight('omni', pc.LIGHTSHAPE_SPHERE, pos, new pc.Vec3(1.5, 1.5, 1.5), color, 4, 6);
             } else if (rand < 0.6) {
-                createAreaLight('spot', pc.LIGHTSHAPE_DISK, pos, new pc.Vec3(1.5, 1.5, 1.5), color, 2.5, 5);
+                createAreaLight('spot', pc.LIGHTSHAPE_DISK, pos, new pc.Vec3(1.5, 1.5, 1.5), color, 4, 5);
             } else {
-                createAreaLight('spot', pc.LIGHTSHAPE_RECT, pos, new pc.Vec3(2, 1, 1), color, 2.5, 5);
+                createAreaLight('spot', pc.LIGHTSHAPE_RECT, pos, new pc.Vec3(2, 1, 1), color, 4, 5);
             }
         }
     }

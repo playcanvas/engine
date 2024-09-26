@@ -63,11 +63,13 @@ class SkyMesh {
             return library.getProgram('skybox', options, processingOptions);
         };
 
+        material.setParameter('skyboxHighlightMultiplier', scene.skyboxHighlightMultiplier);
+
         if (texture.cubemap) {
             material.setParameter('texture_cubeMap', texture);
         } else {
             material.setParameter('texture_envAtlas', texture);
-            material.setParameter('mipLevel', scene._skyboxMip);
+            material.setParameter('mipLevel', scene.skyboxMip);
         }
 
         material.cull = CULLFACE_FRONT;

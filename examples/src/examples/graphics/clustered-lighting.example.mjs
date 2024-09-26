@@ -13,7 +13,10 @@ const assets = {
 const gfxOptions = {
     deviceTypes: [deviceType],
     glslangUrl: rootPath + '/static/lib/glslang/glslang.js',
-    twgslUrl: rootPath + '/static/lib/twgsl/twgsl.js'
+    twgslUrl: rootPath + '/static/lib/twgsl/twgsl.js',
+
+    // enable HDR rendering if supported
+    displayFormat: pc.DISPLAYFORMAT_HDR
 };
 
 const device = await pc.createGraphicsDevice(canvas, gfxOptions);
@@ -49,6 +52,10 @@ app.on('destroy', () => {
 const assetListLoader = new pc.AssetListLoader(Object.values(assets), app.assets);
 assetListLoader.load(() => {
     app.start();
+
+    // if the device renders in HDR mode, disable tone mapping to output HDR values without any processing
+    app.scene.rendering.toneMapping = device.isHdr ? pc.TONEMAP_NONE : pc.TONEMAP_ACES;
+    app.scene.rendering.gammaCorrection = pc.GAMMA_SRGB;
 
     /** @type {Array<pc.Entity>} */
     const pointLightList = [];
@@ -113,6 +120,7 @@ assetListLoader.load(() => {
         lightPoint.addComponent('light', {
             type: 'omni',
             color: color,
+            intensity: 2,
             range: 12,
             castShadows: false,
             falloffMode: pc.LIGHTFALLOFF_INVERSESQUARED
@@ -121,6 +129,7 @@ assetListLoader.load(() => {
         // attach a render component with a small sphere to each light
         const material = new pc.StandardMaterial();
         material.emissive = color;
+        material.emissiveIntensity = 10;    // bright emissive to make it really bright on HDR displays
         material.update();
 
         lightPoint.addComponent('render', {
@@ -143,6 +152,7 @@ assetListLoader.load(() => {
         lightSpot.addComponent('light', {
             type: 'spot',
             color: color,
+            intensity: 2,
             innerConeAngle: 5,
             outerConeAngle: 6 + Math.random() * 40,
             range: 25,
@@ -152,6 +162,7 @@ assetListLoader.load(() => {
         // attach a render component with a small cone to each light
         material = new pc.StandardMaterial();
         material.emissive = color;
+        material.emissiveIntensity = 10;    // bright emissive to make it really bright on HDR displays
         material.update();
 
         lightSpot.addComponent('render', {
