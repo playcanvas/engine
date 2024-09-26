@@ -239,8 +239,8 @@ class Shape {
                 applyShadowColor(tmpG, this.entity.getWorldTransform(), this._defaultColor, LIGHT_DIR) :
                 applyColor(tmpG, this._defaultColor);
 
+            setMeshColor(mesh, color);
             SHADOW_MESH_MAP.set(mesh, shadow);
-            setMeshColor(this.meshInstances[i].mesh, color);
         }
     }
 
