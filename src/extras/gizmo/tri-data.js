@@ -57,6 +57,7 @@ class TriData {
 
     /**
      * Sets the transform of the triangle data.
+     *
      * @param {Vec3} [pos] - The position of the transform.
      * @param {Quat} [rot] - The rotation of the transform.
      * @param {Vec3} [scale] - The scale of the transform.
