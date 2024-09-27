@@ -556,10 +556,10 @@ class Gizmo extends EventHandler {
 
         this.root.destroy();
 
-        if (!--gizmoLayerRefs) {
+        if (!--layerStore.get(this._app).refs) {
             this._app.scene.layers.remove(this._layer);
             this._camera.layers = this._camera.layers.filter(layer => layer !== this._layer.id);
-            gizmoLayer = null;
+            layerStore.delete(this._app);
         }
     }
 }
