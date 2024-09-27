@@ -235,18 +235,17 @@ class Gizmo extends EventHandler {
      *
      * @param {AppBase} app - The app.
      * @param {string} [layerName] - The layer name. Defaults to 'Gizmo'.
-     * @param {number} [layerIndex] - The layer index. Defaults to -1.
+     * @param {number} [layerIndex] - The layer index. Defaults to the end of the layer list.
      * @returns {Layer} The new layer.
      */
-    static createLayer(app, layerName = LAYER_NAME, layerIndex = -1) {
+    static createLayer(app, layerName = LAYER_NAME, layerIndex) {
         const layer = new Layer({
             name: layerName,
             clearDepthBuffer: true,
             opaqueSortMode: SORTMODE_NONE,
             transparentSortMode: SORTMODE_NONE
         });
-        const index = layerIndex === -1 ? app.scene.layers.layerList.length : layerIndex;
-        app.scene.layers.insert(layer, index);
+        app.scene.layers.insert(layer, layerIndex ?? app.scene.layers.layerList.length);
         return layer;
     }
 
