@@ -1,9 +1,23 @@
 import { Vec3 } from '../../core/math/vec3.js';
 import { Quat } from '../../core/math/quat.js';
 
-import { AxisArrow, AxisPlane } from './axis-shapes.js';
-import { GIZMO_LOCAL } from './gizmo.js';
+import {
+    GIZMOSPACE_LOCAL,
+    GIZMOAXIS_FACE,
+    GIZMOAXIS_X,
+    GIZMOAXIS_Y,
+    GIZMOAXIS_Z
+} from './constants.js';
 import { TransformGizmo } from './transform-gizmo.js';
+import { PlaneShape } from './shape/plane-shape.js';
+import { ArrowShape } from './shape/arrow-shape.js';
+import { SphereShape } from './shape/sphere-shape.js';
+
+/**
+ * @import { CameraComponent } from '../../framework/components/camera/component.js'
+ * @import { GraphNode } from '../../scene/graph-node.js'
+ * @import { Layer } from '../../scene/layer.js'
+ */
 
 // temporary variables
 const tmpV1 = new Vec3();
@@ -17,47 +31,57 @@ const tmpQ1 = new Quat();
  */
 class TranslateGizmo extends TransformGizmo {
     _shapes = {
-        yz: new AxisPlane(this._device, {
-            axis: 'x',
-            flipAxis: 'y',
+        face: new SphereShape(this._device, {
+            axis: GIZMOAXIS_FACE,
             layers: [this._layer.id],
+            shading: this._shading,
+            defaultColor: this._meshColors.axis.xyz,
+            hoverColor: this._meshColors.hover.xyz
+        }),
+        yz: new PlaneShape(this._device, {
+            axis: GIZMOAXIS_X,
+            layers: [this._layer.id],
+            shading: this._shading,
             rotation: new Vec3(0, 0, -90),
             defaultColor: this._meshColors.axis.x,
             hoverColor: this._meshColors.hover.x
         }),
-        xz: new AxisPlane(this._device, {
-            axis: 'y',
-            flipAxis: 'z',
+        xz: new PlaneShape(this._device, {
+            axis: GIZMOAXIS_Y,
             layers: [this._layer.id],
+            shading: this._shading,
             rotation: new Vec3(0, 0, 0),
             defaultColor: this._meshColors.axis.y,
             hoverColor: this._meshColors.hover.y
         }),
-        xy: new AxisPlane(this._device, {
-            axis: 'z',
-            flipAxis: 'x',
+        xy: new PlaneShape(this._device, {
+            axis: GIZMOAXIS_Z,
             layers: [this._layer.id],
+            shading: this._shading,
             rotation: new Vec3(90, 0, 0),
             defaultColor: this._meshColors.axis.z,
             hoverColor: this._meshColors.hover.z
         }),
-        x: new AxisArrow(this._device, {
-            axis: 'x',
+        x: new ArrowShape(this._device, {
+            axis: GIZMOAXIS_X,
             layers: [this._layer.id],
+            shading: this._shading,
             rotation: new Vec3(0, 0, -90),
             defaultColor: this._meshColors.axis.x,
             hoverColor: this._meshColors.hover.x
         }),
-        y: new AxisArrow(this._device, {
-            axis: 'y',
+        y: new ArrowShape(this._device, {
+            axis: GIZMOAXIS_Y,
             layers: [this._layer.id],
+            shading: this._shading,
             rotation: new Vec3(0, 0, 0),
             defaultColor: this._meshColors.axis.y,
             hoverColor: this._meshColors.hover.y
         }),
-        z: new AxisArrow(this._device, {
-            axis: 'z',
+        z: new ArrowShape(this._device, {
+            axis: GIZMOAXIS_Z,
             layers: [this._layer.id],
+            shading: this._shading,
             rotation: new Vec3(90, 0, 0),
             defaultColor: this._meshColors.axis.z,
             hoverColor: this._meshColors.hover.z
@@ -67,7 +91,7 @@ class TranslateGizmo extends TransformGizmo {
     /**
      * Internal mapping from each attached node to their starting position in local space.
      *
-     * @type {Map<import('../../scene/graph-node.js').GraphNode, Vec3>}
+     * @type {Map<GraphNode, Vec3>}
      * @private
      */
     _nodeLocalPositions = new Map();
@@ -75,7 +99,7 @@ class TranslateGizmo extends TransformGizmo {
     /**
      * Internal mapping from each attached node to their starting position in world space.
      *
-     * @type {Map<import('../../scene/graph-node.js').GraphNode, Vec3>}
+     * @type {Map<GraphNode, Vec3>}
      * @private
      */
     _nodePositions = new Map();
@@ -88,23 +112,21 @@ class TranslateGizmo extends TransformGizmo {
     /**
      * Creates a new TranslateGizmo object.
      *
-     * @param {import('../../framework/app-base.js').AppBase} app - The application instance.
-     * @param {import('../../framework/components/camera/component.js').CameraComponent} camera -
-     * The camera component.
-     * @param {import('../../scene/layer.js').Layer} layer - The render layer.
+     * @param {CameraComponent} camera - The camera component.
+     * @param {Layer} layer - The render layer.
      * @example
      * const gizmo = new pc.TranslateGizmo(app, camera, layer);
      */
-    constructor(app, camera, layer) {
-        super(app, camera, layer);
+    constructor(camera, layer) {
+        super(camera, layer);
 
         this._createTransform();
 
-        this.on('transform:start', () => {
+        this.on(TransformGizmo.EVENT_TRANSFORMSTART, () => {
             this._storeNodePositions();
         });
 
-        this.on('transform:move', (pointDelta) => {
+        this.on(TransformGizmo.EVENT_TRANSFORMMOVE, (pointDelta) => {
             if (this.snap) {
                 pointDelta.mulScalar(1 / this.snapIncrement);
                 pointDelta.round();
@@ -113,7 +135,7 @@ class TranslateGizmo extends TransformGizmo {
             this._setNodePositions(pointDelta);
         });
 
-        this.on('nodes:detach', () => {
+        this.on(TransformGizmo.EVENT_NODESDETACH, () => {
             this._nodeLocalPositions.clear();
             this._nodePositions.clear();
         });
@@ -263,18 +285,67 @@ class TranslateGizmo extends TransformGizmo {
         return this._shapes.yz.gap;
     }
 
+    /**
+     * Sets the axis center size.
+     *
+     * @type {number}
+     */
+    set axisCenterSize(value) {
+        this._shapes.face.size = value;
+    }
+
+    /**
+     * Gets the axis center size.
+     *
+     * @type {number}
+     */
+    get axisCenterSize() {
+        return this._shapes.face.size;
+    }
+
+    /**
+     * Sets the axis center tolerance.
+     *
+     * @type {number}
+     */
+    set axisCenterTolerance(value) {
+        this._shapes.face.tolerance = value;
+    }
+
+    /**
+     * Gets the axis center tolerance.
+     *
+     * @type {number}
+     */
+    get axisCenterTolerance() {
+        return this._shapes.face.tolerance;
+    }
+
+    /**
+     * @param {string} prop - The property to set.
+     * @param {any} value - The value to set.
+     * @private
+     */
     _setArrowProp(prop, value) {
         this._shapes.x[prop] = value;
         this._shapes.y[prop] = value;
         this._shapes.z[prop] = value;
     }
 
+    /**
+     * @param {string} prop - The property to set.
+     * @param {any} value - The value to set.
+     * @private
+     */
     _setPlaneProp(prop, value) {
         this._shapes.yz[prop] = value;
         this._shapes.xz[prop] = value;
         this._shapes.xy[prop] = value;
     }
 
+    /**
+     * @private
+     */
     _storeNodePositions() {
         for (let i = 0; i < this.nodes.length; i++) {
             const node = this.nodes[i];
@@ -283,26 +354,40 @@ class TranslateGizmo extends TransformGizmo {
         }
     }
 
+    /**
+     * @param {Vec3} pointDelta - The delta to apply to the node positions.
+     * @private
+     */
     _setNodePositions(pointDelta) {
         for (let i = 0; i < this.nodes.length; i++) {
             const node = this.nodes[i];
-            if (this._coordSpace === GIZMO_LOCAL) {
+            const pos = this._nodePositions.get(node);
+            if (!pos) {
+                continue;
+            }
+            if (this._coordSpace === GIZMOSPACE_LOCAL) {
                 tmpV1.copy(pointDelta);
-                node.parent.getWorldTransform().getScale(tmpV2);
+                node.parent?.getWorldTransform().getScale(tmpV2);
                 tmpV2.x = 1 / tmpV2.x;
                 tmpV2.y = 1 / tmpV2.y;
                 tmpV2.z = 1 / tmpV2.z;
                 tmpQ1.copy(node.getLocalRotation()).transformVector(tmpV1, tmpV1);
                 tmpV1.mul(tmpV2);
-                node.setLocalPosition(this._nodeLocalPositions.get(node).clone().add(tmpV1));
+                node.setLocalPosition(pos.clone().add(tmpV1));
             } else {
-                node.setPosition(this._nodePositions.get(node).clone().add(pointDelta));
+                node.setPosition(pos.clone().add(pointDelta));
             }
         }
 
         this._updatePosition();
     }
 
+    /**
+     * @param {number} x - The x coordinate.
+     * @param {number} y - The y coordinate.
+     * @returns {{ point: Vec3, angle: number }} The point and angle.
+     * @protected
+     */
     _screenToPoint(x, y) {
         const mouseWPos = this._camera.screenToWorld(x, y, 1);
 
@@ -310,7 +395,7 @@ class TranslateGizmo extends TransformGizmo {
         const isPlane = this._selectedIsPlane;
 
         const ray = this._createRay(mouseWPos);
-        const plane = this._createPlane(axis, false, !isPlane);
+        const plane = this._createPlane(axis, axis === GIZMOAXIS_FACE, !isPlane);
 
         const point = new Vec3();
         const angle = 0;
@@ -320,7 +405,7 @@ class TranslateGizmo extends TransformGizmo {
         // rotate point back to world coords
         tmpQ1.copy(this._rootStartRot).invert().transformVector(point, point);
 
-        if (!isPlane) {
+        if (!isPlane && axis !== GIZMOAXIS_FACE) {
             this._projectToAxis(point, axis);
         }
 
