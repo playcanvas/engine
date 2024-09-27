@@ -259,8 +259,6 @@ class Gizmo extends EventHandler {
         this._app = camera.system.app;
         this._device = this._app.graphicsDevice;
 
-
-
         if (layer) {
             this._layer = layer;
         } else {
