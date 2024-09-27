@@ -129,7 +129,7 @@ class RotateGizmo extends TransformGizmo {
      * Creates a new RotateGizmo object.
      *
      * @param {CameraComponent} camera - The camera component.
-     * @param {Layer} [layer] - The render layer.
+     * @param {Layer} layer - The render layer.
      * @example
      * const gizmo = new pc.RotateGizmo(app, camera, layer);
      */

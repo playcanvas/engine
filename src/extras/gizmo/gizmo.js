@@ -8,7 +8,6 @@ import { CameraComponent } from '../../framework/components/camera/component.js'
 import { PROJECTION_PERSPECTIVE, SORTMODE_NONE } from '../../scene/constants.js';
 import { Entity } from '../../framework/entity.js';
 import { Layer } from '../../scene/layer.js';
-import { DeviceCache } from '../../platform/graphics/device-cache.js';
 
 import { GIZMOSPACE_LOCAL, GIZMOSPACE_WORLD } from './constants.js';
 
@@ -32,17 +31,6 @@ const MIN_SCALE = 1e-4;
 const PERS_SCALE_RATIO = 0.3;
 const ORTHO_SCALE_RATIO = 0.32;
 const UPDATE_EPSILON = 1e-6;
-
-const deviceCache = new DeviceCache();
-
-/**
- * Generates a random UUID.
- *
- * @returns {string} The generated UUID.
- */
-const genUUID = () => {
-    return Math.random().toString(36).substr(2, 9);
-};
 
 /**
  * The base class for all gizmos.
@@ -243,10 +231,30 @@ class Gizmo extends EventHandler {
     intersectData = [];
 
     /**
+     * Creates a new gizmo layer and adds it to the scene.
+     *
+     * @param {AppBase} app - The app.
+     * @param {string} [layerName] - The layer name.
+     * @param {number} [layerIndex] - The layer index.
+     * @returns {Layer} The new layer.
+     */
+    static createLayer(app, layerName = 'Gizmo', layerIndex = -1) {
+        const layer = new Layer({
+            name: layerName,
+            clearDepthBuffer: true,
+            opaqueSortMode: SORTMODE_NONE,
+            transparentSortMode: SORTMODE_NONE
+        });
+        const index = layerIndex === -1 ? app.scene.layers.layerList.length : layerIndex;
+        app.scene.layers.insert(layer, index);
+        return layer;
+    }
+
+    /**
      * Creates a new Gizmo object.
      *
      * @param {CameraComponent} camera - The camera component.
-     * @param {Layer} [layer] - The render layer. This can be provided by the user or will be created
+     * @param {Layer} layer - The render layer. This can be provided by the user or will be created
      * and added to the scene and camera if not provided. Successive gizmos will share the same layer
      * and will be removed from the camera and scene when the last gizmo is destroyed.
      * const gizmo = new pc.Gizmo(app, camera, layer);
@@ -259,13 +267,8 @@ class Gizmo extends EventHandler {
         this._app = camera.system.app;
         this._device = this._app.graphicsDevice;
 
-        if (layer) {
-            this._layer = layer;
-        } else {
-            const layerData = this._getLayerData();
-            layerData.refs++;
-            this._layer = layerData.layer;
-        }
+        this._layer = layer;
+        camera.layers = camera.layers.concat(layer.id);
 
         this.root = new Entity('gizmo');
         this._app.root.addChild(this.root);
@@ -340,20 +343,6 @@ class Gizmo extends EventHandler {
      */
     get size() {
         return this._size;
-    }
-
-    _getLayerData() {
-        return deviceCache.get(this._device, () => {
-            const layer = new Layer({
-                name: `${LAYER_NAME_PREFIX}-${genUUID()}`,
-                clearDepthBuffer: true,
-                opaqueSortMode: SORTMODE_NONE,
-                transparentSortMode: SORTMODE_NONE
-            });
-            this._app.scene.layers.push(layer);
-            this._camera.layers = this._camera.layers.concat(layer.id);
-            return { layer, refs: 0 };
-        });
     }
 
     /**
@@ -569,13 +558,6 @@ class Gizmo extends EventHandler {
         this._device.canvas.removeEventListener('pointerup', this._onPointerUp);
 
         this.root.destroy();
-
-        const layerData = this._getLayerData();
-        if (!--layerData.refs) {
-            this._app.scene.layers.remove(this._layer);
-            this._camera.layers = this._camera.layers.filter(layer => layer !== this._layer.id);
-            deviceCache.remove(this._device);
-        }
     }
 }
 

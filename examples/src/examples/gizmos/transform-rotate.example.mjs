@@ -89,7 +89,8 @@ app.root.addChild(light);
 light.setEulerAngles(0, 0, -60);
 
 // create gizmo
-const gizmo = new pc.RotateGizmo(camera.camera);
+const layer = pc.Gizmo.createLayer(app);
+const gizmo = new pc.RotateGizmo(camera.camera, layer);
 gizmo.attach(box);
 data.set('gizmo', {
     size: gizmo.size,

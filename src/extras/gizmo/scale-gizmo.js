@@ -109,7 +109,7 @@ class ScaleGizmo extends TransformGizmo {
      * Creates a new ScaleGizmo object.
      *
      * @param {CameraComponent} camera - The camera component.
-     * @param {Layer} [layer] - The render layer.
+     * @param {Layer} layer - The render layer.
      * @example
      * const gizmo = new pc.ScaleGizmo(app, camera, layer);
      */
