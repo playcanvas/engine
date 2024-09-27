@@ -32,8 +32,7 @@ const PERS_SCALE_RATIO = 0.3;
 const ORTHO_SCALE_RATIO = 0.32;
 const UPDATE_EPSILON = 1e-6;
 
-let gizmoLayer = null;
-let gizmoLayerRefs = 0;
+const layerStore = new Map();
 
 /**
  * The base class for all gizmos.
@@ -252,8 +251,8 @@ class Gizmo extends EventHandler {
         if (layer) {
             this._layer = layer;
         } else {
-            if (!gizmoLayer) {
-                gizmoLayer = new Layer({
+            if (!layerStore.has(this._app)) {
+                const gizmoLayer = new Layer({
                     name: LAYER_NAME,
                     clearDepthBuffer: true,
                     opaqueSortMode: SORTMODE_NONE,
@@ -261,9 +260,11 @@ class Gizmo extends EventHandler {
                 });
                 this._app.scene.layers.push(gizmoLayer);
                 this._camera.layers = this._camera.layers.concat(gizmoLayer.id);
+                layerStore.set(this._app, { layer: gizmoLayer, refs: 0 });
             }
-            this._layer = gizmoLayer;
-            gizmoLayerRefs++;
+            const store = layerStore.get(this._app);
+            this._layer = store.layer;
+            store.refs++;
         }
 
         this.root = new Entity('gizmo');
