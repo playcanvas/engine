@@ -12,11 +12,11 @@ import { Layer } from '../../scene/layer.js';
 import { GIZMOSPACE_LOCAL, GIZMOSPACE_WORLD } from './constants.js';
 
 /**
- * @import { AppBase } from '../../framework/app-base.js'
- * @import { GraphNode } from '../../scene/graph-node.js'
- * @import { GraphicsDevice } from '../../platform/graphics/graphics-device.js'
- * @import { MeshInstance } from '../../scene/mesh-instance.js'
- * @import { TriData } from './tri-data.js'
+ * @typedef {import('../../framework/app-base.js').AppBase} AppBase
+ * @typedef {import('../../scene/graph-node.js').GraphNode} GraphNode
+ * @typedef {import('../../platform/graphics/graphics-device.js').GraphicsDevice} GraphicsDevice
+ * @typedef {import('../../scene/mesh-instance.js').MeshInstance} MeshInstance
+ * @typedef {import('./tri-data.js').TriData} TriData
  */
 
 // temporary variables

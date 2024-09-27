@@ -8,9 +8,9 @@ import { PlaneShape } from './shape/plane-shape.js';
 import { BoxLineShape } from './shape/boxline-shape.js';
 
 /**
- * @import { CameraComponent } from '../../framework/components/camera/component.js'
- * @import { GraphNode } from '../../scene/graph-node.js'
- * @import { Layer } from '../../scene/layer.js'
+ * @typedef {import('../../framework/components/camera/component.js').CameraComponent} CameraComponent
+ * @typedef {import('../../scene/graph-node.js').GraphNode} GraphNode
+ * @typedef {import('../../scene/layer.js').Layer} Layer
  */
 
 // temporary variables

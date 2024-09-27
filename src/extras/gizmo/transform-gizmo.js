@@ -19,10 +19,10 @@ import { GIZMOAXIS_X, GIZMOAXIS_XYZ, GIZMOAXIS_Y, GIZMOAXIS_Z } from './constant
 import { Gizmo } from './gizmo.js';
 
 /**
- * @import { Shape } from './shape/shape.js'
- * @import { CameraComponent } from '../../framework/components/camera/component.js'
- * @import { Layer } from '../../scene/layer.js'
- * @import { MeshInstance } from '../../scene/mesh-instance.js'
+ * @typedef {import('./shape/shape.js').Shape} Shape
+ * @typedef {import('../../framework/components/camera/component.js').CameraComponent} CameraComponent
+ * @typedef {import('../../scene/layer.js').Layer} Layer
+ * @typedef {import('../../scene/mesh-instance.js').MeshInstance} MeshInstance
  */
 
 // temporary variables

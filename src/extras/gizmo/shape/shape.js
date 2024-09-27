@@ -19,8 +19,8 @@ import { createShaderFromCode } from '../../../scene/shader-lib/utils.js';
 import { Material } from '../../../scene/materials/material.js';
 
 /**
- * @import { GraphicsDevice } from '../../../platform/graphics/graphics-device.js';
- * @import { TriData } from '../tri-data.js';
+ * @typedef {import('../../../platform/graphics/graphics-device.js').GraphicsDevice} GraphicsDevice;
+ * @typedef {import('../tri-data.js').TriData} TriData;
  */
 
 // constants
