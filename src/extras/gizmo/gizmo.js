@@ -236,8 +236,9 @@ class Gizmo extends EventHandler {
      * Creates a new Gizmo object.
      *
      * @param {CameraComponent} camera - The camera component.
-     * @param {Layer} [layer] - The render layer.
-     * @example
+     * @param {Layer} [layer] - The render layer. This can be provided by the user or will be created
+     * and added to the scene and camera if not provided. Successive gizmos will share the same layer
+     * and will be removed from the camera and scene when the last gizmo is destroyed.
      * const gizmo = new pc.Gizmo(app, camera, layer);
      */
     constructor(camera, layer) {
