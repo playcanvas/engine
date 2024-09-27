@@ -144,11 +144,11 @@ const setMeshColor = (mesh, color) => {
 };
 
 class Shape {
-    _position;
+    _position = new Vec3();
 
-    _rotation;
+    _rotation = new Vec3();
 
-    _scale;
+    _scale = new Vec3(1, 1, 1);
 
     _layers = [];
 
@@ -203,9 +203,16 @@ class Shape {
     constructor(device, options) {
         this.device = device;
         this.axis = options.axis ?? 'x';
-        this._position = options.position ?? new Vec3();
-        this._rotation = options.rotation ?? new Vec3();
-        this._scale = options.scale ?? new Vec3(1, 1, 1);
+
+        if (options.position instanceof Vec3) {
+            this._position.copy(options.position);
+        }
+        if (options.rotation instanceof Vec3) {
+            this._rotation.copy(options.rotation);
+        }
+        if (options.scale instanceof Vec3) {
+            this._scale.copy(options.scale);
+        }
 
         this._disabled = options.disabled ?? false;
 

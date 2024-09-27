@@ -11,8 +11,14 @@ class PlaneShape extends Shape {
 
     _gap = 0.1;
 
+    _hasPosition = false;
+
     constructor(device, options = {}) {
         super(device, options);
+
+        this._size = options.size ?? this._size;
+        this._gap = options.gap ?? this._gap;
+        this._hasPosition = !!options.position;
 
         this.triData = [
             new TriData(new PlaneGeometry())
@@ -22,6 +28,9 @@ class PlaneShape extends Shape {
     }
 
     _getPosition() {
+        if (this._hasPosition) {
+            return this._position;
+        }
         const offset = this._size / 2 + this._gap;
         const position = new Vec3(offset, offset, offset);
         position[this.axis] = 0;

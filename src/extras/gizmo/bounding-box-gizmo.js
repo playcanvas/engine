@@ -6,7 +6,6 @@ import { Gizmo } from './gizmo.js';
 import { PlaneShape } from './shape/plane-shape.js';
 
 /**
- * @import { Shape } from './shape/shape.js'
  * @import { CameraComponent } from '../../framework/components/camera/component.js'
  * @import { Layer } from '../../scene/layer.js'
  */
@@ -44,34 +43,41 @@ class BoundingBoxGizmo extends Gizmo {
             this._bb.add(bb);
         }
 
+        const size = 0.25;
         const shapes = {
-            x: new PlaneShape(this._device, {
+            posX: new PlaneShape(this._device, {
                 axis: GIZMOAXIS_X,
                 layers: [this._layer.id],
+                position: tmpV1.copy(this._bb.center).add(this._bb.halfExtents).sub(new Vec3(0, size / 2, size / 2)),
                 rotation: new Vec3(0, 0, -90),
+                size,
                 defaultColor: this._color
             }),
-            y: new PlaneShape(this._device, {
+            posY: new PlaneShape(this._device, {
                 axis: GIZMOAXIS_Y,
                 layers: [this._layer.id],
+                position: tmpV1.copy(this._bb.center).add(this._bb.halfExtents).sub(new Vec3(size / 2, 0, size / 2)),
                 rotation: new Vec3(0, 0, 0),
+                size,
                 defaultColor: this._color
             }),
-            z: new PlaneShape(this._device, {
+            posZ: new PlaneShape(this._device, {
                 axis: GIZMOAXIS_Z,
                 layers: [this._layer.id],
+                position: tmpV1.copy(this._bb.center).add(this._bb.halfExtents).sub(new Vec3(size / 2, size / 2, 0)),
                 rotation: new Vec3(90, 0, 0),
+                size,
                 defaultColor: this._color
             })
         };
 
         for (const key in shapes) {
             const shape = shapes[key];
-            shape.gap = -0.5;
-            shape.size = 1;
             this.root.addChild(shape.entity);
         }
     }
+
+    _updateScale() {}
 }
 
 export { BoundingBoxGizmo };
