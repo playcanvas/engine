@@ -8,6 +8,7 @@ import { CameraComponent } from '../../framework/components/camera/component.js'
 import { PROJECTION_PERSPECTIVE, SORTMODE_NONE } from '../../scene/constants.js';
 import { Entity } from '../../framework/entity.js';
 import { Layer } from '../../scene/layer.js';
+import { DeviceCache } from '../../platform/graphics/device-cache.js';
 
 import { GIZMOSPACE_LOCAL, GIZMOSPACE_WORLD } from './constants.js';
 
@@ -26,13 +27,22 @@ const tmpM2 = new Mat4();
 const tmpR1 = new Ray();
 
 // constants
-const LAYER_NAME = 'Gizmo';
+const LAYER_NAME_PREFIX = 'Gizmo';
 const MIN_SCALE = 1e-4;
 const PERS_SCALE_RATIO = 0.3;
 const ORTHO_SCALE_RATIO = 0.32;
 const UPDATE_EPSILON = 1e-6;
 
-const layerStore = new Map();
+const deviceCache = new DeviceCache();
+
+/**
+ * Generates a random UUID.
+ *
+ * @returns {string} The generated UUID.
+ */
+const genUUID = () => {
+    return Math.random().toString(36).substr(2, 9);
+};
 
 /**
  * The base class for all gizmos.
@@ -249,23 +259,14 @@ class Gizmo extends EventHandler {
         this._app = camera.system.app;
         this._device = this._app.graphicsDevice;
 
+
+
         if (layer) {
             this._layer = layer;
         } else {
-            if (!layerStore.has(this._app)) {
-                const gizmoLayer = new Layer({
-                    name: LAYER_NAME,
-                    clearDepthBuffer: true,
-                    opaqueSortMode: SORTMODE_NONE,
-                    transparentSortMode: SORTMODE_NONE
-                });
-                this._app.scene.layers.push(gizmoLayer);
-                this._camera.layers = this._camera.layers.concat(gizmoLayer.id);
-                layerStore.set(this._app, { layer: gizmoLayer, refs: 0 });
-            }
-            const store = layerStore.get(this._app);
-            this._layer = store.layer;
-            store.refs++;
+            const layerData = this._getLayerData();
+            layerData.refs++;
+            this._layer = layerData.layer;
         }
 
         this.root = new Entity('gizmo');
@@ -341,6 +342,20 @@ class Gizmo extends EventHandler {
      */
     get size() {
         return this._size;
+    }
+
+    _getLayerData() {
+        return deviceCache.get(this._device, () => {
+            const layer = new Layer({
+                name: `${LAYER_NAME_PREFIX}-${genUUID()}`,
+                clearDepthBuffer: true,
+                opaqueSortMode: SORTMODE_NONE,
+                transparentSortMode: SORTMODE_NONE
+            });
+            this._app.scene.layers.push(layer);
+            this._camera.layers = this._camera.layers.concat(layer.id);
+            return { layer, refs: 0 };
+        });
     }
 
     /**
@@ -557,10 +572,11 @@ class Gizmo extends EventHandler {
 
         this.root.destroy();
 
-        if (!--layerStore.get(this._app).refs) {
+        const layerData = this._getLayerData();
+        if (!--layerData.refs) {
             this._app.scene.layers.remove(this._layer);
             this._camera.layers = this._camera.layers.filter(layer => layer !== this._layer.id);
-            layerStore.delete(this._app);
+            deviceCache.remove(this._device);
         }
     }
 }
