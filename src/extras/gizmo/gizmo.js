@@ -26,7 +26,7 @@ const tmpM2 = new Mat4();
 const tmpR1 = new Ray();
 
 // constants
-const LAYER_NAME_PREFIX = 'Gizmo';
+const LAYER_NAME = 'Gizmo';
 const MIN_SCALE = 1e-4;
 const PERS_SCALE_RATIO = 0.3;
 const ORTHO_SCALE_RATIO = 0.32;
@@ -234,11 +234,11 @@ class Gizmo extends EventHandler {
      * Creates a new gizmo layer and adds it to the scene.
      *
      * @param {AppBase} app - The app.
-     * @param {string} [layerName] - The layer name.
-     * @param {number} [layerIndex] - The layer index.
+     * @param {string} [layerName] - The layer name. Defaults to 'Gizmo'.
+     * @param {number} [layerIndex] - The layer index. Defaults to -1.
      * @returns {Layer} The new layer.
      */
-    static createLayer(app, layerName = 'Gizmo', layerIndex = -1) {
+    static createLayer(app, layerName = LAYER_NAME, layerIndex = -1) {
         const layer = new Layer({
             name: layerName,
             clearDepthBuffer: true,
