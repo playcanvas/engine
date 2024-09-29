@@ -584,7 +584,7 @@ class WebglGraphicsDevice extends GraphicsDevice {
         this.textureFloatRenderable = !!this.extColorBufferFloat;
 
         // render to half float buffers support - either of these two extensions
-        this.extColorBufferHalfFloat = this.extColorBufferHalfFloat || !!this.extColorBufferFloat;
+        this.textureHalfFloatRenderable = !!this.extColorBufferHalfFloat || !!this.extColorBufferFloat;
 
         this.postInit();
     }
@@ -791,6 +791,7 @@ class WebglGraphicsDevice extends GraphicsDevice {
         this.extCompressedTextureS3TC_SRGB = this.getExtension('WEBGL_compressed_texture_s3tc_srgb');
         this.extCompressedTextureATC = this.getExtension('WEBGL_compressed_texture_atc');
         this.extCompressedTextureASTC = this.getExtension('WEBGL_compressed_texture_astc');
+        this.extTextureCompressionBPTC = this.getExtension('EXT_texture_compression_bptc');
 
         // iOS exposes this for half precision render targets on WebGL2 from iOS v 14.5beta
         this.extColorBufferHalfFloat = this.getExtension('EXT_color_buffer_half_float');
@@ -1149,13 +1150,13 @@ class WebglGraphicsDevice extends GraphicsDevice {
      */
     startRenderPass(renderPass) {
 
-        DebugGraphics.pushGpuMarker(this, `Pass:${renderPass.name}`);
-        DebugGraphics.pushGpuMarker(this, 'START-PASS');
-
         // set up render target
         const rt = renderPass.renderTarget ?? this.backBuffer;
         this.renderTarget = rt;
         Debug.assert(rt);
+
+        DebugGraphics.pushGpuMarker(this, `Pass:${renderPass.name} RT:${rt.name}`);
+        DebugGraphics.pushGpuMarker(this, 'START-PASS');
 
         this.updateBegin();
 

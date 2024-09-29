@@ -74,6 +74,24 @@ class CodeEditorDesktop extends CodeEditorBase {
         const monaco = window.monaco;
 
         const { name, message, locations } = event.detail;
+        if (!locations.length) {
+            const editorLines = editor.getValue().split('\n');
+            const line = editorLines.length - 1;
+            const messageMarkdown = `**${name}: ${message}**`;
+            const decorator = {
+                range: new monaco.Range(0, 0, line + 1, editorLines[line].length),
+                options: {
+                    className: 'squiggly-error',
+                    hoverMessage: {
+                        value: messageMarkdown
+                    }
+                }
+            };
+            this._decoratorMap.set(this.state.selectedFile, [decorator]);
+            this._refreshDecorators();
+            return;
+        }
+
         const { line, column } = locations[0];
 
         const messageMarkdown = `**${name}: ${message}** [Ln ${line}, Col ${column}]`;

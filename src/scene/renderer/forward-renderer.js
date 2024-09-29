@@ -794,10 +794,8 @@ class ForwardRenderer extends Renderer {
 
         if (renderParams.fog !== FOG_NONE) {
 
-            const scene = this.scene;
-
             // color in linear space
-            tmpColor.linear(scene?.rendering.fogColor);
+            tmpColor.linear(renderParams.fogColor);
             const fogUniform = this.fogColor;
             fogUniform[0] = tmpColor.r;
             fogUniform[1] = tmpColor.g;
@@ -805,10 +803,10 @@ class ForwardRenderer extends Renderer {
             this.fogColorId.setValue(fogUniform);
 
             if (renderParams.fog === FOG_LINEAR) {
-                this.fogStartId.setValue(scene.rendering.fogStart);
-                this.fogEndId.setValue(scene.rendering.fogEnd);
+                this.fogStartId.setValue(renderParams.fogStart);
+                this.fogEndId.setValue(renderParams.fogEnd);
             } else {
-                this.fogDensityId.setValue(scene.rendering.fogDensity);
+                this.fogDensityId.setValue(renderParams.fogDensity);
             }
         }
     }

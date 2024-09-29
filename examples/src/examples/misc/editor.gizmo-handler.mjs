@@ -34,15 +34,14 @@ class GizmoHandler {
     _hasPointer = false;
 
     /**
-     * @param {pc.AppBase} app - The application.
      * @param {pc.CameraComponent} camera - The camera component.
-     * @param {pc.Layer} layer - The gizmo layer
      */
-    constructor(app, camera, layer) {
+    constructor(camera) {
+        const layer = pc.Gizmo.createLayer(camera.system.app);
         this._gizmos = {
-            translate: new pc.TranslateGizmo(app, camera, layer),
-            rotate: new pc.RotateGizmo(app, camera, layer),
-            scale: new pc.ScaleGizmo(app, camera, layer)
+            translate: new pc.TranslateGizmo(camera, layer),
+            rotate: new pc.RotateGizmo(camera, layer),
+            scale: new pc.ScaleGizmo(camera, layer)
         };
 
         for (const type in this._gizmos) {
