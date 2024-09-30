@@ -373,7 +373,6 @@ class Gizmo extends EventHandler {
         if (!this.root.enabled || document.pointerLockElement) {
             return;
         }
-
         const selection = this._getSelection(e.offsetX, e.offsetY);
         if (selection[0]) {
             e.preventDefault();
