@@ -382,6 +382,7 @@ class Gizmo extends EventHandler {
     }
 
     /**
+     * @param {PointerEvent} e - The pointer event.
      * @private
      */
     _onPointerUp(e) {
