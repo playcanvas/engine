@@ -131,19 +131,11 @@ class ShadowRenderer {
         shadowCam.clearDepthBuffer = true;
         shadowCam.clearStencilBuffer = false;
 
-        return shadowCam;
-    }
-
-    static setShadowCameraSettings(shadowCam, device, shadowType, type, isClustered) {
-
-        // normal omni shadows on webgl2 encode depth in RGBA8 and do manual PCF sampling
-        // clustered omni shadows on webgl2 use depth format and hardware PCF sampling
-        let hwPcf = shadowType === SHADOW_PCF5 || shadowType === SHADOW_PCF1 || shadowType === SHADOW_PCF3;
-        if (type === LIGHTTYPE_OMNI && !isClustered) {
-            hwPcf = false;
-        }
-
+        // clear color buffer only when using it
+        let hwPcf = shadowType === SHADOW_PCF1 || shadowType === SHADOW_PCF3 || shadowType === SHADOW_PCF5;
         shadowCam.clearColorBuffer = !hwPcf;
+
+        return shadowCam;
     }
 
     _cullShadowCastersInternal(meshInstances, visible, camera) {
@@ -391,15 +383,8 @@ class ShadowRenderer {
     prepareFace(light, camera, face) {
 
         const type = light._type;
-        const shadowType = light._shadowType;
-        const isClustered = this.renderer.scene.clusteredLightingEnabled;
-
         const lightRenderData = this.getLightRenderData(light, camera, face);
         const shadowCam = lightRenderData.shadowCamera;
-
-        // camera clear setting
-        // Note: when clustered lighting is the only lighting type, this code can be moved to createShadowCamera function
-        ShadowRenderer.setShadowCameraSettings(shadowCam, this.device, shadowType, type, isClustered);
 
         // assign render target for the face
         const renderTargetIndex = type === LIGHTTYPE_DIRECTIONAL ? 0 : face;
