@@ -279,9 +279,8 @@ class Gizmo extends EventHandler {
         this._onPointerMove = this._onPointerMove.bind(this);
         this._onPointerUp = this._onPointerUp.bind(this);
 
-        this._device.canvas.addEventListener('pointerdown', this._onPointerDown, true);
-        this._device.canvas.addEventListener('pointermove', this._onPointerMove, true);
-        this._device.canvas.addEventListener('pointerup', this._onPointerUp);
+        this._device.canvas.addEventListener('pointerdown', this._onPointerDown);
+        this._device.canvas.addEventListener('pointermove', this._onPointerMove);
 
         this._app.on('update', () => {
             this._updatePosition();
@@ -357,6 +356,12 @@ class Gizmo extends EventHandler {
             e.preventDefault();
             e.stopPropagation();
         }
+
+        // switch to capture phase events on the window during pointer drag
+        this._device.canvas.removeEventListener('pointermove', this._onPointerMove);
+        window.addEventListener('pointermove', this._onPointerMove, true);
+        window.addEventListener('pointerup', this._onPointerUp, true);
+
         this.fire(Gizmo.EVENT_POINTERDOWN, e.offsetX, e.offsetY, selection[0]);
     }
 
@@ -368,12 +373,29 @@ class Gizmo extends EventHandler {
         if (!this.root.enabled || document.pointerLockElement) {
             return;
         }
-        const selection = this._getSelection(e.offsetX, e.offsetY);
+
+        // during drag the pointer can leave the canvas, so we need to
+        // calculate the canvas-relative offset
+        const calcOffset = () => {
+            const { canvas } = this._device;
+            if (e.target === canvas) {
+                return e;
+            }
+            const clientRect = canvas.getBoundingClientRect();
+            return {
+                offsetX: e.clientX - clientRect.left,
+                offsetY: e.clientY - clientRect.top
+            };
+        };
+
+        const { offsetX, offsetY } = calcOffset();
+
+        const selection = this._getSelection(offsetX, offsetY);
         if (selection[0]) {
             e.preventDefault();
             e.stopPropagation();
         }
-        this.fire(Gizmo.EVENT_POINTERMOVE, e.offsetX, e.offsetY, selection[0]);
+        this.fire(Gizmo.EVENT_POINTERMOVE, offsetX, offsetY, selection[0]);
     }
 
     /**
@@ -383,6 +405,11 @@ class Gizmo extends EventHandler {
         if (!this.root.enabled || document.pointerLockElement) {
             return;
         }
+
+        window.removeEventListener('pointermove', this._onPointerMove, true);
+        window.removeEventListener('pointerup', this._onPointerUp, true);
+        this._device.canvas.addEventListener('pointermove', this._onPointerMove);
+
         this.fire(Gizmo.EVENT_POINTERUP);
     }
 

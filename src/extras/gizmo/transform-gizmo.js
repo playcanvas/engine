@@ -262,7 +262,7 @@ class TransformGizmo extends Gizmo {
     constructor(camera, layer) {
         super(camera, layer);
 
-        this._app.on('update', () => {
+        this._app.on('prerender', () => {
             if (!this.root.enabled) {
                 return;
             }
