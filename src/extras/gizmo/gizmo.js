@@ -281,6 +281,7 @@ class Gizmo extends EventHandler {
 
         this._device.canvas.addEventListener('pointerdown', this._onPointerDown);
         this._device.canvas.addEventListener('pointermove', this._onPointerMove);
+        this._device.canvas.addEventListener('pointerup', this._onPointerUp);
 
         this._app.on('update', () => {
             this._updatePosition();
@@ -357,10 +358,9 @@ class Gizmo extends EventHandler {
             e.stopPropagation();
         }
 
-        // switch to capture phase events on the window during pointer drag
-        this._device.canvas.removeEventListener('pointermove', this._onPointerMove);
-        window.addEventListener('pointermove', this._onPointerMove, true);
-        window.addEventListener('pointerup', this._onPointerUp, true);
+        // capture the pointer during drag
+        const { canvas } = this._device;
+        canvas.setPointerCapture(e.pointerId);
 
         this.fire(Gizmo.EVENT_POINTERDOWN, e.offsetX, e.offsetY, selection[0]);
     }
@@ -374,21 +374,7 @@ class Gizmo extends EventHandler {
             return;
         }
 
-        // during drag the pointer can leave the canvas, so we need to
-        // calculate the canvas-relative offset
-        const calcOffset = () => {
-            const { canvas } = this._device;
-            if (e.target === canvas) {
-                return e;
-            }
-            const clientRect = canvas.getBoundingClientRect();
-            return {
-                offsetX: e.clientX - clientRect.left,
-                offsetY: e.clientY - clientRect.top
-            };
-        };
-
-        const { offsetX, offsetY } = calcOffset();
+        const { offsetX, offsetY } = e;
 
         const selection = this._getSelection(offsetX, offsetY);
         if (selection[0]) {
@@ -401,14 +387,13 @@ class Gizmo extends EventHandler {
     /**
      * @private
      */
-    _onPointerUp() {
+    _onPointerUp(e) {
         if (!this.root.enabled || document.pointerLockElement) {
             return;
         }
 
-        window.removeEventListener('pointermove', this._onPointerMove, true);
-        window.removeEventListener('pointerup', this._onPointerUp, true);
-        this._device.canvas.addEventListener('pointermove', this._onPointerMove);
+        const { canvas } = this._device;
+        canvas.releasePointerCapture(e.pointerId);
 
         this.fire(Gizmo.EVENT_POINTERUP);
     }
