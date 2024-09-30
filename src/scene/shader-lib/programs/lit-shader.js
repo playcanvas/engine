@@ -385,14 +385,13 @@ class LitShader {
 
     _fsGetDepthPassCode() {
         let code = this._fsGetBeginCode();
-        code += 'varying float vDepth;\n';
         code += this.varyings;
         code += this.varyingDefines;
         code += this.frontendDecl;
         code += this.frontendCode;
         code += ShaderGenerator.begin();
         code += this.frontendFunc;
-        code += '    gl_FragColor = packFloat(vDepth);\n';
+        code += '    gl_FragColor = vec4(1.0, 1.0, 1.0, 1.0);\n';
         code += ShaderGenerator.end();
 
         return code;
