@@ -169,7 +169,7 @@ class RotateGizmo extends TransformGizmo {
             this._nodeOffsets.clear();
         });
 
-        this._app.on('update', () => {
+        this._app.on('prerender', () => {
             this._faceAxisLookAtCamera();
             this._xyzAxisLookAtCamera();
 
