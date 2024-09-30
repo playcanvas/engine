@@ -279,8 +279,8 @@ class Gizmo extends EventHandler {
         this._onPointerMove = this._onPointerMove.bind(this);
         this._onPointerUp = this._onPointerUp.bind(this);
 
-        this._device.canvas.addEventListener('pointerdown', this._onPointerDown, true);
-        this._device.canvas.addEventListener('pointermove', this._onPointerMove, true);
+        this._device.canvas.addEventListener('pointerdown', this._onPointerDown);
+        this._device.canvas.addEventListener('pointermove', this._onPointerMove);
         this._device.canvas.addEventListener('pointerup', this._onPointerUp);
 
         this._app.on('update', () => {
@@ -357,6 +357,11 @@ class Gizmo extends EventHandler {
             e.preventDefault();
             e.stopPropagation();
         }
+
+        // capture the pointer during drag
+        const { canvas } = this._device;
+        canvas.setPointerCapture(e.pointerId);
+
         this.fire(Gizmo.EVENT_POINTERDOWN, e.offsetX, e.offsetY, selection[0]);
     }
 
@@ -377,12 +382,17 @@ class Gizmo extends EventHandler {
     }
 
     /**
+     * @param {PointerEvent} e - The pointer event.
      * @private
      */
-    _onPointerUp() {
+    _onPointerUp(e) {
         if (!this.root.enabled || document.pointerLockElement) {
             return;
         }
+
+        const { canvas } = this._device;
+        canvas.releasePointerCapture(e.pointerId);
+
         this.fire(Gizmo.EVENT_POINTERUP);
     }
 
@@ -552,8 +562,8 @@ class Gizmo extends EventHandler {
     destroy() {
         this.detach();
 
-        this._device.canvas.removeEventListener('pointerdown', this._onPointerDown, true);
-        this._device.canvas.removeEventListener('pointermove', this._onPointerMove, true);
+        this._device.canvas.removeEventListener('pointerdown', this._onPointerDown);
+        this._device.canvas.removeEventListener('pointermove', this._onPointerMove);
         this._device.canvas.removeEventListener('pointerup', this._onPointerUp);
 
         this.root.destroy();
