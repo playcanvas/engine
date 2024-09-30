@@ -132,7 +132,7 @@ class ShadowRenderer {
         shadowCam.clearStencilBuffer = false;
 
         // clear color buffer only when using it
-        let hwPcf = shadowType === SHADOW_PCF1 || shadowType === SHADOW_PCF3 || shadowType === SHADOW_PCF5;
+        const hwPcf = shadowType === SHADOW_PCF1 || shadowType === SHADOW_PCF3 || shadowType === SHADOW_PCF5;
         shadowCam.clearColorBuffer = !hwPcf;
 
         return shadowCam;

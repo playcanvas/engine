@@ -384,8 +384,6 @@ class LitShader {
     }
 
     _fsGetDepthPassCode() {
-        const chunks = this.chunks;
-
         let code = this._fsGetBeginCode();
         code += 'varying float vDepth;\n';
         code += this.varyings;
