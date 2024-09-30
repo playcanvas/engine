@@ -374,14 +374,12 @@ class Gizmo extends EventHandler {
             return;
         }
 
-        const { offsetX, offsetY } = e;
-
-        const selection = this._getSelection(offsetX, offsetY);
+        const selection = this._getSelection(e.offsetX, e.offsetY);
         if (selection[0]) {
             e.preventDefault();
             e.stopPropagation();
         }
-        this.fire(Gizmo.EVENT_POINTERMOVE, offsetX, offsetY, selection[0]);
+        this.fire(Gizmo.EVENT_POINTERMOVE, e.offsetX, e.offsetY, selection[0]);
     }
 
     /**
@@ -564,8 +562,8 @@ class Gizmo extends EventHandler {
     destroy() {
         this.detach();
 
-        this._device.canvas.removeEventListener('pointerdown', this._onPointerDown, true);
-        this._device.canvas.removeEventListener('pointermove', this._onPointerMove, true);
+        this._device.canvas.removeEventListener('pointerdown', this._onPointerDown);
+        this._device.canvas.removeEventListener('pointermove', this._onPointerMove);
         this._device.canvas.removeEventListener('pointerup', this._onPointerUp);
 
         this.root.destroy();
