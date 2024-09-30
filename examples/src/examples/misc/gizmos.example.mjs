@@ -137,19 +137,8 @@ light.addComponent('light', {
 app.root.addChild(light);
 light.setEulerAngles(0, 0, -60);
 
-// create layers
-const gizmoLayer = new pc.Layer({
-    name: 'Gizmo',
-    clearDepthBuffer: true,
-    opaqueSortMode: pc.SORTMODE_NONE,
-    transparentSortMode: pc.SORTMODE_NONE
-});
-const layers = app.scene.layers;
-layers.push(gizmoLayer);
-camera.camera.layers = camera.camera.layers.concat(gizmoLayer.id);
-
 // create gizmo
-const gizmoHandler = new GizmoHandler(app, camera.camera, gizmoLayer);
+const gizmoHandler = new GizmoHandler(app, camera.camera);
 gizmoHandler.switch('translate');
 gizmoHandler.add(box);
 window.focus();
@@ -257,7 +246,7 @@ data.on('*:set', (/** @type {string} */ path, value) => {
 
 // picker
 const picker = new pc.Picker(app, canvas.clientWidth, canvas.clientHeight);
-const worldLayer = layers.getLayerByName('World');
+const worldLayer = app.scene.layers.getLayerByName('World');
 const pickerLayers = [worldLayer];
 
 const onPointerDown = (/** @type {PointerEvent} */ e) => {
