@@ -122,7 +122,7 @@ jobs:
         cache: 'npm'
 
     - name: Install dependencies
-      run: npm clean-install --progress=false --no-fund
+      run: npm clean-install --no-fund
 
     - name: Run unit tests
       run: npm test
@@ -173,5 +173,5 @@ jobs:
     - name: Build Examples Browser
       working-directory: ./examples
       run: |
-        npm clean-install --progress=false --no-fund
+        npm clean-install --no-fund
         npm run build
