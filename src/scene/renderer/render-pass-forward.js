@@ -126,10 +126,10 @@ class RenderPassForward extends RenderPass {
 
             const layer = layerList[index];
             const isTransparent = subLayerList[index];
-            const renderedbyCamera = cameraComponent.camera.layersSet.has(layer.id);
+            const renderedByCamera = cameraComponent.camera.layersSet.has(layer.id);
 
             // add it for rendering
-            if (renderedbyCamera) {
+            if (renderedByCamera) {
                 this.addLayer(cameraComponent, layer, isTransparent, clearRenderTarget);
                 clearRenderTarget = false;
             }
