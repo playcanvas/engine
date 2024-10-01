@@ -235,7 +235,8 @@ class RenderPassCameraFrame extends RenderPass {
         this.rt = new RenderTarget({
             colorBuffer: this.sceneTexture,
             depthBuffer: this.sceneDepth,
-            samples: options.samples
+            samples: options.samples,
+            flipY: !!targetRenderTarget?.flipY  // flipY is inherited from the target renderTarget
         });
 
         this.sceneOptions = {
