@@ -30,7 +30,7 @@ jobs:
         cache: 'npm'
 
     - name: Install dependencies
-      run: npm clean-install --progress=false --no-fund
+      run: npm ci --progress=false --no-fund --no-audit
 
     - name: Build PlayCanvas
       run: npm run build
@@ -53,7 +53,7 @@ jobs:
         cache: 'npm'
 
     - name: Install dependencies
-      run: npm clean-install --progress=false --no-fund
+      run: npm ci --progress=false --no-fund --no-audit
 
     - name: Build API reference manual
       run: npm run docs
@@ -73,7 +73,7 @@ jobs:
         cache: 'npm'
 
     - name: Install dependencies
-      run: npm clean-install --progress=false --no-fund
+      run: npm ci --progress=false --no-fund --no-audit
 
     - name: Run ESLint
       run: npm run lint
@@ -81,7 +81,7 @@ jobs:
     - name: Run ESLint on examples
       working-directory: ./examples
       run: |
-        npm clean-install --progress=false --no-fund
+        npm ci --progress=false --no-fund --no-audit
         npm run lint
 
   typescript-declarations:
@@ -99,7 +99,7 @@ jobs:
         cache: 'npm'
 
     - name: Install dependencies
-      run: npm clean-install --progress=false --no-fund
+      run: npm ci --progress=false --no-fund --no-audit
 
     - name: Build TypeScript declarations
       run: npm run build:types
@@ -122,7 +122,7 @@ jobs:
         cache: 'npm'
 
     - name: Install dependencies
-      run: npm clean-install --no-fund
+      run: npm ci --no-fund --no-audit
 
     - name: Run unit tests
       run: npm test
@@ -142,7 +142,7 @@ jobs:
         cache: 'npm'
 
     - name: Install dependencies
-      run: npm clean-install --progress=false --no-fund
+      run: npm ci --progress=false --no-fund --no-audit
 
     - name: Build PlayCanvas (UMD-only)
       run: npm run build:umd
@@ -168,10 +168,10 @@ jobs:
         cache: 'npm'
 
     - name: Install dependencies
-      run: npm clean-install --progress=false --no-fund
+      run: npm ci --progress=false --no-fund --no-audit
 
     - name: Build Examples Browser
       working-directory: ./examples
       run: |
-        npm clean-install --no-fund
+        npm ci --no-fund
         npm run build
