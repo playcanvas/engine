@@ -868,6 +868,12 @@ class ForwardRenderer extends Renderer {
 
             if (renderAction.useCameraPasses)  {
 
+                Debug.call(() => {
+                    if (camera.postEffects.effects.length > 0) {
+                        Debug.warnOnce(`Camera '${camera.entity.name}' uses render passes, which are not compatible with post-effects scripts. Rendering of the post-effects is ignored, but they should not be attached to the camera.`);
+                    }
+                });
+
                 // schedule render passes from the camera
                 camera.camera.renderPasses.forEach((renderPass) => {
                     frameGraph.addRenderPass(renderPass);

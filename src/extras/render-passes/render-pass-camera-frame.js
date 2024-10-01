@@ -235,7 +235,8 @@ class RenderPassCameraFrame extends RenderPass {
         this.rt = new RenderTarget({
             colorBuffer: this.sceneTexture,
             depthBuffer: this.sceneDepth,
-            samples: options.samples
+            samples: options.samples,
+            flipY: !!targetRenderTarget?.flipY  // flipY is inherited from the target renderTarget
         });
 
         this.sceneOptions = {
@@ -335,9 +336,17 @@ class RenderPassCameraFrame extends RenderPass {
             this.scenePassTransparent.init(this.rt);
             ret.lastAddedIndex = this.scenePassTransparent.addLayers(composition, cameraComponent, ret.lastAddedIndex, ret.clearRenderTarget, options.lastSceneLayerId, options.lastSceneLayerIsTransparent);
 
-            // if prepass is enabled, we need to store the depth, as by default it gets discarded
-            if (options.prepassEnabled) {
-                this.scenePassTransparent.depthStencilOps.storeDepth = true;
+            // if no layers are rendered by this pass, remove it
+            if (!this.scenePassTransparent.rendersAnything) {
+                this.scenePassTransparent.destroy();
+                this.scenePassTransparent = null;
+            }
+
+            if (this.scenePassTransparent) {
+                // if prepass is enabled, we need to store the depth, as by default it gets discarded
+                if (options.prepassEnabled) {
+                    this.scenePassTransparent.depthStencilOps.storeDepth = true;
+                }
             }
         }
 
