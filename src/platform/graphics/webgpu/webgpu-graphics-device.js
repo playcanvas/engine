@@ -700,7 +700,7 @@ class WebgpuGraphicsDevice extends GraphicsDevice {
 
         // start the pass
         this.passEncoder = this.commandEncoder.beginRenderPass(renderPassDesc);
-        DebugHelper.setLabel(this.passEncoder, `${renderPass.name}-PassEncoder RT:${rt.name}`);
+        this.passEncoder.label = `${renderPass.name}-PassEncoder RT:${rt.name}`;
 
         // push marker to the passEncoder
         DebugGraphics.pushGpuMarker(this, `Pass:${renderPass.name} RT:${rt.name}`);
@@ -779,7 +779,6 @@ class WebgpuGraphicsDevice extends GraphicsDevice {
 
         // create a new encoder for each pass
         this.commandEncoder = this.wgpu.createCommandEncoder();
-        // DebugHelper.setLabel(this.commandEncoder, `${renderPass.name}-Encoder`);
         DebugHelper.setLabel(this.commandEncoder, 'ComputePass-Encoder');
 
         // clear cached encoder state
