@@ -182,6 +182,10 @@ assetListLoader.load(() => {
             type: 'omni',
             color: pc.Color.YELLOW,
             castShadows: true,
+            shadowBias: 0.05,
+            normalOffsetBias: 0.03,
+            shadowType: pc.SHADOW_PCF3,
+            shadowResolution: 256,
             range: 111,
             cookieAsset: cubemapAsset,
             cookieChannel: 'rgb'
