@@ -16,7 +16,7 @@ import { StandardMaterial } from '../../scene/materials/standard-material.js';
 import { shaderChunks } from '../../scene/shader-lib/chunks/chunks.js';
 import { createShaderFromCode } from '../../scene/shader-lib/utils.js';
 
-const THICKNESS = 3.25;
+const THICKNESS = 2.75;
 
 /**
  * @import { AppBase } from '../../framework/app-base.js'
