@@ -1,5 +1,5 @@
-import { 
-    Script, Entity, math, Vec3, BoundingBox, Quat, Vec2, PROJECTION_PERSPECTIVE,
+import {
+    Script, math, Vec3, BoundingBox, Quat, Vec2, PROJECTION_PERSPECTIVE,
     MOUSEBUTTON_LEFT, MOUSEBUTTON_RIGHT, MOUSEBUTTON_MIDDLE, EVENT_TOUCHCANCEL,
     EVENT_TOUCHSTART, EVENT_TOUCHEND, EVENT_TOUCHMOVE, EVENT_MOUSEDOWN, EVENT_MOUSEMOVE, EVENT_MOUSEUP, EVENT_MOUSEWHEEL
 } from 'playcanvas';
@@ -8,8 +8,6 @@ export class OrbitCamera extends Script {
     /**
      * @attribute
      * @title Distance Max
-     * @resource 
-     * @range
      * @type {number}
      */
     set distanceMax(v) {
