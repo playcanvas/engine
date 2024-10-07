@@ -7,7 +7,8 @@ const textureData = {
     white: [255, 255, 255, 255],
     gray: [128, 128, 128, 255],
     black: [0, 0, 0, 255],
-    normal: [128, 128, 255, 255]
+    normal: [128, 128, 255, 255],
+    pink: [255, 128, 255, 255]
 };
 
 // class used to hold LUT textures in the device cache
