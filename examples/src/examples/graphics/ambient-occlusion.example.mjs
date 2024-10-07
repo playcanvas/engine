@@ -168,7 +168,6 @@ assetListLoader.load(() => {
 
     // ------ Custom render passes set up ------
 
-    // cameraEntity.addComponent('script');
     /** @type { CameraFrame } */
     const cameraFrame = cameraEntity.script.create(CameraFrame);
     cameraFrame.rendering.samples = 4;
