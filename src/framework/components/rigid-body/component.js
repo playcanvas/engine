@@ -154,10 +154,16 @@ class RigidBodyComponent extends Component {
     _mass = 1;
 
     /** @private */
+    _position = new Vec3();
+
+    /** @private */
     _restitution = 0;
 
     /** @private */
     _rollingFriction = 0;
+
+    /** @private */
+    _rotation = new Quat();
 
     /** @private */
     _simulationEnabled = false;
@@ -648,6 +654,22 @@ class RigidBodyComponent extends Component {
                 this.enableSimulation();
             }
         }
+    }
+
+    getPosition() {
+        if (this._body) {
+            const p = this._body.getWorldTransform().getOrigin();
+            this._position.set(p.x(), p.y(), p.z());
+        }
+        return this._position;
+    }
+
+    getRotation() {
+        if (this._body) {
+            const q = this._body.getWorldTransform().getRotation();
+            this._rotation.set(q.x(), q.y(), q.z(), q.w());
+        }
+        return this._rotation;
     }
 
     /**
