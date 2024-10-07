@@ -69,7 +69,7 @@
     "@babel/core": "^7.24.4",
     "@babel/eslint-parser": "^7.25.1",
     "@babel/preset-env": "^7.24.4",
-    "@playcanvas/eslint-config": "^2.0.3",
+    "@playcanvas/eslint-config": "^2.0.4",
     "@rollup/plugin-babel": "^6.0.4",
     "@rollup/plugin-node-resolve": "^15.2.3",
     "@rollup/plugin-strip": "^3.0.4",
