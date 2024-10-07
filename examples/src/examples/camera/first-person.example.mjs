@@ -141,7 +141,6 @@ app.systems.rigidbody?.gravity.set(0, -18, 0);
 
 const cameraEntity = new pc.Entity();
 cameraEntity.addComponent('camera', {
-    clearColor: new pc.Color().fromString('#DEF5FF'),
     farClip: 100,
     fov: 90
 });
@@ -150,6 +149,7 @@ cameraEntity.setLocalPosition(0, 0.5, 0);
 // ------ Custom render passes set up ------
 
 cameraEntity.addComponent('script');
+/** @type { CameraFrame } */
 const cameraFrame = cameraEntity.script.create(CameraFrame);
 
 cameraFrame.rendering.samples = 4;

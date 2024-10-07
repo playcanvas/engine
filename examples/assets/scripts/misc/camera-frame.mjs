@@ -5,17 +5,16 @@ import {
     RenderingParams,
     CameraFrameOptions,
     RenderPassCameraFrame,
-    FOG_NONE, FOG_LINEAR, FOG_EXP, FOG_EXP2,
-    SSAOTYPE_NONE, SSAOTYPE_LIGHTING, SSAOTYPE_COMBINE,
-    PIXELFORMAT_RGBA8, PIXELFORMAT_111110F, PIXELFORMAT_RGBA16F, PIXELFORMAT_RGBA32F
+    FOG_NONE,
+    SSAOTYPE_NONE
 } from 'playcanvas';
 
-/** @enum {number} */
+/** @enum {string} */
 const FogType = {
-    OFF: 0,
-    LINEAR: 1,
-    EXP: 2,
-    EXP2: 3
+    NONE: 'none',      // FOG_NONE
+    LINEAR: 'linear',  // FOG_LINEAR
+    EXP: 'exp',        // FOG_EXP
+    EXP2: 'exp2'       // FOG_EXP2
 };
 
 /** @enum {number} */
@@ -28,23 +27,19 @@ const ToneMapping = {
     TONEMAP_NEUTRAL: 5
 };
 
-/** @enum {number} */
+/** @enum {string} */
 const SsaoType = {
-    NONE: 0,
-    LIGHTING: 1,
-    COMBINE: 2
+    NONE: 'none',           // SSAOTYPE_NONE
+    LIGHTING: 'lighting',   // SSAOTYPE_LIGHTING
+    COMBINE: 'combine'      // SSAOTYPE_COMBINE
 };
 
 /** @enum {number} */
 const RenderFormat = {
-    // RGBA8: PIXELFORMAT_RGBA8,
-    // RG11B10: PIXELFORMAT_111110F,
-    // RGBA16: PIXELFORMAT_RGBA16F,
-    // RGBA32: PIXELFORMAT_RGBA32F
-    RGBA8: 0,
-    RG11B10: 1,
-    RGBA16: 2,
-    RGBA32: 3
+    RGBA8: 7,       // PIXELFORMAT_RGBA8
+    RG11B10: 18,    // PIXELFORMAT_111110F
+    RGBA16: 12,     // PIXELFORMAT_RGBA16F
+    RGBA32: 14      // PIXELFORMAT_RGBA32F
 };
 
 /** @interface */
@@ -53,19 +48,19 @@ class Rendering {
      * @attribute
      * @type {RenderFormat}
      */
-    renderFormat = 1;
+    renderFormat = RenderFormat.RG11B10;
 
     /**
      * @attribute
      * @type {RenderFormat}
      */
-    renderFormatFallback0 = 2;
+    renderFormatFallback0 = RenderFormat.RGBA16;
 
     /**
      * @attribute
      * @type {RenderFormat}
      */
-    renderFormatFallback1 = 3;
+    renderFormatFallback1 = RenderFormat.RGBA32;
 
     /**
      * @attribute
@@ -91,7 +86,7 @@ class Rendering {
      * @attribute
      * @type {ToneMapping}
      */
-    toneMapping = 0; // ToneMapping.LINEAR;
+    toneMapping = ToneMapping.LINEAR;
 
     /**
      * @range [0, 1]
@@ -104,7 +99,7 @@ class Rendering {
      * @attribute
      * @type {FogType}
      */
-    fog = 0; // FogType.OFF;
+    fog = FogType.NONE;
 
     /**
      * @attribute
@@ -133,7 +128,7 @@ class Ssao {
      * @attribute
      * @type {SsaoType}
      */
-    type = 0; // SsaoType.NONE;
+    type = SsaoType.NONE;
 
     blurEnabled = true;
 
@@ -372,35 +367,6 @@ class CameraFrame extends Script {
         cameraComponent.jitter = 0;
     }
 
-    // remove this when the enum can be of a string type
-    getFogType(value) {
-        switch (value) {
-            case 1: return FOG_LINEAR;
-            case 2: return FOG_EXP;
-            case 3: return FOG_EXP2;
-        }
-        return FOG_NONE;
-    }
-
-    // remove this when the enum can be of a string type
-    getSsaoType(value) {
-        switch (value) {
-            case 1: return SSAOTYPE_LIGHTING;
-            case 2: return SSAOTYPE_COMBINE;
-        }
-        return SSAOTYPE_NONE;
-    }
-
-    // remove this when the enum can have numerical values assigned to it
-    getFormat(value) {
-        switch (value) {
-            case 1: return PIXELFORMAT_111110F;
-            case 2: return PIXELFORMAT_RGBA16F;
-            case 3: return PIXELFORMAT_RGBA32F;
-        }
-        return PIXELFORMAT_RGBA8;
-    }
-
     updateOptions() {
 
         const { options, rendering, bloom, taa, ssao } = this;
@@ -409,13 +375,9 @@ class CameraFrame extends Script {
         options.prepassEnabled = rendering.sceneDepthMap;
         options.bloomEnabled = bloom.enabled;
         options.taaEnabled = taa.enabled;
-        options.ssaoType = this.getSsaoType(ssao.type);
+        options.ssaoType = ssao.type;
         options.ssaoBlurEnabled = ssao.blurEnabled;
-        options.formats = [
-            this.getFormat(rendering.renderFormat),
-            this.getFormat(rendering.renderFormatFallback0),
-            this.getFormat(rendering.renderFormatFallback1)
-        ];
+        options.formats = [rendering.renderFormat, rendering.renderFormatFallback0, rendering.renderFormatFallback1];
     }
 
     postUpdate(dt) {
@@ -428,7 +390,7 @@ class CameraFrame extends Script {
         renderPassCamera.update(options);
 
         // renderingParams
-        renderingParams.fog = this.getFogType(rendering.fog);
+        renderingParams.fog = rendering.fog;
         if (renderingParams.fog !== FOG_NONE) {
             renderingParams.fogColor.copy(rendering.fogColor);
             renderingParams.fogStart = rendering.fogStart;

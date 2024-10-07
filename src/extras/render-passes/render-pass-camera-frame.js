@@ -185,7 +185,7 @@ class RenderPassCameraFrame extends RenderPass {
         const cameraComponent = this.cameraComponent;
         const targetRenderTarget = cameraComponent.renderTarget;
 
-        this.hdrFormat = device.getRenderableHdrFormat(options.formats) || PIXELFORMAT_RGBA8;
+        this.hdrFormat = device.getRenderableHdrFormat(options.formats, true, options.samples) || PIXELFORMAT_RGBA8;
 
         // camera renders in HDR mode (linear output, no tonemapping)
         if (!cameraComponent.rendering) {
