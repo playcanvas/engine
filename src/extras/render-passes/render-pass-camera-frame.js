@@ -25,7 +25,7 @@ class CameraFrameOptions {
 
     samples = 1;
 
-    sceneColorMap = true;
+    sceneColorMap = false;
 
     // skybox is the last layer rendered before the grab passes
     lastGrabLayerId = LAYERID_SKYBOX;
@@ -154,6 +154,7 @@ class RenderPassCameraFrame extends RenderPass {
         return options.ssaoType !== currentOptions.ssaoType ||
             options.ssaoBlurEnabled !== currentOptions.ssaoBlurEnabled ||
             options.taaEnabled !== currentOptions.taaEnabled ||
+            options.samples !== currentOptions.samples ||
             options.bloomEnabled !== currentOptions.bloomEnabled ||
             options.prepassEnabled !== currentOptions.prepassEnabled ||
             arraysNotEqual(options.formats, currentOptions.formats);
