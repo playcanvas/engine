@@ -361,7 +361,7 @@ class TranslateGizmo extends TransformGizmo {
     _setNodePositions(pointDelta) {
         for (let i = 0; i < this.nodes.length; i++) {
             const node = this.nodes[i];
-            
+
             if (this._coordSpace === GIZMOSPACE_LOCAL) {
                 const pos = this._nodeLocalPositions.get(node);
                 if (!pos) {
