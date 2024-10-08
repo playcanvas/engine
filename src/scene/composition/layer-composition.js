@@ -626,9 +626,13 @@ class LayerComposition extends EventHandler {
     }
 
     isEnabled(layer, transparent) {
-        const index = transparent ? this.getTransparentIndex(layer) : this.getOpaqueIndex(layer);
-        Debug.assert(index >= 0, `${transparent ? 'Transparent' : 'Opaque'} layer ${layer.name} is not part of the composition.`);
-        return this.subLayerEnabled[index];
+        if (layer.enabled) {
+            const index = transparent ? this.getTransparentIndex(layer) : this.getOpaqueIndex(layer);
+            if (index >= 0) {
+                return this.subLayerEnabled[index];
+            }
+        }
+        return false;
     }
 
     /**

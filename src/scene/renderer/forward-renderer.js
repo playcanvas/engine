@@ -874,6 +874,12 @@ class ForwardRenderer extends Renderer {
 
             if (renderAction.useCameraPasses)  {
 
+                Debug.call(() => {
+                    if (camera.postEffects.effects.length > 0) {
+                        Debug.warnOnce(`Camera '${camera.entity.name}' uses render passes, which are not compatible with post-effects scripts. Rendering of the post-effects is ignored, but they should not be attached to the camera.`);
+                    }
+                });
+
                 // schedule render passes from the camera
                 camera.camera.renderPasses.forEach((renderPass) => {
                     frameGraph.addRenderPass(renderPass);
@@ -894,7 +900,7 @@ class ForwardRenderer extends Renderer {
                 // info about the next render action
                 const nextRenderAction = renderActions[i + 1];
                 // magnopus patched - skip invalid renderActions
-                const isNextLayerDepth = nextRenderAction?.layer ? nextRenderAction.layer.id === LAYERID_DEPTH : false;
+                const isNextLayerDepth = nextRenderAction?.layer ? (!nextRenderAction.useCameraPasses && nextRenderAction.layer.id === LAYERID_DEPTH) : false;
                 const isNextLayerGrabPass = isNextLayerDepth && (camera.renderSceneColorMap || camera.renderSceneDepthMap);
                 const nextNeedDirShadows = nextRenderAction ? (nextRenderAction.firstCameraUse && this.cameraDirShadowLights.has(nextRenderAction.camera.camera)) : false;
 

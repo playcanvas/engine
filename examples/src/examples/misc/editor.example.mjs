@@ -135,20 +135,9 @@ light.addComponent('light', {
 app.root.addChild(light);
 light.setEulerAngles(0, 0, -60);
 
-// create layers
-const gizmoLayer = new pc.Layer({
-    name: 'Gizmo',
-    clearDepthBuffer: true,
-    opaqueSortMode: pc.SORTMODE_NONE,
-    transparentSortMode: pc.SORTMODE_NONE
-});
-const layers = app.scene.layers;
-layers.push(gizmoLayer);
-camera.camera.layers = camera.camera.layers.concat(gizmoLayer.id);
-
 // create gizmo
 let skipObserverFire = false;
-const gizmoHandler = new GizmoHandler(app, camera.camera, gizmoLayer);
+const gizmoHandler = new GizmoHandler(camera.camera);
 const setGizmoControls = () => {
     skipObserverFire = true;
     data.set('gizmo', {
@@ -261,6 +250,7 @@ data.on('*:set', (/** @type {string} */ path, /** @type {any} */ value) => {
 });
 
 // selector
+const layers = app.scene.layers;
 const selector = new Selector(app, camera.camera, [layers.getLayerByName('World')]);
 selector.on('select', (/** @type {pc.GraphNode} */ node, /** @type {boolean} */ clear) => {
     if (gizmoHandler.hasPointer) {

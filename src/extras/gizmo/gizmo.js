@@ -1,19 +1,20 @@
+import { Debug } from '../../core/debug.js';
 import { math } from '../../core/math/math.js';
 import { Vec3 } from '../../core/math/vec3.js';
 import { Mat4 } from '../../core/math/mat4.js';
 import { Ray } from '../../core/shape/ray.js';
 import { EventHandler } from '../../core/event-handler.js';
-import { PROJECTION_PERSPECTIVE } from '../../scene/constants.js';
+import { CameraComponent } from '../../framework/components/camera/component.js';
+import { PROJECTION_PERSPECTIVE, SORTMODE_NONE } from '../../scene/constants.js';
 import { Entity } from '../../framework/entity.js';
+import { Layer } from '../../scene/layer.js';
 
 import { GIZMOSPACE_LOCAL, GIZMOSPACE_WORLD } from './constants.js';
 
 /**
  * @import { AppBase } from '../../framework/app-base.js'
- * @import { CameraComponent } from '../../framework/components/camera/component.js'
  * @import { GraphNode } from '../../scene/graph-node.js'
  * @import { GraphicsDevice } from '../../platform/graphics/graphics-device.js'
- * @import { Layer } from '../../scene/layer.js'
  * @import { MeshInstance } from '../../scene/mesh-instance.js'
  * @import { TriData } from './tri-data.js'
  */
@@ -25,9 +26,11 @@ const tmpM2 = new Mat4();
 const tmpR1 = new Ray();
 
 // constants
-const MIN_GIZMO_SCALE = 1e-4;
+const LAYER_NAME = 'Gizmo';
+const MIN_SCALE = 1e-4;
 const PERS_SCALE_RATIO = 0.3;
 const ORTHO_SCALE_RATIO = 0.32;
+const UPDATE_EPSILON = 1e-6;
 
 /**
  * The base class for all gizmos.
@@ -228,21 +231,43 @@ class Gizmo extends EventHandler {
     intersectData = [];
 
     /**
+     * Creates a new gizmo layer and adds it to the scene.
+     *
+     * @param {AppBase} app - The app.
+     * @param {string} [layerName] - The layer name. Defaults to 'Gizmo'.
+     * @param {number} [layerIndex] - The layer index. Defaults to the end of the layer list.
+     * @returns {Layer} The new layer.
+     */
+    static createLayer(app, layerName = LAYER_NAME, layerIndex) {
+        const layer = new Layer({
+            name: layerName,
+            clearDepthBuffer: true,
+            opaqueSortMode: SORTMODE_NONE,
+            transparentSortMode: SORTMODE_NONE
+        });
+        app.scene.layers.insert(layer, layerIndex ?? app.scene.layers.layerList.length);
+        return layer;
+    }
+
+    /**
      * Creates a new Gizmo object.
      *
-     * @param {AppBase} app - The application instance.
      * @param {CameraComponent} camera - The camera component.
-     * @param {Layer} layer - The render layer.
-     * @example
+     * @param {Layer} layer - The render layer. This can be provided by the user or will be created
+     * and added to the scene and camera if not provided. Successive gizmos will share the same layer
+     * and will be removed from the camera and scene when the last gizmo is destroyed.
      * const gizmo = new pc.Gizmo(app, camera, layer);
      */
-    constructor(app, camera, layer) {
+    constructor(camera, layer) {
+        Debug.assert(camera instanceof CameraComponent, 'Incorrect parameters for Gizmos\'s constructor. Use new Gizmo(camera, layer)');
         super();
 
-        this._app = app;
-        this._device = app.graphicsDevice;
         this._camera = camera;
+        this._app = camera.system.app;
+        this._device = this._app.graphicsDevice;
+
         this._layer = layer;
+        camera.layers = camera.layers.concat(layer.id);
 
         this.root = new Entity('gizmo');
         this._app.root.addChild(this.root);
@@ -254,13 +279,26 @@ class Gizmo extends EventHandler {
         this._onPointerMove = this._onPointerMove.bind(this);
         this._onPointerUp = this._onPointerUp.bind(this);
 
-        this._device.canvas.addEventListener('pointerdown', this._onPointerDown, true);
-        this._device.canvas.addEventListener('pointermove', this._onPointerMove, true);
+        this._device.canvas.addEventListener('pointerdown', this._onPointerDown);
+        this._device.canvas.addEventListener('pointermove', this._onPointerMove);
         this._device.canvas.addEventListener('pointerup', this._onPointerUp);
 
-        app.on('update', () => this._updateScale());
+        this._app.on('update', () => {
+            this._updatePosition();
+            this._updateRotation();
+            this._updateScale();
+        });
 
-        app.on('destroy', () => this.destroy());
+        this._app.on('destroy', () => this.destroy());
+    }
+
+    /**
+     * Sets the gizmo render layer.
+     *
+     * @type {Layer}
+     */
+    get layer() {
+        return this._layer;
     }
 
     /**
@@ -319,6 +357,11 @@ class Gizmo extends EventHandler {
             e.preventDefault();
             e.stopPropagation();
         }
+
+        // capture the pointer during drag
+        const { canvas } = this._device;
+        canvas.setPointerCapture(e.pointerId);
+
         this.fire(Gizmo.EVENT_POINTERDOWN, e.offsetX, e.offsetY, selection[0]);
     }
 
@@ -339,12 +382,17 @@ class Gizmo extends EventHandler {
     }
 
     /**
+     * @param {PointerEvent} e - The pointer event.
      * @private
      */
-    _onPointerUp() {
+    _onPointerUp(e) {
         if (!this.root.enabled || document.pointerLockElement) {
             return;
         }
+
+        const { canvas } = this._device;
+        canvas.releasePointerCapture(e.pointerId);
+
         this.fire(Gizmo.EVENT_POINTERUP);
     }
 
@@ -358,8 +406,12 @@ class Gizmo extends EventHandler {
             tmpV1.add(node.getPosition());
         }
         tmpV1.mulScalar(1.0 / (this.nodes.length || 1));
-        this.root.setPosition(tmpV1);
 
+        if (tmpV1.distance(this.root.getPosition()) < UPDATE_EPSILON) {
+            return;
+        }
+
+        this.root.setPosition(tmpV1);
         this.fire(Gizmo.EVENT_POSITIONUPDATE, tmpV1);
     }
 
@@ -371,8 +423,12 @@ class Gizmo extends EventHandler {
         if (this._coordSpace === GIZMOSPACE_LOCAL && this.nodes.length !== 0) {
             tmpV1.copy(this.nodes[this.nodes.length - 1].getEulerAngles());
         }
-        this.root.setEulerAngles(tmpV1);
 
+        if (tmpV1.distance(this.root.getEulerAngles()) < UPDATE_EPSILON) {
+            return;
+        }
+
+        this.root.setEulerAngles(tmpV1);
         this.fire(Gizmo.EVENT_ROTATIONUPDATE, tmpV1);
     }
 
@@ -388,10 +444,13 @@ class Gizmo extends EventHandler {
         } else {
             this._scale = this._camera.orthoHeight * ORTHO_SCALE_RATIO;
         }
-        this._scale = Math.max(this._scale * this._size, MIN_GIZMO_SCALE);
+        this._scale = Math.max(this._scale * this._size, MIN_SCALE);
+
+        if (Math.abs(this._scale - this.root.getLocalScale().x) < UPDATE_EPSILON) {
+            return;
+        }
 
         this.root.setLocalScale(this._scale, this._scale, this._scale);
-
         this.fire(Gizmo.EVENT_SCALEUPDATE, this._scale);
     }
 
@@ -450,19 +509,23 @@ class Gizmo extends EventHandler {
     /**
      * Attach an array of graph nodes to the gizmo.
      *
-     * @param {GraphNode[]} [nodes] - The graph nodes. Defaults to [].
+     * @param {GraphNode[] | GraphNode} [nodes] - The graph nodes. Defaults to [].
      * @example
      * const gizmo = new pc.Gizmo(app, camera, layer);
      * gizmo.attach([boxA, boxB]);
      */
     attach(nodes = []) {
-        if (nodes.length === 0) {
-            return;
+        if (Array.isArray(nodes)) {
+            if (nodes.length === 0) {
+                return;
+            }
+            this.nodes = nodes;
+        } else {
+            this.nodes = [nodes];
         }
-
-        this.nodes = nodes;
         this._updatePosition();
         this._updateRotation();
+        this._updateScale();
 
         this.fire(Gizmo.EVENT_NODESATTACH);
 
@@ -499,8 +562,8 @@ class Gizmo extends EventHandler {
     destroy() {
         this.detach();
 
-        this._device.canvas.removeEventListener('pointerdown', this._onPointerDown, true);
-        this._device.canvas.removeEventListener('pointermove', this._onPointerMove, true);
+        this._device.canvas.removeEventListener('pointerdown', this._onPointerDown);
+        this._device.canvas.removeEventListener('pointermove', this._onPointerMove);
         this._device.canvas.removeEventListener('pointerup', this._onPointerUp);
 
         this.root.destroy();

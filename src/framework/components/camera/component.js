@@ -231,13 +231,13 @@ class CameraComponent extends Component {
 
     /**
      * Sets the render passes the camera uses for rendering, instead of its default rendering.
-     * Set this to an empty array to return to the default behavior.
+     * Set this to null to return to the default behavior.
      *
-     * @type {RenderPass[]}
+     * @type {RenderPass[]|null}
      * @ignore
      */
     set renderPasses(passes) {
-        this._camera.renderPasses = passes;
+        this._camera.renderPasses = passes || [];
         this.dirtyLayerCompositionCameras();
         this.system.app.scene.updateShaders = true;
     }
@@ -840,6 +840,13 @@ class CameraComponent extends Component {
      * @type {RenderTarget}
      */
     set renderTarget(value) {
+
+        Debug.call(() => {
+            if (this._camera.renderPasses.length > 0) {
+                Debug.warn(`Setting a render target on the camera ${this.entity.name} after the render passes is not supported, set it up first.`);
+            }
+        });
+
         this._camera.renderTarget = value;
         this.dirtyLayerCompositionCameras();
     }

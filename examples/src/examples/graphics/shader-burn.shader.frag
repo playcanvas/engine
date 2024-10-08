@@ -15,7 +15,7 @@ void main(void)
         discard;
     }
     if (height < (uTime + uTime * 0.1)) {
-        linearColor = vec4(1.0, 0.02, 0.0, 1.0);
+        linearColor = vec4(5.0, 0.02, 0.0, 1.0);
     }
     gl_FragColor.rgb = gammaCorrectOutput(linearColor.rgb);
     gl_FragColor.a = 1.0;

@@ -196,6 +196,7 @@ class ShaderUtils {
             precision ${precision} usampler2D;
             precision ${precision} isampler2D;
             precision ${precision} sampler2DShadow;
+            precision ${precision} samplerCubeShadow;
             precision ${precision} sampler2DArray;
         `;
 

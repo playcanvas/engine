@@ -58,6 +58,10 @@ class RenderPassForward extends RenderPass {
         this.renderer = renderer;
     }
 
+    get rendersAnything() {
+        return this.renderActions.length > 0;
+    }
+
     addRenderAction(renderAction) {
         this.renderActions.push(renderAction);
     }
@@ -96,8 +100,8 @@ class RenderPassForward extends RenderPass {
     /**
      * Adds layers to be rendered by this render pass, starting from the given index of the layer
      * in the layer composition, till the end of the layer list, or till the last layer with the
-     * given id and transparency is reached (inclusive). Note that only layers that are enabled
-     * and are rendered by the specified camera are added.
+     * given id and transparency is reached (inclusive). Note that only layers that are rendered by
+     * the specified camera are added.
      *
      * @param {LayerComposition} composition - The layer composition containing the layers to be
      * added, typically the scene layer composition.
@@ -114,7 +118,7 @@ class RenderPassForward extends RenderPass {
      */
     addLayers(composition, cameraComponent, startIndex, firstLayerClears, lastLayerId, lastLayerIsTransparent = true) {
 
-        const { layerList, subLayerEnabled, subLayerList } = composition;
+        const { layerList, subLayerList } = composition;
         let clearRenderTarget = firstLayerClears;
 
         let index = startIndex;
@@ -122,11 +126,10 @@ class RenderPassForward extends RenderPass {
 
             const layer = layerList[index];
             const isTransparent = subLayerList[index];
-            const enabled = layer.enabled && subLayerEnabled[index];
-            const renderedbyCamera = cameraComponent.camera.layersSet.has(layer.id);
+            const renderedByCamera = cameraComponent.camera.layersSet.has(layer.id);
 
             // add it for rendering
-            if (enabled && renderedbyCamera) {
+            if (renderedByCamera) {
                 this.addLayer(cameraComponent, layer, isTransparent, clearRenderTarget);
                 clearRenderTarget = false;
             }
@@ -211,7 +214,16 @@ class RenderPassForward extends RenderPass {
         const { layerComposition, renderActions } = this;
         for (let i = 0; i < renderActions.length; i++) {
             const ra = renderActions[i];
-            if (layerComposition.isEnabled(ra.layer, ra.transparent)) {
+            const layer = ra.layer;
+
+            Debug.call(() => {
+                const compLayer = layerComposition.getLayerByName(layer.name);
+                if (!compLayer) {
+                    Debug.warnOnce(`Layer ${layer.name} is not found in the scene and will not be rendered. Your render pass setup might need to be updated.`);
+                }
+            });
+
+            if (layerComposition.isEnabled(layer, ra.transparent)) {
                 this.renderRenderAction(ra, i === 0);
             }
         }
