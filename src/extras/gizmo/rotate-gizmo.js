@@ -435,7 +435,6 @@ class RotateGizmo extends TransformGizmo {
                 if (!rot) {
                     continue;
                 }
-
                 tmpQ2.copy(rot).mul(tmpQ1);
                 node.setLocalRotation(tmpQ2);
             } else {
@@ -443,7 +442,6 @@ class RotateGizmo extends TransformGizmo {
                 if (!rot) {
                     continue;
                 }
-
                 const offset = this._nodeOffsets.get(node);
                 if (!offset) {
                     continue;
