@@ -113,10 +113,13 @@ class RenderPassCameraFrame extends RenderPass {
 
         this.prePass = null;
         this.scenePass = null;
+        this.scenePassTransparent = null;
+        this.colorGrabPass = null;
         this.composePass = null;
         this.bloomPass = null;
         this.ssaoPass = null;
         this.taaPass = null;
+        this.afterPass = null;
     }
 
     sanitizeOptions(options) {
