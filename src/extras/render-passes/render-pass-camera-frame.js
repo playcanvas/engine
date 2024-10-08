@@ -157,6 +157,7 @@ class RenderPassCameraFrame extends RenderPass {
             options.samples !== currentOptions.samples ||
             options.bloomEnabled !== currentOptions.bloomEnabled ||
             options.prepassEnabled !== currentOptions.prepassEnabled ||
+            options.sceneColorMap !== currentOptions.sceneColorMap ||
             arraysNotEqual(options.formats, currentOptions.formats);
     }
 
