@@ -21,12 +21,12 @@ const FogType = {
 
 /** @enum {number} */
 const ToneMapping = {
-    TONEMAP_LINEAR: 0,
-    TONEMAP_FILMIC: 1,
-    TONEMAP_HEJL: 2,
-    TONEMAP_ACES: 3,
-    TONEMAP_ACES2: 4,
-    TONEMAP_NEUTRAL: 5
+    LINEAR: 0,  // TONEMAP_LINEAR
+    FILMIC: 1,  // TONEMAP_FILMIC
+    HEJL: 2,    // TONEMAP_HEJL
+    ACES: 3,    // TONEMAP_ACES
+    ACES2: 4,   // TONEMAP_ACES2
+    NEUTRAL: 5  // TONEMAP_NEUTRAL
 };
 
 /** @enum {string} */
