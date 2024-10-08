@@ -952,7 +952,7 @@ class GraphicsDevice extends EventHandler {
                     break;
 
                 case PIXELFORMAT_RGBA32F:
-                    
+
                     // on WebGPU platform, RGBA32F is not compatible with multi-sampling
                     if (this.isWebGPU && samples > 1) {
                         continue;
