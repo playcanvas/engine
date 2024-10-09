@@ -1,6 +1,7 @@
 import * as pc from 'playcanvas';
 import { data } from 'examples/observer';
-import { deviceType, rootPath } from 'examples/utils';
+import { deviceType, rootPath, fileImport } from 'examples/utils';
+const { CameraFrame } = await fileImport(rootPath + '/static/assets/scripts/misc/camera-frame.mjs');
 
 const canvas = /** @type {HTMLCanvasElement} */ (document.getElementById('application-canvas'));
 window.focus();
@@ -62,13 +63,6 @@ app.on('destroy', () => {
 const assetListLoader = new pc.AssetListLoader(Object.values(assets), app.assets);
 assetListLoader.load(() => {
     app.start();
-
-    // if the device renders in HDR mode, disable tone mapping to output HDR values without any processing
-    app.scene.rendering.toneMapping = device.isHdr ? pc.TONEMAP_NONE : pc.TONEMAP_NEUTRAL;
-    app.scene.rendering.gammaCorrection = pc.GAMMA_SRGB;
-
-    // enabled clustered lighting. This is a temporary API and will change in the future
-    app.scene.clusteredLightingEnabled = true;
 
     // adjust default clustered lighting parameters to handle many lights
     const lighting = app.scene.lighting;
@@ -166,7 +160,8 @@ assetListLoader.load(() => {
 
         // emissive material that is the light source color
         const brightMaterial = new pc.StandardMaterial();
-        brightMaterial.emissive = new pc.Color(color.r * 2, color.g * 2, color.b * 2);
+        brightMaterial.emissive = color;
+        brightMaterial.emissiveIntensity = intensity * 10;
         brightMaterial.useLighting = false;
         brightMaterial.update();
 
@@ -212,7 +207,7 @@ assetListLoader.load(() => {
     // Create the camera, which renders entities
     const camera = new pc.Entity();
     camera.addComponent('camera', {
-        clearColor: new pc.Color(0.1, 0.1, 0.1),
+        clearColor: new pc.Color(0.05, 0.05, 0.05),
         fov: 60,
         farClip: 1000
     });
@@ -223,6 +218,7 @@ assetListLoader.load(() => {
     camera.script.create('orbitCamera', {
         attributes: {
             inertiaFactor: 0.2,
+            inertiaFactor: 0,
             focusEntity: ground,
             distanceMax: 60,
             frameOnStart: false
@@ -232,11 +228,21 @@ assetListLoader.load(() => {
     camera.script.create('orbitCameraInputTouch');
     app.root.addChild(camera);
 
+    // custom render passes
+    const cameraFrame = camera.script.create(CameraFrame);
+    cameraFrame.rendering.samples = 4;
+    cameraFrame.bloom.enabled = true;
+    cameraFrame.bloom.intensity = 0.01;
+    cameraFrame.bloom.lastMipLevel = 4;
+
+    // if the device renders in HDR mode, disable tone mapping to output HDR values without any processing
+    cameraFrame.rendering.toneMapping = device.isHdr ? pc.TONEMAP_NONE : pc.TONEMAP_NEUTRAL;
+
     // generate a grid of area lights of sphere, disk and rect shapes
     for (let x = -20; x <= 20; x += 5) {
         for (let y = -20; y <= 20; y += 5) {
             const pos = new pc.Vec3(x, 0.6, y);
-            const color = new pc.Color(0.3 + Math.random() * 0.7, 0.3 + Math.random() * 0.7, 0.3 + Math.random() * 0.7);
+            const color = new pc.Color(Math.random() * 0.7, Math.random() * 0.7, Math.random() * 0.7);
             const rand = Math.random();
             if (rand < 0.3) {
                 createAreaLight('omni', pc.LIGHTSHAPE_SPHERE, pos, new pc.Vec3(1.5, 1.5, 1.5), color, 4, 6);
