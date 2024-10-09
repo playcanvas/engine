@@ -953,7 +953,8 @@ class CameraComponent extends Component {
 
     /**
      * Request the scene to generate a texture containing the scene color map. Note that this call
-     * is accumulative, and for each enable request, a disable request need to be called.
+     * is accumulative, and for each enable request, a disable request need to be called. Note that
+     * this setting is ignored when the {@link CameraComponent#renderPasses} is used.
      *
      * @param {boolean} enabled - True to request the generation, false to disable it.
      */
@@ -970,7 +971,8 @@ class CameraComponent extends Component {
 
     /**
      * Request the scene to generate a texture containing the scene depth map. Note that this call
-     * is accumulative, and for each enable request, a disable request need to be called.
+     * is accumulative, and for each enable request, a disable request need to be called. Note that
+     * this setting is ignored when the {@link CameraComponent#renderPasses} is used.
      *
      * @param {boolean} enabled - True to request the generation, false to disable it.
      */
