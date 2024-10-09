@@ -296,7 +296,6 @@ class Shape {
         const material = new ShaderMaterial(shaderDesc);
         material.cull = this._cull;
         material.blendType = BLEND_NORMAL;
-        material.chunks.debugOutputPS = '';   // do not apply debug output shader code to gizmo
         material.update();
 
         const meshInstances = [];
