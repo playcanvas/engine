@@ -218,7 +218,6 @@ assetListLoader.load(() => {
     camera.script.create('orbitCamera', {
         attributes: {
             inertiaFactor: 0.2,
-            inertiaFactor: 0,
             focusEntity: ground,
             distanceMax: 60,
             frameOnStart: false
