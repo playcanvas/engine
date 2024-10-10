@@ -1,6 +1,8 @@
 // @config DESCRIPTION <div style='text-align:center'><div>(<b>WASD</b>) Move</div><div>(<b>Space</b>) Jump</div><div>(<b>Mouse</b>) Look</div></div>
 import * as pc from 'playcanvas';
-import { deviceType, rootPath } from 'examples/utils';
+import { deviceType, rootPath, fileImport } from 'examples/utils';
+
+const { CameraFrame } = await fileImport(rootPath + '/static/assets/scripts/misc/camera-frame.mjs');
 
 const canvas = /** @type {HTMLCanvasElement} */ (document.getElementById('application-canvas'));
 window.focus();
@@ -139,7 +141,6 @@ app.systems.rigidbody?.gravity.set(0, -18, 0);
 
 const cameraEntity = new pc.Entity();
 cameraEntity.addComponent('camera', {
-    clearColor: new pc.Color().fromString('#DEF5FF'),
     farClip: 100,
     fov: 90
 });
@@ -147,18 +148,15 @@ cameraEntity.setLocalPosition(0, 0.5, 0);
 
 // ------ Custom render passes set up ------
 
-const currentOptions = new pc.CameraFrameOptions();
-currentOptions.samples = 4;
-currentOptions.sceneColorMap = false;
-currentOptions.bloomEnabled = true;
+cameraEntity.addComponent('script');
+/** @type { CameraFrame } */
+const cameraFrame = cameraEntity.script.create(CameraFrame);
 
-// and set up these rendering passes to be used by the camera, instead of its default rendering
-const renderPassCamera = new pc.RenderPassCameraFrame(app, cameraEntity.camera, currentOptions);
-cameraEntity.camera.renderPasses = [renderPassCamera];
+cameraFrame.rendering.samples = 4;
+cameraFrame.rendering.toneMapping = pc.TONEMAP_ACES2;
 
-const composePass = renderPassCamera.composePass;
-composePass.toneMapping = pc.TONEMAP_ACES2;
-composePass.bloomIntensity = 0.01;
+cameraFrame.bloom.enabled = true;
+cameraFrame.bloom.intensity = 0.01;
 
 // ------------------------------------------
 

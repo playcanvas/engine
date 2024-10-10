@@ -113,10 +113,13 @@ class RenderPassCameraFrame extends RenderPass {
 
         this.prePass = null;
         this.scenePass = null;
+        this.scenePassTransparent = null;
+        this.colorGrabPass = null;
         this.composePass = null;
         this.bloomPass = null;
         this.ssaoPass = null;
         this.taaPass = null;
+        this.afterPass = null;
     }
 
     sanitizeOptions(options) {
@@ -157,6 +160,7 @@ class RenderPassCameraFrame extends RenderPass {
             options.samples !== currentOptions.samples ||
             options.bloomEnabled !== currentOptions.bloomEnabled ||
             options.prepassEnabled !== currentOptions.prepassEnabled ||
+            options.sceneColorMap !== currentOptions.sceneColorMap ||
             arraysNotEqual(options.formats, currentOptions.formats);
     }
 
@@ -185,7 +189,7 @@ class RenderPassCameraFrame extends RenderPass {
         const cameraComponent = this.cameraComponent;
         const targetRenderTarget = cameraComponent.renderTarget;
 
-        this.hdrFormat = device.getRenderableHdrFormat(options.formats) || PIXELFORMAT_RGBA8;
+        this.hdrFormat = device.getRenderableHdrFormat(options.formats, true, options.samples) || PIXELFORMAT_RGBA8;
 
         // camera renders in HDR mode (linear output, no tonemapping)
         if (!cameraComponent.rendering) {

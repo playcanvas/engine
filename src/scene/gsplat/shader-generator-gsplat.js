@@ -120,8 +120,8 @@ const splatCoreVS = /* glsl */ `
     }
 
     // fetch quantized spherical harmonic coefficients
-    void fetchScale(in highp usampler2D sampler, out float scale, out vec3 a, out vec3 b, out vec3 c) {
-        uvec4 t = texelFetch(sampler, splatUV, 0);
+    void fetchScale(in highp usampler2D s, out float scale, out vec3 a, out vec3 b, out vec3 c) {
+        uvec4 t = texelFetch(s, splatUV, 0);
         scale = uintBitsToFloat(t.x);
         a = unpack111011(t.y) * 2.0 - 1.0;
         b = unpack111011(t.z) * 2.0 - 1.0;
@@ -129,8 +129,8 @@ const splatCoreVS = /* glsl */ `
     }
 
     // fetch quantized spherical harmonic coefficients
-    void fetch(in highp usampler2D sampler, out vec3 a, out vec3 b, out vec3 c, out vec3 d) {
-        uvec4 t = texelFetch(sampler, splatUV, 0);
+    void fetch(in highp usampler2D s, out vec3 a, out vec3 b, out vec3 c, out vec3 d) {
+        uvec4 t = texelFetch(s, splatUV, 0);
         a = unpack111011(t.x) * 2.0 - 1.0;
         b = unpack111011(t.y) * 2.0 - 1.0;
         c = unpack111011(t.z) * 2.0 - 1.0;

@@ -361,11 +361,12 @@ class TranslateGizmo extends TransformGizmo {
     _setNodePositions(pointDelta) {
         for (let i = 0; i < this.nodes.length; i++) {
             const node = this.nodes[i];
-            const pos = this._nodePositions.get(node);
-            if (!pos) {
-                continue;
-            }
+
             if (this._coordSpace === GIZMOSPACE_LOCAL) {
+                const pos = this._nodeLocalPositions.get(node);
+                if (!pos) {
+                    continue;
+                }
                 tmpV1.copy(pointDelta);
                 node.parent?.getWorldTransform().getScale(tmpV2);
                 tmpV2.x = 1 / tmpV2.x;
@@ -375,6 +376,10 @@ class TranslateGizmo extends TransformGizmo {
                 tmpV1.mul(tmpV2);
                 node.setLocalPosition(pos.clone().add(tmpV1));
             } else {
+                const pos = this._nodePositions.get(node);
+                if (!pos) {
+                    continue;
+                }
                 node.setPosition(pos.clone().add(pointDelta));
             }
         }

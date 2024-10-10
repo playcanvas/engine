@@ -421,11 +421,6 @@ class RotateGizmo extends TransformGizmo {
         const isFacing = axis === GIZMOAXIS_FACE;
         for (let i = 0; i < this.nodes.length; i++) {
             const node = this.nodes[i];
-            const rot = this._nodeRotations.get(node);
-            if (!rot) {
-                continue;
-            }
-
             if (isFacing) {
                 tmpV1.copy(cameraPos).sub(gizmoPos).normalize();
             } else {
@@ -436,9 +431,17 @@ class RotateGizmo extends TransformGizmo {
             tmpQ1.setFromAxisAngle(tmpV1, angleDelta);
 
             if (!isFacing && this._coordSpace === GIZMOSPACE_LOCAL) {
+                const rot = this._nodeLocalRotations.get(node);
+                if (!rot) {
+                    continue;
+                }
                 tmpQ2.copy(rot).mul(tmpQ1);
                 node.setLocalRotation(tmpQ2);
             } else {
+                const rot = this._nodeRotations.get(node);
+                if (!rot) {
+                    continue;
+                }
                 const offset = this._nodeOffsets.get(node);
                 if (!offset) {
                     continue;

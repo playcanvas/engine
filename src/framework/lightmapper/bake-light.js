@@ -45,7 +45,7 @@ class BakeLight {
         this.intensity = this.light.intensity;
         this.rotation = this.light._node.getLocalRotation().clone();
         this.numCascades = this.light.numCascades;
-        this.castShadows = this.light.castShadows;
+        this.castShadows = this.light._castShadows;
     }
 
     restore() {
@@ -56,7 +56,7 @@ class BakeLight {
         light.intensity = this.intensity;
         light._node.setLocalRotation(this.rotation);
         light.numCascades = this.numCascades;
-        light.castShadows = this.castShadows;
+        light._castShadows = this.castShadows;
     }
 
     startBake() {
