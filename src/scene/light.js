@@ -104,12 +104,7 @@ class LightRenderData {
     get shadowBuffer() {
         const rt = this.shadowCamera.renderTarget;
         if (rt) {
-            const light = this.light;
-            if (light._type === LIGHTTYPE_OMNI) {
-                return rt.colorBuffer;
-            }
-
-            return light._isPcf ? rt.depthBuffer : rt.colorBuffer;
+            return this.light._isPcf ? rt.depthBuffer : rt.colorBuffer;
         }
 
         return null;
@@ -390,9 +385,10 @@ class Light {
 
         const device = this.device;
 
-        if (this._type === LIGHTTYPE_OMNI && value !== SHADOW_PCF3 && value !== SHADOW_PCSS) {
+        // omni light supports PCF1, PCF3 and PCSS only
+        if (this._type === LIGHTTYPE_OMNI && value !== SHADOW_PCF1 && value !== SHADOW_PCF3 && value !== SHADOW_PCSS) {
             value = SHADOW_PCF3;
-        } // VSM or HW PCF for omni lights is not supported yet
+        }
 
         // fallback from vsm32 to vsm16
         if (value === SHADOW_VSM32 && (!device.textureFloatRenderable || !device.textureFloatFilterable)) {
@@ -404,7 +400,7 @@ class Light {
             value = SHADOW_VSM8;
         }
 
-        this._isVsm = value >= SHADOW_VSM8 && value <= SHADOW_VSM32;
+        this._isVsm = value === SHADOW_VSM8 || value === SHADOW_VSM16 || value === SHADOW_VSM32;
         this._isPcf = value === SHADOW_PCF1 || value === SHADOW_PCF3 || value === SHADOW_PCF5;
 
         this._shadowType = value;

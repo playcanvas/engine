@@ -19,8 +19,7 @@ import { GIZMOAXIS_X, GIZMOAXIS_XYZ, GIZMOAXIS_Y, GIZMOAXIS_Z } from './constant
 import { Gizmo } from './gizmo.js';
 
 /**
- * @import { AppBase } from '../../framework/app-base.js'
- * @import { AxisShape } from './axis-shapes.js'
+ * @import { Shape } from './shape/shape.js'
  * @import { CameraComponent } from '../../framework/components/camera/component.js'
  * @import { Layer } from '../../scene/layer.js'
  * @import { MeshInstance } from '../../scene/mesh-instance.js'
@@ -90,7 +89,7 @@ class TransformGizmo extends Gizmo {
     /**
      * Internal color for meshes.
      *
-     * @type {Object}
+     * @type {{ axis: Record<string, Color>, hover: Record<string, Color>, disabled: Color }}
      * @protected
      */
     _meshColors = {
@@ -114,7 +113,7 @@ class TransformGizmo extends Gizmo {
     /**
      * Internal version of the guide line color.
      *
-     * @type {Object<string, Color>}
+     * @type {Record<string, Color>}
      * @protected
      */
     _guideColors = {
@@ -150,17 +149,25 @@ class TransformGizmo extends Gizmo {
     _rootStartRot = new Quat();
 
     /**
-     * Internal object containing the axis shapes to render.
+     * Internal state of if shading is enabled. Defaults to true.
      *
-     * @type {Object.<string, AxisShape>}
+     * @type {boolean}
+     * @protected
+     */
+    _shading = false;
+
+    /**
+     * Internal object containing the gizmo shapes to render.
+     *
+     * @type {Object.<string, Shape>}
      * @protected
      */
     _shapes = {};
 
     /**
-     * Internal mapping of mesh instances to axis shapes.
+     * Internal mapping of mesh instances to gizmo shapes.
      *
-     * @type {Map<MeshInstance, AxisShape>}
+     * @type {Map<MeshInstance, Shape>}
      * @private
      */
     _shapeMap = new Map();
@@ -168,7 +175,7 @@ class TransformGizmo extends Gizmo {
     /**
      * Internal currently hovered shape.
      *
-     * @type {AxisShape | null}
+     * @type {Shape | null}
      * @private
      */
     _hoverShape = null;
@@ -247,16 +254,15 @@ class TransformGizmo extends Gizmo {
     /**
      * Creates a new TransformGizmo object.
      *
-     * @param {AppBase} app - The application instance.
      * @param {CameraComponent} camera - The camera component.
      * @param {Layer} layer - The render layer.
      * @example
      * const gizmo = new pc.TransformGizmo(app, camera, layer);
      */
-    constructor(app, camera, layer) {
-        super(app, camera, layer);
+    constructor(camera, layer) {
+        super(camera, layer);
 
-        app.on('update', () => {
+        this._app.on('prerender', () => {
             if (!this.root.enabled) {
                 return;
             }
@@ -327,6 +333,28 @@ class TransformGizmo extends Gizmo {
             this._hover();
             this.fire(Gizmo.EVENT_POINTERUP);
         });
+    }
+
+    /**
+     * Sets whether shading are enabled. Defaults to true.
+     *
+     * @type {boolean}
+     */
+    set shading(value) {
+        this._shading = this.root.enabled && value;
+
+        for (const name in this._shapes) {
+            this._shapes[name].shading = this._shading;
+        }
+    }
+
+    /**
+     * Gets whether shading are enabled. Defaults to true.
+     *
+     * @type {boolean}
+     */
+    get shading() {
+        return this._shading;
     }
 
     /**
@@ -490,7 +518,7 @@ class TransformGizmo extends Gizmo {
         }
         this._hoverAxis = this._getAxis(meshInstance);
         this._hoverIsPlane = this._getIsPlane(meshInstance);
-        const shape = meshInstance ? this._shapeMap.get(meshInstance) || null : null;
+        const shape = meshInstance ? this._shapeMap.get(meshInstance) ?? null : null;
         if (shape === this._hoverShape) {
             return;
         }
@@ -711,11 +739,11 @@ class TransformGizmo extends Gizmo {
      * @override
      */
     destroy() {
+        super.destroy();
+
         for (const key in this._shapes) {
             this._shapes[key].destroy();
         }
-
-        super.destroy();
     }
 }
 

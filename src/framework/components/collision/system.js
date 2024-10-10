@@ -77,7 +77,9 @@ class CollisionSystemImpl {
 
             if (data.shape) {
                 if (component._compoundParent) {
-                    this.system._removeCompoundChild(component._compoundParent, data.shape);
+                    if (component !== component._compoundParent) {
+                        this.system._removeCompoundChild(component._compoundParent, data.shape);
+                    }
 
                     if (component._compoundParent.entity.rigidbody) {
                         component._compoundParent.entity.rigidbody.activate();
@@ -96,10 +98,6 @@ class CollisionSystemImpl {
 
                 entity.forEach(this._addEachDescendant, component);
             } else if (data.type !== 'compound') {
-                if (component._compoundParent && component === component._compoundParent) {
-                    entity.forEach(this.system.implementations.compound._updateEachDescendant, component);
-                }
-
                 if (!component.rigidbody) {
                     component._compoundParent = null;
                     let parent = entity.parent;
@@ -118,7 +116,7 @@ class CollisionSystemImpl {
                     if (firstCompoundChild && component._compoundParent.shape.getNumChildShapes() === 0) {
                         this.system.recreatePhysicalShapes(component._compoundParent);
                     } else {
-                        this.system.updateCompoundChildTransform(entity);
+                        this.system.updateCompoundChildTransform(entity, true);
 
                         if (component._compoundParent.entity.rigidbody) {
                             component._compoundParent.entity.rigidbody.activate();
@@ -649,7 +647,7 @@ class CollisionCompoundSystemImpl extends CollisionSystemImpl {
             return;
         }
 
-        this.collision.system.updateCompoundChildTransform(entity);
+        this.collision.system.updateCompoundChildTransform(entity, false);
     }
 }
 
@@ -814,20 +812,27 @@ class CollisionComponentSystem extends ComponentSystem {
         this.implementations[data.type].remove(entity, data);
     }
 
-    updateCompoundChildTransform(entity) {
-        // TODO
-        // use updateChildTransform once it is exposed in ammo.js
+    updateCompoundChildTransform(entity, forceUpdate) {
+        const parentComponent = entity.collision._compoundParent;
+        if (parentComponent === entity.collision) return;
 
-        this._removeCompoundChild(entity.collision._compoundParent, entity.collision.data.shape);
-
-        if (entity.enabled && entity.collision.enabled) {
-            const transform = this._getNodeTransform(entity, entity.collision._compoundParent.entity);
-            entity.collision._compoundParent.shape.addChildShape(transform, entity.collision.data.shape);
+        if (entity.enabled && entity.collision.enabled && (entity._dirtyLocal || forceUpdate)) {
+            const transform = this._getNodeTransform(entity, parentComponent.entity);
+            const idx = parentComponent._getCompoundChildShapeIndex(entity.collision.shape);
+            if (idx === null) {
+                parentComponent.shape.addChildShape(transform, entity.collision.data.shape);
+            } else {
+                parentComponent.shape.updateChildTransform(idx, transform, true);
+            }
             Ammo.destroy(transform);
         }
     }
 
     _removeCompoundChild(collision, shape) {
+        if (collision.shape.getNumChildShapes() === 0) {
+            return;
+        }
+
         if (collision.shape.removeChildShape) {
             collision.shape.removeChildShape(shape);
         } else {

@@ -25,7 +25,7 @@ class CameraFrameOptions {
 
     samples = 1;
 
-    sceneColorMap = true;
+    sceneColorMap = false;
 
     // skybox is the last layer rendered before the grab passes
     lastGrabLayerId = LAYERID_SKYBOX;
@@ -113,10 +113,13 @@ class RenderPassCameraFrame extends RenderPass {
 
         this.prePass = null;
         this.scenePass = null;
+        this.scenePassTransparent = null;
+        this.colorGrabPass = null;
         this.composePass = null;
         this.bloomPass = null;
         this.ssaoPass = null;
         this.taaPass = null;
+        this.afterPass = null;
     }
 
     sanitizeOptions(options) {
@@ -154,8 +157,10 @@ class RenderPassCameraFrame extends RenderPass {
         return options.ssaoType !== currentOptions.ssaoType ||
             options.ssaoBlurEnabled !== currentOptions.ssaoBlurEnabled ||
             options.taaEnabled !== currentOptions.taaEnabled ||
+            options.samples !== currentOptions.samples ||
             options.bloomEnabled !== currentOptions.bloomEnabled ||
             options.prepassEnabled !== currentOptions.prepassEnabled ||
+            options.sceneColorMap !== currentOptions.sceneColorMap ||
             arraysNotEqual(options.formats, currentOptions.formats);
     }
 
@@ -184,7 +189,7 @@ class RenderPassCameraFrame extends RenderPass {
         const cameraComponent = this.cameraComponent;
         const targetRenderTarget = cameraComponent.renderTarget;
 
-        this.hdrFormat = device.getRenderableHdrFormat(options.formats) || PIXELFORMAT_RGBA8;
+        this.hdrFormat = device.getRenderableHdrFormat(options.formats, true, options.samples) || PIXELFORMAT_RGBA8;
 
         // camera renders in HDR mode (linear output, no tonemapping)
         if (!cameraComponent.rendering) {
@@ -235,7 +240,8 @@ class RenderPassCameraFrame extends RenderPass {
         this.rt = new RenderTarget({
             colorBuffer: this.sceneTexture,
             depthBuffer: this.sceneDepth,
-            samples: options.samples
+            samples: options.samples,
+            flipY: !!targetRenderTarget?.flipY  // flipY is inherited from the target renderTarget
         });
 
         this.sceneOptions = {
@@ -335,9 +341,17 @@ class RenderPassCameraFrame extends RenderPass {
             this.scenePassTransparent.init(this.rt);
             ret.lastAddedIndex = this.scenePassTransparent.addLayers(composition, cameraComponent, ret.lastAddedIndex, ret.clearRenderTarget, options.lastSceneLayerId, options.lastSceneLayerIsTransparent);
 
-            // if prepass is enabled, we need to store the depth, as by default it gets discarded
-            if (options.prepassEnabled) {
-                this.scenePassTransparent.depthStencilOps.storeDepth = true;
+            // if no layers are rendered by this pass, remove it
+            if (!this.scenePassTransparent.rendersAnything) {
+                this.scenePassTransparent.destroy();
+                this.scenePassTransparent = null;
+            }
+
+            if (this.scenePassTransparent) {
+                // if prepass is enabled, we need to store the depth, as by default it gets discarded
+                if (options.prepassEnabled) {
+                    this.scenePassTransparent.depthStencilOps.storeDepth = true;
+                }
             }
         }
 

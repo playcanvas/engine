@@ -10,9 +10,10 @@ import {
     PIXELFORMAT_R32I, PIXELFORMAT_R32U, PIXELFORMAT_RG16I, PIXELFORMAT_RG16U, PIXELFORMAT_RG32I, PIXELFORMAT_RG32U,
     PIXELFORMAT_RG8I, PIXELFORMAT_RG8U, PIXELFORMAT_RGBA16I, PIXELFORMAT_RGBA16U, PIXELFORMAT_RGBA32I, PIXELFORMAT_RGBA32U,
     PIXELFORMAT_RGBA8I, PIXELFORMAT_RGBA8U, PIXELFORMAT_R16F, PIXELFORMAT_RG16F, PIXELFORMAT_R8, PIXELFORMAT_RG8,
-    PIXELFORMAT_DXT1_SRGB, PIXELFORMAT_DXT3_SRGB, PIXELFORMAT_DXT5_SRGB, PIXELFORMAT_PVRTC_2BPP_SRGB_1,
+    PIXELFORMAT_DXT1_SRGB, PIXELFORMAT_DXT3_SRGBA, PIXELFORMAT_DXT5_SRGBA, PIXELFORMAT_PVRTC_2BPP_SRGB_1,
     PIXELFORMAT_PVRTC_2BPP_SRGBA_1, PIXELFORMAT_PVRTC_4BPP_SRGB_1, PIXELFORMAT_PVRTC_4BPP_SRGBA_1,
-    PIXELFORMAT_ETC2_SRGB, PIXELFORMAT_ETC2_SRGBA, PIXELFORMAT_ASTC_4x4_SRGB, PIXELFORMAT_SBGRA8
+    PIXELFORMAT_ETC2_SRGB, PIXELFORMAT_ETC2_SRGBA, PIXELFORMAT_ASTC_4x4_SRGB, PIXELFORMAT_SBGRA8,
+    PIXELFORMAT_BC6F, PIXELFORMAT_BC6UF, PIXELFORMAT_BC7, PIXELFORMAT_BC7_SRGBA
 } from '../constants.js';
 
 /**
@@ -223,6 +224,18 @@ class WebglTexture {
                 this._glFormat = gl.RGBA;
                 this._glInternalFormat = device.extCompressedTextureATC.COMPRESSED_RGBA_ATC_INTERPOLATED_ALPHA_WEBGL;
                 break;
+            case PIXELFORMAT_BC6F:
+                this._glFormat = gl.RGB;
+                this._glInternalFormat = device.extTextureCompressionBPTC.COMPRESSED_RGB_BPTC_SIGNED_FLOAT_EXT;
+                break;
+            case PIXELFORMAT_BC6UF:
+                this._glFormat = gl.RGB;
+                this._glInternalFormat = device.extTextureCompressionBPTC.COMPRESSED_RGB_BPTC_UNSIGNED_FLOAT_EXT;
+                break;
+            case PIXELFORMAT_BC7:
+                this._glFormat = gl.RGBA;
+                this._glInternalFormat = device.extTextureCompressionBPTC.COMPRESSED_RGBA_BPTC_UNORM_EXT;
+                break;
 
                 // compressed sRGB formats ----
 
@@ -230,11 +243,11 @@ class WebglTexture {
                 this._glFormat = gl.SRGB;
                 this._glInternalFormat = device.extCompressedTextureS3TC_SRGB.COMPRESSED_SRGB_S3TC_DXT1_EXT;
                 break;
-            case PIXELFORMAT_DXT3_SRGB:
+            case PIXELFORMAT_DXT3_SRGBA:
                 this._glFormat = gl.SRGB_ALPHA;
                 this._glInternalFormat = device.extCompressedTextureS3TC_SRGB.COMPRESSED_SRGB_ALPHA_S3TC_DXT3_EXT;
                 break;
-            case PIXELFORMAT_DXT5_SRGB:
+            case PIXELFORMAT_DXT5_SRGBA:
                 this._glFormat = gl.SRGB_ALPHA;
                 this._glInternalFormat = device.extCompressedTextureS3TC_SRGB.COMPRESSED_SRGB_ALPHA_S3TC_DXT5_EXT;
                 break;
@@ -265,6 +278,10 @@ class WebglTexture {
             case PIXELFORMAT_ASTC_4x4_SRGB:
                 this._glFormat = gl.SRGB_ALPHA;
                 this._glInternalFormat = device.extCompressedTextureASTC.COMPRESSED_SRGB8_ALPHA8_ASTC_4x4_KHR;
+                break;
+            case PIXELFORMAT_BC7_SRGBA:
+                this._glFormat = gl.RGBA;
+                this._glInternalFormat = device.extTextureCompressionBPTC.COMPRESSED_SRGB_ALPHA_BPTC_UNORM_EXT;
                 break;
 
                 // ------------------

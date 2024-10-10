@@ -384,18 +384,14 @@ class LitShader {
     }
 
     _fsGetDepthPassCode() {
-        const chunks = this.chunks;
-
         let code = this._fsGetBeginCode();
-        code += 'varying float vDepth;\n';
         code += this.varyings;
         code += this.varyingDefines;
-        code += chunks.packDepthPS;
         code += this.frontendDecl;
         code += this.frontendCode;
         code += ShaderGenerator.begin();
         code += this.frontendFunc;
-        code += '    gl_FragColor = packFloat(vDepth);\n';
+        code += '    gl_FragColor = vec4(1.0, 1.0, 1.0, 1.0);\n';
         code += ShaderGenerator.end();
 
         return code;
@@ -440,10 +436,7 @@ class LitShader {
         code += this.frontendDecl;
         code += this.frontendCode;
 
-        const usePackedDepth = (lightType === LIGHTTYPE_OMNI && shadowType !== SHADOW_PCSS && !options.clusteredLightingEnabled);
-        if (usePackedDepth) {
-            code += chunks.packDepthPS;
-        } else if (shadowType === SHADOW_VSM8) {
+        if (shadowType === SHADOW_VSM8) {
             code += 'vec2 encodeFloatRG( float v ) {\n';
             code += '    vec2 enc = vec2(1.0, 255.0) * v;\n';
             code += '    enc = fract(enc);\n';
@@ -477,9 +470,7 @@ class LitShader {
             hasModifiedDepth = true;
         }
 
-        if (usePackedDepth) {
-            code += '    gl_FragColor = packFloat(depth);\n';
-        } else if (!isVsm) {
+        if (!isVsm) {
             const exportR32 = shadowType === SHADOW_PCSS;
 
             if (exportR32) {
@@ -616,13 +607,9 @@ class LitShader {
                     shadowedDirectionalLightUsed = true;
                 }
                 if (lightType === LIGHTTYPE_OMNI) {
-                    decl.append(`uniform samplerCube light${i}_shadowMap;`);
+                    decl.append(`uniform ${light._isPcf ? 'samplerCubeShadow' : 'samplerCube'} light${i}_shadowMap;`);
                 } else {
-                    if (light._isPcf) {
-                        decl.append(`uniform sampler2DShadow light${i}_shadowMap;`);
-                    } else {
-                        decl.append(`uniform sampler2D light${i}_shadowMap;`);
-                    }
+                    decl.append(`uniform ${light._isPcf ? 'sampler2DShadow' : 'sampler2D'} light${i}_shadowMap;`);
                 }
                 numShadowLights++;
                 shadowTypeUsed[light._shadowType] = true;
