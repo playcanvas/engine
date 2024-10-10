@@ -3,7 +3,8 @@ import { Debug, DebugHelper } from '../../../core/debug.js';
 import {
     PIXELFORMAT_RGBA8, PIXELFORMAT_BGRA8, DEVICETYPE_WEBGPU,
     BUFFERUSAGE_READ, BUFFERUSAGE_COPY_DST, semanticToLocation,
-    PIXELFORMAT_SRGBA8, DISPLAYFORMAT_LDR_SRGB, PIXELFORMAT_SBGRA8
+    PIXELFORMAT_SRGBA8, DISPLAYFORMAT_LDR_SRGB, PIXELFORMAT_SBGRA8, DISPLAYFORMAT_HDR,
+    PIXELFORMAT_RGBA16F
 } from '../constants.js';
 import { BindGroupFormat } from '../bind-group-format.js';
 import { BindGroup } from '../bind-group.js';
@@ -268,8 +269,11 @@ class WebgpuGraphicsDevice extends GraphicsDevice {
 
         this.gpuContext = this.canvas.getContext('webgpu');
 
+        // tonemapping, used when the backbuffer is HDR
+        let canvasToneMapping = 'standard';
+
         // pixel format of the framebuffer that is the most efficient one on the system
-        const preferredCanvasFormat = navigator.gpu.getPreferredCanvasFormat();
+        let preferredCanvasFormat = navigator.gpu.getPreferredCanvasFormat();
 
         // display format the user asked for
         const displayFormat = this.initOptions.displayFormat;
@@ -282,6 +286,24 @@ class WebgpuGraphicsDevice extends GraphicsDevice {
         // view format for the backbuffer. Backbuffer is always allocated without srgb conversion, and
         // the view we create specifies srgb is needed to handle the conversion.
         this.backBufferViewFormat = displayFormat === DISPLAYFORMAT_LDR_SRGB ? `${preferredCanvasFormat}-srgb` : preferredCanvasFormat;
+
+        // optional HDR display format
+        if (displayFormat === DISPLAYFORMAT_HDR && this.textureFloatFilterable) {
+
+            // if supported by the system
+            const hdrMediaQuery = window.matchMedia('(dynamic-range: high)');
+            if (hdrMediaQuery?.matches) {
+
+                // configure the backbuffer to be 16 bit float
+                this.backBufferFormat = PIXELFORMAT_RGBA16F;
+                this.backBufferViewFormat = 'rgba16float';
+                preferredCanvasFormat = 'rgba16float';
+                this.isHdr = true;
+
+                // use extended tonemapping for HDR to avoid clipping
+                canvasToneMapping = 'extended';
+            }
+        }
 
         /**
          * Configuration of the main colorframebuffer we obtain using getCurrentTexture
@@ -296,6 +318,8 @@ class WebgpuGraphicsDevice extends GraphicsDevice {
 
             // use preferred format for optimal performance on mobile
             format: preferredCanvasFormat,
+
+            toneMapping: { mode: canvasToneMapping },
 
             // RENDER_ATTACHMENT is required, COPY_SRC allows scene grab to copy out from it
             usage: GPUTextureUsage.RENDER_ATTACHMENT | GPUTextureUsage.COPY_SRC | GPUTextureUsage.COPY_DST,
@@ -713,7 +737,7 @@ class WebgpuGraphicsDevice extends GraphicsDevice {
 
         // start the pass
         this.passEncoder = this.commandEncoder.beginRenderPass(renderPassDesc);
-        DebugHelper.setLabel(this.passEncoder, `${renderPass.name}-PassEncoder RT:${rt.name}`);
+        this.passEncoder.label = `${renderPass.name}-PassEncoder RT:${rt.name}`;
 
         // push marker to the passEncoder
         DebugGraphics.pushGpuMarker(this, `Pass:${renderPass.name} RT:${rt.name}`);
@@ -792,7 +816,6 @@ class WebgpuGraphicsDevice extends GraphicsDevice {
 
         // create a new encoder for each pass
         this.commandEncoder = this.wgpu.createCommandEncoder();
-        // DebugHelper.setLabel(this.commandEncoder, `${renderPass.name}-Encoder`);
         DebugHelper.setLabel(this.commandEncoder, 'ComputePass-Encoder');
 
         // clear cached encoder state

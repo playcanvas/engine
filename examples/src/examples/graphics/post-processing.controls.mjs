@@ -242,7 +242,7 @@ export function controls({ observer, ReactPCUI, React, jsx, fragment }) {
                     binding: new BindingTwoWay(),
                     link: { observer, path: 'data.taa.jitter' },
                     min: 0,
-                    max: 5,
+                    max: 1,
                     precision: 2
                 })
             )
