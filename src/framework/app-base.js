@@ -2090,6 +2090,8 @@ const makeTick = function (_app) {
         if (application._destroyRequested) {
             application.destroy();
         }
+
+        application.frameRequestId = null;
     };
 };
 
