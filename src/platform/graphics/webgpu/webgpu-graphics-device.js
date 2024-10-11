@@ -649,20 +649,20 @@ class WebgpuGraphicsDevice extends GraphicsDevice {
         });
     }
 
-    setupTimeStampWrites(passDescr, name) {
+    setupTimeStampWrites(passDesc, name) {
         if (this.gpuProfiler._enabled) {
             if (this.gpuProfiler.timestampQueriesSet) {
                 const slot = this.gpuProfiler.getSlot(name);
 
-                passDescr = passDescr ?? {};
-                passDescr.timestampWrites = {
+                passDesc = passDesc ?? {};
+                passDesc.timestampWrites = {
                     querySet: this.gpuProfiler.timestampQueriesSet.querySet,
                     beginningOfPassWriteIndex: slot * 2,
                     endOfPassWriteIndex: slot * 2 + 1
                 };
             }
         }
-        return passDescr;
+        return passDesc;
     }
 
     /**
