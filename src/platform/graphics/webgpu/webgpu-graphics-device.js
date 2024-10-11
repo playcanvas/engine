@@ -649,6 +649,22 @@ class WebgpuGraphicsDevice extends GraphicsDevice {
         });
     }
 
+    setupTimeStampWrites(passDesc, name) {
+        if (this.gpuProfiler._enabled) {
+            if (this.gpuProfiler.timestampQueriesSet) {
+                const slot = this.gpuProfiler.getSlot(name);
+
+                passDesc = passDesc ?? {};
+                passDesc.timestampWrites = {
+                    querySet: this.gpuProfiler.timestampQueriesSet.querySet,
+                    beginningOfPassWriteIndex: slot * 2,
+                    endOfPassWriteIndex: slot * 2 + 1
+                };
+            }
+        }
+        return passDesc;
+    }
+
     /**
      * Start a render pass.
      *
@@ -673,7 +689,7 @@ class WebgpuGraphicsDevice extends GraphicsDevice {
 
         // create a new encoder for each pass
         this.commandEncoder = this.wgpu.createCommandEncoder();
-        DebugHelper.setLabel(this.commandEncoder, `${renderPass.name}-CmdEncoder RT:${rt.name}`);
+        DebugHelper.setLabel(this.commandEncoder, `${renderPass.name}-CommandEncoder RT:${rt.name}`);
 
         // framebuffer is initialized at the start of the frame
         if (rt !== this.backBuffer) {
@@ -686,17 +702,7 @@ class WebgpuGraphicsDevice extends GraphicsDevice {
         const renderPassDesc = wrt.renderPassDescriptor;
 
         // timestamp
-        if (this.gpuProfiler._enabled) {
-            if (this.gpuProfiler.timestampQueriesSet) {
-                const slot = this.gpuProfiler.getSlot(renderPass.name);
-
-                renderPassDesc.timestampWrites = {
-                    querySet: this.gpuProfiler.timestampQueriesSet.querySet,
-                    beginningOfPassWriteIndex: slot * 2,
-                    endOfPassWriteIndex: slot * 2 + 1
-                };
-            }
-        }
+        this.setupTimeStampWrites(renderPassDesc, renderPass.name);
 
         // start the pass
         this.passEncoder = this.commandEncoder.beginRenderPass(renderPassDesc);
@@ -772,23 +778,24 @@ class WebgpuGraphicsDevice extends GraphicsDevice {
         WebgpuDebug.end(this, { renderPass });
     }
 
-    startComputePass() {
+    startComputePass(name) {
 
         WebgpuDebug.internal(this);
         WebgpuDebug.validate(this);
 
         // create a new encoder for each pass
         this.commandEncoder = this.wgpu.createCommandEncoder();
-        DebugHelper.setLabel(this.commandEncoder, 'ComputePass-Encoder');
+        DebugHelper.setLabel(this.commandEncoder, `${name}-ComputePass-Encoder`);
 
         // clear cached encoder state
         this.pipeline = null;
 
-        // TODO: add performance queries to compute passes
+        // timestamp
+        const computePassDesc = this.setupTimeStampWrites(undefined, name);
 
         // start the pass
-        this.passEncoder = this.commandEncoder.beginComputePass();
-        DebugHelper.setLabel(this.passEncoder, 'ComputePass');
+        this.passEncoder = this.commandEncoder.beginComputePass(computePassDesc);
+        DebugHelper.setLabel(this.passEncoder, `ComputePass-${name}`);
 
         Debug.assert(!this.insideRenderPass, 'ComputePass cannot be started while inside another pass.');
         this.insideRenderPass = true;
@@ -816,9 +823,9 @@ class WebgpuGraphicsDevice extends GraphicsDevice {
         WebgpuDebug.end(this);
     }
 
-    computeDispatch(computes) {
+    computeDispatch(computes, name = 'Unnamed') {
 
-        this.startComputePass();
+        this.startComputePass(name);
 
         // update uniform buffers and bind groups
         for (let i = 0; i < computes.length; i++) {
