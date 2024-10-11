@@ -858,7 +858,7 @@ class GraphicsDevice extends EventHandler {
     endRenderPass(renderPass) {
     }
 
-    startComputePass() {
+    startComputePass(name) {
     }
 
     endComputePass() {
