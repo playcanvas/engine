@@ -669,6 +669,14 @@ class XrManager extends EventHandler {
      * @private
      */
     _sessionSupportCheck(type) {
+        const featurePolicy = document?.featurePolicy;
+        if (featurePolicy) {
+            const allowed = featurePolicy.allowsFeature('xr-spatial-tracking');
+            if (!allowed) {
+                return;
+            }
+        }
+
         navigator.xr.isSessionSupported(type).then((available) => {
             if (this._available[type] === available) {
                 return;
