@@ -905,8 +905,9 @@ class GraphicsDevice extends EventHandler {
      * Dispatch multiple compute shaders inside a single compute shader pass.
      *
      * @param {Array<Compute>} computes - An array of compute shaders to dispatch.
+     * @param {string} [name] - The name of the dispatch, used for debugging and reporting only.
      */
-    computeDispatch(computes) {
+    computeDispatch(computes, name = 'Unnamed') {
     }
 
     /**

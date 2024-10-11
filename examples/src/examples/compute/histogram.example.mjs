@@ -145,7 +145,7 @@ assetListLoader.load(() => {
 
             // dispatch the compute shader
             compute.setupDispatch(app.graphicsDevice.width, app.graphicsDevice.height);
-            device.computeDispatch([compute]);
+            device.computeDispatch([compute], 'HistogramDispatch');
 
             // Read back the histogram data from the storage buffer. None that the returned promise
             // will be resolved later, when the GPU is done running it, and so the histogram on the

@@ -258,7 +258,7 @@ assetListLoader.load(() => {
 
             // dispatch the compute shader to simulate the particles
             compute.setupDispatch(1024 / 64, 1024);
-            device.computeDispatch([compute]);
+            device.computeDispatch([compute], 'ComputeParticlesDispatch');
         }
     });
 });
