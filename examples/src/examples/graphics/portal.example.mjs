@@ -230,15 +230,6 @@ assetListLoader.load(() => {
     bitmoji.setLocalPosition(0, -1, -2);
     bitmoji.setLocalScale(2.5, 2.5, 2.5);
     group.addChild(bitmoji);
-
-
-    let o = 0;
-    app.on('update', (/** @type {number} */ dt) => {
-        o++;
-        pc.Tracing.set(pc.TRACEID_RENDER_PASS, o === 10);
-        pc.Tracing.set(pc.TRACEID_RENDER_PASS_DETAIL, o === 10);
-    });
-
 });
 
 export { app };
