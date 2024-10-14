@@ -193,6 +193,12 @@ class WebgpuGraphicsDevice extends GraphicsDevice {
         this.twgsl = results[0];
         this.glslang = results[1];
 
+        // create the device
+        return this.createDevice();
+    }
+
+    async createDevice() {
+
         /** @type {GPURequestAdapterOptions} */
         const adapterOptions = {
             powerPreference: this.initOptions.powerPreference !== 'default' ? this.initOptions.powerPreference : undefined
@@ -258,12 +264,8 @@ class WebgpuGraphicsDevice extends GraphicsDevice {
          */
         this.wgpu = await this.gpuAdapter.requestDevice(deviceDescr);
 
-        this.wgpu.lost?.then((info) => {
-            // reason is 'destroyed' if we intentionally destroy the device
-            if (info.reason !== 'destroyed') {
-                Debug.warn(`WebGPU device was lost: ${info.message}, this needs to be handled`);
-            }
-        });
+        // handle lost device
+        this.wgpu.lost?.then(this.handleDeviceLost.bind(this));
 
         this.initDeviceCaps();
 
@@ -339,6 +341,19 @@ class WebgpuGraphicsDevice extends GraphicsDevice {
         this.postInit();
 
         return this;
+    }
+
+    async handleDeviceLost(info) {
+        // reason is 'destroyed' if we intentionally destroy the device
+        if (info.reason !== 'destroyed') {
+            Debug.warn(`WebGPU device was lost: ${info.message}, this needs to be handled`);
+
+            super.loseContext(); // 'super' works correctly here
+
+            await this.createDevice(); // Ensure this method is defined in your class
+
+            super.restoreContext(); // 'super' works correctly here
+        }
     }
 
     postInit() {
