@@ -64,6 +64,8 @@ class Rendering {
      */
     renderFormatFallback1 = RenderFormat.RGBA32;
 
+    stencil = false;
+
     /**
      * @attribute
      * @range [0.1, 1]
@@ -372,6 +374,7 @@ class CameraFrame extends Script {
     updateOptions() {
 
         const { options, rendering, bloom, taa, ssao } = this;
+        options.stencil = rendering.stencil;
         options.samples = rendering.samples;
         options.sceneColorMap = rendering.sceneColorMap;
         options.prepassEnabled = rendering.sceneDepthMap;

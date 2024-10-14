@@ -1,5 +1,6 @@
 import * as pc from 'playcanvas';
-import { deviceType, rootPath } from 'examples/utils';
+import { deviceType, rootPath, fileImport } from 'examples/utils';
+const { CameraFrame } = await fileImport(rootPath + '/static/assets/scripts/misc/camera-frame.mjs');
 
 const canvas = /** @type {HTMLCanvasElement} */ (document.getElementById('application-canvas'));
 window.focus();
@@ -156,6 +157,18 @@ assetListLoader.load(() => {
     camera.setLocalEulerAngles(-27, 45, 0);
     app.root.addChild(camera);
 
+    // ------ Custom render passes set up ------
+
+    camera.addComponent('script');
+    /** @type { CameraFrame } */
+    const cameraFrame = camera.script.create(CameraFrame);
+
+    cameraFrame.rendering.stencil = true;
+    cameraFrame.rendering.samples = 4;
+    cameraFrame.rendering.toneMapping = pc.TONEMAP_ACES2;
+
+    // ------------------------------------------
+
     // Create an Entity with a directional light component
     const light = new pc.Entity();
     light.addComponent('light', {
@@ -217,6 +230,15 @@ assetListLoader.load(() => {
     bitmoji.setLocalPosition(0, -1, -2);
     bitmoji.setLocalScale(2.5, 2.5, 2.5);
     group.addChild(bitmoji);
+
+
+    let o = 0;
+    app.on('update', (/** @type {number} */ dt) => {
+        o++;
+        pc.Tracing.set(pc.TRACEID_RENDER_PASS, o === 10);
+        pc.Tracing.set(pc.TRACEID_RENDER_PASS_DETAIL, o === 10);
+    });
+
 });
 
 export { app };
