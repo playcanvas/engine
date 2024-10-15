@@ -622,13 +622,13 @@ class CollisionComponent extends Component {
      * @returns {number|null} The shape's index in the child array of the compound shape.
      * @private
      */
-    _getCompoundChildShapeIndex(shape) {
+    getCompoundChildShapeIndex(shape) {
         const compound = this.data.shape;
         const shapes = compound.getNumChildShapes();
 
         for (let i = 0; i < shapes; i++) {
             const childShape = compound.getChildShape(i);
-            if (childShape.ptr === shape.ptr) {
+            if (Ammo.getPointer(childShape) === Ammo.getPointer(shape)) {
                 return i;
             }
         }
