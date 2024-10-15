@@ -858,7 +858,7 @@ class WebgpuGraphicsDevice extends GraphicsDevice {
 
             const cb = commandEncoder.finish();
             DebugHelper.setLabel(cb, 'CommandBuffer-Shared');
-            
+
             this.addCommandBuffer(cb);
             this.commandEncoder = null;
         }
