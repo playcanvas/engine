@@ -127,6 +127,24 @@ class RenderPass {
     _enabled = true;
 
     /**
+     * True if the render pass start is skipped. This means the render pass is merged into the
+     * previous one.
+     *
+     * @type {boolean}
+     * @private
+     */
+    _skipStart = false;
+
+    /**
+     * True if the render pass end is skipped. This means the following render pass is merged into
+     * this one.
+     *
+     * @type {boolean}
+     * @private
+     */
+    _skipEnd = false;
+
+    /**
      * True if the render pass is enabled and execute function will be called. Note that before and
      * after functions are called regardless of this flag.
      */
@@ -414,13 +432,13 @@ class RenderPass {
 
             if (this.executeEnabled) {
 
-                if (realPass) {
+                if (realPass && !this._skipStart) {
                     device.startRenderPass(this);
                 }
 
                 this.execute();
 
-                if (realPass) {
+                if (realPass && !this._skipEnd) {
                     device.endRenderPass(this);
                 }
             }
@@ -447,8 +465,9 @@ class RenderPass {
                 ` ${rt.width} x ${rt.height}` +
                 `${(this.samples > 0 ? ` samples: ${this.samples}` : '')}`;
 
+            const indexString = this._skipStart ? '++' : index.toString().padEnd(2, ' ');
             Debug.trace(TRACEID_RENDER_PASS,
-                `${index.toString().padEnd(2, ' ')}: ${this.name.padEnd(20, ' ')}` +
+                `${indexString}: ${this.name.padEnd(20, ' ')}` +
                         `${this.executeEnabled ? '' : ' DISABLED '}${
                             rtInfo.padEnd(30)}`);
 
