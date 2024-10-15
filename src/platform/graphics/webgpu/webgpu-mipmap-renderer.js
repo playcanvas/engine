@@ -123,8 +123,7 @@ class WebgpuMipmapRenderer {
         }
 
         // loop through each mip level and render the previous level's contents into it.
-        const commandEncoder = device.commandEncoder ?? wgpu.createCommandEncoder();
-        DebugHelper.setLabel(commandEncoder, 'MipmapRendererEncoder');
+        const commandEncoder = device.getCommandEncoder();
 
         DebugGraphics.pushGpuMarker(device, 'MIPMAP-RENDERER');
 
@@ -170,14 +169,6 @@ class WebgpuMipmapRenderer {
         }
 
         DebugGraphics.popGpuMarker(device);
-
-        // submit the encoded commands if we created the encoder
-        if (!device.commandEncoder) {
-
-            const cb = commandEncoder.finish();
-            DebugHelper.setLabel(cb, 'MipmapRenderer-CommandBuffer');
-            device.addCommandBuffer(cb);
-        }
 
         // clear invalidated state
         device.pipeline = null;
