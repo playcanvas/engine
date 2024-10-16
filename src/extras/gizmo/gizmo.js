@@ -461,8 +461,8 @@ class Gizmo extends EventHandler {
      * @private
      */
     _getSelection(x, y) {
-        const start = this._camera.screenToWorld(x, y, this._camera.nearClip);
-        const end = this._camera.screenToWorld(x, y, this._camera.farClip);
+        const start = this._camera.entity.getPosition();
+        const end = this._camera.screenToWorld(x, y, this._camera.farClip - this._camera.nearClip);
         const dir = end.clone().sub(start).normalize();
 
         const selection = [];
