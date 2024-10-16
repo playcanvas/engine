@@ -51,7 +51,7 @@ const shaderDesc = {
         uniform mat4 matrix_viewProjection;
         void main(void) {
             gl_Position = matrix_viewProjection * matrix_model * vec4(vertex_position, 1.0);
-            gl_Position.z = clamp(gl_Position.z, -gl_Position.w, gl_Position.w);
+            gl_Position.z = clamp(gl_Position.z, -abs(gl_Position.w), abs(gl_Position.w)) * sign(gl_Position.z);
             vColor = vertex_color;
         }
     `,
@@ -299,6 +299,7 @@ class Shape {
         const meshInstances = [];
         for (let i = 0; i < meshes.length; i++) {
             const mi = new MeshInstance(meshes[i], material);
+            mi.cull = false;
             meshInstances.push(mi);
             this.meshInstances.push(mi);
         }
