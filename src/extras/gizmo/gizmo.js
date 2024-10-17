@@ -461,6 +461,10 @@ class Gizmo extends EventHandler {
         const selection = [];
         for (let i = 0; i < this.intersectShapes.length; i++) {
             const shape = this.intersectShapes[i];
+            if (shape.disabled) {
+                continue;
+            }
+
             const parentTM = shape.entity.getWorldTransform();
             for (let j = 0; j < shape.triData.length; j++) {
                 const { tris, transform, priority } = shape.triData[j];
