@@ -460,10 +460,10 @@ class Gizmo extends EventHandler {
 
         const selection = [];
         for (let i = 0; i < this.intersectShapes.length; i++) {
-            const { triData, entity, meshInstances } = this.intersectShapes[i];
-            const parentTM = entity.getWorldTransform();
-            for (let j = 0; j < triData.length; j++) {
-                const { tris, transform, priority } = triData[j];
+            const shape = this.intersectShapes[i];
+            const parentTM = shape.entity.getWorldTransform();
+            for (let j = 0; j < shape.triData.length; j++) {
+                const { tris, transform, priority } = shape.triData[j];
 
                 // combine node world transform with transform of tri relative to parent
                 const triWTM = tmpM1.copy(parentTM).mul(transform);
@@ -478,7 +478,7 @@ class Gizmo extends EventHandler {
                     if (tris[k].intersectsRay(ray, tmpV1)) {
                         selection.push({
                             dist: triWTM.transformPoint(tmpV1).sub(start).length(),
-                            meshInstances: meshInstances,
+                            meshInstances: shape.meshInstances,
                             priority: priority
                         });
                     }
