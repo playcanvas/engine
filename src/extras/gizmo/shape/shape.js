@@ -47,21 +47,19 @@ const shaderDesc = {
         attribute vec3 vertex_position;
         attribute vec4 vertex_color;
         varying vec4 vColor;
-        varying vec2 vZW;
         uniform mat4 matrix_model;
         uniform mat4 matrix_viewProjection;
         void main(void) {
             gl_Position = matrix_viewProjection * matrix_model * vec4(vertex_position, 1.0);
+            gl_Position.z = clamp(gl_Position.z, -abs(gl_Position.w), abs(gl_Position.w));
             vColor = vertex_color;
         }
     `,
     fragmentCode: /* glsl */`
         precision highp float;
         varying vec4 vColor;
-        varying vec2 vZW;
         void main(void) {
             gl_FragColor = vec4(gammaCorrectOutput(decodeGamma(vColor)), vColor.w);
-            gl_FragDepth = gl_FragCoord.z;
         }
     `
 };
@@ -301,6 +299,7 @@ class Shape {
         const meshInstances = [];
         for (let i = 0; i < meshes.length; i++) {
             const mi = new MeshInstance(meshes[i], material);
+            mi.cull = false;
             meshInstances.push(mi);
             this.meshInstances.push(mi);
         }
