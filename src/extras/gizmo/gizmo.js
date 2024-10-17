@@ -16,7 +16,7 @@ import { GIZMOSPACE_LOCAL, GIZMOSPACE_WORLD } from './constants.js';
  * @import { GraphNode } from '../../scene/graph-node.js'
  * @import { GraphicsDevice } from '../../platform/graphics/graphics-device.js'
  * @import { MeshInstance } from '../../scene/mesh-instance.js'
- * @import { TriData } from './tri-data.js'
+ * @import { Shape } from './shape/shape.js'
  */
 
 // temporary variables
@@ -217,18 +217,11 @@ class Gizmo extends EventHandler {
     root;
 
     /**
-     * @typedef IntersectData
-     * @property {TriData[]} triData - The array of {@link TriData}.
-     * @property {GraphNode} parent - The mesh parent node.
-     * @property {MeshInstance[]} meshInstances - Array of mesh instances for rendering.
-     */
-
-    /**
-     * The intersection data object.
+     * The intersection shapes for the gizmo.
      *
-     * @type {IntersectData[]}
+     * @type {Shape[]}
      */
-    intersectData = [];
+    intersectShapes = [];
 
     /**
      * Creates a new gizmo layer and adds it to the scene.
@@ -466,9 +459,9 @@ class Gizmo extends EventHandler {
         const dir = end.clone().sub(start).normalize();
 
         const selection = [];
-        for (let i = 0; i < this.intersectData.length; i++) {
-            const { triData, parent, meshInstances } = this.intersectData[i];
-            const parentTM = parent.getWorldTransform();
+        for (let i = 0; i < this.intersectShapes.length; i++) {
+            const { triData, entity, meshInstances } = this.intersectShapes[i];
+            const parentTM = entity.getWorldTransform();
             for (let j = 0; j < triData.length; j++) {
                 const { tris, transform, priority } = triData[j];
 
