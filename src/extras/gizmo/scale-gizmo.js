@@ -18,9 +18,6 @@ const tmpV1 = new Vec3();
 const tmpV2 = new Vec3();
 const tmpQ1 = new Quat();
 
-// constants
-const SCALE_RESOLUTION = 5;
-
 /**
  * Scaling gizmo.
  *
@@ -131,8 +128,7 @@ class ScaleGizmo extends TransformGizmo {
                 pointDelta.round();
                 pointDelta.mulScalar(this.snapIncrement);
             }
-            const dist = tmpV1.sub2(this._camera.entity.getPosition(), this.root.getPosition()).length();
-            pointDelta.mulScalar(SCALE_RESOLUTION / dist);
+            pointDelta.mulScalar(1 / this._scale);
             this._setNodeScales(pointDelta.add(Vec3.ONE));
         });
 
