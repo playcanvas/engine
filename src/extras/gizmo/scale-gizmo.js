@@ -119,7 +119,6 @@ class ScaleGizmo extends TransformGizmo {
         this._createTransform();
 
         this.on(TransformGizmo.EVENT_TRANSFORMSTART, () => {
-            this._selectionStartPoint.sub(Vec3.ONE);
             this._storeNodeScales();
         });
 
@@ -129,7 +128,8 @@ class ScaleGizmo extends TransformGizmo {
                 pointDelta.round();
                 pointDelta.mulScalar(this.snapIncrement);
             }
-            this._setNodeScales(pointDelta);
+            pointDelta.mulScalar(1 / this._scale);
+            this._setNodeScales(pointDelta.add(Vec3.ONE));
         });
 
         this.on(TransformGizmo.EVENT_NODESDETACH, () => {
