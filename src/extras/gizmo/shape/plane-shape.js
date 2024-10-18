@@ -47,9 +47,8 @@ class PlaneShape extends Shape {
         if (this._flipped.distance(value) < UPDATE_EPSILON) {
             return;
         }
-
         this._flipped.copy(value);
-        this._updateTransform();
+        this.entity.setLocalPosition(this._getPosition());
     }
 
     get flipped() {
