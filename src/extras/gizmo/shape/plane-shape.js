@@ -11,6 +11,8 @@ class PlaneShape extends Shape {
 
     _gap = 0.1;
 
+    _flipped = new Vec3();
+
     constructor(device, options = {}) {
         super(device, options);
 
@@ -19,21 +21,6 @@ class PlaneShape extends Shape {
         ];
 
         this._createPlane();
-    }
-
-    _getPosition() {
-        const offset = this._size / 2 + this._gap;
-        const position = new Vec3(offset, offset, offset);
-        position[this.axis] = 0;
-        return position;
-    }
-
-    _createPlane() {
-        this._createRoot('plane');
-        this._updateTransform();
-
-        // plane
-        this._addRenderMesh(this.entity, 'plane', this._shading);
     }
 
     set size(value) {
@@ -52,6 +39,34 @@ class PlaneShape extends Shape {
 
     get gap() {
         return this._gap;
+    }
+
+    set flipped(value) {
+        this._flipped.copy(value);
+        this._updateTransform();
+    }
+
+    get flipped() {
+        return this._flipped;
+    }
+
+    _getPosition() {
+        const offset = this._size / 2 + this._gap;
+        const position = new Vec3(
+            this._flipped.x ? -offset : offset,
+            this._flipped.y ? -offset : offset,
+            this._flipped.z ? -offset : offset
+        );
+        position[this.axis] = 0;
+        return position;
+    }
+
+    _createPlane() {
+        this._createRoot('plane');
+        this._updateTransform();
+
+        // plane
+        this._addRenderMesh(this.entity, 'plane', this._shading);
     }
 
     _updateTransform() {
