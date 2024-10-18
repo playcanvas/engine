@@ -146,7 +146,7 @@ class ScaleGizmo extends TransformGizmo {
             this._nodeScales.clear();
         });
 
-        this._app.on('update', () => {
+        this._app.on('prerender', () => {
             this._planesLookAtCamera();
         });
     }

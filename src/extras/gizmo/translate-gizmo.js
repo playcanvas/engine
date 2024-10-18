@@ -150,7 +150,7 @@ class TranslateGizmo extends TransformGizmo {
             this._nodePositions.clear();
         });
 
-        this._app.on('update', () => {
+        this._app.on('prerender', () => {
             this._planesLookAtCamera();
         });
     }
