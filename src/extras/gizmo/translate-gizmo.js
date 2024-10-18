@@ -141,14 +141,7 @@ class TranslateGizmo extends TransformGizmo {
         });
 
         this._app.on('update', () => {
-            tmpV1.cross(this._camera.entity.forward, this.root.right);
-            this._shapes.yz.flipped = tmpV2.set(0, +(tmpV1.z < 0), +(tmpV1.y > 0));
-
-            tmpV1.cross(tmpV2.copy(this._camera.entity.forward).mulScalar(-1), this.root.forward);
-            this._shapes.xy.flipped = tmpV2.set(+(tmpV1.y < 0), +(tmpV1.x > 0), 0);
-
-            tmpV1.cross(this._camera.entity.right, this.root.up);
-            this._shapes.xz.flipped = tmpV2.set(+(tmpV1.x < 0), 0, +(tmpV1.z < 0));
+            this._planesLookAtCamera();
         });
     }
 
@@ -352,6 +345,20 @@ class TranslateGizmo extends TransformGizmo {
         this._shapes.yz[prop] = value;
         this._shapes.xz[prop] = value;
         this._shapes.xy[prop] = value;
+    }
+
+    /**
+     * @private
+     */
+    _planesLookAtCamera() {
+        tmpV1.cross(this._camera.entity.forward, this.root.right);
+        this._shapes.yz.flipped = tmpV2.set(0, +(tmpV1.dot(this.root.forward) > 0), +(tmpV1.dot(this.root.up) > 0));
+
+        tmpV1.cross(this._camera.entity.forward, this.root.forward);
+        this._shapes.xy.flipped = tmpV2.set(+(tmpV1.dot(this.root.up) > 0), +(tmpV1.dot(this.root.right) < 0), 0);
+
+        tmpV1.cross(this._camera.entity.forward, this.root.up);
+        this._shapes.xz.flipped = tmpV2.set(+(tmpV1.dot(this.root.forward) < 0), 0, +(tmpV1.dot(this.root.right) < 0));
     }
 
     /**
