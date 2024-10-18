@@ -110,6 +110,13 @@ class TranslateGizmo extends TransformGizmo {
     snapIncrement = 1;
 
     /**
+     * Flips the planes to face the camera.
+     * 
+     * @type {boolean}
+     */
+    flipPlanes = true;
+
+    /**
      * Creates a new TranslateGizmo object.
      *
      * @param {CameraComponent} camera - The camera component.
@@ -141,6 +148,9 @@ class TranslateGizmo extends TransformGizmo {
         });
 
         this._app.on('update', () => {
+            if (!this.flipPlanes) {
+                return;
+            }
             this._planesLookAtCamera();
         });
     }
