@@ -461,7 +461,7 @@ class Gizmo extends EventHandler {
         const selection = [];
         for (let i = 0; i < this.intersectShapes.length; i++) {
             const shape = this.intersectShapes[i];
-            if (shape.disabled) {
+            if (shape.disabled || !shape.entity.enabled) {
                 continue;
             }
 

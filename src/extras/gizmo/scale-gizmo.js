@@ -18,6 +18,9 @@ const tmpV1 = new Vec3();
 const tmpV2 = new Vec3();
 const tmpQ1 = new Quat();
 
+// constants
+const GLANCE_EPSILON = 0.98;
+
 /**
  * Scaling gizmo.
  *
@@ -144,9 +147,6 @@ class ScaleGizmo extends TransformGizmo {
         });
 
         this._app.on('update', () => {
-            if (!this.flipPlanes) {
-                return;
-            }
             this._planesLookAtCamera();
         });
     }
@@ -366,13 +366,22 @@ class ScaleGizmo extends TransformGizmo {
      */
     _planesLookAtCamera() {
         tmpV1.cross(this._camera.entity.forward, this.root.right);
-        this._shapes.yz.flipped = tmpV2.set(0, +(tmpV1.dot(this.root.forward) > 0), +(tmpV1.dot(this.root.up) > 0));
+        this._shapes.yz.entity.enabled = tmpV1.length() < GLANCE_EPSILON;
+        if (this.flipPlanes) {
+            this._shapes.yz.flipped = tmpV2.set(0, +(tmpV1.dot(this.root.forward) > 0), +(tmpV1.dot(this.root.up) > 0));
+        }
 
         tmpV1.cross(this._camera.entity.forward, this.root.forward);
-        this._shapes.xy.flipped = tmpV2.set(+(tmpV1.dot(this.root.up) > 0), +(tmpV1.dot(this.root.right) < 0), 0);
+        this._shapes.xy.entity.enabled = tmpV1.length() < GLANCE_EPSILON;
+        if (this.flipPlanes) {
+            this._shapes.xy.flipped = tmpV2.set(+(tmpV1.dot(this.root.up) > 0), +(tmpV1.dot(this.root.right) < 0), 0);
+        }
 
         tmpV1.cross(this._camera.entity.forward, this.root.up);
-        this._shapes.xz.flipped = tmpV2.set(+(tmpV1.dot(this.root.forward) < 0), 0, +(tmpV1.dot(this.root.right) < 0));
+        this._shapes.xz.entity.enabled = tmpV1.length() < GLANCE_EPSILON;
+        if (this.flipPlanes) {
+            this._shapes.xz.flipped = tmpV2.set(+(tmpV1.dot(this.root.forward) < 0), 0, +(tmpV1.dot(this.root.right) < 0));
+        }
     }
 
     /**
