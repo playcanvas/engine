@@ -5,12 +5,11 @@ import { Mat4 } from '../../core/math/mat4.js';
 import { Vec3 } from '../../core/math/vec3.js';
 import { PROJECTION_ORTHOGRAPHIC, PROJECTION_PERSPECTIVE } from '../../scene/constants.js';
 
-import { AxisDisk } from './axis-shapes.js';
+import { ArcShape } from './shape/arc-shape.js';
 import { GIZMOSPACE_LOCAL, GIZMOAXIS_FACE, GIZMOAXIS_X, GIZMOAXIS_Y, GIZMOAXIS_Z } from './constants.js';
 import { TransformGizmo } from './transform-gizmo.js';
 
 /**
- * @import { AppBase } from '../../framework/app-base.js'
  * @import { CameraComponent } from '../../framework/components/camera/component.js'
  * @import { GraphNode } from '../../scene/graph-node.js'
  * @import { Layer } from '../../scene/layer.js'
@@ -35,33 +34,37 @@ const GUIDE_ANGLE_COLOR = new Color(0, 0, 0, 0.3);
  */
 class RotateGizmo extends TransformGizmo {
     _shapes = {
-        z: new AxisDisk(this._device, {
+        z: new ArcShape(this._device, {
             axis: GIZMOAXIS_Z,
             layers: [this._layer.id],
+            shading: this._shading,
             rotation: new Vec3(90, 0, 90),
             defaultColor: this._meshColors.axis.z,
             hoverColor: this._meshColors.hover.z,
             sectorAngle: 180
         }),
-        x: new AxisDisk(this._device, {
+        x: new ArcShape(this._device, {
             axis: GIZMOAXIS_X,
             layers: [this._layer.id],
+            shading: this._shading,
             rotation: new Vec3(0, 0, -90),
             defaultColor: this._meshColors.axis.x,
             hoverColor: this._meshColors.hover.x,
             sectorAngle: 180
         }),
-        y: new AxisDisk(this._device, {
+        y: new ArcShape(this._device, {
             axis: GIZMOAXIS_Y,
             layers: [this._layer.id],
+            shading: this._shading,
             rotation: new Vec3(0, 0, 0),
             defaultColor: this._meshColors.axis.y,
             hoverColor: this._meshColors.hover.y,
             sectorAngle: 180
         }),
-        face: new AxisDisk(this._device, {
+        face: new ArcShape(this._device, {
             axis: GIZMOAXIS_FACE,
             layers: [this._layer.id],
+            shading: this._shading,
             rotation: this._getLookAtEulerAngles(this._camera.entity.getPosition()),
             defaultColor: this._meshColors.axis.f,
             hoverColor: this._meshColors.hover.f,
@@ -125,14 +128,13 @@ class RotateGizmo extends TransformGizmo {
     /**
      * Creates a new RotateGizmo object.
      *
-     * @param {AppBase} app - The application instance.
      * @param {CameraComponent} camera - The camera component.
      * @param {Layer} layer - The render layer.
      * @example
      * const gizmo = new pc.RotateGizmo(app, camera, layer);
      */
-    constructor(app, camera, layer) {
-        super(app, camera, layer);
+    constructor(camera, layer) {
+        super(camera, layer);
 
         this._createTransform();
 
@@ -167,7 +169,7 @@ class RotateGizmo extends TransformGizmo {
             this._nodeOffsets.clear();
         });
 
-        app.on('update', () => {
+        this._app.on('prerender', () => {
             this._faceAxisLookAtCamera();
             this._xyzAxisLookAtCamera();
 
@@ -419,11 +421,6 @@ class RotateGizmo extends TransformGizmo {
         const isFacing = axis === GIZMOAXIS_FACE;
         for (let i = 0; i < this.nodes.length; i++) {
             const node = this.nodes[i];
-            const rot = this._nodeRotations.get(node);
-            if (!rot) {
-                continue;
-            }
-
             if (isFacing) {
                 tmpV1.copy(cameraPos).sub(gizmoPos).normalize();
             } else {
@@ -434,9 +431,17 @@ class RotateGizmo extends TransformGizmo {
             tmpQ1.setFromAxisAngle(tmpV1, angleDelta);
 
             if (!isFacing && this._coordSpace === GIZMOSPACE_LOCAL) {
+                const rot = this._nodeLocalRotations.get(node);
+                if (!rot) {
+                    continue;
+                }
                 tmpQ2.copy(rot).mul(tmpQ1);
                 node.setLocalRotation(tmpQ2);
             } else {
+                const rot = this._nodeRotations.get(node);
+                if (!rot) {
+                    continue;
+                }
                 const offset = this._nodeOffsets.get(node);
                 if (!offset) {
                     continue;

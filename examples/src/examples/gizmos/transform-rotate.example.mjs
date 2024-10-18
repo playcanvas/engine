@@ -88,20 +88,10 @@ light.addComponent('light');
 app.root.addChild(light);
 light.setEulerAngles(0, 0, -60);
 
-// create layers
-const gizmoLayer = new pc.Layer({
-    name: 'Gizmo',
-    clearDepthBuffer: true,
-    opaqueSortMode: pc.SORTMODE_NONE,
-    transparentSortMode: pc.SORTMODE_NONE
-});
-const layers = app.scene.layers;
-layers.push(gizmoLayer);
-camera.camera.layers = camera.camera.layers.concat(gizmoLayer.id);
-
 // create gizmo
-const gizmo = new pc.RotateGizmo(app, camera.camera, gizmoLayer);
-gizmo.attach([box]);
+const layer = pc.Gizmo.createLayer(app);
+const gizmo = new pc.RotateGizmo(camera.camera, layer);
+gizmo.attach(box);
 data.set('gizmo', {
     size: gizmo.size,
     snapIncrement: gizmo.snapIncrement,
@@ -109,6 +99,7 @@ data.set('gizmo', {
     yAxisColor: Object.values(gizmo.yAxisColor),
     zAxisColor: Object.values(gizmo.zAxisColor),
     colorAlpha: gizmo.colorAlpha,
+    shading: gizmo.shading,
     coordSpace: gizmo.coordSpace,
     ringTolerance: gizmo.ringTolerance,
     xyzTubeRadius: gizmo.xyzTubeRadius,
