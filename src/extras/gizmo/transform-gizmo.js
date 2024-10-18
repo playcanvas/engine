@@ -676,11 +676,7 @@ class TransformGizmo extends Gizmo {
         for (const key in this._shapes) {
             const shape = this._shapes[key];
             this.root.addChild(shape.entity);
-            this.intersectData.push({
-                triData: shape.triData,
-                parent: shape.entity,
-                meshInstances: shape.meshInstances
-            });
+            this.intersectShapes.push(shape);
             for (let i = 0; i < shape.meshInstances.length; i++) {
                 this._shapeMap.set(shape.meshInstances[i], shape);
             }

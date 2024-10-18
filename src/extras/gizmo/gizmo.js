@@ -16,7 +16,7 @@ import { GIZMOSPACE_LOCAL, GIZMOSPACE_WORLD } from './constants.js';
  * @typedef {import('../../scene/graph-node.js').GraphNode} GraphNode
  * @typedef {import('../../platform/graphics/graphics-device.js').GraphicsDevice} GraphicsDevice
  * @typedef {import('../../scene/mesh-instance.js').MeshInstance} MeshInstance
- * @typedef {import('./tri-data.js').TriData} TriData
+ * @typedef {import('./shape/shape.js').Shape} Shape
  */
 
 // temporary variables
@@ -217,18 +217,11 @@ class Gizmo extends EventHandler {
     root;
 
     /**
-     * @typedef IntersectData
-     * @property {TriData[]} triData - The array of {@link TriData}.
-     * @property {GraphNode} parent - The mesh parent node.
-     * @property {MeshInstance[]} meshInstances - Array of mesh instances for rendering.
-     */
-
-    /**
-     * The intersection data object.
+     * The intersection shapes for the gizmo.
      *
-     * @type {IntersectData[]}
+     * @type {Shape[]}
      */
-    intersectData = [];
+    intersectShapes = [];
 
     /**
      * Creates a new gizmo layer and adds it to the scene.
@@ -466,11 +459,15 @@ class Gizmo extends EventHandler {
         const dir = end.clone().sub(start).normalize();
 
         const selection = [];
-        for (let i = 0; i < this.intersectData.length; i++) {
-            const { triData, parent, meshInstances } = this.intersectData[i];
-            const parentTM = parent.getWorldTransform();
-            for (let j = 0; j < triData.length; j++) {
-                const { tris, transform, priority } = triData[j];
+        for (let i = 0; i < this.intersectShapes.length; i++) {
+            const shape = this.intersectShapes[i];
+            if (shape.disabled) {
+                continue;
+            }
+
+            const parentTM = shape.entity.getWorldTransform();
+            for (let j = 0; j < shape.triData.length; j++) {
+                const { tris, transform, priority } = shape.triData[j];
 
                 // combine node world transform with transform of tri relative to parent
                 const triWTM = tmpM1.copy(parentTM).mul(transform);
@@ -485,7 +482,7 @@ class Gizmo extends EventHandler {
                     if (tris[k].intersectsRay(ray, tmpV1)) {
                         selection.push({
                             dist: triWTM.transformPoint(tmpV1).sub(start).length(),
-                            meshInstances: meshInstances,
+                            meshInstances: shape.meshInstances,
                             priority: priority
                         });
                     }
