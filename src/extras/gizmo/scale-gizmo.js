@@ -116,6 +116,13 @@ class ScaleGizmo extends TransformGizmo {
     flipPlanes = true;
 
     /**
+     * The lower bound for scaling.
+     *
+     * @type {Vec3}
+     */
+    lowerScaleBound = new Vec3(-Infinity, -Infinity, -Infinity);
+
+    /**
      * Creates a new ScaleGizmo object.
      *
      * @param {CameraComponent} camera - The camera component.
@@ -405,7 +412,7 @@ class ScaleGizmo extends TransformGizmo {
             if (!scale) {
                 continue;
             }
-            node.setLocalScale(scale.clone().mul(pointDelta));
+            node.setLocalScale(tmpV1.copy(scale).mul(pointDelta).max(this.lowerScaleBound));
         }
     }
 
