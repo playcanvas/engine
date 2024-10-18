@@ -411,13 +411,13 @@ class TranslateGizmo extends TransformGizmo {
                 tmpV2.z = 1 / tmpV2.z;
                 tmpQ1.copy(node.getLocalRotation()).transformVector(tmpV1, tmpV1);
                 tmpV1.mul(tmpV2);
-                node.setLocalPosition(pos.clone().add(tmpV1));
+                node.setLocalPosition(tmpV1.add(pos));
             } else {
                 const pos = this._nodePositions.get(node);
                 if (!pos) {
                     continue;
                 }
-                node.setPosition(pos.clone().add(pointDelta));
+                node.setPosition(tmpV1.copy(pointDelta).add(pos));
             }
         }
 
