@@ -152,19 +152,28 @@ class OutlineRenderer {
         this.quadRenderer = null;
     }
 
-    getMeshInstances(entity, recursive) {
+    getMeshInstances(entity, recursive, forceAll = false) {
         const meshInstances = [];
+        const isEnabled = (entity) => {
+            const renderComponentEnabled = entity.render?.enabled ?? true;
+            const modelComponentEnabled = entity.model?.enabled ?? true;
+            const enabled = forceAll || (entity.enabled && renderComponentEnabled && modelComponentEnabled);
+            if (enabled && entity.parent) {
+                return isEnabled(entity.parent);
+            }
+            return enabled;
+        };
 
-        const renders = recursive ? entity.findComponents('render') : (entity.render ? [entity.render] : []);
+        const renders = recursive ? entity.findComponents('render') : entity.render ? [entity.render] : [];
         renders.forEach((render) => {
-            if (render.entity.enabled && render.enabled) {
+            if (isEnabled(render.entity)) {
                 meshInstances.push(...render.meshInstances);
             }
         });
 
-        const models = recursive ? entity.findComponents('model') : (entity.model ? [entity.model] : []);
+        const models = recursive ? entity.findComponents('model') : entity.model ? [entity.model] : [];
         models.forEach((model) => {
-            if (model.entity.enabled && model.enabled) {
+            if (isEnabled(model.entity)) {
                 meshInstances.push(...model.meshInstances);
             }
         });
@@ -228,7 +237,7 @@ class OutlineRenderer {
      * Defaults to true.
      */
     removeEntity(entity, recursive = true) {
-        const meshInstances = this.getMeshInstances(entity, recursive);
+        const meshInstances = this.getMeshInstances(entity, recursive, true);
         this.renderingLayer.removeMeshInstances(meshInstances);
 
         meshInstances.forEach((meshInstance) => {
