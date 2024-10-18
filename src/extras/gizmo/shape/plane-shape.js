@@ -4,6 +4,8 @@ import { PlaneGeometry } from '../../../scene/geometry/plane-geometry.js';
 import { TriData } from '../tri-data.js';
 import { Shape } from './shape.js';
 
+const UPDATE_EPSILON = 1e-6;
+
 class PlaneShape extends Shape {
     _cull = CULLFACE_NONE;
 
@@ -42,6 +44,10 @@ class PlaneShape extends Shape {
     }
 
     set flipped(value) {
+        if (this._flipped.distance(value) < UPDATE_EPSILON) {
+            return;
+        }
+
         this._flipped.copy(value);
         this._updateTransform();
     }
