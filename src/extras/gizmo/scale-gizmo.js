@@ -120,7 +120,7 @@ class ScaleGizmo extends TransformGizmo {
      *
      * @type {Vec3}
      */
-    lowerScaleBound = new Vec3(-Infinity, -Infinity, -Infinity);
+    lowerBoundScale = new Vec3(-Infinity, -Infinity, -Infinity);
 
     /**
      * Creates a new ScaleGizmo object.
@@ -412,7 +412,7 @@ class ScaleGizmo extends TransformGizmo {
             if (!scale) {
                 continue;
             }
-            node.setLocalScale(tmpV1.copy(scale).mul(pointDelta).max(this.lowerScaleBound));
+            node.setLocalScale(tmpV1.copy(scale).mul(pointDelta).max(this.lowerBoundScale));
         }
     }
 
