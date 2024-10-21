@@ -175,8 +175,6 @@ class WebglRenderTarget {
                         target.mipLevel
                     );
 
-                    console.log(target.name, " level ", target.mipLevel);
-
                     buffers.push(attachmentBaseConstant + i);
                 }
             }
