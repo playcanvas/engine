@@ -82,7 +82,7 @@ class RenderTarget {
     _mipLevel;
 
     /**
-     * True if the mipmaps should b automatically generated for the color buffer(s) if it contains
+     * True if the mipmaps should be automatically generated for the color buffer(s) if it contains
      * a mip chain.
      *
      * @type {boolean}
