@@ -51,7 +51,7 @@ class ColorAttachmentOps {
      *
      * @type {boolean}
      */
-    mipmaps = false;
+    genMipmaps = false;
 }
 
 class DepthStencilAttachmentOps {
@@ -315,8 +315,8 @@ class RenderPass {
             }
 
             // if render target needs mipmaps
-            if (this.renderTarget?._colorBuffers?.[i].mipmaps) {
-                colorOps.mipmaps = true;
+            if (this.renderTarget?.mipmaps && this.renderTarget?._colorBuffers?.[i].mipmaps) {
+                colorOps.genMipmaps = true;
             }
         }
     }
@@ -458,12 +458,14 @@ class RenderPass {
             const numColor = rt?._colorBuffers?.length ?? (isBackBuffer ? 1 : 0);
             const hasDepth = rt?.depth;
             const hasStencil = rt?.stencil;
+            const mipLevel = rt?.mipLevel;
             const rtInfo = !rt ? '' : ` RT: ${(rt ? rt.name : 'NULL')} ` +
                 `${numColor > 0 ? `[Color${numColor > 1 ? ` x ${numColor}` : ''}]` : ''}` +
                 `${hasDepth ? '[Depth]' : ''}` +
                 `${hasStencil ? '[Stencil]' : ''}` +
                 ` ${rt.width} x ${rt.height}` +
-                `${(this.samples > 0 ? ` samples: ${this.samples}` : '')}`;
+                `${(this.samples > 0 ? ` samples: ${this.samples}` : '')}` +
+                `${mipLevel > 0 ? ` mipLevel: ${mipLevel}` : ''}`;
 
             const indexString = this._skipStart ? '++' : index.toString().padEnd(2, ' ');
             Debug.trace(TRACEID_RENDER_PASS,
@@ -478,7 +480,7 @@ class RenderPass {
                             `${colorOps.clear ? 'clear' : 'load'}->` +
                             `${colorOps.store ? 'store' : 'discard'} ` +
                             `${colorOps.resolve ? 'resolve ' : ''}` +
-                            `${colorOps.mipmaps ? 'mipmaps ' : ''}` +
+                            `${colorOps.genMipmaps ? 'mipmaps ' : ''}` +
                             ` [format: ${colorFormat}]`);
             }
 
