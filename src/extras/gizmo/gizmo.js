@@ -456,12 +456,12 @@ class Gizmo extends EventHandler {
     _getSelection(x, y) {
         const start = this._camera.entity.getPosition();
         const end = this._camera.screenToWorld(x, y, this._camera.farClip - this._camera.nearClip);
-        const dir = end.clone().sub(start).normalize();
+        const dir = tmpV1.copy(end).sub(start).normalize();
 
         const selection = [];
         for (let i = 0; i < this.intersectShapes.length; i++) {
             const shape = this.intersectShapes[i];
-            if (shape.disabled) {
+            if (shape.disabled || !shape.entity.enabled) {
                 continue;
             }
 

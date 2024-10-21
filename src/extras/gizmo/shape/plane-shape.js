@@ -4,12 +4,16 @@ import { PlaneGeometry } from '../../../scene/geometry/plane-geometry.js';
 import { TriData } from '../tri-data.js';
 import { Shape } from './shape.js';
 
+const UPDATE_EPSILON = 1e-6;
+
 class PlaneShape extends Shape {
     _cull = CULLFACE_NONE;
 
     _size = 0.2;
 
     _gap = 0.1;
+
+    _flipped = new Vec3();
 
     constructor(device, options = {}) {
         super(device, options);
@@ -19,21 +23,6 @@ class PlaneShape extends Shape {
         ];
 
         this._createPlane();
-    }
-
-    _getPosition() {
-        const offset = this._size / 2 + this._gap;
-        const position = new Vec3(offset, offset, offset);
-        position[this.axis] = 0;
-        return position;
-    }
-
-    _createPlane() {
-        this._createRoot('plane');
-        this._updateTransform();
-
-        // plane
-        this._addRenderMesh(this.entity, 'plane', this._shading);
     }
 
     set size(value) {
@@ -52,6 +41,37 @@ class PlaneShape extends Shape {
 
     get gap() {
         return this._gap;
+    }
+
+    set flipped(value) {
+        if (this._flipped.distance(value) < UPDATE_EPSILON) {
+            return;
+        }
+        this._flipped.copy(value);
+        this.entity.setLocalPosition(this._getPosition());
+    }
+
+    get flipped() {
+        return this._flipped;
+    }
+
+    _getPosition() {
+        const offset = this._size / 2 + this._gap;
+        const position = new Vec3(
+            this._flipped.x ? -offset : offset,
+            this._flipped.y ? -offset : offset,
+            this._flipped.z ? -offset : offset
+        );
+        position[this.axis] = 0;
+        return position;
+    }
+
+    _createPlane() {
+        this._createRoot('plane');
+        this._updateTransform();
+
+        // plane
+        this._addRenderMesh(this.entity, 'plane', this._shading);
     }
 
     _updateTransform() {

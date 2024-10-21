@@ -18,6 +18,9 @@ const tmpV1 = new Vec3();
 const tmpV2 = new Vec3();
 const tmpQ1 = new Quat();
 
+// constants
+const GLANCE_EPSILON = 0.98;
+
 /**
  * Scaling gizmo.
  *
@@ -106,6 +109,20 @@ class ScaleGizmo extends TransformGizmo {
     snapIncrement = 1;
 
     /**
+     * Flips the planes to face the camera.
+     *
+     * @type {boolean}
+     */
+    flipPlanes = true;
+
+    /**
+     * The lower bound for scaling.
+     *
+     * @type {Vec3}
+     */
+    lowerBoundScale = new Vec3(-Infinity, -Infinity, -Infinity);
+
+    /**
      * Creates a new ScaleGizmo object.
      *
      * @param {CameraComponent} camera - The camera component.
@@ -134,6 +151,10 @@ class ScaleGizmo extends TransformGizmo {
 
         this.on(TransformGizmo.EVENT_NODESDETACH, () => {
             this._nodeScales.clear();
+        });
+
+        this._app.on('prerender', () => {
+            this._planesLookAtCamera();
         });
     }
 
@@ -350,6 +371,29 @@ class ScaleGizmo extends TransformGizmo {
     /**
      * @private
      */
+    _planesLookAtCamera() {
+        tmpV1.cross(this._camera.entity.forward, this.root.right);
+        this._shapes.yz.entity.enabled = tmpV1.length() < GLANCE_EPSILON;
+        if (this.flipPlanes) {
+            this._shapes.yz.flipped = tmpV2.set(0, +(tmpV1.dot(this.root.forward) > 0), +(tmpV1.dot(this.root.up) > 0));
+        }
+
+        tmpV1.cross(this._camera.entity.forward, this.root.forward);
+        this._shapes.xy.entity.enabled = tmpV1.length() < GLANCE_EPSILON;
+        if (this.flipPlanes) {
+            this._shapes.xy.flipped = tmpV2.set(+(tmpV1.dot(this.root.up) > 0), +(tmpV1.dot(this.root.right) < 0), 0);
+        }
+
+        tmpV1.cross(this._camera.entity.forward, this.root.up);
+        this._shapes.xz.entity.enabled = tmpV1.length() < GLANCE_EPSILON;
+        if (this.flipPlanes) {
+            this._shapes.xz.flipped = tmpV2.set(+(tmpV1.dot(this.root.forward) < 0), 0, +(tmpV1.dot(this.root.right) < 0));
+        }
+    }
+
+    /**
+     * @private
+     */
     _storeNodeScales() {
         for (let i = 0; i < this.nodes.length; i++) {
             const node = this.nodes[i];
@@ -368,7 +412,7 @@ class ScaleGizmo extends TransformGizmo {
             if (!scale) {
                 continue;
             }
-            node.setLocalScale(scale.clone().mul(pointDelta));
+            node.setLocalScale(tmpV1.copy(scale).mul(pointDelta).max(this.lowerBoundScale));
         }
     }
 
