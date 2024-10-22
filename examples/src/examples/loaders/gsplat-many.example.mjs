@@ -70,29 +70,33 @@ assetListLoader.load(() => {
     });
     camera.setLocalPosition(-3, 1, 2);
 
-    const createSplatInstance = (name, resource, px, py, pz, scale, vertex, fragment) => {
-        const splat = resource.instantiate({
+    // instantiate guitar with a custom shader
+    const guitar = assets.guitar.resource.instantiate({
+        fragment: files['shader.frag'],
+        vertex: files['shader.vert']
+    });
+    guitar.name = 'guitar';
+    guitar.setLocalPosition(0, 0.8, 0);
+    guitar.setLocalScale(0.4, 0.4, 0.4);
+    app.root.addChild(guitar);
+
+    // helper function to create a splat instance
+    const createSplatInstance = (name, asset, px, py, pz, scale, vertex, fragment) => {
+        const entity = new pc.Entity(name);
+        entity.addComponent('gsplat', {
+            asset: asset,
             fragment: fragment,
             vertex: vertex
         });
-        splat.name = name;
-        splat.setLocalPosition(px, py, pz);
-        splat.setLocalScale(scale, scale, scale);
-        app.root.addChild(splat);
-        return splat;
+        entity.setLocalPosition(px, py, pz);
+        entity.setLocalEulerAngles(180, 90, 0);
+        entity.setLocalScale(scale, scale, scale);
+        app.root.addChild(entity);
+
+        return entity;
     };
 
-    const guitar = createSplatInstance(
-        'guitar',
-        assets.guitar.resource,
-        0,
-        0.8,
-        0,
-        0.4,
-        files['shader.vert'],
-        files['shader.frag']
-    );
-    const biker1 = createSplatInstance('biker1', assets.biker.resource, -1.5, 0.05, 0, 0.7);
+    const biker1 = createSplatInstance('biker1', assets.biker, -1.5, 0.05, 0, 0.7);
 
     // clone the biker and add the clone to the scene
     const biker2 = biker1.clone();
