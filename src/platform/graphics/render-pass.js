@@ -51,7 +51,7 @@ class ColorAttachmentOps {
      *
      * @type {boolean}
      */
-    mipmaps = false;
+    genMipmaps = false;
 }
 
 class DepthStencilAttachmentOps {
@@ -125,6 +125,24 @@ class RenderPass {
      * @private
      */
     _enabled = true;
+
+    /**
+     * True if the render pass start is skipped. This means the render pass is merged into the
+     * previous one.
+     *
+     * @type {boolean}
+     * @private
+     */
+    _skipStart = false;
+
+    /**
+     * True if the render pass end is skipped. This means the following render pass is merged into
+     * this one.
+     *
+     * @type {boolean}
+     * @private
+     */
+    _skipEnd = false;
 
     /**
      * True if the render pass is enabled and execute function will be called. Note that before and
@@ -297,8 +315,8 @@ class RenderPass {
             }
 
             // if render target needs mipmaps
-            if (this.renderTarget?._colorBuffers?.[i].mipmaps) {
-                colorOps.mipmaps = true;
+            if (this.renderTarget?.mipmaps && this.renderTarget?._colorBuffers?.[i].mipmaps) {
+                colorOps.genMipmaps = true;
             }
         }
     }
@@ -414,13 +432,13 @@ class RenderPass {
 
             if (this.executeEnabled) {
 
-                if (realPass) {
+                if (realPass && !this._skipStart) {
                     device.startRenderPass(this);
                 }
 
                 this.execute();
 
-                if (realPass) {
+                if (realPass && !this._skipEnd) {
                     device.endRenderPass(this);
                 }
             }
@@ -440,15 +458,18 @@ class RenderPass {
             const numColor = rt?._colorBuffers?.length ?? (isBackBuffer ? 1 : 0);
             const hasDepth = rt?.depth;
             const hasStencil = rt?.stencil;
+            const mipLevel = rt?.mipLevel;
             const rtInfo = !rt ? '' : ` RT: ${(rt ? rt.name : 'NULL')} ` +
                 `${numColor > 0 ? `[Color${numColor > 1 ? ` x ${numColor}` : ''}]` : ''}` +
                 `${hasDepth ? '[Depth]' : ''}` +
                 `${hasStencil ? '[Stencil]' : ''}` +
                 ` ${rt.width} x ${rt.height}` +
-                `${(this.samples > 0 ? ` samples: ${this.samples}` : '')}`;
+                `${(this.samples > 0 ? ` samples: ${this.samples}` : '')}` +
+                `${mipLevel > 0 ? ` mipLevel: ${mipLevel}` : ''}`;
 
+            const indexString = this._skipStart ? '++' : index.toString().padEnd(2, ' ');
             Debug.trace(TRACEID_RENDER_PASS,
-                `${index.toString().padEnd(2, ' ')}: ${this.name.padEnd(20, ' ')}` +
+                `${indexString}: ${this.name.padEnd(20, ' ')}` +
                         `${this.executeEnabled ? '' : ' DISABLED '}${
                             rtInfo.padEnd(30)}`);
 
@@ -459,7 +480,7 @@ class RenderPass {
                             `${colorOps.clear ? 'clear' : 'load'}->` +
                             `${colorOps.store ? 'store' : 'discard'} ` +
                             `${colorOps.resolve ? 'resolve ' : ''}` +
-                            `${colorOps.mipmaps ? 'mipmaps ' : ''}` +
+                            `${colorOps.genMipmaps ? 'mipmaps ' : ''}` +
                             ` [format: ${colorFormat}]`);
             }
 

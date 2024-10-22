@@ -774,7 +774,7 @@ class WebgpuGraphicsDevice extends GraphicsDevice {
         // generate mipmaps using the same command buffer encoder
         for (let i = 0; i < renderPass.colorArrayOps.length; i++) {
             const colorOps = renderPass.colorArrayOps[i];
-            if (colorOps.mipmaps) {
+            if (colorOps.genMipmaps) {
                 this.mipmapRenderer.generate(renderPass.renderTarget._colorBuffers[i].impl);
             }
         }
