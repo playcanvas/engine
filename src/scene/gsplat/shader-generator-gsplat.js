@@ -285,7 +285,9 @@ class GSplatShaderGenerator {
             splatCoreFS + options.fragment;
 
         const defineMap = new Map();
-        options.defines.forEach(value => defineMap.set(value, true));
+        options.defines.forEach((value, key) => {
+            defineMap.set(key, value);
+        });
 
         return ShaderUtils.createDefinition(device, {
             name: 'SplatShader',
