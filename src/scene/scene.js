@@ -417,6 +417,11 @@ class Scene extends EventHandler {
         return this._layers;
     }
 
+    /**
+     * Gets the {@link Sky} that defines sky properties.
+     *
+     * @type {Sky}
+     */
     get sky() {
         return this._sky;
     }

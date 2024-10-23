@@ -193,6 +193,9 @@ export { shaderChunks } from './scene/shader-lib/chunks/chunks.js';
 export { shaderChunksLightmapper } from './scene/shader-lib/chunks/chunks-lightmapper.js';
 export { ChunkBuilder } from './scene/shader-lib/chunk-builder.js';     // used by shed
 
+// SCENE / SKY
+export { Sky } from './scene/skybox/sky.js';
+
 // SCENE / SPLAT
 export { GSplatData } from './scene/gsplat/gsplat-data.js';
 export { GSplat } from './scene/gsplat/gsplat.js';
