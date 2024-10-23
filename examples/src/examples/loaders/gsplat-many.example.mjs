@@ -84,9 +84,7 @@ assetListLoader.load(() => {
     const createSplatInstance = (name, asset, px, py, pz, scale, vertex, fragment) => {
         const entity = new pc.Entity(name);
         entity.addComponent('gsplat', {
-            asset: asset,
-            fragment: fragment,
-            vertex: vertex
+            asset: asset
         });
         entity.setLocalPosition(px, py, pz);
         entity.setLocalEulerAngles(180, 90, 0);
