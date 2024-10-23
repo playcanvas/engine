@@ -105,7 +105,6 @@ class AnimComponentSystem extends ComponentSystem {
                 if (
                     animComponent._mi &&
                   animComponent._mi.visible &&
-                  (animComponent._mi.visibleThisFrame || animComponent._mi.visibleThisFrame === undefined) &&
                   animComponent.entity.enabled &&
                   animComponent.playing
                 ) {
@@ -173,7 +172,6 @@ class AnimComponentSystem extends ComponentSystem {
                     this.updateMeshInstanceCache(animComponent, id);
                     if (animComponent._mi &&
                       animComponent._mi.visible &&
-                      (animComponent._mi.visibleThisFrame || animComponent._mi.visibleThisFrame === undefined) &&
                       // componentData.enabled &&
                       animComponent.entity.enabled &&
                       animComponent.playing
