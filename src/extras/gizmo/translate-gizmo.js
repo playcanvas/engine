@@ -22,11 +22,11 @@ import { SphereShape } from './shape/sphere-shape.js';
 // temporary variables
 const tmpV1 = new Vec3();
 const tmpV2 = new Vec3();
-const tmpV3 = new Vec3();
 const tmpQ1 = new Quat();
 
 // constants
 const GLANCE_EPSILON = 0.98;
+const CAMERA_EPSILON = 0.999;
 
 /**
  * Translation gizmo.
@@ -107,6 +107,14 @@ class TranslateGizmo extends TransformGizmo {
      * @private
      */
     _nodePositions = new Map();
+
+    /**
+     * Internal forward vector of the camera in the direction of the gizmo.
+     *
+     * @type {Vec3}
+     * @private
+     */
+    _forward = new Vec3();
 
     /**
      * @override
@@ -362,39 +370,43 @@ class TranslateGizmo extends TransformGizmo {
      * @private
      */
     _shapesLookAtCamera() {
-        const forward = tmpV3.copy(this.root.getPosition()).sub(this._camera.entity.getPosition()).normalize();
+        tmpV1.copy(this.root.getPosition()).sub(this._camera.entity.getPosition()).normalize();
+        if (tmpV1.dot(this._forward) > CAMERA_EPSILON) {
+            return;
+        }
+        this._forward.copy(tmpV1);
 
-        let dot = forward.dot(this.root.right);
+        let dot = this._forward.dot(this.root.right);
         this._shapes.x.entity.enabled = Math.abs(dot) < GLANCE_EPSILON;
         if (this.flipShapes) {
             this._shapes.x.flipped = dot > 0;
         }
 
-        dot = forward.dot(this.root.up);
+        dot = this._forward.dot(this.root.up);
         this._shapes.y.entity.enabled = Math.abs(dot) < GLANCE_EPSILON;
         if (this.flipShapes) {
             this._shapes.y.flipped = dot > 0;
         }
 
-        dot = forward.dot(this.root.forward);
+        dot = this._forward.dot(this.root.forward);
         this._shapes.z.entity.enabled = Math.abs(dot) < GLANCE_EPSILON;
         if (this.flipShapes) {
             this._shapes.z.flipped = dot < 0;
         }
 
-        tmpV1.cross(forward, this.root.right);
+        tmpV1.cross(this._forward, this.root.right);
         this._shapes.yz.entity.enabled = tmpV1.length() < GLANCE_EPSILON;
         if (this.flipShapes) {
             this._shapes.yz.flipped = tmpV2.set(0, +(tmpV1.dot(this.root.forward) > 0), +(tmpV1.dot(this.root.up) > 0));
         }
 
-        tmpV1.cross(forward, this.root.forward);
+        tmpV1.cross(this._forward, this.root.forward);
         this._shapes.xy.entity.enabled = tmpV1.length() < GLANCE_EPSILON;
         if (this.flipShapes) {
             this._shapes.xy.flipped = tmpV2.set(+(tmpV1.dot(this.root.up) > 0), +(tmpV1.dot(this.root.right) < 0), 0);
         }
 
-        tmpV1.cross(forward, this.root.up);
+        tmpV1.cross(this._forward, this.root.up);
         this._shapes.xz.entity.enabled = tmpV1.length() < GLANCE_EPSILON;
         if (this.flipShapes) {
             this._shapes.xz.flipped = tmpV2.set(+(tmpV1.dot(this.root.forward) < 0), 0, +(tmpV1.dot(this.root.right) < 0));
