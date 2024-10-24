@@ -1,6 +1,7 @@
 import * as pc from 'playcanvas';
 import { data } from 'examples/observer';
-import { deviceType, rootPath } from 'examples/utils';
+import { deviceType, rootPath, fileImport } from 'examples/utils';
+const { CameraFrame } = await fileImport(rootPath + '/static/assets/scripts/misc/camera-frame.mjs');
 
 const canvas = /** @type {HTMLCanvasElement} */ (document.getElementById('application-canvas'));
 window.focus();
@@ -92,6 +93,7 @@ assetListLoader.load(() => {
         material.metalness = 0.6;
         material.useMetalness = true;
         material.emissive = pc.Color.YELLOW;
+        material.emissiveIntensity = 100;
         material.update();
 
         // create the primitive using the material
@@ -140,77 +142,104 @@ assetListLoader.load(() => {
         clearColor: new pc.Color(0.4, 0.45, 0.5),
         farClip: 500
     });
-    camera.addComponent('script');
-    data.set('scripts', {
-        ssao: {
-            enabled: true,
-            radius: 5,
-            samples: 16,
-            brightness: 0,
-            downscale: 1
-        },
-        bloom: {
-            enabled: true,
-            bloomIntensity: 0.8,
-            bloomThreshold: 0.7,
-            blurAmount: 15
-        },
-        sepia: {
-            enabled: true,
-            amount: 0.4
-        },
-        vignette: {
-            enabled: true,
-            darkness: 1,
-            offset: 1.2
-        },
-        // bokeh: {
-        //     enabled: false,
-        //     aperture: 0.1,
-        //     maxBlur: 0.02
-        // }
-    });
+    // camera.addComponent('script');
+    // data.set('scripts', {
+    //     ssao: {
+    //         enabled: true,
+    //         radius: 5,
+    //         samples: 16,
+    //         brightness: 0,
+    //         downscale: 1
+    //     },
+    //     bloom: {
+    //         enabled: true,
+    //         bloomIntensity: 0.8,
+    //         bloomThreshold: 0.7,
+    //         blurAmount: 15
+    //     },
+    //     sepia: {
+    //         enabled: true,
+    //         amount: 0.4
+    //     },
+    //     vignette: {
+    //         enabled: true,
+    //         darkness: 1,
+    //         offset: 1.2
+    //     },
+    //     bokeh: {
+    //         enabled: true,
+    //         aperture: 0.1,
+    //         maxBlur: 0.02
+    //     }
+    // });
 
-    Object.keys(data.get('scripts')).forEach((key) => {
-        camera.script.create(key, {
-            attributes: data.get(`scripts.${key}`)
-        });
-    });
+    // Object.keys(data.get('scripts')).forEach((key) => {
+    //     camera.script.create(key, {
+    //         attributes: data.get(`scripts.${key}`)
+    //     });
+    // });
 
     // position the camera in the world
     camera.setLocalPosition(0, 30, -60);
     camera.lookAt(0, 0, 100);
     app.root.addChild(camera);
 
-    // Allow user to toggle individual post effects
-    app.keyboard.on(
-        'keydown',
-        function (e) {
-            // if the user is editing an input field, ignore key presses
-            if (e.element.constructor.name === 'HTMLInputElement') return;
-            switch (e.key) {
-                case pc.KEY_1:
-                    data.set('scripts.bloom.enabled', !data.get('scripts.bloom.enabled'));
-                    break;
-                case pc.KEY_2:
-                    data.set('scripts.sepia.enabled', !data.get('scripts.sepia.enabled'));
-                    break;
-                case pc.KEY_3:
-                    data.set('scripts.vignette.enabled', !data.get('scripts.vignette.enabled'));
-                    break;
-                case pc.KEY_4:
-                    data.set('scripts.bokeh.enabled', !data.get('scripts.bokeh.enabled'));
-                    break;
-                case pc.KEY_5:
-                    data.set('scripts.ssao.enabled', !data.get('scripts.ssao.enabled'));
-                    break;
-                case pc.KEY_6:
-                    data.set('data.postProcessUI.enabled', !data.get('data.postProcessUI.enabled'));
-                    break;
-            }
-        },
-        this
-    );
+
+
+    camera.addComponent('script');
+    const cameraFrame = camera.script.create(CameraFrame);
+    cameraFrame.rendering.samples = 4;
+    cameraFrame.rendering.toneMapping = pc.TONEMAP_ACES;
+    cameraFrame.bloom.intensity = 0.04;
+    cameraFrame.bloom.enabled = true;
+
+    cameraFrame.grading.enabled = true;
+    cameraFrame.grading.tint = new pc.Color(1, 0.5, 0.5);
+
+    cameraFrame.ssao.type = pc.SSAOTYPE_LIGHTING;
+    cameraFrame.ssao.blurEnabled = true;
+    cameraFrame.ssao.intensity = 1;
+    cameraFrame.ssao.power = 6;
+    cameraFrame.ssao.radius = 5;
+    cameraFrame.ssao.samples = 16;
+
+
+    // vignette
+    cameraFrame.vignette.enabled = true;
+    cameraFrame.vignette.inner = 0.3;
+    cameraFrame.vignette.outer = 1;
+    cameraFrame.vignette.curvature = 0.5;
+    cameraFrame.vignette.intensity = 0.3;
+
+    // // Allow user to toggle individual post effects
+    // app.keyboard.on(
+    //     'keydown',
+    //     function (e) {
+    //         // if the user is editing an input field, ignore key presses
+    //         if (e.element.constructor.name === 'HTMLInputElement') return;
+    //         switch (e.key) {
+    //             case pc.KEY_1:
+    //                 data.set('scripts.bloom.enabled', !data.get('scripts.bloom.enabled'));
+    //                 break;
+    //             case pc.KEY_2:
+    //                 data.set('scripts.sepia.enabled', !data.get('scripts.sepia.enabled'));
+    //                 break;
+    //             case pc.KEY_3:
+    //                 data.set('scripts.vignette.enabled', !data.get('scripts.vignette.enabled'));
+    //                 break;
+    //             case pc.KEY_4:
+    //                 data.set('scripts.bokeh.enabled', !data.get('scripts.bokeh.enabled'));
+    //                 break;
+    //             case pc.KEY_5:
+    //                 data.set('scripts.ssao.enabled', !data.get('scripts.ssao.enabled'));
+    //                 break;
+    //             case pc.KEY_6:
+    //                 data.set('data.postProcessUI.enabled', !data.get('data.postProcessUI.enabled'));
+    //                 break;
+    //         }
+    //     },
+    //     this
+    // );
 
     // Create a 2D screen to place UI on
     const screen = new pc.Entity();
@@ -266,15 +295,15 @@ assetListLoader.load(() => {
         // }
     });
 
-    data.on('*:set', (/** @type {string} */ path, value) => {
-        const pathArray = path.split('.');
-        if (pathArray[0] === 'scripts') {
-            camera.script[pathArray[1]][pathArray[2]] = value;
-        } else {
-            camera.camera.disablePostEffectsLayer =
-                camera.camera.disablePostEffectsLayer === pc.LAYERID_UI ? undefined : pc.LAYERID_UI;
-        }
-    });
+    // data.on('*:set', (/** @type {string} */ path, value) => {
+    //     const pathArray = path.split('.');
+    //     if (pathArray[0] === 'scripts') {
+    //         camera.script[pathArray[1]][pathArray[2]] = value;
+    //     } else {
+    //         camera.camera.disablePostEffectsLayer =
+    //             camera.camera.disablePostEffectsLayer === pc.LAYERID_UI ? undefined : pc.LAYERID_UI;
+    //     }
+    // });
 });
 
 export { app };
