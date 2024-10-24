@@ -93,55 +93,61 @@ export function parseConfig(script) {
 }
 
 const DEVICE_TYPES = ['webgpu', 'webgl2', 'webgl1'];
-
-/**
- * @param {any} config - The configuration object.
- * @returns {string} - The device type.
- */
-function getDeviceType(config) {
-    if (params.deviceType && DEVICE_TYPES.includes(params.deviceType)) {
-        console.warn("Overwriting default deviceType from URL: ", params.deviceType);
-        return params.deviceType;
-    }
-
-    const selectedDevice = localStorage.getItem('preferredGraphicsDevice') ?? 'webgl2';
-
-    switch (selectedDevice) {
-        case 'webgpu':
-            if (config.WEBGPU_DISABLED) {
-                console.warn('Picked WebGPU but example is not supported on WebGPU, defaulting to WebGL2');
-                return 'webgl2';
-            }
-            break;
-        case 'webgl2':
-            if (config.WEBGL_DISABLED) {
-                console.warn('Picked WebGL2 but example is not supported on WebGL, defaulting to WebGPU');
-                return 'webgpu';
-            }
-            break;
-        case 'webgl1':
-            if (config.WEBGL_DISABLED) {
-                console.warn('Picked WebGL1 but example is not supported on WebGL, defaulting to WebGPU');
-                return 'webgpu';
-            }
-
-            if (config.WEBGL1_DISABLED) {
-                console.warn('Picked WebGL1 but example is not supported on WebGL1, defaulting to WebGL2');
-                return 'webgl2';
-            }
-            break;
-    }
-
-    return selectedDevice;
-}
-
 export let deviceType = 'webgl2';
 
 /**
- * @param {Record<string, any>} config - The configuration object.
+ * @param {{ WEBGPU_DISABLED: boolean; WEBGL_DISABLED: boolean; WEBGL1_DISABLED: boolean }} config -
+ * The configuration object.
  */
 export function updateDeviceType(config) {
-    deviceType = getDeviceType(config);
+    const savedDevice = localStorage.getItem('preferredGraphicsDevice') ?? 'webgl2';
+    deviceType = DEVICE_TYPES.includes(savedDevice) ? savedDevice : 'webgl2';
+
+    if (params.deviceType && DEVICE_TYPES.includes(params.deviceType)) {
+        console.warn("Overriding default device: ", params.deviceType);
+        deviceType = params.deviceType;
+        return;
+    }
+    if (config.WEBGL1_DISABLED && config.WEBGL_DISABLED && config.WEBGPU_DISABLED) {
+        console.warn('WebGL 1.0, WebGL 2.0 and WebGPU are disabled. Using Null device instead.');
+        deviceType = 'null';
+        return;
+    }
+    if (config.WEBGPU_DISABLED) {
+        if (config.WEBGL_DISABLED && deviceType !== 'webgl1') {
+            console.warn('WebGPU is disabled. Using WebGL 1.0 device instead.');
+            deviceType = 'webgl1';
+            return;
+        }
+        if (config.WEBGL1_DISABLED && deviceType !== 'webgl2') {
+            console.warn('WebGPU is disabled. Using WebGL 2.0 device instead.');
+            deviceType = 'webgl2';
+            return;
+        }
+    }
+    if (config.WEBGL_DISABLED) {
+        if (config.WEBGPU_DISABLED && deviceType !== 'webgl1') {
+            console.warn('WebGL 2.0 is disabled. Using WebGL 1.0 device instead.');
+            deviceType = 'webgl1';
+            return;
+        }
+        if (config.WEBGL1_DISABLED && deviceType !== 'webgpu') {
+            console.warn('WebGL 2.0 is disabled. Using WebGPU device instead.');
+            deviceType = 'webgpu';
+            return;
+        }
+    }
+    if (config.WEBGL1_DISABLED) {
+        if (config.WEBGPU_DISABLED && deviceType !== 'webgl2') {
+            console.warn('WebGL 1.0 is disabled. Using WebGL 2.0 device instead.');
+            deviceType = 'webgl2';
+            return;
+        }
+        if (config.WEBGL_DISABLED && deviceType !== 'webgpu') {
+            console.warn('WebGL 1.0 is disabled. Using WebGPU device instead.');
+            deviceType = 'webgpu';
+        }
+    }
 }
 
 /**
