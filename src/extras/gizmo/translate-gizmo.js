@@ -26,7 +26,6 @@ const tmpQ1 = new Quat();
 
 // constants
 const GLANCE_EPSILON = 0.98;
-const CAMERA_EPSILON = 0.999;
 
 /**
  * Translation gizmo.
@@ -370,11 +369,7 @@ class TranslateGizmo extends TransformGizmo {
      * @private
      */
     _shapesLookAtCamera() {
-        tmpV1.copy(this.root.getPosition()).sub(this._camera.entity.getPosition()).normalize();
-        if (tmpV1.dot(this._forward) > CAMERA_EPSILON) {
-            return;
-        }
-        this._forward.copy(tmpV1);
+        this._forward.copy(this.root.getPosition()).sub(this._camera.entity.getPosition()).normalize();
 
         let dot = this._forward.dot(this.root.right);
         this._shapes.x.entity.enabled = Math.abs(dot) < GLANCE_EPSILON;
