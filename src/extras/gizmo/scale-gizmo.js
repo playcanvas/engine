@@ -96,14 +96,6 @@ class ScaleGizmo extends TransformGizmo {
     _nodeScales = new Map();
 
     /**
-     * Internal forward vector of the camera in the direction of the gizmo.
-     *
-     * @type {Vec3}
-     * @private
-     */
-    _forward = new Vec3();
-
-    /**
      * Internal state if transform should use uniform scaling.
      *
      * @type {boolean}
@@ -380,39 +372,38 @@ class ScaleGizmo extends TransformGizmo {
      * @private
      */
     _shapesLookAtCamera() {
-        this._forward.copy(this.root.getPosition()).sub(this._camera.entity.getPosition()).normalize();
-
-        let dot = this._forward.dot(this.root.right);
+        const forward = this.forward;
+        let dot = forward.dot(this.root.right);
         this._shapes.x.entity.enabled = Math.abs(dot) < GLANCE_EPSILON;
         if (this.flipShapes) {
             this._shapes.x.flipped = dot > 0;
         }
 
-        dot = this._forward.dot(this.root.up);
+        dot = forward.dot(this.root.up);
         this._shapes.y.entity.enabled = Math.abs(dot) < GLANCE_EPSILON;
         if (this.flipShapes) {
             this._shapes.y.flipped = dot > 0;
         }
 
-        dot = this._forward.dot(this.root.forward);
+        dot = forward.dot(this.root.forward);
         this._shapes.z.entity.enabled = Math.abs(dot) < GLANCE_EPSILON;
         if (this.flipShapes) {
             this._shapes.z.flipped = dot < 0;
         }
 
-        tmpV1.cross(this._forward, this.root.right);
+        tmpV1.cross(forward, this.root.right);
         this._shapes.yz.entity.enabled = tmpV1.length() < GLANCE_EPSILON;
         if (this.flipShapes) {
             this._shapes.yz.flipped = tmpV2.set(0, +(tmpV1.dot(this.root.forward) > 0), +(tmpV1.dot(this.root.up) > 0));
         }
 
-        tmpV1.cross(this._forward, this.root.forward);
+        tmpV1.cross(forward, this.root.forward);
         this._shapes.xy.entity.enabled = tmpV1.length() < GLANCE_EPSILON;
         if (this.flipShapes) {
             this._shapes.xy.flipped = tmpV2.set(+(tmpV1.dot(this.root.up) > 0), +(tmpV1.dot(this.root.right) < 0), 0);
         }
 
-        tmpV1.cross(this._forward, this.root.up);
+        tmpV1.cross(forward, this.root.up);
         this._shapes.xz.entity.enabled = tmpV1.length() < GLANCE_EPSILON;
         if (this.flipShapes) {
             this._shapes.xz.flipped = tmpV2.set(+(tmpV1.dot(this.root.forward) < 0), 0, +(tmpV1.dot(this.root.right) < 0));

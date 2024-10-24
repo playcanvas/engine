@@ -139,7 +139,6 @@ class TransformGizmo extends Gizmo {
      */
     _rootStartPos = new Vec3();
 
-
     /**
      * Internal gizmo starting rotation in world space.
      *
