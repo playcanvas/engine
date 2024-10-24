@@ -145,7 +145,7 @@ data.on('*:set', (/** @type {string} */ path, /** @type {any} */ value) => {
 const resize = () => {
     app.resizeCanvas();
     const bounds = canvas.getBoundingClientRect();
-    const dim = camera.camera.horizontalFov ? bounds.width : bounds.height;
+    const dim = camera.camera.horizontalFov && camera.camera.projection === pc.PROJECTION_PERSPECTIVE ? bounds.width : bounds.height;
     data.set('gizmo.size', 1024 / dim);
 };
 window.addEventListener('resize', resize);

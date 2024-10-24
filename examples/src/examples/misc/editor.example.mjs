@@ -161,7 +161,7 @@ window.focus();
 const resize = () => {
     app.resizeCanvas();
     const bounds = canvas.getBoundingClientRect();
-    const dim = camera.camera.horizontalFov ? bounds.width : bounds.height;
+    const dim = camera.camera.horizontalFov && camera.camera.projection === pc.PROJECTION_PERSPECTIVE ? bounds.width : bounds.height;
     gizmoHandler.size = 1024 / dim;
     data.set('gizmo.size', gizmoHandler.size);
 };
