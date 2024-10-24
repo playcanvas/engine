@@ -170,8 +170,7 @@ class RotateGizmo extends TransformGizmo {
         });
 
         this._app.on('prerender', () => {
-            this._faceAxisLookAtCamera();
-            this._xyzAxisLookAtCamera();
+            this._shapesLookAtCamera();
 
             if (this._dragging) {
                 const gizmoPos = this.root.getPosition();
@@ -349,7 +348,7 @@ class RotateGizmo extends TransformGizmo {
     /**
      * @private
      */
-    _faceAxisLookAtCamera() {
+    _shapesLookAtCamera() {
         if (this._camera.projection === PROJECTION_PERSPECTIVE) {
             this._shapes.face.entity.lookAt(this._camera.entity.getPosition());
             this._shapes.face.entity.rotateLocal(90, 0, 0);
@@ -359,12 +358,7 @@ class RotateGizmo extends TransformGizmo {
             this._shapes.face.entity.setEulerAngles(tmpV1);
             this._shapes.face.entity.rotateLocal(-90, 0, 0);
         }
-    }
 
-    /**
-     * @private
-     */
-    _xyzAxisLookAtCamera() {
         if (this._camera.projection === PROJECTION_PERSPECTIVE) {
             const gizmoPos = this.root.getPosition();
             const cameraPos = this._camera.entity.getPosition();
