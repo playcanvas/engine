@@ -875,7 +875,7 @@ class Texture {
      * Set the pixel data of the texture from a canvas, image, video DOM element. If the texture is
      * a cubemap, the supplied source must be an array of 6 canvases, images or videos.
      *
-     * @param {HTMLCanvasElement|HTMLImageElement|HTMLVideoElement|HTMLCanvasElement[]|HTMLImageElement[]|HTMLVideoElement[]} source - A
+     * @param {HTMLCanvasElement|HTMLImageElement|HTMLVideoElement|HTMLCanvasElement[]|HTMLImageElement[]|HTMLVideoElement[]|ImageBitmap} source - A
      * canvas, image or video element, or an array of 6 canvas, image or video elements.
      * @param {number} [mipLevel] - A non-negative integer specifying the image level of detail.
      * Defaults to 0, which represents the base image source. A level value of N, that is greater
