@@ -113,7 +113,7 @@ export function updateDeviceType(config) {
     deviceType = DEVICE_TYPES.includes(savedDevice) ? savedDevice : 'webgl2';
 
     if (params.deviceType && DEVICE_TYPES.includes(params.deviceType)) {
-        console.warn("Overwriting default device: ", params.deviceType);
+        console.warn("Overriding default device: ", params.deviceType);
         deviceType = params.deviceType;
         return;
     }
