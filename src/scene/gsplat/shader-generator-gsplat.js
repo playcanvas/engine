@@ -120,8 +120,7 @@ const splatCoreVS = /* glsl */ `
     }
 
     // fetch quantized spherical harmonic coefficients
-    void fetchScale(in highp usampler2D sampler, out float scale, out vec3 a, out vec3 b, out vec3 c) {
-        uvec4 t = texelFetch(sampler, splatUV, 0);
+    void fetchScale(in uvec4 t, out float scale, out vec3 a, out vec3 b, out vec3 c) {
         scale = uintBitsToFloat(t.x);
         a = unpack111011(t.y) * 2.0 - 1.0;
         b = unpack111011(t.z) * 2.0 - 1.0;
@@ -129,8 +128,7 @@ const splatCoreVS = /* glsl */ `
     }
 
     // fetch quantized spherical harmonic coefficients
-    void fetch(in highp usampler2D sampler, out vec3 a, out vec3 b, out vec3 c, out vec3 d) {
-        uvec4 t = texelFetch(sampler, splatUV, 0);
+    void fetch(in uvec4 t, out vec3 a, out vec3 b, out vec3 c, out vec3 d) {
         a = unpack111011(t.x) * 2.0 - 1.0;
         b = unpack111011(t.y) * 2.0 - 1.0;
         c = unpack111011(t.z) * 2.0 - 1.0;
@@ -176,7 +174,7 @@ const splatCoreVS = /* glsl */ `
 
         float scale;
         vec3 sh1, sh2, sh3;
-        fetchScale(splatSH_1to3, scale, sh1, sh2, sh3);
+        fetchScale(texelFetch(splatSH_1to3, splatUV, 0), scale, sh1, sh2, sh3);
         result += SH_C1 * (-sh1 * y + sh2 * z - sh3 * x);
 
     #if defined(USE_SH2)
@@ -190,8 +188,8 @@ const splatCoreVS = /* glsl */ `
 
         vec3 sh4, sh5, sh6, sh7;
         vec3 sh8, sh9, sh10, sh11;
-        fetch(splatSH_4to7, sh4, sh5, sh6, sh7);
-        fetch(splatSH_8to11, sh8, sh9, sh10, sh11);
+        fetch(texelFetch(splatSH_4to7, splatUV, 0), sh4, sh5, sh6, sh7);
+        fetch(texelFetch(splatSH_8to11, splatUV, 0), sh8, sh9, sh10, sh11);
         result +=
             sh4 * (SH_C2_0 * xy) *  +
             sh5 * (SH_C2_1 * yz) +
@@ -202,7 +200,7 @@ const splatCoreVS = /* glsl */ `
     #if defined(USE_SH3)
         // 3rd degree
         vec3 sh12, sh13, sh14, sh15;
-        fetch(splatSH_12to15, sh12, sh13, sh14, sh15);
+        fetch(texelFetch(splatSH_12to15, splatUV, 0), sh12, sh13, sh14, sh15);
         result +=
             sh9  * (SH_C3_0 * y * (3.0 * xx - yy)) +
             sh10 * (SH_C3_1 * xy * z) +
