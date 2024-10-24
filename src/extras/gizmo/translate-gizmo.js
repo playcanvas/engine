@@ -151,7 +151,7 @@ class TranslateGizmo extends TransformGizmo {
         });
 
         this._app.on('prerender', () => {
-            this._planesLookAtCamera();
+            this._shapesLookAtCamera();
         });
     }
 
@@ -360,7 +360,11 @@ class TranslateGizmo extends TransformGizmo {
     /**
      * @private
      */
-    _planesLookAtCamera() {
+    _shapesLookAtCamera() {
+        this._shapes.x.flipped = this._camera.entity.forward.dot(this.root.right) > 0;
+        this._shapes.y.flipped = this._camera.entity.forward.dot(this.root.up) > 0;
+        this._shapes.z.flipped = this._camera.entity.forward.dot(this.root.forward) < 0;
+
         tmpV1.cross(this._camera.entity.forward, this.root.right);
         this._shapes.yz.entity.enabled = tmpV1.length() < GLANCE_EPSILON;
         if (this.flipPlanes) {
