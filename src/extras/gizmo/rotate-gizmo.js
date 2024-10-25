@@ -475,8 +475,7 @@ class RotateGizmo extends TransformGizmo {
             tmpV1.sub2(point, gizmoPos);
 
             // transform point so it's facing the camera
-            tmpQ1.copy(this._camera.entity.getRotation()).invert();
-            tmpQ1.transformVector(tmpV1, tmpV1);
+            tmpQ1.copy(this._camera.entity.getRotation()).invert().transformVector(tmpV1, tmpV1);
 
             // calculate angle
             angle = Math.sign(facingDot) * Math.atan2(tmpV1.y, tmpV1.x) * math.RAD_TO_DEG;
