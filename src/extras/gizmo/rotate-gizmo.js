@@ -302,15 +302,13 @@ class RotateGizmo extends TransformGizmo {
      * @private
      */
     _updateGuidePoints(angleDelta) {
-        const gizmoPos = this.root.getPosition();
-        const cameraPos = this._camera.entity.getPosition();
         const axis = this._selectedAxis;
         const isFacing = axis === GIZMOAXIS_FACE;
 
-        tmpV1.set(0, 0, 0);
         if (isFacing) {
-            tmpV1.sub2(cameraPos, gizmoPos).normalize();
+            tmpV1.copy(this.facing);
         } else {
+            tmpV1.set(0, 0, 0);
             tmpV1[axis] = 1;
             this._rootStartRot.transformVector(tmpV1, tmpV1);
         }
@@ -349,29 +347,24 @@ class RotateGizmo extends TransformGizmo {
      * @private
      */
     _shapesLookAtCamera() {
+        // face shape
         if (this._camera.projection === PROJECTION_PERSPECTIVE) {
             this._shapes.face.entity.lookAt(this._camera.entity.getPosition());
             this._shapes.face.entity.rotateLocal(90, 0, 0);
         } else {
-            tmpQ1.copy(this._camera.entity.getRotation());
-            tmpQ1.getEulerAngles(tmpV1);
+            tmpQ1.copy(this._camera.entity.getRotation()).getEulerAngles(tmpV1);
             this._shapes.face.entity.setEulerAngles(tmpV1);
             this._shapes.face.entity.rotateLocal(-90, 0, 0);
         }
 
-        if (this._camera.projection === PROJECTION_PERSPECTIVE) {
-            const gizmoPos = this.root.getPosition();
-            const cameraPos = this._camera.entity.getPosition();
-            tmpV1.sub2(cameraPos, gizmoPos).normalize();
-        } else {
-            tmpV1.copy(this._camera.entity.forward).mulScalar(-1);
-        }
-        tmpQ1.copy(this.root.getRotation()).invert().transformVector(tmpV1, tmpV1);
-        let angle = Math.atan2(tmpV1.z, tmpV1.y) * math.RAD_TO_DEG;
+        // axes shapes
+        const facingDir = tmpV1.copy(this.facing);
+        tmpQ1.copy(this.root.getRotation()).invert().transformVector(facingDir, facingDir);
+        let angle = Math.atan2(facingDir.z, facingDir.y) * math.RAD_TO_DEG;
         this._shapes.x.entity.setLocalEulerAngles(0, angle - 90, -90);
-        angle = Math.atan2(tmpV1.x, tmpV1.z) * math.RAD_TO_DEG;
+        angle = Math.atan2(facingDir.x, facingDir.z) * math.RAD_TO_DEG;
         this._shapes.y.entity.setLocalEulerAngles(0, angle, 0);
-        angle = Math.atan2(tmpV1.y, tmpV1.x) * math.RAD_TO_DEG;
+        angle = Math.atan2(facingDir.y, facingDir.x) * math.RAD_TO_DEG;
         this._shapes.z.entity.setLocalEulerAngles(90, 0, angle + 90);
     }
 
@@ -411,7 +404,6 @@ class RotateGizmo extends TransformGizmo {
      */
     _setNodeRotations(axis, angleDelta) {
         const gizmoPos = this.root.getPosition();
-        const cameraPos = this._camera.entity.getPosition();
         const isFacing = axis === GIZMOAXIS_FACE;
         for (let i = 0; i < this.nodes.length; i++) {
             const node = this.nodes[i];
@@ -421,7 +413,7 @@ class RotateGizmo extends TransformGizmo {
             }
 
             if (isFacing) {
-                tmpV1.copy(cameraPos).sub(gizmoPos).normalize();
+                tmpV1.copy(this._camera.entity.forward).mulScalar(-1);
             } else {
                 tmpV1.set(0, 0, 0);
                 tmpV1[axis] = 1;
@@ -473,15 +465,16 @@ class RotateGizmo extends TransformGizmo {
         plane.intersectsRay(ray, point);
 
         // calculate angle
-        const facingDir = tmpV1.sub2(ray.origin, gizmoPos).normalize();
+        const facingDir = tmpV2.copy(this.facing);
         const facingDot = plane.normal.dot(facingDir);
         if (axis === GIZMOAXIS_FACE || Math.abs(facingDot) > FACING_THRESHOLD) {
             // plane facing camera so based on mouse position around gizmo
-            tmpQ1.copy(this._camera.entity.getRotation()).invert();
+            tmpV1.sub2(point, gizmoPos);
 
             // transform point so it's facing the camera
-            tmpV1.sub2(point, gizmoPos);
-            tmpQ1.transformVector(tmpV1, tmpV1);
+            tmpQ1.copy(this._camera.entity.getRotation()).invert().transformVector(tmpV1, tmpV1);
+
+            // calculate angle
             angle = Math.sign(facingDot) * Math.atan2(tmpV1.y, tmpV1.x) * math.RAD_TO_DEG;
         } else {
 
