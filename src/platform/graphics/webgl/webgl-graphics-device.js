@@ -2044,7 +2044,7 @@ class WebglGraphicsDevice extends GraphicsDevice {
         Debug.assert(renderTarget.colorBuffer === texture);
 
         const buffer = new ArrayBuffer(TextureUtils.calcLevelGpuSize(width, height, 1, texture._format));
-        const data = new (getPixelFormatArrayType(texture._format))(buffer);
+        const data = options.data ?? new (getPixelFormatArrayType(texture._format))(buffer);
 
         this.setRenderTarget(renderTarget);
         this.initRenderTarget(renderTarget);

@@ -372,41 +372,40 @@ class ScaleGizmo extends TransformGizmo {
      * @private
      */
     _shapesLookAtCamera() {
-        const forward = this.forward;
-        let dot = forward.dot(this.root.right);
+        const facingDir = this.facing;
+
+        // axes
+        let dot = facingDir.dot(this.root.right);
         this._shapes.x.entity.enabled = Math.abs(dot) < GLANCE_EPSILON;
         if (this.flipShapes) {
-            this._shapes.x.flipped = dot > 0;
+            this._shapes.x.flipped = dot < 0;
         }
-
-        dot = forward.dot(this.root.up);
+        dot = facingDir.dot(this.root.up);
         this._shapes.y.entity.enabled = Math.abs(dot) < GLANCE_EPSILON;
         if (this.flipShapes) {
-            this._shapes.y.flipped = dot > 0;
+            this._shapes.y.flipped = dot < 0;
         }
-
-        dot = forward.dot(this.root.forward);
+        dot = facingDir.dot(this.root.forward);
         this._shapes.z.entity.enabled = Math.abs(dot) < GLANCE_EPSILON;
         if (this.flipShapes) {
-            this._shapes.z.flipped = dot < 0;
+            this._shapes.z.flipped = dot > 0;
         }
 
-        tmpV1.cross(forward, this.root.right);
+        // planes
+        tmpV1.cross(facingDir, this.root.right);
         this._shapes.yz.entity.enabled = tmpV1.length() < GLANCE_EPSILON;
         if (this.flipShapes) {
-            this._shapes.yz.flipped = tmpV2.set(0, +(tmpV1.dot(this.root.forward) > 0), +(tmpV1.dot(this.root.up) > 0));
+            this._shapes.yz.flipped = tmpV2.set(0, +(tmpV1.dot(this.root.forward) < 0), +(tmpV1.dot(this.root.up) < 0));
         }
-
-        tmpV1.cross(forward, this.root.forward);
+        tmpV1.cross(facingDir, this.root.forward);
         this._shapes.xy.entity.enabled = tmpV1.length() < GLANCE_EPSILON;
         if (this.flipShapes) {
-            this._shapes.xy.flipped = tmpV2.set(+(tmpV1.dot(this.root.up) > 0), +(tmpV1.dot(this.root.right) < 0), 0);
+            this._shapes.xy.flipped = tmpV2.set(+(tmpV1.dot(this.root.up) < 0), +(tmpV1.dot(this.root.right) > 0), 0);
         }
-
-        tmpV1.cross(forward, this.root.up);
+        tmpV1.cross(facingDir, this.root.up);
         this._shapes.xz.entity.enabled = tmpV1.length() < GLANCE_EPSILON;
         if (this.flipShapes) {
-            this._shapes.xz.flipped = tmpV2.set(+(tmpV1.dot(this.root.forward) < 0), 0, +(tmpV1.dot(this.root.right) < 0));
+            this._shapes.xz.flipped = tmpV2.set(+(tmpV1.dot(this.root.forward) > 0), 0, +(tmpV1.dot(this.root.right) > 0));
         }
     }
 
