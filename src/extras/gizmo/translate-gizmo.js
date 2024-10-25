@@ -22,7 +22,6 @@ import { SphereShape } from './shape/sphere-shape.js';
 // temporary variables
 const tmpV1 = new Vec3();
 const tmpV2 = new Vec3();
-const tmpV3 = new Vec3();
 const tmpQ1 = new Quat();
 
 // constants
