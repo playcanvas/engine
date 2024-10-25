@@ -21,6 +21,7 @@ import { GIZMOSPACE_LOCAL, GIZMOSPACE_WORLD } from './constants.js';
 
 // temporary variables
 const tmpV1 = new Vec3();
+const tmpV2 = new Vec3();
 const tmpM1 = new Mat4();
 const tmpM2 = new Mat4();
 const tmpR1 = new Ray();
