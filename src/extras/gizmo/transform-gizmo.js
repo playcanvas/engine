@@ -562,9 +562,7 @@ class TransformGizmo extends Gizmo {
      * @protected
      */
     _createPlane(axis, isFacing, isLine) {
-        const cameraPos = this._camera.entity.getPosition();
-
-        const facingDir = tmpV1.sub2(cameraPos, this._rootStartPos).normalize();
+        const facingDir = tmpV1.copy(this.facing);
         const normal = tmpP1.normal.set(0, 0, 0);
 
         if (isFacing) {

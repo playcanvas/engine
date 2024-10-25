@@ -22,6 +22,7 @@ import { SphereShape } from './shape/sphere-shape.js';
 // temporary variables
 const tmpV1 = new Vec3();
 const tmpV2 = new Vec3();
+const tmpV3 = new Vec3();
 const tmpQ1 = new Quat();
 
 // constants
@@ -361,7 +362,7 @@ class TranslateGizmo extends TransformGizmo {
      * @private
      */
     _shapesLookAtCamera() {
-        const forward = this.forward;
+        const forward = tmpV3.copy(this.facing).mulScalar(-1);
         let dot = forward.dot(this.root.right);
         this._shapes.x.entity.enabled = Math.abs(dot) < GLANCE_EPSILON;
         if (this.flipShapes) {
