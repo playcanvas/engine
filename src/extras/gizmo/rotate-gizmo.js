@@ -468,7 +468,7 @@ class RotateGizmo extends TransformGizmo {
         plane.intersectsRay(ray, point);
 
         // calculate angle
-        const facingDir = tmpV2.copy(this.facing).mulScalar(-1);
+        const facingDir = tmpV2.copy(this.facing);
         const facingDot = plane.normal.dot(facingDir);
         if (axis === GIZMOAXIS_FACE || Math.abs(facingDot) > FACING_THRESHOLD) {
             // plane facing camera so based on mouse position around gizmo
