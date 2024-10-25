@@ -1,4 +1,4 @@
-import { __adjustStandardMaterialParameterTypes } from "../../deprecated/compatibility-v2-utils.js";
+import { __adjustStandardMaterialParameterTypes } from '../../deprecated/compatibility-v2-utils.js';
 
 function _textureParameter(name, channel = true, vertexColor = true) {
     const result = {};

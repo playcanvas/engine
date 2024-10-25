@@ -1,4 +1,4 @@
-import { StandardMaterial } from "../scene/materials/standard-material.js";
+import { StandardMaterial } from '../scene/materials/standard-material.js';
 
 // useGammaTonemap is renamed to useGamma
 Object.defineProperty(StandardMaterial.prototype, 'useGamma', {
@@ -13,4 +13,4 @@ Object.defineProperty(StandardMaterial.prototype, 'useGamma', {
 // dummy export to avoid the module being removed by rollup
 // TODO: remove this export when the module has other exports
 export function __dummyFunction() {
-};
+}
