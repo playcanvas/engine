@@ -473,7 +473,7 @@ class RotateGizmo extends TransformGizmo {
         if (Math.abs(facingDot) > FACING_THRESHOLD) {
             // plane facing camera so based on mouse position around gizmo
             tmpV1.sub2(point, gizmoPos);
-            
+
             // transform point so it's facing the camera
             tmpQ1.copy(this._camera.entity.getRotation()).invert().transformVector(tmpV1, tmpV1);
 
