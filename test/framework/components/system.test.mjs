@@ -6,7 +6,7 @@ import { Vec3 } from '../../../src/core/math/vec3.js';
 import { Vec4 } from '../../../src/core/math/vec4.js';
 import { NullGraphicsDevice } from '../../../src/platform/graphics/null/null-graphics-device.js';
 
-import { HTMLCanvasElement } from '@playcanvas/canvas-mock';
+import { Canvas } from 'skia-canvas';
 
 import { expect } from 'chai';
 
@@ -17,7 +17,7 @@ describe('ComponentSystem', function () {
     let system;
 
     beforeEach(function () {
-        const canvas = new HTMLCanvasElement(500, 500);
+        const canvas = new Canvas(500, 500);
         app = new Application(canvas, { graphicsDevice: new NullGraphicsDevice(canvas) });
 
         system = new ComponentSystem(app);
@@ -194,7 +194,7 @@ describe('ComponentSystem', function () {
                 { name: 'foo', type: 'something' }
             ];
 
-            expect(function () {
+            expect(() => {
                 system.initializeComponentData(component, data, properties);
             }).to.throw('Could not convert unhandled type: something');
         });

@@ -95,14 +95,14 @@ class WordAtlas {
         if (p) {
             const padding = 1;
             render2d.quad(x + p.l - padding,
-                          y - p.d + padding,
-                          p.w + padding * 2,
-                          p.h + padding * 2,
-                          p.x - padding,
-                          this.texture.height - p.y - p.h - padding,
-                          undefined, undefined,
-                          this.texture,
-                          1);
+                y - p.d + padding,
+                p.w + padding * 2,
+                p.h + padding * 2,
+                p.x - padding,
+                this.texture.height - p.y - p.h - padding,
+                undefined, undefined,
+                this.texture,
+                1);
             return p.w;
         }
         return 0;

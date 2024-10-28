@@ -31,15 +31,13 @@ varying vec2 vUv0;
 
 // params:
 // x - target cubemap face 0..6
-// y - specular power (when prefiltering)
-// z - target image total pixels
-// w - source cubemap size
-uniform vec4 params;
+// y - target image total pixels
+// z - source cubemap size
+uniform vec3 params;
 
 float targetFace() { return params.x; }
-float specularPower() { return params.y; }
-float targetTotalPixels() { return params.z; }
-float sourceTotalPixels() { return params.w; }
+float targetTotalPixels() { return params.y; }
+float sourceTotalPixels() { return params.z; }
 
 float PI = 3.141592653589793;
 

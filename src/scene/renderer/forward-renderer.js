@@ -1,10 +1,8 @@
 import { now } from '../../core/time.js';
 import { Debug } from '../../core/debug.js';
-
 import { Vec3 } from '../../core/math/vec3.js';
-
+import { Color } from '../../core/math/color.js';
 import { DebugGraphics } from '../../platform/graphics/debug-graphics.js';
-
 import {
     FOG_NONE, FOG_LINEAR,
     LIGHTTYPE_OMNI, LIGHTTYPE_SPOT, LIGHTTYPE_DIRECTIONAL,
@@ -12,13 +10,26 @@ import {
     LAYERID_DEPTH
 } from '../constants.js';
 import { WorldClustersDebug } from '../lighting/world-clusters-debug.js';
-
 import { Renderer } from './renderer.js';
 import { LightCamera } from './light-camera.js';
 import { RenderPassForward } from './render-pass-forward.js';
 import { RenderPassPostprocessing } from './render-pass-postprocessing.js';
 
+/**
+ * @import { BindGroup } from '../../platform/graphics/bind-group.js'
+ * @import { Camera } from '../camera.js'
+ * @import { FrameGraph } from '../frame-graph.js'
+ * @import { GraphicsDevice } from '../../platform/graphics/graphics-device.js'
+ * @import { LayerComposition } from '../composition/layer-composition.js'
+ * @import { Layer } from '../layer.js'
+ * @import { MeshInstance } from '../mesh-instance.js'
+ * @import { RenderTarget } from '../../platform/graphics/render-target.js'
+ * @import { Scene } from '../scene.js'
+ * @import { WorldClusters } from '../lighting/world-clusters.js'
+ */
+
 const _noLights = [[], [], []];
+const tmpColor = new Color();
 
 const _drawCallList = {
     drawCalls: [],
@@ -62,8 +73,7 @@ class ForwardRenderer extends Renderer {
     /**
      * Create a new ForwardRenderer instance.
      *
-     * @param {import('../../platform/graphics/graphics-device.js').GraphicsDevice} graphicsDevice - The
-     * graphics device used by the renderer.
+     * @param {GraphicsDevice} graphicsDevice - The graphics device used by the renderer.
      */
     constructor(graphicsDevice) {
         super(graphicsDevice);
@@ -141,57 +151,57 @@ class ForwardRenderer extends Renderer {
     // #endif
 
     /**
-     * @param {import('../scene.js').Scene} scene - The scene.
+     * @param {Scene} scene - The scene.
      */
     dispatchGlobalLights(scene) {
-        this.ambientColor[0] = scene.ambientLight.r;
-        this.ambientColor[1] = scene.ambientLight.g;
-        this.ambientColor[2] = scene.ambientLight.b;
-        if (scene.gammaCorrection) {
-            for (let i = 0; i < 3; i++) {
-                this.ambientColor[i] = Math.pow(this.ambientColor[i], 2.2);
-            }
-        }
+        const ambientUniform = this.ambientColor;
+
+        // color in linear space
+        tmpColor.linear(scene.ambientLight);
+        ambientUniform[0] = tmpColor.r;
+        ambientUniform[1] = tmpColor.g;
+        ambientUniform[2] = tmpColor.b;
+
         if (scene.physicalUnits) {
             for (let i = 0; i < 3; i++) {
-                this.ambientColor[i] *= scene.ambientLuminance;
+                ambientUniform[i] *= scene.ambientLuminance;
             }
         }
-        this.ambientId.setValue(this.ambientColor);
+        this.ambientId.setValue(ambientUniform);
 
         this.skyboxIntensityId.setValue(scene.physicalUnits ? scene.skyboxLuminance : scene.skyboxIntensity);
         this.cubeMapRotationMatrixId.setValue(scene._skyboxRotationMat3.data);
     }
 
     _resolveLight(scope, i) {
-        const light = 'light' + i;
-        this.lightColorId[i] = scope.resolve(light + '_color');
+        const light = `light${i}`;
+        this.lightColorId[i] = scope.resolve(`${light}_color`);
         this.lightDir[i] = new Float32Array(3);
-        this.lightDirId[i] = scope.resolve(light + '_direction');
-        this.lightShadowMapId[i] = scope.resolve(light + '_shadowMap');
-        this.lightShadowMatrixId[i] = scope.resolve(light + '_shadowMatrix');
-        this.lightShadowParamsId[i] = scope.resolve(light + '_shadowParams');
-        this.lightShadowIntensity[i] = scope.resolve(light + '_shadowIntensity');
-        this.lightShadowSearchAreaId[i] = scope.resolve(light + '_shadowSearchArea');
-        this.lightRadiusId[i] = scope.resolve(light + '_radius');
+        this.lightDirId[i] = scope.resolve(`${light}_direction`);
+        this.lightShadowMapId[i] = scope.resolve(`${light}_shadowMap`);
+        this.lightShadowMatrixId[i] = scope.resolve(`${light}_shadowMatrix`);
+        this.lightShadowParamsId[i] = scope.resolve(`${light}_shadowParams`);
+        this.lightShadowIntensity[i] = scope.resolve(`${light}_shadowIntensity`);
+        this.lightShadowSearchAreaId[i] = scope.resolve(`${light}_shadowSearchArea`);
+        this.lightRadiusId[i] = scope.resolve(`${light}_radius`);
         this.lightPos[i] = new Float32Array(3);
-        this.lightPosId[i] = scope.resolve(light + '_position');
+        this.lightPosId[i] = scope.resolve(`${light}_position`);
         this.lightWidth[i] = new Float32Array(3);
-        this.lightWidthId[i] = scope.resolve(light + '_halfWidth');
+        this.lightWidthId[i] = scope.resolve(`${light}_halfWidth`);
         this.lightHeight[i] = new Float32Array(3);
-        this.lightHeightId[i] = scope.resolve(light + '_halfHeight');
-        this.lightInAngleId[i] = scope.resolve(light + '_innerConeAngle');
-        this.lightOutAngleId[i] = scope.resolve(light + '_outerConeAngle');
-        this.lightCookieId[i] = scope.resolve(light + '_cookie');
-        this.lightCookieIntId[i] = scope.resolve(light + '_cookieIntensity');
-        this.lightCookieMatrixId[i] = scope.resolve(light + '_cookieMatrix');
-        this.lightCookieOffsetId[i] = scope.resolve(light + '_cookieOffset');
-        this.lightCameraParamsId[i] = scope.resolve(light + '_cameraParams');
+        this.lightHeightId[i] = scope.resolve(`${light}_halfHeight`);
+        this.lightInAngleId[i] = scope.resolve(`${light}_innerConeAngle`);
+        this.lightOutAngleId[i] = scope.resolve(`${light}_outerConeAngle`);
+        this.lightCookieId[i] = scope.resolve(`${light}_cookie`);
+        this.lightCookieIntId[i] = scope.resolve(`${light}_cookieIntensity`);
+        this.lightCookieMatrixId[i] = scope.resolve(`${light}_cookieMatrix`);
+        this.lightCookieOffsetId[i] = scope.resolve(`${light}_cookieOffset`);
+        this.lightCameraParamsId[i] = scope.resolve(`${light}_cameraParams`);
 
         // shadow cascades
-        this.shadowMatrixPaletteId[i] = scope.resolve(light + '_shadowMatrixPalette[0]');
-        this.shadowCascadeDistancesId[i] = scope.resolve(light + '_shadowCascadeDistances[0]');
-        this.shadowCascadeCountId[i] = scope.resolve(light + '_shadowCascadeCount');
+        this.shadowMatrixPaletteId[i] = scope.resolve(`${light}_shadowMatrixPalette[0]`);
+        this.shadowCascadeDistancesId[i] = scope.resolve(`${light}_shadowCascadeDistances[0]`);
+        this.shadowCascadeCountId[i] = scope.resolve(`${light}_shadowCascadeCount`);
     }
 
     setLTCDirectionalLight(wtm, cnt, dir, campos, far) {
@@ -213,7 +223,7 @@ class ForwardRenderer extends Renderer {
         this.lightHeightId[cnt].setValue(this.lightHeight[cnt]);
     }
 
-    dispatchDirectLights(dirs, scene, mask, camera) {
+    dispatchDirectLights(dirs, mask, camera) {
         let cnt = 0;
 
         const scope = this.device.scope;
@@ -228,7 +238,7 @@ class ForwardRenderer extends Renderer {
                 this._resolveLight(scope, cnt);
             }
 
-            this.lightColorId[cnt].setValue(scene.gammaCorrection ? directional._linearFinalColor : directional._finalColor);
+            this.lightColorId[cnt].setValue(directional._colorLinear);
 
             // Directional lights shine down the negative Y axis
             wtm.getY(directional._direction).mulScalar(-1);
@@ -257,8 +267,11 @@ class ForwardRenderer extends Renderer {
                 this.lightShadowIntensity[cnt].setValue(directional.shadowIntensity);
 
                 const projectionCompensation = (50.0 / lightRenderData.projectionCompensation);
-                const pixelsPerMeter = directional.penumbraSize / lightRenderData.shadowCamera.renderTarget.width;
-                this.lightShadowSearchAreaId[cnt].setValue(pixelsPerMeter * projectionCompensation);
+                const shadowRT = lightRenderData.shadowCamera.renderTarget;
+                if (shadowRT) {
+                    const pixelsPerMeter = directional.penumbraSize / shadowRT.width;
+                    this.lightShadowSearchAreaId[cnt].setValue(pixelsPerMeter * projectionCompensation);
+                }
 
                 const cameraParams = directional._shadowCameraParams;
                 cameraParams.length = 4;
@@ -295,7 +308,7 @@ class ForwardRenderer extends Renderer {
         this.lightHeightId[cnt].setValue(this.lightHeight[cnt]);
     }
 
-    dispatchOmniLight(scene, scope, omni, cnt) {
+    dispatchOmniLight(scope, omni, cnt) {
         const wtm = omni._node.getWorldTransform();
 
         if (!this.lightColorId[cnt]) {
@@ -303,7 +316,7 @@ class ForwardRenderer extends Renderer {
         }
 
         this.lightRadiusId[cnt].setValue(omni.attenuationEnd);
-        this.lightColorId[cnt].setValue(scene.gammaCorrection ? omni._linearFinalColor : omni._finalColor);
+        this.lightColorId[cnt].setValue(omni._colorLinear);
         wtm.getTranslation(omni._position);
         this.lightPos[cnt][0] = omni._position.x;
         this.lightPos[cnt][1] = omni._position.y;
@@ -349,7 +362,7 @@ class ForwardRenderer extends Renderer {
         }
     }
 
-    dispatchSpotLight(scene, scope, spot, cnt) {
+    dispatchSpotLight(scope, spot, cnt) {
         const wtm = spot._node.getWorldTransform();
 
         if (!this.lightColorId[cnt]) {
@@ -359,7 +372,7 @@ class ForwardRenderer extends Renderer {
         this.lightInAngleId[cnt].setValue(spot._innerConeAngleCos);
         this.lightOutAngleId[cnt].setValue(spot._outerConeAngleCos);
         this.lightRadiusId[cnt].setValue(spot.attenuationEnd);
-        this.lightColorId[cnt].setValue(scene.gammaCorrection ? spot._linearFinalColor : spot._finalColor);
+        this.lightColorId[cnt].setValue(spot._colorLinear);
         wtm.getTranslation(spot._position);
         this.lightPos[cnt][0] = spot._position.x;
         this.lightPos[cnt][1] = spot._position.y;
@@ -434,7 +447,7 @@ class ForwardRenderer extends Renderer {
         }
     }
 
-    dispatchLocalLights(sortedLights, scene, mask, usedDirLights) {
+    dispatchLocalLights(sortedLights, mask, usedDirLights) {
 
         let cnt = usedDirLights;
         const scope = this.device.scope;
@@ -444,7 +457,7 @@ class ForwardRenderer extends Renderer {
         for (let i = 0; i < numOmnis; i++) {
             const omni = omnis[i];
             if (!(omni.mask & mask)) continue;
-            this.dispatchOmniLight(scene, scope, omni, cnt);
+            this.dispatchOmniLight(scope, omni, cnt);
             cnt++;
         }
 
@@ -453,13 +466,19 @@ class ForwardRenderer extends Renderer {
         for (let i = 0; i < numSpts; i++) {
             const spot = spts[i];
             if (!(spot.mask & mask)) continue;
-            this.dispatchSpotLight(scene, scope, spot, cnt);
+            this.dispatchSpotLight(scope, spot, cnt);
             cnt++;
         }
     }
 
     // execute first pass over draw calls, in order to update materials / shaders
-    renderForwardPrepareMaterials(camera, drawCalls, sortedLights, layer, pass) {
+    renderForwardPrepareMaterials(camera, renderTarget, drawCalls, sortedLights, layer, pass) {
+
+        // rendering params from the scene, or overridden by the camera
+        const renderParams = camera.renderingParams ?? this.scene.rendering;
+
+        // output gamma correction is determined by the render target
+        renderParams.srgbRenderTarget = renderTarget?.isColorBufferSrgb(0) ?? false;
 
         const addCall = (drawCall, shaderInstance, isNewMaterial, lightMaskChanged) => {
             _drawCallList.drawCalls.push(drawCall);
@@ -480,18 +499,20 @@ class ForwardRenderer extends Renderer {
         const drawCallsCount = drawCalls.length;
         for (let i = 0; i < drawCallsCount; i++) {
 
-            /** @type {import('../mesh-instance.js').MeshInstance} */
+            /** @type {MeshInstance} */
             const drawCall = drawCalls[i];
 
             // #if _PROFILER
             if (camera === ForwardRenderer.skipRenderCamera) {
-                if (ForwardRenderer._skipRenderCounter >= ForwardRenderer.skipRenderAfter)
+                if (ForwardRenderer._skipRenderCounter >= ForwardRenderer.skipRenderAfter) {
                     continue;
+                }
                 ForwardRenderer._skipRenderCounter++;
             }
             if (layer) {
-                if (layer._skipRenderCounter >= layer.skipRenderAfter)
+                if (layer._skipRenderCounter >= layer.skipRenderAfter) {
                     continue;
+                }
                 layer._skipRenderCounter++;
             }
             // #endif
@@ -511,12 +532,14 @@ class ForwardRenderer extends Renderer {
                 material._scene = scene;
 
                 if (material.dirty) {
+                    DebugGraphics.pushGpuMarker(device, `Node: ${drawCall.node.name}, Material: ${material.name}`);
                     material.updateUniforms(device, scene);
                     material.dirty = false;
+                    DebugGraphics.popGpuMarker(device);
                 }
             }
 
-            const shaderInstance = drawCall.getShaderInstance(pass, lightHash, scene, this.viewUniformFormat, this.viewBindGroupFormat, sortedLights);
+            const shaderInstance = drawCall.getShaderInstance(pass, lightHash, scene, renderParams, this.viewUniformFormat, this.viewBindGroupFormat, sortedLights);
 
             addCall(drawCall, shaderInstance, material !== prevMaterial, !prevMaterial || lightMask !== prevLightMask);
 
@@ -533,7 +556,7 @@ class ForwardRenderer extends Renderer {
         const scene = this.scene;
         const passFlag = 1 << pass;
         const flipFactor = flipFaces ? -1 : 1;
-        const clusteredLightingEnabled = this.scene.clusteredLightingEnabled;
+        const clusteredLightingEnabled = scene.clusteredLightingEnabled;
 
         // Render the scene
         const preparedCallsCount = preparedCalls.drawCalls.length;
@@ -557,10 +580,10 @@ class ForwardRenderer extends Renderer {
                 material.setParameters(device);
 
                 if (lightMaskChanged) {
-                    const usedDirLights = this.dispatchDirectLights(sortedLights[LIGHTTYPE_DIRECTIONAL], scene, lightMask, camera);
+                    const usedDirLights = this.dispatchDirectLights(sortedLights[LIGHTTYPE_DIRECTIONAL], lightMask, camera);
 
                     if (!clusteredLightingEnabled) {
-                        this.dispatchLocalLights(sortedLights, scene, lightMask, usedDirLights);
+                        this.dispatchLocalLights(sortedLights, lightMask, usedDirLights);
                     }
                 }
 
@@ -636,14 +659,14 @@ class ForwardRenderer extends Renderer {
         }
     }
 
-    renderForward(camera, allDrawCalls, sortedLights, pass, drawCallback, layer, flipFaces) {
+    renderForward(camera, renderTarget, allDrawCalls, sortedLights, pass, drawCallback, layer, flipFaces) {
 
         // #if _PROFILER
         const forwardStartTime = now();
         // #endif
 
         // run first pass over draw calls and handle material / shader updates
-        const preparedCalls = this.renderForwardPrepareMaterials(camera, allDrawCalls, sortedLights, layer, pass);
+        const preparedCalls = this.renderForwardPrepareMaterials(camera, renderTarget, allDrawCalls, sortedLights, layer, pass);
 
         // render mesh instances
         this.renderForwardInternal(camera, preparedCalls, sortedLights, pass, drawCallback, flipFaces);
@@ -659,25 +682,22 @@ class ForwardRenderer extends Renderer {
      * Forward render mesh instances on a specified layer, using a camera and a render target.
      * Shaders used are based on the shaderPass provided, with optional clustered lighting support.
      *
-     * @param {import('../camera.js').Camera} camera - The
-     * camera.
-     * @param {import('../../platform/graphics/render-target.js').RenderTarget|undefined} renderTarget - The
-     * render target.
-     * @param {import('../layer.js').Layer} layer - The layer.
+     * @param {Camera} camera - The camera.
+     * @param {RenderTarget|undefined} renderTarget - The render target.
+     * @param {Layer} layer - The layer.
      * @param {boolean} transparent - True if transparent sublayer should be rendered, opaque
      * otherwise.
      * @param {number} shaderPass - A type of shader to use during rendering.
-     * @param {import('../../platform/graphics/bind-group.js').BindGroup[]} viewBindGroups - An array
-     * storing the view level bing groups (can be empty array, and this function populates if per
-     * view).
+     * @param {BindGroup[]} viewBindGroups - An array storing the view level bing groups (can be
+     * empty array, and this function populates if per view).
      * @param {object} [options] - Object for passing optional arguments.
      * @param {boolean} [options.clearColor] - True if the color buffer should be cleared.
      * @param {boolean} [options.clearDepth] - True if the depth buffer should be cleared.
      * @param {boolean} [options.clearStencil] - True if the stencil buffer should be cleared.
-     * @param {import('../lighting/world-clusters.js').WorldClusters} [options.lightClusters] - The
-     * world clusters object to be used for clustered lighting.
-     * @param {import('../mesh-instance.js').MeshInstance[]} [options.meshInstances] - The mesh
-     * instances to be rendered. Use when layer is not provided.
+     * @param {WorldClusters} [options.lightClusters] - The world clusters object to be used for
+     * clustered lighting.
+     * @param {MeshInstance[]} [options.meshInstances] - The mesh instances to be rendered. Use
+     * when layer is not provided.
      * @param {object} [options.splitLights] - The split lights to be used for clustered lighting.
      */
     renderForwardLayer(camera, renderTarget, layer, transparent, shaderPass, viewBindGroups, options = {}) {
@@ -737,6 +757,8 @@ class ForwardRenderer extends Renderer {
         // Set the not very clever global variable which is only useful when there's just one camera
         scene._activeCamera = camera;
 
+        const renderParams = camera.renderingParams ?? scene.rendering;
+        this.setFogConstants(renderParams);
         const viewCount = this.setCameraUniforms(camera, renderTarget);
         if (device.supportsUniformBuffers) {
             this.setupViewUniformBuffers(viewBindGroups, this.viewUniformFormat, this.viewBindGroupFormat, viewCount);
@@ -755,15 +777,38 @@ class ForwardRenderer extends Renderer {
 
         const forwardDrawCalls = this._forwardDrawCalls;
         this.renderForward(camera,
-                           visible,
-                           splitLights,
-                           shaderPass,
-                           layer?.onDrawCall,
-                           layer,
-                           flipFaces);
+            renderTarget,
+            visible,
+            splitLights,
+            shaderPass,
+            null,
+            layer,
+            flipFaces);
 
-        if (layer)
+        if (layer) {
             layer._forwardDrawCalls += this._forwardDrawCalls - forwardDrawCalls;
+        }
+    }
+
+    setFogConstants(renderParams) {
+
+        if (renderParams.fog !== FOG_NONE) {
+
+            // color in linear space
+            tmpColor.linear(renderParams.fogColor);
+            const fogUniform = this.fogColor;
+            fogUniform[0] = tmpColor.r;
+            fogUniform[1] = tmpColor.g;
+            fogUniform[2] = tmpColor.b;
+            this.fogColorId.setValue(fogUniform);
+
+            if (renderParams.fog === FOG_LINEAR) {
+                this.fogStartId.setValue(renderParams.fogStart);
+                this.fogEndId.setValue(renderParams.fogEnd);
+            } else {
+                this.fogDensityId.setValue(renderParams.fogDensity);
+            }
+        }
     }
 
     setSceneConstants() {
@@ -771,25 +816,6 @@ class ForwardRenderer extends Renderer {
 
         // Set up ambient/exposure
         this.dispatchGlobalLights(scene);
-
-        // Set up the fog
-        if (scene.fog !== FOG_NONE) {
-            this.fogColor[0] = scene.fogColor.r;
-            this.fogColor[1] = scene.fogColor.g;
-            this.fogColor[2] = scene.fogColor.b;
-            if (scene.gammaCorrection) {
-                for (let i = 0; i < 3; i++) {
-                    this.fogColor[i] = Math.pow(this.fogColor[i], 2.2);
-                }
-            }
-            this.fogColorId.setValue(this.fogColor);
-            if (scene.fog === FOG_LINEAR) {
-                this.fogStartId.setValue(scene.fogStart);
-                this.fogEndId.setValue(scene.fogEnd);
-            } else {
-                this.fogDensityId.setValue(scene.fogDensity);
-            }
-        }
 
         // Set up screen size // should be RT size?
         const device = this.device;
@@ -806,9 +832,9 @@ class ForwardRenderer extends Renderer {
     /**
      * Builds a frame graph for the rendering of the whole frame.
      *
-     * @param {import('../frame-graph.js').FrameGraph} frameGraph - The frame-graph that is built.
-     * @param {import('../composition/layer-composition.js').LayerComposition} layerComposition - The
-     * layer composition used to build the frame graph.
+     * @param {FrameGraph} frameGraph - The frame-graph that is built.
+     * @param {LayerComposition} layerComposition - The layer composition used to build the frame
+     * graph.
      * @ignore
      */
     buildFrameGraph(frameGraph, layerComposition) {
@@ -842,6 +868,12 @@ class ForwardRenderer extends Renderer {
 
             if (renderAction.useCameraPasses)  {
 
+                Debug.call(() => {
+                    if (camera.postEffects.effects.length > 0) {
+                        Debug.warnOnce(`Camera '${camera.entity.name}' uses render passes, which are not compatible with post-effects scripts. Rendering of the post-effects is ignored, but they should not be attached to the camera.`);
+                    }
+                });
+
                 // schedule render passes from the camera
                 camera.camera.renderPasses.forEach((renderPass) => {
                     frameGraph.addRenderPass(renderPass);
@@ -861,7 +893,7 @@ class ForwardRenderer extends Renderer {
 
                 // info about the next render action
                 const nextRenderAction = renderActions[i + 1];
-                const isNextLayerDepth = nextRenderAction ? nextRenderAction.layer.id === LAYERID_DEPTH : false;
+                const isNextLayerDepth = nextRenderAction ? (!nextRenderAction.useCameraPasses && nextRenderAction.layer.id === LAYERID_DEPTH) : false;
                 const isNextLayerGrabPass = isNextLayerDepth && (camera.renderSceneColorMap || camera.renderSceneDepthMap);
                 const nextNeedDirShadows = nextRenderAction ? (nextRenderAction.firstCameraUse && this.cameraDirShadowLights.has(nextRenderAction.camera.camera)) : false;
 
@@ -903,9 +935,8 @@ class ForwardRenderer extends Renderer {
     }
 
     /**
-     * @param {import('../frame-graph.js').FrameGraph} frameGraph - The frame graph.
-     * @param {import('../composition/layer-composition.js').LayerComposition} layerComposition - The
-     * layer composition.
+     * @param {FrameGraph} frameGraph - The frame graph.
+     * @param {LayerComposition} layerComposition - The layer composition.
      */
     addMainRenderPass(frameGraph, layerComposition, renderTarget, startIndex, endIndex) {
 
@@ -921,8 +952,7 @@ class ForwardRenderer extends Renderer {
     }
 
     /**
-     * @param {import('../composition/layer-composition.js').LayerComposition} comp - The layer
-     * composition.
+     * @param {LayerComposition} comp - The layer composition.
      */
     update(comp) {
 

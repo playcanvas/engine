@@ -12,6 +12,11 @@ import {
     UNIFORMTYPE_IVEC4ARRAY, UNIFORMTYPE_UVEC4ARRAY, UNIFORMTYPE_BVEC4ARRAY
 } from './constants.js';
 
+/**
+ * @import { GraphicsDevice } from './graphics-device.js'
+ * @import { ScopeId } from './scope-id.js'
+ */
+
 // map of UNIFORMTYPE_*** to number of 32bit components
 const uniformTypeToNumComponents = [];
 uniformTypeToNumComponents[UNIFORMTYPE_FLOAT] = 1;
@@ -67,7 +72,7 @@ class UniformFormat {
     offset;
 
     /**
-     * @type {import('./scope-id.js').ScopeId}
+     * @type {ScopeId}
      * @ignore
      */
     scopeId;
@@ -156,8 +161,9 @@ class UniformFormat {
         this.count = count;
         Debug.assert(!isNaN(count), `Unsupported uniform: ${name}[${count}]`);
         Debug.call(() => {
-            if (isNaN(count))
+            if (isNaN(count)) {
                 this.invalid = true;
+            }
         });
 
         let componentSize = this.numComponents;
@@ -168,8 +174,9 @@ class UniformFormat {
         }
 
         this.byteSize = componentSize * 4;
-        if (count)
+        if (count) {
             this.byteSize *= count;
+        }
 
         Debug.assert(this.byteSize, `Unknown byte size for uniform format ${type} used for ${name}`);
     }
@@ -182,8 +189,9 @@ class UniformFormat {
         let alignment = this.byteSize <= 8 ? this.byteSize : 16;
 
         // arrays have vec4 alignments
-        if (this.count)
+        if (this.count) {
             alignment = 16;
+        }
 
         // align the start offset
         offset = math.roundUp(offset, alignment);
@@ -210,7 +218,7 @@ class UniformBufferFormat {
     /**
      * Create a new UniformBufferFormat instance.
      *
-     * @param {import('./graphics-device.js').GraphicsDevice} graphicsDevice - The graphics device.
+     * @param {GraphicsDevice} graphicsDevice - The graphics device.
      * @param {UniformFormat[]} uniforms - An array of uniforms to be stored in the buffer
      */
     constructor(graphicsDevice, uniforms) {
@@ -257,7 +265,7 @@ class UniformBufferFormat {
             code += `    ${typeString} ${uniform.shortName}${uniform.count ? `[${uniform.count}]` : ''};\n`;
         });
 
-        return code + '};\n';
+        return `${code}};\n`;
     }
 }
 

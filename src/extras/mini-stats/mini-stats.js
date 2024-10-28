@@ -2,13 +2,17 @@ import { math } from '../../core/math/math.js';
 import { Texture } from '../../platform/graphics/texture.js';
 import { ADDRESS_REPEAT, FILTER_NEAREST } from '../../platform/graphics/constants.js';
 import { LAYERID_UI } from '../../scene/constants.js';
-
 import { CpuTimer } from './cpu-timer.js';
 import { GpuTimer } from './gpu-timer.js';
 import { StatsTimer } from './stats-timer.js';
 import { Graph } from './graph.js';
 import { WordAtlas } from './word-atlas.js';
 import { Render2d } from './render2d.js';
+
+/**
+ * @import { AppBase } from '../../framework/app-base.js'
+ * @import { GraphicsDevice } from '../../platform/graphics/graphics-device.js'
+ */
 
 /**
  * MiniStats is a small graphical overlay that displays realtime performance metrics. By default,
@@ -19,7 +23,7 @@ class MiniStats {
     /**
      * Create a new MiniStats instance.
      *
-     * @param {import('../../framework/app-base.js').AppBase} app - The application.
+     * @param {AppBase} app - The application.
      * @param {object} [options] - Options for the MiniStats instance.
      * @param {object[]} [options.sizes] - Sizes of area to render individual graphs in and spacing
      * between individual graphs.
@@ -60,9 +64,9 @@ class MiniStats {
         // extract list of words
         const words = new Set(
             ['', 'ms', '0', '1', '2', '3', '4', '5', '6', '7', '8', '9', '.']
-                .concat(this.graphs.map(graph => graph.name))
-                .concat(options.stats ? options.stats.map(stat => stat.unitsName) : [])
-                .filter(item => !!item)
+            .concat(this.graphs.map(graph => graph.name))
+            .concat(options.stats ? options.stats.map(stat => stat.unitsName) : [])
+            .filter(item => !!item)
         );
 
         this.wordAtlas = new WordAtlas(device, words);
@@ -199,9 +203,10 @@ class MiniStats {
     }
 
     /**
-     * Get/set the active size index. Setting the active size index will resize the overlay to the
+     * Sets the active size index. Setting the active size index will resize the overlay to the
      * size specified by the corresponding entry in the sizes array.
      *
+     * @type {number}
      * @ignore
      */
     set activeSizeIndex(value) {
@@ -210,28 +215,40 @@ class MiniStats {
         this.resize(this.sizes[value].width, this.sizes[value].height, this.sizes[value].graphs);
     }
 
-    /** @ignore */
+    /**
+     * Gets the active size index.
+     *
+     * @type {number}
+     * @ignore
+     */
     get activeSizeIndex() {
         return this._activeSizeIndex;
     }
 
     /**
-     * Get/set the opacity of the MiniStats overlay.
+     * Sets the opacity of the MiniStats overlay.
      *
+     * @type {number}
      * @ignore
      */
     set opacity(value) {
         this.clr[3] = value;
     }
 
-    /** @ignore */
+    /**
+     * Gets the opacity of the MiniStats overlay.
+     *
+     * @type {number}
+     * @ignore
+     */
     get opacity() {
         return this.clr[3];
     }
 
     /**
-     * Get the overall height of the MiniStats overlay.
+     * Gets the overall height of the MiniStats overlay.
      *
+     * @type {number}
      * @ignore
      */
     get overallHeight() {
@@ -241,7 +258,9 @@ class MiniStats {
     }
 
     /**
-     * Get/set the enabled state of the MiniStats overlay.
+     * Sets the enabled state of the MiniStats overlay.
+     *
+     * @type {boolean}
      */
     set enabled(value) {
         if (value !== this._enabled) {
@@ -253,6 +272,11 @@ class MiniStats {
         }
     }
 
+    /**
+     * Gets the enabled state of the MiniStats overlay.
+     *
+     * @type {boolean}
+     */
     get enabled() {
         return this._enabled;
     }
@@ -260,8 +284,8 @@ class MiniStats {
     /**
      * Create the graphs requested by the user and add them to the MiniStats instance.
      *
-     * @param {import('../../framework/app-base.js').AppBase} app - The application.
-     * @param {import('../../platform/graphics/graphics-device.js').GraphicsDevice} device - The graphics device.
+     * @param {AppBase} app - The application.
+     * @param {GraphicsDevice} device - The graphics device.
      * @param {object} options - Options for the MiniStats instance.
      * @private
      */
@@ -384,10 +408,10 @@ class MiniStats {
      */
     updateDiv() {
         const rect = this.device.canvas.getBoundingClientRect();
-        this.div.style.left = rect.left + 'px';
-        this.div.style.bottom = (window.innerHeight - rect.bottom) + 'px';
-        this.div.style.width = this.width + 'px';
-        this.div.style.height = this.overallHeight + 'px';
+        this.div.style.left = `${rect.left}px`;
+        this.div.style.bottom = `${window.innerHeight - rect.bottom}px`;
+        this.div.style.width = `${this.width}px`;
+        this.div.style.height = `${this.overallHeight}px`;
     }
 
     /**

@@ -40,13 +40,11 @@ class NullGraphicsDevice extends GraphicsDevice {
         this.maxPixelRatio = 1;
         this.maxAnisotropy = 16;
         this.supportsUniformBuffers = false;
-        this.supportsMorphTargetTexturesCore = true;
         this.supportsAreaLights = true;
         this.supportsGpuParticles = false;
         this.textureFloatRenderable = true;
         this.textureHalfFloatRenderable = true;
         this.supportsImageBitmap = true;
-        this.supportsTextureFetch = true;
     }
 
     postInit() {

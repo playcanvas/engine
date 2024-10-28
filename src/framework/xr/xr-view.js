@@ -1,10 +1,13 @@
 import { EventHandler } from '../../core/event-handler.js';
 import { Texture } from '../../platform/graphics/texture.js';
-import { Vec4 } from "../../core/math/vec4.js";
-import { Mat3 } from "../../core/math/mat3.js";
-import { Mat4 } from "../../core/math/mat4.js";
+import { Vec4 } from '../../core/math/vec4.js';
+import { Mat3 } from '../../core/math/mat3.js';
+import { Mat4 } from '../../core/math/mat4.js';
+import { ADDRESS_CLAMP_TO_EDGE, FILTER_LINEAR, FILTER_NEAREST, PIXELFORMAT_R32F, PIXELFORMAT_DEPTH, PIXELFORMAT_RGB8 } from '../../platform/graphics/constants.js';
 
-import { ADDRESS_CLAMP_TO_EDGE, FILTER_LINEAR, PIXELFORMAT_RGB8 } from '../../platform/graphics/constants.js';
+/**
+ * @import { XrManager } from './xr-manager.js'
+ */
 
 /**
  * Represents an XR View which represents a screen (monoscopic scenario such as a mobile phone) or an eye
@@ -28,7 +31,7 @@ class XrView extends EventHandler {
     static EVENT_DEPTHRESIZE = 'depth:resize';
 
     /**
-     * @type {import('./xr-manager.js').XrManager}
+     * @type {XrManager}
      * @private
      */
     _manager;
@@ -132,9 +135,8 @@ class XrView extends EventHandler {
     /**
      * Create a new XrView instance.
      *
-     * @param {import('./xr-manager.js').XrManager} manager - WebXR Manager.
-     * @param {XRView} xrView - [XRView](https://developer.mozilla.org/en-US/docs/Web/API/XRView)
-     * object that is created by WebXR API.
+     * @param {XrManager} manager - WebXR Manager.
+     * @param {XRView} xrView - XRView object that is created by WebXR API.
      * @param {number} viewsCount - Number of views available for the session.
      * @ignore
      */
@@ -166,14 +168,16 @@ class XrView extends EventHandler {
         }
 
         if (this._manager.views.supportedDepth && this._manager.views.availableDepth) {
+            const filtering = this._manager.views.depthGpuOptimized ? FILTER_NEAREST : FILTER_LINEAR;
+
             this._textureDepth = new Texture(device, {
                 format: this._manager.views.depthPixelFormat,
                 arrayLength: (viewsCount === 1) ? 0 : viewsCount,
                 mipmaps: false,
                 addressU: ADDRESS_CLAMP_TO_EDGE,
                 addressV: ADDRESS_CLAMP_TO_EDGE,
-                minFilter: FILTER_LINEAR,
-                magFilter: FILTER_LINEAR,
+                minFilter: filtering,
+                magFilter: filtering,
                 width: 4,
                 height: 4,
                 name: `XrView-${this._xrView.eye}-Depth`
@@ -182,10 +186,13 @@ class XrView extends EventHandler {
             for (let i = 0; i < this._textureDepth._levels.length; i++) {
                 this._textureDepth._levels[i] = this._emptyDepthBuffer;
             }
+
+            this._textureDepth.upload();
         }
 
-        if (this._textureColor || this._textureDepth)
+        if (this._textureColor || this._textureDepth) {
             device.on('devicelost', this._onDeviceLost, this);
+        }
     }
 
     /**
@@ -198,16 +205,15 @@ class XrView extends EventHandler {
         return this._textureColor;
     }
 
-    /* eslint-disable jsdoc/check-examples */
     /**
      * Texture that contains packed depth information which is reconstructed using the underlying
      * AR system. This texture can be used (not limited to) for reconstructing real world
      * geometry, virtual object placement, occlusion of virtual object by the real world geometry,
      * and more.
-     * The format of this texture is {@link PIXELFORMAT_LA8} or {@link PIXELFORMAT_R32F}
-     * based on {@link XrViews#depthFormat}. It is UV transformed based on the underlying AR
-     * system which can be normalized using {@link XrView#depthUvMatrix}. Equals to null if camera
-     * depth is not supported.
+     * The format of this texture is any of {@link PIXELFORMAT_LA8}, {@link PIXELFORMAT_DEPTH}, or
+     * {@link PIXELFORMAT_R32F} based on {@link XrViews#depthFormat}. It is UV transformed based
+     * on the underlying AR system which can be normalized using {@link XrView#depthUvMatrix}.
+     * Equals to null if camera depth is not supported.
      *
      * @type {Texture|null}
      * @example
@@ -217,6 +223,7 @@ class XrView extends EventHandler {
      * material.setParameter('depth_to_meters', view.depthValueToMeters);
      * @example
      * // GLSL shader to unpack depth texture
+     * // when depth information is provided in form of LA8
      * varying vec2 vUv0;
      *
      * uniform sampler2D texture_depthSensingMap;
@@ -243,7 +250,6 @@ class XrView extends EventHandler {
     get textureDepth() {
         return this._textureDepth;
     }
-    /* eslint-enable jsdoc/check-examples */
 
     /**
      * 4x4 matrix that should be used to transform depth texture UVs to normalized UVs in a shader.
@@ -282,8 +288,8 @@ class XrView extends EventHandler {
     }
 
     /**
-     * A Vec4 (x, y, width, height) that represents a view's viewport. For monoscopic screen
-     * it will define fullscreen view, but for stereoscopic views (left/right eye) it will define
+     * A Vec4 (x, y, width, height) that represents a view's viewport. For a monoscopic screen,
+     * it will define fullscreen view. But for stereoscopic views (left/right eye), it will define
      * a part of a whole screen that view is occupying.
      *
      * @type {Vec4}
@@ -347,8 +353,9 @@ class XrView extends EventHandler {
      */
     update(frame, xrView) {
         this._xrView = xrView;
-        if (this._manager.views.availableColor)
+        if (this._manager.views.availableColor) {
             this._xrCamera = this._xrView.camera;
+        }
 
         const layer = frame.session.renderState.baseLayer;
 
@@ -372,16 +379,19 @@ class XrView extends EventHandler {
      * @private
      */
     _updateTextureColor() {
-        if (!this._manager.views.availableColor || !this._xrCamera || !this._textureColor)
+        if (!this._manager.views.availableColor || !this._xrCamera || !this._textureColor) {
             return;
+        }
 
         const binding = this._manager.webglBinding;
-        if (!binding)
+        if (!binding) {
             return;
+        }
 
         const texture = binding.getCameraImage(this._xrCamera);
-        if (!texture)
+        if (!texture) {
             return;
+        }
 
         const device = this._manager.app.graphicsDevice;
         const gl = device.gl;
@@ -431,8 +441,9 @@ class XrView extends EventHandler {
      * @private
      */
     _updateDepth(frame) {
-        if (!this._manager.views.availableDepth || !this._textureDepth)
+        if (!this._manager.views.availableDepth || !this._textureDepth) {
             return;
+        }
 
         const gpu = this._manager.views.depthGpuOptimized;
 
@@ -478,7 +489,30 @@ class XrView extends EventHandler {
             if (gpu) {
                 // gpu
                 if (this._depthInfo.texture) {
+                    const gl = this._manager.app.graphicsDevice.gl;
+
                     this._textureDepth.impl._glTexture = this._depthInfo.texture;
+
+                    if (this._depthInfo.textureType === 'texture-array') {
+                        this._textureDepth.impl._glTarget = gl.TEXTURE_2D_ARRAY;
+                    } else {
+                        this._textureDepth.impl._glTarget = gl.TEXTURE_2D;
+                    }
+
+                    switch (this._manager.views.depthPixelFormat) {
+                        case PIXELFORMAT_R32F:
+                            this._textureDepth.impl._glInternalFormat = gl.R32F;
+                            this._textureDepth.impl._glPixelType = gl.FLOAT;
+                            this._textureDepth.impl._glFormat = gl.RED;
+                            break;
+                        case PIXELFORMAT_DEPTH:
+                            this._textureDepth.impl._glInternalFormat = gl.DEPTH_COMPONENT16;
+                            this._textureDepth.impl._glPixelType = gl.UNSIGNED_SHORT;
+                            this._textureDepth.impl._glFormat = gl.DEPTH_COMPONENT;
+                            break;
+                    }
+
+                    this._textureDepth.impl._glCreated = true;
                 }
             } else {
                 // cpu
@@ -522,8 +556,8 @@ class XrView extends EventHandler {
     }
 
     /**
-     * Get depth value from depth information in meters. UV is in range of 0..1, with origin in
-     * top-left corner of a texture.
+     * Get a depth value from depth information in meters. The specified UV is in the range 0..1,
+     * with the origin in the top-left corner of the depth texture.
      *
      * @param {number} u - U coordinate of pixel in depth texture, which is in range from 0.0 to
      * 1.0 (left to right).
@@ -538,8 +572,9 @@ class XrView extends EventHandler {
      * }
      */
     getDepth(u, v) {
-        if (this._manager.views.depthGpuOptimized)
+        if (this._manager.views.depthGpuOptimized) {
             return null;
+        }
 
         return this._depthInfo?.getDepthInMeters(u, v) ?? null;
     }

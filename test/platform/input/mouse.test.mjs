@@ -60,8 +60,8 @@ describe('Mouse', function () {
 
     describe('#on', function () {
 
-        it('should handle mousedown events', function (done) {
-            mouse.on(EVENT_MOUSEDOWN, function (event) {
+        it('should handle mousedown events', (done) => {
+            mouse.on(EVENT_MOUSEDOWN, (event) => {
                 expect(event.button).to.equal(MOUSEBUTTON_LEFT);
                 expect(event.event).to.be.an.instanceOf(MouseEvent);
 
@@ -72,8 +72,8 @@ describe('Mouse', function () {
             window.dispatchEvent(mouseDownEvent);
         });
 
-        it('should handle mouseup events', function (done) {
-            mouse.on(EVENT_MOUSEUP, function (event) {
+        it('should handle mouseup events', (done) => {
+            mouse.on(EVENT_MOUSEUP, (event) => {
                 expect(event.button).to.equal(MOUSEBUTTON_LEFT);
                 expect(event.event).to.be.an.instanceOf(MouseEvent);
 

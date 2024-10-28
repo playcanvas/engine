@@ -1,10 +1,8 @@
-import { Tracing } from "./tracing.js";
+import { Tracing } from './tracing.js';
 
 /**
- * Engine debug log system. Note that the logging only executes in the
- * debug build of the engine, and is stripped out in other builds.
- *
- * @ignore
+ * Engine debug log system. Note that the logging only executes in the debug build of the engine,
+ * and is stripped out in other builds.
  */
 class Debug {
     /**
@@ -23,7 +21,19 @@ class Debug {
     static deprecated(message) {
         if (!Debug._loggedMessages.has(message)) {
             Debug._loggedMessages.add(message);
-            console.warn('DEPRECATED: ' + message);
+            console.warn(`DEPRECATED: ${message}`);
+        }
+    }
+
+    /**
+     * Removed warning message.
+     *
+     * @param {string} message - The message to log.
+     */
+    static removed(message) {
+        if (!Debug._loggedMessages.has(message)) {
+            Debug._loggedMessages.add(message);
+            console.warn(`REMOVED: ${message}`);
         }
     }
 
@@ -161,8 +171,6 @@ class Debug {
 
 /**
  * A helper debug functionality.
- *
- * @ignore
  */
 class DebugHelper {
     /**

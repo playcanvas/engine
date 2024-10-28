@@ -66,7 +66,7 @@ assetListLoader.load(() => {
     // setup skydome
     app.scene.envAtlas = assets.helipad.resource;
     app.scene.skyboxMip = 1;
-    app.scene.toneMapping = pc.TONEMAP_ACES;
+    app.scene.rendering.toneMapping = pc.TONEMAP_ACES;
 
     // get existing layers
     const worldLayer = app.scene.layers.getLayerByName('World');
@@ -89,7 +89,7 @@ assetListLoader.load(() => {
             name: name,
             width: width,
             height: height,
-            format: pc.PIXELFORMAT_R8_G8_B8_A8,
+            format: pc.PIXELFORMAT_RGBA8,
             mipmaps: true,
             minFilter: pc.FILTER_LINEAR_MIPMAP_LINEAR,
             magFilter: pc.FILTER_LINEAR,

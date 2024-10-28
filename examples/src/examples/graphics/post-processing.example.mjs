@@ -1,6 +1,7 @@
 import * as pc from 'playcanvas';
 import { data } from 'examples/observer';
-import { deviceType, rootPath } from 'examples/utils';
+import { deviceType, rootPath, fileImport } from 'examples/utils';
+const { CameraFrame } = await fileImport(rootPath + '/static/assets/scripts/misc/camera-frame.mjs');
 
 const canvas = /** @type {HTMLCanvasElement} */ (document.getElementById('application-canvas'));
 window.focus();
@@ -81,11 +82,6 @@ assetListLoader.load(() => {
     // disable skydome rendering itself, we don't need it as we use camera clear color
     app.scene.layers.getLayerByName('Skybox').enabled = false;
 
-    // the render passes render in HDR format, and so disable output tone mapping and gamma correction,
-    // as that is applied in the final compose pass
-    app.scene.toneMapping = pc.TONEMAP_LINEAR;
-    app.scene.gammaCorrection = pc.GAMMA_NONE;
-
     // create an instance of the platform and add it to the scene
     const platformEntity = assets.platform.resource.instantiateRenderEntity();
     platformEntity.setLocalScale(10, 10, 10);
@@ -107,11 +103,12 @@ assetListLoader.load(() => {
     app.root.addChild(mosquitoEntity);
 
     // helper function to create a box primitive
-    const createBox = (x, y, z, r, g, b, name) => {
+    const createBox = (x, y, z, r, g, b, emissive, name) => {
         // create material of random color
         const material = new pc.StandardMaterial();
         material.diffuse = pc.Color.BLACK;
         material.emissive = new pc.Color(r, g, b);
+        material.emissiveIntensity = emissive;
         material.update();
 
         // create primitive
@@ -130,9 +127,9 @@ assetListLoader.load(() => {
 
     // create 3 emissive boxes
     const boxes = [
-        createBox(100, 20, 0, 200, 0, 0, 'boxRed'),
-        createBox(-50, 20, 100, 0, 80, 0, 'boxGreen'),
-        createBox(90, 20, -80, 80, 80, 20, 'boxYellow')
+        createBox(100, 20, 0, 1, 0, 0, 60, 'boxRed'),
+        createBox(-50, 20, 100, 0, 1, 0, 60, 'boxGreen'),
+        createBox(90, 20, -80, 1, 1, 0.25, 50, 'boxYellow')
     ];
 
     // Create an Entity with a camera component
@@ -193,7 +190,11 @@ assetListLoader.load(() => {
         const label = new pc.Entity(name);
         label.addComponent('element', {
             text: text,
-            color: new pc.Color(100, 50, 80), // very bright color to affect the bloom
+
+            // very bright color to affect the bloom - this is not correct, as this is sRGB color that
+            // is valid only in 0..1 range, but UI does not expose emissive intensity currently
+            color: new pc.Color(18, 15, 5),
+
             anchor: new pc.Vec4(x, y, 0.5, 0.5),
             fontAsset: assets.font,
             fontSize: 28,
@@ -215,53 +216,13 @@ assetListLoader.load(() => {
 
     // ------ Custom render passes set up ------
 
-    const currentOptions = {
-        camera: cameraEntity.camera, // camera used to render those passes
-        samples: 0, // number of samples for multi-sampling
-        sceneColorMap: true, // true if the scene color should be captured
-
-        // disabled TAA as it currently does not handle dynamic objects
-        prepassEnabled: false,
-        taaEnabled: false
-    };
-
-    const setupRenderPass = () => {
-        // destroy existing pass if any
-        if (cameraEntity.camera.renderPasses.length > 0) {
-            cameraEntity.camera.renderPasses[0].destroy();
-        }
-
-        // Use a render pass camera frame, which is a render pass that implements typical rendering of a camera.
-        // Internally this sets up additional passes it needs, based on the options passed to it.
-        const renderPassCamera = new pc.RenderPassCameraFrame(app, currentOptions);
-
-        // and set up these rendering passes to be used by the camera, instead of its default rendering
-        cameraEntity.camera.renderPasses = [renderPassCamera];
-    };
-
-    // ------
+    /** @type { CameraFrame } */
+    const cameraFrame = cameraEntity.script.create(CameraFrame);
+    cameraFrame.rendering.sceneColorMap = true;
 
     const applySettings = () => {
-        // if settings require render passes to be re-created
-        const noPasses = cameraEntity.camera.renderPasses.length === 0;
-        const taaEnabled = data.get('data.taa.enabled');
-        if (noPasses || taaEnabled !== currentOptions.taaEnabled) {
-            currentOptions.taaEnabled = taaEnabled;
-            currentOptions.prepassEnabled = taaEnabled;
 
-            // create new pass
-            setupRenderPass();
-        }
-
-        const renderPassCamera = cameraEntity.camera.renderPasses[0];
-        const composePass = renderPassCamera.composePass;
-
-        // apply all runtime settings
-
-        // SCENE
-        composePass.toneMapping = data.get('data.scene.tonemapping');
-        renderPassCamera.renderTargetScale = data.get('data.scene.scale');
-
+        // background
         const background = data.get('data.scene.background');
         cameraEntity.camera.clearColor = new pc.Color(
             lightColor.r * background,
@@ -270,42 +231,47 @@ assetListLoader.load(() => {
         );
         light.light.intensity = background;
 
+        // emissive
         const emissive = data.get('data.scene.emissive');
         emissiveMaterials.forEach((material) => {
             material.emissiveIntensity = emissive;
             material.update();
         });
 
-        // taa - enable camera jitter if taa is enabled
-        cameraEntity.camera.jitter = taaEnabled ? data.get('data.taa.jitter') : 0;
+        // Scene
+        cameraFrame.rendering.renderTargetScale = data.get('data.scene.scale');
+        cameraFrame.rendering.toneMapping = data.get('data.scene.tonemapping');
 
-        // bloom
-        composePass.bloomIntensity = pc.math.lerp(0, 0.1, data.get('data.bloom.intensity') / 100);
-        renderPassCamera.lastMipLevel = data.get('data.bloom.lastMipLevel');
-        renderPassCamera.bloomEnabled = data.get('data.bloom.enabled');
+        // TAA
+        cameraFrame.taa.enabled = data.get('data.taa.enabled');
+        cameraFrame.taa.jitter = data.get('data.taa.jitter');
+
+        // Bloom
+        cameraFrame.bloom.enabled = data.get('data.bloom.enabled');
+        cameraFrame.bloom.intensity = pc.math.lerp(0, 0.1, data.get('data.bloom.intensity') / 100);
+        cameraFrame.bloom.lastMipLevel = data.get('data.bloom.lastMipLevel');
 
         // grading
-        composePass.gradingSaturation = data.get('data.grading.saturation');
-        composePass.gradingBrightness = data.get('data.grading.brightness');
-        composePass.gradingContrast = data.get('data.grading.contrast');
-        composePass.gradingEnabled = data.get('data.grading.enabled');
+        cameraFrame.grading.enabled = data.get('data.grading.enabled');
+        cameraFrame.grading.saturation = data.get('data.grading.saturation');
+        cameraFrame.grading.brightness = data.get('data.grading.brightness');
+        cameraFrame.grading.contrast = data.get('data.grading.contrast');
 
         // vignette
-        composePass.vignetteEnabled = data.get('data.vignette.enabled');
-        composePass.vignetteInner = data.get('data.vignette.inner');
-        composePass.vignetteOuter = data.get('data.vignette.outer');
-        composePass.vignetteCurvature = data.get('data.vignette.curvature');
-        composePass.vignetteIntensity = data.get('data.vignette.intensity');
+        cameraFrame.vignette.enabled = data.get('data.vignette.enabled');
+        cameraFrame.vignette.inner = data.get('data.vignette.inner');
+        cameraFrame.vignette.outer = data.get('data.vignette.outer');
+        cameraFrame.vignette.curvature = data.get('data.vignette.curvature');
+        cameraFrame.vignette.intensity = data.get('data.vignette.intensity');
 
         // fringing
-        composePass.fringingEnabled = data.get('data.fringing.enabled');
-        composePass.fringingIntensity = data.get('data.fringing.intensity');
+        cameraFrame.fringing.enabled = data.get('data.fringing.enabled');
+        cameraFrame.fringing.intensity = data.get('data.fringing.intensity');
     };
 
     // apply UI changes
-    let initialValuesSetup = false;
     data.on('*:set', () => {
-        if (initialValuesSetup) applySettings();
+        applySettings();
     });
 
     // set initial values
@@ -318,7 +284,7 @@ assetListLoader.load(() => {
         },
         bloom: {
             enabled: true,
-            intensity: 20,
+            intensity: 5,
             lastMipLevel: 1
         },
         grading: {
@@ -339,14 +305,10 @@ assetListLoader.load(() => {
             intensity: 50
         },
         taa: {
-            enabled: currentOptions.taaEnabled,
+            enabled: false,
             jitter: 1
         }
     });
-
-    // apply initial settings after all values are set
-    initialValuesSetup = true;
-    applySettings();
 
     // update things every frame
     let angle = 0;

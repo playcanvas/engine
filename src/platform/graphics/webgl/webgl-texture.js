@@ -1,17 +1,25 @@
 import { Debug } from '../../../core/debug.js';
-
 import {
     PIXELFORMAT_A8, PIXELFORMAT_L8, PIXELFORMAT_LA8, PIXELFORMAT_RGB565, PIXELFORMAT_RGBA5551, PIXELFORMAT_RGBA4,
     PIXELFORMAT_RGB8, PIXELFORMAT_RGBA8, PIXELFORMAT_DXT1, PIXELFORMAT_DXT3, PIXELFORMAT_DXT5,
     PIXELFORMAT_RGB16F, PIXELFORMAT_RGBA16F, PIXELFORMAT_RGB32F, PIXELFORMAT_RGBA32F, PIXELFORMAT_R32F, PIXELFORMAT_DEPTH,
-    PIXELFORMAT_DEPTHSTENCIL, PIXELFORMAT_111110F, PIXELFORMAT_SRGB, PIXELFORMAT_SRGBA, PIXELFORMAT_ETC1,
+    PIXELFORMAT_DEPTHSTENCIL, PIXELFORMAT_111110F, PIXELFORMAT_SRGB8, PIXELFORMAT_SRGBA8, PIXELFORMAT_ETC1,
     PIXELFORMAT_ETC2_RGB, PIXELFORMAT_ETC2_RGBA, PIXELFORMAT_PVRTC_2BPP_RGB_1, PIXELFORMAT_PVRTC_2BPP_RGBA_1,
     PIXELFORMAT_PVRTC_4BPP_RGB_1, PIXELFORMAT_PVRTC_4BPP_RGBA_1, PIXELFORMAT_ASTC_4x4, PIXELFORMAT_ATC_RGB,
     PIXELFORMAT_ATC_RGBA, PIXELFORMAT_BGRA8, PIXELFORMAT_R8I, PIXELFORMAT_R8U, PIXELFORMAT_R16I, PIXELFORMAT_R16U,
     PIXELFORMAT_R32I, PIXELFORMAT_R32U, PIXELFORMAT_RG16I, PIXELFORMAT_RG16U, PIXELFORMAT_RG32I, PIXELFORMAT_RG32U,
     PIXELFORMAT_RG8I, PIXELFORMAT_RG8U, PIXELFORMAT_RGBA16I, PIXELFORMAT_RGBA16U, PIXELFORMAT_RGBA32I, PIXELFORMAT_RGBA32U,
-    PIXELFORMAT_RGBA8I, PIXELFORMAT_RGBA8U, PIXELFORMAT_R16F, PIXELFORMAT_RG16F, PIXELFORMAT_R8, PIXELFORMAT_RG8
+    PIXELFORMAT_RGBA8I, PIXELFORMAT_RGBA8U, PIXELFORMAT_R16F, PIXELFORMAT_RG16F, PIXELFORMAT_R8, PIXELFORMAT_RG8,
+    PIXELFORMAT_DXT1_SRGB, PIXELFORMAT_DXT3_SRGBA, PIXELFORMAT_DXT5_SRGBA, PIXELFORMAT_PVRTC_2BPP_SRGB_1,
+    PIXELFORMAT_PVRTC_2BPP_SRGBA_1, PIXELFORMAT_PVRTC_4BPP_SRGB_1, PIXELFORMAT_PVRTC_4BPP_SRGBA_1,
+    PIXELFORMAT_ETC2_SRGB, PIXELFORMAT_ETC2_SRGBA, PIXELFORMAT_ASTC_4x4_SRGB, PIXELFORMAT_SBGRA8,
+    PIXELFORMAT_BC6F, PIXELFORMAT_BC6UF, PIXELFORMAT_BC7, PIXELFORMAT_BC7_SRGBA
 } from '../constants.js';
+
+/**
+ * @import { Texture } from '../texture.js'
+ * @import { WebglGraphicsDevice } from './webgl-graphics-device.js'
+ */
 
 /**
  * Checks that an image's width and height do not exceed the max texture size. If they do, it will
@@ -20,7 +28,6 @@ import {
  * @param {HTMLImageElement} image - The image to downsample.
  * @param {number} size - The maximum allowed size of the image.
  * @returns {HTMLImageElement|HTMLCanvasElement} The downsampled image.
- * @ignore
  */
 function downsampleImage(image, size) {
     const srcW = image.width;
@@ -48,8 +55,6 @@ function downsampleImage(image, size) {
 
 /**
  * A WebGL implementation of the Texture.
- *
- * @ignore
  */
 class WebglTexture {
     _glTexture = null;
@@ -67,7 +72,7 @@ class WebglTexture {
     dirtyParameterFlags = 0;
 
     constructor(texture) {
-        /** @type {import('../texture.js').Texture} */
+        /** @type {Texture} */
         this.texture = texture;
     }
 
@@ -160,6 +165,13 @@ class WebglTexture {
                 this._glInternalFormat = gl.RGBA8;
                 this._glPixelType = gl.UNSIGNED_BYTE;
                 break;
+            case PIXELFORMAT_BGRA8:
+            case PIXELFORMAT_SBGRA8:
+                Debug.error('BGRA8 and SBGRA8 texture formats are not supported by WebGL.');
+                break;
+
+                // compressed formats ----
+
             case PIXELFORMAT_DXT1:
                 this._glFormat = gl.RGB;
                 this._glInternalFormat = device.extCompressedTextureS3TC.COMPRESSED_RGB_S3TC_DXT1_EXT;
@@ -212,6 +224,68 @@ class WebglTexture {
                 this._glFormat = gl.RGBA;
                 this._glInternalFormat = device.extCompressedTextureATC.COMPRESSED_RGBA_ATC_INTERPOLATED_ALPHA_WEBGL;
                 break;
+            case PIXELFORMAT_BC6F:
+                this._glFormat = gl.RGB;
+                this._glInternalFormat = device.extTextureCompressionBPTC.COMPRESSED_RGB_BPTC_SIGNED_FLOAT_EXT;
+                break;
+            case PIXELFORMAT_BC6UF:
+                this._glFormat = gl.RGB;
+                this._glInternalFormat = device.extTextureCompressionBPTC.COMPRESSED_RGB_BPTC_UNSIGNED_FLOAT_EXT;
+                break;
+            case PIXELFORMAT_BC7:
+                this._glFormat = gl.RGBA;
+                this._glInternalFormat = device.extTextureCompressionBPTC.COMPRESSED_RGBA_BPTC_UNORM_EXT;
+                break;
+
+                // compressed sRGB formats ----
+
+            case PIXELFORMAT_DXT1_SRGB:
+                this._glFormat = gl.SRGB;
+                this._glInternalFormat = device.extCompressedTextureS3TC_SRGB.COMPRESSED_SRGB_S3TC_DXT1_EXT;
+                break;
+            case PIXELFORMAT_DXT3_SRGBA:
+                this._glFormat = gl.SRGB_ALPHA;
+                this._glInternalFormat = device.extCompressedTextureS3TC_SRGB.COMPRESSED_SRGB_ALPHA_S3TC_DXT3_EXT;
+                break;
+            case PIXELFORMAT_DXT5_SRGBA:
+                this._glFormat = gl.SRGB_ALPHA;
+                this._glInternalFormat = device.extCompressedTextureS3TC_SRGB.COMPRESSED_SRGB_ALPHA_S3TC_DXT5_EXT;
+                break;
+            case PIXELFORMAT_PVRTC_2BPP_SRGB_1:
+                this._glFormat = gl.SRGB;
+                this._glInternalFormat = device.extCompressedTexturePVRTC.COMPRESSED_SRGB_PVRTC_2BPPV1_EXT;
+                break;
+            case PIXELFORMAT_PVRTC_2BPP_SRGBA_1:
+                this._glFormat = gl.SRGB_ALPHA;
+                this._glInternalFormat = device.extCompressedTexturePVRTC.COMPRESSED_SRGB_ALPHA_PVRTC_2BPPV1_EXT;
+                break;
+            case PIXELFORMAT_PVRTC_4BPP_SRGB_1:
+                this._glFormat = gl.SRGB;
+                this._glInternalFormat = device.extCompressedTexturePVRTC.COMPRESSED_SRGB_PVRTC_4BPPV1_EXT;
+                break;
+            case PIXELFORMAT_PVRTC_4BPP_SRGBA_1:
+                this._glFormat = gl.SRGB_ALPHA;
+                this._glInternalFormat = device.extCompressedTexturePVRTC.COMPRESSED_SRGB_ALPHA_PVRTC_4BPPV1_EXT;
+                break;
+            case PIXELFORMAT_ETC2_SRGB:
+                this._glFormat = gl.RGB;
+                this._glInternalFormat = device.extCompressedTextureETC.COMPRESSED_RGB8_ETC2;
+                break;
+            case PIXELFORMAT_ETC2_SRGBA:
+                this._glFormat = gl.SRGB_ALPHA;
+                this._glInternalFormat = device.extCompressedTextureETC.COMPRESSED_SRGB8_ALPHA8_ETC2_EAC;
+                break;
+            case PIXELFORMAT_ASTC_4x4_SRGB:
+                this._glFormat = gl.SRGB_ALPHA;
+                this._glInternalFormat = device.extCompressedTextureASTC.COMPRESSED_SRGB8_ALPHA8_ASTC_4x4_KHR;
+                break;
+            case PIXELFORMAT_BC7_SRGBA:
+                this._glFormat = gl.RGBA;
+                this._glInternalFormat = device.extTextureCompressionBPTC.COMPRESSED_SRGB_ALPHA_BPTC_UNORM_EXT;
+                break;
+
+                // ------------------
+
             case PIXELFORMAT_R16F:
                 this._glFormat = gl.RED;
                 this._glInternalFormat = gl.R16F;
@@ -262,12 +336,12 @@ class WebglTexture {
                 this._glInternalFormat = gl.R11F_G11F_B10F;
                 this._glPixelType = gl.UNSIGNED_INT_10F_11F_11F_REV;
                 break;
-            case PIXELFORMAT_SRGB:
+            case PIXELFORMAT_SRGB8:
                 this._glFormat = gl.RGB;
                 this._glInternalFormat = gl.SRGB8;
                 this._glPixelType = gl.UNSIGNED_BYTE;
                 break;
-            case PIXELFORMAT_SRGBA:
+            case PIXELFORMAT_SRGBA8:
                 this._glFormat = gl.RGBA;
                 this._glInternalFormat = gl.SRGB8_ALPHA8;
                 this._glPixelType = gl.UNSIGNED_BYTE;
@@ -368,25 +442,23 @@ class WebglTexture {
                 this._glInternalFormat = gl.RGBA32UI;
                 this._glPixelType = gl.UNSIGNED_INT;
                 break;
-            case PIXELFORMAT_BGRA8:
-                Debug.error("BGRA8 texture format is not supported by WebGL.");
-                break;
         }
 
         this._glCreated = false;
     }
 
     /**
-     * @param {import('./webgl-graphics-device.js').WebglGraphicsDevice} device - The device.
-     * @param {import('../texture.js').Texture} texture - The texture to update.
+     * @param {WebglGraphicsDevice} device - The device.
+     * @param {Texture} texture - The texture to update.
      */
     upload(device, texture) {
 
-        Debug.assert(texture.device, "Attempting to use a texture that has been destroyed.", texture);
+        Debug.assert(texture.device, 'Attempting to use a texture that has been destroyed.', texture);
         const gl = device.gl;
 
-        if (!texture._needsUpload && ((texture._needsMipmapsUpload && texture._mipmapsUploaded) || !texture.pot))
+        if (!texture._needsUpload && ((texture._needsMipmapsUpload && texture._mipmapsUploaded) || !texture.pot)) {
             return;
+        }
 
         let mipLevel = 0;
         let mipObject;
@@ -397,11 +469,11 @@ class WebglTexture {
         if (texture.array) {
             // for texture arrays we reserve the space in advance
             gl.texStorage3D(gl.TEXTURE_2D_ARRAY,
-                            requiredMipLevels,
-                            this._glInternalFormat,
-                            texture._width,
-                            texture._height,
-                            texture._arrayLength);
+                requiredMipLevels,
+                this._glInternalFormat,
+                texture._width,
+                texture._height,
+                texture._arrayLength);
         }
 
         // Upload all existing mip levels. Initialize 0 mip anyway.
@@ -432,8 +504,9 @@ class WebglTexture {
                 if (device._isBrowserInterface(mipObject[0])) {
                     // Upload the image, canvas or video
                     for (face = 0; face < 6; face++) {
-                        if (!texture._levelsUpdated[0][face])
+                        if (!texture._levelsUpdated[0][face]) {
                             continue;
+                        }
 
                         let src = mipObject[face];
                         // Downsize images that are too large to be used as cube maps
@@ -474,8 +547,9 @@ class WebglTexture {
                     // Upload the byte array
                     resMult = 1 / Math.pow(2, mipLevel);
                     for (face = 0; face < 6; face++) {
-                        if (!texture._levelsUpdated[0][face])
+                        if (!texture._levelsUpdated[0][face]) {
                             continue;
+                        }
 
                         const texData = mipObject[face];
                         if (texture._compressed) {
@@ -535,28 +609,28 @@ class WebglTexture {
                 // Upload the byte array
                 if (texture._compressed) {
                     gl.compressedTexImage3D(gl.TEXTURE_3D,
-                                            mipLevel,
-                                            this._glInternalFormat,
-                                            Math.max(texture._width * resMult, 1),
-                                            Math.max(texture._height * resMult, 1),
-                                            Math.max(texture._depth * resMult, 1),
-                                            0,
-                                            mipObject);
+                        mipLevel,
+                        this._glInternalFormat,
+                        Math.max(texture._width * resMult, 1),
+                        Math.max(texture._height * resMult, 1),
+                        Math.max(texture._depth * resMult, 1),
+                        0,
+                        mipObject);
                 } else {
                     device.setUnpackFlipY(false);
                     device.setUnpackPremultiplyAlpha(texture._premultiplyAlpha);
                     gl.texImage3D(gl.TEXTURE_3D,
-                                  mipLevel,
-                                  this._glInternalFormat,
-                                  Math.max(texture._width * resMult, 1),
-                                  Math.max(texture._height * resMult, 1),
-                                  Math.max(texture._depth * resMult, 1),
-                                  0,
-                                  this._glFormat,
-                                  this._glPixelType,
-                                  mipObject);
+                        mipLevel,
+                        this._glInternalFormat,
+                        Math.max(texture._width * resMult, 1),
+                        Math.max(texture._height * resMult, 1),
+                        Math.max(texture._depth * resMult, 1),
+                        0,
+                        this._glFormat,
+                        this._glPixelType,
+                        mipObject);
                 }
-            } else if (texture.array && typeof mipObject === "object") {
+            } else if (texture.array && typeof mipObject === 'object') {
                 if (texture._arrayLength === mipObject.length) {
                     if (texture._compressed) {
                         for (let index = 0; index < texture._arrayLength; index++) {
@@ -704,8 +778,9 @@ class WebglTexture {
 
         if (texture._needsUpload) {
             if (texture._cubemap) {
-                for (let i = 0; i < 6; i++)
+                for (let i = 0; i < 6; i++) {
                     texture._levelsUpdated[0][i] = false;
+                }
             } else {
                 texture._levelsUpdated[0] = false;
             }
@@ -731,7 +806,7 @@ class WebglTexture {
 
         const texture = this.texture;
 
-        /** @type {import('./webgl-graphics-device.js').WebglGraphicsDevice} */
+        /** @type {WebglGraphicsDevice} */
         const device = texture.device;
         return device.readTextureAsync(texture, x, y, width, height, options);
     }

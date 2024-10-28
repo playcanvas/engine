@@ -14,7 +14,7 @@ import { ScriptRegistry } from '../../src/framework/script/script-registry.js';
 import { XrManager } from '../../src/framework/xr/xr-manager.js';
 import { NullGraphicsDevice } from '../../src/platform/graphics/null/null-graphics-device.js';
 
-import { HTMLCanvasElement } from '@playcanvas/canvas-mock';
+import { Canvas } from 'skia-canvas';
 
 import { expect } from 'chai';
 
@@ -23,7 +23,7 @@ describe('Application', function () {
     describe('#constructor', function () {
 
         it('support no options', function () {
-            const canvas = new HTMLCanvasElement(500, 500);
+            const canvas = new Canvas(500, 500);
             const app = new Application(canvas, { graphicsDevice: new NullGraphicsDevice(canvas) });
 
             expect(app.assets).to.be.instanceOf(AssetRegistry);
@@ -56,11 +56,11 @@ describe('Application', function () {
     describe('#destroy', function () {
 
         it('destroys the application', function () {
-            const canvas = new HTMLCanvasElement(500, 500);
+            const canvas = new Canvas(500, 500);
             const app = new Application(canvas, { graphicsDevice: new NullGraphicsDevice(canvas) });
 
             app.destroy();
-//            expect(app.assets).to.be.null;
+            //            expect(app.assets).to.be.null;
             expect(app.batcher).to.be.null;
             expect(app.elementInput).to.be.null;
             expect(app.gamepads).to.be.null;
@@ -76,7 +76,7 @@ describe('Application', function () {
             expect(app.scripts).to.be.null;
             expect(app.systems).to.be.null;
             expect(app.touch).to.be.null;
-//            expect(app.xr).to.be.null;
+            //            expect(app.xr).to.be.null;
         });
 
     });

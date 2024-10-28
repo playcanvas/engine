@@ -51,7 +51,7 @@ app.on('destroy', () => {
 const assetListLoader = new pc.AssetListLoader(Object.values(assets), app.assets);
 assetListLoader.load(() => {
     // set up some general scene rendering properties
-    app.scene.toneMapping = pc.TONEMAP_ACES;
+    app.scene.rendering.toneMapping = pc.TONEMAP_ACES;
     app.scene.skyboxMip = 2;
     app.scene.skyboxIntensity = 0.2;
     app.scene.envAtlas = assets.helipad.resource;
@@ -206,15 +206,16 @@ assetListLoader.load(() => {
 
     // ------- Particle rendering -------
 
-    // use WGSL shader for rendering as GLSL does not have access to storage buffers
+    // material to render the particles using WGSL shader as GLSL does not have access to storage buffers
     const shaderSource = files['shader-shared.wgsl'] + files['shader-rendering.wgsl'];
-    const shaderDefinition = {
-        vshader: shaderSource,
-        fshader: shaderSource,
+    const material = new pc.ShaderMaterial({
+        uniqueName: 'ParticleRenderShader',
+        vertexCode: shaderSource,
+        fragmentCode: shaderSource,
         shaderLanguage: pc.SHADERLANGUAGE_WGSL,
 
         // For now WGSL shaders need to provide their own bind group formats as they aren't processed.
-        // This has to match the structs in the shader.
+        // This has to match the ub_mesh struct in the shader.
         meshUniformBufferFormat: new pc.UniformBufferFormat(app.graphicsDevice, [
             new pc.UniformFormat('matrix_model', pc.UNIFORMTYPE_MAT4)
         ]),
@@ -222,12 +223,7 @@ assetListLoader.load(() => {
             // particle storage buffer in read-only mode
             new pc.BindStorageBufferFormat('particles', pc.SHADERSTAGE_VERTEX | pc.SHADERSTAGE_FRAGMENT, true)
         ])
-    };
-
-    // material to render the particles
-    const material = new pc.Material();
-    material.name = 'ParticleRenderingMaterial';
-    material.shader = new pc.Shader(app.graphicsDevice, shaderDefinition);
+    });
 
     // index buffer - two triangles (6 indices) per particle using 4 vertices
     const indices = new Uint32Array(numParticles * 6);
@@ -262,7 +258,7 @@ assetListLoader.load(() => {
 
             // dispatch the compute shader to simulate the particles
             compute.setupDispatch(1024 / 64, 1024);
-            device.computeDispatch([compute]);
+            device.computeDispatch([compute], 'ComputeParticlesDispatch');
         }
     });
 });

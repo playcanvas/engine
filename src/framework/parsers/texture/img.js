@@ -1,5 +1,5 @@
 import {
-    PIXELFORMAT_RGBA8, TEXHINT_ASSET
+    PIXELFORMAT_RGBA8, PIXELFORMAT_SRGBA8, TEXHINT_ASSET
 } from '../../../platform/graphics/constants.js';
 import { Texture } from '../../../platform/graphics/texture.js';
 import { http } from '../../../platform/net/http.js';
@@ -14,8 +14,6 @@ import { TextureParser } from './texture.js';
 
 /**
  * Parser for browser-supported image formats.
- *
- * @ignore
  */
 class ImgParser extends TextureParser {
     constructor(registry, device) {
@@ -77,7 +75,7 @@ class ImgParser extends TextureParser {
             // #endif
             width: data.width,
             height: data.height,
-            format: PIXELFORMAT_RGBA8,
+            format: textureOptions.srgb ? PIXELFORMAT_SRGBA8 : PIXELFORMAT_RGBA8,
 
             ...textureOptions
         });
@@ -112,10 +110,10 @@ class ImgParser extends TextureParser {
                 const idx = url.indexOf('?');
                 const separator = idx >= 0 ? '&' : '?';
 
-                retryTimeout = setTimeout(function () {
+                retryTimeout = setTimeout(() => {
                     // we need to add a cache busting argument if we are trying to re-load an image element
                     // with the same URL
-                    image.src = url + separator + 'retry=' + Date.now();
+                    image.src = `${url + separator}retry=${Date.now()}`;
                     retryTimeout = null;
                 }, retryDelay);
             } else {
@@ -148,8 +146,8 @@ class ImgParser extends TextureParser {
             premultiplyAlpha: 'none',
             colorSpaceConversion: 'none'
         })
-            .then(imageBitmap => callback(null, imageBitmap))
-            .catch(e => callback(e));
+        .then(imageBitmap => callback(null, imageBitmap))
+        .catch(e => callback(e));
     }
 }
 

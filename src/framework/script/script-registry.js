@@ -1,6 +1,12 @@
 import { EventHandler } from '../../core/event-handler.js';
 
 /**
+ * @import { AppBase } from '../app-base.js'
+ * @import { AttributeSchema } from './script-attributes.js'
+ * @import { ScriptType } from './script-type.js'
+ */
+
+/**
  * Container for all {@link ScriptType}s that are available to this application. Note that
  * PlayCanvas scripts can access the Script Registry from inside the application with
  * {@link AppBase#scripts}.
@@ -9,21 +15,29 @@ import { EventHandler } from '../../core/event-handler.js';
  */
 class ScriptRegistry extends EventHandler {
     /**
-     * @type {Object<string, typeof import('./script-type.js').ScriptType>}
+     * @type {Object<string, typeof ScriptType>}
      * @private
      */
     _scripts = {};
 
     /**
-     * @type {typeof import('./script-type.js').ScriptType[]}
+     * @type {typeof ScriptType[]}
      * @private
      */
     _list = [];
 
     /**
+     * A Map of script names to attribute schemas.
+     *
+     * @type {Map<string, AttributeSchema>}
+     * @private
+     */
+    _scriptSchemas = new Map();
+
+    /**
      * Create a new ScriptRegistry instance.
      *
-     * @param {import('../app-base.js').AppBase} app - Application to attach registry to.
+     * @param {AppBase} app - Application to attach registry to.
      */
     constructor(app) {
         super();
@@ -37,12 +51,33 @@ class ScriptRegistry extends EventHandler {
     }
 
     /**
+     * Registers a schema against a script instance.
+     *
+     * @param {string} id - The key to use to store the schema
+     * @param {AttributeSchema} schema - An schema definition for the script
+     */
+    addSchema(id, schema) {
+        if (!schema) return;
+        this._scriptSchemas.set(id, schema);
+    }
+
+    /**
+     * Returns a schema for a given script name.
+     *
+     * @param {string} id - The key to store the schema under
+     * @returns {AttributeSchema | undefined} - The schema stored under the key
+     */
+    getSchema(id) {
+        return this._scriptSchemas.get(id);
+    }
+
+    /**
      * Add {@link ScriptType} to registry. Note: when {@link createScript} is called, it will add
      * the {@link ScriptType} to the registry automatically. If a script already exists in
      * registry, and the new script has a `swap` method defined, it will perform code hot swapping
      * automatically in async manner.
      *
-     * @param {typeof import('./script-type.js').ScriptType} script - Script Type that is created
+     * @param {typeof ScriptType} script - Script Type that is created
      * using {@link createScript}.
      * @returns {boolean} True if added for the first time or false if script already exists.
      * @example
@@ -63,7 +98,7 @@ class ScriptRegistry extends EventHandler {
                     this._scripts[scriptName] = script;
 
                     this.fire('swap', scriptName, script);
-                    this.fire('swap:' + scriptName, script);
+                    this.fire(`swap:${scriptName}`, script);
                 } else {
                     console.warn(`script registry already has '${scriptName}' script, define 'swap' method for new script type to enable code hot swapping`);
                 }
@@ -75,13 +110,14 @@ class ScriptRegistry extends EventHandler {
         this._list.push(script);
 
         this.fire('add', scriptName, script);
-        this.fire('add:' + scriptName, script);
+        this.fire(`add:${scriptName}`, script);
 
         // for all components awaiting Script Type
         // create script instance
         setTimeout(() => {
-            if (!this._scripts.hasOwnProperty(scriptName))
+            if (!this._scripts.hasOwnProperty(scriptName)) {
                 return;
+            }
 
             // this is a check for a possible error
             // that might happen if the app has been destroyed before
@@ -99,8 +135,9 @@ class ScriptRegistry extends EventHandler {
                 const component = components.items[components.loopIndex];
                 // check if awaiting for script
                 if (component._scriptsIndex[scriptName] && component._scriptsIndex[scriptName].awaiting) {
-                    if (component._scriptsData && component._scriptsData[scriptName])
+                    if (component._scriptsData && component._scriptsData[scriptName]) {
                         attributes = component._scriptsData[scriptName].attributes;
+                    }
 
                     const scriptInstance = component.create(scriptName, {
                         preloading: true,
@@ -108,14 +145,16 @@ class ScriptRegistry extends EventHandler {
                         attributes: attributes
                     });
 
-                    if (scriptInstance)
+                    if (scriptInstance) {
                         scriptInstances.push(scriptInstance);
+                    }
+
+                    // initialize attributes
+                    for (const script of component.scripts) {
+                        component.initializeAttributes(script);
+                    }
                 }
             }
-
-            // initialize attributes
-            for (let i = 0; i < scriptInstances.length; i++)
-                scriptInstances[i].__initializeAttributes();
 
             // call initialize()
             for (let i = 0; i < scriptInstances.length; i++) {
@@ -124,8 +163,9 @@ class ScriptRegistry extends EventHandler {
 
                     scriptInstancesInitialized.push(scriptInstances[i]);
 
-                    if (scriptInstances[i].initialize)
+                    if (scriptInstances[i].initialize) {
                         scriptInstances[i].initialize();
+                    }
                 }
             }
 
@@ -137,8 +177,9 @@ class ScriptRegistry extends EventHandler {
 
                 scriptInstancesInitialized[i]._postInitialized = true;
 
-                if (scriptInstancesInitialized[i].postInitialize)
+                if (scriptInstancesInitialized[i].postInitialize) {
                     scriptInstancesInitialized[i].postInitialize();
+                }
             }
         });
 
@@ -148,7 +189,7 @@ class ScriptRegistry extends EventHandler {
     /**
      * Remove {@link ScriptType}.
      *
-     * @param {string|typeof import('./script-type.js').ScriptType} nameOrType - The name or type
+     * @param {string|typeof ScriptType} nameOrType - The name or type
      * of {@link ScriptType}.
      * @returns {boolean} True if removed or False if already not in registry.
      * @example
@@ -164,15 +205,16 @@ class ScriptRegistry extends EventHandler {
             scriptType = this.get(scriptName);
         }
 
-        if (this.get(scriptName) !== scriptType)
+        if (this.get(scriptName) !== scriptType) {
             return false;
+        }
 
         delete this._scripts[scriptName];
         const ind = this._list.indexOf(scriptType);
         this._list.splice(ind, 1);
 
         this.fire('remove', scriptName, scriptType);
-        this.fire('remove:' + scriptName, scriptType);
+        this.fire(`remove:${scriptName}`, scriptType);
 
         return true;
     }
@@ -181,7 +223,7 @@ class ScriptRegistry extends EventHandler {
      * Get {@link ScriptType} by name.
      *
      * @param {string} name - Name of a {@link ScriptType}.
-     * @returns {typeof import('./script-type.js').ScriptType} The Script Type if it exists in the
+     * @returns {typeof ScriptType} The Script Type if it exists in the
      * registry or null otherwise.
      * @example
      * var PlayerController = app.scripts.get('playerController');
@@ -193,7 +235,7 @@ class ScriptRegistry extends EventHandler {
     /**
      * Check if a {@link ScriptType} with the specified name is in the registry.
      *
-     * @param {string|typeof import('./script-type.js').ScriptType} nameOrType - The name or type
+     * @param {string|typeof ScriptType} nameOrType - The name or type
      * of {@link ScriptType}.
      * @returns {boolean} True if {@link ScriptType} is in registry.
      * @example
@@ -214,7 +256,7 @@ class ScriptRegistry extends EventHandler {
     /**
      * Get list of all {@link ScriptType}s from registry.
      *
-     * @returns {Array<typeof import('./script-type.js').ScriptType>} list of all {@link ScriptType}s
+     * @returns {Array<typeof ScriptType>} list of all {@link ScriptType}s
      * in registry.
      * @example
      * // logs array of all Script Type names available in registry

@@ -56,14 +56,12 @@ assetListLoader.load(() => {
      * @param {string} primitiveType - The primitive type.
      * @param {pc.Vec3} position - The position.
      * @param {pc.Vec3} scale - The scale.
-     * @param {pc.Color} color - The color.
      * @param {any} assetManifest - The asset manifest.
      * @returns {pc.Entity} The returned entity.
      */
-    function createPrimitive(primitiveType, position, scale, color, assetManifest) {
+    function createPrimitive(primitiveType, position, scale, assetManifest) {
         // create material of specified color
         const material = new pc.StandardMaterial();
-        material.diffuse = color;
         material.gloss = 0.8;
         material.useMetalness = true;
 
@@ -81,7 +79,7 @@ assetListLoader.load(() => {
         material.update();
 
         // create primitive
-        const primitive = new pc.Entity();
+        const primitive = new pc.Entity(primitiveType);
         primitive.addComponent('render', {
             type: primitiveType,
             material: material
@@ -186,7 +184,7 @@ assetListLoader.load(() => {
     app.setAreaLightLuts(luts.LTC_MAT_1, luts.LTC_MAT_2);
 
     // set up some general scene rendering properties
-    app.scene.toneMapping = pc.TONEMAP_ACES;
+    app.scene.rendering.toneMapping = pc.TONEMAP_ACES;
 
     // setup skydome
     app.scene.skyboxMip = 1; // use top mipmap level of cubemap (full resolution)
@@ -194,7 +192,7 @@ assetListLoader.load(() => {
     app.scene.envAtlas = assets.helipad.resource;
 
     // create ground plane
-    createPrimitive('plane', new pc.Vec3(0, 0, 0), new pc.Vec3(20, 20, 20), new pc.Color(0.3, 0.3, 0.3), assets);
+    createPrimitive('plane', new pc.Vec3(0, 0, 0), new pc.Vec3(20, 20, 20), assets);
 
     // get the instance of the statue and set up with render component
     const statue = assets.statue.resource.instantiateRenderEntity();

@@ -1,35 +1,41 @@
+import { Debug } from '../../core/debug.js';
 import { http } from '../../platform/net/http.js';
-
-import { PIXELFORMAT_RGBA8 } from '../../platform/graphics/constants.js';
-import { Texture } from '../../platform/graphics/texture.js';
-
-import { SPECULAR_PHONG } from '../../scene/constants.js';
 import { standardMaterialCubemapParameters, standardMaterialTextureParameters } from '../../scene/materials/standard-material-parameters.js';
-
 import { AssetReference } from '../asset/asset-reference.js';
 import { JsonStandardMaterialParser } from '../parsers/material/json-standard-material.js';
-
 import { ResourceHandler } from './handler.js';
+import { getBuiltInTexture } from '../../platform/graphics/built-in-textures.js';
+
+/**
+ * @import { AppBase } from '../app-base.js'
+ */
 
 const PLACEHOLDER_MAP = {
     aoMap: 'white',
+    aoDetailMap: 'white',
     diffuseMap: 'gray',
+    diffuseDetailMap: 'gray',
     specularMap: 'gray',
     specularityFactorMap: 'white',
     metalnessMap: 'black',
     glossMap: 'gray',
     sheenMap: 'black',
-    sheenGlossinessMap: 'gray',
+    sheenGlossMap: 'gray',
     clearCoatMap: 'black',
     clearCoatGlossMap: 'gray',
     clearCoatNormalMap: 'normal',
     refractionMap: 'white',
     emissiveMap: 'gray',
     normalMap: 'normal',
+    normalDetailMap: 'normal',
     heightMap: 'gray',
     opacityMap: 'gray',
     sphereMap: 'gray',
-    lightMap: 'white'
+    lightMap: 'white',
+    thicknessMap: 'black',
+    iridescenceMap: 'black',
+    iridescenceThicknessMap: 'black',
+    envAtlas: 'black'
 };
 
 /**
@@ -41,7 +47,7 @@ class MaterialHandler extends ResourceHandler {
     /**
      * Create a new MaterialHandler instance.
      *
-     * @param {import('../app-base.js').AppBase} app - The running {@link AppBase}.
+     * @param {AppBase} app - The running {@link AppBase}.
      * @ignore
      */
     constructor(app) {
@@ -49,9 +55,6 @@ class MaterialHandler extends ResourceHandler {
 
         this._assets = app.assets;
         this._device = app.graphicsDevice;
-
-        this._placeholderTextures = null;
-
         this._parser = new JsonStandardMaterialParser();
     }
 
@@ -67,7 +70,7 @@ class MaterialHandler extends ResourceHandler {
         http.get(url.load, {
             retry: this.maxRetries > 0,
             maxRetries: this.maxRetries
-        }, function (err, response) {
+        }, (err, response) => {
             if (!err) {
                 if (callback) {
                     response._engine = true;
@@ -91,41 +94,6 @@ class MaterialHandler extends ResourceHandler {
         }
 
         return material;
-    }
-
-    // creates placeholders for textures
-    // that are used while texture is loading
-    _createPlaceholders() {
-        this._placeholderTextures = {};
-
-        const textures = {
-            white: [255, 255, 255, 255],
-            gray: [128, 128, 128, 255],
-            black: [0, 0, 0, 255],
-            normal: [128, 128, 255, 255]
-        };
-
-        for (const key in textures) {
-            if (!textures.hasOwnProperty(key))
-                continue;
-
-            // create texture
-            this._placeholderTextures[key] = new Texture(this._device, {
-                width: 2,
-                height: 2,
-                format: PIXELFORMAT_RGBA8,
-                name: 'material_placeholder'
-            });
-
-            // fill pixels with color
-            const pixels = this._placeholderTextures[key].lock();
-            for (let i = 0; i < 4; i++) {
-                for (let c = 0; c < 4; c++) {
-                    pixels[i * 4 + c] = textures[key][c];
-                }
-            }
-            this._placeholderTextures[key].unlock();
-        }
     }
 
     patch(asset, assets) {
@@ -159,15 +127,9 @@ class MaterialHandler extends ResourceHandler {
 
     // returns the correct placeholder texture for the texture parameter
     _getPlaceholderTexture(parameterName) {
-        // create placeholder textures on-demand
-        if (!this._placeholderTextures) {
-            this._createPlaceholders();
-        }
-
         const placeholder = PLACEHOLDER_MAP[parameterName];
-        const texture = this._placeholderTextures[placeholder];
-
-        return texture;
+        Debug.assert(placeholder, `No placeholder texture found for parameter: ${parameterName}`);
+        return getBuiltInTexture(this._device, placeholder);
     }
 
     // assign a placeholder texture while waiting for one to load
@@ -216,11 +178,6 @@ class MaterialHandler extends ResourceHandler {
     }
 
     _onCubemapAdd(parameterName, materialAsset, cubemapAsset) {
-        // phong based - so ensure we load individual faces
-        if (materialAsset.data.shadingModel === SPECULAR_PHONG) {
-            materialAsset.loadFaces = true;
-        }
-
         this._assets.load(cubemapAsset);
     }
 

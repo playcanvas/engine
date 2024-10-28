@@ -58,7 +58,7 @@ app.on('destroy', () => {
 const assetListLoader = new pc.AssetListLoader(Object.values(assets), app.assets);
 assetListLoader.load(() => {
     // set up some general scene rendering properties
-    app.scene.toneMapping = pc.TONEMAP_ACES;
+    app.scene.rendering.toneMapping = pc.TONEMAP_ACES;
 
     // setup skydome
     app.scene.skyboxMip = 2;
@@ -145,7 +145,7 @@ assetListLoader.load(() => {
 
             // dispatch the compute shader
             compute.setupDispatch(app.graphicsDevice.width, app.graphicsDevice.height);
-            device.computeDispatch([compute]);
+            device.computeDispatch([compute], 'HistogramDispatch');
 
             // Read back the histogram data from the storage buffer. None that the returned promise
             // will be resolved later, when the GPU is done running it, and so the histogram on the

@@ -1,11 +1,10 @@
-import { createScript } from '../../src/framework/script/script.js';
+import { createScript } from '../../src/framework/script/script-create.js';
 import { Color } from '../../src/core/math/color.js';
 
 import { AnimComponent } from '../../src/framework/components/anim/component.js';
 import { AnimationComponent } from '../../src/framework/components/animation/component.js';
 import { Application } from '../../src/framework/application.js';
 import { AudioListenerComponent } from '../../src/framework/components/audio-listener/component.js';
-import { AudioSourceComponent } from '../../src/framework/components/audio-source/component.js';
 import { ButtonComponent } from '../../src/framework/components/button/component.js';
 import { CameraComponent } from '../../src/framework/components/camera/component.js';
 import { CollisionComponent } from '../../src/framework/components/collision/component.js';
@@ -30,16 +29,17 @@ import { NullGraphicsDevice } from '../../src/platform/graphics/null/null-graphi
 
 import { DummyComponentSystem } from './test-component/system.mjs';
 
-import { HTMLCanvasElement } from '@playcanvas/canvas-mock';
+import { Canvas } from 'skia-canvas';
 
 import { expect } from 'chai';
+import { stub } from 'sinon';
 
 describe('Entity', function () {
 
     let app;
 
     beforeEach(function () {
-        const canvas = new HTMLCanvasElement(500, 500);
+        const canvas = new Canvas(500, 500);
         app = new Application(canvas, { graphicsDevice: new NullGraphicsDevice(canvas) });
 
         app.systems.add(new DummyComponentSystem(app));
@@ -53,7 +53,6 @@ describe('Entity', function () {
         anim: AnimComponent,
         animation: AnimationComponent,
         audiolistener: AudioListenerComponent,
-        audiosource: AudioSourceComponent,
         button: ButtonComponent,
         camera: CameraComponent,
         collision: CollisionComponent,
@@ -122,6 +121,68 @@ describe('Entity', function () {
                 entity.destroy();
             });
         }
+
+        it('respects components order on disable', function () {
+            const entity = new Entity();
+            entity.enabled = true;
+
+            entity.addComponent('collision');
+            entity.addComponent('rigidbody');
+
+            const colOnDisable = stub();
+            const rbOnDisable = stub();
+            let disableOrder = 0;
+
+            entity.collision.onDisable = colOnDisable;
+            entity.rigidbody.onDisable = rbOnDisable;
+
+            colOnDisable.onFirstCall().callsFake(() => {
+                disableOrder = 2;
+            });
+            rbOnDisable.onFirstCall().callsFake(() => {
+                disableOrder = 1;
+            });
+
+            entity.enabled = false;
+
+            expect(disableOrder).to.equal(2);
+
+            entity.destroy();
+        });
+
+        it('respects components order on enable', function () {
+            const entity = new Entity('Child');
+            const parent = new Entity('Parent');
+
+            parent.addChild(entity);
+            parent._enabled = true;
+            parent._enabledInHierarchy = true;
+
+            entity.addComponent('collision');
+            entity.addComponent('rigidbody');
+
+            entity.enabled = false;
+
+            const rbOnEnable = stub();
+            const colOnEnable = stub();
+            let enableOrder = 0;
+
+            entity.collision.onEnable = colOnEnable;
+            entity.rigidbody.onEnable = rbOnEnable;
+
+            colOnEnable.onFirstCall().callsFake(() => {
+                enableOrder = 2;
+            });
+            rbOnEnable.onFirstCall().callsFake(() => {
+                enableOrder = 1;
+            });
+
+            entity.enabled = true;
+
+            expect(enableOrder).to.equal(2);
+
+            parent.destroy();
+        });
 
     });
 
@@ -443,55 +504,6 @@ describe('Entity', function () {
             expect(subtree2.a_a.script.test.entityArrayAttr.length).to.equal(2);
             expect(subtree2.a_a.script.test.entityArrayAttr[0].getGuid()).to.equal(subtree2.a.getGuid());
             expect(subtree2.a_a.script.test.entityArrayAttr[1].getGuid()).to.equal(app.root.getGuid());
-        });
-
-        it('does not resolve entity script attributes that refer to entities within the duplicated subtree if app.useLegacyScriptAttributeCloning is true', function () {
-            const TestScript = createScript('test');
-            TestScript.attributes.add('entityAttr', { type: 'entity' });
-            TestScript.attributes.add('entityArrayAttr', { type: 'entity', array: true });
-
-            const subtree1 = createSubtree();
-            app.root.addChild(subtree1.a);
-            subtree1.a.addComponent('script');
-            subtree1.a.script.create('test', {
-                attributes: {
-                    entityAttr: subtree1.a_a.getGuid(),
-                    entityArrayAttr: [subtree1.a_a.getGuid()]
-                }
-            });
-            expect(subtree1.a.script.test.entityAttr.getGuid()).to.equal(subtree1.a_a.getGuid());
-            expect(subtree1.a.script.test.entityArrayAttr).to.be.an('array');
-            expect(subtree1.a.script.test.entityArrayAttr.length).to.equal(1);
-            expect(subtree1.a.script.test.entityArrayAttr[0].getGuid()).to.equal(subtree1.a_a.getGuid());
-
-            subtree1.a_a.addComponent('script');
-            subtree1.a_a.script.create('test', {
-                attributes: {
-                    entityAttr: subtree1.a.getGuid(),
-                    entityArrayAttr: [subtree1.a.getGuid(), subtree1.a_a_a.getGuid()]
-                }
-            });
-
-            expect(subtree1.a_a.script.test.entityAttr.getGuid()).to.equal(subtree1.a.getGuid());
-            expect(subtree1.a_a.script.test.entityArrayAttr).to.be.an('array');
-            expect(subtree1.a_a.script.test.entityArrayAttr.length).to.equal(2);
-            expect(subtree1.a_a.script.test.entityArrayAttr[0].getGuid()).to.equal(subtree1.a.getGuid());
-            expect(subtree1.a_a.script.test.entityArrayAttr[1].getGuid()).to.equal(subtree1.a_a_a.getGuid());
-
-            app.useLegacyScriptAttributeCloning = true;
-
-            const subtree2 = cloneSubtree(subtree1);
-            app.root.addChild(subtree2.a);
-            expect(subtree2.a.script.test.entityAttr.getGuid()).to.equal(subtree1.a_a.getGuid());
-            expect(subtree2.a.script.test.entityArrayAttr).to.be.an('array');
-            expect(subtree2.a.script.test.entityArrayAttr.length).to.equal(1);
-            expect(subtree2.a.script.test.entityArrayAttr[0].getGuid()).to.equal(subtree1.a_a.getGuid());
-
-            expect(subtree2.a_a.script.test.entityAttr.getGuid()).to.equal(subtree1.a.getGuid());
-            expect(subtree2.a_a.script.test.entityArrayAttr).to.be.an('array');
-            expect(subtree2.a_a.script.test.entityArrayAttr.length).to.equal(2);
-            expect(subtree2.a_a.script.test.entityArrayAttr[0].getGuid()).to.equal(subtree1.a.getGuid());
-            expect(subtree2.a_a.script.test.entityArrayAttr[1].getGuid()).to.equal(subtree1.a_a_a.getGuid());
         });
 
         it('ensures that an instance of a subclass keeps its class prototype', function () {

@@ -1,8 +1,4 @@
 import {
-    LAYERID_DEPTH,
-    SHADER_PREPASS_VELOCITY
-} from '../../scene/constants.js';
-import {
     FILTER_NEAREST,
     PIXELFORMAT_RGBA32F,
     PIXELFORMAT_RGBA16F,
@@ -11,6 +7,15 @@ import {
 import { Texture } from '../../platform/graphics/texture.js';
 import { RenderPass } from '../../platform/graphics/render-pass.js';
 import { RenderTarget } from '../../platform/graphics/render-target.js';
+
+import {
+    LAYERID_DEPTH,
+    SHADER_PREPASS_VELOCITY
+} from '../../scene/constants.js';
+
+/**
+ * @import { BindGroup } from '../../platform/graphics/bind-group.js'
+ */
 
 const tempMeshInstances = [];
 
@@ -29,19 +34,20 @@ const VELOCITY_UNIFORM_NAME = 'uSceneVelocityMap';
  * @ignore
  */
 class RenderPassPrepass extends RenderPass {
-    /** @type {import('../../platform/graphics/bind-group.js').BindGroup[]} */
+    /** @type {BindGroup[]} */
     viewBindGroups = [];
 
     /** @type {Texture} */
     velocityTexture;
 
-    constructor(device, scene, renderer, camera, depthBuffer, options) {
+    constructor(device, scene, renderer, camera, depthBuffer, resolveDepth, options, samples) {
         super(device);
         this.scene = scene;
         this.renderer = renderer;
         this.camera = camera;
+        this.samples = samples;
 
-        this.setupRenderTarget(depthBuffer, options);
+        this.setupRenderTarget(depthBuffer, resolveDepth, options);
     }
 
     destroy() {
@@ -58,7 +64,7 @@ class RenderPassPrepass extends RenderPass {
         this.viewBindGroups.length = 0;
     }
 
-    setupRenderTarget(depthBuffer, options) {
+    setupRenderTarget(depthBuffer, resolveDepth, options) {
 
         const { device } = this;
 
@@ -79,11 +85,17 @@ class RenderPassPrepass extends RenderPass {
         const renderTarget = new RenderTarget({
             name: 'PrepassRT',
             // colorBuffer: this.velocityTexture,
-            depthBuffer: depthBuffer
+            depthBuffer: depthBuffer,
+            samples: this.samples
         });
 
         this.init(renderTarget, options);
+        this.depthStencilOps.clearStencil = true;
         this.depthStencilOps.storeDepth = true;
+
+        if (resolveDepth) {
+            this.depthStencilOps.resolveDepth = true;
+        }
     }
 
     after() {
@@ -105,14 +117,15 @@ class RenderPassPrepass extends RenderPass {
         for (let i = 0; i < layers.length; i++) {
             const layer = layers[i];
 
+            // only render the layers before the depth layer
+            if (layer.id === LAYERID_DEPTH) {
+                break;
+            }
+
             if (layer.enabled && subLayerEnabled[i]) {
 
                 // if the layer is rendered by the camera
                 if (layer.camerasSet.has(camera)) {
-
-                    // only render the layers before the depth layer
-                    if (layer.id === LAYERID_DEPTH)
-                        break;
 
                     const culledInstances = layer.getCulledInstances(camera);
                     const meshInstances = isTransparent[i] ? culledInstances.transparent : culledInstances.opaque;

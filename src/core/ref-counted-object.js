@@ -1,7 +1,5 @@
 /**
  * Base class that implements reference counting for objects.
- *
- * @ignore
  */
 class RefCountedObject {
     /**
@@ -25,7 +23,7 @@ class RefCountedObject {
     }
 
     /**
-     * The current reference count.
+     * Gets the current reference count.
      *
      * @type {number}
      */

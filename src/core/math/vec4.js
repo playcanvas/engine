@@ -644,6 +644,14 @@ class Vec4 {
     static ZERO = Object.freeze(new Vec4(0, 0, 0, 0));
 
     /**
+     * A constant vector set to [0.5, 0.5, 0.5, 0.5].
+     *
+     * @type {Vec4}
+     * @readonly
+     */
+    static HALF = Object.freeze(new Vec4(0.5, 0.5, 0.5, 0.5));
+
+    /**
      * A constant vector set to [1, 1, 1, 1].
      *
      * @type {Vec4}

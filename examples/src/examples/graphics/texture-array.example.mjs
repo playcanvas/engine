@@ -46,18 +46,10 @@ function generateMipmaps(width, height) {
 }
 
 const assets = {
-    rockyTrail: new pc.Asset('rockyTrail', 'texture', {
-        url: rootPath + '/static/assets/textures/rocky_trail_diff_1k.jpg'
-    }),
-    rockBoulder: new pc.Asset('rockBoulder', 'texture', {
-        url: rootPath + '/static/assets/textures/rock_boulder_cracked_diff_1k.jpg'
-    }),
-    coastSand: new pc.Asset('coastSand', 'texture', {
-        url: rootPath + '/static/assets/textures/coast_sand_rocks_02_diff_1k.jpg'
-    }),
-    aerialRocks: new pc.Asset('aeralRocks', 'texture', {
-        url: rootPath + '/static/assets/textures/aerial_rocks_02_diff_1k.jpg'
-    }),
+    rockyTrail: new pc.Asset('rockyTrail', 'texture', { url: rootPath + '/static/assets/textures/rocky_trail_diff_1k.jpg' }, { srgb: true }),
+    rockBoulder: new pc.Asset('rockBoulder', 'texture', { url: rootPath + '/static/assets/textures/rock_boulder_cracked_diff_1k.jpg' }, { srgb: true }),
+    coastSand: new pc.Asset('coastSand', 'texture', { url: rootPath + '/static/assets/textures/coast_sand_rocks_02_diff_1k.jpg' }, { srgb: true }),
+    aerialRocks: new pc.Asset('aeralRocks', 'texture', { url: rootPath + '/static/assets/textures/aerial_rocks_02_diff_1k.jpg' }, { srgb: true }),
     script: new pc.Asset('script', 'script', { url: rootPath + '/static/scripts/camera/orbit-camera.js' })
 };
 
@@ -110,28 +102,9 @@ assetListLoader.load(() => {
     });
     light.setLocalEulerAngles(45, 0, 45);
 
-    // Create the shader definition and shader from the vertex and fragment shaders
-    const shader = pc.createShaderFromCode(app.graphicsDevice, files['shader.vert'], files['shader.frag'], 'myShader', {
-        aPosition: pc.SEMANTIC_POSITION,
-        aUv0: pc.SEMANTIC_TEXCOORD0,
-        aNormal: pc.SEMANTIC_NORMAL
-    });
-
-    const shaderGround = pc.createShaderFromCode(
-        app.graphicsDevice,
-        files['shader.vert'],
-        files['ground.frag'],
-        'groundsShader',
-        {
-            aPosition: pc.SEMANTIC_POSITION,
-            aUv0: pc.SEMANTIC_TEXCOORD0,
-            aNormal: pc.SEMANTIC_NORMAL
-        }
-    );
-
     const textureArrayOptions = {
         name: 'textureArrayImages',
-        format: pc.PIXELFORMAT_R8_G8_B8_A8,
+        format: pc.PIXELFORMAT_SRGBA8,
         width: 1024,
         height: 1024,
         arrayLength: 4, // array texture with 4 textures
@@ -167,14 +140,30 @@ assetListLoader.load(() => {
     const mipmapTextureArray = new pc.Texture(app.graphicsDevice, textureArrayOptions);
 
     // Create a new material with the new shader
-    const material = new pc.Material();
-    material.shader = shader;
+    const material = new pc.ShaderMaterial({
+        uniqueName: 'MyShader',
+        vertexCode: files['shader.vert'],
+        fragmentCode: files['shader.frag'],
+        attributes: {
+            aPosition: pc.SEMANTIC_POSITION,
+            aUv0: pc.SEMANTIC_TEXCOORD0,
+            aNormal: pc.SEMANTIC_NORMAL
+        }
+    });
     material.setParameter('uDiffuseMap', textureArray);
     material.update();
 
     // Create a another material with the new shader
-    const groundMaterial = new pc.Material();
-    groundMaterial.shader = shaderGround;
+    const groundMaterial = new pc.ShaderMaterial({
+        uniqueName: 'MyShaderGround',
+        vertexCode: files['shader.vert'],
+        fragmentCode: files['ground.frag'],
+        attributes: {
+            aPosition: pc.SEMANTIC_POSITION,
+            aUv0: pc.SEMANTIC_TEXCOORD0,
+            aNormal: pc.SEMANTIC_NORMAL
+        }
+    });
     groundMaterial.cull = pc.CULLFACE_NONE;
     groundMaterial.setParameter('uDiffuseMap', textureArray);
     groundMaterial.update();

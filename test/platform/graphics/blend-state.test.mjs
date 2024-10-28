@@ -42,8 +42,8 @@ describe('BlendState', function () {
 
         it('full parameters', function () {
             const bs = new BlendState(true, BLENDEQUATION_MIN, BLENDMODE_ONE, BLENDMODE_ZERO,
-                                      BLENDEQUATION_MAX, BLENDMODE_ONE_MINUS_DST_COLOR, BLENDMODE_SRC_ALPHA_SATURATE,
-                                      false, false, false, false);
+                BLENDEQUATION_MAX, BLENDMODE_ONE_MINUS_DST_COLOR, BLENDMODE_SRC_ALPHA_SATURATE,
+                false, false, false, false);
             expect(bs.blend).to.equal(true);
             expect(bs.colorOp).to.equal(BLENDEQUATION_MIN);
             expect(bs.colorSrcFactor).to.equal(BLENDMODE_ONE);

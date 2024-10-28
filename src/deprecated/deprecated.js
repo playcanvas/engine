@@ -1,63 +1,25 @@
-import { revision, version } from '../core/core.js';
-import { string } from '../core/string.js';
-import { now } from '../core/time.js';
 import { Debug } from '../core/debug.js';
 
-import { math } from '../core/math/math.js';
-import { Color } from '../core/math/color.js';
-import { Mat4 } from '../core/math/mat4.js';
 import { Vec2 } from '../core/math/vec2.js';
 import { Vec3 } from '../core/math/vec3.js';
 import { Vec4 } from '../core/math/vec4.js';
 
-import { BoundingBox } from '../core/shape/bounding-box.js';
-import { BoundingSphere } from '../core/shape/bounding-sphere.js';
-import { Frustum } from '../core/shape/frustum.js';
-import { Plane } from '../core/shape/plane.js';
-
 import {
-    ADDRESS_CLAMP_TO_EDGE, ADDRESS_MIRRORED_REPEAT, ADDRESS_REPEAT,
-    BLENDMODE_ZERO, BLENDMODE_ONE, BLENDMODE_SRC_COLOR, BLENDMODE_ONE_MINUS_SRC_COLOR,
-    BLENDMODE_DST_COLOR, BLENDMODE_ONE_MINUS_DST_COLOR, BLENDMODE_SRC_ALPHA, BLENDMODE_SRC_ALPHA_SATURATE,
-    BLENDMODE_ONE_MINUS_SRC_ALPHA, BLENDMODE_DST_ALPHA, BLENDMODE_ONE_MINUS_DST_ALPHA,
     BLENDMODE_CONSTANT, BLENDMODE_ONE_MINUS_CONSTANT,
-    BUFFER_STATIC, BUFFER_DYNAMIC, BUFFER_STREAM,
-    CULLFACE_NONE, CULLFACE_BACK, CULLFACE_FRONT, CULLFACE_FRONTANDBACK,
-    FILTER_NEAREST, FILTER_LINEAR, FILTER_NEAREST_MIPMAP_NEAREST, FILTER_NEAREST_MIPMAP_LINEAR,
-    FILTER_LINEAR_MIPMAP_NEAREST, FILTER_LINEAR_MIPMAP_LINEAR,
-    INDEXFORMAT_UINT8, INDEXFORMAT_UINT16, INDEXFORMAT_UINT32,
     PIXELFORMAT_LA8, PIXELFORMAT_RGB565, PIXELFORMAT_RGBA5551, PIXELFORMAT_RGBA4, PIXELFORMAT_RGB8, PIXELFORMAT_RGBA8,
-    PRIMITIVE_POINTS, PRIMITIVE_LINES, PRIMITIVE_LINELOOP, PRIMITIVE_LINESTRIP,
-    PRIMITIVE_TRIANGLES, PRIMITIVE_TRISTRIP, PRIMITIVE_TRIFAN,
-    SEMANTIC_POSITION, SEMANTIC_NORMAL, SEMANTIC_COLOR, SEMANTIC_TEXCOORD, SEMANTIC_TEXCOORD0,
-    SEMANTIC_TEXCOORD1, SEMANTIC_ATTR0, SEMANTIC_ATTR1, SEMANTIC_ATTR2, SEMANTIC_ATTR3,
-    TEXTURELOCK_READ, TEXTURELOCK_WRITE,
-    TEXTURETYPE_DEFAULT, TEXTURETYPE_RGBM, TEXTURETYPE_SWIZZLEGGGR,
-    TYPE_INT8, TYPE_UINT8, TYPE_INT16, TYPE_UINT16, TYPE_INT32, TYPE_UINT32, TYPE_FLOAT32
+    PIXELFORMAT_SRGB8, PIXELFORMAT_SRGBA8,
+    TEXTURETYPE_DEFAULT, TEXTURETYPE_RGBM, TEXTURETYPE_SWIZZLEGGGR
 } from '../platform/graphics/constants.js';
-import { ShaderGenerator } from '../scene/shader-lib/programs/shader-generator.js';
 import { drawQuadWithShader } from '../scene/graphics/quad-render-utils.js';
 import { shaderChunks } from '../scene/shader-lib/chunks/chunks.js';
 import { GraphicsDevice } from '../platform/graphics/graphics-device.js';
-import { IndexBuffer } from '../platform/graphics/index-buffer.js';
 import { LayerComposition } from '../scene/composition/layer-composition.js';
-import { PostEffect } from '../scene/graphics/post-effect.js';
-import { PostEffectQueue } from '../framework/components/camera/post-effect-queue.js';
-import { ProgramLibrary } from '../scene/shader-lib/program-library.js';
-import { getProgramLibrary, setProgramLibrary } from '../scene/shader-lib/get-program-library.js';
 import { RenderTarget } from '../platform/graphics/render-target.js';
-import { ScopeId } from '../platform/graphics/scope-id.js';
-import { Shader } from '../platform/graphics/shader.js';
-import { WebglShaderInput } from '../platform/graphics/webgl/webgl-shader-input.js';
 import { Texture } from '../platform/graphics/texture.js';
-import { VertexBuffer } from '../platform/graphics/vertex-buffer.js';
 import { VertexFormat } from '../platform/graphics/vertex-format.js';
-import { VertexIterator } from '../platform/graphics/vertex-iterator.js';
-import { ShaderUtils } from '../platform/graphics/shader-utils.js';
 import { BlendState } from '../platform/graphics/blend-state.js';
 import { DepthState } from '../platform/graphics/depth-state.js';
 
-import { PROJECTION_ORTHOGRAPHIC, PROJECTION_PERSPECTIVE, LAYERID_IMMEDIATE, LAYERID_WORLD } from '../scene/constants.js';
 import { CylinderGeometry } from '../scene/geometry/cylinder-geometry.js';
 import { BoxGeometry } from '../scene/geometry/box-geometry.js';
 import { CapsuleGeometry } from '../scene/geometry/capsule-geometry.js';
@@ -65,56 +27,29 @@ import { ConeGeometry } from '../scene/geometry/cone-geometry.js';
 import { PlaneGeometry } from '../scene/geometry/plane-geometry.js';
 import { SphereGeometry } from '../scene/geometry/sphere-geometry.js';
 import { TorusGeometry } from '../scene/geometry/torus-geometry.js';
-import { calculateTangents } from '../scene/geometry/geometry-utils.js';
-import { BasicMaterial } from '../scene/materials/basic-material.js';
 import { ForwardRenderer } from '../scene/renderer/forward-renderer.js';
 import { GraphNode } from '../scene/graph-node.js';
 import { Material } from '../scene/materials/material.js';
 import { Mesh } from '../scene/mesh.js';
 import { Morph } from '../scene/morph.js';
 import { MeshInstance } from '../scene/mesh-instance.js';
-import { Model } from '../scene/model.js';
-import { ParticleEmitter } from '../scene/particle-system/particle-emitter.js';
-import { Picker } from '../framework/graphics/picker.js';
 import { Scene } from '../scene/scene.js';
-import { Skin } from '../scene/skin.js';
-import { SkinInstance } from '../scene/skin-instance.js';
 import { StandardMaterial } from '../scene/materials/standard-material.js';
-import { Batch } from '../scene/batching/batch.js';
 import { getDefaultMaterial } from '../scene/materials/default-material.js';
 import { StandardMaterialOptions } from '../scene/materials/standard-material-options.js';
 import { LitShaderOptions } from '../scene/shader-lib/programs/lit-shader-options.js';
 import { Layer } from '../scene/layer.js';
 
-import { Animation, Key, Node } from '../scene/animation/animation.js';
-import { Skeleton } from '../scene/animation/skeleton.js';
-
-import { Channel } from '../platform/audio/channel.js';
-import { Channel3d } from '../platform/audio/channel3d.js';
-import { Listener } from '../platform/sound/listener.js';
-import { Sound } from '../platform/sound/sound.js';
-import { SoundManager } from '../platform/sound/manager.js';
-
 import { AssetRegistry } from '../framework/asset/asset-registry.js';
 
 import { XrInputSource } from '../framework/xr/xr-input-source.js';
 
-import { Controller } from '../platform/input/controller.js';
 import { ElementInput } from '../framework/input/element-input.js';
-import { GamePads } from '../platform/input/game-pads.js';
-import { Keyboard } from '../platform/input/keyboard.js';
-import { KeyboardEvent } from '../platform/input/keyboard-event.js';
-import { Mouse } from '../platform/input/mouse.js';
 import { MouseEvent } from '../platform/input/mouse-event.js';
-import { TouchDevice } from '../platform/input/touch-device.js';
-import { getTouchTargetCoords, Touch, TouchEvent } from '../platform/input/touch-event.js';
 
 import { AppBase } from '../framework/app-base.js';
 import { getApplication } from '../framework/globals.js';
-import { CameraComponent } from '../framework/components/camera/component.js';
-import { LightComponent } from '../framework/components/light/component.js';
 import { ModelComponent } from '../framework/components/model/component.js';
-import { RenderComponent } from '../framework/components/render/component.js';
 import {
     BODYFLAG_KINEMATIC_OBJECT, BODYFLAG_NORESPONSE_OBJECT, BODYFLAG_STATIC_OBJECT,
     BODYSTATE_ACTIVE_TAG, BODYSTATE_DISABLE_DEACTIVATION, BODYSTATE_DISABLE_SIMULATION, BODYSTATE_ISLAND_SLEEPING, BODYSTATE_WANTS_DEACTIVATION,
@@ -122,236 +57,18 @@ import {
 } from '../framework/components/rigid-body/constants.js';
 import { RigidBodyComponent } from '../framework/components/rigid-body/component.js';
 import { RigidBodyComponentSystem } from '../framework/components/rigid-body/system.js';
-import { basisInitialize } from '../framework/handlers/basis.js';
 import { LitShader } from '../scene/shader-lib/programs/lit-shader.js';
 import { Geometry } from '../scene/geometry/geometry.js';
 
-// CORE
-export const LINEBATCH_WORLD = 0;
-export const LINEBATCH_OVERLAY = 1;
-export const LINEBATCH_GIZMO = 2;
-
-export const log = {
-    write: function (text) {
-        Debug.deprecated('pc.log.write is deprecated. Use console.log instead.');
-        console.log(text);
-    },
-
-    open: function () {
-        Debug.deprecated('pc.log.open is deprecated. Use console.log instead.');
-        log.write('Powered by PlayCanvas ' + version + ' ' + revision);
-    },
-
-    info: function (text) {
-        Debug.deprecated('pc.log.info is deprecated. Use console.info instead.');
-        console.info('INFO:    ' + text);
-    },
-
-    debug: function (text) {
-        Debug.deprecated('pc.log.debug is deprecated. Use console.debug instead.');
-        console.debug('DEBUG:   ' + text);
-    },
-
-    error: function (text) {
-        Debug.deprecated('pc.log.error is deprecated. Use console.error instead.');
-        console.error('ERROR:   ' + text);
-    },
-
-    warning: function (text) {
-        Debug.deprecated('pc.log.warning is deprecated. Use console.warn instead.');
-        console.warn('WARNING: ' + text);
-    },
-
-    alert: function (text) {
-        Debug.deprecated('pc.log.alert is deprecated. Use alert instead.');
-        log.write('ALERT:   ' + text);
-        alert(text); // eslint-disable-line no-alert
-    },
-
-    assert: function (condition, text) {
-        Debug.deprecated('pc.log.assert is deprecated. Use a conditional plus console.log instead.');
-        if (condition === false) {
-            log.write('ASSERT:  ' + text);
-        }
-    }
-};
-
-string.endsWith = function (s, subs) {
-    Debug.deprecated('pc.string.endsWith is deprecated. Use String#endsWith instead.');
-    return s.endsWith(subs);
-};
-
-string.startsWith = function (s, subs) {
-    Debug.deprecated('pc.string.startsWith is deprecated. Use String#startsWith instead.');
-    return s.startsWith(subs);
-};
-
-class Timer {
-    constructor() {
-        this._isRunning = false;
-        this._a = 0;
-        this._b = 0;
-    }
-
-    start() {
-        this._isRunning = true;
-        this._a = now();
-    }
-
-    stop() {
-        this._isRunning = false;
-        this._b = now();
-    }
-
-    getMilliseconds() {
-        return this._b - this._a;
-    }
-}
-
-export const time = {
-    now: now,
-    Timer: Timer
-};
-
-Object.defineProperty(Color.prototype, 'data', {
-    get: function () {
-        Debug.deprecated('pc.Color#data is not public API and should not be used. Access color components via their individual properties.');
-        if (!this._data) {
-            this._data = new Float32Array(4);
-        }
-        this._data[0] = this.r;
-        this._data[1] = this.g;
-        this._data[2] = this.b;
-        this._data[3] = this.a;
-        return this._data;
-    }
-});
-
-Object.defineProperty(Color.prototype, 'data3', {
-    get: function () {
-        Debug.deprecated('pc.Color#data3 is not public API and should not be used. Access color components via their individual properties.');
-        if (!this._data3) {
-            this._data3 = new Float32Array(3);
-        }
-        this._data3[0] = this.r;
-        this._data3[1] = this.g;
-        this._data3[2] = this.b;
-        return this._data3;
-    }
-});
-
-export function inherits(Self, Super) {
-    const Temp = function () {};
-    const Func = function (arg1, arg2, arg3, arg4, arg5, arg6, arg7, arg8) {
-        Super.call(this, arg1, arg2, arg3, arg4, arg5, arg6, arg7, arg8);
-        Self.call(this, arg1, arg2, arg3, arg4, arg5, arg6, arg7, arg8);
-        // this.constructor = Self;
-    };
-    Func._super = Super.prototype;
-    Temp.prototype = Super.prototype;
-    Func.prototype = new Temp();
-
-    return Func;
-}
-
-export function makeArray(arr) {
-    Debug.deprecated('pc.makeArray is not public API and should not be used. Use Array.prototype.slice.call instead.');
-    return Array.prototype.slice.call(arr);
-}
-
-export function createStyle(cssString) {
-    const result = document.createElement('style');
-    result.type = 'text/css';
-    if (result.styleSheet) {
-        result.styleSheet.cssText = cssString;
-    } else {
-        result.appendChild(document.createTextNode(cssString));
-    }
-
-    return result;
-}
-
 // MATH
-
-math.INV_LOG2 = Math.LOG2E;
-
-math.intToBytes = math.intToBytes32;
-math.bytesToInt = math.bytesToInt32;
-
-Object.defineProperty(Vec2.prototype, 'data', {
-    get: function () {
-        Debug.deprecated('pc.Vec2#data is not public API and should not be used. Access vector components via their individual properties.');
-        if (!this._data) {
-            this._data = new Float32Array(2);
-        }
-        this._data[0] = this.x;
-        this._data[1] = this.y;
-        return this._data;
-    }
-});
 
 Vec2.prototype.scale = Vec2.prototype.mulScalar;
 
-Object.defineProperty(Vec3.prototype, 'data', {
-    get: function () {
-        Debug.deprecated('pc.Vec3#data is not public API and should not be used. Access vector components via their individual properties.');
-        if (!this._data) {
-            this._data = new Float32Array(3);
-        }
-        this._data[0] = this.x;
-        this._data[1] = this.y;
-        this._data[2] = this.z;
-        return this._data;
-    }
-});
-
 Vec3.prototype.scale = Vec3.prototype.mulScalar;
-
-Object.defineProperty(Vec4.prototype, 'data', {
-    get: function () {
-        Debug.deprecated('pc.Vec4#data is not public API and should not be used. Access vector components via their individual properties.');
-        if (!this._data) {
-            this._data = new Float32Array(4);
-        }
-        this._data[0] = this.x;
-        this._data[1] = this.y;
-        this._data[2] = this.z;
-        this._data[3] = this.w;
-        return this._data;
-    }
-});
 
 Vec4.prototype.scale = Vec4.prototype.mulScalar;
 
-// SHAPE
-
-export const shape = {
-    Aabb: BoundingBox,
-    Sphere: BoundingSphere,
-    Plane: Plane
-};
-
-BoundingSphere.prototype.intersectRay = BoundingSphere.prototype.intersectsRay;
-
-Frustum.prototype.update = function (projectionMatrix, viewMatrix) {
-    Debug.deprecated('pc.Frustum#update is deprecated. Use pc.Frustum#setFromMat4 instead.');
-
-    const viewProj = new Mat4();
-
-    viewProj.mul2(projectionMatrix, viewMatrix);
-
-    this.setFromMat4(viewProj);
-};
-
 // GRAPHICS
-
-export const ELEMENTTYPE_INT8 = TYPE_INT8;
-export const ELEMENTTYPE_UINT8 = TYPE_UINT8;
-export const ELEMENTTYPE_INT16 = TYPE_INT16;
-export const ELEMENTTYPE_UINT16 = TYPE_UINT16;
-export const ELEMENTTYPE_INT32 = TYPE_INT32;
-export const ELEMENTTYPE_UINT32 = TYPE_UINT32;
-export const ELEMENTTYPE_FLOAT32 = TYPE_FLOAT32;
 
 export const PIXELFORMAT_L8_A8 = PIXELFORMAT_LA8;
 export const PIXELFORMAT_R5_G6_B5 = PIXELFORMAT_RGB565;
@@ -359,153 +76,53 @@ export const PIXELFORMAT_R5_G5_B5_A1 = PIXELFORMAT_RGBA5551;
 export const PIXELFORMAT_R4_G4_B4_A4 = PIXELFORMAT_RGBA4;
 export const PIXELFORMAT_R8_G8_B8 = PIXELFORMAT_RGB8;
 export const PIXELFORMAT_R8_G8_B8_A8 = PIXELFORMAT_RGBA8;
+export const PIXELFORMAT_SRGB = PIXELFORMAT_SRGB8;
+export const PIXELFORMAT_SRGBA = PIXELFORMAT_SRGBA8;
 
 export const BLENDMODE_CONSTANT_COLOR = BLENDMODE_CONSTANT;
 export const BLENDMODE_ONE_MINUS_CONSTANT_COLOR = BLENDMODE_ONE_MINUS_CONSTANT;
 export const BLENDMODE_CONSTANT_ALPHA = BLENDMODE_CONSTANT;
 export const BLENDMODE_ONE_MINUS_CONSTANT_ALPHA = BLENDMODE_ONE_MINUS_CONSTANT;
 
-export function UnsupportedBrowserError(message) {
-    this.name = 'UnsupportedBrowserError';
-    this.message = (message || '');
-}
-UnsupportedBrowserError.prototype = Error.prototype;
-
-export function ContextCreationError(message) {
-    this.name = 'ContextCreationError';
-    this.message = (message || '');
-}
-ContextCreationError.prototype = Error.prototype;
-
-export const programlib = {
-    begin: ShaderGenerator.begin,
-    dummyFragmentCode: ShaderUtils.dummyFragmentCode,
-    end: ShaderGenerator.end,
-    fogCode: ShaderGenerator.fogCode,
-    gammaCode: ShaderGenerator.gammaCode,
-    precisionCode: ShaderUtils.precisionCode,
-    skinCode: ShaderGenerator.skinCode,
-    tonemapCode: ShaderGenerator.tonemapCode,
-    versionCode: ShaderUtils.versionCode
-};
-
-export const gfx = {
-    ADDRESS_CLAMP_TO_EDGE: ADDRESS_CLAMP_TO_EDGE,
-    ADDRESS_MIRRORED_REPEAT: ADDRESS_MIRRORED_REPEAT,
-    ADDRESS_REPEAT: ADDRESS_REPEAT,
-    BLENDMODE_ZERO: BLENDMODE_ZERO,
-    BLENDMODE_ONE: BLENDMODE_ONE,
-    BLENDMODE_SRC_COLOR: BLENDMODE_SRC_COLOR,
-    BLENDMODE_ONE_MINUS_SRC_COLOR: BLENDMODE_ONE_MINUS_SRC_COLOR,
-    BLENDMODE_DST_COLOR: BLENDMODE_DST_COLOR,
-    BLENDMODE_ONE_MINUS_DST_COLOR: BLENDMODE_ONE_MINUS_DST_COLOR,
-    BLENDMODE_SRC_ALPHA: BLENDMODE_SRC_ALPHA,
-    BLENDMODE_SRC_ALPHA_SATURATE: BLENDMODE_SRC_ALPHA_SATURATE,
-    BLENDMODE_ONE_MINUS_SRC_ALPHA: BLENDMODE_ONE_MINUS_SRC_ALPHA,
-    BLENDMODE_DST_ALPHA: BLENDMODE_DST_ALPHA,
-    BLENDMODE_ONE_MINUS_DST_ALPHA: BLENDMODE_ONE_MINUS_DST_ALPHA,
-    BUFFER_STATIC: BUFFER_STATIC,
-    BUFFER_DYNAMIC: BUFFER_DYNAMIC,
-    BUFFER_STREAM: BUFFER_STREAM,
-    CULLFACE_NONE: CULLFACE_NONE,
-    CULLFACE_BACK: CULLFACE_BACK,
-    CULLFACE_FRONT: CULLFACE_FRONT,
-    CULLFACE_FRONTANDBACK: CULLFACE_FRONTANDBACK,
-    ELEMENTTYPE_INT8: TYPE_INT8,
-    ELEMENTTYPE_UINT8: TYPE_UINT8,
-    ELEMENTTYPE_INT16: TYPE_INT16,
-    ELEMENTTYPE_UINT16: TYPE_UINT16,
-    ELEMENTTYPE_INT32: TYPE_INT32,
-    ELEMENTTYPE_UINT32: TYPE_UINT32,
-    ELEMENTTYPE_FLOAT32: TYPE_FLOAT32,
-    FILTER_NEAREST: FILTER_NEAREST,
-    FILTER_LINEAR: FILTER_LINEAR,
-    FILTER_NEAREST_MIPMAP_NEAREST: FILTER_NEAREST_MIPMAP_NEAREST,
-    FILTER_NEAREST_MIPMAP_LINEAR: FILTER_NEAREST_MIPMAP_LINEAR,
-    FILTER_LINEAR_MIPMAP_NEAREST: FILTER_LINEAR_MIPMAP_NEAREST,
-    FILTER_LINEAR_MIPMAP_LINEAR: FILTER_LINEAR_MIPMAP_LINEAR,
-    INDEXFORMAT_UINT8: INDEXFORMAT_UINT8,
-    INDEXFORMAT_UINT16: INDEXFORMAT_UINT16,
-    INDEXFORMAT_UINT32: INDEXFORMAT_UINT32,
-    PIXELFORMAT_RGB565: PIXELFORMAT_RGB565,
-    PIXELFORMAT_RGB8: PIXELFORMAT_RGB8,
-    PIXELFORMAT_RGBA8: PIXELFORMAT_RGBA8,
-    PRIMITIVE_POINTS: PRIMITIVE_POINTS,
-    PRIMITIVE_LINES: PRIMITIVE_LINES,
-    PRIMITIVE_LINELOOP: PRIMITIVE_LINELOOP,
-    PRIMITIVE_LINESTRIP: PRIMITIVE_LINESTRIP,
-    PRIMITIVE_TRIANGLES: PRIMITIVE_TRIANGLES,
-    PRIMITIVE_TRISTRIP: PRIMITIVE_TRISTRIP,
-    PRIMITIVE_TRIFAN: PRIMITIVE_TRIFAN,
-    SEMANTIC_POSITION: SEMANTIC_POSITION,
-    SEMANTIC_NORMAL: SEMANTIC_NORMAL,
-    SEMANTIC_COLOR: SEMANTIC_COLOR,
-    SEMANTIC_TEXCOORD: SEMANTIC_TEXCOORD,
-    SEMANTIC_TEXCOORD0: SEMANTIC_TEXCOORD0,
-    SEMANTIC_TEXCOORD1: SEMANTIC_TEXCOORD1,
-    SEMANTIC_ATTR0: SEMANTIC_ATTR0,
-    SEMANTIC_ATTR1: SEMANTIC_ATTR1,
-    SEMANTIC_ATTR2: SEMANTIC_ATTR2,
-    SEMANTIC_ATTR3: SEMANTIC_ATTR3,
-    TEXTURELOCK_READ: TEXTURELOCK_READ,
-    TEXTURELOCK_WRITE: TEXTURELOCK_WRITE,
-    drawQuadWithShader: drawQuadWithShader,
-    programlib: programlib,
-    shaderChunks: shaderChunks,
-    ContextCreationError: ContextCreationError,
-    Device: GraphicsDevice,
-    IndexBuffer: IndexBuffer,
-    ProgramLibrary: ProgramLibrary,
-    RenderTarget: RenderTarget,
-    ScopeId: ScopeId,
-    Shader: Shader,
-    ShaderInput: WebglShaderInput,
-    Texture: Texture,
-    UnsupportedBrowserError: UnsupportedBrowserError,
-    VertexBuffer: VertexBuffer,
-    VertexFormat: VertexFormat,
-    VertexIterator: VertexIterator
-};
-
 const _viewport = new Vec4();
 
 export function createSphere(device, opts) {
-    Debug.deprecated(`pc.createSphere is deprecated. Use 'pc.Mesh.fromGeometry(device, new SphereGeometry(options);' format instead.`);
+    Debug.deprecated('pc.createSphere is deprecated. Use \'pc.Mesh.fromGeometry(device, new SphereGeometry(options);\' format instead.');
     return Mesh.fromGeometry(device, new SphereGeometry(opts));
 }
 
 export function createPlane(device, opts) {
-    Debug.deprecated(`pc.createPlane is deprecated. Use 'pc.Mesh.fromGeometry(device, new PlaneGeometry(options);' format instead.`);
+    Debug.deprecated('pc.createPlane is deprecated. Use \'pc.Mesh.fromGeometry(device, new PlaneGeometry(options);\' format instead.');
     return Mesh.fromGeometry(device, new PlaneGeometry(opts));
 }
 
 export function createBox(device, opts) {
-    Debug.deprecated(`pc.createBox is deprecated. Use 'pc.Mesh.fromGeometry(device, new BoxGeometry(options);' format instead.`);
+    Debug.deprecated('pc.createBox is deprecated. Use \'pc.Mesh.fromGeometry(device, new BoxGeometry(options);\' format instead.');
     return Mesh.fromGeometry(device, new BoxGeometry(opts));
 }
 
 export function createTorus(device, opts) {
-    Debug.deprecated(`pc.createTorus is deprecated. Use 'pc.Mesh.fromGeometry(device, new TorusGeometry(options);' format instead.`);
+    Debug.deprecated('pc.createTorus is deprecated. Use \'pc.Mesh.fromGeometry(device, new TorusGeometry(options);\' format instead.');
     return Mesh.fromGeometry(device, new TorusGeometry(opts));
 }
 
 export function createCapsule(device, opts) {
-    Debug.deprecated(`pc.createCapsule is deprecated. Use 'pc.Mesh.fromGeometry(device, new CapsuleGeometry(options);' format instead.`);
+    Debug.deprecated('pc.createCapsule is deprecated. Use \'pc.Mesh.fromGeometry(device, new CapsuleGeometry(options);\' format instead.');
     return Mesh.fromGeometry(device, new CapsuleGeometry(opts));
 }
 
 export function createCone(device, opts) {
-    Debug.deprecated(`pc.createCone is deprecated. Use 'pc.Mesh.fromGeometry(device, new ConeGeometry(options);' format instead.`);
+    Debug.deprecated('pc.createCone is deprecated. Use \'pc.Mesh.fromGeometry(device, new ConeGeometry(options);\' format instead.');
     return Mesh.fromGeometry(device, new ConeGeometry(opts));
 }
 
 export function createCylinder(device, opts) {
-    Debug.deprecated(`pc.createCylinder is deprecated. Use 'pc.Mesh.fromGeometry(device, new CylinderGeometry(options);' format instead.`);
+    Debug.deprecated('pc.createCylinder is deprecated. Use \'pc.Mesh.fromGeometry(device, new CylinderGeometry(options);\' format instead.');
     return Mesh.fromGeometry(device, new CylinderGeometry(opts));
 }
 
 export function createMesh(device, positions, opts = {}) {
-    Debug.deprecated(`pc.createMesh is deprecated. Use 'pc.Mesh.fromGeometry(device, new Geometry();' format instead.`);
+    Debug.deprecated('pc.createMesh is deprecated. Use \'pc.Mesh.fromGeometry(device, new Geometry();\' format instead.');
 
     const geom = new Geometry();
     geom.positions = positions;
@@ -523,7 +140,7 @@ export function createMesh(device, positions, opts = {}) {
 
 export function drawFullscreenQuad(device, target, vertexBuffer, shader, rect) {
 
-    Debug.deprecated(`pc.drawFullscreenQuad is deprecated. When used as part of PostEffect, use PostEffect#drawQuad instead.`);
+    Debug.deprecated('pc.drawFullscreenQuad is deprecated. When used as part of PostEffect, use PostEffect#drawQuad instead.');
 
     // convert rect in normalized space to viewport in pixel space
     let viewport;
@@ -535,21 +152,6 @@ export function drawFullscreenQuad(device, target, vertexBuffer, shader, rect) {
 
     drawQuadWithShader(device, target, shader, viewport);
 }
-
-export const posteffect = {
-    createFullscreenQuad: (device) => {
-        return device.quadVertexBuffer;
-    },
-    drawFullscreenQuad: drawFullscreenQuad,
-    PostEffect: PostEffect,
-    PostEffectQueue: PostEffectQueue
-};
-
-Object.defineProperty(shaderChunks, 'transformSkinnedVS', {
-    get: function () {
-        return '#define SKIN\n' + shaderChunks.transformVS;
-    }
-});
 
 const deprecatedChunks = {
     'ambientPrefilteredCube.frag': 'ambientEnv.frag',
@@ -593,8 +195,9 @@ Object.keys(deprecatedChunks).forEach((chunkName) => {
  */
 function compatibilityForLitArgs(src) {
     if (src.includes('litShaderArgs')) {
-        src = src.replace(/litShaderArgs([\.a-zA-Z]+)+/g, (a, b) => {
-            const newSource = 'litArgs' + b.replace(/\./g, '_');
+        // eslint-disable-next-line regexp/no-misleading-capturing-group
+        src = src.replace(/litShaderArgs([.a-zA-Z]+)+/g, (a, b) => {
+            const newSource = `litArgs${b.replace(/\./g, '_')}`;
             Debug.deprecated(`Nested struct property access is deprecated, because it's crashing some devices. Please update your custom chunks manually. In particular ${a} should be ${newSource} now.`);
             return newSource;
         });
@@ -659,17 +262,6 @@ Object.defineProperties(Texture.prototype, {
             Debug.deprecated('pc.Texture#_glTexture is no longer available, use Use pc.Texture.impl._glTexture instead.');
             return this.impl._glTexture;
         }
-    },
-
-    autoMipmap: {
-        get: function () {
-            Debug.deprecated('pc.Texture#autoMipmap is deprecated, use pc.Texture#mipmaps instead.');
-            return this._mipmaps;
-        },
-        set: function (value) {
-            Debug.deprecated('pc.Texture#autoMipmap is deprecated, use pc.Texture#mipmaps instead.');
-            this._mipmaps = value;
-        }
     }
 });
 
@@ -684,6 +276,13 @@ Object.defineProperty(GraphicsDevice.prototype, 'webgl2', {
     get: function () {
         Debug.deprecated('pc.GraphicsDevice#webgl2 is deprecated, use pc.GraphicsDevice#isWebGL2 instead.');
         return this.isWebGL2;
+    }
+});
+
+Object.defineProperty(GraphicsDevice.prototype, 'textureFloatHighPrecision', {
+    get: function () {
+        Debug.deprecated('pc.GraphicsDevice#textureFloatHighPrecision is deprecated and always returns true.');
+        return true;
     }
 });
 
@@ -757,28 +356,13 @@ Object.defineProperty(GraphicsDevice.prototype, 'extStandardDerivatives', {
     }
 });
 
-GraphicsDevice.prototype.getProgramLibrary = function () {
-    Debug.deprecated(`pc.GraphicsDevice#getProgramLibrary is deprecated.`);
-    return getProgramLibrary(this);
-};
-
-GraphicsDevice.prototype.setProgramLibrary = function (lib) {
-    Debug.deprecated(`pc.GraphicsDevice#setProgramLibrary is deprecated.`);
-    setProgramLibrary(this, lib);
-};
-
-GraphicsDevice.prototype.removeShaderFromCache = function (shader) {
-    Debug.deprecated(`pc.GraphicsDevice#removeShaderFromCache is deprecated.`);
-    getProgramLibrary(this).removeFromCache(shader);
-};
-
 BlendState.DEFAULT = Object.freeze(new BlendState());
 
 const _tempBlendState = new BlendState();
 const _tempDepthState = new DepthState();
 
 GraphicsDevice.prototype.setBlendFunction = function (blendSrc, blendDst) {
-    Debug.deprecated(`pc.GraphicsDevice#setBlendFunction is deprecated, use pc.GraphicsDevice.setBlendState instead.`);
+    Debug.deprecated('pc.GraphicsDevice#setBlendFunction is deprecated, use pc.GraphicsDevice.setBlendState instead.');
     const currentBlendState = this.blendState;
     _tempBlendState.copy(currentBlendState);
     _tempBlendState.setColorBlend(currentBlendState.colorOp, blendSrc, blendDst);
@@ -787,7 +371,7 @@ GraphicsDevice.prototype.setBlendFunction = function (blendSrc, blendDst) {
 };
 
 GraphicsDevice.prototype.setBlendFunctionSeparate = function (blendSrc, blendDst, blendSrcAlpha, blendDstAlpha) {
-    Debug.deprecated(`pc.GraphicsDevice#setBlendFunctionSeparate is deprecated, use pc.GraphicsDevice.setBlendState instead.`);
+    Debug.deprecated('pc.GraphicsDevice#setBlendFunctionSeparate is deprecated, use pc.GraphicsDevice.setBlendState instead.');
     const currentBlendState = this.blendState;
     _tempBlendState.copy(currentBlendState);
     _tempBlendState.setColorBlend(currentBlendState.colorOp, blendSrc, blendDst);
@@ -796,7 +380,7 @@ GraphicsDevice.prototype.setBlendFunctionSeparate = function (blendSrc, blendDst
 };
 
 GraphicsDevice.prototype.setBlendEquation = function (blendEquation) {
-    Debug.deprecated(`pc.GraphicsDevice#setBlendEquation is deprecated, use pc.GraphicsDevice.setBlendState instead.`);
+    Debug.deprecated('pc.GraphicsDevice#setBlendEquation is deprecated, use pc.GraphicsDevice.setBlendState instead.');
     const currentBlendState = this.blendState;
     _tempBlendState.copy(currentBlendState);
     _tempBlendState.setColorBlend(blendEquation, currentBlendState.colorSrcFactor, currentBlendState.colorDstFactor);
@@ -805,7 +389,7 @@ GraphicsDevice.prototype.setBlendEquation = function (blendEquation) {
 };
 
 GraphicsDevice.prototype.setBlendEquationSeparate = function (blendEquation, blendAlphaEquation) {
-    Debug.deprecated(`pc.GraphicsDevice#setBlendEquationSeparate is deprecated, use pc.GraphicsDevice.setBlendState instead.`);
+    Debug.deprecated('pc.GraphicsDevice#setBlendEquationSeparate is deprecated, use pc.GraphicsDevice.setBlendState instead.');
     const currentBlendState = this.blendState;
     _tempBlendState.copy(currentBlendState);
     _tempBlendState.setColorBlend(blendEquation, currentBlendState.colorSrcFactor, currentBlendState.colorDstFactor);
@@ -814,7 +398,7 @@ GraphicsDevice.prototype.setBlendEquationSeparate = function (blendEquation, ble
 };
 
 GraphicsDevice.prototype.setColorWrite = function (redWrite, greenWrite, blueWrite, alphaWrite) {
-    Debug.deprecated(`pc.GraphicsDevice#setColorWrite is deprecated, use pc.GraphicsDevice.setBlendState instead.`);
+    Debug.deprecated('pc.GraphicsDevice#setColorWrite is deprecated, use pc.GraphicsDevice.setBlendState instead.');
     const currentBlendState = this.blendState;
     _tempBlendState.copy(currentBlendState);
     _tempBlendState.setColorWrite(redWrite, greenWrite, blueWrite, alphaWrite);
@@ -826,28 +410,28 @@ GraphicsDevice.prototype.getBlending = function () {
 };
 
 GraphicsDevice.prototype.setBlending = function (blending) {
-    Debug.deprecated(`pc.GraphicsDevice#setBlending is deprecated, use pc.GraphicsDevice.setBlendState instead.`);
+    Debug.deprecated('pc.GraphicsDevice#setBlending is deprecated, use pc.GraphicsDevice.setBlendState instead.');
     _tempBlendState.copy(this.blendState);
     _tempBlendState.blend = blending;
     this.setBlendState(_tempBlendState);
 };
 
 GraphicsDevice.prototype.setDepthWrite = function (write) {
-    Debug.deprecated(`pc.GraphicsDevice#setDepthWrite is deprecated, use pc.GraphicsDevice.setDepthState instead.`);
+    Debug.deprecated('pc.GraphicsDevice#setDepthWrite is deprecated, use pc.GraphicsDevice.setDepthState instead.');
     _tempDepthState.copy(this.depthState);
     _tempDepthState.write = write;
     this.setDepthState(_tempDepthState);
 };
 
 GraphicsDevice.prototype.setDepthFunc = function (func) {
-    Debug.deprecated(`pc.GraphicsDevice#setDepthFunc is deprecated, use pc.GraphicsDevice.setDepthState instead.`);
+    Debug.deprecated('pc.GraphicsDevice#setDepthFunc is deprecated, use pc.GraphicsDevice.setDepthState instead.');
     _tempDepthState.copy(this.depthState);
     _tempDepthState.func = func;
     this.setDepthState(_tempDepthState);
 };
 
 GraphicsDevice.prototype.setDepthTest = function (test) {
-    Debug.deprecated(`pc.GraphicsDevice#setDepthTest is deprecated, use pc.GraphicsDevice.setDepthState instead.`);
+    Debug.deprecated('pc.GraphicsDevice#setDepthTest is deprecated, use pc.GraphicsDevice.setDepthState instead.');
     _tempDepthState.copy(this.depthState);
     _tempDepthState.test = test;
     this.setDepthState(_tempDepthState);
@@ -859,44 +443,89 @@ GraphicsDevice.prototype.getCullMode = function () {
 
 // SCENE
 
-export const PhongMaterial = StandardMaterial;
 export const LitOptions = LitShaderOptions;
-
-export const scene = {
-    procedural: {
-        calculateTangents: calculateTangents,
-        createMesh: createMesh,
-        createTorus: createTorus,
-        createCylinder: createCylinder,
-        createCapsule: createCapsule,
-        createCone: createCone,
-        createSphere: createSphere,
-        createPlane: createPlane,
-        createBox: createBox
-    },
-    BasicMaterial: BasicMaterial,
-    ForwardRenderer: ForwardRenderer,
-    GraphNode: GraphNode,
-    Material: Material,
-    Mesh: Mesh,
-    MeshInstance: MeshInstance,
-    Model: Model,
-    ParticleEmitter: ParticleEmitter,
-    PhongMaterial: StandardMaterial,
-    Picker: Picker,
-    Projection: {
-        ORTHOGRAPHIC: PROJECTION_ORTHOGRAPHIC,
-        PERSPECTIVE: PROJECTION_PERSPECTIVE
-    },
-    Scene: Scene,
-    Skin: Skin,
-    SkinInstance: SkinInstance
-};
 
 Object.defineProperty(Scene.prototype, 'defaultMaterial', {
     get: function () {
         Debug.deprecated('pc.Scene#defaultMaterial is deprecated.');
         return getDefaultMaterial(getApplication().graphicsDevice);
+    }
+});
+
+Object.defineProperty(Scene.prototype, 'fog', {
+    set: function (value) {
+        Debug.deprecated('Scene#fog is deprecated. Use Scene#rendering.fog instead.');
+        this.rendering.fog = value;
+    },
+    get: function () {
+        Debug.deprecated('Scene#fog is deprecated. Use Scene#rendering.fog instead.');
+        return this.rendering.fog;
+    }
+});
+
+Object.defineProperty(Scene.prototype, 'fogColor', {
+    set: function (value) {
+        Debug.deprecated('Scene#fogColor is deprecated. Use Scene#rendering.fogColor instead.');
+        this.rendering.fogColor = value;
+    },
+    get: function () {
+        Debug.deprecated('Scene#fogColor is deprecated. Use Scene#rendering.fogColor instead.');
+        return this.rendering.fogColor;
+    }
+});
+
+Object.defineProperty(Scene.prototype, 'fogEnd', {
+    set: function (value) {
+        Debug.deprecated('Scene#fogEnd is deprecated. Use Scene#rendering.fogEnd instead.');
+        this.rendering.fogEnd = value;
+    },
+    get: function () {
+        Debug.deprecated('Scene#fogEnd is deprecated. Use Scene#rendering.fogEnd instead.');
+        return this.rendering.fogEnd;
+    }
+});
+
+Object.defineProperty(Scene.prototype, 'fogStart', {
+    set: function (value) {
+        Debug.deprecated('Scene#fogStart is deprecated. Use Scene#rendering.fogStart instead.');
+        this.rendering.fogStart = value;
+    },
+    get: function () {
+        Debug.deprecated('Scene#fogStart is deprecated. Use Scene#rendering.fogStart instead.');
+        return this.rendering.fogStart;
+    }
+});
+
+Object.defineProperty(Scene.prototype, 'fogDensity', {
+    set: function (value) {
+        Debug.deprecated('Scene#fogDensity is deprecated. Use Scene#rendering.fogDensity instead.');
+        this.rendering.fogDensity = value;
+    },
+    get: function () {
+        Debug.deprecated('Scene#fogDensity is deprecated. Use Scene#rendering.fogDensity instead.');
+        return this.rendering.fogDensity;
+    }
+});
+
+Object.defineProperty(Scene.prototype, 'toneMapping', {
+    set: function (value) {
+        Debug.deprecated('Scene#toneMapping is deprecated. Use Scene#rendering.toneMapping instead.');
+        this.rendering.toneMapping = value;
+    },
+    get: function () {
+        Debug.deprecated('Scene#toneMapping is deprecated. Use Scene#rendering.toneMapping instead.');
+        return this.rendering.toneMapping;
+    }
+});
+
+Object.defineProperty(Scene.prototype, 'gammaCorrection', {
+    set: function (value) {
+        Debug.deprecated('Scene#gammaCorrection is deprecated. Use Scene#rendering.gammaCorrection instead.');
+        this.rendering.gammaCorrection = value;
+    },
+    get: function () {
+        Debug.deprecated('Scene#gammaCorrection is deprecated. Use Scene#rendering.gammaCorrection instead.');
+        return this.rendering.gammaCorrection;
     }
 });
 
@@ -938,67 +567,30 @@ Object.defineProperty(Scene.prototype, 'models', {
     }
 });
 
-Object.defineProperty(Layer.prototype, 'renderTarget', {
-    set: function (rt) {
-        Debug.deprecated(`pc.Layer#renderTarget is deprecated. Set the render target on the camera instead.`);
-        this._renderTarget = rt;
-        this._dirtyComposition = true;
-    },
-    get: function () {
-        return this._renderTarget;
-    }
-});
+// A helper function to add deprecated set and get property on a Layer
+function _removedLayerProperty(name) {
+    Object.defineProperty(Layer.prototype, name, {
+        set: function (value) {
+            Debug.errorOnce(`pc.Layer#${name} has been removed.`);
+        },
+        get: function () {
+            Debug.errorOnce(`pc.Layer#${name} has been removed.`);
+            return undefined;
+        }
+    });
+}
 
-Scene.prototype.addModel = function (model) {
-    Debug.deprecated('pc.Scene#addModel is deprecated.');
-    if (this.containsModel(model)) return;
-    const layer = this.layers.getLayerById(LAYERID_WORLD);
-    if (!layer) return;
-    layer.addMeshInstances(model.meshInstances);
-    this.models.push(model);
-};
-
-Scene.prototype.addShadowCaster = function (model) {
-    Debug.deprecated('pc.Scene#addShadowCaster is deprecated.');
-    const layer = this.layers.getLayerById(LAYERID_WORLD);
-    if (!layer) return;
-    layer.addShadowCasters(model.meshInstances);
-};
-
-Scene.prototype.removeModel = function (model) {
-    Debug.deprecated('pc.Scene#removeModel is deprecated.');
-    const index = this.models.indexOf(model);
-    if (index !== -1) {
-        const layer = this.layers.getLayerById(LAYERID_WORLD);
-        if (!layer) return;
-        layer.removeMeshInstances(model.meshInstances);
-        this.models.splice(index, 1);
-    }
-};
-
-Scene.prototype.removeShadowCasters = function (model) {
-    Debug.deprecated('pc.Scene#removeShadowCasters is deprecated.');
-    const layer = this.layers.getLayerById(LAYERID_WORLD);
-    if (!layer) return;
-    layer.removeShadowCasters(model.meshInstances);
-};
-
-Scene.prototype.containsModel = function (model) {
-    Debug.deprecated('pc.Scene#containsModel is deprecated.');
-    return this.models.indexOf(model) >= 0;
-};
-
-Scene.prototype.getModels = function (model) {
-    Debug.deprecated('pc.Scene#getModels is deprecated.');
-    return this.models;
-};
-
-Object.defineProperty(Batch.prototype, 'model', {
-    get: function () {
-        Debug.deprecated('pc.Batch#model is deprecated. Use pc.Batch#meshInstance to access batched mesh instead.');
-        return null;
-    }
-});
+_removedLayerProperty('renderTarget');
+_removedLayerProperty('onPreCull');
+_removedLayerProperty('onPreRender');
+_removedLayerProperty('onPreRenderOpaque');
+_removedLayerProperty('onPreRenderTransparent');
+_removedLayerProperty('onPostCull');
+_removedLayerProperty('onPostRender');
+_removedLayerProperty('onPostRenderOpaque');
+_removedLayerProperty('onPostRenderTransparent');
+_removedLayerProperty('onDrawCall');
+_removedLayerProperty('layerReference');
 
 ForwardRenderer.prototype.renderComposition = function (comp) {
     Debug.deprecated('pc.ForwardRenderer#renderComposition is deprecated. Use pc.AppBase.renderComposition instead.');
@@ -1013,52 +605,6 @@ Morph.prototype.getTarget = function (index) {
     Debug.deprecated('pc.Morph#getTarget is deprecated. Use pc.Morph#targets instead.');
 
     return this.targets[index];
-};
-
-GraphNode.prototype._dirtify = function (local) {
-    Debug.deprecated('pc.GraphNode#_dirtify is deprecated. Use pc.GraphNode#_dirtifyLocal or _dirtifyWorld respectively instead.');
-    if (local)
-        this._dirtifyLocal();
-    else
-        this._dirtifyWorld();
-};
-
-GraphNode.prototype.addLabel = function (label) {
-    Debug.deprecated('pc.GraphNode#addLabel is deprecated. Use pc.GraphNode#tags instead.');
-
-    this._labels[label] = true;
-};
-
-GraphNode.prototype.getLabels = function () {
-    Debug.deprecated('pc.GraphNode#getLabels is deprecated. Use pc.GraphNode#tags instead.');
-
-    return Object.keys(this._labels);
-};
-
-GraphNode.prototype.hasLabel = function (label) {
-    Debug.deprecated('pc.GraphNode#hasLabel is deprecated. Use pc.GraphNode#tags instead.');
-
-    return !!this._labels[label];
-};
-
-GraphNode.prototype.removeLabel = function (label) {
-    Debug.deprecated('pc.GraphNode#removeLabel is deprecated. Use pc.GraphNode#tags instead.');
-
-    delete this._labels[label];
-};
-
-GraphNode.prototype.findByLabel = function (label, results = []) {
-    Debug.deprecated('pc.GraphNode#findByLabel is deprecated. Use pc.GraphNode#tags instead.');
-
-    if (this.hasLabel(label)) {
-        results.push(this);
-    }
-
-    for (let i = 0; i < this._children.length; ++i) {
-        results = this._children[i].findByLabel(label, results);
-    }
-
-    return results;
 };
 
 GraphNode.prototype.getChildren = function () {
@@ -1097,64 +643,24 @@ GraphNode.prototype.setName = function (name) {
     this.name = name;
 };
 
-Material.prototype.getName = function () {
-    Debug.deprecated('pc.Material#getName is deprecated. Use pc.Material#name instead.');
-    return this.name;
-};
-
-Material.prototype.setName = function (name) {
-    Debug.deprecated('pc.Material#setName is deprecated. Use pc.Material#name instead.');
-    this.name = name;
-};
-
-Material.prototype.getShader = function () {
-    Debug.deprecated('pc.Material#getShader is deprecated. Use pc.Material#shader instead.');
-    return this.shader;
-};
-
-Material.prototype.setShader = function (shader) {
-    Debug.deprecated('pc.Material#setShader is deprecated. Use pc.Material#shader instead.');
-    this.shader = shader;
-};
+Object.defineProperty(Material.prototype, 'shader', {
+    set: function (value) {
+        Debug.deprecated('pc.Material#shader is deprecated, use pc.ShaderMaterial instead.');
+    },
+    get: function () {
+        Debug.deprecated('pc.Material#shader is deprecated, use pc.ShaderMaterial instead.');
+        return null;
+    }
+});
 
 // Note: this is used by the Editor
 Object.defineProperty(Material.prototype, 'blend', {
     set: function (value) {
-        Debug.deprecated(`pc.Material#blend is deprecated, use pc.Material.blendState.`);
+        Debug.deprecated('pc.Material#blend is deprecated, use pc.Material.blendState.');
         this.blendState.blend = value;
     },
     get: function () {
         return this.blendState.blend;
-    }
-});
-
-// Note: this is used by the Editor
-Object.defineProperty(Material.prototype, 'blendSrc', {
-    set: function (value) {
-        Debug.deprecated(`pc.Material#blendSrc is deprecated, use pc.Material.blendState.`);
-        const currentBlendState = this.blendState;
-        _tempBlendState.copy(currentBlendState);
-        _tempBlendState.setColorBlend(currentBlendState.colorOp, value, currentBlendState.colorDstFactor);
-        _tempBlendState.setAlphaBlend(currentBlendState.alphaOp, value, currentBlendState.alphaDstFactor);
-        this.blendState = _tempBlendState;
-    },
-    get: function () {
-        return this.blendState.colorSrcFactor;
-    }
-});
-
-// Note: this is used by the Editor
-Object.defineProperty(Material.prototype, 'blendDst', {
-    set: function (value) {
-        Debug.deprecated(`pc.Material#blendDst is deprecated, use pc.Material.blendState.`);
-        const currentBlendState = this.blendState;
-        _tempBlendState.copy(currentBlendState);
-        _tempBlendState.setColorBlend(currentBlendState.colorOp, currentBlendState.colorSrcFactor, value);
-        _tempBlendState.setAlphaBlend(currentBlendState.alphaOp, currentBlendState.alphaSrcFactor, value);
-        this.blendState = _tempBlendState;
-    },
-    get: function () {
-        return this.blendState.colorDstFactor;
     }
 });
 
@@ -1165,6 +671,17 @@ Object.defineProperty(StandardMaterial.prototype, 'shininess', {
     },
     set: function (value) {
         this.gloss = value * 0.01;
+    }
+});
+
+// useGammaTonemap was renamed to useTonemap. For now do not log a deprecated warning to make existing
+// code work without warnings.
+Object.defineProperty(StandardMaterial.prototype, 'useGammaTonemap', {
+    get: function () {
+        return this.useTonemap;
+    },
+    set: function (value) {
+        this.useTonemap = value;
     }
 });
 
@@ -1181,9 +698,24 @@ function _defineAlias(newName, oldName) {
     });
 }
 
-_defineAlias('diffuseTint', 'diffuseMapTint');
+function _deprecateTint(name) {
+    Object.defineProperty(StandardMaterial.prototype, name, {
+        get: function () {
+            Debug.deprecated(`pc.StandardMaterial#${name} is deprecated, and the behaviour is as if ${name} was always true`);
+            return true;
+        },
+        set: function (value) {
+            Debug.deprecated(`pc.StandardMaterial#${name} is deprecated, and the behaviour is as if ${name} was always true`);
+        }
+    });
+}
+
+_deprecateTint('sheenTint');
+_deprecateTint('diffuseTint');
+_deprecateTint('emissiveTint');
+_deprecateTint('ambientTint');
+
 _defineAlias('specularTint', 'specularMapTint');
-_defineAlias('emissiveTint', 'emissiveMapTint');
 _defineAlias('aoVertexColor', 'aoMapVertexColor');
 _defineAlias('diffuseVertexColor', 'diffuseMapVertexColor');
 _defineAlias('specularVertexColor', 'specularMapVertexColor');
@@ -1218,114 +750,7 @@ for (const litOption in litOptionProperties) {
     _defineOption(litOptionProperties[litOption]);
 }
 
-// ANIMATION
-
-export const anim = {
-    Animation: Animation,
-    Key: Key,
-    Node: Node,
-    Skeleton: Skeleton
-};
-
-Animation.prototype.getDuration = function () {
-    Debug.deprecated('pc.Animation#getDuration is deprecated. Use pc.Animation#duration instead.');
-    return this.duration;
-};
-
-Animation.prototype.getName = function () {
-    Debug.deprecated('pc.Animation#getName is deprecated. Use pc.Animation#name instead.');
-    return this.name;
-};
-
-Animation.prototype.getNodes = function () {
-    Debug.deprecated('pc.Animation#getNodes is deprecated. Use pc.Animation#nodes instead.');
-    return this.nodes;
-};
-
-Animation.prototype.setDuration = function (duration) {
-    Debug.deprecated('pc.Animation#setDuration is deprecated. Use pc.Animation#duration instead.');
-    this.duration = duration;
-};
-
-Animation.prototype.setName = function (name) {
-    Debug.deprecated('pc.Animation#setName is deprecated. Use pc.Animation#name instead.');
-    this.name = name;
-};
-
-Skeleton.prototype.getAnimation = function () {
-    Debug.deprecated('pc.Skeleton#getAnimation is deprecated. Use pc.Skeleton#animation instead.');
-    return this.animation;
-};
-
-Skeleton.prototype.getCurrentTime = function () {
-    Debug.deprecated('pc.Skeleton#getCurrentTime is deprecated. Use pc.Skeleton#currentTime instead.');
-    return this.currentTime;
-};
-
-Skeleton.prototype.getLooping = function () {
-    Debug.deprecated('pc.Skeleton#getLooping is deprecated. Use pc.Skeleton#looping instead.');
-    return this.looping;
-};
-
-Skeleton.prototype.getNumNodes = function () {
-    Debug.deprecated('pc.Skeleton#getNumNodes is deprecated. Use pc.Skeleton#numNodes instead.');
-    return this.numNodes;
-};
-
-Skeleton.prototype.setAnimation = function (animation) {
-    Debug.deprecated('pc.Skeleton#setAnimation is deprecated. Use pc.Skeleton#animation instead.');
-    this.animation = animation;
-};
-
-Skeleton.prototype.setCurrentTime = function (time) {
-    Debug.deprecated('pc.Skeleton#setCurrentTime is deprecated. Use pc.Skeleton#currentTime instead.');
-    this.currentTime = time;
-};
-
-Skeleton.prototype.setLooping = function (looping) {
-    Debug.deprecated('pc.Skeleton#setLooping is deprecated. Use pc.Skeleton#looping instead.');
-    this.looping = looping;
-};
-
-// SOUND
-
-export const audio = {
-    AudioManager: SoundManager,
-    Channel: Channel,
-    Channel3d: Channel3d,
-    Listener: Listener,
-    Sound: Sound
-};
-
-SoundManager.prototype.getListener = function () {
-    Debug.deprecated('pc.SoundManager#getListener is deprecated. Use pc.SoundManager#listener instead.');
-    return this.listener;
-};
-
-SoundManager.prototype.getVolume = function () {
-    Debug.deprecated('pc.SoundManager#getVolume is deprecated. Use pc.SoundManager#volume instead.');
-    return this.volume;
-};
-
-SoundManager.prototype.setVolume = function (volume) {
-    Debug.deprecated('pc.SoundManager#setVolume is deprecated. Use pc.SoundManager#volume instead.');
-    this.volume = volume;
-};
-
 // ASSET
-
-export const asset = {
-    ASSET_ANIMATION: 'animation',
-    ASSET_AUDIO: 'audio',
-    ASSET_IMAGE: 'image',
-    ASSET_JSON: 'json',
-    ASSET_MODEL: 'model',
-    ASSET_MATERIAL: 'material',
-    ASSET_TEXT: 'text',
-    ASSET_TEXTURE: 'texture',
-    ASSET_CUBEMAP: 'cubemap',
-    ASSET_SCRIPT: 'script'
-};
 
 AssetRegistry.prototype.getAssetById = function (id) {
     Debug.deprecated('pc.AssetRegistry#getAssetById is deprecated. Use pc.AssetRegistry#get instead.');
@@ -1356,19 +781,6 @@ Object.defineProperty(XrInputSource.prototype, 'rotation', {
 });
 
 // INPUT
-
-export const input = {
-    getTouchTargetCoords: getTouchTargetCoords,
-    Controller: Controller,
-    GamePads: GamePads,
-    Keyboard: Keyboard,
-    KeyboardEvent: KeyboardEvent,
-    Mouse: Mouse,
-    MouseEvent: MouseEvent,
-    Touch: Touch,
-    TouchDevice: TouchDevice,
-    TouchEvent: TouchEvent
-};
 
 Object.defineProperty(ElementInput.prototype, 'wheel', {
     get: function () {
@@ -1474,165 +886,10 @@ AppBase.prototype.loadSceneSettings = function (url, callback) {
     this.scenes.loadSceneSettings(url, callback);
 };
 
-AppBase.prototype.renderMeshInstance = function (meshInstance, options) {
-    Debug.deprecated('pc.AppBase.renderMeshInstance is deprecated. Use pc.AppBase.drawMeshInstance.');
-    const layer = options?.layer ? options.layer : this.scene.defaultDrawLayer;
-    this.scene.immediate.drawMesh(null, null, null, meshInstance, layer);
-};
-
-AppBase.prototype.renderMesh = function (mesh, material, matrix, options) {
-    Debug.deprecated('pc.AppBase.renderMesh is deprecated. Use pc.AppBase.drawMesh.');
-    const layer = options?.layer ? options.layer : this.scene.defaultDrawLayer;
-    this.scene.immediate.drawMesh(material, matrix, mesh, null, layer);
-};
-
-AppBase.prototype._addLines = function (positions, colors, options) {
-    const layer = (options && options.layer) ? options.layer : this.scene.layers.getLayerById(LAYERID_IMMEDIATE);
-    const depthTest = (options && options.depthTest !== undefined) ? options.depthTest : true;
-
-    const batch = this.scene.immediate.getBatch(layer, depthTest);
-    batch.addLines(positions, colors);
-};
-
-AppBase.prototype.renderLine = function (start, end, color) {
-
-    Debug.deprecated('pc.AppBase.renderLine is deprecated. Use pc.AppBase.drawLine.');
-
-    let endColor = color;
-    let options;
-
-    const arg3 = arguments[3];
-    const arg4 = arguments[4];
-
-    if (arg3 instanceof Color) {
-        // passed in end color
-        endColor = arg3;
-
-        if (typeof arg4 === 'number') {
-            // compatibility: convert linebatch id into options
-            if (arg4 === LINEBATCH_OVERLAY) {
-                options = {
-                    layer: this.scene.layers.getLayerById(LAYERID_IMMEDIATE),
-                    depthTest: false
-                };
-            } else {
-                options = {
-                    layer: this.scene.layers.getLayerById(LAYERID_IMMEDIATE),
-                    depthTest: true
-                };
-            }
-        } else {
-            // use passed in options
-            options = arg4;
-        }
-    } else if (typeof arg3 === 'number') {
-        endColor = color;
-
-        // compatibility: convert linebatch id into options
-        if (arg3 === LINEBATCH_OVERLAY) {
-            options = {
-                layer: this.scene.layers.getLayerById(LAYERID_IMMEDIATE),
-                depthTest: false
-            };
-        } else {
-            options = {
-                layer: this.scene.layers.getLayerById(LAYERID_IMMEDIATE),
-                depthTest: true
-            };
-        }
-    } else if (arg3) {
-        // options passed in
-        options = arg3;
-    }
-
-    this._addLines([start, end], [color, endColor], options);
-};
-
-AppBase.prototype.renderLines = function (position, color, options) {
-
-    Debug.deprecated('pc.AppBase.renderLines is deprecated. Use pc.AppBase.drawLines.');
-
-    if (!options) {
-        // default option
-        options = {
-            layer: this.scene.layers.getLayerById(LAYERID_IMMEDIATE),
-            depthTest: true
-        };
-    } else if (typeof options === 'number') {
-        // backwards compatibility, LINEBATCH_OVERLAY lines have depthtest disabled
-        if (options === LINEBATCH_OVERLAY) {
-            options = {
-                layer: this.scene.layers.getLayerById(LAYERID_IMMEDIATE),
-                depthTest: false
-            };
-        } else {
-            options = {
-                layer: this.scene.layers.getLayerById(LAYERID_IMMEDIATE),
-                depthTest: true
-            };
-        }
-    }
-
-    const multiColor = !!color.length;
-    if (multiColor) {
-        if (position.length !== color.length) {
-            console.error('renderLines: position/color arrays have different lengths');
-            return;
-        }
-    }
-    if (position.length % 2 !== 0) {
-        console.error('renderLines: array length is not divisible by 2');
-        return;
-    }
-    this._addLines(position, color, options);
-};
-
-AppBase.prototype.enableVr = function () {
-    Debug.deprecated('pc.AppBase#enableVR is deprecated, and WebVR API is no longer supported.');
-};
-
-Object.defineProperty(CameraComponent.prototype, 'node', {
-    get: function () {
-        Debug.deprecated('pc.CameraComponent#node is deprecated. Use pc.CameraComponent#entity instead.');
-        return this.entity;
-    }
-});
-
-Object.defineProperty(LightComponent.prototype, 'enable', {
-    get: function () {
-        Debug.deprecated('pc.LightComponent#enable is deprecated. Use pc.LightComponent#enabled instead.');
-        return this.enabled;
-    },
-    set: function (value) {
-        Debug.deprecated('pc.LightComponent#enable is deprecated. Use pc.LightComponent#enabled instead.');
-        this.enabled = value;
-    }
-});
-
 ModelComponent.prototype.setVisible = function (visible) {
     Debug.deprecated('pc.ModelComponent#setVisible is deprecated. Use pc.ModelComponent#enabled instead.');
     this.enabled = visible;
 };
-
-Object.defineProperty(ModelComponent.prototype, 'aabb', {
-    get: function () {
-        Debug.deprecated('pc.ModelComponent#aabb is deprecated. Use pc.ModelComponent#customAabb instead - which expects local space AABB instead of a world space AABB.');
-        return null;
-    },
-    set: function (type) {
-        Debug.deprecated('pc.ModelComponent#aabb is deprecated. Use pc.ModelComponent#customAabb instead - which expects local space AABB instead of a world space AABB.');
-    }
-});
-
-Object.defineProperty(RenderComponent.prototype, 'aabb', {
-    get: function () {
-        Debug.deprecated('pc.RenderComponent#aabb is deprecated. Use pc.RenderComponent#customAabb instead - which expects local space AABB instead of a world space AABB.');
-        return null;
-    },
-    set: function (type) {
-        Debug.deprecated('pc.RenderComponent#aabb is deprecated. Use pc.RenderComponent#customAabb instead - which expects local space AABB instead of a world space AABB.');
-    }
-});
 
 Object.defineProperty(RigidBodyComponent.prototype, 'bodyType', {
     get: function () {
@@ -1659,18 +916,3 @@ RigidBodyComponentSystem.prototype.setGravity = function () {
         this.gravity.set(arguments[0], arguments[1], arguments[2]);
     }
 };
-
-
-export function basisSetDownloadConfig(glueUrl, wasmUrl, fallbackUrl) {
-    Debug.deprecated('pc.basisSetDownloadConfig is deprecated. Use pc.basisInitialize instead.');
-    basisInitialize({
-        glueUrl: glueUrl,
-        wasmUrl: wasmUrl,
-        fallbackUrl: fallbackUrl,
-        lazyInit: true
-    });
-}
-
-export function prefilterCubemap(options) {
-    Debug.deprecated('pc.prefilterCubemap is deprecated. Use pc.envLighting instead.');
-}

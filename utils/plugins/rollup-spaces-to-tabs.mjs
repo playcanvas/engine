@@ -14,7 +14,7 @@ export function spacesToTabs() {
     ], []);
 
     return {
-        name: "spacesToTabs",
+        name: 'spacesToTabs',
         transform(code, id) {
             if (!filter(id)) return undefined;
             // ^    = start of line

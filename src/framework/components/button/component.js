@@ -1,14 +1,18 @@
 import { now } from '../../../core/time.js';
-
 import { math } from '../../../core/math/math.js';
 import { Color } from '../../../core/math/color.js';
-
 import { EntityReference } from '../../utils/entity-reference.js';
-
 import { Component } from '../component.js';
-
 import { BUTTON_TRANSITION_MODE_SPRITE_CHANGE, BUTTON_TRANSITION_MODE_TINT } from './constants.js';
 import { ELEMENTTYPE_GROUP } from '../element/constants.js';
+
+/**
+ * @import { Asset } from '../../../framework/asset/asset.js'
+ * @import { ButtonComponentData } from './data.js'
+ * @import { ButtonComponentSystem } from './system.js'
+ * @import { Entity } from '../../entity.js'
+ * @import { Vec4 } from '../../../core/math/vec4.js'
+ */
 
 const VisualState = {
     DEFAULT: 'DEFAULT',
@@ -242,10 +246,8 @@ class ButtonComponent extends Component {
     /**
      * Create a new ButtonComponent instance.
      *
-     * @param {import('./system.js').ButtonComponentSystem} system - The ComponentSystem that
-     * created this component.
-     * @param {import('../../entity.js').Entity} entity - The entity that this component is
-     * attached to.
+     * @param {ButtonComponentSystem} system - The ComponentSystem that created this component.
+     * @param {Entity} entity - The entity that this component is attached to.
      */
     constructor(system, entity) {
         super(system, entity);
@@ -273,7 +275,7 @@ class ButtonComponent extends Component {
 
     // TODO: Remove this override in upgrading component
     /**
-     * @type {import('./data.js').ButtonComponentData}
+     * @type {ButtonComponentData}
      * @ignore
      */
     get data() {
@@ -282,18 +284,26 @@ class ButtonComponent extends Component {
     }
 
     /**
+     * Sets the enabled state of the component.
+     *
      * @type {boolean}
      */
     set enabled(arg) {
         this._setValue('enabled', arg);
     }
 
+    /**
+     * Gets the enabled state of the component.
+     *
+     * @type {boolean}
+     */
     get enabled() {
         return this.data.enabled;
     }
 
     /**
-     * If set to false, the button will be visible but will not respond to hover or touch interactions.
+     * Sets the button's active state. If set to false, the button will be visible but will not
+     * respond to hover or touch interactions. Defaults to true.
      *
      * @type {boolean}
      */
@@ -301,40 +311,61 @@ class ButtonComponent extends Component {
         this._setValue('active', arg);
     }
 
+    /**
+     * Gets the button's active state.
+     *
+     * @type {boolean}
+     */
     get active() {
         return this.data.active;
     }
 
     /**
-     * A reference to the entity to be used as the button background. The entity must have an
-     * ImageElement component.
+     * Sets the entity to be used as the button background. The entity must have an
+     * {@link ElementComponent} configured as an image element.
      *
-     * @type {import('../../../framework/entity.js').Entity}
+     * @type {Entity}
      */
     set imageEntity(arg) {
         this._setValue('imageEntity', arg);
     }
 
+    /**
+     * Gets the entity to be used as the button background.
+     *
+     * @type {Entity}
+     */
     get imageEntity() {
         return this.data.imageEntity;
     }
 
     /**
-     * Padding to be used in hit-test calculations. Can be used to expand the bounding box so that
-     * the button is easier to tap.
+     * Sets the padding to be used in hit-test calculations. Can be used to expand the bounding box
+     * so that the button is easier to tap. Defaults to `[0, 0, 0, 0]`.
      *
-     * @type {import('../../../core/math/vec4.js').Vec4}
+     * @type {Vec4}
      */
     set hitPadding(arg) {
         this._setValue('hitPadding', arg);
     }
 
+    /**
+     * Gets the padding to be used in hit-test calculations.
+     *
+     * @type {Vec4}
+     */
     get hitPadding() {
         return this.data.hitPadding;
     }
 
     /**
-     * Controls how the button responds when the user hovers over it/presses it.
+     * Sets the button transition mode. This controls how the button responds when the user hovers
+     * over it/presses it. Can be:
+     *
+     * - {@link BUTTON_TRANSITION_MODE_TINT}
+     * - {@link BUTTON_TRANSITION_MODE_SPRITE_CHANGE}
+     *
+     * Defaults to {@link BUTTON_TRANSITION_MODE_TINT}.
      *
      * @type {number}
      */
@@ -342,12 +373,18 @@ class ButtonComponent extends Component {
         this._setValue('transitionMode', arg);
     }
 
+    /**
+     * Gets the button transition mode.
+     *
+     * @type {number}
+     */
     get transitionMode() {
         return this.data.transitionMode;
     }
 
     /**
-     * Color to be used on the button image when the user hovers over it.
+     * Sets the tint color to be used on the button image when the user hovers over it. Defaults to
+     * `[0.75, 0.75, 0.75]`.
      *
      * @type {Color}
      */
@@ -355,12 +392,18 @@ class ButtonComponent extends Component {
         this._setValue('hoverTint', arg);
     }
 
+    /**
+     * Gets the tint color to be used on the button image when the user hovers over it.
+     *
+     * @type {Color}
+     */
     get hoverTint() {
         return this.data.hoverTint;
     }
 
     /**
-     * Color to be used on the button image when the user presses it.
+     * Sets the tint color to be used on the button image when the user presses it. Defaults to
+     * `[0.5, 0.5, 0.5]`.
      *
      * @type {Color}
      */
@@ -368,12 +411,18 @@ class ButtonComponent extends Component {
         this._setValue('pressedTint', arg);
     }
 
+    /**
+     * Gets the tint color to be used on the button image when the user presses it.
+     *
+     * @type {Color}
+     */
     get pressedTint() {
         return this.data.pressedTint;
     }
 
     /**
-     * Color to be used on the button image when the button is not interactive.
+     * Sets the tint color to be used on the button image when the button is not interactive.
+     * Defaults to `[0.25, 0.25, 0.25]`.
      *
      * @type {Color}
      */
@@ -381,12 +430,17 @@ class ButtonComponent extends Component {
         this._setValue('inactiveTint', arg);
     }
 
+    /**
+     * Gets the tint color to be used on the button image when the button is not interactive.
+     *
+     * @type {Color}
+     */
     get inactiveTint() {
         return this.data.inactiveTint;
     }
 
     /**
-     * Duration to be used when fading between tints, in milliseconds.
+     * Sets the duration to be used when fading between tints, in milliseconds. Defaults to 0.
      *
      * @type {number}
      */
@@ -394,25 +448,35 @@ class ButtonComponent extends Component {
         this._setValue('fadeDuration', arg);
     }
 
+    /**
+     * Gets the duration to be used when fading between tints, in milliseconds.
+     *
+     * @type {number}
+     */
     get fadeDuration() {
         return this.data.fadeDuration;
     }
 
     /**
-     * Sprite to be used as the button image when the user hovers over it.
+     * Sets the sprite to be used as the button image when the user hovers over it.
      *
-     * @type {import('../../../framework/asset/asset.js').Asset}
+     * @type {Asset}
      */
     set hoverSpriteAsset(arg) {
         this._setValue('hoverSpriteAsset', arg);
     }
 
+    /**
+     * Gets the sprite to be used as the button image when the user hovers over it.
+     *
+     * @type {Asset}
+     */
     get hoverSpriteAsset() {
         return this.data.hoverSpriteAsset;
     }
 
     /**
-     * Frame to be used from the hover sprite.
+     * Sets the frame to be used from the hover sprite.
      *
      * @type {number}
      */
@@ -420,25 +484,35 @@ class ButtonComponent extends Component {
         this._setValue('hoverSpriteFrame', arg);
     }
 
+    /**
+     * Gets the frame to be used from the hover sprite.
+     *
+     * @type {number}
+     */
     get hoverSpriteFrame() {
         return this.data.hoverSpriteFrame;
     }
 
     /**
-     * Sprite to be used as the button image when the user presses it.
+     * Sets the sprite to be used as the button image when the user presses it.
      *
-     * @type {import('../../../framework/asset/asset.js').Asset}
+     * @type {Asset}
      */
     set pressedSpriteAsset(arg) {
         this._setValue('pressedSpriteAsset', arg);
     }
 
+    /**
+     * Gets the sprite to be used as the button image when the user presses it.
+     *
+     * @type {Asset}
+     */
     get pressedSpriteAsset() {
         return this.data.pressedSpriteAsset;
     }
 
     /**
-     * Frame to be used from the pressed sprite.
+     * Sets the frame to be used from the pressed sprite.
      *
      * @type {number}
      */
@@ -446,25 +520,35 @@ class ButtonComponent extends Component {
         this._setValue('pressedSpriteFrame', arg);
     }
 
+    /**
+     * Gets the frame to be used from the pressed sprite.
+     *
+     * @type {number}
+     */
     get pressedSpriteFrame() {
         return this.data.pressedSpriteFrame;
     }
 
     /**
-     * Sprite to be used as the button image when the button is not interactive.
+     * Sets the sprite to be used as the button image when the button is not interactive.
      *
-     * @type {import('../../../framework/asset/asset.js').Asset}
+     * @type {Asset}
      */
     set inactiveSpriteAsset(arg) {
         this._setValue('inactiveSpriteAsset', arg);
     }
 
+    /**
+     * Gets the sprite to be used as the button image when the button is not interactive.
+     *
+     * @type {Asset}
+     */
     get inactiveSpriteAsset() {
         return this.data.inactiveSpriteAsset;
     }
 
     /**
-     * Frame to be used from the inactive sprite.
+     * Sets the frame to be used from the inactive sprite.
      *
      * @type {number}
      */
@@ -472,6 +556,11 @@ class ButtonComponent extends Component {
         this._setValue('inactiveSpriteFrame', arg);
     }
 
+    /**
+     * Gets the frame to be used from the inactive sprite.
+     *
+     * @type {number}
+     */
     get inactiveSpriteFrame() {
         return this.data.inactiveSpriteFrame;
     }
@@ -853,18 +942,21 @@ class ButtonComponent extends Component {
             !tintColor ||
             !this._imageReference.hasComponent('element') ||
             this._imageReference.entity.element.type === ELEMENTTYPE_GROUP
-        )
+        ) {
             return;
+        }
 
         const color3 = toColor3(tintColor);
 
         this._isApplyingTint = true;
 
-        if (!color3.equals(this._imageReference.entity.element.color))
+        if (!color3.equals(this._imageReference.entity.element.color)) {
             this._imageReference.entity.element.color = color3;
+        }
 
-        if (this._imageReference.entity.element.opacity !== tintColor.a)
+        if (this._imageReference.entity.element.opacity !== tintColor.a) {
             this._imageReference.entity.element.opacity = tintColor.a;
+        }
 
         this._isApplyingTint = false;
     }
@@ -874,8 +966,9 @@ class ButtonComponent extends Component {
             !tintColor ||
             !this._imageReference.hasComponent('element') ||
             this._imageReference.entity.element.type === ELEMENTTYPE_GROUP
-        )
+        ) {
             return;
+        }
 
         const color3 = toColor3(tintColor);
         const color = this._imageReference.entity.element.color;

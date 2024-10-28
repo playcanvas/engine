@@ -1,13 +1,14 @@
 import { Color } from '../../../core/math/color.js';
 import { Vec2 } from '../../../core/math/vec2.js';
-
 import { LIGHTSHAPE_PUNCTUAL } from '../../../scene/constants.js';
 import { Light, lightTypes } from '../../../scene/light.js';
-
 import { ComponentSystem } from '../system.js';
-
 import { LightComponent } from './component.js';
 import { properties, LightComponentData } from './data.js';
+
+/**
+ * @import { AppBase } from '../../app-base.js'
+ */
 
 /**
  * A Light Component is used to dynamically light the scene.
@@ -18,7 +19,7 @@ class LightComponentSystem extends ComponentSystem {
     /**
      * Create a new LightComponentSystem instance.
      *
-     * @param {import('../../app-base.js').AppBase} app - The application.
+     * @param {AppBase} app - The application.
      * @ignore
      */
     constructor(app) {
@@ -35,8 +36,9 @@ class LightComponentSystem extends ComponentSystem {
     initializeComponentData(component, _data) {
         // duplicate because we're modifying the data
         const data = { ..._data };
-        if (!data.type)
+        if (!data.type) {
             data.type = component.data.type;
+        }
 
         component.data.type = data.type;
 
@@ -44,14 +46,17 @@ class LightComponentSystem extends ComponentSystem {
             data.layers = data.layers.slice(0);
         }
 
-        if (data.color && Array.isArray(data.color))
+        if (data.color && Array.isArray(data.color)) {
             data.color = new Color(data.color[0], data.color[1], data.color[2]);
+        }
 
-        if (data.cookieOffset && data.cookieOffset instanceof Array)
+        if (data.cookieOffset && data.cookieOffset instanceof Array) {
             data.cookieOffset = new Vec2(data.cookieOffset[0], data.cookieOffset[1]);
+        }
 
-        if (data.cookieScale && data.cookieScale instanceof Array)
+        if (data.cookieScale && data.cookieScale instanceof Array) {
             data.cookieScale = new Vec2(data.cookieScale[0], data.cookieScale[1]);
+        }
 
         if (data.enable) {
             console.warn('WARNING: enable: Property is deprecated. Set enabled property instead.');

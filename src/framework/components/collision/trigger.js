@@ -1,21 +1,23 @@
 import { BODYFLAG_NORESPONSE_OBJECT, BODYMASK_NOT_STATIC, BODYGROUP_TRIGGER, BODYSTATE_ACTIVE_TAG, BODYSTATE_DISABLE_SIMULATION } from '../rigid-body/constants.js';
 
+/**
+ * @import { AppBase } from '../../app-base.js'
+ * @import { Component } from '../component.js'
+ */
+
 let _ammoVec1, _ammoQuat, _ammoTransform;
 
 /**
  * Creates a trigger object used to create internal physics objects that interact with rigid bodies
  * and trigger collision events with no collision response.
- *
- * @ignore
  */
 class Trigger {
     /**
      * Create a new Trigger instance.
      *
-     * @param {import('../../app-base.js').AppBase} app - The running {@link AppBase}.
-     * @param {import('../component.js').Component} component - The component for which the trigger
-     * will be created.
-     * @param {ComponentData} data - The data for the component.
+     * @param {AppBase} app - The running {@link AppBase}.
+     * @param {Component} component - The component for which the trigger will be created.
+     * @param {object} data - The data for the component.
      */
     constructor(app, component, data) {
         this.entity = component.entity;
@@ -117,9 +119,12 @@ class Trigger {
         const body = this.body;
         if (!body) return;
 
-        const systems = this.app.systems;
-        systems.rigidbody.addBody(body, BODYGROUP_TRIGGER, BODYMASK_NOT_STATIC ^ BODYGROUP_TRIGGER);
-        systems.rigidbody._triggers.push(this);
+        const system = this.app.systems.rigidbody;
+        const idx = system._triggers.indexOf(this);
+        if (idx < 0) {
+            system.addBody(body, BODYGROUP_TRIGGER, BODYMASK_NOT_STATIC ^ BODYGROUP_TRIGGER);
+            system._triggers.push(this);
+        }
 
         // set the body's activation state to active so that it is
         // simulated properly again
@@ -132,12 +137,12 @@ class Trigger {
         const body = this.body;
         if (!body) return;
 
-        const systems = this.app.systems;
-        const idx = systems.rigidbody._triggers.indexOf(this);
+        const system = this.app.systems.rigidbody;
+        const idx = system._triggers.indexOf(this);
         if (idx > -1) {
-            systems.rigidbody._triggers.splice(idx, 1);
+            system.removeBody(body);
+            system._triggers.splice(idx, 1);
         }
-        systems.rigidbody.removeBody(body);
 
         // set the body's activation state to disable simulation so
         // that it properly deactivates after we remove it from the physics world

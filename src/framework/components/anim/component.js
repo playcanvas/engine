@@ -1,19 +1,20 @@
 import { Debug } from '../../../core/debug.js';
 import { Asset } from '../../asset/asset.js';
-
 import { AnimEvaluator } from '../../anim/evaluator/anim-evaluator.js';
 import { AnimController } from '../../anim/controller/anim-controller.js';
-
 import { Component } from '../component.js';
-
-import {
-    ANIM_PARAMETER_BOOLEAN, ANIM_PARAMETER_FLOAT, ANIM_PARAMETER_INTEGER, ANIM_PARAMETER_TRIGGER, ANIM_CONTROL_STATES
-} from '../../anim/controller/constants.js';
 import { AnimComponentBinder } from './component-binder.js';
 import { AnimComponentLayer } from './component-layer.js';
 import { AnimStateGraph } from '../../anim/state-graph/anim-state-graph.js';
 import { Entity } from '../../entity.js';
+import {
+    ANIM_PARAMETER_BOOLEAN, ANIM_PARAMETER_FLOAT, ANIM_PARAMETER_INTEGER, ANIM_PARAMETER_TRIGGER, ANIM_CONTROL_STATES
+} from '../../anim/controller/constants.js';
 import { AnimTrack } from '../../anim/evaluator/anim-track.js';
+
+/**
+ * @import { AnimComponentSystem } from './system.js'
+ */
 
 /**
  * The Anim Component allows an Entity to playback animations on models and entity properties.
@@ -24,8 +25,7 @@ class AnimComponent extends Component {
     /**
      * Create a new AnimComponent instance.
      *
-     * @param {import('./system.js').AnimComponentSystem} system - The {@link ComponentSystem} that
-     * created this Component.
+     * @param {AnimComponentSystem} system - The {@link ComponentSystem} that created this Component.
      * @param {Entity} entity - The Entity that this Component is attached to.
      */
     constructor(system, entity) {
@@ -98,7 +98,7 @@ class AnimComponent extends Component {
 
 
     /**
-     * If true the animation component will normalize the weights of its layers by their sum total.
+     * Sets whether the animation component will normalize the weights of its layers by their sum total.
      *
      * @type {boolean}
      */
@@ -107,6 +107,11 @@ class AnimComponent extends Component {
         this.unbind();
     }
 
+    /**
+     * Gets whether the animation component will normalize the weights of its layers by their sum total.
+     *
+     * @type {boolean}
+     */
     get normalizeWeights() {
         return this._normalizeWeights;
     }
@@ -121,7 +126,7 @@ class AnimComponent extends Component {
     }
 
     /**
-     * Speed multiplier for animation play back speed. 1.0 is playback at normal speed, 0.0 pauses
+     * Sets the speed multiplier for animation play back speed. 1.0 is playback at normal speed, 0.0 pauses
      * the animation.
      *
      * @type {number}
@@ -130,12 +135,17 @@ class AnimComponent extends Component {
         this._speed = value;
     }
 
+    /**
+     * Gets the speed multiplier for animation play back speed.
+     *
+     * @type {number}
+     */
     get speed() {
         return this._speed;
     }
 
     /**
-     * If true the first animation will begin playing when the scene is loaded.
+     * Sets whether the first animation will begin playing when the scene is loaded.
      *
      * @type {boolean}
      */
@@ -143,13 +153,18 @@ class AnimComponent extends Component {
         this._activate = value;
     }
 
+    /**
+     * Gets whether the first animation will begin playing when the scene is loaded.
+     *
+     * @type {boolean}
+     */
     get activate() {
         return this._activate;
     }
 
 
     /**
-     * Plays or pauses all animations in the component.
+     * Sets whether to play or pause all animations in the component.
      *
      * @type {boolean}
      */
@@ -157,12 +172,17 @@ class AnimComponent extends Component {
         this._playing = value;
     }
 
+    /**
+     * Gets whether to play or pause all animations in the component.
+     *
+     * @type {boolean}
+     */
     get playing() {
         return this._playing;
     }
 
     /**
-     * The entity that this anim component should use as the root of the animation hierarchy.
+     * Sets the entity that this anim component should use as the root of the animation hierarchy.
      *
      * @type {Entity}
      */
@@ -179,6 +199,11 @@ class AnimComponent extends Component {
         this.rebind();
     }
 
+    /**
+     * Gets the entity that this anim component should use as the root of the animation hierarchy.
+     *
+     * @type {Entity}
+     */
     get rootBone() {
         return this._rootBone;
     }
@@ -395,7 +420,7 @@ class AnimComponent extends Component {
             for (let j = 0; j < layer.states.length; j++) {
                 const stateName = layer.states[j];
                 if (ANIM_CONTROL_STATES.indexOf(stateName) === -1) {
-                    const stateKey = layerName + ':' + stateName;
+                    const stateKey = `${layerName}:${stateName}`;
                     if (!this._animationAssets[stateKey]) {
                         this._animationAssets[stateKey] = {
                             asset: null
@@ -413,7 +438,7 @@ class AnimComponent extends Component {
             for (let j = 0; j < layer.states.length; j++) {
                 const stateName = layer.states[j];
                 if (ANIM_CONTROL_STATES.indexOf(stateName) !== -1) continue;
-                const animationAsset = this._animationAssets[layer.name + ':' + stateName];
+                const animationAsset = this._animationAssets[`${layer.name}:${stateName}`];
                 if (!animationAsset || !animationAsset.asset) {
                     this.findAnimationLayer(layer.name).assignAnimation(stateName, AnimTrack.EMPTY);
                     continue;
@@ -548,7 +573,7 @@ class AnimComponent extends Component {
      * animation should be associated with. Each section of a blend tree path is split using a
      * period (`.`) therefore state names should not include this character (e.g "MyStateName" or
      * "MyStateName.BlendTreeNode").
-     * @param {object} animTrack - The animation track that will be assigned to this state and
+     * @param {AnimTrack} animTrack - The animation track that will be assigned to this state and
      * played whenever this state is active.
      * @param {string} [layerName] - The name of the anim component layer to update. If omitted the
      * default layer is used. If no state graph has been previously loaded this parameter is

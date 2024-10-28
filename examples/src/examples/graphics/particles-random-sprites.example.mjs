@@ -7,10 +7,10 @@ window.focus();
 const assets = {
     particlesCoinsTexture: new pc.Asset('particlesCoinsTexture', 'texture', {
         url: rootPath + '/static/assets/textures/particles-coins.png'
-    }),
+    }, { srgb: true }),
     particlesBonusTexture: new pc.Asset('particlesBonusTexture', 'texture', {
         url: rootPath + '/static/assets/textures/particles-bonus.png'
-    })
+    }, { srgb: true })
 };
 
 const gfxOptions = {

@@ -13,7 +13,10 @@ const assets = {
 const gfxOptions = {
     deviceTypes: [deviceType],
     glslangUrl: rootPath + '/static/lib/glslang/glslang.js',
-    twgslUrl: rootPath + '/static/lib/twgsl/twgsl.js'
+    twgslUrl: rootPath + '/static/lib/twgsl/twgsl.js',
+
+    // Enable HDR rendering if supported
+    displayFormat: pc.DISPLAYFORMAT_HDR
 };
 
 const device = await pc.createGraphicsDevice(canvas, gfxOptions);
@@ -68,15 +71,16 @@ assetListLoader.load(() => {
     app.root.addChild(camera);
     app.root.addChild(light);
 
-    // Create the shader from the vertex and fragment shaders
-    const shader = pc.createShaderFromCode(app.graphicsDevice, files['shader.vert'], files['shader.frag'], 'myShader', {
-        aPosition: pc.SEMANTIC_POSITION,
-        aUv0: pc.SEMANTIC_TEXCOORD0
+    // Create a new material with the custom shader
+    const material = new pc.ShaderMaterial({
+        uniqueName: 'burn',
+        vertexCode: files['shader.vert'],
+        fragmentCode: files['shader.frag'],
+        attributes: {
+            aPosition: pc.SEMANTIC_POSITION,
+            aUv0: pc.SEMANTIC_TEXCOORD0
+        }
     });
-
-    // Create a new material with the new shader
-    const material = new pc.Material();
-    material.shader = shader;
     material.setParameter('uHeightMap', assets.clouds.resource);
 
     // create a hierarchy of entities with render components, representing the statue model

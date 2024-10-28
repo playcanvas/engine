@@ -39,6 +39,8 @@ class LitShaderOptions {
 
     skin = false;
 
+    batch = false;
+
     /**
      * If hardware instancing compatible shader should be generated. Transform is read from
      * per-instance {@link VertexBuffer} instead of shader's uniforms.
@@ -61,7 +63,7 @@ class LitShaderOptions {
      */
     useMorphNormal = false;
 
-    useMorphTextureBased = false;
+    useMorphTextureBasedInt = false;
 
     nineSlicedMode = 0;
 
@@ -91,8 +93,6 @@ class LitShaderOptions {
 
     diffuseMapEnabled = false;
 
-    useAmbientTint = false;
-
     /**
      * Replaced the whole fragment shader with this string.
      *
@@ -103,13 +103,6 @@ class LitShaderOptions {
     pixelSnap = false;
 
     /**
-     * The value of {@link StandardMaterial#shadingModel}.
-     *
-     * @type {number}
-     */
-    shadingModel = 0;
-
-    /**
      * If ambient spherical harmonics are used. Ambient SH replace prefiltered cubemap ambient on
      * certain platforms (mostly Android) for performance reasons.
      *
@@ -118,12 +111,11 @@ class LitShaderOptions {
     ambientSH = false;
 
     /**
-     * Use slightly cheaper normal mapping code (skip tangent space normalization). Can look buggy
-     * sometimes.
+     * Apply SSAO during the lighting.
      *
      * @type {boolean}
      */
-    fastTbn = false;
+    ssao = false;
 
     /**
      * The value of {@link StandardMaterial#twoSidedLighting}.
@@ -192,13 +184,6 @@ class LitShaderOptions {
      * @type {number}
      */
     cubeMapProjection = 0;
-
-    /**
-     * The value of {@link StandardMaterial#conserveEnergy}.
-     *
-     * @type {boolean}
-     */
-    conserveEnergy = false;
 
     /**
      * If any specular or reflections are needed at all.

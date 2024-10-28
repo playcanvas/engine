@@ -59,7 +59,6 @@ import glossPS from './standard/frag/gloss.js';
 import iridescenceDiffractionPS from './lit/frag/iridescenceDiffraction.js';
 import iridescencePS from './standard/frag/iridescence.js';
 import iridescenceThicknessPS from './standard/frag/iridescenceThickness.js';
-import instancingVS from './lit/vert/instancing.js';
 import iorPS from './standard/frag/ior.js';
 import lightDiffuseLambertPS from './lit/frag/lightDiffuseLambert.js';
 import lightDirPointPS from './lit/frag/lightDirPoint.js';
@@ -69,7 +68,6 @@ import lightmapDirPS from './standard/frag/lightmapDir.js';
 import lightmapSinglePS from './standard/frag/lightmapSingle.js';
 import lightSpecularAnisoGGXPS from './lit/frag/lightSpecularAnisoGGX.js';
 import lightSpecularBlinnPS from './lit/frag/lightSpecularBlinn.js';
-import lightSpecularPhongPS from './lit/frag/lightSpecularPhong.js';
 import lightSheenPS from './lit/frag/lightSheen.js';
 import linearizeDepthPS from './common/frag/linearizeDepth.js';
 import litShaderArgsPS from './standard/frag/litShaderArgs.js';
@@ -79,10 +77,9 @@ import msdfPS from './common/frag/msdf.js';
 import metalnessModulatePS from './lit/frag/metalnessModulate.js';
 import msdfVS from './common/vert/msdf.js';
 import normalVS from './lit/vert/normal.js';
+import normalCoreVS from './common/vert/normalCore.js';
 import normalDetailMapPS from './standard/frag/normalDetailMap.js';
-import normalInstancedVS from './lit/vert/normalInstanced.js';
 import normalMapPS from './standard/frag/normalMap.js';
-import normalSkinnedVS from './lit/vert/normalSkinned.js';
 import normalXYPS from './standard/frag/normalXY.js';
 import normalXYZPS from './standard/frag/normalXYZ.js';
 import opacityPS from './standard/frag/opacity.js';
@@ -92,7 +89,6 @@ import outputAlphaPS from './lit/frag/outputAlpha.js';
 import outputAlphaOpaquePS from './lit/frag/outputAlphaOpaque.js';
 import outputAlphaPremulPS from './lit/frag/outputAlphaPremul.js';
 import outputTex2DPS from './common/frag/outputTex2D.js';
-import packDepthPS from './common/frag/packDepth.js';
 import sheenPS from './standard/frag/sheen.js';
 import sheenGlossPS from './standard/frag/sheenGloss.js';
 import parallaxPS from './standard/frag/parallax.js';
@@ -136,6 +132,7 @@ import particle_softVS from './particle/vert/particle_soft.js';
 import particle_stretchVS from './particle/vert/particle_stretch.js';
 import particle_TBNVS from './particle/vert/particle_TBN.js';
 import particle_wrapVS from './particle/vert/particle_wrap.js';
+import pickPS from './common/frag/pick.js';
 import reflDirPS from './lit/frag/reflDir.js';
 import reflDirAnisoPS from './lit/frag/reflDirAniso.js';
 import reflectionCCPS from './lit/frag/reflectionCC.js';
@@ -160,8 +157,7 @@ import shadowVSM8PS from './lit/frag/shadowVSM8.js';
 import shadowVSM_commonPS from './lit/frag/shadowVSM_common.js';
 import skinBatchTexVS from './common/vert/skinBatchTex.js';
 import skinTexVS from './common/vert/skinTex.js';
-import skyboxEnvPS from './skybox/frag/skyboxEnv.js';
-import skyboxHDRPS from './skybox/frag/skyboxHDR.js';
+import skyboxPS from './skybox/frag/skybox.js';
 import skyboxVS from './skybox/vert/skybox.js';
 import specularPS from './standard/frag/specular.js';
 import sphericalPS from './common/frag/spherical.js';
@@ -175,7 +171,6 @@ import storeEVSMPS from './lit/frag/storeEVSM.js';
 import tangentBinormalVS from './lit/vert/tangentBinormal.js';
 import TBNPS from './lit/frag/TBN.js';
 import TBNderivativePS from './lit/frag/TBNderivative.js';
-import TBNfastPS from './lit/frag/TBNfast.js';
 import TBNObjectSpacePS from './lit/frag/TBNObjectSpace.js';
 import thicknessPS from './standard/frag/thickness.js';
 import tonemappingAcesPS from './common/frag/tonemappingAces.js';
@@ -186,7 +181,8 @@ import tonemappingLinearPS from './common/frag/tonemappingLinear.js';
 import tonemappingNeutralPS from './common/frag/tonemappingNeutral.js';
 import tonemappingNonePS from './common/frag/tonemappingNone.js';
 import transformVS from './common/vert/transform.js';
-import transformDeclVS from './common/vert/transformDecl.js';
+import transformCoreVS from './common/vert/transformCore.js';
+import transformInstancingVS from './common/vert/transformInstancing.js';
 import transmissionPS from './standard/frag/transmission.js';
 import twoSidedLightingPS from './lit/frag/twoSidedLighting.js';
 import uv0VS from './lit/vert/uv0.js';
@@ -264,7 +260,6 @@ const shaderChunks = {
     iridescenceDiffractionPS,
     iridescencePS,
     iridescenceThicknessPS,
-    instancingVS,
     iorPS,
     lightDiffuseLambertPS,
     lightDirPointPS,
@@ -274,7 +269,6 @@ const shaderChunks = {
     lightmapSinglePS,
     lightSpecularAnisoGGXPS,
     lightSpecularBlinnPS,
-    lightSpecularPhongPS,
     lightSheenPS,
     linearizeDepthPS,
     litShaderArgsPS,
@@ -284,10 +278,9 @@ const shaderChunks = {
     msdfPS,
     msdfVS,
     normalVS,
+    normalCoreVS,
     normalDetailMapPS,
-    normalInstancedVS,
     normalMapPS,
-    normalSkinnedVS,
     normalXYPS,
     normalXYZPS,
     opacityPS,
@@ -297,7 +290,6 @@ const shaderChunks = {
     outputAlphaOpaquePS,
     outputAlphaPremulPS,
     outputTex2DPS,
-    packDepthPS,
     sheenPS,
     sheenGlossPS,
     parallaxPS,
@@ -341,6 +333,7 @@ const shaderChunks = {
     particle_stretchVS,
     particle_TBNVS,
     particle_wrapVS,
+    pickPS,
     reflDirPS,
     reflDirAnisoPS,
     reflectionCCPS,
@@ -365,8 +358,7 @@ const shaderChunks = {
     shadowVSM_commonPS,
     skinBatchTexVS,
     skinTexVS,
-    skyboxEnvPS,
-    skyboxHDRPS,
+    skyboxPS,
     skyboxVS,
     specularPS,
     sphericalPS,
@@ -380,7 +372,6 @@ const shaderChunks = {
     tangentBinormalVS,
     TBNPS,
     TBNderivativePS,
-    TBNfastPS,
     TBNObjectSpacePS,
     thicknessPS,
     tonemappingAcesPS,
@@ -391,7 +382,8 @@ const shaderChunks = {
     tonemappingNeutralPS,
     tonemappingNonePS,
     transformVS,
-    transformDeclVS,
+    transformCoreVS,
+    transformInstancingVS,
     transmissionPS,
     twoSidedLightingPS,
     uv0VS,

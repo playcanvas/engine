@@ -4,7 +4,7 @@ import { Entity } from '../../../../src/framework/entity.js';
 import { LAYERID_WORLD, LAYERID_UI } from '../../../../src/scene/constants.js';
 import { NullGraphicsDevice } from '../../../../src/platform/graphics/null/null-graphics-device.js';
 
-import { HTMLCanvasElement } from '@playcanvas/canvas-mock';
+import { Canvas } from 'skia-canvas';
 
 import { expect } from 'chai';
 
@@ -15,7 +15,7 @@ describe('ModelComponent', function () {
     const loadAssetList = function (list, cb) {
         // listen for asset load events and fire cb() when all assets are loaded
         let count = 0;
-        app.assets.on('load', function (asset) {
+        app.assets.on('load', (asset) => {
             count++;
             if (count === list.length) {
                 cb();
@@ -39,7 +39,7 @@ describe('ModelComponent', function () {
             })
         ];
 
-        loadAssetList(assetlist, function () {
+        loadAssetList(assetlist, () => {
             assets.model = assetlist[0];
             assets.material = assetlist[1];
             cb();
@@ -47,10 +47,10 @@ describe('ModelComponent', function () {
     };
 
     beforeEach(function (done) {
-        const canvas = new HTMLCanvasElement(500, 500);
+        const canvas = new Canvas(500, 500);
         app = new Application(canvas, { graphicsDevice: new NullGraphicsDevice(canvas) });
 
-        loadAssets(function () {
+        loadAssets(() => {
             done();
         });
     });
@@ -255,7 +255,7 @@ describe('ModelComponent', function () {
         expect(assets.material._callbacks.get('unload').length).to.equal(1);
     });
 
-    it('Materials applied when loading asynchronously', function (done) {
+    it('Materials applied when loading asynchronously', (done) => {
         const boxAsset = new Asset('Box', 'model', {
             url: 'http://localhost:3000/test/test-assets/box/box.json'
         }, {
@@ -283,13 +283,13 @@ describe('ModelComponent', function () {
             });
             app.root.addChild(e);
 
-            expect(app.assets.hasEvent('load:' + materialAsset.id)).to.be.true;
+            expect(app.assets.hasEvent(`load:${materialAsset.id}`)).to.be.true;
 
             done();
         });
     });
 
-    it('Materials applied when added later', function (done) {
+    it('Materials applied when added later', (done) => {
         const boxAsset = new Asset('Box', 'model', {
             url: 'http://localhost:3000/test/test-assets/box/box.json'
         });
@@ -309,13 +309,13 @@ describe('ModelComponent', function () {
             app.root.addChild(e);
             e.model.materialAsset = materialAsset;
 
-            expect(app.assets.hasEvent('add:' + materialAsset.id)).to.be.true;
+            expect(app.assets.hasEvent(`add:${materialAsset.id}`)).to.be.true;
 
             materialAsset.on('load', function () {
                 // do checks after the 'load' handler on the asset has been executed
                 // by other engine event handlers
-                setTimeout(function () {
-                    expect(app.assets.hasEvent('add:' + materialAsset.id)).to.be.false;
+                setTimeout(() => {
+                    expect(app.assets.hasEvent(`add:${materialAsset.id}`)).to.be.false;
                     expect(e.model.material).to.not.be.null;
                     expect(e.model.material).to.equal(materialAsset.resource);
                     done();
@@ -326,7 +326,7 @@ describe('ModelComponent', function () {
         });
     });
 
-    it('Material add events unbound on destroy', function (done) {
+    it('Material add events unbound on destroy', (done) => {
         const boxAsset = new Asset('Box', 'model', {
             url: 'http://localhost:3000/test/test-assets/box/box.json'
         });
@@ -346,11 +346,11 @@ describe('ModelComponent', function () {
             app.root.addChild(e);
             e.model.materialAsset = materialAsset;
 
-            expect(app.assets.hasEvent('add:' + materialAsset.id)).to.be.true;
+            expect(app.assets.hasEvent(`add:${materialAsset.id}`)).to.be.true;
 
             e.destroy();
 
-            expect(app.assets.hasEvent('add:' + materialAsset.id)).to.be.false;
+            expect(app.assets.hasEvent(`add:${materialAsset.id}`)).to.be.false;
 
             done();
 
@@ -374,7 +374,7 @@ describe('ModelComponent', function () {
 
     });
 
-    it('Asset materials unbound on destroy', function (done) {
+    it('Asset materials unbound on destroy', (done) => {
         const modelAsset = new Asset('box.json', 'model', {
             url: 'http://localhost:3000/test/test-assets/box/box.json'
         }, {
@@ -385,24 +385,24 @@ describe('ModelComponent', function () {
         app.assets.add(modelAsset);
         app.assets.load(modelAsset);
 
-        modelAsset.ready(function () {
+        modelAsset.ready(() => {
             const e = new Entity();
             e.addComponent('model', {
                 asset: modelAsset
             });
             app.root.addChild(e);
 
-            expect(app.assets.hasEvent('remove:' + assets.material.id)).to.be.true;
-            expect(e.model._materialEvents[0]['remove:' + assets.material.id]).to.exist;
+            expect(app.assets.hasEvent(`remove:${assets.material.id}`)).to.be.true;
+            expect(e.model._materialEvents[0][`remove:${assets.material.id}`]).to.exist;
 
             e.destroy();
 
-            expect(app.assets.hasEvent('remove:' + assets.material.id)).to.be.false;
+            expect(app.assets.hasEvent(`remove:${assets.material.id}`)).to.be.false;
             done();
         });
     });
 
-    it('Asset materials unbound on change model', function (done) {
+    it('Asset materials unbound on change model', (done) => {
         const modelAsset = new Asset('plane.json', 'model', {
             url: 'http://localhost:3000/test/test-assets/plane/plane.json'
         }, {
@@ -429,22 +429,22 @@ describe('ModelComponent', function () {
         app.assets.add(materialAsset2);
         app.assets.load(materialAsset2);
 
-        materialAsset2.ready(function () {
-            modelAsset.ready(function () {
+        materialAsset2.ready(() => {
+            modelAsset.ready(() => {
                 const e = new Entity();
                 e.addComponent('model', {
                     asset: modelAsset
                 });
                 app.root.addChild(e);
 
-                expect(app.assets.hasEvent('remove:' + assets.material.id)).to.be.true;
-                expect(e.model._materialEvents[0]['remove:' + assets.material.id]).to.exist;
+                expect(app.assets.hasEvent(`remove:${assets.material.id}`)).to.be.true;
+                expect(e.model._materialEvents[0][`remove:${assets.material.id}`]).to.exist;
 
-                modelAsset2.ready(function () {
+                modelAsset2.ready(() => {
                     e.model.asset = modelAsset2;
 
-                    expect(app.assets.hasEvent('remove:' + assets.material.id)).to.be.false;
-                    expect(app.assets.hasEvent('remove:' + materialAsset2.id)).to.be.true;
+                    expect(app.assets.hasEvent(`remove:${assets.material.id}`)).to.be.false;
+                    expect(app.assets.hasEvent(`remove:${materialAsset2.id}`)).to.be.true;
 
                     done();
                 });

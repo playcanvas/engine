@@ -16,6 +16,13 @@ import { NullGraphicsDevice } from './null/null-graphics-device.js';
  * Typically, you'd only specify {@link DEVICETYPE_WEBGPU}, or leave it empty.
  * @param {boolean} [options.antialias] - Boolean that indicates whether or not to perform
  * anti-aliasing if possible. Defaults to true.
+ * @param {string} [options.displayFormat] - The display format of the canvas. Defaults to
+ * {@link DISPLAYFORMAT_LDR}. Can be:
+ *
+ * - {@link DISPLAYFORMAT_LDR}
+ * - {@link DISPLAYFORMAT_LDR_SRGB}
+ * - {@link DISPLAYFORMAT_HDR}
+ *
  * @param {boolean} [options.depth] - Boolean that indicates that the drawing buffer is
  * requested to have a depth buffer of at least 16 bits. Defaults to true.
  * @param {boolean} [options.stencil] - Boolean that indicates that the drawing buffer is
@@ -88,16 +95,16 @@ function createGraphicsDevice(canvas, options = {}) {
                 reject(new Error('Failed to create a graphics device'));
             } else {
                 Promise.resolve(deviceCreateFuncs[attempt++]())
-                    .then((device) => {
-                        if (device) {
-                            resolve(device);
-                        } else {
-                            next();
-                        }
-                    }).catch((err) => {
-                        console.log(err);
+                .then((device) => {
+                    if (device) {
+                        resolve(device);
+                    } else {
                         next();
-                    });
+                    }
+                }).catch((err) => {
+                    console.log(err);
+                    next();
+                });
             }
         };
         next();

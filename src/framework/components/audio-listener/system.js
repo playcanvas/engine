@@ -1,10 +1,12 @@
 import { Debug } from '../../../core/debug.js';
-
 import { Component } from '../component.js';
 import { ComponentSystem } from '../system.js';
-
 import { AudioListenerComponent } from './component.js';
 import { AudioListenerComponentData } from './data.js';
+
+/**
+ * @import { AppBase } from '../../app-base.js'
+ */
 
 const _schema = ['enabled'];
 
@@ -17,7 +19,7 @@ class AudioListenerComponentSystem extends ComponentSystem {
     /**
      * Create a new AudioListenerComponentSystem instance.
      *
-     * @param {import('../../app-base.js').AppBase} app - The application managing this system.
+     * @param {AppBase} app - The application managing this system.
      * @ignore
      */
     constructor(app) {
@@ -31,7 +33,7 @@ class AudioListenerComponentSystem extends ComponentSystem {
         this.schema = _schema;
 
         this.manager = app.soundManager;
-        Debug.assert(this.manager, "AudioSourceComponentSystem cannot be created witout sound manager");
+        Debug.assert(this.manager, 'AudioListenerComponentSystem cannot be created without sound manager');
 
         this.current = null;
 

@@ -1,13 +1,16 @@
 import { DebugHelper } from '../../core/debug.js';
 import { WorldClusters } from '../lighting/world-clusters.js';
 
+/**
+ * @import { GraphicsDevice } from '../../platform/graphics/graphics-device.js'
+ * @import { RenderAction } from '../composition/render-action.js'
+ */
+
 const tempClusterArray = [];
 
 /**
  * A class managing instances of world clusters used by the renderer for layers with
  * unique sets of clustered lights.
- *
- * @ignore
  */
 class WorldClustersAllocator {
     /**
@@ -28,15 +31,14 @@ class WorldClustersAllocator {
      * Render actions with all unique light clusters. The key is the hash of lights on a layer, the
      * value is a render action with unique light clusters.
      *
-     * @type {Map<number, import('../composition/render-action.js').RenderAction>}
+     * @type {Map<number, RenderAction>}
      */
     _clusters = new Map();
 
     /**
      * Create a new instance.
      *
-     * @param {import('../../platform/graphics/graphics-device.js').GraphicsDevice} graphicsDevice -
-     * The graphics device.
+     * @param {GraphicsDevice} graphicsDevice - The graphics device.
      */
     constructor(graphicsDevice) {
         this.device = graphicsDevice;
@@ -70,7 +72,7 @@ class WorldClustersAllocator {
             empty.name = 'ClusterEmpty';
 
             // update it once to avoid doing it each frame
-            empty.update([], false, null);
+            empty.update([]);
             this._empty = empty;
         }
 
@@ -137,7 +139,7 @@ class WorldClustersAllocator {
         tempClusterArray.length = 0;
     }
 
-    update(renderPasses, gammaCorrection, lighting) {
+    update(renderPasses, lighting) {
 
         // assign clusters to render actions
         this.assign(renderPasses);
@@ -146,7 +148,7 @@ class WorldClustersAllocator {
         this._clusters.forEach((renderAction) => {
             const layer = renderAction.layer;
             const cluster = renderAction.lightClusters;
-            cluster.update(layer.clusteredLightsSet, gammaCorrection, lighting);
+            cluster.update(layer.clusteredLightsSet, lighting);
         });
     }
 }

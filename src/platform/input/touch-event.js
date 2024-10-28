@@ -1,4 +1,8 @@
 /**
+ * @import { TouchDevice } from './touch-device.js'
+ */
+
+/**
  * This function takes a browser Touch object and returns the coordinates of the touch relative to
  * the target DOM element.
  *
@@ -11,16 +15,16 @@ function getTouchTargetCoords(touch) {
     let totalOffsetX = 0;
     let totalOffsetY = 0;
     let target = touch.target;
-    while (!(target instanceof HTMLElement)) {
+
+    while (!(target instanceof HTMLElement) && target) {
         target = target.parentNode;
     }
-    let currentElement = target;
 
-    do {
-        totalOffsetX += currentElement.offsetLeft - currentElement.scrollLeft;
-        totalOffsetY += currentElement.offsetTop - currentElement.scrollTop;
-        currentElement = currentElement.offsetParent;
-    } while (currentElement);
+    while (target) {
+        totalOffsetX += target.offsetLeft - target.scrollLeft;
+        totalOffsetY += target.offsetTop - target.scrollTop;
+        target = target.offsetParent;
+    }
 
     return {
         x: touch.pageX - totalOffsetX,
@@ -123,8 +127,7 @@ class TouchEvent {
     /**
      * Create a new TouchEvent instance. It is created from an existing browser event.
      *
-     * @param {import('./touch-device.js').TouchDevice} device - The source device of the touch
-     * events.
+     * @param {TouchDevice} device - The source device of the touch events.
      * @param {globalThis.TouchEvent} event - The original browser TouchEvent.
      */
     constructor(device, event) {

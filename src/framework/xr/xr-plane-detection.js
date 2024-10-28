@@ -3,6 +3,10 @@ import { EventHandler } from '../../core/event-handler.js';
 import { XrPlane } from './xr-plane.js';
 
 /**
+ * @import { XrManager } from './xr-manager.js'
+ */
+
+/**
  * Plane Detection provides the ability to detect real world surfaces based on estimations of the
  * underlying AR system.
  *
@@ -69,7 +73,7 @@ class XrPlaneDetection extends EventHandler {
     static EVENT_REMOVE = 'remove';
 
     /**
-     * @type {import('./xr-manager.js').XrManager}
+     * @type {XrManager}
      * @private
      */
     _manager;
@@ -101,7 +105,7 @@ class XrPlaneDetection extends EventHandler {
     /**
      * Create a new XrPlaneDetection instance.
      *
-     * @param {import('./xr-manager.js').XrManager} manager - WebXR Manager.
+     * @param {XrManager} manager - WebXR Manager.
      * @ignore
      */
     constructor(manager) {
@@ -143,7 +147,7 @@ class XrPlaneDetection extends EventHandler {
     }
 
     /**
-     * @param {*} frame - XRFrame from requestAnimationFrame callback.
+     * @param {XRFrame} frame - XRFrame from requestAnimationFrame callback.
      * @ignore
      */
     update(frame) {
@@ -160,8 +164,9 @@ class XrPlaneDetection extends EventHandler {
 
         // iterate through indexed planes
         for (const [xrPlane, plane] of this._planesIndex) {
-            if (detectedPlanes.has(xrPlane))
+            if (detectedPlanes.has(xrPlane)) {
                 continue;
+            }
 
             // if indexed plane is not listed in detectedPlanes anymore
             // then remove it

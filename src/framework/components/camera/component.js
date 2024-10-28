@@ -1,19 +1,40 @@
 import { Debug } from '../../../core/debug.js';
-
 import { ASPECT_AUTO, LAYERID_UI, LAYERID_DEPTH } from '../../../scene/constants.js';
 import { Camera } from '../../../scene/camera.js';
 import { ShaderPass } from '../../../scene/shader-pass.js';
-
 import { Component } from '../component.js';
-
 import { PostEffectQueue } from './post-effect-queue.js';
+
+/**
+ * @import { CameraComponentSystem } from './system.js'
+ * @import { Color } from '../../../core/math/color.js'
+ * @import { Entity } from '../../entity.js'
+ * @import { Frustum } from '../../../core/shape/frustum.js'
+ * @import { LayerComposition } from '../../../scene/composition/layer-composition.js'
+ * @import { Layer } from '../../../scene/layer.js'
+ * @import { Mat4 } from '../../../core/math/mat4.js'
+ * @import { RenderPass } from '../../../platform/graphics/render-pass.js'
+ * @import { RenderTarget } from '../../../platform/graphics/render-target.js'
+ * @import { RenderingParams } from '../../../scene/renderer/rendering-params.js'
+ * @import { Vec3 } from '../../../core/math/vec3.js'
+ * @import { Vec4 } from '../../../core/math/vec4.js'
+ * @import { XrErrorCallback } from '../../xr/xr-manager.js'
+ */
 
 /**
  * Callback used by {@link CameraComponent#calculateTransform} and {@link CameraComponent#calculateProjection}.
  *
  * @callback CalculateMatrixCallback
- * @param {import('../../../core/math/mat4.js').Mat4} transformMatrix - Output of the function.
+ * @param {Mat4} transformMatrix - Output of the function.
  * @param {number} view - Type of view. Can be {@link VIEW_CENTER}, {@link VIEW_LEFT} or {@link VIEW_RIGHT}. Left and right are only used in stereo rendering.
+ */
+
+/**
+ * Callback used by {@link CameraComponent#onPreRenderLayer} and {@link CameraComponent#onPostRenderLayer}.
+ *
+ * @callback RenderLayerCallback
+ * @param {Layer} layer - The layer.
+ * @param {boolean} transparent - True for transparent sublayer, otherwise opaque sublayer.
  */
 
 /**
@@ -43,7 +64,7 @@ class CameraComponent extends Component {
     /**
      * Custom function that is called when postprocessing should execute.
      *
-     * @type {Function}
+     * @type {Function|null}
      * @ignore
      */
     onPostprocessing = null;
@@ -51,16 +72,48 @@ class CameraComponent extends Component {
     /**
      * Custom function that is called before the camera renders the scene.
      *
-     * @type {Function}
+     * @type {Function|null}
      */
     onPreRender = null;
 
     /**
+     * Custom function that is called before the camera renders a layer. This is called during
+     * rendering to a render target or a default framebuffer, and additional rendering can be
+     * performed here, for example using ${@link QuadRender#render}.
+     *
+     * @type {RenderLayerCallback|null}
+     */
+    onPreRenderLayer = null;
+
+    /**
      * Custom function that is called after the camera renders the scene.
      *
-     * @type {Function}
+     * @type {Function|null}
      */
     onPostRender = null;
+
+    /**
+     * Custom function that is called after the camera renders a layer. This is called during
+     * rendering to a render target or a default framebuffer, and additional rendering can be
+     * performed here, for example using ${@link QuadRender#render}.
+     *
+     * @type {RenderLayerCallback|null}
+     */
+    onPostRenderLayer = null;
+
+    /**
+     * Custom function that is called before visibility culling is performed for this camera.
+     *
+     * @type {Function|null}
+     */
+    onPreCull = null;
+
+    /**
+     * Custom function that is called after visibility culling is performed for this camera.
+     *
+     * @type {Function|null}
+     */
+    onPostCull = null;
 
     /**
      * A counter of requests of depth map rendering.
@@ -101,10 +154,8 @@ class CameraComponent extends Component {
     /**
      * Create a new CameraComponent instance.
      *
-     * @param {import('./system.js').CameraComponentSystem} system - The ComponentSystem that
-     * created this Component.
-     * @param {import('../../entity.js').Entity} entity - The Entity that this Component is
-     * attached to.
+     * @param {CameraComponentSystem} system - The ComponentSystem that created this Component.
+     * @param {Entity} entity - The Entity that this Component is attached to.
      */
     constructor(system, entity) {
         super(system, entity);
@@ -146,7 +197,6 @@ class CameraComponent extends Component {
      * equivalent to {@link SHADERPASS_FORWARD}. Can be:
      *
      * - {@link SHADERPASS_FORWARD}
-     * - {@link SHADERPASS_FORWARD_HDR}
      * - {@link SHADERPASS_ALBEDO}
      * - {@link SHADERPASS_OPACITY}
      * - {@link SHADERPASS_WORLDNORMAL}
@@ -180,22 +230,51 @@ class CameraComponent extends Component {
     }
 
     /**
-     * Sets the render passes the camera will use for rendering, instead of its default rendering.
-     * Set this to an empty array to return to the default behavior.
+     * Sets the render passes the camera uses for rendering, instead of its default rendering.
+     * Set this to null to return to the default behavior.
      *
-     * @type {import('../../../platform/graphics/render-pass.js').RenderPass[]}
+     * @type {RenderPass[]|null}
      * @ignore
      */
     set renderPasses(passes) {
-        this._camera.renderPasses = passes;
+        this._camera.renderPasses = passes || [];
+        this.dirtyLayerCompositionCameras();
+        this.system.app.scene.updateShaders = true;
     }
 
+    /**
+     * Gets the render passes the camera uses for rendering, instead of its default rendering.
+     *
+     * @type {RenderPass[]}
+     * @ignore
+     */
     get renderPasses() {
         return this._camera.renderPasses;
     }
 
     /**
-     * Set camera aperture in f-stops, the default value is 16.0. Higher value means less exposure.
+     * Sets the rendering parameters. If this is not null, the camera will use these rendering
+     * parameters instead of those specified in the scene's rendering parameters
+     * {@link Scene#rendering}.
+     *
+     * @type {RenderingParams|null}
+     */
+    set rendering(value) {
+        this._camera.renderingParams = value;
+    }
+
+    /**
+     * Gets a {@link RenderingParams} that defines rendering parameters, or null if those are not
+     * set.
+     *
+     * @type {RenderingParams|null}
+     */
+    get rendering() {
+        return this._camera.renderingParams;
+    }
+
+    /**
+     * Sets the camera aperture in f-stops. Default is 16. Higher value means less exposure.
      *
      * @type {number}
      */
@@ -203,12 +282,17 @@ class CameraComponent extends Component {
         this._camera.aperture = value;
     }
 
+    /**
+     * Gets the camera aperture in f-stops.
+     *
+     * @type {number}
+     */
     get aperture() {
         return this._camera.aperture;
     }
 
     /**
-     * The aspect ratio (width divided by height) of the camera. If aspectRatioMode is
+     * Sets the aspect ratio (width divided by height) of the camera. If `aspectRatioMode` is
      * {@link ASPECT_AUTO}, then this value will be automatically calculated every frame, and you
      * can only read it. If it's ASPECT_MANUAL, you can set the value.
      *
@@ -218,12 +302,17 @@ class CameraComponent extends Component {
         this._camera.aspectRatio = value;
     }
 
+    /**
+     * Gets the aspect ratio (width divided by height) of the camera.
+     *
+     * @type {number}
+     */
     get aspectRatio() {
         return this._camera.aspectRatio;
     }
 
     /**
-     * The aspect ratio mode of the camera. Can be:
+     * Sets the aspect ratio mode of the camera. Can be:
      *
      * - {@link ASPECT_AUTO}: aspect ratio will be calculated from the current render
      * target's width divided by height.
@@ -237,14 +326,20 @@ class CameraComponent extends Component {
         this._camera.aspectRatioMode = value;
     }
 
+    /**
+     * Gets the aspect ratio mode of the camera.
+     *
+     * @type {number}
+     */
     get aspectRatioMode() {
         return this._camera.aspectRatioMode;
     }
 
     /**
-     * Custom function you can provide to calculate the camera projection matrix manually. Can be
-     * used for complex effects like doing oblique projection. Function is called using component's
-     * scope. Arguments:
+     * Sets the custom function to calculate the camera projection matrix manually. Can be used for
+     * complex effects like doing oblique projection. Function is called using component's scope.
+     *
+     * Arguments:
      *
      * - {@link Mat4} transformMatrix: output of the function
      * - view: Type of view. Can be {@link VIEW_CENTER}, {@link VIEW_LEFT} or {@link VIEW_RIGHT}.
@@ -257,14 +352,18 @@ class CameraComponent extends Component {
         this._camera.calculateProjection = value;
     }
 
+    /**
+     * Gets the custom function to calculate the camera projection matrix manually.
+     *
+     * @type {CalculateMatrixCallback}
+     */
     get calculateProjection() {
         return this._camera.calculateProjection;
     }
 
     /**
-     * Custom function you can provide to calculate the camera transformation matrix manually. Can
-     * be used for complex effects like reflections. Function is called using component's scope.
-     * Arguments:
+     * Sets the custom function to calculate the camera transformation matrix manually. Can be used
+     * for complex effects like reflections. Function is called using component's scope. Arguments:
      *
      * - {@link Mat4} transformMatrix: output of the function.
      * - view: Type of view. Can be {@link VIEW_CENTER}, {@link VIEW_LEFT} or {@link VIEW_RIGHT}.
@@ -277,12 +376,17 @@ class CameraComponent extends Component {
         this._camera.calculateTransform = value;
     }
 
+    /**
+     * Gets the custom function to calculate the camera transformation matrix manually.
+     *
+     * @type {CalculateMatrixCallback}
+     */
     get calculateTransform() {
         return this._camera.calculateTransform;
     }
 
     /**
-     * Queries the camera component's underlying Camera instance.
+     * Gets the camera component's underlying Camera instance.
      *
      * @type {Camera}
      * @ignore
@@ -292,21 +396,25 @@ class CameraComponent extends Component {
     }
 
     /**
-     * The color used to clear the canvas to before the camera starts to render. Defaults to
-     * [0.75, 0.75, 0.75, 1].
+     * Sets the camera component's clear color. Defaults to `[0.75, 0.75, 0.75, 1]`.
      *
-     * @type {import('../../../core/math/color.js').Color}
+     * @type {Color}
      */
     set clearColor(value) {
         this._camera.clearColor = value;
     }
 
+    /**
+     * Gets the camera component's clear color.
+     *
+     * @type {Color}
+     */
     get clearColor() {
         return this._camera.clearColor;
     }
 
     /**
-     * If true the camera will clear the color buffer to the color set in clearColor. Defaults to true.
+     * Sets whether the camera will automatically clear the color buffer before rendering. Defaults to true.
      *
      * @type {boolean}
      */
@@ -315,12 +423,17 @@ class CameraComponent extends Component {
         this.dirtyLayerCompositionCameras();
     }
 
+    /**
+     * Gets whether the camera will automatically clear the color buffer before rendering.
+     *
+     * @type {boolean}
+     */
     get clearColorBuffer() {
         return this._camera.clearColorBuffer;
     }
 
     /**
-     * If true the camera will clear the depth buffer. Defaults to true.
+     * Sets whether the camera will automatically clear the depth buffer before rendering. Defaults to true.
      *
      * @type {boolean}
      */
@@ -329,12 +442,17 @@ class CameraComponent extends Component {
         this.dirtyLayerCompositionCameras();
     }
 
+    /**
+     * Gets whether the camera will automatically clear the depth buffer before rendering.
+     *
+     * @type {boolean}
+     */
     get clearDepthBuffer() {
         return this._camera.clearDepthBuffer;
     }
 
     /**
-     * If true the camera will clear the stencil buffer. Defaults to true.
+     * Sets whether the camera will automatically clear the stencil buffer before rendering. Defaults to true.
      *
      * @type {boolean}
      */
@@ -343,13 +461,19 @@ class CameraComponent extends Component {
         this.dirtyLayerCompositionCameras();
     }
 
+    /**
+     * Gets whether the camera will automatically clear the stencil buffer before rendering.
+     *
+     * @type {boolean}
+     */
     get clearStencilBuffer() {
         return this._camera.clearStencilBuffer;
     }
 
     /**
-     * If true the camera will take material.cull into account. Otherwise both front and back faces
-     * will be rendered. Defaults to true.
+     * Sets whether the camera will cull triangle faces. If true, the camera will take
+     * `material.cull` into account. Otherwise both front and back faces will be rendered. Defaults
+     * to true.
      *
      * @type {boolean}
      */
@@ -357,15 +481,20 @@ class CameraComponent extends Component {
         this._camera.cullFaces = value;
     }
 
+    /**
+     * Gets whether the camera will cull triangle faces.
+     *
+     * @type {boolean}
+     */
     get cullFaces() {
         return this._camera.cullFaces;
     }
 
     /**
-     * Layer ID of a layer on which the postprocessing of the camera stops being applied to.
-     * Defaults to LAYERID_UI, which causes post processing to not be applied to UI layer and any
-     * following layers for the camera. Set to undefined for post-processing to be applied to all
-     * layers of the camera.
+     * Sets the layer id of the layer on which the post-processing of the camera stops being applied
+     * to. Defaults to {@link LAYERID_UI}, which causes post-processing to not be applied to UI
+     * layer and any following layers for the camera. Set to `undefined` for post-processing to be
+     * applied to all layers of the camera.
      *
      * @type {number}
      */
@@ -374,12 +503,18 @@ class CameraComponent extends Component {
         this.dirtyLayerCompositionCameras();
     }
 
+    /**
+     * Gets the layer id of the layer on which the post-processing of the camera stops being applied
+     * to.
+     *
+     * @type {number}
+     */
     get disablePostEffectsLayer() {
         return this._disablePostEffectsLayer;
     }
 
     /**
-     * The distance from the camera after which no rendering will take place. Defaults to 1000.
+     * Sets the distance from the camera after which no rendering will take place. Defaults to 1000.
      *
      * @type {number}
      */
@@ -387,13 +522,19 @@ class CameraComponent extends Component {
         this._camera.farClip = value;
     }
 
+    /**
+     * Gets the distance from the camera after which no rendering will take place.
+     *
+     * @type {number}
+     */
     get farClip() {
         return this._camera.farClip;
     }
 
     /**
-     * If true the camera will invert front and back faces. Can be useful for reflection rendering.
-     * Defaults to false.
+     * Sets whether the camera will flip the face direction of triangles. If set to true, the
+     * camera will invert front and back faces. Can be useful for reflection rendering. Defaults to
+     * false.
      *
      * @type {boolean}
      */
@@ -401,14 +542,19 @@ class CameraComponent extends Component {
         this._camera.flipFaces = value;
     }
 
+    /**
+     * Gets whether the camera will flip the face direction of triangles.
+     *
+     * @type {boolean}
+     */
     get flipFaces() {
         return this._camera.flipFaces;
     }
 
     /**
-     * The field of view of the camera in degrees. Usually this is the Y-axis field of view, see
-     * {@link CameraComponent#horizontalFov}. Used for {@link PROJECTION_PERSPECTIVE} cameras only.
-     * Defaults to 45.
+     * Sets the field of view of the camera in degrees. Usually this is the Y-axis field of view,
+     * see {@link CameraComponent#horizontalFov}. Used for {@link PROJECTION_PERSPECTIVE} cameras
+     * only. Defaults to 45.
      *
      * @type {number}
      */
@@ -416,23 +562,29 @@ class CameraComponent extends Component {
         this._camera.fov = value;
     }
 
+    /**
+     * Gets the field of view of the camera in degrees.
+     *
+     * @type {number}
+     */
     get fov() {
         return this._camera.fov;
     }
 
     /**
-     * Queries the camera's frustum shape.
+     * Gets the camera's frustum shape.
      *
-     * @type {import('../../../core/shape/frustum.js').Frustum}
+     * @type {Frustum}
      */
     get frustum() {
         return this._camera.frustum;
     }
 
     /**
-     * Controls the culling of mesh instances against the camera frustum, i.e. if objects outside
-     * of camera should be omitted from rendering. If false, all mesh instances in the scene are
-     * rendered by the camera, regardless of visibility. Defaults to false.
+     * Sets whether frustum culling is enabled. This controls the culling of mesh instances against
+     * the camera frustum, i.e. if objects outside of the camera's frustum should be omitted from
+     * rendering. If false, all mesh instances in the scene are rendered by the camera, regardless
+     * of visibility. Defaults to false.
      *
      * @type {boolean}
      */
@@ -440,12 +592,18 @@ class CameraComponent extends Component {
         this._camera.frustumCulling = value;
     }
 
+    /**
+     * Gets whether frustum culling is enabled.
+     *
+     * @type {boolean}
+     */
     get frustumCulling() {
         return this._camera.frustumCulling;
     }
 
     /**
-     * Set which axis to use for the Field of View calculation. Defaults to false.
+     * Sets whether the camera's field of view (`fov`) is horizontal or vertical. Defaults to
+     * false (meaning it is vertical be default).
      *
      * @type {boolean}
      */
@@ -453,14 +611,19 @@ class CameraComponent extends Component {
         this._camera.horizontalFov = value;
     }
 
+    /**
+     * Gets whether the camera's field of view (`fov`) is horizontal or vertical.
+     *
+     * @type {boolean}
+     */
     get horizontalFov() {
         return this._camera.horizontalFov;
     }
 
     /**
-     * An array of layer IDs ({@link Layer#id}) to which this camera should belong. Don't push,
-     * pop, splice or modify this array, if you want to change it, set a new one instead. Defaults
-     * to [LAYERID_WORLD, LAYERID_DEPTH, LAYERID_SKYBOX, LAYERID_UI, LAYERID_IMMEDIATE].
+     * Sets the array of layer IDs ({@link Layer#id}) to which this camera should belong. Don't
+     * push, pop, splice or modify this array, if you want to change it, set a new one instead.
+     * Defaults to `[LAYERID_WORLD, LAYERID_DEPTH, LAYERID_SKYBOX, LAYERID_UI, LAYERID_IMMEDIATE]`.
      *
      * @type {number[]}
      */
@@ -483,6 +646,11 @@ class CameraComponent extends Component {
         }
     }
 
+    /**
+     * Gets the array of layer IDs ({@link Layer#id}) to which this camera belongs.
+     *
+     * @type {number[]}
+     */
     get layers() {
         return this._camera.layers;
     }
@@ -492,9 +660,9 @@ class CameraComponent extends Component {
     }
 
     /**
-     * A jitter intensity applied in the projection matrix. Used for jittered sampling by TAA.
-     * A value of 1 represents a jitter in the range of [-1 to 1] of a pixel. Smaller values result
-     * in a crisper yet more aliased outcome, whereas increased values produce smoother but blurred
+     * Sets the jitter intensity applied in the projection matrix. Used for jittered sampling by TAA.
+     * A value of 1 represents a jitter in the range of `[-1, 1]` of a pixel. Smaller values result
+     * in a crisper yet more aliased outcome, whereas increased values produce a smoother but blurred
      * result. Defaults to 0, representing no jitter.
      *
      * @type {number}
@@ -503,12 +671,17 @@ class CameraComponent extends Component {
         this._camera.jitter = value;
     }
 
+    /**
+     * Gets the jitter intensity applied in the projection matrix.
+     *
+     * @type {number}
+     */
     get jitter() {
         return this._camera.jitter;
     }
 
     /**
-     * The distance from the camera before which no rendering will take place. Defaults to 0.1.
+     * Sets the distance from the camera before which no rendering will take place. Defaults to 0.1.
      *
      * @type {number}
      */
@@ -516,12 +689,17 @@ class CameraComponent extends Component {
         this._camera.nearClip = value;
     }
 
+    /**
+     * Gets the distance from the camera before which no rendering will take place.
+     *
+     * @type {number}
+     */
     get nearClip() {
         return this._camera.nearClip;
     }
 
     /**
-     * The half-height of the orthographic view window (in the Y-axis). Used for
+     * Sets the half-height of the orthographic view window (in the Y-axis). Used for
      * {@link PROJECTION_ORTHOGRAPHIC} cameras only. Defaults to 10.
      *
      * @type {number}
@@ -530,12 +708,18 @@ class CameraComponent extends Component {
         this._camera.orthoHeight = value;
     }
 
+    /**
+     * Gets the half-height of the orthographic view window (in the Y-axis).
+     *
+     * @type {number}
+     */
     get orthoHeight() {
         return this._camera.orthoHeight;
     }
 
     /**
-     * The post effects queue for this camera. Use this to add or remove post effects from the camera.
+     * Gets the post effects queue for this camera. Use this to add or remove post effects from the
+     * camera.
      *
      * @type {PostEffectQueue}
      */
@@ -548,8 +732,8 @@ class CameraComponent extends Component {
     }
 
     /**
-     * Controls the order in which cameras are rendered. Cameras with smaller values for priority
-     * are rendered first. Defaults to 0.
+     * Sets the priority to control the render order of this camera. Cameras with a smaller
+     * priority value are rendered first. Defaults to 0.
      *
      * @type {number}
      */
@@ -558,12 +742,17 @@ class CameraComponent extends Component {
         this.dirtyLayerCompositionCameras();
     }
 
+    /**
+     * Gets the priority to control the render order of this camera.
+     *
+     * @type {number}
+     */
     get priority() {
         return this._priority;
     }
 
     /**
-     * The type of projection used to render the camera. Can be:
+     * Sets the type of projection used to render the camera. Can be:
      *
      * - {@link PROJECTION_PERSPECTIVE}: A perspective projection. The camera frustum
      * resembles a truncated pyramid.
@@ -578,30 +767,40 @@ class CameraComponent extends Component {
         this._camera.projection = value;
     }
 
+    /**
+     * Gets the type of projection used to render the camera.
+     *
+     * @type {number}
+     */
     get projection() {
         return this._camera.projection;
     }
 
     /**
-     * Queries the camera's projection matrix.
+     * Gets the camera's projection matrix.
      *
-     * @type {import('../../../core/math/mat4.js').Mat4}
+     * @type {Mat4}
      */
     get projectionMatrix() {
         return this._camera.projectionMatrix;
     }
 
     /**
-     * Controls where on the screen the camera will be rendered in normalized screen coordinates.
-     * Defaults to [0, 0, 1, 1].
+     * Sets the rendering rectangle for the camera. This controls where on the screen the camera
+     * will render in normalized screen coordinates. Defaults to `[0, 0, 1, 1]`.
      *
-     * @type {import('../../../core/math/vec4.js').Vec4}
+     * @type {Vec4}
      */
     set rect(value) {
         this._camera.rect = value;
         this.fire('set:rect', this._camera.rect);
     }
 
+    /**
+     * Gets the rendering rectangle for the camera.
+     *
+     * @type {Vec4}
+     */
     get rect() {
         return this._camera.rect;
     }
@@ -635,36 +834,53 @@ class CameraComponent extends Component {
     }
 
     /**
-     * Render target to which rendering of the cameras is performed. If not set, it will render
-     * simply to the screen.
+     * Sets the render target to which rendering of the camera is performed. If not set, it will
+     * render simply to the screen.
      *
-     * @type {import('../../../platform/graphics/render-target.js').RenderTarget}
+     * @type {RenderTarget}
      */
     set renderTarget(value) {
+
+        Debug.call(() => {
+            if (this._camera.renderPasses.length > 0) {
+                Debug.warn(`Setting a render target on the camera ${this.entity.name} after the render passes is not supported, set it up first.`);
+            }
+        });
+
         this._camera.renderTarget = value;
         this.dirtyLayerCompositionCameras();
     }
 
+    /**
+     * Gets the render target to which rendering of the camera is performed.
+     *
+     * @type {RenderTarget}
+     */
     get renderTarget() {
         return this._camera.renderTarget;
     }
 
     /**
-     * Clips all pixels which are not in the rectangle. The order of the values is
-     * [x, y, width, height]. Defaults to [0, 0, 1, 1].
+     * Sets the scissor rectangle for the camera. This clips all pixels which are not in the
+     * rectangle. The order of the values is `[x, y, width, height]`. Defaults to `[0, 0, 1, 1]`.
      *
-     * @type {import('../../../core/math/vec4.js').Vec4}
+     * @type {Vec4}
      */
     set scissorRect(value) {
         this._camera.scissorRect = value;
     }
 
+    /**
+     * Gets the scissor rectangle for the camera.
+     *
+     * @type {Vec4}
+     */
     get scissorRect() {
         return this._camera.scissorRect;
     }
 
     /**
-     * Set camera sensitivity in ISO, the default value is 1000. Higher value means more exposure.
+     * Sets the camera sensitivity in ISO. Defaults to 1000. Higher value means more exposure.
      *
      * @type {number}
      */
@@ -672,12 +888,17 @@ class CameraComponent extends Component {
         this._camera.sensitivity = value;
     }
 
+    /**
+     * Gets the camera sensitivity in ISO.
+     *
+     * @type {number}
+     */
     get sensitivity() {
         return this._camera.sensitivity;
     }
 
     /**
-     * Set camera shutter speed in seconds, the default value is 1/1000s. Longer shutter means more exposure.
+     * Sets the camera shutter speed in seconds. Defaults to 1/1000s. Longer shutter means more exposure.
      *
      * @type {number}
      */
@@ -685,14 +906,19 @@ class CameraComponent extends Component {
         this._camera.shutter = value;
     }
 
+    /**
+     * Gets the camera shutter speed in seconds.
+     *
+     * @type {number}
+     */
     get shutter() {
         return this._camera.shutter;
     }
 
     /**
-     * Queries the camera's view matrix.
+     * Gets the camera's view matrix.
      *
-     * @type {import('../../../core/math/mat4.js').Mat4}
+     * @type {Mat4}
      */
     get viewMatrix() {
         return this._camera.viewMatrix;
@@ -710,7 +936,7 @@ class CameraComponent extends Component {
         const hasDepthLayer = this.layers.find(layerId => layerId === LAYERID_DEPTH);
         if (hasDepthLayer) {
 
-            /** @type {import('../../../scene/layer.js').Layer} */
+            /** @type {Layer} */
             const depthLayer = this.system.app.scene.layers.getLayerById(LAYERID_DEPTH);
 
             if (value) {
@@ -727,7 +953,8 @@ class CameraComponent extends Component {
 
     /**
      * Request the scene to generate a texture containing the scene color map. Note that this call
-     * is accumulative, and for each enable request, a disable request need to be called.
+     * is accumulative, and for each enable request, a disable request need to be called. Note that
+     * this setting is ignored when the {@link CameraComponent#renderPasses} is used.
      *
      * @param {boolean} enabled - True to request the generation, false to disable it.
      */
@@ -744,7 +971,8 @@ class CameraComponent extends Component {
 
     /**
      * Request the scene to generate a texture containing the scene depth map. Note that this call
-     * is accumulative, and for each enable request, a disable request need to be called.
+     * is accumulative, and for each enable request, a disable request need to be called. Note that
+     * this setting is ignored when the {@link CameraComponent#renderPasses} is used.
      *
      * @param {boolean} enabled - True to request the generation, false to disable it.
      */
@@ -774,8 +1002,7 @@ class CameraComponent extends Component {
      * 0 to `canvas.offsetHeight` of the application's canvas element.
      * @param {number} cameraz - The distance from the camera in world space to create the new
      * point.
-     * @param {import('../../../core/math/vec3.js').Vec3} [worldCoord] - 3D vector to receive world
-     * coordinate result.
+     * @param {Vec3} [worldCoord] - 3D vector to receive world coordinate result.
      * @example
      * // Get the start and end points of a 3D ray fired from a screen click position
      * const start = entity.camera.screenToWorld(clickX, clickY, entity.camera.nearClip);
@@ -785,7 +1012,7 @@ class CameraComponent extends Component {
      * app.systems.rigidbody.raycastFirst(start, end, function (result) {
      *     console.log("Entity " + result.entity.name + " was selected");
      * });
-     * @returns {import('../../../core/math/vec3.js').Vec3} The world space coordinate.
+     * @returns {Vec3} The world space coordinate.
      */
     screenToWorld(screenx, screeny, cameraz, worldCoord) {
         const device = this.system.app.graphicsDevice;
@@ -797,10 +1024,9 @@ class CameraComponent extends Component {
     /**
      * Convert a point from 3D world space to 2D screen space.
      *
-     * @param {import('../../../core/math/vec3.js').Vec3} worldCoord - The world space coordinate.
-     * @param {import('../../../core/math/vec3.js').Vec3} [screenCoord] - 3D vector to receive
-     * screen coordinate result.
-     * @returns {import('../../../core/math/vec3.js').Vec3} The screen space coordinate.
+     * @param {Vec3} worldCoord - The world space coordinate.
+     * @param {Vec3} [screenCoord] - 3D vector to receive screen coordinate result.
+     * @returns {Vec3} The screen space coordinate.
      */
     worldToScreen(worldCoord, screenCoord) {
         const device = this.system.app.graphicsDevice;
@@ -842,8 +1068,8 @@ class CameraComponent extends Component {
     }
 
     /**
-     * @param {import('../../../scene/composition/layer-composition.js').LayerComposition} oldComp - Old layer composition.
-     * @param {import('../../../scene/composition/layer-composition.js').LayerComposition} newComp - New layer composition.
+     * @param {LayerComposition} oldComp - Old layer composition.
+     * @param {LayerComposition} newComp - New layer composition.
      * @private
      */
     onLayersChanged(oldComp, newComp) {
@@ -855,7 +1081,7 @@ class CameraComponent extends Component {
     }
 
     /**
-     * @param {import('../../../scene/layer.js').Layer} layer - The layer to add the camera to.
+     * @param {Layer} layer - The layer to add the camera to.
      * @private
      */
     onLayerAdded(layer) {
@@ -865,7 +1091,7 @@ class CameraComponent extends Component {
     }
 
     /**
-     * @param {import('../../../scene/layer.js').Layer} layer - The layer to remove the camera from.
+     * @param {Layer} layer - The layer to remove the camera from.
      * @private
      */
     onLayerRemoved(layer) {
@@ -922,7 +1148,7 @@ class CameraComponent extends Component {
     /**
      * Calculates aspect ratio value for a given render target.
      *
-     * @param {import('../../../platform/graphics/render-target.js').RenderTarget|null} [rt] - Optional
+     * @param {RenderTarget|null} [rt] - Optional
      * render target. If unspecified, the backbuffer is used.
      * @returns {number} The aspect ratio of the render target (or backbuffer).
      */
@@ -936,7 +1162,7 @@ class CameraComponent extends Component {
     /**
      * Prepare the camera for frame rendering.
      *
-     * @param {import('../../../platform/graphics/render-target.js').RenderTarget|null} [rt] - Render
+     * @param {RenderTarget|null} [rt] - Render
      * target to which rendering will be performed. Will affect camera's aspect ratio, if
      * aspectRatioMode is {@link ASPECT_AUTO}.
      * @ignore
@@ -980,12 +1206,12 @@ class CameraComponent extends Component {
      * used for getting access to additional WebXR spec extensions.
      * @param {boolean} [options.imageTracking] - Set to true to attempt to enable {@link XrImageTracking}.
      * @param {boolean} [options.planeDetection] - Set to true to attempt to enable {@link XrPlaneDetection}.
-     * @param {import('../../xr/xr-manager.js').XrErrorCallback} [options.callback] - Optional
-     * callback function called once the session is started. The callback has one argument Error -
-     * it is null if the XR session started successfully.
+     * @param {XrErrorCallback} [options.callback] - Optional callback function called once the
+     * session is started. The callback has one argument Error - it is null if the XR session
+     * started successfully.
      * @param {boolean} [options.anchors] - Optional boolean to attempt to enable {@link XrAnchors}.
-     * @param {object} [options.depthSensing] - Optional object with depth sensing parameters to
-     * attempt to enable {@link XrDepthSensing}.
+     * @param {object} [options.depthSensing] - Optional object with parameters to attempt to enable
+     * depth sensing.
      * @param {string} [options.depthSensing.usagePreference] - Optional usage preference for depth
      * sensing, can be 'cpu-optimized' or 'gpu-optimized' (XRDEPTHSENSINGUSAGE_*), defaults to
      * 'cpu-optimized'. Most preferred and supported will be chosen by the underlying depth sensing
@@ -1013,9 +1239,8 @@ class CameraComponent extends Component {
     /**
      * Attempt to end XR session of this camera.
      *
-     * @param {import('../../xr/xr-manager.js').XrErrorCallback} [callback] - Optional callback
-     * function called once session is ended. The callback has one argument Error - it is null if
-     * successfully ended XR session.
+     * @param {XrErrorCallback} [callback] - Optional callback function called once session is
+     * ended. The callback has one argument Error - it is null if successfully ended XR session.
      * @example
      * // On an entity with a camera component
      * this.entity.camera.endXr(function (err) {
@@ -1032,9 +1257,8 @@ class CameraComponent extends Component {
     }
 
     /**
-     * Function to copy properties from the source CameraComponent.
-     * Properties not copied: postEffects.
-     * Inherited properties not copied (all): system, entity, enabled.
+     * Function to copy properties from the source CameraComponent. Properties not copied:
+     * postEffects. Inherited properties not copied (all): system, entity, enabled.
      *
      * @param {CameraComponent} source - The source component.
      * @ignore

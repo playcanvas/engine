@@ -8,13 +8,13 @@ window.focus();
 // load the textures
 const assets = {
     helipad: new pc.Asset(
-        'helipad.dds',
-        'cubemap',
-        { url: rootPath + '/static/assets/cubemaps/helipad.dds' },
-        { type: pc.TEXTURETYPE_RGBM }
+        'helipad-env-atlas',
+        'texture',
+        { url: rootPath + '/static/assets/cubemaps/helipad-env-atlas.png' },
+        { type: pc.TEXTURETYPE_RGBP, mipmaps: false }
     ),
-    color: new pc.Asset('color', 'texture', { url: rootPath + '/static/assets/textures/seaside-rocks01-color.jpg' }),
-    decal: new pc.Asset('color', 'texture', { url: rootPath + '/static/assets/textures/heart.png' })
+    color: new pc.Asset('color', 'texture', { url: rootPath + '/static/assets/textures/seaside-rocks01-color.jpg' }, { srgb: true }),
+    decal: new pc.Asset('color', 'texture', { url: rootPath + '/static/assets/textures/heart.png' }, { srgb: true })
 };
 
 const gfxOptions = {
@@ -50,8 +50,8 @@ const assetListLoader = new pc.AssetListLoader(Object.values(assets), app.assets
 assetListLoader.load(() => {
     app.start();
 
-    app.scene.setSkybox(assets.helipad.resources);
-    app.scene.toneMapping = pc.TONEMAP_ACES;
+    app.scene.envAtlas = assets.helipad.resource;
+    app.scene.rendering.toneMapping = pc.TONEMAP_ACES;
     app.scene.skyboxIntensity = 1;
     app.scene.skyboxMip = 2;
 
@@ -129,16 +129,17 @@ assetListLoader.load(() => {
     const meshEntity = createHighQualitySphere(material, [worldLayer.id]);
     meshEntity.setLocalScale(15, 15, 15);
 
-    // Create the shader from the vertex and fragment shaders
-    const shader = pc.createShaderFromCode(app.graphicsDevice, files['shader.vert'], files['shader.frag'], 'myShader', {
-        aPosition: pc.SEMANTIC_POSITION,
-        aUv0: pc.SEMANTIC_TEXCOORD0
+    // Create a decal material with a custom shader
+    const decalMaterial = new pc.ShaderMaterial({
+        uniqueName: 'DecalShader',
+        vertexCode: files['shader.vert'],
+        fragmentCode: files['shader.frag'],
+        attributes: {
+            aPosition: pc.SEMANTIC_POSITION,
+            aUv0: pc.SEMANTIC_TEXCOORD0
+        }
     });
-
-    // Create a decal material with the new shader
-    const decalMaterial = new pc.Material();
     decalMaterial.cull = pc.CULLFACE_NONE;
-    decalMaterial.shader = shader;
     decalMaterial.blendType = pc.BLEND_NORMAL;
     decalMaterial.setParameter('uDecalMap', assets.decal.resource);
 

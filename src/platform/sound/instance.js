@@ -1,8 +1,11 @@
 import { EventHandler } from '../../core/event-handler.js';
-
 import { math } from '../../core/math/math.js';
-
 import { hasAudioContext } from '../audio/capabilities.js';
+
+/**
+ * @import { SoundManager } from './manager.js'
+ * @import { Sound } from './sound.js'
+ */
 
 const STATE_PLAYING = 0;
 const STATE_PAUSED = 1;
@@ -14,7 +17,6 @@ const STATE_STOPPED = 2;
  * @param {number} time - The time.
  * @param {number} duration - The duration.
  * @returns {number} The time % duration.
- * @ignore
  */
 function capTime(time, duration) {
     return (time % duration) || 0;
@@ -93,8 +95,8 @@ class SoundInstance extends EventHandler {
     /**
      * Create a new SoundInstance instance.
      *
-     * @param {import('./manager.js').SoundManager} manager - The sound manager.
-     * @param {import('./sound.js').Sound} sound - The sound to play.
+     * @param {SoundManager} manager - The sound manager.
+     * @param {Sound} sound - The sound to play.
      * @param {object} options - Options for the instance.
      * @param {number} [options.volume] - The playback volume, between 0 and 1. Defaults to 1.
      * @param {number} [options.pitch] - The relative pitch. Defaults to 1 (plays at normal pitch).
@@ -114,7 +116,7 @@ class SoundInstance extends EventHandler {
         super();
 
         /**
-         * @type {import('./manager.js').SoundManager}
+         * @type {SoundManager}
          * @private
          */
         this._manager = manager;
@@ -138,7 +140,7 @@ class SoundInstance extends EventHandler {
         this._loop = !!(options.loop !== undefined ? options.loop : false);
 
         /**
-         * @type {import('./sound.js').Sound}
+         * @type {Sound}
          * @private
          */
         this._sound = sound;
@@ -299,8 +301,8 @@ class SoundInstance extends EventHandler {
     }
 
     /**
-     * Gets or sets the current time of the sound that is playing. If the value provided is bigger
-     * than the duration of the instance it will wrap from the beginning.
+     * Sets the current time of the sound that is playing. If the value provided is bigger than the
+     * duration of the instance it will wrap from the beginning.
      *
      * @type {number}
      */
@@ -326,6 +328,11 @@ class SoundInstance extends EventHandler {
         }
     }
 
+    /**
+     * Gets the current time of the sound that is playing.
+     *
+     * @type {number}
+     */
     get currentTime() {
         // if the user has set the currentTime and we have not used it yet
         // then just return that
@@ -351,7 +358,7 @@ class SoundInstance extends EventHandler {
     }
 
     /**
-     * The duration of the sound that the instance will play starting from startTime.
+     * Sets the duration of the sound that the instance will play starting from startTime.
      *
      * @type {number}
      */
@@ -366,6 +373,11 @@ class SoundInstance extends EventHandler {
         }
     }
 
+    /**
+     * Gets the duration of the sound that the instance will play starting from startTime.
+     *
+     * @type {number}
+     */
     get duration() {
         if (!this._sound) {
             return 0;
@@ -377,7 +389,7 @@ class SoundInstance extends EventHandler {
     }
 
     /**
-     * Returns true if the instance is currently paused.
+     * Gets whether the instance is currently paused.
      *
      * @type {boolean}
      */
@@ -386,7 +398,7 @@ class SoundInstance extends EventHandler {
     }
 
     /**
-     * Returns true if the instance is currently playing.
+     * Gets whether the instance is currently playing.
      *
      * @type {boolean}
      */
@@ -395,7 +407,7 @@ class SoundInstance extends EventHandler {
     }
 
     /**
-     * Returns true if the instance is currently stopped.
+     * Gets whether the instance is currently stopped.
      *
      * @type {boolean}
      */
@@ -404,7 +416,7 @@ class SoundInstance extends EventHandler {
     }
 
     /**
-     * Returns true if the instance is currently suspended because the window is not focused.
+     * Gets whether the instance is currently suspended because the window is not focused.
      *
      * @type {boolean}
      */
@@ -413,7 +425,7 @@ class SoundInstance extends EventHandler {
     }
 
     /**
-     * If true the instance will restart when it finishes playing.
+     * Sets whether the instance will restart when it finishes playing.
      *
      * @type {boolean}
      */
@@ -424,12 +436,17 @@ class SoundInstance extends EventHandler {
         }
     }
 
+    /**
+     * Gets whether the instance will restart when it finishes playing.
+     *
+     * @type {boolean}
+     */
     get loop() {
         return this._loop;
     }
 
     /**
-     * The pitch modifier to play the sound with. Must be larger than 0.01.
+     * Sets the pitch modifier to play the sound with. Must be larger than 0.01.
      *
      * @type {number}
      */
@@ -446,14 +463,19 @@ class SoundInstance extends EventHandler {
         }
     }
 
+    /**
+     * Gets the pitch modifier to play the sound with.
+     *
+     * @type {number}
+     */
     get pitch() {
         return this._pitch;
     }
 
     /**
-     * The sound resource that the instance will play.
+     * Sets the sound resource that the instance will play.
      *
-     * @type {import('./sound.js').Sound}
+     * @type {Sound}
      */
     set sound(value) {
         this._sound = value;
@@ -465,12 +487,17 @@ class SoundInstance extends EventHandler {
         }
     }
 
+    /**
+     * Gets the sound resource that the instance will play.
+     *
+     * @type {Sound}
+     */
     get sound() {
         return this._sound;
     }
 
     /**
-     * The start time from which the sound will start playing.
+     * Sets the start time from which the sound will start playing.
      *
      * @type {number}
      */
@@ -485,12 +512,17 @@ class SoundInstance extends EventHandler {
         }
     }
 
+    /**
+     * Gets the start time from which the sound will start playing.
+     *
+     * @type {number}
+     */
     get startTime() {
         return this._startTime;
     }
 
     /**
-     * The volume modifier to play the sound with. In range 0-1.
+     * Sets the volume modifier to play the sound with. In range 0-1.
      *
      * @type {number}
      */
@@ -502,6 +534,11 @@ class SoundInstance extends EventHandler {
         }
     }
 
+    /**
+     * Gets the volume modifier to play the sound with. In range 0-1.
+     *
+     * @type {number}
+     */
     get volume() {
         return this._volume;
     }
@@ -510,32 +547,36 @@ class SoundInstance extends EventHandler {
     _onPlay() {
         this.fire('play');
 
-        if (this._onPlayCallback)
+        if (this._onPlayCallback) {
             this._onPlayCallback(this);
+        }
     }
 
     /** @private */
     _onPause() {
         this.fire('pause');
 
-        if (this._onPauseCallback)
+        if (this._onPauseCallback) {
             this._onPauseCallback(this);
+        }
     }
 
     /** @private */
     _onResume() {
         this.fire('resume');
 
-        if (this._onResumeCallback)
+        if (this._onResumeCallback) {
             this._onResumeCallback(this);
+        }
     }
 
     /** @private */
     _onStop() {
         this.fire('stop');
 
-        if (this._onStopCallback)
+        if (this._onStopCallback) {
             this._onStopCallback(this);
+        }
     }
 
     /** @private */
@@ -550,8 +591,9 @@ class SoundInstance extends EventHandler {
 
         this.fire('end');
 
-        if (this._onEndCallback)
+        if (this._onEndCallback) {
             this._onEndCallback(this);
+        }
 
         this.stop();
     }
@@ -698,8 +740,9 @@ class SoundInstance extends EventHandler {
         // no need for this anymore
         this._playWhenLoaded = false;
 
-        if (this._state !== STATE_PLAYING)
+        if (this._state !== STATE_PLAYING) {
             return false;
+        }
 
         // set state to paused
         this._state = STATE_PAUSED;
@@ -721,8 +764,9 @@ class SoundInstance extends EventHandler {
         // reset user-set start offset
         this._startOffset = null;
 
-        if (!this._suspendInstanceEvents)
+        if (!this._suspendInstanceEvents) {
             this._onPause();
+        }
 
         return true;
     }
@@ -778,8 +822,9 @@ class SoundInstance extends EventHandler {
         this.pitch = this._pitch;
         this._playWhenLoaded = false;
 
-        if (!this._suspendInstanceEvents)
+        if (!this._suspendInstanceEvents) {
             this._onResume();
+        }
 
         return true;
     }
@@ -793,8 +838,9 @@ class SoundInstance extends EventHandler {
     stop() {
         this._playWhenLoaded = false;
 
-        if (this._state === STATE_STOPPED)
+        if (this._state === STATE_STOPPED) {
             return false;
+        }
 
         // set state to stopped
         const wasPlaying = this._state === STATE_PLAYING;
@@ -824,8 +870,9 @@ class SoundInstance extends EventHandler {
         }
         this.source = null;
 
-        if (!this._suspendInstanceEvents)
+        if (!this._suspendInstanceEvents) {
             this._onStop();
+        }
 
         return true;
     }
@@ -1006,19 +1053,22 @@ if (!hasAudioContext()) {
             this._manager.on('destroy', this._onManagerDestroy, this);
 
             // suspend immediately if manager is suspended
-            if (this._manager.suspended)
+            if (this._manager.suspended) {
                 this._onManagerSuspend();
+            }
 
-            if (!this._suspendInstanceEvents)
+            if (!this._suspendInstanceEvents) {
                 this._onPlay();
+            }
 
             return true;
 
         },
 
         pause: function () {
-            if (!this.source || this._state !== STATE_PLAYING)
+            if (!this.source || this._state !== STATE_PLAYING) {
                 return false;
+            }
 
             this._suspendEndEvent++;
             this.source.pause();
@@ -1026,31 +1076,35 @@ if (!hasAudioContext()) {
             this._state = STATE_PAUSED;
             this._startOffset = null;
 
-            if (!this._suspendInstanceEvents)
+            if (!this._suspendInstanceEvents) {
                 this._onPause();
+            }
 
             return true;
         },
 
         resume: function () {
-            if (!this.source || this._state !== STATE_PAUSED)
+            if (!this.source || this._state !== STATE_PAUSED) {
                 return false;
+            }
 
             this._state = STATE_PLAYING;
             this._playWhenLoaded = false;
             if (this.source.paused) {
                 this.source.play();
 
-                if (!this._suspendInstanceEvents)
+                if (!this._suspendInstanceEvents) {
                     this._onResume();
+                }
             }
 
             return true;
         },
 
         stop: function () {
-            if (!this.source || this._state === STATE_STOPPED)
+            if (!this.source || this._state === STATE_STOPPED) {
                 return false;
+            }
 
             this._manager.off('volumechange', this._onManagerVolumeChange, this);
             this._manager.off('suspend', this._onManagerSuspend, this);
@@ -1063,8 +1117,9 @@ if (!hasAudioContext()) {
             this._state = STATE_STOPPED;
             this._startOffset = null;
 
-            if (!this._suspendInstanceEvents)
+            if (!this._suspendInstanceEvents) {
                 this._onStop();
+            }
 
             return true;
         },
@@ -1115,8 +1170,9 @@ if (!hasAudioContext()) {
 
         // called every time the 'currentTime' is changed
         _onTimeUpdate: function () {
-            if (!this._duration)
+            if (!this._duration) {
                 return;
+            }
 
             // if the currentTime passes the end then if looping go back to the beginning
             // otherwise manually stop

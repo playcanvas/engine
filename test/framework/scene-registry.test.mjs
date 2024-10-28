@@ -2,7 +2,7 @@ import { Application } from '../../src/framework/application.js';
 import { SceneRegistry } from '../../src/framework/scene-registry.js';
 import { NullGraphicsDevice } from '../../src/platform/graphics/null/null-graphics-device.js';
 
-import { HTMLCanvasElement } from '@playcanvas/canvas-mock';
+import { Canvas } from 'skia-canvas';
 
 import { expect } from 'chai';
 
@@ -11,7 +11,7 @@ describe('SceneRegistry', function () {
     let app;
 
     beforeEach(function () {
-        const canvas = new HTMLCanvasElement(500, 500);
+        const canvas = new Canvas(500, 500);
         app = new Application(canvas, { graphicsDevice: new NullGraphicsDevice(canvas) });
     });
 
@@ -101,8 +101,8 @@ describe('SceneRegistry', function () {
     });
 
     const promisedLoadSceneData = function (registry, sceneItemOrNameOrUrl) {
-        return new Promise(function (resolve, reject) {
-            registry.loadSceneData(sceneItemOrNameOrUrl, function (err, sceneItem) {
+        return new Promise((resolve, reject) => {
+            registry.loadSceneData(sceneItemOrNameOrUrl, (err, sceneItem) => {
                 if (err) {
                     resolve(err);
                 }
@@ -116,7 +116,7 @@ describe('SceneRegistry', function () {
 
         const assetPath = 'http://localhost:3000/test/test-assets/';
 
-        it('load and cache, check data is valid, unload data, check data is removed with SceneItem', async function () {
+        it('load and cache, check data is valid, unload data, check data is removed with SceneItem', async () => {
             const registry = new SceneRegistry(app);
             registry.add('New Scene 1', `${assetPath}scene.json`);
 
@@ -132,7 +132,7 @@ describe('SceneRegistry', function () {
             expect(sceneItem._loading).to.equal(false);
         });
 
-        it('load and cache, check data is valid, unload data, check data is removed with Urls', async function () {
+        it('load and cache, check data is valid, unload data, check data is removed with Urls', async () => {
             const registry = new SceneRegistry(app);
             const sceneUrl = `${assetPath}scene.json`;
             registry.add('New Scene 1', sceneUrl);
@@ -147,7 +147,7 @@ describe('SceneRegistry', function () {
             expect(sceneItem._loading).to.equal(false);
         });
 
-        it('try to load scene data that by name', async function () {
+        it('try to load scene data that by name', async () => {
             const registry = new SceneRegistry(app);
             registry.add('New Scene 1', `${assetPath}scene.json`);
 
@@ -158,7 +158,7 @@ describe('SceneRegistry', function () {
             expect(sceneItem._loading).to.equal(false);
         });
 
-        it('try to load scene data that by URL', async function () {
+        it('try to load scene data that by URL', async () => {
             const registry = new SceneRegistry(app);
             registry.add('New Scene 1', `${assetPath}scene.json`);
 

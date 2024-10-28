@@ -1,14 +1,8 @@
 export default /* glsl */`
-#ifdef MAPFLOAT
 uniform float material_opacity;
-#endif
 
 void getOpacity() {
-    dAlpha = 1.0;
-
-    #ifdef MAPFLOAT
-    dAlpha *= material_opacity;
-    #endif
+    dAlpha = material_opacity;
 
     #ifdef MAPTEXTURE
     dAlpha *= texture2DBias($SAMPLER, $UV, textureBias).$CH;

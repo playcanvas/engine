@@ -5,7 +5,7 @@ import { ShaderGenerator } from './shader-generator.js';
 
 class ShaderGeneratorParticle extends ShaderGenerator {
     generateKey(options) {
-        let key = "particle";
+        let key = 'particle';
         for (const prop in options) {
             if (options.hasOwnProperty(prop)) {
                 key += options[prop];
@@ -15,7 +15,7 @@ class ShaderGeneratorParticle extends ShaderGenerator {
     }
 
     _animTex(options) {
-        let vshader = "";
+        let vshader = '';
         vshader += options.animTexLoop ? shaderChunks.particleAnimFrameLoopVS : shaderChunks.particleAnimFrameClampVS;
         vshader += shaderChunks.particleAnimTexVS;
         return vshader;
@@ -25,19 +25,19 @@ class ShaderGeneratorParticle extends ShaderGenerator {
 
         const executionDefine = `#define PARTICLE_${options.useCpu ? 'CPU' : 'GPU'}\n`;
 
-        let fshader = '#define PARTICLE\n' + executionDefine;
-        let vshader = "#define VERTEXSHADER\n" + executionDefine;
+        let fshader = `#define PARTICLE\n${executionDefine}`;
+        let vshader = `#define VERTEXSHADER\n${executionDefine}`;
 
-        if (options.mesh) vshader += "#define USE_MESH\n";
-        if (options.localSpace) vshader += "#define LOCAL_SPACE\n";
-        if (options.screenSpace) vshader += "#define SCREEN_SPACE\n";
+        if (options.mesh) vshader += '#define USE_MESH\n';
+        if (options.localSpace) vshader += '#define LOCAL_SPACE\n';
+        if (options.screenSpace) vshader += '#define SCREEN_SPACE\n';
 
-        if (options.animTex) vshader += "\nuniform vec2 animTexTilesParams;\n";
-        if (options.animTex) vshader += "\nuniform vec4 animTexParams;\n";
-        if (options.animTex) vshader += "\nuniform vec2 animTexIndexParams;\n";
-        if (options.normal === 2) vshader += "\nvarying mat3 ParticleMat;\n";
-        if (options.normal === 1) vshader += "\nvarying vec3 Normal;\n";
-        if (options.soft) vshader += "\nvarying float vDepth;\n";
+        if (options.animTex) vshader += '\nuniform vec2 animTexTilesParams;\n';
+        if (options.animTex) vshader += '\nuniform vec4 animTexParams;\n';
+        if (options.animTex) vshader += '\nuniform vec2 animTexIndexParams;\n';
+        if (options.normal === 2) vshader += '\nvarying mat3 ParticleMat;\n';
+        if (options.normal === 1) vshader += '\nvarying vec3 Normal;\n';
+        if (options.soft) vshader += '\nvarying float vDepth;\n';
 
         const faceVS = options.customFace ? shaderChunks.particle_customFaceVS : shaderChunks.particle_billboardVS;
 
@@ -70,38 +70,28 @@ class ShaderGeneratorParticle extends ShaderGenerator {
             vshader += shaderChunks.particle_cpu_endVS;
             if (options.soft > 0) vshader += shaderChunks.particle_softVS;
         }
-        vshader += "}\n";
+        vshader += '}\n';
 
         if (options.normal > 0) {
             if (options.normal === 1) {
-                fshader += "\nvarying vec3 Normal;\n";
+                fshader += '\nvarying vec3 Normal;\n';
             } else if (options.normal === 2) {
-                fshader += "\nvarying mat3 ParticleMat;\n";
+                fshader += '\nvarying mat3 ParticleMat;\n';
             }
-            fshader += "\nuniform vec3 lightCube[6];\n";
+            fshader += '\nuniform vec3 lightCube[6];\n';
         }
-        if (options.soft) fshader += "\nvarying float vDepth;\n";
+        if (options.soft) fshader += '\nvarying float vDepth;\n';
 
-        if ((options.normal === 0) && (options.fog === "none")) options.srgb = false; // don't have to perform all gamma conversions when no lighting and fogging is used
         fshader += shaderChunks.decodePS;
         fshader += ShaderGenerator.gammaCode(options.gamma);
         fshader += ShaderGenerator.tonemapCode(options.toneMap);
+        fshader += ShaderGenerator.fogCode(options.fog);
 
-        if (options.fog === 'linear') {
-            fshader += shaderChunks.fogLinearPS;
-        } else if (options.fog === 'exp') {
-            fshader += shaderChunks.fogExpPS;
-        } else if (options.fog === 'exp2') {
-            fshader += shaderChunks.fogExp2PS;
-        } else {
-            fshader += shaderChunks.fogNonePS;
-        }
-
-        if (options.normal === 2) fshader += "\nuniform sampler2D normalMap;\n";
+        if (options.normal === 2) fshader += '\nuniform sampler2D normalMap;\n';
         if (options.soft > 0) fshader += shaderChunks.screenDepthPS;
         fshader += shaderChunks.particlePS;
         if (options.soft > 0) fshader += shaderChunks.particle_softPS;
-        if (options.normal === 1) fshader += "\nvec3 normal = Normal;\n";
+        if (options.normal === 1) fshader += '\nvec3 normal = Normal;\n';
         if (options.normal === 2) fshader += shaderChunks.particle_normalMapPS;
         if (options.normal > 0) fshader += options.halflambert ? shaderChunks.particle_halflambertPS : shaderChunks.particle_lambertPS;
         if (options.normal > 0) fshader += shaderChunks.particle_lightingPS;

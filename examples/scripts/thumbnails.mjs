@@ -193,7 +193,7 @@ async function takeScreenshots(metadata) {
 
         // check if thumbnail exists
         if (fs.existsSync(`${MAIN_DIR}/thumbnails/${categoryKebab}_${exampleNameKebab}_large.webp`)) {
-            console.log(`skipped: ${categoryKebab}/${exampleNameKebab}`);
+            console.log(`skipped (cached): ${categoryKebab}/${exampleNameKebab}`);
             continue;
         }
 

@@ -1,4 +1,14 @@
 /**
+ * @import { GraphicsDevice } from './graphics-device.js'
+ * @import { IndexBuffer } from './index-buffer.js'
+ * @import { ScopeId } from './scope-id.js'
+ * @import { Shader } from './shader.js'
+ * @import { StorageBuffer } from './storage-buffer.js'
+ * @import { Texture } from './texture.js'
+ * @import { VertexBuffer } from './vertex-buffer.js'
+ */
+
+/**
  * A helper class storing a parameter value as well as its scope ID.
  *
  * @ignore
@@ -6,7 +16,7 @@
 class ComputeParameter {
     value;
 
-    /** @type {import('./scope-id.js').ScopeId} */
+    /** @type {ScopeId} */
     scopeId = null;
 }
 
@@ -18,7 +28,7 @@ class Compute {
     /**
      * A compute shader.
      *
-     * @type {import('./shader.js').Shader|null}
+     * @type {Shader|null}
      * @ignore
      */
     shader = null;
@@ -58,9 +68,9 @@ class Compute {
      * Create a compute instance. Note that this is supported on WebGPU only and is a no-op on
      * other platforms.
      *
-     * @param {import('./graphics-device.js').GraphicsDevice} graphicsDevice -
+     * @param {GraphicsDevice} graphicsDevice -
      * The graphics device.
-     * @param {import('./shader.js').Shader} shader - The compute shader.
+     * @param {Shader} shader - The compute shader.
      * @param {string} [name] - The name of the compute instance, used for debugging only.
      */
     constructor(graphicsDevice, shader, name = 'Unnamed') {
@@ -77,8 +87,8 @@ class Compute {
      * Sets a shader parameter on a compute instance.
      *
      * @param {string} name - The name of the parameter to set.
-     * @param {number|number[]|Float32Array|import('./texture.js').Texture|import('./storage-buffer.js').StorageBuffer|import('./vertex-buffer.js').VertexBuffer|import('./index-buffer.js').IndexBuffer} value
-     * - The value for the specified parameter.
+     * @param {number|number[]|Float32Array|Texture|StorageBuffer|VertexBuffer|IndexBuffer} value -
+     * The value for the specified parameter.
      */
     setParameter(name, value) {
         let param = this.parameters.get(name);
@@ -94,7 +104,7 @@ class Compute {
      * Returns the value of a shader parameter from the compute instance.
      *
      * @param {string} name - The name of the parameter to get.
-     * @returns {number|number[]|Float32Array|import('./texture.js').Texture|import('./storage-buffer.js').StorageBuffer|import('./vertex-buffer.js').VertexBuffer|import('./index-buffer.js').IndexBuffer|undefined}
+     * @returns {number|number[]|Float32Array|Texture|StorageBuffer|VertexBuffer|IndexBuffer|undefined}
      * The value of the specified parameter.
      */
     getParameter(name) {

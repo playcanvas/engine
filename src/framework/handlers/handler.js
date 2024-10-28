@@ -1,4 +1,10 @@
 /**
+ * @import { AppBase } from '../app-base.js'
+ * @import { AssetRegistry } from '../asset/asset-registry.js'
+ * @import { Asset } from '../asset/asset.js'
+ */
+
+/**
  * Callback used by {@link ResourceHandler#load} when a resource is loaded (or an error occurs).
  *
  * @callback ResourceHandlerCallback
@@ -20,7 +26,7 @@ class ResourceHandler {
     /**
      * The running app instance.
      *
-     * @type {import('../app-base').AppBase}
+     * @type {AppBase}
      */
     _app;
 
@@ -28,7 +34,7 @@ class ResourceHandler {
     _maxRetries = 0;
 
     /**
-     * @param {import('../app-base').AppBase} app - The running {@link AppBase}.
+     * @param {AppBase} app - The running {@link AppBase}.
      * @param {string} handlerType - The type of the resource the handler handles.
      */
     constructor(app, handlerType) {
@@ -37,7 +43,7 @@ class ResourceHandler {
     }
 
     /**
-     * The number of times to retry a failed request for the resource.
+     * Sets the number of times to retry a failed request for the resource.
      *
      * @type {number}
      */
@@ -45,6 +51,11 @@ class ResourceHandler {
         this._maxRetries = value;
     }
 
+    /**
+     * Gets the number of times to retry a failed request for the resource.
+     *
+     * @type {number}
+     */
     get maxRetries() {
         return this._maxRetries;
     }
@@ -59,8 +70,7 @@ class ResourceHandler {
      * format. This is necessary when loading, for example from blob.
      * @param {ResourceHandlerCallback} callback - The callback used when the resource is loaded or
      * an error occurs.
-     * @param {import('../asset/asset.js').Asset} [asset] - Optional asset that is passed by
-     * ResourceLoader.
+     * @param {Asset} [asset] - Optional asset that is passed by ResourceLoader.
      */
     load(url, callback, asset) {
         // do nothing
@@ -72,8 +82,7 @@ class ResourceHandler {
      *
      * @param {string} url - The URL of the resource to open.
      * @param {*} data - The raw resource data passed by callback from {@link ResourceHandler#load}.
-     * @param {import('../asset/asset.js').Asset} [asset] - Optional asset that is passed by
-     * ResourceLoader.
+     * @param {Asset} [asset] - Optional asset that is passed by ResourceLoader.
      * @returns {*} The parsed resource data.
      */
     open(url, data, asset) {
@@ -84,8 +93,8 @@ class ResourceHandler {
      * The patch function performs any operations on a resource that requires a dependency on its
      * asset data or any other asset data. The base implementation does nothing.
      *
-     * @param {import('../asset/asset.js').Asset} asset - The asset to patch.
-     * @param {import('../asset/asset-registry.js').AssetRegistry} assets - The asset registry.
+     * @param {Asset} asset - The asset to patch.
+     * @param {AssetRegistry} assets - The asset registry.
      */
     patch(asset, assets) {
         // do nothing

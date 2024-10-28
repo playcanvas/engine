@@ -4,19 +4,25 @@ import { GSplat } from '../../scene/gsplat/gsplat.js';
 import { GSplatCompressed } from '../../scene/gsplat/gsplat-compressed.js';
 
 /**
+ * @import { GSplatData } from '../../scene/gsplat/gsplat-data.js'
+ * @import { GraphicsDevice } from '../../platform/graphics/graphics-device.js'
+ * @import { SplatMaterialOptions } from '../../scene/gsplat/gsplat-material.js'
+ */
+
+/**
  * The resource for the gsplat asset type.
  *
  * @category Graphics
  */
 class GSplatResource {
     /**
-     * @type {import('../../platform/graphics/graphics-device.js').GraphicsDevice}
+     * @type {GraphicsDevice}
      * @ignore
      */
     device;
 
     /**
-     * @type {import('../../scene/gsplat/gsplat-data.js').GSplatData}
+     * @type {GSplatData}
      * @ignore
      */
     splatData;
@@ -28,8 +34,8 @@ class GSplatResource {
     splat = null;
 
     /**
-     * @param {import('../../platform/graphics/graphics-device.js').GraphicsDevice} device - The graphics device.
-     * @param {import('../../scene/gsplat/gsplat-data.js').GSplatData} splatData - The splat data.
+     * @param {GraphicsDevice} device - The graphics device.
+     * @param {GSplatData} splatData - The splat data.
      * @ignore
      */
     constructor(device, splatData) {
@@ -54,7 +60,7 @@ class GSplatResource {
     /**
      * Instantiates an entity with a {@link GSplatComponent}.
      *
-     * @param {import('../../scene/gsplat/gsplat-material.js').SplatMaterialOptions} [options] - The options.
+     * @param {SplatMaterialOptions} [options] - The options.
      * @returns {Entity} The entity with {@link GSplatComponent}.
      */
     instantiate(options = {}) {
@@ -65,6 +71,10 @@ class GSplatResource {
         const component = entity.addComponent('gsplat', {
             instance: splatInstance
         });
+
+        // the ply scene data no longer gets automatically rotated on load, so do
+        // it here instead.
+        entity.setLocalEulerAngles(0, 0, 180);
 
         // set custom aabb
         component.customAabb = splatInstance.splat.aabb.clone();

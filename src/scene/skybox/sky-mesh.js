@@ -1,17 +1,21 @@
 import { CULLFACE_FRONT } from '../../platform/graphics/constants.js';
 import { ShaderProcessorOptions } from '../../platform/graphics/shader-processor-options.js';
-
-import { GAMMA_NONE, GAMMA_SRGBHDR, LAYERID_SKYBOX, SHADER_FORWARDHDR, TONEMAP_LINEAR } from '../constants.js';
-import { Material } from '../materials/material.js';
+import { LAYERID_SKYBOX } from '../constants.js';
+import { ShaderMaterial } from '../materials/shader-material.js';
 import { MeshInstance } from '../mesh-instance.js';
 import { getProgramLibrary } from '../shader-lib/get-program-library.js';
 import { skybox } from '../shader-lib/programs/skybox.js';
 import { SkyGeometry } from './sky-geometry.js';
 
 /**
+ * @import { GraphNode } from '../graph-node.js'
+ * @import { GraphicsDevice } from '../../platform/graphics/graphics-device.js'
+ * @import { Scene } from '../scene.js'
+ * @import { Texture } from '../../platform/graphics/texture.js'
+ */
+
+/**
  * A visual representation of the sky.
- *
- * @ignore
  */
 class SkyMesh {
     /**
@@ -22,24 +26,26 @@ class SkyMesh {
     meshInstance = null;
 
     /**
-     * @param {import('../../platform/graphics/graphics-device.js').GraphicsDevice} device - The
-     * graphics device.
-     * @param {import('../scene.js').Scene} scene - The scene owning the sky.
-     * @param {import('../../platform/graphics/texture.js').Texture} texture - The texture of the sky.
+     * @param {GraphicsDevice} device - The graphics device.
+     * @param {Scene} scene - The scene owning the sky.
+     * @param {GraphNode} node - The graph node of the sky mesh instance.
+     * @param {Texture} texture - The texture of the sky.
      * @param {string} type - The type of the sky. One of the SKYMESH_* constants.
      */
     constructor(device, scene, node, texture, type) {
 
-        const material = new Material();
+        const material = new ShaderMaterial();
         material.name = 'SkyMaterial';
 
-        material.getShaderVariant = function (dev, sc, defs, unused, pass, sortedLights, viewUniformFormat, viewBindGroupFormat) {
+        material.getShaderVariant = function (params) {
 
+            const { scene, renderParams } = params;
             const options = {
-                pass: pass,
+                defines: this.defines,
+                pass: params.pass,
                 encoding: texture.encoding,
-                gamma: (pass === SHADER_FORWARDHDR ? (scene.gammaCorrection ? GAMMA_SRGBHDR : GAMMA_NONE) : scene.gammaCorrection),
-                toneMapping: (pass === SHADER_FORWARDHDR ? TONEMAP_LINEAR : scene.toneMapping),
+                gamma: renderParams.shaderOutputGamma,
+                toneMapping: renderParams.toneMapping,
                 skymesh: type
             };
 
@@ -50,18 +56,20 @@ class SkyMesh {
                 options.type = 'envAtlas';
             }
 
-            const processingOptions = new ShaderProcessorOptions(viewUniformFormat, viewBindGroupFormat);
+            const processingOptions = new ShaderProcessorOptions(params.viewUniformFormat, params.viewBindGroupFormat);
 
             const library = getProgramLibrary(device);
             library.register('skybox', skybox);
             return library.getProgram('skybox', options, processingOptions);
         };
 
+        material.setParameter('skyboxHighlightMultiplier', scene.skyboxHighlightMultiplier);
+
         if (texture.cubemap) {
             material.setParameter('texture_cubeMap', texture);
         } else {
             material.setParameter('texture_envAtlas', texture);
-            material.setParameter('mipLevel', scene._skyboxMip);
+            material.setParameter('mipLevel', scene.skyboxMip);
         }
 
         material.cull = CULLFACE_FRONT;

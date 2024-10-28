@@ -1,6 +1,7 @@
 import * as pc from 'playcanvas';
 import { data } from 'examples/observer';
-import { deviceType, rootPath } from 'examples/utils';
+import { deviceType, rootPath, fileImport } from 'examples/utils';
+const { CameraFrame } = await fileImport(rootPath + '/static/assets/scripts/misc/camera-frame.mjs');
 
 const canvas = /** @type {HTMLCanvasElement} */ (document.getElementById('application-canvas'));
 window.focus();
@@ -14,7 +15,7 @@ const assets = {
     ),
     table: new pc.Asset('table', 'container', { url: rootPath + '/static/assets/models/glass-table.glb' }),
     script: new pc.Asset('script', 'script', { url: rootPath + '/static/scripts/camera/orbit-camera.js' }),
-    diffuse: new pc.Asset('color', 'texture', { url: rootPath + '/static/assets/textures/seaside-rocks01-color.jpg' })
+    diffuse: new pc.Asset('color', 'texture', { url: rootPath + '/static/assets/textures/playcanvas.png' })
 };
 
 const gfxOptions = {
@@ -67,8 +68,7 @@ assetListLoader.load(() => {
     // setup skydome
     app.scene.envAtlas = assets.envAtlas.resource;
     app.scene.skyboxMip = 2;
-    app.scene.exposure = 1;
-    app.scene.toneMapping = pc.TONEMAP_ACES;
+    app.scene.exposure = 4.5;
 
     /**
      * Helper function to create a primitive with shape type, position, scale, color and layer.
@@ -102,7 +102,7 @@ assetListLoader.load(() => {
     }
 
     // create a ground plane
-    createPrimitive('plane', new pc.Vec3(0, 0, 0), new pc.Vec3(30, 1, 30), new pc.Color(0.5, 0.5, 0.5));
+    createPrimitive('plane', new pc.Vec3(0, 0, 0), new pc.Vec3(30, 1, 30), new pc.Color(0.8, 0.8, 0.8));
 
     // create an instance of the table
     const tableEntity = assets.table.resource.instantiateRenderEntity();
@@ -144,9 +144,6 @@ assetListLoader.load(() => {
     cameraEntity.lookAt(1, 4, 0);
     app.root.addChild(cameraEntity);
 
-    // enable the camera to render the scene's color map, as the table material needs it
-    cameraEntity.camera.requestSceneColorMap(true);
-
     // add orbit camera script with a mouse and a touch support
     cameraEntity.addComponent('script');
     cameraEntity.script.create('orbitCamera', {
@@ -162,52 +159,23 @@ assetListLoader.load(() => {
 
     // ------ Custom render passes set up ------
 
-    const currentOptions = {
-        camera: cameraEntity.camera, // camera used to render those passes
-        samples: 0, // number of samples for multi-sampling
-        sceneColorMap: true,
+    /** @type { CameraFrame } */
+    const cameraFrame = cameraEntity.script.create(CameraFrame);
+    cameraFrame.rendering.toneMapping = pc.TONEMAP_ACES;
+    cameraFrame.rendering.sceneColorMap = true;
+    cameraFrame.taa.jitter = 1;
 
-        // enable the pre-pass to generate the depth buffer, which is needed by the TAA
-        prepassEnabled: true,
-
-        // enable temporal anti-aliasing
-        taaEnabled: true
+    const applySettings = () => {
+        cameraFrame.taa.enabled = data.get('data.taa');
+        cameraFrame.rendering.sharpness = cameraFrame.taa.enabled ? 1 : 0;
     };
-
-    const setupRenderPass = () => {
-        // destroy existing pass if any
-        if (cameraEntity.camera.renderPasses.length > 0) {
-            cameraEntity.camera.renderPasses[0].destroy();
-        }
-
-        // Use a render pass camera frame, which is a render pass that implements typical rendering of a camera.
-        // Internally this sets up additional passes it needs, based on the options passed to it.
-        const renderPassCamera = new pc.RenderPassCameraFrame(app, currentOptions);
-        renderPassCamera.bloomEnabled = false;
-
-        const composePass = renderPassCamera.composePass;
-        composePass.toneMapping = data.get('data.scene.tonemapping');
-        composePass.sharpness = currentOptions.taaEnabled ? 1 : 0;
-
-        // and set up these rendering passes to be used by the camera, instead of its default rendering
-        cameraEntity.camera.renderPasses = [renderPassCamera];
-
-        // the render passes render in HDR format, and so disable output tone mapping and gamma correction,
-        // as that is applied in the final compose pass
-        app.scene.toneMapping = pc.TONEMAP_LINEAR;
-        app.scene.gammaCorrection = pc.GAMMA_NONE;
-
-        // jitter the camera when TAA is enabled
-        cameraEntity.camera.jitter = currentOptions.taaEnabled ? 1 : 0;
-    };
-
-    setupRenderPass();
 
     // ------
 
     // handle UI changes
     data.on('*:set', (/** @type {string} */ path, value) => {
         const propertyName = path.split('.')[1];
+
         materials.forEach((material) => {
             // apply the value to the material
             material[propertyName] = value;
@@ -221,15 +189,9 @@ assetListLoader.load(() => {
             }
 
             material.update();
-
-            // if TAA property changes, we need to set up render passes again
-            if (propertyName === 'taa') {
-                if (currentOptions.taaEnabled !== value) {
-                    currentOptions.taaEnabled = value;
-                    setupRenderPass();
-                }
-            }
         });
+
+        applySettings();
     });
 
     // initial values

@@ -8,7 +8,7 @@ import { Vec2 } from '../../../../src/core/math/vec2.js';
 import { Vec4 } from '../../../../src/core/math/vec4.js';
 import { NullGraphicsDevice } from '../../../../src/platform/graphics/null/null-graphics-device.js';
 
-import { HTMLCanvasElement } from '@playcanvas/canvas-mock';
+import { Canvas } from 'skia-canvas';
 
 import { expect } from 'chai';
 
@@ -32,7 +32,7 @@ describe('LayoutCalculator', function () {
     let mixedHeightElementsWithLayoutChildComponents; // eslint-disable-line no-unused-vars
 
     const applyProperties = function (object, properties) {
-        Object.keys(properties).forEach(function (propertyName) {
+        Object.keys(properties).forEach((propertyName) => {
             object[propertyName] = properties[propertyName];
         });
     };
@@ -56,13 +56,13 @@ describe('LayoutCalculator', function () {
     };
 
     const buildElements = function (elementSpecs) {
-        return elementSpecs.map(function (properties) {
+        return elementSpecs.map((properties) => {
             return buildElement(properties);
         });
     };
 
     beforeEach(function () {
-        const canvas = new HTMLCanvasElement(500, 500);
+        const canvas = new Canvas(500, 500);
         app = new Application(canvas, { graphicsDevice: new NullGraphicsDevice(canvas) });
         calculator = new LayoutCalculator();
 
@@ -253,7 +253,7 @@ describe('LayoutCalculator', function () {
     const assertValues = function (property, values, options) {
         options = options || {};
 
-        elements.forEach(function (element, i) {
+        elements.forEach((element, i) => {
             let propertyValue;
             if (property === 'x' || property === 'y') {
                 propertyValue = element.entity.localPosition[property];
@@ -270,7 +270,7 @@ describe('LayoutCalculator', function () {
     };
 
     it('throws an error if provided with an unrecognized orientation', function () {
-        expect(function () {
+        expect(() => {
             elements = mixedWidthElements;
             options.orientation = 42;
             calculate();

@@ -3,8 +3,11 @@ import { Color } from '../../core/math/color.js';
 import { Mat4 } from '../../core/math/mat4.js';
 import { Quat } from '../../core/math/quat.js';
 import { Vec3 } from '../../core/math/vec3.js';
-
 import { XRTYPE_AR } from './constants.js';
+
+/**
+ * @import { XrManager } from './xr-manager.js'
+ */
 
 const vec3A = new Vec3();
 const vec3B = new Vec3();
@@ -45,7 +48,7 @@ class XrLightEstimation extends EventHandler {
     static EVENT_ERROR = 'error';
 
     /**
-     * @type {import('./xr-manager.js').XrManager}
+     * @type {XrManager}
      * @private
      */
     _manager;
@@ -101,7 +104,7 @@ class XrLightEstimation extends EventHandler {
     /**
      * Create a new XrLightEstimation instance.
      *
-     * @param {import('./xr-manager.js').XrManager} manager - WebXR Manager.
+     * @param {XrManager} manager - WebXR Manager.
      * @ignore
      */
     constructor(manager) {
@@ -135,7 +138,7 @@ class XrLightEstimation extends EventHandler {
      * fired.
      *
      * @example
-     * app.xr.on('start', function () {
+     * app.xr.on('start', () => {
      *     if (app.xr.lightEstimation.supported) {
      *         app.xr.lightEstimation.start();
      *     }
@@ -144,17 +147,21 @@ class XrLightEstimation extends EventHandler {
     start() {
         let err;
 
-        if (!this._manager.session)
+        if (!this._manager.session) {
             err = new Error('XR session is not running');
+        }
 
-        if (!err && this._manager.type !== XRTYPE_AR)
+        if (!err && this._manager.type !== XRTYPE_AR) {
             err = new Error('XR session type is not AR');
+        }
 
-        if (!err && !this._supported)
+        if (!err && !this._supported) {
             err = new Error('light-estimation is not supported');
+        }
 
-        if (!err && this._lightProbe || this._lightProbeRequested)
+        if (!err && this._lightProbe || this._lightProbeRequested) {
             err = new Error('light estimation is already requested');
+        }
 
         if (err) {
             this.fire('error', err);
@@ -191,7 +198,7 @@ class XrLightEstimation extends EventHandler {
     }
 
     /**
-     * @param {*} frame - XRFrame from requestAnimationFrame callback.
+     * @param {XRFrame} frame - XRFrame from requestAnimationFrame callback.
      * @ignore
      */
     update(frame) {

@@ -2,14 +2,13 @@ import { math } from '../../../core/math/math.js';
 import { Debug } from '../../../core/debug.js';
 import { platform } from '../../../core/platform.js';
 import { Color } from '../../../core/math/color.js';
-
 import {
     CLEARFLAG_COLOR, CLEARFLAG_DEPTH, CLEARFLAG_STENCIL,
     CULLFACE_NONE,
     FILTER_NEAREST, FILTER_LINEAR, FILTER_NEAREST_MIPMAP_NEAREST, FILTER_NEAREST_MIPMAP_LINEAR,
     FILTER_LINEAR_MIPMAP_NEAREST, FILTER_LINEAR_MIPMAP_LINEAR,
     FUNC_ALWAYS,
-    PIXELFORMAT_RGB8, PIXELFORMAT_RGBA8, PIXELFORMAT_RGBA32F,
+    PIXELFORMAT_RGB8, PIXELFORMAT_RGBA8,
     STENCILOP_KEEP,
     UNIFORMTYPE_BOOL, UNIFORMTYPE_INT, UNIFORMTYPE_FLOAT, UNIFORMTYPE_VEC2, UNIFORMTYPE_VEC3,
     UNIFORMTYPE_VEC4, UNIFORMTYPE_IVEC2, UNIFORMTYPE_IVEC3, UNIFORMTYPE_IVEC4, UNIFORMTYPE_BVEC2,
@@ -23,165 +22,33 @@ import {
     UNIFORMTYPE_IVEC4ARRAY, UNIFORMTYPE_BVEC4ARRAY, UNIFORMTYPE_UVEC4ARRAY, UNIFORMTYPE_MAT4ARRAY,
     semanticToLocation, getPixelFormatArrayType,
     UNIFORMTYPE_TEXTURE2D_ARRAY,
-    PRIMITIVE_TRISTRIP,
-    DEVICETYPE_WEBGL2
+    DEVICETYPE_WEBGL2,
+    TEXPROPERTY_MIN_FILTER, TEXPROPERTY_MAG_FILTER, TEXPROPERTY_ADDRESS_U, TEXPROPERTY_ADDRESS_V,
+    TEXPROPERTY_ADDRESS_W, TEXPROPERTY_COMPARE_ON_READ, TEXPROPERTY_COMPARE_FUNC, TEXPROPERTY_ANISOTROPY
 } from '../constants.js';
-
 import { GraphicsDevice } from '../graphics-device.js';
 import { RenderTarget } from '../render-target.js';
 import { Texture } from '../texture.js';
 import { DebugGraphics } from '../debug-graphics.js';
-
 import { WebglVertexBuffer } from './webgl-vertex-buffer.js';
 import { WebglIndexBuffer } from './webgl-index-buffer.js';
 import { WebglShader } from './webgl-shader.js';
 import { WebglTexture } from './webgl-texture.js';
 import { WebglRenderTarget } from './webgl-render-target.js';
-import { ShaderUtils } from '../shader-utils.js';
-import { Shader } from '../shader.js';
 import { BlendState } from '../blend-state.js';
 import { DepthState } from '../depth-state.js';
 import { StencilParameters } from '../stencil-parameters.js';
 import { WebglGpuProfiler } from './webgl-gpu-profiler.js';
 import { TextureUtils } from '../texture-utils.js';
+import { getBuiltInTexture } from '../built-in-textures.js';
+
+/**
+ * @import { RenderPass } from '../render-pass.js'
+ * @import { Shader } from '../shader.js'
+ * @import { VertexBuffer } from '../vertex-buffer.js'
+ */
 
 const invalidateAttachments = [];
-
-const _fullScreenQuadVS = /* glsl */`
-attribute vec2 vertex_position;
-varying vec2 vUv0;
-void main(void)
-{
-    gl_Position = vec4(vertex_position, 0.5, 1.0);
-    vUv0 = vertex_position.xy*0.5+0.5;
-}
-`;
-
-const _precisionTest1PS = /* glsl */`
-void main(void) { 
-    gl_FragColor = vec4(2147483648.0);
-}
-`;
-
-const _precisionTest2PS = /* glsl */`
-uniform sampler2D source;
-vec4 packFloat(float depth) {
-    const vec4 bit_shift = vec4(256.0 * 256.0 * 256.0, 256.0 * 256.0, 256.0, 1.0);
-    const vec4 bit_mask  = vec4(0.0, 1.0 / 256.0, 1.0 / 256.0, 1.0 / 256.0);
-    vec4 res = mod(depth * bit_shift * vec4(255), vec4(256) ) / vec4(255);
-    res -= res.xxyz * bit_mask;
-    return res;
-}
-void main(void) {
-    float c = texture2D(source, vec2(0.0)).r;
-    float diff = abs(c - 2147483648.0) / 2147483648.0;
-    gl_FragColor = packFloat(diff);
-}
-`;
-
-const _outputTexture2D = /* glsl */`
-varying vec2 vUv0;
-uniform sampler2D source;
-void main(void) {
-    gl_FragColor = texture2D(source, vUv0);
-}
-`;
-
-function quadWithShader(device, target, shader) {
-
-    DebugGraphics.pushGpuMarker(device, "QuadWithShader");
-
-    const oldRt = device.renderTarget;
-    device.setRenderTarget(target);
-    device.updateBegin();
-
-    device.setCullMode(CULLFACE_NONE);
-    device.setBlendState(BlendState.NOBLEND);
-    device.setDepthState(DepthState.NODEPTH);
-    device.setStencilState(null, null);
-
-    device.setVertexBuffer(device.quadVertexBuffer, 0);
-    device.setShader(shader);
-
-    device.draw({
-        type: PRIMITIVE_TRISTRIP,
-        base: 0,
-        count: 4,
-        indexed: false
-    });
-
-    device.updateEnd();
-
-    device.setRenderTarget(oldRt);
-    device.updateBegin();
-
-    DebugGraphics.popGpuMarker(device);
-}
-
-function testTextureFloatHighPrecision(device) {
-    if (!device.textureFloatRenderable)
-        return false;
-
-    const shader1 = new Shader(device, ShaderUtils.createDefinition(device, {
-        name: 'ptest1',
-        vertexCode: _fullScreenQuadVS,
-        fragmentCode: _precisionTest1PS
-    }));
-
-    const shader2 = new Shader(device, ShaderUtils.createDefinition(device, {
-        name: 'ptest2',
-        vertexCode: _fullScreenQuadVS,
-        fragmentCode: _precisionTest2PS
-    }));
-
-    const textureOptions = {
-        format: PIXELFORMAT_RGBA32F,
-        width: 1,
-        height: 1,
-        mipmaps: false,
-        minFilter: FILTER_NEAREST,
-        magFilter: FILTER_NEAREST,
-        name: 'testFHP'
-    };
-    const tex1 = new Texture(device, textureOptions);
-    const targ1 = new RenderTarget({
-        colorBuffer: tex1,
-        depth: false
-    });
-    quadWithShader(device, targ1, shader1);
-
-    textureOptions.format = PIXELFORMAT_RGBA8;
-    const tex2 = new Texture(device, textureOptions);
-    const targ2 = new RenderTarget({
-        colorBuffer: tex2,
-        depth: false
-    });
-    device.constantTexSource.setValue(tex1);
-    quadWithShader(device, targ2, shader2);
-
-    const prevFramebuffer = device.activeFramebuffer;
-    device.setFramebuffer(targ2.impl._glFrameBuffer);
-
-    const pixels = new Uint8Array(4);
-    device.readPixels(0, 0, 1, 1, pixels);
-
-    device.setFramebuffer(prevFramebuffer);
-
-    const x = pixels[0] / 255;
-    const y = pixels[1] / 255;
-    const z = pixels[2] / 255;
-    const w = pixels[3] / 255;
-    const f = x / (256 * 256 * 256) + y / (256 * 256) + z / 256 + w;
-
-    tex1.destroy();
-    targ1.destroy();
-    tex2.destroy();
-    targ2.destroy();
-    shader1.destroy();
-    shader2.destroy();
-
-    return f === 0;
-}
 
 /**
  * WebglGraphicsDevice extends the base {@link GraphicsDevice} to provide rendering capabilities
@@ -283,7 +150,7 @@ class WebglGraphicsDevice extends GraphicsDevice {
         this.forceDisableMultisampling = ua && ua.includes('AppleWebKit') && (ua.includes('15.4') || ua.includes('15_4'));
         if (this.forceDisableMultisampling) {
             options.antialias = false;
-            Debug.log("Antialiasing has been turned off due to rendering issues on AppleWebKit 15.4");
+            Debug.log('Antialiasing has been turned off due to rendering issues on AppleWebKit 15.4');
         }
 
         // #5856 - turn off antialiasing on Windows Firefox
@@ -295,7 +162,7 @@ class WebglGraphicsDevice extends GraphicsDevice {
                 const version = parseFloat(firefoxVersion);
                 if (version >= 120 || version === 115) {
                     options.antialias = false;
-                    Debug.log("Antialiasing has been turned off due to rendering issues on Windows Firefox esr115 and 120+. Current version: " + firefoxVersion);
+                    Debug.log(`Antialiasing has been turned off due to rendering issues on Windows Firefox esr115 and 120+. Current version: ${firefoxVersion}`);
                 }
             }
         }
@@ -309,7 +176,7 @@ class WebglGraphicsDevice extends GraphicsDevice {
         const gl = options.gl ?? canvas.getContext('webgl2', options);
 
         if (!gl) {
-            throw new Error("WebGL not supported");
+            throw new Error('WebGL not supported');
         }
 
         this.gl = gl;
@@ -321,7 +188,7 @@ class WebglGraphicsDevice extends GraphicsDevice {
 
         const isChrome = platform.browserName === 'chrome';
         const isSafari = platform.browserName === 'safari';
-        const isMac = platform.browser && navigator.appVersion.indexOf("Mac") !== -1;
+        const isMac = platform.browser && navigator.appVersion.indexOf('Mac') !== -1;
 
         // enable temporary texture unit workaround on desktop safari
         this._tempEnableSafariTextureUnitWorkaround = isSafari;
@@ -329,8 +196,8 @@ class WebglGraphicsDevice extends GraphicsDevice {
         // enable temporary workaround for glBlitFramebuffer failing on Mac Chrome (#2504)
         this._tempMacChromeBlitFramebufferWorkaround = isMac && isChrome && !options.alpha;
 
-        canvas.addEventListener("webglcontextlost", this._contextLostHandler, false);
-        canvas.addEventListener("webglcontextrestored", this._contextRestoredHandler, false);
+        canvas.addEventListener('webglcontextlost', this._contextLostHandler, false);
+        canvas.addEventListener('webglcontextrestored', this._contextRestoredHandler, false);
 
         this.initializeExtensions();
         this.initializeCapabilities();
@@ -712,17 +579,13 @@ class WebglGraphicsDevice extends GraphicsDevice {
             gl.uniformMatrix4fv(uniform.locationId, false, value);
         };
 
-        this.constantTexSource = this.scope.resolve("source");
+        this.constantTexSource = this.scope.resolve('source');
 
         // In WebGL2 float texture renderability is dictated by the EXT_color_buffer_float extension
         this.textureFloatRenderable = !!this.extColorBufferFloat;
 
         // render to half float buffers support - either of these two extensions
-        this.extColorBufferHalfFloat = this.extColorBufferHalfFloat || !!this.extColorBufferFloat;
-
-        this.supportsMorphTargetTexturesCore = (this.maxPrecision === "highp" && this.maxVertexTextures >= 2);
-
-        this._textureFloatHighPrecision = undefined;
+        this.textureHalfFloatRenderable = !!this.extColorBufferHalfFloat || !!this.extColorBufferFloat;
 
         this.postInit();
     }
@@ -832,10 +695,11 @@ class WebglGraphicsDevice extends GraphicsDevice {
     popMarker() {
         if (platform.browser && window.spector) {
             const label = DebugGraphics.toString();
-            if (label.length)
+            if (label.length) {
                 window.spector.setMarker(`${label} #`);
-            else
+            } else {
                 window.spector.clearMarker();
+            }
         }
     }
     // #endif
@@ -845,12 +709,12 @@ class WebglGraphicsDevice extends GraphicsDevice {
      * getShaderPrecisionFormat is not guaranteed to be present (such as some instances of the
      * default Android browser). In this case, assume highp is available.
      *
-     * @returns {string} "highp", "mediump" or "lowp"
+     * @returns {"highp"|"mediump"|"lowp"} The highest precision supported by the WebGL context.
      * @ignore
      */
     getPrecision() {
         const gl = this.gl;
-        let precision = "highp";
+        let precision = 'highp';
 
         if (gl.getShaderPrecisionFormat) {
             const vertexShaderPrecisionHighpFloat = gl.getShaderPrecisionFormat(gl.VERTEX_SHADER, gl.HIGH_FLOAT);
@@ -866,11 +730,11 @@ class WebglGraphicsDevice extends GraphicsDevice {
 
                 if (!highpAvailable) {
                     if (mediumpAvailable) {
-                        precision = "mediump";
-                        Debug.warn("WARNING: highp not supported, using mediump");
+                        precision = 'mediump';
+                        Debug.warn('WARNING: highp not supported, using mediump');
                     } else {
-                        precision = "lowp";
-                        Debug.warn("WARNING: highp and mediump not supported, using lowp");
+                        precision = 'lowp';
+                        Debug.warn('WARNING: highp and mediump not supported, using lowp');
                     }
                 }
             }
@@ -888,7 +752,6 @@ class WebglGraphicsDevice extends GraphicsDevice {
         return null;
     }
 
-    /** @ignore */
     get extDisjointTimerQuery() {
         // lazy evaluation as this is not typically used
         if (!this._extDisjointTimerQuery) {
@@ -910,29 +773,29 @@ class WebglGraphicsDevice extends GraphicsDevice {
 
         this.textureRG11B10Renderable = true;
 
-        if (this.isWebGL2) {
-            this.extColorBufferFloat = this.getExtension('EXT_color_buffer_float');
-        } else {
-            this.extColorBufferFloat = null;
-        }
+        this.extColorBufferFloat = this.getExtension('EXT_color_buffer_float');
 
         this.extDebugRendererInfo = this.getExtension('WEBGL_debug_renderer_info');
 
-        this.extTextureFloatLinear = this.getExtension("OES_texture_float_linear");
+        this.extTextureFloatLinear = this.getExtension('OES_texture_float_linear');
         this.textureFloatFilterable = !!this.extTextureFloatLinear;
 
-        this.extFloatBlend = this.getExtension("EXT_float_blend");
+        this.extFloatBlend = this.getExtension('EXT_float_blend');
         this.extTextureFilterAnisotropic = this.getExtension('EXT_texture_filter_anisotropic', 'WEBKIT_EXT_texture_filter_anisotropic');
+        this.extParallelShaderCompile = this.getExtension('KHR_parallel_shader_compile');
+
+        // compressed textures
         this.extCompressedTextureETC1 = this.getExtension('WEBGL_compressed_texture_etc1');
         this.extCompressedTextureETC = this.getExtension('WEBGL_compressed_texture_etc');
         this.extCompressedTexturePVRTC = this.getExtension('WEBGL_compressed_texture_pvrtc', 'WEBKIT_WEBGL_compressed_texture_pvrtc');
         this.extCompressedTextureS3TC = this.getExtension('WEBGL_compressed_texture_s3tc', 'WEBKIT_WEBGL_compressed_texture_s3tc');
+        this.extCompressedTextureS3TC_SRGB = this.getExtension('WEBGL_compressed_texture_s3tc_srgb');
         this.extCompressedTextureATC = this.getExtension('WEBGL_compressed_texture_atc');
         this.extCompressedTextureASTC = this.getExtension('WEBGL_compressed_texture_astc');
-        this.extParallelShaderCompile = this.getExtension('KHR_parallel_shader_compile');
+        this.extTextureCompressionBPTC = this.getExtension('EXT_texture_compression_bptc');
 
         // iOS exposes this for half precision render targets on WebGL2 from iOS v 14.5beta
-        this.extColorBufferHalfFloat = this.getExtension("EXT_color_buffer_half_float");
+        this.extColorBufferHalfFloat = this.getExtension('EXT_color_buffer_half_float');
     }
 
     /**
@@ -944,7 +807,7 @@ class WebglGraphicsDevice extends GraphicsDevice {
         const gl = this.gl;
         let ext;
 
-        const userAgent = typeof navigator !== 'undefined' ? navigator.userAgent : "";
+        const userAgent = typeof navigator !== 'undefined' ? navigator.userAgent : '';
 
         this.maxPrecision = this.precision = this.getPrecision();
 
@@ -996,9 +859,6 @@ class WebglGraphicsDevice extends GraphicsDevice {
 
         // Don't allow area lights on old android devices, they often fail to compile the shader, run it incorrectly or are very slow.
         this.supportsAreaLights = !platform.android;
-
-        // supports texture fetch instruction
-        this.supportsTextureFetch = this.isWebGL2;
 
         // Also do not allow them when we only have small number of texture units
         if (this.maxTextures <= 8) {
@@ -1194,8 +1054,8 @@ class WebglGraphicsDevice extends GraphicsDevice {
      *
      * @param {RenderTarget} [source] - The source render target. Defaults to frame buffer.
      * @param {RenderTarget} [dest] - The destination render target. Defaults to frame buffer.
-     * @param {boolean} [color] - If true will copy the color buffer. Defaults to false.
-     * @param {boolean} [depth] - If true will copy the depth buffer. Defaults to false.
+     * @param {boolean} [color] - If true, will copy the color buffer. Defaults to false.
+     * @param {boolean} [depth] - If true, will copy the depth buffer. Defaults to false.
      * @returns {boolean} True if the copy was successful, false otherwise.
      */
     copyRenderTarget(source, dest, color, depth) {
@@ -1210,17 +1070,17 @@ class WebglGraphicsDevice extends GraphicsDevice {
             if (!dest) {
                 // copying to backbuffer
                 if (!source._colorBuffer) {
-                    Debug.error("Can't copy empty color buffer to backbuffer");
+                    Debug.error('Can\'t copy empty color buffer to backbuffer');
                     return false;
                 }
             } else if (source) {
                 // copying to render target
                 if (!source._colorBuffer || !dest._colorBuffer) {
-                    Debug.error("Can't copy color buffer, because one of the render targets doesn't have it");
+                    Debug.error('Can\'t copy color buffer, because one of the render targets doesn\'t have it');
                     return false;
                 }
                 if (source._colorBuffer._format !== dest._colorBuffer._format) {
-                    Debug.error("Can't copy render targets of different color formats");
+                    Debug.error('Can\'t copy render targets of different color formats');
                     return false;
                 }
             }
@@ -1228,11 +1088,11 @@ class WebglGraphicsDevice extends GraphicsDevice {
         if (depth && source) {
             if (!source._depth) {   // when depth is automatic, we cannot test the buffer nor its format
                 if (!source._depthBuffer || !dest._depthBuffer) {
-                    Debug.error("Can't copy depth buffer, because one of the render targets doesn't have it");
+                    Debug.error('Can\'t copy depth buffer, because one of the render targets doesn\'t have it');
                     return false;
                 }
                 if (source._depthBuffer._format !== dest._depthBuffer._format) {
-                    Debug.error("Can't copy render targets of different depth formats");
+                    Debug.error('Can\'t copy render targets of different depth formats');
                     return false;
                 }
             }
@@ -1240,57 +1100,33 @@ class WebglGraphicsDevice extends GraphicsDevice {
 
         DebugGraphics.pushGpuMarker(this, 'COPY-RT');
 
-        if (this.isWebGL2 && dest) {
-            const prevRt = this.renderTarget;
-            this.renderTarget = dest;
-            this.updateBegin();
+        const prevRt = this.renderTarget;
+        this.renderTarget = dest;
+        this.updateBegin();
 
-            // copy from single sampled framebuffer
-            const src = source ? source.impl._glFrameBuffer : this.backBuffer?.impl._glFrameBuffer;
+        // copy from single sampled framebuffer
+        const src = source ? source.impl._glFrameBuffer : this.backBuffer?.impl._glFrameBuffer;
+        const dst = dest ? dest.impl._glFrameBuffer : this.backBuffer?.impl._glFrameBuffer;
 
-            const dst = dest.impl._glFrameBuffer;
-            Debug.assert(src !== dst, 'Source and destination framebuffers must be different when blitting.');
+        Debug.assert(src !== dst, 'Source and destination framebuffers must be different when blitting.');
 
-            gl.bindFramebuffer(gl.READ_FRAMEBUFFER, src);
-            gl.bindFramebuffer(gl.DRAW_FRAMEBUFFER, dst);
-            const w = source ? source.width : dest.width;
-            const h = source ? source.height : dest.height;
+        gl.bindFramebuffer(gl.READ_FRAMEBUFFER, src);
+        gl.bindFramebuffer(gl.DRAW_FRAMEBUFFER, dst);
+        const w = source ? source.width : dest ? dest.width : this.width;
+        const h = source ? source.height : dest ? dest.height : this.height;
 
-            gl.blitFramebuffer(0, 0, w, h,
-                               0, 0, w, h,
-                               (color ? gl.COLOR_BUFFER_BIT : 0) | (depth ? gl.DEPTH_BUFFER_BIT : 0),
-                               gl.NEAREST);
+        gl.blitFramebuffer(0, 0, w, h,
+            0, 0, w, h,
+            (color ? gl.COLOR_BUFFER_BIT : 0) | (depth ? gl.DEPTH_BUFFER_BIT : 0),
+            gl.NEAREST);
 
-            // TODO: not sure we need to restore the prev target, as this only should run in-between render passes
-            this.renderTarget = prevRt;
-            gl.bindFramebuffer(gl.FRAMEBUFFER, prevRt ? prevRt.impl._glFrameBuffer : null);
-        } else {
-            const shader = this.getCopyShader();
-            this.constantTexSource.setValue(source._colorBuffer);
-            quadWithShader(this, dest, shader);
-        }
+        // TODO: not sure we need to restore the prev target, as this only should run in-between render passes
+        this.renderTarget = prevRt;
+        gl.bindFramebuffer(gl.FRAMEBUFFER, prevRt ? prevRt.impl._glFrameBuffer : null);
 
         DebugGraphics.popGpuMarker(this);
 
         return true;
-    }
-
-    /**
-     * Get copy shader for efficient rendering of fullscreen-quad with texture.
-     *
-     * @returns {Shader} The copy shader (based on `fullscreenQuadVS` and `outputTex2DPS` in
-     * `shaderChunks`).
-     * @ignore
-     */
-    getCopyShader() {
-        if (!this._copyShader) {
-            this._copyShader = new Shader(this, ShaderUtils.createDefinition(this, {
-                name: 'outputTex2D',
-                vertexCode: _fullScreenQuadVS,
-                fragmentCode: _outputTexture2D
-            }));
-        }
-        return this._copyShader;
     }
 
     frameStart() {
@@ -1310,18 +1146,18 @@ class WebglGraphicsDevice extends GraphicsDevice {
     /**
      * Start a render pass.
      *
-     * @param {import('../render-pass.js').RenderPass} renderPass - The render pass to start.
+     * @param {RenderPass} renderPass - The render pass to start.
      * @ignore
      */
     startRenderPass(renderPass) {
-
-        DebugGraphics.pushGpuMarker(this, `Pass:${renderPass.name}`);
-        DebugGraphics.pushGpuMarker(this, `START-PASS`);
 
         // set up render target
         const rt = renderPass.renderTarget ?? this.backBuffer;
         this.renderTarget = rt;
         Debug.assert(rt);
+
+        DebugGraphics.pushGpuMarker(this, `Pass:${renderPass.name} RT:${rt.name}`);
+        DebugGraphics.pushGpuMarker(this, 'START-PASS');
 
         this.updateBegin();
 
@@ -1371,12 +1207,12 @@ class WebglGraphicsDevice extends GraphicsDevice {
     /**
      * End a render pass.
      *
-     * @param {import('../render-pass.js').RenderPass} renderPass - The render pass to end.
+     * @param {RenderPass} renderPass - The render pass to end.
      * @ignore
      */
     endRenderPass(renderPass) {
 
-        DebugGraphics.pushGpuMarker(this, `END-PASS`);
+        DebugGraphics.pushGpuMarker(this, 'END-PASS');
 
         this.unbindVertexArray();
 
@@ -1418,16 +1254,23 @@ class WebglGraphicsDevice extends GraphicsDevice {
             }
 
             // resolve the color buffer (this resolves all MRT color buffers at once)
-            if (renderPass.colorOps?.resolve) {
+            if (colorBufferCount && renderPass.colorOps?.resolve) {
                 if (renderPass.samples > 1 && target.autoResolve) {
                     target.resolve(true, false);
+                }
+            }
+
+            // resolve depth/stencil buffer
+            if (target.depthBuffer && renderPass.depthStencilOps.resolveDepth) {
+                if (renderPass.samples > 1 && target.autoResolve) {
+                    target.resolve(false, true);
                 }
             }
 
             // generate mipmaps
             for (let i = 0; i < colorBufferCount; i++) {
                 const colorOps = renderPass.colorArrayOps[i];
-                if (colorOps.mipmaps) {
+                if (colorOps.genMipmaps) {
                     const colorBuffer = target._colorBuffers[i];
                     if (colorBuffer && colorBuffer.impl._glTexture && colorBuffer.mipmaps) {
 
@@ -1507,7 +1350,7 @@ class WebglGraphicsDevice extends GraphicsDevice {
      */
     updateEnd() {
 
-        DebugGraphics.pushGpuMarker(this, `UPDATE-END`);
+        DebugGraphics.pushGpuMarker(this, 'UPDATE-END');
 
         this.unbindVertexArray();
 
@@ -1630,7 +1473,7 @@ class WebglGraphicsDevice extends GraphicsDevice {
         const flags = texture.impl.dirtyParameterFlags;
         const target = texture.impl._glTarget;
 
-        if (flags & 1) {
+        if (flags & TEXPROPERTY_MIN_FILTER) {
             let filter = texture._minFilter;
             if (!texture._mipmaps || (texture._compressed && texture._levels.length === 1)) {
                 if (filter === FILTER_NEAREST_MIPMAP_NEAREST || filter === FILTER_NEAREST_MIPMAP_LINEAR) {
@@ -1641,25 +1484,25 @@ class WebglGraphicsDevice extends GraphicsDevice {
             }
             gl.texParameteri(target, gl.TEXTURE_MIN_FILTER, this.glFilter[filter]);
         }
-        if (flags & 2) {
+        if (flags & TEXPROPERTY_MAG_FILTER) {
             gl.texParameteri(target, gl.TEXTURE_MAG_FILTER, this.glFilter[texture._magFilter]);
         }
-        if (flags & 4) {
+        if (flags & TEXPROPERTY_ADDRESS_U) {
             gl.texParameteri(target, gl.TEXTURE_WRAP_S, this.glAddress[texture._addressU]);
         }
-        if (flags & 8) {
+        if (flags & TEXPROPERTY_ADDRESS_V) {
             gl.texParameteri(target, gl.TEXTURE_WRAP_T, this.glAddress[texture._addressV]);
         }
-        if (flags & 16) {
+        if (flags & TEXPROPERTY_ADDRESS_W) {
             gl.texParameteri(target, gl.TEXTURE_WRAP_R, this.glAddress[texture._addressW]);
         }
-        if (flags & 32) {
+        if (flags & TEXPROPERTY_COMPARE_ON_READ) {
             gl.texParameteri(target, gl.TEXTURE_COMPARE_MODE, texture._compareOnRead ? gl.COMPARE_REF_TO_TEXTURE : gl.NONE);
         }
-        if (flags & 64) {
+        if (flags & TEXPROPERTY_COMPARE_FUNC) {
             gl.texParameteri(target, gl.TEXTURE_COMPARE_FUNC, this.glComparison[texture._compareFunc]);
         }
-        if (flags & 128) {
+        if (flags & TEXPROPERTY_ANISOTROPY) {
             const ext = this.extTextureFilterAnisotropic;
             if (ext) {
                 gl.texParameterf(target, ext.TEXTURE_MAX_ANISOTROPY_EXT, math.clamp(Math.round(texture._anisotropy), 1, this.maxAnisotropy));
@@ -1677,8 +1520,9 @@ class WebglGraphicsDevice extends GraphicsDevice {
     setTexture(texture, textureUnit) {
 
         const impl = texture.impl;
-        if (!impl._glTexture)
+        if (!impl._glTexture) {
             impl.initialize(this, texture);
+        }
 
         if (impl.dirtyParameterFlags > 0 || texture._needsUpload || texture._needsMipmapsUpload) {
 
@@ -1717,7 +1561,7 @@ class WebglGraphicsDevice extends GraphicsDevice {
         if (useCache) {
 
             // generate unique key for the vertex buffers
-            key = "";
+            key = '';
             for (let i = 0; i < vertexBuffers.length; i++) {
                 const vertexBuffer = vertexBuffers[i];
                 key += vertexBuffer.id + vertexBuffer.format.renderingHash;
@@ -1781,7 +1625,7 @@ class WebglGraphicsDevice extends GraphicsDevice {
             }
 
             if (!locZero) {
-                Debug.warn("No vertex attribute is mapped to location 0, which might cause compatibility issues on Safari on MacOS - please use attribute SEMANTIC_POSITION or SEMANTIC_ATTR15");
+                Debug.warn('No vertex attribute is mapped to location 0, which might cause compatibility issues on Safari on MacOS - please use attribute SEMANTIC_POSITION or SEMANTIC_ATTR15');
             }
         }
 
@@ -1805,7 +1649,7 @@ class WebglGraphicsDevice extends GraphicsDevice {
 
             // single VB keeps its VAO
             const vertexBuffer = this.vertexBuffers[0];
-            Debug.assert(vertexBuffer.device === this, "The VertexBuffer was not created using current GraphicsDevice");
+            Debug.assert(vertexBuffer.device === this, 'The VertexBuffer was not created using current GraphicsDevice');
             if (!vertexBuffer.impl.vao) {
                 vertexBuffer.impl.vao = this.createVertexArray(this.vertexBuffers);
             }
@@ -1852,8 +1696,8 @@ class WebglGraphicsDevice extends GraphicsDevice {
      * call.
      * @param {boolean} [primitive.indexed] - True to interpret the primitive as indexed, thereby
      * using the currently set index buffer and false otherwise.
-     * @param {number} [numInstances] - The number of instances to render when using
-     * ANGLE_instanced_arrays. Defaults to 1.
+     * @param {number} [numInstances] - The number of instances to render when using instancing.
+     * Defaults to 1.
      * @param {boolean} [keepBuffers] - Optionally keep the current set of vertex / index buffers /
      * VAO. This is used when rendering of multiple views, for example under WebXR.
      * @example
@@ -1869,14 +1713,16 @@ class WebglGraphicsDevice extends GraphicsDevice {
         const gl = this.gl;
 
         this.activateShader(this);
-        if (!this.shaderValid)
+        if (!this.shaderValid) {
             return;
+        }
 
         let sampler, samplerValue, texture, numTextures; // Samplers
         let uniform, scopeId, uniformVersion, programVersion; // Uniforms
         const shader = this.shader;
-        if (!shader)
+        if (!shader) {
             return;
+        }
         const samplers = shader.impl.samplers;
         const uniforms = shader.impl.uniforms;
 
@@ -1893,20 +1739,24 @@ class WebglGraphicsDevice extends GraphicsDevice {
             samplerValue = sampler.scopeId.value;
             if (!samplerValue) {
 
-                // #if _DEBUG
                 const samplerName = sampler.scopeId.name;
-                if (samplerName === 'uSceneDepthMap' || samplerName === 'uDepthMap') {
-                    Debug.warnOnce(`A sampler ${samplerName} is used by the shader but a scene depth texture is not available. Use CameraComponent.requestSceneDepthMap / enable Depth Grabpass on the Camera Component to enable it.`);
-                }
-                if (samplerName === 'uSceneColorMap' || samplerName === 'texture_grabPass') {
-                    Debug.warnOnce(`A sampler ${samplerName} is used by the shader but a scene color texture is not available. Use CameraComponent.requestSceneColorMap / enable Color Grabpass on the Camera Component to enable it.`);
-                }
-                // #endif
+                Debug.assert(samplerName !== 'texture_grabPass', 'Engine provided texture with sampler name \'texture_grabPass\' is not longer supported, use \'uSceneColorMap\' instead');
+                Debug.assert(samplerName !== 'uDepthMap', 'Engine provided texture with sampler name \'uDepthMap\' is not longer supported, use \'uSceneDepthMap\' instead');
 
-                Debug.errorOnce(`Shader [${shader.label}] requires texture sampler [${samplerName}] which has not been set, while rendering [${DebugGraphics.toString()}]`);
+                if (samplerName === 'uSceneDepthMap') {
+                    Debug.errorOnce(`A uSceneDepthMap texture is used by the shader but a scene depth texture is not available. Use CameraComponent.requestSceneDepthMap / enable Depth Grabpass on the Camera Component to enable it. Rendering [${DebugGraphics.toString()}]`);
+                    samplerValue = getBuiltInTexture(this, 'white');
+                }
+                if (samplerName === 'uSceneColorMap') {
+                    Debug.errorOnce(`A uSceneColorMap texture is used by the shader but a scene color texture is not available. Use CameraComponent.requestSceneColorMap / enable Color Grabpass on the Camera Component to enable it. Rendering [${DebugGraphics.toString()}]`);
+                    samplerValue = getBuiltInTexture(this, 'pink');
+                }
 
-                // skip this draw call to avoid incorrect rendering / webgl errors
-                return;
+                // missing generic texture
+                if (!samplerValue) {
+                    Debug.errorOnce(`Shader ${shader.name} requires ${samplerName} texture which was not set. Rendering [${DebugGraphics.toString()}]`);
+                    samplerValue = getBuiltInTexture(this, 'pink');
+                }
             }
 
             if (samplerValue instanceof Texture) {
@@ -1918,9 +1768,9 @@ class WebglGraphicsDevice extends GraphicsDevice {
                     // Set breakpoint here to debug "Source and destination textures of the draw are the same" errors
                     if (this.renderTarget._samples < 2) {
                         if (this.renderTarget.colorBuffer && this.renderTarget.colorBuffer === texture) {
-                            Debug.error("Trying to bind current color buffer as a texture", { renderTarget: this.renderTarget, texture });
+                            Debug.error('Trying to bind current color buffer as a texture', { renderTarget: this.renderTarget, texture });
                         } else if (this.renderTarget.depthBuffer && this.renderTarget.depthBuffer === texture) {
-                            Debug.error("Trying to bind current depth buffer as a texture", { texture });
+                            Debug.error('Trying to bind current depth buffer as a texture', { texture });
                         }
                     }
                 }
@@ -1978,7 +1828,7 @@ class WebglGraphicsDevice extends GraphicsDevice {
 
         if (primitive.indexed) {
             const indexBuffer = this.indexBuffer;
-            Debug.assert(indexBuffer.device === this, "The IndexBuffer was not created using current GraphicsDevice");
+            Debug.assert(indexBuffer.device === this, 'The IndexBuffer was not created using current GraphicsDevice');
 
             const format = indexBuffer.impl.glFormat;
             const offset = primitive.base * indexBuffer.bytesPerIndex;
@@ -2090,6 +1940,10 @@ class WebglGraphicsDevice extends GraphicsDevice {
                     this.gl.clearStencil(stencil);
                     this.clearStencil = stencil;
                 }
+
+                gl.stencilMask(0xFF);
+                this.stencilWriteMaskFront = 0xFF;
+                this.stencilWriteMaskBack = 0xFF;
             }
 
             // Clear the frame buffer
@@ -2190,7 +2044,7 @@ class WebglGraphicsDevice extends GraphicsDevice {
         Debug.assert(renderTarget.colorBuffer === texture);
 
         const buffer = new ArrayBuffer(TextureUtils.calcLevelGpuSize(width, height, 1, texture._format));
-        const data = new (getPixelFormatArrayType(texture._format))(buffer);
+        const data = options.data ?? new (getPixelFormatArrayType(texture._format))(buffer);
 
         this.setRenderTarget(renderTarget);
         this.initRenderTarget(renderTarget);
@@ -2229,7 +2083,7 @@ class WebglGraphicsDevice extends GraphicsDevice {
      * Sets the output vertex buffer. It will be written to by a shader with transform feedback
      * varyings.
      *
-     * @param {import('../vertex-buffer.js').VertexBuffer} tf - The output vertex buffer.
+     * @param {VertexBuffer} tf - The output vertex buffer.
      * @ignore
      */
     setTransformFeedbackBuffer(tf) {
@@ -2378,7 +2232,7 @@ class WebglGraphicsDevice extends GraphicsDevice {
                 currentBlendState.alphaSrcFactor !== alphaSrcFactor || currentBlendState.alphaDstFactor !== alphaDstFactor) {
 
                 gl.blendFuncSeparate(this.glBlendFunctionColor[colorSrcFactor], this.glBlendFunctionColor[colorDstFactor],
-                                     this.glBlendFunctionAlpha[alphaSrcFactor], this.glBlendFunctionAlpha[alphaDstFactor]);
+                    this.glBlendFunctionAlpha[alphaSrcFactor], this.glBlendFunctionAlpha[alphaDstFactor]);
             }
 
             // color write
@@ -2515,15 +2369,9 @@ class WebglGraphicsDevice extends GraphicsDevice {
      * Sets the active shader to be used during subsequent draw calls.
      *
      * @param {Shader} shader - The shader to assign to the device.
-     */
-
-    /**
-     * Sets the active shader to be used during subsequent draw calls.
-     *
-     * @param {Shader} shader - The shader to assign to the device.
-     * @param {boolean} asyncCompile - If true, rendering will be skipped until the shader is
-     * compiled, otherwise the rendering will wait for the shader compilation to finish. Defaults to
-     * false.
+     * @param {boolean} [asyncCompile] - If true, rendering will be skipped until the shader is
+     * compiled, otherwise the rendering will wait for the shader compilation to finish. Defaults
+     * to false.
      */
     setShader(shader, asyncCompile = false) {
         if (shader !== this.shader) {
@@ -2594,7 +2442,7 @@ class WebglGraphicsDevice extends GraphicsDevice {
     }
 
     /**
-     * Fullscreen mode.
+     * Sets whether the device is currently in fullscreen mode.
      *
      * @type {boolean}
      */
@@ -2607,20 +2455,13 @@ class WebglGraphicsDevice extends GraphicsDevice {
         }
     }
 
-    get fullscreen() {
-        return !!document.fullscreenElement;
-    }
-
     /**
-     * Check if high precision floating-point textures are supported.
+     * Gets whether the device is currently in fullscreen mode.
      *
      * @type {boolean}
      */
-    get textureFloatHighPrecision() {
-        if (this._textureFloatHighPrecision === undefined) {
-            this._textureFloatHighPrecision = testTextureFloatHighPrecision(this);
-        }
-        return this._textureFloatHighPrecision;
+    get fullscreen() {
+        return !!document.fullscreenElement;
     }
 
     // #if _DEBUG

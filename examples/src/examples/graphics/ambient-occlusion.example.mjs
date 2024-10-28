@@ -1,6 +1,7 @@
 import * as pc from 'playcanvas';
 import { data } from 'examples/observer';
-import { deviceType, rootPath } from 'examples/utils';
+import { deviceType, rootPath, fileImport } from 'examples/utils';
+const { CameraFrame } = await fileImport(rootPath + '/static/assets/scripts/misc/camera-frame.mjs');
 
 const canvas = /** @type {HTMLCanvasElement} */ (document.getElementById('application-canvas'));
 window.focus();
@@ -70,7 +71,7 @@ assetListLoader.load(() => {
     // setup skydome
     app.scene.envAtlas = assets.helipad.resource;
     app.scene.skyboxMip = 2;
-    app.scene.exposure = 1.5;
+    app.scene.exposure = 2.5;
 
     // get the instance of the laboratory
     const laboratoryEntity = assets.laboratory.resource.instantiateRenderEntity({
@@ -130,9 +131,10 @@ assetListLoader.load(() => {
     const light = new pc.Entity();
     light.addComponent('light', {
         type: 'directional',
-        intensity: 0.7,
+        intensity: 1,
         castShadows: true,
-        shadowBias: 0.2,
+        shadowResolution: 4096,
+        shadowBias: 0.4,
         normalOffsetBias: 0.06,
         shadowDistance: 600,
         shadowUpdateMode: pc.SHADOWUPDATE_THISFRAME
@@ -141,50 +143,77 @@ assetListLoader.load(() => {
     light.setLocalEulerAngles(35, 30, 0);
 
     // Create an Entity with a camera component
-    const camera = new pc.Entity();
-    camera.addComponent('camera', {
+    const cameraEntity = new pc.Entity();
+    cameraEntity.addComponent('camera', {
         clearColor: new pc.Color(0.4, 0.45, 0.5),
         nearClip: 1,
-        farClip: 500
+        farClip: 600
     });
 
     // add orbit camera script
-    camera.addComponent('script');
-    camera.script.create('orbitCamera', {
+    cameraEntity.addComponent('script');
+    cameraEntity.script.create('orbitCamera', {
         attributes: {
             inertiaFactor: 0.2,
             focusEntity: laboratoryEntity,
             distanceMax: 350
         }
     });
-    camera.script.create('orbitCameraInputMouse');
-    camera.script.create('orbitCameraInputTouch');
+    cameraEntity.script.create('orbitCameraInputMouse');
+    cameraEntity.script.create('orbitCameraInputTouch');
 
-    // add SSAO post-effect
-    data.set('scripts', {
-        ssao: {
-            enabled: true,
-            radius: 5,
-            samples: 16,
-            brightness: 0,
-            downscale: 1
+    // position the camera in the world
+    cameraEntity.setLocalPosition(-60, 30, 60);
+    app.root.addChild(cameraEntity);
+
+    // ------ Custom render passes set up ------
+
+    /** @type { CameraFrame } */
+    const cameraFrame = cameraEntity.script.create(CameraFrame);
+    cameraFrame.rendering.samples = 4;
+    cameraFrame.rendering.toneMapping = pc.TONEMAP_NEUTRAL;
+
+    const applySettings = () => {
+
+        cameraFrame.ssao.type = data.get('data.ssao.type');
+        cameraFrame.ssao.blurEnabled = data.get('data.ssao.blurEnabled');
+        cameraFrame.ssao.intensity = data.get('data.ssao.intensity');
+        cameraFrame.ssao.power = data.get('data.ssao.power');
+        cameraFrame.ssao.radius = data.get('data.ssao.radius');
+        cameraFrame.ssao.samples = data.get('data.ssao.samples');
+        cameraFrame.ssao.minAngle = data.get('data.ssao.minAngle');
+        cameraFrame.ssao.scale = data.get('data.ssao.scale');
+    };
+
+    // apply UI changes
+    data.on('*:set', (/** @type {string} */ path, value) => {
+
+        applySettings();
+
+        // if scale has changed, adjust min angle based on scale to avoid depth related artifacts
+        const pathArray = path.split('.');
+        if (pathArray[2] === 'scale') {
+            if (value < 0.6)
+                data.set('data.ssao.minAngle', 40);
+            else if (value < 0.8)
+                data.set('data.ssao.minAngle', 20);
+            else
+                data.set('data.ssao.minAngle', 10);
         }
     });
 
-    // position the camera in the world
-    camera.setLocalPosition(-60, 30, 60);
-    app.root.addChild(camera);
-
-    // handle UI values updates
-    Object.keys(data.get('scripts')).forEach((key) => {
-        camera.script.create(key, {
-            attributes: data.get(`scripts.${key}`)
-        });
-    });
-
-    data.on('*:set', (/** @type {string} */ path, value) => {
-        const pathArray = path.split('.');
-        camera.script[pathArray[1]][pathArray[2]] = value;
+    // initial settings
+    data.set('data', {
+        ssao: {
+            type: pc.SSAOTYPE_LIGHTING,
+            blurEnabled: true,
+            radius: 30,
+            samples: 12,
+            intensity: 0.4,
+            power: 6,
+            minAngle: 10,
+            scale: 1
+        }
     });
 });
 

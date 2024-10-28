@@ -1,18 +1,19 @@
 import { Debug } from '../../../core/debug.js';
-
 import { math } from '../../../core/math/math.js';
 import { Vec2 } from '../../../core/math/vec2.js';
 import { Vec3 } from '../../../core/math/vec3.js';
-
 import { ORIENTATION_HORIZONTAL, ORIENTATION_VERTICAL } from '../../../scene/constants.js';
-
 import { EntityReference } from '../../utils/entity-reference.js';
-
 import { ElementDragHelper } from '../element/element-drag-helper.js';
-
 import { SCROLL_MODE_BOUNCE, SCROLL_MODE_CLAMP, SCROLL_MODE_INFINITE, SCROLLBAR_VISIBILITY_SHOW_ALWAYS, SCROLLBAR_VISIBILITY_SHOW_WHEN_REQUIRED } from './constants.js';
 import { Component } from '../component.js';
 import { EVENT_MOUSEWHEEL } from '../../../platform/input/constants.js';
+
+/**
+ * @import { Entity } from '../../entity.js'
+ * @import { ScrollViewComponentData } from './data.js'
+ * @import { ScrollViewComponentSystem } from './system.js'
+ */
 
 const _tempScrollValue = new Vec2();
 
@@ -39,10 +40,8 @@ class ScrollViewComponent extends Component {
     /**
      * Create a new ScrollViewComponent.
      *
-     * @param {import('./system.js').ScrollViewComponentSystem} system - The ComponentSystem that
-     * created this Component.
-     * @param {import('../../entity.js').Entity} entity - The Entity that this Component is
-     * attached to.
+     * @param {ScrollViewComponentSystem} system - The ComponentSystem that created this Component.
+     * @param {Entity} entity - The Entity that this Component is attached to.
      */
     constructor(system, entity) {
         super(system, entity);
@@ -86,7 +85,7 @@ class ScrollViewComponent extends Component {
 
     // TODO: Remove this override in upgrading component
     /**
-     * @type {import('./data.js').ScrollViewComponentData}
+     * @type {ScrollViewComponentData}
      * @ignore
      */
     get data() {
@@ -95,18 +94,25 @@ class ScrollViewComponent extends Component {
     }
 
     /**
+     * Sets the enabled state of the component.
+     *
      * @type {boolean}
      */
     set enabled(arg) {
         this._setValue('enabled', arg);
     }
 
+    /**
+     * Gets the enabled state of the component.
+     *
+     * @type {boolean}
+     */
     get enabled() {
         return this.data.enabled;
     }
 
     /**
-     * Whether to enable horizontal scrolling.
+     * Sets whether horizontal scrolling is enabled.
      *
      * @type {boolean}
      */
@@ -114,12 +120,17 @@ class ScrollViewComponent extends Component {
         this._setValue('horizontal', arg);
     }
 
+    /**
+     * Gets whether horizontal scrolling is enabled.
+     *
+     * @type {boolean}
+     */
     get horizontal() {
         return this.data.horizontal;
     }
 
     /**
-     * Whether to enable vertical scrolling.
+     * Sets whether vertical scrolling is enabled.
      *
      * @type {boolean}
      */
@@ -127,13 +138,18 @@ class ScrollViewComponent extends Component {
         this._setValue('vertical', arg);
     }
 
+    /**
+     * Gets whether vertical scrolling is enabled.
+     *
+     * @type {boolean}
+     */
     get vertical() {
         return this.data.vertical;
     }
 
     /**
-     * Specifies how the scroll view should behave when the user scrolls past the end of the content.
-     * Modes are defined as follows:
+     * Sets the scroll mode of the scroll viewer. Specifies how the scroll view should behave when
+     * the user scrolls past the end of the content. Modes are defined as follows:
      *
      * - {@link SCROLL_MODE_CLAMP}: Content does not scroll any further than its bounds.
      * - {@link SCROLL_MODE_BOUNCE}: Content scrolls past its bounds and then gently bounces back.
@@ -145,12 +161,17 @@ class ScrollViewComponent extends Component {
         this._setValue('scrollMode', arg);
     }
 
+    /**
+     * Gets the scroll mode of the scroll viewer.
+     *
+     * @type {number}
+     */
     get scrollMode() {
         return this.data.scrollMode;
     }
 
     /**
-     * Controls how far the content should move before bouncing back.
+     * Sets how far the content should move before bouncing back.
      *
      * @type {number}
      */
@@ -158,12 +179,17 @@ class ScrollViewComponent extends Component {
         this._setValue('bounceAmount', arg);
     }
 
+    /**
+     * Gets how far the content should move before bouncing back.
+     *
+     * @type {number}
+     */
     get bounceAmount() {
         return this.data.bounceAmount;
     }
 
     /**
-     * Controls how freely the content should move if thrown, i.e. By flicking on a phone or by
+     * Sets how freely the content should move if thrown, i.e. By flicking on a phone or by
      * flinging the scroll wheel on a mouse. A value of 1 means that content will stop immediately;
      * 0 means that content will continue moving forever (or until the bounds of the content are
      * reached, depending on the scrollMode).
@@ -174,14 +200,15 @@ class ScrollViewComponent extends Component {
         this._setValue('friction', arg);
     }
 
+    /**
+     * Gets how freely the content should move if thrown.
+     *
+     * @type {number}
+     */
     get friction() {
         return this.data.friction;
     }
 
-    /**
-     * @type {number}
-     * @ignore
-     */
     set dragThreshold(arg) {
         this._setValue('dragThreshold', arg);
     }
@@ -191,7 +218,7 @@ class ScrollViewComponent extends Component {
     }
 
     /**
-     * Whether to use mouse wheel for scrolling (horizontally and vertically).
+     * Sets whether to use mouse wheel for scrolling (horizontally and vertically).
      *
      * @type {boolean}
      */
@@ -199,15 +226,20 @@ class ScrollViewComponent extends Component {
         this._setValue('useMouseWheel', arg);
     }
 
+    /**
+     * Gets whether to use mouse wheel for scrolling (horizontally and vertically).
+     *
+     * @type {boolean}
+     */
     get useMouseWheel() {
         return this.data.useMouseWheel;
     }
 
     /**
-     * Mouse wheel horizontal and vertical sensitivity. Only used if useMouseWheel is set. Setting a
-     * direction to 0 will disable mouse wheel scrolling in that direction. 1 is a default
-     * sensitivity that is considered to feel good. The values can be set higher or lower than 1 to
-     * tune the sensitivity. Defaults to [1, 1].
+     * Sets the mouse wheel horizontal and vertical sensitivity. Only used if useMouseWheel is set.
+     * Setting a direction to 0 will disable mouse wheel scrolling in that direction. 1 is a
+     * default sensitivity that is considered to feel good. The values can be set higher or lower
+     * than 1 to tune the sensitivity. Defaults to [1, 1].
      *
      * @type {Vec2}
      */
@@ -215,13 +247,18 @@ class ScrollViewComponent extends Component {
         this._setValue('mouseWheelSensitivity', arg);
     }
 
+    /**
+     * Gets the mouse wheel horizontal and vertical sensitivity.
+     *
+     * @type {Vec2}
+     */
     get mouseWheelSensitivity() {
         return this.data.mouseWheelSensitivity;
     }
 
     /**
-     * Controls whether the horizontal scrollbar should be visible all the time, or only visible
-     * when the content exceeds the size of the viewport.
+     * Sets whether the horizontal scrollbar should be visible all the time, or only visible when
+     * the content exceeds the size of the viewport.
      *
      * @type {number}
      */
@@ -229,13 +266,19 @@ class ScrollViewComponent extends Component {
         this._setValue('horizontalScrollbarVisibility', arg);
     }
 
+    /**
+     * Gets whether the horizontal scrollbar should be visible all the time, or only visible when
+     * the content exceeds the size of the viewport.
+     *
+     * @type {number}
+     */
     get horizontalScrollbarVisibility() {
         return this.data.horizontalScrollbarVisibility;
     }
 
     /**
-     * Controls whether the vertical scrollbar should be visible all the time, or only visible when
-     * the content exceeds the size of the viewport.
+     * Sets whether the vertical scrollbar should be visible all the time, or only visible when the
+     * content exceeds the size of the viewport.
      *
      * @type {number}
      */
@@ -243,66 +286,94 @@ class ScrollViewComponent extends Component {
         this._setValue('verticalScrollbarVisibility', arg);
     }
 
+    /**
+     * Gets whether the vertical scrollbar should be visible all the time, or only visible when the
+     * content exceeds the size of the viewport.
+     *
+     * @type {number}
+     */
     get verticalScrollbarVisibility() {
         return this.data.verticalScrollbarVisibility;
     }
 
     /**
-     * The entity to be used as the masked viewport area, within which the content will scroll.
+     * Sets the entity to be used as the masked viewport area, within which the content will scroll.
      * This entity must have an ElementGroup component.
      *
-     * @type {import('../../../framework/entity.js').Entity}
+     * @type {Entity}
      */
     set viewportEntity(arg) {
         this._setValue('viewportEntity', arg);
     }
 
+    /**
+     * Gets the entity to be used as the masked viewport area, within which the content will scroll.
+     *
+     * @type {Entity}
+     */
     get viewportEntity() {
         return this.data.viewportEntity;
     }
 
     /**
-     * The entity which contains the scrolling content itself. This entity must have an Element
-     * component.
+     * Sets the entity which contains the scrolling content itself. This entity must have an
+     * {@link ElementComponent}.
      *
-     * @type {import('../../../framework/entity.js').Entity}
+     * @type {Entity}
      */
     set contentEntity(arg) {
         this._setValue('contentEntity', arg);
     }
 
+    /**
+     * Gets the entity which contains the scrolling content itself.
+     *
+     * @type {Entity}
+     */
     get contentEntity() {
         return this.data.contentEntity;
     }
 
     /**
-     * The entity to be used as the vertical scrollbar. This entity must have a Scrollbar component.
+     * Sets the entity to be used as the horizontal scrollbar. This entity must have a
+     * {@link ScrollbarComponent}.
      *
-     * @type {import('../../../framework/entity.js').Entity}
+     * @type {Entity}
      */
     set horizontalScrollbarEntity(arg) {
         this._setValue('horizontalScrollbarEntity', arg);
     }
 
+    /**
+     * Gets the entity to be used as the horizontal scrollbar.
+     *
+     * @type {Entity}
+     */
     get horizontalScrollbarEntity() {
         return this.data.horizontalScrollbarEntity;
     }
 
     /**
-     * The entity to be used as the vertical scrollbar. This entity must have a Scrollbar component.
+     * Sets the entity to be used as the vertical scrollbar. This entity must have a
+     * {@link ScrollbarComponent}.
      *
-     * @type {import('../../../framework/entity.js').Entity}
+     * @type {Entity}
      */
     set verticalScrollbarEntity(arg) {
         this._setValue('verticalScrollbarEntity', arg);
     }
 
+    /**
+     * Gets the entity to be used as the vertical scrollbar.
+     *
+     * @type {Entity}
+     */
     get verticalScrollbarEntity() {
         return this.data.verticalScrollbarEntity;
     }
 
     /**
-     * Set scroll value.
+     * Sets the scroll value.
      *
      * @type {Vec2}
      */
@@ -310,6 +381,11 @@ class ScrollViewComponent extends Component {
         this._onSetScroll(value.x, value.y);
     }
 
+    /**
+     * Gets the scroll value.
+     *
+     * @type {Vec2}
+     */
     get scroll() {
         return this._scroll;
     }
@@ -324,7 +400,7 @@ class ScrollViewComponent extends Component {
 
     /**
      * @param {string} onOrOff - 'on' or 'off'.
-     * @param {import('./system.js').ScrollViewComponentSystem} system - The ComponentSystem that
+     * @param {ScrollViewComponentSystem} system - The ComponentSystem that
      * created this Component.
      * @private
      */
@@ -499,7 +575,7 @@ class ScrollViewComponent extends Component {
                 return scrollValue;
 
             default:
-                console.warn('Unhandled scroll mode:' + this.scrollMode);
+                console.warn(`Unhandled scroll mode:${this.scrollMode}`);
                 return scrollValue;
         }
     }
@@ -580,7 +656,7 @@ class ScrollViewComponent extends Component {
                     return;
 
                 default:
-                    console.warn('Unhandled scrollbar visibility:' + requestedVisibility);
+                    console.warn(`Unhandled scrollbar visibility:${requestedVisibility}`);
                     entity.enabled = isScrollingEnabled;
             }
         }

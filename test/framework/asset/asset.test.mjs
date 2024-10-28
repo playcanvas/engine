@@ -2,7 +2,7 @@ import { Application } from '../../../src/framework/application.js';
 import { Asset } from '../../../src/framework/asset/asset.js';
 import { NullGraphicsDevice } from '../../../src/platform/graphics/null/null-graphics-device.js';
 
-import { HTMLCanvasElement } from '@playcanvas/canvas-mock';
+import { Canvas } from 'skia-canvas';
 
 import { expect } from 'chai';
 
@@ -11,7 +11,7 @@ describe('Asset', function () {
     let app;
 
     beforeEach(function () {
-        const canvas = new HTMLCanvasElement(500, 500);
+        const canvas = new Canvas(500, 500);
         app = new Application(canvas, { graphicsDevice: new NullGraphicsDevice(canvas) });
     });
 
@@ -75,7 +75,7 @@ describe('Asset', function () {
 
             let id = 1;
             for (const key in DEFAULT_LOCALE_FALLBACKS) {
-                asset.addLocalizedAssetId(key + '-test', 1000 + id); // add other locale with same language which shouldn't be used
+                asset.addLocalizedAssetId(`${key}-test`, 1000 + id); // add other locale with same language which shouldn't be used
                 asset.addLocalizedAssetId(DEFAULT_LOCALE_FALLBACKS[key], 2000 + id);
                 id++;
             }

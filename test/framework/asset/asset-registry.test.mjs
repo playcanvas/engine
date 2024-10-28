@@ -3,10 +3,11 @@ import { Asset } from '../../../src/framework/asset/asset.js';
 import { AssetRegistry } from '../../../src/framework/asset/asset-registry.js';
 import { GlbContainerResource } from '../../../src/framework/parsers/glb-container-resource.js';
 import { ResourceLoader } from '../../../src/framework/handlers/loader.js';
+import { Texture } from '../../../src/platform/graphics/texture.js';
 import { http, Http } from '../../../src/platform/net/http.js';
 import { NullGraphicsDevice } from '../../../src/platform/graphics/null/null-graphics-device.js';
 
-import { HTMLCanvasElement } from '@playcanvas/canvas-mock';
+import { Canvas } from 'skia-canvas';
 
 import { expect } from 'chai';
 import { restore, spy } from 'sinon';
@@ -19,7 +20,7 @@ describe('AssetRegistry', function () {
     beforeEach(function () {
         retryDelay = Http.retryDelay;
         Http.retryDelay = 1;
-        const canvas = new HTMLCanvasElement(500, 500);
+        const canvas = new Canvas(500, 500);
         app = new Application(canvas, { graphicsDevice: new NullGraphicsDevice(canvas) });
     });
 
@@ -238,8 +239,8 @@ describe('AssetRegistry', function () {
 
         const assetPath = 'http://localhost:3000/test/test-assets/';
 
-        it('loads binary assets', function (done) {
-            app.assets.loadFromUrl(`${assetPath}test.bin`, 'binary', function (err, asset) {
+        it('loads binary assets', (done) => {
+            app.assets.loadFromUrl(`${assetPath}test.bin`, 'binary', (err, asset) => {
                 expect(err).to.be.null;
                 expect(asset).to.be.instanceof(Asset);
                 expect(asset.resource).to.be.instanceof(ArrayBuffer);
@@ -252,8 +253,8 @@ describe('AssetRegistry', function () {
             });
         });
 
-        it('loads container assets', function (done) {
-            app.assets.loadFromUrl(`${assetPath}test.glb`, 'container', function (err, asset) {
+        it('loads container assets', (done) => {
+            app.assets.loadFromUrl(`${assetPath}test.glb`, 'container', (err, asset) => {
                 expect(err).to.be.null;
                 expect(asset).to.be.instanceof(Asset);
                 expect(asset.resource).to.be.instanceof(GlbContainerResource);
@@ -261,17 +262,17 @@ describe('AssetRegistry', function () {
             });
         });
 
-        it('supports retry loading of container assets', function (done) {
+        it('supports retry loading of container assets', (done) => {
             spy(http, 'request');
             app.loader.enableRetry(2);
-            app.assets.loadFromUrl(`${assetPath}someurl.glb`, 'container', function (err, asset) {
+            app.assets.loadFromUrl(`${assetPath}someurl.glb`, 'container', (err, asset) => {
                 expect(http.request.callCount).to.equal(3);
                 done();
             });
         });
 
-        it('loads css assets', function (done) {
-            app.assets.loadFromUrl(`${assetPath}test.css`, 'css', function (err, asset) {
+        it('loads css assets', (done) => {
+            app.assets.loadFromUrl(`${assetPath}test.css`, 'css', (err, asset) => {
                 expect(err).to.be.null;
                 expect(asset).to.be.instanceof(Asset);
                 expect(asset.resource).to.be.a('string');
@@ -280,8 +281,8 @@ describe('AssetRegistry', function () {
             });
         });
 
-        it.skip('loads html assets', function (done) {
-            app.assets.loadFromUrl(`${assetPath}test.html`, 'html', function (err, asset) {
+        it.skip('loads html assets', (done) => {
+            app.assets.loadFromUrl(`${assetPath}test.html`, 'html', (err, asset) => {
                 expect(err).to.be.null;
                 expect(asset).to.be.instanceof(Asset);
                 expect(asset.resource).to.be.a('string');
@@ -289,8 +290,8 @@ describe('AssetRegistry', function () {
             });
         });
 
-        it('loads json assets', function (done) {
-            app.assets.loadFromUrl(`${assetPath}test.json`, 'json', function (err, asset) {
+        it('loads json assets', (done) => {
+            app.assets.loadFromUrl(`${assetPath}test.json`, 'json', (err, asset) => {
                 expect(err).to.be.null;
                 expect(asset).to.be.instanceof(Asset);
                 expect(asset.resource).to.be.an.instanceof(Object);
@@ -301,8 +302,8 @@ describe('AssetRegistry', function () {
             });
         });
 
-        it('loads shader assets', function (done) {
-            app.assets.loadFromUrl(`${assetPath}test.glsl`, 'shader', function (err, asset) {
+        it('loads shader assets', (done) => {
+            app.assets.loadFromUrl(`${assetPath}test.glsl`, 'shader', (err, asset) => {
                 expect(err).to.be.null;
                 expect(asset).to.be.instanceof(Asset);
                 expect(asset.resource).to.be.a('string');
@@ -310,12 +311,21 @@ describe('AssetRegistry', function () {
             });
         });
 
-        it('loads text assets', function (done) {
-            app.assets.loadFromUrl(`${assetPath}test.txt`, 'text', function (err, asset) {
+        it('loads text assets', (done) => {
+            app.assets.loadFromUrl(`${assetPath}test.txt`, 'text', (err, asset) => {
                 expect(err).to.be.null;
                 expect(asset).to.be.instanceof(Asset);
                 expect(asset.resource).to.be.a('string');
                 expect(asset.resource).to.equal('hello world');
+                done();
+            });
+        });
+
+        it('loads texture assets', (done) => {
+            app.assets.loadFromUrl(`${assetPath}test.png`, 'texture', (err, asset) => {
+                expect(err).to.be.null;
+                expect(asset).to.be.instanceof(Asset);
+                expect(asset.resource).to.be.instanceof(Texture);
                 done();
             });
         });

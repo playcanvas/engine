@@ -1,5 +1,4 @@
 import { path } from '../../core/path.js';
-
 import {
     TEXHINT_ASSET,
     ADDRESS_CLAMP_TO_EDGE, ADDRESS_MIRRORED_REPEAT, ADDRESS_REPEAT,
@@ -9,15 +8,17 @@ import {
 } from '../../platform/graphics/constants.js';
 import { Texture } from '../../platform/graphics/texture.js';
 import { TextureUtils } from '../../platform/graphics/texture-utils.js';
-
 import { BasisParser } from '../parsers/texture/basis.js';
 import { ImgParser } from '../parsers/texture/img.js';
 import { KtxParser } from '../parsers/texture/ktx.js';
 import { Ktx2Parser } from '../parsers/texture/ktx2.js';
 import { DdsParser } from '../parsers/texture/dds.js';
 import { HdrParser } from '../parsers/texture/hdr.js';
-
 import { ResourceHandler } from './handler.js';
+
+/**
+ * @import { AppBase } from '../app-base.js'
+ */
 
 const JSON_ADDRESS_MODE = {
     'repeat': ADDRESS_REPEAT,
@@ -121,7 +122,7 @@ class TextureHandler extends ResourceHandler {
     /**
      * Create a new TextureHandler instance.
      *
-     * @param {import('../app-base.js').AppBase} app - The running {@link AppBase}.
+     * @param {AppBase} app - The running {@link AppBase}.
      * @ignore
      */
     constructor(app) {
@@ -219,6 +220,10 @@ class TextureHandler extends ResourceHandler {
                 options.flipY = !!assetData.flipY;
             }
 
+            if (assetData.hasOwnProperty('srgb')) {
+                options.srgb = !!assetData.srgb;
+            }
+
             // extract asset type (this is bit of a mess)
             if (assetData.hasOwnProperty('type')) {
                 options.type = JSON_TEXTURE_TYPE[assetData.type];
@@ -245,8 +250,9 @@ class TextureHandler extends ResourceHandler {
     }
 
     open(url, data, asset) {
-        if (!url)
+        if (!url) {
             return undefined;
+        }
 
         const textureOptions = this._getTextureOptions(asset);
         let texture = this._getParser(url).open(url, data, this._device, textureOptions);

@@ -1,5 +1,5 @@
-import { Vec3 } from "../../core/math/vec3.js";
-import { LIGHTTYPE_DIRECTIONAL } from "../constants.js";
+import { Vec3 } from '../../core/math/vec3.js';
+import { LIGHTTYPE_DIRECTIONAL } from '../constants.js';
 
 const lightCubeDir = [
     new Vec3(-1, 0, 0),
@@ -13,8 +13,6 @@ const lightCubeDir = [
 /**
  * A lighting cube represented by 6 colors, one per cube direction. Use for simple lighting on the
  * particle system.
- *
- * @ignore
  */
 class LightCube {
     colors = new Float32Array(6 * 3);

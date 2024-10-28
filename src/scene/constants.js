@@ -273,7 +273,7 @@ export const LIGHTFALLOFF_LINEAR = 0;
 export const LIGHTFALLOFF_INVERSESQUARED = 1;
 
 /**
- * Render depth (color-packed on WebGL 1.0), can be used for PCF 3x3 sampling.
+ * Render depth buffer only, can be used for PCF 3x3 sampling.
  *
  * @type {number}
  * @category Graphics
@@ -309,8 +309,7 @@ export const SHADOW_VSM16 = 2;
 export const SHADOW_VSM32 = 3;
 
 /**
- * Render depth buffer only, can be used for hardware-accelerated PCF 5x5 sampling. Requires
- * WebGL 2. Falls back to {@link SHADOW_PCF3} on WebGL 1.
+ * Render depth buffer only, can be used for hardware-accelerated PCF 5x5 sampling.
  *
  * @type {number}
  * @category Graphics
@@ -318,7 +317,7 @@ export const SHADOW_VSM32 = 3;
 export const SHADOW_PCF5 = 4;
 
 /**
- * Render depth (color-packed on WebGL 1.0), can be used for PCF 1x1 sampling.
+ * Render depth buffer only, can be used for PCF 1x1 sampling.
  *
  * @type {number}
  * @category Graphics
@@ -498,23 +497,6 @@ export const CUBEPROJ_NONE = 0;
 export const CUBEPROJ_BOX = 1;
 
 /**
- * Phong without energy conservation. You should only use it as a backwards compatibility with
- * older projects.
- *
- * @type {number}
- * @category Graphics
- */
-export const SPECULAR_PHONG = 0;
-
-/**
- * Energy-conserving Blinn-Phong.
- *
- * @type {number}
- * @category Graphics
- */
-export const SPECULAR_BLINN = 1;
-
-/**
  * Multiply together the primary and secondary colors.
  *
  * @type {string}
@@ -579,25 +561,7 @@ export const GAMMA_NONE = 0;
 export const GAMMA_SRGB = 1;
 
 /**
- * Apply sRGB (fast) gamma correction.
- *
- * @type {number}
- * @deprecated
- * @ignore
- * @category Graphics
- */
-export const GAMMA_SRGBFAST = 2; // deprecated
-
-/**
- * Apply sRGB (HDR) gamma correction.
- *
- * @type {number}
- * @category Graphics
- */
-export const GAMMA_SRGBHDR = 3;
-
-/**
- * Linear tonemapping.
+ * Linear tonemapping. The colors are preserved, but the exposure is applied.
  *
  * @type {number}
  * @category Graphics
@@ -645,6 +609,14 @@ export const TONEMAP_ACES2 = 4;
 export const TONEMAP_NEUTRAL = 5;
 
 /**
+ * No tonemapping or exposure is applied. Used for HDR rendering.
+ *
+ * @type {number}
+ * @category Graphics
+ */
+export const TONEMAP_NONE = 6;
+
+/**
  * No specular occlusion.
  *
  * @type {number}
@@ -681,8 +653,9 @@ export const SHADERDEF_SCREENSPACE = 256;
 export const SHADERDEF_TANGENTS = 512;
 export const SHADERDEF_MORPH_POSITION = 1024;
 export const SHADERDEF_MORPH_NORMAL = 2048;
-export const SHADERDEF_MORPH_TEXTURE_BASED = 4096;
-export const SHADERDEF_LMAMBIENT = 8192; // lightmaps contain ambient
+export const SHADERDEF_LMAMBIENT = 4096; // lightmaps contain ambient
+export const SHADERDEF_MORPH_TEXTURE_BASED_INT = 8192;
+export const SHADERDEF_BATCH = 16384;
 
 /**
  * The shadow map is not to be updated.
@@ -717,20 +690,14 @@ export const MASK_AFFECT_LIGHTMAPPED = 2;
 export const MASK_BAKE = 4;
 
 /**
- * Render shaded materials with gamma correction and tonemapping.
+ * Render shaded materials using forward rendering.
  *
  * @type {number}
  * @category Graphics
  */
 export const SHADER_FORWARD = 0;
 
-/**
- * Render shaded materials without gamma correction and tonemapping.
- *
- * @type {number}
- * @category Graphics
- */
-export const SHADER_FORWARDHDR = 1;
+export const SHADER_PREPASS_VELOCITY = 1;
 
 /**
  * Render RGBA-encoded depth value.
@@ -746,8 +713,6 @@ export const SHADER_PICK = 3;
 // shadow pass used by the shadow rendering code
 export const SHADER_SHADOW = 4;
 
-export const SHADER_PREPASS_VELOCITY = 5;
-
 /**
  * Shader that performs forward rendering.
  *
@@ -755,15 +720,6 @@ export const SHADER_PREPASS_VELOCITY = 5;
  * @category Graphics
  */
 export const SHADERPASS_FORWARD = 'forward';
-
-/**
- * Shader that performs forward rendering in HDR mode (gamma correction and tonemapping are
- * disabled).
- *
- * @type {string}
- * @category Graphics
- */
-export const SHADERPASS_FORWARD_HDR = 'forward_hdr';
 
 /**
  * Shader used for debug rendering of albedo.

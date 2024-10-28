@@ -53,7 +53,7 @@ const assetListLoader = new pc.AssetListLoader(Object.values(assets), app.assets
 assetListLoader.load(() => {
     app.start();
 
-    app.scene.toneMapping = pc.TONEMAP_ACES;
+    app.scene.rendering.toneMapping = pc.TONEMAP_ACES;
 
     // Create an Entity with a camera component
     const camera = new pc.Entity();
@@ -62,19 +62,15 @@ assetListLoader.load(() => {
     });
     camera.setLocalPosition(2, 1, 1);
 
-    const createSplatInstance = (resource, px, py, pz, scale, vertex, fragment) => {
-        const splat = resource.instantiate({
-            debugRender: false,
-            fragment: fragment,
-            vertex: vertex
-        });
-        splat.setLocalPosition(px, py, pz);
-        splat.setLocalScale(scale, scale, scale);
-        app.root.addChild(splat);
-        return splat;
-    };
-
-    const biker = createSplatInstance(assets.biker.resource, -1.5, 0.05, 0, 0.7);
+    // create a splat entity and place it in the world
+    const biker = new pc.Entity();
+    biker.addComponent('gsplat', {
+        asset: assets.biker
+    });
+    biker.setLocalPosition(-1.5, 0.05, 0);
+    biker.setLocalEulerAngles(180, 90, 0);
+    biker.setLocalScale(0.7, 0.7, 0.7);
+    app.root.addChild(biker);
 
     // add orbit camera script with a mouse and a touch support
     camera.addComponent('script');

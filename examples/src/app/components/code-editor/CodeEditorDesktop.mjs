@@ -7,7 +7,7 @@ import { jsx } from '../../jsx.mjs';
 import { iframe } from '../../iframe.mjs';
 import { removeRedundantSpaces } from '../../strings.mjs';
 
-import '../../events.js';
+/** @typedef {import('../../events.js').StateEvent} StateEvent */
 
 loader.config({ paths: { vs: './modules/monaco-editor/min/vs' } });
 
@@ -74,6 +74,24 @@ class CodeEditorDesktop extends CodeEditorBase {
         const monaco = window.monaco;
 
         const { name, message, locations } = event.detail;
+        if (!locations.length) {
+            const editorLines = editor.getValue().split('\n');
+            const line = editorLines.length - 1;
+            const messageMarkdown = `**${name}: ${message}**`;
+            const decorator = {
+                range: new monaco.Range(0, 0, line + 1, editorLines[line].length),
+                options: {
+                    className: 'squiggly-error',
+                    hoverMessage: {
+                        value: messageMarkdown
+                    }
+                }
+            };
+            this._decoratorMap.set(this.state.selectedFile, [decorator]);
+            this._refreshDecorators();
+            return;
+        }
+
         const { line, column } = locations[0];
 
         const messageMarkdown = `**${name}: ${message}** [Ln ${line}, Col ${column}]`;
@@ -300,7 +318,7 @@ class CodeEditorDesktop extends CodeEditorBase {
                             const examplePath =
                                 location.hash === '#/' ? 'misc/hello-world' : location.hash.replace('#/', '');
                             window.open(
-                                `https://github.com/playcanvas/engine/blob/main/examples/src/examples/${examplePath}.mjs`
+                                `https://github.com/playcanvas/engine/blob/main/examples/src/examples/${examplePath}.example.mjs`
                             );
                         }
                     })

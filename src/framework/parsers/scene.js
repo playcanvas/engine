@@ -2,7 +2,7 @@ import { Entity } from '../entity.js';
 
 import { CompressUtils } from '../../scene/compress/compress-utils.js';
 import { Decompress } from '../../scene/compress/decompress.js';
-import { Debug } from "../../core/debug.js";
+import { Debug } from '../../core/debug.js';
 
 class SceneParser {
     constructor(app, isTemplate) {
@@ -68,12 +68,6 @@ class SceneParser {
             for (let i = 0; i < data.tags.length; i++) {
                 entity.tags.add(data.tags[i]);
             }
-        }
-
-        if (data.labels) {
-            data.labels.forEach(function (label) {
-                entity.addLabel(label);
-            });
         }
 
         return entity;

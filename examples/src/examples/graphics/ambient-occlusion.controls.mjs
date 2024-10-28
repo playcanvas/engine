@@ -1,3 +1,5 @@
+import * as pc from 'playcanvas';
+
 /**
  * @param {import('../../app/components/Example.mjs').ControlOptions} options - The options.
  * @returns {JSX.Element} The returned JSX Element.
@@ -10,11 +12,25 @@ export function controls({ observer, ReactPCUI, React, jsx, fragment }) {
             { headerText: 'Ambient Occlusion' },
             jsx(
                 LabelGroup,
-                { text: 'enabled' },
+                { text: 'Type' },
+                jsx(SelectInput, {
+                    binding: new BindingTwoWay(),
+                    link: { observer, path: 'data.ssao.type' },
+                    type: 'string',
+                    options: [
+                        { v: pc.SSAOTYPE_NONE, t: 'None' },
+                        { v: pc.SSAOTYPE_LIGHTING, t: 'Lighting' },
+                        { v: pc.SSAOTYPE_COMBINE, t: 'Combine' }
+                    ]
+                })
+            ),
+            jsx(
+                LabelGroup,
+                { text: 'blurEnabled' },
                 jsx(BooleanInput, {
                     type: 'toggle',
                     binding: new BindingTwoWay(),
-                    link: { observer, path: 'scripts.ssao.enabled' }
+                    link: { observer, path: 'data.ssao.blurEnabled' }
                 })
             ),
             jsx(
@@ -22,8 +38,8 @@ export function controls({ observer, ReactPCUI, React, jsx, fragment }) {
                 { text: 'radius' },
                 jsx(SliderInput, {
                     binding: new BindingTwoWay(),
-                    link: { observer, path: 'scripts.ssao.radius' },
-                    max: 10
+                    link: { observer, path: 'data.ssao.radius' },
+                    max: 50
                 })
             ),
             jsx(
@@ -31,29 +47,50 @@ export function controls({ observer, ReactPCUI, React, jsx, fragment }) {
                 { text: 'samples' },
                 jsx(SliderInput, {
                     binding: new BindingTwoWay(),
-                    link: { observer, path: 'scripts.ssao.samples' },
-                    max: 32
+                    link: { observer, path: 'data.ssao.samples' },
+                    min: 1,
+                    max: 64,
+                    precision: 0
                 })
             ),
             jsx(
                 LabelGroup,
-                { text: 'brightness' },
+                { text: 'intensity' },
                 jsx(SliderInput, {
                     binding: new BindingTwoWay(),
-                    link: { observer, path: 'scripts.ssao.brightness' }
+                    link: { observer, path: 'data.ssao.intensity' }
                 })
             ),
             jsx(
                 LabelGroup,
-                { text: 'downscale' },
+                { text: 'power' },
+                jsx(SliderInput, {
+                    binding: new BindingTwoWay(),
+                    link: { observer, path: 'data.ssao.power' },
+                    min: 0.1,
+                    max: 10
+                })
+            ),
+            jsx(
+                LabelGroup,
+                { text: 'minAngle' },
+                jsx(SliderInput, {
+                    binding: new BindingTwoWay(),
+                    link: { observer, path: 'data.ssao.minAngle' },
+                    max: 90
+                })
+            ),
+            jsx(
+                LabelGroup,
+                { text: 'scale' },
                 jsx(SelectInput, {
                     options: [
-                        { v: 1, t: 'None' },
-                        { v: 2, t: '50%' },
-                        { v: '4', t: '25%' }
+                        { v: 1.00, t: '100%' },
+                        { v: 0.75, t: '75%' },
+                        { v: 0.50, t: '50%' }
                     ],
                     binding: new BindingTwoWay(),
-                    link: { observer, path: 'scripts.ssao.downscale' }
+                    link: { observer, path: 'data.ssao.scale' }
                 })
             )
         )

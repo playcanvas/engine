@@ -1,19 +1,19 @@
 import { Color } from '../../../core/math/color.js';
-
 import {
     CULLFACE_NONE,
     PIXELFORMAT_RGBA8
 } from '../../../platform/graphics/constants.js';
 import { Texture } from '../../../platform/graphics/texture.js';
-
 import { BLEND_PREMULTIPLIED, SPRITE_RENDERMODE_SLICED, SPRITE_RENDERMODE_TILED } from '../../../scene/constants.js';
 import { StandardMaterial } from '../../../scene/materials/standard-material.js';
-
 import { Component } from '../component.js';
 import { ComponentSystem } from '../system.js';
-
 import { SpriteComponent } from './component.js';
 import { SpriteComponentData } from './data.js';
+
+/**
+ * @import { AppBase } from '../../app-base.js'
+ */
 
 const _schema = ['enabled'];
 
@@ -26,7 +26,7 @@ class SpriteComponentSystem extends ComponentSystem {
     /**
      * Create a new SpriteComponentSystem instance.
      *
-     * @param {import('../../app-base.js').AppBase} app - The application.
+     * @param {AppBase} app - The application.
      * @ignore
      */
     constructor(app) {
@@ -73,15 +73,12 @@ class SpriteComponentSystem extends ComponentSystem {
 
             const material = new StandardMaterial();
             material.diffuse.set(0, 0, 0); // black diffuse color to prevent ambient light being included
-            material.emissive.set(0.5, 0.5, 0.5); // use non-white to compile shader correctly
+            material.emissive.set(1, 1, 1);
             material.emissiveMap = texture;
-            material.emissiveTint = true;
             material.opacityMap = texture;
             material.opacityMapChannel = 'a';
-            material.opacityTint = true;
-            material.opacity = 0; // use non-1 opacity to compile shader correctly
             material.useLighting = false;
-            material.useGammaTonemap = false;
+            material.useTonemap = false;
             material.useFog = false;
             material.useSkybox = false;
             material.blendType = BLEND_PREMULTIPLIED;

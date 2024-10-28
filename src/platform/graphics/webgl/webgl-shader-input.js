@@ -1,18 +1,27 @@
-import { UNIFORMTYPE_FLOAT, UNIFORMTYPE_FLOATARRAY, UNIFORMTYPE_VEC2, UNIFORMTYPE_VEC3, UNIFORMTYPE_VEC4,
-    UNIFORMTYPE_VEC2ARRAY, UNIFORMTYPE_VEC3ARRAY, UNIFORMTYPE_VEC4ARRAY, UNIFORMTYPE_INT, UNIFORMTYPE_INTARRAY, UNIFORMTYPE_UINT, UNIFORMTYPE_UINTARRAY, UNIFORMTYPE_BOOL, UNIFORMTYPE_BOOLARRAY, UNIFORMTYPE_IVEC2, UNIFORMTYPE_IVEC2ARRAY, UNIFORMTYPE_UVEC2, UNIFORMTYPE_UVEC2ARRAY, UNIFORMTYPE_BVEC2, UNIFORMTYPE_BVEC2ARRAY, UNIFORMTYPE_IVEC3, UNIFORMTYPE_UVEC3, UNIFORMTYPE_BVEC3, UNIFORMTYPE_IVEC4, UNIFORMTYPE_UVEC4, UNIFORMTYPE_BVEC4, UNIFORMTYPE_IVEC3ARRAY, UNIFORMTYPE_UVEC3ARRAY, UNIFORMTYPE_BVEC3ARRAY, UNIFORMTYPE_IVEC4ARRAY, UNIFORMTYPE_UVEC4ARRAY, UNIFORMTYPE_BVEC4ARRAY } from '../constants.js';
 import { Version } from '../version.js';
+import {
+    UNIFORMTYPE_FLOAT, UNIFORMTYPE_FLOATARRAY, UNIFORMTYPE_VEC2, UNIFORMTYPE_VEC3, UNIFORMTYPE_VEC4,
+    UNIFORMTYPE_VEC2ARRAY, UNIFORMTYPE_VEC3ARRAY, UNIFORMTYPE_VEC4ARRAY, UNIFORMTYPE_INT,
+    UNIFORMTYPE_INTARRAY, UNIFORMTYPE_UINT, UNIFORMTYPE_UINTARRAY, UNIFORMTYPE_BOOL,
+    UNIFORMTYPE_BOOLARRAY, UNIFORMTYPE_IVEC2, UNIFORMTYPE_IVEC2ARRAY, UNIFORMTYPE_UVEC2,
+    UNIFORMTYPE_UVEC2ARRAY, UNIFORMTYPE_BVEC2, UNIFORMTYPE_BVEC2ARRAY, UNIFORMTYPE_IVEC3,
+    UNIFORMTYPE_UVEC3, UNIFORMTYPE_BVEC3, UNIFORMTYPE_IVEC4, UNIFORMTYPE_UVEC4, UNIFORMTYPE_BVEC4,
+    UNIFORMTYPE_IVEC3ARRAY, UNIFORMTYPE_UVEC3ARRAY, UNIFORMTYPE_BVEC3ARRAY, UNIFORMTYPE_IVEC4ARRAY,
+    UNIFORMTYPE_UVEC4ARRAY, UNIFORMTYPE_BVEC4ARRAY
+} from '../constants.js';
+
+/**
+ * @import { GraphicsDevice } from '../graphics-device.js'
+ */
 
 /**
  * Representation of a shader uniform.
- *
- * @ignore
  */
 class WebglShaderInput {
     /**
      * Create a new WebglShaderInput instance.
      *
-     * @param {import('../graphics-device.js').GraphicsDevice} graphicsDevice - The graphics device
-     * used to manage this shader input.
+     * @param {GraphicsDevice} graphicsDevice - The graphics device used to manage this shader input.
      * @param {string} name - The name of the shader input.
      * @param {number} type - The type of the shader input.
      * @param {number | WebGLUniformLocation} locationId - The location id of the shader input.
@@ -28,7 +37,7 @@ class WebglShaderInput {
         this.version = new Version();
 
         // custom data type for arrays
-        if (name.substring(name.length - 3) === "[0]") {
+        if (name.substring(name.length - 3) === '[0]') {
             switch (type) {
                 case UNIFORMTYPE_FLOAT: type = UNIFORMTYPE_FLOATARRAY; break;
                 case UNIFORMTYPE_INT: type = UNIFORMTYPE_INTARRAY; break;

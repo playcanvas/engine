@@ -1,10 +1,8 @@
-import { BUFFERUSAGE_STORAGE, BUFFERUSAGE_VERTEX } from "../constants.js";
-import { WebgpuBuffer } from "./webgpu-buffer.js";
+import { BUFFERUSAGE_STORAGE, BUFFERUSAGE_VERTEX } from '../constants.js';
+import { WebgpuBuffer } from './webgpu-buffer.js';
 
 /**
  * A WebGPU implementation of the VertexBuffer.
- *
- * @ignore
  */
 class WebgpuVertexBuffer extends WebgpuBuffer {
     constructor(vertexBuffer, format, options) {

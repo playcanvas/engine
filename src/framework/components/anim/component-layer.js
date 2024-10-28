@@ -1,9 +1,14 @@
 import { Debug } from '../../../core/debug.js';
 import { math } from '../../../core/math/math.js';
-
 import { AnimTrack } from '../../anim/evaluator/anim-track.js';
 import { AnimTransition } from '../../anim/controller/anim-transition.js';
 import { ANIM_LAYER_OVERWRITE } from '../../anim/controller/constants.js';
+
+/**
+ * @import { AnimComponent } from './component.js'
+ * @import { AnimController } from '../../anim/controller/anim-controller.js'
+ * @import { Asset } from '../../asset/asset.js'
+ */
 
 /**
  * The Anim Component Layer allows managers a single layer of the animation state graph.
@@ -18,13 +23,13 @@ class AnimComponentLayer {
     _name;
 
     /**
-     * @type {import('../../anim/controller/anim-controller.js').AnimController}
+     * @type {AnimController}
      * @private
      */
     _controller;
 
     /**
-     * @type {import('./component.js').AnimComponent}
+     * @type {AnimComponent}
      * @private
      */
     _component;
@@ -60,10 +65,8 @@ class AnimComponentLayer {
      * Create a new AnimComponentLayer instance.
      *
      * @param {string} name - The name of the layer.
-     * @param {import('../../anim/controller/anim-controller.js').AnimController} controller - The
-     * controller to manage this layers animations.
-     * @param {import('./component.js').AnimComponent} component - The component that this layer is
-     * a member of.
+     * @param {AnimController} controller - The controller to manage this layers animations.
+     * @param {AnimComponent} component - The component that this layer is a member of.
      * @param {number} [weight] - The weight of this layer. Defaults to 1.
      * @param {string} [blendType] - The blend type of this layer. Defaults to {@link ANIM_LAYER_OVERWRITE}.
      * @ignore
@@ -86,7 +89,7 @@ class AnimComponentLayer {
     }
 
     /**
-     * Whether this layer is currently playing.
+     * Sets whether this layer is currently playing.
      *
      * @type {boolean}
      */
@@ -94,6 +97,11 @@ class AnimComponentLayer {
         this._controller.playing = value;
     }
 
+    /**
+     * Gets whether this layer is currently playing.
+     *
+     * @type {boolean}
+     */
     get playing() {
         return this._controller.playing;
     }
@@ -109,7 +117,7 @@ class AnimComponentLayer {
     }
 
     /**
-     * Returns the currently active state name.
+     * Gets the currently active state name.
      *
      * @type {string}
      */
@@ -118,7 +126,7 @@ class AnimComponentLayer {
     }
 
     /**
-     * Returns the previously active state name.
+     * Gets the previously active state name.
      *
      * @type {string|null}
      */
@@ -127,7 +135,7 @@ class AnimComponentLayer {
     }
 
     /**
-     * Returns the currently active state's progress as a value normalized by the state's animation
+     * Gets the currently active state's progress as a value normalized by the state's animation
      * duration. Looped animations will return values greater than 1.
      *
      * @type {number}
@@ -137,7 +145,7 @@ class AnimComponentLayer {
     }
 
     /**
-     * Returns the currently active states duration.
+     * Gets the currently active states duration.
      *
      * @type {number}
      */
@@ -146,7 +154,7 @@ class AnimComponentLayer {
     }
 
     /**
-     * The active states time in seconds.
+     * Sets the active state's time in seconds.
      *
      * @type {number}
      */
@@ -161,12 +169,17 @@ class AnimComponentLayer {
         controller.playing = layerPlaying;
     }
 
+    /**
+     * Gets the active state's time in seconds.
+     *
+     * @type {number}
+     */
     get activeStateCurrentTime() {
         return this._controller.activeStateCurrentTime;
     }
 
     /**
-     * Returns whether the anim component layer is currently transitioning between states.
+     * Gets whether the anim component layer is currently transitioning between states.
      *
      * @type {boolean}
      */
@@ -175,7 +188,7 @@ class AnimComponentLayer {
     }
 
     /**
-     * If the anim component layer is currently transitioning between states, returns the progress.
+     * Gets the progress, if the anim component layer is currently transitioning between states.
      * Otherwise returns null.
      *
      * @type {number|null}
@@ -188,7 +201,7 @@ class AnimComponentLayer {
     }
 
     /**
-     * Lists all available states in this layers state graph.
+     * Gets all available states in this layers state graph.
      *
      * @type {string[]}
      */
@@ -197,8 +210,8 @@ class AnimComponentLayer {
     }
 
     /**
-     * The blending weight of this layer. Used when calculating the value of properties that are
-     * animated by more than one layer.
+     * Sets the blending weight of this layer. Used when calculating the value of properties that
+     * are animated by more than one layer.
      *
      * @type {number}
      */
@@ -207,6 +220,11 @@ class AnimComponentLayer {
         this._component.dirtifyTargets();
     }
 
+    /**
+     * Sets the blending weight of this layer.
+     *
+     * @type {number}
+     */
     get weight() {
         return this._weight;
     }
@@ -225,7 +243,7 @@ class AnimComponentLayer {
     }
 
     /**
-     * A mask of bones which should be animated or ignored by this layer.
+     * Sets the mask of bones which should be animated or ignored by this layer.
      *
      * @type {object}
      * @example
@@ -245,6 +263,11 @@ class AnimComponentLayer {
         this._mask = value;
     }
 
+    /**
+     * Gets the mask of bones which should be animated or ignored by this layer.
+     *
+     * @type {object}
+     */
     get mask() {
         return this._mask;
     }
@@ -358,10 +381,10 @@ class AnimComponentLayer {
     }
 
     /**
-     * Returns the asset that is associated with the given state.
+     * Returns an object holding the animation asset id that is associated with the given state.
      *
      * @param {string} stateName - The name of the state to get the asset for.
-     * @returns {import('../../asset/asset.js').Asset} The asset associated with the given state.
+     * @returns {{ asset: number }} An object containing the animation asset id associated with the given state.
      */
     getAnimationAsset(stateName) {
         return this._component.animationAssets[`${this.name}:${stateName}`];

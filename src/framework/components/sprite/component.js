@@ -1,10 +1,8 @@
 import { Debug } from '../../../core/debug.js';
-
 import { math } from '../../../core/math/math.js';
 import { Color } from '../../../core/math/color.js';
 import { Vec2 } from '../../../core/math/vec2.js';
 import { Vec4 } from '../../../core/math/vec4.js';
-
 import {
     LAYERID_WORLD,
     SPRITE_RENDERMODE_SLICED, SPRITE_RENDERMODE_TILED
@@ -13,11 +11,16 @@ import { BatchGroup } from '../../../scene/batching/batch-group.js';
 import { GraphNode } from '../../../scene/graph-node.js';
 import { MeshInstance } from '../../../scene/mesh-instance.js';
 import { Model } from '../../../scene/model.js';
-
 import { Component } from '../component.js';
-
 import { SPRITETYPE_SIMPLE, SPRITETYPE_ANIMATED } from './constants.js';
 import { SpriteAnimationClip } from './sprite-animation-clip.js';
+
+/**
+ * @import { Asset } from '../../asset/asset.js'
+ * @import { Entity } from '../../entity.js'
+ * @import { SpriteComponentSystem } from './system.js'
+ * @import { Sprite } from '../../../scene/sprite.js'
+ */
 
 const PARAM_EMISSIVE_MAP = 'texture_emissiveMap';
 const PARAM_OPACITY_MAP = 'texture_opacityMap';
@@ -108,9 +111,9 @@ class SpriteComponent extends Component {
     /**
      * Create a new SpriteComponent instance.
      *
-     * @param {import('./system.js').SpriteComponentSystem} system - The ComponentSystem that
+     * @param {SpriteComponentSystem} system - The ComponentSystem that
      * created this Component.
-     * @param {import('../../entity.js').Entity} entity - The Entity that this Component is
+     * @param {Entity} entity - The Entity that this Component is
      * attached to.
      */
     constructor(system, entity) {
@@ -181,7 +184,7 @@ class SpriteComponent extends Component {
     }
 
     /**
-     * The type of the SpriteComponent. Can be:
+     * Sets the type of the SpriteComponent. Can be:
      *
      * - {@link SPRITETYPE_SIMPLE}: The component renders a single frame from a sprite asset.
      * - {@link SPRITETYPE_ANIMATED}: The component can play sprite animation clips.
@@ -191,8 +194,9 @@ class SpriteComponent extends Component {
      * @type {string}
      */
     set type(value) {
-        if (this._type === value)
+        if (this._type === value) {
             return;
+        }
 
         this._type = value;
         if (this._type === SPRITETYPE_SIMPLE) {
@@ -224,13 +228,17 @@ class SpriteComponent extends Component {
         }
     }
 
+    /**
+     * Gets the type of the SpriteComponent.
+     *
+     * @type {string}
+     */
     get type() {
         return this._type;
     }
 
     /**
-     * The frame counter of the sprite. Specifies which frame from the current sprite asset to
-     * render.
+     * Sets which frame from the current sprite asset to render.
      *
      * @type {number}
      */
@@ -238,33 +246,48 @@ class SpriteComponent extends Component {
         this._currentClip.frame = value;
     }
 
+    /**
+     * Gets which frame from the current sprite asset to render.
+     *
+     * @type {number}
+     */
     get frame() {
         return this._currentClip.frame;
     }
 
     /**
-     * The asset id or the {@link Asset} of the sprite to render. Only works for
+     * Sets the asset id or the {@link Asset} of the sprite to render. Only works for
      * {@link SPRITETYPE_SIMPLE} sprites.
      *
-     * @type {number|import('../../asset/asset.js').Asset}
+     * @type {number|Asset}
      */
     set spriteAsset(value) {
         this._defaultClip.spriteAsset = value;
     }
 
+    /**
+     * Gets the asset id or the {@link Asset} of the sprite to render.
+     *
+     * @type {number|Asset}
+     */
     get spriteAsset() {
         return this._defaultClip._spriteAsset;
     }
 
     /**
-     * The current sprite.
+     * Sets the current sprite.
      *
-     * @type {import('../../../scene/sprite.js').Sprite}
+     * @type {Sprite}
      */
     set sprite(value) {
         this._currentClip.sprite = value;
     }
 
+    /**
+     * Gets the current sprite.
+     *
+     * @type {Sprite}
+     */
     get sprite() {
         return this._currentClip.sprite;
     }
@@ -282,7 +305,7 @@ class SpriteComponent extends Component {
     }
 
     /**
-     * The color tint of the sprite.
+     * Sets the color tint of the sprite.
      *
      * @type {Color}
      */
@@ -299,12 +322,17 @@ class SpriteComponent extends Component {
         }
     }
 
+    /**
+     * Gets the color tint of the sprite.
+     *
+     * @type {Color}
+     */
     get color() {
         return this._color;
     }
 
     /**
-     * The opacity of the sprite.
+     * Sets the opacity of the sprite.
      *
      * @type {number}
      */
@@ -315,12 +343,17 @@ class SpriteComponent extends Component {
         }
     }
 
+    /**
+     * Gets the opacity of the sprite.
+     *
+     * @type {number}
+     */
     get opacity() {
         return this._color.a;
     }
 
     /**
-     * A dictionary that contains {@link SpriteAnimationClip}s.
+     * Sets the dictionary that contains {@link SpriteAnimationClip}s.
      *
      * @type {Object<string, SpriteAnimationClip>}
      */
@@ -376,12 +409,17 @@ class SpriteComponent extends Component {
         }
     }
 
+    /**
+     * Gets the dictionary that contains {@link SpriteAnimationClip}s.
+     *
+     * @type {Object<string, SpriteAnimationClip>}
+     */
     get clips() {
         return this._clips;
     }
 
     /**
-     * The current clip being played.
+     * Gets the current clip being played.
      *
      * @type {SpriteAnimationClip}
      */
@@ -390,7 +428,7 @@ class SpriteComponent extends Component {
     }
 
     /**
-     * A global speed modifier used when playing sprite animation clips.
+     * Sets the global speed modifier used when playing sprite animation clips.
      *
      * @type {number}
      */
@@ -398,12 +436,17 @@ class SpriteComponent extends Component {
         this._speed = value;
     }
 
+    /**
+     * Gets the global speed modifier used when playing sprite animation clips.
+     *
+     * @type {number}
+     */
     get speed() {
         return this._speed;
     }
 
     /**
-     * Flip the X axis when rendering a sprite.
+     * Sets whether to flip the X axis when rendering a sprite.
      *
      * @type {boolean}
      */
@@ -414,12 +457,17 @@ class SpriteComponent extends Component {
         this._updateTransform();
     }
 
+    /**
+     * Gets whether to flip the X axis when rendering a sprite.
+     *
+     * @type {boolean}
+     */
     get flipX() {
         return this._flipX;
     }
 
     /**
-     * Flip the Y axis when rendering a sprite.
+     * Sets whether to flip the Y axis when rendering a sprite.
      *
      * @type {boolean}
      */
@@ -430,13 +478,18 @@ class SpriteComponent extends Component {
         this._updateTransform();
     }
 
+    /**
+     * Gets whether to flip the Y axis when rendering a sprite.
+     *
+     * @type {boolean}
+     */
     get flipY() {
         return this._flipY;
     }
 
     /**
-     * The width of the sprite when rendering using 9-Slicing. The width and height are only used
-     * when the render mode of the sprite asset is Sliced or Tiled.
+     * Sets the width of the sprite when rendering using 9-Slicing. The width and height are only
+     * used when the render mode of the sprite asset is Sliced or Tiled.
      *
      * @type {number}
      */
@@ -451,13 +504,18 @@ class SpriteComponent extends Component {
         }
     }
 
+    /**
+     * Gets the width of the sprite when rendering using 9-Slicing.
+     *
+     * @type {number}
+     */
     get width() {
         return this._width;
     }
 
     /**
-     * The height of the sprite when rendering using 9-Slicing. The width and height are only used
-     * when the render mode of the sprite asset is Sliced or Tiled.
+     * Sets the height of the sprite when rendering using 9-Slicing. The width and height are only
+     * used when the render mode of the sprite asset is Sliced or Tiled.
      *
      * @type {number}
      */
@@ -472,18 +530,24 @@ class SpriteComponent extends Component {
         }
     }
 
+    /**
+     * Gets the height of the sprite when rendering using 9-Slicing.
+     *
+     * @type {number}
+     */
     get height() {
         return this._height;
     }
 
     /**
-     * Assign sprite to a specific batch group (see {@link BatchGroup}). Default is -1 (no group).
+     * Sets the batch group for the sprite (see {@link BatchGroup}). Default is -1 (no group).
      *
      * @type {number}
      */
     set batchGroupId(value) {
-        if (this._batchGroupId === value)
+        if (this._batchGroupId === value) {
             return;
+        }
 
         const prev = this._batchGroupId;
         this._batchGroupId = value;
@@ -503,12 +567,17 @@ class SpriteComponent extends Component {
         }
     }
 
+    /**
+     * Gets the batch group for the sprite.
+     *
+     * @type {number}
+     */
     get batchGroupId() {
         return this._batchGroupId;
     }
 
     /**
-     * The name of the clip to play automatically when the component is enabled and the clip exists.
+     * Sets the name of the clip to play automatically when the component is enabled.
      *
      * @type {string}
      */
@@ -517,14 +586,19 @@ class SpriteComponent extends Component {
         this._tryAutoPlay();
     }
 
+    /**
+     * Gets the name of the clip to play automatically when the component is enabled.
+     *
+     * @type {string}
+     */
     get autoPlayClip() {
         return this._autoPlayClip;
     }
 
     /**
-     * The draw order of the component. A higher value means that the component will be rendered on
-     * top of other components in the same layer. This is not used unless the layer's sort order is
-     * set to {@link SORTMODE_MANUAL}.
+     * Sets the draw order of the component. A higher value means that the component will be
+     * rendered on top of other components in the same layer. This is not used unless the layer's
+     * sort order is set to {@link SORTMODE_MANUAL}.
      *
      * @type {number}
      */
@@ -535,12 +609,17 @@ class SpriteComponent extends Component {
         }
     }
 
+    /**
+     * Gets the draw order of the component.
+     *
+     * @type {number}
+     */
     get drawOrder() {
         return this._drawOrder;
     }
 
     /**
-     * An array of layer IDs ({@link Layer#id}) to which this sprite should belong.
+     * Sets the array of layer IDs ({@link Layer#id}) to which this sprite should belong.
      *
      * @type {number[]}
      */
@@ -561,6 +640,11 @@ class SpriteComponent extends Component {
         }
     }
 
+    /**
+     * Gets the array of layer IDs ({@link Layer#id}) to which this sprite belongs.
+     *
+     * @type {number[]}
+     */
     get layers() {
         return this._layers;
     }
@@ -584,8 +668,9 @@ class SpriteComponent extends Component {
         }
 
         this._showModel();
-        if (this._autoPlayClip)
+        if (this._autoPlayClip) {
             this._tryAutoPlay();
+        }
 
         if (this._batchGroupId >= 0) {
             app.batcher?.insert(BatchGroup.SPRITE, this._batchGroupId, this.entity);
@@ -756,9 +841,9 @@ class SpriteComponent extends Component {
 
                 const tex = this.sprite.atlas.texture;
                 this._atlasRect.set(frameData.rect.x / tex.width,
-                                    frameData.rect.y / tex.height,
-                                    frameData.rect.z / tex.width,
-                                    frameData.rect.w / tex.height
+                    frameData.rect.y / tex.height,
+                    frameData.rect.z / tex.width,
+                    frameData.rect.w / tex.height
                 );
 
             } else {
@@ -908,7 +993,7 @@ class SpriteComponent extends Component {
      * @param {string} [data.name] - The name of the new animation clip.
      * @param {number} [data.fps] - Frames per second for the animation clip.
      * @param {boolean} [data.loop] - Whether to loop the animation clip.
-     * @param {number|import('../../asset/asset.js').Asset} [data.spriteAsset] - The asset id or
+     * @param {number|Asset} [data.spriteAsset] - The asset id or
      * the {@link Asset} of the sprite that this clip will play.
      * @returns {SpriteAnimationClip} The new clip that was added.
      */
@@ -922,8 +1007,9 @@ class SpriteComponent extends Component {
 
         this._clips[data.name] = clip;
 
-        if (clip.name && clip.name === this._autoPlayClip)
+        if (clip.name && clip.name === this._autoPlayClip) {
             this._tryAutoPlay();
+        }
 
         return clip;
     }

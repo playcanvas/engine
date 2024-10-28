@@ -1,21 +1,18 @@
 import {
-    CUBEPROJ_NONE, GAMMA_SRGBHDR, GAMMA_NONE, LIGHTTYPE_DIRECTIONAL, LIGHTTYPE_OMNI, LIGHTTYPE_SPOT,
-    MASK_AFFECT_DYNAMIC, SHADER_FORWARDHDR, TONEMAP_LINEAR, SHADERDEF_INSTANCING, SHADERDEF_MORPH_NORMAL,
-    SHADERDEF_MORPH_POSITION, SHADERDEF_MORPH_TEXTURE_BASED, SHADERDEF_SCREENSPACE, SHADERDEF_SKIN,
-    SHADERDEF_NOSHADOW, SHADERDEF_TANGENTS, SPECULAR_BLINN, SPRITE_RENDERMODE_SIMPLE
-} from "../constants.js";
+    CUBEPROJ_NONE, LIGHTTYPE_DIRECTIONAL, LIGHTTYPE_OMNI, LIGHTTYPE_SPOT,
+    MASK_AFFECT_DYNAMIC, TONEMAP_NONE, SHADERDEF_INSTANCING, SHADERDEF_MORPH_NORMAL,
+    SHADERDEF_MORPH_POSITION, SHADERDEF_SCREENSPACE, SHADERDEF_SKIN,
+    SHADERDEF_NOSHADOW, SHADERDEF_TANGENTS, SPRITE_RENDERMODE_SIMPLE,
+    SHADERDEF_MORPH_TEXTURE_BASED_INT,
+    FOG_NONE
+} from '../constants.js';
 
 class LitMaterialOptionsBuilder {
-    static update(litOptions, material, scene, objDefs, pass, sortedLights) {
+    static update(litOptions, material, scene, renderParams, objDefs, pass, sortedLights) {
         LitMaterialOptionsBuilder.updateSharedOptions(litOptions, material, scene, objDefs, pass);
         LitMaterialOptionsBuilder.updateMaterialOptions(litOptions, material);
-        LitMaterialOptionsBuilder.updateEnvOptions(litOptions, material, scene);
+        LitMaterialOptionsBuilder.updateEnvOptions(litOptions, material, scene, renderParams);
         LitMaterialOptionsBuilder.updateLightingOptions(litOptions, material, objDefs, sortedLights);
-
-        if (pass === SHADER_FORWARDHDR) {
-            litOptions.gamma = GAMMA_SRGBHDR;
-            litOptions.toneMap = TONEMAP_LINEAR;
-        }
     }
 
     static updateSharedOptions(litOptions, material, scene, objDefs, pass) {
@@ -29,7 +26,7 @@ class LitMaterialOptionsBuilder {
         litOptions.useInstancing = objDefs && (objDefs & SHADERDEF_INSTANCING) !== 0;
         litOptions.useMorphPosition = objDefs && (objDefs & SHADERDEF_MORPH_POSITION) !== 0;
         litOptions.useMorphNormal = objDefs && (objDefs & SHADERDEF_MORPH_NORMAL) !== 0;
-        litOptions.useMorphTextureBased = objDefs && (objDefs & SHADERDEF_MORPH_TEXTURE_BASED) !== 0;
+        litOptions.useMorphTextureBasedInt = objDefs && (objDefs & SHADERDEF_MORPH_TEXTURE_BASED_INT) !== 0;
         litOptions.hasTangents = objDefs && ((objDefs & SHADERDEF_TANGENTS) !== 0);
 
         litOptions.nineSlicedMode = material.nineSlicedMode || SPRITE_RENDERMODE_SIMPLE;
@@ -50,14 +47,11 @@ class LitMaterialOptionsBuilder {
     }
 
     static updateMaterialOptions(litOptions, material) {
-        litOptions.useAmbientTint = false;
         litOptions.separateAmbient = false;    // store ambient light color in separate variable, instead of adding it to diffuse directly
         litOptions.customFragmentShader = null;
         litOptions.pixelSnap = material.pixelSnap;
 
-        litOptions.shadingModel = material.shadingModel;
         litOptions.ambientSH = material.ambientSH;
-        litOptions.fastTbn = material.fastTbn;
         litOptions.twoSidedLighting = material.twoSidedLighting;
         litOptions.occludeDirect = material.occludeDirect;
         litOptions.occludeSpecular = material.occludeSpecular;
@@ -72,7 +66,6 @@ class LitMaterialOptionsBuilder {
 
         litOptions.cubeMapProjection = CUBEPROJ_NONE;
 
-        litOptions.conserveEnergy = material.conserveEnergy && material.shadingModel === SPECULAR_BLINN;
         litOptions.useSpecular = material.hasSpecular;
         litOptions.useSpecularityFactor = material.hasSpecularityFactor;
         litOptions.enableGGXSpecular = material.ggxSpecular;
@@ -95,10 +88,10 @@ class LitMaterialOptionsBuilder {
         litOptions.diffuseMapEnabled = material.hasDiffuseMap;
     }
 
-    static updateEnvOptions(litOptions, material, scene) {
-        litOptions.fog = material.useFog ? scene.fog : 'none';
-        litOptions.gamma = material.useGammaTonemap ? scene.gammaCorrection : GAMMA_NONE;
-        litOptions.toneMap = material.useGammaTonemap ? scene.toneMapping : -1;
+    static updateEnvOptions(litOptions, material, scene, renderParams) {
+        litOptions.fog = material.useFog ? renderParams.fog : FOG_NONE;
+        litOptions.gamma = renderParams.shaderOutputGamma;
+        litOptions.toneMap = material.useTonemap ? renderParams.toneMapping : TONEMAP_NONE;
 
         // source of reflections
         if (material.useSkybox && scene.envAtlas && scene.skybox) {

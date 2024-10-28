@@ -2,14 +2,21 @@ import { Debug } from '../../core/debug.js';
 import { TRACEID_BINDGROUP_ALLOC } from '../../core/constants.js';
 import { UNIFORM_BUFFER_DEFAULT_SLOT_NAME } from './constants.js';
 import { DebugGraphics } from './debug-graphics.js';
+import { getBuiltInTexture } from './built-in-textures.js';
+
+/**
+ * @import { BindGroupFormat } from './bind-group-format.js'
+ * @import { GraphicsDevice } from './graphics-device.js'
+ * @import { StorageBuffer } from './storage-buffer.js'
+ * @import { Texture } from './texture.js'
+ * @import { UniformBuffer } from './uniform-buffer.js'
+ */
 
 let id = 0;
 
 /**
  * Data structure to hold a bind group and its offsets. This is used by {@link UniformBuffer#update}
  * to return a dynamic bind group and offset for the uniform buffer.
- *
- * @ignore
  */
 class DynamicBindGroup {
     bindGroup;
@@ -20,19 +27,17 @@ class DynamicBindGroup {
 /**
  * A bind group represents a collection of {@link UniformBuffer}, {@link Texture} and
  * {@link StorageBuffer} instanced, which can be bind on a GPU for rendering.
- *
- * @ignore
  */
 class BindGroup {
     /**
      * A render version the bind group was last updated on.
      *
      * @type {number}
-     * @ignore
+     * @private
      */
     renderVersionUpdated = -1;
 
-    /** @type {import('./uniform-buffer.js').UniformBuffer[]} */
+    /** @type {UniformBuffer[]} */
     uniformBuffers;
 
     /**
@@ -46,12 +51,10 @@ class BindGroup {
     /**
      * Create a new Bind Group.
      *
-     * @param {import('./graphics-device.js').GraphicsDevice} graphicsDevice - The graphics device
-     * used to manage this uniform buffer.
-     * @param {import('./bind-group-format.js').BindGroupFormat} format - Format of the bind group.
-     * @param {import('./uniform-buffer.js').UniformBuffer} [defaultUniformBuffer] - The default
-     * uniform buffer. Typically a bind group only has a single uniform buffer, and this allows
-     * easier access.
+     * @param {GraphicsDevice} graphicsDevice - The graphics device used to manage this uniform buffer.
+     * @param {BindGroupFormat} format - Format of the bind group.
+     * @param {UniformBuffer} [defaultUniformBuffer] - The default uniform buffer. Typically a bind
+     * group only has a single uniform buffer, and this allows easier access.
      */
     constructor(graphicsDevice, format, defaultUniformBuffer) {
         this.id = id++;
@@ -65,7 +68,7 @@ class BindGroup {
         this.storageBuffers = [];
         this.uniformBuffers = [];
 
-        /** @type {import('./uniform-buffer.js').UniformBuffer} */
+        /** @type {UniformBuffer} */
         this.defaultUniformBuffer = defaultUniformBuffer;
         if (defaultUniformBuffer) {
             this.setUniformBuffer(UNIFORM_BUFFER_DEFAULT_SLOT_NAME, defaultUniformBuffer);
@@ -88,8 +91,7 @@ class BindGroup {
      * Assign a uniform buffer to a slot.
      *
      * @param {string} name - The name of the uniform buffer slot
-     * @param {import('./uniform-buffer.js').UniformBuffer} uniformBuffer - The Uniform buffer to
-     * assign to the slot.
+     * @param {UniformBuffer} uniformBuffer - The Uniform buffer to assign to the slot.
      */
     setUniformBuffer(name, uniformBuffer) {
         const index = this.format.bufferFormatsMap.get(name);
@@ -104,8 +106,7 @@ class BindGroup {
      * Assign a storage buffer to a slot.
      *
      * @param {string} name - The name of the storage buffer slot.
-     * @param {import('./storage-buffer.js').StorageBuffer} storageBuffer - The storage buffer to
-     * assign to the slot.
+     * @param {StorageBuffer} storageBuffer - The storage buffer to assign to the slot.
      */
     setStorageBuffer(name, storageBuffer) {
         const index = this.format.storageBufferFormatsMap.get(name);
@@ -120,7 +121,7 @@ class BindGroup {
      * Assign a texture to a named slot.
      *
      * @param {string} name - The name of the texture slot.
-     * @param {import('./texture.js').Texture} texture - Texture to assign to the slot.
+     * @param {Texture} texture - Texture to assign to the slot.
      */
     setTexture(name, texture) {
         const index = this.format.textureFormatsMap.get(name);
@@ -138,7 +139,7 @@ class BindGroup {
      * Assign a storage texture to a named slot.
      *
      * @param {string} name - The name of the texture slot.
-     * @param {import('./texture.js').Texture} texture - Texture to assign to the slot.
+     * @param {Texture} texture - Texture to assign to the slot.
      */
     setStorageTexture(name, texture) {
         const index = this.format.storageTextureFormatsMap.get(name);
@@ -172,8 +173,26 @@ class BindGroup {
 
         for (let i = 0; i < textureFormats.length; i++) {
             const textureFormat = textureFormats[i];
-            const value = textureFormat.scopeId.value;
-            Debug.assert(value, `Value was not set when assigning texture slot [${textureFormat.name}] to a bind group, while rendering [${DebugGraphics.toString()}]`, this);
+            let value = textureFormat.scopeId.value;
+
+            // custom error handling for known global textures
+            if (!value) {
+                if (textureFormat.name === 'uSceneDepthMap') {
+                    Debug.errorOnce(`A uSceneDepthMap texture is used by the shader but a scene depth texture is not available. Use CameraComponent.requestSceneDepthMap / enable Depth Grabpass on the Camera Component to enable it. Rendering [${DebugGraphics.toString()}]`);
+                    value = getBuiltInTexture(this.device, 'white');
+                }
+                if (textureFormat.name === 'uSceneColorMap') {
+                    Debug.errorOnce(`A uSceneColorMap texture is used by the shader but a scene color texture is not available. Use CameraComponent.requestSceneColorMap / enable Color Grabpass on the Camera Component to enable it. Rendering [${DebugGraphics.toString()}]`);
+                    value = getBuiltInTexture(this.device, 'pink');
+                }
+
+                // missing generic texture
+                if (!value) {
+                    Debug.errorOnce(`Texture ${textureFormat.name} is required for rendering but was not set. Rendering [${DebugGraphics.toString()}]`);
+                    value = getBuiltInTexture(this.device, 'pink');
+                }
+            }
+
             this.setTexture(textureFormat.name, value);
         }
 

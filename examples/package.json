@@ -14,7 +14,7 @@
     "clean": "node ./scripts/clean.mjs",
     "develop": "cross-env NODE_ENV=development concurrently --kill-others \"npm run watch\" \"npm run serve\"",
     "lint": "eslint --ext .js,.mjs .",
-    "serve": "serve dist -l 5000 --no-request-logging --config ../serve.json",
+    "serve": "serve dist -l 5555 --no-request-logging --config ../serve.json",
     "watch": "npm run -s build:pre && cross-env NODE_ENV=development rollup -c -w"
   },
   "eslintConfig": {
@@ -28,7 +28,15 @@
       "pcx": "readonly"
     },
     "rules": {
-      "import/no-unresolved": "off"
+      "import/no-unresolved": "off",
+      "jsdoc/check-tag-names": [
+        "error",
+        {
+          "definedTags": [
+            "attribute"
+          ]
+        }
+      ]
     }
   },
   "eslintIgnore": [

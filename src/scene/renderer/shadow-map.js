@@ -45,14 +45,12 @@ class ShadowMap {
         this.renderTargets.length = 0;
     }
 
-    static getShadowFormat(device, shadowType) {
+    static getShadowFormat(shadowType) {
         if (shadowType === SHADOW_VSM32) {
             return PIXELFORMAT_RGBA32F;
         } else if (shadowType === SHADOW_VSM16) {
             return PIXELFORMAT_RGBA16F;
-        } else if (shadowType === SHADOW_PCF5) {
-            return PIXELFORMAT_DEPTH;
-        } else if (shadowType === SHADOW_PCF1 || shadowType === SHADOW_PCF3) {
+        } else if (shadowType === SHADOW_PCF1 || shadowType === SHADOW_PCF3 || shadowType === SHADOW_PCF5) {
             return PIXELFORMAT_DEPTH;
         } else if (shadowType === SHADOW_PCSS) {
             return PIXELFORMAT_R32F;
@@ -96,7 +94,7 @@ class ShadowMap {
 
     static create2dMap(device, size, shadowType) {
 
-        const format = this.getShadowFormat(device, shadowType);
+        const format = this.getShadowFormat(shadowType);
         const filter = this.getShadowFiltering(device, shadowType);
 
         const texture = new Texture(device, {
@@ -115,7 +113,7 @@ class ShadowMap {
         });
 
         let target = null;
-        if (shadowType === SHADOW_PCF5 || shadowType === SHADOW_PCF1 || shadowType === SHADOW_PCF3) {
+        if (shadowType === SHADOW_PCF1 || shadowType === SHADOW_PCF3 || shadowType === SHADOW_PCF5) {
 
             // enable hardware PCF when sampling the depth texture
             texture.compareOnRead = true;
@@ -143,7 +141,10 @@ class ShadowMap {
 
     static createCubemap(device, size, shadowType) {
 
-        const format = shadowType === SHADOW_PCSS ? PIXELFORMAT_R32F : PIXELFORMAT_RGBA8;
+        const isPcss = shadowType === SHADOW_PCSS;
+        const format = this.getShadowFormat(shadowType);
+        const filter = isPcss ? FILTER_NEAREST : FILTER_LINEAR;
+
         const cubemap = new Texture(device, {
             // #if _PROFILER
             profilerHint: TEXHINT_SHADOWMAP,
@@ -153,21 +154,39 @@ class ShadowMap {
             height: size,
             cubemap: true,
             mipmaps: false,
-            minFilter: FILTER_NEAREST,
-            magFilter: FILTER_NEAREST,
+            minFilter: filter,
+            magFilter: filter,
             addressU: ADDRESS_CLAMP_TO_EDGE,
             addressV: ADDRESS_CLAMP_TO_EDGE,
             name: 'ShadowMapCube'
         });
 
+        // enable hardware PCF when sampling the depth texture
+        if (!isPcss) {
+            cubemap.compareOnRead = true;
+            cubemap.compareFunc = FUNC_LESS;
+        }
+
         const targets = [];
         for (let i = 0; i < 6; i++) {
-            const target = new RenderTarget({
-                colorBuffer: cubemap,
-                face: i,
-                depth: true
-            });
-            targets.push(target);
+
+            if (isPcss) {
+
+                // color and depth buffer
+                targets.push(new RenderTarget({
+                    colorBuffer: cubemap,
+                    face: i,
+                    depth: true
+                }));
+
+            } else {
+
+                // depth buffer only
+                targets.push(new RenderTarget({
+                    depthBuffer: cubemap,
+                    face: i
+                }));
+            }
         }
         return new ShadowMap(cubemap, targets);
     }

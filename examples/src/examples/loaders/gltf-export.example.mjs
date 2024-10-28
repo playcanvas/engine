@@ -102,7 +102,8 @@ assetListLoader.load(() => {
 
     // a render component with a sphere and cone primitives
     const material = new pc.StandardMaterial();
-    material.diffuse = pc.Color.RED;
+    material.diffuse = pc.Color.YELLOW;
+    material.diffuseMap = assets.color.resource;
     material.update();
 
     const entity = new pc.Entity('TwoMeshInstances');
@@ -116,19 +117,6 @@ assetListLoader.load(() => {
     app.root.addChild(entity);
     entity.setLocalPosition(0, 1.5, -1.5);
 
-    // mesh with a basic material
-    const basicMaterial = new pc.BasicMaterial();
-    basicMaterial.color.set(1.6, 2.7, 1.9);
-    basicMaterial.colorMap = assets.color.resource;
-
-    const capsule = new pc.Entity('capsule');
-    capsule.addComponent('render', {
-        material: basicMaterial,
-        type: 'capsule'
-    });
-    capsule.setLocalPosition(0.5, 2.0, -0.5);
-    app.root.addChild(capsule);
-
     // Create an Entity with a camera component
     const camera = new pc.Entity();
     camera.addComponent('camera', {
@@ -141,7 +129,7 @@ assetListLoader.load(() => {
 
     // set skybox
     app.scene.envAtlas = assets.helipad.resource;
-    app.scene.toneMapping = pc.TONEMAP_ACES;
+    app.scene.rendering.toneMapping = pc.TONEMAP_ACES;
     app.scene.skyboxMip = 1;
     app.scene.exposure = 1.5;
 

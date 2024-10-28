@@ -59,7 +59,7 @@ class Tags extends EventHandler {
     /**
      * Add a tag, duplicates are ignored. Can be array or comma separated arguments for multiple tags.
      *
-     * @param {...*} name - Name of a tag, or array of tags.
+     * @param {...*} args - Name of a tag, or array of tags.
      * @returns {boolean} True if any tag were added.
      * @example
      * tags.add('level-1');
@@ -68,16 +68,18 @@ class Tags extends EventHandler {
      * @example
      * tags.add(['level-2', 'mob']);
      */
-    add() {
+    add(...args) {
         let changed = false;
-        const tags = this._processArguments(arguments, true);
+        const tags = this._processArguments(args, true);
 
-        if (!tags.length)
+        if (!tags.length) {
             return changed;
+        }
 
         for (let i = 0; i < tags.length; i++) {
-            if (this._index[tags[i]])
+            if (this._index[tags[i]]) {
                 continue;
+            }
 
             changed = true;
 
@@ -87,8 +89,9 @@ class Tags extends EventHandler {
             this.fire('add', tags[i], this._parent);
         }
 
-        if (changed)
+        if (changed) {
             this.fire('change', this._parent);
+        }
 
         return changed;
     }
@@ -96,7 +99,7 @@ class Tags extends EventHandler {
     /**
      * Remove tag.
      *
-     * @param {...*} name - Name of a tag or array of tags.
+     * @param {...*} args - Name of a tag or array of tags.
      * @returns {boolean} True if any tag were removed.
      * @example
      * tags.remove('level-1');
@@ -105,20 +108,23 @@ class Tags extends EventHandler {
      * @example
      * tags.remove(['level-2', 'mob']);
      */
-    remove() {
+    remove(...args) {
         let changed = false;
 
-        if (!this._list.length)
+        if (!this._list.length) {
             return changed;
+        }
 
-        const tags = this._processArguments(arguments, true);
+        const tags = this._processArguments(args, true);
 
-        if (!tags.length)
+        if (!tags.length) {
             return changed;
+        }
 
         for (let i = 0; i < tags.length; i++) {
-            if (!this._index[tags[i]])
+            if (!this._index[tags[i]]) {
                 continue;
+            }
 
             changed = true;
 
@@ -128,8 +134,9 @@ class Tags extends EventHandler {
             this.fire('remove', tags[i], this._parent);
         }
 
-        if (changed)
+        if (changed) {
             this.fire('change', this._parent);
+        }
 
         return changed;
     }
@@ -141,15 +148,17 @@ class Tags extends EventHandler {
      * tags.clear();
      */
     clear() {
-        if (!this._list.length)
+        if (!this._list.length) {
             return;
+        }
 
         const tags = this._list.slice(0);
         this._list = [];
         this._index = { };
 
-        for (let i = 0; i < tags.length; i++)
+        for (let i = 0; i < tags.length; i++) {
             this.fire('remove', tags[i], this._parent);
+        }
 
         this.fire('change', this._parent);
     }
@@ -171,11 +180,12 @@ class Tags extends EventHandler {
      * @example
      * tags.has(['ui', 'settings'], ['ui', 'levels']); // (ui AND settings) OR (ui AND levels)
      */
-    has() {
-        if (!this._list.length)
+    has(...query) {
+        if (!this._list.length) {
             return false;
+        }
 
-        return this._has(this._processArguments(arguments));
+        return this._has(this._processArguments(query));
     }
 
     /**
@@ -184,28 +194,32 @@ class Tags extends EventHandler {
      * @private
      */
     _has(tags) {
-        if (!this._list.length || !tags.length)
+        if (!this._list.length || !tags.length) {
             return false;
+        }
 
         for (let i = 0; i < tags.length; i++) {
             if (tags[i].length === 1) {
                 // single occurrence
-                if (this._index[tags[i][0]])
+                if (this._index[tags[i][0]]) {
                     return true;
+                }
             } else {
                 // combined occurrence
                 let multiple = true;
 
                 for (let t = 0; t < tags[i].length; t++) {
-                    if (this._index[tags[i][t]])
+                    if (this._index[tags[i][t]]) {
                         continue;
+                    }
 
                     multiple = false;
                     break;
                 }
 
-                if (multiple)
+                if (multiple) {
                     return true;
+                }
             }
         }
 
@@ -222,7 +236,7 @@ class Tags extends EventHandler {
     }
 
     /**
-     * @param {IArguments} args - Arguments to process.
+     * @param {Array} args - Arguments to process.
      * @param {boolean} [flat] - If true, will flatten array of tags. Defaults to false.
      * @returns {string[]|string[][]} Array of tags.
      * @private
@@ -231,17 +245,20 @@ class Tags extends EventHandler {
         const tags = [];
         let tmp = [];
 
-        if (!args || !args.length)
+        if (!args || !args.length) {
             return tags;
+        }
 
         for (let i = 0; i < args.length; i++) {
             if (args[i] instanceof Array) {
-                if (!flat)
+                if (!flat) {
                     tmp = [];
+                }
 
                 for (let t = 0; t < args[i].length; t++) {
-                    if (typeof args[i][t] !== 'string')
+                    if (typeof args[i][t] !== 'string') {
                         continue;
+                    }
 
                     if (flat) {
                         tags.push(args[i][t]);
@@ -250,8 +267,9 @@ class Tags extends EventHandler {
                     }
                 }
 
-                if (!flat && tmp.length)
+                if (!flat && tmp.length) {
                     tags.push(tmp);
+                }
             } else if (typeof args[i] === 'string') {
                 if (flat) {
                     tags.push(args[i]);

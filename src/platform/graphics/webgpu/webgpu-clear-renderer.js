@@ -1,17 +1,17 @@
-import { Debug } from "../../../core/debug.js";
-import { UniformBufferFormat, UniformFormat } from "../uniform-buffer-format.js";
-import { BlendState } from "../blend-state.js";
+import { Debug } from '../../../core/debug.js';
+import { UniformBufferFormat, UniformFormat } from '../uniform-buffer-format.js';
+import { BlendState } from '../blend-state.js';
 import {
     CULLFACE_NONE,
     PRIMITIVE_TRISTRIP, SHADERLANGUAGE_WGSL,
     UNIFORMTYPE_FLOAT, UNIFORMTYPE_VEC4, BINDGROUP_MESH, CLEARFLAG_COLOR, CLEARFLAG_DEPTH, CLEARFLAG_STENCIL,
     BINDGROUP_MESH_UB
-} from "../constants.js";
-import { Shader } from "../shader.js";
-import { DynamicBindGroup } from "../bind-group.js";
-import { UniformBuffer } from "../uniform-buffer.js";
-import { DebugGraphics } from "../debug-graphics.js";
-import { DepthState } from "../depth-state.js";
+} from '../constants.js';
+import { Shader } from '../shader.js';
+import { DynamicBindGroup } from '../bind-group.js';
+import { UniformBuffer } from '../uniform-buffer.js';
+import { DebugGraphics } from '../debug-graphics.js';
+import { DepthState } from '../depth-state.js';
 
 const primitive = {
     type: PRIMITIVE_TRISTRIP,
@@ -23,11 +23,9 @@ const primitive = {
 /**
  * A WebGPU helper class implementing a viewport clear operation. When rendering to a texture,
  * the whole surface can be cleared using loadOp, but if only a viewport needs to be cleared, or if
- * it needs to be cleared later during the rendering, this need to be archieved by rendering a quad.
+ * it needs to be cleared later during the rendering, this need to be achieved by rendering a quad.
  * This class renders a full-screen quad, and expects the viewport / scissor to be set up to clip
  * it to only required area.
- *
- * @ignore
  */
 class WebgpuClearRenderer {
     constructor(device) {
@@ -131,7 +129,7 @@ class WebgpuClearRenderer {
 
             // setup stencil clear
             if ((flags & CLEARFLAG_STENCIL) && renderTarget.stencil) {
-                Debug.warnOnce("ClearRenderer does not support stencil clear at the moment");
+                Debug.warnOnce('ClearRenderer does not support stencil clear at the moment');
             }
 
             uniformBuffer.endUpdate();

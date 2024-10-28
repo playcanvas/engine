@@ -2,6 +2,11 @@ import { Debug } from '../../core/debug.js';
 import { Quat } from '../../core/math/quat.js';
 import { Vec3 } from '../../core/math/vec3.js';
 
+/**
+ * @import { Animation } from './animation.js'
+ * @import { GraphNode } from '../graph-node.js'
+ */
+
 class InterpolatedKey {
     constructor() {
         this._written = false;
@@ -42,12 +47,11 @@ class Skeleton {
     /**
      * Create a new Skeleton instance.
      *
-     * @param {import('../graph-node.js').GraphNode} graph - The root {@link GraphNode} of the
-     * skeleton.
+     * @param {GraphNode} graph - The root {@link GraphNode} of the skeleton.
      */
     constructor(graph) {
         /**
-         * @type {import('./animation.js').Animation}
+         * @type {Animation}
          * @private
          */
         this._animation = null;
@@ -66,30 +70,36 @@ class Skeleton {
             this._interpolatedKeyDict[node.name] = interpKey;
             this._currKeyIndices[node.name] = 0;
 
-            for (let i = 0; i < node._children.length; i++)
+            for (let i = 0; i < node._children.length; i++) {
                 addInterpolatedKeys(node._children[i]);
+            }
         };
 
         addInterpolatedKeys(graph);
     }
 
     /**
-     * Animation currently assigned to skeleton.
+     * Sets the animation on the skeleton.
      *
-     * @type {import('./animation.js').Animation}
+     * @type {Animation}
      */
     set animation(value) {
         this._animation = value;
         this.currentTime = 0;
     }
 
+    /**
+     * Gets the animation on the skeleton.
+     *
+     * @type {Animation}
+     */
     get animation() {
         return this._animation;
     }
 
     /**
-     * Current time of currently active animation in seconds. This value is between zero and the
-     * duration of the animation.
+     * Sets the current time of the currently active animation in seconds. This value is between
+     * zero and the duration of the animation.
      *
      * @type {number}
      */
@@ -106,12 +116,17 @@ class Skeleton {
         this.updateGraph();
     }
 
+    /**
+     * Gets the current time of the currently active animation in seconds.
+     *
+     * @type {number}
+     */
     get currentTime() {
         return this._time;
     }
 
     /**
-     * Read-only property that returns number of nodes of a skeleton.
+     * Gets the number of nodes in the skeleton.
      *
      * @type {number}
      */
@@ -244,8 +259,7 @@ class Skeleton {
      * Links a skeleton to a node hierarchy. The nodes animated skeleton are then subsequently used
      * to drive the local transformation matrices of the node hierarchy.
      *
-     * @param {import('../graph-node.js').GraphNode} graph - The root node of the graph that the
-     * skeleton is to drive.
+     * @param {GraphNode} graph - The root node of the graph that the skeleton is to drive.
      */
     setGraph(graph) {
         this.graph = graph;
@@ -280,8 +294,9 @@ class Skeleton {
                     transform.localRotation.copy(interpKey._quat);
                     transform.localScale.copy(interpKey._scale);
 
-                    if (!transform._dirtyLocal)
+                    if (!transform._dirtyLocal) {
                         transform._dirtifyLocal();
+                    }
 
                     interpKey._written = false;
                 }

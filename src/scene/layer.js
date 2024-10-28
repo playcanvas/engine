@@ -1,14 +1,27 @@
 import { Debug } from '../core/debug.js';
 import { hash32Fnv1a } from '../core/hash.js';
-
 import {
     LIGHTTYPE_DIRECTIONAL,
     LAYER_FX,
-    SHADER_FORWARD,
     SORTKEY_FORWARD,
     SORTMODE_BACK2FRONT, SORTMODE_CUSTOM, SORTMODE_FRONT2BACK, SORTMODE_MATERIALMESH, SORTMODE_NONE
 } from './constants.js';
 import { Material } from './materials/material.js';
+
+/**
+ * @import { Camera } from './camera.js'
+ * @import { CameraComponent } from '../framework/components/camera/component.js'
+ * @import { Light } from './light.js'
+ * @import { LightComponent } from '../framework/components/light/component.js'
+ * @import { MeshInstance } from './mesh-instance.js'
+ * @import { Vec3 } from '../core/math/vec3.js'
+ */
+
+// Layers
+let layerCounter = 0;
+
+const lightKeys = [];
+const _tempMaterials = new Set();
 
 function sortManual(drawCallA, drawCallB) {
     return drawCallA.drawOrder - drawCallB.drawOrder;
@@ -33,24 +46,18 @@ function sortFrontToBack(drawCallA, drawCallB) {
 
 const sortCallbacks = [null, sortManual, sortMaterialMesh, sortBackToFront, sortFrontToBack];
 
-// Layers
-let layerCounter = 0;
-
-const lightKeys = [];
-const _tempMaterials = new Set();
-
 class CulledInstances {
     /**
      * Visible opaque mesh instances.
      *
-     * @type {import('./mesh-instance.js').MeshInstance[]}
+     * @type {MeshInstance[]}
      */
     opaque = [];
 
     /**
      * Visible transparent mesh instances.
      *
-     * @type {import('./mesh-instance.js').MeshInstance[]}
+     * @type {MeshInstance[]}
      */
     transparent = [];
 }
@@ -66,7 +73,7 @@ class Layer {
     /**
      * Mesh instances assigned to this layer.
      *
-     * @type {import('./mesh-instance.js').MeshInstance[]}
+     * @type {MeshInstance[]}
      * @ignore
      */
     meshInstances = [];
@@ -74,7 +81,7 @@ class Layer {
     /**
      * Mesh instances assigned to this layer, stored in a set.
      *
-     * @type {Set<import('./mesh-instance.js').MeshInstance>}
+     * @type {Set<MeshInstance>}
      * @ignore
      */
     meshInstancesSet = new Set();
@@ -82,7 +89,7 @@ class Layer {
     /**
      * Shadow casting instances assigned to this layer.
      *
-     * @type {import('./mesh-instance.js').MeshInstance[]}
+     * @type {MeshInstance[]}
      * @ignore
      */
     shadowCasters = [];
@@ -90,7 +97,7 @@ class Layer {
     /**
      * Shadow casting instances assigned to this layer, stored in a set.
      *
-     * @type {Set<import('./mesh-instance.js').MeshInstance>}
+     * @type {Set<MeshInstance>}
      * @ignore
      */
     shadowCastersSet = new Set();
@@ -98,7 +105,7 @@ class Layer {
     /**
      * Visible (culled) mesh instances assigned to this layer. Looked up by the Camera.
      *
-     * @type {WeakMap<import('./camera.js').Camera, CulledInstances>}
+     * @type {WeakMap<Camera, CulledInstances>}
      * @private
      */
     _visibleInstances = new WeakMap();
@@ -106,7 +113,7 @@ class Layer {
     /**
      * All lights assigned to a layer.
      *
-     * @type {import('./light.js').Light[]}
+     * @type {Light[]}
      * @private
      */
     _lights = [];
@@ -114,16 +121,15 @@ class Layer {
     /**
      * All lights assigned to a layer stored in a set.
      *
-     * @type {Set<import('./light.js').Light>}
+     * @type {Set<Light>}
      * @private
      */
-
     _lightsSet = new Set();
 
     /**
      * Set of light used by clustered lighting (omni and spot, but no directional).
      *
-     * @type {Set<import('./light.js').Light>}
+     * @type {Set<Light>}
      * @private
      */
     _clusteredLightsSet = new Set();
@@ -133,7 +139,7 @@ class Layer {
      * to match their order in _lightIdHash, so that their order matches the order expected by the
      * generated shader code.
      *
-     * @type {import('./light.js').Light[][]}
+     * @type {Light[][]}
      * @private
      */
     _splitLights = [[], [], []];
@@ -156,13 +162,13 @@ class Layer {
     requiresLightCube = false;
 
     /**
-     * @type {import('../framework/components/camera/component.js').CameraComponent[]}
+     * @type {CameraComponent[]}
      * @ignore
      */
     cameras = [];
 
     /**
-     * @type {Set<import('./camera.js').Camera>}
+     * @type {Set<Camera>}
      * @ignore
      */
     camerasSet = new Set();
@@ -250,21 +256,6 @@ class Layer {
             this.renderTarget = options.renderTarget;
         }
 
-        /**
-         * A type of shader to use during rendering. Possible values are:
-         *
-         * - {@link SHADER_FORWARD}
-         * - {@link SHADER_FORWARDHDR}
-         * - {@link SHADER_DEPTH}
-         * - Your own custom value. Should be in 19 - 31 range. Use {@link StandardMaterial#onUpdateShader}
-         * to apply shader modifications based on this value.
-         *
-         * Defaults to {@link SHADER_FORWARD}.
-         *
-         * @type {number}
-         */
-        this.shaderPass = options.shaderPass ?? SHADER_FORWARD;
-
         // clear flags
         /**
          * @type {boolean}
@@ -283,98 +274,6 @@ class Layer {
          * @private
          */
         this._clearStencilBuffer = !!options.clearStencilBuffer;
-
-        /**
-         * Custom function that is called before visibility culling is performed for this layer.
-         * Useful, for example, if you want to modify camera projection while still using the same
-         * camera and make frustum culling work correctly with it (see
-         * {@link CameraComponent#calculateTransform} and {@link CameraComponent#calculateProjection}).
-         * This function will receive camera index as the only argument. You can get the actual
-         * camera being used by looking up {@link LayerComposition#cameras} with this index.
-         *
-         * @type {Function}
-         */
-        this.onPreCull = options.onPreCull;
-
-        /**
-         * Custom function that is called before this layer is rendered. Useful, for example, for
-         * reacting on screen size changes. This function is called before the first occurrence of
-         * this layer in {@link LayerComposition}. It will receive camera index as the only
-         * argument. You can get the actual camera being used by looking up
-         * {@link LayerComposition#cameras} with this index.
-         *
-         * @type {Function}
-         */
-        this.onPreRender = options.onPreRender;
-
-        /**
-         * Custom function that is called before opaque mesh instances (not semi-transparent) in
-         * this layer are rendered. This function will receive camera index as the only argument.
-         * You can get the actual camera being used by looking up {@link LayerComposition#cameras}
-         * with this index.
-         *
-         * @type {Function}
-         */
-        this.onPreRenderOpaque = options.onPreRenderOpaque;
-
-        /**
-         * Custom function that is called before semi-transparent mesh instances in this layer are
-         * rendered. This function will receive camera index as the only argument. You can get the
-         * actual camera being used by looking up {@link LayerComposition#cameras} with this index.
-         *
-         * @type {Function}
-         */
-        this.onPreRenderTransparent = options.onPreRenderTransparent;
-
-        /**
-         * Custom function that is called after visibility culling is performed for this layer.
-         * Useful for reverting changes done in {@link Layer#onPreCull} and determining final mesh
-         * instance visibility (see {@link MeshInstance#visibleThisFrame}). This function will
-         * receive camera index as the only argument. You can get the actual camera being used by
-         * looking up {@link LayerComposition#cameras} with this index.
-         *
-         * @type {Function}
-         */
-        this.onPostCull = options.onPostCull;
-
-        /**
-         * Custom function that is called after this layer is rendered. Useful to revert changes
-         * made in {@link Layer#onPreRender}. This function is called after the last occurrence of this
-         * layer in {@link LayerComposition}. It will receive camera index as the only argument.
-         * You can get the actual camera being used by looking up {@link LayerComposition#cameras}
-         * with this index.
-         *
-         * @type {Function}
-         */
-        this.onPostRender = options.onPostRender;
-
-        /**
-         * Custom function that is called after opaque mesh instances (not semi-transparent) in
-         * this layer are rendered. This function will receive camera index as the only argument.
-         * You can get the actual camera being used by looking up {@link LayerComposition#cameras}
-         * with this index.
-         *
-         * @type {Function}
-         */
-        this.onPostRenderOpaque = options.onPostRenderOpaque;
-
-        /**
-         * Custom function that is called after semi-transparent mesh instances in this layer are
-         * rendered. This function will receive camera index as the only argument. You can get the
-         * actual camera being used by looking up {@link LayerComposition#cameras} with this index.
-         *
-         * @type {Function}
-         */
-        this.onPostRenderTransparent = options.onPostRenderTransparent;
-
-        /**
-         * Custom function that is called before every mesh instance in this layer is rendered. It
-         * is not recommended to set this function when rendering many objects every frame due to
-         * performance reasons.
-         *
-         * @type {Function}
-         */
-        this.onDrawCall = options.onDrawCall;
 
         /**
          * Custom function that is called after the layer has been enabled. This happens when:
@@ -404,19 +303,11 @@ class Layer {
         }
 
         /**
-         * Make this layer render the same mesh instances that another layer does instead of having
-         * its own mesh instance list. Both layers must share cameras. Frustum culling is only
-         * performed for one layer. Useful for rendering multiple passes using different shaders.
-         *
-         * @type {Layer}
-         */
-        this.layerReference = options.layerReference; // should use the same camera
-
-        /**
          * @type {Function|null}
          * @ignore
          */
         this.customSortCallback = null;
+
         /**
          * @type {Function|null}
          * @ignore
@@ -444,7 +335,7 @@ class Layer {
     }
 
     /**
-     * Enable the layer. Disabled layers are skipped. Defaults to true.
+     * Sets the enabled state of the layer. Disabled layers are skipped. Defaults to true.
      *
      * @type {boolean}
      */
@@ -462,12 +353,17 @@ class Layer {
         }
     }
 
+    /**
+     * Gets the enabled state of the layer.
+     *
+     * @type {boolean}
+     */
     get enabled() {
         return this._enabled;
     }
 
     /**
-     * If true, the camera will clear the color buffer when it renders this layer.
+     * Sets whether the camera will clear the color buffer when it renders this layer.
      *
      * @type {boolean}
      */
@@ -476,12 +372,17 @@ class Layer {
         this._dirtyComposition = true;
     }
 
+    /**
+     * Gets whether the camera will clear the color buffer when it renders this layer.
+     *
+     * @type {boolean}
+     */
     get clearColorBuffer() {
         return this._clearColorBuffer;
     }
 
     /**
-     * If true, the camera will clear the depth buffer when it renders this layer.
+     * Sets whether the camera will clear the depth buffer when it renders this layer.
      *
      * @type {boolean}
      */
@@ -490,12 +391,17 @@ class Layer {
         this._dirtyComposition = true;
     }
 
+    /**
+     * Gets whether the camera will clear the depth buffer when it renders this layer.
+     *
+     * @type {boolean}
+     */
     get clearDepthBuffer() {
         return this._clearDepthBuffer;
     }
 
     /**
-     * If true, the camera will clear the stencil buffer when it renders this layer.
+     * Sets whether the camera will clear the stencil buffer when it renders this layer.
      *
      * @type {boolean}
      */
@@ -504,12 +410,17 @@ class Layer {
         this._dirtyComposition = true;
     }
 
+    /**
+     * Gets whether the camera will clear the stencil buffer when it renders this layer.
+     *
+     * @type {boolean}
+     */
     get clearStencilBuffer() {
         return this._clearStencilBuffer;
     }
 
     /**
-     * True if the layer contains omni or spot lights
+     * Gets whether the layer contains omni or spot lights.
      *
      * @type {boolean}
      * @ignore
@@ -519,9 +430,9 @@ class Layer {
     }
 
     /**
-     * Returns lights used by clustered lighting in a set.
+     * Gets the lights used by clustered lighting in a set.
      *
-     * @type {Set<import('./light.js').Light>}
+     * @type {Set<Light>}
      * @ignore
      */
     get clusteredLightsSet() {
@@ -569,8 +480,7 @@ class Layer {
     /**
      * Adds an array of mesh instances to this layer.
      *
-     * @param {import('./mesh-instance.js').MeshInstance[]} meshInstances - Array of
-     * {@link MeshInstance}.
+     * @param {MeshInstance[]} meshInstances - Array of {@link MeshInstance}.
      * @param {boolean} [skipShadowCasters] - Set it to true if you don't want these mesh instances
      * to cast shadows in this layer. Defaults to false.
      */
@@ -614,8 +524,8 @@ class Layer {
     /**
      * Removes multiple mesh instances from this layer.
      *
-     * @param {import('./mesh-instance.js').MeshInstance[]} meshInstances - Array of
-     * {@link MeshInstance}. If they were added to this layer, they will be removed.
+     * @param {MeshInstance[]} meshInstances - Array of {@link MeshInstance}. If they were added to
+     * this layer, they will be removed.
      * @param {boolean} [skipShadowCasters] - Set it to true if you want to still cast shadows from
      * removed mesh instances or if they never did cast shadows before. Defaults to false.
      */
@@ -648,8 +558,7 @@ class Layer {
      * Adds an array of mesh instances to this layer, but only as shadow casters (they will not be
      * rendered anywhere, but only cast shadows on other objects).
      *
-     * @param {import('./mesh-instance.js').MeshInstance[]} meshInstances - Array of
-     * {@link MeshInstance}.
+     * @param {MeshInstance[]} meshInstances - Array of {@link MeshInstance}.
      */
     addShadowCasters(meshInstances) {
         const shadowCasters = this.shadowCasters;
@@ -668,8 +577,8 @@ class Layer {
      * Removes multiple mesh instances from the shadow casters list of this layer, meaning they
      * will stop casting shadows.
      *
-     * @param {import('./mesh-instance.js').MeshInstance[]} meshInstances - Array of
-     * {@link MeshInstance}. If they were added to this layer, they will be removed.
+     * @param {MeshInstance[]} meshInstances - Array of {@link MeshInstance}. If they were added to
+     * this layer, they will be removed.
      */
     removeShadowCasters(meshInstances) {
         const shadowCasters = this.shadowCasters;
@@ -712,8 +621,7 @@ class Layer {
     /**
      * Adds a light to this layer.
      *
-     * @param {import('../framework/components/light/component.js').LightComponent} light - A
-     * {@link LightComponent}.
+     * @param {LightComponent} light - A {@link LightComponent}.
      */
     addLight(light) {
 
@@ -734,8 +642,7 @@ class Layer {
     /**
      * Removes a light from this layer.
      *
-     * @param {import('../framework/components/light/component.js').LightComponent} light - A
-     * {@link LightComponent}.
+     * @param {LightComponent} light - A {@link LightComponent}.
      */
     removeLight(light) {
 
@@ -772,8 +679,9 @@ class Layer {
             this._splitLightsDirty = false;
 
             const splitLights = this._splitLights;
-            for (let i = 0; i < splitLights.length; i++)
+            for (let i = 0; i < splitLights.length; i++) {
                 splitLights[i].length = 0;
+            }
 
             const lights = this._lights;
             for (let i = 0; i < lights.length; i++) {
@@ -785,8 +693,9 @@ class Layer {
 
             // sort the lights by their key, as the order of lights is used to generate shader generation key,
             // and this avoids new shaders being generated when lights are reordered
-            for (let i = 0; i < splitLights.length; i++)
+            for (let i = 0; i < splitLights.length; i++) {
                 splitLights[i].sort((a, b) => a.key - b.key);
+            }
         }
 
         return this._splitLights;
@@ -849,8 +758,7 @@ class Layer {
     /**
      * Adds a camera to this layer.
      *
-     * @param {import('../framework/components/camera/component.js').CameraComponent} camera - A
-     * {@link CameraComponent}.
+     * @param {CameraComponent} camera - A {@link CameraComponent}.
      */
     addCamera(camera) {
         if (!this.camerasSet.has(camera.camera)) {
@@ -863,8 +771,7 @@ class Layer {
     /**
      * Removes a camera from this layer.
      *
-     * @param {import('../framework/components/camera/component.js').CameraComponent} camera - A
-     * {@link CameraComponent}.
+     * @param {CameraComponent} camera - A {@link CameraComponent}.
      */
     removeCamera(camera) {
         if (this.camerasSet.has(camera.camera)) {
@@ -885,10 +792,10 @@ class Layer {
     }
 
     /**
-     * @param {import('./mesh-instance.js').MeshInstance[]} drawCalls - Array of mesh instances.
+     * @param {MeshInstance[]} drawCalls - Array of mesh instances.
      * @param {number} drawCallsCount - Number of mesh instances.
-     * @param {import('../core/math/vec3.js').Vec3} camPos - Camera position.
-     * @param {import('../core/math/vec3.js').Vec3} camFwd - Camera forward vector.
+     * @param {Vec3} camPos - Camera position.
+     * @param {Vec3} camFwd - Camera forward vector.
      * @private
      */
     _calculateSortDistances(drawCalls, drawCallsCount, camPos, camFwd) {
@@ -910,7 +817,7 @@ class Layer {
     /**
      * Get access to culled mesh instances for the provided camera.
      *
-     * @param {import('./camera.js').Camera} camera - The camera.
+     * @param {Camera} camera - The camera.
      * @returns {CulledInstances} The culled mesh instances.
      * @ignore
      */
@@ -924,15 +831,15 @@ class Layer {
     }
 
     /**
-     * @param {import('./camera.js').Camera} camera - The camera to sort the visible mesh instances
-     * for.
+     * @param {Camera} camera - The camera to sort the visible mesh instances for.
      * @param {boolean} transparent - True if transparent sorting should be used.
      * @ignore
      */
     sortVisible(camera, transparent) {
         const sortMode = transparent ? this.transparentSortMode : this.opaqueSortMode;
-        if (sortMode === SORTMODE_NONE)
+        if (sortMode === SORTMODE_NONE) {
             return;
+        }
 
         const culledInstances = this.getCulledInstances(camera);
         const instances = transparent ? culledInstances.transparent : culledInstances.opaque;

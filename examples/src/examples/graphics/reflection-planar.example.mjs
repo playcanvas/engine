@@ -50,7 +50,7 @@ assetListLoader.load(() => {
     app.start();
 
     // set up some general scene rendering properties
-    app.scene.toneMapping = pc.TONEMAP_ACES;
+    app.scene.rendering.toneMapping = pc.TONEMAP_ACES;
 
     // setup skydome
     app.scene.envAtlas = assets.envatlas.resource;
@@ -106,15 +106,17 @@ assetListLoader.load(() => {
     app.scene.layers.insert(excludedLayer, app.scene.layers.getTransparentIndex(worldLayer) + 1);
 
     // Create the shader from the vertex and fragment shaders
-    const shader = pc.createShaderFromCode(app.graphicsDevice, files['shader.vert'], files['shader.frag'], 'myShader', {
-        aPosition: pc.SEMANTIC_POSITION,
-        aUv0: pc.SEMANTIC_TEXCOORD0
-    });
-
     // reflective ground
     // This is in the excluded layer so it does not render into reflection texture
-    const groundMaterial = new pc.Material();
-    groundMaterial.shader = shader;
+    const groundMaterial = new pc.ShaderMaterial({
+        uniqueName: 'MyShader',
+        vertexCode: files['shader.vert'],
+        fragmentCode: files['shader.frag'],
+        attributes: {
+            aPosition: pc.SEMANTIC_POSITION,
+            aUv0: pc.SEMANTIC_TEXCOORD0
+        }
+    });
     createPrimitive(
         'plane',
         new pc.Vec3(0, 0, 0),

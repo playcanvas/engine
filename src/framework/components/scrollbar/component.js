@@ -1,12 +1,14 @@
 import { math } from '../../../core/math/math.js';
-
 import { ORIENTATION_HORIZONTAL } from '../../../scene/constants.js';
-
 import { Component } from '../component.js';
-
 import { ElementDragHelper } from '../element/element-drag-helper.js';
-
 import { EntityReference } from '../../utils/entity-reference.js';
+
+/**
+ * @import { Entity } from '../../entity.js'
+ * @import { ScrollbarComponentData } from './data.js'
+ * @import { ScrollbarComponentSystem } from './system.js'
+ */
 
 /**
  * A ScrollbarComponent enables a group of entities to behave like a draggable scrollbar.
@@ -29,10 +31,8 @@ class ScrollbarComponent extends Component {
     /**
      * Create a new ScrollbarComponent.
      *
-     * @param {import('./system.js').ScrollbarComponentSystem} system - The ComponentSystem that
-     * created this Component.
-     * @param {import('../../entity.js').Entity} entity - The Entity that this Component is
-     * attached to.
+     * @param {ScrollbarComponentSystem} system - The ComponentSystem that created this Component.
+     * @param {Entity} entity - The Entity that this Component is attached to.
      */
     constructor(system, entity) {
         super(system, entity);
@@ -50,7 +50,7 @@ class ScrollbarComponent extends Component {
 
     // TODO: Remove this override in upgrading component
     /**
-     * @type {import('./data.js').ScrollbarComponentData}
+     * @type {ScrollbarComponentData}
      * @ignore
      */
     get data() {
@@ -59,18 +59,25 @@ class ScrollbarComponent extends Component {
     }
 
     /**
+     * Sets the enabled state of the component.
+     *
      * @type {boolean}
      */
     set enabled(arg) {
         this._setValue('enabled', arg);
     }
 
+    /**
+     * Gets the enabled state of the component.
+     *
+     * @type {boolean}
+     */
     get enabled() {
         return this.data.enabled;
     }
 
     /**
-     * Whether the scrollbar moves horizontally or vertically. Can be:
+     * Sets whether the scrollbar moves horizontally or vertically. Can be:
      *
      * - {@link ORIENTATION_HORIZONTAL}: The scrollbar animates in the horizontal axis.
      * - {@link ORIENTATION_VERTICAL}: The scrollbar animates in the vertical axis.
@@ -83,12 +90,17 @@ class ScrollbarComponent extends Component {
         this._setValue('orientation', arg);
     }
 
+    /**
+     * Gets whether the scrollbar moves horizontally or vertically.
+     *
+     * @type {number}
+     */
     get orientation() {
         return this.data.orientation;
     }
 
     /**
-     * The current position value of the scrollbar, in the range 0 to 1. Defaults to 0.
+     * Sets the current position value of the scrollbar, in the range 0 to 1. Defaults to 0.
      *
      * @type {number}
      */
@@ -96,13 +108,19 @@ class ScrollbarComponent extends Component {
         this._setValue('value', arg);
     }
 
+    /**
+     * Gets the current position value of the scrollbar.
+     *
+     * @type {number}
+     */
     get value() {
         return this.data.value;
     }
 
     /**
-     * The size of the handle relative to the size of the track, in the range 0 to 1. For a vertical
-     * scrollbar, a value of 1 means that the handle will take up the full height of the track.
+     * Sets the size of the handle relative to the size of the track, in the range 0 to 1. For a
+     * vertical scrollbar, a value of 1 means that the handle will take up the full height of the
+     * track.
      *
      * @type {number}
      */
@@ -110,19 +128,30 @@ class ScrollbarComponent extends Component {
         this._setValue('handleSize', arg);
     }
 
+    /**
+     * Gets the size of the handle relative to the size of the track.
+     *
+     * @type {number}
+     */
     get handleSize() {
         return this.data.handleSize;
     }
 
     /**
-     * The entity to be used as the scrollbar handle. This entity must have a Scrollbar component.
+     * Sets the entity to be used as the scrollbar handle. This entity must have a
+     * {@link ScrollbarComponent}.
      *
-     * @type {import('../../../framework/entity.js').Entity}
+     * @type {Entity}
      */
     set handleEntity(arg) {
         this._setValue('handleEntity', arg);
     }
 
+    /**
+     * Gets the entity to be used as the scrollbar handle.
+     *
+     * @type {Entity}
+     */
     get handleEntity() {
         return this.data.handleEntity;
     }

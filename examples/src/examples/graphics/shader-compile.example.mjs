@@ -61,15 +61,13 @@ assetListLoader.load(() => {
      * @param {string} primitiveType - The primitive type.
      * @param {pc.Vec3} position - The position.
      * @param {pc.Vec3} scale - The scale.
-     * @param {pc.Color} color - The color.
      * @param {any} assetManifest - The asset manifest.
      * @param {boolean} [id] - Prevent shader compilation caching.
      * @returns {pc.Entity} The entity.
      */
-    function createPrimitive(primitiveType, position, scale, color, assetManifest, id = false) {
+    function createPrimitive(primitiveType, position, scale, assetManifest, id = false) {
         // create material of specified color
         const material = new pc.StandardMaterial();
-        material.diffuse = color;
         material.gloss = 0.4;
         material.useMetalness = true;
 
@@ -117,7 +115,7 @@ assetListLoader.load(() => {
     app.setAreaLightLuts(luts.LTC_MAT_1, luts.LTC_MAT_2);
 
     // set up some general scene rendering properties
-    app.scene.toneMapping = pc.TONEMAP_ACES;
+    app.scene.rendering.toneMapping = pc.TONEMAP_ACES;
 
     // setup skydome
     app.scene.skyboxMip = 1;
@@ -125,7 +123,7 @@ assetListLoader.load(() => {
     app.scene.envAtlas = assets.helipad.resource;
 
     // create ground plane
-    createPrimitive('plane', new pc.Vec3(0, 0, 0), new pc.Vec3(20, 20, 20), new pc.Color(0.3, 0.3, 0.3), assets);
+    createPrimitive('plane', new pc.Vec3(0, 0, 0), new pc.Vec3(20, 20, 20), assets);
 
     // Create the camera, which renders entities
     const camera = new pc.Entity();
@@ -142,8 +140,7 @@ assetListLoader.load(() => {
     for (let x = -10; x <= 10; x += 6) {
         for (let y = -10; y <= 10; y += 6) {
             const pos = new pc.Vec3(x, 0.6, y);
-            const color = new pc.Color(0.3 + Math.random() * 0.7, 0.3 + Math.random() * 0.7, 0.3 + Math.random() * 0.7);
-            createPrimitive('sphere', pos, new pc.Vec3(1, 1, 1), color, assets, true);
+            createPrimitive('sphere', pos, new pc.Vec3(1, 1, 1), assets, true);
         }
     }
 

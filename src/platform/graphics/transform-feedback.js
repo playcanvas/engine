@@ -1,10 +1,13 @@
 import { Debug } from '../../core/debug.js';
-
 import { BUFFER_GPUDYNAMIC, PRIMITIVE_POINTS } from './constants.js';
 import { VertexBuffer } from './vertex-buffer.js';
 import { DebugGraphics } from './debug-graphics.js';
 import { Shader } from './shader.js';
 import { ShaderUtils } from './shader-utils.js';
+
+/**
+ * @import { GraphicsDevice } from './graphics-device.js'
+ */
 
 /**
  * This object allows you to configure and use the transform feedback feature (WebGL2 only). How to
@@ -93,7 +96,7 @@ class TransformFeedback {
         const gl = this.device.gl;
 
         Debug.assert(inputBuffer.format.interleaved || inputBuffer.format.elements.length <= 1,
-                     "Vertex buffer used by TransformFeedback needs to be interleaved.");
+            'Vertex buffer used by TransformFeedback needs to be interleaved.');
 
         this._inputBuffer = inputBuffer;
         if (usage === BUFFER_GPUDYNAMIC && inputBuffer.usage !== usage) {
@@ -111,8 +114,7 @@ class TransformFeedback {
     /**
      * Creates a transform feedback ready vertex shader from code.
      *
-     * @param {import('./graphics-device.js').GraphicsDevice} graphicsDevice - The graphics device
-     * used by the renderer.
+     * @param {GraphicsDevice} graphicsDevice - The graphics device used by the renderer.
      * @param {string} vertexCode - Vertex shader code. Should contain output variables starting with "out_".
      * @param {string} name - Unique name for caching the shader.
      * @returns {Shader} A shader to use in the process() function.
@@ -144,7 +146,7 @@ class TransformFeedback {
     process(shader, swap = true) {
         const device = this.device;
 
-        DebugGraphics.pushGpuMarker(device, "TransformFeedback");
+        DebugGraphics.pushGpuMarker(device, 'TransformFeedback');
 
         const oldRt = device.getRenderTarget();
         device.setRenderTarget(null);

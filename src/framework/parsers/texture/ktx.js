@@ -5,9 +5,10 @@ import {
     PIXELFORMAT_DXT1, PIXELFORMAT_DXT3, PIXELFORMAT_DXT5,
     PIXELFORMAT_ETC1, PIXELFORMAT_ETC2_RGB, PIXELFORMAT_ETC2_RGBA,
     PIXELFORMAT_PVRTC_4BPP_RGB_1, PIXELFORMAT_PVRTC_2BPP_RGB_1, PIXELFORMAT_PVRTC_4BPP_RGBA_1, PIXELFORMAT_PVRTC_2BPP_RGBA_1,
-    PIXELFORMAT_RGB8, PIXELFORMAT_RGBA8, PIXELFORMAT_SRGB, PIXELFORMAT_SRGBA,
+    PIXELFORMAT_RGB8, PIXELFORMAT_RGBA8, PIXELFORMAT_SRGB8, PIXELFORMAT_SRGBA8,
     PIXELFORMAT_111110F, PIXELFORMAT_RGB16F, PIXELFORMAT_RGBA16F,
-    TEXHINT_ASSET
+    TEXHINT_ASSET,
+    pixelFormatLinearToGamma
 } from '../../../platform/graphics/constants.js';
 import { Texture } from '../../../platform/graphics/texture.js';
 
@@ -32,10 +33,10 @@ const KNOWN_FORMATS = {
     0x8C03: PIXELFORMAT_PVRTC_2BPP_RGBA_1,
 
     // uncompressed formats
-    0x8051: PIXELFORMAT_RGB8,       // GL_RGB8
-    0x8058: PIXELFORMAT_RGBA8,    // GL_RGBA8
-    0x8C41: PIXELFORMAT_SRGB,           // GL_SRGB8
-    0x8C43: PIXELFORMAT_SRGBA,          // GL_SRGB8_ALPHA8
+    0x8051: PIXELFORMAT_RGB8,           // GL_RGB8
+    0x8058: PIXELFORMAT_RGBA8,          // GL_RGBA8
+    0x8C41: PIXELFORMAT_SRGB8,          // GL_SRGB8
+    0x8C43: PIXELFORMAT_SRGBA8,         // GL_SRGB8_ALPHA8
     0x8C3A: PIXELFORMAT_111110F,        // GL_R11F_G11F_B10F
     0x881B: PIXELFORMAT_RGB16F,         // GL_RGB16F
     0x881A: PIXELFORMAT_RGBA16F         // GL_RGBA16F
@@ -49,8 +50,6 @@ function createContainer(pixelFormat, buffer, byteOffset, byteSize) {
 
 /**
  * Texture parser for ktx files.
- *
- * @ignore
  */
 class KtxParser extends TextureParser {
     constructor(registry) {
@@ -69,6 +68,7 @@ class KtxParser extends TextureParser {
             return null;
         }
 
+        const format = textureOptions.srgb ? pixelFormatLinearToGamma(textureData.format) : textureData.format;
         const texture = new Texture(device, {
             name: url,
             // #if _PROFILER
@@ -78,7 +78,7 @@ class KtxParser extends TextureParser {
             addressV: textureData.cubemap ? ADDRESS_CLAMP_TO_EDGE : ADDRESS_REPEAT,
             width: textureData.width,
             height: textureData.height,
-            format: textureData.format,
+            format: format,
             cubemap: textureData.cubemap,
             levels: textureData.levels,
 
@@ -134,7 +134,7 @@ class KtxParser extends TextureParser {
 
         // only support subset of pixel formats
         if (format === undefined) {
-            Debug.warn('Unknown glInternalFormat: ' + header.glInternalFormat);
+            Debug.warn(`Unknown glInternalFormat: ${header.glInternalFormat}`);
             return null;
         }
 

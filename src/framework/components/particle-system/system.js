@@ -1,13 +1,14 @@
 import { Curve } from '../../../core/math/curve.js';
 import { CurveSet } from '../../../core/math/curve-set.js';
 import { Vec3 } from '../../../core/math/vec3.js';
-
 import { Asset } from '../../asset/asset.js';
-
 import { ComponentSystem } from '../system.js';
-
 import { ParticleSystemComponent } from './component.js';
 import { ParticleSystemComponentData } from './data.js';
+
+/**
+ * @import { AppBase } from '../../app-base.js'
+ */
 
 const _schema = [
     'enabled',
@@ -84,7 +85,7 @@ class ParticleSystemComponentSystem extends ComponentSystem {
     /**
      * Create a new ParticleSystemComponentSystem.
      *
-     * @param {import('../../app-base.js').AppBase} app - The Application.
+     * @param {AppBase} app - The Application.
      * @ignore
      */
     constructor(app) {
@@ -223,8 +224,9 @@ class ParticleSystemComponentSystem extends ComponentSystem {
                         const layers = data.layers;
                         for (let i = 0; i < layers.length; i++) {
                             const layer = composition.getLayerById(layers[i]);
-                            if (layer)
+                            if (layer) {
                                 layer.requiresLightCube = true;
+                            }
                         }
                     }
 

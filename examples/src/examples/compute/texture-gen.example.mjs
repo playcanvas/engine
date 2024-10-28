@@ -55,7 +55,7 @@ app.on('destroy', () => {
 const assetListLoader = new pc.AssetListLoader(Object.values(assets), app.assets);
 assetListLoader.load(() => {
     // set up some general scene rendering properties
-    app.scene.toneMapping = pc.TONEMAP_ACES;
+    app.scene.rendering.toneMapping = pc.TONEMAP_ACES;
 
     // setup skydome
     app.scene.skyboxMip = 1;
@@ -183,7 +183,7 @@ assetListLoader.load(() => {
             compute2.setupDispatch(srcTexture.width, srcTexture.height);
 
             // dispatch both compute shaders in a single compute pass
-            device.computeDispatch([compute1, compute2]);
+            device.computeDispatch([compute1, compute2], 'ComputeModifyTextureDispatch');
 
             // debug render the generated textures
             app.drawTexture(0.6, 0.5, 0.6, 0.3, compute1.getParameter('outTexture'));

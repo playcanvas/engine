@@ -69,6 +69,16 @@ export function localImport(name) {
 }
 
 /**
+ * Imports an absolute file as a module.
+ *
+ * @param {string} name - The name of the absolute file.
+ * @returns {Promise<any>} - The module exports.
+ */
+export function fileImport(name) {
+    return import(name);
+}
+
+/**
  * Clears all the blob URLs.
  */
 export function clearImports() {
@@ -92,32 +102,36 @@ export function parseConfig(script) {
     return config;
 }
 
-const DEVICE_TYPES = ['webgpu', 'webgl2'];
+const DEVICE_TYPES = ['webgpu', 'webgl2', 'null'];
 export let deviceType = 'webgl2';
 
 /**
  * @param {{ WEBGPU_DISABLED: boolean; WEBGL_DISABLED: boolean; }} config - The configuration object.
  */
 export function updateDeviceType(config) {
+    const savedDevice = localStorage.getItem('preferredGraphicsDevice') ?? 'webgl2';
+    deviceType = DEVICE_TYPES.includes(savedDevice) ? savedDevice : 'webgl2';
+
     if (params.deviceType && DEVICE_TYPES.includes(params.deviceType)) {
-        console.warn("Overwriting default deviceType from URL: ", params.deviceType);
+        console.warn("Overriding default device: ", params.deviceType);
         deviceType = params.deviceType;
         return;
     }
 
-    if (config.WEBGPU_DISABLED) {
-        console.warn('WebGPU is disabled. Using WebGL2 instead.');
+    if (config.WEBGL_DISABLED && config.WEBGPU_DISABLED) {
+        console.warn('Both WebGL 2.0 and WebGPU are disabled. Using Null device instead.');
+        deviceType = 'null';
+        return;
+    }
+    if (config.WEBGPU_DISABLED && deviceType !== 'webgl2') {
+        console.warn('WebGPU is disabled. Using WebGL 2.0 device instead.');
         deviceType = 'webgl2';
         return;
     }
-    if (config.WEBGL_DISABLED) {
-        console.warn('WebGL is disabled. Using WebGPU instead.');
+    if (config.WEBGL_DISABLED && deviceType !== 'webgpu') {
+        console.warn('WebGL 2.0 is disabled. Using WebGPU device instead.');
         deviceType = 'webgpu';
-        return;
     }
-
-    const savedDevice = localStorage.getItem('preferredGraphicsDevice') ?? 'webgl2';
-    deviceType = DEVICE_TYPES.includes(savedDevice) ? savedDevice : 'webgl2';
 }
 
 /**

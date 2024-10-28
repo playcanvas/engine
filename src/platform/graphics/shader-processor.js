@@ -10,13 +10,20 @@ import {
 import { UniformFormat, UniformBufferFormat } from './uniform-buffer-format.js';
 import { BindGroupFormat, BindTextureFormat } from './bind-group-format.js';
 
+/**
+ * @import { GraphicsDevice } from './graphics-device.js'
+ * @import { ShaderProcessorOptions } from './shader-processor-options.js'
+ * @import { Shader } from './shader.js'
+ */
+
 // accepted keywords
 // TODO: 'out' keyword is not in the list, as handling it is more complicated due
 // to 'out' keyword also being used to mark output only function parameters.
 const KEYWORD = /[ \t]*(\battribute\b|\bvarying\b|\buniform\b)/g;
 
 // match 'attribute' and anything else till ';'
-const KEYWORD_LINE = /(\battribute\b|\bvarying\b|\bout\b|\buniform\b)[ \t]*([^;]+)([;]+)/g;
+// eslint-disable-next-line regexp/no-unused-capturing-group, regexp/no-super-linear-backtracking
+const KEYWORD_LINE = /(\battribute\b|\bvarying\b|\bout\b|\buniform\b)[ \t]*([^;]+)(;+)/g;
 
 // marker for a place in the source code to be replaced by code
 const MARKER = '@@@';
@@ -95,16 +102,14 @@ class UniformLine {
 /**
  * Pure static class implementing processing of GLSL shaders. It allocates fixed locations for
  * attributes, and handles conversion of uniforms to uniform buffers.
- *
- * @ignore
  */
 class ShaderProcessor {
     /**
      * Process the shader.
      *
-     * @param {import('./graphics-device.js').GraphicsDevice} device - The graphics device.
+     * @param {GraphicsDevice} device - The graphics device.
      * @param {object} shaderDefinition - The shader definition.
-     * @param {import('./shader.js').Shader} shader - The shader definition.
+     * @param {Shader} shader - The shader definition.
      * @returns {object} - The processed shader data.
      */
     static run(device, shaderDefinition, shader) {
@@ -148,11 +153,11 @@ class ShaderProcessor {
         const uniformsData = ShaderProcessor.processUniforms(device, parsedUniforms, shaderDefinition.processingOptions, shader);
 
         // VS - insert the blocks to the source
-        const vBlock = attributesBlock + '\n' + vertexVaryingsBlock + '\n' + uniformsData.code;
+        const vBlock = `${attributesBlock}\n${vertexVaryingsBlock}\n${uniformsData.code}`;
         const vshader = vertexExtracted.src.replace(MARKER, vBlock);
 
         // FS - insert the blocks to the source
-        const fBlock = fragmentVaryingsBlock + '\n' + outBlock + '\n' + uniformsData.code;
+        const fBlock = `${fragmentVaryingsBlock}\n${outBlock}\n${uniformsData.code}`;
         const fshader = fragmentExtracted.src.replace(MARKER, fBlock);
 
         return {
@@ -229,11 +234,10 @@ class ShaderProcessor {
      * All leftover uniforms create uniform buffer and bind group for the mesh itself, containing
      * uniforms that change on the level of the mesh.
      *
-     * @param {import('./graphics-device.js').GraphicsDevice} device - The graphics device.
+     * @param {GraphicsDevice} device - The graphics device.
      * @param {Array<UniformLine>} uniforms - Lines containing uniforms.
-     * @param {import('./shader-processor-options.js').ShaderProcessorOptions} processingOptions -
-     * Uniform formats.
-     * @param {import('./shader.js').Shader} shader - The shader definition.
+     * @param {ShaderProcessorOptions} processingOptions - Uniform formats.
+     * @param {Shader} shader - The shader definition.
      * @returns {object} - The uniform data. Returns a shader code block containing uniforms, to be
      * inserted into the shader, as well as generated uniform format structures for the mesh level.
      */
@@ -284,10 +288,12 @@ class ShaderProcessor {
                 } else if (uniform.isUnsignedInt) {
                     sampleType = SAMPLETYPE_UINT;
                 } else {
-                    if (uniform.precision === 'highp')
+                    if (uniform.precision === 'highp') {
                         sampleType = SAMPLETYPE_UNFILTERABLE_FLOAT;
-                    if (shadowSamplers.has(uniform.type))
+                    }
+                    if (shadowSamplers.has(uniform.type)) {
                         sampleType = SAMPLETYPE_DEPTH;
+                    }
                 }
 
                 // dimension
@@ -337,8 +343,8 @@ class ShaderProcessor {
         const op = isVertex ? 'out' : 'in';
         varyingLines.forEach((line, index) => {
             const words = ShaderProcessor.splitToWords(line);
-            const type = words[0];
-            const name = words[1];
+            const type = words.slice(0, -1).join(' ');
+            const name = words[words.length - 1];
 
             if (isVertex) {
                 // store it in the map
@@ -381,9 +387,10 @@ class ShaderProcessor {
             if (shaderDefinitionAttributes.hasOwnProperty(name)) {
                 const semantic = shaderDefinitionAttributes[name];
                 const location = semanticToLocation[semantic];
+                Debug.assert(location !== undefined, `Semantic ${semantic} used by the attribute ${name} is not known - make sure it's one of the supported semantics.`);
 
                 Debug.assert(!usedLocations.hasOwnProperty(location),
-                             `WARNING: Two vertex attributes are mapped to the same location in a shader: ${usedLocations[location]} and ${semantic}`);
+                    `WARNING: Two vertex attributes are mapped to the same location in a shader: ${usedLocations[location]} and ${semantic}`);
                 usedLocations[location] = semantic;
 
                 // if vertex format for this attribute is not of a float type, we need to adjust the attribute format, for example we convert

@@ -56,7 +56,7 @@ assetListLoader.load(() => {
     app.scene.exposure = 2;
     app.scene.envAtlas = assets.helipad.resource;
 
-    app.scene.toneMapping = pc.TONEMAP_ACES;
+    app.scene.rendering.toneMapping = pc.TONEMAP_ACES;
 
     // Depth layer is where the framebuffer is copied to a texture to be used in the following layers.
     // Move the depth layer to take place after World and Skydome layers, to capture both of them.
@@ -129,11 +129,12 @@ assetListLoader.load(() => {
     glass.render.castShadows = false;
     glass.render.receiveShadows = false;
 
-    const shader = pc.createShaderFromCode(app.graphicsDevice, files['shader.vert'], files['shader.frag'], 'myShader');
-
     // reflection material using the shader
-    const refractionMaterial = new pc.Material();
-    refractionMaterial.shader = shader;
+    const refractionMaterial = new pc.ShaderMaterial({
+        uniqueName: 'RefractionShader',
+        vertexCode: files['shader.vert'],
+        fragmentCode: files['shader.frag']
+    });
     glass.render.material = refractionMaterial;
 
     // set an offset map on the material

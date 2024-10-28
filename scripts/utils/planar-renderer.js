@@ -55,14 +55,14 @@ PlanarRenderer.prototype.initialize = function () {
     // sceneCameraEntity needs to be set
     var sceneCamera = this.sceneCameraEntity.camera;
     if (!sceneCamera) {
-        console.error("PlanarRenderer component requires cameraEntity attribute to be set.");
+        console.error('PlanarRenderer component requires cameraEntity attribute to be set.');
         return;
     }
 
     // this entity needs to have camera component as well
     var planarCamera = this.entity.camera;
     if (!planarCamera) {
-        console.error("PlanarRenderer component requires a camera component on the same entity.");
+        console.error('PlanarRenderer component requires a camera component on the same entity.');
         return;
     }
 
@@ -99,10 +99,10 @@ PlanarRenderer.prototype.updateRenderTarget = function () {
 
         // Create texture render target with specified resolution and mipmap generation
         this.texture = new pc.Texture(this.app.graphicsDevice, {
-            name: this.entity.name + ':PlanarRenderer-',
+            name: `${this.entity.name}:PlanarRenderer-`,
             width: width,
             height: height,
-            format: pc.PIXELFORMAT_RGBA8,
+            format: pc.PIXELFORMAT_SRGBA8,
             mipmaps: this.mipmaps,
             addressU: pc.ADDRESS_CLAMP_TO_EDGE,
             addressV: pc.ADDRESS_CLAMP_TO_EDGE,

@@ -4,8 +4,6 @@ import { CodeEditorBase } from './CodeEditorBase.mjs';
 
 import { jsx } from '../../jsx.mjs';
 
-import '../../events.js';
-
 // eslint-disable-next-line jsdoc/require-property
 /**
  * @typedef {Record<string, any>} Props

@@ -1,5 +1,9 @@
 import { Vec3 } from '../math/vec3.js';
 
+/**
+ * @import { Ray } from './ray.js'
+ */
+
 const e1 = new Vec3();
 const e2 = new Vec3();
 const h = new Vec3();
@@ -18,6 +22,7 @@ class Tri {
     /**
      * The first 3-dimensional vector of the triangle.
      *
+     * @readonly
      * @type {Vec3}
      */
     v0 = new Vec3();
@@ -26,6 +31,7 @@ class Tri {
      * The second 3-dimensional vector of the triangle.
      *
      * @type {Vec3}
+     * @readonly
      */
     v1 = new Vec3();
 
@@ -33,6 +39,7 @@ class Tri {
      * The third 3-dimensional vector of the triangle.
      *
      * @type {Vec3}
+     * @readonly
      */
     v2 = new Vec3();
 
@@ -80,7 +87,7 @@ class Tri {
     /**
      * Test if a ray intersects with the triangle.
      *
-     * @param {import('./ray.js').Ray} ray - Ray to test against (direction must be normalized).
+     * @param {Ray} ray - Ray to test against (direction must be normalized).
      * @param {Vec3} [point] - If there is an intersection, the intersection point will be copied
      * into here.
      * @returns {boolean} True if there is an intersection.
@@ -128,7 +135,7 @@ class Tri {
      * console.log(t.toString());
      */
     toString() {
-        return '[' + this.v0.toString() + ', ' + this.v1.toString() + ', ' + this.v2.toString() + ']';
+        return `[${this.v0.toString()}, ${this.v1.toString()}, ${this.v2.toString()}]`;
     }
 }
 
