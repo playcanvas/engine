@@ -63,7 +63,7 @@ await new Promise((resolve) => {
  * @param {pc.Entity} focus - The entity to focus the camera on.
  * @returns {pc.Entity} The multi-camera entity.
  */
-function createMultiCamera(focus) {
+const createMultiCamera = (focus) => {
     const camera = new pc.Entity();
     camera.addComponent('camera');
 
