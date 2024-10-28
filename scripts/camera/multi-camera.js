@@ -1,4 +1,5 @@
 import { BoundingBox, Vec2, Vec3, Ray, Plane, math } from 'playcanvas';
+
 import { BaseCamera } from './base-camera.js';
 
 const tmpVa = new Vec2();
@@ -9,7 +10,14 @@ const tmpP1 = new Plane();
 
 const PASSIVE = { passive: false };
 
-function calcEntityAABB(bbox, entity) {
+/**
+ * Calculate the bounding box of an entity.
+ *
+ * @param {BoundingBox} bbox - The bounding box.
+ * @param {Entity} entity - The entity.
+ * @returns {BoundingBox} The bounding box.
+ */
+const calcEntityAABB = (bbox, entity) => {
     bbox.center.set(0, 0, 0);
     bbox.halfExtents.set(0, 0, 0);
     entity.findComponents('render').forEach((render) => {
@@ -18,7 +26,7 @@ function calcEntityAABB(bbox, entity) {
         });
     });
     return bbox;
-}
+};
 
 class MultiCamera extends BaseCamera {
     /**
