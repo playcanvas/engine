@@ -34,7 +34,6 @@ const tmpP1 = new Plane();
 
 // constants
 const VEC3_AXES = Object.keys(tmpV1);
-const SPANLINE_SIZE = 1e3;
 
 /**
  * The base class for all transform gizmos.
