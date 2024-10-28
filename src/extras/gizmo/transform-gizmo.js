@@ -543,7 +543,10 @@ class TransformGizmo extends Gizmo {
             tmpR1.direction.sub2(mouseWPos, tmpR1.origin).normalize();
             return tmpR1;
         }
-        return tmpR1.set(mouseWPos, this._camera.entity.forward);
+        const orthoDepth = this._camera.farClip - this._camera.nearClip;
+        tmpR1.origin.sub2(mouseWPos, tmpV1.copy(this._camera.entity.forward).mulScalar(orthoDepth));
+        tmpR1.direction.copy(this._camera.entity.forward);
+        return tmpR1;
     }
 
     /**
