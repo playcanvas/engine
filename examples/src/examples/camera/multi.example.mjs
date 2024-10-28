@@ -1,6 +1,7 @@
 // @config DESCRIPTION <div style='text-align:center'><div>(<b>WASDQE</b>) Move</div><div>(<b>LMB</b>) Orbit, (<b>RMB</b>) Fly</div><div>(<b>Scroll Wheel</b>) zoom</div><div>(<b>MMB / Hold Shift</b>) Pan</div><div>(<b>F</b>) Focus</div></div>
 // @config HIDDEN
 import * as pc from 'playcanvas';
+import { data } from 'examples/observer';
 import { deviceType, rootPath, fileImport } from 'examples/utils';
 
 const { MultiCamera } = await fileImport(rootPath + '/static/scripts/camera/multi-camera.js');
@@ -95,7 +96,7 @@ const createMultiCamera = (focus) => {
     resize.observe(canvas);
 
     return multiCamera;
-}
+};
 
 app.start();
 
@@ -117,5 +118,28 @@ app.root.addChild(statue);
 
 const multiCamera = createMultiCamera(statue);
 app.root.addChild(multiCamera);
+
+// Bind controls to camera attributes
+data.set('camera', {
+    focusFov: 75,
+    lookSensitivity: 0.2,
+    lookDamping: 0.97,
+    moveDamping: 0.98,
+    pinchSpeed: 5,
+    wheelSpeed: 0.005,
+    zoomMin: 0.001,
+    zoomMax: 10,
+    zoomScaleMin: 0.01,
+    moveSpeed: 2,
+    sprintSpeed: 4,
+    crouchSpeed: 1
+});
+data.on('*:set', (/** @type {string} */ path, /** @type {any} */ value) => {
+    const [category, key] = path.split('.');
+    if (category !== 'camera') {
+        return;
+    }
+    multiCamera.script.multiCamera[key] = value;
+});
 
 export { app };
