@@ -1,7 +1,9 @@
 // @config DESCRIPTION <div style='text-align:center'><div>(<b>WASDQE</b>) Move</div><div>(<b>LMB</b>) Orbit, (<b>RMB</b>) Fly</div><div>(<b>Scroll Wheel</b>) zoom</div><div>(<b>MMB / Hold Shift</b>) Pan</div><div>(<b>F</b>) Focus</div></div>
 // @config HIDDEN
 import * as pc from 'playcanvas';
-import { deviceType, rootPath } from 'examples/utils';
+import { deviceType, rootPath, fileImport } from 'examples/utils';
+
+const { MultiCameraScript } = await fileImport(rootPath + '/static/scripts/camera/multi-camera.js');
 
 const canvas = document.getElementById('application-canvas');
 if (!(canvas instanceof HTMLCanvasElement)) {
@@ -22,7 +24,6 @@ const assets = {
         { url: rootPath + '/static/assets/cubemaps/helipad-env-atlas.png' },
         { type: pc.TEXTURETYPE_RGBP, mipmaps: false }
     ),
-    script: new pc.Asset('script', 'script', { url: rootPath + '/static/scripts/camera/multi-camera.js' }),
     statue: new pc.Asset('statue', 'container', { url: rootPath + '/static/assets/models/statue.glb' })
 };
 
@@ -68,23 +69,15 @@ function createMultiCamera(focus) {
 
     const multiCamera = new pc.Entity();
     multiCamera.addComponent('script');
-    if (!multiCamera.script) {
-        throw new Error('Script component not found');
-    }
-
-    /** @type {any} */
-    const script = multiCamera.script.create('multiCamera', {
-        attributes: {
-            camera
-        }
-    });
+    const multiCameraScript = multiCamera.script.create(MultiCameraScript);
+    multiCameraScript.attach(camera);
 
     // wait until after canvas resized to focus on entity
     const resize = new ResizeObserver(() => {
-        script.focusOnEntity(focus, true);
+        multiCameraScript.focusOnEntity(focus, true);
         resize.disconnect();
     });
-    resize.observe(canvas ?? document.body);
+    resize.observe(canvas);
 
     return multiCamera;
 }
