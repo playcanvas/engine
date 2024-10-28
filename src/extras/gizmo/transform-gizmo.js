@@ -539,20 +539,12 @@ class TransformGizmo extends Gizmo {
      * @protected
      */
     _createRay(mouseWPos) {
-        const cameraPos = this._camera.entity.getPosition();
-        const cameraTransform = this._camera.entity.getWorldTransform();
-
-        const ray = tmpR1.set(cameraPos, Vec3.ZERO);
-
-        // calculate ray direction from mouse position
         if (this._camera.projection === PROJECTION_PERSPECTIVE) {
-            ray.direction.sub2(mouseWPos, ray.origin).normalize();
-        } else {
-            ray.origin.add(mouseWPos);
-            cameraTransform.transformVector(tmpV1.set(0, 0, -1), ray.direction);
+            tmpR1.origin.copy(this._camera.entity.getPosition());
+            tmpR1.direction.sub2(mouseWPos, tmpR1.origin).normalize();
+            return tmpR1;
         }
-
-        return ray;
+        return tmpR1.set(mouseWPos, this._camera.entity.forward);
     }
 
     /**
