@@ -69,8 +69,19 @@ function createMultiCamera(focus) {
 
     const multiCamera = new pc.Entity();
     multiCamera.addComponent('script');
-    const multiCameraScript = multiCamera.script.create(MultiCameraScript);
+    const multiCameraScript = /** @type {MultiCameraScript} */ (multiCamera.script.create(MultiCameraScript));
     multiCameraScript.attach(camera);
+
+    // focus on entity when 'f' key is pressed
+    const onKeyDown = (/** @type {KeyboardEvent} */ e) => {
+        if (e.key === 'f') {
+            multiCameraScript.focusOnEntity(focus);
+        }
+    };
+    window.addEventListener('keydown', onKeyDown);
+    app.on('destroy', () => {
+        window.removeEventListener('keydown', onKeyDown);
+    });
 
     // wait until after canvas resized to focus on entity
     const resize = new ResizeObserver(() => {

@@ -721,20 +721,8 @@ class MultiCameraScript extends Script {
 
     focus;
 
-    constructor(app, entity) {
-        super(app, entity);
-        this._onKeyDown = this._onKeyDown.bind(this);
-    }
-
-    _onKeyDown(event) {
-        if (event.key === 'f' && this.focus) {
-            this.focusOnEntity(this.focus);
-        }
-    }
-
     focusOnEntity(entity, snap = false) {
-        this.focus = entity;
-        this._multi.focusOnEntity(this.focus, snap);
+        this._multi.focusOnEntity(entity, snap);
     }
 
     attach(camera) {
@@ -746,12 +734,10 @@ class MultiCameraScript extends Script {
             name: 'multi-camera'
         });
         this._multi.attach(camera);
-        window.addEventListener('keydown', this._onKeyDown, false);
     }
 
     detach() {
         this._multi.detach();
-        window.removeEventListener('keydown', this._onKeyDown, false);
     }
 
     update(dt) {
