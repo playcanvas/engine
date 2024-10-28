@@ -3,7 +3,7 @@
 import * as pc from 'playcanvas';
 import { deviceType, rootPath, fileImport } from 'examples/utils';
 
-const { MultiCameraScript } = await fileImport(rootPath + '/static/scripts/camera/multi-camera.js');
+const { MultiCamera } = await fileImport(rootPath + '/static/scripts/camera/multi-camera.js');
 
 const canvas = document.getElementById('application-canvas');
 if (!(canvas instanceof HTMLCanvasElement)) {
@@ -69,13 +69,17 @@ function createMultiCamera(focus) {
 
     const multiCamera = new pc.Entity();
     multiCamera.addComponent('script');
-    const multiCameraScript = /** @type {MultiCameraScript} */ (multiCamera.script.create(MultiCameraScript));
-    multiCameraScript.attach(camera);
+    const script = /** @type {MultiCamera} */ (multiCamera.script.create(MultiCamera, {
+        attributes: {
+            target: canvas
+        }
+    }));
+    script.attach(camera);
 
     // focus on entity when 'f' key is pressed
     const onKeyDown = (/** @type {KeyboardEvent} */ e) => {
         if (e.key === 'f') {
-            multiCameraScript.focusOnEntity(focus);
+            script.focusOnEntity(focus);
         }
     };
     window.addEventListener('keydown', onKeyDown);
@@ -85,7 +89,7 @@ function createMultiCamera(focus) {
 
     // wait until after canvas resized to focus on entity
     const resize = new ResizeObserver(() => {
-        multiCameraScript.focusOnEntity(focus, true);
+        script.focusOnEntity(focus, true);
         resize.disconnect();
     });
     resize.observe(canvas);

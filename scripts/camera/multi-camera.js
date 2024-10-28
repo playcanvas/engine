@@ -21,7 +21,7 @@ function calcEntityAABB(bbox, entity) {
     return bbox;
 }
 
-class BaseCamera {
+class BaseCamera extends Script {
     /**
      * @type {Entity}
      */
@@ -33,21 +33,25 @@ class BaseCamera {
     target = document.documentElement;
 
     /**
+     * @attribute
      * @type {number}
      */
     sceneSize = 100;
 
     /**
+     * @attribute
      * @type {number}
      */
     lookSensitivity = 0.2;
 
     /**
+     * @attribute
      * @type {number}
      */
     lookDamping = 0.97;
 
     /**
+     * @attribute
      * @type {number}
      */
     moveDamping = 0.98;
@@ -83,17 +87,19 @@ class BaseCamera {
     _angles = new Vec3();
 
     /**
-     * @param {Entity} entity - The entity to attach the camera to.
-     * @param {HTMLElement} target - The target element to listen for pointer events.
-     * @param {Record<string, any>} options - The options for the camera.
+     * @param {Record<string, any>} args - The script arguments
      */
-    constructor(entity, target, options = {}) {
+    constructor(args) {
+        super(args);
+        const { entity, attributes } = args;
+        const { target, sceneSize, lookSensitivity, lookDamping, moveDamping } = attributes;
+
         this.entity = entity;
         this.target = target;
-        this.sceneSize = options.sceneSize ?? this.sceneSize;
-        this.lookSensitivity = options.lookSensitivity ?? this.lookSensitivity;
-        this.lookDamping = options.lookDamping ?? this.lookDamping;
-        this.moveDamping = options.moveDamping ?? this.moveDamping;
+        this.sceneSize = sceneSize ?? this.sceneSize;
+        this.lookSensitivity = lookSensitivity ?? this.lookSensitivity;
+        this.lookDamping = lookDamping ?? this.lookDamping;
+        this.moveDamping = moveDamping ?? this.moveDamping;
 
         this._onPointerDown = this._onPointerDown.bind(this);
         this._onPointerMove = this._onPointerMove.bind(this);
@@ -204,65 +210,81 @@ class BaseCamera {
         this._smoothLook(dt);
         this._smoothMove(dt);
     }
+
+    destroy() {
+        this.detach();
+    }
 }
 
 class MultiCamera extends BaseCamera {
     /**
+     * @attribute
      * @type {number}
      */
     focusFov = 75;
 
     /**
+     * @attribute
      * @type {number}
      */
     lookSensitivity = 0.2;
 
     /**
+     * @attribute
      * @type {number}
      */
     lookDamping = 0.97;
 
     /**
+     * @attribute
      * @type {number}
      */
     moveDamping = 0.98;
 
     /**
+     * @attribute
      * @type {number}
      */
     pinchSpeed = 5;
 
     /**
+     * @attribute
      * @type {number}
      */
     wheelSpeed = 0.005;
 
     /**
+     * @attribute
      * @type {number}
      */
     zoomMin = 0.001;
 
     /**
+     * @attribute
      * @type {number}
      */
     zoomMax = 10;
 
     /**
+     * @attribute
      * @type {number}
      */
     zoomScaleMin = 0.01;
 
     /**
+     * @attribute
      * @type {number}
      */
     moveSpeed = 2;
 
     /**
+     * @attribute
      * @type {number}
      */
     sprintSpeed = 4;
 
     /**
+     * @attribute
      * @type {number}
      */
     crouchSpeed = 1;
@@ -323,20 +345,20 @@ class MultiCamera extends BaseCamera {
     };
 
     /**
-     * @param {Entity} entity - The entity to attach the camera to.
-     * @param {HTMLElement} target - The target element to listen for pointer events.
-     * @param {Record<string, any>} options - The options for the camera.
+     * @param {Record<string, any>} args - The script arguments
      */
-    constructor(entity, target, options = {}) {
-        super(entity, target, options);
+    constructor(args) {
+        super(args);
+        const { attributes } = args;
+        const { pinchSpeed, wheelSpeed, zoomMin, zoomMax, moveSpeed, sprintSpeed, crouchSpeed } = attributes;
 
-        this.pinchSpeed = options.pinchSpeed ?? this.pinchSpeed;
-        this.wheelSpeed = options.wheelSpeed ?? this.wheelSpeed;
-        this.zoomMin = options.zoomMin ?? this.zoomMin;
-        this.zoomMax = options.zoomMax ?? this.zoomMax;
-        this.moveSpeed = options.moveSpeed ?? this.moveSpeed;
-        this.sprintSpeed = options.sprintSpeed ?? this.sprintSpeed;
-        this.crouchSpeed = options.crouchSpeed ?? this.crouchSpeed;
+        this.pinchSpeed = pinchSpeed ?? this.pinchSpeed;
+        this.wheelSpeed = wheelSpeed ?? this.wheelSpeed;
+        this.zoomMin = zoomMin ?? this.zoomMin;
+        this.zoomMax = zoomMax ?? this.zoomMax;
+        this.moveSpeed = moveSpeed ?? this.moveSpeed;
+        this.sprintSpeed = sprintSpeed ?? this.sprintSpeed;
+        this.crouchSpeed = crouchSpeed ?? this.crouchSpeed;
 
         this._onWheel = this._onWheel.bind(this);
         this._onKeyDown = this._onKeyDown.bind(this);
@@ -716,37 +738,4 @@ class MultiCamera extends BaseCamera {
     }
 }
 
-class MultiCameraScript extends Script {
-    _multi;
-
-    focus;
-
-    focusOnEntity(entity, snap = false) {
-        this._multi.focusOnEntity(entity, snap);
-    }
-
-    attach(camera) {
-        if (!camera) {
-            console.error('MultiCameraScript: camera attribute must be set');
-            return;
-        }
-        this._multi = new MultiCamera(this.entity, this.app.graphicsDevice.canvas, {
-            name: 'multi-camera'
-        });
-        this._multi.attach(camera);
-    }
-
-    detach() {
-        this._multi.detach();
-    }
-
-    update(dt) {
-        this._multi.update(dt);
-    }
-
-    destroy() {
-        this.detach();
-    }
-}
-
-export { MultiCameraScript };
+export { MultiCamera };
