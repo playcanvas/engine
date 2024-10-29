@@ -2,6 +2,8 @@ import { Script, Vec2, Vec3, math } from 'playcanvas';
 
 const LOOK_MAX_ANGLE = 90;
 
+/** @import { CameraComponent } from 'playcanvas' */
+
 class BaseCamera extends Script {
     /**
      * @type {Entity}
@@ -38,7 +40,7 @@ class BaseCamera extends Script {
     moveDamping = 0.98;
 
     /**
-     * @type {Entity}
+     * @type {CameraComponent}
      * @protected
      */
     _camera = null;
@@ -151,18 +153,18 @@ class BaseCamera extends Script {
     }
 
     /**
-     * @param {Entity} camera - The camera entity to attach.
+     * @param {CameraComponent} camera - The camera entity to attach.
      */
     attach(camera) {
         this._camera = camera;
-        this._camera.setLocalEulerAngles(0, 0, 0);
+        this._camera.entity.setLocalEulerAngles(0, 0, 0);
 
         window.addEventListener('pointerdown', this._onPointerDown);
         window.addEventListener('pointermove', this._onPointerMove);
         window.addEventListener('pointerup', this._onPointerUp);
         window.addEventListener('contextmenu', this._onContextMenu);
 
-        this.entity.addChild(camera);
+        this.entity.addChild(camera.entity);
     }
 
     detach() {
@@ -171,7 +173,7 @@ class BaseCamera extends Script {
         window.removeEventListener('pointerup', this._onPointerUp);
         window.removeEventListener('contextmenu', this._onContextMenu);
 
-        this.entity.removeChild(this._camera);
+        this.entity.removeChild(this._camera.entity);
         this._camera = null;
 
         this._dir.x = this._angles.x;

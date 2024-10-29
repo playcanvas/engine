@@ -75,7 +75,7 @@ const createMultiCamera = (focus) => {
             target: canvas
         }
     }));
-    script.attach(camera);
+    script.attach(camera.camera);
 
     // focus on entity when 'f' key is pressed
     const onKeyDown = (/** @type {KeyboardEvent} */ e) => {

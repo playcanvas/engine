@@ -197,9 +197,9 @@ class MultiCamera extends BaseCamera {
         }
         if (event.button === 2) {
             this._zoom = this._cameraDist;
-            this._origin.copy(this._camera.getPosition());
+            this._origin.copy(this._camera.entity.getPosition());
             this._position.copy(this._origin);
-            this._camera.setLocalPosition(0, 0, 0);
+            this._camera.entity.setLocalPosition(0, 0, 0);
             this._flying = true;
         }
     }
@@ -395,8 +395,8 @@ class MultiCamera extends BaseCamera {
      * @private
      */
     _screenToWorldPan(pos, point) {
-        const mouseW = this._camera.camera.screenToWorld(pos.x, pos.y, 1);
-        const cameraPos = this._camera.getPosition();
+        const mouseW = this._camera.screenToWorld(pos.x, pos.y, 1);
+        const cameraPos = this._camera.entity.getPosition();
 
         const focusDirScaled = tmpV1.copy(this.entity.forward).mulScalar(this._zoom);
         const focalPos = tmpV2.add2(cameraPos, focusDirScaled);
@@ -430,7 +430,7 @@ class MultiCamera extends BaseCamera {
      * @private
      */
     _handleZoom(delta) {
-        const min = this._camera.camera.nearClip + this.zoomMin * this.sceneSize;
+        const min = this._camera.nearClip + this.zoomMin * this.sceneSize;
         const max = this.zoomMax * this.sceneSize;
         const scale = math.clamp(this._zoom / (max - min), this.zoomScaleMin, 1);
         this._zoom += delta * this.wheelSpeed * this.sceneSize * scale;
@@ -442,11 +442,10 @@ class MultiCamera extends BaseCamera {
      * @private
      */
     _calcZoom() {
-        const camera = this._camera.camera;
         const d1 = Math.tan(0.5 * this.focusFov * math.DEG_TO_RAD);
-        const d2 = Math.tan(0.5 * camera.fov * math.DEG_TO_RAD);
+        const d2 = Math.tan(0.5 * this._camera.fov * math.DEG_TO_RAD);
 
-        const scale = (d1 / d2) * (1 / camera.aspectRatio);
+        const scale = (d1 / d2) * (1 / this._camera.aspectRatio);
         return scale * this.sceneSize + this.sceneSize;
     }
 
@@ -464,8 +463,8 @@ class MultiCamera extends BaseCamera {
         if (snap) {
             this._position.copy(point);
         }
-        this._camera.setPosition(start);
-        this._camera.setLocalEulerAngles(0, 0, 0);
+        this._camera.entity.setPosition(start);
+        this._camera.entity.setLocalEulerAngles(0, 0, 0);
 
         if (!start) {
             return;
@@ -501,8 +500,8 @@ class MultiCamera extends BaseCamera {
      */
     attach(camera) {
         super.attach(camera);
-        this._camera.setPosition(0, 0, 0);
-        this._camera.setLocalEulerAngles(0, 0, 0);
+        this._camera.entity.setPosition(0, 0, 0);
+        this._camera.entity.setLocalEulerAngles(0, 0, 0);
 
         window.addEventListener('wheel', this._onWheel, PASSIVE);
         window.addEventListener('keydown', this._onKeyDown, false);
@@ -541,7 +540,7 @@ class MultiCamera extends BaseCamera {
 
         if (!this._flying) {
             this._cameraDist = math.lerp(this._cameraDist, this._zoom, 1 - Math.pow(this.moveDamping, dt * 1000));
-            this._camera.setLocalPosition(0, 0, this._cameraDist);
+            this._camera.entity.setLocalPosition(0, 0, this._cameraDist);
         }
 
         this._handleMove(dt);
