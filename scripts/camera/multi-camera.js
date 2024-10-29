@@ -29,6 +29,62 @@ const calcEntityAABB = (bbox, entity) => {
 };
 
 class MultiCamera extends BaseCamera {
+
+    /**
+     * @type {number}
+     * @private
+     */
+    _zoom = 0;
+
+    /**
+     * @type {number}
+     * @private
+     */
+    _cameraDist = 0;
+
+    /**
+     * @type {Map<number, PointerEvent>}
+     * @private
+     */
+    _pointerEvents = new Map();
+
+    /**
+     * @type {number}
+     * @private
+     */
+    _lastPinchDist = -1;
+
+    /**
+     * @type {Vec2}
+     * @private
+     */
+    _lastPosition = new Vec2();
+
+    /**
+     * @type {boolean}
+     */
+    _panning = false;
+
+    /**
+     * @type {boolean}
+     */
+    _flying = false;
+
+    /**
+     * @type {Record<string, boolean>}
+     * @private
+     */
+    _key = {
+        forward: false,
+        backward: false,
+        left: false,
+        right: false,
+        up: false,
+        down: false,
+        sprint: false,
+        crouch: false
+    };
+
     /**
      * @attribute
      * @type {number}
@@ -100,61 +156,6 @@ class MultiCamera extends BaseCamera {
      * @type {number}
      */
     crouchSpeed = 1;
-
-    /**
-     * @type {number}
-     * @private
-     */
-    _zoom = 0;
-
-    /**
-     * @type {number}
-     * @private
-     */
-    _cameraDist = 0;
-
-    /**
-     * @type {Map<number, PointerEvent>}
-     * @private
-     */
-    _pointerEvents = new Map();
-
-    /**
-     * @type {number}
-     * @private
-     */
-    _lastPinchDist = -1;
-
-    /**
-     * @type {Vec2}
-     * @private
-     */
-    _lastPosition = new Vec2();
-
-    /**
-     * @type {boolean}
-     */
-    _panning = false;
-
-    /**
-     * @type {boolean}
-     */
-    _flying = false;
-
-    /**
-     * @type {Record<string, boolean>}
-     * @private
-     */
-    _key = {
-        forward: false,
-        backward: false,
-        left: false,
-        right: false,
-        up: false,
-        down: false,
-        sprint: false,
-        crouch: false
-    };
 
     /**
      * @param {Record<string, any>} args - The script arguments

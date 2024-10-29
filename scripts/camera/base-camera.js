@@ -6,40 +6,6 @@ const LOOK_MAX_ANGLE = 90;
 
 class BaseCamera extends Script {
     /**
-     * @type {Entity}
-     */
-    entity;
-
-    /**
-     * @type {HTMLElement}
-     */
-    target = document.documentElement;
-
-    /**
-     * @attribute
-     * @type {number}
-     */
-    sceneSize = 100;
-
-    /**
-     * @attribute
-     * @type {number}
-     */
-    lookSensitivity = 0.2;
-
-    /**
-     * @attribute
-     * @type {number}
-     */
-    lookDamping = 0.97;
-
-    /**
-     * @attribute
-     * @type {number}
-     */
-    moveDamping = 0.98;
-
-    /**
      * @type {CameraComponent}
      * @protected
      */
@@ -70,15 +36,43 @@ class BaseCamera extends Script {
     _angles = new Vec3();
 
     /**
+     * @type {Entity}
+     */
+    entity;
+
+    /**
+     * @attribute
+     * @type {number}
+     */
+    sceneSize = 100;
+
+    /**
+     * @attribute
+     * @type {number}
+     */
+    lookSensitivity = 0.2;
+
+    /**
+     * @attribute
+     * @type {number}
+     */
+    lookDamping = 0.97;
+
+    /**
+     * @attribute
+     * @type {number}
+     */
+    moveDamping = 0.98;
+
+    /**
      * @param {Record<string, any>} args - The script arguments
      */
     constructor(args) {
         super(args);
         const { entity, attributes } = args;
-        const { target, sceneSize, lookSensitivity, lookDamping, moveDamping } = attributes;
+        const { sceneSize, lookSensitivity, lookDamping, moveDamping } = attributes;
 
         this.entity = entity;
-        this.target = target;
         this.sceneSize = sceneSize ?? this.sceneSize;
         this.lookSensitivity = lookSensitivity ?? this.lookSensitivity;
         this.lookDamping = lookDamping ?? this.lookDamping;
@@ -143,7 +137,7 @@ class BaseCamera extends Script {
      * @protected
      */
     _look(event) {
-        if (event.target !== this.target) {
+        if (event.target !== this._camera?.system.app.graphicsDevice.canvas) {
             return;
         }
         const movementX = event.movementX || 0;
