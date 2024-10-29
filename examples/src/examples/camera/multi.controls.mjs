@@ -36,8 +36,8 @@ export function controls({ observer, ReactPCUI, React, jsx, fragment }) {
                 jsx(SliderInput, {
                     binding: new BindingTwoWay(),
                     link: { observer, path: 'camera.lookDamping' },
-                    min: 0.9,
-                    max: 1,
+                    min: 0,
+                    max: 0.99,
                     step: 0.01
                 })
             ),
@@ -47,8 +47,8 @@ export function controls({ observer, ReactPCUI, React, jsx, fragment }) {
                 jsx(SliderInput, {
                     binding: new BindingTwoWay(),
                     link: { observer, path: 'camera.moveDamping' },
-                    min: 0.9,
-                    max: 1,
+                    min: 0,
+                    max: 0.99,
                     step: 0.01
                 })
             ),
