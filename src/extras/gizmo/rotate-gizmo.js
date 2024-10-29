@@ -481,8 +481,8 @@ class RotateGizmo extends TransformGizmo {
         } else {
             // convert rotation axis to screen space
             tmpV2.cross(plane.normal, facingDir).normalize();
-            this._camera.worldToScreen(tmpV1.set(0, 0, 0), tmpV1);
-            this._camera.worldToScreen(tmpV2, tmpV2);
+            this._camera.worldToScreen(tmpV1.copy(gizmoPos), tmpV1);
+            this._camera.worldToScreen(tmpV2.add(gizmoPos), tmpV2);
             tmpV1.sub2(tmpV2, tmpV1).normalize();
             tmpV2.set(x, y, 0);
             angle = tmpV1.dot(tmpV2);
