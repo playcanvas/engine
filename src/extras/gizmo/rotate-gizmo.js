@@ -484,7 +484,6 @@ class RotateGizmo extends TransformGizmo {
             // convert rotation axis to screen space
             tmpV1.copy(gizmoPos);
             tmpV2.cross(plane.normal, facingDir).normalize().add(gizmoPos);
-            this._app.drawLine(tmpV1, tmpV2, this._guideColors[axis], false, this._layer);
             this._camera.worldToScreen(tmpV1, tmpV3);
             this._camera.worldToScreen(tmpV2, tmpV4);
             tmpV1.sub2(tmpV4, tmpV3).normalize();
