@@ -3,7 +3,7 @@ import { Color } from '../../core/math/color.js';
 import { Quat } from '../../core/math/quat.js';
 import { Mat4 } from '../../core/math/mat4.js';
 import { Vec3 } from '../../core/math/vec3.js';
-import { PROJECTION_ORTHOGRAPHIC, PROJECTION_PERSPECTIVE } from '../../scene/constants.js';
+import { PROJECTION_PERSPECTIVE } from '../../scene/constants.js';
 
 import { ArcShape } from './shape/arc-shape.js';
 import { GIZMOSPACE_LOCAL, GIZMOAXIS_FACE, GIZMOAXIS_X, GIZMOAXIS_Y, GIZMOAXIS_Z } from './constants.js';
@@ -24,7 +24,6 @@ const tmpQ2 = new Quat();
 
 // constants
 const FACING_THRESHOLD = 0.9;
-const ROTATE_SCALE = 900;
 const GUIDE_ANGLE_COLOR = new Color(0, 0, 0, 0.3);
 
 /**
@@ -480,13 +479,13 @@ class RotateGizmo extends TransformGizmo {
             // calculate angle
             angle = Math.sign(facingDot) * Math.atan2(tmpV1.y, tmpV1.x) * math.RAD_TO_DEG;
         } else {
-
-            // plane not facing camera so based on absolute mouse position
-            tmpV1.cross(plane.normal, facingDir).normalize();
-            angle = mouseWPos.dot(tmpV1) * ROTATE_SCALE;
-            if (this._camera.projection === PROJECTION_ORTHOGRAPHIC) {
-                angle /= (this._camera.orthoHeight || 1);
-            }
+            // convert rotation axis to screen space
+            tmpV2.cross(plane.normal, facingDir).normalize();
+            this._camera.worldToScreen(tmpV1.copy(gizmoPos), tmpV1);
+            this._camera.worldToScreen(tmpV2.add(gizmoPos), tmpV2);
+            tmpV1.sub2(tmpV2, tmpV1).normalize();
+            tmpV2.set(x, y, 0);
+            angle = tmpV1.dot(tmpV2);
         }
 
         return { point, angle };
