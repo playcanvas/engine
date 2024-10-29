@@ -18,6 +18,8 @@ import { TransformGizmo } from './transform-gizmo.js';
 // temporary variables
 const tmpV1 = new Vec3();
 const tmpV2 = new Vec3();
+const tmpV3 = new Vec3();
+const tmpV4 = new Vec3();
 const tmpM1 = new Mat4();
 const tmpQ1 = new Quat();
 const tmpQ2 = new Quat();
@@ -480,10 +482,11 @@ class RotateGizmo extends TransformGizmo {
             angle = Math.sign(facingDot) * Math.atan2(tmpV1.y, tmpV1.x) * math.RAD_TO_DEG;
         } else {
             // convert rotation axis to screen space
-            tmpV2.cross(plane.normal, facingDir).normalize();
-            this._camera.worldToScreen(tmpV1.copy(gizmoPos), tmpV1);
-            this._camera.worldToScreen(tmpV2.add(gizmoPos), tmpV2);
-            tmpV1.sub2(tmpV2, tmpV1).normalize();
+            tmpV1.copy(gizmoPos);
+            tmpV2.cross(plane.normal, facingDir).normalize().add(gizmoPos);
+            this._camera.worldToScreen(tmpV1, tmpV3);
+            this._camera.worldToScreen(tmpV2, tmpV4);
+            tmpV1.sub2(tmpV4, tmpV3).normalize();
             tmpV2.set(x, y, 0);
             angle = tmpV1.dot(tmpV2);
         }
