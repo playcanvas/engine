@@ -238,6 +238,7 @@ class InfiniteGrid extends Script {
     }
 
     /**
+     * @attribute
      * @type {Color}
      */
     set colorX(value) {
@@ -250,6 +251,7 @@ class InfiniteGrid extends Script {
     }
 
     /**
+     * @attribute
      * @type {Color}
      */
     set colorZ(value) {
