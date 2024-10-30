@@ -3,9 +3,18 @@
  * @returns {JSX.Element} The returned JSX Element.
  */
 export function controls({ observer, ReactPCUI, React, jsx, fragment }) {
-    const { BindingTwoWay, LabelGroup, Panel, SliderInput } = ReactPCUI;
+    const { BindingTwoWay, LabelGroup, Panel, BooleanInput, SliderInput } = ReactPCUI;
 
     return fragment(
+        jsx(
+            LabelGroup,
+            { text: 'Zoom reset' },
+            jsx(BooleanInput, {
+                type: 'toggle',
+                binding: new BindingTwoWay(),
+                link: { observer, path: 'example.zoomReset' }
+            })
+        ),
         jsx(
             Panel,
             { headerText: 'Attributes' },
@@ -14,7 +23,7 @@ export function controls({ observer, ReactPCUI, React, jsx, fragment }) {
                 { text: 'Focus FOV' },
                 jsx(SliderInput, {
                     binding: new BindingTwoWay(),
-                    link: { observer, path: 'camera.focusFov' },
+                    link: { observer, path: 'attr.focusFov' },
                     min: 30,
                     max: 120
                 })
@@ -24,7 +33,7 @@ export function controls({ observer, ReactPCUI, React, jsx, fragment }) {
                 { text: 'Look sensitivity' },
                 jsx(SliderInput, {
                     binding: new BindingTwoWay(),
-                    link: { observer, path: 'camera.lookSensitivity' },
+                    link: { observer, path: 'attr.lookSensitivity' },
                     min: 0.1,
                     max: 1,
                     step: 0.01
@@ -35,7 +44,7 @@ export function controls({ observer, ReactPCUI, React, jsx, fragment }) {
                 { text: 'Look damping' },
                 jsx(SliderInput, {
                     binding: new BindingTwoWay(),
-                    link: { observer, path: 'camera.lookDamping' },
+                    link: { observer, path: 'attr.lookDamping' },
                     min: 0,
                     max: 0.99,
                     step: 0.01
@@ -46,7 +55,7 @@ export function controls({ observer, ReactPCUI, React, jsx, fragment }) {
                 { text: 'Move damping' },
                 jsx(SliderInput, {
                     binding: new BindingTwoWay(),
-                    link: { observer, path: 'camera.moveDamping' },
+                    link: { observer, path: 'attr.moveDamping' },
                     min: 0,
                     max: 0.99,
                     step: 0.01
@@ -57,7 +66,7 @@ export function controls({ observer, ReactPCUI, React, jsx, fragment }) {
                 { text: 'Pinch speed' },
                 jsx(SliderInput, {
                     binding: new BindingTwoWay(),
-                    link: { observer, path: 'camera.pinchSpeed' },
+                    link: { observer, path: 'attr.pinchSpeed' },
                     min: 1,
                     max: 10
                 })
@@ -67,7 +76,7 @@ export function controls({ observer, ReactPCUI, React, jsx, fragment }) {
                 { text: 'Wheel speed' },
                 jsx(SliderInput, {
                     binding: new BindingTwoWay(),
-                    link: { observer, path: 'camera.wheelSpeed' },
+                    link: { observer, path: 'attr.wheelSpeed' },
                     min: 0.001,
                     max: 0.01,
                     step: 0.001
@@ -78,7 +87,7 @@ export function controls({ observer, ReactPCUI, React, jsx, fragment }) {
                 { text: 'Zoom min' },
                 jsx(SliderInput, {
                     binding: new BindingTwoWay(),
-                    link: { observer, path: 'camera.zoomMin' },
+                    link: { observer, path: 'attr.zoomMin' },
                     min: 0.001,
                     max: 0.01,
                     step: 0.001
@@ -89,7 +98,7 @@ export function controls({ observer, ReactPCUI, React, jsx, fragment }) {
                 { text: 'Zoom max' },
                 jsx(SliderInput, {
                     binding: new BindingTwoWay(),
-                    link: { observer, path: 'camera.zoomMax' },
+                    link: { observer, path: 'attr.zoomMax' },
                     min: 1,
                     max: 10
                 })
@@ -99,7 +108,7 @@ export function controls({ observer, ReactPCUI, React, jsx, fragment }) {
                 { text: 'Zoom scale min' },
                 jsx(SliderInput, {
                     binding: new BindingTwoWay(),
-                    link: { observer, path: 'camera.zoomScaleMin' },
+                    link: { observer, path: 'attr.zoomScaleMin' },
                     min: 0.001,
                     max: 0.01,
                     step: 0.001
@@ -110,7 +119,7 @@ export function controls({ observer, ReactPCUI, React, jsx, fragment }) {
                 { text: 'Move speed' },
                 jsx(SliderInput, {
                     binding: new BindingTwoWay(),
-                    link: { observer, path: 'camera.moveSpeed' },
+                    link: { observer, path: 'attr.moveSpeed' },
                     min: 1,
                     max: 10
                 })
@@ -120,7 +129,7 @@ export function controls({ observer, ReactPCUI, React, jsx, fragment }) {
                 { text: 'Sprint speed' },
                 jsx(SliderInput, {
                     binding: new BindingTwoWay(),
-                    link: { observer, path: 'camera.sprintSpeed' },
+                    link: { observer, path: 'attr.sprintSpeed' },
                     min: 1,
                     max: 10
                 })
@@ -130,7 +139,7 @@ export function controls({ observer, ReactPCUI, React, jsx, fragment }) {
                 { text: 'Crouch speed' },
                 jsx(SliderInput, {
                     binding: new BindingTwoWay(),
-                    link: { observer, path: 'camera.crouchSpeed' },
+                    link: { observer, path: 'attr.crouchSpeed' },
                     min: 1,
                     max: 10
                 })

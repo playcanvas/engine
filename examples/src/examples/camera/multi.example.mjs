@@ -101,7 +101,9 @@ const createMultiCamera = (focus) => {
     // focus on entity when 'f' key is pressed
     const onKeyDown = (/** @type {KeyboardEvent} */ e) => {
         if (e.key === 'f') {
-            script.resetZoom(zoom);
+            if (data.get('example.zoomReset')) {
+                script.resetZoom(zoom);
+            }
             script.focus(bbox.center);
         }
     };
@@ -141,7 +143,10 @@ app.root.addChild(statue);
 const multiCameraScript = createMultiCamera(statue);
 
 // Bind controls to camera attributes
-data.set('camera', {
+data.set('example', {
+    zoomReset: true
+});
+data.set('attr', {
     focusFov: 75,
     lookSensitivity: 0.2,
     lookDamping: 0.97,
@@ -157,7 +162,7 @@ data.set('camera', {
 });
 data.on('*:set', (/** @type {string} */ path, /** @type {any} */ value) => {
     const [category, key] = path.split('.');
-    if (category !== 'camera') {
+    if (category !== 'attr') {
         return;
     }
     multiCameraScript[key] = value;
