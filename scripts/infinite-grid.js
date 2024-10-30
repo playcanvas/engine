@@ -1,16 +1,17 @@
 import {
-    PROJECTION_PERSPECTIVE,
-    SEMANTIC_POSITION,
-    CULLFACE_NONE,
-    BlendState,
-    DepthState,
-    QuadRender,
-    createShaderFromCode,
     BLENDMODE_ONE,
     BLENDMODE_ONE_MINUS_SRC_ALPHA,
     BLENDMODE_SRC_ALPHA,
     BLENDEQUATION_ADD,
+    CULLFACE_NONE,
+    PROJECTION_PERSPECTIVE,
+    SEMANTIC_POSITION,
+    BlendState,
+    DepthState,
+    QuadRender,
+    createShaderFromCode,
     Script,
+    Color,
     Vec3
 } from 'playcanvas';
 
@@ -45,6 +46,9 @@ const fragmentShader = /* glsl*/ `
     uniform vec3 view_position;
     uniform mat4 matrix_viewProjection;
     uniform sampler2D blueNoiseTex32;
+
+    uniform vec3 color_x;
+    uniform vec3 color_z;
 
     varying vec3 worldNear;
     varying vec3 worldFar;
@@ -137,10 +141,10 @@ const fragmentShader = /* glsl*/ `
                 if (loc.y < levelSize) {
                     color = vec3(1.0);
                 } else {
-                    color = vec3(0.2, 0.2, 1.0);
+                    color = color_z;
                 }
             } else if (loc.y < levelSize) {
-                color = vec3(1.0, 0.2, 0.2);
+                color = color_x;
             } else {
                 color = vec3(0.9);
             }
@@ -176,13 +180,27 @@ const fragmentShader = /* glsl*/ `
 class InfiniteGrid extends Script {
     /**
      * @type {CameraComponent}
+     * @private
      */
     _camera;
 
     /**
      * @type {QuadRender}
+     * @private
      */
     _quadRender;
+
+    /**
+     * @type {Color}
+     * @private
+     */
+    _colorX = new Color(1, 0.3, 0.3);
+
+    /**
+     * @type {Color}
+     * @private
+     */
+    _colorZ = new Color(0.3, 0.3, 1);
 
     /**
      * @type {string}
@@ -202,6 +220,48 @@ class InfiniteGrid extends Script {
     }
 
     /**
+     * Set the value of a uniform in the shader.
+     *
+     * @param {string} name - The name of the uniform.
+     * @param {Color|Vec3} value - The value to set.
+     * @private
+     */
+    _set(name, value) {
+        const device = this.app.graphicsDevice;
+        if (value instanceof Color) {
+            device.scope.resolve(name).setValue([value.r, value.g, value.b]);
+        }
+
+        if (value instanceof Vec3) {
+            device.scope.resolve(name).setValue([value.x, value.y, value.z]);
+        }
+    }
+
+    /**
+     * @type {Color}
+     */
+    set colorX(value) {
+        this._colorX.copy(value);
+        this._set('color_x', value);
+    }
+
+    get colorX() {
+        return this._colorX;
+    }
+
+    /**
+     * @type {Color}
+     */
+    set colorZ(value) {
+        this._colorZ.copy(value);
+        this._set('color_x', value);
+    }
+
+    get colorZ() {
+        return this._colorZ;
+    }
+
+    /**
      * @param {CameraComponent} camera - The camera component.
      */
     attach(camera) {
@@ -211,13 +271,9 @@ class InfiniteGrid extends Script {
         });
         this._quadRender = new QuadRender(shader);
 
-        /**
-         * @param {string} name - The name of the uniform.
-         * @param {Vec3} vec - The vector to set.
-         */
-        const set = (name, vec) => {
-            device.scope.resolve(name).setValue([vec.x, vec.y, vec.z]);
-        };
+        // set initial colors
+        this._set('color_x', this._colorX);
+        this._set('color_z', this._colorZ);
 
         this.app.on('prerender', () => {
             // get frustum corners in world space
@@ -230,20 +286,20 @@ class InfiniteGrid extends Script {
             // near
             if (camera.projection === PROJECTION_PERSPECTIVE) {
                 // perspective
-                set('near_origin', worldTransform.getTranslation());
-                set('near_x', Vec3.ZERO);
-                set('near_y', Vec3.ZERO);
+                this._set('near_origin', worldTransform.getTranslation());
+                this._set('near_x', Vec3.ZERO);
+                this._set('near_y', Vec3.ZERO);
             } else {
                 // orthographic
-                set('near_origin', points[3]);
-                set('near_x', tmpV1.sub2(points[0], points[3]));
-                set('near_y', tmpV1.sub2(points[2], points[3]));
+                this._set('near_origin', points[3]);
+                this._set('near_x', tmpV1.sub2(points[0], points[3]));
+                this._set('near_y', tmpV1.sub2(points[2], points[3]));
             }
 
             // far
-            set('far_origin', points[7]);
-            set('far_x', tmpV1.sub2(points[4], points[7]));
-            set('far_y', tmpV1.sub2(points[6], points[7]));
+            this._set('far_origin', points[7]);
+            this._set('far_x', tmpV1.sub2(points[4], points[7]));
+            this._set('far_y', tmpV1.sub2(points[6], points[7]));
         });
 
         const blendState = new BlendState(
