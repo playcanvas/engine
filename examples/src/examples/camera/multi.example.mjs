@@ -89,7 +89,7 @@ const createMultiCamera = (focus) => {
 
     const start = new pc.Vec3(0, 20, 30);
     const bbox = calcEntityAABB(new pc.BoundingBox(), focus);
-    const zoom = new pc.Vec3().sub2(bbox.center, start).length();
+    const cameraDist = new pc.Vec3().sub2(bbox.center, start).length();
 
     /** @type {MultiCamera} */
     const script = camera.script.create(MultiCamera, {
@@ -102,7 +102,7 @@ const createMultiCamera = (focus) => {
     const onKeyDown = (/** @type {KeyboardEvent} */ e) => {
         if (e.key === 'f') {
             if (data.get('example.zoomReset')) {
-                script.resetZoom(zoom);
+                script.resetZoom(cameraDist);
             }
             script.focus(bbox.center);
         }
