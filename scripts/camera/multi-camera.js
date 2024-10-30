@@ -155,6 +155,9 @@ class MultiCamera extends BaseCamera {
         this._onKeyDown = this._onKeyDown.bind(this);
         this._onKeyUp = this._onKeyUp.bind(this);
 
+        if (!this.entity.camera) {
+            throw new Error('MultiCamera script requires a camera component');
+        }
         this.attach(this.entity.camera);
     }
 
