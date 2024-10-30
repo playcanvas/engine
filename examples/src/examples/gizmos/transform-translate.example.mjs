@@ -73,6 +73,7 @@ camera.addComponent('camera', {
     farClip: 1000
 });
 camera.addComponent('script');
+camera.script.create(InfiniteGrid);
 const orbitCamera = camera.script.create('orbitCamera');
 camera.script.create('orbitCameraInputMouse');
 camera.script.create('orbitCameraInputTouch');
@@ -153,11 +154,8 @@ const resize = () => {
 window.addEventListener('resize', resize);
 resize();
 
-const grid = new InfiniteGrid(camera.camera);
-
 app.on('destroy', () => {
     window.removeEventListener('resize', resize);
-    grid.destroy();
 });
 
 export { app };

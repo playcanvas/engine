@@ -1,14 +1,15 @@
 // @config DESCRIPTION <div style='text-align:center'><div>Translate (1), Rotate (2), Scale (3)</div><div>World/Local (X)</div><div>Perspective (P), Orthographic (O)</div></div>
 import * as pc from 'playcanvas';
 import { data } from 'examples/observer';
-import { deviceType, rootPath, localImport } from 'examples/utils';
+import { deviceType, rootPath, localImport, fileImport } from 'examples/utils';
+
+const { InfiniteGrid } = await fileImport(rootPath + '/static/scripts/infinite-grid.js');
 
 const canvas = /** @type {HTMLCanvasElement} */ (document.getElementById('application-canvas'));
 window.focus();
 
 // class for handling gizmo
 const { GizmoHandler } = await localImport('gizmo-handler.mjs');
-const { Grid } = await localImport('grid.mjs');
 const { Selector } = await localImport('selector.mjs');
 
 const gfxOptions = {
@@ -120,6 +121,7 @@ camera.addComponent('camera', {
     farClip: 1000
 });
 camera.addComponent('script');
+camera.script.create(InfiniteGrid);
 const orbitCamera = camera.script.create('orbitCamera');
 camera.script.create('orbitCameraInputMouse');
 camera.script.create('orbitCameraInputTouch');
@@ -260,13 +262,6 @@ selector.on('select', (/** @type {pc.GraphNode} */ node, /** @type {boolean} */ 
 });
 selector.on('deselect', () => {
     gizmoHandler.clear();
-});
-
-// grid
-const grid = new Grid();
-
-app.on('update', (/** @type {number} */ dt) => {
-    grid.draw(app);
 });
 
 app.on('destroy', () => {

@@ -10,6 +10,7 @@ import {
     BLENDMODE_ONE_MINUS_SRC_ALPHA,
     BLENDMODE_SRC_ALPHA,
     BLENDEQUATION_ADD,
+    Script,
     Vec3
 } from 'playcanvas';
 
@@ -172,7 +173,7 @@ const fragmentShader = /* glsl*/ `
     }
 `;
 
-class InfiniteGrid {
+class InfiniteGrid extends Script {
     /**
      * @type {CameraComponent}
      */
@@ -184,13 +185,27 @@ class InfiniteGrid {
     _quadRender;
 
     /**
-     * @param {CameraComponent} camera - The camera component to render from.
-     * @param {string} layerName - The name of the layer to render into.
+     * @type {string}
      */
-    constructor(camera, layerName = 'World') {
-        const app = camera.system.app;
-        const device = app.graphicsDevice;
+    layerName = 'World';
 
+    /**
+     * @param {object} args - The script arguments.
+     */
+    constructor(args) {
+        super(args);
+
+        if (!this.entity.camera) {
+            throw new Error('InfiniteGrid script requires a camera component');
+        }
+        this.attach(this.entity.camera);
+    }
+
+    /**
+     * @param {CameraComponent} camera - The camera component.
+     */
+    attach(camera) {
+        const device = this.app.graphicsDevice;
         const shader = createShaderFromCode(device, vertexShader, fragmentShader, 'infinite-grid', {
             vertex_position: SEMANTIC_POSITION
         });
@@ -204,7 +219,7 @@ class InfiniteGrid {
             device.scope.resolve(name).setValue([vec.x, vec.y, vec.z]);
         };
 
-        app.on('prerender', () => {
+        this.app.on('prerender', () => {
             // get frustum corners in world space
             const points = camera.camera.getFrustumCorners(-100);
             const worldTransform = camera.entity.getWorldTransform();
@@ -237,7 +252,7 @@ class InfiniteGrid {
             BLENDEQUATION_ADD, BLENDMODE_ONE, BLENDMODE_ONE_MINUS_SRC_ALPHA
         );
         camera.onPreRenderLayer = (layer, transparent) => {
-            if (layer.name === layerName && !transparent) {
+            if (layer.name === this.layerName && !transparent) {
                 device.setBlendState(blendState);
                 device.setCullMode(CULLFACE_NONE);
                 device.setDepthState(DepthState.WRITEDEPTH);
@@ -248,9 +263,15 @@ class InfiniteGrid {
         };
     }
 
-    destroy() {
+    detach() {
         this._camera.onPreRenderLayer = null;
+        this._camera = null;
+
         this._quadRender.destroy();
+    }
+
+    destroy() {
+        this.detach();
     }
 }
 
