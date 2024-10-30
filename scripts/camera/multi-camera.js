@@ -1,6 +1,8 @@
-import { BoundingBox, Vec2, Vec3, Ray, Plane, math } from 'playcanvas';
+import { Vec2, Vec3, Ray, Plane, math } from 'playcanvas';
 
 import { BaseCamera } from './base-camera.js';
+
+/** @import { CameraComponent } from 'playcanvas' */
 
 const tmpVa = new Vec2();
 const tmpV1 = new Vec3();
@@ -10,31 +12,12 @@ const tmpP1 = new Plane();
 
 const PASSIVE = { passive: false };
 
-/**
- * Calculate the bounding box of an entity.
- *
- * @param {BoundingBox} bbox - The bounding box.
- * @param {Entity} entity - The entity.
- * @returns {BoundingBox} The bounding box.
- */
-const calcEntityAABB = (bbox, entity) => {
-    bbox.center.set(0, 0, 0);
-    bbox.halfExtents.set(0, 0, 0);
-    entity.findComponents('render').forEach((render) => {
-        render.meshInstances.forEach((mi) => {
-            bbox.add(mi.aabb);
-        });
-    });
-    return bbox;
-};
-
 class MultiCamera extends BaseCamera {
-
     /**
      * @type {number}
      * @private
      */
-    _zoom = 0;
+    _zoomDist = 0;
 
     /**
      * @type {number}
@@ -62,11 +45,13 @@ class MultiCamera extends BaseCamera {
 
     /**
      * @type {boolean}
+     * @private
      */
     _panning = false;
 
     /**
      * @type {boolean}
+     * @private
      */
     _flying = false;
 
@@ -84,12 +69,6 @@ class MultiCamera extends BaseCamera {
         sprint: false,
         crouch: false
     };
-
-    /**
-     * @attribute
-     * @type {number}
-     */
-    focusFov = 75;
 
     /**
      * @attribute
@@ -158,12 +137,11 @@ class MultiCamera extends BaseCamera {
     crouchSpeed = 1;
 
     /**
-     * @param {Record<string, any>} args - The script arguments
+     * @param {object} args - The script arguments.
      */
     constructor(args) {
         super(args);
-        const { attributes } = args;
-        const { pinchSpeed, wheelSpeed, zoomMin, zoomMax, moveSpeed, sprintSpeed, crouchSpeed } = attributes;
+        const { pinchSpeed, wheelSpeed, zoomMin, zoomMax, moveSpeed, sprintSpeed, crouchSpeed } = args.attributes;
 
         this.pinchSpeed = pinchSpeed ?? this.pinchSpeed;
         this.wheelSpeed = wheelSpeed ?? this.wheelSpeed;
@@ -176,6 +154,8 @@ class MultiCamera extends BaseCamera {
         this._onWheel = this._onWheel.bind(this);
         this._onKeyDown = this._onKeyDown.bind(this);
         this._onKeyUp = this._onKeyUp.bind(this);
+
+        this.attach(this.entity.camera);
     }
 
     /**
@@ -197,7 +177,7 @@ class MultiCamera extends BaseCamera {
             this._panning = true;
         }
         if (event.button === 2) {
-            this._zoom = this._cameraDist;
+            this._zoomDist = this._cameraDist;
             this._origin.copy(this._camera.entity.getPosition());
             this._position.copy(this._origin);
             this._camera.entity.setLocalPosition(0, 0, 0);
@@ -219,7 +199,7 @@ class MultiCamera extends BaseCamera {
         if (this._pointerEvents.size === 1) {
             if (this._panning) {
                 // mouse pan
-                this._handlePan(tmpVa.set(event.clientX, event.clientY));
+                this._pan(tmpVa.set(event.clientX, event.clientY));
             } else {
                 super._look(event);
             }
@@ -228,15 +208,16 @@ class MultiCamera extends BaseCamera {
 
         if (this._pointerEvents.size === 2) {
             // touch pan
-            this._handlePan(this._getMidPoint(tmpVa));
+            this._pan(this._getMidPoint(tmpVa));
 
             // pinch zoom
             const pinchDist = this._getPinchDist();
             if (this._lastPinchDist > 0) {
-                this._handleZoom((this._lastPinchDist - pinchDist) * this.pinchSpeed);
+                this._zoom((this._lastPinchDist - pinchDist) * this.pinchSpeed);
             }
             this._lastPinchDist = pinchDist;
         }
+
     }
 
     /**
@@ -253,7 +234,7 @@ class MultiCamera extends BaseCamera {
             this._panning = false;
         }
         if (this._flying) {
-            tmpV1.copy(this.entity.forward).mulScalar(this._zoom);
+            tmpV1.copy(this.root.forward).mulScalar(this._zoomDist);
             this._origin.add(tmpV1);
             this._position.add(tmpV1);
             this._flying = false;
@@ -266,7 +247,7 @@ class MultiCamera extends BaseCamera {
      */
     _onWheel(event) {
         event.preventDefault();
-        this._handleZoom(event.deltaY);
+        this._zoom(event.deltaY);
     }
 
     /**
@@ -338,28 +319,27 @@ class MultiCamera extends BaseCamera {
     }
 
     /**
-     * @param {number} dt - The time delta.
-     * @private
+     * @param {number} dt - The delta time.
      */
-    _handleMove(dt) {
+    _move(dt) {
         tmpV1.set(0, 0, 0);
         if (this._key.forward) {
-            tmpV1.add(this.entity.forward);
+            tmpV1.add(this.root.forward);
         }
         if (this._key.backward) {
-            tmpV1.sub(this.entity.forward);
+            tmpV1.sub(this.root.forward);
         }
         if (this._key.left) {
-            tmpV1.sub(this.entity.right);
+            tmpV1.sub(this.root.right);
         }
         if (this._key.right) {
-            tmpV1.add(this.entity.right);
+            tmpV1.add(this.root.right);
         }
         if (this._key.up) {
-            tmpV1.add(this.entity.up);
+            tmpV1.add(this.root.up);
         }
         if (this._key.down) {
-            tmpV1.sub(this.entity.up);
+            tmpV1.sub(this.root.up);
         }
         tmpV1.normalize();
         const speed = this._key.crouch ? this.crouchSpeed : this._key.sprint ? this.sprintSpeed : this.moveSpeed;
@@ -380,8 +360,8 @@ class MultiCamera extends BaseCamera {
     }
 
     /**
-     * @returns {number} The pinch distance.
      * @private
+     * @returns {number} The pinch distance.
      */
     _getPinchDist() {
         const [a, b] = this._pointerEvents.values();
@@ -391,7 +371,7 @@ class MultiCamera extends BaseCamera {
     }
 
     /**
-     * @param {Vec2} pos - The position.
+     * @param {Vec2} pos - The screen position.
      * @param {Vec3} point - The output point.
      * @private
      */
@@ -399,7 +379,7 @@ class MultiCamera extends BaseCamera {
         const mouseW = this._camera.screenToWorld(pos.x, pos.y, 1);
         const cameraPos = this._camera.entity.getPosition();
 
-        const focusDirScaled = tmpV1.copy(this.entity.forward).mulScalar(this._zoom);
+        const focusDirScaled = tmpV1.copy(this.root.forward).mulScalar(this._zoomDist);
         const focalPos = tmpV2.add2(cameraPos, focusDirScaled);
         const planeNormal = focusDirScaled.mulScalar(-1).normalize();
 
@@ -410,10 +390,10 @@ class MultiCamera extends BaseCamera {
     }
 
     /**
-     * @param {Vec2} pos - The position.
+     * @param {Vec2} pos - The screen position.
      * @private
      */
-    _handlePan(pos) {
+    _pan(pos) {
         const start = new Vec3();
         const end = new Vec3();
 
@@ -430,44 +410,27 @@ class MultiCamera extends BaseCamera {
      * @param {number} delta - The delta.
      * @private
      */
-    _handleZoom(delta) {
-        const min = this._camera.nearClip + this.zoomMin * this.sceneSize;
-        const max = this.zoomMax * this.sceneSize;
-        const scale = math.clamp(this._zoom / (max - min), this.zoomScaleMin, 1);
-        this._zoom += delta * this.wheelSpeed * this.sceneSize * scale;
-        this._zoom = math.clamp(this._zoom, min, max);
-    }
-
-    /**
-     * @returns {number} The zoom.
-     * @private
-     */
-    _calcZoom() {
-        const d1 = Math.tan(0.5 * this.focusFov * math.DEG_TO_RAD);
-        const d2 = Math.tan(0.5 * this._camera.fov * math.DEG_TO_RAD);
-
-        const scale = (d1 / d2) * (1 / this._camera.aspectRatio);
-        return scale * this.sceneSize + this.sceneSize;
-    }
-
-    /**
-     * @param {Vec3} point - The point to focus on.
-     * @param {Vec3} [start] - The start point.
-     * @param {boolean} [snap] - Whether to snap the focus.
-     */
-    focus(point, start, snap = false) {
+    _zoom(delta) {
         if (!this._camera) {
             return;
         }
+        const min = this._camera.nearClip + this.zoomMin * this.sceneSize;
+        const max = this.zoomMax * this.sceneSize;
+        const scale = math.clamp(this._zoomDist / (max - min), this.zoomScaleMin, 1);
+        this._zoomDist += (delta * this.wheelSpeed * this.sceneSize * scale);
+        this._zoomDist = math.clamp(this._zoomDist, min, max);
+    }
 
-        this._origin.copy(point);
-        if (snap) {
-            this._position.copy(point);
+    /**
+     * @param {Vec3} point - The point.
+     * @param {Vec3} [start] - The start.
+     */
+    focus(point, start) {
+        if (!this._camera) {
+            return;
         }
-        this._camera.entity.setPosition(start);
-        this._camera.entity.setLocalEulerAngles(0, 0, 0);
-
         if (!start) {
+            this._origin.copy(point);
             return;
         }
 
@@ -475,34 +438,26 @@ class MultiCamera extends BaseCamera {
         const elev = Math.atan2(tmpV1.y, tmpV1.z) * math.RAD_TO_DEG;
         const azim = Math.atan2(tmpV1.x, tmpV1.z) * math.RAD_TO_DEG;
         this._dir.set(-elev, -azim);
-        if (snap) {
-            this._angles.copy(this._dir);
-        }
 
-        this._zoom = tmpV1.length();
+        this._origin.copy(point);
+        this._camera.entity.setPosition(start);
+        this._camera.entity.setLocalEulerAngles(0, 0, 0);
+
+        this._zoomDist = tmpV1.length();
     }
 
     /**
-     * @param {Entity} entity - The entity to focus on.
-     * @param {boolean} [snap] - Whether to snap the focus.
+     * @param {number} [zoomDist] - The zoom distance.
      */
-    focusOnEntity(entity, snap = false) {
-        const bbox = calcEntityAABB(new BoundingBox(), entity);
-        this.sceneSize = bbox.halfExtents.length();
-        this.focus(bbox.center, undefined, snap);
-        this._zoom = this._calcZoom();
-        if (snap) {
-            this._cameraDist = this._zoom;
-        }
+    resetZoom(zoomDist = 0) {
+        this._zoomDist = zoomDist;
     }
 
     /**
-     * @param {Entity} camera - The camera entity to attach.
+     * @param {CameraComponent} camera - The camera component.
      */
     attach(camera) {
         super.attach(camera);
-        this._camera.entity.setPosition(0, 0, 0);
-        this._camera.entity.setLocalEulerAngles(0, 0, 0);
 
         window.addEventListener('wheel', this._onWheel, PASSIVE);
         window.addEventListener('keydown', this._onKeyDown, false);
@@ -532,7 +487,7 @@ class MultiCamera extends BaseCamera {
     }
 
     /**
-     * @param {number} dt - The delta time in seconds.
+     * @param {number} dt - The delta time.
      */
     update(dt) {
         if (!this._camera) {
@@ -540,11 +495,11 @@ class MultiCamera extends BaseCamera {
         }
 
         if (!this._flying) {
-            this._cameraDist = math.lerp(this._cameraDist, this._zoom, 1 - Math.pow(this.moveDamping, dt * 1000));
+            this._cameraDist = math.lerp(this._cameraDist, this._zoomDist, 1 - Math.pow(this.moveDamping, dt * 1000));
             this._camera.entity.setLocalPosition(0, 0, this._cameraDist);
         }
 
-        this._handleMove(dt);
+        this._move(dt);
 
         super.update(dt);
     }

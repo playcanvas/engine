@@ -61,26 +61,48 @@ await new Promise((resolve) => {
 });
 
 /**
+ * Calculate the bounding box of an entity.
+ *
+ * @param {pc.BoundingBox} bbox - The bounding box.
+ * @param {pc.Entity} entity - The entity.
+ * @returns {pc.BoundingBox} The bounding box.
+ */
+const calcEntityAABB = (bbox, entity) => {
+    bbox.center.set(0, 0, 0);
+    bbox.halfExtents.set(0, 0, 0);
+    entity.findComponents('render').forEach((render) => {
+        render.meshInstances.forEach((/** @type {pc.MeshInstance} */ mi) => {
+            bbox.add(mi.aabb);
+        });
+    });
+    return bbox;
+};
+
+/**
  * @param {pc.Entity} focus - The entity to focus the camera on.
- * @returns {pc.Entity} The multi-camera entity.
+ * @returns {MultiCamera} The multi-camera script.
  */
 const createMultiCamera = (focus) => {
     const camera = new pc.Entity();
     camera.addComponent('camera');
+    camera.addComponent('script');
 
-    const multiCamera = new pc.Entity();
-    multiCamera.addComponent('script');
-    const script = /** @type {MultiCamera} */ (multiCamera.script.create(MultiCamera, {
+    const start = new pc.Vec3(0, 20, 30);
+    const bbox = calcEntityAABB(new pc.BoundingBox(), focus);
+    const zoom = new pc.Vec3().sub2(bbox.center, start).length();
+
+    /** @type {MultiCamera} */
+    const script = camera.script.create(MultiCamera, {
         attributes: {
-            target: canvas
+            sceneSize: bbox.halfExtents.length()
         }
-    }));
-    script.attach(camera.camera);
+    });
 
     // focus on entity when 'f' key is pressed
     const onKeyDown = (/** @type {KeyboardEvent} */ e) => {
         if (e.key === 'f') {
-            script.focusOnEntity(focus);
+            script.resetZoom(zoom);
+            script.focus(bbox.center);
         }
     };
     window.addEventListener('keydown', onKeyDown);
@@ -90,12 +112,12 @@ const createMultiCamera = (focus) => {
 
     // wait until after canvas resized to focus on entity
     const resize = new ResizeObserver(() => {
-        script.focusOnEntity(focus, true);
         resize.disconnect();
+        script.focus(bbox.center, start);
     });
     resize.observe(canvas);
 
-    return multiCamera;
+    return script;
 };
 
 app.start();
@@ -116,8 +138,7 @@ const statue = assets.statue.resource.instantiateRenderEntity();
 statue.setLocalPosition(0, -0.5, 0);
 app.root.addChild(statue);
 
-const multiCamera = createMultiCamera(statue);
-app.root.addChild(multiCamera);
+const multiCameraScript = createMultiCamera(statue);
 
 // Bind controls to camera attributes
 data.set('camera', {
@@ -139,7 +160,7 @@ data.on('*:set', (/** @type {string} */ path, /** @type {any} */ value) => {
     if (category !== 'camera') {
         return;
     }
-    multiCamera.script.multiCamera[key] = value;
+    multiCameraScript[key] = value;
 });
 
 export { app };

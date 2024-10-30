@@ -1,8 +1,8 @@
-import { Script, Vec2, Vec3, math } from 'playcanvas';
-
-const LOOK_MAX_ANGLE = 90;
+import { Entity, Script, Vec3, Vec2, math } from 'playcanvas';
 
 /** @import { CameraComponent } from 'playcanvas' */
+
+const LOOK_MAX_ANGLE = 90;
 
 class BaseCamera extends Script {
     /**
@@ -38,7 +38,7 @@ class BaseCamera extends Script {
     /**
      * @type {Entity}
      */
-    entity;
+    root;
 
     /**
      * @attribute
@@ -65,14 +65,13 @@ class BaseCamera extends Script {
     moveDamping = 0.98;
 
     /**
-     * @param {Record<string, any>} args - The script arguments
+     * @param {object} args - The script arguments.
      */
     constructor(args) {
         super(args);
-        const { entity, attributes } = args;
-        const { sceneSize, lookSensitivity, lookDamping, moveDamping } = attributes;
+        const { name, sceneSize, lookSensitivity, lookDamping, moveDamping } = args.attributes;
 
-        this.entity = entity;
+        this.root = new Entity(name ?? 'base-camera');
         this.sceneSize = sceneSize ?? this.sceneSize;
         this.lookSensitivity = lookSensitivity ?? this.lookSensitivity;
         this.lookDamping = lookDamping ?? this.lookDamping;
@@ -81,63 +80,71 @@ class BaseCamera extends Script {
         this._onPointerDown = this._onPointerDown.bind(this);
         this._onPointerMove = this._onPointerMove.bind(this);
         this._onPointerUp = this._onPointerUp.bind(this);
+
+        this.app.root.addChild(this.root);
     }
 
     /**
-     * @param {number} dt - The delta time in seconds.
      * @private
+     * @param {number} dt - The delta time.
      */
     _smoothLook(dt) {
         const lerpRate = 1 - Math.pow(this.lookDamping, dt * 1000);
         this._angles.x = math.lerp(this._angles.x, this._dir.x, lerpRate);
         this._angles.y = math.lerp(this._angles.y, this._dir.y, lerpRate);
-        this.entity.setEulerAngles(this._angles);
+        this.root.setEulerAngles(this._angles);
     }
 
     /**
-     * @param {number} dt - The delta time in seconds.
      * @private
+     * @param {number} dt - The delta time.
      */
     _smoothMove(dt) {
         this._position.lerp(this._position, this._origin, 1 - Math.pow(this.moveDamping, dt * 1000));
-        this.entity.setPosition(this._position);
+        this.root.setPosition(this._position);
     }
 
     /**
-     * @param {MouseEvent} event - The mouse event.
      * @private
+     * @param {MouseEvent} event - The mouse event.
      */
     _onContextMenu(event) {
         event.preventDefault();
     }
 
     /**
+     * @protected
+     * @abstract
      * @param {PointerEvent} event - The pointer event.
-     * @protected
-     * @abstract
      */
-    _onPointerDown(event) {}
+    _onPointerDown(event) {
+        throw new Error('Method not implemented.');
+    }
 
     /**
-     * @param {PointerEvent} event - The pointer move event.
      * @protected
      * @abstract
-     */
-    _onPointerMove(event) {}
-
-    /**
      * @param {PointerEvent} event - The pointer event.
-     * @protected
-     * @abstract
      */
-    _onPointerUp(event) {}
+    _onPointerMove(event) {
+        throw new Error('Method not implemented.');
+    }
 
     /**
-     * @param {PointerEvent} event - The pointer move event.
      * @protected
+     * @abstract
+     * @param {PointerEvent} event - The pointer event.
+     */
+    _onPointerUp(event) {
+        throw new Error('Method not implemented.');
+    }
+
+    /**
+     * @protected
+     * @param {PointerEvent} event - The pointer event.
      */
     _look(event) {
-        if (event.target !== this._camera?.system.app.graphicsDevice.canvas) {
+        if (event.target !== this.app.graphicsDevice.canvas) {
             return;
         }
         const movementX = event.movementX || 0;
@@ -147,7 +154,7 @@ class BaseCamera extends Script {
     }
 
     /**
-     * @param {CameraComponent} camera - The camera entity to attach.
+     * @param {CameraComponent} camera - The camera component.
      */
     attach(camera) {
         this._camera = camera;
@@ -158,7 +165,7 @@ class BaseCamera extends Script {
         window.addEventListener('pointerup', this._onPointerUp);
         window.addEventListener('contextmenu', this._onContextMenu);
 
-        this.entity.addChild(camera.entity);
+        this.root.addChild(camera.entity);
     }
 
     detach() {
@@ -167,7 +174,7 @@ class BaseCamera extends Script {
         window.removeEventListener('pointerup', this._onPointerUp);
         window.removeEventListener('contextmenu', this._onContextMenu);
 
-        this.entity.removeChild(this._camera.entity);
+        this.root.removeChild(this._camera.entity);
         this._camera = null;
 
         this._dir.x = this._angles.x;
@@ -177,7 +184,7 @@ class BaseCamera extends Script {
     }
 
     /**
-     * @param {number} dt - The delta time in seconds.
+     * @param {number} dt - The delta time.
      */
     update(dt) {
         if (!this._camera) {
