@@ -89,7 +89,7 @@ const createMultiCamera = (focus) => {
 
     const start = new pc.Vec3(0, 20, 30);
     const bbox = calcEntityAABB(new pc.BoundingBox(), focus);
-    const cameraDist = new pc.Vec3().sub2(bbox.center, start).length();
+    const cameraDist = start.distance(bbox.center);
 
     /** @type {MultiCamera} */
     const script = camera.script.create(MultiCamera, {
