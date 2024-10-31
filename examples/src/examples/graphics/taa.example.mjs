@@ -7,7 +7,7 @@ const canvas = /** @type {HTMLCanvasElement} */ (document.getElementById('applic
 window.focus();
 
 const assets = {
-    orbit: new pc.Asset('script', 'script', { url: rootPath + '/static/scripts/camera/orbit-camera.js' }),
+    orbit: new pc.Asset('script', 'script', { url: rootPath + '/static/scripts/camera/legacy-orbit-camera.js' }),
     house: new pc.Asset('house', 'container', { url: rootPath + '/static/assets/models/pbr-house.glb' }),
     envatlas: new pc.Asset(
         'env-atlas',

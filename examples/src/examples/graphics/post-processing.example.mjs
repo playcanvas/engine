@@ -14,7 +14,7 @@ pc.WasmModule.setConfig('DracoDecoderModule', {
 });
 
 const assets = {
-    orbit: new pc.Asset('script', 'script', { url: rootPath + '/static/scripts/camera/orbit-camera.js' }),
+    orbit: new pc.Asset('script', 'script', { url: rootPath + '/static/scripts/camera/legacy-orbit-camera.js' }),
     platform: new pc.Asset('statue', 'container', { url: rootPath + '/static/assets/models/scifi-platform.glb' }),
     mosquito: new pc.Asset('mosquito', 'container', { url: rootPath + '/static/assets/models/MosquitoInAmber.glb' }),
     font: new pc.Asset('font', 'font', { url: rootPath + '/static/assets/fonts/arial.json' }),

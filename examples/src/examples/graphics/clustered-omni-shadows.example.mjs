@@ -6,7 +6,7 @@ const canvas = /** @type {HTMLCanvasElement} */ (document.getElementById('applic
 window.focus();
 
 const assets = {
-    script: new pc.Asset('script', 'script', { url: rootPath + '/static/scripts/camera/orbit-camera.js' }),
+    script: new pc.Asset('script', 'script', { url: rootPath + '/static/scripts/camera/legacy-orbit-camera.js' }),
     normal: new pc.Asset('normal', 'texture', { url: rootPath + '/static/assets/textures/normal-map.png' }),
     xmas_negx: new pc.Asset('xmas_negx', 'texture', {
         url: rootPath + '/static/assets/cubemaps/xmas_faces/xmas_negx.png'

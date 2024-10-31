@@ -6,7 +6,7 @@ const canvas = /** @type {HTMLCanvasElement} */ (document.getElementById('applic
 window.focus();
 
 const assets = {
-    script: new pc.Asset('script', 'script', { url: rootPath + '/static/scripts/camera/orbit-camera.js' }),
+    script: new pc.Asset('script', 'script', { url: rootPath + '/static/scripts/camera/legacy-orbit-camera.js' }),
     terrain: new pc.Asset('terrain', 'container', { url: rootPath + '/static/assets/models/terrain.glb' }),
     helipad: new pc.Asset(
         'helipad-env-atlas',

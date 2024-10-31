@@ -21,7 +21,7 @@ const assets = {
         { type: pc.TEXTURETYPE_RGBP, mipmaps: false }
     ),
     checkerboard: new pc.Asset('checkerboard', 'texture', { url: rootPath + '/static/assets/textures/checkboard.png' }),
-    script: new pc.Asset('script', 'script', { url: rootPath + '/static/scripts/camera/orbit-camera.js' })
+    script: new pc.Asset('script', 'script', { url: rootPath + '/static/scripts/camera/legacy-orbit-camera.js' })
 };
 
 const gfxOptions = {

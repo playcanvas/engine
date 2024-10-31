@@ -46,7 +46,7 @@ app.on('destroy', () => {
 
 const assets = {
     biker: new pc.Asset('gsplat', 'gsplat', { url: rootPath + '/static/assets/splats/biker.ply' }),
-    orbit: new pc.Asset('script', 'script', { url: rootPath + '/static/scripts/camera/orbit-camera.js' })
+    orbit: new pc.Asset('script', 'script', { url: rootPath + '/static/scripts/camera/legacy-orbit-camera.js' })
 };
 
 const assetListLoader = new pc.AssetListLoader(Object.values(assets), app.assets);

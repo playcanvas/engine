@@ -42,7 +42,7 @@ app.setCanvasResolution(pc.RESOLUTION_AUTO);
 
 // load assets
 const assets = {
-    script: new pc.Asset('script', 'script', { url: rootPath + '/static/scripts/camera/orbit-camera.js' }),
+    script: new pc.Asset('script', 'script', { url: rootPath + '/static/scripts/camera/legacy-orbit-camera.js' }),
     font: new pc.Asset('font', 'font', { url: rootPath + '/static/assets/fonts/courier.json' })
 };
 /**

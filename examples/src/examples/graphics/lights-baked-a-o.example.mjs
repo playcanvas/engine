@@ -14,7 +14,7 @@ const assets = {
         { type: pc.TEXTURETYPE_RGBP, mipmaps: false }
     ),
     house: new pc.Asset('house', 'container', { url: rootPath + '/static/assets/models/house.glb' }),
-    script: new pc.Asset('script', 'script', { url: rootPath + '/static/scripts/camera/orbit-camera.js' })
+    script: new pc.Asset('script', 'script', { url: rootPath + '/static/scripts/camera/legacy-orbit-camera.js' })
 };
 
 const gfxOptions = {

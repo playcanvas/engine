@@ -7,7 +7,7 @@ window.focus();
 
 const observer = data;
 const assets = {
-    script: new pc.Asset('script', 'script', { url: rootPath + '/static/scripts/camera/orbit-camera.js' }),
+    script: new pc.Asset('script', 'script', { url: rootPath + '/static/scripts/camera/legacy-orbit-camera.js' }),
     channels: new pc.Asset('channels', 'texture', { url: rootPath + '/static/assets/textures/channels.png' }),
     heart: new pc.Asset('heart', 'texture', { url: rootPath + '/static/assets/textures/heart.png' }),
     normal: new pc.Asset('normal', 'texture', { url: rootPath + '/static/assets/textures/normal-map.png' }),

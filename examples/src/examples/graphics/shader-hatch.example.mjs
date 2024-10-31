@@ -16,7 +16,7 @@ pc.WasmModule.setConfig('DracoDecoderModule', {
 });
 
 const assets = {
-    script: new pc.Asset('script', 'script', { url: rootPath + '/static/scripts/camera/orbit-camera.js' }),
+    script: new pc.Asset('script', 'script', { url: rootPath + '/static/scripts/camera/legacy-orbit-camera.js' }),
     board: new pc.Asset('board', 'container', { url: rootPath + '/static/assets/models/chess-board.glb' }),
 
     bitmoji: new pc.Asset('model', 'container', { url: rootPath + '/static/assets/models/bitmoji.glb' }),

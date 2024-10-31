@@ -14,7 +14,7 @@ const assets = {
         { type: pc.TEXTURETYPE_RGBP, mipmaps: false }
     ),
     table: new pc.Asset('table', 'container', { url: rootPath + '/static/assets/models/glass-table.glb' }),
-    script: new pc.Asset('script', 'script', { url: rootPath + '/static/scripts/camera/orbit-camera.js' }),
+    script: new pc.Asset('script', 'script', { url: rootPath + '/static/scripts/camera/legacy-orbit-camera.js' }),
     diffuse: new pc.Asset('color', 'texture', { url: rootPath + '/static/assets/textures/playcanvas.png' })
 };
 

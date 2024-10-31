@@ -7,7 +7,7 @@ window.focus();
 const assets = {
     checkboard: new pc.Asset('checkboard', 'texture', { url: rootPath + '/static/assets/textures/checkboard.png' }),
     font: new pc.Asset('font', 'font', { url: rootPath + '/static/assets/fonts/courier.json' }),
-    script: new pc.Asset('script', 'script', { url: rootPath + '/static/scripts/camera/orbit-camera.js' })
+    script: new pc.Asset('script', 'script', { url: rootPath + '/static/scripts/camera/legacy-orbit-camera.js' })
 };
 
 const gfxOptions = {

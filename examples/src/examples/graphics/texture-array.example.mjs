@@ -50,7 +50,7 @@ const assets = {
     rockBoulder: new pc.Asset('rockBoulder', 'texture', { url: rootPath + '/static/assets/textures/rock_boulder_cracked_diff_1k.jpg' }, { srgb: true }),
     coastSand: new pc.Asset('coastSand', 'texture', { url: rootPath + '/static/assets/textures/coast_sand_rocks_02_diff_1k.jpg' }, { srgb: true }),
     aerialRocks: new pc.Asset('aeralRocks', 'texture', { url: rootPath + '/static/assets/textures/aerial_rocks_02_diff_1k.jpg' }, { srgb: true }),
-    script: new pc.Asset('script', 'script', { url: rootPath + '/static/scripts/camera/orbit-camera.js' })
+    script: new pc.Asset('script', 'script', { url: rootPath + '/static/scripts/camera/legacy-orbit-camera.js' })
 };
 
 const gfxOptions = {

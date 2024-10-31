@@ -17,7 +17,7 @@ await new Promise((resolve) => {
 });
 
 const assets = {
-    script: new pc.Asset('script', 'script', { url: rootPath + '/static/scripts/camera/orbit-camera.js' }),
+    script: new pc.Asset('script', 'script', { url: rootPath + '/static/scripts/camera/legacy-orbit-camera.js' }),
     helipad: new pc.Asset(
         'helipad-env-atlas',
         'texture',
