@@ -130,9 +130,14 @@ orbitCamera.distance = 5 * camera.camera?.aspectRatio;
 
 // attach grid
 app.root.addComponent('script');
-const grid = app.root.script.create(Grid);
+const grid = /** @type {Grid} */ (app.root.script.create(Grid));
 grid.halfExtents = new pc.Vec2(4, 4);
 grid.attach(camera.camera);
+data.set('grid', {
+    size: 4,
+    colorX: Object.values(grid.colorX),
+    colorZ: Object.values(grid.colorZ)
+});
 
 // create light entity
 const light = new pc.Entity('light');
@@ -227,6 +232,8 @@ window.addEventListener('keyup', keyup);
 window.addEventListener('keypress', keypress);
 
 // gizmo and camera set handler
+const tmpVa = new pc.Vec2();
+const tmpC1 = new pc.Color();
 data.on('*:set', (/** @type {string} */ path, /** @type {any} */ value) => {
     const [category, key] = path.split('.');
     switch (category) {
@@ -251,6 +258,20 @@ data.on('*:set', (/** @type {string} */ path, /** @type {any} */ value) => {
                 return;
             }
             gizmoHandler.gizmo[key] = value;
+            break;
+        }
+        case 'grid': {
+            switch (key) {
+                case 'size':
+                    grid.halfExtents = tmpVa.set(value, value);
+                    break;
+                case 'colorX':
+                    grid.colorX = tmpC1.set(value[0], value[1], value[2]);
+                    break;
+                case 'colorZ':
+                    grid.colorZ = tmpC1.set(value[0], value[1], value[2]);
+                    break;
+            }
             break;
         }
     }

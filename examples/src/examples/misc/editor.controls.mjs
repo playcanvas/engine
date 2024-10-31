@@ -5,7 +5,7 @@ import * as pc from 'playcanvas';
  * @returns {JSX.Element} The returned JSX Element.
  */
 export function controls({ observer, ReactPCUI, React, jsx, fragment }) {
-    const { BindingTwoWay, LabelGroup, Panel, SliderInput, SelectInput } = ReactPCUI;
+    const { BindingTwoWay, LabelGroup, Panel, SliderInput, SelectInput, ColorPicker } = ReactPCUI;
 
     const [type, setType] = React.useState('translate');
     const [proj, setProj] = React.useState(pc.PROJECTION_PERSPECTIVE);
@@ -66,6 +66,37 @@ export function controls({ observer, ReactPCUI, React, jsx, fragment }) {
                     min: 1,
                     max: 10,
                     precision: 0
+                })
+            )
+        ),
+        jsx(
+            Panel,
+            { headerText: 'Grid' },
+            jsx(
+                LabelGroup,
+                { text: 'Size' },
+                jsx(SliderInput, {
+                    binding: new BindingTwoWay(),
+                    link: { observer, path: 'grid.size' },
+                    min: 1,
+                    max: 10,
+                    precision: 0
+                })
+            ),
+            jsx(
+                LabelGroup,
+                { text: 'Color X' },
+                jsx(ColorPicker, {
+                    binding: new BindingTwoWay(),
+                    link: { observer, path: 'grid.colorX' }
+                })
+            ),
+            jsx(
+                LabelGroup,
+                { text: 'Color Z' },
+                jsx(ColorPicker, {
+                    binding: new BindingTwoWay(),
+                    link: { observer, path: 'grid.colorZ' }
                 })
             )
         ),

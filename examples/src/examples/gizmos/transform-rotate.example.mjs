@@ -86,7 +86,7 @@ data.set('camera', {
 
 // attach grid
 app.root.addComponent('script');
-const grid = app.root.script.create(Grid);
+const grid = /** @type {Grid} */ (app.root.script.create(Grid));
 grid.halfExtents = new pc.Vec2(2, 2);
 grid.attach(camera.camera);
 
