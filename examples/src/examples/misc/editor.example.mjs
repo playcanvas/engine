@@ -129,6 +129,11 @@ camera.setPosition(1, 1, 1);
 app.root.addChild(camera);
 orbitCamera.distance = 5 * camera.camera?.aspectRatio;
 
+// attach grid
+app.root.addComponent('script');
+const grid = app.root.script.create(InfiniteGrid);
+grid.attach(camera.camera);
+
 // create light entity
 const light = new pc.Entity('light');
 light.addComponent('light', {

@@ -15,7 +15,7 @@ import {
     Vec3
 } from 'playcanvas';
 
-/** @import { CameraComponent } from 'playcanvas' */
+/** @import { CameraComponent, GraphicsDevice } from 'playcanvas' */
 
 const tmpV1 = new Vec3();
 
@@ -179,6 +179,11 @@ const fragmentShader = /* glsl*/ `
 
 class InfiniteGrid extends Script {
     /**
+     * @type {GraphicsDevice}
+     */
+    _device;
+
+    /**
      * @type {CameraComponent}
      * @private
      */
@@ -189,6 +194,20 @@ class InfiniteGrid extends Script {
      * @private
      */
     _quadRender;
+
+    /**
+     * @type {BlendState}
+     */
+    _blendState = new BlendState(
+        true,
+        BLENDEQUATION_ADD, BLENDMODE_SRC_ALPHA, BLENDMODE_ONE_MINUS_SRC_ALPHA,
+        BLENDEQUATION_ADD, BLENDMODE_ONE, BLENDMODE_ONE_MINUS_SRC_ALPHA
+    );
+
+    /**
+     * @type {() => void}
+     */
+    _prerender;
 
     /**
      * @type {Color}
@@ -213,10 +232,17 @@ class InfiniteGrid extends Script {
     constructor(args) {
         super(args);
 
-        if (!this.entity.camera) {
-            throw new Error('InfiniteGrid script requires a camera component');
-        }
-        this.attach(this.entity.camera);
+        this._device = this.app.graphicsDevice;
+
+        // create shader
+        const shader = createShaderFromCode(this._device, vertexShader, fragmentShader, 'infinite-grid', {
+            vertex_position: SEMANTIC_POSITION
+        });
+        this._quadRender = new QuadRender(shader);
+
+        // set initial colors
+        this._set('color_x', this._colorX);
+        this._set('color_z', this._colorZ);
     }
 
     /**
@@ -227,13 +253,12 @@ class InfiniteGrid extends Script {
      * @private
      */
     _set(name, value) {
-        const device = this.app.graphicsDevice;
         if (value instanceof Color) {
-            device.scope.resolve(name).setValue([value.r, value.g, value.b]);
+            this._device.scope.resolve(name).setValue([value.r, value.g, value.b]);
         }
 
         if (value instanceof Vec3) {
-            device.scope.resolve(name).setValue([value.x, value.y, value.z]);
+            this._device.scope.resolve(name).setValue([value.x, value.y, value.z]);
         }
     }
 
@@ -267,17 +292,9 @@ class InfiniteGrid extends Script {
      * @param {CameraComponent} camera - The camera component.
      */
     attach(camera) {
-        const device = this.app.graphicsDevice;
-        const shader = createShaderFromCode(device, vertexShader, fragmentShader, 'infinite-grid', {
-            vertex_position: SEMANTIC_POSITION
-        });
-        this._quadRender = new QuadRender(shader);
+        this._camera = camera;
 
-        // set initial colors
-        this._set('color_x', this._colorX);
-        this._set('color_z', this._colorZ);
-
-        this.app.on('prerender', () => {
+        this._prerender = () => {
             // get frustum corners in world space
             const points = camera.camera.getFrustumCorners(-100);
             const worldTransform = camera.entity.getWorldTransform();
@@ -302,19 +319,15 @@ class InfiniteGrid extends Script {
             this._set('far_origin', points[7]);
             this._set('far_x', tmpV1.sub2(points[4], points[7]));
             this._set('far_y', tmpV1.sub2(points[6], points[7]));
-        });
+        };
+        this.app.on('prerender', this._prerender);
 
-        const blendState = new BlendState(
-            true,
-            BLENDEQUATION_ADD, BLENDMODE_SRC_ALPHA, BLENDMODE_ONE_MINUS_SRC_ALPHA,
-            BLENDEQUATION_ADD, BLENDMODE_ONE, BLENDMODE_ONE_MINUS_SRC_ALPHA
-        );
         camera.onPreRenderLayer = (layer, transparent) => {
             if (layer.name === this.layerName && !transparent) {
-                device.setBlendState(blendState);
-                device.setCullMode(CULLFACE_NONE);
-                device.setDepthState(DepthState.WRITEDEPTH);
-                device.setStencilState(null, null);
+                this._device.setBlendState(this._blendState);
+                this._device.setCullMode(CULLFACE_NONE);
+                this._device.setDepthState(DepthState.WRITEDEPTH);
+                this._device.setStencilState(null, null);
 
                 this._quadRender.render();
             }
@@ -322,14 +335,17 @@ class InfiniteGrid extends Script {
     }
 
     detach() {
+        if (this._prerender) {
+            this.app.off('prerender', this._prerender);
+            this._prerender = null;
+        }
         this._camera.onPreRenderLayer = null;
         this._camera = null;
-
-        this._quadRender.destroy();
     }
 
     destroy() {
         this.detach();
+        this._quadRender.destroy();
     }
 }
 

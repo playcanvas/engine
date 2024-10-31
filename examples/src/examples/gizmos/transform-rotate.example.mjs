@@ -85,6 +85,11 @@ data.set('camera', {
     fov: camera.camera.fov
 });
 
+// attach grid
+app.root.addComponent('script');
+const grid = app.root.script.create(InfiniteGrid);
+grid.attach(camera.camera);
+
 // create light entity
 const light = new pc.Entity('light');
 light.addComponent('light');
