@@ -269,6 +269,13 @@ app.on('update', (/** @type {number} */ dt) => {
     grid.draw(app);
 });
 
+// view cube
+const viewCube = new pc.ViewCube();
+viewCube.anchor = new pc.Vec4(0, 1, 1, 0);
+app.on('prerender', () => {
+    viewCube.update(camera.getWorldTransform());
+});
+
 app.on('destroy', () => {
     gizmoHandler.destroy();
     selector.destroy();
