@@ -87,7 +87,6 @@ data.set('camera', {
 
 // attach grid
 app.root.addComponent('script');
-const grid = app.root.script.create(InfiniteGrid);
 grid.attach(camera.camera);
 
 // create light entity
