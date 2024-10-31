@@ -12,6 +12,7 @@ import {
     createShaderFromCode,
     Script,
     Color,
+    Vec2,
     Vec3
 } from 'playcanvas';
 
@@ -46,6 +47,8 @@ const fragmentShader = /* glsl*/ `
     uniform vec3 view_position;
     uniform mat4 matrix_viewProjection;
     uniform sampler2D blueNoiseTex32;
+
+    uniform vec2 half_extents;
 
     uniform vec3 color_x;
     uniform vec3 color_z;
@@ -119,6 +122,11 @@ const fragmentShader = /* glsl*/ `
         vec2 ddy = dFdy(pos.xz);
 
         float epsilon = 1.0 / 255.0;
+
+        // discard if outside size
+        if (abs(pos.x) > half_extents.x || abs(pos.z) > half_extents.y) {
+            discard;
+        }
 
         // calculate fade
         float fade = 1.0 - smoothstep(400.0, 1000.0, length(pos - view_position));
@@ -210,6 +218,11 @@ class InfiniteGrid extends Script {
     _prerender;
 
     /**
+     * @type {Vec2}
+     */
+    _halfExtents = new Vec2(Infinity, Infinity);
+
+    /**
      * @type {Color}
      * @private
      */
@@ -240,6 +253,9 @@ class InfiniteGrid extends Script {
         });
         this._quadRender = new QuadRender(shader);
 
+        // set initial size
+        this._set('half_extents', this._halfExtents);
+
         // set initial colors
         this._set('color_x', this._colorX);
         this._set('color_z', this._colorZ);
@@ -249,7 +265,7 @@ class InfiniteGrid extends Script {
      * Set the value of a uniform in the shader.
      *
      * @param {string} name - The name of the uniform.
-     * @param {Color|Vec3} value - The value to set.
+     * @param {Color|Vec3|number} value - The value to set.
      * @private
      */
     _set(name, value) {
@@ -260,6 +276,24 @@ class InfiniteGrid extends Script {
         if (value instanceof Vec3) {
             this._device.scope.resolve(name).setValue([value.x, value.y, value.z]);
         }
+
+        if (value instanceof Vec2) {
+            this._device.scope.resolve(name).setValue([value.x, value.y]);
+        }
+
+    }
+
+    /**
+     * @attribute
+     * @type {Vec2}
+     */
+    set halfExtents(value) {
+        this._halfExtents.copy(value);
+        this._set('half_extents', this._halfExtents);
+    }
+
+    get halfExtents() {
+        return this._halfExtents;
     }
 
     /**

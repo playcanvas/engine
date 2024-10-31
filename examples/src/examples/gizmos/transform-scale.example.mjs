@@ -87,6 +87,7 @@ data.set('camera', {
 // attach grid
 app.root.addComponent('script');
 const grid = app.root.script.create(InfiniteGrid);
+grid.halfExtents = new pc.Vec2(2, 2);
 grid.attach(camera.camera);
 
 // create light entity
