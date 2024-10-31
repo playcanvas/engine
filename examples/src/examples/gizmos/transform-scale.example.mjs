@@ -2,7 +2,7 @@ import * as pc from 'playcanvas';
 import { data } from 'examples/observer';
 import { deviceType, fileImport, rootPath } from 'examples/utils';
 
-const { InfiniteGrid } = await fileImport(rootPath + '/static/scripts/infinite-grid.js');
+const { Grid } = await fileImport(rootPath + '/static/scripts/grid.js');
 
 const canvas = /** @type {HTMLCanvasElement} */ (document.getElementById('application-canvas'));
 window.focus();
@@ -86,7 +86,7 @@ data.set('camera', {
 
 // attach grid
 app.root.addComponent('script');
-const grid = app.root.script.create(InfiniteGrid);
+const grid = app.root.script.create(Grid);
 grid.halfExtents = new pc.Vec2(2, 2);
 grid.attach(camera.camera);
 

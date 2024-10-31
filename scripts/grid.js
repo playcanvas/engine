@@ -185,7 +185,7 @@ const fragmentShader = /* glsl*/ `
     }
 `;
 
-class InfiniteGrid extends Script {
+class Grid extends Script {
     /**
      * @type {GraphicsDevice}
      */
@@ -248,7 +248,7 @@ class InfiniteGrid extends Script {
         this._device = this.app.graphicsDevice;
 
         // create shader
-        const shader = createShaderFromCode(this._device, vertexShader, fragmentShader, 'infinite-grid', {
+        const shader = createShaderFromCode(this._device, vertexShader, fragmentShader, 'grid', {
             vertex_position: SEMANTIC_POSITION
         });
         this._quadRender = new QuadRender(shader);
@@ -383,4 +383,4 @@ class InfiniteGrid extends Script {
     }
 }
 
-export { InfiniteGrid };
+export { Grid };

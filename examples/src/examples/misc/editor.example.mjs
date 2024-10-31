@@ -3,7 +3,7 @@ import * as pc from 'playcanvas';
 import { data } from 'examples/observer';
 import { deviceType, rootPath, localImport, fileImport } from 'examples/utils';
 
-const { InfiniteGrid } = await fileImport(rootPath + '/static/scripts/infinite-grid.js');
+const { Grid } = await fileImport(rootPath + '/static/scripts/grid.js');
 
 const canvas = /** @type {HTMLCanvasElement} */ (document.getElementById('application-canvas'));
 window.focus();
@@ -130,7 +130,7 @@ orbitCamera.distance = 5 * camera.camera?.aspectRatio;
 
 // attach grid
 app.root.addComponent('script');
-const grid = app.root.script.create(InfiniteGrid);
+const grid = app.root.script.create(Grid);
 grid.halfExtents = new pc.Vec2(4, 4);
 grid.attach(camera.camera);
 
