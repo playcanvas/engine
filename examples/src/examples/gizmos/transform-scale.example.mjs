@@ -73,7 +73,6 @@ camera.addComponent('camera', {
     farClip: 1000
 });
 camera.addComponent('script');
-camera.script.create(InfiniteGrid);
 const orbitCamera = camera.script.create('orbitCamera');
 camera.script.create('orbitCameraInputMouse');
 camera.script.create('orbitCameraInputTouch');
@@ -87,6 +86,7 @@ data.set('camera', {
 
 // attach grid
 app.root.addComponent('script');
+const grid = app.root.script.create(InfiniteGrid);
 grid.attach(camera.camera);
 
 // create light entity
