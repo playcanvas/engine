@@ -50,7 +50,12 @@ const generateExampleFile = (categoryKebab, exampleNameKebab, setEngineType, fil
     return html;
 };
 
-const main = () => {
+/**
+ * @param {Record<string, string>} env - The environment variables.
+ */
+export const build = (env = {}) => {
+    Object.assign(process.env, env);
+
     if (!fs.existsSync(`${MAIN_DIR}/dist/`)) {
         fs.mkdirSync(`${MAIN_DIR}/dist/`);
     }
@@ -58,7 +63,7 @@ const main = () => {
         fs.mkdirSync(`${MAIN_DIR}/dist/iframe/`);
     }
 
-    exampleMetaData.forEach((data) => {
+    exampleMetaData.forEach((/** @type {{ categoryKebab: string; exampleNameKebab: string; path: string; }} */ data) => {
         const { categoryKebab, exampleNameKebab, path } = data;
         const name = `${categoryKebab}_${exampleNameKebab}`;
 
@@ -116,4 +121,3 @@ const main = () => {
         });
     });
 };
-main();

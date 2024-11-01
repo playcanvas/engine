@@ -10,7 +10,7 @@ import terser from '@rollup/plugin-terser';
 
 // custom plugins
 import { copyStatic } from './utils/plugins/rollup-copy-static.mjs';
-import { generateStandalone } from './utils/plugins/rollup-generate-standalone.mjs';
+import { buildExamples } from './utils/plugins/rollup-build-examples.mjs';
 
 // engine rollup utils
 import { treeshakeIgnore } from '../utils/plugins/rollup-treeshake-ignore.mjs';
@@ -148,7 +148,7 @@ export default [
             skipWrite: true
         },
         treeshake: false,
-        plugins: [generateStandalone(NODE_ENV, ENGINE_PATH), copyStatic(NODE_ENV, STATIC_FILES)]
+        plugins: [buildExamples(NODE_ENV, ENGINE_PATH), copyStatic(NODE_ENV, STATIC_FILES)]
     },
     {
         // A debug build is ~2.3MB and a release build ~0.6MB
