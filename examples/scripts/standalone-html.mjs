@@ -29,7 +29,7 @@ export function controls({ fragment }) {
  * @param {string[]} files - The files in the example directory.
  * @returns {string} File to write as standalone example.
  */
-function generateExampleFile(categoryKebab, exampleNameKebab, setEngineType, files) {
+const generateExampleFile = (categoryKebab, exampleNameKebab, setEngineType, files) => {
     let html = EXAMPLE_HTML;
 
     // title
@@ -48,9 +48,9 @@ function generateExampleFile(categoryKebab, exampleNameKebab, setEngineType, fil
     }
 
     return html;
-}
+};
 
-function main() {
+const main = () => {
     if (!fs.existsSync(`${MAIN_DIR}/dist/`)) {
         fs.mkdirSync(`${MAIN_DIR}/dist/`);
     }
@@ -115,5 +115,5 @@ function main() {
             fs.writeFileSync(`${MAIN_DIR}/dist/iframe/${name}.${file}`, script);
         });
     });
-}
+};
 main();
