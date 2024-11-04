@@ -1224,12 +1224,12 @@ function _defineMaterialProps() {
         return uniform;
     });
 
-    _defineFlag('ambientTint', false);
-    _defineFlag('diffuseTint', false);
-    _defineFlag('sheenTint', false);
+    _defineFlag('ambientTint', true);
+    _defineFlag('diffuseTint', true);
+    _defineFlag('sheenTint', true);
     _defineFlag('specularTint', false);
     _defineFlag('specularityFactorTint', false);
-    _defineFlag('emissiveTint', false);
+    _defineFlag('emissiveTint', true);
     _defineFlag('fastTbn', false);
     _defineFlag('useMetalness', false);
     _defineFlag('useMetalnessSpecularColor', false);
