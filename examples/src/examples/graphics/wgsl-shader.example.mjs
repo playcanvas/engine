@@ -1,4 +1,4 @@
-// @config WEBGL_DISABLED
+// @config WEBGL2_DISABLED
 // @config HIDDEN
 import * as pc from 'playcanvas';
 import files from 'examples/files';
