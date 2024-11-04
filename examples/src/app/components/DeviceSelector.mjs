@@ -11,9 +11,9 @@ import {
 import '../events.js';
 
 const deviceTypeNames = {
-    [DEVICETYPE_WEBGL1]: 'WebGL 1',
-    [DEVICETYPE_WEBGL2]: 'WebGL 2',
     [DEVICETYPE_WEBGPU]: 'WebGPU',
+    [DEVICETYPE_WEBGL2]: 'WebGL 2',
+    [DEVICETYPE_WEBGL1]: 'WebGL 1',
     [DEVICETYPE_NULL]: 'Null'
 };
 
@@ -157,9 +157,9 @@ class DeviceSelector extends TypedComponent {
         return jsx(SelectInput, {
             id: 'deviceTypeSelectInput',
             options: [
-                { t: deviceTypeNames[DEVICETYPE_WEBGL1], v: DEVICETYPE_WEBGL1 },
-                { t: deviceTypeNames[DEVICETYPE_WEBGL2], v: DEVICETYPE_WEBGL2 },
                 { t: deviceTypeNames[DEVICETYPE_WEBGPU], v: DEVICETYPE_WEBGPU },
+                { t: deviceTypeNames[DEVICETYPE_WEBGL2], v: DEVICETYPE_WEBGL2 },
+                { t: deviceTypeNames[DEVICETYPE_WEBGL1], v: DEVICETYPE_WEBGL1 },
                 { t: deviceTypeNames[DEVICETYPE_NULL], v: DEVICETYPE_NULL }
             ],
             value: activeDevice,
