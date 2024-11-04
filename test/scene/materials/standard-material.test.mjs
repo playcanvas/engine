@@ -16,7 +16,7 @@ describe('StandardMaterial', () => {
         expect(material.ambient.r).to.equal(0.7);
         expect(material.ambient.g).to.equal(0.7);
         expect(material.ambient.b).to.equal(0.7);
-        expect(material.ambientTint).to.equal(true);
+        expect(material.ambientTint).to.equal(false);
         expect(material.anisotropy).to.equal(0);
 
         expect(material.aoDetailMap).to.be.null;
@@ -114,7 +114,7 @@ describe('StandardMaterial', () => {
         expect(material.diffuseMapTiling.x).to.equal(1);
         expect(material.diffuseMapTiling.y).to.equal(1);
         expect(material.diffuseMapUv).to.equal(0);
-        expect(material.diffuseTint).to.equal(true);
+        expect(material.diffuseTint).to.equal(false);
         expect(material.diffuseVertexColor).to.equal(false);
         expect(material.diffuseVertexColorChannel).to.equal('rgb');
 
@@ -133,7 +133,7 @@ describe('StandardMaterial', () => {
         expect(material.emissiveMapTiling.x).to.equal(1);
         expect(material.emissiveMapTiling.y).to.equal(1);
         expect(material.emissiveMapUv).to.equal(0);
-        expect(material.emissiveTint).to.equal(true);
+        expect(material.emissiveTint).to.equal(false);
         expect(material.emissiveVertexColor).to.equal(false);
         expect(material.emissiveVertexColorChannel).to.equal('rgb');
 

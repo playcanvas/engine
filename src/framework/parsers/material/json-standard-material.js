@@ -11,6 +11,7 @@ import { SPECULAR_BLINN, SPECULAR_PHONG } from '../../../scene/constants.js';
 import { StandardMaterial } from '../../../scene/materials/standard-material.js';
 import { StandardMaterialValidator } from '../../../scene/materials/standard-material-validator.js';
 import { standardMaterialParameterTypes } from '../../../scene/materials/standard-material-parameters.js';
+import { __adjustStandardMaterialData } from '../../../deprecated/compatibility-v2-utils.js';
 
 /**
  * Convert incoming JSON data into a {@link StandardMaterial}.
@@ -163,6 +164,9 @@ class JsonStandardMaterialParser {
                 delete data[name];
             }
         }
+
+        // data migration for engine v2 data compatibility
+        __adjustStandardMaterialData(data);
 
         return data;
     }
