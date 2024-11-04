@@ -307,7 +307,9 @@ class TransformGizmo extends Gizmo {
                 return;
             }
 
-            this._hover(this._noSelection ? null : meshInstance);
+            if (!this._noSelection) {
+                this._hover(meshInstance);
+            }
 
             if (!this._dragging) {
                 return;
