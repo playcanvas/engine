@@ -1,5 +1,4 @@
 // @config WEBGL1_DISABLED
-
 import * as pc from 'playcanvas';
 import { data } from 'examples/observer';
 import files from 'examples/files';
