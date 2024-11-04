@@ -1,9 +1,10 @@
-import { execSync } from 'child_process';
-
 // custom plugins
 import { watch } from '../rollup-watch.mjs';
+import { build } from '../../scripts/build-examples.mjs';
 
 const GREEN_OUT = '\x1b[32m';
+const BOLD_OUT = `\x1b[1m`;
+const REGULAR_OUT = `\x1b[22m`;
 
 /**
  * This plugin builds the standalone html files.
@@ -12,20 +13,19 @@ const GREEN_OUT = '\x1b[32m';
  * @param {string} enginePath - The path to the engine.
  * @returns {import('rollup').Plugin} The plugin.
  */
-export function generateStandalone(nodeEnv, enginePath) {
+export function buildExamples(nodeEnv, enginePath) {
     return {
-        name: 'generate-standalone',
+        name: 'build-examples',
         buildStart() {
             if (nodeEnv === 'development') {
                 watch(this, 'iframe/example.html');
-                watch(this, 'scripts/standalone-html.mjs');
+                watch(this, 'scripts/build-examples.mjs');
                 watch(this, 'src/examples');
             }
         },
         buildEnd() {
-            const cmd = `cross-env NODE_ENV=${nodeEnv} ENGINE_PATH=${enginePath} node ./scripts/standalone-html.mjs`;
-            console.log(`${GREEN_OUT}${cmd}`);
-            execSync(cmd);
+            build({ NODE_ENV: nodeEnv, ENGINE_PATH: enginePath });
+            console.log(`${GREEN_OUT}built examples using NODE_ENV=${BOLD_OUT}${nodeEnv}${REGULAR_OUT} ENGINE_PATH=${BOLD_OUT}${enginePath}${REGULAR_OUT}`);
         }
     };
 }
