@@ -178,6 +178,14 @@ class GraphicsDevice extends EventHandler {
     samples;
 
     /**
+     * The maximum supported number of hardware anti-aliasing samples.
+     *
+     * @readonly
+     * @type {number}
+     */
+    maxSamples = 1;
+
+    /**
      * True if the main framebuffer contains stencil attachment.
      *
      * @ignore
