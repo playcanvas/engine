@@ -4,11 +4,19 @@ export function __adjustStandardMaterialParameterTypes(types) {
     types.aoIntensity = 'number';
 }
 
+const _tintProperties = [
+    'ambientTint',
+    'emissiveTint',
+    'diffuseTint',
+    'sheenTint'
+]
+
 // in the engine v2 material json data, the tints were removed and are assumed to be always true
 // for the engine v1, force them to be true
 export function __adjustStandardMaterialData(data) {
-    data['ambientTint'] = true;
-    data['emissiveTint'] = true;
-    data['diffuseTint'] = true;
-    data['sheenTint'] = true;
+    _tintProperties.forEach(prop => {
+        if (data[prop] === undefined) {
+            data[prop] = true;
+        }
+    });
 }
