@@ -395,5 +395,9 @@ export { XrViews } from './framework/xr/xr-views.js';
 // BACKWARDS COMPATIBILITY
 export * from './deprecated/deprecated.js';
 
+// ENGINE V2 DATA COMPATIBILITY
+export * from './deprecated/compatibility-v2.js';
+export * from './deprecated/compatibility-v2-utils.js';
+
 // EXTRAS
 export * from './extras/index.js';

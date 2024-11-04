@@ -1,3 +1,5 @@
+import { __adjustStandardMaterialParameterTypes } from '../../deprecated/compatibility-v2-utils.js';
+
 function _textureParameter(name, channel = true, vertexColor = true) {
     const result = {};
     result[`${name}Map`] = 'texture';
@@ -163,6 +165,9 @@ const standardMaterialParameterTypes = {
     // msdfVertexColor
     // msdfVertexColorChannel
 };
+
+// handle engine v2 compatibility
+__adjustStandardMaterialParameterTypes(standardMaterialParameterTypes);
 
 const standardMaterialTextureParameters = [];
 for (const key in standardMaterialParameterTypes) {
