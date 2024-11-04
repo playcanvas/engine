@@ -6,8 +6,9 @@ import * as pc from 'playcanvas';
  */
 export function controls({ observer, ReactPCUI, React, jsx, fragment }) {
     const { BindingTwoWay, LabelGroup, Panel, ColorPicker, SliderInput, SelectInput, BooleanInput } = ReactPCUI;
+    const { useState } = React;
 
-    const [proj, setProj] = React.useState(pc.PROJECTION_PERSPECTIVE);
+    const [proj, setProj] = useState(pc.PROJECTION_PERSPECTIVE);
 
     return fragment(
         jsx(
