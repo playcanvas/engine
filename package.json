@@ -1,6 +1,6 @@
 {
   "name": "playcanvas",
-  "version": "1.75.0-dev",
+  "version": "1.76.0-dev",
   "author": "PlayCanvas <support@playcanvas.com>",
   "homepage": "https://playcanvas.com",
   "description": "PlayCanvas WebGL game engine",
@@ -72,7 +72,9 @@
     "parserOptions": {
       "requireConfigFile": false
     },
-    "ignorePatterns": ["tests/**/*"],
+    "ignorePatterns": [
+      "tests/**/*"
+    ],
     "rules": {
       "import/order": "off",
       "jsdoc/check-tag-names": [
