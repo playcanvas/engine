@@ -119,7 +119,7 @@ export function updateDeviceType(config) {
             deviceType = 'webgl1';
             return;
         }
-        if (config.WEBGL1_DISABLED && deviceType !== 'webgl2') {
+        if ((config.WEBGL1_DISABLED && deviceType !== 'webgl2') || deviceType === 'webgpu') {
             console.warn('WebGPU is disabled. Using WebGL 2.0 device instead.');
             deviceType = 'webgl2';
             return;
@@ -131,14 +131,14 @@ export function updateDeviceType(config) {
             deviceType = 'webgl1';
             return;
         }
-        if (config.WEBGL1_DISABLED && deviceType !== 'webgpu') {
+        if ((config.WEBGL1_DISABLED && deviceType !== 'webgpu') || deviceType === 'webgl2') {
             console.warn('WebGL 2.0 is disabled. Using WebGPU device instead.');
             deviceType = 'webgpu';
             return;
         }
     }
     if (config.WEBGL1_DISABLED) {
-        if (config.WEBGPU_DISABLED && deviceType !== 'webgl2') {
+        if ((config.WEBGPU_DISABLED && deviceType !== 'webgl2') || deviceType === 'webgl1') {
             console.warn('WebGL 1.0 is disabled. Using WebGL 2.0 device instead.');
             deviceType = 'webgl2';
             return;
