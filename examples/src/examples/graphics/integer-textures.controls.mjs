@@ -47,4 +47,4 @@ export const controls = ({ observer, ReactPCUI, jsx, fragment }) => {
             )
         )
     );
-}
+};

@@ -15,4 +15,4 @@ export const controls = ({ observer, ReactPCUI, React, jsx }) => {
         }
     }
     return jsx(JsxControls);
-}
+};

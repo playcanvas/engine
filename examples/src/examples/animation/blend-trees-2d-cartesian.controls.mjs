@@ -140,4 +140,4 @@ export const controls = ({ React, jsx, fragment }) => {
         }
     }
     return jsx(JsxControls);
-}
+};

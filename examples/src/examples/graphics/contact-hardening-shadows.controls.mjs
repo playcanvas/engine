@@ -163,4 +163,4 @@ export const controls = ({ observer, ReactPCUI, React, jsx, fragment }) => {
             )
         )
     );
-}
+};

@@ -80,4 +80,4 @@ export const controls = ({ React, jsx, fragment }) => {
         canvas.addEventListener('mousedown', mouseEvent);
     });
     return fragment(jsx('canvas', { ref: canvasRef }));
-}
+};

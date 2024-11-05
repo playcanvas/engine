@@ -16,4 +16,4 @@ export const controls = ({ observer, ReactPCUI, React, jsx, fragment }) => {
             onClick: () => observer.emit('next')
         })
     );
-}
+};

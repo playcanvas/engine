@@ -8,4 +8,4 @@ export const controls = ({ observer, ReactPCUI, React, jsx, fragment }) => {
         text: 'Download GLTF',
         onClick: () => observer.emit('download')
     });
-}
+};
