@@ -92,11 +92,11 @@ export function parseConfig(script) {
     return config;
 }
 
-const DEVICE_TYPES = ['webgpu', 'webgl2', 'webgl1'];
+const DEVICE_TYPES = ['webgpu', 'webgl2', 'webgl1', 'null'];
 export let deviceType = 'webgl2';
 
 /**
- * @param {{ WEBGPU_DISABLED: boolean; WEBGL_DISABLED: boolean; WEBGL1_DISABLED: boolean }} config -
+ * @param {{ WEBGPU_DISABLED: boolean; WEBGL2_DISABLED: boolean; WEBGL1_DISABLED: boolean }} config -
  * The configuration object.
  */
 export function updateDeviceType(config) {
@@ -108,13 +108,13 @@ export function updateDeviceType(config) {
         deviceType = params.deviceType;
         return;
     }
-    if (config.WEBGL1_DISABLED && config.WEBGL_DISABLED && config.WEBGPU_DISABLED) {
+    if (config.WEBGL1_DISABLED && config.WEBGL2_DISABLED && config.WEBGPU_DISABLED) {
         console.warn('WebGL 1.0, WebGL 2.0 and WebGPU are disabled. Using Null device instead.');
         deviceType = 'null';
         return;
     }
     if (config.WEBGPU_DISABLED) {
-        if (config.WEBGL_DISABLED && deviceType !== 'webgl1') {
+        if (config.WEBGL2_DISABLED && deviceType !== 'webgl1') {
             console.warn('WebGPU is disabled. Using WebGL 1.0 device instead.');
             deviceType = 'webgl1';
             return;
@@ -125,7 +125,7 @@ export function updateDeviceType(config) {
             return;
         }
     }
-    if (config.WEBGL_DISABLED) {
+    if (config.WEBGL2_DISABLED) {
         if (config.WEBGPU_DISABLED && deviceType !== 'webgl1') {
             console.warn('WebGL 2.0 is disabled. Using WebGL 1.0 device instead.');
             deviceType = 'webgl1';
@@ -143,7 +143,7 @@ export function updateDeviceType(config) {
             deviceType = 'webgl2';
             return;
         }
-        if (config.WEBGL_DISABLED && deviceType !== 'webgpu') {
+        if (config.WEBGL2_DISABLED && deviceType !== 'webgpu') {
             console.warn('WebGL 1.0 is disabled. Using WebGPU device instead.');
             deviceType = 'webgpu';
         }
