@@ -396,11 +396,16 @@ class Gizmo extends EventHandler {
         if (!this.root.enabled || document.pointerLockElement) {
             return;
         }
+        const selection = this._getSelection(e.offsetX, e.offsetY);
+        if (selection[0]) {
+            e.preventDefault();
+            e.stopPropagation();
+        }
 
         const { canvas } = this._device;
         canvas.releasePointerCapture(e.pointerId);
 
-        this.fire(Gizmo.EVENT_POINTERUP);
+        this.fire(Gizmo.EVENT_POINTERUP, e.offsetX, e.offsetY, selection[0]);
     }
 
     /**
