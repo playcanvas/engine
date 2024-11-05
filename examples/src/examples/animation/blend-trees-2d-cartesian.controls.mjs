@@ -4,7 +4,7 @@ import * as pc from 'playcanvas';
  * @param {import('../../app/components/Example.mjs').ControlOptions} options - The options.
  * @returns {JSX.Element} The returned JSX Element.
  */
-export function controls({ React, jsx, fragment }) {
+export const controls = ({ React, jsx, fragment }) => {
     const { createRef, Component } = React;
     class JsxControls extends Component {
         position = new pc.Vec2();
