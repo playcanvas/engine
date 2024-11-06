@@ -183,7 +183,7 @@ assetListLoader.load(() => {
             compute2.setupDispatch(srcTexture.width, srcTexture.height);
 
             // dispatch both compute shaders in a single compute pass
-            device.computeDispatch([compute1, compute2]);
+            device.computeDispatch([compute1, compute2], 'ComputeModifyTextureDispatch');
 
             // debug render the generated textures
             app.drawTexture(0.6, 0.5, 0.6, 0.3, compute1.getParameter('outTexture'));

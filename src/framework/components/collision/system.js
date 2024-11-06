@@ -818,7 +818,7 @@ class CollisionComponentSystem extends ComponentSystem {
 
         if (entity.enabled && entity.collision.enabled && (entity._dirtyLocal || forceUpdate)) {
             const transform = this._getNodeTransform(entity, parentComponent.entity);
-            const idx = parentComponent._getCompoundChildShapeIndex(entity.collision.shape);
+            const idx = parentComponent.getCompoundChildShapeIndex(entity.collision.shape);
             if (idx === null) {
                 parentComponent.shape.addChildShape(transform, entity.collision.data.shape);
             } else {
@@ -836,7 +836,7 @@ class CollisionComponentSystem extends ComponentSystem {
         if (collision.shape.removeChildShape) {
             collision.shape.removeChildShape(shape);
         } else {
-            const ind = collision._getCompoundChildShapeIndex(shape);
+            const ind = collision.getCompoundChildShapeIndex(shape);
             if (ind !== null) {
                 collision.shape.removeChildShapeByIndex(ind);
             }

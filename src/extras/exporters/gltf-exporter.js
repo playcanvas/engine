@@ -755,13 +755,13 @@ class GltfExporter extends CoreExporter {
         const resources = this.collectResources(entity);
 
         return this.buildJson(resources, options).then((json) => {
-
-            const jsonText = JSON.stringify(json);
+            const encoder = new TextEncoder();
+            const jsonData = encoder.encode(JSON.stringify(json));
 
             const headerLength = 12;
 
             const jsonHeaderLength = 8;
-            const jsonDataLength = jsonText.length;
+            const jsonDataLength = jsonData.length;
             const jsonPaddingLength = (4 - (jsonDataLength & 3)) & 3;
 
             const binaryHeaderLength = 8;
@@ -790,9 +790,7 @@ class GltfExporter extends CoreExporter {
             let offset = headerLength + jsonHeaderLength;
 
             // JSON data
-            for (let i = 0; i < jsonDataLength; i++) {
-                glbView.setUint8(offset + i, jsonText.charCodeAt(i));
-            }
+            new Uint8Array(glbBuffer, offset, jsonDataLength).set(jsonData);
 
             offset += jsonDataLength;
 

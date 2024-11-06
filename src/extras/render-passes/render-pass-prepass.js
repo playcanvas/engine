@@ -90,6 +90,7 @@ class RenderPassPrepass extends RenderPass {
         });
 
         this.init(renderTarget, options);
+        this.depthStencilOps.clearStencil = true;
         this.depthStencilOps.storeDepth = true;
 
         if (resolveDepth) {

@@ -23,6 +23,7 @@ import { RenderTarget } from './render-target.js';
 
 /**
  * @import { GraphicsDevice } from './graphics-device.js'
+ * @import { RenderTarget } from './render-target.js'
  */
 
 let id = 0;
@@ -1022,7 +1023,7 @@ class Texture {
      * @param {number} width - The width of the rectangle.
      * @param {number} height - The height of the rectangle.
      * @param {object} [options] - Object for passing optional arguments.
-     * @param {number} [options.renderTarget] - The render target using the texture as a color
+     * @param {RenderTarget} [options.renderTarget] - The render target using the texture as a color
      * buffer. Provide as an optimization to avoid creating a new render target. Important especially
      * when this function is called with high frequency (per frame). Note that this is only utilized
      * on the WebGL platform, and ignored on WebGPU.

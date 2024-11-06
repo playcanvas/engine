@@ -68,8 +68,7 @@ class WebgpuQuerySet {
 
     resolve(count) {
         const device = this.device;
-        const commandEncoder = device.wgpu.createCommandEncoder();
-        DebugHelper.setLabel(commandEncoder, 'ResolveQuerySet-Encoder');
+        const commandEncoder = device.getCommandEncoder();
 
         // copy times to the gpu buffer
         commandEncoder.resolveQuerySet(this.querySet, 0, count, this.queryBuffer, 0);
@@ -79,10 +78,6 @@ class WebgpuQuerySet {
         this.activeStagingBuffer = activeStagingBuffer;
 
         commandEncoder.copyBufferToBuffer(this.queryBuffer, 0, activeStagingBuffer, 0, this.bytesPerSlot * count);
-
-        const cb = commandEncoder.finish();
-        DebugHelper.setLabel(cb, 'ResolveQuerySet');
-        device.addCommandBuffer(cb);
     }
 
     request(count, renderVersion) {

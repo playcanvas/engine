@@ -24,6 +24,9 @@ const tmpV1 = new Vec3();
 const tmpV2 = new Vec3();
 const tmpQ1 = new Quat();
 
+// constants
+const GLANCE_EPSILON = 0.98;
+
 /**
  * Translation gizmo.
  *
@@ -110,6 +113,13 @@ class TranslateGizmo extends TransformGizmo {
     snapIncrement = 1;
 
     /**
+     * Flips the planes to face the camera.
+     *
+     * @type {boolean}
+     */
+    flipShapes = true;
+
+    /**
      * Creates a new TranslateGizmo object.
      *
      * @param {CameraComponent} camera - The camera component.
@@ -138,6 +148,10 @@ class TranslateGizmo extends TransformGizmo {
         this.on(TransformGizmo.EVENT_NODESDETACH, () => {
             this._nodeLocalPositions.clear();
             this._nodePositions.clear();
+        });
+
+        this._app.on('prerender', () => {
+            this._shapesLookAtCamera();
         });
     }
 
@@ -346,6 +360,47 @@ class TranslateGizmo extends TransformGizmo {
     /**
      * @private
      */
+    _shapesLookAtCamera() {
+        const facingDir = this.facing;
+
+        // axes
+        let dot = facingDir.dot(this.root.right);
+        this._shapes.x.entity.enabled = Math.abs(dot) < GLANCE_EPSILON;
+        if (this.flipShapes) {
+            this._shapes.x.flipped = dot < 0;
+        }
+        dot = facingDir.dot(this.root.up);
+        this._shapes.y.entity.enabled = Math.abs(dot) < GLANCE_EPSILON;
+        if (this.flipShapes) {
+            this._shapes.y.flipped = dot < 0;
+        }
+        dot = facingDir.dot(this.root.forward);
+        this._shapes.z.entity.enabled = Math.abs(dot) < GLANCE_EPSILON;
+        if (this.flipShapes) {
+            this._shapes.z.flipped = dot > 0;
+        }
+
+        // planes
+        tmpV1.cross(facingDir, this.root.right);
+        this._shapes.yz.entity.enabled = tmpV1.length() < GLANCE_EPSILON;
+        if (this.flipShapes) {
+            this._shapes.yz.flipped = tmpV2.set(0, +(tmpV1.dot(this.root.forward) < 0), +(tmpV1.dot(this.root.up) < 0));
+        }
+        tmpV1.cross(facingDir, this.root.forward);
+        this._shapes.xy.entity.enabled = tmpV1.length() < GLANCE_EPSILON;
+        if (this.flipShapes) {
+            this._shapes.xy.flipped = tmpV2.set(+(tmpV1.dot(this.root.up) < 0), +(tmpV1.dot(this.root.right) > 0), 0);
+        }
+        tmpV1.cross(facingDir, this.root.up);
+        this._shapes.xz.entity.enabled = tmpV1.length() < GLANCE_EPSILON;
+        if (this.flipShapes) {
+            this._shapes.xz.flipped = tmpV2.set(+(tmpV1.dot(this.root.forward) > 0), 0, +(tmpV1.dot(this.root.right) > 0));
+        }
+    }
+
+    /**
+     * @private
+     */
     _storeNodePositions() {
         for (let i = 0; i < this.nodes.length; i++) {
             const node = this.nodes[i];
@@ -374,13 +429,13 @@ class TranslateGizmo extends TransformGizmo {
                 tmpV2.z = 1 / tmpV2.z;
                 tmpQ1.copy(node.getLocalRotation()).transformVector(tmpV1, tmpV1);
                 tmpV1.mul(tmpV2);
-                node.setLocalPosition(pos.clone().add(tmpV1));
+                node.setLocalPosition(tmpV1.add(pos));
             } else {
                 const pos = this._nodePositions.get(node);
                 if (!pos) {
                     continue;
                 }
-                node.setPosition(pos.clone().add(pointDelta));
+                node.setPosition(tmpV1.copy(pointDelta).add(pos));
             }
         }
 

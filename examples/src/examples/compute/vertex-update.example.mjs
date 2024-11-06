@@ -163,7 +163,7 @@ assetListLoader.load(() => {
             compute.setupDispatch(mesh.vertexBuffer.numVertices);
 
             // dispatch the compute shader
-            device.computeDispatch([compute]);
+            device.computeDispatch([compute], 'ModifyVBDispatch');
 
             // solid / wireframe
             entity.render.renderStyle = Math.floor(time * 0.5) % 2 ? pc.RENDERSTYLE_WIREFRAME : pc.RENDERSTYLE_SOLID;

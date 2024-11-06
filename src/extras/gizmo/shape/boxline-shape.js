@@ -25,6 +25,8 @@ class BoxLineShape extends Shape {
 
     _line;
 
+    _flipped = false;
+
     constructor(device, options = {}) {
         super(device, options);
 
@@ -82,6 +84,25 @@ class BoxLineShape extends Shape {
 
     get tolerance() {
         return this._tolerance;
+    }
+
+    set flipped(value) {
+        if (this._flipped === value) {
+            return;
+        }
+        this._flipped = value;
+        if (this._rotation.equals(Vec3.ZERO)) {
+            tmpV1.set(0, 0, this._flipped ? 180 : 0);
+        } else {
+            tmpV1.copy(this._rotation).mulScalar(this._flipped ? -1 : 1);
+        }
+
+        this._line.enabled = !this._flipped;
+        this.entity.setLocalEulerAngles(tmpV1);
+    }
+
+    get flipped() {
+        return this._flipped;
     }
 
     _createBoxLine() {

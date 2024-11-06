@@ -18,6 +18,9 @@ const tmpV1 = new Vec3();
 const tmpV2 = new Vec3();
 const tmpQ1 = new Quat();
 
+// constants
+const GLANCE_EPSILON = 0.98;
+
 /**
  * Scaling gizmo.
  *
@@ -106,6 +109,20 @@ class ScaleGizmo extends TransformGizmo {
     snapIncrement = 1;
 
     /**
+     * Flips the planes to face the camera.
+     *
+     * @type {boolean}
+     */
+    flipShapes = true;
+
+    /**
+     * The lower bound for scaling.
+     *
+     * @type {Vec3}
+     */
+    lowerBoundScale = new Vec3(-Infinity, -Infinity, -Infinity);
+
+    /**
      * Creates a new ScaleGizmo object.
      *
      * @param {CameraComponent} camera - The camera component.
@@ -119,7 +136,6 @@ class ScaleGizmo extends TransformGizmo {
         this._createTransform();
 
         this.on(TransformGizmo.EVENT_TRANSFORMSTART, () => {
-            this._selectionStartPoint.sub(Vec3.ONE);
             this._storeNodeScales();
         });
 
@@ -129,11 +145,16 @@ class ScaleGizmo extends TransformGizmo {
                 pointDelta.round();
                 pointDelta.mulScalar(this.snapIncrement);
             }
-            this._setNodeScales(pointDelta);
+            pointDelta.mulScalar(1 / this._scale);
+            this._setNodeScales(pointDelta.add(Vec3.ONE));
         });
 
         this.on(TransformGizmo.EVENT_NODESDETACH, () => {
             this._nodeScales.clear();
+        });
+
+        this._app.on('prerender', () => {
+            this._shapesLookAtCamera();
         });
     }
 
@@ -350,6 +371,47 @@ class ScaleGizmo extends TransformGizmo {
     /**
      * @private
      */
+    _shapesLookAtCamera() {
+        const facingDir = this.facing;
+
+        // axes
+        let dot = facingDir.dot(this.root.right);
+        this._shapes.x.entity.enabled = Math.abs(dot) < GLANCE_EPSILON;
+        if (this.flipShapes) {
+            this._shapes.x.flipped = dot < 0;
+        }
+        dot = facingDir.dot(this.root.up);
+        this._shapes.y.entity.enabled = Math.abs(dot) < GLANCE_EPSILON;
+        if (this.flipShapes) {
+            this._shapes.y.flipped = dot < 0;
+        }
+        dot = facingDir.dot(this.root.forward);
+        this._shapes.z.entity.enabled = Math.abs(dot) < GLANCE_EPSILON;
+        if (this.flipShapes) {
+            this._shapes.z.flipped = dot > 0;
+        }
+
+        // planes
+        tmpV1.cross(facingDir, this.root.right);
+        this._shapes.yz.entity.enabled = tmpV1.length() < GLANCE_EPSILON;
+        if (this.flipShapes) {
+            this._shapes.yz.flipped = tmpV2.set(0, +(tmpV1.dot(this.root.forward) < 0), +(tmpV1.dot(this.root.up) < 0));
+        }
+        tmpV1.cross(facingDir, this.root.forward);
+        this._shapes.xy.entity.enabled = tmpV1.length() < GLANCE_EPSILON;
+        if (this.flipShapes) {
+            this._shapes.xy.flipped = tmpV2.set(+(tmpV1.dot(this.root.up) < 0), +(tmpV1.dot(this.root.right) > 0), 0);
+        }
+        tmpV1.cross(facingDir, this.root.up);
+        this._shapes.xz.entity.enabled = tmpV1.length() < GLANCE_EPSILON;
+        if (this.flipShapes) {
+            this._shapes.xz.flipped = tmpV2.set(+(tmpV1.dot(this.root.forward) > 0), 0, +(tmpV1.dot(this.root.right) > 0));
+        }
+    }
+
+    /**
+     * @private
+     */
     _storeNodeScales() {
         for (let i = 0; i < this.nodes.length; i++) {
             const node = this.nodes[i];
@@ -368,7 +430,7 @@ class ScaleGizmo extends TransformGizmo {
             if (!scale) {
                 continue;
             }
-            node.setLocalScale(scale.clone().mul(pointDelta));
+            node.setLocalScale(tmpV1.copy(scale).mul(pointDelta).max(this.lowerBoundScale));
         }
     }
 

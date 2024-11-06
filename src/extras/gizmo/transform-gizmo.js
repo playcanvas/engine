@@ -34,7 +34,6 @@ const tmpP1 = new Plane();
 
 // constants
 const VEC3_AXES = Object.keys(tmpV1);
-const SPANLINE_SIZE = 1e3;
 
 // Magnopus Patched - export axis shape constants
 /**
@@ -195,7 +194,6 @@ class TransformGizmo extends Gizmo {
      * @protected
      */
     _rootStartPos = new Vec3();
-
 
     /**
      * Internal gizmo starting rotation in world space.
@@ -597,20 +595,15 @@ class TransformGizmo extends Gizmo {
      * @protected
      */
     _createRay(mouseWPos) {
-        const cameraPos = this._camera.entity.getPosition();
-        const cameraTransform = this._camera.entity.getWorldTransform();
-
-        const ray = tmpR1.set(cameraPos, Vec3.ZERO);
-
-        // calculate ray direction from mouse position
         if (this._camera.projection === PROJECTION_PERSPECTIVE) {
-            ray.direction.sub2(mouseWPos, ray.origin).normalize();
-        } else {
-            ray.origin.add(mouseWPos);
-            cameraTransform.transformVector(tmpV1.set(0, 0, -1), ray.direction);
+            tmpR1.origin.copy(this._camera.entity.getPosition());
+            tmpR1.direction.sub2(mouseWPos, tmpR1.origin).normalize();
+            return tmpR1;
         }
-
-        return ray;
+        const orthoDepth = this._camera.farClip - this._camera.nearClip;
+        tmpR1.origin.sub2(mouseWPos, tmpV1.copy(this._camera.entity.forward).mulScalar(orthoDepth));
+        tmpR1.direction.copy(this._camera.entity.forward);
+        return tmpR1;
     }
 
     /**
@@ -621,9 +614,7 @@ class TransformGizmo extends Gizmo {
      * @protected
      */
     _createPlane(axis, isFacing, isLine) {
-        const cameraPos = this._camera.entity.getPosition();
-
-        const facingDir = tmpV1.sub2(cameraPos, this._rootStartPos).normalize();
+        const facingDir = tmpV1.copy(this.facing);
         const normal = tmpP1.normal.set(0, 0, 0);
 
         if (isFacing) {
@@ -719,7 +710,7 @@ class TransformGizmo extends Gizmo {
     _drawSpanLine(pos, rot, axis) {
         tmpV1.set(0, 0, 0);
         tmpV1[axis] = 1;
-        tmpV1.mulScalar(SPANLINE_SIZE);
+        tmpV1.mulScalar(this._camera.farClip - this._camera.nearClip);
         tmpV2.copy(tmpV1).mulScalar(-1);
         rot.transformVector(tmpV1, tmpV1);
         rot.transformVector(tmpV2, tmpV2);
@@ -734,11 +725,7 @@ class TransformGizmo extends Gizmo {
         for (const key in this._shapes) {
             const shape = this._shapes[key];
             this.root.addChild(shape.entity);
-            this.intersectData.push({
-                triData: shape.triData,
-                parent: shape.entity,
-                meshInstances: shape.meshInstances
-            });
+            this.intersectShapes.push(shape);
             for (let i = 0; i < shape.meshInstances.length; i++) {
                 this._shapeMap.set(shape.meshInstances[i], shape);
             }
