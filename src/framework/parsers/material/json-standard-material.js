@@ -100,10 +100,10 @@ class JsonStandardMaterialParser {
         // replace old shader property with new shadingModel property
         if (data.shader) {
             data.shadingModel = data.shader === 'blinn' ? SPECULAR_BLINN : SPECULAR_PHONG;
+            delete data.shader;
         } else if (data.shadingModel === undefined) {
             data.shadingModel = SPECULAR_BLINN;
         }
-        if (data.shader) delete data.shader;
 
         // make JS style
         if (data.mapping_format) {
