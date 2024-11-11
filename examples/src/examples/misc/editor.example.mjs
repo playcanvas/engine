@@ -169,22 +169,6 @@ const resize = () => {
 window.addEventListener('resize', resize);
 resize();
 
-// wrappers for control state changes
-const setType = (/** @type {string} */ value) => {
-    data.set('gizmo.type', value);
-
-    // call method from top context (same as controls)
-    // @ts-ignore
-    window.top.setType?.(value);
-};
-const setProj = (/** @type {number} */ value) => {
-    data.set('camera.proj', value + 1);
-
-    // call method from top context (same as controls)
-    // @ts-ignore
-    window.top.setProj?.(value);
-};
-
 // key event handlers
 const keydown = (/** @type {KeyboardEvent} */ e) => {
     gizmoHandler.gizmo.snap = !!e.shiftKey;
@@ -200,19 +184,19 @@ const keypress = (/** @type {KeyboardEvent} */ e) => {
             data.set('gizmo.coordSpace', data.get('gizmo.coordSpace') === 'world' ? 'local' : 'world');
             break;
         case '1':
-            setType('translate');
+            data.set('gizmo.type', 'translate');
             break;
         case '2':
-            setType('rotate');
+            data.set('gizmo.type', 'rotate');
             break;
         case '3':
-            setType('scale');
+            data.set('gizmo.type', 'scale');
             break;
         case 'p':
-            setProj(pc.PROJECTION_PERSPECTIVE);
+            data.set('camera.proj', pc.PROJECTION_PERSPECTIVE + 1);
             break;
         case 'o':
-            setProj(pc.PROJECTION_ORTHOGRAPHIC);
+            data.set('camera.proj', pc.PROJECTION_ORTHOGRAPHIC + 1);
             break;
     }
 };
