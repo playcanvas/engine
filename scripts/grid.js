@@ -213,11 +213,6 @@ class Grid extends Script {
     );
 
     /**
-     * @type {() => void}
-     */
-    _prerender;
-
-    /**
      * @type {Vec2}
      */
     _halfExtents = new Vec2(Infinity, Infinity);
@@ -252,13 +247,6 @@ class Grid extends Script {
             vertex_position: SEMANTIC_POSITION
         });
         this._quadRender = new QuadRender(shader);
-
-        // set initial size
-        this._set('half_extents', this._halfExtents);
-
-        // set initial colors
-        this._set('color_x', this._colorX);
-        this._set('color_z', this._colorZ);
     }
 
     /**
@@ -289,7 +277,6 @@ class Grid extends Script {
      */
     set halfExtents(value) {
         this._halfExtents.copy(value);
-        this._set('half_extents', this._halfExtents);
     }
 
     get halfExtents() {
@@ -302,7 +289,6 @@ class Grid extends Script {
      */
     set colorX(value) {
         this._colorX.copy(value);
-        this._set('color_x', value);
     }
 
     get colorX() {
@@ -315,7 +301,6 @@ class Grid extends Script {
      */
     set colorZ(value) {
         this._colorZ.copy(value);
-        this._set('color_x', value);
     }
 
     get colorZ() {
@@ -328,7 +313,11 @@ class Grid extends Script {
     attach(camera) {
         this._camera = camera;
 
-        this._prerender = () => {
+        camera.onPreRenderLayer = (layer, transparent) => {
+            if (layer.name !== this.layerName || transparent) {
+                return;
+            }
+
             // get frustum corners in world space
             const points = camera.camera.getFrustumCorners(-100);
             const worldTransform = camera.entity.getWorldTransform();
@@ -353,26 +342,24 @@ class Grid extends Script {
             this._set('far_origin', points[7]);
             this._set('far_x', tmpV1.sub2(points[4], points[7]));
             this._set('far_y', tmpV1.sub2(points[6], points[7]));
-        };
-        this.app.on('prerender', this._prerender);
 
-        camera.onPreRenderLayer = (layer, transparent) => {
-            if (layer.name === this.layerName && !transparent) {
-                this._device.setBlendState(this._blendState);
-                this._device.setCullMode(CULLFACE_NONE);
-                this._device.setDepthState(DepthState.WRITEDEPTH);
-                this._device.setStencilState(null, null);
+            // size
+            this._set('half_extents', this._halfExtents);
 
-                this._quadRender.render();
-            }
+            // colors
+            this._set('color_x', this._colorX);
+            this._set('color_z', this._colorZ);
+
+            this._device.setBlendState(this._blendState);
+            this._device.setCullMode(CULLFACE_NONE);
+            this._device.setDepthState(DepthState.WRITEDEPTH);
+            this._device.setStencilState(null, null);
+
+            this._quadRender.render();
         };
     }
 
     detach() {
-        if (this._prerender) {
-            this.app.off('prerender', this._prerender);
-            this._prerender = null;
-        }
         this._camera.onPreRenderLayer = null;
         this._camera = null;
     }
