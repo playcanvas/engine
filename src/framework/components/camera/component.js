@@ -272,6 +272,8 @@ class CameraComponent extends Component {
 
     /**
      * Gets the gamma correction used when rendering the scene.
+     *
+     * @type {number}
      */
     get gammaCorrection() {
         return this.camera.shaderParams.gammaCorrection;
@@ -297,6 +299,8 @@ class CameraComponent extends Component {
 
     /**
      * Gets the tonemapping transform applied to the rendered color buffer.
+     *
+     * @type {number}
      */
     get toneMapping() {
         return this.camera.shaderParams.toneMapping;

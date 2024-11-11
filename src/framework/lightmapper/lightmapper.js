@@ -19,7 +19,7 @@ import { drawQuadWithShader } from '../../scene/graphics/quad-render-utils.js';
 import { Texture } from '../../platform/graphics/texture.js';
 import {
     BAKE_COLORDIR,
-    FOG_NONE, GAMMA_NONE, TONEMAP_LINEAR,
+    GAMMA_NONE, TONEMAP_LINEAR,
     LIGHTTYPE_DIRECTIONAL, LIGHTTYPE_OMNI, LIGHTTYPE_SPOT,
     PROJECTION_ORTHOGRAPHIC, PROJECTION_PERSPECTIVE,
     SHADERDEF_DIRLM, SHADERDEF_LM, SHADERDEF_LMAMBIENT,
