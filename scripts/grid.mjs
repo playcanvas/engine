@@ -9,6 +9,7 @@ import {
     BlendState,
     DepthState,
     QuadRender,
+    Layer,
     createShaderFromCode,
     Script,
     Color,
@@ -16,8 +17,12 @@ import {
     Vec3
 } from 'playcanvas';
 
-/** @import { CameraComponent, GraphicsDevice } from 'playcanvas' */
+/** @import { AppBase, CameraComponent, GraphicsDevice } from 'playcanvas' */
 
+// constants
+const LAYER_NAME = 'Grid';
+
+// temporary variables
 const tmpV1 = new Vec3();
 
 const vertexShader = /* glsl*/ `
@@ -230,9 +235,21 @@ class Grid extends Script {
     _colorZ = new Color(0.3, 0.3, 1);
 
     /**
-     * @type {string}
+     * Creates a new layer for the grid.
+     *
+     * @param {AppBase} app - The app.
+     * @param {string} [layerName] - The layer name. Defaults to 'Gizmo'.
+     * @param {number} [layerIndex] - The layer index. Defaults to the end of the layer list.
+     * @returns {Layer} The new layer.
      */
-    layerName = 'World';
+    static createLayer(app, layerName = LAYER_NAME, layerIndex) {
+        const layer = new Layer({
+            name: layerName,
+            clearDepthBuffer: false
+        });
+        app.scene.layers.insert(layer, layerIndex ?? app.scene.layers.layerList.length);
+        return layer;
+    }
 
     /**
      * @param {object} args - The script arguments.
@@ -309,12 +326,19 @@ class Grid extends Script {
 
     /**
      * @param {CameraComponent} camera - The camera component.
+     * @param {Layer} layer - The layer to render the grid.
      */
-    attach(camera) {
+    attach(camera, layer) {
+        if (!camera) {
+            throw new Error('Camera is required');
+        }
         this._camera = camera;
 
-        camera.onPreRenderLayer = (layer, transparent) => {
-            if (layer.name !== this.layerName || transparent) {
+        layer ??= Grid.createLayer(this.app);
+        camera.layers = camera.layers.concat(layer.id);
+
+        camera.onPreRenderLayer = (_layer, transparent) => {
+            if (_layer !== layer || transparent) {
                 return;
             }
 
