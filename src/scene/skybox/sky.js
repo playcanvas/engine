@@ -50,6 +50,7 @@ class Sky {
      * Constructs a new sky.
      *
      * @param {Scene} scene - The scene owning the sky.
+     * @ignore
      */
     constructor(scene) {
         this.device = scene.device;
@@ -76,9 +77,9 @@ class Sky {
      * The type of the sky. One of the SKYMESH_* constants. Defaults to {@link SKYTYPE_INFINITE}.
      * Can be:
      *
-     * {@link SKYTYPE_INFINITE}
-     * {@link SKYTYPE_BOX}
-     * {@link SKYTYPE_DOME}
+     * - {@link SKYTYPE_INFINITE}
+     * - {@link SKYTYPE_BOX}
+     * - {@link SKYTYPE_DOME}
      *
      * @type {string}
      */

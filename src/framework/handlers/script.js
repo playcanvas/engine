@@ -139,7 +139,7 @@ class ScriptHandler extends ResourceHandler {
         import(importUrl.toString()).then((module) => {
 
             const filename = importUrl.pathname.split('/').pop();
-            const scriptSchema = this._app.assets.find(filename, 'script').data.scripts;
+            const scriptSchema = this._app.assets.find(filename, 'script')?.data?.scripts;
 
             for (const key in module) {
                 const scriptClass = module[key];
@@ -153,7 +153,7 @@ class ScriptHandler extends ResourceHandler {
                     registerScript(scriptClass, scriptName);
 
                     // Store any schema associated with the script
-                    this._app.scripts.addSchema(scriptName, scriptSchema[scriptName]);
+                    if (scriptSchema) this._app.scripts.addSchema(scriptName, scriptSchema[scriptName]);
                 }
             }
 

@@ -195,6 +195,14 @@ class TransformGizmo extends Gizmo {
     _hoverIsPlane = false;
 
     /**
+     * Internal state of if there is no selection.
+     *
+     * @type {boolean}
+     * @private
+     */
+    _noSelection = false;
+
+    /**
      * Internal currently selected axis.
      *
      * @type {string}
@@ -278,6 +286,7 @@ class TransformGizmo extends Gizmo {
             }
 
             if (!meshInstance) {
+                this._noSelection = true;
                 return;
             }
 
@@ -298,7 +307,9 @@ class TransformGizmo extends Gizmo {
                 return;
             }
 
-            this._hover(meshInstance);
+            if (!this._noSelection) {
+                this._hover(meshInstance);
+            }
 
             if (!this._dragging) {
                 return;
@@ -313,7 +324,10 @@ class TransformGizmo extends Gizmo {
             this._hoverIsPlane = false;
         });
 
-        this.on(Gizmo.EVENT_POINTERUP, () => {
+        this.on(Gizmo.EVENT_POINTERUP, (x, y, meshInstance) => {
+            this._noSelection = false;
+            this._hover(meshInstance);
+
             if (!this._dragging) {
                 return;
             }
