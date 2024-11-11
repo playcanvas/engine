@@ -56,8 +56,6 @@ assetListLoader.load(() => {
     app.scene.exposure = 2;
     app.scene.envAtlas = assets.helipad.resource;
 
-    app.scene.rendering.toneMapping = pc.TONEMAP_ACES;
-
     // Depth layer is where the framebuffer is copied to a texture to be used in the following layers.
     // Move the depth layer to take place after World and Skydome layers, to capture both of them.
     const depthLayer = app.scene.layers.getLayerById(pc.LAYERID_DEPTH);
@@ -115,7 +113,8 @@ assetListLoader.load(() => {
     // Create the camera, which renders entities
     const camera = new pc.Entity('SceneCamera');
     camera.addComponent('camera', {
-        clearColor: new pc.Color(0.2, 0.2, 0.2)
+        clearColor: new pc.Color(0.2, 0.2, 0.2),
+        toneMapping: pc.TONEMAP_ACES
     });
     app.root.addChild(camera);
     camera.setLocalPosition(0, 10, 20);

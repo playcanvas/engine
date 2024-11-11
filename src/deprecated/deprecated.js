@@ -452,80 +452,77 @@ Object.defineProperty(Scene.prototype, 'defaultMaterial', {
     }
 });
 
-Object.defineProperty(Scene.prototype, 'fog', {
-    set: function (value) {
-        Debug.deprecated('Scene#fog is deprecated. Use Scene#rendering.fog instead.');
-        this.rendering.fog = value;
-    },
-    get: function () {
-        Debug.deprecated('Scene#fog is deprecated. Use Scene#rendering.fog instead.');
-        return this.rendering.fog;
-    }
-});
-
 Object.defineProperty(Scene.prototype, 'fogColor', {
     set: function (value) {
-        Debug.deprecated('Scene#fogColor is deprecated. Use Scene#rendering.fogColor instead.');
-        this.rendering.fogColor = value;
+        Debug.deprecated('Scene#fogColor is deprecated. Use Scene#fog.color instead.');
+        this.fog.color = value;
     },
     get: function () {
-        Debug.deprecated('Scene#fogColor is deprecated. Use Scene#rendering.fogColor instead.');
-        return this.rendering.fogColor;
+        Debug.deprecated('Scene#fogColor is deprecated. Use Scene#fog.color instead.');
+        return this.fog.color;
     }
 });
 
 Object.defineProperty(Scene.prototype, 'fogEnd', {
     set: function (value) {
-        Debug.deprecated('Scene#fogEnd is deprecated. Use Scene#rendering.fogEnd instead.');
-        this.rendering.fogEnd = value;
+        Debug.deprecated('Scene#fogEnd is deprecated. Use Scene#fog.end instead.');
+        this.fog.end = value;
     },
     get: function () {
-        Debug.deprecated('Scene#fogEnd is deprecated. Use Scene#rendering.fogEnd instead.');
-        return this.rendering.fogEnd;
+        Debug.deprecated('Scene#fogEnd is deprecated. Use Scene#fog.end instead.');
+        return this.fog.end;
     }
 });
 
 Object.defineProperty(Scene.prototype, 'fogStart', {
     set: function (value) {
-        Debug.deprecated('Scene#fogStart is deprecated. Use Scene#rendering.fogStart instead.');
-        this.rendering.fogStart = value;
+        Debug.deprecated('Scene#fogStart is deprecated. Use Scene#fog.start instead.');
+        this.fog.start = value;
     },
     get: function () {
-        Debug.deprecated('Scene#fogStart is deprecated. Use Scene#rendering.fogStart instead.');
-        return this.rendering.fogStart;
+        Debug.deprecated('Scene#fogStart is deprecated. Use Scene#fog.start instead.');
+        return this.fog.start;
     }
 });
 
 Object.defineProperty(Scene.prototype, 'fogDensity', {
     set: function (value) {
-        Debug.deprecated('Scene#fogDensity is deprecated. Use Scene#rendering.fogDensity instead.');
-        this.rendering.fogDensity = value;
+        Debug.deprecated('Scene#fogDensity is deprecated. Use Scene#fog.density instead.');
+        this.fog.density = value;
     },
     get: function () {
-        Debug.deprecated('Scene#fogDensity is deprecated. Use Scene#rendering.fogDensity instead.');
-        return this.rendering.fogDensity;
+        Debug.deprecated('Scene#fogDensity is deprecated. Use Scene#fog.density instead.');
+        return this.fog.density;
     }
 });
 
 Object.defineProperty(Scene.prototype, 'toneMapping', {
     set: function (value) {
-        Debug.deprecated('Scene#toneMapping is deprecated. Use Scene#rendering.toneMapping instead.');
-        this.rendering.toneMapping = value;
+        Debug.removed('Scene#toneMapping is removed. Use CameraComponent#toneMapping instead.');
     },
     get: function () {
-        Debug.deprecated('Scene#toneMapping is deprecated. Use Scene#rendering.toneMapping instead.');
-        return this.rendering.toneMapping;
+        Debug.removed('Scene#toneMapping is removed. Use CameraComponent#toneMapping instead.');
+        return undefined;
     }
 });
 
 Object.defineProperty(Scene.prototype, 'gammaCorrection', {
     set: function (value) {
-        Debug.deprecated('Scene#gammaCorrection is deprecated. Use Scene#rendering.gammaCorrection instead.');
-        this.rendering.gammaCorrection = value;
+        Debug.removed('Scene#gammaCorrection is removed. Use CameraComponent#gammaCorrection instead.');
     },
     get: function () {
-        Debug.deprecated('Scene#gammaCorrection is deprecated. Use Scene#rendering.gammaCorrection instead.');
-        return this.rendering.gammaCorrection;
+        Debug.removed('Scene#gammaCorrection is removed. Use CameraComponent#gammaCorrection instead.');
+        return undefined;
+    }
+});
+
+Object.defineProperty(Scene.prototype, 'rendering', {
+    set: function (value) {
+        Debug.removed('Scene#rendering is removed. Use Scene#fog or CameraComponent#gammaCorrection or CameraComponent#toneMapping instead.');
+    },
+    get: function () {
+        Debug.removed('Scene#rendering is removed. Use Scene#fog or CameraComponent#gammaCorrection or CameraComponent#toneMapping instead.');
+        return undefined;
     }
 });
 

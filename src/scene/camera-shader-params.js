@@ -1,13 +1,12 @@
-import { hashCode } from '../../core/hash.js';
-import { Color } from '../../core/math/color.js';
-import { FOG_NONE, GAMMA_NONE, GAMMA_SRGB, TONEMAP_LINEAR } from '../constants.js';
+import { hashCode } from '../core/hash.js';
+import { FOG_NONE, GAMMA_NONE, GAMMA_SRGB, TONEMAP_LINEAR } from './constants.js';
 
 /**
- * Rendering parameters, allow configuration of the rendering parameters.
+ * Internal camera shader parameters, used to generate and use matching shaders.
  *
- * @category Graphics
+ * @ignore
  */
-class RenderingParams {
+class CameraShaderParams {
     /** @private */
     _gammaCorrection = GAMMA_SRGB;
 
@@ -22,37 +21,6 @@ class RenderingParams {
 
     /** @private */
     _fog = FOG_NONE;
-
-    /**
-     * The color of the fog (if enabled), specified in sRGB color space. Defaults to black (0, 0, 0).
-     *
-     * @type {Color}
-     */
-    fogColor = new Color(0, 0, 0);
-
-    /**
-     * The density of the fog (if enabled). This property is only valid if the fog property is set
-     * to {@link FOG_EXP} or {@link FOG_EXP2}. Defaults to 0.
-     *
-     * @type {number}
-     */
-    fogDensity = 0;
-
-    /**
-     * The distance from the viewpoint where linear fog reaches its maximum. This property is only
-     * valid if the fog property is set to {@link FOG_LINEAR}. Defaults to 1000.
-     *
-     * @type {number}
-     */
-    fogEnd = 1000;
-
-    /**
-     * The distance from the viewpoint where linear fog begins. This property is only valid if the
-     * fog property is set to {@link FOG_LINEAR}. Defaults to 1.
-     *
-     * @type {number}
-     */
-    fogStart = 1;
 
     /**
      * The hash of the rendering parameters, or undefined if the hash has not been computed yet.
@@ -76,22 +44,18 @@ class RenderingParams {
         return this._hash;
     }
 
+    initDefaults() {
+        this._gammaCorrection = GAMMA_SRGB;
+        this._toneMapping = TONEMAP_LINEAR;
+        this._srgbRenderTarget = false;
+        this._ssaoEnabled = false;
+        this._fog = FOG_NONE;
+    }
+
     markDirty() {
         this._hash = undefined;
     }
 
-    /**
-     * Sets the type of fog used by the scene. Can be:
-     *
-     * - {@link FOG_NONE}
-     * - {@link FOG_LINEAR}
-     * - {@link FOG_EXP}
-     * - {@link FOG_EXP2}
-     *
-     * Defaults to {@link FOG_NONE}.
-     *
-     * @type {string}
-     */
     set fog(type) {
         if (this._fog !== type) {
             this._fog = type;
@@ -99,11 +63,6 @@ class RenderingParams {
         }
     }
 
-    /**
-     * Gets the type of fog used by the scene.
-     *
-     * @type {string}
-     */
     get fog() {
         return this._fog;
     }
@@ -119,17 +78,8 @@ class RenderingParams {
         return this._ssaoEnabled;
     }
 
-    /**
-     * The gamma correction to apply when rendering the scene. Can be:
-     *
-     * - {@link GAMMA_NONE}
-     * - {@link GAMMA_SRGB}
-     *
-     * Defaults to {@link GAMMA_SRGB}.
-     *
-     * @type {number}
-     */
     set gammaCorrection(value) {
+        this._gammaCorrectionAssigned = true;
         if (this._gammaCorrection !== value) {
             this._gammaCorrection = value;
             this.markDirty();
@@ -140,20 +90,6 @@ class RenderingParams {
         return this._gammaCorrection;
     }
 
-    /**
-     * The tonemapping transform to apply to the rendered color buffer. Can be:
-     *
-     * - {@link TONEMAP_LINEAR}
-     * - {@link TONEMAP_FILMIC}
-     * - {@link TONEMAP_HEJL}
-     * - {@link TONEMAP_ACES}
-     * - {@link TONEMAP_ACES2}
-     * - {@link TONEMAP_NEUTRAL}
-     *
-     * Defaults to {@link TONEMAP_LINEAR}.
-     *
-     * @type {number}
-     */
     set toneMapping(value) {
         if (this._toneMapping !== value) {
             this._toneMapping = value;
@@ -191,4 +127,4 @@ class RenderingParams {
     }
 }
 
-export { RenderingParams };
+export { CameraShaderParams };

@@ -383,8 +383,8 @@ const createGSplatCompressedMaterial = (options = {}) => {
         const programOptions = {
             defines: material.defines,
             pass: params.pass,
-            gamma: params.renderParams.shaderOutputGamma,
-            toneMapping: params.renderParams.toneMapping,
+            gamma: params.cameraShaderParams.shaderOutputGamma,
+            toneMapping: params.cameraShaderParams.toneMapping,
             vertex: options.vertex ?? splatMainVS,
             fragment: options.fragment ?? splatMainFS,
             dither: ditherEnum

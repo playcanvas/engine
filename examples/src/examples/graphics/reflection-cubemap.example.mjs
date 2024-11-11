@@ -52,9 +52,6 @@ const assetListLoader = new pc.AssetListLoader(Object.values(assets), app.assets
 assetListLoader.load(() => {
     app.start();
 
-    // set up some general scene rendering properties
-    app.scene.rendering.toneMapping = pc.TONEMAP_ACES;
-
     // setup skydome
     app.scene.envAtlas = assets.helipad.resource;
     app.scene.skyboxMip = 0; // use top mipmap level of cubemap (full resolution)
@@ -152,7 +149,9 @@ assetListLoader.load(() => {
         priority: -1,
 
         // disable as this is not a camera that renders cube map but only a container for properties for cube map rendering
-        enabled: false
+        enabled: false,
+
+        toneMapping: pc.TONEMAP_ACES
     });
 
     // add cubemapRenderer script component which takes care of rendering dynamic cubemap
@@ -199,7 +198,8 @@ assetListLoader.load(() => {
     const camera = new pc.Entity('MainCamera');
     camera.addComponent('camera', {
         fov: 60,
-        layers: [worldLayer.id, excludedLayer.id, skyboxLayer.id, immediateLayer.id, uiLayer.id]
+        layers: [worldLayer.id, excludedLayer.id, skyboxLayer.id, immediateLayer.id, uiLayer.id],
+        toneMapping: pc.TONEMAP_ACES
     });
     app.root.addChild(camera);
 

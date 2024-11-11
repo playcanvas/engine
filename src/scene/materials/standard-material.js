@@ -850,7 +850,7 @@ class StandardMaterial extends Material {
 
     getShaderVariant(params) {
 
-        const { device, scene, pass, objDefs, sortedLights, renderParams } = params;
+        const { device, scene, pass, objDefs, sortedLights, cameraShaderParams } = params;
 
         // update prefiltered lighting data
         this.updateEnvUniforms(device, scene);
@@ -864,7 +864,7 @@ class StandardMaterial extends Material {
         if (minimalOptions) {
             this.shaderOptBuilder.updateMinRef(options, scene, this, objDefs, pass, sortedLights);
         } else {
-            this.shaderOptBuilder.updateRef(options, scene, renderParams, this, objDefs, pass, sortedLights);
+            this.shaderOptBuilder.updateRef(options, scene, cameraShaderParams, this, objDefs, pass, sortedLights);
         }
 
         // execute user callback to modify the options

@@ -15,7 +15,7 @@ import { PostEffectQueue } from './post-effect-queue.js';
  * @import { Mat4 } from '../../../core/math/mat4.js'
  * @import { RenderPass } from '../../../platform/graphics/render-pass.js'
  * @import { RenderTarget } from '../../../platform/graphics/render-target.js'
- * @import { RenderingParams } from '../../../scene/renderer/rendering-params.js'
+ * @import { FogParams } from '../../../scene/fog-params.js'
  * @import { Vec3 } from '../../../core/math/vec3.js'
  * @import { Vec4 } from '../../../core/math/vec4.js'
  * @import { XrErrorCallback } from '../../xr/xr-manager.js'
@@ -223,7 +223,7 @@ class CameraComponent extends Component {
     /**
      * Shader pass name.
      *
-     * @returns {string} The name of the shader pass, or undefined if no shader pass is set.
+     * @returns {string|undefined} The name of the shader pass, or undefined if no shader pass is set.
      */
     getShaderPass() {
         return this._camera.shaderPassInfo?.name;
@@ -252,25 +252,73 @@ class CameraComponent extends Component {
         return this._camera.renderPasses;
     }
 
-    /**
-     * Sets the rendering parameters. If this is not null, the camera will use these rendering
-     * parameters instead of those specified in the scene's rendering parameters
-     * {@link Scene#rendering}.
-     *
-     * @type {RenderingParams|null}
-     */
-    set rendering(value) {
-        this._camera.renderingParams = value;
+    get shaderParams() {
+        return this._camera.shaderParams;
     }
 
     /**
-     * Gets a {@link RenderingParams} that defines rendering parameters, or null if those are not
-     * set.
+     * Sets the gamma correction to apply when rendering the scene. Can be:
      *
-     * @type {RenderingParams|null}
+     * - {@link GAMMA_NONE}
+     * - {@link GAMMA_SRGB}
+     *
+     * Defaults to {@link GAMMA_SRGB}.
+     *
+     * @type {number}
      */
-    get rendering() {
-        return this._camera.renderingParams;
+    set gammaCorrection(value) {
+        this.camera.shaderParams.gammaCorrection = value;
+    }
+
+    /**
+     * Gets the gamma correction used when rendering the scene.
+     */
+    get gammaCorrection() {
+        return this.camera.shaderParams.gammaCorrection;
+    }
+
+    /**
+     * Sets the tonemapping transform to apply to the rendered color buffer. Can be:
+     *
+     * - {@link TONEMAP_LINEAR}
+     * - {@link TONEMAP_FILMIC}
+     * - {@link TONEMAP_HEJL}
+     * - {@link TONEMAP_ACES}
+     * - {@link TONEMAP_ACES2}
+     * - {@link TONEMAP_NEUTRAL}
+     *
+     * Defaults to {@link TONEMAP_LINEAR}.
+     *
+     * @type {number}
+     */
+    set toneMapping(value) {
+        this.camera.shaderParams.toneMapping = value;
+    }
+
+    /**
+     * Gets the tonemapping transform applied to the rendered color buffer.
+     */
+    get toneMapping() {
+        return this.camera.shaderParams.toneMapping;
+    }
+
+    /**
+     * Sets the fog parameters. If this is not null, the camera will use these fog parameters
+     * instead of those specified on the {@link Scene#fog}.
+     *
+     * @type {FogParams|null}
+     */
+    set fog(value) {
+        this._camera.fogParams = value;
+    }
+
+    /**
+     * Gets a {@link FogParams} that defines fog parameters, or null if those are not set.
+     *
+     * @type {FogParams|null}
+     */
+    get fog() {
+        return this._camera.fogParams;
     }
 
     /**

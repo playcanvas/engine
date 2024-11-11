@@ -57,8 +57,6 @@ app.on('destroy', () => {
 
 const assetListLoader = new pc.AssetListLoader(Object.values(assets), app.assets);
 assetListLoader.load(() => {
-    // set up some general scene rendering properties
-    app.scene.rendering.toneMapping = pc.TONEMAP_ACES;
 
     // setup skydome
     app.scene.skyboxMip = 2;
@@ -67,7 +65,9 @@ assetListLoader.load(() => {
 
     // create camera entity
     const camera = new pc.Entity('camera');
-    camera.addComponent('camera');
+    camera.addComponent('camera', {
+        toneMapping: pc.TONEMAP_ACES
+    });
     app.root.addChild(camera);
     camera.setPosition(0, 0, 5);
 

@@ -52,14 +52,15 @@ const assetListLoader = new pc.AssetListLoader(Object.values(assets), app.assets
 assetListLoader.load(() => {
     app.start();
 
-    app.scene.rendering.toneMapping = pc.TONEMAP_ACES;
     app.scene.envAtlas = assets.helipad.resource;
     app.scene.skyboxMip = 1;
     app.scene.skyboxIntensity = 1;
 
     // Create an entity with a camera component
     const camera = new pc.Entity();
-    camera.addComponent('camera');
+    camera.addComponent('camera', {
+        toneMapping: pc.TONEMAP_ACES
+    });
     camera.translate(0, 0, 8);
     camera.rotate(0, 0, 0);
     app.root.addChild(camera);

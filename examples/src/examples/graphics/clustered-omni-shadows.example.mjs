@@ -68,9 +68,6 @@ const assetListLoader = new pc.AssetListLoader(Object.values(assets), app.assets
 assetListLoader.load(() => {
     app.start();
 
-    // set up some general scene rendering properties
-    app.scene.rendering.toneMapping = pc.TONEMAP_ACES;
-
     data.set('settings', {
         shadowAtlasResolution: 1300, // shadow map resolution storing all shadows
         shadowType: pc.SHADOW_PCF3, // shadow filter type
@@ -225,7 +222,8 @@ assetListLoader.load(() => {
     camera.addComponent('camera', {
         fov: 80,
         clearColor: new pc.Color(0.1, 0.1, 0.1),
-        farClip: 1500
+        farClip: 1500,
+        toneMapping: pc.TONEMAP_ACES
     });
 
     // and position it in the world

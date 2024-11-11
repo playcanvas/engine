@@ -30,7 +30,6 @@ import {
 import { MeshInstance } from '../../scene/mesh-instance.js';
 import { LightingParams } from '../../scene/lighting/lighting-params.js';
 import { WorldClusters } from '../../scene/lighting/world-clusters.js';
-import { RenderingParams } from '../../scene/renderer/rendering-params.js';
 import { shaderChunks } from '../../scene/shader-lib/chunks/chunks.js';
 import { shaderChunksLightmapper } from '../../scene/shader-lib/chunks/chunks-lightmapper.js';
 import { Camera } from '../../scene/camera.js';
@@ -166,10 +165,8 @@ class Lightmapper {
             this.camera = camera;
 
             // baking uses HDR (no gamma / tone mapping)
-            const rp = new RenderingParams();
-            rp.gammaCorrection = GAMMA_NONE;
-            rp.toneMapping = TONEMAP_LINEAR;
-            this.camera.renderingParams = rp;
+            this.camera.shaderParams.gammaCorrection = GAMMA_NONE;
+            this.camera.shaderParams.toneMapping = TONEMAP_LINEAR;
         }
 
         // create light cluster structure
@@ -684,11 +681,7 @@ class Lightmapper {
     setupScene() {
 
         // backup
-        this.fog = this.scene.rendering.fog;
         this.ambientLight.copy(this.scene.ambientLight);
-
-        // set up scene
-        this.scene.rendering.fog = FOG_NONE;
 
         // if not baking ambient, set it to black
         if (!this.scene.ambientBake) {
@@ -701,7 +694,6 @@ class Lightmapper {
 
     restoreScene() {
 
-        this.scene.rendering.fog = this.fog;
         this.scene.ambientLight.copy(this.ambientLight);
     }
 
