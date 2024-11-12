@@ -4,7 +4,7 @@ import * as pc from 'playcanvas';
 import { data } from 'examples/observer';
 import { deviceType, rootPath, fileImport } from 'examples/utils';
 
-const { MultiCamera } = await fileImport(rootPath + '/static/scripts/camera/multi-camera.js');
+const { MultiCamera } = await fileImport(rootPath + '/static/scripts/camera/multi-camera.mjs');
 
 const canvas = document.getElementById('application-canvas');
 if (!(canvas instanceof HTMLCanvasElement)) {
