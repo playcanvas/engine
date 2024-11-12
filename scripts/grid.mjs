@@ -322,7 +322,7 @@ class Grid extends Script {
 
     /**
      * @attribute
-     * @type {number}
+     * @type {Grid.RESOLUTION_HIGH | Grid.RESOLUTION_MEDIUM | Grid.RESOLUTION_LOW}
      */
     set resolution(value) {
         this._resolution = value ?? Grid.RESOLUTION_HIGH;
