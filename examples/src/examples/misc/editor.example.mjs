@@ -132,9 +132,11 @@ orbitCamera.distance = 5 * camera.camera?.aspectRatio;
 app.root.addComponent('script');
 const grid = /** @type {Grid} */ (app.root.script.create(Grid));
 grid.halfExtents = new pc.Vec2(4, 4);
+grid.size = 4;
 grid.attach(camera.camera);
 data.set('grid', {
-    size: 4,
+    resolution: grid.resolution + 1,
+    size: grid.size,
     colorX: Object.values(grid.colorX),
     colorZ: Object.values(grid.colorZ)
 });
@@ -246,6 +248,9 @@ data.on('*:set', (/** @type {string} */ path, /** @type {any} */ value) => {
         }
         case 'grid': {
             switch (key) {
+                case 'resolution':
+                    grid.resolution = value - 1;
+                    break;
                 case 'size':
                     grid.halfExtents = tmpVa.set(value, value);
                     break;

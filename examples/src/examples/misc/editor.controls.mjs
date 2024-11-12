@@ -92,6 +92,19 @@ export const controls = ({ observer, ReactPCUI, React, jsx, fragment }) => {
             { headerText: 'Grid' },
             jsx(
                 LabelGroup,
+                { text: 'Resolution' },
+                jsx(SelectInput, {
+                    options: [
+                        { v: 3, t: 'High' },
+                        { v: 2, t: 'Medium' },
+                        { v: 1, t: 'Low' }
+                    ],
+                    binding: new BindingTwoWay(),
+                    link: { observer, path: 'grid.resolution' }
+                })
+            ),
+            jsx(
+                LabelGroup,
                 { text: 'Size' },
                 jsx(SliderInput, {
                     binding: new BindingTwoWay(),

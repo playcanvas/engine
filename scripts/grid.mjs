@@ -53,6 +53,8 @@ const fragmentShader = /* glsl*/ `
     uniform mat4 matrix_viewProjection;
     uniform sampler2D blueNoiseTex32;
 
+    uniform int resolution;
+
     uniform vec2 half_extents;
 
     uniform vec3 color_x;
@@ -171,6 +173,9 @@ const fragmentShader = /* glsl*/ `
         levelSize = 1.0 / 100.0;
         levelAlpha = pristineGrid(levelPos.xz, ddx, ddy, vec2(levelSize)) * fade;
         if (levelAlpha > epsilon) {
+            if (resolution < 1) {
+                discard;
+            }
             gl_FragColor = vec4(vec3(0.7), levelAlpha);
             gl_FragDepth = writeDepth(levelAlpha) ? calcDepth(pos) : 1.0;
             return;
@@ -181,6 +186,9 @@ const fragmentShader = /* glsl*/ `
         levelSize = 1.0 / 100.0;
         levelAlpha = pristineGrid(levelPos.xz, ddx * 10.0, ddy * 10.0, vec2(levelSize)) * fade;
         if (levelAlpha > epsilon) {
+            if (resolution < 2) {
+                discard;
+            }
             gl_FragColor = vec4(vec3(0.7), levelAlpha);
             gl_FragDepth = writeDepth(levelAlpha) ? calcDepth(pos) : 1.0;
             return;
@@ -191,6 +199,26 @@ const fragmentShader = /* glsl*/ `
 `;
 
 class Grid extends Script {
+    /**
+     * @type {number}
+     */
+    static RESOLUTION_LOW = 0;
+
+    /**
+     * @type {number}
+     */
+    static RESOLUTION_MEDIUM = 1;
+
+    /**
+     * @type {number}
+     */
+    static RESOLUTION_HIGH = 2;
+
+    /**
+     * @type {number}
+     */
+    _resolution = Grid.RESOLUTION_HIGH;
+
     /**
      * @type {GraphicsDevice}
      */
@@ -286,6 +314,22 @@ class Grid extends Script {
             this._device.scope.resolve(name).setValue([value.x, value.y]);
         }
 
+        if (typeof value === 'number') {
+            this._device.scope.resolve(name).setValue(value);
+        }
+
+    }
+
+    /**
+     * @attribute
+     * @type {number}
+     */
+    set resolution(value) {
+        this._resolution = value ?? Grid.RESOLUTION_HIGH;
+    }
+
+    get resolution() {
+        return this._resolution;
     }
 
     /**
@@ -293,6 +337,9 @@ class Grid extends Script {
      * @type {Vec2}
      */
     set halfExtents(value) {
+        if (!(value instanceof Vec2)) {
+            return;
+        }
         this._halfExtents.copy(value);
     }
 
@@ -305,6 +352,9 @@ class Grid extends Script {
      * @type {Color}
      */
     set colorX(value) {
+        if (!(value instanceof Color)) {
+            return;
+        }
         this._colorX.copy(value);
     }
 
@@ -317,6 +367,9 @@ class Grid extends Script {
      * @type {Color}
      */
     set colorZ(value) {
+        if (!(value instanceof Color)) {
+            return;
+        }
         this._colorZ.copy(value);
     }
 
@@ -366,6 +419,9 @@ class Grid extends Script {
             this._set('far_origin', points[7]);
             this._set('far_x', tmpV1.sub2(points[4], points[7]));
             this._set('far_y', tmpV1.sub2(points[6], points[7]));
+
+            // resolution
+            this._set('resolution', this._resolution);
 
             // size
             this._set('half_extents', this._halfExtents);
