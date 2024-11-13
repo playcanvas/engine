@@ -666,7 +666,6 @@ class BatchManager {
             let verticesOffset = 0;
             let indexOffset = 0;
             let transform;
-            const vec = new Vec3();
 
             // allocate indices
             const indexArrayType = batchNumVerts <= 0xffff ? Uint16Array : Uint32Array;
@@ -714,6 +713,7 @@ class BatchManager {
                                     y = subarray[j + 1];
                                     z = subarray[j + 2];
 
+                                    // mat4.transformVector
                                     subarray[j] = x * m[0] + y * m[4] + z * m[8] + m[12];
                                     subarray[j + 1] = x * m[1] + y * m[5] + z * m[9] + m[13];
                                     subarray[j + 2] = x * m[2] + y * m[6] + z * m[10] + m[14];
@@ -730,6 +730,7 @@ class BatchManager {
                                     y = subarray[j + 1];
                                     z = subarray[j + 2];
 
+                                    // mat3.transformVector
                                     subarray[j] = x * m[0] + y * m[3] + z * m[6];
                                     subarray[j + 1] = x * m[1] + y * m[4] + z * m[7];
                                     subarray[j + 2] = x * m[2] + y * m[5] + z * m[8];
