@@ -1,6 +1,6 @@
 import { Vec2, Vec3, Ray, Plane, math } from 'playcanvas';
 
-import { BaseCamera } from './base-camera.js';
+import { BaseCamera } from './base-camera.mjs';
 
 /** @import { CameraComponent } from 'playcanvas' */
 
