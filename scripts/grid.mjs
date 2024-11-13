@@ -60,6 +60,8 @@ const fragmentShader = /* glsl*/ `
     uniform vec3 color_x;
     uniform vec3 color_z;
 
+    uniform bool depthMode;
+
     varying vec3 worldNear;
     varying vec3 worldFar;
 
@@ -104,10 +106,15 @@ const fragmentShader = /* glsl*/ `
 
     float calcDepth(vec3 p) {
         vec4 v = matrix_viewProjection * vec4(p, 1.0);
-        return (v.z / v.w) * 0.5 + 0.5;
+        #ifdef WEBGPU
+            return (v.z / v.w);
+        #else
+            return (v.z / v.w) * 0.5 + 0.5;
+        #endif
     }
 
     bool writeDepth(float alpha) {
+        if (!depthMode) return true;
         vec2 uv = fract(gl_FragCoord.xy / 32.0);
         float noise = texture2DLodEXT(blueNoiseTex32, uv, 0.0).y;
         return alpha > noise;
@@ -430,11 +437,18 @@ class Grid extends Script {
             this._set('color_x', this._colorX);
             this._set('color_z', this._colorZ);
 
-            this._device.setBlendState(this._blendState);
             this._device.setCullMode(CULLFACE_NONE);
-            this._device.setDepthState(DepthState.WRITEDEPTH);
             this._device.setStencilState(null, null);
+            this._device.setDepthState(DepthState.DEFAULT);
 
+            // write color
+            this._set('depthMode', false);
+            this._device.setBlendState(this._blendState);
+            this._quadRender.render();
+
+            // write depth
+            this._set('depthMode', true);
+            this._device.setBlendState(BlendState.NOWRITE);
             this._quadRender.render();
         };
     }
