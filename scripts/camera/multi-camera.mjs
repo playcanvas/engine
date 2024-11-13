@@ -187,6 +187,60 @@ class MultiCamera extends BaseCamera {
 
     /**
      * @param {PointerEvent} event - The pointer event.
+     * @private
+     * @returns {boolean} Whether the mouse pan should start.
+     */
+    _isStartMousePan(event) {
+        if (!this.enablePan) {
+            return false;
+        }
+        if (event.shiftKey) {
+            return true;
+        }
+        if (!this.enableOrbit && !this.enableFly) {
+            return event.button === 0 || event.button === 1 || event.button === 2;
+        }
+        if (!this.enableOrbit || !this.enableFly) {
+            return event.button === 1 || event.button === 2;
+        }
+        return event.button === 1;
+    }
+
+    /**
+     * @param {PointerEvent} event - The pointer event.
+     * @returns {boolean} Whether the fly should start.
+     * @private
+     */
+    _isStartFly(event) {
+        if (!this.enableFly) {
+            return false;
+        }
+        if (!this.enableOrbit && !this.enablePan) {
+            return event.button === 0 || event.button === 1 || event.button === 2;
+        }
+        if (!this.enableOrbit) {
+            return event.button === 0;
+        }
+        return event.button === 2;
+    }
+
+    /**
+     * @param {PointerEvent} event - The pointer event.
+     * @returns {boolean} Whether the orbit should start.
+     * @private
+     */
+    _isStartOrbit(event) {
+        if (!this.enableOrbit) {
+            return false;
+        }
+        if (!this.enableFly && !this.enablePan) {
+            return event.button === 0 || event.button === 1 || event.button === 2;
+        }
+        return event.button === 0;
+    }
+
+    /**
+     * @param {PointerEvent} event - The pointer event.
      * @protected
      */
     _onPointerDown(event) {
@@ -196,20 +250,10 @@ class MultiCamera extends BaseCamera {
         this._pointerEvents.set(event.pointerId, event);
 
         const startTouchPan = this.enablePan && this._pointerEvents.size === 2;
-        const startMousePan = this.enablePan && (
-            event.shiftKey ||
-            event.button === 1 ||
-            ((!this.enableFly || !this.enableOrbit) && event.button === 2) ||
-            ((!this.enableFly && !this.enableOrbit) && event.button === 0)
-        );
-        const startFly = this.enableFly && (
-            (this.enableOrbit && event.button === 2) ||
-            (!this.enableOrbit && event.button === 0)
-        );
-        const startOrbit = this.enableOrbit && (
-            (this.enableFly && event.button === 0) ||
-            (!this.enableFly && event.button === 0)
-        );
+        const startMousePan = this._isStartMousePan(event);
+        const startFly = this._isStartFly(event);
+        const startOrbit = this._isStartOrbit(event);
+
         if (startTouchPan) {
             // start touch pan
             this._lastPinchDist = this._getPinchDist();
