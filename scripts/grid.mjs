@@ -394,7 +394,7 @@ class Grid extends Script {
         }
         this._camera = camera;
 
-        layer ??= Grid.createLayer(this.app);
+        layer ??= Grid.createLayer(this.app, undefined, 1);
         camera.layers = camera.layers.concat(layer.id);
 
         camera.onPreRenderLayer = (_layer, transparent) => {
