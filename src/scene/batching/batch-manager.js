@@ -706,24 +706,33 @@ class BatchManager {
                         // transform position, normal and tangent to world space
                         if (!dynamic && stream.numComponents >= 3) {
                             if (semantic === SEMANTIC_POSITION) {
+                                const m = transform.data;
+                                let x, y, z;
+
                                 for (let j = 0; j < totalComponents; j += stream.numComponents) {
-                                    vec.set(subarray[j], subarray[j + 1], subarray[j + 2]);
-                                    transform.transformPoint(vec, vec);
-                                    subarray[j] = vec.x;
-                                    subarray[j + 1] = vec.y;
-                                    subarray[j + 2] = vec.z;
+                                    x = subarray[j];
+                                    y = subarray[j + 1];
+                                    z = subarray[j + 2];
+
+                                    subarray[j] = x * m[0] + y * m[4] + z * m[8] + m[12];
+                                    subarray[j + 1] = x * m[1] + y * m[5] + z * m[9] + m[13];
+                                    subarray[j + 2] = x * m[2] + y * m[6] + z * m[10] + m[14];
                                 }
                             } else if (semantic === SEMANTIC_NORMAL || semantic === SEMANTIC_TANGENT) {
-
                                 // handle non-uniform scale by using transposed inverse matrix to transform vectors
                                 mat3.invertMat4(transform).transpose();
 
+                                const m = mat3.data;
+                                let x, y, z;
+
                                 for (let j = 0; j < totalComponents; j += stream.numComponents) {
-                                    vec.set(subarray[j], subarray[j + 1], subarray[j + 2]);
-                                    mat3.transformVector(vec, vec);
-                                    subarray[j] = vec.x;
-                                    subarray[j + 1] = vec.y;
-                                    subarray[j + 2] = vec.z;
+                                    x = subarray[j];
+                                    y = subarray[j + 1];
+                                    z = subarray[j + 2];
+
+                                    subarray[j] = x * m[0] + y * m[3] + z * m[6];
+                                    subarray[j + 1] = x * m[1] + y * m[4] + z * m[7];
+                                    subarray[j + 2] = x * m[2] + y * m[5] + z * m[8];
                                 }
                             }
                         }
