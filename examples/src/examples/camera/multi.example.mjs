@@ -115,7 +115,7 @@ const createMultiCamera = (focus) => {
     // wait until after canvas resized to focus on entity
     const resize = new ResizeObserver(() => {
         resize.disconnect();
-        script.focus(bbox.center, start);
+        script.focus(bbox.center, start, false);
     });
     resize.observe(canvas);
 

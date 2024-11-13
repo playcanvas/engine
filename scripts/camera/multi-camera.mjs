@@ -478,13 +478,17 @@ class MultiCamera extends BaseCamera {
     /**
      * @param {Vec3} point - The point.
      * @param {Vec3} [start] - The start.
+     * @param {boolean} [smoothing] - Whether to smooth the focus.
      */
-    focus(point, start) {
+    focus(point, start, smoothing = true) {
         if (!this._camera) {
             return;
         }
         if (!start) {
             this._origin.copy(point);
+            if (!smoothing) {
+                this._position.copy(point);
+            }
             return;
         }
 
@@ -498,6 +502,12 @@ class MultiCamera extends BaseCamera {
         this._camera.entity.setLocalEulerAngles(0, 0, 0);
 
         this._zoomDist = tmpV1.length();
+
+        if (!smoothing) {
+            this._angles.set(this._dir.x, this._dir.y, 0);
+            this._position.copy(point);
+            this._cameraDist = this._zoomDist;
+        }
     }
 
     /**
