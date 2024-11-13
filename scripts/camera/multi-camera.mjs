@@ -47,6 +47,12 @@ class MultiCamera extends BaseCamera {
      * @type {boolean}
      * @private
      */
+    _orbiting = false;
+
+    /**
+     * @type {boolean}
+     * @private
+     */
     _panning = false;
 
     /**
@@ -69,6 +75,24 @@ class MultiCamera extends BaseCamera {
         sprint: false,
         crouch: false
     };
+
+    /**
+     * @attribute
+     * @type {boolean}
+     */
+    enableOrbit = true;
+
+    /**
+     * @attribute
+     * @type {boolean
+     */
+    enablePan = true;
+
+    /**
+     * @attribute
+     * @type {boolean}
+     */
+    enableFly = true;
 
     /**
      * @attribute
@@ -170,21 +194,44 @@ class MultiCamera extends BaseCamera {
             return;
         }
         this._pointerEvents.set(event.pointerId, event);
-        if (this._pointerEvents.size === 2) {
+
+        const startTouchPan = this.enablePan && this._pointerEvents.size === 2;
+        const startMousePan = this.enablePan && (
+            event.shiftKey ||
+            event.button === 1 ||
+            ((!this.enableFly || !this.enableOrbit) && event.button === 2) ||
+            ((!this.enableFly && !this.enableOrbit) && event.button === 0)
+        );
+        const startFly = this.enableFly && (
+            (this.enableOrbit && event.button === 2) ||
+            (!this.enableOrbit && event.button === 0)
+        );
+        const startOrbit = this.enableOrbit && (
+            (this.enableFly && event.button === 0) ||
+            (!this.enableFly && event.button === 0)
+        );
+        if (startTouchPan) {
+            // start touch pan
             this._lastPinchDist = this._getPinchDist();
             this._getMidPoint(this._lastPosition);
             this._panning = true;
         }
-        if (event.shiftKey || event.button === 1) {
+        if (startMousePan) {
+            // start mouse pan
             this._lastPosition.set(event.clientX, event.clientY);
             this._panning = true;
         }
-        if (event.button === 2) {
+        if (startFly) {
+            // start fly
             this._zoomDist = this._cameraDist;
             this._origin.copy(this._camera.entity.getPosition());
             this._position.copy(this._origin);
             this._camera.entity.setLocalPosition(0, 0, 0);
             this._flying = true;
+        }
+        if (startOrbit) {
+            // start orbit
+            this._orbiting = true;
         }
     }
 
@@ -196,14 +243,13 @@ class MultiCamera extends BaseCamera {
         if (this._pointerEvents.size === 0) {
             return;
         }
-
         this._pointerEvents.set(event.pointerId, event);
 
         if (this._pointerEvents.size === 1) {
             if (this._panning) {
                 // mouse pan
                 this._pan(tmpVa.set(event.clientX, event.clientY));
-            } else {
+            } else if (this._orbiting || this._flying) {
                 super._look(event);
             }
             return;
@@ -211,7 +257,9 @@ class MultiCamera extends BaseCamera {
 
         if (this._pointerEvents.size === 2) {
             // touch pan
-            this._pan(this._getMidPoint(tmpVa));
+            if (this._panning) {
+                this._pan(this._getMidPoint(tmpVa));
+            }
 
             // pinch zoom
             const pinchDist = this._getPinchDist();
@@ -232,6 +280,9 @@ class MultiCamera extends BaseCamera {
         if (this._pointerEvents.size < 2) {
             this._lastPinchDist = -1;
             this._panning = false;
+        }
+        if (this._orbiting) {
+            this._orbiting = false;
         }
         if (this._panning) {
             this._panning = false;

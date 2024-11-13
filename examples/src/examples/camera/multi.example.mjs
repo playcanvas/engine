@@ -147,7 +147,9 @@ data.set('example', {
     zoomReset: true
 });
 data.set('attr', {
-    focusFov: 75,
+    enableOrbit: multiCameraScript.enableOrbit,
+    enablePan: multiCameraScript.enablePan,
+    enableFly: multiCameraScript.enableFly,
     lookSensitivity: 0.2,
     lookDamping: 0.97,
     moveDamping: 0.98,

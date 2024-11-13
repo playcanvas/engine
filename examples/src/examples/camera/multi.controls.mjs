@@ -20,12 +20,29 @@ export const controls = ({ observer, ReactPCUI, React, jsx, fragment }) => {
             { headerText: 'Attributes' },
             jsx(
                 LabelGroup,
-                { text: 'Focus FOV' },
-                jsx(SliderInput, {
+                { text: 'Enable Orbit' },
+                jsx(BooleanInput, {
+                    type: 'toggle',
                     binding: new BindingTwoWay(),
-                    link: { observer, path: 'attr.focusFov' },
-                    min: 30,
-                    max: 120
+                    link: { observer, path: 'attr.enableOrbit' }
+                })
+            ),
+            jsx(
+                LabelGroup,
+                { text: 'Enable Pan' },
+                jsx(BooleanInput, {
+                    type: 'toggle',
+                    binding: new BindingTwoWay(),
+                    link: { observer, path: 'attr.enablePan' }
+                })
+            ),
+            jsx(
+                LabelGroup,
+                { text: 'Enable Fly' },
+                jsx(BooleanInput, {
+                    type: 'toggle',
+                    binding: new BindingTwoWay(),
+                    link: { observer, path: 'attr.enableFly' }
                 })
             ),
             jsx(
