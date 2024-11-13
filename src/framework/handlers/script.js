@@ -69,7 +69,8 @@ class ScriptHandler extends ResourceHandler {
                 callback(null, obj, extra);
 
                 // no cache for scripts
-                delete self._loader._cache[ResourceLoader.makeKey(url, 'script')];
+                const urlWithoutEndHash = url.split('&hash=')[0];
+                delete self._loader._cache[ResourceLoader.makeKey(urlWithoutEndHash, 'script')];
             } else {
                 callback(err);
             }
