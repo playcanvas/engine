@@ -94,7 +94,8 @@ class RenderPassBloom extends RenderPass {
         let passSourceTexture = this._sourceTexture;
         for (let i = 0; i < numPasses; i++) {
 
-            const pass = new RenderPassDownsample(device, passSourceTexture);
+            const fast = i === 0;  // fast box downscale for the first pass
+            const pass = new RenderPassDownsample(device, passSourceTexture, fast);
             const rt = this.renderTargets[i];
             pass.init(rt, {
                 resizeSource: passSourceTexture,
