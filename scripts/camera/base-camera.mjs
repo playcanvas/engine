@@ -39,36 +39,48 @@ class BaseCamera extends Script {
     root;
 
     /**
+     * The scene size.
+     *
      * @attribute
      * @type {number}
      */
     sceneSize = 100;
 
     /**
+     * The look sensitivity.
+     *
      * @attribute
      * @type {number}
      */
     lookSensitivity = 0.2;
 
     /**
+     * The look damping.
+     *
      * @attribute
      * @type {number}
      */
     lookDamping = 0.97;
 
     /**
+     * The move damping.
+     *
      * @attribute
      * @type {number}
      */
     moveDamping = 0.98;
 
     /**
+     * The minimum camera pitch angle.
+     *
      * @attribute
      * @type {number}
      */
     pitchMin = -90;
 
     /**
+     * The maximum camera pitch angle.
+     *
      * @attribute
      * @type {number}
      */

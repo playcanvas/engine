@@ -77,84 +77,104 @@ class MultiCamera extends BaseCamera {
     };
 
     /**
+     * Enable orbit camera movement.
+     *
      * @attribute
      * @type {boolean}
      */
     enableOrbit = true;
 
     /**
+     * Enable panning the camera.
+     *
      * @attribute
      * @type {boolean
      */
     enablePan = true;
 
     /**
+     * Enable flying the camera.
+     *
      * @attribute
      * @type {boolean}
      */
     enableFly = true;
 
     /**
-     * @attribute
-     * @type {number}
-     */
-    lookSensitivity = 0.2;
-
-    /**
-     * @attribute
-     * @type {number}
-     */
-    lookDamping = 0.97;
-
-    /**
-     * @attribute
-     * @type {number}
-     */
-    moveDamping = 0.98;
-
-    /**
+     * The touch pinch speed.
+     *
      * @attribute
      * @type {number}
      */
     pinchSpeed = 5;
 
     /**
+     * The mouse wheel speed.
+     *
      * @attribute
      * @type {number}
      */
     wheelSpeed = 0.005;
 
     /**
+     * The minimum zoom distance relative to the scene size.
+     *
      * @attribute
      * @type {number}
      */
     zoomMin = 0.001;
 
     /**
+     * The maximum zoom distance relative to the scene size.
+     *
      * @attribute
      * @type {number}
      */
     zoomMax = 10;
 
     /**
+     * The minimum distance the camera can zoom. This will override zoomMin.
+     *
+     * @attribute
+     * @type {number}
+     */
+    zoomDistMin = 0;
+
+    /**
+     * The maximum distance the camera can zoom. This will override zoomMax.
+     *
+     * @attribute
+     * @type {number}
+     */
+    zoomDistMax = Infinity;
+
+    /**
+     * The minimum scale the camera can zoom.
+     *
      * @attribute
      * @type {number}
      */
     zoomScaleMin = 0.01;
 
     /**
+     * The fly move speed.
+     *
      * @attribute
      * @type {number}
      */
     moveSpeed = 2;
 
     /**
+     * The fly sprint speed.
+     *
      * @attribute
      * @type {number}
      */
     sprintSpeed = 4;
 
     /**
+     * The fly crouch speed.
+     *
      * @attribute
      * @type {number}
      */
@@ -171,6 +191,8 @@ class MultiCamera extends BaseCamera {
             wheelSpeed,
             zoomMin,
             zoomMax,
+            zoomDistMin,
+            zoomDistMax,
             moveSpeed,
             sprintSpeed,
             crouchSpeed
@@ -180,6 +202,9 @@ class MultiCamera extends BaseCamera {
         this.wheelSpeed = wheelSpeed ?? this.wheelSpeed;
         this.zoomMin = zoomMin ?? this.zoomMin;
         this.zoomMax = zoomMax ?? this.zoomMax;
+        this.zoomDistMin = zoomDistMin ?? this.zoomDistMin;
+        this.zoomDistMax = zoomDistMax ?? this.zoomDistMax;
+
         this.moveSpeed = moveSpeed ?? this.moveSpeed;
         this.sprintSpeed = sprintSpeed ?? this.sprintSpeed;
         this.crouchSpeed = crouchSpeed ?? this.crouchSpeed;
@@ -540,6 +565,7 @@ class MultiCamera extends BaseCamera {
         const scale = math.clamp(this._zoomDist / (max - min), this.zoomScaleMin, 1);
         this._zoomDist += (delta * this.wheelSpeed * this.sceneSize * scale);
         this._zoomDist = math.clamp(this._zoomDist, min, max);
+        this._zoomDist = math.clamp(this._zoomDist, this.zoomDistMin, this.zoomDistMax);
     }
 
     /**
