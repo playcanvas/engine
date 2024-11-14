@@ -89,6 +89,28 @@ export const controls = ({ observer, ReactPCUI, React, jsx, fragment }) => {
             ),
             jsx(
                 LabelGroup,
+                { text: 'Pitch min' },
+                jsx(SliderInput, {
+                    binding: new BindingTwoWay(),
+                    link: { observer, path: 'attr.pitchMin' },
+                    min: -90,
+                    max: 90,
+                    step: 1
+                })
+            ),
+            jsx(
+                LabelGroup,
+                { text: 'Pitch max' },
+                jsx(SliderInput, {
+                    binding: new BindingTwoWay(),
+                    link: { observer, path: 'attr.pitchMax' },
+                    min: -90,
+                    max: 90,
+                    step: 1
+                })
+            ),
+            jsx(
+                LabelGroup,
                 { text: 'Pinch speed' },
                 jsx(SliderInput, {
                     binding: new BindingTwoWay(),

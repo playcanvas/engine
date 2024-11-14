@@ -65,17 +65,31 @@ class BaseCamera extends Script {
     moveDamping = 0.98;
 
     /**
+     * @attribute
+     * @type {number}
+     */
+    pitchMin = -90;
+
+    /**
+     * @attribute
+     * @type {number}
+     */
+    pitchMax = 90;
+
+    /**
      * @param {object} args - The script arguments.
      */
     constructor(args) {
         super(args);
-        const { name, sceneSize, lookSensitivity, lookDamping, moveDamping } = args.attributes;
+        const { name, sceneSize, lookSensitivity, lookDamping, moveDamping, pitchMin, pitchMax } = args.attributes;
 
         this.root = new Entity(name ?? 'base-camera');
         this.sceneSize = sceneSize ?? this.sceneSize;
         this.lookSensitivity = lookSensitivity ?? this.lookSensitivity;
         this.lookDamping = lookDamping ?? this.lookDamping;
         this.moveDamping = moveDamping ?? this.moveDamping;
+        this.pitchMin = pitchMin ?? this.pitchMin;
+        this.pitchMax = pitchMax ?? this.pitchMax;
 
         this._onPointerDown = this._onPointerDown.bind(this);
         this._onPointerMove = this._onPointerMove.bind(this);
@@ -149,7 +163,7 @@ class BaseCamera extends Script {
         }
         const movementX = event.movementX || 0;
         const movementY = event.movementY || 0;
-        this._dir.x = math.clamp(this._dir.x - movementY * this.lookSensitivity, -LOOK_MAX_ANGLE, LOOK_MAX_ANGLE);
+        this._dir.x = math.clamp(this._dir.x - movementY * this.lookSensitivity, this.pitchMin, this.pitchMax);
         this._dir.y -= movementX * this.lookSensitivity;
     }
 

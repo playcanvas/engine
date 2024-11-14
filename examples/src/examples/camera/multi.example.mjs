@@ -86,14 +86,16 @@ const createMultiCamera = (focus) => {
     const camera = new pc.Entity();
     camera.addComponent('camera');
     camera.addComponent('script');
+    camera.setPosition(0, 20, 30);
+    app.root.addChild(camera);
 
-    const start = new pc.Vec3(0, 20, 30);
     const bbox = calcEntityAABB(new pc.BoundingBox(), focus);
-    const cameraDist = start.distance(bbox.center);
+    const cameraDist = camera.getPosition().distance(bbox.center);
 
     /** @type {MultiCamera} */
     const script = camera.script.create(MultiCamera, {
         attributes: {
+            focus: bbox.center,
             sceneSize: bbox.halfExtents.length()
         }
     });
@@ -101,24 +103,18 @@ const createMultiCamera = (focus) => {
     // focus on entity when 'f' key is pressed
     const onKeyDown = (/** @type {KeyboardEvent} */ e) => {
         if (e.key === 'f') {
-            const smoothed = data.get('example.smoothedFocus');
-            if (data.get('example.zoomReset')) {
-                script.resetZoom(cameraDist, smoothed);
-            }
-            script.focus(bbox.center, null, smoothed);
+            script.refocus(
+                bbox.center,
+                null,
+                data.get('example.zoomReset') ? cameraDist : null,
+                data.get('example.smoothedFocus')
+            );
         }
     };
     window.addEventListener('keydown', onKeyDown);
     app.on('destroy', () => {
         window.removeEventListener('keydown', onKeyDown);
     });
-
-    // wait until after canvas resized to focus on entity
-    const resize = new ResizeObserver(() => {
-        resize.disconnect();
-        script.focus(bbox.center, start, false);
-    });
-    resize.observe(canvas);
 
     return script;
 };
@@ -155,6 +151,8 @@ data.set('attr', {
     lookSensitivity: 0.2,
     lookDamping: 0.97,
     moveDamping: 0.98,
+    pitchMin: multiCameraScript.pitchMin,
+    pitchMax: multiCameraScript.pitchMax,
     pinchSpeed: 5,
     wheelSpeed: 0.005,
     zoomMin: 0.001,

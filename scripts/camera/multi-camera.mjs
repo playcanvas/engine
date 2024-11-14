@@ -165,7 +165,16 @@ class MultiCamera extends BaseCamera {
      */
     constructor(args) {
         super(args);
-        const { pinchSpeed, wheelSpeed, zoomMin, zoomMax, moveSpeed, sprintSpeed, crouchSpeed } = args.attributes;
+        const {
+            focus: point = Vec3.ZERO,
+            pinchSpeed,
+            wheelSpeed,
+            zoomMin,
+            zoomMax,
+            moveSpeed,
+            sprintSpeed,
+            crouchSpeed
+        } = args.attributes;
 
         this.pinchSpeed = pinchSpeed ?? this.pinchSpeed;
         this.wheelSpeed = wheelSpeed ?? this.wheelSpeed;
@@ -183,6 +192,8 @@ class MultiCamera extends BaseCamera {
             throw new Error('MultiCamera script requires a camera component');
         }
         this.attach(this.entity.camera);
+
+        this.focus(point, this.entity.getPosition(), false);
     }
 
     /**
@@ -532,6 +543,8 @@ class MultiCamera extends BaseCamera {
     }
 
     /**
+     * Focus the camera on a point.
+     *
      * @param {Vec3} point - The point.
      * @param {Vec3} [start] - The start.
      * @param {boolean} [smoothing] - Whether to smooth the focus.
@@ -567,6 +580,8 @@ class MultiCamera extends BaseCamera {
     }
 
     /**
+     * Reset the zoom. For orbit and panning only.
+     *
      * @param {number} [zoomDist] - The zoom distance.
      * @param {boolean} [smoothing] - Whether to smooth the zoom.
      */
@@ -575,6 +590,21 @@ class MultiCamera extends BaseCamera {
         if (!smoothing) {
             this._cameraDist = zoomDist;
         }
+    }
+
+    /**
+     * Refocus the camera.
+     *
+     * @param {Vec3} point - The point.
+     * @param {Vec3} [start] - The start.
+     * @param {number} [zoomDist] - The zoom distance.
+     * @param {boolean} [smoothing] - Whether to smooth the refocus.
+     */
+    refocus(point, start = null, zoomDist = null, smoothing = true) {
+        if (zoomDist !== null) {
+            this.resetZoom(zoomDist, smoothing);
+        }
+        this.focus(point, start, smoothing);
     }
 
     /**
