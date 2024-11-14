@@ -53,8 +53,7 @@ export const getDirFiles = (path) => {
  * @returns {ExampleConfig} - The parsed config.
  */
 export const parseConfig = (script) => {
-    /* eslint-disable-next-line regexp/no-misleading-capturing-group */
-    const regex = /\/\/ @config ([^ \n]+) ?([^\n]+)?/g;
+    const regex = /\/\/ @config (\S+)(?:\s+([^\n]+))?/g;
     let match;
     /** @type {Record<string, any>} */
     const config = {};

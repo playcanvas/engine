@@ -90,8 +90,7 @@ export function clearImports() {
  * @returns {Record<string, any>} - The parsed config.
  */
 export function parseConfig(script) {
-    /* eslint-disable-next-line regexp/no-misleading-capturing-group */
-    const regex = /\/\/ @config ([^ \n]+) ?([^\n]+)?/g;
+    const regex = /\/\/ @config (\S+)(?:\s+([^\n]+))?/g;
     let match;
     /** @type {Record<string, any>} */
     const config = {};
