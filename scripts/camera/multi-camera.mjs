@@ -420,6 +420,10 @@ class MultiCamera extends BaseCamera {
      * @param {number} dt - The delta time.
      */
     _move(dt) {
+        if (!this.enableFly) {
+            return;
+        }
+
         tmpV1.set(0, 0, 0);
         if (this._key.forward) {
             tmpV1.add(this.root.forward);
@@ -492,6 +496,10 @@ class MultiCamera extends BaseCamera {
      * @private
      */
     _pan(pos) {
+        if (!this.enablePan) {
+            return;
+        }
+
         const start = new Vec3();
         const end = new Vec3();
 
@@ -509,6 +517,10 @@ class MultiCamera extends BaseCamera {
      * @private
      */
     _zoom(delta) {
+        if (!this.enableOrbit && !this.enablePan) {
+            return;
+        }
+
         if (!this._camera) {
             return;
         }
@@ -607,9 +619,7 @@ class MultiCamera extends BaseCamera {
             this._camera.entity.setLocalPosition(0, 0, this._cameraDist);
         }
 
-        if (this.enableFly) {
-            this._move(dt);
-        }
+        this._move(dt);
 
         super.update(dt);
     }
