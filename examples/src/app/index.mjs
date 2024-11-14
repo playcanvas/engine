@@ -1,8 +1,8 @@
 import { createRoot } from 'react-dom/client';
 
+import { MainLayout } from './components/MainLayout.mjs';
 import { jsx } from './jsx.mjs';
 
-import { MainLayout } from './components/MainLayout.mjs';
 
 import '@playcanvas/pcui/styles';
 

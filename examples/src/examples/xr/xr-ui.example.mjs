@@ -1,7 +1,7 @@
 // @config WEBGPU_DISABLED
-import * as pc from 'playcanvas';
-import { deviceType, rootPath } from 'examples/utils';
 import files from 'examples/files';
+import { deviceType, rootPath } from 'examples/utils';
+import * as pc from 'playcanvas';
 
 const canvas = /** @type {HTMLCanvasElement} */ (document.getElementById('application-canvas'));
 window.focus();
@@ -24,16 +24,16 @@ const message = function (msg) {
 };
 
 const assets = {
-    font: new pc.Asset('font', 'font', { url: rootPath + '/static/assets/fonts/courier.json' }),
-    monitor: new pc.Asset('monitor', 'template', { url: rootPath + '/static/assets/templates/monitor.json' })
+    font: new pc.Asset('font', 'font', { url: `${rootPath}/static/assets/fonts/courier.json` }),
+    monitor: new pc.Asset('monitor', 'template', { url: `${rootPath}/static/assets/templates/monitor.json` })
 };
 
 assets.font.id = 42;
 
 const gfxOptions = {
     deviceTypes: [deviceType],
-    glslangUrl: rootPath + '/static/lib/glslang/glslang.js',
-    twgslUrl: rootPath + '/static/lib/twgsl/twgsl.js',
+    glslangUrl: `${rootPath}/static/lib/glslang/glslang.js`,
+    twgslUrl: `${rootPath}/static/lib/twgsl/twgsl.js`,
     alpha: true
 };
 
@@ -117,11 +117,11 @@ assetListLoader.load(() => {
     if (app.xr.supported) {
         // XR availability
         document
-            .querySelector(`.container > .button[data-xr="immersive-ar"]`)
-            ?.classList.toggle('active', app.xr.isAvailable(pc.XRTYPE_AR));
+        .querySelector('.container > .button[data-xr="immersive-ar"]')
+        ?.classList.toggle('active', app.xr.isAvailable(pc.XRTYPE_AR));
         document
-            .querySelector(`.container > .button[data-xr="immersive-vr"]`)
-            ?.classList.toggle('active', app.xr.isAvailable(pc.XRTYPE_VR));
+        .querySelector('.container > .button[data-xr="immersive-vr"]')
+        ?.classList.toggle('active', app.xr.isAvailable(pc.XRTYPE_VR));
 
         // XR availability events
         app.xr.on('available', (type, available) => {
@@ -156,13 +156,13 @@ assetListLoader.load(() => {
         }
 
         // end session by keyboard ESC
-        app.keyboard.on('keydown', function (evt) {
+        app.keyboard.on('keydown', (evt) => {
             if (evt.key === pc.KEY_ESCAPE && app.xr.active) {
                 app.xr.end();
             }
         });
 
-        app.on('update', function () {
+        app.on('update', () => {
             // fps meter
             const now = Date.now();
             if (now - fpsTime >= 1000) {
@@ -185,14 +185,14 @@ assetListLoader.load(() => {
             }
         });
 
-        app.xr.on('start', function () {
+        app.xr.on('start', () => {
             message('Immersive XR session has started');
         });
-        app.xr.on('end', function () {
+        app.xr.on('end', () => {
             message('Immersive XR session has ended');
         });
-        app.xr.on('available:' + pc.XRTYPE_AR, function (available) {
-            message('Immersive XR is ' + (available ? 'available' : 'unavailable'));
+        app.xr.on(`available:${pc.XRTYPE_AR}`, (available) => {
+            message(`Immersive XR is ${available ? 'available' : 'unavailable'}`);
         });
 
         if (!app.xr.isAvailable(pc.XRTYPE_VR)) {

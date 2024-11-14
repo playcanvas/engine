@@ -1,20 +1,20 @@
-import * as pc from 'playcanvas';
 import { deviceType, rootPath } from 'examples/utils';
+import * as pc from 'playcanvas';
 
 const canvas = /** @type {HTMLCanvasElement} */ (document.getElementById('application-canvas'));
 window.focus();
 
 const assets = {
-    font: new pc.Asset('font', 'font', { url: rootPath + '/static/assets/fonts/courier.json' }),
+    font: new pc.Asset('font', 'font', { url: `${rootPath}/static/assets/fonts/courier.json` }),
     red_button_atlas: new pc.Asset('red_button_atlas', 'texture', {
-        url: rootPath + '/static/assets/button/red_button_atlas.png'
+        url: `${rootPath}/static/assets/button/red_button_atlas.png`
     })
 };
 
 const gfxOptions = {
     deviceTypes: [deviceType],
-    glslangUrl: rootPath + '/static/lib/glslang/glslang.js',
-    twgslUrl: rootPath + '/static/lib/twgsl/twgsl.js'
+    glslangUrl: `${rootPath}/static/lib/glslang/glslang.js`,
+    twgslUrl: `${rootPath}/static/lib/twgsl/twgsl.js`
 };
 
 const device = await pc.createGraphicsDevice(canvas, gfxOptions);
@@ -105,16 +105,16 @@ assetListLoader.load(() => {
     button.addChild(label);
 
     // Change the background color every time the button is clicked
-    button.button.on('click', function () {
+    button.button.on('click', () => {
         const r = Math.random();
         camera.camera.clearColor = new pc.Color(r, r, r);
     });
 
     // Move the button's label with the animation of the sprite
-    button.button.on('pressedstart', function () {
+    button.button.on('pressedstart', () => {
         label.translateLocal(0, -4, 0);
     });
-    button.button.on('pressedend', function () {
+    button.button.on('pressedend', () => {
         label.translateLocal(0, 4, 0);
     });
 

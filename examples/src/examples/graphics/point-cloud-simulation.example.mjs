@@ -1,14 +1,14 @@
-import * as pc from 'playcanvas';
 import files from 'examples/files';
 import { deviceType, rootPath } from 'examples/utils';
+import * as pc from 'playcanvas';
 
 const canvas = /** @type {HTMLCanvasElement} */ (document.getElementById('application-canvas'));
 window.focus();
 
 const gfxOptions = {
     deviceTypes: [deviceType],
-    glslangUrl: rootPath + '/static/lib/glslang/glslang.js',
-    twgslUrl: rootPath + '/static/lib/twgsl/twgsl.js'
+    glslangUrl: `${rootPath}/static/lib/glslang/glslang.js`,
+    twgslUrl: `${rootPath}/static/lib/twgsl/twgsl.js`
 };
 
 const device = await pc.createGraphicsDevice(canvas, gfxOptions);
@@ -113,7 +113,7 @@ app.root.addChild(entity);
 // Set an update function on the app's update event
 let time = 0,
     previousTime;
-app.on('update', function (dt) {
+app.on('update', (dt) => {
     previousTime = time;
     time += dt;
 
@@ -147,8 +147,9 @@ app.on('update', function (dt) {
     }
 
     // once a second change how many points are visible
-    if (Math.round(time) !== Math.round(previousTime))
+    if (Math.round(time) !== Math.round(previousTime)) {
         visiblePoints = Math.floor(50000 + Math.random() * maxNumPoints - 50000);
+    }
 
     // update mesh vertices
     updateMesh(mesh);

@@ -1,5 +1,5 @@
-import * as pc from 'playcanvas';
 import { deviceType, rootPath } from 'examples/utils';
+import * as pc from 'playcanvas';
 
 const canvas = /** @type {HTMLCanvasElement} */ (document.getElementById('application-canvas'));
 window.focus();
@@ -17,17 +17,17 @@ const assets = {
     helipad: new pc.Asset(
         'helipad-env-atlas',
         'texture',
-        { url: rootPath + '/static/assets/cubemaps/helipad-env-atlas.png' },
+        { url: `${rootPath}/static/assets/cubemaps/helipad-env-atlas.png` },
         { type: pc.TEXTURETYPE_RGBP, mipmaps: false }
     ),
-    checkerboard: new pc.Asset('checkerboard', 'texture', { url: rootPath + '/static/assets/textures/checkboard.png' }),
-    script: new pc.Asset('script', 'script', { url: rootPath + '/static/scripts/camera/orbit-camera.js' })
+    checkerboard: new pc.Asset('checkerboard', 'texture', { url: `${rootPath}/static/assets/textures/checkboard.png` }),
+    script: new pc.Asset('script', 'script', { url: `${rootPath}/static/scripts/camera/orbit-camera.js` })
 };
 
 const gfxOptions = {
     deviceTypes: [deviceType],
-    glslangUrl: rootPath + '/static/lib/glslang/glslang.js',
-    twgslUrl: rootPath + '/static/lib/twgsl/twgsl.js'
+    glslangUrl: `${rootPath}/static/lib/glslang/glslang.js`,
+    twgslUrl: `${rootPath}/static/lib/twgsl/twgsl.js`
 };
 
 const device = await pc.createGraphicsDevice(canvas, gfxOptions);
@@ -150,7 +150,7 @@ assetListLoader.load(() => {
         addressV: pc.ADDRESS_CLAMP_TO_EDGE
     });
     const renderTarget = new pc.RenderTarget({
-        name: `RT`,
+        name: 'RT',
         colorBuffer: texture,
         depth: true,
         flipY: !app.graphicsDevice.isWebGPU,
@@ -263,7 +263,7 @@ assetListLoader.load(() => {
     // update things each frame
     let time = 0;
     let switchTime = 0;
-    app.on('update', function (dt) {
+    app.on('update', (dt) => {
         // rotate texture camera around the objects
         time += dt;
         textureCamera.setLocalPosition(12 * Math.sin(time), 3, 12 * Math.cos(time));

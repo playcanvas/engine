@@ -1,26 +1,26 @@
-import * as pc from 'playcanvas';
 import { deviceType, rootPath } from 'examples/utils';
+import * as pc from 'playcanvas';
 
 const canvas = /** @type {HTMLCanvasElement} */ (document.getElementById('application-canvas'));
 window.focus();
 
 pc.WasmModule.setConfig('Ammo', {
-    glueUrl: rootPath + '/static/lib/ammo/ammo.wasm.js',
-    wasmUrl: rootPath + '/static/lib/ammo/ammo.wasm.wasm',
-    fallbackUrl: rootPath + '/static/lib/ammo/ammo.js'
+    glueUrl: `${rootPath}/static/lib/ammo/ammo.wasm.js`,
+    wasmUrl: `${rootPath}/static/lib/ammo/ammo.wasm.wasm`,
+    fallbackUrl: `${rootPath}/static/lib/ammo/ammo.js`
 });
 await new Promise((resolve) => {
     pc.WasmModule.getInstance('Ammo', () => resolve());
 });
 
 const assets = {
-    font: new pc.Asset('font', 'font', { url: rootPath + '/static/assets/fonts/arial.json' })
+    font: new pc.Asset('font', 'font', { url: `${rootPath}/static/assets/fonts/arial.json` })
 };
 
 const gfxOptions = {
     deviceTypes: [deviceType],
-    glslangUrl: rootPath + '/static/lib/glslang/glslang.js',
-    twgslUrl: rootPath + '/static/lib/twgsl/twgsl.js'
+    glslangUrl: `${rootPath}/static/lib/glslang/glslang.js`,
+    twgslUrl: `${rootPath}/static/lib/twgsl/twgsl.js`
 };
 
 const device = await pc.createGraphicsDevice(canvas, gfxOptions);
@@ -133,10 +133,10 @@ assetListLoader.load(() => {
 
     // Create two rows of physical geometric shapes
     const types = ['box', 'capsule', 'cone', 'cylinder', 'sphere'];
-    types.forEach(function (type, idx) {
+    types.forEach((type, idx) => {
         createPhysicalShape(type, green, idx * 2 + 1, 2, 0);
     });
-    types.forEach(function (type, idx) {
+    types.forEach((type, idx) => {
         createPhysicalShape(type, green, idx * 2 + 1, -2, 0);
     });
 
@@ -156,7 +156,7 @@ assetListLoader.load(() => {
         time += dt;
 
         // Reset all shapes to green
-        app.root.findComponents('render').forEach(function (/** @type {pc.RenderComponent}*/ render) {
+        app.root.findComponents('render').forEach((/** @type {pc.RenderComponent}*/ render) => {
             render.material = green;
         });
 
@@ -184,7 +184,7 @@ assetListLoader.load(() => {
         app.drawLine(start, end, white);
 
         const results = app.systems.rigidbody.raycastAll(start, end);
-        results.forEach(function (result) {
+        results.forEach((result) => {
             result.entity.render.material = red;
 
             // Render the normal on the surface from the hit point
