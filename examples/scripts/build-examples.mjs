@@ -116,8 +116,7 @@ export const build = (env = {}) => {
             const scriptPath = resolve(path, `${exampleNameKebab}.${file}`);
             let script = fs.readFileSync(scriptPath, 'utf-8');
 
-            /* eslint-disable-next-line regexp/no-unused-capturing-group */
-            if (/\.(mjs|js)$/.test(file)) {
+            if (/\.(?:mjs|js)$/.test(file)) {
                 script = patchScript(script);
             }
             fs.writeFileSync(`${MAIN_DIR}/dist/iframe/${name}.${file}`, script);
