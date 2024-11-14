@@ -57,8 +57,6 @@ const assetListLoader = new pc.AssetListLoader(Object.values(assets), app.assets
 assetListLoader.load(() => {
     app.start();
 
-    app.scene.rendering.toneMapping = pc.TONEMAP_ACES;
-
     // get the instance of the gallery and set up with render component
     const galleryEntity = assets.gallery.resource.instantiateRenderEntity();
     app.root.addChild(galleryEntity);
@@ -66,7 +64,8 @@ assetListLoader.load(() => {
     // Create an Entity with a camera component
     const camera = new pc.Entity();
     camera.addComponent('camera', {
-        clearColor: new pc.Color(0.2, 0.2, 0.2)
+        clearColor: new pc.Color(0.2, 0.2, 0.2),
+        toneMapping: pc.TONEMAP_ACES
     });
     camera.setLocalPosition(-3, 1, 2);
 

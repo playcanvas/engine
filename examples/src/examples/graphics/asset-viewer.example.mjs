@@ -165,7 +165,9 @@ assetListLoader.load(() => {
 
     // Create an Entity with a camera component
     const camera = new pc.Entity();
-    camera.addComponent('camera', {});
+    camera.addComponent('camera', {
+        toneMapping: pc.TONEMAP_NEUTRAL
+    });
     camera.setLocalPosition(0, 55, 160);
 
     camera.camera.requestSceneColorMap(true);
@@ -195,7 +197,6 @@ assetListLoader.load(() => {
     app.root.addChild(directionalLight);
 
     app.scene.envAtlas = assets.helipad.resource;
-    app.scene.rendering.toneMapping = pc.TONEMAP_NEUTRAL;
     app.scene.skyboxMip = 1;
     app.scene.skyboxRotation = new pc.Quat().setFromEulerAngles(0, 70, 0);
     app.scene.skyboxIntensity = 1.5;

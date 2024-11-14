@@ -75,7 +75,6 @@ assetListLoader.load(() => {
     app.scene.skyboxMip = 3;
     app.scene.envAtlas = assets.helipad.resource;
     app.scene.skyboxRotation = new pc.Quat().setFromEulerAngles(0, -70, 0);
-    app.scene.rendering.toneMapping = pc.TONEMAP_ACES;
 
     // instantiate the terrain
     /** @type {pc.Entity} */
@@ -121,7 +120,8 @@ assetListLoader.load(() => {
     const camera = new pc.Entity();
     camera.addComponent('camera', {
         clearColor: new pc.Color(0.9, 0.9, 0.9),
-        farClip: 1000
+        farClip: 1000,
+        toneMapping: pc.TONEMAP_ACES
     });
 
     // and position it in the world

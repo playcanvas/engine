@@ -51,7 +51,6 @@ assetListLoader.load(() => {
     app.start();
 
     app.scene.envAtlas = assets.helipad.resource;
-    app.scene.rendering.toneMapping = pc.TONEMAP_ACES;
     app.scene.skyboxIntensity = 1;
     app.scene.skyboxMip = 2;
 
@@ -103,14 +102,16 @@ assetListLoader.load(() => {
         clearColorBuffer: false,
         layers: [decalLayer.id],
         renderTarget: renderTarget,
-        priority: -1
+        priority: -1,
+        toneMapping: pc.TONEMAP_ACES
     });
     app.root.addChild(decalCamera);
 
     // Create main camera, which renders entities in world layer - this is where we show mesh with decals
     const camera = new pc.Entity('MainCamera');
     camera.addComponent('camera', {
-        clearColor: new pc.Color(0.1, 0.1, 0.1, 1)
+        clearColor: new pc.Color(0.1, 0.1, 0.1, 1),
+        toneMapping: pc.TONEMAP_ACES
     });
     camera.translate(20, 10, 40);
     camera.lookAt(new pc.Vec3(0, -7, 0));

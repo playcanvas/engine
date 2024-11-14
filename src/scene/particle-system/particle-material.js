@@ -36,7 +36,7 @@ class ParticleMaterial extends Material {
 
     getShaderVariant(params) {
 
-        const { device, scene, renderParams } = params;
+        const { device, scene, cameraShaderParams } = params;
         const { emitter } = this;
         const options = {
             defines: this.defines,
@@ -48,9 +48,9 @@ class ParticleMaterial extends Material {
             alignToMotion: this.emitter.alignToMotion,
             soft: this.emitter.depthSoftening,
             mesh: this.emitter.useMesh,
-            gamma: renderParams?.shaderOutputGamma ?? GAMMA_NONE,
-            toneMap: renderParams?.toneMapping ?? TONEMAP_LINEAR,
-            fog: (scene && !this.emitter.noFog) ? scene.rendering.fog : 'none',
+            gamma: cameraShaderParams?.shaderOutputGamma ?? GAMMA_NONE,
+            toneMap: cameraShaderParams?.toneMapping ?? TONEMAP_LINEAR,
+            fog: (scene && !this.emitter.noFog) ? scene.fog.type : 'none',
             wrap: this.emitter.wrap && this.emitter.wrapBounds,
             localSpace: this.emitter.localSpace,
 

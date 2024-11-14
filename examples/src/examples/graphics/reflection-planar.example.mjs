@@ -49,9 +49,6 @@ const assetListLoader = new pc.AssetListLoader(Object.values(assets), app.assets
 assetListLoader.load(() => {
     app.start();
 
-    // set up some general scene rendering properties
-    app.scene.rendering.toneMapping = pc.TONEMAP_ACES;
-
     // setup skydome
     app.scene.envAtlas = assets.envatlas.resource;
     app.scene.skyboxMip = 1;
@@ -146,7 +143,8 @@ assetListLoader.load(() => {
     const camera = new pc.Entity('MainCamera');
     camera.addComponent('camera', {
         fov: 60,
-        layers: [worldLayer.id, excludedLayer.id, skyboxLayer.id, uiLayer.id]
+        layers: [worldLayer.id, excludedLayer.id, skyboxLayer.id, uiLayer.id],
+        toneMapping: pc.TONEMAP_ACES
     });
     app.root.addChild(camera);
 
@@ -155,7 +153,8 @@ assetListLoader.load(() => {
     reflectionCamera.addComponent('camera', {
         fov: 60,
         layers: [worldLayer.id, skyboxLayer.id],
-        priority: -1 // render reflections before the main camera
+        priority: -1, // render reflections before the main camera
+        toneMapping: pc.TONEMAP_ACES
     });
 
     // add planarRenderer script which renders the reflection texture

@@ -60,10 +60,6 @@ const assetListLoader = new pc.AssetListLoader(Object.values(assets), app.assets
 assetListLoader.load(() => {
     app.start();
 
-    // if the device renders in HDR mode, disable tone mapping to output HDR values without any processing
-    app.scene.rendering.toneMapping = device.isHdr ? pc.TONEMAP_NONE : pc.TONEMAP_ACES;
-    app.scene.rendering.gammaCorrection = pc.GAMMA_SRGB;
-
     // add an instance of the statue
     const statueEntity = assets.statue.resource.instantiateRenderEntity();
     app.root.addChild(statueEntity);
@@ -72,7 +68,11 @@ assetListLoader.load(() => {
     const cameraEntity = new pc.Entity();
     cameraEntity.addComponent('camera', {
         farClip: 500,
-        fov: 60
+        fov: 60,
+
+        // if the device renders in HDR mode, disable tone mapping to output HDR values without any processing
+        toneMapping: device.isHdr ? pc.TONEMAP_NONE : pc.TONEMAP_ACES,
+        gammaCorrection: pc.GAMMA_SRGB
     });
 
     // add orbit camera script with a mouse and a touch support
