@@ -170,7 +170,7 @@ class MultiCamera extends BaseCamera {
     constructor(args) {
         super(args);
         const {
-            focus: point = Vec3.ZERO,
+            focusPoint,
             pinchSpeed,
             wheelSpeed,
             zoomMin,
@@ -202,7 +202,21 @@ class MultiCamera extends BaseCamera {
         }
         this.attach(this.entity.camera);
 
-        this.focus(point, this.entity.getPosition(), false);
+        this.focusPoint = focusPoint ?? this.focusPoint;
+    }
+
+    /**
+     * @param {Vec3} point - The focus point.
+     */
+    set focusPoint(point) {
+        if (!this._camera) {
+            return;
+        }
+        this.focus(point, this._camera.entity.getPosition(), false);
+    }
+
+    get focusPoint() {
+        return this._origin;
     }
 
     /**
