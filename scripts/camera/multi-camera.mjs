@@ -133,22 +133,6 @@ class MultiCamera extends BaseCamera {
     zoomMax = 10;
 
     /**
-     * The minimum distance the camera can zoom. This will override zoomMin.
-     *
-     * @attribute
-     * @type {number}
-     */
-    zoomDistMin = 0;
-
-    /**
-     * The maximum distance the camera can zoom. This will override zoomMax.
-     *
-     * @attribute
-     * @type {number}
-     */
-    zoomDistMax = Infinity;
-
-    /**
      * The minimum scale the camera can zoom.
      *
      * @attribute
@@ -565,7 +549,6 @@ class MultiCamera extends BaseCamera {
         const scale = math.clamp(this._zoomDist / (max - min), this.zoomScaleMin, 1);
         this._zoomDist += (delta * this.wheelSpeed * this.sceneSize * scale);
         this._zoomDist = math.clamp(this._zoomDist, min, max);
-        this._zoomDist = math.clamp(this._zoomDist, this.zoomDistMin, this.zoomDistMax);
     }
 
     /**
