@@ -175,8 +175,6 @@ class MultiCamera extends BaseCamera {
             wheelSpeed,
             zoomMin,
             zoomMax,
-            zoomDistMin,
-            zoomDistMax,
             moveSpeed,
             sprintSpeed,
             crouchSpeed
@@ -186,8 +184,6 @@ class MultiCamera extends BaseCamera {
         this.wheelSpeed = wheelSpeed ?? this.wheelSpeed;
         this.zoomMin = zoomMin ?? this.zoomMin;
         this.zoomMax = zoomMax ?? this.zoomMax;
-        this.zoomDistMin = zoomDistMin ?? this.zoomDistMin;
-        this.zoomDistMax = zoomDistMax ?? this.zoomDistMax;
 
         this.moveSpeed = moveSpeed ?? this.moveSpeed;
         this.sprintSpeed = sprintSpeed ?? this.sprintSpeed;
