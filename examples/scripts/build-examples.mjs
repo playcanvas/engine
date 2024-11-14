@@ -114,7 +114,6 @@ export const build = (env = {}) => {
 
             const scriptPath = resolve(path, `${exampleNameKebab}.${file}`);
             let script = fs.readFileSync(scriptPath, 'utf-8');
-
             if (/\.(?:mjs|js)$/.test(file)) {
                 script = patchScript(script);
             }
