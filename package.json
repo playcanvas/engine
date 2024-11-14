@@ -46,7 +46,7 @@
     "./build/*": "./build/*",
     "./scripts/*": "./scripts/*"
   },
-  "sideEffects": false,
+  "sideEffects": ["./build/playcanvas/src/deprecated/deprecated.js"],
   "type": "module",
   "bugs": {
     "url": "https://github.com/playcanvas/engine/issues"
