@@ -4,20 +4,10 @@ import {
     Script,
     Color,
     math,
-    RenderingParams,
     CameraFrameOptions,
     RenderPassCameraFrame,
-    FOG_NONE,
     SSAOTYPE_NONE
 } from 'playcanvas';
-
-/** @enum {string} */
-const FogType = {
-    NONE: 'none',      // FOG_NONE
-    LINEAR: 'linear',  // FOG_LINEAR
-    EXP: 'exp',        // FOG_EXP
-    EXP2: 'exp2'       // FOG_EXP2
-};
 
 /** @enum {number} */
 const ToneMapping = {
@@ -98,32 +88,6 @@ class Rendering {
      * @step 0.001
      */
     sharpness = 0.0;
-
-    /**
-     * @attribute
-     * @type {FogType}
-     */
-    fog = FogType.NONE;
-
-    /**
-     * @attribute
-     */
-    fogColor = new Color(1, 1, 1, 1);
-
-    /**
-     * @attribute
-     */
-    fogStart = 0;
-
-    /**
-     * @attribute
-     */
-    fogEnd = 100;
-
-    /**
-     * @attribute
-     */
-    fogDensity = 0.01;
 }
 
 /** @interface */
@@ -332,8 +296,6 @@ class CameraFrame extends Script {
 
     options = new CameraFrameOptions();
 
-    renderingParams = new RenderingParams();
-
     initialize() {
 
         this.updateOptions();
@@ -354,8 +316,6 @@ class CameraFrame extends Script {
 
     createRenderPass() {
         const cameraComponent = this.entity.camera;
-        cameraComponent.rendering = this.renderingParams;
-
         this.renderPassCamera = new RenderPassCameraFrame(this.app, cameraComponent, this.options);
         cameraComponent.renderPasses = [this.renderPassCamera];
     }
@@ -388,20 +348,11 @@ class CameraFrame extends Script {
     postUpdate(dt) {
 
         const cameraComponent = this.entity.camera;
-        const { options, renderPassCamera, renderingParams, rendering, bloom, grading, vignette, fringing, taa, ssao } = this;
+        const { options, renderPassCamera, rendering, bloom, grading, vignette, fringing, taa, ssao } = this;
 
         // options that can cause the passes to be re-created
         this.updateOptions();
         renderPassCamera.update(options);
-
-        // renderingParams
-        renderingParams.fog = rendering.fog;
-        if (renderingParams.fog !== FOG_NONE) {
-            renderingParams.fogColor.copy(rendering.fogColor);
-            renderingParams.fogStart = rendering.fogStart;
-            renderingParams.fogEnd = rendering.fogEnd;
-            renderingParams.fogDensity = rendering.fogDensity;
-        }
 
         // update parameters of individual render passes
         const { composePass, bloomPass, ssaoPass } = renderPassCamera;

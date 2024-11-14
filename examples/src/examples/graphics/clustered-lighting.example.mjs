@@ -53,10 +53,6 @@ const assetListLoader = new pc.AssetListLoader(Object.values(assets), app.assets
 assetListLoader.load(() => {
     app.start();
 
-    // if the device renders in HDR mode, disable tone mapping to output HDR values without any processing
-    app.scene.rendering.toneMapping = device.isHdr ? pc.TONEMAP_NONE : pc.TONEMAP_ACES;
-    app.scene.rendering.gammaCorrection = pc.GAMMA_SRGB;
-
     /** @type {Array<pc.Entity>} */
     const pointLightList = [];
     /** @type {Array<pc.Entity>} */
@@ -196,7 +192,11 @@ assetListLoader.load(() => {
     camera.addComponent('camera', {
         clearColor: new pc.Color(0.05, 0.05, 0.05),
         farClip: 500,
-        nearClip: 0.1
+        nearClip: 0.1,
+
+        // if the device renders in HDR mode, disable tone mapping to output HDR values without any processing
+        toneMapping: device.isHdr ? pc.TONEMAP_NONE : pc.TONEMAP_ACES,
+        gammaCorrection: pc.GAMMA_SRGB
     });
     camera.setLocalPosition(140, 140, 140);
     camera.lookAt(new pc.Vec3(0, 40, 0));

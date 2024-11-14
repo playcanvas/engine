@@ -14,7 +14,6 @@ import { RenderPassCompose } from './render-pass-compose.js';
 import { RenderPassTAA } from './render-pass-taa.js';
 import { RenderPassPrepass } from './render-pass-prepass.js';
 import { RenderPassSsao } from './render-pass-ssao.js';
-import { RenderingParams } from '../../scene/renderer/rendering-params.js';
 
 export const SSAOTYPE_NONE = 'none';
 export const SSAOTYPE_LIGHTING = 'lighting';
@@ -195,17 +194,11 @@ class RenderPassCameraFrame extends RenderPass {
         this.hdrFormat = device.getRenderableHdrFormat(options.formats, true, options.samples) || PIXELFORMAT_RGBA8;
 
         // camera renders in HDR mode (linear output, no tonemapping)
-        if (!cameraComponent.rendering) {
-            cameraComponent.rendering = new RenderingParams();
-        }
+        cameraComponent.gammaCorrection = GAMMA_NONE;
+        cameraComponent.toneMapping = TONEMAP_NONE;
 
-        // set HDR rendering parameters
-        const rendering = cameraComponent.rendering;
-        rendering.gammaCorrection = GAMMA_NONE;
-        rendering.toneMapping = TONEMAP_NONE;
-
-        // set up internal rendering parameters
-        rendering.ssaoEnabled = options.ssaoType === SSAOTYPE_LIGHTING;
+        // set up internal rendering parameters - this affect the shader generation to apply SSAO during forward pass
+        cameraComponent.shaderParams.ssaoEnabled = options.ssaoType === SSAOTYPE_LIGHTING;
 
         // create a render target to render the scene into
         this.sceneTexture = new Texture(device, {

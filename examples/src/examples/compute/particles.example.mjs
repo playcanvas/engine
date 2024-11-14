@@ -51,14 +51,15 @@ app.on('destroy', () => {
 const assetListLoader = new pc.AssetListLoader(Object.values(assets), app.assets);
 assetListLoader.load(() => {
     // set up some general scene rendering properties
-    app.scene.rendering.toneMapping = pc.TONEMAP_ACES;
     app.scene.skyboxMip = 2;
     app.scene.skyboxIntensity = 0.2;
     app.scene.envAtlas = assets.helipad.resource;
 
     // create camera entity
     const cameraEntity = new pc.Entity('camera');
-    cameraEntity.addComponent('camera');
+    cameraEntity.addComponent('camera', {
+        toneMapping: pc.TONEMAP_ACES
+    });
     app.root.addChild(cameraEntity);
     cameraEntity.setPosition(-150, -60, 190);
 

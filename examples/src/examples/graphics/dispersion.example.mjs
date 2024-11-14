@@ -59,7 +59,6 @@ assetListLoader.load(() => {
 
     // set skybox
     app.scene.envAtlas = assets.helipad.resource;
-    app.scene.rendering.toneMapping = pc.TONEMAP_ACES;
     app.scene.skyboxMip = 1;
 
     // get the instance of the cube it set up with render component and add it to scene
@@ -71,7 +70,8 @@ assetListLoader.load(() => {
     camera.addComponent('camera', {
         clearColor: new pc.Color(0.2, 0.2, 0.2),
         nearClip: 0.01,
-        farClip: 2
+        farClip: 2,
+        toneMapping: pc.TONEMAP_ACES
     });
 
     // the color grab pass is needed

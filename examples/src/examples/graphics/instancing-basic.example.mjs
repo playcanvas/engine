@@ -52,14 +52,13 @@ assetListLoader.load(() => {
     app.scene.exposure = 0.3;
     app.scene.envAtlas = assets.helipad.resource;
 
-    // set up some general scene rendering properties
-    app.scene.rendering.toneMapping = pc.TONEMAP_ACES;
-
     app.scene.ambientLight = new pc.Color(0.1, 0.1, 0.1);
 
     // Create an Entity with a camera component
     const camera = new pc.Entity();
-    camera.addComponent('camera', {});
+    camera.addComponent('camera', {
+        toneMapping: pc.TONEMAP_ACES
+    });
     app.root.addChild(camera);
 
     // Move the camera back to see the cubes

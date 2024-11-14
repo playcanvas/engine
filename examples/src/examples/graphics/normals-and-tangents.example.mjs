@@ -59,7 +59,6 @@ assetListLoader.load(() => {
 
     // Setup skydome
     app.scene.envAtlas = assets.helipad.resource;
-    app.scene.rendering.toneMapping = pc.TONEMAP_ACES;
     app.scene.skyboxRotation = new pc.Quat().setFromEulerAngles(0, 70, 0);
     app.scene.skyboxIntensity = 1.5;
 
@@ -77,7 +76,9 @@ assetListLoader.load(() => {
 
     // Create a camera with an orbit camera script
     const camera = new pc.Entity();
-    camera.addComponent('camera');
+    camera.addComponent('camera', {
+        toneMapping: pc.TONEMAP_ACES
+    });
     camera.addComponent('script');
     camera.script.create('orbitCamera', {
         attributes: {

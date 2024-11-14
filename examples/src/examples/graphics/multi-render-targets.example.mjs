@@ -66,7 +66,6 @@ assetListLoader.load(() => {
     // setup skydome
     app.scene.envAtlas = assets.helipad.resource;
     app.scene.skyboxMip = 1;
-    app.scene.rendering.toneMapping = pc.TONEMAP_ACES;
 
     // get existing layers
     const worldLayer = app.scene.layers.getLayerByName('World');
@@ -118,6 +117,7 @@ assetListLoader.load(() => {
     textureCamera.addComponent('camera', {
         layers: [rtLayer.id],
         farClip: 500,
+        toneMapping: pc.TONEMAP_ACES,
 
         // set the priority of textureCamera to lower number than the priority of the main camera (which is at default 0)
         // to make it rendered first each frame
