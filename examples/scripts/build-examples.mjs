@@ -43,7 +43,7 @@ const generateExampleFile = (categoryKebab, exampleNameKebab, setEngineType, fil
     const engine = engineFor(engineType);
     html = html.replace(/'@ENGINE'/g, JSON.stringify(engine));
 
-    if (/'@(?:[A-Z0-9_]+)'/.test(html)) {
+    if (/'@[A-Z0-9_]+'/.test(html)) {
         throw new Error('HTML file still has unreplaced values');
     }
 
