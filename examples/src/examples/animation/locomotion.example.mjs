@@ -1,14 +1,14 @@
-import * as pc from 'playcanvas';
 import { data } from 'examples/observer';
 import { deviceType, rootPath } from 'examples/utils';
+import * as pc from 'playcanvas';
 
 const canvas = /** @type {HTMLCanvasElement} */ (document.getElementById('application-canvas'));
 window.focus();
 
 pc.WasmModule.setConfig('Ammo', {
-    glueUrl: rootPath + '/static/lib/ammo/ammo.wasm.js',
-    wasmUrl: rootPath + '/static/lib/ammo/ammo.wasm.wasm',
-    fallbackUrl: rootPath + '/static/lib/ammo/ammo.js'
+    glueUrl: `${rootPath}/static/lib/ammo/ammo.wasm.js`,
+    wasmUrl: `${rootPath}/static/lib/ammo/ammo.wasm.wasm`,
+    fallbackUrl: `${rootPath}/static/lib/ammo/ammo.js`
 });
 await new Promise((resolve) => {
     pc.WasmModule.getInstance('Ammo', () => resolve());
@@ -16,27 +16,27 @@ await new Promise((resolve) => {
 
 const assets = {
     playcanvasGreyTexture: new pc.Asset('playcanvasGreyTexture', 'texture', {
-        url: rootPath + '/static/assets/textures/playcanvas-grey.png'
+        url: `${rootPath}/static/assets/textures/playcanvas-grey.png`
     }),
-    model: new pc.Asset('model', 'container', { url: rootPath + '/static/assets/models/bitmoji.glb' }),
-    idleAnim: new pc.Asset('idleAnim', 'container', { url: rootPath + '/static/assets/animations/bitmoji/idle.glb' }),
-    walkAnim: new pc.Asset('walkAnim', 'container', { url: rootPath + '/static/assets/animations/bitmoji/walk.glb' }),
-    jogAnim: new pc.Asset('jogAnim', 'container', { url: rootPath + '/static/assets/animations/bitmoji/run.glb' }),
+    model: new pc.Asset('model', 'container', { url: `${rootPath}/static/assets/models/bitmoji.glb` }),
+    idleAnim: new pc.Asset('idleAnim', 'container', { url: `${rootPath}/static/assets/animations/bitmoji/idle.glb` }),
+    walkAnim: new pc.Asset('walkAnim', 'container', { url: `${rootPath}/static/assets/animations/bitmoji/walk.glb` }),
+    jogAnim: new pc.Asset('jogAnim', 'container', { url: `${rootPath}/static/assets/animations/bitmoji/run.glb` }),
     jumpAnim: new pc.Asset('jumpAnim', 'container', {
-        url: rootPath + '/static/assets/animations/bitmoji/jump-flip.glb'
+        url: `${rootPath}/static/assets/animations/bitmoji/jump-flip.glb`
     }),
     helipad: new pc.Asset(
         'helipad-env-atlas',
         'texture',
-        { url: rootPath + '/static/assets/cubemaps/helipad-env-atlas.png' },
+        { url: `${rootPath}/static/assets/cubemaps/helipad-env-atlas.png` },
         { type: pc.TEXTURETYPE_RGBP, mipmaps: false }
     )
 };
 
 const gfxOptions = {
     deviceTypes: [deviceType],
-    glslangUrl: rootPath + '/static/lib/glslang/glslang.js',
-    twgslUrl: rootPath + '/static/lib/twgsl/twgsl.js'
+    glslangUrl: `${rootPath}/static/lib/glslang/glslang.js`,
+    twgslUrl: `${rootPath}/static/lib/twgsl/twgsl.js`
 };
 
 const device = await pc.createGraphicsDevice(canvas, gfxOptions);
@@ -294,7 +294,7 @@ assetListLoader.load(() => {
     planeEntity.render.meshInstances[0].material = material;
     app.root.addChild(planeEntity);
 
-    data.on('jump', function () {
+    data.on('jump', () => {
         const isJumping = characterEntity.anim.baseLayer.activeState === 'Jump';
         if (!isJumping) {
             characterEntity.anim.setTrigger('jump');

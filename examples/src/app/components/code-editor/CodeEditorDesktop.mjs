@@ -1,10 +1,9 @@
-import { Button, Container, Panel } from '@playcanvas/pcui/react';
 import MonacoEditor, { loader } from '@monaco-editor/react';
+import { Button, Container, Panel } from '@playcanvas/pcui/react';
 
 import { CodeEditorBase } from './CodeEditorBase.mjs';
-
-import { jsx } from '../../jsx.mjs';
 import { iframe } from '../../iframe.mjs';
+import { jsx } from '../../jsx.mjs';
 import { removeRedundantSpaces } from '../../strings.mjs';
 
 /** @typedef {import('../../events.js').StateEvent} StateEvent */
@@ -41,7 +40,7 @@ const FILE_TYPE_LANGUAGES = {
  */
 let monacoEditor;
 
-// eslint-disable-next-line jsdoc/require-property
+
 /**
  * @typedef {Record<string, any>} Props
  */
@@ -191,7 +190,7 @@ class CodeEditorDesktop extends CodeEditorBase {
         if (!panelToggleDiv) {
             return;
         }
-        panelToggleDiv.addEventListener('click', function () {
+        panelToggleDiv.addEventListener('click', () => {
             codePane.classList.toggle('collapsed');
             localStorage.setItem('codePaneCollapsed', codePane.classList.contains('collapsed') ? 'true' : 'false');
         });

@@ -375,7 +375,7 @@ export const language = {
     predeclared_intrinsics,
     operators,
 
-    symbols: /[!%&*+\-\.\/:;<=>^|_~]+/,
+    symbols: /[!%&*+\-./:;<=>^|_~]+/,
 
     tokenizer: {
         root: [
@@ -402,7 +402,7 @@ export const language = {
 
             [/;:\./, 'delimiter'],
             [/,/, 'delimiter'], // Hack: Should be in previous rule
-            [/[{}()\[\]]/, '@brackets'],
+            [/[{}()[\]]/, '@brackets'],
             ['@', 'annotation', '@attribute'],
             [
                 /@symbols/,
@@ -424,13 +424,13 @@ export const language = {
 
         blockComment: [
             // Soak up uninteresting text: anything except * or /
-            [/[^\/*]+/, 'comment'],
+            [/[^/*]+/, 'comment'],
             // Recognize the start of a nested block comment.
             [/\/\*/, 'comment', '@push'],
             // Recognize the end of a nested block comment.
             [/\*\//, 'comment', '@pop'],
             // Recognize insignificant * and /
-            [/[\/*]/, 'comment']
+            [/[/*]/, 'comment']
         ],
 
         attribute: [
@@ -457,19 +457,19 @@ export const language = {
             // 0, with type-specifying suffix.
             [/0[fh]/, 'number.float'],
             // Other decimal integer, with type-specifying suffix.
-            [/[1-9][0-9]*[fh]/, 'number.float'],
+            [/[1-9]\d*[fh]/, 'number.float'],
             // Has decimal point, at least one digit after decimal.
-            [/[0-9]*\.[0-9]+([eE][+-]?[0-9]+)?[fh]?/, 'number.float'],
+            [/\d*\.\d+([eE][+-]?\d+)?[fh]?/, 'number.float'],
             // Has decimal point, at least one digit before decimal.
-            [/[0-9]+\.[0-9]*([eE][+-]?[0-9]+)?[fh]?/, 'number.float'],
+            [/\d+\.\d*([eE][+-]?\d+)?[fh]?/, 'number.float'],
             // Has at least one digit, and has an exponent.
-            [/[0-9]+[eE][+-]?[0-9]+[fh]?/, 'number.float'],
+            [/\d+[eE][+-]?\d+[fh]?/, 'number.float'],
 
             // Hex float literals
             // https://www.w3.org/TR/WGSL/#syntax-hex_float_literal
-            [/0[xX][0-9a-fA-F]*\.[0-9a-fA-F]+(?:[pP][+-]?[0-9]+[fh]?)?/, 'number.hex'],
-            [/0[xX][0-9a-fA-F]+\.[0-9a-fA-F]*(?:[pP][+-]?[0-9]+[fh]?)?/, 'number.hex'],
-            [/0[xX][0-9a-fA-F]+[pP][+-]?[0-9]+[fh]?/, 'number.hex'],
+            [/0[xX][0-9a-fA-F]*\.[0-9a-fA-F]+(?:[pP][+-]?\d+[fh]?)?/, 'number.hex'],
+            [/0[xX][0-9a-fA-F]+\.[0-9a-fA-F]*(?:[pP][+-]?\d+[fh]?)?/, 'number.hex'],
+            [/0[xX][0-9a-fA-F]+[pP][+-]?\d+[fh]?/, 'number.hex'],
 
             // Hexadecimal integer literals
             // https://www.w3.org/TR/WGSL/#syntax-hex_int_literal
@@ -478,7 +478,7 @@ export const language = {
             // Decimal integer literals
             // https://www.w3.org/TR/WGSL/#syntax-decimal_int_literal
             // We need two rules here because 01 is not valid.
-            [/[1-9][0-9]*[iu]?/, 'number'],
+            [/[1-9]\d*[iu]?/, 'number'],
             [/0[iu]?/, 'number'] // Must match last
         ]
     }
