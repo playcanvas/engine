@@ -22,7 +22,9 @@ export default [
             'assets/scripts/utils/area-light-lut-bin-gen.js',
             'cache',
             'dist',
-            'src/lib'
+            'src/lib',
+            'src/app/monaco/languages',
+            'src/app/monaco/tokenizer-rules.mjs'
         ]
     }
 ];

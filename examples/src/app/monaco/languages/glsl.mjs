@@ -15,7 +15,7 @@ export const conf = {
         { open: '[', close: ']' },
         { open: '{', close: '}' },
         { open: '(', close: ')' },
-        { open: '\'', close: '\'', notIn: ['string', 'comment'] },
+        { open: "'", close: "'", notIn: ['string', 'comment'] },
         { open: '"', close: '"', notIn: ['string'] }
     ],
     surroundingPairs: [
@@ -23,7 +23,7 @@ export const conf = {
         { open: '[', close: ']' },
         { open: '(', close: ')' },
         { open: '"', close: '"' },
-        { open: '\'', close: '\'' }
+        { open: "'", close: "'" }
     ]
 };
 
@@ -212,17 +212,17 @@ export const language = {
         '>>=',
         '>>>='
     ],
-    symbols: /[=><!~?:&|+\-*/^%]+/,
+    symbols: /[=><!~?:&|+\-*\/\^%]+/,
     escapes: /\\(?:[abfnrtv\\"']|x[0-9A-Fa-f]{1,4}|u[0-9A-Fa-f]{4}|U[0-9A-Fa-f]{8})/,
     integersuffix: /([uU](ll|LL|l|L)|(ll|LL|l|L)?[uU]?)/,
-    floatsuffix: /[fl]?/i,
-    encoding: /[uUL]|u8/, /* eslint-disable-line regexp/no-dupe-disjunctions */
+    floatsuffix: /[fFlL]?/,
+    encoding: /u|u8|U|L/,
 
     tokenizer: {
         root: [
             // identifiers and keywords
             [
-                /[a-z_]\w*/i,
+                /[a-zA-Z_]\w*/,
                 {
                     cases: {
                         '@keywords': { token: 'keyword.$0' },
@@ -238,7 +238,7 @@ export const language = {
             { include: '@whitespace' },
 
             // delimiters and operators
-            [/[{}()[\]]/, '@brackets'],
+            [/[{}()\[\]]/, '@brackets'],
             [
                 /@symbols/,
                 {
@@ -250,11 +250,11 @@ export const language = {
             ],
 
             // numbers
-            [/\d+[eE]([\-+]?\d+)?(@floatsuffix)/, 'number.float'],
+            [/\d*\d+[eE]([\-+]?\d+)?(@floatsuffix)/, 'number.float'],
             [/\d*\.\d+([eE][\-+]?\d+)?(@floatsuffix)/, 'number.float'],
             [/0[xX][0-9a-fA-F']*[0-9a-fA-F](@integersuffix)/, 'number.hex'],
             [/0[0-7']*[0-7](@integersuffix)/, 'number.octal'],
-            [/0[bB][01']*[01](@integersuffix)/, 'number.binary'],
+            [/0[bB][0-1']*[0-1](@integersuffix)/, 'number.binary'],
             [/\d[\d']*\d(@integersuffix)/, 'number'],
             [/\d(@integersuffix)/, 'number'],
 
@@ -263,10 +263,10 @@ export const language = {
         ],
 
         comment: [
-            [/[^/*]+/, 'comment'],
+            [/[^\/*]+/, 'comment'],
             [/\/\*/, 'comment', '@push'],
             ['\\*/', 'comment', '@pop'],
-            [/[/*]/, 'comment']
+            [/[\/*]/, 'comment']
         ],
 
         // Does it have strings?
