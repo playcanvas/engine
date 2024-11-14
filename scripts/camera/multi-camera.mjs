@@ -607,7 +607,9 @@ class MultiCamera extends BaseCamera {
             this._camera.entity.setLocalPosition(0, 0, this._cameraDist);
         }
 
-        this._move(dt);
+        if (this._flying) {
+            this._move(dt);
+        }
 
         super.update(dt);
     }
