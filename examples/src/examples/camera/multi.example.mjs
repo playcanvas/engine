@@ -144,24 +144,28 @@ data.set('example', {
     zoomReset: true,
     smoothedFocus: true
 });
-data.set('attr', {
-    enableOrbit: multiCameraScript.enableOrbit,
-    enablePan: multiCameraScript.enablePan,
-    enableFly: multiCameraScript.enableFly,
-    lookSensitivity: 0.2,
-    lookDamping: 0.97,
-    moveDamping: 0.98,
-    pitchMin: multiCameraScript.pitchMin,
-    pitchMax: multiCameraScript.pitchMax,
-    pinchSpeed: 5,
-    wheelSpeed: 0.005,
-    zoomMin: 0.001,
-    zoomMax: 10,
-    zoomScaleMin: 0.01,
-    moveSpeed: 2,
-    sprintSpeed: 4,
-    crouchSpeed: 1
-});
+
+data.set('attr', [
+    'enableOrbit',
+    'enablePan',
+    'enableFly',
+    'lookSensitivity',
+    'lookDamping',
+    'moveDamping',
+    'pitchMin',
+    'pitchMax',
+    'pinchSpeed',
+    'wheelSpeed',
+    'zoomMin',
+    'zoomMax',
+    'zoomScaleMin',
+    'moveSpeed',
+    'sprintSpeed',
+    'crouchSpeed'
+].reduce((/** @type {Record<string, any>} */ obj, key) => {
+    obj[key] = multiCameraScript[key];
+    return obj;
+}, {}));
 data.on('*:set', (/** @type {string} */ path, /** @type {any} */ value) => {
     const [category, key] = path.split('.');
     if (category !== 'attr') {

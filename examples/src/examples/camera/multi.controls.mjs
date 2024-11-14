@@ -72,8 +72,9 @@ export const controls = ({ observer, ReactPCUI, React, jsx, fragment }) => {
                     binding: new BindingTwoWay(),
                     link: { observer, path: 'attr.lookDamping' },
                     min: 0,
-                    max: 0.99,
-                    step: 0.01
+                    max: 0.999,
+                    step: 0.001,
+                    precision: 3
                 })
             ),
             jsx(
@@ -83,8 +84,9 @@ export const controls = ({ observer, ReactPCUI, React, jsx, fragment }) => {
                     binding: new BindingTwoWay(),
                     link: { observer, path: 'attr.moveDamping' },
                     min: 0,
-                    max: 0.99,
-                    step: 0.01
+                    max: 0.999,
+                    step: 0.001,
+                    precision: 3
                 })
             ),
             jsx(
@@ -125,9 +127,10 @@ export const controls = ({ observer, ReactPCUI, React, jsx, fragment }) => {
                 jsx(SliderInput, {
                     binding: new BindingTwoWay(),
                     link: { observer, path: 'attr.wheelSpeed' },
-                    min: 0.001,
-                    max: 0.01,
-                    step: 0.001
+                    min: 0,
+                    max: 10,
+                    step: 0.001,
+                    precision: 3
                 })
             ),
             jsx(
@@ -136,9 +139,10 @@ export const controls = ({ observer, ReactPCUI, React, jsx, fragment }) => {
                 jsx(SliderInput, {
                     binding: new BindingTwoWay(),
                     link: { observer, path: 'attr.zoomMin' },
-                    min: 0.001,
-                    max: 0.01,
-                    step: 0.001
+                    min: 0,
+                    max: 10,
+                    step: 0.001,
+                    precision: 3
                 })
             ),
             jsx(
@@ -147,8 +151,10 @@ export const controls = ({ observer, ReactPCUI, React, jsx, fragment }) => {
                 jsx(SliderInput, {
                     binding: new BindingTwoWay(),
                     link: { observer, path: 'attr.zoomMax' },
-                    min: 1,
-                    max: 10
+                    min: 0,
+                    max: 10,
+                    step: 0.001,
+                    precision: 3
                 })
             ),
             jsx(
@@ -157,9 +163,10 @@ export const controls = ({ observer, ReactPCUI, React, jsx, fragment }) => {
                 jsx(SliderInput, {
                     binding: new BindingTwoWay(),
                     link: { observer, path: 'attr.zoomScaleMin' },
-                    min: 0.001,
-                    max: 0.01,
-                    step: 0.001
+                    min: 0,
+                    max: 1,
+                    step: 0.001,
+                    precision: 3
                 })
             ),
             jsx(

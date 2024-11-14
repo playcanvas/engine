@@ -2,8 +2,6 @@ import { Entity, Script, Vec3, Vec2, math } from 'playcanvas';
 
 /** @import { CameraComponent } from 'playcanvas' */
 
-const LOOK_MAX_ANGLE = 90;
-
 class BaseCamera extends Script {
     /**
      * @type {CameraComponent}
