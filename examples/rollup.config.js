@@ -10,7 +10,7 @@ import terser from '@rollup/plugin-terser';
 
 // custom plugins
 import { copyStatic } from './utils/plugins/rollup-copy-static.mjs';
-import { generateStandalone } from './utils/plugins/rollup-generate-standalone.mjs';
+import { buildExamples } from './utils/plugins/rollup-build-examples.mjs';
 
 // engine rollup utils
 import { treeshakeIgnore } from '../utils/plugins/rollup-treeshake-ignore.mjs';
@@ -22,6 +22,81 @@ import { isModuleWithExternalDependencies } from './utils/utils.mjs';
 const NODE_ENV = process.env.NODE_ENV ?? '';
 const ENGINE_PATH = !process.env.ENGINE_PATH && NODE_ENV === 'development' ?
     '../src/index.js' : process.env.ENGINE_PATH ?? '';
+
+const getEnginePathFiles = () => {
+    if (!ENGINE_PATH) {
+        return [];
+    }
+
+    const src = path.resolve(ENGINE_PATH);
+    const content = fs.readFileSync(src, 'utf8');
+    const isUnpacked = isModuleWithExternalDependencies(content);
+    if (isUnpacked) {
+        const srcDir = path.dirname(src);
+        const dest = 'dist/iframe/ENGINE_PATH';
+        return [{ src: srcDir, dest }];
+    }
+
+    // packed module builds
+    const dest = 'dist/iframe/ENGINE_PATH/index.js';
+    return [{ src, dest }];
+};
+
+const checkAppEngine = () => {
+    // types
+    if (!fs.existsSync('../build/playcanvas.d.ts')) {
+        const cmd = `npm run build target:types --prefix ../`;
+        console.log('\x1b[32m%s\x1b[0m', cmd);
+        execSync(cmd);
+    }
+};
+
+const getEngineTargets = () => {
+    // Checks for types and engien for app building
+    checkAppEngine();
+
+    const targets = [];
+    if (ENGINE_PATH) {
+        return targets;
+    }
+    if (NODE_ENV === 'production') {
+        // Outputs: dist/iframe/playcanvas.mjs
+        targets.push(
+            ...buildTarget({
+                moduleFormat: 'esm',
+                buildType: 'release',
+                bundleState: 'bundled',
+                input: '../src/index.js',
+                dir: 'dist/iframe'
+            })
+        );
+    }
+    if (NODE_ENV === 'production' || NODE_ENV === 'development') {
+        // Outputs: dist/iframe/playcanvas.dbg.mjs
+        targets.push(
+            ...buildTarget({
+                moduleFormat: 'esm',
+                buildType: 'debug',
+                bundleState: 'bundled',
+                input: '../src/index.js',
+                dir: 'dist/iframe'
+            })
+        );
+    }
+    if (NODE_ENV === 'production' || NODE_ENV === 'profiler') {
+        // Outputs: dist/iframe/playcanvas.prf.mjs
+        targets.push(
+            ...buildTarget({
+                moduleFormat: 'esm',
+                buildType: 'profiler',
+                bundleState: 'bundled',
+                input: '../src/index.js',
+                dir: 'dist/iframe'
+            })
+        );
+    }
+    return targets;
+};
 
 const STATIC_FILES = [
     // static main page src
@@ -62,81 +137,6 @@ const STATIC_FILES = [
     ...getEnginePathFiles()
 ];
 
-function getEnginePathFiles() {
-    if (!ENGINE_PATH) {
-        return [];
-    }
-
-    const src = path.resolve(ENGINE_PATH);
-    const content = fs.readFileSync(src, 'utf8');
-    const isUnpacked = isModuleWithExternalDependencies(content);
-    if (isUnpacked) {
-        const srcDir = path.dirname(src);
-        const dest = 'dist/iframe/ENGINE_PATH';
-        return [{ src: srcDir, dest }];
-    }
-
-    // packed module builds
-    const dest = 'dist/iframe/ENGINE_PATH/index.js';
-    return [{ src, dest }];
-}
-
-function checkAppEngine() {
-    // types
-    if (!fs.existsSync('../build/playcanvas.d.ts')) {
-        const cmd = `npm run build target:types --prefix ../`;
-        console.log('\x1b[32m%s\x1b[0m', cmd);
-        execSync(cmd);
-    }
-}
-
-function getEngineTargets() {
-    // Checks for types and engien for app building
-    checkAppEngine();
-
-    const targets = [];
-    if (ENGINE_PATH) {
-        return targets;
-    }
-    if (NODE_ENV === 'production') {
-        // Outputs: dist/iframe/playcanvas.mjs
-        targets.push(
-            ...buildTarget({
-                moduleFormat: 'esm',
-                buildType: 'release',
-                bundleState: 'unbundled',
-                input: '../src/index.js',
-                dir: 'dist/iframe'
-            })
-        );
-    }
-    if (NODE_ENV === 'production' || NODE_ENV === 'development') {
-        // Outputs: dist/iframe/playcanvas.dbg.mjs
-        targets.push(
-            ...buildTarget({
-                moduleFormat: 'esm',
-                buildType: 'debug',
-                bundleState: 'unbundled',
-                input: '../src/index.js',
-                dir: 'dist/iframe'
-            })
-        );
-    }
-    if (NODE_ENV === 'production' || NODE_ENV === 'profiler') {
-        // Outputs: dist/iframe/playcanvas.prf.mjs
-        targets.push(
-            ...buildTarget({
-                moduleFormat: 'esm',
-                buildType: 'profiler',
-                bundleState: 'unbundled',
-                input: '../src/index.js',
-                dir: 'dist/iframe'
-            })
-        );
-    }
-    return targets;
-}
-
 export default [
     {
         // used as a placeholder
@@ -148,7 +148,7 @@ export default [
             skipWrite: true
         },
         treeshake: false,
-        plugins: [generateStandalone(NODE_ENV, ENGINE_PATH), copyStatic(NODE_ENV, STATIC_FILES)]
+        plugins: [buildExamples(NODE_ENV, ENGINE_PATH), copyStatic(NODE_ENV, STATIC_FILES)]
     },
     {
         // A debug build is ~2.3MB and a release build ~0.6MB

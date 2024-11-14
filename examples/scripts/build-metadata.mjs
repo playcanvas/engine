@@ -18,7 +18,7 @@ const MAIN_DIR = `${dirname(__filename)}/../`;
  */
 const exampleMetaData = [];
 
-function main() {
+const main = () => {
     const rootPath = `${MAIN_DIR}/src/examples`;
     const categories = getDirFiles(rootPath);
 
@@ -54,5 +54,5 @@ function main() {
     }
 
     fs.writeFileSync(`${MAIN_DIR}/cache/metadata.mjs`, `export const exampleMetaData = ${objStringify(exampleMetaData)};\n`);
-}
+};
 main();

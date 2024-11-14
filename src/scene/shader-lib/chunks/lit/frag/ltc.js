@@ -316,7 +316,7 @@ float LTC_EvaluateDisk(vec3 N, vec3 V, vec3 P, mat3 Minv, Coords points)
         V2 *= sqrt(b);
     }
 
-    vec3 V3 = cross(V1, V2);
+    vec3 V3 = normalize(cross(V1, V2));
     if (dot(C, V3) < 0.0)
         V3 *= -1.0;
 
@@ -350,7 +350,7 @@ float LTC_EvaluateDisk(vec3 N, vec3 V, vec3 P, mat3 Minv, Coords points)
     float L1 = sqrt(-e2 / e3);
     float L2 = sqrt(-e2 / e1);
 
-    float formFactor = L1 * L2 * inversesqrt((1.0 + L1 * L1) * (1.0 + L2 * L2));
+    float formFactor = max(0.0, L1 * L2 * inversesqrt((1.0 + L1 * L1) * (1.0 + L2 * L2)));
     
     const float LUT_SIZE = 64.0;
     const float LUT_SCALE = ( LUT_SIZE - 1.0 ) / LUT_SIZE;

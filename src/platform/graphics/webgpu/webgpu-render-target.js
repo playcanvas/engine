@@ -151,15 +151,6 @@ class WebgpuRenderTarget {
      */
     constructor(renderTarget) {
         this.renderTarget = renderTarget;
-
-        // color formats are based on the textures
-        if (renderTarget._colorBuffers) {
-            renderTarget._colorBuffers.forEach((colorBuffer, index) => {
-                this.setColorAttachment(index, undefined, colorBuffer.impl.format);
-            });
-        }
-
-        this.updateKey();
     }
 
     /**
@@ -259,6 +250,14 @@ class WebgpuRenderTarget {
         this.initDepthStencil(device, wgpu, renderTarget);
 
         // initialize color attachments
+
+        // color formats are based on the textures
+        if (renderTarget._colorBuffers) {
+            renderTarget._colorBuffers.forEach((colorBuffer, index) => {
+                this.setColorAttachment(index, undefined, colorBuffer.impl.format);
+            });
+        }
+
         this.renderPassDescriptor.colorAttachments = [];
         const count = this.isBackbuffer ? 1 : (renderTarget._colorBuffers?.length ?? 0);
         for (let i = 0; i < count; ++i) {
@@ -272,6 +271,8 @@ class WebgpuRenderTarget {
                 this.renderPassDescriptor.colorAttachments.push(colorAttachment);
             }
         }
+
+        this.updateKey();
 
         this.initialized = true;
 
@@ -330,8 +331,14 @@ class WebgpuRenderTarget {
 
                 if (samples > 1) {  // create a multi-sampled depth buffer for the provided depth buffer
 
+                    // single-sampled depthBuffer.impl.format can be R32F in some cases, but that cannot be used as a depth
+                    // buffer, only as a texture to resolve it to. We always use depth24plus-stencil8 for msaa depth buffers.
+                    const depthFormat = 'depth24plus-stencil8';
+                    this.depthAttachment.format = depthFormat;
+                    this.depthAttachment.hasStencil = depthFormat === 'depth24plus-stencil8';
+
                     // key for matching multi-sampled depth buffer
-                    const key = `${depthBuffer.id}:${width}:${height}:${samples}:${depthBuffer.impl.format}`;
+                    const key = `${depthBuffer.id}:${width}:${height}:${samples}:${depthFormat}`;
 
                     // check if we have already allocated a multi-sampled depth buffer for the depth buffer
                     const msTextures = getMultisampledTextureCache(device);
@@ -343,8 +350,10 @@ class WebgpuRenderTarget {
                             size: [width, height, 1],
                             dimension: '2d',
                             sampleCount: samples,
-                            format: depthBuffer.impl.format,
-                            usage: GPUTextureUsage.RENDER_ATTACHMENT
+                            format: depthFormat,
+                            usage: GPUTextureUsage.RENDER_ATTACHMENT |
+                                // if msaa and resolve targets are different formats, we need to be able to bind the msaa target as a texture for manual shader resolve
+                                (depthFormat !== depthBuffer.impl.format ? GPUTextureUsage.TEXTURE_BINDING : 0)
                         };
 
                         // allocate multi-sampled depth buffer
@@ -395,14 +404,14 @@ class WebgpuRenderTarget {
         /** @type {GPURenderPassColorAttachment} */
         const colorAttachment = {};
 
-        const { samples, width, height } = renderTarget;
+        const { samples, width, height, mipLevel } = renderTarget;
         const colorBuffer = renderTarget.getColorBuffer(index);
 
         // view used to write to the color buffer (either by rendering to it, or resolving to it)
         let colorView = null;
         if (colorBuffer) {
 
-            // render to top mip level in case of mip-mapped buffer
+            // render to a single mip level
             const mipLevelCount = 1;
 
             // cubemap face view - face is a single 2d array layer in order [+X, -X, +Y, -Y, +Z, -Z]
@@ -411,11 +420,13 @@ class WebgpuRenderTarget {
                     dimension: '2d',
                     baseArrayLayer: renderTarget.face,
                     arrayLayerCount: 1,
-                    mipLevelCount
+                    mipLevelCount,
+                    baseMipLevel: mipLevel
                 });
             } else {
                 colorView = colorBuffer.impl.createView({
-                    mipLevelCount
+                    mipLevelCount,
+                    baseMipLevel: mipLevel
                 });
             }
         }

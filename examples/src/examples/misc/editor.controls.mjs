@@ -4,17 +4,35 @@ import * as pc from 'playcanvas';
  * @param {import('../../app/components/Example.mjs').ControlOptions} options - The options.
  * @returns {JSX.Element} The returned JSX Element.
  */
-export function controls({ observer, ReactPCUI, React, jsx, fragment }) {
+export const controls = ({ observer, ReactPCUI, React, jsx, fragment }) => {
     const { BindingTwoWay, LabelGroup, Panel, SliderInput, SelectInput } = ReactPCUI;
+    const { useState } = React;
 
-    const [type, setType] = React.useState('translate');
-    const [proj, setProj] = React.useState(pc.PROJECTION_PERSPECTIVE);
+    const [type, setType] = useState('translate');
+    const [proj, setProj] = useState(pc.PROJECTION_PERSPECTIVE);
 
-    // @ts-ignore
-    window.setType = (/** @type {string} */ value) => setType(value);
-
-    // @ts-ignore
-    window.setProj = (/** @type {number} */ value) => setProj(value);
+    // observe changes to the camera and gizmo type
+    observer.on('*:set', (/** @type {string} */ path, /** @type {any} */ value) => {
+        const [category, key] = path.split('.');
+        switch (category) {
+            case 'camera': {
+                switch (key) {
+                    case 'proj':
+                        setType(value);
+                        break;
+                }
+                break;
+            }
+            case 'gizmo': {
+                switch (key) {
+                    case 'type':
+                        setType(value);
+                        break;
+                }
+                break;
+            }
+        }
+    });
 
     return fragment(
         jsx(
@@ -98,4 +116,4 @@ export function controls({ observer, ReactPCUI, React, jsx, fragment }) {
                 )
         )
     );
-}
+};

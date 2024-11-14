@@ -1,6 +1,7 @@
 import * as pc from 'playcanvas';
 import { data } from 'examples/observer';
-import { deviceType, rootPath } from 'examples/utils';
+import { deviceType, rootPath, fileImport } from 'examples/utils';
+const { CameraFrame } = await fileImport(rootPath + '/static/assets/scripts/misc/camera-frame.mjs');
 
 const canvas = /** @type {HTMLCanvasElement} */ (document.getElementById('application-canvas'));
 window.focus();
@@ -215,31 +216,13 @@ assetListLoader.load(() => {
 
     // ------ Custom render passes set up ------
 
-    const currentOptions = new pc.CameraFrameOptions();
-    currentOptions.sceneColorMap = true;
-    currentOptions.bloomEnabled = true;
-    currentOptions.taaEnabled = false;          // disabled TAA as it currently does not handle dynamic objects
-
-    // and set up these rendering passes to be used by the camera, instead of its default rendering
-    const renderPassCamera = new pc.RenderPassCameraFrame(app, cameraEntity.camera, currentOptions);
-    cameraEntity.camera.renderPasses = [renderPassCamera];
-
-    // ------
+    /** @type { CameraFrame } */
+    const cameraFrame = cameraEntity.script.create(CameraFrame);
+    cameraFrame.rendering.sceneColorMap = true;
 
     const applySettings = () => {
 
-        // update current options and apply them
-        currentOptions.taaEnabled = data.get('data.taa.enabled');
-        currentOptions.bloomEnabled = data.get('data.bloom.enabled');
-        renderPassCamera.update(currentOptions);
-
-        // apply options on the other passes
-        const composePass = renderPassCamera.composePass;
-
-        // SCENE
-        composePass.toneMapping = data.get('data.scene.tonemapping');
-        renderPassCamera.renderTargetScale = data.get('data.scene.scale');
-
+        // background
         const background = data.get('data.scene.background');
         cameraEntity.camera.clearColor = new pc.Color(
             lightColor.r * background,
@@ -248,38 +231,42 @@ assetListLoader.load(() => {
         );
         light.light.intensity = background;
 
+        // emissive
         const emissive = data.get('data.scene.emissive');
         emissiveMaterials.forEach((material) => {
             material.emissiveIntensity = emissive;
             material.update();
         });
 
-        // taa - enable camera jitter if taa is enabled
-        cameraEntity.camera.jitter = currentOptions.taaEnabled ? data.get('data.taa.jitter') : 0;
+        // Scene
+        cameraFrame.rendering.renderTargetScale = data.get('data.scene.scale');
+        cameraFrame.rendering.toneMapping = data.get('data.scene.tonemapping');
 
-        // bloom
-        if (currentOptions.bloomEnabled) {
-            const bloomPass = renderPassCamera.bloomPass;
-            bloomPass.lastMipLevel = data.get('data.bloom.lastMipLevel');
-            composePass.bloomIntensity = pc.math.lerp(0, 0.1, data.get('data.bloom.intensity') / 100);
-        }
+        // TAA
+        cameraFrame.taa.enabled = data.get('data.taa.enabled');
+        cameraFrame.taa.jitter = data.get('data.taa.jitter');
+
+        // Bloom
+        cameraFrame.bloom.enabled = data.get('data.bloom.enabled');
+        cameraFrame.bloom.intensity = pc.math.lerp(0, 0.1, data.get('data.bloom.intensity') / 100);
+        cameraFrame.bloom.lastMipLevel = data.get('data.bloom.lastMipLevel');
 
         // grading
-        composePass.gradingSaturation = data.get('data.grading.saturation');
-        composePass.gradingBrightness = data.get('data.grading.brightness');
-        composePass.gradingContrast = data.get('data.grading.contrast');
-        composePass.gradingEnabled = data.get('data.grading.enabled');
+        cameraFrame.grading.enabled = data.get('data.grading.enabled');
+        cameraFrame.grading.saturation = data.get('data.grading.saturation');
+        cameraFrame.grading.brightness = data.get('data.grading.brightness');
+        cameraFrame.grading.contrast = data.get('data.grading.contrast');
 
         // vignette
-        composePass.vignetteEnabled = data.get('data.vignette.enabled');
-        composePass.vignetteInner = data.get('data.vignette.inner');
-        composePass.vignetteOuter = data.get('data.vignette.outer');
-        composePass.vignetteCurvature = data.get('data.vignette.curvature');
-        composePass.vignetteIntensity = data.get('data.vignette.intensity');
+        cameraFrame.vignette.enabled = data.get('data.vignette.enabled');
+        cameraFrame.vignette.inner = data.get('data.vignette.inner');
+        cameraFrame.vignette.outer = data.get('data.vignette.outer');
+        cameraFrame.vignette.curvature = data.get('data.vignette.curvature');
+        cameraFrame.vignette.intensity = data.get('data.vignette.intensity');
 
         // fringing
-        composePass.fringingEnabled = data.get('data.fringing.enabled');
-        composePass.fringingIntensity = data.get('data.fringing.intensity');
+        cameraFrame.fringing.enabled = data.get('data.fringing.enabled');
+        cameraFrame.fringing.intensity = data.get('data.fringing.intensity');
     };
 
     // apply UI changes
@@ -296,8 +283,8 @@ assetListLoader.load(() => {
             tonemapping: pc.TONEMAP_ACES
         },
         bloom: {
-            enabled: currentOptions.bloomEnabled,
-            intensity: 10,
+            enabled: true,
+            intensity: 5,
             lastMipLevel: 1
         },
         grading: {
@@ -318,7 +305,7 @@ assetListLoader.load(() => {
             intensity: 50
         },
         taa: {
-            enabled: currentOptions.taaEnabled,
+            enabled: false,
             jitter: 1
         }
     });

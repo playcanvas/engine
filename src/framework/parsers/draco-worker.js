@@ -128,7 +128,7 @@ function DracoWorker(jsUrl, wasmUrl) {
         const mesh = new draco.Mesh();
         const status = decoder.DecodeBufferToMesh(buffer, mesh);
 
-        if (!status || !status.ok() || mesh.ptr === 0) {
+        if (!status || !status.ok() || draco.getPointer(mesh) === 0) {
             result.error = 'Failed to decode draco asset';
             return result;
         }

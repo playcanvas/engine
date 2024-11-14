@@ -172,7 +172,7 @@ class WebglRenderTarget {
                         attachmentBaseConstant + i,
                         colorBuffer._cubemap ? gl.TEXTURE_CUBE_MAP_POSITIVE_X + target._face : gl.TEXTURE_2D,
                         colorBuffer.impl._glTexture,
-                        0
+                        target.mipLevel
                     );
 
                     buffers.push(attachmentBaseConstant + i);
@@ -198,7 +198,7 @@ class WebglRenderTarget {
                     // Attach
                     gl.framebufferTexture2D(gl.FRAMEBUFFER, attachmentPoint,
                         depthBuffer._cubemap ? gl.TEXTURE_CUBE_MAP_POSITIVE_X + target._face : gl.TEXTURE_2D,
-                        target._depthBuffer.impl._glTexture, 0);
+                        target._depthBuffer.impl._glTexture, target.mipLevel);
 
                 } else {
                     // --- Init a new depth/stencil buffer (optional) ---

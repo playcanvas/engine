@@ -232,6 +232,7 @@ class Scene extends EventHandler {
         this._skyboxIntensity = 1;
         this._skyboxLuminance = 0;
         this._skyboxMip = 0;
+        this._skyboxHighlightMultiplier = 1;
 
         this._skyboxRotationShaderInclude = false;
         this._skyboxRotation = new Quat();
@@ -416,6 +417,11 @@ class Scene extends EventHandler {
         return this._layers;
     }
 
+    /**
+     * Gets the {@link Sky} that defines sky properties.
+     *
+     * @type {Sky}
+     */
     get sky() {
         return this._sky;
     }
@@ -603,6 +609,31 @@ class Scene extends EventHandler {
      */
     get skyboxMip() {
         return this._skyboxMip;
+    }
+
+    /**
+     * Sets the highlight multiplier for the skybox. The HDR skybox can represent brightness levels
+     * up to a maximum of 64, with any values beyond this being clipped. This limitation prevents
+     * the accurate representation of extremely bright sources, such as the Sun, which can affect
+     * HDR bloom rendering by not producing enough bloom. The multiplier adjusts the brightness
+     * after clipping, enhancing the bloom effect for bright sources. Defaults to 1.
+     *
+     * @type {number}
+     */
+    set skyboxHighlightMultiplier(value) {
+        if (value !== this._skyboxHighlightMultiplier) {
+            this._skyboxHighlightMultiplier = value;
+            this._resetSkyMesh();
+        }
+    }
+
+    /**
+     * Gets the highlight multiplied for the skybox.
+     *
+     * @type {number}
+     */
+    get skyboxHighlightMultiplier() {
+        return this._skyboxHighlightMultiplier;
     }
 
     /**

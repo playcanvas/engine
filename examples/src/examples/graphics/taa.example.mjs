@@ -1,6 +1,7 @@
 import * as pc from 'playcanvas';
 import { data } from 'examples/observer';
-import { deviceType, rootPath } from 'examples/utils';
+import { deviceType, rootPath, fileImport } from 'examples/utils';
+const { CameraFrame } = await fileImport(rootPath + '/static/assets/scripts/misc/camera-frame.mjs');
 
 const canvas = /** @type {HTMLCanvasElement} */ (document.getElementById('application-canvas'));
 window.focus();
@@ -112,35 +113,20 @@ assetListLoader.load(() => {
 
     // ------ Custom render passes set up ------
 
-    const currentOptions = new pc.CameraFrameOptions();
-    currentOptions.sceneColorMap = false;
-    currentOptions.bloomEnabled = true;
-    currentOptions.taaEnabled = true;
-
-    // and set up these rendering passes to be used by the camera, instead of its default rendering
-    const renderPassCamera = new pc.RenderPassCameraFrame(app, cameraEntity.camera, currentOptions);
-    cameraEntity.camera.renderPasses = [renderPassCamera];
+    /** @type { CameraFrame } */
+    const cameraFrame = cameraEntity.script.create(CameraFrame);
+    cameraFrame.rendering.toneMapping = pc.TONEMAP_ACES;
+    cameraFrame.bloom.intensity = 0.02;
 
     // ------
 
     const applySettings = () => {
 
-        // update current options and apply them
-        currentOptions.taaEnabled = data.get('data.taa.enabled');
-        currentOptions.bloomEnabled = data.get('data.scene.bloom');
-        renderPassCamera.update(currentOptions);
-
-        // apply options on the other passes
-        const composePass = renderPassCamera.composePass;
-        composePass.sharpness = data.get('data.scene.sharpness');
-        composePass.bloomIntensity = 0.02;
-        composePass.toneMapping = pc.TONEMAP_ACES;
-
-        // taa - enable camera jitter if taa is enabled
-        cameraEntity.camera.jitter = currentOptions.taaEnabled ? data.get('data.taa.jitter') : 0;
-
-        // render target scale
-        renderPassCamera.renderTargetScale = data.get('data.scene.scale');
+        cameraFrame.bloom.enabled = data.get('data.scene.bloom');
+        cameraFrame.taa.enabled = data.get('data.taa.enabled');
+        cameraFrame.taa.jitter = data.get('data.taa.jitter');
+        cameraFrame.rendering.renderTargetScale = data.get('data.scene.scale');
+        cameraFrame.rendering.sharpness = data.get('data.scene.sharpness');
     };
 
     // apply UI changes
@@ -162,7 +148,7 @@ assetListLoader.load(() => {
             sharpness: 0.5
         },
         taa: {
-            enabled: currentOptions.taaEnabled,
+            enabled: true,
             jitter: 1
         }
     });

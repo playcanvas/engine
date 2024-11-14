@@ -4,7 +4,7 @@ import * as pc from 'playcanvas';
  * @param {import('../../app/components/Example.mjs').ControlOptions} options - The options.
  * @returns {JSX.Element} The returned JSX Element.
  */
-export function controls({ observer, ReactPCUI, React, jsx, fragment }) {
+export const controls = ({ observer, ReactPCUI, React, jsx, fragment }) => {
     const { BindingTwoWay, BooleanInput, LabelGroup, Panel, SelectInput, SliderInput } = ReactPCUI;
     return fragment(
         jsx(
@@ -115,7 +115,7 @@ export function controls({ observer, ReactPCUI, React, jsx, fragment }) {
                     binding: new BindingTwoWay(),
                     link: { observer, path: 'data.grading.saturation' },
                     min: 0,
-                    max: 3,
+                    max: 2,
                     precision: 2
                 })
             ),
@@ -136,8 +136,8 @@ export function controls({ observer, ReactPCUI, React, jsx, fragment }) {
                 jsx(SliderInput, {
                     binding: new BindingTwoWay(),
                     link: { observer, path: 'data.grading.contrast' },
-                    min: 0,
-                    max: 3,
+                    min: 0.5,
+                    max: 1.5,
                     precision: 2
                 })
             )
@@ -242,10 +242,10 @@ export function controls({ observer, ReactPCUI, React, jsx, fragment }) {
                     binding: new BindingTwoWay(),
                     link: { observer, path: 'data.taa.jitter' },
                     min: 0,
-                    max: 5,
+                    max: 1,
                     precision: 2
                 })
             )
         )
     );
-}
+};

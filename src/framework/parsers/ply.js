@@ -1,7 +1,6 @@
 import { GSplatData } from '../../scene/gsplat/gsplat-data.js';
 import { GSplatCompressedData } from '../../scene/gsplat/gsplat-compressed-data.js';
 import { GSplatResource } from './gsplat-resource.js';
-import { Mat4 } from '../../core/math/mat4.js';
 
 /**
  * @import { AssetRegistry } from '../asset/asset-registry.js'
@@ -220,6 +219,12 @@ const isCompressedPly = (elements) => {
            elements[1].properties.every((p, i) => p.name === vertexProperties[i] && p.type === 'uint');
 };
 
+const isFloatPly = (elements) => {
+    return elements.length === 1 &&
+           elements[0].name === 'vertex' &&
+           elements[0].properties.every(p => p.type === 'float');
+};
+
 // read the data of a compressed ply file
 const readCompressedPly = async (streamBuf, elements, littleEndian) => {
     const result = new GSplatCompressedData();
@@ -300,6 +305,99 @@ const readCompressedPly = async (streamBuf, elements, littleEndian) => {
     }
 
     return result;
+};
+
+// read the data of a floating point ply file
+const readFloatPly = async (streamBuf, elements, littleEndian) => {
+    // calculate the size of an input element record
+    const element = elements[0];
+    const properties = element.properties;
+    const numProperties = properties.length;
+    const storage  = properties.map(p => p.storage);
+    const inputSize = properties.reduce((a, p) => a + p.byteSize, 0);
+    let vertexIdx = 0;
+    let floatData;
+
+    const checkFloatData = () => {
+        const buffer = streamBuf.data.buffer;
+        if (floatData?.buffer !== buffer) {
+            floatData = new Float32Array(buffer, 0, buffer.byteLength / 4);
+        }
+    };
+
+    checkFloatData();
+
+    while (vertexIdx < element.count) {
+        while (streamBuf.remaining < inputSize) {
+            /* eslint-disable no-await-in-loop */
+            await streamBuf.read();
+
+            checkFloatData();
+        }
+
+        const toRead = Math.min(element.count - vertexIdx, Math.floor(streamBuf.remaining / inputSize));
+
+        for (let j = 0; j < numProperties; ++j) {
+            const s = storage[j];
+            for (let n = 0; n < toRead; ++n) {
+                s[n + vertexIdx] = floatData[n * numProperties + j];
+            }
+        }
+        vertexIdx += toRead;
+        streamBuf.head += toRead * inputSize;
+    }
+
+    return new GSplatData(elements);
+};
+
+const readGeneralPly = async (streamBuf, elements, littleEndian) => {
+    // read and deinterleave the data
+    for (let i = 0; i < elements.length; ++i) {
+        const element = elements[i];
+
+        // calculate the size of an input element record
+        const inputSize = element.properties.reduce((a, p) => a + p.byteSize, 0);
+        const propertyParsingFunctions = element.properties.map((p) => {
+            /* eslint-disable brace-style */
+            if (p.storage) {
+                switch (p.type) {
+                    case 'char':   return (streamBuf, c) => { p.storage[c] = streamBuf.getInt8(); };
+                    case 'uchar':  return (streamBuf, c) => { p.storage[c] = streamBuf.getUint8(); };
+                    case 'short':  return (streamBuf, c) => { p.storage[c] = streamBuf.getInt16(); };
+                    case 'ushort': return (streamBuf, c) => { p.storage[c] = streamBuf.getUint16(); };
+                    case 'int':    return (streamBuf, c) => { p.storage[c] = streamBuf.getInt32(); };
+                    case 'uint':   return (streamBuf, c) => { p.storage[c] = streamBuf.getUint32(); };
+                    case 'float':  return (streamBuf, c) => { p.storage[c] = streamBuf.getFloat32(); };
+                    case 'double': return (streamBuf, c) => { p.storage[c] = streamBuf.getFloat64(); };
+                    default: throw new Error(`Unsupported property data type '${p.type}' in ply header`);
+                }
+            } else {
+                return (streamBuf) => { streamBuf.head += p.byteSize; };
+            }
+            /* eslint-enable brace-style */
+        });
+        let c = 0;
+
+        while (c < element.count) {
+            while (streamBuf.remaining < inputSize) {
+                /* eslint-disable no-await-in-loop */
+                await streamBuf.read();
+            }
+
+            const toRead = Math.min(element.count - c, Math.floor(streamBuf.remaining / inputSize));
+
+            for (let n = 0; n < toRead; ++n) {
+                for (let j = 0; j < element.properties.length; ++j) {
+                    propertyParsingFunctions[j](streamBuf, c);
+                }
+                c++;
+            }
+        }
+    }
+
+    // console.log(elements);
+
+    return new GSplatData(elements);
 };
 
 /**
@@ -412,73 +510,17 @@ const readPly = async (reader, propertyFilter = null) => {
         });
     });
 
-    // read and un-interleave the data
-    for (let i = 0; i < elements.length; ++i) {
-        const element = elements[i];
-
-        // calculate the size of an input element record
-        const inputSize = element.properties.reduce((a, p) => a + p.byteSize, 0);
-        const propertyParsingFunctions = element.properties.map((p) => {
-            /* eslint-disable brace-style */
-            if (p.storage) {
-                switch (p.type) {
-                    case 'char':   return (streamBuf, c) => { p.storage[c] = streamBuf.getInt8(); };
-                    case 'uchar':  return (streamBuf, c) => { p.storage[c] = streamBuf.getUint8(); };
-                    case 'short':  return (streamBuf, c) => { p.storage[c] = streamBuf.getInt16(); };
-                    case 'ushort': return (streamBuf, c) => { p.storage[c] = streamBuf.getUint16(); };
-                    case 'int':    return (streamBuf, c) => { p.storage[c] = streamBuf.getInt32(); };
-                    case 'uint':   return (streamBuf, c) => { p.storage[c] = streamBuf.getUint32(); };
-                    case 'float':  return (streamBuf, c) => { p.storage[c] = streamBuf.getFloat32(); };
-                    case 'double': return (streamBuf, c) => { p.storage[c] = streamBuf.getFloat64(); };
-                    default: throw new Error(`Unsupported property data type '${p.type}' in ply header`);
-                }
-            } else {
-                return (streamBuf) => { streamBuf.head += p.byteSize; };
-            }
-            /* eslint-enable brace-style */
-        });
-        let c = 0;
-
-        while (c < element.count) {
-            while (streamBuf.remaining < inputSize) {
-                /* eslint-disable no-await-in-loop */
-                await streamBuf.read();
-            }
-
-            const toRead = Math.min(element.count - c, Math.floor(streamBuf.remaining / inputSize));
-
-            for (let n = 0; n < toRead; ++n) {
-                for (let j = 0; j < element.properties.length; ++j) {
-                    propertyParsingFunctions[j](streamBuf, c);
-                }
-                c++;
-            }
-        }
+    // load float32 PLY with fast path
+    if (isFloatPly(elements)) {
+        return await readFloatPly(streamBuf, elements, format === 'binary_little_endian');
     }
 
-    // console.log(elements);
-
-    return new GSplatData(elements);
+    // fallback, general case
+    return await readGeneralPly(streamBuf, elements, format === 'binary_little_endian');
 };
 
-// filter out element data we're not going to use
-const defaultElements = [
-    'x', 'y', 'z',
-    'f_dc_0', 'f_dc_1', 'f_dc_2', 'opacity',
-    'rot_0', 'rot_1', 'rot_2', 'rot_3',
-    'scale_0', 'scale_1', 'scale_2',
-    // compressed format elements
-    'min_x', 'min_y', 'min_z',
-    'max_x', 'max_y', 'max_z',
-    'min_scale_x', 'min_scale_y', 'min_scale_z',
-    'max_scale_x', 'max_scale_y', 'max_scale_z',
-    'packed_position', 'packed_rotation', 'packed_scale', 'packed_color'
-];
-
-const defaultElementsSet = new Set(defaultElements);
-const defaultElementFilter = val => defaultElementsSet.has(val);
-
-const mat4 = new Mat4();
+// by default load everything
+const defaultElementFilter = val => true;
 
 class PlyParser {
     /** @type {GraphicsDevice} */
@@ -510,21 +552,15 @@ class PlyParser {
      * @param {Asset} asset - Container asset.
      */
     async load(url, callback, asset) {
-        const response = await fetch(url.load);
-        if (!response || !response.body) {
-            callback('Error loading resource', null);
-        } else {
-            readPly(response.body.getReader(), asset.data.elementFilter ?? defaultElementFilter)
-            .then((gsplatData) => {
+        try {
+            const response = await fetch(url.load);
+            if (!response || !response.body) {
+                callback('Error loading resource', null);
+            } else {
+                const gsplatData = await readPly(response.body.getReader(), asset.data.elementFilter ?? defaultElementFilter);
+
+                // reorder data
                 if (!gsplatData.isCompressed) {
-
-                    // perform Z scale
-                    if (asset.data.performZScale ?? true) {
-                        mat4.setScale(-1, -1, 1);
-                        gsplatData.transform(mat4);
-                    }
-
-                    // reorder data
                     if (asset.data.reorder ?? true) {
                         gsplatData.reorderData();
                     }
@@ -537,10 +573,9 @@ class PlyParser {
                 );
 
                 callback(null, resource);
-            })
-            .catch((err) => {
-                callback(err, null);
-            });
+            }
+        } catch (err) {
+            callback(err, null);
         }
     }
 

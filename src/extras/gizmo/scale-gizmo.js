@@ -1,12 +1,13 @@
 import { Vec3 } from '../../core/math/vec3.js';
 import { Quat } from '../../core/math/quat.js';
 
-import { AxisBoxCenter, AxisBoxLine, AxisPlane } from './axis-shapes.js';
 import { GIZMOSPACE_LOCAL, GIZMOAXIS_X, GIZMOAXIS_XYZ, GIZMOAXIS_Y, GIZMOAXIS_Z } from './constants.js';
 import { TransformGizmo } from './transform-gizmo.js';
+import { BoxShape } from './shape/box-shape.js';
+import { PlaneShape } from './shape/plane-shape.js';
+import { BoxLineShape } from './shape/boxline-shape.js';
 
 /**
- * @import { AppBase } from '../../framework/app-base.js'
  * @import { CameraComponent } from '../../framework/components/camera/component.js'
  * @import { GraphNode } from '../../scene/graph-node.js'
  * @import { Layer } from '../../scene/layer.js'
@@ -17,6 +18,9 @@ const tmpV1 = new Vec3();
 const tmpV2 = new Vec3();
 const tmpQ1 = new Quat();
 
+// constants
+const GLANCE_EPSILON = 0.98;
+
 /**
  * Scaling gizmo.
  *
@@ -24,53 +28,57 @@ const tmpQ1 = new Quat();
  */
 class ScaleGizmo extends TransformGizmo {
     _shapes = {
-        xyz: new AxisBoxCenter(this._device, {
+        xyz: new BoxShape(this._device, {
             axis: GIZMOAXIS_XYZ,
             layers: [this._layer.id],
+            shading: this._shading,
             defaultColor: this._meshColors.axis.xyz,
             hoverColor: this._meshColors.hover.xyz
         }),
-        yz: new AxisPlane(this._device, {
+        yz: new PlaneShape(this._device, {
             axis: GIZMOAXIS_X,
-            flipAxis: GIZMOAXIS_Y,
             layers: [this._layer.id],
+            shading: this._shading,
             rotation: new Vec3(0, 0, -90),
             defaultColor: this._meshColors.axis.x,
             hoverColor: this._meshColors.hover.x
         }),
-        xz: new AxisPlane(this._device, {
+        xz: new PlaneShape(this._device, {
             axis: GIZMOAXIS_Y,
-            flipAxis: GIZMOAXIS_Z,
             layers: [this._layer.id],
+            shading: this._shading,
             rotation: new Vec3(0, 0, 0),
             defaultColor: this._meshColors.axis.y,
             hoverColor: this._meshColors.hover.y
         }),
-        xy: new AxisPlane(this._device, {
+        xy: new PlaneShape(this._device, {
             axis: GIZMOAXIS_Z,
-            flipAxis: GIZMOAXIS_X,
             layers: [this._layer.id],
+            shading: this._shading,
             rotation: new Vec3(90, 0, 0),
             defaultColor: this._meshColors.axis.z,
             hoverColor: this._meshColors.hover.z
         }),
-        x: new AxisBoxLine(this._device, {
+        x: new BoxLineShape(this._device, {
             axis: GIZMOAXIS_X,
             layers: [this._layer.id],
+            shading: this._shading,
             rotation: new Vec3(0, 0, -90),
             defaultColor: this._meshColors.axis.x,
             hoverColor: this._meshColors.hover.x
         }),
-        y: new AxisBoxLine(this._device, {
+        y: new BoxLineShape(this._device, {
             axis: GIZMOAXIS_Y,
             layers: [this._layer.id],
+            shading: this._shading,
             rotation: new Vec3(0, 0, 0),
             defaultColor: this._meshColors.axis.y,
             hoverColor: this._meshColors.hover.y
         }),
-        z: new AxisBoxLine(this._device, {
+        z: new BoxLineShape(this._device, {
             axis: GIZMOAXIS_Z,
             layers: [this._layer.id],
+            shading: this._shading,
             rotation: new Vec3(90, 0, 0),
             defaultColor: this._meshColors.axis.z,
             hoverColor: this._meshColors.hover.z
@@ -101,21 +109,33 @@ class ScaleGizmo extends TransformGizmo {
     snapIncrement = 1;
 
     /**
+     * Flips the planes to face the camera.
+     *
+     * @type {boolean}
+     */
+    flipShapes = true;
+
+    /**
+     * The lower bound for scaling.
+     *
+     * @type {Vec3}
+     */
+    lowerBoundScale = new Vec3(-Infinity, -Infinity, -Infinity);
+
+    /**
      * Creates a new ScaleGizmo object.
      *
-     * @param {AppBase} app - The application instance.
      * @param {CameraComponent} camera - The camera component.
      * @param {Layer} layer - The render layer.
      * @example
      * const gizmo = new pc.ScaleGizmo(app, camera, layer);
      */
-    constructor(app, camera, layer) {
-        super(app, camera, layer);
+    constructor(camera, layer) {
+        super(camera, layer);
 
         this._createTransform();
 
         this.on(TransformGizmo.EVENT_TRANSFORMSTART, () => {
-            this._selectionStartPoint.sub(Vec3.ONE);
             this._storeNodeScales();
         });
 
@@ -125,11 +145,16 @@ class ScaleGizmo extends TransformGizmo {
                 pointDelta.round();
                 pointDelta.mulScalar(this.snapIncrement);
             }
-            this._setNodeScales(pointDelta);
+            pointDelta.mulScalar(1 / this._scale);
+            this._setNodeScales(pointDelta.add(Vec3.ONE));
         });
 
         this.on(TransformGizmo.EVENT_NODESDETACH, () => {
             this._nodeScales.clear();
+        });
+
+        this._app.on('prerender', () => {
+            this._shapesLookAtCamera();
         });
     }
 
@@ -346,6 +371,47 @@ class ScaleGizmo extends TransformGizmo {
     /**
      * @private
      */
+    _shapesLookAtCamera() {
+        const facingDir = this.facing;
+
+        // axes
+        let dot = facingDir.dot(this.root.right);
+        this._shapes.x.entity.enabled = Math.abs(dot) < GLANCE_EPSILON;
+        if (this.flipShapes) {
+            this._shapes.x.flipped = dot < 0;
+        }
+        dot = facingDir.dot(this.root.up);
+        this._shapes.y.entity.enabled = Math.abs(dot) < GLANCE_EPSILON;
+        if (this.flipShapes) {
+            this._shapes.y.flipped = dot < 0;
+        }
+        dot = facingDir.dot(this.root.forward);
+        this._shapes.z.entity.enabled = Math.abs(dot) < GLANCE_EPSILON;
+        if (this.flipShapes) {
+            this._shapes.z.flipped = dot > 0;
+        }
+
+        // planes
+        tmpV1.cross(facingDir, this.root.right);
+        this._shapes.yz.entity.enabled = tmpV1.length() < GLANCE_EPSILON;
+        if (this.flipShapes) {
+            this._shapes.yz.flipped = tmpV2.set(0, +(tmpV1.dot(this.root.forward) < 0), +(tmpV1.dot(this.root.up) < 0));
+        }
+        tmpV1.cross(facingDir, this.root.forward);
+        this._shapes.xy.entity.enabled = tmpV1.length() < GLANCE_EPSILON;
+        if (this.flipShapes) {
+            this._shapes.xy.flipped = tmpV2.set(+(tmpV1.dot(this.root.up) < 0), +(tmpV1.dot(this.root.right) > 0), 0);
+        }
+        tmpV1.cross(facingDir, this.root.up);
+        this._shapes.xz.entity.enabled = tmpV1.length() < GLANCE_EPSILON;
+        if (this.flipShapes) {
+            this._shapes.xz.flipped = tmpV2.set(+(tmpV1.dot(this.root.forward) > 0), 0, +(tmpV1.dot(this.root.right) > 0));
+        }
+    }
+
+    /**
+     * @private
+     */
     _storeNodeScales() {
         for (let i = 0; i < this.nodes.length; i++) {
             const node = this.nodes[i];
@@ -364,7 +430,7 @@ class ScaleGizmo extends TransformGizmo {
             if (!scale) {
                 continue;
             }
-            node.setLocalScale(scale.clone().mul(pointDelta));
+            node.setLocalScale(tmpV1.copy(scale).mul(pointDelta).max(this.lowerBoundScale));
         }
     }
 

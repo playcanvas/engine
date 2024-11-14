@@ -1,6 +1,7 @@
 import * as pc from 'playcanvas';
 import { data } from 'examples/observer';
-import { deviceType, rootPath } from 'examples/utils';
+import { deviceType, rootPath, fileImport } from 'examples/utils';
+const { CameraFrame } = await fileImport(rootPath + '/static/assets/scripts/misc/camera-frame.mjs');
 
 const canvas = /** @type {HTMLCanvasElement} */ (document.getElementById('application-canvas'));
 window.focus();
@@ -167,34 +168,21 @@ assetListLoader.load(() => {
 
     // ------ Custom render passes set up ------
 
-    const currentOptions = new pc.CameraFrameOptions();
-    currentOptions.samples = 1;
-    currentOptions.sceneColorMap = false;
-    currentOptions.ssaoType = pc.SSAOTYPE_LIGHTING;
-    currentOptions.ssaoBlurEnabled = true;
-
-    // and set up these rendering passes to be used by the camera, instead of its default rendering
-    const renderPassCamera = new pc.RenderPassCameraFrame(app, cameraEntity.camera, currentOptions);
-    cameraEntity.camera.renderPasses = [renderPassCamera];
+    /** @type { CameraFrame } */
+    const cameraFrame = cameraEntity.script.create(CameraFrame);
+    cameraFrame.rendering.samples = 4;
+    cameraFrame.rendering.toneMapping = pc.TONEMAP_NEUTRAL;
 
     const applySettings = () => {
 
-        // update current options and apply them
-        currentOptions.ssaoType = data.get('data.ssao.type');
-        currentOptions.ssaoBlurEnabled = data.get('data.ssao.blurEnabled');
-        renderPassCamera.update(currentOptions);
-
-        // apply options on the other passes
-        const ssaoPass = renderPassCamera.ssaoPass;
-        if (ssaoPass) {
-
-            ssaoPass.intensity = data.get('data.ssao.intensity');
-            ssaoPass.power = data.get('data.ssao.power');
-            ssaoPass.radius = data.get('data.ssao.radius');
-            ssaoPass.sampleCount = data.get('data.ssao.samples');
-            ssaoPass.minAngle = data.get('data.ssao.minAngle');
-            ssaoPass.scale = data.get('data.ssao.scale');
-        }
+        cameraFrame.ssao.type = data.get('data.ssao.type');
+        cameraFrame.ssao.blurEnabled = data.get('data.ssao.blurEnabled');
+        cameraFrame.ssao.intensity = data.get('data.ssao.intensity');
+        cameraFrame.ssao.power = data.get('data.ssao.power');
+        cameraFrame.ssao.radius = data.get('data.ssao.radius');
+        cameraFrame.ssao.samples = data.get('data.ssao.samples');
+        cameraFrame.ssao.minAngle = data.get('data.ssao.minAngle');
+        cameraFrame.ssao.scale = data.get('data.ssao.scale');
     };
 
     // apply UI changes

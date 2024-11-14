@@ -9,9 +9,8 @@ import { dirname } from 'path';
 import { fileURLToPath } from 'url';
 import { spawn, execSync } from 'node:child_process';
 
-import { parseConfig } from './utils.mjs';
-
 import { exampleMetaData } from '../cache/metadata.mjs';
+import { sleep } from './utils.mjs';
 
 // @ts-ignore
 const __filename = fileURLToPath(import.meta.url);
@@ -120,7 +119,7 @@ class PuppeteerPool {
  * @param {string} categoryKebab - Category kebab name.
  * @param {string} exampleNameKebab - Example kebab name.
  */
-async function takeThumbnails(pool, categoryKebab, exampleNameKebab) {
+const takeThumbnails = async (pool, categoryKebab, exampleNameKebab) => {
     const poolItem = pool.allocPoolItem();
     const page = await pool.newPage(poolItem);
     if (DEBUG) {
@@ -168,12 +167,12 @@ async function takeThumbnails(pool, categoryKebab, exampleNameKebab) {
     await pool.closePage(poolItem, page);
 
     console.log(`screenshot taken for: ${categoryKebab}/${exampleNameKebab}`);
-}
+};
 
 /**
  * @param {typeof exampleMetaData} metadata - Example metadata.
  */
-async function takeScreenshots(metadata) {
+const takeScreenshots = async (metadata) => {
     if (metadata.length === 0) {
         return;
     }
@@ -191,15 +190,7 @@ async function takeScreenshots(metadata) {
 
     const screenshotPromises = [];
     for (let i = 0; i < metadata.length; i++) {
-        const { categoryKebab, exampleNameKebab, path } = metadata[i];
-
-        // check if hidden
-        const script = fs.readFileSync(`${path}/${exampleNameKebab}.example.mjs`, 'utf-8');
-        const config = parseConfig(script);
-        if (config.HIDDEN) {
-            console.log(`skipped (hidden): ${categoryKebab}/${exampleNameKebab}`);
-            continue;
-        }
+        const { categoryKebab, exampleNameKebab } = metadata[i];
 
         // check if thumbnail exists
         if (fs.existsSync(`${MAIN_DIR}/thumbnails/${categoryKebab}_${exampleNameKebab}_large.webp`)) {
@@ -217,19 +208,10 @@ async function takeScreenshots(metadata) {
 
     // close pool
     await pool.close();
-}
+};
 
-/**
- * @param {number} ms - Milliseconds.
- * @returns {Promise<void>} - Sleep promise.
- */
-function sleep(ms = 0) {
-    return new Promise((resolve) => {
-        setTimeout(resolve, ms);
-    });
-}
 
-async function main() {
+const main = async () => {
     console.log('Spawn server on', PORT);
     // We need this kind of command:
     // npx serve dist --config ../serve.json
@@ -254,5 +236,5 @@ async function main() {
     }
     console.log('Killed server on', PORT);
     return 0;
-}
+};
 main().then(process.exit);

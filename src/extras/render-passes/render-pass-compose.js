@@ -28,14 +28,24 @@ const fragmentShader = /* glsl */ `
 
     #ifdef GRADING
         uniform vec3 brightnessContrastSaturation;
+        uniform vec3 tint;
 
         // for all parameters, 1.0 is the no-change value
-        vec3 contrastSaturationBrightness(vec3 color, float brt, float sat, float con)
+        vec3 colorGradingHDR(vec3 color, float brt, float sat, float con)
         {
+            // tint
+            color *= tint;
+
+            // brightness
             color = color * brt;
+
+            // saturation
             float grey = dot(color, vec3(0.3, 0.59, 0.11));
-            color  = mix(vec3(grey), color, sat);
-            return max(mix(vec3(0.5), color, con), 0.0);
+            grey = grey / max(1.0, max(color.r, max(color.g, color.b)));    // Normalize luminance in HDR to preserve intensity (optional)
+            color = mix(vec3(grey), color, sat);
+
+            // contrast
+            return mix(vec3(0.5), color, con);
         }
     
     #endif
@@ -109,6 +119,9 @@ const fragmentShader = /* glsl */ `
             float w = sharpening_amount * sharpness;
             vec3 res = (w * (a + b + d + e) + c) / (4.0 * w + 1.0);
 
+            // remove negative colors
+            res = max(res, 0.0);
+
             // convert back to HDR
             return toHDR(res);
         }
@@ -147,7 +160,8 @@ const fragmentShader = /* glsl */ `
         #endif
 
         #ifdef GRADING
-            result = contrastSaturationBrightness(result, brightnessContrastSaturation.x, brightnessContrastSaturation.z, brightnessContrastSaturation.y);
+            // color grading takes place in HDR space before tone mapping
+            result = colorGradingHDR(result, brightnessContrastSaturation.x, brightnessContrastSaturation.z, brightnessContrastSaturation.y);
         #endif
 
         result = toneMap(result);
@@ -189,6 +203,8 @@ class RenderPassCompose extends RenderPassShaderQuad {
 
     gradingBrightness = 1;
 
+    gradingTint = new Color(1, 1, 1, 1);
+
     _shaderDirty = true;
 
     _vignetteEnabled = false;
@@ -222,6 +238,7 @@ class RenderPassCompose extends RenderPassShaderQuad {
         this.ssaoTextureId = scope.resolve('ssaoTexture');
         this.bloomIntensityId = scope.resolve('bloomIntensity');
         this.bcsId = scope.resolve('brightnessContrastSaturation');
+        this.tintId = scope.resolve('tint');
         this.vignetterParamsId = scope.resolve('vignetterParams');
         this.fringingIntensityId = scope.resolve('fringingIntensity');
         this.sceneTextureInvResId = scope.resolve('sceneTextureInvRes');
@@ -393,6 +410,7 @@ class RenderPassCompose extends RenderPassShaderQuad {
 
         if (this._gradingEnabled) {
             this.bcsId.setValue([this.gradingBrightness, this.gradingContrast, this.gradingSaturation]);
+            this.tintId.setValue([this.gradingTint.r, this.gradingTint.g, this.gradingTint.b]);
         }
 
         if (this._vignetteEnabled) {

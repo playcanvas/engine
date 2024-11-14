@@ -1,7 +1,6 @@
 import { Vec3 } from '../../core/math/vec3.js';
 import { Quat } from '../../core/math/quat.js';
 
-import { AxisArrow, AxisPlane, AxisSphereCenter } from './axis-shapes.js';
 import {
     GIZMOSPACE_LOCAL,
     GIZMOAXIS_FACE,
@@ -10,9 +9,11 @@ import {
     GIZMOAXIS_Z
 } from './constants.js';
 import { TransformGizmo } from './transform-gizmo.js';
+import { PlaneShape } from './shape/plane-shape.js';
+import { ArrowShape } from './shape/arrow-shape.js';
+import { SphereShape } from './shape/sphere-shape.js';
 
 /**
- * @import { AppBase } from '../../framework/app-base.js'
  * @import { CameraComponent } from '../../framework/components/camera/component.js'
  * @import { GraphNode } from '../../scene/graph-node.js'
  * @import { Layer } from '../../scene/layer.js'
@@ -23,6 +24,9 @@ const tmpV1 = new Vec3();
 const tmpV2 = new Vec3();
 const tmpQ1 = new Quat();
 
+// constants
+const GLANCE_EPSILON = 0.98;
+
 /**
  * Translation gizmo.
  *
@@ -30,53 +34,57 @@ const tmpQ1 = new Quat();
  */
 class TranslateGizmo extends TransformGizmo {
     _shapes = {
-        face: new AxisSphereCenter(this._device, {
+        face: new SphereShape(this._device, {
             axis: GIZMOAXIS_FACE,
             layers: [this._layer.id],
+            shading: this._shading,
             defaultColor: this._meshColors.axis.xyz,
             hoverColor: this._meshColors.hover.xyz
         }),
-        yz: new AxisPlane(this._device, {
+        yz: new PlaneShape(this._device, {
             axis: GIZMOAXIS_X,
-            flipAxis: GIZMOAXIS_Y,
             layers: [this._layer.id],
+            shading: this._shading,
             rotation: new Vec3(0, 0, -90),
             defaultColor: this._meshColors.axis.x,
             hoverColor: this._meshColors.hover.x
         }),
-        xz: new AxisPlane(this._device, {
+        xz: new PlaneShape(this._device, {
             axis: GIZMOAXIS_Y,
-            flipAxis: GIZMOAXIS_Z,
             layers: [this._layer.id],
+            shading: this._shading,
             rotation: new Vec3(0, 0, 0),
             defaultColor: this._meshColors.axis.y,
             hoverColor: this._meshColors.hover.y
         }),
-        xy: new AxisPlane(this._device, {
+        xy: new PlaneShape(this._device, {
             axis: GIZMOAXIS_Z,
-            flipAxis: GIZMOAXIS_X,
             layers: [this._layer.id],
+            shading: this._shading,
             rotation: new Vec3(90, 0, 0),
             defaultColor: this._meshColors.axis.z,
             hoverColor: this._meshColors.hover.z
         }),
-        x: new AxisArrow(this._device, {
+        x: new ArrowShape(this._device, {
             axis: GIZMOAXIS_X,
             layers: [this._layer.id],
+            shading: this._shading,
             rotation: new Vec3(0, 0, -90),
             defaultColor: this._meshColors.axis.x,
             hoverColor: this._meshColors.hover.x
         }),
-        y: new AxisArrow(this._device, {
+        y: new ArrowShape(this._device, {
             axis: GIZMOAXIS_Y,
             layers: [this._layer.id],
+            shading: this._shading,
             rotation: new Vec3(0, 0, 0),
             defaultColor: this._meshColors.axis.y,
             hoverColor: this._meshColors.hover.y
         }),
-        z: new AxisArrow(this._device, {
+        z: new ArrowShape(this._device, {
             axis: GIZMOAXIS_Z,
             layers: [this._layer.id],
+            shading: this._shading,
             rotation: new Vec3(90, 0, 0),
             defaultColor: this._meshColors.axis.z,
             hoverColor: this._meshColors.hover.z
@@ -105,16 +113,22 @@ class TranslateGizmo extends TransformGizmo {
     snapIncrement = 1;
 
     /**
+     * Flips the planes to face the camera.
+     *
+     * @type {boolean}
+     */
+    flipShapes = true;
+
+    /**
      * Creates a new TranslateGizmo object.
      *
-     * @param {AppBase} app - The application instance.
      * @param {CameraComponent} camera - The camera component.
      * @param {Layer} layer - The render layer.
      * @example
      * const gizmo = new pc.TranslateGizmo(app, camera, layer);
      */
-    constructor(app, camera, layer) {
-        super(app, camera, layer);
+    constructor(camera, layer) {
+        super(camera, layer);
 
         this._createTransform();
 
@@ -134,6 +148,10 @@ class TranslateGizmo extends TransformGizmo {
         this.on(TransformGizmo.EVENT_NODESDETACH, () => {
             this._nodeLocalPositions.clear();
             this._nodePositions.clear();
+        });
+
+        this._app.on('prerender', () => {
+            this._shapesLookAtCamera();
         });
     }
 
@@ -342,6 +360,47 @@ class TranslateGizmo extends TransformGizmo {
     /**
      * @private
      */
+    _shapesLookAtCamera() {
+        const facingDir = this.facing;
+
+        // axes
+        let dot = facingDir.dot(this.root.right);
+        this._shapes.x.entity.enabled = Math.abs(dot) < GLANCE_EPSILON;
+        if (this.flipShapes) {
+            this._shapes.x.flipped = dot < 0;
+        }
+        dot = facingDir.dot(this.root.up);
+        this._shapes.y.entity.enabled = Math.abs(dot) < GLANCE_EPSILON;
+        if (this.flipShapes) {
+            this._shapes.y.flipped = dot < 0;
+        }
+        dot = facingDir.dot(this.root.forward);
+        this._shapes.z.entity.enabled = Math.abs(dot) < GLANCE_EPSILON;
+        if (this.flipShapes) {
+            this._shapes.z.flipped = dot > 0;
+        }
+
+        // planes
+        tmpV1.cross(facingDir, this.root.right);
+        this._shapes.yz.entity.enabled = tmpV1.length() < GLANCE_EPSILON;
+        if (this.flipShapes) {
+            this._shapes.yz.flipped = tmpV2.set(0, +(tmpV1.dot(this.root.forward) < 0), +(tmpV1.dot(this.root.up) < 0));
+        }
+        tmpV1.cross(facingDir, this.root.forward);
+        this._shapes.xy.entity.enabled = tmpV1.length() < GLANCE_EPSILON;
+        if (this.flipShapes) {
+            this._shapes.xy.flipped = tmpV2.set(+(tmpV1.dot(this.root.up) < 0), +(tmpV1.dot(this.root.right) > 0), 0);
+        }
+        tmpV1.cross(facingDir, this.root.up);
+        this._shapes.xz.entity.enabled = tmpV1.length() < GLANCE_EPSILON;
+        if (this.flipShapes) {
+            this._shapes.xz.flipped = tmpV2.set(+(tmpV1.dot(this.root.forward) > 0), 0, +(tmpV1.dot(this.root.right) > 0));
+        }
+    }
+
+    /**
+     * @private
+     */
     _storeNodePositions() {
         for (let i = 0; i < this.nodes.length; i++) {
             const node = this.nodes[i];
@@ -357,11 +416,12 @@ class TranslateGizmo extends TransformGizmo {
     _setNodePositions(pointDelta) {
         for (let i = 0; i < this.nodes.length; i++) {
             const node = this.nodes[i];
-            const pos = this._nodePositions.get(node);
-            if (!pos) {
-                continue;
-            }
+
             if (this._coordSpace === GIZMOSPACE_LOCAL) {
+                const pos = this._nodeLocalPositions.get(node);
+                if (!pos) {
+                    continue;
+                }
                 tmpV1.copy(pointDelta);
                 node.parent?.getWorldTransform().getScale(tmpV2);
                 tmpV2.x = 1 / tmpV2.x;
@@ -369,9 +429,13 @@ class TranslateGizmo extends TransformGizmo {
                 tmpV2.z = 1 / tmpV2.z;
                 tmpQ1.copy(node.getLocalRotation()).transformVector(tmpV1, tmpV1);
                 tmpV1.mul(tmpV2);
-                node.setLocalPosition(pos.clone().add(tmpV1));
+                node.setLocalPosition(tmpV1.add(pos));
             } else {
-                node.setPosition(pos.clone().add(pointDelta));
+                const pos = this._nodePositions.get(node);
+                if (!pos) {
+                    continue;
+                }
+                node.setPosition(tmpV1.copy(pointDelta).add(pos));
             }
         }
 
