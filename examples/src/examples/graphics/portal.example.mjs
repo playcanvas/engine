@@ -58,7 +58,6 @@ assetListLoader.load(() => {
 
     // set skybox - this DDS file was 'prefiltered' in the PlayCanvas Editor and then downloaded.
     app.scene.envAtlas = assets.helipad.resource;
-    app.scene.rendering.toneMapping = pc.TONEMAP_ACES;
     app.scene.skyboxMip = 1;
     app.scene.skyboxIntensity = 0.7;
 
@@ -151,7 +150,8 @@ assetListLoader.load(() => {
     // this camera renders both world and portal layers
     const camera = new pc.Entity();
     camera.addComponent('camera', {
-        layers: [worldLayer.id, portalLayer.id, skyboxLayer.id, uiLayer.id]
+        layers: [worldLayer.id, portalLayer.id, skyboxLayer.id, uiLayer.id],
+        toneMapping: pc.TONEMAP_ACES
     });
     camera.setLocalPosition(7, 5.5, 7.1);
     camera.setLocalEulerAngles(-27, 45, 0);

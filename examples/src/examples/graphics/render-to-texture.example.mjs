@@ -189,7 +189,8 @@ assetListLoader.load(() => {
     const camera = new pc.Entity('Camera');
     camera.addComponent('camera', {
         fov: 100,
-        layers: [worldLayer.id, excludedLayer.id, skyboxLayer.id, uiLayer.id]
+        layers: [worldLayer.id, excludedLayer.id, skyboxLayer.id, uiLayer.id],
+        toneMapping: pc.TONEMAP_ACES
     });
     camera.translate(0, 9, 15);
     camera.lookAt(1, 4, 0);
@@ -212,6 +213,7 @@ assetListLoader.load(() => {
     const textureCamera = new pc.Entity('TextureCamera');
     textureCamera.addComponent('camera', {
         layers: [worldLayer.id, skyboxLayer.id],
+        toneMapping: pc.TONEMAP_ACES,
 
         // set the priority of textureCamera to lower number than the priority of the main camera (which is at default 0)
         // to make it rendered first each frame
@@ -257,8 +259,6 @@ assetListLoader.load(() => {
     // setup skydome, use top mipmap level of cubemap (full resolution)
     app.scene.skyboxMip = 0;
     app.scene.envAtlas = assets.helipad.resource;
-
-    app.scene.rendering.toneMapping = pc.TONEMAP_ACES;
 
     // update things each frame
     let time = 0;

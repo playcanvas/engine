@@ -78,7 +78,6 @@ const assetListLoader = new pc.AssetListLoader(Object.values(assets), app.assets
 assetListLoader.load(() => {
     app.start();
 
-    app.scene.rendering.toneMapping = pc.TONEMAP_ACES;
     app.scene.skyboxMip = 1;
     app.scene.ambientLight.set(0, 0, 0);
     app.scene.ambientLuminance = 0;
@@ -235,7 +234,8 @@ assetListLoader.load(() => {
     // Create an Entity with a camera component
     const camera = new pc.Entity();
     camera.addComponent('camera', {
-        clearColor: new pc.Color(0.4, 0.45, 0.5)
+        clearColor: new pc.Color(0.4, 0.45, 0.5),
+        toneMapping: pc.TONEMAP_ACES
     });
     camera.setLocalPosition(0, 5, 11);
 

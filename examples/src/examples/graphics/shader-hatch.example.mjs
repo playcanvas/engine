@@ -204,14 +204,14 @@ assetListLoader.load(() => {
         }
         if (propertyName === 'tonemapping') {
             // set up selected tone-mapping
-            app.scene.rendering.toneMapping = value;
+            camera.camera.toneMapping = value;
         }
         if (propertyName === 'fog') {
             // turn on/off fog and set up its properties
-            app.scene.rendering.fog = value ? pc.FOG_LINEAR : pc.FOG_NONE;
-            app.scene.rendering.fogColor = new pc.Color(0.8, 0.8, 0.8);
-            app.scene.rendering.fogStart = 100;
-            app.scene.rendering.fogEnd = 300;
+            app.scene.fog.type = value ? pc.FOG_LINEAR : pc.FOG_NONE;
+            app.scene.fog.color = new pc.Color(0.8, 0.8, 0.8);
+            app.scene.fog.start = 100;
+            app.scene.fog.end = 300;
         }
         if (propertyName === 'metalness') {
             materials.forEach((mat) => {

@@ -183,9 +183,6 @@ assetListLoader.load(() => {
     const luts = assets.luts.resource;
     app.setAreaLightLuts(luts.LTC_MAT_1, luts.LTC_MAT_2);
 
-    // set up some general scene rendering properties
-    app.scene.rendering.toneMapping = pc.TONEMAP_ACES;
-
     // setup skydome
     app.scene.skyboxMip = 1; // use top mipmap level of cubemap (full resolution)
     app.scene.skyboxIntensity = 0.4; // make it darker
@@ -204,7 +201,8 @@ assetListLoader.load(() => {
     camera.addComponent('camera', {
         clearColor: new pc.Color(0.2, 0.2, 0.2),
         fov: 60,
-        farClip: 100000
+        farClip: 100000,
+        toneMapping: pc.TONEMAP_ACES
     });
     app.root.addChild(camera);
     camera.setLocalPosition(0, 2.5, 12);
