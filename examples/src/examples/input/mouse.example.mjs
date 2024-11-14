@@ -49,14 +49,14 @@ assetListLoader.load(() => {
 
     // set skybox
     app.scene.envAtlas = assets.helipad.resource;
-    app.scene.rendering.toneMapping = pc.TONEMAP_ACES;
     app.scene.exposure = 1.6;
     app.scene.skyboxMip = 1;
 
     // Create an Entity with a camera component
     const camera = new pc.Entity();
     camera.addComponent('camera', {
-        clearColor: new pc.Color(0.4, 0.45, 0.5)
+        clearColor: new pc.Color(0.4, 0.45, 0.5),
+        toneMapping: pc.TONEMAP_ACES
     });
     camera.translate(0, 7, 25);
     app.root.addChild(camera);

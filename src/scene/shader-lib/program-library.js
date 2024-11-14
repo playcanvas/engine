@@ -5,7 +5,7 @@ import { Shader } from '../../platform/graphics/shader.js';
 import { SHADER_FORWARD, SHADER_DEPTH, SHADER_PICK, SHADER_SHADOW, SHADER_PREPASS_VELOCITY } from '../constants.js';
 import { ShaderPass } from '../shader-pass.js';
 import { StandardMaterialOptions } from '../materials/standard-material-options.js';
-import { RenderingParams } from '../renderer/rendering-params.js';
+import { CameraShaderParams } from '../camera-shader-params.js';
 
 /**
  * @import { ShaderGenerator } from './programs/shader-generator.js'
@@ -51,9 +51,9 @@ class ProgramLibrary {
         this._defaultStdMatOption = new StandardMaterialOptions();
         this._defaultStdMatOptionMin = new StandardMaterialOptions();
 
-        const defaultRenderParams = new RenderingParams();
+        const defaultCameraShaderParams = new CameraShaderParams();
         standardMaterial.shaderOptBuilder.updateRef(
-            this._defaultStdMatOption, {}, defaultRenderParams, standardMaterial, null, [], SHADER_FORWARD, null);
+            this._defaultStdMatOption, {}, defaultCameraShaderParams, standardMaterial, null, [], SHADER_FORWARD, null);
         standardMaterial.shaderOptBuilder.updateMinRef(
             this._defaultStdMatOptionMin, {}, standardMaterial, null, SHADER_SHADOW, null);
 

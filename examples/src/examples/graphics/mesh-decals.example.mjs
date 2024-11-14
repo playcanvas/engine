@@ -46,10 +46,6 @@ assetListLoader.load(() => {
 
     app.scene.ambientLight = new pc.Color(0.2, 0.2, 0.2);
 
-    // if the device renders in HDR mode, disable tone mapping to output HDR values without any processing
-    app.scene.rendering.toneMapping = device.isHdr ? pc.TONEMAP_NONE : pc.TONEMAP_ACES;
-    app.scene.rendering.gammaCorrection = pc.GAMMA_SRGB;
-
     // create material for the plane
     const planeMaterial = new pc.StandardMaterial();
     planeMaterial.gloss = 0.6;
@@ -86,7 +82,11 @@ assetListLoader.load(() => {
     // Create an Entity with a camera component
     const camera = new pc.Entity();
     camera.addComponent('camera', {
-        clearColor: new pc.Color(0.2, 0.2, 0.2)
+        clearColor: new pc.Color(0.2, 0.2, 0.2),
+
+        // if the device renders in HDR mode, disable tone mapping to output HDR values without any processing
+        toneMapping: device.isHdr ? pc.TONEMAP_NONE : pc.TONEMAP_ACES,
+        gammaCorrection: pc.GAMMA_SRGB
     });
 
     // Add the camera to the hierarchy

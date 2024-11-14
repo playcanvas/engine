@@ -78,12 +78,11 @@ assetListLoader.load(() => {
     app.scene.skyboxMip = 2;
     app.scene.envAtlas = assets.helipad.resource;
 
-    // set up some general scene rendering properties
-    app.scene.rendering.toneMapping = pc.TONEMAP_ACES;
-
     // Create an Entity with a camera component
     const camera = new pc.Entity();
-    camera.addComponent('camera', {});
+    camera.addComponent('camera', {
+        toneMapping: pc.TONEMAP_ACES
+    });
     app.root.addChild(camera);
 
     // number of instanced trees to render

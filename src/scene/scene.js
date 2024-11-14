@@ -12,7 +12,7 @@ import { LightingParams } from './lighting/lighting-params.js';
 import { Sky } from './skybox/sky.js';
 import { Immediate } from './immediate/immediate.js';
 import { EnvLighting } from './graphics/env-lighting.js';
-import { RenderingParams } from './renderer/rendering-params.js';
+import { FogParams } from './fog-params.js';
 
 /**
  * @import { Entity } from '../framework/entity.js'
@@ -192,11 +192,11 @@ class Scene extends EventHandler {
     _skyboxCubeMap = null;
 
     /**
-     * The rendering parameters.
+     * The fog parameters.
      *
      * @private
      */
-    _renderingParams = new RenderingParams();
+    _fogParams = new FogParams();
 
     /**
      * Create a new Scene instance.
@@ -436,12 +436,12 @@ class Scene extends EventHandler {
     }
 
     /**
-     * A {@link RenderingParams} that defines rendering parameters.
+     * Gets the {@link FogParams} that define fog parameters.
      *
-     * @type {RenderingParams}
+     * @type {FogParams}
      */
-    get rendering() {
-        return this._renderingParams;
+    get fog() {
+        return this._fogParams;
     }
 
     /**
@@ -700,13 +700,11 @@ class Scene extends EventHandler {
         this._gravity.set(physics.gravity[0], physics.gravity[1], physics.gravity[2]);
         this.ambientLight.set(render.global_ambient[0], render.global_ambient[1], render.global_ambient[2]);
         this.ambientLuminance = render.ambientLuminance;
-        this._renderingParams.fog = render.fog;
-        this._renderingParams.fogColor.set(render.fog_color[0], render.fog_color[1], render.fog_color[2]);
-        this._renderingParams.fogStart = render.fog_start;
-        this._renderingParams.fogEnd = render.fog_end;
-        this._renderingParams.fogDensity = render.fog_density;
-        this._renderingParams.gammaCorrection = render.gamma_correction;
-        this._renderingParams.toneMapping = render.tonemapping;
+        this.fog.type = render.fog;
+        this.fog.color.set(render.fog_color[0], render.fog_color[1], render.fog_color[2]);
+        this.fog.start = render.fog_start;
+        this.fog.end = render.fog_end;
+        this.fog.density = render.fog_density;
         this.lightmapSizeMultiplier = render.lightmapSizeMultiplier;
         this.lightmapMaxResolution = render.lightmapMaxResolution;
         this.lightmapMode = render.lightmapMode;

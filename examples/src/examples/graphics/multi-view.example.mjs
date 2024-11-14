@@ -92,7 +92,8 @@ assetListLoader.load(() => {
     const cameraLeft = new pc.Entity('LeftCamera');
     cameraLeft.addComponent('camera', {
         farClip: 500,
-        rect: new pc.Vec4(0, 0, 0.5, 0.5)
+        rect: new pc.Vec4(0, 0, 0.5, 0.5),
+        toneMapping: pc.TONEMAP_ACES
     });
     app.root.addChild(cameraLeft);
 
@@ -104,7 +105,8 @@ assetListLoader.load(() => {
         farClip: 500,
         rect: new pc.Vec4(0.5, 0, 0.5, 0.5),
         projection: pc.PROJECTION_ORTHOGRAPHIC,
-        orthoHeight: 150
+        orthoHeight: 150,
+        toneMapping: pc.TONEMAP_ACES
     });
     cameraRight.translate(0, 150, 0);
     cameraRight.lookAt(pc.Vec3.ZERO, pc.Vec3.RIGHT);
@@ -114,7 +116,8 @@ assetListLoader.load(() => {
     const cameraTop = new pc.Entity('TopCamera');
     cameraTop.addComponent('camera', {
         farClip: 500,
-        rect: new pc.Vec4(0, 0.5, 1, 0.5)
+        rect: new pc.Vec4(0, 0.5, 1, 0.5),
+        toneMapping: pc.TONEMAP_ACES
     });
     cameraTop.translate(-100, 75, 100);
     cameraTop.lookAt(0, 7, 0);
@@ -168,7 +171,6 @@ assetListLoader.load(() => {
 
     // set skybox - this DDS file was 'prefiltered' in the PlayCanvas Editor and then downloaded.
     app.scene.envAtlas = assets.helipad.resource;
-    app.scene.rendering.toneMapping = pc.TONEMAP_ACES;
     app.scene.skyboxMip = 1;
 
     // handle HUD changes - update the debug mode for the top and right cameras
