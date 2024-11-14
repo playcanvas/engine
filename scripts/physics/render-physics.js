@@ -182,14 +182,8 @@ RenderPhysics.prototype.postUpdate = function (dt) {
                     debugShape._collisionType = collision.type;
                     collision._debugShape = debugShape;
                 }
-
-                // Prefer the rigid body position if we have it, since entity position
-                // may still be (0, 0, 0) in the first frame. And compounds don't have
-                // a rigid body in the first place.
-                var src = collision.entity.rigidbody || collision.entity;
-                collision._debugShape.setPosition(src.getPosition());
-                collision._debugShape.setRotation(src.getRotation());
-
+                collision._debugShape.setPosition(collision.getShapePosition());
+                collision._debugShape.setRotation(collision.getShapeRotation());
                 // If the shape is a capsule, cone or cylinder, rotate it so that its axis is taken into account
                 if (collision.type === 'capsule' || collision.type === 'cone' || collision.type === 'cylinder') {
                     if (collision._debugShape._axis === 0) {
