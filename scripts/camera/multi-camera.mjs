@@ -568,9 +568,13 @@ class MultiCamera extends BaseCamera {
 
     /**
      * @param {number} [zoomDist] - The zoom distance.
+     * @param {boolean} [smoothing] - Whether to smooth the zoom.
      */
-    resetZoom(zoomDist = 0) {
+    resetZoom(zoomDist = 0, smoothing = true) {
         this._zoomDist = zoomDist;
+        if (!smoothing) {
+            this._cameraDist = zoomDist;
+        }
     }
 
     /**

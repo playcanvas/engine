@@ -16,6 +16,15 @@ export const controls = ({ observer, ReactPCUI, React, jsx, fragment }) => {
             })
         ),
         jsx(
+            LabelGroup,
+            { text: 'Smoothed focus' },
+            jsx(BooleanInput, {
+                type: 'toggle',
+                binding: new BindingTwoWay(),
+                link: { observer, path: 'example.smoothedFocus' }
+            })
+        ),
+        jsx(
             Panel,
             { headerText: 'Attributes' },
             jsx(

@@ -101,10 +101,11 @@ const createMultiCamera = (focus) => {
     // focus on entity when 'f' key is pressed
     const onKeyDown = (/** @type {KeyboardEvent} */ e) => {
         if (e.key === 'f') {
+            const smoothed = data.get('example.smoothedFocus');
             if (data.get('example.zoomReset')) {
-                script.resetZoom(cameraDist);
+                script.resetZoom(cameraDist, smoothed);
             }
-            script.focus(bbox.center);
+            script.focus(bbox.center, null, smoothed);
         }
     };
     window.addEventListener('keydown', onKeyDown);
@@ -144,7 +145,8 @@ const multiCameraScript = createMultiCamera(statue);
 
 // Bind controls to camera attributes
 data.set('example', {
-    zoomReset: true
+    zoomReset: true,
+    smoothedFocus: true
 });
 data.set('attr', {
     enableOrbit: multiCameraScript.enableOrbit,
