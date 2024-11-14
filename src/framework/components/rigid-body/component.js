@@ -83,13 +83,13 @@ class RigidBodyComponent extends Component {
     static EVENT_COLLISIONSTART = 'collisionstart';
 
     /**
-     * Fired when two rigid bodies stop touching. The handler is passed a {@link ContactResult}
-     * object containing details of the contact between the two rigid bodies.
+     * Fired when two rigid-bodies stop touching. The handler is passed an {@link Entity} that
+     * represents the other rigid body involved in the collision.
      *
      * @event
      * @example
-     * entity.rigidbody.on('collisionend', (result) => {
-     *     console.log(`Collision ended between ${entity.name} and ${result.other.name}`);
+     * entity.rigidbody.on('collisionend', (other) => {
+     *     console.log(`${entity.name} stopped touching ${other.name}`);
      * });
      */
     static EVENT_COLLISIONEND = 'collisionend';
