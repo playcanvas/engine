@@ -3,14 +3,15 @@
  */
 /* eslint-disable no-await-in-loop */
 import fs from 'fs';
-import puppeteer from 'puppeteer';
-import sharp from 'sharp';
+import { spawn, execSync } from 'node:child_process';
 import { dirname } from 'path';
 import { fileURLToPath } from 'url';
-import { spawn, execSync } from 'node:child_process';
 
-import { exampleMetaData } from '../cache/metadata.mjs';
+import puppeteer from 'puppeteer';
+import sharp from 'sharp';
+
 import { sleep } from './utils.mjs';
+import { exampleMetaData } from '../cache/metadata.mjs';
 
 // @ts-ignore
 const __filename = fileURLToPath(import.meta.url);
@@ -152,13 +153,13 @@ const takeThumbnails = async (pool, categoryKebab, exampleNameKebab) => {
 
     // copy and crop image for large thumbnail
     await sharp(imgData)
-        .resize(320, 240)
-        .toFile(`${MAIN_DIR}/thumbnails/${categoryKebab}_${exampleNameKebab}_large.webp`);
+    .resize(320, 240)
+    .toFile(`${MAIN_DIR}/thumbnails/${categoryKebab}_${exampleNameKebab}_large.webp`);
 
     // copy and crop image for small thumbnail
     await sharp(imgData)
-        .resize(64, 48)
-        .toFile(`${MAIN_DIR}/thumbnails/${categoryKebab}_${exampleNameKebab}_small.webp`);
+    .resize(64, 48)
+    .toFile(`${MAIN_DIR}/thumbnails/${categoryKebab}_${exampleNameKebab}_small.webp`);
 
     // remove screenshot
     fs.unlinkSync(`${MAIN_DIR}/thumbnails/${categoryKebab}_${exampleNameKebab}.webp`);

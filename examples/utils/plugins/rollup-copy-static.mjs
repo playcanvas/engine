@@ -4,8 +4,8 @@ import fse from 'fs-extra';
 import { watch } from '../rollup-watch.mjs';
 
 const YELLOW_OUT = '\x1b[33m';
-const BOLD_OUT = `\x1b[1m`;
-const REGULAR_OUT = `\x1b[22m`;
+const BOLD_OUT = '\x1b[1m';
+const REGULAR_OUT = '\x1b[22m';
 
 const copied = new Set();
 

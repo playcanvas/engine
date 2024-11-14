@@ -1,7 +1,8 @@
+/* eslint-disable regexp/no-super-linear-backtracking */
 const regexPatterns = [
-    /^\s*export\s*\*\s*from\s*.+\s*;\s*$/gm,
-    /^\s*export\s*{.*}\s*from\s*.+\s*;\s*$/gm,
-    /^\s*import\s*.+\s*;\s*$/gm
+    /^\s*export\s*\*\s*from\s*(?:\S.*|[\t\v\f \xa0\u1680\u2000-\u200a\u202f\u205f\u3000\ufeff])\s*;\s*$/gm,
+    /^\s*export\s*\{.*\}\s*from\s*(?:\S.*|[\t\v\f \xa0\u1680\u2000-\u200a\u202f\u205f\u3000\ufeff])\s*;\s*$/gm,
+    /^\s*import\s*(?:\S.*|[\t\v\f \xa0\u1680\u2000-\u200a\u202f\u205f\u3000\ufeff])\s*;\s*$/gm
 ];
 
 /**

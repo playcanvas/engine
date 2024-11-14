@@ -1,7 +1,7 @@
-import * as pc from 'playcanvas';
 import { data } from 'examples/observer';
 import { deviceType, rootPath, fileImport } from 'examples/utils';
-const { CameraFrame } = await fileImport(rootPath + '/static/assets/scripts/misc/camera-frame.mjs');
+import * as pc from 'playcanvas';
+const { CameraFrame } = await fileImport(`${rootPath}/static/assets/scripts/misc/camera-frame.mjs`);
 
 const canvas = /** @type {HTMLCanvasElement} */ (document.getElementById('application-canvas'));
 window.focus();
@@ -10,18 +10,18 @@ const assets = {
     envAtlas: new pc.Asset(
         'env-atlas',
         'texture',
-        { url: rootPath + '/static/assets/cubemaps/table-mountain-env-atlas.png' },
+        { url: `${rootPath}/static/assets/cubemaps/table-mountain-env-atlas.png` },
         { type: pc.TEXTURETYPE_RGBP, mipmaps: false }
     ),
-    table: new pc.Asset('table', 'container', { url: rootPath + '/static/assets/models/glass-table.glb' }),
-    script: new pc.Asset('script', 'script', { url: rootPath + '/static/scripts/camera/orbit-camera.js' }),
-    diffuse: new pc.Asset('color', 'texture', { url: rootPath + '/static/assets/textures/playcanvas.png' })
+    table: new pc.Asset('table', 'container', { url: `${rootPath}/static/assets/models/glass-table.glb` }),
+    script: new pc.Asset('script', 'script', { url: `${rootPath}/static/scripts/camera/orbit-camera.js` }),
+    diffuse: new pc.Asset('color', 'texture', { url: `${rootPath}/static/assets/textures/playcanvas.png` })
 };
 
 const gfxOptions = {
     deviceTypes: [deviceType],
-    glslangUrl: rootPath + '/static/lib/glslang/glslang.js',
-    twgslUrl: rootPath + '/static/lib/twgsl/twgsl.js',
+    glslangUrl: `${rootPath}/static/lib/glslang/glslang.js`,
+    twgslUrl: `${rootPath}/static/lib/twgsl/twgsl.js`,
 
     // disable anti-aliasing as TAA is used to smooth edges
     antialias: false

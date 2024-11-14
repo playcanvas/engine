@@ -1,13 +1,13 @@
-import * as pc from 'playcanvas';
 import { deviceType, rootPath } from 'examples/utils';
+import * as pc from 'playcanvas';
 
 const canvas = /** @type {HTMLCanvasElement} */ (document.getElementById('application-canvas'));
 window.focus();
 
 const gfxOptions = {
     deviceTypes: [deviceType],
-    glslangUrl: rootPath + '/static/lib/glslang/glslang.js',
-    twgslUrl: rootPath + '/static/lib/twgsl/twgsl.js'
+    glslangUrl: `${rootPath}/static/lib/glslang/glslang.js`,
+    twgslUrl: `${rootPath}/static/lib/twgsl/twgsl.js`
 };
 
 const device = await pc.createGraphicsDevice(canvas, gfxOptions);
@@ -105,7 +105,7 @@ blueBox.addComponent('render', {
 blueBox.setLocalScale(2.5, 2.5, 2.5);
 app.root.addChild(blueBox);
 
-app.on('update', function (dt) {
+app.on('update', (dt) => {
     if (redBox) {
         redBox.rotate(0, 10 * dt, 0);
     }

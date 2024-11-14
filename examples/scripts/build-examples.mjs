@@ -5,8 +5,8 @@ import fs from 'fs';
 import { dirname, resolve } from 'path';
 import { fileURLToPath } from 'url';
 
-import { exampleMetaData } from '../cache/metadata.mjs';
 import { parseConfig, engineFor, patchScript } from './utils.mjs';
+import { exampleMetaData } from '../cache/metadata.mjs';
 
 // @ts-ignore
 const __filename = fileURLToPath(import.meta.url);
@@ -43,7 +43,7 @@ const generateExampleFile = (categoryKebab, exampleNameKebab, setEngineType, fil
     const engine = engineFor(engineType);
     html = html.replace(/'@ENGINE'/g, JSON.stringify(engine));
 
-    if (/'@([A-Z0-9_]+)'/g.test(html)) {
+    if (/'@[A-Z0-9_]+'/.test(html)) {
         throw new Error('HTML file still has unreplaced values');
     }
 
@@ -114,7 +114,7 @@ export const build = (env = {}) => {
 
             const scriptPath = resolve(path, `${exampleNameKebab}.${file}`);
             let script = fs.readFileSync(scriptPath, 'utf-8');
-            if (/\.(mjs|js)$/.test(file)) {
+            if (/\.(?:mjs|js)$/.test(file)) {
                 script = patchScript(script);
             }
             fs.writeFileSync(`${MAIN_DIR}/dist/iframe/${name}.${file}`, script);
