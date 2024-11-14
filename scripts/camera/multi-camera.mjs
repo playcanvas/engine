@@ -328,7 +328,7 @@ class MultiCamera extends BaseCamera {
                 // mouse pan
                 this._pan(tmpVa.set(event.clientX, event.clientY));
             } else if (this._orbiting || this._flying) {
-                super._look(event);
+                this._look(event);
             }
             return;
         }
