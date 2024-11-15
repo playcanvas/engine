@@ -123,7 +123,7 @@ export const controls = ({ observer, ReactPCUI, React, jsx, fragment }) => {
                     step: 0.001,
                     precision: 3
                 })
-            ),
+            )
         )
     );
 };

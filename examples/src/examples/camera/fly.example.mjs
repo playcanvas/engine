@@ -97,7 +97,7 @@ const createFlyCamera = (focus) => {
             enablePan: false,
             focusPoint: bbox.center,
             sceneSize: bbox.halfExtents.length(),
-            pitchRange: new pc.Vec2(-90, 90),
+            pitchRange: new pc.Vec2(-90, 90)
         }
     });
 
