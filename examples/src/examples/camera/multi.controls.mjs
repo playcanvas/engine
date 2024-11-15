@@ -95,7 +95,7 @@ export const controls = ({ observer, ReactPCUI, React, jsx, fragment }) => {
                 jsx(VectorInput, {
                     binding: new BindingTwoWay(),
                     link: { observer, path: 'attr.pitchRange' },
-                    dimensions: 2,
+                    dimensions: 2
                 })
             ),
             jsx(
