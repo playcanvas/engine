@@ -3,7 +3,7 @@
  * @returns {JSX.Element} The returned JSX Element.
  */
 export const controls = ({ observer, ReactPCUI, React, jsx, fragment }) => {
-    const { BindingTwoWay, LabelGroup, Panel, BooleanInput, SliderInput } = ReactPCUI;
+    const { BindingTwoWay, LabelGroup, Panel, BooleanInput, SliderInput, VectorInput } = ReactPCUI;
 
     return fragment(
         jsx(
@@ -91,34 +91,11 @@ export const controls = ({ observer, ReactPCUI, React, jsx, fragment }) => {
             ),
             jsx(
                 LabelGroup,
-                { text: 'Pitch min' },
-                jsx(SliderInput, {
+                { text: 'Camera pitch range' },
+                jsx(VectorInput, {
                     binding: new BindingTwoWay(),
-                    link: { observer, path: 'attr.pitchMin' },
-                    min: -90,
-                    max: 90,
-                    step: 1
-                })
-            ),
-            jsx(
-                LabelGroup,
-                { text: 'Pitch max' },
-                jsx(SliderInput, {
-                    binding: new BindingTwoWay(),
-                    link: { observer, path: 'attr.pitchMax' },
-                    min: -90,
-                    max: 90,
-                    step: 1
-                })
-            ),
-            jsx(
-                LabelGroup,
-                { text: 'Pinch speed' },
-                jsx(SliderInput, {
-                    binding: new BindingTwoWay(),
-                    link: { observer, path: 'attr.pinchSpeed' },
-                    min: 1,
-                    max: 10
+                    link: { observer, path: 'attr.cameraPitchRange' },
+                    dimensions: 2,
                 })
             ),
             jsx(

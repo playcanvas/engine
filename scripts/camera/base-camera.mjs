@@ -1,7 +1,6 @@
 import { Entity, Script, Vec3, Vec2, math } from 'playcanvas';
 
 /** @import { CameraComponent } from 'playcanvas' */
-
 class BaseCamera extends Script {
     /**
      * @type {CameraComponent}
@@ -71,35 +70,28 @@ class BaseCamera extends Script {
     moveDamping = 0.98;
 
     /**
-     * The minimum camera pitch angle.
+     * The camera pitch range
      *
      * @attribute
-     * @type {number}
+     * @type {Vec2}
      */
-    pitchMin = -90;
-
-    /**
-     * The maximum camera pitch angle.
-     *
-     * @attribute
-     * @type {number}
-     */
-    pitchMax = 90;
+    cameraPitchRange = new Vec2(-360, 360);
 
     /**
      * @param {object} args - The script arguments.
      */
     constructor(args) {
         super(args);
-        const { name, sceneSize, lookSensitivity, lookDamping, moveDamping, pitchMin, pitchMax } = args.attributes;
+        const { name, sceneSize, lookSensitivity, lookDamping, moveDamping, cameraPitchRange } = args.attributes;
 
         this.root = new Entity(name ?? 'base-camera');
         this.sceneSize = sceneSize ?? this.sceneSize;
         this.lookSensitivity = lookSensitivity ?? this.lookSensitivity;
         this.lookDamping = lookDamping ?? this.lookDamping;
         this.moveDamping = moveDamping ?? this.moveDamping;
-        this.pitchMin = pitchMin ?? this.pitchMin;
-        this.pitchMax = pitchMax ?? this.pitchMax;
+        if (cameraPitchRange instanceof Vec2) {
+            this.cameraPitchRange.copy(cameraPitchRange);
+        }
 
         this._onPointerDown = this._onPointerDown.bind(this);
         this._onPointerMove = this._onPointerMove.bind(this);
@@ -173,7 +165,9 @@ class BaseCamera extends Script {
         }
         const movementX = event.movementX || 0;
         const movementY = event.movementY || 0;
-        this._dir.x = math.clamp(this._dir.x - movementY * this.lookSensitivity, this.pitchMin, this.pitchMax);
+        const min = this.cameraPitchRange.x === -360 ? -Infinity : this.cameraPitchRange.x;
+        const max = this.cameraPitchRange.y === 360 ? Infinity : this.cameraPitchRange.y;
+        this._dir.x = math.clamp(this._dir.x - movementY * this.lookSensitivity, min, max);
         this._dir.y -= movementX * this.lookSensitivity;
     }
 

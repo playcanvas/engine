@@ -151,8 +151,7 @@ data.set('attr', [
     'lookSensitivity',
     'lookDamping',
     'moveDamping',
-    'pitchMin',
-    'pitchMax',
+    'cameraPitchRange',
     'pinchSpeed',
     'wheelSpeed',
     'zoomMin',
@@ -162,12 +161,30 @@ data.set('attr', [
     'sprintSpeed',
     'crouchSpeed'
 ].reduce((/** @type {Record<string, any>} */ obj, key) => {
+    const value = multiCameraScript[key];
+
+    if (value instanceof pc.Vec2) {
+        obj[key] = [value.x, value.y];
+        return obj;
+    }
+
     obj[key] = multiCameraScript[key];
     return obj;
 }, {}));
+
 data.on('*:set', (/** @type {string} */ path, /** @type {any} */ value) => {
-    const [category, key] = path.split('.');
+    const [category, key, index] = path.split('.');
     if (category !== 'attr') {
+        return;
+    }
+
+    if (Array.isArray(value)) {
+        multiCameraScript[key].set(value[0], value[1]);
+        return;
+    }
+    if (index !== undefined) {
+        const arr = data.get(`${category}.${key}`);
+        multiCameraScript[key].set(arr[0], arr[1]);
         return;
     }
     multiCameraScript[key] = value;

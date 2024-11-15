@@ -216,8 +216,8 @@ class MultiCamera extends BaseCamera {
     }
 
     /**
-     * @param {PointerEvent} event - The pointer event.
      * @private
+     * @param {PointerEvent} event - The pointer event.
      * @returns {boolean} Whether the mouse pan should start.
      */
     _isStartMousePan(event) {
@@ -237,9 +237,9 @@ class MultiCamera extends BaseCamera {
     }
 
     /**
+     * @private
      * @param {PointerEvent} event - The pointer event.
      * @returns {boolean} Whether the fly should start.
-     * @private
      */
     _isStartFly(event) {
         if (!this.enableFly) {
@@ -270,8 +270,8 @@ class MultiCamera extends BaseCamera {
     }
 
     /**
-     * @param {PointerEvent} event - The pointer event.
      * @protected
+     * @param {PointerEvent} event - The pointer event.
      */
     _onPointerDown(event) {
         if (!this._camera) {
@@ -310,8 +310,8 @@ class MultiCamera extends BaseCamera {
     }
 
     /**
-     * @param {PointerEvent} event - The pointer event.
      * @protected
+     * @param {PointerEvent} event - The pointer event.
      */
     _onPointerMove(event) {
         if (this._pointerEvents.size === 0) {
@@ -346,8 +346,8 @@ class MultiCamera extends BaseCamera {
     }
 
     /**
-     * @param {PointerEvent} event - The pointer event.
      * @protected
+     * @param {PointerEvent} event - The pointer event.
      */
     _onPointerUp(event) {
         this._pointerEvents.delete(event.pointerId);
@@ -370,8 +370,8 @@ class MultiCamera extends BaseCamera {
     }
 
     /**
-     * @param {WheelEvent} event - The wheel event.
      * @private
+     * @param {WheelEvent} event - The wheel event.
      */
     _onWheel(event) {
         event.preventDefault();
@@ -379,8 +379,8 @@ class MultiCamera extends BaseCamera {
     }
 
     /**
-     * @param {KeyboardEvent} event - The keyboard event.
      * @private
+     * @param {KeyboardEvent} event - The keyboard event.
      */
     _onKeyDown(event) {
         event.stopPropagation();
@@ -413,8 +413,8 @@ class MultiCamera extends BaseCamera {
     }
 
     /**
-     * @param {KeyboardEvent} event - The keyboard event.
      * @private
+     * @param {KeyboardEvent} event - The keyboard event.
      */
     _onKeyUp(event) {
         event.stopPropagation();
@@ -480,9 +480,9 @@ class MultiCamera extends BaseCamera {
     }
 
     /**
+     * @private
      * @param {Vec2} out - The output vector.
      * @returns {Vec2} The mid point.
-     * @private
      */
     _getMidPoint(out) {
         const [a, b] = this._pointerEvents.values();
@@ -503,9 +503,9 @@ class MultiCamera extends BaseCamera {
     }
 
     /**
+     * @private
      * @param {Vec2} pos - The screen position.
      * @param {Vec3} point - The output point.
-     * @private
      */
     _screenToWorldPan(pos, point) {
         const mouseW = this._camera.screenToWorld(pos.x, pos.y, 1);
@@ -522,8 +522,8 @@ class MultiCamera extends BaseCamera {
     }
 
     /**
-     * @param {Vec2} pos - The screen position.
      * @private
+     * @param {Vec2} pos - The screen position.
      */
     _pan(pos) {
         if (!this.enablePan) {
@@ -543,8 +543,8 @@ class MultiCamera extends BaseCamera {
     }
 
     /**
-     * @param {number} delta - The delta.
      * @private
+     * @param {number} delta - The delta.
      */
     _zoom(delta) {
         if (!this.enableOrbit && !this.enablePan) {
