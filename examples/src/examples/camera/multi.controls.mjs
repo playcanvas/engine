@@ -117,9 +117,7 @@ export const controls = ({ observer, ReactPCUI, React, jsx, fragment }) => {
                     binding: new BindingTwoWay(),
                     link: { observer, path: 'attr.zoomMin' },
                     min: 0,
-                    max: 10,
-                    step: 0.001,
-                    precision: 3
+                    max: 10
                 })
             ),
             jsx(
@@ -129,9 +127,7 @@ export const controls = ({ observer, ReactPCUI, React, jsx, fragment }) => {
                     binding: new BindingTwoWay(),
                     link: { observer, path: 'attr.zoomMax' },
                     min: 0,
-                    max: 10,
-                    step: 0.001,
-                    precision: 3
+                    max: 20
                 })
             ),
             jsx(

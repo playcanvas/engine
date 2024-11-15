@@ -9,6 +9,7 @@ const tmpR1 = new Ray();
 const tmpP1 = new Plane();
 
 const PASSIVE = { passive: false };
+const ZOOM_SCALE_SCENE_MULT = 10;
 
 /**
  * Calculate the lerp rate.
@@ -202,15 +203,16 @@ class CameraControls extends Script {
      * @attribute
      * @type {number}
      */
-    zoomMin = 0.001;
+    zoomMin = 0;
 
     /**
-     * The maximum zoom distance relative to the scene size.
+     * The maximum zoom distance relative to the scene size. Having a value less than or equal to
+     * zoomMin means no maximum zoom.
      *
      * @attribute
      * @type {number}
      */
-    zoomMax = 10;
+    zoomMax = 0;
 
     /**
      * The minimum scale the camera can zoom.
@@ -316,7 +318,8 @@ class CameraControls extends Script {
     }
 
     /**
-     * The camera's pitch range.
+     * The camera's pitch range. Having a value of -360 means no minimum pitch and 360 means no
+     * maximum pitch.
      *
      * @attribute
      * @type {Vec2}
@@ -705,8 +708,9 @@ class CameraControls extends Script {
             return;
         }
         const min = this._camera.nearClip + this.zoomMin * this.sceneSize;
-        const max = this.zoomMax * this.sceneSize;
-        const scale = math.clamp(this._zoomDist / (max - min), this.zoomScaleMin, 1);
+        const max = this.zoomMax <= this.zoomMin ? Infinity : this.zoomMax * this.sceneSize;
+        const distNormalized = this._zoomDist / (ZOOM_SCALE_SCENE_MULT * this.sceneSize);
+        const scale = math.clamp(distNormalized, this.zoomScaleMin, 1);
         this._zoomDist += (delta * this.wheelSpeed * this.sceneSize * scale);
         this._zoomDist = math.clamp(this._zoomDist, min, max);
     }
