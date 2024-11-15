@@ -248,6 +248,9 @@ class CameraControls extends Script {
         super(args);
         const {
             name,
+            enableOrbit,
+            enablePan,
+            enableFly,
             focusPoint,
             sceneSize,
             lookSensitivity,
@@ -263,9 +266,12 @@ class CameraControls extends Script {
             crouchSpeed
         } = args.attributes;
 
-        this.root = new Entity(name ?? 'multi-camera');
+        this.root = new Entity(name ?? 'camera-controls');
         this.app.root.addChild(this.root);
 
+        this.enableOrbit = enableOrbit ?? this.enableOrbit;
+        this.enablePan = enablePan ?? this.enablePan;
+        this.enableFly = enableFly ?? this.enableFly;
         this.sceneSize = sceneSize ?? this.sceneSize;
         this.lookSensitivity = lookSensitivity ?? this.lookSensitivity;
         this.lookDamping = lookDamping ?? this.lookDamping;

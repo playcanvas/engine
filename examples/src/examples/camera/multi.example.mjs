@@ -79,7 +79,7 @@ const calcEntityAABB = (bbox, entity) => {
 
 /**
  * @param {pc.Entity} focus - The entity to focus the camera on.
- * @returns {CameraControls} The multi-camera script.
+ * @returns {CameraControls} The camera-controls script.
  */
 const createMultiCamera = (focus) => {
     const camera = new pc.Entity();
