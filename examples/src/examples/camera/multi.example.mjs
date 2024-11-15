@@ -3,7 +3,7 @@ import { data } from 'examples/observer';
 import { deviceType, rootPath, fileImport } from 'examples/utils';
 import * as pc from 'playcanvas';
 
-const { MultiCamera } = await fileImport(`${rootPath}/static/scripts/camera/multi-camera.mjs`);
+const { CameraControls } = await fileImport(`${rootPath}/static/scripts/camera-controls.mjs`);
 
 const canvas = document.getElementById('application-canvas');
 if (!(canvas instanceof HTMLCanvasElement)) {
@@ -79,7 +79,7 @@ const calcEntityAABB = (bbox, entity) => {
 
 /**
  * @param {pc.Entity} focus - The entity to focus the camera on.
- * @returns {MultiCamera} The multi-camera script.
+ * @returns {CameraControls} The multi-camera script.
  */
 const createMultiCamera = (focus) => {
     const camera = new pc.Entity();
@@ -91,8 +91,8 @@ const createMultiCamera = (focus) => {
     const bbox = calcEntityAABB(new pc.BoundingBox(), focus);
     const cameraDist = camera.getPosition().distance(bbox.center);
 
-    /** @type {MultiCamera} */
-    const script = camera.script.create(MultiCamera, {
+    /** @type {CameraControls} */
+    const script = camera.script.create(CameraControls, {
         attributes: {
             focusPoint: bbox.center,
             sceneSize: bbox.halfExtents.length()

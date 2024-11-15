@@ -19,7 +19,7 @@ const PASSIVE = { passive: false };
  */
 const lerpRate = (damping, dt) => 1 - Math.pow(damping, dt * 1000);
 
-class MultiCamera extends Script {
+class CameraControls extends Script {
     /**
      * @private
      * @type {CameraComponent}
@@ -292,7 +292,7 @@ class MultiCamera extends Script {
         this._onContextMenu = this._onContextMenu.bind(this);
 
         if (!this.entity.camera) {
-            throw new Error('MultiCamera script requires a camera component');
+            throw new Error('CameraControls script requires a camera component');
         }
         this.attach(this.entity.camera);
 
@@ -869,4 +869,4 @@ class MultiCamera extends Script {
     }
 }
 
-export { MultiCamera };
+export { CameraControls };
