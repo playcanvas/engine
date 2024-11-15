@@ -380,7 +380,7 @@ class CameraControls extends Script {
      * @returns {number} - The clamped value.
      */
     _clampZoom(value) {
-        const min = this._camera.nearClip + this.zoomMin * this.sceneSize;
+        const min = (this._camera?.nearClip ?? 0) + this.zoomMin * this.sceneSize;
         const max = this.zoomMax <= this.zoomMin ? Infinity : this.zoomMax * this.sceneSize;
         return math.clamp(value, min, max);
     }
