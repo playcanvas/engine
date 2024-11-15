@@ -130,7 +130,7 @@ const STATIC_FILES = [
         once: true
     },
 
-    // modules (N.B. destination folder is 'modules' as 'node_modules' are automatically excluded by git pages)
+    // monaco loader
     { src: './node_modules/monaco-editor/min/vs', dest: 'dist/modules/monaco-editor/min/vs', once: true },
 
     // fflate (for when using ENGINE_PATH)
