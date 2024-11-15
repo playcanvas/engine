@@ -13,8 +13,8 @@ import { buildExamples } from './utils/plugins/rollup-build-examples.mjs';
 import { copyStatic } from './utils/plugins/rollup-copy-static.mjs';
 import { isModuleWithExternalDependencies } from './utils/utils.mjs';
 import { treeshakeIgnore } from '../utils/plugins/rollup-treeshake-ignore.mjs';
-import { buildTarget } from '../utils/rollup-build-target.mjs';
 import { buildTargetRTI } from '../utils/rollup-build-target-rti.mjs';
+import { buildTarget } from '../utils/rollup-build-target.mjs';
 
 // util functions
 
