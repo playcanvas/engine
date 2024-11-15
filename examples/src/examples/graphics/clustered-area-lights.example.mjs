@@ -1,7 +1,7 @@
-import * as pc from 'playcanvas';
 import { data } from 'examples/observer';
 import { deviceType, rootPath, fileImport } from 'examples/utils';
-const { CameraFrame } = await fileImport(rootPath + '/static/assets/scripts/misc/camera-frame.mjs');
+import * as pc from 'playcanvas';
+const { CameraFrame } = await fileImport(`${rootPath}/static/assets/scripts/misc/camera-frame.mjs`);
 
 const canvas = /** @type {HTMLCanvasElement} */ (document.getElementById('application-canvas'));
 window.focus();
@@ -14,17 +14,17 @@ data.set('settings', {
 });
 
 const assets = {
-    script: new pc.Asset('script', 'script', { url: rootPath + '/static/scripts/camera/orbit-camera.js' }),
-    color: new pc.Asset('color', 'texture', { url: rootPath + '/static/assets/textures/seaside-rocks01-color.jpg' }),
-    normal: new pc.Asset('normal', 'texture', { url: rootPath + '/static/assets/textures/seaside-rocks01-normal.jpg' }),
-    gloss: new pc.Asset('gloss', 'texture', { url: rootPath + '/static/assets/textures/seaside-rocks01-gloss.jpg' }),
-    luts: new pc.Asset('luts', 'json', { url: rootPath + '/static/assets/json/area-light-luts.json' })
+    script: new pc.Asset('script', 'script', { url: `${rootPath}/static/scripts/camera/orbit-camera.js` }),
+    color: new pc.Asset('color', 'texture', { url: `${rootPath}/static/assets/textures/seaside-rocks01-color.jpg` }),
+    normal: new pc.Asset('normal', 'texture', { url: `${rootPath}/static/assets/textures/seaside-rocks01-normal.jpg` }),
+    gloss: new pc.Asset('gloss', 'texture', { url: `${rootPath}/static/assets/textures/seaside-rocks01-gloss.jpg` }),
+    luts: new pc.Asset('luts', 'json', { url: `${rootPath}/static/assets/json/area-light-luts.json` })
 };
 
 const gfxOptions = {
     deviceTypes: [deviceType],
-    glslangUrl: rootPath + '/static/lib/glslang/glslang.js',
-    twgslUrl: rootPath + '/static/lib/twgsl/twgsl.js',
+    glslangUrl: `${rootPath}/static/lib/glslang/glslang.js`,
+    twgslUrl: `${rootPath}/static/lib/twgsl/twgsl.js`,
 
     // enable HDR rendering if supported
     displayFormat: pc.DISPLAYFORMAT_HDR

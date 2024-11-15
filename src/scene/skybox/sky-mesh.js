@@ -39,13 +39,13 @@ class SkyMesh {
 
         material.getShaderVariant = function (params) {
 
-            const { scene, renderParams } = params;
+            const { scene, cameraShaderParams } = params;
             const options = {
                 defines: this.defines,
                 pass: params.pass,
                 encoding: texture.encoding,
-                gamma: renderParams.shaderOutputGamma,
-                toneMapping: renderParams.toneMapping,
+                gamma: cameraShaderParams.shaderOutputGamma,
+                toneMapping: cameraShaderParams.toneMapping,
                 skymesh: type
             };
 

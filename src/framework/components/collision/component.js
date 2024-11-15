@@ -59,7 +59,7 @@ class CollisionComponent extends Component {
     static EVENT_COLLISIONSTART = 'collisionstart';
 
     /**
-     * Fired two rigid-bodies stop touching. The handler is passed an {@link Entity} that
+     * Fired when two rigid bodies stop touching. The handler is passed an {@link Entity} that
      * represents the other rigid body involved in the collision.
      *
      * @event

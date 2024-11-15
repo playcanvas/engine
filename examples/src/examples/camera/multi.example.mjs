@@ -1,10 +1,10 @@
 // @config DESCRIPTION <div style='text-align:center'><div>(<b>WASDQE</b>) Move</div><div>(<b>LMB</b>) Orbit, (<b>RMB</b>) Fly</div><div>(<b>Scroll Wheel</b>) zoom</div><div>(<b>MMB / Hold Shift</b>) Pan</div><div>(<b>F</b>) Focus</div></div>
 // @config HIDDEN
-import * as pc from 'playcanvas';
 import { data } from 'examples/observer';
 import { deviceType, rootPath, fileImport } from 'examples/utils';
+import * as pc from 'playcanvas';
 
-const { MultiCamera } = await fileImport(rootPath + '/static/scripts/camera/multi-camera.mjs');
+const { MultiCamera } = await fileImport(`${rootPath}/static/scripts/camera/multi-camera.mjs`);
 
 const canvas = document.getElementById('application-canvas');
 if (!(canvas instanceof HTMLCanvasElement)) {
@@ -14,18 +14,18 @@ window.focus();
 
 const gfxOptions = {
     deviceTypes: [deviceType],
-    glslangUrl: rootPath + '/static/lib/glslang/glslang.js',
-    twgslUrl: rootPath + '/static/lib/twgsl/twgsl.js'
+    glslangUrl: `${rootPath}/static/lib/glslang/glslang.js`,
+    twgslUrl: `${rootPath}/static/lib/twgsl/twgsl.js`
 };
 
 const assets = {
     helipad: new pc.Asset(
         'helipad-env-atlas',
         'texture',
-        { url: rootPath + '/static/assets/cubemaps/helipad-env-atlas.png' },
+        { url: `${rootPath}/static/assets/cubemaps/helipad-env-atlas.png` },
         { type: pc.TEXTURETYPE_RGBP, mipmaps: false }
     ),
-    statue: new pc.Asset('statue', 'container', { url: rootPath + '/static/assets/models/statue.glb' })
+    statue: new pc.Asset('statue', 'container', { url: `${rootPath}/static/assets/models/statue.glb` })
 };
 
 const device = await pc.createGraphicsDevice(canvas, gfxOptions);

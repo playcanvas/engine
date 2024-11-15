@@ -106,9 +106,9 @@ class ShaderMaterial extends Material {
             useMorphTextureBasedInt: (objDefs & SHADERDEF_MORPH_TEXTURE_BASED_INT) !== 0,
 
             pass: params.pass,
-            gamma: params.renderParams.shaderOutputGamma,
-            toneMapping: params.renderParams.toneMapping,
-            fog: params.renderParams.fog,
+            gamma: params.cameraShaderParams.shaderOutputGamma,
+            toneMapping: params.cameraShaderParams.toneMapping,
+            fog: params.cameraShaderParams.fog,
             shaderDesc: this.shaderDesc
         };
 

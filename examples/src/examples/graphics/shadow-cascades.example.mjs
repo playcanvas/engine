@@ -1,25 +1,25 @@
-import * as pc from 'playcanvas';
 import { data } from 'examples/observer';
 import { deviceType, rootPath } from 'examples/utils';
+import * as pc from 'playcanvas';
 
 const canvas = /** @type {HTMLCanvasElement} */ (document.getElementById('application-canvas'));
 window.focus();
 
 const assets = {
-    script: new pc.Asset('script', 'script', { url: rootPath + '/static/scripts/camera/orbit-camera.js' }),
-    terrain: new pc.Asset('terrain', 'container', { url: rootPath + '/static/assets/models/terrain.glb' }),
+    script: new pc.Asset('script', 'script', { url: `${rootPath}/static/scripts/camera/orbit-camera.js` }),
+    terrain: new pc.Asset('terrain', 'container', { url: `${rootPath}/static/assets/models/terrain.glb` }),
     helipad: new pc.Asset(
         'helipad-env-atlas',
         'texture',
-        { url: rootPath + '/static/assets/cubemaps/helipad-env-atlas.png' },
+        { url: `${rootPath}/static/assets/cubemaps/helipad-env-atlas.png` },
         { type: pc.TEXTURETYPE_RGBP, mipmaps: false }
     )
 };
 
 const gfxOptions = {
     deviceTypes: [deviceType],
-    glslangUrl: rootPath + '/static/lib/glslang/glslang.js',
-    twgslUrl: rootPath + '/static/lib/twgsl/twgsl.js'
+    glslangUrl: `${rootPath}/static/lib/glslang/glslang.js`,
+    twgslUrl: `${rootPath}/static/lib/twgsl/twgsl.js`
 };
 
 const device = await pc.createGraphicsDevice(canvas, gfxOptions);
@@ -75,7 +75,6 @@ assetListLoader.load(() => {
     app.scene.skyboxMip = 3;
     app.scene.envAtlas = assets.helipad.resource;
     app.scene.skyboxRotation = new pc.Quat().setFromEulerAngles(0, -70, 0);
-    app.scene.rendering.toneMapping = pc.TONEMAP_ACES;
 
     // instantiate the terrain
     /** @type {pc.Entity} */
@@ -121,7 +120,8 @@ assetListLoader.load(() => {
     const camera = new pc.Entity();
     camera.addComponent('camera', {
         clearColor: new pc.Color(0.9, 0.9, 0.9),
-        farClip: 1000
+        farClip: 1000,
+        toneMapping: pc.TONEMAP_ACES
     });
 
     // and position it in the world
@@ -177,7 +177,7 @@ assetListLoader.load(() => {
     const cloudSpeed = 0.2;
     let frameNumber = 0;
     let time = 0;
-    app.on('update', function (/** @type {number} */ dt) {
+    app.on('update', (/** @type {number} */ dt) => {
         time += dt;
 
         // on the first frame, when camera is updated, move it further away from the focus tree

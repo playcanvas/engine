@@ -1,41 +1,41 @@
-import * as pc from 'playcanvas';
 import { data } from 'examples/observer';
 import { deviceType, rootPath, fileImport } from 'examples/utils';
+import * as pc from 'playcanvas';
 
 // import the createHatchMaterial function from the hatch-material.mjs file
-const { createHatchMaterial } = await fileImport(rootPath + '/static/assets/scripts/misc/hatch-material.mjs');
+const { createHatchMaterial } = await fileImport(`${rootPath}/static/assets/scripts/misc/hatch-material.mjs`);
 
 const canvas = /** @type {HTMLCanvasElement} */ (document.getElementById('application-canvas'));
 window.focus();
 
 // set up and load draco module, as the glb we load is draco compressed
 pc.WasmModule.setConfig('DracoDecoderModule', {
-    glueUrl: rootPath + '/static/lib/draco/draco.wasm.js',
-    wasmUrl: rootPath + '/static/lib/draco/draco.wasm.wasm',
-    fallbackUrl: rootPath + '/static/lib/draco/draco.js'
+    glueUrl: `${rootPath}/static/lib/draco/draco.wasm.js`,
+    wasmUrl: `${rootPath}/static/lib/draco/draco.wasm.wasm`,
+    fallbackUrl: `${rootPath}/static/lib/draco/draco.js`
 });
 
 const assets = {
-    script: new pc.Asset('script', 'script', { url: rootPath + '/static/scripts/camera/orbit-camera.js' }),
-    board: new pc.Asset('board', 'container', { url: rootPath + '/static/assets/models/chess-board.glb' }),
+    script: new pc.Asset('script', 'script', { url: `${rootPath}/static/scripts/camera/orbit-camera.js` }),
+    board: new pc.Asset('board', 'container', { url: `${rootPath}/static/assets/models/chess-board.glb` }),
 
-    bitmoji: new pc.Asset('model', 'container', { url: rootPath + '/static/assets/models/bitmoji.glb' }),
-    danceAnim: new pc.Asset('walkAnim', 'container', { url: rootPath + '/static/assets/animations/bitmoji/win-dance.glb' }),
-    morph: new pc.Asset('glb', 'container', { url: rootPath + '/static/assets/models/morph-stress-test.glb' }),
+    bitmoji: new pc.Asset('model', 'container', { url: `${rootPath}/static/assets/models/bitmoji.glb` }),
+    danceAnim: new pc.Asset('walkAnim', 'container', { url: `${rootPath}/static/assets/animations/bitmoji/win-dance.glb` }),
+    morph: new pc.Asset('glb', 'container', { url: `${rootPath}/static/assets/models/morph-stress-test.glb` }),
 
     // hatch textures, sorted from light to dark
-    hatch0: new pc.Asset('hatch0', 'texture', { url: rootPath + '/static/assets/textures/hatch-0.jpg' }, { srgb: true }),
-    hatch1: new pc.Asset('hatch1', 'texture', { url: rootPath + '/static/assets/textures/hatch-1.jpg' }, { srgb: true }),
-    hatch2: new pc.Asset('hatch2', 'texture', { url: rootPath + '/static/assets/textures/hatch-2.jpg' }, { srgb: true }),
-    hatch3: new pc.Asset('hatch3', 'texture', { url: rootPath + '/static/assets/textures/hatch-3.jpg' }, { srgb: true }),
-    hatch4: new pc.Asset('hatch4', 'texture', { url: rootPath + '/static/assets/textures/hatch-4.jpg' }, { srgb: true }),
-    hatch5: new pc.Asset('hatch5', 'texture', { url: rootPath + '/static/assets/textures/hatch-5.jpg' }, { srgb: true })
+    hatch0: new pc.Asset('hatch0', 'texture', { url: `${rootPath}/static/assets/textures/hatch-0.jpg` }, { srgb: true }),
+    hatch1: new pc.Asset('hatch1', 'texture', { url: `${rootPath}/static/assets/textures/hatch-1.jpg` }, { srgb: true }),
+    hatch2: new pc.Asset('hatch2', 'texture', { url: `${rootPath}/static/assets/textures/hatch-2.jpg` }, { srgb: true }),
+    hatch3: new pc.Asset('hatch3', 'texture', { url: `${rootPath}/static/assets/textures/hatch-3.jpg` }, { srgb: true }),
+    hatch4: new pc.Asset('hatch4', 'texture', { url: `${rootPath}/static/assets/textures/hatch-4.jpg` }, { srgb: true }),
+    hatch5: new pc.Asset('hatch5', 'texture', { url: `${rootPath}/static/assets/textures/hatch-5.jpg` }, { srgb: true })
 };
 
 const gfxOptions = {
     deviceTypes: [deviceType],
-    glslangUrl: rootPath + '/static/lib/glslang/glslang.js',
-    twgslUrl: rootPath + '/static/lib/twgsl/twgsl.js'
+    glslangUrl: `${rootPath}/static/lib/glslang/glslang.js`,
+    twgslUrl: `${rootPath}/static/lib/twgsl/twgsl.js`
 };
 
 const createOptions = new pc.AppOptions();
@@ -182,7 +182,7 @@ assetListLoader.load(() => {
 
     // update things each frame
     let time = 0;
-    app.on('update', function (dt) {
+    app.on('update', (dt) => {
         time += dt;
 
         // generate a light direction that rotates around the scene, and set it on the materials
@@ -204,14 +204,14 @@ assetListLoader.load(() => {
         }
         if (propertyName === 'tonemapping') {
             // set up selected tone-mapping
-            app.scene.rendering.toneMapping = value;
+            camera.camera.toneMapping = value;
         }
         if (propertyName === 'fog') {
             // turn on/off fog and set up its properties
-            app.scene.rendering.fog = value ? pc.FOG_LINEAR : pc.FOG_NONE;
-            app.scene.rendering.fogColor = new pc.Color(0.8, 0.8, 0.8);
-            app.scene.rendering.fogStart = 100;
-            app.scene.rendering.fogEnd = 300;
+            app.scene.fog.type = value ? pc.FOG_LINEAR : pc.FOG_NONE;
+            app.scene.fog.color = new pc.Color(0.8, 0.8, 0.8);
+            app.scene.fog.start = 100;
+            app.scene.fog.end = 300;
         }
         if (propertyName === 'metalness') {
             materials.forEach((mat) => {

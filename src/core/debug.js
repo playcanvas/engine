@@ -33,7 +33,7 @@ class Debug {
     static removed(message) {
         if (!Debug._loggedMessages.has(message)) {
             Debug._loggedMessages.add(message);
-            console.warn(`REMOVED: ${message}`);
+            console.error(`REMOVED: ${message}`);
         }
     }
 
