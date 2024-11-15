@@ -1,6 +1,4 @@
-import { Vec2, Vec3, Ray, Plane, math } from 'playcanvas';
-
-import { BaseCamera } from './base-camera.mjs';
+import { Vec2, Vec3, Ray, Plane, Entity, Script, math } from 'playcanvas';
 
 /** @import { CameraComponent } from 'playcanvas' */
 
@@ -12,7 +10,52 @@ const tmpP1 = new Plane();
 
 const PASSIVE = { passive: false };
 
-class MultiCamera extends BaseCamera {
+/**
+ * Calculate the lerp rate.
+ *
+ * @param {number} damping - The damping.
+ * @param {number} dt - The delta time.
+ * @returns {number} - The lerp rate.
+ */
+const lerpRate = (damping, dt) => 1 - Math.pow(damping, dt * 1000);
+
+class MultiCamera extends Script {
+    /**
+     * @private
+     * @type {CameraComponent}
+     */
+    _camera = null;
+
+    /**
+     * @private
+     * @type {Vec3}
+     */
+    _origin = new Vec3(0, 1, 0);
+
+    /**
+     * @private
+     * @type {Vec3}
+     */
+    _position = new Vec3();
+
+    /**
+     * @private
+     * @type {Vec2}
+     */
+    _dir = new Vec2();
+
+    /**
+     * @private
+     * @type {Vec3}
+     */
+    _angles = new Vec3();
+
+    /**
+     * @private
+     * @type {Vec2}
+     */
+    _pitchRange = new Vec2(-360, 360);
+
     /**
      * @type {number}
      * @private
@@ -75,6 +118,43 @@ class MultiCamera extends BaseCamera {
         sprint: false,
         crouch: false
     };
+
+    /**
+     * @type {Entity}
+     */
+    root;
+
+    /**
+     * The scene size.
+     *
+     * @attribute
+     * @type {number}
+     */
+    sceneSize = 100;
+
+    /**
+     * The look sensitivity.
+     *
+     * @attribute
+     * @type {number}
+     */
+    lookSensitivity = 0.2;
+
+    /**
+     * The look damping.
+     *
+     * @attribute
+     * @type {number}
+     */
+    lookDamping = 0.97;
+
+    /**
+     * The move damping.
+     *
+     * @attribute
+     * @type {number}
+     */
+    moveDamping = 0.98;
 
     /**
      * Enable orbit camera movement.
@@ -170,7 +250,13 @@ class MultiCamera extends BaseCamera {
     constructor(args) {
         super(args);
         const {
+            name,
             focusPoint,
+            sceneSize,
+            lookSensitivity,
+            lookDamping,
+            moveDamping,
+            pitchRange,
             pinchSpeed,
             wheelSpeed,
             zoomMin,
@@ -180,6 +266,14 @@ class MultiCamera extends BaseCamera {
             crouchSpeed
         } = args.attributes;
 
+        this.root = new Entity(name ?? 'multi-camera');
+        this.app.root.addChild(this.root);
+
+        this.sceneSize = sceneSize ?? this.sceneSize;
+        this.lookSensitivity = lookSensitivity ?? this.lookSensitivity;
+        this.lookDamping = lookDamping ?? this.lookDamping;
+        this.moveDamping = moveDamping ?? this.moveDamping;
+        this.pitchRange = pitchRange ?? this.pitchRange;
         this.pinchSpeed = pinchSpeed ?? this.pinchSpeed;
         this.wheelSpeed = wheelSpeed ?? this.wheelSpeed;
         this.zoomMin = zoomMin ?? this.zoomMin;
@@ -192,6 +286,10 @@ class MultiCamera extends BaseCamera {
         this._onWheel = this._onWheel.bind(this);
         this._onKeyDown = this._onKeyDown.bind(this);
         this._onKeyUp = this._onKeyUp.bind(this);
+        this._onPointerDown = this._onPointerDown.bind(this);
+        this._onPointerMove = this._onPointerMove.bind(this);
+        this._onPointerUp = this._onPointerUp.bind(this);
+        this._onContextMenu = this._onContextMenu.bind(this);
 
         if (!this.entity.camera) {
             throw new Error('MultiCamera script requires a camera component');
@@ -202,6 +300,8 @@ class MultiCamera extends BaseCamera {
     }
 
     /**
+     * The camera's focus point.
+     *
      * @param {Vec3} point - The focus point.
      */
     set focusPoint(point) {
@@ -213,6 +313,42 @@ class MultiCamera extends BaseCamera {
 
     get focusPoint() {
         return this._origin;
+    }
+
+    /**
+     * The camera's pitch range.
+     *
+     * @attribute
+     * @type {Vec2}
+     */
+    set pitchRange(value) {
+        this._pitchRange.copy(value);
+        this._dir.x = this._clampPitch(this._dir.x);
+        this._angles.x = this._dir.x;
+        this.root.setEulerAngles(this._angles);
+    }
+
+    get pitchRange() {
+        return this._pitchRange;
+    }
+
+    /**
+     * @private
+     * @param {number} value - The value to clamp.
+     * @returns {number} - The clamped value.
+     */
+    _clampPitch(value) {
+        const min = this._pitchRange.x === -360 ? -Infinity : this._pitchRange.x;
+        const max = this._pitchRange.y === 360 ? Infinity : this._pitchRange.y;
+        return math.clamp(value, min, max);
+    }
+
+    /**
+     * @private
+     * @param {MouseEvent} event - The mouse event.
+     */
+    _onContextMenu(event) {
+        event.preventDefault();
     }
 
     /**
@@ -270,7 +406,7 @@ class MultiCamera extends BaseCamera {
     }
 
     /**
-     * @protected
+     * @private
      * @param {PointerEvent} event - The pointer event.
      */
     _onPointerDown(event) {
@@ -310,7 +446,7 @@ class MultiCamera extends BaseCamera {
     }
 
     /**
-     * @protected
+     * @private
      * @param {PointerEvent} event - The pointer event.
      */
     _onPointerMove(event) {
@@ -346,7 +482,7 @@ class MultiCamera extends BaseCamera {
     }
 
     /**
-     * @protected
+     * @private
      * @param {PointerEvent} event - The pointer event.
      */
     _onPointerUp(event) {
@@ -444,6 +580,20 @@ class MultiCamera extends BaseCamera {
                 this._key.crouch = false;
                 break;
         }
+    }
+
+    /**
+     * @private
+     * @param {PointerEvent} event - The pointer event.
+     */
+    _look(event) {
+        if (event.target !== this.app.graphicsDevice.canvas) {
+            return;
+        }
+        const movementX = event.movementX || 0;
+        const movementY = event.movementY || 0;
+        this._dir.x = this._clampPitch(this._dir.x - movementY * this.lookSensitivity);
+        this._dir.y -= movementX * this.lookSensitivity;
     }
 
     /**
@@ -562,6 +712,26 @@ class MultiCamera extends BaseCamera {
     }
 
     /**
+     * @private
+     * @param {number} dt - The delta time.
+     */
+    _smoothLook(dt) {
+        const a = lerpRate(this.lookDamping, dt);
+        this._angles.x = math.lerp(this._angles.x, this._dir.x, a);
+        this._angles.y = math.lerp(this._angles.y, this._dir.y, a);
+        this.root.setEulerAngles(this._angles);
+    }
+
+    /**
+     * @private
+     * @param {number} dt - The delta time.
+     */
+    _smoothMove(dt) {
+        this._position.lerp(this._position, this._origin, lerpRate(this.moveDamping, dt));
+        this.root.setPosition(this._position);
+    }
+
+    /**
      * Focus the camera on a point.
      *
      * @param {Vec3} point - The point.
@@ -630,19 +800,35 @@ class MultiCamera extends BaseCamera {
      * @param {CameraComponent} camera - The camera component.
      */
     attach(camera) {
-        super.attach(camera);
+        this._camera = camera;
+        this._camera.entity.setLocalEulerAngles(0, 0, 0);
 
         window.addEventListener('wheel', this._onWheel, PASSIVE);
         window.addEventListener('keydown', this._onKeyDown, false);
         window.addEventListener('keyup', this._onKeyUp, false);
+        window.addEventListener('pointerdown', this._onPointerDown);
+        window.addEventListener('pointermove', this._onPointerMove);
+        window.addEventListener('pointerup', this._onPointerUp);
+        window.addEventListener('contextmenu', this._onContextMenu);
+
+        this.root.addChild(camera.entity);
     }
 
     detach() {
-        super.detach();
-
         window.removeEventListener('wheel', this._onWheel, PASSIVE);
         window.removeEventListener('keydown', this._onKeyDown, false);
         window.removeEventListener('keyup', this._onKeyUp, false);
+        window.removeEventListener('pointermove', this._onPointerMove);
+        window.removeEventListener('pointerdown', this._onPointerDown);
+        window.removeEventListener('pointerup', this._onPointerUp);
+        window.removeEventListener('contextmenu', this._onContextMenu);
+
+        this.root.removeChild(this._camera.entity);
+        this._camera = null;
+
+        this._dir.x = this._angles.x;
+        this._dir.y = this._angles.y;
+        this._origin.copy(this._position);
 
         this._pointerEvents.clear();
         this._lastPinchDist = -1;
@@ -674,7 +860,12 @@ class MultiCamera extends BaseCamera {
 
         this._move(dt);
 
-        super.update(dt);
+        this._smoothLook(dt);
+        this._smoothMove(dt);
+    }
+
+    destroy() {
+        this.detach();
     }
 }
 
