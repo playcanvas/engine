@@ -58,6 +58,18 @@ class CameraControls extends Script {
     _pitchRange = new Vec2(-360, 360);
 
     /**
+     * @private
+     * @type {number}
+     */
+    _zoomMin = 0;
+
+    /**
+     * @private
+     * @type {number}
+     */
+    _zoomMax = 0;
+
+    /**
      * @type {number}
      * @private
      */
@@ -126,7 +138,7 @@ class CameraControls extends Script {
     root;
 
     /**
-     * The scene size.
+     * The scene size. The zoom, pan and fly speeds are relative to this size.
      *
      * @attribute
      * @type {number}
@@ -142,7 +154,7 @@ class CameraControls extends Script {
     lookSensitivity = 0.2;
 
     /**
-     * The look damping.
+     * The look damping. A higher value means less damping. A value of 1 means no damping.
      *
      * @attribute
      * @type {number}
@@ -150,7 +162,7 @@ class CameraControls extends Script {
     lookDamping = 0.97;
 
     /**
-     * The move damping.
+     * The move damping. A higher value means less damping. A value of 1 means no damping.
      *
      * @attribute
      * @type {number}
@@ -158,7 +170,7 @@ class CameraControls extends Script {
     moveDamping = 0.98;
 
     /**
-     * Enable orbit camera movement.
+     * Enable orbit camera controls.
      *
      * @attribute
      * @type {boolean}
@@ -166,7 +178,7 @@ class CameraControls extends Script {
     enableOrbit = true;
 
     /**
-     * Enable panning the camera.
+     * Enable pan camera controls.
      *
      * @attribute
      * @type {boolean
@@ -174,7 +186,7 @@ class CameraControls extends Script {
     enablePan = true;
 
     /**
-     * Enable flying the camera.
+     * Enable fly camera controls.
      *
      * @attribute
      * @type {boolean}
@@ -198,32 +210,15 @@ class CameraControls extends Script {
     wheelSpeed = 0.005;
 
     /**
-     * The minimum zoom distance relative to the scene size.
+     * The minimum scale the camera can zoom (absolute value).
      *
      * @attribute
      * @type {number}
      */
-    zoomMin = 0;
+    zoomScaleMin = 0;
 
     /**
-     * The maximum zoom distance relative to the scene size. Having a value less than or equal to
-     * zoomMin means no maximum zoom.
-     *
-     * @attribute
-     * @type {number}
-     */
-    zoomMax = 0;
-
-    /**
-     * The minimum scale the camera can zoom.
-     *
-     * @attribute
-     * @type {number}
-     */
-    zoomScaleMin = 0.01;
-
-    /**
-     * The fly move speed.
+     * The fly move speed relative to the scene size.
      *
      * @attribute
      * @type {number}
@@ -231,7 +226,7 @@ class CameraControls extends Script {
     moveSpeed = 2;
 
     /**
-     * The fly sprint speed.
+     * The fly sprint speed relative to the scene size.
      *
      * @attribute
      * @type {number}
@@ -239,7 +234,7 @@ class CameraControls extends Script {
     sprintSpeed = 4;
 
     /**
-     * The fly crouch speed.
+     * The fly crouch speed relative to the scene size.
      *
      * @attribute
      * @type {number}
@@ -275,11 +270,8 @@ class CameraControls extends Script {
         this.lookSensitivity = lookSensitivity ?? this.lookSensitivity;
         this.lookDamping = lookDamping ?? this.lookDamping;
         this.moveDamping = moveDamping ?? this.moveDamping;
-        this.pitchRange = pitchRange ?? this.pitchRange;
         this.pinchSpeed = pinchSpeed ?? this.pinchSpeed;
         this.wheelSpeed = wheelSpeed ?? this.wheelSpeed;
-        this.zoomMin = zoomMin ?? this.zoomMin;
-        this.zoomMax = zoomMax ?? this.zoomMax;
 
         this.moveSpeed = moveSpeed ?? this.moveSpeed;
         this.sprintSpeed = sprintSpeed ?? this.sprintSpeed;
@@ -299,6 +291,9 @@ class CameraControls extends Script {
         this.attach(this.entity.camera);
 
         this.focusPoint = focusPoint ?? this.focusPoint;
+        this.pitchRange = pitchRange ?? this.pitchRange;
+        this.zoomMin = zoomMin ?? this.zoomMin;
+        this.zoomMax = zoomMax ?? this.zoomMax;
     }
 
     /**
@@ -327,12 +322,45 @@ class CameraControls extends Script {
     set pitchRange(value) {
         this._pitchRange.copy(value);
         this._dir.x = this._clampPitch(this._dir.x);
-        this._angles.x = this._dir.x;
-        this.root.setEulerAngles(this._angles);
+        this._smoothLook(-1);
     }
 
     get pitchRange() {
         return this._pitchRange;
+    }
+
+    /**
+     * The minimum zoom distance relative to the scene size.
+     *
+     * @attribute
+     * @type {number}
+     */
+    set zoomMin(value) {
+        this._zoomMin = value;
+        this._zoomDist = this._clampZoom(this._zoomDist);
+        this._smoothZoom(-1);
+    }
+
+    get zoomMin() {
+        return this._zoomMin;
+    }
+
+    /**
+     * The maximum zoom distance relative to the scene size. Having a value less than or equal to
+     * zoomMin means no maximum zoom.
+     *
+     * @attribute
+     * @type {number}
+     */
+    set zoomMax(value) {
+        this._zoomMax = value;
+        this._zoomDist = this._clampZoom(this._zoomDist);
+        this._smoothZoom(-1);
+
+    }
+
+    get zoomMax() {
+        return this._zoomMax;
     }
 
     /**
@@ -343,6 +371,17 @@ class CameraControls extends Script {
     _clampPitch(value) {
         const min = this._pitchRange.x === -360 ? -Infinity : this._pitchRange.x;
         const max = this._pitchRange.y === 360 ? Infinity : this._pitchRange.y;
+        return math.clamp(value, min, max);
+    }
+
+    /**
+     * @private
+     * @param {number} value - The value to clamp.
+     * @returns {number} - The clamped value.
+     */
+    _clampZoom(value) {
+        const min = this._camera.nearClip + this.zoomMin * this.sceneSize;
+        const max = this.zoomMax <= this.zoomMin ? Infinity : this.zoomMax * this.sceneSize;
         return math.clamp(value, min, max);
     }
 
@@ -707,12 +746,20 @@ class CameraControls extends Script {
         if (!this._camera) {
             return;
         }
-        const min = this._camera.nearClip + this.zoomMin * this.sceneSize;
-        const max = this.zoomMax <= this.zoomMin ? Infinity : this.zoomMax * this.sceneSize;
         const distNormalized = this._zoomDist / (ZOOM_SCALE_SCENE_MULT * this.sceneSize);
         const scale = math.clamp(distNormalized, this.zoomScaleMin, 1);
         this._zoomDist += (delta * this.wheelSpeed * this.sceneSize * scale);
-        this._zoomDist = math.clamp(this._zoomDist, min, max);
+        this._zoomDist = this._clampZoom(this._zoomDist);
+    }
+
+    /**
+     * @private
+     * @param {number} dt - The delta time.
+     */
+    _smoothZoom(dt) {
+        const a = dt === -1 ? 1 : lerpRate(this.moveDamping, dt);
+        this._cameraDist = math.lerp(this._cameraDist, this._zoomDist, a);
+        this._camera.entity.setLocalPosition(0, 0, this._cameraDist);
     }
 
     /**
@@ -720,7 +767,7 @@ class CameraControls extends Script {
      * @param {number} dt - The delta time.
      */
     _smoothLook(dt) {
-        const a = lerpRate(this.lookDamping, dt);
+        const a = dt === -1 ? 1 : lerpRate(this.lookDamping, dt);
         this._angles.x = math.lerp(this._angles.x, this._dir.x, a);
         this._angles.y = math.lerp(this._angles.y, this._dir.y, a);
         this.root.setEulerAngles(this._angles);
@@ -731,7 +778,8 @@ class CameraControls extends Script {
      * @param {number} dt - The delta time.
      */
     _smoothMove(dt) {
-        this._position.lerp(this._position, this._origin, lerpRate(this.moveDamping, dt));
+        const a = dt === -1 ? 1 : lerpRate(this.moveDamping, dt);
+        this._position.lerp(this._position, this._origin, a);
         this.root.setPosition(this._position);
     }
 
@@ -858,8 +906,7 @@ class CameraControls extends Script {
         }
 
         if (!this._flying) {
-            this._cameraDist = math.lerp(this._cameraDist, this._zoomDist, 1 - Math.pow(this.moveDamping, dt * 1000));
-            this._camera.entity.setLocalPosition(0, 0, this._cameraDist);
+            this._smoothZoom(dt);
         }
 
         this._move(dt);
