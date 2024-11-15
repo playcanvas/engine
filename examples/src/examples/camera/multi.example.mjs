@@ -151,7 +151,7 @@ data.set('attr', [
     'lookSensitivity',
     'lookDamping',
     'moveDamping',
-    'cameraPitchRange',
+    'pitchRange',
     'pinchSpeed',
     'wheelSpeed',
     'zoomMin',
@@ -172,6 +172,7 @@ data.set('attr', [
     return obj;
 }, {}));
 
+const tmpVa = new pc.Vec2();
 data.on('*:set', (/** @type {string} */ path, /** @type {any} */ value) => {
     const [category, key, index] = path.split('.');
     if (category !== 'attr') {
@@ -179,12 +180,12 @@ data.on('*:set', (/** @type {string} */ path, /** @type {any} */ value) => {
     }
 
     if (Array.isArray(value)) {
-        multiCameraScript[key].set(value[0], value[1]);
+        multiCameraScript[key] = tmpVa.set(value[0], value[1]);
         return;
     }
     if (index !== undefined) {
         const arr = data.get(`${category}.${key}`);
-        multiCameraScript[key].set(arr[0], arr[1]);
+        multiCameraScript[key] = tmpVa.set(arr[0], arr[1]);
         return;
     }
     multiCameraScript[key] = value;

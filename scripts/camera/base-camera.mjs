@@ -3,34 +3,40 @@ import { Entity, Script, Vec3, Vec2, math } from 'playcanvas';
 /** @import { CameraComponent } from 'playcanvas' */
 class BaseCamera extends Script {
     /**
-     * @type {CameraComponent}
      * @protected
+     * @type {CameraComponent}
      */
     _camera = null;
 
     /**
-     * @type {Vec3}
      * @protected
+     * @type {Vec3}
      */
     _origin = new Vec3(0, 1, 0);
 
     /**
-     * @type {Vec3}
      * @protected
+     * @type {Vec3}
      */
     _position = new Vec3();
 
     /**
-     * @type {Vec2}
      * @protected
+     * @type {Vec2}
      */
     _dir = new Vec2();
 
     /**
-     * @type {Vec3}
      * @protected
+     * @type {Vec3}
      */
     _angles = new Vec3();
+
+    /**
+     * @protected
+     * @type {Vec2}
+     */
+    _pitchRange = new Vec2(-360, 360);
 
     /**
      * @type {Entity}
@@ -70,34 +76,52 @@ class BaseCamera extends Script {
     moveDamping = 0.98;
 
     /**
-     * The camera pitch range
-     *
-     * @attribute
-     * @type {Vec2}
-     */
-    cameraPitchRange = new Vec2(-360, 360);
-
-    /**
      * @param {object} args - The script arguments.
      */
     constructor(args) {
         super(args);
-        const { name, sceneSize, lookSensitivity, lookDamping, moveDamping, cameraPitchRange } = args.attributes;
+        const { name, sceneSize, lookSensitivity, lookDamping, moveDamping, pitchRange } = args.attributes;
 
         this.root = new Entity(name ?? 'base-camera');
+        this.app.root.addChild(this.root);
+
         this.sceneSize = sceneSize ?? this.sceneSize;
         this.lookSensitivity = lookSensitivity ?? this.lookSensitivity;
         this.lookDamping = lookDamping ?? this.lookDamping;
         this.moveDamping = moveDamping ?? this.moveDamping;
-        if (cameraPitchRange instanceof Vec2) {
-            this.cameraPitchRange.copy(cameraPitchRange);
-        }
+        this.pitchRange = pitchRange ?? this.pitchRange;
 
         this._onPointerDown = this._onPointerDown.bind(this);
         this._onPointerMove = this._onPointerMove.bind(this);
         this._onPointerUp = this._onPointerUp.bind(this);
+    }
 
-        this.app.root.addChild(this.root);
+    /**
+     * The camera's pitch range.
+     *
+     * @attribute
+     * @type {Vec2}
+     */
+    set pitchRange(value) {
+        this._pitchRange.copy(value);
+        this._dir.x = this._clampPitch(this._dir.x);
+        this._angles.x = this._dir.x;
+        this.root.setEulerAngles(this._angles);
+    }
+
+    get pitchRange() {
+        return this._pitchRange;
+    }
+
+    /**
+     * @private
+     * @param {number} value - The value to clamp.
+     * @returns {number} - The clamped value.
+     */
+    _clampPitch(value) {
+        const min = this._pitchRange.x === -360 ? -Infinity : this._pitchRange.x;
+        const max = this._pitchRange.y === 360 ? Infinity : this._pitchRange.y;
+        return math.clamp(value, min, max);
     }
 
     /**
@@ -165,9 +189,7 @@ class BaseCamera extends Script {
         }
         const movementX = event.movementX || 0;
         const movementY = event.movementY || 0;
-        const min = this.cameraPitchRange.x === -360 ? -Infinity : this.cameraPitchRange.x;
-        const max = this.cameraPitchRange.y === 360 ? Infinity : this.cameraPitchRange.y;
-        this._dir.x = math.clamp(this._dir.x - movementY * this.lookSensitivity, min, max);
+        this._dir.x = this._clampPitch(this._dir.x - movementY * this.lookSensitivity);
         this._dir.y -= movementX * this.lookSensitivity;
     }
 

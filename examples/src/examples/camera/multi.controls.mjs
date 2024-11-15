@@ -91,10 +91,10 @@ export const controls = ({ observer, ReactPCUI, React, jsx, fragment }) => {
             ),
             jsx(
                 LabelGroup,
-                { text: 'Camera pitch range' },
+                { text: 'Pitch range' },
                 jsx(VectorInput, {
                     binding: new BindingTwoWay(),
-                    link: { observer, path: 'attr.cameraPitchRange' },
+                    link: { observer, path: 'attr.pitchRange' },
                     dimensions: 2,
                 })
             ),
