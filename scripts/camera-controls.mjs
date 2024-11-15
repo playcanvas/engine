@@ -788,15 +788,15 @@ class CameraControls extends Script {
      *
      * @param {Vec3} point - The point.
      * @param {Vec3} [start] - The start.
-     * @param {boolean} [smoothing] - Whether to smooth the focus.
+     * @param {boolean} [smooth] - Whether to smooth the focus.
      */
-    focus(point, start, smoothing = true) {
+    focus(point, start, smooth = true) {
         if (!this._camera) {
             return;
         }
         if (!start) {
             this._origin.copy(point);
-            if (!smoothing) {
+            if (!smooth) {
                 this._position.copy(point);
             }
             return;
@@ -813,7 +813,7 @@ class CameraControls extends Script {
 
         this._zoomDist = tmpV1.length();
 
-        if (!smoothing) {
+        if (!smooth) {
             this._angles.set(this._dir.x, this._dir.y, 0);
             this._position.copy(point);
             this._cameraDist = this._zoomDist;
@@ -824,11 +824,11 @@ class CameraControls extends Script {
      * Reset the zoom. For orbit and panning only.
      *
      * @param {number} [zoomDist] - The zoom distance.
-     * @param {boolean} [smoothing] - Whether to smooth the zoom.
+     * @param {boolean} [smooth] - Whether to smooth the zoom.
      */
-    resetZoom(zoomDist = 0, smoothing = true) {
+    resetZoom(zoomDist = 0, smooth = true) {
         this._zoomDist = zoomDist;
-        if (!smoothing) {
+        if (!smooth) {
             this._cameraDist = zoomDist;
         }
     }
@@ -839,13 +839,13 @@ class CameraControls extends Script {
      * @param {Vec3} point - The point.
      * @param {Vec3} [start] - The start.
      * @param {number} [zoomDist] - The zoom distance.
-     * @param {boolean} [smoothing] - Whether to smooth the refocus.
+     * @param {boolean} [smooth] - Whether to smooth the refocus.
      */
-    refocus(point, start = null, zoomDist = null, smoothing = true) {
+    refocus(point, start = null, zoomDist = null, smooth = true) {
         if (zoomDist !== null) {
-            this.resetZoom(zoomDist, smoothing);
+            this.resetZoom(zoomDist, smooth);
         }
-        this.focus(point, start, smoothing);
+        this.focus(point, start, smooth);
     }
 
     /**
