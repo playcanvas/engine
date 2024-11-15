@@ -7,10 +7,9 @@
   "scripts": {
     "build": "npm run -s build:pre && cross-env NODE_ENV=production rollup -c",
     "build:pre": "npm run -s build:metadata && npm run -s build:sharing",
-    "build:metadata": "node ./scripts/metadata.mjs",
-    "build:sharing": "node ./scripts/sharing-html.mjs",
-    "build:standalone": "node ./scripts/standalone-html.mjs",
-    "build:thumbnails": "node ./scripts/thumbnails.mjs",
+    "build:metadata": "node ./scripts/build-metadata.mjs",
+    "build:sharing": "node ./scripts/build-sharing.mjs",
+    "build:thumbnails": "node ./scripts/build-thumbnails.mjs",
     "clean": "node ./scripts/clean.mjs",
     "develop": "cross-env NODE_ENV=development concurrently --kill-others \"npm run watch\" \"npm run serve\"",
     "develop:rti": "RTI=on npm run develop",

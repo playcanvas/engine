@@ -16,11 +16,12 @@ import { GIZMOSPACE_LOCAL, GIZMOSPACE_WORLD } from './constants.js';
  * @import { GraphNode } from '../../scene/graph-node.js'
  * @import { GraphicsDevice } from '../../platform/graphics/graphics-device.js'
  * @import { MeshInstance } from '../../scene/mesh-instance.js'
- * @import { TriData } from './tri-data.js'
+ * @import { Shape } from './shape/shape.js'
  */
 
 // temporary variables
 const tmpV1 = new Vec3();
+const tmpV2 = new Vec3();
 const tmpM1 = new Mat4();
 const tmpM2 = new Mat4();
 const tmpR1 = new Ray();
@@ -217,18 +218,11 @@ class Gizmo extends EventHandler {
     root;
 
     /**
-     * @typedef IntersectData
-     * @property {TriData[]} triData - The array of {@link TriData}.
-     * @property {GraphNode} parent - The mesh parent node.
-     * @property {MeshInstance[]} meshInstances - Array of mesh instances for rendering.
-     */
-
-    /**
-     * The intersection data object.
+     * The intersection shapes for the gizmo.
      *
-     * @type {IntersectData[]}
+     * @type {Shape[]}
      */
-    intersectData = [];
+    intersectShapes = [];
 
     /**
      * Creates a new gizmo layer and adds it to the scene.
@@ -279,8 +273,8 @@ class Gizmo extends EventHandler {
         this._onPointerMove = this._onPointerMove.bind(this);
         this._onPointerUp = this._onPointerUp.bind(this);
 
-        this._device.canvas.addEventListener('pointerdown', this._onPointerDown, true);
-        this._device.canvas.addEventListener('pointermove', this._onPointerMove, true);
+        this._device.canvas.addEventListener('pointerdown', this._onPointerDown);
+        this._device.canvas.addEventListener('pointermove', this._onPointerMove);
         this._device.canvas.addEventListener('pointerup', this._onPointerUp);
 
         this._app.on('update', () => {
@@ -345,6 +339,19 @@ class Gizmo extends EventHandler {
     }
 
     /**
+     * @type {Vec3}
+     * @protected
+     */
+    get facing() {
+        if (this._camera.projection === PROJECTION_PERSPECTIVE) {
+            const gizmoPos = this.root.getPosition();
+            const cameraPos = this._camera.entity.getPosition();
+            return tmpV2.sub2(cameraPos, gizmoPos).normalize();
+        }
+        return tmpV2.copy(this._camera.entity.forward).mulScalar(-1);
+    }
+
+    /**
      * @param {PointerEvent} e - The pointer event.
      * @private
      */
@@ -357,6 +364,11 @@ class Gizmo extends EventHandler {
             e.preventDefault();
             e.stopPropagation();
         }
+
+        // capture the pointer during drag
+        const { canvas } = this._device;
+        canvas.setPointerCapture(e.pointerId);
+
         this.fire(Gizmo.EVENT_POINTERDOWN, e.offsetX, e.offsetY, selection[0]);
     }
 
@@ -377,13 +389,23 @@ class Gizmo extends EventHandler {
     }
 
     /**
+     * @param {PointerEvent} e - The pointer event.
      * @private
      */
-    _onPointerUp() {
+    _onPointerUp(e) {
         if (!this.root.enabled || document.pointerLockElement) {
             return;
         }
-        this.fire(Gizmo.EVENT_POINTERUP);
+        const selection = this._getSelection(e.offsetX, e.offsetY);
+        if (selection[0]) {
+            e.preventDefault();
+            e.stopPropagation();
+        }
+
+        const { canvas } = this._device;
+        canvas.releasePointerCapture(e.pointerId);
+
+        this.fire(Gizmo.EVENT_POINTERUP, e.offsetX, e.offsetY, selection[0]);
     }
 
     /**
@@ -451,16 +473,20 @@ class Gizmo extends EventHandler {
      * @private
      */
     _getSelection(x, y) {
-        const start = this._camera.screenToWorld(x, y, this._camera.nearClip);
-        const end = this._camera.screenToWorld(x, y, this._camera.farClip);
-        const dir = end.clone().sub(start).normalize();
+        const start = this._camera.screenToWorld(x, y, 0);
+        const end = this._camera.screenToWorld(x, y, this._camera.farClip - this._camera.nearClip);
+        const dir = tmpV1.copy(end).sub(start).normalize();
 
         const selection = [];
-        for (let i = 0; i < this.intersectData.length; i++) {
-            const { triData, parent, meshInstances } = this.intersectData[i];
-            const parentTM = parent.getWorldTransform();
-            for (let j = 0; j < triData.length; j++) {
-                const { tris, transform, priority } = triData[j];
+        for (let i = 0; i < this.intersectShapes.length; i++) {
+            const shape = this.intersectShapes[i];
+            if (shape.disabled || !shape.entity.enabled) {
+                continue;
+            }
+
+            const parentTM = shape.entity.getWorldTransform();
+            for (let j = 0; j < shape.triData.length; j++) {
+                const { tris, transform, priority } = shape.triData[j];
 
                 // combine node world transform with transform of tri relative to parent
                 const triWTM = tmpM1.copy(parentTM).mul(transform);
@@ -475,7 +501,7 @@ class Gizmo extends EventHandler {
                     if (tris[k].intersectsRay(ray, tmpV1)) {
                         selection.push({
                             dist: triWTM.transformPoint(tmpV1).sub(start).length(),
-                            meshInstances: meshInstances,
+                            meshInstances: shape.meshInstances,
                             priority: priority
                         });
                     }
@@ -552,8 +578,8 @@ class Gizmo extends EventHandler {
     destroy() {
         this.detach();
 
-        this._device.canvas.removeEventListener('pointerdown', this._onPointerDown, true);
-        this._device.canvas.removeEventListener('pointermove', this._onPointerMove, true);
+        this._device.canvas.removeEventListener('pointerdown', this._onPointerDown);
+        this._device.canvas.removeEventListener('pointermove', this._onPointerMove);
         this._device.canvas.removeEventListener('pointerup', this._onPointerUp);
 
         this.root.destroy();

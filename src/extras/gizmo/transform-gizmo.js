@@ -34,7 +34,6 @@ const tmpP1 = new Plane();
 
 // constants
 const VEC3_AXES = Object.keys(tmpV1);
-const SPANLINE_SIZE = 1e3;
 
 /**
  * The base class for all transform gizmos.
@@ -139,7 +138,6 @@ class TransformGizmo extends Gizmo {
      */
     _rootStartPos = new Vec3();
 
-
     /**
      * Internal gizmo starting rotation in world space.
      *
@@ -195,6 +193,14 @@ class TransformGizmo extends Gizmo {
      * @private
      */
     _hoverIsPlane = false;
+
+    /**
+     * Internal state of if there is no selection.
+     *
+     * @type {boolean}
+     * @private
+     */
+    _noSelection = false;
 
     /**
      * Internal currently selected axis.
@@ -262,7 +268,7 @@ class TransformGizmo extends Gizmo {
     constructor(camera, layer) {
         super(camera, layer);
 
-        this._app.on('update', () => {
+        this._app.on('prerender', () => {
             if (!this.root.enabled) {
                 return;
             }
@@ -280,6 +286,7 @@ class TransformGizmo extends Gizmo {
             }
 
             if (!meshInstance) {
+                this._noSelection = true;
                 return;
             }
 
@@ -300,7 +307,9 @@ class TransformGizmo extends Gizmo {
                 return;
             }
 
-            this._hover(meshInstance);
+            if (!this._noSelection) {
+                this._hover(meshInstance);
+            }
 
             if (!this._dragging) {
                 return;
@@ -315,7 +324,10 @@ class TransformGizmo extends Gizmo {
             this._hoverIsPlane = false;
         });
 
-        this.on(Gizmo.EVENT_POINTERUP, () => {
+        this.on(Gizmo.EVENT_POINTERUP, (x, y, meshInstance) => {
+            this._noSelection = false;
+            this._hover(meshInstance);
+
             if (!this._dragging) {
                 return;
             }
@@ -539,20 +551,15 @@ class TransformGizmo extends Gizmo {
      * @protected
      */
     _createRay(mouseWPos) {
-        const cameraPos = this._camera.entity.getPosition();
-        const cameraTransform = this._camera.entity.getWorldTransform();
-
-        const ray = tmpR1.set(cameraPos, Vec3.ZERO);
-
-        // calculate ray direction from mouse position
         if (this._camera.projection === PROJECTION_PERSPECTIVE) {
-            ray.direction.sub2(mouseWPos, ray.origin).normalize();
-        } else {
-            ray.origin.add(mouseWPos);
-            cameraTransform.transformVector(tmpV1.set(0, 0, -1), ray.direction);
+            tmpR1.origin.copy(this._camera.entity.getPosition());
+            tmpR1.direction.sub2(mouseWPos, tmpR1.origin).normalize();
+            return tmpR1;
         }
-
-        return ray;
+        const orthoDepth = this._camera.farClip - this._camera.nearClip;
+        tmpR1.origin.sub2(mouseWPos, tmpV1.copy(this._camera.entity.forward).mulScalar(orthoDepth));
+        tmpR1.direction.copy(this._camera.entity.forward);
+        return tmpR1;
     }
 
     /**
@@ -563,9 +570,7 @@ class TransformGizmo extends Gizmo {
      * @protected
      */
     _createPlane(axis, isFacing, isLine) {
-        const cameraPos = this._camera.entity.getPosition();
-
-        const facingDir = tmpV1.sub2(cameraPos, this._rootStartPos).normalize();
+        const facingDir = tmpV1.copy(this.facing);
         const normal = tmpP1.normal.set(0, 0, 0);
 
         if (isFacing) {
@@ -661,7 +666,7 @@ class TransformGizmo extends Gizmo {
     _drawSpanLine(pos, rot, axis) {
         tmpV1.set(0, 0, 0);
         tmpV1[axis] = 1;
-        tmpV1.mulScalar(SPANLINE_SIZE);
+        tmpV1.mulScalar(this._camera.farClip - this._camera.nearClip);
         tmpV2.copy(tmpV1).mulScalar(-1);
         rot.transformVector(tmpV1, tmpV1);
         rot.transformVector(tmpV2, tmpV2);
@@ -676,11 +681,7 @@ class TransformGizmo extends Gizmo {
         for (const key in this._shapes) {
             const shape = this._shapes[key];
             this.root.addChild(shape.entity);
-            this.intersectData.push({
-                triData: shape.triData,
-                parent: shape.entity,
-                meshInstances: shape.meshInstances
-            });
+            this.intersectShapes.push(shape);
             for (let i = 0; i < shape.meshInstances.length; i++) {
                 this._shapeMap.set(shape.meshInstances[i], shape);
             }

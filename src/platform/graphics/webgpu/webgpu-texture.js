@@ -526,9 +526,6 @@ class WebgpuTexture {
         const stagingBuffer = device.createBufferImpl(BUFFERUSAGE_READ | BUFFERUSAGE_COPY_DST);
         stagingBuffer.allocate(device, size);
 
-        // use existing or create new encoder
-        const commandEncoder = device.commandEncoder ?? device.wgpu.createCommandEncoder();
-
         const src = {
             texture: this.gpuTexture,
             mipLevel: mipLevel,
@@ -548,15 +545,8 @@ class WebgpuTexture {
         };
 
         // copy the GPU texture to the staging buffer
+        const commandEncoder = device.getCommandEncoder();
         commandEncoder.copyTextureToBuffer(src, dst, copySize);
-
-        // if we created new encoder
-        if (!device.commandEncoder) {
-            DebugHelper.setLabel(commandEncoder, 'copyTextureToBuffer-Encoder');
-            const cb = commandEncoder.finish();
-            DebugHelper.setLabel(cb, 'copyTextureToBuffer-CommandBuffer');
-            device.addCommandBuffer(cb);
-        }
 
         // async read data from the staging buffer to a temporary array
         return device.readBuffer(stagingBuffer, size, null, immediate).then((temp) => {

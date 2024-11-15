@@ -119,6 +119,9 @@ const fragmentShader = /* glsl */ `
             float w = sharpening_amount * sharpness;
             vec3 res = (w * (a + b + d + e) + c) / (4.0 * w + 1.0);
 
+            // remove negative colors
+            res = max(res, 0.0);
+
             // convert back to HDR
             return toHDR(res);
         }

@@ -668,8 +668,20 @@ class Camera {
     getFrustumCorners(near = this.nearClip, far = this.farClip) {
 
         const fov = this.fov * Math.PI / 180.0;
-        let y = this._projection === PROJECTION_PERSPECTIVE ? Math.tan(fov / 2.0) * near : this._orthoHeight;
-        let x = y * this.aspectRatio;
+        let x, y;
+
+        if (this.projection === PROJECTION_PERSPECTIVE) {
+            if (this.horizontalFov) {
+                x = near * Math.tan(fov / 2.0);
+                y = x / this.aspectRatio;
+            } else {
+                y = near * Math.tan(fov / 2.0);
+                x = y * this.aspectRatio;
+            }
+        } else {
+            y = this._orthoHeight;
+            x = y * this.aspectRatio;
+        }
 
         const points = _frustumPoints;
         points[0].x = x;
@@ -686,8 +698,13 @@ class Camera {
         points[3].z = -near;
 
         if (this._projection === PROJECTION_PERSPECTIVE) {
-            y = Math.tan(fov / 2.0) * far;
-            x = y * this.aspectRatio;
+            if (this.horizontalFov) {
+                x = far * Math.tan(fov / 2.0);
+                y = x / this.aspectRatio;
+            } else {
+                y = far * Math.tan(fov / 2.0);
+                x = y * this.aspectRatio;
+            }
         }
         points[4].x = x;
         points[4].y = -y;

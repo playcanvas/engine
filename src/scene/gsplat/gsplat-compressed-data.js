@@ -231,16 +231,8 @@ class GSplatCompressedData {
 
         const iter = this.createIter(p, r, s, c);
 
-        // the compressed data is stored "right way up" so must
-        // be flipped upside down during decompression to match
-        // uncompressed orientation.
-        const q = new Quat().setFromEulerAngles(0, 0, 180);
-
         for (let i = 0; i < this.numSplats; ++i) {
             iter.read(i);
-
-            q.transformVector(p, p);
-            r.mul2(q, r);
 
             data.x[i] = p.x;
             data.y[i] = p.y;

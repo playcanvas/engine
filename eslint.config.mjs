@@ -17,13 +17,13 @@ export default [
                 ...globals.browser,
                 ...globals.mocha,
                 ...globals.node,
-                'Ammo': false,
-                'earcut': false,
-                'opentype': false,
-                'pc': false,
-                'TWEEN': false,
-                'twgsl': false,
-                'webkitAudioContext': false
+                'Ammo': 'readonly',
+                'earcut': 'readonly',
+                'opentype': 'readonly',
+                'pc': 'readonly',
+                'TWEEN': 'readonly',
+                'twgsl': 'readonly',
+                'webkitAudioContext': 'readonly'
             }
         },
         rules: {

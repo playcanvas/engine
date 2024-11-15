@@ -979,7 +979,7 @@ class Lightmapper {
                 m.mask = MASK_BAKE; // only affected by LM lights
 
                 // patch material
-                m.setRealtimeLightmap(MeshInstance.lightmapParamNames[0], m.material.lightMap ? m.material.lightMap : this.blackTex);
+                m.setRealtimeLightmap(MeshInstance.lightmapParamNames[0], this.blackTex);
                 m.setRealtimeLightmap(MeshInstance.lightmapParamNames[1], this.blackTex);
             }
         }

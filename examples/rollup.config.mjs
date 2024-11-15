@@ -10,7 +10,7 @@ import terser from '@rollup/plugin-terser';
 
 // custom plugins
 import { copyStatic } from './utils/plugins/rollup-copy-static.mjs';
-import { generateStandalone } from './utils/plugins/rollup-generate-standalone.mjs';
+import { buildExamples } from './utils/plugins/rollup-build-examples.mjs';
 
 // engine rollup utils
 import { treeshakeIgnore } from '../utils/plugins/rollup-treeshake-ignore.mjs';
@@ -25,46 +25,7 @@ const ENGINE_PATH = !process.env.ENGINE_PATH && NODE_ENV === 'development' ?
     '../src/index.js' : process.env.ENGINE_PATH ?? '';
 const { RTI = '' } = process.env;
 
-const STATIC_FILES = [
-    // static main page src
-    { src: './src/static', dest: 'dist/' },
-
-    // static iframe src
-    { src: './iframe', dest: 'dist/iframe' },
-
-    // assets used in examples
-    { src: './assets', dest: 'dist/static/assets/', once: true },
-
-    // thumbnails used in examples
-    { src: './thumbnails', dest: 'dist/thumbnails/', once: true },
-
-    // external libraries used in examples
-    { src: './src/lib', dest: 'dist/static/lib/', once: true },
-
-    // engine scripts
-    { src: '../scripts', dest: 'dist/static/scripts/' },
-
-    // playcanvas engine types
-    { src: '../build/playcanvas.d.ts', dest: 'dist/playcanvas.d.ts' },
-
-    // playcanvas observer
-    {
-        src: './node_modules/@playcanvas/observer/dist/index.mjs',
-        dest: 'dist/iframe/playcanvas-observer.mjs',
-        once: true
-    },
-
-    // modules (N.B. destination folder is 'modules' as 'node_modules' are automatically excluded by git pages)
-    { src: './node_modules/monaco-editor/min/vs', dest: 'dist/modules/monaco-editor/min/vs', once: true },
-
-    // fflate (for when using ENGINE_PATH)
-    { src: '../node_modules/fflate/esm/', dest: 'dist/modules/fflate/esm', once: true },
-
-    // engine path
-    ...getEnginePathFiles()
-];
-
-function getEnginePathFiles() {
+const getEnginePathFiles = () => {
     if (!ENGINE_PATH) {
         return [];
     }
@@ -81,18 +42,18 @@ function getEnginePathFiles() {
     // packed module builds
     const dest = 'dist/iframe/ENGINE_PATH/index.js';
     return [{ src, dest }];
-}
+};
 
-function checkAppEngine() {
+const checkAppEngine = () => {
     // types
     if (!fs.existsSync('../build/playcanvas.d.ts')) {
         const cmd = `npm run build target:types --prefix ../`;
         console.log('\x1b[32m%s\x1b[0m', cmd);
         execSync(cmd);
     }
-}
+};
 
-function getEngineTargets() {
+const getEngineTargets = () => {
     // Checks for types and engien for app building
     checkAppEngine();
 
@@ -140,7 +101,46 @@ function getEngineTargets() {
         );
     }
     return targets;
-}
+};
+
+const STATIC_FILES = [
+    // static main page src
+    { src: './src/static', dest: 'dist/' },
+
+    // static iframe src
+    { src: './iframe', dest: 'dist/iframe' },
+
+    // assets used in examples
+    { src: './assets', dest: 'dist/static/assets/', once: true },
+
+    // thumbnails used in examples
+    { src: './thumbnails', dest: 'dist/thumbnails/', once: true },
+
+    // external libraries used in examples
+    { src: './src/lib', dest: 'dist/static/lib/', once: true },
+
+    // engine scripts
+    { src: '../scripts', dest: 'dist/static/scripts/' },
+
+    // playcanvas engine types
+    { src: '../build/playcanvas.d.ts', dest: 'dist/playcanvas.d.ts' },
+
+    // playcanvas observer
+    {
+        src: './node_modules/@playcanvas/observer/dist/index.mjs',
+        dest: 'dist/iframe/playcanvas-observer.mjs',
+        once: true
+    },
+
+    // modules (N.B. destination folder is 'modules' as 'node_modules' are automatically excluded by git pages)
+    { src: './node_modules/monaco-editor/min/vs', dest: 'dist/modules/monaco-editor/min/vs', once: true },
+
+    // fflate (for when using ENGINE_PATH)
+    { src: '../node_modules/fflate/esm/', dest: 'dist/modules/fflate/esm', once: true },
+
+    // engine path
+    ...getEnginePathFiles()
+];
 
 export default [
     {
@@ -153,7 +153,7 @@ export default [
             skipWrite: true
         },
         treeshake: false,
-        plugins: [generateStandalone(NODE_ENV, ENGINE_PATH, RTI), copyStatic(NODE_ENV, STATIC_FILES)]
+        plugins: [buildExamples(NODE_ENV, ENGINE_PATH, RTI), copyStatic(NODE_ENV, STATIC_FILES)]
     },
     {
         // A debug build is ~2.3MB and a release build ~0.6MB

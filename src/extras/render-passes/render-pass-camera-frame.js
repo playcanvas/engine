@@ -1,7 +1,7 @@
 import { LAYERID_SKYBOX, LAYERID_IMMEDIATE, TONEMAP_NONE, GAMMA_NONE } from '../../scene/constants.js';
 import {
     ADDRESS_CLAMP_TO_EDGE, FILTER_LINEAR, FILTER_NEAREST,
-    PIXELFORMAT_DEPTH, PIXELFORMAT_R32F, PIXELFORMAT_RGBA8
+    PIXELFORMAT_DEPTH, PIXELFORMAT_DEPTHSTENCIL, PIXELFORMAT_R32F, PIXELFORMAT_RGBA8
 } from '../../platform/graphics/constants.js';
 import { Texture } from '../../platform/graphics/texture.js';
 import { RenderPass } from '../../platform/graphics/render-pass.js';
@@ -23,9 +23,11 @@ export const SSAOTYPE_COMBINE = 'combine';
 class CameraFrameOptions {
     formats;
 
+    stencil = false;
+
     samples = 1;
 
-    sceneColorMap = true;
+    sceneColorMap = false;
 
     // skybox is the last layer rendered before the grab passes
     lastGrabLayerId = LAYERID_SKYBOX;
@@ -113,10 +115,13 @@ class RenderPassCameraFrame extends RenderPass {
 
         this.prePass = null;
         this.scenePass = null;
+        this.scenePassTransparent = null;
+        this.colorGrabPass = null;
         this.composePass = null;
         this.bloomPass = null;
         this.ssaoPass = null;
         this.taaPass = null;
+        this.afterPass = null;
     }
 
     sanitizeOptions(options) {
@@ -154,8 +159,11 @@ class RenderPassCameraFrame extends RenderPass {
         return options.ssaoType !== currentOptions.ssaoType ||
             options.ssaoBlurEnabled !== currentOptions.ssaoBlurEnabled ||
             options.taaEnabled !== currentOptions.taaEnabled ||
+            options.samples !== currentOptions.samples ||
+            options.stencil !== currentOptions.stencil ||
             options.bloomEnabled !== currentOptions.bloomEnabled ||
             options.prepassEnabled !== currentOptions.prepassEnabled ||
+            options.sceneColorMap !== currentOptions.sceneColorMap ||
             arraysNotEqual(options.formats, currentOptions.formats);
     }
 
@@ -184,7 +192,7 @@ class RenderPassCameraFrame extends RenderPass {
         const cameraComponent = this.cameraComponent;
         const targetRenderTarget = cameraComponent.renderTarget;
 
-        this.hdrFormat = device.getRenderableHdrFormat(options.formats) || PIXELFORMAT_RGBA8;
+        this.hdrFormat = device.getRenderableHdrFormat(options.formats, true, options.samples) || PIXELFORMAT_RGBA8;
 
         // camera renders in HDR mode (linear output, no tonemapping)
         if (!cameraComponent.rendering) {
@@ -212,8 +220,7 @@ class RenderPassCameraFrame extends RenderPass {
             addressV: ADDRESS_CLAMP_TO_EDGE
         });
 
-        // TODO: handle stencil support
-        let depthFormat = PIXELFORMAT_DEPTH;
+        let depthFormat = options.stencil ? PIXELFORMAT_DEPTHSTENCIL : PIXELFORMAT_DEPTH;
         if (options.prepassEnabled && device.isWebGPU && options.samples > 1) {
             // on WebGPU the depth format cannot be resolved, so we need to use a float format in that case
             // TODO: ideally we expose this using some option or similar public API to hide this implementation detail
@@ -235,7 +242,8 @@ class RenderPassCameraFrame extends RenderPass {
         this.rt = new RenderTarget({
             colorBuffer: this.sceneTexture,
             depthBuffer: this.sceneDepth,
-            samples: options.samples
+            samples: options.samples,
+            flipY: !!targetRenderTarget?.flipY  // flipY is inherited from the target renderTarget
         });
 
         this.sceneOptions = {
@@ -307,7 +315,12 @@ class RenderPassCameraFrame extends RenderPass {
 
         // if prepass is enabled, do not clear the depth buffer when rendering the scene, and preserve it
         if (options.prepassEnabled) {
-            this.scenePass.noDepthClear = true;
+            if (!options.stencil) {
+                // when stencil is used, the depth buffer might not be correct as the prepass does not
+                // handle stencil, so we need to clear it - in this case, depth prepass does not give
+                // us any benefit
+                this.scenePass.noDepthClear = true;
+            }
             this.scenePass.depthStencilOps.storeDepth = true;
         }
 
@@ -335,9 +348,17 @@ class RenderPassCameraFrame extends RenderPass {
             this.scenePassTransparent.init(this.rt);
             ret.lastAddedIndex = this.scenePassTransparent.addLayers(composition, cameraComponent, ret.lastAddedIndex, ret.clearRenderTarget, options.lastSceneLayerId, options.lastSceneLayerIsTransparent);
 
-            // if prepass is enabled, we need to store the depth, as by default it gets discarded
-            if (options.prepassEnabled) {
-                this.scenePassTransparent.depthStencilOps.storeDepth = true;
+            // if no layers are rendered by this pass, remove it
+            if (!this.scenePassTransparent.rendersAnything) {
+                this.scenePassTransparent.destroy();
+                this.scenePassTransparent = null;
+            }
+
+            if (this.scenePassTransparent) {
+                // if prepass is enabled, we need to store the depth, as by default it gets discarded
+                if (options.prepassEnabled) {
+                    this.scenePassTransparent.depthStencilOps.storeDepth = true;
+                }
             }
         }
 

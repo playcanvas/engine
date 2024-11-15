@@ -86,10 +86,14 @@ class GpuProfiler {
 
             // log out timings
             if (Tracing.get(TRACEID_GPU_TIMINGS)) {
+                Debug.trace(TRACEID_GPU_TIMINGS, `-- GPU timings for frame ${renderVersion} --`);
+                let total = 0;
                 for (let i = 0; i < allocations.length; ++i) {
                     const name = allocations[i];
+                    total += timings[i];
                     Debug.trace(TRACEID_GPU_TIMINGS, `${timings[i].toFixed(2)} ms ${name}`);
                 }
+                Debug.trace(TRACEID_GPU_TIMINGS, `${total.toFixed(2)} ms TOTAL`);
             }
         }
 

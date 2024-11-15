@@ -2,6 +2,7 @@ import { Debug } from '../../core/debug.js';
 import { TRACEID_BINDGROUP_ALLOC } from '../../core/constants.js';
 import { UNIFORM_BUFFER_DEFAULT_SLOT_NAME } from './constants.js';
 import { DebugGraphics } from './debug-graphics.js';
+import { getBuiltInTexture } from './built-in-textures.js';
 
 /**
  * @import { BindGroupFormat } from './bind-group-format.js'
@@ -172,8 +173,26 @@ class BindGroup {
 
         for (let i = 0; i < textureFormats.length; i++) {
             const textureFormat = textureFormats[i];
-            const value = textureFormat.scopeId.value;
-            Debug.assert(value, `Value was not set when assigning texture slot [${textureFormat.name}] to a bind group, while rendering [${DebugGraphics.toString()}]`, this);
+            let value = textureFormat.scopeId.value;
+
+            // custom error handling for known global textures
+            if (!value) {
+                if (textureFormat.name === 'uSceneDepthMap') {
+                    Debug.errorOnce(`A uSceneDepthMap texture is used by the shader but a scene depth texture is not available. Use CameraComponent.requestSceneDepthMap / enable Depth Grabpass on the Camera Component to enable it. Rendering [${DebugGraphics.toString()}]`);
+                    value = getBuiltInTexture(this.device, 'white');
+                }
+                if (textureFormat.name === 'uSceneColorMap') {
+                    Debug.errorOnce(`A uSceneColorMap texture is used by the shader but a scene color texture is not available. Use CameraComponent.requestSceneColorMap / enable Color Grabpass on the Camera Component to enable it. Rendering [${DebugGraphics.toString()}]`);
+                    value = getBuiltInTexture(this.device, 'pink');
+                }
+
+                // missing generic texture
+                if (!value) {
+                    Debug.errorOnce(`Texture ${textureFormat.name} is required for rendering but was not set. Rendering [${DebugGraphics.toString()}]`);
+                    value = getBuiltInTexture(this.device, 'pink');
+                }
+            }
+
             this.setTexture(textureFormat.name, value);
         }
 

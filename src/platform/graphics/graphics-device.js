@@ -178,6 +178,14 @@ class GraphicsDevice extends EventHandler {
     samples;
 
     /**
+     * The maximum supported number of hardware anti-aliasing samples.
+     *
+     * @readonly
+     * @type {number}
+     */
+    maxSamples = 1;
+
+    /**
      * True if the main framebuffer contains stencil attachment.
      *
      * @ignore
@@ -858,7 +866,7 @@ class GraphicsDevice extends EventHandler {
     endRenderPass(renderPass) {
     }
 
-    startComputePass() {
+    startComputePass(name) {
     }
 
     endComputePass() {
@@ -905,8 +913,9 @@ class GraphicsDevice extends EventHandler {
      * Dispatch multiple compute shaders inside a single compute shader pass.
      *
      * @param {Array<Compute>} computes - An array of compute shaders to dispatch.
+     * @param {string} [name] - The name of the dispatch, used for debugging and reporting only.
      */
-    computeDispatch(computes) {
+    computeDispatch(computes, name = 'Unnamed') {
     }
 
     /**
@@ -927,10 +936,13 @@ class GraphicsDevice extends EventHandler {
      *
      * @param {boolean} [filterable] - If true, the format also needs to be filterable. Defaults to
      * true.
+     * @param {number} [samples] - The number of samples to check for. Some formats are not
+     * compatible with multi-sampling, for example {@link PIXELFORMAT_RGBA32F} on WebGPU platform.
+     * Defaults to 1.
      * @returns {number|undefined} The first supported renderable HDR format or undefined if none is
      * supported.
      */
-    getRenderableHdrFormat(formats = [PIXELFORMAT_111110F, PIXELFORMAT_RGBA16F, PIXELFORMAT_RGBA32F], filterable = true) {
+    getRenderableHdrFormat(formats = [PIXELFORMAT_111110F, PIXELFORMAT_RGBA16F, PIXELFORMAT_RGBA32F], filterable = true, samples = 1) {
         for (let i = 0; i < formats.length; i++) {
             const format = formats[i];
             switch (format) {
@@ -949,6 +961,12 @@ class GraphicsDevice extends EventHandler {
                     break;
 
                 case PIXELFORMAT_RGBA32F:
+
+                    // on WebGPU platform, RGBA32F is not compatible with multi-sampling
+                    if (this.isWebGPU && samples > 1) {
+                        continue;
+                    }
+
                     if (this.textureFloatRenderable && (!filterable || this.textureFloatFilterable)) {
                         return format;
                     }
