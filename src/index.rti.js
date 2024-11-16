@@ -5,7 +5,7 @@ import { Vec4 } from './core/math/vec4.js';
 import { Quat } from './core/math/quat.js';
 import { Mat3 } from './core/math/mat3.js';
 import { Mat4 } from './core/math/mat4.js';
-import { customTypes, customValidations, validateNumber } from '@runtime-type-inspector/runtime';
+import { customTypes, customValidations, validateNumber, TypePanel } from '@runtime-type-inspector/runtime';
 import 'display-anything/src/style.js';
 Object.assign(customTypes, {
     AnimSetter(value) {
@@ -93,3 +93,10 @@ function validate(value, expect, loc, name, critical, warn, depth) {
     return true;
 }
 customValidations.push(validate);
+export const typePanel = new TypePanel();
+globalThis.parent.addEventListener('message', (e) => {
+    if (e.data.type !== 'rti') {
+        return;
+    }
+    typePanel.handleEvent(e);
+});
