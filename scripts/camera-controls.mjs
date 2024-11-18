@@ -489,6 +489,7 @@ class CameraControls extends Script {
         if (!this._camera) {
             return;
         }
+        this._element.setPointerCapture(event.pointerId);
         this._pointerEvents.set(event.pointerId, event);
 
         const startTouchPan = this.enablePan && this._pointerEvents.size === 2;
@@ -562,6 +563,7 @@ class CameraControls extends Script {
      * @param {PointerEvent} event - The pointer event.
      */
     _onPointerUp(event) {
+        this._element.releasePointerCapture(event.pointerId);
         this._pointerEvents.delete(event.pointerId);
         if (this._pointerEvents.size < 2) {
             this._lastPinchDist = -1;
