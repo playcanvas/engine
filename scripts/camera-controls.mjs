@@ -31,7 +31,7 @@ class CameraControls extends Script {
      * @private
      * @type {Vec3}
      */
-    _origin = new Vec3(0, 0, 0);
+    _origin = new Vec3();
 
     /**
      * @private
@@ -296,7 +296,7 @@ class CameraControls extends Script {
         }
         this.attach(this.entity.camera);
 
-        this.focusPoint = focusPoint ?? Vec3.ZERO;
+        this.focusPoint = focusPoint ?? this._origin;
         this.pitchRange = pitchRange ?? this.pitchRange;
         this.zoomMin = zoomMin ?? this.zoomMin;
         this.zoomMax = zoomMax ?? this.zoomMax;
@@ -315,13 +315,10 @@ class CameraControls extends Script {
     }
 
     get focusPoint() {
-        if (!this._camera) {
-            return Vec3.ZERO;
+        if (this._flying) {
+            return tmpV1.copy(this.root.forward).mulScalar(this._zoomDist).add(this._origin);
         }
-        return tmpV1
-        .copy(this._camera.entity.forward)
-        .mulScalar(this._zoomDist)
-        .add(this._camera.entity.getPosition());
+        return this._origin;
     }
 
     /**
