@@ -363,7 +363,7 @@ class Scene extends EventHandler {
     /**
      * Sets the environment lighting atlas.
      *
-     * @type {Texture}
+     * @type {Texture|null}
      */
     set envAtlas(value) {
         if (value !== this._envAtlas) {
@@ -391,7 +391,7 @@ class Scene extends EventHandler {
     /**
      * Gets the environment lighting atlas.
      *
-     * @type {Texture}
+     * @type {Texture|null}
      */
     get envAtlas() {
         return this._envAtlas;
@@ -529,7 +529,7 @@ class Scene extends EventHandler {
     /**
      * Sets the base cubemap texture used as the scene's skybox when skyboxMip is 0. Defaults to null.
      *
-     * @type {Texture}
+     * @type {Texture|null}
      */
     set skybox(value) {
         if (value !== this._skyboxCubeMap) {
@@ -541,7 +541,7 @@ class Scene extends EventHandler {
     /**
      * Gets the base cubemap texture used as the scene's skybox when skyboxMip is 0.
      *
-     * @type {Texture}
+     * @type {Texture|null}
      */
     get skybox() {
         return this._skyboxCubeMap;
