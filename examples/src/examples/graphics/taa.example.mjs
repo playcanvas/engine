@@ -162,7 +162,7 @@ assetListLoader.load(() => {
     app.on('update', (/** @type {number} */ dt) => {
         time += dt;
         cubeEntity.setLocalPosition(130 * Math.sin(time), 0, 130 * Math.cos(time));
-        cubeEntity.rotate(50 * dt, 20 * dt, 30 * dt)
+        cubeEntity.rotate(50 * dt, 20 * dt, 30 * dt);
     });
 });
 
