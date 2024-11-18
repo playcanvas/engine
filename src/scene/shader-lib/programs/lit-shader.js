@@ -49,7 +49,7 @@ const builtinVaryings = {
     vObjectSpaceUpW: 'vec3',
     vUv0: 'vec2',
     vUv1: 'vec2',
-    vLinearDepth: 'float',
+    vLinearDepth: 'float'
 };
 
 class LitShader {

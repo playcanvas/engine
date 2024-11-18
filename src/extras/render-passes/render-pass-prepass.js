@@ -98,7 +98,7 @@ class RenderPassPrepass extends RenderPass {
         this.init(renderTarget, options);
 
         // clear color for the linear depth texture
-        this.linearDepthClearValue = new Color(linearDepthFormat === PIXELFORMAT_R32F ? 
+        this.linearDepthClearValue = new Color(linearDepthFormat === PIXELFORMAT_R32F ?
             [1, 1, 1, 1] :          // only R is used
             [0.5, 0.0, 0.0, 0.0]    // represents linear value of -1 encoded into RGBA8
         );
