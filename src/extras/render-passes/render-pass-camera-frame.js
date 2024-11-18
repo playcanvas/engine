@@ -100,7 +100,6 @@ class RenderPassCameraFrame extends RenderPass {
     reset() {
 
         this.sceneTexture = null;
-        this.sceneDepth = null;
 
         if (this.rt) {
             this.rt.destroyTextureBuffers();
@@ -213,28 +212,10 @@ class RenderPassCameraFrame extends RenderPass {
             addressV: ADDRESS_CLAMP_TO_EDGE
         });
 
-        let depthFormat = options.stencil ? PIXELFORMAT_DEPTHSTENCIL : PIXELFORMAT_DEPTH;
-        if (options.prepassEnabled && device.isWebGPU && options.samples > 1) {
-            // on WebGPU the depth format cannot be resolved, so we need to use a float format in that case
-            // TODO: ideally we expose this using some option or similar public API to hide this implementation detail
-            depthFormat = PIXELFORMAT_R32F;
-        }
-
-        this.sceneDepth = new Texture(device, {
-            name: 'SceneDepth',
-            width: 4,
-            height: 4,
-            format: depthFormat,
-            mipmaps: false,
-            minFilter: FILTER_NEAREST,
-            magFilter: FILTER_NEAREST,
-            addressU: ADDRESS_CLAMP_TO_EDGE,
-            addressV: ADDRESS_CLAMP_TO_EDGE
-        });
-
         this.rt = new RenderTarget({
             colorBuffer: this.sceneTexture,
-            depthBuffer: this.sceneDepth,
+            // depthBuffer: this.sceneDepth,
+            depth: true,
             samples: options.samples,
             flipY: !!targetRenderTarget?.flipY  // flipY is inherited from the target renderTarget
         });
@@ -286,11 +267,7 @@ class RenderPassCameraFrame extends RenderPass {
 
             const { app, device, cameraComponent } = this;
             const { scene, renderer } = app;
-
-            // ssao & taa need resolved depth
-            const resolveDepth = this.options.ssaoType !== SSAOTYPE_NONE || this.options.taaEnabled;
-
-            this.prePass = new RenderPassPrepass(device, scene, renderer, cameraComponent, this.sceneDepth, resolveDepth, this.sceneOptions, options.samples);
+            this.prePass = new RenderPassPrepass(device, scene, renderer, cameraComponent, this.sceneOptions);
         }
     }
 
@@ -305,17 +282,6 @@ class RenderPassCameraFrame extends RenderPass {
         // allow us to render the 3d scene at lower resolution, improving performance.
         this.scenePass = new RenderPassForward(device, composition, scene, renderer);
         this.scenePass.init(this.rt, this.sceneOptions);
-
-        // if prepass is enabled, do not clear the depth buffer when rendering the scene, and preserve it
-        if (options.prepassEnabled) {
-            if (!options.stencil) {
-                // when stencil is used, the depth buffer might not be correct as the prepass does not
-                // handle stencil, so we need to clear it - in this case, depth prepass does not give
-                // us any benefit
-                this.scenePass.noDepthClear = true;
-            }
-            this.scenePass.depthStencilOps.storeDepth = true;
-        }
 
         // layers this pass renders depend on the grab pass being used
         const lastLayerId = options.sceneColorMap ? options.lastGrabLayerId : options.lastSceneLayerId;
@@ -359,9 +325,10 @@ class RenderPassCameraFrame extends RenderPass {
     }
 
     setupSsaoPass(options) {
-        const { camera, ssaoBlurEnabled, ssaoType } = options;
+        const { ssaoBlurEnabled, ssaoType } = options;
+        const { device, cameraComponent } = this;
         if (ssaoType !== SSAOTYPE_NONE) {
-            this.ssaoPass = new RenderPassSsao(this.device, this.sceneTexture, camera, ssaoBlurEnabled);
+            this.ssaoPass = new RenderPassSsao(device, this.sceneTexture, cameraComponent, ssaoBlurEnabled);
         }
     }
 

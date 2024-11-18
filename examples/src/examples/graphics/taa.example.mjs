@@ -9,6 +9,7 @@ window.focus();
 const assets = {
     orbit: new pc.Asset('script', 'script', { url: `${rootPath}/static/scripts/camera/orbit-camera.js` }),
     house: new pc.Asset('house', 'container', { url: `${rootPath}/static/assets/models/pbr-house.glb` }),
+    cube: new pc.Asset('cube', 'container', { url: `${rootPath}/static/assets/models/playcanvas-cube.glb` }),
     envatlas: new pc.Asset(
         'env-atlas',
         'texture',
@@ -111,6 +112,10 @@ assetListLoader.load(() => {
     app.root.addChild(light);
     light.setLocalEulerAngles(40, 10, 0);
 
+    const cubeEntity = assets.cube.resource.instantiateRenderEntity();
+    cubeEntity.setLocalScale(30, 30, 30);
+    app.root.addChild(cubeEntity);
+
     // ------ Custom render passes set up ------
 
     /** @type { CameraFrame } */
@@ -151,6 +156,13 @@ assetListLoader.load(() => {
             enabled: true,
             jitter: 1
         }
+    });
+
+    let time = 0;
+    app.on('update', (/** @type {number} */ dt) => {
+        time += dt;
+        cubeEntity.setLocalPosition(130 * Math.sin(time), 0, 130 * Math.cos(time));
+        cubeEntity.rotate(50 * dt, 20 * dt, 30 * dt)
     });
 });
 

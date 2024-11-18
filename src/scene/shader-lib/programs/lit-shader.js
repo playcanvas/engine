@@ -13,7 +13,7 @@ import {
     SHADER_DEPTH, SHADER_PICK,
     SHADOW_PCF1, SHADOW_PCF3, SHADOW_PCF5, SHADOW_VSM8, SHADOW_VSM16, SHADOW_VSM32, SHADOW_PCSS,
     SPECOCC_AO, SPECOCC_GLOSSDEPENDENT,
-    SPRITE_RENDERMODE_SLICED, SPRITE_RENDERMODE_TILED, shadowTypeToString, SHADER_PREPASS_VELOCITY
+    SPRITE_RENDERMODE_SLICED, SPRITE_RENDERMODE_TILED, shadowTypeToString, SHADER_PREPASS
 } from '../../constants.js';
 import { shaderChunks } from '../chunks/chunks.js';
 import { ChunkUtils } from '../chunk-utils.js';
@@ -23,7 +23,6 @@ import { validateUserChunks } from '../chunks/chunk-validation.js';
 import { ShaderUtils } from '../../../platform/graphics/shader-utils.js';
 import { ChunkBuilder } from '../chunk-builder.js';
 import { ShaderGenerator } from './shader-generator.js';
-import { Debug } from '../../../core/debug.js';
 
 /**
  * @import { GraphicsDevice } from '../../../platform/graphics/graphics-device.js'
@@ -49,7 +48,8 @@ const builtinVaryings = {
     vBinormalW: 'vec3',
     vObjectSpaceUpW: 'vec3',
     vUv0: 'vec2',
-    vUv1: 'vec2'
+    vUv1: 'vec2',
+    vLinearDepth: 'float',
 };
 
 class LitShader {
@@ -203,23 +203,19 @@ class LitShader {
 
         code = this._vsAddBaseCode(code, chunks, options);
 
-        codeBody += '   vPositionW    = getWorldPosition();\n';
+        codeBody += '   vPositionW = getWorldPosition();\n';
 
-        if (this.options.pass === SHADER_DEPTH || this.options.pass === SHADER_PREPASS_VELOCITY) {
-            code += 'varying float vDepth;\n';
-            code += '#ifndef VIEWMATRIX\n';
-            code += '#define VIEWMATRIX\n';
-            code += 'uniform mat4 matrix_view;\n';
-            code += '#endif\n';
-            code += '#ifndef CAMERAPLANES\n';
-            code += '#define CAMERAPLANES\n';
-            code += 'uniform vec4 camera_params;\n\n';
-            code += '#endif\n';
-            codeBody += '    vDepth = -(matrix_view * vec4(vPositionW,1.0)).z * camera_params.x;\n';
-        }
-
-        if (this.options.pass === SHADER_PREPASS_VELOCITY) {
-            Debug.warnOnce('SHADER_PREPASS_VELOCITY not implemented');
+        if (this.options.linearDepth) {
+            codeDefines += `
+                #ifndef VIEWMATRIX
+                #define VIEWMATRIX
+                    uniform mat4 matrix_view;
+                #endif
+            `;
+            codeBody += `
+                // linear depth from the worldPosition, see getLinearDepth
+                vLinearDepth = -(matrix_view * vec4(vPositionW, 1.0)).z;
+            `;
         }
 
         if (this.options.useInstancing) {
@@ -397,10 +393,32 @@ class LitShader {
         return code;
     }
 
-    _fsGetPrePassVelocityCode() {
+    _fsGetPrePassCode() {
+        let code = this._fsGetBeginCode();
+        code += this.varyings;
+        code += this.varyingDefines;
+        code += this.frontendDecl;
+        code += this.frontendCode;
+        code += ShaderGenerator.begin();
+        code += this.frontendFunc;
+        code += this.device.textureFloatRenderable ?
+            // storing linear depth in a single F32 channel
+            `
+            gl_FragColor = vec4(vLinearDepth, 1.0, 1.0, 1.0);
+        ` :
+            // storing linear depth float value in RGBA8
+            `
+            uint intBits = floatBitsToUint(vLinearDepth);
+            gl_FragColor = vec4(
+                float((intBits >> 24u) & 0xFFu) / 255.0,
+                float((intBits >> 16u) & 0xFFu) / 255.0,
+                float((intBits >> 8u) & 0xFFu) / 255.0,
+                float(intBits & 0xFFu) / 255.0
+            );
+        `;
+        code += ShaderGenerator.end();
 
-        // till the velocity is implemented, just output the depth
-        return this._fsGetDepthPassCode();
+        return code;
     }
 
     _fsGetShadowPassCode() {
@@ -1494,8 +1512,8 @@ class LitShader {
             this.fshader = this._fsGetPickPassCode();
         } else if (options.pass === SHADER_DEPTH) {
             this.fshader = this._fsGetDepthPassCode();
-        } else if (options.pass === SHADER_PREPASS_VELOCITY) {
-            this.fshader = this._fsGetPrePassVelocityCode();
+        } else if (options.pass === SHADER_PREPASS) {
+            this.fshader = this._fsGetPrePassCode();
         } else if (this.shadowPass) {
             this.fshader = this._fsGetShadowPassCode();
         } else if (options.customFragmentShader) {

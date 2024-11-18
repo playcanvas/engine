@@ -8,7 +8,8 @@ import { SKYTYPE_INFINITE } from '../../constants.js';
 
 class ShaderGeneratorSkybox extends ShaderGenerator {
     generateKey(options) {
-        const sharedKey = `skybox-${options.type}-${options.encoding}-${options.gamma}-${options.toneMapping}-${options.skymesh}`;
+        const definesHash = ShaderGenerator.definesHash(options.defines);
+        const sharedKey = `skybox-${options.type}-${options.encoding}-${options.gamma}-${options.toneMapping}-${options.skymesh}_${definesHash}`;
         return sharedKey + (options.type === 'cubemap' ? `-${options.mip}` : '');
     }
 

@@ -9,6 +9,7 @@ import { ShaderUtils } from '../../platform/graphics/shader-utils.js';
 import { shaderChunks } from '../shader-lib/chunks/chunks.js';
 import { ShaderGenerator } from '../shader-lib/programs/shader-generator.js';
 import { ShaderPass } from '../shader-pass.js';
+import { getMaterialShaderDefines } from '../shader-lib/utils.js';
 
 const splatCoreVS = /* glsl */ `
     uniform mat4 matrix_model;
@@ -380,8 +381,9 @@ const createGSplatCompressedMaterial = (options = {}) => {
 
     material.getShaderVariant = function (params) {
 
+        const { cameraShaderParams } = params;
         const programOptions = {
-            defines: material.defines,
+            defines: getMaterialShaderDefines(material, cameraShaderParams),
             pass: params.pass,
             gamma: params.cameraShaderParams.shaderOutputGamma,
             toneMapping: params.cameraShaderParams.toneMapping,

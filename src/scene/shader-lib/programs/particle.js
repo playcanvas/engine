@@ -5,7 +5,8 @@ import { ShaderGenerator } from './shader-generator.js';
 
 class ShaderGeneratorParticle extends ShaderGenerator {
     generateKey(options) {
-        let key = 'particle';
+        const definesHash = ShaderGenerator.definesHash(options.defines);
+        let key = `particle_${definesHash}_`;
         for (const prop in options) {
             if (options.hasOwnProperty(prop)) {
                 key += options[prop];
@@ -107,7 +108,9 @@ class ShaderGeneratorParticle extends ShaderGenerator {
         return ShaderUtils.createDefinition(device, {
             name: 'ParticleShader',
             vertexCode: vshader,
-            fragmentCode: fshader
+            fragmentCode: fshader,
+            fragmentDefines: options.defines,
+            vertexDefines: options.defines
         });
     }
 }
