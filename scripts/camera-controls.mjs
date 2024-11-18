@@ -133,6 +133,11 @@ class CameraControls extends Script {
     };
 
     /**
+     * @type {HTMLElement}
+     */
+    _element;
+
+    /**
      * @type {Entity}
      */
     root;
@@ -248,6 +253,7 @@ class CameraControls extends Script {
         super(args);
         const {
             name,
+            element,
             enableOrbit,
             enablePan,
             enableFly,
@@ -268,6 +274,8 @@ class CameraControls extends Script {
 
         this.root = new Entity(name ?? 'camera-controls');
         this.app.root.addChild(this.root);
+
+        this._element = element ?? this.app.graphicsDevice.canvas;
 
         this.enableOrbit = enableOrbit ?? this.enableOrbit;
         this.enablePan = enablePan ?? this.enablePan;
@@ -300,6 +308,23 @@ class CameraControls extends Script {
         this.pitchRange = pitchRange ?? this.pitchRange;
         this.zoomMin = zoomMin ?? this.zoomMin;
         this.zoomMax = zoomMax ?? this.zoomMax;
+    }
+
+    /**
+     * The element to attach the camera controls to.
+     *
+     * @type {HTMLElement}
+     */
+    set element(value) {
+        this._element = value;
+
+        const camera = this._camera;
+        this.detach();
+        this.attach(camera);
+    }
+
+    get element() {
+        return this._element;
     }
 
     /**
@@ -864,25 +889,31 @@ class CameraControls extends Script {
         this._camera = camera;
         this._camera.entity.setLocalEulerAngles(0, 0, 0);
 
-        window.addEventListener('wheel', this._onWheel, PASSIVE);
+        // Attach events to canvas instead of window
+        this._element.addEventListener('wheel', this._onWheel, PASSIVE);
+        this._element.addEventListener('pointerdown', this._onPointerDown);
+        this._element.addEventListener('pointermove', this._onPointerMove);
+        this._element.addEventListener('pointerup', this._onPointerUp);
+        this._element.addEventListener('contextmenu', this._onContextMenu);
+
+        // These can stay on window since they're keyboard events
         window.addEventListener('keydown', this._onKeyDown, false);
         window.addEventListener('keyup', this._onKeyUp, false);
-        window.addEventListener('pointerdown', this._onPointerDown);
-        window.addEventListener('pointermove', this._onPointerMove);
-        window.addEventListener('pointerup', this._onPointerUp);
-        window.addEventListener('contextmenu', this._onContextMenu);
 
         this.root.addChild(camera.entity);
     }
 
     detach() {
-        window.removeEventListener('wheel', this._onWheel, PASSIVE);
+        // Remove from canvas instead of window
+        this._element.removeEventListener('wheel', this._onWheel, PASSIVE);
+        this._element.removeEventListener('pointermove', this._onPointerMove);
+        this._element.removeEventListener('pointerdown', this._onPointerDown);
+        this._element.removeEventListener('pointerup', this._onPointerUp);
+        this._element.removeEventListener('contextmenu', this._onContextMenu);
+
+        // Remove keyboard events from window
         window.removeEventListener('keydown', this._onKeyDown, false);
         window.removeEventListener('keyup', this._onKeyUp, false);
-        window.removeEventListener('pointermove', this._onPointerMove);
-        window.removeEventListener('pointerdown', this._onPointerDown);
-        window.removeEventListener('pointerup', this._onPointerUp);
-        window.removeEventListener('contextmenu', this._onContextMenu);
 
         this.root.removeChild(this._camera.entity);
         this._camera = null;
