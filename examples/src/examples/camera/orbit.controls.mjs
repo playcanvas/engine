@@ -29,29 +29,11 @@ export const controls = ({ observer, ReactPCUI, React, jsx, fragment }) => {
             { headerText: 'Attributes' },
             jsx(
                 LabelGroup,
-                { text: 'Enable Orbit' },
-                jsx(BooleanInput, {
-                    type: 'toggle',
-                    binding: new BindingTwoWay(),
-                    link: { observer, path: 'attr.enableOrbit' }
-                })
-            ),
-            jsx(
-                LabelGroup,
                 { text: 'Enable Pan' },
                 jsx(BooleanInput, {
                     type: 'toggle',
                     binding: new BindingTwoWay(),
                     link: { observer, path: 'attr.enablePan' }
-                })
-            ),
-            jsx(
-                LabelGroup,
-                { text: 'Enable Fly' },
-                jsx(BooleanInput, {
-                    type: 'toggle',
-                    binding: new BindingTwoWay(),
-                    link: { observer, path: 'attr.enableFly' }
                 })
             ),
             jsx(
@@ -140,36 +122,6 @@ export const controls = ({ observer, ReactPCUI, React, jsx, fragment }) => {
                     max: 1,
                     step: 0.001,
                     precision: 3
-                })
-            ),
-            jsx(
-                LabelGroup,
-                { text: 'Move speed' },
-                jsx(SliderInput, {
-                    binding: new BindingTwoWay(),
-                    link: { observer, path: 'attr.moveSpeed' },
-                    min: 1,
-                    max: 10
-                })
-            ),
-            jsx(
-                LabelGroup,
-                { text: 'Sprint speed' },
-                jsx(SliderInput, {
-                    binding: new BindingTwoWay(),
-                    link: { observer, path: 'attr.sprintSpeed' },
-                    min: 1,
-                    max: 10
-                })
-            ),
-            jsx(
-                LabelGroup,
-                { text: 'Crouch speed' },
-                jsx(SliderInput, {
-                    binding: new BindingTwoWay(),
-                    link: { observer, path: 'attr.crouchSpeed' },
-                    min: 1,
-                    max: 10
                 })
             )
         )
