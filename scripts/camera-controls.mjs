@@ -839,7 +839,7 @@ class CameraControls extends Script {
         }
 
         tmpV1.sub2(start, point);
-        const elev = Math.atan2(tmpV1.y, tmpV1.z) * math.RAD_TO_DEG;
+        const elev = Math.atan2(tmpV1.y, Math.sqrt(tmpV1.x * tmpV1.x + tmpV1.z * tmpV1.z)) * math.RAD_TO_DEG;
         const azim = Math.atan2(tmpV1.x, tmpV1.z) * math.RAD_TO_DEG;
         this._dir.set(-elev, -azim);
 
