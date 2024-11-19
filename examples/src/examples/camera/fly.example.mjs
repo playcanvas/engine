@@ -1,4 +1,4 @@
-// @config DESCRIPTION <div style='text-align:center'><div>(<b>WASDQE</b>) Move</div></div>
+// @config DESCRIPTION <div style='text-align:center'><div>(<b>LMB</b>) Fly</div><div>(<b>WASDQE</b>) Move</div></div>
 import { data } from 'examples/observer';
 import { deviceType, rootPath, fileImport } from 'examples/utils';
 import * as pc from 'playcanvas';
