@@ -39,13 +39,13 @@ class SkyMesh {
 
         material.getShaderVariant = function (params) {
 
-            const { scene, renderParams } = params;
+            const { scene, cameraShaderParams } = params;
             const options = {
                 defines: this.defines,
                 pass: params.pass,
                 encoding: texture.encoding,
-                gamma: renderParams.shaderOutputGamma,
-                toneMapping: renderParams.toneMapping,
+                gamma: cameraShaderParams.shaderOutputGamma,
+                toneMapping: cameraShaderParams.toneMapping,
                 skymesh: type
             };
 
@@ -63,11 +63,13 @@ class SkyMesh {
             return library.getProgram('skybox', options, processingOptions);
         };
 
+        material.setParameter('skyboxHighlightMultiplier', scene.skyboxHighlightMultiplier);
+
         if (texture.cubemap) {
             material.setParameter('texture_cubeMap', texture);
         } else {
             material.setParameter('texture_envAtlas', texture);
-            material.setParameter('mipLevel', scene._skyboxMip);
+            material.setParameter('mipLevel', scene.skyboxMip);
         }
 
         material.cull = CULLFACE_FRONT;

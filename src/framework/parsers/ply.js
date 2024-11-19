@@ -552,14 +552,15 @@ class PlyParser {
      * @param {Asset} asset - Container asset.
      */
     async load(url, callback, asset) {
-        const response = await fetch(url.load);
-        if (!response || !response.body) {
-            callback('Error loading resource', null);
-        } else {
-            readPly(response.body.getReader(), asset.data.elementFilter ?? defaultElementFilter)
-            .then((gsplatData) => {
+        try {
+            const response = await fetch(url.load);
+            if (!response || !response.body) {
+                callback('Error loading resource', null);
+            } else {
+                const gsplatData = await readPly(response.body.getReader(), asset.data.elementFilter ?? defaultElementFilter);
+
+                // reorder data
                 if (!gsplatData.isCompressed) {
-                    // reorder data
                     if (asset.data.reorder ?? true) {
                         gsplatData.reorderData();
                     }
@@ -572,10 +573,9 @@ class PlyParser {
                 );
 
                 callback(null, resource);
-            })
-            .catch((err) => {
-                callback(err, null);
-            });
+            }
+        } catch (err) {
+            callback(err, null);
         }
     }
 

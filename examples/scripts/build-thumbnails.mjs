@@ -3,12 +3,14 @@
  */
 /* eslint-disable no-await-in-loop */
 import fs from 'fs';
-import puppeteer from 'puppeteer';
-import sharp from 'sharp';
+import { spawn, execSync } from 'node:child_process';
 import { dirname } from 'path';
 import { fileURLToPath } from 'url';
-import { spawn, execSync } from 'node:child_process';
 
+import puppeteer from 'puppeteer';
+import sharp from 'sharp';
+
+import { sleep } from './utils.mjs';
 import { exampleMetaData } from '../cache/metadata.mjs';
 
 // @ts-ignore
@@ -118,7 +120,7 @@ class PuppeteerPool {
  * @param {string} categoryKebab - Category kebab name.
  * @param {string} exampleNameKebab - Example kebab name.
  */
-async function takeThumbnails(pool, categoryKebab, exampleNameKebab) {
+const takeThumbnails = async (pool, categoryKebab, exampleNameKebab) => {
     const poolItem = pool.allocPoolItem();
     const page = await pool.newPage(poolItem);
     if (DEBUG) {
@@ -151,13 +153,13 @@ async function takeThumbnails(pool, categoryKebab, exampleNameKebab) {
 
     // copy and crop image for large thumbnail
     await sharp(imgData)
-        .resize(320, 240)
-        .toFile(`${MAIN_DIR}/thumbnails/${categoryKebab}_${exampleNameKebab}_large.webp`);
+    .resize(320, 240)
+    .toFile(`${MAIN_DIR}/thumbnails/${categoryKebab}_${exampleNameKebab}_large.webp`);
 
     // copy and crop image for small thumbnail
     await sharp(imgData)
-        .resize(64, 48)
-        .toFile(`${MAIN_DIR}/thumbnails/${categoryKebab}_${exampleNameKebab}_small.webp`);
+    .resize(64, 48)
+    .toFile(`${MAIN_DIR}/thumbnails/${categoryKebab}_${exampleNameKebab}_small.webp`);
 
     // remove screenshot
     fs.unlinkSync(`${MAIN_DIR}/thumbnails/${categoryKebab}_${exampleNameKebab}.webp`);
@@ -166,12 +168,12 @@ async function takeThumbnails(pool, categoryKebab, exampleNameKebab) {
     await pool.closePage(poolItem, page);
 
     console.log(`screenshot taken for: ${categoryKebab}/${exampleNameKebab}`);
-}
+};
 
 /**
  * @param {typeof exampleMetaData} metadata - Example metadata.
  */
-async function takeScreenshots(metadata) {
+const takeScreenshots = async (metadata) => {
     if (metadata.length === 0) {
         return;
     }
@@ -207,19 +209,10 @@ async function takeScreenshots(metadata) {
 
     // close pool
     await pool.close();
-}
+};
 
-/**
- * @param {number} ms - Milliseconds.
- * @returns {Promise<void>} - Sleep promise.
- */
-function sleep(ms = 0) {
-    return new Promise((resolve) => {
-        setTimeout(resolve, ms);
-    });
-}
 
-async function main() {
+const main = async () => {
     console.log('Spawn server on', PORT);
     // We need this kind of command:
     // npx serve dist --config ../serve.json
@@ -244,5 +237,5 @@ async function main() {
     }
     console.log('Killed server on', PORT);
     return 0;
-}
+};
 main().then(process.exit);

@@ -22,7 +22,6 @@ import { LightCamera } from './light-camera.js';
 import { UniformBufferFormat, UniformFormat } from '../../platform/graphics/uniform-buffer-format.js';
 import { BindUniformBufferFormat, BindGroupFormat } from '../../platform/graphics/bind-group-format.js';
 import { BlendState } from '../../platform/graphics/blend-state.js';
-import { RenderingParams } from './rendering-params.js';
 
 /**
  * @import { Camera } from '../camera.js'
@@ -111,9 +110,6 @@ class ShadowRenderer {
         this.blendStateWrite = new BlendState();
         this.blendStateNoWrite = new BlendState();
         this.blendStateNoWrite.setColorWrite(false, false, false, false);
-
-        // shadow rendering parameters
-        this.shadowRenderingParams = new RenderingParams();
     }
 
     // creates shadow camera for a light and sets up its constant properties
@@ -131,19 +127,11 @@ class ShadowRenderer {
         shadowCam.clearDepthBuffer = true;
         shadowCam.clearStencilBuffer = false;
 
-        return shadowCam;
-    }
-
-    static setShadowCameraSettings(shadowCam, device, shadowType, type, isClustered) {
-
-        // normal omni shadows on webgl2 encode depth in RGBA8 and do manual PCF sampling
-        // clustered omni shadows on webgl2 use depth format and hardware PCF sampling
-        let hwPcf = shadowType === SHADOW_PCF5 || shadowType === SHADOW_PCF1 || shadowType === SHADOW_PCF3;
-        if (type === LIGHTTYPE_OMNI && !isClustered) {
-            hwPcf = false;
-        }
-
+        // clear color buffer only when using it
+        const hwPcf = shadowType === SHADOW_PCF1 || shadowType === SHADOW_PCF3 || shadowType === SHADOW_PCF5;
         shadowCam.clearColorBuffer = !hwPcf;
+
+        return shadowCam;
     }
 
     _cullShadowCastersInternal(meshInstances, visible, camera) {
@@ -280,15 +268,16 @@ class ShadowRenderer {
     /**
      * @param {MeshInstance[]} visibleCasters - Visible mesh instances.
      * @param {Light} light - The light.
+     * @param {Camera} camera - The camera.
      */
-    submitCasters(visibleCasters, light) {
+    submitCasters(visibleCasters, light, camera) {
 
         const device = this.device;
         const renderer = this.renderer;
         const scene = renderer.scene;
         const passFlags = 1 << SHADER_SHADOW;
         const shadowPass = this.getShadowPass(light);
-        const renderParams = this.shadowRenderingParams;
+        const cameraShaderParams = camera.shaderParams;
 
         // Render
         const count = visibleCasters.length;
@@ -319,7 +308,7 @@ class ShadowRenderer {
                 meshInstance.setParameters(device, passFlags);
             }
 
-            const shaderInstance = meshInstance.getShaderInstance(shadowPass, 0, scene, renderParams, this.viewUniformFormat, this.viewBindGroupFormat);
+            const shaderInstance = meshInstance.getShaderInstance(shadowPass, 0, scene, cameraShaderParams, this.viewUniformFormat, this.viewBindGroupFormat);
             const shadowShader = shaderInstance.shader;
             Debug.assert(shadowShader, `no shader for pass ${shadowPass}`, material);
 
@@ -391,15 +380,8 @@ class ShadowRenderer {
     prepareFace(light, camera, face) {
 
         const type = light._type;
-        const shadowType = light._shadowType;
-        const isClustered = this.renderer.scene.clusteredLightingEnabled;
-
         const lightRenderData = this.getLightRenderData(light, camera, face);
         const shadowCam = lightRenderData.shadowCamera;
-
-        // camera clear setting
-        // Note: when clustered lighting is the only lighting type, this code can be moved to createShadowCamera function
-        ShadowRenderer.setShadowCameraSettings(shadowCam, this.device, shadowType, type, isClustered);
 
         // assign render target for the face
         const renderTargetIndex = type === LIGHTTYPE_DIRECTIONAL ? 0 : face;
@@ -446,7 +428,7 @@ class ShadowRenderer {
         this.setupRenderState(device, light);
 
         // render mesh instances
-        this.submitCasters(lightRenderData.visibleCasters, light);
+        this.submitCasters(lightRenderData.visibleCasters, light, shadowCam);
 
         DebugGraphics.popGpuMarker(device);
 

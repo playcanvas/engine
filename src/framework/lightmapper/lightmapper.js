@@ -19,7 +19,7 @@ import { drawQuadWithShader } from '../../scene/graphics/quad-render-utils.js';
 import { Texture } from '../../platform/graphics/texture.js';
 import {
     BAKE_COLORDIR,
-    FOG_NONE, GAMMA_NONE, TONEMAP_LINEAR,
+    GAMMA_NONE, TONEMAP_LINEAR,
     LIGHTTYPE_DIRECTIONAL, LIGHTTYPE_OMNI, LIGHTTYPE_SPOT,
     PROJECTION_ORTHOGRAPHIC, PROJECTION_PERSPECTIVE,
     SHADERDEF_DIRLM, SHADERDEF_LM, SHADERDEF_LMAMBIENT,
@@ -30,7 +30,6 @@ import {
 import { MeshInstance } from '../../scene/mesh-instance.js';
 import { LightingParams } from '../../scene/lighting/lighting-params.js';
 import { WorldClusters } from '../../scene/lighting/world-clusters.js';
-import { RenderingParams } from '../../scene/renderer/rendering-params.js';
 import { shaderChunks } from '../../scene/shader-lib/chunks/chunks.js';
 import { shaderChunksLightmapper } from '../../scene/shader-lib/chunks/chunks-lightmapper.js';
 import { Camera } from '../../scene/camera.js';
@@ -166,10 +165,8 @@ class Lightmapper {
             this.camera = camera;
 
             // baking uses HDR (no gamma / tone mapping)
-            const rp = new RenderingParams();
-            rp.gammaCorrection = GAMMA_NONE;
-            rp.toneMapping = TONEMAP_LINEAR;
-            this.camera.renderingParams = rp;
+            this.camera.shaderParams.gammaCorrection = GAMMA_NONE;
+            this.camera.shaderParams.toneMapping = TONEMAP_LINEAR;
         }
 
         // create light cluster structure
@@ -684,11 +681,7 @@ class Lightmapper {
     setupScene() {
 
         // backup
-        this.fog = this.scene.rendering.fog;
         this.ambientLight.copy(this.scene.ambientLight);
-
-        // set up scene
-        this.scene.rendering.fog = FOG_NONE;
 
         // if not baking ambient, set it to black
         if (!this.scene.ambientBake) {
@@ -701,7 +694,6 @@ class Lightmapper {
 
     restoreScene() {
 
-        this.scene.rendering.fog = this.fog;
         this.scene.ambientLight.copy(this.ambientLight);
     }
 
@@ -979,7 +971,7 @@ class Lightmapper {
                 m.mask = MASK_BAKE; // only affected by LM lights
 
                 // patch material
-                m.setRealtimeLightmap(MeshInstance.lightmapParamNames[0], m.material.lightMap ? m.material.lightMap : this.blackTex);
+                m.setRealtimeLightmap(MeshInstance.lightmapParamNames[0], this.blackTex);
                 m.setRealtimeLightmap(MeshInstance.lightmapParamNames[1], this.blackTex);
             }
         }

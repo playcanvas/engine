@@ -1,31 +1,34 @@
-import * as pc from 'playcanvas';
 import { data } from 'examples/observer';
 import { deviceType, rootPath } from 'examples/utils';
+import * as pc from 'playcanvas';
 
 const canvas = /** @type {HTMLCanvasElement} */ (document.getElementById('application-canvas'));
 window.focus();
 
 const assets = {
-    orbit: new pc.Asset('script', 'script', { url: rootPath + '/static/scripts/camera/orbit-camera.js' }),
-    statue: new pc.Asset('statue', 'container', { url: rootPath + '/static/assets/models/statue.glb' }),
+    orbit: new pc.Asset('script', 'script', { url: `${rootPath}/static/scripts/camera/orbit-camera.js` }),
+    statue: new pc.Asset('statue', 'container', { url: `${rootPath}/static/assets/models/statue.glb` }),
     hdri_street: new pc.Asset(
         'hdri',
         'texture',
-        { url: rootPath + '/static/assets/hdri/wide-street.hdr' },
+        { url: `${rootPath}/static/assets/hdri/wide-street.hdr` },
         { mipmaps: false }
     ),
     hdri_room: new pc.Asset(
         'hdri',
         'texture',
-        { url: rootPath + '/static/assets/hdri/empty-room.hdr' },
+        { url: `${rootPath}/static/assets/hdri/empty-room.hdr` },
         { mipmaps: false }
     )
 };
 
 const gfxOptions = {
     deviceTypes: [deviceType],
-    glslangUrl: rootPath + '/static/lib/glslang/glslang.js',
-    twgslUrl: rootPath + '/static/lib/twgsl/twgsl.js'
+    glslangUrl: `${rootPath}/static/lib/glslang/glslang.js`,
+    twgslUrl: `${rootPath}/static/lib/twgsl/twgsl.js`,
+
+    // enable HDR rendering if supported
+    displayFormat: pc.DISPLAYFORMAT_HDR
 };
 
 const device = await pc.createGraphicsDevice(canvas, gfxOptions);
@@ -57,8 +60,6 @@ const assetListLoader = new pc.AssetListLoader(Object.values(assets), app.assets
 assetListLoader.load(() => {
     app.start();
 
-    app.scene.rendering.toneMapping = pc.TONEMAP_ACES;
-
     // add an instance of the statue
     const statueEntity = assets.statue.resource.instantiateRenderEntity();
     app.root.addChild(statueEntity);
@@ -67,7 +68,11 @@ assetListLoader.load(() => {
     const cameraEntity = new pc.Entity();
     cameraEntity.addComponent('camera', {
         farClip: 500,
-        fov: 60
+        fov: 60,
+
+        // if the device renders in HDR mode, disable tone mapping to output HDR values without any processing
+        toneMapping: device.isHdr ? pc.TONEMAP_NONE : pc.TONEMAP_ACES,
+        gammaCorrection: pc.GAMMA_SRGB
     });
 
     // add orbit camera script with a mouse and a touch support

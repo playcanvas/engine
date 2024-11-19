@@ -1,30 +1,30 @@
-import * as pc from 'playcanvas';
 import { data } from 'examples/observer';
 import { deviceType, rootPath } from 'examples/utils';
+import * as pc from 'playcanvas';
 
 const canvas = /** @type {HTMLCanvasElement} */ (document.getElementById('application-canvas'));
 window.focus();
 
 const assets = {
-    orbitCamera: new pc.Asset('script', 'script', { url: rootPath + '/static/scripts/camera/orbit-camera.js' }),
+    orbitCamera: new pc.Asset('script', 'script', { url: `${rootPath}/static/scripts/camera/orbit-camera.js` }),
     helipad: new pc.Asset(
         'helipad-env-atlas',
         'texture',
-        { url: rootPath + '/static/assets/cubemaps/helipad-env-atlas.png' },
+        { url: `${rootPath}/static/assets/cubemaps/helipad-env-atlas.png` },
         { type: pc.TEXTURETYPE_RGBP, mipmaps: false }
     ),
-    lights: new pc.Asset('lights', 'container', { url: rootPath + '/static/assets/models/Lights.glb' }),
-    sheen: new pc.Asset('sheen', 'container', { url: rootPath + '/static/assets/models/SheenChair.glb' }),
-    color: new pc.Asset('color', 'texture', { url: rootPath + '/static/assets/textures/seaside-rocks01-color.jpg' }),
-    normal: new pc.Asset('normal', 'texture', { url: rootPath + '/static/assets/textures/seaside-rocks01-normal.jpg' }),
-    gloss: new pc.Asset('gloss', 'texture', { url: rootPath + '/static/assets/textures/seaside-rocks01-gloss.jpg' }),
-    luts: new pc.Asset('luts', 'json', { url: rootPath + '/static/assets/json/area-light-luts.json' })
+    lights: new pc.Asset('lights', 'container', { url: `${rootPath}/static/assets/models/Lights.glb` }),
+    sheen: new pc.Asset('sheen', 'container', { url: `${rootPath}/static/assets/models/SheenChair.glb` }),
+    color: new pc.Asset('color', 'texture', { url: `${rootPath}/static/assets/textures/seaside-rocks01-color.jpg` }),
+    normal: new pc.Asset('normal', 'texture', { url: `${rootPath}/static/assets/textures/seaside-rocks01-normal.jpg` }),
+    gloss: new pc.Asset('gloss', 'texture', { url: `${rootPath}/static/assets/textures/seaside-rocks01-gloss.jpg` }),
+    luts: new pc.Asset('luts', 'json', { url: `${rootPath}/static/assets/json/area-light-luts.json` })
 };
 
 const gfxOptions = {
     deviceTypes: [deviceType],
-    glslangUrl: rootPath + '/static/lib/glslang/glslang.js',
-    twgslUrl: rootPath + '/static/lib/twgsl/twgsl.js'
+    glslangUrl: `${rootPath}/static/lib/glslang/glslang.js`,
+    twgslUrl: `${rootPath}/static/lib/twgsl/twgsl.js`
 };
 
 const device = await pc.createGraphicsDevice(canvas, gfxOptions);
@@ -62,7 +62,6 @@ const assetListLoader = new pc.AssetListLoader(Object.values(assets), app.assets
 assetListLoader.load(() => {
     app.start();
 
-    app.scene.rendering.toneMapping = pc.TONEMAP_ACES;
     app.scene.skyboxMip = 1;
     app.scene.ambientLight.set(1, 0, 0);
     app.scene.ambientLuminance = 20000;
@@ -144,7 +143,8 @@ assetListLoader.load(() => {
             aperture: 16.0,
             shutter: 1000,
             sensitivity: 1000,
-            animate: false
+            animate: false,
+            toneMapping: pc.TONEMAP_ACES
         },
         scene: {
             physicalUnits: true,
@@ -292,7 +292,7 @@ assetListLoader.load(() => {
 
     let resizeControlPanel = true;
     let time = 0;
-    app.on('update', function (dt) {
+    app.on('update', (dt) => {
         time += dt;
 
         // resize control panel to fit the content better

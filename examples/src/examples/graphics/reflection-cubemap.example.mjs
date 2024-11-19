@@ -1,5 +1,5 @@
-import * as pc from 'playcanvas';
 import { deviceType, rootPath } from 'examples/utils';
+import * as pc from 'playcanvas';
 
 const canvas = /** @type {HTMLCanvasElement} */ (document.getElementById('application-canvas'));
 window.focus();
@@ -8,16 +8,16 @@ const assets = {
     helipad: new pc.Asset(
         'helipad-env-atlas',
         'texture',
-        { url: rootPath + '/static/assets/cubemaps/helipad-env-atlas.png' },
+        { url: `${rootPath}/static/assets/cubemaps/helipad-env-atlas.png` },
         { type: pc.TEXTURETYPE_RGBP, mipmaps: false }
     ),
-    script: new pc.Asset('script', 'script', { url: rootPath + '/static/scripts/utils/cubemap-renderer.js' })
+    script: new pc.Asset('script', 'script', { url: `${rootPath}/static/scripts/utils/cubemap-renderer.js` })
 };
 
 const gfxOptions = {
     deviceTypes: [deviceType],
-    glslangUrl: rootPath + '/static/lib/glslang/glslang.js',
-    twgslUrl: rootPath + '/static/lib/twgsl/twgsl.js'
+    glslangUrl: `${rootPath}/static/lib/glslang/glslang.js`,
+    twgslUrl: `${rootPath}/static/lib/twgsl/twgsl.js`
 };
 
 const device = await pc.createGraphicsDevice(canvas, gfxOptions);
@@ -51,9 +51,6 @@ app.on('destroy', () => {
 const assetListLoader = new pc.AssetListLoader(Object.values(assets), app.assets);
 assetListLoader.load(() => {
     app.start();
-
-    // set up some general scene rendering properties
-    app.scene.rendering.toneMapping = pc.TONEMAP_ACES;
 
     // setup skydome
     app.scene.envAtlas = assets.helipad.resource;
@@ -152,7 +149,9 @@ assetListLoader.load(() => {
         priority: -1,
 
         // disable as this is not a camera that renders cube map but only a container for properties for cube map rendering
-        enabled: false
+        enabled: false,
+
+        toneMapping: pc.TONEMAP_ACES
     });
 
     // add cubemapRenderer script component which takes care of rendering dynamic cubemap
@@ -199,7 +198,8 @@ assetListLoader.load(() => {
     const camera = new pc.Entity('MainCamera');
     camera.addComponent('camera', {
         fov: 60,
-        layers: [worldLayer.id, excludedLayer.id, skyboxLayer.id, immediateLayer.id, uiLayer.id]
+        layers: [worldLayer.id, excludedLayer.id, skyboxLayer.id, immediateLayer.id, uiLayer.id],
+        toneMapping: pc.TONEMAP_ACES
     });
     app.root.addChild(camera);
 
@@ -249,7 +249,7 @@ assetListLoader.load(() => {
 
     // update things each frame
     let time = 0;
-    app.on('update', function (dt) {
+    app.on('update', (dt) => {
         time += dt;
 
         // rotate primitives around their center and also orbit them around the shiny sphere

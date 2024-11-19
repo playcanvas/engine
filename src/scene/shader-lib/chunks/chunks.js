@@ -89,7 +89,6 @@ import outputAlphaPS from './lit/frag/outputAlpha.js';
 import outputAlphaOpaquePS from './lit/frag/outputAlphaOpaque.js';
 import outputAlphaPremulPS from './lit/frag/outputAlphaPremul.js';
 import outputTex2DPS from './common/frag/outputTex2D.js';
-import packDepthPS from './common/frag/packDepth.js';
 import sheenPS from './standard/frag/sheen.js';
 import sheenGlossPS from './standard/frag/sheenGloss.js';
 import parallaxPS from './standard/frag/parallax.js';
@@ -158,8 +157,7 @@ import shadowVSM8PS from './lit/frag/shadowVSM8.js';
 import shadowVSM_commonPS from './lit/frag/shadowVSM_common.js';
 import skinBatchTexVS from './common/vert/skinBatchTex.js';
 import skinTexVS from './common/vert/skinTex.js';
-import skyboxEnvPS from './skybox/frag/skyboxEnv.js';
-import skyboxHDRPS from './skybox/frag/skyboxHDR.js';
+import skyboxPS from './skybox/frag/skybox.js';
 import skyboxVS from './skybox/vert/skybox.js';
 import specularPS from './standard/frag/specular.js';
 import sphericalPS from './common/frag/spherical.js';
@@ -292,7 +290,6 @@ const shaderChunks = {
     outputAlphaOpaquePS,
     outputAlphaPremulPS,
     outputTex2DPS,
-    packDepthPS,
     sheenPS,
     sheenGlossPS,
     parallaxPS,
@@ -361,8 +358,7 @@ const shaderChunks = {
     shadowVSM_commonPS,
     skinBatchTexVS,
     skinTexVS,
-    skyboxEnvPS,
-    skyboxHDRPS,
+    skyboxPS,
     skyboxVS,
     specularPS,
     sphericalPS,

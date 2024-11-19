@@ -1,18 +1,28 @@
 import fs from 'fs';
 
 /**
+ * @param {number} ms - The milliseconds to sleep.
+ * @returns {Promise<void>} - The sleep promise.
+ */
+export const sleep = (ms = 0) => {
+    return new Promise((resolve) => {
+        setTimeout(resolve, ms);
+    });
+};
+
+/**
  * @param {object} obj - The object.
  * @returns {string} - The stringified object
  */
-export function objStringify(obj) {
+export const objStringify = (obj) => {
     return JSON.stringify(obj, null, 4).replace(/"(\w+)":/g, '$1:');
-}
+};
 
 /**
  * @param {string} path - The directory path.
  * @returns {string[]} - The file names in the directory.
  */
-export function getDirFiles(path) {
+export const getDirFiles = (path) => {
     if (!fs.existsSync(path)) {
         return [];
     }
@@ -21,7 +31,7 @@ export function getDirFiles(path) {
         return [];
     }
     return fs.readdirSync(path);
-}
+};
 
 /**
  * @typedef {'development' | 'performance' | 'debug'} Engine
@@ -42,18 +52,18 @@ export function getDirFiles(path) {
  * @param {string} script - The script to parse.
  * @returns {ExampleConfig} - The parsed config.
  */
-export function parseConfig(script) {
-    const regex = /\/\/ @config ([^ \n]+) ?([^\n]+)?/g;
+export const parseConfig = (script) => {
+    const regex = /\/\/ @config (\S+)(?:\s+([^\n]+))?/g;
     let match;
     /** @type {Record<string, any>} */
     const config = {};
     while ((match = regex.exec(script)) !== null) {
         const key = match[1].trim();
         const val = match[2]?.trim();
-        config[key] = /true|false/g.test(val) ? val === 'true' : val ?? true;
+        config[key] = /true|false/.test(val) ? val === 'true' : val ?? true;
     }
     return config;
-}
+};
 
 /**
  * Choose engine based on `Example#ENGINE`, e.g. ClusteredLightingExample picks PERFORMANCE.
@@ -61,7 +71,7 @@ export function parseConfig(script) {
  * @param {Engine | undefined} type - The engine type.
  * @returns {string} - The build file.
  */
-export function engineFor(type) {
+export const engineFor = (type) => {
     switch (type) {
         case 'development':
             return './ENGINE_PATH/index.js';
@@ -71,15 +81,15 @@ export function engineFor(type) {
             return './playcanvas.dbg.mjs';
     }
     return './playcanvas.mjs';
-}
+};
 
 /**
  * @param {string} script - The script to be patched.
  * @returns {string} - The patched script.
  */
-export function patchScript(script) {
+export const patchScript = (script) => {
     // remove playcanvas imports
-    script = script.replace(/ *import[\s\w*{},]+["']playcanvas["'] *;?[\s\r\n]*/g, '');
+    script = script.replace(/ *import[\s\w*{},]+["']playcanvas["'] *;?\s*/g, '');
 
     return script;
-}
+};

@@ -700,7 +700,7 @@ class ScriptComponent extends Component {
                     app: this.system.app,
                     entity: this.entity,
                     enabled: args.hasOwnProperty('enabled') ? args.enabled : true,
-                    attributes: args.attributes
+                    attributes: args.attributes || {}
                 });
 
                 if (args.properties && typeof args.properties === 'object') {

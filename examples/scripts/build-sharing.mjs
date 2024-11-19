@@ -14,7 +14,7 @@ import { exampleMetaData } from '../cache/metadata.mjs';
  * @param {string} options.largeThumbnailName - The large thumbnail name.
  * @returns {string} - The template string.
  */
-function template({ path, exampleTitle, largeThumbnailName }) {
+const template = ({ path, exampleTitle, largeThumbnailName }) => {
     return `<!DOCTYPE html>
       <html>
         <head>
@@ -30,14 +30,14 @@ function template({ path, exampleTitle, largeThumbnailName }) {
           <p>Please follow <a href="/#/${path}">this link</a>.</p>
         </body>
       </html>`;
-}
+};
 
 // @ts-ignore
 const __filename = fileURLToPath(import.meta.url);
 const __dirname = dirname(__filename);
 const MAIN_DIR = `${__dirname}/../`;
 
-function main() {
+const main = () => {
     if (!fs.existsSync(`${MAIN_DIR}/dist/`)) {
         fs.mkdirSync(`${MAIN_DIR}/dist/`);
     }
@@ -58,5 +58,5 @@ function main() {
         }
         fs.writeFileSync(`${dirPath}/index.html`, content);
     }
-}
+};
 main();

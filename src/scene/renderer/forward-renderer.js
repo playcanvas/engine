@@ -474,11 +474,13 @@ class ForwardRenderer extends Renderer {
     // execute first pass over draw calls, in order to update materials / shaders
     renderForwardPrepareMaterials(camera, renderTarget, drawCalls, sortedLights, layer, pass) {
 
-        // rendering params from the scene, or overridden by the camera
-        const renderParams = camera.renderingParams ?? this.scene.rendering;
+        // fog params from the scene, or overridden by the camera
+        const fogParams = camera.fog ?? this.scene.fog;
 
-        // output gamma correction is determined by the render target
-        renderParams.srgbRenderTarget = renderTarget?.isColorBufferSrgb(0) ?? false;
+        // camera shader params
+        const shaderParams = camera.shaderParams;
+        shaderParams.fog = fogParams.type;
+        shaderParams.srgbRenderTarget = renderTarget?.isColorBufferSrgb(0) ?? false;    // output gamma correction is determined by the render target
 
         const addCall = (drawCall, shaderInstance, isNewMaterial, lightMaskChanged) => {
             _drawCallList.drawCalls.push(drawCall);
@@ -539,7 +541,7 @@ class ForwardRenderer extends Renderer {
                 }
             }
 
-            const shaderInstance = drawCall.getShaderInstance(pass, lightHash, scene, renderParams, this.viewUniformFormat, this.viewBindGroupFormat, sortedLights);
+            const shaderInstance = drawCall.getShaderInstance(pass, lightHash, scene, shaderParams, this.viewUniformFormat, this.viewBindGroupFormat, sortedLights);
 
             addCall(drawCall, shaderInstance, material !== prevMaterial, !prevMaterial || lightMask !== prevLightMask);
 
@@ -757,8 +759,9 @@ class ForwardRenderer extends Renderer {
         // Set the not very clever global variable which is only useful when there's just one camera
         scene._activeCamera = camera;
 
-        const renderParams = camera.renderingParams ?? scene.rendering;
-        this.setFogConstants(renderParams);
+        const fogParams = camera.fog ?? this.scene.fog;
+        this.setFogConstants(fogParams);
+
         const viewCount = this.setCameraUniforms(camera, renderTarget);
         if (device.supportsUniformBuffers) {
             this.setupViewUniformBuffers(viewBindGroups, this.viewUniformFormat, this.viewBindGroupFormat, viewCount);
@@ -790,23 +793,23 @@ class ForwardRenderer extends Renderer {
         }
     }
 
-    setFogConstants(renderParams) {
+    setFogConstants(fogParams) {
 
-        if (renderParams.fog !== FOG_NONE) {
+        if (fogParams.type !== FOG_NONE) {
 
             // color in linear space
-            tmpColor.linear(renderParams.fogColor);
+            tmpColor.linear(fogParams.color);
             const fogUniform = this.fogColor;
             fogUniform[0] = tmpColor.r;
             fogUniform[1] = tmpColor.g;
             fogUniform[2] = tmpColor.b;
             this.fogColorId.setValue(fogUniform);
 
-            if (renderParams.fog === FOG_LINEAR) {
-                this.fogStartId.setValue(renderParams.fogStart);
-                this.fogEndId.setValue(renderParams.fogEnd);
+            if (fogParams.type === FOG_LINEAR) {
+                this.fogStartId.setValue(fogParams.start);
+                this.fogEndId.setValue(fogParams.end);
             } else {
-                this.fogDensityId.setValue(renderParams.fogDensity);
+                this.fogDensityId.setValue(fogParams.density);
             }
         }
     }
@@ -868,6 +871,12 @@ class ForwardRenderer extends Renderer {
 
             if (renderAction.useCameraPasses)  {
 
+                Debug.call(() => {
+                    if (camera.postEffects.effects.length > 0) {
+                        Debug.warnOnce(`Camera '${camera.entity.name}' uses render passes, which are not compatible with post-effects scripts. Rendering of the post-effects is ignored, but they should not be attached to the camera.`);
+                    }
+                });
+
                 // schedule render passes from the camera
                 camera.camera.renderPasses.forEach((renderPass) => {
                     frameGraph.addRenderPass(renderPass);
@@ -887,7 +896,7 @@ class ForwardRenderer extends Renderer {
 
                 // info about the next render action
                 const nextRenderAction = renderActions[i + 1];
-                const isNextLayerDepth = nextRenderAction ? nextRenderAction.layer.id === LAYERID_DEPTH : false;
+                const isNextLayerDepth = nextRenderAction ? (!nextRenderAction.useCameraPasses && nextRenderAction.layer.id === LAYERID_DEPTH) : false;
                 const isNextLayerGrabPass = isNextLayerDepth && (camera.renderSceneColorMap || camera.renderSceneDepthMap);
                 const nextNeedDirShadows = nextRenderAction ? (nextRenderAction.firstCameraUse && this.cameraDirShadowLights.has(nextRenderAction.camera.camera)) : false;
 

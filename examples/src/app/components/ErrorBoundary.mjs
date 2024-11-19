@@ -1,9 +1,9 @@
-import { Component } from 'react';
 import { Label } from '@playcanvas/pcui/react';
+import { Component } from 'react';
 
 import { fragment, jsx } from '../jsx.mjs';
 
-// eslint-disable-next-line jsdoc/require-property
+
 /**
  * @typedef {object} Props
  * @property {import('react').ReactNode} children - The children.
@@ -40,7 +40,7 @@ class ErrorBoundary extends TypedComponent {
         const lines = stack.split('\n');
         const locations = [];
         lines.forEach((line) => {
-            const match = /\((.+):(\d+):(\d+)\)$/g.exec(line);
+            const match = /\((.+):(\d+):(\d+)\)$/.exec(line);
             if (!match) {
                 return;
             }

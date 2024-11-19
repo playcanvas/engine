@@ -1,24 +1,24 @@
+import { deviceType, rootPath, fileImport } from 'examples/utils';
 import * as pc from 'playcanvas';
-import { deviceType, rootPath } from 'examples/utils';
+const { CameraFrame } = await fileImport(`${rootPath}/static/assets/scripts/misc/camera-frame.mjs`);
 
 const canvas = /** @type {HTMLCanvasElement} */ (document.getElementById('application-canvas'));
 window.focus();
 
 const assets = {
-    model: new pc.Asset('model', 'container', { url: rootPath + '/static/assets/models/bitmoji.glb' }),
-    walkAnim: new pc.Asset('walkAnim', 'container', { url: rootPath + '/static/assets/animations/bitmoji/walk.glb' }),
+    model: new pc.Asset('model', 'container', { url: `${rootPath}/static/assets/models/bitmoji.glb` }),
+    walkAnim: new pc.Asset('walkAnim', 'container', { url: `${rootPath}/static/assets/animations/bitmoji/walk.glb` }),
     helipad: new pc.Asset(
         'helipad-env-atlas',
         'texture',
-        { url: rootPath + '/static/assets/cubemaps/helipad-env-atlas.png' },
+        { url: `${rootPath}/static/assets/cubemaps/table-mountain-env-atlas.png` },
         { type: pc.TEXTURETYPE_RGBP, mipmaps: false }
-    ),
-    bloom: new pc.Asset('bloom', 'script', { url: rootPath + '/static/scripts/posteffects/posteffect-bloom.js' })
+    )
 };
 const gfxOptions = {
     deviceTypes: [deviceType],
-    glslangUrl: rootPath + '/static/lib/glslang/glslang.js',
-    twgslUrl: rootPath + '/static/lib/twgsl/twgsl.js'
+    glslangUrl: `${rootPath}/static/lib/glslang/glslang.js`,
+    twgslUrl: `${rootPath}/static/lib/twgsl/twgsl.js`
 };
 
 const device = await pc.createGraphicsDevice(canvas, gfxOptions);
@@ -74,15 +74,17 @@ assetListLoader.load(() => {
     });
     cameraEntity.translate(0, 1, 0);
 
-    // add bloom postprocessing (this is ignored by the picker)
+    // ------ Custom render passes set up ------
+
     cameraEntity.addComponent('script');
-    cameraEntity.script.create('bloom', {
-        attributes: {
-            bloomIntensity: 1,
-            bloomThreshold: 0.7,
-            blurAmount: 4
-        }
-    });
+    const cameraFrame = cameraEntity.script.create(CameraFrame);
+    cameraFrame.rendering.toneMapping = pc.TONEMAP_NEUTRAL;
+    cameraFrame.rendering.samples = 4;
+    cameraFrame.bloom.enabled = true;
+    cameraFrame.bloom.intensity = 0.01;
+
+    // ------------------------------------------
+
     app.root.addChild(cameraEntity);
 
     const boxes = {};
@@ -121,7 +123,9 @@ assetListLoader.load(() => {
         const j = Math.floor(pos.z + 0.5);
         const colorVec = new pc.Vec3(Math.random(), Math.random(), Math.random());
         colorVec.mulScalar(1 / colorVec.length());
-        boxes[`${i}${j}`].render.material.emissive = new pc.Color(colorVec.x, colorVec.y, colorVec.z);
+        const material = boxes[`${i}${j}`].render.material;
+        material.emissive = new pc.Color(colorVec.x, colorVec.y, colorVec.z);
+        material.emissiveIntensity = 50;
         highlightedBoxes.push(boxes[`${i}${j}`]);
     };
 
@@ -174,8 +178,7 @@ assetListLoader.load(() => {
         // on update, iterate over any currently highlighted boxes and reduce their emissive property
         highlightedBoxes.forEach((box) => {
             const material = box.render.material;
-            const emissive = material.emissive;
-            emissive.lerp(emissive, pc.Color.BLACK, 0.08);
+            material.emissiveIntensity *= 0.95;
             material.update();
         });
         // remove old highlighted boxes from the update loop

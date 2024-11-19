@@ -182,7 +182,7 @@ export { SphereGeometry } from './scene/geometry/sphere-geometry.js';
 export { TorusGeometry } from './scene/geometry/torus-geometry.js';
 
 // SCENE / RENDERER
-export { RenderingParams } from './scene/renderer/rendering-params.js';
+export { FogParams } from './scene/fog-params.js';
 export { RenderPassForward } from './scene/renderer/render-pass-forward.js';
 
 // SCENE / SHADER-LIB
@@ -192,6 +192,9 @@ export { ProgramLibrary } from './scene/shader-lib/program-library.js';
 export { shaderChunks } from './scene/shader-lib/chunks/chunks.js';
 export { shaderChunksLightmapper } from './scene/shader-lib/chunks/chunks-lightmapper.js';
 export { ChunkBuilder } from './scene/shader-lib/chunk-builder.js';     // used by shed
+
+// SCENE / SKY
+export { Sky } from './scene/skybox/sky.js';
 
 // SCENE / SPLAT
 export { GSplatData } from './scene/gsplat/gsplat-data.js';

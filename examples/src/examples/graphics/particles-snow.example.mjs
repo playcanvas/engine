@@ -1,17 +1,19 @@
-import * as pc from 'playcanvas';
+import { data } from 'examples/observer';
 import { deviceType, rootPath } from 'examples/utils';
+import * as pc from 'playcanvas';
 
 const canvas = /** @type {HTMLCanvasElement} */ (document.getElementById('application-canvas'));
 window.focus();
 
 const assets = {
-    snowflake: new pc.Asset('snowflake', 'texture', { url: rootPath + '/static/assets/textures/snowflake.png' }, { srgb: true })
+    orbit: new pc.Asset('script', 'script', { url: `${rootPath}/static/scripts/camera/orbit-camera.js` }),
+    snowflake: new pc.Asset('snowflake', 'texture', { url: `${rootPath}/static/assets/textures/snowflake.png` }, { srgb: true })
 };
 
 const gfxOptions = {
     deviceTypes: [deviceType],
-    glslangUrl: rootPath + '/static/lib/glslang/glslang.js',
-    twgslUrl: rootPath + '/static/lib/twgsl/twgsl.js'
+    glslangUrl: `${rootPath}/static/lib/glslang/glslang.js`,
+    twgslUrl: `${rootPath}/static/lib/twgsl/twgsl.js`
 };
 
 const device = await pc.createGraphicsDevice(canvas, gfxOptions);
@@ -19,16 +21,19 @@ device.maxPixelRatio = Math.min(window.devicePixelRatio, 2);
 
 const createOptions = new pc.AppOptions();
 createOptions.graphicsDevice = device;
+createOptions.mouse = new pc.Mouse(document.body);
+createOptions.touch = new pc.TouchDevice(document.body);
 
 createOptions.componentSystems = [
     pc.RenderComponentSystem,
     pc.CameraComponentSystem,
     pc.LightComponentSystem,
+    pc.ScriptComponentSystem,
     pc.ParticleSystemComponentSystem
 ];
 createOptions.resourceHandlers = [
-    // @ts-ignore
-    pc.TextureHandler
+    pc.TextureHandler,
+    pc.ScriptHandler
 ];
 
 const app = new pc.AppBase(canvas);
@@ -55,7 +60,19 @@ assetListLoader.load(() => {
         clearColor: new pc.Color(0, 0, 0)
     });
     cameraEntity.rotateLocal(0, 0, 0);
-    cameraEntity.translateLocal(0, 0, 10);
+    cameraEntity.translateLocal(0, 7, 10);
+
+    // add orbit camera script with a mouse and a touch support
+    cameraEntity.addComponent('script');
+    cameraEntity.script.create('orbitCamera', {
+        attributes: {
+            inertiaFactor: 0.2,
+            distanceMax: 190,
+            frameOnStart: false
+        }
+    });
+    cameraEntity.script.create('orbitCameraInputMouse');
+    cameraEntity.script.create('orbitCameraInputTouch');
 
     // Create a directional light
     const lightDirEntity = new pc.Entity();
@@ -87,31 +104,53 @@ assetListLoader.load(() => {
     const rotCurve2 = new pc.Curve([0, -100]);
 
     // scale is constant at 0.1
-    const scaleCurve = new pc.Curve([0, 0.1]);
+    const scaleCurve = new pc.Curve([0, 0.2]);
 
     // Create entity for particle system
     const entity = new pc.Entity();
     app.root.addChild(entity);
-    entity.setLocalPosition(0, 3, 0);
+    entity.setLocalPosition(0, 5, 0);
 
-    // load snowflake texture
-    // app.assets.loadFromUrl(rootPath + '/static/assets/textures/snowflake.png', 'texture', function () {
-    // when texture is loaded add particlesystem component to entity
     entity.addComponent('particlesystem', {
         numParticles: 100,
         lifetime: 10,
         rate: 0.1,
         startAngle: 360,
         startAngle2: -360,
-        emitterExtents: new pc.Vec3(5, 0, 0),
+        emitterExtents: new pc.Vec3(7, 2, 7),
         velocityGraph: velocityCurve,
         velocityGraph2: velocityCurve2,
         scaleGraph: scaleCurve,
         rotationSpeedGraph: rotCurve,
         rotationSpeedGraph2: rotCurve2,
-        colorMap: assets.snowflake.resource
+        colorMap: assets.snowflake.resource,
+        depthSoftening: 0.08
     });
-    // });
+
+    // Create an Entity for the ground
+    const ground = new pc.Entity();
+    ground.addComponent('render', {
+        type: 'cylinder'
+    });
+    ground.setLocalScale(10, 0.01, 10);
+    ground.setLocalPosition(0, 0, 0);
+    app.root.addChild(ground);
+
+    let depthRendering = false;
+    data.on('*:set', (/** @type {string} */ path, value) => {
+
+        // toggle the depth texture for the camera based on the soft parameter
+        const soft = data.get('data.soft');
+        if (depthRendering !== soft) {
+            cameraEntity.camera.requestSceneDepthMap(soft);
+            depthRendering = soft;
+        }
+    });
+
+    // initial values
+    data.set('data', {
+        soft: true
+    });
 });
 
 export { app };

@@ -19,8 +19,7 @@ import { GIZMOAXIS_X, GIZMOAXIS_XYZ, GIZMOAXIS_Y, GIZMOAXIS_Z } from './constant
 import { Gizmo } from './gizmo.js';
 
 /**
- * @import { AppBase } from '../../framework/app-base.js'
- * @import { AxisShape } from './axis-shapes.js'
+ * @import { Shape } from './shape/shape.js'
  * @import { CameraComponent } from '../../framework/components/camera/component.js'
  * @import { Layer } from '../../scene/layer.js'
  * @import { MeshInstance } from '../../scene/mesh-instance.js'
@@ -35,7 +34,6 @@ const tmpP1 = new Plane();
 
 // constants
 const VEC3_AXES = Object.keys(tmpV1);
-const SPANLINE_SIZE = 1e3;
 
 /**
  * The base class for all transform gizmos.
@@ -90,7 +88,7 @@ class TransformGizmo extends Gizmo {
     /**
      * Internal color for meshes.
      *
-     * @type {Object}
+     * @type {{ axis: Record<string, Color>, hover: Record<string, Color>, disabled: Color }}
      * @protected
      */
     _meshColors = {
@@ -114,7 +112,7 @@ class TransformGizmo extends Gizmo {
     /**
      * Internal version of the guide line color.
      *
-     * @type {Object<string, Color>}
+     * @type {Record<string, Color>}
      * @protected
      */
     _guideColors = {
@@ -140,7 +138,6 @@ class TransformGizmo extends Gizmo {
      */
     _rootStartPos = new Vec3();
 
-
     /**
      * Internal gizmo starting rotation in world space.
      *
@@ -150,17 +147,25 @@ class TransformGizmo extends Gizmo {
     _rootStartRot = new Quat();
 
     /**
-     * Internal object containing the axis shapes to render.
+     * Internal state of if shading is enabled. Defaults to true.
      *
-     * @type {Object.<string, AxisShape>}
+     * @type {boolean}
+     * @protected
+     */
+    _shading = false;
+
+    /**
+     * Internal object containing the gizmo shapes to render.
+     *
+     * @type {Object.<string, Shape>}
      * @protected
      */
     _shapes = {};
 
     /**
-     * Internal mapping of mesh instances to axis shapes.
+     * Internal mapping of mesh instances to gizmo shapes.
      *
-     * @type {Map<MeshInstance, AxisShape>}
+     * @type {Map<MeshInstance, Shape>}
      * @private
      */
     _shapeMap = new Map();
@@ -168,7 +173,7 @@ class TransformGizmo extends Gizmo {
     /**
      * Internal currently hovered shape.
      *
-     * @type {AxisShape | null}
+     * @type {Shape | null}
      * @private
      */
     _hoverShape = null;
@@ -188,6 +193,14 @@ class TransformGizmo extends Gizmo {
      * @private
      */
     _hoverIsPlane = false;
+
+    /**
+     * Internal state of if there is no selection.
+     *
+     * @type {boolean}
+     * @private
+     */
+    _noSelection = false;
 
     /**
      * Internal currently selected axis.
@@ -247,16 +260,15 @@ class TransformGizmo extends Gizmo {
     /**
      * Creates a new TransformGizmo object.
      *
-     * @param {AppBase} app - The application instance.
      * @param {CameraComponent} camera - The camera component.
      * @param {Layer} layer - The render layer.
      * @example
      * const gizmo = new pc.TransformGizmo(app, camera, layer);
      */
-    constructor(app, camera, layer) {
-        super(app, camera, layer);
+    constructor(camera, layer) {
+        super(camera, layer);
 
-        app.on('update', () => {
+        this._app.on('prerender', () => {
             if (!this.root.enabled) {
                 return;
             }
@@ -274,6 +286,7 @@ class TransformGizmo extends Gizmo {
             }
 
             if (!meshInstance) {
+                this._noSelection = true;
                 return;
             }
 
@@ -294,7 +307,9 @@ class TransformGizmo extends Gizmo {
                 return;
             }
 
-            this._hover(meshInstance);
+            if (!this._noSelection) {
+                this._hover(meshInstance);
+            }
 
             if (!this._dragging) {
                 return;
@@ -309,7 +324,10 @@ class TransformGizmo extends Gizmo {
             this._hoverIsPlane = false;
         });
 
-        this.on(Gizmo.EVENT_POINTERUP, () => {
+        this.on(Gizmo.EVENT_POINTERUP, (x, y, meshInstance) => {
+            this._noSelection = false;
+            this._hover(meshInstance);
+
             if (!this._dragging) {
                 return;
             }
@@ -327,6 +345,28 @@ class TransformGizmo extends Gizmo {
             this._hover();
             this.fire(Gizmo.EVENT_POINTERUP);
         });
+    }
+
+    /**
+     * Sets whether shading are enabled. Defaults to true.
+     *
+     * @type {boolean}
+     */
+    set shading(value) {
+        this._shading = this.root.enabled && value;
+
+        for (const name in this._shapes) {
+            this._shapes[name].shading = this._shading;
+        }
+    }
+
+    /**
+     * Gets whether shading are enabled. Defaults to true.
+     *
+     * @type {boolean}
+     */
+    get shading() {
+        return this._shading;
     }
 
     /**
@@ -490,7 +530,7 @@ class TransformGizmo extends Gizmo {
         }
         this._hoverAxis = this._getAxis(meshInstance);
         this._hoverIsPlane = this._getIsPlane(meshInstance);
-        const shape = meshInstance ? this._shapeMap.get(meshInstance) || null : null;
+        const shape = meshInstance ? this._shapeMap.get(meshInstance) ?? null : null;
         if (shape === this._hoverShape) {
             return;
         }
@@ -511,20 +551,15 @@ class TransformGizmo extends Gizmo {
      * @protected
      */
     _createRay(mouseWPos) {
-        const cameraPos = this._camera.entity.getPosition();
-        const cameraTransform = this._camera.entity.getWorldTransform();
-
-        const ray = tmpR1.set(cameraPos, Vec3.ZERO);
-
-        // calculate ray direction from mouse position
         if (this._camera.projection === PROJECTION_PERSPECTIVE) {
-            ray.direction.sub2(mouseWPos, ray.origin).normalize();
-        } else {
-            ray.origin.add(mouseWPos);
-            cameraTransform.transformVector(tmpV1.set(0, 0, -1), ray.direction);
+            tmpR1.origin.copy(this._camera.entity.getPosition());
+            tmpR1.direction.sub2(mouseWPos, tmpR1.origin).normalize();
+            return tmpR1;
         }
-
-        return ray;
+        const orthoDepth = this._camera.farClip - this._camera.nearClip;
+        tmpR1.origin.sub2(mouseWPos, tmpV1.copy(this._camera.entity.forward).mulScalar(orthoDepth));
+        tmpR1.direction.copy(this._camera.entity.forward);
+        return tmpR1;
     }
 
     /**
@@ -535,9 +570,7 @@ class TransformGizmo extends Gizmo {
      * @protected
      */
     _createPlane(axis, isFacing, isLine) {
-        const cameraPos = this._camera.entity.getPosition();
-
-        const facingDir = tmpV1.sub2(cameraPos, this._rootStartPos).normalize();
+        const facingDir = tmpV1.copy(this.facing);
         const normal = tmpP1.normal.set(0, 0, 0);
 
         if (isFacing) {
@@ -633,7 +666,7 @@ class TransformGizmo extends Gizmo {
     _drawSpanLine(pos, rot, axis) {
         tmpV1.set(0, 0, 0);
         tmpV1[axis] = 1;
-        tmpV1.mulScalar(SPANLINE_SIZE);
+        tmpV1.mulScalar(this._camera.farClip - this._camera.nearClip);
         tmpV2.copy(tmpV1).mulScalar(-1);
         rot.transformVector(tmpV1, tmpV1);
         rot.transformVector(tmpV2, tmpV2);
@@ -648,11 +681,7 @@ class TransformGizmo extends Gizmo {
         for (const key in this._shapes) {
             const shape = this._shapes[key];
             this.root.addChild(shape.entity);
-            this.intersectData.push({
-                triData: shape.triData,
-                parent: shape.entity,
-                meshInstances: shape.meshInstances
-            });
+            this.intersectShapes.push(shape);
             for (let i = 0; i < shape.meshInstances.length; i++) {
                 this._shapeMap.set(shape.meshInstances[i], shape);
             }
@@ -711,11 +740,11 @@ class TransformGizmo extends Gizmo {
      * @override
      */
     destroy() {
+        super.destroy();
+
         for (const key in this._shapes) {
             this._shapes[key].destroy();
         }
-
-        super.destroy();
     }
 }
 

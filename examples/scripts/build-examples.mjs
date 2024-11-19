@@ -5,8 +5,8 @@ import fs from 'fs';
 import { dirname, resolve } from 'path';
 import { fileURLToPath } from 'url';
 
-import { exampleMetaData } from '../cache/metadata.mjs';
 import { parseConfig, engineFor, patchScript } from './utils.mjs';
+import { exampleMetaData } from '../cache/metadata.mjs';
 
 // @ts-ignore
 const __filename = fileURLToPath(import.meta.url);
@@ -29,7 +29,7 @@ export function controls({ fragment }) {
  * @param {string[]} files - The files in the example directory.
  * @returns {string} File to write as standalone example.
  */
-function generateExampleFile(categoryKebab, exampleNameKebab, setEngineType, files) {
+const generateExampleFile = (categoryKebab, exampleNameKebab, setEngineType, files) => {
     let html = EXAMPLE_HTML;
 
     // title
@@ -43,14 +43,19 @@ function generateExampleFile(categoryKebab, exampleNameKebab, setEngineType, fil
     const engine = engineFor(engineType);
     html = html.replace(/'@ENGINE'/g, JSON.stringify(engine));
 
-    if (/'@([A-Z0-9_]+)'/g.test(html)) {
+    if (/'@[A-Z0-9_]+'/.test(html)) {
         throw new Error('HTML file still has unreplaced values');
     }
 
     return html;
-}
+};
 
-function main() {
+/**
+ * @param {Record<string, string>} env - The environment variables.
+ */
+export const build = (env = {}) => {
+    Object.assign(process.env, env);
+
     if (!fs.existsSync(`${MAIN_DIR}/dist/`)) {
         fs.mkdirSync(`${MAIN_DIR}/dist/`);
     }
@@ -58,7 +63,7 @@ function main() {
         fs.mkdirSync(`${MAIN_DIR}/dist/iframe/`);
     }
 
-    exampleMetaData.forEach((data) => {
+    exampleMetaData.forEach((/** @type {{ categoryKebab: string; exampleNameKebab: string; path: string; }} */ data) => {
         const { categoryKebab, exampleNameKebab, path } = data;
         const name = `${categoryKebab}_${exampleNameKebab}`;
 
@@ -109,11 +114,10 @@ function main() {
 
             const scriptPath = resolve(path, `${exampleNameKebab}.${file}`);
             let script = fs.readFileSync(scriptPath, 'utf-8');
-            if (/\.(mjs|js)$/.test(file)) {
+            if (/\.(?:mjs|js)$/.test(file)) {
                 script = patchScript(script);
             }
             fs.writeFileSync(`${MAIN_DIR}/dist/iframe/${name}.${file}`, script);
         });
     });
-}
-main();
+};

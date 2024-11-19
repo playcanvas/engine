@@ -49,13 +49,13 @@ class StandardMaterialOptionsBuilder {
         this._updateUVOptions(options, stdMat, objDefs, true);
     }
 
-    updateRef(options, scene, renderParams, stdMat, objDefs, pass, sortedLights) {
+    updateRef(options, scene, cameraShaderParams, stdMat, objDefs, pass, sortedLights) {
         this._updateSharedOptions(options, scene, stdMat, objDefs, pass);
-        this._updateEnvOptions(options, stdMat, scene, renderParams);
+        this._updateEnvOptions(options, stdMat, scene, cameraShaderParams);
         this._updateMaterialOptions(options, stdMat);
         options.litOptions.hasTangents = objDefs && ((objDefs & SHADERDEF_TANGENTS) !== 0);
         this._updateLightOptions(options, scene, stdMat, objDefs, sortedLights);
-        this._updateUVOptions(options, stdMat, objDefs, false, renderParams);
+        this._updateUVOptions(options, stdMat, objDefs, false, cameraShaderParams);
     }
 
     _updateSharedOptions(options, scene, stdMat, objDefs, pass) {
@@ -96,7 +96,7 @@ class StandardMaterialOptionsBuilder {
         }
     }
 
-    _updateUVOptions(options, stdMat, objDefs, minimalOptions, renderParams) {
+    _updateUVOptions(options, stdMat, objDefs, minimalOptions, cameraShaderParams) {
         let hasUv0 = false;
         let hasUv1 = false;
         let hasVcolor = false;
@@ -116,7 +116,7 @@ class StandardMaterialOptionsBuilder {
         this._mapXForms = null;
 
         // true if ssao is applied directly in the lit shaders. Also ensure the AO part is generated in the front end
-        options.litOptions.ssao = renderParams?.ssaoEnabled;
+        options.litOptions.ssao = cameraShaderParams?.ssaoEnabled;
         options.useAO = options.litOptions.ssao;
 
         // All texture related lit options
@@ -214,6 +214,8 @@ class StandardMaterialOptionsBuilder {
 
         const isPackedNormalMap = stdMat.normalMap ? (stdMat.normalMap.format === PIXELFORMAT_DXT5 || stdMat.normalMap.type === TEXTURETYPE_SWIZZLEGGGR) : false;
 
+        const equalish = (a, b) => Math.abs(a - b) < 1e-4;
+
         options.specularTint = specularTint ? 2 : 0;
         options.specularityFactorTint = specularityFactorTint ? 1 : 0;
         options.metalnessTint = (stdMat.useMetalness && stdMat.metalness < 1) ? 1 : 0;
@@ -223,8 +225,8 @@ class StandardMaterialOptionsBuilder {
         options.emissiveEncoding = stdMat.emissiveMap?.encoding;
         options.lightMapEncoding = stdMat.lightMap?.encoding;
         options.packedNormal = isPackedNormalMap;
-        options.refractionTint = (stdMat.refraction !== 1.0) ? 1 : 0;
-        options.refractionIndexTint = (stdMat.refractionIndex !== 1.0 / 1.5) ? 1 : 0;
+        options.refractionTint = equalish(stdMat.refraction, 1.0) ? 0 : 1;
+        options.refractionIndexTint = equalish(stdMat.refractionIndex, 1.0 / 1.5) ? 0 : 1;
         options.thicknessTint = (stdMat.useDynamicRefraction && stdMat.thickness !== 1.0) ? 1 : 0;
         options.specularEncoding = stdMat.specularEncoding || 'linear';
         options.sheenEncoding = stdMat.sheenEncoding || 'linear';
@@ -234,10 +236,10 @@ class StandardMaterialOptionsBuilder {
         options.normalDetail = !!stdMat.normalMap;
         options.diffuseDetailMode = stdMat.diffuseDetailMode;
         options.aoDetailMode = stdMat.aoDetailMode;
-        options.clearCoatTint = (stdMat.clearCoat !== 1.0) ? 1 : 0;
+        options.clearCoatTint = equalish(stdMat.clearCoat, 1.0) ? 0 : 1;
         options.clearCoatGloss = !!stdMat.clearCoatGloss;
         options.clearCoatGlossTint = (stdMat.clearCoatGloss !== 1.0) ? 1 : 0;
-        options.iorTint = stdMat.refractionIndex !== 1.0 / 1.5 ? 1 : 0;
+        options.iorTint = equalish(stdMat.refractionIndex, 1.0 / 1.5) ? 0 : 1;
 
         options.iridescenceTint = stdMat.iridescence !== 1.0 ? 1 : 0;
 
@@ -280,10 +282,10 @@ class StandardMaterialOptionsBuilder {
         options.litOptions.dispersion = stdMat.dispersion > 0;
     }
 
-    _updateEnvOptions(options, stdMat, scene, renderParams) {
-        options.litOptions.fog = stdMat.useFog ? renderParams.fog : FOG_NONE;
-        options.litOptions.gamma = renderParams.shaderOutputGamma;
-        options.litOptions.toneMap = stdMat.useTonemap ? renderParams.toneMapping : TONEMAP_NONE;
+    _updateEnvOptions(options, stdMat, scene, cameraShaderParams) {
+        options.litOptions.fog = stdMat.useFog ? cameraShaderParams.fog : FOG_NONE;
+        options.litOptions.gamma = cameraShaderParams.shaderOutputGamma;
+        options.litOptions.toneMap = stdMat.useTonemap ? cameraShaderParams.toneMapping : TONEMAP_NONE;
 
         let usingSceneEnv = false;
 

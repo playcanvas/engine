@@ -1,12 +1,11 @@
+import { Container } from '@playcanvas/pcui/react';
 import { Component } from 'react';
 import { HashRouter, Switch, Route, Redirect } from 'react-router-dom';
-import { Container } from '@playcanvas/pcui/react';
 
 import { CodeEditorDesktop } from './code-editor/CodeEditorDesktop.mjs';
 import { Example } from './Example.mjs';
 import { Menu } from './Menu.mjs';
 import { SideBar } from './Sidebar.mjs';
-
 import { iframe } from '../iframe.mjs';
 import { jsx } from '../jsx.mjs';
 import { getOrientation } from '../utils.mjs';

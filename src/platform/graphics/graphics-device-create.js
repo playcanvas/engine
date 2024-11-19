@@ -21,6 +21,7 @@ import { NullGraphicsDevice } from './null/null-graphics-device.js';
  *
  * - {@link DISPLAYFORMAT_LDR}
  * - {@link DISPLAYFORMAT_LDR_SRGB}
+ * - {@link DISPLAYFORMAT_HDR}
  *
  * @param {boolean} [options.depth] - Boolean that indicates that the drawing buffer is
  * requested to have a depth buffer of at least 16 bits. Defaults to true.

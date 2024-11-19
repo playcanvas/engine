@@ -1,13 +1,13 @@
-import * as pc from 'playcanvas';
 import { deviceType, rootPath } from 'examples/utils';
+import * as pc from 'playcanvas';
 
 const canvas = /** @type {HTMLCanvasElement} */ (document.getElementById('application-canvas'));
 window.focus();
 
 pc.WasmModule.setConfig('DracoDecoderModule', {
-    glueUrl: rootPath + '/static/lib/draco/draco.wasm.js',
-    wasmUrl: rootPath + '/static/lib/draco/draco.wasm.wasm',
-    fallbackUrl: rootPath + '/static/lib/draco/draco.js'
+    glueUrl: `${rootPath}/static/lib/draco/draco.wasm.js`,
+    wasmUrl: `${rootPath}/static/lib/draco/draco.wasm.wasm`,
+    fallbackUrl: `${rootPath}/static/lib/draco/draco.js`
 });
 await new Promise((resolve) => {
     pc.WasmModule.getInstance('DracoDecoderModule', () => resolve());
@@ -15,8 +15,8 @@ await new Promise((resolve) => {
 
 const gfxOptions = {
     deviceTypes: [deviceType],
-    glslangUrl: rootPath + '/static/lib/glslang/glslang.js',
-    twgslUrl: rootPath + '/static/lib/twgsl/twgsl.js'
+    glslangUrl: `${rootPath}/static/lib/glslang/glslang.js`,
+    twgslUrl: `${rootPath}/static/lib/twgsl/twgsl.js`
 };
 
 const device = await pc.createGraphicsDevice(canvas, gfxOptions);
@@ -43,7 +43,7 @@ app.on('destroy', () => {
 });
 
 const assets = {
-    heart: new pc.Asset('heart', 'container', { url: rootPath + '/static/assets/models/heart_draco.glb' })
+    heart: new pc.Asset('heart', 'container', { url: `${rootPath}/static/assets/models/heart_draco.glb` })
 };
 
 const assetListLoader = new pc.AssetListLoader(Object.values(assets), app.assets);
@@ -76,7 +76,7 @@ assetListLoader.load(() => {
     light.setLocalPosition(1, 1, 5);
     app.root.addChild(light);
 
-    app.on('update', function (dt) {
+    app.on('update', (dt) => {
         if (entity) {
             entity.rotate(4 * dt, -20 * dt, 0);
         }
