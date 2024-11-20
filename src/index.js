@@ -192,6 +192,7 @@ export { ProgramLibrary } from './scene/shader-lib/program-library.js';
 export { shaderChunks } from './scene/shader-lib/chunks/chunks.js';
 export { shaderChunksLightmapper } from './scene/shader-lib/chunks/chunks-lightmapper.js';
 export { ChunkBuilder } from './scene/shader-lib/chunk-builder.js';     // used by shed
+export { ChunkUtils } from './scene/shader-lib/chunk-utils.js';
 
 // SCENE / SKY
 export { Sky } from './scene/skybox/sky.js';

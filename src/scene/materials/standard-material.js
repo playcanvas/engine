@@ -9,7 +9,7 @@ import {
     DITHER_NONE,
     FRESNEL_SCHLICK,
     SHADER_DEPTH, SHADER_PICK,
-    SHADER_PREPASS_VELOCITY,
+    SHADER_PREPASS,
     SPECOCC_AO
 } from '../constants.js';
 import { ShaderPass } from '../shader-pass.js';
@@ -20,6 +20,7 @@ import { Material } from './material.js';
 import { StandardMaterialOptionsBuilder } from './standard-material-options-builder.js';
 import { standardMaterialCubemapParameters, standardMaterialTextureParameters } from './standard-material-parameters.js';
 import { DebugGraphics } from '../../platform/graphics/debug-graphics.js';
+import { getMaterialShaderDefines } from '../shader-lib/utils.js';
 
 /**
  * @import { BoundingBox } from '../../core/shape/bounding-box.js'
@@ -857,9 +858,9 @@ class StandardMaterial extends Material {
 
         // Minimal options for Depth, Shadow and Prepass passes
         const shaderPassInfo = ShaderPass.get(device).getByIndex(pass);
-        const minimalOptions = pass === SHADER_DEPTH || pass === SHADER_PICK || pass === SHADER_PREPASS_VELOCITY || shaderPassInfo.isShadow;
+        const minimalOptions = pass === SHADER_DEPTH || pass === SHADER_PICK || pass === SHADER_PREPASS || shaderPassInfo.isShadow;
         let options = minimalOptions ? standard.optionsContextMin : standard.optionsContext;
-        options.defines = this.defines;
+        options.defines = getMaterialShaderDefines(this, cameraShaderParams);
 
         if (minimalOptions) {
             this.shaderOptBuilder.updateMinRef(options, scene, this, objDefs, pass, sortedLights);

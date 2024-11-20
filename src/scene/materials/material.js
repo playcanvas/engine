@@ -532,7 +532,7 @@ class Material {
 
         // defines
         this.defines.clear();
-        source.defines.forEach(define => this.defines.add(define));
+        source.defines.forEach((value, key) => this.defines.set(key, value));
 
         return this;
     }

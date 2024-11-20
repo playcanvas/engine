@@ -697,7 +697,7 @@ export const MASK_BAKE = 4;
  */
 export const SHADER_FORWARD = 0;
 
-export const SHADER_PREPASS_VELOCITY = 1;
+export const SHADER_PREPASS = 1;
 
 /**
  * Render RGBA-encoded depth value.

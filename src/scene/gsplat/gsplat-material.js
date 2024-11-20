@@ -3,6 +3,7 @@ import { ShaderProcessorOptions } from '../../platform/graphics/shader-processor
 import { BLEND_NONE, BLEND_NORMAL, DITHER_NONE } from '../constants.js';
 import { ShaderMaterial } from '../materials/shader-material.js';
 import { getProgramLibrary } from '../shader-lib/get-program-library.js';
+import { getMaterialShaderDefines } from '../shader-lib/utils.js';
 import { gsplat } from './shader-generator-gsplat.js';
 
 const splatMainVS = /* glsl */ `
@@ -110,11 +111,12 @@ const createGSplatMaterial = (options = {}) => {
 
     material.getShaderVariant = function (params) {
 
+        const { cameraShaderParams } = params;
         const programOptions = {
-            defines: material.defines,
+            defines: getMaterialShaderDefines(material, cameraShaderParams),
             pass: params.pass,
-            gamma: params.cameraShaderParams.shaderOutputGamma,
-            toneMapping: params.cameraShaderParams.toneMapping,
+            gamma: cameraShaderParams.shaderOutputGamma,
+            toneMapping: cameraShaderParams.toneMapping,
             vertex: options.vertex ?? splatMainVS,
             fragment: options.fragment ?? splatMainFS,
             dither: ditherEnum
