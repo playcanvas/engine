@@ -82,7 +82,7 @@ class Quat {
 
     /**
      * Conjugates a quaternion.
-     * 
+     *
      * @param {Quat} [src] - The quaternion to conjugate. If not set, the operation is done in place.
      * @returns {Quat} Self for chaining.
      * @example
@@ -341,7 +341,7 @@ class Quat {
      * const a = new pc.Quat().setFromEulerAngles(0, 30, 0);
      * const b = new pc.Quat().setFromEulerAngles(0, 60, 0);
      * const r = new pc.Quat();
-     * 
+     *
      * // r is set to a 90 degree rotation around the Y axis
      * // In other words, r = a * b
      * r.mul2(a, b);
