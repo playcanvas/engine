@@ -212,11 +212,30 @@ const isCompressedPly = (elements) => {
         'packed_position', 'packed_rotation', 'packed_scale', 'packed_color'
     ];
 
-    return elements.length === 2 &&
-           elements[0].name === 'chunk' &&
-           elements[0].properties.every((p, i) => p.name === chunkProperties[i] && p.type === 'float') &&
-           elements[1].name === 'vertex' &&
-           elements[1].properties.every((p, i) => p.name === vertexProperties[i] && p.type === 'uint');
+    const band1Properties = ['0', '1', '2'].map(x => `coeff_${x}`);
+    const band2Properties = ['3', '4', '5', '6', '7'].map(x => `coeff_${x}`);
+    const band3Properties = ['8', '9', '10', '11', '12', '13', '14'].map(x => `coeff_${x}`);
+    const indicesProperties = ['0', '1', '2', '3'].map(x => `packed_sh_${x}`);
+
+    const hasBaseElements = () => {
+        return elements[0].name === 'chunk' &&
+               elements[0].properties.every((p, i) => p.name === chunkProperties[i] && p.type === 'float') &&
+               elements[1].name === 'vertex' &&
+               elements[1].properties.every((p, i) => p.name === vertexProperties[i] && p.type === 'uint');
+    };
+
+    const hasSHElements = () => {
+        return elements[2].name === 'sh_band_1' &&
+               elements[2].properties.every((p, i) => p.name === band1Properties[i] && p.type === 'ushort') &&
+               elements[3].name === 'sh_band_2' &&
+               elements[3].properties.every((p, i) => p.name === band2Properties[i] && p.type === 'ushort') &&
+               elements[4].name === 'sh_band_3' &&
+               elements[4].properties.every((p, i) => p.name === band3Properties[i] && p.type === 'ushort') &&
+               elements[5].name === 'vertex_sh' &&
+               elements[5].properties.every((p, i) => p.name === indicesProperties[i] && p.type === 'uint');
+    };
+
+    return (elements.length === 2 && hasBaseElements()) || (elements.length === 6 && hasBaseElements() && hasSHElements());
 };
 
 const isFloatPly = (elements) => {
@@ -230,10 +249,7 @@ const readCompressedPly = async (streamBuf, elements, littleEndian) => {
     const result = new GSplatCompressedData();
 
     const numChunks = elements[0].count;
-    const chunkSize = 12 * 4;
-
     const numVertices = elements[1].count;
-    const vertexSize = 4 * 4;
 
     // evaluate the storage size for the given count (this must match the
     // texture size calculation in GSplatCompressed).
@@ -244,64 +260,47 @@ const readCompressedPly = async (streamBuf, elements, littleEndian) => {
     };
 
     // allocate result
-    result.numSplats = elements[1].count;
+    result.numSplats = numVertices;
     result.chunkData = new Float32Array(evalStorageSize(numChunks) * 12);
     result.vertexData = new Uint32Array(evalStorageSize(numVertices) * 4);
 
-    let uint32StreamData;
-    const uint32ChunkData = new Uint32Array(result.chunkData.buffer);
-    const uint32VertexData = result.vertexData;
+    // read length bytes of data into buffer
+    const read = async (buffer, length) => {
+        const target = new Uint8Array(buffer);
+        let cursor = 0;
 
-    // read chunks
-    let chunks = 0;
-    while (chunks < numChunks) {
-        while (streamBuf.remaining < chunkSize) {
-            /* eslint-disable no-await-in-loop */
-            await streamBuf.read();
+        while (cursor < length) {
+            while (streamBuf.remaining === 0) {
+                await streamBuf.read();
+            }
+
+            const toCopy = Math.min(length - cursor, streamBuf.remaining);
+            const src = streamBuf.data;
+            for (let i = 0; i < toCopy; ++i) {
+                target[cursor++] = src[streamBuf.head++];
+            }
         }
+    };
 
-        // ensure the uint32 view is still valid
-        if (uint32StreamData?.buffer !== streamBuf.data.buffer) {
-            uint32StreamData = new Uint32Array(streamBuf.data.buffer, 0, Math.floor(streamBuf.data.buffer.byteLength / 4));
-        }
+    // read chunk data
+    await read(result.chunkData.buffer, numChunks * 12 * 4);
 
-        // read the next chunk of data
-        const toRead = Math.min(numChunks - chunks, Math.floor(streamBuf.remaining / chunkSize));
+    // read packed vertices
+    await read(result.vertexData.buffer, numVertices * 4 * 4);
 
-        const dstOffset = chunks * 12;
-        const srcOffset = streamBuf.head / 4;
-        for (let i = 0; i < toRead * 12; ++i) {
-            uint32ChunkData[dstOffset + i] = uint32StreamData[srcOffset + i];
-        }
+    // read sh data
+    if (elements.length === 6) {
+        result.band1Data = new Uint16Array(elements[2].count * 3);
+        await read(result.band1Data.buffer, result.band1Data.byteLength);
 
-        streamBuf.head += toRead * chunkSize;
-        chunks += toRead;
-    }
+        result.band2Data = new Uint16Array(elements[3].count * 5);
+        await read(result.band2Data.buffer, result.band2Data.byteLength);
 
-    // read vertices
-    let vertices = 0;
-    while (vertices < numVertices) {
-        while (streamBuf.remaining < vertexSize) {
-            /* eslint-disable no-await-in-loop */
-            await streamBuf.read();
-        }
+        result.band3Data = new Uint16Array(elements[4].count * 7);
+        await read(result.band3Data.buffer, result.band3Data.byteLength);
 
-        // ensure the uint32 view is still valid
-        if (uint32StreamData?.buffer !== streamBuf.data.buffer) {
-            uint32StreamData = new Uint32Array(streamBuf.data.buffer, 0, Math.floor(streamBuf.data.buffer.byteLength / 4));
-        }
-
-        // read the next chunk of data
-        const toRead = Math.min(numVertices - vertices, Math.floor(streamBuf.remaining / vertexSize));
-
-        const dstOffset = vertices * 4;
-        const srcOffset = streamBuf.head / 4;
-        for (let i = 0; i < toRead * 4; ++i) {
-            uint32VertexData[dstOffset + i] = uint32StreamData[srcOffset + i];
-        }
-
-        streamBuf.head += toRead * vertexSize;
-        vertices += toRead;
+        result.packedSHData = new Uint32Array(evalStorageSize(numVertices) * 4);
+        await read(result.packedSHData.buffer, numVertices * 4 * 4);
     }
 
     return result;

@@ -102,6 +102,36 @@ class GSplatCompressedData {
      */
     vertexData;
 
+    // optional spherical harmonics data
+
+    /**
+     * Contains 3 half values per band 1 palette entry
+     * @type {Uint16Array}
+     */
+    band1Data;
+
+    /**
+     * Contains 5 half values per band 2 palette entry
+     * @type {Uint16Array}
+     */
+    band2Data;
+
+    /**
+     * Contains 7 half values per band 3 palette entry
+     * @type {Uint16Array}
+     */
+    band3Data;
+
+    /**
+     * Contains 4 uint32 per vertex with packed bits referencing the SH palette:
+     *      packed_sh_0
+     *      packed_sh_1
+     *      packed_sh_2
+     *      packed_sh_3
+     * @type {Uint32Array}
+     */
+    packedSHData;
+
     /**
      * Create an iterator for accessing splat data
      *
@@ -207,6 +237,10 @@ class GSplatCompressedData {
 
     get isCompressed() {
         return true;
+    }
+
+    get hasSHData() {
+        return !!this.packedSHData;
     }
 
     // decompress into GSplatData
