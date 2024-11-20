@@ -126,21 +126,26 @@ class SplatCompressedIterator {
                 ];
 
                 for (let i = 0; i < 3; ++i) {
-                    sh[i * 15 + 0] = halfToFloat(band1Data[b1[i] * 3 + 0]);
-                    sh[i * 15 + 1] = halfToFloat(band1Data[b1[i] * 3 + 1]);
-                    sh[i * 15 + 2] = halfToFloat(band1Data[b1[i] * 3 + 2]);
-                    sh[i * 15 + 3] = halfToFloat(band2Data[b2[i] * 5 + 0]);
-                    sh[i * 15 + 4] = halfToFloat(band2Data[b2[i] * 5 + 1]);
-                    sh[i * 15 + 5] = halfToFloat(band2Data[b2[i] * 5 + 2]);
-                    sh[i * 15 + 6] = halfToFloat(band2Data[b2[i] * 5 + 3]);
-                    sh[i * 15 + 7] = halfToFloat(band2Data[b2[i] * 5 + 4]);
-                    sh[i * 15 + 8] = halfToFloat(band3Data[b3[i] * 7 + 0]);
-                    sh[i * 15 + 9] = halfToFloat(band3Data[b3[i] * 7 + 1]);
-                    sh[i * 15 + 10] = halfToFloat(band3Data[b3[i] * 7 + 2]);
-                    sh[i * 15 + 11] = halfToFloat(band3Data[b3[i] * 7 + 3]);
-                    sh[i * 15 + 12] = halfToFloat(band3Data[b3[i] * 7 + 4]);
-                    sh[i * 15 + 13] = halfToFloat(band3Data[b3[i] * 7 + 5]);
-                    sh[i * 15 + 14] = halfToFloat(band3Data[b3[i] * 7 + 6]);
+                    const i1 = b1[i] * 3;
+                    sh[i * 15 + 0] = halfToFloat(band1Data[i1 + 0]);
+                    sh[i * 15 + 1] = halfToFloat(band1Data[i1 + 1]);
+                    sh[i * 15 + 2] = halfToFloat(band1Data[i1 + 2]);
+
+                    const i2 = b2[i] * 5;
+                    sh[i * 15 + 3] = halfToFloat(band2Data[i2 + 0]);
+                    sh[i * 15 + 4] = halfToFloat(band2Data[i2 + 1]);
+                    sh[i * 15 + 5] = halfToFloat(band2Data[i2 + 2]);
+                    sh[i * 15 + 6] = halfToFloat(band2Data[i2 + 3]);
+                    sh[i * 15 + 7] = halfToFloat(band2Data[i2 + 4]);
+
+                    const i3 = b3[i] * 7;
+                    sh[i * 15 + 8] = halfToFloat(band3Data[i3 + 0]);
+                    sh[i * 15 + 9] = halfToFloat(band3Data[i3 + 1]);
+                    sh[i * 15 + 10] = halfToFloat(band3Data[i3 + 2]);
+                    sh[i * 15 + 11] = halfToFloat(band3Data[i3 + 3]);
+                    sh[i * 15 + 12] = halfToFloat(band3Data[i3 + 4]);
+                    sh[i * 15 + 13] = halfToFloat(band3Data[i3 + 5]);
+                    sh[i * 15 + 14] = halfToFloat(band3Data[i3 + 6]);
                 }
             }
         };
