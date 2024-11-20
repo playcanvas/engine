@@ -271,6 +271,7 @@ const readCompressedPly = async (streamBuf, elements, littleEndian) => {
 
         while (cursor < length) {
             while (streamBuf.remaining === 0) {
+                /* eslint-disable no-await-in-loop */
                 await streamBuf.read();
             }
 

@@ -1,4 +1,3 @@
-import { FloatPacking } from '../../core/math/float-packing.js';
 import { Quat } from '../../core/math/quat.js';
 import { Vec3 } from '../../core/math/vec3.js';
 import { Vec4 } from '../../core/math/vec4.js';
