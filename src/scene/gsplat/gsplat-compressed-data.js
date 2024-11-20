@@ -1,3 +1,4 @@
+import { FloatPacking } from '../../core/math/float-packing.js';
 import { Quat } from '../../core/math/quat.js';
 import { Vec3 } from '../../core/math/vec3.js';
 import { Vec4 } from '../../core/math/vec4.js';
@@ -9,9 +10,34 @@ import { GSplatData } from './gsplat-data.js';
 
 const SH_C0 = 0.28209479177387814;
 
+// https://fgiesen.wordpress.com/2012/03/28/half-to-float-done-quic/
+const halfToFloat = (() => {
+    const f32 = new Float32Array(1);
+    const magicF = new Float32Array(1);
+    const wasInfNanF = new Float32Array(1);
+
+    const u32 = new Uint32Array(f32.buffer);
+    const magicU = new Uint32Array(magicF.buffer);
+    const wasInfNanU = new Uint32Array(wasInfNanF.buffer);
+
+    magicU[0] = (254 - 15) << 23;
+    wasInfNanU[0] = (127 + 16) << 23;
+
+    return (h) => {
+        u32[0] = (h & 0x7fff) << 13;
+        f32[0] *= magicF[0];
+
+        if (f32[0] >= wasInfNanF[0]) {
+            u32[0] |= 255 << 23;
+        }
+        u32[0] |= (h & 0x8000) << 16;    // sign bit
+        return f32[0];
+    };
+})();
+
 // iterator for accessing compressed splat data
 class SplatCompressedIterator {
-    constructor(gsplatData, p, r, s, c) {
+    constructor(gsplatData, p, r, s, c, sh) {
         const unpackUnorm = (value, bits) => {
             const t = (1 << bits) - 1;
             return (value & t) / t;
@@ -48,8 +74,7 @@ class SplatCompressedIterator {
 
         const lerp = (a, b, t) => a * (1 - t) + b * t;
 
-        const chunkData = gsplatData.chunkData;
-        const vertexData = gsplatData.vertexData;
+        const { chunkData, vertexData, band1Data, band2Data, band3Data, packedSHData } = gsplatData;
 
         this.read = (i) => {
             const ci = Math.floor(i / 256) * 12;
@@ -74,6 +99,49 @@ class SplatCompressedIterator {
 
             if (c) {
                 unpack8888(c, vertexData[i * 4 + 3]);
+            }
+
+            if (sh) {
+                const bits0 = packedSHData[i * 4 + 0];
+                const bits1 = packedSHData[i * 4 + 1];
+                const bits2 = packedSHData[i * 4 + 2];
+                const bits3 = packedSHData[i * 4 + 3];
+
+                const b1 = [
+                    bits0 >>> 21,
+                    (bits0 >>> 10) & 0x7ff,
+                    bits0 & 0x3ff
+                ];
+
+                const b2 = [
+                    bits1 >>> 17,
+                    (bits1 >>> 2) & 0x7fff,
+                    ((bits1 << 13) | (bits2 >>> 19)) & 0x7fff
+                ];
+
+                const b3 = [
+                    (bits2 >>> 2) & 0x1ffff,
+                    ((bits2 << 15) | (bits3 >>> 17)) & 0x1ffff,
+                    (bits3 & 0x1ffff)
+                ];
+
+                for (let i = 0; i < 3; ++i) {
+                    sh[i * 15 + 0] = halfToFloat(band1Data[b1[i] * 3 + 0]);
+                    sh[i * 15 + 1] = halfToFloat(band1Data[b1[i] * 3 + 1]);
+                    sh[i * 15 + 2] = halfToFloat(band1Data[b1[i] * 3 + 2]);
+                    sh[i * 15 + 3] = halfToFloat(band2Data[b2[i] * 5 + 0]);
+                    sh[i * 15 + 4] = halfToFloat(band2Data[b2[i] * 5 + 1]);
+                    sh[i * 15 + 5] = halfToFloat(band2Data[b2[i] * 5 + 2]);
+                    sh[i * 15 + 6] = halfToFloat(band2Data[b2[i] * 5 + 3]);
+                    sh[i * 15 + 7] = halfToFloat(band2Data[b2[i] * 5 + 4]);
+                    sh[i * 15 + 8] = halfToFloat(band3Data[b3[i] * 7 + 0]);
+                    sh[i * 15 + 9] = halfToFloat(band3Data[b3[i] * 7 + 1]);
+                    sh[i * 15 + 10] = halfToFloat(band3Data[b3[i] * 7 + 2]);
+                    sh[i * 15 + 11] = halfToFloat(band3Data[b3[i] * 7 + 3]);
+                    sh[i * 15 + 12] = halfToFloat(band3Data[b3[i] * 7 + 4]);
+                    sh[i * 15 + 13] = halfToFloat(band3Data[b3[i] * 7 + 5]);
+                    sh[i * 15 + 14] = halfToFloat(band3Data[b3[i] * 7 + 6]);
+                }
             }
         };
     }
@@ -139,10 +207,11 @@ class GSplatCompressedData {
      * @param {Quat|null} [r] - the quaternion to receive splat rotation
      * @param {Vec3|null} [s] - the vector to receive splat scale
      * @param {Vec4|null} [c] - the vector to receive splat color
+     * @param {Float32Array|null} [sh] - the array to receive spherical harmonics data
      * @returns {SplatCompressedIterator} - The iterator
      */
-    createIter(p, r, s, c) {
-        return new SplatCompressedIterator(this, p, r, s, c);
+    createIter(p, r, s, c, sh) {
+        return new SplatCompressedIterator(this, p, r, s, c, sh);
     }
 
     /**
@@ -252,6 +321,15 @@ class GSplatCompressedData {
             'rot_0', 'rot_1', 'rot_2', 'rot_3'
         ];
 
+        // allocate spherical harmonics data
+        if (this.hasSHData) {
+            const shMembers = [];
+            for (let i = 0; i < 45; ++i) {
+                shMembers.push(`f_rest_${i}`);
+            }
+            members.splice(9, 0, ...shMembers);
+        }
+
         // allocate uncompressed data
         const data = {};
         members.forEach((name) => {
@@ -262,8 +340,9 @@ class GSplatCompressedData {
         const r = new Quat();
         const s = new Vec3();
         const c = new Vec4();
+        const sh = this.hasSHData ? new Float32Array(45) : null;
 
-        const iter = this.createIter(p, r, s, c);
+        const iter = this.createIter(p, r, s, c, sh);
 
         for (let i = 0; i < this.numSplats; ++i) {
             iter.read(i);
@@ -286,6 +365,12 @@ class GSplatCompressedData {
             data.f_dc_2[i] = (c.z - 0.5) / SH_C0;
             // convert opacity to log sigmoid taking into account infinities at 0 and 1
             data.opacity[i] = (c.w <= 0) ? -40 : (c.w >= 1) ? 40 : -Math.log(1 / c.w - 1);
+
+            if (this.hasSHData) {
+                for (let c = 0; c < 45; ++c) {
+                    data[`f_rest_${c}`][i] = sh[c];
+                }
+            }
         }
 
         return new GSplatData([{

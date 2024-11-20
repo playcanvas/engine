@@ -239,7 +239,7 @@ const splatCoreVS = /* glsl */ `
         ivec2 band1b = ivec2(int(packedSHData.x & 0x3ffu), 0);
 
         // 15, 15, 15
-        ivec2 band2r = shUV((packedSHData.y >> 17u) & 0x7fffu);
+        ivec2 band2r = shUV(packedSHData.y >> 17u);
         ivec2 band2g = shUV((packedSHData.y >> 2u) & 0x7fffu);
         ivec2 band2b = shUV(((packedSHData.y << 13u) | (packedSHData.z >> 19u)) & 0x7fffu);
 
