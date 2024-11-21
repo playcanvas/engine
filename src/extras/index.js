@@ -14,7 +14,7 @@ export { UsdzExporter } from './exporters/usdz-exporter.js';
 export { GltfExporter } from './exporters/gltf-exporter.js';
 
 // RENDER PASSES
-export { SSAOTYPE_NONE, SSAOTYPE_LIGHTING, SSAOTYPE_COMBINE } from './render-passes/render-pass-camera-frame.js';
+export { SSAOTYPE_NONE, SSAOTYPE_LIGHTING, SSAOTYPE_COMBINE } from './render-passes/constants.js';
 export { RenderPassCameraFrame, CameraFrameOptions } from './render-passes/render-pass-camera-frame.js';
 export { RenderPassCompose } from './render-passes/render-pass-compose.js';
 export { RenderPassDepthAwareBlur } from './render-passes/render-pass-depth-aware-blur.js';
@@ -23,6 +23,7 @@ export { RenderPassUpsample } from './render-passes/render-pass-upsample.js';
 export { RenderPassBloom } from './render-passes/render-pass-bloom.js';
 export { RenderPassSsao } from './render-passes/render-pass-ssao.js';
 export { RenderPassTAA } from './render-passes/render-pass-taa.js';
+export { CameraFrame } from './render-passes/camera-frame.js';
 
 // GIZMOS
 export {

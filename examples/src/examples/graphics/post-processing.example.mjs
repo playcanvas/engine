@@ -1,7 +1,6 @@
 import { data } from 'examples/observer';
-import { deviceType, rootPath, fileImport } from 'examples/utils';
+import { deviceType, rootPath } from 'examples/utils';
 import * as pc from 'playcanvas';
-const { CameraFrame } = await fileImport(`${rootPath}/static/assets/scripts/misc/camera-frame.mjs`);
 
 const canvas = /** @type {HTMLCanvasElement} */ (document.getElementById('application-canvas'));
 window.focus();
@@ -216,9 +215,9 @@ assetListLoader.load(() => {
 
     // ------ Custom render passes set up ------
 
-    /** @type { CameraFrame } */
-    const cameraFrame = cameraEntity.script.create(CameraFrame);
+    const cameraFrame = new pc.CameraFrame(app, cameraEntity.camera);
     cameraFrame.rendering.sceneColorMap = true;
+    cameraFrame.update();
 
     const applySettings = () => {
 
@@ -247,8 +246,7 @@ assetListLoader.load(() => {
         cameraFrame.taa.jitter = data.get('data.taa.jitter');
 
         // Bloom
-        cameraFrame.bloom.enabled = data.get('data.bloom.enabled');
-        cameraFrame.bloom.intensity = pc.math.lerp(0, 0.1, data.get('data.bloom.intensity') / 100);
+        cameraFrame.bloom.intensity = data.get('data.bloom.enabled') ? pc.math.lerp(0, 0.1, data.get('data.bloom.intensity') / 100) : 0;
         cameraFrame.bloom.lastMipLevel = data.get('data.bloom.lastMipLevel');
 
         // grading
@@ -258,15 +256,16 @@ assetListLoader.load(() => {
         cameraFrame.grading.contrast = data.get('data.grading.contrast');
 
         // vignette
-        cameraFrame.vignette.enabled = data.get('data.vignette.enabled');
         cameraFrame.vignette.inner = data.get('data.vignette.inner');
         cameraFrame.vignette.outer = data.get('data.vignette.outer');
         cameraFrame.vignette.curvature = data.get('data.vignette.curvature');
-        cameraFrame.vignette.intensity = data.get('data.vignette.intensity');
+        cameraFrame.vignette.intensity = data.get('data.vignette.enabled') ? data.get('data.vignette.intensity') : 0;
 
         // fringing
-        cameraFrame.fringing.enabled = data.get('data.fringing.enabled');
-        cameraFrame.fringing.intensity = data.get('data.fringing.intensity');
+        cameraFrame.fringing.intensity = data.get('data.fringing.enabled') ? data.get('data.fringing.intensity') : 0;
+
+        // apply all settings
+        cameraFrame.update();
     };
 
     // apply UI changes
