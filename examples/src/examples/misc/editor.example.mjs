@@ -1,8 +1,9 @@
 // @config DESCRIPTION <div style='text-align:center'><div>Translate (1), Rotate (2), Scale (3)</div><div>World/Local (X)</div><div>Perspective (P), Orthographic (O)</div></div>
 import { data } from 'examples/observer';
 import { deviceType, rootPath, localImport, fileImport } from 'examples/utils';
+import * as pc from 'playcanvas';
 
-const { Grid } = await fileImport(`${rootPath}/static/scripts/grid.mjs`);
+const { GridRenderer } = await fileImport(`${rootPath}/static/scripts/grid-renderer.mjs`);
 
 const canvas = /** @type {HTMLCanvasElement} */ (document.getElementById('application-canvas'));
 window.focus();
@@ -127,11 +128,12 @@ camera.setPosition(1, 1, 1);
 app.root.addChild(camera);
 orbitCamera.distance = 5 * camera.camera?.aspectRatio;
 
-// attach grid
-app.root.addComponent('script');
-const grid = /** @type {Grid} */ (app.root.script.create(Grid));
-grid.halfExtents = new pc.Vec2(4, 4);
-grid.attach(camera.camera);
+// attach grid renderer
+const grid = /** @type {GridRenderer} */ (camera.script.create(GridRenderer, {
+    attributes: {
+        halfExtents: new pc.Vec2(4, 4)
+    }
+}));
 data.set('grid', {
     resolution: grid.resolution + 1,
     size: grid.halfExtents.x,

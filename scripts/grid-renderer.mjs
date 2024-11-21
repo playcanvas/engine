@@ -205,7 +205,7 @@ const fragmentShader = /* glsl*/ `
     }
 `;
 
-class Grid extends Script {
+class GridRenderer extends Script {
     /**
      * @type {number}
      */
@@ -224,18 +224,12 @@ class Grid extends Script {
     /**
      * @type {number}
      */
-    _resolution = Grid.RESOLUTION_HIGH;
+    _resolution = GridRenderer.RESOLUTION_HIGH;
 
     /**
      * @type {GraphicsDevice}
      */
     _device;
-
-    /**
-     * @type {CameraComponent}
-     * @private
-     */
-    _camera;
 
     /**
      * @type {QuadRender}
@@ -273,7 +267,7 @@ class Grid extends Script {
      * Creates a new layer for the grid.
      *
      * @param {AppBase} app - The app.
-     * @param {string} [layerName] - The layer name. Defaults to 'Gizmo'.
+     * @param {string} [layerName] - The layer name. Defaults to 'Grid'.
      * @param {number} [layerIndex] - The layer index. Defaults to the end of the layer list.
      * @returns {Layer} The new layer.
      */
@@ -291,6 +285,18 @@ class Grid extends Script {
      */
     constructor(args) {
         super(args);
+        const {
+            layer,
+            resolution,
+            halfExtents,
+            colorX,
+            colorZ
+        } = args.attributes;
+
+        this.resolution = resolution;
+        this.halfExtents = halfExtents;
+        this.colorX = colorX;
+        this.colorZ = colorZ;
 
         this._device = this.app.graphicsDevice;
 
@@ -299,106 +305,18 @@ class Grid extends Script {
             vertex_position: SEMANTIC_POSITION
         });
         this._quadRender = new QuadRender(shader);
-    }
 
-    /**
-     * Set the value of a uniform in the shader.
-     *
-     * @param {string} name - The name of the uniform.
-     * @param {Color|Vec3|number} value - The value to set.
-     * @private
-     */
-    _set(name, value) {
-        if (value instanceof Color) {
-            this._device.scope.resolve(name).setValue([value.r, value.g, value.b]);
-        }
+        const targetLayer = layer ?? GridRenderer.createLayer(this.app, undefined, 1);
 
-        if (value instanceof Vec3) {
-            this._device.scope.resolve(name).setValue([value.x, value.y, value.z]);
-        }
-
-        if (value instanceof Vec2) {
-            this._device.scope.resolve(name).setValue([value.x, value.y]);
-        }
-
-        if (typeof value === 'number') {
-            this._device.scope.resolve(name).setValue(value);
-        }
-
-    }
-
-    /**
-     * @attribute
-     * @type {Grid.RESOLUTION_HIGH | Grid.RESOLUTION_MEDIUM | Grid.RESOLUTION_LOW}
-     */
-    set resolution(value) {
-        this._resolution = value ?? Grid.RESOLUTION_HIGH;
-    }
-
-    get resolution() {
-        return this._resolution;
-    }
-
-    /**
-     * @attribute
-     * @type {Vec2}
-     */
-    set halfExtents(value) {
-        if (!(value instanceof Vec2)) {
-            return;
-        }
-        this._halfExtents.copy(value);
-    }
-
-    get halfExtents() {
-        return this._halfExtents;
-    }
-
-    /**
-     * @attribute
-     * @type {Color}
-     */
-    set colorX(value) {
-        if (!(value instanceof Color)) {
-            return;
-        }
-        this._colorX.copy(value);
-    }
-
-    get colorX() {
-        return this._colorX;
-    }
-
-    /**
-     * @attribute
-     * @type {Color}
-     */
-    set colorZ(value) {
-        if (!(value instanceof Color)) {
-            return;
-        }
-        this._colorZ.copy(value);
-    }
-
-    get colorZ() {
-        return this._colorZ;
-    }
-
-    /**
-     * @param {CameraComponent} camera - The camera component.
-     * @param {Layer} layer - The layer to render the grid.
-     */
-    attach(camera, layer) {
+        const camera = this.entity.camera;
         if (!camera) {
-            throw new Error('Camera is required');
+            throw new Error('GridRenderer script must be attached to a camera entity.');
         }
-        this._camera = camera;
 
-        layer ??= Grid.createLayer(this.app, undefined, 1);
-        camera.layers = camera.layers.concat(layer.id);
-
-        camera.onPreRenderLayer = (_layer, transparent) => {
-            if (_layer !== layer || transparent) {
+        // attach to camera
+        camera.layers = camera.layers.concat(targetLayer.id);
+        camera.onPreRenderLayer = (layer, transparent) => {
+            if (layer !== targetLayer || transparent) {
                 return;
             }
 
@@ -453,9 +371,87 @@ class Grid extends Script {
         };
     }
 
-    detach() {
-        this._camera.onPreRenderLayer = null;
-        this._camera = null;
+    /**
+     * Set the value of a uniform in the shader.
+     *
+     * @param {string} name - The name of the uniform.
+     * @param {Color|Vec3|number} value - The value to set.
+     * @private
+     */
+    _set(name, value) {
+        if (value instanceof Color) {
+            this._device.scope.resolve(name).setValue([value.r, value.g, value.b]);
+        }
+
+        if (value instanceof Vec3) {
+            this._device.scope.resolve(name).setValue([value.x, value.y, value.z]);
+        }
+
+        if (value instanceof Vec2) {
+            this._device.scope.resolve(name).setValue([value.x, value.y]);
+        }
+
+        if (typeof value === 'number') {
+            this._device.scope.resolve(name).setValue(value);
+        }
+
+    }
+
+    /**
+     * @attribute
+     * @type {GridRenderer.RESOLUTION_HIGH | GridRenderer.RESOLUTION_MEDIUM | GridRenderer.RESOLUTION_LOW}
+     */
+    set resolution(value) {
+        this._resolution = value ?? GridRenderer.RESOLUTION_HIGH;
+    }
+
+    get resolution() {
+        return this._resolution;
+    }
+
+    /**
+     * @attribute
+     * @type {Vec2}
+     */
+    set halfExtents(value) {
+        if (!(value instanceof Vec2)) {
+            return;
+        }
+        this._halfExtents.copy(value);
+    }
+
+    get halfExtents() {
+        return this._halfExtents;
+    }
+
+    /**
+     * @attribute
+     * @type {Color}
+     */
+    set colorX(value) {
+        if (!(value instanceof Color)) {
+            return;
+        }
+        this._colorX.copy(value);
+    }
+
+    get colorX() {
+        return this._colorX;
+    }
+
+    /**
+     * @attribute
+     * @type {Color}
+     */
+    set colorZ(value) {
+        if (!(value instanceof Color)) {
+            return;
+        }
+        this._colorZ.copy(value);
+    }
+
+    get colorZ() {
+        return this._colorZ;
     }
 
     destroy() {
@@ -464,4 +460,4 @@ class Grid extends Script {
     }
 }
 
-export { Grid };
+export { GridRenderer };

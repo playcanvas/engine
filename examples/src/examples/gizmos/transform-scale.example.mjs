@@ -1,7 +1,8 @@
 import { data } from 'examples/observer';
 import { deviceType, fileImport, rootPath } from 'examples/utils';
+import * as pc from 'playcanvas';
 
-const { Grid } = await fileImport(`${rootPath}/static/scripts/grid.mjs`);
+const { GridRenderer } = await fileImport(`${rootPath}/static/scripts/grid-renderer.mjs`);
 
 const canvas = /** @type {HTMLCanvasElement} */ (document.getElementById('application-canvas'));
 window.focus();
@@ -83,11 +84,12 @@ data.set('camera', {
     fov: camera.camera.fov
 });
 
-// attach grid
-app.root.addComponent('script');
-const grid = /** @type {Grid} */ (app.root.script.create(Grid));
-grid.halfExtents = new pc.Vec2(2, 2);
-grid.attach(camera.camera);
+// attach grid renderer
+camera.script.create(GridRenderer, {
+    attributes: {
+        halfExtents: new pc.Vec2(2, 2)
+    }
+});
 
 // create light entity
 const light = new pc.Entity('light');
