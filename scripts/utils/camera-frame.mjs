@@ -1,5 +1,4 @@
-import { Script, Color } from 'playcanvas';
-import { CameraFrame as EngineCameraFrame} from 'playcanvas';
+import { CameraFrame as EngineCameraFrame, Script, Color } from 'playcanvas';
 
 /** @enum {number} */
 const ToneMapping = {
@@ -305,7 +304,7 @@ class CameraFrame extends Script {
 
     postUpdate(dt) {
 
-        const cf = this.engineCameraFrame
+        const cf = this.engineCameraFrame;
         const { rendering, bloom, grading, vignette, fringing, taa, ssao } = this;
 
         const dstRendering = cf.rendering;
@@ -313,12 +312,12 @@ class CameraFrame extends Script {
         dstRendering.renderFormats.push(rendering.renderFormat);
         dstRendering.renderFormats.push(rendering.renderFormatFallback0);
         dstRendering.renderFormats.push(rendering.renderFormatFallback1);
-        dstRendering.stencil = rendering.stencil,
-        dstRendering.renderTargetScale = rendering.renderTargetScale,
-        dstRendering.samples = rendering.samples,
-        dstRendering.sceneColorMap = rendering.sceneColorMap,
-        dstRendering.sceneDepthMap = rendering.sceneDepthMap,
-        dstRendering.toneMapping = rendering.toneMapping,
+        dstRendering.stencil = rendering.stencil;
+        dstRendering.renderTargetScale = rendering.renderTargetScale;
+        dstRendering.samples = rendering.samples;
+        dstRendering.sceneColorMap = rendering.sceneColorMap;
+        dstRendering.sceneDepthMap = rendering.sceneDepthMap;
+        dstRendering.toneMapping = rendering.toneMapping;
         dstRendering.sharpness = rendering.sharpness;
 
         // ssao

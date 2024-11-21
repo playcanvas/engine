@@ -12,7 +12,7 @@ import { CameraFrameOptions, RenderPassCameraFrame } from './render-pass-camera-
 /**
  * @typedef {Object} Rendering
  * @property {number[]} renderFormats - The render formats of the frame buffer, in order of
- * preference. Defaults to [{@link PIXELFORMAT_111110F}, {@link PIXELFORMAT_RGBA16F}, 
+ * preference. Defaults to [{@link PIXELFORMAT_111110F}, {@link PIXELFORMAT_RGBA16F},
  * {@link PIXELFORMAT_RGBA32F}].
  * @property {boolean} stencil - Whether the render buffer has a stencil buffer. Defaults to false.
  * @property {number} renderTargetScale - The scale of the frame buffer, 0.1-1 range. Defaults to 1.
@@ -39,7 +39,7 @@ import { CameraFrameOptions, RenderPassCameraFrame } from './render-pass-camera-
  * - {@link SSAOTYPE_NONE}
  * - {@link SSAOTYPE_LIGHTING}
  * - {@link SSAOTYPE_COMBINE}
- * 
+ *
  * @property {boolean} blurEnabled - Whether the SSAO effect is blurred. Defaults to true.
  * @property {number} intensity - The intensity of the SSAO effect, 0-1 range. Defaults to 0.5.
  * @property {number} radius - The radius of the SSAO effect, 0-100 range. Defaults to 30.
@@ -67,7 +67,7 @@ import { CameraFrameOptions, RenderPassCameraFrame } from './render-pass-camera-
 
 /**
  * @typedef {Object} Vignette
- * @property {number} intensity - The intensity of the vignette effect, 0-1 range. Defaults to 0, 
+ * @property {number} intensity - The intensity of the vignette effect, 0-1 range. Defaults to 0,
  * making it disabled.
  * @property {number} inner - The inner radius of the vignette effect, 0-3 range. Defaults to 0.5.
  * @property {number} outer - The outer radius of the vignette effect, 0-3 range. Defaults to 1.
@@ -252,7 +252,7 @@ class CameraFrame {
     get enabled() {
         return this.renderPassCamera !== null;
     }
-    
+
     updateOptions() {
 
         const { options, rendering, bloom, taa, ssao } = this;
