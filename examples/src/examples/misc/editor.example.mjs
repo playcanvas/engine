@@ -2,7 +2,7 @@
 import { data } from 'examples/observer';
 import { deviceType, rootPath, localImport, fileImport } from 'examples/utils';
 
-const { Grid } = await fileImport(rootPath + '/static/scripts/grid.mjs');
+const { Grid } = await fileImport(`${rootPath}/static/scripts/grid.mjs`);
 
 const canvas = /** @type {HTMLCanvasElement} */ (document.getElementById('application-canvas'));
 window.focus();
