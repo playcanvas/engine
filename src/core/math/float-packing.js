@@ -119,29 +119,6 @@ class FloatPacking {
         value = math.clamp((value - min) / (max - min), 0, 1);
         FloatPacking.float2Bytes(value, array, offset, numBytes);
     }
-
-    /**
-     * Packs a float into specified number of bytes, using 1 byte for exponent and the remaining
-     * bytes for the mantissa.
-     *
-     * @param {number} value - The float value to pack.
-     * @param {Uint8ClampedArray} array - The array to store the packed value in.
-     * @param {number} offset - The start offset in the array to store the packed value at.
-     * @param {number} numBytes - The number of bytes to pack the value to.
-     *
-     * @ignore
-     */
-    static float2MantissaExponent(value, array, offset, numBytes) {
-        // exponent is increased by one, so that 2^exponent is larger than the value
-        const exponent = Math.floor(Math.log2(Math.abs(value))) + 1;
-        value /= Math.pow(2, exponent);
-
-        // value is now in -1..1 range, store it using specified number of bytes less one
-        FloatPacking.float2BytesRange(value, array, offset, -1, 1, numBytes - 1);
-
-        // last byte for the exponent (positive or negative)
-        array[offset + numBytes - 1] = Math.round(exponent + 127);
-    }
 }
 
 export { FloatPacking };
