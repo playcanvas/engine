@@ -1,25 +1,25 @@
 // @config HIDDEN
-import * as pc from 'playcanvas';
 import { deviceType, rootPath } from 'examples/utils';
+import * as pc from 'playcanvas';
 
 const canvas = /** @type {HTMLCanvasElement} */ (document.getElementById('application-canvas'));
 window.focus();
 
 const assets = {
-    orbitCamera: new pc.Asset('script', 'script', { url: rootPath + '/static/scripts/camera/orbit-camera.js' }),
+    orbitCamera: new pc.Asset('script', 'script', { url: `${rootPath}/static/scripts/camera/orbit-camera.js` }),
     helipad: new pc.Asset(
         'helipad-env-atlas',
         'texture',
-        { url: rootPath + '/static/assets/cubemaps/helipad-env-atlas.png' },
+        { url: `${rootPath}/static/assets/cubemaps/helipad-env-atlas.png` },
         { type: pc.TEXTURETYPE_RGBP, mipmaps: false }
     ),
-    model: new pc.Asset('model', 'container', { url: rootPath + '/static/assets/models/NormalTangentTest.glb' })
+    model: new pc.Asset('model', 'container', { url: `${rootPath}/static/assets/models/NormalTangentTest.glb` })
 };
 
 const gfxOptions = {
     deviceTypes: [deviceType],
-    glslangUrl: rootPath + '/static/lib/glslang/glslang.js',
-    twgslUrl: rootPath + '/static/lib/twgsl/twgsl.js'
+    glslangUrl: `${rootPath}/static/lib/glslang/glslang.js`,
+    twgslUrl: `${rootPath}/static/lib/twgsl/twgsl.js`
 };
 
 const device = await pc.createGraphicsDevice(canvas, gfxOptions);
@@ -59,7 +59,6 @@ assetListLoader.load(() => {
 
     // Setup skydome
     app.scene.envAtlas = assets.helipad.resource;
-    app.scene.rendering.toneMapping = pc.TONEMAP_ACES;
     app.scene.skyboxRotation = new pc.Quat().setFromEulerAngles(0, 70, 0);
     app.scene.skyboxIntensity = 1.5;
 
@@ -77,7 +76,9 @@ assetListLoader.load(() => {
 
     // Create a camera with an orbit camera script
     const camera = new pc.Entity();
-    camera.addComponent('camera');
+    camera.addComponent('camera', {
+        toneMapping: pc.TONEMAP_ACES
+    });
     camera.addComponent('script');
     camera.script.create('orbitCamera', {
         attributes: {

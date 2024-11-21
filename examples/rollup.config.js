@@ -1,23 +1,21 @@
+import { execSync } from 'child_process';
 import fs from 'fs';
 import path from 'path';
-import { execSync } from 'child_process';
 
 // 1st party Rollup plugins
 import commonjs from '@rollup/plugin-commonjs';
-import replace from '@rollup/plugin-replace';
 import resolve from '@rollup/plugin-node-resolve';
+import replace from '@rollup/plugin-replace';
 import terser from '@rollup/plugin-terser';
 
 // custom plugins
-import { copyStatic } from './utils/plugins/rollup-copy-static.mjs';
 import { buildExamples } from './utils/plugins/rollup-build-examples.mjs';
-
-// engine rollup utils
+import { copyStatic } from './utils/plugins/rollup-copy-static.mjs';
+import { isModuleWithExternalDependencies } from './utils/utils.mjs';
 import { treeshakeIgnore } from '../utils/plugins/rollup-treeshake-ignore.mjs';
 import { buildTarget } from '../utils/rollup-build-target.mjs';
 
 // util functions
-import { isModuleWithExternalDependencies } from './utils/utils.mjs';
 
 const NODE_ENV = process.env.NODE_ENV ?? '';
 const ENGINE_PATH = !process.env.ENGINE_PATH && NODE_ENV === 'development' ?
@@ -45,7 +43,7 @@ const getEnginePathFiles = () => {
 const checkAppEngine = () => {
     // types
     if (!fs.existsSync('../build/playcanvas.d.ts')) {
-        const cmd = `npm run build target:types --prefix ../`;
+        const cmd = 'npm run build target:types --prefix ../';
         console.log('\x1b[32m%s\x1b[0m', cmd);
         execSync(cmd);
     }
@@ -127,7 +125,7 @@ const STATIC_FILES = [
         once: true
     },
 
-    // modules (N.B. destination folder is 'modules' as 'node_modules' are automatically excluded by git pages)
+    // monaco loader
     { src: './node_modules/monaco-editor/min/vs', dest: 'dist/modules/monaco-editor/min/vs', once: true },
 
     // fflate (for when using ENGINE_PATH)

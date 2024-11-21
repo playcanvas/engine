@@ -1,5 +1,5 @@
-import * as pc from 'playcanvas';
 import { deviceType, rootPath } from 'examples/utils';
+import * as pc from 'playcanvas';
 
 const canvas = /** @type {HTMLCanvasElement} */ (document.getElementById('application-canvas'));
 window.focus();
@@ -8,16 +8,16 @@ const assets = {
     helipad: new pc.Asset(
         'helipad-env-atlas',
         'texture',
-        { url: rootPath + '/static/assets/cubemaps/helipad-env-atlas.png' },
+        { url: `${rootPath}/static/assets/cubemaps/helipad-env-atlas.png` },
         { type: pc.TEXTURETYPE_RGBP, mipmaps: false }
     ),
-    font: new pc.Asset('font', 'font', { url: rootPath + '/static/assets/fonts/arial.json' })
+    font: new pc.Asset('font', 'font', { url: `${rootPath}/static/assets/fonts/arial.json` })
 };
 
 const gfxOptions = {
     deviceTypes: [deviceType],
-    glslangUrl: rootPath + '/static/lib/glslang/glslang.js',
-    twgslUrl: rootPath + '/static/lib/twgsl/twgsl.js'
+    glslangUrl: `${rootPath}/static/lib/glslang/glslang.js`,
+    twgslUrl: `${rootPath}/static/lib/twgsl/twgsl.js`
 };
 
 const device = await pc.createGraphicsDevice(canvas, gfxOptions);
@@ -54,13 +54,14 @@ const assetListLoader = new pc.AssetListLoader(Object.values(assets), app.assets
 assetListLoader.load(() => {
     app.start();
 
-    app.scene.rendering.toneMapping = pc.TONEMAP_ACES;
     app.scene.skyboxMip = 1;
     app.scene.envAtlas = assets.helipad.resource;
 
     // Create an entity with a camera component
     const camera = new pc.Entity();
-    camera.addComponent('camera');
+    camera.addComponent('camera', {
+        toneMapping: pc.TONEMAP_ACES
+    });
     camera.translate(0, 6, 6);
     camera.rotate(-48, 0, 0);
     app.root.addChild(camera);

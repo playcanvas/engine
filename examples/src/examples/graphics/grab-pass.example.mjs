@@ -1,25 +1,25 @@
-import * as pc from 'playcanvas';
 import files from 'examples/files';
 import { deviceType, rootPath } from 'examples/utils';
+import * as pc from 'playcanvas';
 
 const canvas = /** @type {HTMLCanvasElement} */ (document.getElementById('application-canvas'));
 window.focus();
 
 const assets = {
-    normal: new pc.Asset('normal', 'texture', { url: rootPath + '/static/assets/textures/normal-map.png' }),
-    roughness: new pc.Asset('roughness', 'texture', { url: rootPath + '/static/assets/textures/pc-gray.png' }),
+    normal: new pc.Asset('normal', 'texture', { url: `${rootPath}/static/assets/textures/normal-map.png` }),
+    roughness: new pc.Asset('roughness', 'texture', { url: `${rootPath}/static/assets/textures/pc-gray.png` }),
     helipad: new pc.Asset(
         'helipad-env-atlas',
         'texture',
-        { url: rootPath + '/static/assets/cubemaps/helipad-env-atlas.png' },
+        { url: `${rootPath}/static/assets/cubemaps/helipad-env-atlas.png` },
         { type: pc.TEXTURETYPE_RGBP, mipmaps: false }
     )
 };
 
 const gfxOptions = {
     deviceTypes: [deviceType],
-    glslangUrl: rootPath + '/static/lib/glslang/glslang.js',
-    twgslUrl: rootPath + '/static/lib/twgsl/twgsl.js'
+    glslangUrl: `${rootPath}/static/lib/glslang/glslang.js`,
+    twgslUrl: `${rootPath}/static/lib/twgsl/twgsl.js`
 };
 
 const device = await pc.createGraphicsDevice(canvas, gfxOptions);
@@ -55,8 +55,6 @@ assetListLoader.load(() => {
     app.scene.skyboxMip = 0;
     app.scene.exposure = 2;
     app.scene.envAtlas = assets.helipad.resource;
-
-    app.scene.rendering.toneMapping = pc.TONEMAP_ACES;
 
     // Depth layer is where the framebuffer is copied to a texture to be used in the following layers.
     // Move the depth layer to take place after World and Skydome layers, to capture both of them.
@@ -115,7 +113,8 @@ assetListLoader.load(() => {
     // Create the camera, which renders entities
     const camera = new pc.Entity('SceneCamera');
     camera.addComponent('camera', {
-        clearColor: new pc.Color(0.2, 0.2, 0.2)
+        clearColor: new pc.Color(0.2, 0.2, 0.2),
+        toneMapping: pc.TONEMAP_ACES
     });
     app.root.addChild(camera);
     camera.setLocalPosition(0, 10, 20);
@@ -168,7 +167,7 @@ assetListLoader.load(() => {
 
     // update things each frame
     let time = 0;
-    app.on('update', function (dt) {
+    app.on('update', (dt) => {
         time += dt;
 
         // rotate the primitives

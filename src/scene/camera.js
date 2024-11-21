@@ -10,10 +10,11 @@ import {
 } from './constants.js';
 import { RenderPassColorGrab } from './graphics/render-pass-color-grab.js';
 import { RenderPassDepthGrab } from './graphics/render-pass-depth-grab.js';
+import { CameraShaderParams } from './camera-shader-params.js';
 
 /**
  * @import { RenderPass } from '../platform/graphics/render-pass.js'
- * @import { RenderingParams } from './renderer/rendering-params.js'
+ * @import { FogParams } from './fog-params.js'
  * @import { ShaderPassInfo } from './shader-pass.js'
  */
 
@@ -46,11 +47,18 @@ class Camera {
     renderPassDepthGrab = null;
 
     /**
-     * The rendering parameters.
+     * The fog parameters.
      *
-     * @type {RenderingParams|null}
+     * @type {FogParams|null}
      */
-    renderingParams = null;
+    fogParams = null;
+
+    /**
+     * Shader parameters used to generate and use matching shaders.
+     *
+     * @type {CameraShaderParams}
+     */
+    shaderParams = new CameraShaderParams();
 
     /**
      * Render passes used to render this camera. If empty, the camera will render using the default

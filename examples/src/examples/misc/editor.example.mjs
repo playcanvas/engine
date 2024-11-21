@@ -1,5 +1,4 @@
 // @config DESCRIPTION <div style='text-align:center'><div>Translate (1), Rotate (2), Scale (3)</div><div>World/Local (X)</div><div>Perspective (P), Orthographic (O)</div></div>
-import * as pc from 'playcanvas';
 import { data } from 'examples/observer';
 import { deviceType, rootPath, localImport, fileImport } from 'examples/utils';
 
@@ -14,8 +13,8 @@ const { Selector } = await localImport('selector.mjs');
 
 const gfxOptions = {
     deviceTypes: [deviceType],
-    glslangUrl: rootPath + '/static/lib/glslang/glslang.js',
-    twgslUrl: rootPath + '/static/lib/twgsl/twgsl.js'
+    glslangUrl: `${rootPath}/static/lib/glslang/glslang.js`,
+    twgslUrl: `${rootPath}/static/lib/twgsl/twgsl.js`
 };
 
 const device = await pc.createGraphicsDevice(canvas, gfxOptions);
@@ -43,8 +42,8 @@ app.setCanvasResolution(pc.RESOLUTION_AUTO);
 
 // load assets
 const assets = {
-    script: new pc.Asset('script', 'script', { url: rootPath + '/static/scripts/camera/orbit-camera.js' }),
-    font: new pc.Asset('font', 'font', { url: rootPath + '/static/assets/fonts/courier.json' })
+    script: new pc.Asset('script', 'script', { url: `${rootPath}/static/scripts/camera/orbit-camera.js` }),
+    font: new pc.Asset('font', 'font', { url: `${rootPath}/static/assets/fonts/courier.json` })
 };
 /**
  * @param {pc.Asset[] | number[]} assetList - The asset list.

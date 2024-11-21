@@ -1,17 +1,17 @@
-import * as pc from 'playcanvas';
 import { deviceType, rootPath } from 'examples/utils';
+import * as pc from 'playcanvas';
 
 const canvas = /** @type {HTMLCanvasElement} */ (document.getElementById('application-canvas'));
 window.focus();
 
 const assets = {
-    font: new pc.Asset('font', 'font', { url: rootPath + '/static/assets/fonts/arial.json' })
+    font: new pc.Asset('font', 'font', { url: `${rootPath}/static/assets/fonts/arial.json` })
 };
 
 const gfxOptions = {
     deviceTypes: [deviceType],
-    glslangUrl: rootPath + '/static/lib/glslang/glslang.js',
-    twgslUrl: rootPath + '/static/lib/twgsl/twgsl.js',
+    glslangUrl: `${rootPath}/static/lib/glslang/glslang.js`,
+    twgslUrl: `${rootPath}/static/lib/twgsl/twgsl.js`,
 
     // disable anti-aliasing to make dithering more pronounced
     antialias: false,
@@ -57,12 +57,11 @@ const assetListLoader = new pc.AssetListLoader(Object.values(assets), app.assets
 assetListLoader.load(() => {
     app.start();
 
-    app.scene.rendering.toneMapping = pc.TONEMAP_LINEAR;
-
     // Create an entity with a camera component
     const camera = new pc.Entity();
     camera.addComponent('camera', {
-        clearColor: pc.Color.BLACK
+        clearColor: pc.Color.BLACK,
+        toneMapping: pc.TONEMAP_LINEAR
     });
     camera.translate(0, -0.5, 14);
     camera.rotate(0, 0, 0);

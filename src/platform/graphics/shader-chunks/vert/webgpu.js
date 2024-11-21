@@ -15,4 +15,5 @@ export default /* glsl */`
 #define WEBGPU
 #define VERTEXSHADER
 #define gl_VertexID gl_VertexIndex
+#define gl_InstanceID gl_InstanceIndex
 `;

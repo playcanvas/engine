@@ -1,6 +1,6 @@
 // @config WEBGPU_DISABLED
-import * as pc from 'playcanvas';
 import { rootPath } from 'examples/utils';
+import * as pc from 'playcanvas';
 
 const canvas = /** @type {HTMLCanvasElement} */ (document.getElementById('application-canvas'));
 window.focus();
@@ -27,7 +27,7 @@ const message = function (msg) {
 };
 
 const assets = {
-    font: new pc.Asset('font', 'font', { url: rootPath + '/static/assets/fonts/courier.json' })
+    font: new pc.Asset('font', 'font', { url: `${rootPath}/static/assets/fonts/courier.json` })
 };
 
 const app = new pc.Application(canvas, {
@@ -75,7 +75,7 @@ assetListLoader.load(() => {
                 camera.camera.startXr(pc.XRTYPE_AR, pc.XRSPACE_LOCALFLOOR, {
                     meshDetection: true,
                     callback: function (err) {
-                        if (err) message('WebXR Immersive AR failed to start: ' + err.message);
+                        if (err) message(`WebXR Immersive AR failed to start: ${err.message}`);
                     }
                 });
             } else {
@@ -83,12 +83,12 @@ assetListLoader.load(() => {
             }
         };
 
-        app.mouse.on('mousedown', function () {
+        app.mouse.on('mousedown', () => {
             if (!app.xr.active) activate();
         });
 
         if (app.touch) {
-            app.touch.on('touchend', function (evt) {
+            app.touch.on('touchend', (evt) => {
                 if (!app.xr.active) {
                     // if not in VR, activate
                     activate();
@@ -103,13 +103,13 @@ assetListLoader.load(() => {
         }
 
         // end session by keyboard ESC
-        app.keyboard.on('keydown', function (evt) {
+        app.keyboard.on('keydown', (evt) => {
             if (evt.key === pc.KEY_ESCAPE && app.xr.active) {
                 app.xr.end();
             }
         });
 
-        app.xr.on('start', function () {
+        app.xr.on('start', () => {
             message('Immersive AR session has started');
 
             // Trigger manual room capture
@@ -120,10 +120,10 @@ assetListLoader.load(() => {
                 });
             }, 500);
         });
-        app.xr.on('end', function () {
+        app.xr.on('end', () => {
             message('Immersive AR session has ended');
         });
-        app.xr.on('available:' + pc.XRTYPE_AR, function (available) {
+        app.xr.on(`available:${pc.XRTYPE_AR}`, (available) => {
             if (available) {
                 if (app.xr.meshDetection.supported) {
                     message('Touch screen to start AR session and look at the floor or walls');

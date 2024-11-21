@@ -322,8 +322,8 @@ class AppBase extends EventHandler {
      *
      * @type {Scene}
      * @example
-     * // Set the tone mapping property of the application's scene
-     * this.app.scene.rendering.toneMapping = pc.TONEMAP_FILMIC;
+     * // Set the fog type property of the application's scene
+     * this.app.scene.fog.type = pc.FOG_LINEAR;
      */
     scene;
 

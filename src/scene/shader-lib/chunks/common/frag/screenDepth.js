@@ -26,9 +26,36 @@ float linearizeDepth(float z) {
 }
 #endif // LINEARIZE_DEPTH
 
+float delinearizeDepth(float linearDepth) {
+    if (camera_params.w == 0.0) {
+        return (camera_params.y * (camera_params.z - linearDepth)) / (linearDepth * (camera_params.z - camera_params.y));
+    } else {
+        return (linearDepth - camera_params.z) / (camera_params.y - camera_params.z);
+    }
+}
+
 // Retrieves rendered linear camera depth by UV
 float getLinearScreenDepth(vec2 uv) {
-    return linearizeDepth(texture2D(uSceneDepthMap, uv).r);
+    #ifdef SCENE_DEPTHMAP_LINEAR
+        #ifdef SCENE_DEPTHMAP_FLOAT
+            return texture2D(uSceneDepthMap, uv).r;
+        #else
+
+            ivec2 textureSize = textureSize(uSceneDepthMap, 0);
+            ivec2 texel = ivec2(uv * vec2(textureSize));
+            vec4 data = texelFetch(uSceneDepthMap, texel, 0);
+
+            uint intBits = 
+                (uint(data.r * 255.0) << 24u) |
+                (uint(data.g * 255.0) << 16u) |
+                (uint(data.b * 255.0) << 8u) |
+                uint(data.a * 255.0);
+
+            return uintBitsToFloat(intBits);
+        #endif
+    #else
+        return linearizeDepth(texture2D(uSceneDepthMap, uv).r);
+    #endif
 }
 
 #ifndef VERTEXSHADER
