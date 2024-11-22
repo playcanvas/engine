@@ -69,9 +69,18 @@ import { CameraFrameOptions, RenderPassCameraFrame } from './render-pass-camera-
  * @typedef {Object} Vignette
  * @property {number} intensity - The intensity of the vignette effect, 0-1 range. Defaults to 0,
  * making it disabled.
- * @property {number} inner - The inner radius of the vignette effect, 0-3 range. Defaults to 0.5.
- * @property {number} outer - The outer radius of the vignette effect, 0-3 range. Defaults to 1.
- * @property {number} curvature - The curvature of the vignette effect, 0.01-10 range. Defaults to 0.5.
+ * @property {number} inner - The inner distance of the vignette effect measured from the center of
+ * the screen, 0-3 range. This is where the vignette effect starts. Value larger than 1 represents
+ * the value off screen, which allows more control. Defaults to 0.5, representing half the distance
+ * from center.
+ * @property {number} outer - The outer distance of the vignette effect measured from the center of
+ * the screen, 0-3 range. This is where the vignette reaches full intensity. Value larger than 1
+ * represents the value off screen, which allows more control. Defaults to 1, representing the full
+ * screen.
+ * @property {number} curvature - The curvature of the vignette effect, 0.01-10 range. The vignette
+ * is rendered using a rectangle with rounded corners, and this parameter controls the curvature of
+ * the corners. Value of 1 represents a circle. Smaller values make the corners more square, while
+ * larger values make them more rounded. Defaults to 0.5.
  */
 
 /**
