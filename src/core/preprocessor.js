@@ -30,8 +30,11 @@ const IDENTIFIER = /([\w-]+)/;
 // [!]defined(EXPRESSION)
 const DEFINED = /(!|\s)?defined\(([\w-]+)\)/;
 
+// Matches comparison operators like ==, !=, <, <=, >, >=
+const COMPARISON = /([a-z_]\w*)\s*(==|!=|<|<=|>|>=)\s*([\w"']+)/i;
+
 // currently unsupported characters in the expression: | & < > = + -
-const INVALID = /[><=|&+-]/g;
+const INVALID = /[|&+-]/g;
 
 // #include "identifier"
 const INCLUDE = /include[ \t]+"([\w-]+)"\r?(?:\n|$)/g;
@@ -374,6 +377,7 @@ class Preprocessor {
      * - expression
      * - defined(expression)
      * - !defined(expression)
+     * - simple comparisons like "XX == 3" or "XX != test"
      *
      * But does not handle more complex cases, which would require more complex system:
      *
@@ -388,12 +392,35 @@ class Preprocessor {
         const correct = INVALID.exec(expression) === null;
         Debug.assert(correct, `Resolving expression like this is not supported: ${expression}`);
 
-        // if the format is defined(expression), extract expression
+        // if the format is 'defined(expression)', extract expression
         let invert = false;
         const defined = DEFINED.exec(expression);
         if (defined) {
             invert = defined[1] === '!';
             expression = defined[2];
+        }
+
+        // if the expression is a comparison, evaluate it
+        const comparison = COMPARISON.exec(expression);
+        if (comparison) {
+            const left = defines.get(comparison[1]) ?? comparison[1];
+            const right = defines.get(comparison[3]) ?? comparison[3];
+            const operator = comparison[2];
+
+            let result = false;
+            switch (operator) {
+                case '==': result = left === right; break;
+                case '!=': result = left !== right; break;
+                case '<': result = left < right; break;
+                case '<=': result = left <= right; break;
+                case '>': result = left > right; break;
+                case '>=': result = left >= right; break;
+            }
+
+            return {
+                result,
+                error: !correct
+            };
         }
 
         // test if expression define exists
