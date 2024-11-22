@@ -37,6 +37,8 @@ const splatCoreVS = /* glsl */ `
     vec4 chunkDataA;    // x: min_x, y: min_y, z: min_z, w: max_x
     vec4 chunkDataB;    // x: max_y, y: max_z, z: scale_min_x, w: scale_min_y
     vec4 chunkDataC;    // x: scale_min_z, y: scale_max_x, z: scale_max_y, w: scale_max_z
+    vec4 chunkDataD;    // x: min_r, y: min_g, z: min_b, w: max_r
+    vec4 chunkDataE;    // x: max_g, y: max_b, z: unused, w: unused
     uvec4 packedData;   // x: position bits, y: rotation bits, z: scale bits, w: color bits
 
     // calculate the current splat index and uvs
@@ -67,7 +69,7 @@ const splatCoreVS = /* glsl */ `
         // calculate chunkUV
         uint chunkId = splatId / 256u;
         chunkUV = ivec2(
-            int((chunkId % chunkWidth) * 3u),
+            int((chunkId % chunkWidth) * 5u),
             int(chunkId / chunkWidth)
         );
 
@@ -79,6 +81,8 @@ const splatCoreVS = /* glsl */ `
         chunkDataA = texelFetch(chunkTexture, chunkUV, 0);
         chunkDataB = texelFetch(chunkTexture, ivec2(chunkUV.x + 1, chunkUV.y), 0);
         chunkDataC = texelFetch(chunkTexture, ivec2(chunkUV.x + 2, chunkUV.y), 0);
+        chunkDataD = texelFetch(chunkTexture, ivec2(chunkUV.x + 3, chunkUV.y), 0);
+        chunkDataE = texelFetch(chunkTexture, ivec2(chunkUV.x + 4, chunkUV.y), 0);
         packedData = texelFetch(packedTexture, packedUV, 0);
     }
 
@@ -127,7 +131,8 @@ const splatCoreVS = /* glsl */ `
     }
 
     vec4 getColor() {
-        return unpack8888(packedData.w);
+        vec4 r = unpack8888(packedData.w);
+        return vec4(mix(chunkDataD.xyz, vec3(chunkDataD.w, chunkDataE.xy), r.rgb), r.w);
     }
 
     mat3 quatToMat3(vec4 R) {

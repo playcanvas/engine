@@ -36,6 +36,7 @@ const dataTypeMap = new Map([
     ['uchar', Uint8Array],
     ['short', Int16Array],
     ['ushort', Uint16Array],
+    ['half', Uint16Array],
     ['int', Int32Array],
     ['uint', Uint32Array],
     ['float', Float32Array],
@@ -205,7 +206,9 @@ const isCompressedPly = (elements) => {
         'min_x', 'min_y', 'min_z',
         'max_x', 'max_y', 'max_z',
         'min_scale_x', 'min_scale_y', 'min_scale_z',
-        'max_scale_x', 'max_scale_y', 'max_scale_z'
+        'max_scale_x', 'max_scale_y', 'max_scale_z',
+        'min_r', 'min_g', 'min_b',
+        'max_r', 'max_g', 'max_b'
     ];
 
     const vertexProperties = [
@@ -226,11 +229,11 @@ const isCompressedPly = (elements) => {
 
     const hasSHElements = () => {
         return elements[2].name === 'sh_band_1' &&
-               elements[2].properties.every((p, i) => p.name === band1Properties[i] && p.type === 'ushort') &&
+               elements[2].properties.every((p, i) => p.name === band1Properties[i] && p.type === 'half') &&
                elements[3].name === 'sh_band_2' &&
-               elements[3].properties.every((p, i) => p.name === band2Properties[i] && p.type === 'ushort') &&
+               elements[3].properties.every((p, i) => p.name === band2Properties[i] && p.type === 'half') &&
                elements[4].name === 'sh_band_3' &&
-               elements[4].properties.every((p, i) => p.name === band3Properties[i] && p.type === 'ushort') &&
+               elements[4].properties.every((p, i) => p.name === band3Properties[i] && p.type === 'half') &&
                elements[5].name === 'vertex_sh' &&
                elements[5].properties.every((p, i) => p.name === indicesProperties[i] && p.type === 'uint');
     };
@@ -249,6 +252,7 @@ const readCompressedPly = async (streamBuf, elements, littleEndian) => {
     const result = new GSplatCompressedData();
 
     const numChunks = elements[0].count;
+    const numChunkProperties = elements[0].properties.length;
     const numVertices = elements[1].count;
 
     // evaluate the storage size for the given count (this must match the
@@ -261,7 +265,7 @@ const readCompressedPly = async (streamBuf, elements, littleEndian) => {
 
     // allocate result
     result.numSplats = numVertices;
-    result.chunkData = new Float32Array(evalStorageSize(numChunks) * 12);
+    result.chunkData = new Float32Array(numChunks * numChunkProperties);
     result.vertexData = new Uint32Array(evalStorageSize(numVertices) * 4);
 
     // read length bytes of data into buffer
@@ -284,7 +288,7 @@ const readCompressedPly = async (streamBuf, elements, littleEndian) => {
     };
 
     // read chunk data
-    await read(result.chunkData.buffer, numChunks * 12 * 4);
+    await read(result.chunkData.buffer, numChunks * numChunkProperties * 4);
 
     // read packed vertices
     await read(result.vertexData.buffer, numVertices * 4 * 4);

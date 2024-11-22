@@ -5,6 +5,17 @@ const oneDiv255 = 1 / 255;
 const floatView = new Float32Array(1);
 const int32View = new Int32Array(floatView.buffer);
 
+const f32 = new Float32Array(1);
+const magicF = new Float32Array(1);
+const wasInfNanF = new Float32Array(1);
+
+const u32 = new Uint32Array(f32.buffer);
+const magicU = new Uint32Array(magicF.buffer);
+const wasInfNanU = new Uint32Array(wasInfNanF.buffer);
+
+magicU[0] = (254 - 15) << 23;
+wasInfNanU[0] = (127 + 16) << 23;
+
 /**
  * Utility static class providing functionality to pack float values to various storage
  * representations.
@@ -119,6 +130,24 @@ class FloatPacking {
         value = math.clamp((value - min) / (max - min), 0, 1);
         FloatPacking.float2Bytes(value, array, offset, numBytes);
     }
+
+    /**
+     * Unpacks a 16 bit half floating point value to a float.
+     * 
+     * Based on https://fgiesen.wordpress.com/2012/03/28/half-to-float-done-quic/
+     *
+     * @param {number} value - The half value to pack as a uint16.
+     * @returns {number} The packed value.
+     */
+    static half2Float(value) {
+        u32[0] = (value & 0x7fff) << 13;
+        f32[0] *= magicF[0];
+        if (f32[0] >= wasInfNanF[0]) {
+            u32[0] |= 255 << 23;
+        }
+        u32[0] |= (value & 0x8000) << 16;
+        return f32[0];
+    };
 
     /**
      * Packs a float into specified number of bytes, using 1 byte for exponent and the remaining
