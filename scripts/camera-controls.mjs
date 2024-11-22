@@ -134,13 +134,14 @@ class CameraControls extends Script {
 
     /**
      * @type {HTMLElement}
+     * @private
      */
     _element;
 
     /**
      * @type {Entity}
      */
-    root;
+    root = new Entity();
 
     /**
      * The scene size. The zoom, pan and fly speeds are relative to this size.
@@ -252,7 +253,6 @@ class CameraControls extends Script {
     constructor(args) {
         super(args);
         const {
-            name,
             element,
             enableOrbit,
             enablePan,
@@ -272,7 +272,6 @@ class CameraControls extends Script {
             crouchSpeed
         } = args.attributes;
 
-        this.root = new Entity(name ?? 'camera-controls');
         this.app.root.addChild(this.root);
 
         this._element = element ?? this.app.graphicsDevice.canvas;
@@ -341,7 +340,7 @@ class CameraControls extends Script {
 
     get focusPoint() {
         if (this._flying) {
-            return tmpV1.copy(this.root.forward).mulScalar(this._zoomDist).add(this._origin);
+            return tmpV1.copy(this._camera.entity.forward).mulScalar(this._zoomDist).add(this._origin);
         }
         return this._origin;
     }
@@ -576,7 +575,7 @@ class CameraControls extends Script {
             this._panning = false;
         }
         if (this._flying) {
-            tmpV1.copy(this.root.forward).mulScalar(this._zoomDist);
+            tmpV1.copy(this._camera.entity.forward).mulScalar(this._zoomDist);
             this._origin.add(tmpV1);
             this._position.add(tmpV1);
             this._flying = false;
@@ -684,22 +683,22 @@ class CameraControls extends Script {
 
         tmpV1.set(0, 0, 0);
         if (this._key.forward) {
-            tmpV1.add(this.root.forward);
+            tmpV1.add(this._camera.entity.forward);
         }
         if (this._key.backward) {
-            tmpV1.sub(this.root.forward);
+            tmpV1.sub(this._camera.entity.forward);
         }
         if (this._key.left) {
-            tmpV1.sub(this.root.right);
+            tmpV1.sub(this._camera.entity.right);
         }
         if (this._key.right) {
-            tmpV1.add(this.root.right);
+            tmpV1.add(this._camera.entity.right);
         }
         if (this._key.up) {
-            tmpV1.add(this.root.up);
+            tmpV1.add(this._camera.entity.up);
         }
         if (this._key.down) {
-            tmpV1.sub(this.root.up);
+            tmpV1.sub(this._camera.entity.up);
         }
         tmpV1.normalize();
         const speed = this._key.crouch ? this.crouchSpeed : this._key.sprint ? this.sprintSpeed : this.moveSpeed;
@@ -739,7 +738,7 @@ class CameraControls extends Script {
         const mouseW = this._camera.screenToWorld(pos.x, pos.y, 1);
         const cameraPos = this._camera.entity.getPosition();
 
-        const focusDirScaled = tmpV1.copy(this.root.forward).mulScalar(this._zoomDist);
+        const focusDirScaled = tmpV1.copy(this._camera.entity.forward).mulScalar(this._zoomDist);
         const focalPos = tmpV2.add2(cameraPos, focusDirScaled);
         const planeNormal = focusDirScaled.mulScalar(-1).normalize();
 
