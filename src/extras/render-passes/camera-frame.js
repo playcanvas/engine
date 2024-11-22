@@ -9,7 +9,11 @@ import { CameraFrameOptions, RenderPassCameraFrame } from './render-pass-camera-
  * @import { AppBase } from '../../framework/app-base.js'
  * @import { CameraComponent } from '../../framework/components/camera/component.js'
  */
+
 /**
+ * Properties related to scene rendering, encompassing settings that control the rendering resolution,
+ * pixel format, multi-sampling for anti-aliasing, tone-mapping and similar.
+ *
  * @typedef {Object} Rendering
  * @property {number[]} renderFormats - The preferred render formats of the frame buffer, in order of
  * preference. First format from this list that is supported by the hardware is used. When none of
@@ -47,6 +51,11 @@ import { CameraFrameOptions, RenderPassCameraFrame } from './render-pass-camera-
  */
 
 /**
+ * Properties related to the Screen Space Ambient Occlusion (SSAO) effect, a postprocessing technique
+ * that approximates ambient occlusion by calculating how exposed each point in the screen space is
+ * to ambient light, enhancing depth perception and adding subtle shadowing in crevices and between
+ * objects.
+ *
  * @typedef {Object} Ssao
  * @property {string} type - The type of the SSAO determines how it is applied in the rendering
  * process. Defaults to {@link SSAOTYPE_NONE}. Can be:
@@ -65,6 +74,10 @@ import { CameraFrameOptions, RenderPassCameraFrame } from './render-pass-camera-
  */
 
 /**
+ * Properties related to the HDR bloom effect, a postprocessing technique that simulates the natural
+ * glow of bright light sources by spreading their intensity beyond their boundaries, creating a soft
+ * and realistic blooming effect.
+ *
  * @typedef {Object} Bloom
  * @property {number} intensity - The intensity of the bloom effect, 0-0.1 range. Defaults to 0,
  * making it disabled.
@@ -72,6 +85,10 @@ import { CameraFrameOptions, RenderPassCameraFrame } from './render-pass-camera-
  */
 
 /**
+ * Properties related to the color grading effect, a postprocessing technique used to adjust and the
+ * visual tone of an image. This effect modifies brightness, contrast, saturation, and overall color
+ * balance to achieve a specific aesthetic or mood.
+ *
  * @typedef {Object} Grading
  * @property {boolean} enabled - Whether grading is enabled. Defaults to false.
  * @property {number} brightness - The brightness of the grading effect, 0-3 range. Defaults to 1.
@@ -81,6 +98,11 @@ import { CameraFrameOptions, RenderPassCameraFrame } from './render-pass-camera-
  */
 
 /**
+ * Properties related to the vignette effect, a postprocessing technique that darkens the image
+ * edges, creating a gradual falloff in brightness from the center outward. The effect can be also
+ * reversed, making the center of the image darker than the edges, by specifying the outer distance
+ * smaller than the inner distance.
+ *
  * @typedef {Object} Vignette
  * @property {number} intensity - The intensity of the vignette effect, 0-1 range. Defaults to 0,
  * making it disabled.
@@ -99,12 +121,18 @@ import { CameraFrameOptions, RenderPassCameraFrame } from './render-pass-camera-
  */
 
 /**
+ * Properties related to the fringing effect, a chromatic aberration phenomenon where the red, green,
+ * and blue color channels diverge increasingly with greater distance from the center of the screen.
+ *
  * @typedef {Object} Fringing
  * @property {number} intensity - The intensity of the fringing effect, 0-100 range. Defaults to 0,
  * making it disabled.
  */
 
 /**
+ * Properties related to temporal anti-aliasing (TAA), which is a technique used to reduce aliasing
+ * in the rendered image by blending multiple frames together over time.
+ *
  * @typedef {Object} Taa
  * @property {boolean} enabled - Whether Taa is enabled. Defaults to false.
  * @property {number} jitter - The intensity of the camera jitter, 0-1 range. The larger the value,
