@@ -11,12 +11,20 @@ import { CameraFrameOptions, RenderPassCameraFrame } from './render-pass-camera-
  */
 /**
  * @typedef {Object} Rendering
- * @property {number[]} renderFormats - The render formats of the frame buffer, in order of
- * preference. Defaults to [{@link PIXELFORMAT_111110F}, {@link PIXELFORMAT_RGBA16F},
- * {@link PIXELFORMAT_RGBA32F}].
+ * @property {number[]} renderFormats - The preferred render formats of the frame buffer, in order of
+ * preference. First format from this list that is supported by the hardware is used. When none of
+ * the formats are supported, {@link PIXELFORMAT_RGBA8} is used, but this automatically disables
+ * bloom effect, which requires HDR format. The list can contain the following formats:
+ * {@link PIXELFORMAT_111110F}, {@link PIXELFORMAT_RGBA16F}, {@link PIXELFORMAT_RGBA32F} and {@link
+ * PIXELFORMAT_RGBA8}. Typically the default option should be used, which prefers the faster formats,
+ * but if higher dynamic range is needed, the list can be adjusted to prefer higher precision formats.
+ * Defaults to [{@link PIXELFORMAT_111110F}, {@link PIXELFORMAT_RGBA16F}, {@link PIXELFORMAT_RGBA32F}].
  * @property {boolean} stencil - Whether the render buffer has a stencil buffer. Defaults to false.
  * @property {number} renderTargetScale - The scale of the frame buffer, 0.1-1 range. Defaults to 1.
- * @property {number} samples - The number of samples of the render buffer, 1-4 range. Defaults to 1.
+ * @property {number} samples - The number of samples of the {@link RenderTarget} used for the scene
+ * rendering, in 1-4 range. Value of 1 disables multisample anti-aliasing, other values enable
+ * anti-aliasing, Typically set to 1 when TAA is used, even though both anti-aliasing options can be
+ * used together at a higher cost. Defaults to 1.
  * @property {boolean} sceneColorMap - Whether rendering generates a scene color map. Defaults to false.
  * @property {boolean} sceneDepthMap - Whether rendering generates a scene depth map. Defaults to false.
  * @property {number} toneMapping - The tone mapping. Defaults to {@link ToneMapping.LINEAR}. Can be:
