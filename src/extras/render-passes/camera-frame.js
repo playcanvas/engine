@@ -28,7 +28,10 @@ import { CameraFrameOptions, RenderPassCameraFrame } from './render-pass-camera-
  * - {@link TONEMAP_ACES2}
  * - {@link TONEMAP_NEUTRAL}
  *
- * @property {number} sharpness - The sharpness of the frame buffer, 0-1 range. Defaults to 0.
+ * @property {number} sharpness - The sharpening intensity, 0-1 range. This can be used to increase
+ * the sharpness of the rendered image. Often used to counteract the blurriness of the TAA effect,
+ * but also blurriness caused by rendering to a lower resolution render target by using
+ * rendering.renderTargetScale property. Defaults to 0.
  */
 
 /**
@@ -92,7 +95,10 @@ import { CameraFrameOptions, RenderPassCameraFrame } from './render-pass-camera-
 /**
  * @typedef {Object} Taa
  * @property {boolean} enabled - Whether Taa is enabled. Defaults to false.
- * @property {number} jitter - The intensity of the camera jitter, 0-1 range. Defaults to 1.
+ * @property {number} jitter - The intensity of the camera jitter, 0-1 range. The larger the value,
+ * the more jitter is applied to the camera, making the anti-aliasing effect more pronounced. This
+ * also makes the image more blurry, and rendering.sharpness parameter can be used to counteract.
+ * Defaults to 1.
  */
 
 /**
