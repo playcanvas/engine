@@ -20,7 +20,11 @@ import { CameraFrameOptions, RenderPassCameraFrame } from './render-pass-camera-
  * but if higher dynamic range is needed, the list can be adjusted to prefer higher precision formats.
  * Defaults to [{@link PIXELFORMAT_111110F}, {@link PIXELFORMAT_RGBA16F}, {@link PIXELFORMAT_RGBA32F}].
  * @property {boolean} stencil - Whether the render buffer has a stencil buffer. Defaults to false.
- * @property {number} renderTargetScale - The scale of the frame buffer, 0.1-1 range. Defaults to 1.
+ * @property {number} renderTargetScale - The scale of the render target, 0.1-1 range. This allows the
+ * scene to be rendered to a lower resolution render target as an optimization. The post-processing
+ * is also applied at this lower resolution. The image is then up-scaled to the full resolution and
+ * any UI rendering that follows is applied at the full resolution. Defaults to 1 which represents
+ * full resolution rendering.
  * @property {number} samples - The number of samples of the {@link RenderTarget} used for the scene
  * rendering, in 1-4 range. Value of 1 disables multisample anti-aliasing, other values enable
  * anti-aliasing, Typically set to 1 when TAA is used, even though both anti-aliasing options can be
