@@ -28,11 +28,75 @@ const properties = [
 ];
 
 /**
- * The JointComponent adds a physics joint constraint linking two rigid bodies.
- *
- * @ignore
+ * The JointComponent adds a physics joint constraint between two rigid body components. 
+ * A joint connects two rigid bodies and restricts their relative movement in various ways.
+ * It supports both linear and angular constraints along all three axes, with options for:
+ * 
+ * - Locked motion (no movement)
+ * - Free motion (unrestricted movement)
+ * - Limited motion (movement within specified limits)
+ * - Spring behavior (with configurable stiffness, damping, and equilibrium points)
+ * 
+ * This can be used to create a variety of joint types like hinges, sliders, ball-and-socket joints, etc.
+ * Each degree of freedom (linear and angular) for each axis (X, Y, Z) can be configured independently.
+ * 
+ * @beta
  */
 class JointComponent extends Component {
+    _constraint = null;
+    _entityA = null;
+    _entityB = null;
+    _breakForce = 3.4e+38;
+    _enableCollision = true;
+
+    // Linear X degree of freedom
+    _linearMotionX = MOTION_LOCKED;
+    _linearLimitsX = new Vec2(0, 0);
+    _linearSpringX = false;
+    _linearStiffnessX = 0;
+    _linearDampingX = 1;
+    _linearEquilibriumX = 0;
+
+    // Linear Y degree of freedom
+    _linearMotionY = MOTION_LOCKED;
+    _linearLimitsY = new Vec2(0, 0);
+    _linearSpringY = false;
+    _linearStiffnessY = 0;
+    _linearDampingY = 1;
+    _linearEquilibriumY = 0;
+
+    // Linear Z degree of freedom
+    _linearMotionZ = MOTION_LOCKED;
+    _linearLimitsZ = new Vec2(0, 0);
+    _linearSpringZ = false;
+    _linearStiffnessZ = 0;
+    _linearDampingZ = 1;
+    _linearEquilibriumZ = 0;
+
+    // Angular X degree of freedom
+    _angularMotionX = MOTION_LOCKED;
+    _angularLimitsX = new Vec2(0, 0);
+    _angularSpringX = false;
+    _angularStiffnessX = 0;
+    _angularDampingX = 1;
+    _angularEquilibriumX = 0;
+
+    // Angular Y degree of freedom
+    _angularMotionY = MOTION_LOCKED;
+    _angularLimitsY = new Vec2(0, 0);
+    _angularSpringY = false;
+    _angularStiffnessY = 0;
+    _angularDampingY = 1;
+    _angularEquilibriumY = 0;
+
+    // Angular Z degree of freedom
+    _angularMotionZ = MOTION_LOCKED;
+    _angularLimitsZ = new Vec2(0, 0);
+    _angularSpringZ = false;
+    _angularEquilibriumZ = 0;
+    _angularDampingZ = 1;
+    _angularStiffnessZ = 0;
+
     /**
      * Create a new JointComponent instance.
      *
@@ -43,106 +107,142 @@ class JointComponent extends Component {
         super(system, entity);
 
         Debug.assert(typeof Ammo !== 'undefined', 'ERROR: Attempting to create a pc.JointComponent but Ammo.js is not loaded');
-
-        this._constraint = null;
-
-        this._entityA = null;
-        this._entityB = null;
-        this._breakForce = 3.4e+38;
-        this._enableCollision = true;
-
-        // Linear X degree of freedom
-        this._linearMotionX = MOTION_LOCKED;
-        this._linearLimitsX = new Vec2(0, 0);
-        this._linearSpringX = false;
-        this._linearStiffnessX = 0;
-        this._linearDampingX = 1;
-        this._linearEquilibriumX = 0;
-
-        // Linear Y degree of freedom
-        this._linearMotionY = MOTION_LOCKED;
-        this._linearLimitsY = new Vec2(0, 0);
-        this._linearSpringY = false;
-        this._linearStiffnessY = 0;
-        this._linearDampingY = 1;
-        this._linearEquilibriumY = 0;
-
-        // Linear Z degree of freedom
-        this._linearMotionZ = MOTION_LOCKED;
-        this._linearLimitsZ = new Vec2(0, 0);
-        this._linearSpringZ = false;
-        this._linearStiffnessZ = 0;
-        this._linearDampingZ = 1;
-        this._linearEquilibriumZ = 0;
-
-        // Angular X degree of freedom
-        this._angularMotionX = MOTION_LOCKED;
-        this._angularLimitsX = new Vec2(0, 0);
-        this._angularSpringX = false;
-        this._angularStiffnessX = 0;
-        this._angularDampingX = 1;
-        this._angularEquilibriumX = 0;
-
-        // Angular Y degree of freedom
-        this._angularMotionY = MOTION_LOCKED;
-        this._angularLimitsY = new Vec2(0, 0);
-        this._angularSpringY = false;
-        this._angularStiffnessY = 0;
-        this._angularDampingY = 1;
-        this._angularEquilibriumY = 0;
-
-        // Angular Z degree of freedom
-        this._angularMotionZ = MOTION_LOCKED;
-        this._angularLimitsZ = new Vec2(0, 0);
-        this._angularSpringZ = false;
-        this._angularEquilibriumZ = 0;
-        this._angularDampingZ = 1;
-        this._angularStiffnessZ = 0;
-
-        this.on('set_enabled', this._onSetEnabled, this);
     }
 
-    set entityA(body) {
-        this._destroyConstraint();
-        this._entityA = body;
-        this._createConstraint();
-    }
-
-    get entityA() {
-        return this._entityA;
-    }
-
-    set entityB(body) {
-        this._destroyConstraint();
-        this._entityB = body;
-        this._createConstraint();
-    }
-
-    get entityB() {
-        return this._entityB;
-    }
-
-    set breakForce(force) {
-        if (this._constraint && this._breakForce !== force) {
-            this._constraint.setBreakingImpulseThreshold(force);
-            this._breakForce = force;
+    /**
+     * Sets the angular damping for the X-axis. This reduces the angular velocity over time.
+     * A value of 0 means no damping, while higher values cause more damping.
+     *
+     * @type {number}
+     */
+    set angularDampingX(value) {
+        if (this._angularDampingX !== value) {
+            this._angularDampingX = value;
+            if (this._constraint) this._constraint.setDamping(3, value);
         }
     }
 
-    get breakForce() {
-        return this._breakForce;
+    /**
+     * Gets the angular damping for the X-axis.
+     *
+     * @type {number}
+     */
+    get angularDampingX() {
+        return this._angularDampingX;
     }
 
-    set enableCollision(enableCollision) {
-        this._destroyConstraint();
-        this._enableCollision = enableCollision;
-        this._createConstraint();
+    /**
+     * Sets the angular damping for the Y-axis. This reduces the angular velocity over time.
+     * A value of 0 means no damping, while higher values cause more damping.
+     *
+     * @type {number}
+     */
+    set angularDampingY(value) {
+        if (this._angularDampingY !== value) {
+            this._angularDampingY = value;
+            if (this._constraint) this._constraint.setDamping(4, value);
+        }
     }
 
-    get enableCollision() {
-        return this._enableCollision;
+    /**
+     * Gets the angular damping for the Y-axis.
+     *
+     * @type {number}
+     */
+    get angularDampingY() {
+        return this._angularDampingY;
     }
 
+    /**
+     * Sets the angular damping for the Z-axis. This reduces the angular velocity over time.
+     * A value of 0 means no damping, while higher values cause more damping.
+     *
+     * @type {number}
+     */
+    set angularDampingZ(value) {
+        if (this._angularDampingZ !== value) {
+            this._angularDampingZ = value;
+            if (this._constraint) this._constraint.setDamping(5, value);
+        }
+    }
+
+    /**
+     * Gets the angular damping for the Z-axis.
+     *
+     * @type {number}
+     */
+    get angularDampingZ() {
+        return this._angularDampingZ;
+    }
+
+    /**
+     * Sets the angular equilibrium point for the X-axis. The spring will attempt to reach this angle.
+     *
+     * @type {number}
+     */
+    set angularEquilibriumX(value) {
+        if (this._angularEquilibriumX !== value) {
+            this._angularEquilibriumX = value;
+            if (this._constraint) this._constraint.setEquilibriumPoint(3, value);
+        }
+    }
+
+    /**
+     * Gets the angular equilibrium point for the X-axis.
+     *
+     * @type {number}
+     */
+    get angularEquilibriumX() {
+        return this._angularEquilibriumX;
+    }
+
+    /**
+     * Sets the angular equilibrium point for the Y-axis. The spring will attempt to reach this angle.
+     *
+     * @type {number}
+     */
+    set angularEquilibriumY(value) {
+        if (this._angularEquilibriumY !== value) {
+            this._angularEquilibriumY = value;
+            if (this._constraint) this._constraint.setEquilibriumPoint(4, value);
+        }
+    }
+
+    /**
+     * Gets the angular equilibrium point for the Y-axis.
+     *
+     * @type {number}
+     */
+    get angularEquilibriumY() {
+        return this._angularEquilibriumY;
+    }
+
+    /**
+     * Sets the angular equilibrium point for the Z-axis. The spring will attempt to reach this angle.
+     *
+     * @type {number}
+     */
+    set angularEquilibriumZ(value) {
+        if (this._angularEquilibriumZ !== value) {
+            this._angularEquilibriumZ = value;
+            if (this._constraint) this._constraint.setEquilibriumPoint(5, value);
+        }
+    }
+
+    /**
+     * Gets the angular equilibrium point for the Z-axis.
+     *
+     * @type {number}
+     */
+    get angularEquilibriumZ() {
+        return this._angularEquilibriumZ;
+    }
+
+    /**
+     * Sets the angular limits for the X-axis rotation in degrees.
+     *
+     * @type {Vec2}
+     */
     set angularLimitsX(limits) {
         if (!this._angularLimitsX.equals(limits)) {
             this._angularLimitsX.copy(limits);
@@ -150,21 +250,20 @@ class JointComponent extends Component {
         }
     }
 
+    /**
+     * Gets the angular limits for the X-axis rotation.
+     *
+     * @type {Vec2}
+     */
     get angularLimitsX() {
         return this._angularLimitsX;
     }
 
-    set angularMotionX(value) {
-        if (this._angularMotionX !== value) {
-            this._angularMotionX = value;
-            this._updateAngularLimits();
-        }
-    }
-
-    get angularMotionX() {
-        return this._angularMotionX;
-    }
-
+    /**
+     * Sets the angular limits for the Y-axis rotation in degrees.
+     *
+     * @type {Vec2}
+     */
     set angularLimitsY(limits) {
         if (!this._angularLimitsY.equals(limits)) {
             this._angularLimitsY.copy(limits);
@@ -172,21 +271,20 @@ class JointComponent extends Component {
         }
     }
 
+    /**
+     * Gets the angular limits for the Y-axis rotation.
+     *
+     * @type {Vec2}
+     */
     get angularLimitsY() {
         return this._angularLimitsY;
     }
 
-    set angularMotionY(value) {
-        if (this._angularMotionY !== value) {
-            this._angularMotionY = value;
-            this._updateAngularLimits();
-        }
-    }
-
-    get angularMotionY() {
-        return this._angularMotionY;
-    }
-
+    /**
+     * Sets the angular limits for the Z-axis rotation in degrees.
+     *
+     * @type {Vec2}
+     */
     set angularLimitsZ(limits) {
         if (!this._angularLimitsZ.equals(limits)) {
             this._angularLimitsZ.copy(limits);
@@ -194,10 +292,71 @@ class JointComponent extends Component {
         }
     }
 
+    /**
+     * Gets the angular limits for the Z-axis rotation.
+     *
+     * @type {Vec2}
+     */
     get angularLimitsZ() {
         return this._angularLimitsZ;
     }
 
+    /**
+     * Sets the type of motion allowed for rotation around the X-axis. Can be:
+     * - MOTION_LOCKED: No rotation allowed
+     * - MOTION_FREE: Unlimited rotation allowed
+     * - MOTION_LIMITED: Rotation limited by angularLimitsX
+     *
+     * @type {string}
+     */
+    set angularMotionX(value) {
+        if (this._angularMotionX !== value) {
+            this._angularMotionX = value;
+            this._updateAngularLimits();
+        }
+    }
+
+    /**
+     * Gets the type of motion allowed for rotation around the X-axis.
+     *
+     * @type {string}
+     */
+    get angularMotionX() {
+        return this._angularMotionX;
+    }
+
+    /**
+     * Sets the type of motion allowed for rotation around the Y-axis. Can be:
+     * - MOTION_LOCKED: No rotation allowed
+     * - MOTION_FREE: Unlimited rotation allowed
+     * - MOTION_LIMITED: Rotation limited by angularLimitsY
+     *
+     * @type {string}
+     */
+    set angularMotionY(value) {
+        if (this._angularMotionY !== value) {
+            this._angularMotionY = value;
+            this._updateAngularLimits();
+        }
+    }
+
+    /**
+     * Gets the type of motion allowed for rotation around the Y-axis.
+     *
+     * @type {string}
+     */
+    get angularMotionY() {
+        return this._angularMotionY;
+    }
+
+    /**
+     * Sets the type of motion allowed for rotation around the Z-axis. Can be:
+     * - MOTION_LOCKED: No rotation allowed
+     * - MOTION_FREE: Unlimited rotation allowed
+     * - MOTION_LIMITED: Rotation limited by angularLimitsZ
+     *
+     * @type {string}
+     */
     set angularMotionZ(value) {
         if (this._angularMotionZ !== value) {
             this._angularMotionZ = value;
@@ -205,10 +364,353 @@ class JointComponent extends Component {
         }
     }
 
+    /**
+     * Gets the type of motion allowed for rotation around the Z-axis.
+     *
+     * @type {string}
+     */
     get angularMotionZ() {
         return this._angularMotionZ;
     }
 
+    /**
+     * Enables or disables the spring behavior for rotation around the X-axis.
+     *
+     * @type {boolean}
+     */
+    set angularSpringX(value) {
+        if (this._angularSpringX !== value) {
+            this._angularSpringX = value;
+            if (this._constraint) this._constraint.enableSpring(3, value);
+        }
+    }
+
+    /**
+     * Gets whether the spring behavior is enabled for rotation around the X-axis.
+     *
+     * @type {boolean}
+     */
+    get angularSpringX() {
+        return this._angularSpringX;
+    }
+
+    /**
+     * Enables or disables the spring behavior for rotation around the Y-axis.
+     *
+     * @type {boolean}
+     */
+    set angularSpringY(value) {
+        if (this._angularSpringY !== value) {
+            this._angularSpringY = value;
+            if (this._constraint) this._constraint.enableSpring(4, value);
+        }
+    }
+
+    /**
+     * Gets whether the spring behavior is enabled for rotation around the Y-axis.
+     *
+     * @type {boolean}
+     */
+    get angularSpringY() {
+        return this._angularSpringY;
+    }
+
+    /**
+     * Enables or disables the spring behavior for rotation around the Z-axis.
+     *
+     * @type {boolean}
+     */
+    set angularSpringZ(value) {
+        if (this._angularSpringZ !== value) {
+            this._angularSpringZ = value;
+            if (this._constraint) this._constraint.enableSpring(5, value);
+        }
+    }
+
+    /**
+     * Gets whether the spring behavior is enabled for rotation around the Z-axis.
+     *
+     * @type {boolean}
+     */
+    get angularSpringZ() {
+        return this._angularSpringZ;
+    }
+
+    /**
+     * Sets the spring stiffness for rotation around the X-axis.
+     *
+     * @type {number}
+     */
+    set angularStiffnessX(value) {
+        if (this._angularStiffnessX !== value) {
+            this._angularStiffnessX = value;
+            if (this._constraint) this._constraint.setStiffness(3, value);
+        }
+    }
+
+    /**
+     * Gets the spring stiffness for rotation around the X-axis.
+     *
+     * @type {number}
+     */
+    get angularStiffnessX() {
+        return this._angularStiffnessX;
+    }
+
+    /**
+     * Sets the spring stiffness for rotation around the Y-axis.
+     *
+     * @type {number}
+     */
+    set angularStiffnessY(value) {
+        if (this._angularStiffnessY !== value) {
+            this._angularStiffnessY = value;
+            if (this._constraint) this._constraint.setStiffness(4, value);
+        }
+    }
+
+    /**
+     * Gets the spring stiffness for rotation around the Y-axis.
+     *
+     * @type {number}
+     */
+    get angularStiffnessY() {
+        return this._angularStiffnessY;
+    }
+
+    /**
+     * Sets the spring stiffness for rotation around the Z-axis.
+     *
+     * @type {number}
+     */
+    set angularStiffnessZ(value) {
+        if (this._angularStiffnessZ !== value) {
+            this._angularStiffnessZ = value;
+            if (this._constraint) this._constraint.setStiffness(5, value);
+        }
+    }
+
+    /**
+     * Gets the spring stiffness for rotation around the Z-axis.
+     *
+     * @type {number}
+     */
+    get angularStiffnessZ() {
+        return this._angularStiffnessZ;
+    }
+
+    /**
+     * Sets the breaking force threshold for the constraint.
+     *
+     * @type {number}
+     */
+    set breakForce(force) {
+        if (this._constraint && this._breakForce !== force) {
+            this._constraint.setBreakingImpulseThreshold(force);
+            this._breakForce = force;
+        }
+    }
+
+    /**
+     * Gets the breaking force threshold for the constraint.
+     *
+     * @type {number}
+     */
+    get breakForce() {
+        return this._breakForce;
+    }
+
+    /**
+     * Enables or disables collision between the constrained entities.
+     *
+     * @type {boolean}
+     */
+    set enableCollision(enableCollision) {
+        this._destroyConstraint();
+        this._enableCollision = enableCollision;
+        this._createConstraint();
+    }
+
+    /**
+     * Gets whether collision is enabled between the constrained entities.
+     *
+     * @type {boolean}
+     */
+    get enableCollision() {
+        return this._enableCollision;
+    }
+
+    /**
+     * Sets the first entity in the constraint.
+     *
+     * @type {Entity}
+     */
+    set entityA(body) {
+        this._destroyConstraint();
+        this._entityA = body;
+        this._createConstraint();
+    }
+
+    /**
+     * Gets the first entity in the constraint.
+     *
+     * @type {Entity}
+     */
+    get entityA() {
+        return this._entityA;
+    }
+
+    /**
+     * Sets the second entity in the constraint.
+     *
+     * @type {Entity}
+     */
+    set entityB(body) {
+        this._destroyConstraint();
+        this._entityB = body;
+        this._createConstraint();
+    }
+
+    /**
+     * Gets the second entity in the constraint.
+     *
+     * @type {Entity}
+     */
+    get entityB() {
+        return this._entityB;
+    }
+
+    /**
+     * Sets the linear damping for movement along the X-axis.
+     *
+     * @type {number}
+     */
+    set linearDampingX(value) {
+        if (this._linearDampingX !== value) {
+            this._linearDampingX = value;
+            if (this._constraint) this._constraint.setDamping(0, value);
+        }
+    }
+
+    /**
+     * Gets the linear damping for movement along the X-axis.
+     *
+     * @type {number}
+     */
+    get linearDampingX() {
+        return this._linearDampingX;
+    }
+
+    /**
+     * Sets the linear damping for movement along the Y-axis.
+     *
+     * @type {number}
+     */
+    set linearDampingY(value) {
+        if (this._linearDampingY !== value) {
+            this._linearDampingY = value;
+            if (this._constraint) this._constraint.setDamping(1, value);
+        }
+    }
+
+    /**
+     * Gets the linear damping for movement along the Y-axis.
+     *
+     * @type {number}
+     */
+    get linearDampingY() {
+        return this._linearDampingY;
+    }
+
+    /**
+     * Sets the linear damping for movement along the Z-axis.
+     *
+     * @type {number}
+     */
+    set linearDampingZ(value) {
+        if (this._linearDampingZ !== value) {
+            this._linearDampingZ = value;
+            if (this._constraint) this._constraint.setDamping(2, value);
+        }
+    }
+
+    /**
+     * Gets the linear damping for movement along the Z-axis.
+     *
+     * @type {number}
+     */
+    get linearDampingZ() {
+        return this._linearDampingZ;
+    }
+
+    /**
+     * Sets the linear equilibrium point for movement along the X-axis.
+     *
+     * @type {number}
+     */
+    set linearEquilibriumX(value) {
+        if (this._linearEquilibriumX !== value) {
+            this._linearEquilibriumX = value;
+            if (this._constraint) this._constraint.setEquilibriumPoint(0, value);
+        }
+    }
+
+    /**
+     * Gets the linear equilibrium point for movement along the X-axis.
+     *
+     * @type {number}
+     */
+    get linearEquilibriumX() {
+        return this._linearEquilibriumX;
+    }
+
+    /**
+     * Sets the linear equilibrium point for movement along the Y-axis.
+     *
+     * @type {number}
+     */
+    set linearEquilibriumY(value) {
+        if (this._linearEquilibriumY !== value) {
+            this._linearEquilibriumY = value;
+            if (this._constraint) this._constraint.setEquilibriumPoint(1, value);
+        }
+    }
+
+    /**
+     * Gets the linear equilibrium point for movement along the Y-axis.
+     *
+     * @type {number}
+     */
+    get linearEquilibriumY() {
+        return this._linearEquilibriumY;
+    }
+
+    /**
+     * Sets the linear equilibrium point for movement along the Z-axis.
+     *
+     * @type {number}
+     */
+    set linearEquilibriumZ(value) {
+        if (this._linearEquilibriumZ !== value) {
+            this._linearEquilibriumZ = value;
+            if (this._constraint) this._constraint.setEquilibriumPoint(2, value);
+        }
+    }
+
+    /**
+     * Gets the linear equilibrium point for movement along the Z-axis.
+     *
+     * @type {number}
+     */
+    get linearEquilibriumZ() {
+        return this._linearEquilibriumZ;
+    }
+
+    /**
+     * Sets the linear limits for movement along the X-axis.
+     *
+     * @type {Vec2}
+     */
     set linearLimitsX(limits) {
         if (!this._linearLimitsX.equals(limits)) {
             this._linearLimitsX.copy(limits);
@@ -216,21 +718,20 @@ class JointComponent extends Component {
         }
     }
 
+    /**
+     * Gets the linear limits for movement along the X-axis.
+     *
+     * @type {Vec2}
+     */
     get linearLimitsX() {
         return this._linearLimitsX;
     }
 
-    set linearMotionX(value) {
-        if (this._linearMotionX !== value) {
-            this._linearMotionX = value;
-            this._updateLinearLimits();
-        }
-    }
-
-    get linearMotionX() {
-        return this._linearMotionX;
-    }
-
+    /**
+     * Sets the linear limits for movement along the Y-axis.
+     *
+     * @type {Vec2}
+     */
     set linearLimitsY(limits) {
         if (!this._linearLimitsY.equals(limits)) {
             this._linearLimitsY.copy(limits);
@@ -238,21 +739,20 @@ class JointComponent extends Component {
         }
     }
 
+    /**
+     * Gets the linear limits for movement along the Y-axis.
+     *
+     * @type {Vec2}
+     */
     get linearLimitsY() {
         return this._linearLimitsY;
     }
 
-    set linearMotionY(value) {
-        if (this._linearMotionY !== value) {
-            this._linearMotionY = value;
-            this._updateLinearLimits();
-        }
-    }
-
-    get linearMotionY() {
-        return this._linearMotionY;
-    }
-
+    /**
+     * Sets the linear limits for movement along the Z-axis.
+     *
+     * @type {Vec2}
+     */
     set linearLimitsZ(limits) {
         if (!this._linearLimitsZ.equals(limits)) {
             this._linearLimitsZ.copy(limits);
@@ -260,10 +760,71 @@ class JointComponent extends Component {
         }
     }
 
+    /**
+     * Gets the linear limits for movement along the Z-axis.
+     *
+     * @type {Vec2}
+     */
     get linearLimitsZ() {
         return this._linearLimitsZ;
     }
 
+    /**
+     * Sets the type of motion allowed for movement along the X-axis. Can be:
+     * - MOTION_LOCKED: No movement allowed
+     * - MOTION_FREE: Unlimited movement allowed
+     * - MOTION_LIMITED: Movement limited by linearLimitsX
+     *
+     * @type {string}
+     */
+    set linearMotionX(value) {
+        if (this._linearMotionX !== value) {
+            this._linearMotionX = value;
+            this._updateLinearLimits();
+        }
+    }
+
+    /**
+     * Gets the type of motion allowed for movement along the X-axis.
+     *
+     * @type {string}
+     */
+    get linearMotionX() {
+        return this._linearMotionX;
+    }
+
+    /**
+     * Sets the type of motion allowed for movement along the Y-axis. Can be:
+     * - MOTION_LOCKED: No movement allowed
+     * - MOTION_FREE: Unlimited movement allowed
+     * - MOTION_LIMITED: Movement limited by linearLimitsY
+     *
+     * @type {string}
+     */
+    set linearMotionY(value) {
+        if (this._linearMotionY !== value) {
+            this._linearMotionY = value;
+            this._updateLinearLimits();
+        }
+    }
+
+    /**
+     * Gets the type of motion allowed for movement along the Y-axis.
+     *
+     * @type {string}
+     */
+    get linearMotionY() {
+        return this._linearMotionY;
+    }
+
+    /**
+     * Sets the type of motion allowed for movement along the Z-axis. Can be:
+     * - MOTION_LOCKED: No movement allowed
+     * - MOTION_FREE: Unlimited movement allowed
+     * - MOTION_LIMITED: Movement limited by linearLimitsZ
+     *
+     * @type {string}
+     */
     set linearMotionZ(value) {
         if (this._linearMotionZ !== value) {
             this._linearMotionZ = value;
@@ -271,8 +832,139 @@ class JointComponent extends Component {
         }
     }
 
+    /**
+     * Gets the type of motion allowed for movement along the Z-axis.
+     *
+     * @type {string}
+     */
     get linearMotionZ() {
         return this._linearMotionZ;
+    }
+
+    /**
+     * Enables or disables the spring behavior for movement along the X-axis.
+     *
+     * @type {boolean}
+     */
+    set linearSpringX(value) {
+        if (this._linearSpringX !== value) {
+            this._linearSpringX = value;
+            if (this._constraint) this._constraint.enableSpring(0, value);
+        }
+    }
+
+    /**
+     * Gets whether the spring behavior is enabled for movement along the X-axis.
+     *
+     * @type {boolean}
+     */
+    get linearSpringX() {
+        return this._linearSpringX;
+    }
+
+    /**
+     * Enables or disables the spring behavior for movement along the Y-axis.
+     *
+     * @type {boolean}
+     */
+    set linearSpringY(value) {
+        if (this._linearSpringY !== value) {
+            this._linearSpringY = value;
+            if (this._constraint) this._constraint.enableSpring(1, value);
+        }
+    }
+
+    /**
+     * Gets whether the spring behavior is enabled for movement along the Y-axis.
+     *
+     * @type {boolean}
+     */
+    get linearSpringY() {
+        return this._linearSpringY;
+    }
+
+    /**
+     * Enables or disables the spring behavior for movement along the Z-axis.
+     *
+     * @type {boolean}
+     */
+    set linearSpringZ(value) {
+        if (this._linearSpringZ !== value) {
+            this._linearSpringZ = value;
+            if (this._constraint) this._constraint.enableSpring(2, value);
+        }
+    }
+
+    /**
+     * Gets whether the spring behavior is enabled for movement along the Z-axis.
+     *
+     * @type {boolean}
+     */
+    get linearSpringZ() {
+        return this._linearSpringZ;
+    }
+
+    /**
+     * Sets the spring stiffness for movement along the X-axis.
+     *
+     * @type {number}
+     */
+    set linearStiffnessX(value) {
+        if (this._linearStiffnessX !== value) {
+            this._linearStiffnessX = value;
+            if (this._constraint) this._constraint.setStiffness(0, value);
+        }
+    }
+
+    /**
+     * Gets the spring stiffness for movement along the X-axis.
+     *
+     * @type {number}
+     */
+    get linearStiffnessX() {
+        return this._linearStiffnessX;
+    }
+
+    /**
+     * Sets the spring stiffness for movement along the Y-axis.
+     *
+     * @type {number}
+     */
+    set linearStiffnessY(value) {
+        if (this._linearStiffnessY !== value) {
+            this._linearStiffnessY = value;
+            if (this._constraint) this._constraint.setStiffness(1, value);
+        }
+    }
+
+    /**
+     * Gets the spring stiffness for movement along the Y-axis.
+     *
+     * @type {number}
+     */
+    get linearStiffnessY() {
+        return this._linearStiffnessY;
+    }
+
+    /**
+     * Sets the spring stiffness for movement along the Z-axis.
+     *
+     * @type {number}
+     */
+    set linearStiffnessZ(value) {
+        if (this._linearStiffnessZ !== value) {
+            this._linearStiffnessZ = value;
+            if (this._constraint) this._constraint.setStiffness(2, value);
+        }
+    }
+
+    /**
+     * Gets the spring stiffness for movement along the Z-axis.
+     *
+     * @type {number}
+     */
+    get linearStiffnessZ() {
+        return this._linearStiffnessZ;
     }
 
     _convertTransform(pcTransform, ammoTransform) {
@@ -468,46 +1160,9 @@ class JointComponent extends Component {
         this._destroyConstraint();
     }
 
-    _onSetEnabled(prop, old, value) {
-    }
-
     _onBeforeRemove() {
         this.fire('remove');
     }
 }
-
-const functionMap = {
-    Damping: 'setDamping',
-    Equilibrium: 'setEquilibriumPoint',
-    Spring: 'enableSpring',
-    Stiffness: 'setStiffness'
-};
-
-// Define additional properties for each degree of freedom
-['linear', 'angular'].forEach((type) => {
-    ['Damping', 'Equilibrium', 'Spring', 'Stiffness'].forEach((name) => {
-        ['X', 'Y', 'Z'].forEach((axis) => {
-            const prop = type + name + axis;
-            const propInternal = `_${prop}`;
-
-            let index = (type === 'linear') ? 0 : 3;
-            if (axis === 'Y') index += 1;
-            if (axis === 'Z') index += 2;
-
-            Object.defineProperty(JointComponent.prototype, prop, {
-                get: function () {
-                    return this[propInternal];
-                },
-
-                set: function (value) {
-                    if (this[propInternal] !== value) {
-                        this[propInternal] = value;
-                        this._constraint[functionMap[name]](index, value);
-                    }
-                }
-            });
-        });
-    });
-});
 
 export { JointComponent };
