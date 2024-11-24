@@ -28,113 +28,147 @@ const properties = [
 ];
 
 /**
- * The JointComponent adds a physics joint constraint between two rigid body components. 
+ * The JointComponent adds a physics joint constraint between two rigid body components.
  * A joint connects two rigid bodies and restricts their relative movement in various ways.
  * It supports both linear and angular constraints along all three axes, with options for:
- * 
+ *
  * - Locked motion (no movement)
  * - Free motion (unrestricted movement)
  * - Limited motion (movement within specified limits)
  * - Spring behavior (with configurable stiffness, damping, and equilibrium points)
- * 
+ *
  * This can be used to create a variety of joint types like hinges, sliders, ball-and-socket joints, etc.
  * Each degree of freedom (linear and angular) for each axis (X, Y, Z) can be configured independently.
- * 
+ *
  * @beta
  */
 class JointComponent extends Component {
     /** @private */
     _constraint = null;
+
     /** @private */
     _entityA = null;
+
     /** @private */
     _entityB = null;
+
     /** @private */
     _breakForce = 3.4e+38;
+
     /** @private */
     _enableCollision = true;
 
     // Linear X degree of freedom
     /** @private */
     _linearMotionX = MOTION_LOCKED;
+
     /** @private */
     _linearLimitsX = new Vec2(0, 0);
+
     /** @private */
     _linearSpringX = false;
+
     /** @private */
     _linearStiffnessX = 0;
+
     /** @private */
     _linearDampingX = 1;
+
     /** @private */
     _linearEquilibriumX = 0;
 
     // Linear Y degree of freedom
     /** @private */
     _linearMotionY = MOTION_LOCKED;
+
     /** @private */
     _linearLimitsY = new Vec2(0, 0);
+
     /** @private */
     _linearSpringY = false;
+
     /** @private */
     _linearStiffnessY = 0;
+
     /** @private */
     _linearDampingY = 1;
+
     /** @private */
     _linearEquilibriumY = 0;
 
     // Linear Z degree of freedom
     /** @private */
     _linearMotionZ = MOTION_LOCKED;
+
     /** @private */
     _linearLimitsZ = new Vec2(0, 0);
+
     /** @private */
     _linearSpringZ = false;
+
     /** @private */
     _linearStiffnessZ = 0;
+
     /** @private */
     _linearDampingZ = 1;
+
     /** @private */
     _linearEquilibriumZ = 0;
 
     // Angular X degree of freedom
     /** @private */
     _angularMotionX = MOTION_LOCKED;
+
     /** @private */
     _angularLimitsX = new Vec2(0, 0);
+
     /** @private */
     _angularSpringX = false;
+
     /** @private */
     _angularStiffnessX = 0;
+
     /** @private */
     _angularDampingX = 1;
+
     /** @private */
     _angularEquilibriumX = 0;
 
     // Angular Y degree of freedom
     /** @private */
     _angularMotionY = MOTION_LOCKED;
+
     /** @private */
     _angularLimitsY = new Vec2(0, 0);
+
     /** @private */
     _angularSpringY = false;
+
     /** @private */
     _angularStiffnessY = 0;
+
     /** @private */
     _angularDampingY = 1;
+
     /** @private */
     _angularEquilibriumY = 0;
 
     // Angular Z degree of freedom
     /** @private */
     _angularMotionZ = MOTION_LOCKED;
+
     /** @private */
     _angularLimitsZ = new Vec2(0, 0);
+
     /** @private */
     _angularSpringZ = false;
+
     /** @private */
     _angularEquilibriumZ = 0;
+
     /** @private */
     _angularDampingZ = 1;
+
     /** @private */
     _angularStiffnessZ = 0;
 
