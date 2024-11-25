@@ -81,7 +81,9 @@ import { CameraFrameOptions, RenderPassCameraFrame } from './render-pass-camera-
  * @typedef {Object} Bloom
  * @property {number} intensity - The intensity of the bloom effect, 0-0.1 range. Defaults to 0,
  * making it disabled.
- * @property {number} lastMipLevel - The last mip level of the bloom effect, 0-12 range. Defaults to 1.
+ * @property {number} blurLevel - The number of iterations for blurring the bloom effect, with each
+ * level doubling the blur size. Once the blur size matches the dimensions of the render target,
+ * further blur passes are skipped. The default value is 16.
  */
 
 /**
@@ -187,7 +189,7 @@ class CameraFrame {
      */
     bloom = {
         intensity: 0,
-        lastMipLevel: 1
+        blurLevel: 16
     };
 
     /**
@@ -345,7 +347,7 @@ class CameraFrame {
 
         if (options.bloomEnabled && bloomPass) {
             composePass.bloomIntensity = bloom.intensity;
-            bloomPass.lastMipLevel = bloom.lastMipLevel;
+            bloomPass.blurLevel = bloom.blurLevel;
         }
 
         if (options.ssaoType !== SSAOTYPE_NONE) {

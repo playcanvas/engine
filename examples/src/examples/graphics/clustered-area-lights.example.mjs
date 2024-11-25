@@ -230,7 +230,7 @@ assetListLoader.load(() => {
     const cameraFrame = new pc.CameraFrame(app, camera.camera);
     cameraFrame.rendering.samples = 4;
     cameraFrame.bloom.intensity = 0.01;
-    cameraFrame.bloom.lastMipLevel = 4;
+    cameraFrame.bloom.blurLevel = 4;
     cameraFrame.update();
 
     // if the device renders in HDR mode, disable tone mapping to output HDR values without any processing

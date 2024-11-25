@@ -247,7 +247,7 @@ assetListLoader.load(() => {
 
         // Bloom
         cameraFrame.bloom.intensity = data.get('data.bloom.enabled') ? pc.math.lerp(0, 0.1, data.get('data.bloom.intensity') / 100) : 0;
-        cameraFrame.bloom.lastMipLevel = data.get('data.bloom.lastMipLevel');
+        cameraFrame.bloom.blurLevel = data.get('data.bloom.blurLevel');
 
         // grading
         cameraFrame.grading.enabled = data.get('data.grading.enabled');
@@ -284,7 +284,7 @@ assetListLoader.load(() => {
         bloom: {
             enabled: true,
             intensity: 5,
-            lastMipLevel: 1
+            blurLevel: 16
         },
         grading: {
             enabled: false,

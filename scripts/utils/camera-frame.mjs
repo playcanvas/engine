@@ -147,11 +147,11 @@ class Bloom {
 
     /**
      * @attribute
-     * @range [0, 12]
+     * @range [0, 16]
      * @precision 0
      * @step 0
      */
-    lastMipLevel = 1;
+    blurLevel = 1;
 }
 
 /** @interface */
@@ -336,7 +336,7 @@ class CameraFrame extends Script {
         const dstBloom = cf.bloom;
         dstBloom.intensity = bloom.enabled ? bloom.intensity : 0;
         if (bloom.enabled) {
-            dstBloom.lastMipLevel = bloom.lastMipLevel;
+            dstBloom.blurLevel = bloom.blurLevel;
         }
 
         // grading
