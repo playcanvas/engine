@@ -7,6 +7,7 @@ import { FILTER_LINEAR, ADDRESS_CLAMP_TO_EDGE } from '../../platform/graphics/co
 
 import { RenderPassDownsample } from './render-pass-downsample.js';
 import { RenderPassUpsample } from './render-pass-upsample.js';
+import { math } from '../../core/math/math.js';
 
 // based on https://learnopengl.com/Guest-Articles/2022/Phys.-Based-Bloom
 /**
@@ -18,7 +19,7 @@ import { RenderPassUpsample } from './render-pass-upsample.js';
 class RenderPassBloom extends RenderPass {
     bloomTexture;
 
-    lastMipLevel = 1;
+    blurLevel = 16;
 
     bloomRenderTarget;
 
@@ -151,8 +152,8 @@ class RenderPassBloom extends RenderPass {
         super.frameUpdate();
 
         // create an appropriate amount of render passes
-        let numPasses = this.calcMipLevels(this._sourceTexture.width, this._sourceTexture.height, 2 ** this.lastMipLevel);
-        numPasses = Math.max(1, numPasses);
+        const maxNumPasses = this.calcMipLevels(this._sourceTexture.width, this._sourceTexture.height, 1);
+        const numPasses = math.clamp(maxNumPasses, 1, this.blurLevel);
 
         if (this.renderTargets.length !== numPasses) {
 
