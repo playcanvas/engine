@@ -1,7 +1,6 @@
 import { Debug } from '../../core/debug.js';
 import { now } from '../../core/time.js';
 import { Mat3 } from '../../core/math/mat3.js';
-import { Vec3 } from '../../core/math/vec3.js';
 import { BoundingBox } from '../../core/shape/bounding-box.js';
 
 import {
@@ -706,7 +705,19 @@ class BatchManager {
                         if (!dynamic && stream.numComponents >= 3) {
                             if (semantic === SEMANTIC_POSITION) {
                                 const m = transform.data;
-                                const [ m0, m1, m2, m3, m4, m5, m6, m7, m8, m9, m10, m11, m12, m13, m14 ] = m;
+                                const m0 = m[0];
+                                const m1 = m[1];
+                                const m2 = m[2];
+                                const m4 = m[4];
+                                const m5 = m[5];
+                                const m6 = m[6];
+                                const m8 = m[8];
+                                const m9 = m[9];
+                                const m10 = m[10];
+                                const m12 = m[12];
+                                const m13 = m[13];
+                                const m14 = m[14];
+
                                 let x, y, z;
 
                                 for (let j = 0; j < totalComponents; j += stream.numComponents) {
@@ -723,8 +734,7 @@ class BatchManager {
                                 // handle non-uniform scale by using transposed inverse matrix to transform vectors
                                 mat3.invertMat4(transform).transpose();
 
-                                const m = mat3.data;
-                                const [ m0, m1, m2, m3, m4, m5, m6, m7, m8 ] = m;
+                                const [m0, m1, m2, m3, m4, m5, m6, m7, m8] = mat3.data;
                                 let x, y, z;
 
                                 for (let j = 0; j < totalComponents; j += stream.numComponents) {
