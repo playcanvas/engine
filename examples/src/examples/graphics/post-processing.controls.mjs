@@ -59,6 +59,21 @@ export const controls = ({ observer, ReactPCUI, React, jsx, fragment }) => {
                         { v: pc.TONEMAP_NEUTRAL, t: 'NEUTRAL' }
                     ]
                 })
+            ),
+            jsx(
+                LabelGroup,
+                { text: 'Debug' },
+                jsx(SelectInput, {
+                    binding: new BindingTwoWay(),
+                    link: { observer, path: 'data.scene.debug' },
+                    type: 'number',
+                    options: [
+                        { v: 0, t: 'NONE' },
+                        { v: 1, t: 'BLOOM' },
+                        { v: 2, t: 'VIGNETTE' },
+                        { v: 3, t: 'SCENE' },
+                    ]
+                })
             )
         ),
         jsx(

@@ -168,9 +168,11 @@ assetListLoader.load(() => {
     // ------ Custom render passes set up ------
 
     const cameraFrame = new pc.CameraFrame(app, cameraEntity.camera);
-    cameraFrame.rendering.samples = 4;
     cameraFrame.rendering.toneMapping = pc.TONEMAP_NEUTRAL;
 
+    // use 16but render target for better precision, improves quality with TAA and randomized SSAO
+    cameraFrame.rendering.renderFormats = [pc.PIXELFORMAT_RGBA16F];
+    
     const applySettings = () => {
 
         cameraFrame.ssao.type = data.get('data.ssao.type');
@@ -181,6 +183,14 @@ assetListLoader.load(() => {
         cameraFrame.ssao.samples = data.get('data.ssao.samples');
         cameraFrame.ssao.minAngle = data.get('data.ssao.minAngle');
         cameraFrame.ssao.scale = data.get('data.ssao.scale');
+        cameraFrame.ssao.randomize = data.get('data.ssao.randomize');
+        cameraFrame.debug = data.get('data.ssao.debug') ? 'ssao' : '';
+
+        // TAA or MSAA
+        const taa = data.get('data.ssao.taa');
+        cameraFrame.taa.enabled = taa;
+        cameraFrame.rendering.samples = taa ? 1 : 4;    // disable MSAA when TAA is enabled
+        cameraFrame.rendering.sharpness = taa ? 1 : 0;  // sharpen the image when TAA is enabled
 
         cameraFrame.update();
     };
@@ -213,7 +223,10 @@ assetListLoader.load(() => {
             intensity: 0.4,
             power: 6,
             minAngle: 10,
-            scale: 1
+            scale: 1,
+            taa: false,
+            randomize: false,
+            debug: false
         }
     });
 });

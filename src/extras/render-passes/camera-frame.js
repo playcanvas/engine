@@ -65,6 +65,8 @@ import { CameraFrameOptions, RenderPassCameraFrame } from './render-pass-camera-
  * - {@link SSAOTYPE_COMBINE}
  *
  * @property {boolean} blurEnabled - Whether the SSAO effect is blurred. Defaults to true.
+ * @property {boolean} randomize - Whether the SSAO sampling is randomized. Useful when used instead
+ * of blur effect together with TAA. Defaults to false.
  * @property {number} intensity - The intensity of the SSAO effect, 0-1 range. Defaults to 0.5.
  * @property {number} radius - The radius of the SSAO effect, 0-100 range. Defaults to 30.
  * @property {number} samples - The number of samples of the SSAO effect, 1-64 range. Defaults to 12.
@@ -174,6 +176,7 @@ class CameraFrame {
     ssao = {
         type: SSAOTYPE_NONE,
         blurEnabled: true,
+        randomize: false,
         intensity: 0.5,
         radius: 30,
         samples: 12,
@@ -235,6 +238,13 @@ class CameraFrame {
     fringing = {
         intensity: 0
     };
+
+    /**
+     * Debug rendering.
+     *
+     * @type {''|'scene'|'ssao'|'bloom'|'vignette'}
+     */
+    debug = '';
 
     options = new CameraFrameOptions();
 
@@ -357,6 +367,7 @@ class CameraFrame {
             ssaoPass.sampleCount = ssao.samples;
             ssaoPass.minAngle = ssao.minAngle;
             ssaoPass.scale = ssao.scale;
+            ssaoPass.randomize = ssao.randomize;
         }
 
         composePass.gradingEnabled = grading.enabled;
@@ -382,6 +393,11 @@ class CameraFrame {
 
         // enable camera jitter if taa is enabled
         cameraComponent.jitter = taa.enabled ? taa.jitter : 0;
+
+        // debug rendering
+        composePass.debug = this.debug;
+        if (composePass.debug === 'ssao' && options.ssaoType == SSAOTYPE_NONE) composePass.debug = '';
+        if (composePass.debug === 'vignette' && !composePass.vignetteEnabled) composePass.debug = '';
     }
 }
 

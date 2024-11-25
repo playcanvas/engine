@@ -35,6 +35,15 @@ export const controls = ({ observer, ReactPCUI, React, jsx, fragment }) => {
             ),
             jsx(
                 LabelGroup,
+                { text: 'randomize' },
+                jsx(BooleanInput, {
+                    type: 'toggle',
+                    binding: new BindingTwoWay(),
+                    link: { observer, path: 'data.ssao.randomize' }
+                })
+            ),
+            jsx(
+                LabelGroup,
                 { text: 'radius' },
                 jsx(SliderInput, {
                     binding: new BindingTwoWay(),
@@ -91,6 +100,24 @@ export const controls = ({ observer, ReactPCUI, React, jsx, fragment }) => {
                     ],
                     binding: new BindingTwoWay(),
                     link: { observer, path: 'data.ssao.scale' }
+                })
+            ),
+            jsx(
+                LabelGroup,
+                { text: 'TAA' },
+                jsx(BooleanInput, {
+                    type: 'toggle',
+                    binding: new BindingTwoWay(),
+                    link: { observer, path: 'data.ssao.taa' }
+                })
+            ),
+            jsx(
+                LabelGroup,
+                { text: 'debug' },
+                jsx(BooleanInput, {
+                    type: 'toggle',
+                    binding: new BindingTwoWay(),
+                    link: { observer, path: 'data.ssao.debug' }
                 })
             )
         )
