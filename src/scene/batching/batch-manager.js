@@ -706,6 +706,7 @@ class BatchManager {
                         if (!dynamic && stream.numComponents >= 3) {
                             if (semantic === SEMANTIC_POSITION) {
                                 const m = transform.data;
+                                const [ m0, m1, m2, m3, m4, m5, m6, m7, m8, m9, m10, m11, m12, m13, m14 ] = m;
                                 let x, y, z;
 
                                 for (let j = 0; j < totalComponents; j += stream.numComponents) {
@@ -714,15 +715,16 @@ class BatchManager {
                                     z = subarray[j + 2];
 
                                     // mat4.transformVector
-                                    subarray[j] = x * m[0] + y * m[4] + z * m[8] + m[12];
-                                    subarray[j + 1] = x * m[1] + y * m[5] + z * m[9] + m[13];
-                                    subarray[j + 2] = x * m[2] + y * m[6] + z * m[10] + m[14];
+                                    subarray[j] = x * m0 + y * m4 + z * m8 + m12;
+                                    subarray[j + 1] = x * m1 + y * m5 + z * m9 + m13;
+                                    subarray[j + 2] = x * m2 + y * m6 + z * m10 + m14;
                                 }
                             } else if (semantic === SEMANTIC_NORMAL || semantic === SEMANTIC_TANGENT) {
                                 // handle non-uniform scale by using transposed inverse matrix to transform vectors
                                 mat3.invertMat4(transform).transpose();
 
                                 const m = mat3.data;
+                                const [ m0, m1, m2, m3, m4, m5, m6, m7, m8 ] = m;
                                 let x, y, z;
 
                                 for (let j = 0; j < totalComponents; j += stream.numComponents) {
@@ -731,9 +733,9 @@ class BatchManager {
                                     z = subarray[j + 2];
 
                                     // mat3.transformVector
-                                    subarray[j] = x * m[0] + y * m[3] + z * m[6];
-                                    subarray[j + 1] = x * m[1] + y * m[4] + z * m[7];
-                                    subarray[j + 2] = x * m[2] + y * m[5] + z * m[8];
+                                    subarray[j] = x * m0 + y * m3 + z * m6;
+                                    subarray[j + 1] = x * m1 + y * m4 + z * m7;
+                                    subarray[j + 2] = x * m2 + y * m5 + z * m8;
                                 }
                             }
                         }
