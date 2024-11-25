@@ -172,7 +172,7 @@ assetListLoader.load(() => {
 
     // use 16but render target for better precision, improves quality with TAA and randomized SSAO
     cameraFrame.rendering.renderFormats = [pc.PIXELFORMAT_RGBA16F];
-    
+
     const applySettings = () => {
 
         cameraFrame.ssao.type = data.get('data.ssao.type');

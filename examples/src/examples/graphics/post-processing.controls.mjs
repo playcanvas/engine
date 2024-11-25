@@ -71,7 +71,7 @@ export const controls = ({ observer, ReactPCUI, React, jsx, fragment }) => {
                         { v: 0, t: 'NONE' },
                         { v: 1, t: 'BLOOM' },
                         { v: 2, t: 'VIGNETTE' },
-                        { v: 3, t: 'SCENE' },
+                        { v: 3, t: 'SCENE' }
                     ]
                 })
             )
