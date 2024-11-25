@@ -160,6 +160,12 @@ class RenderComponent extends Component {
     _evtLayerRemoved = null;
 
     /**
+     * @type {import('../../../core/event-handle.js').EventHandle|null}
+     * @private
+     */
+    _evtSetMeshes = null;
+
+    /**
      * Create a new RenderComponent.
      *
      * @param {import('./system.js').RenderComponentSystem} system - The ComponentSystem that
@@ -908,8 +914,8 @@ class RenderComponent extends Component {
 
         if (this._assetReference.asset) {
             const render = this._assetReference.asset.resource;
-            render.off('set:meshes', this._onSetMeshes, this);
-            render.on('set:meshes', this._onSetMeshes, this);
+            this._evtSetMeshes?.off();
+            this._evtSetMeshes = render.on('set:meshes', this._onSetMeshes, this);
             if (render.meshes) {
                 this._onSetMeshes(render.meshes);
             }
@@ -984,9 +990,8 @@ class RenderComponent extends Component {
     }
 
     _onRenderAssetRemove() {
-        if (this._assetReference.asset && this._assetReference.asset.resource) {
-            this._assetReference.asset.resource.off('set:meshes', this._onSetMeshes, this);
-        }
+        this._evtSetMeshes?.off();
+        this._evtSetMeshes = null;
 
         this._onRenderAssetUnload();
     }

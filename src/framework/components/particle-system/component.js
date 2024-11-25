@@ -123,6 +123,12 @@ class ParticleSystemComponent extends Component {
     _evtLayerRemoved = null;
 
     /**
+     * @type {import('../../../core/event-handle.js').EventHandle|null}
+     * @private
+     */
+    _evtSetMeshes = null;
+
+    /**
      * Create a new ParticleSystemComponent.
      *
      * @param {import('./system.js').ParticleSystemComponentSystem} system - The ComponentSystem
@@ -1735,9 +1741,8 @@ class ParticleSystemComponent extends Component {
         asset.off('unload', this._onRenderAssetUnload, this);
         asset.off('remove', this._onRenderAssetRemove, this);
 
-        if (asset.resource) {
-            asset.resource.off('set:meshes', this._onRenderSetMeshes, this);
-        }
+        this._evtSetMeshes?.off();
+        this._evtSetMeshes = null;
     }
 
     _onRenderAssetLoad(asset) {
@@ -1758,8 +1763,8 @@ class ParticleSystemComponent extends Component {
             return;
         }
 
-        render.off('set:meshes', this._onRenderSetMeshes, this);
-        render.on('set:meshes', this._onRenderSetMeshes, this);
+        this._evtSetMeshes?.off();
+        this._evtSetMeshes = render.on('set:meshes', this._onRenderSetMeshes, this);
 
         if (render.meshes) {
             this._onRenderSetMeshes(render.meshes);
