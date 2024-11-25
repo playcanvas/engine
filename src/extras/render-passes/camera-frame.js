@@ -396,7 +396,7 @@ class CameraFrame {
 
         // debug rendering
         composePass.debug = this.debug;
-        if (composePass.debug === 'ssao' && options.ssaoType == SSAOTYPE_NONE) composePass.debug = '';
+        if (composePass.debug === 'ssao' && options.ssaoType === SSAOTYPE_NONE) composePass.debug = '';
         if (composePass.debug === 'vignette' && !composePass.vignetteEnabled) composePass.debug = '';
     }
 }
