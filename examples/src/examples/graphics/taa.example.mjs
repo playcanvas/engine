@@ -1,7 +1,6 @@
 import { data } from 'examples/observer';
-import { deviceType, rootPath, fileImport } from 'examples/utils';
+import { deviceType, rootPath } from 'examples/utils';
 import * as pc from 'playcanvas';
-const { CameraFrame } = await fileImport(`${rootPath}/static/assets/scripts/misc/camera-frame.mjs`);
 
 const canvas = /** @type {HTMLCanvasElement} */ (document.getElementById('application-canvas'));
 window.focus();
@@ -118,20 +117,21 @@ assetListLoader.load(() => {
 
     // ------ Custom render passes set up ------
 
-    /** @type { CameraFrame } */
-    const cameraFrame = cameraEntity.script.create(CameraFrame);
+    const cameraFrame = new pc.CameraFrame(app, cameraEntity.camera);
     cameraFrame.rendering.toneMapping = pc.TONEMAP_ACES;
     cameraFrame.bloom.intensity = 0.02;
+    cameraFrame.update();
 
     // ------
 
     const applySettings = () => {
 
-        cameraFrame.bloom.enabled = data.get('data.scene.bloom');
+        cameraFrame.bloom.intensity = data.get('data.scene.bloom') ? 0.02 : 0;
         cameraFrame.taa.enabled = data.get('data.taa.enabled');
         cameraFrame.taa.jitter = data.get('data.taa.jitter');
         cameraFrame.rendering.renderTargetScale = data.get('data.scene.scale');
         cameraFrame.rendering.sharpness = data.get('data.scene.sharpness');
+        cameraFrame.update();
     };
 
     // apply UI changes

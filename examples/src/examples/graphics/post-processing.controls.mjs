@@ -86,12 +86,12 @@ export const controls = ({ observer, ReactPCUI, React, jsx, fragment }) => {
             ),
             jsx(
                 LabelGroup,
-                { text: 'last mip level' },
+                { text: 'blur level' },
                 jsx(SliderInput, {
                     binding: new BindingTwoWay(),
-                    link: { observer, path: 'data.bloom.lastMipLevel' },
+                    link: { observer, path: 'data.bloom.blurLevel' },
                     min: 1,
-                    max: 10,
+                    max: 16,
                     precision: 0
                 })
             )

@@ -1,7 +1,6 @@
 import { data } from 'examples/observer';
-import { deviceType, rootPath, fileImport } from 'examples/utils';
+import { deviceType, rootPath } from 'examples/utils';
 import * as pc from 'playcanvas';
-const { CameraFrame } = await fileImport(`${rootPath}/static/assets/scripts/misc/camera-frame.mjs`);
 
 const canvas = /** @type {HTMLCanvasElement} */ (document.getElementById('application-canvas'));
 window.focus();
@@ -168,8 +167,7 @@ assetListLoader.load(() => {
 
     // ------ Custom render passes set up ------
 
-    /** @type { CameraFrame } */
-    const cameraFrame = cameraEntity.script.create(CameraFrame);
+    const cameraFrame = new pc.CameraFrame(app, cameraEntity.camera);
     cameraFrame.rendering.samples = 4;
     cameraFrame.rendering.toneMapping = pc.TONEMAP_NEUTRAL;
 
@@ -183,6 +181,8 @@ assetListLoader.load(() => {
         cameraFrame.ssao.samples = data.get('data.ssao.samples');
         cameraFrame.ssao.minAngle = data.get('data.ssao.minAngle');
         cameraFrame.ssao.scale = data.get('data.ssao.scale');
+
+        cameraFrame.update();
     };
 
     // apply UI changes
