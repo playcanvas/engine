@@ -833,6 +833,9 @@ class CameraControls extends Script {
         if (!this._camera) {
             return;
         }
+        if (this._flying) {
+            return;
+        }
         if (!start) {
             this._origin.copy(point);
             if (!smooth) {
@@ -882,7 +885,7 @@ class CameraControls extends Script {
      * @param {boolean} [smooth] - Whether to smooth the refocus.
      */
     refocus(point, start = null, zoomDist, smooth = true) {
-        if (zoomDist !== undefined) {
+        if (typeof zoomDist === 'number') {
             this.resetZoom(zoomDist, smooth);
         }
         this.focus(point, start, smooth);
