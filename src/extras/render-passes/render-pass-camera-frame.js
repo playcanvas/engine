@@ -11,10 +11,8 @@ import { RenderPassCompose } from './render-pass-compose.js';
 import { RenderPassTAA } from './render-pass-taa.js';
 import { RenderPassPrepass } from './render-pass-prepass.js';
 import { RenderPassSsao } from './render-pass-ssao.js';
-
-export const SSAOTYPE_NONE = 'none';
-export const SSAOTYPE_LIGHTING = 'lighting';
-export const SSAOTYPE_COMBINE = 'combine';
+import { SSAOTYPE_COMBINE, SSAOTYPE_LIGHTING, SSAOTYPE_NONE } from './constants.js';
+import { Debug } from '../../core/debug.js';
 
 class CameraFrameOptions {
     formats;
@@ -82,6 +80,7 @@ class RenderPassCameraFrame extends RenderPass {
     rt = null;
 
     constructor(app, cameraComponent, options = {}) {
+        Debug.assert(app);
         super(app.graphicsDevice);
         this.app = app;
         this.cameraComponent = cameraComponent;
@@ -211,8 +210,8 @@ class RenderPassCameraFrame extends RenderPass {
 
         this.rt = new RenderTarget({
             colorBuffer: this.sceneTexture,
-            // depthBuffer: this.sceneDepth,
             depth: true,
+            stencil: options.stencil,
             samples: options.samples,
             flipY: !!targetRenderTarget?.flipY  // flipY is inherited from the target renderTarget
         });
