@@ -8,9 +8,12 @@ import {
     BLUR_GAUSSIAN,
     LIGHTTYPE_DIRECTIONAL, LIGHTTYPE_OMNI, LIGHTTYPE_SPOT,
     MASK_BAKE, MASK_AFFECT_DYNAMIC,
-    SHADOW_PCF1, SHADOW_PCF3, SHADOW_PCF5, SHADOW_VSM8, SHADOW_VSM16, SHADOW_VSM32, SHADOW_PCSS,
+    SHADOW_PCF1, SHADOW_PCF3, SHADOW_VSM8, SHADOW_VSM16, SHADOW_VSM32, SHADOW_PCSS,
     SHADOWUPDATE_NONE, SHADOWUPDATE_REALTIME, SHADOWUPDATE_THISFRAME,
-    LIGHTSHAPE_PUNCTUAL, LIGHTFALLOFF_LINEAR
+    LIGHTSHAPE_PUNCTUAL, LIGHTFALLOFF_LINEAR,
+    shadowTypeInfo,
+    SHADOW_PCF1_FLOAT16,
+    SHADOW_PCF3_FLOAT16
 } from './constants.js';
 import { ShadowRenderer } from './renderer/shadow-renderer.js';
 import { DepthState } from '../platform/graphics/depth-state.js';
@@ -50,7 +53,7 @@ let id = 0;
  * Class storing shadow rendering related private information
  */
 class LightRenderData {
-    constructor(device, camera, face, light) {
+    constructor(camera, face, light) {
 
         // light this data belongs to
         this.light = light;
@@ -62,7 +65,7 @@ class LightRenderData {
         this.camera = camera;
 
         // camera used to cull / render the shadow map
-        this.shadowCamera = ShadowRenderer.createShadowCamera(device, light._shadowType, light._type, face);
+        this.shadowCamera = ShadowRenderer.createShadowCamera(light._shadowType, light._type, face);
 
         // shadow view-projection matrix
         this.shadowMatrix = new Mat4();
@@ -386,7 +389,8 @@ class Light {
         const device = this.device;
 
         // omni light supports PCF1, PCF3 and PCSS only
-        if (this._type === LIGHTTYPE_OMNI && value !== SHADOW_PCF1 && value !== SHADOW_PCF3 && value !== SHADOW_PCSS) {
+        if (this._type === LIGHTTYPE_OMNI && value !== SHADOW_PCF1 && value !== SHADOW_PCF3 &&
+            value !== SHADOW_PCF1_FLOAT16 && value !== SHADOW_PCF3_FLOAT16 && value !== SHADOW_PCSS) {
             value = SHADOW_PCF3;
         }
 
@@ -400,8 +404,9 @@ class Light {
             value = SHADOW_VSM8;
         }
 
-        this._isVsm = value === SHADOW_VSM8 || value === SHADOW_VSM16 || value === SHADOW_VSM32;
-        this._isPcf = value === SHADOW_PCF1 || value === SHADOW_PCF3 || value === SHADOW_PCF5;
+        const shadowInfo = shadowTypeInfo.get(value);
+        this._isVsm = shadowInfo?.vsm ?? false;
+        this._isPcf = shadowInfo?.pcf ?? false;
 
         this._shadowType = value;
         this._destroyShadowMap();
@@ -724,7 +729,7 @@ class Light {
         }
 
         // create new one
-        const rd = new LightRenderData(this.device, camera, face, this);
+        const rd = new LightRenderData(camera, face, this);
         this._renderData.push(rd);
         return rd;
     }
@@ -963,8 +968,7 @@ class Light {
         // Bit
         // 31      : sign bit (leave)
         // 29 - 30 : type
-        // 28      : cast shadows
-        // 25 - 27 : shadow type
+        // 25 - 28 : shadow type
         // 23 - 24 : falloff mode
         // 22      : normal offset bias
         // 21      : cookie
@@ -977,9 +981,9 @@ class Light {
         //  8 -  9 : light num cascades
         //  7      : disable specular
         //  6 -  4 : mask
+        //  3      : cast shadows
         let key =
                (this._type                                << 29) |
-               ((this._castShadows ? 1 : 0)               << 28) |
                (this._shadowType                          << 25) |
                (this._falloffMode                         << 23) |
                ((this._normalOffsetBias !== 0.0 ? 1 : 0)  << 22) |
@@ -990,7 +994,8 @@ class Light {
                ((this._shape)                             << 10) |
                ((this.numCascades - 1)                    <<  8) |
                ((this.affectSpecularity ? 1 : 0)          <<  7) |
-               ((this.mask)                               <<  6);
+               ((this.mask)                               <<  6) |
+               ((this._castShadows ? 1 : 0)               <<  3);
 
         if (this._cookieChannel.length === 3) {
             key |= (chanId[this._cookieChannel.charAt(1)] << 16);

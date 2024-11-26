@@ -1070,6 +1070,14 @@ export const PIXELFORMAT_BC7 = 67;
 export const PIXELFORMAT_BC7_SRGBA = 68;
 
 /**
+ * A 16-bit depth buffer format.
+ *
+ * @type {number}
+ * @category Graphics
+ */
+export const PIXELFORMAT_DEPTH16 = 69;
+
+/**
  * Information about pixel formats.
  *
  * ldr: whether the format is low dynamic range (LDR), which typically means it's not HDR, and uses
@@ -1100,12 +1108,13 @@ export const pixelFormatInfo = new Map([
     [PIXELFORMAT_RGBA32F,       { name: 'RGBA32F', size: 16 }],
     [PIXELFORMAT_R32F,          { name: 'R32F', size: 4 }],
     [PIXELFORMAT_DEPTH,         { name: 'DEPTH', size: 4 }],
+    [PIXELFORMAT_DEPTH16,       { name: 'DEPTH16', size: 2 }],
     [PIXELFORMAT_DEPTHSTENCIL,  { name: 'DEPTHSTENCIL', size: 4 }],
     [PIXELFORMAT_111110F,       { name: '111110F', size: 4 }],
     [PIXELFORMAT_SRGB8,         { name: 'SRGB8', size: 4, ldr: true, srgb: true }],
     [PIXELFORMAT_SRGBA8,        { name: 'SRGBA8', size: 4, ldr: true, srgb: true }],
     [PIXELFORMAT_BGRA8,         { name: 'BGRA8', size: 4, ldr: true }],
-    [PIXELFORMAT_SBGRA8,         { name: 'SBGRA8', size: 4, ldr: true, srgb: true }],
+    [PIXELFORMAT_SBGRA8,        { name: 'SBGRA8', size: 4, ldr: true, srgb: true }],
 
     // compressed formats
     [PIXELFORMAT_DXT1,              { name: 'DXT1', blockSize: 8, ldr: true, srgbFormat: PIXELFORMAT_DXT1_SRGB }],

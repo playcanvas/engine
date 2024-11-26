@@ -1,6 +1,6 @@
 import { Debug } from '../../core/debug.js';
 import { TRACEID_RENDER_TARGET_ALLOC } from '../../core/constants.js';
-import { PIXELFORMAT_DEPTH, PIXELFORMAT_DEPTHSTENCIL, PIXELFORMAT_R32F, isSrgbPixelFormat } from './constants.js';
+import { PIXELFORMAT_DEPTH, PIXELFORMAT_DEPTH16, PIXELFORMAT_DEPTHSTENCIL, PIXELFORMAT_R32F, isSrgbPixelFormat } from './constants.js';
 import { DebugGraphics } from './debug-graphics.js';
 import { GraphicsDevice } from './graphics-device.js';
 import { TextureUtils } from './texture-utils.js';
@@ -191,7 +191,7 @@ class RenderTarget {
 
         if (this._depthBuffer) {
             const format = this._depthBuffer._format;
-            if (format === PIXELFORMAT_DEPTH) {
+            if (format === PIXELFORMAT_DEPTH || format === PIXELFORMAT_DEPTH16) {
                 this._depth = true;
                 this._stencil = false;
             } else if (format === PIXELFORMAT_DEPTHSTENCIL) {

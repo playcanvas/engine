@@ -154,9 +154,12 @@ class LightingParams {
     /**
      * Sets the type of shadow filtering used by all shadows. Can be:
      *
-     * - {@link SHADOW_PCF1}: PCF 1x1 sampling.
-     * - {@link SHADOW_PCF3}: PCF 3x3 sampling.
-     * - {@link SHADOW_PCF5}: PCF 5x5 sampling.
+     * - {@link SHADOW_PCF1}
+     * - {@link SHADOW_PCF3}
+     * - {@link SHADOW_PCF5}
+     * - {@link SHADOW_PCF1_FLOAT16}
+     * - {@link SHADOW_PCF3_FLOAT16}
+     * - {@link SHADOW_PCF5_FLOAT16}
      *
      * Defaults to {@link SHADOW_PCF3}
      *

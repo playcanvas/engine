@@ -13,7 +13,10 @@ import {
     SHADER_DEPTH, SHADER_PICK,
     SHADOW_PCF1, SHADOW_PCF3, SHADOW_PCF5, SHADOW_VSM8, SHADOW_VSM16, SHADOW_VSM32, SHADOW_PCSS,
     SPECOCC_AO, SPECOCC_GLOSSDEPENDENT,
-    SPRITE_RENDERMODE_SLICED, SPRITE_RENDERMODE_TILED, shadowTypeToString, SHADER_PREPASS
+    SPRITE_RENDERMODE_SLICED, SPRITE_RENDERMODE_TILED, shadowTypeInfo, SHADER_PREPASS,
+    SHADOW_PCF1_FLOAT16,
+    SHADOW_PCF5_FLOAT16,
+    SHADOW_PCF3_FLOAT16
 } from '../../constants.js';
 import { shaderChunks } from '../chunks/chunks.js';
 import { ChunkUtils } from '../chunk-utils.js';
@@ -23,6 +26,7 @@ import { validateUserChunks } from '../chunks/chunk-validation.js';
 import { ShaderUtils } from '../../../platform/graphics/shader-utils.js';
 import { ChunkBuilder } from '../chunk-builder.js';
 import { ShaderGenerator } from './shader-generator.js';
+import { Debug } from '../../../core/debug.js';
 
 /**
  * @import { GraphicsDevice } from '../../../platform/graphics/graphics-device.js'
@@ -786,10 +790,10 @@ class LitShader {
             if (shadowedDirectionalLightUsed) {
                 func.append(chunks.shadowCascadesPS);
             }
-            if (shadowTypeUsed[SHADOW_PCF1] || shadowTypeUsed[SHADOW_PCF3]) {
+            if (shadowTypeUsed[SHADOW_PCF1] || shadowTypeUsed[SHADOW_PCF3] || shadowTypeUsed[SHADOW_PCF1_FLOAT16] || shadowTypeUsed[SHADOW_PCF3_FLOAT16]) {
                 func.append(chunks.shadowStandardPS);
             }
-            if (shadowTypeUsed[SHADOW_PCF5]) {
+            if (shadowTypeUsed[SHADOW_PCF5] || shadowTypeUsed[SHADOW_PCF5_FLOAT16]) {
                 func.append(chunks.shadowStandardGL2PS);
             }
             if (useVsm) {
@@ -898,8 +902,11 @@ class LitShader {
                 decl.append('#define CLUSTER_COOKIES');
             }
             if (options.clusteredLightingShadowsEnabled && !options.noShadow) {
+                const shadowTypeName = shadowTypeInfo.get(options.clusteredLightingShadowType)?.name;
+                Debug.assert(shadowTypeName);
+                const clusteredSampleType = shadowTypeName.substring(0, 4);     // PCF1 from PCF1_FLOAT16
                 decl.append('#define CLUSTER_SHADOWS');
-                decl.append(`#define CLUSTER_SHADOW_TYPE_${shadowTypeToString[options.clusteredLightingShadowType]}`);
+                decl.append(`#define CLUSTER_SHADOW_TYPE_${clusteredSampleType}`);
             }
 
             if (options.clusteredLightingAreaLightsEnabled) {
@@ -1155,9 +1162,12 @@ class LitShader {
                 }
 
                 if (light.castShadows && !options.noShadow) {
+                    const shadowInfo = shadowTypeInfo.get(light._shadowType);
+                    Debug.assert(shadowInfo);
+
                     const pcssShadows = light._shadowType === SHADOW_PCSS;
-                    const vsmShadows = light._shadowType === SHADOW_VSM8 || light._shadowType === SHADOW_VSM16 || light._shadowType === SHADOW_VSM32;
-                    const pcfShadows = light._shadowType === SHADOW_PCF1 || light._shadowType === SHADOW_PCF3 || light._shadowType === SHADOW_PCF5;
+                    const vsmShadows = shadowInfo?.vsm;
+                    const pcfShadows = shadowInfo?.pcf;
                     let shadowReadMode = null;
                     let evsmExp;
                     switch (light._shadowType) {
@@ -1174,15 +1184,18 @@ class LitShader {
                             evsmExp = '15.0';
                             break;
                         case SHADOW_PCF1:
+                        case SHADOW_PCF1_FLOAT16:
                             shadowReadMode = 'PCF1x1';
                             break;
                         case SHADOW_PCF5:
+                        case SHADOW_PCF5_FLOAT16:
                             shadowReadMode = 'PCF5x5';
                             break;
                         case SHADOW_PCSS:
                             shadowReadMode = 'PCSS';
                             break;
                         case SHADOW_PCF3:
+                        case SHADOW_PCF3_FLOAT16:
                         default:
                             shadowReadMode = 'PCF3x3';
                             break;
