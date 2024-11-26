@@ -36,7 +36,6 @@ const dataTypeMap = new Map([
     ['uchar', Uint8Array],
     ['short', Int16Array],
     ['ushort', Uint16Array],
-    ['half', Uint16Array],
     ['int', Int32Array],
     ['uint', Uint32Array],
     ['float', Float32Array],

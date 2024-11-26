@@ -2,7 +2,6 @@ import { Quat } from '../../core/math/quat.js';
 import { Vec3 } from '../../core/math/vec3.js';
 import { Vec4 } from '../../core/math/vec4.js';
 import { GSplatData } from './gsplat-data.js';
-import { FloatPacking } from '../../core/math/float-packing.js';
 
 /**
  * @import { BoundingBox } from '../../core/shape/bounding-box.js'
