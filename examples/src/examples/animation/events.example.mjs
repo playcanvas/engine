@@ -1,6 +1,5 @@
-import { deviceType, rootPath, fileImport } from 'examples/utils';
+import { deviceType, rootPath } from 'examples/utils';
 import * as pc from 'playcanvas';
-const { CameraFrame } = await fileImport(`${rootPath}/static/assets/scripts/misc/camera-frame.mjs`);
 
 const canvas = /** @type {HTMLCanvasElement} */ (document.getElementById('application-canvas'));
 window.focus();
@@ -34,13 +33,11 @@ createOptions.componentSystems = [
     pc.RenderComponentSystem,
     pc.CameraComponentSystem,
     pc.LightComponentSystem,
-    pc.ScriptComponentSystem,
     pc.AnimComponentSystem
 ];
 createOptions.resourceHandlers = [
     pc.TextureHandler,
     pc.ContainerHandler,
-    pc.ScriptHandler,
     pc.AnimClipHandler,
     pc.AnimStateGraphHandler
 ];
@@ -76,12 +73,12 @@ assetListLoader.load(() => {
 
     // ------ Custom render passes set up ------
 
-    cameraEntity.addComponent('script');
-    const cameraFrame = cameraEntity.script.create(CameraFrame);
+    const cameraFrame = new pc.CameraFrame(app, cameraEntity.camera);
     cameraFrame.rendering.toneMapping = pc.TONEMAP_NEUTRAL;
     cameraFrame.rendering.samples = 4;
     cameraFrame.bloom.enabled = true;
     cameraFrame.bloom.intensity = 0.01;
+    cameraFrame.update();
 
     // ------------------------------------------
 

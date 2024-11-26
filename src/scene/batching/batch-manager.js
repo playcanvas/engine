@@ -1,7 +1,6 @@
 import { Debug } from '../../core/debug.js';
 import { now } from '../../core/time.js';
 import { Mat3 } from '../../core/math/mat3.js';
-import { Vec3 } from '../../core/math/vec3.js';
 import { BoundingBox } from '../../core/shape/bounding-box.js';
 import {
     PRIMITIVE_TRIANGLES, PRIMITIVE_TRIFAN, PRIMITIVE_TRISTRIP,
@@ -663,7 +662,6 @@ class BatchManager {
             let verticesOffset = 0;
             let indexOffset = 0;
             let transform;
-            const vec = new Vec3();
 
             // allocate indices
             const indexArrayType = batchNumVerts <= 0xffff ? Uint16Array : Uint32Array;
@@ -703,24 +701,48 @@ class BatchManager {
                         // transform position, normal and tangent to world space
                         if (!dynamic && stream.numComponents >= 3) {
                             if (semantic === SEMANTIC_POSITION) {
+                                const m = transform.data;
+                                const m0 = m[0];
+                                const m1 = m[1];
+                                const m2 = m[2];
+                                const m4 = m[4];
+                                const m5 = m[5];
+                                const m6 = m[6];
+                                const m8 = m[8];
+                                const m9 = m[9];
+                                const m10 = m[10];
+                                const m12 = m[12];
+                                const m13 = m[13];
+                                const m14 = m[14];
+
+                                let x, y, z;
+
                                 for (let j = 0; j < totalComponents; j += stream.numComponents) {
-                                    vec.set(subarray[j], subarray[j + 1], subarray[j + 2]);
-                                    transform.transformPoint(vec, vec);
-                                    subarray[j] = vec.x;
-                                    subarray[j + 1] = vec.y;
-                                    subarray[j + 2] = vec.z;
+                                    x = subarray[j];
+                                    y = subarray[j + 1];
+                                    z = subarray[j + 2];
+
+                                    // mat4.transformVector
+                                    subarray[j] = x * m0 + y * m4 + z * m8 + m12;
+                                    subarray[j + 1] = x * m1 + y * m5 + z * m9 + m13;
+                                    subarray[j + 2] = x * m2 + y * m6 + z * m10 + m14;
                                 }
                             } else if (semantic === SEMANTIC_NORMAL || semantic === SEMANTIC_TANGENT) {
-
                                 // handle non-uniform scale by using transposed inverse matrix to transform vectors
                                 mat3.invertMat4(transform).transpose();
 
+                                const [m0, m1, m2, m3, m4, m5, m6, m7, m8] = mat3.data;
+                                let x, y, z;
+
                                 for (let j = 0; j < totalComponents; j += stream.numComponents) {
-                                    vec.set(subarray[j], subarray[j + 1], subarray[j + 2]);
-                                    mat3.transformVector(vec, vec);
-                                    subarray[j] = vec.x;
-                                    subarray[j + 1] = vec.y;
-                                    subarray[j + 2] = vec.z;
+                                    x = subarray[j];
+                                    y = subarray[j + 1];
+                                    z = subarray[j + 2];
+
+                                    // mat3.transformVector
+                                    subarray[j] = x * m0 + y * m3 + z * m6;
+                                    subarray[j + 1] = x * m1 + y * m4 + z * m7;
+                                    subarray[j + 2] = x * m2 + y * m5 + z * m8;
                                 }
                             }
                         }
