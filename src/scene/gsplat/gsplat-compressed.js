@@ -88,6 +88,7 @@ class GSplatCompressed {
 
         this.chunkTexture.unlock();
 
+        // load optional spherical harmonics data
         if (shBands > 0) {
             const { shData } = gsplatData;
 

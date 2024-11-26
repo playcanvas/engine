@@ -228,15 +228,8 @@ const splatCoreVS = /* glsl */ `
     uniform highp usampler2D shTexture1;
     uniform highp usampler2D shTexture2;
 
-    vec4 sunpack8888(uint bits) {
-        // return (vec4((uvec4(bits) >> uvec4(24u, 16u, 8u, 0u)) & 255u) / 255.0 - 0.5) * 8.0;
-
-        return vec4(
-            float(bits >> 24u),
-            float((bits >> 16u) & 0xffu),
-            float((bits >> 8u) & 0xffu),
-            float(bits & 0xffu)
-        ) * (8.0 / 255.0) - 4.0;
+    vec4 sunpack8888(in uint bits) {
+        return vec4((uvec4(bits) >> uvec4(0u, 8u, 16u, 24u)) & 0xffu) * (8.0 / 255.0) - 4.0;
     }
 
     void readSHData(out vec3 sh[15]) {

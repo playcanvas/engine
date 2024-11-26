@@ -84,7 +84,7 @@ class SplatCompressedIterator {
             if (sh && shBands > 0) {
                 for (let j = 0; j < 3; ++j) {
                     for (let k = 0; k < 15; ++k) {
-                        sh[j * 15 + k] = (k < shCoeffs) ? (shData[(i * 3 + j) * shCoeffs + k] / 255 * 8 - 4) : 0;
+                        sh[j * 15 + k] = (k < shCoeffs) ? (shData[(i * 3 + j) * shCoeffs + k] * (8 / 255) - 4) : 0;
                     }
                 }
             }
