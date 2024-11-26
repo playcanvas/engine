@@ -223,74 +223,57 @@ const splatCoreVS = /* glsl */ `
     #define SH_C3_5 1.445305721320277f
     #define SH_C3_6 -0.5900435899266435f
 
-    uniform highp sampler2D band1Texture;
-    uniform highp sampler2D band2Texture;
-    uniform highp sampler2D band3Texture;
-    uniform highp usampler2D packedSHTexture;
+    uniform highp usampler2D shTexture0;
+    uniform highp usampler2D shTexture1;
+    uniform highp usampler2D shTexture2;
 
-    ivec2 shUV(uint index) {
-        return ivec2(int(index & 1023u) * 2, int(index / 1024u));
+    vec4 sunpack8888(uint bits) {
+        // return (vec4((uvec4(bits) >> uvec4(24u, 16u, 8u, 0u)) & 255u) / 255.0 - 0.5) * 8.0;
+
+        return vec4(
+            float(bits >> 24u),
+            float((bits >> 16u) & 0xffu),
+            float((bits >> 8u) & 0xffu),
+            float(bits & 0xffu)
+        ) * (8.0 / 255.0) - 4.0;
     }
 
     void readSHData(out vec3 sh[15]) {
-        // read the splat indices
-        uvec4 packedSHData = texelFetch(packedSHTexture, packedUV, 0);
+        // read the sh coefficients
+        uvec4 shData0 = texelFetch(shTexture0, packedUV, 0);
+        uvec4 shData1 = texelFetch(shTexture1, packedUV, 0);
+        uvec4 shData2 = texelFetch(shTexture2, packedUV, 0);
 
-        // generate palette uvs from packed bits
+        vec4 r0 = sunpack8888(shData0.x);
+        vec4 r1 = sunpack8888(shData0.y);
+        vec4 r2 = sunpack8888(shData0.z);
+        vec4 r3 = sunpack8888(shData0.w);
 
-        // 11, 11, 10
-        ivec2 band1r = ivec2(int(packedSHData.x >> 21u), 0);
-        ivec2 band1g = ivec2(int((packedSHData.x >> 10u) & 0x7ffu), 0);
-        ivec2 band1b = ivec2(int(packedSHData.x & 0x3ffu), 0);
+        vec4 g0 = sunpack8888(shData1.x);
+        vec4 g1 = sunpack8888(shData1.y);
+        vec4 g2 = sunpack8888(shData1.z);
+        vec4 g3 = sunpack8888(shData1.w);
 
-        // 15, 15, 15
-        ivec2 band2r = shUV(packedSHData.y >> 17u);
-        ivec2 band2g = shUV((packedSHData.y >> 2u) & 0x7fffu);
-        ivec2 band2b = shUV(((packedSHData.y << 13u) | (packedSHData.z >> 19u)) & 0x7fffu);
+        vec4 b0 = sunpack8888(shData2.x);
+        vec4 b1 = sunpack8888(shData2.y);
+        vec4 b2 = sunpack8888(shData2.z);
+        vec4 b3 = sunpack8888(shData2.w);
 
-        // 17, 17, 17
-        ivec2 band3r = shUV((packedSHData.z >> 2u) & 0x1ffffu);
-        ivec2 band3g = shUV(((packedSHData.z << 15u) | (packedSHData.w >> 17u)) & 0x1ffffu);
-        ivec2 band3b = shUV(packedSHData.w & 0x1ffffu);
-
-        // sample palette coefficients
-
-        // band 1
-        vec3 a = texelFetch(band1Texture, band1r, 0).xyz;
-        vec3 b = texelFetch(band1Texture, band1g, 0).xyz;
-        vec3 c = texelFetch(band1Texture, band1b, 0).xyz;
-
-        // band 2
-        vec4 d = texelFetch(band2Texture, band2r, 0);
-        float e = texelFetch(band2Texture, band2r + ivec2(1, 0), 0).x;
-        vec4 f = texelFetch(band2Texture, band2g, 0);
-        float g = texelFetch(band2Texture, band2g + ivec2(1, 0), 0).x;
-        vec4 h = texelFetch(band2Texture, band2b, 0);
-        float i = texelFetch(band2Texture, band2b + ivec2(1, 0), 0).x;
-
-        // band 3
-        vec4 j = texelFetch(band3Texture, band3r, 0);
-        vec3 k = texelFetch(band3Texture, band3r + ivec2(1, 0), 0).xyz;
-        vec4 l = texelFetch(band3Texture, band3g, 0);
-        vec3 m = texelFetch(band3Texture, band3g + ivec2(1, 0), 0).xyz;
-        vec4 n = texelFetch(band3Texture, band3b, 0);
-        vec3 o = texelFetch(band3Texture, band3b + ivec2(1, 0), 0).xyz;
-
-        sh[0] = vec3(a.x, b.x, c.x);
-        sh[1] = vec3(a.y, b.y, c.y);
-        sh[2] = vec3(a.z, b.z, c.z);
-        sh[3] = vec3(d.x, f.x, h.x);
-        sh[4] = vec3(d.y, f.y, h.y);
-        sh[5] = vec3(d.z, f.z, h.z);
-        sh[6] = vec3(d.w, f.w, h.w);
-        sh[7] = vec3(e, g, i);
-        sh[8] = vec3(j.x, l.x, n.x);
-        sh[9] = vec3(j.y, l.y, n.y);
-        sh[10] = vec3(j.z, l.z, n.z);
-        sh[11] = vec3(j.w, l.w, n.w);
-        sh[12] = vec3(k.x, m.x, o.x);
-        sh[13] = vec3(k.y, m.y, o.y);
-        sh[14] = vec3(k.z, m.z, o.z);
+        sh[0] =  vec3(r0.x, g0.x, b0.x);
+        sh[1] =  vec3(r0.y, g0.y, b0.y);
+        sh[2] =  vec3(r0.z, g0.z, b0.z);
+        sh[3] =  vec3(r0.w, g0.w, b0.w);
+        sh[4] =  vec3(r1.x, g1.x, b1.x);
+        sh[5] =  vec3(r1.y, g1.y, b1.y);
+        sh[6] =  vec3(r1.z, g1.z, b1.z);
+        sh[7] =  vec3(r1.w, g1.w, b1.w);
+        sh[8] =  vec3(r2.x, g2.x, b2.x);
+        sh[9] =  vec3(r2.y, g2.y, b2.y);
+        sh[10] = vec3(r2.z, g2.z, b2.z);
+        sh[11] = vec3(r2.w, g2.w, b2.w);
+        sh[12] = vec3(r3.x, g3.x, b3.x);
+        sh[13] = vec3(r3.y, g3.y, b3.y);
+        sh[14] = vec3(r3.z, g3.z, b3.z);
     }
 
     // see https://github.com/graphdeco-inria/gaussian-splatting/blob/main/utils/sh_utils.py

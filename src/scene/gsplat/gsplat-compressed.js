@@ -40,23 +40,20 @@ class GSplatCompressed {
     chunkTexture;
 
     /** @type {Texture?} */
-    band1Texture;
+    shTexture0;
 
     /** @type {Texture?} */
-    band2Texture;
+    shTexture1;
 
     /** @type {Texture?} */
-    band3Texture;
-
-    /** @type {Texture?} */
-    packedSHTexture;
+    shTexture2;
 
     /**
      * @param {GraphicsDevice} device - The graphics device.
      * @param {GSplatCompressedData} gsplatData - The splat data.
      */
     constructor(device, gsplatData) {
-        const { chunkData, chunkSize, numChunks, numSplats, vertexData } = gsplatData;
+        const { chunkData, chunkSize, numChunks, numSplats, vertexData, shBands } = gsplatData;
 
         this.device = device;
         this.numSplats = numSplats;
@@ -91,47 +88,53 @@ class GSplatCompressed {
 
         this.chunkTexture.unlock();
 
-        if (gsplatData.hasSHData) {
-            const { band1Data, band2Data, band3Data, packedSHData } = gsplatData;
+        if (shBands > 0) {
+            const { shData } = gsplatData;
 
-            const calcDim = (numEntries) => {
-                return new Vec2(2048, Math.ceil(numEntries / 1024));
-            };
+            const size = this.evalTextureSize(numSplats);
 
-            // unpack the palette coefficients to align nicely to RGBA16F boundaries for ease of reading on gpu
+            const texture0 = this.createTexture('shTexture0', PIXELFORMAT_RGBA32U, size);
+            const texture1 = this.createTexture('shTexture1', PIXELFORMAT_RGBA32U, size);
+            const texture2 = this.createTexture('shTexture2', PIXELFORMAT_RGBA32U, size);
 
-            // band1 has max 2k entries, 3 coefficients each, 1 pixel per entry.
-            const band1Size = band1Data.length / 3;
-            this.band1Texture = this.createTexture('band1Palette', PIXELFORMAT_RGBA16F, new Vec2(band1Size, 1));
-            strideCopy(this.band1Texture.lock(), 4, band1Data, 3, band1Size);
+            const data0 = texture0.lock();
+            const data1 = texture1.lock();
+            const data2 = texture2.lock();
 
-            // band2 has max 32k entries, 5 coefficients each, 2 pixels per entry.
-            const band2Size = band2Data.length / 5;
-            this.band2Texture = this.createTexture('band2Palette', PIXELFORMAT_RGBA16F, calcDim(band2Size));
-            strideCopy(this.band2Texture.lock(), 8, band2Data, 5, band2Size);
+            const target0 = new Uint8Array(data0.buffer);
+            const target1 = new Uint8Array(data1.buffer);
+            const target2 = new Uint8Array(data2.buffer);
 
-            // band3 has max 128k entries, 7 coefficients each, 2 pixels per entry.
-            const band3Size = band3Data.length / 7;
-            this.band3Texture = this.createTexture('band3Palette', PIXELFORMAT_RGBA16F, calcDim(band3Size));
-            strideCopy(this.band3Texture.lock(), 8, band3Data, 7, band3Size);
+            const srcCoeffs = [3, 8, 15][shBands - 1];
 
-            // packed SH data is loaded directly
-            this.packedSHTexture = this.createTexture('packedSHData', PIXELFORMAT_RGBA32U, this.evalTextureSize(numSplats), packedSHData);
+            for (let i = 0; i < numSplats; ++i) {
+                for (let j = 0; j < srcCoeffs; ++j) {
+                    target0[i * 16 + j] = shData[(i * 3 + 0) * srcCoeffs + j];
+                    target1[i * 16 + j] = shData[(i * 3 + 1) * srcCoeffs + j];
+                    target2[i * 16 + j] = shData[(i * 3 + 2) * srcCoeffs + j];
+                }
+            }
 
-            this.band1Texture.unlock();
-            this.band2Texture.unlock();
-            this.band3Texture.unlock();
+            texture0.unlock();
+            texture1.unlock();
+            texture2.unlock();
+
+            this.shTexture0 = texture0;
+            this.shTexture1 = texture1;
+            this.shTexture2 = texture2;
         } else {
-            this.band1Texture = null;
-            this.band2Texture = null;
-            this.band3Texture = null;
-            this.packedSHTexture = null;
+            this.shTexture0 = null;
+            this.shTexture1 = null;
+            this.shTexture2 = null;
         }
     }
 
     destroy() {
         this.packedTexture?.destroy();
         this.chunkTexture?.destroy();
+        this.shTexture0?.destroy();
+        this.shTexture1?.destroy();
+        this.shTexture2?.destroy();
     }
 
     /**
@@ -143,12 +146,11 @@ class GSplatCompressed {
         result.setParameter('packedTexture', this.packedTexture);
         result.setParameter('chunkTexture', this.chunkTexture);
         result.setParameter('tex_params', new Float32Array([this.numSplats, this.packedTexture.width, this.chunkTexture.width / 5, 0]));
-        if (this.packedSHTexture) {
+        if (this.shTexture0) {
             result.setDefine('USE_SH', true);
-            result.setParameter('band1Texture', this.band1Texture);
-            result.setParameter('band2Texture', this.band2Texture);
-            result.setParameter('band3Texture', this.band3Texture);
-            result.setParameter('packedSHTexture', this.packedSHTexture);
+            result.setParameter('shTexture0', this.shTexture0);
+            result.setParameter('shTexture1', this.shTexture1);
+            result.setParameter('shTexture2', this.shTexture2);
         }
         return result;
     }

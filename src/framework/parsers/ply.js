@@ -215,10 +215,7 @@ const isCompressedPly = (elements) => {
         'packed_position', 'packed_rotation', 'packed_scale', 'packed_color'
     ];
 
-    const band1Properties = ['0', '1', '2'].map(x => `coeff_${x}`);
-    const band2Properties = ['3', '4', '5', '6', '7'].map(x => `coeff_${x}`);
-    const band3Properties = ['8', '9', '10', '11', '12', '13', '14'].map(x => `coeff_${x}`);
-    const indicesProperties = ['0', '1', '2', '3'].map(x => `packed_sh_${x}`);
+    const shProperties = new Array(45).fill('').map((_, i) => `f_rest_${i}`);
 
     const hasBaseElements = () => {
         return elements[0].name === 'chunk' &&
@@ -228,17 +225,12 @@ const isCompressedPly = (elements) => {
     };
 
     const hasSHElements = () => {
-        return elements[2].name === 'sh_band_1' &&
-               elements[2].properties.every((p, i) => p.name === band1Properties[i] && p.type === 'half') &&
-               elements[3].name === 'sh_band_2' &&
-               elements[3].properties.every((p, i) => p.name === band2Properties[i] && p.type === 'half') &&
-               elements[4].name === 'sh_band_3' &&
-               elements[4].properties.every((p, i) => p.name === band3Properties[i] && p.type === 'half') &&
-               elements[5].name === 'vertex_sh' &&
-               elements[5].properties.every((p, i) => p.name === indicesProperties[i] && p.type === 'uint');
+        return elements[2].name === 'sh' &&
+               [9, 24, 45].indexOf(elements[2].properties.length) !== -1 &&
+               elements[2].properties.every((p, i) => p.name === shProperties[i] && p.type === 'uchar');
     };
 
-    return (elements.length === 2 && hasBaseElements()) || (elements.length === 6 && hasBaseElements() && hasSHElements());
+    return (elements.length === 2 && hasBaseElements()) || (elements.length === 3 && hasBaseElements() && hasSHElements());
 };
 
 const isFloatPly = (elements) => {
@@ -294,18 +286,9 @@ const readCompressedPly = async (streamBuf, elements, littleEndian) => {
     await read(result.vertexData.buffer, numVertices * 4 * 4);
 
     // read sh data
-    if (elements.length === 6) {
-        result.band1Data = new Uint16Array(elements[2].count * 3);
-        await read(result.band1Data.buffer, result.band1Data.byteLength);
-
-        result.band2Data = new Uint16Array(elements[3].count * 5);
-        await read(result.band2Data.buffer, result.band2Data.byteLength);
-
-        result.band3Data = new Uint16Array(elements[4].count * 7);
-        await read(result.band3Data.buffer, result.band3Data.byteLength);
-
-        result.packedSHData = new Uint32Array(evalStorageSize(numVertices) * 4);
-        await read(result.packedSHData.buffer, numVertices * 4 * 4);
+    if (elements.length === 3) {
+        result.shData = new Uint8Array(elements[2].count * elements[2].properties.length);
+        await read(result.shData.buffer, result.shData.byteLength);
     }
 
     return result;

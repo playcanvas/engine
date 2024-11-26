@@ -49,8 +49,8 @@ class SplatCompressedIterator {
 
         const lerp = (a, b, t) => a * (1 - t) + b * t;
 
-        const { chunkData, chunkSize, vertexData, band1Data, band2Data, band3Data, packedSHData } = gsplatData;
-        const { half2Float } = FloatPacking;
+        const { chunkData, chunkSize, vertexData, shData, shBands } = gsplatData;
+        const shCoeffs = [3, 8, 15][shBands - 1];
 
         this.read = (i) => {
             const ci = Math.floor(i / 256) * chunkSize;
@@ -82,51 +82,11 @@ class SplatCompressedIterator {
                 }
             }
 
-            if (sh) {
-                const bits0 = packedSHData[i * 4 + 0];
-                const bits1 = packedSHData[i * 4 + 1];
-                const bits2 = packedSHData[i * 4 + 2];
-                const bits3 = packedSHData[i * 4 + 3];
-
-                const b1 = [
-                    bits0 >>> 21,
-                    (bits0 >>> 10) & 0x7ff,
-                    bits0 & 0x3ff
-                ];
-
-                const b2 = [
-                    bits1 >>> 17,
-                    (bits1 >>> 2) & 0x7fff,
-                    ((bits1 << 13) | (bits2 >>> 19)) & 0x7fff
-                ];
-
-                const b3 = [
-                    (bits2 >>> 2) & 0x1ffff,
-                    ((bits2 << 15) | (bits3 >>> 17)) & 0x1ffff,
-                    (bits3 & 0x1ffff)
-                ];
-
+            if (sh && shBands > 0) {
                 for (let j = 0; j < 3; ++j) {
-                    const i1 = b1[j] * 3;
-                    sh[j * 15 + 0] = half2Float(band1Data[i1 + 0]);
-                    sh[j * 15 + 1] = half2Float(band1Data[i1 + 1]);
-                    sh[j * 15 + 2] = half2Float(band1Data[i1 + 2]);
-
-                    const i2 = b2[j] * 5;
-                    sh[j * 15 + 3] = half2Float(band2Data[i2 + 0]);
-                    sh[j * 15 + 4] = half2Float(band2Data[i2 + 1]);
-                    sh[j * 15 + 5] = half2Float(band2Data[i2 + 2]);
-                    sh[j * 15 + 6] = half2Float(band2Data[i2 + 3]);
-                    sh[j * 15 + 7] = half2Float(band2Data[i2 + 4]);
-
-                    const i3 = b3[j] * 7;
-                    sh[j * 15 + 8] = half2Float(band3Data[i3 + 0]);
-                    sh[j * 15 + 9] = half2Float(band3Data[i3 + 1]);
-                    sh[j * 15 + 10] = half2Float(band3Data[i3 + 2]);
-                    sh[j * 15 + 11] = half2Float(band3Data[i3 + 3]);
-                    sh[j * 15 + 12] = half2Float(band3Data[i3 + 4]);
-                    sh[j * 15 + 13] = half2Float(band3Data[i3 + 5]);
-                    sh[j * 15 + 14] = half2Float(band3Data[i3 + 6]);
+                    for (let k = 0; k < 15; ++k) {
+                        sh[j * 15 + k] = (k < shCoeffs) ? (shData[(i * 3 + j) * shCoeffs + k] / 255 * 8 - 4) : 0;
+                    }
                 }
             }
         };
@@ -158,35 +118,11 @@ class GSplatCompressedData {
      */
     vertexData;
 
-    // optional spherical harmonics data
-
     /**
-     * Contains 3 half values per band 1 palette entry
-     * @type {Uint16Array}
+     * Contains optional quantized spherical harmonic data for up to 3 bands.
+     * @type {Uint8Array}
      */
-    band1Data;
-
-    /**
-     * Contains 5 half values per band 2 palette entry
-     * @type {Uint16Array}
-     */
-    band2Data;
-
-    /**
-     * Contains 7 half values per band 3 palette entry
-     * @type {Uint16Array}
-     */
-    band3Data;
-
-    /**
-     * Contains 4 uint32 per vertex with packed bits referencing the SH palette:
-     *      packed_sh_0
-     *      packed_sh_1
-     *      packed_sh_2
-     *      packed_sh_3
-     * @type {Uint32Array}
-     */
-    packedSHData;
+    shData;
 
     /**
      * Create an iterator for accessing splat data
@@ -298,8 +234,13 @@ class GSplatCompressedData {
         return this.chunkData.length / this.numChunks;
     }
 
-    get hasSHData() {
-        return !!this.packedSHData;
+    get shBands() {
+        const sizes = {
+            3: 1,
+            8: 2,
+            15: 3
+        };
+        return sizes[this.shData?.length / this.numSplats / 3] ?? 0;
     }
 
     // decompress into GSplatData
@@ -311,8 +252,10 @@ class GSplatCompressedData {
             'rot_0', 'rot_1', 'rot_2', 'rot_3'
         ];
 
+        const { shBands } = this;
+
         // allocate spherical harmonics data
-        if (this.hasSHData) {
+        if (shBands > 0) {
             const shMembers = [];
             for (let i = 0; i < 45; ++i) {
                 shMembers.push(`f_rest_${i}`);
@@ -330,7 +273,7 @@ class GSplatCompressedData {
         const r = new Quat();
         const s = new Vec3();
         const c = new Vec4();
-        const sh = this.hasSHData ? new Float32Array(45) : null;
+        const sh = shBands > 0 ? new Float32Array(45) : null;
 
         const iter = this.createIter(p, r, s, c, sh);
 
@@ -356,7 +299,7 @@ class GSplatCompressedData {
             // convert opacity to log sigmoid taking into account infinities at 0 and 1
             data.opacity[i] = (c.w <= 0) ? -40 : (c.w >= 1) ? 40 : -Math.log(1 / c.w - 1);
 
-            if (this.hasSHData) {
+            if (sh) {
                 for (let c = 0; c < 45; ++c) {
                     data[`f_rest_${c}`][i] = sh[c];
                 }
