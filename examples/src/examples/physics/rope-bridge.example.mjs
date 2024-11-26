@@ -117,7 +117,7 @@ function createBridge(startPos, endPos, segments) {
     const plankWidth = 0.5;    // Width along X axis (spacing between planks)
     const plankHeight = 0.1;   // Height along Y axis
     const plankLength = 2;     // Length along Z axis (across the bridge)
-    
+
     const plankPos = startPos.clone();
     plankPos.x += plankWidth / 2;
 
@@ -134,13 +134,13 @@ function createBridge(startPos, endPos, segments) {
         });
         plank.addComponent('collision', {
             type: 'box',
-            halfExtents: new pc.Vec3(plankWidth/2, plankHeight/2, plankLength/2)
+            halfExtents: new pc.Vec3(plankWidth / 2, plankHeight / 2, plankLength / 2)
         });
 
         // Position the plank
         plank.setLocalPosition(plankPos);
         plankPos.x += plankWidth;
-        
+
         // Create a child entity for the visual representation
         const visualPlank = new pc.Entity('visual');
         visualPlank.addComponent('render', {
@@ -149,7 +149,7 @@ function createBridge(startPos, endPos, segments) {
         });
         visualPlank.setLocalScale(plankWidth, plankHeight, plankLength);
         plank.addChild(visualPlank);
-        
+
         app.root.addChild(plank);
         planks.push(plank);
     }
@@ -160,7 +160,7 @@ function createBridge(startPos, endPos, segments) {
 
     for (let i = 0; i < segments - 1; i++) {
         const joint = new pc.Entity();
-        
+
         // Position the joint at the center of plankA
         joint.setLocalPosition(jointPos);
         jointPos.x += plankWidth;
@@ -204,7 +204,7 @@ function createTower(position) {
     });
     tower.addComponent('collision', {
         type: 'box',
-        halfExtents: new pc.Vec3(towerWidth/2, towerHeight/2, towerDepth/2)
+        halfExtents: new pc.Vec3(towerWidth / 2, towerHeight / 2, towerDepth / 2)
     });
 
     const visualTower = new pc.Entity('visual');
@@ -228,8 +228,8 @@ const bridgeStart = new pc.Vec3(-5, 5, 0);  // Right side of left tower + half p
 const bridgeEnd = new pc.Vec3(5, 5, 0);     // Left side of right tower - half plank
 
 createGround();
-createTower(new pc.Vec3(-5 - towerWidth/2, 5, 0));
-createTower(new pc.Vec3(5 + towerWidth/2, 5, 0));
+createTower(new pc.Vec3(-5 - towerWidth / 2, 5, 0));
+createTower(new pc.Vec3(5 + towerWidth / 2, 5, 0));
 createBridge(bridgeStart, bridgeEnd, 20);
 
 // Create a test sphere to drop on the bridge
@@ -264,4 +264,4 @@ app.keyboard.on('keydown', (event) => {
     }
 });
 
-export { app }; 
+export { app };
