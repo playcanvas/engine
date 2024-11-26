@@ -144,7 +144,13 @@ class CameraControls extends Script {
      * @type {Mat4}
      * @private
      */
-    _transform = new Mat4();
+    _cameraTransform = new Mat4();
+
+    /**
+     * @type {Mat4}
+     * @private
+     */
+    _baseTransform = new Mat4();
 
     /**
      * The scene size. The zoom, pan and fly speeds are relative to this size.
@@ -510,7 +516,7 @@ class CameraControls extends Script {
             this._zoomDist = this._cameraDist;
             this._origin.copy(this._camera.entity.getPosition());
             this._position.copy(this._origin);
-            this._camera.entity.setLocalPosition(0, 0, 0);
+            this._cameraTransform.setTranslate(0, 0, 0);
             this._flying = true;
         }
         if (startOrbit) {
@@ -792,7 +798,7 @@ class CameraControls extends Script {
     _smoothZoom(dt) {
         const a = dt === -1 ? 1 : lerpRate(this.moveDamping, dt);
         this._cameraDist = math.lerp(this._cameraDist, this._zoomDist, a);
-        this._camera.entity.setLocalPosition(0, 0, this._cameraDist);
+        this._cameraTransform.setTranslate(0, 0, this._cameraDist);
     }
 
     /**
@@ -804,15 +810,16 @@ class CameraControls extends Script {
         this._angles.x = math.lerp(this._angles.x, this._dir.x, a);
         this._angles.y = math.lerp(this._angles.y, this._dir.y, a);
         this._position.lerp(this._position, this._origin, a);
-        this._transform.setTRS(this._position, tmpQ1.setFromEulerAngles(this._angles), Vec3.ONE);
+        this._baseTransform.setTRS(this._position, tmpQ1.setFromEulerAngles(this._angles), Vec3.ONE);
     }
 
     /**
      * @private
      */
     _updateTransform() {
-        const cameraTransform = this._camera.entity.getLocalTransform();
-        this._camera.entity.getWorldTransform().copy(this._transform).mul(cameraTransform);
+        tmpM1.copy(this._baseTransform).mul(this._cameraTransform);
+        this._camera.entity.setPosition(tmpM1.getTranslation());
+        this._camera.entity.setEulerAngles(tmpM1.getEulerAngles());
     }
 
     /**
@@ -840,8 +847,9 @@ class CameraControls extends Script {
         this._dir.set(-elev, -azim);
 
         this._origin.copy(point);
-        this._camera.entity.setPosition(start);
-        this._camera.entity.setLocalEulerAngles(0, 0, 0);
+
+        this._cameraTransform.setTranslate(0, 0, 0);
+        this._baseTransform.setTRS(this._origin, Quat.IDENTITY, Vec3.ONE);
 
         this._zoomDist = tmpV1.length();
 
