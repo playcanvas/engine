@@ -1,16 +1,14 @@
 // @config DESCRIPTION <div style='text-align:center'><div>(<b>WASD</b>) Move</div><div>(<b>Space</b>) Jump</div><div>(<b>Mouse</b>) Look</div></div>
+import { deviceType, rootPath } from 'examples/utils';
 import * as pc from 'playcanvas';
-import { deviceType, rootPath, fileImport } from 'examples/utils';
-
-const { CameraFrame } = await fileImport(rootPath + '/static/assets/scripts/misc/camera-frame.mjs');
 
 const canvas = /** @type {HTMLCanvasElement} */ (document.getElementById('application-canvas'));
 window.focus();
 
 pc.WasmModule.setConfig('Ammo', {
-    glueUrl: rootPath + '/static/lib/ammo/ammo.wasm.js',
-    wasmUrl: rootPath + '/static/lib/ammo/ammo.wasm.wasm',
-    fallbackUrl: rootPath + '/static/lib/ammo/ammo.js'
+    glueUrl: `${rootPath}/static/lib/ammo/ammo.wasm.js`,
+    wasmUrl: `${rootPath}/static/lib/ammo/ammo.wasm.wasm`,
+    fallbackUrl: `${rootPath}/static/lib/ammo/ammo.js`
 });
 
 await new Promise((resolve) => {
@@ -19,17 +17,17 @@ await new Promise((resolve) => {
 
 const gfxOptions = {
     deviceTypes: [deviceType],
-    glslangUrl: rootPath + '/static/lib/glslang/glslang.js',
-    twgslUrl: rootPath + '/static/lib/twgsl/twgsl.js'
+    glslangUrl: `${rootPath}/static/lib/glslang/glslang.js`,
+    twgslUrl: `${rootPath}/static/lib/twgsl/twgsl.js`
 };
 
 const assets = {
-    map: new pc.Asset('map', 'container', { url: rootPath + '/static/assets/models/fps-map.glb' }),
-    script: new pc.Asset('script', 'script', { url: rootPath + '/static/scripts/camera/first-person-camera.js' }),
+    map: new pc.Asset('map', 'container', { url: `${rootPath}/static/assets/models/fps-map.glb` }),
+    script: new pc.Asset('script', 'script', { url: `${rootPath}/static/scripts/camera/first-person-camera.js` }),
     helipad: new pc.Asset(
         'helipad-env-atlas',
         'texture',
-        { url: rootPath + '/static/assets/cubemaps/morning-env-atlas.png' },
+        { url: `${rootPath}/static/assets/cubemaps/morning-env-atlas.png` },
         { type: pc.TEXTURETYPE_RGBP, mipmaps: false }
     )
 };
@@ -148,15 +146,12 @@ cameraEntity.setLocalPosition(0, 0.5, 0);
 
 // ------ Custom render passes set up ------
 
-cameraEntity.addComponent('script');
-/** @type { CameraFrame } */
-const cameraFrame = cameraEntity.script.create(CameraFrame);
-
+const cameraFrame = new pc.CameraFrame(app, cameraEntity.camera);
 cameraFrame.rendering.samples = 4;
 cameraFrame.rendering.toneMapping = pc.TONEMAP_ACES2;
-
 cameraFrame.bloom.enabled = true;
 cameraFrame.bloom.intensity = 0.01;
+cameraFrame.update();
 
 // ------------------------------------------
 

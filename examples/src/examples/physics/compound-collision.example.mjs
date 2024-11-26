@@ -1,13 +1,13 @@
-import * as pc from 'playcanvas';
 import { deviceType, rootPath } from 'examples/utils';
+import * as pc from 'playcanvas';
 
 const canvas = /** @type {HTMLCanvasElement} */ (document.getElementById('application-canvas'));
 window.focus();
 
 pc.WasmModule.setConfig('Ammo', {
-    glueUrl: rootPath + '/static/lib/ammo/ammo.wasm.js',
-    wasmUrl: rootPath + '/static/lib/ammo/ammo.wasm.wasm',
-    fallbackUrl: rootPath + '/static/lib/ammo/ammo.js'
+    glueUrl: `${rootPath}/static/lib/ammo/ammo.wasm.js`,
+    wasmUrl: `${rootPath}/static/lib/ammo/ammo.wasm.wasm`,
+    fallbackUrl: `${rootPath}/static/lib/ammo/ammo.js`
 });
 await new Promise((resolve) => {
     pc.WasmModule.getInstance('Ammo', () => resolve());
@@ -15,8 +15,8 @@ await new Promise((resolve) => {
 
 const gfxOptions = {
     deviceTypes: [deviceType],
-    glslangUrl: rootPath + '/static/lib/glslang/glslang.js',
-    twgslUrl: rootPath + '/static/lib/twgsl/twgsl.js'
+    glslangUrl: `${rootPath}/static/lib/glslang/glslang.js`,
+    twgslUrl: `${rootPath}/static/lib/twgsl/twgsl.js`
 };
 
 const device = await pc.createGraphicsDevice(canvas, gfxOptions);
@@ -364,13 +364,13 @@ function parseEntity(e) {
     }
 
     if (e.components) {
-        e.components.forEach(function (c) {
+        e.components.forEach((c) => {
             entity.addComponent(c.type, c.options);
         });
     }
 
     if (e.children) {
-        e.children.forEach(function (/** @type {typeof scene} */ child) {
+        e.children.forEach((/** @type {typeof scene} */ child) => {
             entity.addChild(parseEntity(child));
         });
     }
@@ -380,7 +380,7 @@ function parseEntity(e) {
 
 // Parse the scene data above into entities and add them to the scene's root entity
 function parseScene(s) {
-    s.forEach(function (e) {
+    s.forEach((e) => {
         app.root.addChild(parseEntity(e));
     });
 }
@@ -401,7 +401,7 @@ function spawnChair() {
 
 // Set an update function on the application's update event
 let time = 0;
-app.on('update', function (dt) {
+app.on('update', (dt) => {
     // Add a new chair every 250 ms
     time += dt;
     if (time > 0.25 && numChairs < 20) {
@@ -410,8 +410,8 @@ app.on('update', function (dt) {
     }
 
     // Show active bodies in red and frozen bodies in gray
-    app.root.findComponents('rigidbody').forEach(function (/** @type {pc.RigidBodyComponent} */ body) {
-        body.entity.findComponents('render').forEach(function (/** @type {pc.RenderComponent} */ render) {
+    app.root.findComponents('rigidbody').forEach((/** @type {pc.RigidBodyComponent} */ body) => {
+        body.entity.findComponents('render').forEach((/** @type {pc.RenderComponent} */ render) => {
             render.material = body.isActive() ? red : gray;
         });
     });

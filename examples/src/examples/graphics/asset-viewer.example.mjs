@@ -1,30 +1,30 @@
-import * as pc from 'playcanvas';
 import { data } from 'examples/observer';
 import { deviceType, rootPath } from 'examples/utils';
+import * as pc from 'playcanvas';
 
 const canvas = /** @type {HTMLCanvasElement} */ (document.getElementById('application-canvas'));
 window.focus();
 
 const assets = {
-    orbitCamera: new pc.Asset('script', 'script', { url: rootPath + '/static/scripts/camera/orbit-camera.js' }),
+    orbitCamera: new pc.Asset('script', 'script', { url: `${rootPath}/static/scripts/camera/orbit-camera.js` }),
     helipad: new pc.Asset(
         'helipad-env-atlas',
         'texture',
-        { url: rootPath + '/static/assets/cubemaps/helipad-env-atlas.png' },
+        { url: `${rootPath}/static/assets/cubemaps/helipad-env-atlas.png` },
         { type: pc.TEXTURETYPE_RGBP, mipmaps: false }
     ),
-    dish: new pc.Asset('dish', 'container', { url: rootPath + '/static/assets/models/IridescentDishWithOlives.glb' }),
-    mosquito: new pc.Asset('mosquito', 'container', { url: rootPath + '/static/assets/models/MosquitoInAmber.glb' }),
-    sheen: new pc.Asset('sheen', 'container', { url: rootPath + '/static/assets/models/SheenChair.glb' }),
-    lamp: new pc.Asset('lamp', 'container', { url: rootPath + '/static/assets/models/StainedGlassLamp.glb' }),
-    font: new pc.Asset('font', 'font', { url: rootPath + '/static/assets/fonts/arial.json' }),
-    checkerboard: new pc.Asset('checkerboard', 'texture', { url: rootPath + '/static/assets/textures/checkboard.png' })
+    dish: new pc.Asset('dish', 'container', { url: `${rootPath}/static/assets/models/IridescentDishWithOlives.glb` }),
+    mosquito: new pc.Asset('mosquito', 'container', { url: `${rootPath}/static/assets/models/MosquitoInAmber.glb` }),
+    sheen: new pc.Asset('sheen', 'container', { url: `${rootPath}/static/assets/models/SheenChair.glb` }),
+    lamp: new pc.Asset('lamp', 'container', { url: `${rootPath}/static/assets/models/StainedGlassLamp.glb` }),
+    font: new pc.Asset('font', 'font', { url: `${rootPath}/static/assets/fonts/arial.json` }),
+    checkerboard: new pc.Asset('checkerboard', 'texture', { url: `${rootPath}/static/assets/textures/checkboard.png` })
 };
 
 const gfxOptions = {
     deviceTypes: [deviceType],
-    glslangUrl: rootPath + '/static/lib/glslang/glslang.js',
-    twgslUrl: rootPath + '/static/lib/twgsl/twgsl.js'
+    glslangUrl: `${rootPath}/static/lib/glslang/glslang.js`,
+    twgslUrl: `${rootPath}/static/lib/twgsl/twgsl.js`
 };
 
 const device = await pc.createGraphicsDevice(canvas, gfxOptions);
@@ -165,7 +165,9 @@ assetListLoader.load(() => {
 
     // Create an Entity with a camera component
     const camera = new pc.Entity();
-    camera.addComponent('camera', {});
+    camera.addComponent('camera', {
+        toneMapping: pc.TONEMAP_NEUTRAL
+    });
     camera.setLocalPosition(0, 55, 160);
 
     camera.camera.requestSceneColorMap(true);
@@ -195,7 +197,6 @@ assetListLoader.load(() => {
     app.root.addChild(directionalLight);
 
     app.scene.envAtlas = assets.helipad.resource;
-    app.scene.rendering.toneMapping = pc.TONEMAP_NEUTRAL;
     app.scene.skyboxMip = 1;
     app.scene.skyboxRotation = new pc.Quat().setFromEulerAngles(0, 70, 0);
     app.scene.skyboxIntensity = 1.5;
@@ -238,12 +239,12 @@ assetListLoader.load(() => {
     // focus on mosquito
     jumpToAsset(3);
 
-    data.on('previous', function () {
+    data.on('previous', () => {
         jumpToAsset(-1);
     });
 
     // remove light button handler
-    data.on('next', function () {
+    data.on('next', () => {
         jumpToAsset(1);
     });
 });

@@ -76,7 +76,9 @@ class CameraComponentSystem extends ComponentSystem {
             'scissorRect',
             'aperture',
             'shutter',
-            'sensitivity'
+            'sensitivity',
+            'gammaCorrection',
+            'toneMapping'
         ];
 
         for (let i = 0; i < properties.length; i++) {
@@ -139,7 +141,9 @@ class CameraComponentSystem extends ComponentSystem {
             scissorRect: c.scissorRect,
             aperture: c.aperture,
             sensitivity: c.sensitivity,
-            shutter: c.shutter
+            shutter: c.shutter,
+            gammaCorrection: c.gammaCorrection,
+            toneMapping: c.toneMapping
         });
     }
 

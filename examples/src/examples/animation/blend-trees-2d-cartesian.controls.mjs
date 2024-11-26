@@ -17,15 +17,15 @@ export const controls = ({ React, jsx, fragment }) => {
             if (e.targetTouches) {
                 const offset = canvas.getBoundingClientRect();
                 position
-                    .set(e.targetTouches[0].clientX - offset.x, e.targetTouches[0].clientY - offset.y)
-                    .mulScalar(1 / (width / 2))
-                    .sub(pc.Vec2.ONE);
+                .set(e.targetTouches[0].clientX - offset.x, e.targetTouches[0].clientY - offset.y)
+                .mulScalar(1 / (width / 2))
+                .sub(pc.Vec2.ONE);
             } else {
                 if (e.buttons) {
                     position
-                        .set(e.offsetX, e.offsetY)
-                        .mulScalar(1 / (width / 2))
-                        .sub(pc.Vec2.ONE);
+                    .set(e.offsetX, e.offsetY)
+                    .mulScalar(1 / (width / 2))
+                    .sub(pc.Vec2.ONE);
                 } else {
                     return;
                 }
@@ -114,8 +114,8 @@ export const controls = ({ React, jsx, fragment }) => {
         onAppStart() {
             const { canvas } = this;
             // @ts-ignore engine-tsd
-            const dim = window.top.controlPanel.offsetWidth + 'px';
-            canvas.setAttribute('style', 'width: ' + dim + '; height: ' + dim + ';');
+            const dim = `${window.top.controlPanel.offsetWidth}px`;
+            canvas.setAttribute('style', `width: ${dim}; height: ${dim};`);
             canvas.setAttribute('width', dim);
             canvas.setAttribute('height', dim);
             this.drawPosition();

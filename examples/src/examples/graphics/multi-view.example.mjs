@@ -1,15 +1,15 @@
-import * as pc from 'playcanvas';
 import { data } from 'examples/observer';
 import { deviceType, rootPath } from 'examples/utils';
+import * as pc from 'playcanvas';
 
 const canvas = /** @type {HTMLCanvasElement} */ (document.getElementById('application-canvas'));
 window.focus();
 
 // set up and load draco module, as the glb we load is draco compressed
 pc.WasmModule.setConfig('DracoDecoderModule', {
-    glueUrl: rootPath + '/static/lib/draco/draco.wasm.js',
-    wasmUrl: rootPath + '/static/lib/draco/draco.wasm.wasm',
-    fallbackUrl: rootPath + '/static/lib/draco/draco.js'
+    glueUrl: `${rootPath}/static/lib/draco/draco.wasm.js`,
+    wasmUrl: `${rootPath}/static/lib/draco/draco.wasm.wasm`,
+    fallbackUrl: `${rootPath}/static/lib/draco/draco.js`
 });
 
 await new Promise((resolve) => {
@@ -17,20 +17,20 @@ await new Promise((resolve) => {
 });
 
 const assets = {
-    script: new pc.Asset('script', 'script', { url: rootPath + '/static/scripts/camera/orbit-camera.js' }),
+    script: new pc.Asset('script', 'script', { url: `${rootPath}/static/scripts/camera/orbit-camera.js` }),
     helipad: new pc.Asset(
         'helipad-env-atlas',
         'texture',
-        { url: rootPath + '/static/assets/cubemaps/helipad-env-atlas.png' },
+        { url: `${rootPath}/static/assets/cubemaps/helipad-env-atlas.png` },
         { type: pc.TEXTURETYPE_RGBP, mipmaps: false }
     ),
-    board: new pc.Asset('statue', 'container', { url: rootPath + '/static/assets/models/chess-board.glb' })
+    board: new pc.Asset('statue', 'container', { url: `${rootPath}/static/assets/models/chess-board.glb` })
 };
 
 const gfxOptions = {
     deviceTypes: [deviceType],
-    glslangUrl: rootPath + '/static/lib/glslang/glslang.js',
-    twgslUrl: rootPath + '/static/lib/twgsl/twgsl.js'
+    glslangUrl: `${rootPath}/static/lib/glslang/glslang.js`,
+    twgslUrl: `${rootPath}/static/lib/twgsl/twgsl.js`
 };
 
 const device = await pc.createGraphicsDevice(canvas, gfxOptions);
@@ -92,7 +92,8 @@ assetListLoader.load(() => {
     const cameraLeft = new pc.Entity('LeftCamera');
     cameraLeft.addComponent('camera', {
         farClip: 500,
-        rect: new pc.Vec4(0, 0, 0.5, 0.5)
+        rect: new pc.Vec4(0, 0, 0.5, 0.5),
+        toneMapping: pc.TONEMAP_ACES
     });
     app.root.addChild(cameraLeft);
 
@@ -104,7 +105,8 @@ assetListLoader.load(() => {
         farClip: 500,
         rect: new pc.Vec4(0.5, 0, 0.5, 0.5),
         projection: pc.PROJECTION_ORTHOGRAPHIC,
-        orthoHeight: 150
+        orthoHeight: 150,
+        toneMapping: pc.TONEMAP_ACES
     });
     cameraRight.translate(0, 150, 0);
     cameraRight.lookAt(pc.Vec3.ZERO, pc.Vec3.RIGHT);
@@ -114,7 +116,8 @@ assetListLoader.load(() => {
     const cameraTop = new pc.Entity('TopCamera');
     cameraTop.addComponent('camera', {
         farClip: 500,
-        rect: new pc.Vec4(0, 0.5, 1, 0.5)
+        rect: new pc.Vec4(0, 0.5, 1, 0.5),
+        toneMapping: pc.TONEMAP_ACES
     });
     cameraTop.translate(-100, 75, 100);
     cameraTop.lookAt(0, 7, 0);
@@ -168,7 +171,6 @@ assetListLoader.load(() => {
 
     // set skybox - this DDS file was 'prefiltered' in the PlayCanvas Editor and then downloaded.
     app.scene.envAtlas = assets.helipad.resource;
-    app.scene.rendering.toneMapping = pc.TONEMAP_ACES;
     app.scene.skyboxMip = 1;
 
     // handle HUD changes - update the debug mode for the top and right cameras
@@ -179,7 +181,7 @@ assetListLoader.load(() => {
 
     // update function called once per frame
     let time = 0;
-    app.on('update', function (dt) {
+    app.on('update', (dt) => {
         time += dt;
 
         // orbit camera left around

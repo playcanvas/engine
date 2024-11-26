@@ -46,7 +46,9 @@
     "./build/*": "./build/*",
     "./scripts/*": "./scripts/*"
   },
-  "sideEffects": false,
+  "sideEffects": [
+    "./build/playcanvas/src/deprecated/deprecated.js"
+  ],
   "type": "module",
   "bugs": {
     "url": "https://github.com/playcanvas/engine/issues"
@@ -67,9 +69,9 @@
   },
   "devDependencies": {
     "@babel/core": "^7.24.4",
-    "@babel/eslint-parser": "^7.25.1",
+    "@babel/eslint-parser": "^7.25.9",
     "@babel/preset-env": "^7.24.4",
-    "@playcanvas/eslint-config": "^2.0.2",
+    "@playcanvas/eslint-config": "^2.0.8",
     "@rollup/plugin-babel": "^6.0.4",
     "@rollup/plugin-node-resolve": "^15.2.3",
     "@rollup/plugin-strip": "^3.0.4",
@@ -77,7 +79,7 @@
     "@rollup/pluginutils": "^5.1.0",
     "c8": "^10.1.2",
     "chai": "^5.1.0",
-    "eslint": "^9.10.0",
+    "eslint": "^9.15.0",
     "fflate": "^0.8.2",
     "global-jsdom": "^24.0.0",
     "globals": "^15.9.0",

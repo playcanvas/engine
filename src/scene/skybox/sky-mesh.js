@@ -5,6 +5,7 @@ import { ShaderMaterial } from '../materials/shader-material.js';
 import { MeshInstance } from '../mesh-instance.js';
 import { getProgramLibrary } from '../shader-lib/get-program-library.js';
 import { skybox } from '../shader-lib/programs/skybox.js';
+import { getMaterialShaderDefines } from '../shader-lib/utils.js';
 import { SkyGeometry } from './sky-geometry.js';
 
 /**
@@ -39,13 +40,13 @@ class SkyMesh {
 
         material.getShaderVariant = function (params) {
 
-            const { scene, renderParams } = params;
+            const { scene, cameraShaderParams } = params;
             const options = {
-                defines: this.defines,
+                defines: getMaterialShaderDefines(this, cameraShaderParams),
                 pass: params.pass,
                 encoding: texture.encoding,
-                gamma: renderParams.shaderOutputGamma,
-                toneMapping: renderParams.toneMapping,
+                gamma: cameraShaderParams.shaderOutputGamma,
+                toneMapping: cameraShaderParams.toneMapping,
                 skymesh: type
             };
 

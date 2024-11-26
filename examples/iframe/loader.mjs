@@ -1,6 +1,6 @@
-import { updateDeviceType, fetchFile, localImport, clearImports, parseConfig, fire } from 'examples/utils';
-import { data, refresh } from 'examples/observer';
 import files from 'examples/files';
+import { data, refresh } from 'examples/observer';
+import { updateDeviceType, fetchFile, localImport, clearImports, parseConfig, fire } from 'examples/utils';
 
 import MiniStats from './ministats.mjs';
 
@@ -82,7 +82,7 @@ class ExampleLoader {
          */
         const locations = [];
         lines.forEach((line) => {
-            const match = /^\s*at\s(.+):(\d+):(\d+)$/g.exec(line);
+            const match = /^\s*at\s(.+):(\d+):(\d+)$/.exec(line);
             if (!match) {
                 return;
             }

@@ -1,23 +1,5 @@
-/* eslint-disable jsdoc/check-tag-names */
-
-import {
-    Script,
-    Color,
-    math,
-    RenderingParams,
-    CameraFrameOptions,
-    RenderPassCameraFrame,
-    FOG_NONE,
-    SSAOTYPE_NONE
-} from 'playcanvas';
-
-/** @enum {string} */
-const FogType = {
-    NONE: 'none',      // FOG_NONE
-    LINEAR: 'linear',  // FOG_LINEAR
-    EXP: 'exp',        // FOG_EXP
-    EXP2: 'exp2'       // FOG_EXP2
-};
+/* eslint-disable-next-line import/no-unresolved */
+import { CameraFrame as EngineCameraFrame, Script, Color } from 'playcanvas';
 
 /** @enum {number} */
 const ToneMapping = {
@@ -98,32 +80,6 @@ class Rendering {
      * @step 0.001
      */
     sharpness = 0.0;
-
-    /**
-     * @attribute
-     * @type {FogType}
-     */
-    fog = FogType.NONE;
-
-    /**
-     * @attribute
-     */
-    fogColor = new Color(1, 1, 1, 1);
-
-    /**
-     * @attribute
-     */
-    fogStart = 0;
-
-    /**
-     * @attribute
-     */
-    fogEnd = 100;
-
-    /**
-     * @attribute
-     */
-    fogDensity = 0.01;
 }
 
 /** @interface */
@@ -192,11 +148,11 @@ class Bloom {
 
     /**
      * @attribute
-     * @range [0, 12]
+     * @range [0, 16]
      * @precision 0
      * @step 0
      */
-    lastMipLevel = 1;
+    blurLevel = 1;
 }
 
 /** @interface */
@@ -330,123 +286,91 @@ class CameraFrame extends Script {
      */
     fringing = new Fringing();
 
-    options = new CameraFrameOptions();
-
-    renderingParams = new RenderingParams();
+    engineCameraFrame = new EngineCameraFrame(this.app, this.entity.camera);
 
     initialize() {
 
-        this.updateOptions();
-        this.createRenderPass();
-
         this.on('enable', () => {
-            this.createRenderPass();
+            this.engineCameraFrame.enabled = true;
         });
 
         this.on('disable', () => {
-            this.destroyRenderPass();
+            this.engineCameraFrame.enabled = false;
         });
 
         this.on('destroy', () => {
-            this.destroyRenderPass();
+            this.engineCameraFrame.destroy();
         });
-    }
-
-    createRenderPass() {
-        const cameraComponent = this.entity.camera;
-        cameraComponent.rendering = this.renderingParams;
-
-        this.renderPassCamera = new RenderPassCameraFrame(this.app, cameraComponent, this.options);
-        cameraComponent.renderPasses = [this.renderPassCamera];
-    }
-
-    destroyRenderPass() {
-        const cameraComponent = this.entity.camera;
-        cameraComponent.renderPasses?.forEach((renderPass) => {
-            renderPass.destroy();
-        });
-        cameraComponent.renderPasses = [];
-        cameraComponent.rendering = null;
-
-        cameraComponent.jitter = 0;
-    }
-
-    updateOptions() {
-
-        const { options, rendering, bloom, taa, ssao } = this;
-        options.stencil = rendering.stencil;
-        options.samples = rendering.samples;
-        options.sceneColorMap = rendering.sceneColorMap;
-        options.prepassEnabled = rendering.sceneDepthMap;
-        options.bloomEnabled = bloom.enabled;
-        options.taaEnabled = taa.enabled;
-        options.ssaoType = ssao.type;
-        options.ssaoBlurEnabled = ssao.blurEnabled;
-        options.formats = [rendering.renderFormat, rendering.renderFormatFallback0, rendering.renderFormatFallback1];
     }
 
     postUpdate(dt) {
 
-        const cameraComponent = this.entity.camera;
-        const { options, renderPassCamera, renderingParams, rendering, bloom, grading, vignette, fringing, taa, ssao } = this;
+        const cf = this.engineCameraFrame;
+        const { rendering, bloom, grading, vignette, fringing, taa, ssao } = this;
 
-        // options that can cause the passes to be re-created
-        this.updateOptions();
-        renderPassCamera.update(options);
+        const dstRendering = cf.rendering;
+        dstRendering.renderFormats.length = 0;
+        dstRendering.renderFormats.push(rendering.renderFormat);
+        dstRendering.renderFormats.push(rendering.renderFormatFallback0);
+        dstRendering.renderFormats.push(rendering.renderFormatFallback1);
+        dstRendering.stencil = rendering.stencil;
+        dstRendering.renderTargetScale = rendering.renderTargetScale;
+        dstRendering.samples = rendering.samples;
+        dstRendering.sceneColorMap = rendering.sceneColorMap;
+        dstRendering.sceneDepthMap = rendering.sceneDepthMap;
+        dstRendering.toneMapping = rendering.toneMapping;
+        dstRendering.sharpness = rendering.sharpness;
 
-        // renderingParams
-        renderingParams.fog = rendering.fog;
-        if (renderingParams.fog !== FOG_NONE) {
-            renderingParams.fogColor.copy(rendering.fogColor);
-            renderingParams.fogStart = rendering.fogStart;
-            renderingParams.fogEnd = rendering.fogEnd;
-            renderingParams.fogDensity = rendering.fogDensity;
+        // ssao
+        const dstSsao = cf.ssao;
+        dstSsao.type = ssao.type;
+        if (ssao.type !== SsaoType.NONE) {
+            dstSsao.intensity = ssao.intensity;
+            dstSsao.radius = ssao.radius;
+            dstSsao.samples = ssao.samples;
+            dstSsao.power = ssao.power;
+            dstSsao.minAngle = ssao.minAngle;
+            dstSsao.scale = ssao.scale;
         }
 
-        // update parameters of individual render passes
-        const { composePass, bloomPass, ssaoPass } = renderPassCamera;
-
-        renderPassCamera.renderTargetScale = math.clamp(rendering.renderTargetScale, 0.1, 1);
-        composePass.toneMapping = rendering.toneMapping;
-        composePass.sharpness = rendering.sharpness;
-
-        if (options.bloomEnabled && bloomPass) {
-            composePass.bloomIntensity = bloom.intensity;
-            bloomPass.lastMipLevel = bloom.lastMipLevel;
+        // bloom
+        const dstBloom = cf.bloom;
+        dstBloom.intensity = bloom.enabled ? bloom.intensity : 0;
+        if (bloom.enabled) {
+            dstBloom.blurLevel = bloom.blurLevel;
         }
 
-        if (options.ssaoType !== SSAOTYPE_NONE) {
-            ssaoPass.intensity = ssao.intensity;
-            ssaoPass.power = ssao.power;
-            ssaoPass.radius = ssao.radius;
-            ssaoPass.sampleCount = ssao.samples;
-            ssaoPass.minAngle = ssao.minAngle;
-            ssaoPass.scale = ssao.scale;
-        }
-
-        composePass.gradingEnabled = grading.enabled;
+        // grading
+        const dstGrading = cf.grading;
+        dstGrading.enabled = grading.enabled;
         if (grading.enabled) {
-            composePass.gradingSaturation = grading.saturation;
-            composePass.gradingBrightness = grading.brightness;
-            composePass.gradingContrast = grading.contrast;
-            composePass.gradingTint = grading.tint;
+            dstGrading.brightness = grading.brightness;
+            dstGrading.contrast = grading.contrast;
+            dstGrading.saturation = grading.saturation;
+            dstGrading.tint.copy(grading.tint);
         }
 
-        composePass.vignetteEnabled = vignette.enabled;
+        // vignette
+        const dstVignette = cf.vignette;
+        dstVignette.intensity = vignette.enabled ? vignette.intensity : 0;
         if (vignette.enabled) {
-            composePass.vignetteInner = vignette.inner;
-            composePass.vignetteOuter = vignette.outer;
-            composePass.vignetteCurvature = vignette.curvature;
-            composePass.vignetteIntensity = vignette.intensity;
+            dstVignette.inner = vignette.inner;
+            dstVignette.outer = vignette.outer;
+            dstVignette.curvature = vignette.curvature;
         }
 
-        composePass.fringingEnabled = fringing.enabled;
-        if (fringing.enabled) {
-            composePass.fringingIntensity = fringing.intensity;
+        // taa
+        const dstTaa = cf.taa;
+        dstTaa.enabled = taa.enabled;
+        if (taa.enabled) {
+            dstTaa.jitter = taa.jitter;
         }
 
-        // enable camera jitter if taa is enabled
-        cameraComponent.jitter = taa.enabled ? taa.jitter : 0;
+        // fringing
+        const dstFringing = cf.fringing;
+        dstFringing.intensity = fringing.enabled ? fringing.intensity : 0;
+
+        cf.update();
     }
 }
 

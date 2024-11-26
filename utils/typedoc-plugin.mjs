@@ -1,6 +1,7 @@
 import { readFileSync } from 'fs';
 import { resolve } from 'path';
 
+/* eslint-disable-next-line import/no-unresolved */
 import { ArrayType, Converter, DeclarationReflection, IntrinsicType, ReflectionFlag, ReflectionKind, ReferenceType, UnionType } from 'typedoc';
 
 /**

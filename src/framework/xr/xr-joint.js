@@ -35,7 +35,7 @@ class XrJoint {
     _index;
 
     /**
-     * @type {string}
+     * @type {XRHandJoint}
      * @private
      */
     _id;
@@ -47,7 +47,7 @@ class XrJoint {
     _hand;
 
     /**
-     * @type {XrFinger}
+     * @type {XrFinger|null}
      * @private
      */
     _finger;
@@ -65,7 +65,7 @@ class XrJoint {
     _tip;
 
     /**
-     * @type {number}
+     * @type {number|null}
      * @private
      */
     _radius = null;
@@ -116,7 +116,7 @@ class XrJoint {
      * Create an XrJoint instance.
      *
      * @param {number} index - Index of a joint within a finger.
-     * @param {string} id - Id of a joint based on WebXR Hand Input Specs.
+     * @param {XRHandJoint} id - Id of a joint based on WebXR Hand Input Specs.
      * @param {XrHand} hand - Hand that joint relates to.
      * @param {XrFinger|null} finger - Finger that joint is related to. Can be null in the case of
      * the wrist joint.
@@ -179,6 +179,15 @@ class XrJoint {
         this._updateTransforms();
         this._rotation.setFromMat4(this._worldTransform);
         return this._rotation;
+    }
+
+    /**
+     * Id of a joint based on WebXR Hand Input Specs.
+     *
+     * @type {XRHandJoint}
+     */
+    get id() {
+        return this._id;
     }
 
     /**

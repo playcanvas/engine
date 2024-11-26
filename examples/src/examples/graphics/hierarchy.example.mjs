@@ -1,13 +1,13 @@
-import * as pc from 'playcanvas';
 import { deviceType, rootPath } from 'examples/utils';
+import * as pc from 'playcanvas';
 
 const canvas = /** @type {HTMLCanvasElement} */ (document.getElementById('application-canvas'));
 window.focus();
 
 const gfxOptions = {
     deviceTypes: [deviceType],
-    glslangUrl: rootPath + '/static/lib/glslang/glslang.js',
-    twgslUrl: rootPath + '/static/lib/twgsl/twgsl.js'
+    glslangUrl: `${rootPath}/static/lib/glslang/glslang.js`,
+    twgslUrl: `${rootPath}/static/lib/twgsl/twgsl.js`
 };
 
 const device = await pc.createGraphicsDevice(canvas, gfxOptions);
@@ -105,7 +105,7 @@ const scale = 1.7;
 const scaleDelta = 0.25;
 const spacing = 7;
 createChildren(root, gridSize, scale, scaleDelta, spacing, levels);
-console.log('number of created entities: ' + entities.length);
+console.log(`number of created entities: ${entities.length}`);
 
 // Create main camera
 const camera = new pc.Entity();
@@ -128,7 +128,7 @@ app.root.addChild(light);
 
 // update each frame
 let time = 0;
-app.on('update', function (dt) {
+app.on('update', (dt) => {
     time += dt;
 
     // rotation quaternion changing with time

@@ -17,7 +17,7 @@ export const controls = ({ React, jsx, fragment }) => {
         const height = width;
         const halfWidth = Math.floor(width / 2);
         const halfHeight = Math.floor(height / 2);
-        canvas.setAttribute('style', 'width: ' + width + 'px; height: ' + height + 'px;');
+        canvas.setAttribute('style', `width: ${width}px; height: ${height}px;`);
         canvas.setAttribute('width', width);
         canvas.setAttribute('height', height);
         const ctx = canvas.getContext('2d');
