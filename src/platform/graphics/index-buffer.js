@@ -160,7 +160,7 @@ class IndexBuffer {
     /**
      * Set preallocated data on the index buffer.
      *
-     * @param {ArrayBuffer} data - The index data to set.
+     * @param {ArrayBuffer|Uint16Array} data - The index data to set.
      * @returns {boolean} True if the data was set successfully, false otherwise.
      * @ignore
      */

@@ -108,7 +108,7 @@ class ShaderGeneratorStandard extends ShaderGenerator {
      * @param {object} options - The options passed into to createShaderDefinition.
      * @param {object} chunks - The set of shader chunks to choose from.
      * @param {object} mapping - The mapping between chunk and sampler
-     * @param {string} encoding - The texture's encoding
+     * @param {string|null} encoding - The texture's encoding
      * @returns {string} The shader code to support this map.
      * @private
      */

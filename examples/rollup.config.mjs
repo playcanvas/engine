@@ -13,6 +13,7 @@ import { buildExamples } from './utils/plugins/rollup-build-examples.mjs';
 import { copyStatic } from './utils/plugins/rollup-copy-static.mjs';
 import { isModuleWithExternalDependencies } from './utils/utils.mjs';
 import { treeshakeIgnore } from '../utils/plugins/rollup-treeshake-ignore.mjs';
+import { buildTargetRTI } from '../utils/rollup-build-target-rti.mjs';
 import { buildTarget } from '../utils/rollup-build-target.mjs';
 
 // util functions
@@ -20,6 +21,7 @@ import { buildTarget } from '../utils/rollup-build-target.mjs';
 const NODE_ENV = process.env.NODE_ENV ?? '';
 const ENGINE_PATH = !process.env.ENGINE_PATH && NODE_ENV === 'development' ?
     '../src/index.js' : process.env.ENGINE_PATH ?? '';
+const { RTI = '' } = process.env;
 
 const getEnginePathFiles = () => {
     if (!ENGINE_PATH) {
@@ -54,6 +56,9 @@ const getEngineTargets = () => {
     checkAppEngine();
 
     const targets = [];
+    if (RTI === 'on') {
+        targets.push(buildTargetRTI('es', '../src/index.rti.js', 'dist/iframe/ENGINE_PATH'));
+    }
     if (ENGINE_PATH) {
         return targets;
     }
@@ -146,7 +151,7 @@ export default [
             skipWrite: true
         },
         treeshake: false,
-        plugins: [buildExamples(NODE_ENV, ENGINE_PATH), copyStatic(NODE_ENV, STATIC_FILES)]
+        plugins: [buildExamples(NODE_ENV, ENGINE_PATH, RTI), copyStatic(NODE_ENV, STATIC_FILES)]
     },
     {
         // A debug build is ~2.3MB and a release build ~0.6MB
