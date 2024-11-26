@@ -1,3 +1,4 @@
+/* eslint-disable-next-line import/no-unresolved */
 import { CameraFrame as EngineCameraFrame, Script, Color } from 'playcanvas';
 
 /** @enum {number} */

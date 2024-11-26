@@ -1,3 +1,4 @@
+/* eslint-disable-next-line import/no-unresolved */
 import { Vec2, Vec3, Ray, Plane, Entity, Script, math } from 'playcanvas';
 
 /** @import { CameraComponent } from 'playcanvas' */
