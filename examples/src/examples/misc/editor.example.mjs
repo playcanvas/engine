@@ -1,14 +1,15 @@
 // @config DESCRIPTION <div style='text-align:center'><div>Translate (1), Rotate (2), Scale (3)</div><div>World/Local (X)</div><div>Perspective (P), Orthographic (O)</div></div>
 import { data } from 'examples/observer';
-import { deviceType, rootPath, localImport } from 'examples/utils';
+import { deviceType, rootPath, localImport, fileImport } from 'examples/utils';
 import * as pc from 'playcanvas';
+
+const { Grid } = await fileImport(`${rootPath}/static/scripts/grid.mjs`);
 
 const canvas = /** @type {HTMLCanvasElement} */ (document.getElementById('application-canvas'));
 window.focus();
 
 // class for handling gizmo
 const { GizmoHandler } = await localImport('gizmo-handler.mjs');
-const { Grid } = await localImport('grid.mjs');
 const { Selector } = await localImport('selector.mjs');
 
 const gfxOptions = {
@@ -127,6 +128,13 @@ camera.setPosition(1, 1, 1);
 app.root.addChild(camera);
 orbitCamera.distance = 5 * camera.camera?.aspectRatio;
 
+// grid
+const grid = new pc.Entity('grid');
+grid.setLocalScale(8, 1, 8);
+app.root.addChild(grid);
+grid.addComponent('script');
+grid.script.create(Grid);
+
 // create light entity
 const light = new pc.Entity('light');
 light.addComponent('light', {
@@ -244,13 +252,6 @@ selector.on('select', (/** @type {pc.GraphNode} */ node, /** @type {boolean} */ 
 });
 selector.on('deselect', () => {
     gizmoHandler.clear();
-});
-
-// grid
-const grid = new Grid();
-
-app.on('update', (/** @type {number} */ dt) => {
-    grid.draw(app);
 });
 
 app.on('destroy', () => {
