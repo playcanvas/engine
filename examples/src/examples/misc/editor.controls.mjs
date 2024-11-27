@@ -109,7 +109,7 @@ export const controls = ({ observer, ReactPCUI, React, jsx, fragment }) => {
                 jsx(SliderInput, {
                     binding: new BindingTwoWay(),
                     link: { observer, path: 'grid.size' },
-                    min: 1,
+                    min: 0,
                     max: 10,
                     precision: 0
                 })

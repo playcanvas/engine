@@ -417,7 +417,7 @@ class GridRenderer extends Script {
         if (!(value instanceof Vec2)) {
             return;
         }
-        this._halfExtents.copy(value);
+        this._halfExtents.set(value.x || Infinity, value.y || Infinity);
     }
 
     get halfExtents() {
