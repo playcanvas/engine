@@ -11,7 +11,7 @@ import {
     BLUR_GAUSSIAN,
     LIGHTTYPE_DIRECTIONAL, LIGHTTYPE_OMNI,
     SHADER_SHADOW,
-    SHADOW_VSM8, SHADOW_VSM32,
+    SHADOW_VSM8, SHADOW_VSM_32F,
     SHADOWUPDATE_NONE, SHADOWUPDATE_THISFRAME,
     SORTKEY_DEPTH,
     shadowTypeInfo
@@ -119,7 +119,7 @@ class ShadowRenderer {
         const shadowCam = LightCamera.create('ShadowCamera', type, face);
 
         // don't clear the color buffer if rendering a depth map
-        if (shadowType >= SHADOW_VSM8 && shadowType <= SHADOW_VSM32) {
+        if (shadowType >= SHADOW_VSM8 && shadowType <= SHADOW_VSM_32F) {
             shadowCam.clearColor = new Color(0, 0, 0, 0);
         } else {
             shadowCam.clearColor = new Color(1, 1, 1, 1);

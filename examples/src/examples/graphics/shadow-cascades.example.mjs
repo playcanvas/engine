@@ -54,7 +54,7 @@ assetListLoader.load(() => {
             numCascades: 4, // number of cascades
             shadowResolution: 2048, // shadow map resolution storing 4 cascades
             cascadeDistribution: 0.5, // distribution of cascade distances to prefer sharpness closer to the camera
-            shadowType: pc.SHADOW_PCF3, // shadow filter type
+            shadowType: pc.SHADOW_PCF3_32F, // shadow filter type
             vsmBlurSize: 11, // shader filter blur size for VSM shadows
             everyFrame: true // true if all cascades update every frame
         }

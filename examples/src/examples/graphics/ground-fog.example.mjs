@@ -119,7 +119,7 @@ assetListLoader.load(() => {
         castShadows: true,
         shadowDistance: 1000,
         shadowResolution: 2048,
-        shadowType: pc.SHADOW_PCF3
+        shadowType: pc.SHADOW_PCF3_32F
     });
     app.root.addChild(dirLight);
     dirLight.setLocalEulerAngles(45, 350, 20);

@@ -184,7 +184,7 @@ assetListLoader.load(() => {
             castShadows: true,
             shadowBias: 0.05,
             normalOffsetBias: 0.03,
-            shadowType: pc.SHADOW_PCF3,
+            shadowType: pc.SHADOW_PCF3_32F,
             shadowResolution: 256,
             range: 111,
             cookieAsset: cubemapAsset,

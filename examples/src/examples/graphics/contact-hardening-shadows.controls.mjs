@@ -46,8 +46,8 @@ export const controls = ({ observer, ReactPCUI, React, jsx, fragment }) => {
                     binding: new BindingTwoWay(),
                     link: { observer, path: 'script.area.shadowType' },
                     options: [
-                        { v: pc.SHADOW_PCSS, t: 'PCSS' },
-                        { v: pc.SHADOW_PCF5, t: 'PCF' }
+                        { v: pc.SHADOW_PCSS_32F, t: 'PCSS_32F' },
+                        { v: pc.SHADOW_PCF5_32F, t: 'PCF_32F' }
                     ]
                 })
             )
@@ -91,8 +91,8 @@ export const controls = ({ observer, ReactPCUI, React, jsx, fragment }) => {
                     binding: new BindingTwoWay(),
                     link: { observer, path: 'script.point.shadowType' },
                     options: [
-                        { v: pc.SHADOW_PCSS, t: 'PCSS' },
-                        { v: pc.SHADOW_PCF5, t: 'PCF' }
+                        { v: pc.SHADOW_PCSS_32F, t: 'PCSS_32F' },
+                        { v: pc.SHADOW_PCF5_32F, t: 'PCF_32F' }
                     ]
                 })
             )
@@ -136,8 +136,8 @@ export const controls = ({ observer, ReactPCUI, React, jsx, fragment }) => {
                     binding: new BindingTwoWay(),
                     link: { observer, path: 'script.directional.shadowType' },
                     options: [
-                        { v: pc.SHADOW_PCSS, t: 'PCSS' },
-                        { v: pc.SHADOW_PCF5, t: 'PCF' }
+                        { v: pc.SHADOW_PCSS_32F, t: 'PCSS_32F' },
+                        { v: pc.SHADOW_PCF5_32F, t: 'PCF_32F' }
                     ]
                 })
             )

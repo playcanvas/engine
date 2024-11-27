@@ -11,12 +11,10 @@ import {
     LIGHTSHAPE_PUNCTUAL, LIGHTSHAPE_RECT, LIGHTSHAPE_DISK, LIGHTSHAPE_SPHERE,
     LIGHTTYPE_DIRECTIONAL, LIGHTTYPE_OMNI, LIGHTTYPE_SPOT,
     SHADER_DEPTH, SHADER_PICK,
-    SHADOW_PCF1, SHADOW_PCF3, SHADOW_PCF5, SHADOW_VSM8, SHADOW_VSM16, SHADOW_VSM32, SHADOW_PCSS,
+    SHADOW_PCF1_32F, SHADOW_PCF3_32F, SHADOW_PCF5_32F, SHADOW_VSM8, SHADOW_VSM_16F, SHADOW_VSM_32F, SHADOW_PCSS_32F,
     SPECOCC_AO, SPECOCC_GLOSSDEPENDENT,
     SPRITE_RENDERMODE_SLICED, SPRITE_RENDERMODE_TILED, shadowTypeInfo, SHADER_PREPASS,
-    SHADOW_PCF1_FLOAT16,
-    SHADOW_PCF5_FLOAT16,
-    SHADOW_PCF3_FLOAT16
+    SHADOW_PCF1_16F, SHADOW_PCF5_16F, SHADOW_PCF3_16F
 } from '../../constants.js';
 import { shaderChunks } from '../chunks/chunks.js';
 import { ChunkUtils } from '../chunk-utils.js';
@@ -435,16 +433,16 @@ class LitShader {
 
         // If not a directional light and using clustered, fall back to using PCF3x3 if shadow type isn't supported
         if (lightType !== LIGHTTYPE_DIRECTIONAL && options.clusteredLightingEnabled) {
-            if (shadowType === SHADOW_VSM8 || shadowType === SHADOW_VSM16 || shadowType === SHADOW_VSM32 || shadowType === SHADOW_PCSS) {
-                shadowType = SHADOW_PCF3;
+            if (shadowType === SHADOW_VSM8 || shadowType === SHADOW_VSM_16F || shadowType === SHADOW_VSM_32F || shadowType === SHADOW_PCSS_32F) {
+                shadowType = SHADOW_PCF3_32F;
             }
         }
 
         let code = this._fsGetBeginCode();
 
-        if (shadowType === SHADOW_VSM32) {
+        if (shadowType === SHADOW_VSM_32F) {
             code += '#define VSM_EXPONENT 15.0\n\n';
-        } else if (shadowType === SHADOW_VSM16) {
+        } else if (shadowType === SHADOW_VSM_16F) {
             code += '#define VSM_EXPONENT 5.54\n\n';
         }
 
@@ -467,7 +465,7 @@ class LitShader {
             code += '}\n\n';
         }
 
-        if (shadowType === SHADOW_PCSS) {
+        if (shadowType === SHADOW_PCSS_32F) {
             code += shaderChunks.linearizeDepthPS;
         }
 
@@ -475,7 +473,7 @@ class LitShader {
 
         code += this.frontendFunc;
 
-        const isVsm = shadowType === SHADOW_VSM8 || shadowType === SHADOW_VSM16 || shadowType === SHADOW_VSM32;
+        const isVsm = shadowType === SHADOW_VSM8 || shadowType === SHADOW_VSM_16F || shadowType === SHADOW_VSM_32F;
 
         // Use perspective depth for:
         // Directional: Always since light has no position
@@ -493,7 +491,7 @@ class LitShader {
         }
 
         if (!isVsm) {
-            const exportR32 = shadowType === SHADOW_PCSS;
+            const exportR32 = shadowType === SHADOW_PCSS_32F;
 
             if (exportR32) {
                 code += '    gl_FragColor.r = depth;\n';
@@ -591,7 +589,7 @@ class LitShader {
 
             decl.append(`uniform vec3 light${i}_color;`);
 
-            if (light._shadowType === SHADOW_PCSS && light.castShadows && !options.noShadow) {
+            if (light._shadowType === SHADOW_PCSS_32F && light.castShadows && !options.noShadow) {
                 decl.append(`uniform float light${i}_shadowSearchArea;`);
                 decl.append(`uniform vec4 light${i}_cameraParams;`);
             }
@@ -636,7 +634,7 @@ class LitShader {
                 numShadowLights++;
                 shadowTypeUsed[light._shadowType] = true;
                 if (light._isVsm) useVsm = true;
-                if (light._shadowType === SHADOW_PCSS) usePcss = true;
+                if (light._shadowType === SHADOW_PCSS_32F) usePcss = true;
             }
             if (light._cookie) {
                 if (light._cookie._cubemap) {
@@ -780,9 +778,9 @@ class LitShader {
 
             // include shadow chunks clustered lights support
             if (options.clusteredLightingShadowsEnabled && !options.noShadow) {
-                shadowTypeUsed[SHADOW_PCF3] = true;
-                shadowTypeUsed[SHADOW_PCF5] = true;
-                shadowTypeUsed[SHADOW_PCSS] = true;
+                shadowTypeUsed[SHADOW_PCF3_32F] = true;
+                shadowTypeUsed[SHADOW_PCF5_32F] = true;
+                shadowTypeUsed[SHADOW_PCSS_32F] = true;
             }
         }
 
@@ -790,10 +788,10 @@ class LitShader {
             if (shadowedDirectionalLightUsed) {
                 func.append(chunks.shadowCascadesPS);
             }
-            if (shadowTypeUsed[SHADOW_PCF1] || shadowTypeUsed[SHADOW_PCF3] || shadowTypeUsed[SHADOW_PCF1_FLOAT16] || shadowTypeUsed[SHADOW_PCF3_FLOAT16]) {
+            if (shadowTypeUsed[SHADOW_PCF1_32F] || shadowTypeUsed[SHADOW_PCF3_32F] || shadowTypeUsed[SHADOW_PCF1_16F] || shadowTypeUsed[SHADOW_PCF3_16F]) {
                 func.append(chunks.shadowStandardPS);
             }
-            if (shadowTypeUsed[SHADOW_PCF5] || shadowTypeUsed[SHADOW_PCF5_FLOAT16]) {
+            if (shadowTypeUsed[SHADOW_PCF5_32F] || shadowTypeUsed[SHADOW_PCF5_16F]) {
                 func.append(chunks.shadowStandardGL2PS);
             }
             if (useVsm) {
@@ -801,10 +799,10 @@ class LitShader {
                 if (shadowTypeUsed[SHADOW_VSM8]) {
                     func.append(chunks.shadowVSM8PS);
                 }
-                if (shadowTypeUsed[SHADOW_VSM16]) {
+                if (shadowTypeUsed[SHADOW_VSM_16F]) {
                     func.append(chunks.shadowEVSMPS.replace(/\$/g, '16'));
                 }
-                if (shadowTypeUsed[SHADOW_VSM32]) {
+                if (shadowTypeUsed[SHADOW_VSM_32F]) {
                     func.append(device.extTextureFloatLinear ? chunks.shadowEVSMPS.replace(/\$/g, '32') : chunks.shadowEVSMnPS.replace(/\$/g, '32'));
                 }
             }
@@ -1165,7 +1163,7 @@ class LitShader {
                     const shadowInfo = shadowTypeInfo.get(light._shadowType);
                     Debug.assert(shadowInfo);
 
-                    const pcssShadows = light._shadowType === SHADOW_PCSS;
+                    const pcssShadows = light._shadowType === SHADOW_PCSS_32F;
                     const vsmShadows = shadowInfo?.vsm;
                     const pcfShadows = shadowInfo?.pcf;
                     let shadowReadMode = null;
@@ -1175,27 +1173,27 @@ class LitShader {
                             shadowReadMode = 'VSM8';
                             evsmExp = '0.0';
                             break;
-                        case SHADOW_VSM16:
+                        case SHADOW_VSM_16F:
                             shadowReadMode = 'VSM16';
                             evsmExp = '5.54';
                             break;
-                        case SHADOW_VSM32:
+                        case SHADOW_VSM_32F:
                             shadowReadMode = 'VSM32';
                             evsmExp = '15.0';
                             break;
-                        case SHADOW_PCF1:
-                        case SHADOW_PCF1_FLOAT16:
+                        case SHADOW_PCF1_32F:
+                        case SHADOW_PCF1_16F:
                             shadowReadMode = 'PCF1x1';
                             break;
-                        case SHADOW_PCF5:
-                        case SHADOW_PCF5_FLOAT16:
+                        case SHADOW_PCF5_32F:
+                        case SHADOW_PCF5_16F:
                             shadowReadMode = 'PCF5x5';
                             break;
-                        case SHADOW_PCSS:
+                        case SHADOW_PCSS_32F:
                             shadowReadMode = 'PCSS';
                             break;
-                        case SHADOW_PCF3:
-                        case SHADOW_PCF3_FLOAT16:
+                        case SHADOW_PCF3_32F:
+                        case SHADOW_PCF3_16F:
                         default:
                             shadowReadMode = 'PCF3x3';
                             break;
