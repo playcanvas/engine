@@ -11,9 +11,10 @@ import {
     BLUR_GAUSSIAN,
     LIGHTTYPE_DIRECTIONAL, LIGHTTYPE_OMNI,
     SHADER_SHADOW,
-    SHADOW_PCF1, SHADOW_PCF3, SHADOW_PCF5, SHADOW_VSM8, SHADOW_VSM32,
+    SHADOW_VSM8, SHADOW_VSM32,
     SHADOWUPDATE_NONE, SHADOWUPDATE_THISFRAME,
-    SORTKEY_DEPTH
+    SORTKEY_DEPTH,
+    shadowTypeInfo
 } from '../constants.js';
 import { ShaderPass } from '../shader-pass.js';
 import { shaderChunks } from '../shader-lib/chunks/chunks.js';
@@ -113,7 +114,7 @@ class ShadowRenderer {
     }
 
     // creates shadow camera for a light and sets up its constant properties
-    static createShadowCamera(device, shadowType, type, face) {
+    static createShadowCamera(shadowType, type, face) {
 
         const shadowCam = LightCamera.create('ShadowCamera', type, face);
 
@@ -127,8 +128,11 @@ class ShadowRenderer {
         shadowCam.clearDepthBuffer = true;
         shadowCam.clearStencilBuffer = false;
 
+        const shadowInfo = shadowTypeInfo.get(shadowType);
+        Debug.assert(shadowInfo);
+
         // clear color buffer only when using it
-        const hwPcf = shadowType === SHADOW_PCF1 || shadowType === SHADOW_PCF3 || shadowType === SHADOW_PCF5;
+        const hwPcf = shadowInfo?.pcf ?? false;
         shadowCam.clearColorBuffer = !hwPcf;
 
         return shadowCam;
@@ -468,7 +472,8 @@ class ShadowRenderer {
 
     getVsmBlurShader(isVsm8, blurMode, filterSize) {
 
-        let blurShader = (isVsm8 ? this.blurPackedVsmShader : this.blurVsmShader)[blurMode][filterSize];
+        const cache = isVsm8 ? this.blurPackedVsmShader : this.blurVsmShader;
+        let blurShader = cache[blurMode][filterSize];
         if (!blurShader) {
             this.blurVsmWeights[filterSize] = gaussWeights(filterSize);
 
@@ -481,12 +486,7 @@ class ShadowRenderer {
             }
             const blurShaderName = `blurVsm${blurMode}${filterSize}${isVsm8}`;
             blurShader = createShaderFromCode(this.device, blurVS, blurFS, blurShaderName);
-
-            if (isVsm8) {
-                this.blurPackedVsmShader[blurMode][filterSize] = blurShader;
-            } else {
-                this.blurVsmShader[blurMode][filterSize] = blurShader;
-            }
+            cache[blurMode][filterSize] = blurShader;
         }
 
         return blurShader;

@@ -73,6 +73,28 @@ describe('Preprocessor', function () {
         #ifdef (UNKNOWN)
             #define TEST14  // this should not be defined
         #endif
+
+        #define INDEX 3
+        #if INDEX == 3
+            CMP1
+        #endif
+
+        #if INDEX != 3
+            CMP2
+        #endif
+
+        #if INDEX > 2
+            CMP3
+        #endif
+
+        #define NAME hello
+        #if NAME == hello
+            CMP4
+        #endif
+
+        #if NAME != hello
+            CMP5
+        #endif
     `;
 
     it('returns false for MORPH_A', function () {
@@ -154,4 +176,25 @@ describe('Preprocessor', function () {
     it('returns true for nested', function () {
         expect(Preprocessor.run(srcData, includes).includes('nested')).to.equal(true);
     });
+
+    it('returns true for CMP1', function () {
+        expect(Preprocessor.run(srcData, includes).includes('CMP1')).to.equal(true);
+    });
+
+    it('returns false for CMP2', function () {
+        expect(Preprocessor.run(srcData, includes).includes('CMP2')).to.equal(false);
+    });
+
+    it('returns true for CMP3', function () {
+        expect(Preprocessor.run(srcData, includes).includes('CMP3')).to.equal(true);
+    });
+
+    it('returns true for CMP4', function () {
+        expect(Preprocessor.run(srcData, includes).includes('CMP4')).to.equal(true);
+    });
+
+    it('returns false for CMP5', function () {
+        expect(Preprocessor.run(srcData, includes).includes('CMP5')).to.equal(false);
+    });
+
 });

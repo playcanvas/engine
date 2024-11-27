@@ -1,8 +1,6 @@
 // @config DESCRIPTION <div style='text-align:center'><div>(<b>WASD</b>) Move</div><div>(<b>Space</b>) Jump</div><div>(<b>Mouse</b>) Look</div></div>
-import { deviceType, rootPath, fileImport } from 'examples/utils';
+import { deviceType, rootPath } from 'examples/utils';
 import * as pc from 'playcanvas';
-
-const { CameraFrame } = await fileImport(`${rootPath}/static/assets/scripts/misc/camera-frame.mjs`);
 
 const canvas = /** @type {HTMLCanvasElement} */ (document.getElementById('application-canvas'));
 window.focus();
@@ -148,15 +146,12 @@ cameraEntity.setLocalPosition(0, 0.5, 0);
 
 // ------ Custom render passes set up ------
 
-cameraEntity.addComponent('script');
-/** @type { CameraFrame } */
-const cameraFrame = cameraEntity.script.create(CameraFrame);
-
+const cameraFrame = new pc.CameraFrame(app, cameraEntity.camera);
 cameraFrame.rendering.samples = 4;
 cameraFrame.rendering.toneMapping = pc.TONEMAP_ACES2;
-
 cameraFrame.bloom.enabled = true;
 cameraFrame.bloom.intensity = 0.01;
+cameraFrame.update();
 
 // ------------------------------------------
 

@@ -23,6 +23,14 @@ const fragmentShader = /* glsl */ `
     #endif
 
     #ifdef SSAO
+        #define SSAO_TEXTURE
+    #endif
+
+    #if DEBUG_COMPOSE == ssao
+        #define SSAO_TEXTURE
+    #endif
+
+    #ifdef SSAO_TEXTURE
         uniform sampler2D ssaoTexture;
     #endif
 
@@ -146,8 +154,12 @@ const fragmentShader = /* glsl */ `
             result = cas(result, uv, sharpness);
         #endif
 
+        #ifdef SSAO_TEXTURE
+            mediump float ssao = texture2DLodEXT(ssaoTexture, uv0, 0.0).r;
+        #endif
+
         #ifdef SSAO
-            result *= texture2DLodEXT(ssaoTexture, uv0, 0.0).r;
+            result *= ssao;
         #endif
 
         #ifdef FRINGING
@@ -167,7 +179,31 @@ const fragmentShader = /* glsl */ `
         result = toneMap(result);
 
         #ifdef VIGNETTE
-            result *= vignette(uv);
+            mediump float vig = vignette(uv);
+            result *= vig;
+        #endif
+
+        // debug output
+        #ifdef DEBUG_COMPOSE
+
+            #ifdef BLOOM
+                #if DEBUG_COMPOSE == bloom
+                    result = bloom * bloomIntensity;
+                #endif
+            #endif
+
+            #if DEBUG_COMPOSE == ssao
+                result = vec3(ssao);
+            #endif
+
+            #if DEBUG_COMPOSE == vignette
+                result = vec3(vig);
+            #endif
+
+            #if DEBUG_COMPOSE == scene
+                result = scene.rgb;
+            #endif
+
         #endif
 
         #ifdef GAMMA_CORRECT_OUTPUT
@@ -229,6 +265,8 @@ class RenderPassCompose extends RenderPassShaderQuad {
 
     _key = '';
 
+    _debug = null;
+
     constructor(graphicsDevice) {
         super(graphicsDevice);
 
@@ -244,6 +282,17 @@ class RenderPassCompose extends RenderPassShaderQuad {
         this.sceneTextureInvResId = scope.resolve('sceneTextureInvRes');
         this.sceneTextureInvResValue = new Float32Array(2);
         this.sharpnessId = scope.resolve('sharpness');
+    }
+
+    set debug(value) {
+        if (this._debug !== value) {
+            this._debug = value;
+            this._shaderDirty = true;
+        }
+    }
+
+    get debug() {
+        return this._debug;
     }
 
     set bloomTexture(value) {
@@ -367,7 +416,8 @@ class RenderPassCompose extends RenderPassShaderQuad {
                 `-${this.fringingEnabled ? 'fringing' : 'nofringing'}` +
                 `-${this.taaEnabled ? 'taa' : 'notaa'}` +
                 `-${this.isSharpnessEnabled ? 'cas' : 'nocas'}` +
-                `-${this._srgb ? 'srgb' : 'linear'}`;
+                `-${this._srgb ? 'srgb' : 'linear'}` +
+                `-${this._debug ?? ''}`;
 
             if (this._key !== key) {
                 this._key = key;
@@ -380,7 +430,8 @@ class RenderPassCompose extends RenderPassShaderQuad {
                     (this.fringingEnabled ? '#define FRINGING\n' : '') +
                     (this.taaEnabled ? '#define TAA\n' : '') +
                     (this.isSharpnessEnabled ? '#define CAS\n' : '') +
-                    (this._srgb ? '' : '#define GAMMA_CORRECT_OUTPUT\n');
+                    (this._srgb ? '' : '#define GAMMA_CORRECT_OUTPUT\n') +
+                    (this._debug ? `#define DEBUG_COMPOSE ${this._debug}\n` : '');
 
                 const fsChunks =
                 shaderChunks.decodePS +

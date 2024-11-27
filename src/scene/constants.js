@@ -1,3 +1,5 @@
+import { PIXELFORMAT_DEPTH, PIXELFORMAT_DEPTH16, PIXELFORMAT_R32F, PIXELFORMAT_RGBA16F, PIXELFORMAT_RGBA32F, PIXELFORMAT_RGBA8 } from '../platform/graphics/constants.js';
+
 /**
  * Subtract the color of the source fragment from the destination fragment and write the result to
  * the frame buffer.
@@ -273,7 +275,8 @@ export const LIGHTFALLOFF_LINEAR = 0;
 export const LIGHTFALLOFF_INVERSESQUARED = 1;
 
 /**
- * Render depth buffer only, can be used for PCF 3x3 sampling.
+ * A shadow sampling technique using 32bit shadow map that averages depth comparisons from a 3x3
+ * grid of texels for softened shadow edges.
  *
  * @type {number}
  * @category Graphics
@@ -282,8 +285,9 @@ export const SHADOW_PCF3 = 0;
 export const SHADOW_DEPTH = 0; // alias for SHADOW_PCF3 for backwards compatibility
 
 /**
- * Render packed variance shadow map. All shadow receivers must also cast shadows for this mode to
- * work correctly.
+ * A shadow sampling technique using a 16-bit exponential variance shadow map packed into
+ * {@link PIXELFORMAT_RGBA8} that leverages variance to approximate shadow boundaries, enabling soft
+ * shadows. All shadow receivers must also cast shadows for this mode to work correctly.
  *
  * @type {number}
  * @category Graphics
@@ -291,8 +295,10 @@ export const SHADOW_DEPTH = 0; // alias for SHADOW_PCF3 for backwards compatibil
 export const SHADOW_VSM8 = 1;
 
 /**
- * Render 16-bit exponential variance shadow map. Requires OES_texture_half_float extension. Falls
- * back to {@link SHADOW_VSM8}, if not supported.
+ * A shadow sampling technique using a 16-bit exponential variance shadow map that leverages
+ * variance to approximate shadow boundaries, enabling soft shadows. Only supported when
+ * {@link GraphicsDevice#textureHalfFloatRenderable} is true. Falls back to {@link SHADOW_VSM8}, if not
+ * supported.
  *
  * @type {number}
  * @category Graphics
@@ -300,8 +306,10 @@ export const SHADOW_VSM8 = 1;
 export const SHADOW_VSM16 = 2;
 
 /**
- * Render 32-bit exponential variance shadow map. Requires OES_texture_float extension. Falls back
- * to {@link SHADOW_VSM16}, if not supported.
+ * A shadow sampling technique using a 32-bit exponential variance shadow map that leverages
+ * variance to approximate shadow boundaries, enabling soft shadows. Only supported when
+ * {@link GraphicsDevice#textureFloatRenderable} is true. Falls back to {@link SHADOW_VSM16}, if not
+ * supported.
  *
  * @type {number}
  * @category Graphics
@@ -309,7 +317,8 @@ export const SHADOW_VSM16 = 2;
 export const SHADOW_VSM32 = 3;
 
 /**
- * Render depth buffer only, can be used for hardware-accelerated PCF 5x5 sampling.
+ * A shadow sampling technique using 32bit shadow map that averages depth comparisons from a 5x5
+ * grid of texels for softened shadow edges.
  *
  * @type {number}
  * @category Graphics
@@ -317,7 +326,8 @@ export const SHADOW_VSM32 = 3;
 export const SHADOW_PCF5 = 4;
 
 /**
- * Render depth buffer only, can be used for PCF 1x1 sampling.
+ * A shadow sampling technique using a 32-bit shadow map that performs a single depth comparison for
+ * sharp shadow edges.
  *
  * @type {number}
  * @category Graphics
@@ -325,7 +335,8 @@ export const SHADOW_PCF5 = 4;
 export const SHADOW_PCF1 = 5;
 
 /**
- * Render depth as color for PCSS software filtering.
+ * A shadow sampling technique using a 32-bit shadow map that adjusts filter size based on blocker
+ * distance, producing realistic, soft shadow edges that vary with the light's occlusion.
  *
  * @type {number}
  * @category Graphics
@@ -333,20 +344,50 @@ export const SHADOW_PCF1 = 5;
 export const SHADOW_PCSS = 6;
 
 /**
- * map of engine SHADOW__*** to a string representation
+ * A shadow sampling technique using a 16-bit shadow map that performs a single depth comparison for
+ * sharp shadow edges.
  *
- * @type {object}
- * @ignore
+ * @type {number}
  * @category Graphics
  */
-export const shadowTypeToString = {};
-shadowTypeToString[SHADOW_PCF3] = 'PCF3';
-shadowTypeToString[SHADOW_VSM8] = 'VSM8';
-shadowTypeToString[SHADOW_VSM16] = 'VSM16';
-shadowTypeToString[SHADOW_VSM32] = 'VSM32';
-shadowTypeToString[SHADOW_PCF5] = 'PCF5';
-shadowTypeToString[SHADOW_PCF1] = 'PCF1';
-shadowTypeToString[SHADOW_PCSS] = 'PCSS';
+export const SHADOW_PCF1_FLOAT16 = 7;
+
+/**
+ * A shadow sampling technique using 16-bit shadow map that averages depth comparisons from a 3x3
+ * grid of texels for softened shadow edges.
+ *
+ * @type {number}
+ * @category Graphics
+ */
+export const SHADOW_PCF3_FLOAT16 = 8;
+
+/**
+ * A shadow sampling technique using 16-bit shadow map that averages depth comparisons from a 3x3
+ * grid of texels for softened shadow edges.
+ *
+ * @type {number}
+ * @category Graphics
+ */
+export const SHADOW_PCF5_FLOAT16 = 9;
+
+/**
+ * Information about shadow types.
+ *
+ * @type {Map<number, { name: string, format: number, pcf?: boolean, vsm?: boolean }>}
+ * @ignore
+ */
+export const shadowTypeInfo = new Map([
+    [SHADOW_PCF1,            { name: 'PCF1', format: PIXELFORMAT_DEPTH, pcf: true }],
+    [SHADOW_PCF3,            { name: 'PCF3', format: PIXELFORMAT_DEPTH, pcf: true }],
+    [SHADOW_PCF5,            { name: 'PCF5', format: PIXELFORMAT_DEPTH, pcf: true }],
+    [SHADOW_PCF1_FLOAT16,    { name: 'PCF1_FLOAT16', format: PIXELFORMAT_DEPTH16, pcf: true }],
+    [SHADOW_PCF3_FLOAT16,    { name: 'PCF3_FLOAT16', format: PIXELFORMAT_DEPTH16, pcf: true }],
+    [SHADOW_PCF5_FLOAT16,    { name: 'PCF5_FLOAT16', format: PIXELFORMAT_DEPTH16, pcf: true }],
+    [SHADOW_VSM8,            { name: 'VSM8', format: PIXELFORMAT_RGBA8, vsm: true }],
+    [SHADOW_VSM16,           { name: 'VSM16', format: PIXELFORMAT_RGBA16F, vsm: true }],
+    [SHADOW_VSM32,           { name: 'VSM32', format: PIXELFORMAT_RGBA32F, vsm: true }],
+    [SHADOW_PCSS,            { name: 'PCSS', format: PIXELFORMAT_R32F }]
+]);
 
 /**
  * Box filter.

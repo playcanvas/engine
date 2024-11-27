@@ -322,6 +322,15 @@ class GSplatData {
         return false;
     }
 
+    get hasSHData() {
+        for (let i = 0; i < 45; ++i) {
+            if (!this.getProp(`f_rest_${i}`)) {
+                return false;
+            }
+        }
+        return true;
+    }
+
     calcMortonOrder() {
         const calcMinMax = (arr) => {
             let min = arr[0];

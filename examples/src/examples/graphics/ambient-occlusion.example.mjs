@@ -1,7 +1,6 @@
 import { data } from 'examples/observer';
-import { deviceType, rootPath, fileImport } from 'examples/utils';
+import { deviceType, rootPath } from 'examples/utils';
 import * as pc from 'playcanvas';
-const { CameraFrame } = await fileImport(`${rootPath}/static/assets/scripts/misc/camera-frame.mjs`);
 
 const canvas = /** @type {HTMLCanvasElement} */ (document.getElementById('application-canvas'));
 window.focus();
@@ -168,10 +167,11 @@ assetListLoader.load(() => {
 
     // ------ Custom render passes set up ------
 
-    /** @type { CameraFrame } */
-    const cameraFrame = cameraEntity.script.create(CameraFrame);
-    cameraFrame.rendering.samples = 4;
+    const cameraFrame = new pc.CameraFrame(app, cameraEntity.camera);
     cameraFrame.rendering.toneMapping = pc.TONEMAP_NEUTRAL;
+
+    // use 16but render target for better precision, improves quality with TAA and randomized SSAO
+    cameraFrame.rendering.renderFormats = [pc.PIXELFORMAT_RGBA16F];
 
     const applySettings = () => {
 
@@ -183,6 +183,16 @@ assetListLoader.load(() => {
         cameraFrame.ssao.samples = data.get('data.ssao.samples');
         cameraFrame.ssao.minAngle = data.get('data.ssao.minAngle');
         cameraFrame.ssao.scale = data.get('data.ssao.scale');
+        cameraFrame.ssao.randomize = data.get('data.ssao.randomize');
+        cameraFrame.debug = data.get('data.ssao.debug') ? 'ssao' : null;
+
+        // TAA or MSAA
+        const taa = data.get('data.ssao.taa');
+        cameraFrame.taa.enabled = taa;
+        cameraFrame.rendering.samples = taa ? 1 : 4;    // disable MSAA when TAA is enabled
+        cameraFrame.rendering.sharpness = taa ? 1 : 0;  // sharpen the image when TAA is enabled
+
+        cameraFrame.update();
     };
 
     // apply UI changes
@@ -213,7 +223,10 @@ assetListLoader.load(() => {
             intensity: 0.4,
             power: 6,
             minAngle: 10,
-            scale: 1
+            scale: 1,
+            taa: false,
+            randomize: false,
+            debug: false
         }
     });
 });
