@@ -81,7 +81,7 @@ class GSplat {
         this.updateTransformData(gsplatData);
 
         // initialize SH data
-        this.hasSH = getSHData(gsplatData).every(x => x);
+        this.hasSH = gsplatData.hasSHData;
         if (this.hasSH) {
             this.sh1to3Texture = this.createTexture('splatSH_1to3', PIXELFORMAT_RGBA32U, size);
             this.sh4to7Texture = this.createTexture('splatSH_4to7', PIXELFORMAT_RGBA32U, size);
