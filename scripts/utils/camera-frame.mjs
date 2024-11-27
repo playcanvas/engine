@@ -26,6 +26,15 @@ const RenderFormat = {
     RGBA32: 14      // PIXELFORMAT_RGBA32F
 };
 
+/** @enum {string} */
+const DebugType = {
+    NONE: '',
+    SCENE: 'scene',
+    SSAO: 'ssao',
+    BLOOM: 'bloom',
+    VIGNETTE: 'vignette'
+};
+
 /** @interface */
 class Rendering {
     /**
@@ -80,6 +89,12 @@ class Rendering {
      * @step 0.001
      */
     sharpness = 0.0;
+
+    /**
+     * @attribute
+     * @type {DebugType}
+     */
+    debug = DebugType.NONE;
 }
 
 /** @interface */
@@ -369,6 +384,9 @@ class CameraFrame extends Script {
         // fringing
         const dstFringing = cf.fringing;
         dstFringing.intensity = fringing.enabled ? fringing.intensity : 0;
+
+        // debugging
+        cf.debug = rendering.debug;
 
         cf.update();
     }

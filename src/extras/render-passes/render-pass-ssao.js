@@ -1,3 +1,4 @@
+import { BlueNoise } from '../../core/math/blue-noise.js';
 import { Color } from '../../core/math/color.js';
 import { ADDRESS_CLAMP_TO_EDGE, FILTER_NEAREST, PIXELFORMAT_R8 } from '../../platform/graphics/constants.js';
 import { RenderTarget } from '../../platform/graphics/render-target.js';
@@ -150,9 +151,10 @@ const fs = /* glsl */`
 
     uniform float uProjectionScaleRadius;
     uniform float uIntensity;
+    uniform float uRandomize;
 
     float scalableAmbientObscurance(highp vec2 uv, highp vec3 origin, vec3 normal) {
-        float noise = random(getFragCoord());
+        float noise = random(getFragCoord()) + uRandomize;
         highp vec2 tapPosition = startPosition(noise);
         highp mat2 angleStep = tapAngleStep();
 
@@ -235,6 +237,12 @@ class RenderPassSsao extends RenderPassShaderQuad {
     minAngle = 5;
 
     /**
+     * Enable randomization of the sample pattern. Useful when TAA is used to remove the noise,
+     * instead of blurring.
+     */
+    randomize = false;
+
+    /**
      * The texture containing the occlusion information in the red channel.
      *
      * @type {Texture}
@@ -244,6 +252,8 @@ class RenderPassSsao extends RenderPassShaderQuad {
 
     /** @type {number} */
     _scale = 1;
+
+    _blueNoise = new BlueNoise(19);
 
     constructor(device, sourceTexture, cameraComponent, blurEnabled) {
         super(device);
@@ -356,11 +366,12 @@ class RenderPassSsao extends RenderPassShaderQuad {
 
         const spiralTurns = 10.0;
         const step = (1.0 / (sampleCount - 0.5)) * spiralTurns * 2.0 * 3.141;
-        const radius = this.radius * scale;
+        const radius = this.radius / scale;
+
         const bias = 0.001;
         const peak = 0.1 * radius;
         const intensity = 2 * (peak * 2.0 * 3.141) * this.intensity / sampleCount;
-        const projectionScale = 0.5 * sourceTexture.height * scale;
+        const projectionScale = 0.5 * sourceTexture.height;
         scope.resolve('uSpiralTurns').setValue(spiralTurns);
         scope.resolve('uAngleIncCosSin').setValue([Math.cos(step), Math.sin(step)]);
         scope.resolve('uMaxLevel').setValue(0.0);
@@ -370,6 +381,7 @@ class RenderPassSsao extends RenderPassShaderQuad {
         scope.resolve('uIntensity').setValue(intensity);
         scope.resolve('uPower').setValue(this.power);
         scope.resolve('uProjectionScaleRadius').setValue(projectionScale * radius);
+        scope.resolve('uRandomize').setValue(this.randomize ? this._blueNoise.value() : 0);
 
         super.execute();
     }

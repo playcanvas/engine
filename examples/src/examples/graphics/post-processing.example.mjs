@@ -264,6 +264,14 @@ assetListLoader.load(() => {
         // fringing
         cameraFrame.fringing.intensity = data.get('data.fringing.enabled') ? data.get('data.fringing.intensity') : 0;
 
+        // debug
+        switch (data.get('data.scene.debug')) {
+            case 0: cameraFrame.debug = null; break;
+            case 1: cameraFrame.debug = 'bloom'; break;
+            case 2: cameraFrame.debug = 'vignette'; break;
+            case 3: cameraFrame.debug = 'scene'; break;
+        }
+
         // apply all settings
         cameraFrame.update();
     };
@@ -279,7 +287,8 @@ assetListLoader.load(() => {
             scale: 1.8,
             background: 6,
             emissive: 200,
-            tonemapping: pc.TONEMAP_ACES
+            tonemapping: pc.TONEMAP_ACES,
+            debug: 0
         },
         bloom: {
             enabled: true,
