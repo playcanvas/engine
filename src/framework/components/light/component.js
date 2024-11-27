@@ -547,16 +547,16 @@ class LightComponent extends Component {
     /**
      * Sets the type of shadows being rendered by this light. Can be:
      *
-     * - {@link SHADOW_PCF3}: Render depth, can be used for PCF 3x3 sampling.
-     * - {@link SHADOW_VSM8}: Render packed variance shadow map. All shadow receivers must also cast
-     * shadows for this mode to work correctly.
-     * - {@link SHADOW_VSM16}: Render 16-bit exponential variance shadow map. Requires
-     * OES_texture_half_float extension. Falls back to {@link SHADOW_VSM8}, if not supported.
-     * - {@link SHADOW_VSM32}: Render 32-bit exponential variance shadow map. Requires
-     * OES_texture_float extension. Falls back to {@link SHADOW_VSM16}, if not supported.
-     * - {@link SHADOW_PCF5}: Render depth buffer only, can be used for hardware-accelerated PCF 5x5
-     * sampling.
-     * - {@link SHADOW_PCSS}: Render depth as color, and use the software sampled PCSS method for shadows.
+     * - {@link SHADOW_PCF1}
+     * - {@link SHADOW_PCF3}
+     * - {@link SHADOW_PCF5}
+     * - {@link SHADOW_PCF1_FLOAT16}
+     * - {@link SHADOW_PCF3_FLOAT16}
+     * - {@link SHADOW_PCF5_FLOAT16}
+     * - {@link SHADOW_VSM8}
+     * - {@link SHADOW_VSM16}
+     * - {@link SHADOW_VSM32}
+     * - {@link SHADOW_PCSS}
      *
      * @type {number}
      */
