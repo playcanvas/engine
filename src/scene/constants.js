@@ -287,20 +287,10 @@ export const SHADOW_PCF3_32F = 0;
 export const SHADOW_PCF3 = 0; // alias for SHADOW_PCF3_32F for backwards compatibility
 
 /**
- * A shadow sampling technique using a 16-bit exponential variance shadow map packed into
- * {@link PIXELFORMAT_RGBA8} that leverages variance to approximate shadow boundaries, enabling soft
- * shadows. All shadow receivers must also cast shadows for this mode to work correctly.
- *
- * @type {number}
- * @category Graphics
- */
-export const SHADOW_VSM8 = 1;
-
-/**
  * A shadow sampling technique using a 16-bit exponential variance shadow map that leverages
  * variance to approximate shadow boundaries, enabling soft shadows. Only supported when
- * {@link GraphicsDevice#textureHalfFloatRenderable} is true. Falls back to {@link SHADOW_VSM8}, if not
- * supported.
+ * {@link GraphicsDevice#textureHalfFloatRenderable} is true. Falls back to {@link SHADOW_PCF3_32F},
+ * if not supported.
  *
  * @type {number}
  * @category Graphics
@@ -397,7 +387,6 @@ export const shadowTypeInfo = new Map([
     [SHADOW_PCF1_16F,    { name: 'PCF1_16F', format: PIXELFORMAT_DEPTH16, pcf: true }],
     [SHADOW_PCF3_16F,    { name: 'PCF3_16F', format: PIXELFORMAT_DEPTH16, pcf: true }],
     [SHADOW_PCF5_16F,    { name: 'PCF5_16F', format: PIXELFORMAT_DEPTH16, pcf: true }],
-    [SHADOW_VSM8,            { name: 'VSM8', format: PIXELFORMAT_RGBA8, vsm: true }],
     [SHADOW_VSM_16F,     { name: 'VSM_16F', format: PIXELFORMAT_RGBA16F, vsm: true }],
     [SHADOW_VSM_32F,     { name: 'VSM_32F', format: PIXELFORMAT_RGBA32F, vsm: true }],
     [SHADOW_PCSS_32F,    { name: 'PCSS_32F', format: PIXELFORMAT_R32F }]

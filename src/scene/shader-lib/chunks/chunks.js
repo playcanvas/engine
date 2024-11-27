@@ -153,7 +153,6 @@ import shadowPCSSPS from './lit/frag/shadowPCSS.js';
 import shadowSampleCoordPS from './lit/frag/shadowSampleCoord.js';
 import shadowStandardPS from './lit/frag/shadowStandard.js';
 import shadowStandardGL2PS from './lit/frag/shadowStandardGL2.js';
-import shadowVSM8PS from './lit/frag/shadowVSM8.js';
 import shadowVSM_commonPS from './lit/frag/shadowVSM_common.js';
 import skinBatchTexVS from './common/vert/skinBatchTex.js';
 import skinTexVS from './common/vert/skinTex.js';
@@ -354,7 +353,6 @@ const shaderChunks = {
     shadowSampleCoordPS,
     shadowStandardPS,
     shadowStandardGL2PS,
-    shadowVSM8PS,
     shadowVSM_commonPS,
     skinBatchTexVS,
     skinTexVS,

@@ -24,7 +24,6 @@ export const controls = ({ observer, ReactPCUI, React, jsx, fragment }) => {
                         { v: pc.SHADOW_PCF1_16F, t: 'PCF1_16F' },
                         { v: pc.SHADOW_PCF3_16F, t: 'PCF3_16F' },
                         { v: pc.SHADOW_PCF5_16F, t: 'PCF5_16F' },
-                        { v: pc.SHADOW_VSM8, t: 'VSM8' },
                         { v: pc.SHADOW_VSM_16F, t: 'VSM_16F' },
                         { v: pc.SHADOW_VSM_32F, t: 'VSM_32F' }
                     ]

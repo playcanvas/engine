@@ -8,7 +8,7 @@ import {
     BLUR_GAUSSIAN,
     LIGHTTYPE_DIRECTIONAL, LIGHTTYPE_OMNI, LIGHTTYPE_SPOT,
     MASK_BAKE, MASK_AFFECT_DYNAMIC,
-    SHADOW_PCF1_32F, SHADOW_PCF3_32F, SHADOW_VSM8, SHADOW_VSM_16F, SHADOW_VSM_32F, SHADOW_PCSS_32F,
+    SHADOW_PCF1_32F, SHADOW_PCF3_32F, SHADOW_VSM_16F, SHADOW_VSM_32F, SHADOW_PCSS_32F,
     SHADOWUPDATE_NONE, SHADOWUPDATE_REALTIME, SHADOWUPDATE_THISFRAME,
     LIGHTSHAPE_PUNCTUAL, LIGHTFALLOFF_LINEAR,
     shadowTypeInfo,
@@ -398,9 +398,9 @@ class Light {
             value = SHADOW_VSM_16F;
         }
 
-        // fallback from vsm16 to vsm8
+        // fallback from vsm16 to pcf3
         if (value === SHADOW_VSM_16F && !device.textureHalfFloatRenderable) {
-            value = SHADOW_VSM8;
+            value = SHADOW_PCF3_32F;
         }
 
         const shadowInfo = shadowTypeInfo.get(value);
