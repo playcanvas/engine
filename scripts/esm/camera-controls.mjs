@@ -1,11 +1,13 @@
 /* eslint-disable-next-line import/no-unresolved */
-import { Vec2, Vec3, Ray, Plane, Entity, Script, math } from 'playcanvas';
+import { Vec2, Vec3, Ray, Plane, Mat4, Quat, Script, math } from 'playcanvas';
 
 /** @import { CameraComponent } from 'playcanvas' */
 
 const tmpVa = new Vec2();
 const tmpV1 = new Vec3();
 const tmpV2 = new Vec3();
+const tmpM1 = new Mat4();
+const tmpQ1 = new Quat();
 const tmpR1 = new Ray();
 const tmpP1 = new Plane();
 
@@ -135,13 +137,21 @@ class CameraControls extends Script {
 
     /**
      * @type {HTMLElement}
+     * @private
      */
     _element;
 
     /**
-     * @type {Entity}
+     * @type {Mat4}
+     * @private
      */
-    root;
+    _cameraTransform = new Mat4();
+
+    /**
+     * @type {Mat4}
+     * @private
+     */
+    _baseTransform = new Mat4();
 
     /**
      * The scene size. The zoom, pan and fly speeds are relative to this size.
@@ -187,7 +197,7 @@ class CameraControls extends Script {
      * Enable pan camera controls.
      *
      * @attribute
-     * @type {boolean
+     * @type {boolean}
      */
     enablePan = true;
 
@@ -253,7 +263,6 @@ class CameraControls extends Script {
     constructor(args) {
         super(args);
         const {
-            name,
             element,
             enableOrbit,
             enablePan,
@@ -272,9 +281,6 @@ class CameraControls extends Script {
             sprintSpeed,
             crouchSpeed
         } = args.attributes;
-
-        this.root = new Entity(name ?? 'camera-controls');
-        this.app.root.addChild(this.root);
 
         this._element = element ?? this.app.graphicsDevice.canvas;
 
@@ -305,7 +311,7 @@ class CameraControls extends Script {
         }
         this.attach(this.entity.camera);
 
-        this.focusPoint = focusPoint ?? this._origin;
+        this.focusPoint = focusPoint ?? this.focusPoint;
         this.pitchRange = pitchRange ?? this.pitchRange;
         this.zoomMin = zoomMin ?? this.zoomMin;
         this.zoomMax = zoomMax ?? this.zoomMax;
@@ -341,9 +347,6 @@ class CameraControls extends Script {
     }
 
     get focusPoint() {
-        if (this._flying) {
-            return tmpV1.copy(this.root.forward).mulScalar(this._zoomDist).add(this._origin);
-        }
         return this._origin;
     }
 
@@ -357,7 +360,7 @@ class CameraControls extends Script {
     set pitchRange(value) {
         this._pitchRange.copy(value);
         this._dir.x = this._clampPitch(this._dir.x);
-        this._smoothLook(-1);
+        this._smoothTransform(-1);
     }
 
     get pitchRange() {
@@ -514,7 +517,7 @@ class CameraControls extends Script {
             this._zoomDist = this._cameraDist;
             this._origin.copy(this._camera.entity.getPosition());
             this._position.copy(this._origin);
-            this._camera.entity.setLocalPosition(0, 0, 0);
+            this._cameraTransform.setTranslate(0, 0, 0);
             this._flying = true;
         }
         if (startOrbit) {
@@ -577,7 +580,7 @@ class CameraControls extends Script {
             this._panning = false;
         }
         if (this._flying) {
-            tmpV1.copy(this.root.forward).mulScalar(this._zoomDist);
+            tmpV1.copy(this._camera.entity.forward).mulScalar(this._zoomDist);
             this._origin.add(tmpV1);
             this._position.add(tmpV1);
             this._flying = false;
@@ -685,22 +688,22 @@ class CameraControls extends Script {
 
         tmpV1.set(0, 0, 0);
         if (this._key.forward) {
-            tmpV1.add(this.root.forward);
+            tmpV1.add(this._camera.entity.forward);
         }
         if (this._key.backward) {
-            tmpV1.sub(this.root.forward);
+            tmpV1.sub(this._camera.entity.forward);
         }
         if (this._key.left) {
-            tmpV1.sub(this.root.right);
+            tmpV1.sub(this._camera.entity.right);
         }
         if (this._key.right) {
-            tmpV1.add(this.root.right);
+            tmpV1.add(this._camera.entity.right);
         }
         if (this._key.up) {
-            tmpV1.add(this.root.up);
+            tmpV1.add(this._camera.entity.up);
         }
         if (this._key.down) {
-            tmpV1.sub(this.root.up);
+            tmpV1.sub(this._camera.entity.up);
         }
         tmpV1.normalize();
         const speed = this._key.crouch ? this.crouchSpeed : this._key.sprint ? this.sprintSpeed : this.moveSpeed;
@@ -740,7 +743,7 @@ class CameraControls extends Script {
         const mouseW = this._camera.screenToWorld(pos.x, pos.y, 1);
         const cameraPos = this._camera.entity.getPosition();
 
-        const focusDirScaled = tmpV1.copy(this.root.forward).mulScalar(this._zoomDist);
+        const focusDirScaled = tmpV1.copy(this._camera.entity.forward).mulScalar(this._zoomDist);
         const focalPos = tmpV2.add2(cameraPos, focusDirScaled);
         const planeNormal = focusDirScaled.mulScalar(-1).normalize();
 
@@ -796,28 +799,28 @@ class CameraControls extends Script {
     _smoothZoom(dt) {
         const a = dt === -1 ? 1 : lerpRate(this.moveDamping, dt);
         this._cameraDist = math.lerp(this._cameraDist, this._zoomDist, a);
-        this._camera.entity.setLocalPosition(0, 0, this._cameraDist);
+        this._cameraTransform.setTranslate(0, 0, this._cameraDist);
     }
 
     /**
      * @private
      * @param {number} dt - The delta time.
      */
-    _smoothLook(dt) {
+    _smoothTransform(dt) {
         const a = dt === -1 ? 1 : lerpRate(this.lookDamping, dt);
         this._angles.x = math.lerp(this._angles.x, this._dir.x, a);
         this._angles.y = math.lerp(this._angles.y, this._dir.y, a);
-        this.root.setEulerAngles(this._angles);
+        this._position.lerp(this._position, this._origin, a);
+        this._baseTransform.setTRS(this._position, tmpQ1.setFromEulerAngles(this._angles), Vec3.ONE);
     }
 
     /**
      * @private
-     * @param {number} dt - The delta time.
      */
-    _smoothMove(dt) {
-        const a = dt === -1 ? 1 : lerpRate(this.moveDamping, dt);
-        this._position.lerp(this._position, this._origin, a);
-        this.root.setPosition(this._position);
+    _updateTransform() {
+        tmpM1.copy(this._baseTransform).mul(this._cameraTransform);
+        this._camera.entity.setPosition(tmpM1.getTranslation());
+        this._camera.entity.setEulerAngles(tmpM1.getEulerAngles());
     }
 
     /**
@@ -829,6 +832,9 @@ class CameraControls extends Script {
      */
     focus(point, start, smooth = true) {
         if (!this._camera) {
+            return;
+        }
+        if (this._flying) {
             return;
         }
         if (!start) {
@@ -845,8 +851,9 @@ class CameraControls extends Script {
         this._dir.set(-elev, -azim);
 
         this._origin.copy(point);
-        this._camera.entity.setPosition(start);
-        this._camera.entity.setLocalEulerAngles(0, 0, 0);
+
+        this._cameraTransform.setTranslate(0, 0, 0);
+        this._baseTransform.setTRS(this._origin, Quat.IDENTITY, Vec3.ONE);
 
         this._zoomDist = tmpV1.length();
 
@@ -878,8 +885,8 @@ class CameraControls extends Script {
      * @param {number} [zoomDist] - The zoom distance.
      * @param {boolean} [smooth] - Whether to smooth the refocus.
      */
-    refocus(point, start = null, zoomDist = null, smooth = true) {
-        if (zoomDist !== null) {
+    refocus(point, start = null, zoomDist, smooth = true) {
+        if (typeof zoomDist === 'number') {
             this.resetZoom(zoomDist, smooth);
         }
         this.focus(point, start, smooth);
@@ -890,7 +897,6 @@ class CameraControls extends Script {
      */
     attach(camera) {
         this._camera = camera;
-        this._camera.entity.setLocalEulerAngles(0, 0, 0);
 
         // Attach events to canvas instead of window
         this._element.addEventListener('wheel', this._onWheel, PASSIVE);
@@ -902,8 +908,6 @@ class CameraControls extends Script {
         // These can stay on window since they're keyboard events
         window.addEventListener('keydown', this._onKeyDown, false);
         window.addEventListener('keyup', this._onKeyUp, false);
-
-        this.root.addChild(camera.entity);
     }
 
     detach() {
@@ -918,7 +922,6 @@ class CameraControls extends Script {
         window.removeEventListener('keydown', this._onKeyDown, false);
         window.removeEventListener('keyup', this._onKeyUp, false);
 
-        this.root.removeChild(this._camera.entity);
         this._camera = null;
 
         this._dir.x = this._angles.x;
@@ -948,14 +951,13 @@ class CameraControls extends Script {
             return;
         }
 
+        this._move(dt);
+
         if (!this._flying) {
             this._smoothZoom(dt);
         }
-
-        this._move(dt);
-
-        this._smoothLook(dt);
-        this._smoothMove(dt);
+        this._smoothTransform(dt);
+        this._updateTransform();
     }
 
     destroy() {
