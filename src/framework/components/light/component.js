@@ -553,7 +553,6 @@ class LightComponent extends Component {
      * - {@link SHADOW_PCF1_16F}
      * - {@link SHADOW_PCF3_16F}
      * - {@link SHADOW_PCF5_16F}
-     * - {@link SHADOW_VSM8}
      * - {@link SHADOW_VSM_16F}
      * - {@link SHADOW_VSM_32F}
      * - {@link SHADOW_PCSS_32F}

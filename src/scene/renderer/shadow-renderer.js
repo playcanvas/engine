@@ -11,7 +11,6 @@ import {
     BLUR_GAUSSIAN,
     LIGHTTYPE_DIRECTIONAL, LIGHTTYPE_OMNI,
     SHADER_SHADOW,
-    SHADOW_VSM8, SHADOW_VSM_32F,
     SHADOWUPDATE_NONE, SHADOWUPDATE_THISFRAME,
     SORTKEY_DEPTH,
     shadowTypeInfo
@@ -91,12 +90,9 @@ class ShadowRenderer {
         this.pixelOffsetId = scope.resolve('pixelOffset');
         this.weightId = scope.resolve('weight[0]');
         this.blurVsmShaderCode = [shaderChunks.blurVSMPS, `#define GAUSS\n${shaderChunks.blurVSMPS}`];
-        const packed = '#define PACKED\n';
-        this.blurPackedVsmShaderCode = [packed + this.blurVsmShaderCode[0], packed + this.blurVsmShaderCode[1]];
 
         // cache for vsm blur shaders
         this.blurVsmShader = [{}, {}];
-        this.blurPackedVsmShader = [{}, {}];
 
         this.blurVsmWeights = {};
 
@@ -118,8 +114,13 @@ class ShadowRenderer {
 
         const shadowCam = LightCamera.create('ShadowCamera', type, face);
 
+        const shadowInfo = shadowTypeInfo.get(shadowType);
+        Debug.assert(shadowInfo);
+        const isVsm = shadowInfo?.vsm ?? false;
+        const isPcf = shadowInfo?.pcf ?? false;
+
         // don't clear the color buffer if rendering a depth map
-        if (shadowType >= SHADOW_VSM8 && shadowType <= SHADOW_VSM_32F) {
+        if (isVsm) {
             shadowCam.clearColor = new Color(0, 0, 0, 0);
         } else {
             shadowCam.clearColor = new Color(1, 1, 1, 1);
@@ -128,12 +129,8 @@ class ShadowRenderer {
         shadowCam.clearDepthBuffer = true;
         shadowCam.clearStencilBuffer = false;
 
-        const shadowInfo = shadowTypeInfo.get(shadowType);
-        Debug.assert(shadowInfo);
-
         // clear color buffer only when using it
-        const hwPcf = shadowInfo?.pcf ?? false;
-        shadowCam.clearColorBuffer = !hwPcf;
+        shadowCam.clearColorBuffer = !isPcf;
 
         return shadowCam;
     }
@@ -470,21 +467,17 @@ class ShadowRenderer {
         }
     }
 
-    getVsmBlurShader(isVsm8, blurMode, filterSize) {
+    getVsmBlurShader(blurMode, filterSize) {
 
-        const cache = isVsm8 ? this.blurPackedVsmShader : this.blurVsmShader;
+        const cache = this.blurVsmShader;
         let blurShader = cache[blurMode][filterSize];
         if (!blurShader) {
             this.blurVsmWeights[filterSize] = gaussWeights(filterSize);
 
             const blurVS = shaderChunks.fullscreenQuadVS;
             let blurFS = `#define SAMPLES ${filterSize}\n`;
-            if (isVsm8) {
-                blurFS += this.blurPackedVsmShaderCode[blurMode];
-            } else {
-                blurFS += this.blurVsmShaderCode[blurMode];
-            }
-            const blurShaderName = `blurVsm${blurMode}${filterSize}${isVsm8}`;
+            blurFS += this.blurVsmShaderCode[blurMode];
+            const blurShaderName = `blurVsm${blurMode}${filterSize}`;
             blurShader = createShaderFromCode(this.device, blurVS, blurFS, blurShaderName);
             cache[blurMode][filterSize] = blurShader;
         }
@@ -511,10 +504,9 @@ class ShadowRenderer {
         const tempShadowMap = this.renderer.shadowMapCache.get(device, light);
         const tempRt = tempShadowMap.renderTargets[0];
 
-        const isVsm8 = light._shadowType === SHADOW_VSM8;
         const blurMode = light.vsmBlurMode;
         const filterSize = light._vsmBlurSize;
-        const blurShader = this.getVsmBlurShader(isVsm8, blurMode, filterSize);
+        const blurShader = this.getVsmBlurShader(blurMode, filterSize);
 
         blurScissorRect.z = light._shadowResolution - 2;
         blurScissorRect.w = blurScissorRect.z;
