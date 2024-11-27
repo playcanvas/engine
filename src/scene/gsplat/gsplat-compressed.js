@@ -6,13 +6,6 @@ import { Texture } from '../../platform/graphics/texture.js';
 import { BoundingBox } from '../../core/shape/bounding-box.js';
 import { createGSplatCompressedMaterial } from './gsplat-compressed-material.js';
 
-/**
- * @import { GSplatCompressedData } from './gsplat-compressed-data.js'
- * @import { GraphicsDevice } from '../../platform/graphics/graphics-device.js'
- * @import { Material } from '../materials/material.js'
- * @import { SplatMaterialOptions } from './gsplat-material.js'
- */
-
 // copy data with padding
 const strideCopy = (target, targetStride, src, srcStride, numEntries) => {
     for (let i = 0; i < numEntries; ++i) {
