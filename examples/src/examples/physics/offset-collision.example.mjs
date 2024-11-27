@@ -83,7 +83,7 @@ assetListLoader.load(() => {
         castShadows: true,
         intensity: 1.5,
         normalOffsetBias: 0.2,
-        shadowType: pc.SHADOW_PCF5,
+        shadowType: pc.SHADOW_PCF5_32F,
         shadowDistance: 12,
         shadowResolution: 4096,
         shadowBias: 0.2

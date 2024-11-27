@@ -11,7 +11,7 @@ import { Texture } from '../../platform/graphics/texture.js';
 
 import {
     LIGHTTYPE_OMNI,
-    SHADOW_VSM32, SHADOW_PCSS,
+    SHADOW_VSM_32F, SHADOW_PCSS_32F,
     shadowTypeInfo
 } from '../constants.js';
 
@@ -47,7 +47,7 @@ class ShadowMap {
     }
 
     static getShadowFiltering(device, shadowType) {
-        if (shadowType === SHADOW_VSM32) {
+        if (shadowType === SHADOW_VSM_32F) {
             return device.extTextureFloatLinear ? FILTER_LINEAR : FILTER_NEAREST;
         }
         return FILTER_LINEAR;
@@ -133,7 +133,7 @@ class ShadowMap {
         const shadowInfo = shadowTypeInfo.get(shadowType);
         Debug.assert(shadowInfo);
         const formatName = pixelFormatInfo.get(shadowInfo.format)?.name;
-        const isPcss = shadowType === SHADOW_PCSS;
+        const isPcss = shadowType === SHADOW_PCSS_32F;
         const filter = isPcss ? FILTER_NEAREST : FILTER_LINEAR;
 
         const cubemap = new Texture(device, {
