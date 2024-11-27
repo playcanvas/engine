@@ -266,7 +266,7 @@ assetListLoader.load(() => {
 
         // debug
         switch (data.get('data.scene.debug')) {
-            case 0: cameraFrame.debug = ''; break;
+            case 0: cameraFrame.debug = null; break;
             case 1: cameraFrame.debug = 'bloom'; break;
             case 2: cameraFrame.debug = 'vignette'; break;
             case 3: cameraFrame.debug = 'scene'; break;

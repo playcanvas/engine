@@ -240,11 +240,11 @@ class CameraFrame {
     };
 
     /**
-     * Debug rendering.
+     * Debug rendering. Set to null to disable.
      *
-     * @type {''|'scene'|'ssao'|'bloom'|'vignette'}
+     * @type {null|'scene'|'ssao'|'bloom'|'vignette'}
      */
-    debug = '';
+    debug = null;
 
     options = new CameraFrameOptions();
 
@@ -396,8 +396,8 @@ class CameraFrame {
 
         // debug rendering
         composePass.debug = this.debug;
-        if (composePass.debug === 'ssao' && options.ssaoType === SSAOTYPE_NONE) composePass.debug = '';
-        if (composePass.debug === 'vignette' && !composePass.vignetteEnabled) composePass.debug = '';
+        if (composePass.debug === 'ssao' && options.ssaoType === SSAOTYPE_NONE) composePass.debug = null;
+        if (composePass.debug === 'vignette' && !composePass.vignetteEnabled) composePass.debug = null;
     }
 }
 

@@ -265,7 +265,7 @@ class RenderPassCompose extends RenderPassShaderQuad {
 
     _key = '';
 
-    _debug = '';
+    _debug = null;
 
     constructor(graphicsDevice) {
         super(graphicsDevice);
@@ -417,7 +417,7 @@ class RenderPassCompose extends RenderPassShaderQuad {
                 `-${this.taaEnabled ? 'taa' : 'notaa'}` +
                 `-${this.isSharpnessEnabled ? 'cas' : 'nocas'}` +
                 `-${this._srgb ? 'srgb' : 'linear'}` +
-                `-${this._debug}`;
+                `-${this._debug ?? ''}`;
 
             if (this._key !== key) {
                 this._key = key;

@@ -184,7 +184,7 @@ assetListLoader.load(() => {
         cameraFrame.ssao.minAngle = data.get('data.ssao.minAngle');
         cameraFrame.ssao.scale = data.get('data.ssao.scale');
         cameraFrame.ssao.randomize = data.get('data.ssao.randomize');
-        cameraFrame.debug = data.get('data.ssao.debug') ? 'ssao' : '';
+        cameraFrame.debug = data.get('data.ssao.debug') ? 'ssao' : null;
 
         // TAA or MSAA
         const taa = data.get('data.ssao.taa');
