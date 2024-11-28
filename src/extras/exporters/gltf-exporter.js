@@ -487,21 +487,20 @@ class GltfExporter extends CoreExporter {
         }
     }
 
-    writeMeshes(resources, json) {
+    writeMeshes(resources, json, options) {
         if (resources.entityMeshInstances.length > 0) {
             json.accessors = [];
             json.meshes = [];
 
             resources.entityMeshInstances.forEach((entityMeshInstances) => {
-
                 const mesh = {
                     primitives: []
                 };
 
-                // all mesh instances of a single node are stores as a single gltf mesh with multiple primitives
+                // all mesh instances of a single node are stored as a single gltf mesh with multiple primitives
                 const meshInstances = entityMeshInstances.meshInstances;
                 meshInstances.forEach((meshInstance) => {
-                    const primitive = GltfExporter.createPrimitive(resources, json, meshInstance.mesh);
+                    const primitive = GltfExporter.createPrimitive(resources, json, meshInstance.mesh, options);
 
                     primitive.material = resources.materials.indexOf(meshInstance.material);
 
@@ -513,7 +512,7 @@ class GltfExporter extends CoreExporter {
         }
     }
 
-    static createPrimitive(resources, json, mesh) {
+    static createPrimitive(resources, json, mesh, options = {}) {
         const primitive = {
             attributes: {}
         };
@@ -524,6 +523,44 @@ class GltfExporter extends CoreExporter {
         const { interleaved, elements } = format;
         const numVertices = vertexBuffer.getNumVertices();
         elements.forEach((element, elementIndex) => {
+            const semantic = getSemantic(element.name);
+
+            // Skip unused attributes if stripping is enabled
+            if (options.stripUnusedAttributes) {
+                let isUsed = true;
+
+                // Check texture coordinates
+                if (semantic.startsWith('TEXCOORD_')) {
+                    const texCoordIndex = parseInt(semantic.split('_')[1]);
+                    isUsed = resources.materials.some(material => {
+                        return textureSemantics.some(texSemantic => {
+                            const texture = material[texSemantic];
+                            // Most materials use UV0 by default, so keep TEXCOORD_0 unless explicitly using a different UV set
+                            return texture && (texCoordIndex === 0 || material[`${texSemantic}Tiling`]?.uv === texCoordIndex);
+                        });
+                    });
+                }
+
+                // Check vertex colors
+                if (semantic === 'COLOR_0') {
+                    isUsed = resources.materials.some(material => material.vertexColors);
+                }
+
+                // Check tangents
+                if (semantic === 'TANGENT') {
+                    isUsed = resources.materials.some(material => material.normalMap);
+                }
+
+                // Check skinning attributes
+                if (semantic === 'JOINTS_0' || semantic === 'WEIGHTS_0') {
+                    isUsed = resources.entityMeshInstances.some(emi => 
+                        emi.meshInstances.some(mi => mi.mesh.skin));
+                }
+
+                if (!isUsed) {
+                    return; // Skip this attribute
+                }
+            }
 
             let bufferView = resources.bufferViewMap.get(vertexBuffer);
             if (!bufferView) {
@@ -543,13 +580,10 @@ class GltfExporter extends CoreExporter {
             };
 
             const idx = json.accessors.push(accessor) - 1;
-            primitive.attributes[getSemantic(element.name)] = idx;
+            primitive.attributes[semantic] = idx;
 
             // Position accessor also requires min and max properties
             if (element.name === SEMANTIC_POSITION) {
-
-                // compute min and max from positions, as the BoundingBox stores center and extents,
-                // and we get precision warnings from gltf validator
                 const positions = [];
                 mesh.getPositions(positions);
                 const min = new Vec3();
@@ -723,7 +757,7 @@ class GltfExporter extends CoreExporter {
 
             this.writeBufferViews(resources, json);
             this.writeCameras(resources, json);
-            this.writeMeshes(resources, json);
+            this.writeMeshes(resources, json, options);
             this.writeMaterials(resources, json);
             this.writeNodes(resources, json, options);
             await this.writeTextures(resources, textureCanvases, json, options);
@@ -742,8 +776,15 @@ class GltfExporter extends CoreExporter {
      *
      * @param {Entity} entity - The root of the entity hierarchy to convert.
      * @param {object} options - Object for passing optional arguments.
-     * @param {number} [options.maxTextureSize] - Maximum texture size. Texture is resized if over
-     * the size.
+     * @param {number} [options.maxTextureSize] - Maximum texture size. Texture is resized if over the size.
+     * @param {boolean} [options.stripUnusedAttributes] - If true, removes unused vertex attributes:
+     *
+     * - Texture coordinates not referenced by materials
+     * - Vertex colors if not used by materials
+     * - Tangents if no normal maps are used
+     * - Skinning data if no skinned meshes exist
+     *
+     * Defaults to false.
      * @returns {Promise<ArrayBuffer>} - The GLB file content.
      */
     build(entity, options = {}) {
