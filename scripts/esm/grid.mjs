@@ -71,15 +71,13 @@ const fragmentCode = /* glsl */ `
 
         float epsilon = 1.0 / 255.0;
 
-        float fade = 1.0 - smoothstep(400.0, 1000.0, 0.0);
-
         vec2 levelPos;
         float levelSize;
         float levelAlpha;
 
         levelPos = pos * 0.1;
         levelSize = 2.0 / 1000.0;
-        levelAlpha = pristineGrid(levelPos, ddx * 0.1, ddy * 0.1, vec2(levelSize)) * fade;
+        levelAlpha = pristineGrid(levelPos, ddx * 0.1, ddy * 0.1, vec2(levelSize));
         if (levelAlpha > epsilon) {
             vec3 color;
             if (abs(levelPos.x) < levelSize) {
@@ -99,7 +97,7 @@ const fragmentCode = /* glsl */ `
 
         levelPos = pos;
         levelSize = 1.0 / 100.0;
-        levelAlpha = pristineGrid(levelPos, ddx, ddy, vec2(levelSize)) * fade;
+        levelAlpha = pristineGrid(levelPos, ddx, ddy, vec2(levelSize));
         if (levelAlpha > epsilon) {
             gl_FragColor = vec4(vec3(0.7), levelAlpha);
             return;
@@ -107,7 +105,7 @@ const fragmentCode = /* glsl */ `
 
         levelPos = pos * 10.0;
         levelSize = 1.0 / 100.0;
-        levelAlpha = pristineGrid(levelPos, ddx * 10.0, ddy * 10.0, vec2(levelSize)) * fade;
+        levelAlpha = pristineGrid(levelPos, ddx * 10.0, ddy * 10.0, vec2(levelSize));
         if (levelAlpha > epsilon) {
             gl_FragColor = vec4(vec3(0.7), levelAlpha);
             return;
