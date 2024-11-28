@@ -242,14 +242,20 @@ class GltfExporter extends CoreExporter {
 
         // FIXME: don't create the function every time
         const addBufferView = (target, byteLength, byteOffset, byteStride) => {
-
             const bufferView = {
-                target: target,
                 buffer: 0,
                 byteLength: byteLength,
-                byteOffset: byteOffset,
-                byteStride: byteStride
+                byteOffset: byteOffset
             };
+
+            // Only add target if it's a vertex or index buffer
+            if (target === ARRAY_BUFFER || target === ELEMENT_ARRAY_BUFFER) {
+                bufferView.target = target;
+            }
+
+            if (byteStride !== undefined) {
+                bufferView.byteStride = byteStride;
+            }
 
             return json.bufferViews.push(bufferView) - 1;
         };
@@ -260,16 +266,12 @@ class GltfExporter extends CoreExporter {
 
             const format = buffer.getFormat();
             if (format.interleaved) {
-
                 const bufferViewIndex = addBufferView(ARRAY_BUFFER, arrayBuffer.byteLength, offset, format.size);
                 resources.bufferViewMap.set(buffer, [bufferViewIndex]);
-
             } else {
-
                 // generate buffer view per element
                 const bufferViewIndices = [];
                 for (const element of format.elements) {
-
                     const bufferViewIndex = addBufferView(
                         ARRAY_BUFFER,
                         element.size * format.vertexCount,
@@ -277,25 +279,18 @@ class GltfExporter extends CoreExporter {
                         element.size
                     );
                     bufferViewIndices.push(bufferViewIndex);
-
                 }
-
                 resources.bufferViewMap.set(buffer, bufferViewIndices);
             }
-
-        } else if (buffer instanceof IndexBuffer) {    // index buffer
+        } else if (buffer instanceof IndexBuffer) {
             arrayBuffer = buffer.lock();
-
-            const bufferViewIndex = addBufferView(ARRAY_BUFFER, arrayBuffer.byteLength, offset);
-            resources.bufferViewMap.set(buffer, [bufferViewIndex]);
-
-        } else {
-            // buffer is an array buffer
-            arrayBuffer = buffer;
-
             const bufferViewIndex = addBufferView(ELEMENT_ARRAY_BUFFER, arrayBuffer.byteLength, offset);
             resources.bufferViewMap.set(buffer, [bufferViewIndex]);
-
+        } else {
+            // buffer is an array buffer (for images)
+            arrayBuffer = buffer;
+            const bufferViewIndex = addBufferView(undefined, arrayBuffer.byteLength, offset);
+            resources.bufferViewMap.set(buffer, [bufferViewIndex]);
         }
 
         // increment buffer by the size of the array buffer to allocate buffer with enough space
