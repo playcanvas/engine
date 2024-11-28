@@ -19,60 +19,59 @@ export default class XrControllers extends Script {
                 return;
             }
 
-            // Try each profile in order until one works
-            for (const profileId of inputSource.profiles) {
+            // Process all profiles concurrently
+            const profilePromises = inputSource.profiles.map(async (profileId) => {
                 const profileUrl = `${this.basePath}/${profileId}/profile.json`;
 
                 try {
-                    // Fetch the profile
                     const response = await fetch(profileUrl);
                     if (!response.ok) {
-                        continue;
+                        return null;
                     }
 
                     const profile = await response.json();
                     const layoutPath = profile.layouts[inputSource.handedness]?.assetPath || '';
                     const assetPath = `${this.basePath}/${profile.profileId}/${inputSource.handedness}${layoutPath.replace(/^\/?(left|right)/, '')}`;
 
-                    // Try to load the model
-                    try {
-                        const asset = await new Promise((resolve, reject) => {
-                            this.app.assets.loadFromUrl(assetPath, 'container', (err, asset) => {
-                                if (err) reject(err);
-                                else resolve(asset);
-                            });
+                    // Load the model
+                    const asset = await new Promise((resolve, reject) => {
+                        this.app.assets.loadFromUrl(assetPath, 'container', (err, asset) => {
+                            if (err) reject(err);
+                            else resolve(asset);
                         });
+                    });
 
-                        const container = asset.resource;
-                        const entity = container.instantiateRenderEntity();
-                        this.app.root.addChild(entity);
-
-                        const jointMap = new Map();
-                        if (inputSource.hand) {
-                            for (const joint of inputSource.hand.joints) {
-                                const jointEntity = entity.findByName(joint.id);
-                                if (jointEntity) {
-                                    jointMap.set(joint, jointEntity);
-                                }
-                            }
-                        }
-
-                        this.controllers.set(inputSource, { entity, jointMap });
-                        return;
-
-                    } catch (error) {
-                        console.warn(`Failed to load model for profile ${profileId}, trying next...`);
-                        continue;
-                    }
-
+                    return { profileId, asset };
                 } catch (error) {
-                    console.warn(`Failed to fetch profile ${profileId}, trying next...`);
-                    continue;
+                    console.warn(`Failed to process profile ${profileId}`);
+                    return null;
                 }
-            }
+            });
 
-            // If we get here, none of the profiles worked
-            console.warn('No compatible profiles found');
+            // Wait for all profile attempts to complete
+            const results = await Promise.all(profilePromises);
+            const successfulResult = results.find(result => result !== null);
+
+            if (successfulResult) {
+                const { asset } = successfulResult;
+                const container = asset.resource;
+                const entity = container.instantiateRenderEntity();
+                this.app.root.addChild(entity);
+
+                const jointMap = new Map();
+                if (inputSource.hand) {
+                    for (const joint of inputSource.hand.joints) {
+                        const jointEntity = entity.findByName(joint.id);
+                        if (jointEntity) {
+                            jointMap.set(joint, jointEntity);
+                        }
+                    }
+                }
+
+                this.controllers.set(inputSource, { entity, jointMap });
+            } else {
+                console.warn('No compatible profiles found');
+            }
         });
 
         this.app.xr.input.on('remove', (inputSource) => {
