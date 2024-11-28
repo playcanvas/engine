@@ -332,7 +332,7 @@ class OutlineRenderer {
 
         // store the current function before we overwrite it
         const onPreRenderLayer = sceneCameraEntity.camera.onPreRenderLayer;
-        
+
         // function called before the scene camera renders a layer
         sceneCameraEntity.camera.onPreRenderLayer = (layer, transparent) => {
 
