@@ -345,6 +345,9 @@ class OutlineRenderer {
         const sceneCamera = sceneCameraEntity.camera;
         this.updateRenderTarget(sceneCamera);
 
+        // store the current function before we overwrite it
+        const onPreRenderLayer = sceneCameraEntity.camera.onPreRenderLayer;
+
         // function called before the scene camera renders a layer
         sceneCameraEntity.camera.onPreRenderLayer = (layer, transparent) => {
 
@@ -352,8 +355,12 @@ class OutlineRenderer {
             if (transparent === blendLayerTransparent && layer === blendLayer) {
                 this.blendOutlines();
 
-                sceneCameraEntity.camera.onPreRenderLayer = null;
+                // restore the previous function
+                sceneCameraEntity.camera.onPreRenderLayer = onPreRenderLayer;
             }
+
+            // call the current function
+            onPreRenderLayer?.(layer, transparent);
         };
 
         // copy the transform
