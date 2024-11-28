@@ -38,6 +38,8 @@ const splatCoreVS = /* glsl */ `
     vec4 chunkDataA;    // x: min_x, y: min_y, z: min_z, w: max_x
     vec4 chunkDataB;    // x: max_y, y: max_z, z: scale_min_x, w: scale_min_y
     vec4 chunkDataC;    // x: scale_min_z, y: scale_max_x, z: scale_max_y, w: scale_max_z
+    vec4 chunkDataD;    // x: min_r, y: min_g, z: min_b, w: max_r
+    vec4 chunkDataE;    // x: max_g, y: max_b, z: unused, w: unused
     uvec4 packedData;   // x: position bits, y: rotation bits, z: scale bits, w: color bits
 
     // calculate the current splat index and uvs
@@ -68,7 +70,7 @@ const splatCoreVS = /* glsl */ `
         // calculate chunkUV
         uint chunkId = splatId / 256u;
         chunkUV = ivec2(
-            int((chunkId % chunkWidth) * 3u),
+            int((chunkId % chunkWidth) * 5u),
             int(chunkId / chunkWidth)
         );
 
@@ -80,6 +82,8 @@ const splatCoreVS = /* glsl */ `
         chunkDataA = texelFetch(chunkTexture, chunkUV, 0);
         chunkDataB = texelFetch(chunkTexture, ivec2(chunkUV.x + 1, chunkUV.y), 0);
         chunkDataC = texelFetch(chunkTexture, ivec2(chunkUV.x + 2, chunkUV.y), 0);
+        chunkDataD = texelFetch(chunkTexture, ivec2(chunkUV.x + 3, chunkUV.y), 0);
+        chunkDataE = texelFetch(chunkTexture, ivec2(chunkUV.x + 4, chunkUV.y), 0);
         packedData = texelFetch(packedTexture, packedUV, 0);
     }
 
@@ -128,7 +132,8 @@ const splatCoreVS = /* glsl */ `
     }
 
     vec4 getColor() {
-        return unpack8888(packedData.w);
+        vec4 r = unpack8888(packedData.w);
+        return vec4(mix(chunkDataD.xyz, vec3(chunkDataD.w, chunkDataE.xy), r.rgb), r.w);
     }
 
     mat3 quatToMat3(vec4 R) {
@@ -201,6 +206,117 @@ const splatCoreVS = /* glsl */ `
 
         return vec4(v1, v2);
     }
+
+#if defined(USE_SH)
+    #define SH_C1 0.4886025119029199f
+
+    #define SH_C2_0 1.0925484305920792f
+    #define SH_C2_1 -1.0925484305920792f
+    #define SH_C2_2 0.31539156525252005f
+    #define SH_C2_3 -1.0925484305920792f
+    #define SH_C2_4 0.5462742152960396f
+
+    #define SH_C3_0 -0.5900435899266435f
+    #define SH_C3_1 2.890611442640554f
+    #define SH_C3_2 -0.4570457994644658f
+    #define SH_C3_3 0.3731763325901154f
+    #define SH_C3_4 -0.4570457994644658f
+    #define SH_C3_5 1.445305721320277f
+    #define SH_C3_6 -0.5900435899266435f
+
+    uniform highp usampler2D shTexture0;
+    uniform highp usampler2D shTexture1;
+    uniform highp usampler2D shTexture2;
+
+    vec4 sunpack8888(in uint bits) {
+        return vec4((uvec4(bits) >> uvec4(0u, 8u, 16u, 24u)) & 0xffu) * (8.0 / 255.0) - 4.0;
+    }
+
+    void readSHData(out vec3 sh[15]) {
+        // read the sh coefficients
+        uvec4 shData0 = texelFetch(shTexture0, packedUV, 0);
+        uvec4 shData1 = texelFetch(shTexture1, packedUV, 0);
+        uvec4 shData2 = texelFetch(shTexture2, packedUV, 0);
+
+        vec4 r0 = sunpack8888(shData0.x);
+        vec4 r1 = sunpack8888(shData0.y);
+        vec4 r2 = sunpack8888(shData0.z);
+        vec4 r3 = sunpack8888(shData0.w);
+
+        vec4 g0 = sunpack8888(shData1.x);
+        vec4 g1 = sunpack8888(shData1.y);
+        vec4 g2 = sunpack8888(shData1.z);
+        vec4 g3 = sunpack8888(shData1.w);
+
+        vec4 b0 = sunpack8888(shData2.x);
+        vec4 b1 = sunpack8888(shData2.y);
+        vec4 b2 = sunpack8888(shData2.z);
+        vec4 b3 = sunpack8888(shData2.w);
+
+        sh[0] =  vec3(r0.x, g0.x, b0.x);
+        sh[1] =  vec3(r0.y, g0.y, b0.y);
+        sh[2] =  vec3(r0.z, g0.z, b0.z);
+        sh[3] =  vec3(r0.w, g0.w, b0.w);
+        sh[4] =  vec3(r1.x, g1.x, b1.x);
+        sh[5] =  vec3(r1.y, g1.y, b1.y);
+        sh[6] =  vec3(r1.z, g1.z, b1.z);
+        sh[7] =  vec3(r1.w, g1.w, b1.w);
+        sh[8] =  vec3(r2.x, g2.x, b2.x);
+        sh[9] =  vec3(r2.y, g2.y, b2.y);
+        sh[10] = vec3(r2.z, g2.z, b2.z);
+        sh[11] = vec3(r2.w, g2.w, b2.w);
+        sh[12] = vec3(r3.x, g3.x, b3.x);
+        sh[13] = vec3(r3.y, g3.y, b3.y);
+        sh[14] = vec3(r3.z, g3.z, b3.z);
+    }
+
+    // see https://github.com/graphdeco-inria/gaussian-splatting/blob/main/utils/sh_utils.py
+    vec3 evalSH(in vec3 dir) {
+
+        vec3 sh[15];
+        readSHData(sh);
+
+        vec3 result = vec3(0.0);
+
+        // 1st degree
+        float x = dir.x;
+        float y = dir.y;
+        float z = dir.z;
+
+        result += SH_C1 * (-sh[0] * y + sh[1] * z - sh[2] * x);
+
+        // 2nd degree
+        float xx = x * x;
+        float yy = y * y;
+        float zz = z * z;
+        float xy = x * y;
+        float yz = y * z;
+        float xz = x * z;
+
+        result +=
+            sh[3] * (SH_C2_0 * xy) *  +
+            sh[4] * (SH_C2_1 * yz) +
+            sh[5] * (SH_C2_2 * (2.0 * zz - xx - yy)) +
+            sh[6] * (SH_C2_3 * xz) +
+            sh[7] * (SH_C2_4 * (xx - yy));
+
+        // 3rd degree
+        result +=
+            sh[8]  * (SH_C3_0 * y * (3.0 * xx - yy)) +
+            sh[9]  * (SH_C3_1 * xy * z) +
+            sh[10] * (SH_C3_2 * y * (4.0 * zz - xx - yy)) +
+            sh[11] * (SH_C3_3 * z * (2.0 * zz - 3.0 * xx - 3.0 * yy)) +
+            sh[12] * (SH_C3_4 * x * (4.0 * zz - xx - yy)) +
+            sh[13] * (SH_C3_5 * z * (xx - yy)) +
+            sh[14] * (SH_C3_6 * x * (xx - 3.0 * yy));
+
+        return result;
+    }
+#else
+    vec3 evalSH(in vec3 dir) {
+        return vec3(0.0);
+    }
+#endif
 `;
 
 const splatCoreFS = /* glsl */ `
@@ -256,8 +372,8 @@ class GSplatCompressedShaderGenerator {
         const shaderPassDefines = shaderPassInfo.shaderDefines;
 
         const defines =
-            `${shaderPassDefines
-            }#define DITHER_${options.dither.toUpperCase()}\n` +
+            `${shaderPassDefines}\n` +
+            `#define DITHER_${options.dither.toUpperCase()}\n` +
             `#define TONEMAP_${options.toneMapping === TONEMAP_LINEAR ? 'DISABLED' : 'ENABLED'}\n`;
 
         const vs = defines + splatCoreVS + options.vertex;
@@ -268,7 +384,9 @@ class GSplatCompressedShaderGenerator {
             splatCoreFS + options.fragment;
 
         const defineMap = new Map();
-        options.defines.forEach(value => defineMap.set(value, true));
+        options.defines.forEach((value, key) => {
+            defineMap.set(key, value);
+        });
 
         return ShaderUtils.createDefinition(device, {
             name: 'SplatShader',
@@ -289,6 +407,8 @@ const gsplatCompressed = new GSplatCompressedShaderGenerator();
 const splatMainVS = /* glsl */ `
     varying mediump vec2 texCoord;
     varying mediump vec4 color;
+
+    uniform vec3 view_position;
 
     mediump vec4 discardVec = vec4(0.0, 0.0, 2.0, 1.0);
 
@@ -340,6 +460,12 @@ const splatMainVS = /* glsl */ `
         gl_Position = splat_proj + vec4((vertex_position.x * v1v2.xy + vertex_position.y * v1v2.zw) / viewport * splat_proj.w, 0, 0);
 
         texCoord = vertex_position.xy * scale / 2.0;
+
+        #ifdef USE_SH
+            vec4 worldCenter = matrix_model * vec4(center, 1.0);
+            vec3 viewDir = normalize((worldCenter.xyz / worldCenter.w - view_position) * mat3(matrix_model));
+            color.xyz = max(color.xyz + evalSH(viewDir), 0.0);
+        #endif
 
         #ifndef DITHER_NONE
             id = float(splatId);

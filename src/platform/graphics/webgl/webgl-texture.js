@@ -13,7 +13,8 @@ import {
     PIXELFORMAT_DXT1_SRGB, PIXELFORMAT_DXT3_SRGBA, PIXELFORMAT_DXT5_SRGBA, PIXELFORMAT_PVRTC_2BPP_SRGB_1,
     PIXELFORMAT_PVRTC_2BPP_SRGBA_1, PIXELFORMAT_PVRTC_4BPP_SRGB_1, PIXELFORMAT_PVRTC_4BPP_SRGBA_1,
     PIXELFORMAT_ETC2_SRGB, PIXELFORMAT_ETC2_SRGBA, PIXELFORMAT_ASTC_4x4_SRGB, PIXELFORMAT_SBGRA8,
-    PIXELFORMAT_BC6F, PIXELFORMAT_BC6UF, PIXELFORMAT_BC7, PIXELFORMAT_BC7_SRGBA
+    PIXELFORMAT_BC6F, PIXELFORMAT_BC6UF, PIXELFORMAT_BC7, PIXELFORMAT_BC7_SRGBA,
+    PIXELFORMAT_DEPTH16
 } from '../constants.js';
 
 /**
@@ -323,8 +324,13 @@ class WebglTexture {
                 break;
             case PIXELFORMAT_DEPTH:
                 this._glFormat = gl.DEPTH_COMPONENT;
-                this._glInternalFormat = gl.DEPTH_COMPONENT32F; // should allow 16/24 bits?
+                this._glInternalFormat = gl.DEPTH_COMPONENT32F;
                 this._glPixelType = gl.FLOAT;
+                break;
+            case PIXELFORMAT_DEPTH16:
+                this._glFormat = gl.DEPTH_COMPONENT;
+                this._glInternalFormat = gl.DEPTH_COMPONENT16;
+                this._glPixelType = gl.UNSIGNED_SHORT;
                 break;
             case PIXELFORMAT_DEPTHSTENCIL:
                 this._glFormat = gl.DEPTH_STENCIL;

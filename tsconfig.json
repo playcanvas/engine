@@ -36,5 +36,5 @@
         ],
         "readme": "none"
     },
-    "include": ["src/**/*.js", "rollup.config.mjs"]
+    "include": ["src/**/*.js", "scripts/**/*.mjs", "rollup.config.mjs"],
 }
