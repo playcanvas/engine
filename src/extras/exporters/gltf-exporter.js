@@ -531,9 +531,9 @@ class GltfExporter extends CoreExporter {
 
                 // Check texture coordinates
                 if (semantic.startsWith('TEXCOORD_')) {
-                    const texCoordIndex = parseInt(semantic.split('_')[1]);
-                    isUsed = resources.materials.some(material => {
-                        return textureSemantics.some(texSemantic => {
+                    const texCoordIndex = parseInt(semantic.split('_')[1], 10);
+                    isUsed = resources.materials.some((material) => {
+                        return textureSemantics.some((texSemantic) => {
                             const texture = material[texSemantic];
                             // Most materials use UV0 by default, so keep TEXCOORD_0 unless explicitly using a different UV set
                             return texture && (texCoordIndex === 0 || material[`${texSemantic}Tiling`]?.uv === texCoordIndex);
@@ -553,8 +553,7 @@ class GltfExporter extends CoreExporter {
 
                 // Check skinning attributes
                 if (semantic === 'JOINTS_0' || semantic === 'WEIGHTS_0') {
-                    isUsed = resources.entityMeshInstances.some(emi => 
-                        emi.meshInstances.some(mi => mi.mesh.skin));
+                    isUsed = resources.entityMeshInstances.some(emi => emi.meshInstances.some(mi => mi.mesh.skin));
                 }
 
                 if (!isUsed) {
