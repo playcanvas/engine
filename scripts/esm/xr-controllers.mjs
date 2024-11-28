@@ -49,7 +49,7 @@ export default class XrControllers extends Script {
                         const jointMap = new Map();
                         if (inputSource.hand) {
                             for (const joint of inputSource.hand.joints) {
-                                const jointEntity = entity.findByName(joint._id); // change to id after next engine update
+                                const jointEntity = entity.findByName(joint.id);
                                 if (jointEntity) {
                                     jointMap.set(joint, jointEntity);
                                 }
