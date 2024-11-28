@@ -1,3 +1,4 @@
+/* eslint-disable-next-line import/no-unresolved */
 import { Script } from 'playcanvas';
 
 export default class XrControllers extends Script {
@@ -28,7 +29,7 @@ export default class XrControllers extends Script {
                     if (!response.ok) {
                         continue;
                     }
-                    
+
                     const profile = await response.json();
                     const layoutPath = profile.layouts[inputSource.handedness]?.assetPath || '';
                     const assetPath = `${this.basePath}/${profile.profileId}/${inputSource.handedness}${layoutPath.replace(/^\/?(left|right)/, '')}`;
