@@ -583,6 +583,8 @@ class GltfExporter extends CoreExporter {
 
             // Position accessor also requires min and max properties
             if (element.name === SEMANTIC_POSITION) {
+                // compute min and max from positions, as the BoundingBox stores center and extents,
+                // and we get precision warnings from gltf validator
                 const positions = [];
                 mesh.getPositions(positions);
                 const min = new Vec3();
