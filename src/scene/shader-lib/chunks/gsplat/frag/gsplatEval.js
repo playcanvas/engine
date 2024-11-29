@@ -1,26 +1,26 @@
 export default /* glsl */`
-#include "decodePS"
 
-#if defined(TONEMAP_FILMIC)
+#if TONEMAP == FILMIC
     #include "tonemappingFilmicPS"
-#elif defined(TONEMAP_LINEAR)
+#elif TONEMAP == LINEAR
     #include "tonemappingLinearPS"
-#elif defined(TONEMAP_HEJL)
+#elif TONEMAP == HEJL
     #include "tonemappingHejlPS"
-#elif defined(TONEMAP_ACES)
+#elif TONEMAP == ACES
     #include "tonemappingAcesPS"
-#elif defined(TONEMAP_ACES2)
+#elif TONEMAP == ACES2
     #include "tonemappingAces2PS"
-#elif defined(TONEMAP_NEUTRAL)
+#elif TONEMAP == NEUTRAL
     #include "tonemappingNeutralPS"
-#else
-    #include "tonemappingNonePS"
 #endif
 
-#if defined(GAMMA_NONE)
-    #include "gamma1_0PS"
-#else
-    #include "gamma2_2PS"
+#if TONEMAP != NONE
+    #if GAMMA == SRGB
+        #include "decodePS"
+        #include "gamma2_2PS"
+    #else
+        #include "gamma1_0PS"
+    #endif
 #endif
 
 #if !defined(DITHER_NONE)
@@ -58,10 +58,18 @@ vec4 evalSplat(vec2 texCoord, vec4 color) {
         opacityDither(B, id * 0.013);
     #endif
 
-    #if !defined(TONEMAP_NONE)
-        return vec4(gammaCorrectOutput(toneMap(decodeGamma(color.rgb))), B);
+    #if TONEMAP == NONE
+        #if GAMMA == NONE
+            // convert to linear space
+            return decodeGamma(vec4(color.rgb, B));
+        #else
+            // output gamma space color directly
+            return vec4(color.rgb, B);
+        #endif
     #else
-        return vec4(color.rgb, B);
+        // apply tonemapping in linear space and output to linear or
+        // gamma (which is handled by gammaCorrectOutput)
+        return vec4(gammaCorrectOutput(toneMap(decodeGamma(color.rgb))), B);
     #endif
 }
 `;
