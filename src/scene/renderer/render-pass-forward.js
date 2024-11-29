@@ -13,6 +13,7 @@ import { EVENT_POSTRENDER, EVENT_POSTRENDER_LAYER, EVENT_PRERENDER, EVENT_PREREN
  * @import { LayerComposition } from '../composition/layer-composition.js'
  * @import { Layer } from '../layer.js'
  * @import { Renderer } from './renderer.js'
+ * @import { Scene } from '../scene.js'
  */
 
 /**
