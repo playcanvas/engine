@@ -30,7 +30,7 @@ MacGPUProfiling.prototype.initialize = function () {
 };
 
 // Async function for WebGPU initialization
-MacGPUProfiling.prototype.initWebGPU = async function() {
+MacGPUProfiling.prototype.initWebGPU = async function () {
     // Check for WebGPU support
     if (!navigator.gpu) {
         console.error('WebGPU is not supported on this browser.');
@@ -61,7 +61,7 @@ MacGPUProfiling.prototype.initWebGPU = async function() {
 };
 
 // Called when the 'frameend' event is triggered
-MacGPUProfiling.prototype.onFrameEnd = function() {
+MacGPUProfiling.prototype.onFrameEnd = function () {
     // If WebGPU is not initialized yet, do nothing
     if (!this.isInitialized) return;
 
@@ -70,7 +70,7 @@ MacGPUProfiling.prototype.onFrameEnd = function() {
 };
 
 // Function to clear the WebGPU surface to red
-MacGPUProfiling.prototype.clearToRed = function() {
+MacGPUProfiling.prototype.clearToRed = function () {
     // Get the current texture to render to
     const textureView = this.context.getCurrentTexture().createView();
 
@@ -83,7 +83,7 @@ MacGPUProfiling.prototype.clearToRed = function() {
             view: textureView,
             clearValue: { r: 1.0, g: 0.0, b: 0.0, a: 1.0 },  // Red background
             loadOp: 'clear',
-            storeOp: 'store',
+            storeOp: 'store'
         }]
     };
 
