@@ -32,7 +32,7 @@ class EventHandle {
 
     /**
      * @type {string}
-     * @private
+     * @ignore
      */
     name;
 
@@ -81,7 +81,7 @@ class EventHandle {
      */
     off() {
         if (this._removed) return;
-        this.handler.off(this.name, this.callback, this.scope);
+        this.handler.offByHandle(this);
     }
 
     on(name, callback, scope = this) {
