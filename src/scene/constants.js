@@ -1054,3 +1054,51 @@ export const DITHER_BLUENOISE = 'bluenoise';
  * @category Graphics
  */
 export const DITHER_IGNNOISE = 'ignnoise';
+
+/**
+ * Name of event fired before the camera renders the scene.
+ *
+ * @type {string}
+ * @category Graphics
+ */
+export const EVENT_PRERENDER = 'preRender';
+
+/**
+ * Name of event fired after the camera renders the scene.
+ *
+ * @type {string}
+ * @category Graphics
+ */
+export const EVENT_POSTRENDER = 'postRender';
+
+/**
+ * Name of event fired before a layer is rendered by a camera.
+ *
+ * @type {string}
+ * @category Graphics
+ */
+export const EVENT_PRERENDER_LAYER = 'preRenderLayer';
+
+/**
+ * Name of event fired after a layer is rendered by a camera.
+ *
+ * @type {string}
+ * @category Graphics
+ */
+export const EVENT_POSTRENDER_LAYER = 'postRenderLayer';
+
+/**
+ * Name of event fired before visibility culling is performed for the camera
+ *
+ * @type {string}
+ * @category Graphics
+ */
+export const EVENT_PRECULL = 'preCull';
+
+/**
+ * Name of event after before visibility culling is performed for the camera
+ *
+ * @type {string}
+ * @category Graphics
+ */
+export const EVENT_POSTCULL = 'postCull';

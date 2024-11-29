@@ -6,14 +6,13 @@ import { BlendState } from '../../platform/graphics/blend-state.js';
 import { DebugGraphics } from '../../platform/graphics/debug-graphics.js';
 import { RenderPass } from '../../platform/graphics/render-pass.js';
 import { RenderAction } from '../composition/render-action.js';
-import { SHADER_FORWARD } from '../constants.js';
+import { EVENT_POSTRENDER, EVENT_POSTRENDER_LAYER, EVENT_PRERENDER, EVENT_PRERENDER_LAYER, SHADER_FORWARD } from '../constants.js';
 
 /**
  * @import { CameraComponent } from '../../framework/components/camera/component.js'
  * @import { LayerComposition } from '../composition/layer-composition.js'
  * @import { Layer } from '../layer.js'
  * @import { Renderer } from './renderer.js'
- * @import { Scene } from '../scene.js'
  */
 
 /**
@@ -201,11 +200,11 @@ class RenderPassForward extends RenderPass {
     before() {
         const { renderActions } = this;
 
-        // onPreRender callbacks
+        // onPreRender events
         for (let i = 0; i < renderActions.length; i++) {
             const ra = renderActions[i];
             if (ra.firstCameraUse) {
-                ra.camera.onPreRender?.();
+                this.scene.fire(EVENT_PRERENDER, ra.camera);
             }
         }
     }
@@ -231,11 +230,11 @@ class RenderPassForward extends RenderPass {
 
     after() {
 
-        // onPostRender callbacks
+        // onPostRender events
         for (let i = 0; i < this.renderActions.length; i++) {
             const ra = this.renderActions[i];
             if (ra.lastCameraUse) {
-                ra.camera.onPostRender?.();
+                this.scene.fire(EVENT_POSTRENDER, ra.camera);
             }
         }
 
@@ -249,7 +248,7 @@ class RenderPassForward extends RenderPass {
      */
     renderRenderAction(renderAction, firstRenderAction) {
 
-        const { renderer } = this;
+        const { renderer, scene } = this;
         const device = renderer.device;
 
         // layer
@@ -263,8 +262,8 @@ class RenderPassForward extends RenderPass {
 
         if (camera) {
 
-            // layer pre render callback
-            camera.onPreRenderLayer?.(layer, transparent);
+            // layer pre render event
+            this.scene.fire(EVENT_PRERENDER_LAYER, camera, layer, transparent);
 
             const options = {
                 lightClusters: renderAction.lightClusters
@@ -292,8 +291,8 @@ class RenderPassForward extends RenderPass {
             device.setStencilState(null, null);
             device.setAlphaToCoverage(false);
 
-            // layer post render callback
-            camera.onPostRenderLayer?.(layer, transparent);
+            // layer post render event
+            this.scene.fire(EVENT_POSTRENDER_LAYER, camera, layer, transparent);
         }
 
         DebugGraphics.popGpuMarker(this.device);

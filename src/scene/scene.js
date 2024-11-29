@@ -68,6 +68,80 @@ class Scene extends EventHandler {
     static EVENT_SETSKYBOX = 'set:skybox';
 
     /**
+     * Fired before the camera renders the scene. The handler is passed the {@link CameraComponent}
+     * that will render the scene.
+     *
+     * @event
+     * @example
+     * app.scene.on(EVENT_PRERENDER, (camera) => {
+     *    console.log(`Camera ${camera.entity.name} will render the scene`);
+     * });
+     */
+    static EVENT_PRERENDER = 'preRender';
+
+    /**
+     * Fired when the camera renders the scene. The handler is passed the {@link CameraComponent}
+     * that rendered the scene.
+     *
+     * @event
+     * @example
+     * app.scene.on(EVENT_POSTRENDER, (camera) => {
+     *    console.log(`Camera ${camera.entity.name} rendered the scene`);
+     * });
+     */
+    static EVENT_POSTRENDER = 'postRender';
+
+    /**
+     * Fired before the camera renders a layer. The handler is passed the {@link CameraComponent},
+     * the {@link Layer} that will be rendered, and a boolean parameter set to true if the layer is
+     * transparent. This is called during rendering to a render target or a default framebuffer, and
+     * additional rendering can be performed here, for example using ${@link QuadRender#render}.
+     *
+     * @event
+     * @example
+     * app.scene.on(EVENT_PRERENDER_LAYER, (camera, layer, transparent) => {
+     *    console.log(`Camera ${camera.entity.name} will render the layer ${layer.name} (transparent: ${transparent})`);
+     * });
+     */
+    static EVENT_PRERENDER_LAYER = 'preRenderLayer';
+
+    /**
+     * Fired when the camera renders a layer. The handler is passed the {@link CameraComponent},
+     * the {@link Layer} that will be rendered, and a boolean parameter set to true if the layer is
+     * transparent. This is called during rendering to a render target or a default framebuffer, and
+     * additional rendering can be performed here, for example using ${@link QuadRender#render}.
+     *
+     * @event
+     * @example
+     * app.scene.on(EVENT_PRERENDER_LAYER, (camera, layer, transparent) => {
+     *    console.log(`Camera ${camera.entity.name} rendered the layer ${layer.name} (transparent: ${transparent})`);
+     * });
+     */
+    static EVENT_POSTRENDER_LAYER = 'postRenderLayer';
+
+    /**
+     * Fired before visibility culling is performed for the camera.
+     *
+     * @event
+     * @example
+     * app.scene.on(EVENT_PRECULL, (camera) => {
+     *    console.log(`Visibility culling will be performed for camera ${camera.entity.name}`);
+     * });
+     */
+    static EVENT_PRECULL = 'preCull';
+
+    /**
+     * Fired after visibility culling is performed for the camera.
+     *
+     * @event
+     * @example
+     * app.scene.on(EVENT_POSTCULL, (camera) => {
+     *    console.log(`Visibility culling was performed for camera ${camera.entity.name}`);
+     * });
+     */
+    static EVENT_POSTCULL = 'postCull';
+
+    /**
      * If enabled, the ambient lighting will be baked into lightmaps. This will be either the
      * {@link Scene#skybox} if set up, otherwise {@link Scene#ambientLight}. Defaults to false.
      *
