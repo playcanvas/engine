@@ -95,7 +95,7 @@ class Scene extends EventHandler {
      * Fired before the camera renders a layer. The handler is passed the {@link CameraComponent},
      * the {@link Layer} that will be rendered, and a boolean parameter set to true if the layer is
      * transparent. This is called during rendering to a render target or a default framebuffer, and
-     * additional rendering can be performed here, for example using ${@link QuadRender#render}.
+     * additional rendering can be performed here, for example using {@link QuadRender#render}.
      *
      * @event
      * @example
@@ -109,7 +109,7 @@ class Scene extends EventHandler {
      * Fired when the camera renders a layer. The handler is passed the {@link CameraComponent},
      * the {@link Layer} that will be rendered, and a boolean parameter set to true if the layer is
      * transparent. This is called during rendering to a render target or a default framebuffer, and
-     * additional rendering can be performed here, for example using ${@link QuadRender#render}.
+     * additional rendering can be performed here, for example using {@link QuadRender#render}.
      *
      * @event
      * @example
