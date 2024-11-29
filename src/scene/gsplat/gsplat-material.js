@@ -74,16 +74,6 @@ const splatMainVS = /* glsl */ `
     }
 `;
 
-const splatMainFS = /* glsl */ `
-    varying mediump vec2 texCoord;
-    varying mediump vec4 color;
-
-    void main(void)
-    {
-        gl_FragColor = evalSplat(texCoord, color);
-    }
-`;
-
 /**
  * @typedef {object} SplatMaterialOptions - The options.
  * @property {string} [vertex] - Custom vertex shader, see SPLAT MANY example.
@@ -118,7 +108,7 @@ const createGSplatMaterial = (options = {}) => {
             gamma: cameraShaderParams.shaderOutputGamma,
             toneMapping: cameraShaderParams.toneMapping,
             vertex: options.vertex ?? splatMainVS,
-            fragment: options.fragment ?? splatMainFS,
+            fragment: options.fragment,
             dither: ditherEnum
         };
 

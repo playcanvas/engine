@@ -1,7 +1,7 @@
 import { hashCode } from '../../core/hash.js';
 import { SEMANTIC_ATTR13, SEMANTIC_POSITION } from '../../platform/graphics/constants.js';
 import { ShaderUtils } from '../../platform/graphics/shader-utils.js';
-import { DITHER_NONE, TONEMAP_LINEAR } from '../constants.js';
+import { GAMMA_NONE, GAMMA_SRGB, TONEMAP_ACES, TONEMAP_ACES2, TONEMAP_FILMIC, TONEMAP_HEJL, TONEMAP_LINEAR, TONEMAP_NEUTRAL } from '../constants.js';
 import { shaderChunks } from '../shader-lib/chunks/chunks.js';
 import { ShaderGenerator } from '../shader-lib/programs/shader-generator.js';
 import { ShaderPass } from '../shader-pass.js';
@@ -218,44 +218,25 @@ const splatCoreVS = /* glsl */ `
     }
 `;
 
-const splatCoreFS = /* glsl */ `
-    #ifndef DITHER_NONE
-        varying float id;
-    #endif
-
-    #ifdef PICK_PASS
-        uniform vec4 uColor;
-    #endif
-
-    vec4 evalSplat(vec2 texCoord, vec4 color) {
-        mediump float A = dot(texCoord, texCoord);
-        if (A > 1.0) {
-            discard;
-        }
-
-        mediump float B = exp(-A * 4.0) * color.a;
-        if (B < 1.0 / 255.0) {
-            discard;
-        }
-
-        #ifdef PICK_PASS
-            if (B < 0.3) {
-                discard;
-            }
-            return uColor;
-        #endif
-
-        #ifndef DITHER_NONE
-            opacityDither(B, id * 0.013);
-        #endif
-
-        #ifdef TONEMAP_ENABLED
-            return vec4(gammaCorrectOutput(toneMap(decodeGamma(color.rgb))), B);
-        #else
-            return vec4(color.rgb, B);
-        #endif
+const getTonemapping = (value) => {
+    switch (value) {
+        case TONEMAP_FILMIC: return 'TONEMAP_FILMIC';
+        case TONEMAP_LINEAR: return 'TONEMAP_LINEAR';
+        case TONEMAP_HEJL: return 'TONEMAP_HEJL';
+        case TONEMAP_ACES: return 'TONEMAP_ACES';
+        case TONEMAP_ACES2: return 'TONEMAP_ACES2';
+        case TONEMAP_NEUTRAL: return 'TONEMAP_NEUTRAL';
+        default: return 'TONEMAP_NONE';
     }
-`;
+};
+
+const getGamma = (value) => {
+    switch (value) {
+        case GAMMA_NONE: return 'GAMMA_NONE';
+        case GAMMA_SRGB: return 'GAMMA_SRGB';
+        default: return 'GAMMA_NONE';
+    }
+};
 
 class GSplatShaderGenerator {
     generateKey(options) {
@@ -266,26 +247,22 @@ class GSplatShaderGenerator {
     }
 
     createShaderDefinition(device, options) {
-
         const shaderPassInfo = ShaderPass.get(device).getByIndex(options.pass);
         const shaderPassDefines = shaderPassInfo.shaderDefines;
 
-        const defines =
-            `${shaderPassDefines}\n` +
-            `#define DITHER_${options.dither.toUpperCase()}\n` +
-            `#define TONEMAP_${options.toneMapping === TONEMAP_LINEAR ? 'DISABLED' : 'ENABLED'}\n`;
-
-        const vs = defines + splatCoreVS + options.vertex;
-        const fs = defines + shaderChunks.decodePS +
-            (options.dither === DITHER_NONE ? '' : shaderChunks.bayerPS + shaderChunks.opacityDitherPS) +
-            ShaderGenerator.tonemapCode(options.toneMapping) +
-            ShaderGenerator.gammaCode(options.gamma) +
-            splatCoreFS + options.fragment;
-
         const defineMap = new Map();
+        defineMap.set(`DITHER_${options.dither.toUpperCase()}`, true);
+        defineMap.set(getTonemapping(options.toneMapping), true);
+        defineMap.set(getGamma(options.gamma), true);
+
         options.defines.forEach((value, key) => {
             defineMap.set(key, value);
         });
+
+        const defines = `${shaderPassDefines}\n`;
+        const vs = defines + splatCoreVS + options.vertex;
+        const fs = defines + (options.fragment ?? shaderChunks.gsplatMainPS);
+        const includes = new Map(Object.entries(shaderChunks));
 
         return ShaderUtils.createDefinition(device, {
             name: 'SplatShader',
@@ -294,9 +271,10 @@ class GSplatShaderGenerator {
                 vertex_id_attrib: SEMANTIC_ATTR13
             },
             vertexCode: vs,
+            vertexDefines: defineMap,
             fragmentCode: fs,
             fragmentDefines: defineMap,
-            vertexDefines: defineMap
+            fragmentIncludes: includes
         });
     }
 }
