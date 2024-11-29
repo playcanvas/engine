@@ -23,10 +23,8 @@ const gammaNames = {
 
 class GSplatShaderGenerator {
     generateKey(options) {
-        const vsHash = hashCode(options.vertex);
-        const fsHash = hashCode(options.fragment);
-        const definesHash = ShaderGenerator.definesHash(options.defines);
-        return `splat-${options.pass}-${options.gamma}-${options.toneMapping}-${vsHash}-${fsHash}-${options.dither}-${definesHash}`;
+        const { pass, gamma, toneMapping, vertex, fragment, dither, defines } = options;
+        return `splat-${pass}-${gamma}-${toneMapping}-${hashCode(vertex)}-${hashCode(fragment)}-${dither}-${ShaderGenerator.definesHash(defines)}`;
     }
 
     createShaderDefinition(device, options) {
@@ -41,6 +39,7 @@ class GSplatShaderGenerator {
         // define gamma
         defineMap.set('GAMMA', gammaNames[options.gamma] ?? true);
 
+        // it would nice if DITHER type was defined like the others
         defineMap.set(`DITHER_${options.dither.toUpperCase()}`, true);
 
         // add user defines
