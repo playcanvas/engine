@@ -68,7 +68,7 @@ PlanarRenderer.prototype.initialize = function () {
 
     // When the camera is finished rendering, trigger onPlanarPostRender event on the entity.
     // This can be listened to by the user, and the resulting texture can be further processed (e.g prefiltered)
-    this.evtPostRender = this.app.scene.on(pc.EVENT_POSTRENDER, (cameraComponent) => {
+    this.evtPostRender = this.app.scene.on('postrender', (cameraComponent) => {
         if (planarCamera === cameraComponent) {
             this.entity.fire('onPlanarPostRender');
         }

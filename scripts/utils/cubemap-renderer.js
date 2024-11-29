@@ -117,7 +117,7 @@ CubemapRenderer.prototype.initialize = function () {
     }
 
     // Before the first camera renders, trigger onCubemapPreRender event on the entity.
-    this.evtPreRender = this.app.scene.on(pc.EVENT_PRERENDER, (cameraComponent) => {
+    this.evtPreRender = this.app.scene.on('prerender', (cameraComponent) => {
         if (cameraComponent === firstCamera) {
             this.entity.fire('onCubemapPreRender');
         }
@@ -125,7 +125,7 @@ CubemapRenderer.prototype.initialize = function () {
 
     // When last camera is finished rendering, trigger onCubemapPostRender event on the entity.
     // This can be listened to by the user, and the resulting cubemap can be further processed (e.g pre-filtering)
-    this.evtPostRender = this.app.scene.on(pc.EVENT_POSTRENDER, (cameraComponent) => {
+    this.evtPostRender = this.app.scene.on('postrender', (cameraComponent) => {
         if (cameraComponent === lastCamera) {
             this.entity.fire('onCubemapPostRender');
         }

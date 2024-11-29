@@ -73,11 +73,11 @@ class Scene extends EventHandler {
      *
      * @event
      * @example
-     * app.scene.on(EVENT_PRERENDER, (camera) => {
+     * app.scene.on('prerender', (camera) => {
      *    console.log(`Camera ${camera.entity.name} will render the scene`);
      * });
      */
-    static EVENT_PRERENDER = 'preRender';
+    static EVENT_PRERENDER = 'prerender';
 
     /**
      * Fired when the camera renders the scene. The handler is passed the {@link CameraComponent}
@@ -85,11 +85,11 @@ class Scene extends EventHandler {
      *
      * @event
      * @example
-     * app.scene.on(EVENT_POSTRENDER, (camera) => {
+     * app.scene.on('postrender', (camera) => {
      *    console.log(`Camera ${camera.entity.name} rendered the scene`);
      * });
      */
-    static EVENT_POSTRENDER = 'postRender';
+    static EVENT_POSTRENDER = 'postrender';
 
     /**
      * Fired before the camera renders a layer. The handler is passed the {@link CameraComponent},
@@ -99,11 +99,11 @@ class Scene extends EventHandler {
      *
      * @event
      * @example
-     * app.scene.on(EVENT_PRERENDER_LAYER, (camera, layer, transparent) => {
+     * app.scene.on('prerender:layer', (camera, layer, transparent) => {
      *    console.log(`Camera ${camera.entity.name} will render the layer ${layer.name} (transparent: ${transparent})`);
      * });
      */
-    static EVENT_PRERENDER_LAYER = 'preRenderLayer';
+    static EVENT_PRERENDER_LAYER = 'prerender:layer';
 
     /**
      * Fired when the camera renders a layer. The handler is passed the {@link CameraComponent},
@@ -113,33 +113,33 @@ class Scene extends EventHandler {
      *
      * @event
      * @example
-     * app.scene.on(EVENT_PRERENDER_LAYER, (camera, layer, transparent) => {
+     * app.scene.on('postrender:layer', (camera, layer, transparent) => {
      *    console.log(`Camera ${camera.entity.name} rendered the layer ${layer.name} (transparent: ${transparent})`);
      * });
      */
-    static EVENT_POSTRENDER_LAYER = 'postRenderLayer';
+    static EVENT_POSTRENDER_LAYER = 'postrender:layer';
 
     /**
      * Fired before visibility culling is performed for the camera.
      *
      * @event
      * @example
-     * app.scene.on(EVENT_PRECULL, (camera) => {
+     * app.scene.on('precull', (camera) => {
      *    console.log(`Visibility culling will be performed for camera ${camera.entity.name}`);
      * });
      */
-    static EVENT_PRECULL = 'preCull';
+    static EVENT_PRECULL = 'precull';
 
     /**
      * Fired after visibility culling is performed for the camera.
      *
      * @event
      * @example
-     * app.scene.on(EVENT_POSTCULL, (camera) => {
+     * app.scene.on('postcull', (camera) => {
      *    console.log(`Visibility culling was performed for camera ${camera.entity.name}`);
      * });
      */
-    static EVENT_POSTCULL = 'postCull';
+    static EVENT_POSTCULL = 'postcull';
 
     /**
      * If enabled, the ambient lighting will be baked into lightmaps. This will be either the

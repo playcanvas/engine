@@ -1061,7 +1061,7 @@ export const DITHER_IGNNOISE = 'ignnoise';
  * @type {string}
  * @category Graphics
  */
-export const EVENT_PRERENDER = 'preRender';
+export const EVENT_PRERENDER = 'prerender';
 
 /**
  * Name of event fired after the camera renders the scene.
@@ -1069,7 +1069,7 @@ export const EVENT_PRERENDER = 'preRender';
  * @type {string}
  * @category Graphics
  */
-export const EVENT_POSTRENDER = 'postRender';
+export const EVENT_POSTRENDER = 'postrender';
 
 /**
  * Name of event fired before a layer is rendered by a camera.
@@ -1077,7 +1077,7 @@ export const EVENT_POSTRENDER = 'postRender';
  * @type {string}
  * @category Graphics
  */
-export const EVENT_PRERENDER_LAYER = 'preRenderLayer';
+export const EVENT_PRERENDER_LAYER = 'prerender:layer';
 
 /**
  * Name of event fired after a layer is rendered by a camera.
@@ -1085,7 +1085,7 @@ export const EVENT_PRERENDER_LAYER = 'preRenderLayer';
  * @type {string}
  * @category Graphics
  */
-export const EVENT_POSTRENDER_LAYER = 'postRenderLayer';
+export const EVENT_POSTRENDER_LAYER = 'postrender:layer';
 
 /**
  * Name of event fired before visibility culling is performed for the camera
@@ -1093,7 +1093,7 @@ export const EVENT_POSTRENDER_LAYER = 'postRenderLayer';
  * @type {string}
  * @category Graphics
  */
-export const EVENT_PRECULL = 'preCull';
+export const EVENT_PRECULL = 'precull';
 
 /**
  * Name of event after before visibility culling is performed for the camera
@@ -1101,4 +1101,4 @@ export const EVENT_PRECULL = 'preCull';
  * @type {string}
  * @category Graphics
  */
-export const EVENT_POSTCULL = 'postCull';
+export const EVENT_POSTCULL = 'postcull';

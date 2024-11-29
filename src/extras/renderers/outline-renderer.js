@@ -9,7 +9,6 @@ import {
 import { DepthState } from '../../platform/graphics/depth-state.js';
 import { RenderTarget } from '../../platform/graphics/render-target.js';
 import { Texture } from '../../platform/graphics/texture.js';
-import { EVENT_POSTRENDER, EVENT_PRERENDER_LAYER } from '../../scene/constants.js';
 import { drawQuadWithShader } from '../../scene/graphics/quad-render-utils.js';
 import { QuadRender } from '../../scene/graphics/quad-render.js';
 import { StandardMaterialOptions } from '../../scene/materials/standard-material-options.js';
@@ -98,7 +97,7 @@ class OutlineRenderer {
         this.outlineShaderPass = this.outlineCameraEntity.camera.setShaderPass('OutlineShaderPass');
 
         // function called after the camera has rendered the outline objects to the texture
-        app.scene.on(EVENT_POSTRENDER, (cameraComponent) => {
+        app.scene.on('postrender', (cameraComponent) => {
             if (this.outlineCameraEntity.camera === cameraComponent) {
                 this.onPostRender();
             }
@@ -334,7 +333,7 @@ class OutlineRenderer {
         this.updateRenderTarget(sceneCamera);
 
         // function called before the scene camera renders a layer
-        const evt = this.app.scene.on(EVENT_PRERENDER_LAYER, (cameraComponent, layer, transparent) => {
+        const evt = this.app.scene.on('prerender:layer', (cameraComponent, layer, transparent) => {
             if (sceneCamera === cameraComponent && transparent === blendLayerTransparent && layer === blendLayer) {
                 this.blendOutlines();
                 evt.off();
