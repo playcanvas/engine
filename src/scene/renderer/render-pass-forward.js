@@ -263,7 +263,7 @@ class RenderPassForward extends RenderPass {
         if (camera) {
 
             // layer pre render event
-            this.scene.fire(EVENT_PRERENDER_LAYER, camera, layer, transparent);
+            scene.fire(EVENT_PRERENDER_LAYER, camera, layer, transparent);
 
             const options = {
                 lightClusters: renderAction.lightClusters
@@ -292,7 +292,7 @@ class RenderPassForward extends RenderPass {
             device.setAlphaToCoverage(false);
 
             // layer post render event
-            this.scene.fire(EVENT_POSTRENDER_LAYER, camera, layer, transparent);
+            scene.fire(EVENT_POSTRENDER_LAYER, camera, layer, transparent);
         }
 
         DebugGraphics.popGpuMarker(this.device);
