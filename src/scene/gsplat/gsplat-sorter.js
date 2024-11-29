@@ -3,15 +3,6 @@ import { TEXTURELOCK_READ } from '../../platform/graphics/constants.js';
 
 // sort blind set of data
 function SortWorker() {
-
-    // number of bits used to store the distance in integer array. Smaller number gives it a smaller
-    // precision but faster sorting. Could be dynamic for less precise sorting.
-    // 16bit seems plenty of large scenes (train), 10bits is enough for sled.
-    const compareBits = 16;
-
-    // number of buckets for count sorting to represent each unique distance using compareBits bits
-    const bucketCount = (2 ** compareBits) + 1;
-
     let order;
     let centers;
     let mapping;
@@ -45,7 +36,7 @@ function SortWorker() {
     };
 
     const update = () => {
-        if (!order || !centers || !cameraPosition || !cameraDirection) return;
+        if (!order || !centers || centers.length === 0 || !cameraPosition || !cameraDirection) return;
 
         const px = cameraPosition.x;
         const py = cameraPosition.y;
@@ -75,12 +66,6 @@ function SortWorker() {
         lastCameraDirection.y = dy;
         lastCameraDirection.z = dz;
 
-        // create distance buffer
-        const numVertices = centers.length / 3;
-        if (distances?.length !== numVertices) {
-            distances = new Uint32Array(numVertices);
-        }
-
         // calc min/max distance using bound
         let minDist;
         let maxDist;
@@ -97,7 +82,18 @@ function SortWorker() {
             }
         }
 
-        if (!countBuffer) {
+        const numVertices = centers.length / 3;
+
+        // calculate number of bits needed to store sorting result
+        const compareBits = Math.max(10, Math.min(20, Math.round(Math.log2(numVertices / 4))));
+        const bucketCount = 2 ** compareBits + 1;
+
+        // create distance buffer
+        if (distances?.length !== numVertices) {
+            distances = new Uint32Array(numVertices);
+        }
+
+        if (!countBuffer || countBuffer.length !== bucketCount) {
             countBuffer = new Uint32Array(bucketCount);
         } else {
             countBuffer.fill(0);
