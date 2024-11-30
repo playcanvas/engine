@@ -26,7 +26,7 @@ class TextureUtils {
      *
      * @param {number} width - Texture's width.
      * @param {number} height - Texture's height.
-     * @param {number} [depth] - Texture's depth. Defaults to 1.
+     * @param {number} [depth] - Texture's depth layers. Defaults to 1.
      * @returns {number} The number of mip levels required for the texture.
      */
     static calcMipLevelsCount(width, height, depth = 1) {
@@ -38,7 +38,7 @@ class TextureUtils {
      *
      * @param {number} width - Texture's width.
      * @param {number} height - Texture's height.
-     * @param {number} depth - Texture's depth.
+     * @param {number} depth - Texture's depth layers.
      * @param {number} format - Texture's pixel format PIXELFORMAT_***.
      * @returns {number} The number of bytes of GPU memory required for the texture.
      */
@@ -70,14 +70,15 @@ class TextureUtils {
      *
      * @param {number} width - Texture's width.
      * @param {number} height - Texture's height.
-     * @param {number} depth - Texture's depth.
+     * @param {number} layers - Texture's layers.
      * @param {number} format - Texture's pixel format PIXELFORMAT_***.
+     * @param {boolean} isVolume - True if the texture is a volume texture, false otherwise.
      * @param {boolean} mipmaps - True if the texture includes mipmaps, false otherwise.
-     * @param {boolean} cubemap - True is the texture is a cubemap, false otherwise.
      * @returns {number} The number of bytes of GPU memory required for the texture.
      */
-    static calcGpuSize(width, height, depth, format, mipmaps, cubemap) {
+    static calcGpuSize(width, height, layers, format, isVolume, mipmaps) {
         let result = 0;
+        let depth = isVolume ? layers : 1;
 
         while (1) {
             result += TextureUtils.calcLevelGpuSize(width, height, depth, format);
@@ -91,7 +92,7 @@ class TextureUtils {
             depth = Math.max(depth >> 1, 1);
         }
 
-        return result * (cubemap ? 6 : 1);
+        return result * (isVolume ? 1 : layers);
     }
 }
 
