@@ -3,68 +3,73 @@ uniform mat4 matrix_model;
 uniform mat4 matrix_view;
 uniform mat4 matrix_projection;
 
-uniform vec2 viewport;
-uniform vec4 tex_params;            // num splats, texture width
+uniform vec2 viewport;                  // viewport dimensions
+uniform uvec2 tex_params;                // num splats, texture width
+uniform vec3 view_position;             // world space camera position
 
 uniform highp usampler2D splatOrder;
 uniform highp usampler2D transformA;
 uniform highp sampler2D transformB;
 
-attribute vec3 vertex_position;
-attribute uint vertex_id_attrib;
+attribute vec3 vertex_position;         // xy: corner, z: render order offset
+attribute uint vertex_id_attrib;        // render order base
 
-#ifndef DITHER_NONE
-    varying float id;
-#endif
+struct SplatState {
+    uint order;         // render order
+    uint id;            // splat id
+    ivec2 uv;           // splat uv
+    uint tAw;           // work value
+    vec3 center;        // model space center
+    vec2 corner;        // corner coordinates (-2, -2)..(2, 2)
 
-uint orderId;
-uint splatId;
-ivec2 splatUV;
+    vec3 centerCam;     // center in camera space
+    vec4 centerProj;    // center in screen space
+    vec2 cornerOffset;  // corner offset in screen space
+};
 
-// calculate the current splat index and uv
-bool calcSplatUV() {
-    uint numSplats = uint(tex_params.x);
-    uint textureWidth = uint(tex_params.y);
+// read the model-space center of the gaussian
+bool readCenter(out SplatState state) {
+    state.order = vertex_id_attrib + uint(vertex_position.z);
 
-    // calculate splat index
-    orderId = vertex_id_attrib + uint(vertex_position.z);
-
-    if (orderId >= numSplats) {
+    // return if out of range (since the last block of splats may be partially full)
+    if (state.order >= tex_params.x) {
         return false;
     }
 
-    ivec2 orderUV = ivec2(
-        int(orderId % textureWidth),
-        int(orderId / textureWidth)
-    );
+    ivec2 uv = ivec2(state.order % tex_params.y, state.order / tex_params.y);
 
-    // calculate splatUV
-    splatId = texelFetch(splatOrder, orderUV, 0).r;
-    splatUV = ivec2(
-        int(splatId % textureWidth),
-        int(splatId / textureWidth)
-    );
+    // read splat id
+    state.id = texelFetch(splatOrder, uv, 0).r;
+
+    // map id to uv
+    state.uv = ivec2(state.id % tex_params.y, state.id / tex_params.y);
+
+    uvec4 tA = texelFetch(transformA, state.uv, 0);
+    state.tAw = tA.w;
+    state.center = uintBitsToFloat(tA.xyz);
+    state.corner = vertex_position.xy;
 
     return true;
 }
 
-uvec4 tA;
+// calculate screen space gaussian vertex position
+bool projectCenter(inout SplatState state) {
+    // project center to screen space
+    mat4 model_view = matrix_view * matrix_model;
+    vec4 centerCam = model_view * vec4(state.center, 1.0);
+    vec4 centerProj = matrix_projection * centerCam;
+    if (centerProj.z < -centerProj.w) {
+        return false;
+    }
 
-vec3 getCenter() {
-    tA = texelFetch(transformA, splatUV, 0);
-    return uintBitsToFloat(tA.xyz);
-}
+    mat3 W = transpose(mat3(model_view));
 
-void getCovariance(out vec3 covA, out vec3 covB) {
-    vec4 tB = texelFetch(transformB, splatUV, 0);
-    vec2 tC = unpackHalf2x16(tA.w);
+    // read covariance
+    vec4 tB = texelFetch(transformB, state.uv, 0);
+    vec2 tC = unpackHalf2x16(state.tAw);
+    vec3 covA = tB.xyz;
+    vec3 covB = vec3(tC.x, tC.y, tB.w);
 
-    covA = tB.xyz;
-    covB = vec3(tC.x, tC.y, tB.w);
-}
-
-// calculate 2d covariance vectors
-vec4 calcV1V2(in vec3 splat_cam, in vec3 covA, in vec3 covB, mat3 W) {
     mat3 Vrk = mat3(
         covA.x, covA.y, covA.z, 
         covA.y, covB.x, covB.y,
@@ -73,8 +78,8 @@ vec4 calcV1V2(in vec3 splat_cam, in vec3 covA, in vec3 covB, mat3 W) {
 
     float focal = viewport.x * matrix_projection[0][0];
 
-    float J1 = focal / splat_cam.z;
-    vec2 J2 = -J1 / splat_cam.z * splat_cam.xy;
+    float J1 = focal / centerCam.z;
+    vec2 J2 = -J1 / centerCam.z * centerCam.xy;
     mat3 J = mat3(
         J1, 0.0, J2.x, 
         0.0, J1, J2.y, 
@@ -97,12 +102,31 @@ vec4 calcV1V2(in vec3 splat_cam, in vec3 covA, in vec3 covB, mat3 W) {
     vec2 v1 = min(sqrt(2.0 * lambda1), 1024.0) * diagonalVector;
     vec2 v2 = min(sqrt(2.0 * lambda2), 1024.0) * vec2(diagonalVector.y, -diagonalVector.x);
 
-    return vec4(v1, v2);
-}
+    if (dot(v1, v1) < 4.0 && dot(v2, v2) < 4.0) {
+        return false;
+    }
 
+    state.centerCam = centerCam.xyz / centerCam.w;
+    state.centerProj = centerProj;
+    state.cornerOffset = (state.corner.x * v1 + state.corner.y * v2) / viewport * state.centerProj.w;
+
+    return true;
+}
 
 // Spherical Harmonics
 
+#if SH_BANDS > 0
+    uniform highp usampler2D splatSH_1to3;
+#if SH_BANDS > 1
+    uniform highp usampler2D splatSH_4to7;
+    uniform highp usampler2D splatSH_8to11;
+#if SH_BANDS > 2
+    uniform highp usampler2D splatSH_12to15;
+#endif
+#endif
+#endif
+
+#if SH_BANDS > 0
 vec3 unpack111011(uint bits) {
     return vec3(
         float(bits >> 21u) / 2047.0,
@@ -127,38 +151,28 @@ void fetch(in uvec4 t, out vec3 a, out vec3 b, out vec3 c, out vec3 d) {
     d = unpack111011(t.w) * 2.0 - 1.0;
 }
 
-#if defined(USE_SH1)
-    #define SH_C1 0.4886025119029199f
+#define SH_C1 0.4886025119029199f
+#define SH_C2_0 1.0925484305920792f
+#define SH_C2_1 -1.0925484305920792f
+#define SH_C2_2 0.31539156525252005f
+#define SH_C2_3 -1.0925484305920792f
+#define SH_C2_4 0.5462742152960396f
+#define SH_C3_0 -0.5900435899266435f
+#define SH_C3_1 2.890611442640554f
+#define SH_C3_2 -0.4570457994644658f
+#define SH_C3_3 0.3731763325901154f
+#define SH_C3_4 -0.4570457994644658f
+#define SH_C3_5 1.445305721320277f
+#define SH_C3_6 -0.5900435899266435f
 
-    uniform highp usampler2D splatSH_1to3;
-#if defined(USE_SH2)
-    #define SH_C2_0 1.0925484305920792f
-    #define SH_C2_1 -1.0925484305920792f
-    #define SH_C2_2 0.31539156525252005f
-    #define SH_C2_3 -1.0925484305920792f
-    #define SH_C2_4 0.5462742152960396f
-
-    uniform highp usampler2D splatSH_4to7;
-    uniform highp usampler2D splatSH_8to11;
-#if defined(USE_SH3)
-    #define SH_C3_0 -0.5900435899266435f
-    #define SH_C3_1 2.890611442640554f
-    #define SH_C3_2 -0.4570457994644658f
-    #define SH_C3_3 0.3731763325901154f
-    #define SH_C3_4 -0.4570457994644658f
-    #define SH_C3_5 1.445305721320277f
-    #define SH_C3_6 -0.5900435899266435f
-
-    uniform highp usampler2D splatSH_12to15;
-#endif
-#endif
-#endif
-
-vec3 evalSH(in vec3 dir) {
+vec3 evalSH(in SplatState state) {
     vec3 result = vec3(0.0);
 
+    // transform camera-space view vector to model space
+    vec3 dir = normalize(state.centerCam * mat3(matrix_view) * mat3(matrix_model));
+
     // see https://github.com/graphdeco-inria/gaussian-splatting/blob/main/utils/sh_utils.py
-#if defined(USE_SH1)
+
     // 1st degree
     float x = dir.x;
     float y = dir.y;
@@ -166,10 +180,10 @@ vec3 evalSH(in vec3 dir) {
 
     float scale;
     vec3 sh1, sh2, sh3;
-    fetchScale(texelFetch(splatSH_1to3, splatUV, 0), scale, sh1, sh2, sh3);
+    fetchScale(texelFetch(splatSH_1to3, state.uv, 0), scale, sh1, sh2, sh3);
     result += SH_C1 * (-sh1 * y + sh2 * z - sh3 * x);
 
-#if defined(USE_SH2)
+#if SH_BANDS > 1
     // 2nd degree
     float xx = x * x;
     float yy = y * y;
@@ -180,8 +194,8 @@ vec3 evalSH(in vec3 dir) {
 
     vec3 sh4, sh5, sh6, sh7;
     vec3 sh8, sh9, sh10, sh11;
-    fetch(texelFetch(splatSH_4to7, splatUV, 0), sh4, sh5, sh6, sh7);
-    fetch(texelFetch(splatSH_8to11, splatUV, 0), sh8, sh9, sh10, sh11);
+    fetch(texelFetch(splatSH_4to7, state.uv, 0), sh4, sh5, sh6, sh7);
+    fetch(texelFetch(splatSH_8to11, state.uv, 0), sh8, sh9, sh10, sh11);
     result +=
         sh4 * (SH_C2_0 * xy) *  +
         sh5 * (SH_C2_1 * yz) +
@@ -189,10 +203,10 @@ vec3 evalSH(in vec3 dir) {
         sh7 * (SH_C2_3 * xz) +
         sh8 * (SH_C2_4 * (xx - yy));
 
-#if defined(USE_SH3)
+#if SH_BANDS > 2
     // 3rd degree
     vec3 sh12, sh13, sh14, sh15;
-    fetch(texelFetch(splatSH_12to15, splatUV, 0), sh12, sh13, sh14, sh15);
+    fetch(texelFetch(splatSH_12to15, state.uv, 0), sh12, sh13, sh14, sh15);
     result +=
         sh9  * (SH_C3_0 * y * (3.0 * xx - yy)) +
         sh10 * (SH_C3_1 * xy * z) +
@@ -204,8 +218,9 @@ vec3 evalSH(in vec3 dir) {
 #endif
 #endif
     result *= scale;
-#endif
 
     return result;
 }
+#endif
+
 `;

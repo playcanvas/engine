@@ -116,15 +116,15 @@ class GSplat {
         result.setParameter('splatColor', this.colorTexture);
         result.setParameter('transformA', this.transformATexture);
         result.setParameter('transformB', this.transformBTexture);
-        result.setParameter('tex_params', new Float32Array([this.numSplats, this.colorTexture.width, 0, 0]));
+        result.setParameter('tex_params', new Float32Array([this.numSplats, this.colorTexture.width]));
         if (this.hasSH) {
-            result.setDefine('USE_SH1', true);
-            result.setDefine('USE_SH2', true);
-            result.setDefine('USE_SH3', true);
+            result.setDefine('SH_BANDS', 3);
             result.setParameter('splatSH_1to3', this.sh1to3Texture);
             result.setParameter('splatSH_4to7', this.sh4to7Texture);
             result.setParameter('splatSH_8to11', this.sh8to11Texture);
             result.setParameter('splatSH_12to15', this.sh12to15Texture);
+        } else {
+            result.setDefine('SH_BANDS', 0);
         }
         return result;
     }

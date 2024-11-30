@@ -10,11 +10,11 @@ export default /* glsl */`
     uniform vec4 uColor;
 #endif
 
-varying mediump vec2 texCoord;
+varying mediump vec2 surfaceUV;
 varying mediump vec4 color;
 
 void main(void) {
-    mediump float A = dot(texCoord, texCoord);
+    mediump float A = dot(surfaceUV, surfaceUV);
     if (A > 1.0) {
         discard;
     }
