@@ -1,5 +1,4 @@
 export default /* glsl */`
-#include "gsplatOutputPS"
 
 #ifndef DITHER_NONE
     #include "bayerPS"
@@ -37,7 +36,7 @@ void main(void) {
             opacityDither(alpha, id * 0.013);
         #endif
 
-        gl_FragColor = vec4(prepareOutputFromGamma(color.xyz), alpha);
+        gl_FragColor = vec4(color.xyz, alpha);
     #endif
 }
 `;
