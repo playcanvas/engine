@@ -254,7 +254,7 @@ class Texture {
         if (options.numLevels !== undefined) {
             this._numLevels = options.numLevels;
         }
-        this._updateMipLevelCount();
+        this._updateNumLevel();
 
         this._minFilter = options.minFilter ?? FILTER_LINEAR_MIPMAP_LINEAR;
         this._magFilter = options.magFilter ?? FILTER_LINEAR;
@@ -350,7 +350,7 @@ class Texture {
         this._width = Math.floor(width);
         this._height = Math.floor(height);
         this._depth = Math.floor(depth);
-        this._updateMipLevelCount();
+        this._updateNumLevel();
 
         // re-create the implementation
         this.impl = device.createTextureImpl(this);
@@ -394,7 +394,7 @@ class Texture {
         this.renderVersionDirty = this.device.renderVersion;
     }
 
-    _updateMipLevelCount() {
+    _updateNumLevel() {
 
         const maxLevels = this.mipmaps ? TextureUtils.calcMipLevelsCount(this.width, this.height) : 1;
         const requestedLevels = this._numLevelsRequested;
