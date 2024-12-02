@@ -470,7 +470,7 @@ class WebglTexture {
         let mipObject;
         let resMult;
 
-        const requiredMipLevels = texture.requiredMipLevels;
+        const requiredMipLevels = texture.mipLevelCount;
 
         if (texture.array) {
             // for texture arrays we reserve the space in advance

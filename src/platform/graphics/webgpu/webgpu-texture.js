@@ -92,7 +92,7 @@ class WebgpuTexture {
 
         const texture = this.texture;
         const wgpu = device.wgpu;
-        const mipLevelCount = texture.requiredMipLevels;
+        const mipLevelCount = texture.mipLevelCount;
 
         Debug.assert(texture.width > 0 && texture.height > 0, `Invalid texture dimensions ${texture.width}x${texture.height} for texture ${texture.name}`, texture);
 
@@ -300,7 +300,7 @@ class WebgpuTexture {
             // upload texture data if any
             let anyUploads = false;
             let anyLevelMissing = false;
-            const requiredMipLevels = texture.requiredMipLevels;
+            const requiredMipLevels = texture.mipLevelCount;
             for (let mipLevel = 0; mipLevel < requiredMipLevels; mipLevel++) {
 
                 const mipObject = texture._levels[mipLevel];
@@ -383,7 +383,7 @@ class WebgpuTexture {
                 }
             }
 
-            if (anyUploads && anyLevelMissing && texture.mipmaps && !isCompressedPixelFormat(texture.format)) {
+            if (anyUploads && anyLevelMissing && texture.mipmaps && !isCompressedPixelFormat(texture.format) && !isIntegerPixelFormat(texture.format)) {
                 device.mipmapRenderer.generate(this);
             }
 
