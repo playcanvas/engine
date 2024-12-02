@@ -1,14 +1,10 @@
 export default /* glsl */`
+#include "gsplatUnpackVS"
+
 attribute vec3 vertex_position;         // xy: cornerUV, z: render order offset
 attribute uint vertex_id_attrib;        // render order base
 
-uniform mat4 matrix_model;
-uniform mat4 matrix_view;
-uniform mat4 matrix_projection;
-
-uniform vec2 viewport;                  // viewport dimensions
 uniform uvec3 tex_params;               // num splats, packed width, chunked width
-
 uniform highp usampler2D splatOrder;
 uniform highp usampler2D packedTexture;
 uniform highp sampler2D chunkTexture;
@@ -20,14 +16,6 @@ vec4 chunkDataC;    // x: scale_min_z, y: scale_max_x, z: scale_max_y, w: scale_
 vec4 chunkDataD;    // x: min_r, y: min_g, z: min_b, w: max_r
 vec4 chunkDataE;    // x: max_g, y: max_b, z: unused, w: unused
 uvec4 packedData;   // x: position bits, y: rotation bits, z: scale bits, w: color bits
-
-vec3 unpack111011(uint bits) {
-    return vec3(
-        float(bits >> 21u) / 2047.0,
-        float((bits >> 11u) & 0x3ffu) / 1023.0,
-        float(bits & 0x7ffu) / 2047.0
-    );
-}
 
 // calculate the current splat index and uvs
 bool readCenter(out SplatState state) {
@@ -65,30 +53,6 @@ bool readCenter(out SplatState state) {
     return true;
 }
 
-vec4 unpack8888(uint bits) {
-    return vec4(
-        float(bits >> 24u) / 255.0,
-        float((bits >> 16u) & 0xffu) / 255.0,
-        float((bits >> 8u) & 0xffu) / 255.0,
-        float(bits & 0xffu) / 255.0
-    );
-}
-
-float norm = 1.0 / (sqrt(2.0) * 0.5);
-
-vec4 unpackRotation(uint bits) {
-    float a = (float((bits >> 20u) & 0x3ffu) / 1023.0 - 0.5) * norm;
-    float b = (float((bits >> 10u) & 0x3ffu) / 1023.0 - 0.5) * norm;
-    float c = (float(bits & 0x3ffu) / 1023.0 - 0.5) * norm;
-    float m = sqrt(1.0 - (a * a + b * b + c * c));
-
-    uint mode = bits >> 30u;
-    if (mode == 0u) return vec4(m, a, b, c);
-    if (mode == 1u) return vec4(a, m, b, c);
-    if (mode == 2u) return vec4(a, b, m, c);
-    return vec4(a, b, c, m);
-}
-
 vec4 getRotation() {
     return unpackRotation(packedData.y);
 }
@@ -102,26 +66,8 @@ vec4 readColor(in SplatState state) {
     return vec4(mix(chunkDataD.xyz, vec3(chunkDataD.w, chunkDataE.xy), r.rgb), r.w);
 }
 
-mat3 quatToMat3(vec4 R) {
-    float x = R.x;
-    float y = R.y;
-    float z = R.z;
-    float w = R.w;
-    return mat3(
-        1.0 - 2.0 * (z * z + w * w),
-              2.0 * (y * z + x * w),
-              2.0 * (y * w - x * z),
-              2.0 * (y * z - x * w),
-        1.0 - 2.0 * (y * y + w * w),
-              2.0 * (z * w + x * y),
-              2.0 * (y * w + x * z),
-              2.0 * (z * w - x * y),
-        1.0 - 2.0 * (y * y + z * z)
-    );
-}
-
-// Given a rotation matrix and scale vector, compute 3d covariance A and B
-void getCovariance(out vec3 covA, out vec3 covB) {
+// given a rotation matrix and scale vector, compute 3d covariance A and B
+void readCovariance(in SplatState state, out vec3 covA, out vec3 covB) {
     mat3 rot = quatToMat3(getRotation());
     vec3 scale = getScale();
 
@@ -136,82 +82,9 @@ void getCovariance(out vec3 covA, out vec3 covB) {
     covB = vec3(dot(M[1], M[1]), dot(M[1], M[2]), dot(M[2], M[2]));
 }
 
-// calculate 2d covariance vectors
-bool projectCenter(inout SplatState state) {
-    // project center to screen space
-    mat4 model_view = matrix_view * matrix_model;
-    vec4 centerCam = model_view * vec4(state.center, 1.0);
-    vec4 centerProj = matrix_projection * centerCam;
-    if (centerProj.z < -centerProj.w) {
-        return false;
-    }
-
-    // get covariance
-    vec3 covA, covB;
-    getCovariance(covA, covB);
-
-    mat3 W = transpose(mat3(model_view));
-
-    mat3 Vrk = mat3(
-        covA.x, covA.y, covA.z, 
-        covA.y, covB.x, covB.y,
-        covA.z, covB.y, covB.z
-    );
-
-    float focal = viewport.x * matrix_projection[0][0];
-
-    float J1 = focal / centerCam.z;
-    vec2 J2 = -J1 / centerCam.z * centerCam.xy;
-    mat3 J = mat3(
-        J1, 0.0, J2.x, 
-        0.0, J1, J2.y, 
-        0.0, 0.0, 0.0
-    );
-
-    mat3 T = W * J;
-    mat3 cov = transpose(T) * Vrk * T;
-
-    float diagonal1 = cov[0][0] + 0.3;
-    float offDiagonal = cov[0][1];
-    float diagonal2 = cov[1][1] + 0.3;
-
-    float mid = 0.5 * (diagonal1 + diagonal2);
-    float radius = length(vec2((diagonal1 - diagonal2) / 2.0, offDiagonal));
-    float lambda1 = mid + radius;
-    float lambda2 = max(mid - radius, 0.1);
-    vec2 diagonalVector = normalize(vec2(offDiagonal, lambda1 - diagonal1));
-
-    vec2 v1 = min(sqrt(2.0 * lambda1), 1024.0) * diagonalVector;
-    vec2 v2 = min(sqrt(2.0 * lambda2), 1024.0) * vec2(diagonalVector.y, -diagonalVector.x);
-
-    if (dot(v1, v1) < 4.0 && dot(v2, v2) < 4.0) {
-        return false;
-    }
-
-    state.centerCam = centerCam.xyz / centerCam.w;
-    state.centerProj = centerProj;
-    state.cornerOffset = (state.cornerUV.x * v1 + state.cornerUV.y * v2) / viewport * state.centerProj.w;
-
-    return true;
-}
-
-// Spherical Harmonics
+// spherical Harmonics
 
 #if SH_BANDS > 0
-
-#define SH_C1 0.4886025119029199f
-#define SH_C2_0 1.0925484305920792f
-#define SH_C2_1 -1.0925484305920792f
-#define SH_C2_2 0.31539156525252005f
-#define SH_C2_3 -1.0925484305920792f
-#define SH_C2_4 0.5462742152960396f
-#define SH_C3_0 -0.5900435899266435f
-#define SH_C3_1 2.890611442640554f
-#define SH_C3_2 -0.4570457994644658f
-#define SH_C3_3 0.3731763325901154f
-#define SH_C3_4 -0.4570457994644658f
-#define SH_C3_5 1.445305721320277f
-#define SH_C3_6 -0.5900435899266435f
 
 uniform highp usampler2D shTexture0;
 uniform highp usampler2D shTexture1;
@@ -259,49 +132,5 @@ void readSHData(in SplatState state, out vec3 sh[15]) {
     sh[14] = vec3(r3.z, g3.z, b3.z);
 }
 
-// see https://github.com/graphdeco-inria/gaussian-splatting/blob/main/utils/sh_utils.py
-vec3 evalSH(in SplatState state) {
-    vec3 result = vec3(0.0);
-
-    // transform camera-space view vector to model space
-    vec3 dir = normalize(state.centerCam * mat3(matrix_view) * mat3(matrix_model));
-
-    vec3 sh[15];
-    readSHData(state, sh);
-
-    // 1st degree
-    float x = dir.x;
-    float y = dir.y;
-    float z = dir.z;
-
-    result += SH_C1 * (-sh[0] * y + sh[1] * z - sh[2] * x);
-
-    // 2nd degree
-    float xx = x * x;
-    float yy = y * y;
-    float zz = z * z;
-    float xy = x * y;
-    float yz = y * z;
-    float xz = x * z;
-
-    result +=
-        sh[3] * (SH_C2_0 * xy) *  +
-        sh[4] * (SH_C2_1 * yz) +
-        sh[5] * (SH_C2_2 * (2.0 * zz - xx - yy)) +
-        sh[6] * (SH_C2_3 * xz) +
-        sh[7] * (SH_C2_4 * (xx - yy));
-
-    // 3rd degree
-    result +=
-        sh[8]  * (SH_C3_0 * y * (3.0 * xx - yy)) +
-        sh[9]  * (SH_C3_1 * xy * z) +
-        sh[10] * (SH_C3_2 * y * (4.0 * zz - xx - yy)) +
-        sh[11] * (SH_C3_3 * z * (2.0 * zz - 3.0 * xx - 3.0 * yy)) +
-        sh[12] * (SH_C3_4 * x * (4.0 * zz - xx - yy)) +
-        sh[13] * (SH_C3_5 * z * (xx - yy)) +
-        sh[14] * (SH_C3_6 * x * (xx - 3.0 * yy));
-
-    return result;
-}
 #endif
 `;

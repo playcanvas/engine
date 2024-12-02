@@ -13,6 +13,16 @@ struct SplatState {
     vec2 cornerOffset;  // corner offset in screen space
 };
 
+#if SH_BANDS > 0
+    #if SH_BANDS == 1
+        #define SH_COEFFS 3
+    #elif SH_BANDS == 2
+        #define SH_COEFFS 8
+    #elif SH_BANDS == 3
+        #define SH_COEFFS 15
+    #endif
+#endif
+
 #if GSPLAT_COMPRESSED_DATA == true
     #include "gsplatCompressedCoreVS"
 #else
@@ -21,4 +31,140 @@ struct SplatState {
 
 #include "gsplatOutputPS"
 
+uniform mat4 matrix_model;
+uniform mat4 matrix_view;
+uniform mat4 matrix_projection;
+uniform vec2 viewport;                  // viewport dimensions
+
+// calculate 2d covariance vectors
+bool projectCenter(inout SplatState state) {
+    // project center to screen space
+    mat4 model_view = matrix_view * matrix_model;
+    vec4 centerCam = model_view * vec4(state.center, 1.0);
+    vec4 centerProj = matrix_projection * centerCam;
+    if (centerProj.z < -centerProj.w) {
+        return false;
+    }
+
+    // get covariance
+    vec3 covA, covB;
+    readCovariance(state, covA, covB);
+
+    mat3 Vrk = mat3(
+        covA.x, covA.y, covA.z, 
+        covA.y, covB.x, covB.y,
+        covA.z, covB.y, covB.z
+    );
+
+    float focal = viewport.x * matrix_projection[0][0];
+
+    float J1 = focal / centerCam.z;
+    vec2 J2 = -J1 / centerCam.z * centerCam.xy;
+    mat3 J = mat3(
+        J1, 0.0, J2.x, 
+        0.0, J1, J2.y, 
+        0.0, 0.0, 0.0
+    );
+
+    mat3 W = transpose(mat3(model_view));
+    mat3 T = W * J;
+    mat3 cov = transpose(T) * Vrk * T;
+
+    float diagonal1 = cov[0][0] + 0.3;
+    float offDiagonal = cov[0][1];
+    float diagonal2 = cov[1][1] + 0.3;
+
+    float mid = 0.5 * (diagonal1 + diagonal2);
+    float radius = length(vec2((diagonal1 - diagonal2) / 2.0, offDiagonal));
+    float lambda1 = mid + radius;
+    float lambda2 = max(mid - radius, 0.1);
+    vec2 diagonalVector = normalize(vec2(offDiagonal, lambda1 - diagonal1));
+
+    vec2 v1 = min(sqrt(2.0 * lambda1), 1024.0) * diagonalVector;
+    vec2 v2 = min(sqrt(2.0 * lambda2), 1024.0) * vec2(diagonalVector.y, -diagonalVector.x);
+
+    if (dot(v1, v1) < 4.0 && dot(v2, v2) < 4.0) {
+        return false;
+    }
+
+    state.centerCam = centerCam.xyz / centerCam.w;
+    state.centerProj = centerProj;
+    state.cornerOffset = (state.cornerUV.x * v1 + state.cornerUV.y * v2) / viewport * state.centerProj.w;
+
+    return true;
+}
+
+// spherical Harmonics
+
+#if SH_BANDS > 0
+
+#define SH_C1 0.4886025119029199f
+
+#if SH_BANDS > 1
+    #define SH_C2_0 1.0925484305920792f
+    #define SH_C2_1 -1.0925484305920792f
+    #define SH_C2_2 0.31539156525252005f
+    #define SH_C2_3 -1.0925484305920792f
+    #define SH_C2_4 0.5462742152960396f
+#endif
+
+#if SH_BANDS > 2
+    #define SH_C3_0 -0.5900435899266435f
+    #define SH_C3_1 2.890611442640554f
+    #define SH_C3_2 -0.4570457994644658f
+    #define SH_C3_3 0.3731763325901154f
+    #define SH_C3_4 -0.4570457994644658f
+    #define SH_C3_5 1.445305721320277f
+    #define SH_C3_6 -0.5900435899266435f
+#endif
+
+// see https://github.com/graphdeco-inria/gaussian-splatting/blob/main/utils/sh_utils.py
+vec3 evalSH(in SplatState state) {
+
+    // read sh coefficients
+    vec3 sh[SH_COEFFS];
+    readSHData(state, sh);
+
+    // calculate the model-space view direction
+    vec3 dir = normalize(state.centerCam * mat3(matrix_view) * mat3(matrix_model));
+
+    float x = dir.x;
+    float y = dir.y;
+    float z = dir.z;
+
+    // 1st degree
+    vec3 result = SH_C1 * (-sh[0] * y + sh[1] * z - sh[2] * x);
+
+#if SH_BANDS > 1
+    // 2nd degree
+    float xx = x * x;
+    float yy = y * y;
+    float zz = z * z;
+    float xy = x * y;
+    float yz = y * z;
+    float xz = x * z;
+
+    result +=
+        sh[3] * (SH_C2_0 * xy) *  +
+        sh[4] * (SH_C2_1 * yz) +
+        sh[5] * (SH_C2_2 * (2.0 * zz - xx - yy)) +
+        sh[6] * (SH_C2_3 * xz) +
+        sh[7] * (SH_C2_4 * (xx - yy));
+#endif
+
+#if SH_BANDS > 2
+    // 3rd degree
+    result +=
+        sh[8]  * (SH_C3_0 * y * (3.0 * xx - yy)) +
+        sh[9]  * (SH_C3_1 * xy * z) +
+        sh[10] * (SH_C3_2 * y * (4.0 * zz - xx - yy)) +
+        sh[11] * (SH_C3_3 * z * (2.0 * zz - 3.0 * xx - 3.0 * yy)) +
+        sh[12] * (SH_C3_4 * x * (4.0 * zz - xx - yy)) +
+        sh[13] * (SH_C3_5 * z * (xx - yy)) +
+        sh[14] * (SH_C3_6 * x * (xx - 3.0 * yy));
+#endif
+
+    return result;
+}
+#endif
 `;

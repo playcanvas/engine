@@ -28,7 +28,7 @@ void main(void) {
     // read color
     vec4 clr = readColor(state);
 
-    // evaluate optional spherical harmonics
+    // evaluate spherical harmonics
     #if SH_BANDS > 0
         clr.xyz = max(clr.xyz + evalSH(state), 0.0);
     #endif

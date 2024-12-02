@@ -62,6 +62,7 @@ import gsplatCommonVS from './gsplat/vert/gsplatCommon.js'
 import gsplatCompressedCoreVS from './gsplat/vert/gsplatCompressedCore.js';
 import gsplatCoreVS from './gsplat/vert/gsplatCore.js';
 import gsplatOutputPS from './gsplat/gsplatOutput.js';
+import gsplatUnpackVS from './gsplat/vert/gsplatUnpack.js';
 import iridescenceDiffractionPS from './lit/frag/iridescenceDiffraction.js';
 import iridescencePS from './standard/frag/iridescence.js';
 import iridescenceThicknessPS from './standard/frag/iridescenceThickness.js';
@@ -268,6 +269,7 @@ const shaderChunks = {
     gsplatCompressedCoreVS,
     gsplatCoreVS,
     gsplatOutputPS,
+    gsplatUnpackVS,
     iridescenceDiffractionPS,
     iridescencePS,
     iridescenceThicknessPS,
