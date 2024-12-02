@@ -90,10 +90,10 @@ class Texture {
     _storage = false;
 
     /** @protected */
-    _mipLevelCount = 0;
+    _numLevels = 0;
 
     /** @protected */
-    _mipLevelCountRequested;
+    _numLevelsRequested;
 
     /**
      * Create a new Texture instance.
@@ -155,8 +155,8 @@ class Texture {
      * {@link ADDRESS_REPEAT}.
      * @param {boolean} [options.mipmaps] - When enabled try to generate or use mipmaps for this
      * texture. Default is true.
-     * @param {number} [options.mipLevelCount] - Specifies the number of mip levels to generate. If
-     * not specified, the number is calculated based on the texture size. When this property is set,
+     * @param {number} [options.numLevels] - Specifies the number of mip levels to generate. If not
+     * specified, the number is calculated based on the texture size. When this property is set,
      * the mipmaps property is ignored.
      * @param {boolean} [options.cubemap] - Specifies whether the texture is to be a cubemap.
      * Defaults to false.
@@ -250,9 +250,9 @@ class Texture {
         this._premultiplyAlpha = options.premultiplyAlpha ?? false;
 
         this._mipmaps = options.mipmaps ?? true;
-        this._mipLevelCountRequested = options.mipLevelCount;
-        if (options.mipLevelCount !== undefined) {
-            this._mipLevelCount = options.mipLevelCount;
+        this._numLevelsRequested = options.numLevels;
+        if (options.numLevels !== undefined) {
+            this._numLevels = options.numLevels;
         }
         this._updateMipLevelCount();
 
@@ -299,7 +299,7 @@ class Texture {
             `${this.cubemap ? '[Cubemap]' : ''}` +
             `${this.volume ? '[Volume]' : ''}` +
             `${this.array ? '[Array]' : ''}` +
-            `[MipLevels:${this.mipLevelCount}]`, this);
+            `[MipLevels:${this.numLevels}]`, this);
     }
 
     /**
@@ -397,13 +397,13 @@ class Texture {
     _updateMipLevelCount() {
 
         const maxLevels = this.mipmaps ? TextureUtils.calcMipLevelsCount(this.width, this.height) : 1;
-        const requestedLevels = this._mipLevelCountRequested;
+        const requestedLevels = this._numLevelsRequested;
         if (requestedLevels !== undefined && requestedLevels > maxLevels) {
-            Debug.warn('Texture#mipLevelCount: requested mip level count is greater than the maximum possible, will be clamped to', maxLevels, this);
+            Debug.warn('Texture#numLevels: requested mip level count is greater than the maximum possible, will be clamped to', maxLevels, this);
         }
 
-        this._mipLevelCount = Math.min(requestedLevels ?? maxLevels, maxLevels);
-        this._mipmaps = this._mipLevelCount > 1;
+        this._numLevels = Math.min(requestedLevels ?? maxLevels, maxLevels);
+        this._mipmaps = this._numLevels > 1;
     }
 
     /**
@@ -666,8 +666,8 @@ class Texture {
      *
      * @type {number}
      */
-    get mipLevelCount() {
-        return this._mipLevelCount;
+    get numLevels() {
+        return this._numLevels;
     }
 
     /**
