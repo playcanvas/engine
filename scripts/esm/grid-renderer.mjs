@@ -1,3 +1,4 @@
+/* eslint-disable-next-line import/no-unresolved */
 import {
     BLENDMODE_ONE,
     BLENDMODE_ONE_MINUS_SRC_ALPHA,
