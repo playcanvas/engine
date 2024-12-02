@@ -4,12 +4,12 @@ uniform mat4 matrix_view;
 uniform mat4 matrix_projection;
 
 uniform vec2 viewport;                  // viewport dimensions
-uniform uvec2 tex_params;                // num splats, texture width
-uniform vec3 view_position;             // world space camera position
+uniform uvec2 tex_params;               // num splats, texture width
 
 uniform highp usampler2D splatOrder;
 uniform highp usampler2D transformA;
 uniform highp sampler2D transformB;
+uniform mediump sampler2D splatColor;
 
 attribute vec3 vertex_position;         // xy: corner, z: render order offset
 attribute uint vertex_id_attrib;        // render order base
@@ -18,17 +18,21 @@ struct SplatState {
     uint order;         // render order
     uint id;            // splat id
     ivec2 uv;           // splat uv
-    uint tAw;           // work value
+
+    vec2 corner;        // corner coordinates for this vertex of the gaussian (-2, -2)..(2, 2)
     vec3 center;        // model space center
-    vec2 corner;        // corner coordinates (-2, -2)..(2, 2)
 
     vec3 centerCam;     // center in camera space
     vec4 centerProj;    // center in screen space
     vec2 cornerOffset;  // corner offset in screen space
 };
 
+// work values
+uint tAw;
+
 // read the model-space center of the gaussian
 bool readCenter(out SplatState state) {
+    // calculate splat order
     state.order = vertex_id_attrib + uint(vertex_position.z);
 
     // return if out of range (since the last block of splats may be partially full)
@@ -36,20 +40,34 @@ bool readCenter(out SplatState state) {
         return false;
     }
 
-    ivec2 uv = ivec2(state.order % tex_params.y, state.order / tex_params.y);
+    ivec2 orderUV = ivec2(state.order % tex_params.y, state.order / tex_params.y);
 
     // read splat id
-    state.id = texelFetch(splatOrder, uv, 0).r;
+    state.id = texelFetch(splatOrder, orderUV, 0).r;
 
     // map id to uv
     state.uv = ivec2(state.id % tex_params.y, state.id / tex_params.y);
 
+    // read transform data
     uvec4 tA = texelFetch(transformA, state.uv, 0);
-    state.tAw = tA.w;
-    state.center = uintBitsToFloat(tA.xyz);
+    tAw = tA.w;
+
     state.corner = vertex_position.xy;
+    state.center = uintBitsToFloat(tA.xyz);
 
     return true;
+}
+
+vec4 readColor(in SplatState state) {
+    return texelFetch(splatColor, state.uv, 0);
+}
+
+// sample covariance vectors
+void getCovariance(in SplatState state, out vec3 covA, out vec3 covB) {
+    vec4 tB = texelFetch(transformB, state.uv, 0);
+    vec2 tC = unpackHalf2x16(tAw);
+    covA = tB.xyz;
+    covB = vec3(tC.x, tC.y, tB.w);
 }
 
 // calculate screen space gaussian vertex position
@@ -64,11 +82,9 @@ bool projectCenter(inout SplatState state) {
 
     mat3 W = transpose(mat3(model_view));
 
-    // read covariance
-    vec4 tB = texelFetch(transformB, state.uv, 0);
-    vec2 tC = unpackHalf2x16(state.tAw);
-    vec3 covA = tB.xyz;
-    vec3 covB = vec3(tC.x, tC.y, tB.w);
+    // get covariance
+    vec3 covA, covB;
+    getCovariance(state, covA, covB);
 
     mat3 Vrk = mat3(
         covA.x, covA.y, covA.z, 
@@ -116,6 +132,21 @@ bool projectCenter(inout SplatState state) {
 // Spherical Harmonics
 
 #if SH_BANDS > 0
+
+#define SH_C1 0.4886025119029199f
+#define SH_C2_0 1.0925484305920792f
+#define SH_C2_1 -1.0925484305920792f
+#define SH_C2_2 0.31539156525252005f
+#define SH_C2_3 -1.0925484305920792f
+#define SH_C2_4 0.5462742152960396f
+#define SH_C3_0 -0.5900435899266435f
+#define SH_C3_1 2.890611442640554f
+#define SH_C3_2 -0.4570457994644658f
+#define SH_C3_3 0.3731763325901154f
+#define SH_C3_4 -0.4570457994644658f
+#define SH_C3_5 1.445305721320277f
+#define SH_C3_6 -0.5900435899266435f
+
     uniform highp usampler2D splatSH_1to3;
 #if SH_BANDS > 1
     uniform highp usampler2D splatSH_4to7;
@@ -124,9 +155,7 @@ bool projectCenter(inout SplatState state) {
     uniform highp usampler2D splatSH_12to15;
 #endif
 #endif
-#endif
 
-#if SH_BANDS > 0
 vec3 unpack111011(uint bits) {
     return vec3(
         float(bits >> 21u) / 2047.0,
@@ -151,27 +180,12 @@ void fetch(in uvec4 t, out vec3 a, out vec3 b, out vec3 c, out vec3 d) {
     d = unpack111011(t.w) * 2.0 - 1.0;
 }
 
-#define SH_C1 0.4886025119029199f
-#define SH_C2_0 1.0925484305920792f
-#define SH_C2_1 -1.0925484305920792f
-#define SH_C2_2 0.31539156525252005f
-#define SH_C2_3 -1.0925484305920792f
-#define SH_C2_4 0.5462742152960396f
-#define SH_C3_0 -0.5900435899266435f
-#define SH_C3_1 2.890611442640554f
-#define SH_C3_2 -0.4570457994644658f
-#define SH_C3_3 0.3731763325901154f
-#define SH_C3_4 -0.4570457994644658f
-#define SH_C3_5 1.445305721320277f
-#define SH_C3_6 -0.5900435899266435f
-
+// see https://github.com/graphdeco-inria/gaussian-splatting/blob/main/utils/sh_utils.py
 vec3 evalSH(in SplatState state) {
     vec3 result = vec3(0.0);
 
     // transform camera-space view vector to model space
     vec3 dir = normalize(state.centerCam * mat3(matrix_view) * mat3(matrix_model));
-
-    // see https://github.com/graphdeco-inria/gaussian-splatting/blob/main/utils/sh_utils.py
 
     // 1st degree
     float x = dir.x;
@@ -222,5 +236,4 @@ vec3 evalSH(in SplatState state) {
     return result;
 }
 #endif
-
 `;

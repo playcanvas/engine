@@ -1,8 +1,10 @@
 export default /* glsl */`
-#include "gsplatCoreVS"
+#if GSPLAT_COMPRESSED_DATA == true
+    #include "gsplatCompressedCoreVS"
+#else
+    #include "gsplatCoreVS"
+#endif
 #include "gsplatOutputPS"
-
-uniform sampler2D splatColor;
 
 varying mediump vec2 surfaceUV;
 varying mediump vec4 color;
@@ -29,7 +31,7 @@ void main(void) {
     }
 
     // read color
-    vec4 clr = texelFetch(splatColor, state.uv, 0);
+    vec4 clr = readColor(state);
 
     // evaluate optional spherical harmonics
     #if SH_BANDS > 0
