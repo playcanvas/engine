@@ -1,24 +1,47 @@
 export default /* glsl */`
+#include "gsplatCommonVS"
 
-struct SplatState {
-    uint order;         // render order
-    uint id;            // splat id
-    ivec2 uv;           // splat uv
+varying mediump vec2 surfaceUV;
+varying mediump vec4 color;
 
-    vec2 cornerUV;      // corner coordinates for this vertex of the gaussian (-2, -2)..(2, 2)
-    vec3 center;        // model space center
-
-    vec3 centerCam;     // center in camera space
-    vec4 centerProj;    // center in screen space
-    vec2 cornerOffset;  // corner offset in screen space
-};
-
-#if GSPLAT_COMPRESSED_DATA == true
-    #include "gsplatCompressedCoreVS"
-#else
-    #include "gsplatCoreVS"
+#ifndef DITHER_NONE
+    varying float id;
 #endif
 
-#include "gsplatOutputPS"
+mediump vec4 discardVec = vec4(0.0, 0.0, 2.0, 1.0);
 
+void main(void) {
+    SplatState state;
+
+    // read gaussian center
+    if (!readCenter(state)) {
+        gl_Position = discardVec;
+        return;
+    }
+
+    // project center to screen space
+    if (!projectCenter(state)) {
+        gl_Position = discardVec;
+        return;
+    }
+
+    // read color
+    vec4 clr = readColor(state);
+
+    // evaluate optional spherical harmonics
+    #if SH_BANDS > 0
+        clr.xyz = max(clr.xyz + evalSH(state), 0.0);
+    #endif
+
+    // calculate clip size based on alpha
+    // float clip = min(1.0, sqrt(-log(1.0 / 255.0 / color.a)) / 2.0);
+
+    color = vec4(prepareOutputFromGamma(clr.xyz), clr.w);
+    surfaceUV = state.cornerUV / 2.0;
+    gl_Position = state.centerProj + vec4(state.cornerOffset, 0.0, 0.0);
+
+    #ifndef DITHER_NONE
+        id = float(state.id);
+    #endif
+}
 `;

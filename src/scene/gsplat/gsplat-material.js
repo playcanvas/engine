@@ -52,8 +52,8 @@ class GSplatShaderGenerator {
         });
 
         const defines = `${shaderPassDefines}\n`;
-        const vs = defines + (options.vertex ?? shaderChunks.gsplatMainVS);
-        const fs = defines + (options.fragment ?? shaderChunks.gsplatMainPS);
+        const vs = defines + (options.vertex ?? shaderChunks.gsplatVS);
+        const fs = defines + (options.fragment ?? shaderChunks.gsplatPS);
         const includes = new Map(Object.entries(shaderChunks));
 
         return ShaderUtils.createDefinition(device, {

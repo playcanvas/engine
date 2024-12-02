@@ -59,7 +59,7 @@ void getCovariance(in SplatState state, out vec3 covA, out vec3 covB) {
 
 // calculate screen space gaussian vertex position
 bool projectCenter(inout SplatState state) {
-    // project center to screen space
+    // project gaussian center to screen space
     mat4 model_view = matrix_view * matrix_model;
     vec4 centerCam = model_view * vec4(state.center, 1.0);
     vec4 centerProj = matrix_projection * centerCam;
