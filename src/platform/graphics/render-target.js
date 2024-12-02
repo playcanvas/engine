@@ -122,8 +122,7 @@ class RenderTarget {
      * ignored. Texture must have {@link PIXELFORMAT_DEPTH} or {@link PIXELFORMAT_DEPTHSTENCIL}
      * format.
      * @param {number} [options.mipLevel] - If set to a number greater than 0, the render target
-     * will render to the specified mip level of the color buffer. Defaults to 0. Currently only
-     * supported on WebGPU.
+     * will render to the specified mip level of the color buffer. Defaults to 0.
      * @param {number} [options.face] - If the colorBuffer parameter is a cubemap, use this option
      * to specify the face of the cubemap to render to. Can be:
      *
