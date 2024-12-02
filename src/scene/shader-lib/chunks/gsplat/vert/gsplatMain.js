@@ -1,10 +1,5 @@
 export default /* glsl */`
-#if GSPLAT_COMPRESSED_DATA == true
-    #include "gsplatCompressedCoreVS"
-#else
-    #include "gsplatCoreVS"
-#endif
-#include "gsplatOutputPS"
+#include "gsplatVS"
 
 varying mediump vec2 surfaceUV;
 varying mediump vec4 color;
@@ -42,7 +37,7 @@ void main(void) {
     // float clip = min(1.0, sqrt(-log(1.0 / 255.0 / color.a)) / 2.0);
 
     color = vec4(prepareOutputFromGamma(clr.xyz), clr.w);
-    surfaceUV = state.corner / 2.0;
+    surfaceUV = state.cornerUV / 2.0;
     gl_Position = state.centerProj + vec4(state.cornerOffset, 0.0, 0.0);
 
     #ifndef DITHER_NONE

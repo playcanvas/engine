@@ -1,4 +1,7 @@
 export default /* glsl */`
+attribute vec3 vertex_position;         // xy: cornerUV, z: render order offset
+attribute uint vertex_id_attrib;        // render order base
+
 uniform mat4 matrix_model;
 uniform mat4 matrix_view;
 uniform mat4 matrix_projection;
@@ -10,22 +13,6 @@ uniform highp usampler2D splatOrder;
 uniform highp usampler2D transformA;
 uniform highp sampler2D transformB;
 uniform mediump sampler2D splatColor;
-
-attribute vec3 vertex_position;         // xy: corner, z: render order offset
-attribute uint vertex_id_attrib;        // render order base
-
-struct SplatState {
-    uint order;         // render order
-    uint id;            // splat id
-    ivec2 uv;           // splat uv
-
-    vec2 corner;        // corner coordinates for this vertex of the gaussian (-2, -2)..(2, 2)
-    vec3 center;        // model space center
-
-    vec3 centerCam;     // center in camera space
-    vec4 centerProj;    // center in screen space
-    vec2 cornerOffset;  // corner offset in screen space
-};
 
 // work values
 uint tAw;
@@ -52,7 +39,7 @@ bool readCenter(out SplatState state) {
     uvec4 tA = texelFetch(transformA, state.uv, 0);
     tAw = tA.w;
 
-    state.corner = vertex_position.xy;
+    state.cornerUV = vertex_position.xy;
     state.center = uintBitsToFloat(tA.xyz);
 
     return true;
@@ -124,7 +111,7 @@ bool projectCenter(inout SplatState state) {
 
     state.centerCam = centerCam.xyz / centerCam.w;
     state.centerProj = centerProj;
-    state.cornerOffset = (state.corner.x * v1 + state.corner.y * v2) / viewport * state.centerProj.w;
+    state.cornerOffset = (state.cornerUV.x * v1 + state.cornerUV.y * v2) / viewport * state.centerProj.w;
 
     return true;
 }
