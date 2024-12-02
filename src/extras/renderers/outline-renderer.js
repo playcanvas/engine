@@ -97,9 +97,11 @@ class OutlineRenderer {
         this.outlineShaderPass = this.outlineCameraEntity.camera.setShaderPass('OutlineShaderPass');
 
         // function called after the camera has rendered the outline objects to the texture
-        this.outlineCameraEntity.camera.onPostRender = () => {
-            this.onPostRender();
-        };
+        app.scene.on('postrender', (cameraComponent) => {
+            if (this.outlineCameraEntity.camera === cameraComponent) {
+                this.onPostRender();
+            }
+        });
 
         // add the camera to the scene
         this.app.root.addChild(this.outlineCameraEntity);
@@ -331,15 +333,12 @@ class OutlineRenderer {
         this.updateRenderTarget(sceneCamera);
 
         // function called before the scene camera renders a layer
-        sceneCameraEntity.camera.onPreRenderLayer = (layer, transparent) => {
-
-            // when specified blend layer is rendered, add outline before its rendering
-            if (transparent === blendLayerTransparent && layer === blendLayer) {
+        const evt = this.app.scene.on('prerender:layer', (cameraComponent, layer, transparent) => {
+            if (sceneCamera === cameraComponent && transparent === blendLayerTransparent && layer === blendLayer) {
                 this.blendOutlines();
-
-                sceneCameraEntity.camera.onPreRenderLayer = null;
+                evt.off();
             }
-        };
+        });
 
         // copy the transform
         this.outlineCameraEntity.setLocalPosition(sceneCameraEntity.getPosition());

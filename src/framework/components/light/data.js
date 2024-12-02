@@ -4,7 +4,7 @@ import {
     LAYERID_WORLD,
     LIGHTSHAPE_PUNCTUAL,
     LIGHTFALLOFF_LINEAR,
-    SHADOW_PCF3,
+    SHADOW_PCF3_32F,
     SHADOWUPDATE_REALTIME
 } from '../../../scene/constants.js';
 
@@ -58,7 +58,7 @@ class LightComponentData {
 
     falloffMode = LIGHTFALLOFF_LINEAR;
 
-    shadowType = SHADOW_PCF3;
+    shadowType = SHADOW_PCF3_32F;
 
     vsmBlurSize = 11;
 

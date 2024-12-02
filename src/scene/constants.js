@@ -1,4 +1,4 @@
-import { PIXELFORMAT_DEPTH, PIXELFORMAT_DEPTH16, PIXELFORMAT_R32F, PIXELFORMAT_RGBA16F, PIXELFORMAT_RGBA32F, PIXELFORMAT_RGBA8 } from '../platform/graphics/constants.js';
+import { PIXELFORMAT_DEPTH, PIXELFORMAT_DEPTH16, PIXELFORMAT_R32F, PIXELFORMAT_RGBA16F, PIXELFORMAT_RGBA32F } from '../platform/graphics/constants.js';
 
 /**
  * Subtract the color of the source fragment from the destination fragment and write the result to
@@ -281,40 +281,38 @@ export const LIGHTFALLOFF_INVERSESQUARED = 1;
  * @type {number}
  * @category Graphics
  */
-export const SHADOW_PCF3 = 0;
-export const SHADOW_DEPTH = 0; // alias for SHADOW_PCF3 for backwards compatibility
+export const SHADOW_PCF3_32F = 0;
 
-/**
- * A shadow sampling technique using a 16-bit exponential variance shadow map packed into
- * {@link PIXELFORMAT_RGBA8} that leverages variance to approximate shadow boundaries, enabling soft
- * shadows. All shadow receivers must also cast shadows for this mode to work correctly.
- *
- * @type {number}
- * @category Graphics
- */
-export const SHADOW_VSM8 = 1;
+/** @deprecated */
+export const SHADOW_PCF3 = 0; // alias for SHADOW_PCF3_32F for backwards compatibility
 
 /**
  * A shadow sampling technique using a 16-bit exponential variance shadow map that leverages
  * variance to approximate shadow boundaries, enabling soft shadows. Only supported when
- * {@link GraphicsDevice#textureHalfFloatRenderable} is true. Falls back to {@link SHADOW_VSM8}, if not
- * supported.
+ * {@link GraphicsDevice#textureHalfFloatRenderable} is true. Falls back to {@link SHADOW_PCF3_32F},
+ * if not supported.
  *
  * @type {number}
  * @category Graphics
  */
-export const SHADOW_VSM16 = 2;
+export const SHADOW_VSM_16F = 2;
+
+/** @deprecated */
+export const SHADOW_VSM16 = 2; // alias for SHADOW_VSM_16F for backwards compatibility
 
 /**
  * A shadow sampling technique using a 32-bit exponential variance shadow map that leverages
  * variance to approximate shadow boundaries, enabling soft shadows. Only supported when
- * {@link GraphicsDevice#textureFloatRenderable} is true. Falls back to {@link SHADOW_VSM16}, if not
- * supported.
+ * {@link GraphicsDevice#textureFloatRenderable} is true. Falls back to {@link SHADOW_VSM_16F}, if
+ * not supported.
  *
  * @type {number}
  * @category Graphics
  */
-export const SHADOW_VSM32 = 3;
+export const SHADOW_VSM_32F = 3;
+
+/** @deprecated */
+export const SHADOW_VSM32 = 3; // alias for SHADOW_VSM_32F for backwards compatibility
 
 /**
  * A shadow sampling technique using 32bit shadow map that averages depth comparisons from a 5x5
@@ -323,7 +321,10 @@ export const SHADOW_VSM32 = 3;
  * @type {number}
  * @category Graphics
  */
-export const SHADOW_PCF5 = 4;
+export const SHADOW_PCF5_32F = 4;
+
+/** @deprecated */
+export const SHADOW_PCF5 = 4;  // alias for SHADOW_PCF5_32F for backwards compatibility
 
 /**
  * A shadow sampling technique using a 32-bit shadow map that performs a single depth comparison for
@@ -332,7 +333,10 @@ export const SHADOW_PCF5 = 4;
  * @type {number}
  * @category Graphics
  */
-export const SHADOW_PCF1 = 5;
+export const SHADOW_PCF1_32F = 5;
+
+/** @deprecated */
+export const SHADOW_PCF1 = 5;  // alias for SHADOW_PCF1_32F for backwards compatibility
 
 /**
  * A shadow sampling technique using a 32-bit shadow map that adjusts filter size based on blocker
@@ -341,7 +345,7 @@ export const SHADOW_PCF1 = 5;
  * @type {number}
  * @category Graphics
  */
-export const SHADOW_PCSS = 6;
+export const SHADOW_PCSS_32F = 6;
 
 /**
  * A shadow sampling technique using a 16-bit shadow map that performs a single depth comparison for
@@ -350,7 +354,7 @@ export const SHADOW_PCSS = 6;
  * @type {number}
  * @category Graphics
  */
-export const SHADOW_PCF1_FLOAT16 = 7;
+export const SHADOW_PCF1_16F = 7;
 
 /**
  * A shadow sampling technique using 16-bit shadow map that averages depth comparisons from a 3x3
@@ -359,7 +363,7 @@ export const SHADOW_PCF1_FLOAT16 = 7;
  * @type {number}
  * @category Graphics
  */
-export const SHADOW_PCF3_FLOAT16 = 8;
+export const SHADOW_PCF3_16F = 8;
 
 /**
  * A shadow sampling technique using 16-bit shadow map that averages depth comparisons from a 3x3
@@ -368,7 +372,7 @@ export const SHADOW_PCF3_FLOAT16 = 8;
  * @type {number}
  * @category Graphics
  */
-export const SHADOW_PCF5_FLOAT16 = 9;
+export const SHADOW_PCF5_16F = 9;
 
 /**
  * Information about shadow types.
@@ -377,16 +381,15 @@ export const SHADOW_PCF5_FLOAT16 = 9;
  * @ignore
  */
 export const shadowTypeInfo = new Map([
-    [SHADOW_PCF1,            { name: 'PCF1', format: PIXELFORMAT_DEPTH, pcf: true }],
-    [SHADOW_PCF3,            { name: 'PCF3', format: PIXELFORMAT_DEPTH, pcf: true }],
-    [SHADOW_PCF5,            { name: 'PCF5', format: PIXELFORMAT_DEPTH, pcf: true }],
-    [SHADOW_PCF1_FLOAT16,    { name: 'PCF1_FLOAT16', format: PIXELFORMAT_DEPTH16, pcf: true }],
-    [SHADOW_PCF3_FLOAT16,    { name: 'PCF3_FLOAT16', format: PIXELFORMAT_DEPTH16, pcf: true }],
-    [SHADOW_PCF5_FLOAT16,    { name: 'PCF5_FLOAT16', format: PIXELFORMAT_DEPTH16, pcf: true }],
-    [SHADOW_VSM8,            { name: 'VSM8', format: PIXELFORMAT_RGBA8, vsm: true }],
-    [SHADOW_VSM16,           { name: 'VSM16', format: PIXELFORMAT_RGBA16F, vsm: true }],
-    [SHADOW_VSM32,           { name: 'VSM32', format: PIXELFORMAT_RGBA32F, vsm: true }],
-    [SHADOW_PCSS,            { name: 'PCSS', format: PIXELFORMAT_R32F }]
+    [SHADOW_PCF1_32F,    { name: 'PCF1_32F', format: PIXELFORMAT_DEPTH, pcf: true }],
+    [SHADOW_PCF3_32F,    { name: 'PCF3_32F', format: PIXELFORMAT_DEPTH, pcf: true }],
+    [SHADOW_PCF5_32F,    { name: 'PCF5_32F', format: PIXELFORMAT_DEPTH, pcf: true }],
+    [SHADOW_PCF1_16F,    { name: 'PCF1_16F', format: PIXELFORMAT_DEPTH16, pcf: true }],
+    [SHADOW_PCF3_16F,    { name: 'PCF3_16F', format: PIXELFORMAT_DEPTH16, pcf: true }],
+    [SHADOW_PCF5_16F,    { name: 'PCF5_16F', format: PIXELFORMAT_DEPTH16, pcf: true }],
+    [SHADOW_VSM_16F,     { name: 'VSM_16F', format: PIXELFORMAT_RGBA16F, vsm: true }],
+    [SHADOW_VSM_32F,     { name: 'VSM_32F', format: PIXELFORMAT_RGBA32F, vsm: true }],
+    [SHADOW_PCSS_32F,    { name: 'PCSS_32F', format: PIXELFORMAT_R32F }]
 ]);
 
 /**
@@ -1051,3 +1054,51 @@ export const DITHER_BLUENOISE = 'bluenoise';
  * @category Graphics
  */
 export const DITHER_IGNNOISE = 'ignnoise';
+
+/**
+ * Name of event fired before the camera renders the scene.
+ *
+ * @type {string}
+ * @ignore
+ */
+export const EVENT_PRERENDER = 'prerender';
+
+/**
+ * Name of event fired after the camera renders the scene.
+ *
+ * @type {string}
+ * @ignore
+ */
+export const EVENT_POSTRENDER = 'postrender';
+
+/**
+ * Name of event fired before a layer is rendered by a camera.
+ *
+ * @type {string}
+ * @ignore
+ */
+export const EVENT_PRERENDER_LAYER = 'prerender:layer';
+
+/**
+ * Name of event fired after a layer is rendered by a camera.
+ *
+ * @type {string}
+ * @ignore
+ */
+export const EVENT_POSTRENDER_LAYER = 'postrender:layer';
+
+/**
+ * Name of event fired before visibility culling is performed for the camera
+ *
+ * @type {string}
+ * @ignore
+ */
+export const EVENT_PRECULL = 'precull';
+
+/**
+ * Name of event after before visibility culling is performed for the camera
+ *
+ * @type {string}
+ * @ignore
+ */
+export const EVENT_POSTCULL = 'postcull';

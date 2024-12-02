@@ -547,16 +547,15 @@ class LightComponent extends Component {
     /**
      * Sets the type of shadows being rendered by this light. Can be:
      *
-     * - {@link SHADOW_PCF1}
-     * - {@link SHADOW_PCF3}
-     * - {@link SHADOW_PCF5}
-     * - {@link SHADOW_PCF1_FLOAT16}
-     * - {@link SHADOW_PCF3_FLOAT16}
-     * - {@link SHADOW_PCF5_FLOAT16}
-     * - {@link SHADOW_VSM8}
-     * - {@link SHADOW_VSM16}
-     * - {@link SHADOW_VSM32}
-     * - {@link SHADOW_PCSS}
+     * - {@link SHADOW_PCF1_32F}
+     * - {@link SHADOW_PCF3_32F}
+     * - {@link SHADOW_PCF5_32F}
+     * - {@link SHADOW_PCF1_16F}
+     * - {@link SHADOW_PCF3_16F}
+     * - {@link SHADOW_PCF5_16F}
+     * - {@link SHADOW_VSM_16F}
+     * - {@link SHADOW_VSM_32F}
+     * - {@link SHADOW_PCSS_32F}
      *
      * @type {number}
      */

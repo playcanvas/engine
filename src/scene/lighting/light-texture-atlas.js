@@ -5,7 +5,7 @@ import { ADDRESS_CLAMP_TO_EDGE, FILTER_NEAREST, PIXELFORMAT_RGBA8 } from '../../
 import { RenderTarget } from '../../platform/graphics/render-target.js';
 import { Texture } from '../../platform/graphics/texture.js';
 
-import { LIGHTTYPE_OMNI, LIGHTTYPE_SPOT, SHADOW_PCF3, shadowTypeInfo } from '../constants.js';
+import { LIGHTTYPE_OMNI, LIGHTTYPE_SPOT, SHADOW_PCF3_32F, shadowTypeInfo } from '../constants.js';
 import { ShadowMap } from '../renderer/shadow-map.js';
 
 const _tempArray = [];
@@ -98,7 +98,7 @@ class LightTextureAtlas {
         this.cookieRenderTarget = null;
     }
 
-    allocateShadowAtlas(resolution, shadowType = SHADOW_PCF3) {
+    allocateShadowAtlas(resolution, shadowType = SHADOW_PCF3_32F) {
 
         const existingFormat = this.shadowAtlas?.texture.format;
         const requiredFormat = shadowTypeInfo.get(shadowType).format;

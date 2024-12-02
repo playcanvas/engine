@@ -126,7 +126,7 @@ assetListLoader.load(() => {
         range: 200,
         castShadows: true,
         shadowResolution: 2048,
-        shadowType: pc.SHADOW_VSM16,
+        shadowType: pc.SHADOW_VSM_16F,
         vsmBlurSize: 20,
         shadowBias: 0.1,
         normalOffsetBias: 0.1

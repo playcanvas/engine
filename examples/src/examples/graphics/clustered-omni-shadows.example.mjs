@@ -70,7 +70,7 @@ assetListLoader.load(() => {
 
     data.set('settings', {
         shadowAtlasResolution: 1300, // shadow map resolution storing all shadows
-        shadowType: pc.SHADOW_PCF3, // shadow filter type
+        shadowType: pc.SHADOW_PCF3_32F, // shadow filter type
         shadowsEnabled: true,
         cookiesEnabled: true
     });

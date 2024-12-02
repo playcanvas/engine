@@ -1,6 +1,6 @@
 import { math } from '../../core/math/math.js';
 import { Vec3 } from '../../core/math/vec3.js';
-import { SHADOW_PCF3 } from '../constants.js';
+import { SHADOW_PCF3_32F } from '../constants.js';
 
 /**
  * Lighting parameters, allow configuration of the global lighting parameters. For details see
@@ -22,7 +22,7 @@ class LightingParams {
     _shadowsEnabled = true;
 
     /** @private */
-    _shadowType = SHADOW_PCF3;
+    _shadowType = SHADOW_PCF3_32F;
 
     /** @private */
     _shadowAtlasResolution = 2048;
@@ -154,14 +154,14 @@ class LightingParams {
     /**
      * Sets the type of shadow filtering used by all shadows. Can be:
      *
-     * - {@link SHADOW_PCF1}
-     * - {@link SHADOW_PCF3}
-     * - {@link SHADOW_PCF5}
-     * - {@link SHADOW_PCF1_FLOAT16}
-     * - {@link SHADOW_PCF3_FLOAT16}
-     * - {@link SHADOW_PCF5_FLOAT16}
+     * - {@link SHADOW_PCF1_32F}
+     * - {@link SHADOW_PCF3_32F}
+     * - {@link SHADOW_PCF5_32F}
+     * - {@link SHADOW_PCF1_16F}
+     * - {@link SHADOW_PCF3_16F}
+     * - {@link SHADOW_PCF5_16F}
      *
-     * Defaults to {@link SHADOW_PCF3}
+     * Defaults to {@link SHADOW_PCF3_32F}
      *
      * @type {number}
      */

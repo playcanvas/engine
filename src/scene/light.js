@@ -8,12 +8,11 @@ import {
     BLUR_GAUSSIAN,
     LIGHTTYPE_DIRECTIONAL, LIGHTTYPE_OMNI, LIGHTTYPE_SPOT,
     MASK_BAKE, MASK_AFFECT_DYNAMIC,
-    SHADOW_PCF1, SHADOW_PCF3, SHADOW_VSM8, SHADOW_VSM16, SHADOW_VSM32, SHADOW_PCSS,
+    SHADOW_PCF1_32F, SHADOW_PCF3_32F, SHADOW_VSM_16F, SHADOW_VSM_32F, SHADOW_PCSS_32F,
     SHADOWUPDATE_NONE, SHADOWUPDATE_REALTIME, SHADOWUPDATE_THISFRAME,
     LIGHTSHAPE_PUNCTUAL, LIGHTFALLOFF_LINEAR,
     shadowTypeInfo,
-    SHADOW_PCF1_FLOAT16,
-    SHADOW_PCF3_FLOAT16
+    SHADOW_PCF1_16F, SHADOW_PCF3_16F
 } from './constants.js';
 import { ShadowRenderer } from './renderer/shadow-renderer.js';
 import { DepthState } from '../platform/graphics/depth-state.js';
@@ -165,7 +164,7 @@ class Light {
         this.attenuationStart = 10;
         this.attenuationEnd = 10;
         this._falloffMode = LIGHTFALLOFF_LINEAR;
-        this._shadowType = SHADOW_PCF3;
+        this._shadowType = SHADOW_PCF3_32F;
         this._vsmBlurSize = 11;
         this.vsmBlurMode = BLUR_GAUSSIAN;
         this.vsmBias = 0.01 * 0.25;
@@ -389,19 +388,19 @@ class Light {
         const device = this.device;
 
         // omni light supports PCF1, PCF3 and PCSS only
-        if (this._type === LIGHTTYPE_OMNI && value !== SHADOW_PCF1 && value !== SHADOW_PCF3 &&
-            value !== SHADOW_PCF1_FLOAT16 && value !== SHADOW_PCF3_FLOAT16 && value !== SHADOW_PCSS) {
-            value = SHADOW_PCF3;
+        if (this._type === LIGHTTYPE_OMNI && value !== SHADOW_PCF1_32F && value !== SHADOW_PCF3_32F &&
+            value !== SHADOW_PCF1_16F && value !== SHADOW_PCF3_16F && value !== SHADOW_PCSS_32F) {
+            value = SHADOW_PCF3_32F;
         }
 
         // fallback from vsm32 to vsm16
-        if (value === SHADOW_VSM32 && (!device.textureFloatRenderable || !device.textureFloatFilterable)) {
-            value = SHADOW_VSM16;
+        if (value === SHADOW_VSM_32F && (!device.textureFloatRenderable || !device.textureFloatFilterable)) {
+            value = SHADOW_VSM_16F;
         }
 
-        // fallback from vsm16 to vsm8
-        if (value === SHADOW_VSM16 && !device.textureHalfFloatRenderable) {
-            value = SHADOW_VSM8;
+        // fallback from vsm16 to pcf3
+        if (value === SHADOW_VSM_16F && !device.textureHalfFloatRenderable) {
+            value = SHADOW_PCF3_32F;
         }
 
         const shadowInfo = shadowTypeInfo.get(value);

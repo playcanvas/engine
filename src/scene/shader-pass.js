@@ -34,7 +34,7 @@ class ShaderPassInfo {
      * @param {boolean} [options.isForward] - Whether the pass is forward.
      * @param {boolean} [options.isShadow] - Whether the pass is shadow.
      * @param {boolean} [options.lightType] - Type of light, for example `pc.LIGHTTYPE_DIRECTIONAL`.
-     * @param {boolean} [options.shadowType] - Type of shadow, for example `pc.SHADOW_PCF3`.
+     * @param {boolean} [options.shadowType] - Type of shadow, for example `pc.SHADOW_PCF3_32F`.
      */
     constructor(name, index, options = {}) {
 
