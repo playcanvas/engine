@@ -319,13 +319,9 @@ class CameraControls extends Script {
         const position = new Vec3();
         const rotation = new Quat();
         this.app.xr.on('start', () => {
-            // Store the position and rotation of the camera
+            // Store the camera's position and rotation
             position.copy(this.entity.getPosition());
             rotation.copy(this.entity.getRotation());
-
-            // Set the camera's position to the ground
-            const pos = this.entity.getPosition();
-            this.entity.setPosition(pos.x, 0, pos.z);
         });
         this.app.xr.on('end', () => {
             // Restore the camera's position and rotation
