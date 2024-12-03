@@ -951,7 +951,7 @@ class CameraControls extends Script {
      * @param {number} dt - The delta time.
      */
     update(dt) {
-        if (this.app.xr.active) {
+        if (this.app.xr?.active) {
             return;
         }
 
