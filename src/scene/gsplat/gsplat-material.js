@@ -29,8 +29,8 @@ const defaultChunks = new Map(Object.entries(shaderChunks));
 
 class GSplatShaderGenerator {
     generateKey(options) {
-        const { pass, gamma, toneMapping, vertex, fragment, dither, defines } = options;
-        return `splat-${pass}-${gamma}-${toneMapping}-${hashCode(vertex)}-${hashCode(fragment)}-${dither}-${ShaderGenerator.definesHash(defines)}`;
+        const { pass, gamma, toneMapping, vertex, fragment, dither, defines, chunks } = options;
+        return `splat-${pass}-${gamma}-${toneMapping}-${hashCode(vertex)}-${hashCode(fragment)}-${dither}-${ShaderGenerator.definesHash(defines)}-${chunks && Object.keys(chunks).sort().join(':')}`;
     }
 
     createShaderDefinition(device, options) {
