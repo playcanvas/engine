@@ -4,13 +4,17 @@ struct SplatState {
     uint order;         // render order
     uint id;            // splat id
     ivec2 uv;           // splat uv
+    vec2 cornerUV;      // corner coordinates for this vertex of the gaussian (-1, -1)..(1, 1)
+    vec3 center;        // model space center  
+};
 
-    vec2 cornerUV;      // corner coordinates for this vertex of the gaussian (-2, -2)..(2, 2)
-    vec3 center;        // model space center
-
+struct ProjectedState {
     vec3 centerCam;     // center in camera space
-    vec4 centerProj;    // center in screen space
-    vec2 cornerOffset;  // corner offset in screen space
+    vec4 centerProj;    // center in clip space
+
+    vec2 cornerOffset;  // corner offset in clip space
+    vec4 cornerProj;    // corner position in clip space
+    vec2 cornerUV;      // corner uv
 };
 
 #if SH_BANDS > 0
@@ -40,7 +44,7 @@ uniform mat4 matrix_projection;
 uniform vec2 viewport;                  // viewport dimensions
 
 // calculate 2d covariance vectors
-bool projectCenter(inout SplatState state) {
+bool projectCenter(in SplatState state, out ProjectedState projState) {
     // project center to screen space
     mat4 model_view = matrix_view * matrix_model;
     vec4 centerCam = model_view * vec4(state.center, 1.0);
@@ -82,16 +86,16 @@ bool projectCenter(inout SplatState state) {
     float lambda1 = mid + radius;
     float lambda2 = max(mid - radius, 0.1);
 
-    float l1 = min(sqrt(2.0 * lambda1), 1024.0);
-    float l2 = min(sqrt(2.0 * lambda2), 1024.0);
+    float l1 = 2.0 * min(sqrt(2.0 * lambda1), 1024.0);
+    float l2 = 2.0 * min(sqrt(2.0 * lambda2), 1024.0);
 
     // early-out gaussians smaller than 2 pixels
-    if (l1 < 2.0 && l2 < 2.0) {
+    if (l1 < 4.0 && l2 < 4.0) {
         return false;
     }
 
     // perform clipping test against x/y
-    if (any(greaterThan(abs(centerProj.xy) - (l1 + l2) / viewport * 2.0 * centerProj.w, centerProj.ww))) {
+    if (any(greaterThan(abs(centerProj.xy) - (l1 + l2) / viewport * centerProj.w, centerProj.ww))) {
         return false;
     }
 
@@ -99,11 +103,21 @@ bool projectCenter(inout SplatState state) {
     vec2 v1 = l1 * diagonalVector;
     vec2 v2 = l2 * vec2(diagonalVector.y, -diagonalVector.x);
 
-    state.centerCam = centerCam.xyz / centerCam.w;
-    state.centerProj = centerProj;
-    state.cornerOffset = (state.cornerUV.x * v1 + state.cornerUV.y * v2) * state.centerProj.w;
+    projState.centerCam = centerCam.xyz;
+    projState.centerProj = centerProj;
+    projState.cornerOffset = (state.cornerUV.x * v1 + state.cornerUV.y * v2) * centerProj.w;
+    projState.cornerProj = centerProj + vec4(projState.cornerOffset, 0.0, 0.0);
+    projState.cornerUV = state.cornerUV;
 
     return true;
+}
+
+// modify the projected gaussian so it excludes regions with alpha
+// less than 1/255
+void applyClipping(inout ProjectedState projState, float alpha) {
+    float clip = min(1.0, sqrt(-log(1.0 / 255.0 / alpha)) / 2.0);
+    projState.cornerProj.xy -= projState.cornerOffset * (1.0 - clip);
+    projState.cornerUV *= clip;
 }
 
 // spherical Harmonics
@@ -131,14 +145,14 @@ bool projectCenter(inout SplatState state) {
 #endif
 
 // see https://github.com/graphdeco-inria/gaussian-splatting/blob/main/utils/sh_utils.py
-vec3 evalSH(in SplatState state) {
+vec3 evalSH(in SplatState state, in ProjectedState projState) {
 
     // read sh coefficients
     vec3 sh[SH_COEFFS];
     readSHData(state, sh);
 
     // calculate the model-space view direction
-    vec3 dir = normalize(state.centerCam * mat3(matrix_view) * mat3(matrix_model));
+    vec3 dir = normalize(projState.centerCam * mat3(matrix_view) * mat3(matrix_model));
 
     float x = dir.x;
     float y = dir.y;

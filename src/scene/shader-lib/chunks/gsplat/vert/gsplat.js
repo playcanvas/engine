@@ -11,16 +11,16 @@ varying mediump vec4 gaussianColor;
 mediump vec4 discardVec = vec4(0.0, 0.0, 2.0, 1.0);
 
 void main(void) {
+    // read gaussian details
     SplatState state;
-
-    // read gaussian center
     if (!readCenter(state)) {
         gl_Position = discardVec;
         return;
     }
 
     // project center to screen space
-    if (!projectCenter(state)) {
+    ProjectedState projState;
+    if (!projectCenter(state, projState)) {
         gl_Position = discardVec;
         return;
     }
@@ -30,14 +30,14 @@ void main(void) {
 
     // evaluate spherical harmonics
     #if SH_BANDS > 0
-        clr.xyz = max(clr.xyz + evalSH(state), 0.0);
+        clr.xyz = max(vec3(0.0), clr.xyz + evalSH(state, projState));
     #endif
 
-    // calculate the clip amount to exclude the semitransparent outer region
-    float clip = min(1.0, sqrt(-log(1.0 / 255.0 / clr.w)) / 2.0);
+    applyClipping(projState, clr.w);
 
-    gl_Position = state.centerProj + vec4(state.cornerOffset * clip, 0.0, 0.0);
-    gaussianUV = state.cornerUV / 2.0 * clip;
+    // write output
+    gl_Position = projState.cornerProj;
+    gaussianUV = projState.cornerUV;
     gaussianColor = vec4(prepareOutputFromGamma(clr.xyz), clr.w);
 
     #ifndef DITHER_NONE
