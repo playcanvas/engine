@@ -1,5 +1,5 @@
 /* eslint-disable-next-line import/no-unresolved */
-import { math, Mat4, Plane, Ray, Script, Vec2, Vec3 } from 'playcanvas';
+import { Vec2, Vec3, Ray, Plane, Mat4, Quat, Script, math } from 'playcanvas';
 
 /** @import { CameraComponent } from 'playcanvas' */
 
