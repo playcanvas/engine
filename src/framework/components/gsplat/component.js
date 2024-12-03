@@ -53,6 +53,24 @@ class GSplatComponent extends Component {
     _materialOptions = null;
 
     /**
+     * @type {import('../../../core/event-handle.js').EventHandle|null}
+     * @private
+     */
+    _evtLayersChanged = null;
+
+    /**
+     * @type {import('../../../core/event-handle.js').EventHandle|null}
+     * @private
+     */
+    _evtLayerAdded = null;
+
+    /**
+     * @type {import('../../../core/event-handle.js').EventHandle|null}
+     * @private
+     */
+    _evtLayerRemoved = null;
+
+    /**
      * Create a new GSplatComponent.
      *
      * @param {GSplatComponentSystem} system - The ComponentSystem that created this Component.
@@ -324,10 +342,13 @@ class GSplatComponent extends Component {
 
     onEnable() {
         const scene = this.system.app.scene;
-        scene.on('set:layers', this.onLayersChanged, this);
-        if (scene.layers) {
-            scene.layers.on('add', this.onLayerAdded, this);
-            scene.layers.on('remove', this.onLayerRemoved, this);
+        const layers = scene.layers;
+
+        this._evtLayersChanged = scene.on('set:layers', this.onLayersChanged, this);
+
+        if (layers) {
+            this._evtLayerAdded = layers.on('add', this.onLayerAdded, this);
+            this._evtLayerRemoved = layers.on('remove', this.onLayerRemoved, this);
         }
 
         if (this._instance) {
@@ -339,10 +360,16 @@ class GSplatComponent extends Component {
 
     onDisable() {
         const scene = this.system.app.scene;
-        scene.off('set:layers', this.onLayersChanged, this);
-        if (scene.layers) {
-            scene.layers.off('add', this.onLayerAdded, this);
-            scene.layers.off('remove', this.onLayerRemoved, this);
+        const layers = scene.layers;
+
+        this._evtLayersChanged?.off();
+        this._evtLayersChanged = null;
+
+        if (layers) {
+            this._evtLayerAdded?.off();
+            this._evtLayerAdded = null;
+            this._evtLayerRemoved?.off();
+            this._evtLayerRemoved = null;
         }
 
         this.removeFromLayers();

@@ -90,18 +90,6 @@ class RenderTarget {
      */
     _mipmaps;
 
-    /**
-     * @type {number}
-     * @private
-     */
-    _width;
-
-    /**
-     * @type {number}
-     * @private
-     */
-    _height;
-
     /** @type {boolean} */
     flipY;
 
@@ -122,8 +110,7 @@ class RenderTarget {
      * ignored. Texture must have {@link PIXELFORMAT_DEPTH} or {@link PIXELFORMAT_DEPTHSTENCIL}
      * format.
      * @param {number} [options.mipLevel] - If set to a number greater than 0, the render target
-     * will render to the specified mip level of the color buffer. Defaults to 0. Currently only
-     * supported on WebGPU.
+     * will render to the specified mip level of the color buffer. Defaults to 0.
      * @param {number} [options.face] - If the colorBuffer parameter is a cubemap, use this option
      * to specify the face of the cubemap to render to. Can be:
      *
@@ -253,7 +240,6 @@ class RenderTarget {
         // if we render to a specific mipmap (even 0), do not generate mipmaps
         this._mipmaps = options.mipLevel === undefined;
 
-        this.updateDimensions();
         this.validateMrt();
 
         // device specific implementation
@@ -349,8 +335,6 @@ class RenderTarget {
             // initialize again
             this.validateMrt();
             this.impl = device.createRenderTargetImpl(this);
-
-            this.updateDimensions();
         }
     }
 
@@ -549,7 +533,11 @@ class RenderTarget {
      * @type {number}
      */
     get width() {
-        return this._width ?? this._device.width;
+        let width = this._colorBuffer?.width || this._depthBuffer?.width || this._device.width;
+        if (this._mipLevel > 0) {
+            width = TextureUtils.calcLevelDimension(width, this._mipLevel);
+        }
+        return width;
     }
 
     /**
@@ -558,17 +546,11 @@ class RenderTarget {
      * @type {number}
      */
     get height() {
-        return this._height ?? this._device.height;
-    }
-
-    updateDimensions() {
-        this._width = this._colorBuffer?.width ?? this._depthBuffer?.width;
-        this._height = this._colorBuffer?.height ?? this._depthBuffer?.height;
-
-        if (this._mipLevel > 0 && this._width && this._height) {
-            this._width = TextureUtils.calcLevelDimension(this._width, this._mipLevel);
-            this._height = TextureUtils.calcLevelDimension(this._height, this._mipLevel);
+        let height = this._colorBuffer?.height || this._depthBuffer?.height || this._device.height;
+        if (this._mipLevel > 0) {
+            height = TextureUtils.calcLevelDimension(height, this._mipLevel);
         }
+        return height;
     }
 
     /**
