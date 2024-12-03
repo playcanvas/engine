@@ -24,9 +24,9 @@ struct SplatState {
 #endif
 
 #if GSPLAT_COMPRESSED_DATA == true
-    #include "gsplatCompressedCoreVS"
+    #include "gsplatCompressedDataVS"
 #else
-    #include "gsplatCoreVS"
+    #include "gsplatDataVS"
 #endif
 
 #include "gsplatOutputPS"
@@ -78,18 +78,27 @@ bool projectCenter(inout SplatState state) {
     float radius = length(vec2((diagonal1 - diagonal2) / 2.0, offDiagonal));
     float lambda1 = mid + radius;
     float lambda2 = max(mid - radius, 0.1);
-    vec2 diagonalVector = normalize(vec2(offDiagonal, lambda1 - diagonal1));
 
-    vec2 v1 = min(sqrt(2.0 * lambda1), 1024.0) * diagonalVector;
-    vec2 v2 = min(sqrt(2.0 * lambda2), 1024.0) * vec2(diagonalVector.y, -diagonalVector.x);
+    float l1 = min(sqrt(2.0 * lambda1), 1024.0);
+    float l2 = min(sqrt(2.0 * lambda2), 1024.0);
 
-    if (dot(v1, v1) < 4.0 && dot(v2, v2) < 4.0) {
+    // early-out gaussians smaller than 2 pixels
+    if (l1 < 2.0 && l2 < 2.0) {
         return false;
     }
 
+    // perform clipping test against x/y
+    if (any(greaterThan(abs(centerProj.xy) - (l1 + l2) / viewport * 2.0 * centerProj.w, centerProj.ww))) {
+        return false;
+    }
+
+    vec2 diagonalVector = normalize(vec2(offDiagonal, lambda1 - diagonal1)) / viewport;
+    vec2 v1 = l1 * diagonalVector;
+    vec2 v2 = l2 * vec2(diagonalVector.y, -diagonalVector.x);
+
     state.centerCam = centerCam.xyz / centerCam.w;
     state.centerProj = centerProj;
-    state.cornerOffset = (state.cornerUV.x * v1 + state.cornerUV.y * v2) / viewport * state.centerProj.w;
+    state.cornerOffset = (state.cornerUV.x * v1 + state.cornerUV.y * v2) * state.centerProj.w;
 
     return true;
 }

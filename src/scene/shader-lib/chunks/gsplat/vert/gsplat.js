@@ -1,8 +1,8 @@
 export default /* glsl */`
 #include "gsplatCommonVS"
 
-varying mediump vec2 surfaceUV;
-varying mediump vec4 color;
+varying mediump vec2 gaussianUV;
+varying mediump vec4 gaussianColor;
 
 #ifndef DITHER_NONE
     varying float id;
@@ -33,12 +33,12 @@ void main(void) {
         clr.xyz = max(clr.xyz + evalSH(state), 0.0);
     #endif
 
-    // calculate clip size based on alpha
-    // float clip = min(1.0, sqrt(-log(1.0 / 255.0 / color.a)) / 2.0);
+    // calculate the clip amount to exclude the semitransparent outer region
+    float clip = min(1.0, sqrt(-log(1.0 / 255.0 / clr.w)) / 2.0);
 
-    color = vec4(prepareOutputFromGamma(clr.xyz), clr.w);
-    surfaceUV = state.cornerUV / 2.0;
-    gl_Position = state.centerProj + vec4(state.cornerOffset, 0.0, 0.0);
+    gl_Position = state.centerProj + vec4(state.cornerOffset * clip, 0.0, 0.0);
+    gaussianUV = state.cornerUV / 2.0 * clip;
+    gaussianColor = vec4(prepareOutputFromGamma(clr.xyz), clr.w);
 
     #ifndef DITHER_NONE
         id = float(state.id);
