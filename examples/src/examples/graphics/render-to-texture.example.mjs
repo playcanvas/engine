@@ -144,8 +144,6 @@ assetListLoader.load(() => {
         height: 256,
         format: pc.PIXELFORMAT_SRGBA8,
         mipmaps: true,
-        minFilter: pc.FILTER_LINEAR,
-        magFilter: pc.FILTER_LINEAR,
         addressU: pc.ADDRESS_CLAMP_TO_EDGE,
         addressV: pc.ADDRESS_CLAMP_TO_EDGE
     });
