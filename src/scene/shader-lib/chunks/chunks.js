@@ -58,7 +58,7 @@ import gles3VS from '../../../platform/graphics/shader-chunks/vert/gles3.js';
 import glossPS from './standard/frag/gloss.js';
 import gsplatPS from './gsplat/frag/gsplat.js';
 import gsplatVS from './gsplat/vert/gsplat.js';
-import gsplatCommonVS from './gsplat/vert/gsplatCommon.js'
+import gsplatCommonVS from './gsplat/vert/gsplatCommon.js';
 import gsplatCompressedDataVS from './gsplat/vert/gsplatCompressedData.js';
 import gsplatCompressedSHVS from './gsplat/vert/gsplatCompressedSH.js';
 import gsplatColorVS from './gsplat/vert/gsplatColor.js';
