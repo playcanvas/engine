@@ -104,10 +104,10 @@ class GSplatInstance {
         const meshIndices = new Uint32Array(6 * splatInstanceSize);
         for (let i = 0; i < splatInstanceSize; ++i) {
             meshPositions.set([
-                -2, -2, i,
-                2, -2, i,
-                2, 2, i,
-                -2, 2, i
+                -1, -1, i,
+                1, -1, i,
+                1, 1, i,
+                -1, 1, i
             ], i * 12);
 
             const b = i * 4;

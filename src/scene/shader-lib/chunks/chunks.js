@@ -56,6 +56,15 @@ import gamma2_2PS from './common/frag/gamma2_2.js';
 import gles3PS from '../../../platform/graphics/shader-chunks/frag/gles3.js';
 import gles3VS from '../../../platform/graphics/shader-chunks/vert/gles3.js';
 import glossPS from './standard/frag/gloss.js';
+import gsplatColorVS from './gsplat/vert/gsplatColor.js';
+import gsplatCommonVS from './gsplat/vert/gsplatCommon.js';
+import gsplatCompressedDataVS from './gsplat/vert/gsplatCompressedData.js';
+import gsplatCompressedSHVS from './gsplat/vert/gsplatCompressedSH.js';
+import gsplatDataVS from './gsplat/vert/gsplatData.js';
+import gsplatOutputPS from './gsplat/gsplatOutput.js';
+import gsplatPS from './gsplat/frag/gsplat.js';
+import gsplatSHVS from './gsplat/vert/gsplatSH.js';
+import gsplatVS from './gsplat/vert/gsplat.js';
 import iridescenceDiffractionPS from './lit/frag/iridescenceDiffraction.js';
 import iridescencePS from './standard/frag/iridescence.js';
 import iridescenceThicknessPS from './standard/frag/iridescenceThickness.js';
@@ -256,6 +265,15 @@ const shaderChunks = {
     gles3PS,
     gles3VS,
     glossPS,
+    gsplatColorVS,
+    gsplatCommonVS,
+    gsplatCompressedDataVS,
+    gsplatCompressedSHVS,
+    gsplatDataVS,
+    gsplatOutputPS,
+    gsplatPS,
+    gsplatSHVS,
+    gsplatVS,
     iridescenceDiffractionPS,
     iridescencePS,
     iridescenceThicknessPS,

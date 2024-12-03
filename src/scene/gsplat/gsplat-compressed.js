@@ -4,7 +4,7 @@ import { BoundingBox } from '../../core/shape/bounding-box.js';
 import {
     ADDRESS_CLAMP_TO_EDGE, FILTER_NEAREST, PIXELFORMAT_RGBA32F, PIXELFORMAT_RGBA32U
 } from '../../platform/graphics/constants.js';
-import { createGSplatCompressedMaterial } from './gsplat-compressed-material.js';
+import { createGSplatMaterial } from './gsplat-material.js';
 
 /**
  * @import { GSplatCompressedData } from './gsplat-compressed-data.js'
@@ -143,15 +143,18 @@ class GSplatCompressed {
      * @returns {Material} material - The material to set up for the splat rendering.
      */
     createMaterial(options) {
-        const result = createGSplatCompressedMaterial(options);
+        const result = createGSplatMaterial(options);
+        result.setDefine('GSPLAT_COMPRESSED_DATA', true);
         result.setParameter('packedTexture', this.packedTexture);
         result.setParameter('chunkTexture', this.chunkTexture);
-        result.setParameter('tex_params', new Float32Array([this.numSplats, this.packedTexture.width, this.chunkTexture.width / 5, 0]));
+        result.setParameter('tex_params', new Float32Array([this.numSplats, this.packedTexture.width, this.chunkTexture.width / 5]));
         if (this.shTexture0) {
-            result.setDefine('USE_SH', true);
+            result.setDefine('SH_BANDS', 3);
             result.setParameter('shTexture0', this.shTexture0);
             result.setParameter('shTexture1', this.shTexture1);
             result.setParameter('shTexture2', this.shTexture2);
+        } else {
+            result.setDefine('SH_BANDS', 0);
         }
         return result;
     }
