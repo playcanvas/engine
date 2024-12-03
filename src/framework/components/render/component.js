@@ -818,14 +818,10 @@ class RenderComponent extends Component {
 
         this._cloneSkinInstances();
 
-        this._evtLayersChanged?.off();
         this._evtLayersChanged = scene.on('set:layers', this.onLayersChanged, this);
 
         if (layers) {
-            this._evtLayerAdded?.off();
             this._evtLayerAdded = layers.on('add', this.onLayerAdded, this);
-
-            this._evtLayerRemoved?.off();
             this._evtLayerRemoved = layers.on('remove', this.onLayerRemoved, this);
         }
 

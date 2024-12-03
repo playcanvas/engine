@@ -677,14 +677,10 @@ class SpriteComponent extends Component {
         const scene = app.scene;
         const layers = scene.layers;
 
-        this._evtLayersChanged?.off();
         this._evtLayersChanged = scene.on('set:layers', this._onLayersChanged, this);
 
         if (layers) {
-            this._evtLayerAdded?.off();
             this._evtLayerAdded = layers.on('add', this._onLayerAdded, this);
-
-            this._evtLayerRemoved?.off();
             this._evtLayerRemoved = layers.on('remove', this._onLayerRemoved, this);
         }
 

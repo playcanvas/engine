@@ -797,7 +797,6 @@ class ImageElement {
 
     // Hook up event handlers on sprite asset
     _bindSprite(sprite) {
-        this._evtSetMeshes?.off();
         this._evtSetMeshes = sprite.on('set:meshes', this._onSpriteMeshesChange, this);
         sprite.on('set:pixelsPerUnit', this._onSpritePpuChange, this);
         sprite.on('set:atlas', this._onAtlasTextureChange, this);
