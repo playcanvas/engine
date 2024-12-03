@@ -98,6 +98,24 @@ class CameraComponent extends Component {
     _camera = new Camera();
 
     /**
+     * @type {import('../../../core/event-handle.js').EventHandle|null}
+     * @private
+     */
+    _evtLayersChanged = null;
+
+    /**
+     * @type {import('../../../core/event-handle.js').EventHandle|null}
+     * @private
+     */
+    _evtLayerAdded = null;
+
+    /**
+     * @type {import('../../../core/event-handle.js').EventHandle|null}
+     * @private
+     */
+    _evtLayerRemoved = null;
+
+    /**
      * Create a new CameraComponent instance.
      *
      * @param {CameraComponentSystem} system - The ComponentSystem that created this Component.
@@ -1099,16 +1117,20 @@ class CameraComponent extends Component {
     }
 
     onEnable() {
-        const system = this.system;
-        const scene = system.app.scene;
+        const scene = this.system.app.scene;
         const layers = scene.layers;
 
-        system.addCamera(this);
+        this.system.addCamera(this);
 
-        scene.on('set:layers', this.onLayersChanged, this);
+        this._evtLayersChanged?.off();
+        this._evtLayersChanged = scene.on('set:layers', this.onLayersChanged, this);
+
         if (layers) {
-            layers.on('add', this.onLayerAdded, this);
-            layers.on('remove', this.onLayerRemoved, this);
+            this._evtLayerAdded?.off();
+            this._evtLayerAdded = layers.on('add', this.onLayerAdded, this);
+
+            this._evtLayerRemoved?.off();
+            this._evtLayerRemoved = layers.on('remove', this.onLayerRemoved, this);
         }
 
         if (this.enabled && this.entity.enabled) {
@@ -1119,21 +1141,24 @@ class CameraComponent extends Component {
     }
 
     onDisable() {
-        const system = this.system;
-        const scene = system.app.scene;
+        const scene = this.system.app.scene;
         const layers = scene.layers;
 
         this.postEffects.disable();
 
         this.removeCameraFromLayers();
 
-        scene.off('set:layers', this.onLayersChanged, this);
+        this._evtLayersChanged?.off();
+        this._evtLayersChanged = null;
+
         if (layers) {
-            layers.off('add', this.onLayerAdded, this);
-            layers.off('remove', this.onLayerRemoved, this);
+            this._evtLayerAdded?.off();
+            this._evtLayerAdded = null;
+            this._evtLayerRemoved?.off();
+            this._evtLayerRemoved = null;
         }
 
-        system.removeCamera(this);
+        this.system.removeCamera(this);
     }
 
     onRemove() {

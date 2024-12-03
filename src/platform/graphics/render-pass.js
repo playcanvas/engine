@@ -2,7 +2,7 @@ import { Debug } from '../../core/debug.js';
 import { Tracing } from '../../core/tracing.js';
 import { Color } from '../../core/math/color.js';
 import { TRACEID_RENDER_PASS, TRACEID_RENDER_PASS_DETAIL } from '../../core/constants.js';
-import { pixelFormatInfo } from './constants.js';
+import { isIntegerPixelFormat, pixelFormatInfo } from './constants.js';
 
 /**
  * @import { GraphicsDevice } from '../graphics/graphics-device.js'
@@ -315,8 +315,10 @@ class RenderPass {
             }
 
             // if render target needs mipmaps
-            if (this.renderTarget?.mipmaps && this.renderTarget?._colorBuffers?.[i].mipmaps) {
-                colorOps.genMipmaps = true;
+            const colorBuffer = this.renderTarget?._colorBuffers?.[i];
+            if (this.renderTarget?.mipmaps && colorBuffer?.mipmaps) {
+                const intFormat = isIntegerPixelFormat(colorBuffer._format);
+                colorOps.genMipmaps = !intFormat;  // no automatic mipmap generation for integer formats
             }
         }
     }

@@ -263,6 +263,12 @@ class ImageRenderable {
 }
 
 class ImageElement {
+    /**
+     * @type {import('../../../core/event-handle.js').EventHandle|null}
+     * @private
+     */
+    _evtSetMeshes = null;
+
     constructor(element) {
         this._element = element;
         this._entity = element.entity;
@@ -794,7 +800,7 @@ class ImageElement {
 
     // Hook up event handlers on sprite asset
     _bindSprite(sprite) {
-        sprite.on('set:meshes', this._onSpriteMeshesChange, this);
+        this._evtSetMeshes = sprite.on('set:meshes', this._onSpriteMeshesChange, this);
         sprite.on('set:pixelsPerUnit', this._onSpritePpuChange, this);
         sprite.on('set:atlas', this._onAtlasTextureChange, this);
         if (sprite.atlas) {
@@ -803,7 +809,8 @@ class ImageElement {
     }
 
     _unbindSprite(sprite) {
-        sprite.off('set:meshes', this._onSpriteMeshesChange, this);
+        this._evtSetMeshes?.off();
+        this._evtSetMeshes = null;
         sprite.off('set:pixelsPerUnit', this._onSpritePpuChange, this);
         sprite.off('set:atlas', this._onAtlasTextureChange, this);
         if (sprite.atlas) {
