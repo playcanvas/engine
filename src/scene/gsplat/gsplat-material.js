@@ -25,6 +25,8 @@ const gammaNames = {
     [GAMMA_SRGB]: 'SRGB'
 };
 
+const defaultChunks = new Map(Object.entries(shaderChunks));
+
 class GSplatShaderGenerator {
     generateKey(options) {
         const { pass, gamma, toneMapping, vertex, fragment, dither, defines } = options;
@@ -54,7 +56,10 @@ class GSplatShaderGenerator {
         const defines = `${shaderPassDefines}\n`;
         const vs = defines + (options.vertex ?? shaderChunks.gsplatVS);
         const fs = defines + (options.fragment ?? shaderChunks.gsplatPS);
-        const includes = new Map(Object.entries(shaderChunks));
+        const includes = options.chunks ? new Map(Object.entries({
+            ...shaderChunks,
+            ...options.chunks
+        })) : defaultChunks;
 
         return ShaderUtils.createDefinition(device, {
             name: 'SplatShader',
@@ -78,15 +83,16 @@ const gsplat = new GSplatShaderGenerator();
  * @typedef {object} SplatMaterialOptions - The options.
  * @property {string} [vertex] - Custom vertex shader, see SPLAT MANY example.
  * @property {string} [fragment] - Custom fragment shader, see SPLAT MANY example.
- * @property {string} [dither] - Opacity dithering enum.
  * @property {string[]} [defines] - List of shader defines.
+ * @property {Object<string, string>} [chunks] - Custom shader chunks.
+ * @property {string} [dither] - Opacity dithering enum.
  *
  * @ignore
  */
 
 /**
  * @param {SplatMaterialOptions} [options] - The options.
- * @returns {Material} The GS material.
+ * @returns {ShaderMaterial} The GS material.
  */
 const createGSplatMaterial = (options = {}) => {
 
@@ -109,6 +115,7 @@ const createGSplatMaterial = (options = {}) => {
             toneMapping: cameraShaderParams.toneMapping,
             vertex: options.vertex,
             fragment: options.fragment,
+            chunks: options.chunks,
             dither: ditherEnum
         };
 
