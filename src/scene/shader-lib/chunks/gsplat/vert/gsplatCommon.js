@@ -25,8 +25,11 @@ struct SplatState {
 
 #if GSPLAT_COMPRESSED_DATA == true
     #include "gsplatCompressedDataVS"
+    #include "gsplatCompressedSHVS"
 #else
     #include "gsplatDataVS"
+    #include "gsplatColorVS"
+    #include "gsplatSHVS"
 #endif
 
 #include "gsplatOutputPS"
