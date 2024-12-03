@@ -213,6 +213,24 @@ class ElementComponent extends Component {
     static EVENT_TOUCHCANCEL = 'touchcancel';
 
     /**
+     * @type {import('../../../core/event-handle.js').EventHandle|null}
+     * @private
+     */
+    _evtLayersChanged = null;
+
+    /**
+     * @type {import('../../../core/event-handle.js').EventHandle|null}
+     * @private
+     */
+    _evtLayerAdded = null;
+
+    /**
+     * @type {import('../../../core/event-handle.js').EventHandle|null}
+     * @private
+     */
+    _evtLayerRemoved = null;
+
+    /**
      * Create a new ElementComponent instance.
      *
      * @param {import('./system.js').ElementComponentSystem} system - The ComponentSystem that
@@ -2525,6 +2543,9 @@ class ElementComponent extends Component {
     }
 
     onEnable() {
+        const scene = this.system.app.scene;
+        const layers = scene.layers;
+
         if (this._image) {
             this._image.onEnable();
         }
@@ -2539,10 +2560,11 @@ class ElementComponent extends Component {
             this.system.app.elementInput.addElement(this);
         }
 
-        this.system.app.scene.on('set:layers', this.onLayersChanged, this);
-        if (this.system.app.scene.layers) {
-            this.system.app.scene.layers.on('add', this.onLayerAdded, this);
-            this.system.app.scene.layers.on('remove', this.onLayerRemoved, this);
+        this._evtLayersChanged = scene.on('set:layers', this.onLayersChanged, this);
+
+        if (layers) {
+            this._evtLayerAdded = layers.on('add', this.onLayerAdded, this);
+            this._evtLayerRemoved = layers.on('remove', this.onLayerRemoved, this);
         }
 
         if (this._batchGroupId >= 0) {
@@ -2553,10 +2575,17 @@ class ElementComponent extends Component {
     }
 
     onDisable() {
-        this.system.app.scene.off('set:layers', this.onLayersChanged, this);
-        if (this.system.app.scene.layers) {
-            this.system.app.scene.layers.off('add', this.onLayerAdded, this);
-            this.system.app.scene.layers.off('remove', this.onLayerRemoved, this);
+        const scene = this.system.app.scene;
+        const layers = scene.layers;
+
+        this._evtLayersChanged?.off();
+        this._evtLayersChanged = null;
+
+        if (layers) {
+            this._evtLayerAdded?.off();
+            this._evtLayerAdded = null;
+            this._evtLayerRemoved?.off();
+            this._evtLayerRemoved = null;
         }
 
         if (this._image) this._image.onDisable();

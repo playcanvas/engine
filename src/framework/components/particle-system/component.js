@@ -105,6 +105,30 @@ class ParticleSystemComponent extends Component {
     _drawOrder = 0;
 
     /**
+     * @type {import('../../../core/event-handle.js').EventHandle|null}
+     * @private
+     */
+    _evtLayersChanged = null;
+
+    /**
+     * @type {import('../../../core/event-handle.js').EventHandle|null}
+     * @private
+     */
+    _evtLayerAdded = null;
+
+    /**
+     * @type {import('../../../core/event-handle.js').EventHandle|null}
+     * @private
+     */
+    _evtLayerRemoved = null;
+
+    /**
+     * @type {import('../../../core/event-handle.js').EventHandle|null}
+     * @private
+     */
+    _evtSetMeshes = null;
+
+    /**
      * Create a new ParticleSystemComponent.
      *
      * @param {import('./system.js').ParticleSystemComponentSystem} system - The ComponentSystem
@@ -1717,9 +1741,8 @@ class ParticleSystemComponent extends Component {
         asset.off('unload', this._onRenderAssetUnload, this);
         asset.off('remove', this._onRenderAssetRemove, this);
 
-        if (asset.resource) {
-            asset.resource.off('set:meshes', this._onRenderSetMeshes, this);
-        }
+        this._evtSetMeshes?.off();
+        this._evtSetMeshes = null;
     }
 
     _onRenderAssetLoad(asset) {
@@ -1740,8 +1763,8 @@ class ParticleSystemComponent extends Component {
             return;
         }
 
-        render.off('set:meshes', this._onRenderSetMeshes, this);
-        render.on('set:meshes', this._onRenderSetMeshes, this);
+        this._evtSetMeshes?.off();
+        this._evtSetMeshes = render.on('set:meshes', this._onRenderSetMeshes, this);
 
         if (render.meshes) {
             this._onRenderSetMeshes(render.meshes);
@@ -1827,6 +1850,9 @@ class ParticleSystemComponent extends Component {
     }
 
     onEnable() {
+        const scene = this.system.app.scene;
+        const layers = scene.layers;
+
         // get data store once
         const data = this.data;
 
@@ -1948,10 +1974,11 @@ class ParticleSystemComponent extends Component {
             this.addMeshInstanceToLayers();
         }
 
-        this.system.app.scene.on('set:layers', this.onLayersChanged, this);
-        if (this.system.app.scene.layers) {
-            this.system.app.scene.layers.on('add', this.onLayerAdded, this);
-            this.system.app.scene.layers.on('remove', this.onLayerRemoved, this);
+        this._evtLayersChanged = scene.on('set:layers', this.onLayersChanged, this);
+
+        if (layers) {
+            this._evtLayerAdded = layers.on('add', this.onLayerAdded, this);
+            this._evtLayerRemoved = layers.on('remove', this.onLayerRemoved, this);
         }
 
         if (this.enabled && this.entity.enabled && data.depthSoftening) {
@@ -1960,10 +1987,17 @@ class ParticleSystemComponent extends Component {
     }
 
     onDisable() {
-        this.system.app.scene.off('set:layers', this.onLayersChanged, this);
-        if (this.system.app.scene.layers) {
-            this.system.app.scene.layers.off('add', this.onLayerAdded, this);
-            this.system.app.scene.layers.off('remove', this.onLayerRemoved, this);
+        const scene = this.system.app.scene;
+        const layers = scene.layers;
+
+        this._evtLayersChanged?.off();
+        this._evtLayersChanged = null;
+
+        if (layers) {
+            this._evtLayerAdded?.off();
+            this._evtLayerAdded = null;
+            this._evtLayerRemoved?.off();
+            this._evtLayerRemoved = null;
         }
 
         if (this.emitter) {
