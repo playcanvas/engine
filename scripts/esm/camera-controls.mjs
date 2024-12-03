@@ -1,5 +1,5 @@
 /* eslint-disable-next-line import/no-unresolved */
-import { math, Mat4, Plane, Quat, Ray, Script, Vec2, Vec3 } from 'playcanvas';
+import { math, Mat4, Plane, Ray, Script, Vec2, Vec3 } from 'playcanvas';
 
 /** @import { CameraComponent } from 'playcanvas' */
 
@@ -315,19 +315,6 @@ class CameraControls extends Script {
         this.pitchRange = pitchRange ?? this.pitchRange;
         this.zoomMin = zoomMin ?? this.zoomMin;
         this.zoomMax = zoomMax ?? this.zoomMax;
-
-        const position = new Vec3();
-        const rotation = new Quat();
-        this.app.xr.on('start', () => {
-            // Store the camera's position and rotation
-            position.copy(this.entity.getPosition());
-            rotation.copy(this.entity.getRotation());
-        });
-        this.app.xr.on('end', () => {
-            // Restore the camera's position and rotation
-            this.entity.setPosition(position);
-            this.entity.setRotation(rotation);
-        });
     }
 
     /**
