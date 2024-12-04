@@ -289,15 +289,6 @@ class GSplat {
 
         const t11 = (1 << 11) - 1;
         const t10 = (1 << 10) - 1;
-        const pack = (r, g, b) => {
-            const rb = Math.floor(r * t11 + 0.5);
-            const gb = Math.floor(g * t10 + 0.5);
-            const bb = Math.floor(b * t11 + 0.5);
-
-            return (rb < 0 ? 0 : rb > t11 ? t11 : rb) << 21 |
-                   (gb < 0 ? 0 : gb > t10 ? t10 : gb) << 11 |
-                   (bb < 0 ? 0 : bb > t11 ? t11 : bb);
-        };
 
         const float32 = new Float32Array(1);
         const uint32 = new Uint32Array(float32.buffer);
@@ -310,49 +301,52 @@ class GSplat {
         ];
 
         for (let i = 0; i < gsplatData.numSplats; ++i) {
-            // get coefficients
-            for (let j = 0; j < 45; ++j) {
-                c[j] = src[j][i];
+            // extract coefficients
+            for (let j = 0; j < 15; ++j) {
+                c[j * 3] = src[j][i];
+                c[j * 3 + 1] = src[j + 15][i];
+                c[j * 3 + 2] = src[j + 30][i];
             }
 
-            // calculate maximum absolute value
-            let m = Math.abs(c[0]);
+            // calc maximum value
+            let max = c[0];
             for (let j = 1; j < 45; ++j) {
-                const as = Math.abs(c[j]);
-                if (as > m) m = as;
+                max = Math.max(max, Math.abs(c[j]));
             }
 
-            if (m === 0) {
+            if (max === 0) {
                 continue;
             }
 
             // normalize
-            for (let j = 0; j < 45; ++j) {
-                c[j] = (c[j] / m) * 0.5 + 0.5;
+            for (let j = 0; j < 15; ++j) {
+                c[j * 3 + 0] = Math.floor((c[j * 3 + 0] / max * 0.5 + 0.5) * t11 + 0.5);
+                c[j * 3 + 1] = Math.floor((c[j * 3 + 1] / max * 0.5 + 0.5) * t10 + 0.5);
+                c[j * 3 + 2] = Math.floor((c[j * 3 + 2] / max * 0.5 + 0.5) * t11 + 0.5);
             }
 
             // pack
-            float32[0] = m;
+            float32[0] = max;
 
             sh1to3Data[i * 4 + 0] = uint32[0];
-            sh1to3Data[i * 4 + 1] = pack(c[0], c[15], c[30]);
-            sh1to3Data[i * 4 + 2] = pack(c[1], c[16], c[31]);
-            sh1to3Data[i * 4 + 3] = pack(c[2], c[17], c[32]);
+            sh1to3Data[i * 4 + 1] = c[0] << 21 | c[1] << 11 | c[2];
+            sh1to3Data[i * 4 + 2] = c[3] << 21 | c[4] << 11 | c[5];
+            sh1to3Data[i * 4 + 3] = c[6] << 21 | c[7] << 11 | c[8];
 
-            sh4to7Data[i * 4 + 0] = pack(c[3], c[18], c[33]);
-            sh4to7Data[i * 4 + 1] = pack(c[4], c[19], c[34]);
-            sh4to7Data[i * 4 + 2] = pack(c[5], c[20], c[35]);
-            sh4to7Data[i * 4 + 3] = pack(c[6], c[21], c[36]);
+            sh4to7Data[i * 4 + 0] = c[9] << 21 | c[10] << 11 | c[11];
+            sh4to7Data[i * 4 + 1] = c[12] << 21 | c[13] << 11 | c[14];
+            sh4to7Data[i * 4 + 2] = c[15] << 21 | c[16] << 11 | c[17];
+            sh4to7Data[i * 4 + 3] = c[18] << 21 | c[19] << 11 | c[20];
 
-            sh8to11Data[i * 4 + 0] = pack(c[7], c[22], c[37]);
-            sh8to11Data[i * 4 + 1] = pack(c[8], c[23], c[38]);
-            sh8to11Data[i * 4 + 2] = pack(c[9], c[24], c[39]);
-            sh8to11Data[i * 4 + 3] = pack(c[10], c[25], c[40]);
+            sh8to11Data[i * 4 + 0] = c[21] << 21 | c[22] << 11 | c[23];
+            sh8to11Data[i * 4 + 1] = c[24] << 21 | c[25] << 11 | c[26];
+            sh8to11Data[i * 4 + 2] = c[27] << 21 | c[28] << 11 | c[29];
+            sh8to11Data[i * 4 + 3] = c[30] << 21 | c[31] << 11 | c[32];
 
-            sh12to15Data[i * 4 + 0] = pack(c[11], c[26], c[41]);
-            sh12to15Data[i * 4 + 1] = pack(c[12], c[27], c[42]);
-            sh12to15Data[i * 4 + 2] = pack(c[13], c[28], c[43]);
-            sh12to15Data[i * 4 + 3] = pack(c[14], c[29], c[44]);
+            sh12to15Data[i * 4 + 0] = c[33] << 21 | c[34] << 11 | c[35];
+            sh12to15Data[i * 4 + 1] = c[36] << 21 | c[37] << 11 | c[38];
+            sh12to15Data[i * 4 + 2] = c[39] << 21 | c[40] << 11 | c[41];
+            sh12to15Data[i * 4 + 3] = c[42] << 21 | c[43] << 11 | c[44];
         }
 
         this.sh1to3Texture.unlock();
