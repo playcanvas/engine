@@ -65,7 +65,7 @@ const getEngineTargets = () => {
             ...buildTarget({
                 moduleFormat: 'esm',
                 buildType: 'release',
-                bundleState: 'unbundled',
+                bundleState: 'bundled',
                 input: '../src/index.js',
                 dir: 'dist/iframe'
             })
@@ -77,7 +77,7 @@ const getEngineTargets = () => {
             ...buildTarget({
                 moduleFormat: 'esm',
                 buildType: 'debug',
-                bundleState: 'unbundled',
+                bundleState: 'bundled',
                 input: '../src/index.js',
                 dir: 'dist/iframe'
             })
@@ -89,7 +89,7 @@ const getEngineTargets = () => {
             ...buildTarget({
                 moduleFormat: 'esm',
                 buildType: 'profiler',
-                bundleState: 'unbundled',
+                bundleState: 'bundled',
                 input: '../src/index.js',
                 dir: 'dist/iframe'
             })
