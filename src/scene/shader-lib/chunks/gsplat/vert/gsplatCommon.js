@@ -5,10 +5,10 @@ struct SplatState {
     uint id;            // splat id
     ivec2 uv;           // splat uv
     vec2 cornerUV;      // corner coordinates for this vertex of the gaussian (-1, -1)..(1, 1)
-    vec3 center;        // model space center  
 };
 
 struct ProjectedState {
+    mat4 modelView;     // model-view matrix
     vec3 centerCam;     // center in camera space
     vec4 centerProj;    // center in clip space
 
@@ -42,12 +42,37 @@ uniform mat4 matrix_model;
 uniform mat4 matrix_view;
 uniform mat4 matrix_projection;
 uniform vec2 viewport;                  // viewport dimensions
+uniform vec4 camera_params;             // 1 / far, far, near, isOrtho
+
+// initialize the splat state structure
+bool initState(out SplatState state) {
+    // calculate splat order
+    state.order = vertex_id_attrib + uint(vertex_position.z);
+
+    // return if out of range (since the last block of splats may be partially full)
+    if (state.order >= tex_params.x) {
+        return false;
+    }
+
+    ivec2 orderUV = ivec2(state.order % tex_params.y, state.order / tex_params.y);
+
+    // read splat id
+    state.id = texelFetch(splatOrder, orderUV, 0).r;
+
+    // map id to uv
+    state.uv = ivec2(state.id % tex_params.y, state.id / tex_params.y);
+
+    // get the corner
+    state.cornerUV = vertex_position.xy;
+
+    return true;
+}
 
 // calculate 2d covariance vectors
-bool projectCenter(in SplatState state, out ProjectedState projState) {
+bool projectCenter(SplatState state, vec3 center, out ProjectedState projState) {
     // project center to screen space
     mat4 model_view = matrix_view * matrix_model;
-    vec4 centerCam = model_view * vec4(state.center, 1.0);
+    vec4 centerCam = model_view * vec4(center, 1.0);
     vec4 centerProj = matrix_projection * centerCam;
     if (centerProj.z < -centerProj.w) {
         return false;
@@ -65,8 +90,9 @@ bool projectCenter(in SplatState state, out ProjectedState projState) {
 
     float focal = viewport.x * matrix_projection[0][0];
 
-    float J1 = focal / centerCam.z;
-    vec2 J2 = -J1 / centerCam.z * centerCam.xy;
+    vec3 v = camera_params.w == 1.0 ? vec3(0.0, 0.0, 1.0) : centerCam.xyz;
+    float J1 = focal / v.z;
+    vec2 J2 = -J1 / v.z * v.xy;
     mat3 J = mat3(
         J1, 0.0, J2.x, 
         0.0, J1, J2.y, 
@@ -90,22 +116,23 @@ bool projectCenter(in SplatState state, out ProjectedState projState) {
     float l2 = 2.0 * min(sqrt(2.0 * lambda2), 1024.0);
 
     // early-out gaussians smaller than 2 pixels
-    if (l1 < 4.0 && l2 < 4.0) {
+    if (l1 < 2.0 && l2 < 2.0) {
         return false;
     }
 
     // perform clipping test against x/y
-    if (any(greaterThan(abs(centerProj.xy) - (l1 + l2) / viewport * centerProj.w, centerProj.ww))) {
+    if (any(greaterThan(abs(centerProj.xy) - vec2(l1, l2) / viewport * centerProj.w, centerProj.ww))) {
         return false;
     }
 
-    vec2 diagonalVector = normalize(vec2(offDiagonal, lambda1 - diagonal1)) / viewport;
+    vec2 diagonalVector = normalize(vec2(offDiagonal, lambda1 - diagonal1));
     vec2 v1 = l1 * diagonalVector;
     vec2 v2 = l2 * vec2(diagonalVector.y, -diagonalVector.x);
 
+    projState.modelView = model_view;
     projState.centerCam = centerCam.xyz;
     projState.centerProj = centerProj;
-    projState.cornerOffset = (state.cornerUV.x * v1 + state.cornerUV.y * v2) * centerProj.w;
+    projState.cornerOffset = (state.cornerUV.x * v1 + state.cornerUV.y * v2) / viewport * centerProj.w;
     projState.cornerProj = centerProj + vec4(projState.cornerOffset, 0.0, 0.0);
     projState.cornerUV = state.cornerUV;
 
@@ -149,10 +176,11 @@ vec3 evalSH(in SplatState state, in ProjectedState projState) {
 
     // read sh coefficients
     vec3 sh[SH_COEFFS];
-    readSHData(state, sh);
+    float scale;
+    readSHData(state, sh, scale);
 
     // calculate the model-space view direction
-    vec3 dir = normalize(projState.centerCam * mat3(matrix_view) * mat3(matrix_model));
+    vec3 dir = normalize(projState.centerCam * mat3(projState.modelView));
 
     float x = dir.x;
     float y = dir.y;
@@ -190,7 +218,7 @@ vec3 evalSH(in SplatState state, in ProjectedState projState) {
         sh[14] * (SH_C3_6 * x * (xx - 3.0 * yy));
 #endif
 
-    return result;
+    return result * scale;
 }
 #endif
 `;
