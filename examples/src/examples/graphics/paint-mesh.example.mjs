@@ -1,6 +1,6 @@
-import * as pc from 'playcanvas';
 import files from 'examples/files';
 import { deviceType, rootPath } from 'examples/utils';
+import * as pc from 'playcanvas';
 
 const canvas = document.getElementById('application-canvas');
 if (!(canvas instanceof HTMLCanvasElement)) {
@@ -12,17 +12,17 @@ const assets = {
     helipad: new pc.Asset(
         'helipad.dds',
         'cubemap',
-        { url: rootPath + '/static/assets/cubemaps/helipad.dds' },
+        { url: `${rootPath}/static/assets/cubemaps/helipad.dds` },
         { type: pc.TEXTURETYPE_RGBM }
     ),
-    color: new pc.Asset('color', 'texture', { url: rootPath + '/static/assets/textures/seaside-rocks01-color.jpg' }),
-    decal: new pc.Asset('color', 'texture', { url: rootPath + '/static/assets/textures/heart.png' })
+    color: new pc.Asset('color', 'texture', { url: `${rootPath}/static/assets/textures/seaside-rocks01-color.jpg` }),
+    decal: new pc.Asset('color', 'texture', { url: `${rootPath}/static/assets/textures/heart.png` })
 };
 
 const gfxOptions = {
     deviceTypes: [deviceType],
-    glslangUrl: rootPath + '/static/lib/glslang/glslang.js',
-    twgslUrl: rootPath + '/static/lib/twgsl/twgsl.js'
+    glslangUrl: `${rootPath}/static/lib/glslang/glslang.js`,
+    twgslUrl: `${rootPath}/static/lib/twgsl/twgsl.js`
 };
 
 const device = await pc.createGraphicsDevice(canvas, gfxOptions);
@@ -171,7 +171,7 @@ assetListLoader.load(() => {
     let time = 0;
     let decalTime = 0;
     const decalFrequency = 0.5;
-    app.on('update', function (dt) {
+    app.on('update', (dt) => {
         time += dt * 0.7;
 
         // a decal projection box is an orthographic projection from some position. We calculate position

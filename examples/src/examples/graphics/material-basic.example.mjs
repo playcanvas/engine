@@ -1,5 +1,5 @@
-import * as pc from 'playcanvas';
 import { deviceType, rootPath } from 'examples/utils';
+import * as pc from 'playcanvas';
 
 const canvas = document.getElementById('application-canvas');
 if (!(canvas instanceof HTMLCanvasElement)) {
@@ -7,16 +7,16 @@ if (!(canvas instanceof HTMLCanvasElement)) {
 }
 
 const assets = {
-    font: new pc.Asset('font', 'font', { url: rootPath + '/static/assets/fonts/arial.json' }),
+    font: new pc.Asset('font', 'font', { url: `${rootPath}/static/assets/fonts/arial.json` }),
     rocks: new pc.Asset('rocks', 'texture', {
-        url: rootPath + '/static/assets/textures/seaside-rocks01-diffuse-alpha.png'
+        url: `${rootPath}/static/assets/textures/seaside-rocks01-diffuse-alpha.png`
     })
 };
 
 const gfxOptions = {
     deviceTypes: [deviceType],
-    glslangUrl: rootPath + '/static/lib/glslang/glslang.js',
-    twgslUrl: rootPath + '/static/lib/twgsl/twgsl.js'
+    glslangUrl: `${rootPath}/static/lib/glslang/glslang.js`,
+    twgslUrl: `${rootPath}/static/lib/twgsl/twgsl.js`
 };
 
 const device = await pc.createGraphicsDevice(canvas, gfxOptions);
@@ -135,7 +135,7 @@ assetListLoader.load(() => {
     // Set an update function on the app's update event
     let time = 0;
     const rot = new pc.Quat();
-    app.on('update', function (/** @type {number} */ dt) {
+    app.on('update', (/** @type {number} */ dt) => {
         time += dt;
 
         // rotate the boxes

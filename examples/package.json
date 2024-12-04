@@ -12,29 +12,10 @@
     "build:thumbnails": "node ./scripts/build-thumbnails.mjs",
     "clean": "node ./scripts/clean.mjs",
     "develop": "cross-env NODE_ENV=development concurrently --kill-others \"npm run watch\" \"npm run serve\"",
-    "lint": "eslint --ext .js,.mjs .",
+    "lint": "eslint .",
     "serve": "serve dist -l 5555 --no-request-logging --config ../serve.json",
     "watch": "npm run -s build:pre && cross-env NODE_ENV=development rollup -c -w"
   },
-  "eslintConfig": {
-    "root": true,
-    "extends": [
-      "@playcanvas/eslint-config"
-    ],
-    "globals": {
-      "ObjModelParser": "readonly",
-      "OutlineEffect": "readonly",
-      "pcx": "readonly"
-    },
-    "rules": {
-      "import/no-unresolved": "off"
-    }
-  },
-  "eslintIgnore": [
-    "area-light-lut-bin-gen.js",
-    "dist",
-    "lib"
-  ],
   "devDependencies": {
     "@babel/standalone": "^7.26.3",
     "@monaco-editor/react": "^4.6.0",

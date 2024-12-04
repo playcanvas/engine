@@ -1,10 +1,10 @@
 // custom plugins
-import { watch } from '../rollup-watch.mjs';
 import { build } from '../../scripts/build-examples.mjs';
+import { watch } from '../rollup-watch.mjs';
 
 const GREEN_OUT = '\x1b[32m';
-const BOLD_OUT = `\x1b[1m`;
-const REGULAR_OUT = `\x1b[22m`;
+const BOLD_OUT = '\x1b[1m';
+const REGULAR_OUT = '\x1b[22m';
 
 /**
  * This plugin builds the standalone html files.

@@ -1,8 +1,8 @@
 // @config WEBGL2_DISABLED
 // @config WEBGL1_DISABLED
-import * as pc from 'playcanvas';
-import { deviceType, rootPath } from 'examples/utils';
 import files from 'examples/files';
+import { deviceType, rootPath } from 'examples/utils';
+import * as pc from 'playcanvas';
 
 const canvas = document.getElementById('application-canvas');
 if (!(canvas instanceof HTMLCanvasElement)) {
@@ -10,20 +10,20 @@ if (!(canvas instanceof HTMLCanvasElement)) {
 }
 
 const assets = {
-    texture: new pc.Asset('color', 'texture', { url: rootPath + '/static/assets/textures/seaside-rocks01-color.jpg' }),
-    solid: new pc.Asset('solid', 'container', { url: rootPath + '/static/assets/models/icosahedron.glb' }),
+    texture: new pc.Asset('color', 'texture', { url: `${rootPath}/static/assets/textures/seaside-rocks01-color.jpg` }),
+    solid: new pc.Asset('solid', 'container', { url: `${rootPath}/static/assets/models/icosahedron.glb` }),
     helipad: new pc.Asset(
         'helipad-env-atlas',
         'texture',
-        { url: rootPath + '/static/assets/cubemaps/helipad-env-atlas.png' },
+        { url: `${rootPath}/static/assets/cubemaps/helipad-env-atlas.png` },
         { type: pc.TEXTURETYPE_RGBP, mipmaps: false }
     )
 };
 
 const gfxOptions = {
     deviceTypes: [deviceType],
-    glslangUrl: rootPath + '/static/lib/glslang/glslang.js',
-    twgslUrl: rootPath + '/static/lib/twgsl/twgsl.js'
+    glslangUrl: `${rootPath}/static/lib/glslang/glslang.js`,
+    twgslUrl: `${rootPath}/static/lib/twgsl/twgsl.js`
 };
 
 const device = await pc.createGraphicsDevice(canvas, gfxOptions);
@@ -99,13 +99,13 @@ assetListLoader.load(() => {
                 ])
             },
 
-              // format of a bind group, providing resources for the compute shader
+            // format of a bind group, providing resources for the compute shader
             computeBindGroupFormat: new pc.BindGroupFormat(device, [
-                  // a uniform buffer we provided format for
+                // a uniform buffer we provided format for
                 new pc.BindUniformBufferFormat('ub', pc.SHADERSTAGE_COMPUTE),
-                  // input textures
+                // input textures
                 new pc.BindTextureFormat('inTexture', pc.SHADERSTAGE_COMPUTE, undefined, undefined, false),
-                  // output storage textures
+                // output storage textures
                 new pc.BindStorageTextureFormat('outTexture', pc.PIXELFORMAT_RGBA8, pc.TEXTUREDIMENSION_2D)
             ])
         }) :
@@ -167,7 +167,7 @@ assetListLoader.load(() => {
 
     let time = 0;
     const srcTexture = assets.texture.resource;
-    app.on('update', function (/** @type {number} */ dt) {
+    app.on('update', (/** @type {number} */ dt) => {
         time += dt;
 
         if (device.supportsCompute) {

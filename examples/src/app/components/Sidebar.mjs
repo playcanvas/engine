@@ -1,14 +1,14 @@
-import { Component } from 'react';
-import { BindingTwoWay, BooleanInput, Container, Label, LabelGroup, Panel, TextInput } from '@playcanvas/pcui/react';
-import { Link } from 'react-router-dom';
 import { Observer } from '@playcanvas/observer';
+import { BindingTwoWay, BooleanInput, Container, Label, LabelGroup, Panel, TextInput } from '@playcanvas/pcui/react';
+import { Component } from 'react';
+import { Link } from 'react-router-dom';
 
 import { exampleMetaData } from '../../../cache/metadata.mjs';
 import { MIN_DESKTOP_WIDTH } from '../constants.mjs';
-import { thumbnailPath } from '../paths.mjs';
-import { jsx } from '../jsx.mjs';
-import { getOrientation } from '../utils.mjs';
 import { iframe } from '../iframe.mjs';
+import { jsx } from '../jsx.mjs';
+import { thumbnailPath } from '../paths.mjs';
+import { getOrientation } from '../utils.mjs';
 
 // eslint-disable-next-line jsdoc/require-property
 /**
@@ -209,61 +209,61 @@ class SideBar extends TypedComponent {
         }
         const { hash } = this.state;
         return Object.keys(categories)
-            .sort((a, b) => (a > b ? 1 : -1))
-            .map((category) => {
-                return jsx(
-                    Panel,
+        .sort((a, b) => (a > b ? 1 : -1))
+        .map((category) => {
+            return jsx(
+                Panel,
+                {
+                    key: category,
+                    class: 'categoryPanel',
+                    headerText: category.split('-').join(' ').toUpperCase(),
+                    collapsible: true,
+                    collapsed: false
+                },
+                jsx(
+                    'ul',
                     {
-                        key: category,
-                        class: 'categoryPanel',
-                        headerText: category.split('-').join(' ').toUpperCase(),
-                        collapsible: true,
-                        collapsed: false
+                        className: 'category-nav'
                     },
-                    jsx(
-                        'ul',
-                        {
-                            className: 'category-nav'
-                        },
-                        Object.keys(categories[category].examples)
-                            .sort((a, b) => (a > b ? 1 : -1))
-                            .map((example) => {
-                                const path = `/${category}/${example}`;
-                                const isSelected = new RegExp(`${path}$`).test(hash);
-                                const className = `nav-item ${isSelected ? 'selected' : null}`;
-                                return jsx(
-                                    Link,
+                    Object.keys(categories[category].examples)
+                    .sort((a, b) => (a > b ? 1 : -1))
+                    .map((example) => {
+                        const path = `/${category}/${example}`;
+                        const isSelected = new RegExp(`${path}$`).test(hash);
+                        const className = `nav-item ${isSelected ? 'selected' : null}`;
+                        return jsx(
+                            Link,
+                            {
+                                key: example,
+                                to: path,
+                                onClick: e => this._onClickExample(e, path)
+                            },
+                            jsx(
+                                'div',
+                                { className: className, id: `link-${category}-${example}` },
+                                jsx('img', {
+                                    className: 'small-thumbnail',
+                                    loading: 'lazy',
+                                    src: `${thumbnailPath}${category}_${example}_small.webp`
+                                }),
+                                jsx('img', {
+                                    className: 'large-thumbnail',
+                                    loading: 'lazy',
+                                    src: `${thumbnailPath}${category}_${example}_large.webp`
+                                }),
+                                jsx(
+                                    'div',
                                     {
-                                        key: example,
-                                        to: path,
-                                        onClick: e => this._onClickExample(e, path)
+                                        className: 'nav-item-text'
                                     },
-                                    jsx(
-                                        'div',
-                                        { className: className, id: `link-${category}-${example}` },
-                                        jsx('img', {
-                                            className: 'small-thumbnail',
-                                            loading: 'lazy',
-                                            src: thumbnailPath + `${category}_${example}_small.webp`
-                                        }),
-                                        jsx('img', {
-                                            className: 'large-thumbnail',
-                                            loading: 'lazy',
-                                            src: thumbnailPath + `${category}_${example}_large.webp`
-                                        }),
-                                        jsx(
-                                            'div',
-                                            {
-                                                className: 'nav-item-text'
-                                            },
-                                            example.split('-').join(' ').toUpperCase()
-                                        )
-                                    )
-                                );
-                            })
-                    )
-                );
-            });
+                                    example.split('-').join(' ').toUpperCase()
+                                )
+                            )
+                        );
+                    })
+                )
+            );
+        });
     }
 
     render() {

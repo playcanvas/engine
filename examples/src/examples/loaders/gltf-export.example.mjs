@@ -1,6 +1,6 @@
-import * as pc from 'playcanvas';
 import { data } from 'examples/observer';
 import { deviceType, rootPath } from 'examples/utils';
+import * as pc from 'playcanvas';
 
 const canvas = document.getElementById('application-canvas');
 if (!(canvas instanceof HTMLCanvasElement)) {
@@ -23,9 +23,9 @@ appInner.appendChild(div);
 
 // set up and load draco module, as the glb we load is draco compressed
 pc.WasmModule.setConfig('DracoDecoderModule', {
-    glueUrl: rootPath + '/static/lib/draco/draco.wasm.js',
-    wasmUrl: rootPath + '/static/lib/draco/draco.wasm.wasm',
-    fallbackUrl: rootPath + '/static/lib/draco/draco.js'
+    glueUrl: `${rootPath}/static/lib/draco/draco.wasm.js`,
+    wasmUrl: `${rootPath}/static/lib/draco/draco.wasm.wasm`,
+    fallbackUrl: `${rootPath}/static/lib/draco/draco.js`
 });
 await new Promise((resolve) => {
     pc.WasmModule.getInstance('DracoDecoderModule', () => resolve());
@@ -35,20 +35,20 @@ const assets = {
     helipad: new pc.Asset(
         'helipad-env-atlas',
         'texture',
-        { url: rootPath + '/static/assets/cubemaps/helipad-env-atlas.png' },
+        { url: `${rootPath}/static/assets/cubemaps/helipad-env-atlas.png` },
         { type: pc.TEXTURETYPE_RGBP, mipmaps: false }
     ),
-    bench: new pc.Asset('bench', 'container', { url: rootPath + '/static/assets/models/bench_wooden_01.glb' }),
-    model: new pc.Asset('model', 'container', { url: rootPath + '/static/assets/models/bitmoji.glb' }),
-    board: new pc.Asset('statue', 'container', { url: rootPath + '/static/assets/models/chess-board.glb' }),
-    boombox: new pc.Asset('statue', 'container', { url: rootPath + '/static/assets/models/boom-box.glb' }),
-    color: new pc.Asset('color', 'texture', { url: rootPath + '/static/assets/textures/seaside-rocks01-color.jpg' })
+    bench: new pc.Asset('bench', 'container', { url: `${rootPath}/static/assets/models/bench_wooden_01.glb` }),
+    model: new pc.Asset('model', 'container', { url: `${rootPath}/static/assets/models/bitmoji.glb` }),
+    board: new pc.Asset('statue', 'container', { url: `${rootPath}/static/assets/models/chess-board.glb` }),
+    boombox: new pc.Asset('statue', 'container', { url: `${rootPath}/static/assets/models/boom-box.glb` }),
+    color: new pc.Asset('color', 'texture', { url: `${rootPath}/static/assets/textures/seaside-rocks01-color.jpg` })
 };
 
 const gfxOptions = {
     deviceTypes: [deviceType],
-    glslangUrl: rootPath + '/static/lib/glslang/glslang.js',
-    twgslUrl: rootPath + '/static/lib/twgsl/twgsl.js'
+    glslangUrl: `${rootPath}/static/lib/glslang/glslang.js`,
+    twgslUrl: `${rootPath}/static/lib/twgsl/twgsl.js`
 };
 
 const device = await pc.createGraphicsDevice(canvas, gfxOptions);
@@ -151,17 +151,17 @@ assetListLoader.load(() => {
     };
 
     new pc.GltfExporter()
-        .build(app.root, options)
-        .then((arrayBuffer) => {
-            const blob = new Blob([arrayBuffer], { type: 'application/octet-stream' });
+    .build(app.root, options)
+    .then((arrayBuffer) => {
+        const blob = new Blob([arrayBuffer], { type: 'application/octet-stream' });
 
-            // @ts-ignore
-            link.href = URL.createObjectURL(blob);
-        })
-        .catch(console.error);
+        // @ts-ignore
+        link.href = URL.createObjectURL(blob);
+    })
+    .catch(console.error);
 
     // when clicking on the download UI button, trigger the download
-    data.on('download', function () {
+    data.on('download', () => {
         link.click();
     });
 });

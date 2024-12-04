@@ -125,12 +125,12 @@ const updateShader = (array, float) => {
     shaderDepthArray = array;
     shaderDepthFloat = float;
 
-    const key = 'textureDepthSensing_' + array + float;
+    const key = `textureDepthSensing_${array}${float}`;
     let frag = fragShader;
 
-    if (shaderDepthArray) frag = '#define XRDEPTH_ARRAY\n' + frag;
+    if (shaderDepthArray) frag = `#define XRDEPTH_ARRAY\n${frag}`;
 
-    if (shaderDepthArray) frag = '#define XRDEPTH_FLOAT\n' + frag;
+    if (shaderDepthArray) frag = `#define XRDEPTH_FLOAT\n${frag}`;
 
     materialDepth.shader = pc.createShaderFromCode(app.graphicsDevice, vertShader, frag, key, {
         aPosition: pc.SEMANTIC_POSITION,
@@ -162,7 +162,7 @@ if (app.xr.supported) {
                     dataFormatPreference: pc.XRDEPTHSENSINGFORMAT_F32
                 },
                 callback: function (err) {
-                    if (err) message('WebXR Immersive AR failed to start: ' + err.message);
+                    if (err) message(`WebXR Immersive AR failed to start: ${err.message}`);
                 }
             });
         } else {
@@ -170,12 +170,12 @@ if (app.xr.supported) {
         }
     };
 
-    app.mouse.on('mousedown', function () {
+    app.mouse.on('mousedown', () => {
         if (!app.xr.active) activate();
     });
 
     if (app.touch) {
-        app.touch.on('touchend', function (evt) {
+        app.touch.on('touchend', (evt) => {
             if (!app.xr.active) {
                 // if not in VR, activate
                 activate();
@@ -190,22 +190,22 @@ if (app.xr.supported) {
     }
 
     // end session by keyboard ESC
-    app.keyboard.on('keydown', function (evt) {
+    app.keyboard.on('keydown', (evt) => {
         if (evt.key === pc.KEY_ESCAPE && app.xr.active) {
             app.xr.end();
         }
     });
 
-    app.xr.on('start', function () {
+    app.xr.on('start', () => {
         message('Immersive AR session has started');
         console.log('depth gpu optimized', app.xr.views.depthGpuOptimized);
         console.log('depth texture format', app.xr.views.depthPixelFormat);
     });
-    app.xr.on('end', function () {
+    app.xr.on('end', () => {
         shaderUpdated = false;
         message('Immersive AR session has ended');
     });
-    app.xr.on('available:' + pc.XRTYPE_AR, function (available) {
+    app.xr.on(`available:${pc.XRTYPE_AR}`, (available) => {
         if (available) {
             if (!app.xr.views.supportedDepth) {
                 message('AR Camera Depth is not supported');
@@ -227,9 +227,10 @@ if (app.xr.supported) {
 
             for (let i = 0; i < app.xr.views.list.length; i++) {
                 const view = app.xr.views.list[i];
-                if (!view.textureDepth)
-                    // check if depth texture is available
+                // check if depth texture is available
+                if (!view.textureDepth) {
                     continue;
+                }
 
                 materialDepth.setParameter('depthMap', view.textureDepth);
                 materialDepth.setParameter('matrix_depth_uv', view.depthUvMatrix.data);
