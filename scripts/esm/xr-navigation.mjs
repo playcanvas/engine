@@ -3,6 +3,16 @@ import { Color, Script, Vec3 } from 'playcanvas';
 
 /** @import { XrInputSource } from 'playcanvas' */
 
+/**
+ * Handles VR teleportation navigation by allowing users to point and teleport using either
+ * hands or tracked controllers. Shows a visual ray and target indicator when the user holds
+ * the select button (trigger) or makes a pinch gesture with hand tracking, and teleports to
+ * the target location when released.
+ *
+ * This script should be attached to a parent entity of the camera entity used for the XR
+ * session. Use it in conjunction with the `XrControllers` script to handle the rendering of
+ * the controllers.
+ */
 export class XrNavigation extends Script {
     /** @type {Set<XrInputSource>} */
     inputSources = new Set();
