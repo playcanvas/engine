@@ -121,7 +121,7 @@ bool projectCenter(SplatState state, vec3 center, out ProjectedState projState) 
     }
 
     // perform clipping test against x/y
-    if (any(greaterThan(abs(centerProj.xy) - vec2(l1, l2) / viewport * centerProj.w * 0.5, centerProj.ww))) {
+    if (any(greaterThan(abs(centerProj.xy) - vec2(l1, l2) / viewport * centerProj.w, centerProj.ww))) {
         return false;
     }
 
