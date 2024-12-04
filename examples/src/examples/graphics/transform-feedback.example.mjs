@@ -1,8 +1,8 @@
 // @config WEBGPU_DISABLED
 // @config WEBGL1_DISABLED
-import * as pc from 'playcanvas';
 import files from 'examples/files';
 import { deviceType, rootPath } from 'examples/utils';
+import * as pc from 'playcanvas';
 
 const canvas = document.getElementById('application-canvas');
 if (!(canvas instanceof HTMLCanvasElement)) {
@@ -11,8 +11,8 @@ if (!(canvas instanceof HTMLCanvasElement)) {
 
 const gfxOptions = {
     deviceTypes: [deviceType],
-    glslangUrl: rootPath + '/static/lib/glslang/glslang.js',
-    twgslUrl: rootPath + '/static/lib/twgsl/twgsl.js'
+    glslangUrl: `${rootPath}/static/lib/glslang/glslang.js`,
+    twgslUrl: `${rootPath}/static/lib/twgsl/twgsl.js`
 };
 
 const device = await pc.createGraphicsDevice(canvas, gfxOptions);
@@ -27,7 +27,7 @@ const app = new pc.AppBase(canvas);
 app.init(createOptions);
 
 const assets = {
-    statue: new pc.Asset('statue', 'container', { url: rootPath + '/static/assets/models/statue.glb' })
+    statue: new pc.Asset('statue', 'container', { url: `${rootPath}/static/assets/models/statue.glb` })
 };
 
 const assetListLoader = new pc.AssetListLoader(Object.values(assets), app.assets);
@@ -155,7 +155,7 @@ assetListLoader.load(() => {
 
     // update things each frame
     let time = 0;
-    app.on('update', function (dt) {
+    app.on('update', (dt) => {
         // rotate camera around
         time += dt;
         camera.setLocalPosition(9 * Math.sin(time * 0.2), 6, 25 * Math.cos(time * 0.2));

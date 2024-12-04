@@ -1,5 +1,5 @@
-import * as pc from 'playcanvas';
 import { deviceType, rootPath } from 'examples/utils';
+import * as pc from 'playcanvas';
 
 const canvas = document.getElementById('application-canvas');
 if (!(canvas instanceof HTMLCanvasElement)) {
@@ -8,32 +8,32 @@ if (!(canvas instanceof HTMLCanvasElement)) {
 
 // initialize basis
 pc.basisInitialize({
-    glueUrl: rootPath + '/static/lib/basis/basis.wasm.js',
-    wasmUrl: rootPath + '/static/lib/basis/basis.wasm.wasm',
-    fallbackUrl: rootPath + '/static/lib/basis/basis.js'
+    glueUrl: `${rootPath}/static/lib/basis/basis.wasm.js`,
+    wasmUrl: `${rootPath}/static/lib/basis/basis.wasm.wasm`,
+    fallbackUrl: `${rootPath}/static/lib/basis/basis.js`
 });
 
 const assets = {
-    color: new pc.Asset('color', 'texture', { url: rootPath + '/static/assets/textures/seaside-rocks01-color.basis' }),
-    gloss: new pc.Asset('gloss', 'texture', { url: rootPath + '/static/assets/textures/seaside-rocks01-gloss.basis' }),
+    color: new pc.Asset('color', 'texture', { url: `${rootPath}/static/assets/textures/seaside-rocks01-color.basis` }),
+    gloss: new pc.Asset('gloss', 'texture', { url: `${rootPath}/static/assets/textures/seaside-rocks01-gloss.basis` }),
     normal: new pc.Asset(
         'normal',
         'texture',
-        { url: rootPath + '/static/assets/textures/seaside-rocks01-normal.basis' },
+        { url: `${rootPath}/static/assets/textures/seaside-rocks01-normal.basis` },
         { type: pc.TEXTURETYPE_SWIZZLEGGGR }
     ),
     helipad: new pc.Asset(
         'helipad-env-atlas',
         'texture',
-        { url: rootPath + '/static/assets/cubemaps/helipad-env-atlas.png' },
+        { url: `${rootPath}/static/assets/cubemaps/helipad-env-atlas.png` },
         { type: pc.TEXTURETYPE_RGBP, mipmaps: false }
     )
 };
 
 const gfxOptions = {
     deviceTypes: [deviceType],
-    glslangUrl: rootPath + '/static/lib/glslang/glslang.js',
-    twgslUrl: rootPath + '/static/lib/twgsl/twgsl.js'
+    glslangUrl: `${rootPath}/static/lib/glslang/glslang.js`,
+    twgslUrl: `${rootPath}/static/lib/twgsl/twgsl.js`
 };
 
 const device = await pc.createGraphicsDevice(canvas, gfxOptions);
@@ -124,7 +124,7 @@ assetListLoader.load(() => {
 
     // Set an update function on the app's update event
     let angle = 0;
-    app.on('update', function (dt) {
+    app.on('update', (dt) => {
         angle = (angle + dt * 10) % 360;
 
         // Rotate the boxes

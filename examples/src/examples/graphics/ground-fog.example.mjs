@@ -1,7 +1,7 @@
-import * as pc from 'playcanvas';
-import { data } from 'examples/observer';
 import files from 'examples/files';
+import { data } from 'examples/observer';
 import { deviceType, rootPath } from 'examples/utils';
+import * as pc from 'playcanvas';
 
 const canvas = document.getElementById('application-canvas');
 if (!(canvas instanceof HTMLCanvasElement)) {
@@ -9,21 +9,21 @@ if (!(canvas instanceof HTMLCanvasElement)) {
 }
 
 const assets = {
-    script: new pc.Asset('script', 'script', { url: rootPath + '/static/scripts/camera/orbit-camera.js' }),
-    terrain: new pc.Asset('terrain', 'container', { url: rootPath + '/static/assets/models/terrain.glb' }),
+    script: new pc.Asset('script', 'script', { url: `${rootPath}/static/scripts/camera/orbit-camera.js` }),
+    terrain: new pc.Asset('terrain', 'container', { url: `${rootPath}/static/assets/models/terrain.glb` }),
     helipad: new pc.Asset(
         'helipad-env-atlas',
         'texture',
-        { url: rootPath + '/static/assets/cubemaps/helipad-env-atlas.png' },
+        { url: `${rootPath}/static/assets/cubemaps/helipad-env-atlas.png` },
         { type: pc.TEXTURETYPE_RGBP, mipmaps: false }
     ),
-    texture: new pc.Asset('color', 'texture', { url: rootPath + '/static/assets/textures/clouds.jpg' })
+    texture: new pc.Asset('color', 'texture', { url: `${rootPath}/static/assets/textures/clouds.jpg` })
 };
 
 const gfxOptions = {
     deviceTypes: [deviceType],
-    glslangUrl: rootPath + '/static/lib/glslang/glslang.js',
-    twgslUrl: rootPath + '/static/lib/twgsl/twgsl.js'
+    glslangUrl: `${rootPath}/static/lib/glslang/glslang.js`,
+    twgslUrl: `${rootPath}/static/lib/twgsl/twgsl.js`
 };
 
 const device = await pc.createGraphicsDevice(canvas, gfxOptions);
@@ -127,7 +127,7 @@ assetListLoader.load(() => {
 
     // create a custom fog shader
     // @ts-ignore
-    const vertex = `#define VERTEXSHADER\n` + pc.shaderChunks.screenDepthPS + files['shader.vert'];
+    const vertex = `#define VERTEXSHADER\n${pc.shaderChunks.screenDepthPS}${files['shader.vert']}`;
     // @ts-ignore
     const fragment = pc.shaderChunks.screenDepthPS + files['shader.frag'];
     const shader = pc.createShaderFromCode(app.graphicsDevice, vertex, fragment, 'GroundFogShader');
@@ -159,7 +159,7 @@ assetListLoader.load(() => {
 
     let firstFrame = true;
     let currentTime = 0;
-    app.on('update', function (dt) {
+    app.on('update', (dt) => {
         // on the first frame, when camera is updated, move it further away from the focus tree
         if (firstFrame) {
             firstFrame = false;

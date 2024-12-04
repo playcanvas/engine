@@ -1,6 +1,24 @@
 import { Debug } from '../core/debug.js';
 
 /**
+ * @import { EventHandler } from './event-handler.js'
+ */
+
+/**
+ * Callback used by {@link EventHandler} functions. Note the callback is limited to 8 arguments.
+ *
+ * @callback HandleEventCallback
+ * @param {*} [arg1] - First argument that is passed from caller.
+ * @param {*} [arg2] - Second argument that is passed from caller.
+ * @param {*} [arg3] - Third argument that is passed from caller.
+ * @param {*} [arg4] - Fourth argument that is passed from caller.
+ * @param {*} [arg5] - Fifth argument that is passed from caller.
+ * @param {*} [arg6] - Sixth argument that is passed from caller.
+ * @param {*} [arg7] - Seventh argument that is passed from caller.
+ * @param {*} [arg8] - Eighth argument that is passed from caller.
+ */
+
+/**
  * Event Handle that is created by {@link EventHandler} and can be used for easier event removal and management.
  * @example
  * const evt = obj.on('test', (a, b) => {
@@ -25,7 +43,7 @@ import { Debug } from '../core/debug.js';
  */
 class EventHandle {
     /**
-     * @type {import('./event-handler.js').EventHandler}
+     * @type {EventHandler}
      * @private
      */
     handler;
@@ -37,7 +55,7 @@ class EventHandle {
     name;
 
     /**
-     * @type {import('./event-handler.js').HandleEventCallback}
+     * @type {HandleEventCallback}
      * @ignore
      */
     callback;
@@ -62,9 +80,9 @@ class EventHandle {
     _removed = false;
 
     /**
-     * @param {import('./event-handler.js').EventHandler} handler - source object of the event.
+     * @param {EventHandler} handler - source object of the event.
      * @param {string} name - Name of the event.
-     * @param {import('./event-handler.js').HandleEventCallback} callback - Function that is called when event is fired.
+     * @param {HandleEventCallback} callback - Function that is called when event is fired.
      * @param {object} scope - Object that is used as `this` when event is fired.
      * @param {boolean} [once] - If this is a single event and will be removed after event is fired.
      */

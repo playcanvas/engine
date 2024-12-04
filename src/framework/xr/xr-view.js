@@ -199,7 +199,6 @@ class XrView extends EventHandler {
         return this._textureColor;
     }
 
-    /* eslint-disable jsdoc/check-examples */
     /**
      * Texture that contains packed depth information which is reconstructed using the underlying
      * AR system. This texture can be used (not limited to) for reconstructing real world
@@ -244,7 +243,6 @@ class XrView extends EventHandler {
     get textureDepth() {
         return this._textureDepth;
     }
-    /* eslint-enable jsdoc/check-examples */
 
     /**
      * 4x4 matrix that should be used to transform depth texture UVs to normalized UVs in a shader.

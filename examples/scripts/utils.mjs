@@ -53,14 +53,14 @@ export const getDirFiles = (path) => {
  * @returns {ExampleConfig} - The parsed config.
  */
 export const parseConfig = (script) => {
-    const regex = /\/\/ @config ([^ \n]+) ?([^\n]+)?/g;
+    const regex = /\/\/ @config (\S+)(?:\s+([^\n]+))?/g;
     let match;
     /** @type {Record<string, any>} */
     const config = {};
     while ((match = regex.exec(script)) !== null) {
         const key = match[1].trim();
         const val = match[2]?.trim();
-        config[key] = /true|false/g.test(val) ? val === 'true' : val ?? true;
+        config[key] = /true|false/.test(val) ? val === 'true' : val ?? true;
     }
     return config;
 };
@@ -89,7 +89,7 @@ export const engineFor = (type) => {
  */
 export const patchScript = (script) => {
     // remove playcanvas imports
-    script = script.replace(/ *import[\s\w*{},]+["']playcanvas["'] *;?[\s\r\n]*/g, '');
+    script = script.replace(/ *import[\s\w*{},]+["']playcanvas["'] *;?\s*/g, '');
 
     return script;
 };

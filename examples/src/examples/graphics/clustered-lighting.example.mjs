@@ -1,6 +1,6 @@
 // @config ENGINE performance
-import * as pc from 'playcanvas';
 import { deviceType, rootPath } from 'examples/utils';
+import * as pc from 'playcanvas';
 
 const canvas = document.getElementById('application-canvas');
 if (!(canvas instanceof HTMLCanvasElement)) {
@@ -8,14 +8,14 @@ if (!(canvas instanceof HTMLCanvasElement)) {
 }
 
 const assets = {
-    script: new pc.Asset('script', 'script', { url: rootPath + '/static/scripts/camera/orbit-camera.js' }),
-    normal: new pc.Asset('normal', 'texture', { url: rootPath + '/static/assets/textures/normal-map.png' })
+    script: new pc.Asset('script', 'script', { url: `${rootPath}/static/scripts/camera/orbit-camera.js` }),
+    normal: new pc.Asset('normal', 'texture', { url: `${rootPath}/static/assets/textures/normal-map.png` })
 };
 
 const gfxOptions = {
     deviceTypes: [deviceType],
-    glslangUrl: rootPath + '/static/lib/glslang/glslang.js',
-    twgslUrl: rootPath + '/static/lib/twgsl/twgsl.js'
+    glslangUrl: `${rootPath}/static/lib/glslang/glslang.js`,
+    twgslUrl: `${rootPath}/static/lib/twgsl/twgsl.js`
 };
 
 const device = await pc.createGraphicsDevice(canvas, gfxOptions);
@@ -207,18 +207,18 @@ assetListLoader.load(() => {
 
     // Set an update function on the app's update event
     let time = 0;
-    app.on('update', function (/** @type {number} */ dt) {
+    app.on('update', (/** @type {number} */ dt) => {
         time += dt;
 
         // move lights along sin based waves around the cylinder
-        pointLightList.forEach(function (light, i) {
+        pointLightList.forEach((light, i) => {
             const angle = (i / pointLightList.length) * Math.PI * 2;
             const y = Math.sin(time * 0.5 + 7 * angle) * 30 + 70;
             light.setLocalPosition(30 * Math.sin(angle), y, 30 * Math.cos(angle));
         });
 
         // rotate spot lights around
-        spotLightList.forEach(function (spotlight, i) {
+        spotLightList.forEach((spotlight, i) => {
             const angle = (i / spotLightList.length) * Math.PI * 2;
             spotlight.setLocalPosition(40 * Math.sin(time + angle), 5, 40 * Math.cos(time + angle));
             spotlight.lookAt(pc.Vec3.ZERO);

@@ -1,8 +1,8 @@
 // @config WEBGL2_DISABLED
 // @config WEBGL1_DISABLED
-import * as pc from 'playcanvas';
-import { deviceType, rootPath } from 'examples/utils';
 import files from 'examples/files';
+import { deviceType, rootPath } from 'examples/utils';
+import * as pc from 'playcanvas';
 
 const canvas = document.getElementById('application-canvas');
 if (!(canvas instanceof HTMLCanvasElement)) {
@@ -10,22 +10,22 @@ if (!(canvas instanceof HTMLCanvasElement)) {
 }
 
 const assets = {
-    color: new pc.Asset('color', 'texture', { url: rootPath + '/static/assets/textures/seaside-rocks01-color.jpg' }),
-    normal: new pc.Asset('normal', 'texture', { url: rootPath + '/static/assets/textures/seaside-rocks01-normal.jpg' }),
-    gloss: new pc.Asset('gloss', 'texture', { url: rootPath + '/static/assets/textures/seaside-rocks01-gloss.jpg' }),
-    orbit: new pc.Asset('script', 'script', { url: rootPath + '/static/scripts/camera/orbit-camera.js' }),
+    color: new pc.Asset('color', 'texture', { url: `${rootPath}/static/assets/textures/seaside-rocks01-color.jpg` }),
+    normal: new pc.Asset('normal', 'texture', { url: `${rootPath}/static/assets/textures/seaside-rocks01-normal.jpg` }),
+    gloss: new pc.Asset('gloss', 'texture', { url: `${rootPath}/static/assets/textures/seaside-rocks01-gloss.jpg` }),
+    orbit: new pc.Asset('script', 'script', { url: `${rootPath}/static/scripts/camera/orbit-camera.js` }),
     helipad: new pc.Asset(
         'helipad-env-atlas',
         'texture',
-        { url: rootPath + '/static/assets/cubemaps/table-mountain-env-atlas.png' },
+        { url: `${rootPath}/static/assets/cubemaps/table-mountain-env-atlas.png` },
         { type: pc.TEXTURETYPE_RGBP, mipmaps: false }
     )
 };
 
 const gfxOptions = {
     deviceTypes: [deviceType],
-    glslangUrl: rootPath + '/static/lib/glslang/glslang.js',
-    twgslUrl: rootPath + '/static/lib/twgsl/twgsl.js'
+    glslangUrl: `${rootPath}/static/lib/glslang/glslang.js`,
+    twgslUrl: `${rootPath}/static/lib/twgsl/twgsl.js`
 };
 
 const device = await pc.createGraphicsDevice(canvas, gfxOptions);
@@ -120,7 +120,7 @@ assetListLoader.load(() => {
             shaderLanguage: pc.SHADERLANGUAGE_WGSL,
             cshader: files['compute-shader.wgsl'],
 
-              // format of a uniform buffer used by the compute shader
+            // format of a uniform buffer used by the compute shader
             computeUniformBufferFormats: {
                 ub: new pc.UniformBufferFormat(device, [
                     new pc.UniformFormat('count', pc.UNIFORMTYPE_UINT),
@@ -130,11 +130,11 @@ assetListLoader.load(() => {
                 ])
             },
 
-              // format of a bind group, providing resources for the compute shader
+            // format of a bind group, providing resources for the compute shader
             computeBindGroupFormat: new pc.BindGroupFormat(device, [
-                  // a uniform buffer we provided format for
+                // a uniform buffer we provided format for
                 new pc.BindUniformBufferFormat('ub', pc.SHADERSTAGE_COMPUTE),
-                  // the vertex buffer we want to modify
+                // the vertex buffer we want to modify
                 new pc.BindStorageBufferFormat('vb', pc.SHADERSTAGE_COMPUTE)
             ])
         }) :
@@ -155,7 +155,7 @@ assetListLoader.load(() => {
     compute.setParameter('normalOffset', normalElement?.offset / 4); // number of floats offset
 
     let time = 0;
-    app.on('update', function (dt) {
+    app.on('update', (dt) => {
         time += dt;
         if (entity) {
             // update non-constant parameters each frame

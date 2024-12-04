@@ -1,9 +1,9 @@
 // @config WEBGL1_DISABLED
 // @config DESCRIPTION <ul><li>Click to add sand<li>Shift-click to remove sand<li>Press space to reset.</ul>
-import * as pc from 'playcanvas';
-import { data } from 'examples/observer';
 import files from 'examples/files';
+import { data } from 'examples/observer';
 import { deviceType, rootPath } from 'examples/utils';
+import * as pc from 'playcanvas';
 
 const canvas = document.getElementById('application-canvas');
 if (!(canvas instanceof HTMLCanvasElement)) {
@@ -31,24 +31,24 @@ const TEXTURE_WIDTH = TEXTURE_HEIGHT * TEXTURE_RATIO;
 
 // set up and load draco module, as the glb we load is draco compressed
 pc.WasmModule.setConfig('DracoDecoderModule', {
-    glueUrl: rootPath + '/static/lib/draco/draco.wasm.js',
-    wasmUrl: rootPath + '/static/lib/draco/draco.wasm.wasm',
-    fallbackUrl: rootPath + '/static/lib/draco/draco.js'
+    glueUrl: `${rootPath}/static/lib/draco/draco.wasm.js`,
+    wasmUrl: `${rootPath}/static/lib/draco/draco.wasm.wasm`,
+    fallbackUrl: `${rootPath}/static/lib/draco/draco.js`
 });
 
 const assets = {
     helipad: new pc.Asset(
         'helipad-env-atlas',
         'texture',
-        { url: rootPath + '/static/assets/cubemaps/helipad-env-atlas.png' },
+        { url: `${rootPath}/static/assets/cubemaps/helipad-env-atlas.png` },
         { type: pc.TEXTURETYPE_RGBP, mipmaps: false }
     )
 };
 
 const gfxOptions = {
     deviceTypes: [deviceType],
-    glslangUrl: rootPath + '/static/lib/glslang/glslang.js',
-    twgslUrl: rootPath + '/static/lib/twgsl/twgsl.js'
+    glslangUrl: `${rootPath}/static/lib/glslang/glslang.js`,
+    twgslUrl: `${rootPath}/static/lib/twgsl/twgsl.js`
 };
 
 const device = await pc.createGraphicsDevice(canvas, gfxOptions);
@@ -276,7 +276,7 @@ assetListLoader.load(() => {
     );
 
     let mouseState = 0;
-    mouse.on(pc.EVENT_MOUSEDOWN, function (event) {
+    mouse.on(pc.EVENT_MOUSEDOWN, (event) => {
         if (event.button === pc.MOUSEBUTTON_LEFT) {
             if (keyboard.isPressed(pc.KEY_SHIFT)) {
                 mouseState = 2;
@@ -287,7 +287,7 @@ assetListLoader.load(() => {
             mouseState = 2;
         }
     });
-    mouse.on(pc.EVENT_MOUSEUP, function () {
+    mouse.on(pc.EVENT_MOUSEUP, () => {
         mouseState = 0;
     });
 
@@ -295,7 +295,7 @@ assetListLoader.load(() => {
     const planePoint = new pc.Vec3();
     const mousePos = new pc.Vec2();
     const mouseUniform = new Float32Array(2);
-    mouse.on(pc.EVENT_MOUSEMOVE, function (event) {
+    mouse.on(pc.EVENT_MOUSEMOVE, (event) => {
         const x = event.x;
         const y = event.y;
 
@@ -314,7 +314,7 @@ assetListLoader.load(() => {
     });
 
     let passNum = 0;
-    app.on('update', function (/** @type {number} */) {
+    app.on('update', (/** @type {number} */) => {
         if (device.isWebGL1) {
             // WebGL1 does not support integer textures
             return;

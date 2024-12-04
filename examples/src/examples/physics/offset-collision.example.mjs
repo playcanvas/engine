@@ -1,5 +1,5 @@
-import * as pc from 'playcanvas';
 import { deviceType, rootPath } from 'examples/utils';
+import * as pc from 'playcanvas';
 
 const canvas = document.getElementById('application-canvas');
 if (!(canvas instanceof HTMLCanvasElement)) {
@@ -7,29 +7,29 @@ if (!(canvas instanceof HTMLCanvasElement)) {
 }
 
 pc.WasmModule.setConfig('Ammo', {
-    glueUrl: rootPath + '/static/lib/ammo/ammo.wasm.js',
-    wasmUrl: rootPath + '/static/lib/ammo/ammo.wasm.wasm',
-    fallbackUrl: rootPath + '/static/lib/ammo/ammo.js'
+    glueUrl: `${rootPath}/static/lib/ammo/ammo.wasm.js`,
+    wasmUrl: `${rootPath}/static/lib/ammo/ammo.wasm.wasm`,
+    fallbackUrl: `${rootPath}/static/lib/ammo/ammo.js`
 });
 await new Promise((resolve) => {
     pc.WasmModule.getInstance('Ammo', () => resolve());
 });
 
 const assets = {
-    model: new pc.Asset('model', 'container', { url: rootPath + '/static/assets/models/bitmoji.glb' }),
-    idleAnim: new pc.Asset('idleAnim', 'container', { url: rootPath + '/static/assets/animations/bitmoji/idle.glb' }),
+    model: new pc.Asset('model', 'container', { url: `${rootPath}/static/assets/models/bitmoji.glb` }),
+    idleAnim: new pc.Asset('idleAnim', 'container', { url: `${rootPath}/static/assets/animations/bitmoji/idle.glb` }),
     helipad: new pc.Asset(
         'helipad-env-atlas',
         'texture',
-        { url: rootPath + '/static/assets/cubemaps/helipad-env-atlas.png' },
+        { url: `${rootPath}/static/assets/cubemaps/helipad-env-atlas.png` },
         { type: pc.TEXTURETYPE_RGBP, mipmaps: false }
     )
 };
 
 const gfxOptions = {
     deviceTypes: [deviceType],
-    glslangUrl: rootPath + '/static/lib/glslang/glslang.js',
-    twgslUrl: rootPath + '/static/lib/twgsl/twgsl.js'
+    glslangUrl: `${rootPath}/static/lib/glslang/glslang.js`,
+    twgslUrl: `${rootPath}/static/lib/twgsl/twgsl.js`
 };
 
 const device = await pc.createGraphicsDevice(canvas, gfxOptions);
@@ -230,7 +230,7 @@ assetListLoader.load(() => {
     let count = 40;
 
     // Set an update function on the application's update event
-    app.on('update', function (dt) {
+    app.on('update', (dt) => {
         // create a falling box every 0.2 seconds
         if (count > 0) {
             timer -= dt;
@@ -248,7 +248,7 @@ assetListLoader.load(() => {
         }
 
         // Show active bodies in red and frozen bodies in gray
-        app.root.findByTag('shape').forEach(function (/** @type {pc.Entity} */ entity) {
+        app.root.findByTag('shape').forEach((/** @type {pc.Entity} */ entity) => {
             entity.render.meshInstances[0].material = entity.rigidbody.isActive() ? red : gray;
         });
 

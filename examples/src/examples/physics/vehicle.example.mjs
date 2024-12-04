@@ -1,5 +1,5 @@
-import * as pc from 'playcanvas';
 import { deviceType, rootPath } from 'examples/utils';
+import * as pc from 'playcanvas';
 
 const canvas = document.getElementById('application-canvas');
 if (!(canvas instanceof HTMLCanvasElement)) {
@@ -7,9 +7,9 @@ if (!(canvas instanceof HTMLCanvasElement)) {
 }
 
 pc.WasmModule.setConfig('Ammo', {
-    glueUrl: rootPath + '/static/lib/ammo/ammo.wasm.js',
-    wasmUrl: rootPath + '/static/lib/ammo/ammo.wasm.wasm',
-    fallbackUrl: rootPath + '/static/lib/ammo/ammo.js'
+    glueUrl: `${rootPath}/static/lib/ammo/ammo.wasm.js`,
+    wasmUrl: `${rootPath}/static/lib/ammo/ammo.wasm.wasm`,
+    fallbackUrl: `${rootPath}/static/lib/ammo/ammo.js`
 });
 
 await new Promise((resolve) => {
@@ -20,19 +20,19 @@ const assets = {
     helipad: new pc.Asset(
         'helipad-env-atlas',
         'texture',
-        { url: rootPath + '/static/assets/cubemaps/helipad-env-atlas.png' },
+        { url: `${rootPath}/static/assets/cubemaps/helipad-env-atlas.png` },
         { type: pc.TEXTURETYPE_RGBP, mipmaps: false }
     ),
-    script1: new pc.Asset('script1', 'script', { url: rootPath + '/static/scripts/camera/tracking-camera.js' }),
-    script2: new pc.Asset('script2', 'script', { url: rootPath + '/static/scripts/physics/render-physics.js' }),
-    script3: new pc.Asset('script3', 'script', { url: rootPath + '/static/scripts/physics/action-physics-reset.js' }),
-    script4: new pc.Asset('script4', 'script', { url: rootPath + '/static/scripts/physics/vehicle.js' })
+    script1: new pc.Asset('script1', 'script', { url: `${rootPath}/static/scripts/camera/tracking-camera.js` }),
+    script2: new pc.Asset('script2', 'script', { url: `${rootPath}/static/scripts/physics/render-physics.js` }),
+    script3: new pc.Asset('script3', 'script', { url: `${rootPath}/static/scripts/physics/action-physics-reset.js` }),
+    script4: new pc.Asset('script4', 'script', { url: `${rootPath}/static/scripts/physics/vehicle.js` })
 };
 
 const gfxOptions = {
     deviceTypes: [deviceType],
-    glslangUrl: rootPath + '/static/lib/glslang/glslang.js',
-    twgslUrl: rootPath + '/static/lib/twgsl/twgsl.js'
+    glslangUrl: `${rootPath}/static/lib/glslang/glslang.js`,
+    twgslUrl: `${rootPath}/static/lib/twgsl/twgsl.js`
 };
 
 const device = await pc.createGraphicsDevice(canvas, gfxOptions);
@@ -149,7 +149,7 @@ assetListLoader.load(() => {
     cab.setLocalPosition(0, 1.2, -0.25);
 
     // Add the vehicle to the hierarchy
-    wheels.forEach(function (wheel) {
+    wheels.forEach((wheel) => {
         vehicle.addChild(wheel);
     });
     vehicle.addChild(chassis);
@@ -213,7 +213,7 @@ assetListLoader.load(() => {
         }
     });
 
-    app.keyboard.on(pc.EVENT_KEYDOWN, function (e) {
+    app.keyboard.on(pc.EVENT_KEYDOWN, (e) => {
         if (e.key === pc.KEY_R) {
             app.fire('reset');
         }

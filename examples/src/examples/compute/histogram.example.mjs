@@ -1,8 +1,8 @@
 // @config WEBGL2_DISABLED
 // @config WEBGL1_DISABLED
-import * as pc from 'playcanvas';
-import { deviceType, rootPath } from 'examples/utils';
 import files from 'examples/files';
+import { deviceType, rootPath } from 'examples/utils';
+import * as pc from 'playcanvas';
 
 // Note: the example is based on this article:
 // https://webgpufundamentals.org/webgpu/lessons/webgpu-compute-shaders-histogram.html
@@ -14,19 +14,19 @@ if (!(canvas instanceof HTMLCanvasElement)) {
 }
 
 const assets = {
-    solid: new pc.Asset('solid', 'container', { url: rootPath + '/static/assets/models/icosahedron.glb' }),
+    solid: new pc.Asset('solid', 'container', { url: `${rootPath}/static/assets/models/icosahedron.glb` }),
     helipad: new pc.Asset(
         'helipad-env-atlas',
         'texture',
-        { url: rootPath + '/static/assets/cubemaps/helipad-env-atlas.png' },
+        { url: `${rootPath}/static/assets/cubemaps/helipad-env-atlas.png` },
         { type: pc.TEXTURETYPE_RGBP, mipmaps: false }
     )
 };
 
 const gfxOptions = {
     deviceTypes: [deviceType],
-    glslangUrl: rootPath + '/static/lib/glslang/glslang.js',
-    twgslUrl: rootPath + '/static/lib/twgsl/twgsl.js'
+    glslangUrl: `${rootPath}/static/lib/glslang/glslang.js`,
+    twgslUrl: `${rootPath}/static/lib/twgsl/twgsl.js`
 };
 
 const device = await pc.createGraphicsDevice(canvas, gfxOptions);
@@ -100,11 +100,11 @@ assetListLoader.load(() => {
             shaderLanguage: pc.SHADERLANGUAGE_WGSL,
             cshader: files['compute-shader.wgsl'],
 
-              // format of a bind group, providing resources for the compute shader
+            // format of a bind group, providing resources for the compute shader
             computeBindGroupFormat: new pc.BindGroupFormat(device, [
-                  // input texture - the scene color map, without a sampler
+                // input texture - the scene color map, without a sampler
                 new pc.BindTextureFormat('uSceneColorMap', pc.SHADERSTAGE_COMPUTE, undefined, undefined, false),
-                  // output storage buffer
+                // output storage buffer
                 new pc.BindStorageBufferFormat('outBuffer', pc.SHADERSTAGE_COMPUTE)
             ])
         }) :
@@ -133,7 +133,7 @@ assetListLoader.load(() => {
     app.root.addChild(solid);
 
     let firstFrame = true;
-    app.on('update', function (/** @type {number} */ dt) {
+    app.on('update', (/** @type {number} */ dt) => {
         // The update function runs every frame before the frame gets rendered. On the first time it
         // runs, the scene color map has not been rendered yet, so we skip the first frame.
         if (firstFrame) {

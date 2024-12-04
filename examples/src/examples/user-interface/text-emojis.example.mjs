@@ -1,5 +1,5 @@
-import * as pc from 'playcanvas';
 import { deviceType, rootPath } from 'examples/utils';
+import * as pc from 'playcanvas';
 
 const canvas = document.getElementById('application-canvas');
 if (!(canvas instanceof HTMLCanvasElement)) {
@@ -7,13 +7,13 @@ if (!(canvas instanceof HTMLCanvasElement)) {
 }
 
 const assets = {
-    font: new pc.Asset('font', 'font', { url: rootPath + '/static/assets/fonts/arial.json' })
+    font: new pc.Asset('font', 'font', { url: `${rootPath}/static/assets/fonts/arial.json` })
 };
 
 const gfxOptions = {
     deviceTypes: [deviceType],
-    glslangUrl: rootPath + '/static/lib/glslang/glslang.js',
-    twgslUrl: rootPath + '/static/lib/twgsl/twgsl.js'
+    glslangUrl: `${rootPath}/static/lib/glslang/glslang.js`,
+    twgslUrl: `${rootPath}/static/lib/twgsl/twgsl.js`
 };
 
 const device = await pc.createGraphicsDevice(canvas, gfxOptions);
@@ -124,7 +124,7 @@ assetListLoader.load(() => {
         anchor: new pc.Vec4(0.5, 0.5, 0.5, 0.5),
         fontAsset: assets.font.id,
         fontSize: elSize,
-        text: "The following are the CanvasFont's Texture Atlases,\ncontaining all the rendered characters:",
+        text: 'The following are the CanvasFont\'s Texture Atlases,\ncontaining all the rendered characters:',
         type: pc.ELEMENTTYPE_TEXT
     });
     screen.addChild(debugText);

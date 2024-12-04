@@ -2,8 +2,8 @@ import fs from 'fs';
 import { dirname, resolve } from 'path';
 import { fileURLToPath } from 'url';
 
-import { toKebabCase } from '../src/app/strings.mjs';
 import { objStringify, getDirFiles, parseConfig } from './utils.mjs';
+import { toKebabCase } from '../src/app/strings.mjs';
 
 // @ts-ignore
 const __filename = fileURLToPath(import.meta.url);
@@ -28,7 +28,7 @@ const main = () => {
         const categoryKebab = toKebabCase(category);
 
         examplesFiles.forEach((exampleFile) => {
-            if (!/\example.mjs$/.test(exampleFile)) {
+            if (!/example.mjs$/.test(exampleFile)) {
                 return;
             }
             const examplePath = resolve(`${categoryPath}/${exampleFile}`);

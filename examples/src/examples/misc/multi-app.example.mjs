@@ -1,9 +1,9 @@
 // @config NO_MINISTATS
 // @config NO_DEVICE_SELECTOR
 // @config WEBGPU_DISABLED
-import * as pc from 'playcanvas';
 import { data } from 'examples/observer';
 import { rootPath } from 'examples/utils';
+import * as pc from 'playcanvas';
 
 /**
  * @param {string} deviceType - The device type.
@@ -11,7 +11,7 @@ import { rootPath } from 'examples/utils';
  */
 const createApp = async function (deviceType) {
     const assets = {
-        font: new pc.Asset('font', 'font', { url: rootPath + '/static/assets/fonts/courier.json' })
+        font: new pc.Asset('font', 'font', { url: `${rootPath}/static/assets/fonts/courier.json` })
     };
 
     const canvas = document.createElement('canvas');
@@ -22,7 +22,7 @@ const createApp = async function (deviceType) {
     let device;
     if (deviceType === 'webgpu') {
         device = new pc.WebgpuGraphicsDevice(canvas, {});
-        await device.initWebGpu(rootPath + '/static/lib/glslang/glslang.js', rootPath + '/static/lib/twgsl/twgsl.js');
+        await device.initWebGpu(`${rootPath}/static/lib/glslang/glslang.js`, `${rootPath}/static/lib/twgsl/twgsl.js`);
     } else if (deviceType === 'webgl1' || deviceType === 'webgl2') {
         device = new pc.WebglGraphicsDevice(canvas, {
             preferWebGl2: deviceType === 'webgl2'
@@ -145,13 +145,13 @@ for (const deviceType in apps) {
 
     data.on(`add:${deviceType}`, () => {
         createApp(deviceType)
-            .then((app) => {
-                apps[deviceType].push(app);
-                data.set(deviceType, apps[deviceType].length);
-            })
-            .catch((err) => {
-                console.error(err);
-            });
+        .then((app) => {
+            apps[deviceType].push(app);
+            data.set(deviceType, apps[deviceType].length);
+        })
+        .catch((err) => {
+            console.error(err);
+        });
     });
 
     data.on(`remove:${deviceType}`, () => {
