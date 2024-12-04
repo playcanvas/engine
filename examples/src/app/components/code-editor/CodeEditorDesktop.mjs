@@ -9,7 +9,7 @@ import { removeRedundantSpaces } from '../../strings.mjs';
 
 import '../../events.js';
 
-loader.config({ paths: { vs: './modules/monaco-editor/min/vs' } });
+loader.config({ paths: { vs: new URL('./modules/monaco-editor/min/vs', window.location.href).toString() } });
 
 function getShowMinimap() {
     let showMinimap = true;
