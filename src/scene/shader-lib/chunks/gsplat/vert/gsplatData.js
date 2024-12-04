@@ -11,31 +11,11 @@ uniform highp sampler2D transformB;
 uint tAw;
 
 // read the model-space center of the gaussian
-bool readCenter(out SplatState state) {
-    // calculate splat order
-    state.order = vertex_id_attrib + uint(vertex_position.z);
-
-    // return if out of range (since the last block of splats may be partially full)
-    if (state.order >= tex_params.x) {
-        return false;
-    }
-
-    ivec2 orderUV = ivec2(state.order % tex_params.y, state.order / tex_params.y);
-
-    // read splat id
-    state.id = texelFetch(splatOrder, orderUV, 0).r;
-
-    // map id to uv
-    state.uv = ivec2(state.id % tex_params.y, state.id / tex_params.y);
-
+vec3 readCenter(SplatState state) {
     // read transform data
     uvec4 tA = texelFetch(transformA, state.uv, 0);
     tAw = tA.w;
-
-    state.cornerUV = vertex_position.xy;
-    state.center = uintBitsToFloat(tA.xyz);
-
-    return true;
+    return uintBitsToFloat(tA.xyz);
 }
 
 // sample covariance vectors

@@ -65,25 +65,8 @@ mat3 quatToMat3(vec4 R) {
     );
 }
 
-// calculate the current splat index and uvs
-bool readCenter(out SplatState state) {
-    // calculate splat order
-    state.order = vertex_id_attrib + uint(vertex_position.z);
-
-    // return if out of range (since the last block of splats may be partially full)
-    if (state.order >= tex_params.x) {
-        return false;
-    }
-
-    ivec2 orderUV = ivec2(state.order % tex_params.y, state.order / tex_params.y);
-
-    // read splat id
-    state.id = texelFetch(splatOrder, orderUV, 0).r;
-
-    // map id to uv
-    state.uv = ivec2(state.id % tex_params.y, state.id / tex_params.y);
-
-    // calculate chunkUV
+// read center
+vec3 readCenter(SplatState state) {
     uint chunkId = state.id / 256u;
     ivec2 chunkUV = ivec2((chunkId % tex_params.z) * 5u, chunkId / tex_params.z);
 
@@ -95,10 +78,12 @@ bool readCenter(out SplatState state) {
     chunkDataE = texelFetch(chunkTexture, chunkUV + ivec2(4, 0), 0);
     packedData = texelFetch(packedTexture, state.uv, 0);
 
-    state.center = mix(chunkDataA.xyz, vec3(chunkDataA.w, chunkDataB.xy), unpack111011(packedData.x));
-    state.cornerUV = vertex_position.xy;
+    return mix(chunkDataA.xyz, vec3(chunkDataA.w, chunkDataB.xy), unpack111011(packedData.x));
+}
 
-    return true;
+vec4 readColor(in SplatState state) {
+    vec4 r = unpack8888(packedData.w);
+    return vec4(mix(chunkDataD.xyz, vec3(chunkDataD.w, chunkDataE.xy), r.rgb), r.w);
 }
 
 vec4 getRotation() {
@@ -107,11 +92,6 @@ vec4 getRotation() {
 
 vec3 getScale() {
     return exp(mix(vec3(chunkDataB.zw, chunkDataC.x), chunkDataC.yzw, unpack111011(packedData.z)));
-}
-
-vec4 readColor(in SplatState state) {
-    vec4 r = unpack8888(packedData.w);
-    return vec4(mix(chunkDataD.xyz, vec3(chunkDataD.w, chunkDataE.xy), r.rgb), r.w);
 }
 
 // given a rotation matrix and scale vector, compute 3d covariance A and B
