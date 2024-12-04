@@ -48,53 +48,6 @@
     "type": "git",
     "url": "https://github.com/playcanvas/engine.git"
   },
-  "eslintConfig": {
-    "extends": "@playcanvas/eslint-config",
-    "globals": {
-      "Ammo": "readonly",
-      "earcut": "readonly",
-      "glslang": "readonly",
-      "GPUBufferUsage": "readonly",
-      "GPUColorWrite": "readonly",
-      "GPUMapMode": "readonly",
-      "GPUShaderStage": "readonly",
-      "GPUTextureUsage": "readonly",
-      "opentype": "readonly",
-      "pc": "readonly",
-      "TWEEN": "readonly",
-      "twgsl": "readonly",
-      "webkitAudioContext": "readonly",
-      "XRRay": "readonly",
-      "XRRigidTransform": "readonly",
-      "XRWebGLLayer": "readonly"
-    },
-    "parser": "@babel/eslint-parser",
-    "parserOptions": {
-      "requireConfigFile": false
-    },
-    "ignorePatterns": [
-      "tests/**/*"
-    ],
-    "rules": {
-      "import/order": "off",
-      "jsdoc/check-tag-names": [
-        "error",
-        {
-          "definedTags": [
-            "category"
-          ]
-        }
-      ]
-    }
-  },
-  "eslintIgnore": [
-    "examples/lib/*",
-    "scripts/textmesh/earcut.min.js",
-    "scripts/textmesh/opentype.min.js",
-    "src/polyfill/*",
-    "scripts/spine/playcanvas-spine.3.8.js",
-    "scripts/spine/playcanvas-spine.3.8.mjs"
-  ],
   "files": [
     "build/playcanvas*",
     "build/playcanvas*/*",
@@ -121,6 +74,7 @@
     "eslint": "^9.16.0",
     "fflate": "^0.8.2",
     "global-jsdom": "^25.0.0",
+    "globals": "^15.13.0",
     "jsdom": "^25.0.1",
     "karma": "^6.4.4",
     "karma-chrome-launcher": "^3.2.0",
@@ -163,7 +117,7 @@
     "watch:esm:release": "npm run build target:esm:release -- -w",
     "watch:esm:debug": "npm run build target:esm:debug -- -w",
     "docs": "typedoc",
-    "lint": "eslint --ext .js,.mjs scripts src test utils rollup.config.mjs",
+    "lint": "eslint scripts src test utils eslint.config.mjs rollup.config.mjs",
     "publint": "publint --level error",
     "serve": "serve build -l 51000 --cors",
     "test": "mocha --recursive --require test/fixtures.mjs",

@@ -263,7 +263,6 @@ class XrAnchors extends EventHandler {
             return;
         }
 
-        // eslint-disable-next-line no-undef
         if (window.XRHitTestResult && position instanceof XRHitTestResult) {
             const hitResult = position;
             callback = rotation;
