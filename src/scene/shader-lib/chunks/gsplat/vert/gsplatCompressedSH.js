@@ -5,30 +5,30 @@ uniform highp usampler2D shTexture0;
 uniform highp usampler2D shTexture1;
 uniform highp usampler2D shTexture2;
 
-vec4 sunpack8888(in uint bits) {
+vec4 unpack8888s(in uint bits) {
     return vec4((uvec4(bits) >> uvec4(0u, 8u, 16u, 24u)) & 0xffu) * (8.0 / 255.0) - 4.0;
 }
 
-void readSHData(in SplatState state, out vec3 sh[15]) {
+void readSHData(in SplatState state, out vec3 sh[15], out float scale) {
     // read the sh coefficients
     uvec4 shData0 = texelFetch(shTexture0, state.uv, 0);
     uvec4 shData1 = texelFetch(shTexture1, state.uv, 0);
     uvec4 shData2 = texelFetch(shTexture2, state.uv, 0);
 
-    vec4 r0 = sunpack8888(shData0.x);
-    vec4 r1 = sunpack8888(shData0.y);
-    vec4 r2 = sunpack8888(shData0.z);
-    vec4 r3 = sunpack8888(shData0.w);
+    vec4 r0 = unpack8888s(shData0.x);
+    vec4 r1 = unpack8888s(shData0.y);
+    vec4 r2 = unpack8888s(shData0.z);
+    vec4 r3 = unpack8888s(shData0.w);
 
-    vec4 g0 = sunpack8888(shData1.x);
-    vec4 g1 = sunpack8888(shData1.y);
-    vec4 g2 = sunpack8888(shData1.z);
-    vec4 g3 = sunpack8888(shData1.w);
+    vec4 g0 = unpack8888s(shData1.x);
+    vec4 g1 = unpack8888s(shData1.y);
+    vec4 g2 = unpack8888s(shData1.z);
+    vec4 g3 = unpack8888s(shData1.w);
 
-    vec4 b0 = sunpack8888(shData2.x);
-    vec4 b1 = sunpack8888(shData2.y);
-    vec4 b2 = sunpack8888(shData2.z);
-    vec4 b3 = sunpack8888(shData2.w);
+    vec4 b0 = unpack8888s(shData2.x);
+    vec4 b1 = unpack8888s(shData2.y);
+    vec4 b2 = unpack8888s(shData2.z);
+    vec4 b3 = unpack8888s(shData2.w);
 
     sh[0] =  vec3(r0.x, g0.x, b0.x);
     sh[1] =  vec3(r0.y, g0.y, b0.y);
@@ -45,6 +45,8 @@ void readSHData(in SplatState state, out vec3 sh[15]) {
     sh[12] = vec3(r3.x, g3.x, b3.x);
     sh[13] = vec3(r3.y, g3.y, b3.y);
     sh[14] = vec3(r3.z, g3.z, b3.z);
+
+    scale = 1.0;
 }
 
 #endif

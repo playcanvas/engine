@@ -176,7 +176,8 @@ vec3 evalSH(in SplatState state, in ProjectedState projState) {
 
     // read sh coefficients
     vec3 sh[SH_COEFFS];
-    readSHData(state, sh);
+    float scale;
+    readSHData(state, sh, scale);
 
     // calculate the model-space view direction
     vec3 dir = normalize(projState.centerCam * mat3(projState.modelView));
@@ -217,7 +218,7 @@ vec3 evalSH(in SplatState state, in ProjectedState projState) {
         sh[14] * (SH_C3_6 * x * (xx - 3.0 * yy));
 #endif
 
-    return result;
+    return result * scale;
 }
 #endif
 `;
