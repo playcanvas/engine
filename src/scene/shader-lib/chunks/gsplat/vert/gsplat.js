@@ -13,14 +13,16 @@ mediump vec4 discardVec = vec4(0.0, 0.0, 2.0, 1.0);
 void main(void) {
     // read gaussian details
     SplatState state;
-    if (!readCenter(state)) {
+    if (!initState(state)) {
         gl_Position = discardVec;
         return;
     }
 
+    vec3 center = readCenter(state);
+
     // project center to screen space
     ProjectedState projState;
-    if (!projectCenter(state, projState)) {
+    if (!projectCenter(state, center, projState)) {
         gl_Position = discardVec;
         return;
     }

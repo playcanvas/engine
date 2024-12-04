@@ -41,16 +41,16 @@ vec4 animateColor(float height, vec4 clr) {
 void main(void) {
     // read gaussian center
     SplatState state;
-    if (!readCenter(state)) {
+    if (!initState(state)) {
         gl_Position = discardVec;
         return;
     }
 
-    state.center = animatePosition(state.center);
+    vec3 center = animatePosition(readCenter(state));
 
     // project center to screen space
     ProjectedState projState;
-    if (!projectCenter(state, projState)) {
+    if (!projectCenter(state, center, projState)) {
         gl_Position = discardVec;
         return;
     }
@@ -63,7 +63,7 @@ void main(void) {
         clr.xyz = max(clr.xyz + evalSH(state, projState), 0.0);
     #endif
 
-    clr = animateColor(state.center.y, clr);
+    clr = animateColor(center.y, clr);
 
     applyClipping(projState, clr.w);
 
