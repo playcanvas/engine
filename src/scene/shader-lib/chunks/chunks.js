@@ -181,13 +181,14 @@ import TBNPS from './lit/frag/TBN.js';
 import TBNderivativePS from './lit/frag/TBNderivative.js';
 import TBNObjectSpacePS from './lit/frag/TBNObjectSpace.js';
 import thicknessPS from './standard/frag/thickness.js';
-import tonemappingAcesPS from './common/frag/tonemappingAces.js';
-import tonemappingAces2PS from './common/frag/tonemappingAces2.js';
-import tonemappingFilmicPS from './common/frag/tonemappingFilmic.js';
-import tonemappingHejlPS from './common/frag/tonemappingHejl.js';
-import tonemappingLinearPS from './common/frag/tonemappingLinear.js';
-import tonemappingNeutralPS from './common/frag/tonemappingNeutral.js';
-import tonemappingNonePS from './common/frag/tonemappingNone.js';
+import tonemappingPS from './common/frag/tonemapping/tonemapping.js';
+import tonemappingAcesPS from './common/frag/tonemapping/tonemappingAces.js';
+import tonemappingAces2PS from './common/frag/tonemapping/tonemappingAces2.js';
+import tonemappingFilmicPS from './common/frag/tonemapping/tonemappingFilmic.js';
+import tonemappingHejlPS from './common/frag/tonemapping/tonemappingHejl.js';
+import tonemappingLinearPS from './common/frag/tonemapping/tonemappingLinear.js';
+import tonemappingNeutralPS from './common/frag/tonemapping/tonemappingNeutral.js';
+import tonemappingNonePS from './common/frag/tonemapping/tonemappingNone.js';
 import transformVS from './common/vert/transform.js';
 import transformCoreVS from './common/vert/transformCore.js';
 import transformInstancingVS from './common/vert/transformInstancing.js';
@@ -390,6 +391,7 @@ const shaderChunks = {
     TBNderivativePS,
     TBNObjectSpacePS,
     thicknessPS,
+    tonemappingPS,
     tonemappingAcesPS,
     tonemappingAces2PS,
     tonemappingFilmicPS,
