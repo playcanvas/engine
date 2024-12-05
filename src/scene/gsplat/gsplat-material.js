@@ -1,6 +1,6 @@
 import { CULLFACE_NONE, SEMANTIC_ATTR13, SEMANTIC_POSITION } from '../../platform/graphics/constants.js';
 import { ShaderProcessorOptions } from '../../platform/graphics/shader-processor-options.js';
-import { BLEND_NONE, BLEND_NORMAL, DITHER_NONE, GAMMA_NONE, GAMMA_SRGB, TONEMAP_ACES, TONEMAP_ACES2, TONEMAP_FILMIC, TONEMAP_HEJL, TONEMAP_LINEAR, TONEMAP_NEUTRAL, TONEMAP_NONE, tonemapNames } from '../constants.js';
+import { BLEND_NONE, BLEND_NORMAL, DITHER_NONE, GAMMA_NONE, GAMMA_SRGB, tonemapNames } from '../constants.js';
 import { ShaderMaterial } from '../materials/shader-material.js';
 import { getProgramLibrary } from '../shader-lib/get-program-library.js';
 import { getMaterialShaderDefines } from '../shader-lib/utils.js';

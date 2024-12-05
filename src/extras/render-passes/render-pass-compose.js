@@ -438,8 +438,8 @@ class RenderPassCompose extends RenderPassShaderQuad {
                 if (this._debug) defines.set('DEBUG_COMPOSE', this._debug);
 
                 const includes = new Map(Object.entries(shaderChunks));
-            
-                this.shader = this.createQuadShader(`ComposeShader-${key}`, /*defines + */fragmentShader, {
+
+                this.shader = this.createQuadShader(`ComposeShader-${key}`, fragmentShader, {
                     fragmentIncludes: includes,
                     fragmentDefines: defines
                 });
