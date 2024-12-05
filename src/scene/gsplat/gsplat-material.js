@@ -1,6 +1,6 @@
 import { CULLFACE_NONE, SEMANTIC_ATTR13, SEMANTIC_POSITION } from '../../platform/graphics/constants.js';
 import { ShaderProcessorOptions } from '../../platform/graphics/shader-processor-options.js';
-import { BLEND_NONE, BLEND_NORMAL, DITHER_NONE, GAMMA_NONE, GAMMA_SRGB, TONEMAP_ACES, TONEMAP_ACES2, TONEMAP_FILMIC, TONEMAP_HEJL, TONEMAP_LINEAR, TONEMAP_NEUTRAL, TONEMAP_NONE } from '../constants.js';
+import { BLEND_NONE, BLEND_NORMAL, DITHER_NONE, GAMMA_NONE, GAMMA_SRGB, TONEMAP_ACES, TONEMAP_ACES2, TONEMAP_FILMIC, TONEMAP_HEJL, TONEMAP_LINEAR, TONEMAP_NEUTRAL, TONEMAP_NONE, tonemapNames } from '../constants.js';
 import { ShaderMaterial } from '../materials/shader-material.js';
 import { getProgramLibrary } from '../shader-lib/get-program-library.js';
 import { getMaterialShaderDefines } from '../shader-lib/utils.js';
@@ -9,16 +9,6 @@ import { shaderChunks } from '../shader-lib/chunks/chunks.js';
 import { ShaderGenerator } from '../shader-lib/programs/shader-generator.js';
 import { ShaderPass } from '../shader-pass.js';
 import { hashCode } from '../../core/hash.js';
-
-const tonemapNames = {
-    [TONEMAP_FILMIC]: 'FILMIC',
-    [TONEMAP_LINEAR]: 'LINEAR',
-    [TONEMAP_HEJL]: 'HEJL',
-    [TONEMAP_ACES]: 'ACES',
-    [TONEMAP_ACES2]: 'ACES2',
-    [TONEMAP_NEUTRAL]: 'NEUTRAL',
-    [TONEMAP_NONE]: 'NONE'
-};
 
 const gammaNames = {
     [GAMMA_NONE]: 'NONE',

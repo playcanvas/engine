@@ -1,7 +1,7 @@
 export default /* glsl */`
     #include "decodePS"
     #include "gamma"
-    #include "tonemapping"
+    #include "tonemappingPS"
     #include "envMultiplyPS"
 
     varying vec3 vViewDir;
