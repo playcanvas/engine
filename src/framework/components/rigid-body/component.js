@@ -1,8 +1,11 @@
+import { Debug } from '../../../core/debug.js';
+
 import { Quat } from '../../../core/math/quat.js';
 import { Vec3 } from '../../../core/math/vec3.js';
 import { Component } from '../component.js';
 import {
     BODYFLAG_KINEMATIC_OBJECT, BODYTYPE_STATIC,
+    BODYFLAG_GRAVITY_WORLD_ENABLE, BODYFLAG_GRAVITY_WORLD_DISABLE,
     BODYGROUP_DYNAMIC, BODYGROUP_KINEMATIC, BODYGROUP_STATIC,
     BODYMASK_ALL, BODYMASK_NOT_STATIC,
     BODYSTATE_ACTIVE_TAG, BODYSTATE_DISABLE_DEACTIVATION, BODYSTATE_DISABLE_SIMULATION,
@@ -164,6 +167,22 @@ class RigidBodyComponent extends Component {
 
     /** @private */
     _type = BODYTYPE_STATIC;
+
+    /**
+     * Whether the RigidBody component uses gravity.
+     *
+     * @type {boolean}
+     * @private
+     */
+    _useGravity = true;
+
+    /**
+     * The current gravity of this body.
+     *
+     * @type {null|Vec3}
+     * @private
+     */
+    _gravity = null;
 
     /**
      * Create a new RigidBodyComponent instance.
@@ -588,6 +607,63 @@ class RigidBodyComponent extends Component {
     }
 
     /**
+     * Whether this rigid body should use gravity.
+     *
+     * @type {boolean}
+     */
+    set useGravity(value) {
+        if (!!value === this._useGravity) {
+            return;
+        }
+
+        Debug.assert(typeof Ammo !== 'undefined' && Ammo.btRigidBody.prototype.setFlags, 'pc.RigidBodyComponent.useGravity: Your version of ammo.js does not expose Ammo.btRigidBody#setFlags. Update it to latest.');
+
+        this._useGravity = !this._useGravity;
+
+        if (this._body) {
+            this._body.setFlags(this._useGravity && !this._gravity ? BODYFLAG_GRAVITY_WORLD_ENABLE : BODYFLAG_GRAVITY_WORLD_DISABLE);
+
+            if (this._useGravity) {
+                if (this._gravity) {
+                    _ammoVec1.setValue(this._gravity.x, this._gravity.y, this._gravity.z);
+                    this._body.setGravity(_ammoVec1);
+                } else {
+                    this._body.setGravity(this.system.dynamicsWorld.getGravity());
+                }
+            } else {
+                _ammoVec1.setValue(0, 0, 0);
+                this._body.setGravity(_ammoVec1);
+            }
+        }
+    }
+
+    get useGravity() {
+        return this._useGravity;
+    }
+
+    /**
+     * The gravity that affects this rigid body. Defaults to null to use world gravity.
+     *
+     * @type {Vec3}
+     */
+    set gravity(value) {
+        Debug.assert(typeof Ammo !== 'undefined' && Ammo.btRigidBody.prototype.setFlags, 'pc.RigidBodyComponent#gravity: Your version of ammo.js does not expose Ammo.btRigidBody#setFlags. Update it to latest.');
+
+        this._gravity = value;
+
+        if (this._body && this._useGravity) {
+            this._body.setFlags(BODYFLAG_GRAVITY_WORLD_DISABLE);
+
+            _ammoVec1.setValue(value.x, value.y, value.z);
+            this._body.setGravity(_ammoVec1);
+        }
+    }
+
+    get gravity() {
+        return this._gravity;
+    }
+
+    /**
      * If the Entity has a Collision shape attached then create a rigid body using this shape. This
      * method destroys the existing body.
      *
@@ -638,6 +714,17 @@ class RigidBodyComponent extends Component {
             } else if (this._type === BODYTYPE_KINEMATIC) {
                 body.setCollisionFlags(body.getCollisionFlags() | BODYFLAG_KINEMATIC_OBJECT);
                 body.setActivationState(BODYSTATE_DISABLE_DEACTIVATION);
+            }
+
+            if (this._useGravity && this._gravity) {
+                Debug.assert(Ammo.btRigidBody.prototype.setFlags, 'pc.RigidBodyComponent#createBody: Your version of ammo.js does not expose Ammo.btRigidBody#setFlags. Update it to latest.');
+                body.setFlags(BODYFLAG_GRAVITY_WORLD_DISABLE);
+
+                _ammoVec1.setValue(this._gravity.x, this._gravity.y, this._gravity.z);
+                body.setGravity(_ammoVec1);
+            } else if (!this._useGravity) {
+                Debug.assert(Ammo.btRigidBody.prototype.setFlags, 'pc.RigidBodyComponent#createBody: Your version of ammo.js does not expose Ammo.btRigidBody#setFlags. Update it to latest.');
+                body.setFlags(BODYFLAG_GRAVITY_WORLD_DISABLE);
             }
 
             body.entity = entity;
