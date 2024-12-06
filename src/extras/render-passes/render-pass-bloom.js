@@ -9,6 +9,10 @@ import { RenderPassDownsample } from './render-pass-downsample.js';
 import { RenderPassUpsample } from './render-pass-upsample.js';
 import { math } from '../../core/math/math.js';
 
+/**
+ * @import { GraphicsDevice } from '../../platform/graphics/graphics-device.js'
+ */
+
 // based on https://learnopengl.com/Guest-Articles/2022/Phys.-Based-Bloom
 /**
  * Render pass implementation of HDR bloom effect.
@@ -27,6 +31,12 @@ class RenderPassBloom extends RenderPass {
 
     renderTargets = [];
 
+    /**
+     * @param {GraphicsDevice} device - The graphics device.
+     * @param {Texture} sourceTexture - The source texture, usually at half the resolution of the
+     * render target getting blurred.
+     * @param {number} format - The texture format.
+     */
     constructor(device, sourceTexture, format) {
         super(device);
         this._sourceTexture = sourceTexture;
@@ -95,8 +105,7 @@ class RenderPassBloom extends RenderPass {
         let passSourceTexture = this._sourceTexture;
         for (let i = 0; i < numPasses; i++) {
 
-            const fast = i === 0;  // fast box downscale for the first pass
-            const pass = new RenderPassDownsample(device, passSourceTexture, fast);
+            const pass = new RenderPassDownsample(device, passSourceTexture);
             const rt = this.renderTargets[i];
             pass.init(rt, {
                 resizeSource: passSourceTexture,
@@ -128,24 +137,6 @@ class RenderPassBloom extends RenderPass {
         // release the rest
         this.destroyRenderPasses();
         this.destroyRenderTargets(1);
-    }
-
-    set sourceTexture(value) {
-        this._sourceTexture = value;
-
-        if (this.beforePasses.length > 0) {
-            const firstPass = this.beforePasses[0];
-
-            // change resize source
-            firstPass.options.resizeSource = value;
-
-            // change downsample source
-            firstPass.sourceTexture = value;
-        }
-    }
-
-    get sourceTexture() {
-        return this._sourceTexture;
     }
 
     frameUpdate() {
