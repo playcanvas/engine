@@ -5,7 +5,7 @@ import * as pc from 'playcanvas';
  * @returns {JSX.Element} The returned JSX Element.
  */
 export const controls = ({ observer, ReactPCUI, React, jsx, fragment }) => {
-    const { BindingTwoWay, LabelGroup, Panel, SliderInput, SelectInput } = ReactPCUI;
+    const { BindingTwoWay, LabelGroup, Panel, SliderInput, SelectInput, ColorPicker } = ReactPCUI;
     const { useState } = React;
 
     const [type, setType] = useState('translate');
@@ -84,6 +84,50 @@ export const controls = ({ observer, ReactPCUI, React, jsx, fragment }) => {
                     min: 1,
                     max: 10,
                     precision: 0
+                })
+            )
+        ),
+        jsx(
+            Panel,
+            { headerText: 'Grid' },
+            jsx(
+                LabelGroup,
+                { text: 'Resolution' },
+                jsx(SelectInput, {
+                    options: [
+                        { v: 3, t: 'High' },
+                        { v: 2, t: 'Medium' },
+                        { v: 1, t: 'Low' }
+                    ],
+                    binding: new BindingTwoWay(),
+                    link: { observer, path: 'grid.resolution' }
+                })
+            ),
+            jsx(
+                LabelGroup,
+                { text: 'Size' },
+                jsx(SliderInput, {
+                    binding: new BindingTwoWay(),
+                    link: { observer, path: 'grid.size' },
+                    min: 0,
+                    max: 10,
+                    precision: 0
+                })
+            ),
+            jsx(
+                LabelGroup,
+                { text: 'Color X' },
+                jsx(ColorPicker, {
+                    binding: new BindingTwoWay(),
+                    link: { observer, path: 'grid.colorX' }
+                })
+            ),
+            jsx(
+                LabelGroup,
+                { text: 'Color Z' },
+                jsx(ColorPicker, {
+                    binding: new BindingTwoWay(),
+                    link: { observer, path: 'grid.colorZ' }
                 })
             )
         ),
