@@ -315,7 +315,7 @@ class RenderTarget {
         if (this.width !== width || this.height !== height) {
 
             if (this.mipLevel > 0) {
-                Debug.warn('Only render target rendering to mipLevel 0 can be resized, ignoring.', this);
+                Debug.warn('Only a render target rendering to mipLevel 0 can be resized, ignoring.', this);
                 return;
             }
 
