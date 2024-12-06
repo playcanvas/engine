@@ -32,7 +32,7 @@ void main(void) {
 
     // evaluate spherical harmonics
     #if SH_BANDS > 0
-        clr.xyz = max(vec3(0.0), clr.xyz + evalSH(state, projState));
+        clr.xyz += evalSH(state, projState));
     #endif
 
     applyClipping(projState, clr.w);
@@ -40,7 +40,7 @@ void main(void) {
     // write output
     gl_Position = projState.cornerProj;
     gaussianUV = projState.cornerUV;
-    gaussianColor = vec4(prepareOutputFromGamma(clr.xyz), clr.w);
+    gaussianColor = vec4(prepareOutputFromGamma(max(clr.xyz, 0.0)), clr.w);
 
     #ifndef DITHER_NONE
         id = float(state.id);
