@@ -1,6 +1,8 @@
 export default /* glsl */`
 
-#if TONEMAP == FILMIC
+#if (TONEMAP == NONE)
+    #include "tonemappingNonePS"
+#elif TONEMAP == FILMIC
     #include "tonemappingFilmicPS"
 #elif TONEMAP == LINEAR
     #include "tonemappingLinearPS"
