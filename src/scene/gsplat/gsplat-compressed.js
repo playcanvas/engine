@@ -109,10 +109,10 @@ class GSplatCompressed {
             const srcCoeffs = [3, 8, 15][shBands - 1];
 
             for (let i = 0; i < numSplats; ++i) {
-                for (let j = 0; j < srcCoeffs; ++j) {
-                    target0[i * 16 + j] = shData[(i * 3 + 0) * srcCoeffs + j];
-                    target1[i * 16 + j] = shData[(i * 3 + 1) * srcCoeffs + j];
-                    target2[i * 16 + j] = shData[(i * 3 + 2) * srcCoeffs + j];
+                for (let j = 0; j < 15; ++j) {
+                    target0[i * 16 + j] = j < srcCoeffs ? shData[(i * 3 + 0) * srcCoeffs + j] : 127;
+                    target1[i * 16 + j] = j < srcCoeffs ? shData[(i * 3 + 1) * srcCoeffs + j] : 127;
+                    target2[i * 16 + j] = j < srcCoeffs ? shData[(i * 3 + 2) * srcCoeffs + j] : 127;
                 }
             }
 
