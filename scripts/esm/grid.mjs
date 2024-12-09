@@ -1,4 +1,3 @@
-/* eslint-disable-next-line import/no-unresolved */
 import {
     ShaderMaterial,
     SEMANTIC_POSITION,
@@ -11,6 +10,7 @@ import {
     Color,
     Script,
     Vec2
+/* eslint-disable-next-line import/no-unresolved */
 } from 'playcanvas';
 
 const tmpVa = new Vec2();
