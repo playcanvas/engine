@@ -146,6 +146,30 @@ class RenderComponent extends Component {
     _rootBone;
 
     /**
+     * @type {import('../../../core/event-handle.js').EventHandle|null}
+     * @private
+     */
+    _evtLayersChanged = null;
+
+    /**
+     * @type {import('../../../core/event-handle.js').EventHandle|null}
+     * @private
+     */
+    _evtLayerAdded = null;
+
+    /**
+     * @type {import('../../../core/event-handle.js').EventHandle|null}
+     * @private
+     */
+    _evtLayerRemoved = null;
+
+    /**
+     * @type {import('../../../core/event-handle.js').EventHandle|null}
+     * @private
+     */
+    _evtSetMeshes = null;
+
+    /**
      * Create a new RenderComponent.
      *
      * @param {RenderComponentSystem} system - The ComponentSystem that created this Component.
@@ -790,15 +814,17 @@ class RenderComponent extends Component {
     onEnable() {
         const app = this.system.app;
         const scene = app.scene;
+        const layers = scene.layers;
 
         this._rootBone.onParentComponentEnable();
 
         this._cloneSkinInstances();
 
-        scene.on('set:layers', this.onLayersChanged, this);
-        if (scene.layers) {
-            scene.layers.on('add', this.onLayerAdded, this);
-            scene.layers.on('remove', this.onLayerRemoved, this);
+        this._evtLayersChanged = scene.on('set:layers', this.onLayersChanged, this);
+
+        if (layers) {
+            this._evtLayerAdded = layers.on('add', this.onLayerAdded, this);
+            this._evtLayerRemoved = layers.on('remove', this.onLayerRemoved, this);
         }
 
         const isAsset = (this._type === 'asset');
@@ -823,11 +849,16 @@ class RenderComponent extends Component {
     onDisable() {
         const app = this.system.app;
         const scene = app.scene;
+        const layers = scene.layers;
 
-        scene.off('set:layers', this.onLayersChanged, this);
-        if (scene.layers) {
-            scene.layers.off('add', this.onLayerAdded, this);
-            scene.layers.off('remove', this.onLayerRemoved, this);
+        this._evtLayersChanged?.off();
+        this._evtLayersChanged = null;
+
+        if (layers) {
+            this._evtLayerAdded?.off();
+            this._evtLayerAdded = null;
+            this._evtLayerRemoved?.off();
+            this._evtLayerRemoved = null;
         }
 
         if (this._batchGroupId >= 0) {
@@ -881,8 +912,8 @@ class RenderComponent extends Component {
 
         if (this._assetReference.asset) {
             const render = this._assetReference.asset.resource;
-            render.off('set:meshes', this._onSetMeshes, this);
-            render.on('set:meshes', this._onSetMeshes, this);
+            this._evtSetMeshes?.off();
+            this._evtSetMeshes = render.on('set:meshes', this._onSetMeshes, this);
             if (render.meshes) {
                 this._onSetMeshes(render.meshes);
             }
@@ -957,9 +988,8 @@ class RenderComponent extends Component {
     }
 
     _onRenderAssetRemove() {
-        if (this._assetReference.asset && this._assetReference.asset.resource) {
-            this._assetReference.asset.resource.off('set:meshes', this._onSetMeshes, this);
-        }
+        this._evtSetMeshes?.off();
+        this._evtSetMeshes = null;
 
         this._onRenderAssetUnload();
     }

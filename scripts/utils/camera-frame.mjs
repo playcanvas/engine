@@ -167,7 +167,7 @@ class Bloom {
      * @precision 0
      * @step 0
      */
-    blurLevel = 1;
+    blurLevel = 16;
 }
 
 /** @interface */

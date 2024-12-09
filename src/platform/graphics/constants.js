@@ -932,7 +932,7 @@ export const PIXELFORMAT_R16F = 50;
 export const PIXELFORMAT_RG16F = 51;
 
 /**
- * 8-bit per-channel unsigned integer (R) format.
+ * 8-bit per-channel (R) format.
  *
  * @type {number}
  * @category Graphics
@@ -940,7 +940,7 @@ export const PIXELFORMAT_RG16F = 51;
 export const PIXELFORMAT_R8 = 52;
 
 /**
- * 8-bit per-channel unsigned integer (RG) format.
+ * 8-bit per-channel (RG) format.
  *
  * @type {number}
  * @category Graphics

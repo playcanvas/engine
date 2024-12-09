@@ -81,6 +81,12 @@ class SpriteAnimationClip extends EventHandler {
     static EVENT_LOOP = 'loop';
 
     /**
+     * @type {import('../../../core/event-handle.js').EventHandle|null}
+     * @private
+     */
+    _evtSetMeshes = null;
+
+    /**
      * Create a new SpriteAnimationClip instance.
      *
      * @param {SpriteComponent} component - The sprite component managing this clip.
@@ -170,7 +176,8 @@ class SpriteAnimationClip extends EventHandler {
      */
     set sprite(value) {
         if (this._sprite) {
-            this._sprite.off('set:meshes', this._onSpriteMeshesChange, this);
+            this._evtSetMeshes?.off();
+            this._evtSetMeshes = null;
             this._sprite.off('set:pixelsPerUnit', this._onSpritePpuChanged, this);
             this._sprite.off('set:atlas', this._onSpriteMeshesChange, this);
             if (this._sprite.atlas) {
@@ -181,7 +188,7 @@ class SpriteAnimationClip extends EventHandler {
         this._sprite = value;
 
         if (this._sprite) {
-            this._sprite.on('set:meshes', this._onSpriteMeshesChange, this);
+            this._evtSetMeshes = this._sprite.on('set:meshes', this._onSpriteMeshesChange, this);
             this._sprite.on('set:pixelsPerUnit', this._onSpritePpuChanged, this);
             this._sprite.on('set:atlas', this._onSpriteMeshesChange, this);
 

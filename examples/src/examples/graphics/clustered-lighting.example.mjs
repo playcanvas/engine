@@ -100,7 +100,6 @@ assetListLoader.load(() => {
     const cylinderMesh = pc.Mesh.fromGeometry(app.graphicsDevice, new pc.CylinderGeometry({ capSegments: 200 }));
     const cylinder = new pc.Entity();
     cylinder.addComponent('render', {
-        material: material,
         meshInstances: [new pc.MeshInstance(cylinderMesh, material)],
         castShadows: true
     });
