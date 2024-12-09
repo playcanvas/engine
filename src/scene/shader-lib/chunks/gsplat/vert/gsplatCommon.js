@@ -1,20 +1,22 @@
 export default /* glsl */`
 
-struct SplatState {
+struct SplatSource {
     uint order;         // render order
     uint id;            // splat id
     ivec2 uv;           // splat uv
     vec2 cornerUV;      // corner coordinates for this vertex of the gaussian (-1, -1)..(1, 1)
 };
 
-struct ProjectedState {
+struct SplatCenter {
+    vec3 view;          // center in view space
+    vec4 proj;          // center in clip space
     mat4 modelView;     // model-view matrix
-    vec3 centerCam;     // center in camera space
-    vec4 centerProj;    // center in clip space
+    float projMat00;    // elememt [0][0] of the projection matrix
+};
 
-    vec2 cornerOffset;  // corner offset in clip space
-    vec4 cornerProj;    // corner position in clip space
-    vec2 cornerUV;      // corner uv
+struct SplatCorner {
+    vec2 offset;        // corner offset from center in clip space
+    vec2 uv;            // corner uv
 };
 
 #if SH_BANDS > 0
@@ -44,43 +46,46 @@ uniform mat4 matrix_projection;
 uniform vec2 viewport;                  // viewport dimensions
 uniform vec4 camera_params;             // 1 / far, far, near, isOrtho
 
-// initialize the splat state structure
-bool initState(out SplatState state) {
+// initialize the splat source structure
+bool initSource(out SplatSource source) {
     // calculate splat order
-    state.order = vertex_id_attrib + uint(vertex_position.z);
+    source.order = vertex_id_attrib + uint(vertex_position.z);
 
     // return if out of range (since the last block of splats may be partially full)
-    if (state.order >= tex_params.x) {
+    if (source.order >= tex_params.x) {
         return false;
     }
 
-    ivec2 orderUV = ivec2(state.order % tex_params.y, state.order / tex_params.y);
+    ivec2 orderUV = ivec2(source.order % tex_params.y, source.order / tex_params.y);
 
     // read splat id
-    state.id = texelFetch(splatOrder, orderUV, 0).r;
+    source.id = texelFetch(splatOrder, orderUV, 0).r;
 
     // map id to uv
-    state.uv = ivec2(state.id % tex_params.y, state.id / tex_params.y);
+    source.uv = ivec2(source.id % tex_params.y, source.id / tex_params.y);
 
     // get the corner
-    state.cornerUV = vertex_position.xy;
+    source.cornerUV = vertex_position.xy;
 
     return true;
 }
 
-// calculate 2d covariance vectors
-bool projectCenter(SplatState state, vec3 center, out ProjectedState projState) {
-    // project center to screen space
-    mat4 model_view = matrix_view * matrix_model;
-    vec4 centerCam = model_view * vec4(center, 1.0);
-    vec4 centerProj = matrix_projection * centerCam;
-    if (centerProj.z < -centerProj.w) {
-        return false;
-    }
+// project the model space gaussian center to view and clip space
+bool initCenter(SplatSource source, vec3 modelCenter, out SplatCenter center) {
+    mat4 modelView = matrix_view * matrix_model;
+    vec4 centerView = center.modelView * vec4(modelCenter, 1.0);
+    center.view = centerView.xyz / centerView.w;
+    center.proj = matrix_projection * centerView;
+    center.projMat00 = matrix_projection[0][0];
+    center.modelView = modelView;
+    return center.proj.z >= -center.proj.w;
+}
 
+// calculate the clip-space offset from the center for this gaussian
+bool initCorner(SplatSource source, SplatCenter center, out SplatCorner corner) {
     // get covariance
     vec3 covA, covB;
-    readCovariance(state, covA, covB);
+    readCovariance(source, covA, covB);
 
     mat3 Vrk = mat3(
         covA.x, covA.y, covA.z, 
@@ -88,9 +93,9 @@ bool projectCenter(SplatState state, vec3 center, out ProjectedState projState) 
         covA.z, covB.y, covB.z
     );
 
-    float focal = viewport.x * matrix_projection[0][0];
+    float focal = viewport.x * center.projMat00;
 
-    vec3 v = camera_params.w == 1.0 ? vec3(0.0, 0.0, 1.0) : centerCam.xyz;
+    vec3 v = camera_params.w == 1.0 ? vec3(0.0, 0.0, 1.0) : center.view.xyz;
     float J1 = focal / v.z;
     vec2 J2 = -J1 / v.z * v.xy;
     mat3 J = mat3(
@@ -99,7 +104,7 @@ bool projectCenter(SplatState state, vec3 center, out ProjectedState projState) 
         0.0, 0.0, 0.0
     );
 
-    mat3 W = transpose(mat3(model_view));
+    mat3 W = transpose(mat3(center.modelView));
     mat3 T = W * J;
     mat3 cov = transpose(T) * Vrk * T;
 
@@ -120,8 +125,8 @@ bool projectCenter(SplatState state, vec3 center, out ProjectedState projState) 
         return false;
     }
 
-    // perform clipping test against x/y
-    if (any(greaterThan(abs(centerProj.xy) - vec2(l1, l2) / viewport * centerProj.w, centerProj.ww))) {
+    // perform cull against x/y axes
+    if (any(greaterThan(abs(center.proj.xy) - vec2(l1, l2) / viewport * center.proj.w, center.proj.ww))) {
         return false;
     }
 
@@ -129,22 +134,18 @@ bool projectCenter(SplatState state, vec3 center, out ProjectedState projState) 
     vec2 v1 = l1 * diagonalVector;
     vec2 v2 = l2 * vec2(diagonalVector.y, -diagonalVector.x);
 
-    projState.modelView = model_view;
-    projState.centerCam = centerCam.xyz;
-    projState.centerProj = centerProj;
-    projState.cornerOffset = (state.cornerUV.x * v1 + state.cornerUV.y * v2) / viewport * centerProj.w;
-    projState.cornerProj = centerProj + vec4(projState.cornerOffset, 0.0, 0.0);
-    projState.cornerUV = state.cornerUV;
+    corner.offset = (source.cornerUV.x * v1 + source.cornerUV.y * v2) / viewport * center.proj.w;
+    corner.uv = source.cornerUV;
 
     return true;
 }
 
-// modify the projected gaussian so it excludes regions with alpha
-// less than 1/255
-void applyClipping(inout ProjectedState projState, float alpha) {
+// modify the projected corner vector and uv so it excludes regions with alpha
+// less than 1/255, thereby saving some fillrate.
+void clipCorner(inout SplatCorner corner, float alpha) {
     float clip = min(1.0, sqrt(-log(1.0 / 255.0 / alpha)) / 2.0);
-    projState.cornerProj.xy -= projState.cornerOffset * (1.0 - clip);
-    projState.cornerUV *= clip;
+    corner.offset *= clip;
+    corner.uv *= clip;
 }
 
 // spherical Harmonics
@@ -172,15 +173,12 @@ void applyClipping(inout ProjectedState projState, float alpha) {
 #endif
 
 // see https://github.com/graphdeco-inria/gaussian-splatting/blob/main/utils/sh_utils.py
-vec3 evalSH(in SplatState state, in ProjectedState projState) {
+vec3 evalSH(in SplatSource source, in vec3 dir) {
 
     // read sh coefficients
     vec3 sh[SH_COEFFS];
     float scale;
-    readSHData(state, sh, scale);
-
-    // calculate the model-space view direction
-    vec3 dir = normalize(projState.centerCam * mat3(projState.modelView));
+    readSHData(source, sh, scale);
 
     float x = dir.x;
     float y = dir.y;

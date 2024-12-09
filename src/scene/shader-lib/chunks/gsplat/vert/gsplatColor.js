@@ -2,8 +2,8 @@ export default /* glsl */`
 
 uniform mediump sampler2D splatColor;
 
-vec4 readColor(in SplatState state) {
-    return texelFetch(splatColor, state.uv, 0);
+vec4 readColor(in SplatSource source) {
+    return texelFetch(splatColor, source.uv, 0);
 }
 
 `;

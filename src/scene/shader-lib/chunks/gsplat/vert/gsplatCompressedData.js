@@ -66,8 +66,8 @@ mat3 quatToMat3(vec4 R) {
 }
 
 // read center
-vec3 readCenter(SplatState state) {
-    uint chunkId = state.id / 256u;
+vec3 readCenter(SplatSource source) {
+    uint chunkId = source.id / 256u;
     ivec2 chunkUV = ivec2((chunkId % tex_params.z) * 5u, chunkId / tex_params.z);
 
     // read chunk and packed compressed data
@@ -76,12 +76,12 @@ vec3 readCenter(SplatState state) {
     chunkDataC = texelFetch(chunkTexture, chunkUV + ivec2(2, 0), 0);
     chunkDataD = texelFetch(chunkTexture, chunkUV + ivec2(3, 0), 0);
     chunkDataE = texelFetch(chunkTexture, chunkUV + ivec2(4, 0), 0);
-    packedData = texelFetch(packedTexture, state.uv, 0);
+    packedData = texelFetch(packedTexture, source.uv, 0);
 
     return mix(chunkDataA.xyz, vec3(chunkDataA.w, chunkDataB.xy), unpack111011(packedData.x));
 }
 
-vec4 readColor(in SplatState state) {
+vec4 readColor(in SplatSource source) {
     vec4 r = unpack8888(packedData.w);
     return vec4(mix(chunkDataD.xyz, vec3(chunkDataD.w, chunkDataE.xy), r.rgb), r.w);
 }
@@ -95,7 +95,7 @@ vec3 getScale() {
 }
 
 // given a rotation matrix and scale vector, compute 3d covariance A and B
-void readCovariance(in SplatState state, out vec3 covA, out vec3 covB) {
+void readCovariance(in SplatSource source, out vec3 covA, out vec3 covB) {
     mat3 rot = quatToMat3(getRotation());
     vec3 scale = getScale();
 
