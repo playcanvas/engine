@@ -30,14 +30,6 @@ import { PostEffectQueue } from './post-effect-queue.js';
  */
 
 /**
- * Callback used by {@link CameraComponent#onPreRenderLayer} and {@link CameraComponent#onPostRenderLayer}.
- *
- * @callback RenderLayerCallback
- * @param {Layer} layer - The layer.
- * @param {boolean} transparent - True for transparent sublayer, otherwise opaque sublayer.
- */
-
-/**
  * The Camera Component enables an Entity to render the scene. A scene requires at least one
  * enabled camera component to be rendered. Note that multiple camera components can be enabled
  * simultaneously (for split-screen or offscreen rendering, for example).
@@ -68,52 +60,6 @@ class CameraComponent extends Component {
      * @ignore
      */
     onPostprocessing = null;
-
-    /**
-     * Custom function that is called before the camera renders the scene.
-     *
-     * @type {Function|null}
-     */
-    onPreRender = null;
-
-    /**
-     * Custom function that is called before the camera renders a layer. This is called during
-     * rendering to a render target or a default framebuffer, and additional rendering can be
-     * performed here, for example using ${@link QuadRender#render}.
-     *
-     * @type {RenderLayerCallback|null}
-     */
-    onPreRenderLayer = null;
-
-    /**
-     * Custom function that is called after the camera renders the scene.
-     *
-     * @type {Function|null}
-     */
-    onPostRender = null;
-
-    /**
-     * Custom function that is called after the camera renders a layer. This is called during
-     * rendering to a render target or a default framebuffer, and additional rendering can be
-     * performed here, for example using ${@link QuadRender#render}.
-     *
-     * @type {RenderLayerCallback|null}
-     */
-    onPostRenderLayer = null;
-
-    /**
-     * Custom function that is called before visibility culling is performed for this camera.
-     *
-     * @type {Function|null}
-     */
-    onPreCull = null;
-
-    /**
-     * Custom function that is called after visibility culling is performed for this camera.
-     *
-     * @type {Function|null}
-     */
-    onPostCull = null;
 
     /**
      * A counter of requests of depth map rendering.
@@ -150,6 +96,24 @@ class CameraComponent extends Component {
 
     /** @private */
     _camera = new Camera();
+
+    /**
+     * @type {import('../../../core/event-handle.js').EventHandle|null}
+     * @private
+     */
+    _evtLayersChanged = null;
+
+    /**
+     * @type {import('../../../core/event-handle.js').EventHandle|null}
+     * @private
+     */
+    _evtLayerAdded = null;
+
+    /**
+     * @type {import('../../../core/event-handle.js').EventHandle|null}
+     * @private
+     */
+    _evtLayerRemoved = null;
 
     /**
      * Create a new CameraComponent instance.
@@ -1153,16 +1117,20 @@ class CameraComponent extends Component {
     }
 
     onEnable() {
-        const system = this.system;
-        const scene = system.app.scene;
+        const scene = this.system.app.scene;
         const layers = scene.layers;
 
-        system.addCamera(this);
+        this.system.addCamera(this);
 
-        scene.on('set:layers', this.onLayersChanged, this);
+        this._evtLayersChanged?.off();
+        this._evtLayersChanged = scene.on('set:layers', this.onLayersChanged, this);
+
         if (layers) {
-            layers.on('add', this.onLayerAdded, this);
-            layers.on('remove', this.onLayerRemoved, this);
+            this._evtLayerAdded?.off();
+            this._evtLayerAdded = layers.on('add', this.onLayerAdded, this);
+
+            this._evtLayerRemoved?.off();
+            this._evtLayerRemoved = layers.on('remove', this.onLayerRemoved, this);
         }
 
         if (this.enabled && this.entity.enabled) {
@@ -1173,21 +1141,24 @@ class CameraComponent extends Component {
     }
 
     onDisable() {
-        const system = this.system;
-        const scene = system.app.scene;
+        const scene = this.system.app.scene;
         const layers = scene.layers;
 
         this.postEffects.disable();
 
         this.removeCameraFromLayers();
 
-        scene.off('set:layers', this.onLayersChanged, this);
+        this._evtLayersChanged?.off();
+        this._evtLayersChanged = null;
+
         if (layers) {
-            layers.off('add', this.onLayerAdded, this);
-            layers.off('remove', this.onLayerRemoved, this);
+            this._evtLayerAdded?.off();
+            this._evtLayerAdded = null;
+            this._evtLayerRemoved?.off();
+            this._evtLayerRemoved = null;
         }
 
-        system.removeCamera(this);
+        this.system.removeCamera(this);
     }
 
     onRemove() {

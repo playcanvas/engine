@@ -59,6 +59,7 @@ import { RigidBodyComponent } from '../framework/components/rigid-body/component
 import { RigidBodyComponentSystem } from '../framework/components/rigid-body/system.js';
 import { LitShader } from '../scene/shader-lib/programs/lit-shader.js';
 import { Geometry } from '../scene/geometry/geometry.js';
+import { CameraComponent } from '../framework/components/camera/component.js';
 
 // MATH
 
@@ -564,30 +565,37 @@ Object.defineProperty(Scene.prototype, 'models', {
     }
 });
 
-// A helper function to add deprecated set and get property on a Layer
-function _removedLayerProperty(name) {
-    Object.defineProperty(Layer.prototype, name, {
+// A helper function to add deprecated set and get property on a class
+function _removedClassProperty(targetClass, name, comment = '') {
+    Object.defineProperty(targetClass.prototype, name, {
         set: function (value) {
-            Debug.errorOnce(`pc.Layer#${name} has been removed.`);
+            Debug.errorOnce(`${targetClass.name}#${name} has been removed. ${comment}`);
         },
         get: function () {
-            Debug.errorOnce(`pc.Layer#${name} has been removed.`);
+            Debug.errorOnce(`${targetClass.name}#${name} has been removed. ${comment}`);
             return undefined;
         }
     });
 }
 
-_removedLayerProperty('renderTarget');
-_removedLayerProperty('onPreCull');
-_removedLayerProperty('onPreRender');
-_removedLayerProperty('onPreRenderOpaque');
-_removedLayerProperty('onPreRenderTransparent');
-_removedLayerProperty('onPostCull');
-_removedLayerProperty('onPostRender');
-_removedLayerProperty('onPostRenderOpaque');
-_removedLayerProperty('onPostRenderTransparent');
-_removedLayerProperty('onDrawCall');
-_removedLayerProperty('layerReference');
+_removedClassProperty(Layer, 'renderTarget');
+_removedClassProperty(Layer, 'onPreCull');
+_removedClassProperty(Layer, 'onPreRender');
+_removedClassProperty(Layer, 'onPreRenderOpaque');
+_removedClassProperty(Layer, 'onPreRenderTransparent');
+_removedClassProperty(Layer, 'onPostCull');
+_removedClassProperty(Layer, 'onPostRender');
+_removedClassProperty(Layer, 'onPostRenderOpaque');
+_removedClassProperty(Layer, 'onPostRenderTransparent');
+_removedClassProperty(Layer, 'onDrawCall');
+_removedClassProperty(Layer, 'layerReference');
+
+_removedClassProperty(CameraComponent, 'onPreCull', 'Use Scene#EVENT_PRECULL event instead.');
+_removedClassProperty(CameraComponent, 'onPostCull', 'Use Scene#EVENT_POSTCULL event instead.');
+_removedClassProperty(CameraComponent, 'onPreRender', 'Use Scene#EVENT_PRERENDER event instead.');
+_removedClassProperty(CameraComponent, 'onPostRender', 'Use Scene#EVENT_POSTRENDER event instead.');
+_removedClassProperty(CameraComponent, 'onPreRenderLayer', 'Use Scene#EVENT_PRERENDER_LAYER event instead.');
+_removedClassProperty(CameraComponent, 'onPostRenderLayer', 'Use Scene#EVENT_POSTRENDER_LAYER event instead.');
 
 ForwardRenderer.prototype.renderComposition = function (comp) {
     Debug.deprecated('pc.ForwardRenderer#renderComposition is deprecated. Use pc.AppBase.renderComposition instead.');

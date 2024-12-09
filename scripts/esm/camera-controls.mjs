@@ -848,20 +848,24 @@ class CameraControls extends Script {
         tmpV1.sub2(start, point);
         const elev = Math.atan2(tmpV1.y, Math.sqrt(tmpV1.x * tmpV1.x + tmpV1.z * tmpV1.z)) * math.RAD_TO_DEG;
         const azim = Math.atan2(tmpV1.x, tmpV1.z) * math.RAD_TO_DEG;
-        this._dir.set(-elev, -azim);
+        this._dir.set(this._clampPitch(-elev), azim);
 
         this._origin.copy(point);
 
         this._cameraTransform.setTranslate(0, 0, 0);
-        this._baseTransform.setTRS(this._origin, Quat.IDENTITY, Vec3.ONE);
 
-        this._zoomDist = tmpV1.length();
+        const pos = this._camera.entity.getPosition();
+        const rot = this._camera.entity.getRotation();
+        this._baseTransform.setTRS(pos, rot, Vec3.ONE);
+
+        this._zoomDist = this._clampZoom(tmpV1.length());
 
         if (!smooth) {
-            this._angles.set(this._dir.x, this._dir.y, 0);
-            this._position.copy(point);
-            this._cameraDist = this._zoomDist;
+            this._smoothZoom(-1);
+            this._smoothTransform(-1);
         }
+
+        this._updateTransform();
     }
 
     /**
@@ -947,6 +951,10 @@ class CameraControls extends Script {
      * @param {number} dt - The delta time.
      */
     update(dt) {
+        if (this.app.xr?.active) {
+            return;
+        }
+
         if (!this._camera) {
             return;
         }
