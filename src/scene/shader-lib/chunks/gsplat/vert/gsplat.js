@@ -21,7 +21,10 @@ void main(void) {
     vec3 modelCenter = readCenter(source);
 
     SplatCenter center;
-    initCenter(source, modelCenter, center);
+    if (!initCenter(source, modelCenter, center)) {
+        gl_Position = discardVec;
+        return;
+    }
 
     // project center to screen space
     SplatCorner corner;
