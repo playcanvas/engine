@@ -44,6 +44,9 @@ void main(void)
 
     vec4 splat_proj = matrix_projection * splat_cam;
 
+    // ensure gaussians are not clipped by camera near and far
+    splat_proj.z = clamp(splat_proj.z, -abs(splat_proj.w), abs(splat_proj.w));
+
     // get covariance
     vec3 covA, covB;
     getCovariance(covA, covB);
