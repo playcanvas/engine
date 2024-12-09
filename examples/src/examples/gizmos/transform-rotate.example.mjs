@@ -1,6 +1,8 @@
 import { data } from 'examples/observer';
-import { deviceType, rootPath } from 'examples/utils';
+import { deviceType, fileImport, rootPath } from 'examples/utils';
 import * as pc from 'playcanvas';
+
+const { GridRenderer } = await fileImport(`${rootPath}/static/scripts/esm/grid-renderer.mjs`);
 
 const canvas = /** @type {HTMLCanvasElement} */ (document.getElementById('application-canvas'));
 window.focus();
@@ -82,6 +84,16 @@ data.set('camera', {
     fov: camera.camera.fov
 });
 
+// create grid
+const gridEntity = new pc.Entity('grid');
+gridEntity.addComponent('script');
+gridEntity.script.create(GridRenderer, {
+    attributes: {
+        halfExtents: new pc.Vec2(2, 2)
+    }
+});
+app.root.addChild(gridEntity);
+
 // create light entity
 const light = new pc.Entity('light');
 light.addComponent('light');
@@ -145,24 +157,6 @@ const resize = () => {
 };
 window.addEventListener('resize', resize);
 resize();
-
-// grid lines
-const createGridLines = (size = 1) => {
-    const lines = [];
-    for (let i = -size; i < size + 1; i++) {
-        lines.push(
-            new pc.Vec3(-size, 0, i),
-            new pc.Vec3(size, 0, i),
-            new pc.Vec3(i, 0, -size),
-            new pc.Vec3(i, 0, size)
-        );
-    }
-    return lines;
-};
-
-const lines = createGridLines(2);
-const gridCol = new pc.Color(1, 1, 1, 0.5);
-app.on('update', () => app.drawLines(lines, gridCol));
 
 app.on('destroy', () => {
     window.removeEventListener('resize', resize);
