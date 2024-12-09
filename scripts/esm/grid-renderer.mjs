@@ -362,8 +362,7 @@ class GridRenderer extends Script {
             this._set('half_extents', this._halfExtents);
 
             // transform
-            tmpM1.copy(this.entity.getWorldTransform()).invert();
-            this._set('inv_transform', tmpM1);
+            this._set('inv_transform', tmpM1.copy(this.entity.getWorldTransform()).invert());
 
             // colors
             this._set('color_x', this._colorX);
