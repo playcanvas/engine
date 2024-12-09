@@ -2,9 +2,7 @@ import { math } from '../../core/math/math.js';
 import { Color } from '../../core/math/color.js';
 import { RenderPassShaderQuad } from '../../scene/graphics/render-pass-shader-quad.js';
 import { shaderChunks } from '../../scene/shader-lib/chunks/chunks.js';
-import { TONEMAP_LINEAR } from '../../scene/constants.js';
-import { ShaderGenerator } from '../../scene/shader-lib/programs/shader-generator.js';
-
+import { TONEMAP_LINEAR, tonemapNames } from '../../scene/constants.js';
 
 // Contrast Adaptive Sharpening (CAS) is used to apply the sharpening. It's based on AMD's
 // FidelityFX CAS, WebGL implementation: https://www.shadertoy.com/view/wtlSWB. It's best to run it
@@ -13,6 +11,11 @@ import { ShaderGenerator } from '../../scene/shader-lib/programs/shader-generato
 // before the tone-mapping.
 
 const fragmentShader = /* glsl */ `
+
+    #include "tonemappingPS"
+    #include "decodePS"
+    #include "gamma2_2PS"
+
     varying vec2 uv0;
     uniform sampler2D sceneTexture;
     uniform vec2 sceneTextureInvRes;
@@ -422,23 +425,24 @@ class RenderPassCompose extends RenderPassShaderQuad {
             if (this._key !== key) {
                 this._key = key;
 
-                const defines =
-                    (this.bloomTexture ? '#define BLOOM\n' : '') +
-                    (this.ssaoTexture ? '#define SSAO\n' : '') +
-                    (this.gradingEnabled ? '#define GRADING\n' : '') +
-                    (this.vignetteEnabled ? '#define VIGNETTE\n' : '') +
-                    (this.fringingEnabled ? '#define FRINGING\n' : '') +
-                    (this.taaEnabled ? '#define TAA\n' : '') +
-                    (this.isSharpnessEnabled ? '#define CAS\n' : '') +
-                    (this._srgb ? '' : '#define GAMMA_CORRECT_OUTPUT\n') +
-                    (this._debug ? `#define DEBUG_COMPOSE ${this._debug}\n` : '');
+                const defines = new Map();
+                defines.set('TONEMAP', tonemapNames[this.toneMapping]);
+                if (this.bloomTexture) defines.set('BLOOM', true);
+                if (this.ssaoTexture) defines.set('SSAO', true);
+                if (this.gradingEnabled) defines.set('GRADING', true);
+                if (this.vignetteEnabled) defines.set('VIGNETTE', true);
+                if (this.fringingEnabled) defines.set('FRINGING', true);
+                if (this.taaEnabled) defines.set('TAA', true);
+                if (this.isSharpnessEnabled) defines.set('CAS', true);
+                if (!this._srgb) defines.set('GAMMA_CORRECT_OUTPUT', true);
+                if (this._debug) defines.set('DEBUG_COMPOSE', this._debug);
 
-                const fsChunks =
-                shaderChunks.decodePS +
-                shaderChunks.gamma2_2PS +
-                ShaderGenerator.tonemapCode(this.toneMapping);
+                const includes = new Map(Object.entries(shaderChunks));
 
-                this.shader = this.createQuadShader(`ComposeShader-${key}`, defines + fsChunks + fragmentShader);
+                this.shader = this.createQuadShader(`ComposeShader-${key}`, fragmentShader, {
+                    fragmentIncludes: includes,
+                    fragmentDefines: defines
+                });
             }
         }
     }

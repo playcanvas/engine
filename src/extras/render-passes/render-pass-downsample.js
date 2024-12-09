@@ -61,6 +61,13 @@ class RenderPassDownsample extends RenderPassShaderQuad {
         this.sourceInvResolutionValue = new Float32Array(2);
     }
 
+    setSourceTexture(value) {
+        this._sourceTexture = value;
+
+        // change resize source
+        this.options.resizeSource = value;
+    }
+
     execute() {
         this.sourceTextureId.setValue(this.sourceTexture);
 
