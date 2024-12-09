@@ -1,4 +1,3 @@
-/* eslint-disable-next-line import/no-unresolved */
 import {
     BLENDMODE_ONE,
     BLENDMODE_ONE_MINUS_SRC_ALPHA,
@@ -16,6 +15,7 @@ import {
     Color,
     Vec2,
     Vec3
+// eslint-disable-next-line import/no-unresolved
 } from 'playcanvas';
 
 /** @import { AppBase, CameraComponent, GraphicsDevice } from 'playcanvas' */
