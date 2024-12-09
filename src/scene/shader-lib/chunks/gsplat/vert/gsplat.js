@@ -32,7 +32,7 @@ void main(void) {
 
     // evaluate spherical harmonics
     #if SH_BANDS > 0
-        clr.xyz += evalSH(state, projState));
+        clr.xyz += evalSH(state, projState);
     #endif
 
     applyClipping(projState, clr.w);
