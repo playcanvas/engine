@@ -13,6 +13,7 @@ import {
     createShaderFromCode,
     Script,
     Color,
+    Mat4,
     Vec2,
     Vec3
 // eslint-disable-next-line import/no-unresolved
@@ -25,6 +26,7 @@ const LAYER_NAME = 'Grid';
 
 // temporary variables
 const tmpV1 = new Vec3();
+const tmpM1 = new Mat4();
 
 const vertexShader = /* glsl*/ `
     uniform vec3 near_origin;
@@ -58,6 +60,8 @@ const fragmentShader = /* glsl*/ `
 
     uniform vec2 half_extents;
 
+    uniform mat4 inv_transform;
+
     uniform vec3 color_x;
     uniform vec3 color_z;
 
@@ -80,6 +84,14 @@ const fragmentShader = /* glsl*/ `
         t = n;
 
         return true;
+    }
+
+    vec3 transformPoint(mat4 m, vec3 p) {
+        return (m * vec4(p, 1.0)).xyz;
+    }
+
+    vec3 transformDirection(mat4 m, vec3 p) {
+        return (m * vec4(p, 0.0)).xyz;
     }
 
     // https://bgolus.medium.com/the-best-darn-grid-shader-yet-727f9278b9d8#1e7c
@@ -122,8 +134,8 @@ const fragmentShader = /* glsl*/ `
     }
 
     void main(void) {
-        vec3 p = worldNear;
-        vec3 v = normalize(worldFar - worldNear);
+        vec3 p = transformPoint(inv_transform, worldNear);
+        vec3 v = transformDirection(inv_transform, normalize(worldFar - worldNear));
 
         // intersect ray with the world xz plane
         float t;
@@ -349,6 +361,10 @@ class GridRenderer extends Script {
             // size
             this._set('half_extents', this._halfExtents);
 
+            // transform
+            tmpM1.copy(this.entity.getWorldTransform()).invert();
+            this._set('inv_transform', tmpM1);
+
             // colors
             this._set('color_x', this._colorX);
             this._set('color_z', this._colorZ);
@@ -379,6 +395,10 @@ class GridRenderer extends Script {
     _set(name, value) {
         if (value instanceof Color) {
             this._device.scope.resolve(name).setValue([value.r, value.g, value.b]);
+        }
+
+        if (value instanceof Mat4) {
+            this._device.scope.resolve(name).setValue(value.data);
         }
 
         if (value instanceof Vec3) {
