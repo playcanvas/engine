@@ -321,9 +321,10 @@ class GridRenderer extends Script {
 
         const targetLayer = layer ?? GridRenderer.createLayer(this.app, undefined, 1);
 
+        const cameras = [];
         this.app.scene.on('prerender:layer', (camera, layer, transparent) => {
-            if (!camera.layers.includes(targetLayer.id)) {
-                camera.layers = camera.layers.concat(targetLayer.id);
+            if (!cameras.includes(camera)) {
+                cameras.push(camera);
             }
 
             if (layer !== targetLayer || transparent) {
@@ -381,6 +382,14 @@ class GridRenderer extends Script {
             this._set('depthMode', true);
             this._device.setBlendState(BlendState.NOWRITE);
             this._quadRender.render();
+        });
+
+        this.app.on('update', () => {
+            for (const camera of cameras) {
+                if (!camera.layers.includes(targetLayer.id)) {
+                    camera.layers = camera.layers.concat(targetLayer.id);
+                }
+            }
         });
     }
 
