@@ -3,7 +3,7 @@ import { data } from 'examples/observer';
 import { deviceType, rootPath, localImport, fileImport } from 'examples/utils';
 import * as pc from 'playcanvas';
 
-const { GridRenderer } = await fileImport(`${rootPath}/static/scripts/grid-renderer.mjs`);
+const { GridRenderer } = await fileImport(`${rootPath}/static/scripts/esm/grid-renderer.mjs`);
 
 const canvas = /** @type {HTMLCanvasElement} */ (document.getElementById('application-canvas'));
 window.focus();
@@ -129,11 +129,15 @@ app.root.addChild(camera);
 orbitCamera.distance = 5 * camera.camera?.aspectRatio;
 
 // attach grid renderer
-const grid = /** @type {GridRenderer} */ (camera.script.create(GridRenderer, {
+// create grid
+const gridEntity = new pc.Entity('grid');
+gridEntity.addComponent('script');
+const grid = /** @type {GridRenderer} */ (gridEntity.script.create(GridRenderer, {
     attributes: {
         halfExtents: new pc.Vec2(4, 4)
     }
 }));
+app.root.addChild(gridEntity);
 data.set('grid', {
     resolution: grid.resolution + 1,
     size: grid.halfExtents.x,
@@ -249,16 +253,16 @@ data.on('*:set', (/** @type {string} */ path, /** @type {any} */ value) => {
         case 'grid': {
             switch (key) {
                 case 'resolution':
-                    grid.resolution = value - 1;
+                    gridEntity.resolution = value - 1;
                     break;
                 case 'size':
-                    grid.halfExtents = tmpVa.set(value, value);
+                    gridEntity.halfExtents = tmpVa.set(value, value);
                     break;
                 case 'colorX':
-                    grid.colorX = tmpC1.set(value[0], value[1], value[2]);
+                    gridEntity.colorX = tmpC1.set(value[0], value[1], value[2]);
                     break;
                 case 'colorZ':
-                    grid.colorZ = tmpC1.set(value[0], value[1], value[2]);
+                    gridEntity.colorZ = tmpC1.set(value[0], value[1], value[2]);
                     break;
             }
             break;
