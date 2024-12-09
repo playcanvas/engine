@@ -252,16 +252,16 @@ data.on('*:set', (/** @type {string} */ path, /** @type {any} */ value) => {
         case 'grid': {
             switch (key) {
                 case 'resolution':
-                    gridEntity.resolution = value - 1;
+                    grid.resolution = value - 1;
                     break;
                 case 'size':
-                    gridEntity.halfExtents = tmpVa.set(value, value);
+                    grid.halfExtents = tmpVa.set(value, value);
                     break;
                 case 'colorX':
-                    gridEntity.colorX = tmpC1.set(value[0], value[1], value[2]);
+                    grid.colorX = tmpC1.set(value[0], value[1], value[2]);
                     break;
                 case 'colorZ':
-                    gridEntity.colorZ = tmpC1.set(value[0], value[1], value[2]);
+                    grid.colorZ = tmpC1.set(value[0], value[1], value[2]);
                     break;
             }
             break;
