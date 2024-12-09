@@ -62,7 +62,7 @@ mat3 quatToMat3(vec4 R) {
 
 // read center
 vec3 readCenter(SplatSource source) {
-    uint w = uint(textureSize(chunkTexture, 0).x) / 5;
+    uint w = uint(textureSize(chunkTexture, 0).x) / 5u;
     uint chunkId = source.id / 256u;
     ivec2 chunkUV = ivec2((chunkId % w) * 5u, chunkId / w);
 
