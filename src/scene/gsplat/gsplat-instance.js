@@ -143,10 +143,7 @@ class GSplatInstance {
                 this.meshInstance.instancingCount = Math.ceil(count / splatInstanceSize);
 
                 // update splat count on the material
-                const tex_params = this.material.getParameter('tex_params');
-                if (tex_params?.data) {
-                    tex_params.data[0] = count;
-                }
+                this.material.setParameter('numSplats', count);
             });
         }
     }

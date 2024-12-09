@@ -31,6 +31,8 @@ class GSplat {
 
     numSplats;
 
+    numSplatsVisible;
+
     /** @type {Float32Array} */
     centers;
 
@@ -70,6 +72,7 @@ class GSplat {
 
         this.device = device;
         this.numSplats = numSplats;
+        this.numSplatsVisible = numSplats;
 
         this.centers = new Float32Array(gsplatData.numSplats * 3);
         gsplatData.getCenters(this.centers);
@@ -116,7 +119,7 @@ class GSplat {
         result.setParameter('splatColor', this.colorTexture);
         result.setParameter('transformA', this.transformATexture);
         result.setParameter('transformB', this.transformBTexture);
-        result.setParameter('tex_params', new Float32Array([this.numSplats, this.colorTexture.width]));
+        result.setParameter('numSplats', this.numSplatsVisible);
         if (this.hasSH) {
             result.setDefine('SH_BANDS', 3);
             result.setParameter('splatSH_1to3', this.sh1to3Texture);

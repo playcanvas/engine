@@ -40,37 +40,41 @@ vec4 animateColor(float height, vec4 clr) {
 
 void main(void) {
     // read gaussian center
-    SplatState state;
-    if (!initState(state)) {
+    SplatSource source;
+    if (!initSource(source)) {
         gl_Position = discardVec;
         return;
     }
 
-    vec3 center = animatePosition(readCenter(state));
+    vec3 centerPos = animatePosition(readCenter(source));
+
+    SplatCenter center;
+    initCenter(source, centerPos, center);
 
     // project center to screen space
-    ProjectedState projState;
-    if (!projectCenter(state, center, projState)) {
+    SplatCorner corner;
+    if (!initCorner(source, center, corner)) {
         gl_Position = discardVec;
         return;
     }
 
     // read color
-    vec4 clr = readColor(state);
+    vec4 clr = readColor(source);
 
     // evaluate spherical harmonics
     #if SH_BANDS > 0
-        clr.xyz = max(clr.xyz + evalSH(state, projState), 0.0);
+        vec3 dir = normalize(center.view * mat3(center.modelView));
+        clr.xyz += evalSH(state, dir);
     #endif
 
-    clr = animateColor(center.y, clr);
+    clr = animateColor(centerPos.y, clr);
 
-    applyClipping(projState, clr.w);
+    clipCorner(corner, clr.w);
 
     // write output
-    gl_Position = projState.cornerProj;
-    gaussianUV = projState.cornerUV;
-    gaussianColor = vec4(prepareOutputFromGamma(clr.xyz), clr.w);
+    gl_Position = center.proj + vec4(corner.offset, 0.0, 0.0);
+    gaussianUV = corner.uv;
+    gaussianColor = vec4(prepareOutputFromGamma(max(clr.xyz, 0.0)), clr.w);
 
     #ifndef DITHER_NONE
         id = float(state.id);
