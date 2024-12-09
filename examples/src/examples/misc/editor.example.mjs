@@ -128,7 +128,6 @@ camera.setPosition(1, 1, 1);
 app.root.addChild(camera);
 orbitCamera.distance = 5 * camera.camera?.aspectRatio;
 
-// attach grid renderer
 // create grid
 const gridEntity = new pc.Entity('grid');
 gridEntity.addComponent('script');
