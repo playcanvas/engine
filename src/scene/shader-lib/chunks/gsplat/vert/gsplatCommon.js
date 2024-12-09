@@ -73,12 +73,16 @@ bool initSource(out SplatSource source) {
 // project the model space gaussian center to view and clip space
 bool initCenter(SplatSource source, vec3 modelCenter, out SplatCenter center) {
     mat4 modelView = matrix_view * matrix_model;
-    vec4 centerView = center.modelView * vec4(modelCenter, 1.0);
+    vec4 centerView = modelView * vec4(modelCenter, 1.0);
+    vec4 centerProj = matrix_projection * centerView;
+    if (centerProj.z < -centerProj.w) {
+        return false;
+    }
     center.view = centerView.xyz / centerView.w;
-    center.proj = matrix_projection * centerView;
+    center.proj = centerProj;
     center.projMat00 = matrix_projection[0][0];
     center.modelView = modelView;
-    return center.proj.z >= -center.proj.w;
+    return true;
 }
 
 // calculate the clip-space offset from the center for this gaussian
