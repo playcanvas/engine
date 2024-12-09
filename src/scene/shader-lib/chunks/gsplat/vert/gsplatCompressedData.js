@@ -1,9 +1,4 @@
 export default /* glsl */`
-attribute vec3 vertex_position;         // xy: cornerUV, z: render order offset
-attribute uint vertex_id_attrib;        // render order base
-
-uniform uvec3 tex_params;               // num splats, packed width, chunked width
-uniform highp usampler2D splatOrder;
 uniform highp usampler2D packedTexture;
 uniform highp sampler2D chunkTexture;
 
@@ -67,8 +62,9 @@ mat3 quatToMat3(vec4 R) {
 
 // read center
 vec3 readCenter(SplatSource source) {
+    uint w = uint(textureSize(chunkTexture, 0).x) / 5;
     uint chunkId = source.id / 256u;
-    ivec2 chunkUV = ivec2((chunkId % tex_params.z) * 5u, chunkId / tex_params.z);
+    ivec2 chunkUV = ivec2((chunkId % w) * 5u, chunkId / w);
 
     // read chunk and packed compressed data
     chunkDataA = texelFetch(chunkTexture, chunkUV, 0);

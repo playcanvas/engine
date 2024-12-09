@@ -1,9 +1,4 @@
 export default /* glsl */`
-attribute vec3 vertex_position;         // xy: cornerUV, z: render order offset
-attribute uint vertex_id_attrib;        // render order base
-
-uniform uvec2 tex_params;               // num splats, texture width
-uniform highp usampler2D splatOrder;
 uniform highp usampler2D transformA;
 uniform highp sampler2D transformB;
 

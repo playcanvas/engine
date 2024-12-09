@@ -27,6 +27,8 @@ class GSplatCompressed {
 
     numSplats;
 
+    numSplatsVisible;
+
     /** @type {BoundingBox} */
     aabb;
 
@@ -57,6 +59,7 @@ class GSplatCompressed {
 
         this.device = device;
         this.numSplats = numSplats;
+        this.numVisibleSplats = numSplats;
 
         // initialize aabb
         this.aabb = new BoundingBox();
@@ -147,7 +150,7 @@ class GSplatCompressed {
         result.setDefine('GSPLAT_COMPRESSED_DATA', true);
         result.setParameter('packedTexture', this.packedTexture);
         result.setParameter('chunkTexture', this.chunkTexture);
-        result.setParameter('tex_params', new Float32Array([this.numSplats, this.packedTexture.width, this.chunkTexture.width / 5]));
+        result.setParameter('numSplats', this.numSplatsVisible);
         if (this.shTexture0) {
             result.setDefine('SH_BANDS', 3);
             result.setParameter('shTexture0', this.shTexture0);

@@ -1,5 +1,6 @@
 export default /* glsl */`
 
+// stores the source UV and order of the splat
 struct SplatSource {
     uint order;         // render order
     uint id;            // splat id
@@ -7,6 +8,7 @@ struct SplatSource {
     vec2 cornerUV;      // corner coordinates for this vertex of the gaussian (-1, -1)..(1, 1)
 };
 
+// stores the camera and clip space position of the gaussian center
 struct SplatCenter {
     vec3 view;          // center in view space
     vec4 proj;          // center in clip space
@@ -14,6 +16,7 @@ struct SplatCenter {
     float projMat00;    // elememt [0][0] of the projection matrix
 };
 
+// stores the offset from center for the current gaussian
 struct SplatCorner {
     vec2 offset;        // corner offset from center in clip space
     vec2 uv;            // corner uv
@@ -38,114 +41,13 @@ struct SplatCorner {
     #include "gsplatSHVS"
 #endif
 
-#include "gsplatOutputPS"
+#include "gsplatSourceVS"
+#include "gsplatCenterVS"
+#include "gsplatCornerVS"
+#include "gsplatOutputVS"
 
-uniform mat4 matrix_model;
-uniform mat4 matrix_view;
-uniform mat4 matrix_projection;
-uniform vec2 viewport;                  // viewport dimensions
-uniform vec4 camera_params;             // 1 / far, far, near, isOrtho
-
-// initialize the splat source structure
-bool initSource(out SplatSource source) {
-    // calculate splat order
-    source.order = vertex_id_attrib + uint(vertex_position.z);
-
-    // return if out of range (since the last block of splats may be partially full)
-    if (source.order >= tex_params.x) {
-        return false;
-    }
-
-    ivec2 orderUV = ivec2(source.order % tex_params.y, source.order / tex_params.y);
-
-    // read splat id
-    source.id = texelFetch(splatOrder, orderUV, 0).r;
-
-    // map id to uv
-    source.uv = ivec2(source.id % tex_params.y, source.id / tex_params.y);
-
-    // get the corner
-    source.cornerUV = vertex_position.xy;
-
-    return true;
-}
-
-// project the model space gaussian center to view and clip space
-bool initCenter(SplatSource source, vec3 modelCenter, out SplatCenter center) {
-    mat4 modelView = matrix_view * matrix_model;
-    vec4 centerView = modelView * vec4(modelCenter, 1.0);
-    vec4 centerProj = matrix_projection * centerView;
-    if (centerProj.z < -centerProj.w) {
-        return false;
-    }
-    center.view = centerView.xyz / centerView.w;
-    center.proj = centerProj;
-    center.projMat00 = matrix_projection[0][0];
-    center.modelView = modelView;
-    return true;
-}
-
-// calculate the clip-space offset from the center for this gaussian
-bool initCorner(SplatSource source, SplatCenter center, out SplatCorner corner) {
-    // get covariance
-    vec3 covA, covB;
-    readCovariance(source, covA, covB);
-
-    mat3 Vrk = mat3(
-        covA.x, covA.y, covA.z, 
-        covA.y, covB.x, covB.y,
-        covA.z, covB.y, covB.z
-    );
-
-    float focal = viewport.x * center.projMat00;
-
-    vec3 v = camera_params.w == 1.0 ? vec3(0.0, 0.0, 1.0) : center.view.xyz;
-    float J1 = focal / v.z;
-    vec2 J2 = -J1 / v.z * v.xy;
-    mat3 J = mat3(
-        J1, 0.0, J2.x, 
-        0.0, J1, J2.y, 
-        0.0, 0.0, 0.0
-    );
-
-    mat3 W = transpose(mat3(center.modelView));
-    mat3 T = W * J;
-    mat3 cov = transpose(T) * Vrk * T;
-
-    float diagonal1 = cov[0][0] + 0.3;
-    float offDiagonal = cov[0][1];
-    float diagonal2 = cov[1][1] + 0.3;
-
-    float mid = 0.5 * (diagonal1 + diagonal2);
-    float radius = length(vec2((diagonal1 - diagonal2) / 2.0, offDiagonal));
-    float lambda1 = mid + radius;
-    float lambda2 = max(mid - radius, 0.1);
-
-    float l1 = 2.0 * min(sqrt(2.0 * lambda1), 1024.0);
-    float l2 = 2.0 * min(sqrt(2.0 * lambda2), 1024.0);
-
-    // early-out gaussians smaller than 2 pixels
-    if (l1 < 2.0 && l2 < 2.0) {
-        return false;
-    }
-
-    // perform cull against x/y axes
-    if (any(greaterThan(abs(center.proj.xy) - vec2(l1, l2) / viewport * center.proj.w, center.proj.ww))) {
-        return false;
-    }
-
-    vec2 diagonalVector = normalize(vec2(offDiagonal, lambda1 - diagonal1));
-    vec2 v1 = l1 * diagonalVector;
-    vec2 v2 = l2 * vec2(diagonalVector.y, -diagonalVector.x);
-
-    corner.offset = (source.cornerUV.x * v1 + source.cornerUV.y * v2) / viewport * center.proj.w;
-    corner.uv = source.cornerUV;
-
-    return true;
-}
-
-// modify the projected corner vector and uv so it excludes regions with alpha
-// less than 1/255, thereby saving some fillrate.
+// modify the gaussian corner so it excludes gaussian regions with alpha
+// less than 1/255
 void clipCorner(inout SplatCorner corner, float alpha) {
     float clip = min(1.0, sqrt(-log(1.0 / 255.0 / alpha)) / 2.0);
     corner.offset *= clip;
