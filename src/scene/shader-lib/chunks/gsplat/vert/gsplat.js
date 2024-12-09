@@ -12,38 +12,43 @@ mediump vec4 discardVec = vec4(0.0, 0.0, 2.0, 1.0);
 
 void main(void) {
     // read gaussian details
-    SplatState state;
-    if (!initState(state)) {
+    SplatSource source;
+    if (!initSource(source)) {
         gl_Position = discardVec;
         return;
     }
 
-    vec3 center = readCenter(state);
+    vec3 modelCenter = readCenter(source);
+
+    SplatCenter center;
+    initCenter(source, modelCenter, center);
 
     // project center to screen space
-    ProjectedState projState;
-    if (!projectCenter(state, center, projState)) {
+    SplatCorner corner;
+    if (!initCorner(source, center, corner)) {
         gl_Position = discardVec;
         return;
     }
 
     // read color
-    vec4 clr = readColor(state);
+    vec4 clr = readColor(source);
 
     // evaluate spherical harmonics
     #if SH_BANDS > 0
-        clr.xyz += evalSH(state, projState);
+        // calculate the model-space view direction
+        vec3 dir = normalize(center.view * mat3(center.modelView));
+        clr.xyz += evalSH(source, dir);
     #endif
 
-    applyClipping(projState, clr.w);
+    clipCorner(corner, clr.w);
 
     // write output
-    gl_Position = projState.cornerProj;
-    gaussianUV = projState.cornerUV;
+    gl_Position = center.proj + vec4(corner.offset, 0, 0);
+    gaussianUV = corner.uv;
     gaussianColor = vec4(prepareOutputFromGamma(max(clr.xyz, 0.0)), clr.w);
 
     #ifndef DITHER_NONE
-        id = float(state.id);
+        id = float(source.id);
     #endif
 }
 `;

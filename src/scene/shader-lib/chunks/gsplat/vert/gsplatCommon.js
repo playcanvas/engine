@@ -1,20 +1,25 @@
 export default /* glsl */`
 
-struct SplatState {
+// stores the source UV and order of the splat
+struct SplatSource {
     uint order;         // render order
     uint id;            // splat id
     ivec2 uv;           // splat uv
     vec2 cornerUV;      // corner coordinates for this vertex of the gaussian (-1, -1)..(1, 1)
 };
 
-struct ProjectedState {
+// stores the camera and clip space position of the gaussian center
+struct SplatCenter {
+    vec3 view;          // center in view space
+    vec4 proj;          // center in clip space
     mat4 modelView;     // model-view matrix
-    vec3 centerCam;     // center in camera space
-    vec4 centerProj;    // center in clip space
+    float projMat00;    // elememt [0][0] of the projection matrix
+};
 
-    vec2 cornerOffset;  // corner offset in clip space
-    vec4 cornerProj;    // corner position in clip space
-    vec2 cornerUV;      // corner uv
+// stores the offset from center for the current gaussian
+struct SplatCorner {
+    vec2 offset;        // corner offset from center in clip space
+    vec2 uv;            // corner uv
 };
 
 #if SH_BANDS > 0
@@ -36,115 +41,17 @@ struct ProjectedState {
     #include "gsplatSHVS"
 #endif
 
-#include "gsplatOutputPS"
+#include "gsplatSourceVS"
+#include "gsplatCenterVS"
+#include "gsplatCornerVS"
+#include "gsplatOutputVS"
 
-uniform mat4 matrix_model;
-uniform mat4 matrix_view;
-uniform mat4 matrix_projection;
-uniform vec2 viewport;                  // viewport dimensions
-uniform vec4 camera_params;             // 1 / far, far, near, isOrtho
-
-// initialize the splat state structure
-bool initState(out SplatState state) {
-    // calculate splat order
-    state.order = vertex_id_attrib + uint(vertex_position.z);
-
-    // return if out of range (since the last block of splats may be partially full)
-    if (state.order >= tex_params.x) {
-        return false;
-    }
-
-    ivec2 orderUV = ivec2(state.order % tex_params.y, state.order / tex_params.y);
-
-    // read splat id
-    state.id = texelFetch(splatOrder, orderUV, 0).r;
-
-    // map id to uv
-    state.uv = ivec2(state.id % tex_params.y, state.id / tex_params.y);
-
-    // get the corner
-    state.cornerUV = vertex_position.xy;
-
-    return true;
-}
-
-// calculate 2d covariance vectors
-bool projectCenter(SplatState state, vec3 center, out ProjectedState projState) {
-    // project center to screen space
-    mat4 model_view = matrix_view * matrix_model;
-    vec4 centerCam = model_view * vec4(center, 1.0);
-    vec4 centerProj = matrix_projection * centerCam;
-    if (centerProj.z < -centerProj.w) {
-        return false;
-    }
-
-    // get covariance
-    vec3 covA, covB;
-    readCovariance(state, covA, covB);
-
-    mat3 Vrk = mat3(
-        covA.x, covA.y, covA.z, 
-        covA.y, covB.x, covB.y,
-        covA.z, covB.y, covB.z
-    );
-
-    float focal = viewport.x * matrix_projection[0][0];
-
-    vec3 v = camera_params.w == 1.0 ? vec3(0.0, 0.0, 1.0) : centerCam.xyz;
-    float J1 = focal / v.z;
-    vec2 J2 = -J1 / v.z * v.xy;
-    mat3 J = mat3(
-        J1, 0.0, J2.x, 
-        0.0, J1, J2.y, 
-        0.0, 0.0, 0.0
-    );
-
-    mat3 W = transpose(mat3(model_view));
-    mat3 T = W * J;
-    mat3 cov = transpose(T) * Vrk * T;
-
-    float diagonal1 = cov[0][0] + 0.3;
-    float offDiagonal = cov[0][1];
-    float diagonal2 = cov[1][1] + 0.3;
-
-    float mid = 0.5 * (diagonal1 + diagonal2);
-    float radius = length(vec2((diagonal1 - diagonal2) / 2.0, offDiagonal));
-    float lambda1 = mid + radius;
-    float lambda2 = max(mid - radius, 0.1);
-
-    float l1 = 2.0 * min(sqrt(2.0 * lambda1), 1024.0);
-    float l2 = 2.0 * min(sqrt(2.0 * lambda2), 1024.0);
-
-    // early-out gaussians smaller than 2 pixels
-    if (l1 < 2.0 && l2 < 2.0) {
-        return false;
-    }
-
-    // perform clipping test against x/y
-    if (any(greaterThan(abs(centerProj.xy) - vec2(l1, l2) / viewport * centerProj.w, centerProj.ww))) {
-        return false;
-    }
-
-    vec2 diagonalVector = normalize(vec2(offDiagonal, lambda1 - diagonal1));
-    vec2 v1 = l1 * diagonalVector;
-    vec2 v2 = l2 * vec2(diagonalVector.y, -diagonalVector.x);
-
-    projState.modelView = model_view;
-    projState.centerCam = centerCam.xyz;
-    projState.centerProj = centerProj;
-    projState.cornerOffset = (state.cornerUV.x * v1 + state.cornerUV.y * v2) / viewport * centerProj.w;
-    projState.cornerProj = centerProj + vec4(projState.cornerOffset, 0.0, 0.0);
-    projState.cornerUV = state.cornerUV;
-
-    return true;
-}
-
-// modify the projected gaussian so it excludes regions with alpha
+// modify the gaussian corner so it excludes gaussian regions with alpha
 // less than 1/255
-void applyClipping(inout ProjectedState projState, float alpha) {
+void clipCorner(inout SplatCorner corner, float alpha) {
     float clip = min(1.0, sqrt(-log(1.0 / 255.0 / alpha)) / 2.0);
-    projState.cornerProj.xy -= projState.cornerOffset * (1.0 - clip);
-    projState.cornerUV *= clip;
+    corner.offset *= clip;
+    corner.uv *= clip;
 }
 
 // spherical Harmonics
@@ -172,15 +79,12 @@ void applyClipping(inout ProjectedState projState, float alpha) {
 #endif
 
 // see https://github.com/graphdeco-inria/gaussian-splatting/blob/main/utils/sh_utils.py
-vec3 evalSH(in SplatState state, in ProjectedState projState) {
+vec3 evalSH(in SplatSource source, in vec3 dir) {
 
     // read sh coefficients
     vec3 sh[SH_COEFFS];
     float scale;
-    readSHData(state, sh, scale);
-
-    // calculate the model-space view direction
-    vec3 dir = normalize(projState.centerCam * mat3(projState.modelView));
+    readSHData(source, sh, scale);
 
     float x = dir.x;
     float y = dir.y;

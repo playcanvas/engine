@@ -9,11 +9,11 @@ vec4 unpack8888s(in uint bits) {
     return vec4((uvec4(bits) >> uvec4(0u, 8u, 16u, 24u)) & 0xffu) * (8.0 / 255.0) - 4.0;
 }
 
-void readSHData(in SplatState state, out vec3 sh[15], out float scale) {
+void readSHData(in SplatSource source, out vec3 sh[15], out float scale) {
     // read the sh coefficients
-    uvec4 shData0 = texelFetch(shTexture0, state.uv, 0);
-    uvec4 shData1 = texelFetch(shTexture1, state.uv, 0);
-    uvec4 shData2 = texelFetch(shTexture2, state.uv, 0);
+    uvec4 shData0 = texelFetch(shTexture0, source.uv, 0);
+    uvec4 shData1 = texelFetch(shTexture1, source.uv, 0);
+    uvec4 shData2 = texelFetch(shTexture2, source.uv, 0);
 
     vec4 r0 = unpack8888s(shData0.x);
     vec4 r1 = unpack8888s(shData0.y);
