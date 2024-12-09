@@ -361,7 +361,8 @@ class GSplatCompressedShaderGenerator {
     generateKey(options) {
         const vsHash = hashCode(options.vertex);
         const fsHash = hashCode(options.fragment);
-        return `splat-${options.pass}-${options.gamma}-${options.toneMapping}-${vsHash}-${fsHash}-${options.dither}}`;
+        const defines = options.defines?.sort().join('-') ?? '';
+        return `splat-${options.pass}-${options.gamma}-${options.toneMapping}-${vsHash}-${fsHash}-${options.dither}-${defines}`;
     }
 
     createShaderDefinition(device, options) {
