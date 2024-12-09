@@ -35,13 +35,14 @@ void main(void)
     // handle transforms
     mat4 model_view = matrix_view * matrix_model;
     vec4 splat_cam = model_view * vec4(center, 1.0);
-    vec4 splat_proj = matrix_projection * splat_cam;
 
     // cull behind camera
-    if (splat_proj.z < -splat_proj.w) {
+    if (splat_cam.z > 0.0) {
         gl_Position = discardVec;
         return;
     }
+
+    vec4 splat_proj = matrix_projection * splat_cam;
 
     // get covariance
     vec3 covA, covB;
