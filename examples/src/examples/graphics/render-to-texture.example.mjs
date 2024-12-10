@@ -4,6 +4,15 @@ import * as pc from 'playcanvas';
 const canvas = /** @type {HTMLCanvasElement} */ (document.getElementById('application-canvas'));
 window.focus();
 
+// initialize basis
+pc.basisInitialize({
+    glueUrl: `${rootPath}/static/lib/basis/basis.wasm.js`,
+    wasmUrl: `${rootPath}/static/lib/basis/basis.wasm.wasm`,
+    fallbackUrl: `${rootPath}/static/lib/basis/basis.js`
+});
+
+// pc.Tracing.set(pc.TRACEID_TEXTURE_ALLOC, true);
+
 // Overview:
 // There are 3 layers used:
 // - worldLayer - it contains objects that render into main camera and also into texture
@@ -21,7 +30,11 @@ const assets = {
         { type: pc.TEXTURETYPE_RGBP, mipmaps: false }
     ),
     checkerboard: new pc.Asset('checkerboard', 'texture', { url: `${rootPath}/static/assets/textures/checkboard.png` }),
-    script: new pc.Asset('script', 'script', { url: `${rootPath}/static/scripts/camera/orbit-camera.js` })
+    script: new pc.Asset('script', 'script', { url: `${rootPath}/static/scripts/camera/orbit-camera.js` }),
+    monster: new pc.Asset('statue', 'container', { url: `${rootPath}/static/assets/models/redesign_deathclaw_lod0_lod3.glb` }),
+    cube: new pc.Asset('cube', 'container', { url: `${rootPath}/static/assets/models/playcanvas-cube.glb` }),
+    boom: new pc.Asset('cube', 'container', { url: `${rootPath}/static/assets/models/boom-box.glb` }),
+    alien: new pc.Asset('cube', 'container', { url: `${rootPath}/static/assets/models/alien.glb` })
 };
 
 const gfxOptions = {
@@ -46,7 +59,7 @@ createOptions.componentSystems = [
     pc.ScriptComponentSystem,
     pc.ParticleSystemComponentSystem
 ];
-createOptions.resourceHandlers = [pc.TextureHandler, pc.ScriptHandler];
+createOptions.resourceHandlers = [pc.TextureHandler, pc.ScriptHandler, pc.ContainerHandler];
 
 const app = new pc.AppBase(canvas);
 app.init(createOptions);
@@ -140,8 +153,8 @@ assetListLoader.load(() => {
 
     // create texture and render target for rendering into, including depth buffer
     const texture = new pc.Texture(app.graphicsDevice, {
-        width: 512,
-        height: 256,
+        width: 1024,
+        height: 1024,
         format: pc.PIXELFORMAT_SRGBA8,
         mipmaps: true,
         addressU: pc.ADDRESS_CLAMP_TO_EDGE,
@@ -151,7 +164,9 @@ assetListLoader.load(() => {
         name: 'RT',
         colorBuffer: texture,
         depth: true,
-        flipY: !app.graphicsDevice.isWebGPU,
+        stencil: true,
+        flipY: true,
+        //flipY: !app.graphicsDevice.isWebGPU,
         samples: 2
     });
 
@@ -181,14 +196,38 @@ assetListLoader.load(() => {
     createPrimitive('box', new pc.Vec3(2, 1, 0), new pc.Vec3(2, 2, 2), pc.Color.YELLOW, [worldLayer.id]);
 
     // particle system
-    createParticleSystem(new pc.Vec3(2, 3, 0));
+    //createParticleSystem(new pc.Vec3(2, 3, 0));
+
+
+    const monster = assets.monster.resource.instantiateRenderEntity();
+    monster.setLocalPosition(0, 0, 5);
+    monster.setLocalScale(0.5, 0.5, 0.5);
+    app.root.addChild(monster);
+
+
+    const cube = assets.cube.resource.instantiateRenderEntity();
+    cube.setLocalPosition(5, 0, 5);
+    cube.setLocalScale(3, 3, 3);
+    app.root.addChild(cube);
+
+
+    const boom = assets.boom.resource.instantiateRenderEntity();
+    boom.setLocalPosition(-5, 2, 5);
+    boom.setLocalScale(300, 300, 300);
+    app.root.addChild(boom);
+
+    const alien = assets.alien.resource.instantiateRenderEntity();
+    alien.setLocalPosition(-9, 10, 5);
+    alien.setLocalScale(0.03, 0.03, 0.03);
+    app.root.addChild(alien);
+
 
     // Create main camera, which renders entities in world, excluded and skybox layers
     const camera = new pc.Entity('Camera');
     camera.addComponent('camera', {
         fov: 100,
         layers: [worldLayer.id, excludedLayer.id, skyboxLayer.id, uiLayer.id],
-        toneMapping: pc.TONEMAP_ACES
+        toneMapping: pc.TONEMAP_NONE
     });
     camera.translate(0, 9, 15);
     camera.lookAt(1, 4, 0);
@@ -199,7 +238,7 @@ assetListLoader.load(() => {
     camera.script.create('orbitCamera', {
         attributes: {
             inertiaFactor: 0.2,
-            focusEntity: plane,
+            focusEntity: monster,
             distanceMax: 20,
             frameOnStart: false
         }
@@ -211,7 +250,8 @@ assetListLoader.load(() => {
     const textureCamera = new pc.Entity('TextureCamera');
     textureCamera.addComponent('camera', {
         layers: [worldLayer.id, skyboxLayer.id],
-        toneMapping: pc.TONEMAP_ACES,
+        toneMapping: pc.TONEMAP_NONE,
+        fov: 100,
 
         // set the priority of textureCamera to lower number than the priority of the main camera (which is at default 0)
         // to make it rendered first each frame
@@ -222,15 +262,15 @@ assetListLoader.load(() => {
     });
 
     // add sphere at the position of this camera to see it in the world
-    textureCamera.addComponent('render', {
-        type: 'sphere'
-    });
+    // textureCamera.addComponent('render', {
+    //     type: 'sphere'
+    // });
     app.root.addChild(textureCamera);
 
     // Create an Entity with a omni light component and add it to world layer (and so used by both cameras)
     const light = new pc.Entity();
     light.addComponent('light', {
-        type: 'omni',
+        type: 'directional',
         color: pc.Color.WHITE,
         range: 200,
         castShadows: true,
@@ -264,24 +304,27 @@ assetListLoader.load(() => {
     app.on('update', (dt) => {
         // rotate texture camera around the objects
         time += dt;
-        textureCamera.setLocalPosition(12 * Math.sin(time), 3, 12 * Math.cos(time));
-        textureCamera.lookAt(pc.Vec3.ZERO);
+        // textureCamera.setLocalPosition(12 * Math.sin(time), 3, 12 * Math.cos(time));
+        // textureCamera.lookAt(pc.Vec3.ZERO);
+
+        textureCamera.setLocalPosition(camera.getLocalPosition());
+        textureCamera.setLocalRotation(camera.getLocalRotation());
 
         // every 5 seconds switch texture camera between perspective and orthographic projection
-        switchTime += dt;
-        if (switchTime > 5) {
-            switchTime = 0;
-            if (textureCamera.camera.projection === pc.PROJECTION_ORTHOGRAPHIC) {
-                textureCamera.camera.projection = pc.PROJECTION_PERSPECTIVE;
-            } else {
-                textureCamera.camera.projection = pc.PROJECTION_ORTHOGRAPHIC;
-                textureCamera.camera.orthoHeight = 5;
-            }
-        }
+        // switchTime += dt;
+        // if (switchTime > 5) {
+        //     switchTime = 0;
+        //     if (textureCamera.camera.projection === pc.PROJECTION_ORTHOGRAPHIC) {
+        //         textureCamera.camera.projection = pc.PROJECTION_PERSPECTIVE;
+        //     } else {
+        //         textureCamera.camera.projection = pc.PROJECTION_ORTHOGRAPHIC;
+        //         textureCamera.camera.orthoHeight = 5;
+        //     }
+        // }
 
         // debug draw the texture on the screen in the excludedLayer layer of the main camera
         // @ts-ignore engine-tsd
-        app.drawTexture(0.7, -0.7, 0.5, 0.5, texture, null, excludedLayer);
+        app.drawTexture(0.5, -0.5, 0.8, 0.8, texture, null, excludedLayer);
     });
 });
 
