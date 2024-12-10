@@ -660,6 +660,17 @@ export const TONEMAP_NEUTRAL = 5;
  */
 export const TONEMAP_NONE = 6;
 
+// names of the tonemaps
+export const tonemapNames = [
+    'LINEAR',
+    'FILMIC',
+    'HEJL',
+    'ACES',
+    'ACES2',
+    'NEUTRAL',
+    'NONE'
+];
+
 /**
  * No specular occlusion.
  *

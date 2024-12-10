@@ -430,9 +430,6 @@ class LitShader {
 
         const lightType = this.shaderPassInfo.lightType;
         let shadowType = this.shaderPassInfo.shadowType;
-        const shadowInfo = shadowTypeInfo.get(shadowType);
-        Debug.assert(shadowInfo);
-        const isVsm = shadowInfo?.vsm ?? false;
 
         // If not a directional light and using clustered, fall back to using PCF3x3 if shadow type isn't supported
         if (lightType !== LIGHTTYPE_DIRECTIONAL && options.clusteredLightingEnabled) {
@@ -440,6 +437,10 @@ class LitShader {
                 shadowType = SHADOW_PCF3_32F;
             }
         }
+
+        const shadowInfo = shadowTypeInfo.get(shadowType);
+        Debug.assert(shadowInfo);
+        const isVsm = shadowInfo?.vsm ?? false;
 
         let code = this._fsGetBeginCode();
 

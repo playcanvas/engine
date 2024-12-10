@@ -1,5 +1,5 @@
 import { ShaderUtils } from '../../../platform/graphics/shader-utils.js';
-import { BLEND_ADDITIVE, BLEND_MULTIPLICATIVE, BLEND_NORMAL } from '../../constants.js';
+import { BLEND_ADDITIVE, BLEND_MULTIPLICATIVE, BLEND_NORMAL, tonemapNames } from '../../constants.js';
 import { shaderChunks } from '../chunks/chunks.js';
 import { ShaderGenerator } from './shader-generator.js';
 
@@ -85,7 +85,7 @@ class ShaderGeneratorParticle extends ShaderGenerator {
 
         fshader += shaderChunks.decodePS;
         fshader += ShaderGenerator.gammaCode(options.gamma);
-        fshader += ShaderGenerator.tonemapCode(options.toneMap);
+        fshader += '#include "tonemappingPS"\n';
         fshader += ShaderGenerator.fogCode(options.fog);
 
         if (options.normal === 2) fshader += '\nuniform sampler2D normalMap;\n';
@@ -105,11 +105,20 @@ class ShaderGeneratorParticle extends ShaderGenerator {
         }
         fshader += shaderChunks.particle_endPS;
 
+        const includes = new Map(Object.entries({
+            ...shaderChunks,
+            ...options.chunks
+        }));
+
+        const fragmentDefines = new Map(options.defines);
+        fragmentDefines.set('TONEMAP', tonemapNames[options.toneMap]);
+
         return ShaderUtils.createDefinition(device, {
             name: 'ParticleShader',
             vertexCode: vshader,
             fragmentCode: fshader,
-            fragmentDefines: options.defines,
+            fragmentDefines: fragmentDefines,
+            fragmentIncludes: includes,
             vertexDefines: options.defines
         });
     }

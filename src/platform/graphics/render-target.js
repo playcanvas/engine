@@ -312,12 +312,12 @@ class RenderTarget {
      */
     resize(width, height) {
 
-        if (this.mipLevel > 0) {
-            Debug.warn('Only render target rendering to mipLevel 0 can be resized, ignoring.', this);
-            return;
-        }
-
         if (this.width !== width || this.height !== height) {
+
+            if (this.mipLevel > 0) {
+                Debug.warn('Only a render target rendering to mipLevel 0 can be resized, ignoring.', this);
+                return;
+            }
 
             // release existing
             const device = this._device;
