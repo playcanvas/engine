@@ -782,6 +782,9 @@ class CameraControls extends Script {
         if (!this.enableOrbit && !this.enablePan) {
             return;
         }
+        if (this._flying) {
+            return;
+        }
 
         if (!this._camera) {
             return;
