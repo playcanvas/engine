@@ -323,9 +323,9 @@ class GSplat {
 
             // normalize
             for (let j = 0; j < 15; ++j) {
-                c[j * 3 + 0] = Math.floor((c[j * 3 + 0] / max * 0.5 + 0.5) * t11 + 0.5);
-                c[j * 3 + 1] = Math.floor((c[j * 3 + 1] / max * 0.5 + 0.5) * t10 + 0.5);
-                c[j * 3 + 2] = Math.floor((c[j * 3 + 2] / max * 0.5 + 0.5) * t11 + 0.5);
+                c[j * 3 + 0] = Math.max(0, Math.min(t11, Math.floor((c[j * 3 + 0] / max * 0.5 + 0.5) * t11 + 0.5)));
+                c[j * 3 + 1] = Math.max(0, Math.min(t10, Math.floor((c[j * 3 + 1] / max * 0.5 + 0.5) * t10 + 0.5)));
+                c[j * 3 + 2] = Math.max(0, Math.min(t11, Math.floor((c[j * 3 + 2] / max * 0.5 + 0.5) * t11 + 0.5)));
             }
 
             // pack
