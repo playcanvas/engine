@@ -552,6 +552,15 @@ class CameraControls extends Script {
         return this._zoomMax;
     }
 
+
+    /**
+     * @param {Vec3} out - The output vector.
+     * @returns {Vec3} - The focus vector.
+     */
+    _focusDir(out) {
+        return out.copy(this._camera.entity.forward).mulScalar(this._zoomDist);
+    }
+
     /**
      * @private
      * @param {number} value - The value to clamp.
@@ -569,19 +578,22 @@ class CameraControls extends Script {
      * @returns {Vec3} - The clamped position.
      */
     _clampPosition(position) {
-        const cameraPos = this._camera.entity.getPosition();
-        const offset = tmpV1.copy(position).sub(cameraPos);
+        if (this._flying) {
+            tmpV1.set(0, 0, 0);
+        } else {
+            this._focusDir(tmpV1);
+        }
 
-        let min = this._xBound & Bound.LOWER ? offset.x + this._xRange.x : -Infinity;
-        let max = this._xBound & Bound.UPPER ? offset.x + this._xRange.y : Infinity;
+        let min = this._xBound & Bound.LOWER ? tmpV1.x + this._xRange.x : -Infinity;
+        let max = this._xBound & Bound.UPPER ? tmpV1.x + this._xRange.y : Infinity;
         position.x = math.clamp(position.x, min, max);
 
-        min = this._yBound & Bound.LOWER ? offset.y + this._yRange.x : -Infinity;
-        max = this._yBound & Bound.UPPER ? offset.y + this._yRange.y : Infinity;
+        min = this._yBound & Bound.LOWER ? tmpV1.y + this._yRange.x : -Infinity;
+        max = this._yBound & Bound.UPPER ? tmpV1.y + this._yRange.y : Infinity;
         position.y = math.clamp(position.y, min, max);
 
-        min = this._zBound & Bound.LOWER ? offset.z + this._zRange.x : -Infinity;
-        max = this._zBound & Bound.UPPER ? offset.z + this._zRange.y : Infinity;
+        min = this._zBound & Bound.LOWER ? tmpV1.z + this._zRange.x : -Infinity;
+        max = this._zBound & Bound.UPPER ? tmpV1.z + this._zRange.y : Infinity;
         position.z = math.clamp(position.z, min, max);
 
         return position;
@@ -755,7 +767,7 @@ class CameraControls extends Script {
             this._panning = false;
         }
         if (this._flying) {
-            tmpV1.copy(this._camera.entity.forward).mulScalar(this._zoomDist);
+            this._focusDir(tmpV1);
             this._origin.add(tmpV1);
             this._position.add(tmpV1);
             this._flying = false;
@@ -924,9 +936,9 @@ class CameraControls extends Script {
         const mouseW = this._camera.screenToWorld(pos.x, pos.y, 1);
         const cameraPos = this._camera.entity.getPosition();
 
-        const focusDirScaled = tmpV1.copy(this._camera.entity.forward).mulScalar(this._zoomDist);
-        const focalPos = tmpV2.add2(cameraPos, focusDirScaled);
-        const planeNormal = focusDirScaled.mulScalar(-1).normalize();
+        const focusDir = this._focusDir(tmpV1);
+        const focalPos = tmpV2.add2(cameraPos, focusDir);
+        const planeNormal = focusDir.mulScalar(-1).normalize();
 
         const plane = tmpP1.setFromPointNormal(focalPos, planeNormal);
         const ray = tmpR1.set(cameraPos, mouseW.sub(cameraPos).normalize());
