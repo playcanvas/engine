@@ -639,6 +639,46 @@ class GltfExporter extends CoreExporter {
         return primitive;
     }
 
+    writeSkins(resources, json) {
+        if (resources.skins.length > 0) {
+            json.skins = resources.skins.map((skin) => {
+                // Create float32 array for inverse bind matrices
+                const matrices = new Float32Array(skin.inverseBindPose.length * 16);
+                for (let i = 0; i < skin.inverseBindPose.length; i++) {
+                    const ibm = skin.inverseBindPose[i];
+                    matrices.set(ibm.data, i * 16);
+                }
+
+                // Create buffer view for matrices
+                const matrixBuffer = matrices.buffer;
+                GltfExporter.writeBufferView(resources, json, matrixBuffer);
+                resources.buffers.push(matrixBuffer);
+                const bufferView = resources.bufferViewMap.get(matrixBuffer);
+
+                // Create accessor for inverse bind matrices
+                const accessor = {
+                    bufferView: bufferView[0],
+                    componentType: 5126, // FLOAT
+                    count: skin.inverseBindPose.length,
+                    type: 'MAT4'
+                };
+                const accessorIndex = json.accessors.push(accessor) - 1;
+
+                // Find joint nodes by bone names
+                const joints = skin.boneNames.map(boneName => {
+                    const node = resources.entities.find(entity => entity.name === boneName);
+                    return resources.entities.indexOf(node);
+                });
+
+                // Create skin
+                return {
+                    inverseBindMatrices: accessorIndex,
+                    joints: joints
+                };
+            });
+        }
+    }
+
     convertTextures(srcTextures, options) {
 
         const textureOptions = {
@@ -745,46 +785,6 @@ class GltfExporter extends CoreExporter {
             return array.buffer;
         }
         return arrayBuffer;
-    }
-
-    writeSkins(resources, json) {
-        if (resources.skins.length > 0) {
-            json.skins = resources.skins.map((skin) => {
-                // Create float32 array for inverse bind matrices
-                const matrices = new Float32Array(skin.inverseBindPose.length * 16);
-                for (let i = 0; i < skin.inverseBindPose.length; i++) {
-                    const ibm = skin.inverseBindPose[i];
-                    matrices.set(ibm.data, i * 16);
-                }
-
-                // Create buffer view for matrices
-                const matrixBuffer = matrices.buffer;
-                GltfExporter.writeBufferView(resources, json, matrixBuffer);
-                resources.buffers.push(matrixBuffer);
-                const bufferView = resources.bufferViewMap.get(matrixBuffer);
-
-                // Create accessor for inverse bind matrices
-                const accessor = {
-                    bufferView: bufferView[0],
-                    componentType: 5126, // FLOAT
-                    count: skin.inverseBindPose.length,
-                    type: 'MAT4'
-                };
-                const accessorIndex = json.accessors.push(accessor) - 1;
-
-                // Find joint nodes by bone names
-                const joints = skin.boneNames.map(boneName => {
-                    const node = resources.entities.find(entity => entity.name === boneName);
-                    return resources.entities.indexOf(node);
-                });
-
-                // Create skin
-                return {
-                    inverseBindMatrices: accessorIndex,
-                    joints: joints
-                };
-            });
-        }
     }
 
     buildJson(resources, options) {
