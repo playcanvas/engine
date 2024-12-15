@@ -478,7 +478,7 @@ class GltfExporter extends CoreExporter {
                 const entityMeshInstance = resources.entityMeshInstances.find(e => e.node === entity);
                 if (entityMeshInstance) {
                     node.mesh = resources.entityMeshInstances.indexOf(entityMeshInstance);
-                    
+
                     // Add skin reference if this node has a skinned mesh
                     const meshInstance = entityMeshInstance.meshInstances[0];
                     if (meshInstance && meshInstance.mesh.skin) {
@@ -665,7 +665,7 @@ class GltfExporter extends CoreExporter {
                 const accessorIndex = json.accessors.push(accessor) - 1;
 
                 // Find joint nodes by bone names
-                const joints = skin.boneNames.map(boneName => {
+                const joints = skin.boneNames.map((boneName) => {
                     const node = resources.entities.find(entity => entity.name === boneName);
                     return resources.entities.indexOf(node);
                 });
