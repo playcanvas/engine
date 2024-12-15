@@ -631,11 +631,6 @@ class GltfExporter extends CoreExporter {
             primitive.indices = idx;
         }
 
-        // Add skin reference if mesh is skinned
-        if (mesh.skin) {
-            primitive.skin = resources.skins.indexOf(mesh.skin);
-        }
-
         return primitive;
     }
 
