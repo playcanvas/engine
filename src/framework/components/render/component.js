@@ -172,8 +172,7 @@ class RenderComponent extends Component {
      *
      * @param {import('./system.js').RenderComponentSystem} system - The ComponentSystem that
      * created this Component.
-     * @param {Entity} entity - The Entity that this Component is
-     * attached to.
+     * @param {Entity} entity - The Entity that this Component is attached to.
      */
     constructor(system, entity) {
         super(system, entity);
