@@ -653,7 +653,7 @@ class GltfExporter extends CoreExporter {
                 // Create accessor for inverse bind matrices
                 const accessor = {
                     bufferView: bufferView[0],
-                    componentType: 5126, // FLOAT
+                    componentType: getComponentType(TYPE_FLOAT32),
                     count: skin.inverseBindPose.length,
                     type: 'MAT4'
                 };
