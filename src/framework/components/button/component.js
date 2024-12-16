@@ -254,6 +254,12 @@ class ButtonComponent extends Component {
      * @type {EventHandle|null}
      * @private
      */
+    _evtElementAdd = null;
+
+    /**
+     * @type {EventHandle|null}
+     * @private
+     */
     _evtImageEntityElementAdd = null;
 
     /**
@@ -648,8 +654,12 @@ class ButtonComponent extends Component {
         this[onOrOff]('set_inactiveSpriteAsset', this._onSetTransitionValue, this);
         this[onOrOff]('set_inactiveSpriteFrame', this._onSetTransitionValue, this);
 
-        system.app.systems.element[onOrOff]('add', this._onElementComponentAdd, this);
-        system.app.systems.element[onOrOff]('beforeremove', this._onElementComponentRemove, this);
+        if (onOrOff === 'on') {
+            this._evtElementAdd = this.entity.on('element:add', this._onElementComponentAdd, this);
+        } else {
+            this._evtElementAdd?.off();
+            this._evtElementAdd = null;
+        }
     }
 
     _onSetActive(name, oldValue, newValue) {
@@ -716,16 +726,12 @@ class ButtonComponent extends Component {
         this._evtImageEntityElementSpriteFrame = null;
     }
 
-    _onElementComponentRemove(entity) {
-        if (this.entity === entity) {
-            this._toggleHitElementListeners('off');
-        }
+    _onElementComponentRemove() {
+        this._toggleHitElementListeners('off');
     }
 
-    _onElementComponentAdd(entity) {
-        if (this.entity === entity) {
-            this._toggleHitElementListeners('on');
-        }
+    _onElementComponentAdd() {
+        this._toggleHitElementListeners('on');
     }
 
     _onImageElementLose() {
@@ -749,6 +755,7 @@ class ButtonComponent extends Component {
                 return;
             }
 
+            this.entity.element[onOrOff]('beforeremove', this._onElementComponentRemove, this);
             this.entity.element[onOrOff]('mouseenter', this._onMouseEnter, this);
             this.entity.element[onOrOff]('mouseleave', this._onMouseLeave, this);
             this.entity.element[onOrOff]('mousedown', this._onMouseDown, this);
