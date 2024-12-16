@@ -22,6 +22,7 @@ import { Component } from '../component.js';
  * - [Loading a Splat](https://playcanvas.github.io/#/loaders/gsplat)
  * - [Custom Splat Shaders](https://playcanvas.github.io/#/loaders/gsplat-many)
  *
+ * @hideconstructor
  * @category Graphics
  */
 class GSplatComponent extends Component {

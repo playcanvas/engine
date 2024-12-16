@@ -7,9 +7,7 @@ import { properties } from './data.js';
 
 /**
  * @import { Color } from '../../../core/math/color.js'
- * @import { Entity } from '../../entity.js'
  * @import { LightComponentData } from './data.js'
- * @import { LightComponentSystem } from './system.js'
  * @import { Light } from '../../../scene/light.js'
  * @import { Texture } from '../../../platform/graphics/texture.js'
  * @import { Vec2 } from '../../../core/math/vec2.js'
@@ -39,6 +37,7 @@ import { properties } from './data.js';
  * entity.light.range = 20;
  * ```
  *
+ * @hideconstructor
  * @category Graphics
  */
 class LightComponent extends Component {
@@ -60,20 +59,17 @@ class LightComponent extends Component {
      */
     _evtLayerRemoved = null;
 
-    /**
-     * Creates a new LightComponent instance.
-     *
-     * @param {LightComponentSystem} system - The ComponentSystem that created this Component.
-     * @param {Entity} entity - The Entity that this Component is attached to.
-     */
-    constructor(system, entity) {
-        super(system, entity);
+    /** @private */
+    _cookieAsset = null;
 
-        this._cookieAsset = null;
-        this._cookieAssetId = null;
-        this._cookieAssetAdd = false;
-        this._cookieMatrix = null;
-    }
+    /** @private */
+    _cookieAssetId = null;
+
+    /** @private */
+    _cookieAssetAdd = false;
+
+    /** @private */
+    _cookieMatrix = null;
 
     // TODO: Remove this override in upgrading component
     /**
