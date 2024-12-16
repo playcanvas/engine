@@ -135,6 +135,7 @@ class RenderComponent extends Component {
      * are rendered by this component.
      *
      * @type {import('../../entity.js').Entity|null}
+     * @private
      */
     _rootBone = null;
 
@@ -695,6 +696,11 @@ class RenderComponent extends Component {
         this._assetReference.id = id;
     }
 
+    /**
+     * Sets the root bone entity (or entity guid) for the render component.
+     *
+     * @type {import('../../entity.js').Entity|string|null}
+     */
     set rootBone(value) {
         if (this._rootBone !== value) {
             const isString = typeof (value) === 'string';
@@ -720,6 +726,11 @@ class RenderComponent extends Component {
         }
     }
 
+    /**
+     * Gets the root bone entity for the render component.
+     *
+     * @type {import('../../entity.js').Entity|null}
+     */
     get rootBone() {
         return this._rootBone;
     }
