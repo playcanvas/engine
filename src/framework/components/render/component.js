@@ -703,7 +703,7 @@ class RenderComponent extends Component {
      */
     set rootBone(value) {
         if (this._rootBone !== value) {
-            const isString = typeof (value) === 'string';
+            const isString = typeof value === 'string';
             if (this._rootBone && isString && this._rootBone.getGuid() === value) {
                 return;
             }
