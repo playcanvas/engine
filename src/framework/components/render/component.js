@@ -13,6 +13,10 @@ import { AssetReference } from '../../asset/asset-reference.js';
 import { Component } from '../component.js';
 
 /**
+ * @import { Entity } from '../../entity.js'
+ */
+
+/**
  * The RenderComponent enables an {@link Entity} to render 3D meshes. The {@link RenderComponent#type}
  * property can be set to one of several predefined shape types (such as `box`, `sphere`, `cone`
  * and so on). Alternatively, the component can be configured to manage an arbitrary array of
@@ -134,7 +138,7 @@ class RenderComponent extends Component {
      * A reference to the entity to be used as the root bone for any skinned meshes that
      * are rendered by this component.
      *
-     * @type {import('../../entity.js').Entity|null}
+     * @type {Entity|null}
      * @private
      */
     _rootBone = null;
@@ -168,7 +172,7 @@ class RenderComponent extends Component {
      *
      * @param {import('./system.js').RenderComponentSystem} system - The ComponentSystem that
      * created this Component.
-     * @param {import('../../entity.js').Entity} entity - The Entity that this Component is
+     * @param {Entity} entity - The Entity that this Component is
      * attached to.
      */
     constructor(system, entity) {
@@ -699,7 +703,7 @@ class RenderComponent extends Component {
     /**
      * Sets the root bone entity (or entity guid) for the render component.
      *
-     * @type {import('../../entity.js').Entity|string|null}
+     * @type {Entity|string|null}
      */
     set rootBone(value) {
         if (this._rootBone !== value) {
@@ -729,7 +733,7 @@ class RenderComponent extends Component {
     /**
      * Gets the root bone entity for the render component.
      *
-     * @type {import('../../entity.js').Entity|null}
+     * @type {Entity|null}
      */
     get rootBone() {
         return this._rootBone;
