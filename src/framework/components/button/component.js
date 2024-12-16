@@ -3,12 +3,17 @@ import { now } from '../../../core/time.js';
 import { math } from '../../../core/math/math.js';
 import { Color } from '../../../core/math/color.js';
 
-import { EntityReference } from '../../utils/entity-reference.js';
+import { GraphNode } from '../../../scene/graph-node.js';
 
 import { Component } from '../component.js';
 
 import { BUTTON_TRANSITION_MODE_SPRITE_CHANGE, BUTTON_TRANSITION_MODE_TINT } from './constants.js';
 import { ELEMENTTYPE_GROUP } from '../element/constants.js';
+
+/**
+ * @import { EventHandle } from '../../../core/event-handle.js'
+ * @import { Entity } from '../../entity.js'
+ */
 
 const VisualState = {
     DEFAULT: 'DEFAULT',
@@ -240,12 +245,53 @@ class ButtonComponent extends Component {
     static EVENT_PRESSEDEND = 'pressedend';
 
     /**
+     * @type {Entity|null}
+     * @private
+     */
+    _imageEntity = null;
+
+    /**
+     * @type {EventHandle|null}
+     * @private
+     */
+    _evtImageEntityElementAdd = null;
+
+    /**
+     * @type {EventHandle|null}
+     * @private
+     */
+    _evtImageEntityElementRemove = null;
+
+    /**
+     * @type {EventHandle|null}
+     * @private
+     */
+    _evtImageEntityElementColor = null;
+
+    /**
+     * @type {EventHandle|null}
+     * @private
+     */
+    _evtImageEntityElementOpacity = null;
+
+    /**
+     * @type {EventHandle|null}
+     * @private
+     */
+    _evtImageEntityElementSpriteAsset = null;
+
+    /**
+     * @type {EventHandle|null}
+     * @private
+     */
+    _evtImageEntityElementSpriteFrame = null;
+
+    /**
      * Create a new ButtonComponent instance.
      *
      * @param {import('./system.js').ButtonComponentSystem} system - The ComponentSystem that
      * created this component.
-     * @param {import('../../entity.js').Entity} entity - The entity that this component is
-     * attached to.
+     * @param {Entity} entity - The entity that this component is attached to.
      */
     constructor(system, entity) {
         super(system, entity);
@@ -258,15 +304,6 @@ class ButtonComponent extends Component {
         this._defaultTint = new Color(1, 1, 1, 1);
         this._defaultSpriteAsset = null;
         this._defaultSpriteFrame = 0;
-
-        this._imageReference = new EntityReference(this, 'imageEntity', {
-            'element#gain': this._onImageElementGain,
-            'element#lose': this._onImageElementLose,
-            'element#set:color': this._onSetColor,
-            'element#set:opacity': this._onSetOpacity,
-            'element#set:spriteAsset': this._onSetSpriteAsset,
-            'element#set:spriteFrame': this._onSetSpriteFrame
-        });
 
         this._toggleLifecycleListeners('on', system);
     }
@@ -322,19 +359,46 @@ class ButtonComponent extends Component {
      * Sets the entity to be used as the button background. The entity must have an
      * {@link ElementComponent} configured as an image element.
      *
-     * @type {import('../../../framework/entity.js').Entity}
+     * @type {Entity|string|null}
      */
     set imageEntity(arg) {
-        this._setValue('imageEntity', arg);
+        if (this._imageEntity !== arg) {
+            const isString = typeof arg === 'string';
+            if (this._imageEntity && isString && this._imageEntity.getGuid() === arg) {
+                return;
+            }
+
+            if (this._imageEntity) {
+                this._imageEntityUnsubscribe();
+            }
+
+            if (arg instanceof GraphNode) {
+                this._imageEntity = arg;
+            } else if (isString) {
+                this._imageEntity = this.system.app.getEntityFromIndex(arg) || null;
+            } else {
+                this._imageEntity = null;
+            }
+
+            if (this._imageEntity) {
+                this._imageEntitySubscribe();
+            }
+
+            if (this._imageEntity) {
+                this.data.imageEntity = this._imageEntity.getGuid();
+            } else if (isString && arg) {
+                this.data.imageEntity = arg;
+            }
+        }
     }
 
     /**
      * Gets the entity to be used as the button background.
      *
-     * @type {import('../../../framework/entity.js').Entity}
+     * @type {Entity|null}
      */
     get imageEntity() {
-        return this.data.imageEntity;
+        return this._imageEntity;
     }
 
     /**
@@ -608,6 +672,50 @@ class ButtonComponent extends Component {
         }
     }
 
+    _imageEntitySubscribe() {
+        this._evtImageEntityElementAdd = this._imageEntity.on('element:add', this._onImageElementGain, this);
+
+        if (this._imageEntity.element) {
+            this._onImageElementGain();
+        }
+    }
+
+    _imageEntityUnsubscribe() {
+        this._evtImageEntityElementAdd?.off();
+        this._evtImageEntityElementAdd = null;
+
+        if (this._imageEntity?.element) {
+            this._onImageElementLose();
+        }
+    }
+
+    _imageEntityElementSubscribe() {
+        const element = this._imageEntity.element;
+
+        this._evtImageEntityElementRemove = element.once('beforeremove', this._onImageElementLose, this);
+        this._evtImageEntityElementColor = element.on('set:color', this._onSetColor, this);
+        this._evtImageEntityElementOpacity = element.on('set:opacity', this._onSetOpacity, this);
+        this._evtImageEntityElementSpriteAsset = element.on('set:spriteAsset', this._onSetSpriteAsset, this);
+        this._evtImageEntityElementSpriteFrame = element.on('set:spriteFrame', this._onSetSpriteFrame, this);
+    }
+
+    _imageEntityElementUnsubscribe() {
+        this._evtImageEntityElementRemove?.off();
+        this._evtImageEntityElementRemove = null;
+
+        this._evtImageEntityElementColor?.off();
+        this._evtImageEntityElementColor = null;
+
+        this._evtImageEntityElementOpacity?.off();
+        this._evtImageEntityElementOpacity = null;
+
+        this._evtImageEntityElementSpriteAsset?.off();
+        this._evtImageEntityElementSpriteAsset = null;
+
+        this._evtImageEntityElementSpriteFrame?.off();
+        this._evtImageEntityElementSpriteFrame = null;
+    }
+
     _onElementComponentRemove(entity) {
         if (this.entity === entity) {
             this._toggleHitElementListeners('off');
@@ -621,11 +729,13 @@ class ButtonComponent extends Component {
     }
 
     _onImageElementLose() {
+        this._imageEntityElementUnsubscribe();
         this._cancelTween();
         this._resetToDefaultVisualState(this.transitionMode);
     }
 
     _onImageElementGain() {
+        this._imageEntityElementSubscribe();
         this._storeDefaultVisualState();
         this._forceReapplyVisualState();
     }
@@ -659,15 +769,14 @@ class ButtonComponent extends Component {
 
     _storeDefaultVisualState() {
         // If the element is of group type, all it's visual properties are null
-        if (this._imageReference.hasComponent('element')) {
-            const element = this._imageReference.entity.element;
-            if (element.type !== ELEMENTTYPE_GROUP) {
-                this._storeDefaultColor(element.color);
-                this._storeDefaultOpacity(element.opacity);
-                this._storeDefaultSpriteAsset(element.spriteAsset);
-                this._storeDefaultSpriteFrame(element.spriteFrame);
-            }
+        const element = this._imageEntity?.element;
+        if (!element || element.type === ELEMENTTYPE_GROUP) {
+            return;
         }
+        this._storeDefaultColor(element.color);
+        this._storeDefaultOpacity(element.opacity);
+        this._storeDefaultSpriteAsset(element.spriteAsset);
+        this._storeDefaultSpriteFrame(element.spriteFrame);
     }
 
     _storeDefaultColor(color) {
@@ -881,17 +990,18 @@ class ButtonComponent extends Component {
     // image back to its original tint. Note that this happens immediately, i.e.
     // without any animation.
     _resetToDefaultVisualState(transitionMode) {
-        if (this._imageReference.hasComponent('element')) {
-            switch (transitionMode) {
-                case BUTTON_TRANSITION_MODE_TINT:
-                    this._cancelTween();
-                    this._applyTintImmediately(this._defaultTint);
-                    break;
+        if (!this._imageEntity?.element) {
+            return;
+        }
+        switch (transitionMode) {
+            case BUTTON_TRANSITION_MODE_TINT:
+                this._cancelTween();
+                this._applyTintImmediately(this._defaultTint);
+                break;
 
-                case BUTTON_TRANSITION_MODE_SPRITE_CHANGE:
-                    this._applySprite(this._defaultSpriteAsset, this._defaultSpriteFrame);
-                    break;
-            }
+            case BUTTON_TRANSITION_MODE_SPRITE_CHANGE:
+                this._applySprite(this._defaultSpriteAsset, this._defaultSpriteFrame);
+                break;
         }
     }
 
@@ -908,21 +1018,24 @@ class ButtonComponent extends Component {
     }
 
     _applySprite(spriteAsset, spriteFrame) {
+        const element = this._imageEntity?.element;
+        if (!element) {
+            return;
+        }
+
         spriteFrame = spriteFrame || 0;
 
-        if (this._imageReference.hasComponent('element')) {
-            this._isApplyingSprite = true;
+        this._isApplyingSprite = true;
 
-            if (this._imageReference.entity.element.spriteAsset !== spriteAsset) {
-                this._imageReference.entity.element.spriteAsset = spriteAsset;
-            }
-
-            if (this._imageReference.entity.element.spriteFrame !== spriteFrame) {
-                this._imageReference.entity.element.spriteFrame = spriteFrame;
-            }
-
-            this._isApplyingSprite = false;
+        if (element.spriteAsset !== spriteAsset) {
+            element.spriteAsset = spriteAsset;
         }
+
+        if (element.spriteFrame !== spriteFrame) {
+            element.spriteFrame = spriteFrame;
+        }
+
+        this._isApplyingSprite = false;
     }
 
     _applyTint(tintColor) {
@@ -936,10 +1049,11 @@ class ButtonComponent extends Component {
     }
 
     _applyTintImmediately(tintColor) {
+        const element = this._imageEntity?.element;
         if (
             !tintColor ||
-            !this._imageReference.hasComponent('element') ||
-            this._imageReference.entity.element.type === ELEMENTTYPE_GROUP
+            !element ||
+            element.type === ELEMENTTYPE_GROUP
         ) {
             return;
         }
@@ -948,29 +1062,30 @@ class ButtonComponent extends Component {
 
         this._isApplyingTint = true;
 
-        if (!color3.equals(this._imageReference.entity.element.color)) {
-            this._imageReference.entity.element.color = color3;
+        if (!color3.equals(element.color)) {
+            element.color = color3;
         }
 
-        if (this._imageReference.entity.element.opacity !== tintColor.a) {
-            this._imageReference.entity.element.opacity = tintColor.a;
+        if (element.opacity !== tintColor.a) {
+            element.opacity = tintColor.a;
         }
 
         this._isApplyingTint = false;
     }
 
     _applyTintWithTween(tintColor) {
+        const element = this._imageEntity?.element;
         if (
             !tintColor ||
-            !this._imageReference.hasComponent('element') ||
-            this._imageReference.entity.element.type === ELEMENTTYPE_GROUP
+            !element ||
+            element.type === ELEMENTTYPE_GROUP
         ) {
             return;
         }
 
         const color3 = toColor3(tintColor);
-        const color = this._imageReference.entity.element.color;
-        const opacity = this._imageReference.entity.element.opacity;
+        const color = element.color;
+        const opacity = element.opacity;
 
         if (color3.equals(color) && tintColor.a === opacity) return;
 
@@ -1015,7 +1130,6 @@ class ButtonComponent extends Component {
         this._hoveringCounter = 0;
         this._isPressed = false;
 
-        this._imageReference.onParentComponentEnable();
         this._toggleHitElementListeners('on');
         this._forceReapplyVisualState();
     }
@@ -1026,8 +1140,15 @@ class ButtonComponent extends Component {
     }
 
     onRemove() {
+        this._imageEntityUnsubscribe();
         this._toggleLifecycleListeners('off', this.system);
         this.onDisable();
+    }
+
+    resolveDuplicatedEntityReferenceProperties(oldButton, duplicatedIdsMap) {
+        if (oldButton.imageEntity) {
+            this.imageEntity = duplicatedIdsMap[oldButton.imageEntity.getGuid()];
+        }
     }
 }
 
