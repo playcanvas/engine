@@ -70,6 +70,7 @@ class ComponentSystem extends EventHandler {
         const record = this.store[entity.getGuid()];
         const component = entity.c[this.id];
 
+        component.fire('beforeremove');
         this.fire('beforeremove', entity, component);
 
         delete this.store[entity.getGuid()];
