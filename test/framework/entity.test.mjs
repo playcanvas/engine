@@ -250,6 +250,15 @@ describe('Entity', function () {
             }
         });
 
+        for (const name in components) {
+            it(`clones the enabled state of ${name} components correctly`, function () {
+                const entity = new Entity('Test');
+                entity.addComponent(name, { enabled: false });
+                const clone = entity.clone();
+                expect(clone[name].enabled).to.equal(false);
+            });
+        }
+
         it('clones an entity hierarchy', function () {
             const root = new Entity('Test');
             const child = new Entity('Child');
