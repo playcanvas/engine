@@ -955,8 +955,13 @@ class Texture {
                     this._levelsUpdated[mipLevel] = true;
                 }
 
-                width = source.width;
-                height = source.height;
+                if (source instanceof HTMLVideoElement) {
+                    width = source.videoWidth;
+                    height = source.videoHeight;
+                } else {
+                    width = source.width;
+                    height = source.height;
+                }
             }
         }
 
