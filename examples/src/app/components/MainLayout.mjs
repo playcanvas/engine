@@ -6,6 +6,7 @@ import { CodeEditorDesktop } from './code-editor/CodeEditorDesktop.mjs';
 import { Example } from './Example.mjs';
 import { Menu } from './Menu.mjs';
 import { SideBar } from './Sidebar.mjs';
+import { BottomBar } from './Bottombar.mjs';
 import { iframe } from '../iframe.mjs';
 import { jsx } from '../jsx.mjs';
 import { getOrientation } from '../utils.mjs';
@@ -74,6 +75,7 @@ class MainLayout extends TypedComponent {
                         Route,
                         { path: '/:category/:example' },
                         jsx(SideBar, null),
+                        jsx(BottomBar, null),
                         jsx(
                             Container,
                             { id: 'main-view-wrapper' },
