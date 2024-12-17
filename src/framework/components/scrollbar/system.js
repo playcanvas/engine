@@ -7,8 +7,7 @@ const _schema = [
     { name: 'enabled', type: 'boolean' },
     { name: 'orientation', type: 'number' },
     { name: 'value', type: 'number' },
-    { name: 'handleSize', type: 'number' },
-    { name: 'handleEntity', type: 'entity' }
+    { name: 'handleSize', type: 'number' }
 ];
 
 /**
@@ -37,6 +36,7 @@ class ScrollbarComponentSystem extends ComponentSystem {
     }
 
     initializeComponentData(component, data, properties) {
+        component.handleEntity = data.handleEntity;
         super.initializeComponentData(component, data, _schema);
     }
 

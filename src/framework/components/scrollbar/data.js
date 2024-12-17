@@ -11,7 +11,7 @@ class ScrollbarComponentData {
     handleSize;
 
     /** @type {import('../../../framework/entity').Entity} */
-    handleEntity;
+    handleEntity = null;
 }
 
 export { ScrollbarComponentData };
