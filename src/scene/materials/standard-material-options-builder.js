@@ -328,7 +328,7 @@ class StandardMaterialOptionsBuilder {
             options.litOptions.ambientEncoding = null;
         } else {
             const envAtlas = stdMat.envAtlas || (stdMat.useSkybox && scene.envAtlas ? scene.envAtlas : null);
-            if (envAtlas) {
+            if (envAtlas && !stdMat.sphereMap) {
                 options.litOptions.ambientSource = 'envAtlas';
                 options.litOptions.ambientEncoding = envAtlas.encoding;
             } else {
