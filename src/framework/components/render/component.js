@@ -61,6 +61,7 @@ import { EntityReference } from '../../utils/entity-reference.js';
  * @property {Entity} rootBone A reference to the entity to be used as the root bone for any
  * skinned meshes that are rendered by this component.
  *
+ * @hideconstructor
  * @category Graphics
  */
 class RenderComponent extends Component {
