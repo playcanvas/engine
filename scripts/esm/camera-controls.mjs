@@ -23,6 +23,16 @@ const ZOOM_SCALE_SCENE_MULT = 10;
  */
 const lerpRate = (damping, dt) => 1 - Math.pow(damping, dt * 1000);
 
+/**
+ * @enum {number}
+ */
+const Bound = {
+    NONE: 0,
+    LOWER: 1,
+    UPPER: 2,
+    BOTH: 3
+};
+
 class CameraControls extends Script {
     /**
      * @private
@@ -59,6 +69,42 @@ class CameraControls extends Script {
      * @type {Vec2}
      */
     _pitchRange = new Vec2(-360, 360);
+
+    /**
+     * @private
+     * @type {Vec3}
+     */
+    _xRange = new Vec3();
+
+    /**
+     * @private
+     * @type {Vec3}
+     */
+    _yRange = new Vec3();
+
+    /**
+     * @private
+     * @type {Vec3}
+     */
+    _zRange = new Vec3();
+
+    /**
+     * @private
+     * @type {Bound}
+     */
+    _xBound = Bound.NONE;
+
+    /**
+     * @private
+     * @type {Bound}
+     */
+    _yBound = Bound.NONE;
+
+    /**
+     * @private
+     * @type {Bound}
+     */
+    _zBound = Bound.NONE;
 
     /**
      * @private
@@ -119,6 +165,12 @@ class CameraControls extends Script {
      * @private
      */
     _flying = false;
+
+    /**
+     * @type {boolean}
+     * @private
+     */
+    _moving = false;
 
     /**
      * @type {Record<string, boolean>}
@@ -273,6 +325,12 @@ class CameraControls extends Script {
             lookDamping,
             moveDamping,
             pitchRange,
+            xRange,
+            yRange,
+            zRange,
+            xBound,
+            yBound,
+            zBound,
             pinchSpeed,
             wheelSpeed,
             zoomMin,
@@ -313,6 +371,12 @@ class CameraControls extends Script {
 
         this.focusPoint = focusPoint ?? this.focusPoint;
         this.pitchRange = pitchRange ?? this.pitchRange;
+        this.xRange = xRange ?? this.xRange;
+        this.yRange = yRange ?? this.yRange;
+        this.zRange = zRange ?? this.zRange;
+        this.xBound = xBound ?? this.xBound;
+        this.yBound = yBound ?? this.yBound;
+        this.zBound = zBound ?? this.zBound;
         this.zoomMin = zoomMin ?? this.zoomMin;
         this.zoomMax = zoomMax ?? this.zoomMax;
     }
@@ -368,6 +432,93 @@ class CameraControls extends Script {
     }
 
     /**
+     * The camera's x range. These constaints are used long with xBound to clamp the camera's
+     * position.
+     *
+     * @attribute
+     * @type {Vec3}
+     */
+    set xRange(value) {
+        this._xRange.copy(value);
+    }
+
+    get xRange() {
+        return this._xRange;
+    }
+
+    /**
+     * The camera's y range. These constaints are used long with yBound to clamp the camera's
+     * position.
+     *
+     * @attribute
+     * @type {Vec3}
+     */
+    set yRange(value) {
+        this._yRange.copy(value);
+    }
+
+    get yRange() {
+        return this._yRange;
+    }
+
+    /**
+     * The camera's z range. These constaints are used long with zBound to clamp the camera's
+     * position.
+     *
+     * @attribute
+     * @type {Vec3}
+     */
+    set zRange(value) {
+        this._zRange.copy(value);
+    }
+
+    get zRange() {
+        return this._zRange;
+    }
+
+    /**
+     * The x bound. This is used to clamp the camera's x position. Default is NONE.
+     *
+     * @attribute
+     * @type {Bound}
+     */
+    set xBound(value) {
+        this._xBound = value;
+    }
+
+    get xBound() {
+        return this._xBound;
+    }
+
+    /**
+     * The y bound. This is used to clamp the camera's y position. Default is NONE.
+     *
+     * @attribute
+     * @type {Bound}
+     */
+    set yBound(value) {
+        this._yBound = value;
+    }
+
+    get yBound() {
+        return this._yBound;
+    }
+
+    /**
+     * The z bound. This is used to clamp the camera's z position. Default is NONE.
+     *
+     * @attribute
+     * @type {Bound}
+     */
+    set zBound(value) {
+        this._zBound = value;
+    }
+
+    get zBound() {
+        return this._zBound;
+    }
+
+    /**
      * The minimum zoom distance relative to the scene size.
      *
      * @attribute
@@ -401,6 +552,15 @@ class CameraControls extends Script {
         return this._zoomMax;
     }
 
+
+    /**
+     * @param {Vec3} out - The output vector.
+     * @returns {Vec3} - The focus vector.
+     */
+    _focusDir(out) {
+        return out.copy(this._camera.entity.forward).mulScalar(this._zoomDist);
+    }
+
     /**
      * @private
      * @param {number} value - The value to clamp.
@@ -410,6 +570,33 @@ class CameraControls extends Script {
         const min = this._pitchRange.x === -360 ? -Infinity : this._pitchRange.x;
         const max = this._pitchRange.y === 360 ? Infinity : this._pitchRange.y;
         return math.clamp(value, min, max);
+    }
+
+    /**
+     * @private
+     * @param {Vec3} position - The position to clamp.
+     * @returns {Vec3} - The clamped position.
+     */
+    _clampPosition(position) {
+        if (this._flying) {
+            tmpV1.set(0, 0, 0);
+        } else {
+            this._focusDir(tmpV1);
+        }
+
+        let min = this._xBound & Bound.LOWER ? tmpV1.x + this._xRange.x : -Infinity;
+        let max = this._xBound & Bound.UPPER ? tmpV1.x + this._xRange.y : Infinity;
+        position.x = math.clamp(position.x, min, max);
+
+        min = this._yBound & Bound.LOWER ? tmpV1.y + this._yRange.x : -Infinity;
+        max = this._yBound & Bound.UPPER ? tmpV1.y + this._yRange.y : Infinity;
+        position.y = math.clamp(position.y, min, max);
+
+        min = this._zBound & Bound.LOWER ? tmpV1.z + this._zRange.x : -Infinity;
+        max = this._zBound & Bound.UPPER ? tmpV1.z + this._zRange.y : Infinity;
+        position.z = math.clamp(position.z, min, max);
+
+        return position;
     }
 
     /**
@@ -580,7 +767,7 @@ class CameraControls extends Script {
             this._panning = false;
         }
         if (this._flying) {
-            tmpV1.copy(this._camera.entity.forward).mulScalar(this._zoomDist);
+            this._focusDir(tmpV1);
             this._origin.add(tmpV1);
             this._position.add(tmpV1);
             this._flying = false;
@@ -706,9 +893,15 @@ class CameraControls extends Script {
             tmpV1.sub(this._camera.entity.up);
         }
         tmpV1.normalize();
+        this._moving = tmpV1.length() > 0;
         const speed = this._key.crouch ? this.crouchSpeed : this._key.sprint ? this.sprintSpeed : this.moveSpeed;
         tmpV1.mulScalar(this.sceneSize * speed * dt);
         this._origin.add(tmpV1);
+
+        // clamp movement if locked
+        if (this._moving) {
+            this._clampPosition(this._origin);
+        }
     }
 
     /**
@@ -743,9 +936,9 @@ class CameraControls extends Script {
         const mouseW = this._camera.screenToWorld(pos.x, pos.y, 1);
         const cameraPos = this._camera.entity.getPosition();
 
-        const focusDirScaled = tmpV1.copy(this._camera.entity.forward).mulScalar(this._zoomDist);
-        const focalPos = tmpV2.add2(cameraPos, focusDirScaled);
-        const planeNormal = focusDirScaled.mulScalar(-1).normalize();
+        const focusDir = this._focusDir(tmpV1);
+        const focalPos = tmpV2.add2(cameraPos, focusDir);
+        const planeNormal = focusDir.mulScalar(-1).normalize();
 
         const plane = tmpP1.setFromPointNormal(focalPos, planeNormal);
         const ray = tmpR1.set(cameraPos, mouseW.sub(cameraPos).normalize());
@@ -780,6 +973,9 @@ class CameraControls extends Script {
      */
     _zoom(delta) {
         if (!this.enableOrbit && !this.enablePan) {
+            return;
+        }
+        if (this._flying) {
             return;
         }
 
@@ -973,4 +1169,4 @@ class CameraControls extends Script {
     }
 }
 
-export { CameraControls };
+export { Bound, CameraControls };

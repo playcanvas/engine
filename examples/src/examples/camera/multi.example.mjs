@@ -5,6 +5,8 @@ import * as pc from 'playcanvas';
 
 const { CameraControls } = await fileImport(`${rootPath}/static/scripts/esm/camera-controls.mjs`);
 
+const tmpVa = new pc.Vec2();
+
 const canvas = document.getElementById('application-canvas');
 if (!(canvas instanceof HTMLCanvasElement)) {
     throw new Error('No canvas found');
@@ -95,7 +97,8 @@ const createMultiCamera = (focus) => {
     const script = camera.script.create(CameraControls, {
         attributes: {
             focusPoint: bbox.center,
-            sceneSize: bbox.halfExtents.length()
+            sceneSize: bbox.halfExtents.length(),
+            yBounds: tmpVa.set(1, 1)
         }
     });
 
@@ -152,6 +155,12 @@ data.set('attr', [
     'lookDamping',
     'moveDamping',
     'pitchRange',
+    'xRange',
+    'yRange',
+    'zRange',
+    'xBound',
+    'yBound',
+    'zBound',
     'pinchSpeed',
     'wheelSpeed',
     'zoomMin',
@@ -168,11 +177,15 @@ data.set('attr', [
         return obj;
     }
 
+    if (key.includes('Bound')) {
+        obj[key] = value + 1;
+        return obj;
+    }
+
     obj[key] = multiCameraScript[key];
     return obj;
 }, {}));
 
-const tmpVa = new pc.Vec2();
 data.on('*:set', (/** @type {string} */ path, /** @type {any} */ value) => {
     const [category, key, index] = path.split('.');
     if (category !== 'attr') {
@@ -188,6 +201,12 @@ data.on('*:set', (/** @type {string} */ path, /** @type {any} */ value) => {
         multiCameraScript[key] = tmpVa.set(arr[0], arr[1]);
         return;
     }
+
+    if (key.includes('Bound')) {
+        multiCameraScript[key] = value - 1;
+        return;
+    }
+
     multiCameraScript[key] = value;
 });
 
