@@ -32,12 +32,17 @@ class ScrollbarComponentSystem extends ComponentSystem {
 
         this.schema = _schema;
 
+        this.on('add', this._onAddComponent, this);
         this.on('beforeremove', this._onRemoveComponent, this);
     }
 
     initializeComponentData(component, data, properties) {
-        component.handleEntity = data.handleEntity;
         super.initializeComponentData(component, data, _schema);
+        component.handleEntity = data.handleEntity;
+    }
+
+    _onAddComponent(entity) {
+        entity.fire('scrollbar:add');
     }
 
     _onRemoveComponent(entity, component) {

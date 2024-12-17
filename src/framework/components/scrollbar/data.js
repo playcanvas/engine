@@ -8,7 +8,7 @@ class ScrollbarComponentData {
     value = 0;
 
     /** @type {number} */
-    handleSize;
+    handleSize = 0;
 
     /** @type {import('../../../framework/entity').Entity} */
     handleEntity = null;
