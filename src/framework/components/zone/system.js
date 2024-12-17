@@ -49,6 +49,7 @@ class ZoneComponentSystem extends ComponentSystem {
 
     cloneComponent(entity, clone) {
         const data = {
+            enabled: entity.zone.enabled,
             size: entity.zone.size
         };
 
