@@ -1,5 +1,9 @@
 import { Vec2 } from '../../../core/math/vec2.js';
 
+/**
+ * @import { Entity } from '../../../framework/entity.js'
+ */
+
 const DEFAULT_DRAG_THRESHOLD = 10;
 
 class ScrollViewComponentData {
@@ -27,22 +31,22 @@ class ScrollViewComponentData {
     mouseWheelSensitivity = new Vec2(1, 1);
 
     /** @type {number} */
-    horizontalScrollbarVisibility;
+    horizontalScrollbarVisibility = 0;
 
     /** @type {number} */
-    verticalScrollbarVisibility;
+    verticalScrollbarVisibility = 0;
 
-    /** @type {import('../../../framework/entity.js').Entity} */
-    viewportEntity;
+    /** @type {Entity|null} */
+    viewportEntity = null;
 
-    /** @type {import('../../../framework/entity.js').Entity} */
-    contentEntity;
+    /** @type {Entity|null} */
+    contentEntity = null;
 
-    /** @type {import('../../../framework/entity.js').Entity} */
-    horizontalScrollbarEntity;
+    /** @type {Entity|null} */
+    horizontalScrollbarEntity = null;
 
-    /** @type {import('../../../framework/entity.js').Entity} */
-    verticalScrollbarEntity;
+    /** @type {Entity|null} */
+    verticalScrollbarEntity = null;
 }
 
 export { ScrollViewComponentData };
