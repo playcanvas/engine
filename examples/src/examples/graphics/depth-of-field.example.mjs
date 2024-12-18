@@ -91,7 +91,7 @@ assetListLoader.load(() => {
 
     // adjust all materials of the love sign to disable dynamic refraction
     loveEntity.findComponents('render').forEach((render) => {
-        render.meshInstances.forEach(meshInstance => {
+        render.meshInstances.forEach((meshInstance) => {
             meshInstance.material.useDynamicRefraction = false;
         });
     });

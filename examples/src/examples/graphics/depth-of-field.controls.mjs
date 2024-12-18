@@ -1,5 +1,3 @@
-import * as pc from 'playcanvas';
-
 /**
  * @param {import('../../app/components/Example.mjs').ControlOptions} options - The options.
  * @returns {JSX.Element} The returned JSX Element.
