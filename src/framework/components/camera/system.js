@@ -169,6 +169,12 @@ class CameraComponentSystem extends ComponentSystem {
             sortPriority(this.cameras);
         }
     }
+
+    destroy() {
+        super.destroy();
+
+        this.app.off('prerender', this.onAppPrerender, this);
+    }
 }
 
 Component._buildAccessors(CameraComponent.prototype, _schema);
