@@ -171,9 +171,9 @@ class CameraComponentSystem extends ComponentSystem {
     }
 
     destroy() {
-        super.destroy();
-
         this.app.off('prerender', this.onAppPrerender, this);
+
+        super.destroy();
     }
 }
 
