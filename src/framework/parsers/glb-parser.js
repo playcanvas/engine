@@ -1125,7 +1125,7 @@ const createMaterial = (gltfMaterial, textures) => {
 
     // Set glTF spec defaults
     material.specular.set(1, 1, 1);
-    material.gloss = 1;
+    material.gloss = 0;
     material.glossInvert = true;
     material.useMetalness = true;
 
