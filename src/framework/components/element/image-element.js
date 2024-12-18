@@ -29,6 +29,7 @@ import { Asset } from '../../asset/asset.js';
 
 /**
  * @import { BoundingBox } from '../../../core/shape/bounding-box.js'
+ * @import { EventHandle } from '../../../core/event-handle.js'
  * @import { Material } from '../../../scene/materials/material.js'
  * @import { Sprite } from '../../../scene/sprite.js'
  * @import { Texture } from '../../../platform/graphics/texture.js'
@@ -264,7 +265,7 @@ class ImageRenderable {
 
 class ImageElement {
     /**
-     * @type {import('../../../core/event-handle.js').EventHandle|null}
+     * @type {EventHandle|null}
      * @private
      */
     _evtSetMeshes = null;

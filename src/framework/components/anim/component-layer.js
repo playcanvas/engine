@@ -7,7 +7,6 @@ import { ANIM_LAYER_OVERWRITE } from '../../anim/controller/constants.js';
 /**
  * @import { AnimComponent } from './component.js'
  * @import { AnimController } from '../../anim/controller/anim-controller.js'
- * @import { Asset } from '../../asset/asset.js'
  */
 
 /**

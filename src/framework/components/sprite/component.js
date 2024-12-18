@@ -18,6 +18,7 @@ import { SpriteAnimationClip } from './sprite-animation-clip.js';
 /**
  * @import { Asset } from '../../asset/asset.js'
  * @import { Entity } from '../../entity.js'
+ * @import { EventHandle } from '../../../core/event-handle.js'
  * @import { SpriteComponentSystem } from './system.js'
  * @import { Sprite } from '../../../scene/sprite.js'
  */
@@ -110,19 +111,19 @@ class SpriteComponent extends Component {
     static EVENT_LOOP = 'loop';
 
     /**
-     * @type {import('../../../core/event-handle.js').EventHandle|null}
+     * @type {EventHandle|null}
      * @private
      */
     _evtLayersChanged = null;
 
     /**
-     * @type {import('../../../core/event-handle.js').EventHandle|null}
+     * @type {EventHandle|null}
      * @private
      */
     _evtLayerAdded = null;
 
     /**
-     * @type {import('../../../core/event-handle.js').EventHandle|null}
+     * @type {EventHandle|null}
      * @private
      */
     _evtLayerRemoved = null;

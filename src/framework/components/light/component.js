@@ -7,6 +7,7 @@ import { properties } from './data.js';
 
 /**
  * @import { Color } from '../../../core/math/color.js'
+ * @import { EventHandle } from '../../../core/event-handle.js'
  * @import { LightComponentData } from './data.js'
  * @import { Light } from '../../../scene/light.js'
  * @import { Texture } from '../../../platform/graphics/texture.js'
@@ -42,19 +43,19 @@ import { properties } from './data.js';
  */
 class LightComponent extends Component {
     /**
-     * @type {import('../../../core/event-handle.js').EventHandle|null}
+     * @type {EventHandle|null}
      * @private
      */
     _evtLayersChanged = null;
 
     /**
-     * @type {import('../../../core/event-handle.js').EventHandle|null}
+     * @type {EventHandle|null}
      * @private
      */
     _evtLayerAdded = null;
 
     /**
-     * @type {import('../../../core/event-handle.js').EventHandle|null}
+     * @type {EventHandle|null}
      * @private
      */
     _evtLayerRemoved = null;

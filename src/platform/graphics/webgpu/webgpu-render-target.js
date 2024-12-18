@@ -190,7 +190,7 @@ class WebgpuRenderTarget {
      * Assign a color buffer. This allows the color buffer of the main framebuffer
      * to be swapped each frame to a buffer provided by the context.
      *
-     * @param {import('./webgpu-graphics-device.js').WebgpuGraphicsDevice} device - The WebGPU
+     * @param {WebgpuGraphicsDevice} device - The WebGPU
      * graphics device.
      * @param {any} gpuTexture - The color buffer.
      */

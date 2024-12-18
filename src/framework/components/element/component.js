@@ -20,6 +20,7 @@ import { TextElement } from './text-element.js';
  * @import { Color } from '../../../core/math/color.js'
  * @import { ElementComponentData } from './data.js'
  * @import { ElementComponentSystem } from './system.js'
+ * @import { EventHandle } from '../../../core/event-handle.js'
  * @import { Font } from '../../../framework/font/font.js'
  * @import { Material } from '../../../scene/materials/material.js'
  * @import { Sprite } from '../../../scene/sprite.js'
@@ -220,19 +221,19 @@ class ElementComponent extends Component {
     static EVENT_TOUCHCANCEL = 'touchcancel';
 
     /**
-     * @type {import('../../../core/event-handle.js').EventHandle|null}
+     * @type {EventHandle|null}
      * @private
      */
     _evtLayersChanged = null;
 
     /**
-     * @type {import('../../../core/event-handle.js').EventHandle|null}
+     * @type {EventHandle|null}
      * @private
      */
     _evtLayerAdded = null;
 
     /**
-     * @type {import('../../../core/event-handle.js').EventHandle|null}
+     * @type {EventHandle|null}
      * @private
      */
     _evtLayerRemoved = null;
