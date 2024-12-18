@@ -647,9 +647,9 @@ class CameraComponent extends Component {
     set layers(newValue) {
         const oldLayers = this._camera.layers;
         const scene = this.system.app.scene;
-        
+
         // Remove from old layers
-        oldLayers.forEach(layerId => {
+        oldLayers.forEach((layerId) => {
             const layer = scene.layers.getLayerById(layerId);
             layer?.removeCamera(this);
         });
@@ -658,7 +658,7 @@ class CameraComponent extends Component {
 
         // Only add to new layers if enabled
         if (this.enabled && this.entity.enabled) {
-            newValue.forEach(layerId => {
+            newValue.forEach((layerId) => {
                 const layer = scene.layers.getLayerById(layerId);
                 layer?.addCamera(this);
             });
