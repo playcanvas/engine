@@ -50,6 +50,7 @@ import { PostEffectQueue } from './post-effect-queue.js';
  * entity.camera.nearClip = 2;
  * ```
  *
+ * @hideconstructor
  * @category Graphics
  */
 class CameraComponent extends Component {

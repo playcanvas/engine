@@ -82,6 +82,7 @@ const matD = new Mat4();
  * - [Text localization](https://playcanvas.github.io/#/user-interface/text-localization)
  * - [Typewriter text](https://playcanvas.github.io/#/user-interface/text-typewriter)
  *
+ * @hideconstructor
  * @category User Interface
  */
 class ElementComponent extends Component {
