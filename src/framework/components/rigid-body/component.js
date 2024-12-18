@@ -11,7 +11,6 @@ import {
 
 /**
  * @import { Entity } from '../../entity.js'
- * @import { RigidBodyComponentSystem } from './system.js'
  */
 
 // Shared math variable to avoid excessive allocation
