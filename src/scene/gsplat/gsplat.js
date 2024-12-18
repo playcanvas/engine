@@ -280,7 +280,7 @@ class GSplat {
     }
 
     /**
-     * @param {import('./gsplat-data.js').GSplatData} gsplatData - The source data
+     * @param {GSplatData} gsplatData - The source data
      */
     updateSHData(gsplatData) {
         const sh1to3Data = this.sh1to3Texture.lock();

@@ -9,6 +9,7 @@ import { PostEffectQueue } from './post-effect-queue.js';
  * @import { CameraComponentSystem } from './system.js'
  * @import { Color } from '../../../core/math/color.js'
  * @import { Entity } from '../../entity.js'
+ * @import { EventHandle } from '../../../core/event-handle.js'
  * @import { Frustum } from '../../../core/shape/frustum.js'
  * @import { LayerComposition } from '../../../scene/composition/layer-composition.js'
  * @import { Layer } from '../../../scene/layer.js'
@@ -99,19 +100,19 @@ class CameraComponent extends Component {
     _camera = new Camera();
 
     /**
-     * @type {import('../../../core/event-handle.js').EventHandle|null}
+     * @type {EventHandle|null}
      * @private
      */
     _evtLayersChanged = null;
 
     /**
-     * @type {import('../../../core/event-handle.js').EventHandle|null}
+     * @type {EventHandle|null}
      * @private
      */
     _evtLayerAdded = null;
 
     /**
-     * @type {import('../../../core/event-handle.js').EventHandle|null}
+     * @type {EventHandle|null}
      * @private
      */
     _evtLayerRemoved = null;
