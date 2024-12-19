@@ -86,6 +86,7 @@ describe('TextElement', function () {
         expect(element._text.symbolShadowParams).to.deep.equal(expectedLineShadowParams);
     }
 
+    // Creates data for a single translation as if it was a whole asset
     function createTranslation(locale, key, translations) {
         const messages = {};
         messages[key] = translations;
@@ -104,6 +105,8 @@ describe('TextElement', function () {
         return data;
     }
 
+    // Adds the specified key->translations pair for the specified locale to
+    // the specified i18n instance, as if it's adding a whole new asset
     function addText(locale, key, translations) {
         const data = createTranslation(locale, key, translations);
         app.i18n.addData(data);
