@@ -12,7 +12,7 @@ import { Canvas } from 'skia-canvas';
 
 import { expect } from 'chai';
 
-/** @typedef {import('../../../../src/framework/components/element/component.js').ElementComponent} ElementComponent */
+/** @import { ElementComponent } from '../../../../src/framework/components/element/component.js' */
 
 describe('LayoutCalculator', function () {
     /** @type {Application} */

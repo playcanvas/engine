@@ -8,7 +8,7 @@ import { Canvas } from 'skia-canvas';
 import { expect } from 'chai';
 import { restore, spy, stub } from 'sinon';
 
-/** @typedef {import('../../../../src/framework/components/layout-group/system.js').LayoutGroupComponentSystem} LayoutGroupComponentSystem */
+/** @import { LayoutGroupComponentSystem } from '../../../../src/framework/components/layout-group/system.js' */
 
 describe('LayoutGroupComponent', function () {
     /** @type {Application} */
