@@ -10,7 +10,7 @@ import { Canvas } from 'skia-canvas';
 import { expect } from 'chai';
 import { restore } from 'sinon';
 
-describe.only('TextElement', function () {
+describe('TextElement', function () {
     let app;
     let assets;
     let entity;
