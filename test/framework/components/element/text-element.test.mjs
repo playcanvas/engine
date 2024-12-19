@@ -1239,8 +1239,6 @@ describe('TextElement', function () {
         app.update(0.1);
         app.render();
 
-        const meshInstance = e.element._text._model.meshInstances[0];
-
         expect(e.element.isVisibleForCamera(camera.camera.camera)).to.be.true;
 
         // move just off screen
@@ -1288,8 +1286,6 @@ describe('TextElement', function () {
         // update transform
         app.update(0.1);
         app.render();
-
-        const meshInstance = e.element._text._model.meshInstances[0];
 
         expect(e.element.isVisibleForCamera(camera.camera.camera)).to.be.true;
 
@@ -1345,8 +1341,6 @@ describe('TextElement', function () {
         camera.addComponent('camera');
         app.root.addChild(camera);
 
-        const meshInstance = e.element._text._model.meshInstances[0];
-
         // update transform
         app.update(0.1);
         app.render();
@@ -1391,8 +1385,6 @@ describe('TextElement', function () {
         e.translateLocal(300 + (50 * Math.sqrt(2)), 0, 0);
         e.rotateLocal(0, 0, 45);
 
-        const meshInstance = e.element._text._model.meshInstances[0];
-
         // update transform
         app.update(0.1);
         app.render();
@@ -1426,8 +1418,6 @@ describe('TextElement', function () {
         // move just off screen (when rotated 45°)
         e.translateLocal(300, 0, 0);
         e.rotateLocal(0, 90, 0);
-
-        const meshInstance = e.element._text._model.meshInstances[0];
 
         // update transform
         app.update(0.1);
