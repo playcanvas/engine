@@ -10,7 +10,7 @@ import { Canvas } from 'skia-canvas';
 import { expect } from 'chai';
 import { restore, spy, stub } from 'sinon';
 
-/** @typedef {import('../../../../src/framework/components/component.js').Component} Component */
+/** @import { Component } from '../../../../src/framework/components/component.js' */
 
 describe('EntityReference', function () {
     /** @type {Application} */
