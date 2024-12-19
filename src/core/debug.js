@@ -52,7 +52,7 @@ class Debug {
     /**
      * Assertion error message. If the assertion is false, the error message is written to the log.
      *
-     * @param {boolean|object} assertion - The assertion to check.
+     * @param {boolean|object|string} assertion - The assertion to check.
      * @param {...*} args - The values to be written to the log.
      */
     static assert(assertion, ...args) {
