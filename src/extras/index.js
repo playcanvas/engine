@@ -18,6 +18,7 @@ export { SSAOTYPE_NONE, SSAOTYPE_LIGHTING, SSAOTYPE_COMBINE } from './render-pas
 export { RenderPassCameraFrame, CameraFrameOptions } from './render-passes/render-pass-camera-frame.js';
 export { RenderPassCompose } from './render-passes/render-pass-compose.js';
 export { RenderPassDepthAwareBlur } from './render-passes/render-pass-depth-aware-blur.js';
+export { RenderPassDof } from './render-passes/render-pass-dof.js';
 export { RenderPassDownsample } from './render-passes/render-pass-downsample.js';
 export { RenderPassUpsample } from './render-passes/render-pass-upsample.js';
 export { RenderPassBloom } from './render-passes/render-pass-bloom.js';

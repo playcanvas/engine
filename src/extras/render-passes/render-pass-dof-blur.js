@@ -1,0 +1,148 @@
+import { Kernel } from '../../core/math/kernel.js';
+import { RenderPassShaderQuad } from '../../scene/graphics/render-pass-shader-quad.js';
+
+/**
+ * Render pass implementation of a down-sample filter used by the Depth of Field pass. Based on
+ * a texel of the CoC texture, it generates blurred version of the near or far texture.
+ *
+ * @category Graphics
+ * @ignore
+ */
+class RenderPassDofBlur extends RenderPassShaderQuad {
+    blurRadiusNear = 1;
+
+    blurRadiusFar = 1;
+
+    _blurRings = 3;
+
+    _blurRingPoints = 3;
+
+    constructor(device, nearTexture, farTexture, cocTexture) {
+        super(device);
+        this.nearTexture = nearTexture;
+        this.farTexture = farTexture;
+        this.cocTexture = cocTexture;
+
+        const { scope } = device;
+        this.kernelId = scope.resolve('kernel[0]');
+        this.kernelCountId = scope.resolve('kernelCount');
+        this.blurRadiusNearId = scope.resolve('blurRadiusNear');
+        this.blurRadiusFarId = scope.resolve('blurRadiusFar');
+
+        this.nearTextureId = scope.resolve('nearTexture');
+        this.farTextureId = scope.resolve('farTexture');
+        this.cocTextureId = scope.resolve('cocTexture');
+    }
+
+    set blurRings(value) {
+        if (this._blurRings !== value) {
+            this._blurRings = value;
+            this.shader = null;
+        }
+    }
+
+    get blurRings() {
+        return this._blurRings;
+    }
+
+    set blurRingPoints(value) {
+        if (this._blurRingPoints !== value) {
+            this._blurRingPoints = value;
+            this.shader = null;
+        }
+    }
+
+    get blurRingPoints() {
+        return this._blurRingPoints;
+    }
+
+    createShader() {
+        this.kernel = new Float32Array(Kernel.concentric(this.blurRings, this.blurRingPoints));
+        const kernelCount = this.kernel.length >> 1;
+
+        this.shader = this.createQuadShader(`DofBlurShader-${kernelCount}`, /* glsl */`
+
+            uniform sampler2D nearTexture;
+            uniform sampler2D farTexture;
+            uniform sampler2D cocTexture;
+            uniform float blurRadiusNear;
+            uniform float blurRadiusFar;
+            uniform vec2 kernel[${kernelCount}];
+
+            varying vec2 uv0;
+
+            void main()
+            {
+                vec2 coc = texture2D(cocTexture, uv0).rg;
+                float cocNear = coc.r;
+                float cocFar = coc.g;
+
+                vec3 sum = vec3(0.0, 0.0, 0.0);
+
+                // near blur
+                if (cocNear > 0.0001) {
+
+                    ivec2 nearTextureSize = textureSize(nearTexture, 0);
+                    vec2 step = cocNear * blurRadiusNear / vec2(nearTextureSize);
+
+                    for (int i = 0; i < ${kernelCount}; i++)
+                    {
+                        vec2 uv = uv0 + step * kernel[i];
+                        vec3 tap = texture2D(nearTexture, uv).rgb;
+                        sum += tap.rgb;
+                    }
+
+                    sum *= ${1.0 / kernelCount};
+
+                } else if (cocFar > 0.0001) { // far blur
+
+                    ivec2 farTextureSize = textureSize(farTexture, 0);
+                    vec2 step = cocFar * blurRadiusFar / vec2(farTextureSize);
+
+                    float sumCoC = 0.0; 
+                    for (int i = 0; i < ${kernelCount}; i++)
+                    {
+                        vec2 uv = uv0 + step * kernel[i];
+                        vec3 tap = texture2D(farTexture, uv).rgb;
+
+                        // block out sharp objects to avoid leaking to far blur
+                        float cocThis = texture2D(cocTexture, uv).g;
+                        tap *= cocThis;
+                        sumCoC += cocThis;
+
+                        sum += tap.rgb;
+                    }
+
+                    // average out the sum
+                    if (sumCoC > 0.0)
+                        sum /= sumCoC;
+
+                    // compensate for the fact the farTexture was premultiplied by CoC
+                    sum /= cocFar;
+                }
+
+                pcFragColor0 = vec4(sum, 1.0);
+            }`
+        );
+    }
+
+    execute() {
+
+        if (!this.shader) {
+            this.createShader();
+        }
+
+        this.nearTextureId.setValue(this.nearTexture);
+        this.farTextureId.setValue(this.farTexture);
+        this.cocTextureId.setValue(this.cocTexture);
+
+        this.kernelId.setValue(this.kernel);
+        this.kernelCountId.setValue(this.kernel.length >> 1);
+        this.blurRadiusNearId.setValue(this.blurRadiusNear);
+        this.blurRadiusFarId.setValue(this.blurRadiusFar);
+
+        super.execute();
+    }
+}
+
+export { RenderPassDofBlur };

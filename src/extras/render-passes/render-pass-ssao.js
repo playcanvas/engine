@@ -325,8 +325,8 @@ class RenderPassSsao extends RenderPassShaderQuad {
      */
     set scale(value) {
         this._scale = value;
-        this.options.scaleX = value;
-        this.options.scaleY = value;
+        this.scaleX = value;
+        this.scaleY = value;
     }
 
     get scale() {
