@@ -7,7 +7,7 @@ import { Canvas } from 'skia-canvas';
 import { expect } from 'chai';
 import { fake, restore } from 'sinon';
 
-describe.only('AssetReference', function () {
+describe('AssetReference', function () {
     let app;
     let parent;
     let load;
