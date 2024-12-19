@@ -1,42 +1,56 @@
-describe("pc.TextElement", function () {
-    var app;
-    var assets;
-    var entity;
-    var element;
-    var fontAsset;
-    var canvas;
+import { Application } from '../../../../src/framework/application.js';
+import { Asset } from '../../../../src/framework/asset/asset.js';
+import { CanvasFont } from '../../../../src/framework/font/canvas-font.js';
+import { Color } from '../../../../src/core/math/color.js';
+import { Entity } from '../../../../src/framework/entity.js';
+import { NullGraphicsDevice } from '../../../../src/platform/graphics/null/null-graphics-device.js';
+import { Vec2 } from '../../../../src/core/math/vec2.js';
+
+import { Canvas } from 'skia-canvas';
+import { expect } from 'chai';
+import { restore } from 'sinon';
+
+describe.only('TextElement', function () {
+    let app;
+    let assets;
+    let entity;
+    let element;
+    let fontAsset;
 
     beforeEach(function (done) {
-        canvas = document.createElement("canvas");
-        app = new pc.Application(canvas);
+        const canvas = new Canvas(300, 150);
+        canvas.getBoundingClientRect = () => ({ left: 0, top: 0, width: 300, height: 150 });
+        app = new Application(canvas, {
+            graphicsDevice: new NullGraphicsDevice(canvas)
+        });
+
         buildElement(done);
     });
 
-
     afterEach(function () {
-        for (var key in assets) {
+        for (const key in assets) {
             assets[key].unload();
         }
 
         fontAsset = null;
         app.destroy();
         app = null;
-        canvas = null;
+        restore();
     });
 
-    var buildElement = function (callback) {
-        entity = new pc.Entity("myEntity", app);
-        element = app.systems.element.addComponent(entity, { type: pc.ELEMENTTYPE_TEXT });
+    function buildElement(callback) {
+        entity = new Entity('myEntity');
+        element = app.systems.element.addComponent(entity, { type: 'text' });
         element.autoWidth = false;
         element.wrapLines = true;
         element.width = 200;
 
-        fontAsset = new pc.Asset("arial.json", "font", {
-            url: "base/examples/assets/fonts/arial.json"
+        fontAsset = new Asset('arial.json', 'font', {
+            url: 'http://localhost:3000/test/test-assets/fonts/arial.json'
         });
 
         fontAsset.ready(function () {
-            // use timeout to prevent tests running inside ready() callback (so events are cleared on asset)
+            // use timeout to prevent tests running inside ready() callback
             setTimeout(function () {
                 callback();
             });
@@ -50,33 +64,32 @@ describe("pc.TextElement", function () {
         assets = {
             font: fontAsset
         };
-    };
+    }
 
-    var assertLineContents = function (expectedLineContents) {
+    function assertLineContents(expectedLineContents) {
         expect(element.lines.length).to.equal(expectedLineContents.length);
         expect(element.lines).to.deep.equal(expectedLineContents);
-    };
+    }
 
-    var assertLineColors = function (expectedLineColors) {
+    function assertLineColors(expectedLineColors) {
         expect(element._text.symbolColors.length).to.equal(expectedLineColors.length);
         expect(element._text.symbolColors).to.deep.equal(expectedLineColors);
-    };
+    }
 
-    var assertLineOutlineParams = function (expectedLineOutlineParams) {
+    function assertLineOutlineParams(expectedLineOutlineParams) {
         expect(element._text.symbolOutlineParams.length).to.equal(expectedLineOutlineParams.length);
         expect(element._text.symbolOutlineParams).to.deep.equal(expectedLineOutlineParams);
-    };
+    }
 
-    var assertLineShadowParams = function (expectedLineShadowParams) {
+    function assertLineShadowParams(expectedLineShadowParams) {
         expect(element._text.symbolShadowParams.length).to.equal(expectedLineShadowParams.length);
         expect(element._text.symbolShadowParams).to.deep.equal(expectedLineShadowParams);
-    };
+    }
 
-    // Creates data for a single translation as if it was a whole asset
-    var createTranslation = function (locale, key, translations) {
-        var messages = {};
+    function createTranslation(locale, key, translations) {
+        const messages = {};
         messages[key] = translations;
-        var data = {
+        const data = {
             header: {
                 version: 1
             },
@@ -89,19 +102,17 @@ describe("pc.TextElement", function () {
         };
 
         return data;
-    };
+    }
 
-    // Adds the specified key->translations pair for the specified locale to
-    // the specified i18n instance, as if it's adding a whole new asset
-    var addText = function (locale, key, translations) {
-        var data = createTranslation(locale, key, translations);
+    function addText(locale, key, translations) {
+        const data = createTranslation(locale, key, translations);
         app.i18n.addData(data);
         return data;
-    };
+    }
 
-    var registerRtlHandler = function (lineBreakChar) {
+    function registerRtlHandler(lineBreakChar) {
         app.systems.element.registerRtlReorder(function (symbols) {
-            var mapping = symbols.map(function (s, i) {
+            const mapping = symbols.map(function (s, i) {
                 return i;
             });
             return {
@@ -109,7 +120,7 @@ describe("pc.TextElement", function () {
                 isrtl: true
             };
         });
-    };
+    }
 
     it("does not break onto multiple lines if the text is short enough", function () {
         element.fontAsset = fontAsset;
@@ -117,6 +128,7 @@ describe("pc.TextElement", function () {
         element.text = "abcde fghij";
         assertLineContents(["abcde fghij"]);
     });
+
 
     it("does not break onto multiple lines if the autoWidth is set to true", function () {
         element.fontAsset = fontAsset;
@@ -627,7 +639,7 @@ describe("pc.TextElement", function () {
     });
 
     it("rtl and ltr text in one line using CanvasFont ends up with the same width", function () {
-        var cf = new pc.CanvasFont(app, {
+        var cf = new CanvasFont(app, {
             fontName: 'Arial',
             fontSize: 64,
             width: 1024,
@@ -947,7 +959,7 @@ describe("pc.TextElement", function () {
     });
 
     it('AssetRegistry events unbound on destroy for font asset', function () {
-        var e = new pc.Entity();
+        var e = new Entity();
 
         e.addComponent('element', {
             type: 'text',
@@ -961,14 +973,13 @@ describe("pc.TextElement", function () {
         expect(app.assets.hasEvent('add:123456')).to.be.false;
     });
 
-
     it('Font assets unbound when reset', function () {
         expect(assets.font.hasEvent('add')).to.be.false;
         expect(assets.font.hasEvent('change')).to.be.false;
         expect(assets.font.hasEvent('load')).to.be.false;
         expect(assets.font.hasEvent('remove')).to.be.false;
 
-        var e = new pc.Entity();
+        var e = new Entity();
         e.addComponent('element', {
             type: 'text',
             fontAsset: assets.font
@@ -988,7 +999,7 @@ describe("pc.TextElement", function () {
         expect(assets.font.hasEvent('load')).to.be.false;
         expect(assets.font.hasEvent('remove')).to.be.false;
 
-        var e = new pc.Entity();
+        var e = new Entity();
         e.addComponent('element', {
             type: 'text',
             fontAsset: assets.font
@@ -1008,7 +1019,7 @@ describe("pc.TextElement", function () {
         expect(assets.font.hasEvent('load')).to.be.false;
         expect(assets.font.hasEvent('remove')).to.be.false;
 
-        var e = new pc.Entity();
+        var e = new Entity();
         e.enabled = false;
         e.addComponent('element', {
             type: 'text',
@@ -1027,7 +1038,7 @@ describe("pc.TextElement", function () {
     });
 
     it('CanvasFont render event is unbound when reset', function () {
-        var cf = new pc.CanvasFont(app, {
+        var cf = new CanvasFont(app, {
             fontName: 'Arial'
         });
 
@@ -1035,7 +1046,7 @@ describe("pc.TextElement", function () {
 
         expect(cf.hasEvent('render')).to.be.false;
 
-        var e = new pc.Entity();
+        var e = new Entity();
         e.addComponent('element', {
             type: 'text',
             text: 'abc'
@@ -1052,7 +1063,7 @@ describe("pc.TextElement", function () {
     });
 
     it('CanvasFont render event is unbound on destroy', function () {
-        var cf = new pc.CanvasFont(app, {
+        var cf = new CanvasFont(app, {
             fontName: 'Arial'
         });
 
@@ -1060,7 +1071,7 @@ describe("pc.TextElement", function () {
 
         expect(cf.hasEvent('render')).to.be.false;
 
-        var e = new pc.Entity();
+        var e = new Entity();
         e.addComponent('element', {
             type: 'text',
             text: 'abc'
@@ -1095,7 +1106,7 @@ describe("pc.TextElement", function () {
     });
 
     it("uses color and opacity passed in addComponent data", function () {
-        var e = new pc.Entity();
+        var e = new Entity();
         e.addComponent('element', {
             type: 'text',
             text: 'test',
@@ -1122,7 +1133,7 @@ describe("pc.TextElement", function () {
     });
 
     it("changes color", function () {
-        element.color = new pc.Color(0.1, 0.2, 0.3);
+        element.color = new Color(0.1, 0.2, 0.3);
 
         expect(element.color.r).to.be.closeTo(0.1, 0.001);
         expect(element.color.g).to.be.closeTo(0.2, 0.001);
@@ -1154,7 +1165,7 @@ describe("pc.TextElement", function () {
 
 
     it("cloned text component is complete", function () {
-        var e = new pc.Entity();
+        var e = new Entity();
 
         e.addComponent('element', {
             type: 'text',
@@ -1180,7 +1191,7 @@ describe("pc.TextElement", function () {
     });
 
     it("clears font asset when font is assigned directly", function () {
-        var e = new pc.Entity();
+        var e = new Entity();
 
         e.addComponent('element', {
             type: 'text',
@@ -1188,7 +1199,7 @@ describe("pc.TextElement", function () {
             fontAsset: assets.font
         });
 
-        var font = new pc.CanvasFont(app);
+        var font = new CanvasFont(app);
         font.createTextures(' ');
 
         e.element.font = font;
@@ -1202,13 +1213,13 @@ describe("pc.TextElement", function () {
         var canvasWidth = app.graphicsDevice.width;
         var canvasHeight = app.graphicsDevice.height;
 
-        var screen = new pc.Entity();
+        var screen = new Entity();
         screen.addComponent('screen', {
             screenSpace: true
         });
         app.root.addChild(screen);
 
-        var e = new pc.Entity();
+        var e = new Entity();
         e.addComponent('element', {
             type: 'text',
             text: "test",
@@ -1221,7 +1232,7 @@ describe("pc.TextElement", function () {
         });
         screen.addChild(e);
 
-        var camera = new pc.Entity();
+        var camera = new Entity();
         camera.addComponent('camera');
         app.root.addChild(camera);
 
@@ -1253,13 +1264,13 @@ describe("pc.TextElement", function () {
         var canvasWidth = app.graphicsDevice.width;
         var canvasHeight = app.graphicsDevice.height;
 
-        var screen = new pc.Entity();
+        var screen = new Entity();
         screen.addComponent('screen', {
             screenSpace: true
         });
         app.root.addChild(screen);
 
-        var e = new pc.Entity();
+        var e = new Entity();
         e.addComponent('element', {
             type: 'text',
             text: "test",
@@ -1272,7 +1283,7 @@ describe("pc.TextElement", function () {
         });
         screen.addChild(e);
 
-        var camera = new pc.Entity();
+        var camera = new Entity();
         camera.addComponent('camera');
         app.root.addChild(camera);
 
@@ -1303,13 +1314,13 @@ describe("pc.TextElement", function () {
         var canvasWidth = app.graphicsDevice.width;
         var canvasHeight = app.graphicsDevice.height;
 
-        var screen = new pc.Entity();
+        var screen = new Entity();
         screen.addComponent('screen', {
             screenSpace: true
         });
         app.root.addChild(screen);
 
-        var parent = new pc.Entity();
+        var parent = new Entity();
         parent.addComponent('element', {
             type: 'text',
             text: "test",
@@ -1322,7 +1333,7 @@ describe("pc.TextElement", function () {
         });
         screen.addChild(parent);
 
-        var e = new pc.Entity();
+        var e = new Entity();
         e.addComponent('element', {
             type: 'text',
             text: "test",
@@ -1335,7 +1346,7 @@ describe("pc.TextElement", function () {
         });
         parent.addChild(e);
 
-        var camera = new pc.Entity();
+        var camera = new Entity();
         camera.addComponent('camera');
         app.root.addChild(camera);
 
@@ -1361,13 +1372,13 @@ describe("pc.TextElement", function () {
         var canvasWidth = app.graphicsDevice.width;
         var canvasHeight = app.graphicsDevice.height;
 
-        var screen = new pc.Entity();
+        var screen = new Entity();
         screen.addComponent('screen', {
             screenSpace: true
         });
         app.root.addChild(screen);
 
-        var e = new pc.Entity();
+        var e = new Entity();
         e.addComponent('element', {
             type: 'text',
             text: "test",
@@ -1380,7 +1391,7 @@ describe("pc.TextElement", function () {
         });
         screen.addChild(e);
 
-        var camera = new pc.Entity();
+        var camera = new Entity();
         camera.addComponent('camera');
         app.root.addChild(camera);
 
@@ -1400,13 +1411,13 @@ describe("pc.TextElement", function () {
         var canvasWidth = app.graphicsDevice.width;
         var canvasHeight = app.graphicsDevice.height;
 
-        var screen = new pc.Entity();
+        var screen = new Entity();
         screen.addComponent('screen', {
             screenSpace: true
         });
         app.root.addChild(screen);
 
-        var e = new pc.Entity();
+        var e = new Entity();
         e.addComponent('element', {
             type: 'text',
             text: "test",
@@ -1419,7 +1430,7 @@ describe("pc.TextElement", function () {
         });
         screen.addChild(e);
 
-        var camera = new pc.Entity();
+        var camera = new Entity();
         camera.addComponent('camera');
         app.root.addChild(camera);
 
@@ -1515,8 +1526,8 @@ describe("pc.TextElement", function () {
     });
 
     it('changing the locale changes the font asset', function (done) {
-        assets.font2 = new pc.Asset("courier.json", "font", {
-            url: "base/examples/assets/fonts/courier.json"
+        assets.font2 = new Asset("courier.json", "font", {
+            url: "http://localhost:3000/test/test-assets/fonts/courier.json"
         });
 
         app.assets.add(assets.font2);
@@ -1540,8 +1551,8 @@ describe("pc.TextElement", function () {
     });
 
     it('text element that does not use localization uses the default font asset not its localized variant', function (done) {
-        assets.font2 = new pc.Asset("courier.json", "font", {
-            url: "base/examples/assets/fonts/courier.json"
+        assets.font2 = new Asset("courier.json", "font", {
+            url: "http://localhost:3000/test/test-assets/fonts/courier.json"
         });
 
         app.assets.add(assets.font2);
@@ -1562,8 +1573,8 @@ describe("pc.TextElement", function () {
     });
 
     it('if text element is disabled it does not automatically load localizedAssets', function () {
-        assets.font2 = new pc.Asset("courier.json", "font", {
-            url: "base/examples/assets/fonts/courier.json"
+        assets.font2 = new Asset("courier.json", "font", {
+            url: "http://localhost:3000/test/test-assets/fonts/courier.json"
         });
 
         app.assets.add(assets.font2);
@@ -1646,8 +1657,8 @@ describe("pc.TextElement", function () {
         element.rtlReorder = true;
         element.enableMarkup = true;
         element.autoWidth = true;
-        element.shadowColor = new pc.Color(1, 1, 0, 1);
-        element.shadowOffset = new pc.Vec2(0.5, -1);
+        element.shadowColor = new Color(1, 1, 0, 1);
+        element.shadowOffset = new Vec2(0.5, -1);
 
         element.text = "text [shadow color=\"#00ff00bb\" offset=\"1\"]element[/shadow] [shadow color=\"#ff0000\"]in red[/shadow] [shadow offset=\"1\"]or[/shadow] not";
 
@@ -1676,7 +1687,7 @@ describe("pc.TextElement", function () {
         element.rtlReorder = true;
         element.enableMarkup = true;
         element.autoWidth = true;
-        element.outlineColor = new pc.Color(1, 1, 0, 1);
+        element.outlineColor = new Color(1, 1, 0, 1);
         element.outlineThickness = 1;
 
         element.text = "text [outline color=\"#00ff00bb\" thickness=\"0.5\"]element[/outline] [outline color=\"#ff0000\"]in red[/outline] [outline thickness=\"1\"]or[/outline] not";
@@ -1715,4 +1726,5 @@ describe("pc.TextElement", function () {
             w, w, w, w, w, w, w, w, w, w, w, w, w, w, w, w, w, w, w
         ]);
     });
+
 });
