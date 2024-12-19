@@ -78,7 +78,8 @@ const fs = /* glsl */ `
         vec4 srcColor = texture2D(sourceTexture, uv);
 
         // current depth is in linear space, convert it to non-linear space
-        float depth = delinearizeDepth(texture2DLodEXT(uSceneDepthMap, uv, 0.0).r);
+        float linearDepth = getLinearScreenDepth(uv0);
+        float depth = delinearizeDepth(linearDepth);
 
         // previous frame
         vec2 historyUv = reproject(uv0, depth);

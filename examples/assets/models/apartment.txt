@@ -1,0 +1,7 @@
+Model Information:
+* title:	Mirror's Edge Apartment - Interior Scene
+* source:	https://sketchfab.com/3d-models/mirrors-edge-apartment-interior-scene-9804e9f2fe284070b081c96ceaf8af96
+* author:	Aurélien Martel (https://sketchfab.com/aurelien_martel)
+
+Model License:
+* license type:	CC Attribution-NonCommercial (https://creativecommons.org/licenses/by-nc/4.0/)

@@ -13,6 +13,7 @@ import {
     SHADER_PREPASS
 } from '../../scene/constants.js';
 import { Color } from '../../core/math/color.js';
+import { FloatPacking } from '../../core/math/float-packing.js';
 
 /**
  * @import { BindGroup } from '../../platform/graphics/bind-group.js'
@@ -39,7 +40,7 @@ class RenderPassPrepass extends RenderPass {
     linearDepthTexture;
 
     /** @type {Color} */
-    linearDepthClearValue;
+    linearDepthClearValue = new Color(0, 0, 0, 0);
 
     constructor(device, scene, renderer, camera, options) {
         super(device);
@@ -68,12 +69,12 @@ class RenderPassPrepass extends RenderPass {
 
         const { device } = this;
 
-        const linearDepthFormat = device.textureFloatRenderable ? PIXELFORMAT_R32F : PIXELFORMAT_RGBA8;
+        this.linearDepthFormat = device.textureFloatRenderable ? PIXELFORMAT_R32F : PIXELFORMAT_RGBA8;
         this.linearDepthTexture = new Texture(device, {
             name: 'SceneLinearDepthTexture',
             width: 1,
             height: 1,
-            format: linearDepthFormat,
+            format: this.linearDepthFormat,
             mipmaps: false,
             minFilter: FILTER_NEAREST,
             magFilter: FILTER_NEAREST,
@@ -96,12 +97,6 @@ class RenderPassPrepass extends RenderPass {
         this.camera.shaderParams.sceneDepthMapLinear = true;
 
         this.init(renderTarget, options);
-
-        // clear color for the linear depth texture
-        this.linearDepthClearValue = new Color(linearDepthFormat === PIXELFORMAT_R32F ?
-            [1, 1, 1, 1] :          // only R is used
-            [0.5, 0.0, 0.0, 0.0]    // represents linear value of -1 encoded into RGBA8
-        );
     }
 
     after() {
@@ -156,10 +151,22 @@ class RenderPassPrepass extends RenderPass {
 
         super.frameUpdate();
 
-        // depth clear value (1 or no clear) set up each frame
+        // depth clear value set up each frame
         const { camera } = this;
         this.setClearDepth(camera.clearDepthBuffer ? 1 : undefined);
-        this.setClearColor(camera.clearDepthBuffer ? this.linearDepthClearValue : undefined);
+
+        // linear depth clear value set up each frame, or undefined to disable clearing
+        let clearValue;
+        if (camera.clearDepthBuffer) {
+            const farClip = camera.farClip - Number.MIN_VALUE;
+            clearValue = this.linearDepthClearValue;
+            if (this.linearDepthFormat === PIXELFORMAT_R32F) {
+                clearValue.r = farClip;  // only R is used
+            } else {
+                FloatPacking.float2RGBA8(farClip, clearValue);
+            }
+        }
+        this.setClearColor(clearValue);
     }
 }
 

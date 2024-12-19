@@ -246,13 +246,31 @@ class RenderPass {
         return this._name;
     }
 
+    set scaleX(value) {
+        Debug.assert(this._options, 'The render pass needs to be initialized first.');
+        this._options.scaleX = value;
+    }
+
+    get scaleX() {
+        return this._options.scaleX;
+    }
+
+    set scaleY(value) {
+        Debug.assert(this._options, 'The render pass needs to be initialized first.');
+        this._options.scaleY = value;
+    }
+
+    get scaleY() {
+        return this._options.scaleY;
+    }
+
     set options(value) {
         this._options = value;
 
         // sanitize options
         if (value) {
-            this._options.scaleX = this._options.scaleX ?? 1;
-            this._options.scaleY = this._options.scaleY ?? 1;
+            this.scaleX = this.scaleX ?? 1;
+            this.scaleY = this.scaleY ?? 1;
         }
     }
 
@@ -333,8 +351,8 @@ class RenderPass {
         // resize the render target if needed
         if (this._options && this.renderTarget) {
             const resizeSource = this._options.resizeSource ?? this.device.backBuffer;
-            const width = Math.floor(resizeSource.width * this._options.scaleX);
-            const height = Math.floor(resizeSource.height * this._options.scaleY);
+            const width = Math.floor(resizeSource.width * this.scaleX);
+            const height = Math.floor(resizeSource.height * this.scaleY);
             this.renderTarget.resize(width, height);
         }
     }
