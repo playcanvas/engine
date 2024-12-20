@@ -11,9 +11,10 @@ const REGULAR_OUT = '\x1b[22m';
  *
  * @param {string} nodeEnv - The node environment.
  * @param {string} enginePath - The path to the engine.
+ * @param {string} rti - Whether to activate RuntimeTypeInspector.
  * @returns {import('rollup').Plugin} The plugin.
  */
-export function buildExamples(nodeEnv, enginePath) {
+export function buildExamples(nodeEnv, enginePath, rti) {
     return {
         name: 'build-examples',
         buildStart() {
@@ -24,8 +25,8 @@ export function buildExamples(nodeEnv, enginePath) {
             }
         },
         buildEnd() {
-            build({ NODE_ENV: nodeEnv, ENGINE_PATH: enginePath });
-            console.log(`${GREEN_OUT}built examples using NODE_ENV=${BOLD_OUT}${nodeEnv}${REGULAR_OUT} ENGINE_PATH=${BOLD_OUT}${enginePath}${REGULAR_OUT}`);
+            build({ NODE_ENV: nodeEnv, ENGINE_PATH: enginePath, RTI: rti });
+            console.log(`${GREEN_OUT}built examples using NODE_ENV=${BOLD_OUT}${nodeEnv}${REGULAR_OUT} ENGINE_PATH=${BOLD_OUT}${enginePath}${REGULAR_OUT} RTI=${BOLD_OUT}${rti}${REGULAR_OUT}`);
         }
     };
 }
