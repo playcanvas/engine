@@ -152,6 +152,7 @@ import { CameraFrameOptions, RenderPassCameraFrame } from './render-pass-camera-
  *
  * @typedef {Object} Dof
  * @property {boolean} enabled - Whether DoF is enabled. Defaults to false.
+ * @property {boolean} nearBlur - Whether the near blur is enabled. Defaults to false.
  * @property {number} focusDistance - The distance at which the focus is set. Defaults to 100.
  * @property {number} focusRange - The range around the focus distance where the focus is sharp.
  * Defaults to 10.
@@ -265,6 +266,7 @@ class CameraFrame {
      */
     dof = {
         enabled: false,
+        nearBlur: false,
         focusDistance: 100,
         focusRange: 10,
         blurRadius: 3,
@@ -367,6 +369,7 @@ class CameraFrame {
         options.ssaoBlurEnabled = ssao.blurEnabled;
         options.formats = rendering.renderFormats.slice();
         options.dofEnabled = this.dof.enabled;
+        options.dofNearBlur = this.dof.nearBlur;
         options.dofHighQuality = this.dof.highQuality;
     }
 
