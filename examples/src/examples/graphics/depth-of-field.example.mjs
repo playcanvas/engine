@@ -1,4 +1,3 @@
-// @config WEBGPU_DISABLED
 import { data } from 'examples/observer';
 import { deviceType, rootPath } from 'examples/utils';
 import * as pc from 'playcanvas';
