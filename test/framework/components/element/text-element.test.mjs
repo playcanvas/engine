@@ -6,7 +6,6 @@ import { Entity } from '../../../../src/framework/entity.js';
 import { NullGraphicsDevice } from '../../../../src/platform/graphics/null/null-graphics-device.js';
 import { Vec2 } from '../../../../src/core/math/vec2.js';
 
-import { Canvas } from 'skia-canvas';
 import { expect } from 'chai';
 import { restore } from 'sinon';
 
@@ -18,8 +17,7 @@ describe('TextElement', function () {
     let fontAsset;
 
     beforeEach(function (done) {
-        const canvas = new Canvas(300, 150);
-        canvas.getBoundingClientRect = () => ({ left: 0, top: 0, width: 300, height: 150 });
+        const canvas = document.createElement('canvas');
         app = new Application(canvas, {
             graphicsDevice: new NullGraphicsDevice(canvas)
         });

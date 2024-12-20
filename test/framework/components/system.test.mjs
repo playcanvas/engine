@@ -6,8 +6,6 @@ import { Vec3 } from '../../../src/core/math/vec3.js';
 import { Vec4 } from '../../../src/core/math/vec4.js';
 import { NullGraphicsDevice } from '../../../src/platform/graphics/null/null-graphics-device.js';
 
-import { Canvas } from 'skia-canvas';
-
 import { expect } from 'chai';
 
 describe('ComponentSystem', function () {
@@ -17,7 +15,7 @@ describe('ComponentSystem', function () {
     let system;
 
     beforeEach(function () {
-        const canvas = new Canvas(500, 500);
+        const canvas = document.createElement('canvas');
         app = new Application(canvas, { graphicsDevice: new NullGraphicsDevice(canvas) });
 
         system = new ComponentSystem(app);

@@ -4,8 +4,6 @@ import { Entity } from '../../../../src/framework/entity.js';
 import { LAYERID_WORLD, LAYERID_UI } from '../../../../src/scene/constants.js';
 import { NullGraphicsDevice } from '../../../../src/platform/graphics/null/null-graphics-device.js';
 
-import { Canvas } from 'skia-canvas';
-
 import { expect } from 'chai';
 
 describe('ModelComponent', function () {
@@ -47,7 +45,7 @@ describe('ModelComponent', function () {
     };
 
     beforeEach(function (done) {
-        const canvas = new Canvas(500, 500);
+        const canvas = document.createElement('canvas');
         app = new Application(canvas, { graphicsDevice: new NullGraphicsDevice(canvas) });
 
         loadAssets(() => {

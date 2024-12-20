@@ -1,18 +1,14 @@
 import globalJsdom from 'global-jsdom';
 import handler from 'serve-handler';
 import http from 'http';
-import XMLHttpRequest from 'xhr2';
-import { Image } from 'skia-canvas';
+
+let cleanup;
 let server;
 
 export const mochaGlobalSetup = () => {
-    globalJsdom(undefined, {
+    cleanup = globalJsdom(undefined, {
         resources: 'usable'
     });
-    globalThis.Image = Image;
-
-    // Provide a polyfill for XMLHttpRequest required by the engine
-    global.XMLHttpRequest = XMLHttpRequest;
 
     server = http.createServer((request, response) => {
         return handler(request, response);
@@ -25,4 +21,6 @@ export const mochaGlobalSetup = () => {
 
 export const mochaGlobalTeardown = () => {
     server.close();
+
+    cleanup();
 };

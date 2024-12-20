@@ -3,8 +3,6 @@ import { Asset } from '../../../src/framework/asset/asset.js';
 import { JsonHandler } from '../../../src/framework/handlers/json.js';
 import { NullGraphicsDevice } from '../../../src/platform/graphics/null/null-graphics-device.js';
 
-import { Canvas } from 'skia-canvas';
-
 import { expect } from 'chai';
 import { restore, stub } from 'sinon';
 
@@ -13,7 +11,7 @@ describe('I18n', function () {
     let app;
 
     beforeEach(function () {
-        const canvas = new Canvas(500, 500);
+        const canvas = document.createElement('canvas');
         app = new Application(canvas, { graphicsDevice: new NullGraphicsDevice(canvas) });
     });
 

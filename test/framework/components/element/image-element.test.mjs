@@ -13,7 +13,6 @@ import { TextureAtlas } from '../../../../src/scene/texture-atlas.js';
 import { Vec2 } from '../../../../src/core/math/vec2.js';
 import { Vec4 } from '../../../../src/core/math/vec4.js';
 
-import { Canvas } from 'skia-canvas';
 import { expect } from 'chai';
 import { createSandbox } from 'sinon';
 
@@ -23,8 +22,7 @@ describe('ImageElement', function () {
     let sandbox;
 
     beforeEach(function (done) {
-        const canvas = new Canvas(300, 150);
-        canvas.getBoundingClientRect = () => ({ left: 0, top: 0, width: 300, height: 150 });
+        const canvas = document.createElement('canvas');
         sandbox = createSandbox();
         app = new Application(canvas, {
             graphicsDevice: new NullGraphicsDevice(canvas)
