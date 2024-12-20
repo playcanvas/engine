@@ -44,7 +44,7 @@ describe('TextElement', function () {
         element.width = 200;
 
         fontAsset = new Asset('arial.json', 'font', {
-            url: 'http://localhost:3000/test/test-assets/fonts/arial.json'
+            url: 'http://localhost:3000/test/assets/fonts/arial.json'
         });
 
         fontAsset.ready(function () {
@@ -1507,7 +1507,7 @@ describe('TextElement', function () {
 
     it('changing the locale changes the font asset', function (done) {
         assets.font2 = new Asset('courier.json', 'font', {
-            url: 'http://localhost:3000/test/test-assets/fonts/courier.json'
+            url: 'http://localhost:3000/test/assets/fonts/courier.json'
         });
 
         app.assets.add(assets.font2);
@@ -1532,7 +1532,7 @@ describe('TextElement', function () {
 
     it('text element that does not use localization uses the default font asset not its localized variant', function (done) {
         assets.font2 = new Asset('courier.json', 'font', {
-            url: 'http://localhost:3000/test/test-assets/fonts/courier.json'
+            url: 'http://localhost:3000/test/assets/fonts/courier.json'
         });
 
         app.assets.add(assets.font2);
@@ -1554,7 +1554,7 @@ describe('TextElement', function () {
 
     it('if text element is disabled it does not automatically load localizedAssets', function () {
         assets.font2 = new Asset('courier.json', 'font', {
-            url: 'http://localhost:3000/test/test-assets/fonts/courier.json'
+            url: 'http://localhost:3000/test/assets/fonts/courier.json'
         });
 
         app.assets.add(assets.font2);

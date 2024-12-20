@@ -235,7 +235,7 @@ describe('AssetRegistry', function () {
 
     describe('#loadFromUrl', function () {
 
-        const assetPath = 'http://localhost:3000/test/test-assets/';
+        const assetPath = 'http://localhost:3000/test/assets/';
 
         it('loads binary assets', (done) => {
             app.assets.loadFromUrl(`${assetPath}test.bin`, 'binary', (err, asset) => {
@@ -279,7 +279,7 @@ describe('AssetRegistry', function () {
             });
         });
 
-        it.skip('loads html assets', (done) => {
+        it('loads html assets', (done) => {
             app.assets.loadFromUrl(`${assetPath}test.html`, 'html', (err, asset) => {
                 expect(err).to.be.null;
                 expect(asset).to.be.instanceof(Asset);

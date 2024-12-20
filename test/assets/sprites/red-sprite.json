@@ -1,0 +1,6 @@
+{
+    "renderMode": 0,
+    "pixelsPerUnit": 100,
+    "textureAtlasAsset": "http://localhost:3000/test/assets/sprites/red-atlas.json",
+    "frameKeys": [0]
+}
