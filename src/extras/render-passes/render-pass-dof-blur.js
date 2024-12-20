@@ -2,6 +2,11 @@ import { Kernel } from '../../core/math/kernel.js';
 import { RenderPassShaderQuad } from '../../scene/graphics/render-pass-shader-quad.js';
 
 /**
+ * @import { GraphicsDevice } from '../../platform/graphics/graphics-device.js'
+ * @import { Texture } from '../../platform/graphics/texture.js'
+ */
+
+/**
  * Render pass implementation of a down-sample filter used by the Depth of Field pass. Based on
  * a texel of the CoC texture, it generates blurred version of the near or far texture.
  *
@@ -17,6 +22,12 @@ class RenderPassDofBlur extends RenderPassShaderQuad {
 
     _blurRingPoints = 3;
 
+    /**
+     * @param {GraphicsDevice} device - The graphics device.
+     * @param {Texture|null} nearTexture - The near texture to blur. Skip near blur if the texture is null.
+     * @param {Texture} farTexture - The far texture to blur.
+     * @param {Texture} cocTexture - The CoC texture.
+     */
     constructor(device, nearTexture, farTexture, cocTexture) {
         super(device);
         this.nearTexture = nearTexture;
@@ -59,10 +70,16 @@ class RenderPassDofBlur extends RenderPassShaderQuad {
     createShader() {
         this.kernel = new Float32Array(Kernel.concentric(this.blurRings, this.blurRingPoints));
         const kernelCount = this.kernel.length >> 1;
+        const nearBlur = this.nearTexture !== null;
+        const shaderName = `DofBlurShader-${kernelCount}-${nearBlur ? 'nearBlur' : 'noNearBlur'}`;
 
-        this.shader = this.createQuadShader(`DofBlurShader-${kernelCount}`, /* glsl */`
+        this.shader = this.createQuadShader(shaderName, /* glsl */`
 
-            uniform sampler2D nearTexture;
+            ${nearBlur ? '#define NEAR_BLUR' : ''}
+
+            #if defined(NEAR_BLUR)
+                uniform sampler2D nearTexture;
+            #endif
             uniform sampler2D farTexture;
             uniform sampler2D cocTexture;
             uniform float blurRadiusNear;
@@ -74,39 +91,41 @@ class RenderPassDofBlur extends RenderPassShaderQuad {
             void main()
             {
                 vec2 coc = texture2D(cocTexture, uv0).rg;
-                float cocNear = coc.r;
-                float cocFar = coc.g;
+                float cocFar = coc.r;
 
                 vec3 sum = vec3(0.0, 0.0, 0.0);
 
-                // near blur
-                if (cocNear > 0.0001) {
+                #if defined(NEAR_BLUR)
+                    // near blur
+                    float cocNear = coc.g;
+                    if (cocNear > 0.0001) {
 
-                    ivec2 nearTextureSize = textureSize(nearTexture, 0);
-                    vec2 step = cocNear * blurRadiusNear / vec2(nearTextureSize);
+                        ivec2 nearTextureSize = textureSize(nearTexture, 0);
+                        vec2 step = cocNear * blurRadiusNear / vec2(nearTextureSize);
 
-                    for (int i = 0; i < ${kernelCount}; i++)
-                    {
-                        vec2 uv = uv0 + step * kernel[i];
-                        vec3 tap = texture2DLod(nearTexture, uv, 0.0).rgb;
-                        sum += tap.rgb;
-                    }
+                        for (int i = 0; i < ${kernelCount}; i++) {
+                            vec2 uv = uv0 + step * kernel[i];
+                            vec3 tap = texture2DLod(nearTexture, uv, 0.0).rgb;
+                            sum += tap.rgb;
+                        }
 
-                    sum *= ${1.0 / kernelCount};
+                        sum *= ${1.0 / kernelCount};
 
-                } else if (cocFar > 0.0001) { // far blur
+                    } else
+                #endif
+                    
+                    if (cocFar > 0.0001) { // far blur
 
                     ivec2 farTextureSize = textureSize(farTexture, 0);
                     vec2 step = cocFar * blurRadiusFar / vec2(farTextureSize);
 
                     float sumCoC = 0.0; 
-                    for (int i = 0; i < ${kernelCount}; i++)
-                    {
+                    for (int i = 0; i < ${kernelCount}; i++) {
                         vec2 uv = uv0 + step * kernel[i];
                         vec3 tap = texture2DLod(farTexture, uv, 0.0).rgb;
 
                         // block out sharp objects to avoid leaking to far blur
-                        float cocThis = texture2DLod(cocTexture, uv, 0.0).g;
+                        float cocThis = texture2DLod(cocTexture, uv, 0.0).r;
                         tap *= cocThis;
                         sumCoC += cocThis;
 
