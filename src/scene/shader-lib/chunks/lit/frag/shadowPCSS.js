@@ -96,7 +96,7 @@ float PCSSCubeBlockerDistance(samplerCube shadowMap, vec3 lightDirNorm, vec3 sam
         vec3 sampleDir = lightDirNorm + samplePoints[i] * shadowSearchArea;
         sampleDir = normalize(sampleDir);
 
-        float blocker = textureCubeLodEXT(shadowMap, sampleDir, 0.0).r;
+        float blocker = textureCubeLod(shadowMap, sampleDir, 0.0).r;
         float isBlocking = step(blocker, z);
         blockers += isBlocking;
         averageBlocker += blocker * isBlocking;
@@ -133,7 +133,7 @@ float PCSSCube(samplerCube shadowMap, vec4 shadowParams, vec3 shadowCoords, vec4
             vec3 sampleDir = lightDirNorm + offset;
             sampleDir = normalize(sampleDir);
 
-            float depth = textureCubeLodEXT(shadowMap, sampleDir, 0.0).r;
+            float depth = textureCubeLod(shadowMap, sampleDir, 0.0).r;
             shadow += step(receiverDepth, depth);
         }
         return shadow / float(PCSS_SAMPLE_COUNT);

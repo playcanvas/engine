@@ -32,7 +32,7 @@ const fragmentShader = /* glsl */ `
         // Samples the DOF blur and CoC textures. When the blur texture was generated at lower resolution,
         // upscale it to the full resolution using bilinear interpolation to hide the blockiness along COC edges.
         vec3 dofBlur(vec2 uv, out vec2 coc) {
-            coc = texture2DLodEXT(cocTexture, uv, 0.0).rg;
+            coc = texture2DLod(cocTexture, uv, 0.0).rg;
 
             #if DOF_UPSCALE
                 vec2 blurTexelSize = 1.0 / vec2(textureSize(blurTexture, 0));
@@ -43,8 +43,8 @@ const fragmentShader = /* glsl */ `
                 for (int i = -1; i <= 1; i++) {
                     for (int j = -1; j <= 1; j++) {
                         vec2 offset = vec2(i, j) * blurTexelSize;
-                        vec2 cocSample = texture2DLodEXT(cocTexture, uv + offset, 0.0).rg;
-                        vec3 blurSample = texture2DLodEXT(blurTexture, uv + offset, 0.0).rgb;
+                        vec2 cocSample = texture2DLod(cocTexture, uv + offset, 0.0).rg;
+                        vec3 blurSample = texture2DLod(blurTexture, uv + offset, 0.0).rgb;
 
                         // Accumulate the weighted blur sample
                         float cocWeight = clamp(cocSample.r + cocSample.g, 0.0, 1.0);
@@ -61,7 +61,7 @@ const fragmentShader = /* glsl */ `
                 return bilinearBlur;
             #else
                 // when blurTexture is full resolution, just sample it, no upsampling
-                return texture2DLodEXT(blurTexture, uv, 0.0).rgb;
+                return texture2DLod(blurTexture, uv, 0.0).rgb;
             #endif
         }
 
@@ -159,11 +159,11 @@ const fragmentShader = /* glsl */ `
             float y = sceneTextureInvRes.y;
 
             // sample 4 neighbors around the already sampled pixel, and convert it to SDR
-            vec3 a = toSDR(texture2DLodEXT(sceneTexture, uv + vec2(0.0, -y), 0.0).rgb);
-            vec3 b = toSDR(texture2DLodEXT(sceneTexture, uv + vec2(-x, 0.0), 0.0).rgb);
+            vec3 a = toSDR(texture2DLod(sceneTexture, uv + vec2(0.0, -y), 0.0).rgb);
+            vec3 b = toSDR(texture2DLod(sceneTexture, uv + vec2(-x, 0.0), 0.0).rgb);
             vec3 c = toSDR(color.rgb);
-            vec3 d = toSDR(texture2DLodEXT(sceneTexture, uv + vec2(x, 0.0), 0.0).rgb);
-            vec3 e = toSDR(texture2DLodEXT(sceneTexture, uv + vec2(0.0, y), 0.0).rgb);
+            vec3 d = toSDR(texture2DLod(sceneTexture, uv + vec2(x, 0.0), 0.0).rgb);
+            vec3 e = toSDR(texture2DLod(sceneTexture, uv + vec2(0.0, y), 0.0).rgb);
 
             // apply the sharpening
             float min_g = min(a.g, min(b.g, min(c.g, min(d.g, e.g))));
@@ -192,7 +192,7 @@ const fragmentShader = /* glsl */ `
         #endif
         #endif
 
-        vec4 scene = texture2DLodEXT(sceneTexture, uv, 0.0);
+        vec4 scene = texture2DLod(sceneTexture, uv, 0.0);
         vec3 result = scene.rgb;
 
         #ifdef CAS
@@ -206,7 +206,7 @@ const fragmentShader = /* glsl */ `
         #endif
 
         #ifdef SSAO_TEXTURE
-            mediump float ssao = texture2DLodEXT(ssaoTexture, uv0, 0.0).r;
+            mediump float ssao = texture2DLod(ssaoTexture, uv0, 0.0).r;
         #endif
 
         #ifdef SSAO
@@ -218,7 +218,7 @@ const fragmentShader = /* glsl */ `
         #endif
 
         #ifdef BLOOM
-            vec3 bloom = texture2DLodEXT(bloomTexture, uv, 0.0).rgb;
+            vec3 bloom = texture2DLod(bloomTexture, uv, 0.0).rgb;
             result += bloom * bloomIntensity;
         #endif
 
