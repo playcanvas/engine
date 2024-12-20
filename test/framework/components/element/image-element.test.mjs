@@ -83,28 +83,6 @@ describe.only('ImageElement', function () {
 
         assets = {};
 
-        // Mock resources for all assets
-        assetsToPreload[0].resource = {
-            texture: { width: 64, height: 64 },
-            frames: { frame1: { rect: [0, 0, 32, 32] } }
-        };
-
-        assetsToLoad[0].resource = {
-            atlas: assetsToPreload[0].resource,
-            pixelsPerUnit: 100,
-            renderMode: 0,
-            frameKeys: ['frame1']
-        };
-
-        assetsToLoad[1].resource = {
-            width: 64,
-            height: 64
-        };
-
-        assetsToLoad[2].resource = {
-            parameters: {}
-        };
-
         loadAssets(assetsToPreload, function () {
             assets.textureatlas = assetsToPreload[0];
 
