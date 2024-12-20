@@ -100,8 +100,7 @@
     "sinon": "^19.0.2",
     "typedoc": "^0.27.5",
     "typedoc-plugin-mdn-links": "^4.0.5",
-    "typescript": "^5.7.2",
-    "xhr2": "^0.2.1"
+    "typescript": "^5.7.2"
   },
   "scripts": {
     "build": "node build.mjs",
