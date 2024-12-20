@@ -62,20 +62,20 @@ describe('ImageElement', function () {
         // load atlas first so that sprite is set up with out waiting for next frame
         const assetsToPreload = [
             new Asset('red-atlas', 'textureatlas', {
-                url: 'http://localhost:3000/test/test-assets/sprites/red-atlas.json'
+                url: 'http://localhost:3000/test/assets/sprites/red-atlas.json'
             })
         ];
 
         // list of assets to load
         const assetsToLoad = [
             new Asset('red-sprite', 'sprite', {
-                url: 'http://localhost:3000/test/test-assets/sprites/red-sprite.json'
+                url: 'http://localhost:3000/test/assets/sprites/red-sprite.json'
             }),
             new Asset('red-texture', 'texture', {
-                url: 'http://localhost:3000/test/test-assets/sprites/red-atlas.png'
+                url: 'http://localhost:3000/test/assets/sprites/red-atlas.png'
             }),
             new Asset('red-material', 'material', {
-                url: 'http://localhost:3000/test/test-assets/sprites/red-material.json'
+                url: 'http://localhost:3000/test/assets/sprites/red-material.json'
             })
         ];
 
@@ -1005,10 +1005,10 @@ describe('ImageElement', function () {
         });
 
         const spriteAsset = new Asset('red-sprite', 'sprite', {
-            url: 'http://localhost:3000/test/test-assets/sprites/red-sprite.json'
+            url: 'http://localhost:3000/test/assets/sprites/red-sprite.json'
         });
         const textureAtlasAsset = new Asset('red-texture', 'texture', {
-            url: 'http://localhost:3000/test/test-assets/sprites/red-atlas.json'
+            url: 'http://localhost:3000/test/assets/sprites/red-atlas.json'
         });
 
         if (spriteAsset.resource) {

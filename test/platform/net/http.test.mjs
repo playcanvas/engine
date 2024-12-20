@@ -19,7 +19,7 @@ describe('Http', function () {
     describe('#get()', function () {
 
         it('returns resource', (done) => {
-            http.get('http://localhost:3000/test/test-assets/test.json', (err, data) => {
+            http.get('http://localhost:3000/test/assets/test.json', (err, data) => {
                 expect(err).to.equal(null);
                 expect(data).to.deep.equal({
                     a: 1,

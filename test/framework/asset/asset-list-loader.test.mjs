@@ -8,7 +8,7 @@ import { expect } from 'chai';
 describe('AssetListLoader', function () {
 
     let app;
-    const assetPath = 'http://localhost:3000/test/test-assets/';
+    const assetPath = 'http://localhost:3000/test/assets/';
 
     beforeEach(function () {
         const canvas = document.createElement('canvas');

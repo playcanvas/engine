@@ -30,10 +30,10 @@ describe('ModelComponent', function () {
     const loadAssets = function (cb) {
         const assetlist = [
             new Asset('plane.json', 'model', {
-                url: 'http://localhost:3000/test/test-assets/plane/plane.json'
+                url: 'http://localhost:3000/test/assets/plane/plane.json'
             }),
             new Asset('lambert1.json', 'material', {
-                url: 'http://localhost:3000/test/test-assets/plane/31208636/lambert1.json'
+                url: 'http://localhost:3000/test/assets/plane/31208636/lambert1.json'
             })
         ];
 
@@ -255,7 +255,7 @@ describe('ModelComponent', function () {
 
     it('Materials applied when loading asynchronously', (done) => {
         const boxAsset = new Asset('Box', 'model', {
-            url: 'http://localhost:3000/test/test-assets/box/box.json'
+            url: 'http://localhost:3000/test/assets/box/box.json'
         }, {
             'mapping': [
                 {
@@ -266,7 +266,7 @@ describe('ModelComponent', function () {
         });
 
         const materialAsset = new Asset('Box Material', 'material', {
-            url: 'http://localhost:3000/test/test-assets/box/1/Box Material.json'
+            url: 'http://localhost:3000/test/assets/box/1/Box Material.json'
         });
 
         app.assets.add(boxAsset);
@@ -289,11 +289,11 @@ describe('ModelComponent', function () {
 
     it('Materials applied when added later', (done) => {
         const boxAsset = new Asset('Box', 'model', {
-            url: 'http://localhost:3000/test/test-assets/box/box.json'
+            url: 'http://localhost:3000/test/assets/box/box.json'
         });
 
         const materialAsset = new Asset('Box Material', 'material', {
-            url: 'http://localhost:3000/test/test-assets/box/1/Box Material.json'
+            url: 'http://localhost:3000/test/assets/box/1/Box Material.json'
         });
 
         app.assets.add(boxAsset);
@@ -326,11 +326,11 @@ describe('ModelComponent', function () {
 
     it('Material add events unbound on destroy', (done) => {
         const boxAsset = new Asset('Box', 'model', {
-            url: 'http://localhost:3000/test/test-assets/box/box.json'
+            url: 'http://localhost:3000/test/assets/box/box.json'
         });
 
         const materialAsset = new Asset('Box Material', 'material', {
-            url: 'http://localhost:3000/test/test-assets/box/1/Box Material.json'
+            url: 'http://localhost:3000/test/assets/box/1/Box Material.json'
         });
 
         app.assets.add(boxAsset);
@@ -374,7 +374,7 @@ describe('ModelComponent', function () {
 
     it('Asset materials unbound on destroy', (done) => {
         const modelAsset = new Asset('box.json', 'model', {
-            url: 'http://localhost:3000/test/test-assets/box/box.json'
+            url: 'http://localhost:3000/test/assets/box/box.json'
         }, {
             mapping: [{
                 material: assets.material.id
@@ -402,7 +402,7 @@ describe('ModelComponent', function () {
 
     it('Asset materials unbound on change model', (done) => {
         const modelAsset = new Asset('plane.json', 'model', {
-            url: 'http://localhost:3000/test/test-assets/plane/plane.json'
+            url: 'http://localhost:3000/test/assets/plane/plane.json'
         }, {
             mapping: [{
                 material: assets.material.id
@@ -410,10 +410,10 @@ describe('ModelComponent', function () {
         });
 
         const materialAsset2 = new Asset('lambert2.json', 'material', {
-            url: 'http://localhost:3000/test/test-assets/plane/31208636/lambert1.json?t=1'
+            url: 'http://localhost:3000/test/assets/plane/31208636/lambert1.json?t=1'
         });
         const modelAsset2 = new Asset('plane2.json', 'model', {
-            url: 'http://localhost:3000/test/test-assets/plane/plane.json?t=1'
+            url: 'http://localhost:3000/test/assets/plane/plane.json?t=1'
         }, {
             mapping: [{
                 material: materialAsset2.id
