@@ -88,7 +88,7 @@ class RenderPassDofBlur extends RenderPassShaderQuad {
                     for (int i = 0; i < ${kernelCount}; i++)
                     {
                         vec2 uv = uv0 + step * kernel[i];
-                        vec3 tap = texture2DLodEXT(nearTexture, uv, 0.0).rgb;
+                        vec3 tap = texture2DLod(nearTexture, uv, 0.0).rgb;
                         sum += tap.rgb;
                     }
 
@@ -103,10 +103,10 @@ class RenderPassDofBlur extends RenderPassShaderQuad {
                     for (int i = 0; i < ${kernelCount}; i++)
                     {
                         vec2 uv = uv0 + step * kernel[i];
-                        vec3 tap = texture2DLodEXT(farTexture, uv, 0.0).rgb;
+                        vec3 tap = texture2DLod(farTexture, uv, 0.0).rgb;
 
                         // block out sharp objects to avoid leaking to far blur
-                        float cocThis = texture2DLodEXT(cocTexture, uv, 0.0).g;
+                        float cocThis = texture2DLod(cocTexture, uv, 0.0).g;
                         tap *= cocThis;
                         sumCoC += cocThis;
 

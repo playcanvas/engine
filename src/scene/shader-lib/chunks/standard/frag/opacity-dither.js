@@ -15,7 +15,7 @@ void opacityDither(float alpha, float id) {
 
         #ifdef DITHER_BLUENOISE
             vec2 uv = fract(gl_FragCoord.xy / 32.0 + blueNoiseJitter.xy + id);
-            float noise = texture2DLodEXT(blueNoiseTex32, uv, 0.0).y;
+            float noise = texture2DLod(blueNoiseTex32, uv, 0.0).y;
         #endif
 
         #ifdef DITHER_IGNNOISE

@@ -938,7 +938,7 @@ class LitShader {
                     uniform sampler2D ssaoTexture;
                     uniform vec2 ssaoTextureSizeInv;
                 `);
-            backend.append('litArgs_ao *= texture2DLodEXT(ssaoTexture, gl_FragCoord.xy * ssaoTextureSizeInv, 0.0).r;');
+            backend.append('litArgs_ao *= texture2DLod(ssaoTexture, gl_FragCoord.xy * ssaoTextureSizeInv, 0.0).r;');
         }
 
         // transform tangent space normals to world space
