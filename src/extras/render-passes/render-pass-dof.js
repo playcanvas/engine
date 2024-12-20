@@ -2,7 +2,7 @@ import { Color } from '../../core/math/color.js';
 import { Texture } from '../../platform/graphics/texture.js';
 import { RenderTarget } from '../../platform/graphics/render-target.js';
 import { RenderPass } from '../../platform/graphics/render-pass.js';
-import { FILTER_LINEAR, ADDRESS_CLAMP_TO_EDGE, PIXELFORMAT_RGBA8 } from '../../platform/graphics/constants.js';
+import { FILTER_LINEAR, ADDRESS_CLAMP_TO_EDGE, PIXELFORMAT_RG8, PIXELFORMAT_R8 } from '../../platform/graphics/constants.js';
 
 import { RenderPassDownsample } from './render-pass-downsample.js';
 import { RenderPassCoC } from './render-pass-coc.js';
@@ -53,13 +53,14 @@ class RenderPassDof extends RenderPass {
      * @param {Texture} sceneTexture - The full resolution texture.
      * @param {Texture} sceneTextureHalf - The half resolution texture.
      * @param {boolean} highQuality - Whether to use high quality setup.
+     * @param {boolean} nearBlur - Whether to apply near blur.
      */
-    constructor(device, cameraComponent, sceneTexture, sceneTextureHalf, highQuality) {
+    constructor(device, cameraComponent, sceneTexture, sceneTextureHalf, highQuality, nearBlur) {
         super(device);
         this.highQuality = highQuality;
 
         // full resolution CoC texture
-        this.cocPass = this.setupCocPass(device, cameraComponent, sceneTexture);
+        this.cocPass = this.setupCocPass(device, cameraComponent, sceneTexture, nearBlur);
         this.beforePasses.push(this.cocPass);
 
         // prepare the source image for the background blur, half or quarter resolution
@@ -72,7 +73,7 @@ class RenderPassDof extends RenderPass {
         // Low quality: far texture was resized from half to quarter resolution
         // In both cases, the near texture is supplied scene half resolution
         // the result is a blurred texture, full or quarter resolution based on quality
-        this.blurPass = this.setupBlurPass(device, sceneTextureHalf, highQuality ? 2 : 0.5);
+        this.blurPass = this.setupBlurPass(device, sceneTextureHalf, nearBlur, highQuality ? 2 : 0.5);
         this.beforePasses.push(this.blurPass);
     }
 
@@ -104,13 +105,15 @@ class RenderPassDof extends RenderPass {
         }
     }
 
-    setupCocPass(device, cameraComponent, sourceTexture) {
+    setupCocPass(device, cameraComponent, sourceTexture, nearBlur) {
 
-        // render full resolution CoC texture, R - near CoC, G - far CoC
-        this.cocRT = this.createRenderTarget('CoCTexture', PIXELFORMAT_RGBA8);
+        // render full resolution CoC texture, R - far CoC, G - near CoC
+        // when near blur is not enabled, we only need format with R channel
+        const format = nearBlur ? PIXELFORMAT_RG8 : PIXELFORMAT_R8;
+        this.cocRT = this.createRenderTarget('CoCTexture', format);
         this.cocTexture = this.cocRT.colorBuffer;
 
-        const cocPass = new RenderPassCoC(device, cameraComponent);
+        const cocPass = new RenderPassCoC(device, cameraComponent, nearBlur);
         cocPass.init(this.cocRT, {
             resizeSource: sourceTexture
         });
@@ -125,7 +128,7 @@ class RenderPassDof extends RenderPass {
         const farPass = new RenderPassDownsample(device, sourceTexture, {
             boxFilter: true,
             premultiplyTexture: this.cocTexture,
-            premultiplySrcChannel: 'g' // far CoC
+            premultiplySrcChannel: 'r' // far CoC
         });
 
         farPass.init(this.farRt, {
@@ -137,11 +140,11 @@ class RenderPassDof extends RenderPass {
         return farPass;
     }
 
-    setupBlurPass(device, nearTexture, scale) {
+    setupBlurPass(device, nearTexture, nearBlur, scale) {
         const farTexture = this.farRt?.colorBuffer;
         this.blurRt = this.createRenderTarget('DofBlurTexture', nearTexture.format);
         this.blurTexture = this.blurRt.colorBuffer;
-        const blurPass = new RenderPassDofBlur(device, nearTexture, farTexture, this.cocTexture);
+        const blurPass = new RenderPassDofBlur(device, nearBlur ? nearTexture : null, farTexture, this.cocTexture);
         blurPass.init(this.blurRt, {
             resizeSource: nearTexture,
             scaleX: scale,

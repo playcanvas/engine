@@ -149,6 +149,7 @@ assetListLoader.load(() => {
 
         // DOF
         cameraFrame.dof.enabled = data.get('data.dof.enabled');
+        cameraFrame.dof.nearBlur = data.get('data.dof.nearBlur');
         cameraFrame.dof.focusDistance = data.get('data.dof.focusDistance');
         cameraFrame.dof.focusRange = data.get('data.dof.focusRange');
         cameraFrame.dof.blurRadius = data.get('data.dof.blurRadius');
@@ -193,6 +194,7 @@ assetListLoader.load(() => {
         },
         dof: {
             enabled: true,
+            nearBlur: true,
             focusDistance: 200,
             focusRange: 100,
             blurRadius: 5,

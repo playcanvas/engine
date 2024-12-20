@@ -58,6 +58,8 @@ class CameraFrameOptions {
     // DOF
     dofEnabled = false;
 
+    dofNearBlur = false;
+
     dofHighQuality = true;
 }
 
@@ -186,6 +188,7 @@ class RenderPassCameraFrame extends RenderPass {
             options.prepassEnabled !== currentOptions.prepassEnabled ||
             options.sceneColorMap !== currentOptions.sceneColorMap ||
             options.dofEnabled !== currentOptions.dofEnabled ||
+            options.dofNearBlur !== currentOptions.dofNearBlur ||
             options.dofHighQuality !== currentOptions.dofHighQuality ||
             arraysNotEqual(options.formats, currentOptions.formats);
     }
@@ -407,7 +410,7 @@ class RenderPassCameraFrame extends RenderPass {
 
     setupDofPass(options, inputTexture, inputTextureHalf) {
         if (options.dofEnabled)  {
-            this.dofPass = new RenderPassDof(this.device, this.cameraComponent, inputTexture, inputTextureHalf, options.dofHighQuality);
+            this.dofPass = new RenderPassDof(this.device, this.cameraComponent, inputTexture, inputTextureHalf, options.dofHighQuality, options.dofNearBlur);
         }
     }
 
