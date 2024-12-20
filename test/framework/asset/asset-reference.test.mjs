@@ -33,7 +33,7 @@ describe('AssetReference', function () {
         });
 
         const asset = new Asset('Reference Test', 'texture', {
-            url: 'test/test-assets/test.png'
+            url: 'test/assets/test.png'
         });
 
         reg.id = asset.id;
@@ -56,7 +56,7 @@ describe('AssetReference', function () {
         });
 
         const asset = new Asset('Reference Test', 'texture', {
-            url: 'test/test-assets/test.png'
+            url: 'test/assets/test.png'
         });
 
         reg.id = asset.id;
@@ -80,7 +80,7 @@ describe('AssetReference', function () {
         });
 
         const asset = new Asset('Reference Test', 'texture', {
-            url: 'test/test-assets/test.png'
+            url: 'test/assets/test.png'
         });
 
         reg.id = asset.id;
