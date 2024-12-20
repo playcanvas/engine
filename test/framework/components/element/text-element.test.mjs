@@ -6,7 +6,6 @@ import { Entity } from '../../../../src/framework/entity.js';
 import { NullGraphicsDevice } from '../../../../src/platform/graphics/null/null-graphics-device.js';
 import { Vec2 } from '../../../../src/core/math/vec2.js';
 
-import { Canvas } from 'skia-canvas';
 import { expect } from 'chai';
 import { restore } from 'sinon';
 
