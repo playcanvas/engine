@@ -1,5 +1,9 @@
 import { math } from './math.js';
 
+/**
+ * @import { Color } from './color.js'
+ */
+
 let checkRange = 5;
 const oneDiv255 = 1 / 255;
 const floatView = new Float32Array(1);
@@ -118,6 +122,24 @@ class FloatPacking {
 
         value = math.clamp((value - min) / (max - min), 0, 1);
         FloatPacking.float2Bytes(value, array, offset, numBytes);
+    }
+
+    /**
+     * Converts bits of a 32-bit float into RGBA8 format and stores the result in a provided color.
+     * The float can be reconstructed in shader using the uintBitsToFloat instruction.
+     *
+     * @param {number} value - The float value to convert.
+     * @param {Color} data - The color to store the RGBA8 packed value in.
+     *
+     * @ignore
+     */
+    static float2RGBA8(value, data) {
+        floatView[0] = value;
+        const intBits = int32View[0];
+        data.r = ((intBits >> 24) & 0xFF) / 255.0;
+        data.g = ((intBits >> 16) & 0xFF) / 255.0;
+        data.b = ((intBits >> 8) & 0xFF) / 255.0;
+        data.a = (intBits & 0xFF) / 255.0;
     }
 }
 

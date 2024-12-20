@@ -9,6 +9,7 @@ import { RenderTarget } from '../../platform/graphics/render-target.js';
 import { RenderPassBloom } from './render-pass-bloom.js';
 import { RenderPassCompose } from './render-pass-compose.js';
 import { RenderPassTAA } from './render-pass-taa.js';
+import { RenderPassDof } from './render-pass-dof.js';
 import { RenderPassPrepass } from './render-pass-prepass.js';
 import { RenderPassSsao } from './render-pass-ssao.js';
 import { SSAOTYPE_COMBINE, SSAOTYPE_LIGHTING, SSAOTYPE_NONE } from './constants.js';
@@ -16,6 +17,12 @@ import { Debug } from '../../core/debug.js';
 import { RenderPassDownsample } from './render-pass-downsample.js';
 import { Color } from '../../core/math/color.js';
 
+/**
+ * Options used to configure the RenderPassCameraFrame. To modify these options, you must create
+ * a new instance of the RenderPassCameraFrame with the desired settings.
+ *
+ * @ignore
+ */
 class CameraFrameOptions {
     formats;
 
@@ -47,6 +54,11 @@ class CameraFrameOptions {
     ssaoBlurEnabled = true;
 
     prepassEnabled = false;
+
+    // DOF
+    dofEnabled = false;
+
+    dofHighQuality = true;
 }
 
 const _defaultOptions = new CameraFrameOptions();
@@ -74,6 +86,8 @@ class RenderPassCameraFrame extends RenderPass {
     taaPass;
 
     scenePassHalf;
+
+    dofPass;
 
     _renderTargetScale = 1;
 
@@ -128,13 +142,14 @@ class RenderPassCameraFrame extends RenderPass {
         this.taaPass = null;
         this.afterPass = null;
         this.scenePassHalf = null;
+        this.dofPass = null;
     }
 
     sanitizeOptions(options) {
         options = Object.assign({}, _defaultOptions, options);
 
         // automatically enable prepass when required internally
-        if (options.taaEnabled || options.ssaoType !== SSAOTYPE_NONE) {
+        if (options.taaEnabled || options.ssaoType !== SSAOTYPE_NONE || options.dofEnabled) {
             options.prepassEnabled = true;
         }
 
@@ -144,8 +159,8 @@ class RenderPassCameraFrame extends RenderPass {
     set renderTargetScale(value) {
         this._renderTargetScale = value;
         if (this.scenePass) {
-            this.scenePass.options.scaleX = value;
-            this.scenePass.options.scaleY = value;
+            this.scenePass.scaleX = value;
+            this.scenePass.scaleY = value;
         }
     }
 
@@ -170,6 +185,8 @@ class RenderPassCameraFrame extends RenderPass {
             options.bloomEnabled !== currentOptions.bloomEnabled ||
             options.prepassEnabled !== currentOptions.prepassEnabled ||
             options.sceneColorMap !== currentOptions.sceneColorMap ||
+            options.dofEnabled !== currentOptions.dofEnabled ||
+            options.dofHighQuality !== currentOptions.dofHighQuality ||
             arraysNotEqual(options.formats, currentOptions.formats);
     }
 
@@ -226,8 +243,8 @@ class RenderPassCameraFrame extends RenderPass {
         // HDR bloom is not supported on RGBA8 format
         this._bloomEnabled = options.bloomEnabled && this.hdrFormat !== PIXELFORMAT_RGBA8;
 
-        // bloom needs half resolution scene texture
-        this._sceneHalfEnabled = this._bloomEnabled;
+        // bloom and DOF needs half resolution scene texture
+        this._sceneHalfEnabled = this._bloomEnabled || options.dofEnabled;
 
         // camera renders in HDR mode (linear output, no tonemapping)
         cameraComponent.gammaCorrection = GAMMA_NONE;
@@ -262,7 +279,7 @@ class RenderPassCameraFrame extends RenderPass {
     collectPasses() {
 
         // use these prepared render passes in the order they should be executed
-        return [this.prePass, this.ssaoPass, this.scenePass, this.colorGrabPass, this.scenePassTransparent, this.taaPass, this.scenePassHalf, this.bloomPass, this.composePass, this.afterPass];
+        return [this.prePass, this.ssaoPass, this.scenePass, this.colorGrabPass, this.scenePassTransparent, this.taaPass, this.scenePassHalf, this.bloomPass, this.dofPass, this.composePass, this.afterPass];
     }
 
     createPasses(options) {
@@ -284,6 +301,8 @@ class RenderPassCameraFrame extends RenderPass {
 
         // bloom
         this.setupBloomPass(options, this.sceneTextureHalf);
+
+        this.setupDofPass(options, this.sceneTexture, this.sceneTextureHalf);
 
         // compose
         this.setupComposePass(options);
@@ -365,7 +384,9 @@ class RenderPassCameraFrame extends RenderPass {
     setupSceneHalfPass(options, sourceTexture) {
 
         if (this._sceneHalfEnabled) {
-            this.scenePassHalf = new RenderPassDownsample(this.device, this.sceneTexture, true);
+            this.scenePassHalf = new RenderPassDownsample(this.device, this.sceneTexture, {
+                boxFilter: true
+            });
             this.scenePassHalf.name = 'RenderPassSceneHalf';
             this.scenePassHalf.init(this.rtHalf, {
                 resizeSource: sourceTexture,
@@ -384,11 +405,16 @@ class RenderPassCameraFrame extends RenderPass {
         }
     }
 
+    setupDofPass(options, inputTexture, inputTextureHalf) {
+        if (options.dofEnabled)  {
+            this.dofPass = new RenderPassDof(this.device, this.cameraComponent, inputTexture, inputTextureHalf, options.dofHighQuality);
+        }
+    }
+
     setupTaaPass(options) {
         let textureWithTaa = this.sceneTexture;
         if (options.taaEnabled) {
-            const cameraComponent = this.cameraComponent;
-            this.taaPass = new RenderPassTAA(this.device, this.sceneTexture, cameraComponent);
+            this.taaPass = new RenderPassTAA(this.device, this.sceneTexture, this.cameraComponent);
             textureWithTaa = this.taaPass.historyTexture;
         }
 
@@ -401,6 +427,9 @@ class RenderPassCameraFrame extends RenderPass {
         this.composePass = new RenderPassCompose(this.device);
         this.composePass.bloomTexture = this.bloomPass?.bloomTexture;
         this.composePass.taaEnabled = options.taaEnabled;
+        this.composePass.cocTexture = this.dofPass?.cocTexture;
+        this.composePass.blurTexture = this.dofPass?.blurTexture;
+        this.composePass.blurTextureUpscale = !this.dofPass?.highQuality;
 
         // compose pass renders directly to target renderTarget
         const cameraComponent = this.cameraComponent;
