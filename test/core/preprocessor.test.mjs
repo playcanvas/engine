@@ -197,4 +197,8 @@ describe('Preprocessor', function () {
         expect(Preprocessor.run(srcData, includes).includes('CMP5')).to.equal(false);
     });
 
+    it('returns false for any leftover hash symbols', function () {
+        expect(Preprocessor.run(srcData, includes, { stripDefines: true }).includes('#')).to.equal(false);
+    });
+
 });
