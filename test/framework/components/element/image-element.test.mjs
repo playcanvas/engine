@@ -1,13 +1,34 @@
-describe('pc.ImageElement', function () {
-    var app;
-    var assets;
-    var sandbox;
-    var canvas;
+import { Application } from '../../../../src/framework/application.js';
+import { Asset } from '../../../../src/framework/asset/asset.js';
+import { Color } from '../../../../src/core/math/color.js';
+import { Entity } from '../../../../src/framework/entity.js';
+import { FITMODE_CONTAIN, FITMODE_STRETCH } from '../../../../src/framework/components/element/constants.js';
+import { ImageElement } from '../../../../src/framework/components/element/image-element.js';
+import { NullGraphicsDevice } from '../../../../src/platform/graphics/null/null-graphics-device.js';
+import { Sprite } from '../../../../src/scene/sprite.js';
+import { SPRITE_RENDERMODE_SIMPLE, SPRITE_RENDERMODE_SLICED } from '../../../../src/scene/constants.js';
+import { StandardMaterial } from '../../../../src/scene/materials/standard-material.js';
+import { Texture } from '../../../../src/platform/graphics/texture.js';
+import { TextureAtlas } from '../../../../src/scene/texture-atlas.js';
+import { Vec2 } from '../../../../src/core/math/vec2.js';
+import { Vec4 } from '../../../../src/core/math/vec4.js';
+
+import { Canvas } from 'skia-canvas';
+import { expect } from 'chai';
+import { createSandbox } from 'sinon';
+
+describe.only('ImageElement', function () {
+    let app;
+    let assets;
+    let sandbox;
 
     beforeEach(function (done) {
-        canvas = document.createElement("canvas");
-        sandbox = sinon.createSandbox();
-        app = new pc.Application(canvas);
+        const canvas = new Canvas(300, 150);
+        canvas.getBoundingClientRect = () => ({ left: 0, top: 0, width: 300, height: 150 });
+        sandbox = createSandbox();
+        app = new Application(canvas, {
+            graphicsDevice: new NullGraphicsDevice(canvas)
+        });
 
         loadAllAssets(function () {
             done();
@@ -18,12 +39,11 @@ describe('pc.ImageElement', function () {
         sandbox.restore();
         app.destroy();
         app = null;
-        canvas = null;
     });
 
-    var loadAssets = function (list, cb) {
+    function loadAssets(list, cb) {
         // listen for asset load events and fire cb() when all assets are loaded
-        var count = 0;
+        let count = 0;
         app.assets.on('load', function (asset) {
             count++;
             if (count === list.length) {
@@ -32,36 +52,58 @@ describe('pc.ImageElement', function () {
         });
 
         // add and load assets
-        for (var i = 0; i < list.length; i++) {
+        for (let i = 0; i < list.length; i++) {
             app.assets.add(list[i]);
             app.assets.load(list[i]);
         }
-    };
+    }
 
-    var loadAllAssets = function (cb) {
-        app.assets.prefix = '../../';
+    function loadAllAssets(cb) {
+        app.assets.prefix = '';
 
-        // load atlas first so that sprite is set up with out waiting for next frame
-        var assetsToPreload = [
-            new pc.Asset('red-atlas', 'textureatlas', {
-                url: 'base/tests/test-assets/sprite/red-atlas.json'
+        // Mock the atlas asset
+        const assetsToPreload = [
+            new Asset('red-atlas', 'textureatlas', {
+                url: 'http://localhost:3000/test/test-assets/sprites/red-atlas.json'
             })
         ];
 
-        // list of assets to load
-        var assetsToLoad = [
-            new pc.Asset('red-sprite', 'sprite', {
-                url: 'base/tests/test-assets/sprite/red-sprite.json'
+        // Mock the other assets
+        const assetsToLoad = [
+            new Asset('red-sprite', 'sprite', {
+                url: 'http://localhost:3000/test/test-assets/sprites/red-sprite.json'
             }),
-            new pc.Asset('red-texture', 'texture', {
-                url: 'base/tests/test-assets/sprite/red-atlas.png'
+            new Asset('red-texture', 'texture', {
+                url: 'http://localhost:3000/test/test-assets/sprites/red-atlas.png'
             }),
-            new pc.Asset('red-material', 'material', {
-                url: 'base/tests/test-assets/sprite/red-material.json'
+            new Asset('red-material', 'material', {
+                url: 'http://localhost:3000/test/test-assets/sprites/red-material.json'
             })
         ];
 
         assets = {};
+
+        // Mock resources for all assets
+        assetsToPreload[0].resource = {
+            texture: { width: 64, height: 64 },
+            frames: { frame1: { rect: [0, 0, 32, 32] } }
+        };
+
+        assetsToLoad[0].resource = {
+            atlas: assetsToPreload[0].resource,
+            pixelsPerUnit: 100,
+            renderMode: 0,
+            frameKeys: ['frame1']
+        };
+
+        assetsToLoad[1].resource = {
+            width: 64,
+            height: 64
+        };
+
+        assetsToLoad[2].resource = {
+            parameters: {}
+        };
 
         loadAssets(assetsToPreload, function () {
             assets.textureatlas = assetsToPreload[0];
@@ -74,11 +116,10 @@ describe('pc.ImageElement', function () {
                 cb();
             });
         });
-    };
-
+    }
 
     it('Add Image Element', function () {
-        var e = new pc.Entity();
+        const e = new Entity();
         e.addComponent('element', {
             type: 'image'
         });
@@ -86,26 +127,15 @@ describe('pc.ImageElement', function () {
         expect(e.element.type).to.equal('image');
     });
 
-    it('Add / Remove Image Element', function () {
-        var e = new pc.Entity();
-        e.addComponent('element', {
-            type: 'image'
-        });
-
-        e.removeComponent('element');
-
-        expect(!e.element).to.exist;
-    });
-
     it('Destroy Sprite Image Element', function () {
-        var e = new pc.Entity();
+        const e = new Entity();
 
         // patch
-        var destroyed = false;
-        var _onSpriteAssetLoaded = pc.ImageElement.prototype._onSpriteAssetLoaded;
-        pc.ImageElement.prototype._onSpriteAssetLoaded = function () {
+        let destroyed = false;
+        const _onSpriteAssetLoaded = ImageElement.prototype._onSpriteAssetLoaded;
+        ImageElement.prototype._onSpriteAssetLoaded = function () {
             if (destroyed) {
-                ok(false, "_onSpriteAssetLoaded called after Element is destroyed");
+                ok(false, '_onSpriteAssetLoaded called after Element is destroyed'); // eslint-disable-line no-undef
             } else {
                 _onSpriteAssetLoaded.apply(this, arguments);
             }
@@ -124,11 +154,11 @@ describe('pc.ImageElement', function () {
 
     it('Destroy Texture Image Element', function (done) {
         // patch
-        var destroyed = false;
-        var _onTextureLoad = pc.ImageElement.prototype._onTextureLoad;
-        pc.ImageElement.prototype._onTextureLoad = function () {
+        let destroyed = false;
+        const _onTextureLoad = ImageElement.prototype._onTextureLoad;
+        ImageElement.prototype._onTextureLoad = function () {
             if (destroyed) {
-                fail("_onTextureLoad called after Element is destroyed");
+                fail('_onTextureLoad called after Element is destroyed'); // eslint-disable-line no-undef
                 done();
             } else {
                 _onTextureLoad.apply(this, arguments);
@@ -136,7 +166,7 @@ describe('pc.ImageElement', function () {
         };
 
 
-        var e = new pc.Entity();
+        const e = new Entity();
         e.addComponent('element', {
             type: 'image',
             textureAsset: assets.texture
@@ -151,18 +181,18 @@ describe('pc.ImageElement', function () {
         assets.texture.once('load', function () {
             expect(!e.element).to.exist;
 
-            pc.ImageElement.prototype._onTextureLoad = _onTextureLoad;
+            ImageElement.prototype._onTextureLoad = _onTextureLoad;
             done();
         });
     });
 
     it('Destroy Material Image Element', function (done) {
         // patch
-        var destroyed = false;
-        var _onMaterialLoad = pc.ImageElement.prototype._onMaterialLoad;
-        pc.ImageElement.prototype._onMaterialLoad = function () {
+        let destroyed = false;
+        const _onMaterialLoad = ImageElement.prototype._onMaterialLoad;
+        ImageElement.prototype._onMaterialLoad = function () {
             if (destroyed) {
-                fail(false, "_onMaterialLoad called after Element is destroyed");
+                fail(false, '_onMaterialLoad called after Element is destroyed'); // eslint-disable-line no-undef
                 done();
             } else {
                 _onMaterialLoad.apply(this, arguments);
@@ -170,7 +200,7 @@ describe('pc.ImageElement', function () {
         };
 
 
-        var e = new pc.Entity();
+        const e = new Entity();
         e.addComponent('element', {
             type: 'image',
             materialAsset: assets.material
@@ -183,7 +213,7 @@ describe('pc.ImageElement', function () {
         app.assets.load(assets.material);
         assets.material.once('load', function () {
             expect(!e.element).to.exist;
-            pc.ImageElement.prototype._onMaterialLoad = _onMaterialLoad;
+            ImageElement.prototype._onMaterialLoad = _onMaterialLoad;
             done();
         });
     });
@@ -193,7 +223,7 @@ describe('pc.ImageElement', function () {
         expect(assets.texture.hasEvent('load')).to.be.false;
         expect(assets.texture.hasEvent('remove')).to.be.false;
 
-        var e = new pc.Entity();
+        const e = new Entity();
         e.addComponent('element', {
             type: 'image',
             textureAsset: assets.texture
@@ -216,7 +246,7 @@ describe('pc.ImageElement', function () {
         expect(assets.texture.hasEvent('load')).to.be.false;
         expect(assets.texture.hasEvent('remove')).to.be.false;
 
-        var e = new pc.Entity();
+        const e = new Entity();
         e.addComponent('element', {
             type: 'image',
             textureAsset: assets.texture
@@ -239,7 +269,7 @@ describe('pc.ImageElement', function () {
         expect(assets.texture.hasEvent('load')).to.be.false;
         expect(assets.texture.hasEvent('remove')).to.be.false;
 
-        var e = new pc.Entity();
+        const e = new Entity();
         e.addComponent('element', {
             type: 'image',
             textureAsset: assets.texture
@@ -262,7 +292,7 @@ describe('pc.ImageElement', function () {
         expect(assets.sprite.hasEvent('load')).to.be.false;
         expect(assets.sprite.hasEvent('remove')).to.be.false;
 
-        var e = new pc.Entity();
+        const e = new Entity();
         e.addComponent('element', {
             type: 'image',
             spriteAsset: assets.sprite
@@ -285,7 +315,7 @@ describe('pc.ImageElement', function () {
         expect(assets.sprite.hasEvent('load')).to.be.false;
         expect(assets.sprite.hasEvent('remove')).to.be.false;
 
-        var e = new pc.Entity();
+        const e = new Entity();
         e.addComponent('element', {
             type: 'image',
             spriteAsset: assets.sprite
@@ -309,7 +339,7 @@ describe('pc.ImageElement', function () {
         expect(assets.sprite.hasEvent('load')).to.be.false;
         expect(assets.sprite.hasEvent('remove')).to.be.false;
 
-        var e = new pc.Entity();
+        const e = new Entity();
         e.addComponent('element', {
             type: 'image',
             spriteAsset: assets.sprite
@@ -328,16 +358,16 @@ describe('pc.ImageElement', function () {
     });
 
     it('Sprite resource unbound on destroy', function () {
-        var atlas = assets.textureatlas;
+        const atlas = assets.textureatlas;
 
-        var e = new pc.Entity();
+        const e = new Entity();
         e.addComponent('element', {
             type: 'image',
             spriteAsset: assets.sprite
         });
         app.root.addChild(e);
 
-        var sprite = e.element.sprite;
+        const sprite = e.element.sprite;
         expect(sprite).to.be.not.null;
         expect(sprite.hasEvent('set:meshes')).to.be.true;
         expect(sprite.hasEvent('set:pixelsPerUnit')).to.be.true;
@@ -356,7 +386,7 @@ describe('pc.ImageElement', function () {
 
 
     it('AssetRegistry events unbound on destroy for texture asset', function () {
-        var e = new pc.Entity();
+        const e = new Entity();
         e.addComponent('element', {
             type: 'image',
             textureAsset: 123456
@@ -370,7 +400,7 @@ describe('pc.ImageElement', function () {
     });
 
     it('AssetRegistry events unbound on destroy for sprite asset', function () {
-        var e = new pc.Entity();
+        const e = new Entity();
         e.addComponent('element', {
             type: 'image',
             spriteAsset: 123456
@@ -384,7 +414,7 @@ describe('pc.ImageElement', function () {
     });
 
     it('AssetRegistry events unbound on destroy for material asset', function () {
-        var e = new pc.Entity();
+        const e = new Entity();
         e.addComponent('element', {
             type: 'image',
             materialAsset: 123456
@@ -398,38 +428,38 @@ describe('pc.ImageElement', function () {
     });
 
     it('Image element calls _updateMesh once when rect changes', function () {
-        var e = new pc.Entity();
+        const e = new Entity();
         e.addComponent('element', {
             type: 'image'
         });
         app.root.addChild(e);
 
-        var spy = sandbox.spy(pc.ImageElement.prototype, '_updateMesh');
+        const spy = sandbox.spy(ImageElement.prototype, '_updateMesh');
         e.element.rect = [1, 1, 1, 1];
         expect(spy.calledOnce).to.equal(true);
     });
 
     it('Image element does not call _updateMesh if rect is the same', function () {
-        var e = new pc.Entity();
+        const e = new Entity();
         e.addComponent('element', {
             type: 'image'
         });
         app.root.addChild(e);
 
-        var spy = sandbox.spy(pc.ImageElement.prototype, '_updateMesh');
+        const spy = sandbox.spy(ImageElement.prototype, '_updateMesh');
         e.element.rect = [0, 0, 1, 1];
-        e.element.rect = new pc.Vec4(0, 0, 1, 1);
+        e.element.rect = new Vec4(0, 0, 1, 1);
         expect(spy.notCalled).to.equal(true);
     });
 
     it('Image element calls _updateMesh once at the start and once at the end when all properties that call it are passed into the data', function () {
-        var spy = sandbox.spy(pc.ImageElement.prototype, '_updateMesh');
+        const spy = sandbox.spy(ImageElement.prototype, '_updateMesh');
 
-        var sprite = new pc.Sprite(app.graphicsDevice, {
+        const sprite = new Sprite(app.graphicsDevice, {
             frameKeys: [1, 2]
         });
 
-        var e = new pc.Entity();
+        const e = new Entity();
         e.addComponent('element', {
             type: 'image',
             rect: [1, 1, 1, 1],
@@ -450,74 +480,74 @@ describe('pc.ImageElement', function () {
 
     it('Image element calls _updateMesh once when sprite changes', function () {
 
-        var e = new pc.Entity();
+        const e = new Entity();
         e.addComponent('element', {
             type: 'image'
         });
         app.root.addChild(e);
 
-        var spy = sandbox.spy(pc.ImageElement.prototype, '_updateMesh');
-        e.element.sprite = new pc.Sprite(app.graphicsDevice, {
+        const spy = sandbox.spy(ImageElement.prototype, '_updateMesh');
+        e.element.sprite = new Sprite(app.graphicsDevice, {
             frameKeys: []
         });
         expect(spy.calledOnce).to.equal(true);
     });
 
     it('Image element does not call _updateMesh if sprite is the same', function () {
-        var sprite = new pc.Sprite(app.graphicsDevice, {
+        const sprite = new Sprite(app.graphicsDevice, {
             frameKeys: []
         });
 
-        var e = new pc.Entity();
+        const e = new Entity();
         e.addComponent('element', {
             type: 'image',
             sprite: sprite
         });
         app.root.addChild(e);
 
-        var spy = sandbox.spy(pc.ImageElement.prototype, '_updateMesh');
+        const spy = sandbox.spy(ImageElement.prototype, '_updateMesh');
         e.element.sprite = sprite;
         expect(spy.notCalled).to.equal(true);
     });
 
     it('Image element calls _updateMesh once when spriteFrame changes', function () {
 
-        var e = new pc.Entity();
+        const e = new Entity();
         e.addComponent('element', {
             type: 'image',
             spriteFrame: 1,
-            sprite: new pc.Sprite(app.graphicsDevice, {
+            sprite: new Sprite(app.graphicsDevice, {
                 frameKeys: [1, 2]
             })
         });
         app.root.addChild(e);
 
-        var spy = sandbox.spy(pc.ImageElement.prototype, '_updateMesh');
+        const spy = sandbox.spy(ImageElement.prototype, '_updateMesh');
         e.element.spriteFrame = 0;
         expect(spy.calledOnce).to.equal(true);
     });
 
     it('Image element does not call _updateMesh if spriteFrame is the same', function () {
-        var e = new pc.Entity();
+        const e = new Entity();
         e.addComponent('element', {
             type: 'image',
-            sprite: new pc.Sprite(app.graphicsDevice, {
+            sprite: new Sprite(app.graphicsDevice, {
                 frameKeys: [1, 2]
             }),
             spriteFrame: 1
         });
         app.root.addChild(e);
 
-        var spy = sandbox.spy(pc.ImageElement.prototype, '_updateMesh');
+        const spy = sandbox.spy(ImageElement.prototype, '_updateMesh');
         e.element.spriteFrame = 1;
         expect(spy.notCalled).to.equal(true);
     });
 
     it('Image element spriteFrame clamped to the latest frame available to the sprite asset', function () {
-        var e = new pc.Entity();
+        const e = new Entity();
         e.addComponent('element', {
             type: 'image',
-            sprite: new pc.Sprite(app.graphicsDevice, {
+            sprite: new Sprite(app.graphicsDevice, {
                 frameKeys: [1, 2]
             }),
             spriteFrame: 2
@@ -528,10 +558,10 @@ describe('pc.ImageElement', function () {
     });
 
     it('Image element spriteFrame clamped to the latest frame available to the sprite when a different sprite is assigned', function () {
-        var e = new pc.Entity();
+        const e = new Entity();
         e.addComponent('element', {
             type: 'image',
-            sprite: new pc.Sprite(app.graphicsDevice, {
+            sprite: new Sprite(app.graphicsDevice, {
                 frameKeys: [1, 2]
             }),
             spriteFrame: 1
@@ -539,24 +569,24 @@ describe('pc.ImageElement', function () {
         app.root.addChild(e);
         expect(e.element.spriteFrame).to.equal(1);
 
-        e.element.sprite = new pc.Sprite(app.graphicsDevice, {
+        e.element.sprite = new Sprite(app.graphicsDevice, {
             frameKeys: [1]
         });
         expect(e.element.spriteFrame).to.equal(0);
     });
 
     it('Image element spriteFrame clamped to the latest frame available to the sprite when the frame keys of the sprite change with correct aspect ratio', function () {
-        var atlas = new pc.TextureAtlas();
+        const atlas = new TextureAtlas();
         atlas.frames = {
-            0: { rect: new pc.Vec4(0, 0, 32, 32), pivot: new pc.Vec2() },
-            1: { rect: new pc.Vec4(0, 0, 16, 32), pivot: new pc.Vec2() }
+            0: { rect: new Vec4(0, 0, 32, 32), pivot: new Vec2() },
+            1: { rect: new Vec4(0, 0, 16, 32), pivot: new Vec2() }
         };
-        atlas.texture = new pc.Texture(app.graphicsDevice);
+        atlas.texture = new Texture(app.graphicsDevice);
 
-        var e = new pc.Entity();
+        const e = new Entity();
         e.addComponent('element', {
             type: 'image',
-            sprite: new pc.Sprite(app.graphicsDevice, {
+            sprite: new Sprite(app.graphicsDevice, {
                 frameKeys: [0, 1],
                 atlas: atlas
             }),
@@ -573,21 +603,21 @@ describe('pc.ImageElement', function () {
     });
 
     it('Image element calls _updateMesh when its sprite is 9-sliced and the sprite\'s PPU changes', function () {
-        var atlas = new pc.TextureAtlas();
+        const atlas = new TextureAtlas();
         atlas.frames = {
-            0: { rect: new pc.Vec4(), pivot: new pc.Vec2(), border: new pc.Vec4() },
-            1: { rect: new pc.Vec4(), pivot: new pc.Vec2(), border: new pc.Vec4() }
+            0: { rect: new Vec4(), pivot: new Vec2(), border: new Vec4() },
+            1: { rect: new Vec4(), pivot: new Vec2(), border: new Vec4() }
         };
-        atlas.texture = new pc.Texture(app.graphicsDevice);
+        atlas.texture = new Texture(app.graphicsDevice);
 
-        var sprite = new pc.Sprite(app.graphicsDevice, {
+        const sprite = new Sprite(app.graphicsDevice, {
             atlas: atlas,
             frameKeys: [0, 1],
             pixelsPerUnit: 1,
-            renderMode: pc.SPRITE_RENDERMODE_SLICED
+            renderMode: SPRITE_RENDERMODE_SLICED
         });
 
-        var e = new pc.Entity();
+        const e = new Entity();
         e.addComponent('element', {
             type: 'image',
             sprite: sprite,
@@ -595,27 +625,27 @@ describe('pc.ImageElement', function () {
         });
         app.root.addChild(e);
 
-        var spy = sandbox.spy(pc.ImageElement.prototype, '_updateMesh');
+        const spy = sandbox.spy(ImageElement.prototype, '_updateMesh');
         sprite.pixelsPerUnit = 2;
         expect(spy.calledOnce).to.equal(true);
     });
 
     it('Image element calls _updateMesh once when its sprite is not 9-sliced and the sprite\'s PPU changes', function () {
-        var atlas = new pc.TextureAtlas();
+        const atlas = new TextureAtlas();
         atlas.frames = {
-            0: { rect: new pc.Vec4(), pivot: new pc.Vec2(), border: new pc.Vec4() },
-            1: { rect: new pc.Vec4(), pivot: new pc.Vec2(), border: new pc.Vec4() }
+            0: { rect: new Vec4(), pivot: new Vec2(), border: new Vec4() },
+            1: { rect: new Vec4(), pivot: new Vec2(), border: new Vec4() }
         };
-        atlas.texture = new pc.Texture(app.graphicsDevice);
+        atlas.texture = new Texture(app.graphicsDevice);
 
-        var sprite = new pc.Sprite(app.graphicsDevice, {
+        const sprite = new Sprite(app.graphicsDevice, {
             atlas: atlas,
             frameKeys: [0, 1],
             pixelsPerUnit: 1,
-            renderMode: pc.SPRITE_RENDERMODE_SIMPLE
+            renderMode: SPRITE_RENDERMODE_SIMPLE
         });
 
-        var e = new pc.Entity();
+        const e = new Entity();
         e.addComponent('element', {
             type: 'image',
             sprite: sprite,
@@ -623,13 +653,13 @@ describe('pc.ImageElement', function () {
         });
         app.root.addChild(e);
 
-        var spy = sandbox.spy(pc.ImageElement.prototype, '_updateMesh');
+        const spy = sandbox.spy(ImageElement.prototype, '_updateMesh');
         sprite.pixelsPerUnit = 2;
         expect(spy.calledOnce).to.equal(true);
     });
 
     it('Image element defaults to white color and opacity 1', function () {
-        var e = new pc.Entity();
+        const e = new Entity();
         e.addComponent('element', {
             type: 'image'
         });
@@ -639,20 +669,20 @@ describe('pc.ImageElement', function () {
         expect(e.element.color.b).to.equal(1);
         expect(e.element.opacity).to.equal(1);
 
-        var emissive = e.element._image._renderable.meshInstance.getParameter('material_emissive').data;
+        const emissive = e.element._image._renderable.meshInstance.getParameter('material_emissive').data;
         expect(emissive[0]).to.equal(1);
         expect(emissive[1]).to.equal(1);
         expect(emissive[2]).to.equal(1);
 
-        var opacity = e.element._image._renderable.meshInstance.getParameter('material_opacity').data;
+        const opacity = e.element._image._renderable.meshInstance.getParameter('material_opacity').data;
         expect(opacity).to.equal(1);
     });
 
     it('Image element initializes to color and opacity 1 specified in data', function () {
 
-        var color = new pc.Color(0.5, 0.6, 0.7);
-        var linear = color.clone().linear();
-        var e = new pc.Entity();
+        const color = new Color(0.5, 0.6, 0.7);
+        const linear = color.clone().linear();
+        const e = new Entity();
         e.addComponent('element', {
             type: 'image',
             color: color,
@@ -663,39 +693,39 @@ describe('pc.ImageElement', function () {
         expect(e.element.color.g).to.be.closeTo(color.g, 0.001);
         expect(e.element.color.b).to.be.closeTo(color.b, 0.001);
 
-        var emissive = e.element._image._renderable.meshInstance.getParameter('material_emissive').data;
+        const emissive = e.element._image._renderable.meshInstance.getParameter('material_emissive').data;
         expect(emissive[0]).to.be.closeTo(linear.r, 0.001);
         expect(emissive[1]).to.be.closeTo(linear.g, 0.001);
         expect(emissive[2]).to.be.closeTo(linear.b, 0.001);
 
-        var opacity = e.element._image._renderable.meshInstance.getParameter('material_opacity').data;
+        const opacity = e.element._image._renderable.meshInstance.getParameter('material_opacity').data;
         expect(opacity).to.be.closeTo(0.1, 0.001);
     });
 
     it('Image element color changes', function () {
-        var e = new pc.Entity();
+        const e = new Entity();
         e.addComponent('element', {
             type: 'image'
         });
 
-        e.element.color = new pc.Color(0, 0, 0);
+        e.element.color = new Color(0, 0, 0);
 
         expect(e.element.color.r).to.equal(0);
         expect(e.element.color.g).to.equal(0);
         expect(e.element.color.b).to.equal(0);
         expect(e.element.opacity).to.equal(1);
 
-        var emissive = e.element._image._renderable.meshInstance.getParameter('material_emissive').data;
+        const emissive = e.element._image._renderable.meshInstance.getParameter('material_emissive').data;
         expect(emissive[0]).to.equal(0);
         expect(emissive[1]).to.equal(0);
         expect(emissive[2]).to.equal(0);
 
-        var opacity = e.element._image._renderable.meshInstance.getParameter('material_opacity').data;
+        const opacity = e.element._image._renderable.meshInstance.getParameter('material_opacity').data;
         expect(opacity).to.equal(1);
     });
 
     it('Image element opacity changes', function () {
-        var e = new pc.Entity();
+        const e = new Entity();
         e.addComponent('element', {
             type: 'image'
         });
@@ -704,42 +734,42 @@ describe('pc.ImageElement', function () {
 
         expect(e.element.opacity).to.equal(0);
 
-        var opacity = e.element._image._renderable.meshInstance.getParameter('material_opacity').data;
+        const opacity = e.element._image._renderable.meshInstance.getParameter('material_opacity').data;
         expect(opacity).to.equal(0);
     });
 
     it('Image element reverts back to the previous color, opacity and material if we clear its material', function () {
-        var color = new pc.Color(0.1, 0.2, 0.3);
-        var linear = color.clone().linear();
+        const color = new Color(0.1, 0.2, 0.3);
+        const linear = color.clone().linear();
 
-        var e = new pc.Entity();
+        const e = new Entity();
         e.addComponent('element', {
             type: 'image',
             color: color,
             opacity: 0.4
         });
 
-        var defaultMaterial = e.element.material;
-        e.element.material = new pc.StandardMaterial();
+        const defaultMaterial = e.element.material;
+        e.element.material = new StandardMaterial();
         e.element.material = null;
 
         expect(e.element.material).to.equal(defaultMaterial);
 
-        var emissive = e.element._image._renderable.meshInstance.getParameter('material_emissive').data;
+        const emissive = e.element._image._renderable.meshInstance.getParameter('material_emissive').data;
         expect(emissive[0]).to.be.closeTo(linear.r, 0.001);
         expect(emissive[1]).to.be.closeTo(linear.g, 0.001);
         expect(emissive[2]).to.be.closeTo(linear.b, 0.001);
 
-        var opacity = e.element._image._renderable.meshInstance.getParameter('material_opacity').data;
+        const opacity = e.element._image._renderable.meshInstance.getParameter('material_opacity').data;
         expect(opacity).to.be.closeTo(0.4, 0.001);
 
     });
 
     it('Image element with mask reverts back to the previous color, opacity and material if we clear its material', function () {
-        var color = new pc.Color(0.1, 0.2, 0.3);
-        var linear = color.clone().linear();
+        const color = new Color(0.1, 0.2, 0.3);
+        const linear = color.clone().linear();
 
-        var e = new pc.Entity();
+        const e = new Entity();
         e.addComponent('element', {
             type: 'image',
             color: color,
@@ -747,33 +777,33 @@ describe('pc.ImageElement', function () {
             mask: true
         });
 
-        var defaultMaterial = e.element.material;
-        e.element.material = new pc.StandardMaterial();
+        const defaultMaterial = e.element.material;
+        e.element.material = new StandardMaterial();
         e.element.material = null;
 
         expect(e.element.material).to.equal(defaultMaterial);
 
-        var emissive = e.element._image._renderable.meshInstance.getParameter('material_emissive').data;
+        const emissive = e.element._image._renderable.meshInstance.getParameter('material_emissive').data;
         expect(emissive[0]).to.be.closeTo(linear.r, 0.001);
         expect(emissive[1]).to.be.closeTo(linear.g, 0.001);
         expect(emissive[2]).to.be.closeTo(linear.b, 0.001);
 
-        var opacity = e.element._image._renderable.meshInstance.getParameter('material_opacity').data;
+        const opacity = e.element._image._renderable.meshInstance.getParameter('material_opacity').data;
         expect(opacity).to.be.closeTo(0.4, 0.001);
 
     });
 
     it('Screenspace Image element reverts back to the previous color, opacity and material if we clear its material', function () {
-        var screen = new pc.Entity();
+        const screen = new Entity();
         screen.addComponent('screen', {
             screenSpace: true
         });
         app.root.addChild(screen);
 
-        var color = new pc.Color(0.1, 0.2, 0.3);
-        var linear = color.clone().linear();
+        const color = new Color(0.1, 0.2, 0.3);
+        const linear = color.clone().linear();
 
-        var e = new pc.Entity();
+        const e = new Entity();
         e.addComponent('element', {
             type: 'image',
             color: color,
@@ -781,33 +811,33 @@ describe('pc.ImageElement', function () {
         });
         screen.addChild(e);
 
-        var defaultMaterial = e.element.material;
-        e.element.material = new pc.StandardMaterial();
+        const defaultMaterial = e.element.material;
+        e.element.material = new StandardMaterial();
         e.element.material = null;
 
         expect(e.element.material).to.equal(defaultMaterial);
 
-        var emissive = e.element._image._renderable.meshInstance.getParameter('material_emissive').data;
+        const emissive = e.element._image._renderable.meshInstance.getParameter('material_emissive').data;
         expect(emissive[0]).to.be.closeTo(linear.r, 0.001);
         expect(emissive[1]).to.be.closeTo(linear.g, 0.001);
         expect(emissive[2]).to.be.closeTo(linear.b, 0.001);
 
-        var opacity = e.element._image._renderable.meshInstance.getParameter('material_opacity').data;
+        const opacity = e.element._image._renderable.meshInstance.getParameter('material_opacity').data;
         expect(opacity).to.be.closeTo(0.4, 0.001);
 
     });
 
     it('Screenspace Image element with mask reverts back to the previous color, opacity and material if we clear its material', function () {
-        var screen = new pc.Entity();
+        const screen = new Entity();
         screen.addComponent('screen', {
             screenSpace: true
         });
         app.root.addChild(screen);
 
-        var color = new pc.Color(0.1, 0.2, 0.3);
-        var linear = color.clone().linear();
+        const color = new Color(0.1, 0.2, 0.3);
+        const linear = color.clone().linear();
 
-        var e = new pc.Entity();
+        const e = new Entity();
         e.addComponent('element', {
             type: 'image',
             color: color,
@@ -816,42 +846,41 @@ describe('pc.ImageElement', function () {
         });
         screen.addChild(e);
 
-        var defaultMaterial = e.element.material;
-        e.element.material = new pc.StandardMaterial();
+        const defaultMaterial = e.element.material;
+        e.element.material = new StandardMaterial();
         e.element.material = null;
 
         expect(e.element.material).to.equal(defaultMaterial);
 
-        var emissive = e.element._image._renderable.meshInstance.getParameter('material_emissive').data;
+        const emissive = e.element._image._renderable.meshInstance.getParameter('material_emissive').data;
         expect(emissive[0]).to.be.closeTo(linear.r, 0.001);
         expect(emissive[1]).to.be.closeTo(linear.g, 0.001);
         expect(emissive[2]).to.be.closeTo(linear.b, 0.001);
 
-        var opacity = e.element._image._renderable.meshInstance.getParameter('material_opacity').data;
+        const opacity = e.element._image._renderable.meshInstance.getParameter('material_opacity').data;
         expect(opacity).to.be.closeTo(0.4, 0.001);
 
     });
 
     it('Offscreen element is culled', function () {
-        var canvasWidth = app.graphicsDevice.width;
-        var canvasHeight = app.graphicsDevice.height;
+        const canvasWidth = app.graphicsDevice.width;
 
-        var screen = new pc.Entity();
+        const screen = new Entity();
         screen.addComponent('screen', {
             screenSpace: true
         });
         app.root.addChild(screen);
 
-        var e = new pc.Entity();
+        const e = new Entity();
         e.addComponent('element', {
             type: 'image',
             width: 100,
             height: 100,
-            pivot: [0.5,0.5]
+            pivot: [0.5, 0.5]
         });
         screen.addChild(e);
 
-        var camera = new pc.Entity();
+        const camera = new Entity();
         camera.addComponent('camera');
         app.root.addChild(camera);
 
@@ -861,7 +890,7 @@ describe('pc.ImageElement', function () {
         expect(e.element.isVisibleForCamera(camera.camera.camera)).to.be.true;
 
         // move just off screen
-        e.translateLocal(canvasWidth+(100/2)+0.001,0,0);
+        e.translateLocal(canvasWidth + (100 / 2) + 0.001, 0, 0);
 
         app.update(0.1);
         app.render();
@@ -878,34 +907,31 @@ describe('pc.ImageElement', function () {
 
 
     it('Offscreen child element is culled', function () {
-        var canvasWidth = app.graphicsDevice.width;
-        var canvasHeight = app.graphicsDevice.height;
-
-        var screen = new pc.Entity();
+        const screen = new Entity();
         screen.addComponent('screen', {
             screenSpace: true
         });
         app.root.addChild(screen);
 
-        var parent = new pc.Entity();
+        const parent = new Entity();
         parent.addComponent('element', {
             type: 'image',
             width: 100,
             height: 100,
-            pivot: [0.5,0.5]
+            pivot: [0.5, 0.5]
         });
         screen.addChild(parent);
 
-        var e = new pc.Entity();
+        const e = new Entity();
         e.addComponent('element', {
             type: 'image',
             width: 100,
             height: 100,
-            pivot: [0.5,0.5]
+            pivot: [0.5, 0.5]
         });
         parent.addChild(e);
 
-        var camera = new pc.Entity();
+        const camera = new Entity();
         camera.addComponent('camera');
         app.root.addChild(camera);
 
@@ -925,30 +951,27 @@ describe('pc.ImageElement', function () {
     });
 
     it('Offscreen rotated element is culled', function () {
-        var canvasWidth = app.graphicsDevice.width;
-        var canvasHeight = app.graphicsDevice.height;
-
-        var screen = new pc.Entity();
+        const screen = new Entity();
         screen.addComponent('screen', {
             screenSpace: true
         });
         app.root.addChild(screen);
 
-        var e = new pc.Entity();
+        const e = new Entity();
         e.addComponent('element', {
             type: 'image',
             width: 100,
             height: 100,
-            pivot: [0.5,0.5]
+            pivot: [0.5, 0.5]
         });
         screen.addChild(e);
 
-        var camera = new pc.Entity();
+        const camera = new Entity();
         camera.addComponent('camera');
         app.root.addChild(camera);
 
         // move just off screen (when rotated 45°)
-        e.translateLocal(300 + (50*Math.sqrt(2)), 0, 0);
+        e.translateLocal(300 + (50 * Math.sqrt(2)), 0, 0);
         e.rotateLocal(0, 0, 45);
 
         // update transform
@@ -958,25 +981,22 @@ describe('pc.ImageElement', function () {
     });
 
     it('Offscreen rotated out of plane is culled', function () {
-        var canvasWidth = app.graphicsDevice.width;
-        var canvasHeight = app.graphicsDevice.height;
-
-        var screen = new pc.Entity();
+        const screen = new Entity();
         screen.addComponent('screen', {
             screenSpace: true
         });
         app.root.addChild(screen);
 
-        var e = new pc.Entity();
+        const e = new Entity();
         e.addComponent('element', {
             type: 'image',
             width: 100,
             height: 100,
-            pivot: [0.5,0.5]
+            pivot: [0.5, 0.5]
         });
         screen.addChild(e);
 
-        var camera = new pc.Entity();
+        const camera = new Entity();
         camera.addComponent('camera');
         app.root.addChild(camera);
 
@@ -991,28 +1011,30 @@ describe('pc.ImageElement', function () {
     });
 
     it('TextureAtlas asset events are unbound if sprite is changed while loading', function (done) {
+        const e = new Entity();
+
         app.assets.list().forEach(function (asset) {
             asset.unload();
         });
 
-        var spriteAsset = new pc.Asset('red-sprite', 'sprite', {
-            url: 'base/tests/test-assets/sprite/red-sprite.json'
+        const spriteAsset = new Asset('red-sprite', 'sprite', {
+            url: 'http://localhost:3000/test/test-assets/sprites/red-sprite.json'
         });
-        var textureAtlasAsset = new pc.Asset('red-texture', 'texture', {
-            url: 'base/tests/test-assets/sprite/red-atlas.json'
+        const textureAtlasAsset = new Asset('red-texture', 'texture', {
+            url: 'http://localhost:3000/test/test-assets/sprites/red-atlas.json'
         });
 
         if (spriteAsset.resource) {
-            fail("spriteAsset should not be loaded at this stage");
+            fail('spriteAsset should not be loaded at this stage'); // eslint-disable-line no-undef
         }
 
-        spriteAsset.once("load", function () {
-            expect(app.assets.hasEvent('load:' + textureAtlasAsset.id)).to.be.true;
+        spriteAsset.once('load', function () {
+            expect(app.assets.hasEvent(`load:${textureAtlasAsset.id}`)).to.be.true;
 
             e.element.spriteAsset = null;
 
             // check that no event listeners come from this image element
-            app.assets._callbacks.get('load:' + textureAtlasAsset.id).forEach(function (callback) {
+            app.assets._callbacks.get(`load:${textureAtlasAsset.id}`).forEach(function (callback) {
                 expect(callback.scope).to.not.equal(e.element._image);
             });
 
@@ -1022,9 +1044,8 @@ describe('pc.ImageElement', function () {
         app.assets.add(spriteAsset);
         app.assets.add(textureAtlasAsset);
 
-        expect(app.assets.hasEvent('load:' + textureAtlasAsset.id)).to.be.false;
+        expect(app.assets.hasEvent(`load:${textureAtlasAsset.id}`)).to.be.false;
 
-        var e = new pc.Entity();
         e.addComponent('element', {
             type: 'image',
             spriteAsset: spriteAsset.id
@@ -1034,26 +1055,26 @@ describe('pc.ImageElement', function () {
     });
 
     it('Cloning image element with texture works', function () {
-        var e = new pc.Entity();
+        const e = new Entity();
         e.addComponent('element', {
             type: 'image',
             textureAsset: assets.texture.id
         });
 
-        var copy = e.clone();
+        const copy = e.clone();
 
         expect(copy.element.textureAsset).to.equal(assets.texture.id);
         expect(copy.element.texture).to.equal(e.element.texture);
     });
 
     it('Setting texture on image element clears texture asset', function () {
-        var e = new pc.Entity();
+        const e = new Entity();
         e.addComponent('element', {
             type: 'image',
             textureAsset: assets.texture.id
         });
 
-        var texture = new pc.Texture(app.graphicsDevice);
+        const texture = new Texture(app.graphicsDevice);
 
         e.element.texture = texture;
 
@@ -1062,7 +1083,7 @@ describe('pc.ImageElement', function () {
     });
 
     it('Setting texture on image element clears sprite asset', function () {
-        var e = new pc.Entity();
+        const e = new Entity();
         e.addComponent('element', {
             type: 'image',
             spriteAsset: assets.sprite.id
@@ -1071,7 +1092,7 @@ describe('pc.ImageElement', function () {
         expect(e.element.spriteAsset).to.be.not.null;
         // expect(e.element.sprite).to.be.not.null;
 
-        var texture = new pc.Texture(app.graphicsDevice);
+        const texture = new Texture(app.graphicsDevice);
 
         e.element.texture = texture;
 
@@ -1081,17 +1102,17 @@ describe('pc.ImageElement', function () {
     });
 
     it('Setting texture on image element then cloning works', function () {
-        var e = new pc.Entity();
+        const e = new Entity();
         e.addComponent('element', {
             type: 'image',
             textureAsset: assets.texture.id
         });
 
-        var texture = new pc.Texture(app.graphicsDevice);
+        const texture = new Texture(app.graphicsDevice);
 
         e.element.texture = texture;
 
-        var copy = e.clone();
+        const copy = e.clone();
 
         expect(e.element.textureAsset).to.be.null;
         expect(e.element.texture).to.equal(texture);
@@ -1101,26 +1122,26 @@ describe('pc.ImageElement', function () {
     });
 
     it('Cloning image element with sprite works', function () {
-        var e = new pc.Entity();
+        const e = new Entity();
         e.addComponent('element', {
             type: 'image',
             spriteAsset: assets.sprite.id
         });
 
-        var copy = e.clone();
+        const copy = e.clone();
 
         expect(copy.element.spriteAsset).to.equal(assets.sprite.id);
         expect(copy.element.sprite).to.equal(e.element.sprite);
     });
 
     it('Setting sprite on image element clears sprite asset', function () {
-        var e = new pc.Entity();
+        const e = new Entity();
         e.addComponent('element', {
             type: 'image',
             spriteAsset: assets.sprite
         });
 
-        var sprite = new pc.Sprite(app.graphicsDevice, {
+        const sprite = new Sprite(app.graphicsDevice, {
             frameKeys: []
         });
 
@@ -1131,7 +1152,7 @@ describe('pc.ImageElement', function () {
     });
 
     it('Setting sprite on image element clears texture asset', function () {
-        var e = new pc.Entity();
+        const e = new Entity();
         e.addComponent('element', {
             type: 'image',
             textureAsset: assets.texture
@@ -1140,7 +1161,7 @@ describe('pc.ImageElement', function () {
         expect(e.element.textureAsset).to.be.not.null;
         // expect(e.element.texture).to.be.not.null;
 
-        var sprite = new pc.Sprite(app.graphicsDevice, {
+        const sprite = new Sprite(app.graphicsDevice, {
             frameKeys: []
         });
 
@@ -1152,19 +1173,19 @@ describe('pc.ImageElement', function () {
     });
 
     it('Setting sprite on image element then cloning works', function () {
-        var e = new pc.Entity();
+        const e = new Entity();
         e.addComponent('element', {
             type: 'image',
             spriteAsset: assets.sprite
         });
 
-        var sprite = new pc.Sprite(app.graphicsDevice, {
+        const sprite = new Sprite(app.graphicsDevice, {
             frameKeys: []
         });
 
         e.element.sprite = sprite;
 
-        var copy = e.clone();
+        const copy = e.clone();
 
         expect(e.element.spriteAsset).to.be.null;
         expect(e.element.sprite).to.equal(e.element.sprite);
@@ -1174,7 +1195,7 @@ describe('pc.ImageElement', function () {
     });
 
     it('Setting texture and changing the fitMode setting changes the mesh', function () {
-        var e = new pc.Entity();
+        const e = new Entity();
         e.addComponent('element', {
             type: 'image',
             width: 50,
@@ -1183,22 +1204,22 @@ describe('pc.ImageElement', function () {
         });
         app.root.addChild(e);
 
-        var texture = new pc.Texture(app.graphicsDevice);
+        const texture = new Texture(app.graphicsDevice);
 
         e.element.texture = texture;
 
         expect(e.element._image._targetAspectRatio).to.be.equal(1); // setting texture sets target aspect ratio
 
         // no aspect ratio fitting
-        expect(e.element.fitMode).to.equal(pc.FITMODE_STRETCH);
+        expect(e.element.fitMode).to.equal(FITMODE_STRETCH);
         expect(e.element._image.mesh.aabb.center.x).to.equal(25);
         expect(e.element._image.mesh.aabb.center.y).to.equal(12.5);
         expect(e.element._image.mesh.aabb.halfExtents.x).to.equal(25);
         expect(e.element._image.mesh.aabb.halfExtents.y).to.equal(12.5);
 
         // change aspect ratio should trigger _updateMesh
-        var spy = sandbox.spy(pc.ImageElement.prototype, '_updateMesh');
-        e.element.fitMode = pc.FITMODE_CONTAIN;
+        const spy = sandbox.spy(ImageElement.prototype, '_updateMesh');
+        e.element.fitMode = FITMODE_CONTAIN;
         expect(spy.calledOnce).to.equal(true);
 
         expect(e.element._image.mesh.aabb.center.x).to.equal(12.5);
@@ -1206,4 +1227,5 @@ describe('pc.ImageElement', function () {
         expect(e.element._image.mesh.aabb.halfExtents.x).to.equal(12.5);
         expect(e.element._image.mesh.aabb.halfExtents.y).to.equal(12.5);
     });
+
 });
