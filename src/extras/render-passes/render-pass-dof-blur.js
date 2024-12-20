@@ -125,7 +125,7 @@ class RenderPassDofBlur extends RenderPassShaderQuad {
                         vec3 tap = texture2DLod(farTexture, uv, 0.0).rgb;
 
                         // block out sharp objects to avoid leaking to far blur
-                        float cocThis = texture2DLod(cocTexture, uv, 0.0).g;
+                        float cocThis = texture2DLod(cocTexture, uv, 0.0).r;
                         tap *= cocThis;
                         sumCoC += cocThis;
 
