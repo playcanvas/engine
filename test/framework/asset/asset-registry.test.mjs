@@ -7,8 +7,6 @@ import { Texture } from '../../../src/platform/graphics/texture.js';
 import { http, Http } from '../../../src/platform/net/http.js';
 import { NullGraphicsDevice } from '../../../src/platform/graphics/null/null-graphics-device.js';
 
-import { Canvas } from 'skia-canvas';
-
 import { expect } from 'chai';
 import { restore, spy } from 'sinon';
 
@@ -20,7 +18,7 @@ describe('AssetRegistry', function () {
     beforeEach(function () {
         retryDelay = Http.retryDelay;
         Http.retryDelay = 1;
-        const canvas = new Canvas(500, 500);
+        const canvas = document.createElement('canvas');
         app = new Application(canvas, { graphicsDevice: new NullGraphicsDevice(canvas) });
     });
 

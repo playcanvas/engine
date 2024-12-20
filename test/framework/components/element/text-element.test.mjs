@@ -18,8 +18,7 @@ describe('TextElement', function () {
     let fontAsset;
 
     beforeEach(function (done) {
-        const canvas = new Canvas(300, 150);
-        canvas.getBoundingClientRect = () => ({ left: 0, top: 0, width: 300, height: 150 });
+        const canvas = document.createElement('canvas');
         app = new Application(canvas, {
             graphicsDevice: new NullGraphicsDevice(canvas)
         });

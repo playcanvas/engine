@@ -3,15 +3,13 @@ import { Application } from '../../../../src/framework/application.js';
 import { Entity } from '../../../../src/framework/entity.js';
 import { NullGraphicsDevice } from '../../../../src/platform/graphics/null/null-graphics-device.js';
 
-import { Canvas } from 'skia-canvas';
-
 import { expect } from 'chai';
 
 describe('ElementComponent', function () {
     let app;
 
     beforeEach(function () {
-        const canvas = new Canvas(500, 500);
+        const canvas = document.createElement('canvas');
         app = new Application(canvas, { graphicsDevice: new NullGraphicsDevice(canvas) });
     });
 

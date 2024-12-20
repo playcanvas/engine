@@ -29,8 +29,6 @@ import { NullGraphicsDevice } from '../../src/platform/graphics/null/null-graphi
 
 import { DummyComponentSystem } from './test-component/system.mjs';
 
-import { Canvas } from 'skia-canvas';
-
 import { expect } from 'chai';
 import { stub } from 'sinon';
 
@@ -39,7 +37,7 @@ describe('Entity', function () {
     let app;
 
     beforeEach(function () {
-        const canvas = new Canvas(500, 500);
+        const canvas = document.createElement('canvas');
         app = new Application(canvas, { graphicsDevice: new NullGraphicsDevice(canvas) });
 
         app.systems.add(new DummyComponentSystem(app));

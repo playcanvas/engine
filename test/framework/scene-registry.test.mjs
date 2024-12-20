@@ -2,8 +2,6 @@ import { Application } from '../../src/framework/application.js';
 import { SceneRegistry } from '../../src/framework/scene-registry.js';
 import { NullGraphicsDevice } from '../../src/platform/graphics/null/null-graphics-device.js';
 
-import { Canvas } from 'skia-canvas';
-
 import { expect } from 'chai';
 
 describe('SceneRegistry', function () {
@@ -11,7 +9,7 @@ describe('SceneRegistry', function () {
     let app;
 
     beforeEach(function () {
-        const canvas = new Canvas(500, 500);
+        const canvas = document.createElement('canvas');
         app = new Application(canvas, { graphicsDevice: new NullGraphicsDevice(canvas) });
     });
 

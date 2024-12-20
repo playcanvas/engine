@@ -5,8 +5,6 @@ import { NullGraphicsDevice } from '../../../src/platform/graphics/null/null-gra
 
 import { DummyComponentSystem } from '../test-component/system.mjs';
 
-import { Canvas } from 'skia-canvas';
-
 import { expect } from 'chai';
 import { restore, spy, stub } from 'sinon';
 
@@ -25,7 +23,7 @@ describe('EntityReference', function () {
     let otherEntity2;
 
     beforeEach(function () {
-        const canvas = new Canvas(500, 500);
+        const canvas = document.createElement('canvas');
         app = new Application(canvas, { graphicsDevice: new NullGraphicsDevice(canvas) });
 
         app.systems.add(new DummyComponentSystem(app));

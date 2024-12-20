@@ -15,7 +15,7 @@ describe('AssetReference', function () {
     let add;
 
     beforeEach(function () {
-        const canvas = new Canvas(500, 500);
+        const canvas = document.createElement('canvas');
         app = new Application(canvas, { graphicsDevice: new NullGraphicsDevice(canvas) });
         parent = fake();
         load = fake();
