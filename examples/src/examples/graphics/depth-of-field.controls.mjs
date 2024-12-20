@@ -40,6 +40,15 @@ export const controls = ({ observer, ReactPCUI, React, jsx, fragment }) => {
             ),
             jsx(
                 LabelGroup,
+                { text: 'Near Blur' },
+                jsx(BooleanInput, {
+                    type: 'toggle',
+                    binding: new BindingTwoWay(),
+                    link: { observer, path: 'data.dof.nearBlur' }
+                })
+            ),
+            jsx(
+                LabelGroup,
                 { text: 'Focus Distance' },
                 jsx(SliderInput, {
                     binding: new BindingTwoWay(),
