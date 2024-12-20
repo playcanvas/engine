@@ -17,7 +17,7 @@ import { Canvas } from 'skia-canvas';
 import { expect } from 'chai';
 import { createSandbox } from 'sinon';
 
-describe.only('ImageElement', function () {
+describe('ImageElement', function () {
     let app;
     let assets;
     let sandbox;
