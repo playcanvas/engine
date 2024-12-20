@@ -61,14 +61,14 @@ describe.only('ImageElement', function () {
     function loadAllAssets(cb) {
         app.assets.prefix = '';
 
-        // Mock the atlas asset
+        // load atlas first so that sprite is set up with out waiting for next frame
         const assetsToPreload = [
             new Asset('red-atlas', 'textureatlas', {
                 url: 'http://localhost:3000/test/test-assets/sprites/red-atlas.json'
             })
         ];
 
-        // Mock the other assets
+        // list of assets to load
         const assetsToLoad = [
             new Asset('red-sprite', 'sprite', {
                 url: 'http://localhost:3000/test/test-assets/sprites/red-sprite.json'
@@ -103,6 +103,17 @@ describe.only('ImageElement', function () {
         });
 
         expect(e.element.type).to.equal('image');
+    });
+
+    it('Add / Remove Image Element', function () {
+        const e = new Entity();
+        e.addComponent('element', {
+            type: 'image'
+        });
+
+        e.removeComponent('element');
+
+        expect(!e.element).to.exist;
     });
 
     it('Destroy Sprite Image Element', function () {
