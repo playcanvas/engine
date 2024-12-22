@@ -127,7 +127,7 @@
     "lint": "eslint scripts src test utils build.mjs eslint.config.mjs rollup.config.mjs",
     "publint": "publint --level error",
     "serve": "serve build -l 51000 --cors",
-    "test": "mocha --ignore test/assets/scripts/** --recursive --require test/fixtures.mjs --timeout 5000",
+    "test": "mocha '--ignore test/assets/scripts/**' --recursive --require test/fixtures.mjs --timeout 5000",
     "test:coverage": "c8 npm test",
     "test:karma": "karma start tests/karma.conf.cjs -- --single-run",
     "test:types": "tsc --pretty false build/playcanvas.d.ts"
