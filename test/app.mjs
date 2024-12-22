@@ -3,7 +3,7 @@ import { NullGraphicsDevice } from '../src/platform/graphics/null/null-graphics-
 
 /**
  * Create a new application instance that uses the null graphics device.
- * @returns {Application}
+ * @returns {Application} The new application instance.
  */
 function createApp() {
     const canvas = document.createElement('canvas');

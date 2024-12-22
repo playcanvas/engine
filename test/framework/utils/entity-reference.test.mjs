@@ -3,8 +3,8 @@ import { restore, spy, stub } from 'sinon';
 
 import { Entity } from '../../../src/framework/entity.js';
 import { EntityReference } from '../../../src/framework/utils/entity-reference.js';
-import { DummyComponentSystem } from '../test-component/system.mjs';
 import { createApp } from '../../app.mjs';
+import { DummyComponentSystem } from '../test-component/system.mjs';
 
 /**
  * @import { Application } from '../../../../src/framework/application.js'
