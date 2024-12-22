@@ -91,14 +91,14 @@
     "karma-spec-reporter": "^0.0.36",
     "mocha": "^11.0.1",
     "publint": "^0.2.12",
-    "rollup": "^4.28.1",
+    "rollup": "^4.29.1",
     "rollup-plugin-dts": "^6.0.2",
     "rollup-plugin-jscc": "2.0.0",
     "rollup-plugin-visualizer": "^5.12.0",
     "serve": "^14.2.4",
     "sinon": "^19.0.2",
     "typedoc": "^0.27.5",
-    "typedoc-plugin-mdn-links": "^4.0.5",
+    "typedoc-plugin-mdn-links": "^4.0.6",
     "typescript": "^5.7.2"
   },
   "scripts": {
