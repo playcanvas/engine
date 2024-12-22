@@ -5,7 +5,6 @@ import { Asset } from '../../../src/framework/asset/asset.js';
 import { JsonHandler } from '../../../src/framework/handlers/json.js';
 import { createApp } from '../../app.mjs';
 
-
 describe('I18n', function () {
 
     let app;

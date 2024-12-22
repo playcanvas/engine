@@ -2,7 +2,6 @@ import { expect } from 'chai';
 
 import { Vec4 } from '../../../src/core/math/vec4.js';
 
-
 describe('Vec4', function () {
 
     describe('#constructor', function () {

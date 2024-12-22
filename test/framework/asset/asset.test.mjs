@@ -3,7 +3,6 @@ import { expect } from 'chai';
 import { Asset } from '../../../src/framework/asset/asset.js';
 import { createApp } from '../../app.mjs';
 
-
 describe('Asset', function () {
 
     let app;

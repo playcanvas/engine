@@ -5,7 +5,6 @@ import { Quat } from '../../../src/core/math/quat.js';
 import { Vec3 } from '../../../src/core/math/vec3.js';
 import { Vec4 } from '../../../src/core/math/vec4.js';
 
-
 describe('Mat4', function () {
 
     describe('#data', function () {

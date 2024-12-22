@@ -3,7 +3,6 @@ import { expect } from 'chai';
 import { CURVE_LINEAR, CURVE_SMOOTHSTEP, CURVE_SPLINE, CURVE_STEP } from '../../../src/core/math/constants.js';
 import { Curve } from '../../../src/core/math/curve.js';
 
-
 describe('Curve', function () {
 
     describe('#constructor', function () {

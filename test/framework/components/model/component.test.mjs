@@ -5,7 +5,6 @@ import { Entity } from '../../../../src/framework/entity.js';
 import { LAYERID_WORLD, LAYERID_UI } from '../../../../src/scene/constants.js';
 import { createApp } from '../../../app.mjs';
 
-
 describe('ModelComponent', function () {
     let app;
     let assets = {};

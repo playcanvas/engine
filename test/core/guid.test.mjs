@@ -2,7 +2,6 @@ import { expect } from 'chai';
 
 import { guid } from '../../src/core/guid.js';
 
-
 describe('guid', function () {
 
     describe('#create', function () {

@@ -8,7 +8,6 @@ import { Entity } from '../../../../src/framework/entity.js';
 import { CanvasFont } from '../../../../src/framework/font/canvas-font.js';
 import { createApp } from '../../../app.mjs';
 
-
 describe('TextElement', function () {
     let app;
     let assets;

@@ -2,7 +2,6 @@ import { expect } from 'chai';
 
 import { EventHandler } from '../../src/core/event-handler.js';
 
-
 describe('EventHandler', function () {
 
     describe('#hasEvent', function () {

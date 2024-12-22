@@ -4,7 +4,6 @@ import { Entity } from '../../../../src/framework/entity.js';
 import { LAYERID_UI } from '../../../../src/scene/constants.js';
 import { createApp } from '../../../app.mjs';
 
-
 describe('ElementComponent', function () {
     let app;
 

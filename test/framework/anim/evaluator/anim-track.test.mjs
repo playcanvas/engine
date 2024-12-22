@@ -6,7 +6,6 @@ import { AnimData } from '../../../../src/framework/anim/evaluator/anim-data.js'
 import { AnimSnapshot } from '../../../../src/framework/anim/evaluator/anim-snapshot.js';
 import { AnimTrack } from '../../../../src/framework/anim/evaluator/anim-track.js';
 
-
 describe('AnimTrack', function () {
     const curves = [new AnimCurve(['path/to/entity'], 0, 0, INTERPOLATION_LINEAR)];
     const inputs = [new AnimData(1, [0, 1, 2])];

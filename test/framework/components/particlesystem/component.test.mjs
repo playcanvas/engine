@@ -5,7 +5,6 @@ import { Asset } from '../../../../src/framework/asset/asset.js';
 import { Entity } from '../../../../src/framework/entity.js';
 import { createApp } from '../../../app.mjs';
 
-
 describe('ParticleSystemComponent', function () {
     let app;
     let assets = {};

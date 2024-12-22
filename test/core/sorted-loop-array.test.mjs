@@ -2,7 +2,6 @@ import { expect } from 'chai';
 
 import { SortedLoopArray } from '../../src/core/sorted-loop-array.js';
 
-
 describe('SortedLoopArray', function () {
 
     describe('#constructor', function () {

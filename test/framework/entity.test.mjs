@@ -29,7 +29,6 @@ import { Entity } from '../../src/framework/entity.js';
 import { createScript } from '../../src/framework/script/script-create.js';
 import { createApp } from '../app.mjs';
 
-
 describe('Entity', function () {
 
     let app;

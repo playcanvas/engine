@@ -2,7 +2,6 @@ import { expect } from 'chai';
 
 import { math } from '../../../src/core/math/math.js';
 
-
 describe('math', function () {
 
     describe('#DEG_TO_RAD', function () {

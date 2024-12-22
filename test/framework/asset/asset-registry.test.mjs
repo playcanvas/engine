@@ -9,7 +9,6 @@ import { Texture } from '../../../src/platform/graphics/texture.js';
 import { http, Http } from '../../../src/platform/net/http.js';
 import { createApp } from '../../app.mjs';
 
-
 describe('AssetRegistry', function () {
 
     let app;

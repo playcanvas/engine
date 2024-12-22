@@ -7,7 +7,6 @@ import { AnimData } from '../../../../src/framework/anim/evaluator/anim-data.js'
 import { AnimEvents } from '../../../../src/framework/anim/evaluator/anim-events.js';
 import { AnimTrack } from '../../../../src/framework/anim/evaluator/anim-track.js';
 
-
 describe('AnimClip', function () {
     let animClip;
 

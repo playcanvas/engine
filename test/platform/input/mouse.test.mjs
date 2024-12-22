@@ -6,7 +6,6 @@ import {
 } from '../../../src/platform/input/constants.js';
 import { Mouse } from '../../../src/platform/input/mouse.js';
 
-
 const buttons = [MOUSEBUTTON_LEFT, MOUSEBUTTON_MIDDLE, MOUSEBUTTON_RIGHT];
 
 // Mock the _getTargetCoords method, otherwise it returns null

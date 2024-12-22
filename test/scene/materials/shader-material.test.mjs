@@ -4,7 +4,6 @@ import { CULLFACE_BACK, FUNC_LESSEQUAL } from '../../../src/platform/graphics/co
 import { BLEND_NONE } from '../../../src/scene/constants.js';
 import { ShaderMaterial } from '../../../src/scene/materials/shader-material.js';
 
-
 describe('Material', function () {
 
     function checkDefaultMaterial(material) {

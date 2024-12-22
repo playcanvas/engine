@@ -6,7 +6,6 @@ import { CUBEPROJ_NONE, DETAILMODE_MUL, DITHER_NONE, FRESNEL_SCHLICK, SPECOCC_AO
 import { Material } from '../../../src/scene/materials/material.js';
 import { StandardMaterial } from '../../../src/scene/materials/standard-material.js';
 
-
 describe('StandardMaterial', function () {
 
     function checkDefaultMaterial(material) {

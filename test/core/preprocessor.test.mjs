@@ -2,7 +2,6 @@ import { expect } from 'chai';
 
 import { Preprocessor } from '../../src/core/preprocessor.js';
 
-
 describe('Preprocessor', function () {
 
     const includes = new Map([

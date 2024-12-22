@@ -5,7 +5,6 @@ import {
 } from '../../../src/platform/graphics/constants.js';
 import { DepthState } from '../../../src/platform/graphics/depth-state.js';
 
-
 describe('DepthState', function () {
 
     describe('#constructor', function () {

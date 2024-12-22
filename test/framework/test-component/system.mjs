@@ -3,7 +3,6 @@ import { DummyComponentData } from './data.mjs';
 import { Component } from '../../../src/framework/components/component.js';
 import { ComponentSystem } from '../../../src/framework/components/system.js';
 
-
 const dummySchema = [
     'enabled',
     { name: 'myEntity1', type: 'entity' },

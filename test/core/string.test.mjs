@@ -2,7 +2,6 @@ import { expect } from 'chai';
 
 import { string } from '../../src/core/string.js';
 
-
 describe('string', function () {
 
     describe('#format', function () {

@@ -11,7 +11,6 @@ import { AnimTrack } from '../../../../src/framework/anim/evaluator/anim-track.j
 import { GraphNode } from '../../../../src/scene/graph-node.js';
 import { createApp } from '../../../app.mjs';
 
-
 describe('AnimEvaluator', function () {
 
     let app;

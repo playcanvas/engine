@@ -15,7 +15,6 @@ import { Sprite } from '../../../../src/scene/sprite.js';
 import { TextureAtlas } from '../../../../src/scene/texture-atlas.js';
 import { createApp } from '../../../app.mjs';
 
-
 describe('ImageElement', function () {
     let app;
     let assets;

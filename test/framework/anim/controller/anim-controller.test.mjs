@@ -11,7 +11,6 @@ import { AnimComponentBinder } from '../../../../src/framework/components/anim/c
 import { Entity } from '../../../../src/framework/entity.js';
 import { createApp } from '../../../app.mjs';
 
-
 describe('AnimController', function () {
 
     let app;

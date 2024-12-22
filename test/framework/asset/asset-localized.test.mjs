@@ -4,7 +4,6 @@ import { LocalizedAsset } from '../../../src/framework/asset/asset-localized.js'
 import { Asset } from '../../../src/framework/asset/asset.js';
 import { createApp } from '../../app.mjs';
 
-
 describe('LocalizedAsset', function () {
 
     let app;

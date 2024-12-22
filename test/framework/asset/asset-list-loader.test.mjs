@@ -4,7 +4,6 @@ import { AssetListLoader } from '../../../src/framework/asset/asset-list-loader.
 import { Asset } from '../../../src/framework/asset/asset.js';
 import { createApp } from '../../app.mjs';
 
-
 describe('AssetListLoader', function () {
 
     let app;

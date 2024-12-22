@@ -7,7 +7,6 @@ import { AnimBlendTreeDirect } from '../../../../src/framework/anim/controller/a
 import { AnimBlendTree } from '../../../../src/framework/anim/controller/anim-blend-tree.js';
 import { AnimState } from '../../../../src/framework/anim/controller/anim-state.js';
 
-
 describe('AnimBlendTree', function () {
     const findParameter = () => {};
     const animState = new AnimState({ findParameter }, 'state', 1, true, null);

@@ -6,7 +6,6 @@ import { Vec3 } from '../../src/core/math/vec3.js';
 import { Tags } from '../../src/core/tags.js';
 import { GraphNode } from '../../src/scene/graph-node.js';
 
-
 describe('GraphNode', function () {
 
     describe('#children', function () {

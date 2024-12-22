@@ -2,7 +2,6 @@ import { expect } from 'chai';
 
 import { BitPacking } from '../../../src/core/math/bit-packing.js';
 
-
 describe('BitPacking', function () {
 
     describe('#set', function () {

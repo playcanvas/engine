@@ -5,7 +5,6 @@ import { AssetReference } from '../../../src/framework/asset/asset-reference.js'
 import { Asset } from '../../../src/framework/asset/asset.js';
 import { createApp } from '../../app.mjs';
 
-
 describe('AssetReference', function () {
     let app;
     let parent;

@@ -3,7 +3,6 @@ import { expect } from 'chai';
 import { SceneRegistry } from '../../src/framework/scene-registry.js';
 import { createApp } from '../app.mjs';
 
-
 describe('SceneRegistry', function () {
 
     let app;

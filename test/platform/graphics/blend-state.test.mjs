@@ -6,7 +6,6 @@ import {
     BLENDMODE_ONE_MINUS_DST_COLOR, BLENDMODE_SRC_ALPHA_SATURATE
 } from '../../../src/platform/graphics/constants.js';
 
-
 describe('BlendState', function () {
 
     describe('#constructor', function () {

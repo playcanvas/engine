@@ -2,7 +2,6 @@ import { expect } from 'chai';
 
 import { hashCode, hash32Fnv1a } from '../../src/core/hash.js';
 
-
 describe('hashCode', function () {
 
     it('returns 0 for the empty string', function () {
