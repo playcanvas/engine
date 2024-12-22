@@ -8,9 +8,8 @@ import { AnimData } from '../../../../src/framework/anim/evaluator/anim-data.js'
 import { AnimEvaluator } from '../../../../src/framework/anim/evaluator/anim-evaluator.js';
 import { AnimEvents } from '../../../../src/framework/anim/evaluator/anim-events.js';
 import { AnimTrack } from '../../../../src/framework/anim/evaluator/anim-track.js';
-import { Application } from '../../../../src/framework/application.js';
-import { NullGraphicsDevice } from '../../../../src/platform/graphics/null/null-graphics-device.js';
 import { GraphNode } from '../../../../src/scene/graph-node.js';
+import { createApp } from '../../../app.mjs';
 
 
 describe('AnimEvaluator', function () {
@@ -18,9 +17,7 @@ describe('AnimEvaluator', function () {
     let app;
 
     beforeEach(function () {
-        const canvas = document.createElement('canvas');
-        const graphicsDevice = new NullGraphicsDevice(canvas);
-        app = new Application(canvas, { graphicsDevice });
+        app = createApp();
     });
 
     afterEach(function () {

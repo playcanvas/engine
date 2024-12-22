@@ -1,9 +1,8 @@
 import { expect } from 'chai';
 
-import { Application } from '../../../src/framework/application.js';
 import { LocalizedAsset } from '../../../src/framework/asset/asset-localized.js';
 import { Asset } from '../../../src/framework/asset/asset.js';
-import { NullGraphicsDevice } from '../../../src/platform/graphics/null/null-graphics-device.js';
+import { createApp } from '../../app.mjs';
 
 
 describe('LocalizedAsset', function () {
@@ -11,9 +10,7 @@ describe('LocalizedAsset', function () {
     let app;
 
     beforeEach(function () {
-        const canvas = document.createElement('canvas');
-        const graphicsDevice = new NullGraphicsDevice(canvas);
-        app = new Application(canvas, { graphicsDevice });
+        app = createApp();
     });
 
     afterEach(function () {

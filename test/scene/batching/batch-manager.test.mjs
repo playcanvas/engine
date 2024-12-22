@@ -1,9 +1,8 @@
 import { expect } from 'chai';
 
-import { Application } from '../../../src/framework/application.js';
 import { Entity } from '../../../src/framework/entity.js';
-import { NullGraphicsDevice } from '../../../src/platform/graphics/null/null-graphics-device.js';
 import { LAYERID_WORLD } from '../../../src/scene/constants.js';
+import { createApp } from '../../app.mjs';
 
 
 describe('BatchManager', function () {
@@ -11,9 +10,7 @@ describe('BatchManager', function () {
     let app;
 
     beforeEach(function () {
-        const canvas = document.createElement('canvas');
-        const graphicsDevice = new NullGraphicsDevice(canvas);
-        app = new Application(canvas, { graphicsDevice });
+        app = createApp();
 
         this.bg = app.batcher.addGroup('Test Group', false, 100);
     });

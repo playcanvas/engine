@@ -1,14 +1,15 @@
 import { expect } from 'chai';
 import { restore, spy, stub } from 'sinon';
 
-import { Application } from '../../../src/framework/application.js';
 import { Entity } from '../../../src/framework/entity.js';
 import { EntityReference } from '../../../src/framework/utils/entity-reference.js';
-import { NullGraphicsDevice } from '../../../src/platform/graphics/null/null-graphics-device.js';
 import { DummyComponentSystem } from '../test-component/system.mjs';
+import { createApp } from '../../app.mjs';
 
-
-/** @import { Component } from '../../../../src/framework/components/component.js' */
+/**
+ * @import { Application } from '../../../../src/framework/application.js'
+ * @import { Component } from '../../../../src/framework/components/component.js'
+ */
 
 describe('EntityReference', function () {
     /** @type {Application} */
@@ -23,9 +24,7 @@ describe('EntityReference', function () {
     let otherEntity2;
 
     beforeEach(function () {
-        const canvas = document.createElement('canvas');
-        const graphicsDevice = new NullGraphicsDevice(canvas);
-        app = new Application(canvas, { graphicsDevice });
+        app = createApp();
 
         app.systems.add(new DummyComponentSystem(app));
 

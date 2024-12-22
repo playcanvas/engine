@@ -3,11 +3,10 @@ import { restore } from 'sinon';
 
 import { Color } from '../../../../src/core/math/color.js';
 import { Vec2 } from '../../../../src/core/math/vec2.js';
-import { Application } from '../../../../src/framework/application.js';
 import { Asset } from '../../../../src/framework/asset/asset.js';
 import { Entity } from '../../../../src/framework/entity.js';
 import { CanvasFont } from '../../../../src/framework/font/canvas-font.js';
-import { NullGraphicsDevice } from '../../../../src/platform/graphics/null/null-graphics-device.js';
+import { createApp } from '../../../app.mjs';
 
 
 describe('TextElement', function () {
@@ -18,9 +17,7 @@ describe('TextElement', function () {
     let fontAsset;
 
     beforeEach(function (done) {
-        const canvas = document.createElement('canvas');
-        const graphicsDevice = new NullGraphicsDevice(canvas);
-        app = new Application(canvas, { graphicsDevice });
+        app = createApp();
 
         buildElement(done);
     });

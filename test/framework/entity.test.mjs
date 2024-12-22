@@ -3,7 +3,6 @@ import { stub } from 'sinon';
 
 import { DummyComponentSystem } from './test-component/system.mjs';
 import { Color } from '../../src/core/math/color.js';
-import { Application } from '../../src/framework/application.js';
 import { AnimComponent } from '../../src/framework/components/anim/component.js';
 import { AnimationComponent } from '../../src/framework/components/animation/component.js';
 import { AudioListenerComponent } from '../../src/framework/components/audio-listener/component.js';
@@ -28,7 +27,7 @@ import { SpriteComponent } from '../../src/framework/components/sprite/component
 import { ZoneComponent } from '../../src/framework/components/zone/component.js';
 import { Entity } from '../../src/framework/entity.js';
 import { createScript } from '../../src/framework/script/script-create.js';
-import { NullGraphicsDevice } from '../../src/platform/graphics/null/null-graphics-device.js';
+import { createApp } from '../app.mjs';
 
 
 describe('Entity', function () {
@@ -36,9 +35,7 @@ describe('Entity', function () {
     let app;
 
     beforeEach(function () {
-        const canvas = document.createElement('canvas');
-        const graphicsDevice = new NullGraphicsDevice(canvas);
-        app = new Application(canvas, { graphicsDevice });
+        app = createApp();
 
         app.systems.add(new DummyComponentSystem(app));
     });

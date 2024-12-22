@@ -7,10 +7,9 @@ import { AnimCurve } from '../../../../src/framework/anim/evaluator/anim-curve.j
 import { AnimData } from '../../../../src/framework/anim/evaluator/anim-data.js';
 import { AnimEvaluator } from '../../../../src/framework/anim/evaluator/anim-evaluator.js';
 import { AnimTrack } from '../../../../src/framework/anim/evaluator/anim-track.js';
-import { Application } from '../../../../src/framework/application.js';
 import { AnimComponentBinder } from '../../../../src/framework/components/anim/component-binder.js';
 import { Entity } from '../../../../src/framework/entity.js';
-import { NullGraphicsDevice } from '../../../../src/platform/graphics/null/null-graphics-device.js';
+import { createApp } from '../../../app.mjs';
 
 
 describe('AnimController', function () {
@@ -19,9 +18,7 @@ describe('AnimController', function () {
     let controller;
 
     beforeEach(function () {
-        const canvas = document.createElement('canvas');
-        const graphicsDevice = new NullGraphicsDevice(canvas);
-        app = new Application(canvas, { graphicsDevice });
+        app = createApp();
 
         const states = [
             {

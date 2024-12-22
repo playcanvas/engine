@@ -1,6 +1,5 @@
 import { expect } from 'chai';
 
-import { Application } from '../../src/framework/application.js';
 import { AssetRegistry } from '../../src/framework/asset/asset-registry.js';
 import { ComponentSystemRegistry } from '../../src/framework/components/registry.js';
 import { FILLMODE_KEEP_ASPECT, RESOLUTION_FIXED } from '../../src/framework/constants.js';
@@ -12,19 +11,16 @@ import { SceneRegistry } from '../../src/framework/scene-registry.js';
 import { ScriptRegistry } from '../../src/framework/script/script-registry.js';
 import { XrManager } from '../../src/framework/xr/xr-manager.js';
 import { GraphicsDevice } from '../../src/platform/graphics/graphics-device.js';
-import { NullGraphicsDevice } from '../../src/platform/graphics/null/null-graphics-device.js';
 import { BatchManager } from '../../src/scene/batching/batch-manager.js';
 import { Scene } from '../../src/scene/scene.js';
-
+import { createApp } from '../app.mjs';
 
 describe('Application', function () {
 
     let app;
 
     beforeEach(function () {
-        const canvas = document.createElement('canvas');
-        const graphicsDevice = new NullGraphicsDevice(canvas);
-        app = new Application(canvas, { graphicsDevice });
+        app = createApp();
     });
 
     afterEach(function () {

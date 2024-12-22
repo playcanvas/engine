@@ -4,17 +4,16 @@ import { createSandbox } from 'sinon';
 import { Color } from '../../../../src/core/math/color.js';
 import { Vec2 } from '../../../../src/core/math/vec2.js';
 import { Vec4 } from '../../../../src/core/math/vec4.js';
-import { Application } from '../../../../src/framework/application.js';
 import { Asset } from '../../../../src/framework/asset/asset.js';
 import { FITMODE_CONTAIN, FITMODE_STRETCH } from '../../../../src/framework/components/element/constants.js';
 import { ImageElement } from '../../../../src/framework/components/element/image-element.js';
 import { Entity } from '../../../../src/framework/entity.js';
-import { NullGraphicsDevice } from '../../../../src/platform/graphics/null/null-graphics-device.js';
 import { Texture } from '../../../../src/platform/graphics/texture.js';
 import { SPRITE_RENDERMODE_SIMPLE, SPRITE_RENDERMODE_SLICED } from '../../../../src/scene/constants.js';
 import { StandardMaterial } from '../../../../src/scene/materials/standard-material.js';
 import { Sprite } from '../../../../src/scene/sprite.js';
 import { TextureAtlas } from '../../../../src/scene/texture-atlas.js';
+import { createApp } from '../../../app.mjs';
 
 
 describe('ImageElement', function () {
@@ -23,9 +22,7 @@ describe('ImageElement', function () {
     let sandbox;
 
     beforeEach(function (done) {
-        const canvas = document.createElement('canvas');
-        const graphicsDevice = new NullGraphicsDevice(canvas);
-        app = new Application(canvas, { graphicsDevice });
+        app = createApp();
 
         sandbox = createSandbox();
 

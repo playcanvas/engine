@@ -2,16 +2,17 @@ import { expect } from 'chai';
 
 import { Vec2 } from '../../../../src/core/math/vec2.js';
 import { Vec4 } from '../../../../src/core/math/vec4.js';
-import { Application } from '../../../../src/framework/application.js';
 import { ELEMENTTYPE_GROUP } from '../../../../src/framework/components/element/constants.js';
 import { FITTING_BOTH, FITTING_NONE, FITTING_SHRINK, FITTING_STRETCH } from '../../../../src/framework/components/layout-group/constants.js';
 import { LayoutCalculator } from '../../../../src/framework/components/layout-group/layout-calculator.js';
 import { Entity } from '../../../../src/framework/entity.js';
-import { NullGraphicsDevice } from '../../../../src/platform/graphics/null/null-graphics-device.js';
 import { ORIENTATION_HORIZONTAL, ORIENTATION_VERTICAL } from '../../../../src/scene/constants.js';
+import { createApp } from '../../../app.mjs';
 
-
-/** @import { ElementComponent } from '../../../../src/framework/components/element/component.js' */
+/**
+ * @import { Application } from '../../../../src/framework/application.js'
+ * @import { ElementComponent } from '../../../../src/framework/components/element/component.js'
+ */
 
 describe('LayoutCalculator', function () {
     /** @type {Application} */
@@ -61,9 +62,7 @@ describe('LayoutCalculator', function () {
     };
 
     beforeEach(function () {
-        const canvas = document.createElement('canvas');
-        const graphicsDevice = new NullGraphicsDevice(canvas);
-        app = new Application(canvas, { graphicsDevice });
+        app = createApp();
 
         calculator = new LayoutCalculator();
 
