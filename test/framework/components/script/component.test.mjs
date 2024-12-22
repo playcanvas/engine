@@ -55,14 +55,12 @@ describe('ScriptComponent', function () {
         const e = new Entity();
 
         e.addComponent('script', {
-            'enabled': true,
-            'order': [
-                'scriptA'
-            ],
-            'scripts': {
-                'scriptA': {
-                    'enabled': true,
-                    'attributes': {}
+            enabled: true,
+            order: ['scriptA'],
+            scripts: {
+                scriptA: {
+                    enabled: true,
+                    attributes: {}
                 }
             }
         });
@@ -81,19 +79,16 @@ describe('ScriptComponent', function () {
         const e = new Entity();
 
         e.addComponent('script', {
-            'enabled': true,
-            'order': [
-                'scriptA',
-                'scriptB'
-            ],
-            'scripts': {
-                'scriptA': {
-                    'enabled': true,
-                    'attributes': {}
+            enabled: true,
+            order: ['scriptA', 'scriptB'],
+            scripts: {
+                scriptA: {
+                    enabled: true,
+                    attributes: {}
                 },
-                'scriptB': {
-                    'enabled': true,
-                    'attributes': {}
+                scriptB: {
+                    enabled: true,
+                    attributes: {}
                 }
             }
         });
@@ -116,14 +111,12 @@ describe('ScriptComponent', function () {
         const e = new Entity();
         e.enabled = false;
         e.addComponent('script', {
-            'enabled': true,
-            'order': [
-                'scriptA'
-            ],
-            'scripts': {
-                'scriptA': {
-                    'enabled': true,
-                    'attributes': {}
+            enabled: true,
+            order: ['scriptA'],
+            scripts: {
+                scriptA: {
+                    enabled: true,
+                    attributes: {}
                 }
             }
         });
@@ -143,14 +136,12 @@ describe('ScriptComponent', function () {
     it('initialize and postInitialize are called on script component that is enabled later', function () {
         const e = new Entity();
         e.addComponent('script', {
-            'enabled': false,
-            'order': [
-                'scriptA'
-            ],
-            'scripts': {
-                'scriptA': {
-                    'enabled': true,
-                    'attributes': {}
+            enabled: false,
+            order: ['scriptA'],
+            scripts: {
+                scriptA: {
+                    enabled: true,
+                    attributes: {}
                 }
             }
         });
@@ -170,14 +161,12 @@ describe('ScriptComponent', function () {
     it('initialize and postInitialize are called on script instance that is enabled later', function () {
         const e = new Entity();
         e.addComponent('script', {
-            'enabled': true,
-            'order': [
-                'scriptA'
-            ],
-            'scripts': {
-                'scriptA': {
-                    'enabled': false,
-                    'attributes': {}
+            enabled: true,
+            order: ['scriptA'],
+            scripts: {
+                scriptA: {
+                    enabled: false,
+                    attributes: {}
                 }
             }
         });
@@ -209,19 +198,16 @@ describe('ScriptComponent', function () {
         const e = new Entity();
 
         e.addComponent('script', {
-            'enabled': true,
-            'order': [
-                'scriptA',
-                'scriptB'
-            ],
-            'scripts': {
-                'scriptA': {
-                    'enabled': true,
-                    'attributes': {}
+            enabled: true,
+            order: ['scriptA', 'scriptB'],
+            scripts: {
+                scriptA: {
+                    enabled: true,
+                    attributes: {}
                 },
-                'scriptB': {
-                    'enabled': true,
-                    'attributes': {}
+                scriptB: {
+                    enabled: true,
+                    attributes: {}
                 }
             }
         });
@@ -250,19 +236,16 @@ describe('ScriptComponent', function () {
         e.enabled = false;
 
         e.addComponent('script', {
-            'enabled': true,
-            'order': [
-                'scriptA',
-                'scriptB'
-            ],
-            'scripts': {
-                'scriptA': {
-                    'enabled': true,
-                    'attributes': {}
+            enabled: true,
+            order: ['scriptA', 'scriptB'],
+            scripts: {
+                scriptA: {
+                    enabled: true,
+                    attributes: {}
                 },
-                'scriptB': {
-                    'enabled': true,
-                    'attributes': {}
+                scriptB: {
+                    enabled: true,
+                    attributes: {}
                 }
             }
         });
@@ -274,15 +257,13 @@ describe('ScriptComponent', function () {
         const enabler = new Entity('enabler');
 
         enabler.addComponent('script', {
-            'enabled': true,
-            'order': [
-                'enabler'
-            ],
-            'scripts': {
-                'enabler': {
-                    'enabled': true,
-                    'attributes': {
-                        'entityToEnable': e.getGuid()
+            enabled: true,
+            order: ['enabler'],
+            scripts: {
+                enabler: {
+                    enabled: true,
+                    attributes: {
+                        entityToEnable: e.getGuid()
                     }
                 }
             }
@@ -303,19 +284,16 @@ describe('ScriptComponent', function () {
         const e = new Entity('entity to enable');
 
         e.addComponent('script', {
-            'enabled': false,
-            'order': [
-                'scriptA',
-                'scriptB'
-            ],
-            'scripts': {
-                'scriptA': {
-                    'enabled': true,
-                    'attributes': {}
+            enabled: false,
+            order: ['scriptA', 'scriptB'],
+            scripts: {
+                scriptA: {
+                    enabled: true,
+                    attributes: {}
                 },
-                'scriptB': {
-                    'enabled': true,
-                    'attributes': {}
+                scriptB: {
+                    enabled: true,
+                    attributes: {}
                 }
             }
         });
@@ -327,15 +305,13 @@ describe('ScriptComponent', function () {
         const enabler = new Entity();
 
         enabler.addComponent('script', {
-            'enabled': true,
-            'order': [
-                'enabler'
-            ],
-            'scripts': {
-                'enabler': {
-                    'enabled': true,
-                    'attributes': {
-                        'entityToEnable': e.getGuid()
+            enabled: true,
+            order: ['enabler'],
+            scripts: {
+                enabler: {
+                    enabled: true,
+                    attributes: {
+                        entityToEnable: e.getGuid()
                     }
                 }
             }
@@ -357,19 +333,16 @@ describe('ScriptComponent', function () {
         const e = new Entity('entity to enable');
 
         e.addComponent('script', {
-            'enabled': true,
-            'order': [
-                'scriptA',
-                'scriptB'
-            ],
-            'scripts': {
-                'scriptA': {
-                    'enabled': false,
-                    'attributes': {}
+            enabled: true,
+            order: ['scriptA', 'scriptB'],
+            scripts: {
+                scriptA: {
+                    enabled: false,
+                    attributes: {}
                 },
-                'scriptB': {
-                    'enabled': false,
-                    'attributes': {}
+                scriptB: {
+                    enabled: false,
+                    attributes: {}
                 }
             }
         });
@@ -381,15 +354,13 @@ describe('ScriptComponent', function () {
         const enabler = new Entity();
 
         enabler.addComponent('script', {
-            'enabled': true,
-            'order': [
-                'enabler'
-            ],
-            'scripts': {
-                'enabler': {
-                    'enabled': true,
-                    'attributes': {
-                        'entityToEnable': e.getGuid()
+            enabled: true,
+            order: ['enabler'],
+            scripts: {
+                enabler: {
+                    enabled: true,
+                    attributes: {
+                        entityToEnable: e.getGuid()
                     }
                 }
             }
@@ -412,38 +383,32 @@ describe('ScriptComponent', function () {
         const e = new Entity();
 
         e.addComponent('script', {
-            'enabled': true,
-            'order': [
-                'scriptA',
-                'scriptB'
-            ],
-            'scripts': {
-                'scriptA': {
-                    'enabled': true,
-                    'attributes': {}
+            enabled: true,
+            order: ['scriptA', 'scriptB'],
+            scripts: {
+                scriptA: {
+                    enabled: true,
+                    attributes: {}
                 },
-                'scriptB': {
-                    'enabled': true,
-                    'attributes': {}
+                scriptB: {
+                    enabled: true,
+                    attributes: {}
                 }
             }
         });
 
         const c1 = new Entity();
         c1.addComponent('script', {
-            'enabled': true,
-            'order': [
-                'scriptA',
-                'scriptB'
-            ],
-            'scripts': {
-                'scriptA': {
-                    'enabled': true,
-                    'attributes': {}
+            enabled: true,
+            order: ['scriptA', 'scriptB'],
+            scripts: {
+                scriptA: {
+                    enabled: true,
+                    attributes: {}
                 },
-                'scriptB': {
-                    'enabled': true,
-                    'attributes': {}
+                scriptB: {
+                    enabled: true,
+                    attributes: {}
                 }
             }
         });
@@ -451,19 +416,16 @@ describe('ScriptComponent', function () {
 
         const c2 = new Entity();
         c2.addComponent('script', {
-            'enabled': true,
-            'order': [
-                'scriptA',
-                'scriptB'
-            ],
-            'scripts': {
-                'scriptA': {
-                    'enabled': true,
-                    'attributes': {}
+            enabled: true,
+            order: ['scriptA', 'scriptB'],
+            scripts: {
+                scriptA: {
+                    enabled: true,
+                    attributes: {}
                 },
-                'scriptB': {
-                    'enabled': true,
-                    'attributes': {}
+                scriptB: {
+                    enabled: true,
+                    attributes: {}
                 }
             }
         });
@@ -471,19 +433,16 @@ describe('ScriptComponent', function () {
 
         const c3 = new Entity();
         c3.addComponent('script', {
-            'enabled': true,
-            'order': [
-                'scriptA',
-                'scriptB'
-            ],
-            'scripts': {
-                'scriptA': {
-                    'enabled': true,
-                    'attributes': {}
+            enabled: true,
+            order: ['scriptA', 'scriptB'],
+            scripts: {
+                scriptA: {
+                    enabled: true,
+                    attributes: {}
                 },
-                'scriptB': {
-                    'enabled': true,
-                    'attributes': {}
+                scriptB: {
+                    enabled: true,
+                    attributes: {}
                 }
             }
         });
@@ -519,15 +478,12 @@ describe('ScriptComponent', function () {
         const src = new Entity();
         src.enabled = false;
         src.addComponent('script', {
-            'enabled': true,
-            'order': [
-                'postInitializeReporter'
-            ],
+            enabled: true,
+            order: ['postInitializeReporter'],
             'scripts': {
-                'postInitializeReporter': {
-                    'enabled': true,
-                    'attributes': {
-                    }
+                postInitializeReporter: {
+                    enabled: true,
+                    attributes: {}
                 }
             }
         });
@@ -536,15 +492,13 @@ describe('ScriptComponent', function () {
 
         const e = new Entity();
         e.addComponent('script', {
-            'enabled': true,
-            'order': [
-                'postCloner'
-            ],
-            'scripts': {
-                'postCloner': {
-                    'enabled': true,
-                    'attributes': {
-                        'entityToClone': src.getGuid()
+            enabled: true,
+            order: ['postCloner'],
+            scripts: {
+                postCloner: {
+                    enabled: true,
+                    attributes: {
+                        entityToClone: src.getGuid()
                     }
                 }
             }
@@ -563,15 +517,13 @@ describe('ScriptComponent', function () {
 
         const e = new Entity();
         e.addComponent('script', {
-            'enabled': true,
-            'order': [
-                'scriptWithAttributes'
-            ],
-            'scripts': {
-                'scriptWithAttributes': {
-                    'enabled': true,
-                    'attributes': {
-                        'attribute1': e2.getGuid()
+            enabled: true,
+            order: ['scriptWithAttributes'],
+            scripts: {
+                scriptWithAttributes: {
+                    enabled: true,
+                    attributes: {
+                        attribute1: e2.getGuid()
                     }
                 }
             }
@@ -592,15 +544,13 @@ describe('ScriptComponent', function () {
         const e = new Entity();
         e.enabled = false;
         e.addComponent('script', {
-            'enabled': true,
-            'order': [
-                'scriptWithAttributes'
-            ],
-            'scripts': {
-                'scriptWithAttributes': {
-                    'enabled': true,
-                    'attributes': {
-                        'attribute1': e2.getGuid()
+            enabled: true,
+            order: ['scriptWithAttributes'],
+            scripts: {
+                scriptWithAttributes: {
+                    enabled: true,
+                    attributes: {
+                        attribute1: e2.getGuid()
                     }
                 }
             }
@@ -619,15 +569,13 @@ describe('ScriptComponent', function () {
 
         const e = new Entity();
         e.addComponent('script', {
-            'enabled': false,
-            'order': [
-                'scriptWithAttributes'
-            ],
-            'scripts': {
-                'scriptWithAttributes': {
-                    'enabled': true,
-                    'attributes': {
-                        'attribute1': e2.getGuid()
+            enabled: false,
+            order: ['scriptWithAttributes'],
+            scripts: {
+                scriptWithAttributes: {
+                    enabled: true,
+                    attributes: {
+                        attribute1: e2.getGuid()
                     }
                 }
             }
@@ -645,15 +593,13 @@ describe('ScriptComponent', function () {
 
         const e = new Entity();
         e.addComponent('script', {
-            'enabled': true,
-            'order': [
-                'scriptWithAttributes'
-            ],
-            'scripts': {
-                'scriptWithAttributes': {
-                    'enabled': false,
-                    'attributes': {
-                        'attribute1': e2.getGuid()
+            enabled: true,
+            order: ['scriptWithAttributes'],
+            scripts: {
+                scriptWithAttributes: {
+                    enabled: false,
+                    attributes: {
+                        attribute1: e2.getGuid()
                     }
                 }
             }
@@ -671,15 +617,13 @@ describe('ScriptComponent', function () {
 
         const e = new Entity();
         e.addComponent('script', {
-            'enabled': true,
-            'order': [
-                'scriptWithAttributes'
-            ],
-            'scripts': {
-                'scriptWithAttributes': {
-                    'enabled': true,
-                    'attributes': {
-                        'attribute1': e2.getGuid()
+            enabled: true,
+            order: ['scriptWithAttributes'],
+            scripts: {
+                scriptWithAttributes: {
+                    enabled: true,
+                    attributes: {
+                        attribute1: e2.getGuid()
                     }
                 }
             }
@@ -702,15 +646,13 @@ describe('ScriptComponent', function () {
         const e = new Entity();
         e.enabled = false;
         e.addComponent('script', {
-            'enabled': true,
-            'order': [
-                'scriptWithAttributes'
-            ],
-            'scripts': {
-                'scriptWithAttributes': {
-                    'enabled': true,
-                    'attributes': {
-                        'attribute1': e2.getGuid()
+            enabled: true,
+            order: ['scriptWithAttributes'],
+            scripts: {
+                scriptWithAttributes: {
+                    enabled: true,
+                    attributes: {
+                        attribute1: e2.getGuid()
                     }
                 }
             }
@@ -732,15 +674,13 @@ describe('ScriptComponent', function () {
 
         const e = new Entity();
         e.addComponent('script', {
-            'enabled': false,
-            'order': [
-                'scriptWithAttributes'
-            ],
-            'scripts': {
-                'scriptWithAttributes': {
-                    'enabled': true,
-                    'attributes': {
-                        'attribute1': e2.getGuid()
+            enabled: false,
+            order: ['scriptWithAttributes'],
+            scripts: {
+                scriptWithAttributes: {
+                    enabled: true,
+                    attributes: {
+                        attribute1: e2.getGuid()
                     }
                 }
             }
@@ -762,15 +702,13 @@ describe('ScriptComponent', function () {
 
         const e = new Entity();
         e.addComponent('script', {
-            'enabled': true,
-            'order': [
-                'scriptWithAttributes'
-            ],
-            'scripts': {
-                'scriptWithAttributes': {
-                    'enabled': false,
-                    'attributes': {
-                        'attribute1': e2.getGuid()
+            enabled: true,
+            order: ['scriptWithAttributes'],
+            scripts: {
+                scriptWithAttributes: {
+                    enabled: false,
+                    attributes: {
+                        attribute1: e2.getGuid()
                     }
                 }
             }
@@ -867,18 +805,16 @@ describe('ScriptComponent', function () {
     it('json script attributes are initialized correctly', function () {
         const e = new Entity();
         e.addComponent('script', {
-            'enabled': true,
-            'order': [
-                'scriptWithAttributes'
-            ],
-            'scripts': {
-                'scriptWithAttributes': {
-                    'enabled': true,
-                    'attributes': {
-                        'attribute3': {
+            enabled: true,
+            order: ['scriptWithAttributes'],
+            scripts: {
+                scriptWithAttributes: {
+                    enabled: true,
+                    attributes: {
+                        attribute3: {
                             fieldNumber: 1
                         },
-                        'attribute4': [{
+                        attribute4: [{
                             fieldNumber: 2
                         }, {
                             fieldNumber: 'shouldBeNull'
@@ -916,19 +852,17 @@ describe('ScriptComponent', function () {
         e.addChild(child);
 
         e.addComponent('script', {
-            'enabled': true,
-            'order': [
-                'scriptWithAttributes'
-            ],
-            'scripts': {
-                'scriptWithAttributes': {
-                    'enabled': true,
-                    'attributes': {
-                        'attribute3': {
+            enabled: true,
+            order: ['scriptWithAttributes'],
+            scripts: {
+                scriptWithAttributes: {
+                    enabled: true,
+                    attributes: {
+                        attribute3: {
                             fieldNumber: 1,
                             fieldEntity: child.getGuid()
                         },
-                        'attribute4': [{
+                        attribute4: [{
                             fieldNumber: 2,
                             fieldEntity: child.getGuid()
                         }]
@@ -1010,14 +944,12 @@ describe('ScriptComponent', function () {
     it('enable is fired when entity becomes enabled', function () {
         const e = new Entity();
         e.addComponent('script', {
-            'enabled': true,
-            'order': [
-                'scriptA'
-            ],
-            'scripts': {
-                'scriptA': {
-                    'enabled': true,
-                    'attributes': {}
+            enabled: true,
+            order: ['scriptA'],
+            scripts: {
+                scriptA: {
+                    enabled: true,
+                    attributes: {}
                 }
             }
         });
@@ -1044,14 +976,12 @@ describe('ScriptComponent', function () {
     it('disable is fired when entity becomes disabled', function () {
         const e = new Entity();
         e.addComponent('script', {
-            'enabled': true,
-            'order': [
-                'scriptA'
-            ],
-            'scripts': {
-                'scriptA': {
-                    'enabled': true,
-                    'attributes': {}
+            enabled: true,
+            order: ['scriptA'],
+            scripts: {
+                scriptA: {
+                    enabled: true,
+                    attributes: {}
                 }
             }
         });
@@ -1072,14 +1002,12 @@ describe('ScriptComponent', function () {
     it('enable is fired when script component becomes enabled', function () {
         const e = new Entity();
         e.addComponent('script', {
-            'enabled': true,
-            'order': [
-                'scriptA'
-            ],
-            'scripts': {
-                'scriptA': {
-                    'enabled': true,
-                    'attributes': {}
+            enabled: true,
+            order: ['scriptA'],
+            scripts: {
+                scriptA: {
+                    enabled: true,
+                    attributes: {}
                 }
             }
         });
@@ -1102,14 +1030,12 @@ describe('ScriptComponent', function () {
     it('enable is not fired if script component started disabled', function () {
         const e = new Entity();
         e.addComponent('script', {
-            'enabled': false,
-            'order': [
-                'scriptA'
-            ],
-            'scripts': {
-                'scriptA': {
-                    'enabled': true,
-                    'attributes': {}
+            enabled: false,
+            order: ['scriptA'],
+            scripts: {
+                scriptA: {
+                    enabled: true,
+                    attributes: {}
                 }
             }
         });
@@ -1126,14 +1052,12 @@ describe('ScriptComponent', function () {
     it('disable is fired when script component becomes disabled', function () {
         const e = new Entity();
         e.addComponent('script', {
-            'enabled': true,
-            'order': [
-                'scriptA'
-            ],
-            'scripts': {
-                'scriptA': {
-                    'enabled': true,
-                    'attributes': {}
+            enabled: true,
+            order: ['scriptA'],
+            scripts: {
+                scriptA: {
+                    enabled: true,
+                    attributes: {}
                 }
             }
         });
@@ -1155,21 +1079,18 @@ describe('ScriptComponent', function () {
     it('if entity is disabled in initialize call and enabled later, postInitialize is called only later', function () {
         const e = new Entity();
         e.addComponent('script', {
-            'enabled': true,
-            'order': [
-                'disabler',
-                'scriptA'
-            ],
-            'scripts': {
-                'disabler': {
-                    'enabled': true,
-                    'attributes': {
-                        'disableEntity': true
+            enabled: true,
+            order: ['disabler', 'scriptA'],
+            scripts: {
+                disabler: {
+                    enabled: true,
+                    attributes: {
+                        disableEntity: true
                     }
                 },
-                'scriptA': {
-                    'enabled': true,
-                    'attributes': {}
+                scriptA: {
+                    enabled: true,
+                    attributes: {}
                 }
             }
         });
@@ -1192,21 +1113,18 @@ describe('ScriptComponent', function () {
     it('if script component is disabled in initialize call and enabled later, postInitialize is called only later', function () {
         const e = new Entity();
         e.addComponent('script', {
-            'enabled': true,
-            'order': [
-                'disabler',
-                'scriptA'
-            ],
-            'scripts': {
-                'disabler': {
-                    'enabled': true,
-                    'attributes': {
-                        'disableScriptComponent': true
+            enabled: true,
+            order: ['disabler', 'scriptA'],
+            scripts: {
+                disabler: {
+                    enabled: true,
+                    attributes: {
+                        disableScriptComponent: true
                     }
                 },
-                'scriptA': {
-                    'enabled': true,
-                    'attributes': {}
+                scriptA: {
+                    enabled: true,
+                    attributes: {}
                 }
             }
         });
@@ -1229,21 +1147,18 @@ describe('ScriptComponent', function () {
     it('if script instance is disabled in initialize call and enabled later, postInitialize is called only later', function () {
         const e = new Entity();
         e.addComponent('script', {
-            'enabled': true,
-            'order': [
-                'disabler',
-                'scriptA'
-            ],
-            'scripts': {
-                'disabler': {
-                    'enabled': true,
-                    'attributes': {
-                        'disableScriptInstance': true
+            enabled: true,
+            order: ['disabler', 'scriptA'],
+            scripts: {
+                disabler: {
+                    enabled: true,
+                    attributes: {
+                        disableScriptInstance: true
                     }
                 },
-                'scriptA': {
-                    'enabled': true,
-                    'attributes': {}
+                scriptA: {
+                    enabled: true,
+                    attributes: {}
                 }
             }
         });
@@ -1266,12 +1181,12 @@ describe('ScriptComponent', function () {
     it('initialize and postInitialize are called if script is added to the script registry later', function (done) {
         const e = new Entity();
         e.addComponent('script', {
-            'enabled': true,
-            'order': ['loadedLater'],
-            'scripts': {
-                'loadedLater': {
-                    'enabled': true,
-                    'attributes': {}
+            enabled: true,
+            order: ['loadedLater'],
+            scripts: {
+                loadedLater: {
+                    enabled: true,
+                    attributes: {}
                 }
             }
         });
@@ -1296,13 +1211,13 @@ describe('ScriptComponent', function () {
     it('if entity is disabled in initialize call of script that is added to the registry later, postInitialize is called only when it becomes enabled again', function (done) {
         const e = new Entity();
         e.addComponent('script', {
-            'enabled': true,
-            'order': ['loadedLater'],
-            'scripts': {
-                'loadedLater': {
-                    'enabled': true,
-                    'attributes': {
-                        'disableEntity': true
+            enabled: true,
+            order: ['loadedLater'],
+            scripts: {
+                loadedLater: {
+                    enabled: true,
+                    attributes: {
+                        disableEntity: true
                     }
                 }
             }
@@ -1332,13 +1247,13 @@ describe('ScriptComponent', function () {
     it('if script component is disabled in initialize call of script that is added to the registry later, postInitialize is called only when it becomes enabled again', function (done) {
         const e = new Entity();
         e.addComponent('script', {
-            'enabled': true,
-            'order': ['loadedLater'],
-            'scripts': {
-                'loadedLater': {
-                    'enabled': true,
-                    'attributes': {
-                        'disableScriptComponent': true
+            enabled: true,
+            order: ['loadedLater'],
+            scripts: {
+                loadedLater: {
+                    enabled: true,
+                    attributes: {
+                        disableScriptComponent: true
                     }
                 }
             }
@@ -1368,13 +1283,13 @@ describe('ScriptComponent', function () {
     it('if script instance is disabled in initialize call of script that is added to the registry later, postInitialize is called only when it becomes enabled again', function (done) {
         const e = new Entity();
         e.addComponent('script', {
-            'enabled': true,
-            'order': ['loadedLater'],
-            'scripts': {
-                'loadedLater': {
-                    'enabled': true,
-                    'attributes': {
-                        'disableScriptInstance': true
+            enabled: true,
+            order: ['loadedLater'],
+            scripts: {
+                loadedLater: {
+                    enabled: true,
+                    attributes: {
+                        disableScriptInstance: true
                     }
                 }
             }
@@ -1405,15 +1320,15 @@ describe('ScriptComponent', function () {
     it('script attributes are initialized when script is added to the registry later', function (done) {
         const e = new Entity();
         e.addComponent('script', {
-            'enabled': true,
-            'order': ['loadedLater'],
-            'scripts': {
-                'loadedLater': {
-                    'enabled': true,
-                    'attributes': {
-                        'disableEntity': true,
-                        'disableScriptComponent': true,
-                        'disableScriptInstance': true
+            enabled: true,
+            order: ['loadedLater'],
+            scripts: {
+                loadedLater: {
+                    enabled: true,
+                    attributes: {
+                        disableEntity: true,
+                        disableScriptComponent: true,
+                        disableScriptInstance: true
                     }
                 }
             }
