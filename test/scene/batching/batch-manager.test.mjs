@@ -7,15 +7,19 @@ import { expect } from 'chai';
 
 describe('BatchManager', function () {
 
+    let app;
+
     beforeEach(function () {
         const canvas = document.createElement('canvas');
-        this.app = new Application(canvas, { graphicsDevice: new NullGraphicsDevice(canvas) });
+        const graphicsDevice = new NullGraphicsDevice(canvas);
+        app = new Application(canvas, { graphicsDevice });
 
-        this.bg = this.app.batcher.addGroup('Test Group', false, 100);
+        this.bg = app.batcher.addGroup('Test Group', false, 100);
     });
 
     afterEach(function () {
-        this.app.destroy();
+        app?.destroy();
+        app = null;
     });
 
     it('generate: removes model component mesh instances from layer', function () {
@@ -33,12 +37,12 @@ describe('BatchManager', function () {
             batchGroupId: this.bg.id
         });
 
-        this.app.root.addChild(e1);
-        this.app.root.addChild(e2);
+        app.root.addChild(e1);
+        app.root.addChild(e2);
 
-        this.app.batcher.generate();
+        app.batcher.generate();
 
-        const layer = this.app.scene.layers.getLayerById(LAYERID_WORLD);
+        const layer = app.scene.layers.getLayerById(LAYERID_WORLD);
         const instances = layer.meshInstances;
 
         expect(instances.length).to.equal(1);
@@ -61,14 +65,14 @@ describe('BatchManager', function () {
             batchGroupId: this.bg.id
         });
 
-        this.app.root.addChild(e1);
-        this.app.root.addChild(e2);
+        app.root.addChild(e1);
+        app.root.addChild(e2);
 
-        this.app.batcher.generate();
+        app.batcher.generate();
 
         e2.enabled = false;
 
-        expect(this.app.batcher._dirtyGroups[0]).to.equal(this.bg.id);
+        expect(app.batcher._dirtyGroups[0]).to.equal(this.bg.id);
     });
 
 
@@ -91,12 +95,12 @@ describe('BatchManager', function () {
         e1.model.meshInstances[0].visible = false;
         e2.model.meshInstances[0].visible = false;
 
-        this.app.root.addChild(e1);
-        this.app.root.addChild(e2);
+        app.root.addChild(e1);
+        app.root.addChild(e2);
 
-        this.app.batcher.generate();
+        app.batcher.generate();
 
-        expect(this.app.batcher._batchList.length).to.equal(0);
+        expect(app.batcher._batchList.length).to.equal(0);
 
     });
 });

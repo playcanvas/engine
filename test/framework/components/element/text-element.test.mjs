@@ -18,9 +18,8 @@ describe('TextElement', function () {
 
     beforeEach(function (done) {
         const canvas = document.createElement('canvas');
-        app = new Application(canvas, {
-            graphicsDevice: new NullGraphicsDevice(canvas)
-        });
+        const graphicsDevice = new NullGraphicsDevice(canvas);
+        app = new Application(canvas, { graphicsDevice });
 
         buildElement(done);
     });
@@ -31,7 +30,8 @@ describe('TextElement', function () {
         }
 
         fontAsset = null;
-        app.destroy();
+        app?.destroy();
+        app = null;
         app = null;
         restore();
     });

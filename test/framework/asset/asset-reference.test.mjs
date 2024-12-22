@@ -15,7 +15,9 @@ describe('AssetReference', function () {
 
     beforeEach(function () {
         const canvas = document.createElement('canvas');
-        app = new Application(canvas, { graphicsDevice: new NullGraphicsDevice(canvas) });
+        const graphicsDevice = new NullGraphicsDevice(canvas);
+        app = new Application(canvas, { graphicsDevice });
+
         parent = fake();
         load = fake();
         remove = fake();
@@ -23,7 +25,9 @@ describe('AssetReference', function () {
     });
 
     afterEach(function () {
-        app.destroy();
+        app?.destroy();
+        app = null;
+
         restore();
     });
 

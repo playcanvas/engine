@@ -10,11 +10,13 @@ describe('ElementComponent', function () {
 
     beforeEach(function () {
         const canvas = document.createElement('canvas');
-        app = new Application(canvas, { graphicsDevice: new NullGraphicsDevice(canvas) });
+        const graphicsDevice = new NullGraphicsDevice(canvas);
+        app = new Application(canvas, { graphicsDevice });
     });
 
     afterEach(function () {
-        app.destroy();
+        app?.destroy();
+        app = null;
     });
 
     describe('#constructor', function () {

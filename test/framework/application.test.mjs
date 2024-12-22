@@ -18,12 +18,22 @@ import { expect } from 'chai';
 
 describe('Application', function () {
 
+    let app;
+
+    beforeEach(function () {
+        const canvas = document.createElement('canvas');
+        const graphicsDevice = new NullGraphicsDevice(canvas);
+        app = new Application(canvas, { graphicsDevice });
+    });
+
+    afterEach(function () {
+        app?.destroy();
+        app = null;
+    });
+
     describe('#constructor', function () {
 
         it('support no options', function () {
-            const canvas = document.createElement('canvas');
-            const app = new Application(canvas, { graphicsDevice: new NullGraphicsDevice(canvas) });
-
             expect(app.assets).to.be.instanceOf(AssetRegistry);
             expect(app.autoRender).to.be.true;
             expect(app.batcher).to.be.instanceOf(BatchManager);
@@ -54,11 +64,9 @@ describe('Application', function () {
     describe('#destroy', function () {
 
         it('destroys the application', function () {
-            const canvas = document.createElement('canvas');
-            const app = new Application(canvas, { graphicsDevice: new NullGraphicsDevice(canvas) });
-
             app.destroy();
-            //            expect(app.assets).to.be.null;
+
+            // expect(app.assets).to.be.null;
             expect(app.batcher).to.be.null;
             expect(app.elementInput).to.be.null;
             expect(app.gamepads).to.be.null;
@@ -74,7 +82,9 @@ describe('Application', function () {
             expect(app.scripts).to.be.null;
             expect(app.systems).to.be.null;
             expect(app.touch).to.be.null;
-            //            expect(app.xr).to.be.null;
+            // expect(app.xr).to.be.null;
+
+            app = null;
         });
 
     });

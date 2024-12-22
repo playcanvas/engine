@@ -31,7 +31,9 @@ describe('LayoutGroupComponent', function () {
 
     beforeEach(function () {
         const canvas = document.createElement('canvas');
-        app = new Application(canvas, { graphicsDevice: new NullGraphicsDevice(canvas) });
+        const graphicsDevice = new NullGraphicsDevice(canvas);
+        app = new Application(canvas, { graphicsDevice });
+
         system = app.systems.layoutgroup;
 
         entity0 = buildLayoutGroupEntity('0');
@@ -51,7 +53,8 @@ describe('LayoutGroupComponent', function () {
 
     afterEach(function () {
         restore();
-        app.destroy();
+        app?.destroy();
+        app = null;
     });
 
     it('reflows in ascending order of graph depth', function () {

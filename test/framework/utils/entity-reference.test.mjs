@@ -24,7 +24,8 @@ describe('EntityReference', function () {
 
     beforeEach(function () {
         const canvas = document.createElement('canvas');
-        app = new Application(canvas, { graphicsDevice: new NullGraphicsDevice(canvas) });
+        const graphicsDevice = new NullGraphicsDevice(canvas);
+        app = new Application(canvas, { graphicsDevice });
 
         app.systems.add(new DummyComponentSystem(app));
 
@@ -42,7 +43,8 @@ describe('EntityReference', function () {
 
     afterEach(function () {
         restore();
-        app.destroy();
+        app?.destroy();
+        app = null;
     });
 
     // Assertion helpers that rely on checking some private state. Usually I wouldn't do

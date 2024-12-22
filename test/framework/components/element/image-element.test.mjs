@@ -23,10 +23,10 @@ describe('ImageElement', function () {
 
     beforeEach(function (done) {
         const canvas = document.createElement('canvas');
+        const graphicsDevice = new NullGraphicsDevice(canvas);
+        app = new Application(canvas, { graphicsDevice });
+
         sandbox = createSandbox();
-        app = new Application(canvas, {
-            graphicsDevice: new NullGraphicsDevice(canvas)
-        });
 
         loadAllAssets(function () {
             done();
@@ -35,7 +35,8 @@ describe('ImageElement', function () {
 
     afterEach(function () {
         sandbox.restore();
-        app.destroy();
+        app?.destroy();
+        app = null;
         app = null;
     });
 

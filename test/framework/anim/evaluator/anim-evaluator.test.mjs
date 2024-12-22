@@ -14,10 +14,20 @@ import { expect } from 'chai';
 
 describe('AnimEvaluator', function () {
 
-    it('AnimEvaluator: update with clip blending', function () {
-        const canvas = document.createElement('canvas');
-        const app = new Application(canvas, { graphicsDevice: new NullGraphicsDevice(canvas) });
+    let app;
 
+    beforeEach(function () {
+        const canvas = document.createElement('canvas');
+        const graphicsDevice = new NullGraphicsDevice(canvas);
+        app = new Application(canvas, { graphicsDevice });
+    });
+
+    afterEach(function () {
+        app?.destroy();
+        app = null;
+    });
+
+    it('AnimEvaluator: update with clip blending', function () {
         // build the graph to be animated
         const parent = new GraphNode('parent');
         const child1 = new GraphNode('child1');
@@ -88,9 +98,6 @@ describe('AnimEvaluator', function () {
     });
 
     it('AnimEvaluator: update without clip blending', function () {
-        const canvas = document.createElement('canvas');
-        const app = new Application(canvas, { graphicsDevice: new NullGraphicsDevice(canvas) });
-
         // build the graph to be animated
         const parent = new GraphNode('parent');
         const child1 = new GraphNode('child1');

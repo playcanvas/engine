@@ -16,15 +16,19 @@ describe('AssetRegistry', function () {
     let retryDelay;
 
     beforeEach(function () {
+        const canvas = document.createElement('canvas');
+        const graphicsDevice = new NullGraphicsDevice(canvas);
+        app = new Application(canvas, { graphicsDevice });
+
         retryDelay = Http.retryDelay;
         Http.retryDelay = 1;
-        const canvas = document.createElement('canvas');
-        app = new Application(canvas, { graphicsDevice: new NullGraphicsDevice(canvas) });
     });
 
     afterEach(function () {
-        app.destroy();
         Http.retryDelay = retryDelay;
+
+        app?.destroy();
+        app = null;
         restore();
     });
 
