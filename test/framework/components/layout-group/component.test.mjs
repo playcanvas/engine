@@ -1,12 +1,14 @@
-import { ELEMENTTYPE_GROUP } from '../../../../src/framework/components/element/constants.js';
-import { Application } from '../../../../src/framework/application.js';
-import { Entity } from '../../../../src/framework/entity.js';
-import { NullGraphicsDevice } from '../../../../src/platform/graphics/null/null-graphics-device.js';
-
 import { expect } from 'chai';
 import { restore, spy, stub } from 'sinon';
 
-/** @import { LayoutGroupComponentSystem } from '../../../../src/framework/components/layout-group/system.js' */
+import { ELEMENTTYPE_GROUP } from '../../../../src/framework/components/element/constants.js';
+import { Entity } from '../../../../src/framework/entity.js';
+import { createApp } from '../../../app.mjs';
+
+/**
+ * @import { Application } from '../../../../src/framework/application.js'
+ * @import { LayoutGroupComponentSystem } from '../../../../src/framework/components/layout-group/system.js'
+ */
 
 describe('LayoutGroupComponent', function () {
     /** @type {Application} */
@@ -30,8 +32,8 @@ describe('LayoutGroupComponent', function () {
     };
 
     beforeEach(function () {
-        const canvas = document.createElement('canvas');
-        app = new Application(canvas, { graphicsDevice: new NullGraphicsDevice(canvas) });
+        app = createApp();
+
         system = app.systems.layoutgroup;
 
         entity0 = buildLayoutGroupEntity('0');
@@ -51,7 +53,8 @@ describe('LayoutGroupComponent', function () {
 
     afterEach(function () {
         restore();
-        app.destroy();
+        app?.destroy();
+        app = null;
     });
 
     it('reflows in ascending order of graph depth', function () {

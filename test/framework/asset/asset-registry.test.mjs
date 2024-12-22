@@ -1,14 +1,13 @@
-import { Application } from '../../../src/framework/application.js';
-import { Asset } from '../../../src/framework/asset/asset.js';
-import { AssetRegistry } from '../../../src/framework/asset/asset-registry.js';
-import { GlbContainerResource } from '../../../src/framework/parsers/glb-container-resource.js';
-import { ResourceLoader } from '../../../src/framework/handlers/loader.js';
-import { Texture } from '../../../src/platform/graphics/texture.js';
-import { http, Http } from '../../../src/platform/net/http.js';
-import { NullGraphicsDevice } from '../../../src/platform/graphics/null/null-graphics-device.js';
-
 import { expect } from 'chai';
 import { restore, spy } from 'sinon';
+
+import { AssetRegistry } from '../../../src/framework/asset/asset-registry.js';
+import { Asset } from '../../../src/framework/asset/asset.js';
+import { ResourceLoader } from '../../../src/framework/handlers/loader.js';
+import { GlbContainerResource } from '../../../src/framework/parsers/glb-container-resource.js';
+import { Texture } from '../../../src/platform/graphics/texture.js';
+import { http, Http } from '../../../src/platform/net/http.js';
+import { createApp } from '../../app.mjs';
 
 describe('AssetRegistry', function () {
 
@@ -16,15 +15,17 @@ describe('AssetRegistry', function () {
     let retryDelay;
 
     beforeEach(function () {
+        app = createApp();
+
         retryDelay = Http.retryDelay;
         Http.retryDelay = 1;
-        const canvas = document.createElement('canvas');
-        app = new Application(canvas, { graphicsDevice: new NullGraphicsDevice(canvas) });
     });
 
     afterEach(function () {
-        app.destroy();
         Http.retryDelay = retryDelay;
+
+        app?.destroy();
+        app = null;
         restore();
     });
 

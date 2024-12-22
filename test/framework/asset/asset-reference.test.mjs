@@ -1,10 +1,9 @@
-import { Application } from '../../../src/framework/application.js';
-import { Asset } from '../../../src/framework/asset/asset.js';
-import { AssetReference } from '../../../src/framework/asset/asset-reference.js';
-import { NullGraphicsDevice } from '../../../src/platform/graphics/null/null-graphics-device.js';
-
 import { expect } from 'chai';
 import { fake, restore } from 'sinon';
+
+import { AssetReference } from '../../../src/framework/asset/asset-reference.js';
+import { Asset } from '../../../src/framework/asset/asset.js';
+import { createApp } from '../../app.mjs';
 
 describe('AssetReference', function () {
     let app;
@@ -14,8 +13,8 @@ describe('AssetReference', function () {
     let add;
 
     beforeEach(function () {
-        const canvas = document.createElement('canvas');
-        app = new Application(canvas, { graphicsDevice: new NullGraphicsDevice(canvas) });
+        app = createApp();
+
         parent = fake();
         load = fake();
         remove = fake();
@@ -23,7 +22,9 @@ describe('AssetReference', function () {
     });
 
     afterEach(function () {
-        app.destroy();
+        app?.destroy();
+        app = null;
+
         restore();
     });
 

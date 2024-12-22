@@ -1,9 +1,8 @@
-import { Application } from '../../../src/framework/application.js';
+import { expect } from 'chai';
+
 import { AssetListLoader } from '../../../src/framework/asset/asset-list-loader.js';
 import { Asset } from '../../../src/framework/asset/asset.js';
-import { NullGraphicsDevice } from '../../../src/platform/graphics/null/null-graphics-device.js';
-
-import { expect } from 'chai';
+import { createApp } from '../../app.mjs';
 
 describe('AssetListLoader', function () {
 
@@ -11,12 +10,12 @@ describe('AssetListLoader', function () {
     const assetPath = 'http://localhost:3000/test/assets/';
 
     beforeEach(function () {
-        const canvas = document.createElement('canvas');
-        app = new Application(canvas, { graphicsDevice: new NullGraphicsDevice(canvas) });
+        app = createApp();
     });
 
     afterEach(function () {
-        app.destroy();
+        app?.destroy();
+        app = null;
     });
 
     describe('#constructor', function () {

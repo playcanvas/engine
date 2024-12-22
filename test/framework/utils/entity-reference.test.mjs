@@ -1,14 +1,15 @@
-import { Application } from '../../../src/framework/application.js';
-import { Entity } from '../../../src/framework/entity.js';
-import { EntityReference } from '../../../src/framework/utils/entity-reference.js';
-import { NullGraphicsDevice } from '../../../src/platform/graphics/null/null-graphics-device.js';
-
-import { DummyComponentSystem } from '../test-component/system.mjs';
-
 import { expect } from 'chai';
 import { restore, spy, stub } from 'sinon';
 
-/** @import { Component } from '../../../../src/framework/components/component.js' */
+import { Entity } from '../../../src/framework/entity.js';
+import { EntityReference } from '../../../src/framework/utils/entity-reference.js';
+import { createApp } from '../../app.mjs';
+import { DummyComponentSystem } from '../test-component/system.mjs';
+
+/**
+ * @import { Application } from '../../../../src/framework/application.js'
+ * @import { Component } from '../../../../src/framework/components/component.js'
+ */
 
 describe('EntityReference', function () {
     /** @type {Application} */
@@ -23,8 +24,7 @@ describe('EntityReference', function () {
     let otherEntity2;
 
     beforeEach(function () {
-        const canvas = document.createElement('canvas');
-        app = new Application(canvas, { graphicsDevice: new NullGraphicsDevice(canvas) });
+        app = createApp();
 
         app.systems.add(new DummyComponentSystem(app));
 
@@ -42,7 +42,8 @@ describe('EntityReference', function () {
 
     afterEach(function () {
         restore();
-        app.destroy();
+        app?.destroy();
+        app = null;
     });
 
     // Assertion helpers that rely on checking some private state. Usually I wouldn't do

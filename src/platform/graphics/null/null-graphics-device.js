@@ -1,4 +1,3 @@
-import { Debug } from '../../../core/debug.js';
 import {
     DEVICETYPE_NULL
 } from '../constants.js';
@@ -18,8 +17,6 @@ class NullGraphicsDevice extends GraphicsDevice {
         this.isNull = true;
         this._deviceType = DEVICETYPE_NULL;
         this.samples = 1;
-
-        Debug.log('NullGraphicsDevice');
     }
 
     destroy() {

@@ -1,20 +1,19 @@
-import { Application } from '../../src/framework/application.js';
-import { SceneRegistry } from '../../src/framework/scene-registry.js';
-import { NullGraphicsDevice } from '../../src/platform/graphics/null/null-graphics-device.js';
-
 import { expect } from 'chai';
+
+import { SceneRegistry } from '../../src/framework/scene-registry.js';
+import { createApp } from '../app.mjs';
 
 describe('SceneRegistry', function () {
 
     let app;
 
     beforeEach(function () {
-        const canvas = document.createElement('canvas');
-        app = new Application(canvas, { graphicsDevice: new NullGraphicsDevice(canvas) });
+        app = createApp();
     });
 
     afterEach(function () {
-        app.destroy();
+        app?.destroy();
+        app = null;
     });
 
     describe('#constructor', function () {

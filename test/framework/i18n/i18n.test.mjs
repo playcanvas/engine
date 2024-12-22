@@ -1,22 +1,21 @@
-import { Application } from '../../../src/framework/application.js';
-import { Asset } from '../../../src/framework/asset/asset.js';
-import { JsonHandler } from '../../../src/framework/handlers/json.js';
-import { NullGraphicsDevice } from '../../../src/platform/graphics/null/null-graphics-device.js';
-
 import { expect } from 'chai';
 import { restore, stub } from 'sinon';
+
+import { Asset } from '../../../src/framework/asset/asset.js';
+import { JsonHandler } from '../../../src/framework/handlers/json.js';
+import { createApp } from '../../app.mjs';
 
 describe('I18n', function () {
 
     let app;
 
     beforeEach(function () {
-        const canvas = document.createElement('canvas');
-        app = new Application(canvas, { graphicsDevice: new NullGraphicsDevice(canvas) });
+        app = createApp();
     });
 
     afterEach(function () {
-        app.destroy();
+        app?.destroy();
+        app = null;
         restore();
     });
 

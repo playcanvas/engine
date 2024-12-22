@@ -1,21 +1,20 @@
-import { LocalizedAsset } from '../../../src/framework/asset/asset-localized.js';
-import { Application } from '../../../src/framework/application.js';
-import { Asset } from '../../../src/framework/asset/asset.js';
-import { NullGraphicsDevice } from '../../../src/platform/graphics/null/null-graphics-device.js';
-
 import { expect } from 'chai';
+
+import { LocalizedAsset } from '../../../src/framework/asset/asset-localized.js';
+import { Asset } from '../../../src/framework/asset/asset.js';
+import { createApp } from '../../app.mjs';
 
 describe('LocalizedAsset', function () {
 
     let app;
 
     beforeEach(function () {
-        const canvas = document.createElement('canvas');
-        app = new Application(canvas, { graphicsDevice: new NullGraphicsDevice(canvas) });
+        app = createApp();
     });
 
     afterEach(function () {
-        app.destroy();
+        app?.destroy();
+        app = null;
     });
 
     it('sets defaultAsset and localizedAsset to the same id if defaultAsset has no localization', function () {

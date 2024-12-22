@@ -1,10 +1,9 @@
-import { Application } from '../../../../src/framework/application.js';
+import { expect } from 'chai';
+
 import { Asset } from '../../../../src/framework/asset/asset.js';
 import { Entity } from '../../../../src/framework/entity.js';
 import { LAYERID_WORLD, LAYERID_UI } from '../../../../src/scene/constants.js';
-import { NullGraphicsDevice } from '../../../../src/platform/graphics/null/null-graphics-device.js';
-
-import { expect } from 'chai';
+import { createApp } from '../../../app.mjs';
 
 describe('ModelComponent', function () {
     let app;
@@ -45,8 +44,7 @@ describe('ModelComponent', function () {
     };
 
     beforeEach(function (done) {
-        const canvas = document.createElement('canvas');
-        app = new Application(canvas, { graphicsDevice: new NullGraphicsDevice(canvas) });
+        app = createApp();
 
         loadAssets(() => {
             done();
@@ -54,7 +52,8 @@ describe('ModelComponent', function () {
     });
 
     afterEach(function () {
-        app.destroy();
+        app?.destroy();
+        app = null;
         assets = {};
     });
 

@@ -1,6 +1,6 @@
-import { Vec3 } from '../../../src/core/math/vec3.js';
-
 import { expect } from 'chai';
+
+import { Vec3 } from '../../../src/core/math/vec3.js';
 
 describe('Vec3', function () {
 

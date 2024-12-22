@@ -1,12 +1,15 @@
-import { Application } from '../../../src/framework/application.js';
+import { expect } from 'chai';
+
 import { Color } from '../../../src/core/math/color.js';
-import { ComponentSystem } from '../../../src/framework/components/system.js';
 import { Vec2 } from '../../../src/core/math/vec2.js';
 import { Vec3 } from '../../../src/core/math/vec3.js';
 import { Vec4 } from '../../../src/core/math/vec4.js';
-import { NullGraphicsDevice } from '../../../src/platform/graphics/null/null-graphics-device.js';
+import { ComponentSystem } from '../../../src/framework/components/system.js';
+import { createApp } from '../../app.mjs';
 
-import { expect } from 'chai';
+/**
+ * @import { Application } from '../../../src/framework/application.js'
+ */
 
 describe('ComponentSystem', function () {
     /** @type {Application} */
@@ -15,14 +18,14 @@ describe('ComponentSystem', function () {
     let system;
 
     beforeEach(function () {
-        const canvas = document.createElement('canvas');
-        app = new Application(canvas, { graphicsDevice: new NullGraphicsDevice(canvas) });
+        app = createApp();
 
         system = new ComponentSystem(app);
     });
 
     afterEach(function () {
-        app.destroy();
+        app?.destroy();
+        app = null;
     });
 
     describe('#initializeComponentData()', function () {
