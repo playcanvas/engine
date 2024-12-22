@@ -1,8 +1,8 @@
 import { expect } from 'chai';
 import { fake } from 'sinon';
 
-import { Asset } from '../../../src/framework/asset/asset.js';
 import { AssetRegistry } from '../../../src/framework/asset/asset-registry.js';
+import { Asset } from '../../../src/framework/asset/asset.js';
 import { BundleRegistry } from '../../../src/framework/bundle/bundle-registry.js';
 
 describe('BundleRegistry', () => {
@@ -30,14 +30,14 @@ describe('BundleRegistry', () => {
     });
 
     it('bundle asset is added to the bundle registry', function () {
-        let asset = new Asset('bundle', 'bundle', null, { assets: [] });
+        const asset = new Asset('bundle', 'bundle', null, { assets: [] });
         assetRegistry.add(asset);
-        let assets = bundleRegistry.list();
+        const assets = bundleRegistry.list();
         expect(assets).to.deep.equal([asset]);
     });
 
     it('bundle asset is removed from the bundle registry', function () {
-        let asset = new Asset('bundle', 'bundle', null, { assets: [] });
+        const asset = new Asset('bundle', 'bundle', null, { assets: [] });
         assetRegistry.add(asset);
         let bundles = bundleRegistry.list();
         expect(bundles).to.deep.equal([asset]);
@@ -48,97 +48,97 @@ describe('BundleRegistry', () => {
     });
 
     it('listBundlesForAsset() returns null for assets not in bundles', function () {
-        let asset = new Asset('asset', 'text', {
+        const asset = new Asset('asset', 'text', {
             url: 'text.txt'
         });
         assetRegistry.add(asset);
 
-        let notInBundle = new Asset('asset', 'text', {
+        const notInBundle = new Asset('asset', 'text', {
             url: 'text2.txt'
         });
         assetRegistry.add(notInBundle);
 
-        let bundleAsset = new Asset('bundle', 'bundle', null, {
+        const bundleAsset = new Asset('bundle', 'bundle', null, {
             assets: [asset.id]
         });
         assetRegistry.add(bundleAsset);
 
-        let bundles = bundleRegistry.listBundlesForAsset(notInBundle);
+        const bundles = bundleRegistry.listBundlesForAsset(notInBundle);
         expect(bundles).to.equal(null);
     });
 
     it('listBundlesForAsset() lists bundles for asset if asset added before bundle', function () {
-        let asset = new Asset('asset', 'text', {
+        const asset = new Asset('asset', 'text', {
             url: 'text.txt'
         });
         assetRegistry.add(asset);
 
-        let bundleAsset = new Asset('bundle', 'bundle', null, {
+        const bundleAsset = new Asset('bundle', 'bundle', null, {
             assets: [asset.id]
         });
         assetRegistry.add(bundleAsset);
 
-        let bundles = bundleRegistry.listBundlesForAsset(asset);
+        const bundles = bundleRegistry.listBundlesForAsset(asset);
         expect(bundles).to.deep.equal([bundleAsset]);
     });
 
     it('listBundlesForAsset() lists bundles for asset if asset added after bundle', function () {
-        let asset = new Asset('asset', 'text', {
+        const asset = new Asset('asset', 'text', {
             url: 'text.txt'
         });
 
-        let bundleAsset = new Asset('bundle', 'bundle', null, {
+        const bundleAsset = new Asset('bundle', 'bundle', null, {
             assets: [asset.id]
         });
 
         assetRegistry.add(bundleAsset);
         assetRegistry.add(asset);
 
-        let bundles = bundleRegistry.listBundlesForAsset(asset);
+        const bundles = bundleRegistry.listBundlesForAsset(asset);
         expect(bundles).to.deep.equal([bundleAsset]);
     });
 
     it('listBundlesForAsset() does not return removed bundle asset', function () {
-        let asset = new Asset('asset', 'text', {
+        const asset = new Asset('asset', 'text', {
             url: 'text.txt'
         });
         assetRegistry.add(asset);
 
-        let bundleAsset = new Asset('bundle', 'bundle', null, {
+        const bundleAsset = new Asset('bundle', 'bundle', null, {
             assets: [asset.id]
         });
         assetRegistry.add(bundleAsset);
 
         assetRegistry.remove(bundleAsset);
 
-        let bundles = bundleRegistry.listBundlesForAsset(asset);
+        const bundles = bundleRegistry.listBundlesForAsset(asset);
         expect(bundles).to.equal(null);
     });
 
     it('listBundlesForAsset() does not return bundle for removed asset', function () {
-        let asset = new Asset('asset', 'text', {
+        const asset = new Asset('asset', 'text', {
             url: 'text.txt'
         });
         assetRegistry.add(asset);
 
-        let bundleAsset = new Asset('bundle', 'bundle', null, {
+        const bundleAsset = new Asset('bundle', 'bundle', null, {
             assets: [asset.id]
         });
         assetRegistry.add(bundleAsset);
 
         assetRegistry.remove(asset);
 
-        let bundles = bundleRegistry.listBundlesForAsset(asset);
+        const bundles = bundleRegistry.listBundlesForAsset(asset);
         expect(bundles).to.equal(null);
     });
 
     it('hasUrl() returns true for url in bundle', function () {
-        let asset = new Asset('asset', 'text', {
+        const asset = new Asset('asset', 'text', {
             url: 'text.txt'
         });
         assetRegistry.add(asset);
 
-        let bundleAsset = new Asset('bundle', 'bundle', null, {
+        const bundleAsset = new Asset('bundle', 'bundle', null, {
             assets: [asset.id]
         });
         assetRegistry.add(bundleAsset);
@@ -151,12 +151,12 @@ describe('BundleRegistry', () => {
     });
 
     it('hasUrl() returns true for url with query parameters in bundle', function () {
-        let asset = new Asset('asset', 'text', {
+        const asset = new Asset('asset', 'text', {
             url: 'text.txt?query=true&query2=true'
         });
         assetRegistry.add(asset);
 
-        let bundleAsset = new Asset('bundle', 'bundle', null, {
+        const bundleAsset = new Asset('bundle', 'bundle', null, {
             assets: [asset.id]
         });
         assetRegistry.add(bundleAsset);
@@ -165,7 +165,7 @@ describe('BundleRegistry', () => {
     });
 
     it('hasUrl() returns true for all font asset urls', function () {
-        let asset = new Asset('asset', 'font', {
+        const asset = new Asset('asset', 'font', {
             url: 'test.png'
         }, {
             info: {
@@ -178,7 +178,7 @@ describe('BundleRegistry', () => {
         });
         assetRegistry.add(asset);
 
-        let bundleAsset = new Asset('bundle', 'bundle', null, {
+        const bundleAsset = new Asset('bundle', 'bundle', null, {
             assets: [asset.id]
         });
         assetRegistry.add(bundleAsset);
@@ -188,12 +188,12 @@ describe('BundleRegistry', () => {
     });
 
     it('hasUrl() returns false after asset is removed', function () {
-        let asset = new Asset('asset', 'text', {
+        const asset = new Asset('asset', 'text', {
             url: 'text.txt'
         });
         assetRegistry.add(asset);
 
-        let bundleAsset = new Asset('bundle', 'bundle', null, {
+        const bundleAsset = new Asset('bundle', 'bundle', null, {
             assets: [asset.id]
         });
         assetRegistry.add(bundleAsset);
@@ -204,12 +204,12 @@ describe('BundleRegistry', () => {
     });
 
     it('urlIsLoadedOrLoading() returns false if bundle not loaded', function () {
-        let asset = new Asset('asset', 'text', {
+        const asset = new Asset('asset', 'text', {
             url: 'text.txt'
         });
         assetRegistry.add(asset);
 
-        let bundleAsset = new Asset('bundle', 'bundle', null, {
+        const bundleAsset = new Asset('bundle', 'bundle', null, {
             assets: [asset.id]
         });
         assetRegistry.add(bundleAsset);
@@ -218,12 +218,12 @@ describe('BundleRegistry', () => {
     });
 
     it('urlIsLoadedOrLoading() returns false if bundle loaded without a resource', function () {
-        let asset = new Asset('asset', 'text', {
+        const asset = new Asset('asset', 'text', {
             url: 'text.txt'
         });
         assetRegistry.add(asset);
 
-        let bundleAsset = new Asset('bundle', 'bundle', null, {
+        const bundleAsset = new Asset('bundle', 'bundle', null, {
             assets: [asset.id]
         });
         assetRegistry.add(bundleAsset);
@@ -233,12 +233,12 @@ describe('BundleRegistry', () => {
     });
 
     it('urlIsLoadedOrLoading() returns true if bundle loaded', function () {
-        let asset = new Asset('asset', 'text', {
+        const asset = new Asset('asset', 'text', {
             url: 'text.txt'
         });
         assetRegistry.add(asset);
 
-        let bundleAsset = new Asset('bundle', 'bundle', null, {
+        const bundleAsset = new Asset('bundle', 'bundle', null, {
             assets: [asset.id]
         });
         assetRegistry.add(bundleAsset);
@@ -250,12 +250,12 @@ describe('BundleRegistry', () => {
     });
 
     it('urlIsLoadedOrLoading() returns true if bundle being loaded', function () {
-        let asset = new Asset('asset', 'text', {
+        const asset = new Asset('asset', 'text', {
             url: 'text.txt'
         });
         assetRegistry.add(asset);
 
-        let bundleAsset = new Asset('bundle', 'bundle', null, {
+        const bundleAsset = new Asset('bundle', 'bundle', null, {
             assets: [asset.id]
         });
         assetRegistry.add(bundleAsset);
@@ -265,12 +265,12 @@ describe('BundleRegistry', () => {
     });
 
     it('loadUrl() calls callback with error if bundle fails to load', function (done) {
-        let asset = new Asset('asset', 'text', {
+        const asset = new Asset('asset', 'text', {
             url: 'text.txt'
         });
         assetRegistry.add(asset);
 
-        let bundleAsset = new Asset('bundle', 'bundle', null, {
+        const bundleAsset = new Asset('bundle', 'bundle', null, {
             assets: [asset.id]
         });
         assetRegistry.add(bundleAsset);
@@ -284,8 +284,8 @@ describe('BundleRegistry', () => {
         setTimeout(function () {
             bundleAsset.loading = false;
             bundleAsset.loaded = true;
-            assetRegistry.fire('error:' + bundleAsset.id, 'error');
-        }.bind(this));
+            assetRegistry.fire(`error:${bundleAsset.id}`, 'error');
+        });
     });
 
 });
