@@ -1,11 +1,11 @@
-var Disabler = pc.createScript('disabler');
+const Disabler = pc.createScript('disabler');
 
-Disabler.attributes.add('disableEntity', {type: 'boolean'});
-Disabler.attributes.add('disableScriptComponent', {type: 'boolean'});
-Disabler.attributes.add('disableScriptInstance', {type: 'boolean'});
+Disabler.attributes.add('disableEntity', { type: 'boolean' });
+Disabler.attributes.add('disableScriptComponent', { type: 'boolean' });
+Disabler.attributes.add('disableScriptInstance', { type: 'boolean' });
 
-Disabler.prototype.initialize = function() {
-    window.initializeCalls.push(this.entity.getGuid() + ' initialize disabler');
+Disabler.prototype.initialize = function () {
+    window.initializeCalls.push(`${this.entity.getGuid()} initialize disabler`);
 
     if (this.disableEntity) {
         this.entity.enabled = false;
@@ -27,5 +27,5 @@ Disabler.prototype.initialize = function() {
 };
 
 Disabler.prototype.postInitialize = function () {
-    window.initializeCalls.push(this.entity.getGuid() + ' postInitialize disabler');
+    window.initializeCalls.push(`${this.entity.getGuid()} postInitialize disabler`);
 };

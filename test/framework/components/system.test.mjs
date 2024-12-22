@@ -6,6 +6,7 @@ import { Vec3 } from '../../../src/core/math/vec3.js';
 import { Vec4 } from '../../../src/core/math/vec4.js';
 import { ComponentSystem } from '../../../src/framework/components/system.js';
 import { createApp } from '../../app.mjs';
+import { jsdomSetup, jsdomTeardown } from '../../jsdom.mjs';
 
 /**
  * @import { Application } from '../../../src/framework/application.js'
@@ -18,6 +19,7 @@ describe('ComponentSystem', function () {
     let system;
 
     beforeEach(function () {
+        jsdomSetup();
         app = createApp();
 
         system = new ComponentSystem(app);
@@ -26,6 +28,7 @@ describe('ComponentSystem', function () {
     afterEach(function () {
         app?.destroy();
         app = null;
+        jsdomTeardown();
     });
 
     describe('#initializeComponentData()', function () {

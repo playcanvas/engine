@@ -4,18 +4,21 @@ import { restore, stub } from 'sinon';
 import { Asset } from '../../../src/framework/asset/asset.js';
 import { JsonHandler } from '../../../src/framework/handlers/json.js';
 import { createApp } from '../../app.mjs';
+import { jsdomSetup, jsdomTeardown } from '../../jsdom.mjs';
 
 describe('I18n', function () {
 
     let app;
 
     beforeEach(function () {
+        jsdomSetup();
         app = createApp();
     });
 
     afterEach(function () {
         app?.destroy();
         app = null;
+        jsdomTeardown();
         restore();
     });
 

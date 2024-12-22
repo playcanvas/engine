@@ -14,18 +14,21 @@ import { GraphicsDevice } from '../../src/platform/graphics/graphics-device.js';
 import { BatchManager } from '../../src/scene/batching/batch-manager.js';
 import { Scene } from '../../src/scene/scene.js';
 import { createApp } from '../app.mjs';
+import { jsdomSetup, jsdomTeardown } from '../jsdom.mjs';
 
 describe('Application', function () {
 
     let app;
 
     beforeEach(function () {
+        jsdomSetup();
         app = createApp();
     });
 
     afterEach(function () {
         app?.destroy();
         app = null;
+        jsdomTeardown();
     });
 
     describe('#constructor', function () {

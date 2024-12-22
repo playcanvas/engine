@@ -10,18 +10,21 @@ import { AnimEvents } from '../../../../src/framework/anim/evaluator/anim-events
 import { AnimTrack } from '../../../../src/framework/anim/evaluator/anim-track.js';
 import { GraphNode } from '../../../../src/scene/graph-node.js';
 import { createApp } from '../../../app.mjs';
+import { jsdomSetup, jsdomTeardown } from '../../../jsdom.mjs';
 
 describe('AnimEvaluator', function () {
 
     let app;
 
     beforeEach(function () {
+        jsdomSetup();
         app = createApp();
     });
 
     afterEach(function () {
         app?.destroy();
         app = null;
+        jsdomTeardown();
     });
 
     it('AnimEvaluator: update with clip blending', function () {

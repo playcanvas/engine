@@ -3,18 +3,21 @@ import { expect } from 'chai';
 import { LocalizedAsset } from '../../../src/framework/asset/asset-localized.js';
 import { Asset } from '../../../src/framework/asset/asset.js';
 import { createApp } from '../../app.mjs';
+import { jsdomSetup, jsdomTeardown } from '../../jsdom.mjs';
 
 describe('LocalizedAsset', function () {
 
     let app;
 
     beforeEach(function () {
+        jsdomSetup();
         app = createApp();
     });
 
     afterEach(function () {
         app?.destroy();
         app = null;
+        jsdomTeardown();
     });
 
     it('sets defaultAsset and localizedAsset to the same id if defaultAsset has no localization', function () {

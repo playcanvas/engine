@@ -14,6 +14,7 @@ import { StandardMaterial } from '../../../../src/scene/materials/standard-mater
 import { Sprite } from '../../../../src/scene/sprite.js';
 import { TextureAtlas } from '../../../../src/scene/texture-atlas.js';
 import { createApp } from '../../../app.mjs';
+import { jsdomSetup, jsdomTeardown } from '../../../jsdom.mjs';
 
 describe('ImageElement', function () {
     let app;
@@ -21,6 +22,7 @@ describe('ImageElement', function () {
     let sandbox;
 
     beforeEach(function (done) {
+        jsdomSetup();
         app = createApp();
 
         sandbox = createSandbox();
@@ -34,6 +36,7 @@ describe('ImageElement', function () {
         sandbox.restore();
         app?.destroy();
         app = null;
+        jsdomTeardown();
     });
 
     function loadAssets(list, cb) {

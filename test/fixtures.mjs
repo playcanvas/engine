@@ -1,16 +1,10 @@
 import http from 'http';
 
-import globalJsdom from 'global-jsdom';
 import handler from 'serve-handler';
 
-let cleanup;
 let server;
 
 export const mochaGlobalSetup = () => {
-    cleanup = globalJsdom(undefined, {
-        resources: 'usable'
-    });
-
     server = http.createServer((request, response) => {
         return handler(request, response);
     });
@@ -22,6 +16,4 @@ export const mochaGlobalSetup = () => {
 
 export const mochaGlobalTeardown = () => {
     server.close();
-
-    cleanup();
 };
