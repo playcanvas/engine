@@ -1,14 +1,15 @@
-import { Application } from '../../../src/framework/application.js';
-import { Asset } from '../../../src/framework/asset/asset.js';
-import { AssetRegistry } from '../../../src/framework/asset/asset-registry.js';
-import { GlbContainerResource } from '../../../src/framework/parsers/glb-container-resource.js';
-import { ResourceLoader } from '../../../src/framework/handlers/loader.js';
-import { Texture } from '../../../src/platform/graphics/texture.js';
-import { http, Http } from '../../../src/platform/net/http.js';
-import { NullGraphicsDevice } from '../../../src/platform/graphics/null/null-graphics-device.js';
-
 import { expect } from 'chai';
 import { restore, spy } from 'sinon';
+
+import { Application } from '../../../src/framework/application.js';
+import { AssetRegistry } from '../../../src/framework/asset/asset-registry.js';
+import { Asset } from '../../../src/framework/asset/asset.js';
+import { ResourceLoader } from '../../../src/framework/handlers/loader.js';
+import { GlbContainerResource } from '../../../src/framework/parsers/glb-container-resource.js';
+import { NullGraphicsDevice } from '../../../src/platform/graphics/null/null-graphics-device.js';
+import { Texture } from '../../../src/platform/graphics/texture.js';
+import { http, Http } from '../../../src/platform/net/http.js';
+
 
 describe('AssetRegistry', function () {
 

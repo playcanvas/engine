@@ -1,6 +1,7 @@
+import { expect } from 'chai';
+
 import { path } from '../../src/core/path.js';
 
-import { expect } from 'chai';
 
 describe('path', function () {
 

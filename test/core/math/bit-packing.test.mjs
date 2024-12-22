@@ -1,6 +1,7 @@
+import { expect } from 'chai';
+
 import { BitPacking } from '../../../src/core/math/bit-packing.js';
 
-import { expect } from 'chai';
 
 describe('BitPacking', function () {
 

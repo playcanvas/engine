@@ -1,6 +1,7 @@
+import { expect } from 'chai';
+
 import { Preprocessor } from '../../src/core/preprocessor.js';
 
-import { expect } from 'chai';
 
 describe('Preprocessor', function () {
 

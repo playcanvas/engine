@@ -1,16 +1,17 @@
+import { expect } from 'chai';
+
+import { DefaultAnimBinder } from '../../../../src/framework/anim/binder/default-anim-binder.js';
 import { INTERPOLATION_LINEAR } from '../../../../src/framework/anim/constants.js';
-import { AnimCurve } from '../../../../src/framework/anim/evaluator/anim-curve.js';
 import { AnimClip } from '../../../../src/framework/anim/evaluator/anim-clip.js';
+import { AnimCurve } from '../../../../src/framework/anim/evaluator/anim-curve.js';
 import { AnimData } from '../../../../src/framework/anim/evaluator/anim-data.js';
 import { AnimEvaluator } from '../../../../src/framework/anim/evaluator/anim-evaluator.js';
-import { AnimTrack } from '../../../../src/framework/anim/evaluator/anim-track.js';
 import { AnimEvents } from '../../../../src/framework/anim/evaluator/anim-events.js';
+import { AnimTrack } from '../../../../src/framework/anim/evaluator/anim-track.js';
 import { Application } from '../../../../src/framework/application.js';
-import { DefaultAnimBinder } from '../../../../src/framework/anim/binder/default-anim-binder.js';
-import { GraphNode } from '../../../../src/scene/graph-node.js';
 import { NullGraphicsDevice } from '../../../../src/platform/graphics/null/null-graphics-device.js';
+import { GraphNode } from '../../../../src/scene/graph-node.js';
 
-import { expect } from 'chai';
 
 describe('AnimEvaluator', function () {
 

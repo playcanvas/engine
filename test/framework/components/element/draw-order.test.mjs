@@ -1,9 +1,10 @@
+import { expect } from 'chai';
+
 import { Application } from '../../../../src/framework/application.js';
+import { ScreenComponent } from '../../../../src/framework/components/screen/component.js';
 import { Entity } from '../../../../src/framework/entity.js';
 import { NullGraphicsDevice } from '../../../../src/platform/graphics/null/null-graphics-device.js';
-import { ScreenComponent } from '../../../../src/framework/components/screen/component.js';
 
-import { expect } from 'chai';
 
 describe('ElementComponent Draw Order', function () {
     let app;

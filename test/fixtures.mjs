@@ -1,6 +1,7 @@
+import http from 'http';
+
 import globalJsdom from 'global-jsdom';
 import handler from 'serve-handler';
-import http from 'http';
 
 let cleanup;
 let server;

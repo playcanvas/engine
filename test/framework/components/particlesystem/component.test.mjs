@@ -1,10 +1,11 @@
+import { expect } from 'chai';
+
 import { Application } from '../../../../src/framework/application.js';
-import { Asset } from '../../../../src/framework/asset/asset.js';
 import { AssetListLoader } from '../../../../src/framework/asset/asset-list-loader.js';
+import { Asset } from '../../../../src/framework/asset/asset.js';
 import { Entity } from '../../../../src/framework/entity.js';
 import { NullGraphicsDevice } from '../../../../src/platform/graphics/null/null-graphics-device.js';
 
-import { expect } from 'chai';
 
 describe('ParticleSystemComponent', function () {
     let app;

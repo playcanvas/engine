@@ -1,16 +1,17 @@
-import { AnimController } from '../../../../src/framework/anim/controller/anim-controller.js';
-import { Entity } from '../../../../src/framework/entity.js';
-import { AnimComponentBinder } from '../../../../src/framework/components/anim/component-binder.js';
-import { AnimEvaluator } from '../../../../src/framework/anim/evaluator/anim-evaluator.js';
-import { Application } from '../../../../src/framework/application.js';
-import { AnimTrack } from '../../../../src/framework/anim/evaluator/anim-track.js';
-import { AnimData } from '../../../../src/framework/anim/evaluator/anim-data.js';
-import { AnimCurve } from '../../../../src/framework/anim/evaluator/anim-curve.js';
+import { expect } from 'chai';
+
 import { INTERPOLATION_LINEAR } from '../../../../src/framework/anim/constants.js';
+import { AnimController } from '../../../../src/framework/anim/controller/anim-controller.js';
 import { ANIM_LESS_THAN } from '../../../../src/framework/anim/controller/constants.js';
+import { AnimCurve } from '../../../../src/framework/anim/evaluator/anim-curve.js';
+import { AnimData } from '../../../../src/framework/anim/evaluator/anim-data.js';
+import { AnimEvaluator } from '../../../../src/framework/anim/evaluator/anim-evaluator.js';
+import { AnimTrack } from '../../../../src/framework/anim/evaluator/anim-track.js';
+import { Application } from '../../../../src/framework/application.js';
+import { AnimComponentBinder } from '../../../../src/framework/components/anim/component-binder.js';
+import { Entity } from '../../../../src/framework/entity.js';
 import { NullGraphicsDevice } from '../../../../src/platform/graphics/null/null-graphics-device.js';
 
-import { expect } from 'chai';
 
 describe('AnimController', function () {
 

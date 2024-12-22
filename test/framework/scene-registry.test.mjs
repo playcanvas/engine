@@ -1,8 +1,9 @@
+import { expect } from 'chai';
+
 import { Application } from '../../src/framework/application.js';
 import { SceneRegistry } from '../../src/framework/scene-registry.js';
 import { NullGraphicsDevice } from '../../src/platform/graphics/null/null-graphics-device.js';
 
-import { expect } from 'chai';
 
 describe('SceneRegistry', function () {
 

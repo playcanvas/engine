@@ -1,6 +1,7 @@
+import { expect } from 'chai';
+
 import { SortedLoopArray } from '../../src/core/sorted-loop-array.js';
 
-import { expect } from 'chai';
 
 describe('SortedLoopArray', function () {
 

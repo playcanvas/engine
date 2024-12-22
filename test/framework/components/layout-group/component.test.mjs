@@ -1,10 +1,11 @@
-import { ELEMENTTYPE_GROUP } from '../../../../src/framework/components/element/constants.js';
+import { expect } from 'chai';
+import { restore, spy, stub } from 'sinon';
+
 import { Application } from '../../../../src/framework/application.js';
+import { ELEMENTTYPE_GROUP } from '../../../../src/framework/components/element/constants.js';
 import { Entity } from '../../../../src/framework/entity.js';
 import { NullGraphicsDevice } from '../../../../src/platform/graphics/null/null-graphics-device.js';
 
-import { expect } from 'chai';
-import { restore, spy, stub } from 'sinon';
 
 /** @import { LayoutGroupComponentSystem } from '../../../../src/framework/components/layout-group/system.js' */
 

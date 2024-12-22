@@ -1,6 +1,7 @@
+import { expect } from 'chai';
+
 import { extend } from '../../src/core/core.js';
 
-import { expect } from 'chai';
 
 describe('core', function () {
 

@@ -1,6 +1,7 @@
+import { expect } from 'chai';
+
 import { createURI, URI } from '../../src/core/uri.js';
 
-import { expect } from 'chai';
 
 describe('URI', function () {
 

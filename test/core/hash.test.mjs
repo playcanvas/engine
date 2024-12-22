@@ -1,6 +1,7 @@
+import { expect } from 'chai';
+
 import { hashCode, hash32Fnv1a } from '../../src/core/hash.js';
 
-import { expect } from 'chai';
 
 describe('hashCode', function () {
 

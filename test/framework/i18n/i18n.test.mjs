@@ -1,10 +1,11 @@
+import { expect } from 'chai';
+import { restore, stub } from 'sinon';
+
 import { Application } from '../../../src/framework/application.js';
 import { Asset } from '../../../src/framework/asset/asset.js';
 import { JsonHandler } from '../../../src/framework/handlers/json.js';
 import { NullGraphicsDevice } from '../../../src/platform/graphics/null/null-graphics-device.js';
 
-import { expect } from 'chai';
-import { restore, stub } from 'sinon';
 
 describe('I18n', function () {
 

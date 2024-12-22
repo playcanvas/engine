@@ -1,10 +1,11 @@
-import { Application } from '../../../src/framework/application.js';
-import { Asset } from '../../../src/framework/asset/asset.js';
-import { AssetReference } from '../../../src/framework/asset/asset-reference.js';
-import { NullGraphicsDevice } from '../../../src/platform/graphics/null/null-graphics-device.js';
-
 import { expect } from 'chai';
 import { fake, restore } from 'sinon';
+
+import { Application } from '../../../src/framework/application.js';
+import { AssetReference } from '../../../src/framework/asset/asset-reference.js';
+import { Asset } from '../../../src/framework/asset/asset.js';
+import { NullGraphicsDevice } from '../../../src/platform/graphics/null/null-graphics-device.js';
+
 
 describe('AssetReference', function () {
     let app;
