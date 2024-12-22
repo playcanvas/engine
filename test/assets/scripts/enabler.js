@@ -1,9 +1,9 @@
-var Enabler = pc.createScript('enabler');
+const Enabler = pc.createScript('enabler');
 
-Enabler.attributes.add('entityToEnable', {type: 'entity'});
+Enabler.attributes.add('entityToEnable', { type: 'entity' });
 
-Enabler.prototype.initialize = function() {
-    window.initializeCalls.push(this.entity.getGuid() + ' initialize enabler');
+Enabler.prototype.initialize = function () {
+    window.initializeCalls.push(`${this.entity.getGuid()} initialize enabler`);
     this.entityToEnable.enabled = true;
     this.entityToEnable.script.enabled = true;
     if (this.entityToEnable.script.scriptA) {
@@ -16,5 +16,5 @@ Enabler.prototype.initialize = function() {
 };
 
 Enabler.prototype.postInitialize = function () {
-    window.initializeCalls.push(this.entity.getGuid() + ' postInitialize enabler');
+    window.initializeCalls.push(`${this.entity.getGuid()} postInitialize enabler`);
 };

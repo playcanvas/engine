@@ -3,17 +3,20 @@ import { expect } from 'chai';
 import { ScreenComponent } from '../../../../src/framework/components/screen/component.js';
 import { Entity } from '../../../../src/framework/entity.js';
 import { createApp } from '../../../app.mjs';
+import { setupJsdom, teardownJsdom } from '../../../jsdom.mjs';
 
 describe('ElementComponent Draw Order', function () {
     let app;
 
     beforeEach(function () {
+        setupJsdom();
         app = createApp();
     });
 
     afterEach(function () {
         app?.destroy();
         app = null;
+        teardownJsdom();
     });
 
     it('basic hierarchy', function () {

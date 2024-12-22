@@ -4,6 +4,7 @@ import { AssetListLoader } from '../../../../src/framework/asset/asset-list-load
 import { Asset } from '../../../../src/framework/asset/asset.js';
 import { Entity } from '../../../../src/framework/entity.js';
 import { createApp } from '../../../app.mjs';
+import { setupJsdom, teardownJsdom } from '../../../jsdom.mjs';
 
 describe('ParticleSystemComponent', function () {
     let app;
@@ -34,6 +35,7 @@ describe('ParticleSystemComponent', function () {
     };
 
     beforeEach(function (done) {
+        setupJsdom();
         app = createApp();
 
         loadAssets(done);
@@ -42,6 +44,7 @@ describe('ParticleSystemComponent', function () {
     afterEach(function () {
         app?.destroy();
         app = null;
+        teardownJsdom();
         assets = {};
     });
 

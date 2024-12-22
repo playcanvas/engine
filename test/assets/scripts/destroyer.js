@@ -1,24 +1,24 @@
-var Destroyer = pc.createScript('destroyer');
+const Destroyer = pc.createScript('destroyer');
 
-Destroyer.attributes.add('methodName', {type: 'string'});
-Destroyer.attributes.add('destroyEntity', {type: 'boolean'});
-Destroyer.attributes.add('destroyScriptComponent', {type: 'boolean'});
-Destroyer.attributes.add('destroyScriptInstance', {type: 'boolean'});
+Destroyer.attributes.add('methodName', { type: 'string' });
+Destroyer.attributes.add('destroyEntity', { type: 'boolean' });
+Destroyer.attributes.add('destroyScriptComponent', { type: 'boolean' });
+Destroyer.attributes.add('destroyScriptInstance', { type: 'boolean' });
 
-Destroyer.prototype.initialize = function() {
-    window.initializeCalls.push(this.entity.getGuid() + ' initialize destroyer');
+Destroyer.prototype.initialize = function () {
+    window.initializeCalls.push(`${this.entity.getGuid()} initialize destroyer`);
 
     this.on('state', function (state) {
-        window.initializeCalls.push(this.entity.getGuid() + ' state ' + state + ' destroyer');
+        window.initializeCalls.push(`${this.entity.getGuid()} state ${state} destroyer`);
     });
     this.on('disable', function () {
-        window.initializeCalls.push(this.entity.getGuid() + ' disable destroyer');
+        window.initializeCalls.push(`${this.entity.getGuid()} disable destroyer`);
     });
     this.on('enable', function () {
-        window.initializeCalls.push(this.entity.getGuid() + ' enable destroyer');
+        window.initializeCalls.push(`${this.entity.getGuid()} enable destroyer`);
     });
     this.on('destroy', function () {
-        window.initializeCalls.push(this.entity.getGuid() + ' destroy destroyer');
+        window.initializeCalls.push(`${this.entity.getGuid()} destroy destroyer`);
     });
 
     if (this.methodName === 'initialize') {
@@ -27,7 +27,7 @@ Destroyer.prototype.initialize = function() {
 };
 
 Destroyer.prototype.postInitialize = function () {
-    window.initializeCalls.push(this.entity.getGuid() + ' postInitialize destroyer');
+    window.initializeCalls.push(`${this.entity.getGuid()} postInitialize destroyer`);
 
     if (this.methodName === 'postInitialize') {
         this.destroySomething();
@@ -35,7 +35,7 @@ Destroyer.prototype.postInitialize = function () {
 };
 
 Destroyer.prototype.update = function () {
-    window.initializeCalls.push(this.entity.getGuid() + ' update destroyer');
+    window.initializeCalls.push(`${this.entity.getGuid()} update destroyer`);
 
     if (!this.methodName || this.methodName === 'update')  {
         this.destroySomething();
@@ -43,7 +43,7 @@ Destroyer.prototype.update = function () {
 };
 
 Destroyer.prototype.postUpdate = function () {
-    window.initializeCalls.push(this.entity.getGuid() + ' postUpdate destroyer');
+    window.initializeCalls.push(`${this.entity.getGuid()} postUpdate destroyer`);
 
     if (this.methodName === 'postUpdate') {
         this.destroySomething();

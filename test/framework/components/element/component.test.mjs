@@ -3,17 +3,20 @@ import { expect } from 'chai';
 import { Entity } from '../../../../src/framework/entity.js';
 import { LAYERID_UI } from '../../../../src/scene/constants.js';
 import { createApp } from '../../../app.mjs';
+import { setupJsdom, teardownJsdom } from '../../../jsdom.mjs';
 
 describe('ElementComponent', function () {
     let app;
 
     beforeEach(function () {
+        setupJsdom();
         app = createApp();
     });
 
     afterEach(function () {
         app?.destroy();
         app = null;
+        teardownJsdom();
     });
 
     describe('#constructor', function () {

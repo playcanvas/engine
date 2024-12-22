@@ -3,6 +3,7 @@ import { expect } from 'chai';
 import { AssetListLoader } from '../../../src/framework/asset/asset-list-loader.js';
 import { Asset } from '../../../src/framework/asset/asset.js';
 import { createApp } from '../../app.mjs';
+import { setupJsdom, teardownJsdom } from '../../jsdom.mjs';
 
 describe('AssetListLoader', function () {
 
@@ -10,12 +11,14 @@ describe('AssetListLoader', function () {
     const assetPath = 'http://localhost:3000/test/assets/';
 
     beforeEach(function () {
+        setupJsdom();
         app = createApp();
     });
 
     afterEach(function () {
         app?.destroy();
         app = null;
+        teardownJsdom();
     });
 
     describe('#constructor', function () {

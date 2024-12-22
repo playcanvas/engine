@@ -2,18 +2,21 @@ import { expect } from 'chai';
 
 import { SceneRegistry } from '../../src/framework/scene-registry.js';
 import { createApp } from '../app.mjs';
+import { setupJsdom, teardownJsdom } from '../jsdom.mjs';
 
 describe('SceneRegistry', function () {
 
     let app;
 
     beforeEach(function () {
+        setupJsdom();
         app = createApp();
     });
 
     afterEach(function () {
         app?.destroy();
         app = null;
+        teardownJsdom();
     });
 
     describe('#constructor', function () {
