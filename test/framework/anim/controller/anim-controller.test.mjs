@@ -10,7 +10,7 @@ import { AnimTrack } from '../../../../src/framework/anim/evaluator/anim-track.j
 import { AnimComponentBinder } from '../../../../src/framework/components/anim/component-binder.js';
 import { Entity } from '../../../../src/framework/entity.js';
 import { createApp } from '../../../app.mjs';
-import { setupJsdom, teardownJsdom } from '../../../jsdom.mjs';
+import { jsdomSetup, jsdomTeardown } from '../../../jsdom.mjs';
 
 describe('AnimController', function () {
 
@@ -18,7 +18,7 @@ describe('AnimController', function () {
     let controller;
 
     beforeEach(function () {
-        setupJsdom();
+        jsdomSetup();
         app = createApp();
 
         const states = [
@@ -103,7 +103,7 @@ describe('AnimController', function () {
     afterEach(function () {
         app?.destroy();
         app = null;
-        teardownJsdom();
+        jsdomTeardown();
     });
 
     describe('#constructor', function () {

@@ -4,7 +4,7 @@ import { Asset } from '../../../../src/framework/asset/asset.js';
 import { Entity } from '../../../../src/framework/entity.js';
 import { createScript } from '../../../../src/framework/script/script-create.js';
 import { createApp } from '../../../app.mjs';
-import { setupJsdom, teardownJsdom } from '../../../jsdom.mjs';
+import { jsdomSetup, jsdomTeardown } from '../../../jsdom.mjs';
 
 describe('ScriptComponent', function () {
 
@@ -13,7 +13,7 @@ describe('ScriptComponent', function () {
     let app;
 
     beforeEach(function (done) {
-        setupJsdom();
+        jsdomSetup();
         app = createApp();
 
         window.initializeCalls = [];
@@ -36,7 +36,7 @@ describe('ScriptComponent', function () {
     afterEach(function () {
         app?.destroy();
         app = null;
-        teardownJsdom();
+        jsdomTeardown();
     });
 
     function checkInitCall(entity, index, text) {

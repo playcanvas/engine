@@ -8,7 +8,7 @@ import { GlbContainerResource } from '../../../src/framework/parsers/glb-contain
 import { Texture } from '../../../src/platform/graphics/texture.js';
 import { http, Http } from '../../../src/platform/net/http.js';
 import { createApp } from '../../app.mjs';
-import { setupJsdom, teardownJsdom } from '../../jsdom.mjs';
+import { jsdomSetup, jsdomTeardown } from '../../jsdom.mjs';
 
 describe('AssetRegistry', function () {
 
@@ -16,7 +16,7 @@ describe('AssetRegistry', function () {
     let retryDelay;
 
     beforeEach(function () {
-        setupJsdom();
+        jsdomSetup();
         app = createApp();
 
         retryDelay = Http.retryDelay;
@@ -28,7 +28,7 @@ describe('AssetRegistry', function () {
 
         app?.destroy();
         app = null;
-        teardownJsdom();
+        jsdomTeardown();
         restore();
     });
 

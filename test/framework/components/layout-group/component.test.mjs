@@ -4,7 +4,7 @@ import { restore, spy, stub } from 'sinon';
 import { ELEMENTTYPE_GROUP } from '../../../../src/framework/components/element/constants.js';
 import { Entity } from '../../../../src/framework/entity.js';
 import { createApp } from '../../../app.mjs';
-import { setupJsdom, teardownJsdom } from '../../../jsdom.mjs';
+import { jsdomSetup, jsdomTeardown } from '../../../jsdom.mjs';
 
 /**
  * @import { Application } from '../../../../src/framework/application.js'
@@ -33,7 +33,7 @@ describe('LayoutGroupComponent', function () {
     };
 
     beforeEach(function () {
-        setupJsdom();
+        jsdomSetup();
         app = createApp();
 
         system = app.systems.layoutgroup;
@@ -57,7 +57,7 @@ describe('LayoutGroupComponent', function () {
         restore();
         app?.destroy();
         app = null;
-        teardownJsdom();
+        jsdomTeardown();
     });
 
     it('reflows in ascending order of graph depth', function () {

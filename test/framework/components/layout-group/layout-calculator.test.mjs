@@ -8,7 +8,7 @@ import { LayoutCalculator } from '../../../../src/framework/components/layout-gr
 import { Entity } from '../../../../src/framework/entity.js';
 import { ORIENTATION_HORIZONTAL, ORIENTATION_VERTICAL } from '../../../../src/scene/constants.js';
 import { createApp } from '../../../app.mjs';
-import { setupJsdom, teardownJsdom } from '../../../jsdom.mjs';
+import { jsdomSetup, jsdomTeardown } from '../../../jsdom.mjs';
 
 /**
  * @import { Application } from '../../../../src/framework/application.js'
@@ -63,7 +63,7 @@ describe('LayoutCalculator', function () {
     };
 
     beforeEach(function () {
-        setupJsdom();
+        jsdomSetup();
         app = createApp();
 
         calculator = new LayoutCalculator();
@@ -247,7 +247,7 @@ describe('LayoutCalculator', function () {
     afterEach(function () {
         app?.destroy();
         app = null;
-        teardownJsdom();
+        jsdomTeardown();
     });
 
     const calculate = function () {

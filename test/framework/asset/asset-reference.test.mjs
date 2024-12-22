@@ -4,7 +4,7 @@ import { fake, restore } from 'sinon';
 import { AssetReference } from '../../../src/framework/asset/asset-reference.js';
 import { Asset } from '../../../src/framework/asset/asset.js';
 import { createApp } from '../../app.mjs';
-import { setupJsdom, teardownJsdom } from '../../jsdom.mjs';
+import { jsdomSetup, jsdomTeardown } from '../../jsdom.mjs';
 
 describe('AssetReference', function () {
     let app;
@@ -14,7 +14,7 @@ describe('AssetReference', function () {
     let add;
 
     beforeEach(function () {
-        setupJsdom();
+        jsdomSetup();
         app = createApp();
 
         parent = fake();
@@ -26,7 +26,7 @@ describe('AssetReference', function () {
     afterEach(function () {
         app?.destroy();
         app = null;
-        teardownJsdom();
+        jsdomTeardown();
 
         restore();
     });

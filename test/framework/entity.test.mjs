@@ -28,14 +28,14 @@ import { ZoneComponent } from '../../src/framework/components/zone/component.js'
 import { Entity } from '../../src/framework/entity.js';
 import { createScript } from '../../src/framework/script/script-create.js';
 import { createApp } from '../app.mjs';
-import { setupJsdom, teardownJsdom } from '../jsdom.mjs';
+import { jsdomSetup, jsdomTeardown } from '../jsdom.mjs';
 
 describe('Entity', function () {
 
     let app;
 
     beforeEach(function () {
-        setupJsdom();
+        jsdomSetup();
         app = createApp();
 
         app.systems.add(new DummyComponentSystem(app));
@@ -44,7 +44,7 @@ describe('Entity', function () {
     afterEach(function () {
         app?.destroy();
         app = null;
-        teardownJsdom();
+        jsdomTeardown();
     });
 
     const components = {

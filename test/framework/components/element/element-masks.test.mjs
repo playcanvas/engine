@@ -2,20 +2,20 @@ import { expect } from 'chai';
 
 import { Entity } from '../../../../src/framework/entity.js';
 import { createApp } from '../../../app.mjs';
-import { setupJsdom, teardownJsdom } from '../../../jsdom.mjs';
+import { jsdomSetup, jsdomTeardown } from '../../../jsdom.mjs';
 
 describe('ElementComponent Masks', function () {
     let app;
 
     beforeEach(function () {
-        setupJsdom();
+        jsdomSetup();
         app = createApp();
     });
 
     afterEach(function () {
         app?.destroy();
         app = null;
-        teardownJsdom();
+        jsdomTeardown();
     });
 
     it('add / remove', function () {

@@ -4,7 +4,7 @@ import { Asset } from '../../../../src/framework/asset/asset.js';
 import { Entity } from '../../../../src/framework/entity.js';
 import { LAYERID_WORLD, LAYERID_UI } from '../../../../src/scene/constants.js';
 import { createApp } from '../../../app.mjs';
-import { setupJsdom, teardownJsdom } from '../../../jsdom.mjs';
+import { jsdomSetup, jsdomTeardown } from '../../../jsdom.mjs';
 
 describe('ModelComponent', function () {
     let app;
@@ -45,7 +45,7 @@ describe('ModelComponent', function () {
     };
 
     beforeEach(function (done) {
-        setupJsdom();
+        jsdomSetup();
         app = createApp();
 
         loadAssets(() => {
@@ -56,7 +56,7 @@ describe('ModelComponent', function () {
     afterEach(function () {
         app?.destroy();
         app = null;
-        teardownJsdom();
+        jsdomTeardown();
         assets = {};
     });
 

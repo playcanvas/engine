@@ -12,7 +12,7 @@ const html = `<!DOCTYPE html>
     </body>
 </html>`;
 
-function setupJsdom() {
+function jsdomSetup() {
     jsdom = new JSDOM(html, {
         resources: 'usable',
         runScripts: 'dangerously',
@@ -33,8 +33,8 @@ function setupJsdom() {
     jsdom.window.pc = pc;
 }
 
-function teardownJsdom() {
+function jsdomTeardown() {
     jsdom = null;
 }
 
-export { setupJsdom, teardownJsdom };
+export { jsdomSetup, jsdomTeardown };

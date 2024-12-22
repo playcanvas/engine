@@ -4,7 +4,7 @@ import { restore, spy, stub } from 'sinon';
 import { Entity } from '../../../src/framework/entity.js';
 import { EntityReference } from '../../../src/framework/utils/entity-reference.js';
 import { createApp } from '../../app.mjs';
-import { setupJsdom, teardownJsdom } from '../../jsdom.mjs';
+import { jsdomSetup, jsdomTeardown } from '../../jsdom.mjs';
 import { DummyComponentSystem } from '../test-component/system.mjs';
 
 /**
@@ -25,7 +25,7 @@ describe('EntityReference', function () {
     let otherEntity2;
 
     beforeEach(function () {
-        setupJsdom();
+        jsdomSetup();
         app = createApp();
 
         app.systems.add(new DummyComponentSystem(app));
@@ -46,7 +46,7 @@ describe('EntityReference', function () {
         restore();
         app?.destroy();
         app = null;
-        teardownJsdom();
+        jsdomTeardown();
     });
 
     // Assertion helpers that rely on checking some private state. Usually I wouldn't do

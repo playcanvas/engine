@@ -2,21 +2,21 @@ import { expect } from 'chai';
 
 import { Asset } from '../../../src/framework/asset/asset.js';
 import { createApp } from '../../app.mjs';
-import { setupJsdom, teardownJsdom } from '../../jsdom.mjs';
+import { jsdomSetup, jsdomTeardown } from '../../jsdom.mjs';
 
 describe('Asset', function () {
 
     let app;
 
     beforeEach(function () {
-        setupJsdom();
+        jsdomSetup();
         app = createApp();
     });
 
     afterEach(function () {
         app?.destroy();
         app = null;
-        teardownJsdom();
+        jsdomTeardown();
     });
 
     const DEFAULT_LOCALE_FALLBACKS = {

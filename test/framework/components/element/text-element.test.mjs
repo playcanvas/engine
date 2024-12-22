@@ -7,7 +7,7 @@ import { Asset } from '../../../../src/framework/asset/asset.js';
 import { Entity } from '../../../../src/framework/entity.js';
 import { CanvasFont } from '../../../../src/framework/font/canvas-font.js';
 import { createApp } from '../../../app.mjs';
-import { setupJsdom, teardownJsdom } from '../../../jsdom.mjs';
+import { jsdomSetup, jsdomTeardown } from '../../../jsdom.mjs';
 
 describe('TextElement', function () {
     let app;
@@ -17,7 +17,7 @@ describe('TextElement', function () {
     let fontAsset;
 
     beforeEach(function (done) {
-        setupJsdom();
+        jsdomSetup();
         app = createApp();
 
         buildElement(done);
@@ -31,7 +31,7 @@ describe('TextElement', function () {
         fontAsset = null;
         app?.destroy();
         app = null;
-        teardownJsdom();
+        jsdomTeardown();
         app = null;
         restore();
     });
