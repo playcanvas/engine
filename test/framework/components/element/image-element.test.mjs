@@ -38,7 +38,6 @@ describe('ImageElement', function () {
         sandbox.restore();
         app?.destroy();
         app = null;
-        app = null;
     });
 
     function loadAssets(list, cb) {
