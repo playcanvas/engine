@@ -19,13 +19,13 @@ describe('SpriteHandler', function () {
         jsdomTeardown();
     });
 
-    it("loads from filesystem", function (done) {
+    it('loads from filesystem', function (done) {
 
-        const atlasAsset = new Asset("Red Atlas", "textureatlas", {
+        const atlasAsset = new Asset('Red Atlas', 'textureatlas', {
             url: 'http://localhost:3000/test/assets/sprites/red-atlas.json'
         });
 
-        const spriteAsset = new Asset("Red Sprite", "sprite", {
+        const spriteAsset = new Asset('Red Sprite', 'sprite', {
             url: 'http://localhost:3000/test/assets/sprites/red-sprite.json'
         });
 
@@ -50,26 +50,26 @@ describe('SpriteHandler', function () {
             }, this);
 
             spriteAsset.on('error', function (err) {
-                fail(err);
+                done(err);
             }, this);
 
         }, this);
 
         atlasAsset.on('error', function (err) {
-            fail(err);
+            done(err);
         }, this);
     });
 
-    it("loads from asset data", function (done) {
-        const atlasAsset = new Asset("Red Atlas", "textureatlas", {
+    it('loads from asset data', function (done) {
+        const atlasAsset = new Asset('Red Atlas', 'textureatlas', {
             url: 'http://localhost:3000/test/assets/sprites/red-atlas.json'
         });
 
-        const spriteAsset = new Asset("Red Sprite", "sprite", null, {
-            "renderMode": 0,
-            "pixelsPerUnit": 100,
-            "textureAtlasAsset": atlasAsset.id,
-            "frameKeys": [0]
+        const spriteAsset = new Asset('Red Sprite', 'sprite', null, {
+            'renderMode': 0,
+            'pixelsPerUnit': 100,
+            'textureAtlasAsset': atlasAsset.id,
+            'frameKeys': [0]
         });
 
         app.assets.add(atlasAsset);
@@ -93,15 +93,14 @@ describe('SpriteHandler', function () {
             }, this);
 
             spriteAsset.on('error', function (err) {
-                fail(err);
+                done(err);
             }, this);
 
         }, this);
 
         atlasAsset.on('error', function (err) {
-            fail(err);
+            done(err);
         }, this);
     });
 
 });
-
