@@ -1,25 +1,35 @@
-describe("pc.SpriteComponent", function () {
-    var app = null;
-    var atlasAsset = null;
-    var spriteAsset = null;
-    var spriteAsset2 = null;
+import { expect } from 'chai';
+
+import { Asset } from '../../../../src/framework/asset/asset.js';
+import { Entity } from '../../../../src/framework/entity.js';
+import { createApp } from '../../../app.mjs';
+import { jsdomSetup, jsdomTeardown } from '../../../jsdom.mjs';
+
+describe('SpriteComponent', function () {
+    let app;
+    let atlasAsset = null;
+    let spriteAsset = null;
+    let spriteAsset2 = null;
 
     beforeEach(function (done) {
-        app = new pc.Application(document.createElement("canvas"));
+        jsdomSetup();
+        app = createApp();
 
-        loadAssets(function () {
-            done();
-        });
+        loadAssets(done);
     });
 
     afterEach(function () {
-        app.destroy();
+        app?.destroy();
+        app = null;
+        jsdomTeardown();
+        atlasAsset = null;
+        spriteAsset = null;
+        spriteAsset2 = null;
     });
 
-
-    var loadAssets = function (cb) {
-        var i = 0;
-        var check = function () {
+    let loadAssets = function (cb) {
+        let i = 0;
+        let check = function () {
             i++;
             if (i === 3) {
                 return true;
@@ -28,16 +38,16 @@ describe("pc.SpriteComponent", function () {
             }
         };
 
-        atlasAsset = new pc.Asset('red-atlas', 'textureatlas', {
-            url: 'base/tests/test-assets/sprite/red-atlas.json'
+        atlasAsset = new Asset('red-atlas', 'textureatlas', {
+            url: 'http://localhost:3000/test/assets/sprites/red-atlas.json'
         });
 
-        spriteAsset = new pc.Asset('red-sprite', 'sprite', {
-            url: 'base/tests/test-assets/sprite/red-sprite.json'
+        spriteAsset = new Asset('red-sprite', 'sprite', {
+            url: 'http://localhost:3000/test/assets/sprites/red-sprite.json'
         });
 
-        spriteAsset2 = new pc.Asset('red-sprite-2', 'sprite', {
-            url: 'base/tests/test-assets/sprite/red-sprite.json'
+        spriteAsset2 = new Asset('red-sprite-2', 'sprite', {
+            url: 'http://localhost:3000/test/assets/sprites/red-sprite.json'
         });
 
         app.assets.add(atlasAsset);
@@ -62,7 +72,7 @@ describe("pc.SpriteComponent", function () {
     }
 
     it('Add new Component', function () {
-        var e = new pc.Entity();
+        let e = new Entity();
 
         e.addComponent('sprite', {});
 
@@ -85,7 +95,7 @@ describe("pc.SpriteComponent", function () {
     //
     // Once this has been addressed they can be re-enabled.
     it('Add / Remove Component', function () {
-        var e = new pc.Entity();
+        let e = new Entity();
 
         e.addComponent('sprite', {});
 
@@ -97,7 +107,7 @@ describe("pc.SpriteComponent", function () {
     });
 
     it('Remove after destroy', function () {
-        var e = new pc.Entity();
+        let e = new Entity();
         e.addComponent('sprite', {
             spriteAsset: spriteAsset
         });
@@ -112,7 +122,7 @@ describe("pc.SpriteComponent", function () {
         expect(!spriteAsset.hasEvent('load')).to.exist;
         expect(!spriteAsset.hasEvent('remove')).to.exist;
 
-        var e = new pc.Entity();
+        let e = new Entity();
         e.addComponent('sprite', {
             spriteAsset: spriteAsset
         });
@@ -129,7 +139,7 @@ describe("pc.SpriteComponent", function () {
         expect(!spriteAsset.hasEvent('load')).to.exist;
         expect(!spriteAsset.hasEvent('remove')).to.exist;
 
-        var e = new pc.Entity();
+        let e = new Entity();
         e.addComponent('sprite', {
             spriteAsset: spriteAsset
         });
@@ -140,6 +150,5 @@ describe("pc.SpriteComponent", function () {
         expect(!spriteAsset.hasEvent('load')).to.exist;
         expect(!spriteAsset.hasEvent('remove')).to.exist;
     });
+
 });
-
-

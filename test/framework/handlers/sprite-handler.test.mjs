@@ -1,30 +1,41 @@
-describe("pc.SpriteHandler", function () {
-    beforeEach(function () {
-        this.app = new pc.Application(document.createElement('canvas'));
-    })
+import { expect } from 'chai';
 
-    afterEach(function () {
-        this.app.destroy();
-        this.app = null;
+import { Asset } from '../../../src/framework/asset/asset.js';
+import { createApp } from '../../app.mjs';
+import { jsdomSetup, jsdomTeardown } from '../../jsdom.mjs';
+
+describe('SpriteHandler', function () {
+
+    let app;
+
+    beforeEach(function () {
+        jsdomSetup();
+        app = createApp();
     });
 
-    it("load from filesystem", function (done) {
+    afterEach(function () {
+        app?.destroy();
+        app = null;
+        jsdomTeardown();
+    });
 
-        var atlasAsset = new pc.Asset("Red Atlas", "textureatlas", {
-            url: 'base/tests/test-assets/sprite/red-atlas.json'
+    it("loads from filesystem", function (done) {
+
+        const atlasAsset = new Asset("Red Atlas", "textureatlas", {
+            url: 'http://localhost:3000/test/assets/sprites/red-atlas.json'
         });
 
-        var spriteAsset = new pc.Asset("Red Sprite", "sprite", {
-            url: 'base/tests/test-assets/sprite/red-sprite.json'
+        const spriteAsset = new Asset("Red Sprite", "sprite", {
+            url: 'http://localhost:3000/test/assets/sprites/red-sprite.json'
         });
 
-        this.app.assets.add(atlasAsset);
-        this.app.assets.add(spriteAsset);
+        app.assets.add(atlasAsset);
+        app.assets.add(spriteAsset);
 
-        this.app.assets.load(atlasAsset);
+        app.assets.load(atlasAsset);
 
         atlasAsset.on('load', function () {
-            this.app.assets.load(spriteAsset);
+            app.assets.load(spriteAsset);
 
             spriteAsset.ready(function (asset) {
                 expect(asset.resource.atlas).to.exist;
@@ -49,25 +60,25 @@ describe("pc.SpriteHandler", function () {
         }, this);
     });
 
-    it("load from asset data", function (done) {
-        var atlasAsset = new pc.Asset("Red Atlas", "textureatlas", {
-            url: 'base/tests/test-assets/sprite/red-atlas.json'
+    it("loads from asset data", function (done) {
+        const atlasAsset = new Asset("Red Atlas", "textureatlas", {
+            url: 'http://localhost:3000/test/assets/sprites/red-atlas.json'
         });
 
-        var spriteAsset = new pc.Asset("Red Sprite", "sprite", null, {
+        const spriteAsset = new Asset("Red Sprite", "sprite", null, {
             "renderMode": 0,
             "pixelsPerUnit": 100,
             "textureAtlasAsset": atlasAsset.id,
             "frameKeys": [0]
         });
 
-        this.app.assets.add(atlasAsset);
-        this.app.assets.add(spriteAsset);
+        app.assets.add(atlasAsset);
+        app.assets.add(spriteAsset);
 
-        this.app.assets.load(atlasAsset);
+        app.assets.load(atlasAsset);
 
         atlasAsset.on('load', function () {
-            this.app.assets.load(spriteAsset);
+            app.assets.load(spriteAsset);
 
             spriteAsset.ready(function (asset) {
                 expect(asset.resource.atlas).to.exist;
