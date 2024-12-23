@@ -97,27 +97,28 @@ describe('BundleHandler', function () {
 
         const onLoad = function (asset) {
             loaded++;
-            expect(this.resource).to.not.equal(null);
-            console.log(asset.name);
+
+            const resource = asset.resource;
+            expect(resource).to.not.equal(null);
 
             switch (asset.type) {
                 case 'css':
                 case 'html':
                 case 'shader':
                 case 'text':
-                    expect(typeof this.resource).to.equal('string');
+                    expect(typeof resource).to.equal('string');
                     break;
                 case 'json':
-                    expect(this.resource instanceof Object).to.equal(true);
+                    expect(resource instanceof Object).to.equal(true);
                     break;
                 case 'binary':
-                    expect(Object.prototype.toString.call(this.resource)).to.equal('[object ArrayBuffer]');
+                    expect(Object.prototype.toString.call(resource)).to.equal('[object ArrayBuffer]');
                     break;
                 case 'container':
-                    expect(this.resource instanceof ContainerResource).to.equal(true);
+                    expect(resource instanceof ContainerResource).to.equal(true);
                     break;
                 case 'texture':
-                    expect(this.resource instanceof Texture).to.equal(true);
+                    expect(resource instanceof Texture).to.equal(true);
                     break;
             }
 
