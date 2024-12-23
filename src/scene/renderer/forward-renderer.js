@@ -200,7 +200,7 @@ class ForwardRenderer extends Renderer {
 
         // shadow cascades
         this.shadowMatrixPaletteId[i] = scope.resolve(`${light}_shadowMatrixPalette[0]`);
-        this.shadowCascadeDistancesId[i] = scope.resolve(`${light}_shadowCascadeDistances[0]`);
+        this.shadowCascadeDistancesId[i] = scope.resolve(`${light}_shadowCascadeDistances`);
         this.shadowCascadeCountId[i] = scope.resolve(`${light}_shadowCascadeCount`);
     }
 
