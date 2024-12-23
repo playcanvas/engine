@@ -59,8 +59,6 @@ class ShadowRendererLocal {
             shadowCam.nearClip = light.attenuationEnd / 1000;
             shadowCam.farClip = light.attenuationEnd;
 
-            lightRenderData.depthRangeCompensation = shadowCam.farClip - shadowCam.nearClip;
-
             const shadowCamNode = shadowCam._node;
             const lightNode = light._node;
             shadowCamNode.setPosition(lightNode.getPosition());

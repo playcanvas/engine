@@ -42,9 +42,9 @@ In short, for any given engine source module:
 Test module code should adhere to the following style:
 
 ```javascript
-import { SomeClass } from '../../src/path/to/some-class.js';
-
 import { expect } from 'chai';
+
+import { SomeClass } from '../../src/path/to/some-class.js';
 
 describe('SomeClass', function () {
 

@@ -1,10 +1,11 @@
-import { AnimBlendTree } from '../../../../src/framework/anim/controller/anim-blend-tree.js';
+import { expect } from 'chai';
+
 import { AnimBlendTree1D } from '../../../../src/framework/anim/controller/anim-blend-tree-1d.js';
-import { AnimBlendTreeDirect } from '../../../../src/framework/anim/controller/anim-blend-tree-direct.js';
 import { AnimBlendTreeCartesian2D } from '../../../../src/framework/anim/controller/anim-blend-tree-2d-cartesian.js';
 import { AnimBlendTreeDirectional2D } from '../../../../src/framework/anim/controller/anim-blend-tree-2d-directional.js';
+import { AnimBlendTreeDirect } from '../../../../src/framework/anim/controller/anim-blend-tree-direct.js';
+import { AnimBlendTree } from '../../../../src/framework/anim/controller/anim-blend-tree.js';
 import { AnimState } from '../../../../src/framework/anim/controller/anim-state.js';
-import { expect } from 'chai';
 
 describe('AnimBlendTree', function () {
     const findParameter = () => {};

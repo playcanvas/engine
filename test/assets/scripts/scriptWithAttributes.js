@@ -1,4 +1,4 @@
-var ScriptWithAttributes = pc.createScript('scriptWithAttributes');
+const ScriptWithAttributes = pc.createScript('scriptWithAttributes');
 
 ScriptWithAttributes.attributes.add('attribute1', {
     type: 'entity'
@@ -9,7 +9,7 @@ ScriptWithAttributes.attributes.add('attribute2', {
     default: 2
 });
 
-var schema = [{
+const schema = [{
     name: 'fieldNumber',
     type: 'number',
     default: 1
@@ -34,7 +34,7 @@ ScriptWithAttributes.attributes.add('attribute4', {
     schema: schema
 });
 
-ScriptWithAttributes.prototype.initialize = function() {
+ScriptWithAttributes.prototype.initialize = function () {
 };
 
 ScriptWithAttributes.prototype.postInitialize = function () {

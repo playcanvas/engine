@@ -1,7 +1,7 @@
+import { expect } from 'chai';
+
 import { CURVE_LINEAR, CURVE_SMOOTHSTEP, CURVE_SPLINE, CURVE_STEP } from '../../../src/core/math/constants.js';
 import { CurveSet } from '../../../src/core/math/curve-set.js';
-
-import { expect } from 'chai';
 
 describe('CurveSet', function () {
 

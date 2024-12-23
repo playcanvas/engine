@@ -1,10 +1,10 @@
-import { Application } from '../../../../src/framework/application.js';
-import { Asset } from '../../../../src/framework/asset/asset.js';
-import { AssetListLoader } from '../../../../src/framework/asset/asset-list-loader.js';
-import { Entity } from '../../../../src/framework/entity.js';
-import { NullGraphicsDevice } from '../../../../src/platform/graphics/null/null-graphics-device.js';
-
 import { expect } from 'chai';
+
+import { AssetListLoader } from '../../../../src/framework/asset/asset-list-loader.js';
+import { Asset } from '../../../../src/framework/asset/asset.js';
+import { Entity } from '../../../../src/framework/entity.js';
+import { createApp } from '../../../app.mjs';
+import { jsdomSetup, jsdomTeardown } from '../../../jsdom.mjs';
 
 describe('ParticleSystemComponent', function () {
     let app;
@@ -35,13 +35,16 @@ describe('ParticleSystemComponent', function () {
     };
 
     beforeEach(function (done) {
-        const canvas = document.createElement('canvas');
-        app = new Application(canvas, { graphicsDevice: new NullGraphicsDevice(canvas) });
+        jsdomSetup();
+        app = createApp();
+
         loadAssets(done);
     });
 
     afterEach(function () {
-        app.destroy();
+        app?.destroy();
+        app = null;
+        jsdomTeardown();
         assets = {};
     });
 

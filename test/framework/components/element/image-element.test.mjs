@@ -1,20 +1,20 @@
-import { Application } from '../../../../src/framework/application.js';
-import { Asset } from '../../../../src/framework/asset/asset.js';
-import { Color } from '../../../../src/core/math/color.js';
-import { Entity } from '../../../../src/framework/entity.js';
-import { FITMODE_CONTAIN, FITMODE_STRETCH } from '../../../../src/framework/components/element/constants.js';
-import { ImageElement } from '../../../../src/framework/components/element/image-element.js';
-import { NullGraphicsDevice } from '../../../../src/platform/graphics/null/null-graphics-device.js';
-import { Sprite } from '../../../../src/scene/sprite.js';
-import { SPRITE_RENDERMODE_SIMPLE, SPRITE_RENDERMODE_SLICED } from '../../../../src/scene/constants.js';
-import { StandardMaterial } from '../../../../src/scene/materials/standard-material.js';
-import { Texture } from '../../../../src/platform/graphics/texture.js';
-import { TextureAtlas } from '../../../../src/scene/texture-atlas.js';
-import { Vec2 } from '../../../../src/core/math/vec2.js';
-import { Vec4 } from '../../../../src/core/math/vec4.js';
-
 import { expect } from 'chai';
 import { createSandbox } from 'sinon';
+
+import { Color } from '../../../../src/core/math/color.js';
+import { Vec2 } from '../../../../src/core/math/vec2.js';
+import { Vec4 } from '../../../../src/core/math/vec4.js';
+import { Asset } from '../../../../src/framework/asset/asset.js';
+import { FITMODE_CONTAIN, FITMODE_STRETCH } from '../../../../src/framework/components/element/constants.js';
+import { ImageElement } from '../../../../src/framework/components/element/image-element.js';
+import { Entity } from '../../../../src/framework/entity.js';
+import { Texture } from '../../../../src/platform/graphics/texture.js';
+import { SPRITE_RENDERMODE_SIMPLE, SPRITE_RENDERMODE_SLICED } from '../../../../src/scene/constants.js';
+import { StandardMaterial } from '../../../../src/scene/materials/standard-material.js';
+import { Sprite } from '../../../../src/scene/sprite.js';
+import { TextureAtlas } from '../../../../src/scene/texture-atlas.js';
+import { createApp } from '../../../app.mjs';
+import { jsdomSetup, jsdomTeardown } from '../../../jsdom.mjs';
 
 describe('ImageElement', function () {
     let app;
@@ -22,11 +22,10 @@ describe('ImageElement', function () {
     let sandbox;
 
     beforeEach(function (done) {
-        const canvas = document.createElement('canvas');
+        jsdomSetup();
+        app = createApp();
+
         sandbox = createSandbox();
-        app = new Application(canvas, {
-            graphicsDevice: new NullGraphicsDevice(canvas)
-        });
 
         loadAllAssets(function () {
             done();
@@ -35,8 +34,9 @@ describe('ImageElement', function () {
 
     afterEach(function () {
         sandbox.restore();
-        app.destroy();
+        app?.destroy();
         app = null;
+        jsdomTeardown();
     });
 
     function loadAssets(list, cb) {

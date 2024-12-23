@@ -19,7 +19,6 @@ module.exports = function (config) {
             // resources - list any files here that need to be loaded by tests (i.e. via XHR), or
             // need to be pre-loaded in order to provide helper functions etc.
             { pattern: 'tests/test-assets/**/*.*', included: false, served: true, watched: true, nocache: true },
-            { pattern: 'tests/framework/components/script/*.*', included: false, served: true, watched: true, nocache: true },
             { pattern: 'examples/assets/**/*.*', included: false, served: true, watched: true, nocache: true }
         ],
 

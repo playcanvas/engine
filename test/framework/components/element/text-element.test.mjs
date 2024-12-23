@@ -1,13 +1,13 @@
-import { Application } from '../../../../src/framework/application.js';
-import { Asset } from '../../../../src/framework/asset/asset.js';
-import { CanvasFont } from '../../../../src/framework/font/canvas-font.js';
-import { Color } from '../../../../src/core/math/color.js';
-import { Entity } from '../../../../src/framework/entity.js';
-import { NullGraphicsDevice } from '../../../../src/platform/graphics/null/null-graphics-device.js';
-import { Vec2 } from '../../../../src/core/math/vec2.js';
-
 import { expect } from 'chai';
 import { restore } from 'sinon';
+
+import { Color } from '../../../../src/core/math/color.js';
+import { Vec2 } from '../../../../src/core/math/vec2.js';
+import { Asset } from '../../../../src/framework/asset/asset.js';
+import { Entity } from '../../../../src/framework/entity.js';
+import { CanvasFont } from '../../../../src/framework/font/canvas-font.js';
+import { createApp } from '../../../app.mjs';
+import { jsdomSetup, jsdomTeardown } from '../../../jsdom.mjs';
 
 describe('TextElement', function () {
     let app;
@@ -17,10 +17,8 @@ describe('TextElement', function () {
     let fontAsset;
 
     beforeEach(function (done) {
-        const canvas = document.createElement('canvas');
-        app = new Application(canvas, {
-            graphicsDevice: new NullGraphicsDevice(canvas)
-        });
+        jsdomSetup();
+        app = createApp();
 
         buildElement(done);
     });
@@ -31,7 +29,9 @@ describe('TextElement', function () {
         }
 
         fontAsset = null;
-        app.destroy();
+        app?.destroy();
+        app = null;
+        jsdomTeardown();
         app = null;
         restore();
     });

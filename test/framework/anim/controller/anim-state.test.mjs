@@ -1,7 +1,8 @@
-import { AnimState } from '../../../../src/framework/anim/controller/anim-state.js';
 import { expect } from 'chai';
-import { ANIM_BLEND_1D } from '../../../../src/framework/anim/controller/constants.js';
+
 import { INTERPOLATION_LINEAR } from '../../../../src/framework/anim/constants.js';
+import { AnimState } from '../../../../src/framework/anim/controller/anim-state.js';
+import { ANIM_BLEND_1D } from '../../../../src/framework/anim/controller/constants.js';
 import { AnimCurve } from '../../../../src/framework/anim/evaluator/anim-curve.js';
 import { AnimData } from '../../../../src/framework/anim/evaluator/anim-data.js';
 import { AnimTrack } from '../../../../src/framework/anim/evaluator/anim-track.js';

@@ -1,7 +1,7 @@
-import { http, Http } from '../../../src/platform/net/http.js';
-
 import { expect } from 'chai';
 import { restore, spy } from 'sinon';
+
+import { http, Http } from '../../../src/platform/net/http.js';
 
 describe('Http', function () {
     let retryDelay;
