@@ -1,28 +1,22 @@
 import { Color } from '../../core/math/color.js';
-
-import { ADDRESS_CLAMP_TO_EDGE, CLEARFLAG_DEPTH, FILTER_NEAREST, PIXELFORMAT_RGBA8 } from '../../platform/graphics/constants.js';
-import { GraphicsDevice } from '../../platform/graphics/graphics-device.js';
+import { ADDRESS_CLAMP_TO_EDGE, FILTER_NEAREST, PIXELFORMAT_RGBA8 } from '../../platform/graphics/constants.js';
 import { RenderTarget } from '../../platform/graphics/render-target.js';
 import { Texture } from '../../platform/graphics/texture.js';
-import { DebugGraphics } from '../../platform/graphics/debug-graphics.js';
-
-import { SHADER_PICK, SORTMODE_NONE } from '../../scene/constants.js';
-import { Camera } from '../../scene/camera.js';
-import { Command } from '../../scene/mesh-instance.js';
 import { Layer } from '../../scene/layer.js';
-import { LayerComposition } from '../../scene/composition/layer-composition.js';
-
-import { getApplication } from '../globals.js';
-import { Entity } from '../entity.js';
 import { Debug } from '../../core/debug.js';
-import { BlendState } from '../../platform/graphics/blend-state.js';
+import { RenderPassPicker } from './render-pass-picker.js';
+import { math } from '../../core/math/math.js';
+import { Vec4 } from '../../core/math/vec4.js';
+
+/**
+ * @import { AppBase } from '../app-base.js'
+ * @import { CameraComponent } from '../components/camera/component.js'
+ * @import { MeshInstance } from '../../scene/mesh-instance.js'
+ * @import { Scene } from '../../scene/scene.js'
+ */
 
 const tempSet = new Set();
-
-const clearDepthOptions = {
-    depth: 1.0,
-    flags: CLEARFLAG_DEPTH
-};
+const _rect = new Vec4();
 
 /**
  * Picker object used to select mesh instances from screen coordinates.
@@ -31,62 +25,59 @@ const clearDepthOptions = {
  * @property {number} height Height of the pick buffer in pixels (read-only).
  * @property {RenderTarget} renderTarget The render target used by the picker internally
  * (read-only).
+ *
+ * @category Graphics
  */
 class Picker {
     // internal render target
     renderTarget = null;
 
+    // mapping table from ids to meshInstances
+    mapping = new Map();
+
+    // when the device is destroyed, this allows us to ignore async results
+    deviceValid = true;
+
     /**
      * Create a new Picker instance.
      *
-     * @param {import('../app-base.js').AppBase} app - The application managing this picker
-     * instance.
+     * @param {AppBase} app - The application managing this picker instance.
      * @param {number} width - The width of the pick buffer in pixels.
      * @param {number} height - The height of the pick buffer in pixels.
      */
     constructor(app, width, height) {
-        if (app instanceof GraphicsDevice) {
-            app = getApplication();
-            Debug.deprecated('pc.Picker now takes pc.AppBase as first argument. Passing pc.GraphicsDevice is deprecated.');
-        }
+        Debug.assert(app);
 
-        this.app = app;
+        // Note: The only reason this class needs the app is to access the renderer. Ideally we remove this dependency and move
+        // the Picker from framework to the scene level, or even the extras.
+        this.renderer = app.renderer;
         this.device = app.graphicsDevice;
 
-        // uniform for the mesh index encoded into rgba
-        this.pickColor = new Float32Array(4);
-        this.pickColor[3] = 1;
-
-        // mapping table from ids to meshInstances
-        this.mapping = [];
-
-        // create layer composition with the layer and camera
-        this.cameraEntity = null;
-        this.layer = null;
-        this.layerComp = null;
-        this.initLayerComposition();
-
-        // clear command user to simulate layer clearing, required due to storing meshes from multiple layers on a singe layer
-        const device = this.device;
-        this.clearDepthCommand = new Command(0, 0, function () {
-            device.clear(clearDepthOptions);
-        });
+        this.renderPass = new RenderPassPicker(this.device, app.renderer);
 
         this.width = 0;
         this.height = 0;
         this.resize(width, height);
+
+        // handle the device getting destroyed
+        this.device.on('destroy', () => {
+            this.deviceValid = false;
+        });
     }
 
     /**
      * Return the list of mesh instances selected by the specified rectangle in the previously
-     * prepared pick buffer.The rectangle using top-left coordinate system.
+     * prepared pick buffer. The rectangle using top-left coordinate system.
+     *
+     * Note: This function is not supported on WebGPU. Use {@link Picker#getSelectionAsync} instead.
+     * Note: This function is blocks the main thread while reading pixels from GPU memory. It's
+     * recommended to use {@link Picker#getSelectionAsync} instead.
      *
      * @param {number} x - The left edge of the rectangle.
      * @param {number} y - The top edge of the rectangle.
-     * @param {number} [width] - The width of the rectangle.
-     * @param {number} [height] - The height of the rectangle.
-     * @returns {import('../../scene/mesh-instance.js').MeshInstance[]} An array of mesh instances
-     * that are in the selection.
+     * @param {number} [width] - The width of the rectangle. Defaults to 1.
+     * @param {number} [height] - The height of the rectangle. Defaults to 1.
+     * @returns {MeshInstance[]} An array of mesh instances that are in the selection.
      * @example
      * // Get the selection at the point (10,20)
      * const selection = picker.getSelection(10, 20);
@@ -94,69 +85,113 @@ class Picker {
      * // Get all models in rectangle with corners at (10,20) and (20,40)
      * const selection = picker.getSelection(10, 20, 10, 20);
      */
-    getSelection(x, y, width, height) {
+    getSelection(x, y, width = 1, height = 1) {
         const device = this.device;
-
-        if (typeof x === 'object') {
-            Debug.deprecated('Picker.getSelection:param \'rect\' is deprecated, use \'x, y, width, height\' instead.');
-
-            const rect = x;
-            x = rect.x;
-            y = rect.y;
-            width = rect.width;
-            height = rect.height;
-        } else {
-            y = this.renderTarget.height - (y + (height || 1));
+        if (device.isWebGPU) {
+            Debug.errorOnce('pc.Picker#getSelection is not supported on WebGPU, use pc.Picker#getSelectionAsync instead.');
+            return [];
         }
 
-        // make sure we have nice numbers to work with
-        x = Math.floor(x);
-        y = Math.floor(y);
-        width = Math.floor(Math.max(width || 1, 1));
-        height = Math.floor(Math.max(height || 1, 1));
+        Debug.assert(typeof x !== 'object', 'Picker.getSelection:param \'rect\' is deprecated, use \'x, y, width, height\' instead.');
 
-        // backup active render target
-        const origRenderTarget = device.renderTarget;
+        y = this.renderTarget.height - (y + height);
+        const rect = this.sanitizeRect(x, y, width, height);
 
-        DebugGraphics.pushGpuMarker(device, 'PICKER');
-
-        // Ready the device for rendering to the pick buffer
+        // read pixels from the render target
         device.setRenderTarget(this.renderTarget);
         device.updateBegin();
 
-        const pixels = new Uint8Array(4 * width * height);
-        device.readPixels(x, y, width, height, pixels);
+        const pixels = new Uint8Array(4 * rect.z * rect.w);
+        device.readPixels(rect.x, rect.y, rect.z, rect.w, pixels);
 
         device.updateEnd();
 
-        // Restore render target
-        device.setRenderTarget(origRenderTarget);
+        return this.decodePixels(pixels, this.mapping);
+    }
 
-        DebugGraphics.popGpuMarker(device);
+    /**
+     * Return the list of mesh instances selected by the specified rectangle in the previously
+     * prepared pick buffer. The rectangle uses top-left coordinate system.
+     *
+     * This method is asynchronous and does not block the execution.
+     *
+     * @param {number} x - The left edge of the rectangle.
+     * @param {number} y - The top edge of the rectangle.
+     * @param {number} [width] - The width of the rectangle. Defaults to 1.
+     * @param {number} [height] - The height of the rectangle. Defaults to 1.
+     * @returns {Promise<MeshInstance[]>} - Promise that resolves with an array of mesh instances
+     * that are in the selection.
+     * @example
+     * // Get the mesh instances at the rectangle with start at (10,20) and size of (5,5)
+     * picker.getSelectionAsync(10, 20, 5, 5).then((meshInstances) => {
+     *    console.log(meshInstances);
+     * });
+     */
+    getSelectionAsync(x, y, width = 1, height = 1) {
 
-        const mapping = this.mapping;
-        for (let i = 0; i < width * height; i++) {
-            const r = pixels[4 * i + 0];
-            const g = pixels[4 * i + 1];
-            const b = pixels[4 * i + 2];
-            const index = r << 16 | g << 8 | b;
-
-            // White is 'no selection'
-            if (index !== 0xffffff) {
-                tempSet.add(mapping[index]);
-            }
+        if (this.device?.isWebGL2) {
+            y = this.renderTarget.height - (y + height);
         }
+        const rect = this.sanitizeRect(x, y, width, height);
 
-        // return the content of the set as an array
+        return this.renderTarget.colorBuffer.read(rect.x, rect.y, rect.z, rect.w, {
+            renderTarget: this.renderTarget,
+            immediate: true
+        }).then((pixels) => {
+            return this.decodePixels(pixels, this.mapping);
+        });
+    }
+
+    // sanitize the rectangle to make sure it;s inside the texture and does not use fractions
+    sanitizeRect(x, y, width, height) {
+        const maxWidth = this.renderTarget.width;
+        const maxHeight = this.renderTarget.height;
+        x = math.clamp(Math.floor(x), 0, maxWidth - 1);
+        y = math.clamp(Math.floor(y), 0, maxHeight - 1);
+        width = Math.floor(Math.max(width, 1));
+        width = Math.min(width, maxWidth - x);
+        height = Math.floor(Math.max(height, 1));
+        height = Math.min(height, maxHeight - y);
+        return _rect.set(x, y, width, height);
+    }
+
+    decodePixels(pixels, mapping) {
+
         const selection = [];
-        tempSet.forEach(meshInstance => selection.push(meshInstance));
-        tempSet.clear();
+
+        // when we decode results from async calls, ignore them if the device is no longer valid
+        if (this.deviceValid) {
+
+            const count = pixels.length;
+            for (let i = 0; i < count; i += 4) {
+                const r = pixels[i + 0];
+                const g = pixels[i + 1];
+                const b = pixels[i + 2];
+                const a = pixels[i + 3];
+                const index = a << 24 | r << 16 | g << 8 | b;
+
+                // White is 'no selection'
+                if (index !== -1) {
+                    tempSet.add(mapping.get(index));
+                }
+            }
+
+            // return the content of the set as an array
+            tempSet.forEach((meshInstance) => {
+                if (meshInstance) {
+                    selection.push(meshInstance);
+                }
+            });
+            tempSet.clear();
+        }
 
         return selection;
     }
 
     allocateRenderTarget() {
 
+        // TODO: Ideally we'd use a UINT32 texture format and avoid RGBA8 conversion, but WebGL2 does not
+        // support clearing render targets of this format, so we'd need a quad based clear solution.
         const colorBuffer = new Texture(this.device, {
             format: PIXELFORMAT_RGBA8,
             width: this.width,
@@ -176,50 +211,11 @@ class Picker {
     }
 
     releaseRenderTarget() {
-
-        // unset it from the camera
-        this.cameraEntity.camera.renderTarget = null;
-
         if (this.renderTarget) {
             this.renderTarget.destroyTextureBuffers();
             this.renderTarget.destroy();
             this.renderTarget = null;
         }
-    }
-
-    initLayerComposition() {
-
-        const device = this.device;
-        const self = this;
-        const pickColorId = device.scope.resolve('uColor');
-
-        // camera
-        this.cameraEntity = new Entity();
-        this.cameraEntity.addComponent('camera');
-
-        // layer all meshes rendered for picking at added to
-        this.layer = new Layer({
-            name: 'Picker',
-            shaderPass: SHADER_PICK,
-            opaqueSortMode: SORTMODE_NONE,
-
-            // executes just before the mesh is rendered. And index encoded in rgb is assigned to it
-            onDrawCall: function (meshInstance, index) {
-                self.pickColor[0] = ((index >> 16) & 0xff) / 255;
-                self.pickColor[1] = ((index >> 8) & 0xff) / 255;
-                self.pickColor[2] = (index & 0xff) / 255;
-                pickColorId.setValue(self.pickColor);
-                device.setBlendState(BlendState.NOBLEND);
-
-                // keep the index -> meshInstance index mapping
-                self.mapping[index] = meshInstance;
-            }
-        });
-        this.layer.addCamera(this.cameraEntity.camera);
-
-        // composition
-        this.layerComp = new LayerComposition('picker');
-        this.layerComp.pushOpaque(this.layer);
     }
 
     /**
@@ -228,64 +224,15 @@ class Picker {
      * be called multiple times on the same picker object. Therefore, if the models or camera do
      * not change in any way, {@link Picker#prepare} does not need to be called again.
      *
-     * @param {import('../components/camera/component.js').CameraComponent} camera - The camera
-     * component used to render the scene.
-     * @param {import('../../scene/scene.js').Scene} scene - The scene containing the pickable mesh
-     * instances.
-     * @param {Layer[]} [layers] - Layers from which objects will be picked. If not supplied, all layers of the specified camera will be used.
+     * @param {CameraComponent} camera - The camera component used to render the scene.
+     * @param {Scene} scene - The scene containing the pickable mesh instances.
+     * @param {Layer[]} [layers] - Layers from which objects will be picked. If not supplied, all
+     * layers of the specified camera will be used.
      */
     prepare(camera, scene, layers) {
 
-        // handle deprecated arguments
-        if (camera instanceof Camera) {
-            Debug.deprecated('pc.Picker#prepare now takes pc.CameraComponent as first argument. Passing pc.Camera is deprecated.');
-
-            // Get the camera component
-            camera = camera.node.camera;
-        }
-
         if (layers instanceof Layer) {
             layers = [layers];
-        }
-
-        // populate the layer with meshes and depth clear commands
-        this.layer.clearMeshInstances();
-        const destMeshInstances = this.layer.opaqueMeshInstances;
-
-        // source mesh instances
-        const srcLayers = scene.layers.layerList;
-        const subLayerEnabled = scene.layers.subLayerEnabled;
-        const isTransparent = scene.layers.subLayerList;
-
-        for (let i = 0; i < srcLayers.length; i++) {
-            const srcLayer = srcLayers[i];
-
-            // skip the layer if it does not match the provided ones
-            if (layers && layers.indexOf(srcLayer) < 0) {
-                continue;
-            }
-
-            if (srcLayer.enabled && subLayerEnabled[i]) {
-
-                // if the layer is rendered by the camera
-                const layerCamId = srcLayer.cameras.indexOf(camera);
-                if (layerCamId >= 0) {
-
-                    // if the layer clears the depth, add command to clear it
-                    if (srcLayer._clearDepthBuffer) {
-                        destMeshInstances.push(this.clearDepthCommand);
-                    }
-
-                    // copy all pickable mesh instances
-                    const meshInstances = isTransparent[i] ? srcLayer.instances.transparentMeshInstances : srcLayer.instances.opaqueMeshInstances;
-                    for (let j = 0; j < meshInstances.length; j++) {
-                        const meshInstance = meshInstances[j];
-                        if (meshInstance.pick) {
-                            destMeshInstances.push(meshInstance);
-                        }
-                    }
-                }
-            }
         }
 
         // make the render target the right size
@@ -294,39 +241,20 @@ class Picker {
             this.allocateRenderTarget();
         }
 
-        // prepare the rendering camera
-        this.updateCamera(camera);
-
         // clear registered meshes mapping
-        this.mapping.length = 0;
+        this.mapping.clear();
 
-        // render
-        this.app.renderComposition(this.layerComp);
-    }
-
-    updateCamera(srcCamera) {
-
-        // copy transform
-        this.cameraEntity.copy(srcCamera.entity);
-        this.cameraEntity.name = 'PickerCamera';
-
-        // copy camera component properties - which overwrites few properties we change to what is needed later
-        const destCamera = this.cameraEntity.camera;
-        destCamera.copy(srcCamera);
+        const renderPass = this.renderPass;
+        renderPass.init(this.renderTarget);
 
         // set up clears
-        destCamera.clearColorBuffer = true;
-        destCamera.clearDepthBuffer = true;
-        destCamera.clearStencilBuffer = true;
-        destCamera.clearColor = Color.WHITE;
+        renderPass.colorOps.clearValue = Color.WHITE;
+        renderPass.colorOps.clear = true;
+        renderPass.depthStencilOps.clearDepth = true;
 
-        // render target
-        destCamera.renderTarget = this.renderTarget;
-
-        // layers
-        this.layer.clearCameras();
-        this.layer.addCamera(destCamera);
-        destCamera.layers = [this.layer.id];
+        // render the pass to update the render target
+        renderPass.update(camera, scene, layers, this.mapping);
+        renderPass.render();
     }
 
     /**

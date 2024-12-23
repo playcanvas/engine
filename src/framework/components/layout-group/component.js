@@ -1,12 +1,15 @@
 import { Debug } from '../../../core/debug.js';
 import { Vec2 } from '../../../core/math/vec2.js';
 import { Vec4 } from '../../../core/math/vec4.js';
-
 import { ORIENTATION_HORIZONTAL } from '../../../scene/constants.js';
-
 import { FITTING_NONE } from './constants.js';
 import { Component } from '../component.js';
 import { LayoutCalculator } from './layout-calculator.js';
+
+/**
+ * @import { Entity } from '../../entity.js'
+ * @import { LayoutGroupComponentSystem } from './system.js'
+ */
 
 function getElement(entity) {
     return entity.element;
@@ -20,40 +23,48 @@ function isEnabledAndHasEnabledElement(entity) {
  * A LayoutGroupComponent enables the Entity to position and scale child {@link ElementComponent}s
  * according to configurable layout rules.
  *
- * @augments Component
+ * @hideconstructor
+ * @category User Interface
  */
 class LayoutGroupComponent extends Component {
+    /** @private */
+    _orientation = ORIENTATION_HORIZONTAL;
+
+    /** @private */
+    _reverseX = false;
+
+    /** @private */
+    _reverseY = true;
+
+    /** @private */
+    _alignment = new Vec2(0, 1);
+
+    /** @private */
+    _padding = new Vec4();
+
+    /** @private */
+    _spacing = new Vec2();
+
+    /** @private */
+    _widthFitting = FITTING_NONE;
+
+    /** @private */
+    _heightFitting = FITTING_NONE;
+
+    /** @private */
+    _wrap = false;
+
+    /** @private */
+    _layoutCalculator = new LayoutCalculator();
+
     /**
      * Create a new LayoutGroupComponent instance.
      *
-     * @param {import('./system.js').LayoutGroupComponentSystem} system - The ComponentSystem that
-     * created this Component.
-     * @param {import('../../entity.js').Entity} entity - The Entity that this Component is
-     * attached to.
+     * @param {LayoutGroupComponentSystem} system - The ComponentSystem that created this Component.
+     * @param {Entity} entity - The Entity that this Component is attached to.
      */
     constructor(system, entity) {
         super(system, entity);
-
-        /** @private */
-        this._orientation = ORIENTATION_HORIZONTAL;
-        /** @private */
-        this._reverseX = false;
-        /** @private */
-        this._reverseY = true;
-        /** @private */
-        this._alignment = new Vec2(0, 1);
-        /** @private */
-        this._padding = new Vec4();
-        /** @private */
-        this._spacing = new Vec2();
-        /** @private */
-        this._widthFitting = FITTING_NONE;
-        /** @private */
-        this._heightFitting = FITTING_NONE;
-        /** @private */
-        this._wrap = false;
-        /** @private */
-        this._layoutCalculator = new LayoutCalculator();
 
         // Listen for the group container being resized
         this._listenForReflowEvents(this.entity, 'on');
@@ -70,17 +81,17 @@ class LayoutGroupComponent extends Component {
         // Listen for ElementComponents and LayoutChildComponents being added
         // to self or to children - covers cases where they are not already
         // present at the point when this component is constructed.
-        Debug.assert(system.app.systems.element, `System 'element' doesn't exist`);
+        Debug.assert(system.app.systems.element, 'System \'element\' doesn\'t exist');
         system.app.systems.element.on('add', this._onElementOrLayoutComponentAdd, this);
         system.app.systems.element.on('beforeremove', this._onElementOrLayoutComponentRemove, this);
 
-        Debug.assert(system.app.systems.layoutchild, `System 'layoutchild' doesn't exist`);
+        Debug.assert(system.app.systems.layoutchild, 'System \'layoutchild\' doesn\'t exist');
         system.app.systems.layoutchild.on('add', this._onElementOrLayoutComponentAdd, this);
         system.app.systems.layoutchild.on('beforeremove', this._onElementOrLayoutComponentRemove, this);
     }
 
     /**
-     * Whether the layout should run horizontally or vertically. Can be:
+     * Sets whether the layout should run horizontally or vertically. Can be:
      *
      * - {@link ORIENTATION_HORIZONTAL}
      * - {@link ORIENTATION_VERTICAL}
@@ -96,12 +107,17 @@ class LayoutGroupComponent extends Component {
         }
     }
 
+    /**
+     * Gets whether the layout should run horizontally or vertically.
+     *
+     * @type {number}
+     */
     get orientation() {
         return this._orientation;
     }
 
     /**
-     * Reverses the order of children along the x axis. Defaults to false.
+     * Sets whether to reverse the order of children along the x axis. Defaults to false.
      *
      * @type {boolean}
      */
@@ -112,12 +128,17 @@ class LayoutGroupComponent extends Component {
         }
     }
 
+    /**
+     * Gets whether to reverse the order of children along the x axis.
+     *
+     * @type {boolean}
+     */
     get reverseX() {
         return this._reverseX;
     }
 
     /**
-     * Reverses the order of children along the y axis. Defaults to true.
+     * Sets whether to reverse the order of children along the y axis. Defaults to true.
      *
      * @type {boolean}
      */
@@ -128,13 +149,18 @@ class LayoutGroupComponent extends Component {
         }
     }
 
+    /**
+     * Gets whether to reverse the order of children along the y axis.
+     *
+     * @type {boolean}
+     */
     get reverseY() {
         return this._reverseY;
     }
 
     /**
-     * Specifies the horizontal and vertical alignment of child elements. Values range from 0 to 1
-     * where [0, 0] is the bottom left and [1, 1] is the top right. Defaults to [0, 1].
+     * Sets the horizontal and vertical alignment of child elements. Values range from 0 to 1 where
+     * `[0, 0]` is the bottom left and `[1, 1]` is the top right. Defaults to `[0, 1]`.
      *
      * @type {Vec2}
      */
@@ -145,13 +171,18 @@ class LayoutGroupComponent extends Component {
         }
     }
 
+    /**
+     * Gets the horizontal and vertical alignment of child elements.
+     *
+     * @type {Vec2}
+     */
     get alignment() {
         return this._alignment;
     }
 
     /**
-     * Padding to be applied inside the container before positioning any children. Specified as
-     * left, bottom, right and top values. Defaults to [0, 0, 0, 0] (no padding).
+     * Sets the padding to be applied inside the container before positioning any children.
+     * Specified as left, bottom, right and top values. Defaults to `[0, 0, 0, 0]` (no padding).
      *
      * @type {Vec4}
      */
@@ -162,12 +193,17 @@ class LayoutGroupComponent extends Component {
         }
     }
 
+    /**
+     * Gets the padding to be applied inside the container before positioning any children.
+     *
+     * @type {Vec4}
+     */
     get padding() {
         return this._padding;
     }
 
     /**
-     * Spacing to be applied between each child element. Defaults to [0, 0] (no spacing).
+     * Sets the spacing to be applied between each child element. Defaults to `[0, 0]` (no spacing).
      *
      * @type {Vec2}
      */
@@ -178,12 +214,17 @@ class LayoutGroupComponent extends Component {
         }
     }
 
+    /**
+     * Gets the spacing to be applied between each child element.
+     *
+     * @type {Vec2}
+     */
     get spacing() {
         return this._spacing;
     }
 
     /**
-     * Fitting logic to be applied when positioning and scaling child elements. Can be:
+     * Sets the width fitting mode to be applied when positioning and scaling child elements. Can be:
      *
      * - {@link FITTING_NONE}: Child elements will be rendered at their natural size.
      * - {@link FITTING_STRETCH}: When the natural size of all child elements does not fill the width
@@ -218,11 +259,17 @@ class LayoutGroupComponent extends Component {
         }
     }
 
+    /**
+     * Gets the width fitting mode to be applied when positioning and scaling child elements.
+     *
+     * @type {number}
+     */
     get widthFitting() {
         return this._widthFitting;
     }
 
     /**
+     * Sets the height fitting mode to be applied when positioning and scaling child elements.
      * Identical to {@link LayoutGroupComponent#widthFitting} but for the Y axis. Defaults to
      * {@link FITTING_NONE}.
      *
@@ -235,12 +282,17 @@ class LayoutGroupComponent extends Component {
         }
     }
 
+    /**
+     * Gets the height fitting mode to be applied when positioning and scaling child elements.
+     *
+     * @type {number}
+     */
     get heightFitting() {
         return this._heightFitting;
     }
 
     /**
-     * Whether or not to wrap children onto a new row/column when the size of the container is
+     * Sets whether or not to wrap children onto a new row/column when the size of the container is
      * exceeded. Defaults to false, which means that children will be be rendered in a single row
      * (horizontal orientation) or column (vertical orientation). Note that setting wrap to true
      * makes it impossible for the {@link FITTING_BOTH} fitting mode to operate in any logical
@@ -257,6 +309,12 @@ class LayoutGroupComponent extends Component {
         }
     }
 
+    /**
+     * Gets whether or not to wrap children onto a new row/column when the size of the container is
+     * exceeded.
+     *
+     * @type {boolean}
+     */
     get wrap() {
         return this._wrap;
     }

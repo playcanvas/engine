@@ -15,7 +15,6 @@ import { VertexBuffer } from '../../platform/graphics/vertex-buffer.js';
 import { VertexFormat } from '../../platform/graphics/vertex-format.js';
 import { VertexIterator } from '../../platform/graphics/vertex-iterator.js';
 
-import { partitionSkin } from '../../scene/skin-partition.js';
 import { GraphNode } from '../../scene/graph-node.js';
 import { Mesh } from '../../scene/mesh.js';
 import { MeshInstance } from '../../scene/mesh-instance.js';
@@ -125,11 +124,6 @@ class JsonModelParser {
         const skins = [];
         const skinInstances = [];
         let i, j;
-
-        if (!this._device.supportsBoneTextures && modelData.skins.length > 0) {
-            const boneLimit = this._device.getBoneLimit();
-            partitionSkin(modelData, null, boneLimit);
-        }
 
         for (i = 0; i < modelData.skins.length; i++) {
             const skinData = modelData.skins[i];
@@ -335,7 +329,7 @@ class JsonModelParser {
             maxVerts = Math.max(maxVerts, vertexBuffers[i].numVertices);
         }
         if (numIndices > 0) {
-            if (maxVerts > 0xFFFF && this._device.extUintElement) {
+            if (maxVerts > 0xFFFF) {
                 indexBuffer = new IndexBuffer(this._device, INDEXFORMAT_UINT32, numIndices);
                 indexData = new Uint32Array(indexBuffer.lock());
             } else {

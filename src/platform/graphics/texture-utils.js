@@ -22,34 +22,47 @@ class TextureUtils {
     }
 
     /**
+     * Calculate the number of mip levels for a texture with the specified dimensions.
+     *
+     * @param {number} width - Texture's width.
+     * @param {number} height - Texture's height.
+     * @param {number} [depth] - Texture's depth. Defaults to 1.
+     * @returns {number} The number of mip levels required for the texture.
+     */
+    static calcMipLevelsCount(width, height, depth = 1) {
+        return 1 + Math.floor(Math.log2(Math.max(width, height, depth)));
+    }
+
+    /**
      * Calculate the size in bytes of the texture level given its format and dimensions.
      *
      * @param {number} width - Texture's width.
      * @param {number} height - Texture's height.
+     * @param {number} depth - Texture's depth.
      * @param {number} format - Texture's pixel format PIXELFORMAT_***.
      * @returns {number} The number of bytes of GPU memory required for the texture.
-     * @ignore
      */
-    static calcLevelGpuSize(width, height, format) {
+    static calcLevelGpuSize(width, height, depth, format) {
 
         const formatInfo = pixelFormatInfo.get(format);
         Debug.assert(formatInfo !== undefined, `Invalid pixel format ${format}`);
 
         const pixelSize = pixelFormatInfo.get(format)?.size ?? 0;
         if (pixelSize > 0) {
-            return width * height * pixelSize;
+            return width * height * depth * pixelSize;
         }
 
         const blockSize = formatInfo.blockSize ?? 0;
         let blockWidth = Math.floor((width + 3) / 4);
         const blockHeight = Math.floor((height + 3) / 4);
+        const blockDepth = Math.floor((depth + 3) / 4);
 
         if (format === PIXELFORMAT_PVRTC_2BPP_RGB_1 ||
             format === PIXELFORMAT_PVRTC_2BPP_RGBA_1) {
             blockWidth = Math.max(Math.floor(blockWidth / 2), 1);
         }
 
-        return blockWidth * blockHeight * blockSize;
+        return blockWidth * blockHeight * blockDepth * blockSize;
     }
 
     /**
@@ -62,13 +75,12 @@ class TextureUtils {
      * @param {boolean} mipmaps - True if the texture includes mipmaps, false otherwise.
      * @param {boolean} cubemap - True is the texture is a cubemap, false otherwise.
      * @returns {number} The number of bytes of GPU memory required for the texture.
-     * @ignore
      */
     static calcGpuSize(width, height, depth, format, mipmaps, cubemap) {
         let result = 0;
 
         while (1) {
-            result += TextureUtils.calcLevelGpuSize(width, height, format);
+            result += TextureUtils.calcLevelGpuSize(width, height, depth, format);
 
             // we're done if mipmaps aren't required or we've calculated the smallest mipmap level
             if (!mipmaps || ((width === 1) && (height === 1) && (depth === 1))) {

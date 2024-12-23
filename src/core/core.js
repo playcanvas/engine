@@ -1,47 +1,13 @@
 /**
- * @name pc
- * @namespace
- * @description Root namespace for the PlayCanvas Engine.
+ * The engine version number. This is in semantic versioning format (MAJOR.MINOR.PATCH).
  */
-
 const version = '$_CURRENT_SDK_VERSION';
-const revision = '$_CURRENT_SDK_REVISION';
-const config = { };
-const common = { };
-const apps = { }; // Storage for the applications using the PlayCanvas Engine
-const data = { }; // Storage for exported entity data
-
-// Create look up table for types.
-const _typeLookup = function () {
-    const result = { };
-    const names = ['Array', 'Object', 'Function', 'Date', 'RegExp', 'Float32Array'];
-
-    for (let i = 0; i < names.length; i++)
-        result['[object ' + names[i] + ']'] = names[i].toLowerCase();
-
-    return result;
-}();
 
 /**
- * Extended typeof() function, returns the type of the object.
- *
- * @param {object} obj - The object to get the type of.
- * @returns {string} The type string: "null", "undefined", "number", "string", "boolean", "array", "object", "function", "date", "regexp" or "float32array".
- * @ignore
+ * The engine revision number. This is the Git hash of the last commit made to the branch
+ * from which the engine was built.
  */
-function type(obj) {
-    if (obj === null) {
-        return 'null';
-    }
-
-    const type = typeof obj;
-
-    if (type === 'undefined' || type === 'number' || type === 'string' || type === 'boolean') {
-        return type;
-    }
-
-    return _typeLookup[Object.prototype.toString.call(obj)];
-}
+const revision = '$_CURRENT_SDK_REVISION';
 
 /**
  * Merge the contents of two objects into a single object.
@@ -61,7 +27,7 @@ function type(obj) {
  *     }
  * };
  *
- * pc.extend(A, B);
+ * extend(A, B);
  * A.a();
  * // logs "a"
  * A.b();
@@ -72,10 +38,10 @@ function extend(target, ex) {
     for (const prop in ex) {
         const copy = ex[prop];
 
-        if (type(copy) === 'object') {
-            target[prop] = extend({}, copy);
-        } else if (type(copy) === 'array') {
+        if (Array.isArray(copy)) {
             target[prop] = extend([], copy);
+        } else if (copy && typeof copy === 'object') {
+            target[prop] = extend({}, copy);
         } else {
             target[prop] = copy;
         }
@@ -84,4 +50,4 @@ function extend(target, ex) {
     return target;
 }
 
-export { apps, common, config, data, extend, revision, type, version };
+export { extend, revision, version };

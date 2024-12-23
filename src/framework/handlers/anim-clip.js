@@ -4,24 +4,16 @@ import { AnimCurve } from '../anim/evaluator/anim-curve.js';
 import { AnimData } from '../anim/evaluator/anim-data.js';
 import { AnimTrack } from '../anim/evaluator/anim-track.js';
 
-/** @typedef {import('./handler.js').ResourceHandler} ResourceHandler */
+import { ResourceHandler } from './handler.js';
 
 /**
  * Resource handler used for loading {@link AnimClip} resources.
  *
- * @implements {ResourceHandler}
  * @ignore
  */
-class AnimClipHandler {
-    /**
-     * Type of the resource the handler handles.
-     *
-     * @type {string}
-     */
-    handlerType = "animclip";
-
+class AnimClipHandler extends ResourceHandler {
     constructor(app) {
-        this.maxRetries = 0;
+        super(app, 'animclip');
     }
 
     load(url, callback) {
@@ -42,7 +34,7 @@ class AnimClipHandler {
             options.responseType = Http.ResponseType.JSON;
         }
 
-        http.get(url.load, options, function (err, response) {
+        http.get(url.load, options, (err, response) => {
             if (err) {
                 callback(`Error loading animation clip resource: ${url.original} [${err}]`);
             } else {
@@ -54,13 +46,13 @@ class AnimClipHandler {
     open(url, data) {
         const name = data.name;
         const duration = data.duration;
-        const inputs = data.inputs.map(function (input) {
+        const inputs = data.inputs.map((input) => {
             return new AnimData(1, input);
         });
-        const outputs = data.outputs.map(function (output) {
+        const outputs = data.outputs.map((output) => {
             return new AnimData(output.components, output.data);
         });
-        const curves = data.curves.map(function (curve) {
+        const curves = data.curves.map((curve) => {
             return new AnimCurve(
                 [curve.path],
                 curve.inputIndex,
@@ -75,9 +67,6 @@ class AnimClipHandler {
             outputs,
             curves
         );
-    }
-
-    patch(asset, assets) {
     }
 }
 

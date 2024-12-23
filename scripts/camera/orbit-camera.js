@@ -31,7 +31,7 @@ OrbitCamera.attributes.add('frameOnStart', {
 
 // Property to get and set the distance between the pivot point and camera
 // Clamped between this.distanceMin and this.distanceMax
-Object.defineProperty(OrbitCamera.prototype, "distance", {
+Object.defineProperty(OrbitCamera.prototype, 'distance', {
     get: function () {
         return this._targetDistance;
     },
@@ -41,11 +41,23 @@ Object.defineProperty(OrbitCamera.prototype, "distance", {
     }
 });
 
+// Property to get and set the camera orthoHeight
+// Clamped above 0
+Object.defineProperty(OrbitCamera.prototype, 'orthoHeight', {
+    get: function () {
+        return this.entity.camera.orthoHeight;
+    },
+
+    set: function (value) {
+        this.entity.camera.orthoHeight = Math.max(0, value);
+    }
+});
+
 
 // Property to get and set the pitch of the camera around the pivot point (degrees)
 // Clamped between this.pitchAngleMin and this.pitchAngleMax
 // When set at 0, the camera angle is flat, looking along the horizon
-Object.defineProperty(OrbitCamera.prototype, "pitch", {
+Object.defineProperty(OrbitCamera.prototype, 'pitch', {
     get: function () {
         return this._targetPitch;
     },
@@ -57,7 +69,7 @@ Object.defineProperty(OrbitCamera.prototype, "pitch", {
 
 
 // Property to get and set the yaw of the camera around the pivot point (degrees)
-Object.defineProperty(OrbitCamera.prototype, "yaw", {
+Object.defineProperty(OrbitCamera.prototype, 'yaw', {
     get: function () {
         return this._targetYaw;
     },
@@ -82,7 +94,7 @@ Object.defineProperty(OrbitCamera.prototype, "yaw", {
 
 
 // Property to get and set the world position of the pivot point that the camera orbits around
-Object.defineProperty(OrbitCamera.prototype, "pivotPoint", {
+Object.defineProperty(OrbitCamera.prototype, 'pivotPoint', {
     get: function () {
         return this._pivotPoint;
     },
@@ -232,7 +244,7 @@ OrbitCamera.prototype.initialize = function () {
         }
     });
 
-    this.on('destroy', function () {
+    this.on('destroy', () => {
         window.removeEventListener('resize', onWindowResize, false);
     });
 };
@@ -282,7 +294,7 @@ OrbitCamera.prototype._checkAspectRatio = function () {
 OrbitCamera.prototype._buildAabb = function (entity) {
     var i, m, meshInstances = [];
 
-    var renders = entity.findComponents("render");
+    var renders = entity.findComponents('render');
     for (i = 0; i < renders.length; i++) {
         var render = renders[i];
         for (m = 0; m < render.meshInstances.length; m++) {
@@ -290,11 +302,20 @@ OrbitCamera.prototype._buildAabb = function (entity) {
         }
     }
 
-    var models = entity.findComponents("model");
+    var models = entity.findComponents('model');
     for (i = 0; i < models.length; i++) {
         var model = models[i];
         for (m = 0; m < model.meshInstances.length; m++) {
             meshInstances.push(model.meshInstances[m]);
+        }
+    }
+
+    var gsplats = entity.findComponents('gsplat');
+    for (i = 0; i < gsplats.length; i++) {
+        var gsplat = gsplats[i];
+        var instance = gsplat.instance;
+        if (instance?.meshInstance) {
+            meshInstances.push(instance.meshInstance);
         }
     }
 
@@ -472,7 +493,11 @@ OrbitCameraInputMouse.prototype.onMouseMove = function (event) {
 
 
 OrbitCameraInputMouse.prototype.onMouseWheel = function (event) {
-    this.orbitCamera.distance -= event.wheel * this.distanceSensitivity * (this.orbitCamera.distance * 0.1);
+    if (this.entity.camera.projection === pc.PROJECTION_PERSPECTIVE) {
+        this.orbitCamera.distance -= event.wheelDelta * -2 * this.distanceSensitivity * (this.orbitCamera.distance * 0.1);
+    } else {
+        this.orbitCamera.orthoHeight -= event.wheelDelta * -2 * this.distanceSensitivity;
+    }
     event.event.preventDefault();
 };
 

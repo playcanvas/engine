@@ -1,28 +1,38 @@
 import { Debug, DebugHelper } from '../../../core/debug.js';
 import { SHADERLANGUAGE_WGSL } from '../constants.js';
-
+import { DebugGraphics } from '../debug-graphics.js';
 import { ShaderProcessor } from '../shader-processor.js';
 import { WebgpuDebug } from './webgpu-debug.js';
 
 /**
+ * @import { GraphicsDevice } from '../graphics-device.js'
+ * @import { Shader } from '../shader.js'
+ */
+
+/**
  * A WebGPU implementation of the Shader.
- *
- * @ignore
  */
 class WebgpuShader {
     /**
      * Transpiled vertex shader code.
      *
-     * @type {Uint32Array | string}
+     * @type {string|null}
      */
-    _vertexCode;
+    _vertexCode = null;
 
     /**
      * Transpiled fragment shader code.
      *
-     * @type {Uint32Array | string}
+     * @type {string|null}
      */
-    _fragmentCode;
+    _fragmentCode = null;
+
+    /**
+     * Compute shader code.
+     *
+     * @type {string|null}
+     */
+    _computeCode = null;
 
     /**
      * Name of the vertex entry point function.
@@ -35,10 +45,15 @@ class WebgpuShader {
     fragmentEntryPoint = 'main';
 
     /**
-     * @param {import('../shader.js').Shader} shader - The shader.
+     * Name of the compute entry point function.
+     */
+    computeEntryPoint = 'main';
+
+    /**
+     * @param {Shader} shader - The shader.
      */
     constructor(shader) {
-        /** @type {import('../shader.js').Shader} */
+        /** @type {Shader} */
         this.shader = shader;
 
         const definition = shader.definition;
@@ -46,8 +61,16 @@ class WebgpuShader {
 
         if (definition.shaderLanguage === SHADERLANGUAGE_WGSL) {
 
-            this._vertexCode = definition.vshader;
-            this._fragmentCode = definition.fshader;
+            this._vertexCode = definition.vshader ?? null;
+            this._fragmentCode = definition.fshader ?? null;
+            this._computeCode = definition.cshader ?? null;
+
+            shader.meshUniformBufferFormat = definition.meshUniformBufferFormat;
+            shader.meshBindGroupFormat = definition.meshBindGroupFormat;
+
+            this.computeUniformBufferFormats = definition.computeUniformBufferFormats;
+            this.computeBindGroupFormat = definition.computeBindGroupFormat;
+
             this.vertexEntryPoint = 'vertexMain';
             this.fragmentEntryPoint = 'fragmentMain';
             shader.ready = true;
@@ -63,7 +86,7 @@ class WebgpuShader {
     /**
      * Free the WebGPU resources associated with a shader.
      *
-     * @param {import('../shader.js').Shader} shader - The shader to free.
+     * @param {Shader} shader - The shader to free.
      */
     destroy(shader) {
         this._vertexCode = null;
@@ -98,6 +121,10 @@ class WebgpuShader {
         return this.createShaderModule(this._fragmentCode, 'Fragment');
     }
 
+    getComputeShaderModule() {
+        return this.createShaderModule(this._computeCode, 'Compute');
+    }
+
     process() {
         const shader = this.shader;
 
@@ -125,12 +152,15 @@ class WebgpuShader {
     transpile(src, shaderType, originalSrc) {
         try {
             const spirv = this.shader.device.glslang.compileGLSL(src, shaderType);
-            return this.shader.device.twgsl.convertSpirV2WGSL(spirv);
+            const wgsl = this.shader.device.twgsl.convertSpirV2WGSL(spirv);
+            return wgsl;
         } catch (err) {
-            console.error(`Failed to transpile webgl ${shaderType} shader [${this.shader.label}] to WebGPU: [${err.message}]`, {
+            console.error(`Failed to transpile webgl ${shaderType} shader [${this.shader.label}] to WebGPU while rendering ${DebugGraphics.toString()}, error:\n [${err.stack}]`, {
                 processed: src,
                 original: originalSrc,
-                shader: this.shader
+                shader: this.shader,
+                error: err,
+                stack: err.stack
             });
         }
     }
@@ -154,8 +184,8 @@ class WebgpuShader {
     /**
      * Restore shader after the context has been obtained.
      *
-     * @param {import('../graphics-device.js').GraphicsDevice} device - The graphics device.
-     * @param {import('../shader.js').Shader} shader - The shader to restore.
+     * @param {GraphicsDevice} device - The graphics device.
+     * @param {Shader} shader - The shader to restore.
      */
     restoreContext(device, shader) {
     }

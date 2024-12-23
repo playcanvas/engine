@@ -1,9 +1,7 @@
-import { WebglBuffer } from "./webgl-buffer.js";
+import { WebglBuffer } from './webgl-buffer.js';
 
 /**
  * A WebGL implementation of the VertexBuffer.
- *
- * @ignore
  */
 class WebglVertexBuffer extends WebglBuffer {
     // vertex array object
@@ -14,8 +12,7 @@ class WebglVertexBuffer extends WebglBuffer {
         super.destroy(device);
 
         // clear up bound vertex buffers
-        device.boundVao = null;
-        device.gl.bindVertexArray(null);
+        device.unbindVertexArray();
     }
 
     loseContext() {

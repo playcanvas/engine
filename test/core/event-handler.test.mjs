@@ -1,6 +1,6 @@
-import { EventHandler } from '../../src/core/event-handler.js';
-
 import { expect } from 'chai';
+
+import { EventHandler } from '../../src/core/event-handler.js';
 
 describe('EventHandler', function () {
 
@@ -25,7 +25,7 @@ describe('EventHandler', function () {
         it('calls handler on fire', function () {
             const e = new EventHandler();
             let called = false;
-            e.on('test', () => {
+            e.on('test', function () {
                 called = true;
             });
             e.fire('test');
@@ -58,7 +58,7 @@ describe('EventHandler', function () {
         it('unregisters itself after the first fire', function () {
             const e = new EventHandler();
             let count = 0;
-            e.once('test', () => {
+            e.once('test', function () {
                 count++;
             });
             expect(e.hasEvent('test')).to.be.true;

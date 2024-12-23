@@ -1,10 +1,11 @@
 import { Vec2 } from '../../core/math/vec2.js';
 import { Vec4 } from '../../core/math/vec4.js';
 
+import { ADDRESS_CLAMP_TO_EDGE, FILTER_NEAREST, PIXELFORMAT_RGBA8 } from '../../platform/graphics/constants.js';
 import { RenderTarget } from '../../platform/graphics/render-target.js';
+import { Texture } from '../../platform/graphics/texture.js';
 
-import { LIGHTTYPE_OMNI, LIGHTTYPE_SPOT, SHADOW_PCF3 } from '../constants.js';
-import { CookieRenderer } from '../renderer/cookie-renderer.js';
+import { LIGHTTYPE_OMNI, LIGHTTYPE_SPOT, SHADOW_PCF3_32F, shadowTypeInfo } from '../constants.js';
 import { ShadowMap } from '../renderer/shadow-map.js';
 
 const _tempArray = [];
@@ -35,9 +36,25 @@ class LightTextureAtlas {
         // This needs to be a pixel more than a shadow filter needs to access.
         this.shadowEdgePixels = 3;
 
-        this.cookieAtlasResolution = 2048;
-        this.cookieAtlas = null;
-        this.cookieRenderTarget = null;
+        this.cookieAtlasResolution = 4;
+        this.cookieAtlas = new Texture(this.device, {
+            name: 'CookieAtlas',
+            width: this.cookieAtlasResolution,
+            height: this.cookieAtlasResolution,
+            format: PIXELFORMAT_RGBA8,
+            cubemap: false,
+            mipmaps: false,
+            minFilter: FILTER_NEAREST,
+            magFilter: FILTER_NEAREST,
+            addressU: ADDRESS_CLAMP_TO_EDGE,
+            addressV: ADDRESS_CLAMP_TO_EDGE
+        });
+
+        this.cookieRenderTarget = new RenderTarget({
+            colorBuffer: this.cookieAtlas,
+            depth: false,
+            flipY: true
+        });
 
         // available slots (of type Slot)
         this.slots = [];
@@ -69,31 +86,29 @@ class LightTextureAtlas {
     }
 
     destroyShadowAtlas() {
-        if (this.shadowAtlas) {
-            this.shadowAtlas.destroy();
-            this.shadowAtlas = null;
-        }
+        this.shadowAtlas?.destroy();
+        this.shadowAtlas = null;
     }
 
     destroyCookieAtlas() {
-        if (this.cookieAtlas) {
-            this.cookieAtlas.destroy();
-            this.cookieAtlas = null;
-        }
-        if (this.cookieRenderTarget) {
-            this.cookieRenderTarget.destroy();
-            this.cookieRenderTarget = null;
-        }
+        this.cookieAtlas?.destroy();
+        this.cookieAtlas = null;
+
+        this.cookieRenderTarget?.destroy();
+        this.cookieRenderTarget = null;
     }
 
-    allocateShadowAtlas(resolution) {
-        if (!this.shadowAtlas || this.shadowAtlas.texture.width !== resolution) {
+    allocateShadowAtlas(resolution, shadowType = SHADOW_PCF3_32F) {
+
+        const existingFormat = this.shadowAtlas?.texture.format;
+        const requiredFormat = shadowTypeInfo.get(shadowType).format;
+        if (!this.shadowAtlas || this.shadowAtlas.texture.width !== resolution || existingFormat !== requiredFormat) {
 
             // content of atlas is lost, force re-render of static shadows
             this.version++;
 
             this.destroyShadowAtlas();
-            this.shadowAtlas = ShadowMap.createAtlas(this.device, resolution, SHADOW_PCF3);
+            this.shadowAtlas = ShadowMap.createAtlas(this.device, resolution, shadowType);
 
             // avoid it being destroyed by lights
             this.shadowAtlas.cached = true;
@@ -106,19 +121,14 @@ class LightTextureAtlas {
     }
 
     allocateCookieAtlas(resolution) {
-        if (!this.cookieAtlas || this.cookieAtlas.width !== resolution) {
+
+        // resize atlas
+        if (this.cookieAtlas.width !== resolution) {
+
+            this.cookieRenderTarget.resize(resolution, resolution);
 
             // content of atlas is lost, force re-render of static cookies
             this.version++;
-
-            this.destroyCookieAtlas();
-            this.cookieAtlas = CookieRenderer.createTexture(this.device, resolution);
-
-            this.cookieRenderTarget = new RenderTarget({
-                colorBuffer: this.cookieAtlas,
-                depth: false,
-                flipY: true
-            });
         }
     }
 
@@ -133,10 +143,8 @@ class LightTextureAtlas {
     updateUniforms() {
 
         // shadow atlas texture
-        const isShadowFilterPcf = true;
         const rt = this.shadowAtlas.renderTargets[0];
-        const isDepthShadow = (this.device.isWebGPU || this.device.webgl2) && isShadowFilterPcf;
-        const shadowBuffer = isDepthShadow ? rt.depthBuffer : rt.colorBuffer;
+        const shadowBuffer = rt.depthBuffer;
         this._shadowAtlasTextureId.setValue(shadowBuffer);
 
         // shadow atlas params
@@ -210,7 +218,7 @@ class LightTextureAtlas {
         }
     }
 
-    collectLights(spotLights, omniLights, lightingParams) {
+    collectLights(localLights, lightingParams) {
 
         const cookiesEnabled = lightingParams.cookiesEnabled;
         const shadowsEnabled = lightingParams.shadowsEnabled;
@@ -239,8 +247,7 @@ class LightTextureAtlas {
         };
 
         if (cookiesEnabled || shadowsEnabled) {
-            processLights(spotLights);
-            processLights(omniLights);
+            processLights(localLights);
         }
 
         // sort lights by maxScreenSize - to have them ordered by atlas slot size
@@ -249,7 +256,7 @@ class LightTextureAtlas {
         });
 
         if (needsShadowAtlas) {
-            this.allocateShadowAtlas(this.shadowAtlasResolution);
+            this.allocateShadowAtlas(this.shadowAtlasResolution, lightingParams.shadowType);
         }
 
         if (needsCookieAtlas) {
@@ -322,14 +329,14 @@ class LightTextureAtlas {
     }
 
     // update texture atlas for a list of lights
-    update(spotLights, omniLights, lightingParams) {
+    update(localLights, lightingParams) {
 
         // update texture resolutions
         this.shadowAtlasResolution = lightingParams.shadowAtlasResolution;
         this.cookieAtlasResolution = lightingParams.cookieAtlasResolution;
 
         // collect lights requiring atlas
-        const lights = this.collectLights(spotLights, omniLights, lightingParams);
+        const lights = this.collectLights(localLights, lightingParams);
         if (lights.length > 0) {
 
             // mark all slots as unused
@@ -351,8 +358,9 @@ class LightTextureAtlas {
             for (let i = 0; i < assignCount; i++) {
                 const light = lights[i];
 
-                if (light.castShadows)
+                if (light.castShadows) {
                     light._shadowMap = this.shadowAtlas;
+                }
 
                 // if currently assigned slot is the same size as what is needed, and was last used by this light, reuse it
                 const previousSlot = slots[light.atlasSlotIndex];
@@ -369,8 +377,9 @@ class LightTextureAtlas {
             for (let i = 0; i < assignCount; i++) {
 
                 // skip already used slots
-                while (usedCount < slots.length && slots[usedCount].used)
+                while (usedCount < slots.length && slots[usedCount].used) {
                     usedCount++;
+                }
 
                 const light = lights[i];
                 if (!light.atlasViewportAllocated) {

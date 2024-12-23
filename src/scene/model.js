@@ -4,14 +4,20 @@ import { MorphInstance } from './morph-instance.js';
 import { SkinInstance } from './skin-instance.js';
 
 /**
+ * @import { GraphNode } from './graph-node.js'
+ */
+
+/**
  * A model is a graphical object that can be added to or removed from a scene. It contains a
  * hierarchy and any number of mesh instances.
+ *
+ * @category Graphics
  */
 class Model {
     /**
      * The root node of the model's graph node hierarchy.
      *
-     * @type {import('./graph-node.js').GraphNode|null}
+     * @type {GraphNode|null}
      */
     graph = null;
 

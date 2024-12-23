@@ -1,17 +1,19 @@
-import { ORIENTATION_HORIZONTAL, ORIENTATION_VERTICAL } from '../../../../src/scene/constants.js';
-import { ELEMENTTYPE_GROUP } from '../../../../src/framework/components/element/constants.js';
-import { FITTING_BOTH, FITTING_NONE, FITTING_SHRINK, FITTING_STRETCH } from '../../../../src/framework/components/layout-group/constants.js';
-import { Application } from '../../../../src/framework/application.js';
-import { Entity } from '../../../../src/framework/entity.js';
-import { LayoutCalculator } from '../../../../src/framework/components/layout-group/layout-calculator.js';
-import { Vec2 } from '../../../../src/core/math/vec2.js';
-import { Vec4 } from '../../../../src/core/math/vec4.js';
-
-import { HTMLCanvasElement } from '@playcanvas/canvas-mock';
-
 import { expect } from 'chai';
 
-/** @typedef {import('../../../../src/framework/components/element/component.js').ElementComponent} ElementComponent */
+import { Vec2 } from '../../../../src/core/math/vec2.js';
+import { Vec4 } from '../../../../src/core/math/vec4.js';
+import { ELEMENTTYPE_GROUP } from '../../../../src/framework/components/element/constants.js';
+import { FITTING_BOTH, FITTING_NONE, FITTING_SHRINK, FITTING_STRETCH } from '../../../../src/framework/components/layout-group/constants.js';
+import { LayoutCalculator } from '../../../../src/framework/components/layout-group/layout-calculator.js';
+import { Entity } from '../../../../src/framework/entity.js';
+import { ORIENTATION_HORIZONTAL, ORIENTATION_VERTICAL } from '../../../../src/scene/constants.js';
+import { createApp } from '../../../app.mjs';
+import { jsdomSetup, jsdomTeardown } from '../../../jsdom.mjs';
+
+/**
+ * @import { Application } from '../../../../src/framework/application.js'
+ * @import { ElementComponent } from '../../../../src/framework/components/element/component.js'
+ */
 
 describe('LayoutCalculator', function () {
     /** @type {Application} */
@@ -31,7 +33,7 @@ describe('LayoutCalculator', function () {
     let mixedHeightElementsWithLayoutChildComponents; // eslint-disable-line no-unused-vars
 
     const applyProperties = function (object, properties) {
-        Object.keys(properties).forEach(function (propertyName) {
+        Object.keys(properties).forEach((propertyName) => {
             object[propertyName] = properties[propertyName];
         });
     };
@@ -55,14 +57,15 @@ describe('LayoutCalculator', function () {
     };
 
     const buildElements = function (elementSpecs) {
-        return elementSpecs.map(function (properties) {
+        return elementSpecs.map((properties) => {
             return buildElement(properties);
         });
     };
 
     beforeEach(function () {
-        const canvas = new HTMLCanvasElement(500, 500);
-        app = new Application(canvas);
+        jsdomSetup();
+        app = createApp();
+
         calculator = new LayoutCalculator();
 
         options = {
@@ -242,7 +245,9 @@ describe('LayoutCalculator', function () {
     });
 
     afterEach(function () {
-        app.destroy();
+        app?.destroy();
+        app = null;
+        jsdomTeardown();
     });
 
     const calculate = function () {
@@ -252,7 +257,7 @@ describe('LayoutCalculator', function () {
     const assertValues = function (property, values, options) {
         options = options || {};
 
-        elements.forEach(function (element, i) {
+        elements.forEach((element, i) => {
             let propertyValue;
             if (property === 'x' || property === 'y') {
                 propertyValue = element.entity.localPosition[property];
@@ -269,7 +274,7 @@ describe('LayoutCalculator', function () {
     };
 
     it('throws an error if provided with an unrecognized orientation', function () {
-        expect(function () {
+        expect(() => {
             elements = mixedWidthElements;
             options.orientation = 42;
             calculate();

@@ -3,8 +3,11 @@ import { Color } from '../../core/math/color.js';
 import { Mat4 } from '../../core/math/mat4.js';
 import { Quat } from '../../core/math/quat.js';
 import { Vec3 } from '../../core/math/vec3.js';
-
 import { XRTYPE_AR } from './constants.js';
+
+/**
+ * @import { XrManager } from './xr-manager.js'
+ */
 
 const vec3A = new Vec3();
 const vec3B = new Vec3();
@@ -18,11 +21,34 @@ const mat4B = new Mat4();
  * Spherical Harmonics data. And the most simple level of light estimation is the most prominent
  * directional light, its rotation, intensity and color.
  *
- * @augments EventHandler
+ * @category XR
  */
 class XrLightEstimation extends EventHandler {
     /**
-     * @type {import('./xr-manager.js').XrManager}
+     * Fired when light estimation data becomes available.
+     *
+     * @event
+     * @example
+     * app.xr.lightEstimation.on('available', () => {
+     *     console.log('Light estimation is available');
+     * });
+     */
+    static EVENT_AVAILABLE = 'available';
+
+    /**
+     * Fired when light estimation has failed to start. The handler is passed the Error object
+     * related to failure of light estimation start.
+     *
+     * @event
+     * @example
+     * app.xr.lightEstimation.on('error', (error) => {
+     *     console.error(error.message);
+     * });
+     */
+    static EVENT_ERROR = 'error';
+
+    /**
+     * @type {XrManager}
      * @private
      */
     _manager;
@@ -78,8 +104,8 @@ class XrLightEstimation extends EventHandler {
     /**
      * Create a new XrLightEstimation instance.
      *
-     * @param {import('./xr-manager.js').XrManager} manager - WebXR Manager.
-     * @hideconstructor
+     * @param {XrManager} manager - WebXR Manager.
+     * @ignore
      */
     constructor(manager) {
         super();
@@ -89,23 +115,6 @@ class XrLightEstimation extends EventHandler {
         this._manager.on('start', this._onSessionStart, this);
         this._manager.on('end', this._onSessionEnd, this);
     }
-
-    /**
-     * Fired when light estimation data becomes available.
-     *
-     * @event XrLightEstimation#available
-     */
-
-    /**
-     * Fired when light estimation has failed to start.
-     *
-     * @event XrLightEstimation#error
-     * @param {Error} error - Error object related to failure of light estimation start.
-     * @example
-     * app.xr.lightEstimation.on('error', function (ex) {
-     *     // has failed to start
-     * });
-     */
 
     /** @private */
     _onSessionStart() {
@@ -129,7 +138,7 @@ class XrLightEstimation extends EventHandler {
      * fired.
      *
      * @example
-     * app.xr.on('start', function () {
+     * app.xr.on('start', () => {
      *     if (app.xr.lightEstimation.supported) {
      *         app.xr.lightEstimation.start();
      *     }
@@ -138,17 +147,21 @@ class XrLightEstimation extends EventHandler {
     start() {
         let err;
 
-        if (!this._manager.session)
+        if (!this._manager.session) {
             err = new Error('XR session is not running');
+        }
 
-        if (!err && this._manager.type !== XRTYPE_AR)
+        if (!err && this._manager.type !== XRTYPE_AR) {
             err = new Error('XR session type is not AR');
+        }
 
-        if (!err && !this._supported)
+        if (!err && !this._supported) {
             err = new Error('light-estimation is not supported');
+        }
 
-        if (!err && this._lightProbe || this._lightProbeRequested)
+        if (!err && this._lightProbe || this._lightProbeRequested) {
             err = new Error('light estimation is already requested');
+        }
 
         if (err) {
             this.fire('error', err);
@@ -185,7 +198,7 @@ class XrLightEstimation extends EventHandler {
     }
 
     /**
-     * @param {*} frame - XRFrame from requestAnimationFrame callback.
+     * @param {XRFrame} frame - XRFrame from requestAnimationFrame callback.
      * @ignore
      */
     update(frame) {
@@ -273,11 +286,9 @@ class XrLightEstimation extends EventHandler {
     }
 
     /**
-     * Spherical harmonics coefficients of what is estimated to be the most prominent directional
-     * light. Or null if data is not available.
+     * Spherical harmonic coefficients of estimated ambient light. Or null if data is not available.
      *
      * @type {Float32Array|null}
-     * @ignore
      */
     get sphericalHarmonics() {
         return this._available ? this._sphericalHarmonics : null;

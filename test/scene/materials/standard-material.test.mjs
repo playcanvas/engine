@@ -1,10 +1,10 @@
-import { CUBEPROJ_NONE, DETAILMODE_MUL, FRESNEL_SCHLICK, SPECOCC_AO, SPECULAR_BLINN } from '../../../src/scene/constants.js';
+import { expect } from 'chai';
+
 import { Color } from '../../../src/core/math/color.js';
+import { Vec2 } from '../../../src/core/math/vec2.js';
+import { CUBEPROJ_NONE, DETAILMODE_MUL, DITHER_NONE, FRESNEL_SCHLICK, SPECOCC_AO } from '../../../src/scene/constants.js';
 import { Material } from '../../../src/scene/materials/material.js';
 import { StandardMaterial } from '../../../src/scene/materials/standard-material.js';
-import { Vec2 } from '../../../src/core/math/vec2.js';
-
-import { expect } from 'chai';
 
 describe('StandardMaterial', function () {
 
@@ -13,10 +13,9 @@ describe('StandardMaterial', function () {
         expect(material).to.be.an.instanceof(Material);
         expect(material.alphaFade).to.equal(1);
         expect(material.ambient).to.be.an.instanceof(Color);
-        expect(material.ambient.r).to.equal(0.7);
-        expect(material.ambient.g).to.equal(0.7);
-        expect(material.ambient.b).to.equal(0.7);
-        expect(material.ambientTint).to.equal(false);
+        expect(material.ambient.r).to.equal(1);
+        expect(material.ambient.g).to.equal(1);
+        expect(material.ambient.b).to.equal(1);
         expect(material.anisotropy).to.equal(0);
 
         expect(material.aoDetailMap).to.be.null;
@@ -83,8 +82,6 @@ describe('StandardMaterial', function () {
         expect(material.clearCoatVertexColor).to.equal(false);
         expect(material.clearCoatVertexColorChannel).to.equal('g');
 
-        expect(material.conserveEnergy).to.equal(true);
-
         expect(material.cubeMap).to.be.null;
         expect(material.cubeMapProjection).to.equal(CUBEPROJ_NONE);
         expect(material.cubeMapProjectionBox).to.be.null;
@@ -114,7 +111,6 @@ describe('StandardMaterial', function () {
         expect(material.diffuseMapTiling.x).to.equal(1);
         expect(material.diffuseMapTiling.y).to.equal(1);
         expect(material.diffuseMapUv).to.equal(0);
-        expect(material.diffuseTint).to.equal(false);
         expect(material.diffuseVertexColor).to.equal(false);
         expect(material.diffuseVertexColorChannel).to.equal('rgb');
 
@@ -133,7 +129,6 @@ describe('StandardMaterial', function () {
         expect(material.emissiveMapTiling.x).to.equal(1);
         expect(material.emissiveMapTiling.y).to.equal(1);
         expect(material.emissiveMapUv).to.equal(0);
-        expect(material.emissiveTint).to.equal(false);
         expect(material.emissiveVertexColor).to.equal(false);
         expect(material.emissiveVertexColorChannel).to.equal('rgb');
 
@@ -221,6 +216,8 @@ describe('StandardMaterial', function () {
 
         expect(material.opacity).to.equal(1);
         expect(material.opacityFadesSpecular).to.equal(true);
+        expect(material.opacityDither).to.equal(DITHER_NONE);
+        expect(material.opacityShadowDither).to.equal(DITHER_NONE);
         expect(material.opacityMap).to.be.null;
         expect(material.opacityMapChannel).to.equal('a');
         expect(material.opacityMapOffset).to.be.an.instanceof(Vec2);
@@ -239,7 +236,7 @@ describe('StandardMaterial', function () {
         expect(material.reflectivity).to.equal(1);
         expect(material.refraction).to.equal(0);
         expect(material.refractionIndex).to.equal(1.0 / 1.5);
-        expect(material.shadingModel).to.equal(SPECULAR_BLINN);
+        expect(material.dispersion).to.equal(0);
 
         expect(material.specular).to.be.instanceof(Color);
         expect(material.specular.r).to.equal(0);
@@ -278,7 +275,7 @@ describe('StandardMaterial', function () {
         expect(material.twoSidedLighting).to.equal(false);
 
         expect(material.useFog).to.equal(true);
-        expect(material.useGammaTonemap).to.equal(true);
+        expect(material.useTonemap).to.equal(true);
         expect(material.useLighting).to.equal(true);
         expect(material.useMetalness).to.equal(false);
         expect(material.useMetalnessSpecularColor).to.equal(false);

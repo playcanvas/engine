@@ -1,14 +1,11 @@
+import { createServer } from 'http';
+
 import handler from 'serve-handler';
-import http from 'http';
-import XMLHttpRequest from 'xhr2';
 
 let server;
 
 export const mochaGlobalSetup = () => {
-    // Provide a polyfill for XMLHttpRequest required by the engine
-    global.XMLHttpRequest = XMLHttpRequest;
-
-    server = http.createServer((request, response) => {
+    server = createServer((request, response) => {
         return handler(request, response);
     });
 

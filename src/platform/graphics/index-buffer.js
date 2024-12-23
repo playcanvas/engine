@@ -1,5 +1,10 @@
 import { Debug } from '../../core/debug.js';
 import { TRACEID_VRAM_IB } from '../../core/constants.js';
+
+/**
+ * @import { GraphicsDevice } from './graphics-device.js'
+ */
+
 import {
     BUFFER_STATIC, INDEXFORMAT_UINT16, INDEXFORMAT_UINT32, typedArrayIndexFormatsByteSize
 } from './constants.js';
@@ -11,13 +16,14 @@ let id = 0;
  * can normally utilize less memory that unindexed primitives (if vertices are shared).
  *
  * Typically, index buffers are set on {@link Mesh} objects.
+ *
+ * @category Graphics
  */
 class IndexBuffer {
     /**
      * Create a new IndexBuffer instance.
      *
-     * @param {import('./graphics-device.js').GraphicsDevice} graphicsDevice - The graphics device
-     * used to manage this index buffer.
+     * @param {GraphicsDevice} graphicsDevice - The graphics device used to manage this index buffer.
      * @param {number} format - The type of each index to be stored in the index buffer. Can be:
      *
      * - {@link INDEXFORMAT_UINT8}
@@ -33,6 +39,9 @@ class IndexBuffer {
      * Defaults to {@link BUFFER_STATIC}.
      * @param {ArrayBuffer} [initialData] - Initial data. If left unspecified, the index buffer
      * will be initialized to zeros.
+     * @param {object} [options] - Object for passing optional arguments.
+     * @param {boolean} [options.storage] - Defines if the index buffer can be used as a storage
+     * buffer by a compute shader. Defaults to false. Only supported on WebGPU.
      * @example
      * // Create an index buffer holding 3 16-bit indices. The buffer is marked as
      * // static, hinting that the buffer will never be modified.
@@ -43,7 +52,7 @@ class IndexBuffer {
      *                                        pc.BUFFER_STATIC,
      *                                        indices);
      */
-    constructor(graphicsDevice, format, numIndices, usage = BUFFER_STATIC, initialData) {
+    constructor(graphicsDevice, format, numIndices, usage = BUFFER_STATIC, initialData, options) {
         // By default, index buffers are static (better for performance since buffer data can be cached in VRAM)
         this.device = graphicsDevice;
         this.format = format;
@@ -52,7 +61,7 @@ class IndexBuffer {
 
         this.id = id++;
 
-        this.impl = graphicsDevice.createIndexBufferImpl(this);
+        this.impl = graphicsDevice.createIndexBufferImpl(this, options);
 
         // Allocate the storage
         const bytesPerIndex = typedArrayIndexFormatsByteSize[format];
@@ -199,8 +208,9 @@ class IndexBuffer {
                 indices.set(data);
             } else {
                 // data is array, copy right amount manually
-                for (let i = 0; i < count; i++)
+                for (let i = 0; i < count; i++) {
                     indices[i] = data[i];
+                }
             }
         } else {
             // copy whole data
@@ -228,8 +238,9 @@ class IndexBuffer {
         } else {
             // data is array, copy right amount manually
             data.length = 0;
-            for (let i = 0; i < count; i++)
+            for (let i = 0; i < count; i++) {
                 data[i] = indices[i];
+            }
         }
 
         return count;

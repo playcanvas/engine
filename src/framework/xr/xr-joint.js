@@ -3,6 +3,11 @@ import { Mat4 } from '../../core/math/mat4.js';
 import { Quat } from '../../core/math/quat.js';
 import { Vec3 } from '../../core/math/vec3.js';
 
+/**
+ * @import { XrFinger } from './xr-finger.js'
+ * @import { XrHand } from './xr-hand.js'
+ */
+
 const tipJointIds = platform.browser && window.XRHand ? [
     'thumb-tip',
     'index-finger-tip',
@@ -19,6 +24,8 @@ for (let i = 0; i < tipJointIds.length; i++) {
 
 /**
  * Represents the joint of a finger.
+ *
+ * @category XR
  */
 class XrJoint {
     /**
@@ -28,19 +35,19 @@ class XrJoint {
     _index;
 
     /**
-     * @type {string}
+     * @type {XRHandJoint}
      * @private
      */
     _id;
 
     /**
-     * @type {import('./xr-hand.js').XrHand}
+     * @type {XrHand}
      * @private
      */
     _hand;
 
     /**
-     * @type {import('./xr-finger.js').XrFinger}
+     * @type {XrFinger|null}
      * @private
      */
     _finger;
@@ -58,7 +65,7 @@ class XrJoint {
     _tip;
 
     /**
-     * @type {number}
+     * @type {number|null}
      * @private
      */
     _radius = null;
@@ -109,11 +116,11 @@ class XrJoint {
      * Create an XrJoint instance.
      *
      * @param {number} index - Index of a joint within a finger.
-     * @param {string} id - Id of a joint based on WebXR Hand Input Specs.
-     * @param {import('./xr-hand.js').XrHand} hand - Hand that joint relates to.
-     * @param {import('./xr-finger.js').XrFinger|null} finger - Finger that joint is related to.
-     * Can be null in the case of the wrist joint.
-     * @hideconstructor
+     * @param {XRHandJoint} id - Id of a joint based on WebXR Hand Input Specs.
+     * @param {XrHand} hand - Hand that joint relates to.
+     * @param {XrFinger|null} finger - Finger that joint is related to. Can be null in the case of
+     * the wrist joint.
+     * @ignore
      */
     constructor(index, id, hand, finger = null) {
         this._index = index;
@@ -125,7 +132,7 @@ class XrJoint {
     }
 
     /**
-     * @param {*} pose - XRJointPose of this joint.
+     * @param {XRJointPose} pose - XRJointPose of this joint.
      * @ignore
      */
     update(pose) {
@@ -175,6 +182,15 @@ class XrJoint {
     }
 
     /**
+     * Id of a joint based on WebXR Hand Input Specs.
+     *
+     * @type {XRHandJoint}
+     */
+    get id() {
+        return this._id;
+    }
+
+    /**
      * Index of a joint within a finger, starting from 0 (root of a finger) all the way to tip of
      * the finger.
      *
@@ -187,7 +203,7 @@ class XrJoint {
     /**
      * Hand that joint relates to.
      *
-     * @type {import('./xr-hand.js').XrHand}
+     * @type {XrHand}
      */
     get hand() {
         return this._hand;
@@ -196,7 +212,7 @@ class XrJoint {
     /**
      * Finger that joint relates to.
      *
-     * @type {import('./xr-finger.js').XrFinger|null}
+     * @type {XrFinger|null}
      */
     get finger() {
         return this._finger;

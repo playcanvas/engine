@@ -1,21 +1,22 @@
-import { LAYERID_UI } from '../../../../src/scene/constants.js';
-import { Application } from '../../../../src/framework/application.js';
-import { Entity } from '../../../../src/framework/entity.js';
-
-import { HTMLCanvasElement } from '@playcanvas/canvas-mock';
-
 import { expect } from 'chai';
+
+import { Entity } from '../../../../src/framework/entity.js';
+import { LAYERID_UI } from '../../../../src/scene/constants.js';
+import { createApp } from '../../../app.mjs';
+import { jsdomSetup, jsdomTeardown } from '../../../jsdom.mjs';
 
 describe('ElementComponent', function () {
     let app;
 
     beforeEach(function () {
-        const canvas = new HTMLCanvasElement(500, 500);
-        app = new Application(canvas);
+        jsdomSetup();
+        app = createApp();
     });
 
     afterEach(function () {
-        app.destroy();
+        app?.destroy();
+        app = null;
+        jsdomTeardown();
     });
 
     describe('#constructor', function () {

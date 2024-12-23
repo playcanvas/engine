@@ -1,23 +1,24 @@
 import { Component } from '../component.js';
 import { ComponentSystem } from '../system.js';
-
 import { JointComponent } from './component.js';
 import { JointComponentData } from './data.js';
+
+/**
+ * @import { AppBase } from '../../app-base.js'
+ */
 
 const _schema = ['enabled'];
 
 /**
  * Creates and manages physics joint components.
  *
- * @augments ComponentSystem
  * @ignore
  */
 class JointComponentSystem extends ComponentSystem {
     /**
      * Create a new JointComponentSystem instance.
      *
-     * @param {import('../../app-base.js').AppBase} app - The application.
-     * @hideconstructor
+     * @param {AppBase} app - The application.
      */
     constructor(app) {
         super(app);
@@ -33,6 +34,8 @@ class JointComponentSystem extends ComponentSystem {
 
     initializeComponentData(component, data, properties) {
         component.initFromData(data);
+
+        super.initializeComponentData(component, data, _schema);
     }
 }
 

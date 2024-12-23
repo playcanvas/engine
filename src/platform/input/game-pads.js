@@ -10,7 +10,6 @@ const dummyArray = Object.freeze([]);
  *
  * @type {Function}
  * @returns {Gamepad[]} Retrieved gamepads from the device.
- * @ignore
  */
 let getGamepads = function () {
     return dummyArray;
@@ -85,7 +84,7 @@ const MAPS = {
             'PAD_LEFT',
             'PAD_RIGHT',
 
-             // Vendor specific button
+            // Vendor specific button
             'PAD_VENDOR'
         ],
 
@@ -118,7 +117,7 @@ const MAPS = {
             'PAD_L_STICK_BUTTON',
             'PAD_R_STICK_BUTTON',
 
-             // Vendor specific button
+            // Vendor specific button
             'PAD_VENDOR'
         ],
 
@@ -216,7 +215,6 @@ const custom_maps = {};
  *
  * @param {Gamepad} pad - The HTML5 Gamepad object.
  * @returns {object} Object defining the order of buttons and axes for given HTML5 Gamepad.
- * @ignore
  */
 function getMap(pad) {
     const custom = custom_maps[pad.id];
@@ -229,7 +227,7 @@ function getMap(pad) {
             const product = PRODUCT_CODES[code];
 
             if (!pad.mapping) {
-                const raw = MAPS['RAW_' + product];
+                const raw = MAPS[`RAW_${product}`];
 
                 if (raw) {
                     return raw;
@@ -255,7 +253,6 @@ let deadZone = 0.25;
 /**
  * @param {number} ms - Number of milliseconds to sleep for.
  * @returns {Promise<void>}
- * @ignore
  */
 function sleep(ms) {
     return new Promise((resolve) => {
@@ -265,6 +262,8 @@ function sleep(ms) {
 
 /**
  * A GamePadButton stores information about a button from the Gamepad API.
+ *
+ * @category Input
  */
 class GamePadButton {
     /**
@@ -314,7 +313,7 @@ class GamePadButton {
      *
      * @param {number|GamepadButton} current - The original Gamepad API gamepad button.
      * @param {number|GamepadButton} [previous] - The previous Gamepad API gamepad button.
-     * @hideconstructor
+     * @ignore
      */
     constructor(current, previous) {
         if (typeof current === 'number') {
@@ -364,6 +363,8 @@ const dummyButton = Object.freeze(new GamePadButton(0));
 
 /**
  * A GamePad stores information about a gamepad from the Gamepad API.
+ *
+ * @category Input
  */
 class GamePad {
     /**
@@ -382,7 +383,7 @@ class GamePad {
      *
      * @param {Gamepad} gamepad - The original Gamepad API gamepad.
      * @param {object} map - The buttons and axes map.
-     * @hideconstructor
+     * @ignore
      */
     constructor(gamepad, map) {
         /**
@@ -403,7 +404,7 @@ class GamePad {
          * The buttons present on the GamePad. Order is provided by API, use GamePad#buttons instead.
          *
          * @type {GamePadButton[]}
-         * @ignore
+         * @private
          */
         this._buttons = gamepad.buttons.map(b => new GamePadButton(b));
 
@@ -411,7 +412,7 @@ class GamePad {
          * The axes values from the GamePad. Order is provided by API, use GamePad#axes instead.
          *
          * @type {number[]}
-         * @ignore
+         * @private
          */
         this._axes = [...gamepad.axes];
 
@@ -419,7 +420,7 @@ class GamePad {
          * Previous value for the analog axes present on the gamepad. Values are between -1 and 1.
          *
          * @type {number[]}
-         * @ignore
+         * @private
          */
         this._previousAxes = [...gamepad.axes];
 
@@ -456,7 +457,7 @@ class GamePad {
     }
 
     /**
-     * Whether the gamepad is connected.
+     * Gets whether the gamepad is connected.
      *
      * @type {boolean}
      */
@@ -617,7 +618,7 @@ class GamePad {
     }
 
     /**
-     * The values from analog axes present on the GamePad. Values are between -1 and 1.
+     * Gets the values from analog axes present on the GamePad. Values are between -1 and 1.
      *
      * @type {number[]}
      */
@@ -626,7 +627,7 @@ class GamePad {
     }
 
     /**
-     * The buttons present on the GamePad.
+     * Gets the buttons present on the GamePad.
      *
      * @type {GamePadButton[]}
      */
@@ -767,9 +768,41 @@ class GamePad {
 /**
  * Input handler for accessing GamePad input.
  *
- * @augments EventHandler
+ * @category Input
  */
 class GamePads extends EventHandler {
+    /**
+     * Fired when a gamepad is connected. The handler is passed the {@link GamePad} object that was
+     * connected.
+     *
+     * @event
+     * @example
+     * const onPadConnected = (pad) => {
+     *     if (!pad.mapping) {
+     *         // Map the gamepad as the system could not find the proper map.
+     *     } else {
+     *         // Make the gamepad pulse.
+     *     }
+     * };
+     *
+     * app.keyboard.on("gamepadconnected", onPadConnected, this);
+     */
+    static EVENT_GAMEPADCONNECTED = 'gamepadconnected';
+
+    /**
+     * Fired when a gamepad is disconnected. The handler is passed the {@link GamePad} object that
+     * was disconnected.
+     *
+     * @event
+     * @example
+     * const onPadDisconnected = (pad) => {
+     *     // Pause the game.
+     * };
+     *
+     * app.keyboard.on("gamepaddisconnected", onPadDisconnected, this);
+     */
+    static EVENT_GAMEPADDISCONNECTED = 'gamepaddisconnected';
+
     /**
      * Create a new GamePads instance.
      */
@@ -794,7 +827,7 @@ class GamePads extends EventHandler {
          * The list of previous buttons states
          *
          * @type {boolean[][]}
-         * @ignore
+         * @private
          */
         this._previous = [];
 
@@ -808,35 +841,7 @@ class GamePads extends EventHandler {
     }
 
     /**
-     * Fired when a gamepad is connected.
-     *
-     * @event GamePads#gamepadconnected
-     * @param {GamePad} gamepad - The gamepad that was just connected.
-     * @example
-     * const onPadConnected = function (pad) {
-     *     if (!pad.mapping) {
-     *         // Map the gamepad as the system could not find the proper map.
-     *     } else {
-     *         // Make the gamepad pulse.
-     *     }
-     * };
-     * app.keyboard.on("gamepadconnected", onPadConnected, this);
-     */
-
-    /**
-     * Fired when a gamepad is disconnected.
-     *
-     * @event GamePads#gamepaddisconnected
-     * @param {GamePad} gamepad - The gamepad that was just disconnected.
-     * @example
-     * const onPadDisconnected = function (pad) {
-     *     // Pause the game.
-     * };
-     * app.keyboard.on("gamepaddisconnected", onPadDisconnected, this);
-     */
-
-    /**
-     * Threshold for axes to return values. Must be between 0 and 1.
+     * Sets the threshold for axes to return values. Must be between 0 and 1.
      *
      * @type {number}
      * @ignore
@@ -845,12 +850,18 @@ class GamePads extends EventHandler {
         deadZone = value;
     }
 
+    /**
+     * Gets the threshold for axes to return values.
+     *
+     * @type {number}
+     * @ignore
+     */
     get deadZone() {
         return deadZone;
     }
 
     /**
-     * The list of previous buttons states.
+     * Gets the list of previous button states.
      *
      * @type {boolean[][]}
      * @ignore

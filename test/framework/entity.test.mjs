@@ -1,16 +1,15 @@
-import { createScript } from '../../src/framework/script/script.js';
-import { Color } from '../../src/core/math/color.js';
+import { expect } from 'chai';
+import { stub } from 'sinon';
 
+import { DummyComponentSystem } from './test-component/system.mjs';
+import { Color } from '../../src/core/math/color.js';
 import { AnimComponent } from '../../src/framework/components/anim/component.js';
 import { AnimationComponent } from '../../src/framework/components/animation/component.js';
-import { Application } from '../../src/framework/application.js';
 import { AudioListenerComponent } from '../../src/framework/components/audio-listener/component.js';
-import { AudioSourceComponent } from '../../src/framework/components/audio-source/component.js';
 import { ButtonComponent } from '../../src/framework/components/button/component.js';
 import { CameraComponent } from '../../src/framework/components/camera/component.js';
 import { CollisionComponent } from '../../src/framework/components/collision/component.js';
 import { ElementComponent } from '../../src/framework/components/element/component.js';
-import { Entity } from '../../src/framework/entity.js';
 import { JointComponent } from '../../src/framework/components/joint/component.js';
 import { LayoutChildComponent } from '../../src/framework/components/layout-child/component.js';
 import { LayoutGroupComponent } from '../../src/framework/components/layout-group/component.js';
@@ -21,38 +20,37 @@ import { RenderComponent } from '../../src/framework/components/render/component
 import { RigidBodyComponent } from '../../src/framework/components/rigid-body/component.js';
 import { ScreenComponent } from '../../src/framework/components/screen/component.js';
 import { ScriptComponent } from '../../src/framework/components/script/component.js';
-import { ScrollbarComponent } from '../../src/framework/components/scrollbar/component.js';
 import { ScrollViewComponent } from '../../src/framework/components/scroll-view/component.js';
+import { ScrollbarComponent } from '../../src/framework/components/scrollbar/component.js';
 import { SoundComponent } from '../../src/framework/components/sound/component.js';
 import { SpriteComponent } from '../../src/framework/components/sprite/component.js';
 import { ZoneComponent } from '../../src/framework/components/zone/component.js';
-
-import { DummyComponentSystem } from './test-component/system.mjs';
-
-import { HTMLCanvasElement } from '@playcanvas/canvas-mock';
-
-import { expect } from 'chai';
+import { Entity } from '../../src/framework/entity.js';
+import { createScript } from '../../src/framework/script/script-create.js';
+import { createApp } from '../app.mjs';
+import { jsdomSetup, jsdomTeardown } from '../jsdom.mjs';
 
 describe('Entity', function () {
 
     let app;
 
     beforeEach(function () {
-        const canvas = new HTMLCanvasElement(500, 500);
-        app = new Application(canvas);
+        jsdomSetup();
+        app = createApp();
 
         app.systems.add(new DummyComponentSystem(app));
     });
 
     afterEach(function () {
-        app.destroy();
+        app?.destroy();
+        app = null;
+        jsdomTeardown();
     });
 
     const components = {
         anim: AnimComponent,
         animation: AnimationComponent,
         audiolistener: AudioListenerComponent,
-        audiosource: AudioSourceComponent,
         button: ButtonComponent,
         camera: CameraComponent,
         collision: CollisionComponent,
@@ -122,6 +120,68 @@ describe('Entity', function () {
             });
         }
 
+        it('respects components order on disable', function () {
+            const entity = new Entity();
+            entity.enabled = true;
+
+            entity.addComponent('collision');
+            entity.addComponent('rigidbody');
+
+            const colOnDisable = stub();
+            const rbOnDisable = stub();
+            let disableOrder = 0;
+
+            entity.collision.onDisable = colOnDisable;
+            entity.rigidbody.onDisable = rbOnDisable;
+
+            colOnDisable.onFirstCall().callsFake(() => {
+                disableOrder = 2;
+            });
+            rbOnDisable.onFirstCall().callsFake(() => {
+                disableOrder = 1;
+            });
+
+            entity.enabled = false;
+
+            expect(disableOrder).to.equal(2);
+
+            entity.destroy();
+        });
+
+        it('respects components order on enable', function () {
+            const entity = new Entity('Child');
+            const parent = new Entity('Parent');
+
+            parent.addChild(entity);
+            parent._enabled = true;
+            parent._enabledInHierarchy = true;
+
+            entity.addComponent('collision');
+            entity.addComponent('rigidbody');
+
+            entity.enabled = false;
+
+            const rbOnEnable = stub();
+            const colOnEnable = stub();
+            let enableOrder = 0;
+
+            entity.collision.onEnable = colOnEnable;
+            entity.rigidbody.onEnable = rbOnEnable;
+
+            colOnEnable.onFirstCall().callsFake(() => {
+                enableOrder = 2;
+            });
+            rbOnEnable.onFirstCall().callsFake(() => {
+                enableOrder = 1;
+            });
+
+            entity.enabled = true;
+
+            expect(enableOrder).to.equal(2);
+
+            parent.destroy();
+        });
+
     });
 
     const createSubtree = () => {
@@ -187,6 +247,15 @@ describe('Entity', function () {
                 expect(clone[name]).to.be.an.instanceof(components[name]);
             }
         });
+
+        for (const name in components) {
+            it(`clones the enabled state of ${name} components correctly`, function () {
+                const entity = new Entity('Test');
+                entity.addComponent(name, { enabled: false });
+                const clone = entity.clone();
+                expect(clone[name].enabled).to.equal(false);
+            });
+        }
 
         it('clones an entity hierarchy', function () {
             const root = new Entity('Test');
@@ -444,55 +513,6 @@ describe('Entity', function () {
             expect(subtree2.a_a.script.test.entityArrayAttr[1].getGuid()).to.equal(app.root.getGuid());
         });
 
-        it('does not resolve entity script attributes that refer to entities within the duplicated subtree if app.useLegacyScriptAttributeCloning is true', function () {
-            const TestScript = createScript('test');
-            TestScript.attributes.add('entityAttr', { type: 'entity' });
-            TestScript.attributes.add('entityArrayAttr', { type: 'entity', array: true });
-
-            const subtree1 = createSubtree();
-            app.root.addChild(subtree1.a);
-            subtree1.a.addComponent('script');
-            subtree1.a.script.create('test', {
-                attributes: {
-                    entityAttr: subtree1.a_a.getGuid(),
-                    entityArrayAttr: [subtree1.a_a.getGuid()]
-                }
-            });
-            expect(subtree1.a.script.test.entityAttr.getGuid()).to.equal(subtree1.a_a.getGuid());
-            expect(subtree1.a.script.test.entityArrayAttr).to.be.an('array');
-            expect(subtree1.a.script.test.entityArrayAttr.length).to.equal(1);
-            expect(subtree1.a.script.test.entityArrayAttr[0].getGuid()).to.equal(subtree1.a_a.getGuid());
-
-            subtree1.a_a.addComponent('script');
-            subtree1.a_a.script.create('test', {
-                attributes: {
-                    entityAttr: subtree1.a.getGuid(),
-                    entityArrayAttr: [subtree1.a.getGuid(), subtree1.a_a_a.getGuid()]
-                }
-            });
-
-            expect(subtree1.a_a.script.test.entityAttr.getGuid()).to.equal(subtree1.a.getGuid());
-            expect(subtree1.a_a.script.test.entityArrayAttr).to.be.an('array');
-            expect(subtree1.a_a.script.test.entityArrayAttr.length).to.equal(2);
-            expect(subtree1.a_a.script.test.entityArrayAttr[0].getGuid()).to.equal(subtree1.a.getGuid());
-            expect(subtree1.a_a.script.test.entityArrayAttr[1].getGuid()).to.equal(subtree1.a_a_a.getGuid());
-
-            app.useLegacyScriptAttributeCloning = true;
-
-            const subtree2 = cloneSubtree(subtree1);
-            app.root.addChild(subtree2.a);
-            expect(subtree2.a.script.test.entityAttr.getGuid()).to.equal(subtree1.a_a.getGuid());
-            expect(subtree2.a.script.test.entityArrayAttr).to.be.an('array');
-            expect(subtree2.a.script.test.entityArrayAttr.length).to.equal(1);
-            expect(subtree2.a.script.test.entityArrayAttr[0].getGuid()).to.equal(subtree1.a_a.getGuid());
-
-            expect(subtree2.a_a.script.test.entityAttr.getGuid()).to.equal(subtree1.a.getGuid());
-            expect(subtree2.a_a.script.test.entityArrayAttr).to.be.an('array');
-            expect(subtree2.a_a.script.test.entityArrayAttr.length).to.equal(2);
-            expect(subtree2.a_a.script.test.entityArrayAttr[0].getGuid()).to.equal(subtree1.a.getGuid());
-            expect(subtree2.a_a.script.test.entityArrayAttr[1].getGuid()).to.equal(subtree1.a_a_a.getGuid());
-        });
-
         it('ensures that an instance of a subclass keeps its class prototype', function () {
             class UserEntity extends Entity {}
             const a = new UserEntity();
@@ -671,6 +691,151 @@ describe('Entity', function () {
             const components = child.findComponents('anim');
             expect(components).to.be.an('array');
             expect(components.length).to.equal(0);
+        });
+
+    });
+
+    describe('#findScript', function () {
+
+        it('finds script on single entity', function () {
+            const MyScript = createScript('myScript');
+            const e = new Entity();
+            e.addComponent('script');
+            e.script.create('myScript');
+            const script = e.findScript('myScript');
+            expect(script).to.be.an.instanceof(MyScript);
+        });
+
+        it('returns undefined when script is not found', function () {
+            const root = new Entity();
+            const child = new Entity();
+            root.addChild(child);
+            child.addComponent('script');
+            const script = root.findScript('myScript');
+            expect(script).to.be.undefined;
+        });
+
+        it('returns undefined when script component is not found', function () {
+            const root = new Entity();
+            const child = new Entity();
+            root.addChild(child);
+            const script = root.findScript('myScript');
+            expect(script).to.be.undefined;
+        });
+
+        it('finds script on child entity', function () {
+            const MyScript = createScript('myScript');
+            const root = new Entity();
+            const child = new Entity();
+            root.addChild(child);
+            child.addComponent('script');
+            child.script.create('myScript');
+            const script = root.findScript('myScript');
+            expect(script).to.be.an.instanceof(MyScript);
+        });
+
+        it('finds script on grandchild entity', function () {
+            const MyScript = createScript('myScript');
+            const root = new Entity();
+            const child = new Entity();
+            const grandchild = new Entity();
+            root.addChild(child);
+            child.addChild(grandchild);
+            grandchild.addComponent('script');
+            grandchild.script.create('myScript');
+            const script = root.findScript('myScript');
+            expect(script).to.be.an.instanceof(MyScript);
+        });
+
+        it('does not find script on parent entity', function () {
+            createScript('myScript');
+            const root = new Entity();
+            const child = new Entity();
+            root.addChild(child);
+            root.addComponent('script');
+            root.script.create('myScript');
+            const script = child.findScript('myScript');
+            expect(script).to.be.undefined;
+        });
+
+    });
+
+    describe('#findScripts', function () {
+
+        it('finds scripts on single entity', function () {
+            const MyScript = createScript('myScript');
+            const e = new Entity();
+            e.addComponent('script');
+            e.script.create('myScript');
+            const scripts = e.findScripts('myScript');
+            expect(scripts).to.be.an('array');
+            expect(scripts.length).to.equal(1);
+            expect(scripts[0]).to.be.an.instanceof(MyScript);
+        });
+
+        it('returns empty array when no scripts are found', function () {
+            const root = new Entity();
+            const child = new Entity();
+            root.addChild(child);
+            child.addComponent('script');
+            const scripts = root.findScripts('myScript');
+            expect(scripts).to.be.an('array');
+            expect(scripts.length).to.equal(0);
+        });
+
+        it('returns empty array when no script component are found', function () {
+            const root = new Entity();
+            const child = new Entity();
+            root.addChild(child);
+            const scripts = root.findScripts('myScript');
+            expect(scripts).to.be.an('array');
+            expect(scripts.length).to.equal(0);
+        });
+
+        it('finds scripts on child entity', function () {
+            const MyScript = createScript('myScript');
+            const root = new Entity();
+            const child = new Entity();
+            root.addChild(child);
+            child.addComponent('script');
+            child.script.create('myScript');
+            const scripts = root.findScripts('myScript');
+            expect(scripts).to.be.an('array');
+            expect(scripts.length).to.equal(1);
+            expect(scripts[0]).to.be.an.instanceof(MyScript);
+        });
+
+        it('finds scripts on 3 entity hierarchy', function () {
+            const MyScript = createScript('myScript');
+            const root = new Entity();
+            const child = new Entity();
+            const grandchild = new Entity();
+            root.addChild(child);
+            child.addChild(grandchild);
+            root.addComponent('script');
+            root.script.create('myScript');
+            child.addComponent('script');
+            child.script.create('myScript');
+            grandchild.addComponent('script');
+            grandchild.script.create('myScript');
+            const scripts = root.findScripts('myScript');
+            expect(scripts).to.be.an('array');
+            expect(scripts.length).to.equal(3);
+            expect(scripts[0]).to.be.an.instanceof(MyScript);
+            expect(scripts[1]).to.be.an.instanceof(MyScript);
+            expect(scripts[2]).to.be.an.instanceof(MyScript);
+        });
+
+        it('does not find scripts on parent entity', function () {
+            createScript('myScript');
+            const root = new Entity();
+            const child = new Entity();
+            root.addChild(child);
+            root.addComponent('script');
+            root.script.create('myScript');
+            const scripts = child.findScripts('myScript');
+            expect(scripts).to.be.an('array');
+            expect(scripts.length).to.equal(0);
         });
 
     });

@@ -1,12 +1,14 @@
 import { sortPriority } from '../../../core/sort.js';
 import { Color } from '../../../core/math/color.js';
 import { Vec4 } from '../../../core/math/vec4.js';
-
 import { Component } from '../component.js';
 import { ComponentSystem } from '../system.js';
-
 import { CameraComponent } from './component.js';
 import { CameraComponentData } from './data.js';
+
+/**
+ * @import { AppBase } from '../../app-base.js'
+ */
 
 const _schema = ['enabled'];
 
@@ -14,7 +16,7 @@ const _schema = ['enabled'];
  * Used to add and remove {@link CameraComponent}s from Entities. It also holds an array of all
  * active cameras.
  *
- * @augments ComponentSystem
+ * @category Graphics
  */
 class CameraComponentSystem extends ComponentSystem {
     /**
@@ -27,8 +29,8 @@ class CameraComponentSystem extends ComponentSystem {
     /**
      * Create a new CameraComponentSystem instance.
      *
-     * @param {import('../../app-base.js').AppBase} app - The Application.
-     * @hideconstructor
+     * @param {AppBase} app - The Application.
+     * @ignore
      */
     constructor(app) {
         super(app);
@@ -42,8 +44,6 @@ class CameraComponentSystem extends ComponentSystem {
 
         this.on('beforeremove', this.onBeforeRemove, this);
         this.app.on('prerender', this.onAppPrerender, this);
-
-        this.app.systems.on('update', this.onUpdate, this);
     }
 
     initializeComponentData(component, data, properties) {
@@ -74,7 +74,9 @@ class CameraComponentSystem extends ComponentSystem {
             'scissorRect',
             'aperture',
             'shutter',
-            'sensitivity'
+            'sensitivity',
+            'gammaCorrection',
+            'toneMapping'
         ];
 
         for (let i = 0; i < properties.length; i++) {
@@ -137,15 +139,16 @@ class CameraComponentSystem extends ComponentSystem {
             scissorRect: c.scissorRect,
             aperture: c.aperture,
             sensitivity: c.sensitivity,
-            shutter: c.shutter
+            shutter: c.shutter,
+            gammaCorrection: c.gammaCorrection,
+            toneMapping: c.toneMapping
         });
     }
 
     onBeforeRemove(entity, component) {
         this.removeCamera(component);
-    }
 
-    onUpdate(dt) {
+        component.onRemove();
     }
 
     onAppPrerender() {
@@ -168,9 +171,9 @@ class CameraComponentSystem extends ComponentSystem {
     }
 
     destroy() {
-        super.destroy();
+        this.app.off('prerender', this.onAppPrerender, this);
 
-        this.app.systems.off('update', this.onUpdate, this);
+        super.destroy();
     }
 }
 

@@ -1,9 +1,12 @@
 import { AnimTrack } from '../../anim/evaluator/anim-track.js';
 import { Component } from '../component.js';
 import { ComponentSystem } from '../system.js';
-
 import { AnimComponent } from './component.js';
 import { AnimComponentData } from './data.js';
+
+/**
+ * @import { AppBase } from '../../app-base.js'
+ */
 
 const _schema = [
     'enabled'
@@ -12,14 +15,14 @@ const _schema = [
 /**
  * The AnimComponentSystem manages creating and deleting AnimComponents.
  *
- * @augments ComponentSystem
+ * @category Animation
  */
 class AnimComponentSystem extends ComponentSystem {
     /**
      * Create an AnimComponentSystem instance.
      *
-     * @param {import('../../app-base.js').AppBase} app - The application managing this system.
-     * @hideconstructor
+     * @param {AppBase} app - The application managing this system.
+     * @ignore
      */
     constructor(app) {
         super(app);
@@ -52,7 +55,7 @@ class AnimComponentSystem extends ComponentSystem {
                 layer._controller.states.forEach((stateKey) => {
                     layer._controller._states[stateKey]._animationList.forEach((node) => {
                         if (!node.animTrack || node.animTrack === AnimTrack.EMPTY) {
-                            const animationAsset = this.app.assets.get(layer._component._animationAssets[layer.name + ':' + node.name].asset);
+                            const animationAsset = this.app.assets.get(layer._component._animationAssets[`${layer.name}:${node.name}`].asset);
                             // If there is an animation asset that hasn't been loaded, assign it once it has loaded. If it is already loaded it will be assigned already.
                             if (animationAsset && !animationAsset.loaded) {
                                 animationAsset.once('load', () => {
@@ -65,7 +68,8 @@ class AnimComponentSystem extends ComponentSystem {
                     });
                 });
             });
-        } else if (data.animationAssets) {
+        }
+        if (data.animationAssets) {
             component.animationAssets = Object.assign(component.animationAssets, data.animationAssets);
         }
 
@@ -100,7 +104,8 @@ class AnimComponentSystem extends ComponentSystem {
 
     cloneComponent(entity, clone) {
         let masks;
-        // If the component animaites from the components entity, any layer mask hierarchy should be updated from the old entity to the cloned entity.
+        // If the component animates from the components entity, any layer mask hierarchy should be
+        // updated from the old entity to the cloned entity.
         if (!entity.anim.rootBone || entity.anim.rootBone === entity) {
             masks = {};
             entity.anim.layers.forEach((layer, i) => {
@@ -118,6 +123,7 @@ class AnimComponentSystem extends ComponentSystem {
             });
         }
         const data = {
+            enabled: entity.anim.enabled,
             stateGraphAsset: entity.anim.stateGraphAsset,
             animationAssets: entity.anim.animationAssets,
             speed: entity.anim.speed,

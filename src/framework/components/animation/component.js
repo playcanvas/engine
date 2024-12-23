@@ -1,24 +1,26 @@
 import { Debug } from '../../../core/debug.js';
-
 import { AnimClip } from '../../anim/evaluator/anim-clip.js';
 import { AnimEvaluator } from '../../anim/evaluator/anim-evaluator.js';
 import { AnimTrack } from '../../anim/evaluator/anim-track.js';
 import { DefaultAnimBinder } from '../../anim/binder/default-anim-binder.js';
-
 import { Skeleton } from '../../../scene/animation/skeleton.js';
-
 import { Asset } from '../../asset/asset.js';
-
 import { Component } from '../component.js';
+
+/**
+ * @import { Animation } from '../../../scene/animation/animation.js'
+ * @import { Model } from '../../../scene/model.js'
+ */
 
 /**
  * The Animation Component allows an Entity to playback animations on models.
  *
- * @augments Component
+ * @hideconstructor
+ * @category Animation
  */
 class AnimationComponent extends Component {
     /**
-     * @type {Object<string, import('../../../scene/animation/animation.js').Animation>}
+     * @type {Object<string, Animation>}
      * @private
      */
     _animations = {};
@@ -39,7 +41,7 @@ class AnimationComponent extends Component {
     animEvaluator = null;
 
     /**
-     * @type {import('../../../scene/model.js').Model|null}
+     * @type {Model|null}
      * @ignore
      */
     model = null;
@@ -92,7 +94,7 @@ class AnimationComponent extends Component {
     blendSpeed = 0;
 
     /**
-     * If true the first animation asset will begin playing when the scene is loaded.
+     * If true, the first animation asset will begin playing when the scene is loaded.
      *
      * @type {boolean}
      */
@@ -107,21 +109,9 @@ class AnimationComponent extends Component {
     speed = 1;
 
     /**
-     * Create a new AnimationComponent instance.
+     * Sets the dictionary of animations by name.
      *
-     * @param {import('./system.js').AnimationComponentSystem} system - The {@link ComponentSystem}
-     * that created this component.
-     * @param {import('../../entity.js').Entity} entity - The Entity that this component is
-     * attached to.
-     */
-    constructor(system, entity) { // eslint-disable-line no-useless-constructor
-        super(system, entity);
-    }
-
-    /**
-     * Get or set dictionary of animations by name.
-     *
-     * @type {Object<string, import('../../../scene/animation/animation.js').Animation>}
+     * @type {Object<string, Animation>}
      */
     set animations(value) {
         this._animations = value;
@@ -129,12 +119,17 @@ class AnimationComponent extends Component {
         this.onSetAnimations();
     }
 
+    /**
+     * Gets the dictionary of animations by name.
+     *
+     * @type {Object<string, Animation>}
+     */
     get animations() {
         return this._animations;
     }
 
     /**
-     * The array of animation assets. Can also be an array of asset ids.
+     * Sets the array of animation assets or asset ids.
      *
      * @type {Array.<number|Asset>}
      */
@@ -152,8 +147,9 @@ class AnimationComponent extends Component {
 
                         const animName = this.animationsIndex[asset.id];
 
-                        if (this.currAnim === animName)
+                        if (this.currAnim === animName) {
                             this._stopCurrentAnimation();
+                        }
 
                         delete this.animations[animName];
                         delete this.animationsIndex[asset.id];
@@ -171,12 +167,17 @@ class AnimationComponent extends Component {
         this.loadAnimationAssets(assetIds);
     }
 
+    /**
+     * Gets the array of animation assets or asset ids.
+     *
+     * @type {Array.<number|Asset>}
+     */
     get assets() {
         return this._assets;
     }
 
     /**
-     * Get or set the current time position (in seconds) of the animation.
+     * Sets the current time position (in seconds) of the animation.
      *
      * @type {number}
      */
@@ -195,6 +196,11 @@ class AnimationComponent extends Component {
         }
     }
 
+    /**
+     * Gets the current time position (in seconds) of the animation.
+     *
+     * @type {number}
+     */
     get currentTime() {
         if (this.skeleton) {
             return this.skeleton._time;
@@ -213,7 +219,7 @@ class AnimationComponent extends Component {
     }
 
     /**
-     * Get the duration in seconds of the current animation. Returns 0 if no animation is playing.
+     * Gets the duration in seconds of the current animation. Returns 0 if no animation is playing.
      *
      * @type {number}
      */
@@ -222,12 +228,12 @@ class AnimationComponent extends Component {
             return this.animations[this.currAnim].duration;
         }
 
-        Debug.warn(`No animation is playing to get a duration. Returning 0.`);
+        Debug.warn('No animation is playing to get a duration. Returning 0.');
         return 0;
     }
 
     /**
-     * If true the animation will restart from the beginning when it reaches the end.
+     * Sets whether the animation will restart from the beginning when it reaches the end.
      *
      * @type {boolean}
      */
@@ -245,6 +251,11 @@ class AnimationComponent extends Component {
         }
     }
 
+    /**
+     * Gets whether the animation will restart from the beginning when it reaches the end.
+     *
+     * @type {boolean}
+     */
     get loop() {
         return this._loop;
     }
@@ -323,7 +334,7 @@ class AnimationComponent extends Component {
      * Return an animation.
      *
      * @param {string} name - The name of the animation asset.
-     * @returns {import('../../../scene/animation/animation.js').Animation} An Animation.
+     * @returns {Animation} An Animation.
      */
     getAnimation(name) {
         return this.animations[name];
@@ -332,7 +343,7 @@ class AnimationComponent extends Component {
     /**
      * Set the model driven by this animation component.
      *
-     * @param {import('../../../scene/model.js').Model} model - The model to set.
+     * @param {Model} model - The model to set.
      * @ignore
      */
     setModel(model) {
@@ -414,8 +425,9 @@ class AnimationComponent extends Component {
      * @private
      */
     loadAnimationAssets(ids) {
-        if (!ids || !ids.length)
+        if (!ids || !ids.length) {
             return;
+        }
 
         const assets = this.system.app.assets;
 
@@ -445,8 +457,9 @@ class AnimationComponent extends Component {
                 onAssetReady(asset);
             } else {
                 asset.once('load', onAssetReady, this);
-                if (this.enabled && this.entity.enabled)
+                if (this.enabled && this.entity.enabled) {
                     assets.load(asset);
+                }
             }
         };
 
@@ -455,7 +468,7 @@ class AnimationComponent extends Component {
             if (asset) {
                 onAssetAdd(asset);
             } else {
-                assets.on('add:' + ids[i], onAssetAdd);
+                assets.on(`add:${ids[i]}`, onAssetAdd);
             }
         }
     }
@@ -557,13 +570,15 @@ class AnimationComponent extends Component {
             if (asset.resources.length > 1) {
                 for (let i = 0; i < asset.resources.length; i++) {
                     delete this.animations[asset.resources[i].name];
-                    if (this.currAnim === asset.resources[i].name)
+                    if (this.currAnim === asset.resources[i].name) {
                         this._stopCurrentAnimation();
+                    }
                 }
             } else {
                 delete this.animations[asset.name];
-                if (this.currAnim === asset.name)
+                if (this.currAnim === asset.name) {
                     this._stopCurrentAnimation();
+                }
             }
             delete this.animationsIndex[asset.id];
         }
@@ -596,11 +611,13 @@ class AnimationComponent extends Component {
         if (assets) {
             for (let i = 0, len = assets.length; i < len; i++) {
                 let asset = assets[i];
-                if (!(asset instanceof Asset))
+                if (!(asset instanceof Asset)) {
                     asset = registry.get(asset);
+                }
 
-                if (asset && !asset.resource)
+                if (asset && !asset.resource) {
                     registry.load(asset);
+                }
             }
         }
 

@@ -1,13 +1,13 @@
 import { path } from '../../core/path.js';
 import { Debug } from '../../core/debug.js';
-
 import { http, Http } from '../../platform/net/http.js';
-
 import { hasAudioContext } from '../../platform/audio/capabilities.js';
-
 import { Sound } from '../../platform/sound/sound.js';
+import { ResourceHandler } from './handler.js';
 
-/** @typedef {import('./handler.js').ResourceHandler} ResourceHandler */
+/**
+ * @import { AppBase } from '../app-base.js'
+ */
 
 // checks if user is running IE
 const ie = (function () {
@@ -47,27 +47,20 @@ const supportedExtensions = [
 /**
  * Resource handler used for loading {@link Sound} resources.
  *
- * @implements {ResourceHandler}
+ * @category Sound
  */
-class AudioHandler {
-    /**
-     * Type of the resource the handler handles.
-     *
-     * @type {string}
-     */
-    handlerType = "audio";
-
+class AudioHandler extends ResourceHandler {
     /**
      * Create a new AudioHandler instance.
      *
-     * @param {import('../app-base.js').AppBase} app - The running {@link AppBase}.
-     * @hideconstructor
+     * @param {AppBase} app - The running {@link AppBase}.
+     * @ignore
      */
     constructor(app) {
-        this.manager = app.soundManager;
-        Debug.assert(this.manager, "AudioSourceComponentSystem cannot be created without sound manager");
+        super(app, 'audio');
 
-        this.maxRetries = 0;
+        this.manager = app.soundManager;
+        Debug.assert(this.manager, 'AudioHandler cannot be created without sound manager');
     }
 
     _isSupported(url) {
@@ -89,9 +82,9 @@ class AudioHandler {
         };
 
         const error = function (err) {
-            let msg = 'Error loading audio url: ' + url.original;
+            let msg = `Error loading audio url: ${url.original}`;
             if (err) {
-                msg += ': ' + (err.message || err);
+                msg += `: ${err.message || err}`;
             }
             console.warn(msg);
             callback(msg);
@@ -107,13 +100,6 @@ class AudioHandler {
         } else {
             error(null);
         }
-    }
-
-    open(url, data) {
-        return data;
-    }
-
-    patch(asset, assets) {
     }
 
     /**
@@ -146,7 +132,7 @@ class AudioHandler {
                 options.responseType = Http.ResponseType.ARRAY_BUFFER;
             }
 
-            http.get(url, options, function (err, response) {
+            http.get(url, options, (err, response) => {
                 if (err) {
                     error(err);
                     return;

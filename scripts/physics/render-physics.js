@@ -25,13 +25,13 @@ RenderPhysics.attributes.add('castShadows', {
 RenderPhysics.prototype.initialize = function () {
     // Handle attribute change events
     this.on('attr:castShadows', function (value, prev) {
-        this.debugRoot.children.forEach(function (child) {
+        this.debugRoot.children.forEach((child) => {
             child.model.castShadows = value;
         });
     }, this);
     this.on('attr:opacity', function (value, prev) {
-        this.debugRoot.children.forEach(function (child) {
-            child.model.meshInstances.forEach(function (meshInstance) {
+        this.debugRoot.children.forEach((child) => {
+            child.model.meshInstances.forEach((meshInstance) => {
                 var material = meshInstance.material;
                 material.opacity = value;
                 material.update();
@@ -50,7 +50,7 @@ RenderPhysics.prototype.initialize = function () {
 
     this.on('disable', function () {
         var collisionComponents = this.app.root.findComponents('collision');
-        collisionComponents.forEach(function (collision) {
+        collisionComponents.forEach((collision) => {
             if (collision.hasOwnProperty('_debugShape')) {
                 delete collision._debugShape;
             }
@@ -70,7 +70,7 @@ RenderPhysics.prototype.createModel = function (mesh, material) {
 
 RenderPhysics.prototype.postUpdate = function (dt) {
     // For any existing debug shapes, mark them as not updated (yet)
-    this.debugRoot.children.forEach(function (child) {
+    this.debugRoot.children.forEach((child) => {
         child.updated = false;
     });
 
@@ -127,40 +127,40 @@ RenderPhysics.prototype.postUpdate = function (dt) {
                     var mesh;
                     switch (collision.type) {
                         case 'box':
-                            mesh = pc.createBox(this.app.graphicsDevice, {
+                            mesh = pc.Mesh.fromGeometry(this.app.graphicsDevice, new pc.BoxGeometry({
                                 halfExtents: collision.halfExtents
-                            });
+                            }));
                             debugShape._halfExtents = collision.halfExtents.clone();
                             break;
                         case 'cone':
-                            mesh = pc.createCone(this.app.graphicsDevice, {
+                            mesh = pc.Mesh.fromGeometry(this.app.graphicsDevice, new pc.ConeGeometry({
                                 height: collision.height,
                                 radius: collision.radius
-                            });
+                            }));
                             debugShape._height = collision.height;
                             debugShape._radius = collision.radius;
                             debugShape._axis = collision.axis;
                             break;
                         case 'cylinder':
-                            mesh = pc.createCylinder(this.app.graphicsDevice, {
+                            mesh = pc.Mesh.fromGeometry(this.app.graphicsDevice, new pc.CylinderGeometry({
                                 height: collision.height,
                                 radius: collision.radius
-                            });
+                            }));
                             debugShape._height = collision.height;
                             debugShape._radius = collision.radius;
                             debugShape._axis = collision.axis;
                             break;
                         case 'sphere':
-                            mesh = pc.createSphere(this.app.graphicsDevice, {
+                            mesh = pc.Mesh.fromGeometry(this.app.graphicsDevice, new pc.SphereGeometry({
                                 radius: collision.radius
-                            });
+                            }));
                             debugShape._radius = collision.radius;
                             break;
                         case 'capsule':
-                            mesh = pc.createCapsule(this.app.graphicsDevice, {
+                            mesh = pc.Mesh.fromGeometry(this.app.graphicsDevice, new pc.CapsuleGeometry({
                                 height: collision.height,
                                 radius: collision.radius
-                            });
+                            }));
                             debugShape._height = collision.height;
                             debugShape._radius = collision.radius;
                             debugShape._axis = collision.axis;
@@ -182,23 +182,8 @@ RenderPhysics.prototype.postUpdate = function (dt) {
                     debugShape._collisionType = collision.type;
                     collision._debugShape = debugShape;
                 }
-
-                // Use the rigid body position if we have it
-                if (collision.entity.rigidbody) {
-                    var body = collision.entity.rigidbody.body;
-                    if (body) {
-                        var t = body.getWorldTransform();
-
-                        var p = t.getOrigin();
-                        var q = t.getRotation();
-                        collision._debugShape.setPosition(p.x(), p.y(), p.z());
-                        collision._debugShape.setRotation(q.x(), q.y(), q.z(), q.w());
-                    }
-                } else {
-                    collision._debugShape.setPosition(collision.entity.getPosition());
-                    collision._debugShape.setRotation(collision.entity.getRotation());
-                }
-
+                collision._debugShape.setPosition(collision.getShapePosition());
+                collision._debugShape.setRotation(collision.getShapeRotation());
                 // If the shape is a capsule, cone or cylinder, rotate it so that its axis is taken into account
                 if (collision.type === 'capsule' || collision.type === 'cone' || collision.type === 'cylinder') {
                     if (collision._debugShape._axis === 0) {
@@ -217,7 +202,7 @@ RenderPhysics.prototype.postUpdate = function (dt) {
 
     // If a debug shape was not updated this frame, the source collision component
     // isn't around any more so we can delete it
-    this.debugRoot.children.forEach(function (child) {
+    this.debugRoot.children.forEach((child) => {
         if (!child.updated) {
             delete child._collision._debugShape;
             delete child._collision;

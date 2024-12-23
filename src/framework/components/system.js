@@ -1,21 +1,24 @@
 import { EventHandler } from '../../core/event-handler.js';
-
 import { Color } from '../../core/math/color.js';
 import { Vec2 } from '../../core/math/vec2.js';
 import { Vec3 } from '../../core/math/vec3.js';
 import { Vec4 } from '../../core/math/vec4.js';
 
 /**
+ * @import { AppBase } from '../app-base.js'
+ * @import { Component } from './component.js'
+ * @import { Entity } from '../entity.js'
+ */
+
+/**
  * Component Systems contain the logic and functionality to update all Components of a particular
  * type.
- *
- * @augments EventHandler
  */
 class ComponentSystem extends EventHandler {
     /**
      * Create a new ComponentSystem instance.
      *
-     * @param {import('../app-base.js').AppBase} app - The application managing this system.
+     * @param {AppBase} app - The application managing this system.
      */
     constructor(app) {
         super();
@@ -30,10 +33,9 @@ class ComponentSystem extends EventHandler {
     /**
      * Create new {@link Component} and component data instances and attach them to the entity.
      *
-     * @param {import('../entity.js').Entity} entity - The Entity to attach this component to.
+     * @param {Entity} entity - The Entity to attach this component to.
      * @param {object} [data] - The source data with which to create the component.
-     * @returns {import('./component.js').Component} Returns a Component of type defined by the
-     * component system.
+     * @returns {Component} Returns a Component of type defined by the component system.
      * @example
      * const entity = new pc.Entity(app);
      * app.systems.model.addComponent(entity, { type: 'box' });
@@ -62,22 +64,23 @@ class ComponentSystem extends EventHandler {
     /**
      * Remove the {@link Component} from the entity and delete the associated component data.
      *
-     * @param {import('../entity.js').Entity} entity - The entity to remove the component from.
+     * @param {Entity} entity - The entity to remove the component from.
      * @example
      * app.systems.model.removeComponent(entity);
      * // entity.model === undefined
      * @ignore
      */
     removeComponent(entity) {
+        const id = this.id;
         const record = this.store[entity.getGuid()];
-        const component = entity.c[this.id];
+        const component = entity.c[id];
 
         this.fire('beforeremove', entity, component);
 
         delete this.store[entity.getGuid()];
 
-        entity[this.id] = undefined;
-        delete entity.c[this.id];
+        entity[id] = undefined;
+        delete entity.c[id];
 
         this.fire('remove', entity, record.data);
     }
@@ -85,9 +88,9 @@ class ComponentSystem extends EventHandler {
     /**
      * Create a clone of component. This creates a copy of all component data variables.
      *
-     * @param {import('../entity.js').Entity} entity - The entity to clone the component from.
-     * @param {import('../entity.js').Entity} clone - The entity to clone the component into.
-     * @returns {import('./component.js').Component} The newly cloned component.
+     * @param {Entity} entity - The entity to clone the component from.
+     * @param {Entity} clone - The entity to clone the component into.
+     * @returns {Component} The newly cloned component.
      * @ignore
      */
     cloneComponent(entity, clone) {
@@ -101,7 +104,7 @@ class ComponentSystem extends EventHandler {
      * store. This can be overridden by derived Component Systems and either called by the derived
      * System or replaced entirely.
      *
-     * @param {import('./component.js').Component} component - The component being initialized.
+     * @param {Component} component - The component being initialized.
      * @param {object} data - The data block used to initialize the component.
      * @param {Array<string | {name: string, type: string}>} properties - The array of property
      * descriptors for the component. A descriptor can be either a plain property name, or an
@@ -156,7 +159,7 @@ class ComponentSystem extends EventHandler {
         const matchingProperties = [];
         const schema = this.schema || [];
 
-        schema.forEach(function (descriptor) {
+        schema.forEach((descriptor) => {
             if (descriptor && typeof descriptor === 'object' && descriptor.type === type) {
                 matchingProperties.push(descriptor);
             }
@@ -208,7 +211,7 @@ function convertValue(value, type) {
         case 'entity':
             return value; // Entity fields should just be a string guid
         default:
-            throw new Error('Could not convert unhandled type: ' + type);
+            throw new Error(`Could not convert unhandled type: ${type}`);
     }
 }
 

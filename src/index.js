@@ -1,3 +1,14 @@
+/**
+ * This module provides the core functionality for the PlayCanvas Engine. It includes the main
+ * classes and methods used to create and manage a PlayCanvas application. It provides APIs for
+ * graphics, audio, input, physics, asset management, scripting and much more. It also includes an
+ * application framework and entity-component system, making it easy to manage the lifetime of your
+ * application.
+ *
+ * @module Engine
+ */
+
+// #if _IS_UMD
 // POLYFILLS
 import './polyfill/array-fill.js';
 import './polyfill/array-find.js';
@@ -6,21 +17,22 @@ import './polyfill/math-log2.js';
 import './polyfill/math-sign.js';
 import './polyfill/number-isfinite.js';
 import './polyfill/object-assign.js';
+import './polyfill/object-entries.js';
 import './polyfill/object-values.js';
 import './polyfill/pointer-lock.js';
 import './polyfill/string.js';
 import './polyfill/typedarray-fill.js';
-import './polyfill/OESVertexArrayObject.js';
+// #endif
 
 // CORE
 export * from './core/constants.js';
-export { apps, common, config, data, extend, revision, type, version } from './core/core.js';
-export { events } from './core/events.js';
+export { extend, revision, version } from './core/core.js';
 export { guid } from './core/guid.js';
 export { path } from './core/path.js';
 export { platform } from './core/platform.js';
 export { string } from './core/string.js';
 export { EventHandler } from './core/event-handler.js';
+export { EventHandle } from './core/event-handle.js';
 export { IndexedList } from './core/indexed-list.js';
 export { WasmModule } from './core/wasm-module.js';
 export { ReadStream } from './core/read-stream.js';
@@ -36,6 +48,8 @@ export { math } from './core/math/math.js';
 export { Color } from './core/math/color.js';
 export { Curve } from './core/math/curve.js';
 export { CurveSet } from './core/math/curve-set.js';
+export { FloatPacking } from './core/math/float-packing.js';
+export { Kernel } from './core/math/kernel.js';
 export { Mat3 } from './core/math/mat3.js';
 export { Mat4 } from './core/math/mat4.js';
 export { Quat } from './core/math/quat.js';
@@ -49,6 +63,7 @@ export { BoundingSphere } from './core/shape/bounding-sphere.js';
 export { Frustum } from './core/shape/frustum.js';
 export { OrientedBox } from './core/shape/oriented-box.js';
 export { Plane } from './core/shape/plane.js';
+export { Tri } from './core/shape/tri.js';
 export { Ray } from './core/shape/ray.js';
 
 // PLATFORM / AUDIO
@@ -57,17 +72,22 @@ export * from './platform/audio/constants.js';
 // PLATFORM / GRAPHICS
 export * from './platform/graphics/constants.js';
 export { createGraphicsDevice } from './platform/graphics/graphics-device-create.js';
+export { BindGroupFormat, BindUniformBufferFormat, BindTextureFormat, BindStorageTextureFormat, BindStorageBufferFormat } from './platform/graphics/bind-group-format.js';
 export { BlendState } from './platform/graphics/blend-state.js';
+export { Compute } from './platform/graphics/compute.js';
 export { DepthState } from './platform/graphics/depth-state.js';
 export { GraphicsDevice } from './platform/graphics/graphics-device.js';
 export { IndexBuffer } from './platform/graphics/index-buffer.js';
 export { RenderTarget } from './platform/graphics/render-target.js';
+export { RenderPass } from './platform/graphics/render-pass.js';
 export { ScopeId } from './platform/graphics/scope-id.js';
 export { ScopeSpace } from './platform/graphics/scope-space.js';
 export { Shader } from './platform/graphics/shader.js';
+export { StorageBuffer } from './platform/graphics/storage-buffer.js';
 export { Texture } from './platform/graphics/texture.js';
 export { TextureUtils } from './platform/graphics/texture-utils.js';
 export { TransformFeedback } from './platform/graphics/transform-feedback.js';
+export { UniformBufferFormat, UniformFormat } from './platform/graphics/uniform-buffer-format.js';
 export { VertexBuffer } from './platform/graphics/vertex-buffer.js';
 export { VertexFormat } from './platform/graphics/vertex-format.js';
 export { VertexIterator } from './platform/graphics/vertex-iterator.js';
@@ -77,6 +97,9 @@ export { WebglGraphicsDevice } from './platform/graphics/webgl/webgl-graphics-de
 
 // PLATFORM / GRAPHICS / webgpu
 export { WebgpuGraphicsDevice } from './platform/graphics/webgpu/webgpu-graphics-device.js';
+
+// PLATFORM / GRAPHICS / null
+export { NullGraphicsDevice } from './platform/graphics/null/null-graphics-device.js';
 
 // PLATFORM / INPUT
 export * from './platform/input/constants.js';
@@ -100,15 +123,13 @@ export { SoundInstance3d } from './platform/sound/instance3d.js';
 
 // SCENE
 export * from './scene/constants.js';
-export { calculateNormals, calculateTangents, createBox, createCapsule, createCone, createCylinder, createMesh, createPlane, createSphere, createTorus } from './scene/procedural.js';
-export { drawQuadWithShader, drawTexture } from './scene/graphics/quad-render-utils.js';
-export { BasicMaterial } from './scene/materials/basic-material.js';
+export { drawQuadWithShader } from './scene/graphics/quad-render-utils.js';
 export { Batch } from './scene/batching/batch.js';
 export { BatchGroup } from './scene/batching/batch-group.js';
 export { SkinBatchInstance } from './scene/batching/skin-batch-instance.js';
 export { BatchManager } from './scene/batching/batch-manager.js';
 export { Camera } from './scene/camera.js';
-export { CustomMaterial } from './scene/materials/custom-material.js';
+export { CameraShaderParams } from './scene/camera-shader-params.js'; // needed by the Editor
 export { WorldClusters } from './scene/lighting/world-clusters.js';
 export { ForwardRenderer } from './scene/renderer/forward-renderer.js';
 export { GraphNode } from './scene/graph-node.js';
@@ -116,10 +137,8 @@ export { Layer } from './scene/layer.js';
 export { LayerComposition } from './scene/composition/layer-composition.js';
 export { Light } from './scene/light.js';
 export { LightingParams } from './scene/lighting/lighting-params.js';
-export { LitOptions } from './scene/materials/lit-options.js';
-export { Material } from './scene/materials/material.js';
 export { Mesh } from './scene/mesh.js';
-export { MeshInstance, Command } from './scene/mesh-instance.js';
+export { MeshInstance } from './scene/mesh-instance.js';
 export { Model } from './scene/model.js';
 export { Morph } from './scene/morph.js';
 export { MorphInstance } from './scene/morph-instance.js';
@@ -131,8 +150,6 @@ export { ShaderPass } from './scene/shader-pass.js';
 export { Skin } from './scene/skin.js';
 export { SkinInstance } from './scene/skin-instance.js';
 export { Sprite } from './scene/sprite.js';
-export { StandardMaterial } from './scene/materials/standard-material.js';
-export { StandardMaterialOptions } from './scene/materials/standard-material-options.js';
 export { StencilParameters } from './platform/graphics/stencil-parameters.js';
 export { TextureAtlas } from './scene/texture-atlas.js';
 
@@ -143,14 +160,49 @@ export { Skeleton } from './scene/animation/skeleton.js';
 // SCENE / GRAPHICS
 export { EnvLighting } from './scene/graphics/env-lighting.js';
 export { PostEffect } from './scene/graphics/post-effect.js';
-export { shFromCubemap } from './scene/graphics/prefilter-cubemap.js';
+export { RenderPassColorGrab } from './scene/graphics/render-pass-color-grab.js';
+export { RenderPassShaderQuad } from './scene/graphics/render-pass-shader-quad.js';
 export { reprojectTexture } from './scene/graphics/reproject-texture.js';
+
+// SCENE / MATERIALS
+export { LitMaterial } from './scene/materials/lit-material.js';
+export { Material } from './scene/materials/material.js';
+export { ShaderMaterial } from './scene/materials/shader-material.js';
+export { StandardMaterial } from './scene/materials/standard-material.js';
+export { StandardMaterialOptions } from './scene/materials/standard-material-options.js';
+
+// SCENE / PROCEDURAL
+export { calculateNormals, calculateTangents } from './scene/geometry/geometry-utils.js';
+export { CapsuleGeometry } from './scene/geometry/capsule-geometry.js';
+export { ConeGeometry } from './scene/geometry/cone-geometry.js';
+export { CylinderGeometry } from './scene/geometry/cylinder-geometry.js';
+export { DomeGeometry } from './scene/geometry/dome-geometry.js';
+export { Geometry } from './scene/geometry/geometry.js';
+export { BoxGeometry } from './scene/geometry/box-geometry.js';
+export { PlaneGeometry } from './scene/geometry/plane-geometry.js';
+export { SphereGeometry } from './scene/geometry/sphere-geometry.js';
+export { TorusGeometry } from './scene/geometry/torus-geometry.js';
+
+// SCENE / RENDERER
+export { FogParams } from './scene/fog-params.js';
+export { RenderPassForward } from './scene/renderer/render-pass-forward.js';
 
 // SCENE / SHADER-LIB
 export { createShader, createShaderFromCode } from './scene/shader-lib/utils.js';
+export { LitShaderOptions } from './scene/shader-lib/programs/lit-shader-options.js';
 export { ProgramLibrary } from './scene/shader-lib/program-library.js';
 export { shaderChunks } from './scene/shader-lib/chunks/chunks.js';
 export { shaderChunksLightmapper } from './scene/shader-lib/chunks/chunks-lightmapper.js';
+export { ChunkBuilder } from './scene/shader-lib/chunk-builder.js';     // used by shed
+export { ChunkUtils } from './scene/shader-lib/chunk-utils.js';
+
+// SCENE / SKY
+export { Sky } from './scene/skybox/sky.js';
+
+// SCENE / SPLAT
+export { GSplatData } from './scene/gsplat/gsplat-data.js';
+export { GSplat } from './scene/gsplat/gsplat.js';
+export { GSplatInstance } from './scene/gsplat/gsplat-instance.js';
 
 // FRAMEWORK
 export * from './framework/constants.js';
@@ -165,8 +217,6 @@ export { AnimComponentLayer } from './framework/components/anim/component-layer.
 export { AnimComponentSystem } from './framework/components/anim/system.js';
 export { AudioListenerComponent } from './framework/components/audio-listener/component.js';
 export { AudioListenerComponentSystem } from './framework/components/audio-listener/system.js';
-export { AudioSourceComponent } from './framework/components/audio-source/component.js';
-export { AudioSourceComponentSystem } from './framework/components/audio-source/system.js';
 export * from './framework/components/button/constants.js';
 export { ButtonComponent } from './framework/components/button/component.js';
 export { ButtonComponentSystem } from './framework/components/button/system.js';
@@ -183,6 +233,8 @@ export { ElementComponentSystem } from './framework/components/element/system.js
 export { ElementDragHelper } from './framework/components/element/element-drag-helper.js';
 export { Entity } from './framework/entity.js';
 export { EntityReference } from './framework/utils/entity-reference.js';
+export { GSplatComponent } from './framework/components/gsplat/component.js';
+export { GSplatComponentSystem } from './framework/components/gsplat/system.js';
 export { ImageElement } from './framework/components/element/image-element.js';
 export * from './framework/components/joint/constants.js';
 export { JointComponent } from './framework/components/joint/component.js';
@@ -213,8 +265,6 @@ export { ScreenComponent } from './framework/components/screen/component.js';
 export { ScreenComponentSystem } from './framework/components/screen/system.js';
 export { ScriptComponent } from './framework/components/script/component.js';
 export { ScriptComponentSystem } from './framework/components/script/system.js';
-export { ScriptLegacyComponent } from './framework/components/script-legacy/component.js';
-export { ScriptLegacyComponentSystem } from './framework/components/script-legacy/system.js';
 export { ScrollbarComponent } from './framework/components/scrollbar/component.js';
 export { ScrollbarComponentSystem } from './framework/components/scrollbar/system.js';
 export * from './framework/components/scroll-view/constants.js';
@@ -282,11 +332,13 @@ export { CssHandler } from './framework/handlers/css.js';
 export { CubemapHandler } from './framework/handlers/cubemap.js';
 export { FolderHandler } from './framework/handlers/folder.js';
 export { FontHandler } from './framework/handlers/font.js';
+export { GSplatResource } from './framework/parsers/gsplat-resource.js';
 export { HierarchyHandler } from './framework/handlers/hierarchy.js';
 export { HtmlHandler } from './framework/handlers/html.js';
 export { JsonHandler } from './framework/handlers/json.js';
 export { MaterialHandler } from './framework/handlers/material.js';
 export { ModelHandler } from './framework/handlers/model.js';
+export { GSplatHandler } from './framework/handlers/gsplat.js';
 export { RenderHandler } from './framework/handlers/render.js';
 export { ResourceHandler } from './framework/handlers/handler.js';
 export { ResourceLoader } from './framework/handlers/loader.js';
@@ -297,7 +349,7 @@ export { ShaderHandler } from './framework/handlers/shader.js';
 export { SpriteHandler } from './framework/handlers/sprite.js';
 export { TemplateHandler } from './framework/handlers/template.js';
 export { TextHandler } from './framework/handlers/text.js';
-export { TextureHandler, TextureParser } from './framework/handlers/texture.js';
+export { TextureHandler } from './framework/handlers/texture.js';
 export { TextureAtlasHandler } from './framework/handlers/texture-atlas.js';
 
 // FRAMEWORK / INPUT
@@ -307,28 +359,39 @@ export { ElementInput, ElementInputEvent, ElementMouseEvent, ElementSelectEvent,
 export { JsonStandardMaterialParser } from './framework/parsers/material/json-standard-material.js';
 
 // FRAMEWORK /SCRIPTS
-export { createScript, registerScript, getReservedScriptNames } from './framework/script/script.js';
+export { createScript, registerScript, getReservedScriptNames } from './framework/script/script-create.js';
 export { ScriptAttributes } from './framework/script/script-attributes.js';
 export { ScriptRegistry } from './framework/script/script-registry.js';
 export { ScriptType } from './framework/script/script-type.js';
+export { Script } from './framework/script/script.js';
 
 // FRAMEWORK / LOCALIZATION
 export { I18n } from './framework/i18n/i18n.js';
 
 // FRAMEWORK / XR
 export * from './framework/xr/constants.js';
-export { XrInput } from './framework/xr/xr-input.js';
-export { XrInputSource } from './framework/xr/xr-input-source.js';
-export { XrLightEstimation } from './framework/xr/xr-light-estimation.js';
-export { XrDepthSensing } from './framework/xr/xr-depth-sensing.js';
-export { XrManager } from './framework/xr/xr-manager.js';
+export { XrAnchor } from './framework/xr/xr-anchor.js';
+export { XrAnchors } from './framework/xr/xr-anchors.js';
+export { XrDomOverlay } from './framework/xr/xr-dom-overlay.js';
+export { XrFinger } from './framework/xr/xr-finger.js';
+export { XrHand } from './framework/xr/xr-hand.js';
 export { XrHitTest } from './framework/xr/xr-hit-test.js';
 export { XrHitTestSource } from './framework/xr/xr-hit-test-source.js';
 export { XrImageTracking } from './framework/xr/xr-image-tracking.js';
-export { XrTrackedImage } from './framework/xr/xr-tracked-image.js';
-export { XrDomOverlay } from './framework/xr/xr-dom-overlay.js';
-export { XrPlaneDetection } from './framework/xr/xr-plane-detection.js';
+export { XrInput } from './framework/xr/xr-input.js';
+export { XrInputSource } from './framework/xr/xr-input-source.js';
+export { XrJoint } from './framework/xr/xr-joint.js';
+export { XrLightEstimation } from './framework/xr/xr-light-estimation.js';
+export { XrManager } from './framework/xr/xr-manager.js';
+export { XrMeshDetection } from './framework/xr/xr-mesh-detection.js';
 export { XrPlane } from './framework/xr/xr-plane.js';
+export { XrPlaneDetection } from './framework/xr/xr-plane-detection.js';
+export { XrTrackedImage } from './framework/xr/xr-tracked-image.js';
+export { XrView } from './framework/xr/xr-view.js';
+export { XrViews } from './framework/xr/xr-views.js';
 
 // BACKWARDS COMPATIBILITY
 export * from './deprecated/deprecated.js';
+
+// EXTRAS
+export * from './extras/index.js';

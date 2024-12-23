@@ -1,17 +1,17 @@
 import { SceneParser } from '../parsers/scene.js';
 import { SceneUtils } from './scene-utils.js';
+import { ResourceHandler } from './handler.js';
 
-class HierarchyHandler {
+/**
+ * @import { AppBase } from '../app-base.js'
+ */
+
+class HierarchyHandler extends ResourceHandler {
     /**
-     * Type of the resource the handler handles.
-     *
-     * @type {string}
+     * @param {AppBase} app - The running {@link AppBase}.
      */
-    handlerType = "hierarchy";
-
     constructor(app) {
-        this._app = app;
-        this.maxRetries = 0;
+        super(app, 'hierarchy');
     }
 
     load(url, callback) {

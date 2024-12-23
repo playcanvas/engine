@@ -1,13 +1,22 @@
 import { Vec3 } from '../../../core/math/vec3.js';
-
 import { BLEND_NORMAL, EMITTERSHAPE_BOX, LAYERID_WORLD, PARTICLEMODE_GPU, PARTICLEORIENTATION_SCREEN } from '../../../scene/constants.js';
+
+/**
+ * @import { Asset } from '../../../framework/asset/asset.js'
+ * @import { CurveSet } from '../../../core/math/curve-set.js'
+ * @import { Curve } from '../../../core/math/curve.js'
+ * @import { Mesh } from '../../../scene/mesh.js'
+ * @import { Texture } from '../../../platform/graphics/texture.js'
+ */
 
 class ParticleSystemComponentData {
     constructor() {
         this.numParticles = 1;                  // Amount of particles allocated (max particles = max GL texture width at this moment)
         this.rate = 1;                          // Emission rate
+        /** @type {number} */
         this.rate2 = null;
         this.startAngle = 0;
+        /** @type {number} */
         this.startAngle2 = null;
         this.lifetime = 50;                     // Particle lifetime
         this.emitterExtents = new Vec3();       // Spawn point divergence
@@ -16,12 +25,17 @@ class ParticleSystemComponentData {
         this.emitterRadiusInner = 0;
         this.emitterShape = EMITTERSHAPE_BOX;
         this.initialVelocity = 0;
+        this.wrap = false;
         this.wrapBounds = new Vec3();
         this.localSpace = false;
         this.screenSpace = false;
+        /** @type {Texture} */
         this.colorMap = null;
+        /** @type {Asset} */
         this.colorMapAsset = null;
+        /** @type {Texture} */
         this.normalMap = null;
+        /** @type {Asset} */
         this.normalMapAsset = null;
         this.loop = true;
         this.preWarm = false;
@@ -34,9 +48,13 @@ class ParticleSystemComponentData {
         this.stretch = 0.0;
         this.alignToMotion = false;
         this.depthSoftening = 0;
+        /** @type {Asset} */
+        this.renderAsset = null;
+        /** @type {Asset} */
         this.meshAsset = null;
+        /** @type {Mesh} */
         this.mesh = null;                       // Mesh to be used as particle. Vertex buffer is supposed to hold vertex position in first 3 floats of each vertex
-                                                // Leave undefined to use simple quads
+        // Leave undefined to use simple quads
         this.depthWrite = false;
         this.noFog = false;
 
@@ -54,25 +72,39 @@ class ParticleSystemComponentData {
         this.animLoop = true;
 
         // Time-dependent parameters
+        /** @type {Curve} */
         this.scaleGraph = null;
+        /** @type {Curve} */
         this.scaleGraph2 = null;
 
+        /** @type {CurveSet} */
         this.colorGraph = null;
+        /** @type {CurveSet} */
         this.colorGraph2 = null;
 
+        /** @type {Curve} */
         this.alphaGraph = null;
+        /** @type {Curve} */
         this.alphaGraph2 = null;
 
+        /** @type {CurveSet} */
         this.localVelocityGraph = null;
+        /** @type {CurveSet} */
         this.localVelocityGraph2 = null;
 
+        /** @type {CurveSet} */
         this.velocityGraph = null;
+        /** @type {CurveSet} */
         this.velocityGraph2 = null;
 
+        /** @type {Curve} */
         this.rotationSpeedGraph = null;
+        /** @type {Curve} */
         this.rotationSpeedGraph2 = null;
 
+        /** @type {Curve} */
         this.radialSpeedGraph = null;
+        /** @type {Curve} */
         this.radialSpeedGraph2 = null;
 
         this.blendType = BLEND_NORMAL;

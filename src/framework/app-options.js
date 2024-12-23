@@ -1,36 +1,55 @@
+/**
+ * @import { BatchManager } from '../scene/batching/batch-manager.js'
+ * @import { ComponentSystem } from './components/system.js'
+ * @import { ElementInput } from './input/element-input.js'
+ * @import { GamePads } from '../platform/input/game-pads.js'
+ * @import { GraphicsDevice } from '../platform/graphics/graphics-device.js'
+ * @import { Keyboard } from '../platform/input/keyboard.js'
+ * @import { Lightmapper } from './lightmapper/lightmapper.js'
+ * @import { Mouse } from '../platform/input/mouse.js'
+ * @import { ResourceHandler } from './handlers/handler.js'
+ * @import { SoundManager } from '../platform/sound/manager.js'
+ * @import { TouchDevice } from '../platform/input/touch-device.js'
+ * @import { XrManager } from './xr/xr-manager.js'
+ */
+
+/**
+ * AppOptions is an object that holds configuration settings utilized in the creation of AppBase. It
+ * allows functionality to be included or excluded from the AppBase instance.
+ */
 class AppOptions {
     /**
      * Input handler for {@link ElementComponent}s.
      *
-     * @type {import('./input/element-input.js').ElementInput}
+     * @type {ElementInput}
      */
     elementInput;
 
     /**
      * Keyboard handler for input.
      *
-     * @type {import('../platform/input/keyboard.js').Keyboard}
+     * @type {Keyboard}
      */
     keyboard;
 
     /**
      * Mouse handler for input.
      *
-     * @type {import('../platform/input/mouse.js').Mouse}
+     * @type {Mouse}
      */
     mouse;
 
     /**
      * TouchDevice handler for input.
      *
-     * @type {import('../platform/input/touch-device.js').TouchDevice}
+     * @type {TouchDevice}
      */
     touch;
 
     /**
      * Gamepad handler for input.
      *
-     * @type {import('../platform/input/game-pads.js').GamePads}
+     * @type {GamePads}
      */
     gamepads;
 
@@ -58,49 +77,49 @@ class AppOptions {
     /**
      * The sound manager
      *
-     * @type {import('../platform/sound/manager.js').SoundManager}
+     * @type {SoundManager}
      */
     soundManager;
 
     /**
      * The graphics device.
      *
-     * @type {import('../platform/graphics/graphics-device.js').GraphicsDevice}
+     * @type {GraphicsDevice}
      */
     graphicsDevice;
 
     /**
      * The lightmapper.
      *
-     * @type {import('./lightmapper/lightmapper.js').Lightmapper}
+     * @type {typeof Lightmapper}
      */
     lightmapper;
 
     /**
      * The BatchManager.
      *
-     * @type {import('../scene/batching/batch-manager.js').BatchManager}
+     * @type {typeof BatchManager}
      */
     batchManager;
 
     /**
      * The XrManager.
      *
-     * @type {import('./xr/xr-manager.js').XrManager}
+     * @type {typeof XrManager}
      */
     xr;
 
     /**
      * The component systems the app requires.
      *
-     * @type {import('./components/system.js').ComponentSystem[]}
+     * @type {typeof ComponentSystem[]}
      */
     componentSystems = [];
 
     /**
      * The resource handlers the app requires.
      *
-     * @type {import('./handlers/handler.js').ResourceHandler[]}
+     * @type {typeof ResourceHandler[]}
      */
     resourceHandlers = [];
 }

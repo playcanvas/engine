@@ -5,10 +5,14 @@ import { CurveSet } from '../../core/math/curve-set.js';
 import { Vec2 } from '../../core/math/vec2.js';
 import { Vec3 } from '../../core/math/vec3.js';
 import { Vec4 } from '../../core/math/vec4.js';
-
 import { GraphNode } from '../../scene/graph-node.js';
-
 import { Asset } from '../asset/asset.js';
+
+/**
+ * @import { Application } from '../../framework/application.js'
+ * @import { ScriptType } from './script-type.js'
+ * @import { Script } from '../../framework/script/script.js'
+ */
 
 const components = ['x', 'y', 'z', 'w'];
 const vecLookup = [undefined, undefined, Vec2, Vec3, Vec4];
@@ -85,8 +89,9 @@ function rawToValue(app, args, value, old) {
                 return value.clone();
             } else if (value instanceof Array && value.length >= 3 && value.length <= 4) {
                 for (let i = 0; i < value.length; i++) {
-                    if (typeof value[i] !== 'number')
+                    if (typeof value[i] !== 'number') {
                         return null;
+                    }
                 }
                 if (!old) old = new Color();
 
@@ -96,9 +101,10 @@ function rawToValue(app, args, value, old) {
                 old.a = (value.length === 3) ? 1 : value[3];
 
                 return old;
-            } else if (typeof value === 'string' && /#([0-9abcdef]{2}){3,4}/i.test(value)) {
-                if (!old)
+            } else if (typeof value === 'string' && /#(?:[0-9a-f]{2}){3,4}/i.test(value)) {
+                if (!old) {
                     old = new Color();
+                }
 
                 old.fromString(value);
                 return old;
@@ -118,13 +124,15 @@ function rawToValue(app, args, value, old) {
                 return value.clone();
             } else if (value instanceof Array && value.length === len) {
                 for (let i = 0; i < value.length; i++) {
-                    if (typeof value[i] !== 'number')
+                    if (typeof value[i] !== 'number') {
                         return null;
+                    }
                 }
                 if (!old) old = new vecType();
 
-                for (let i = 0; i < len; i++)
+                for (let i = 0; i < len; i++) {
                     old[components[i]] = value[i];
+                }
 
                 return old;
             }
@@ -149,15 +157,70 @@ function rawToValue(app, args, value, old) {
 }
 
 /**
+ * @typedef {Object} AttributeSchema
+ * @property {"boolean"|"number"|"string"|"json"|"asset"|"entity"|"rgb"|"rgba"|"vec2"|"vec3"|"vec4"|"curve"} type - The Attribute type
+ * @property {boolean} [array] - True if this attribute is an array of `type`
+ */
+
+/**
+ * Takes an attribute schema, a value and current value, and return a new value.
+ *
+ * @param {Application} app - The working application
+ * @param {AttributeSchema} schema - The attribute schema used to resolve properties
+ * @param {*} value - The raw value to create
+ * @param {*} current - The existing value
+ * @returns {*} The return value
+ */
+function attributeToValue(app, schema, value, current) {
+    if (schema.array) {
+        return value.map((item, index) => rawToValue(app, schema, item, current ? current[index] : null));
+    }
+
+    return rawToValue(app, schema, value, current);
+}
+
+/**
+ * Assigns values to a script instance based on a map of attributes schemas
+ * and a corresponding map of data.
+ *
+ * @param {Application} app - The application instance
+ * @param {Object<string, AttributeSchema>} attributeSchemaMap - A map of names to Schemas
+ * @param {Object<string, *>} data - A Map of data to assign to the Script instance
+ * @param {Script} script - A Script instance to assign values on
+ */
+export function assignAttributesToScript(app, attributeSchemaMap, data, script) {
+
+    if (!data) return;
+
+    // Iterate over the schema and assign corresponding data
+    for (const attributeName in attributeSchemaMap) {
+        const attributeSchema = attributeSchemaMap[attributeName];
+        const dataToAssign = data[attributeName];
+
+        // Skip if the data is not defined
+        if (dataToAssign === undefined) continue;
+
+        // Assign the value to the script based on the attribute schema
+        script[attributeName] =  attributeToValue(app, attributeSchema, dataToAssign, script[attributeName]);
+    }
+}
+
+/**
  * Container of Script Attribute definitions. Implements an interface to add/remove attributes and
  * store their definition for a {@link ScriptType}. Note: An instance of ScriptAttributes is
  * created automatically by each {@link ScriptType}.
+ *
+ * @category Script
  */
 class ScriptAttributes {
+    static assignAttributesToScript = assignAttributesToScript;
+
+    static attributeToValue = attributeToValue;
+
     /**
      * Create a new ScriptAttributes instance.
      *
-     * @param {Class<import('./script-type.js').ScriptType>} scriptType - Script Type that attributes relate to.
+     * @param {typeof ScriptType} scriptType - Script Type that attributes relate to.
      */
     constructor(scriptType) {
         this.scriptType = scriptType;
@@ -167,7 +230,7 @@ class ScriptAttributes {
     static reservedNames = new Set([
         'app', 'entity', 'enabled', '_enabled', '_enabledOld', '_destroyed',
         '__attributes', '__attributesRaw', '__scriptType', '__executionOrder',
-        '_callbacks', 'has', 'get', 'on', 'off', 'fire', 'once', 'hasEvent'
+        '_callbacks', '_callbackActive', 'has', 'get', 'on', 'off', 'fire', 'once', 'hasEvent'
     ]);
 
     /**
@@ -276,7 +339,7 @@ class ScriptAttributes {
             },
             set: function (raw) {
                 const evt = 'attr';
-                const evtName = 'attr:' + name;
+                const evtName = `attr:${name}`;
 
                 const old = this.__attributes[name];
                 // keep copy of old for the event below
@@ -287,7 +350,7 @@ class ScriptAttributes {
                 if (old && args.type !== 'json' && args.type !== 'entity' && old.clone) {
                     // check if an event handler is there
                     // before cloning for performance
-                    if (this._callbacks[evt] || this._callbacks[evtName]) {
+                    if (this.hasEvent(evt) || this.hasEvent(evtName)) {
                         oldCopy = old.clone();
                     }
                 }
@@ -319,8 +382,9 @@ class ScriptAttributes {
      * PlayerController.attributes.remove('fullName');
      */
     remove(name) {
-        if (!this.index[name])
+        if (!this.index[name]) {
             return false;
+        }
 
         delete this.index[name];
         delete this.scriptType.prototype[name];

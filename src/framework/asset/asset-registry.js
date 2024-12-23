@@ -2,12 +2,14 @@ import { path } from '../../core/path.js';
 import { Debug } from '../../core/debug.js';
 import { EventHandler } from '../../core/event-handler.js';
 import { TagsCache } from '../../core/tags-cache.js';
-
 import { standardMaterialTextureParameters } from '../../scene/materials/standard-material-parameters.js';
-
-import { script } from '../script.js';
-
 import { Asset } from './asset.js';
+
+/**
+ * @import { Bundle } from '../bundle/bundle.js'
+ * @import { BundleRegistry } from '../bundle/bundle-registry.js'
+ * @import { ResourceLoader } from '../handlers/loader.js'
+ */
 
 /**
  * Callback used by {@link AssetRegistry#filter} to filter assets.
@@ -27,17 +29,148 @@ import { Asset } from './asset.js';
  */
 
 /**
+ * Callback used by {@link ResourceLoader#load} and called when an asset is choosing a bundle
+ * to load from. Return a single bundle to ensure asset is loaded from it.
+ *
+ * @callback BundlesFilterCallback
+ * @param {Bundle[]} bundles - List of bundles which contain the asset.
+ */
+
+/**
  * Container for all assets that are available to this application. Note that PlayCanvas scripts
  * are provided with an AssetRegistry instance as `app.assets`.
  *
- * @augments EventHandler
+ * @category Asset
  */
 class AssetRegistry extends EventHandler {
+    /**
+     * Fired when an asset completes loading. This event is available in three forms. They are as
+     * follows:
+     *
+     * 1. `load` - Fired when any asset finishes loading.
+     * 2. `load:[id]` - Fired when a specific asset has finished loading, where `[id]` is the
+     * unique id of the asset.
+     * 3. `load:url:[url]` - Fired when an asset finishes loading whose URL matches `[url]`, where
+     * `[url]` is the URL of the asset.
+     *
+     * @event
+     * @example
+     * app.assets.on('load', (asset) => {
+     *     console.log(`Asset loaded: ${asset.name}`);
+     * });
+     * @example
+     * const id = 123456;
+     * const asset = app.assets.get(id);
+     * app.assets.on('load:' + id, (asset) => {
+     *     console.log(`Asset loaded: ${asset.name}`);
+     * });
+     * app.assets.load(asset);
+     * @example
+     * const id = 123456;
+     * const asset = app.assets.get(id);
+     * app.assets.on('load:url:' + asset.file.url, (asset) => {
+     *     console.log(`Asset loaded: ${asset.name}`);
+     * });
+     * app.assets.load(asset);
+     */
+    static EVENT_LOAD = 'load';
+
+    /**
+     * Fired when an asset is added to the registry. This event is available in three forms. They
+     * are as follows:
+     *
+     * 1. `add` - Fired when any asset is added to the registry.
+     * 2. `add:[id]` - Fired when an asset is added to the registry, where `[id]` is the unique id
+     * of the asset.
+     * 3. `add:url:[url]` - Fired when an asset is added to the registry and matches the URL
+     * `[url]`, where `[url]` is the URL of the asset.
+     *
+     * @event
+     * @example
+     * app.assets.on('add', (asset) => {
+     *    console.log(`Asset added: ${asset.name}`);
+     * });
+     * @example
+     * const id = 123456;
+     * app.assets.on('add:' + id, (asset) => {
+     *    console.log(`Asset added: ${asset.name}`);
+     * });
+     * @example
+     * const id = 123456;
+     * const asset = app.assets.get(id);
+     * app.assets.on('add:url:' + asset.file.url, (asset) => {
+     *    console.log(`Asset added: ${asset.name}`);
+     * });
+     */
+    static EVENT_ADD = 'add';
+
+    /**
+     * Fired when an asset is removed from the registry. This event is available in three forms.
+     * They are as follows:
+     *
+     * 1. `remove` - Fired when any asset is removed from the registry.
+     * 2. `remove:[id]` - Fired when an asset is removed from the registry, where `[id]` is the
+     * unique id of the asset.
+     * 3. `remove:url:[url]` - Fired when an asset is removed from the registry and matches the
+     * URL `[url]`, where `[url]` is the URL of the asset.
+     *
+     * @event
+     * @param {Asset} asset - The asset that was removed.
+     * @example
+     * app.assets.on('remove', (asset) => {
+     *    console.log(`Asset removed: ${asset.name}`);
+     * });
+     * @example
+     * const id = 123456;
+     * app.assets.on('remove:' + id, (asset) => {
+     *    console.log(`Asset removed: ${asset.name}`);
+     * });
+     * @example
+     * const id = 123456;
+     * const asset = app.assets.get(id);
+     * app.assets.on('remove:url:' + asset.file.url, (asset) => {
+     *    console.log(`Asset removed: ${asset.name}`);
+     * });
+     */
+    static EVENT_REMOVE = 'remove';
+
+    /**
+     * Fired when an error occurs during asset loading. This event is available in two forms. They
+     * are as follows:
+     *
+     * 1. `error` - Fired when any asset reports an error in loading.
+     * 2. `error:[id]` - Fired when an asset reports an error in loading, where `[id]` is the
+     * unique id of the asset.
+     *
+     * @event
+     * @example
+     * const id = 123456;
+     * const asset = app.assets.get(id);
+     * app.assets.on('error', (err, asset) => {
+     *     console.error(err);
+     * });
+     * app.assets.load(asset);
+     * @example
+     * const id = 123456;
+     * const asset = app.assets.get(id);
+     * app.assets.on('error:' + id, (err, asset) => {
+     *     console.error(err);
+     * });
+     * app.assets.load(asset);
+     */
+    static EVENT_ERROR = 'error';
+
     /**
      * @type {Set<Asset>}
      * @private
      */
     _assets = new Set();
+
+    /**
+     * @type {ResourceLoader}
+     * @private
+     */
+    _loader;
 
     /**
      * @type {Map<number, Asset>}
@@ -50,6 +183,12 @@ class AssetRegistry extends EventHandler {
      * @private
      */
     _urlToAsset = new Map();
+
+    /**
+     * @type {Map<string, Set<Asset>>}
+     * @private
+     */
+    _nameToAsset = new Map();
 
     /**
      * Index for looking up by tags.
@@ -66,10 +205,16 @@ class AssetRegistry extends EventHandler {
     prefix = null;
 
     /**
+     * BundleRegistry
+     *
+     * @type {BundleRegistry|null}
+     */
+    bundles = null;
+
+    /**
      * Create an instance of an AssetRegistry.
      *
-     * @param {import('../handlers/loader.js').ResourceLoader} loader - The ResourceLoader used to
-     * load the asset files.
+     * @param {ResourceLoader} loader - The ResourceLoader used to load the asset files.
      */
     constructor(loader) {
         super();
@@ -78,137 +223,10 @@ class AssetRegistry extends EventHandler {
     }
 
     /**
-     * Fired when an asset completes loading.
-     *
-     * @event AssetRegistry#load
-     * @param {Asset} asset - The asset that has just loaded.
-     * @example
-     * app.assets.on("load", function (asset) {
-     *     console.log("asset loaded: " + asset.name);
-     * });
-     */
-
-    /**
-     * Fired when an asset completes loading.
-     *
-     * @event AssetRegistry#load:[id]
-     * @param {Asset} asset - The asset that has just loaded.
-     * @example
-     * const id = 123456;
-     * const asset = app.assets.get(id);
-     * app.assets.on("load:" + id, function (asset) {
-     *     console.log("asset loaded: " + asset.name);
-     * });
-     * app.assets.load(asset);
-     */
-
-    /**
-     * Fired when an asset completes loading.
-     *
-     * @event AssetRegistry#load:url:[url]
-     * @param {Asset} asset - The asset that has just loaded.
-     * @example
-     * const id = 123456;
-     * const asset = app.assets.get(id);
-     * app.assets.on("load:url:" + asset.file.url, function (asset) {
-     *     console.log("asset loaded: " + asset.name);
-     * });
-     * app.assets.load(asset);
-     */
-
-    /**
-     * Fired when an asset is added to the registry.
-     *
-     * @event AssetRegistry#add
-     * @param {Asset} asset - The asset that was added.
-     * @example
-     * app.assets.on("add", function (asset) {
-     *     console.log("New asset added: " + asset.name);
-     * });
-     */
-
-    /**
-     * Fired when an asset is added to the registry.
-     *
-     * @event AssetRegistry#add:[id]
-     * @param {Asset} asset - The asset that was added.
-     * @example
-     * const id = 123456;
-     * app.assets.on("add:" + id, function (asset) {
-     *     console.log("Asset 123456 loaded");
-     * });
-     */
-
-    /**
-     * Fired when an asset is added to the registry.
-     *
-     * @event AssetRegistry#add:url:[url]
-     * @param {Asset} asset - The asset that was added.
-     */
-
-    /**
-     * Fired when an asset is removed from the registry.
-     *
-     * @event AssetRegistry#remove
-     * @param {Asset} asset - The asset that was removed.
-     * @example
-     * app.assets.on("remove", function (asset) {
-     *     console.log("Asset removed: " + asset.name);
-     * });
-     */
-
-    /**
-     * Fired when an asset is removed from the registry.
-     *
-     * @event AssetRegistry#remove:[id]
-     * @param {Asset} asset - The asset that was removed.
-     * @example
-     * const id = 123456;
-     * app.assets.on("remove:" + id, function (asset) {
-     *     console.log("Asset removed: " + asset.name);
-     * });
-     */
-
-    /**
-     * Fired when an asset is removed from the registry.
-     *
-     * @event AssetRegistry#remove:url:[url]
-     * @param {Asset} asset - The asset that was removed.
-     */
-
-    /**
-     * Fired when an error occurs during asset loading.
-     *
-     * @event AssetRegistry#error
-     * @param {string} err - The error message.
-     * @param {Asset} asset - The asset that generated the error.
-     * @example
-     * const id = 123456;
-     * const asset = app.assets.get(id);
-     * app.assets.on("error", function (err, asset) {
-     *     console.error(err);
-     * });
-     * app.assets.load(asset);
-     */
-
-    /**
-     * Fired when an error occurs during asset loading.
-     *
-     * @event AssetRegistry#error:[id]
-     * @param {Asset} asset - The asset that generated the error.
-     * @example
-     * const id = 123456;
-     * const asset = app.assets.get(id);
-     * app.assets.on("error:" + id, function (err, asset) {
-     *     console.error(err);
-     * });
-     * app.assets.load(asset);
-     */
-
-    /**
      * Create a filtered list of assets from the registry.
      *
-     * @param {object} filters - Properties to filter on, currently supports: 'preload: true|false'.
+     * @param {object} [filters] - Filter options.
+     * @param {boolean} [filters.preload] - Filter by preload setting.
      * @returns {Asset[]} The filtered list of assets.
      */
     list(filters = {}) {
@@ -240,6 +258,14 @@ class AssetRegistry extends EventHandler {
             this._urlToAsset.set(asset.file.url, asset);
         }
 
+        if (!this._nameToAsset.has(asset.name)) {
+            this._nameToAsset.set(asset.name, new Set());
+        }
+
+        this._nameToAsset.get(asset.name).add(asset);
+
+        asset.on('name', this._onNameChange, this);
+
         asset.registry = this;
 
         // tags cache
@@ -248,13 +274,14 @@ class AssetRegistry extends EventHandler {
         asset.tags.on('remove', this._onTagRemove, this);
 
         this.fire('add', asset);
-        this.fire('add:' + asset.id, asset);
+        this.fire(`add:${asset.id}`, asset);
         if (asset.file?.url) {
-            this.fire('add:url:' + asset.file.url, asset);
+            this.fire(`add:url:${asset.file.url}`, asset);
         }
 
-        if (asset.preload)
+        if (asset.preload) {
             this.load(asset);
+        }
     }
 
     /**
@@ -277,6 +304,16 @@ class AssetRegistry extends EventHandler {
             this._urlToAsset.delete(asset.file.url);
         }
 
+        asset.off('name', this._onNameChange, this);
+
+        if (this._nameToAsset.has(asset.name)) {
+            const items = this._nameToAsset.get(asset.name);
+            items.delete(asset);
+            if (items.size === 0) {
+                this._nameToAsset.delete(asset.name);
+            }
+        }
+
         // tags cache
         this._tags.removeItem(asset);
         asset.tags.off('add', this._onTagAdd, this);
@@ -284,9 +321,9 @@ class AssetRegistry extends EventHandler {
 
         asset.fire('remove', asset);
         this.fire('remove', asset);
-        this.fire('remove:' + asset.id, asset);
+        this.fire(`remove:${asset.id}`, asset);
         if (asset.file?.url) {
-            this.fire('remove:url:' + asset.file.url, asset);
+            this.fire(`remove:url:${asset.file.url}`, asset);
         }
 
         return true;
@@ -318,10 +355,19 @@ class AssetRegistry extends EventHandler {
     }
 
     /**
-     * Load the asset's file from a remote source. Listen for "load" events on the asset to find
+     * Load the asset's file from a remote source. Listen for `load` events on the asset to find
      * out when it is loaded.
      *
      * @param {Asset} asset - The asset to load.
+     * @param {object} [options] - Options for asset loading.
+     * @param {boolean} [options.bundlesIgnore] - If set to true, then asset will not try to load
+     * from a bundle. Defaults to false.
+     * @param {boolean} [options.force] - If set to true, then the check of asset being loaded or
+     * is already loaded is bypassed, which forces loading of asset regardless.
+     * @param {BundlesFilterCallback} [options.bundlesFilter] - A callback that will be called
+     * when loading an asset that is contained in any of the bundles. It provides an array of
+     * bundles and will ensure asset is loaded from bundle returned from a callback. By default
+     * smallest filesize bundle is chosen.
      * @example
      * // load some assets
      * const assetsToLoad = [
@@ -339,15 +385,24 @@ class AssetRegistry extends EventHandler {
      *     app.assets.load(assetToLoad);
      * });
      */
-    load(asset) {
+    load(asset, options) {
         // do nothing if asset is already loaded
         // note: lots of code calls assets.load() assuming this check is present
         // don't remove it without updating calls to assets.load() with checks for the asset.loaded state
-        if (asset.loading || asset.loaded) {
+        if ((asset.loading || asset.loaded) && !options?.force) {
             return;
         }
 
         const file = asset.file;
+
+        const _fireLoad = () => {
+            this.fire('load', asset);
+            this.fire(`load:${asset.id}`, asset);
+            if (file && file.url) {
+                this.fire(`load:url:${file.url}`, asset);
+            }
+            asset.fire('load', asset);
+        };
 
         // open has completed on the resource
         const _opened = (resource) => {
@@ -360,11 +415,29 @@ class AssetRegistry extends EventHandler {
             // let handler patch the resource
             this._loader.patch(asset, this);
 
-            this.fire('load', asset);
-            this.fire('load:' + asset.id, asset);
-            if (file && file.url)
-                this.fire('load:url:' + file.url, asset);
-            asset.fire('load', asset);
+            if (asset.type === 'bundle') {
+                const assetIds = asset.data.assets;
+                for (let i = 0; i < assetIds.length; i++) {
+                    const assetInBundle = this._idToAsset.get(assetIds[i]);
+                    if (assetInBundle && !assetInBundle.loaded) {
+                        this.load(assetInBundle, { force: true });
+                    }
+                }
+
+                if (asset.resource.loaded) {
+                    _fireLoad();
+                } else {
+                    this.fire('load:start', asset);
+                    this.fire(`load:start:${asset.id}`, asset);
+                    if (file && file.url) {
+                        this.fire(`load:start:url:${file.url}`, asset);
+                    }
+                    asset.fire('load:start', asset);
+                    asset.resource.on('load', _fireLoad);
+                }
+            } else {
+                _fireLoad();
+            }
         };
 
         // load has completed on the resource
@@ -374,10 +447,10 @@ class AssetRegistry extends EventHandler {
 
             if (err) {
                 this.fire('error', err, asset);
-                this.fire('error:' + asset.id, err, asset);
+                this.fire(`error:${asset.id}`, err, asset);
                 asset.fire('error', err, asset);
             } else {
-                if (!script.legacy && asset.type === 'script') {
+                if (asset.type === 'script') {
                     const handler = this._loader.getHandler('script');
                     if (handler._cache[asset.id] && handler._cache[asset.id].parentNode === document.head) {
                         // remove old element
@@ -393,10 +466,31 @@ class AssetRegistry extends EventHandler {
         if (file || asset.type === 'cubemap') {
             // start loading the resource
             this.fire('load:start', asset);
-            this.fire('load:' + asset.id + ':start', asset);
+            this.fire(`load:${asset.id}:start`, asset);
 
             asset.loading = true;
-            this._loader.load(asset.getFileUrl(), asset.type, _loaded, asset);
+
+            const fileUrl = asset.getFileUrl();
+
+            // mark bundle assets as loading
+            if (asset.type === 'bundle') {
+                const assetIds = asset.data.assets;
+                for (let i = 0; i < assetIds.length; i++) {
+                    const assetInBundle = this._idToAsset.get(assetIds[i]);
+                    if (!assetInBundle) {
+                        continue;
+                    }
+
+                    if (assetInBundle.loaded || assetInBundle.resource || assetInBundle.loading) {
+                        continue;
+                    }
+
+                    assetInBundle.loading = true;
+                }
+            }
+
+
+            this._loader.load(fileUrl, asset.type, _loaded, asset, options);
         } else {
             // asset has no file to load, open it directly
             const resource = this._loader.open(asset.type, asset.data);
@@ -586,6 +680,24 @@ class AssetRegistry extends EventHandler {
         this._tags.remove(tag, asset);
     }
 
+    _onNameChange(asset, name, nameOld) {
+        // remove
+        if (this._nameToAsset.has(nameOld)) {
+            const items = this._nameToAsset.get(nameOld);
+            items.delete(asset);
+            if (items.size === 0) {
+                this._nameToAsset.delete(nameOld);
+            }
+        }
+
+        // add
+        if (!this._nameToAsset.has(asset.name)) {
+            this._nameToAsset.set(asset.name, new Set());
+        }
+
+        this._nameToAsset.get(asset.name).add(asset);
+    }
+
     /**
      * Return all Assets that satisfy the search query. Query can be simply a string, or comma
      * separated strings, to have inclusive results of assets that match at least one query. A
@@ -607,8 +719,8 @@ class AssetRegistry extends EventHandler {
      * const assets = app.assets.findByTag(["level-1", "monster"], ["level-2", "monster"]);
      * // returns all assets that tagged by (`level-1` AND `monster`) OR (`level-2` AND `monster`)
      */
-    findByTag() {
-        return this._tags.find(arguments);
+    findByTag(...query) {
+        return this._tags.find(query);
     }
 
     /**
@@ -635,7 +747,16 @@ class AssetRegistry extends EventHandler {
      * const asset = app.assets.find("myTextureAsset", "texture");
      */
     find(name, type) {
-        return Array.from(this._assets).find(asset => asset.name === name && (!type || asset.type === type)) ?? null;
+        const items = this._nameToAsset.get(name);
+        if (!items) return null;
+
+        for (const asset of items) {
+            if (!type || asset.type === type) {
+                return asset;
+            }
+        }
+
+        return null;
     }
 
     /**
@@ -649,7 +770,11 @@ class AssetRegistry extends EventHandler {
      * console.log(`Found ${assets.length} texture assets named 'brick'`);
      */
     findAll(name, type) {
-        return Array.from(this._assets).filter(asset => asset.name === name && (!type || asset.type === type));
+        const items = this._nameToAsset.get(name);
+        if (!items) return [];
+        const results = Array.from(items);
+        if (!type) return results;
+        return results.filter(asset => asset.type === type);
     }
 }
 

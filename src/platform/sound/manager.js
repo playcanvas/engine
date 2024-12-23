@@ -1,13 +1,14 @@
 import { Debug } from '../../core/debug.js';
-
 import { EventHandler } from '../../core/event-handler.js';
-
 import { math } from '../../core/math/math.js';
-
 import { Channel } from '../audio/channel.js';
 import { Channel3d } from '../audio/channel3d.js';
-
 import { Listener } from './listener.js';
+
+/**
+ * @import { Sound } from './sound.js'
+ * @import { Vec3 } from '../../core/math/vec3.js'
+ */
 
 const CONTEXT_STATE_RUNNING = 'running';
 
@@ -22,12 +23,11 @@ const USER_INPUT_EVENTS = [
  * The SoundManager is used to load and play audio. It also applies system-wide settings like
  * global volume, suspend and resume.
  *
- * @augments EventHandler
+ * @category Sound
  */
 class SoundManager extends EventHandler {
     /**
      * Create a new SoundManager instance.
-     *
      */
     constructor() {
         super();
@@ -58,8 +58,8 @@ class SoundManager extends EventHandler {
     }
 
     /**
-     * Global volume for the manager. All {@link SoundInstance}s will scale their volume with this
-     * volume. Valid between [0, 1].
+     * Sets the global volume for the manager. All {@link SoundInstance}s will scale their volume
+     * with this volume. Valid between [0, 1].
      *
      * @type {number}
      */
@@ -69,6 +69,11 @@ class SoundManager extends EventHandler {
         this.fire('volumechange', volume);
     }
 
+    /**
+     * Gets the global volume for the manager.
+     *
+     * @type {number}
+     */
     get volume() {
         return this._volume;
     }
@@ -127,7 +132,7 @@ class SoundManager extends EventHandler {
     /**
      * Create a new {@link Channel} and begin playback of the sound.
      *
-     * @param {import('./sound.js').Sound} sound - The Sound object to play.
+     * @param {Sound} sound - The Sound object to play.
      * @param {object} [options] - Optional options object.
      * @param {number} [options.volume] - The volume to playback at, between 0 and 1.
      * @param {boolean} [options.loop] - Whether to loop the sound when it reaches the end.
@@ -146,8 +151,8 @@ class SoundManager extends EventHandler {
     /**
      * Create a new {@link Channel3d} and begin playback of the sound at the position specified.
      *
-     * @param {import('./sound.js').Sound} sound - The Sound object to play.
-     * @param {import('../../core/math/vec3.js').Vec3} position - The position of the sound in 3D space.
+     * @param {Sound} sound - The Sound object to play.
+     * @param {Vec3} position - The position of the sound in 3D space.
      * @param {object} options - Optional options object.
      * @param {number} [options.volume] - The volume to playback at, between 0 and 1.
      * @param {boolean} [options.loop] - Whether to loop the sound when it reaches the end.

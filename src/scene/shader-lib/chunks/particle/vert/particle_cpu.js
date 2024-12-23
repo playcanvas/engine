@@ -5,6 +5,7 @@ attribute vec4 particle_vertexData3;  // XYZ = particle local pos, W = velocity.
 attribute float particle_vertexData4; // particle id
 
 // type depends on useMesh property. Start with X = velocity.z, Y = particle ID and for mesh particles proceeds with Z = mesh UV.x, W = mesh UV.y
+// Note: This generates a duplicate attribute warning, as the scanning we do is very simple.
 #ifndef USE_MESH
 attribute vec2 particle_vertexData5;
 #else
@@ -30,9 +31,12 @@ uniform vec3 wrapBounds;
 uniform vec3 emitterScale;
 uniform vec3 faceTangent;
 uniform vec3 faceBinorm;
-uniform highp sampler2D internalTex0;
-uniform highp sampler2D internalTex1;
-uniform highp sampler2D internalTex2;
+
+#ifdef PARTICLE_GPU
+    uniform highp sampler2D internalTex0;
+    uniform highp sampler2D internalTex1;
+    uniform highp sampler2D internalTex2;
+#endif
 uniform vec3 emitterPos;
 
 varying vec4 texCoordsAlphaLife;

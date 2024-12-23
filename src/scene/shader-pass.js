@@ -1,9 +1,12 @@
 import { Debug } from '../core/debug.js';
+import { DeviceCache } from '../platform/graphics/device-cache.js';
 import {
-    SHADER_FORWARD, SHADER_FORWARDHDR, SHADER_DEPTH, SHADER_PICK, SHADER_SHADOW
+    SHADER_FORWARD, SHADER_DEPTH, SHADER_PICK, SHADER_SHADOW, SHADER_PREPASS
 } from './constants.js';
 
-import { DeviceCache } from '../platform/graphics/device-cache.js';
+/**
+ * @import { GraphicsDevice } from '../platform/graphics/graphics-device.js'
+ */
 
 // device cache storing shader pass data per device
 const shaderPassDeviceCache = new DeviceCache();
@@ -12,8 +15,6 @@ const shaderPassDeviceCache = new DeviceCache();
  * Info about a shader pass. Shader pass is represented by a unique index and a name, and the
  * index is used to access the shader required for the pass, from an array stored in the
  * material or mesh instance.
- *
- * @ignore
  */
 class ShaderPassInfo {
     /** @type {number} */
@@ -23,11 +24,21 @@ class ShaderPassInfo {
     name;
 
     /** @type {string} */
-    shaderDefine;
+    shaderDefines;
 
+    /**
+     * @param {string} name - The name, for example 'depth'. Must contain only letters, numbers,
+     * and underscores, and start with a letter.
+     * @param {number} index - Index from ShaderPass#nextIndex.
+     * @param {object} [options] - Options for additional configuration of the shader pass.
+     * @param {boolean} [options.isForward] - Whether the pass is forward.
+     * @param {boolean} [options.isShadow] - Whether the pass is shadow.
+     * @param {boolean} [options.lightType] - Type of light, for example `pc.LIGHTTYPE_DIRECTIONAL`.
+     * @param {boolean} [options.shadowType] - Type of shadow, for example `pc.SHADOW_PCF3_32F`.
+     */
     constructor(name, index, options = {}) {
 
-        Debug.assert(/^[a-zA-Z][_a-zA-Z0-9]*$/.test(name), `ShaderPass name can only contain letters, numbers and underscores and start with a letter: ${name}`);
+        Debug.assert(/^[a-z]\w*$/i.test(name), `ShaderPass name can only contain letters, numbers and underscores and start with a letter: ${name}`);
 
         this.name = name;
         this.index = index;
@@ -35,10 +46,10 @@ class ShaderPassInfo {
         // assign options as properties to this object
         Object.assign(this, options);
 
-        this.initShaderDefines();
+        this.shaderDefines = this.buildShaderDefines();
     }
 
-    initShaderDefines() {
+    buildShaderDefines() {
 
         let keyword;
         if (this.isShadow) {
@@ -57,7 +68,7 @@ class ShaderPassInfo {
         // define based on the name
         const define2 = `#define ${this.name.toUpperCase()}_PASS\n`;
 
-        this.shaderDefines = define1 + define2;
+        return define1 + define2;
     }
 }
 
@@ -93,7 +104,7 @@ class ShaderPass {
 
         // add default passes in the required order, to match the constants
         add('forward', SHADER_FORWARD, { isForward: true });
-        add('forward_hdr', SHADER_FORWARDHDR, { isForward: true });
+        add('prepass', SHADER_PREPASS);
         add('depth', SHADER_DEPTH);
         add('pick', SHADER_PICK);
         add('shadow', SHADER_SHADOW);
@@ -102,8 +113,7 @@ class ShaderPass {
     /**
      * Get access to the shader pass instance for the specified device.
      *
-     * @param {import('../platform/graphics/graphics-device.js').GraphicsDevice} device - The
-     * graphics device.
+     * @param {GraphicsDevice} device - The graphics device.
      * @returns { ShaderPass } The shader pass instance for the specified device.
      */
     static get(device) {
@@ -118,7 +128,7 @@ class ShaderPass {
      * Allocates a shader pass with the specified name and options.
      *
      * @param {string} name - A name of the shader pass.
-     * @param {object} options - Options for the shader pass, which are added as properties to the
+     * @param {object} [options] - Options for the shader pass, which are added as properties to the
      * shader pass info.
      * @returns {ShaderPassInfo} The allocated shader pass info.
      */

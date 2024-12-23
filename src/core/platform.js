@@ -17,12 +17,13 @@ const detectPassiveEvents = () => {
 };
 
 const ua = (typeof navigator !== 'undefined') ? navigator.userAgent : '';
-const environment = (typeof window !== 'undefined') ? 'browser' : 'node';
+const environment = typeof window !== 'undefined' ? 'browser' :
+    typeof global !== 'undefined' ? 'node' : 'worker';
 
 // detect platform
 const platformName =
     (/android/i.test(ua) ? 'android' :
-        (/ip([ao]d|hone)/i.test(ua) ? 'ios' :
+        (/ip(?:[ao]d|hone)/i.test(ua) ? 'ios' :
             (/windows/i.test(ua) ? 'windows' :
                 (/mac os/i.test(ua) ? 'osx' :
                     (/linux/i.test(ua) ? 'linux' :
@@ -31,7 +32,7 @@ const platformName =
 // detect browser
 const browserName =
     (environment !== 'browser') ? null :
-        (/(Chrome\/|Chromium\/|Edg.*\/)/.test(ua) ? 'chrome' :  // chrome, chromium, edge
+        (/Chrome\/|Chromium\/|Edg.*\//.test(ua) ? 'chrome' :  // chrome, chromium, edge
             (/Safari\//.test(ua) ? 'safari' :                   // safari, ios chrome/firefox
                 (/Firefox\//.test(ua) ? 'firefox' :
                     'other')));
@@ -53,19 +54,31 @@ const passiveEvents = detectPassiveEvents();
  */
 const platform = {
     /**
-     * String identifying the current runtime environment. Either 'browser' or 'node'.
+     * String identifying the current platform. Can be one of: android, ios, windows, osx, linux,
+     * cros or null.
      *
-     * @type {'browser' | 'node'}
+     * @type {'android' | 'ios' | 'windows' | 'osx' | 'linux' | 'cros' | null}
+     * @ignore
+     */
+    name: platformName,
+
+    /**
+     * String identifying the current runtime environment. Either 'browser', 'node' or 'worker'.
+     *
+     * @type {'browser' | 'node' | 'worker'}
      */
     environment: environment,
 
     /**
      * The global object. This will be the window object when running in a browser and the global
-     * object when running in nodejs.
+     * object when running in nodejs and self when running in a worker.
      *
      * @type {object}
      */
-    global: (environment === 'browser') ? window : global,
+    global: (typeof globalThis !== 'undefined' && globalThis) ??
+        (environment === 'browser' && window) ??
+        (environment === 'node' && global) ??
+        (environment === 'worker' && self),
 
     /**
      * Convenience boolean indicating whether we're running in the browser.
@@ -73,6 +86,14 @@ const platform = {
      * @type {boolean}
      */
     browser: environment === 'browser',
+
+    /**
+     * True if running in a Web Worker.
+     *
+     * @type {boolean}
+     * @ignore
+     */
+    worker: environment === 'worker',
 
     /**
      * True if running on a desktop or laptop device.

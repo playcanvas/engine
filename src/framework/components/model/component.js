@@ -1,22 +1,29 @@
 import { Debug } from '../../../core/debug.js';
-import {
-    LAYERID_WORLD
-} from '../../../scene/constants.js';
+import { LAYERID_WORLD } from '../../../scene/constants.js';
 import { BatchGroup } from '../../../scene/batching/batch-group.js';
 import { GraphNode } from '../../../scene/graph-node.js';
 import { MeshInstance } from '../../../scene/mesh-instance.js';
 import { Model } from '../../../scene/model.js';
-import { getShapePrimitive } from '../../../scene/procedural.js';
-
+import { getShapePrimitive } from '../../graphics/primitive-cache.js';
 import { Asset } from '../../asset/asset.js';
-
 import { Component } from '../component.js';
+
+/**
+ * @import { BoundingBox } from '../../../core/shape/bounding-box.js'
+ * @import { Entity } from '../../entity.js'
+ * @import { EventHandle } from '../../../core/event-handle.js'
+ * @import { LayerComposition } from '../../../scene/composition/layer-composition.js'
+ * @import { Layer } from '../../../scene/layer.js'
+ * @import { Material } from '../../../scene/materials/material.js'
+ * @import { ModelComponentSystem } from './system.js'
+ */
 
 /**
  * Enables an Entity to render a model or a primitive shape. This Component attaches additional
  * model geometry in to the scene graph below the Entity.
  *
- * @augments Component
+ * @hideconstructor
+ * @category Graphics
  */
 class ModelComponent extends Component {
     /**
@@ -62,7 +69,7 @@ class ModelComponent extends Component {
     _materialAsset = null;
 
     /**
-     * @type {import('../../../scene/materials/material.js').Material}
+     * @type {Material}
      * @private
      */
     _material;
@@ -86,10 +93,11 @@ class ModelComponent extends Component {
     _lightmapSizeMultiplier = 1;
 
     /**
+     * Mark meshes as non-movable (optimization).
+     *
      * @type {boolean}
-     * @private
      */
-    _isStatic = false;
+    isStatic = false;
 
     /**
      * @type {number[]}
@@ -104,7 +112,7 @@ class ModelComponent extends Component {
     _batchGroupId = -1;
 
     /**
-     * @type {import('../../../core/shape/bounding-box.js').BoundingBox|null}
+     * @type {BoundingBox|null}
      * @private
      */
     _customAabb = null;
@@ -124,12 +132,28 @@ class ModelComponent extends Component {
     // #endif
 
     /**
+     * @type {EventHandle|null}
+     * @private
+     */
+    _evtLayersChanged = null;
+
+    /**
+     * @type {EventHandle|null}
+     * @private
+     */
+    _evtLayerAdded = null;
+
+    /**
+     * @type {EventHandle|null}
+     * @private
+     */
+    _evtLayerRemoved = null;
+
+    /**
      * Create a new ModelComponent instance.
      *
-     * @param {import('./system.js').ModelComponentSystem} system - The ComponentSystem that
-     * created this Component.
-     * @param {import('../../entity.js').Entity} entity - The Entity that this Component is
-     * attached to.
+     * @param {ModelComponentSystem} system - The ComponentSystem that created this Component.
+     * @param {Entity} entity - The Entity that this Component is attached to.
      */
     constructor(system, entity) {
         super(system, entity);
@@ -144,32 +168,38 @@ class ModelComponent extends Component {
     }
 
     /**
-     * An array of meshInstances contained in the component's model. If model is not set or loaded
-     * for component it will return null.
+     * Sets the array of mesh instances contained in the component's model.
      *
      * @type {MeshInstance[]|null}
      */
     set meshInstances(value) {
-        if (!this._model)
+        if (!this._model) {
             return;
+        }
 
         this._model.meshInstances = value;
     }
 
+    /**
+     * Gets the array of mesh instances contained in the component's model.
+     *
+     * @type {MeshInstance[]|null}
+     */
     get meshInstances() {
-        if (!this._model)
+        if (!this._model) {
             return null;
+        }
 
         return this._model.meshInstances;
     }
 
     /**
-     * If set, the object space bounding box is used as a bounding box for visibility culling of
-     * attached mesh instances. This is an optimization, allowing oversized bounding box to be
-     * specified for skinned characters in order to avoid per frame bounding box computations based
-     * on bone positions.
+     * Sets the custom object space bounding box that is used for visibility culling of attached
+     * mesh instances. This is an optimization, allowing an oversized bounding box to be specified
+     * for skinned characters in order to avoid per frame bounding box computations based on bone
+     * positions.
      *
-     * @type {import('../../../core/shape/bounding-box.js').BoundingBox|null}
+     * @type {BoundingBox|null}
      */
     set customAabb(value) {
         this._customAabb = value;
@@ -185,12 +215,18 @@ class ModelComponent extends Component {
         }
     }
 
+    /**
+     * Gets the custom object space bounding box that is used for visibility culling of attached
+     * mesh instances.
+     *
+     * @type {BoundingBox|null}
+     */
     get customAabb() {
         return this._customAabb;
     }
 
     /**
-     * The type of the model. Can be:
+     * Sets the type of the component. Can be one of the following:
      *
      * - "asset": The component will render a model asset
      * - "box": The component will render a box (1 unit in each dimension)
@@ -234,12 +270,18 @@ class ModelComponent extends Component {
         }
     }
 
+    /**
+     * Gets the type of the component.
+     *
+     * @type {string}
+     */
     get type() {
         return this._type;
     }
 
     /**
-     * The asset for the model (only applies to models of type 'asset') can also be an asset id.
+     * Sets the model asset (or asset id) for the component. This only applies to model components
+     * with type 'asset'.
      *
      * @type {Asset|number|null}
      */
@@ -254,7 +296,7 @@ class ModelComponent extends Component {
         if (this._asset !== _id) {
             if (this._asset) {
                 // remove previous asset
-                assets.off('add:' + this._asset, this._onModelAssetAdded, this);
+                assets.off(`add:${this._asset}`, this._onModelAssetAdded, this);
                 const _prev = assets.get(this._asset);
                 if (_prev) {
                     this._unbindModelAsset(_prev);
@@ -267,7 +309,7 @@ class ModelComponent extends Component {
                 const asset = assets.get(this._asset);
                 if (!asset) {
                     this.model = null;
-                    assets.on('add:' + this._asset, this._onModelAssetAdded, this);
+                    assets.on(`add:${this._asset}`, this._onModelAssetAdded, this);
                 } else {
                     this._bindModelAsset(asset);
                 }
@@ -277,18 +319,24 @@ class ModelComponent extends Component {
         }
     }
 
+    /**
+     * Gets the model asset id for the component.
+     *
+     * @type {Asset|number|null}
+     */
     get asset() {
         return this._asset;
     }
 
     /**
-     * The model that is added to the scene graph. It can be not set or loaded, so will return null.
+     * Sets the model owned by this component.
      *
      * @type {Model}
      */
     set model(value) {
-        if (this._model === value)
+        if (this._model === value) {
             return;
+        }
 
         // return if the model has been flagged as immutable
         if (value && value._immutable) {
@@ -320,7 +368,6 @@ class ModelComponent extends Component {
             for (let i = 0; i < meshInstances.length; i++) {
                 meshInstances[i].castShadow = this._castShadows;
                 meshInstances[i].receiveShadow = this._receiveShadows;
-                meshInstances[i].isStatic = this._isStatic;
                 meshInstances[i].setCustomAabb(this._customAabb);
             }
 
@@ -336,8 +383,9 @@ class ModelComponent extends Component {
             this._model._entity = this.entity;
 
             // Update any animation component
-            if (this.entity.animation)
+            if (this.entity.animation) {
                 this.entity.animation.setModel(this._model);
+            }
 
             // Update any anim component
             if (this.entity.anim) {
@@ -353,12 +401,19 @@ class ModelComponent extends Component {
         }
     }
 
+    /**
+     * Gets the model owned by this component. In this case a model is not set or loaded, this will
+     * return null.
+     *
+     * @type {Model}
+     */
     get model() {
         return this._model;
     }
 
     /**
-     * If true, this model will be lightmapped after using lightmapper.bake().
+     * Sets whether the component is affected by the runtime lightmapper. If true, the meshes will
+     * be lightmapped after using lightmapper.bake().
      *
      * @type {boolean}
      */
@@ -376,12 +431,17 @@ class ModelComponent extends Component {
         }
     }
 
+    /**
+     * Gets whether the component is affected by the runtime lightmapper.
+     *
+     * @type {boolean}
+     */
     get lightmapped() {
         return this._lightmapped;
     }
 
     /**
-     * If true, this model will cast shadows for lights that have shadow casting enabled.
+     * Sets whether attached meshes will cast shadows for lights that have shadow casting enabled.
      *
      * @type {boolean}
      */
@@ -418,12 +478,17 @@ class ModelComponent extends Component {
         this._castShadows = value;
     }
 
+    /**
+     * Gets whether attached meshes will cast shadows for lights that have shadow casting enabled.
+     *
+     * @type {boolean}
+     */
     get castShadows() {
         return this._castShadows;
     }
 
     /**
-     * If true, shadows will be cast on this model.
+     * Sets whether shadows will be cast on attached meshes.
      *
      * @type {boolean}
      */
@@ -440,12 +505,17 @@ class ModelComponent extends Component {
         }
     }
 
+    /**
+     * Gets whether shadows will be cast on attached meshes.
+     *
+     * @type {boolean}
+     */
     get receiveShadows() {
         return this._receiveShadows;
     }
 
     /**
-     * If true, this model will cast shadows when rendering lightmaps.
+     * Sets whether meshes instances will cast shadows when rendering lightmaps.
      *
      * @type {boolean}
      */
@@ -453,12 +523,17 @@ class ModelComponent extends Component {
         this._castShadowsLightmap = value;
     }
 
+    /**
+     * Gets whether meshes instances will cast shadows when rendering lightmaps.
+     *
+     * @type {boolean}
+     */
     get castShadowsLightmap() {
         return this._castShadowsLightmap;
     }
 
     /**
-     * Lightmap resolution multiplier.
+     * Sets the lightmap resolution multiplier.
      *
      * @type {number}
      */
@@ -466,36 +541,18 @@ class ModelComponent extends Component {
         this._lightmapSizeMultiplier = value;
     }
 
+    /**
+     * Gets the lightmap resolution multiplier.
+     *
+     * @type {number}
+     */
     get lightmapSizeMultiplier() {
         return this._lightmapSizeMultiplier;
     }
 
     /**
-     * Mark model as non-movable (optimization).
-     *
-     * @type {boolean}
-     */
-    set isStatic(value) {
-        if (this._isStatic === value) return;
-
-        this._isStatic = value;
-
-        if (this._model) {
-            const rcv = this._model.meshInstances;
-            for (let i = 0; i < rcv.length; i++) {
-                const m = rcv[i];
-                m.isStatic = value;
-            }
-        }
-    }
-
-    get isStatic() {
-        return this._isStatic;
-    }
-
-    /**
-     * An array of layer IDs ({@link Layer#id}) to which this model should belong. Don't push, pop,
-     * splice or modify this array, if you want to change it - set a new one instead.
+     * Sets the array of layer IDs ({@link Layer#id}) to which the mesh instances belong. Don't
+     * push, pop, splice or modify this array. If you want to change it, set a new one instead.
      *
      * @type {number[]}
      */
@@ -528,12 +585,18 @@ class ModelComponent extends Component {
         }
     }
 
+    /**
+     * Gets the array of layer IDs ({@link Layer#id}) to which the mesh instances belong.
+     *
+     * @type {number[]}
+     */
     get layers() {
         return this._layers;
     }
 
     /**
-     * Assign model to a specific batch group (see {@link BatchGroup}). Default is -1 (no group).
+     * Sets the batch group for the mesh instances in this component (see {@link BatchGroup}).
+     * Default is -1 (no group).
      *
      * @type {number}
      */
@@ -555,13 +618,18 @@ class ModelComponent extends Component {
         this._batchGroupId = value;
     }
 
+    /**
+     * Gets the batch group for the mesh instances in this component (see {@link BatchGroup}).
+     *
+     * @type {number}
+     */
     get batchGroupId() {
         return this._batchGroupId;
     }
 
     /**
-     * The material {@link Asset} that will be used to render the model (not used on models of type
-     * 'asset').
+     * Sets the material {@link Asset} that will be used to render the component. The material is
+     * ignored for renders of type 'asset'.
      *
      * @type {Asset|number|null}
      */
@@ -575,7 +643,7 @@ class ModelComponent extends Component {
 
         if (_id !== this._materialAsset) {
             if (this._materialAsset) {
-                assets.off('add:' + this._materialAsset, this._onMaterialAssetAdd, this);
+                assets.off(`add:${this._materialAsset}`, this._onMaterialAssetAdd, this);
                 const _prev = assets.get(this._materialAsset);
                 if (_prev) {
                     this._unbindMaterialAsset(_prev);
@@ -588,7 +656,7 @@ class ModelComponent extends Component {
                 const asset = assets.get(this._materialAsset);
                 if (!asset) {
                     this._setMaterial(this.system.defaultMaterial);
-                    assets.on('add:' + this._materialAsset, this._onMaterialAssetAdd, this);
+                    assets.on(`add:${this._materialAsset}`, this._onMaterialAssetAdd, this);
                 } else {
                     this._bindMaterialAsset(asset);
                 }
@@ -598,46 +666,59 @@ class ModelComponent extends Component {
         }
     }
 
+    /**
+     * Gets the material {@link Asset} that will be used to render the component.
+     *
+     * @type {Asset|number|null}
+     */
     get materialAsset() {
         return this._materialAsset;
     }
 
     /**
-     * The material {@link Material} that will be used to render the model (not used on models of
-     * type 'asset').
+     * Sets the {@link Material} that will be used to render the model. The material is ignored for
+     * renders of type 'asset'.
      *
-     * @type {import('../../../scene/materials/material.js').Material}
+     * @type {Material}
      */
     set material(value) {
-        if (this._material === value)
+        if (this._material === value) {
             return;
+        }
 
         this.materialAsset = null;
 
         this._setMaterial(value);
     }
 
+    /**
+     * Gets the {@link Material} that will be used to render the model.
+     *
+     * @type {Material}
+     */
     get material() {
         return this._material;
     }
 
     /**
-     * A dictionary that holds material overrides for each mesh instance. Only applies to model
-     * components of type 'asset'. The mapping contains pairs of mesh instance index - material
-     * asset id.
+     * Sets the dictionary that holds material overrides for each mesh instance. Only applies to
+     * model components of type 'asset'. The mapping contains pairs of mesh instance index to
+     * material asset id.
      *
      * @type {Object<string, number>}
      */
     set mapping(value) {
-        if (this._type !== 'asset')
+        if (this._type !== 'asset') {
             return;
+        }
 
         // unsubscribe from old events
         this._unsetMaterialEvents();
 
         // can't have a null mapping
-        if (!value)
+        if (!value) {
             value = {};
+        }
 
         this._mapping = value;
 
@@ -674,6 +755,11 @@ class ModelComponent extends Component {
         }
     }
 
+    /**
+     * Gets the dictionary that holds material overrides for each mesh instance.
+     *
+     * @type {Object<string, number>}
+     */
     get mapping() {
         return this._mapping;
     }
@@ -698,13 +784,15 @@ class ModelComponent extends Component {
     }
 
     onRemoveChild() {
-        if (this._model)
+        if (this._model) {
             this.removeModelFromLayers();
+        }
     }
 
     onInsertChild() {
-        if (this._model && this.enabled && this.entity.enabled)
+        if (this._model && this.enabled && this.entity.enabled) {
             this.addModelToLayers();
+        }
     }
 
     onRemove() {
@@ -718,10 +806,8 @@ class ModelComponent extends Component {
     }
 
     /**
-     * @param {import('../../../scene/composition/layer-composition.js').LayerComposition} oldComp - The
-     * old layer composition.
-     * @param {import('../../../scene/composition/layer-composition.js').LayerComposition} newComp - The
-     * new layer composition.
+     * @param {LayerComposition} oldComp - The old layer composition.
+     * @param {LayerComposition} newComp - The new layer composition.
      * @private
      */
     onLayersChanged(oldComp, newComp) {
@@ -733,7 +819,7 @@ class ModelComponent extends Component {
     }
 
     /**
-     * @param {import('../../../scene/layer.js').Layer} layer - The layer that was added.
+     * @param {Layer} layer - The layer that was added.
      * @private
      */
     onLayerAdded(layer) {
@@ -743,7 +829,7 @@ class ModelComponent extends Component {
     }
 
     /**
-     * @param {import('../../../scene/layer.js').Layer} layer - The layer that was removed.
+     * @param {Layer} layer - The layer that was removed.
      * @private
      */
     onLayerRemoved(layer) {
@@ -760,14 +846,16 @@ class ModelComponent extends Component {
      * @private
      */
     _setMaterialEvent(index, event, id, handler) {
-        const evt = event + ':' + id;
+        const evt = `${event}:${id}`;
         this.system.app.assets.on(evt, handler, this);
 
-        if (!this._materialEvents)
+        if (!this._materialEvents) {
             this._materialEvents = [];
+        }
 
-        if (!this._materialEvents[index])
+        if (!this._materialEvents[index]) {
             this._materialEvents[index] = { };
+        }
 
         this._materialEvents[index][evt] = {
             id: id,
@@ -779,8 +867,9 @@ class ModelComponent extends Component {
     _unsetMaterialEvents() {
         const assets = this.system.app.assets;
         const events = this._materialEvents;
-        if (!events)
+        if (!events) {
             return;
+        }
 
         for (let i = 0, len = events.length; i < len; i++) {
             if (!events[i]) continue;
@@ -807,8 +896,9 @@ class ModelComponent extends Component {
             asset = this.system.app.assets.get(idOrPath);
         } else if (this.asset) {
             const url = this._getMaterialAssetUrl(idOrPath);
-            if (url)
+            if (url) {
                 asset = this.system.app.assets.getByUrl(url);
+            }
         }
 
         return asset;
@@ -836,8 +926,9 @@ class ModelComponent extends Component {
     _loadAndSetMeshInstanceMaterial(materialAsset, meshInstance, index) {
         const assets = this.system.app.assets;
 
-        if (!materialAsset)
+        if (!materialAsset) {
             return;
+        }
 
         if (materialAsset.resource) {
             meshInstance.material = materialAsset.resource;
@@ -854,19 +945,22 @@ class ModelComponent extends Component {
                 });
             });
 
-            if (this.enabled && this.entity.enabled)
+            if (this.enabled && this.entity.enabled) {
                 assets.load(materialAsset);
+            }
         }
     }
 
     onEnable() {
         const app = this.system.app;
         const scene = app.scene;
+        const layers = scene?.layers;
 
-        scene.on('set:layers', this.onLayersChanged, this);
-        if (scene.layers) {
-            scene.layers.on('add', this.onLayerAdded, this);
-            scene.layers.on('remove', this.onLayerRemoved, this);
+        this._evtLayersChanged = scene.on('set:layers', this.onLayersChanged, this);
+
+        if (layers) {
+            this._evtLayerAdded = layers.on('add', this.onLayerAdded, this);
+            this._evtLayerRemoved = layers.on('remove', this.onLayerRemoved, this);
         }
 
         const isAsset = (this._type === 'asset');
@@ -913,11 +1007,16 @@ class ModelComponent extends Component {
     onDisable() {
         const app = this.system.app;
         const scene = app.scene;
+        const layers = scene.layers;
 
-        scene.off('set:layers', this.onLayersChanged, this);
-        if (scene.layers) {
-            scene.layers.off('add', this.onLayerAdded, this);
-            scene.layers.off('remove', this.onLayerRemoved, this);
+        this._evtLayersChanged?.off();
+        this._evtLayersChanged = null;
+
+        if (layers) {
+            this._evtLayerAdded?.off();
+            this._evtLayerAdded = null;
+            this._evtLayerRemoved?.off();
+            this._evtLayerRemoved = null;
         }
 
         if (this._batchGroupId >= 0) {
@@ -1009,7 +1108,7 @@ class ModelComponent extends Component {
      * @private
      */
     _onMaterialAssetAdd(asset) {
-        this.system.app.assets.off('add:' + asset.id, this._onMaterialAssetAdd, this);
+        this.system.app.assets.off(`add:${asset.id}`, this._onMaterialAssetAdd, this);
         if (this._materialAsset === asset.id) {
             this._bindMaterialAsset(asset);
         }
@@ -1084,7 +1183,7 @@ class ModelComponent extends Component {
      * @private
      */
     _onModelAssetAdded(asset) {
-        this.system.app.assets.off('add:' + asset.id, this._onModelAssetAdded, this);
+        this.system.app.assets.off(`add:${asset.id}`, this._onModelAssetAdded, this);
         if (asset.id === this._asset) {
             this._bindModelAsset(asset);
         }
@@ -1129,13 +1228,13 @@ class ModelComponent extends Component {
     }
 
     /**
-     * @param {import('../../../scene/materials/material.js').Material} material - The material to
-     * be set.
+     * @param {Material} material - The material to be set.
      * @private
      */
     _setMaterial(material) {
-        if (this._material === material)
+        if (this._material === material) {
             return;
+        }
 
         this._material = material;
 

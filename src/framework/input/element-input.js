@@ -2,10 +2,18 @@ import { platform } from '../../core/platform.js';
 import { Vec3 } from '../../core/math/vec3.js';
 import { Vec4 } from '../../core/math/vec4.js';
 import { Ray } from '../../core/shape/ray.js';
-
 import { Mouse } from '../../platform/input/mouse.js';
-
+import { getTouchTargetCoords } from '../../platform/input/touch-event.js';
 import { getApplication } from '../globals.js';
+
+/**
+ * @import { CameraComponent } from '../components/camera/component.js'
+ * @import { ElementComponent } from '../components/element/component.js'
+ * @import { MouseEvent } from '../../platform/input/mouse-event.js'
+ * @import { TouchEvent } from '../../platform/input/touch-event.js'
+ * @import { Touch } from '../../platform/input/touch-event.js'
+ * @import { XrInputSource } from '../xr/xr-input-source.js'
+ */
 
 let targetX, targetY;
 const vecA = new Vec3();
@@ -64,12 +72,14 @@ function intersectLineQuad(p, q, corners) {
     if (v >= 0) {
         // Test intersection against triangle abc
         u = -_pb.dot(_m);
-        if (u < 0)
+        if (u < 0) {
             return -1;
+        }
 
         w = scalarTriple(_pq, _pb, _pa);
-        if (w < 0)
+        if (w < 0) {
             return -1;
+        }
 
         const denom = 1.0 / (u + v + w);
 
@@ -81,12 +91,14 @@ function intersectLineQuad(p, q, corners) {
         // Test intersection against triangle dac
         _pd.sub2(corners[3], p);
         u = _pd.dot(_m);
-        if (u < 0)
+        if (u < 0) {
             return -1;
+        }
 
         w = scalarTriple(_pq, _pa, _pd);
-        if (w < 0)
+        if (w < 0) {
             return -1;
+        }
 
         v = -v;
 
@@ -109,21 +121,22 @@ function intersectLineQuad(p, q, corners) {
 /**
  * Represents an input event fired on a {@link ElementComponent}. When an event is raised on an
  * ElementComponent it bubbles up to its parent ElementComponents unless we call stopPropagation().
+ *
+ * @category User Interface
  */
 class ElementInputEvent {
     /**
      * Create a new ElementInputEvent instance.
      *
-     * @param {MouseEvent|TouchEvent} event - The MouseEvent or TouchEvent that was originally
-     * raised.
-     * @param {import('../components/element/component.js').ElementComponent} element - The
-     * ElementComponent that this event was originally raised on.
-     * @param {import('../components/camera/component.js').CameraComponent} camera - The
-     * CameraComponent that this event was originally raised via.
+     * @param {MouseEvent|TouchEvent} event - MouseEvent or TouchEvent that was originally raised.
+     * @param {ElementComponent} element - The ElementComponent that this event was originally
+     * raised on.
+     * @param {CameraComponent} camera - The CameraComponent that this event was originally raised
+     * via.
      */
     constructor(event, element, camera) {
         /**
-         * The MouseEvent or TouchEvent that was originally raised.
+         * MouseEvent or TouchEvent that was originally raised.
          *
          * @type {MouseEvent|TouchEvent}
          */
@@ -132,14 +145,14 @@ class ElementInputEvent {
         /**
          * The ElementComponent that this event was originally raised on.
          *
-         * @type {import('../components/element/component.js').ElementComponent}
+         * @type {ElementComponent}
          */
         this.element = element;
 
         /**
          * The CameraComponent that this event was originally raised via.
          *
-         * @type {import('../components/camera/component.js').CameraComponent}
+         * @type {CameraComponent}
          */
         this.camera = camera;
 
@@ -162,16 +175,17 @@ class ElementInputEvent {
 /**
  * Represents a Mouse event fired on a {@link ElementComponent}.
  *
- * @augments ElementInputEvent
+ * @category User Interface
  */
 class ElementMouseEvent extends ElementInputEvent {
     /**
      * Create an instance of an ElementMouseEvent.
      *
-     * @param {MouseEvent} event - The MouseEvent that was originally raised.
-     * @param {import('../components/element/component.js').ElementComponent} element - The
+     * @param {MouseEvent} event - The MouseEvent that
+     * was originally raised.
+     * @param {ElementComponent} element - The
      * ElementComponent that this event was originally raised on.
-     * @param {import('../components/camera/component.js').CameraComponent} camera - The
+     * @param {CameraComponent} camera - The
      * CameraComponent that this event was originally raised via.
      * @param {number} x - The x coordinate.
      * @param {number} y - The y coordinate.
@@ -256,16 +270,16 @@ class ElementMouseEvent extends ElementInputEvent {
 /**
  * Represents a TouchEvent fired on a {@link ElementComponent}.
  *
- * @augments ElementInputEvent
+ * @category User Interface
  */
 class ElementTouchEvent extends ElementInputEvent {
     /**
      * Create an instance of an ElementTouchEvent.
      *
      * @param {TouchEvent} event - The TouchEvent that was originally raised.
-     * @param {import('../components/element/component.js').ElementComponent} element - The
+     * @param {ElementComponent} element - The
      * ElementComponent that this event was originally raised on.
-     * @param {import('../components/camera/component.js').CameraComponent} camera - The
+     * @param {CameraComponent} camera - The
      * CameraComponent that this event was originally raised via.
      * @param {number} x - The x coordinate of the touch that triggered the event.
      * @param {number} y - The y coordinate of the touch that triggered the event.
@@ -302,18 +316,18 @@ class ElementTouchEvent extends ElementInputEvent {
 /**
  * Represents a XRInputSourceEvent fired on a {@link ElementComponent}.
  *
- * @augments ElementInputEvent
+ * @category User Interface
  */
 class ElementSelectEvent extends ElementInputEvent {
     /**
      * Create an instance of a ElementSelectEvent.
      *
-     * @param {object} event - The XRInputSourceEvent that was originally raised.
-     * @param {import('../components/element/component.js').ElementComponent} element - The
+     * @param {XRInputSourceEvent} event - The XRInputSourceEvent that was originally raised.
+     * @param {ElementComponent} element - The
      * ElementComponent that this event was originally raised on.
-     * @param {import('../components/camera/component.js').CameraComponent} camera - The
+     * @param {CameraComponent} camera - The
      * CameraComponent that this event was originally raised via.
-     * @param {import('../xr/xr-input-source.js').XrInputSource} inputSource - The XR input source
+     * @param {XrInputSource} inputSource - The XR input source
      * that this event was originally raised from.
      */
     constructor(event, element, camera, inputSource) {
@@ -322,7 +336,7 @@ class ElementSelectEvent extends ElementInputEvent {
         /**
          * The XR input source that this event was originally raised from.
          *
-         * @type {import('../xr/xr-input-source.js').XrInputSource}
+         * @type {XrInputSource}
          */
         this.inputSource = inputSource;
     }
@@ -331,6 +345,8 @@ class ElementSelectEvent extends ElementInputEvent {
 /**
  * Handles mouse and touch events for {@link ElementComponent}s. When input events occur on an
  * ElementComponent this fires the appropriate events on the ElementComponent.
+ *
+ * @category User Interface
  */
 class ElementInput {
     /**
@@ -376,8 +392,9 @@ class ElementInput {
         this._useXr = !options || options.useXr !== false;
         this._selectEventsAttached = false;
 
-        if (platform.touch)
+        if (platform.touch) {
             this._clickedEntities = {};
+        }
 
         this.attach(domElement);
     }
@@ -434,8 +451,9 @@ class ElementInput {
 
     attachSelectEvents() {
         if (!this._selectEventsAttached && this._useXr && this.app && this.app.xr && this.app.xr.supported) {
-            if (!this._clickedEntities)
+            if (!this._clickedEntities) {
                 this._clickedEntities = {};
+            }
 
             this._selectEventsAttached = true;
             this.app.xr.on('start', this._onXrStart, this);
@@ -481,32 +499,35 @@ class ElementInput {
      * Add a {@link ElementComponent} to the internal list of ElementComponents that are being
      * checked for input.
      *
-     * @param {import('../components/element/component.js').ElementComponent} element - The
+     * @param {ElementComponent} element - The
      * ElementComponent.
      */
     addElement(element) {
-        if (this._elements.indexOf(element) === -1)
+        if (this._elements.indexOf(element) === -1) {
             this._elements.push(element);
+        }
     }
 
     /**
      * Remove a {@link ElementComponent} from the internal list of ElementComponents that are being
      * checked for input.
      *
-     * @param {import('../components/element/component.js').ElementComponent} element - The
+     * @param {ElementComponent} element - The
      * ElementComponent.
      */
     removeElement(element) {
         const idx = this._elements.indexOf(element);
-        if (idx !== -1)
+        if (idx !== -1) {
             this._elements.splice(idx, 1);
+        }
     }
 
     _handleUp(event) {
         if (!this._enabled) return;
 
-        if (Mouse.isPointerLocked())
+        if (Mouse.isPointerLocked()) {
             return;
+        }
 
         this._calcMouseCoords(event);
 
@@ -516,8 +537,9 @@ class ElementInput {
     _handleDown(event) {
         if (!this._enabled) return;
 
-        if (Mouse.isPointerLocked())
+        if (Mouse.isPointerLocked()) {
             return;
+        }
 
         this._calcMouseCoords(event);
 
@@ -561,7 +583,7 @@ class ElementInput {
                     continue;
                 }
 
-                const coords = this._calcTouchCoords(event.changedTouches[j]);
+                const coords = getTouchTargetCoords(event.changedTouches[j]);
 
                 const element = this._getTargetElementByCoords(camera, coords.x, coords.y);
                 if (element) {
@@ -620,8 +642,9 @@ class ElementInput {
         for (let i = 0, len = event.changedTouches.length; i < len; i++) {
             const touch = event.changedTouches[i];
             const touchInfo = this._touchedElements[touch.identifier];
-            if (!touchInfo)
+            if (!touchInfo) {
                 continue;
+            }
 
             const element = touchInfo.element;
             const camera = touchInfo.camera;
@@ -631,11 +654,9 @@ class ElementInput {
             delete this._touchedElements[touch.identifier];
             delete this._touchesForWhichTouchLeaveHasFired[touch.identifier];
 
-            this._fireEvent(event.type, new ElementTouchEvent(event, element, camera, x, y, touch));
-
             // check if touch was released over previously touch
             // element in order to fire click event
-            const coords = this._calcTouchCoords(touch);
+            const coords = getTouchTargetCoords(touch);
 
             for (let c = cameras.length - 1; c >= 0; c--) {
                 const hovered = this._getTargetElementByCoords(cameras[c], coords.x, coords.y);
@@ -648,6 +669,8 @@ class ElementInput {
 
                 }
             }
+
+            this._fireEvent(event.type, new ElementTouchEvent(event, element, camera, x, y, touch));
         }
     }
 
@@ -666,7 +689,7 @@ class ElementInput {
             const oldTouchInfo = this._touchedElements[touch.identifier];
 
             if (oldTouchInfo) {
-                const coords = this._calcTouchCoords(touch);
+                const coords = getTouchTargetCoords(touch);
 
                 // Fire touchleave if we've left the previously touched element
                 if ((!newTouchInfo || newTouchInfo.element !== oldTouchInfo.element) && !this._touchesForWhichTouchLeaveHasFired[touch.identifier]) {
@@ -702,8 +725,9 @@ class ElementInput {
             camera = cameras[i];
 
             element = this._getTargetElementByCoords(camera, targetX, targetY);
-            if (element)
+            if (element) {
                 break;
+            }
         }
 
         // currently hovered element is whatever's being pointed by mouse (which may be null)
@@ -818,8 +842,9 @@ class ElementInput {
                 camera = cameras[i];
 
                 element = this._getTargetElementByRay(rayC, camera);
-                if (element)
+                if (element) {
                     break;
+                }
             }
         }
 
@@ -871,15 +896,18 @@ class ElementInput {
         let element = evt.element;
         while (true) {
             element.fire(name, evt);
-            if (evt._stopPropagation)
+            if (evt._stopPropagation) {
                 break;
+            }
 
-            if (!element.entity.parent)
+            if (!element.entity.parent) {
                 break;
+            }
 
             element = element.entity.parent.element;
-            if (!element)
+            if (!element) {
                 break;
+            }
         }
     }
 
@@ -891,43 +919,26 @@ class ElementInput {
         targetY = (event.clientY - top);
     }
 
-    _calcTouchCoords(touch) {
-        let totalOffsetX = 0;
-        let totalOffsetY = 0;
-        let target = touch.target;
-        while (!(target instanceof HTMLElement)) {
-            target = target.parentNode;
-        }
-        let currentElement = target;
-
-        do {
-            totalOffsetX += currentElement.offsetLeft - currentElement.scrollLeft;
-            totalOffsetY += currentElement.offsetTop - currentElement.scrollTop;
-            currentElement = currentElement.offsetParent;
-        } while (currentElement);
-
-        // calculate coords and scale them to the graphicsDevice size
-        return {
-            x: (touch.pageX - totalOffsetX),
-            y: (touch.pageY - totalOffsetY)
-        };
-    }
-
     _sortElements(a, b) {
         const layerOrder = this.app.scene.layers.sortTransparentLayers(a.layers, b.layers);
         if (layerOrder !== 0) return layerOrder;
 
-        if (a.screen && !b.screen)
+        if (a.screen && !b.screen) {
             return -1;
-        if (!a.screen && b.screen)
+        }
+        if (!a.screen && b.screen) {
             return 1;
-        if (!a.screen && !b.screen)
+        }
+        if (!a.screen && !b.screen) {
             return 0;
+        }
 
-        if (a.screen.screen.screenSpace && !b.screen.screen.screenSpace)
+        if (a.screen.screen.screenSpace && !b.screen.screen.screenSpace) {
             return -1;
-        if (b.screen.screen.screenSpace && !a.screen.screen.screenSpace)
+        }
+        if (b.screen.screen.screenSpace && !a.screen.screen.screenSpace) {
             return 1;
+        }
         return b.drawOrder - a.drawOrder;
     }
 

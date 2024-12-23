@@ -1,23 +1,24 @@
-import { Application } from '../../../src/framework/application.js';
-import { Asset } from '../../../src/framework/asset/asset.js';
-import { JsonHandler } from '../../../src/framework/handlers/json.js';
-
-import { HTMLCanvasElement } from '@playcanvas/canvas-mock';
-
 import { expect } from 'chai';
 import { restore, stub } from 'sinon';
+
+import { Asset } from '../../../src/framework/asset/asset.js';
+import { JsonHandler } from '../../../src/framework/handlers/json.js';
+import { createApp } from '../../app.mjs';
+import { jsdomSetup, jsdomTeardown } from '../../jsdom.mjs';
 
 describe('I18n', function () {
 
     let app;
 
     beforeEach(function () {
-        const canvas = new HTMLCanvasElement(500, 500);
-        app = new Application(canvas);
+        jsdomSetup();
+        app = createApp();
     });
 
     afterEach(function () {
-        app.destroy();
+        app?.destroy();
+        app = null;
+        jsdomTeardown();
         restore();
     });
 
@@ -141,7 +142,7 @@ describe('I18n', function () {
             expect(app.i18n.getPluralText('key', 1)).to.equal('');
             expect(app.i18n.getPluralText('key', 2)).to.equal('');
 
-            ['no-NO', 'ar'].forEach(function (locale) {
+            ['no-NO', 'ar'].forEach((locale) => {
                 expect(app.i18n.getPluralText('key', 0, locale)).to.equal('');
                 expect(app.i18n.getPluralText('key', 1, locale)).to.equal('');
                 expect(app.i18n.getPluralText('key', 2, locale)).to.equal('');
@@ -164,7 +165,7 @@ describe('I18n', function () {
             expect(app.i18n.getPluralText('key', 1)).to.equal('key');
             expect(app.i18n.getPluralText('key', 2)).to.equal('key');
 
-            ['no-NO', 'ar'].forEach(function (locale) {
+            ['no-NO', 'ar'].forEach((locale) => {
                 expect(app.i18n.getPluralText('key', 0, locale)).to.equal('key');
                 expect(app.i18n.getPluralText('key', 1, locale)).to.equal('key');
                 expect(app.i18n.getPluralText('key', 2, locale)).to.equal('key');
@@ -186,14 +187,14 @@ describe('I18n', function () {
 
         it('should fall back to default locale for that language if the specific locale does not exist', function () {
             for (const lang in DEFAULT_LOCALE_FALLBACKS) {
-                addText(DEFAULT_LOCALE_FALLBACKS[lang], 'key', ['language ' + lang]);
+                addText(DEFAULT_LOCALE_FALLBACKS[lang], 'key', [`language ${lang}`]);
             }
             addText('no-NO', 'key', ['language no']);
 
             for (const lang in DEFAULT_LOCALE_FALLBACKS) {
-                expect(app.i18n.getPluralText('key', 1, lang + '-alt')).to.equal('language ' + lang);
-                app.i18n.locale = lang + '-alt';
-                expect(app.i18n.getPluralText('key', 1)).to.equal('language ' + lang);
+                expect(app.i18n.getPluralText('key', 1, `${lang}-alt`)).to.equal(`language ${lang}`);
+                app.i18n.locale = `${lang}-alt`;
+                expect(app.i18n.getPluralText('key', 1)).to.equal(`language ${lang}`);
             }
 
             expect(app.i18n.getPluralText('key', 1, 'no-alt')).to.equal('language no');
@@ -204,14 +205,14 @@ describe('I18n', function () {
 
         it('should fall back to default locale for that language if you just pass the language', function () {
             for (const lang in DEFAULT_LOCALE_FALLBACKS) {
-                addText(DEFAULT_LOCALE_FALLBACKS[lang], 'key', ['language ' + lang]);
+                addText(DEFAULT_LOCALE_FALLBACKS[lang], 'key', [`language ${lang}`]);
             }
             addText('no-NO', 'key', ['language no']);
 
             for (const lang in DEFAULT_LOCALE_FALLBACKS) {
-                expect(app.i18n.getPluralText('key', 1, lang)).to.equal('language ' + lang);
+                expect(app.i18n.getPluralText('key', 1, lang)).to.equal(`language ${lang}`);
                 app.i18n.locale = lang;
-                expect(app.i18n.getPluralText('key', 1)).to.equal('language ' + lang);
+                expect(app.i18n.getPluralText('key', 1)).to.equal(`language ${lang}`);
             }
 
             expect(app.i18n.getPluralText('key', 1, 'no')).to.equal('language no');
@@ -228,11 +229,11 @@ describe('I18n', function () {
 
         it('should return correct plural forms for \"ja, ko, th, vi, zh\"', function () {
             const locales = ['ja-JP', 'ko-KO', 'th-TH', 'vi-VI', 'zh-ZH'];
-            locales.forEach(function (locale) {
+            locales.forEach((locale) => {
                 addText(locale, 'key', ['other']);
             });
 
-            locales.forEach(function (locale) {
+            locales.forEach((locale) => {
                 expect(app.i18n.getPluralText('key', 0, locale)).to.equal('other');
                 expect(app.i18n.getPluralText('key', 1, locale)).to.equal('other');
 
@@ -244,7 +245,7 @@ describe('I18n', function () {
 
         it('should return correct plural forms for \"fa, hi\"', function () {
             const locales = ['fa-FA', 'hi-HI'];
-            locales.forEach(function (locale) {
+            locales.forEach((locale) => {
                 addText(locale, 'key', ['one', 'other']);
             });
 
@@ -257,7 +258,7 @@ describe('I18n', function () {
                 expect(app.i18n.getPluralText('key', 2, locale)).to.equal('other');
             };
 
-            locales.forEach(function (locale) {
+            locales.forEach((locale) => {
                 testLocale(locale);
                 app.i18n.locale = locale;
                 testLocale();
@@ -266,7 +267,7 @@ describe('I18n', function () {
 
         it('should return correct plural forms for \"fr\"', function () {
             const locales = ['fr-FR'];
-            locales.forEach(function (locale) {
+            locales.forEach((locale) => {
                 addText(locale, 'key', ['one', 'other']);
             });
 
@@ -278,7 +279,7 @@ describe('I18n', function () {
                 expect(app.i18n.getPluralText('key', 2, locale)).to.equal('other');
             };
 
-            locales.forEach(function (locale) {
+            locales.forEach((locale) => {
                 testLocale(locale);
                 app.i18n.locale = locale;
                 testLocale();
@@ -288,7 +289,7 @@ describe('I18n', function () {
 
         it('should return correct plural forms for \"en, de, it, el, es, tr\"', function () {
             const locales = ['en-US', 'en-GB', 'de-DE', 'it-IT', 'el-GR', 'es-ES', 'tr-TR'];
-            locales.forEach(function (locale) {
+            locales.forEach((locale) => {
                 addText(locale, 'key', ['one', 'other']);
             });
 
@@ -300,7 +301,7 @@ describe('I18n', function () {
                 expect(app.i18n.getPluralText('key', 1.5, locale)).to.equal('other');
             };
 
-            locales.forEach(function (locale) {
+            locales.forEach((locale) => {
                 testLocale(locale);
                 app.i18n.locale = locale;
                 testLocale();
@@ -309,7 +310,7 @@ describe('I18n', function () {
 
         it('should return correct plural forms for \"ru, uk\"', function () {
             const locales = ['ru-RU', 'uk-UK'];
-            locales.forEach(function (locale) {
+            locales.forEach((locale) => {
                 addText(locale, 'key', ['one', 'few', 'many', 'other']);
             });
 
@@ -338,7 +339,7 @@ describe('I18n', function () {
                 expect(app.i18n.getPluralText('key', 1000.5, locale)).to.equal('other');
             };
 
-            locales.forEach(function (locale) {
+            locales.forEach((locale) => {
                 testLocale(locale);
                 app.i18n.locale = locale;
                 testLocale();
@@ -348,7 +349,7 @@ describe('I18n', function () {
 
         it('should return correct plural forms for \"ar\"', function () {
             const locales = ['ar-AR'];
-            locales.forEach(function (locale) {
+            locales.forEach((locale) => {
                 addText(locale, 'key', ['zero', 'one', 'two', 'few', 'many', 'other']);
             });
 
@@ -377,7 +378,7 @@ describe('I18n', function () {
                 expect(app.i18n.getPluralText('key', 10.1, locale)).to.equal('other');
             };
 
-            locales.forEach(function (locale) {
+            locales.forEach((locale) => {
                 testLocale(locale);
                 app.i18n.locale = locale;
                 testLocale();
@@ -582,8 +583,8 @@ describe('I18n', function () {
 
     });
 
-    it.skip('assets not in asset registry get loaded after they are added to the registry', function (done) {
-        stub(JsonHandler.prototype, 'load').callsFake(function (url, callback) {
+    it.skip('assets not in asset registry get loaded after they are added to the registry', (done) => {
+        stub(JsonHandler.prototype, 'load').callsFake((url, callback) => {
             callback(null, createTranslation('en-US', 'key', 'translation'));
         });
 
@@ -599,8 +600,8 @@ describe('I18n', function () {
         app.assets.load(asset);
     });
 
-    it.skip('assets in asset registry get loaded when passed to i18n', function (done) {
-        stub(JsonHandler.prototype, 'load').callsFake(function (url, callback) {
+    it.skip('assets in asset registry get loaded when passed to i18n', (done) => {
+        stub(JsonHandler.prototype, 'load').callsFake((url, callback) => {
             callback(null, createTranslation('en-US', 'key', 'translation'));
         });
 
@@ -617,8 +618,8 @@ describe('I18n', function () {
         app.assets.load(asset);
     });
 
-    it('assets already loaded are parsed when passed to i18n', function (done) {
-        stub(JsonHandler.prototype, 'load').callsFake(function (url, callback) {
+    it('assets already loaded are parsed when passed to i18n', (done) => {
+        stub(JsonHandler.prototype, 'load').callsFake((url, callback) => {
             callback(null, createTranslation('en-US', 'key', 'translation'));
         });
 
@@ -636,8 +637,8 @@ describe('I18n', function () {
         app.assets.load(asset);
     });
 
-    it('translations are unloaded when the asset is unloaded', function (done) {
-        stub(JsonHandler.prototype, 'load').callsFake(function (url, callback) {
+    it('translations are unloaded when the asset is unloaded', (done) => {
+        stub(JsonHandler.prototype, 'load').callsFake((url, callback) => {
             callback(null, createTranslation('en-US', 'key', 'translation'));
         });
 
@@ -657,8 +658,8 @@ describe('I18n', function () {
         app.assets.load(asset);
     });
 
-    it('translations are unloaded when the asset is removed', function (done) {
-        stub(JsonHandler.prototype, 'load').callsFake(function (url, callback) {
+    it('translations are unloaded when the asset is removed', (done) => {
+        stub(JsonHandler.prototype, 'load').callsFake((url, callback) => {
             callback(null, createTranslation('en-US', 'key', 'translation'));
         });
 
@@ -678,8 +679,8 @@ describe('I18n', function () {
         app.assets.load(asset);
     });
 
-    it('translations are re-loaded when the asset is removed and then added again', function (done) {
-        stub(JsonHandler.prototype, 'load').callsFake(function (url, callback) {
+    it('translations are re-loaded when the asset is removed and then added again', (done) => {
+        stub(JsonHandler.prototype, 'load').callsFake((url, callback) => {
             callback(null, createTranslation('en-US', 'key', 'translation'));
         });
 
@@ -688,7 +689,7 @@ describe('I18n', function () {
         app.i18n.once('data:add', function () {
             app.assets.remove(asset);
 
-            setTimeout(function () {
+            setTimeout(() => {
                 app.assets.add(asset);
                 expect(app.i18n.getText('key')).to.equal('translation');
                 done();
@@ -703,8 +704,8 @@ describe('I18n', function () {
         app.assets.load(asset);
     });
 
-    it('translations are re-loaded when the contents of the asset change', function (done) {
-        stub(JsonHandler.prototype, 'load').callsFake(function (url, callback) {
+    it('translations are re-loaded when the contents of the asset change', (done) => {
+        stub(JsonHandler.prototype, 'load').callsFake((url, callback) => {
             callback(null, createTranslation('en-US', 'key', 'translation'));
         });
 
@@ -713,7 +714,7 @@ describe('I18n', function () {
         app.i18n.once('data:add', function () {
             expect(app.i18n.getText('key')).to.equal('translation');
 
-            setTimeout(function () {
+            setTimeout(() => {
                 app.i18n.once('data:add', function () {
                     expect(app.i18n.getText('key')).to.equal('changed');
                     done();

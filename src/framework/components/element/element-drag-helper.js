@@ -1,13 +1,15 @@
 import { platform } from '../../../core/platform.js';
 import { EventHandler } from '../../../core/event-handler.js';
-
 import { Quat } from '../../../core/math/quat.js';
 import { Vec2 } from '../../../core/math/vec2.js';
 import { Vec3 } from '../../../core/math/vec3.js';
-
 import { ElementComponent } from './component.js';
 import { Ray } from '../../../core/shape/ray.js';
 import { Plane } from '../../../core/shape/plane.js';
+
+/**
+ * @import { ElementMouseEvent, ElementSelectEvent, ElementTouchEvent } from '../../input/element-input.js'
+ */
 
 const _inputScreenPosition = new Vec2();
 const _inputWorldPosition = new Vec3();
@@ -25,9 +27,43 @@ const OPPOSITE_AXIS = {
 /**
  * Helper class that makes it easy to create Elements that can be dragged by the mouse or touch.
  *
- * @augments EventHandler
+ * @category User Interface
  */
 class ElementDragHelper extends EventHandler {
+    /**
+     * Fired when a new drag operation starts.
+     *
+     * @event
+     * @example
+     * elementDragHelper.on('drag:start', () => {
+     *     console.log('Drag started');
+     * });
+     */
+    static EVENT_DRAGSTART = 'drag:start';
+
+    /**
+     * Fired when the current new drag operation ends.
+     *
+     * @event
+     * @example
+     * elementDragHelper.on('drag:end', () => {
+     *     console.log('Drag ended');
+     * });
+     */
+    static EVENT_DRAGEND = 'drag:end';
+
+    /**
+     * Fired whenever the position of the dragged element changes. The handler is passed the
+     * current {@link Vec3} position of the dragged element.
+     *
+     * @event
+     * @example
+     * elementDragHelper.on('drag:move', (position) => {
+     *     console.log(`Dragged element position is ${position}`);
+     * });
+     */
+    static EVENT_DRAGMOVE = 'drag:move';
+
     /**
      * Create a new ElementDragHelper instance.
      *
@@ -42,7 +78,7 @@ class ElementDragHelper extends EventHandler {
         }
 
         if (axis && axis !== 'x' && axis !== 'y') {
-            throw new Error('Unrecognized axis: ' + axis);
+            throw new Error(`Unrecognized axis: ${axis}`);
         }
 
         this._element = element;
@@ -60,24 +96,9 @@ class ElementDragHelper extends EventHandler {
     }
 
     /**
-     * Fired when a new drag operation starts.
-     *
-     * @event ElementDragHelper#drag:start
+     * @param {'on'|'off'} onOrOff - Either 'on' or 'off'.
+     * @private
      */
-
-    /**
-     * Fired when the current new drag operation ends.
-     *
-     * @event ElementDragHelper#drag:end
-     */
-
-    /**
-     * Fired whenever the position of the dragged element changes.
-     *
-     * @event ElementDragHelper#drag:move
-     * @param {Vec3} value - The current position.
-     */
-
     _toggleLifecycleListeners(onOrOff) {
         this._element[onOrOff]('mousedown', this._onMouseDownOrTouchStart, this);
         this._element[onOrOff]('touchstart', this._onMouseDownOrTouchStart, this);
@@ -147,7 +168,7 @@ class ElementDragHelper extends EventHandler {
      * This method calculates the `Vec3` intersection point of plane/ray intersection based on
      * the mouse/touch input event. If there is no intersection, it returns `null`.
      *
-     * @param {import('../../input/element-input').ElementTouchEvent | import('../../input/element-input').ElementMouseEvent | import('../../input/element-input').ElementSelectEvent} event - The event.
+     * @param {ElementTouchEvent|ElementMouseEvent|ElementSelectEvent} event - The event.
      * @returns {Vec3|null} The `Vec3` intersection point of plane/ray intersection, if there
      * is an intersection, otherwise `null`
      * @private
@@ -223,7 +244,7 @@ class ElementDragHelper extends EventHandler {
     /**
      * This method is linked to `_element` events: `mousemove` and `touchmove`
      *
-     * @param {import('../../input/element-input').ElementTouchEvent} event - The event.
+     * @param {ElementTouchEvent} event - The event.
      * @private
      */
     _onMove(event) {

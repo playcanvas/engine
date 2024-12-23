@@ -1,17 +1,16 @@
 import { Vec3 } from '../../../core/math/vec3.js';
-
 import { BoundingBox } from '../../../core/shape/bounding-box.js';
-
 import { getDefaultMaterial } from '../../../scene/materials/default-material.js';
-
 import { Component } from '../component.js';
 import { ComponentSystem } from '../system.js';
-
 import { RenderComponent } from './component.js';
 import { RenderComponentData } from './data.js';
 
+/**
+ * @import { AppBase } from '../../app-base.js'
+ */
+
 const _schema = [
-    { name: 'rootBone', type: 'entity' },
     'enabled'
 ];
 
@@ -30,21 +29,22 @@ const _properties = [
     'type',
     'layers',
     'isStatic',
-    'batchGroupId'
+    'batchGroupId',
+    'rootBone'
 ];
 
 /**
  * Allows an Entity to render a mesh or a primitive shape like a box, capsule, sphere, cylinder,
  * cone etc.
  *
- * @augments ComponentSystem
+ * @category Graphics
  */
 class RenderComponentSystem extends ComponentSystem {
     /**
      * Create a new RenderComponentSystem.
      *
-     * @param {import('../../app-base.js').AppBase} app - The Application.
-     * @hideconstructor
+     * @param {AppBase} app - The Application.
+     * @ignore
      */
     constructor(app) {
         super(app);

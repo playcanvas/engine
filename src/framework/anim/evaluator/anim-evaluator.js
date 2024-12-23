@@ -2,6 +2,11 @@ import { AnimTargetValue } from './anim-target-value.js';
 import { AnimBlend } from './anim-blend.js';
 
 /**
+ * @import { AnimBinder } from '../binder/anim-binder.js'
+ * @import { AnimClip } from './anim-clip.js'
+ */
+
+/**
  * AnimEvaluator blends multiple sets of animation clips together.
  *
  * @ignore
@@ -10,8 +15,8 @@ class AnimEvaluator {
     /**
      * Create a new animation evaluator.
      *
-     * @param {import('../binder/anim-binder.js').AnimBinder} binder - interface resolves curve
-     * paths to instances of {@link AnimTarget}.
+     * @param {AnimBinder} binder - Interface that resolves curve paths to instances of
+     * {@link AnimTarget}.
      */
     constructor(binder) {
         this._binder = binder;
@@ -24,7 +29,7 @@ class AnimEvaluator {
     /**
      * The list of animation clips.
      *
-     * @type {import('./anim-clip.js').AnimClip[]}
+     * @type {AnimClip[]}
      */
     get clips() {
         return this._clips;
@@ -33,7 +38,7 @@ class AnimEvaluator {
     /**
      * Add a clip to the evaluator.
      *
-     * @param {import('./anim-clip.js').AnimClip} clip - The clip to add to the evaluator.
+     * @param {AnimClip} clip - The clip to add to the evaluator.
      */
     addClip(clip) {
         const targets = this._targets;
@@ -159,7 +164,7 @@ class AnimEvaluator {
      * Returns the first clip which matches the given name, or null if no such clip was found.
      *
      * @param {string} name - Name of the clip to find.
-     * @returns {import('./anim-clip.js').AnimClip|null} - The clip with the given name or null if no such clip was found.
+     * @returns {AnimClip|null} - The clip with the given name or null if no such clip was found.
      */
     findClip(name) {
         const clips = this._clips;
@@ -192,17 +197,18 @@ class AnimEvaluator {
      *
      * @param {number} deltaTime - The amount of time that has passed since the last update, in
      * seconds.
-     * @param {number} outputAnimation - Whether the evaluator should output the results of the update to the bound animation targets.
+     * @param {boolean} [outputAnimation] - Whether the evaluator should output the results of the
+     * update to the bound animation targets.
      */
     update(deltaTime, outputAnimation = true) {
         // copy clips
         const clips = this._clips;
 
         // stable sort order
-        const order = clips.map(function (c, i) {
+        const order = clips.map((c, i) => {
             return i;
         });
-        AnimBlend.stableSort(order, function (a, b) {
+        AnimBlend.stableSort(order, (a, b) => {
             return clips[a].blendOrder < clips[b].blendOrder;
         });
 

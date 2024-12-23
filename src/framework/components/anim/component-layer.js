@@ -1,38 +1,81 @@
 import { Debug } from '../../../core/debug.js';
 import { math } from '../../../core/math/math.js';
-
 import { AnimTrack } from '../../anim/evaluator/anim-track.js';
 import { AnimTransition } from '../../anim/controller/anim-transition.js';
 import { ANIM_LAYER_OVERWRITE } from '../../anim/controller/constants.js';
 
 /**
+ * @import { AnimComponent } from './component.js'
+ * @import { AnimController } from '../../anim/controller/anim-controller.js'
+ */
+
+/**
  * The Anim Component Layer allows managers a single layer of the animation state graph.
+ *
+ * @category Animation
  */
 class AnimComponentLayer {
+    /**
+     * @type {string}
+     * @private
+     */
+    _name;
+
+    /**
+     * @type {AnimController}
+     * @private
+     */
+    _controller;
+
+    /**
+     * @type {AnimComponent}
+     * @private
+     */
+    _component;
+
+    /**
+     * @type {number}
+     * @private
+     */
+    _weight;
+
+    /**
+     * @type {string}
+     * @private
+     */
+    _blendType;
+
+    /** @private */
+    _mask = null;
+
+    /** @private */
+    _blendTime = 0;
+
+    /** @private */
+    _blendTimeElapsed = 0;
+
+    /** @private */
+    _startingWeight = 0;
+
+    /** @private */
+    _targetWeight = 0;
+
     /**
      * Create a new AnimComponentLayer instance.
      *
      * @param {string} name - The name of the layer.
-     * @param {object} controller - The controller to manage this layers animations.
-     * @param {import('./component.js').AnimComponent} component - The component that this layer is
-     * a member of.
+     * @param {AnimController} controller - The controller to manage this layers animations.
+     * @param {AnimComponent} component - The component that this layer is a member of.
      * @param {number} [weight] - The weight of this layer. Defaults to 1.
      * @param {string} [blendType] - The blend type of this layer. Defaults to {@link ANIM_LAYER_OVERWRITE}.
-     * @param {boolean} [normalizedWeight] - Whether the weight of this layer should be normalized
-     * using the total weight of all layers.
+     * @ignore
      */
-    constructor(name, controller, component, weight = 1, blendType = ANIM_LAYER_OVERWRITE, normalizedWeight = true) {
+    constructor(name, controller, component, weight = 1, blendType = ANIM_LAYER_OVERWRITE) {
         this._name = name;
         this._controller = controller;
         this._component = component;
         this._weight = weight;
         this._blendType = blendType;
-        this._normalizedWeight = normalizedWeight;
-        this._mask = null;
-        this._blendTime = 0;
-        this._blendTimeElapsed = 0;
-        this._startingWeight = 0;
-        this._targetWeight = 0;
     }
 
     /**
@@ -45,14 +88,19 @@ class AnimComponentLayer {
     }
 
     /**
-     * Whether this layer is currently playing.
+     * Sets whether this layer is currently playing.
      *
-     * @type {string}
+     * @type {boolean}
      */
     set playing(value) {
         this._controller.playing = value;
     }
 
+    /**
+     * Gets whether this layer is currently playing.
+     *
+     * @type {boolean}
+     */
     get playing() {
         return this._controller.playing;
     }
@@ -61,14 +109,14 @@ class AnimComponentLayer {
      * Returns true if a state graph has been loaded and all states in the graph have been assigned
      * animation tracks.
      *
-     * @type {string}
+     * @type {boolean}
      */
     get playable() {
         return this._controller.playable;
     }
 
     /**
-     * Returns the currently active state name.
+     * Gets the currently active state name.
      *
      * @type {string}
      */
@@ -77,16 +125,16 @@ class AnimComponentLayer {
     }
 
     /**
-     * Returns the previously active state name.
+     * Gets the previously active state name.
      *
-     * @type {string}
+     * @type {string|null}
      */
     get previousState() {
         return this._controller.previousStateName;
     }
 
     /**
-     * Returns the currently active states progress as a value normalized by the states animation
+     * Gets the currently active state's progress as a value normalized by the state's animation
      * duration. Looped animations will return values greater than 1.
      *
      * @type {number}
@@ -96,7 +144,7 @@ class AnimComponentLayer {
     }
 
     /**
-     * Returns the currently active states duration.
+     * Gets the currently active states duration.
      *
      * @type {number}
      */
@@ -105,7 +153,7 @@ class AnimComponentLayer {
     }
 
     /**
-     * The active states time in seconds.
+     * Sets the active state's time in seconds.
      *
      * @type {number}
      */
@@ -120,12 +168,17 @@ class AnimComponentLayer {
         controller.playing = layerPlaying;
     }
 
+    /**
+     * Gets the active state's time in seconds.
+     *
+     * @type {number}
+     */
     get activeStateCurrentTime() {
         return this._controller.activeStateCurrentTime;
     }
 
     /**
-     * Returns whether the anim component layer is currently transitioning between states.
+     * Gets whether the anim component layer is currently transitioning between states.
      *
      * @type {boolean}
      */
@@ -134,7 +187,7 @@ class AnimComponentLayer {
     }
 
     /**
-     * If the anim component layer is currently transitioning between states, returns the progress.
+     * Gets the progress, if the anim component layer is currently transitioning between states.
      * Otherwise returns null.
      *
      * @type {number|null}
@@ -147,7 +200,7 @@ class AnimComponentLayer {
     }
 
     /**
-     * Lists all available states in this layers state graph.
+     * Gets all available states in this layers state graph.
      *
      * @type {string[]}
      */
@@ -156,8 +209,8 @@ class AnimComponentLayer {
     }
 
     /**
-     * The blending weight of this layer. Used when calculating the value of properties that are
-     * animated by more than one layer.
+     * Sets the blending weight of this layer. Used when calculating the value of properties that
+     * are animated by more than one layer.
      *
      * @type {number}
      */
@@ -166,6 +219,11 @@ class AnimComponentLayer {
         this._component.dirtifyTargets();
     }
 
+    /**
+     * Sets the blending weight of this layer.
+     *
+     * @type {number}
+     */
     get weight() {
         return this._weight;
     }
@@ -184,7 +242,7 @@ class AnimComponentLayer {
     }
 
     /**
-     * A mask of bones which should be animated or ignored by this layer.
+     * Sets the mask of bones which should be animated or ignored by this layer.
      *
      * @type {object}
      * @example
@@ -204,6 +262,11 @@ class AnimComponentLayer {
         this._mask = value;
     }
 
+    /**
+     * Gets the mask of bones which should be animated or ignored by this layer.
+     *
+     * @type {object}
+     */
     get mask() {
         return this._mask;
     }
@@ -272,30 +335,6 @@ class AnimComponentLayer {
     }
 
     /**
-     * Add a mask to this layer.
-     *
-     * @param {object} [mask] - The mask to assign to the layer. If not provided the current mask
-     * in the layer will be removed.
-     * @example
-     * entity.anim.baseLayer.assignMask({
-     *     // include the spine of the current model and all of its children
-     *     "path/to/spine": {
-     *         children: true
-     *     },
-     *     // include the hip of the current model but not all of its children
-     *     "path/to/hip": true
-     * });
-     * @ignore
-     */
-    assignMask(mask) {
-        Debug.deprecated('The pc.AnimComponentLayer#assignMask function is now deprecated. Assign masks to the pc.AnimComponentLayer#mask property instead.');
-        if (this._controller.assignMask(mask)) {
-            this._component.rebind();
-        }
-        this._mask = mask;
-    }
-
-    /**
      * Assigns an animation track to a state or blend tree node in the current graph. If a state
      * for the given nodePath doesn't exist, it will be created. If all states nodes are linked and
      * the {@link AnimComponent#activate} value was set to true then the component will begin
@@ -305,7 +344,7 @@ class AnimComponentLayer {
      * animation should be associated with. Each section of a blend tree path is split using a
      * period (`.`) therefore state names should not include this character (e.g "MyStateName" or
      * "MyStateName.BlendTreeNode").
-     * @param {object} animTrack - The animation track that will be assigned to this state and
+     * @param {AnimTrack} animTrack - The animation track that will be assigned to this state and
      * played whenever this state is active.
      * @param {number} [speed] - Update the speed of the state you are assigning an animation to.
      * Defaults to 1.
@@ -341,10 +380,10 @@ class AnimComponentLayer {
     }
 
     /**
-     * Returns the asset that is associated with the given state.
+     * Returns an object holding the animation asset id that is associated with the given state.
      *
      * @param {string} stateName - The name of the state to get the asset for.
-     * @returns {import('../../asset/asset.js').Asset} The asset associated with the given state.
+     * @returns {{ asset: number }} An object containing the animation asset id associated with the given state.
      */
     getAnimationAsset(stateName) {
         return this._component.animationAssets[`${this.name}:${stateName}`];

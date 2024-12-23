@@ -1,6 +1,6 @@
-import { Vec3 } from '../../../src/core/math/vec3.js';
-
 import { expect } from 'chai';
+
+import { Vec3 } from '../../../src/core/math/vec3.js';
 
 describe('Vec3', function () {
 
@@ -80,6 +80,18 @@ describe('Vec3', function () {
             expect(v.x).to.equal(3);
             expect(v.y).to.equal(4);
             expect(v.z).to.equal(5);
+        });
+
+    });
+
+    describe('#addScaled', function () {
+
+        it('adds a scaled vector', function () {
+            const v = new Vec3(1, 2, 3);
+            v.addScaled(Vec3.UP, 2);
+            expect(v.x).to.equal(1);
+            expect(v.y).to.equal(4);
+            expect(v.z).to.equal(3);
         });
 
     });
@@ -282,6 +294,20 @@ describe('Vec3', function () {
             expect(v1.equals(v2)).to.be.false;
         });
 
+        it('checks for equality of different vectors that are close enough', function () {
+            const v1 = new Vec3(0.1, 0.2, 0.3);
+            const v2 = new Vec3(0.10000000000000001, 0.2, 0.3);
+            const epsilon = 0.000001;
+            expect(v1.equalsApprox(v2, epsilon)).to.be.true;
+            expect(v1.equalsApprox(v2)).to.be.true;
+
+            const v3 = new Vec3(0.1 + epsilon - Number.EPSILON, 0.2, 0.3);
+            expect(v1.equalsApprox(v3, epsilon)).to.be.true;
+
+            const v4 = new Vec3(0.1 + epsilon + Number.EPSILON, 0.2, 0.3);
+            expect(v1.equalsApprox(v4, epsilon)).to.be.false;
+        });
+
     });
 
     describe('#floor', function () {
@@ -322,7 +348,7 @@ describe('Vec3', function () {
 
         it('calculates the length squared of a zero length vector', function () {
             const v = new Vec3();
-            expect(v.length()).to.equal(0);
+            expect(v.lengthSq()).to.equal(0);
         });
 
         it('calculates the length squared of a vector', function () {

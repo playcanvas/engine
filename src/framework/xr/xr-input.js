@@ -1,15 +1,133 @@
 import { EventHandler } from '../../core/event-handler.js';
-
+import { platform } from '../../core/platform.js';
 import { XrInputSource } from './xr-input-source.js';
+
+/**
+ * @import { XrManager } from './xr-manager.js'
+ */
 
 /**
  * Provides access to input sources for WebXR.
  *
- * @augments EventHandler
+ * Input sources represent:
+ *
+ * - hand held controllers - and their optional capabilities: gamepad and vibration
+ * - hands - with their individual joints
+ * - transient sources - such as touch screen taps and voice commands
+ *
+ * @category XR
  */
 class XrInput extends EventHandler {
     /**
-     * @type {import('./xr-manager.js').XrManager}
+     * Fired when a new {@link XrInputSource} is added to the list. The handler is passed the
+     * {@link XrInputSource} that has been added.
+     *
+     * @event
+     * @example
+     * app.xr.input.on('add', (inputSource) => {
+     *     // new input source is added
+     * });
+     */
+    static EVENT_ADD = 'add';
+
+    /**
+     * Fired when an {@link XrInputSource} is removed from the list. The handler is passed the
+     * {@link XrInputSource} that has been removed.
+     *
+     * @event
+     * @example
+     * app.xr.input.on('remove', (inputSource) => {
+     *     // input source is removed
+     * });
+     */
+    static EVENT_REMOVE = 'remove';
+
+    /**
+     * Fired when {@link XrInputSource} has triggered primary action. This could be pressing a
+     * trigger button, or touching a screen. The handler is passed the {@link XrInputSource} that
+     * triggered the `select` event and the XRInputSourceEvent event from the WebXR API.
+     *
+     * @event
+     * @example
+     * const ray = new pc.Ray();
+     * app.xr.input.on('select', (inputSource, evt) => {
+     *     ray.set(inputSource.getOrigin(), inputSource.getDirection());
+     *     if (obj.intersectsRay(ray)) {
+     *         // selected an object with input source
+     *     }
+     * });
+     */
+    static EVENT_SELECT = 'select';
+
+    /**
+     * Fired when {@link XrInputSource} has started to trigger primary action. The handler is
+     * passed the {@link XrInputSource} that triggered the `selectstart` event and the
+     * XRInputSourceEvent event from the WebXR API.
+     *
+     * @event
+     * @example
+     * app.xr.input.on('selectstart', (inputSource, evt) => {
+     *     console.log('Select started');
+     * });
+     */
+    static EVENT_SELECTSTART = 'selectstart';
+
+    /**
+     * Fired when {@link XrInputSource} has ended triggering primary action. The handler is passed
+     * the {@link XrInputSource} that triggered the `selectend` event and the XRInputSourceEvent
+     * event from the WebXR API.
+     *
+     * @event
+     * @example
+     * app.xr.input.on('selectend', (inputSource, evt) => {
+     *     console.log('Select ended');
+     * });
+     */
+    static EVENT_SELECTEND = 'selectend';
+
+    /**
+     * Fired when {@link XrInputSource} has triggered squeeze action. This is associated with
+     * "grabbing" action on the controllers. The handler is passed the {@link XrInputSource} that
+     * triggered the `squeeze` event and the XRInputSourceEvent event from the WebXR API.
+     *
+     * @event
+     * @example
+     * app.xr.input.on('squeeze', (inputSource, evt) => {
+     *     console.log('Squeeze');
+     * });
+     */
+    static EVENT_SQUEEZE = 'squeeze';
+
+    /**
+     * Fired when {@link XrInputSource} has started to trigger squeeze action. The handler is
+     * passed the {@link XrInputSource} that triggered the `squeezestart` event and the
+     * XRInputSourceEvent event from the WebXR API.
+     *
+     * @event
+     * @example
+     * app.xr.input.on('squeezestart', (inputSource, evt) => {
+     *     if (obj.containsPoint(inputSource.getPosition())) {
+     *         // grabbed an object
+     *     }
+     * });
+     */
+    static EVENT_SQUEEZESTART = 'squeezestart';
+
+    /**
+     * Fired when {@link XrInputSource} has ended triggering squeeze action. The handler is passed
+     * the {@link XrInputSource} that triggered the `squeezeend` event and the XRInputSourceEvent
+     * event from the WebXR API.
+     *
+     * @event
+     * @example
+     * app.xr.input.on('squeezeend', (inputSource, evt) => {
+     *     console.log('Squeeze ended');
+     * });
+     */
+    static EVENT_SQUEEZEEND = 'squeezeend';
+
+    /**
+     * @type {XrManager}
      * @private
      */
     manager;
@@ -27,15 +145,22 @@ class XrInput extends EventHandler {
     _onInputSourcesChangeEvt;
 
     /**
+     * @type {boolean}
+     * @ignore
+     */
+    velocitiesSupported = false;
+
+    /**
      * Create a new XrInput instance.
      *
-     * @param {import('./xr-manager.js').XrManager} manager - WebXR Manager.
-     * @hideconstructor
+     * @param {XrManager} manager - WebXR Manager.
+     * @ignore
      */
     constructor(manager) {
         super();
 
         this.manager = manager;
+        this.velocitiesSupported = !!(platform.browser && window.XRPose?.prototype?.hasOwnProperty('linearVelocity'));
 
         this._onInputSourcesChangeEvt = (evt) => {
             this._onInputSourcesChange(evt);
@@ -44,92 +169,6 @@ class XrInput extends EventHandler {
         this.manager.on('start', this._onSessionStart, this);
         this.manager.on('end', this._onSessionEnd, this);
     }
-
-    /**
-     * Fired when new {@link XrInputSource} is added to the list.
-     *
-     * @event XrInput#add
-     * @param {XrInputSource} inputSource - Input source that has been added.
-     * @example
-     * app.xr.input.on('add', function (inputSource) {
-     *     // new input source is added
-     * });
-     */
-
-    /**
-     * Fired when {@link XrInputSource} is removed to the list.
-     *
-     * @event XrInput#remove
-     * @param {XrInputSource} inputSource - Input source that has been removed.
-     * @example
-     * app.xr.input.on('remove', function (inputSource) {
-     *     // input source is removed
-     * });
-     */
-
-    /**
-     * Fired when {@link XrInputSource} has triggered primary action. This could be pressing a
-     * trigger button, or touching a screen.
-     *
-     * @event XrInput#select
-     * @param {XrInputSource} inputSource - Input source that triggered select event.
-     * @param {object} evt - XRInputSourceEvent event data from WebXR API.
-     * @example
-     * const ray = new pc.Ray();
-     * app.xr.input.on('select', function (inputSource, evt) {
-     *     ray.set(inputSource.getOrigin(), inputSource.getDirection());
-     *     if (obj.intersectsRay(ray)) {
-     *         // selected an object with input source
-     *     }
-     * });
-     */
-
-    /**
-     * Fired when {@link XrInputSource} has started to trigger primary action.
-     *
-     * @event XrInput#selectstart
-     * @param {XrInputSource} inputSource - Input source that triggered selectstart event.
-     * @param {object} evt - XRInputSourceEvent event data from WebXR API.
-     */
-
-    /**
-     * Fired when {@link XrInputSource} has ended triggerring primary action.
-     *
-     * @event XrInput#selectend
-     * @param {XrInputSource} inputSource - Input source that triggered selectend event.
-     * @param {object} evt - XRInputSourceEvent event data from WebXR API.
-     */
-
-    /**
-     * Fired when {@link XrInputSource} has triggered squeeze action. This is associated with
-     * "grabbing" action on the controllers.
-     *
-     * @event XrInput#squeeze
-     * @param {XrInputSource} inputSource - Input source that triggered squeeze event.
-     * @param {object} evt - XRInputSourceEvent event data from WebXR API.
-     */
-
-    /**
-     * Fired when {@link XrInputSource} has started to trigger sqeeze action.
-     *
-     * @event XrInput#squeezestart
-     * @param {XrInputSource} inputSource - Input source that triggered squeezestart event.
-     * @param {object} evt - XRInputSourceEvent event data from WebXR API.
-     * @example
-     * app.xr.input.on('squeezestart', function (inputSource, evt) {
-     *     if (obj.containsPoint(inputSource.getPosition())) {
-     *         // grabbed an object
-     *     }
-     * });
-     */
-
-    /**
-     * Fired when {@link XrInputSource} has ended triggerring sqeeze action.
-     *
-     * @event XrInput#squeezeend
-     * @param {XrInputSource} inputSource - Input source that triggered squeezeend event.
-     * @param {object} evt - XRInputSourceEvent event data from WebXR API.
-     */
 
     /** @private */
     _onSessionStart() {
@@ -236,8 +275,9 @@ class XrInput extends EventHandler {
      * @private
      */
     _addInputSource(xrInputSource) {
-        if (this._getByInputSource(xrInputSource))
+        if (this._getByInputSource(xrInputSource)) {
             return;
+        }
 
         const inputSource = new XrInputSource(this.manager, xrInputSource);
         this._inputSources.push(inputSource);
@@ -250,8 +290,9 @@ class XrInput extends EventHandler {
      */
     _removeInputSource(xrInputSource) {
         for (let i = 0; i < this._inputSources.length; i++) {
-            if (this._inputSources[i].inputSource !== xrInputSource)
+            if (this._inputSources[i].inputSource !== xrInputSource) {
                 continue;
+            }
 
             const inputSource = this._inputSources[i];
             this._inputSources.splice(i, 1);
@@ -268,7 +309,7 @@ class XrInput extends EventHandler {
     }
 
     /**
-     * @param {*} frame - XRFrame from requestAnimationFrame callback.
+     * @param {XRFrame} frame - XRFrame from requestAnimationFrame callback.
      * @ignore
      */
     update(frame) {

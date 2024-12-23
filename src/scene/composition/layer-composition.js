@@ -2,30 +2,102 @@ import { TRACEID_RENDER_ACTION } from '../../core/constants.js';
 import { Debug } from '../../core/debug.js';
 import { Tracing } from '../../core/tracing.js';
 import { EventHandler } from '../../core/event-handler.js';
-import { set } from '../../core/set-utils.js';
 import { sortPriority } from '../../core/sort.js';
-
-import {
-    LAYERID_DEPTH,
-    COMPUPDATED_BLEND, COMPUPDATED_CAMERAS, COMPUPDATED_INSTANCES, COMPUPDATED_LIGHTS,
-    LIGHTTYPE_DIRECTIONAL, LIGHTTYPE_OMNI, LIGHTTYPE_SPOT
-} from '../constants.js';
-
+import { LAYERID_DEPTH } from '../constants.js';
 import { RenderAction } from './render-action.js';
-import { WorldClusters } from '../lighting/world-clusters.js';
-import { LightCompositionData } from './light-composition-data.js';
 
-const tempSet = new Set();
-const tempClusterArray = [];
+/**
+ * @import { CameraComponent } from '../../framework/components/camera/component.js'
+ * @import { Layer } from '../layer.js'
+ */
 
 /**
  * Layer Composition is a collection of {@link Layer} that is fed to {@link Scene#layers} to define
  * rendering order.
  *
- * @augments EventHandler
+ * @category Graphics
  */
 class LayerComposition extends EventHandler {
     // Composition can hold only 2 sublayers of each layer
+
+    /**
+     * A read-only array of {@link Layer} sorted in the order they will be rendered.
+     *
+     * @type {Layer[]}
+     */
+    layerList = [];
+
+    /**
+     * A mapping of {@link Layer#id} to {@link Layer}.
+     *
+     * @type {Map<number, Layer>}
+     * @ignore
+     */
+    layerIdMap = new Map();
+
+    /**
+     * A mapping of {@link Layer#name} to {@link Layer}.
+     *
+     * @type {Map<string, Layer>}
+     * @ignore
+     */
+    layerNameMap = new Map();
+
+    /**
+     * A mapping of {@link Layer} to its opaque index in {@link LayerComposition#layerList}.
+     *
+     * @type {Map<Layer, number>}
+     * @ignore
+     */
+    layerOpaqueIndexMap = new Map();
+
+    /**
+     * A mapping of {@link Layer} to its transparent index in {@link LayerComposition#layerList}.
+     *
+     * @type {Map<Layer, number>}
+     * @ignore
+     */
+    layerTransparentIndexMap = new Map();
+
+    /**
+     * A read-only array of boolean values, matching {@link LayerComposition#layerList}. True means only
+     * semi-transparent objects are rendered, and false means opaque.
+     *
+     * @type {boolean[]}
+     * @ignore
+     */
+    subLayerList = [];
+
+    /**
+     * A read-only array of boolean values, matching {@link LayerComposition#layerList}. True means the
+     * layer is rendered, false means it's skipped.
+     *
+     * @type {boolean[]}
+     */
+    subLayerEnabled = []; // more granular control on top of layer.enabled (ANDed)
+
+    /**
+     * An array of {@link CameraComponent}s.
+     *
+     * @type {CameraComponent[]}
+     * @ignore
+     */
+    cameras = [];
+
+    /**
+     * The actual rendering sequence, generated based on layers and cameras
+     *
+     * @type {RenderAction[]}
+     * @ignore
+     */
+    _renderActions = [];
+
+    /**
+     * True if the composition needs to be updated before rendering.
+     *
+     * @ignore
+     */
+    _dirty = false;
 
     /**
      * Create a new layer composition.
@@ -38,252 +110,41 @@ class LayerComposition extends EventHandler {
 
         this.name = name;
 
-        /**
-         * A read-only array of {@link Layer} sorted in the order they will be rendered.
-         *
-         * @type {import('../layer.js').Layer[]}
-         */
-        this.layerList = [];
-
-        /**
-         * A read-only array of boolean values, matching {@link LayerComposition#layerList}. True means only
-         * semi-transparent objects are rendered, and false means opaque.
-         *
-         * @type {boolean[]}
-         */
-        this.subLayerList = [];
-
-        /**
-         * A read-only array of boolean values, matching {@link LayerComposition#layerList}. True means the
-         * layer is rendered, false means it's skipped.
-         *
-         * @type {boolean[]}
-         */
-        this.subLayerEnabled = []; // more granular control on top of layer.enabled (ANDed)
-
         this._opaqueOrder = {};
         this._transparentOrder = {};
-
-        this._dirty = false;
-        this._dirtyBlend = false;
-        this._dirtyLights = false;
-        this._dirtyCameras = false;
-
-        // all unique meshInstances from all layers, stored both as an array, and also a set for fast search
-        this._meshInstances = [];
-        this._meshInstancesSet = new Set();
-
-        // an array of all unique lights from all layers
-        this._lights = [];
-
-        // a map of Light to index in _lights for fast lookup
-        this._lightsMap = new Map();
-
-        // each entry in _lights has entry of type LightCompositionData here at the same index,
-        // storing shadow casters and additional composition related data for the light
-        this._lightCompositionData = [];
-
-        // _lights split into arrays per type of light, indexed by LIGHTTYPE_*** constants
-        this._splitLights = [[], [], []];
-
-        /**
-         * A read-only array of {@link CameraComponent} that can be used during rendering. e.g.
-         * Inside {@link Layer#onPreCull}, {@link Layer#onPostCull}, {@link Layer#onPreRender},
-         * {@link Layer#onPostRender}.
-         *
-         * @type {import('../../framework/components/camera/component.js').CameraComponent[]}
-         */
-        this.cameras = [];
-
-        /**
-         * The actual rendering sequence, generated based on layers and cameras
-         *
-         * @type {RenderAction[]}
-         * @ignore
-         */
-        this._renderActions = [];
-
-        // all currently created light clusters, that need to be updated before rendering
-        this._worldClusters = [];
-
-        // empty cluster with no lights
-        this._emptyWorldClusters = null;
     }
 
     destroy() {
-        // empty light cluster
-        if (this._emptyWorldClusters) {
-            this._emptyWorldClusters.destroy();
-            this._emptyWorldClusters = null;
-        }
+        this.destroyRenderActions();
+    }
 
-        // all other clusters
-        this._worldClusters.forEach((cluster) => {
-            cluster.destroy();
-        });
-        this._worldClusters = null;
-
-        // render actions
+    destroyRenderActions() {
         this._renderActions.forEach(ra => ra.destroy());
-        this._renderActions = null;
+        this._renderActions.length = 0;
     }
 
-    // returns an empty light cluster object to be used when no lights are used
-    getEmptyWorldClusters(device) {
-        if (!this._emptyWorldClusters) {
-
-            // create cluster structure with no lights
-            this._emptyWorldClusters = new WorldClusters(device);
-            this._emptyWorldClusters.name = 'ClusterEmpty';
-
-            // update it once to avoid doing it each frame
-            this._emptyWorldClusters.update([], false, null);
-        }
-
-        return this._emptyWorldClusters;
-    }
-
-    // function which splits list of lights on a a target object into separate lists of lights based on light type
-    _splitLightsArray(target) {
-        const lights = target._lights;
-        target._splitLights[LIGHTTYPE_DIRECTIONAL].length = 0;
-        target._splitLights[LIGHTTYPE_OMNI].length = 0;
-        target._splitLights[LIGHTTYPE_SPOT].length = 0;
-
-        for (let i = 0; i < lights.length; i++) {
-            const light = lights[i];
-            if (light.enabled) {
-                target._splitLights[light._type].push(light);
-            }
-        }
-    }
-
-    _update(device, clusteredLightingEnabled = false) {
+    _update() {
         const len = this.layerList.length;
-        let result = 0;
 
-        // if composition dirty flags are not set, test if layers are marked dirty
-        if (!this._dirty || !this._dirtyLights || !this._dirtyCameras) {
+        // if composition dirty flag is not set, test if layers are marked dirty
+        if (!this._dirty) {
             for (let i = 0; i < len; i++) {
-                const layer = this.layerList[i];
-                if (layer._dirty) {
+                if (this.layerList[i]._dirtyComposition) {
                     this._dirty = true;
-                }
-                if (layer._dirtyLights) {
-                    this._dirtyLights = true;
-                }
-                if (layer._dirtyCameras) {
-                    this._dirtyCameras = true;
+                    break;
                 }
             }
         }
 
-        // function adds unique meshInstances from src array into destArray. A destSet is a Set containing already
-        // existing meshInstances  to accelerate the removal of duplicates
-        // returns true if any of the materials on these meshInstances has _dirtyBlend set
-        function addUniqueMeshInstance(destArray, destSet, srcArray) {
-            let dirtyBlend = false;
-            const srcLen = srcArray.length;
-            for (let s = 0; s < srcLen; s++) {
-                const meshInst = srcArray[s];
-
-                if (!destSet.has(meshInst)) {
-                    destSet.add(meshInst);
-                    destArray.push(meshInst);
-
-                    const material = meshInst.material;
-                    if (material && material._dirtyBlend) {
-                        dirtyBlend = true;
-                        material._dirtyBlend = false;
-                    }
-                }
-            }
-            return dirtyBlend;
-        }
-
-        // rebuild this._meshInstances array - add all unique meshInstances from all layers to it
-        // also set this._dirtyBlend to true if material of any meshInstance has _dirtyBlend set, and clear those flags on materials
         if (this._dirty) {
-            result |= COMPUPDATED_INSTANCES;
-            this._meshInstances.length = 0;
-            this._meshInstancesSet.clear();
-
-            for (let i = 0; i < len; i++) {
-                const layer = this.layerList[i];
-                if (!layer.passThrough) {
-
-                    // add meshInstances from both opaque and transparent lists
-                    this._dirtyBlend = addUniqueMeshInstance(this._meshInstances, this._meshInstancesSet, layer.opaqueMeshInstances) || this._dirtyBlend;
-                    this._dirtyBlend = addUniqueMeshInstance(this._meshInstances, this._meshInstancesSet, layer.transparentMeshInstances) || this._dirtyBlend;
-                }
-
-                layer._dirty = false;
-            }
 
             this._dirty = false;
-        }
-
-        // function moves transparent or opaque meshes based on moveTransparent from src to dest array
-        function moveByBlendType(dest, src, moveTransparent) {
-            for (let s = 0; s < src.length;) {
-
-                if (src[s].material?.transparent === moveTransparent) {
-
-                    // add it to dest
-                    dest.push(src[s]);
-
-                    // remove it from src
-                    src[s] = src[src.length - 1];
-                    src.length--;
-
-                } else {
-
-                    // just skip it
-                    s++;
-                }
-            }
-        }
-
-        // for each layer, split its meshInstances to either opaque or transparent array based on material blend type
-        if (this._dirtyBlend) {
-            result |= COMPUPDATED_BLEND;
-
-            for (let i = 0; i < len; i++) {
-                const layer = this.layerList[i];
-                if (!layer.passThrough) {
-
-                    // move any opaque meshInstances from transparentMeshInstances to opaqueMeshInstances
-                    moveByBlendType(layer.opaqueMeshInstances, layer.transparentMeshInstances, false);
-
-                    // move any transparent meshInstances from opaqueMeshInstances to transparentMeshInstances
-                    moveByBlendType(layer.transparentMeshInstances, layer.opaqueMeshInstances, true);
-                }
-            }
-            this._dirtyBlend = false;
-        }
-
-        if (this._dirtyLights) {
-            result |= COMPUPDATED_LIGHTS;
-            this._dirtyLights = false;
-
-            this.updateLights();
-        }
-
-        // if meshes OR lights changed, rebuild shadow casters
-        if (result) {
-            this.updateShadowCasters();
-        }
-
-        if (this._dirtyCameras || (result & COMPUPDATED_LIGHTS)) {
-
-            this._dirtyCameras = false;
-            result |= COMPUPDATED_CAMERAS;
 
             // walk the layers and build an array of unique cameras from all layers
             this.cameras.length = 0;
             for (let i = 0; i < len; i++) {
                 const layer = this.layerList[i];
-                layer._dirtyCameras = false;
+                layer._dirtyComposition = false;
 
                 // for all cameras in the layer
                 for (let j = 0; j < layer.cameras.length; j++) {
@@ -305,9 +166,19 @@ class LayerComposition extends EventHandler {
 
             // render in order of cameras sorted by priority
             let renderActionCount = 0;
+            this.destroyRenderActions();
+
             for (let i = 0; i < this.cameras.length; i++) {
                 const camera = this.cameras[i];
                 cameraLayers.length = 0;
+
+                // if the camera uses custom render passes, only add a dummy render action to mark
+                // the place where to add them during building of the frame graph
+                if (camera.camera.renderPasses.length > 0) {
+                    this.addDummyRenderAction(renderActionCount, camera);
+                    renderActionCount++;
+                    continue;
+                }
 
                 // first render action for this camera
                 let cameraFirstRenderAction = true;
@@ -324,8 +195,8 @@ class LayerComposition extends EventHandler {
                 for (let j = 0; j < len; j++) {
 
                     const layer = this.layerList[j];
-                    const isLayerEnabled = this.subLayerEnabled[j];
-                    if (layer && isLayerEnabled) {
+                    const isLayerEnabled = layer.enabled && this.subLayerEnabled[j];
+                    if (isLayerEnabled) {
 
                         // if layer needs to be rendered
                         if (layer.cameras.length > 0) {
@@ -347,16 +218,12 @@ class LayerComposition extends EventHandler {
                                     }
                                 }
 
-                                // camera index in the layer array
-                                const cameraIndex = layer.cameras.indexOf(camera);
-                                if (cameraIndex >= 0) {
-
-                                    // add render action to describe rendering step
-                                    lastRenderAction = this.addRenderAction(this._renderActions, renderActionCount, layer, j, cameraIndex,
-                                                                            cameraFirstRenderAction, postProcessMarked);
-                                    renderActionCount++;
-                                    cameraFirstRenderAction = false;
-                                }
+                                // add render action to describe rendering step
+                                const isTransparent = this.subLayerList[j];
+                                lastRenderAction = this.addRenderAction(renderActionCount, layer, isTransparent, camera,
+                                    cameraFirstRenderAction, postProcessMarked);
+                                renderActionCount++;
+                                cameraFirstRenderAction = false;
                             }
                         }
                     }
@@ -364,9 +231,6 @@ class LayerComposition extends EventHandler {
 
                 // if the camera renders any layers.
                 if (cameraFirstRenderActionIndex < renderActionCount) {
-                    // based on all layers this camera renders, prepare a list of directional lights the camera needs to render shadow for
-                    // and set these up on the first render action for the camera.
-                    this._renderActions[cameraFirstRenderActionIndex].collectDirectionalLights(cameraLayers, this._splitLights[LIGHTTYPE_DIRECTIONAL], this._lights);
 
                     // mark the last render action as last one using the camera
                     lastRenderAction.lastCameraUse = true;
@@ -384,231 +248,32 @@ class LayerComposition extends EventHandler {
                 }
             }
 
-            // destroy unused render actions
-            for (let i = renderActionCount; i < this._renderActions.length; i++) {
-                this._renderActions[i].destroy();
-            }
-            this._renderActions.length = renderActionCount;
-        }
-
-        // allocate light clusteres if lights or meshes or cameras are modified
-        if (result & (COMPUPDATED_CAMERAS | COMPUPDATED_LIGHTS | COMPUPDATED_INSTANCES)) {
-
-            // prepare clustered lighting for render actions
-            if (clusteredLightingEnabled) {
-                this.allocateLightClusters(device);
-            }
-        }
-
-        if (result & (COMPUPDATED_LIGHTS | COMPUPDATED_LIGHTS)) {
             this._logRenderActions();
         }
-
-        return result;
     }
 
-    updateShadowCasters() {
-
-        // _lightCompositionData already has the right size, just clean up shadow casters
-        const lightCount = this._lights.length;
-        for (let i = 0; i < lightCount; i++) {
-            this._lightCompositionData[i].clearShadowCasters();
-        }
-
-        // for each layer
-        const len = this.layerList.length;
-        for (let i = 0; i < len; i++) {
-            const layer = this.layerList[i];
-
-            // layer can be in the list two times (opaque, transp), add casters only one time
-            if (!tempSet.has(layer)) {
-                tempSet.add(layer);
-
-                // for each light of a layer
-                const lights = layer._lights;
-                for (let j = 0; j < lights.length; j++) {
-
-                    // only need casters when casting shadows
-                    if (lights[j].castShadows) {
-
-                        // find its index in global light list, and get shadow casters for it
-                        const lightIndex = this._lightsMap.get(lights[j]);
-                        const lightCompData = this._lightCompositionData[lightIndex];
-
-                        // add unique meshes from the layer to casters
-                        lightCompData.addShadowCasters(layer.shadowCasters);
-                    }
-                }
-            }
-        }
-
-        tempSet.clear();
+    getNextRenderAction(renderActionIndex) {
+        Debug.assert(this._renderActions.length === renderActionIndex);
+        const renderAction = new RenderAction();
+        this._renderActions.push(renderAction);
+        return renderAction;
     }
 
-    updateLights() {
-
-        // build a list and map of all unique lights from all layers
-        this._lights.length = 0;
-        this._lightsMap.clear();
-
-        const count = this.layerList.length;
-        for (let i = 0; i < count; i++) {
-            const layer = this.layerList[i];
-
-            // layer can be in the list two times (opaque, transp), process it only one time
-            if (!tempSet.has(layer)) {
-                tempSet.add(layer);
-
-                const lights = layer._lights;
-                for (let j = 0; j < lights.length; j++) {
-                    const light = lights[j];
-
-                    // add new light
-                    let lightIndex = this._lightsMap.get(light);
-                    if (lightIndex === undefined) {
-                        lightIndex = this._lights.length;
-                        this._lightsMap.set(light, lightIndex);
-                        this._lights.push(light);
-
-                        // make sure the light has composition data allocated
-                        let lightCompData = this._lightCompositionData[lightIndex];
-                        if (!lightCompData) {
-                            lightCompData = new LightCompositionData();
-                            this._lightCompositionData[lightIndex] = lightCompData;
-                        }
-                    }
-                }
-            }
-
-            // split layer lights lists by type
-            this._splitLightsArray(layer);
-            layer._dirtyLights = false;
-        }
-
-        tempSet.clear();
-
-        // split light list by type
-        this._splitLightsArray(this);
-
-        // adjust _lightCompositionData to the right size, matching number of lights
-        const lightCount = this._lights.length;
-        this._lightCompositionData.length = lightCount;
-    }
-
-    // find existing light cluster that is compatible with specified layer
-    findCompatibleCluster(layer, renderActionCount, emptyWorldClusters) {
-
-        // check already set up render actions
-        for (let i = 0; i < renderActionCount; i++) {
-            const ra = this._renderActions[i];
-            const raLayer = this.layerList[ra.layerIndex];
-
-            // only reuse clusters if not empty
-            if (ra.lightClusters !== emptyWorldClusters) {
-
-                // if layer is the same (but different sublayer), cluster can be used directly as lights are the same
-                if (layer === raLayer) {
-                    return ra.lightClusters;
-                }
-
-                if (ra.lightClusters) {
-                    // if the layer has exactly the same set of lights, use the same cluster
-                    if (set.equals(layer._clusteredLightsSet, raLayer._clusteredLightsSet)) {
-                        return ra.lightClusters;
-                    }
-                }
-            }
-        }
-
-        // no match
-        return null;
-    }
-
-    // assign light clusters to render actions that need it
-    allocateLightClusters(device) {
-
-        // reuse previously allocated clusters
-        tempClusterArray.push(...this._worldClusters);
-
-        // the cluster with no lights
-        const emptyWorldClusters = this.getEmptyWorldClusters(device);
-
-        // start with no clusters
-        this._worldClusters.length = 0;
-
-        // process all render actions
-        const count = this._renderActions.length;
-        for (let i = 0; i < count; i++) {
-            const ra = this._renderActions[i];
-            const layer = this.layerList[ra.layerIndex];
-
-            ra.lightClusters = null;
-
-            // if the layer has lights used by clusters
-            if (layer.hasClusteredLights) {
-
-                // and if the layer has meshes
-                const transparent = this.subLayerList[ra.layerIndex];
-                const meshInstances = transparent ? layer.transparentMeshInstances : layer.opaqueMeshInstances;
-                if (meshInstances.length) {
-
-                    // reuse cluster that was already set up and is compatible
-                    let clusters = this.findCompatibleCluster(layer, i, emptyWorldClusters);
-                    if (!clusters) {
-
-                        // use already allocated cluster from before
-                        if (tempClusterArray.length) {
-                            clusters = tempClusterArray.pop();
-                        }
-
-                        // create new cluster
-                        if (!clusters) {
-                            clusters = new WorldClusters(device);
-                        }
-
-                        clusters.name = 'Cluster-' + this._worldClusters.length;
-                        this._worldClusters.push(clusters);
-                    }
-
-                    ra.lightClusters = clusters;
-                }
-            }
-
-            // no clustered lights, use the cluster with no lights
-            if (!ra.lightClusters) {
-                ra.lightClusters = emptyWorldClusters;
-            }
-        }
-
-        // delete leftovers
-        tempClusterArray.forEach((item) => {
-            item.destroy();
-        });
-        tempClusterArray.length = 0;
+    addDummyRenderAction(renderActionIndex, camera) {
+        const renderAction = this.getNextRenderAction(renderActionIndex);
+        renderAction.camera = camera;
+        renderAction.useCameraPasses = true;
     }
 
     // function adds new render action to a list, while trying to limit allocation and reuse already allocated objects
-    addRenderAction(renderActions, renderActionIndex, layer, layerIndex, cameraIndex, cameraFirstRenderAction, postProcessMarked) {
+    addRenderAction(renderActionIndex, layer, isTransparent, camera, cameraFirstRenderAction, postProcessMarked) {
 
-        // try and reuse object, otherwise allocate new
-        /** @type {RenderAction} */
-        let renderAction = renderActions[renderActionIndex];
-        if (!renderAction) {
-            renderAction = renderActions[renderActionIndex] = new RenderAction();
-        }
-
-        // render target from the camera takes precedence over the render target from the layer
-        let rt = layer.renderTarget;
-        /** @type {import('../../framework/components/camera/component.js').CameraComponent} */
-        const camera = layer.cameras[cameraIndex];
-        if (camera && camera.renderTarget) {
-            if (layer.id !== LAYERID_DEPTH) {   // ignore depth layer
-                rt = camera.renderTarget;
-            }
-        }
+        // camera's render target, ignoring depth layer
+        let rt = layer.id !== LAYERID_DEPTH ? camera.renderTarget : null;
 
         // was camera and render target combo used already
         let used = false;
+        const renderActions = this._renderActions;
         for (let i = renderActionIndex - 1; i >= 0; i--) {
             if (renderActions[i].camera === camera && renderActions[i].renderTarget === rt) {
                 used = true;
@@ -616,36 +281,29 @@ class LayerComposition extends EventHandler {
             }
         }
 
-        // clear flags - use camera clear flags in the first render action for each camera,
-        // or when render target (from layer) was not yet cleared by this camera
-        const needsClear = cameraFirstRenderAction || !used;
-        let clearColor = needsClear ? camera.clearColorBuffer : false;
-        let clearDepth = needsClear ? camera.clearDepthBuffer : false;
-        let clearStencil = needsClear ? camera.clearStencilBuffer : false;
-
-        // clear buffers if requested by the layer
-        clearColor ||= layer.clearColorBuffer;
-        clearDepth ||= layer.clearDepthBuffer;
-        clearStencil ||= layer.clearStencilBuffer;
-
         // for cameras with post processing enabled, on layers after post processing has been applied already (so UI and similar),
         // don't render them to render target anymore
         if (postProcessMarked && camera.postEffectsEnabled) {
             rt = null;
         }
 
-        // store the properties - write all as we reuse previously allocated class instances
-        renderAction.reset();
+        // store the properties
+        const renderAction = this.getNextRenderAction(renderActionIndex);
         renderAction.triggerPostprocess = false;
-        renderAction.layerIndex = layerIndex;
-        renderAction.cameraIndex = cameraIndex;
+        renderAction.layer = layer;
+        renderAction.transparent = isTransparent;
         renderAction.camera = camera;
         renderAction.renderTarget = rt;
-        renderAction.clearColor = clearColor;
-        renderAction.clearDepth = clearDepth;
-        renderAction.clearStencil = clearStencil;
         renderAction.firstCameraUse = cameraFirstRenderAction;
         renderAction.lastCameraUse = false;
+
+        // clear flags - use camera clear flags in the first render action for each camera,
+        // or when render target (from layer) was not yet cleared by this camera
+        const needsCameraClear = cameraFirstRenderAction || !used;
+        const needsLayerClear = layer.clearColorBuffer || layer.clearDepthBuffer || layer.clearStencilBuffer;
+        if (needsCameraClear || needsLayerClear) {
+            renderAction.setupClears(needsCameraClear ? camera : undefined, layer);
+        }
 
         return renderAction;
     }
@@ -657,7 +315,7 @@ class LayerComposition extends EventHandler {
         for (let a = startIndex; a >= 0; a--) {
 
             const ra = this._renderActions[a];
-            const layer = this.layerList[ra.layerIndex];
+            const layer = ra.layer;
 
             // if we hit render action with a render target (other than depth layer), that marks the end of camera stack
             // TODO: refactor this as part of depth layer refactoring
@@ -668,6 +326,11 @@ class LayerComposition extends EventHandler {
             // skip over depth layer
             if (layer.id === LAYERID_DEPTH) {
                 continue;
+            }
+
+            // end of stacking if camera with custom render passes
+            if (ra.useCameraPasses) {
+                break;
             }
 
             // camera stack ends when viewport or scissor of the camera changes
@@ -688,51 +351,46 @@ class LayerComposition extends EventHandler {
 
         // #if _DEBUG
         if (Tracing.get(TRACEID_RENDER_ACTION)) {
-            Debug.trace(TRACEID_RENDER_ACTION, 'Render Actions for composition: ' + this.name);
+            Debug.trace(TRACEID_RENDER_ACTION, `Render Actions for composition: ${this.name}`);
             for (let i = 0; i < this._renderActions.length; i++) {
                 const ra = this._renderActions[i];
-                const layerIndex = ra.layerIndex;
-                const layer = this.layerList[layerIndex];
-                const enabled = layer.enabled && this.subLayerEnabled[layerIndex];
-                const transparent = this.subLayerList[layerIndex];
-                const camera = layer.cameras[ra.cameraIndex];
-                const dirLightCount = ra.directionalLights.length;
-                const clear = (ra.clearColor ? 'Color ' : '..... ') + (ra.clearDepth ? 'Depth ' : '..... ') + (ra.clearStencil ? 'Stencil' : '.......');
+                const camera = ra.camera;
+                if (ra.useCameraPasses) {
+                    Debug.trace(TRACEID_RENDER_ACTION, `${i
+                    }CustomPasses Cam: ${camera ? camera.entity.name : '-'}`);
+                } else {
+                    const layer = ra.layer;
+                    const enabled = layer.enabled && this.isEnabled(layer, ra.transparent);
+                    const clear = (ra.clearColor ? 'Color ' : '..... ') + (ra.clearDepth ? 'Depth ' : '..... ') + (ra.clearStencil ? 'Stencil' : '.......');
 
-                Debug.trace(TRACEID_RENDER_ACTION, i +
-                    (' Cam: ' + (camera ? camera.entity.name : '-')).padEnd(22, ' ') +
-                    (' Lay: ' + layer.name).padEnd(22, ' ') +
-                    (transparent ? ' TRANSP' : ' OPAQUE') +
-                    (enabled ? ' ENABLED ' : ' DISABLED') +
-                    ' Meshes: ', (transparent ? layer.transparentMeshInstances.length : layer.opaqueMeshInstances.length).toString().padStart(4) +
-                    (' RT: ' + (ra.renderTarget ? ra.renderTarget.name : '-')).padEnd(30, ' ') +
-                    ' Clear: ' + clear +
-                    ' Lights: (' + layer._clusteredLightsSet.size + '/' + layer._lightsSet.size + ')' +
-                    ' ' + (ra.lightClusters !== this._emptyWorldClusters ? (ra.lightClusters.name) : '').padEnd(10, ' ') +
-                    (ra.firstCameraUse ? ' CAM-FIRST' : '') +
-                    (ra.lastCameraUse ? ' CAM-LAST' : '') +
-                    (ra.triggerPostprocess ? ' POSTPROCESS' : '') +
-                    (dirLightCount ? (' DirLights: ' + dirLightCount) : '')
-                );
+                    Debug.trace(TRACEID_RENDER_ACTION, `${i +
+                        (` Cam: ${camera ? camera.entity.name : '-'}`).padEnd(22, ' ') +
+                        (` Lay: ${layer.name}`).padEnd(22, ' ') +
+                        (ra.transparent ? ' TRANSP' : ' OPAQUE') +
+                        (enabled ? ' ENABLED ' : ' DISABLED') +
+                        (` RT: ${ra.renderTarget ? ra.renderTarget.name : '-'}`).padEnd(30, ' ')
+                    } Clear: ${clear
+                    }${ra.firstCameraUse ? ' CAM-FIRST' : ''
+                    }${ra.lastCameraUse ? ' CAM-LAST' : ''
+                    }${ra.triggerPostprocess ? ' POSTPROCESS' : ''}`
+                    );
+                }
             }
         }
         // #endif
     }
 
     _isLayerAdded(layer) {
-        if (this.layerList.indexOf(layer) >= 0) {
-            Debug.error('Layer is already added.');
-            return true;
-        }
-        return false;
+        const found = this.layerIdMap.get(layer.id) === layer;
+        Debug.assert(!found, `Layer is already added: ${layer.name}`);
+        return found;
     }
 
     _isSublayerAdded(layer, transparent) {
-        for (let i = 0; i < this.layerList.length; i++) {
-            if (this.layerList[i] === layer && this.subLayerList[i] === transparent) {
-                Debug.error('Sublayer is already added.');
-                return true;
-            }
+        const map = transparent ? this.layerTransparentIndexMap : this.layerOpaqueIndexMap;
+        if (map.get(layer) !== undefined) {
+            Debug.error(`Sublayer ${layer.name}, transparent: ${transparent} is already added.`);
+            return true;
         }
         return false;
     }
@@ -742,7 +400,7 @@ class LayerComposition extends EventHandler {
     /**
      * Adds a layer (both opaque and semi-transparent parts) to the end of the {@link LayerComposition#layerList}.
      *
-     * @param {import('../layer.js').Layer} layer - A {@link Layer} to add.
+     * @param {Layer} layer - A {@link Layer} to add.
      */
     push(layer) {
         // add both opaque and transparent to the end of the array
@@ -753,9 +411,9 @@ class LayerComposition extends EventHandler {
         this._transparentOrder[layer.id] = this.subLayerList.push(true) - 1;
         this.subLayerEnabled.push(true);
         this.subLayerEnabled.push(true);
+
+        this._updateLayerMaps();
         this._dirty = true;
-        this._dirtyLights = true;
-        this._dirtyCameras = true;
         this.fire('add', layer);
     }
 
@@ -763,7 +421,7 @@ class LayerComposition extends EventHandler {
      * Inserts a layer (both opaque and semi-transparent parts) at the chosen index in the
      * {@link LayerComposition#layerList}.
      *
-     * @param {import('../layer.js').Layer} layer - A {@link Layer} to add.
+     * @param {Layer} layer - A {@link Layer} to add.
      * @param {number} index - Insertion position.
      */
     insert(layer, index) {
@@ -776,16 +434,16 @@ class LayerComposition extends EventHandler {
         this._updateOpaqueOrder(index, count - 1);
         this._updateTransparentOrder(index, count - 1);
         this.subLayerEnabled.splice(index, 0, true, true);
+
+        this._updateLayerMaps();
         this._dirty = true;
-        this._dirtyLights = true;
-        this._dirtyCameras = true;
         this.fire('add', layer);
     }
 
     /**
      * Removes a layer (both opaque and semi-transparent parts) from {@link LayerComposition#layerList}.
      *
-     * @param {import('../layer.js').Layer} layer - A {@link Layer} to remove.
+     * @param {Layer} layer - A {@link Layer} to remove.
      */
     remove(layer) {
         // remove all occurrences of a layer
@@ -800,8 +458,6 @@ class LayerComposition extends EventHandler {
             this.subLayerEnabled.splice(id, 1);
             id = this.layerList.indexOf(layer);
             this._dirty = true;
-            this._dirtyLights = true;
-            this._dirtyCameras = true;
             this.fire('remove', layer);
         }
 
@@ -809,6 +465,7 @@ class LayerComposition extends EventHandler {
         const count = this.layerList.length;
         this._updateOpaqueOrder(0, count - 1);
         this._updateTransparentOrder(0, count - 1);
+        this._updateLayerMaps();
     }
 
     // Sublayer API
@@ -817,7 +474,7 @@ class LayerComposition extends EventHandler {
      * Adds part of the layer with opaque (non semi-transparent) objects to the end of the
      * {@link LayerComposition#layerList}.
      *
-     * @param {import('../layer.js').Layer} layer - A {@link Layer} to add.
+     * @param {Layer} layer - A {@link Layer} to add.
      */
     pushOpaque(layer) {
         // add opaque to the end of the array
@@ -825,9 +482,9 @@ class LayerComposition extends EventHandler {
         this.layerList.push(layer);
         this._opaqueOrder[layer.id] = this.subLayerList.push(false) - 1;
         this.subLayerEnabled.push(true);
+
+        this._updateLayerMaps();
         this._dirty = true;
-        this._dirtyLights = true;
-        this._dirtyCameras = true;
         this.fire('add', layer);
     }
 
@@ -835,7 +492,7 @@ class LayerComposition extends EventHandler {
      * Inserts an opaque part of the layer (non semi-transparent mesh instances) at the chosen
      * index in the {@link LayerComposition#layerList}.
      *
-     * @param {import('../layer.js').Layer} layer - A {@link Layer} to add.
+     * @param {Layer} layer - A {@link Layer} to add.
      * @param {number} index - Insertion position.
      */
     insertOpaque(layer, index) {
@@ -848,9 +505,9 @@ class LayerComposition extends EventHandler {
         this._updateOpaqueOrder(index, count - 1);
 
         this.subLayerEnabled.splice(index, 0, true);
+
+        this._updateLayerMaps();
         this._dirty = true;
-        this._dirtyLights = true;
-        this._dirtyCameras = true;
         this.fire('add', layer);
     }
 
@@ -858,7 +515,7 @@ class LayerComposition extends EventHandler {
      * Removes an opaque part of the layer (non semi-transparent mesh instances) from
      * {@link LayerComposition#layerList}.
      *
-     * @param {import('../layer.js').Layer} layer - A {@link Layer} to remove.
+     * @param {Layer} layer - A {@link Layer} to remove.
      */
     removeOpaque(layer) {
         // remove opaque occurrences of a layer
@@ -872,20 +529,19 @@ class LayerComposition extends EventHandler {
 
                 this.subLayerEnabled.splice(i, 1);
                 this._dirty = true;
-                this._dirtyLights = true;
-                this._dirtyCameras = true;
                 if (this.layerList.indexOf(layer) < 0) {
                     this.fire('remove', layer); // no sublayers left
                 }
-                return;
+                break;
             }
         }
+        this._updateLayerMaps();
     }
 
     /**
      * Adds part of the layer with semi-transparent objects to the end of the {@link LayerComposition#layerList}.
      *
-     * @param {import('../layer.js').Layer} layer - A {@link Layer} to add.
+     * @param {Layer} layer - A {@link Layer} to add.
      */
     pushTransparent(layer) {
         // add transparent to the end of the array
@@ -893,16 +549,16 @@ class LayerComposition extends EventHandler {
         this.layerList.push(layer);
         this._transparentOrder[layer.id] = this.subLayerList.push(true) - 1;
         this.subLayerEnabled.push(true);
+
+        this._updateLayerMaps();
         this._dirty = true;
-        this._dirtyLights = true;
-        this._dirtyCameras = true;
         this.fire('add', layer);
     }
 
     /**
      * Inserts a semi-transparent part of the layer at the chosen index in the {@link LayerComposition#layerList}.
      *
-     * @param {import('../layer.js').Layer} layer - A {@link Layer} to add.
+     * @param {Layer} layer - A {@link Layer} to add.
      * @param {number} index - Insertion position.
      */
     insertTransparent(layer, index) {
@@ -915,16 +571,16 @@ class LayerComposition extends EventHandler {
         this._updateTransparentOrder(index, count - 1);
 
         this.subLayerEnabled.splice(index, 0, true);
+
+        this._updateLayerMaps();
         this._dirty = true;
-        this._dirtyLights = true;
-        this._dirtyCameras = true;
         this.fire('add', layer);
     }
 
     /**
      * Removes a transparent part of the layer from {@link LayerComposition#layerList}.
      *
-     * @param {import('../layer.js').Layer} layer - A {@link Layer} to remove.
+     * @param {Layer} layer - A {@link Layer} to remove.
      */
     removeTransparent(layer) {
         // remove transparent occurrences of a layer
@@ -938,77 +594,88 @@ class LayerComposition extends EventHandler {
 
                 this.subLayerEnabled.splice(i, 1);
                 this._dirty = true;
-                this._dirtyLights = true;
-                this._dirtyCameras = true;
                 if (this.layerList.indexOf(layer) < 0) {
                     this.fire('remove', layer); // no sublayers left
                 }
-                return;
+                break;
             }
         }
-    }
-
-    _getSublayerIndex(layer, transparent) {
-        // find sublayer index in the composition array
-        let id = this.layerList.indexOf(layer);
-        if (id < 0) return -1;
-
-        if (this.subLayerList[id] !== transparent) {
-            id = this.layerList.indexOf(layer, id + 1);
-            if (id < 0) return -1;
-            if (this.subLayerList[id] !== transparent) {
-                return -1;
-            }
-        }
-        return id;
+        this._updateLayerMaps();
     }
 
     /**
      * Gets index of the opaque part of the supplied layer in the {@link LayerComposition#layerList}.
      *
-     * @param {import('../layer.js').Layer} layer - A {@link Layer} to find index of.
-     * @returns {number} The index of the opaque part of the specified layer.
+     * @param {Layer} layer - A {@link Layer} to find index of.
+     * @returns {number} The index of the opaque part of the specified layer, or -1 if it is not
+     * part of the composition.
      */
     getOpaqueIndex(layer) {
-        return this._getSublayerIndex(layer, false);
+        return this.layerOpaqueIndexMap.get(layer) ?? -1;
     }
 
     /**
      * Gets index of the semi-transparent part of the supplied layer in the {@link LayerComposition#layerList}.
      *
-     * @param {import('../layer.js').Layer} layer - A {@link Layer} to find index of.
-     * @returns {number} The index of the semi-transparent part of the specified layer.
+     * @param {Layer} layer - A {@link Layer} to find index of.
+     * @returns {number} The index of the semi-transparent part of the specified layer, or -1 if it
+     * is not part of the composition.
      */
     getTransparentIndex(layer) {
-        return this._getSublayerIndex(layer, true);
+        return this.layerTransparentIndexMap.get(layer) ?? -1;
+    }
+
+    isEnabled(layer, transparent) {
+        if (layer.enabled) {
+            const index = transparent ? this.getTransparentIndex(layer) : this.getOpaqueIndex(layer);
+            if (index >= 0) {
+                return this.subLayerEnabled[index];
+            }
+        }
+        return false;
+    }
+
+    /**
+     * Update maps of layer IDs and names to match the layer list.
+     *
+     * @private
+     */
+    _updateLayerMaps() {
+        this.layerIdMap.clear();
+        this.layerNameMap.clear();
+        this.layerOpaqueIndexMap.clear();
+        this.layerTransparentIndexMap.clear();
+
+        for (let i = 0; i < this.layerList.length; i++) {
+            const layer = this.layerList[i];
+            this.layerIdMap.set(layer.id, layer);
+            this.layerNameMap.set(layer.name, layer);
+
+            const subLayerIndexMap = this.subLayerList[i] ? this.layerTransparentIndexMap : this.layerOpaqueIndexMap;
+            subLayerIndexMap.set(layer, i);
+        }
     }
 
     /**
      * Finds a layer inside this composition by its ID. Null is returned, if nothing is found.
      *
      * @param {number} id - An ID of the layer to find.
-     * @returns {import('../layer.js').Layer|null} The layer corresponding to the specified ID.
-     * Returns null if layer is not found.
+     * @returns {Layer|null} The layer corresponding to the specified ID. Returns null if layer is
+     * not found.
      */
     getLayerById(id) {
-        for (let i = 0; i < this.layerList.length; i++) {
-            if (this.layerList[i].id === id) return this.layerList[i];
-        }
-        return null;
+        return this.layerIdMap.get(id) ?? null;
     }
 
     /**
      * Finds a layer inside this composition by its name. Null is returned, if nothing is found.
      *
      * @param {string} name - The name of the layer to find.
-     * @returns {import('../layer.js').Layer|null} The layer corresponding to the specified name.
-     * Returns null if layer is not found.
+     * @returns {Layer|null} The layer corresponding to the specified name. Returns null if layer
+     * is not found.
      */
     getLayerByName(name) {
-        for (let i = 0; i < this.layerList.length; i++) {
-            if (this.layerList[i].name === name) return this.layerList[i];
-        }
-        return null;
+        return this.layerNameMap.get(name) ?? null;
     }
 
     _updateOpaqueOrder(startIndex, endIndex) {

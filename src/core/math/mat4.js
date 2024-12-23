@@ -3,6 +3,10 @@ import { Vec2 } from './vec2.js';
 import { Vec3 } from './vec3.js';
 import { Vec4 } from './vec4.js';
 
+/**
+ * @import { Quat } from './quat.js'
+ */
+
 const _halfSize = new Vec2();
 const x = new Vec3();
 const y = new Vec3();
@@ -11,6 +15,8 @@ const scale = new Vec3();
 
 /**
  * A 4x4 matrix.
+ *
+ * @category Math
  */
 class Mat4 {
     /**
@@ -391,9 +397,7 @@ class Mat4 {
     transformPoint(vec, res = new Vec3()) {
         const m = this.data;
 
-        const x = vec.x;
-        const y = vec.y;
-        const z = vec.z;
+        const { x, y, z } = vec;
 
         res.x = x * m[0] + y * m[4] + z * m[8] + m[12];
         res.y = x * m[1] + y * m[5] + z * m[9] + m[13];
@@ -421,9 +425,7 @@ class Mat4 {
     transformVector(vec, res = new Vec3()) {
         const m = this.data;
 
-        const x = vec.x;
-        const y = vec.y;
-        const z = vec.z;
+        const { x, y, z } = vec;
 
         res.x = x * m[0] + y * m[4] + z * m[8];
         res.y = x * m[1] + y * m[5] + z * m[9];
@@ -454,10 +456,7 @@ class Mat4 {
     transformVec4(vec, res = new Vec4()) {
         const m = this.data;
 
-        const x = vec.x;
-        const y = vec.y;
-        const z = vec.z;
-        const w = vec.w;
+        const { x, y, z, w } = vec;
 
         res.x = x * m[0] + y * m[4] + z * m[8] + w * m[12];
         res.y = x * m[1] + y * m[5] + z * m[9] + w * m[13];
@@ -572,8 +571,8 @@ class Mat4 {
      * (width / height).
      * @param {number} znear - The near clip plane in eye coordinates.
      * @param {number} zfar - The far clip plane in eye coordinates.
-     * @param {boolean} [fovIsHorizontal=false] - Set to true to treat the fov as horizontal
-     * (x-axis) and false for vertical (y-axis). Defaults to false.
+     * @param {boolean} [fovIsHorizontal] - Set to true to treat the fov as horizontal (x-axis) and
+     * false for vertical (y-axis). Defaults to false.
      * @returns {Mat4} Self for chaining.
      * @example
      * // Create a 4x4 perspective projection matrix
@@ -640,9 +639,7 @@ class Mat4 {
     setFromAxisAngle(axis, angle) {
         angle *= math.DEG_TO_RAD;
 
-        const x = axis.x;
-        const y = axis.y;
-        const z = axis.z;
+        const { x, y, z } = axis;
         const c = Math.cos(angle);
         const s = Math.sin(angle);
         const t = 1 - c;
@@ -814,8 +811,9 @@ class Mat4 {
     }
 
     /**
-     * Sets the specified matrix to its inverse.
+     * Sets the matrix to the inverse of a source matrix.
      *
+     * @param {Mat4} [src] - The matrix to invert. If not set, the matrix is inverted in-place.
      * @returns {Mat4} Self for chaining.
      * @example
      * // Create a 4x4 rotation matrix of 180 degrees around the y-axis
@@ -824,25 +822,25 @@ class Mat4 {
      * // Invert in place
      * rot.invert();
      */
-    invert() {
-        const m = this.data;
+    invert(src = this) {
+        const s = src.data;
 
-        const a00 = m[0];
-        const a01 = m[1];
-        const a02 = m[2];
-        const a03 = m[3];
-        const a10 = m[4];
-        const a11 = m[5];
-        const a12 = m[6];
-        const a13 = m[7];
-        const a20 = m[8];
-        const a21 = m[9];
-        const a22 = m[10];
-        const a23 = m[11];
-        const a30 = m[12];
-        const a31 = m[13];
-        const a32 = m[14];
-        const a33 = m[15];
+        const a00 = s[0];
+        const a01 = s[1];
+        const a02 = s[2];
+        const a03 = s[3];
+        const a10 = s[4];
+        const a11 = s[5];
+        const a12 = s[6];
+        const a13 = s[7];
+        const a20 = s[8];
+        const a21 = s[9];
+        const a22 = s[10];
+        const a23 = s[11];
+        const a30 = s[12];
+        const a31 = s[13];
+        const a32 = s[14];
+        const a33 = s[15];
 
         const b00 = a00 * a11 - a01 * a10;
         const b01 = a00 * a12 - a02 * a10;
@@ -862,23 +860,24 @@ class Mat4 {
             this.setIdentity();
         } else {
             const invDet = 1 / det;
+            const t = this.data;
 
-            m[0] = (a11 * b11 - a12 * b10 + a13 * b09) * invDet;
-            m[1] = (-a01 * b11 + a02 * b10 - a03 * b09) * invDet;
-            m[2] = (a31 * b05 - a32 * b04 + a33 * b03) * invDet;
-            m[3] = (-a21 * b05 + a22 * b04 - a23 * b03) * invDet;
-            m[4] = (-a10 * b11 + a12 * b08 - a13 * b07) * invDet;
-            m[5] = (a00 * b11 - a02 * b08 + a03 * b07) * invDet;
-            m[6] = (-a30 * b05 + a32 * b02 - a33 * b01) * invDet;
-            m[7] = (a20 * b05 - a22 * b02 + a23 * b01) * invDet;
-            m[8] = (a10 * b10 - a11 * b08 + a13 * b06) * invDet;
-            m[9] = (-a00 * b10 + a01 * b08 - a03 * b06) * invDet;
-            m[10] = (a30 * b04 - a31 * b02 + a33 * b00) * invDet;
-            m[11] = (-a20 * b04 + a21 * b02 - a23 * b00) * invDet;
-            m[12] = (-a10 * b09 + a11 * b07 - a12 * b06) * invDet;
-            m[13] = (a00 * b09 - a01 * b07 + a02 * b06) * invDet;
-            m[14] = (-a30 * b03 + a31 * b01 - a32 * b00) * invDet;
-            m[15] = (a20 * b03 - a21 * b01 + a22 * b00) * invDet;
+            t[0] = (a11 * b11 - a12 * b10 + a13 * b09) * invDet;
+            t[1] = (-a01 * b11 + a02 * b10 - a03 * b09) * invDet;
+            t[2] = (a31 * b05 - a32 * b04 + a33 * b03) * invDet;
+            t[3] = (-a21 * b05 + a22 * b04 - a23 * b03) * invDet;
+            t[4] = (-a10 * b11 + a12 * b08 - a13 * b07) * invDet;
+            t[5] = (a00 * b11 - a02 * b08 + a03 * b07) * invDet;
+            t[6] = (-a30 * b05 + a32 * b02 - a33 * b01) * invDet;
+            t[7] = (a20 * b05 - a22 * b02 + a23 * b01) * invDet;
+            t[8] = (a10 * b10 - a11 * b08 + a13 * b06) * invDet;
+            t[9] = (-a00 * b10 + a01 * b08 - a03 * b06) * invDet;
+            t[10] = (a30 * b04 - a31 * b02 + a33 * b00) * invDet;
+            t[11] = (-a20 * b04 + a21 * b02 - a23 * b00) * invDet;
+            t[12] = (-a10 * b09 + a11 * b07 - a12 * b06) * invDet;
+            t[13] = (a00 * b09 - a01 * b07 + a02 * b06) * invDet;
+            t[14] = (-a30 * b03 + a31 * b01 - a32 * b00) * invDet;
+            t[15] = (a20 * b03 - a21 * b01 + a22 * b00) * invDet;
         }
 
         return this;
@@ -949,7 +948,7 @@ class Mat4 {
      * scale.
      *
      * @param {Vec3} t - A 3-d vector translation.
-     * @param {import('./quat.js').Quat} r - A quaternion rotation.
+     * @param {Quat} r - A quaternion rotation.
      * @param {Vec3} s - A 3-d vector scale.
      * @returns {Mat4} Self for chaining.
      * @example
@@ -1009,8 +1008,9 @@ class Mat4 {
     }
 
     /**
-     * Sets the specified matrix to its transpose.
+     * Sets the matrix to the transpose of a source matrix.
      *
+     * @param {Mat4} [src] - The matrix to transpose. If not set, the matrix is transposed in-place.
      * @returns {Mat4} Self for chaining.
      * @example
      * const m = new pc.Mat4();
@@ -1018,79 +1018,54 @@ class Mat4 {
      * // Transpose in place
      * m.transpose();
      */
-    transpose() {
-        let tmp;
-        const m = this.data;
+    transpose(src = this) {
+        const s = src.data;
+        const t = this.data;
 
-        tmp = m[1];
-        m[1] = m[4];
-        m[4] = tmp;
+        if (s === t) {
+            let tmp;
 
-        tmp = m[2];
-        m[2] = m[8];
-        m[8] = tmp;
+            tmp = s[1];
+            t[1] = s[4];
+            t[4] = tmp;
 
-        tmp = m[3];
-        m[3] = m[12];
-        m[12] = tmp;
+            tmp = s[2];
+            t[2] = s[8];
+            t[8] = tmp;
 
-        tmp = m[6];
-        m[6] = m[9];
-        m[9] = tmp;
+            tmp = s[3];
+            t[3] = s[12];
+            t[12] = tmp;
 
-        tmp = m[7];
-        m[7] = m[13];
-        m[13] = tmp;
+            tmp = s[6];
+            t[6] = s[9];
+            t[9] = tmp;
 
-        tmp = m[11];
-        m[11] = m[14];
-        m[14] = tmp;
+            tmp = s[7];
+            t[7] = s[13];
+            t[13] = tmp;
 
-        return this;
-    }
-
-    invertTo3x3(res) {
-        const m = this.data;
-        const r = res.data;
-
-        const m0 = m[0];
-        const m1 = m[1];
-        const m2 = m[2];
-
-        const m4 = m[4];
-        const m5 = m[5];
-        const m6 = m[6];
-
-        const m8 = m[8];
-        const m9 = m[9];
-        const m10 = m[10];
-
-        const a11 =  m10 * m5 - m6 * m9;
-        const a21 = -m10 * m1 + m2 * m9;
-        const a31 =  m6  * m1 - m2 * m5;
-        const a12 = -m10 * m4 + m6 * m8;
-        const a22 =  m10 * m0 - m2 * m8;
-        const a32 = -m6  * m0 + m2 * m4;
-        const a13 =  m9  * m4 - m5 * m8;
-        const a23 = -m9  * m0 + m1 * m8;
-        const a33 =  m5  * m0 - m1 * m4;
-
-        const det =  m0 * a11 + m1 * a12 + m2 * a13;
-        if (det === 0) { // no inverse
-            return this;
+            tmp = s[11];
+            t[11] = s[14];
+            t[14] = tmp;
+        } else {
+            t[0] = s[0];
+            t[1] = s[4];
+            t[2] = s[8];
+            t[3] = s[12];
+            t[4] = s[1];
+            t[5] = s[5];
+            t[6] = s[9];
+            t[7] = s[13];
+            t[8] = s[2];
+            t[9] = s[6];
+            t[10] = s[10];
+            t[11] = s[14];
+            t[12] = s[3];
+            t[13] = s[7];
+            t[14] = s[11];
+            t[15] = s[15];
         }
-
-        const idet = 1 / det;
-
-        r[0] = idet * a11;
-        r[1] = idet * a21;
-        r[2] = idet * a31;
-        r[3] = idet * a12;
-        r[4] = idet * a22;
-        r[5] = idet * a32;
-        r[6] = idet * a13;
-        r[7] = idet * a23;
-        r[8] = idet * a33;
 
         return this;
     }
@@ -1267,8 +1242,9 @@ class Mat4 {
         const sy = scale.y;
         const sz = scale.z;
 
-        if (sx === 0 || sy === 0 || sz === 0)
+        if (sx === 0 || sy === 0 || sz === 0) {
             return eulers.set(0, 0, 0);
+        }
 
         const m = this.data;
 
@@ -1305,7 +1281,7 @@ class Mat4 {
      * console.log(m.toString());
      */
     toString() {
-        return '[' + this.data.join(', ') + ']';
+        return `[${this.data.join(', ')}]`;
     }
 
     /**

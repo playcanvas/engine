@@ -1,6 +1,10 @@
 import { math } from '../../core/math/math.js';
-
 import { hasAudioContext } from './capabilities.js';
+
+/**
+ * @import { SoundManager } from '../sound/manager.js'
+ * @import { Sound } from '../sound/sound.js'
+ */
 
 /**
  * A channel is created when the {@link SoundManager} begins playback of a {@link Sound}. Usually
@@ -13,13 +17,13 @@ class Channel {
     /**
      * Create a new Channel instance.
      *
-     * @param {import('../sound/manager.js').SoundManager} manager - The SoundManager instance.
-     * @param {import('../sound/sound.js').Sound} sound - The sound to playback.
+     * @param {SoundManager} manager - The SoundManager instance.
+     * @param {Sound} sound - The sound to playback.
      * @param {object} [options] - Optional options object.
-     * @param {number} [options.volume=1] - The playback volume, between 0 and 1.
-     * @param {number} [options.pitch=1] - The relative pitch, default of 1, plays at normal pitch.
-     * @param {boolean} [options.loop=false] - Whether the sound should loop when it reaches the
-     * end or not.
+     * @param {number} [options.volume] - The playback volume, between 0 and 1. Defaults to 1.
+     * @param {number} [options.pitch] - The relative pitch. Defaults to 1 (plays at normal pitch).
+     * @param {boolean} [options.loop] - Whether the sound should loop when it reaches the
+     * end or not. Defaults to false.
      */
     constructor(manager, sound, options = {}) {
         this.volume = options.volume ?? 1;
@@ -33,6 +37,7 @@ class Channel {
 
         this.manager = manager;
 
+        /** @type {globalThis.Node | null} */
         this.source = null;
 
         if (hasAudioContext()) {
@@ -142,8 +147,9 @@ class Channel {
         this.manager.on('resume', this.onManagerResume, this);
 
         // suspend immediately if manager is suspended
-        if (this.manager.suspended)
+        if (this.manager.suspended) {
             this.onManagerSuspend();
+        }
     }
 
     /**
@@ -262,8 +268,9 @@ if (!hasAudioContext()) {
             this.manager.on('resume', this.onManagerResume, this);
 
             // suspend immediately if manager is suspended
-            if (this.manager.suspended)
+            if (this.manager.suspended) {
                 this.onManagerSuspend();
+            }
 
         },
 

@@ -1,21 +1,22 @@
-import { Application } from '../../../src/framework/application.js';
-import { Asset } from '../../../src/framework/asset/asset.js';
-
-import { HTMLCanvasElement } from '@playcanvas/canvas-mock';
-
 import { expect } from 'chai';
+
+import { Asset } from '../../../src/framework/asset/asset.js';
+import { createApp } from '../../app.mjs';
+import { jsdomSetup, jsdomTeardown } from '../../jsdom.mjs';
 
 describe('Asset', function () {
 
     let app;
 
     beforeEach(function () {
-        const canvas = new HTMLCanvasElement(500, 500);
-        app = new Application(canvas);
+        jsdomSetup();
+        app = createApp();
     });
 
     afterEach(function () {
-        app.destroy();
+        app?.destroy();
+        app = null;
+        jsdomTeardown();
     });
 
     const DEFAULT_LOCALE_FALLBACKS = {
@@ -74,7 +75,7 @@ describe('Asset', function () {
 
             let id = 1;
             for (const key in DEFAULT_LOCALE_FALLBACKS) {
-                asset.addLocalizedAssetId(key + '-test', 1000 + id); // add other locale with same language which shouldn't be used
+                asset.addLocalizedAssetId(`${key}-test`, 1000 + id); // add other locale with same language which shouldn't be used
                 asset.addLocalizedAssetId(DEFAULT_LOCALE_FALLBACKS[key], 2000 + id);
                 id++;
             }

@@ -1,11 +1,16 @@
-import { ADDRESS_CLAMP_TO_EDGE, FILTER_NEAREST, PIXELFORMAT_RGBA8 } from '../../../platform/graphics/constants.js';
+import { ADDRESS_CLAMP_TO_EDGE, FILTER_NEAREST, PIXELFORMAT_RGBA16F, PIXELFORMAT_RGBA32F, PIXELFORMAT_RGBA8, PIXELFORMAT_SRGBA8 } from '../../../platform/graphics/constants.js';
 import { DebugGraphics } from '../../../platform/graphics/debug-graphics.js';
 import { RenderTarget } from '../../../platform/graphics/render-target.js';
 import { Texture } from '../../../platform/graphics/texture.js';
-
 import { LAYERID_DEPTH } from '../../../scene/constants.js';
 
-class PostEffect {
+/**
+ * @import { AppBase } from '../../app-base.js'
+ * @import { CameraComponent } from './component.js'
+ * @import { PostEffect } from '../../../scene/graphics/post-effect.js'
+ */
+
+class PostEffectEntry {
     constructor(effect, inputTarget) {
         this.effect = effect;
         this.inputTarget = inputTarget;
@@ -16,13 +21,15 @@ class PostEffect {
 
 /**
  * Used to manage multiple post effects for a camera.
+ *
+ * @category Graphics
  */
 class PostEffectQueue {
     /**
      * Create a new PostEffectQueue instance.
      *
-     * @param {import('../../app-base.js').AppBase} app - The application.
-     * @param {import('./component.js').CameraComponent} camera - The camera component.
+     * @param {AppBase} app - The application.
+     * @param {CameraComponent} camera - The camera component.
      */
     constructor(app, camera) {
         this.app = app;
@@ -40,7 +47,7 @@ class PostEffectQueue {
         /**
          * All of the post effects in the queue.
          *
-         * @type {PostEffect[]}
+         * @type {PostEffectEntry[]}
          * @ignore
          */
         this.effects = [];
@@ -70,10 +77,13 @@ class PostEffectQueue {
      */
     _allocateColorBuffer(format, name) {
         const rect = this.camera.rect;
-        const width = Math.floor(rect.z * (this.camera.renderTarget?.width ?? this.app.graphicsDevice.width));
-        const height = Math.floor(rect.w * (this.camera.renderTarget?.height ?? this.app.graphicsDevice.height));
+        const renderTarget = this.destinationRenderTarget;
+        const device = this.app.graphicsDevice;
 
-        const colorBuffer = new Texture(this.app.graphicsDevice, {
+        const width = Math.floor(rect.z * (renderTarget?.width ?? device.width));
+        const height = Math.floor(rect.w * (renderTarget?.height ?? device.height));
+
+        const colorBuffer = new Texture(device, {
             name: name,
             format: format,
             width: width,
@@ -99,8 +109,14 @@ class PostEffectQueue {
     _createOffscreenTarget(useDepth, hdr) {
 
         const device = this.app.graphicsDevice;
-        const format = hdr && device.getHdrFormat(false, true, false, false) || PIXELFORMAT_RGBA8;
-        const name = this.camera.entity.name + '-posteffect-' + this.effects.length;
+
+        // use srgb LDR format if backbuffer is srgb
+        const outputRt = this.destinationRenderTarget ?? device.backBuffer;
+        const srgb = outputRt.isColorBufferSrgb(0);
+
+        const format = (hdr && device.getRenderableHdrFormat([PIXELFORMAT_RGBA16F, PIXELFORMAT_RGBA32F], true)) ??
+            (srgb ? PIXELFORMAT_SRGBA8 : PIXELFORMAT_RGBA8);
+        const name = `${this.camera.entity.name}-posteffect-${this.effects.length}`;
 
         const colorBuffer = this._allocateColorBuffer(format, name);
 
@@ -139,7 +155,7 @@ class PostEffectQueue {
         const isFirstEffect = effects.length === 0;
 
         const inputTarget = this._createOffscreenTarget(isFirstEffect, effect.hdr);
-        const newEntry = new PostEffect(effect, inputTarget);
+        const newEntry = new PostEffectEntry(effect, inputTarget);
         effects.push(newEntry);
 
         this._sourceTarget = newEntry.inputTarget;
@@ -217,8 +233,9 @@ class PostEffectQueue {
     _requestDepthMaps() {
         for (let i = 0, len = this.effects.length; i < len; i++) {
             const effect = this.effects[i].effect;
-            if (this._newPostEffect === effect)
+            if (this._newPostEffect === effect) {
                 continue;
+            }
 
             if (effect.needsDepthBuffer) {
                 this._requestDepthMap();
@@ -329,7 +346,7 @@ class PostEffectQueue {
 
             this._destroyOffscreenTarget(this._sourceTarget);
 
-            this.camera.renderTarget = null;
+            this.camera.renderTarget = this.destinationRenderTarget;
             this.camera.onPostprocessing = null;
         }
     }
@@ -343,17 +360,25 @@ class PostEffectQueue {
      */
     _onCanvasResized(width, height) {
         const rect = this.camera.rect;
-        const device = this.app.graphicsDevice;
-        this.camera.camera.aspectRatio = (device.width * rect.z) / (device.height * rect.w);
+        const renderTarget = this.destinationRenderTarget;
+
+        width = renderTarget?.width ?? width;
+        height = renderTarget?.height ?? height;
+
+        this.camera.camera.aspectRatio = (width * rect.z) / (height * rect.w);
 
         this.resizeRenderTargets();
     }
 
     resizeRenderTargets() {
+        const device = this.app.graphicsDevice;
+        const renderTarget = this.destinationRenderTarget;
+        const width = renderTarget?.width ?? device.width;
+        const height = renderTarget?.height ?? device.height;
 
         const rect = this.camera.rect;
-        const desiredWidth = Math.floor(rect.z * this.app.graphicsDevice.width);
-        const desiredHeight = Math.floor(rect.w * this.app.graphicsDevice.height);
+        const desiredWidth = Math.floor(rect.z * width);
+        const desiredHeight = Math.floor(rect.w * height);
 
         const effects = this.effects;
 

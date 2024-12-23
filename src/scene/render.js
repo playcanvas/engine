@@ -1,43 +1,41 @@
 import { EventHandler } from '../core/event-handler.js';
 
 /**
- * A render contains an array of meshes that are referenced by a single hierarchy node in a GLB
- * model, and are accessible using {@link ContainerResource#renders} property. The render is the
- * resource of a Render Asset.
- *
- * @augments EventHandler
- * @ignore
+ * @import { Mesh } from './mesh.js'
+ */
+
+/**
+ * A `Render` contains an array of meshes that are referenced by a single hierarchy node in a GLB
+ * scene, and are accessible using the {@link ContainerResource#renders} property. A `Render` is
+ * the resource of a Render Asset. They are usually created by the GLB loader and not created by
+ * hand.
  */
 class Render extends EventHandler {
     /**
-     * Create a new Render instance. These are usually created by the GLB loader and not created
-     * by hand.
+     * Fired when the meshes are set on the render. The handler is passed the an array of
+     * {@link Mesh} objects.
+     *
+     * @event
+     * @example
+     * render.on('set:meshes', (meshes) => {
+     *     console.log(`Render has ${meshes.length} meshes`);
+     * });
      */
-    constructor() {
-        super();
-
-        /**
-         * Meshes are reference counted, and this class owns the references and is responsible for
-         * releasing the meshes when they are no longer referenced.
-         *
-         * @type {import('./mesh.js').Mesh[]}
-         * @private
-         */
-        this._meshes = null;
-    }
+    static EVENT_SETMESHES = 'set:meshes';
 
     /**
-     * Fired when the meshes are set.
+     * Meshes are reference counted, and this class owns the references and is responsible for
+     * releasing the meshes when they are no longer referenced.
      *
-     * @event Render#set:meshes
-     * @param {import('./mesh.js').Mesh[]} meshes - The meshes.
-     * @ignore
+     * @type {Array<Mesh|null>|null}
+     * @private
      */
+    _meshes = null;
 
     /**
-     * The meshes that the render contains.
+     * Sets the meshes that the render contains.
      *
-     * @type {import('./mesh.js').Mesh[]}
+     * @type {Array<Mesh|null>|null}
      */
     set meshes(value) {
         // decrement references on the existing meshes
@@ -50,6 +48,11 @@ class Render extends EventHandler {
         this.fire('set:meshes', value);
     }
 
+    /**
+     * Gets the meshes that the render contains.
+     *
+     * @type {Array<Mesh|null>|null}
+     */
     get meshes() {
         return this._meshes;
     }
@@ -58,33 +61,28 @@ class Render extends EventHandler {
         this.meshes = null;
     }
 
-    // decrement references to meshes, destroy the ones with zero references
+    /**
+     * Decrement references to meshes. Destroy the ones with zero references.
+     */
     decRefMeshes() {
-        if (this._meshes) {
-            const count = this._meshes.length;
-            for (let i = 0; i < count; i++) {
-                const mesh = this._meshes[i];
-                if (mesh) {
-                    mesh.decRefCount();
-                    if (mesh.refCount < 1) {
-                        mesh.destroy();
-                        this._meshes[i] = null;
-                    }
+        this._meshes?.forEach((mesh, index) => {
+            if (mesh) {
+                mesh.decRefCount();
+                if (mesh.refCount < 1) {
+                    mesh.destroy();
+                    this._meshes[index] = null;
                 }
             }
-        }
+        });
     }
 
-    // increments ref count on all meshes
+    /**
+     * Increments ref count on all meshes.
+     */
     incRefMeshes() {
-        if (this._meshes) {
-            const count = this._meshes.length;
-            for (let i = 0; i < count; i++) {
-                if (this._meshes[i]) {
-                    this._meshes[i].incRefCount();
-                }
-            }
-        }
+        this._meshes?.forEach((mesh) => {
+            mesh?.incRefCount();
+        });
     }
 }
 

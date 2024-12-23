@@ -1,5 +1,10 @@
 import { math } from './math.js';
 
+/**
+ * @import { Vec2 } from './vec2.js'
+ * @import { Vec3 } from './vec3.js'
+ */
+
 // golden angle in radians: PI * (3 - sqrt(5))
 const _goldenAngle = 2.399963229728653;
 
@@ -7,16 +12,14 @@ const _goldenAngle = 2.399963229728653;
  * Random API.
  *
  * @namespace
- * @ignore
  */
 const random = {
     /**
      * Return a pseudo-random 2D point inside a unit circle with uniform distribution.
      *
-     * @param {import('./vec2.js').Vec2} point - The returned generated point.
-     * @ignore
+     * @param {Vec2} point - The returned generated point.
      */
-    circlePoint: function (point) {
+    circlePoint(point) {
         const r = Math.sqrt(Math.random());
         const theta = Math.random() * 2 * Math.PI;
         point.x = r * Math.cos(theta);
@@ -27,12 +30,11 @@ const random = {
      * Generates evenly distributed deterministic points inside a unit circle using Fermat's spiral
      * and Vogel's method.
      *
-     * @param {import('./vec2.js').Vec2} point - The returned generated point.
+     * @param {Vec2} point - The returned generated point.
      * @param {number} index - Index of the point to generate, in the range from 0 to numPoints - 1.
      * @param {number} numPoints - The total number of points of the set.
-     * @ignore
      */
-    circlePointDeterministic: function (point, index, numPoints) {
+    circlePointDeterministic(point, index, numPoints) {
         const theta = index * _goldenAngle;
         const r = Math.sqrt(index) / Math.sqrt(numPoints);
 
@@ -47,16 +49,15 @@ const random = {
      * sphere). For example by specifying 0.4 and 0.6 and start and end, a band around the equator
      * would be generated.
      *
-     * @param {import('./vec3.js').Vec3} point - The returned generated point.
+     * @param {Vec3} point - The returned generated point.
      * @param {number} index - Index of the point to generate, in the range from 0 to numPoints - 1.
      * @param {number} numPoints - The total number of points of the set.
      * @param {number} [start] - Part on the sphere along y axis to start the points, in the range
      * of 0 and 1. Defaults to 0.
      * @param {number} [end] - Part on the sphere along y axis to stop the points, in the range of
      * 0 and 1. Defaults to 1.
-     * @ignore
      */
-    spherePointDeterministic: function (point, index, numPoints, start = 0, end = 1) {
+    spherePointDeterministic(point, index, numPoints, start = 0, end = 1) {
 
         // y coordinate needs to go from -1 (top) to 1 (bottom) for the full sphere
         // evaluate its value for this point and specified start and end
@@ -81,9 +82,8 @@ const random = {
      *
      * @param {number} i - The index in the sequence to return.
      * @returns {number} The pseudo-random value.
-     * @ignore
      */
-    radicalInverse: function (i) {
+    radicalInverse(i) {
         let bits = ((i << 16) | (i >>> 16)) >>> 0;
         bits = (((bits & 0x55555555) << 1) | ((bits & 0xAAAAAAAA) >>> 1)) >>> 0;
         bits = (((bits & 0x33333333) << 2) | ((bits & 0xCCCCCCCC) >>> 2)) >>> 0;

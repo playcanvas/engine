@@ -1,6 +1,12 @@
 import { Debug } from '../../core/debug.js';
 import { typedArrayTypes } from './constants.js';
 
+/**
+ * @import { ScopeId } from './scope-id.js'
+ * @import { VertexBuffer } from './vertex-buffer.js'
+ * @import { VertexFormat } from './vertex-format.js'
+ */
+
 function set1(a) {
     this.array[this.index] = a;
 }
@@ -69,6 +75,8 @@ function arrayGet4(offset, outputArray, outputIndex) {
 
 /**
  * Helps with accessing a specific vertex attribute.
+ *
+ * @category Graphics
  */
 class VertexIteratorAccessor {
     /**
@@ -114,11 +122,11 @@ class VertexIteratorAccessor {
      * that are not relevant to this attribute.
      * @param {number} vertexElement.stride - The number of total bytes that are between the start
      * of one vertex, and the start of the next.
-     * @param {import('./scope-id.js').ScopeId} vertexElement.scopeId - The shader input variable
-     * corresponding to the attribute.
+     * @param {ScopeId} vertexElement.scopeId - The shader input variable corresponding to the
+     * attribute.
      * @param {number} vertexElement.size - The size of the attribute in bytes.
-     * @param {import('./vertex-format.js').VertexFormat} vertexFormat - A vertex format that
-     * defines the layout of vertex data inside the buffer.
+     * @param {VertexFormat} vertexFormat - A vertex format that defines the layout of vertex data
+     * inside the buffer.
      */
     constructor(buffer, vertexElement, vertexFormat) {
         this.index = 0;
@@ -189,7 +197,7 @@ class VertexIteratorAccessor {
      *
      * @param {number} offset - The component offset at which to read data from the buffer. Will be
      * used instead of the iterator's current index.
-     * @param {number[]|Int8Array|Uint8Array|Uint8ClampedArray|Int16Array|Uint16Array|Int32Array|Uint32Array|Float32Array} outputArray - The output array to write data into.
+     * @param {number[]|ArrayBufferView} outputArray - The output array to write data into.
      * @param {number} outputIndex - The output index at which to write into the output array.
      */
     getToArray(offset, outputArray, outputIndex) {
@@ -201,7 +209,7 @@ class VertexIteratorAccessor {
      *
      * @param {number} index - The starting index at which to write data into the buffer. Will be
      * used instead of the iterator's current index.
-     * @param {number[]|Int8Array|Uint8Array|Uint8ClampedArray|Int16Array|Uint16Array|Int32Array|Uint32Array|Float32Array} inputArray - The input array to read data from.
+     * @param {number[]|ArrayBufferView} inputArray - The input array to read data from.
      * @param {number} inputIndex - The input index at which to read from the input array.
      */
     setFromArray(index, inputArray, inputIndex) {
@@ -211,13 +219,14 @@ class VertexIteratorAccessor {
 
 /**
  * A vertex iterator simplifies the process of writing vertex data to a vertex buffer.
+ *
+ * @category Graphics
  */
 class VertexIterator {
     /**
      * Create a new VertexIterator instance.
      *
-     * @param {import('./vertex-buffer.js').VertexBuffer} vertexBuffer - The vertex buffer to be
-     * iterated.
+     * @param {VertexBuffer} vertexBuffer - The vertex buffer to be iterated.
      */
     constructor(vertexBuffer) {
         // Store the vertex buffer
@@ -249,8 +258,7 @@ class VertexIterator {
     /**
      * Moves the vertex iterator on to the next vertex.
      *
-     * @param {number} [count] - Optional number of steps to move on when calling next. Defaults to
-     * 1.
+     * @param {number} [count] - Number of steps to move on when calling next. Defaults to 1.
      * @example
      * const iterator = new pc.VertexIterator(vertexBuffer);
      * iterator.element[pc.SEMANTIC_POSITION].set(-0.9, -0.9, 0.0);
@@ -299,7 +307,7 @@ class VertexIterator {
      * and non-interleaved (fast) vertex buffers.
      *
      * @param {string} semantic - The semantic of the vertex element to set.
-     * @param {number[]|Int8Array|Uint8Array|Uint8ClampedArray|Int16Array|Uint16Array|Int32Array|Uint32Array|Float32Array} data - The data to set.
+     * @param {number[]|ArrayBufferView} data - The data to set.
      * @param {number} numVertices - The number of vertices to write.
      * @ignore
      */
@@ -335,8 +343,9 @@ class VertexIterator {
                         element.array.set(data);
                     } else {
                         // data is array, copy right amount manually
-                        for (let i = 0; i < copyCount; i++)
+                        for (let i = 0; i < copyCount; i++) {
                             element.array[i] = data[i];
+                        }
                     }
                 } else {
                     // copy whole data
@@ -353,8 +362,7 @@ class VertexIterator {
      * only part of the data gets copied out (typed arrays ignore read/write out of range).
      *
      * @param {string} semantic - The semantic of the vertex element to read.
-     * @param {number[]|Int8Array|Uint8Array|Uint8ClampedArray|Int16Array|Uint16Array|Int32Array|Uint32Array|Float32Array} data - The
-     * array to receive the data.
+     * @param {number[]|ArrayBufferView} data - The array to receive the data.
      * @returns {number} The number of vertices read.
      * @ignore
      */
@@ -369,8 +377,9 @@ class VertexIterator {
             if (this.vertexBuffer.getFormat().interleaved) {
 
                 // extract data from interleaved buffer by looping over vertices and copying them manually
-                if (Array.isArray(data))
+                if (Array.isArray(data)) {
                     data.length = 0;
+                }
 
                 element.index = 0;
                 let offset = 0;
@@ -386,8 +395,9 @@ class VertexIterator {
                     // destination data is array
                     data.length = 0;
                     const copyCount = count * numComponents;
-                    for (i = 0; i < copyCount; i++)
+                    for (i = 0; i < copyCount; i++) {
                         data[i] = element.array[i];
+                    }
                 }
             }
         }
@@ -396,4 +406,4 @@ class VertexIterator {
     }
 }
 
-export { VertexIterator, VertexIteratorAccessor };
+export { VertexIterator };

@@ -14,10 +14,11 @@ void addRefraction(
     vec3 specularity, 
     vec3 albedo, 
     float transmission,
-    float refractionIndex
+    float refractionIndex,
+    float dispersion
 #if defined(LIT_IRIDESCENCE)
     , vec3 iridescenceFresnel,
-    IridescenceArgs iridescence
+    float iridescenceIntensity
 #endif 
 ) {
     // use same reflection code with refraction vector

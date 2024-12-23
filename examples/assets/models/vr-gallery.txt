@@ -1,0 +1,5 @@
+The vr-gallery model has been obtained from this address:
+https://sketchfab.com/3d-models/vr-gallery-1e087aa25dc742e680accb15249bd6be
+
+It's distributed under CC license:
+https://creativecommons.org/licenses/by/4.0/

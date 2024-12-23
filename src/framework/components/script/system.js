@@ -1,9 +1,11 @@
 import { SortedLoopArray } from '../../../core/sorted-loop-array.js';
-
 import { ComponentSystem } from '../system.js';
-
 import { ScriptComponent } from './component.js';
 import { ScriptComponentData } from './data.js';
+
+/**
+ * @import { AppBase } from '../../app-base.js'
+ */
 
 const METHOD_INITIALIZE_ATTRIBUTES = '_onInitializeAttributes';
 const METHOD_INITIALIZE = '_onInitialize';
@@ -20,14 +22,14 @@ let executionOrderCounter = 0;
 /**
  * Allows scripts to be attached to an Entity and executed.
  *
- * @augments ComponentSystem
+ * @category Script
  */
 class ScriptComponentSystem extends ComponentSystem {
     /**
      * Create a new ScriptComponentSystem.
      *
-     * @param {import('../../app-base.js').AppBase} app - The application.
-     * @hideconstructor
+     * @param {AppBase} app - The application.
+     * @ignore
      */
     constructor(app) {
         super(app);
@@ -108,8 +110,9 @@ class ScriptComponentSystem extends ComponentSystem {
             order.push(scriptName);
 
             const attributes = { };
-            for (const key in scriptInstance.__attributes)
+            for (const key in scriptInstance.__attributes) {
                 attributes[key] = scriptInstance.__attributes[key];
+            }
 
             scripts[scriptName] = {
                 enabled: scriptInstance._enabled,

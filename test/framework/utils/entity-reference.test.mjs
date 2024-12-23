@@ -1,15 +1,16 @@
-import { Application } from '../../../src/framework/application.js';
-import { Entity } from '../../../src/framework/entity.js';
-import { EntityReference } from '../../../src/framework/utils/entity-reference.js';
-
-import { DummyComponentSystem } from '../test-component/system.mjs';
-
-import { HTMLCanvasElement } from '@playcanvas/canvas-mock';
-
 import { expect } from 'chai';
 import { restore, spy, stub } from 'sinon';
 
-/** @typedef {import('../../../../src/framework/components/component.js').Component} Component */
+import { Entity } from '../../../src/framework/entity.js';
+import { EntityReference } from '../../../src/framework/utils/entity-reference.js';
+import { createApp } from '../../app.mjs';
+import { jsdomSetup, jsdomTeardown } from '../../jsdom.mjs';
+import { DummyComponentSystem } from '../test-component/system.mjs';
+
+/**
+ * @import { Application } from '../../../../src/framework/application.js'
+ * @import { Component } from '../../../../src/framework/components/component.js'
+ */
 
 describe('EntityReference', function () {
     /** @type {Application} */
@@ -24,8 +25,8 @@ describe('EntityReference', function () {
     let otherEntity2;
 
     beforeEach(function () {
-        const canvas = new HTMLCanvasElement(500, 500);
-        app = new Application(canvas);
+        jsdomSetup();
+        app = createApp();
 
         app.systems.add(new DummyComponentSystem(app));
 
@@ -43,7 +44,9 @@ describe('EntityReference', function () {
 
     afterEach(function () {
         restore();
-        app.destroy();
+        app?.destroy();
+        app = null;
+        jsdomTeardown();
     });
 
     // Assertion helpers that rely on checking some private state. Usually I wouldn't do
@@ -55,15 +58,15 @@ describe('EntityReference', function () {
     function getTotalEventListeners(entity) {
         let total = 0;
 
-        Object.keys(entity._callbacks || {}).forEach(function (eventName) {
-            total += entity._callbacks[eventName].length;
-        });
+        for (const callbacks of entity._callbacks.values()) {
+            total += callbacks.length;
+        }
 
         return total;
     }
 
     function getNumListenersForEvent(entity, eventName) {
-        return (entity._callbacks && entity._callbacks[eventName] && entity._callbacks[eventName].length) || 0;
+        return entity._callbacks.get(eventName)?.length || 0;
     }
 
     it('provides a reference to the entity once the guid is populated', function () {
@@ -364,19 +367,19 @@ describe('EntityReference', function () {
 
         const callback = stub();
 
-        expect(function () {
+        expect(() => {
             testEventMap({ 'foo': callback });
         }).to.throw('Invalid event listener description: `foo`');
 
-        expect(function () {
+        expect(() => {
             testEventMap({ 'foo#': callback });
         }).to.throw('Invalid event listener description: `foo#`');
 
-        expect(function () {
+        expect(() => {
             testEventMap({ '#foo': callback });
         }).to.throw('Invalid event listener description: `#foo`');
 
-        expect(function () {
+        expect(() => {
             testEventMap({ 'foo#bar': null });
         }).to.throw('Invalid or missing callback for event listener `foo#bar`');
     });

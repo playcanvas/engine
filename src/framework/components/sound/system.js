@@ -1,26 +1,28 @@
 import { Debug } from '../../../core/debug.js';
-
 import { hasAudioContext } from '../../../platform/audio/capabilities.js';
-
 import { Component } from '../component.js';
 import { ComponentSystem } from '../system.js';
-
 import { SoundComponent } from './component.js';
 import { SoundComponentData } from './data.js';
+
+/**
+ * @import { AppBase } from '../../app-base.js'
+ * @import { SoundManager } from '../../../platform/sound/manager.js'
+ */
 
 const _schema = ['enabled'];
 
 /**
  * Manages creation of {@link SoundComponent}s.
  *
- * @augments ComponentSystem
+ * @category Sound
  */
 class SoundComponentSystem extends ComponentSystem {
     /**
      * Create a SoundComponentSystem.
      *
-     * @param {import('../../app-base.js').AppBase} app - The Application.
-     * @hideconstructor
+     * @param {AppBase} app - The Application.
+     * @ignore
      */
     constructor(app) {
         super(app);
@@ -35,10 +37,10 @@ class SoundComponentSystem extends ComponentSystem {
         /**
          * Gets / sets the sound manager.
          *
-         * @type {import('../../../platform/sound/manager.js').SoundManager}
+         * @type {SoundManager}
          */
         this.manager = app.soundManager;
-        Debug.assert(this.manager, "AudioSourceComponentSystem cannot be created without sound manager");
+        Debug.assert(this.manager, 'SoundComponentSystem cannot be created without sound manager');
 
         this.app.systems.on('update', this.onUpdate, this);
 
@@ -46,8 +48,8 @@ class SoundComponentSystem extends ComponentSystem {
     }
 
     /**
-     * Sets / gets the volume for the entire Sound system. All sounds will have their volume
-     * multiplied by this value. Valid between [0, 1].
+     * Sets the volume for the entire Sound system. All sounds will have their volume multiplied by
+     * this value. Valid between [0, 1].
      *
      * @type {number}
      */
@@ -55,6 +57,11 @@ class SoundComponentSystem extends ComponentSystem {
         this.manager.volume = volume;
     }
 
+    /**
+     * Gets the volume for the entire Sound system.
+     *
+     * @type {number}
+     */
     get volume() {
         return this.manager.volume;
     }

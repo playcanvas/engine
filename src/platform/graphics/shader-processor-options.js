@@ -1,4 +1,11 @@
-import { BINDGROUP_VIEW } from "./constants.js";
+import { BINDGROUP_VIEW } from './constants.js';
+
+/**
+ * @import { BindGroupFormat } from './bind-group-format.js'
+ * @import { GraphicsDevice } from './graphics-device.js'
+ * @import { UniformBufferFormat } from './uniform-buffer-format.js'
+ * @import { VertexFormat } from './vertex-format.js'
+ */
 
 /**
  * Options to drive shader processing to add support for bind groups and uniform buffers.
@@ -6,24 +13,21 @@ import { BINDGROUP_VIEW } from "./constants.js";
  * @ignore
  */
 class ShaderProcessorOptions {
-    /** @type {import('./uniform-buffer-format.js').UniformBufferFormat[]} */
+    /** @type {UniformBufferFormat[]} */
     uniformFormats = [];
 
-    /** @type {import('./bind-group-format.js').BindGroupFormat[]} */
+    /** @type {BindGroupFormat[]} */
     bindGroupFormats = [];
 
-    /** @type {import('./vertex-format.js').VertexFormat[]} */
+    /** @type {VertexFormat[]} */
     vertexFormat;
 
     /**
      * Constructs shader processing options, used to process the shader for uniform buffer support.
      *
-     * @param {import('./uniform-buffer-format.js').UniformBufferFormat} [viewUniformFormat] - Format
-     * of the uniform buffer.
-     * @param {import('./bind-group-format.js').BindGroupFormat} [viewBindGroupFormat] - Format of
-     * the bind group.
-     * @param {import('./vertex-format.js').VertexFormat} [vertexFormat] - Format of the vertex
-     * buffer.
+     * @param {UniformBufferFormat} [viewUniformFormat] - Format of the uniform buffer.
+     * @param {BindGroupFormat} [viewBindGroupFormat] - Format of the bind group.
+     * @param {VertexFormat} [vertexFormat] - Format of the vertex buffer.
      */
     constructor(viewUniformFormat, viewBindGroupFormat, vertexFormat) {
 
@@ -75,16 +79,22 @@ class ShaderProcessorOptions {
     }
 
     /**
-     * Generate unique key represending the processing options.
+     * Generate unique key representing the processing options.
      *
+     * @param {GraphicsDevice} device - The device.
      * @returns {string} - Returns the key.
      */
-    generateKey() {
+    generateKey(device) {
         // TODO: Optimize. Uniform and BindGroup formats should have their keys evaluated in their
         // constructors, and here we should simply concatenate those.
-        return JSON.stringify(this.uniformFormats) +
-        JSON.stringify(this.bindGroupFormats) +
-        this.vertexFormat?.renderingHashString;
+        let key = JSON.stringify(this.uniformFormats) + JSON.stringify(this.bindGroupFormats);
+
+        // WebGPU shaders are processed per vertex format
+        if (device.isWebGPU) {
+            key += this.vertexFormat?.shaderProcessingHashString;
+        }
+
+        return key;
     }
 }
 

@@ -1,5 +1,4 @@
 import { Debug } from '../../core/debug.js';
-
 import { BUFFER_GPUDYNAMIC, PRIMITIVE_POINTS } from './constants.js';
 import { VertexBuffer } from './vertex-buffer.js';
 import { DebugGraphics } from './debug-graphics.js';
@@ -7,10 +6,14 @@ import { Shader } from './shader.js';
 import { ShaderUtils } from './shader-utils.js';
 
 /**
+ * @import { GraphicsDevice } from './graphics-device.js'
+ */
+
+/**
  * This object allows you to configure and use the transform feedback feature (WebGL2 only). How to
  * use:
  *
- * 1. First, check that you're on WebGL2, by looking at the `app.graphicsDevice.webgl2`` value.
+ * 1. First, check that you're on WebGL2, by looking at the `app.graphicsDevice.isWebGL2`` value.
  * 2. Define the outputs in your vertex shader. The syntax is `out vec3 out_vertex_position`,
  * note that there must be out_ in the name. You can then simply assign values to these outputs in
  * VS. The order and size of shader outputs must match the output buffer layout.
@@ -50,7 +53,7 @@ import { ShaderUtils } from './shader-utils.js';
  *
  * TransformExample.prototype.initialize = function() {
  *     const device = this.app.graphicsDevice;
- *     const mesh = pc.createTorus(device, { tubeRadius: 0.01, ringRadius: 3 });
+ *     const mesh = pc.Mesh.fromGeometry(app.graphicsDevice, new pc.TorusGeometry({ tubeRadius: 0.01, ringRadius: 3 }));
  *     const meshInstance = new pc.MeshInstance(mesh, this.material.resource);
  *     const entity = new pc.Entity();
  *     entity.addComponent('render', {
@@ -60,17 +63,19 @@ import { ShaderUtils } from './shader-utils.js';
  *     app.root.addChild(entity);
  *
  *     // if webgl2 is not supported, transform-feedback is not available
- *     if (!device.webgl2) return;
+ *     if (!device.isWebGL2) return;
  *     const inputBuffer = mesh.vertexBuffer;
  *     this.tf = new pc.TransformFeedback(inputBuffer);
  *     this.shader = pc.TransformFeedback.createShader(device, this.shaderCode.resource, "tfMoveUp");
  * };
  *
  * TransformExample.prototype.update = function(dt) {
- *     if (!this.app.graphicsDevice.webgl2) return;
+ *     if (!this.app.graphicsDevice.isWebGL2) return;
  *     this.tf.process(this.shader);
  * };
  * ```
+ *
+ * @category Graphics
  */
 class TransformFeedback {
     /**
@@ -91,7 +96,7 @@ class TransformFeedback {
         const gl = this.device.gl;
 
         Debug.assert(inputBuffer.format.interleaved || inputBuffer.format.elements.length <= 1,
-                     "Vertex buffer used by TransformFeedback needs to be interleaved.");
+            'Vertex buffer used by TransformFeedback needs to be interleaved.');
 
         this._inputBuffer = inputBuffer;
         if (usage === BUFFER_GPUDYNAMIC && inputBuffer.usage !== usage) {
@@ -100,14 +105,16 @@ class TransformFeedback {
             gl.bufferData(gl.ARRAY_BUFFER, inputBuffer.storage, gl.DYNAMIC_COPY);
         }
 
-        this._outputBuffer = new VertexBuffer(inputBuffer.device, inputBuffer.format, inputBuffer.numVertices, usage, inputBuffer.storage);
+        this._outputBuffer = new VertexBuffer(inputBuffer.device, inputBuffer.format, inputBuffer.numVertices, {
+            usage: usage,
+            data: inputBuffer.storage
+        });
     }
 
     /**
      * Creates a transform feedback ready vertex shader from code.
      *
-     * @param {import('./graphics-device.js').GraphicsDevice} graphicsDevice - The graphics device
-     * used by the renderer.
+     * @param {GraphicsDevice} graphicsDevice - The graphics device used by the renderer.
      * @param {string} vertexCode - Vertex shader code. Should contain output variables starting with "out_".
      * @param {string} name - Unique name for caching the shader.
      * @returns {Shader} A shader to use in the process() function.
@@ -139,7 +146,7 @@ class TransformFeedback {
     process(shader, swap = true) {
         const device = this.device;
 
-        DebugGraphics.pushGpuMarker(device, "TransformFeedback");
+        DebugGraphics.pushGpuMarker(device, 'TransformFeedback');
 
         const oldRt = device.getRenderTarget();
         device.setRenderTarget(null);

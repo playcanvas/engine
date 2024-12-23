@@ -3,23 +3,52 @@ import { ShaderUtils } from '../../platform/graphics/shader-utils.js';
 import { shaderChunks } from './chunks/chunks.js';
 import { getProgramLibrary } from './get-program-library.js';
 import { Debug } from '../../core/debug.js';
+import { ShaderGenerator } from './programs/shader-generator.js';
+import { SHADERLANGUAGE_WGSL } from '../../platform/graphics/constants.js';
+
+/**
+ * @import { GraphicsDevice } from '../../platform/graphics/graphics-device.js'
+ * @import { ShaderProcessorOptions } from '../../platform/graphics/shader-processor-options.js'
+ * @import { CameraShaderParams } from '../camera-shader-params.js'
+ * @import { Material } from '../materials/material.js'
+ */
 
 /**
  * Create a shader from named shader chunks.
  *
- * @param {import('../../platform/graphics/graphics-device.js').GraphicsDevice} device - The
- * graphics device.
+ * @param {GraphicsDevice} device - The graphics device.
  * @param {string} vsName - The vertex shader chunk name.
  * @param {string} fsName - The fragment shader chunk name.
- * @param {boolean} [useTransformFeedback] - Whether to use transform feedback. Defaults to false.
+ * @param {boolean | Record<string, boolean | string | string[]>} [useTransformFeedback] - Whether
+ * to use transform feedback. Defaults to false.
+ * @param {object} [shaderDefinitionOptions] - Additional options that will be added to the shader
+ * definition.
+ * @param {boolean} [shaderDefinitionOptions.useTransformFeedback] - Whether to use transform
+ * feedback. Defaults to false.
+ * @param {string | string[]} [shaderDefinitionOptions.fragmentOutputTypes] - Fragment shader
+ * output types, which default to vec4. Passing a string will set the output type for all color
+ * attachments. Passing an array will set the output type for each color attachment.
+ * @see ShaderUtils.createDefinition
  * @returns {Shader} The newly created shader.
+ * @category Graphics
  */
-function createShader(device, vsName, fsName, useTransformFeedback = false) {
+function createShader(device, vsName, fsName, useTransformFeedback = false, shaderDefinitionOptions = {}) {
+
+    // Normalize arguments to allow passing shaderDefinitionOptions as the 6th argument
+    if (typeof useTransformFeedback === 'boolean') {
+        shaderDefinitionOptions.useTransformFeedback = useTransformFeedback;
+    } else if (typeof useTransformFeedback === 'object') {
+        shaderDefinitionOptions = {
+            ...shaderDefinitionOptions,
+            ...useTransformFeedback
+        };
+    }
+
     return new Shader(device, ShaderUtils.createDefinition(device, {
+        ...shaderDefinitionOptions,
         name: `${vsName}_${fsName}`,
         vertexCode: shaderChunks[vsName],
-        fragmentCode: shaderChunks[fsName],
-        useTransformFeedback: useTransformFeedback
+        fragmentCode: shaderChunks[fsName]
     }));
 }
 
@@ -29,8 +58,7 @@ function createShader(device, vsName, fsName, useTransformFeedback = false) {
  * compile on both WebGL and WebGPU. Specifically, these blocks are added, and should not be
  * part of provided vsCode and fsCode: shader version, shader precision, commonly used extensions.
  *
- * @param {import('../../platform/graphics/graphics-device.js').GraphicsDevice} device - The
- * graphics device.
+ * @param {GraphicsDevice} device - The graphics device.
  * @param {string} vsCode - The vertex shader code.
  * @param {string} fsCode - The fragment shader code.
  * @param {string} uniqueName - Unique name for the shader. If a shader with this name already
@@ -38,37 +66,71 @@ function createShader(device, vsName, fsName, useTransformFeedback = false) {
  * @param {Object<string, string>} [attributes] - Object detailing the mapping of vertex shader
  * attribute names to semantics SEMANTIC_*. This enables the engine to match vertex buffer data as
  * inputs to the shader. Defaults to undefined, which generates the default attributes.
- * @param {boolean} [useTransformFeedback] - Whether to use transform feedback. Defaults to false.
+ * @param {boolean | Record<string, boolean | string | string[]>} [useTransformFeedback] - Whether
+ * to use transform feedback. Defaults to false.
+ * @param {object} [shaderDefinitionOptions] - Additional options that will be added to the shader
+ * definition.
+ * @param {boolean} [shaderDefinitionOptions.useTransformFeedback] - Whether to use transform
+ * feedback. Defaults to false.
+ * @param {string | string[]} [shaderDefinitionOptions.fragmentOutputTypes] - Fragment shader
+ * output types, which default to vec4. Passing a string will set the output type for all color
+ * attachments. Passing an array will set the output type for each color attachment.
+ * @see ShaderUtils.createDefinition
  * @returns {Shader} The newly created shader.
+ * @category Graphics
  */
-function createShaderFromCode(device, vsCode, fsCode, uniqueName, attributes, useTransformFeedback = false) {
+function createShaderFromCode(device, vsCode, fsCode, uniqueName, attributes, useTransformFeedback = false, shaderDefinitionOptions = {}) {
 
     // the function signature has changed, fail if called incorrectly
     Debug.assert(typeof attributes !== 'boolean');
+
+    // Normalize arguments to allow passing shaderDefinitionOptions as the 6th argument
+    if (typeof useTransformFeedback === 'boolean') {
+        shaderDefinitionOptions.useTransformFeedback = useTransformFeedback;
+    } else if (typeof useTransformFeedback === 'object') {
+        shaderDefinitionOptions = {
+            ...shaderDefinitionOptions,
+            ...useTransformFeedback
+        };
+    }
 
     const programLibrary = getProgramLibrary(device);
     let shader = programLibrary.getCachedShader(uniqueName);
     if (!shader) {
         shader = new Shader(device, ShaderUtils.createDefinition(device, {
+            ...shaderDefinitionOptions,
             name: uniqueName,
             vertexCode: vsCode,
             fragmentCode: fsCode,
-            attributes: attributes,
-            useTransformFeedback: useTransformFeedback
+            attributes: attributes
         }));
         programLibrary.setCachedShader(uniqueName, shader);
     }
     return shader;
 }
 
+class ShaderGeneratorPassThrough extends ShaderGenerator {
+    constructor(key, shaderDefinition) {
+        super();
+        this.key = key;
+        this.shaderDefinition = shaderDefinition;
+    }
+
+    generateKey(options) {
+        return this.key;
+    }
+
+    createShaderDefinition(device, options) {
+        return this.shaderDefinition;
+    }
+}
+
 /**
  * Process shader using shader processing options, utilizing cache of the ProgramLibrary
  *
  * @param {Shader} shader - The shader to be processed.
- * @param {import('../../platform/graphics/shader-processor-options.js').ShaderProcessorOptions} processingOptions -
- * The shader processing options.
+ * @param {ShaderProcessorOptions} processingOptions - The shader processing options.
  * @returns {Shader} The processed shader.
- * @ignore
  */
 function processShader(shader, processingOptions) {
 
@@ -78,17 +140,11 @@ function processShader(shader, processingOptions) {
     // 'shader' generator for a material - simply return existing shader definition. Use generator and getProgram
     // to allow for shader processing to be cached
     const name = shaderDefinition.name ?? 'shader';
-    const key = `${name}-id-${shader.id}`;
-    const materialGenerator = {
-        generateKey: function (options) {
-            // unique name based of the shader id
-            return key;
-        },
 
-        createShaderDefinition: function (device, options) {
-            return shaderDefinition;
-        }
-    };
+    // unique name based of the shader id
+    const key = `${name}-id-${shader.id}`;
+
+    const materialGenerator = new ShaderGeneratorPassThrough(key, shaderDefinition);
 
     // temporarily register the program generator
     const libraryModuleName = 'shader';
@@ -99,14 +155,34 @@ function processShader(shader, processingOptions) {
     // generate shader variant - its the same shader, but with different processing options
     const variant = library.getProgram(libraryModuleName, {}, processingOptions);
 
+    // For now WGSL shaders need to provide their own formats as they aren't processed.
+    // Make sure to copy these from the original shader.
+    if (shader.definition.shaderLanguage === SHADERLANGUAGE_WGSL) {
+        variant.meshUniformBufferFormat = shaderDefinition.meshUniformBufferFormat;
+        variant.meshBindGroupFormat = shaderDefinition.meshBindGroupFormat;
+    }
+
     // unregister it again
     library.unregister(libraryModuleName);
 
     return variant;
 }
 
+/**
+ * Create a map of defines for the shader for a material, rendered by a camera with the specified
+ * shader parameters.
+ *
+ * @param {Material} material - The material to create the shader defines for.
+ * @param {CameraShaderParams} cameraShaderParams - The camera shader parameters.
+ * @returns {Map<string, string>} The map of shader defines.
+ * @ignore
+ */
+const getMaterialShaderDefines = (material, cameraShaderParams) => {
 
-shaderChunks.createShader = createShader;
-shaderChunks.createShaderFromCode = createShaderFromCode;
+    // merge both maps, with camera shader params taking precedence
+    const defines = new Map(material.defines);
+    cameraShaderParams.defines.forEach((value, key) => defines.set(key, value));
+    return defines;
+};
 
-export { createShader, createShaderFromCode, processShader };
+export { createShader, createShaderFromCode, processShader, getMaterialShaderDefines };

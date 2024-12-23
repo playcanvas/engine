@@ -1,14 +1,14 @@
-import { Application } from '../../../src/framework/application.js';
-import { Asset } from '../../../src/framework/asset/asset.js';
-import { AssetRegistry } from '../../../src/framework/asset/asset-registry.js';
-import { GlbContainerResource } from '../../../src/framework/parsers/glb-container-resource.js';
-import { ResourceLoader } from '../../../src/framework/handlers/loader.js';
-import { http, Http } from '../../../src/platform/net/http.js';
-
-import { HTMLCanvasElement } from '@playcanvas/canvas-mock';
-
 import { expect } from 'chai';
 import { restore, spy } from 'sinon';
+
+import { AssetRegistry } from '../../../src/framework/asset/asset-registry.js';
+import { Asset } from '../../../src/framework/asset/asset.js';
+import { ResourceLoader } from '../../../src/framework/handlers/loader.js';
+import { GlbContainerResource } from '../../../src/framework/parsers/glb-container-resource.js';
+import { Texture } from '../../../src/platform/graphics/texture.js';
+import { http, Http } from '../../../src/platform/net/http.js';
+import { createApp } from '../../app.mjs';
+import { jsdomSetup, jsdomTeardown } from '../../jsdom.mjs';
 
 describe('AssetRegistry', function () {
 
@@ -16,15 +16,19 @@ describe('AssetRegistry', function () {
     let retryDelay;
 
     beforeEach(function () {
+        jsdomSetup();
+        app = createApp();
+
         retryDelay = Http.retryDelay;
         Http.retryDelay = 1;
-        const canvas = new HTMLCanvasElement(500, 500);
-        app = new Application(canvas);
     });
 
     afterEach(function () {
-        app.destroy();
         Http.retryDelay = retryDelay;
+
+        app?.destroy();
+        app = null;
+        jsdomTeardown();
         restore();
     });
 
@@ -76,6 +80,81 @@ describe('AssetRegistry', function () {
             expect(app.assets.find(asset1.name)).to.equal(null);
             expect(app.assets.find(asset2.name)).to.equal(asset2);
             expect(app.assets.find(asset3.name)).to.equal(asset3);
+        });
+
+    });
+
+    describe('#find + rename', function () {
+
+        it('works after renaming an asset', function () {
+            const asset1 = new Asset('Asset 1', 'text', {
+                url: 'fake/one/file.txt'
+            });
+
+            app.assets.add(asset1);
+
+            asset1.name = 'Asset 1 renamed';
+
+            expect(app.assets.find('Asset 1')).to.equal(null);
+            expect(app.assets.find('Asset 1 renamed')).to.equal(asset1);
+
+            app.assets.remove(asset1);
+            asset1.name = 'Asset 1 renamed again';
+
+            expect(app.assets.find('Asset 1')).to.equal(null);
+            expect(app.assets.find('Asset 1 renamed')).to.equal(null);
+            expect(app.assets.find('Asset 1 renamed again')).to.equal(null);
+        });
+
+    });
+
+    describe('#find + type', function () {
+
+        it('finds assets by name filtered by type', function () {
+            const asset1 = new Asset('Asset 1', 'text', {
+                url: 'fake/one/file.txt'
+            });
+            const asset2 = new Asset('Asset 1', 'json', {
+                url: 'fake/two/file.json'
+            });
+
+            app.assets.add(asset1);
+            app.assets.add(asset2);
+
+            expect(app.assets.find('Asset 1', 'text')).to.equal(asset1);
+            expect(app.assets.find('Asset 1', 'json')).to.equal(asset2);
+        });
+
+    });
+
+    describe('#findAll + type', function () {
+
+        it('finds all assets by name filtered by type', function () {
+            const asset1 = new Asset('Asset 1', 'text', {
+                url: 'fake/one/file.txt'
+            });
+            const asset2 = new Asset('Asset 1', 'json', {
+                url: 'fake/two/file.json'
+            });
+            const asset3 = new Asset('Asset 1', 'text', {
+                url: 'fake/two/file.txt'
+            });
+            const asset4 = new Asset('Asset 1', 'text', {
+                url: 'fake/two/file.txt'
+            });
+
+            app.assets.add(asset1);
+            app.assets.add(asset2);
+            app.assets.add(asset3);
+            app.assets.add(asset4);
+
+            // ensure renaming updates indexes
+            asset3.name = 'Asset 1 renamed';
+
+            // ensure removing updates indexes
+            app.assets.remove(asset4);
+
+            expect(app.assets.findAll('Asset 1', 'text').length).to.equal(1);
         });
 
     });
@@ -160,10 +239,10 @@ describe('AssetRegistry', function () {
 
     describe('#loadFromUrl', function () {
 
-        const assetPath = 'http://localhost:3000/test/test-assets/';
+        const assetPath = 'http://localhost:3000/test/assets/';
 
-        it('loads binary assets', function (done) {
-            app.assets.loadFromUrl(`${assetPath}test.bin`, 'binary', function (err, asset) {
+        it('loads binary assets', (done) => {
+            app.assets.loadFromUrl(`${assetPath}test.bin`, 'binary', (err, asset) => {
                 expect(err).to.be.null;
                 expect(asset).to.be.instanceof(Asset);
                 expect(asset.resource).to.be.instanceof(ArrayBuffer);
@@ -176,8 +255,8 @@ describe('AssetRegistry', function () {
             });
         });
 
-        it('loads container assets', function (done) {
-            app.assets.loadFromUrl(`${assetPath}test.glb`, 'container', function (err, asset) {
+        it('loads container assets', (done) => {
+            app.assets.loadFromUrl(`${assetPath}test.glb`, 'container', (err, asset) => {
                 expect(err).to.be.null;
                 expect(asset).to.be.instanceof(Asset);
                 expect(asset.resource).to.be.instanceof(GlbContainerResource);
@@ -185,17 +264,17 @@ describe('AssetRegistry', function () {
             });
         });
 
-        it('supports retry loading of container assets', function (done) {
+        it('supports retry loading of container assets', (done) => {
             spy(http, 'request');
             app.loader.enableRetry(2);
-            app.assets.loadFromUrl(`${assetPath}someurl.glb`, 'container', function (err, asset) {
+            app.assets.loadFromUrl(`${assetPath}someurl.glb`, 'container', (err, asset) => {
                 expect(http.request.callCount).to.equal(3);
                 done();
             });
         });
 
-        it('loads css assets', function (done) {
-            app.assets.loadFromUrl(`${assetPath}test.css`, 'css', function (err, asset) {
+        it('loads css assets', (done) => {
+            app.assets.loadFromUrl(`${assetPath}test.css`, 'css', (err, asset) => {
                 expect(err).to.be.null;
                 expect(asset).to.be.instanceof(Asset);
                 expect(asset.resource).to.be.a('string');
@@ -204,8 +283,8 @@ describe('AssetRegistry', function () {
             });
         });
 
-        it.skip('loads html assets', function (done) {
-            app.assets.loadFromUrl(`${assetPath}test.html`, 'html', function (err, asset) {
+        it('loads html assets', (done) => {
+            app.assets.loadFromUrl(`${assetPath}test.html`, 'html', (err, asset) => {
                 expect(err).to.be.null;
                 expect(asset).to.be.instanceof(Asset);
                 expect(asset.resource).to.be.a('string');
@@ -213,8 +292,8 @@ describe('AssetRegistry', function () {
             });
         });
 
-        it('loads json assets', function (done) {
-            app.assets.loadFromUrl(`${assetPath}test.json`, 'json', function (err, asset) {
+        it('loads json assets', (done) => {
+            app.assets.loadFromUrl(`${assetPath}test.json`, 'json', (err, asset) => {
                 expect(err).to.be.null;
                 expect(asset).to.be.instanceof(Asset);
                 expect(asset.resource).to.be.an.instanceof(Object);
@@ -225,8 +304,8 @@ describe('AssetRegistry', function () {
             });
         });
 
-        it('loads shader assets', function (done) {
-            app.assets.loadFromUrl(`${assetPath}test.glsl`, 'shader', function (err, asset) {
+        it('loads shader assets', (done) => {
+            app.assets.loadFromUrl(`${assetPath}test.glsl`, 'shader', (err, asset) => {
                 expect(err).to.be.null;
                 expect(asset).to.be.instanceof(Asset);
                 expect(asset.resource).to.be.a('string');
@@ -234,12 +313,21 @@ describe('AssetRegistry', function () {
             });
         });
 
-        it('loads text assets', function (done) {
-            app.assets.loadFromUrl(`${assetPath}test.txt`, 'text', function (err, asset) {
+        it('loads text assets', (done) => {
+            app.assets.loadFromUrl(`${assetPath}test.txt`, 'text', (err, asset) => {
                 expect(err).to.be.null;
                 expect(asset).to.be.instanceof(Asset);
                 expect(asset.resource).to.be.a('string');
                 expect(asset.resource).to.equal('hello world');
+                done();
+            });
+        });
+
+        it('loads texture assets', (done) => {
+            app.assets.loadFromUrl(`${assetPath}test.png`, 'texture', (err, asset) => {
+                expect(err).to.be.null;
+                expect(asset).to.be.instanceof(Asset);
+                expect(asset.resource).to.be.instanceof(Texture);
                 done();
             });
         });

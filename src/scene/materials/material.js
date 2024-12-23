@@ -1,5 +1,4 @@
 import { Debug } from '../../core/debug.js';
-
 import {
     BLENDMODE_ZERO, BLENDMODE_ONE, BLENDMODE_SRC_COLOR,
     BLENDMODE_DST_COLOR, BLENDMODE_ONE_MINUS_DST_COLOR, BLENDMODE_SRC_ALPHA,
@@ -10,21 +9,32 @@ import {
 } from '../../platform/graphics/constants.js';
 import { BlendState } from '../../platform/graphics/blend-state.js';
 import { DepthState } from '../../platform/graphics/depth-state.js';
-import { ShaderProcessorOptions } from '../../platform/graphics/shader-processor-options.js';
-
 import {
     BLEND_ADDITIVE, BLEND_NORMAL, BLEND_NONE, BLEND_PREMULTIPLIED,
     BLEND_MULTIPLICATIVE, BLEND_ADDITIVEALPHA, BLEND_MULTIPLICATIVE2X, BLEND_SCREEN,
     BLEND_MIN, BLEND_MAX, BLEND_SUBTRACTIVE
 } from '../constants.js';
-import { processShader } from '../shader-lib/utils.js';
 import { getDefaultMaterial } from './default-material.js';
+
+/**
+ * @import { BindGroupFormat } from '../../platform/graphics/bind-group-format.js';
+ * @import { GraphicsDevice } from '../../platform/graphics/graphics-device.js'
+ * @import { Light } from '../light.js';
+ * @import { MeshInstance } from '../mesh-instance.js'
+ * @import { CameraShaderParams } from '../camera-shader-params.js'
+ * @import { Scene } from '../scene.js'
+ * @import { Shader } from '../../platform/graphics/shader.js'
+ * @import { StencilParameters } from '../../platform/graphics/stencil-parameters.js'
+ * @import { Texture } from '../../platform/graphics/texture.js'
+ * @import { UniformBufferFormat } from '../../platform/graphics/uniform-buffer-format.js';
+ * @import { VertexFormat } from '../../platform/graphics/vertex-format.js';
+ */
 
 // blend mode mapping to op, srcBlend and dstBlend
 const blendModes = [];
 blendModes[BLEND_SUBTRACTIVE] = { src: BLENDMODE_ONE, dst: BLENDMODE_ONE, op: BLENDEQUATION_REVERSE_SUBTRACT };
 blendModes[BLEND_NONE] = { src: BLENDMODE_ONE, dst: BLENDMODE_ZERO, op: BLENDEQUATION_ADD };
-blendModes[BLEND_NORMAL] = { src: BLENDMODE_SRC_ALPHA, dst: BLENDMODE_ONE_MINUS_SRC_ALPHA, op: BLENDEQUATION_ADD };
+blendModes[BLEND_NORMAL] = { src: BLENDMODE_SRC_ALPHA, dst: BLENDMODE_ONE_MINUS_SRC_ALPHA, op: BLENDEQUATION_ADD, alphaSrc: BLENDMODE_ONE };
 blendModes[BLEND_PREMULTIPLIED] = { src: BLENDMODE_ONE, dst: BLENDMODE_ONE_MINUS_SRC_ALPHA, op: BLENDEQUATION_ADD };
 blendModes[BLEND_ADDITIVE] = { src: BLENDMODE_ONE, dst: BLENDMODE_ONE, op: BLENDEQUATION_ADD };
 blendModes[BLEND_ADDITIVEALPHA] = { src: BLENDMODE_SRC_ALPHA, dst: BLENDMODE_ONE, op: BLENDEQUATION_ADD };
@@ -37,24 +47,31 @@ blendModes[BLEND_MAX] = { src: BLENDMODE_ONE, dst: BLENDMODE_ONE, op: BLENDEQUAT
 let id = 0;
 
 /**
+ * @typedef {object} ShaderVariantParams - The description of the parameters used by the
+ * Material#getShaderVariant function.
+ * @property {GraphicsDevice} device - The graphics device.
+ * @property {Scene} scene - The scene.
+ * @property {number} objDefs - The object definitions.
+ * @property {CameraShaderParams} cameraShaderParams - The camera shader parameters.
+ * @property {number} pass - The shader pass.
+ * @property {Light[][]} sortedLights - The sorted lights.
+ * @property {UniformBufferFormat|undefined} viewUniformFormat - The view uniform format.
+ * @property {BindGroupFormat|undefined} viewBindGroupFormat - The view bind group format.
+ * @property {VertexFormat} vertexFormat - The vertex format.
+ * @ignore
+ */
+
+/**
  * A material determines how a particular mesh instance is rendered. It specifies the shader and
  * render state that is set before the mesh instance is submitted to the graphics device.
+ *
+ * @category Graphics
  */
 class Material {
     /**
-     * A shader used to render the material. Note that this is used only by materials where the
-     * user specifies the shader. Most material types generate multiple shader variants, and do not
-     * set this.
-     *
-     * @type {import('../../platform/graphics/shader.js').Shader}
-     * @private
-     */
-    _shader = null;
-
-    /**
      * The mesh instances referencing this material
      *
-     * @type {import('../mesh-instance.js').MeshInstance[]}
+     * @type {MeshInstance[]}
      * @private
      */
     meshInstances = [];
@@ -66,9 +83,35 @@ class Material {
      */
     name = 'Untitled';
 
+    /**
+     * A unique id the user can assign to the material. The engine internally does not use this for
+     * anything, and the user can assign a value to this id for any purpose they like. Defaults to
+     * an empty string.
+     *
+     * @type {string}
+     */
+    userId = '';
+
     id = id++;
 
-    variants = {};
+    /**
+     * The cache of shader variants generated for this material. The key represents the unique
+     * variant, the value is the shader.
+     *
+     * @type {Map<number, Shader>}
+     * @ignore
+     */
+    variants = new Map();
+
+    /**
+     * The set of defines used to generate the shader variants.
+     *
+     * @type {Map<string, string>}
+     * @ignore
+     */
+    defines = new Map();
+
+    _definesDirty = false;
 
     parameters = {};
 
@@ -119,44 +162,75 @@ class Material {
     /**
      * Stencil parameters for front faces (default is null).
      *
-     * @type {import('../../platform/graphics/stencil-parameters.js').StencilParameters|null}
+     * @type {StencilParameters|null}
      */
     stencilFront = null;
 
     /**
      * Stencil parameters for back faces (default is null).
      *
-     * @type {import('../../platform/graphics/stencil-parameters.js').StencilParameters|null}
+     * @type {StencilParameters|null}
      */
     stencilBack = null;
 
-    /**
-     * Offsets the output depth buffer value. Useful for decals to prevent z-fighting.
-     *
-     * @type {number}
-     */
-    depthBias = 0;
+    /** @protected */
+    constructor() {
+        if (new.target === Material) {
+            Debug.error('Material class cannot be instantiated, use ShaderMaterial instead');
+        }
+    }
 
     /**
-     * Same as {@link Material#depthBias}, but also depends on the slope of the triangle relative
-     * to the camera.
+     * Sets the offset for the output depth buffer value. Useful for decals to prevent z-fighting.
+     * Typically a small negative value (-0.1) is used to render the mesh slightly closer to the
+     * camera.
      *
      * @type {number}
      */
-    slopeDepthBias = 0;
+    set depthBias(value) {
+        this._depthState.depthBias = value;
+    }
+
+    /**
+     * Gets the offset for the output depth buffer value.
+     *
+     * @type {number}
+     */
+    get depthBias() {
+        return this._depthState.depthBias;
+    }
+
+    /**
+     * Sets the offset for the output depth buffer value based on the slope of the triangle
+     * relative to the camera.
+     *
+     * @type {number}
+     */
+    set slopeDepthBias(value) {
+        this._depthState.depthBiasSlope = value;
+    }
+
+    /**
+     * Gets the offset for the output depth buffer value based on the slope of the triangle
+     * relative to the camera.
+     *
+     * @type {number}
+     */
+    get slopeDepthBias() {
+        return this._depthState.depthBiasSlope;
+    }
 
     _shaderVersion = 0;
 
     _scene = null;
 
-    _dirtyBlend = false;
-
     dirty = true;
 
     /**
-     * If true, the red component of fragments generated by the shader of this material is written
-     * to the color buffer of the currently active render target. If false, the red component will
-     * not be written. Defaults to true.
+     * Sets whether the red channel is written to the color buffer. If true, the red component of
+     * fragments generated by the shader of this material is written to the color buffer of the
+     * currently active render target. If false, the red component will not be written. Defaults to
+     * true.
      *
      * @type {boolean}
      */
@@ -164,14 +238,20 @@ class Material {
         this._blendState.redWrite = value;
     }
 
+    /**
+     * Gets whether the red channel is written to the color buffer.
+     *
+     * @type {boolean}
+     */
     get redWrite() {
         return this._blendState.redWrite;
     }
 
     /**
-     * If true, the green component of fragments generated by the shader of this material is
-     * written to the color buffer of the currently active render target. If false, the green
-     * component will not be written. Defaults to true.
+     * Sets whether the green channel is written to the color buffer. If true, the red component of
+     * fragments generated by the shader of this material is written to the color buffer of the
+     * currently active render target. If false, the green component will not be written. Defaults
+     * to true.
      *
      * @type {boolean}
      */
@@ -179,14 +259,20 @@ class Material {
         this._blendState.greenWrite = value;
     }
 
+    /**
+     * Gets whether the green channel is written to the color buffer.
+     *
+     * @type {boolean}
+     */
     get greenWrite() {
         return this._blendState.greenWrite;
     }
 
     /**
-     * If true, the blue component of fragments generated by the shader of this material is
-     * written to the color buffer of the currently active render target. If false, the blue
-     * component will not be written. Defaults to true.
+     * Sets whether the blue channel is written to the color buffer. If true, the red component of
+     * fragments generated by the shader of this material is written to the color buffer of the
+     * currently active render target. If false, the blue component will not be written. Defaults
+     * to true.
      *
      * @type {boolean}
      */
@@ -194,14 +280,20 @@ class Material {
         this._blendState.blueWrite = value;
     }
 
+    /**
+     * Gets whether the blue channel is written to the color buffer.
+     *
+     * @type {boolean}
+     */
     get blueWrite() {
         return this._blendState.blueWrite;
     }
 
     /**
-     * If true, the alpha component of fragments generated by the shader of this material is
-     * written to the color buffer of the currently active render target. If false, the alpha
-     * component will not be written. Defaults to true.
+     * Sets whether the alpha channel is written to the color buffer. If true, the red component of
+     * fragments generated by the shader of this material is written to the color buffer of the
+     * currently active render target. If false, the alpha component will not be written. Defaults
+     * to true.
      *
      * @type {boolean}
      */
@@ -209,21 +301,13 @@ class Material {
         this._blendState.alphaWrite = value;
     }
 
+    /**
+     * Gets whether the alpha channel is written to the color buffer.
+     *
+     * @type {boolean}
+     */
     get alphaWrite() {
         return this._blendState.alphaWrite;
-    }
-
-    /**
-     * The shader used by this material to render mesh instances (default is null).
-     *
-     * @type {import('../../platform/graphics/shader.js').Shader|null}
-     */
-    set shader(shader) {
-        this._shader = shader;
-    }
-
-    get shader() {
-        return this._shader;
     }
 
     // returns boolean depending on material being transparent
@@ -231,37 +315,38 @@ class Material {
         return this._blendState.blend;
     }
 
-    // called when material changes transparency, for layer composition to add it to appropriate
-    // queue (opaque or transparent)
-    _markBlendDirty() {
-        if (this._scene) {
-            this._scene.layers._dirtyBlend = true;
-        } else {
-            this._dirtyBlend = true;
+    _updateTransparency() {
+        const transparent = this.transparent;
+        const meshInstances = this.meshInstances;
+        for (let i = 0; i < meshInstances.length; i++) {
+            meshInstances[i].transparent = transparent;
         }
     }
 
     /**
-     * Controls how fragment shader outputs are blended when being written to the currently active
-     * render target. This overwrites blending type set using {@link Material#blendType}, and
-     * offers more control over blending.
+     * Sets the blend state for this material. Controls how fragment shader outputs are blended
+     * when being written to the currently active render target. This overwrites blending type set
+     * using {@link Material#blendType}, and offers more control over blending.
      *
-     * @type { BlendState }
+     * @type {BlendState}
      */
     set blendState(value) {
-        if (this._blendState.blend !== value.blend) {
-            this._markBlendDirty();
-        }
         this._blendState.copy(value);
+        this._updateTransparency();
     }
 
+    /**
+     * Gets the blend state for this material.
+     *
+     * @type {BlendState}
+     */
     get blendState() {
         return this._blendState;
     }
 
     /**
-     * Controls how fragment shader outputs are blended when being written to the currently active
-     * render target. Can be:
+     * Sets the blend mode for this material. Controls how fragment shader outputs are blended when
+     * being written to the currently active render target. Can be:
      *
      * - {@link BLEND_SUBTRACTIVE}: Subtract the color of the source fragment from the destination
      * fragment and write the result to the frame buffer.
@@ -279,8 +364,8 @@ class Material {
      * multiplied by the source alpha.
      * - {@link BLEND_MULTIPLICATIVE2X}: Multiplies colors and doubles the result.
      * - {@link BLEND_SCREEN}: Softer version of additive.
-     * - {@link BLEND_MIN}: Minimum color. Check app.graphicsDevice.extBlendMinmax for support.
-     * - {@link BLEND_MAX}: Maximum color. Check app.graphicsDevice.extBlendMinmax for support.
+     * - {@link BLEND_MIN}: Minimum color.
+     * - {@link BLEND_MAX}: Maximum color.
      *
      * Defaults to {@link BLEND_NONE}.
      *
@@ -291,16 +376,21 @@ class Material {
         const blendMode = blendModes[type];
         Debug.assert(blendMode, `Unknown blend mode ${type}`);
         this._blendState.setColorBlend(blendMode.op, blendMode.src, blendMode.dst);
-        this._blendState.setAlphaBlend(blendMode.op, blendMode.src, blendMode.dst);
+        this._blendState.setAlphaBlend(blendMode.alphaOp ?? blendMode.op, blendMode.alphaSrc ?? blendMode.src, blendMode.alphaDst ?? blendMode.dst);
 
         const blend = type !== BLEND_NONE;
         if (this._blendState.blend !== blend) {
             this._blendState.blend = blend;
-            this._markBlendDirty();
+            this._updateTransparency();
         }
         this._updateMeshInstanceKeys();
     }
 
+    /**
+     * Gets the blend mode for this material.
+     *
+     * @type {number}
+     */
     get blendType() {
         if (!this.transparent) {
             return BLEND_NONE;
@@ -323,21 +413,26 @@ class Material {
      * Sets the depth state. Note that this can also be done by using {@link Material#depthTest},
      * {@link Material#depthFunc} and {@link Material#depthWrite}.
      *
-     * @type { DepthState }
+     * @type {DepthState}
      */
     set depthState(value) {
         this._depthState.copy(value);
     }
 
+    /**
+     * Gets the depth state.
+     *
+     * @type {DepthState}
+     */
     get depthState() {
         return this._depthState;
     }
 
     /**
-     * If true, fragments generated by the shader of this material are only written to the current
-     * render target if they pass the depth test. If false, fragments generated by the shader of
-     * this material are written to the current render target regardless of what is in the depth
-     * buffer. Defaults to true.
+     * Sets whether depth testing is enabled. If true, fragments generated by the shader of this
+     * material are only written to the current render target if they pass the depth test. If
+     * false, fragments generated by the shader of this material are written to the current render
+     * target regardless of what is in the depth buffer. Defaults to true.
      *
      * @type {boolean}
      */
@@ -345,13 +440,18 @@ class Material {
         this._depthState.test = value;
     }
 
+    /**
+     * Gets whether depth testing is enabled.
+     *
+     * @type {boolean}
+     */
     get depthTest() {
         return this._depthState.test;
     }
 
     /**
-     * Controls how the depth of new fragments is compared against the current depth contained in
-     * the depth buffer. Can be:
+     * Sets the depth test function. Controls how the depth of new fragments is compared against
+     * the current depth contained in the depth buffer. Can be:
      *
      * - {@link FUNC_NEVER}: don't draw
      * - {@link FUNC_LESS}: draw if new depth < depth buffer
@@ -370,14 +470,19 @@ class Material {
         this._depthState.func = value;
     }
 
+    /**
+     * Gets the depth test function.
+     *
+     * @type {number}
+     */
     get depthFunc() {
         return this._depthState.func;
     }
 
     /**
-     * If true, fragments generated by the shader of this material write a depth value to the depth
-     * buffer of the currently active render target. If false, no depth value is written. Defaults
-     * to true.
+     * Sets whether depth writing is enabled. If true, fragments generated by the shader of this
+     * material write a depth value to the depth buffer of the currently active render target. If
+     * false, no depth value is written. Defaults to true.
      *
      * @type {boolean}
      */
@@ -385,6 +490,11 @@ class Material {
         this._depthState.write = value;
     }
 
+    /**
+     * Gets whether depth writing is enabled.
+     *
+     * @type {boolean}
+     */
     get depthWrite() {
         return this._depthState.write;
     }
@@ -397,7 +507,6 @@ class Material {
      */
     copy(source) {
         this.name = source.name;
-        this._shader = source._shader;
 
         // Render states
         this.alphaTest = source.alphaTest;
@@ -408,13 +517,22 @@ class Material {
 
         this.cull = source.cull;
 
-        this.depthBias = source.depthBias;
-        this.slopeDepthBias = source.slopeDepthBias;
-
         this.stencilFront = source.stencilFront?.clone();
         if (source.stencilBack) {
             this.stencilBack = source.stencilFront === source.stencilBack ? this.stencilFront : source.stencilBack.clone();
         }
+
+        // Shader parameters
+        this.clearParameters();
+        for (const name in source.parameters) {
+            if (source.parameters.hasOwnProperty(name)) {
+                this._setParameterSimple(name, source.parameters[name].data);
+            }
+        }
+
+        // defines
+        this.defines.clear();
+        source.defines.forEach((value, key) => this.defines.set(key, value));
 
         return this;
     }
@@ -439,19 +557,25 @@ class Material {
     updateUniforms(device, scene) {
     }
 
-    getShaderVariant(device, scene, objDefs, staticLightList, pass, sortedLights, viewUniformFormat, viewBindGroupFormat, vertexFormat) {
-
-        // generate shader variant - its the same shader, but with different processing options
-        const processingOptions = new ShaderProcessorOptions(viewUniformFormat, viewBindGroupFormat, vertexFormat);
-        return processShader(this._shader, processingOptions);
+    /**
+     * @param {ShaderVariantParams} params - The parameters used to generate the shader variant.
+     * @ignore
+     */
+    getShaderVariant(params) {
+        Debug.assert(false, 'Not implemented');
     }
 
     /**
      * Applies any changes made to the material's properties.
      */
     update() {
+        // if the defines were modified, we need to rebuild the shaders
+        if (this._definesDirty) {
+            this._definesDirty = false;
+            this.clearVariants();
+        }
+
         this.dirty = true;
-        if (this._shader) this._shader.failed = false;
     }
 
     // Parameter management
@@ -466,7 +590,7 @@ class Material {
     clearVariants() {
 
         // clear variants on the material
-        this.variants = {};
+        this.variants.clear();
 
         // but also clear them from all materials that reference them
         const meshInstances = this.meshInstances;
@@ -486,12 +610,23 @@ class Material {
         return this.parameters[name];
     }
 
+    _setParameterSimple(name, data) {
+        const param = this.parameters[name];
+        if (param) {
+            param.data = data;
+        } else {
+            this.parameters[name] = {
+                scopeId: null,
+                data: data
+            };
+        }
+    }
+
     /**
      * Sets a shader parameter on a material.
      *
      * @param {string} name - The name of the parameter to set.
-     * @param {number|number[]|Float32Array|import('../../platform/graphics/texture.js').Texture} data -
-     * The value for the specified parameter.
+     * @param {number|number[]|Float32Array|Texture} data - The value for the specified parameter.
      */
     setParameter(name, data) {
 
@@ -507,15 +642,7 @@ class Material {
             data = uniformObject.value;
         }
 
-        const param = this.parameters[name];
-        if (param) {
-            param.data = data;
-        } else {
-            this.parameters[name] = {
-                scopeId: null,
-                data: data
-            };
-        }
+        this._setParameterSimple(name, data);
     }
 
     /**
@@ -546,12 +673,44 @@ class Material {
     }
 
     /**
+     * Adds or removes a define on the material. Defines can be used to enable or disable various
+     * parts of the shader code.
+     *
+     * @param {string} name - The name of the define to set.
+     * @param {string|undefined|false} value - The value of the define. If undefined or false, the
+     * define is removed.
+     */
+    setDefine(name, value) {
+        let modified = false;
+        const { defines } = this;
+
+        if (value !== undefined && value !== false) {
+            modified = !defines.has(name) || defines.get(name) !== value;
+            defines.set(name, value);
+        } else {
+            modified = defines.has(name);
+            defines.delete(name);
+        }
+
+        this._definesDirty ||= modified;
+    }
+
+    /**
+     * Returns true if a define is enabled on the material, otherwise false.
+     *
+     * @param {string} name - The name of the define to check.
+     * @returns {boolean} The value of the define.
+     */
+    getDefine(name) {
+        return this.defines.has(name);
+    }
+
+    /**
      * Removes this material from the scene and possibly frees up memory from its shaders (if there
      * are no other materials using it).
      */
     destroy() {
-        this.variants = {};
-        this._shader = null;
+        this.variants.clear();
 
         for (let i = 0; i < this.meshInstances.length; i++) {
             const meshInstance = this.meshInstances[i];
@@ -574,8 +733,7 @@ class Material {
     /**
      * Registers mesh instance as referencing the material.
      *
-     * @param {import('../mesh-instance.js').MeshInstance} meshInstance - The mesh instance to
-     * de-register.
+     * @param {MeshInstance} meshInstance - The mesh instance to register.
      * @ignore
      */
     addMeshInstanceRef(meshInstance) {
@@ -585,8 +743,7 @@ class Material {
     /**
      * De-registers mesh instance as referencing the material.
      *
-     * @param {import('../mesh-instance.js').MeshInstance} meshInstance - The mesh instance to
-     * de-register.
+     * @param {MeshInstance} meshInstance - The mesh instance to de-register.
      * @ignore
      */
     removeMeshInstanceRef(meshInstance) {

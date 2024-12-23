@@ -1,26 +1,27 @@
 import { IndexedList } from '../../../core/indexed-list.js';
-
 import { Vec2 } from '../../../core/math/vec2.js';
-
 import { Component } from '../component.js';
 import { ComponentSystem } from '../system.js';
-
 import { ScreenComponent } from './component.js';
 import { ScreenComponentData } from './data.js';
+
+/**
+ * @import { AppBase } from '../../app-base.js'
+ */
 
 const _schema = ['enabled'];
 
 /**
  * Manages creation of {@link ScreenComponent}s.
  *
- * @augments ComponentSystem
+ * @category User Interface
  */
 class ScreenComponentSystem extends ComponentSystem {
     /**
      * Create a new ScreenComponentSystem instance.
      *
-     * @param {import('../../app-base.js').AppBase} app - The application.
-     * @hideconstructor
+     * @param {AppBase} app - The application.
+     * @ignore
      */
     constructor(app) {
         super(app);
@@ -69,7 +70,7 @@ class ScreenComponentSystem extends ComponentSystem {
 
         // queue up a draw order sync
         component.syncDrawOrder();
-        super.initializeComponentData(component, data, properties);
+        super.initializeComponentData(component, data, _schema);
     }
 
     destroy() {

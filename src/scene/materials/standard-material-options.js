@@ -1,17 +1,18 @@
-import { LitOptions } from "./lit-options.js";
+import { LitShaderOptions } from '../shader-lib/programs/lit-shader-options.js';
 
 /**
  * The standard material options define a set of options used to control the shader frontend shader
  * generation, such as textures, tints and multipliers.
+ *
+ * @category Graphics
  */
 class StandardMaterialOptions {
-    /** @private */
-    _pass = 0;
-
-    /** @private */
-    _isForwardPass = false;
-
-    chunks = [];
+    /**
+     * The set of defines used to generate the shader.
+     *
+     * @type {Map<string, string>}
+     */
+    defines = new Map();
 
     /**
      * If UV1 (second set of texture coordinates) is required in the shader. Will be declared as
@@ -20,20 +21,6 @@ class StandardMaterialOptions {
      * @type {boolean}
      */
     forceUv1 = false;
-
-    /**
-     * The value of {@link StandardMaterial#ambientTint}.
-     *
-     * @type {boolean}
-     */
-    ambientTint = false;
-
-    /**
-     * Defines if {@link StandardMaterial#diffuse} constant should affect diffuse color.
-     *
-     * @type {boolean}
-     */
-    diffuseTint = false;
 
     /**
      * Defines if {@link StandardMaterial#specular} constant should affect specular color.
@@ -55,20 +42,6 @@ class StandardMaterialOptions {
      * @type {boolean}
      */
     glossTint = false;
-
-    /**
-     * Defines if {@link StandardMaterial#emissive} constant should affect emissive color.
-     *
-     * @type {boolean}
-     */
-    emissiveTint = false;
-
-    /**
-     * Defines if {@link StandardMaterial#opacity} constant should affect opacity value.
-     *
-     * @type {boolean}
-     */
-    opacityTint = false;
 
     emissiveEncoding = 'linear';
 
@@ -102,30 +75,23 @@ class StandardMaterialOptions {
      */
     clearCoatGlossInvert = false;
 
-    litOptions = new LitOptions();
+    /**
+     * True to include AO variables even if AO is not used, which allows SSAO to be used in the lit shader.
+     *
+     * @type {boolean}
+     */
+    useAO = false;
 
     /**
-     * Value of {@link Layer#shaderPass} of the Layer being rendered. Must be set to the same in
-     * {@link LitOptions#pass}.
+     * Storage for the options for lit the shader and material.
      *
-     * @type {number}
+     * @type {LitShaderOptions}
      */
-    set pass(p) {
-        this._pass = p;
-        this.litOptions._pass = p;
-    }
+    litOptions = new LitShaderOptions();
 
+    // program-library assumes material options has a pass property
     get pass() {
-        return this._pass;
-    }
-
-    set isForwardPass(value) {
-        this._isForwardPass = value;
-        this.litOptions._isForwardPass = value;
-    }
-
-    get isForwardPass() {
-        return this._isForwardPass;
+        return this.litOptions.pass;
     }
 }
 

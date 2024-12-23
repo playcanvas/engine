@@ -16,13 +16,12 @@ import { Vec3 } from '../core/math/vec3.js';
 import {
     PRIMITIVE_TRIANGLES, PRIMITIVE_TRIFAN, PRIMITIVE_TRISTRIP, CULLFACE_NONE
 } from '../platform/graphics/constants.js';
-import { GraphicsDeviceAccess } from '../platform/graphics/graphics-device-access.js';
 import { DebugGraphics } from '../platform/graphics/debug-graphics.js';
 import { http } from '../platform/net/http.js';
 
 import {
     LAYERID_DEPTH, LAYERID_IMMEDIATE, LAYERID_SKYBOX, LAYERID_UI, LAYERID_WORLD,
-    SORTMODE_NONE, SORTMODE_MANUAL, SPECULAR_BLINN
+    SORTMODE_NONE, SORTMODE_MANUAL
 } from '../scene/constants.js';
 import { setProgramLibrary } from '../scene/shader-lib/get-program-library.js';
 import { ProgramLibrary } from '../scene/shader-lib/program-library.js';
@@ -32,16 +31,18 @@ import { AreaLightLuts } from '../scene/area-light-luts.js';
 import { Layer } from '../scene/layer.js';
 import { LayerComposition } from '../scene/composition/layer-composition.js';
 import { Scene } from '../scene/scene.js';
-import { Material } from '../scene/materials/material.js';
-import { LightsBuffer } from '../scene/lighting/lights-buffer.js';
+import { ShaderMaterial } from '../scene/materials/shader-material.js';
 import { StandardMaterial } from '../scene/materials/standard-material.js';
 import { setDefaultMaterial } from '../scene/materials/default-material.js';
 
+import {
+    FILLMODE_FILL_WINDOW, FILLMODE_KEEP_ASPECT,
+    RESOLUTION_AUTO, RESOLUTION_FIXED
+} from './constants.js';
 import { Asset } from './asset/asset.js';
 import { AssetRegistry } from './asset/asset-registry.js';
 import { BundleRegistry } from './bundle/bundle-registry.js';
 import { ComponentSystemRegistry } from './components/registry.js';
-import { SceneGrab } from '../scene/graphics/scene-grab.js';
 import { BundleHandler } from './handlers/bundle.js';
 import { ResourceLoader } from './handlers/loader.js';
 import { I18n } from './i18n/i18n.js';
@@ -50,47 +51,58 @@ import { Entity } from './entity.js';
 import { SceneRegistry } from './scene-registry.js';
 import { script } from './script.js';
 import { ApplicationStats } from './stats.js';
-
-import {
-    FILLMODE_FILL_WINDOW, FILLMODE_KEEP_ASPECT,
-    RESOLUTION_AUTO, RESOLUTION_FIXED
-} from './constants.js';
-
-import {
-    getApplication,
-    setApplication
-} from './globals.js';
-
-// Mini-object used to measure progress of loading sets
-class Progress {
-    constructor(length) {
-        this.length = length;
-        this.count = 0;
-    }
-
-    inc() {
-        this.count++;
-    }
-
-    done() {
-        return (this.count === this.length);
-    }
-}
+import { getApplication, setApplication } from './globals.js';
 
 /**
- * Callback used by {@link AppBase#configure} when configuration file is loaded and parsed (or
- * an error occurs).
+ * @import { AppOptions } from './app-options.js'
+ * @import { BatchManager } from '../scene/batching/batch-manager.js'
+ * @import { ElementInput } from './input/element-input.js'
+ * @import { GamePads } from '../platform/input/game-pads.js'
+ * @import { GraphicsDevice } from '../platform/graphics/graphics-device.js'
+ * @import { Keyboard } from '../platform/input/keyboard.js'
+ * @import { Lightmapper } from './lightmapper/lightmapper.js'
+ * @import { Material } from '../scene/materials/material.js'
+ * @import { MeshInstance } from '../scene/mesh-instance.js'
+ * @import { Mesh } from '../scene/mesh.js'
+ * @import { Mouse } from '../platform/input/mouse.js'
+ * @import { SoundManager } from '../platform/sound/manager.js'
+ * @import { Texture } from '../platform/graphics/texture.js'
+ * @import { TouchDevice } from '../platform/input/touch-device.js'
+ * @import { XrManager } from './xr/xr-manager.js'
+ */
+
+/**
+ * Callback used by {@link AppBase#configure} when configuration file is loaded and parsed (or an
+ * error occurs).
  *
  * @callback ConfigureAppCallback
  * @param {string|null} err - The error message in the case where the loading or parsing fails.
+ * @returns {void}
  */
 
 /**
  * Callback used by {@link AppBase#preload} when all assets (marked as 'preload') are loaded.
  *
  * @callback PreloadAppCallback
+ * @returns {void}
  */
 
+/**
+ * Callback used by {@link AppBase#start} and itself to request the rendering of a new animation
+ * frame.
+ *
+ * @callback MakeTickCallback
+ * @param {number} [timestamp] - The timestamp supplied by requestAnimationFrame.
+ * @param {XRFrame} [frame] - XRFrame from requestAnimationFrame callback.
+ * @returns {void}
+ */
+
+/**
+ * Gets the current application, if any.
+ *
+ * @type {AppBase|null}
+ * @ignore
+ */
 let app = null;
 
 /**
@@ -116,10 +128,324 @@ let app = null;
  *
  * If you are using the Engine without the Editor, you have to create the application instance
  * manually.
- *
- * @augments EventHandler
  */
 class AppBase extends EventHandler {
+    /**
+     * The application's batch manager.
+     *
+     * @type {BatchManager|null}
+     * @private
+     */
+    _batcher = null;
+
+    /** @private */
+    _destroyRequested = false;
+
+    /** @private */
+    _inFrameUpdate = false;
+
+    /** @private */
+    _librariesLoaded = false;
+
+    /** @private */
+    _fillMode = FILLMODE_KEEP_ASPECT;
+
+    /** @private */
+    _resolutionMode = RESOLUTION_FIXED;
+
+    /** @private */
+    _allowResize = true;
+
+    /**
+     * @type {Asset|null}
+     * @private
+     */
+    _skyboxAsset = null;
+
+    /**
+     * @type {SoundManager}
+     * @private
+     */
+    _soundManager;
+
+    /** @private */
+    _visibilityChangeHandler;
+
+    /**
+     * Stores all entities that have been created for this app by guid.
+     *
+     * @type {Object<string, Entity>}
+     * @ignore
+     */
+    _entityIndex = {};
+
+    /**
+     * @type {boolean}
+     * @ignore
+     */
+    _inTools = false;
+
+    /**
+     * @type {string}
+     * @ignore
+     */
+    _scriptPrefix = '';
+
+    /** @ignore */
+    _time = 0;
+
+    /**
+     * Set this to false if you want to run without using bundles. We set it to true only if
+     * TextDecoder is available because we currently rely on it for untarring.
+     *
+     * @type {boolean}
+     * @ignore
+     */
+    enableBundles = (typeof TextDecoder !== 'undefined');
+
+    /**
+     * A request id returned by requestAnimationFrame, allowing us to cancel it.
+     *
+     * @ignore
+     */
+    frameRequestId;
+
+    /**
+     * Scales the global time delta. Defaults to 1.
+     *
+     * @type {number}
+     * @example
+     * // Set the app to run at half speed
+     * this.app.timeScale = 0.5;
+     */
+    timeScale = 1;
+
+    /**
+     * Clamps per-frame delta time to an upper bound. Useful since returning from a tab
+     * deactivation can generate huge values for dt, which can adversely affect game state.
+     * Defaults to 0.1 (seconds).
+     *
+     * @type {number}
+     * @example
+     * // Don't clamp inter-frame times of 200ms or less
+     * this.app.maxDeltaTime = 0.2;
+     */
+    maxDeltaTime = 0.1; // Maximum delta is 0.1s or 10 fps.
+
+    /**
+     * The total number of frames the application has updated since start() was called.
+     *
+     * @type {number}
+     * @ignore
+     */
+    frame = 0;
+
+    /**
+     * The frame graph.
+     *
+     * @type {FrameGraph}
+     * @ignore
+     */
+    frameGraph = new FrameGraph();
+
+    /**
+     * The forward renderer.
+     *
+     * @type {ForwardRenderer}
+     * @ignore
+     */
+    renderer;
+
+    /**
+     * Scripts in order of loading first.
+     *
+     * @type {string[]}
+     */
+    scriptsOrder = [];
+
+    /**
+     * The application's performance stats.
+     *
+     * @type {ApplicationStats}
+     * @ignore
+     */
+    stats;
+
+    /**
+     * When true, the application's render function is called every frame. Setting autoRender to
+     * false is useful to applications where the rendered image may often be unchanged over time.
+     * This can heavily reduce the application's load on the CPU and GPU. Defaults to true.
+     *
+     * @type {boolean}
+     * @example
+     * // Disable rendering every frame and only render on a keydown event
+     * this.app.autoRender = false;
+     * this.app.keyboard.on('keydown', (event) => {
+     *     this.app.renderNextFrame = true;
+     * });
+     */
+    autoRender = true;
+
+    /**
+     * Set to true to render the scene on the next iteration of the main loop. This only has an
+     * effect if {@link AppBase#autoRender} is set to false. The value of renderNextFrame is set
+     * back to false again as soon as the scene has been rendered.
+     *
+     * @type {boolean}
+     * @example
+     * // Render the scene only while space key is pressed
+     * if (this.app.keyboard.isPressed(pc.KEY_SPACE)) {
+     *     this.app.renderNextFrame = true;
+     * }
+     */
+    renderNextFrame = false;
+
+    /**
+     * The graphics device used by the application.
+     *
+     * @type {GraphicsDevice}
+     */
+    graphicsDevice;
+
+    /**
+     * The root entity of the application.
+     *
+     * @type {Entity}
+     * @example
+     * // Return the first entity called 'Camera' in a depth-first search of the scene hierarchy
+     * const camera = this.app.root.findByName('Camera');
+     */
+    root;
+
+    /**
+     * The scene managed by the application.
+     *
+     * @type {Scene}
+     * @example
+     * // Set the fog type property of the application's scene
+     * this.app.scene.fog.type = pc.FOG_LINEAR;
+     */
+    scene;
+
+    /**
+     * The run-time lightmapper.
+     *
+     * @type {Lightmapper|null}
+     */
+    lightmapper = null;
+
+    /**
+     * The resource loader.
+     *
+     * @type {ResourceLoader}
+     */
+    loader = new ResourceLoader(this);
+
+    /**
+     * The asset registry managed by the application.
+     *
+     * @type {AssetRegistry}
+     * @example
+     * // Search the asset registry for all assets with the tag 'vehicle'
+     * const vehicleAssets = this.app.assets.findByTag('vehicle');
+     */
+    assets;
+
+    /**
+     * The bundle registry managed by the application.
+     *
+     * @type {BundleRegistry}
+     * @ignore
+     */
+    bundles;
+
+    /**
+     * The scene registry managed by the application.
+     *
+     * @type {SceneRegistry}
+     * @example
+     * // Search the scene registry for a item with the name 'racetrack1'
+     * const sceneItem = this.app.scenes.find('racetrack1');
+     *
+     * // Load the scene using the item's url
+     * this.app.scenes.loadScene(sceneItem.url);
+     */
+    scenes = new SceneRegistry(this);
+
+    /**
+     * The application's script registry.
+     *
+     * @type {ScriptRegistry}
+     */
+    scripts = new ScriptRegistry(this);
+
+    /**
+     * The application's component system registry.
+     *
+     * @type {ComponentSystemRegistry}
+     * @example
+     * // Set global gravity to zero
+     * this.app.systems.rigidbody.gravity.set(0, 0, 0);
+     * @example
+     * // Set the global sound volume to 50%
+     * this.app.systems.sound.volume = 0.5;
+     */
+    systems = new ComponentSystemRegistry();
+
+    /**
+     * Handles localization.
+     *
+     * @type {I18n}
+     */
+    i18n = new I18n(this);
+
+    /**
+     * The keyboard device.
+     *
+     * @type {Keyboard|null}
+     */
+    keyboard = null;
+
+    /**
+     * The mouse device.
+     *
+     * @type {Mouse|null}
+     */
+    mouse = null;
+
+    /**
+     * Used to get touch events input.
+     *
+     * @type {TouchDevice|null}
+     */
+    touch = null;
+
+    /**
+     * Used to access GamePad input.
+     *
+     * @type {GamePads|null}
+     */
+    gamepads = null;
+
+    /**
+     * Used to handle input for {@link ElementComponent}s.
+     *
+     * @type {ElementInput|null}
+     */
+    elementInput = null;
+
+    /**
+     * The XR Manager that provides ability to start VR/AR sessions.
+     *
+     * @type {XrManager|null}
+     * @example
+     * // check if VR is available
+     * if (app.xr.isAvailable(pc.XRTYPE_VR)) {
+     *     // VR is available
+     * }
+     */
+    xr = null;
+
     /**
      * Create a new AppBase instance.
      *
@@ -132,8 +458,6 @@ class AppBase extends EventHandler {
      *
      * // Start the application's main loop
      * app.start();
-     *
-     * @hideconstructor
      */
     constructor(canvas) {
         super();
@@ -150,253 +474,45 @@ class AppBase extends EventHandler {
 
         app = this;
 
-        /** @private */
-        this._destroyRequested = false;
-
-        /** @private */
-        this._inFrameUpdate = false;
-
-        /** @private */
-        this._time = 0;
-
-        /**
-         * Scales the global time delta. Defaults to 1.
-         *
-         * @type {number}
-         * @example
-         * // Set the app to run at half speed
-         * this.app.timeScale = 0.5;
-         */
-        this.timeScale = 1;
-
-        /**
-         * Clamps per-frame delta time to an upper bound. Useful since returning from a tab
-         * deactivation can generate huge values for dt, which can adversely affect game state.
-         * Defaults to 0.1 (seconds).
-         *
-         * @type {number}
-         * @example
-         * // Don't clamp inter-frame times of 200ms or less
-         * this.app.maxDeltaTime = 0.2;
-         */
-        this.maxDeltaTime = 0.1; // Maximum delta is 0.1s or 10 fps.
-
-        /**
-         * The total number of frames the application has updated since start() was called.
-         *
-         * @type {number}
-         * @ignore
-         */
-        this.frame = 0;
-
-        /**
-         * When true, the application's render function is called every frame. Setting autoRender
-         * to false is useful to applications where the rendered image may often be unchanged over
-         * time. This can heavily reduce the application's load on the CPU and GPU. Defaults to
-         * true.
-         *
-         * @type {boolean}
-         * @example
-         * // Disable rendering every frame and only render on a keydown event
-         * this.app.autoRender = false;
-         * this.app.keyboard.on('keydown', function (event) {
-         *     this.app.renderNextFrame = true;
-         * }, this);
-         */
-        this.autoRender = true;
-
-        /**
-         * Set to true to render the scene on the next iteration of the main loop. This only has an
-         * effect if {@link AppBase#autoRender} is set to false. The value of renderNextFrame
-         * is set back to false again as soon as the scene has been rendered.
-         *
-         * @type {boolean}
-         * @example
-         * // Render the scene only while space key is pressed
-         * if (this.app.keyboard.isPressed(pc.KEY_SPACE)) {
-         *     this.app.renderNextFrame = true;
-         * }
-         */
-        this.renderNextFrame = false;
-
-        /**
-         * Enable if you want entity type script attributes to not be re-mapped when an entity is
-         * cloned.
-         *
-         * @type {boolean}
-         * @ignore
-         */
-        this.useLegacyScriptAttributeCloning = script.legacy;
-
-        this._librariesLoaded = false;
-        this._fillMode = FILLMODE_KEEP_ASPECT;
-        this._resolutionMode = RESOLUTION_FIXED;
-        this._allowResize = true;
-
-        /**
-         * For backwards compatibility with scripts 1.0.
-         *
-         * @type {AppBase}
-         * @deprecated
-         * @ignore
-         */
-        this.context = this;
+        this.root = new Entity();
+        this.root._enabledInHierarchy = true;
     }
 
     /**
      * Initialize the app.
      *
-     * @param {import('./app-options.js').AppOptions} appOptions - Options specifying the init
-     * parameters for the app.
+     * @param {AppOptions} appOptions - Options specifying the init parameters for the app.
      */
     init(appOptions) {
-        const device = appOptions.graphicsDevice;
+        const {
+            assetPrefix, batchManager, componentSystems, elementInput, gamepads, graphicsDevice, keyboard,
+            lightmapper, mouse, resourceHandlers, scriptsOrder, scriptPrefix, soundManager, touch, xr
+        } = appOptions;
 
-        Debug.assert(device, "The application cannot be created without a valid GraphicsDevice");
+        Debug.assert(graphicsDevice, 'The application cannot be created without a valid GraphicsDevice');
 
-        /**
-         * The graphics device used by the application.
-         *
-         * @type {import('../platform/graphics/graphics-device.js').GraphicsDevice}
-         */
-        this.graphicsDevice = device;
-        GraphicsDeviceAccess.set(device);
-
+        this.graphicsDevice = graphicsDevice;
         this._initDefaultMaterial();
         this._initProgramLibrary();
-        this.stats = new ApplicationStats(device);
+        this.stats = new ApplicationStats(graphicsDevice);
 
-        /**
-         * @type {import('../platform/sound/manager.js').SoundManager}
-         * @private
-         */
-        this._soundManager = appOptions.soundManager;
-
-        /**
-         * The resource loader.
-         *
-         * @type {ResourceLoader}
-         */
-        this.loader = new ResourceLoader(this);
-
-        LightsBuffer.init(device);
-
-        /**
-         * Stores all entities that have been created for this app by guid.
-         *
-         * @type {Object<string, Entity>}
-         * @ignore
-         */
-        this._entityIndex = {};
-
-        /**
-         * The scene managed by the application.
-         *
-         * @type {Scene}
-         * @example
-         * // Set the tone mapping property of the application's scene
-         * this.app.scene.toneMapping = pc.TONEMAP_FILMIC;
-         */
-        this.scene = new Scene(device);
+        this._soundManager = soundManager;
+        this.scene = new Scene(graphicsDevice);
         this._registerSceneImmediate(this.scene);
 
-        /**
-         * The root entity of the application.
-         *
-         * @type {Entity}
-         * @example
-         * // Return the first entity called 'Camera' in a depth-first search of the scene hierarchy
-         * const camera = this.app.root.findByName('Camera');
-         */
-        this.root = new Entity();
-        this.root._enabledInHierarchy = true;
-
-        /**
-         * The asset registry managed by the application.
-         *
-         * @type {AssetRegistry}
-         * @example
-         * // Search the asset registry for all assets with the tag 'vehicle'
-         * const vehicleAssets = this.app.assets.findByTag('vehicle');
-         */
         this.assets = new AssetRegistry(this.loader);
-        if (appOptions.assetPrefix) this.assets.prefix = appOptions.assetPrefix;
+        if (assetPrefix) this.assets.prefix = assetPrefix;
 
-        /**
-         * @type {BundleRegistry}
-         * @ignore
-         */
         this.bundles = new BundleRegistry(this.assets);
+        this.scriptsOrder = scriptsOrder || [];
 
-        /**
-         * Set this to false if you want to run without using bundles. We set it to true only if
-         * TextDecoder is available because we currently rely on it for untarring.
-         *
-         * @type {boolean}
-         * @ignore
-         */
-        this.enableBundles = (typeof TextDecoder !== 'undefined');
+        this.defaultLayerWorld = new Layer({ name: 'World', id: LAYERID_WORLD });
+        this.defaultLayerDepth = new Layer({ name: 'Depth', id: LAYERID_DEPTH, enabled: false, opaqueSortMode: SORTMODE_NONE });
+        this.defaultLayerSkybox = new Layer({ name: 'Skybox', id: LAYERID_SKYBOX, opaqueSortMode: SORTMODE_NONE });
+        this.defaultLayerUi = new Layer({ name: 'UI', id: LAYERID_UI, transparentSortMode: SORTMODE_MANUAL });
+        this.defaultLayerImmediate = new Layer({ name: 'Immediate', id: LAYERID_IMMEDIATE, opaqueSortMode: SORTMODE_NONE });
 
-        this.scriptsOrder = appOptions.scriptsOrder || [];
-
-        /**
-         * The application's script registry.
-         *
-         * @type {ScriptRegistry}
-         */
-        this.scripts = new ScriptRegistry(this);
-
-        /**
-         * Handles localization.
-         *
-         * @type {I18n}
-         */
-        this.i18n = new I18n(this);
-
-        /**
-         * The scene registry managed by the application.
-         *
-         * @type {SceneRegistry}
-         * @example
-         * // Search the scene registry for a item with the name 'racetrack1'
-         * const sceneItem = this.app.scenes.find('racetrack1');
-         *
-         * // Load the scene using the item's url
-         * this.app.scenes.loadScene(sceneItem.url);
-         */
-        this.scenes = new SceneRegistry(this);
-
-        const self = this;
-        this.defaultLayerWorld = new Layer({
-            name: "World",
-            id: LAYERID_WORLD
-        });
-
-        this.sceneGrab = new SceneGrab(this.graphicsDevice, this.scene);
-        this.defaultLayerDepth = this.sceneGrab.layer;
-
-        this.defaultLayerSkybox = new Layer({
-            enabled: true,
-            name: "Skybox",
-            id: LAYERID_SKYBOX,
-            opaqueSortMode: SORTMODE_NONE
-        });
-        this.defaultLayerUi = new Layer({
-            enabled: true,
-            name: "UI",
-            id: LAYERID_UI,
-            transparentSortMode: SORTMODE_MANUAL,
-            passThrough: false
-        });
-        this.defaultLayerImmediate = new Layer({
-            enabled: true,
-            name: "Immediate",
-            id: LAYERID_IMMEDIATE,
-            opaqueSortMode: SORTMODE_NONE,
-            passThrough: true
-        });
-
-        const defaultLayerComposition = new LayerComposition("default");
+        const defaultLayerComposition = new LayerComposition('default');
         defaultLayerComposition.pushOpaque(this.defaultLayerWorld);
         defaultLayerComposition.pushOpaque(this.defaultLayerDepth);
         defaultLayerComposition.pushOpaque(this.defaultLayerSkybox);
@@ -406,190 +522,51 @@ class AppBase extends EventHandler {
         defaultLayerComposition.pushTransparent(this.defaultLayerUi);
         this.scene.layers = defaultLayerComposition;
 
-        // Default layers patch
-        this.scene.on('set:layers', function (oldComp, newComp) {
-            const list = newComp.layerList;
-            let layer;
-            for (let i = 0; i < list.length; i++) {
-                layer = list[i];
-                switch (layer.id) {
-                    case LAYERID_DEPTH:
-                        self.sceneGrab.patch(layer);
-                        break;
-                    case LAYERID_UI:
-                        layer.passThrough = self.defaultLayerUi.passThrough;
-                        break;
-                    case LAYERID_IMMEDIATE:
-                        layer.passThrough = self.defaultLayerImmediate.passThrough;
-                        break;
-                }
-            }
-        });
+        // Placeholder texture for area light LUTs
+        AreaLightLuts.createPlaceholder(graphicsDevice);
 
-        // placeholder texture for area light LUTs
-        AreaLightLuts.createPlaceholder(device);
-
-        /**
-         * The forward renderer.
-         *
-         * @type {ForwardRenderer}
-         * @ignore
-         */
-        this.renderer = new ForwardRenderer(device);
+        this.renderer = new ForwardRenderer(graphicsDevice);
         this.renderer.scene = this.scene;
 
-        /**
-         * The frame graph.
-         *
-         * @type {FrameGraph}
-         * @ignore
-         */
-        this.frameGraph = new FrameGraph();
-
-        /**
-         * The run-time lightmapper.
-         *
-         * @type {import('./lightmapper/lightmapper.js').Lightmapper}
-         */
-        this.lightmapper = null;
-        if (appOptions.lightmapper) {
-            this.lightmapper = new appOptions.lightmapper(device, this.root, this.scene, this.renderer, this.assets);
+        if (lightmapper) {
+            this.lightmapper = new lightmapper(graphicsDevice, this.root, this.scene, this.renderer, this.assets);
             this.once('prerender', this._firstBake, this);
         }
 
-        /**
-         * The application's batch manager.
-         *
-         * @type {import('../scene/batching/batch-manager.js').BatchManager}
-         * @private
-         */
-        this._batcher = null;
-        if (appOptions.batchManager) {
-            this._batcher = new appOptions.batchManager(device, this.root, this.scene);
+        if (batchManager) {
+            this._batcher = new batchManager(graphicsDevice, this.root, this.scene);
             this.once('prerender', this._firstBatch, this);
         }
 
-        /**
-         * The keyboard device.
-         *
-         * @type {import('../platform/input/keyboard.js').Keyboard}
-         */
-        this.keyboard = appOptions.keyboard || null;
-
-        /**
-         * The mouse device.
-         *
-         * @type {import('../platform/input/mouse.js').Mouse}
-         */
-        this.mouse = appOptions.mouse || null;
-
-        /**
-         * Used to get touch events input.
-         *
-         * @type {import('../platform/input/touch-device.js').TouchDevice}
-         */
-        this.touch = appOptions.touch || null;
-
-        /**
-         * Used to access GamePad input.
-         *
-         * @type {import('../platform/input/game-pads.js').GamePads}
-         */
-        this.gamepads = appOptions.gamepads || null;
-
-        /**
-         * Used to handle input for {@link ElementComponent}s.
-         *
-         * @type {import('./input/element-input.js').ElementInput}
-         */
-        this.elementInput = appOptions.elementInput || null;
-        if (this.elementInput)
+        this.keyboard = keyboard || null;
+        this.mouse = mouse || null;
+        this.touch = touch || null;
+        this.gamepads = gamepads || null;
+        if (elementInput) {
+            this.elementInput = elementInput;
             this.elementInput.app = this;
-
-        /**
-         * The XR Manager that provides ability to start VR/AR sessions.
-         *
-         * @type {import('./xr/xr-manager.js').XrManager}
-         * @example
-         * // check if VR is available
-         * if (app.xr.isAvailable(pc.XRTYPE_VR)) {
-         *     // VR is available
-         * }
-         */
-        this.xr = appOptions.xr ? new appOptions.xr(this) : null;
-
-        if (this.elementInput)
-            this.elementInput.attachSelectEvents();
-
-        /**
-         * @type {boolean}
-         * @ignore
-         */
-        this._inTools = false;
-
-        /**
-         * @type {Asset|null}
-         * @private
-         */
-        this._skyboxAsset = null;
-
-        /**
-         * @type {string}
-         * @ignore
-         */
-        this._scriptPrefix = appOptions.scriptPrefix || '';
-
-        if (this.enableBundles) {
-            this.loader.addHandler("bundle", new BundleHandler(this));
         }
 
-        // create and register all required resource handlers
-        appOptions.resourceHandlers.forEach((resourceHandler) => {
+        this.xr = xr ? new xr(this) : null;
+        if (this.elementInput) this.elementInput.attachSelectEvents();
+
+        this._scriptPrefix = scriptPrefix || '';
+
+        if (this.enableBundles) {
+            this.loader.addHandler('bundle', new BundleHandler(this));
+        }
+
+        // Create and register all required resource handlers
+        resourceHandlers.forEach((resourceHandler) => {
             const handler = new resourceHandler(this);
             this.loader.addHandler(handler.handlerType, handler);
         });
 
-        /**
-         * The application's component system registry. The Application constructor adds the
-         * following component systems to its component system registry:
-         *
-         * - anim ({@link AnimComponentSystem})
-         * - animation ({@link AnimationComponentSystem})
-         * - audiolistener ({@link AudioListenerComponentSystem})
-         * - button ({@link ButtonComponentSystem})
-         * - camera ({@link CameraComponentSystem})
-         * - collision ({@link CollisionComponentSystem})
-         * - element ({@link ElementComponentSystem})
-         * - layoutchild ({@link LayoutChildComponentSystem})
-         * - layoutgroup ({@link LayoutGroupComponentSystem})
-         * - light ({@link LightComponentSystem})
-         * - model ({@link ModelComponentSystem})
-         * - particlesystem ({@link ParticleSystemComponentSystem})
-         * - rigidbody ({@link RigidBodyComponentSystem})
-         * - render ({@link RenderComponentSystem})
-         * - screen ({@link ScreenComponentSystem})
-         * - script ({@link ScriptComponentSystem})
-         * - scrollbar ({@link ScrollbarComponentSystem})
-         * - scrollview ({@link ScrollViewComponentSystem})
-         * - sound ({@link SoundComponentSystem})
-         * - sprite ({@link SpriteComponentSystem})
-         *
-         * @type {ComponentSystemRegistry}
-         * @example
-         * // Set global gravity to zero
-         * this.app.systems.rigidbody.gravity.set(0, 0, 0);
-         * @example
-         * // Set the global sound volume to 50%
-         * this.app.systems.sound.volume = 0.5;
-         */
-        this.systems = new ComponentSystemRegistry();
-
-        // create and register all required component systems
-        appOptions.componentSystems.forEach((componentSystem) => {
+        // Create and register all required component systems
+        componentSystems.forEach((componentSystem) => {
             this.systems.add(new componentSystem(this));
         });
 
-        /** @private */
         this._visibilityChangeHandler = this.onVisibilityChange.bind(this);
 
         // Depending on browser add the correct visibilitychange event and store the name of the
@@ -615,14 +592,6 @@ class AppBase extends EventHandler {
         this.tick = makeTick(this); // Circular linting issue as makeTick and Application reference each other
     }
 
-    /**
-     * @private
-     * @static
-     * @name app
-     * @type {AppBase|undefined}
-     * @description Gets the current application, if any.
-     */
-
     static _applications = {};
 
     /**
@@ -644,8 +613,7 @@ class AppBase extends EventHandler {
     /** @private */
     _initDefaultMaterial() {
         const material = new StandardMaterial();
-        material.name = "Default Material";
-        material.shadingModel = SPECULAR_BLINN;
+        material.name = 'Default Material';
         setDefaultMaterial(this.graphicsDevice, material);
     }
 
@@ -656,7 +624,7 @@ class AppBase extends EventHandler {
     }
 
     /**
-     * @type {import('../platform/sound/manager.js').SoundManager}
+     * @type {SoundManager}
      * @ignore
      */
     get soundManager() {
@@ -667,10 +635,10 @@ class AppBase extends EventHandler {
      * The application's batch manager. The batch manager is used to merge mesh instances in
      * the scene, which reduces the overall number of draw calls, thereby boosting performance.
      *
-     * @type {import('../scene/batching/batch-manager.js').BatchManager}
+     * @type {BatchManager}
      */
     get batcher() {
-        Debug.assert(this._batcher, "BatchManager has not been created and is required for correct functionality.");
+        Debug.assert(this._batcher, 'BatchManager has not been created and is required for correct functionality.');
         return this._batcher;
     }
 
@@ -738,109 +706,45 @@ class AppBase extends EventHandler {
      * @param {PreloadAppCallback} callback - Function called when all assets are loaded.
      */
     preload(callback) {
-        this.fire("preload:start");
+        this.fire('preload:start');
 
         // get list of assets to preload
         const assets = this.assets.list({
             preload: true
         });
 
-        const progress = new Progress(assets.length);
-
-        let _done = false;
-
-        // check if all loading is done
-        const done = () => {
-            // do not proceed if application destroyed
-            if (!this.graphicsDevice) {
-                return;
-            }
-
-            if (!_done && progress.done()) {
-                _done = true;
-                this.fire("preload:end");
-                callback();
-            }
-        };
-
-        // totals loading progress of assets
-        const total = assets.length;
-
-        if (progress.length) {
-            const onAssetLoad = (asset) => {
-                progress.inc();
-                this.fire('preload:progress', progress.count / total);
-
-                if (progress.done())
-                    done();
-            };
-
-            const onAssetError = (err, asset) => {
-                progress.inc();
-                this.fire('preload:progress', progress.count / total);
-
-                if (progress.done())
-                    done();
-            };
-
-            // for each asset
-            for (let i = 0; i < assets.length; i++) {
-                if (!assets[i].loaded) {
-                    assets[i].once('load', onAssetLoad);
-                    assets[i].once('error', onAssetError);
-
-                    this.assets.load(assets[i]);
-                } else {
-                    progress.inc();
-                    this.fire("preload:progress", progress.count / total);
-
-                    if (progress.done())
-                        done();
-                }
-            }
-        } else {
-            done();
-        }
-    }
-
-    _preloadScripts(sceneData, callback) {
-        if (!script.legacy) {
+        if (assets.length === 0) {
+            this.fire('preload:end');
             callback();
             return;
         }
 
-        this.systems.script.preloading = true;
+        let loadedCount = 0;
 
-        const scripts = this._getScriptReferences(sceneData);
+        const onAssetLoadOrError = () => {
+            loadedCount++;
+            this.fire('preload:progress', loadedCount / assets.length);
 
-        const l = scripts.length;
-        const progress = new Progress(l);
-        const regex = /^http(s)?:\/\//;
-
-        if (l) {
-            const onLoad = (err, ScriptType) => {
-                if (err)
-                    console.error(err);
-
-                progress.inc();
-                if (progress.done()) {
-                    this.systems.script.preloading = false;
-                    callback();
-                }
-            };
-
-            for (let i = 0; i < l; i++) {
-                let scriptUrl = scripts[i];
-                // support absolute URLs (for now)
-                if (!regex.test(scriptUrl.toLowerCase()) && this._scriptPrefix)
-                    scriptUrl = path.join(this._scriptPrefix, scripts[i]);
-
-                this.loader.load(scriptUrl, 'script', onLoad);
+            if (loadedCount === assets.length) {
+                this.fire('preload:end');
+                callback();
             }
-        } else {
-            this.systems.script.preloading = false;
-            callback();
-        }
+        };
+
+        // for each asset
+        assets.forEach((asset) => {
+            if (!asset.loaded) {
+                asset.once('load', onAssetLoadOrError);
+                asset.once('error', onAssetLoadOrError);
+                this.assets.load(asset);
+            } else {
+                onAssetLoadOrError();
+            }
+        });
+    }
+
+    _preloadScripts(sceneData, callback) {
+        callback();
     }
 
     // set application properties from data file
@@ -851,12 +755,15 @@ class AppBase extends EventHandler {
         }
 
         // TODO: remove this temporary block after migrating properties
-        if (!props.useDevicePixelRatio)
+        if (!props.useDevicePixelRatio) {
             props.useDevicePixelRatio = props.use_device_pixel_ratio;
-        if (!props.resolutionMode)
+        }
+        if (!props.resolutionMode) {
             props.resolutionMode = props.resolution_mode;
-        if (!props.fillMode)
+        }
+        if (!props.fillMode) {
             props.fillMode = props.fill_mode;
+        }
 
         this._width = props.width;
         this._height = props.height;
@@ -869,7 +776,7 @@ class AppBase extends EventHandler {
 
         // set up layers
         if (props.layers && props.layerOrder) {
-            const composition = new LayerComposition("application");
+            const composition = new LayerComposition('application');
 
             const layers = {};
             for (const key in props.layers) {
@@ -926,7 +833,7 @@ class AppBase extends EventHandler {
         const len = urls.length;
         let count = len;
 
-        const regex = /^http(s)?:\/\//;
+        const regex = /^https?:\/\//;
 
         if (len) {
             const onLoad = (err, script) => {
@@ -942,8 +849,9 @@ class AppBase extends EventHandler {
             for (let i = 0; i < len; ++i) {
                 let url = urls[i];
 
-                if (!regex.test(url.toLowerCase()) && this._scriptPrefix)
+                if (!regex.test(url.toLowerCase()) && this._scriptPrefix) {
                     url = path.join(this._scriptPrefix, url);
+                }
 
                 this.loader.load(url, 'script', onLoad);
             }
@@ -979,52 +887,34 @@ class AppBase extends EventHandler {
         const scriptsIndex = {};
         const bundlesIndex = {};
 
-        if (!script.legacy) {
-            // add scripts in order of loading first
-            for (let i = 0; i < this.scriptsOrder.length; i++) {
-                const id = this.scriptsOrder[i];
-                if (!assets[id])
-                    continue;
-
-                scriptsIndex[id] = true;
-                list.push(assets[id]);
+        // add scripts in order of loading first
+        for (let i = 0; i < this.scriptsOrder.length; i++) {
+            const id = this.scriptsOrder[i];
+            if (!assets[id]) {
+                continue;
             }
 
-            // then add bundles
-            if (this.enableBundles) {
-                for (const id in assets) {
-                    if (assets[id].type === 'bundle') {
-                        bundlesIndex[id] = true;
-                        list.push(assets[id]);
-                    }
+            scriptsIndex[id] = true;
+            list.push(assets[id]);
+        }
+
+        // then add bundles
+        if (this.enableBundles) {
+            for (const id in assets) {
+                if (assets[id].type === 'bundle') {
+                    bundlesIndex[id] = true;
+                    list.push(assets[id]);
                 }
             }
+        }
 
-            // then add rest of assets
-            for (const id in assets) {
-                if (scriptsIndex[id] || bundlesIndex[id])
-                    continue;
-
-                list.push(assets[id]);
-            }
-        } else {
-            if (this.enableBundles) {
-                // add bundles
-                for (const id in assets) {
-                    if (assets[id].type === 'bundle') {
-                        bundlesIndex[id] = true;
-                        list.push(assets[id]);
-                    }
-                }
+        // then add rest of assets
+        for (const id in assets) {
+            if (scriptsIndex[id] || bundlesIndex[id]) {
+                continue;
             }
 
-            // then add rest of assets
-            for (const id in assets) {
-                if (bundlesIndex[id])
-                    continue;
-
-                list.push(assets[id]);
-            }
+            list.push(assets[id]);
         }
 
         for (let i = 0; i < list.length; i++) {
@@ -1049,45 +939,6 @@ class AppBase extends EventHandler {
     }
 
     /**
-     * @param {Scene} scene - The scene.
-     * @returns {Array} - The list of scripts that are referenced by the scene.
-     * @private
-     */
-    _getScriptReferences(scene) {
-        let priorityScripts = [];
-        if (scene.settings.priority_scripts) {
-            priorityScripts = scene.settings.priority_scripts;
-        }
-
-        const _scripts = [];
-        const _index = {};
-
-        // first add priority scripts
-        for (let i = 0; i < priorityScripts.length; i++) {
-            _scripts.push(priorityScripts[i]);
-            _index[priorityScripts[i]] = true;
-        }
-
-        // then iterate hierarchy to get referenced scripts
-        const entities = scene.entities;
-        for (const key in entities) {
-            if (!entities[key].components.script) {
-                continue;
-            }
-
-            const scripts = entities[key].components.script.scripts;
-            for (let i = 0; i < scripts.length; i++) {
-                if (_index[scripts[i].url])
-                    continue;
-                _scripts.push(scripts[i].url);
-                _index[scripts[i].url] = true;
-            }
-        }
-
-        return _scripts;
-    }
-
-    /**
      * Start the application. This function does the following:
      *
      * 1. Fires an event on the application named 'start'
@@ -1106,13 +957,13 @@ class AppBase extends EventHandler {
     start() {
 
         Debug.call(() => {
-            Debug.assert(!this._alreadyStarted, "The application can be started only one time.");
+            Debug.assert(!this._alreadyStarted, 'The application can be started only one time.');
             this._alreadyStarted = true;
         });
 
         this.frame = 0;
 
-        this.fire("start", {
+        this.fire('start', {
             timestamp: now(),
             target: this
         });
@@ -1169,16 +1020,12 @@ class AppBase extends EventHandler {
         this.stats.frame.updateStart = now();
         // #endif
 
-        // Perform ComponentSystem update
-        if (script.legacy)
-            this.systems.fire('fixedUpdate', 1.0 / 60.0);
-
         this.systems.fire(this._inTools ? 'toolsUpdate' : 'update', dt);
         this.systems.fire('animationUpdate', dt);
         this.systems.fire('postUpdate', dt);
 
         // fire update event
-        this.fire("update", dt);
+        this.fire('update', dt);
 
         // update input devices
         this.inputUpdate(dt);
@@ -1232,6 +1079,10 @@ class AppBase extends EventHandler {
     // render a layer composition
     renderComposition(layerComposition) {
         DebugGraphics.clearGpuMarkers();
+
+        // update composition, cull everything, assign atlas slots for clustered lighting
+        this.renderer.update(layerComposition);
+
         this.renderer.buildFrameGraph(this.frameGraph, layerComposition);
         this.frameGraph.render(this.graphicsDevice);
     }
@@ -1419,8 +1270,9 @@ class AppBase extends EventHandler {
         if (!this._allowResize) return undefined; // prevent resizing (e.g. if presenting in VR HMD)
 
         // prevent resizing when in XR session
-        if (this.xr && this.xr.session)
+        if (this.xr && this.xr.session) {
             return undefined;
+        }
 
         const windowWidth = window.innerWidth;
         const windowHeight = window.innerHeight;
@@ -1442,8 +1294,8 @@ class AppBase extends EventHandler {
         }
         // OTHERWISE: FILLMODE_NONE use width and height that are provided
 
-        this.graphicsDevice.canvas.style.width = width + 'px';
-        this.graphicsDevice.canvas.style.height = height + 'px';
+        this.graphicsDevice.canvas.style.width = `${width}px`;
+        this.graphicsDevice.canvas.style.height = `${height}px`;
 
         this.updateCanvasSize();
 
@@ -1529,6 +1381,8 @@ class AppBase extends EventHandler {
      * - {@link TONEMAP_FILMIC}
      * - {@link TONEMAP_HEJL}
      * - {@link TONEMAP_ACES}
+     * - {@link TONEMAP_ACES2}
+     * - {@link TONEMAP_NEUTRAL}
      *
      * @param {number} settings.render.exposure - The exposure value tweaks the overall brightness
      * of the scene.
@@ -1562,11 +1416,14 @@ class AppBase extends EventHandler {
      * @param {number} settings.render.lightingMaxLightsPerCell - Maximum number of lights a cell can store.
      * @param {number} settings.render.lightingShadowType - The type of shadow filtering used by all shadows. Can be:
      *
-     * - {@link SHADOW_PCF1}: PCF 1x1 sampling.
-     * - {@link SHADOW_PCF3}: PCF 3x3 sampling.
-     * - {@link SHADOW_PCF5}: PCF 5x5 sampling. Falls back to {@link SHADOW_PCF3} on WebGL 1.0.
+     * - {@link SHADOW_PCF1_32F}
+     * - {@link SHADOW_PCF3_32F}
+     * - {@link SHADOW_PCF5_32F}
+     * - {@link SHADOW_PCF1_16F}
+     * - {@link SHADOW_PCF3_16F}
+     * - {@link SHADOW_PCF5_16F}
      *
-     * @param {Vec3} settings.render.lightingCells - Number of cells along each world-space axis the space containing lights
+     * @param {Vec3} settings.render.lightingCells - Number of cells along each world space axis the space containing lights
      * is subdivided into.
      *
      * Only lights with bakeDir=true will be used for generating the dominant light direction.
@@ -1601,8 +1458,8 @@ class AppBase extends EventHandler {
         let asset;
 
         if (this.systems.rigidbody && typeof Ammo !== 'undefined') {
-            const gravity = settings.physics.gravity;
-            this.systems.rigidbody.gravity.set(gravity[0], gravity[1], gravity[2]);
+            const [x, y, z] = settings.physics.gravity;
+            this.systems.rigidbody.gravity.set(x, y, z);
         }
 
         this.scene.applySettings(settings);
@@ -1614,7 +1471,7 @@ class AppBase extends EventHandler {
                 if (asset) {
                     this.setSkybox(asset);
                 } else {
-                    this.assets.once('add:' + settings.render.skybox, this.setSkybox, this);
+                    this.assets.once(`add:${settings.render.skybox}`, this.setSkybox, this);
                 }
             } else {
                 this.setSkybox(null);
@@ -1633,7 +1490,7 @@ class AppBase extends EventHandler {
         if (ltcMat1 && ltcMat2) {
             AreaLightLuts.set(this.graphicsDevice, ltcMat1, ltcMat2);
         } else {
-            Debug.warn("setAreaLightLuts: LUTs for area light are not valid");
+            Debug.warn('setAreaLightLuts: LUTs for area light are not valid');
         }
     }
 
@@ -1654,16 +1511,16 @@ class AppBase extends EventHandler {
 
             // cleanup previous asset
             if (this._skyboxAsset) {
-                this.assets.off('load:' + this._skyboxAsset.id, onSkyboxChanged, this);
-                this.assets.off('remove:' + this._skyboxAsset.id, onSkyboxRemoved, this);
+                this.assets.off(`load:${this._skyboxAsset.id}`, onSkyboxChanged, this);
+                this.assets.off(`remove:${this._skyboxAsset.id}`, onSkyboxRemoved, this);
                 this._skyboxAsset.off('change', onSkyboxChanged, this);
             }
 
             // set new asset
             this._skyboxAsset = asset;
             if (this._skyboxAsset) {
-                this.assets.on('load:' + this._skyboxAsset.id, onSkyboxChanged, this);
-                this.assets.once('remove:' + this._skyboxAsset.id, onSkyboxRemoved, this);
+                this.assets.on(`load:${this._skyboxAsset.id}`, onSkyboxChanged, this);
+                this.assets.once(`remove:${this._skyboxAsset.id}`, onSkyboxRemoved, this);
                 this._skyboxAsset.on('change', onSkyboxChanged, this);
 
                 if (this.scene.skyboxMip === 0 && !this._skyboxAsset.loadFaces) {
@@ -1699,11 +1556,11 @@ class AppBase extends EventHandler {
     }
 
     /**
-     * Draws a single line. Line start and end coordinates are specified in world-space. The line
+     * Draws a single line. Line start and end coordinates are specified in world space. The line
      * will be flat-shaded with the specified color.
      *
-     * @param {Vec3} start - The start world-space coordinate of the line.
-     * @param {Vec3} end - The end world-space coordinate of the line.
+     * @param {Vec3} start - The start world space coordinate of the line.
+     * @param {Vec3} end - The end world space coordinate of the line.
      * @param {Color} [color] - The color of the line. It defaults to white if not specified.
      * @param {boolean} [depthTest] - Specifies if the line is depth tested against the depth
      * buffer. Defaults to true.
@@ -1738,8 +1595,9 @@ class AppBase extends EventHandler {
      *
      * @param {Vec3[]} positions - An array of points to draw lines between. The length of the
      * array must be a multiple of 2.
-     * @param {Color[]} colors - An array of colors to color the lines. This must be the same
-     * length as the position array. The length of the array must also be a multiple of 2.
+     * @param {Color[] | Color} colors - An array of colors or a single color. If an array is
+     * specified, this must be the same length as the position array. The length of the array
+     * must also be a multiple of 2.
      * @param {boolean} [depthTest] - Specifies if the lines are depth tested against the depth
      * buffer. Defaults to true.
      * @param {Layer} [layer] - The layer to render the lines into. Defaults to {@link LAYERID_IMMEDIATE}.
@@ -1779,8 +1637,9 @@ class AppBase extends EventHandler {
      *
      * @param {number[]} positions - An array of points to draw lines between. Each point is
      * represented by 3 numbers - x, y and z coordinate.
-     * @param {number[]} colors - An array of colors to color the lines. This must be the same
-     * length as the position array. The length of the array must also be a multiple of 2.
+     * @param {number[]|Color} colors - A single color for all lines, or an array of colors to color
+     * the lines. If an array is specified, number of colors it stores must match the number of
+     * positions provided.
      * @param {boolean} [depthTest] - Specifies if the lines are depth tested against the depth
      * buffer. Defaults to true.
      * @param {Layer} [layer] - The layer to render the lines into. Defaults to {@link LAYERID_IMMEDIATE}.
@@ -1838,6 +1697,7 @@ class AppBase extends EventHandler {
      * @param {boolean} [depthTest] - Specifies if the sphere lines are depth tested against the
      * depth buffer. Defaults to true.
      * @param {Layer} [layer] - The layer to render the sphere into. Defaults to {@link LAYERID_IMMEDIATE}.
+     * @param {Mat4} [mat] - Matrix to transform the box before rendering.
      * @example
      * // Render a red wire aligned box
      * const min = new pc.Vec3(-1, -1, -1);
@@ -1845,14 +1705,14 @@ class AppBase extends EventHandler {
      * app.drawWireAlignedBox(min, max, pc.Color.RED);
      * @ignore
      */
-    drawWireAlignedBox(minPoint, maxPoint, color = Color.WHITE, depthTest = true, layer = this.scene.defaultDrawLayer) {
-        this.scene.immediate.drawWireAlignedBox(minPoint, maxPoint, color, depthTest, layer);
+    drawWireAlignedBox(minPoint, maxPoint, color = Color.WHITE, depthTest = true, layer = this.scene.defaultDrawLayer, mat) {
+        this.scene.immediate.drawWireAlignedBox(minPoint, maxPoint, color, depthTest, layer, mat);
     }
 
     /**
      * Draw meshInstance at this frame
      *
-     * @param {import('../scene/mesh-instance.js').MeshInstance} meshInstance - The mesh instance
+     * @param {MeshInstance} meshInstance - The mesh instance
      * to draw.
      * @param {Layer} [layer] - The layer to render the mesh instance into. Defaults to
      * {@link LAYERID_IMMEDIATE}.
@@ -1865,7 +1725,7 @@ class AppBase extends EventHandler {
     /**
      * Draw mesh at this frame.
      *
-     * @param {import('../scene/mesh.js').Mesh} mesh - The mesh to draw.
+     * @param {Mesh} mesh - The mesh to draw.
      * @param {Material} material - The material to use to render the mesh.
      * @param {Mat4} matrix - The matrix to use to render the mesh.
      * @param {Layer} [layer] - The layer to render the mesh into. Defaults to {@link LAYERID_IMMEDIATE}.
@@ -1899,7 +1759,7 @@ class AppBase extends EventHandler {
      * range [0, 2].
      * @param {number} height - The height of the rectangle of the rendered texture. Should be in
      * the range [0, 2].
-     * @param {import('../platform/graphics/texture.js').Texture} texture - The texture to render.
+     * @param {Texture} texture - The texture to render.
      * @param {Material} material - The material used when rendering the texture.
      * @param {Layer} [layer] - The layer to render the texture into. Defaults to {@link LAYERID_IMMEDIATE}.
      * @param {boolean} [filterable] - Indicate if the texture can be sampled using filtering.
@@ -1911,18 +1771,19 @@ class AppBase extends EventHandler {
 
         // only WebGPU supports filterable parameter to be false, allowing a depth texture / shadow
         // map to be fetched (without filtering) and rendered
-        if (filterable === false && !this.graphicsDevice.isWebGPU)
+        if (filterable === false && !this.graphicsDevice.isWebGPU) {
             return;
+        }
 
         // TODO: if this is used for anything other than debug texture display, we should optimize this to avoid allocations
         const matrix = new Mat4();
         matrix.setTRS(new Vec3(x, y, 0.0), Quat.IDENTITY, new Vec3(width, -height, 0.0));
 
         if (!material) {
-            material = new Material();
+            material = new ShaderMaterial();
             material.cull = CULLFACE_NONE;
-            material.setParameter("colorMap", texture);
-            material.shader = filterable ? this.scene.immediate.getTextureShader() : this.scene.immediate.getUnfilterableTextureShader();
+            material.setParameter('colorMap', texture);
+            material.shaderDesc = filterable ? this.scene.immediate.getTextureShaderDesc(texture.encoding) : this.scene.immediate.getUnfilterableTextureShaderDesc();
             material.update();
         }
 
@@ -1945,9 +1806,9 @@ class AppBase extends EventHandler {
      * @ignore
      */
     drawDepthTexture(x, y, width, height, layer = this.scene.defaultDrawLayer) {
-        const material = new Material();
+        const material = new ShaderMaterial();
         material.cull = CULLFACE_NONE;
-        material.shader = this.scene.immediate.getDepthTextureShader();
+        material.shaderDesc = this.scene.immediate.getDepthTextureShaderDesc();
         material.update();
 
         this.drawTexture(x, y, width, height, null, material, layer);
@@ -1969,6 +1830,7 @@ class AppBase extends EventHandler {
 
         const canvasId = this.graphicsDevice.canvas.id;
 
+        this.fire('destroy', this); // fire destroy event
         this.off('librariesloaded');
 
         if (typeof document !== 'undefined') {
@@ -2037,12 +1899,8 @@ class AppBase extends EventHandler {
         this.i18n.destroy();
         this.i18n = null;
 
-        for (const key in this.loader.getHandler('script')._cache) {
-            const element = this.loader.getHandler('script')._cache[key];
-            const parent = element.parentNode;
-            if (parent) parent.removeChild(element);
-        }
-        this.loader.getHandler('script')._cache = {};
+        const scriptHandler = this.loader.getHandler('script');
+        scriptHandler?.clearCache();
 
         this.loader.destroy();
         this.loader = null;
@@ -2070,15 +1928,13 @@ class AppBase extends EventHandler {
 
         this._entityIndex = {};
 
-        this.defaultLayerDepth.onPreRenderOpaque = null;
-        this.defaultLayerDepth.onPostRenderOpaque = null;
         this.defaultLayerDepth.onDisable = null;
         this.defaultLayerDepth.onEnable = null;
         this.defaultLayerDepth = null;
         this.defaultLayerWorld = null;
 
-        this?.xr.end();
-        this?.xr.destroy();
+        this.xr?.end();
+        this.xr?.destroy();
 
         this.renderer.destroy();
         this.renderer = null;
@@ -2090,10 +1946,8 @@ class AppBase extends EventHandler {
 
         this.off(); // remove all events
 
-        if (this._soundManager) {
-            this._soundManager.destroy();
-            this._soundManager = null;
-        }
+        this._soundManager?.destroy();
+        this._soundManager = null;
 
         script.app = null;
 
@@ -2101,6 +1955,15 @@ class AppBase extends EventHandler {
 
         if (getApplication() === this) {
             setApplication(null);
+        }
+
+        AppBase.cancelTick(this);
+    }
+
+    static cancelTick(app) {
+        if (app.frameRequestId) {
+            window.cancelAnimationFrame(app.frameRequestId);
+            app.frameRequestId = undefined;
         }
     }
 
@@ -2128,16 +1991,6 @@ class AppBase extends EventHandler {
 const _frameEndData = {};
 
 /**
- * Callback used by {@link AppBase#start} and itself to request
- * the rendering of a new animation frame.
- *
- * @callback MakeTickCallback
- * @param {number} [timestamp] - The timestamp supplied by requestAnimationFrame.
- * @param {*} [frame] - XRFrame from requestAnimationFrame callback.
- * @ignore
- */
-
-/**
  * Create tick function to be wrapped in closure.
  *
  * @param {AppBase} _app - The application.
@@ -2146,21 +1999,25 @@ const _frameEndData = {};
  */
 const makeTick = function (_app) {
     const application = _app;
-    let frameRequest;
     /**
      * @param {number} [timestamp] - The timestamp supplied by requestAnimationFrame.
-     * @param {*} [frame] - XRFrame from requestAnimationFrame callback.
+     * @param {XRFrame} [frame] - XRFrame from requestAnimationFrame callback.
      */
     return function (timestamp, frame) {
-        if (!application.graphicsDevice)
+        if (!application.graphicsDevice) {
             return;
+        }
+
+        // cancel any hanging rAF to avoid multiple rAF callbacks per frame
+        if (application.frameRequestId) {
+            application.xr?.session?.cancelAnimationFrame(application.frameRequestId);
+            cancelAnimationFrame(application.frameRequestId);
+            application.frameRequestId = null;
+        }
+
+        application._inFrameUpdate = true;
 
         setApplication(application);
-
-        if (frameRequest) {
-            window.cancelAnimationFrame(frameRequest);
-            frameRequest = null;
-        }
 
         // have current application pointer in pc
         app = application;
@@ -2175,13 +2032,14 @@ const makeTick = function (_app) {
 
         // Submit a request to queue up a new animation frame immediately
         if (application.xr?.session) {
-            frameRequest = application.xr.session.requestAnimationFrame(application.tick);
+            application.frameRequestId = application.xr.session.requestAnimationFrame(application.tick);
         } else {
-            frameRequest = platform.browser ? window.requestAnimationFrame(application.tick) : null;
+            application.frameRequestId = platform.browser || platform.worker ? requestAnimationFrame(application.tick) : null;
         }
 
-        if (application.graphicsDevice.contextLost)
+        if (application.graphicsDevice.contextLost) {
             return;
+        }
 
         application._fillFrameStatsBasic(currentTime, dt, ms);
 
@@ -2189,8 +2047,7 @@ const makeTick = function (_app) {
         application._fillFrameStats();
         // #endif
 
-        application._inFrameUpdate = true;
-        application.fire("frameupdate", ms);
+        application.fire('frameupdate', ms);
 
         let shouldRenderFrame = true;
 
@@ -2208,7 +2065,7 @@ const makeTick = function (_app) {
 
             application.update(dt);
 
-            application.fire("framerender");
+            application.fire('framerender');
 
 
             if (application.autoRender || application.renderNextFrame) {
@@ -2228,7 +2085,7 @@ const makeTick = function (_app) {
             _frameEndData.timestamp = now();
             _frameEndData.target = application;
 
-            application.fire("frameend", _frameEndData);
+            application.fire('frameend', _frameEndData);
         }
 
         application._inFrameUpdate = false;

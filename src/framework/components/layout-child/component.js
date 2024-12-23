@@ -4,38 +4,33 @@ import { Component } from '../component.js';
  * A LayoutChildComponent enables the Entity to control the sizing applied to it by its parent
  * {@link LayoutGroupComponent}.
  *
- * @augments Component
+ * @hideconstructor
+ * @category User Interface
  */
 class LayoutChildComponent extends Component {
-    /**
-     * Create a new LayoutChildComponent.
-     *
-     * @param {import('./system.js').LayoutChildComponentSystem} system - The ComponentSystem that
-     * created this Component.
-     * @param {import('../../entity.js').Entity} entity - The Entity that this Component is
-     * attached to.
-     */
-    constructor(system, entity) {
-        super(system, entity);
+    /** @private */
+    _minWidth = 0;
 
-        /** @private */
-        this._minWidth = 0;
-        /** @private */
-        this._minHeight = 0;
-        /** @private */
-        this._maxWidth = null;
-        /** @private */
-        this._maxHeight = null;
-        /** @private */
-        this._fitWidthProportion = 0;
-        /** @private */
-        this._fitHeightProportion = 0;
-        /** @private */
-        this._excludeFromLayout = false;
-    }
+    /** @private */
+    _minHeight = 0;
+
+    /** @private */
+    _maxWidth = null;
+
+    /** @private */
+    _maxHeight = null;
+
+    /** @private */
+    _fitWidthProportion = 0;
+
+    /** @private */
+    _fitHeightProportion = 0;
+
+    /** @private */
+    _excludeFromLayout = false;
 
     /**
-     * The minimum width the element should be rendered at.
+     * Sets the minimum width the element should be rendered at.
      *
      * @type {number}
      */
@@ -46,12 +41,17 @@ class LayoutChildComponent extends Component {
         }
     }
 
+    /**
+     * Gets the minimum width the element should be rendered at.
+     *
+     * @type {number}
+     */
     get minWidth() {
         return this._minWidth;
     }
 
     /**
-     * The minimum height the element should be rendered at.
+     * Sets the minimum height the element should be rendered at.
      *
      * @type {number}
      */
@@ -62,12 +62,17 @@ class LayoutChildComponent extends Component {
         }
     }
 
+    /**
+     * Gets the minimum height the element should be rendered at.
+     *
+     * @type {number}
+     */
     get minHeight() {
         return this._minHeight;
     }
 
     /**
-     * The maximum width the element should be rendered at.
+     * Sets the maximum width the element should be rendered at.
      *
      * @type {number|null}
      */
@@ -78,12 +83,17 @@ class LayoutChildComponent extends Component {
         }
     }
 
+    /**
+     * Gets the maximum width the element should be rendered at.
+     *
+     * @type {number|null}
+     */
     get maxWidth() {
         return this._maxWidth;
     }
 
     /**
-     * The maximum height the element should be rendered at.
+     * Sets the maximum height the element should be rendered at.
      *
      * @type {number|null}
      */
@@ -94,12 +104,17 @@ class LayoutChildComponent extends Component {
         }
     }
 
+    /**
+     * Gets the maximum height the element should be rendered at.
+     *
+     * @type {number|null}
+     */
     get maxHeight() {
         return this._maxHeight;
     }
 
     /**
-     * The amount of additional horizontal space that the element should take up, if necessary to
+     * Sets the amount of additional horizontal space that the element should take up, if necessary to
      * satisfy a Stretch/Shrink fitting calculation. This is specified as a proportion, taking into
      * account the proportion values of other siblings.
      *
@@ -112,12 +127,18 @@ class LayoutChildComponent extends Component {
         }
     }
 
+    /**
+     * Gets the amount of additional horizontal space that the element should take up, if necessary to
+     * satisfy a Stretch/Shrink fitting calculation.
+     *
+     * @type {number}
+     */
     get fitWidthProportion() {
         return this._fitWidthProportion;
     }
 
     /**
-     * The amount of additional vertical space that the element should take up, if necessary to
+     * Sets the amount of additional vertical space that the element should take up, if necessary to
      * satisfy a Stretch/Shrink fitting calculation. This is specified as a proportion, taking into
      * account the proportion values of other siblings.
      *
@@ -130,12 +151,18 @@ class LayoutChildComponent extends Component {
         }
     }
 
+    /**
+     * Gets the amount of additional vertical space that the element should take up, if necessary to
+     * satisfy a Stretch/Shrink fitting calculation.
+     *
+     * @type {number}
+     */
     get fitHeightProportion() {
         return this._fitHeightProportion;
     }
 
     /**
-     * If set to true, the child will be excluded from all layout calculations.
+     * Sets whether the child will be excluded from all layout calculations.
      *
      * @type {boolean}
      */
@@ -146,6 +173,11 @@ class LayoutChildComponent extends Component {
         }
     }
 
+    /**
+     * Gets whether the child will be excluded from all layout calculations.
+     *
+     * @type {boolean}
+     */
     get excludeFromLayout() {
         return this._excludeFromLayout;
     }

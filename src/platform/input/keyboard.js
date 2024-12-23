@@ -11,7 +11,6 @@ const _keyboardEvent = new KeyboardEvent();
  *
  * @param {globalThis.KeyboardEvent} event - A browser keyboard event.
  * @returns {KeyboardEvent} A PlayCanvas keyboard event.
- * @ignore
  */
 function makeKeyboardEvent(event) {
     _keyboardEvent.key = event.keyCode;
@@ -25,7 +24,6 @@ function makeKeyboardEvent(event) {
  *
  * @param {string|number} s - Either a character code or the key character.
  * @returns {number} The character code.
- * @ignore
  */
 function toKeyCode(s) {
     if (typeof s === 'string') {
@@ -56,16 +54,57 @@ const _keyCodeToKeyIdentifier = {
  * A Keyboard device bound to an Element. Allows you to detect the state of the key presses. Note
  * that the Keyboard object must be attached to an Element before it can detect any key presses.
  *
- * @augments EventHandler
+ * @category Input
  */
 class Keyboard extends EventHandler {
+    /**
+     * Fired when a key is pressed. The handler is passed a {@link KeyboardEvent}.
+     *
+     * @event
+     * @example
+     * const onKeyDown = (e) => {
+     *     if (e.key === pc.KEY_SPACE) {
+     *         // space key pressed
+     *     }
+     *     e.event.preventDefault(); // Use original browser event to prevent browser action.
+     * };
+     *
+     * app.keyboard.on("keydown", onKeyDown, this);
+     */
+    static EVENT_KEYDOWN = 'keydown';
+
+    /**
+     * Fired when a key is released. The handler is passed a {@link KeyboardEvent}.
+     *
+     * @event
+     * @example
+     * const onKeyUp = (e) => {
+     *     if (e.key === pc.KEY_SPACE) {
+     *         // space key released
+     *     }
+     *     e.event.preventDefault(); // Use original browser event to prevent browser action.
+     * };
+     *
+     * app.keyboard.on("keyup", onKeyUp, this);
+     */
+    static EVENT_KEYUP = 'keyup';
+
+    /** @private */
+    _element = null;
+
+    /** @private */
+    _keymap = {};
+
+    /** @private */
+    _lastmap = {};
+
     /**
      * Create a new Keyboard instance.
      *
      * @param {Element|Window} [element] - Element to attach Keyboard to. Note that elements like
      * &lt;div&gt; can't accept focus by default. To use keyboard events on an element like this it
      * must have a value of 'tabindex' e.g. tabindex="0". See
-     * [here](http://www.w3.org/WAI/GL/WCAG20/WD-WCAG20-TECHS/SCR29.html) for more details.
+     * [here](https://www.w3.org/WAI/GL/WCAG20/WD-WCAG20-TECHS/SCR29.html) for more details.
      * @param {object} [options] - Optional options object.
      * @param {boolean} [options.preventDefault] - Call preventDefault() in key event handlers.
      * This stops the default action of the event occurring. e.g. Ctrl+T will not open a new
@@ -80,16 +119,11 @@ class Keyboard extends EventHandler {
     constructor(element, options = {}) {
         super();
 
-        this._element = null;
-
         this._keyDownHandler = this._handleKeyDown.bind(this);
         this._keyUpHandler = this._handleKeyUp.bind(this);
         this._keyPressHandler = this._handleKeyPress.bind(this);
         this._visibilityChangeHandler = this._handleVisibilityChange.bind(this);
         this._windowBlurHandler = this._handleWindowBlur.bind(this);
-
-        this._keymap = {};
-        this._lastmap = {};
 
         if (element) {
             this.attach(element);
@@ -98,36 +132,6 @@ class Keyboard extends EventHandler {
         this.preventDefault = options.preventDefault || false;
         this.stopPropagation = options.stopPropagation || false;
     }
-
-    /**
-     * Fired when a key is pressed.
-     *
-     * @event Keyboard#keydown
-     * @param {KeyboardEvent} event - The Keyboard event object. Note, this event is only valid for the current callback.
-     * @example
-     * const onKeyDown = function (e) {
-     *     if (e.key === pc.KEY_SPACE) {
-     *         // space key pressed
-     *     }
-     *     e.event.preventDefault(); // Use original browser event to prevent browser action.
-     * };
-     * app.keyboard.on("keydown", onKeyDown, this);
-     */
-
-    /**
-     * Fired when a key is released.
-     *
-     * @event Keyboard#keyup
-     * @param {KeyboardEvent} event - The Keyboard event object. Note, this event is only valid for the current callback.
-     * @example
-     * const onKeyUp = function (e) {
-     *     if (e.key === pc.KEY_SPACE) {
-     *         // space key released
-     *     }
-     *     e.event.preventDefault(); // Use original browser event to prevent browser action.
-     * };
-     * app.keyboard.on("keyup", onKeyUp, this);
-     */
 
     /**
      * Attach the keyboard event handlers to an Element.
@@ -185,10 +189,10 @@ class Keyboard extends EventHandler {
         let hex = keyCode.toString(16).toUpperCase();
         const length = hex.length;
         for (let count = 0; count < (4 - length); count++) {
-            hex = '0' + hex;
+            hex = `0${hex}`;
         }
 
-        return 'U+' + hex;
+        return `U+${hex}`;
     }
 
     /**

@@ -1,8 +1,10 @@
-import { Component } from '../component.js';
 import { ComponentSystem } from '../system.js';
-
 import { ScrollbarComponent } from './component.js';
 import { ScrollbarComponentData } from './data.js';
+
+/**
+ * @import { AppBase } from '../../app-base.js'
+ */
 
 const _schema = [
     { name: 'enabled', type: 'boolean' },
@@ -15,14 +17,14 @@ const _schema = [
 /**
  * Manages creation of {@link ScrollbarComponent}s.
  *
- * @augments ComponentSystem
+ * @category User Interface
  */
 class ScrollbarComponentSystem extends ComponentSystem {
     /**
      * Create a new ScrollbarComponentSystem.
      *
-     * @param {import('../../app-base.js').AppBase} app - The application.
-     * @hideconstructor
+     * @param {AppBase} app - The application.
+     * @ignore
      */
     constructor(app) {
         super(app);
@@ -45,7 +47,5 @@ class ScrollbarComponentSystem extends ComponentSystem {
         component.onRemove();
     }
 }
-
-Component._buildAccessors(ScrollbarComponent.prototype, _schema);
 
 export { ScrollbarComponentSystem };

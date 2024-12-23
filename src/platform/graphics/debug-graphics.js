@@ -1,8 +1,10 @@
 /**
- * Internal graphics debug system - gpu markers and similar. Note that the functions only execute in the
- * debug build, and are stripped out in other builds.
- *
- * @ignore
+ * @import { GraphicsDevice } from './graphics-device.js'
+ */
+
+/**
+ * Internal graphics debug system - gpu markers and similar. Note that the functions only execute
+ * in the debug build, and are stripped out in other builds.
  */
 class DebugGraphics {
     /**
@@ -24,7 +26,7 @@ class DebugGraphics {
     /**
      * Push GPU marker to the stack on the device.
      *
-     * @param {import('./graphics-device.js').GraphicsDevice} device - The graphics device.
+     * @param {GraphicsDevice} device - The graphics device.
      * @param {string} name - The name of the marker.
      */
     static pushGpuMarker(device, name) {
@@ -35,7 +37,7 @@ class DebugGraphics {
     /**
      * Pop GPU marker from the stack on the device.
      *
-     * @param {import('./graphics-device.js').GraphicsDevice} device - The graphics device.
+     * @param {GraphicsDevice} device - The graphics device.
      */
     static popGpuMarker(device) {
         if (DebugGraphics.markers.length) {
@@ -50,7 +52,7 @@ class DebugGraphics {
      * @returns {string} String representation of current markers.
      */
     static toString() {
-        return DebugGraphics.markers.join(" | ");
+        return DebugGraphics.markers.join(' | ');
     }
 }
 

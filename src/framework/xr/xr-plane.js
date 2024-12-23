@@ -2,13 +2,44 @@ import { EventHandler } from '../../core/event-handler.js';
 import { Quat } from '../../core/math/quat.js';
 import { Vec3 } from '../../core/math/vec3.js';
 
+/**
+ * @import { XrPlaneDetection } from './xr-plane-detection.js'
+ */
+
 let ids = 0;
 
 /**
- * Detected Plane instance that provides position, rotation and polygon points. Plane is a subject
- * to change during its lifetime.
+ * Represents a detected plane in the real world, providing its position, rotation, polygon points,
+ * and semantic label. The plane data may change over time as the system updates its understanding
+ * of the environment. Instances of this class are created and managed by the
+ * {@link XrPlaneDetection} system.
+ *
+ * @category XR
  */
 class XrPlane extends EventHandler {
+    /**
+     * Fired when an {@link XrPlane} is removed.
+     *
+     * @event
+     * @example
+     * plane.once('remove', () => {
+     *     // plane is not available anymore
+     * });
+     */
+    static EVENT_REMOVE = 'remove';
+
+    /**
+     * Fired when {@link XrPlane} attributes such as: orientation and/or points have been changed.
+     * Position and rotation can change at any time without triggering a `change` event.
+     *
+     * @event
+     * @example
+     * plane.on('change', () -> {
+     *     // plane has been changed
+     * });
+     */
+    static EVENT_CHANGE = 'change';
+
     /**
      * @type {number}
      * @private
@@ -16,7 +47,7 @@ class XrPlane extends EventHandler {
     _id;
 
     /**
-     * @type {import('./xr-plane-detection.js').XrPlaneDetection}
+     * @type {XrPlaneDetection}
      * @private
      */
     _planeDetection;
@@ -34,7 +65,7 @@ class XrPlane extends EventHandler {
     _lastChangedTime;
 
     /**
-     * @type {string}
+     * @type {"horizontal"|"vertical"|null}
      * @private
      */
     _orientation;
@@ -54,10 +85,9 @@ class XrPlane extends EventHandler {
     /**
      * Create a new XrPlane instance.
      *
-     * @param {import('./xr-plane-detection.js').XrPlaneDetection} planeDetection - Plane detection
-     * system.
+     * @param {XrPlaneDetection} planeDetection - Plane detection system.
      * @param {*} xrPlane - XRPlane that is instantiated by WebXR system.
-     * @hideconstructor
+     * @ignore
      */
     constructor(planeDetection, xrPlane) {
         super();
@@ -69,34 +99,15 @@ class XrPlane extends EventHandler {
         this._orientation = xrPlane.orientation;
     }
 
-    /**
-     * Fired when {@link XrPlane} is removed.
-     *
-     * @event XrPlane#remove
-     * @example
-     * plane.once('remove', function () {
-     *     // plane is not available anymore
-     * });
-     */
-
-    /**
-     * Fired when {@link XrPlane} attributes such as: orientation and/or points have been changed.
-     * Position and rotation can change at any time without triggering a `change` event.
-     *
-     * @event XrPlane#change
-     * @example
-     * plane.on('change', function () {
-     *     // plane has been changed
-     * });
-     */
-
     /** @ignore */
     destroy() {
+        if (!this._xrPlane) return;
+        this._xrPlane = null;
         this.fire('remove');
     }
 
     /**
-     * @param {*} frame - XRFrame from requestAnimationFrame callback.
+     * @param {XRFrame} frame - XRFrame from requestAnimationFrame callback.
      * @ignore
      */
     update(frame) {
@@ -144,24 +155,36 @@ class XrPlane extends EventHandler {
     }
 
     /**
-     * Plane's specific orientation (horizontal or vertical) or null if orientation is anything else.
+     * Gets the plane's specific orientation. This can be "horizontal" for planes that are parallel
+     * to the ground, "vertical" for planes that are perpendicular to the ground, or `null` if the
+     * orientation is different or unknown.
      *
-     * @type {string|null}
+     * @type {"horizontal"|"vertical"|null}
+     * @example
+     * if (plane.orientation === 'horizontal') {
+     *     console.log('This plane is horizontal.');
+     * } else if (plane.orientation === 'vertical') {
+     *     console.log('This plane is vertical.');
+     * } else {
+     *     console.log('Orientation of this plane is unknown or different.');
+     * }
      */
     get orientation() {
         return this._orientation;
     }
 
     /**
-     * Array of DOMPointReadOnly objects. DOMPointReadOnly is an object with `x y z` properties
-     * that defines a local point of a plane's polygon.
+     * Gets the array of points that define the polygon of the plane in its local coordinate space.
+     * Each point is represented as a `DOMPointReadOnly` object with `x`, `y`, and `z` properties.
+     * These points can be transformed to world coordinates using the plane's position and
+     * rotation.
      *
-     * @type {object[]}
+     * @type {DOMPointReadOnly[]}
      * @example
      * // prepare reusable objects
+     * const transform = new pc.Mat4();
      * const vecA = new pc.Vec3();
      * const vecB = new pc.Vec3();
-     * const color = new pc.Color(1, 1, 1);
      *
      * // update Mat4 to plane position and rotation
      * transform.setTRS(plane.getPosition(), plane.getRotation(), pc.Vec3.ONE);
@@ -171,16 +194,33 @@ class XrPlane extends EventHandler {
      *     vecA.copy(plane.points[i]);
      *     vecB.copy(plane.points[(i + 1) % plane.points.length]);
      *
-     *     // transform from planes local to world coords
+     *     // transform points to world space
      *     transform.transformPoint(vecA, vecA);
      *     transform.transformPoint(vecB, vecB);
      *
      *     // render line
-     *     app.drawLine(vecA, vecB, color);
+     *     app.drawLine(vecA, vecB, pc.Color.WHITE);
      * }
      */
     get points() {
         return this._xrPlane.polygon;
+    }
+
+    /**
+     * Gets the semantic label of the plane provided by the underlying system. The label describes
+     * the type of surface the plane represents, such as "floor", "wall", "ceiling", etc. The list
+     * of possible labels can be found in the [semantic labels repository](https://github.com/immersive-web/semantic-labels).
+     *
+     * @type {string}
+     * @example
+     * if (plane.label === 'floor') {
+     *     console.log('This plane represents the floor.');
+     * } else if (plane.label === 'wall') {
+     *     console.log('This plane represents a wall.');
+     * }
+     */
+    get label() {
+        return this._xrPlane.semanticLabel || '';
     }
 }
 

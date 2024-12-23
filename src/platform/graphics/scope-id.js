@@ -2,6 +2,8 @@ import { VersionedObject } from './versioned-object.js';
 
 /**
  * The scope for a variable.
+ *
+ * @category Graphics
  */
 class ScopeId {
     /**

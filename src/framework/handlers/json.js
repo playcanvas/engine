@@ -1,15 +1,17 @@
 import { http, Http } from '../../platform/net/http.js';
+import { ResourceHandler } from './handler.js';
 
-class JsonHandler {
+class JsonHandler extends ResourceHandler {
     /**
-     * Type of the resource the handler handles.
+     * TextDecoder for decoding binary data.
      *
-     * @type {string}
+     * @type {TextDecoder|null}
+     * @private
      */
-    handlerType = "json";
+    decoder = null;
 
     constructor(app) {
-        this.maxRetries = 0;
+        super(app, 'json');
     }
 
     load(url, callback) {
@@ -30,7 +32,7 @@ class JsonHandler {
             options.responseType = Http.ResponseType.JSON;
         }
 
-        http.get(url.load, options, function (err, response) {
+        http.get(url.load, options, (err, response) => {
             if (!err) {
                 callback(null, response);
             } else {
@@ -39,11 +41,15 @@ class JsonHandler {
         });
     }
 
-    open(url, data) {
-        return data;
-    }
-
-    patch(asset, assets) {
+    /**
+     * Parses raw DataView and returns string.
+     *
+     * @param {DataView} data - The raw data as a DataView
+     * @returns {object} The parsed resource data.
+     */
+    openBinary(data) {
+        this.decoder ??= new TextDecoder('utf-8');
+        return JSON.parse(this.decoder.decode(data));
     }
 }
 

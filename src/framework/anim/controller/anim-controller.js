@@ -1,15 +1,20 @@
 import { Debug } from '../../../core/debug.js';
 import { sortPriority } from '../../../core/sort.js';
 import { AnimClip } from '../evaluator/anim-clip.js';
-import { AnimState } from './anim-state.js';
-import { AnimNode } from './anim-node.js';
-import { AnimTransition } from './anim-transition.js';
 import {
     ANIM_GREATER_THAN, ANIM_LESS_THAN, ANIM_GREATER_THAN_EQUAL_TO, ANIM_LESS_THAN_EQUAL_TO, ANIM_EQUAL_TO, ANIM_NOT_EQUAL_TO,
     ANIM_INTERRUPTION_NONE, ANIM_INTERRUPTION_PREV, ANIM_INTERRUPTION_NEXT, ANIM_INTERRUPTION_PREV_NEXT, ANIM_INTERRUPTION_NEXT_PREV,
     ANIM_PARAMETER_TRIGGER,
     ANIM_STATE_START, ANIM_STATE_END, ANIM_STATE_ANY, ANIM_CONTROL_STATES
 } from './constants.js';
+import { AnimState } from './anim-state.js';
+import { AnimNode } from './anim-node.js';
+import { AnimTransition } from './anim-transition.js';
+
+/**
+ * @import { AnimEvaluator } from '../evaluator/anim-evaluator.js'
+ * @import { EventHandler } from '../../../core/event-handler.js'
+ */
 
 /**
  * The AnimController manages the animations for its entity, based on the provided state graph and
@@ -21,26 +26,100 @@ import {
  */
 class AnimController {
     /**
+     * @type {Object<string, AnimState>}
+     * @private
+     */
+    _states = {};
+
+    /**
+     * @type {string[]}
+     * @private
+     */
+    _stateNames = [];
+
+    /**
+     * @type {Object<string, AnimTransition[]>}
+     * @private
+     */
+    _findTransitionsFromStateCache = {};
+
+    /**
+     * @type {Object<string, AnimTransition[]>}
+     * @private
+     */
+    _findTransitionsBetweenStatesCache = {};
+
+    /**
+     * @type {string|null}
+     * @private
+     */
+    _previousStateName = null;
+
+    /** @private */
+    _activeStateName = ANIM_STATE_START;
+
+    /** @private */
+    _activeStateDuration = 0;
+
+    /** @private */
+    _activeStateDurationDirty = true;
+
+    /** @private */
+    _playing = false;
+
+    /**
+     * @type {boolean}
+     * @private
+     */
+    _activate;
+
+    /**
+     * @type {AnimTransition[]}
+     * @private
+     */
+    _transitions;
+
+    /** @private */
+    _currTransitionTime = 1;
+
+    /** @private */
+    _totalTransitionTime = 1;
+
+    /** @private */
+    _isTransitioning = false;
+
+    /** @private */
+    _transitionInterruptionSource = ANIM_INTERRUPTION_NONE;
+
+    /** @private */
+    _transitionPreviousStates = [];
+
+    /** @private */
+    _timeInState = 0;
+
+    /** @private */
+    _timeInStateBefore = 0;
+
+    /**
      * Create a new AnimController.
      *
-     * @param {import('../evaluator/anim-evaluator.js').AnimEvaluator} animEvaluator - The
-     * animation evaluator used to blend all current playing animation keyframes and update the
-     * entities properties based on the current animation values.
+     * @param {AnimEvaluator} animEvaluator - The animation evaluator used to blend all current
+     * playing animation keyframes and update the entities properties based on the current
+     * animation values.
      * @param {object[]} states - The list of states used to form the controller state graph.
      * @param {object[]} transitions - The list of transitions used to form the controller state
      * graph.
      * @param {boolean} activate - Determines whether the anim controller should automatically play
      * once all {@link AnimNodes} are assigned animations.
-     * @param {import('../../../core/event-handler.js').EventHandler} eventHandler - The event
-     * handler which should be notified with anim events.
-     * @param {Function} findParameter - Retrieves a parameter which is used to control the transition between states.
-     * @param {Function} consumeTrigger - Used to set triggers back to their default state after they
-     * have been consumed by a transition.
+     * @param {EventHandler} eventHandler - The event handler which should be notified with anim
+     * events.
+     * @param {Function} findParameter - Retrieves a parameter which is used to control the
+     * transition between states.
+     * @param {Function} consumeTrigger - Used to set triggers back to their default state after
+     * they have been consumed by a transition.
      */
     constructor(animEvaluator, states, transitions, activate, eventHandler, findParameter, consumeTrigger) {
         this._animEvaluator = animEvaluator;
-        this._states = {};
-        this._stateNames = [];
         this._eventHandler = eventHandler;
         this._findParameter = findParameter;
         this._consumeTrigger = consumeTrigger;
@@ -59,23 +138,7 @@ class AnimController {
                 ...transition
             });
         });
-        this._findTransitionsFromStateCache = {};
-        this._findTransitionsBetweenStatesCache = {};
-        this._previousStateName = null;
-        this._activeStateName = ANIM_STATE_START;
-        this._activeStateDuration = 0.0;
-        this._activeStateDurationDirty = true;
-        this._playing = false;
         this._activate = activate;
-
-        this._currTransitionTime = 1.0;
-        this._totalTransitionTime = 1.0;
-        this._isTransitioning = false;
-        this._transitionInterruptionSource = ANIM_INTERRUPTION_NONE;
-        this._transitionPreviousStates = [];
-
-        this._timeInState = 0;
-        this._timeInStateBefore = 0;
     }
 
     get animEvaluator() {
@@ -178,13 +241,19 @@ class AnimController {
         return this._animEvaluator.assignMask(mask);
     }
 
+    /**
+     * @param {string} stateName - The name of the state to find.
+     * @returns {AnimState} The state with the given name.
+     * @private
+     */
     _findState(stateName) {
         return this._states[stateName];
     }
 
     _getActiveStateProgressForTime(time) {
-        if (this.activeStateName === ANIM_STATE_START || this.activeStateName === ANIM_STATE_END || this.activeStateName === ANIM_STATE_ANY)
+        if (this.activeStateName === ANIM_STATE_START || this.activeStateName === ANIM_STATE_END || this.activeStateName === ANIM_STATE_ANY) {
             return 1.0;
+        }
 
         const activeClip = this._animEvaluator.findClip(this.activeStateAnimations[0].name);
         if (activeClip) {
@@ -194,11 +263,18 @@ class AnimController {
         return null;
     }
 
-    // return all the transitions that have the given stateName as their source state
+    /**
+     * Return all the transitions that have the given stateName as their source state.
+     *
+     * @param {string} stateName - The name of the state to find transitions from.
+     * @returns {AnimTransition[]} The transitions that have the given stateName as their source
+     * state.
+     * @private
+     */
     _findTransitionsFromState(stateName) {
         let transitions = this._findTransitionsFromStateCache[stateName];
         if (!transitions) {
-            transitions = this._transitions.filter(function (transition) {
+            transitions = this._transitions.filter((transition) => {
                 return transition.from === stateName;
             });
 
@@ -210,18 +286,26 @@ class AnimController {
         return transitions;
     }
 
-    // return all the transitions that contain the given source and destination states
+    /**
+     * Return all the transitions that contain the given source and destination states.
+     *
+     * @param {string} sourceStateName - The name of the source state to find transitions from.
+     * @param {string} destinationStateName - The name of the destination state to find transitions
+     * to.
+     * @returns {AnimTransition[]} The transitions that have the given source and destination states.
+     * @private
+     */
     _findTransitionsBetweenStates(sourceStateName, destinationStateName) {
-        let transitions = this._findTransitionsBetweenStatesCache[sourceStateName + '->' + destinationStateName];
+        let transitions = this._findTransitionsBetweenStatesCache[`${sourceStateName}->${destinationStateName}`];
         if (!transitions) {
-            transitions = this._transitions.filter(function (transition) {
+            transitions = this._transitions.filter((transition) => {
                 return transition.from === sourceStateName && transition.to === destinationStateName;
             });
 
             // sort transitions in priority order
             sortPriority(transitions);
 
-            this._findTransitionsBetweenStatesCache[sourceStateName + '->' + destinationStateName] = transitions;
+            this._findTransitionsBetweenStatesCache[`${sourceStateName}->${destinationStateName}`] = transitions;
         }
         return transitions;
     }
@@ -383,10 +467,10 @@ class AnimController {
                 // to uniquely identify animations from the same state that were added during different transitions
                 for (let j = 0; j < state.animations.length; j++) {
                     animation = state.animations[j];
-                    clip = this._animEvaluator.findClip(animation.name + '.previous.' + i);
+                    clip = this._animEvaluator.findClip(`${animation.name}.previous.${i}`);
                     if (!clip) {
                         clip = this._animEvaluator.findClip(animation.name);
-                        clip.name = animation.name + '.previous.' + i;
+                        clip.name = `${animation.name}.previous.${i}`;
                     }
                     // // pause previous animation clips to reduce their impact on performance
                     if (i !== this._transitionPreviousStates.length - 1) {
@@ -543,8 +627,9 @@ class AnimController {
 
         // transition between states if a transition is available from the active state
         const transition = this._findTransition(this._activeStateName);
-        if (transition)
+        if (transition) {
             this.updateStateFromTransition(transition);
+        }
 
         if (this._isTransitioning) {
             this._currTransitionTime += dt;
@@ -556,7 +641,7 @@ class AnimController {
                     const stateWeight = this._transitionPreviousStates[i].weight;
                     for (let j = 0; j < state.animations.length; j++) {
                         animation = state.animations[j];
-                        clip = this._animEvaluator.findClip(animation.name + '.previous.' + i);
+                        clip = this._animEvaluator.findClip(`${animation.name}.previous.${i}`);
                         if (clip) {
                             clip.blendWeight = (1.0 - interpolatedTime) * animation.normalizedWeight * stateWeight;
                         }

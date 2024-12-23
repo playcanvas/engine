@@ -1,10 +1,12 @@
 import { math } from '../../core/math/math.js';
 import { Vec3 } from '../../core/math/vec3.js';
-import { SHADOW_PCF3 } from '../constants.js';
+import { SHADOW_PCF3_32F } from '../constants.js';
 
 /**
  * Lighting parameters, allow configuration of the global lighting parameters. For details see
- * [Clustered Lighting](https://developer.playcanvas.com/en/user-manual/graphics/lighting/clustered-lighting/).
+ * [Clustered Lighting](https://developer.playcanvas.com/user-manual/graphics/lighting/clustered-lighting/).
+ *
+ * @category Graphics
  */
 class LightingParams {
     /** @private */
@@ -20,7 +22,7 @@ class LightingParams {
     _shadowsEnabled = true;
 
     /** @private */
-    _shadowType = SHADOW_PCF3;
+    _shadowType = SHADOW_PCF3_32F;
 
     /** @private */
     _shadowAtlasResolution = 2048;
@@ -43,7 +45,7 @@ class LightingParams {
     /**
      * Atlas textures split description, which applies to both the shadow and cookie texture atlas.
      * Defaults to null, which enables to automatic split mode. For details see [Configuring Atlas
-     * Split](https://developer.playcanvas.com/en/user-manual/graphics/lighting/clustered-lighting/#configuring-atlas).
+     * Split](https://developer.playcanvas.com/user-manual/graphics/lighting/clustered-lighting/#configuring-atlas).
      *
      * @type {number[]|null}
      */
@@ -61,19 +63,21 @@ class LightingParams {
     }
 
     applySettings(render) {
-        this.shadowsEnabled = render.lightingShadowsEnabled;
-        this.cookiesEnabled = render.lightingCookiesEnabled;
-        this.areaLightsEnabled = render.lightingAreaLightsEnabled;
-        this.shadowAtlasResolution = render.lightingShadowAtlasResolution;
-        this.cookieAtlasResolution = render.lightingCookieAtlasResolution;
-        this.maxLightsPerCell = render.lightingMaxLightsPerCell;
-        this.shadowType = render.lightingShadowType;
-        this.cell = new Vec3(render.lightingCells);
+        this.shadowsEnabled = render.lightingShadowsEnabled ?? this.shadowsEnabled;
+        this.cookiesEnabled = render.lightingCookiesEnabled ?? this.cookiesEnabled;
+        this.areaLightsEnabled = render.lightingAreaLightsEnabled ?? this.areaLightsEnabled;
+        this.shadowAtlasResolution = render.lightingShadowAtlasResolution ?? this.shadowAtlasResolution;
+        this.cookieAtlasResolution = render.lightingCookieAtlasResolution ?? this.cookieAtlasResolution;
+        this.maxLightsPerCell = render.lightingMaxLightsPerCell ?? this.maxLightsPerCell;
+        this.shadowType = render.lightingShadowType ?? this.shadowType;
+        if (render.lightingCells) {
+            this.cell = new Vec3(render.lightingCells);
+        }
     }
 
     /**
-     * Number of cells along each world-space axis the space containing lights
-     * is subdivided into. Defaults to Vec(10, 3, 10).
+     * Sets the number of cells along each world space axis the space containing lights is
+     * subdivided into. Defaults to `[10, 3, 10]`.
      *
      * @type {Vec3}
      */
@@ -81,12 +85,18 @@ class LightingParams {
         this._cells.copy(value);
     }
 
+    /**
+     * Gets the number of cells along each world space axis the space containing lights is
+     * subdivided into.
+     *
+     * @type {Vec3}
+     */
     get cells() {
         return this._cells;
     }
 
     /**
-     * Maximum number of lights a cell can store. Defaults to 255.
+     * Sets the maximum number of lights a cell can store. Defaults to 255.
      *
      * @type {number}
      */
@@ -94,12 +104,17 @@ class LightingParams {
         this._maxLightsPerCell = math.clamp(value, 1, 255);
     }
 
+    /**
+     * Gets the maximum number of lights a cell can store.
+     *
+     * @type {number}
+     */
     get maxLightsPerCell() {
         return this._maxLightsPerCell;
     }
 
     /**
-     * Resolution of the atlas texture storing all non-directional cookie textures.
+     * Sets the resolution of the atlas texture storing all non-directional cookie textures.
      * Defaults to 2048.
      *
      * @type {number}
@@ -108,12 +123,17 @@ class LightingParams {
         this._cookieAtlasResolution = math.clamp(value, 32, this._maxTextureSize);
     }
 
+    /**
+     * Gets the resolution of the atlas texture storing all non-directional cookie textures.
+     *
+     * @type {number}
+     */
     get cookieAtlasResolution() {
         return this._cookieAtlasResolution;
     }
 
     /**
-     * Resolution of the atlas texture storing all non-directional shadow textures.
+     * Sets the resolution of the atlas texture storing all non-directional shadow textures.
      * Defaults to 2048.
      *
      * @type {number}
@@ -122,18 +142,26 @@ class LightingParams {
         this._shadowAtlasResolution = math.clamp(value, 32, this._maxTextureSize);
     }
 
+    /**
+     * Gets the resolution of the atlas texture storing all non-directional shadow textures.
+     *
+     * @type {number}
+     */
     get shadowAtlasResolution() {
         return this._shadowAtlasResolution;
     }
 
     /**
-     * The type of shadow filtering used by all shadows. Can be:
+     * Sets the type of shadow filtering used by all shadows. Can be:
      *
-     * - {@link SHADOW_PCF1}: PCF 1x1 sampling.
-     * - {@link SHADOW_PCF3}: PCF 3x3 sampling.
-     * - {@link SHADOW_PCF5}: PCF 5x5 sampling. Falls back to {@link SHADOW_PCF3} on WebGL 1.0.
+     * - {@link SHADOW_PCF1_32F}
+     * - {@link SHADOW_PCF3_32F}
+     * - {@link SHADOW_PCF5_32F}
+     * - {@link SHADOW_PCF1_16F}
+     * - {@link SHADOW_PCF3_16F}
+     * - {@link SHADOW_PCF5_16F}
      *
-     * Defaults to {@link SHADOW_PCF3}
+     * Defaults to {@link SHADOW_PCF3_32F}
      *
      * @type {number}
      */
@@ -146,13 +174,17 @@ class LightingParams {
         }
     }
 
+    /**
+     * Gets the type of shadow filtering used by all shadows.
+     *
+     * @type {number}
+     */
     get shadowType() {
         return this._shadowType;
     }
 
     /**
-     * If set to true, the clustered lighting will support cookie textures.
-     * Defaults to false.
+     * Sets whether clustered lighting supports cookie textures. Defaults to false.
      *
      * @type {boolean}
      */
@@ -165,13 +197,17 @@ class LightingParams {
         }
     }
 
+    /**
+     * Gets whether clustered lighting supports cookie textures.
+     *
+     * @type {boolean}
+     */
     get cookiesEnabled() {
         return this._cookiesEnabled;
     }
 
     /**
-     * If set to true, the clustered lighting will support area lights.
-     * Defaults to false.
+     * Sets whether clustered lighting supports area lights. Defaults to false.
      *
      * @type {boolean}
      */
@@ -188,13 +224,17 @@ class LightingParams {
         }
     }
 
+    /**
+     * Gets whether clustered lighting supports area lights.
+     *
+     * @type {boolean}
+     */
     get areaLightsEnabled() {
         return this._areaLightsEnabled;
     }
 
     /**
-     * If set to true, the clustered lighting will support shadows.
-     * Defaults to true.
+     * Sets whether clustered lighting supports shadow casting. Defaults to true.
      *
      * @type {boolean}
      */
@@ -207,6 +247,11 @@ class LightingParams {
         }
     }
 
+    /**
+     * Gets whether clustered lighting supports shadow casting.
+     *
+     * @type {boolean}
+     */
     get shadowsEnabled() {
         return this._shadowsEnabled;
     }

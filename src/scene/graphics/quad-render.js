@@ -1,11 +1,15 @@
-import { Debug, DebugHelper } from "../../core/debug.js";
-import { Vec4 } from "../../core/math/vec4.js";
-import { BindGroup } from "../../platform/graphics/bind-group.js";
-import { BINDGROUP_MESH, PRIMITIVE_TRISTRIP } from "../../platform/graphics/constants.js";
-import { DebugGraphics } from "../../platform/graphics/debug-graphics.js";
-import { ShaderProcessorOptions } from "../../platform/graphics/shader-processor-options.js";
-import { UniformBuffer } from "../../platform/graphics/uniform-buffer.js";
-import { processShader } from "../shader-lib/utils.js";
+import { Debug, DebugHelper } from '../../core/debug.js';
+import { Vec4 } from '../../core/math/vec4.js';
+import { BindGroup, DynamicBindGroup } from '../../platform/graphics/bind-group.js';
+import { BINDGROUP_MESH, BINDGROUP_MESH_UB, BINDGROUP_VIEW, PRIMITIVE_TRISTRIP } from '../../platform/graphics/constants.js';
+import { DebugGraphics } from '../../platform/graphics/debug-graphics.js';
+import { ShaderProcessorOptions } from '../../platform/graphics/shader-processor-options.js';
+import { UniformBuffer } from '../../platform/graphics/uniform-buffer.js';
+import { processShader } from '../shader-lib/utils.js';
+
+/**
+ * @import { Shader } from '../../platform/graphics/shader.js'
+ */
 
 const _quadPrimitive = {
     type: PRIMITIVE_TRISTRIP,
@@ -16,6 +20,7 @@ const _quadPrimitive = {
 
 const _tempViewport = new Vec4();
 const _tempScissor = new Vec4();
+const _dynamicBindGroup = new DynamicBindGroup();
 
 /**
  * An object that renders a quad using a {@link Shader}.
@@ -28,6 +33,8 @@ const _tempScissor = new Vec4();
  * quad.render();
  * quad.destroy();
  * ```
+ *
+ * @category Graphics
  */
 class QuadRender {
     /**
@@ -45,7 +52,7 @@ class QuadRender {
     /**
      * Create a new QuadRender instance.
      *
-     * @param {import('../../platform/graphics/shader.js').Shader} shader - The shader to be used to render the quad.
+     * @param {Shader} shader - The shader to be used to render the quad.
      */
     constructor(shader) {
 
@@ -68,7 +75,7 @@ class QuadRender {
             // bind group
             const bindGroupFormat = this.shader.meshBindGroupFormat;
             Debug.assert(bindGroupFormat);
-            this.bindGroup = new BindGroup(device, bindGroupFormat, this.uniformBuffer);
+            this.bindGroup = new BindGroup(device, bindGroupFormat);
             DebugHelper.setName(this.bindGroup, `QuadRender-MeshBindGroup_${this.bindGroup.id}`);
         }
     }
@@ -88,15 +95,15 @@ class QuadRender {
      * Renders the quad. If the viewport is provided, the original viewport and scissor is restored
      * after the rendering.
      *
-     * @param {import('../../core/math/vec4.js').Vec4} [viewport] - The viewport rectangle of the
-     * quad, in pixels. The viewport is not changed if not provided.
-     * @param {import('../../core/math/vec4.js').Vec4} [scissor] - The scissor rectangle of the
-     * quad, in pixels. Used only if the viewport is provided.
+     * @param {Vec4} [viewport] - The viewport rectangle of the quad, in pixels. The viewport is
+     * not changed if not provided.
+     * @param {Vec4} [scissor] - The scissor rectangle of the quad, in pixels. Used only if the
+     * viewport is provided.
      */
     render(viewport, scissor) {
 
         const device = this.shader.device;
-        DebugGraphics.pushGpuMarker(device, "QuadRender");
+        DebugGraphics.pushGpuMarker(device, 'QuadRender');
 
         // only modify viewport or scissor if viewport supplied
         if (viewport) {
@@ -118,10 +125,22 @@ class QuadRender {
 
         if (device.supportsUniformBuffers) {
 
+            // not using view bind group
+            device.setBindGroup(BINDGROUP_VIEW, device.emptyBindGroup);
+
+            // mesh bind group
             const bindGroup = this.bindGroup;
-            bindGroup.defaultUniformBuffer?.update();
             bindGroup.update();
             device.setBindGroup(BINDGROUP_MESH, bindGroup);
+
+            // dynamic uniform buffer bind group
+            const uniformBuffer = this.uniformBuffer;
+            if (uniformBuffer) {
+                uniformBuffer.update(_dynamicBindGroup);
+                device.setBindGroup(BINDGROUP_MESH_UB, _dynamicBindGroup.bindGroup, _dynamicBindGroup.offsets);
+            } else {
+                device.setBindGroup(BINDGROUP_MESH_UB, device.emptyBindGroup);
+            }
         }
 
         device.draw(_quadPrimitive);

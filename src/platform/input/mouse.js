@@ -13,9 +13,71 @@ import { isMousePointerLocked, MouseEvent } from './mouse-event.js';
 /**
  * A Mouse Device, bound to a DOM Element.
  *
- * @augments EventHandler
+ * @category Input
  */
 class Mouse extends EventHandler {
+    /**
+     * Fired when the mouse is moved. The handler is passed a {@link MouseEvent}.
+     *
+     * @event
+     * @example
+     * app.mouse.on('mousemove', (e) => {
+     *     console.log(`Current mouse position is: ${e.x}, ${e.y}`);
+     * });
+     */
+    static EVENT_MOUSEMOVE = EVENT_MOUSEMOVE;
+
+    /**
+     * Fired when a mouse button is pressed. The handler is passed a {@link MouseEvent}.
+     *
+     * @event
+     * @example
+     * app.mouse.on('mousedown', (e) => {
+     *     console.log(`The ${e.button} button was pressed at position: ${e.x}, ${e.y}`);
+     * });
+     */
+    static EVENT_MOUSEDOWN = EVENT_MOUSEDOWN;
+
+    /**
+     * Fired when a mouse button is released. The handler is passed a {@link MouseEvent}.
+     *
+     * @event
+     * @example
+     * app.mouse.on('mouseup', (e) => {
+     *     console.log(`The ${e.button} button was released at position: ${e.x}, ${e.y}`);
+     * });
+     */
+    static EVENT_MOUSEUP = EVENT_MOUSEUP;
+
+    /**
+     * Fired when a mouse wheel is moved. The handler is passed a {@link MouseEvent}.
+     *
+     * @event
+     * @example
+     * app.mouse.on('mousewheel', (e) => {
+     *     console.log(`The mouse wheel was moved by ${e.wheelDelta}`);
+     * });
+     */
+    static EVENT_MOUSEWHEEL = EVENT_MOUSEWHEEL;
+
+    /** @private */
+    _lastX = 0;
+
+    /** @private */
+    _lastY = 0;
+
+    /** @private */
+    _buttons = [false, false, false];
+
+    /** @private */
+    _lastbuttons = [false, false, false];
+
+    /** @private */
+    _target = null;
+
+    /** @private */
+    _attached = false;
+
     /**
      * Create a new Mouse instance.
      *
@@ -23,13 +85,6 @@ class Mouse extends EventHandler {
      */
     constructor(element) {
         super();
-
-        // Clear the mouse state
-        this._lastX = 0;
-        this._lastY = 0;
-        this._buttons = [false, false, false];
-        this._lastbuttons = [false, false, false];
-
 
         // Setup event handlers so they are bound to the correct 'this'
         this._upHandler = this._handleUp.bind(this);
@@ -40,39 +95,8 @@ class Mouse extends EventHandler {
             event.preventDefault();
         };
 
-        this._target = null;
-        this._attached = false;
-
         this.attach(element);
     }
-
-    /**
-     * Fired when the mouse is moved.
-     *
-     * @event Mouse#mousemove
-     * @param {MouseEvent} event - The MouseEvent object.
-     */
-
-    /**
-     * Fired when a mouse button is pressed.
-     *
-     * @event Mouse#mousedown
-     * @param {MouseEvent} event - The MouseEvent object.
-     */
-
-    /**
-     * Fired when a mouse button is released.
-     *
-     * @event Mouse#mouseup
-     * @param {MouseEvent} event - The MouseEvent object.
-     */
-
-    /**
-     * Fired when a mouse wheel is moved.
-     *
-     * @event Mouse#mousewheel
-     * @param {MouseEvent} event - The MouseEvent object.
-     */
 
     /**
      * Check if the mouse pointer has been locked, using {@link Mouse#enablePointerLock}.
@@ -94,11 +118,13 @@ class Mouse extends EventHandler {
         if (this._attached) return;
         this._attached = true;
 
-        const opts = platform.passiveEvents ? { passive: false } : false;
-        window.addEventListener('mouseup', this._upHandler, opts);
-        window.addEventListener('mousedown', this._downHandler, opts);
-        window.addEventListener('mousemove', this._moveHandler, opts);
-        window.addEventListener('wheel', this._wheelHandler, opts);
+        /** @type {AddEventListenerOptions} */
+        const passiveOptions = { passive: false };
+        const options = platform.passiveEvents ? passiveOptions : false;
+        window.addEventListener('mouseup', this._upHandler, options);
+        window.addEventListener('mousedown', this._downHandler, options);
+        window.addEventListener('mousemove', this._moveHandler, options);
+        window.addEventListener('wheel', this._wheelHandler, options);
     }
 
     /**
@@ -109,11 +135,13 @@ class Mouse extends EventHandler {
         this._attached = false;
         this._target = null;
 
-        const opts = platform.passiveEvents ? { passive: false } : false;
-        window.removeEventListener('mouseup', this._upHandler, opts);
-        window.removeEventListener('mousedown', this._downHandler, opts);
-        window.removeEventListener('mousemove', this._moveHandler, opts);
-        window.removeEventListener('wheel', this._wheelHandler, opts);
+        /** @type {AddEventListenerOptions} */
+        const passiveOptions = { passive: false };
+        const options = platform.passiveEvents ? passiveOptions : false;
+        window.removeEventListener('mouseup', this._upHandler, options);
+        window.removeEventListener('mousedown', this._downHandler, options);
+        window.removeEventListener('mousemove', this._moveHandler, options);
+        window.removeEventListener('wheel', this._wheelHandler, options);
     }
 
     /**
@@ -150,8 +178,9 @@ class Mouse extends EventHandler {
      */
     enablePointerLock(success, error) {
         if (!document.body.requestPointerLock) {
-            if (error)
+            if (error) {
                 error();
+            }
 
             return;
         }

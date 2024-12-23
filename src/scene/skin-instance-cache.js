@@ -22,7 +22,7 @@ class SkinInstanceCache {
     // function that logs out the state of the skin instances cache
     static logCachedSkinInstances() {
         console.log('CachedSkinInstances');
-        SkinInstanceCache._skinInstanceCache.forEach(function (array, rootBone) {
+        SkinInstanceCache._skinInstanceCache.forEach((array, rootBone) => {
             console.log(`${rootBone.name}: Array(${array.length})`);
             for (let i = 0; i < array.length; i++) {
                 console.log(`  ${i}: RefCount ${array[i].refCount}`);

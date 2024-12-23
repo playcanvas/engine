@@ -1,17 +1,24 @@
 import { path } from '../../core/path.js';
-
 import { GlbContainerParser } from '../parsers/glb-container-parser.js';
+import { ResourceHandler } from './handler.js';
 
-/** @typedef {import('./handler.js').ResourceHandler} ResourceHandler */
+/**
+ * @import { AppBase } from '../app-base.js'
+ * @import { Asset } from '../asset/asset.js'
+ * @import { Entity } from '../entity.js'
+ * @import { MeshInstance } from '../../scene/mesh-instance.js'
+ * @import { ResourceHandlerCallback } from './handler.js'
+ */
 
 /**
  * @interface
  * @name ContainerResource
  * @description Container for a list of animations, textures, materials, renders and a model.
- * @property {import('../asset/asset.js').Asset[]} renders An array of the Render assets.
- * @property {import('../asset/asset.js').Asset[]} materials An array of {@link Material} and/or {@link StandardMaterial} assets.
- * @property {import('../asset/asset.js').Asset[]} textures An array of the {@link Texture} assets.
- * @property {import('../asset/asset.js').Asset[]} animations An array of the {@link Animation} assets.
+ * @property {Asset[]} renders An array of the Render assets.
+ * @property {Asset[]} materials An array of {@link Material} and/or {@link StandardMaterial} assets.
+ * @property {Asset[]} textures An array of the {@link Texture} assets.
+ * @property {Asset[]} animations An array of the {@link Animation} assets.
+ * @category Graphics
  */
 class ContainerResource {
     /**
@@ -19,8 +26,8 @@ class ContainerResource {
      *
      * @param {object} [options] - The initialization data for the model component type
      * {@link ModelComponent}.
-     * @returns {import('../entity.js').Entity} A single entity with a model component. Model
-     * component internally contains a hierarchy based on {@link GraphNode}.
+     * @returns {Entity} A single entity with a model component. Model component internally
+     * contains a hierarchy based on {@link GraphNode}.
      * @example
      * // load a glb file and instantiate an entity with a model component based on it
      * app.assets.loadFromUrl("statue.glb", "container", function (err, asset) {
@@ -39,8 +46,8 @@ class ContainerResource {
      *
      * @param {object} [options] - The initialization data for the render component type
      * {@link RenderComponent}.
-     * @returns {import('../entity.js').Entity} A hierarchy of entities with render components on
-     * entities containing renderable geometry.
+     * @returns {Entity} A hierarchy of entities with render components on entities containing
+     * renderable geometry.
      * @example
      * // load a glb file and instantiate an entity with a render component based on it
      * app.assets.loadFromUrl("statue.glb", "container", function (err, asset) {
@@ -75,10 +82,9 @@ class ContainerResource {
     /**
      * Applies a material variant to an entity hierarchy.
      *
-     * @param {import('../entity.js').Entity} entity - The entity root to which material variants
-     * will be applied.
-     * @param {string} [name] - The name of the variant, as queried from getMaterialVariants,
-     * if null the variant will be reset to the default.
+     * @param {Entity} entity - The entity root to which material variants will be applied.
+     * @param {string} [name] - The name of the variant, as queried from getMaterialVariants, if
+     * null the variant will be reset to the default.
      * @example
      * // load a glb file and instantiate an entity with a render component based on it
      * app.assets.loadFromUrl("statue.glb", "container", function (err, asset) {
@@ -96,10 +102,9 @@ class ContainerResource {
      * this method allows for setting the variant on a specific set of mesh instances instead of the
      * whole entity.
      *
-     * @param {import('../../scene/mesh-instance').MeshInstance[]} instances - An array of mesh
-     * instances.
-     * @param {string} [name] - The the name of the variant, as quered from getMaterialVariants,
-     * if null the variant will be reset to the default
+     * @param {MeshInstance[]} instances - An array of mesh instances.
+     * @param {string} [name] - The name of the variant, as queried by getMaterialVariants. If null,
+     * the variant will be reset to the default.
      * @example
      * // load a glb file and instantiate an entity with a render component based on it
      * app.assets.loadFromUrl("statue.glb", "container", function (err, asset) {
@@ -125,28 +130,24 @@ class ContainerResource {
  * the various resources at different stages of loading. The table below lists the resource types
  * and the corresponding supported process functions.
  *
- * ```
- * |---------------------------------------------------------------------|
- * |  resource   |  preprocess |   process   |processAsync | postprocess |
- * |-------------+-------------+-------------+-------------+-------------|
- * | global      |      x      |             |             |      x      |
- * | node        |      x      |      x      |             |      x      |
- * | light       |      x      |      x      |             |      x      |
- * | camera      |      x      |      x      |             |      x      |
- * | animation   |      x      |             |             |      x      |
- * | material    |      x      |      x      |             |      x      |
- * | image       |      x      |             |      x      |      x      |
- * | texture     |      x      |             |      x      |      x      |
- * | buffer      |      x      |             |      x      |      x      |
- * | bufferView  |      x      |             |      x      |      x      |
- * |---------------------------------------------------------------------|
- * ```
+ * | resource   | preprocess | process | processAsync | postprocess |
+ * | ---------- | :--------: | :-----: | :----------: | :---------: |
+ * | global     |      √     |         |              |      √      |
+ * | node       |      √     |    √    |              |      √      |
+ * | light      |      √     |    √    |              |      √      |
+ * | camera     |      √     |    √    |              |      √      |
+ * | animation  |      √     |         |              |      √      |
+ * | material   |      √     |    √    |              |      √      |
+ * | image      |      √     |         |      √       |      √      |
+ * | texture    |      √     |         |      √       |      √      |
+ * | buffer     |      √     |         |      √       |      √      |
+ * | bufferView |      √     |         |      √       |      √      |
  *
  * Additional options that can be passed for glTF files:
  * [options.morphPreserveData] - When true, the morph target keeps its data passed using the options,
  * allowing the clone operation.
  * [options.morphPreferHighPrecision] - When true, high precision storage for morph targets should
- * be prefered. This is faster to create and allows higher precision, but takes more memory and
+ * be preferred. This is faster to create and allows higher precision, but takes more memory and
  * might be slower to render. Defaults to false.
  * [options.skipMeshes] - When true, the meshes from the container are not created. This can be
  * useful if you only need access to textures or animations and similar.
@@ -156,28 +157,25 @@ class ContainerResource {
  * ```javascript
  * const containerAsset = new pc.Asset(filename, 'container', { url: url, filename: filename }, null, {
  *     texture: {
- *         preprocess(gltfTexture) { console.log("texture preprocess"); }
- *     },
+ *         preprocess: (gltfTexture) => {
+ *             console.log("texture preprocess");
+ *         }
+ *     }
  * });
  * ```
  *
- * @implements {ResourceHandler}
+ * @category Graphics
  */
-class ContainerHandler {
-    /**
-     * Type of the resource the handler handles.
-     *
-     * @type {string}
-     */
-    handlerType = "container";
-
+class ContainerHandler extends ResourceHandler {
     /**
      * Create a new ContainerResource instance.
      *
-     * @param {import('../app-base.js').AppBase} app - The running {@link AppBase}.
-     * @hideconstructor
+     * @param {AppBase} app - The running {@link AppBase}.
+     * @ignore
      */
     constructor(app) {
+        super(app, 'container');
+
         this.glbContainerParser = new GlbContainerParser(app.graphicsDevice, app.assets, 0);
         this.parsers = { };
     }
@@ -220,10 +218,9 @@ class ContainerHandler {
      * @param {string} [url.load] - The URL to be used for loading the resource.
      * @param {string} [url.original] - The original URL to be used for identifying the resource
      * format. This is necessary when loading, for example from blob.
-     * @param {import('./handler.js').ResourceHandlerCallback} callback - The callback used when
-     * the resource is loaded or an error occurs.
-     * @param {import('../asset/asset.js').Asset} [asset] - Optional asset that is passed by
-     * ResourceLoader.
+     * @param {ResourceHandlerCallback} callback - The callback used when the resource is loaded or
+     * an error occurs.
+     * @param {Asset} [asset] - Optional asset that is passed by ResourceLoader.
      */
     load(url, callback, asset) {
         if (typeof url === 'string') {
@@ -239,20 +236,11 @@ class ContainerHandler {
     /**
      * @param {string} url - The URL of the resource to open.
      * @param {*} data - The raw resource data passed by callback from {@link ResourceHandler#load}.
-     * @param {import('../asset/asset.js').Asset} [asset] - Optional asset that is passed by
-     * ResourceLoader.
+     * @param {Asset} [asset] - Optional asset that is passed by ResourceLoader.
      * @returns {*} The parsed resource data.
      */
     open(url, data, asset) {
         return this._getParser(url).open(url, data, asset);
-    }
-
-    /**
-     * @param {import('../asset/asset.js').Asset} asset - The asset to patch.
-     * @param {import('../asset/asset-registry.js').AssetRegistry} assets - The asset registry.
-     */
-    patch(asset, assets) {
-
     }
 }
 

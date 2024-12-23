@@ -1,11 +1,12 @@
 import { path } from '../../core/path.js';
 import { string } from '../../core/string.js';
-
 import { http } from '../../platform/net/http.js';
-
 import { Font } from '../font/font.js';
+import { ResourceHandler } from './handler.js';
 
-/** @typedef {import('./handler.js').ResourceHandler} ResourceHandler */
+/**
+ * @import { AppBase } from '../app-base.js'
+ */
 
 function upgradeDataSchema(data) {
     // convert v1 and v2 to v3 font data schema
@@ -16,7 +17,7 @@ function upgradeDataSchema(data) {
                 height: data.info.height
             }];
         }
-        data.chars = Object.keys(data.chars || {}).reduce(function (newChars, key) {
+        data.chars = Object.keys(data.chars || {}).reduce((newChars, key) => {
             const existing = data.chars[key];
             // key by letter instead of char code
             const newKey = existing.letter !== undefined ? existing.letter : string.fromCodePoint(key);
@@ -34,23 +35,18 @@ function upgradeDataSchema(data) {
 /**
  * Resource handler used for loading {@link Font} resources.
  *
- * @implements {ResourceHandler}
+ * @category User Interface
  */
-class FontHandler {
-    /**
-     * Type of the resource the handler handles.
-     *
-     * @type {string}
-     */
-    handlerType = "font";
-
+class FontHandler extends ResourceHandler {
     /**
      * Create a new FontHandler instance.
      *
-     * @param {import('../app-base.js').AppBase} app - The running {@link AppBase}.
-     * @hideconstructor
+     * @param {AppBase} app - The running {@link AppBase}.
+     * @ignore
      */
     constructor(app) {
+        super(app, 'font');
+
         this._loader = app.loader;
         this.maxRetries = 0;
     }
@@ -69,17 +65,19 @@ class FontHandler {
             http.get(url.load, {
                 retry: this.maxRetries > 0,
                 maxRetries: this.maxRetries
-            }, function (err, response) {
+            }, (err, response) => {
                 // update asset data
                 if (!err) {
                     const data = upgradeDataSchema(response);
-                    self._loadTextures(url.load.replace('.json', '.png'), data, function (err, textures) {
-                        if (err) return callback(err);
-
-                        callback(null, {
-                            data: data,
-                            textures: textures
-                        });
+                    self._loadTextures(url.load.replace('.json', '.png'), data, (err, textures) => {
+                        if (err) {
+                            callback(err);
+                        } else {
+                            callback(null, {
+                                data: data,
+                                textures: textures
+                            });
+                        }
                     });
                 } else {
                     callback(`Error loading font resource: ${url.original} [${err}]`);
@@ -109,7 +107,8 @@ class FontHandler {
 
                 if (err) {
                     error = err;
-                    return callback(err);
+                    callback(err);
+                    return;
                 }
 
                 texture.upload();
@@ -123,12 +122,13 @@ class FontHandler {
             if (index === 0) {
                 loader.load(url, 'texture', onLoaded);
             } else {
-                loader.load(url.replace('.png', index + '.png'), 'texture', onLoaded);
+                loader.load(url.replace('.png', `${index}.png`), 'texture', onLoaded);
             }
         };
 
-        for (let i = 0; i < numTextures; i++)
+        for (let i = 0; i < numTextures; i++) {
             loadTexture(i);
+        }
     }
 
     open(url, data, asset) {

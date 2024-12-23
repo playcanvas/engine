@@ -2,13 +2,21 @@
  * A pool of reusable objects of the same type. Designed to promote reuse of objects to reduce
  * garbage collection.
  *
- * @ignore
+ * @template {new (...args: any[]) => any} T
  */
 class ObjectPool {
     /**
+     * The constructor function for the objects in the pool.
+     *
+     * @type {new (...args: any[]) => any}
+     * @private
+     */
+    _constructor;
+
+    /**
      * Array of object instances.
      *
-     * @type {object[]}
+     * @type {InstanceType<T>[]}
      * @private
      */
     _pool = [];
@@ -22,7 +30,8 @@ class ObjectPool {
     _count = 0;
 
     /**
-     * @param {Function} constructorFunc - The constructor function for the objects in the pool.
+     * @param {T} constructorFunc - The constructor function for the
+     * objects in the pool.
      * @param {number} size - The initial number of object instances to allocate.
      */
     constructor(constructorFunc, size) {
@@ -47,7 +56,7 @@ class ObjectPool {
      * Returns an object instance from the pool. If no instances are available, the pool will be
      * doubled in size and a new instance will be returned.
      *
-     * @returns {object} An object instance from the pool.
+     * @returns {InstanceType<T>} An object instance from the pool.
      */
     allocate() {
         if (this._count >= this._pool.length) {

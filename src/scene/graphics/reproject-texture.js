@@ -1,32 +1,33 @@
 import { Debug } from '../../core/debug.js';
 import { random } from '../../core/math/random.js';
 import { Vec3 } from '../../core/math/vec3.js';
-
 import {
     FILTER_NEAREST,
     TEXTUREPROJECTION_OCTAHEDRAL, TEXTUREPROJECTION_CUBE
 } from '../../platform/graphics/constants.js';
 import { DebugGraphics } from '../../platform/graphics/debug-graphics.js';
 import { DeviceCache } from '../../platform/graphics/device-cache.js';
-import { GraphicsDevice } from '../../platform/graphics/graphics-device.js';
 import { RenderTarget } from '../../platform/graphics/render-target.js';
-import { drawQuadWithShader } from './quad-render-utils.js';
 import { Texture } from '../../platform/graphics/texture.js';
-
 import { ChunkUtils } from '../shader-lib/chunk-utils.js';
 import { shaderChunks } from '../shader-lib/chunks/chunks.js';
 import { getProgramLibrary } from '../shader-lib/get-program-library.js';
 import { createShaderFromCode } from '../shader-lib/utils.js';
 import { BlendState } from '../../platform/graphics/blend-state.js';
+import { drawQuadWithShader } from './quad-render-utils.js';
+
+/**
+ * @import { Vec4 } from '../../core/math/vec4.js'
+ */
 
 const getProjectionName = (projection) => {
     switch (projection) {
         case TEXTUREPROJECTION_CUBE:
-            return "Cubemap";
+            return 'Cubemap';
         case TEXTUREPROJECTION_OCTAHEDRAL:
-            return "Octahedral";
+            return 'Octahedral';
         default: // for anything else, assume equirect
-            return "Equirect";
+            return 'Equirect';
     }
 };
 
@@ -218,33 +219,33 @@ const calculateRequiredSamplesGGX = () => {
 // required for the sets of (numSamples, specularPowers) pairs we expect to
 // encounter at runtime.
 const requiredSamplesGGX = {
-    "16": {
-        "2": 26,
-        "8": 20,
-        "32": 17,
-        "128": 16,
-        "512": 16
+    '16': {
+        '2': 26,
+        '8': 20,
+        '32': 17,
+        '128': 16,
+        '512': 16
     },
-    "32": {
-        "2": 53,
-        "8": 40,
-        "32": 34,
-        "128": 32,
-        "512": 32
+    '32': {
+        '2': 53,
+        '8': 40,
+        '32': 34,
+        '128': 32,
+        '512': 32
     },
-    "128": {
-        "2": 214,
-        "8": 163,
-        "32": 139,
-        "128": 130,
-        "512": 128
+    '128': {
+        '2': 214,
+        '8': 163,
+        '32': 139,
+        '128': 130,
+        '512': 128
     },
-    "1024": {
-        "2": 1722,
-        "8": 1310,
-        "32": 1114,
-        "128": 1041,
-        "512": 1025
+    '1024': {
+        '2': 1722,
+        '8': 1310,
+        '32': 1114,
+        '128': 1041,
+        '512': 1025
     }
 };
 
@@ -394,24 +395,21 @@ void main(void) {
  * @param {number} [options.face] - Optional cubemap face to update (default is update all faces).
  * @param {string} [options.distribution] - Specify convolution distribution - 'none', 'lambert',
  * 'phong', 'ggx'. Default depends on specularPower.
- * @param {import('../../core/math/vec4.js').Vec4} [options.rect] - Optional viewport rectangle.
+ * @param {Vec4} [options.rect] - Optional viewport rectangle.
  * @param {number} [options.seamPixels] - Optional number of seam pixels to render
+ * @returns {boolean} True if the reprojection was applied and false otherwise (e.g. if rect is empty)
+ * @category Graphics
  */
 function reprojectTexture(source, target, options = {}) {
-    // maintain backwards compatibility with previous function signature
-    // reprojectTexture(device, source, target, specularPower = 1, numSamples = 1024)
-    if (source instanceof GraphicsDevice) {
-        source = arguments[1];
-        target = arguments[2];
-        options = { };
-        if (arguments[3] !== undefined) {
-            options.specularPower = arguments[3];
-        }
-        if (arguments[4] !== undefined) {
-            options.numSamples = arguments[4];
-        }
+    Debug.assert(source instanceof Texture && target instanceof Texture, 'source and target must be textures');
 
-        Debug.deprecated('please use the updated pc.reprojectTexture API.');
+    // calculate inner width and height
+    const seamPixels = options.seamPixels ?? 0;
+    const innerWidth = (options.rect?.z ?? target.width) - seamPixels * 2;
+    const innerHeight = (options.rect?.w ?? target.height) - seamPixels * 2;
+    if (innerWidth < 1 || innerHeight < 1) {
+        // early out if inner space is empty
+        return false;
     }
 
     // table of distribution -> function name
@@ -443,10 +441,10 @@ function reprojectTexture(source, target, options = {}) {
     let shader = getProgramLibrary(device).getCachedShader(shaderKey);
     if (!shader) {
         const defines =
-            `#define PROCESS_FUNC ${processFunc}\n` +
-            (prefilterSamples ? `#define USE_SAMPLES_TEX\n` : '') +
-            (source.cubemap ? `#define CUBEMAP_SOURCE\n` : '') +
-            `#define DECODE_FUNC ${decodeFunc}\n` +
+            `#define PROCESS_FUNC ${processFunc}\n${
+                prefilterSamples ? '#define USE_SAMPLES_TEX\n' : ''
+            }${source.cubemap ? '#define CUBEMAP_SOURCE\n' : ''
+            }#define DECODE_FUNC ${decodeFunc}\n` +
             `#define ENCODE_FUNC ${encodeFunc}\n` +
             `#define SOURCE_FUNC ${sourceFunc}\n` +
             `#define TARGET_FUNC ${targetFunc}\n` +
@@ -461,33 +459,25 @@ function reprojectTexture(source, target, options = {}) {
         );
     }
 
-    DebugGraphics.pushGpuMarker(device, "ReprojectTexture");
+    DebugGraphics.pushGpuMarker(device, 'ReprojectTexture');
 
     // render state
     // TODO: set up other render state here to expected state
     device.setBlendState(BlendState.NOBLEND);
 
-    const constantSource = device.scope.resolve(source.cubemap ? "sourceCube" : "sourceTex");
+    const constantSource = device.scope.resolve(source.cubemap ? 'sourceCube' : 'sourceTex');
     Debug.assert(constantSource);
     constantSource.setValue(source);
 
-    const constantParams = device.scope.resolve("params");
-    const constantParams2 = device.scope.resolve("params2");
+    const constantParams = device.scope.resolve('params');
 
-    const uvModParam = device.scope.resolve("uvMod");
-    if (options?.seamPixels) {
-        const p = options.seamPixels;
-        const w = options.rect ? options.rect.z : target.width;
-        const h = options.rect ? options.rect.w : target.height;
-
-        const innerWidth = w - p * 2;
-        const innerHeight = h - p * 2;
-
+    const uvModParam = device.scope.resolve('uvMod');
+    if (seamPixels > 0) {
         uvModParam.setValue([
-            (innerWidth + p * 2) / innerWidth,
-            (innerHeight + p * 2) / innerHeight,
-            -p / innerWidth,
-            -p / innerHeight
+            (innerWidth + seamPixels * 2) / innerWidth,
+            (innerHeight + seamPixels * 2) / innerHeight,
+            -seamPixels / innerWidth,
+            -seamPixels / innerHeight
         ]);
     } else {
         uvModParam.setValue([1, 1, 0, 0]);
@@ -495,12 +485,6 @@ function reprojectTexture(source, target, options = {}) {
 
     const params = [
         0,
-        specularPower,
-        source.fixCubemapSeams ? 1.0 / source.width : 0.0,          // source seam scale
-        target.fixCubemapSeams ? 1.0 / target.width : 0.0           // target seam scale
-    ];
-
-    const params2 = [
         target.width * target.height * (target.cubemap ? 6 : 1),
         source.width * source.height * (source.cubemap ? 6 : 1)
     ];
@@ -512,8 +496,8 @@ function reprojectTexture(source, target, options = {}) {
             (distribution === 'ggx') ? generateGGXSamplesTex(device, numSamples, specularPower, sourceTotalPixels) :
                 ((distribution === 'lambert') ? generateLambertSamplesTex(device, numSamples, sourceTotalPixels) :
                     generatePhongSamplesTex(device, numSamples, specularPower));
-        device.scope.resolve("samplesTex").setValue(samplesTex);
-        device.scope.resolve("samplesTexInverseSize").setValue([1.0 / samplesTex.width, 1.0 / samplesTex.height]);
+        device.scope.resolve('samplesTex').setValue(samplesTex);
+        device.scope.resolve('samplesTexInverseSize').setValue([1.0 / samplesTex.width, 1.0 / samplesTex.height]);
     }
 
     for (let f = 0; f < (target.cubemap ? 6 : 1); f++) {
@@ -521,11 +505,11 @@ function reprojectTexture(source, target, options = {}) {
             const renderTarget = new RenderTarget({
                 colorBuffer: target,
                 face: f,
-                depth: false
+                depth: false,
+                flipY: device.isWebGPU
             });
             params[0] = f;
             constantParams.setValue(params);
-            constantParams2.setValue(params2);
 
             drawQuadWithShader(device, renderTarget, shader, options?.rect);
 
@@ -534,6 +518,8 @@ function reprojectTexture(source, target, options = {}) {
     }
 
     DebugGraphics.popGpuMarker(device);
+
+    return true;
 }
 
 export { reprojectTexture };

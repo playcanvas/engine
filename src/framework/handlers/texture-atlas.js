@@ -1,17 +1,18 @@
 import { path } from '../../core/path.js';
 import { Vec2 } from '../../core/math/vec2.js';
 import { Vec4 } from '../../core/math/vec4.js';
-
 import {
     ADDRESS_CLAMP_TO_EDGE, ADDRESS_MIRRORED_REPEAT, ADDRESS_REPEAT,
     FILTER_LINEAR, FILTER_NEAREST, FILTER_NEAREST_MIPMAP_NEAREST, FILTER_NEAREST_MIPMAP_LINEAR, FILTER_LINEAR_MIPMAP_NEAREST, FILTER_LINEAR_MIPMAP_LINEAR,
     TEXTURETYPE_DEFAULT, TEXTURETYPE_RGBM
 } from '../../platform/graphics/constants.js';
 import { http } from '../../platform/net/http.js';
-
 import { TextureAtlas } from '../../scene/texture-atlas.js';
+import { ResourceHandler } from './handler.js';
 
-/** @typedef {import('./handler.js').ResourceHandler} ResourceHandler */
+/**
+ * @import { AppBase } from '../app-base.js'
+ */
 
 const JSON_ADDRESS_MODE = {
     'repeat': ADDRESS_REPEAT,
@@ -33,25 +34,19 @@ const regexFrame = /^data\.frames\.(\d+)$/;
 /**
  * Resource handler used for loading {@link TextureAtlas} resources.
  *
- * @implements {ResourceHandler}
+ * @category Graphics
  */
-class TextureAtlasHandler {
-    /**
-     * Type of the resource the handler handles.
-     *
-     * @type {string}
-     */
-    handlerType = "textureatlas";
-
+class TextureAtlasHandler extends ResourceHandler {
     /**
      * Create a new TextureAtlasHandler instance.
      *
-     * @param {import('../app-base.js').AppBase} app - The running {@link AppBase}.
-     * @hideconstructor
+     * @param {AppBase} app - The running {@link AppBase}.
+     * @ignore
      */
     constructor(app) {
+        super(app, 'textureatlas');
+
         this._loader = app.loader;
-        this.maxRetries = 0;
     }
 
     // Load the texture atlas texture using the texture resource loader
@@ -72,11 +67,11 @@ class TextureAtlasHandler {
             http.get(url.load, {
                 retry: this.maxRetries > 0,
                 maxRetries: this.maxRetries
-            }, function (err, response) {
+            }, (err, response) => {
                 if (!err) {
                     // load texture
                     const textureUrl = url.original.replace('.json', '.png');
-                    self._loader.load(textureUrl, 'texture', function (err, texture) {
+                    self._loader.load(textureUrl, 'texture', (err, texture) => {
                         if (err) {
                             callback(err);
                         } else {
@@ -91,7 +86,7 @@ class TextureAtlasHandler {
                 }
             });
         } else {
-            return handler.load(url, callback);
+            handler.load(url, callback);
         }
     }
 
@@ -136,23 +131,29 @@ class TextureAtlasHandler {
         if (texture) {
             texture.name = asset.name;
 
-            if (asset.data.hasOwnProperty('minfilter') && texture.minFilter !== JSON_FILTER_MODE[asset.data.minfilter])
+            if (asset.data.hasOwnProperty('minfilter') && texture.minFilter !== JSON_FILTER_MODE[asset.data.minfilter]) {
                 texture.minFilter = JSON_FILTER_MODE[asset.data.minfilter];
+            }
 
-            if (asset.data.hasOwnProperty('magfilter') && texture.magFilter !== JSON_FILTER_MODE[asset.data.magfilter])
+            if (asset.data.hasOwnProperty('magfilter') && texture.magFilter !== JSON_FILTER_MODE[asset.data.magfilter]) {
                 texture.magFilter = JSON_FILTER_MODE[asset.data.magfilter];
+            }
 
-            if (asset.data.hasOwnProperty('addressu') && texture.addressU !== JSON_ADDRESS_MODE[asset.data.addressu])
+            if (asset.data.hasOwnProperty('addressu') && texture.addressU !== JSON_ADDRESS_MODE[asset.data.addressu]) {
                 texture.addressU = JSON_ADDRESS_MODE[asset.data.addressu];
+            }
 
-            if (asset.data.hasOwnProperty('addressv') && texture.addressV !== JSON_ADDRESS_MODE[asset.data.addressv])
+            if (asset.data.hasOwnProperty('addressv') && texture.addressV !== JSON_ADDRESS_MODE[asset.data.addressv]) {
                 texture.addressV = JSON_ADDRESS_MODE[asset.data.addressv];
+            }
 
-            if (asset.data.hasOwnProperty('mipmaps') && texture.mipmaps !== asset.data.mipmaps)
+            if (asset.data.hasOwnProperty('mipmaps') && texture.mipmaps !== asset.data.mipmaps) {
                 texture.mipmaps = asset.data.mipmaps;
+            }
 
-            if (asset.data.hasOwnProperty('anisotropy') && texture.anisotropy !== asset.data.anisotropy)
+            if (asset.data.hasOwnProperty('anisotropy') && texture.anisotropy !== asset.data.anisotropy) {
                 texture.anisotropy = asset.data.anisotropy;
+            }
 
             if (asset.data.hasOwnProperty('rgbm')) {
                 const type = asset.data.rgbm ? TEXTURETYPE_RGBM : TEXTURETYPE_DEFAULT;

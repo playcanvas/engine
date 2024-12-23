@@ -7,9 +7,31 @@ import { Quat } from '../../core/math/quat.js';
  * list from {@link XrImageTracking#images}. It contains information about the tracking state as
  * well as the position and rotation of the tracked image.
  *
- * @augments EventHandler
+ * @category XR
  */
 class XrTrackedImage extends EventHandler {
+    /**
+     * Fired when image becomes actively tracked.
+     *
+     * @event
+     * @example
+     * trackedImage.on('tracked', () => {
+     *     console.log('Image is now tracked');
+     * });
+     */
+    static EVENT_TRACKED = 'tracked';
+
+    /**
+     * Fired when image is no longer actively tracked.
+     *
+     * @event
+     * @example
+     * trackedImage.on('untracked', () => {
+     *     console.log('Image is no longer tracked');
+     * });
+     */
+    static EVENT_UNTRACKED = 'untracked';
+
     /**
      * @type {HTMLCanvasElement|HTMLImageElement|SVGImageElement|HTMLVideoElement|Blob|ImageData|ImageBitmap}
      * @private
@@ -53,7 +75,7 @@ class XrTrackedImage extends EventHandler {
     _emulated = false;
 
     /**
-     * @type {*}
+     * @type {XRPose|null}
      * @ignore
      */
     _pose = null;
@@ -71,9 +93,7 @@ class XrTrackedImage extends EventHandler {
     _rotation = new Quat();
 
     /**
-     * The tracked image interface that is created by the Image Tracking system and is provided as
-     * a list from {@link XrImageTracking#images}. It contains information about the tracking state
-     * as well as the position and rotation of the tracked image.
+     * Create a new XrTrackedImage instance.
      *
      * @param {HTMLCanvasElement|HTMLImageElement|SVGImageElement|HTMLVideoElement|Blob|ImageData|ImageBitmap} image - Image
      * that is matching the real world image as closely as possible. Resolution of images should be
@@ -82,7 +102,7 @@ class XrTrackedImage extends EventHandler {
      * repeating patterns will reduce tracking stability.
      * @param {number} width - Width (in meters) of image in real world. Providing this value as
      * close to the real value will improve tracking quality.
-     * @hideconstructor
+     * @ignore
      */
     constructor(image, width) {
         super();
@@ -90,18 +110,6 @@ class XrTrackedImage extends EventHandler {
         this._image = image;
         this._width = width;
     }
-
-    /**
-     * Fired when image becomes actively tracked.
-     *
-     * @event XrTrackedImage#tracked
-     */
-
-    /**
-     * Fired when image is no more actively tracked.
-     *
-     * @event XrTrackedImage#untracked
-     */
 
     /**
      * Image that is used for tracking.
@@ -122,6 +130,11 @@ class XrTrackedImage extends EventHandler {
         this._width = value;
     }
 
+    /**
+     * Get the width (in meters) of image in real world.
+     *
+     * @type {number}
+     */
     get width() {
         return this._width;
     }
@@ -170,13 +183,13 @@ class XrTrackedImage extends EventHandler {
         }
 
         return createImageBitmap(this._image)
-            .then((bitmap) => {
-                this._bitmap = bitmap;
-                return {
-                    image: this._bitmap,
-                    widthInMeters: this._width
-                };
-            });
+        .then((bitmap) => {
+            this._bitmap = bitmap;
+            return {
+                image: this._bitmap,
+                widthInMeters: this._width
+            };
+        });
     }
 
     /**
@@ -195,8 +208,7 @@ class XrTrackedImage extends EventHandler {
     }
 
     /**
-     * Get the position of the tracked image. The position is the most recent one based on the
-     * tracked image state.
+     * Get the world position of the tracked image.
      *
      * @returns {Vec3} Position in world space.
      * @example
@@ -209,8 +221,7 @@ class XrTrackedImage extends EventHandler {
     }
 
     /**
-     * Get the rotation of the tracked image. The rotation is the most recent based on the tracked
-     * image state.
+     * Get the world rotation of the tracked image.
      *
      * @returns {Quat} Rotation in world space.
      * @example

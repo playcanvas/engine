@@ -1,13 +1,13 @@
 import { Debug } from '../../../core/debug.js';
 import { ReadStream } from '../../../core/read-stream.js';
 
-import { ADDRESS_CLAMP_TO_EDGE, ADDRESS_REPEAT, TEXHINT_ASSET } from '../../../platform/graphics/constants.js';
+import { ADDRESS_CLAMP_TO_EDGE, ADDRESS_REPEAT, TEXHINT_ASSET, pixelFormatLinearToGamma } from '../../../platform/graphics/constants.js';
 import { Texture } from '../../../platform/graphics/texture.js';
 
 import { Asset } from '../../asset/asset.js';
 import { basisTranscode } from '../../handlers/basis.js';
 
-/** @typedef {import('../../handlers/texture.js').TextureParser} TextureParser */
+import { TextureParser } from './texture.js';
 
 const KHRConstants = {
     KHR_DF_MODEL_ETC1S: 163,
@@ -16,12 +16,10 @@ const KHRConstants = {
 
 /**
  * Texture parser for ktx2 files.
- *
- * @implements {TextureParser}
- * @ignore
  */
-class Ktx2Parser {
+class Ktx2Parser extends TextureParser {
     constructor(registry, device) {
+        super();
         this.maxRetries = 0;
         this.device = device;
     }
@@ -37,6 +35,7 @@ class Ktx2Parser {
     }
 
     open(url, data, device, textureOptions = {}) {
+        const format = textureOptions.srgb ? pixelFormatLinearToGamma(data.format) : data.format;
         const texture = new Texture(device, {
             name: url,
             // #if _PROFILER
@@ -46,7 +45,7 @@ class Ktx2Parser {
             addressV: data.cubemap ? ADDRESS_CLAMP_TO_EDGE : ADDRESS_REPEAT,
             width: data.width,
             height: data.height,
-            format: data.format,
+            format: format,
             cubemap: data.cubemap,
             levels: data.levels,
 
@@ -129,7 +128,7 @@ class Ktx2Parser {
             );
 
             if (!basisModuleFound) {
-                callback('Basis module not found. Asset "' + asset.name + '" basis texture variant will not be loaded.');
+                callback(`Basis module not found. Asset [${asset.name}](${asset.getFileUrl()}) basis texture variant will not be loaded.`);
             }
         } else {
             // TODO: load non-supercompressed formats

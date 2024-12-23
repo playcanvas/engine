@@ -1,14 +1,18 @@
 import { now } from '../../../core/time.js';
-
 import { math } from '../../../core/math/math.js';
 import { Color } from '../../../core/math/color.js';
-
 import { EntityReference } from '../../utils/entity-reference.js';
-
 import { Component } from '../component.js';
-
 import { BUTTON_TRANSITION_MODE_SPRITE_CHANGE, BUTTON_TRANSITION_MODE_TINT } from './constants.js';
 import { ELEMENTTYPE_GROUP } from '../element/constants.js';
+
+/**
+ * @import { Asset } from '../../../framework/asset/asset.js'
+ * @import { ButtonComponentData } from './data.js'
+ * @import { ButtonComponentSystem } from './system.js'
+ * @import { Entity } from '../../entity.js'
+ * @import { Vec4 } from '../../../core/math/vec4.js'
+ */
 
 const VisualState = {
     DEFAULT: 'DEFAULT',
@@ -39,50 +43,236 @@ STATES_TO_SPRITE_FRAME_NAMES[VisualState.INACTIVE] = 'inactiveSpriteFrame';
  * A ButtonComponent enables a group of entities to behave like a button, with different visual
  * states for hover and press interactions.
  *
- * @property {boolean} active If set to false, the button will be visible but will not respond to
- * hover or touch interactions.
- * @property {import('../../entity.js').Entity} imageEntity A reference to the entity to be used as
- * the button background. The entity must have an ImageElement component.
- * @property {import('../../../core/math/vec4.js').Vec4} hitPadding Padding to be used in hit-test
- * calculations. Can be used to expand the bounding box so that the button is easier to tap.
- * @property {number} transitionMode Controls how the button responds when the user hovers over
- * it/presses it.
- * @property {Color} hoverTint Color to be used on the button image when the user hovers over it.
- * @property {Color} pressedTint Color to be used on the button image when the user presses it.
- * @property {Color} inactiveTint Color to be used on the button image when the button is not
- * interactive.
- * @property {number} fadeDuration Duration to be used when fading between tints, in milliseconds.
- * @property {import('../../asset/asset.js').Asset} hoverSpriteAsset Sprite to be used as the
- * button image when the user hovers over it.
- * @property {number} hoverSpriteFrame Frame to be used from the hover sprite.
- * @property {import('../../asset/asset.js').Asset} pressedSpriteAsset Sprite to be used as the
- * button image when the user presses it.
- * @property {number} pressedSpriteFrame Frame to be used from the pressed sprite.
- * @property {import('../../asset/asset.js').Asset} inactiveSpriteAsset Sprite to be used as the
- * button image when the button is not interactive.
- * @property {number} inactiveSpriteFrame Frame to be used from the inactive sprite.
- * @augments Component
+ * @hideconstructor
+ * @category User Interface
  */
 class ButtonComponent extends Component {
     /**
+     * Fired when the mouse is pressed while the cursor is on the component. The handler is passed
+     * a {@link ElementMouseEvent}.
+     *
+     * @event
+     * @example
+     * entity.button.on('mousedown', (event) => {
+     *     console.log(`Mouse down on entity ${entity.name}`);
+     * });
+     */
+    static EVENT_MOUSEDOWN = 'mousedown';
+
+    /**
+     * Fired when the mouse is released while the cursor is on the component. The handler is passed
+     * a {@link ElementMouseEvent}.
+     *
+     * @event
+     * @example
+     * entity.button.on('mouseup', (event) => {
+     *     console.log(`Mouse up on entity ${entity.name}`);
+     * });
+     */
+    static EVENT_MOUSEUP = 'mouseup';
+
+    /**
+     * Fired when the mouse cursor enters the component. The handler is passed a
+     * {@link ElementMouseEvent}.
+     *
+     * @event
+     * @example
+     * entity.button.on('mouseenter', (event) => {
+     *     console.log(`Mouse entered entity ${entity.name}`);
+     * });
+     */
+    static EVENT_MOUSEENTER = 'mouseenter';
+
+    /**
+     * Fired when the mouse cursor leaves the component. The handler is passed a
+     * {@link ElementMouseEvent}.
+     *
+     * @event
+     * @example
+     * entity.button.on('mouseleave', (event) => {
+     *     console.log(`Mouse left entity ${entity.name}`);
+     * });
+     */
+    static EVENT_MOUSELEAVE = 'mouseleave';
+
+    /**
+     * Fired when the mouse is pressed and released on the component or when a touch starts and ends on
+     * the component. The handler is passed a {@link ElementMouseEvent} or {@link ElementTouchEvent}.
+     *
+     * @event
+     * @example
+     * entity.button.on('click', (event) => {
+     *     console.log(`Clicked entity ${entity.name}`);
+     * });
+     */
+    static EVENT_CLICK = 'click';
+
+    /**
+     * Fired when a touch starts on the component. The handler is passed a {@link ElementTouchEvent}.
+     *
+     * @event
+     * @example
+     * entity.button.on('touchstart', (event) => {
+     *     console.log(`Touch started on entity ${entity.name}`);
+     * });
+     */
+    static EVENT_TOUCHSTART = 'touchstart';
+
+    /**
+     * Fired when a touch ends on the component. The handler is passed a {@link ElementTouchEvent}.
+     *
+     * @event
+     * @example
+     * entity.button.on('touchend', (event) => {
+     *     console.log(`Touch ended on entity ${entity.name}`);
+     * });
+     */
+    static EVENT_TOUCHEND = 'touchend';
+
+    /**
+     * Fired when a touch is canceled on the component. The handler is passed a
+     * {@link ElementTouchEvent}.
+     *
+     * @event
+     * @example
+     * entity.button.on('touchcancel', (event) => {
+     *     console.log(`Touch canceled on entity ${entity.name}`);
+     * });
+     */
+    static EVENT_TOUCHCANCEL = 'touchcancel';
+
+    /**
+     * Fired when a touch leaves the component. The handler is passed a {@link ElementTouchEvent}.
+     *
+     * @event
+     * @example
+     * entity.button.on('touchleave', (event) => {
+     *     console.log(`Touch left entity ${entity.name}`);
+     * });
+     */
+    static EVENT_TOUCHLEAVE = 'touchleave';
+
+    /**
+     * Fired when a xr select starts on the component. The handler is passed a
+     * {@link ElementSelectEvent}.
+     *
+     * @event
+     * @example
+     * entity.button.on('selectstart', (event) => {
+     *     console.log(`Select started on entity ${entity.name}`);
+     * });
+     */
+    static EVENT_SELECTSTART = 'selectstart';
+
+    /**
+     * Fired when a xr select ends on the component. The handler is passed a
+     * {@link ElementSelectEvent}.
+     *
+     * @event
+     * @example
+     * entity.button.on('selectend', (event) => {
+     *     console.log(`Select ended on entity ${entity.name}`);
+     * });
+     */
+    static EVENT_SELECTEND = 'selectend';
+
+    /**
+     * Fired when a xr select now hovering over the component. The handler is passed a
+     * {@link ElementSelectEvent}.
+     *
+     * @event
+     * @example
+     * entity.button.on('selectenter', (event) => {
+     *     console.log(`Select entered entity ${entity.name}`);
+     * });
+     */
+    static EVENT_SELECTENTER = 'selectenter';
+
+    /**
+     * Fired when a xr select not hovering over the component. The handler is passed a
+     * {@link ElementSelectEvent}.
+     *
+     * @event
+     * @example
+     * entity.button.on('selectleave', (event) => {
+     *     console.log(`Select left entity ${entity.name}`);
+     * });
+     */
+    static EVENT_SELECTLEAVE = 'selectleave';
+
+    /**
+     * Fired when the button changes state to be hovered.
+     *
+     * @event
+     * @example
+     * entity.button.on('hoverstart', () => {
+     *     console.log(`Entity ${entity.name} hovered`);
+     * });
+     */
+    static EVENT_HOVERSTART = 'hoverstart';
+
+    /**
+     * Fired when the button changes state to be not hovered.
+     *
+     * @event
+     * @example
+     * entity.button.on('hoverend', () => {
+     *     console.log(`Entity ${entity.name} unhovered`);
+     * });
+     */
+    static EVENT_HOVEREND = 'hoverend';
+
+    /**
+     * Fired when the button changes state to be pressed.
+     *
+     * @event
+     * @example
+     * entity.button.on('pressedstart', () => {
+     *     console.log(`Entity ${entity.name} pressed`);
+     * });
+     */
+    static EVENT_PRESSEDSTART = 'pressedstart';
+
+    /**
+     * Fired when the button changes state to be not pressed.
+     *
+     * @event
+     * @example
+     * entity.button.on('pressedend', () => {
+     *     console.log(`Entity ${entity.name} unpressed`);
+     * });
+     */
+    static EVENT_PRESSEDEND = 'pressedend';
+
+    /** @private */
+    _visualState = VisualState.DEFAULT;
+
+    /** @private */
+    _isHovering = false;
+
+    /** @private */
+    _hoveringCounter = 0;
+
+    /** @private */
+    _isPressed = false;
+
+    /** @private */
+    _defaultTint = new Color(1, 1, 1, 1);
+
+    /** @private */
+    _defaultSpriteAsset = null;
+
+    /** @private */
+    _defaultSpriteFrame = 0;
+
+    /**
      * Create a new ButtonComponent instance.
      *
-     * @param {import('./system.js').ButtonComponentSystem} system - The ComponentSystem that
-     * created this component.
-     * @param {import('../../entity.js').Entity} entity - The entity that this component is
-     * attached to.
+     * @param {ButtonComponentSystem} system - The ComponentSystem that created this component.
+     * @param {Entity} entity - The entity that this component is attached to.
      */
     constructor(system, entity) {
         super(system, entity);
-
-        this._visualState = VisualState.DEFAULT;
-        this._isHovering = false;
-        this._hoveringCounter = 0;
-        this._isPressed = false;
-
-        this._defaultTint = new Color(1, 1, 1, 1);
-        this._defaultSpriteAsset = null;
-        this._defaultSpriteFrame = 0;
 
         this._imageReference = new EntityReference(this, 'imageEntity', {
             'element#gain': this._onImageElementGain,
@@ -94,6 +284,306 @@ class ButtonComponent extends Component {
         });
 
         this._toggleLifecycleListeners('on', system);
+    }
+
+    // TODO: Remove this override in upgrading component
+    /**
+     * @type {ButtonComponentData}
+     * @ignore
+     */
+    get data() {
+        const record = this.system.store[this.entity.getGuid()];
+        return record ? record.data : null;
+    }
+
+    /**
+     * Sets the enabled state of the component.
+     *
+     * @type {boolean}
+     */
+    set enabled(arg) {
+        this._setValue('enabled', arg);
+    }
+
+    /**
+     * Gets the enabled state of the component.
+     *
+     * @type {boolean}
+     */
+    get enabled() {
+        return this.data.enabled;
+    }
+
+    /**
+     * Sets the button's active state. If set to false, the button will be visible but will not
+     * respond to hover or touch interactions. Defaults to true.
+     *
+     * @type {boolean}
+     */
+    set active(arg) {
+        this._setValue('active', arg);
+    }
+
+    /**
+     * Gets the button's active state.
+     *
+     * @type {boolean}
+     */
+    get active() {
+        return this.data.active;
+    }
+
+    /**
+     * Sets the entity to be used as the button background. The entity must have an
+     * {@link ElementComponent} configured as an image element.
+     *
+     * @type {Entity}
+     */
+    set imageEntity(arg) {
+        this._setValue('imageEntity', arg);
+    }
+
+    /**
+     * Gets the entity to be used as the button background.
+     *
+     * @type {Entity}
+     */
+    get imageEntity() {
+        return this.data.imageEntity;
+    }
+
+    /**
+     * Sets the padding to be used in hit-test calculations. Can be used to expand the bounding box
+     * so that the button is easier to tap. Defaults to `[0, 0, 0, 0]`.
+     *
+     * @type {Vec4}
+     */
+    set hitPadding(arg) {
+        this._setValue('hitPadding', arg);
+    }
+
+    /**
+     * Gets the padding to be used in hit-test calculations.
+     *
+     * @type {Vec4}
+     */
+    get hitPadding() {
+        return this.data.hitPadding;
+    }
+
+    /**
+     * Sets the button transition mode. This controls how the button responds when the user hovers
+     * over it/presses it. Can be:
+     *
+     * - {@link BUTTON_TRANSITION_MODE_TINT}
+     * - {@link BUTTON_TRANSITION_MODE_SPRITE_CHANGE}
+     *
+     * Defaults to {@link BUTTON_TRANSITION_MODE_TINT}.
+     *
+     * @type {number}
+     */
+    set transitionMode(arg) {
+        this._setValue('transitionMode', arg);
+    }
+
+    /**
+     * Gets the button transition mode.
+     *
+     * @type {number}
+     */
+    get transitionMode() {
+        return this.data.transitionMode;
+    }
+
+    /**
+     * Sets the tint color to be used on the button image when the user hovers over it. Defaults to
+     * `[0.75, 0.75, 0.75]`.
+     *
+     * @type {Color}
+     */
+    set hoverTint(arg) {
+        this._setValue('hoverTint', arg);
+    }
+
+    /**
+     * Gets the tint color to be used on the button image when the user hovers over it.
+     *
+     * @type {Color}
+     */
+    get hoverTint() {
+        return this.data.hoverTint;
+    }
+
+    /**
+     * Sets the tint color to be used on the button image when the user presses it. Defaults to
+     * `[0.5, 0.5, 0.5]`.
+     *
+     * @type {Color}
+     */
+    set pressedTint(arg) {
+        this._setValue('pressedTint', arg);
+    }
+
+    /**
+     * Gets the tint color to be used on the button image when the user presses it.
+     *
+     * @type {Color}
+     */
+    get pressedTint() {
+        return this.data.pressedTint;
+    }
+
+    /**
+     * Sets the tint color to be used on the button image when the button is not interactive.
+     * Defaults to `[0.25, 0.25, 0.25]`.
+     *
+     * @type {Color}
+     */
+    set inactiveTint(arg) {
+        this._setValue('inactiveTint', arg);
+    }
+
+    /**
+     * Gets the tint color to be used on the button image when the button is not interactive.
+     *
+     * @type {Color}
+     */
+    get inactiveTint() {
+        return this.data.inactiveTint;
+    }
+
+    /**
+     * Sets the duration to be used when fading between tints, in milliseconds. Defaults to 0.
+     *
+     * @type {number}
+     */
+    set fadeDuration(arg) {
+        this._setValue('fadeDuration', arg);
+    }
+
+    /**
+     * Gets the duration to be used when fading between tints, in milliseconds.
+     *
+     * @type {number}
+     */
+    get fadeDuration() {
+        return this.data.fadeDuration;
+    }
+
+    /**
+     * Sets the sprite to be used as the button image when the user hovers over it.
+     *
+     * @type {Asset}
+     */
+    set hoverSpriteAsset(arg) {
+        this._setValue('hoverSpriteAsset', arg);
+    }
+
+    /**
+     * Gets the sprite to be used as the button image when the user hovers over it.
+     *
+     * @type {Asset}
+     */
+    get hoverSpriteAsset() {
+        return this.data.hoverSpriteAsset;
+    }
+
+    /**
+     * Sets the frame to be used from the hover sprite.
+     *
+     * @type {number}
+     */
+    set hoverSpriteFrame(arg) {
+        this._setValue('hoverSpriteFrame', arg);
+    }
+
+    /**
+     * Gets the frame to be used from the hover sprite.
+     *
+     * @type {number}
+     */
+    get hoverSpriteFrame() {
+        return this.data.hoverSpriteFrame;
+    }
+
+    /**
+     * Sets the sprite to be used as the button image when the user presses it.
+     *
+     * @type {Asset}
+     */
+    set pressedSpriteAsset(arg) {
+        this._setValue('pressedSpriteAsset', arg);
+    }
+
+    /**
+     * Gets the sprite to be used as the button image when the user presses it.
+     *
+     * @type {Asset}
+     */
+    get pressedSpriteAsset() {
+        return this.data.pressedSpriteAsset;
+    }
+
+    /**
+     * Sets the frame to be used from the pressed sprite.
+     *
+     * @type {number}
+     */
+    set pressedSpriteFrame(arg) {
+        this._setValue('pressedSpriteFrame', arg);
+    }
+
+    /**
+     * Gets the frame to be used from the pressed sprite.
+     *
+     * @type {number}
+     */
+    get pressedSpriteFrame() {
+        return this.data.pressedSpriteFrame;
+    }
+
+    /**
+     * Sets the sprite to be used as the button image when the button is not interactive.
+     *
+     * @type {Asset}
+     */
+    set inactiveSpriteAsset(arg) {
+        this._setValue('inactiveSpriteAsset', arg);
+    }
+
+    /**
+     * Gets the sprite to be used as the button image when the button is not interactive.
+     *
+     * @type {Asset}
+     */
+    get inactiveSpriteAsset() {
+        return this.data.inactiveSpriteAsset;
+    }
+
+    /**
+     * Sets the frame to be used from the inactive sprite.
+     *
+     * @type {number}
+     */
+    set inactiveSpriteFrame(arg) {
+        this._setValue('inactiveSpriteFrame', arg);
+    }
+
+    /**
+     * Gets the frame to be used from the inactive sprite.
+     *
+     * @type {number}
+     */
+    get inactiveSpriteFrame() {
+        return this.data.inactiveSpriteFrame;
+    }
+
+    /** @ignore */
+    _setValue(name, value) {
+        const data = this.data;
+        const oldValue = data[name];
+        data[name] = value;
+        this.fire('set', name, oldValue, value);
     }
 
     _toggleLifecycleListeners(onOrOff, system) {
@@ -157,7 +647,7 @@ class ButtonComponent extends Component {
 
     _toggleHitElementListeners(onOrOff) {
         if (this.entity.element) {
-            const isAdding = (onOrOff === 'on');
+            const isAdding = onOrOff === 'on';
 
             // Prevent duplicate listeners
             if (isAdding && this._hasHitElementListeners) {
@@ -461,32 +951,43 @@ class ButtonComponent extends Component {
     }
 
     _applyTintImmediately(tintColor) {
-        if (!tintColor || !this._imageReference.hasComponent('element') || this._imageReference.entity.element.type === ELEMENTTYPE_GROUP)
+        if (
+            !tintColor ||
+            !this._imageReference.hasComponent('element') ||
+            this._imageReference.entity.element.type === ELEMENTTYPE_GROUP
+        ) {
             return;
+        }
 
         const color3 = toColor3(tintColor);
 
         this._isApplyingTint = true;
 
-        if (!color3.equals(this._imageReference.entity.element.color))
+        if (!color3.equals(this._imageReference.entity.element.color)) {
             this._imageReference.entity.element.color = color3;
+        }
 
-        if (this._imageReference.entity.element.opacity !== tintColor.a)
+        if (this._imageReference.entity.element.opacity !== tintColor.a) {
             this._imageReference.entity.element.opacity = tintColor.a;
+        }
 
         this._isApplyingTint = false;
     }
 
     _applyTintWithTween(tintColor) {
-        if (!tintColor || !this._imageReference.hasComponent('element') || this._imageReference.entity.element.type === ELEMENTTYPE_GROUP)
+        if (
+            !tintColor ||
+            !this._imageReference.hasComponent('element') ||
+            this._imageReference.entity.element.type === ELEMENTTYPE_GROUP
+        ) {
             return;
+        }
 
         const color3 = toColor3(tintColor);
         const color = this._imageReference.entity.element.color;
         const opacity = this._imageReference.entity.element.opacity;
 
-        if (color3.equals(color) && tintColor.a === opacity)
-            return;
+        if (color3.equals(color) && tintColor.a === opacity) return;
 
         this._tweenInfo = {
             startTime: now(),
@@ -498,13 +999,15 @@ class ButtonComponent extends Component {
 
     _updateTintTween() {
         const elapsedTime = now() - this._tweenInfo.startTime;
-        let elapsedProportion = this.fadeDuration === 0 ? 1 : (elapsedTime / this.fadeDuration);
+        let elapsedProportion = this.fadeDuration === 0 ? 1 : elapsedTime / this.fadeDuration;
         elapsedProportion = math.clamp(elapsedProportion, 0, 1);
 
         if (Math.abs(elapsedProportion - 1) > 1e-5) {
             const lerpColor = this._tweenInfo.lerpColor;
             lerpColor.lerp(this._tweenInfo.from, this._tweenInfo.to, elapsedProportion);
-            this._applyTintImmediately(new Color(lerpColor.r, lerpColor.g, lerpColor.b, lerpColor.a));
+            this._applyTintImmediately(
+                new Color(lerpColor.r, lerpColor.g, lerpColor.b, lerpColor.a)
+            );
         } else {
             this._applyTintImmediately(this._tweenInfo.to);
             this._cancelTween();
@@ -546,121 +1049,5 @@ class ButtonComponent extends Component {
 function toColor3(color4) {
     return new Color(color4.r, color4.g, color4.b);
 }
-
-/**
- * Fired when the mouse is pressed while the cursor is on the component.
- *
- * @event ButtonComponent#mousedown
- * @param {import('../../input/element-input.js').ElementMouseEvent} event - The event.
- */
-
-/**
- * Fired when the mouse is released while the cursor is on the component.
- *
- * @event ButtonComponent#mouseup
- * @param {import('../../input/element-input.js').ElementMouseEvent} event - The event.
- */
-
-/**
- * Fired when the mouse cursor enters the component.
- *
- * @event ButtonComponent#mouseenter
- * @param {import('../../input/element-input.js').ElementMouseEvent} event - The event.
- */
-
-/**
- * Fired when the mouse cursor leaves the component.
- *
- * @event ButtonComponent#mouseleave
- * @param {import('../../input/element-input.js').ElementMouseEvent} event - The event.
- */
-
-/**
- * Fired when the mouse is pressed and released on the component or when a touch starts and ends on
- * the component.
- *
- * @event ButtonComponent#click
- * @param {import('../../input/element-input.js').ElementMouseEvent|import('../../input/element-input.js').ElementTouchEvent} event - The event.
- */
-
-/**
- * Fired when a touch starts on the component.
- *
- * @event ButtonComponent#touchstart
- * @param {import('../../input/element-input.js').ElementTouchEvent} event - The event.
- */
-
-/**
- * Fired when a touch ends on the component.
- *
- * @event ButtonComponent#touchend
- * @param {import('../../input/element-input.js').ElementTouchEvent} event - The event.
- */
-
-/**
- * Fired when a touch is canceled on the component.
- *
- * @event ButtonComponent#touchcancel
- * @param {import('../../input/element-input.js').ElementTouchEvent} event - The event.
- */
-
-/**
- * Fired when a touch leaves the component.
- *
- * @event ButtonComponent#touchleave
- * @param {import('../../input/element-input.js').ElementTouchEvent} event - The event.
- */
-
-/**
- * Fired when a xr select starts on the component.
- *
- * @event ButtonComponent#selectstart
- * @param {import('../../input/element-input.js').ElementSelectEvent} event - The event.
- */
-
-/**
- * Fired when a xr select ends on the component.
- *
- * @event ButtonComponent#selectend
- * @param {import('../../input/element-input.js').ElementSelectEvent} event - The event.
- */
-
-/**
- * Fired when a xr select now hovering over the component.
- *
- * @event ButtonComponent#selectenter
- * @param {import('../../input/element-input.js').ElementSelectEvent} event - The event.
- */
-
-/**
- * Fired when a xr select not hovering over the component.
- *
- * @event ButtonComponent#selectleave
- * @param {import('../../input/element-input.js').ElementSelectEvent} event - The event.
- */
-
-/**
- * Fired when the button changes state to be hovered.
- *
- * @event ButtonComponent#hoverstart
- */
-
-/**
- * Fired when the button changes state to be not hovered.
- *
- * @event ButtonComponent#hoverend
- */
-
-/**
- * Fired when the button changes state to be pressed.
- *
- * @event ButtonComponent#pressedstart
- */
-
-/**
- * Fired when the button changes state to be not pressed.
- *
- * @event ButtonComponent#pressedend
- */
 
 export { ButtonComponent };

@@ -337,7 +337,7 @@ body {
     position: absolute;
     right: 8px;
     top: 8px;
-    width: 250px;
+    width: 280px;
     z-index: 9999;
     background-color: rgba(54, 67, 70, 0.64);
     backdrop-filter: blur(32px);
@@ -360,7 +360,11 @@ body {
     width: calc(100% - 16px);
     top: inherit;
     background-color: rgba(54, 67, 70, 1);
-    min-height: calc(100% - 112px);
+    min-height: calc(100% - 116px);
+}
+
+#controlPanel.mobile:has(#controlPanel-controls):not(.pcui-collapsed){
+    min-height: 300px;
 }
 
 #controlPanel.mobile.pcui-collapsed {
@@ -401,6 +405,25 @@ body {
     background-color: #364346;
 }
 
+#descriptionPanel {
+    /* center on the bottom of the page */
+    position: absolute;
+    left: 50%;
+    bottom: 8px;
+    transform: translateX(-50%);
+    color: #f2f2f2;
+    width: 50%;
+}
+
+#descriptionPanel.mobile {
+    bottom: 100px;
+    width: 90%;
+}
+
+#descriptionPanel a {
+    color: #f2f2f2;
+}
+
 @media only screen and (max-width: 600px) {
     #controls-wrapper {
         position: absolute;
@@ -408,8 +431,13 @@ body {
         height: calc(100% - 48px);
     }
 
-    #controls-wrapper.has-controls {
-        height: calc(100% - 100px);
+    #controlPanel-controls {
+        height: calc(100% - 48px);
+        overflow: auto;
+    }
+
+    .code-editor-mobile {
+        height: calc(100% - 48px);
     }
 }
 
@@ -428,6 +456,13 @@ body {
 
 #deviceTypeSelectInput > .pcui-select-input-container-value > .pcui-select-input-icon {
     top: 4px;
+}
+
+#errorLabel {
+    color: #f95555 !important;
+    font-size: 14px;
+    text-align: center;
+    display: block;
 }
 
 .filter-input {
@@ -734,4 +769,9 @@ body {
     color: #ccc;
     background-color: rgba(0, 0, 0, .5);
     font-family: "Proxima Nova", Arial, sans-serif;
+}
+
+/* Prevent that number slider bar inputs are cropped */
+.pcui-slider > .pcui-numeric-input {
+    flex: 1.5 !important;
 }

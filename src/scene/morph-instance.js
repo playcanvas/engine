@@ -1,15 +1,18 @@
 import { Debug } from '../core/debug.js';
-
 import { BLENDEQUATION_ADD, BLENDMODE_ONE } from '../platform/graphics/constants.js';
 import { drawQuadWithShader } from './graphics/quad-render-utils.js';
 import { RenderTarget } from '../platform/graphics/render-target.js';
 import { DebugGraphics } from '../platform/graphics/debug-graphics.js';
-
 import { createShaderFromCode } from './shader-lib/utils.js';
 import { BlendState } from '../platform/graphics/blend-state.js';
 
+/**
+ * @import { Morph } from './morph.js'
+ * @import { Shader } from '../platform/graphics/shader.js'
+ */
+
 // vertex shader used to add morph targets from textures into render target
-const textureMorphVertexShader = `
+const textureMorphVertexShader = /* glsl */ `
     attribute vec2 vertex_position;
     varying vec2 uv0;
     void main(void) {
@@ -23,18 +26,23 @@ const blendStateAdditive = new BlendState(true, BLENDEQUATION_ADD, BLENDMODE_ONE
 /**
  * An instance of {@link Morph}. Contains weights to assign to every {@link MorphTarget}, manages
  * selection of active morph targets.
+ *
+ * @category Graphics
  */
 class MorphInstance {
+    /** @private */
+    shaderCache = [];
+
     /**
      * Create a new MorphInstance instance.
      *
-     * @param {import('./morph.js').Morph} morph - The {@link Morph} to instance.
+     * @param {Morph} morph - The {@link Morph} to instance.
      */
     constructor(morph) {
         /**
          * The morph with its targets, which is being instanced.
          *
-         * @type {import('./morph.js').Morph}
+         * @type {Morph}
          */
         this.morph = morph;
         morph.incRefCount();
@@ -54,63 +62,57 @@ class MorphInstance {
         // temporary array of targets with non-zero weight
         this._activeTargets = [];
 
-        if (morph.useTextureMorph) {
+        // max number of morph targets rendered at a time (each uses single texture slot)
+        this.maxSubmitCount = this.device.maxTextures;
 
-            // shader cache
-            this.shaderCache = {};
+        // array for max number of weights
+        this._shaderMorphWeights = new Float32Array(this.maxSubmitCount);
 
-            // max number of morph targets rendered at a time (each uses single texture slot)
-            this.maxSubmitCount = this.device.maxTextures;
+        // create render targets to morph targets into
+        const createRT = (name, textureVar) => {
 
-            // array for max number of weights
-            this._shaderMorphWeights = new Float32Array(this.maxSubmitCount);
+            // render to appropriate, RGBA formats, we cannot render to RGB float / half float format in WEbGL
+            this[textureVar] = morph._createTexture(name, morph._renderTextureFormat);
+            return new RenderTarget({
+                colorBuffer: this[textureVar],
+                depth: false
+            });
+        };
 
-            // create render targets to morph targets into
-            const createRT = (name, textureVar) => {
-
-                // render to appropriate, RGBA formats, we cannot render to RGB float / half float format in WEbGL
-                this[textureVar] = morph._createTexture(name, morph._renderTextureFormat);
-                return new RenderTarget({
-                    colorBuffer: this[textureVar],
-                    depth: false
-                });
-            };
-
-            if (morph.morphPositions) {
-                this.rtPositions = createRT('MorphRTPos', 'texturePositions');
-            }
-
-            if (morph.morphNormals) {
-                this.rtNormals = createRT('MorphRTNrm', 'textureNormals');
-            }
-
-            // texture params
-            this._textureParams = new Float32Array([morph.morphTextureWidth, morph.morphTextureHeight,
-                1 / morph.morphTextureWidth, 1 / morph.morphTextureHeight]);
-
-            // resolve possible texture names
-            for (let i = 0; i < this.maxSubmitCount; i++) {
-                this['morphBlendTex' + i] = this.device.scope.resolve('morphBlendTex' + i);
-            }
-
-            this.morphFactor = this.device.scope.resolve('morphFactor[0]');
-
-            // true indicates render target textures are full of zeros to avoid rendering to them when all weights are zero
-            this.zeroTextures = false;
-
-        } else {    // vertex attribute based morphing
-
-            // max number of morph targets rendered at a time
-            this.maxSubmitCount = 8;
-
-            // weights of active vertex buffers in format used by rendering
-            this._shaderMorphWeights = new Float32Array(this.maxSubmitCount);                           // whole array
-            this._shaderMorphWeightsA = new Float32Array(this._shaderMorphWeights.buffer, 0, 4);        // first 4 elements
-            this._shaderMorphWeightsB = new Float32Array(this._shaderMorphWeights.buffer, 4 * 4, 4);    // second 4 elements
-
-            // pre-allocate array of active vertex buffers used by rendering
-            this._activeVertexBuffers = new Array(this.maxSubmitCount);
+        if (morph.morphPositions) {
+            this.rtPositions = createRT('MorphRTPos', 'texturePositions');
         }
+
+        if (morph.morphNormals) {
+            this.rtNormals = createRT('MorphRTNrm', 'textureNormals');
+        }
+
+        // texture params
+        this._textureParams = new Float32Array([morph.morphTextureWidth, morph.morphTextureHeight]);
+
+        // position aabb data - expand it 2x on each side to handle the expected worse range. Note
+        // that this is only needed for the fallback solution using integer textures to encode positions
+        const halfSize = morph.aabb.halfExtents;
+        this._aabbSize = new Float32Array([halfSize.x * 4, halfSize.y * 4, halfSize.z * 4]);
+        const min = morph.aabb.getMin();
+        this._aabbMin = new Float32Array([min.x * 2, min.y * 2, min.z * 2]);
+
+        // aabb size and min factors for normal rendering, where the range is -1..1
+        this._aabbNrmSize = new Float32Array([2, 2, 2]);
+        this._aabbNrmMin = new Float32Array([-1, -1, -1]);
+
+        this.aabbSizeId = this.device.scope.resolve('aabbSize');
+        this.aabbMinId = this.device.scope.resolve('aabbMin');
+
+        // resolve possible texture names
+        for (let i = 0; i < this.maxSubmitCount; i++) {
+            this[`morphBlendTex${i}`] = this.device.scope.resolve(`morphBlendTex${i}`);
+        }
+
+        this.morphFactor = this.device.scope.resolve('morphFactor[0]');
+
+        // true indicates render target textures are full of zeros to avoid rendering to them when all weights are zero
+        this.zeroTextures = false;
     }
 
     /**
@@ -211,35 +213,46 @@ class MorphInstance {
      */
     _getFragmentShader(numTextures) {
 
-        let fragmentShader = '';
-
-        if (numTextures > 0) {
-            fragmentShader += 'varying vec2 uv0;\n' +
-                'uniform highp float morphFactor[' + numTextures + '];\n';
-        }
-
+        // code to declare textures and blend them together
+        let textureDecl = '';
+        let addingCode = '';
         for (let i = 0; i < numTextures; i++) {
-            fragmentShader += 'uniform highp sampler2D morphBlendTex' + i + ';\n';
+            textureDecl += `uniform highp sampler2D morphBlendTex${i};`;
+            addingCode += `color.xyz += morphFactor[${i}] * texture2D(morphBlendTex${i}, uv0).xyz;`;
         }
 
-        fragmentShader += 'void main (void) {\n' +
-            '    highp vec4 color = vec4(0, 0, 0, 1);\n';
+        return `
 
-        for (let i = 0; i < numTextures; i++) {
-            fragmentShader += '    color.xyz += morphFactor[' + i + '] * texture2D(morphBlendTex' + i + ', uv0).xyz;\n';
-        }
+            varying vec2 uv0;
+            ${this.morph.intRenderFormat ? '#define MORPH_INT' : ''}
+            ${numTextures > 0 ? `uniform highp float morphFactor[${numTextures}];` : ''}
+            ${textureDecl}
 
-        fragmentShader += '    gl_FragColor = color;\n' +
-            '}\n';
+            #ifdef MORPH_INT
+                uniform vec3 aabbSize;
+                uniform vec3 aabbMin;
+            #endif
 
-        return fragmentShader;
+            void main (void) {
+                highp vec4 color = vec4(0, 0, 0, 1);
+
+                ${addingCode}
+
+                #ifdef MORPH_INT
+                    color.xyz = (color.xyz - aabbMin) / aabbSize * 65535.0;
+                    gl_FragColor = uvec4(color);
+                #else
+                    gl_FragColor = color;
+                #endif
+            }
+        `;
     }
 
     /**
      * Create complete shader for texture based morphing.
      *
      * @param {number} count - Number of textures to blend.
-     * @returns {import('../platform/graphics/shader.js').Shader} Shader.
+     * @returns {Shader} Shader.
      * @private
      */
     _getShader(count) {
@@ -249,14 +262,15 @@ class MorphInstance {
         // if shader is not in cache, generate one
         if (!shader) {
             const fs = this._getFragmentShader(count);
-            shader = createShaderFromCode(this.device, textureMorphVertexShader, fs, 'textureMorph' + count);
+            const outputType = this.morph.intRenderFormat ? 'uvec4' : 'vec4';
+            shader = createShaderFromCode(this.device, textureMorphVertexShader, fs, `textureMorph${count}`, undefined, { fragmentOutputTypes: [outputType] });
             this.shaderCache[count] = shader;
         }
 
         return shader;
     }
 
-    _updateTextureRenderTarget(renderTarget, srcTextureName) {
+    _updateTextureRenderTarget(renderTarget, srcTextureName, isPos) {
 
         const device = this.device;
 
@@ -274,6 +288,8 @@ class MorphInstance {
             drawQuadWithShader(device, renderTarget, shader);
         };
 
+        this.setAabbUniforms(isPos);
+
         // set up parameters for active blend targets
         let usedCount = 0;
         let blending = false;
@@ -284,7 +300,7 @@ class MorphInstance {
             if (tex) {
 
                 // texture
-                this['morphBlendTex' + usedCount].setValue(tex);
+                this[`morphBlendTex${usedCount}`].setValue(tex);
 
                 // weight
                 this._shaderMorphWeights[usedCount] = activeTarget.weight;
@@ -316,11 +332,13 @@ class MorphInstance {
         if (this._activeTargets.length > 0 || !this.zeroTextures) {
 
             // blend morph targets into render targets
-            if (this.rtPositions)
-                this._updateTextureRenderTarget(this.rtPositions, 'texturePositions');
+            if (this.rtPositions) {
+                this._updateTextureRenderTarget(this.rtPositions, 'texturePositions', true);
+            }
 
-            if (this.rtNormals)
-                this._updateTextureRenderTarget(this.rtNormals, 'textureNormals');
+            if (this.rtNormals) {
+                this._updateTextureRenderTarget(this.rtNormals, 'textureNormals', false);
+            }
 
             // textures were cleared if no active targets
             this.zeroTextures = this._activeTargets.length === 0;
@@ -329,32 +347,14 @@ class MorphInstance {
         DebugGraphics.popGpuMarker(device);
     }
 
-    _updateVertexMorph() {
+    setAabbUniforms(isPos = true) {
+        this.aabbSizeId.setValue(isPos ? this._aabbSize : this._aabbNrmSize);
+        this.aabbMinId.setValue(isPos ? this._aabbMin : this._aabbNrmMin);
+    }
 
-        // prepare 8 slots for rendering. these are supported combinations: PPPPPPPP, NNNNNNNN, PPPPNNNN
-        const count = this.maxSubmitCount;
-        for (let i = 0; i < count; i++) {
-            this._shaderMorphWeights[i] = 0;
-            this._activeVertexBuffers[i] = null;
-        }
 
-        let posIndex = 0;
-        let nrmIndex = this.morph.morphPositions ? 4 : 0;
-        for (let i = 0; i < this._activeTargets.length; i++) {
-            const target = this._activeTargets[i].target;
-
-            if (target._vertexBufferPositions) {
-                this._activeVertexBuffers[posIndex] = target._vertexBufferPositions;
-                this._shaderMorphWeights[posIndex] = this._activeTargets[i].weight;
-                posIndex++;
-            }
-
-            if (target._vertexBufferNormals) {
-                this._activeVertexBuffers[nrmIndex] = target._vertexBufferNormals;
-                this._shaderMorphWeights[nrmIndex] = this._activeTargets[i].weight;
-                nrmIndex++;
-            }
-        }
+    prepareRendering(device) {
+        this.setAabbUniforms();
     }
 
     /**
@@ -386,25 +386,22 @@ class MorphInstance {
         }
         this._activeTargets.length = activeCount;
 
-        // if there's more active targets then rendering supports
-        const maxActiveTargets = this.morph.maxActiveTargets;
-        if (this._activeTargets.length > maxActiveTargets) {
+        // with int texture, we do not have blending and so only support a single submit
+        if (this.morph.intRenderFormat) {
+            if (this._activeTargets.length > this.maxSubmitCount) {
 
-            // sort them by absWeight
-            this._activeTargets.sort(function (l, r) {
-                return (l.absWeight < r.absWeight) ? 1 : (r.absWeight < l.absWeight ? -1 : 0);
-            });
+                // sort them by absWeight
+                this._activeTargets.sort((l, r) => {
+                    return (l.absWeight < r.absWeight) ? 1 : (r.absWeight < l.absWeight ? -1 : 0);
+                });
 
-            // remove excess
-            this._activeTargets.length = maxActiveTargets;
+                // remove excess
+                this._activeTargets.length = this.maxSubmitCount;
+            }
         }
 
         // prepare for rendering
-        if (this.morph.useTextureMorph) {
-            this._updateTextureMorph();
-        } else {
-            this._updateVertexMorph();
-        }
+        this._updateTextureMorph();
     }
 }
 

@@ -1,35 +1,31 @@
 import { path } from '../../core/path.js';
-
 import { Quat } from '../../core/math/quat.js';
 import { Vec3 } from '../../core/math/vec3.js';
-
 import { http, Http } from '../../platform/net/http.js';
-
 import { Animation, Key, Node } from '../../scene/animation/animation.js';
 import { AnimEvents } from '../anim/evaluator/anim-events.js';
-
 import { GlbParser } from '../parsers/glb-parser.js';
+import { ResourceHandler } from './handler.js';
 
-/** @typedef {import('./handler.js').ResourceHandler} ResourceHandler */
+/**
+ * @import { AppBase } from '../app-base.js'
+ */
 
 /**
  * Resource handler used for loading {@link Animation} resources.
  *
- * @implements {ResourceHandler}
+ * @category Animation
  */
-class AnimationHandler {
+class AnimationHandler extends ResourceHandler {
     /**
-     * Type of the resource the handler handles.
-     *
-     * @type {string}
+     * @param {AppBase} app - The running {@link AppBase}.
+     * @ignore
      */
-    handlerType = "animation";
-
-    /** @hideconstructor */
     constructor(app) {
+        super(app, 'animation');
+
         this.device = app.graphicsDevice;
         this.assets = app.assets;
-        this.maxRetries = 0;
     }
 
     load(url, callback, asset) {
@@ -75,7 +71,7 @@ class AnimationHandler {
                         }
                     });
                 } else {
-                    callback(null, this['_parseAnimationV' + response.animation.version](response));
+                    callback(null, this[`_parseAnimationV${response.animation.version}`](response));
                 }
             }
         });
@@ -83,9 +79,6 @@ class AnimationHandler {
 
     open(url, data, asset) {
         return data;
-    }
-
-    patch(asset, assets) {
     }
 
     _parseAnimationV3(data) {

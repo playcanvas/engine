@@ -3,6 +3,10 @@ import { EventHandler } from '../../core/event-handler.js';
 import { XrPlane } from './xr-plane.js';
 
 /**
+ * @import { XrManager } from './xr-manager.js'
+ */
+
+/**
  * Plane Detection provides the ability to detect real world surfaces based on estimations of the
  * underlying AR system.
  *
@@ -14,14 +18,62 @@ import { XrPlane } from './xr-plane.js';
  * ```
  *
  * ```javascript
- * app.xr.planeDetection.on('add', function (plane) {
+ * app.xr.planeDetection.on('add', (plane) => {
  *     // new plane been added
  * });
  * ```
+ *
+ * @category XR
  */
 class XrPlaneDetection extends EventHandler {
     /**
-     * @type {import('./xr-manager.js').XrManager}
+     * Fired when plane detection becomes available.
+     *
+     * @event
+     * @example
+     * app.xr.planeDetection.on('available', () => {
+     *     console.log('Plane detection is available');
+     * });
+     */
+    static EVENT_AVAILABLE = 'available';
+
+    /**
+     * Fired when plane detection becomes unavailable.
+     *
+     * @event
+     * @example
+     * app.xr.planeDetection.on('unavailable', () => {
+     *     console.log('Plane detection is unavailable');
+     * });
+     */
+    static EVENT_UNAVAILABLE = 'unavailable';
+
+    /**
+     * Fired when new {@link XrPlane} is added to the list. The handler is passed the
+     * {@link XrPlane} instance that has been added.
+     *
+     * @event
+     * @example
+     * app.xr.planeDetection.on('add', (plane) => {
+     *     // new plane is added
+     * });
+     */
+    static EVENT_ADD = 'add';
+
+    /**
+     * Fired when a {@link XrPlane} is removed from the list. The handler is passed the
+     * {@link XrPlane} instance that has been removed.
+     *
+     * @event
+     * @example
+     * app.xr.planeDetection.on('remove', (plane) => {
+     *     // new plane is removed
+     * });
+     */
+    static EVENT_REMOVE = 'remove';
+
+    /**
+     * @type {XrManager}
      * @private
      */
     _manager;
@@ -45,16 +97,16 @@ class XrPlaneDetection extends EventHandler {
     _planesIndex = new Map();
 
     /**
-     * @type {XrPlane[]|null}
+     * @type {XrPlane[]}
      * @private
      */
-    _planes = null;
+    _planes = [];
 
     /**
      * Create a new XrPlaneDetection instance.
      *
-     * @param {import('./xr-manager.js').XrManager} manager - WebXR Manager.
-     * @hideconstructor
+     * @param {XrManager} manager - WebXR Manager.
+     * @ignore
      */
     constructor(manager) {
         super();
@@ -62,54 +114,31 @@ class XrPlaneDetection extends EventHandler {
         this._manager = manager;
 
         if (this._supported) {
+            this._manager.on('start', this._onSessionStart, this);
             this._manager.on('end', this._onSessionEnd, this);
         }
     }
 
-    /**
-     * Fired when plane detection becomes available.
-     *
-     * @event XrPlaneDetection#available
-     */
-
-    /**
-     * Fired when plane detection becomes unavailable.
-     *
-     * @event XrPlaneDetection#unavailable
-     */
-
-    /**
-     * Fired when new {@link XrPlane} is added to the list.
-     *
-     * @event XrPlaneDetection#add
-     * @param {XrPlane} plane - Plane that has been added.
-     * @example
-     * app.xr.planeDetection.on('add', function (plane) {
-     *     // new plane is added
-     * });
-     */
-
-    /**
-     * Fired when a {@link XrPlane} is removed from the list.
-     *
-     * @event XrPlaneDetection#remove
-     * @param {XrPlane} plane - Plane that has been removed.
-     * @example
-     * app.xr.planeDetection.on('remove', function (plane) {
-     *     // new plane is removed
-     * });
-     */
+    /** @private */
+    _onSessionStart() {
+        if (this._manager.session.enabledFeatures) {
+            const available = this._manager.session.enabledFeatures.indexOf('plane-detection') !== -1;
+            if (available) {
+                this._available = true;
+                this.fire('available');
+            }
+        }
+    }
 
     /** @private */
     _onSessionEnd() {
-        if (this._planes) {
-            for (let i = 0; i < this._planes.length; i++) {
-                this._planes[i].destroy();
-            }
+        for (let i = 0; i < this._planes.length; i++) {
+            this._planes[i].destroy();
+            this.fire('remove', this._planes[i]);
         }
 
         this._planesIndex.clear();
-        this._planes = null;
+        this._planes.length = 0;
 
         if (this._available) {
             this._available = false;
@@ -118,29 +147,26 @@ class XrPlaneDetection extends EventHandler {
     }
 
     /**
-     * @param {*} frame - XRFrame from requestAnimationFrame callback.
+     * @param {XRFrame} frame - XRFrame from requestAnimationFrame callback.
      * @ignore
      */
     update(frame) {
-        let detectedPlanes;
-
         if (!this._available) {
-            try {
-                detectedPlanes = frame.detectedPlanes;
-                this._planes = [];
+            if (!this._manager.session.enabledFeatures && frame.detectedPlanes.size) {
                 this._available = true;
                 this.fire('available');
-            } catch (ex) {
+            } else {
                 return;
             }
-        } else {
-            detectedPlanes = frame.detectedPlanes;
         }
+
+        const detectedPlanes = frame.detectedPlanes;
 
         // iterate through indexed planes
         for (const [xrPlane, plane] of this._planesIndex) {
-            if (detectedPlanes.has(xrPlane))
+            if (detectedPlanes.has(xrPlane)) {
                 continue;
+            }
 
             // if indexed plane is not listed in detectedPlanes anymore
             // then remove it
@@ -179,8 +205,7 @@ class XrPlaneDetection extends EventHandler {
     }
 
     /**
-     * True if Plane Detection is available. This property can be set to true only during a running
-     * session.
+     * True if Plane Detection is available. This information is available only when the session has started.
      *
      * @type {boolean}
      */
@@ -189,10 +214,9 @@ class XrPlaneDetection extends EventHandler {
     }
 
     /**
-     * Array of {@link XrPlane} instances that contain individual plane information, or null if
-     * plane detection is not available.
+     * Array of {@link XrPlane} instances that contain individual plane information.
      *
-     * @type {XrPlane[]|null}
+     * @type {XrPlane[]}
      */
     get planes() {
         return this._planes;

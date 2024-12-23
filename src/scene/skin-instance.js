@@ -1,28 +1,37 @@
 import { Debug } from '../core/debug.js';
 import { math } from '../core/math/math.js';
 import { Mat4 } from '../core/math/mat4.js';
-
-import { FILTER_NEAREST, PIXELFORMAT_RGBA32F } from '../platform/graphics/constants.js';
+import { FILTER_NEAREST, PIXELFORMAT_RGBA32F, TEXTURELOCK_READ } from '../platform/graphics/constants.js';
 import { Texture } from '../platform/graphics/texture.js';
+
+/**
+ * @import { Entity } from '../framework/entity.js'
+ * @import { GraphNode } from './graph-node.js'
+ * @import { Skin } from './skin.js'
+ */
 
 const _invMatrix = new Mat4();
 
 /**
  * A skin instance is responsible for generating the matrix palette that is used to skin vertices
  * from object space to world space.
+ *
+ * @category Graphics
  */
 class SkinInstance {
     /**
      * An array of nodes representing each bone in this skin instance.
      *
-     * @type {import('./graph-node.js').GraphNode[]}
+     * @type {GraphNode[]}
      */
     bones;
+
+    boneTextureSize;
 
     /**
      * Create a new SkinInstance instance.
      *
-     * @param {import('./skin.js').Skin} skin - The skin that will provide the inverse bind pose
+     * @param {Skin} skin - The skin that will provide the inverse bind pose
      * matrices to generate the final matrix palette.
      */
     constructor(skin) {
@@ -52,29 +61,26 @@ class SkinInstance {
 
     init(device, numBones) {
 
-        if (device.supportsBoneTextures) {
+        // texture size - roughly square that fits all bones, width is multiply of 3 to simplify shader math
+        const numPixels = numBones * 3;
+        let width = Math.ceil(Math.sqrt(numPixels));
+        width = math.roundUp(width, 3);
+        const height = Math.ceil(numPixels / width);
 
-            // texture size - roughly square that fits all bones, width is multiply of 3 to simplify shader math
-            const numPixels = numBones * 3;
-            let width = Math.ceil(Math.sqrt(numPixels));
-            width = math.roundUp(width, 3);
-            const height = Math.ceil(numPixels / width);
+        this.boneTexture = new Texture(device, {
+            width: width,
+            height: height,
+            format: PIXELFORMAT_RGBA32F,
+            mipmaps: false,
+            minFilter: FILTER_NEAREST,
+            magFilter: FILTER_NEAREST,
+            name: 'skin'
+        });
 
-            this.boneTexture = new Texture(device, {
-                width: width,
-                height: height,
-                format: PIXELFORMAT_RGBA32F,
-                mipmaps: false,
-                minFilter: FILTER_NEAREST,
-                magFilter: FILTER_NEAREST,
-                name: 'skin'
-            });
+        this.boneTextureSize = [width, height, 1.0 / width, 1.0 / height];
 
-            this.matrixPalette = this.boneTexture.lock();
-
-        } else {
-            this.matrixPalette = new Float32Array(numBones * 12);
-        }
+        this.matrixPalette = this.boneTexture.lock({ mode: TEXTURELOCK_READ });
+        this.boneTexture.unlock();
     }
 
     destroy() {
@@ -85,8 +91,14 @@ class SkinInstance {
         }
     }
 
-    // resolved skin bones to a hierarchy with the rootBone at its root.
-    // entity parameter specifies the entity used if the bone match is not found in the hierarchy - usually the entity the render component is attached to
+    /**
+     * Resolves skin bones to a hierarchy with the rootBone at its root.
+     *
+     * @param {Entity} rootBone - A reference to the entity to be used as the root bone.
+     * @param {Entity} entity - Specifies the entity used if the bone match is not found in the
+     * hierarchy - usually the entity the render component is attached to.
+     * @ignore
+     */
     resolve(rootBone, entity) {
 
         this.rootBone = rootBone;
@@ -96,6 +108,7 @@ class SkinInstance {
         const bones = [];
         for (let j = 0; j < skin.boneNames.length; j++) {
             const boneName = skin.boneNames[j];
+            /** @type {Entity|GraphNode|null} */
             let bone = rootBone.findByName(boneName);
 
             if (!bone) {
@@ -108,6 +121,9 @@ class SkinInstance {
         this.bones = bones;
     }
 
+    /**
+     * @param {Skin} skin - The skin.
+     */
     initSkin(skin) {
 
         this.skin = skin;
@@ -125,12 +141,7 @@ class SkinInstance {
     }
 
     uploadBones(device) {
-
-        // TODO: this is a bit strange looking. Change the Texture API to do a reupload
-        if (device.supportsBoneTextures) {
-            this.boneTexture.lock();
-            this.boneTexture.unlock();
-        }
+        this.boneTexture.upload();
     }
 
     _updateMatrices(rootNode, skinUpdateIndex) {

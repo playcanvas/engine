@@ -1,5 +1,10 @@
-import { Debug } from '../debug.js';
 import { Vec3 } from '../math/vec3.js';
+
+/**
+ * @import { BoundingSphere } from './bounding-sphere.js'
+ * @import { Mat4 } from '../math/mat4.js'
+ * @import { Ray } from './ray.js'
+ */
 
 const tmpVecA = new Vec3();
 const tmpVecB = new Vec3();
@@ -9,21 +14,25 @@ const tmpVecE = new Vec3();
 
 /**
  * Axis-Aligned Bounding Box.
+ *
+ * @category Math
  */
 class BoundingBox {
     /**
      * Center of box.
      *
      * @type {Vec3}
+     * @readonly
      */
-    center;
+    center = new Vec3();
 
     /**
      * Half the distance across the box in each axis.
      *
      * @type {Vec3}
+     * @readonly
      */
-    halfExtents;
+    halfExtents = new Vec3(0.5, 0.5, 0.5);
 
     /**
      * @type {Vec3}
@@ -41,15 +50,17 @@ class BoundingBox {
      * Create a new BoundingBox instance. The bounding box is axis-aligned.
      *
      * @param {Vec3} [center] - Center of box. The constructor takes a reference of this parameter.
+     * Defaults to (0, 0, 0).
      * @param {Vec3} [halfExtents] - Half the distance across the box in each axis. The constructor
-     * takes a reference of this parameter. Defaults to 0.5 on each axis.
+     * takes a reference of this parameter. Defaults to (0.5, 0.5, 0.5).
      */
-    constructor(center = new Vec3(), halfExtents = new Vec3(0.5, 0.5, 0.5)) {
-        Debug.assert(!Object.isFrozen(center), 'The constructor of \'BoundingBox\' does not accept a constant (frozen) object as a \'center\' parameter');
-        Debug.assert(!Object.isFrozen(halfExtents), 'The constructor of \'BoundingBox\' does not accept a constant (frozen) object as a \'halfExtents\' parameter');
-
-        this.center = center;
-        this.halfExtents = halfExtents;
+    constructor(center, halfExtents) {
+        if (center) {
+            this.center.copy(center);
+        }
+        if (halfExtents) {
+            this.halfExtents.copy(halfExtents);
+        }
     }
 
     /**
@@ -119,7 +130,7 @@ class BoundingBox {
      * @returns {BoundingBox} A duplicate AABB.
      */
     clone() {
-        return new BoundingBox(this.center.clone(), this.halfExtents.clone());
+        return new BoundingBox(this.center, this.halfExtents);
     }
 
     /**
@@ -175,8 +186,9 @@ class BoundingBox {
 
         const intersects = minMax >= maxMin && maxMin >= 0;
 
-        if (intersects)
+        if (intersects) {
             point.copy(ray.direction).mulScalar(maxMin).add(ray.origin);
+        }
 
         return intersects;
     }
@@ -194,27 +206,33 @@ class BoundingBox {
 
         prod.mul2(diff, rayDir);
 
-        if (absDiff.x > this.halfExtents.x && prod.x >= 0)
+        if (absDiff.x > this.halfExtents.x && prod.x >= 0) {
             return false;
+        }
 
-        if (absDiff.y > this.halfExtents.y && prod.y >= 0)
+        if (absDiff.y > this.halfExtents.y && prod.y >= 0) {
             return false;
+        }
 
-        if (absDiff.z > this.halfExtents.z && prod.z >= 0)
+        if (absDiff.z > this.halfExtents.z && prod.z >= 0) {
             return false;
+        }
 
         absDir.set(Math.abs(rayDir.x), Math.abs(rayDir.y), Math.abs(rayDir.z));
         cross.cross(rayDir, diff);
         cross.set(Math.abs(cross.x), Math.abs(cross.y), Math.abs(cross.z));
 
-        if (cross.x > this.halfExtents.y * absDir.z + this.halfExtents.z * absDir.y)
+        if (cross.x > this.halfExtents.y * absDir.z + this.halfExtents.z * absDir.y) {
             return false;
+        }
 
-        if (cross.y > this.halfExtents.x * absDir.z + this.halfExtents.z * absDir.x)
+        if (cross.y > this.halfExtents.x * absDir.z + this.halfExtents.z * absDir.x) {
             return false;
+        }
 
-        if (cross.z > this.halfExtents.x * absDir.y + this.halfExtents.y * absDir.x)
+        if (cross.z > this.halfExtents.x * absDir.y + this.halfExtents.y * absDir.x) {
             return false;
+        }
 
         return true;
     }
@@ -222,7 +240,7 @@ class BoundingBox {
     /**
      * Test if a ray intersects with the AABB.
      *
-     * @param {import('./ray.js').Ray} ray - Ray to test against (direction must be normalized).
+     * @param {Ray} ray - Ray to test against (direction must be normalized).
      * @param {Vec3} [point] - If there is an intersection, the intersection point will be copied
      * into here.
      * @returns {boolean} True if there is an intersection.
@@ -289,7 +307,7 @@ class BoundingBox {
      * matrix.
      *
      * @param {BoundingBox} aabb - Box to transform and enclose.
-     * @param {import('../math/mat4.js').Mat4} m - Transformation matrix to apply to source AABB.
+     * @param {Mat4} m - Transformation matrix to apply to source AABB.
      * @param {boolean} ignoreScale - If true is specified, a scale from the matrix is ignored. Defaults to false.
      */
     setFromTransformedAabb(aabb, m, ignoreScale = false) {
@@ -398,7 +416,7 @@ class BoundingBox {
     /**
      * Test if a Bounding Sphere is overlapping, enveloping, or inside this AABB.
      *
-     * @param {import('./bounding-sphere.js').BoundingSphere} sphere - Bounding Sphere to test.
+     * @param {BoundingSphere} sphere - Bounding Sphere to test.
      * @returns {boolean} True if the Bounding Sphere is overlapping, enveloping, or inside the
      * AABB and false otherwise.
      */

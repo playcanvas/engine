@@ -28,7 +28,7 @@ ActionPhysicsReset.prototype.postInitialize = function () {
         app.on(this.event, reset);
     }
 
-    this.on('attr:event', function (value, prev) {
+    this.on('attr:event', (value, prev) => {
         if (prev && prev.length > 0) {
             app.off(prev, reset);
         }

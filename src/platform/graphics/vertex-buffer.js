@@ -2,40 +2,57 @@ import { Debug } from '../../core/debug.js';
 import { TRACEID_VRAM_VB } from '../../core/constants.js';
 import { BUFFER_STATIC } from './constants.js';
 
+/**
+ * @import { GraphicsDevice } from './graphics-device.js'
+ * @import { VertexFormat } from './vertex-format.js'
+ */
+
 let id = 0;
 
 /**
  * A vertex buffer is the mechanism via which the application specifies vertex data to the graphics
  * hardware.
+ *
+ * @category Graphics
  */
 class VertexBuffer {
+    usage = BUFFER_STATIC;
+
     /**
      * Create a new VertexBuffer instance.
      *
-     * @param {import('./graphics-device.js').GraphicsDevice} graphicsDevice - The graphics device
-     * used to manage this vertex buffer.
-     * @param {import('./vertex-format.js').VertexFormat} format - The vertex format of this vertex
+     * @param {GraphicsDevice} graphicsDevice - The graphics device used to manage this vertex
      * buffer.
+     * @param {VertexFormat} format - The vertex format of this vertex buffer.
      * @param {number} numVertices - The number of vertices that this vertex buffer will hold.
-     * @param {number} [usage] - The usage type of the vertex buffer (see BUFFER_*). Defaults to BUFFER_STATIC.
-     * @param {ArrayBuffer} [initialData] - Initial data.
+     * @param {object} [options] - Object for passing optional arguments.
+     * @param {number} [options.usage] - The usage type of the vertex buffer (see BUFFER_*).
+     * Defaults to BUFFER_STATIC.
+     * @param {ArrayBuffer} [options.data] - Initial data.
+     * @param {boolean} [options.storage] - Defines if the vertex buffer can be used as a storage
+     * buffer by a compute shader. Defaults to false. Only supported on WebGPU.
      */
-    constructor(graphicsDevice, format, numVertices, usage = BUFFER_STATIC, initialData) {
+    constructor(graphicsDevice, format, numVertices, options) {
+
+        Debug.assert(arguments.length <= 4 && (!options || typeof options === 'object'), 'incorrect arguments');
+
         // By default, vertex buffers are static (better for performance since buffer data can be cached in VRAM)
+        this.usage = options?.usage ?? BUFFER_STATIC;
+
         this.device = graphicsDevice;
         this.format = format;
         this.numVertices = numVertices;
-        this.usage = usage;
 
         this.id = id++;
 
-        this.impl = graphicsDevice.createVertexBufferImpl(this, format);
+        this.impl = graphicsDevice.createVertexBufferImpl(this, format, options);
 
         // Calculate the size. If format contains verticesByteSize (non-interleaved format), use it
         this.numBytes = format.verticesByteSize ? format.verticesByteSize : format.size * numVertices;
         this.adjustVramSizeTracking(graphicsDevice._vram, this.numBytes);
 
         // Allocate the storage
+        const initialData = options?.data;
         if (initialData) {
             this.setData(initialData);
         } else {
@@ -80,8 +97,7 @@ class VertexBuffer {
     /**
      * Returns the data format of the specified vertex buffer.
      *
-     * @returns {import('./vertex-format.js').VertexFormat} The data format of the specified vertex
-     * buffer.
+     * @returns {VertexFormat} The data format of the specified vertex buffer.
      */
     getFormat() {
         return this.format;

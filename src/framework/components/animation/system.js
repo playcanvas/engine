@@ -1,8 +1,12 @@
 import { Component } from '../component.js';
 import { ComponentSystem } from '../system.js';
-
 import { AnimationComponent } from './component.js';
 import { AnimationComponentData } from './data.js';
+
+/**
+ * @import { AppBase } from '../../app-base.js'
+ * @import { Entity } from '../../entity.js'
+ */
 
 const _schema = [
     'enabled'
@@ -11,14 +15,14 @@ const _schema = [
 /**
  * The AnimationComponentSystem manages creating and deleting AnimationComponents.
  *
- * @augments ComponentSystem
+ * @category Animation
  */
 class AnimationComponentSystem extends ComponentSystem {
     /**
      * Create an AnimationComponentSystem instance.
      *
-     * @param {import('../../app-base.js').AppBase} app - The application managing this system.
-     * @hideconstructor
+     * @param {AppBase} app - The application managing this system.
+     * @ignore
      */
     constructor(app) {
         super(app);
@@ -62,8 +66,8 @@ class AnimationComponentSystem extends ComponentSystem {
     /**
      * Create a clone of component. This creates a copy of all component data variables.
      *
-     * @param {import('../../entity.js').Entity} entity - The entity to clone the component from.
-     * @param {import('../../entity.js').Entity} clone - The entity to clone the component into.
+     * @param {Entity} entity - The entity to clone the component from.
+     * @param {Entity} clone - The entity to clone the component into.
      * @returns {AnimationComponent} The newly cloned component.
      * @ignore
      */
@@ -98,7 +102,7 @@ class AnimationComponentSystem extends ComponentSystem {
     }
 
     /**
-     * @param {import('../../entity.js').Entity} entity - The entity having its component removed.
+     * @param {Entity} entity - The entity having its component removed.
      * @param {AnimationComponent} component - The component being removed.
      * @private
      */

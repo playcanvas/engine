@@ -3,21 +3,30 @@ import { RefCountedObject } from '../core/ref-counted-object.js';
 import { Vec3 } from '../core/math/vec3.js';
 import { FloatPacking } from '../core/math/float-packing.js';
 import { BoundingBox } from '../core/shape/bounding-box.js';
+import {
+    TYPE_UINT32, SEMANTIC_ATTR15, ADDRESS_CLAMP_TO_EDGE, FILTER_NEAREST,
+    PIXELFORMAT_RGBA16F, PIXELFORMAT_RGB32F, PIXELFORMAT_RGBA32F, PIXELFORMAT_RGBA16U,
+    isIntegerPixelFormat
+} from '../platform/graphics/constants.js';
 import { Texture } from '../platform/graphics/texture.js';
 import { VertexBuffer } from '../platform/graphics/vertex-buffer.js';
 import { VertexFormat } from '../platform/graphics/vertex-format.js';
 
-import {
-    BUFFER_STATIC, TYPE_FLOAT32, TYPE_UINT32, SEMANTIC_ATTR15, ADDRESS_CLAMP_TO_EDGE, FILTER_NEAREST,
-    PIXELFORMAT_RGBA16F, PIXELFORMAT_RGB32F, PIXELFORMAT_RGBA32F
-} from '../platform/graphics/constants.js';
-import { GraphicsDeviceAccess } from '../platform/graphics/graphics-device-access.js';
+/**
+ * @import { GraphicsDevice } from '../platform/graphics/graphics-device.js'
+ * @import { MorphTarget } from './morph-target.js'
+ */
 
 /**
- * Contains a list of {@link MorphTarget}, a combined delta AABB and some associated data.
+ * Contains a list of {@link MorphTarget}s, a combined delta AABB and some associated data.
+ *
+ * @category Graphics
  */
 class Morph extends RefCountedObject {
-    /** @type {BoundingBox} */
+    /**
+     * @type {BoundingBox}
+     * @private
+     */
     _aabb;
 
     /** @type {boolean} */
@@ -26,19 +35,18 @@ class Morph extends RefCountedObject {
     /**
      * Create a new Morph instance.
      *
-     * @param {import('./morph-target.js').MorphTarget[]} targets - A list of morph targets.
-     * @param {import('../platform/graphics/graphics-device.js').GraphicsDevice} graphicsDevice -
-     * The graphics device used to manage this morph target.
+     * @param {MorphTarget[]} targets - A list of morph targets.
+     * @param {GraphicsDevice} graphicsDevice - The graphics device used to manage this morph target.
      * @param {object} [options] - Object for passing optional arguments.
      * @param {boolean} [options.preferHighPrecision] - True if high precision storage should be
-     * prefered. This is faster to create and allows higher precision, but takes more memory and
+     * preferred. This is faster to create and allows higher precision, but takes more memory and
      * might be slower to render. Defaults to false.
      */
     constructor(targets, graphicsDevice, { preferHighPrecision = false } = {}) {
         super();
 
-        Debug.assertDeprecated(graphicsDevice, "Morph constructor takes a GraphicsDevice as a parameter, and it was not provided.");
-        this.device = graphicsDevice || GraphicsDeviceAccess.get();
+        Debug.assert(graphicsDevice, 'Morph constructor takes a GraphicsDevice as a parameter, and it was not provided.');
+        this.device = graphicsDevice;
 
         this.preferHighPrecision = preferHighPrecision;
 
@@ -48,25 +56,19 @@ class Morph extends RefCountedObject {
 
         // default to texture based morphing if available
         const device = this.device;
-        if (device.supportsMorphTargetTexturesCore) {
 
-            // renderable format
-            const renderableHalf = (device.extTextureHalfFloat && device.textureHalfFloatRenderable) ? PIXELFORMAT_RGBA16F : undefined;
-            const renderableFloat = (device.extTextureFloat && device.textureFloatRenderable) ? PIXELFORMAT_RGBA32F : undefined;
-            this._renderTextureFormat = this.preferHighPrecision ?
-                (renderableFloat ?? renderableHalf) : (renderableHalf ?? renderableFloat);
+        // renderable format
+        const renderableHalf = device.textureHalfFloatRenderable ? PIXELFORMAT_RGBA16F : undefined;
+        const renderableFloat = device.textureFloatRenderable ? PIXELFORMAT_RGBA32F : undefined;
+        this._renderTextureFormat = this.preferHighPrecision ?
+            (renderableFloat ?? renderableHalf) : (renderableHalf ?? renderableFloat);
 
-            // texture format
-            const textureHalf = (device.extTextureHalfFloat && device.textureHalfFloatUpdatable) ? PIXELFORMAT_RGBA16F : undefined;
-            const textureFloat = device.extTextureFloat ? PIXELFORMAT_RGB32F : undefined;
-            this._textureFormat = this.preferHighPrecision ?
-                (textureFloat ?? textureHalf) : (textureHalf ?? textureFloat);
+        // fallback to more limited int format
+        this._renderTextureFormat = this._renderTextureFormat ?? PIXELFORMAT_RGBA16U;
+        this.intRenderFormat = isIntegerPixelFormat(this._renderTextureFormat);
 
-            // if both available, enable texture morphing
-            if (this._renderTextureFormat !== undefined && this._textureFormat !== undefined) {
-                this._useTextureMorph = true;
-            }
-        }
+        // source texture format - both are always supported
+        this._textureFormat = this.preferHighPrecision ? PIXELFORMAT_RGB32F : PIXELFORMAT_RGBA16F;
 
         this._init();
         this._updateMorphFlags();
@@ -103,32 +105,10 @@ class Morph extends RefCountedObject {
         return this._morphNormals;
     }
 
-    get maxActiveTargets() {
-
-        // no limit when texture morph based
-        if (this._useTextureMorph)
-            return this._targets.length;
-
-        return (this._morphPositions && this._morphNormals) ? 4 : 8;
-    }
-
-    get useTextureMorph() {
-        return this._useTextureMorph;
-    }
-
     _init() {
 
-        // try to init texture based morphing
-        if (this._useTextureMorph) {
-            this._useTextureMorph = this._initTextureBased();
-        }
-
-        // if texture morphing is not set up, use attribute based morphing
-        if (!this._useTextureMorph) {
-            for (let i = 0; i < this._targets.length; i++) {
-                this._targets[i]._initVertexBuffers(this.device);
-            }
-        }
+        // texture based morphing
+        this._initTextureBased();
 
         // finalize init
         for (let i = 0; i < this._targets.length; i++) {
@@ -136,7 +116,7 @@ class Morph extends RefCountedObject {
         }
     }
 
-    _findSparseSet(deltaArrays, ids, usedDataIndices, floatRounding) {
+    _findSparseSet(deltaArrays, ids, usedDataIndices) {
 
         let freeIndex = 1;  // reserve slot 0 for zero delta
         const dataCount = deltaArrays[0].length;
@@ -155,12 +135,12 @@ class Morph extends RefCountedObject {
             }
 
             if (vertexUsed) {
-                ids.push(freeIndex + floatRounding);
+                ids.push(freeIndex);
                 usedDataIndices.push(v / 3);
                 freeIndex++;
             } else {
                 // non morphed vertices would be all mapped to pixel 0 of texture
-                ids.push(0 + floatRounding);
+                ids.push(0);
             }
         }
 
@@ -168,12 +148,6 @@ class Morph extends RefCountedObject {
     }
 
     _initTextureBased() {
-
-        // use uint32 for vertex Ids instead of float32
-        const useUintIds = this.device.isWebGPU;
-
-        // value added to floats which are used as ints on the shader side to avoid values being rounded to one less occasionally
-        const floatRounding = useUintIds ? 0 : 0.2;
 
         // collect all source delta arrays to find sparse set of vertices
         const deltaArrays = [], deltaInfos = [];
@@ -191,13 +165,10 @@ class Morph extends RefCountedObject {
 
         // find sparse set for all target deltas into usedDataIndices and build vertex id buffer
         const ids = [], usedDataIndices = [];
-        const freeIndex = this._findSparseSet(deltaArrays, ids, usedDataIndices, floatRounding);
-
-        // max texture size: vertexBufferIds is stored in float32 format, giving us 2^24 range, so can address 4096 texture at maximum
-        // TODO: on webgl2 we could store this in uint32 format and remove this limit
-        const maxTextureSize = Math.min(this.device.maxTextureSize, 4096);
+        const freeIndex = this._findSparseSet(deltaArrays, ids, usedDataIndices);
 
         // texture size for freeIndex pixels - roughly square
+        const maxTextureSize = this.device.maxTextureSize;
         let morphTextureWidth = Math.ceil(Math.sqrt(freeIndex));
         morphTextureWidth = Math.min(morphTextureWidth, maxTextureSize);
         const morphTextureHeight = Math.ceil(freeIndex / morphTextureWidth);
@@ -260,9 +231,10 @@ class Morph extends RefCountedObject {
         }
 
         // create vertex stream with vertex_id used to map vertex to texture
-        const formatDesc = [{ semantic: SEMANTIC_ATTR15, components: 1, type: useUintIds ? TYPE_UINT32 : TYPE_FLOAT32 }];
-        this.vertexBufferIds = new VertexBuffer(this.device, new VertexFormat(this.device, formatDesc, ids.length), ids.length, BUFFER_STATIC,
-                                                useUintIds ? new Uint32Array(ids) : new Float32Array(ids));
+        const formatDesc = [{ semantic: SEMANTIC_ATTR15, components: 1, type: TYPE_UINT32, asInt: true }];
+        this.vertexBufferIds = new VertexBuffer(this.device, new VertexFormat(this.device, formatDesc, ids.length), ids.length, {
+            data: new Uint32Array(ids)
+        });
 
         return true;
     }
@@ -281,9 +253,9 @@ class Morph extends RefCountedObject {
     }
 
     /**
-     * The array of morph targets.
+     * Gets the array of morph targets.
      *
-     * @type {import('./morph-target.js').MorphTarget[]}
+     * @type {MorphTarget[]}
      */
     get targets() {
         return this._targets;
@@ -305,7 +277,15 @@ class Morph extends RefCountedObject {
         }
     }
 
-    // creates texture. Used to create both source morph target data, as well as render target used to morph these into, positions and normals
+    /**
+     * Creates texture. Used to create both source morph target data, as well as render target used
+     * to morph these into, positions and normals.
+     *
+     * @param {string} name - The name of the texture.
+     * @param {number} format - The format of the texture.
+     * @returns {Texture} The created texture.
+     * @private
+     */
     _createTexture(name, format) {
         return new Texture(this.device, {
             width: this.morphTextureWidth,

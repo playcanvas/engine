@@ -1,51 +1,66 @@
 import { Debug, DebugHelper } from '../../../core/debug.js';
-import { SAMPLETYPE_FLOAT, SAMPLETYPE_UNFILTERABLE_FLOAT, SAMPLETYPE_DEPTH } from '../constants.js';
-
+import { StringIds } from '../../../core/string-ids.js';
+import { SAMPLETYPE_FLOAT, SAMPLETYPE_UNFILTERABLE_FLOAT, SAMPLETYPE_DEPTH, SAMPLETYPE_INT, SAMPLETYPE_UINT } from '../constants.js';
 import { WebgpuUtils } from './webgpu-utils.js';
+import { gpuTextureFormats } from './constants.js';
+
+/**
+ * @import { BindGroupFormat } from '../bind-group-format.js'
+ * @import { WebgpuGraphicsDevice } from './webgpu-graphics-device.js'
+ */
 
 const samplerTypes = [];
 samplerTypes[SAMPLETYPE_FLOAT] = 'filtering';
 samplerTypes[SAMPLETYPE_UNFILTERABLE_FLOAT] = 'non-filtering';
 samplerTypes[SAMPLETYPE_DEPTH] = 'comparison';
 
+// Using 'comparison' instead of 'non-filtering' may seem unusual, but currently we will get a
+// validation error if we use 'non-filtering' along with texelFetch/textureLoad. 'comparison' works
+// very well for the most common use-case of integer textures, texelFetch. We may be able to change
+// how we initialize the sampler elsewhere to support 'non-filtering' in the future.
+samplerTypes[SAMPLETYPE_INT] = 'comparison';
+samplerTypes[SAMPLETYPE_UINT] = 'comparison';
+
 const sampleTypes = [];
 sampleTypes[SAMPLETYPE_FLOAT] = 'float';
 sampleTypes[SAMPLETYPE_UNFILTERABLE_FLOAT] = 'unfilterable-float';
 sampleTypes[SAMPLETYPE_DEPTH] = 'depth';
+sampleTypes[SAMPLETYPE_INT] = 'sint';
+sampleTypes[SAMPLETYPE_UINT] = 'uint';
+
+const stringIds = new StringIds();
 
 /**
  * A WebGPU implementation of the BindGroupFormat, which is a wrapper over GPUBindGroupLayout.
- *
- * @ignore
  */
 class WebgpuBindGroupFormat {
     /**
-     * @param {import('../bind-group-format.js').BindGroupFormat} bindGroupFormat - Bind group format.
+     * @param {BindGroupFormat} bindGroupFormat - Bind group format.
      */
     constructor(bindGroupFormat) {
 
-        /** @type {import('./webgpu-graphics-device.js').WebgpuGraphicsDevice} */
+        /** @type {WebgpuGraphicsDevice} */
         const device = bindGroupFormat.device;
 
-        const { key, descr } = this.createDescriptor(bindGroupFormat);
+        const { key, desc } = this.createDescriptor(bindGroupFormat);
 
         /**
          * Unique key, used for caching
          *
-         * @type {string}
+         * @type {number}
          */
-        this.key = key;
+        this.key = stringIds.get(key);
 
-        // keep descr in debug mode
+        // keep desc in debug mode
         Debug.call(() => {
-            this.descr = descr;
+            this.desc = desc;
         });
 
         /**
          * @type {GPUBindGroupLayout}
          * @private
          */
-        this.bindGroupLayout = device.wgpu.createBindGroupLayout(descr);
+        this.bindGroupLayout = device.wgpu.createBindGroupLayout(desc);
         DebugHelper.setLabel(this.bindGroupLayout, bindGroupFormat.name);
     }
 
@@ -58,22 +73,11 @@ class WebgpuBindGroupFormat {
     }
 
     /**
-     * Returns texture binding slot.
-     *
-     * @param {import('../bind-group-format.js').BindGroupFormat} bindGroupFormat - Bind group format.
-     * @param {number} index - The index of the texture.
-     * @returns {number} - The slot index.
-     */
-    getTextureSlot(bindGroupFormat, index) {
-        // each texture takes 2 slots (texture, sampler) and those are added after uniform buffers
-        return bindGroupFormat.bufferFormats.length + index * 2;
-    }
-
-    /**
      * @param {any} bindGroupFormat - The format of the bind group.
      * @returns {any} Returns the bind group descriptor.
      */
     createDescriptor(bindGroupFormat) {
+
         // all WebGPU bindings:
         // - buffer: GPUBufferBindingLayout, resource type is GPUBufferBinding
         // - sampler: GPUSamplerBindingLayout, resource type is GPUSampler
@@ -85,14 +89,14 @@ class WebgpuBindGroupFormat {
         // generate unique key
         let key = '';
 
-        let index = 0;
-        bindGroupFormat.bufferFormats.forEach((bufferFormat) => {
+        // buffers
+        bindGroupFormat.uniformBufferFormats.forEach((bufferFormat) => {
 
             const visibility = WebgpuUtils.shaderStage(bufferFormat.visibility);
-            key += `#${index}U:${visibility}`;
+            key += `#${bufferFormat.slot}U:${visibility}`;
 
             entries.push({
-                binding: index++,
+                binding: bufferFormat.slot,
                 visibility: visibility,
 
                 buffer: {
@@ -109,6 +113,7 @@ class WebgpuBindGroupFormat {
             });
         });
 
+        // textures
         bindGroupFormat.textureFormats.forEach((textureFormat) => {
 
             const visibility = WebgpuUtils.shaderStage(textureFormat.visibility);
@@ -121,10 +126,11 @@ class WebgpuBindGroupFormat {
             const gpuSampleType = sampleTypes[sampleType];
             Debug.assert(gpuSampleType);
 
-            key += `#${index}T:${visibility}-${gpuSampleType}-${viewDimension}-${multisampled}`;
+            key += `#${textureFormat.slot}T:${visibility}-${gpuSampleType}-${viewDimension}-${multisampled}`;
 
+            // texture
             entries.push({
-                binding: index++,
+                binding: textureFormat.slot,
                 visibility: visibility,
                 texture: {
                     // Indicates the type required for texture views bound to this binding.
@@ -141,30 +147,77 @@ class WebgpuBindGroupFormat {
             });
 
             // sampler
-            const gpuSamplerType = samplerTypes[sampleType];
-            Debug.assert(gpuSamplerType);
+            if (textureFormat.hasSampler) {
+                const gpuSamplerType = samplerTypes[sampleType];
+                Debug.assert(gpuSamplerType);
 
-            key += `#${index}S:${visibility}-${gpuSamplerType}`;
+                key += `#${textureFormat.slot + 1}S:${visibility}-${gpuSamplerType}`;
+
+                entries.push({
+                    binding: textureFormat.slot + 1,
+                    visibility: visibility,
+                    sampler: {
+                        // Indicates the required type of a sampler bound to this bindings
+                        // 'filtering', 'non-filtering', 'comparison'
+                        type: gpuSamplerType
+                    }
+                });
+            }
+        });
+
+        // storage textures
+        bindGroupFormat.storageTextureFormats.forEach((textureFormat) => {
+
+            const { format, textureDimension } = textureFormat;
+            const { read, write } = textureFormat;
+            key += `#${textureFormat.slot}ST:${format}-${textureDimension}-${read ? 'r1' : 'r0'}-${write ? 'w1' : 'w0'}`;
+
+            // storage texture
+            entries.push({
+                binding: textureFormat.slot,
+                visibility: GPUShaderStage.COMPUTE,
+                storageTexture: {
+
+                    // The access mode for this binding, indicating readability and writability.
+                    // 'write-only' is always support, 'read-write' and 'read-only' optionally
+                    access: read ? (write ? 'read-write' : 'read-only') : 'write-only',
+
+                    // The required format of texture views bound to this binding.
+                    format: gpuTextureFormats[format],
+
+                    // Indicates the required dimension for texture views bound to this binding.
+                    // "1d", "2d", "2d-array", "cube", "cube-array", "3d"
+                    viewDimension: textureDimension
+                }
+            });
+        });
+
+        // storage buffers
+        bindGroupFormat.storageBufferFormats.forEach((bufferFormat) => {
+
+            const readOnly = bufferFormat.readOnly;
+            const visibility = WebgpuUtils.shaderStage(bufferFormat.visibility);
+            key += `#${bufferFormat.slot}SB:${visibility}-${readOnly ? 'ro' : 'rw'}`;
 
             entries.push({
-                binding: index++,
+                binding: bufferFormat.slot,
                 visibility: visibility,
-                sampler: {
-                    // Indicates the required type of a sampler bound to this bindings
-                    // 'filtering', 'non-filtering', 'comparison'
-                    type: gpuSamplerType
+                buffer: {
+
+                    // "storage", "read-only-storage"
+                    type: readOnly ? 'read-only-storage' : 'storage'
                 }
             });
         });
 
         /** @type {GPUBindGroupLayoutDescriptor} */
-        const descr = {
+        const desc = {
             entries: entries
         };
 
         return {
             key,
-            descr
+            desc
         };
     }
 }

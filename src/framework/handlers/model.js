@@ -1,13 +1,13 @@
 import { path } from '../../core/path.js';
-
 import { http, Http } from '../../platform/net/http.js';
-
 import { getDefaultMaterial } from '../../scene/materials/default-material.js';
-
 import { GlbModelParser } from '../parsers/glb-model.js';
 import { JsonModelParser } from '../parsers/json-model.js';
+import { ResourceHandler } from './handler.js';
 
-/** @typedef {import('./handler.js').ResourceHandler} ResourceHandler */
+/**
+ * @import { AppBase } from '../app-base.js'
+ */
 
 /**
  * Callback used by {@link ModelHandler#addParser} to decide on which parser to use.
@@ -22,33 +22,27 @@ import { JsonModelParser } from '../parsers/json-model.js';
 /**
  * Resource handler used for loading {@link Model} resources.
  *
- * @implements {ResourceHandler}
+ * @category Graphics
  */
-class ModelHandler {
-    /**
-     * Type of the resource the handler handles.
-     *
-     * @type {string}
-     */
-    handlerType = "model";
-
+class ModelHandler extends ResourceHandler {
     /**
      * Create a new ModelHandler instance.
      *
-     * @param {import('../app-base.js').AppBase} app - The running {@link AppBase}.
-     * @hideconstructor
+     * @param {AppBase} app - The running {@link AppBase}.
+     * @ignore
      */
     constructor(app) {
+        super(app, 'model');
+
         this._parsers = [];
         this.device = app.graphicsDevice;
         this.assets = app.assets;
         this.defaultMaterial = getDefaultMaterial(this.device);
-        this.maxRetries = 0;
 
-        this.addParser(new JsonModelParser(this), function (url, data) {
+        this.addParser(new JsonModelParser(this), (url, data) => {
             return (path.getExtension(url) === '.json');
         });
-        this.addParser(new GlbModelParser(this), function (url, data) {
+        this.addParser(new GlbModelParser(this), (url, data) => {
             return (path.getExtension(url) === '.glb');
         });
     }
@@ -76,8 +70,9 @@ class ModelHandler {
         }
 
         http.get(url.load, options, (err, response) => {
-            if (!callback)
+            if (!callback) {
                 return;
+            }
 
             if (!err) {
                 // parse the model
@@ -95,7 +90,7 @@ class ModelHandler {
                         return;
                     }
                 }
-                callback("No parsers found");
+                callback('No parsers found');
             } else {
                 callback(`Error loading model: ${url.original} [${err}]`);
             }
@@ -108,13 +103,14 @@ class ModelHandler {
     }
 
     patch(asset, assets) {
-        if (!asset.resource)
+        if (!asset.resource) {
             return;
+        }
 
         const data = asset.data;
 
         const self = this;
-        asset.resource.meshInstances.forEach(function (meshInstance, i) {
+        asset.resource.meshInstances.forEach((meshInstance, i) => {
             if (data.mapping) {
                 const handleMaterial = function (asset) {
                     if (asset.resource) {
@@ -124,7 +120,7 @@ class ModelHandler {
                         assets.load(asset);
                     }
 
-                    asset.once('remove', function (asset) {
+                    asset.once('remove', (asset) => {
                         if (meshInstance.material === asset.resource) {
                             meshInstance.material = self.defaultMaterial;
                         }
@@ -148,7 +144,7 @@ class ModelHandler {
                         if (material) {
                             handleMaterial(material);
                         } else {
-                            assets.once('add:' + id, handleMaterial);
+                            assets.once(`add:${id}`, handleMaterial);
                         }
                     }
                 } else if (url) {
@@ -159,7 +155,7 @@ class ModelHandler {
                     if (material) {
                         handleMaterial(material);
                     } else {
-                        assets.once('add:url:' + path, handleMaterial);
+                        assets.once(`add:url:${path}`, handleMaterial);
                     }
                 }
             }

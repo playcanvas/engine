@@ -1,13 +1,15 @@
 import { Debug } from '../../../core/debug.js';
-
 import { math } from '../../../core/math/math.js';
 import { Mat4 } from '../../../core/math/mat4.js';
 import { Quat } from '../../../core/math/quat.js';
 import { Vec2 } from '../../../core/math/vec2.js';
-
 import { Component } from '../component.js';
-
 import { MOTION_FREE, MOTION_LIMITED, MOTION_LOCKED } from './constants.js';
+
+/**
+ * @import { Entity } from '../../entity.js'
+ * @import { JointComponentSystem } from './system.js'
+ */
 
 const properties = [
     'angularDampingX', 'angularDampingY', 'angularDampingZ',
@@ -28,17 +30,14 @@ const properties = [
 /**
  * The JointComponent adds a physics joint constraint linking two rigid bodies.
  *
- * @augments Component
  * @ignore
  */
 class JointComponent extends Component {
     /**
      * Create a new JointComponent instance.
      *
-     * @param {import('./system.js').JointComponentSystem} system - The ComponentSystem that
-     * created this Component.
-     * @param {import('../../entity.js').Entity} entity - The Entity that this Component is
-     * attached to.
+     * @param {JointComponentSystem} system - The ComponentSystem that created this Component.
+     * @param {Entity} entity - The Entity that this Component is attached to.
      */
     constructor(system, entity) {
         super(system, entity);
@@ -419,10 +418,10 @@ class JointComponent extends Component {
 
             for (let i = 0; i < 6; i++) {
                 const type = i < 3 ? '_linear' : '_angular';
-                this._constraint.enableSpring(i, this[type + 'Spring' + axis[i]]);
-                this._constraint.setDamping(i, this[type + 'Damping' + axis[i]]);
-                this._constraint.setEquilibriumPoint(i, this[type + 'Equilibrium' + axis[i]]);
-                this._constraint.setStiffness(i, this[type + 'Stiffness' + axis[i]]);
+                this._constraint.enableSpring(i, this[`${type}Spring${axis[i]}`]);
+                this._constraint.setDamping(i, this[`${type}Damping${axis[i]}`]);
+                this._constraint.setEquilibriumPoint(i, this[`${type}Equilibrium${axis[i]}`]);
+                this._constraint.setStiffness(i, this[`${type}Stiffness${axis[i]}`]);
             }
 
             this._constraint.setBreakingImpulseThreshold(this._breakForce);
@@ -451,9 +450,9 @@ class JointComponent extends Component {
         for (const prop of properties) {
             if (data.hasOwnProperty(prop)) {
                 if (data[prop] instanceof Vec2) {
-                    this['_' + prop].copy(data[prop]);
+                    this[`_${prop}`].copy(data[prop]);
                 } else {
-                    this['_' + prop] = data[prop];
+                    this[`_${prop}`] = data[prop];
                 }
             }
         }
@@ -489,7 +488,7 @@ const functionMap = {
     ['Damping', 'Equilibrium', 'Spring', 'Stiffness'].forEach((name) => {
         ['X', 'Y', 'Z'].forEach((axis) => {
             const prop = type + name + axis;
-            const propInternal = '_' + prop;
+            const propInternal = `_${prop}`;
 
             let index = (type === 'linear') ? 0 : 3;
             if (axis === 'Y') index += 1;

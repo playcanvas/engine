@@ -128,7 +128,7 @@ function DracoWorker(jsUrl, wasmUrl) {
         const mesh = new draco.Mesh();
         const status = decoder.DecodeBufferToMesh(buffer, mesh);
 
-        if (!status || !status.ok() || mesh.ptr === 0) {
+        if (!status || !status.ok() || draco.getPointer(mesh) === 0) {
             result.error = 'Failed to decode draco asset';
             return result;
         }
@@ -202,7 +202,7 @@ function DracoWorker(jsUrl, wasmUrl) {
             if (!hasNormals && attribute.attribute_type() === POSITION_ATTRIBUTE) {
                 // generate normals just after position
                 const normals = generateNormals(wrap(src, attribute.data_type()),
-                                                shortIndices ? new Uint16Array(result.indices) : new Uint32Array(result.indices));
+                    shortIndices ? new Uint16Array(result.indices) : new Uint32Array(result.indices));
 
                 // pack normals
                 for (let j = 0; j < mesh.num_points(); ++j) {
@@ -245,15 +245,15 @@ function DracoWorker(jsUrl, wasmUrl) {
                 self.DracoDecoderModule({
                     instantiateWasm: (imports, successCallback) => {
                         WebAssembly.instantiate(data.module, imports)
-                            .then(result => successCallback(result))
-                            .catch(reason => console.error('instantiate failed + ' + reason));
+                        .then(result => successCallback(result))
+                        .catch(reason => console.error(`instantiate failed + ${reason}`));
                         return {};
                     }
                 })
-                    .then((instance) => {
-                        draco = instance;
-                        workQueue.forEach(data => decode(data));
-                    });
+                .then((instance) => {
+                    draco = instance;
+                    workQueue.forEach(data => decode(data));
+                });
                 break;
             case 'decodeMesh':
                 if (draco) {

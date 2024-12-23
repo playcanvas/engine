@@ -1,8 +1,6 @@
 import { string } from '../../core/string.js';
 import { EventHandler } from '../../core/event-handler.js';
-
 import { Color } from '../../core/math/color.js';
-
 import {
     ADDRESS_CLAMP_TO_EDGE,
     FILTER_LINEAR, FILTER_LINEAR_MIPMAP_LINEAR,
@@ -10,20 +8,63 @@ import {
 } from '../../platform/graphics/constants.js';
 import { Texture } from '../../platform/graphics/texture.js';
 
+/**
+ * @import { AppBase } from '../app-base.js'
+ */
+
 const MAX_TEXTURE_SIZE = 4096;
 const DEFAULT_TEXTURE_SIZE = 512;
+
+class Atlas {
+    constructor(device, width, height, name) {
+        this.canvas = document.createElement('canvas');
+        this.canvas.width = width;
+        this.canvas.height = height;
+
+        this.texture = new Texture(device, {
+            name: name,
+            format: PIXELFORMAT_RGBA8,
+            width: width,
+            height: height,
+            mipmaps: true,
+            minFilter: FILTER_LINEAR_MIPMAP_LINEAR,
+            magFilter: FILTER_LINEAR,
+            addressU: ADDRESS_CLAMP_TO_EDGE,
+            addressV: ADDRESS_CLAMP_TO_EDGE,
+            levels: [this.canvas]
+        });
+
+        this.ctx = this.canvas.getContext('2d', {
+            alpha: true
+        });
+    }
+
+    destroy() {
+        this.texture.destroy();
+    }
+
+    clear(clearColor) {
+        const { width, height } = this.canvas;
+
+        // clear to black first to remove everything as clear color is transparent
+        this.ctx.clearRect(0, 0, width, height);
+
+        // clear to color
+        this.ctx.fillStyle = clearColor;
+        this.ctx.fillRect(0, 0, width, height);
+    }
+}
 
 /**
  * Represents the resource of a canvas font asset.
  *
- * @augments EventHandler
  * @ignore
  */
 class CanvasFont extends EventHandler {
     /**
      * Create a new CanvasFont instance.
      *
-     * @param {import('../app-base.js').AppBase} app - The application.
+     * @param {AppBase} app - The application.
      * @param {object} options - The font options.
      * @param {string} [options.fontName] - The name of the font. CSS font names are supported.
      * Defaults to 'Arial'.
@@ -52,27 +93,9 @@ class CanvasFont extends EventHandler {
         this.color = options.color || new Color(1, 1, 1);
         this.padding = options.padding || 0;
 
-        const w = options.width > MAX_TEXTURE_SIZE ? MAX_TEXTURE_SIZE : (options.width || DEFAULT_TEXTURE_SIZE);
-        const h = options.height > MAX_TEXTURE_SIZE ? MAX_TEXTURE_SIZE : (options.height || DEFAULT_TEXTURE_SIZE);
-
-        // Create a canvas to do the text rendering
-        const canvas = document.createElement('canvas');
-        canvas.height = h;
-        canvas.width = w;
-
-        const texture = new Texture(this.app.graphicsDevice, {
-            name: 'font',
-            format: PIXELFORMAT_RGBA8,
-            minFilter: FILTER_LINEAR_MIPMAP_LINEAR,
-            magFilter: FILTER_LINEAR,
-            addressU: ADDRESS_CLAMP_TO_EDGE,
-            addressV: ADDRESS_CLAMP_TO_EDGE,
-            mipmaps: true
-        });
-
-        texture.setSource(canvas);
-
-        this.textures = [texture];
+        this.width = Math.min(MAX_TEXTURE_SIZE, options.width || DEFAULT_TEXTURE_SIZE);
+        this.height = Math.min(MAX_TEXTURE_SIZE, options.height || DEFAULT_TEXTURE_SIZE);
+        this.atlases = [];
 
         this.chars = '';
         this.data = {};
@@ -127,10 +150,8 @@ class CanvasFont extends EventHandler {
      * Destroys the font. This also destroys the textures owned by the font.
      */
     destroy() {
-        // call texture.destroy on any created textures
-        for (let i = 0; i < this.textures.length; i++) {
-            this.textures[i].destroy();
-        }
+        this.atlases.forEach(atlas => atlas.destroy());
+
         // null instance variables to make it obvious this font is no longer valid
         this.chars = null;
         this.color = null;
@@ -139,30 +160,9 @@ class CanvasFont extends EventHandler {
         this.fontSize = null;
         this.glyphSize = null;
         this.intensity = null;
-        this.textures = null;
+        this.atlases = null;
         this.type = null;
         this.fontWeight = null;
-    }
-
-    /**
-     * @param {HTMLCanvasElement} canvas - The canvas used to render the font.
-     * @param {string} clearColor - The color to clear the canvas with.
-     * @returns {CanvasRenderingContext2D} - A 2D rendering contxt.
-     * @private
-     */
-    _getAndClearContext(canvas, clearColor) {
-        const w = canvas.width;
-        const h = canvas.height;
-
-        const ctx = canvas.getContext('2d', {
-            alpha: true
-        });
-
-        ctx.clearRect(0, 0, w, h);  // clear to black first to remove everything as clear color is transparent
-        ctx.fillStyle = clearColor;
-        ctx.fillRect(0, 0, w, h);   // clear to color
-
-        return ctx;
     }
 
     /**
@@ -191,12 +191,25 @@ class CanvasFont extends EventHandler {
      * @param {string} char - The character to render.
      * @param {number} x - The x position to render the character at.
      * @param {number} y - The y position to render the character at.
-     * @param {number} color - The color to render the character in.
+     * @param {string} color - The color to render the character in.
      * @ignore
      */
     renderCharacter(context, char, x, y, color) {
         context.fillStyle = color;
         context.fillText(char, x, y);
+    }
+
+    /**
+     * Return the atlas at the specified index.
+     *
+     * @param {number} index - The atlas index
+     * @private
+     */
+    _getAtlas(index) {
+        if (index >= this.atlases.length) {
+            this.atlases[index] = new Atlas(this.app.graphicsDevice, this.width, this.height, `font-atlas-${this.fontName}-${index}`);
+        }
+        return this.atlases[index];
     }
 
     /**
@@ -208,11 +221,8 @@ class CanvasFont extends EventHandler {
     _renderAtlas(charsArray) {
         this.chars = charsArray;
 
-        let numTextures = 1;
-
-        let canvas = this.textures[numTextures - 1].getSource();
-        const w = canvas.width;
-        const h = canvas.height;
+        const w = this.width;
+        const h = this.height;
 
         // fill color
         const color = this._colorToRgbString(this.color, false);
@@ -228,16 +238,13 @@ class CanvasFont extends EventHandler {
         const TEXT_ALIGN = 'center';
         const TEXT_BASELINE = 'alphabetic';
 
-        let ctx = this._getAndClearContext(canvas, transparent);
-
-        ctx.font = this.fontWeight + ' ' + this.fontSize.toString() + 'px ' + this.fontName;
-        ctx.textAlign = TEXT_ALIGN;
-        ctx.textBaseline = TEXT_BASELINE;
+        let atlasIndex = 0;
+        let atlas = this._getAtlas(atlasIndex++);
+        atlas.clear(transparent);
 
         this.data = this._createJson(this.chars, this.fontName, w, h);
 
         const symbols = string.getSymbols(this.chars.join(''));
-        const prevNumTextures = this.textures.length;
 
         let maxHeight = 0;
         let maxDescent = 0;
@@ -263,25 +270,25 @@ class CanvasFont extends EventHandler {
             const code = string.getCodePoint(symbols[i]);
 
             let fs = this.fontSize;
-            ctx.font = this.fontWeight + ' ' + fs.toString() + 'px ' + this.fontName;
-            ctx.textAlign = TEXT_ALIGN;
-            ctx.textBaseline = TEXT_BASELINE;
+            atlas.ctx.font = `${this.fontWeight} ${fs.toString()}px ${this.fontName}`;
+            atlas.ctx.textAlign = TEXT_ALIGN;
+            atlas.ctx.textBaseline = TEXT_BASELINE;
 
-            let width = ctx.measureText(ch).width;
+            let width = atlas.ctx.measureText(ch).width;
 
             if (width > fs) {
                 fs = this.fontSize * this.fontSize / width;
-                ctx.font = this.fontWeight + ' ' + fs.toString() + 'px ' + this.fontName;
+                atlas.ctx.font = `${this.fontWeight} ${fs.toString()}px ${this.fontName}`;
                 width = this.fontSize;
             }
 
-            this.renderCharacter(ctx, ch, _x + _xOffset, _y + _yOffset, color);
+            this.renderCharacter(atlas.ctx, ch, _x + _xOffset, _y + _yOffset, color);
 
             const xoffset = this.padding + (this.glyphSize - width) / 2;
             const yoffset = -this.padding + metrics[ch].descent - maxDescent;
             const xadvance = width;
 
-            this._addChar(this.data, ch, code, _x, _y, sx, sy, xoffset, yoffset, xadvance, numTextures - 1, w, h);
+            this._addChar(this.data, ch, code, _x, _y, sx, sy, xoffset, yoffset, xadvance, atlasIndex - 1, w, h);
 
             _x += sx;
             if (_x + sx > w) {
@@ -290,46 +297,18 @@ class CanvasFont extends EventHandler {
                 _y += sy;
                 if (_y + sy > h) {
                     // We ran out of space on this texture!
-                    // Copy the canvas into the texture and upload it
-                    this.textures[numTextures - 1].upload();
-                    // Create a new texture (if needed) and continue on
-                    numTextures++;
+                    atlas = this._getAtlas(atlasIndex++);
+                    atlas.clear(transparent);
                     _y = 0;
-                    if (numTextures > prevNumTextures) {
-                        canvas = document.createElement('canvas');
-                        canvas.height = h;
-                        canvas.width = w;
-
-                        ctx = this._getAndClearContext(canvas, transparent);
-
-                        const texture = new Texture(this.app.graphicsDevice, {
-                            format: PIXELFORMAT_RGBA8,
-                            mipmaps: true,
-                            name: 'font-atlas'
-                        });
-                        texture.setSource(canvas);
-                        texture.minFilter = FILTER_LINEAR_MIPMAP_LINEAR;
-                        texture.magFilter = FILTER_LINEAR;
-                        texture.addressU = ADDRESS_CLAMP_TO_EDGE;
-                        texture.addressV = ADDRESS_CLAMP_TO_EDGE;
-                        this.textures.push(texture);
-                    } else {
-                        canvas = this.textures[numTextures - 1].getSource();
-                        ctx = this._getAndClearContext(canvas, transparent);
-                    }
                 }
             }
         }
-        // Copy any remaining characters in the canvas into the last texture and upload it
-        this.textures[numTextures - 1].upload();
 
-        // Cleanup any remaining (unused) textures
-        if (numTextures < prevNumTextures) {
-            for (let i = numTextures; i < prevNumTextures; i++) {
-                this.textures[i].destroy();
-            }
-            this.textures.splice(numTextures);
-        }
+        // remove any unused characters
+        this.atlases.splice(atlasIndex).forEach(atlas => atlas.destroy());
+
+        // upload textures
+        this.atlases.forEach(atlas => atlas.texture.upload());
 
         // alert text-elements that the font has been re-rendered
         this.fire('render');
@@ -451,7 +430,7 @@ class CanvasFont extends EventHandler {
         const div = document.createElement('div');
         div.appendChild(textSpan);
         div.appendChild(block);
-        div.style.font = this.fontSize + 'px ' + this.fontName;
+        div.style.font = `${this.fontSize}px ${this.fontName}`;
 
         const body = document.body;
         body.appendChild(div);
@@ -475,6 +454,11 @@ class CanvasFont extends EventHandler {
             descent: descent,
             height: height
         };
+    }
+
+    // nasty, other systems are accessing textures directly
+    get textures() {
+        return this.atlases.map(atlas => atlas.texture);
     }
 }
 

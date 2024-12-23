@@ -1,7 +1,13 @@
 import { math } from './math.js';
 
 /**
- * Representation of an RGBA color.
+ * An RGBA color.
+ *
+ * Each color component is a floating point value in the range 0 to 1. The `r` (red), `g` (green)
+ * and `b` (blue) components define a color in RGB color space. The `a` (alpha) component defines
+ * transparency. An alpha of 1 is fully opaque. An alpha of 0 is fully transparent.
+ *
+ * @category Math
  */
 class Color {
     /**
@@ -47,7 +53,7 @@ class Color {
             this.r = r[0];
             this.g = r[1];
             this.b = r[2];
-            this.a = r[3] !== undefined ? r[3] : 1;
+            this.a = r[3] ?? 1;
         } else {
             this.r = r;
             this.g = g;
@@ -149,6 +155,49 @@ class Color {
     }
 
     /**
+     * Converts the color from gamma to linear color space.
+     *
+     * @param {Color} [src] - The color to convert to linear color space. If not set, the operation
+     * is done in place.
+     * @returns {Color} Self for chaining.
+     */
+    linear(src = this) {
+        this.r = Math.pow(src.r, 2.2);
+        this.g = Math.pow(src.g, 2.2);
+        this.b = Math.pow(src.b, 2.2);
+        this.a = src.a;
+        return this;
+    }
+
+    /**
+     * Converts the color from linear to gamma color space.
+     *
+     * @param {Color} [src] - The color to convert to gamma color space. If not set, the operation is
+     * done in place.
+     * @returns {Color} Self for chaining.
+     */
+    gamma(src = this) {
+        this.r = Math.pow(src.r, 1 / 2.2);
+        this.g = Math.pow(src.g, 1 / 2.2);
+        this.b = Math.pow(src.b, 1 / 2.2);
+        this.a = src.a;
+        return this;
+    }
+
+    /**
+     * Multiplies RGB elements of a Color by a number. Note that the alpha value is left unchanged.
+     *
+     * @param {number} scalar - The number to multiply by.
+     * @returns {Color} Self for chaining.
+     */
+    mulScalar(scalar) {
+        this.r *= scalar;
+        this.g *= scalar;
+        this.b *= scalar;
+        return this;
+    }
+
+    /**
      * Set the values of the color from a string representation '#11223344' or '#112233'.
      *
      * @param {string} hex - A string representation in the format '#RRGGBBAA' or '#RRGGBB'. Where
@@ -184,11 +233,11 @@ class Color {
      * console.log(c.toString());
      */
     toString(alpha) {
-        let s = '#' + ((1 << 24) + (Math.round(this.r * 255) << 16) + (Math.round(this.g * 255) << 8) + Math.round(this.b * 255)).toString(16).slice(1);
+        let s = `#${((1 << 24) + (Math.round(this.r * 255) << 16) + (Math.round(this.g * 255) << 8) + Math.round(this.b * 255)).toString(16).slice(1)}`;
         if (alpha === true) {
             const a = Math.round(this.a * 255).toString(16);
             if (this.a < 16 / 255) {
-                s += '0' + a;
+                s += `0${a}`;
             } else {
                 s += a;
             }

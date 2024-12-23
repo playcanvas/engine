@@ -20,101 +20,115 @@ npm run develop
 Visit the url mentioned in your terminal to view the examples browser.
 
 You can also run the examples browser with a specific version of the engine by running the following command:
-```
-ENGINE_PATH=../build/playcanvas.mjs/index.js npm run develop
-```
-Where `../build/playcanvas.mjs/index.js` is the path to the es6 version of the engine.
 
-To create the side bar thumbnails run the following script:
 ```
-npm run build:thumbnails
+ENGINE_PATH=../build/playcanvas.mjs npm run develop
 ```
 
-Please note that the examples app requires a built version of the engine to be present in the engine repo within the `../build` folder. If you haven't already done so, run `npm install` followed by `npm run build` in the engine repo.
+Where `../build/playcanvas.mjs` is the path to the ESM version of the engine.
 
-As the examples are written in TypeScript, you will also need to build the type definitions in the engine repo with `npm run build:types`.
+Or directly from the source:
+
+```
+ENGINE_PATH=../src/index.js npm run develop
+```
 
 ## Creating an example
 
-The available examples are written as classes in TypeScript under the paths `./src/examples/\<categoryName\>/\<exampleName>.tsx.
-To create a new example you can copy any of the existing examples as a template and update its path.
+The available examples are written as classes in JavaScript under the paths `./src/examples/<category>/<exampleName>.example.mjs`.
+To create a new example you can copy any of the existing examples as a template.
 
-Each example extends the `Example` parent class and can implement three methods to define its functionality:
+Each example consists of two modules to define its behavior:
 
-### `example` function
-```tsx
-import * as pc from 'playcanvas/build/playcanvas.js';
-example(canvas: HTMLCanvasElement) {
-    const app = new pc.Application(canvas, {});
-}
-```
-This is the only function that's required to run an example. The code defined in this function is executed each time the example play button is pressed. It takes the example's canvas element as its first argument and usually begins by creating a new PlayCanvas application using that canvas.
+### `<exampleName>.example.mjs`
 
-### `load` function
-You can define a set of PlayCanvas assets to load into your application using this function. The function should return a set of Loader React components:
-```tsx
-import React from 'react';
-import { AssetLoader } from '../../app/helpers/loader';
-load() {
-    return <>
-        <AssetLoader name='statue' type='container' url='static/assets/models/statue.glb' />
-        <AssetLoader name='firstPersonCamScript' type='script' url='static/scripts/camera/first-person-camera.js' />
-    <>;
-}
-```
-As assets are loaded using React, be sure to import React into any example that is loading assets.
+```js
+import * as pc from 'playcanvas';
 
-Assets and scripts present in the `./assets` and `../scripts` directories will be available to examples under the `static/` path.
-Each asset you load will be made available to the `example` function you write as the second parameter and will already be in the loaded state.
-```tsx
-example(canvas: HTMLCanvasElement, assets: { statue: pc.Asset, firstPersonCamScript: pc.Asset }) {
-    const app = new pc.Application(canvas, {});
-    // this will log true
-    console.log(assets.statue.loaded);
-}
+const canvas = /** @type {HTMLCanvasElement} */ (document.getElementById('application-canvas'));
+window.focus();
+
+const app = new pc.Application(canvas, {});
+
+export { app };
 ```
 
-Be sure to correctly define the type of the assets parameter to list each asset you're loading into the example.
+This is the only file that's required to run an example. The code defined in this function is executed each time the example play button is pressed. It takes the example's canvas element from the DOM and usually begins by creating a new PlayCanvas `Application` or `AppBase` using that canvas.
 
-You can also load external scripts into an example using the `ScriptLoader` React component as follows:
-```tsx
-import React from 'react';
-import { ScriptLoader } from '../../app/helpers/loader';
-load() {
-    return <>
-        <ScriptLoader name='TWEEN' url='https://cdnjs.cloudflare.com/ajax/libs/tween.js/18.6.4/tween.umd.js' />
-    <>;
-}
-```
-Each script will be made available as a parameter of the example function as an esModule using the name it was given and therefore any scripts should be defined in the examples function signature as follows:
-```tsx
-example(canvas: HTMLCanvasElement, TWEEN: any) {
-    const app = new pc.Application(canvas, {});
-    console.log(TWEEN);
-}
+Examples can also contain comments which allow you to define the default configuration for your examples as well as overrides to particular settings such as `deviceType`. Check the possible values to set in `ExampleConfig` in `scripts/utils.mjs` file for the full list.
+
+```js
+// @config DESCRIPTION This is a description
+// @config HIDDEN
+// @config ENGINE performance
+// @config NO_DEVICE_SELECTOR
+// @config NO_MINISTATS
+// @config WEBGPU_DISABLED
+// @config WEBGL_DISABLED
+import * as pc from 'playcanvas';
+...
 ```
 
-### `controls` function
-This function allows you to define a set of PCUI based interface which can be used to display stats from your example or provide users with a way of controlling the example.
-```tsx
-import Button from '@playcanvas/pcui/Button/component';
-controls(data: any) {
-    return <>
-        <Button text='Flash' onClick={() => {
-            data.set('flash', !data.get('flash'));
-        }}/>
-    </>;
+You can load external scripts into an example using the `loadES5` function as follows:
+
+```js
+import { loadES5 } from 'examples/utils';
+
+const CORE  = await loadES5('https://cdn.jsdelivr.net/npm/@loaders.gl/core@2.3.6/dist/dist.min.js');
+const DRACO = await loadES5('https://cdn.jsdelivr.net/npm/@loaders.gl/draco@2.3.6/dist/dist.min.js');
+```
+
+However, depending on external URL's is maybe not what you want as it breaks your examples once your internet connection is gone - you can simply import modules directly as follows:
+
+```js
+import confetti from "https://esm.sh/canvas-confetti@1.6.0"
+```
+
+### `<exampleName>.controls.mjs`
+
+This file allows you to define a set of PCUI based interface which can be used to display stats from your example or provide users with a way of controlling the example.
+
+```js
+/**
+ * @param {import('../../../app/Example.mjs').ControlOptions} options - The options.
+ * @returns {JSX.Element} The returned JSX Element.
+ */
+export function controls({ observer, ReactPCUI, React, jsx, fragment }) {
+    const { Button } = ReactPCUI;
+    return fragment(
+        jsx(Button, {
+            text: 'Flash',
+            onClick: () => {
+                observer.set('flash', !observer.get('flash'));
+            }
+        })
+    );
 }
 ```
+
 The controls function takes a [pcui observer](https://playcanvas.github.io/pcui/data-binding/using-observers/) as its parameter and returns a set of PCUI components. Check this [link](https://playcanvas.github.io/pcui/examples/todo/) for an example of how to create and use PCUI.
 
-The data observer used in the controls function will be made available as the third parameter in the example function:
-```tsx
-example(canvas: HTMLCanvasElement, assets: {}, data: any) {
-    const app = new pc.Application(canvas, {});
-    console.log(data.get('flash'));
-}
+The data observer used in the `controls` function will be made available as an import `examples/observer` to use in the example file:
+
+```js
+import { data } from 'examples/observer';
+
+console.log(data.get('flash'));
 ```
+
+### Additional files
+
+Any other file you wish to include in your example can be added to the same folder with the example name prepended (e.g. `<exampleName>.shader.vert` and `<exampleName>.shader.frag`). These files can be accessed from the `examples/files` module (refer to the Example Modules below).
+
+If you wish to include a file which is a module (e.g. `module.mjs`), use the `localImport` function to include it in your project: 
+
+```js
+import { localImport } from 'examples/utils';
+
+// use just the file name without the example name
+const data = localImport('data.mjs');
+```
+
 
 ### Testing your example
 Ensure you have a locally built version of the examples browser by running the commands in the `Local examples browser development` section. Then run `npm run serve` to serve the examples browser.
@@ -124,13 +138,19 @@ You can view the full collection of example iframes by visiting [http://localhos
 ### Debug and performance engine development
 By default, the examples app uses the local version of the playcanvas engine located at `../build/playcanvas.js`. If you'd like to test the examples browser with the debug or performance versions of the engine instead, you can run `npm run watch:debug` or `npm run watch:profiler` commands.
 
+## Example Modules
+
+The example script allows you to import examples only modules that interact with the environment such as the device selector and controls. These are listed below:
+
+- `examples/files` - The real-time file contents of all files used in the example.
+- `examples/observer` - The observer object `data`.
+- `examples/utils` - Contains utilities functions such as `localImport` and `loadES5`. The full list of functions can be found in `./iframe/utils.mjs`.
+
 ## Deployment
 
-1) **Build the latest engine** by running the following in the `/engine` directory:
+1) **Install Engine packages** by running the following in the `/engine` directory:
 ```
 npm install
-npm run build
-npm run build:types
 ```
 
 2) **Build the examples browser and launch the server** by running the following in the `/engine/examples` directory:
@@ -140,14 +160,12 @@ npm run build
 npm run serve
 ```
 
-3) **Generate thumbnails** by first ensuring the examples browser is running on [http://localhost:5000]() then running the following command. This step will create the thumbnails directory for the browser and may take a while depending on the number of new examples or if this is first time it has been run locally.
+3) **Generate thumbnails (Case-by-case basis)** This step will create the thumbnails directory for the browser. This only needs to be run if the examples thumbnails are updated or new examples are added.
 ```
 npm run build:thumbnails
 ```
-If you are serving the examples browser from a different port, you can specify the port using the `PORT` environment variable:
-```
-PORT=5001 npm run build:thumbnails
-```
+
+This command spawns its own `serve` instance on port 12321, so you don't need to care about that.
 
 4) Copy the contents of the `./dist` directory to the root of the [playcanvas.github.io](https://github.com/playcanvas/playcanvas.github.io) repository. Be sure not to wipe the contents of the `pcui` subdirectory in that repository.
 

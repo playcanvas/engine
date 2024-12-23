@@ -1,17 +1,34 @@
 import { EventHandler } from '../../core/event-handler.js';
 import { platform } from '../../core/platform.js';
-
 import { XrTrackedImage } from './xr-tracked-image.js';
 
 /**
- * Image Tracking provides the ability to track real world images by provided image samples and
- * their estimated sizes.
+ * @import { XrManager } from './xr-manager.js'
+ */
+
+/**
+ * Image Tracking provides the ability to track real world images using provided image samples and
+ * their estimated sizes. The underlying system will assume that the tracked image can move and
+ * rotate in the real world and will try to provide transformation estimates and its tracking
+ * state.
  *
- * @augments EventHandler
+ * @category XR
  */
 class XrImageTracking extends EventHandler {
     /**
-     * @type {import('./xr-manager.js').XrManager}
+     * Fired when the XR session is started, but image tracking failed to process the provided
+     * images. The handler is passed the Error object.
+     *
+     * @event
+     * @example
+     * app.xr.imageTracking.on('error', (err) => {
+     *     console.error(err.message);
+     * });
+     */
+    static EVENT_ERROR = 'error';
+
+    /**
+     * @type {XrManager}
      * @private
      */
     _manager;
@@ -22,10 +39,10 @@ class XrImageTracking extends EventHandler {
      */
     _supported = platform.browser && !!window.XRImageTrackingResult;
 
-     /**
-      * @type {boolean}
-      * @private
-      */
+    /**
+     * @type {boolean}
+     * @private
+     */
     _available = false;
 
     /**
@@ -35,11 +52,10 @@ class XrImageTracking extends EventHandler {
     _images = [];
 
     /**
-     * Image Tracking provides the ability to track real world images by provided image samples and
-     * their estimate sizes.
+     * Create a new XrImageTracking instance.
      *
-     * @param {import('./xr-manager.js').XrManager} manager - WebXR Manager.
-     * @hideconstructor
+     * @param {XrManager} manager - WebXR Manager.
+     * @ignore
      */
     constructor(manager) {
         super();
@@ -53,29 +69,21 @@ class XrImageTracking extends EventHandler {
     }
 
     /**
-     * Fired when the XR session is started, but image tracking failed to process the provided
-     * images.
-     *
-     * @event XrImageTracking#error
-     * @param {Error} error - Error object related to a failure of image tracking.
-     */
-
-    /**
      * Add an image for image tracking. A width can also be provided to help the underlying system
      * estimate the appropriate transformation. Modifying the tracked images list is only possible
      * before an AR session is started.
      *
-     * @param {HTMLCanvasElement|HTMLImageElement|SVGImageElement|HTMLVideoElement|Blob|ImageData|ImageBitmap} image - Image
-     * that is matching real world image as close as possible. Resolution of images should be at
-     * least 300x300. High resolution does NOT improve tracking performance. Color of image is
-     * irrelevant, so grayscale images can be used. Images with too many geometric features or
-     * repeating patterns will reduce tracking stability.
+     * @param {HTMLCanvasElement|HTMLImageElement|SVGImageElement|HTMLVideoElement|Blob|ImageData|ImageBitmap} image -
+     * Image that is matching real world image as close as possible. Resolution of images should be
+     * at least 300x300. High resolution does _not_ improve tracking performance. The color of the
+     * image is irrelevant, so grayscale images can be used. Images with too many geometric
+     * features or repeating patterns will reduce tracking stability.
      * @param {number} width - Width (in meters) of image in the real world. Providing this value
      * as close to the real value will improve tracking quality.
      * @returns {XrTrackedImage|null} Tracked image object that will contain tracking information.
      * Returns null if image tracking is not supported or if the XR manager is not active.
      * @example
-     * // image with width of 20cm (0.2m)
+     * // image of a book cover that has width of 20cm (0.2m)
      * app.xr.imageTracking.add(bookCoverImg, 0.2);
      */
     add(image, width) {
@@ -139,11 +147,11 @@ class XrImageTracking extends EventHandler {
      */
     prepareImages(callback) {
         if (this._images.length) {
-            Promise.all(this._images.map(function (trackedImage) {
+            Promise.all(this._images.map((trackedImage) => {
                 return trackedImage.prepare();
-            })).then(function (bitmaps) {
+            })).then((bitmaps) => {
                 callback(null, bitmaps);
-            }).catch(function (err) {
+            }).catch((err) => {
                 callback(err, null);
             });
         } else {
@@ -152,7 +160,7 @@ class XrImageTracking extends EventHandler {
     }
 
     /**
-     * @param {*} frame - XRFrame from requestAnimationFrame callback.
+     * @param {XRFrame} frame - XRFrame from requestAnimationFrame callback.
      * @ignore
      */
     update(frame) {
@@ -191,8 +199,9 @@ class XrImageTracking extends EventHandler {
     }
 
     /**
-     * True if Image Tracking is available. This property will be false if no images were provided
-     * for the AR session or there was an error processing the provided images.
+     * True if Image Tracking is available. This information is only available when the
+     * XR session has started, and will be true if image tracking is supported and
+     * images were provided and they have been processed successfully.
      *
      * @type {boolean}
      */

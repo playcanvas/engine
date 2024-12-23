@@ -1,20 +1,25 @@
 import { Debug } from '../../../core/debug.js';
 import { TRACEID_SHADER_COMPILE } from '../../../core/constants.js';
 import { now } from '../../../core/time.js';
-
 import { WebglShaderInput } from './webgl-shader-input.js';
 import { SHADERTAG_MATERIAL, semanticToLocation } from '../constants.js';
 import { DeviceCache } from '../device-cache.js';
+import { DebugGraphics } from '../debug-graphics.js';
+
+/**
+ * @import { Shader } from '../shader.js'
+ * @import { WebglGraphicsDevice } from './webgl-graphics-device.js'
+ */
 
 let _totalCompileTime = 0;
 
-const _vertexShaderBuiltins = [
+const _vertexShaderBuiltins = new Set([
     'gl_VertexID',
     'gl_InstanceID',
     'gl_DrawID',
     'gl_BaseVertex',
     'gl_BaseInstance'
-];
+]);
 
 // class used to hold compiled WebGL vertex or fragment shaders in the device cache
 class CompiledShaderCache {
@@ -34,23 +39,11 @@ class CompiledShaderCache {
     }
 }
 
-// class used to hold a list of recently created shaders forming a batch, to allow their more optimized compilation
-class ShaderBatchCache {
-    shaders = [];
-
-    loseContext(device) {
-        this.shaders = [];
-    }
-}
-
 const _vertexShaderCache = new DeviceCache();
 const _fragmentShaderCache = new DeviceCache();
-const _shaderBatchCache = new DeviceCache();
 
 /**
  * A WebGL implementation of the Shader.
- *
- * @ignore
  */
 class WebglShader {
     compileDuration = 0;
@@ -58,12 +51,11 @@ class WebglShader {
     constructor(shader) {
         this.init();
 
-        // kick off vertex and fragment shader compilation, but not linking here, as that would
-        // make it blocking.
+        // kick off vertex and fragment shader compilation
         this.compile(shader.device, shader);
 
-        // add the shader to recently created list
-        WebglShader.getBatchShaders(shader.device).push(shader);
+        // kick off linking, as this is non-blocking too
+        this.link(shader.device, shader);
 
         // add it to a device list of all shaders
         shader.device.shaders.push(shader);
@@ -72,7 +64,7 @@ class WebglShader {
     /**
      * Free the WebGL resources associated with a shader.
      *
-     * @param {import('../shader.js').Shader} shader - The shader to free.
+     * @param {Shader} shader - The shader to free.
      */
     destroy(shader) {
         if (this.glProgram) {
@@ -91,22 +83,6 @@ class WebglShader {
         this.glFragmentShader = null;
     }
 
-    static getBatchShaders(device) {
-        const batchCache = _shaderBatchCache.get(device, () => {
-            return new ShaderBatchCache();
-        });
-        return batchCache.shaders;
-    }
-
-    static endShaderBatch(device) {
-
-        // Trigger link step for all recently created shaders. This allows linking to be done in parallel, before
-        // the blocking wait on the linking result is triggered in finalize function
-        const shaders = WebglShader.getBatchShaders(device);
-        shaders.forEach(shader => shader.impl.link(device, shader));
-        shaders.length = 0;
-    }
-
     /**
      * Dispose the shader when the context has been lost.
      */
@@ -117,18 +93,19 @@ class WebglShader {
     /**
      * Restore shader after the context has been obtained.
      *
-     * @param {import('./webgl-graphics-device.js').WebglGraphicsDevice} device - The graphics device.
-     * @param {import('../shader.js').Shader} shader - The shader to restore.
+     * @param {WebglGraphicsDevice} device - The graphics device.
+     * @param {Shader} shader - The shader to restore.
      */
     restoreContext(device, shader) {
         this.compile(device, shader);
+        this.link(device, shader);
     }
 
     /**
      * Compile shader programs.
      *
-     * @param {import('./webgl-graphics-device.js').WebglGraphicsDevice} device - The graphics device.
-     * @param {import('../shader.js').Shader} shader - The shader to compile.
+     * @param {WebglGraphicsDevice} device - The graphics device.
+     * @param {Shader} shader - The shader to compile.
      */
     compile(device, shader) {
 
@@ -140,14 +117,21 @@ class WebglShader {
     /**
      * Link shader programs. This is called at a later stage, to allow many shaders to compile in parallel.
      *
-     * @param {import('./webgl-graphics-device.js').WebglGraphicsDevice} device - The graphics device.
-     * @param {import('../shader.js').Shader} shader - The shader to compile.
+     * @param {WebglGraphicsDevice} device - The graphics device.
+     * @param {Shader} shader - The shader to compile.
      */
     link(device, shader) {
 
         // if the shader was already linked
-        if (this.glProgram)
+        if (this.glProgram) {
             return;
+        }
+
+        // if the device is lost, silently ignore
+        const gl = device.gl;
+        if (gl.isContextLost()) {
+            return;
+        }
 
         let startTime = 0;
         Debug.call(() => {
@@ -155,7 +139,6 @@ class WebglShader {
             startTime = now();
         });
 
-        const gl = device.gl;
         const glProgram = gl.createProgram();
         this.glProgram = glProgram;
 
@@ -164,12 +147,12 @@ class WebglShader {
 
         const definition = shader.definition;
         const attrs = definition.attributes;
-        if (device.webgl2 && definition.useTransformFeedback) {
+        if (definition.useTransformFeedback) {
             // Collect all "out_" attributes and use them for output
             const outNames = [];
             for (const attr in attrs) {
                 if (attrs.hasOwnProperty(attr)) {
-                    outNames.push("out_" + attr);
+                    outNames.push(`out_${attr}`);
                 }
             }
             gl.transformFeedbackVaryings(glProgram, outNames, gl.INTERLEAVED_ATTRIBS);
@@ -205,15 +188,20 @@ class WebglShader {
     /**
      * Compiles an individual shader.
      *
-     * @param {import('./webgl-graphics-device.js').WebglGraphicsDevice} device - The graphics device.
+     * @param {WebglGraphicsDevice} device - The graphics device.
      * @param {string} src - The shader source code.
      * @param {boolean} isVertexShader - True if the shader is a vertex shader, false if it is a
      * fragment shader.
-     * @returns {WebGLShader} The compiled shader.
+     * @returns {WebGLShader|null} The compiled shader, or null if the device is lost.
      * @private
      */
     _compileShaderSource(device, src, isVertexShader) {
         const gl = device.gl;
+
+        // if the device is lost, silently ignore
+        if (gl.isContextLost()) {
+            return null;
+        }
 
         // device cache for current device, containing cache of compiled shaders
         const shaderDeviceCache = isVertexShader ? _vertexShaderCache : _fragmentShaderCache;
@@ -262,17 +250,18 @@ class WebglShader {
     /**
      * Link the shader, and extract its attributes and uniform information.
      *
-     * @param {import('./webgl-graphics-device.js').WebglGraphicsDevice} device - The graphics device.
-     * @param {import('../shader.js').Shader} shader - The shader to query.
+     * @param {WebglGraphicsDevice} device - The graphics device.
+     * @param {Shader} shader - The shader to query.
      * @returns {boolean} True if the shader was successfully queried and false otherwise.
      */
     finalize(device, shader) {
 
-        // if the program wasn't linked yet (shader was not created in batch)
-        if (!this.glProgram)
-            this.link(device, shader);
-
+        // if the device is lost, silently ignore
         const gl = device.gl;
+        if (gl.isContextLost()) {
+            return true;
+        }
+
         const glProgram = this.glProgram;
         const definition = shader.definition;
 
@@ -290,17 +279,21 @@ class WebglShader {
             linkStartTime = now();
         });
 
+        // check the link status of a shader - this is a blocking operation waiting for the shader
+        // to finish compiling and linking
         const linkStatus = gl.getProgramParameter(glProgram, gl.LINK_STATUS);
         if (!linkStatus) {
 
             // Check for compilation errors
-            if (!this._isCompiled(device, shader, this.glVertexShader, definition.vshader, "vertex"))
+            if (!this._isCompiled(device, shader, this.glVertexShader, definition.vshader, 'vertex')) {
                 return false;
+            }
 
-            if (!this._isCompiled(device, shader, this.glFragmentShader, definition.fshader, "fragment"))
+            if (!this._isCompiled(device, shader, this.glFragmentShader, definition.fshader, 'fragment')) {
                 return false;
+            }
 
-            const message = "Failed to link shader program. Error: " + gl.getProgramInfoLog(glProgram);
+            const message = `Failed to link shader program. Error: ${gl.getProgramInfoLog(glProgram)}`;
 
             // #if _DEBUG
 
@@ -317,39 +310,36 @@ class WebglShader {
         }
 
         // Query the program for each vertex buffer input (GLSL 'attribute')
-        let i = 0;
         const numAttributes = gl.getProgramParameter(glProgram, gl.ACTIVE_ATTRIBUTES);
-        while (i < numAttributes) {
-            const info = gl.getActiveAttrib(glProgram, i++);
+        for (let i = 0; i < numAttributes; i++) {
+            const info = gl.getActiveAttrib(glProgram, i);
             const location = gl.getAttribLocation(glProgram, info.name);
 
             // a built-in attributes for which we do not need to provide any data
-            if (_vertexShaderBuiltins.indexOf(info.name) !== -1)
+            if (_vertexShaderBuiltins.has(info.name)) {
                 continue;
+            }
 
             // Check attributes are correctly linked up
             if (definition.attributes[info.name] === undefined) {
                 console.error(`Vertex shader attribute "${info.name}" is not mapped to a semantic in shader definition, shader [${shader.label}]`, shader);
                 shader.failed = true;
+            } else {
+                const shaderInput = new WebglShaderInput(device, definition.attributes[info.name], device.pcUniformType[info.type], location);
+                this.attributes.push(shaderInput);
             }
-
-            const shaderInput = new WebglShaderInput(device, definition.attributes[info.name], device.pcUniformType[info.type], location);
-
-            this.attributes.push(shaderInput);
         }
 
         // Query the program for each shader state (GLSL 'uniform')
-        i = 0;
+        const samplerTypes = device._samplerTypes;
         const numUniforms = gl.getProgramParameter(glProgram, gl.ACTIVE_UNIFORMS);
-        while (i < numUniforms) {
-            const info = gl.getActiveUniform(glProgram, i++);
+        for (let i = 0; i < numUniforms; i++) {
+            const info = gl.getActiveUniform(glProgram, i);
             const location = gl.getUniformLocation(glProgram, info.name);
 
             const shaderInput = new WebglShaderInput(device, info.name, device.pcUniformType[info.type], location);
 
-            if (info.type === gl.SAMPLER_2D || info.type === gl.SAMPLER_CUBE ||
-                (device.webgl2 && (info.type === gl.SAMPLER_2D_SHADOW || info.type === gl.SAMPLER_CUBE_SHADOW || info.type === gl.SAMPLER_3D))
-            ) {
+            if (samplerTypes.has(info.type)) {
                 this.samplers.push(shaderInput);
             } else {
                 this.uniforms.push(shaderInput);
@@ -380,8 +370,8 @@ class WebglShader {
     /**
      * Check the compilation status of a shader.
      *
-     * @param {import('./webgl-graphics-device.js').WebglGraphicsDevice} device - The graphics device.
-     * @param {import('../shader.js').Shader} shader - The shader to query.
+     * @param {WebglGraphicsDevice} device - The graphics device.
+     * @param {Shader} shader - The shader to query.
      * @param {WebGLShader} glShader - The WebGL shader.
      * @param {string} source - The shader source code.
      * @param {string} shaderType - The shader type. Can be 'vertex' or 'fragment'.
@@ -394,7 +384,7 @@ class WebglShader {
         if (!gl.getShaderParameter(glShader, gl.COMPILE_STATUS)) {
             const infoLog = gl.getShaderInfoLog(glShader);
             const [code, error] = this._processError(source, infoLog);
-            const message = `Failed to compile ${shaderType} shader:\n\n${infoLog}\n${code}`;
+            const message = `Failed to compile ${shaderType} shader:\n\n${infoLog}\n${code} while rendering ${DebugGraphics.toString()}`;
             // #if _DEBUG
             error.shader = shader;
             console.error(message, error);
@@ -403,6 +393,23 @@ class WebglShader {
             // #endif
             return false;
         }
+        return true;
+    }
+
+    /**
+     * Check the linking status of a shader.
+     *
+     * @param {WebglGraphicsDevice} device - The graphics device.
+     * @returns {boolean} True if the shader is already linked, false otherwise. Note that unless the
+     * device supports the KHR_parallel_shader_compile extension, this will always return true.
+     */
+    isLinked(device) {
+
+        const { extParallelShaderCompile } = device;
+        if (extParallelShaderCompile) {
+            return device.gl.getProgramParameter(this.glProgram, extParallelShaderCompile.COMPLETION_STATUS_KHR);
+        }
+
         return true;
     }
 
@@ -428,7 +435,7 @@ class WebglShader {
 
             // if error is in the code, only show nearby lines instead of whole shader code
             if (infoLog && infoLog.startsWith('ERROR:')) {
-                const match = infoLog.match(/^ERROR:\s([0-9]+):([0-9]+):\s*(.+)/);
+                const match = infoLog.match(/^ERROR:\s(\d+):(\d+):\s*(.+)/);
                 if (match) {
                     error.message = match[3];
                     error.line = parseInt(match[2], 10);
@@ -440,7 +447,7 @@ class WebglShader {
 
             // Chrome reports shader errors on lines indexed from 1
             for (let i = from; i < to; i++) {
-                code += (i + 1) + ":\t" + lines[i] + '\n';
+                code += `${i + 1}:\t${lines[i]}\n`;
             }
 
             error.source = src;

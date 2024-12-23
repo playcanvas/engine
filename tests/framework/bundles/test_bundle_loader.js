@@ -1,7 +1,5 @@
 describe('Test Bundle Loader', function () {
     beforeEach(function () {
-        this._workers = pc.platform.workers;
-
         // create app
         this.app = new pc.Application(document.createElement('canvas'));
 
@@ -11,7 +9,7 @@ describe('Test Bundle Loader', function () {
         this.assets = [
             new pc.Asset('css', 'css', {
                 filename: 'css.css',
-                url: 'files/css/css.css'
+                url: 'base/tests/test-assets/bundles/css.css'
             }),
             new pc.Asset('html', 'html', {
                 filename: 'html.html',
@@ -33,21 +31,25 @@ describe('Test Bundle Loader', function () {
             //     filename: 'cubemap.dds',
             //     url: 'files/cubemap/cubemap.dds'
             // }),
-            new pc.Asset('model', 'model', {
-                filename: 'model.json',
-                url: 'files/model/model.json'
+            new pc.Asset('container', 'container', {
+                filename: 'container.glb',
+                url: 'files/container/container.glb'
             }),
             new pc.Asset('texture', 'texture', {
                 filename: 'texture.jpg',
                 url: 'files/texture/texture.jpg'
             }),
             new pc.Asset('atlas', 'textureatlas', {
-                filename: 'atlas.jpg',
-                url: 'files/textureatlas/atlas.jpg'
+                filename: 'texture.jpg',
+                url: 'files/textureatlas/texture.jpg'
             }),
             new pc.Asset('animation', 'animation', {
                 filename: 'animation.json',
                 url: 'files/animation/animation.json'
+            }),
+            new pc.Asset('template', 'template', {
+                filename: 'template.json',
+                url: 'files/template/template.json'
             }),
             new pc.Asset('font', 'font', {
                 filename: 'font.png',
@@ -89,6 +91,9 @@ describe('Test Bundle Loader', function () {
             cubemap: {
                 instanceof: pc.Texture
             },
+            template: {
+                instanceof: pc.Template
+            },
             texture: {
                 instanceof: pc.Texture
             },
@@ -97,6 +102,12 @@ describe('Test Bundle Loader', function () {
             },
             model: {
                 instanceof: pc.Model
+            },
+            render: {
+                instanceof: pc.Render
+            },
+            container: {
+                instanceof: pc.Container
             },
             animation: {
                 instanceof: pc.Animation
@@ -111,7 +122,8 @@ describe('Test Bundle Loader', function () {
 
         // the bundle asset
         this.bundleAsset = new pc.Asset('bundle asset', 'bundle', {
-            url: 'base/tests/test-assets/bundles/bundle.tar.gz'
+            url: 'base/tests/test-assets/bundles/bundle.tar',
+            size: 133632
         }, {
             assets: this.assets.map(function (asset) {
                 return asset.id;
@@ -120,143 +132,199 @@ describe('Test Bundle Loader', function () {
     });
 
     afterEach(function () {
-        pc.platform.workers = this._workers;
         this.app.destroy();
     });
 
-    it('should load bundle asset', function (done) {
-        expect(pc.platform.workers).to.equal(true);
-
-        var self = this;
-        self.app.assets.add(this.bundleAsset);
-        self.assets.forEach(function (asset) {
-            self.app.assets.add(asset);
+    it('should load bundle asset and its assets', function (done) {
+        this.app.assets.add(this.bundleAsset);
+        this.assets.forEach((asset) => {
+            this.app.assets.add(asset);
         });
 
-        self.app.assets.load(this.bundleAsset);
+        this.app.assets.load(this.bundleAsset);
 
-        self.app.assets.on('load:' + self.bundleAsset.id, function () {
-            expect(self.bundleAsset.resource instanceof pc.Bundle).to.equal(true);
-            self.assets.forEach(function (asset) {
-                expect(self.bundleAsset.resource.hasBlobUrl(asset.file.url)).to.equal(true);
-            });
-            done();
-        });
-    });
-
-    it('should load bundle asset without using web workers', function (done) {
-        pc.platform.workers = false;
-
-        var self = this;
-        self.app.assets.add(this.bundleAsset);
-        self.assets.forEach(function (asset) {
-            self.app.assets.add(asset);
-        });
-
-        self.app.assets.load(this.bundleAsset);
-
-        self.app.assets.on('load:' + self.bundleAsset.id, function () {
-            expect(self.bundleAsset.resource instanceof pc.Bundle).to.equal(true);
-            self.assets.forEach(function (asset) {
-                expect(self.bundleAsset.resource.hasBlobUrl(asset.file.url)).to.equal(true);
+        this.app.assets.on('load:' + this.bundleAsset.id, () => {
+            expect(this.bundleAsset.resource instanceof pc.Bundle).to.equal(true);
+            this.assets.forEach((asset) => {
+                const url = (this.app.assets.prefix || '') + asset.file.url;
+                expect(this.bundleAsset.resource.has(url)).to.equal(true);
             });
             done();
         });
     });
 
     it('should load assets from bundle', function (done) {
-        expect(pc.platform.workers).to.equal(true);
+        const self = this;
+        let loaded = 0;
 
-        var self = this;
-        var todo = 0;
-
-        var onLoad = function () {
-            todo--;
-            if (todo === 0) {
-                self.assets.forEach(function (asset, index) {
-                    var resource = asset.type === 'cubemap' ? asset.resources[1] : asset.resource;
-                    expect(resource).to.not.equal(null);
-                    var expected = self.expectedTypes[asset.type];
-
-                    if (expected.typeof) {
-                        expect(typeof resource).to.equal(expected.typeof);
-                    }
-
-                    if (expected.instanceof) {
-                        expect(resource instanceof expected.instanceof).to.equal(true);
-                    }
-
-                    if (asset.type === 'font') {
-                        expect(resource.textures.length).to.equal(2);
-                    }
-                });
-                done();
-            }
-        };
-
-        this.bundleAsset.on('load', onLoad);
-        self.app.assets.add(this.bundleAsset);
-        self.app.assets.load(this.bundleAsset);
-        todo++;
-
-        self.assets.forEach(function (asset) {
-            asset.on('load', onLoad);
-            self.app.assets.add(asset);
-            self.app.assets.load(asset);
-            todo++;
-        });
-    });
-
-    it('should load assets from bundle without using web workers', function (done) {
-        pc.platform.workers = false;
-
-        var self = this;
-        var todo = 0;
-
-        var onLoad = function () {
-            todo--;
-            if (todo === 0) {
-                self.assets.forEach(function (asset, index) {
-                    var resource = asset.type === 'cubemap' ? asset.resources[1] : asset.resource;
-                    expect(resource).to.not.equal(null);
-                    var expected = self.expectedTypes[asset.type];
-
-                    if (expected.typeof) {
-                        expect(typeof resource).to.equal(expected.typeof);
-                    }
-
-                    if (expected.instanceof) {
-                        expect(resource instanceof expected.instanceof).to.equal(true);
-                    }
-
-                    if (asset.type === 'font') {
-                        expect(resource.textures.length).to.equal(2);
-                    }
-                });
-                done();
-            }
-        };
-
-        this.bundleAsset.on('load', onLoad);
-        self.app.assets.add(this.bundleAsset);
-        self.app.assets.load(this.bundleAsset);
-        todo++;
-
-        self.assets.forEach(function (asset) {
-            asset.on('load', onLoad);
-            self.app.assets.add(asset);
-            self.app.assets.load(asset);
-            todo++;
-        });
-    });
-
-    it('should fail loading assets if the bundle has not started loading', function (done) {
         this.app.assets.add(this.bundleAsset);
+        this.assets.forEach((asset) => {
+            this.app.assets.add(asset);
+        });
 
-        this.app.assets.on('error:' + this.assets[0].id, function (err) {
+        this.app.assets.load(this.bundleAsset);
+
+        const onLoad = function() {
+            loaded++;
+            var resource = this.type === 'cubemap' ? this.resources[1] : this.resource;
+            expect(resource).to.not.equal(null);
+            var expected = self.expectedTypes[this.type];
+
+            if (expected.typeof) {
+                expect(typeof resource).to.equal(expected.typeof);
+            }
+
+            if (expected.instanceof) {
+                expect(resource instanceof expected.instanceof).to.equal(true);
+            }
+
+            if (this.type === 'font') {
+                expect(resource.textures.length).to.equal(2);
+            }
+
+            if ((self.assets.length + 1) === loaded) {
+                done();
+            }
+        };
+
+        this.assets.forEach((asset, index) => {
+            asset.on('load', onLoad);
+        });
+        this.bundleAsset.on('load', onLoad);
+    });
+
+    it('asset should load if bundle with that asset has loaded', function(done) {
+        this.app.assets.add(this.bundleAsset);
+        this.app.assets.add(this.assets[0]);
+
+        expect(this.assets[0].loading).to.equal(false);
+        this.app.assets.load(this.bundleAsset);
+        expect(this.assets[0].loading).to.equal(true);
+
+        this.assets[0].ready(() => {
             done();
         });
+    });
+
+    it('bundle should load if asset from it has loaded', function(done) {
+        this.app.assets.add(this.bundleAsset);
         this.app.assets.add(this.assets[0]);
+
+        expect(this.bundleAsset.loading).to.equal(false);
         this.app.assets.load(this.assets[0]);
+        expect(this.bundleAsset.loading).to.equal(true);
+
+        this.bundleAsset.ready(() => {
+            done();
+        });
+    });
+
+    it('bundle should load if asset from it has loaded', function(done) {
+        this.app.assets.add(this.bundleAsset);
+        this.app.assets.add(this.assets[0]);
+
+        expect(this.bundleAsset.loading).to.equal(false);
+        this.app.assets.load(this.assets[0]);
+        expect(this.bundleAsset.loading).to.equal(true);
+
+        this.bundleAsset.ready(() => {
+            done();
+        });
+    });
+
+    it('asset loading with bundlesIgnore option should not load bundle', function(done) {
+        this.app.assets.add(this.bundleAsset);
+        this.app.assets.add(this.assets[0]);
+
+        let filterCalled = false;
+
+        expect(this.bundleAsset.loading).to.equal(false);
+        this.app.assets.load(this.assets[0], {
+            bundlesIgnore: true,
+            bundlesFilter: (bundles) => {
+                filterCalled = true;
+            }
+        });
+        expect(filterCalled).to.equal(false);
+        expect(this.bundleAsset.loading).to.equal(false);
+
+        this.assets[0].ready(() => {
+            done();
+        });
+    });
+
+    it('asset loading should prefer smallest bundle', function(done) {
+        const bundleAsset2 = new pc.Asset('bundle asset 2', 'bundle', {
+            url: 'base/tests/test-assets/bundles/bundle.tar',
+            size: 133632 + 1
+        }, {
+            assets: this.assets.map(function (asset) {
+                return asset.id;
+            })
+        });
+
+        this.app.assets.add(bundleAsset2);
+        this.app.assets.add(this.bundleAsset);
+        this.app.assets.add(this.assets[0]);
+
+        expect(this.bundleAsset.loading).to.equal(false);
+        this.app.assets.load(this.assets[0]);
+        expect(this.bundleAsset.loading).to.equal(true);
+        expect(bundleAsset2.loading).to.equal(false);
+
+        this.assets[0].ready(() => {
+            done();
+        });
+    });
+
+    it('asset loading with bundlesFilter', function(done) {
+        const bundleAsset2 = new pc.Asset('bundle asset 2', 'bundle', {
+            url: 'base/tests/test-assets/bundles/bundle.tar',
+            size: 133632 + 1
+        }, {
+            assets: this.assets.map(function (asset) {
+                return asset.id;
+            })
+        });
+
+        this.app.assets.add(bundleAsset2);
+        this.app.assets.add(this.bundleAsset);
+        this.app.assets.add(this.assets[0]);
+
+        let filterCalled = false;
+
+        expect(bundleAsset2.loading).to.equal(false);
+
+        this.app.assets.load(this.assets[0], {
+            bundlesFilter: (bundles) => {
+                filterCalled = true;
+                expect(bundles.length).to.equal(2);
+
+                if (bundles[0].name === 'bundle asset 2') {
+                    return bundles[0];
+                } else {
+                    return bundles[1];
+                }
+            }
+        });
+        expect(filterCalled).to.equal(true);
+        expect(bundleAsset2.loading).to.equal(true);
+        expect(this.bundleAsset.loading).to.equal(false);
+
+        this.assets[0].ready(() => {
+            done();
+        });
+    });
+
+    it('loadUrl() calls callback if bundle loaded', function (done) {
+        this.app.assets.add(this.bundleAsset);
+        this.app.assets.add(this.assets[0]);
+        this.app.assets.load(this.bundleAsset);
+
+        this.app.assets.bundles.loadUrl(this.assets[0].file.url, function (err, dataView) {
+            expect(err).to.equal(null);
+            expect(dataView instanceof DataView).to.equal(true);
+            done();
+        });
     });
 });

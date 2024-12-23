@@ -1,6 +1,6 @@
-import { Vec4 } from '../../../src/core/math/vec4.js';
-
 import { expect } from 'chai';
+
+import { Vec4 } from '../../../src/core/math/vec4.js';
 
 describe('Vec4', function () {
 
@@ -84,6 +84,19 @@ describe('Vec4', function () {
         it('adds a scalar in place', function () {
             const v = new Vec4(1, 2, 3, 4);
             v.addScalar(2);
+            expect(v.x).to.equal(3);
+            expect(v.y).to.equal(4);
+            expect(v.z).to.equal(5);
+            expect(v.w).to.equal(6);
+        });
+
+    });
+
+    describe('#addScaled', function () {
+
+        it('adds a scaled vector', function () {
+            const v = new Vec4(1, 2, 3, 4);
+            v.addScaled(Vec4.ONE, 2);
             expect(v.x).to.equal(3);
             expect(v.y).to.equal(4);
             expect(v.z).to.equal(5);
@@ -250,6 +263,20 @@ describe('Vec4', function () {
             const v1 = new Vec4(1, 2, 3, 4);
             const v2 = new Vec4(5, 6, 7, 8);
             expect(v1.equals(v2)).to.be.false;
+        });
+
+        it('checks for equality of different vectors that are close enough', function () {
+            const v1 = new Vec4(0.1, 0.2, 0.3, 0.4);
+            const v2 = new Vec4(0.10000000000000001, 0.2, 0.3, 0.4);
+            const epsilon = 0.000001;
+            expect(v1.equalsApprox(v2, epsilon)).to.be.true;
+            expect(v1.equalsApprox(v2)).to.be.true;
+
+            const v3 = new Vec4(0.1 + epsilon - Number.EPSILON, 0.2, 0.3, 0.4);
+            expect(v1.equalsApprox(v3, epsilon)).to.be.true;
+
+            const v4 = new Vec4(0.1 + epsilon + Number.EPSILON, 0.2, 0.3, 0.4);
+            expect(v1.equalsApprox(v4, epsilon)).to.be.false;
         });
 
     });

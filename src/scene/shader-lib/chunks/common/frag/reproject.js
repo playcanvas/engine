@@ -31,23 +31,13 @@ varying vec2 vUv0;
 
 // params:
 // x - target cubemap face 0..6
-// y - specular power (when prefiltering)
-// z - source cubemap seam scale (0 to disable)
-// w - target cubemap size for seam calc (0 to disable)
-uniform vec4 params;
-
-// params2:
-// x - target image total pixels
-// y - source cubemap size
-uniform vec2 params2;
+// y - target image total pixels
+// z - source cubemap size
+uniform vec3 params;
 
 float targetFace() { return params.x; }
-float specularPower() { return params.y; }
-float sourceCubeSeamScale() { return params.z; }
-float targetCubeSeamScale() { return params.w; }
-
-float targetTotalPixels() { return params2.x; }
-float sourceTotalPixels() { return params2.y; }
+float targetTotalPixels() { return params.y; }
+float sourceTotalPixels() { return params.z; }
 
 float PI = 3.141592653589793;
 
@@ -84,7 +74,7 @@ vec3 getDirectionEquirect() {
     return fromSpherical((vec2(vUv0.x, 1.0 - vUv0.y) * 2.0 - 1.0) * vec2(PI, PI * 0.5));
 }
 
-// octahedral code, based on http://jcgt.org/published/0003/02/01
+// octahedral code, based on https://jcgt.org/published/0003/02/01/
 // "Survey of Efficient Representations for Independent Unit Vectors" by Cigolle, Donow, Evangelakos, Mara, McGuire, Meyer
 
 float signNotZero(float k){
@@ -122,7 +112,7 @@ vec2 octEncode(in vec3 v) {
 
 #ifdef CUBEMAP_SOURCE
     vec4 sampleCubemap(vec3 dir) {
-        return textureCube(sourceCube, modifySeams(dir, 1.0 - sourceCubeSeamScale()));
+        return textureCube(sourceCube, modifySeams(dir, 1.0));
     }
 
     vec4 sampleCubemap(vec2 sph) {
@@ -130,7 +120,7 @@ vec2 octEncode(in vec3 v) {
 }
 
     vec4 sampleCubemap(vec3 dir, float mipLevel) {
-        return textureCubeLodEXT(sourceCube, modifySeams(dir, 1.0 - exp2(mipLevel) * sourceCubeSeamScale()), mipLevel);
+        return textureCubeLod(sourceCube, modifySeams(dir, 1.0), mipLevel);
     }
 
     vec4 sampleCubemap(vec2 sph, float mipLevel) {
@@ -149,7 +139,7 @@ vec2 octEncode(in vec3 v) {
 
     vec4 sampleEquirect(vec2 sph, float mipLevel) {
         vec2 uv = sph / vec2(PI * 2.0, PI) + 0.5;
-        return texture2DLodEXT(sourceTex, vec2(uv.x, 1.0 - uv.y), mipLevel);
+        return texture2DLod(sourceTex, vec2(uv.x, 1.0 - uv.y), mipLevel);
     }
 
     vec4 sampleEquirect(vec3 dir, float mipLevel) {
@@ -167,7 +157,7 @@ vec2 octEncode(in vec3 v) {
 
     vec4 sampleOctahedral(vec3 dir, float mipLevel) {
         vec2 uv = octEncode(dir) * 0.5 + 0.5;
-        return texture2DLodEXT(sourceTex, vec2(uv.x, 1.0 - uv.y), mipLevel);
+        return texture2DLod(sourceTex, vec2(uv.x, 1.0 - uv.y), mipLevel);
     }
 
     vec4 sampleOctahedral(vec2 sph, float mipLevel) {
@@ -195,7 +185,7 @@ vec3 getDirectionCubemap() {
         vec = vec3(-st.x, -st.y, -1);
     }
 
-    return normalize(modifySeams(vec, 1.0 / (1.0 - targetCubeSeamScale())));
+    return normalize(modifySeams(vec, 1.0));
 }
 
 mat3 matrixFromVector(vec3 n) { // frisvad

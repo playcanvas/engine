@@ -1,4 +1,4 @@
-import { BitPacking } from "../../core/math/bit-packing.js";
+import { BitPacking } from '../../core/math/bit-packing.js';
 import { BLENDEQUATION_ADD, BLENDMODE_ONE, BLENDMODE_ZERO, BLENDMODE_SRC_ALPHA, BLENDMODE_ONE_MINUS_SRC_ALPHA } from '../../platform/graphics/constants.js';
 
 // masks (to only keep relevant bits)
@@ -28,10 +28,12 @@ const allWriteShift = redWriteShift;
  *
  * For the best performance, do not modify blend state after it has been created, but create
  * multiple blend states and assign them to the material or graphics device as needed.
+ *
+ * @category Graphics
  */
 class BlendState {
     /**
-     * Bitfield representing the blend state for render target 0.
+     * Bit field representing the blend state for render target 0.
      *
      * @private
      */
@@ -63,9 +65,6 @@ class BlendState {
      * - {@link BLENDEQUATION_REVERSE_SUBTRACT}
      * - {@link BLENDEQUATION_MIN}
      * - {@link BLENDEQUATION_MAX}
-     *
-     * Note that MIN and MAX operations on WebGL platform require either EXT_blend_minmax or WebGL2
-     * to work (check device.extBlendMinmax).
      *
      * @param {boolean} [blend] - Enables or disables blending. Defaults to false.
      * @param {number} [colorOp] - Configures color blending operation. Defaults to
@@ -99,7 +98,7 @@ class BlendState {
     }
 
     /**
-     * Enables or disables blending.
+     * Sets whether blending is enabled.
      *
      * @type {boolean}
      */
@@ -107,6 +106,11 @@ class BlendState {
         this.target0 = BitPacking.set(this.target0, value ? 1 : 0, blendShift);
     }
 
+    /**
+     * Gets whether blending is enabled.
+     *
+     * @type {boolean}
+     */
     get blend() {
         return BitPacking.all(this.target0, blendShift);
     }
@@ -249,6 +253,14 @@ class BlendState {
      * @readonly
      */
     static ALPHABLEND = Object.freeze(new BlendState(true, BLENDEQUATION_ADD, BLENDMODE_SRC_ALPHA, BLENDMODE_ONE_MINUS_SRC_ALPHA));
+
+    /**
+     * A blend state that does simple additive blending.
+     *
+     * @type {BlendState}
+     * @readonly
+     */
+    static ADDBLEND = Object.freeze(new BlendState(true, BLENDEQUATION_ADD, BLENDMODE_ONE, BLENDMODE_ONE));
 }
 
 export { BlendState };

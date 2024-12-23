@@ -4,27 +4,41 @@ import { Color } from '../../core/math/color.js';
 import { Mat4 } from '../../core/math/mat4.js';
 import { Vec3 } from '../../core/math/vec3.js';
 import { Vec4 } from '../../core/math/vec4.js';
-
 import { SHADERSTAGE_FRAGMENT, SHADERSTAGE_VERTEX, UNIFORMTYPE_MAT4, UNIFORM_BUFFER_DEFAULT_SLOT_NAME } from '../../platform/graphics/constants.js';
 import { DebugGraphics } from '../../platform/graphics/debug-graphics.js';
 import { drawQuadWithShader } from '../graphics/quad-render-utils.js';
-
 import {
     BLUR_GAUSSIAN,
     LIGHTTYPE_DIRECTIONAL, LIGHTTYPE_OMNI,
     SHADER_SHADOW,
-    SHADOW_PCF1, SHADOW_PCF3, SHADOW_PCF5, SHADOW_VSM8, SHADOW_VSM32,
     SHADOWUPDATE_NONE, SHADOWUPDATE_THISFRAME,
-    SORTKEY_DEPTH
+    SORTKEY_DEPTH,
+    shadowTypeInfo
 } from '../constants.js';
 import { ShaderPass } from '../shader-pass.js';
 import { shaderChunks } from '../shader-lib/chunks/chunks.js';
 import { createShaderFromCode } from '../shader-lib/utils.js';
 import { LightCamera } from './light-camera.js';
 import { UniformBufferFormat, UniformFormat } from '../../platform/graphics/uniform-buffer-format.js';
-import { BindBufferFormat, BindGroupFormat } from '../../platform/graphics/bind-group-format.js';
+import { BindUniformBufferFormat, BindGroupFormat } from '../../platform/graphics/bind-group-format.js';
 import { BlendState } from '../../platform/graphics/blend-state.js';
-import { DepthState } from '../../platform/graphics/depth-state.js';
+
+/**
+ * @import { Camera } from '../camera.js'
+ * @import { LayerComposition } from '../composition/layer-composition.js'
+ * @import { LightTextureAtlas } from '../lighting/light-texture-atlas.js'
+ * @import { Light } from '../light.js'
+ * @import { MeshInstance } from '../mesh-instance.js'
+ * @import { Renderer } from './renderer.js'
+ * @import { ShaderPassInfo } from '../shader-pass.js'
+ */
+
+const tempSet = new Set();
+const shadowCamView = new Mat4();
+const shadowCamViewProj = new Mat4();
+const pixelOffset = new Float32Array(2);
+const blurScissorRect = new Vec4(1, 1, 0, 0);
+const viewportMatrix = new Mat4();
 
 function gauss(x, sigma) {
     return Math.exp(-(x * x) / (2.0 * sigma * sigma));
@@ -47,68 +61,38 @@ function gaussWeights(kernelSize) {
     return values;
 }
 
-const shadowCamView = new Mat4();
-const shadowCamViewProj = new Mat4();
-const pixelOffset = new Float32Array(2);
-const blurScissorRect = new Vec4(1, 1, 0, 0);
-const opChanId = { r: 1, g: 2, b: 3, a: 4 };
-const viewportMatrix = new Mat4();
-
-function getDepthKey(meshInstance) {
-    const material = meshInstance.material;
-    const x = meshInstance.skinInstance ? 10 : 0;
-    let y = 0;
-    if (material.opacityMap) {
-        const opChan = material.opacityMapChannel;
-        if (opChan) {
-            y = opChanId[opChan];
-        }
-    }
-    return x + y;
-}
-
-/**
- * @ignore
- */
 class ShadowRenderer {
     /**
      * A cache of shadow passes. First index is looked up by light type, second by shadow type.
      *
-     * @type {import('../shader-pass.js').ShaderPassInfo[][]}
+     * @type {ShaderPassInfo[][]}
      * @private
      */
     shadowPassCache = [];
 
     /**
-     * @param {import('./renderer.js').Renderer} renderer - The renderer.
-     * @param {import('../lighting/light-texture-atlas.js').LightTextureAtlas} lightTextureAtlas - The
-     * shadow map atlas.
+     * @param {Renderer} renderer - The renderer.
+     * @param {LightTextureAtlas} lightTextureAtlas - The shadow map atlas.
      */
     constructor(renderer, lightTextureAtlas) {
         this.device = renderer.device;
 
-        /** @type {import('./renderer.js').Renderer} */
+        /** @type {Renderer} */
         this.renderer = renderer;
 
-        /** @type {import('../lighting/light-texture-atlas.js').LightTextureAtlas} */
+        /** @type {LightTextureAtlas} */
         this.lightTextureAtlas = lightTextureAtlas;
 
         const scope = this.device.scope;
-
-        this.polygonOffsetId = scope.resolve('polygonOffset');
-        this.polygonOffset = new Float32Array(2);
 
         // VSM
         this.sourceId = scope.resolve('source');
         this.pixelOffsetId = scope.resolve('pixelOffset');
         this.weightId = scope.resolve('weight[0]');
-        this.blurVsmShaderCode = [shaderChunks.blurVSMPS, '#define GAUSS\n' + shaderChunks.blurVSMPS];
-        const packed = '#define PACKED\n';
-        this.blurPackedVsmShaderCode = [packed + this.blurVsmShaderCode[0], packed + this.blurVsmShaderCode[1]];
+        this.blurVsmShaderCode = [shaderChunks.blurVSMPS, `#define GAUSS\n${shaderChunks.blurVSMPS}`];
 
         // cache for vsm blur shaders
         this.blurVsmShader = [{}, {}];
-        this.blurPackedVsmShader = [{}, {}];
 
         this.blurVsmWeights = {};
 
@@ -126,12 +110,17 @@ class ShadowRenderer {
     }
 
     // creates shadow camera for a light and sets up its constant properties
-    static createShadowCamera(device, shadowType, type, face) {
+    static createShadowCamera(shadowType, type, face) {
 
         const shadowCam = LightCamera.create('ShadowCamera', type, face);
 
+        const shadowInfo = shadowTypeInfo.get(shadowType);
+        Debug.assert(shadowInfo);
+        const isVsm = shadowInfo?.vsm ?? false;
+        const isPcf = shadowInfo?.pcf ?? false;
+
         // don't clear the color buffer if rendering a depth map
-        if (shadowType >= SHADOW_VSM8 && shadowType <= SHADOW_VSM32) {
+        if (isVsm) {
             shadowCam.clearColor = new Color(0, 0, 0, 0);
         } else {
             shadowCam.clearColor = new Color(1, 1, 1, 1);
@@ -140,25 +129,14 @@ class ShadowRenderer {
         shadowCam.clearDepthBuffer = true;
         shadowCam.clearStencilBuffer = false;
 
+        // clear color buffer only when using it
+        shadowCam.clearColorBuffer = !isPcf;
+
         return shadowCam;
     }
 
-    static setShadowCameraSettings(shadowCam, device, shadowType, type, isClustered) {
+    _cullShadowCastersInternal(meshInstances, visible, camera) {
 
-        // normal omni shadows on webgl2 encode depth in RGBA8 and do manual PCF sampling
-        // clustered omni shadows on webgl2 use depth format and hardware PCF sampling
-        let hwPcf = shadowType === SHADOW_PCF5 || ((shadowType === SHADOW_PCF1 || shadowType === SHADOW_PCF3) && device.supportsDepthShadow);
-        if (type === LIGHTTYPE_OMNI && !isClustered) {
-            hwPcf = false;
-        }
-
-        shadowCam.clearColorBuffer = !hwPcf;
-    }
-
-    // culls the list of meshes instances by the camera, storing visible mesh instances in the specified array
-    cullShadowCasters(meshInstances, visible, camera) {
-
-        let count = 0;
         const numInstances = meshInstances.length;
         for (let i = 0; i < numInstances; i++) {
             const meshInstance = meshInstances[i];
@@ -166,62 +144,68 @@ class ShadowRenderer {
             if (meshInstance.castShadow) {
                 if (!meshInstance.cull || meshInstance._isVisible(camera)) {
                     meshInstance.visibleThisFrame = true;
-                    visible[count] = meshInstance;
-                    count++;
+                    visible.push(meshInstance);
                 }
             }
         }
+    }
 
-        visible.length = count;
+    /**
+     * Culls the list of shadow casters used by the light by the camera, storing visible mesh
+     * instances in the specified array.
+     *
+     * @param {LayerComposition} comp - The layer composition used as a source of shadow casters,
+     * if those are not provided directly.
+     * @param {Light} light - The light.
+     * @param {MeshInstance[]} visible - The array to store visible mesh instances in.
+     * @param {Camera} camera - The camera.
+     * @param {MeshInstance[]} [casters] - Optional array of mesh instances to use as casters.
+     */
+    cullShadowCasters(comp, light, visible, camera, casters) {
 
-        // TODO: we should probably sort shadow meshes by shader and not depth
+        visible.length = 0;
+
+        // if the casters are supplied, use them
+        if (casters) {
+
+            this._cullShadowCastersInternal(casters, visible, camera);
+
+        } else {    // otherwise, get them from the layer composition
+
+            // for each layer
+            const layers = comp.layerList;
+            const len = layers.length;
+            for (let i = 0; i < len; i++) {
+                const layer = layers[i];
+                if (layer._lightsSet.has(light)) {
+
+                    // layer can be in the list two times (opaque, transp), add casters only one time
+                    if (!tempSet.has(layer)) {
+                        tempSet.add(layer);
+
+                        this._cullShadowCastersInternal(layer.shadowCasters, visible, camera);
+                    }
+                }
+            }
+
+            tempSet.clear();
+        }
+
+        // this sorts the shadow casters by the shader id
         visible.sort(this.renderer.sortCompareDepth);
     }
 
     setupRenderState(device, light) {
 
-        const isClustered = this.renderer.scene.clusteredLightingEnabled;
-
-        // depth bias
-        if (device.webgl2 || device.isWebGPU) {
-            if (light._type === LIGHTTYPE_OMNI && !isClustered) {
-                device.setDepthBias(false);
-            } else {
-                device.setDepthBias(true);
-                device.setDepthBiasValues(light.shadowBias * -1000.0, light.shadowBias * -1000.0);
-            }
-        } else if (device.extStandardDerivatives) {
-            if (light._type === LIGHTTYPE_OMNI) {
-                this.polygonOffset[0] = 0;
-                this.polygonOffset[1] = 0;
-                this.polygonOffsetId.setValue(this.polygonOffset);
-            } else {
-                this.polygonOffset[0] = light.shadowBias * -1000.0;
-                this.polygonOffset[1] = light.shadowBias * -1000.0;
-                this.polygonOffsetId.setValue(this.polygonOffset);
-            }
-        }
-
         // Set standard shadowmap states
-        const gpuOrGl2 = device.webgl2 || device.isWebGPU;
+        const isClustered = this.renderer.scene.clusteredLightingEnabled;
         const useShadowSampler = isClustered ?
-            light._isPcf && gpuOrGl2 :     // both spot and omni light are using shadow sampler on webgl2 when clustered
-            light._isPcf && gpuOrGl2 && light._type !== LIGHTTYPE_OMNI;    // for non-clustered, point light is using depth encoded in color buffer (should change to shadow sampler)
+            light._isPcf :     // both spot and omni light are using shadow sampler when clustered
+            light._isPcf && light._type !== LIGHTTYPE_OMNI;    // for non-clustered, point light is using depth encoded in color buffer (should change to shadow sampler)
 
         device.setBlendState(useShadowSampler ? this.blendStateNoWrite : this.blendStateWrite);
-        device.setDepthState(DepthState.DEFAULT);
+        device.setDepthState(light.shadowDepthState);
         device.setStencilState(null, null);
-    }
-
-    restoreRenderState(device) {
-
-        if (device.webgl2 || device.isWebGPU) {
-            device.setDepthBias(false);
-        } else if (device.extStandardDerivatives) {
-            this.polygonOffset[0] = 0;
-            this.polygonOffset[1] = 0;
-            this.polygonOffsetId.setValue(this.polygonOffset);
-        }
     }
 
     dispatchUniforms(light, shadowCam, lightRenderData, face) {
@@ -252,6 +236,10 @@ class ShadowRenderer {
         }
     }
 
+    /**
+     * @param {Light} light - The light.
+     * @returns {number} Index of shadow pass info.
+     */
     getShadowPass(light) {
 
         // get shader pass from cache for this light type and shadow type
@@ -269,8 +257,9 @@ class ShadowRenderer {
             });
 
             // add it to the cache
-            if (!this.shadowPassCache[lightType])
+            if (!this.shadowPassCache[lightType]) {
                 this.shadowPassCache[lightType] = [];
+            }
             this.shadowPassCache[lightType][shadowType] = shadowPassInfo;
         }
 
@@ -278,20 +267,18 @@ class ShadowRenderer {
     }
 
     /**
-     * @param {import('../mesh-instance.js').MeshInstance[]} visibleCasters - Visible mesh
-     * instances.
-     * @param {import('../light.js').Light} light - The light.
+     * @param {MeshInstance[]} visibleCasters - Visible mesh instances.
+     * @param {Light} light - The light.
+     * @param {Camera} camera - The camera.
      */
-    submitCasters(visibleCasters, light) {
+    submitCasters(visibleCasters, light, camera) {
 
         const device = this.device;
         const renderer = this.renderer;
         const scene = renderer.scene;
         const passFlags = 1 << SHADER_SHADOW;
         const shadowPass = this.getShadowPass(light);
-
-        // TODO: Similarly to forward renderer, a shader creation part of this loop should be split into a separate loop,
-        // and endShaderBatch should be called at its end
+        const cameraShaderParams = camera.shaderParams;
 
         // Render
         const count = visibleCasters.length;
@@ -322,22 +309,20 @@ class ShadowRenderer {
                 meshInstance.setParameters(device, passFlags);
             }
 
-            // set shader
-            let shadowShader = meshInstance._shader[shadowPass];
-            if (!shadowShader) {
-                meshInstance.updatePassShader(scene, shadowPass, null, null, this.viewUniformFormat, this.viewBindGroupFormat);
-                shadowShader = meshInstance._shader[shadowPass];
-                meshInstance._key[SORTKEY_DEPTH] = getDepthKey(meshInstance);
-            }
-            if (!shadowShader.failed && !device.setShader(shadowShader)) {
-                Debug.error(`Error compiling shadow shader for material=${material.name} pass=${shadowPass}`, material);
-            }
+            const shaderInstance = meshInstance.getShaderInstance(shadowPass, 0, scene, cameraShaderParams, this.viewUniformFormat, this.viewBindGroupFormat);
+            const shadowShader = shaderInstance.shader;
+            Debug.assert(shadowShader, `no shader for pass ${shadowPass}`, material);
+
+            // sort shadow casters by shader
+            meshInstance._key[SORTKEY_DEPTH] = shadowShader.id;
+
+            device.setShader(shadowShader);
 
             // set buffers
             renderer.setVertexBuffers(device, mesh);
             renderer.setMorphing(device, meshInstance.morphInstance);
 
-            this.renderer.setupMeshUniformBuffers(meshInstance, shadowPass);
+            this.renderer.setupMeshUniformBuffers(shaderInstance, meshInstance);
 
             const style = meshInstance.renderStyle;
             device.setIndexBuffer(mesh.indexBuffer[style]);
@@ -396,15 +381,8 @@ class ShadowRenderer {
     prepareFace(light, camera, face) {
 
         const type = light._type;
-        const shadowType = light._shadowType;
-        const isClustered = this.renderer.scene.clusteredLightingEnabled;
-
         const lightRenderData = this.getLightRenderData(light, camera, face);
         const shadowCam = lightRenderData.shadowCamera;
-
-        // camera clear setting
-        // Note: when clustered lighting is the only lighting type, this code can be moved to createShadowCamera function
-        ShadowRenderer.setShadowCameraSettings(shadowCam, this.device, shadowType, type, isClustered);
 
         // assign render target for the face
         const renderTargetIndex = type === LIGHTTYPE_DIRECTIONAL ? 0 : face;
@@ -451,9 +429,7 @@ class ShadowRenderer {
         this.setupRenderState(device, light);
 
         // render mesh instances
-        this.submitCasters(lightRenderData.visibleCasters, light);
-
-        this.restoreRenderState(device);
+        this.submitCasters(lightRenderData.visibleCasters, light, shadowCam);
 
         DebugGraphics.popGpuMarker(device);
 
@@ -491,27 +467,19 @@ class ShadowRenderer {
         }
     }
 
-    getVsmBlurShader(isVsm8, blurMode, filterSize) {
+    getVsmBlurShader(blurMode, filterSize) {
 
-        let blurShader = (isVsm8 ? this.blurPackedVsmShader : this.blurVsmShader)[blurMode][filterSize];
+        const cache = this.blurVsmShader;
+        let blurShader = cache[blurMode][filterSize];
         if (!blurShader) {
             this.blurVsmWeights[filterSize] = gaussWeights(filterSize);
 
             const blurVS = shaderChunks.fullscreenQuadVS;
-            let blurFS = '#define SAMPLES ' + filterSize + '\n';
-            if (isVsm8) {
-                blurFS += this.blurPackedVsmShaderCode[blurMode];
-            } else {
-                blurFS += this.blurVsmShaderCode[blurMode];
-            }
-            const blurShaderName = 'blurVsm' + blurMode + '' + filterSize + '' + isVsm8;
+            let blurFS = `#define SAMPLES ${filterSize}\n`;
+            blurFS += this.blurVsmShaderCode[blurMode];
+            const blurShaderName = `blurVsm${blurMode}${filterSize}`;
             blurShader = createShaderFromCode(this.device, blurVS, blurFS, blurShaderName);
-
-            if (isVsm8) {
-                this.blurPackedVsmShader[blurMode][filterSize] = blurShader;
-            } else {
-                this.blurVsmShader[blurMode][filterSize] = blurShader;
-            }
+            cache[blurMode][filterSize] = blurShader;
         }
 
         return blurShader;
@@ -536,10 +504,9 @@ class ShadowRenderer {
         const tempShadowMap = this.renderer.shadowMapCache.get(device, light);
         const tempRt = tempShadowMap.renderTargets[0];
 
-        const isVsm8 = light._shadowType === SHADOW_VSM8;
         const blurMode = light.vsmBlurMode;
         const filterSize = light._vsmBlurSize;
-        const blurShader = this.getVsmBlurShader(isVsm8, blurMode, filterSize);
+        const blurShader = this.getVsmBlurShader(blurMode, filterSize);
 
         blurScissorRect.z = light._shadowResolution - 2;
         blurScissorRect.w = blurScissorRect.z;
@@ -571,13 +538,12 @@ class ShadowRenderer {
 
             // format of the view uniform buffer
             this.viewUniformFormat = new UniformBufferFormat(this.device, [
-                new UniformFormat("matrix_viewProjection", UNIFORMTYPE_MAT4)
+                new UniformFormat('matrix_viewProjection', UNIFORMTYPE_MAT4)
             ]);
 
             // format of the view bind group - contains single uniform buffer, and no textures
             this.viewBindGroupFormat = new BindGroupFormat(this.device, [
-                new BindBufferFormat(UNIFORM_BUFFER_DEFAULT_SLOT_NAME, SHADERSTAGE_VERTEX | SHADERSTAGE_FRAGMENT)
-            ], [
+                new BindUniformBufferFormat(UNIFORM_BUFFER_DEFAULT_SLOT_NAME, SHADERSTAGE_VERTEX | SHADERSTAGE_FRAGMENT)
             ]);
         }
     }

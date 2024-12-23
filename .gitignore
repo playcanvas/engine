@@ -2,15 +2,15 @@
 .idea/
 .vscode/
 build
+tree*.html
 coverage
 docs
 examples/dist
 examples/node_modules
 node_modules
 npm-debug.log
-scripts/parsers/vox-parser.js
-scripts/parsers/vox-parser.js.map
 types
 stats.html
 .npmrc
 examples/.npmrc
+.prettierrc

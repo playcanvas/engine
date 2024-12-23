@@ -14,23 +14,23 @@ function BrightnessContrastEffect(graphicsDevice) {
 
     // Shader author: tapio / http://tapio.github.com/
     var fshader = [
-        "uniform sampler2D uColorBuffer;",
-        "uniform float uBrightness;",
-        "uniform float uContrast;",
-        "",
-        "varying vec2 vUv0;",
-        "",
-        "void main() {",
-        "    gl_FragColor = texture2D( uColorBuffer, vUv0 );",
-        "    gl_FragColor.rgb += uBrightness;",
-        "",
-        "    if (uContrast > 0.0) {",
-        "        gl_FragColor.rgb = (gl_FragColor.rgb - 0.5) / (1.0 - uContrast) + 0.5;",
-        "    } else {",
-        "        gl_FragColor.rgb = (gl_FragColor.rgb - 0.5) * (1.0 + uContrast) + 0.5;",
-        "    }",
-        "}"
-    ].join("\n");
+        'uniform sampler2D uColorBuffer;',
+        'uniform float uBrightness;',
+        'uniform float uContrast;',
+        '',
+        'varying vec2 vUv0;',
+        '',
+        'void main() {',
+        '    gl_FragColor = texture2D( uColorBuffer, vUv0 );',
+        '    gl_FragColor.rgb += uBrightness;',
+        '',
+        '    if (uContrast > 0.0) {',
+        '        gl_FragColor.rgb = (gl_FragColor.rgb - 0.5) / (1.0 - uContrast) + 0.5;',
+        '    } else {',
+        '        gl_FragColor.rgb = (gl_FragColor.rgb - 0.5) * (1.0 + uContrast) + 0.5;',
+        '    }',
+        '}'
+    ].join('\n');
 
     this.shader = pc.createShaderFromCode(graphicsDevice, pc.PostEffect.quadVertexShader, fshader, 'BrightnessContrastShader', {
         aPosition: pc.SEMANTIC_POSITION
@@ -49,9 +49,9 @@ Object.assign(BrightnessContrastEffect.prototype, {
         var device = this.device;
         var scope = device.scope;
 
-        scope.resolve("uBrightness").setValue(this.brightness);
-        scope.resolve("uContrast").setValue(this.contrast);
-        scope.resolve("uColorBuffer").setValue(inputTarget.colorBuffer);
+        scope.resolve('uBrightness').setValue(this.brightness);
+        scope.resolve('uContrast').setValue(this.contrast);
+        scope.resolve('uColorBuffer').setValue(inputTarget.colorBuffer);
         this.drawQuad(outputTarget, this.shader, rect);
     }
 });

@@ -1,7 +1,7 @@
-import { http, Http } from '../../../src/platform/net/http.js';
-
 import { expect } from 'chai';
 import { restore, spy } from 'sinon';
+
+import { http, Http } from '../../../src/platform/net/http.js';
 
 describe('Http', function () {
     let retryDelay;
@@ -18,8 +18,8 @@ describe('Http', function () {
 
     describe('#get()', function () {
 
-        it('returns resource', function (done) {
-            http.get('http://localhost:3000/test/test-assets/test.json', function (err, data) {
+        it('returns resource', (done) => {
+            http.get('http://localhost:3000/test/assets/test.json', (err, data) => {
                 expect(err).to.equal(null);
                 expect(data).to.deep.equal({
                     a: 1,
@@ -30,32 +30,32 @@ describe('Http', function () {
             });
         });
 
-        it('does not retry if retry is false', function (done) {
+        it('does not retry if retry is false', (done) => {
             spy(http, 'request');
-            http.get('http://localhost:3000/someurl.json', function (err, data) {
+            http.get('http://localhost:3000/someurl.json', (err, data) => {
                 expect(err).to.equal(404);
                 expect(http.request.callCount).to.equal(1);
                 done();
             });
         });
 
-        it('retries resource and returns 404 in the end if not found', function (done) {
+        it('retries resource and returns 404 in the end if not found', (done) => {
             spy(http, 'request');
             http.get('http://localhost:3000/someurl.json', {
                 retry: true,
                 maxRetries: 2
-            }, function (err) {
+            }, (err) => {
                 expect(err).to.equal(404);
                 expect(http.request.callCount).to.equal(3);
                 done();
             });
         });
 
-        it('retries resource 5 times by default', function (done) {
+        it('retries resource 5 times by default', (done) => {
             spy(http, 'request');
             http.get('http://localhost:3000/someurl.json', {
                 retry: true
-            }, function (err) {
+            }, (err) => {
                 expect(http.request.callCount).to.equal(6);
                 done();
             });

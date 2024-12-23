@@ -2,6 +2,8 @@ import { LAYERID_WORLD } from '../constants.js';
 
 /**
  * Holds mesh batching settings and a unique id. Created via {@link BatchManager#addGroup}.
+ *
+ * @category Graphics
  */
 class BatchGroup {
     /** @private */

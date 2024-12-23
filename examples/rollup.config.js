@@ -1,186 +1,173 @@
-import resolve from "@rollup/plugin-node-resolve";
-import commonjs from "@rollup/plugin-commonjs";
-import replace from '@rollup/plugin-replace';
-import typescript from 'rollup-plugin-typescript2';
-import { terser } from 'rollup-plugin-terser';
-import alias from '@rollup/plugin-alias';
-import sourcemaps from 'rollup-plugin-sourcemaps';
-import date from 'date-and-time';
-import path from 'path';
+import { execSync } from 'child_process';
 import fs from 'fs';
-import fse from 'fs-extra';
+import path from 'path';
 
-const ENGINE_PATH = process.env.ENGINE_PATH ? path.resolve(process.env.ENGINE_PATH) : path.resolve(`../build/playcanvas${process.env.NODE_ENV === 'development' ? '.dbg' : ''}.js`);
-const PCUI_PATH = process.env.PCUI_PATH || 'node_modules/@playcanvas/pcui';
-const PCUI_REACT_PATH = path.resolve(PCUI_PATH, 'react');
-const PCUI_STYLES_PATH = path.resolve(PCUI_PATH, 'styles');
+// 1st party Rollup plugins
+import commonjs from '@rollup/plugin-commonjs';
+import resolve from '@rollup/plugin-node-resolve';
+import replace from '@rollup/plugin-replace';
+import terser from '@rollup/plugin-terser';
 
-const staticFiles = [
-    { src: 'src/static', dest: 'dist/' },
-    { src: './assets', dest: 'dist/static/assets/' },
-    { src: './src/lib', dest: 'dist/static/lib/' },
+// custom plugins
+import { buildExamples } from './utils/plugins/rollup-build-examples.mjs';
+import { copyStatic } from './utils/plugins/rollup-copy-static.mjs';
+import { isModuleWithExternalDependencies } from './utils/utils.mjs';
+import { treeshakeIgnore } from '../utils/plugins/rollup-treeshake-ignore.mjs';
+import { buildTarget } from '../utils/rollup-build-target.mjs';
+
+// util functions
+
+const NODE_ENV = process.env.NODE_ENV ?? '';
+const ENGINE_PATH = !process.env.ENGINE_PATH && NODE_ENV === 'development' ?
+    '../src/index.js' : process.env.ENGINE_PATH ?? '';
+
+const getEnginePathFiles = () => {
+    if (!ENGINE_PATH) {
+        return [];
+    }
+
+    const src = path.resolve(ENGINE_PATH);
+    const content = fs.readFileSync(src, 'utf8');
+    const isUnpacked = isModuleWithExternalDependencies(content);
+    if (isUnpacked) {
+        const srcDir = path.dirname(src);
+        const dest = 'dist/iframe/ENGINE_PATH';
+        return [{ src: srcDir, dest }];
+    }
+
+    // packed module builds
+    const dest = 'dist/iframe/ENGINE_PATH/index.js';
+    return [{ src, dest }];
+};
+
+const checkAppEngine = () => {
+    // types
+    if (!fs.existsSync('../build/playcanvas.d.ts')) {
+        const cmd = 'npm run build target:types --prefix ../';
+        console.log('\x1b[32m%s\x1b[0m', cmd);
+        execSync(cmd);
+    }
+};
+
+const getEngineTargets = () => {
+    // Checks for types and engien for app building
+    checkAppEngine();
+
+    const targets = [];
+    if (ENGINE_PATH) {
+        return targets;
+    }
+    if (NODE_ENV === 'production') {
+        // Outputs: dist/iframe/playcanvas.mjs
+        targets.push(
+            ...buildTarget({
+                moduleFormat: 'esm',
+                buildType: 'release',
+                bundleState: 'bundled',
+                input: '../src/index.js',
+                dir: 'dist/iframe'
+            })
+        );
+    }
+    if (NODE_ENV === 'production' || NODE_ENV === 'development') {
+        // Outputs: dist/iframe/playcanvas.dbg.mjs
+        targets.push(
+            ...buildTarget({
+                moduleFormat: 'esm',
+                buildType: 'debug',
+                bundleState: 'bundled',
+                input: '../src/index.js',
+                dir: 'dist/iframe'
+            })
+        );
+    }
+    if (NODE_ENV === 'production' || NODE_ENV === 'profiler') {
+        // Outputs: dist/iframe/playcanvas.prf.mjs
+        targets.push(
+            ...buildTarget({
+                moduleFormat: 'esm',
+                buildType: 'profiler',
+                bundleState: 'bundled',
+                input: '../src/index.js',
+                dir: 'dist/iframe'
+            })
+        );
+    }
+    return targets;
+};
+
+const STATIC_FILES = [
+    // static main page src
+    { src: './src/static', dest: 'dist/' },
+
+    // static iframe src
+    { src: './iframe', dest: 'dist/iframe' },
+
+    // assets used in examples
+    { src: './assets', dest: 'dist/static/assets/', once: true },
+
+    // thumbnails used in examples
+    { src: './thumbnails', dest: 'dist/thumbnails/', once: true },
+
+    // external libraries used in examples
+    { src: './src/lib', dest: 'dist/static/lib/', once: true },
+
+    // engine scripts
     { src: '../scripts', dest: 'dist/static/scripts/' },
+
+    // playcanvas engine types
     { src: '../build/playcanvas.d.ts', dest: 'dist/playcanvas.d.ts' },
-    { src: 'src/iframe/index.html', dest: 'dist/iframe/index.html' }
+
+    // playcanvas observer
+    {
+        src: './node_modules/@playcanvas/observer/dist/index.mjs',
+        dest: 'dist/iframe/playcanvas-observer.mjs',
+        once: true
+    },
+
+    // monaco loader
+    { src: './node_modules/monaco-editor/min/vs', dest: 'dist/modules/monaco-editor/min/vs', once: true },
+
+    // fflate (for when using ENGINE_PATH)
+    { src: '../node_modules/fflate/esm/', dest: 'dist/modules/fflate/esm', once: true },
+
+    // engine path
+    ...getEnginePathFiles()
 ];
 
-function timestamp() {
-    return {
-        name: 'timestamp',
-        writeBundle() {
-            console.log("\x1b[32m", "Finished at: " + date.format(new Date(), 'HH:mm:ss'));
-        }
-    };
-}
-
-function copyStaticFiles(targets) {
-    function watch(src) {
-        const srcStats = fs.statSync(src);
-        if (srcStats.isFile()) {
-            this.addWatchFile(path.resolve(__dirname, src));
-            return;
-        }
-
-        const filesToWatch = fs.readdirSync(src);
-
-        for (const file of filesToWatch) {
-            const fullPath = path.join(src, file);
-            const stats = fs.statSync(fullPath);
-
-            if (stats.isFile()) {
-                this.addWatchFile(path.resolve(__dirname, fullPath));
-
-            } else if (stats.isDirectory()) {
-                watch.bind(this)(fullPath);
-            }
-        }
-    }
-    return {
-        name: 'copy-and-watch',
-        async load() {
-            return 'console.log("This temp file is created when copying static files, it should be removed during the build process.");';
-        },
-        async buildStart() {
-            if (process.env.NODE_ENV !== 'development') return;
-            targets.forEach((target) => {
-                watch.bind(this)(target.src, target.dest);
-            });
-        },
-        async generateBundle() {
-            targets.forEach((target) => {
-                fse.copySync(target.src, target.dest, { overwrite: true });
-            });
-        },
-        async writeBundle() {
-            fs.unlinkSync('dist/copy.tmp');
-        }
-    };
-}
-
-// define supported module overrides
-const aliasEntries = {
-    '@playcanvas/pcui/react': PCUI_REACT_PATH,
-    '@playcanvas/pcui/styles': PCUI_STYLES_PATH
-};
-
-const tsCompilerOptions = {
-    baseUrl: '.',
-    paths: {
-        '@playcanvas/pcui/react': [PCUI_REACT_PATH],
-        '@playcanvas/pcui/styles': [PCUI_STYLES_PATH]
-    }
-};
-
-const builds = [
+export default [
     {
-        input: 'src/app/index.tsx',
+        // used as a placeholder
+        input: 'src/static/index.html',
+        output: {
+            file: 'cache/output.tmp'
+        },
+        watch: {
+            skipWrite: true
+        },
+        treeshake: false,
+        plugins: [buildExamples(NODE_ENV, ENGINE_PATH), copyStatic(NODE_ENV, STATIC_FILES)]
+    },
+    {
+        // A debug build is ~2.3MB and a release build ~0.6MB
+        input: 'src/app/index.mjs',
         output: {
             dir: 'dist',
-            format: 'es'
+            format: 'umd'
         },
+        treeshake: 'smallest',
         plugins: [
-            alias({ entries: aliasEntries }),
             commonjs(),
+            treeshakeIgnore([/@playcanvas\/pcui/g]), // ignore PCUI treeshake
             resolve(),
-            typescript({
-                tsconfig: 'tsconfig.json',
-                tsconfigDefaults: { compilerOptions: tsCompilerOptions },
-                clean: true
-            }),
             replace({
                 values: {
-                    'process.env.NODE_ENV': JSON.stringify(process.env.NODE_ENV)
+                    'process.env.NODE_ENV': JSON.stringify(NODE_ENV) // for REACT bundling
                 },
                 preventAssignment: true
             }),
-            (process.env.NODE_ENV === 'production' && terser()),
-            timestamp()
+            NODE_ENV === 'production' && terser()
         ]
     },
-    {
-        input: 'src/iframe/index.mjs',
-        output: {
-            name: 'bundle',
-            format: 'es',
-            dir: 'dist/iframe',
-            sourcemap: process.env.NODE_ENV === 'development' ? 'inline' : false
-        },
-        plugins: [
-            alias({
-                entries: {
-                    'playcanvas': ENGINE_PATH,
-                    '../../../build/playcanvas.js': ENGINE_PATH,
-                    'pc-alias': ENGINE_PATH.includes('.mjs') ? './pc-es6.mjs' : './pc-es5.mjs'
-                }
-            }),
-            commonjs(),
-            resolve(),
-            replace({
-                'process.env.NODE_ENV': JSON.stringify(
-                    'production'
-                ),
-                preventAssignment: true
-            }),
-            typescript({
-                tsconfig: 'tsconfig.json'
-            }),
-            process.env.NODE_ENV === 'development' ? sourcemaps() : null,
-            timestamp()
-        ]
-    },
-    {
-        input: 'src/examples/index.mjs',
-        external: ['../../../../', 'react', '@playcanvas/pcui/react', '@playcanvas/observer'],
-        output: {
-            name: 'examples',
-            format: 'umd',
-            dir: `dist/examples`,
-            globals: {
-                '@playcanvas/pcui/react': 'pcui',
-                'react': 'React',
-                '@playcanvas/observer': 'observer',
-                [process.cwd().slice(0, process.cwd().length - 9)]: 'pc'
-            }
-        },
-        plugins: [
-            commonjs(),
-            resolve(),
-            typescript({
-                tsconfig: 'tsconfig.json'
-            }),
-            timestamp()
-        ]
-    },
-    {
-        input: 'src/static/index.html',
-        output: {
-            file: `dist/copy.tmp`
-        },
-        plugins: [
-            copyStaticFiles(staticFiles),
-            timestamp()
-        ]
-    }
+    ...getEngineTargets()
 ];
-
-export default builds;

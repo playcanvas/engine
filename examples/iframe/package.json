@@ -1,0 +1,8 @@
+{
+    "name": "examples",
+    "exports": {
+        "./files": "./files.mjs",
+        "./observer": "./observer.mjs",
+        "./utils": "./utils.mjs"
+    }
+}

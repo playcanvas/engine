@@ -4,6 +4,8 @@ import { CurveEvaluator } from './curve-evaluator.js';
 
 /**
  * A curve set is a collection of curves.
+ *
+ * @category Math
  */
 class CurveSet {
     curves = [];
@@ -59,7 +61,7 @@ class CurveSet {
     }
 
     /**
-     * The number of curves in the curve set.
+     * Gets the number of curves in the curve set.
      *
      * @type {number}
      */
@@ -68,7 +70,7 @@ class CurveSet {
     }
 
     /**
-     * The interpolation scheme applied to all curves in the curve set. Can be:
+     * Sets the interpolation scheme applied to all curves in the curve set. Can be:
      *
      * - {@link CURVE_LINEAR}
      * - {@link CURVE_SMOOTHSTEP}
@@ -86,6 +88,11 @@ class CurveSet {
         }
     }
 
+    /**
+     * Gets the interpolation scheme applied to all curves in the curve set.
+     *
+     * @type {number}
+     */
     get type() {
         return this._type;
     }

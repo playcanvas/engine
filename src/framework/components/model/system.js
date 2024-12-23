@@ -1,18 +1,16 @@
 import { extend } from '../../../core/core.js';
-
 import { Vec3 } from '../../../core/math/vec3.js';
-
 import { BoundingBox } from '../../../core/shape/bounding-box.js';
-
 import { getDefaultMaterial } from '../../../scene/materials/default-material.js';
-
 import { Asset } from '../../asset/asset.js';
-
 import { Component } from '../component.js';
 import { ComponentSystem } from '../system.js';
-
 import { ModelComponent } from './component.js';
 import { ModelComponentData } from './data.js';
+
+/**
+ * @import { AppBase } from '../../app-base.js'
+ */
 
 const _schema = ['enabled'];
 
@@ -20,14 +18,14 @@ const _schema = ['enabled'];
  * Allows an Entity to render a model or a primitive shape like a box, capsule, sphere, cylinder,
  * cone etc.
  *
- * @augments ComponentSystem
+ * @category Graphics
  */
 class ModelComponentSystem extends ComponentSystem {
     /**
      * Create a new ModelComponentSystem instance.
      *
-     * @param {import('../../app-base.js').AppBase} app - The Application.
-     * @hideconstructor
+     * @param {AppBase} app - The Application.
+     * @ignore
      */
     constructor(app) {
         super(app);
@@ -125,8 +123,9 @@ class ModelComponentSystem extends ComponentSystem {
             component._clonedModel = true;
         }
 
-        if (!data.materialAsset)
+        if (!data.materialAsset) {
             component.material = material;
+        }
 
         // TODO: we should copy all relevant mesh instance properties here
         if (entity.model.model) {

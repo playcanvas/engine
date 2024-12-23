@@ -156,7 +156,7 @@ function BasisWorker() {
     };
 
     // return true if the texture dimensions are valid for the target format
-    const dimensionsValid = (width, height, format, webgl2) => {
+    const dimensionsValid = (width, height, format) => {
         switch (format) {
             // etc1, 2
             case BASIS_FORMAT.cTFETC1:
@@ -171,7 +171,7 @@ function BasisWorker() {
             // pvrtc
             case BASIS_FORMAT.cTFPVRTC1_4_RGB:
             case BASIS_FORMAT.cTFPVRTC1_4_RGBA:
-                return isPOT(width, height) && ((width === height) || webgl2);
+                return isPOT(width, height);
             // astc
             case BASIS_FORMAT.cTFASTC_4x4:
                 return true;
@@ -182,6 +182,7 @@ function BasisWorker() {
                 // https://www.khronos.org/registry/webgl/extensions/rejected/WEBGL_compressed_texture_atc/
                 return true;
         }
+        return false;
     };
 
     const transcodeKTX2 = (url, data, options) => {
@@ -220,7 +221,7 @@ function BasisWorker() {
             basisFormat = hasAlpha ? alphaMapping[format] : opaqueMapping[format];
 
             // if image dimensions don't work on target, fall back to uncompressed
-            if (!dimensionsValid(width, height, basisFormat, options.deviceDetails.webgl2)) {
+            if (!dimensionsValid(width, height, basisFormat)) {
                 basisFormat = hasAlpha ? BASIS_FORMAT.cTFRGBA32 : BASIS_FORMAT.cTFRGB565;
             }
         }
@@ -228,7 +229,7 @@ function BasisWorker() {
         if (!basisFile.startTranscoding()) {
             basisFile.close();
             basisFile.delete();
-            throw new Error('Failed to start transcoding url=' + url);
+            throw new Error(`Failed to start transcoding url=${url}`);
         }
 
         let i;
@@ -241,7 +242,7 @@ function BasisWorker() {
             if (!basisFile.transcodeImage(dst, mip, 0, 0, basisFormat, 0, -1, -1)) {
                 basisFile.close();
                 basisFile.delete();
-                throw new Error('Failed to transcode image url=' + url);
+                throw new Error(`Failed to transcode image url=${url}`);
             }
 
             const is16BitFormat = (basisFormat === BASIS_FORMAT.cTFRGB565 || basisFormat === BASIS_FORMAT.cTFRGBA4444);
@@ -306,7 +307,7 @@ function BasisWorker() {
             basisFormat = hasAlpha ? alphaMapping[format] : opaqueMapping[format];
 
             // if image dimensions don't work on target, fall back to uncompressed
-            if (!dimensionsValid(width, height, basisFormat, options.deviceDetails.webgl2)) {
+            if (!dimensionsValid(width, height, basisFormat)) {
                 basisFormat = hasAlpha ? BASIS_FORMAT.cTFRGBA32 : BASIS_FORMAT.cTFRGB565;
             }
         }
@@ -314,7 +315,7 @@ function BasisWorker() {
         if (!basisFile.startTranscoding()) {
             basisFile.close();
             basisFile.delete();
-            throw new Error('Failed to start transcoding url=' + url);
+            throw new Error(`Failed to start transcoding url=${url}`);
         }
 
         let i;
@@ -325,9 +326,18 @@ function BasisWorker() {
             const dst = new Uint8Array(dstSize);
 
             if (!basisFile.transcodeImage(dst, 0, mip, basisFormat, 0, 0)) {
-                basisFile.close();
-                basisFile.delete();
-                throw new Error('Failed to transcode image url=' + url);
+                if (mip === levels - 1 && dstSize === levelData[mip - 1].buffer.byteLength) {
+                    // https://github.com/BinomialLLC/basis_universal/issues/358
+                    // there is a regression on iOS/safari 17 where the last mipmap level
+                    // fails to transcode. this is a workaround which copies the previous mip
+                    // level data instead of failing.
+                    dst.set(new Uint8Array(levelData[mip - 1].buffer));
+                    console.warn(`Failed to transcode last mipmap level, using previous level instead url=${url}`);
+                } else {
+                    basisFile.close();
+                    basisFile.delete();
+                    throw new Error(`Failed to transcode image url=${url}`);
+                }
             }
 
             const is16BitFormat = (basisFormat === BASIS_FORMAT.cTFRGB565 || basisFormat === BASIS_FORMAT.cTFRGBA4444);
@@ -378,26 +388,26 @@ function BasisWorker() {
         // initialize the wasm module
         const instantiateWasmFunc = (imports, successCallback) => {
             WebAssembly.instantiate(config.module, imports)
-                .then((result) => {
-                    successCallback(result);
-                })
-                .catch((reason) => {
-                    console.error('instantiate failed + ' + reason);
-                });
+            .then((result) => {
+                successCallback(result);
+            })
+            .catch((reason) => {
+                console.error(`instantiate failed + ${reason}`);
+            });
             return {};
         };
 
         self.BASIS(config.module ? { instantiateWasm: instantiateWasmFunc } : null)
-            .then((instance) => {
-                instance.initializeBasis();
+        .then((instance) => {
+            instance.initializeBasis();
 
-                // set globals
-                basis = instance;
-                rgbPriority = config.rgbPriority;
-                rgbaPriority = config.rgbaPriority;
+            // set globals
+            basis = instance;
+            rgbPriority = config.rgbPriority;
+            rgbaPriority = config.rgbaPriority;
 
-                callback(null);
-            });
+            callback(null);
+        });
     };
 
     // handle incoming worker requests

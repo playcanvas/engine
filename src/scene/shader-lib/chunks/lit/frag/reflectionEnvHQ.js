@@ -15,7 +15,7 @@ vec3 calcReflection(vec3 reflDir, float gloss) {
     float ilevel = floor(level);
     float flevel = level - ilevel;
 
-    vec3 sharp = $DECODE_CUBEMAP(textureCube(texture_cubeMap, fixSeams(dir)));
+    vec3 sharp = $DECODE_CUBEMAP(textureCube(texture_cubeMap, dir));
     vec3 roughA = $DECODE(texture2D(texture_envAtlas, mapRoughnessUv(uv, ilevel)));
     vec3 roughB = $DECODE(texture2D(texture_envAtlas, mapRoughnessUv(uv, ilevel + 1.0)));
 

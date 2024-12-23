@@ -271,48 +271,47 @@ Tween.prototype.start = function (idx) {
     updateProperty(startValue);
 
     tweenInstances[idx] = new TWEEN.Tween(startValue)
-        .to(endValue, tween.duration)
-        .easing(easingFunc)
-        .onStart(function (obj) {
-            if (tween.startEvent !== '') {
-                app.fire(tween.startEvent);
-            }
-        })
-        .onStop(function (obj) {
-            if (tween.stopEvent !== '') {
-                app.fire(tween.stopEvent);
-            }
-            tweenInstances[idx] = null;
-        })
-        .onUpdate(function (obj) {
-            updateProperty(obj);
+    .to(endValue, tween.duration)
+    .easing(easingFunc)
+    .onStart((obj) => {
+        if (tween.startEvent !== '') {
+            app.fire(tween.startEvent);
+        }
+    })
+    .onStop((obj) => {
+        if (tween.stopEvent !== '') {
+            app.fire(tween.stopEvent);
+        }
+        tweenInstances[idx] = null;
+    })
+    .onUpdate((obj) => {
+        updateProperty(obj);
 
-            if (tween.updateEvent !== '') {
-                app.fire(tween.updateEvent);
-            }
-        })
-        .onComplete(function (obj) {
-            if (tween.completeEvent !== '') {
-                app.fire(tween.completeEvent);
-            }
-            tweenInstances[idx] = null;
-        })
-        .onRepeat(function (obj) {
-            if (tween.repeatEvent !== '') {
-                app.fire(tween.repeatEvent);
-            }
-        })
-        .repeat(tween.repeat === -1 ? Infinity : tween.repeat)
-        .repeatDelay(tween.repeatDelay)
-        .yoyo(tween.yoyo)
-        .delay(tween.delay)
-        .start();
+        if (tween.updateEvent !== '') {
+            app.fire(tween.updateEvent);
+        }
+    })
+    .onComplete((obj) => {
+        if (tween.completeEvent !== '') {
+            app.fire(tween.completeEvent);
+        }
+        tweenInstances[idx] = null;
+    })
+    .onRepeat((obj) => {
+        if (tween.repeatEvent !== '') {
+            app.fire(tween.repeatEvent);
+        }
+    })
+    .repeat(tween.repeat === -1 ? Infinity : tween.repeat)
+    .repeatDelay(tween.repeatDelay)
+    .yoyo(tween.yoyo)
+    .delay(tween.delay)
+    .start();
 };
 
 // We have to update the tween.js engine somewhere once a frame...
-var app = pc.Application.getApplication();
-if (app) {
-    app.on('update', function (dt) {
+if (pc.Application.getApplication()) {
+    pc.Application.getApplication().on('update', (dt) => {
         TWEEN.update();
     });
 }

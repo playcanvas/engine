@@ -12,10 +12,6 @@ vec4 gammaCorrectInput(vec4 color) {
 }
 
 vec3 gammaCorrectOutput(vec3 color) {
-#ifdef HDR
-    return color;
-#else
     return pow(color + 0.0000001, vec3(1.0 / 2.2));
-#endif
 }
 `;
