@@ -74,6 +74,17 @@ export const controls = ({ observer, ReactPCUI, React, jsx, fragment }) => {
             ),
             jsx(
                 LabelGroup,
+                { text: 'Blend' },
+                jsx(SliderInput, {
+                    binding: new BindingTwoWay(),
+                    link: { observer, path: 'settings.light.cascadeBlend' },
+                    min: 0,
+                    max: 0.2,
+                    precision: 2
+                })
+            ),
+            jsx(
+                LabelGroup,
                 { text: 'VSM Blur' },
                 jsx(SliderInput, {
                     binding: new BindingTwoWay(),

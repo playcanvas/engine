@@ -386,6 +386,28 @@ class LightComponent extends Component {
     }
 
     /**
+     * Sets the blend factor for cascaded shadow maps, defining the fraction of each cascade level
+     * used for blending between adjacent cascades. The value should be between 0 and 1, with
+     * a default of 0, which disables blending between cascades.
+     *
+     * @type {number}
+     */
+    set cascadeBlend(value) {
+        this._setValue('cascadeBlend', value, function (newValue, oldValue) {
+            this.light.cascadeBlend = math.clamp(newValue, 0, 1);
+        });
+    }
+
+    /**
+     * Gets the blend factor for cascaded shadow maps.
+     *
+     * @type {number}
+     */
+    get cascadeBlend() {
+        return this.data.cascadeBlend;
+    }
+
+    /**
      * Sets the number of samples used to bake this light into the lightmap. Defaults to 1. Maximum
      * value is 255.
      *
