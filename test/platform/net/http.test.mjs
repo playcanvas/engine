@@ -63,13 +63,13 @@ describe('Http', function () {
 
         it('retries resource and returns result if eventually found', function (done) {
             spy(http, 'request');
-    
+
             let requests = 0;
             const xhr = useFakeXMLHttpRequest();
-            
+
             // Store original XMLHttpRequest
             const originalXHR = global.XMLHttpRequest;
-            
+
             // Replace JSDOM's XMLHttpRequest with Sinon's fake
             global.XMLHttpRequest = xhr;
 
@@ -77,38 +77,38 @@ describe('Http', function () {
                 setTimeout(function () {
                     try {
                         if (++requests === 3) {
-                            xhr.respond(200, { ContentType: 'application/json' }, JSON.stringify({ test: "value" }));
+                            xhr.respond(200, { ContentType: 'application/json' }, JSON.stringify({ test: 'value' }));
                         } else {
                             xhr.error();
                         }
                     } catch (err) {
-                        done(new Error(err.message + '\n' + err.stack));
+                        done(new Error(`${err.message}\n${err.stack}`));
                     }
                 });
             };
-    
+
             http.get('/someurl.json', {
                 retry: true,
                 maxRetries: 2
             }, function (err, data) {
                 expect(err).to.equal(null);
                 expect(http.request.callCount).to.equal(3);
-                expect(data).to.deep.equal({ test: "value" });
-                
+                expect(data).to.deep.equal({ test: 'value' });
+
                 // Restore original XMLHttpRequest
                 global.XMLHttpRequest = originalXHR;
-                
+
                 done();
             });
         });
-    
+
         it('status 0 returns "Network error"', function (done) {
             const xhr = useFakeXMLHttpRequest();
             let isDone = false;
-            
+
             // Store original XMLHttpRequest
             const originalXHR = global.XMLHttpRequest;
-            
+
             // Replace JSDOM's XMLHttpRequest with Sinon's fake
             global.XMLHttpRequest = xhr;
 
@@ -119,12 +119,12 @@ describe('Http', function () {
                     } catch (err) {
                         if (!isDone) {
                             isDone = true;
-                            done(new Error(err.message + '\n' + err.stack));
+                            done(new Error(`${err.message}\n${err.stack}`));
                         }
                     }
                 });
             };
-    
+
             http.get('/someurl.json', function (err, data) {
                 if (!isDone) {
                     isDone = true;
