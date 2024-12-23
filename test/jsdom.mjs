@@ -23,13 +23,13 @@ function jsdomSetup() {
     global.document = jsdom.window.document;
 
     global.ArrayBuffer = jsdom.window.ArrayBuffer;
+    global.Audio = jsdom.window.Audio;
     global.DataView = jsdom.window.DataView;
     global.Image = jsdom.window.Image;
     global.KeyboardEvent = jsdom.window.KeyboardEvent;
     global.MouseEvent = jsdom.window.MouseEvent;
     global.XMLHttpRequest = jsdom.window.XMLHttpRequest;
 
-    global.pc = pc;
     jsdom.window.pc = pc;
 }
 

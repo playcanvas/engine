@@ -1,11 +1,11 @@
-import http from 'http';
+import { createServer } from 'http';
 
 import handler from 'serve-handler';
 
 let server;
 
 export const mochaGlobalSetup = () => {
-    server = http.createServer((request, response) => {
+    server = createServer((request, response) => {
         return handler(request, response);
     });
 
@@ -14,6 +14,9 @@ export const mochaGlobalSetup = () => {
     });
 };
 
-export const mochaGlobalTeardown = () => {
-    server.close();
+export const mochaGlobalTeardown = async () => {
+    if (server) {
+        await new Promise(resolve => server.close(resolve));
+        server = null;
+    }
 };
