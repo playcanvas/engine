@@ -1,11 +1,11 @@
-import http from 'http';
+import { createServer } from 'http';
 
 import handler from 'serve-handler';
 
 let server;
 
 export const mochaGlobalSetup = () => {
-    server = http.createServer((request, response) => {
+    server = createServer((request, response) => {
         return handler(request, response);
     });
 
