@@ -7,7 +7,7 @@ import { Texture } from '../../../src/platform/graphics/texture.js';
 import { createApp } from '../../app.mjs';
 import { jsdomSetup, jsdomTeardown } from '../../jsdom.mjs';
 
-describe.only('BundleHandler', function () {
+describe('BundleHandler', function () {
 
     let app;
     let assets;
