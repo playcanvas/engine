@@ -126,6 +126,7 @@ class ForwardRenderer extends Renderer {
         this.shadowMatrixPaletteId = [];
         this.shadowCascadeDistancesId = [];
         this.shadowCascadeCountId = [];
+        this.shadowCascadeBlendId = [];
 
         this.screenSizeId = scope.resolve('uScreenSize');
         this._screenSize = new Float32Array(4);
@@ -202,6 +203,7 @@ class ForwardRenderer extends Renderer {
         this.shadowMatrixPaletteId[i] = scope.resolve(`${light}_shadowMatrixPalette[0]`);
         this.shadowCascadeDistancesId[i] = scope.resolve(`${light}_shadowCascadeDistances`);
         this.shadowCascadeCountId[i] = scope.resolve(`${light}_shadowCascadeCount`);
+        this.shadowCascadeBlendId[i] = scope.resolve(`${light}_shadowCascadeBlend`);
     }
 
     setLTCDirectionalLight(wtm, cnt, dir, campos, far) {
@@ -264,6 +266,7 @@ class ForwardRenderer extends Renderer {
                 this.shadowMatrixPaletteId[cnt].setValue(directional._shadowMatrixPalette);
                 this.shadowCascadeDistancesId[cnt].setValue(directional._shadowCascadeDistances);
                 this.shadowCascadeCountId[cnt].setValue(directional.numCascades);
+                this.shadowCascadeBlendId[cnt].setValue(1 - directional.cascadeBlend);
                 this.lightShadowIntensity[cnt].setValue(directional.shadowIntensity);
 
                 const shadowRT = lightRenderData.shadowCamera.renderTarget;

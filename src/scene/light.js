@@ -18,6 +18,10 @@ import { ShadowRenderer } from './renderer/shadow-renderer.js';
 import { DepthState } from '../platform/graphics/depth-state.js';
 
 /**
+ * @import { GraphicsDevice } from '../platform/graphics/graphics-device.js'
+ */
+
+/**
  * @import { BindGroup } from '../platform/graphics/bind-group.js'
  * @import { Layer } from './layer.js'
  */
@@ -139,6 +143,10 @@ class Light {
      */
     shadowDepthState = DepthState.DEFAULT.clone();
 
+    /**
+     * @param {GraphicsDevice} graphicsDevice - The graphics device.
+     * @param {boolean} clusteredLighting - True if the clustered lighting is enabled.
+     */
     constructor(graphicsDevice, clusteredLighting) {
         this.device = graphicsDevice;
         this.clusteredLighting = clusteredLighting;
@@ -187,6 +195,7 @@ class Light {
         this._shadowMatrixPalette = null;   // a float array, 16 floats per cascade
         this._shadowCascadeDistances = null;
         this.numCascades = 1;
+        this._cascadeBlend = 0;
         this.cascadeDistribution = 0.5;
 
         // Light source shape properties
@@ -294,6 +303,17 @@ class Light {
 
     get numCascades() {
         return this.cascades.length;
+    }
+
+    set cascadeBlend(value) {
+        if (this._cascadeBlend !== value) {
+            this._cascadeBlend = value;
+            this.updateKey();
+        }
+    }
+
+    get cascadeBlend() {
+        return this._cascadeBlend;
     }
 
     set shadowMap(shadowMap) {
@@ -473,14 +493,14 @@ class Light {
     }
 
     set normalOffsetBias(value) {
-        if (this._normalOffsetBias === value) {
-            return;
-        }
+        if (this._normalOffsetBias !== value) {
+            const dirty = (!this._normalOffsetBias && value) || (this._normalOffsetBias && !value);
+            this._normalOffsetBias = value;
 
-        if ((!this._normalOffsetBias && value) || (this._normalOffsetBias && !value)) {
-            this.updateKey();
+            if (dirty) {
+                this.updateKey();
+            }
         }
-        this._normalOffsetBias = value;
     }
 
     get normalOffsetBias() {
@@ -772,6 +792,7 @@ class Light {
         // Directional properties
         clone.numCascades = this.numCascades;
         clone.cascadeDistribution = this.cascadeDistribution;
+        clone.cascadeBlend = this._cascadeBlend;
 
         // shape properties
         clone.shape = this._shape;
@@ -952,7 +973,9 @@ class Light {
 
     layersDirty() {
         this.layers.forEach((layer) => {
-            layer.markLightsDirty();
+            if (layer.hasLight(this)) {
+                layer.markLightsDirty();
+            }
         });
     }
 
@@ -976,7 +999,8 @@ class Light {
         // 14 - 15 : cookie channel B
         // 12      : cookie transform
         // 10 - 11 : light source shape
-        //  8 -  9 : light num cascades
+        //  9      : use cascades
+        //  8      : cascade blend
         //  7      : disable specular
         //  6 -  4 : mask
         //  3      : cast shadows
@@ -990,7 +1014,8 @@ class Light {
                (chanId[this._cookieChannel.charAt(0)]     << 18) |
                ((this._cookieTransform ? 1 : 0)           << 12) |
                ((this._shape)                             << 10) |
-               ((this.numCascades - 1)                    <<  8) |
+               ((this.numCascades > 0 ? 1 : 0)            <<  9) |
+               ((this._cascadeBlend > 0 ? 1 : 0)          <<  8) |
                ((this.affectSpecularity ? 1 : 0)          <<  7) |
                ((this.mask)                               <<  6) |
                ((this._castShadows ? 1 : 0)               <<  3);

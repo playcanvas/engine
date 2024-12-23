@@ -42,6 +42,8 @@ class LightComponentData {
 
     numCascades = 1;
 
+    cascadeBlend = 0;
+
     bakeNumSamples = 1;
 
     bakeArea = 0;
