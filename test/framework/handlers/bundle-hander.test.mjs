@@ -127,7 +127,7 @@ describe('BundleHandler', function () {
             }
         };
 
-        assets.forEach((asset, index) => {
+        assets.forEach((asset) => {
             asset.on('load', onLoad);
         });
         bundleAsset.on('load', onLoad);
