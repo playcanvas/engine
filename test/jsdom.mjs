@@ -4,7 +4,7 @@ import * as pc from '../src/index.js';
 
 let jsdom;
 
-function jsdomSetup() {
+export const jsdomSetup = () => {
     const html = '<!DOCTYPE html><html><head></head><body></body></html>';
 
     jsdom = new JSDOM(html, {
@@ -28,10 +28,8 @@ function jsdomSetup() {
 
     // Copy the PlayCanvas API to global scope (only required for 'classic' scripts)
     jsdom.window.pc = pc;
-}
+};
 
-function jsdomTeardown() {
+export const jsdomTeardown = () => {
     jsdom = null;
-}
-
-export { jsdomSetup, jsdomTeardown };
+};
