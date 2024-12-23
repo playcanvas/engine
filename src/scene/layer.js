@@ -618,6 +618,10 @@ class Layer {
         this._splitLightsDirty = true;
     }
 
+    hasLight(light) {
+        return this._lightsSet.has(light);
+    }
+
     /**
      * Adds a light to this layer.
      *
