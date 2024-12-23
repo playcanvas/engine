@@ -10,13 +10,10 @@ export const mochaGlobalSetup = () => {
     });
 
     server.listen(3000, () => {
-        console.log('Server started at http://localhost:3000');
+        console.log('Server at http://localhost:3000 started');
     });
 };
 
 export const mochaGlobalTeardown = async () => {
-    if (server) {
-        await new Promise(resolve => server.close(resolve));
-        server = null;
-    }
+    server.close();
 };
