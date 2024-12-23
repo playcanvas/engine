@@ -17,9 +17,7 @@ describe.only('BundleHandler', function () {
         jsdomSetup();
         app = createApp();
 
-        // create assets in the bundle
-        // (To add more files just untar bundles.tar.gz, add your file and then tar it again using
-        // "tar czf bundle.tar.gz files")
+        // unbundled assets that also exist in the test.tar bundle
         assets = [
             new Asset('binary', 'binary', {
                 filename: 'test.bin',
@@ -51,8 +49,8 @@ describe.only('BundleHandler', function () {
             })
         ];
 
-        // the bundle asset created by calling tar in the root folder of the repo:
-        // tar cvf test.tar test\assets\test.bin test\assets\test.css test\assets\test.glb test\assets\test.glsl test\assets\test.html test\assets\test.json test\assets\test.png test\assets\test.txt
+        // the bundle asset (created by calling tar in the root folder of the repo):
+        // tar cvf test.tar test\assets\test.bin test\assets\test.css test\assets\test.glb test\assets\test.glsl test\assets\test.html test\assets\test.json test\assets\test.txt
         bundleAsset = new Asset('bundle asset', 'bundle', {
             url: 'http://localhost:3000/test/assets/test.tar',
             size: 9728
