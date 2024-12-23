@@ -58,7 +58,7 @@ function vogelSpherePrecalculationSamples(numSamples) {
     const samples = [];
     for (let i = 0; i < numSamples; i++) {
         const weight = i / numSamples;
-        const radius = Math.sqrt(1.0 - weight * weight);
+        const radius = Math.sqrt(weight * weight);
         samples.push(radius);
     }
     return samples;
@@ -266,16 +266,14 @@ class ForwardRenderer extends Renderer {
                 this.shadowCascadeCountId[cnt].setValue(directional.numCascades);
                 this.lightShadowIntensity[cnt].setValue(directional.shadowIntensity);
 
-                const projectionCompensation = (50.0 / lightRenderData.projectionCompensation);
                 const shadowRT = lightRenderData.shadowCamera.renderTarget;
                 if (shadowRT) {
-                    const pixelsPerMeter = directional.penumbraSize / shadowRT.width;
-                    this.lightShadowSearchAreaId[cnt].setValue(pixelsPerMeter * projectionCompensation);
+                    this.lightShadowSearchAreaId[cnt].setValue(directional.penumbraSize / lightRenderData.shadowCamera.renderTarget.width * lightRenderData.projectionCompensation);
                 }
 
                 const cameraParams = directional._shadowCameraParams;
                 cameraParams.length = 4;
-                cameraParams[0] = lightRenderData.depthRangeCompensation;
+                cameraParams[0] = 3.0; // unused
                 cameraParams[1] = lightRenderData.shadowCamera._farClip;
                 cameraParams[2] = lightRenderData.shadowCamera._nearClip;
                 cameraParams[3] = 1;
@@ -349,7 +347,7 @@ class ForwardRenderer extends Renderer {
             const cameraParams = omni._shadowCameraParams;
 
             cameraParams.length = 4;
-            cameraParams[0] = lightRenderData.depthRangeCompensation;
+            cameraParams[0] = 0; // unused
             cameraParams[1] = lightRenderData.shadowCamera._farClip;
             cameraParams[2] = lightRenderData.shadowCamera._nearClip;
             cameraParams[3] = 0;
@@ -417,7 +415,7 @@ class ForwardRenderer extends Renderer {
 
             const cameraParams = spot._shadowCameraParams;
             cameraParams.length = 4;
-            cameraParams[0] = lightRenderData.depthRangeCompensation;
+            cameraParams[0] = 0; // unused
             cameraParams[1] = lightRenderData.shadowCamera._farClip;
             cameraParams[2] = lightRenderData.shadowCamera._nearClip;
             cameraParams[3] = 0;

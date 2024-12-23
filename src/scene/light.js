@@ -76,7 +76,6 @@ class LightRenderData {
         this.shadowScissor = new Vec4(0, 0, 1, 1);
 
         // depth range compensation for PCSS with directional lights
-        this.depthRangeCompensation = 0;
         this.projectionCompensation = 0;
 
         // face index, value is based on light type:

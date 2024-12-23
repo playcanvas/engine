@@ -441,6 +441,7 @@ class LitShader {
         const shadowInfo = shadowTypeInfo.get(shadowType);
         Debug.assert(shadowInfo);
         const isVsm = shadowInfo?.vsm ?? false;
+        const isPcss = shadowInfo?.pcss ?? false;
 
         let code = this._fsGetBeginCode();
 
@@ -472,19 +473,23 @@ class LitShader {
         // Directional: Always since light has no position
         // Spot: If not using VSM
         // Point: Never
-        const usePerspectiveDepth = lightType === LIGHTTYPE_DIRECTIONAL || (!isVsm && lightType === LIGHTTYPE_SPOT);
+        const usePerspectiveDepth = (lightType === LIGHTTYPE_DIRECTIONAL || (!isVsm && lightType === LIGHTTYPE_SPOT));
 
         // Flag if we are using non-standard depth, i.e gl_FragCoord.z
         let hasModifiedDepth = false;
         if (usePerspectiveDepth) {
             code += '    float depth = gl_FragCoord.z;\n';
+            if (isPcss) {
+                // Transform depth values to world space
+                code += '    depth = linearizeDepth(depth, camera_params);\n';
+            }
         } else {
             code += '    float depth = min(distance(view_position, vPositionW) / light_radius, 0.99999);\n';
             hasModifiedDepth = true;
         }
 
         if (!isVsm) {
-            const exportR32 = shadowType === SHADOW_PCSS_32F;
+            const exportR32 = isPcss;
 
             if (exportR32) {
                 code += '    gl_FragColor.r = depth;\n';
