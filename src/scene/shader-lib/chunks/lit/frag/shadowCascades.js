@@ -5,19 +5,16 @@ const float maxCascades = 4.0;
 mat4 cascadeShadowMat;
 
 // function which selects a shadow projection matrix based on cascade distances 
-void getShadowCascadeMatrix(mat4 shadowMatrixPalette[4], float shadowCascadeDistances[4], float shadowCascadeCount) {
+void getShadowCascadeMatrix(mat4 shadowMatrixPalette[4], vec4 shadowCascadeDistances, float shadowCascadeCount) {
 
     // depth in 0 .. far plane range
     float depth = 1.0 / gl_FragCoord.w;
 
-    // find cascade index based on the depth (loop as there is no per component vec compare operator in webgl)
-    float cascadeIndex = 0.0;
-    for (float i = 0.0; i < maxCascades; i++) {
-        if (depth < shadowCascadeDistances[int(i)]) {
-            cascadeIndex = i;
-            break;
-        }
-    }
+    // 1.0 if depth >= distance, 0.0 otherwise
+    vec4 comparisons = step(shadowCascadeDistances, vec4(depth));
+
+    // sum is the index
+    float cascadeIndex = dot(comparisons, vec4(1.0));
 
     // limit to actual number of used cascades
     cascadeIndex = min(cascadeIndex, shadowCascadeCount - 1.0);
@@ -26,12 +23,11 @@ void getShadowCascadeMatrix(mat4 shadowMatrixPalette[4], float shadowCascadeDist
     cascadeShadowMat = shadowMatrixPalette[int(cascadeIndex)];
 }
 
-void fadeShadow(float shadowCascadeDistances[4]) {                  
-
+void fadeShadow(vec4 shadowCascadeDistances) {                  
     // if the pixel is past the shadow distance, remove shadow
     // this enforces straight line instead of corner of shadow which moves when camera rotates  
     float depth = 1.0 / gl_FragCoord.w;
-    if (depth > shadowCascadeDistances[int(maxCascades - 1.0)]) {
+    if (depth > shadowCascadeDistances.w) {
         dShadowCoord.z = -9999999.0;
     }
 }

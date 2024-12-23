@@ -610,7 +610,7 @@ class LitShader {
                 // directional (cascaded) shadows
                 if (lightType === LIGHTTYPE_DIRECTIONAL) {
                     decl.append(`uniform mat4 light${i}_shadowMatrixPalette[4];`);
-                    decl.append(`uniform float light${i}_shadowCascadeDistances[4];`);
+                    decl.append(`uniform vec4 light${i}_shadowCascadeDistances;`);
                     decl.append(`uniform float light${i}_shadowCascadeCount;`);
                 }
                 decl.append(`uniform vec4 light${i}_shadowParams;`); // Width, height, bias, radius
