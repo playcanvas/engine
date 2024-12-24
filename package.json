@@ -68,12 +68,8 @@
     "@webgpu/types": "^0.1.52"
   },
   "devDependencies": {
-    "@babel/core": "^7.26.0",
-    "@babel/eslint-parser": "^7.25.9",
-    "@babel/preset-env": "^7.26.0",
     "@napi-rs/canvas": "^0.1.65",
     "@playcanvas/eslint-config": "^2.0.8",
-    "@rollup/plugin-babel": "^6.0.4",
     "@rollup/plugin-node-resolve": "^16.0.0",
     "@rollup/plugin-strip": "^3.0.4",
     "@rollup/plugin-swc": "^0.4.0",
