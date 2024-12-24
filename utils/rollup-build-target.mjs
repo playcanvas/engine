@@ -1,7 +1,7 @@
 // official package plugins
 import resolve from '@rollup/plugin-node-resolve';
 import strip from '@rollup/plugin-strip';
-import swc from '@rollup/plugin-swc';
+import swcPlugin from '@rollup/plugin-swc';
 
 // unofficial package plugins
 import jscc from 'rollup-plugin-jscc';
@@ -206,7 +206,7 @@ function buildTarget({ moduleFormat, buildType, bundleState, input = 'src/index.
         const target = {
             input: release.output.file,
             plugins: [
-                swc({ swc: swcOptions(isDebug, isUMD, isMin) })
+                swcPlugin({ swc: swcOptions(isDebug, isUMD, isMin) })
             ],
             output: {
                 plugins: getOutPlugins(),
@@ -247,7 +247,7 @@ function buildTarget({ moduleFormat, buildType, bundleState, input = 'src/index.
             !isDebug ? shaderChunks() : undefined,
             isDebug ? engineLayerImportValidation(input) : undefined,
             !isDebug ? strip({ functions: STRIP_FUNCTIONS }) : undefined,
-            swc({ swc: swcOptions(isDebug, isUMD, isMin) }),
+            swcPlugin({ swc: swcOptions(isDebug, isUMD, isMin) }),
             !isUMD ? dynamicImportBundlerSuppress() : undefined,
             !isDebug ? spacesToTabs() : undefined
         ]
