@@ -24,6 +24,13 @@ describe('ElementDragHelper', function () {
     let camera;
     let parent;
 
+    const createDragHelper = function (axis) {
+        dragHelper = new ElementDragHelper(element, axis);
+        dragHelper.on('drag:start', dragStartHandler);
+        dragHelper.on('drag:end', dragEndHandler);
+        dragHelper.on('drag:move', dragMoveHandler);
+    };
+
     beforeEach(function () {
         jsdomSetup();
 
@@ -84,13 +91,6 @@ describe('ElementDragHelper', function () {
         parent.addChild(entity);
         app.root.addChild(parent);
     });
-
-    const createDragHelper = function (axis) {
-        dragHelper = new ElementDragHelper(element, axis);
-        dragHelper.on('drag:start', dragStartHandler);
-        dragHelper.on('drag:end', dragEndHandler);
-        dragHelper.on('drag:move', dragMoveHandler);
-    };
 
     afterEach(function () {
         restore();
