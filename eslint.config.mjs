@@ -59,7 +59,6 @@ export default [
     },
     {
         ignores: [
-            'tests/**/*',
             'examples/lib/*',
             'scripts/textmesh/*.min.js',
             'src/polyfill/*',
