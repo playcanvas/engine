@@ -84,11 +84,6 @@
     "fflate": "^0.8.2",
     "globals": "^15.14.0",
     "jsdom": "^25.0.1",
-    "karma": "^6.4.3",
-    "karma-chrome-launcher": "^3.2.0",
-    "karma-mocha": "^2.0.1",
-    "karma-sinon": "^1.0.5",
-    "karma-spec-reporter": "^0.0.36",
     "mocha": "^11.0.1",
     "publint": "^0.2.12",
     "rollup": "^4.29.1",
@@ -129,7 +124,6 @@
     "serve": "serve build -l 51000 --cors",
     "test": "mocha --ignore 'test/assets/scripts/**' --recursive --require test/fixtures.mjs --timeout 5000",
     "test:coverage": "c8 npm test",
-    "test:karma": "karma start tests/karma.conf.cjs -- --single-run",
     "test:types": "tsc --pretty false build/playcanvas.d.ts"
   },
   "engines": {
