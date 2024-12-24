@@ -134,12 +134,11 @@ describe('AnimationComponent', function () {
 
         it('async assets, clone of animation component loads animations', function (done) {
             const entity = new Entity();
-            let clone;
 
             loadAssets(function () {
                 // is currAnim public API?
                 expect(entity.animation.currAnim).to.equal(assets.animation.name);
-                expect(clone.animation.currAnim).to.equal(assets.animation.name);
+                expect(clone.animation.currAnim).to.equal(assets.animation.name); // eslint-disable-line no-use-before-define
 
                 done();
             });
@@ -155,7 +154,7 @@ describe('AnimationComponent', function () {
 
             app.root.addChild(entity);
 
-            clone = entity.clone();
+            const clone = entity.clone();
             app.root.addChild(clone);
         });
 
