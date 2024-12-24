@@ -12,7 +12,7 @@ import { Mouse } from '../../../../src/platform/input/mouse.js';
 import { TouchDevice } from '../../../../src/platform/input/touch-device.js';
 import { jsdomSetup, jsdomTeardown } from '../../../jsdom.mjs';
 
-describe.only('ElementDragHelper', function () {
+describe('ElementDragHelper', function () {
     let stubbedOntouchstart;
     let app;
     let entity;
