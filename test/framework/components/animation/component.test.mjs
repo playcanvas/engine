@@ -61,28 +61,28 @@ describe('AnimationComponent', function () {
             assets = {};
         });
 
-        it("can create animation component", function () {
+        it('can create animation component', function () {
             const entity = new Entity();
 
-            entity.addComponent("model", {
+            entity.addComponent('model', {
                 asset: assets.model
             });
 
-            entity.addComponent("animation", {
+            entity.addComponent('animation', {
                 asset: assets.animation
             });
 
             expect(entity.animation).to.exist;
         });
 
-        it("can create animation and auto play them", function () {
+        it('can create animation and auto play them', function () {
             const entity = new Entity();
 
-            entity.addComponent("model", {
+            entity.addComponent('model', {
                 asset: assets.model
             });
 
-            entity.addComponent("animation", {
+            entity.addComponent('animation', {
                 assets: [assets.animation.id],
                 activate: true
             });
@@ -109,7 +109,7 @@ describe('AnimationComponent', function () {
             assets = {};
         });
 
-        it("async assets, can create animation and auto play them", function (done) {
+        it('async assets, can create animation and auto play them', function (done) {
             const entity = new Entity();
 
             loadAssets(function () {
@@ -119,11 +119,11 @@ describe('AnimationComponent', function () {
                 done();
             });
 
-            entity.addComponent("model", {
+            entity.addComponent('model', {
                 asset: assets.model
             });
 
-            entity.addComponent("animation", {
+            entity.addComponent('animation', {
                 assets: [assets.animation.id],
                 activate: true
             });
@@ -132,8 +132,9 @@ describe('AnimationComponent', function () {
 
         });
 
-        it("async assets, clone of animation component loads animations", function (done) {
+        it('async assets, clone of animation component loads animations', function (done) {
             const entity = new Entity();
+            let clone;
 
             loadAssets(function () {
                 // is currAnim public API?
@@ -143,18 +144,18 @@ describe('AnimationComponent', function () {
                 done();
             });
 
-            entity.addComponent("model", {
+            entity.addComponent('model', {
                 asset: assets.model
             });
 
-            entity.addComponent("animation", {
+            entity.addComponent('animation', {
                 assets: [assets.animation.id],
                 activate: true
             });
 
             app.root.addChild(entity);
 
-            const clone = entity.clone();
+            clone = entity.clone();
             app.root.addChild(clone);
         });
 
