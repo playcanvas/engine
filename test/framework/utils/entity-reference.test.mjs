@@ -1,16 +1,16 @@
-import { Application } from '../../../src/framework/application.js';
-import { Entity } from '../../../src/framework/entity.js';
-import { EntityReference } from '../../../src/framework/utils/entity-reference.js';
-import { NullGraphicsDevice } from '../../../src/platform/graphics/null/null-graphics-device.js';
-
-import { DummyComponentSystem } from '../test-component/system.mjs';
-
-import { HTMLCanvasElement } from '@playcanvas/canvas-mock';
-
 import { expect } from 'chai';
 import { restore, spy, stub } from 'sinon';
 
-/** @typedef {import('../../../../src/framework/components/component.js').Component} Component */
+import { Entity } from '../../../src/framework/entity.js';
+import { EntityReference } from '../../../src/framework/utils/entity-reference.js';
+import { createApp } from '../../app.mjs';
+import { jsdomSetup, jsdomTeardown } from '../../jsdom.mjs';
+import { DummyComponentSystem } from '../test-component/system.mjs';
+
+/**
+ * @import { Application } from '../../../../src/framework/application.js'
+ * @import { Component } from '../../../../src/framework/components/component.js'
+ */
 
 describe('EntityReference', function () {
     /** @type {Application} */
@@ -24,9 +24,9 @@ describe('EntityReference', function () {
     /** @type {Entity} */
     let otherEntity2;
 
-    beforeEach(() => {
-        const canvas = new HTMLCanvasElement(500, 500);
-        app = new Application(canvas, { graphicsDevice: new NullGraphicsDevice(canvas) });
+    beforeEach(function () {
+        jsdomSetup();
+        app = createApp();
 
         app.systems.add(new DummyComponentSystem(app));
 
@@ -42,9 +42,11 @@ describe('EntityReference', function () {
         app.root.addChild(otherEntity2);
     });
 
-    afterEach(() => {
+    afterEach(function () {
         restore();
-        app.destroy();
+        app?.destroy();
+        app = null;
+        jsdomTeardown();
     });
 
     // Assertion helpers that rely on checking some private state. Usually I wouldn't do

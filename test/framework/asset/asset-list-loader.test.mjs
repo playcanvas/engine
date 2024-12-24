@@ -1,24 +1,24 @@
-import { Application } from '../../../src/framework/application.js';
+import { expect } from 'chai';
+
 import { AssetListLoader } from '../../../src/framework/asset/asset-list-loader.js';
 import { Asset } from '../../../src/framework/asset/asset.js';
-import { NullGraphicsDevice } from '../../../src/platform/graphics/null/null-graphics-device.js';
-
-import { HTMLCanvasElement } from '@playcanvas/canvas-mock';
-
-import { expect } from 'chai';
+import { createApp } from '../../app.mjs';
+import { jsdomSetup, jsdomTeardown } from '../../jsdom.mjs';
 
 describe('AssetListLoader', function () {
 
     let app;
-    const assetPath = 'http://localhost:3000/test/test-assets/';
+    const assetPath = 'http://localhost:3000/test/assets/';
 
-    beforeEach(() => {
-        const canvas = new HTMLCanvasElement(500, 500);
-        app = new Application(canvas, { graphicsDevice: new NullGraphicsDevice(canvas) });
+    beforeEach(function () {
+        jsdomSetup();
+        app = createApp();
     });
 
-    afterEach(() => {
-        app.destroy();
+    afterEach(function () {
+        app?.destroy();
+        app = null;
+        jsdomTeardown();
     });
 
     describe('#constructor', function () {

@@ -4,7 +4,7 @@ import * as pc from 'playcanvas';
  * @param {import('../../app/components/Example.mjs').ControlOptions} options - The options.
  * @returns {JSX.Element} The returned JSX Element.
  */
-export function controls({ observer, ReactPCUI, React, jsx, fragment }) {
+export const controls = ({ observer, ReactPCUI, React, jsx, fragment }) => {
     const { BindingTwoWay, BooleanInput, LabelGroup, Panel, SelectInput, SliderInput } = ReactPCUI;
     return fragment(
         jsx(
@@ -31,6 +31,15 @@ export function controls({ observer, ReactPCUI, React, jsx, fragment }) {
                     type: 'toggle',
                     binding: new BindingTwoWay(),
                     link: { observer, path: 'data.ssao.blurEnabled' }
+                })
+            ),
+            jsx(
+                LabelGroup,
+                { text: 'randomize' },
+                jsx(BooleanInput, {
+                    type: 'toggle',
+                    binding: new BindingTwoWay(),
+                    link: { observer, path: 'data.ssao.randomize' }
                 })
             ),
             jsx(
@@ -92,7 +101,25 @@ export function controls({ observer, ReactPCUI, React, jsx, fragment }) {
                     binding: new BindingTwoWay(),
                     link: { observer, path: 'data.ssao.scale' }
                 })
+            ),
+            jsx(
+                LabelGroup,
+                { text: 'TAA' },
+                jsx(BooleanInput, {
+                    type: 'toggle',
+                    binding: new BindingTwoWay(),
+                    link: { observer, path: 'data.ssao.taa' }
+                })
+            ),
+            jsx(
+                LabelGroup,
+                { text: 'debug' },
+                jsx(BooleanInput, {
+                    type: 'toggle',
+                    binding: new BindingTwoWay(),
+                    link: { observer, path: 'data.ssao.debug' }
+                })
             )
         )
     );
-}
+};

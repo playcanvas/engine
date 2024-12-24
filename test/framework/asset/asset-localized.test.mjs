@@ -1,23 +1,23 @@
-import { LocalizedAsset } from '../../../src/framework/asset/asset-localized.js';
-import { Application } from '../../../src/framework/application.js';
-import { Asset } from '../../../src/framework/asset/asset.js';
-import { NullGraphicsDevice } from '../../../src/platform/graphics/null/null-graphics-device.js';
-
-import { HTMLCanvasElement } from '@playcanvas/canvas-mock';
-
 import { expect } from 'chai';
+
+import { LocalizedAsset } from '../../../src/framework/asset/asset-localized.js';
+import { Asset } from '../../../src/framework/asset/asset.js';
+import { createApp } from '../../app.mjs';
+import { jsdomSetup, jsdomTeardown } from '../../jsdom.mjs';
 
 describe('LocalizedAsset', function () {
 
     let app;
 
-    beforeEach(() => {
-        const canvas = new HTMLCanvasElement(500, 500);
-        app = new Application(canvas, { graphicsDevice: new NullGraphicsDevice(canvas) });
+    beforeEach(function () {
+        jsdomSetup();
+        app = createApp();
     });
 
-    afterEach(() => {
-        app.destroy();
+    afterEach(function () {
+        app?.destroy();
+        app = null;
+        jsdomTeardown();
     });
 
     it('sets defaultAsset and localizedAsset to the same id if defaultAsset has no localization', function () {

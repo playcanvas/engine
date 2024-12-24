@@ -1,26 +1,26 @@
-import * as pc from 'playcanvas';
 import { deviceType, rootPath } from 'examples/utils';
+import * as pc from 'playcanvas';
 
 const canvas = /** @type {HTMLCanvasElement} */ (document.getElementById('application-canvas'));
 window.focus();
 
 pc.WasmModule.setConfig('Ammo', {
-    glueUrl: rootPath + '/static/lib/ammo/ammo.wasm.js',
-    wasmUrl: rootPath + '/static/lib/ammo/ammo.wasm.wasm',
-    fallbackUrl: rootPath + '/static/lib/ammo/ammo.js'
+    glueUrl: `${rootPath}/static/lib/ammo/ammo.wasm.js`,
+    wasmUrl: `${rootPath}/static/lib/ammo/ammo.wasm.wasm`,
+    fallbackUrl: `${rootPath}/static/lib/ammo/ammo.js`
 });
 await new Promise((resolve) => {
     pc.WasmModule.getInstance('Ammo', () => resolve());
 });
 
 const assets = {
-    torus: new pc.Asset('torus', 'container', { url: rootPath + '/static/assets/models/torus.glb' })
+    torus: new pc.Asset('torus', 'container', { url: `${rootPath}/static/assets/models/torus.glb` })
 };
 
 const gfxOptions = {
     deviceTypes: [deviceType],
-    glslangUrl: rootPath + '/static/lib/glslang/glslang.js',
-    twgslUrl: rootPath + '/static/lib/twgsl/twgsl.js'
+    glslangUrl: `${rootPath}/static/lib/glslang/glslang.js`,
+    twgslUrl: `${rootPath}/static/lib/twgsl/twgsl.js`
 };
 
 const device = await pc.createGraphicsDevice(canvas, gfxOptions);
@@ -224,7 +224,7 @@ assetListLoader.load(() => {
 
     // disable the templates because we don't want them to be visible
     // we'll just use them to clone other Entities
-    templates.forEach(function (template) {
+    templates.forEach((template) => {
         template.enabled = false;
     });
 
@@ -235,7 +235,7 @@ assetListLoader.load(() => {
     let count = 40;
 
     // Set an update function on the application's update event
-    app.on('update', function (dt) {
+    app.on('update', (dt) => {
         // create a falling box every 0.2 seconds
         if (count > 0) {
             timer -= dt;
@@ -261,7 +261,7 @@ assetListLoader.load(() => {
         }
 
         // Show active bodies in red and frozen bodies in gray
-        app.root.findComponents('rigidbody').forEach(function (/** @type {pc.RigidBodyComponent} */ body) {
+        app.root.findComponents('rigidbody').forEach((/** @type {pc.RigidBodyComponent} */ body) => {
             body.entity.render.meshInstances[0].material = body.isActive() ? red : gray;
         });
     });

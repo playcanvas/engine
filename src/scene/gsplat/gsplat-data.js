@@ -10,10 +10,8 @@ import { BoundingBox } from '../../core/shape/bounding-box.js';
  * @import { Vec4 } from '../../core/math/vec4.js'
  */
 
-const vec3 = new Vec3();
 const mat4 = new Mat4();
 const quat = new Quat();
-const quat2 = new Quat();
 const aabb = new BoundingBox();
 const aabb2 = new BoundingBox();
 
@@ -121,48 +119,6 @@ class GSplatData {
         result.setFromTransformedAabb(aabb, mat4);
     }
 
-    /**
-     * Transform splat data by the given matrix.
-     *
-     * @param {Mat4} mat - The matrix.
-     */
-    transform(mat) {
-        const x = this.getProp('x');
-        const y = this.getProp('y');
-        const z = this.getProp('z');
-
-        if (x && y && z) {
-            for (let i = 0; i < this.numSplats; ++i) {
-                // transform center
-                vec3.set(x[i], y[i], z[i]);
-                mat.transformPoint(vec3, vec3);
-                x[i] = vec3.x;
-                y[i] = vec3.y;
-                z[i] = vec3.z;
-            }
-        }
-
-        const rx = this.getProp('rot_1');
-        const ry = this.getProp('rot_2');
-        const rz = this.getProp('rot_3');
-        const rw = this.getProp('rot_0');
-
-        if (rx && ry && rz && rw) {
-            quat2.setFromMat4(mat);
-
-            for (let i = 0; i < this.numSplats; ++i) {
-                // transform orientation
-                quat.set(rx[i], ry[i], rz[i], rw[i]).mul2(quat2, quat);
-                rx[i] = quat.x;
-                ry[i] = quat.y;
-                rz[i] = quat.z;
-                rw[i] = quat.w;
-            }
-        }
-
-        // TODO: transform SH
-    }
-
     // access a named property
     getProp(name, elementName = 'vertex') {
         return this.getElement(elementName)?.properties.find(p => p.name === name)?.storage;
@@ -208,35 +164,39 @@ class GSplatData {
         let mx, my, mz, Mx, My, Mz;
         let first = true;
 
-        const p = new Vec3();
-        const s = new Vec3();
-
-        const iter = this.createIter(p, null, s);
+        const x = this.getProp('x');
+        const y = this.getProp('y');
+        const z = this.getProp('z');
+        const sx = this.getProp('scale_0');
+        const sy = this.getProp('scale_1');
+        const sz = this.getProp('scale_2');
 
         for (let i = 0; i < this.numSplats; ++i) {
             if (pred && !pred(i)) {
                 continue;
             }
 
-            iter.read(i);
+            const scaleVal = 2.0 * Math.exp(Math.max(sx[i], sy[i], sz[i]));
 
-            const scaleVal = 2.0 * Math.max(s.x, s.y, s.z);
+            const px = x[i];
+            const py = y[i];
+            const pz = z[i];
 
             if (first) {
                 first = false;
-                mx = p.x - scaleVal;
-                my = p.y - scaleVal;
-                mz = p.z - scaleVal;
-                Mx = p.x + scaleVal;
-                My = p.y + scaleVal;
-                Mz = p.z + scaleVal;
+                mx = px - scaleVal;
+                my = py - scaleVal;
+                mz = pz - scaleVal;
+                Mx = px + scaleVal;
+                My = py + scaleVal;
+                Mz = pz + scaleVal;
             } else {
-                mx = Math.min(mx, p.x - scaleVal);
-                my = Math.min(my, p.y - scaleVal);
-                mz = Math.min(mz, p.z - scaleVal);
-                Mx = Math.max(Mx, p.x + scaleVal);
-                My = Math.max(My, p.y + scaleVal);
-                Mz = Math.max(Mz, p.z + scaleVal);
+                mx = Math.min(mx, px - scaleVal);
+                my = Math.min(my, py - scaleVal);
+                mz = Math.min(mz, pz - scaleVal);
+                Mx = Math.max(Mx, px + scaleVal);
+                My = Math.max(My, py + scaleVal);
+                Mz = Math.max(Mz, pz + scaleVal);
             }
         }
 
@@ -288,15 +248,14 @@ class GSplatData {
      * @param {Float32Array} result - Array containing the centers.
      */
     getCenters(result) {
-        const p = new Vec3();
-        const iter = this.createIter(p);
+        const x = this.getProp('x');
+        const y = this.getProp('y');
+        const z = this.getProp('z');
 
         for (let i = 0; i < this.numSplats; ++i) {
-            iter.read(i);
-
-            result[i * 3 + 0] = p.x;
-            result[i * 3 + 1] = p.y;
-            result[i * 3 + 2] = p.z;
+            result[i * 3 + 0] = x[i];
+            result[i * 3 + 1] = y[i];
+            result[i * 3 + 2] = z[i];
         }
     }
 
@@ -305,9 +264,12 @@ class GSplatData {
      * @param {Function} pred - Predicate given index for skipping.
      */
     calcFocalPoint(result, pred) {
-        const p = new Vec3();
-        const s = new Vec3();
-        const iter = this.createIter(p, null, s, null);
+        const x = this.getProp('x');
+        const y = this.getProp('y');
+        const z = this.getProp('z');
+        const sx = this.getProp('scale_0');
+        const sy = this.getProp('scale_1');
+        const sz = this.getProp('scale_2');
 
         result.x = 0;
         result.y = 0;
@@ -319,12 +281,10 @@ class GSplatData {
                 continue;
             }
 
-            iter.read(i);
-
-            const weight = 1.0 / (1.0 + Math.max(s.x, s.y, s.z));
-            result.x += p.x * weight;
-            result.y += p.y * weight;
-            result.z += p.z * weight;
+            const weight = 1.0 / (1.0 + Math.exp(Math.max(sx[i], sy[i], sz[i])));
+            result.x += x[i] * weight;
+            result.y += y[i] * weight;
+            result.z += z[i] * weight;
             sum += weight;
         }
         result.mulScalar(1 / sum);
@@ -360,6 +320,15 @@ class GSplatData {
 
     get isCompressed() {
         return false;
+    }
+
+    get hasSHData() {
+        for (let i = 0; i < 45; ++i) {
+            if (!this.getProp(`f_rest_${i}`)) {
+                return false;
+            }
+        }
+        return true;
     }
 
     calcMortonOrder() {

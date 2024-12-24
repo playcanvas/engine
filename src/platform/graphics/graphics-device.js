@@ -105,6 +105,14 @@ class GraphicsDevice extends EventHandler {
     isWebGL2 = false;
 
     /**
+     * True if the back-buffer is using HDR format, which means that the browser will display the
+     * rendered images in high dynamic range mode. This is true if the options.displayFormat is set
+     * to {@link DISPLAYFORMAT_HDR} when creating the graphics device using
+     * {@link createGraphicsDevice}, and HDR is supported by the device.
+     */
+    isHdr = false;
+
+    /**
      * The scope namespace for shader attributes and variables.
      *
      * @type {ScopeSpace}
@@ -168,6 +176,14 @@ class GraphicsDevice extends EventHandler {
      * @type {number}
      */
     samples;
+
+    /**
+     * The maximum supported number of hardware anti-aliasing samples.
+     *
+     * @readonly
+     * @type {number}
+     */
+    maxSamples = 1;
 
     /**
      * True if the main framebuffer contains stencil attachment.
@@ -258,6 +274,14 @@ class GraphicsDevice extends EventHandler {
      * @ignore
      */
     supportsUniformBuffers = false;
+
+    /**
+     * True if the device supports clip distances (WebGPU only). Clip distances allow you to restrict
+     * primitives' clip volume with user-defined half-spaces in the output of vertex stage.
+     *
+     * @type {boolean}
+     */
+    supportsClipDistances = false;
 
     /**
      * True if 32-bit floating-point textures can be used as a frame buffer.
@@ -850,7 +874,7 @@ class GraphicsDevice extends EventHandler {
     endRenderPass(renderPass) {
     }
 
-    startComputePass() {
+    startComputePass(name) {
     }
 
     endComputePass() {
@@ -897,8 +921,9 @@ class GraphicsDevice extends EventHandler {
      * Dispatch multiple compute shaders inside a single compute shader pass.
      *
      * @param {Array<Compute>} computes - An array of compute shaders to dispatch.
+     * @param {string} [name] - The name of the dispatch, used for debugging and reporting only.
      */
-    computeDispatch(computes) {
+    computeDispatch(computes, name = 'Unnamed') {
     }
 
     /**
@@ -919,10 +944,13 @@ class GraphicsDevice extends EventHandler {
      *
      * @param {boolean} [filterable] - If true, the format also needs to be filterable. Defaults to
      * true.
+     * @param {number} [samples] - The number of samples to check for. Some formats are not
+     * compatible with multi-sampling, for example {@link PIXELFORMAT_RGBA32F} on WebGPU platform.
+     * Defaults to 1.
      * @returns {number|undefined} The first supported renderable HDR format or undefined if none is
      * supported.
      */
-    getRenderableHdrFormat(formats = [PIXELFORMAT_111110F, PIXELFORMAT_RGBA16F, PIXELFORMAT_RGBA32F], filterable = true) {
+    getRenderableHdrFormat(formats = [PIXELFORMAT_111110F, PIXELFORMAT_RGBA16F, PIXELFORMAT_RGBA32F], filterable = true, samples = 1) {
         for (let i = 0; i < formats.length; i++) {
             const format = formats[i];
             switch (format) {
@@ -941,6 +969,12 @@ class GraphicsDevice extends EventHandler {
                     break;
 
                 case PIXELFORMAT_RGBA32F:
+
+                    // on WebGPU platform, RGBA32F is not compatible with multi-sampling
+                    if (this.isWebGPU && samples > 1) {
+                        continue;
+                    }
+
                     if (this.textureFloatRenderable && (!filterable || this.textureFloatFilterable)) {
                         return format;
                     }

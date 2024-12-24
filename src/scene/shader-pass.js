@@ -1,7 +1,7 @@
 import { Debug } from '../core/debug.js';
 import { DeviceCache } from '../platform/graphics/device-cache.js';
 import {
-    SHADER_FORWARD, SHADER_DEPTH, SHADER_PICK, SHADER_SHADOW, SHADER_PREPASS_VELOCITY
+    SHADER_FORWARD, SHADER_DEPTH, SHADER_PICK, SHADER_SHADOW, SHADER_PREPASS
 } from './constants.js';
 
 /**
@@ -34,7 +34,7 @@ class ShaderPassInfo {
      * @param {boolean} [options.isForward] - Whether the pass is forward.
      * @param {boolean} [options.isShadow] - Whether the pass is shadow.
      * @param {boolean} [options.lightType] - Type of light, for example `pc.LIGHTTYPE_DIRECTIONAL`.
-     * @param {boolean} [options.shadowType] - Type of shadow, for example `pc.SHADOW_PCF3`.
+     * @param {boolean} [options.shadowType] - Type of shadow, for example `pc.SHADOW_PCF3_32F`.
      */
     constructor(name, index, options = {}) {
 
@@ -104,7 +104,7 @@ class ShaderPass {
 
         // add default passes in the required order, to match the constants
         add('forward', SHADER_FORWARD, { isForward: true });
-        add('prepass', SHADER_PREPASS_VELOCITY);
+        add('prepass', SHADER_PREPASS);
         add('depth', SHADER_DEPTH);
         add('pick', SHADER_PICK);
         add('shadow', SHADER_SHADOW);

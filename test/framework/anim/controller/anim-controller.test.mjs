@@ -1,25 +1,26 @@
-import { AnimController } from '../../../../src/framework/anim/controller/anim-controller.js';
-import { Entity } from '../../../../src/framework/entity.js';
-import { AnimComponentBinder } from '../../../../src/framework/components/anim/component-binder.js';
-import { AnimEvaluator } from '../../../../src/framework/anim/evaluator/anim-evaluator.js';
-import { Application } from '../../../../src/framework/application.js';
-import { AnimTrack } from '../../../../src/framework/anim/evaluator/anim-track.js';
-import { AnimData } from '../../../../src/framework/anim/evaluator/anim-data.js';
-import { AnimCurve } from '../../../../src/framework/anim/evaluator/anim-curve.js';
-import { INTERPOLATION_LINEAR } from '../../../../src/framework/anim/constants.js';
-import { ANIM_LESS_THAN } from '../../../../src/framework/anim/controller/constants.js';
-import { NullGraphicsDevice } from '../../../../src/platform/graphics/null/null-graphics-device.js';
-import { HTMLCanvasElement } from '@playcanvas/canvas-mock';
 import { expect } from 'chai';
+
+import { INTERPOLATION_LINEAR } from '../../../../src/framework/anim/constants.js';
+import { AnimController } from '../../../../src/framework/anim/controller/anim-controller.js';
+import { ANIM_LESS_THAN } from '../../../../src/framework/anim/controller/constants.js';
+import { AnimCurve } from '../../../../src/framework/anim/evaluator/anim-curve.js';
+import { AnimData } from '../../../../src/framework/anim/evaluator/anim-data.js';
+import { AnimEvaluator } from '../../../../src/framework/anim/evaluator/anim-evaluator.js';
+import { AnimTrack } from '../../../../src/framework/anim/evaluator/anim-track.js';
+import { AnimComponentBinder } from '../../../../src/framework/components/anim/component-binder.js';
+import { Entity } from '../../../../src/framework/entity.js';
+import { createApp } from '../../../app.mjs';
+import { jsdomSetup, jsdomTeardown } from '../../../jsdom.mjs';
 
 describe('AnimController', function () {
 
     let app;
     let controller;
 
-    beforeEach(() => {
-        const canvas = new HTMLCanvasElement(500, 500);
-        app = new Application(canvas, { graphicsDevice: new NullGraphicsDevice(canvas) });
+    beforeEach(function () {
+        jsdomSetup();
+        app = createApp();
+
         const states = [
             {
                 name: 'START'
@@ -99,8 +100,10 @@ describe('AnimController', function () {
         controller.assignAnimation('Other State 2', new AnimTrack('otherState2Track', 4, inputs, outputs, curves), 1, true);
     });
 
-    afterEach(() => {
-        app.destroy();
+    afterEach(function () {
+        app?.destroy();
+        app = null;
+        jsdomTeardown();
     });
 
     describe('#constructor', function () {

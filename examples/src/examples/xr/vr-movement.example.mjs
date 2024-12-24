@@ -88,7 +88,7 @@ const createController = function (inputSource) {
 
     // destroy input source related entity
     // when input source is removed
-    inputSource.on('remove', function () {
+    inputSource.on('remove', () => {
         controllers.splice(controllers.indexOf(entity), 1);
         entity.destroy();
     });
@@ -107,7 +107,7 @@ if (app.xr.supported) {
         if (app.xr.isAvailable(pc.XRTYPE_VR)) {
             c.camera.startXr(pc.XRTYPE_VR, pc.XRSPACE_LOCAL, {
                 callback: function (err) {
-                    if (err) message('Immersive VR failed to start: ' + err.message);
+                    if (err) message(`Immersive VR failed to start: ${err.message}`);
                 }
             });
         } else {
@@ -115,12 +115,12 @@ if (app.xr.supported) {
         }
     };
 
-    app.mouse.on('mousedown', function () {
+    app.mouse.on('mousedown', () => {
         if (!app.xr.active) activate();
     });
 
     if (app.touch) {
-        app.touch.on('touchend', function (evt) {
+        app.touch.on('touchend', (evt) => {
             if (!app.xr.active) {
                 // if not in VR, activate
                 activate();
@@ -135,14 +135,14 @@ if (app.xr.supported) {
     }
 
     // end session by keyboard ESC
-    app.keyboard.on('keydown', function (evt) {
+    app.keyboard.on('keydown', (evt) => {
         if (evt.key === pc.KEY_ESCAPE && app.xr.active) {
             app.xr.end();
         }
     });
 
     // when new input source added
-    app.xr.input.on('add', function (inputSource) {
+    app.xr.input.on('add', (inputSource) => {
         createController(inputSource);
     });
 
@@ -161,7 +161,7 @@ if (app.xr.supported) {
     const lineColor = new pc.Color(1, 1, 1);
 
     // update position and rotation for each controller
-    app.on('update', function (dt) {
+    app.on('update', (dt) => {
         let i, inputSource;
 
         // first we update movement

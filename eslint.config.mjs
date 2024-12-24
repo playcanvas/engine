@@ -2,6 +2,12 @@ import playcanvasConfig from '@playcanvas/eslint-config';
 import babelParser from '@babel/eslint-parser';
 import globals from 'globals';
 
+// Extract or preserve existing JSDoc tags
+const jsdocRule = playcanvasConfig.find(
+    config => config.rules && config.rules['jsdoc/check-tag-names']
+);
+const existingTags = jsdocRule?.rules['jsdoc/check-tag-names'][1]?.definedTags || [];
+
 export default [
     ...playcanvasConfig,
     {
@@ -17,17 +23,24 @@ export default [
                 ...globals.browser,
                 ...globals.mocha,
                 ...globals.node,
-                'Ammo': false,
-                'earcut': false,
-                'opentype': false,
-                'pc': false,
-                'TWEEN': false,
-                'twgsl': false,
-                'webkitAudioContext': false
+                'Ammo': 'readonly',
+                'earcut': 'readonly',
+                'opentype': 'readonly',
+                'pc': 'readonly',
+                'TWEEN': 'readonly',
+                'twgsl': 'readonly',
+                'webkitAudioContext': 'readonly'
             }
         },
         rules: {
-            'import/order': 'off'
+            'import/order': 'off',
+            'jsdoc/check-tag-names': [
+                'error',
+                {
+                    // custom mjs script tags to not error on, add them to those from parent config
+                    definedTags: [...new Set([...existingTags, 'range', 'step', 'precision'])]
+                }
+            ]
         }
     },
     {
@@ -39,6 +52,7 @@ export default [
     {
         files: ['test/**/*.mjs'],
         rules: {
+            'import/order': 'error',
             'no-unused-expressions': 'off',
             'prefer-arrow-callback': 'off' // Mocha uses function callbacks
         }

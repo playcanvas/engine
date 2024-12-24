@@ -1,14 +1,14 @@
-import * as pc from 'playcanvas';
 import { data } from 'examples/observer';
 import { deviceType, rootPath } from 'examples/utils';
+import * as pc from 'playcanvas';
 
 const canvas = /** @type {HTMLCanvasElement} */ (document.getElementById('application-canvas'));
 window.focus();
 
 const gfxOptions = {
     deviceTypes: [deviceType],
-    glslangUrl: rootPath + '/static/lib/glslang/glslang.js',
-    twgslUrl: rootPath + '/static/lib/twgsl/twgsl.js'
+    glslangUrl: `${rootPath}/static/lib/glslang/glslang.js`,
+    twgslUrl: `${rootPath}/static/lib/twgsl/twgsl.js`
 };
 
 const device = await pc.createGraphicsDevice(canvas, gfxOptions);
@@ -36,8 +36,8 @@ app.setCanvasResolution(pc.RESOLUTION_AUTO);
 
 // load assets
 const assets = {
-    script: new pc.Asset('script', 'script', { url: rootPath + '/static/scripts/camera/orbit-camera.js' }),
-    font: new pc.Asset('font', 'font', { url: rootPath + '/static/assets/fonts/courier.json' })
+    script: new pc.Asset('script', 'script', { url: `${rootPath}/static/scripts/camera/orbit-camera.js` }),
+    font: new pc.Asset('font', 'font', { url: `${rootPath}/static/assets/fonts/courier.json` })
 };
 /**
  * @param {pc.Asset[] | number[]} assetList - The asset list.
@@ -88,20 +88,10 @@ light.addComponent('light');
 app.root.addChild(light);
 light.setEulerAngles(0, 0, -60);
 
-// create layers
-const gizmoLayer = new pc.Layer({
-    name: 'Gizmo',
-    clearDepthBuffer: true,
-    opaqueSortMode: pc.SORTMODE_NONE,
-    transparentSortMode: pc.SORTMODE_NONE
-});
-const layers = app.scene.layers;
-layers.push(gizmoLayer);
-camera.camera.layers = camera.camera.layers.concat(gizmoLayer.id);
-
 // create gizmo
-const gizmo = new pc.RotateGizmo(app, camera.camera, gizmoLayer);
-gizmo.attach([box]);
+const layer = pc.Gizmo.createLayer(app);
+const gizmo = new pc.RotateGizmo(camera.camera, layer);
+gizmo.attach(box);
 data.set('gizmo', {
     size: gizmo.size,
     snapIncrement: gizmo.snapIncrement,
@@ -109,6 +99,7 @@ data.set('gizmo', {
     yAxisColor: Object.values(gizmo.yAxisColor),
     zAxisColor: Object.values(gizmo.zAxisColor),
     colorAlpha: gizmo.colorAlpha,
+    shading: gizmo.shading,
     coordSpace: gizmo.coordSpace,
     ringTolerance: gizmo.ringTolerance,
     xyzTubeRadius: gizmo.xyzTubeRadius,

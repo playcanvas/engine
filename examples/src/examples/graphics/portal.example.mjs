@@ -1,5 +1,5 @@
-import * as pc from 'playcanvas';
 import { deviceType, rootPath } from 'examples/utils';
+import * as pc from 'playcanvas';
 
 const canvas = /** @type {HTMLCanvasElement} */ (document.getElementById('application-canvas'));
 window.focus();
@@ -8,18 +8,18 @@ const assets = {
     helipad: new pc.Asset(
         'helipad-env-atlas',
         'texture',
-        { url: rootPath + '/static/assets/cubemaps/helipad-env-atlas.png' },
+        { url: `${rootPath}/static/assets/cubemaps/helipad-env-atlas.png` },
         { type: pc.TEXTURETYPE_RGBP, mipmaps: false }
     ),
-    portal: new pc.Asset('portal', 'container', { url: rootPath + '/static/assets/models/portal.glb' }),
-    statue: new pc.Asset('statue', 'container', { url: rootPath + '/static/assets/models/statue.glb' }),
-    bitmoji: new pc.Asset('bitmoji', 'container', { url: rootPath + '/static/assets/models/bitmoji.glb' })
+    portal: new pc.Asset('portal', 'container', { url: `${rootPath}/static/assets/models/portal.glb` }),
+    statue: new pc.Asset('statue', 'container', { url: `${rootPath}/static/assets/models/statue.glb` }),
+    bitmoji: new pc.Asset('bitmoji', 'container', { url: `${rootPath}/static/assets/models/bitmoji.glb` })
 };
 
 const gfxOptions = {
     deviceTypes: [deviceType],
-    glslangUrl: rootPath + '/static/lib/glslang/glslang.js',
-    twgslUrl: rootPath + '/static/lib/twgsl/twgsl.js'
+    glslangUrl: `${rootPath}/static/lib/glslang/glslang.js`,
+    twgslUrl: `${rootPath}/static/lib/twgsl/twgsl.js`
 };
 
 const device = await pc.createGraphicsDevice(canvas, gfxOptions);
@@ -57,7 +57,6 @@ assetListLoader.load(() => {
 
     // set skybox - this DDS file was 'prefiltered' in the PlayCanvas Editor and then downloaded.
     app.scene.envAtlas = assets.helipad.resource;
-    app.scene.rendering.toneMapping = pc.TONEMAP_ACES;
     app.scene.skyboxMip = 1;
     app.scene.skyboxIntensity = 0.7;
 
@@ -150,11 +149,22 @@ assetListLoader.load(() => {
     // this camera renders both world and portal layers
     const camera = new pc.Entity();
     camera.addComponent('camera', {
-        layers: [worldLayer.id, portalLayer.id, skyboxLayer.id, uiLayer.id]
+        layers: [worldLayer.id, portalLayer.id, skyboxLayer.id, uiLayer.id],
+        toneMapping: pc.TONEMAP_ACES
     });
     camera.setLocalPosition(7, 5.5, 7.1);
     camera.setLocalEulerAngles(-27, 45, 0);
     app.root.addChild(camera);
+
+    // ------ Custom render passes set up ------
+
+    const cameraFrame = new pc.CameraFrame(app, camera.camera);
+    cameraFrame.rendering.stencil = true;
+    cameraFrame.rendering.samples = 4;
+    cameraFrame.rendering.toneMapping = pc.TONEMAP_ACES2;
+    cameraFrame.update();
+
+    // ------------------------------------------
 
     // Create an Entity with a directional light component
     const light = new pc.Entity();

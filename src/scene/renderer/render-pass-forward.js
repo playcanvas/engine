@@ -6,7 +6,7 @@ import { BlendState } from '../../platform/graphics/blend-state.js';
 import { DebugGraphics } from '../../platform/graphics/debug-graphics.js';
 import { RenderPass } from '../../platform/graphics/render-pass.js';
 import { RenderAction } from '../composition/render-action.js';
-import { SHADER_FORWARD } from '../constants.js';
+import { EVENT_POSTRENDER, EVENT_POSTRENDER_LAYER, EVENT_PRERENDER, EVENT_PRERENDER_LAYER, SHADER_FORWARD } from '../constants.js';
 
 /**
  * @import { CameraComponent } from '../../framework/components/camera/component.js'
@@ -58,6 +58,10 @@ class RenderPassForward extends RenderPass {
         this.renderer = renderer;
     }
 
+    get rendersAnything() {
+        return this.renderActions.length > 0;
+    }
+
     addRenderAction(renderAction) {
         this.renderActions.push(renderAction);
     }
@@ -96,8 +100,8 @@ class RenderPassForward extends RenderPass {
     /**
      * Adds layers to be rendered by this render pass, starting from the given index of the layer
      * in the layer composition, till the end of the layer list, or till the last layer with the
-     * given id and transparency is reached (inclusive). Note that only layers that are enabled
-     * and are rendered by the specified camera are added.
+     * given id and transparency is reached (inclusive). Note that only layers that are rendered by
+     * the specified camera are added.
      *
      * @param {LayerComposition} composition - The layer composition containing the layers to be
      * added, typically the scene layer composition.
@@ -114,7 +118,7 @@ class RenderPassForward extends RenderPass {
      */
     addLayers(composition, cameraComponent, startIndex, firstLayerClears, lastLayerId, lastLayerIsTransparent = true) {
 
-        const { layerList, subLayerEnabled, subLayerList } = composition;
+        const { layerList, subLayerList } = composition;
         let clearRenderTarget = firstLayerClears;
 
         let index = startIndex;
@@ -122,11 +126,10 @@ class RenderPassForward extends RenderPass {
 
             const layer = layerList[index];
             const isTransparent = subLayerList[index];
-            const enabled = layer.enabled && subLayerEnabled[index];
-            const renderedbyCamera = cameraComponent.camera.layersSet.has(layer.id);
+            const renderedByCamera = cameraComponent.camera.layersSet.has(layer.id);
 
             // add it for rendering
-            if (enabled && renderedbyCamera) {
+            if (renderedByCamera) {
                 this.addLayer(cameraComponent, layer, isTransparent, clearRenderTarget);
                 clearRenderTarget = false;
             }
@@ -198,11 +201,11 @@ class RenderPassForward extends RenderPass {
     before() {
         const { renderActions } = this;
 
-        // onPreRender callbacks
+        // onPreRender events
         for (let i = 0; i < renderActions.length; i++) {
             const ra = renderActions[i];
             if (ra.firstCameraUse) {
-                ra.camera.onPreRender?.();
+                this.scene.fire(EVENT_PRERENDER, ra.camera);
             }
         }
     }
@@ -211,7 +214,16 @@ class RenderPassForward extends RenderPass {
         const { layerComposition, renderActions } = this;
         for (let i = 0; i < renderActions.length; i++) {
             const ra = renderActions[i];
-            if (layerComposition.isEnabled(ra.layer, ra.transparent)) {
+            const layer = ra.layer;
+
+            Debug.call(() => {
+                const compLayer = layerComposition.getLayerByName(layer.name);
+                if (!compLayer) {
+                    Debug.warnOnce(`Layer ${layer.name} is not found in the scene and will not be rendered. Your render pass setup might need to be updated.`);
+                }
+            });
+
+            if (layerComposition.isEnabled(layer, ra.transparent)) {
                 this.renderRenderAction(ra, i === 0);
             }
         }
@@ -219,11 +231,11 @@ class RenderPassForward extends RenderPass {
 
     after() {
 
-        // onPostRender callbacks
+        // onPostRender events
         for (let i = 0; i < this.renderActions.length; i++) {
             const ra = this.renderActions[i];
             if (ra.lastCameraUse) {
-                ra.camera.onPostRender?.();
+                this.scene.fire(EVENT_POSTRENDER, ra.camera);
             }
         }
 
@@ -237,7 +249,7 @@ class RenderPassForward extends RenderPass {
      */
     renderRenderAction(renderAction, firstRenderAction) {
 
-        const { renderer } = this;
+        const { renderer, scene } = this;
         const device = renderer.device;
 
         // layer
@@ -251,8 +263,8 @@ class RenderPassForward extends RenderPass {
 
         if (camera) {
 
-            // layer pre render callback
-            camera.onPreRenderLayer?.(layer, transparent);
+            // layer pre render event
+            scene.fire(EVENT_PRERENDER_LAYER, camera, layer, transparent);
 
             const options = {
                 lightClusters: renderAction.lightClusters
@@ -280,8 +292,8 @@ class RenderPassForward extends RenderPass {
             device.setStencilState(null, null);
             device.setAlphaToCoverage(false);
 
-            // layer post render callback
-            camera.onPostRenderLayer?.(layer, transparent);
+            // layer post render event
+            scene.fire(EVENT_POSTRENDER_LAYER, camera, layer, transparent);
         }
 
         DebugGraphics.popGpuMarker(this.device);

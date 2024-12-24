@@ -1,18 +1,19 @@
-import { ORIENTATION_HORIZONTAL, ORIENTATION_VERTICAL } from '../../../../src/scene/constants.js';
-import { ELEMENTTYPE_GROUP } from '../../../../src/framework/components/element/constants.js';
-import { FITTING_BOTH, FITTING_NONE, FITTING_SHRINK, FITTING_STRETCH } from '../../../../src/framework/components/layout-group/constants.js';
-import { Application } from '../../../../src/framework/application.js';
-import { Entity } from '../../../../src/framework/entity.js';
-import { LayoutCalculator } from '../../../../src/framework/components/layout-group/layout-calculator.js';
-import { Vec2 } from '../../../../src/core/math/vec2.js';
-import { Vec4 } from '../../../../src/core/math/vec4.js';
-import { NullGraphicsDevice } from '../../../../src/platform/graphics/null/null-graphics-device.js';
-
-import { HTMLCanvasElement } from '@playcanvas/canvas-mock';
-
 import { expect } from 'chai';
 
-/** @typedef {import('../../../../src/framework/components/element/component.js').ElementComponent} ElementComponent */
+import { Vec2 } from '../../../../src/core/math/vec2.js';
+import { Vec4 } from '../../../../src/core/math/vec4.js';
+import { ELEMENTTYPE_GROUP } from '../../../../src/framework/components/element/constants.js';
+import { FITTING_BOTH, FITTING_NONE, FITTING_SHRINK, FITTING_STRETCH } from '../../../../src/framework/components/layout-group/constants.js';
+import { LayoutCalculator } from '../../../../src/framework/components/layout-group/layout-calculator.js';
+import { Entity } from '../../../../src/framework/entity.js';
+import { ORIENTATION_HORIZONTAL, ORIENTATION_VERTICAL } from '../../../../src/scene/constants.js';
+import { createApp } from '../../../app.mjs';
+import { jsdomSetup, jsdomTeardown } from '../../../jsdom.mjs';
+
+/**
+ * @import { Application } from '../../../../src/framework/application.js'
+ * @import { ElementComponent } from '../../../../src/framework/components/element/component.js'
+ */
 
 describe('LayoutCalculator', function () {
     /** @type {Application} */
@@ -61,9 +62,10 @@ describe('LayoutCalculator', function () {
         });
     };
 
-    beforeEach(() => {
-        const canvas = new HTMLCanvasElement(500, 500);
-        app = new Application(canvas, { graphicsDevice: new NullGraphicsDevice(canvas) });
+    beforeEach(function () {
+        jsdomSetup();
+        app = createApp();
+
         calculator = new LayoutCalculator();
 
         options = {
@@ -242,8 +244,10 @@ describe('LayoutCalculator', function () {
         ]);
     });
 
-    afterEach(() => {
-        app.destroy();
+    afterEach(function () {
+        app?.destroy();
+        app = null;
+        jsdomTeardown();
     });
 
     const calculate = function () {

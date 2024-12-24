@@ -2,6 +2,7 @@ import { ShaderProcessorOptions } from '../../platform/graphics/shader-processor
 import { SHADERDEF_INSTANCING, SHADERDEF_MORPH_NORMAL, SHADERDEF_MORPH_POSITION, SHADERDEF_MORPH_TEXTURE_BASED_INT, SHADERDEF_SKIN } from '../constants.js';
 import { getProgramLibrary } from '../shader-lib/get-program-library.js';
 import { shaderGeneratorShader } from '../shader-lib/programs/shader-generator-shader.js';
+import { getMaterialShaderDefines } from '../shader-lib/utils.js';
 import { Material } from './material.js';
 
 /**
@@ -96,9 +97,9 @@ class ShaderMaterial extends Material {
 
     getShaderVariant(params) {
 
-        const objDefs = params.objDefs;
+        const { objDefs, cameraShaderParams } = params;
         const options = {
-            defines: this.defines,
+            defines: getMaterialShaderDefines(this, cameraShaderParams),
             skin: (objDefs & SHADERDEF_SKIN) !== 0,
             useInstancing: (objDefs & SHADERDEF_INSTANCING) !== 0,
             useMorphPosition: (objDefs & SHADERDEF_MORPH_POSITION) !== 0,
@@ -106,9 +107,9 @@ class ShaderMaterial extends Material {
             useMorphTextureBasedInt: (objDefs & SHADERDEF_MORPH_TEXTURE_BASED_INT) !== 0,
 
             pass: params.pass,
-            gamma: params.renderParams.shaderOutputGamma,
-            toneMapping: params.renderParams.toneMapping,
-            fog: params.renderParams.fog,
+            gamma: params.cameraShaderParams.shaderOutputGamma,
+            toneMapping: params.cameraShaderParams.toneMapping,
+            fog: params.cameraShaderParams.fog,
             shaderDesc: this.shaderDesc
         };
 

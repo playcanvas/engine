@@ -1,6 +1,6 @@
-import * as pc from 'playcanvas';
 import { data } from 'examples/observer';
 import { deviceType, rootPath } from 'examples/utils';
+import * as pc from 'playcanvas';
 
 const canvas = /** @type {HTMLCanvasElement} */ (document.getElementById('application-canvas'));
 window.focus();
@@ -9,18 +9,18 @@ const assets = {
     envAtlas: new pc.Asset(
         'env-atlas',
         'texture',
-        { url: rootPath + '/static/assets/cubemaps/table-mountain-env-atlas.png' },
+        { url: `${rootPath}/static/assets/cubemaps/table-mountain-env-atlas.png` },
         { type: pc.TEXTURETYPE_RGBP, mipmaps: false }
     ),
-    table: new pc.Asset('table', 'container', { url: rootPath + '/static/assets/models/glass-table.glb' }),
-    script: new pc.Asset('script', 'script', { url: rootPath + '/static/scripts/camera/orbit-camera.js' }),
-    diffuse: new pc.Asset('color', 'texture', { url: rootPath + '/static/assets/textures/seaside-rocks01-color.jpg' })
+    table: new pc.Asset('table', 'container', { url: `${rootPath}/static/assets/models/glass-table.glb` }),
+    script: new pc.Asset('script', 'script', { url: `${rootPath}/static/scripts/camera/orbit-camera.js` }),
+    diffuse: new pc.Asset('color', 'texture', { url: `${rootPath}/static/assets/textures/playcanvas.png` })
 };
 
 const gfxOptions = {
     deviceTypes: [deviceType],
-    glslangUrl: rootPath + '/static/lib/glslang/glslang.js',
-    twgslUrl: rootPath + '/static/lib/twgsl/twgsl.js',
+    glslangUrl: `${rootPath}/static/lib/glslang/glslang.js`,
+    twgslUrl: `${rootPath}/static/lib/twgsl/twgsl.js`,
 
     // disable anti-aliasing as TAA is used to smooth edges
     antialias: false
@@ -67,7 +67,7 @@ assetListLoader.load(() => {
     // setup skydome
     app.scene.envAtlas = assets.envAtlas.resource;
     app.scene.skyboxMip = 2;
-    app.scene.exposure = 2.5;
+    app.scene.exposure = 4.5;
 
     /**
      * Helper function to create a primitive with shape type, position, scale, color and layer.
@@ -101,7 +101,7 @@ assetListLoader.load(() => {
     }
 
     // create a ground plane
-    createPrimitive('plane', new pc.Vec3(0, 0, 0), new pc.Vec3(30, 1, 30), new pc.Color(0.5, 0.5, 0.5));
+    createPrimitive('plane', new pc.Vec3(0, 0, 0), new pc.Vec3(30, 1, 30), new pc.Color(0.8, 0.8, 0.8));
 
     // create an instance of the table
     const tableEntity = assets.table.resource.instantiateRenderEntity();
@@ -126,7 +126,7 @@ assetListLoader.load(() => {
         range: 200,
         castShadows: true,
         shadowResolution: 2048,
-        shadowType: pc.SHADOW_VSM16,
+        shadowType: pc.SHADOW_VSM_16F,
         vsmBlurSize: 20,
         shadowBias: 0.1,
         normalOffsetBias: 0.1
@@ -143,9 +143,6 @@ assetListLoader.load(() => {
     cameraEntity.lookAt(1, 4, 0);
     app.root.addChild(cameraEntity);
 
-    // enable the camera to render the scene's color map, as the table material needs it
-    cameraEntity.camera.requestSceneColorMap(true);
-
     // add orbit camera script with a mouse and a touch support
     cameraEntity.addComponent('script');
     cameraEntity.script.create('orbitCamera', {
@@ -161,13 +158,17 @@ assetListLoader.load(() => {
 
     // ------ Custom render passes set up ------
 
-    const currentOptions = new pc.CameraFrameOptions();
-    currentOptions.sceneColorMap = true;
-    currentOptions.taaEnabled = true;
+    const cameraFrame = new pc.CameraFrame(app, cameraEntity.camera);
+    cameraFrame.rendering.toneMapping = pc.TONEMAP_ACES;
+    cameraFrame.rendering.sceneColorMap = true;
+    cameraFrame.taa.jitter = 1;
+    cameraFrame.update();
 
-    // and set up these rendering passes to be used by the camera, instead of its default rendering
-    const renderPassCamera = new pc.RenderPassCameraFrame(app, cameraEntity.camera, currentOptions);
-    cameraEntity.camera.renderPasses = [renderPassCamera];
+    const applySettings = () => {
+        cameraFrame.taa.enabled = data.get('data.taa');
+        cameraFrame.rendering.sharpness = cameraFrame.taa.enabled ? 1 : 0;
+        cameraFrame.update();
+    };
 
     // ------
 
@@ -190,17 +191,7 @@ assetListLoader.load(() => {
             material.update();
         });
 
-        // if TAA property changes
-        if (propertyName === 'taa') {
-            currentOptions.taaEnabled = data.get('data.taa');
-            renderPassCamera.update(currentOptions);
-
-            const composePass = renderPassCamera.composePass;
-            composePass.sharpness = currentOptions.taaEnabled ? 1 : 0;
-
-            // jitter the camera when TAA is enabled
-            cameraEntity.camera.jitter = currentOptions.taaEnabled ? 1 : 0;
-        }
+        applySettings();
     });
 
     // initial values

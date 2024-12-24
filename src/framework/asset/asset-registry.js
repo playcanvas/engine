@@ -167,7 +167,7 @@ class AssetRegistry extends EventHandler {
     _assets = new Set();
 
     /**
-     * @type {import('../handlers/loader.js').ResourceLoader}
+     * @type {ResourceLoader}
      * @private
      */
     _loader;

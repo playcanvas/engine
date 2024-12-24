@@ -1,25 +1,26 @@
-import * as pc from 'playcanvas';
 import { data } from 'examples/observer';
 import { deviceType, rootPath } from 'examples/utils';
+import * as pc from 'playcanvas';
 
 const canvas = /** @type {HTMLCanvasElement} */ (document.getElementById('application-canvas'));
 window.focus();
 
 const assets = {
-    orbit: new pc.Asset('script', 'script', { url: rootPath + '/static/scripts/camera/orbit-camera.js' }),
-    house: new pc.Asset('house', 'container', { url: rootPath + '/static/assets/models/pbr-house.glb' }),
+    orbit: new pc.Asset('script', 'script', { url: `${rootPath}/static/scripts/camera/orbit-camera.js` }),
+    house: new pc.Asset('house', 'container', { url: `${rootPath}/static/assets/models/pbr-house.glb` }),
+    cube: new pc.Asset('cube', 'container', { url: `${rootPath}/static/assets/models/playcanvas-cube.glb` }),
     envatlas: new pc.Asset(
         'env-atlas',
         'texture',
-        { url: rootPath + '/static/assets/cubemaps/table-mountain-env-atlas.png' },
+        { url: `${rootPath}/static/assets/cubemaps/table-mountain-env-atlas.png` },
         { type: pc.TEXTURETYPE_RGBP, mipmaps: false }
     )
 };
 
 const gfxOptions = {
     deviceTypes: [deviceType],
-    glslangUrl: rootPath + '/static/lib/glslang/glslang.js',
-    twgslUrl: rootPath + '/static/lib/twgsl/twgsl.js',
+    glslangUrl: `${rootPath}/static/lib/glslang/glslang.js`,
+    twgslUrl: `${rootPath}/static/lib/twgsl/twgsl.js`,
 
     // disable anti-aliasing as TAA is used to smooth edges
     antialias: false
@@ -110,37 +111,27 @@ assetListLoader.load(() => {
     app.root.addChild(light);
     light.setLocalEulerAngles(40, 10, 0);
 
+    const cubeEntity = assets.cube.resource.instantiateRenderEntity();
+    cubeEntity.setLocalScale(30, 30, 30);
+    app.root.addChild(cubeEntity);
+
     // ------ Custom render passes set up ------
 
-    const currentOptions = new pc.CameraFrameOptions();
-    currentOptions.sceneColorMap = false;
-    currentOptions.bloomEnabled = true;
-    currentOptions.taaEnabled = true;
-
-    // and set up these rendering passes to be used by the camera, instead of its default rendering
-    const renderPassCamera = new pc.RenderPassCameraFrame(app, cameraEntity.camera, currentOptions);
-    cameraEntity.camera.renderPasses = [renderPassCamera];
+    const cameraFrame = new pc.CameraFrame(app, cameraEntity.camera);
+    cameraFrame.rendering.toneMapping = pc.TONEMAP_ACES;
+    cameraFrame.bloom.intensity = 0.02;
+    cameraFrame.update();
 
     // ------
 
     const applySettings = () => {
 
-        // update current options and apply them
-        currentOptions.taaEnabled = data.get('data.taa.enabled');
-        currentOptions.bloomEnabled = data.get('data.scene.bloom');
-        renderPassCamera.update(currentOptions);
-
-        // apply options on the other passes
-        const composePass = renderPassCamera.composePass;
-        composePass.sharpness = data.get('data.scene.sharpness');
-        composePass.bloomIntensity = 0.02;
-        composePass.toneMapping = pc.TONEMAP_ACES;
-
-        // taa - enable camera jitter if taa is enabled
-        cameraEntity.camera.jitter = currentOptions.taaEnabled ? data.get('data.taa.jitter') : 0;
-
-        // render target scale
-        renderPassCamera.renderTargetScale = data.get('data.scene.scale');
+        cameraFrame.bloom.intensity = data.get('data.scene.bloom') ? 0.02 : 0;
+        cameraFrame.taa.enabled = data.get('data.taa.enabled');
+        cameraFrame.taa.jitter = data.get('data.taa.jitter');
+        cameraFrame.rendering.renderTargetScale = data.get('data.scene.scale');
+        cameraFrame.rendering.sharpness = data.get('data.scene.sharpness');
+        cameraFrame.update();
     };
 
     // apply UI changes
@@ -162,9 +153,16 @@ assetListLoader.load(() => {
             sharpness: 0.5
         },
         taa: {
-            enabled: currentOptions.taaEnabled,
+            enabled: true,
             jitter: 1
         }
+    });
+
+    let time = 0;
+    app.on('update', (/** @type {number} */ dt) => {
+        time += dt;
+        cubeEntity.setLocalPosition(130 * Math.sin(time), 0, 130 * Math.cos(time));
+        cubeEntity.rotate(50 * dt, 20 * dt, 30 * dt);
     });
 });
 

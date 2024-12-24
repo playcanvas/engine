@@ -1,14 +1,15 @@
-import { ELEMENTTYPE_GROUP } from '../../../../src/framework/components/element/constants.js';
-import { Application } from '../../../../src/framework/application.js';
-import { Entity } from '../../../../src/framework/entity.js';
-import { NullGraphicsDevice } from '../../../../src/platform/graphics/null/null-graphics-device.js';
-
-import { HTMLCanvasElement } from '@playcanvas/canvas-mock';
-
 import { expect } from 'chai';
 import { restore, spy, stub } from 'sinon';
 
-/** @typedef {import('../../../../src/framework/components/layout-group/system.js').LayoutGroupComponentSystem} LayoutGroupComponentSystem */
+import { ELEMENTTYPE_GROUP } from '../../../../src/framework/components/element/constants.js';
+import { Entity } from '../../../../src/framework/entity.js';
+import { createApp } from '../../../app.mjs';
+import { jsdomSetup, jsdomTeardown } from '../../../jsdom.mjs';
+
+/**
+ * @import { Application } from '../../../../src/framework/application.js'
+ * @import { LayoutGroupComponentSystem } from '../../../../src/framework/components/layout-group/system.js'
+ */
 
 describe('LayoutGroupComponent', function () {
     /** @type {Application} */
@@ -31,9 +32,10 @@ describe('LayoutGroupComponent', function () {
         return entity;
     };
 
-    beforeEach(() => {
-        const canvas = new HTMLCanvasElement(500, 500);
-        app = new Application(canvas, { graphicsDevice: new NullGraphicsDevice(canvas) });
+    beforeEach(function () {
+        jsdomSetup();
+        app = createApp();
+
         system = app.systems.layoutgroup;
 
         entity0 = buildLayoutGroupEntity('0');
@@ -51,9 +53,11 @@ describe('LayoutGroupComponent', function () {
         spy(entity0_0_0.layoutgroup, 'reflow');
     });
 
-    afterEach(() => {
+    afterEach(function () {
         restore();
-        app.destroy();
+        app?.destroy();
+        app = null;
+        jsdomTeardown();
     });
 
     it('reflows in ascending order of graph depth', function () {

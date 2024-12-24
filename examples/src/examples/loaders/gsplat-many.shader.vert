@@ -1,44 +1,82 @@
-uniform float uTime;
-varying float height;
+#include "gsplatCommonVS"
 
-void animate() {
+varying mediump vec2 gaussianUV;
+varying mediump vec4 gaussianColor;
+
+#ifndef DITHER_NONE
+    varying float id;
+#endif
+
+mediump vec4 discardVec = vec4(0.0, 0.0, 2.0, 1.0);
+
+uniform float uTime;
+
+vec3 animatePosition(vec3 center) {
     // modify center
     float heightIntensity = center.y * 0.2;
     center.x += sin(uTime * 5.0 + center.y) * 0.3 * heightIntensity;
 
     // output y-coordinate
-    height = center.y;
+    return center;
 }
 
-vec4 discardVec = vec4(0.0, 0.0, 2.0, 1.0);
+vec4 animateColor(float height, vec4 clr) {
+    float sineValue = abs(sin(uTime * 5.0 + height));
 
-void main(void)
-{
-    // calculate splat uv
-    if (!calcSplatUV()) {
-        gl_Position = discardVec;
-        return;
-    }
-
-    // read data
-    readData();
-
-    // animate
-    animate();
-
-    vec4 pos;
-    if (!evalSplat(pos)) {
-        gl_Position = discardVec;
-        return;
-    }
-
-    gl_Position = pos;
-
-    texCoord = vertex_position.xy;
-    color = getColor();
-
-    #ifndef DITHER_NONE
-        id = float(splatId);
+    #ifdef CUTOUT
+        // in cutout mode, remove pixels along the wave
+        if (sineValue < 0.5) {
+            clr.a = 0.0;
+        }
+    #else
+        // in non-cutout mode, add a golden tint to the wave
+        vec3 gold = vec3(1.0, 0.85, 0.0);
+        float blend = smoothstep(0.9, 1.0, sineValue);
+        clr.xyz = mix(clr.xyz, gold, blend);
     #endif
 
+    return clr;
+}
+
+void main(void) {
+    // read gaussian center
+    SplatSource source;
+    if (!initSource(source)) {
+        gl_Position = discardVec;
+        return;
+    }
+
+    vec3 centerPos = animatePosition(readCenter(source));
+
+    SplatCenter center;
+    initCenter(source, centerPos, center);
+
+    // project center to screen space
+    SplatCorner corner;
+    if (!initCorner(source, center, corner)) {
+        gl_Position = discardVec;
+        return;
+    }
+
+    // read color
+    vec4 clr = readColor(source);
+
+    // evaluate spherical harmonics
+    #if SH_BANDS > 0
+        vec3 dir = normalize(center.view * mat3(center.modelView));
+        clr.xyz += evalSH(state, dir);
+    #endif
+
+    clr = animateColor(centerPos.y, clr);
+
+    clipCorner(corner, clr.w);
+
+    // write output
+    gl_Position = center.proj + vec4(corner.offset, 0.0, 0.0);
+    gaussianUV = corner.uv;
+    gaussianColor = vec4(prepareOutputFromGamma(max(clr.xyz, 0.0)), clr.w);
+
+    #ifndef DITHER_NONE
+        id = float(state.id);
+    #endif
 }

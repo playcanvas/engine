@@ -1,19 +1,19 @@
-import { Keyboard } from '../../../src/platform/input/keyboard.js';
-import { EVENT_KEYDOWN, EVENT_KEYUP, KEY_UP } from '../../../src/platform/input/constants.js';
-
 import { expect } from 'chai';
+
+import { EVENT_KEYDOWN, EVENT_KEYUP, KEY_UP } from '../../../src/platform/input/constants.js';
+import { Keyboard } from '../../../src/platform/input/keyboard.js';
 
 describe('Keyboard', function () {
 
     /** @type { Keyboard } */
     let keyboard;
 
-    beforeEach(() => {
+    beforeEach(function () {
         keyboard = new Keyboard();
         keyboard.attach(window);
     });
 
-    afterEach(() => {
+    afterEach(function () {
         keyboard.detach();
     });
 

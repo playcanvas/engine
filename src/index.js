@@ -49,6 +49,7 @@ export { Color } from './core/math/color.js';
 export { Curve } from './core/math/curve.js';
 export { CurveSet } from './core/math/curve-set.js';
 export { FloatPacking } from './core/math/float-packing.js';
+export { Kernel } from './core/math/kernel.js';
 export { Mat3 } from './core/math/mat3.js';
 export { Mat4 } from './core/math/mat4.js';
 export { Quat } from './core/math/quat.js';
@@ -128,6 +129,7 @@ export { BatchGroup } from './scene/batching/batch-group.js';
 export { SkinBatchInstance } from './scene/batching/skin-batch-instance.js';
 export { BatchManager } from './scene/batching/batch-manager.js';
 export { Camera } from './scene/camera.js';
+export { CameraShaderParams } from './scene/camera-shader-params.js'; // needed by the Editor
 export { WorldClusters } from './scene/lighting/world-clusters.js';
 export { ForwardRenderer } from './scene/renderer/forward-renderer.js';
 export { GraphNode } from './scene/graph-node.js';
@@ -182,7 +184,7 @@ export { SphereGeometry } from './scene/geometry/sphere-geometry.js';
 export { TorusGeometry } from './scene/geometry/torus-geometry.js';
 
 // SCENE / RENDERER
-export { RenderingParams } from './scene/renderer/rendering-params.js';
+export { FogParams } from './scene/fog-params.js';
 export { RenderPassForward } from './scene/renderer/render-pass-forward.js';
 
 // SCENE / SHADER-LIB
@@ -192,6 +194,10 @@ export { ProgramLibrary } from './scene/shader-lib/program-library.js';
 export { shaderChunks } from './scene/shader-lib/chunks/chunks.js';
 export { shaderChunksLightmapper } from './scene/shader-lib/chunks/chunks-lightmapper.js';
 export { ChunkBuilder } from './scene/shader-lib/chunk-builder.js';     // used by shed
+export { ChunkUtils } from './scene/shader-lib/chunk-utils.js';
+
+// SCENE / SKY
+export { Sky } from './scene/skybox/sky.js';
 
 // SCENE / SPLAT
 export { GSplatData } from './scene/gsplat/gsplat-data.js';

@@ -1,28 +1,28 @@
-import * as pc from 'playcanvas';
 import { data } from 'examples/observer';
 import { deviceType, rootPath } from 'examples/utils';
+import * as pc from 'playcanvas';
 
 const canvas = /** @type {HTMLCanvasElement} */ (document.getElementById('application-canvas'));
 window.focus();
 
 const observer = data;
 const assets = {
-    script: new pc.Asset('script', 'script', { url: rootPath + '/static/scripts/camera/orbit-camera.js' }),
-    channels: new pc.Asset('channels', 'texture', { url: rootPath + '/static/assets/textures/channels.png' }),
-    heart: new pc.Asset('heart', 'texture', { url: rootPath + '/static/assets/textures/heart.png' }),
-    normal: new pc.Asset('normal', 'texture', { url: rootPath + '/static/assets/textures/normal-map.png' }),
+    script: new pc.Asset('script', 'script', { url: `${rootPath}/static/scripts/camera/orbit-camera.js` }),
+    channels: new pc.Asset('channels', 'texture', { url: `${rootPath}/static/assets/textures/channels.png` }),
+    heart: new pc.Asset('heart', 'texture', { url: `${rootPath}/static/assets/textures/heart.png` }),
+    normal: new pc.Asset('normal', 'texture', { url: `${rootPath}/static/assets/textures/normal-map.png` }),
     helipad: new pc.Asset(
         'helipad-env-atlas',
         'texture',
-        { url: rootPath + '/static/assets/cubemaps/helipad-env-atlas.png' },
+        { url: `${rootPath}/static/assets/cubemaps/helipad-env-atlas.png` },
         { type: pc.TEXTURETYPE_RGBP, mipmaps: false }
     )
 };
 
 const gfxOptions = {
     deviceTypes: [deviceType],
-    glslangUrl: rootPath + '/static/lib/glslang/glslang.js',
-    twgslUrl: rootPath + '/static/lib/twgsl/twgsl.js'
+    glslangUrl: `${rootPath}/static/lib/glslang/glslang.js`,
+    twgslUrl: `${rootPath}/static/lib/twgsl/twgsl.js`
 };
 
 const device = await pc.createGraphicsDevice(canvas, gfxOptions);
@@ -61,7 +61,7 @@ assetListLoader.load(() => {
 
     data.set('settings', {
         shadowAtlasResolution: 1024, // shadow map resolution storing all shadows
-        shadowType: pc.SHADOW_PCF3, // shadow filter type
+        shadowType: pc.SHADOW_PCF3_32F, // shadow filter type
         shadowsEnabled: true,
         cookiesEnabled: true,
         shadowIntensity: 1,
@@ -293,7 +293,7 @@ assetListLoader.load(() => {
     }
 
     // add light button handler
-    data.on('add', function () {
+    data.on('add', () => {
         if (spotLightList.length < maxLights) {
             createLight(spotLightList.length);
             updateLightCount();
@@ -301,7 +301,7 @@ assetListLoader.load(() => {
     });
 
     // remove light button handler
-    data.on('remove', function () {
+    data.on('remove', () => {
         if (spotLightList.length) {
             const light = spotLightList.pop();
             app.root.removeChild(light);
@@ -312,7 +312,7 @@ assetListLoader.load(() => {
 
     // Set an update function on the app's update event
     let time = 0;
-    app.on('update', function (/** @type {number} */ dt) {
+    app.on('update', (/** @type {number} */ dt) => {
         // don't move lights around when they're static
         if (!lightsStatic) {
             time += dt * 0.15;
@@ -320,7 +320,7 @@ assetListLoader.load(() => {
 
         // rotate spot lights around
         const lightPos = new pc.Vec3();
-        spotLightList.forEach(function (spotlight, i) {
+        spotLightList.forEach((spotlight, i) => {
             const angle = (i / spotLightList.length) * Math.PI * 2;
             const x = 130 * Math.sin(angle + time);
             const z = 130 * Math.cos(angle + time);

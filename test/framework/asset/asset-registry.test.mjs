@@ -1,31 +1,34 @@
-import { Application } from '../../../src/framework/application.js';
-import { Asset } from '../../../src/framework/asset/asset.js';
-import { AssetRegistry } from '../../../src/framework/asset/asset-registry.js';
-import { GlbContainerResource } from '../../../src/framework/parsers/glb-container-resource.js';
-import { ResourceLoader } from '../../../src/framework/handlers/loader.js';
-import { http, Http } from '../../../src/platform/net/http.js';
-import { NullGraphicsDevice } from '../../../src/platform/graphics/null/null-graphics-device.js';
-
-import { HTMLCanvasElement } from '@playcanvas/canvas-mock';
-
 import { expect } from 'chai';
 import { restore, spy } from 'sinon';
+
+import { AssetRegistry } from '../../../src/framework/asset/asset-registry.js';
+import { Asset } from '../../../src/framework/asset/asset.js';
+import { ResourceLoader } from '../../../src/framework/handlers/loader.js';
+import { GlbContainerResource } from '../../../src/framework/parsers/glb-container-resource.js';
+import { Texture } from '../../../src/platform/graphics/texture.js';
+import { http, Http } from '../../../src/platform/net/http.js';
+import { createApp } from '../../app.mjs';
+import { jsdomSetup, jsdomTeardown } from '../../jsdom.mjs';
 
 describe('AssetRegistry', function () {
 
     let app;
     let retryDelay;
 
-    beforeEach(() => {
+    beforeEach(function () {
+        jsdomSetup();
+        app = createApp();
+
         retryDelay = Http.retryDelay;
         Http.retryDelay = 1;
-        const canvas = new HTMLCanvasElement(500, 500);
-        app = new Application(canvas, { graphicsDevice: new NullGraphicsDevice(canvas) });
     });
 
-    afterEach(() => {
-        app.destroy();
+    afterEach(function () {
         Http.retryDelay = retryDelay;
+
+        app?.destroy();
+        app = null;
+        jsdomTeardown();
         restore();
     });
 
@@ -236,7 +239,7 @@ describe('AssetRegistry', function () {
 
     describe('#loadFromUrl', function () {
 
-        const assetPath = 'http://localhost:3000/test/test-assets/';
+        const assetPath = 'http://localhost:3000/test/assets/';
 
         it('loads binary assets', (done) => {
             app.assets.loadFromUrl(`${assetPath}test.bin`, 'binary', (err, asset) => {
@@ -280,7 +283,7 @@ describe('AssetRegistry', function () {
             });
         });
 
-        it.skip('loads html assets', (done) => {
+        it('loads html assets', (done) => {
             app.assets.loadFromUrl(`${assetPath}test.html`, 'html', (err, asset) => {
                 expect(err).to.be.null;
                 expect(asset).to.be.instanceof(Asset);
@@ -316,6 +319,15 @@ describe('AssetRegistry', function () {
                 expect(asset).to.be.instanceof(Asset);
                 expect(asset.resource).to.be.a('string');
                 expect(asset.resource).to.equal('hello world');
+                done();
+            });
+        });
+
+        it('loads texture assets', (done) => {
+            app.assets.loadFromUrl(`${assetPath}test.png`, 'texture', (err, asset) => {
+                expect(err).to.be.null;
+                expect(asset).to.be.instanceof(Asset);
+                expect(asset.resource).to.be.instanceof(Texture);
                 done();
             });
         });

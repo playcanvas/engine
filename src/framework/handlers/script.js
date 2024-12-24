@@ -69,7 +69,8 @@ class ScriptHandler extends ResourceHandler {
                 callback(null, obj, extra);
 
                 // no cache for scripts
-                delete self._loader._cache[ResourceLoader.makeKey(url, 'script')];
+                const urlWithoutEndHash = url.split('&hash=')[0];
+                delete self._loader._cache[ResourceLoader.makeKey(urlWithoutEndHash, 'script')];
             } else {
                 callback(err);
             }
@@ -139,7 +140,7 @@ class ScriptHandler extends ResourceHandler {
         import(importUrl.toString()).then((module) => {
 
             const filename = importUrl.pathname.split('/').pop();
-            const scriptSchema = this._app.assets.find(filename, 'script').data.scripts;
+            const scriptSchema = this._app.assets.find(filename, 'script')?.data?.scripts;
 
             for (const key in module) {
                 const scriptClass = module[key];
@@ -153,7 +154,7 @@ class ScriptHandler extends ResourceHandler {
                     registerScript(scriptClass, scriptName);
 
                     // Store any schema associated with the script
-                    this._app.scripts.addSchema(scriptName, scriptSchema[scriptName]);
+                    if (scriptSchema) this._app.scripts.addSchema(scriptName, scriptSchema[scriptName]);
                 }
             }
 

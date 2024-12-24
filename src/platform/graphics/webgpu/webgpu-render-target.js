@@ -190,8 +190,7 @@ class WebgpuRenderTarget {
      * Assign a color buffer. This allows the color buffer of the main framebuffer
      * to be swapped each frame to a buffer provided by the context.
      *
-     * @param {import('./webgpu-graphics-device.js').WebgpuGraphicsDevice} device - The WebGPU
-     * graphics device.
+     * @param {WebgpuGraphicsDevice} device - The WebGPU graphics device.
      * @param {any} gpuTexture - The color buffer.
      */
     assignColorTexture(device, gpuTexture) {
@@ -404,14 +403,14 @@ class WebgpuRenderTarget {
         /** @type {GPURenderPassColorAttachment} */
         const colorAttachment = {};
 
-        const { samples, width, height } = renderTarget;
+        const { samples, width, height, mipLevel } = renderTarget;
         const colorBuffer = renderTarget.getColorBuffer(index);
 
         // view used to write to the color buffer (either by rendering to it, or resolving to it)
         let colorView = null;
         if (colorBuffer) {
 
-            // render to top mip level in case of mip-mapped buffer
+            // render to a single mip level
             const mipLevelCount = 1;
 
             // cubemap face view - face is a single 2d array layer in order [+X, -X, +Y, -Y, +Z, -Z]
@@ -420,11 +419,13 @@ class WebgpuRenderTarget {
                     dimension: '2d',
                     baseArrayLayer: renderTarget.face,
                     arrayLayerCount: 1,
-                    mipLevelCount
+                    mipLevelCount,
+                    baseMipLevel: mipLevel
                 });
             } else {
                 colorView = colorBuffer.impl.createView({
-                    mipLevelCount
+                    mipLevelCount,
+                    baseMipLevel: mipLevel
                 });
             }
         }

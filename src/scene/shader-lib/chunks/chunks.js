@@ -56,6 +56,18 @@ import gamma2_2PS from './common/frag/gamma2_2.js';
 import gles3PS from '../../../platform/graphics/shader-chunks/frag/gles3.js';
 import gles3VS from '../../../platform/graphics/shader-chunks/vert/gles3.js';
 import glossPS from './standard/frag/gloss.js';
+import gsplatCenterVS from './gsplat/vert/gsplatCenter.js';
+import gsplatColorVS from './gsplat/vert/gsplatColor.js';
+import gsplatCommonVS from './gsplat/vert/gsplatCommon.js';
+import gsplatCompressedDataVS from './gsplat/vert/gsplatCompressedData.js';
+import gsplatCompressedSHVS from './gsplat/vert/gsplatCompressedSH.js';
+import gsplatCornerVS from './gsplat/vert/gsplatCorner.js';
+import gsplatDataVS from './gsplat/vert/gsplatData.js';
+import gsplatOutputVS from './gsplat/vert/gsplatOutput.js';
+import gsplatPS from './gsplat/frag/gsplat.js';
+import gsplatSHVS from './gsplat/vert/gsplatSH.js';
+import gsplatSourceVS from './gsplat/vert/gsplatSource.js';
+import gsplatVS from './gsplat/vert/gsplat.js';
 import iridescenceDiffractionPS from './lit/frag/iridescenceDiffraction.js';
 import iridescencePS from './standard/frag/iridescence.js';
 import iridescenceThicknessPS from './standard/frag/iridescenceThickness.js';
@@ -89,7 +101,6 @@ import outputAlphaPS from './lit/frag/outputAlpha.js';
 import outputAlphaOpaquePS from './lit/frag/outputAlphaOpaque.js';
 import outputAlphaPremulPS from './lit/frag/outputAlphaPremul.js';
 import outputTex2DPS from './common/frag/outputTex2D.js';
-import packDepthPS from './common/frag/packDepth.js';
 import sheenPS from './standard/frag/sheen.js';
 import sheenGlossPS from './standard/frag/sheenGloss.js';
 import parallaxPS from './standard/frag/parallax.js';
@@ -154,12 +165,10 @@ import shadowPCSSPS from './lit/frag/shadowPCSS.js';
 import shadowSampleCoordPS from './lit/frag/shadowSampleCoord.js';
 import shadowStandardPS from './lit/frag/shadowStandard.js';
 import shadowStandardGL2PS from './lit/frag/shadowStandardGL2.js';
-import shadowVSM8PS from './lit/frag/shadowVSM8.js';
 import shadowVSM_commonPS from './lit/frag/shadowVSM_common.js';
 import skinBatchTexVS from './common/vert/skinBatchTex.js';
 import skinTexVS from './common/vert/skinTex.js';
-import skyboxEnvPS from './skybox/frag/skyboxEnv.js';
-import skyboxHDRPS from './skybox/frag/skyboxHDR.js';
+import skyboxPS from './skybox/frag/skybox.js';
 import skyboxVS from './skybox/vert/skybox.js';
 import specularPS from './standard/frag/specular.js';
 import sphericalPS from './common/frag/spherical.js';
@@ -175,13 +184,14 @@ import TBNPS from './lit/frag/TBN.js';
 import TBNderivativePS from './lit/frag/TBNderivative.js';
 import TBNObjectSpacePS from './lit/frag/TBNObjectSpace.js';
 import thicknessPS from './standard/frag/thickness.js';
-import tonemappingAcesPS from './common/frag/tonemappingAces.js';
-import tonemappingAces2PS from './common/frag/tonemappingAces2.js';
-import tonemappingFilmicPS from './common/frag/tonemappingFilmic.js';
-import tonemappingHejlPS from './common/frag/tonemappingHejl.js';
-import tonemappingLinearPS from './common/frag/tonemappingLinear.js';
-import tonemappingNeutralPS from './common/frag/tonemappingNeutral.js';
-import tonemappingNonePS from './common/frag/tonemappingNone.js';
+import tonemappingPS from './common/frag/tonemapping/tonemapping.js';
+import tonemappingAcesPS from './common/frag/tonemapping/tonemappingAces.js';
+import tonemappingAces2PS from './common/frag/tonemapping/tonemappingAces2.js';
+import tonemappingFilmicPS from './common/frag/tonemapping/tonemappingFilmic.js';
+import tonemappingHejlPS from './common/frag/tonemapping/tonemappingHejl.js';
+import tonemappingLinearPS from './common/frag/tonemapping/tonemappingLinear.js';
+import tonemappingNeutralPS from './common/frag/tonemapping/tonemappingNeutral.js';
+import tonemappingNonePS from './common/frag/tonemapping/tonemappingNone.js';
 import transformVS from './common/vert/transform.js';
 import transformCoreVS from './common/vert/transformCore.js';
 import transformInstancingVS from './common/vert/transformInstancing.js';
@@ -259,6 +269,18 @@ const shaderChunks = {
     gles3PS,
     gles3VS,
     glossPS,
+    gsplatCenterVS,
+    gsplatCornerVS,
+    gsplatColorVS,
+    gsplatCommonVS,
+    gsplatCompressedDataVS,
+    gsplatCompressedSHVS,
+    gsplatDataVS,
+    gsplatOutputVS,
+    gsplatPS,
+    gsplatSHVS,
+    gsplatSourceVS,
+    gsplatVS,
     iridescenceDiffractionPS,
     iridescencePS,
     iridescenceThicknessPS,
@@ -292,7 +314,6 @@ const shaderChunks = {
     outputAlphaOpaquePS,
     outputAlphaPremulPS,
     outputTex2DPS,
-    packDepthPS,
     sheenPS,
     sheenGlossPS,
     parallaxPS,
@@ -357,12 +378,10 @@ const shaderChunks = {
     shadowSampleCoordPS,
     shadowStandardPS,
     shadowStandardGL2PS,
-    shadowVSM8PS,
     shadowVSM_commonPS,
     skinBatchTexVS,
     skinTexVS,
-    skyboxEnvPS,
-    skyboxHDRPS,
+    skyboxPS,
     skyboxVS,
     specularPS,
     sphericalPS,
@@ -378,6 +397,7 @@ const shaderChunks = {
     TBNderivativePS,
     TBNObjectSpacePS,
     thicknessPS,
+    tonemappingPS,
     tonemappingAcesPS,
     tonemappingAces2PS,
     tonemappingFilmicPS,

@@ -1,15 +1,15 @@
-import { createScript } from '../../src/framework/script/script-create.js';
-import { Color } from '../../src/core/math/color.js';
+import { expect } from 'chai';
+import { stub } from 'sinon';
 
+import { DummyComponentSystem } from './test-component/system.mjs';
+import { Color } from '../../src/core/math/color.js';
 import { AnimComponent } from '../../src/framework/components/anim/component.js';
 import { AnimationComponent } from '../../src/framework/components/animation/component.js';
-import { Application } from '../../src/framework/application.js';
 import { AudioListenerComponent } from '../../src/framework/components/audio-listener/component.js';
 import { ButtonComponent } from '../../src/framework/components/button/component.js';
 import { CameraComponent } from '../../src/framework/components/camera/component.js';
 import { CollisionComponent } from '../../src/framework/components/collision/component.js';
 import { ElementComponent } from '../../src/framework/components/element/component.js';
-import { Entity } from '../../src/framework/entity.js';
 import { JointComponent } from '../../src/framework/components/joint/component.js';
 import { LayoutChildComponent } from '../../src/framework/components/layout-child/component.js';
 import { LayoutGroupComponent } from '../../src/framework/components/layout-group/component.js';
@@ -20,33 +20,31 @@ import { RenderComponent } from '../../src/framework/components/render/component
 import { RigidBodyComponent } from '../../src/framework/components/rigid-body/component.js';
 import { ScreenComponent } from '../../src/framework/components/screen/component.js';
 import { ScriptComponent } from '../../src/framework/components/script/component.js';
-import { ScrollbarComponent } from '../../src/framework/components/scrollbar/component.js';
 import { ScrollViewComponent } from '../../src/framework/components/scroll-view/component.js';
+import { ScrollbarComponent } from '../../src/framework/components/scrollbar/component.js';
 import { SoundComponent } from '../../src/framework/components/sound/component.js';
 import { SpriteComponent } from '../../src/framework/components/sprite/component.js';
 import { ZoneComponent } from '../../src/framework/components/zone/component.js';
-import { NullGraphicsDevice } from '../../src/platform/graphics/null/null-graphics-device.js';
-
-import { DummyComponentSystem } from './test-component/system.mjs';
-
-import { HTMLCanvasElement } from '@playcanvas/canvas-mock';
-
-import { expect } from 'chai';
-import { stub } from 'sinon';
+import { Entity } from '../../src/framework/entity.js';
+import { createScript } from '../../src/framework/script/script-create.js';
+import { createApp } from '../app.mjs';
+import { jsdomSetup, jsdomTeardown } from '../jsdom.mjs';
 
 describe('Entity', function () {
 
     let app;
 
-    beforeEach(() => {
-        const canvas = new HTMLCanvasElement(500, 500);
-        app = new Application(canvas, { graphicsDevice: new NullGraphicsDevice(canvas) });
+    beforeEach(function () {
+        jsdomSetup();
+        app = createApp();
 
         app.systems.add(new DummyComponentSystem(app));
     });
 
-    afterEach(() => {
-        app.destroy();
+    afterEach(function () {
+        app?.destroy();
+        app = null;
+        jsdomTeardown();
     });
 
     const components = {
@@ -99,7 +97,7 @@ describe('Entity', function () {
     describe('#addComponent', function () {
 
         for (const name in components) {
-            it(`adds a ${name} component`, () => {
+            it(`adds a ${name} component`, function () {
                 // Create an entity and verify that it does not already have the component
                 const entity = new Entity();
                 expect(entity[name]).to.be.undefined;
@@ -249,6 +247,15 @@ describe('Entity', function () {
                 expect(clone[name]).to.be.an.instanceof(components[name]);
             }
         });
+
+        for (const name in components) {
+            it(`clones the enabled state of ${name} components correctly`, function () {
+                const entity = new Entity('Test');
+                entity.addComponent(name, { enabled: false });
+                const clone = entity.clone();
+                expect(clone[name].enabled).to.equal(false);
+            });
+        }
 
         it('clones an entity hierarchy', function () {
             const root = new Entity('Test');

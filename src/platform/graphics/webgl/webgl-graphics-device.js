@@ -40,6 +40,7 @@ import { DepthState } from '../depth-state.js';
 import { StencilParameters } from '../stencil-parameters.js';
 import { WebglGpuProfiler } from './webgl-gpu-profiler.js';
 import { TextureUtils } from '../texture-utils.js';
+import { getBuiltInTexture } from '../built-in-textures.js';
 
 /**
  * @import { RenderPass } from '../render-pass.js'
@@ -152,16 +153,18 @@ class WebglGraphicsDevice extends GraphicsDevice {
             Debug.log('Antialiasing has been turned off due to rendering issues on AppleWebKit 15.4');
         }
 
-        // #5856 - turn off antialiasing on Windows Firefox
-        if (platform.browserName === 'firefox' && platform.name === 'windows') {
+        // #5856 - turn off antialiasing on Firefox running on Windows / Android
+        if (platform.browserName === 'firefox') {
             const ua = (typeof navigator !== 'undefined') ? navigator.userAgent : '';
             const match = ua.match(/Firefox\/(\d+(\.\d+)*)/);
             const firefoxVersion = match ? match[1] : null;
             if (firefoxVersion) {
                 const version = parseFloat(firefoxVersion);
-                if (version >= 120 || version === 115) {
+                const disableAntialias = (platform.name === 'windows' && (version >= 120 || version === 115)) ||
+                                         (platform.name === 'android' && version >= 132);
+                if (disableAntialias) {
                     options.antialias = false;
-                    Debug.log(`Antialiasing has been turned off due to rendering issues on Windows Firefox esr115 and 120+. Current version: ${firefoxVersion}`);
+                    Debug.log(`Antialiasing has been turned off due to rendering issues on Firefox ${platform.name} platform version ${firefoxVersion}`);
                 }
             }
         }
@@ -584,7 +587,7 @@ class WebglGraphicsDevice extends GraphicsDevice {
         this.textureFloatRenderable = !!this.extColorBufferFloat;
 
         // render to half float buffers support - either of these two extensions
-        this.extColorBufferHalfFloat = this.extColorBufferHalfFloat || !!this.extColorBufferFloat;
+        this.textureHalfFloatRenderable = !!this.extColorBufferHalfFloat || !!this.extColorBufferFloat;
 
         this.postInit();
     }
@@ -791,6 +794,7 @@ class WebglGraphicsDevice extends GraphicsDevice {
         this.extCompressedTextureS3TC_SRGB = this.getExtension('WEBGL_compressed_texture_s3tc_srgb');
         this.extCompressedTextureATC = this.getExtension('WEBGL_compressed_texture_atc');
         this.extCompressedTextureASTC = this.getExtension('WEBGL_compressed_texture_astc');
+        this.extTextureCompressionBPTC = this.getExtension('EXT_texture_compression_bptc');
 
         // iOS exposes this for half precision render targets on WebGL2 from iOS v 14.5beta
         this.extColorBufferHalfFloat = this.getExtension('EXT_color_buffer_half_float');
@@ -1268,7 +1272,7 @@ class WebglGraphicsDevice extends GraphicsDevice {
             // generate mipmaps
             for (let i = 0; i < colorBufferCount; i++) {
                 const colorOps = renderPass.colorArrayOps[i];
-                if (colorOps.mipmaps) {
+                if (colorOps.genMipmaps) {
                     const colorBuffer = target._colorBuffers[i];
                     if (colorBuffer && colorBuffer.impl._glTexture && colorBuffer.mipmaps) {
 
@@ -1737,23 +1741,24 @@ class WebglGraphicsDevice extends GraphicsDevice {
             samplerValue = sampler.scopeId.value;
             if (!samplerValue) {
 
-                // #if _DEBUG
                 const samplerName = sampler.scopeId.name;
                 Debug.assert(samplerName !== 'texture_grabPass', 'Engine provided texture with sampler name \'texture_grabPass\' is not longer supported, use \'uSceneColorMap\' instead');
                 Debug.assert(samplerName !== 'uDepthMap', 'Engine provided texture with sampler name \'uDepthMap\' is not longer supported, use \'uSceneDepthMap\' instead');
 
                 if (samplerName === 'uSceneDepthMap') {
-                    Debug.warnOnce('A sampler uSceneDepthMap is used by the shader but a scene depth texture is not available. Use CameraComponent.requestSceneDepthMap / enable Depth Grabpass on the Camera Component to enable it.');
+                    Debug.errorOnce(`A uSceneDepthMap texture is used by the shader but a scene depth texture is not available. Use CameraComponent.requestSceneDepthMap / enable Depth Grabpass on the Camera Component to enable it. Rendering [${DebugGraphics.toString()}]`);
+                    samplerValue = getBuiltInTexture(this, 'white');
                 }
                 if (samplerName === 'uSceneColorMap') {
-                    Debug.warnOnce('A sampler uSceneColorMap is used by the shader but a scene color texture is not available. Use CameraComponent.requestSceneColorMap / enable Color Grabpass on the Camera Component to enable it.');
+                    Debug.errorOnce(`A uSceneColorMap texture is used by the shader but a scene color texture is not available. Use CameraComponent.requestSceneColorMap / enable Color Grabpass on the Camera Component to enable it. Rendering [${DebugGraphics.toString()}]`);
+                    samplerValue = getBuiltInTexture(this, 'pink');
                 }
-                // #endif
 
-                Debug.errorOnce(`Shader [${shader.label}] requires texture sampler [${samplerName}] which has not been set, while rendering [${DebugGraphics.toString()}]`);
-
-                // skip this draw call to avoid incorrect rendering / webgl errors
-                return;
+                // missing generic texture
+                if (!samplerValue) {
+                    Debug.errorOnce(`Shader ${shader.name} requires ${samplerName} texture which was not set. Rendering [${DebugGraphics.toString()}]`);
+                    samplerValue = getBuiltInTexture(this, 'pink');
+                }
             }
 
             if (samplerValue instanceof Texture) {
@@ -2041,7 +2046,7 @@ class WebglGraphicsDevice extends GraphicsDevice {
         Debug.assert(renderTarget.colorBuffer === texture);
 
         const buffer = new ArrayBuffer(TextureUtils.calcLevelGpuSize(width, height, 1, texture._format));
-        const data = new (getPixelFormatArrayType(texture._format))(buffer);
+        const data = options.data ?? new (getPixelFormatArrayType(texture._format))(buffer);
 
         this.setRenderTarget(renderTarget);
         this.initRenderTarget(renderTarget);
@@ -2054,7 +2059,7 @@ class WebglGraphicsDevice extends GraphicsDevice {
                     renderTarget.destroy();
                 }
                 resolve(data);
-            });
+            }).catch(reject);
         });
     }
 

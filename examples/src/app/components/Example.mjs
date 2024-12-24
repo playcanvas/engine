@@ -1,17 +1,16 @@
-import React, { Component } from 'react';
-import { withRouter } from 'react-router-dom';
 import * as PCUI from '@playcanvas/pcui';
 import * as ReactPCUI from '@playcanvas/pcui/react';
 import { Panel, Container, Button, Spinner } from '@playcanvas/pcui/react';
+import React, { Component } from 'react';
+import { withRouter } from 'react-router-dom';
 
-import { DeviceSelector } from './DeviceSelector.mjs';
 import { CodeEditorMobile } from './code-editor/CodeEditorMobile.mjs';
+import { DeviceSelector } from './DeviceSelector.mjs';
 import { ErrorBoundary } from './ErrorBoundary.mjs';
-
 import { MIN_DESKTOP_WIDTH } from '../constants.mjs';
-import { iframePath } from '../paths.mjs';
-import { jsx, fragment } from '../jsx.mjs';
 import { iframe } from '../iframe.mjs';
+import { jsx, fragment } from '../jsx.mjs';
+import { iframePath } from '../paths.mjs';
 import { getOrientation } from '../utils.mjs';
 
 /** @typedef {import('../events.js').StateEvent} StateEvent */

@@ -4,7 +4,7 @@ import * as pc from 'playcanvas';
  * @param {import('../../app/components/Example.mjs').ControlOptions} options - The options.
  * @returns {JSX.Element} The returned JSX Element.
  */
-export function controls({ observer, ReactPCUI, React, jsx, fragment }) {
+export const controls = ({ observer, ReactPCUI, React, jsx, fragment }) => {
     const { BindingTwoWay, BooleanInput, LabelGroup, Panel, SelectInput, SliderInput } = ReactPCUI;
     return fragment(
         jsx(
@@ -59,6 +59,21 @@ export function controls({ observer, ReactPCUI, React, jsx, fragment }) {
                         { v: pc.TONEMAP_NEUTRAL, t: 'NEUTRAL' }
                     ]
                 })
+            ),
+            jsx(
+                LabelGroup,
+                { text: 'Debug' },
+                jsx(SelectInput, {
+                    binding: new BindingTwoWay(),
+                    link: { observer, path: 'data.scene.debug' },
+                    type: 'number',
+                    options: [
+                        { v: 0, t: 'NONE' },
+                        { v: 1, t: 'BLOOM' },
+                        { v: 2, t: 'VIGNETTE' },
+                        { v: 3, t: 'SCENE' }
+                    ]
+                })
             )
         ),
         jsx(
@@ -86,12 +101,12 @@ export function controls({ observer, ReactPCUI, React, jsx, fragment }) {
             ),
             jsx(
                 LabelGroup,
-                { text: 'last mip level' },
+                { text: 'blur level' },
                 jsx(SliderInput, {
                     binding: new BindingTwoWay(),
-                    link: { observer, path: 'data.bloom.lastMipLevel' },
+                    link: { observer, path: 'data.bloom.blurLevel' },
                     min: 1,
-                    max: 10,
+                    max: 16,
                     precision: 0
                 })
             )
@@ -115,7 +130,7 @@ export function controls({ observer, ReactPCUI, React, jsx, fragment }) {
                     binding: new BindingTwoWay(),
                     link: { observer, path: 'data.grading.saturation' },
                     min: 0,
-                    max: 3,
+                    max: 2,
                     precision: 2
                 })
             ),
@@ -136,8 +151,8 @@ export function controls({ observer, ReactPCUI, React, jsx, fragment }) {
                 jsx(SliderInput, {
                     binding: new BindingTwoWay(),
                     link: { observer, path: 'data.grading.contrast' },
-                    min: 0,
-                    max: 3,
+                    min: 0.5,
+                    max: 1.5,
                     precision: 2
                 })
             )
@@ -242,10 +257,10 @@ export function controls({ observer, ReactPCUI, React, jsx, fragment }) {
                     binding: new BindingTwoWay(),
                     link: { observer, path: 'data.taa.jitter' },
                     min: 0,
-                    max: 5,
+                    max: 1,
                     precision: 2
                 })
             )
         )
     );
-}
+};

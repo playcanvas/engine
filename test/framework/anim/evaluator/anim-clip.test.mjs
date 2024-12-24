@@ -1,15 +1,16 @@
-import { AnimTrack } from '../../../../src/framework/anim/evaluator/anim-track.js';
-import { AnimData } from '../../../../src/framework/anim/evaluator/anim-data.js';
-import { AnimCurve } from '../../../../src/framework/anim/evaluator/anim-curve.js';
-import { AnimClip } from '../../../../src/framework/anim/evaluator/anim-clip.js';
-import { AnimEvents } from '../../../../src/framework/anim/evaluator/anim-events.js';
-import { INTERPOLATION_LINEAR } from '../../../../src/framework/anim/constants.js';
 import { expect } from 'chai';
+
+import { INTERPOLATION_LINEAR } from '../../../../src/framework/anim/constants.js';
+import { AnimClip } from '../../../../src/framework/anim/evaluator/anim-clip.js';
+import { AnimCurve } from '../../../../src/framework/anim/evaluator/anim-curve.js';
+import { AnimData } from '../../../../src/framework/anim/evaluator/anim-data.js';
+import { AnimEvents } from '../../../../src/framework/anim/evaluator/anim-events.js';
+import { AnimTrack } from '../../../../src/framework/anim/evaluator/anim-track.js';
 
 describe('AnimClip', function () {
     let animClip;
 
-    beforeEach(() => {
+    beforeEach(function () {
         const curves = [new AnimCurve(['path/to/entity'], 0, 0, INTERPOLATION_LINEAR)];
         const inputs = [new AnimData(1, [0, 1, 2])];
         const outputs = [new AnimData(3, [0, 0, 0, 1, 2, 3, 2, 4, 6])];

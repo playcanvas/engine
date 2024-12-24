@@ -4,26 +4,12 @@ import { ChunkUtils } from '../chunk-utils.js';
 
 import { ShaderUtils } from '../../../platform/graphics/shader-utils.js';
 import { ShaderGenerator } from './shader-generator.js';
-import { SKYTYPE_INFINITE } from '../../constants.js';
-
-const fShader = `
-    #include "decodePS"
-    #include "gamma"
-    #include "tonemapping"
-    #include "envMultiplyPS"
-
-    #ifdef SKY_CUBEMAP
-        #include "skyboxHDRPS"
-    #else
-        #include "sphericalPS"
-        #include "envAtlasPS"
-        #include "skyboxEnvPS"
-    #endif
-`;
+import { SKYTYPE_INFINITE, tonemapNames } from '../../constants.js';
 
 class ShaderGeneratorSkybox extends ShaderGenerator {
     generateKey(options) {
-        const sharedKey = `skybox-${options.type}-${options.encoding}-${options.gamma}-${options.toneMapping}-${options.skymesh}`;
+        const definesHash = ShaderGenerator.definesHash(options.defines);
+        const sharedKey = `skybox-${options.type}-${options.encoding}-${options.gamma}-${options.toneMapping}-${options.skymesh}_${definesHash}`;
         return sharedKey + (options.type === 'cubemap' ? `-${options.mip}` : '');
     }
 
@@ -31,6 +17,7 @@ class ShaderGeneratorSkybox extends ShaderGenerator {
 
         // defines
         const defines = new Map();
+        defines.set('TONEMAP', tonemapNames[options.toneMapping]);
         defines.set('SKYBOX_DECODE_FNC', ChunkUtils.decodeFunc(options.encoding));
         if (options.skymesh !== SKYTYPE_INFINITE) defines.set('SKYMESH', '');
         if (options.type === 'cubemap') {
@@ -38,18 +25,17 @@ class ShaderGeneratorSkybox extends ShaderGenerator {
         }
 
         // includes
-        const includes = new Map();
+        const includes = new Map(Object.entries({
+            ...shaderChunks,
+            ...options.chunks
+        }));
         includes.set('decodePS', shaderChunks.decodePS);
         includes.set('gamma', ShaderGenerator.gammaCode(options.gamma));
-        includes.set('tonemapping', ShaderGenerator.tonemapCode(options.toneMapping));
         includes.set('envMultiplyPS', shaderChunks.envMultiplyPS);
 
-        if (options.type === 'cubemap') {
-            includes.set('skyboxHDRPS', shaderChunks.skyboxHDRPS);
-        } else {
+        if (options.type !== 'cubemap') {
             includes.set('sphericalPS', shaderChunks.sphericalPS);
             includes.set('envAtlasPS', shaderChunks.envAtlasPS);
-            includes.set('skyboxEnvPS', shaderChunks.skyboxEnvPS);
         }
 
         return ShaderUtils.createDefinition(device, {
@@ -59,7 +45,7 @@ class ShaderGeneratorSkybox extends ShaderGenerator {
             },
             vertexCode: shaderChunks.skyboxVS,
             vertexDefines: defines,
-            fragmentCode: fShader,
+            fragmentCode: shaderChunks.skyboxPS,
             fragmentDefines: defines,
             fragmentIncludes: includes
         });

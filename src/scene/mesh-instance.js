@@ -25,10 +25,10 @@ import { array } from '../core/array-utils.js';
  * @import { Camera } from './camera.js'
  * @import { GSplatInstance } from './gsplat/gsplat-instance.js'
  * @import { GraphicsDevice } from '../platform/graphics/graphics-device.js'
- * @import { Material, ShaderVariantParams } from './materials/material.js'
+ * @import { Material } from './materials/material.js'
  * @import { Mesh } from './mesh.js'
  * @import { MorphInstance } from './morph-instance.js'
- * @import { RenderingParams } from './renderer/rendering-params.js'
+ * @import { CameraShaderParams } from './camera-shader-params.js'
  * @import { Scene } from './scene.js'
  * @import { ScopeId } from '../platform/graphics/scope-id.js'
  * @import { Shader } from '../platform/graphics/shader.js'
@@ -225,8 +225,8 @@ class MeshInstance {
     visible = true;
 
     /**
-     * Read this value in {@link CameraComponent#onPostCull} to determine if the object is actually going to
-     * be rendered.
+     * Read this value in {@link Scene#EVENT_POSTCULL} event to determine if the object is actually
+     * going to be rendered.
      *
      * @type {boolean}
      */
@@ -590,14 +590,14 @@ class MeshInstance {
      * @param {number} shaderPass - The shader pass index.
      * @param {number} lightHash - The hash value of the lights that are affecting this mesh instance.
      * @param {Scene} scene - The scene.
-     * @param {RenderingParams} renderParams - The rendering parameters.
+     * @param {CameraShaderParams} cameraShaderParams - The camera shader parameters.
      * @param {UniformBufferFormat} [viewUniformFormat] - The format of the view uniform buffer.
      * @param {BindGroupFormat} [viewBindGroupFormat] - The format of the view bind group.
      * @param {any} [sortedLights] - Array of arrays of lights.
      * @returns {ShaderInstance} - the shader instance.
      * @ignore
      */
-    getShaderInstance(shaderPass, lightHash, scene, renderParams, viewUniformFormat, viewBindGroupFormat, sortedLights) {
+    getShaderInstance(shaderPass, lightHash, scene, cameraShaderParams, viewUniformFormat, viewBindGroupFormat, sortedLights) {
 
         const shaderDefs = this._shaderDefs;
 
@@ -605,7 +605,7 @@ class MeshInstance {
         lookupHashes[0] = shaderPass;
         lookupHashes[1] = lightHash;
         lookupHashes[2] = shaderDefs;
-        lookupHashes[3] = renderParams.hash;
+        lookupHashes[3] = cameraShaderParams.hash;
         const hash = hash32Fnv1a(lookupHashes);
 
         // look up the cache
@@ -631,7 +631,7 @@ class MeshInstance {
                     device: this.mesh.device,
                     scene: scene,
                     objDefs: shaderDefs,
-                    renderParams: renderParams,
+                    cameraShaderParams: cameraShaderParams,
                     pass: shaderPass,
                     sortedLights: sortedLights,
                     viewUniformFormat: viewUniformFormat,

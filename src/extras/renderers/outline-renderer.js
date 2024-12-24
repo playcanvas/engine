@@ -97,9 +97,11 @@ class OutlineRenderer {
         this.outlineShaderPass = this.outlineCameraEntity.camera.setShaderPass('OutlineShaderPass');
 
         // function called after the camera has rendered the outline objects to the texture
-        this.outlineCameraEntity.camera.onPostRender = () => {
-            this.onPostRender();
-        };
+        app.scene.on('postrender', (cameraComponent) => {
+            if (this.outlineCameraEntity.camera === cameraComponent) {
+                this.onPostRender();
+            }
+        });
 
         // add the camera to the scene
         this.app.root.addChild(this.outlineCameraEntity);
@@ -155,12 +157,16 @@ class OutlineRenderer {
 
         const renders = recursive ? entity.findComponents('render') : (entity.render ? [entity.render] : []);
         renders.forEach((render) => {
-            meshInstances.push(...render.meshInstances);
+            if (render.entity.enabled && render.enabled) {
+                meshInstances.push(...render.meshInstances);
+            }
         });
 
         const models = recursive ? entity.findComponents('model') : (entity.model ? [entity.model] : []);
         models.forEach((model) => {
-            meshInstances.push(...model.meshInstances);
+            if (model.entity.enabled && model.enabled) {
+                meshInstances.push(...model.meshInstances);
+            }
         });
 
         return meshInstances;
@@ -327,15 +333,12 @@ class OutlineRenderer {
         this.updateRenderTarget(sceneCamera);
 
         // function called before the scene camera renders a layer
-        sceneCameraEntity.camera.onPreRenderLayer = (layer, transparent) => {
-
-            // when specified blend layer is rendered, add outline before its rendering
-            if (transparent === blendLayerTransparent && layer === blendLayer) {
+        const evt = this.app.scene.on('prerender:layer', (cameraComponent, layer, transparent) => {
+            if (sceneCamera === cameraComponent && transparent === blendLayerTransparent && layer === blendLayer) {
                 this.blendOutlines();
-
-                sceneCameraEntity.camera.onPreRenderLayer = null;
+                evt.off();
             }
-        };
+        });
 
         // copy the transform
         this.outlineCameraEntity.setLocalPosition(sceneCameraEntity.getPosition());

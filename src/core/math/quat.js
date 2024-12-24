@@ -6,7 +6,9 @@ import { Vec3 } from './vec3.js';
  */
 
 /**
- * A quaternion.
+ * A quaternion representing rotation in 3D space. Quaternions are typically used to represent
+ * rotations in 3D applications, offering advantages over Euler angles including no gimbal lock and
+ * more efficient interpolation.
  *
  * @category Math
  */
@@ -65,12 +67,12 @@ class Quat {
     /**
      * Returns an identical copy of the specified quaternion.
      *
-     * @returns {this} A quaternion containing the result of the cloning.
+     * @returns {this} A new quaternion identical to this one.
      * @example
      * const q = new pc.Quat(-0.11, -0.15, -0.46, 0.87);
      * const qclone = q.clone();
      *
-     * console.log("The result of the cloning is: " + q.toString());
+     * console.log("The result of the cloning is: " + qclone.toString());
      */
     clone() {
         /** @type {this} */
@@ -78,6 +80,17 @@ class Quat {
         return new cstr(this.x, this.y, this.z, this.w);
     }
 
+    /**
+     * Conjugates a quaternion.
+     *
+     * @param {Quat} [src] - The quaternion to conjugate. If not set, the operation is done in place.
+     * @returns {Quat} Self for chaining.
+     * @example
+     * const q = new pc.Quat(1, 2, 3, 4);
+     * q.conjugate();
+     * // q is now [-1, -2, -3, 4]
+     * @ignore
+     */
     conjugate(src = this) {
         this.x = src.x * -1;
         this.y = src.y * -1;
@@ -95,7 +108,7 @@ class Quat {
      * @example
      * const src = new pc.Quat();
      * const dst = new pc.Quat();
-     * dst.copy(src, src);
+     * dst.copy(src);
      * console.log("The two quaternions are " + (src.equals(dst) ? "equal" : "different"));
      */
     copy(rhs) {
@@ -186,6 +199,13 @@ class Quat {
      * @param {Vec3} [eulers] - The 3-dimensional vector to receive the Euler angles.
      * @returns {Vec3} The 3-dimensional vector holding the Euler angles that
      * correspond to the supplied quaternion.
+     * @example
+     * const q = new pc.Quat();
+     * q.setFromAxisAngle(new pc.Vec3(0, 1, 0), 90);
+     * const e = new pc.Vec3();
+     * q.getEulerAngles(e);
+     * // Outputs [0, 90, 0]
+     * console.log(e.toString());
      */
     getEulerAngles(eulers = new Vec3()) {
         let x, y, z;
@@ -247,9 +267,9 @@ class Quat {
     /**
      * Returns the magnitude squared of the specified quaternion.
      *
-     * @returns {number} The magnitude of the specified quaternion.
+     * @returns {number} The magnitude squared of the quaternion.
      * @example
-     * const q = new pc.Quat(3, 4, 0);
+     * const q = new pc.Quat(3, 4, 0, 0);
      * const lenSq = q.lengthSq();
      * // Outputs 25
      * console.log("The length squared of the quaternion is: " + lenSq);
@@ -298,6 +318,10 @@ class Quat {
      * @param {number} scalar - The number to multiply by.
      * @param {Quat} [src] - The quaternion to scale. If not set, the operation is done in place.
      * @returns {Quat} Self for chaining.
+     * @example
+     * const q = new pc.Quat(1, 2, 3, 4);
+     * q.mulScalar(2);
+     * // q is now [2, 4, 6, 8]
      */
     mulScalar(scalar, src = this) {
         this.x = src.x * scalar;
@@ -321,8 +345,6 @@ class Quat {
      * // r is set to a 90 degree rotation around the Y axis
      * // In other words, r = a * b
      * r.mul2(a, b);
-     *
-     * console.log("The result of the multiplication is: " + r.toString());
      */
     mul2(lhs, rhs) {
         const q1x = lhs.x;
@@ -344,17 +366,15 @@ class Quat {
     }
 
     /**
-     * Returns the specified quaternion converted in place to a unit quaternion.
+     * Normalizes the specified quaternion.
      *
      * @param {Quat} [src] - The quaternion to normalize. If not set, the operation is done in place.
      * @returns {Quat} The result of the normalization.
      * @example
      * const v = new pc.Quat(0, 0, 0, 5);
-     *
      * v.normalize();
-     *
-     * // Outputs 0, 0, 0, 1
-     * console.log("The result of the vector normalization is: " + v.toString());
+     * // Outputs [0, 0, 0, 1]
+     * console.log(v.toString());
      */
     normalize(src = this) {
         let len = src.length();
@@ -399,7 +419,7 @@ class Quat {
     /**
      * Sets a quaternion from an angular rotation around an axis.
      *
-     * @param {Vec3} axis - World space axis around which to rotate.
+     * @param {Vec3} axis - World space axis around which to rotate. Should be normalized.
      * @param {number} angle - Angle to rotate around the given axis in degrees.
      * @returns {Quat} Self for chaining.
      * @example
@@ -468,7 +488,7 @@ class Quat {
 
     /**
      * Converts the specified 4x4 matrix to a quaternion. Note that since a quaternion is purely a
-     * representation for orientation, only the translational part of the matrix is lost.
+     * representation for orientation, only the rotational part of the matrix is used.
      *
      * @param {Mat4} m - The 4x4 matrix to convert.
      * @returns {Quat} Self for chaining.
@@ -545,8 +565,11 @@ class Quat {
      * @param {Vec3} from - The direction to rotate from. It should be normalized.
      * @param {Vec3} to - The direction to rotate to. It should be normalized.
      * @returns {Quat} Self for chaining.
-     *
-     * {@link https://www.xarg.org/proof/quaternion-from-two-vectors/ Proof of correctness}
+     * @example
+     * const q = new pc.Quat();
+     * const from = new pc.Vec3(0, 0, 1);
+     * const to = new pc.Vec3(0, 1, 0);
+     * q.setFromDirections(from, to);
      */
     setFromDirections(from, to) {
         const dotProduct = 1 + from.dot(to);
@@ -590,10 +613,10 @@ class Quat {
      * const q1 = new pc.Quat(-0.11, -0.15, -0.46, 0.87);
      * const q2 = new pc.Quat(-0.21, -0.21, -0.67, 0.68);
      *
-     * const result;
-     * result = new pc.Quat().slerp(q1, q2, 0);   // Return q1
-     * result = new pc.Quat().slerp(q1, q2, 0.5); // Return the midpoint interpolant
-     * result = new pc.Quat().slerp(q1, q2, 1);   // Return q2
+     * const result = new pc.Quat();
+     * result.slerp(q1, q2, 0);   // Return q1
+     * result.slerp(q1, q2, 0.5); // Return the midpoint interpolant
+     * result.slerp(q1, q2, 1);   // Return q2
      */
     slerp(lhs, rhs, alpha) {
         // Algorithm sourced from:
@@ -657,12 +680,12 @@ class Quat {
      *
      * @param {Vec3} vec - The 3-dimensional vector to be transformed.
      * @param {Vec3} [res] - An optional 3-dimensional vector to receive the result of the transformation.
-     * @returns {Vec3} The input vector v transformed by the current instance.
+     * @returns {Vec3} The transformed vector (res if specified, otherwise a new Vec3).
      * @example
      * // Create a 3-dimensional vector
      * const v = new pc.Vec3(1, 2, 3);
      *
-     * // Create a 4x4 rotation matrix
+     * // Create a quaternion rotation
      * const q = new pc.Quat().setFromEulerAngles(10, 20, 30);
      *
      * const tv = q.transformVector(v);
@@ -699,7 +722,7 @@ class Quat {
     }
 
     /**
-     * A constant quaternion set to [0, 0, 0, 1] (the identity).
+     * A constant quaternion set to [0, 0, 0, 1] (the identity). Represents no rotation.
      *
      * @type {Quat}
      * @readonly

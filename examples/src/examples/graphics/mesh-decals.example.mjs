@@ -1,17 +1,20 @@
-import * as pc from 'playcanvas';
 import { deviceType, rootPath } from 'examples/utils';
+import * as pc from 'playcanvas';
 
 const canvas = /** @type {HTMLCanvasElement} */ (document.getElementById('application-canvas'));
 window.focus();
 
 const assets = {
-    heart: new pc.Asset('heart', 'texture', { url: rootPath + '/static/assets/textures/heart.png' })
+    heart: new pc.Asset('heart', 'texture', { url: `${rootPath}/static/assets/textures/heart.png` })
 };
 
 const gfxOptions = {
     deviceTypes: [deviceType],
-    glslangUrl: rootPath + '/static/lib/glslang/glslang.js',
-    twgslUrl: rootPath + '/static/lib/twgsl/twgsl.js'
+    glslangUrl: `${rootPath}/static/lib/glslang/glslang.js`,
+    twgslUrl: `${rootPath}/static/lib/twgsl/twgsl.js`,
+
+    // enable HDR rendering if supported
+    displayFormat: pc.DISPLAYFORMAT_HDR
 };
 
 const device = await pc.createGraphicsDevice(canvas, gfxOptions);
@@ -79,7 +82,11 @@ assetListLoader.load(() => {
     // Create an Entity with a camera component
     const camera = new pc.Entity();
     camera.addComponent('camera', {
-        clearColor: new pc.Color(0.2, 0.2, 0.2)
+        clearColor: new pc.Color(0.2, 0.2, 0.2),
+
+        // if the device renders in HDR mode, disable tone mapping to output HDR values without any processing
+        toneMapping: device.isHdr ? pc.TONEMAP_NONE : pc.TONEMAP_ACES,
+        gammaCorrection: pc.GAMMA_SRGB
     });
 
     // Add the camera to the hierarchy
@@ -201,6 +208,7 @@ assetListLoader.load(() => {
     material.depthWrite = false; // optimization - no need to write to depth buffer, as decals are part of the ground plane
     material.emissiveMap = assets.heart.resource;
     material.emissive = pc.Color.WHITE;
+    material.emissiveIntensity = 10;    // bright emissive to make it really bright on HDR displays
     material.opacityMap = assets.heart.resource;
     material.depthBias = -0.1; // depth biases to avoid z-fighting with ground plane
     material.slopeDepthBias = -0.1;

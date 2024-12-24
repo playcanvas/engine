@@ -16,9 +16,9 @@ export const rootPath = root.replace(/\/iframe/g, '');
  */
 export function getQueryParams(url) {
     return Object.fromEntries(url
-        .split('?').pop()
-        .split('#')[0]
-        .split('&').map(s => s.split('=')));
+    .split('?').pop()
+    .split('#')[0]
+    .split('&').map(s => s.split('=')));
 }
 
 /**
@@ -90,14 +90,14 @@ export function clearImports() {
  * @returns {Record<string, any>} - The parsed config.
  */
 export function parseConfig(script) {
-    const regex = /\/\/ @config ([^ \n]+) ?([^\n]+)?/g;
+    const regex = /\/\/ @config (\S+)(?:\s+([^\n]+))?/g;
     let match;
     /** @type {Record<string, any>} */
     const config = {};
     while ((match = regex.exec(script)) !== null) {
         const key = match[1].trim();
         const val = match[2]?.trim();
-        config[key] = /true|false/g.test(val) ? val === 'true' : val ?? true;
+        config[key] = /true|false/.test(val) ? val === 'true' : val ?? true;
     }
     return config;
 }
@@ -109,30 +109,29 @@ export let deviceType = 'webgl2';
  * @param {{ WEBGPU_DISABLED: boolean; WEBGL_DISABLED: boolean; }} config - The configuration object.
  */
 export function updateDeviceType(config) {
+    const savedDevice = localStorage.getItem('preferredGraphicsDevice') ?? 'webgl2';
+    deviceType = DEVICE_TYPES.includes(savedDevice) ? savedDevice : 'webgl2';
+
     if (params.deviceType && DEVICE_TYPES.includes(params.deviceType)) {
-        console.warn("Overwriting default deviceType from URL: ", params.deviceType);
+        console.warn('Overriding default device: ', params.deviceType);
         deviceType = params.deviceType;
         return;
     }
 
     if (config.WEBGL_DISABLED && config.WEBGPU_DISABLED) {
-        console.warn('Both WebGL and WebGPU are disabled. Using NullGraphicsDevice instead.');
+        console.warn('Both WebGL 2.0 and WebGPU are disabled. Using Null device instead.');
         deviceType = 'null';
         return;
     }
-    if (config.WEBGPU_DISABLED) {
-        console.warn('WebGPU is disabled. Using WebGL2 instead.');
+    if (config.WEBGPU_DISABLED && deviceType !== 'webgl2') {
+        console.warn('WebGPU is disabled. Using WebGL 2.0 device instead.');
         deviceType = 'webgl2';
         return;
     }
-    if (config.WEBGL_DISABLED) {
-        console.warn('WebGL is disabled. Using WebGPU instead.');
+    if (config.WEBGL_DISABLED && deviceType !== 'webgpu') {
+        console.warn('WebGL 2.0 is disabled. Using WebGPU device instead.');
         deviceType = 'webgpu';
-        return;
     }
-
-    const savedDevice = localStorage.getItem('preferredGraphicsDevice') ?? 'webgl2';
-    deviceType = DEVICE_TYPES.includes(savedDevice) ? savedDevice : 'webgl2';
 }
 
 /**
