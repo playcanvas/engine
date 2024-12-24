@@ -243,7 +243,14 @@ class Color {
         }
 
         let s = `#${((1 << 24) + (Math.round(r * 255) << 16) + (Math.round(g * 255) << 8) + Math.round(b * 255)).toString(16).slice(1)}`;
-        s += alpha === true ? a.toString(16).padStart(2, '0') : '';
+        if (alpha === true) {
+            const aa = Math.round(a * 255).toString(16);
+            if (this.a < 16 / 255) {
+                s += `0${aa}`;
+            } else {
+                s += aa;
+            }
+        }
         return s;
     }
 
