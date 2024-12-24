@@ -257,18 +257,18 @@ describe('ModelComponent', function () {
 
     it('Materials applied when loading asynchronously', (done) => {
         const boxAsset = new Asset('Box', 'model', {
-            url: 'http://localhost:3000/test/assets/box/box.json'
+            url: 'http://localhost:3000/test/assets/cube/cube.json'
         }, {
             'mapping': [
                 {
-                    'path': '1/Box Material.json'
+                    'path': '208808876/Material.json'
                 }
             ],
             'area': 0
         });
 
-        const materialAsset = new Asset('Box Material', 'material', {
-            url: 'http://localhost:3000/test/assets/box/1/Box Material.json'
+        const materialAsset = new Asset('Material', 'material', {
+            url: 'http://localhost:3000/test/assets/cube/208808876/Material.json'
         });
 
         app.assets.add(boxAsset);
@@ -291,11 +291,11 @@ describe('ModelComponent', function () {
 
     it('Materials applied when added later', (done) => {
         const boxAsset = new Asset('Box', 'model', {
-            url: 'http://localhost:3000/test/assets/box/box.json'
+            url: 'http://localhost:3000/test/assets/cube/cube.json'
         });
 
         const materialAsset = new Asset('Box Material', 'material', {
-            url: 'http://localhost:3000/test/assets/box/1/Box Material.json'
+            url: 'http://localhost:3000/test/assets/cube/208808876/Material.json'
         });
 
         app.assets.add(boxAsset);
@@ -328,11 +328,11 @@ describe('ModelComponent', function () {
 
     it('Material add events unbound on destroy', (done) => {
         const boxAsset = new Asset('Box', 'model', {
-            url: 'http://localhost:3000/test/assets/box/box.json'
+            url: 'http://localhost:3000/test/assets/cube/cube.json'
         });
 
         const materialAsset = new Asset('Box Material', 'material', {
-            url: 'http://localhost:3000/test/assets/box/1/Box Material.json'
+            url: 'http://localhost:3000/test/assets/cube/208808876/Material.json'
         });
 
         app.assets.add(boxAsset);
@@ -375,8 +375,8 @@ describe('ModelComponent', function () {
     });
 
     it('Asset materials unbound on destroy', (done) => {
-        const modelAsset = new Asset('box.json', 'model', {
-            url: 'http://localhost:3000/test/assets/box/box.json'
+        const modelAsset = new Asset('cube.json', 'model', {
+            url: 'http://localhost:3000/test/assets/cube/cube.json'
         }, {
             mapping: [{
                 material: assets.material.id
