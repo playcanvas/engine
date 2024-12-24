@@ -14,15 +14,13 @@ function swcOptions(isDebug, isUMD, minify) {
         minify,
         jsc: {
             minify: {
-                // format: {
-                //     comments: !isDebug || minify ? false : 'some'
-                // },
+                format: {
+                    comments: !isDebug || minify ? false : 'all'
+                },
                 mangle: minify,
                 compress: (!isDebug && minify) ? {
-                    reduce_funcs: true,
                     drop_console: true,
                     pure_funcs: [],
-                    inline: 3
                 } : undefined
             },
             externalHelpers: false,
