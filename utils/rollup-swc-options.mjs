@@ -20,7 +20,7 @@ function swcOptions(isDebug, isUMD, minify) {
                 mangle: minify,
                 compress: (!isDebug && minify) ? {
                     drop_console: true,
-                    pure_funcs: [],
+                    pure_funcs: []
                 } : undefined
             },
             externalHelpers: false,
