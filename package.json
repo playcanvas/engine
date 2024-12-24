@@ -94,6 +94,9 @@
     "typedoc-plugin-mdn-links": "^4.0.6",
     "typescript": "^5.7.2"
   },
+  "optionalDependencies": {
+    "@rollup/rollup-linux-x64-gnu": "4.9.5"
+  },
   "scripts": {
     "build": "node build.mjs",
     "build:release": "npm run build target:release",
