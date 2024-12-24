@@ -3,7 +3,7 @@ import { createFilter } from '@rollup/pluginutils';
 /** @typedef {import('rollup').Plugin} Plugin */
 
 /**
- * This plugin converts every two spaces into one tab. Two spaces is the default the babel plugin
+ * This plugin converts every two spaces into one tab. Two spaces is the default the rollup plugin
  * outputs, which is independent of the four spaces of the code base.
  *
  * @returns {Plugin} The plugin.
