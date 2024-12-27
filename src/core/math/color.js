@@ -226,7 +226,7 @@ class Color {
      * is the same format as used in HTML/CSS.
      *
      * @param {boolean} alpha - If true, the output string will include the alpha value.
-     * @param {boolean} asArray - If true, the output will be an array of numbers.
+     * @param {boolean} [asArray] - If true, the output will be an array of numbers. Defaults to false.
      * @returns {string} The color in string form.
      * @example
      * const c = new pc.Color(1, 1, 1);
