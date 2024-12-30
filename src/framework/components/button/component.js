@@ -43,6 +43,7 @@ STATES_TO_SPRITE_FRAME_NAMES[VisualState.INACTIVE] = 'inactiveSpriteFrame';
  * A ButtonComponent enables a group of entities to behave like a button, with different visual
  * states for hover and press interactions.
  *
+ * @hideconstructor
  * @category User Interface
  */
 class ButtonComponent extends Component {
@@ -243,6 +244,27 @@ class ButtonComponent extends Component {
      */
     static EVENT_PRESSEDEND = 'pressedend';
 
+    /** @private */
+    _visualState = VisualState.DEFAULT;
+
+    /** @private */
+    _isHovering = false;
+
+    /** @private */
+    _hoveringCounter = 0;
+
+    /** @private */
+    _isPressed = false;
+
+    /** @private */
+    _defaultTint = new Color(1, 1, 1, 1);
+
+    /** @private */
+    _defaultSpriteAsset = null;
+
+    /** @private */
+    _defaultSpriteFrame = 0;
+
     /**
      * Create a new ButtonComponent instance.
      *
@@ -251,15 +273,6 @@ class ButtonComponent extends Component {
      */
     constructor(system, entity) {
         super(system, entity);
-
-        this._visualState = VisualState.DEFAULT;
-        this._isHovering = false;
-        this._hoveringCounter = 0;
-        this._isPressed = false;
-
-        this._defaultTint = new Color(1, 1, 1, 1);
-        this._defaultSpriteAsset = null;
-        this._defaultSpriteFrame = 0;
 
         this._imageReference = new EntityReference(this, 'imageEntity', {
             'element#gain': this._onImageElementGain,

@@ -1,6 +1,6 @@
 export default /* glsl */`
 vec3 _getCookieClustered(TEXTURE_ACCEPT(tex), vec2 uv, float intensity, bool isRgb, vec4 cookieChannel) {
-    vec4 pixel = mix(vec4(1.0), texture2DLodEXT(tex, uv, 0.0), intensity);
+    vec4 pixel = mix(vec4(1.0), texture2DLod(tex, uv, 0.0), intensity);
     return isRgb == true ? pixel.rgb : vec3(dot(pixel, cookieChannel));
 }
 

@@ -4,6 +4,7 @@ import { Asset } from '../../asset/asset.js';
 import { SPRITE_RENDERMODE_SIMPLE } from '../../../scene/constants.js';
 
 /**
+ * @import { EventHandle } from '../../../core/event-handle.js'
  * @import { SpriteComponent } from './component.js'
  * @import { Sprite } from '../../../scene/sprite.js'
  */
@@ -81,7 +82,7 @@ class SpriteAnimationClip extends EventHandler {
     static EVENT_LOOP = 'loop';
 
     /**
-     * @type {import('../../../core/event-handle.js').EventHandle|null}
+     * @type {EventHandle|null}
      * @private
      */
     _evtSetMeshes = null;

@@ -226,24 +226,31 @@ class Color {
      * is the same format as used in HTML/CSS.
      *
      * @param {boolean} alpha - If true, the output string will include the alpha value.
+     * @param {boolean} [asArray] - If true, the output will be an array of numbers. Defaults to false.
      * @returns {string} The color in string form.
      * @example
      * const c = new pc.Color(1, 1, 1);
      * // Outputs #ffffffff
      * console.log(c.toString());
      */
-    toString(alpha) {
-        let s = `#${((1 << 24) + (Math.round(this.r * 255) << 16) + (Math.round(this.g * 255) << 8) + Math.round(this.b * 255)).toString(16).slice(1)}`;
-        if (alpha === true) {
-            const a = Math.round(this.a * 255).toString(16);
-            if (this.a < 16 / 255) {
-                s += `0${a}`;
-            } else {
-                s += a;
-            }
+    toString(alpha, asArray) {
 
+        const { r, g, b, a } = this;
+
+        // If any component exceeds 1 (HDR), return the color as an array
+        if (asArray || r > 1 || g > 1 || b > 1) {
+            return `${r.toFixed(3)}, ${g.toFixed(3)}, ${b.toFixed(3)}, ${a.toFixed(3)}`;
         }
 
+        let s = `#${((1 << 24) + (Math.round(r * 255) << 16) + (Math.round(g * 255) << 8) + Math.round(b * 255)).toString(16).slice(1)}`;
+        if (alpha === true) {
+            const aa = Math.round(a * 255).toString(16);
+            if (this.a < 16 / 255) {
+                s += `0${aa}`;
+            } else {
+                s += aa;
+            }
+        }
         return s;
     }
 

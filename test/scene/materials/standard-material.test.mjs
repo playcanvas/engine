@@ -1,10 +1,10 @@
-import { CUBEPROJ_NONE, DETAILMODE_MUL, DITHER_NONE, FRESNEL_SCHLICK, SPECOCC_AO } from '../../../src/scene/constants.js';
+import { expect } from 'chai';
+
 import { Color } from '../../../src/core/math/color.js';
+import { Vec2 } from '../../../src/core/math/vec2.js';
+import { CUBEPROJ_NONE, DETAILMODE_MUL, DITHER_NONE, FRESNEL_SCHLICK, SPECOCC_AO } from '../../../src/scene/constants.js';
 import { Material } from '../../../src/scene/materials/material.js';
 import { StandardMaterial } from '../../../src/scene/materials/standard-material.js';
-import { Vec2 } from '../../../src/core/math/vec2.js';
-
-import { expect } from 'chai';
 
 describe('StandardMaterial', function () {
 

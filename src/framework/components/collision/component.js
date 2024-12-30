@@ -30,6 +30,7 @@ const _quat = new Quat();
  * | **Rigid Body (Dynamic or Kinematic)** | <ul><li>contact</li><li>collisionstart</li><li>collisionend</li></ul> | <ul><li>contact</li><li>collisionstart</li><li>collisionend</li></ul> | <ul><li>triggerenter</li><li>triggerleave</li></ul> |
  * | **Trigger Volume**                    |                                                                       | <ul><li>triggerenter</li><li>triggerleave</li></ul>                   |                                                     |
  *
+ * @hideconstructor
  * @category Physics
  */
 class CollisionComponent extends Component {
@@ -94,6 +95,12 @@ class CollisionComponent extends Component {
      */
     static EVENT_TRIGGERLEAVE = 'triggerleave';
 
+    /** @private */
+    _compoundParent = null;
+
+    /** @private */
+    _hasOffset = false;
+
     /**
      * Create a new CollisionComponent.
      *
@@ -102,10 +109,6 @@ class CollisionComponent extends Component {
      */
     constructor(system, entity) {
         super(system, entity);
-
-        /** @private */
-        this._compoundParent = null;
-        this._hasOffset = false;
 
         this.entity.on('insert', this._onInsert, this);
 

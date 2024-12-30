@@ -1,6 +1,6 @@
-import { Preprocessor } from '../../src/core/preprocessor.js';
-
 import { expect } from 'chai';
+
+import { Preprocessor } from '../../src/core/preprocessor.js';
 
 describe('Preprocessor', function () {
 
@@ -195,6 +195,10 @@ describe('Preprocessor', function () {
 
     it('returns false for CMP5', function () {
         expect(Preprocessor.run(srcData, includes).includes('CMP5')).to.equal(false);
+    });
+
+    it('returns false for any leftover hash symbols', function () {
+        expect(Preprocessor.run(srcData, includes, { stripDefines: true }).includes('#')).to.equal(false);
     });
 
 });

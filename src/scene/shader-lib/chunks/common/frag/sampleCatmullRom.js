@@ -33,17 +33,17 @@ vec4 SampleTextureCatmullRom(TEXTURE_ACCEPT(tex), vec2 uv, vec2 texSize) {
     vec2 texPos12 = (texPos1 + offset12) / texSize;
 
     vec4 result = vec4(0.0);
-    result += texture2DLodEXT(tex, vec2(texPos0.x, texPos0.y), 0.0) * w0.x * w0.y;
-    result += texture2DLodEXT(tex, vec2(texPos12.x, texPos0.y), 0.0) * w12.x * w0.y;
-    result += texture2DLodEXT(tex, vec2(texPos3.x, texPos0.y), 0.0) * w3.x * w0.y;
+    result += texture2DLod(tex, vec2(texPos0.x, texPos0.y), 0.0) * w0.x * w0.y;
+    result += texture2DLod(tex, vec2(texPos12.x, texPos0.y), 0.0) * w12.x * w0.y;
+    result += texture2DLod(tex, vec2(texPos3.x, texPos0.y), 0.0) * w3.x * w0.y;
 
-    result += texture2DLodEXT(tex, vec2(texPos0.x, texPos12.y), 0.0) * w0.x * w12.y;
-    result += texture2DLodEXT(tex, vec2(texPos12.x, texPos12.y), 0.0) * w12.x * w12.y;
-    result += texture2DLodEXT(tex, vec2(texPos3.x, texPos12.y), 0.0) * w3.x * w12.y;
+    result += texture2DLod(tex, vec2(texPos0.x, texPos12.y), 0.0) * w0.x * w12.y;
+    result += texture2DLod(tex, vec2(texPos12.x, texPos12.y), 0.0) * w12.x * w12.y;
+    result += texture2DLod(tex, vec2(texPos3.x, texPos12.y), 0.0) * w3.x * w12.y;
 
-    result += texture2DLodEXT(tex, vec2(texPos0.x, texPos3.y), 0.0) * w0.x * w3.y;
-    result += texture2DLodEXT(tex, vec2(texPos12.x, texPos3.y), 0.0) * w12.x * w3.y;
-    result += texture2DLodEXT(tex, vec2(texPos3.x, texPos3.y), 0.0) * w3.x * w3.y;
+    result += texture2DLod(tex, vec2(texPos0.x, texPos3.y), 0.0) * w0.x * w3.y;
+    result += texture2DLod(tex, vec2(texPos12.x, texPos3.y), 0.0) * w12.x * w3.y;
+    result += texture2DLod(tex, vec2(texPos3.x, texPos3.y), 0.0) * w3.x * w3.y;
 
     return result;
 }

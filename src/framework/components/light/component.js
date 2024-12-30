@@ -7,9 +7,8 @@ import { properties } from './data.js';
 
 /**
  * @import { Color } from '../../../core/math/color.js'
- * @import { Entity } from '../../entity.js'
+ * @import { EventHandle } from '../../../core/event-handle.js'
  * @import { LightComponentData } from './data.js'
- * @import { LightComponentSystem } from './system.js'
  * @import { Light } from '../../../scene/light.js'
  * @import { Texture } from '../../../platform/graphics/texture.js'
  * @import { Vec2 } from '../../../core/math/vec2.js'
@@ -39,41 +38,39 @@ import { properties } from './data.js';
  * entity.light.range = 20;
  * ```
  *
+ * @hideconstructor
  * @category Graphics
  */
 class LightComponent extends Component {
     /**
-     * @type {import('../../../core/event-handle.js').EventHandle|null}
+     * @type {EventHandle|null}
      * @private
      */
     _evtLayersChanged = null;
 
     /**
-     * @type {import('../../../core/event-handle.js').EventHandle|null}
+     * @type {EventHandle|null}
      * @private
      */
     _evtLayerAdded = null;
 
     /**
-     * @type {import('../../../core/event-handle.js').EventHandle|null}
+     * @type {EventHandle|null}
      * @private
      */
     _evtLayerRemoved = null;
 
-    /**
-     * Creates a new LightComponent instance.
-     *
-     * @param {LightComponentSystem} system - The ComponentSystem that created this Component.
-     * @param {Entity} entity - The Entity that this Component is attached to.
-     */
-    constructor(system, entity) {
-        super(system, entity);
+    /** @private */
+    _cookieAsset = null;
 
-        this._cookieAsset = null;
-        this._cookieAssetId = null;
-        this._cookieAssetAdd = false;
-        this._cookieMatrix = null;
-    }
+    /** @private */
+    _cookieAssetId = null;
+
+    /** @private */
+    _cookieAssetAdd = false;
+
+    /** @private */
+    _cookieMatrix = null;
 
     // TODO: Remove this override in upgrading component
     /**
@@ -386,6 +383,28 @@ class LightComponent extends Component {
      */
     get numCascades() {
         return this.data.numCascades;
+    }
+
+    /**
+     * Sets the blend factor for cascaded shadow maps, defining the fraction of each cascade level
+     * used for blending between adjacent cascades. The value should be between 0 and 1, with
+     * a default of 0, which disables blending between cascades.
+     *
+     * @type {number}
+     */
+    set cascadeBlend(value) {
+        this._setValue('cascadeBlend', value, function (newValue, oldValue) {
+            this.light.cascadeBlend = math.clamp(newValue, 0, 1);
+        });
+    }
+
+    /**
+     * Gets the blend factor for cascaded shadow maps.
+     *
+     * @type {number}
+     */
+    get cascadeBlend() {
+        return this.data.cascadeBlend;
     }
 
     /**
