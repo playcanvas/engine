@@ -507,7 +507,7 @@ const readPly = async (reader, propertyFilter = null) => {
 
         // fallback, general case
         return await readGeneralPly(streamBuf, elements);
-    }
+    };
 
     return {
         data: await readData(),
