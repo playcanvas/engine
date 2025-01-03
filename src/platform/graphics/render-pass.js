@@ -501,7 +501,9 @@ class RenderPass {
                             `${colorOps.store ? 'store' : 'discard'} ` +
                             `${colorOps.resolve ? 'resolve ' : ''}` +
                             `${colorOps.genMipmaps ? 'mipmaps ' : ''}` +
-                            ` [format: ${colorFormat}]`);
+                            ` [format: ${colorFormat}]` +
+                            ` ${colorOps.clear ? `[clear: ${colorOps.clearValue.toString(true, true)}]` : ''}`
+                );
             }
 
             if (this.depthStencilOps) {
@@ -513,14 +515,18 @@ class RenderPass {
                                 `${this.depthStencilOps.clearDepth ? 'clear' : 'load'}->` +
                                 `${this.depthStencilOps.storeDepth ? 'store' : 'discard'}` +
                                 `${this.depthStencilOps.resolveDepth ? ' resolve' : ''}` +
-                                `${depthFormat}`);
+                                `${depthFormat}` +
+                                `${this.depthStencilOps.clearDepth ? ` [clear: ${this.depthStencilOps.clearDepthValue}]` : ''}`
+                    );
                 }
 
                 if (hasStencil) {
                     Debug.trace(TRACEID_RENDER_PASS_DETAIL, '    stencOps: ' +
                                 `${this.depthStencilOps.clearStencil ? 'clear' : 'load'}->` +
                                 `${this.depthStencilOps.storeStencil ? 'store' : 'discard'}` +
-                                `${depthFormat}`);
+                                `${depthFormat}` +
+                                `${this.depthStencilOps.clearStencil ? ` [clear: ${this.depthStencilOps.clearStencilValue}]` : ''}`
+                    );
                 }
             }
         }
