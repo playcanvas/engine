@@ -658,7 +658,7 @@ class WebgpuGraphicsDevice extends GraphicsDevice {
     _uploadDirtyTextures() {
 
         this.textures.forEach((texture) => {
-            if (texture._needsUpload || texture._needsMipmaps) {
+            if (texture._needsUpload || texture._needsMipmapsUpload) {
                 texture.upload();
             }
         });

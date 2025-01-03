@@ -105,9 +105,10 @@ assetListLoader.load(() => {
     const textureArrayOptions = {
         name: 'textureArrayImages',
         format: pc.PIXELFORMAT_SRGBA8,
+        dimension: pc.TEXTUREDIMENSION_2D_ARRAY,
         width: 1024,
         height: 1024,
-        arrayLength: 4, // array texture with 4 textures
+        layers: 4, // array texture with 4 textures
         magFilter: pc.FILTER_NEAREST,
         minFilter: pc.FILTER_NEAREST_MIPMAP_NEAREST,
         mipmaps: true,
@@ -120,17 +121,17 @@ assetListLoader.load(() => {
                 assets.aerialRocks.resource.getSource(),
                 assets.coastSand.resource.getSource()
             ]
-        ]
+        ],
+        immediate: true
     };
 
     const textureArray = new pc.Texture(app.graphicsDevice, textureArrayOptions);
-    textureArray.upload();
 
     // generate mipmaps for visualization
     const mipmaps = generateMipmaps(textureArrayOptions.width, textureArrayOptions.height);
     const levels = mipmaps.map((data) => {
         const textures = [];
-        for (let i = 0; i < textureArrayOptions.arrayLength; i++) {
+        for (let i = 0; i < textureArrayOptions.layers; i++) {
             textures.push(data);
         }
         return textures;
