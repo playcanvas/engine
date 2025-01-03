@@ -645,8 +645,9 @@ class GraphNode extends EventHandler {
 
         while (stack.length) {
             const current = stack.pop();
-            if (test(current))
+            if (test(current)) {
                 return current;
+            }
 
             const children = current._children;
             for (let i = 0; i < children.length; i++) {
