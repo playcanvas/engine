@@ -956,10 +956,12 @@ class MeshInstance {
                 return this.isVisibleFunc(camera);
             }
 
-            const aabb = this._aabbUpdateIndex === aabbUpdateIndex && this._aabb || this.aabb;
+            const aabb = this._aabbUpdateIndex === aabbUpdateIndex
+                ? this._aabb
+                : this.aabb; // this line evaluates aabb
             this._aabbUpdateIndex = aabbUpdateIndex;
 
-            _tempSphere.center = aabb.center;  // this line evaluates aabb
+            _tempSphere.center = aabb.center;
             _tempSphere.radius = aabb.halfExtents.length();
 
             return camera.frustum.containsSphere(_tempSphere) > 0;

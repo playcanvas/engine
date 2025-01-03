@@ -1586,22 +1586,24 @@ class GraphNode extends EventHandler {
             return;
         }
 
-        this._frozen = true;
-
         const stack = GraphNode._tmpGraphNodeStack;
         stack.push(this);
 
-        while (stack.length > 0) {
+        while (stack.length) {
             const node = stack.pop();
+
             if (!node._enabled || node._frozen) {
                 continue;
             }
+
+            node._frozen = true;
 
             if (node._dirtyLocal || node._dirtyWorld) {
                 node._sync();
             }
 
             const children = node._children;
+
             for (let i = children.length - 1; i >= 0; i--) {
                 stack.push(children[i]);
             }
