@@ -44,31 +44,6 @@ function createTest(attr, value) {
 }
 
 /**
- * Helper function to recurse findOne without calling createTest constantly.
- *
- * @param {GraphNode} node - Current node.
- * @param {FindNodeCallback} test - Test function.
- * @returns {GraphNode|null} A graph node that matches the search criteria. Returns null if no
- * node is found.
- */
-function findNode(node, test) {
-    if (test(node)) {
-        return node;
-    }
-
-    const children = node._children;
-    const len = children.length;
-    for (let i = 0; i < len; ++i) {
-        const result = findNode(children[i], test);
-        if (result) {
-            return result;
-        }
-    }
-
-    return null;
-}
-
-/**
  * Callback used by {@link GraphNode#find} and {@link GraphNode#findOne} to search through a graph
  * node and all of its descendants.
  *
@@ -98,6 +73,12 @@ function findNode(node, test) {
  * a powerful set of features that are leveraged by the `Entity` class.
  */
 class GraphNode extends EventHandler {
+    /**
+     * @type {GraphNode[]}
+     * @ignore
+     */
+    static _tmpGraphNodeStack = [];
+
     /**
      * The non-unique name of a graph node. Defaults to 'Untitled'.
      *
@@ -448,12 +429,30 @@ class GraphNode extends EventHandler {
      * @protected
      */
     _notifyHierarchyStateChanged(node, enabled) {
-        node._onHierarchyStateChanged(enabled);
+        /**
+         * NOTE: GraphNode._tmpGraphNodeStack is not used here because _notifyHierarchyStateChanged can be called
+         * while other _notifyHierarchyStateChanged is still running because of _onHierarchyStateChanged
+         *
+         * @type {GraphNode[]}
+         */
+        const stack = [node];
 
-        const c = node._children;
-        for (let i = 0, len = c.length; i < len; i++) {
-            if (c[i]._enabled) {
-                this._notifyHierarchyStateChanged(c[i], enabled);
+        while (stack.length) {
+            const current = stack.pop();
+            current._onHierarchyStateChanged(enabled);
+
+            const c = current._children;
+
+            for (let i = 0; i < c.length; i++) {
+                const child = c[i];
+
+                if (enabled) {
+                    if (child._enabled) {
+                        stack.push(child);
+                    }
+                } else {
+                    stack.push(child);
+                }
             }
         }
     }
@@ -594,11 +593,22 @@ class GraphNode extends EventHandler {
         const results = [];
         const test = createTest(attr, value);
 
-        this.forEach((node) => {
+        const stack = GraphNode._tmpGraphNodeStack;
+        stack.push(this);
+
+        while (stack.length) {
+            const node = stack.pop();
+
             if (test(node)) {
                 results.push(node);
             }
-        });
+
+            const children = node._children;
+
+            for (let i = 0; i < children.length; i++) {
+                stack.push(children[i]);
+            }
+        }
 
         return results;
     }
@@ -629,7 +639,22 @@ class GraphNode extends EventHandler {
      */
     findOne(attr, value) {
         const test = createTest(attr, value);
-        return findNode(this, test);
+
+        const stack = GraphNode._tmpGraphNodeStack;
+        stack.push(this);
+
+        while (stack.length) {
+            const current = stack.pop();
+            if (test(current))
+                return current;
+
+            const children = current._children;
+            for (let i = 0; i < children.length; i++) {
+                stack.push(children[i]);
+            }
+        }
+
+        return null;
     }
 
     /**
@@ -653,21 +678,27 @@ class GraphNode extends EventHandler {
      * // Return all assets that tagged by (`carnivore` AND `mammal`) OR (`carnivore` AND `reptile`)
      * const meatEatingMammalsAndReptiles = node.findByTag(["carnivore", "mammal"], ["carnivore", "reptile"]);
      */
-    findByTag() {
-        const query = arguments;
+    findByTag(...query) {
         const results = [];
+        const stack = GraphNode._tmpGraphNodeStack;
 
-        const queryNode = (node, checkNode) => {
-            if (checkNode && node.tags.has(...query)) {
+        const children = this._children;
+        for (let i = 0; i < children.length; i++) {
+            stack.push(children[i]);
+        }
+
+        while (stack.length) {
+            const node = stack.pop();
+
+            if (node.tags.has(...query)) {
                 results.push(node);
             }
 
-            for (let i = 0; i < node._children.length; i++) {
-                queryNode(node._children[i], true);
+            const children = node._children;
+            for (let i = 0; i < children.length; i++) {
+                stack.push(children[i]);
             }
-        };
-
-        queryNode(this, false);
+        }
 
         return results;
     }
@@ -715,23 +746,36 @@ class GraphNode extends EventHandler {
 
     /**
      * Executes a provided function once on this graph node and all of its descendants.
+     * The method executes the provided function for each node in the graph in a breadth-first manner.
      *
      * @param {ForEachNodeCallback} callback - The function to execute on the graph node and each
      * descendant.
-     * @param {object} [thisArg] - Optional value to use as this when executing callback function.
+     * @param {object} [thisArg] - Optional value to use as this when executing the callback function.
      * @example
-     * // Log the path and name of each node in descendant tree starting with "parent"
+     * // Log the path and name of each node in the descendant tree starting with "parent"
      * parent.forEach(function (node) {
      *     console.log(node.path + "/" + node.name);
      * });
      */
     forEach(callback, thisArg) {
-        callback.call(thisArg, this);
+        /**
+         * NOTE: GraphNode._tmpGraphNodeStack is not used here because forEach can be called within the callback
+         *
+         * @type {GraphNode[]}
+         */
+        const queue = [this];
 
-        const children = this._children;
-        const len = children.length;
-        for (let i = 0; i < len; ++i) {
-            children[i].forEach(callback, thisArg);
+        while (queue.length > 0) {
+            // shift() is used for breadth-first approach, use pop() for depth-first
+            const current = queue.shift();
+
+            callback.call(thisArg, current);
+
+            const children = current._children;
+
+            for (let i = 0; i < children.length; i++) {
+                queue.push(children[i]);
+            }
         }
     }
 
@@ -1115,18 +1159,28 @@ class GraphNode extends EventHandler {
 
     /** @private */
     _dirtifyWorldInternal() {
-        if (!this._dirtyWorld) {
-            this._frozen = false;
-            this._dirtyWorld = true;
-            for (let i = 0; i < this._children.length; i++) {
-                if (!this._children[i]._dirtyWorld) {
-                    this._children[i]._dirtifyWorldInternal();
+        const stack = GraphNode._tmpGraphNodeStack;
+        stack.push(this);
+
+        while (stack.length > 0) {
+            const node = stack.pop();
+
+            if (!node._dirtyWorld) {
+                node._frozen = false;
+                node._dirtyWorld = true;
+            }
+
+            node._dirtyNormal = true;
+            node._worldScaleSign = 0;
+            node._aabbVer++;
+
+            const children = node._children;
+            for (let i = 0; i < children.length; i++) {
+                if (!children[i]._dirtyWorld) {
+                    stack.push(children[i]);
                 }
             }
         }
-        this._dirtyNormal = true;
-        this._worldScaleSign = 0;   // world matrix is dirty, mark this flag dirty too
-        this._aabbVer++;
     }
 
     /**
@@ -1345,8 +1399,28 @@ class GraphNode extends EventHandler {
      */
     _fireOnHierarchy(name, nameHierarchy, parent) {
         this.fire(name, parent);
-        for (let i = 0; i < this._children.length; i++) {
-            this._children[i]._fireOnHierarchy(nameHierarchy, nameHierarchy, parent);
+
+        /**
+         * NOTE: GraphNode._tmpGraphNodeStack is not used here because _fireOnHierarchy can be called
+         * while other _fireOnHierarchy is still running
+         *
+         * @type {GraphNode[]}
+         */
+        const stack = [this];
+
+        const child = this._children;
+
+        for (let i = 0; i < child.length; i++) {
+            stack.push(child[i]);
+        }
+
+        while (stack.length) {
+            const curr = stack.pop();
+            curr.fire(nameHierarchy, parent);
+
+            for (let j = 0; j < curr._children.length; j++) {
+                stack.push(curr._children[j]);
+            }
         }
     }
 
@@ -1390,15 +1464,21 @@ class GraphNode extends EventHandler {
     }
 
     /**
-     * Recurse the hierarchy and update the graph depth at each node.
+     * Iterates through the hierarchy and update the graph depth at each node.
      *
      * @private
      */
     _updateGraphDepth() {
-        this._graphDepth = this._parent ? this._parent._graphDepth + 1 : 0;
+        const stack = GraphNode._tmpGraphNodeStack;
+        stack.push(this);
 
-        for (let i = 0, len = this._children.length; i < len; i++) {
-            this._children[i]._updateGraphDepth();
+        while (stack.length) {
+            const n = stack.pop();
+            n._graphDepth = n._parent ? n._parent._graphDepth + 1 : 0;
+
+            for (let i = 0; i < n._children.length; i++) {
+                stack.push(n._children[i]);
+            }
         }
     }
 
@@ -1501,22 +1581,29 @@ class GraphNode extends EventHandler {
      * @ignore
      */
     syncHierarchy() {
-        if (!this._enabled) {
+        if (!this._enabled || this._frozen) {
             return;
         }
 
-        if (this._frozen) {
-            return;
-        }
         this._frozen = true;
 
-        if (this._dirtyLocal || this._dirtyWorld) {
-            this._sync();
-        }
+        const stack = GraphNode._tmpGraphNodeStack;
+        stack.push(this);
 
-        const children = this._children;
-        for (let i = 0, len = children.length; i < len; i++) {
-            children[i].syncHierarchy();
+        while (stack.length > 0) {
+            const node = stack.pop();
+            if (!node._enabled || node._frozen) {
+                continue;
+            }
+
+            if (node._dirtyLocal || node._dirtyWorld) {
+                node._sync();
+            }
+
+            const children = node._children;
+            for (let i = children.length - 1; i >= 0; i--) {
+                stack.push(children[i]);
+            }
         }
     }
 

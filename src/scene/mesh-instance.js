@@ -277,6 +277,8 @@ class MeshInstance {
      */
     pick = true;
 
+    _aabbUpdateIndex = NaN;
+
     /**
      * The stencil parameters for front faces or null if no stencil is enabled.
      *
@@ -945,7 +947,7 @@ class MeshInstance {
      * @returns {boolean} - True if the mesh instance is visible by the camera, false otherwise.
      * @ignore
      */
-    _isVisible(camera) {
+    _isVisible(camera, aabbUpdateIndex) {
 
         if (this.visible) {
 
@@ -954,8 +956,11 @@ class MeshInstance {
                 return this.isVisibleFunc(camera);
             }
 
-            _tempSphere.center = this.aabb.center;  // this line evaluates aabb
-            _tempSphere.radius = this._aabb.halfExtents.length();
+            const aabb = this._aabbUpdateIndex === aabbUpdateIndex && this._aabb || this.aabb;
+            this._aabbUpdateIndex = aabbUpdateIndex;
+
+            _tempSphere.center = aabb.center;  // this line evaluates aabb
+            _tempSphere.radius = aabb.halfExtents.length();
 
             return camera.frustum.containsSphere(_tempSphere) > 0;
         }
