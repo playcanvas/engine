@@ -956,7 +956,7 @@ class MeshInstance {
                 return this.isVisibleFunc(camera);
             }
 
-            const aabb = this._aabbUpdateIndex === aabbUpdateIndex ? this._aabb: this.aabb; // this line evaluates aabb
+            const aabb = this._aabbUpdateIndex === aabbUpdateIndex ? this._aabb : this.aabb; // this line evaluates aabb
             this._aabbUpdateIndex = aabbUpdateIndex;
 
             _tempSphere.center = aabb.center;
