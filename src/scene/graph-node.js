@@ -75,7 +75,7 @@ function createTest(attr, value) {
 class GraphNode extends EventHandler {
     /**
      * @type {GraphNode[]}
-     * @ignore
+     * @private
      */
     static _stack = [];
 
