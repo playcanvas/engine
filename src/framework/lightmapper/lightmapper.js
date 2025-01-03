@@ -811,7 +811,7 @@ class Lightmapper {
 
             const meshInstances = bakeNode.meshInstances;
             for (let i = 0; i < meshInstances.length; i++) {
-                if (meshInstances[i]._isVisible(shadowCam)) {
+                if (meshInstances[i]._isVisible(shadowCam, this.renderer._aabbUpdateIndex)) {
                     nodeVisible = true;
                     break;
                 }

@@ -77,7 +77,7 @@ class GraphNode extends EventHandler {
      * @type {GraphNode[]}
      * @ignore
      */
-    static _tmpGraphNodeStack = [];
+    static _stack = [];
 
     /**
      * The non-unique name of a graph node. Defaults to 'Untitled'.
@@ -430,7 +430,7 @@ class GraphNode extends EventHandler {
      */
     _notifyHierarchyStateChanged(node, enabled) {
         /**
-         * NOTE: GraphNode._tmpGraphNodeStack is not used here because _notifyHierarchyStateChanged can be called
+         * NOTE: GraphNode._stack is not used here because _notifyHierarchyStateChanged can be called
          * while other _notifyHierarchyStateChanged is still running because of _onHierarchyStateChanged
          *
          * @type {GraphNode[]}
@@ -593,7 +593,7 @@ class GraphNode extends EventHandler {
         const results = [];
         const test = createTest(attr, value);
 
-        const stack = GraphNode._tmpGraphNodeStack;
+        const stack = GraphNode._stack;
         stack.push(this);
 
         while (stack.length) {
@@ -640,7 +640,7 @@ class GraphNode extends EventHandler {
     findOne(attr, value) {
         const test = createTest(attr, value);
 
-        const stack = GraphNode._tmpGraphNodeStack;
+        const stack = GraphNode._stack;
         stack.push(this);
 
         while (stack.length) {
@@ -681,7 +681,7 @@ class GraphNode extends EventHandler {
      */
     findByTag(...query) {
         const results = [];
-        const stack = GraphNode._tmpGraphNodeStack;
+        const stack = GraphNode._stack;
 
         const children = this._children;
         for (let i = 0; i < children.length; i++) {
@@ -760,7 +760,7 @@ class GraphNode extends EventHandler {
      */
     forEach(callback, thisArg) {
         /**
-         * NOTE: GraphNode._tmpGraphNodeStack is not used here because forEach can be called within the callback
+         * NOTE: GraphNode._stack is not used here because forEach can be called within the callback
          *
          * @type {GraphNode[]}
          */
@@ -1160,7 +1160,7 @@ class GraphNode extends EventHandler {
 
     /** @private */
     _dirtifyWorldInternal() {
-        const stack = GraphNode._tmpGraphNodeStack;
+        const stack = GraphNode._stack;
         stack.push(this);
 
         while (stack.length > 0) {
@@ -1402,7 +1402,7 @@ class GraphNode extends EventHandler {
         this.fire(name, parent);
 
         /**
-         * NOTE: GraphNode._tmpGraphNodeStack is not used here because _fireOnHierarchy can be called
+         * NOTE: GraphNode._stack is not used here because _fireOnHierarchy can be called
          * while other _fireOnHierarchy is still running
          *
          * @type {GraphNode[]}
@@ -1470,7 +1470,7 @@ class GraphNode extends EventHandler {
      * @private
      */
     _updateGraphDepth() {
-        const stack = GraphNode._tmpGraphNodeStack;
+        const stack = GraphNode._stack;
         stack.push(this);
 
         while (stack.length) {
@@ -1586,7 +1586,7 @@ class GraphNode extends EventHandler {
             return;
         }
 
-        const stack = GraphNode._tmpGraphNodeStack;
+        const stack = GraphNode._stack;
         stack.push(this);
 
         while (stack.length) {
