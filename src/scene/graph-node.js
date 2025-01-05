@@ -7,6 +7,9 @@ import { Mat4 } from '../core/math/mat4.js';
 import { Quat } from '../core/math/quat.js';
 import { Vec3 } from '../core/math/vec3.js';
 
+import { Queue } from '../core/queue.js';
+import { ObjectPool } from '../core/object-pool.js';
+
 const scaleCompensatePosTransform = new Mat4();
 const scaleCompensatePos = new Vec3();
 const scaleCompensateRot = new Quat();
@@ -78,6 +81,22 @@ class GraphNode extends EventHandler {
      * @private
      */
     static _stack = [];
+
+    /**
+     * It is a pool of graph node queues that are used to reduce memory allocation overhead
+     *
+     * @type {ObjectPool<typeof Queue>}
+     * @private
+     */
+    static _queuePool = new ObjectPool(Queue, 1);
+
+    /**
+     * Maximum number of nodes that can be stored in a graph node queue.
+     *
+     * @type {number}
+     * @private
+     */
+    static _maxQueueSize = 512;
 
     /**
      * The non-unique name of a graph node. Defaults to 'Untitled'.
@@ -759,25 +778,21 @@ class GraphNode extends EventHandler {
      * });
      */
     forEach(callback, thisArg) {
-        /**
-         * NOTE: GraphNode._stack is not used here because forEach can be called within the callback
-         *
-         * @type {GraphNode[]}
-         */
-        const queue = [this];
+        const queue = GraphNode._queuePool.allocate();
+        queue.resize(GraphNode._maxQueueSize);
+        queue.enqueue(this);
 
-        while (queue.length > 0) {
-            // shift() is used for breadth-first approach, use pop() for depth-first
-            const current = queue.shift();
-
-            callback.call(thisArg, current);
-
-            const children = current._children;
-
+        while (queue.size()) {
+            const current = queue.dequeue()
+            callback(current);
+            const children = current.children;
             for (let i = 0; i < children.length; i++) {
-                queue.push(children[i]);
+                queue.enqueue(children[i]);
             }
         }
+
+        GraphNode._maxQueueSize = Math.max(GraphNode._maxQueueSize, queue.size());
+        GraphNode._queuePool.free(queue);
     }
 
     /**
