@@ -1,4 +1,3 @@
-
 /**
  * A circular queue that automatically extends its capacity when full.
  * This implementation uses a fixed-size array to store elements and
@@ -19,7 +18,7 @@ class Queue {
     /**
      * Enqueue (push) a value to the back of the queue.
      * Automatically extends capacity if the queue is full.
-     * @param {*} value The value to enqueue.
+     * @param {*} value - The value to enqueue.
      */
     enqueue(value) {
         if (this._size === this._capacity) {
@@ -32,9 +31,8 @@ class Queue {
     }
 
     /**
-     * Dequeue (pop) a value from the front of the queue.
-     * Returns undefined if the queue is empty.
-     * @returns {*}
+     * @returns {*} The value at the front of the queue after dequeuing,
+     * or undefined if the queue is empty.
      */
     dequeue() {
         if (this.isEmpty()) {
@@ -50,8 +48,7 @@ class Queue {
     }
 
     /**
-     * Return the front element without removing it.
-     * @returns {*}
+     * @returns {*} The value at the front of the queue without dequeuing it.
      */
     peek() {
         if (this.isEmpty()) {
@@ -62,16 +59,14 @@ class Queue {
     }
 
     /**
-     * The current number of elements in the queue.
-     * @returns {number}
+     * @returns {number} The current number of elements in the queue.
      */
     size() {
         return this._size;
     }
 
     /**
-     * Check if the queue is empty.
-     * @returns {boolean}
+     * @returns {boolean} True if the queue is empty, false otherwise.
      */
     isEmpty() {
         return this._size === 0;
@@ -79,7 +74,7 @@ class Queue {
 
     /**
      * Internal method to resize the underlying storage.
-     * @param {number} size The new capacity for the queue.
+     * @param {number} size - The new capacity for the queue.
      */
     resize(size) {
         if (size <= this._size) {

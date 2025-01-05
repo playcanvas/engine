@@ -783,7 +783,7 @@ class GraphNode extends EventHandler {
         queue.enqueue(this);
 
         while (queue.size()) {
-            const current = queue.dequeue()
+            const current = queue.dequeue();
             callback(current);
             const children = current.children;
             for (let i = 0; i < children.length; i++) {

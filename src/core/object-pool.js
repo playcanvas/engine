@@ -67,7 +67,7 @@ class ObjectPool {
      * was previously allocated (i.e. it exists in `_objToIndexMap`) and is still in use
      * (i.e., its index is below `_count`).
      *
-     * @param {InstanceType<T>} obj
+     * @param {InstanceType<T>} obj - The object instance to be freed back into the pool.
      * @returns {boolean} Whether freeing succeeded.
      */
     free(obj) {

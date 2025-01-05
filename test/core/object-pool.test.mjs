@@ -21,10 +21,10 @@ describe('ObjectPool', function () {
     });
 
     it('should resize the pool when allocation exceeds size', function () {
-        const obj1 = pool.allocate();
-        const obj2 = pool.allocate();
-        const obj3 = pool.allocate();
-        expect(obj3).to.be.an.instanceof(SampleObject);
+        pool.allocate();
+        pool.allocate();
+        const obj = pool.allocate();
+        expect(obj).to.be.an.instanceof(SampleObject);
     });
 
     it('should free an allocated object back to the pool', function () {
