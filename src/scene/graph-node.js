@@ -77,15 +77,18 @@ function createTest(attr, value) {
  */
 class GraphNode extends EventHandler {
     /**
-     * @type {GraphNode[]}
+     * It is a pool of graph node stacks that are used to reduce memory allocation overhead
+     * Note: we usually don't need more than 1 stack at a time, but we allocate 2 just in case.
+     *
+     * @type {ObjectPool<typeof Array<GraphNode>>}
      * @private
      */
-    static _stack = [];
+    static _stackPool = new ObjectPool(Array, 2);
 
     /**
      * It is a pool of graph node queues that are used to reduce memory allocation overhead
      *
-     * @type {ObjectPool<typeof Queue>}
+     * @type {ObjectPool<typeof Queue<GraphNode>>}
      * @private
      */
     static _queuePool = new ObjectPool(Queue, 1);
@@ -96,7 +99,7 @@ class GraphNode extends EventHandler {
      * @type {number}
      * @private
      */
-    static _maxQueueSize = 512;
+    static _maxQueueCapacity = 512;
 
     /**
      * The non-unique name of a graph node. Defaults to 'Untitled'.
@@ -448,30 +451,12 @@ class GraphNode extends EventHandler {
      * @protected
      */
     _notifyHierarchyStateChanged(node, enabled) {
-        /**
-         * NOTE: GraphNode._stack is not used here because _notifyHierarchyStateChanged can be called
-         * while other _notifyHierarchyStateChanged is still running because of _onHierarchyStateChanged
-         *
-         * @type {GraphNode[]}
-         */
-        const stack = [node];
+        node._onHierarchyStateChanged(enabled);
 
-        while (stack.length) {
-            const current = stack.pop();
-            current._onHierarchyStateChanged(enabled);
-
-            const c = current._children;
-
-            for (let i = 0; i < c.length; i++) {
-                const child = c[i];
-
-                if (enabled) {
-                    if (child._enabled) {
-                        stack.push(child);
-                    }
-                } else {
-                    stack.push(child);
-                }
+        const c = node._children;
+        for (let i = 0, len = c.length; i < len; i++) {
+            if (c[i]._enabled) {
+                this._notifyHierarchyStateChanged(c[i], enabled);
             }
         }
     }
@@ -551,7 +536,6 @@ class GraphNode extends EventHandler {
         return this;
     }
 
-
     /**
      * Destroy the graph node and all of its descendants. First, the graph node is removed from the
      * hierarchy. This is then repeated recursively for all descendants of the graph node.
@@ -612,22 +596,11 @@ class GraphNode extends EventHandler {
         const results = [];
         const test = createTest(attr, value);
 
-        const stack = GraphNode._stack;
-        stack.push(this);
-
-        while (stack.length) {
-            const node = stack.pop();
-
+        this.forEach(node => {
             if (test(node)) {
                 results.push(node);
             }
-
-            const children = node._children;
-
-            for (let i = 0; i < children.length; i++) {
-                stack.push(children[i]);
-            }
-        }
+        });
 
         return results;
     }
@@ -659,20 +632,27 @@ class GraphNode extends EventHandler {
     findOne(attr, value) {
         const test = createTest(attr, value);
 
-        const stack = GraphNode._stack;
-        stack.push(this);
+        const stack = GraphNode._stackPool.allocate();
+        let size = 0;
+        stack[size++] = this;
 
-        while (stack.length) {
-            const current = stack.pop();
-            if (test(current)) {
-                return current;
+        while (size > 0) {
+            const node = stack[--size];
+
+            if (test(node)) {
+                GraphNode._stackPool.free(stack);
+
+                return node;
             }
 
-            const children = current._children;
-            for (let i = 0; i < children.length; i++) {
-                stack.push(children[i]);
+            const children = node._children;
+            const length = children.length;
+            for (let i = length - 1; i >= 0; --i) {
+                stack[size++] = children[i];
             }
         }
+
+        GraphNode._stackPool.free(stack);
 
         return null;
     }
@@ -700,25 +680,25 @@ class GraphNode extends EventHandler {
      */
     findByTag(...query) {
         const results = [];
-        const stack = GraphNode._stack;
+        const stack = GraphNode._stackPool.allocate();
+        Array.prototype.push.apply(stack, this._children);
+        let size = stack.length;
 
-        const children = this._children;
-        for (let i = 0; i < children.length; i++) {
-            stack.push(children[i]);
-        }
-
-        while (stack.length) {
-            const node = stack.pop();
+        while (size > 0) {
+            const node = stack[--size];
 
             if (node.tags.has(...query)) {
                 results.push(node);
             }
 
             const children = node._children;
-            for (let i = 0; i < children.length; i++) {
-                stack.push(children[i]);
+            const length = children.length;
+            for (let i = length - 1; i >= 0; --i) {
+                stack[size++] = children[i];
             }
         }
+
+        GraphNode._stackPool.free(stack);
 
         return results;
     }
@@ -778,20 +758,23 @@ class GraphNode extends EventHandler {
      * });
      */
     forEach(callback, thisArg) {
+        // This is BFS via a queue, so not a stack usage
         const queue = GraphNode._queuePool.allocate();
-        queue.resize(GraphNode._maxQueueSize);
+        queue.capacity = GraphNode._maxQueueCapacity;
         queue.enqueue(this);
 
-        while (queue.size()) {
-            const current = queue.dequeue();
-            callback(current);
-            const children = current.children;
+        while (queue.length) {
+            const node = queue.dequeue();
+
+            callback.call(thisArg, node);
+
+            const children = node.children;
             for (let i = 0; i < children.length; i++) {
                 queue.enqueue(children[i]);
             }
         }
 
-        GraphNode._maxQueueSize = Math.max(GraphNode._maxQueueSize, queue.size());
+        GraphNode._maxQueueCapacity = Math.max(GraphNode._maxQueueCapacity, queue.capacity);
         GraphNode._queuePool.free(queue);
     }
 
@@ -811,7 +794,6 @@ class GraphNode extends EventHandler {
             if (parent === node) {
                 return true;
             }
-
             parent = parent._parent;
         }
         return false;
@@ -1001,11 +983,9 @@ class GraphNode extends EventHandler {
      * @ignore
      */
     get worldScaleSign() {
-
         if (this._worldScaleSign === 0) {
             this._worldScaleSign = this.getWorldTransform().scaleSign;
         }
-
         return this._worldScaleSign;
     }
 
@@ -1175,11 +1155,12 @@ class GraphNode extends EventHandler {
 
     /** @private */
     _dirtifyWorldInternal() {
-        const stack = GraphNode._stack;
-        stack.push(this);
+        const stack = GraphNode._stackPool.allocate();
+        let size = 0;
+        stack[size++] = this;
 
-        while (stack.length > 0) {
-            const node = stack.pop();
+        while (size > 0) {
+            const node = stack[--size];
 
             if (!node._dirtyWorld) {
                 node._frozen = false;
@@ -1187,16 +1168,18 @@ class GraphNode extends EventHandler {
             }
 
             node._dirtyNormal = true;
-            node._worldScaleSign = 0;
+            node._worldScaleSign = 0;   // world matrix is dirty, mark this flag dirty too
             node._aabbVer++;
 
             const children = node._children;
             for (let i = 0; i < children.length; i++) {
                 if (!children[i]._dirtyWorld) {
-                    stack.push(children[i]);
+                    stack[size++] = children[i];
                 }
             }
         }
+
+        GraphNode._stackPool.free(stack);
     }
 
     /**
@@ -1358,7 +1341,6 @@ class GraphNode extends EventHandler {
      * @ignore
      */
     addChildAndSaveTransform(node) {
-
         const wPos = node.getPosition();
         const wRot = node.getRotation();
 
@@ -1383,7 +1365,6 @@ class GraphNode extends EventHandler {
      * this.entity.insertChild(e, 1);
      */
     insertChild(node, index) {
-
         this._prepareInsertChild(node);
         this._children.splice(index, 0, node);
         this._onInsertChild(node);
@@ -1396,7 +1377,6 @@ class GraphNode extends EventHandler {
      * @private
      */
     _prepareInsertChild(node) {
-
         // remove it from the existing parent
         node.remove();
 
@@ -1416,28 +1396,22 @@ class GraphNode extends EventHandler {
     _fireOnHierarchy(name, nameHierarchy, parent) {
         this.fire(name, parent);
 
-        /**
-         * NOTE: GraphNode._stack is not used here because _fireOnHierarchy can be called
-         * while other _fireOnHierarchy is still running
-         *
-         * @type {GraphNode[]}
-         */
-        const stack = [this];
+        const stack = GraphNode._stackPool.allocate();
+        let size = 1;
 
-        const child = this._children;
+        while (size > 0) {
+            const node = stack[--size];
 
-        for (let i = 0; i < child.length; i++) {
-            stack.push(child[i]);
-        }
+            node.fire(nameHierarchy, parent);
 
-        while (stack.length) {
-            const curr = stack.pop();
-            curr.fire(nameHierarchy, parent);
-
-            for (let j = 0; j < curr._children.length; j++) {
-                stack.push(curr._children[j]);
+            const children = node._children;
+            const length = children.length;
+            for (let i = length - 1; i >= 0; --i) {
+                stack[size++] = children[i];
             }
         }
+
+        GraphNode._stackPool.free(stack);
     }
 
     /**
@@ -1485,17 +1459,22 @@ class GraphNode extends EventHandler {
      * @private
      */
     _updateGraphDepth() {
-        const stack = GraphNode._stack;
-        stack.push(this);
+        const stack = GraphNode._stackPool.allocate();
+        let size = 0;
+        stack[size++] = this;
 
-        while (stack.length) {
-            const n = stack.pop();
-            n._graphDepth = n._parent ? n._parent._graphDepth + 1 : 0;
+        while (size > 0) {
+            const node = stack[--size];
+            node._graphDepth = node._parent ? node._parent._graphDepth + 1 : 0;
 
-            for (let i = 0; i < n._children.length; i++) {
-                stack.push(n._children[i]);
+            const children = node._children;
+            const length = children.length;
+            for (let i = length - 1; i >= 0; --i) {
+                stack[size++] = children[i];
             }
         }
+
+        GraphNode._stackPool.free(stack);
     }
 
     /**
@@ -1601,11 +1580,12 @@ class GraphNode extends EventHandler {
             return;
         }
 
-        const stack = GraphNode._stack;
-        stack.push(this);
+        const stack = GraphNode._stackPool.allocate();
+        let size = 0;
+        stack[size++] = this;
 
-        while (stack.length) {
-            const node = stack.pop();
+        while (size > 0) {
+            const node = stack[--size];
 
             if (!node._enabled || node._frozen) {
                 continue;
@@ -1618,11 +1598,13 @@ class GraphNode extends EventHandler {
             }
 
             const children = node._children;
-
-            for (let i = children.length - 1; i >= 0; i--) {
-                stack.push(children[i]);
+            const length = children.length;
+            for (let i = length - 1; i >= 0; --i) {
+                stack[size++] = children[i];
             }
         }
+
+        GraphNode._stackPool.free(stack);
     }
 
     /**
