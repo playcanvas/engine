@@ -1232,8 +1232,9 @@ class GraphNode extends EventHandler {
             this.localRotation.setFromMat4(invParentWtm).mul(rotation);
         }
 
-        if (!this._dirtyLocal)
+        if (!this._dirtyLocal) {
             this._dirtifyLocal();
+        }
     }
 
     /**
