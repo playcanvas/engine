@@ -719,6 +719,9 @@ class RenderComponent extends Component {
                 this._rootBone = value;
             } else if (isString) {
                 this._rootBone = this.system.app.getEntityFromIndex(value) || null;
+                if (!this._rootBone) {
+                    Debug.warn('Failed to find rootBone Entity by GUID');
+                }
             } else {
                 this._rootBone = null;
             }
