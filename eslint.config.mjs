@@ -14,9 +14,6 @@ export default [
         languageOptions: {
             ecmaVersion: 2022,
             sourceType: 'module',
-            parserOptions: {
-                requireConfigFile: false
-            },
             globals: {
                 ...globals.browser,
                 ...globals.mocha,
