@@ -596,7 +596,7 @@ class GraphNode extends EventHandler {
         const results = [];
         const test = createTest(attr, value);
 
-        this.forEach(node => {
+        this.forEach((node) => {
             if (test(node)) {
                 results.push(node);
             }
@@ -681,8 +681,11 @@ class GraphNode extends EventHandler {
     findByTag(...query) {
         const results = [];
         const stack = GraphNode._stackPool.allocate();
-        Array.prototype.push.apply(stack, this._children);
-        let size = stack.length;
+
+        let size = 0;
+        for (let i = 0; i < this._children.length; ++i) {
+            stack[size++] = this._children[i];
+        }
 
         while (size > 0) {
             const node = stack[--size];

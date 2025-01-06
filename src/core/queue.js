@@ -8,7 +8,7 @@
 class Queue {
     /**
      * Create a new queue.
-     * @param {number} [initialCapacity=8] - The initial capacity of the queue.
+     * @param {number} [initialCapacity] - The initial capacity of the queue.
      */
     constructor(initialCapacity = 8) {
         /**
@@ -43,15 +43,6 @@ class Queue {
     }
 
     /**
-     * The capacity of the queue.
-     * @type {number}
-     * @readonly
-     */
-    get capacity() {
-        return this._storage.length;
-    }
-
-    /**
      * Change the capacity of the underlying storage.
      * Does not shrink capacity if new capacity is less than or equal to the current length.
      * @param {number} capacity - The new capacity for the queue.
@@ -72,6 +63,15 @@ class Queue {
             }
             this._head = capacity - endLength;
         }
+    }
+
+    /**
+     * The capacity of the queue.
+     * @type {number}
+     * @readonly
+     */
+    get capacity() {
+        return this._storage.length;
     }
 
     /**
