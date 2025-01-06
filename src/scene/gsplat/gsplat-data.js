@@ -322,13 +322,22 @@ class GSplatData {
         return false;
     }
 
-    get hasSHData() {
-        for (let i = 0; i < 45; ++i) {
-            if (!this.getProp(`f_rest_${i}`)) {
-                return false;
+    // return the number of spherical harmonic bands present. value will be between 0 and 3 inclusive.
+    get shBands() {
+        const numProps = () => {
+            for (let i = 0; i < 45; ++i) {
+                if (!this.getProp(`f_rest_${i}`)) {
+                    return i;
+                }
             }
-        }
-        return true;
+            return 45;
+        };
+        const sizes = {
+            9: 1,
+            24: 2,
+            45: 3
+        };
+        return sizes[numProps()] ?? 0;
     }
 
     calcMortonOrder() {
