@@ -647,7 +647,7 @@ class GraphNode extends EventHandler {
 
             const children = node._children;
             const length = children.length;
-            for (let i = length - 1; i >= 0; --i) {
+            for (let i = 0; i < length; ++i) {
                 stack[size++] = children[i];
             }
         }
@@ -696,7 +696,7 @@ class GraphNode extends EventHandler {
 
             const children = node._children;
             const length = children.length;
-            for (let i = length - 1; i >= 0; --i) {
+            for (let i = 0; i < length; ++i) {
                 stack[size++] = children[i];
             }
         }
@@ -1409,7 +1409,7 @@ class GraphNode extends EventHandler {
 
             const children = node._children;
             const length = children.length;
-            for (let i = length - 1; i >= 0; --i) {
+            for (let i = 0; i < length; ++i) {
                 stack[size++] = children[i];
             }
         }
@@ -1472,7 +1472,7 @@ class GraphNode extends EventHandler {
 
             const children = node._children;
             const length = children.length;
-            for (let i = length - 1; i >= 0; --i) {
+            for (let i = 0; i < length; ++i) {
                 stack[size++] = children[i];
             }
         }
@@ -1602,7 +1602,7 @@ class GraphNode extends EventHandler {
 
             const children = node._children;
             const length = children.length;
-            for (let i = length - 1; i >= 0; --i) {
+            for (let i = 0; i < length; ++i) {
                 stack[size++] = children[i];
             }
         }
