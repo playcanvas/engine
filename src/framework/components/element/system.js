@@ -75,6 +75,7 @@ class ElementComponentSystem extends ComponentSystem {
 
         this.defaultImageMaterials = [];
 
+        this.on('add', this.onAddComponent, this);
         this.on('beforeremove', this.onRemoveComponent, this);
     }
 
@@ -265,6 +266,10 @@ class ElementComponentSystem extends ComponentSystem {
         if (component.type === ELEMENTTYPE_IMAGE && component._image._meshDirty) {
             component._image._updateMesh(component._image.mesh);
         }
+    }
+
+    onAddComponent(entity, component) {
+        entity.fire('element:add');
     }
 
     onRemoveComponent(entity, component) {
