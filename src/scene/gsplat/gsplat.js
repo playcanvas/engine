@@ -48,7 +48,7 @@ class GSplat {
     /** @type {Texture} */
     transformBTexture;
 
-    /** @type {number} */
+    /** @type {0 | 1 | 2 | 3} */
     shBands;
 
     /** @type {Texture | undefined} */
@@ -318,7 +318,7 @@ class GSplat {
             for (let j = 0; j < numCoeffs; ++j) {
                 c[j * 3] = src[j][i];
                 c[j * 3 + 1] = src[j + numCoeffs][i];
-                c[j * 3 + 2] = src[j + numCoeffs][i];
+                c[j * 3 + 2] = src[j + numCoeffs * 2][i];
             }
 
             // calc maximum value
