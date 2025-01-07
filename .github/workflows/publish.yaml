@@ -33,7 +33,7 @@ jobs:
           fi
 
       - name: Install Dependencies
-        run: npm install
+        run: npm install --legacy-peer-deps
 
       - name: Build PlayCanvas
         run: npm run build
