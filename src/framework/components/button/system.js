@@ -9,7 +9,6 @@ import { ButtonComponentData } from './data.js';
 const _schema = [
     'enabled',
     'active',
-    { name: 'imageEntity', type: 'entity' },
     { name: 'hitPadding', type: 'vec4' },
     'transitionMode',
     { name: 'hoverTint', type: 'rgba' },
@@ -52,6 +51,7 @@ class ButtonComponentSystem extends ComponentSystem {
     }
 
     initializeComponentData(component, data, properties) {
+        component.imageEntity = data.imageEntity;
         super.initializeComponentData(component, data, _schema);
     }
 

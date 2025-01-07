@@ -4,7 +4,7 @@ import { Vec2 } from '../../core/math/vec2.js';
 import { Vec3 } from '../../core/math/vec3.js';
 import { Mat3 } from '../../core/math/mat3.js';
 import {
-    ADDRESS_CLAMP_TO_EDGE, FILTER_NEAREST, PIXELFORMAT_RGBA16F, PIXELFORMAT_RGBA32U,
+    ADDRESS_CLAMP_TO_EDGE, FILTER_NEAREST, PIXELFORMAT_RGBA16F, PIXELFORMAT_R32U, PIXELFORMAT_RGBA32U,
     PIXELFORMAT_RGBA8
 } from '../../platform/graphics/constants.js';
 import { Texture } from '../../platform/graphics/texture.js';
@@ -17,9 +17,9 @@ import { createGSplatMaterial } from './gsplat-material.js';
  * @import { Material } from '../materials/material.js'
  */
 
-const getSHData = (gsplatData) => {
+const getSHData = (gsplatData, numCoeffs) => {
     const result = [];
-    for (let i = 0; i < 45; ++i) {
+    for (let i = 0; i < numCoeffs; ++i) {
         result.push(gsplatData.getProp(`f_rest_${i}`));
     }
     return result;
@@ -48,14 +48,17 @@ class GSplat {
     /** @type {Texture} */
     transformBTexture;
 
-    /** @type {Boolean} */
-    hasSH;
+    /** @type {0 | 1 | 2 | 3} */
+    shBands;
 
     /** @type {Texture | undefined} */
     sh1to3Texture;
 
     /** @type {Texture | undefined} */
     sh4to7Texture;
+
+    /** @type {Texture | undefined} */
+    sh8Texture;
 
     /** @type {Texture | undefined} */
     sh8to11Texture;
@@ -90,12 +93,18 @@ class GSplat {
         this.updateTransformData(gsplatData);
 
         // initialize SH data
-        this.hasSH = gsplatData.hasSHData;
-        if (this.hasSH) {
+        this.shBands = gsplatData.shBands;
+        if (this.shBands > 0) {
             this.sh1to3Texture = this.createTexture('splatSH_1to3', PIXELFORMAT_RGBA32U, size);
-            this.sh4to7Texture = this.createTexture('splatSH_4to7', PIXELFORMAT_RGBA32U, size);
-            this.sh8to11Texture = this.createTexture('splatSH_8to11', PIXELFORMAT_RGBA32U, size);
-            this.sh12to15Texture = this.createTexture('splatSH_12to15', PIXELFORMAT_RGBA32U, size);
+            if (this.shBands > 1) {
+                this.sh4to7Texture = this.createTexture('splatSH_4to7', PIXELFORMAT_RGBA32U, size);
+                if (this.shBands > 2) {
+                    this.sh8to11Texture = this.createTexture('splatSH_8to11', PIXELFORMAT_RGBA32U, size);
+                    this.sh12to15Texture = this.createTexture('splatSH_12to15', PIXELFORMAT_RGBA32U, size);
+                } else {
+                    this.sh8Texture = this.createTexture('splatSH_8', PIXELFORMAT_R32U, size);
+                }
+            }
 
             this.updateSHData(gsplatData);
         }
@@ -107,6 +116,7 @@ class GSplat {
         this.transformBTexture?.destroy();
         this.sh1to3Texture?.destroy();
         this.sh4to7Texture?.destroy();
+        this.sh8Texture?.destroy();
         this.sh8to11Texture?.destroy();
         this.sh12to15Texture?.destroy();
     }
@@ -120,15 +130,12 @@ class GSplat {
         result.setParameter('transformA', this.transformATexture);
         result.setParameter('transformB', this.transformBTexture);
         result.setParameter('numSplats', this.numSplatsVisible);
-        if (this.hasSH) {
-            result.setDefine('SH_BANDS', 3);
-            result.setParameter('splatSH_1to3', this.sh1to3Texture);
-            result.setParameter('splatSH_4to7', this.sh4to7Texture);
-            result.setParameter('splatSH_8to11', this.sh8to11Texture);
-            result.setParameter('splatSH_12to15', this.sh12to15Texture);
-        } else {
-            result.setDefine('SH_BANDS', 0);
-        }
+        result.setDefine('SH_BANDS', this.shBands);
+        result.setParameter('splatSH_1to3', this.sh1to3Texture);
+        result.setParameter('splatSH_4to7', this.sh4to7Texture);
+        result.setParameter('splatSH_8', this.sh8Texture);
+        result.setParameter('splatSH_8to11', this.sh8to11Texture);
+        result.setParameter('splatSH_12to15', this.sh12to15Texture);
         return result;
     }
 
@@ -284,11 +291,18 @@ class GSplat {
      */
     updateSHData(gsplatData) {
         const sh1to3Data = this.sh1to3Texture.lock();
-        const sh4to7Data = this.sh4to7Texture.lock();
-        const sh8to11Data = this.sh8to11Texture.lock();
-        const sh12to15Data = this.sh12to15Texture.lock();
+        const sh4to7Data = this.sh4to7Texture?.lock();
+        const sh8Data = this.sh8Texture?.lock();
+        const sh8to11Data = this.sh8to11Texture?.lock();
+        const sh12to15Data = this.sh12to15Texture?.lock();
 
-        const src = getSHData(gsplatData);
+        const numCoeffs = {
+            1: 3,
+            2: 8,
+            3: 15
+        }[this.shBands];
+
+        const src = getSHData(gsplatData, numCoeffs * 3);
 
         const t11 = (1 << 11) - 1;
         const t10 = (1 << 10) - 1;
@@ -297,23 +311,19 @@ class GSplat {
         const uint32 = new Uint32Array(float32.buffer);
 
         // coefficients
-        const c = [
-            0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0,
-            0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0,
-            0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0
-        ];
+        const c = new Array(numCoeffs * 3).fill(0);
 
         for (let i = 0; i < gsplatData.numSplats; ++i) {
             // extract coefficients
-            for (let j = 0; j < 15; ++j) {
+            for (let j = 0; j < numCoeffs; ++j) {
                 c[j * 3] = src[j][i];
-                c[j * 3 + 1] = src[j + 15][i];
-                c[j * 3 + 2] = src[j + 30][i];
+                c[j * 3 + 1] = src[j + numCoeffs][i];
+                c[j * 3 + 2] = src[j + numCoeffs * 2][i];
             }
 
             // calc maximum value
             let max = c[0];
-            for (let j = 1; j < 45; ++j) {
+            for (let j = 1; j < numCoeffs * 3; ++j) {
                 max = Math.max(max, Math.abs(c[j]));
             }
 
@@ -322,7 +332,7 @@ class GSplat {
             }
 
             // normalize
-            for (let j = 0; j < 15; ++j) {
+            for (let j = 0; j < numCoeffs; ++j) {
                 c[j * 3 + 0] = Math.max(0, Math.min(t11, Math.floor((c[j * 3 + 0] / max * 0.5 + 0.5) * t11 + 0.5)));
                 c[j * 3 + 1] = Math.max(0, Math.min(t10, Math.floor((c[j * 3 + 1] / max * 0.5 + 0.5) * t10 + 0.5)));
                 c[j * 3 + 2] = Math.max(0, Math.min(t11, Math.floor((c[j * 3 + 2] / max * 0.5 + 0.5) * t11 + 0.5)));
@@ -336,26 +346,33 @@ class GSplat {
             sh1to3Data[i * 4 + 2] = c[3] << 21 | c[4] << 11 | c[5];
             sh1to3Data[i * 4 + 3] = c[6] << 21 | c[7] << 11 | c[8];
 
-            sh4to7Data[i * 4 + 0] = c[9] << 21 | c[10] << 11 | c[11];
-            sh4to7Data[i * 4 + 1] = c[12] << 21 | c[13] << 11 | c[14];
-            sh4to7Data[i * 4 + 2] = c[15] << 21 | c[16] << 11 | c[17];
-            sh4to7Data[i * 4 + 3] = c[18] << 21 | c[19] << 11 | c[20];
+            if (this.shBands > 1) {
+                sh4to7Data[i * 4 + 0] = c[9] << 21 | c[10] << 11 | c[11];
+                sh4to7Data[i * 4 + 1] = c[12] << 21 | c[13] << 11 | c[14];
+                sh4to7Data[i * 4 + 2] = c[15] << 21 | c[16] << 11 | c[17];
+                sh4to7Data[i * 4 + 3] = c[18] << 21 | c[19] << 11 | c[20];
 
-            sh8to11Data[i * 4 + 0] = c[21] << 21 | c[22] << 11 | c[23];
-            sh8to11Data[i * 4 + 1] = c[24] << 21 | c[25] << 11 | c[26];
-            sh8to11Data[i * 4 + 2] = c[27] << 21 | c[28] << 11 | c[29];
-            sh8to11Data[i * 4 + 3] = c[30] << 21 | c[31] << 11 | c[32];
+                if (this.shBands > 2) {
+                    sh8to11Data[i * 4 + 0] = c[21] << 21 | c[22] << 11 | c[23];
+                    sh8to11Data[i * 4 + 1] = c[24] << 21 | c[25] << 11 | c[26];
+                    sh8to11Data[i * 4 + 2] = c[27] << 21 | c[28] << 11 | c[29];
+                    sh8to11Data[i * 4 + 3] = c[30] << 21 | c[31] << 11 | c[32];
 
-            sh12to15Data[i * 4 + 0] = c[33] << 21 | c[34] << 11 | c[35];
-            sh12to15Data[i * 4 + 1] = c[36] << 21 | c[37] << 11 | c[38];
-            sh12to15Data[i * 4 + 2] = c[39] << 21 | c[40] << 11 | c[41];
-            sh12to15Data[i * 4 + 3] = c[42] << 21 | c[43] << 11 | c[44];
+                    sh12to15Data[i * 4 + 0] = c[33] << 21 | c[34] << 11 | c[35];
+                    sh12to15Data[i * 4 + 1] = c[36] << 21 | c[37] << 11 | c[38];
+                    sh12to15Data[i * 4 + 2] = c[39] << 21 | c[40] << 11 | c[41];
+                    sh12to15Data[i * 4 + 3] = c[42] << 21 | c[43] << 11 | c[44];
+                } else {
+                    sh8Data[i] = c[21] << 21 | c[22] << 11 | c[23];
+                }
+            }
         }
 
         this.sh1to3Texture.unlock();
-        this.sh4to7Texture.unlock();
-        this.sh8to11Texture.unlock();
-        this.sh12to15Texture.unlock();
+        this.sh4to7Texture?.unlock();
+        this.sh8Texture?.unlock();
+        this.sh8to11Texture?.unlock();
+        this.sh12to15Texture?.unlock();
     }
 }
 

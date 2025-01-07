@@ -754,6 +754,11 @@ function resolveDuplicatedEntityReferenceProperties(oldSubtreeRoot, oldEntity, n
             newEntity.render.resolveDuplicatedEntityReferenceProperties(components.render, duplicatedIdsMap);
         }
 
+        // Handle entity button attributes
+        if (components.button) {
+            newEntity.button.resolveDuplicatedEntityReferenceProperties(components.button, duplicatedIdsMap);
+        }
+
         // Handle entity anim attributes
         if (components.anim) {
             newEntity.anim.resolveDuplicatedEntityReferenceProperties(components.anim, duplicatedIdsMap);
