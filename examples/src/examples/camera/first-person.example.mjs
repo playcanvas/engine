@@ -1,6 +1,13 @@
 // @config DESCRIPTION <div style='text-align:center'><div>(<b>WASD</b>) Move</div><div>(<b>Space</b>) Jump</div><div>(<b>Mouse</b>) Look</div></div>
-import { deviceType, rootPath } from 'examples/utils';
+import { deviceType, fileImport, rootPath } from 'examples/utils';
 import * as pc from 'playcanvas';
+
+const {
+    DesktopInput,
+    MobileInput,
+    GamePadInput,
+    CharacterController
+} = await fileImport(`${rootPath}/static/scripts/esm/first-person-controls.mjs`);
 
 const canvas = /** @type {HTMLCanvasElement} */ (document.getElementById('application-canvas'));
 window.focus();
@@ -23,7 +30,6 @@ const gfxOptions = {
 
 const assets = {
     map: new pc.Asset('map', 'container', { url: `${rootPath}/static/assets/models/fps-map.glb` }),
-    script: new pc.Asset('script', 'script', { url: `${rootPath}/static/scripts/camera/first-person-camera.js` }),
     helipad: new pc.Asset(
         'helipad-env-atlas',
         'texture',
@@ -112,15 +118,15 @@ function createCharacterController(camera) {
         restitution: 0
     });
     entity.addComponent('script');
-    entity.script.create('characterController', {
+    entity.script.create(CharacterController, {
         attributes: {
             camera: camera,
             jumpForce: 850
         }
     });
-    entity.script.create('desktopInput');
-    entity.script.create('mobileInput');
-    entity.script.create('gamePadInput');
+    entity.script.create(DesktopInput);
+    entity.script.create(MobileInput);
+    entity.script.create(GamePadInput);
 
     return entity;
 }
