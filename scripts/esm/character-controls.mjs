@@ -602,7 +602,7 @@ class GamePadInput extends Script {
     }
 }
 
-class CharacterController extends Script {
+class FirstPersonController extends Script {
     /**
      * @type {RigidBodyComponent}
      * @private
@@ -830,5 +830,5 @@ export {
     DesktopInput,
     MobileInput,
     GamePadInput,
-    CharacterController
+    FirstPersonController
 };

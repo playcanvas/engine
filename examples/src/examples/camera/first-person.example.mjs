@@ -6,8 +6,8 @@ const {
     DesktopInput,
     MobileInput,
     GamePadInput,
-    CharacterController
-} = await fileImport(`${rootPath}/static/scripts/esm/first-person-controls.mjs`);
+    FirstPersonController,
+} = await fileImport(`${rootPath}/static/scripts/esm/character-controls.mjs`);
 
 const canvas = /** @type {HTMLCanvasElement} */ (document.getElementById('application-canvas'));
 window.focus();
@@ -118,9 +118,9 @@ function createCharacterController(camera) {
         restitution: 0
     });
     entity.addComponent('script');
-    entity.script.create(CharacterController, {
+    entity.script.create(FirstPersonController, {
         attributes: {
-            camera: camera,
+            camera,
             jumpForce: 850
         }
     });
