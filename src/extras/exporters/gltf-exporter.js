@@ -139,6 +139,7 @@ class GltfExporter extends CoreExporter {
             cameras: [],
             entities: [],
             materials: [],
+            skins: [],
             textures: [],
 
             // entry: { node, meshInstances}
@@ -199,6 +200,11 @@ class GltfExporter extends CoreExporter {
                 const indexBuffer = mesh.indexBuffer[0];
                 if (buffers.indexOf(indexBuffer) < 0) {
                     buffers.push(indexBuffer);
+                }
+
+                // Collect skin
+                if (mesh.skin && resources.skins.indexOf(mesh.skin) < 0) {
+                    resources.skins.push(mesh.skin);
                 }
             });
         };
@@ -472,6 +478,12 @@ class GltfExporter extends CoreExporter {
                 const entityMeshInstance = resources.entityMeshInstances.find(e => e.node === entity);
                 if (entityMeshInstance) {
                     node.mesh = resources.entityMeshInstances.indexOf(entityMeshInstance);
+
+                    // Add skin reference if this node has a skinned mesh
+                    const meshInstance = entityMeshInstance.meshInstances[0];
+                    if (meshInstance && meshInstance.mesh.skin) {
+                        node.skin = resources.skins.indexOf(meshInstance.mesh.skin);
+                    }
                 }
 
                 if (entity.children.length > 0) {
@@ -622,6 +634,46 @@ class GltfExporter extends CoreExporter {
         return primitive;
     }
 
+    writeSkins(resources, json) {
+        if (resources.skins.length > 0) {
+            json.skins = resources.skins.map((skin) => {
+                // Create float32 array for inverse bind matrices
+                const matrices = new Float32Array(skin.inverseBindPose.length * 16);
+                for (let i = 0; i < skin.inverseBindPose.length; i++) {
+                    const ibm = skin.inverseBindPose[i];
+                    matrices.set(ibm.data, i * 16);
+                }
+
+                // Create buffer view for matrices
+                const matrixBuffer = matrices.buffer;
+                GltfExporter.writeBufferView(resources, json, matrixBuffer);
+                resources.buffers.push(matrixBuffer);
+                const bufferView = resources.bufferViewMap.get(matrixBuffer);
+
+                // Create accessor for inverse bind matrices
+                const accessor = {
+                    bufferView: bufferView[0],
+                    componentType: getComponentType(TYPE_FLOAT32),
+                    count: skin.inverseBindPose.length,
+                    type: 'MAT4'
+                };
+                const accessorIndex = json.accessors.push(accessor) - 1;
+
+                // Find joint nodes by bone names
+                const joints = skin.boneNames.map((boneName) => {
+                    const node = resources.entities.find(entity => entity.name === boneName);
+                    return resources.entities.indexOf(node);
+                });
+
+                // Create skin
+                return {
+                    inverseBindMatrices: accessorIndex,
+                    joints: joints
+                };
+            });
+        }
+    }
+
     convertTextures(srcTextures, options) {
 
         const textureOptions = {
@@ -761,6 +813,7 @@ class GltfExporter extends CoreExporter {
             this.writeMeshes(resources, json, options);
             this.writeMaterials(resources, json);
             this.writeNodes(resources, json, options);
+            this.writeSkins(resources, json);
             await this.writeTextures(resources, textureCanvases, json, options);
 
             // delete unused properties

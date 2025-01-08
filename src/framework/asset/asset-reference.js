@@ -1,6 +1,7 @@
 /**
  * @import { Asset } from './asset.js'
  * @import { AssetRegistry } from './asset-registry.js'
+ * @import { EventHandle } from '../../core/event-handle.js'
  */
 
 /**
@@ -12,43 +13,43 @@
  */
 class AssetReference {
     /**
-     * @type {import('../../core/event-handle.js').EventHandle|null}
+     * @type {EventHandle|null}
      * @private
      */
     _evtLoadById = null;
 
     /**
-     * @type {import('../../core/event-handle.js').EventHandle|null}
+     * @type {EventHandle|null}
      * @private
      */
     _evtUnloadById = null;
 
     /**
-     * @type {import('../../core/event-handle.js').EventHandle|null}
+     * @type {EventHandle|null}
      * @private
      */
     _evtAddById = null;
 
     /**
-     * @type {import('../../core/event-handle.js').EventHandle|null}
+     * @type {EventHandle|null}
      * @private
      */
     _evtRemoveById = null;
 
     /**
-     * @type {import('../../core/event-handle.js').EventHandle|null}
+     * @type {EventHandle|null}
      * @private
      */
     _evtLoadByUrl = null;
 
     /**
-     * @type {import('../../core/event-handle.js').EventHandle|null}
+     * @type {EventHandle|null}
      * @private
      */
     _evtAddByUrl = null;
 
     /**
-     * @type {import('../../core/event-handle.js').EventHandle|null}
+     * @type {EventHandle|null}
      * @private
      */
     _evtRemoveByUrl = null;

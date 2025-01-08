@@ -52,13 +52,13 @@ export default [
     {
         files: ['test/**/*.mjs'],
         rules: {
+            'import/order': 'error',
             'no-unused-expressions': 'off',
             'prefer-arrow-callback': 'off' // Mocha uses function callbacks
         }
     },
     {
         ignores: [
-            'tests/**/*',
             'examples/lib/*',
             'scripts/textmesh/*.min.js',
             'src/polyfill/*',

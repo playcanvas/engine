@@ -21,6 +21,7 @@ const _tempScrollValue = new Vec2();
  * A ScrollViewComponent enables a group of entities to behave like a masked scrolling area, with
  * optional horizontal and vertical scroll bars.
  *
+ * @hideconstructor
  * @category User Interface
  */
 class ScrollViewComponent extends Component {

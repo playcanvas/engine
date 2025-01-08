@@ -50,19 +50,27 @@ layout(location = 7) out highp outType_7 pc_fragColor7;
 
 #define texture2D(res, uv) texture(sampler2D(res, res ## _sampler), uv)
 #define texture2DBias(res, uv, bias) texture(sampler2D(res, res ## _sampler), uv, bias)
-#define texture2DLodEXT(res, uv, lod) textureLod(sampler2D(res, res ## _sampler), uv, lod)
+#define texture2DLod(res, uv, lod) textureLod(sampler2D(res, res ## _sampler), uv, lod)
 #define textureCube(res, uv) texture(samplerCube(res, res ## _sampler), uv)
-#define textureCubeLodEXT(res, uv, lod) textureLod(samplerCube(res, res ## _sampler), uv, lod)
+#define textureCubeLod(res, uv, lod) textureLod(samplerCube(res, res ## _sampler), uv, lod)
 #define textureShadow(res, uv) textureLod(sampler2DShadow(res, res ## _sampler), uv, 0.0)
 #define itexture2D(res, uv) texture(isampler2D(res, res ## _sampler), uv)
 #define utexture2D(res, uv) texture(usampler2D(res, res ## _sampler), uv)
 
+// deprecated defines
+#define texture2DLodEXT texture2DLodEXT_is_no_longer_supported_use_texture2DLod_instead
+#define texture2DProjLodEXT texture2DProjLodEXT_is_no_longer_supported_use_texture2DProjLod
+#define textureCubeLodEXT textureCubeLodEXT_is_no_longer_supported_use_textureCubeLod_instead
+#define texture2DGradEXT texture2DGradEXT_is_no_longer_supported_use_texture2DGrad_instead
+#define texture2DProjGradEXT texture2DProjGradEXT_is_no_longer_supported_use_texture2DProjGrad_instead
+#define textureCubeGradEXT textureCubeGradEXT_is_no_longer_supported_use_textureCubeGrad_instead
+
 // TODO: implement other texture sampling macros
 // #define texture2DProj textureProj
-// #define texture2DProjLodEXT textureProjLod
-// #define texture2DGradEXT textureGrad
-// #define texture2DProjGradEXT textureProjGrad
-// #define textureCubeGradEXT textureGrad
+// #define texture2DProjLod textureProjLod
+// #define texture2DGrad textureGrad
+// #define texture2DProjGrad textureProjGrad
+// #define textureCubeGrad textureGrad
 
 // pass / accept shadow map as a function parameter, passes both the texture as well as sampler
 // as the combined sampler can be only created at a point of use

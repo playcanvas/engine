@@ -1,6 +1,6 @@
-import { IndexedList } from '../../src/core/indexed-list.js';
-
 import { expect } from 'chai';
+
+import { IndexedList } from '../../src/core/indexed-list.js';
 
 describe('IndexedList', function () {
 

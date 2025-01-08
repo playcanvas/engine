@@ -65,14 +65,22 @@ layout(location = 7) out highp outType_7 pc_fragColor7;
 #define texture2DBias texture
 #define textureCube texture
 #define texture2DProj textureProj
-#define texture2DLodEXT textureLod
-#define texture2DProjLodEXT textureProjLod
-#define textureCubeLodEXT textureLod
-#define texture2DGradEXT textureGrad
-#define texture2DProjGradEXT textureProjGrad
-#define textureCubeGradEXT textureGrad
+#define texture2DLod textureLod
+#define texture2DProjLod textureProjLod
+#define textureCubeLod textureLod
+#define texture2DGrad textureGrad
+#define texture2DProjGrad textureProjGrad
+#define textureCubeGrad textureGrad
 #define utexture2D texture
 #define itexture2D texture
+
+// deprecated defines
+#define texture2DLodEXT texture2DLodEXT_is_no_longer_supported_use_texture2DLod_instead
+#define texture2DProjLodEXT texture2DProjLodEXT_is_no_longer_supported_use_texture2DProjLod
+#define textureCubeLodEXT textureCubeLodEXT_is_no_longer_supported_use_textureCubeLod_instead
+#define texture2DGradEXT texture2DGradEXT_is_no_longer_supported_use_texture2DGrad_instead
+#define texture2DProjGradEXT texture2DProjGradEXT_is_no_longer_supported_use_texture2DProjGrad_instead
+#define textureCubeGradEXT textureCubeGradEXT_is_no_longer_supported_use_textureCubeGrad_instead
 
 // sample shadows using textureGrad to remove derivatives in the dynamic loops (which are used by
 // clustered lighting) - as DirectX shader compiler tries to unroll the loops and takes long time
