@@ -18,8 +18,7 @@
         "compilerOptions": {
             "allowSyntheticDefaultImports": true,
             "checkJs": false,
-            "typeRoots": [ "./node_modules/@types" ],
-            "skipLibCheck": true
+            "typeRoots": [ "./node_modules/@types" ]
         },
         "entryPoints": [ "./src/index.js" ],
         "excludeNotDocumented": true,
