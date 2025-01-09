@@ -1,7 +1,17 @@
 version: 2
 updates:
+  # GitHub Actions updates
   - package-ecosystem: "github-actions"
     directory: "/"
-    # Look for `package.json` and `lock` files in the `root` directory
     schedule:
       interval: "monthly"
+
+  # NPM dependencies updates
+  - package-ecosystem: "npm"
+    directory: "/"
+    schedule:
+      interval: "weekly"
+    groups:
+      all-dependencies:
+        patterns:
+          - "*"
