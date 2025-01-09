@@ -86,7 +86,7 @@
     "globals": "^15.14.0",
     "jsdom": "^26.0.0",
     "mocha": "^11.0.1",
-    "publint": "^0.2.12",
+    "publint": "^0.3.0",
     "rollup": "^4.29.1",
     "rollup-plugin-dts": "^6.0.2",
     "rollup-plugin-jscc": "2.0.0",
