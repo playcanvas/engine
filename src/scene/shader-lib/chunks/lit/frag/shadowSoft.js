@@ -38,12 +38,12 @@ vec2 generatePoissonSample(inout PoissonDiskData data) {
 }
 
 void PCSSFindBlocker(TEXTURE_ACCEPT(shadowMap), out float avgBlockerDepth, out int numBlockers,
-    vec2 shadowCoords, float z, int shadowBlockerSamples, float penumbraSize, vec2 invShadowMapSize, float randomSeed) {
+    vec2 shadowCoords, float z, int shadowBlockerSamples, float penumbraSize, float invShadowMapSize, float randomSeed) {
 
     PoissonDiskData poissonData;
     preparePoissonConstants(poissonData, shadowBlockerSamples, 11, randomSeed);
 
-    vec2 searchWidth = penumbraSize * invShadowMapSize;
+    float searchWidth = penumbraSize * invShadowMapSize;
     float blockerSum = 0.0;
     numBlockers = 0;
 
@@ -83,14 +83,17 @@ float getPenumbra(float dblocker, float dreceiver, float penumbraSize, float pen
 
 float PCSSDirectional(TEXTURE_ACCEPT(shadowMap), vec3 shadowCoords, vec4 cameraParams, vec4 softShadowParams) {
 
+    float receiverDepth = shadowCoords.z;
     float randomSeed = fractSinRand(gl_FragCoord.xy);
     int shadowSamples = int(softShadowParams.x);
     int shadowBlockerSamples = int(softShadowParams.y);
     float penumbraSize = softShadowParams.z;
     float penumbraFalloff = softShadowParams.w;
-    ivec2 shadowMapSize = textureSize(shadowMap, 0);
-    vec2 invShadowMapSize = 1.0 / vec2(shadowMapSize);
-    float receiverDepth = shadowCoords.z;
+
+    // normalized inverse shadow map size to preserve the shadow softness regardless of the shadow resolution
+    int shadowMapSize = textureSize(shadowMap, 0).x;
+    float invShadowMapSize = 1.0 / float(shadowMapSize);
+    invShadowMapSize *= float(shadowMapSize) / 2048.0;
 
     float penumbra;
 
@@ -115,7 +118,7 @@ float PCSSDirectional(TEXTURE_ACCEPT(shadowMap), vec3 shadowCoords, vec4 cameraP
         penumbra = penumbraSize;
     }
 
-    float filterRadius = penumbra * invShadowMapSize.x;
+    float filterRadius = penumbra * invShadowMapSize;
 
     // filtering
     return PCSSFilter(TEXTURE_PASS(shadowMap), shadowCoords.xy, receiverDepth, shadowSamples, filterRadius, randomSeed);
