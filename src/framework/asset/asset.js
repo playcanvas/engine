@@ -112,7 +112,7 @@ class Asset extends EventHandler {
      * Please note:
      * - only gsplat assets current emit this event
      * - totalBytes may not be reliable as it is based on the content-length header of the response
-     * 
+     *
      * @event
      * @example
      * asset.on('progress', (receivedBytes, totalBytes) => {
