@@ -572,10 +572,6 @@ class PlyParser {
                     }
                 );
 
-                if (totalReceived !== totalLength) {
-                    asset.fire('progress', totalReceived, totalReceived);
-                }
-
                 // reorder data
                 if (!data.isCompressed) {
                     if (asset.data.reorder ?? true) {
