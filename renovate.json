@@ -8,5 +8,8 @@
       "managers": ["npm"],
       "groupName": "all npm dependencies"
     }
+  ],
+  "schedule": [
+    "on Mondays at 10:00am"
   ]
 }
