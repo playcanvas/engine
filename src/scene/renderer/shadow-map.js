@@ -147,7 +147,7 @@ class ShadowMap {
             // #if _PROFILER
             profilerHint: TEXHINT_SHADOWMAP,
             // #endif
-            format: format,
+            format: shadowInfo?.format,
             width: size,
             height: size,
             cubemap: true,
