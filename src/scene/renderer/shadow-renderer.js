@@ -289,6 +289,8 @@ class ShadowRenderer {
             meshInstance.ensureMaterial(device);
             const material = meshInstance.material;
 
+            DebugGraphics.pushGpuMarker(device, `Node: ${meshInstance.node.name}, Material: ${material.name}`);
+
             // set basic material states/parameters
             renderer.setBaseConstants(device, material);
             renderer.setSkinning(device, meshInstance);
@@ -330,6 +332,8 @@ class ShadowRenderer {
             // draw
             renderer.drawInstance(device, meshInstance, mesh, style);
             renderer._shadowDrawCalls++;
+
+            DebugGraphics.popGpuMarker(device);
         }
     }
 

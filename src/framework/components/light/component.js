@@ -1120,6 +1120,47 @@ class LightComponent extends Component {
     }
 
     /**
+     * Sets the number of shadow samples used for soft shadows when shadow type is
+     * {@link SHADOW_PCSS_32F}. Higher values result in smoother shadows but can decrease
+     * performance. Defaults to 16.
+     *
+     * @type {number}
+     */
+    set shadowSamples(value) {
+        this.light.shadowSamples = value;
+    }
+
+    /**
+     * Gets the number of shadow samples used for soft shadows.
+     *
+     * @type {number}
+     */
+    get shadowSamples() {
+        return this.light.shadowSamples;
+    }
+
+    /**
+     * Sets the number of blocker samples used for soft shadows when shadow type is
+     * {@link SHADOW_PCSS_32F}. Higher values improve shadow quality but can decrease
+     * performance. When set to 0, contact hardening is disabled and the shadow have constant
+     * softness. Defaults to 4.
+     *
+     * @type {number}
+     */
+    set shadowBlockerSamples(value) {
+        this.light.shadowBlockerSamples = value;
+    }
+
+    /**
+     * Gets the number of blocker samples used for contact hardening shadows.
+     *
+     * @type {number}
+     */
+    get shadowBlockerSamples() {
+        return this.light.shadowBlockerSamples;
+    }
+
+    /**
      * Sets the size of penumbra for contact hardening shadows. For area lights, acts as a
      * multiplier with the dimensions of the area light. For punctual and directional lights it's
      * the area size of the light. Defaults to 1.
@@ -1137,6 +1178,25 @@ class LightComponent extends Component {
      */
     get penumbraSize() {
         return this.light.penumbraSize;
+    }
+
+    /**
+     * Sets the falloff rate for shadow penumbra for contact hardening shadows.
+     * Defaults to 1.
+     *
+     * @type {number}
+     */
+    set penumbraFalloff(value) {
+        this.light.penumbraFalloff = value;
+    }
+
+    /**
+     * Gets the falloff rate for shadow penumbra for contact hardening shadows.
+     *
+     * @type {number}
+     */
+    get penumbraFalloff() {
+        return this.light.penumbraFalloff;
     }
 
     /** @ignore */

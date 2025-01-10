@@ -163,6 +163,7 @@ import shadowEVSMPS from './lit/frag/shadowEVSM.js';
 import shadowEVSMnPS from './lit/frag/shadowEVSMn.js';
 import shadowPCSSPS from './lit/frag/shadowPCSS.js';
 import shadowSampleCoordPS from './lit/frag/shadowSampleCoord.js';
+import shadowSoftPS from './lit/frag/shadowSoft.js';
 import shadowStandardPS from './lit/frag/shadowStandard.js';
 import shadowStandardGL2PS from './lit/frag/shadowStandardGL2.js';
 import shadowVSM_commonPS from './lit/frag/shadowVSM_common.js';
@@ -376,6 +377,7 @@ const shaderChunks = {
     shadowEVSMnPS,
     shadowPCSSPS,
     shadowSampleCoordPS,
+    shadowSoftPS,
     shadowStandardPS,
     shadowStandardGL2PS,
     shadowVSM_commonPS,
