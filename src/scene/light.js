@@ -427,6 +427,11 @@ class Light {
 
         const device = this.device;
 
+        // PCSS requires F16 or F32 render targets
+        if (value === SHADOW_PCSS_32F && !device.textureFloatRenderable && !device.textureHalfFloatRenderable) {
+            value = SHADOW_PCF3_32F;
+        }
+
         // omni light supports PCF1, PCF3 and PCSS only
         if (this._type === LIGHTTYPE_OMNI && value !== SHADOW_PCF1_32F && value !== SHADOW_PCF3_32F &&
             value !== SHADOW_PCF1_16F && value !== SHADOW_PCF3_16F && value !== SHADOW_PCSS_32F) {

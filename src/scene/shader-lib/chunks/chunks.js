@@ -44,6 +44,7 @@ import envMultiplyPS from './common/frag/envMultiply.js';
 import falloffInvSquaredPS from './lit/frag/falloffInvSquared.js';
 import falloffLinearPS from './lit/frag/falloffLinear.js';
 import floatUnpackingPS from './lit/frag/float-unpacking.js';
+import floatAsUintPS from './common/frag/float-as-uint.js';
 import fogExpPS from './lit/frag/fogExp.js';
 import fogExp2PS from './lit/frag/fogExp2.js';
 import fogLinearPS from './lit/frag/fogLinear.js';
@@ -258,6 +259,7 @@ const shaderChunks = {
     falloffInvSquaredPS,
     falloffLinearPS,
     floatUnpackingPS,
+    floatAsUintPS,
     fogExpPS,
     fogExp2PS,
     fogLinearPS,

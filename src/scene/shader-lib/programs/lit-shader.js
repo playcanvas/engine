@@ -399,6 +399,7 @@ class LitShader {
         let code = this._fsGetBeginCode();
         code += this.varyings;
         code += this.varyingDefines;
+        code += this.chunks.floatAsUintPS;
         code += this.frontendDecl;
         code += this.frontendCode;
         code += ShaderGenerator.begin();
@@ -410,13 +411,7 @@ class LitShader {
         ` :
             // storing linear depth float value in RGBA8
             `
-            uint intBits = floatBitsToUint(vLinearDepth);
-            gl_FragColor = vec4(
-                float((intBits >> 24u) & 0xFFu) / 255.0,
-                float((intBits >> 16u) & 0xFFu) / 255.0,
-                float((intBits >> 8u) & 0xFFu) / 255.0,
-                float(intBits & 0xFFu) / 255.0
-            );
+            gl_FragColor = float2uint(vLinearDepth);
         `;
         code += ShaderGenerator.end();
 
