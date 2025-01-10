@@ -46,6 +46,8 @@ const dataTypeMap = new Map([
 class StreamBuf {
     reader;
 
+    progressFunc;
+
     data;
 
     view;
@@ -54,8 +56,9 @@ class StreamBuf {
 
     tail = 0;
 
-    constructor(reader) {
+    constructor(reader, progressFunc) {
         this.reader = reader;
+        this.progressFunc = progressFunc;
     }
 
     // read the next chunk of data
@@ -67,6 +70,7 @@ class StreamBuf {
         }
 
         this.push(value);
+        this.progressFunc?.(value.byteLength);
     }
 
     // append data to the buffer
@@ -395,9 +399,10 @@ const readGeneralPly = async (streamBuf, elements) => {
  *
  * @param {ReadableStreamDefaultReader<Uint8Array>} reader - The reader.
  * @param {Function|null} propertyFilter - Function to filter properties with.
+ * @param {Function|null} progressFunc - Function to call with progress updates.
  * @returns {Promise<{ data: GSplatData | GSplatCompressedData, comments: string[] }>} The ply file data.
  */
-const readPly = async (reader, propertyFilter = null) => {
+const readPly = async (reader, propertyFilter = null, progressFunc = null) => {
     /**
      * Searches for the first occurrence of a sequence within a buffer.
      * @example
@@ -444,7 +449,7 @@ const readPly = async (reader, propertyFilter = null) => {
         return true;
     };
 
-    const streamBuf = new StreamBuf(reader);
+    const streamBuf = new StreamBuf(reader, progressFunc);
     let headerLength;
 
     while (true) {
@@ -553,7 +558,23 @@ class PlyParser {
             if (!response || !response.body) {
                 callback('Error loading resource', null);
             } else {
-                const { data, comments } = await readPly(response.body.getReader(), asset.data.elementFilter ?? defaultElementFilter);
+                const totalLength = parseInt(response.headers.get('content-length') ?? '0');
+                let totalReceived = 0;
+
+                const { data, comments } = await readPly(
+                    response.body.getReader(),
+                    asset.data.elementFilter ?? defaultElementFilter,
+                    (bytes) => {
+                        totalReceived += bytes;
+                        if (asset) {
+                            asset.fire('progress', totalReceived, totalLength);
+                        }
+                    }
+                );
+
+                if (totalReceived !== totalLength) {
+                    asset.fire('progress', totalReceived, totalReceived);
+                }
 
                 // reorder data
                 if (!data.isCompressed) {
