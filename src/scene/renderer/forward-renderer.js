@@ -121,6 +121,7 @@ class ForwardRenderer extends Renderer {
         this.lightCookieOffsetId = [];
         this.lightShadowSearchAreaId = [];
         this.lightCameraParamsId = [];
+        this.lightSoftShadowParamsId = [];
 
         // shadow cascades
         this.shadowMatrixPaletteId = [];
@@ -198,6 +199,7 @@ class ForwardRenderer extends Renderer {
         this.lightCookieMatrixId[i] = scope.resolve(`${light}_cookieMatrix`);
         this.lightCookieOffsetId[i] = scope.resolve(`${light}_cookieOffset`);
         this.lightCameraParamsId[i] = scope.resolve(`${light}_cameraParams`);
+        this.lightSoftShadowParamsId[i] = scope.resolve(`${light}_softShadowParams`);
 
         // shadow cascades
         this.shadowMatrixPaletteId[i] = scope.resolve(`${light}_shadowMatrixPalette[0]`);
@@ -268,6 +270,7 @@ class ForwardRenderer extends Renderer {
                 this.shadowCascadeCountId[cnt].setValue(directional.numCascades);
                 this.shadowCascadeBlendId[cnt].setValue(1 - directional.cascadeBlend);
                 this.lightShadowIntensity[cnt].setValue(directional.shadowIntensity);
+                this.lightSoftShadowParamsId[cnt].setValue(directional._softShadowParams);
 
                 const shadowRT = lightRenderData.shadowCamera.renderTarget;
                 if (shadowRT) {
@@ -276,7 +279,7 @@ class ForwardRenderer extends Renderer {
 
                 const cameraParams = directional._shadowCameraParams;
                 cameraParams.length = 4;
-                cameraParams[0] = 3.0; // unused
+                cameraParams[0] = 0; // unused
                 cameraParams[1] = lightRenderData.shadowCamera._farClip;
                 cameraParams[2] = lightRenderData.shadowCamera._nearClip;
                 cameraParams[3] = 1;
