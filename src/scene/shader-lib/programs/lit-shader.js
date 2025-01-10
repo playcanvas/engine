@@ -399,6 +399,7 @@ class LitShader {
         let code = this._fsGetBeginCode();
         code += this.varyings;
         code += this.varyingDefines;
+        code += this.chunks.floatAsUintPS;
         code += this.frontendDecl;
         code += this.frontendCode;
         code += ShaderGenerator.begin();
@@ -410,13 +411,7 @@ class LitShader {
         ` :
             // storing linear depth float value in RGBA8
             `
-            uint intBits = floatBitsToUint(vLinearDepth);
-            gl_FragColor = vec4(
-                float((intBits >> 24u) & 0xFFu) / 255.0,
-                float((intBits >> 16u) & 0xFFu) / 255.0,
-                float((intBits >> 8u) & 0xFFu) / 255.0,
-                float(intBits & 0xFFu) / 255.0
-            );
+            gl_FragColor = float2uint(vLinearDepth);
         `;
         code += ShaderGenerator.end();
 
@@ -480,8 +475,11 @@ class LitShader {
         if (usePerspectiveDepth) {
             code += '    float depth = gl_FragCoord.z;\n';
             if (isPcss) {
-                // Transform depth values to world space
-                code += '    depth = linearizeDepth(depth, camera_params);\n';
+                // spot/omni shadows currently use linear depth.
+                // TODO: use perspective depth for spot/omni the same way as directional
+                if (lightType !== LIGHTTYPE_DIRECTIONAL) {
+                    code += '    depth = linearizeDepth(depth, camera_params);\n';
+                }
             }
         } else {
             code += '    float depth = min(distance(view_position, vPositionW) / light_radius, 0.99999);\n';
@@ -588,6 +586,10 @@ class LitShader {
             if (light._shadowType === SHADOW_PCSS_32F && light.castShadows && !options.noShadow) {
                 decl.append(`uniform float light${i}_shadowSearchArea;`);
                 decl.append(`uniform vec4 light${i}_cameraParams;`);
+
+                if (lightType === LIGHTTYPE_DIRECTIONAL) {
+                    decl.append(`uniform vec4 light${i}_softShadowParams;`);
+                }
             }
 
             if (lightType === LIGHTTYPE_DIRECTIONAL) {
@@ -803,6 +805,7 @@ class LitShader {
             if (usePcss) {
                 func.append(chunks.linearizeDepthPS);
                 func.append(chunks.shadowPCSSPS);
+                func.append(chunks.shadowSoftPS);
             }
         }
 
@@ -1239,7 +1242,7 @@ class LitShader {
                             // VSM
                             shadowCoordArgs = `${shadowCoordArgs}, ${evsmExp}, dLightDirW`;
                         } else if (pcssShadows) {
-                            let penumbraSizeArg = `vec2(light${i}_shadowSearchArea)`;
+                            let penumbraSizeArg =  lightType === LIGHTTYPE_DIRECTIONAL ? `light${i}_softShadowParams` : `vec2(light${i}_shadowSearchArea)`;
                             if (lightShape !== LIGHTSHAPE_PUNCTUAL) {
                                 penumbraSizeArg = `vec2(length(light${i}_halfWidth), length(light${i}_halfHeight)) * light${i}_shadowSearchArea`;
                             }
