@@ -1,0 +1,13 @@
+{
+  "$schema": "https://docs.renovatebot.com/renovate-schema.json",
+  "extends": [
+    "config:recommended"
+  ],
+  "packageRules": [
+    {
+      "managers": ["npm"],
+      "groupName": "all npm dependencies",
+      "schedule": ["on monday at 10:00am"]
+    }
+  ]
+}
