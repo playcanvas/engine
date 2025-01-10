@@ -1185,8 +1185,10 @@ class LightComponent extends Component {
     }
 
     /**
-     * Sets the falloff rate for shadow penumbra for contact hardening shadows.
-     * Defaults to 1.
+     * Sets the falloff rate for shadow penumbra for contact hardening shadows. This is a value larger
+     * than or equal to 1. This parameter determines how quickly the shadow softens with distance.
+     * Higher values result in a faster softening of the shadow, while lower values produce a more
+     * gradual transition. Defaults to 1.
      *
      * @type {number}
      */
