@@ -6,10 +6,8 @@
   "packageRules": [
     {
       "managers": ["npm"],
-      "groupName": "all npm dependencies"
+      "groupName": "all npm dependencies",
+      "schedule": ["on monday at 10:00am"]
     }
-  ],
-  "schedule": [
-    "on Mondays at 10:00am"
   ]
 }
