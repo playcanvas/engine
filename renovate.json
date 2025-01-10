@@ -5,9 +5,13 @@
   ],
   "packageRules": [
     {
-      "managers": ["npm"],
+      "matchManagers": [
+        "npm"
+      ],
       "groupName": "all npm dependencies",
-      "schedule": ["on monday at 10:00am"]
+      "schedule": [
+        "on monday at 10:00am"
+      ]
     }
   ]
 }
