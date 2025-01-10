@@ -558,7 +558,7 @@ class PlyParser {
             if (!response || !response.body) {
                 callback('Error loading resource', null);
             } else {
-                const totalLength = parseInt(response.headers.get('content-length') ?? '0');
+                const totalLength = parseInt(response.headers.get('content-length') ?? '0', 10);
                 let totalReceived = 0;
 
                 const { data, comments } = await readPly(
