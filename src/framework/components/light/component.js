@@ -1145,7 +1145,7 @@ class LightComponent extends Component {
      * caster and the shadow receiver, which is then used for the estimation of contact hardening in
      * the shadow. This value must be a positive whole number starting at 0. Higher values improve
      * shadow quality by considering more occlusion points, but can decrease performance. When set
-     * to 0, contact hardening is disabled and the shadow has constant softness. Defaults to 4. Note
+     * to 0, contact hardening is disabled and the shadow has constant softness. Defaults to 16. Note
      * that this values can be lower than shadowSamples to optimize performance, often without large
      * impact on quality.
      *
