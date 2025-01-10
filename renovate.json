@@ -12,6 +12,14 @@
       "schedule": [
         "on monday at 10:00am"
       ]
+    },
+    {
+      "matchDepTypes": ["devDependencies"],
+      "rangeStrategy": "pin"
+    },
+    {
+      "matchDepTypes": ["dependencies"],
+      "rangeStrategy": "widen"
     }
   ]
 }
