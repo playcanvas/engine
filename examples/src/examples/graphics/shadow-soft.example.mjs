@@ -136,7 +136,6 @@ assetListLoader.load(() => {
     });
 
     // and position it in the world
-//    camera.setLocalPosition(300, 160, 25);
     camera.setLocalPosition(-500, 160, 300);
 
     // add orbit camera script with a mouse and a touch support
