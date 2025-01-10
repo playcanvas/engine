@@ -1120,9 +1120,9 @@ class LightComponent extends Component {
     }
 
     /**
-     * Sets the number of shadow samples used for soft shadows when shadow type is
-     * {@link SHADOW_PCSS_32F}. Higher values result in smoother shadows but can decrease
-     * performance. Defaults to 16.
+     * Sets the number of shadow samples used for soft shadows when the shadow type is
+     * {@link SHADOW_PCSS_32F}. This value must be a positive whole number starting at 1. Higher
+     * values result in smoother shadows but can significantly decrease performance. Defaults to 16.
      *
      * @type {number}
      */
@@ -1140,10 +1140,14 @@ class LightComponent extends Component {
     }
 
     /**
-     * Sets the number of blocker samples used for soft shadows when shadow type is
-     * {@link SHADOW_PCSS_32F}. Higher values improve shadow quality but can decrease
-     * performance. When set to 0, contact hardening is disabled and the shadow have constant
-     * softness. Defaults to 4.
+     * Sets the number of blocker samples used for soft shadows when the shadow type is
+     * {@link SHADOW_PCSS_32F}. These samples are used to estimate the distance between the shadow
+     * caster and the shadow receiver, which is then used for the estimation of contact hardening in
+     * the shadow. This value must be a positive whole number starting at 0. Higher values improve
+     * shadow quality by considering more occlusion points, but can decrease performance. When set
+     * to 0, contact hardening is disabled and the shadow has constant softness. Defaults to 4. Note
+     * that this values can be lower than shadowSamples to optimize performance, often without large
+     * impact on quality.
      *
      * @type {number}
      */
