@@ -127,7 +127,9 @@ class Shader {
             // Note: this is only needed for iOS 15 on WebGL2 where there seems to be a bug where color attachments that are not
             // written to generate metal linking errors. This is fixed on iOS 16, and iOS 14 does not support WebGL2.
             const stripUnusedColorAttachments = graphicsDevice.isWebGL2 && (platform.name === 'osx' || platform.name === 'ios');
-            definition.fshader = Preprocessor.run(definition.fshader, definition.fincludes, stripUnusedColorAttachments);
+            definition.fshader = Preprocessor.run(definition.fshader, definition.fincludes, {
+                stripUnusedColorAttachments
+            });
         }
 
         this.impl = graphicsDevice.createShaderImpl(this);

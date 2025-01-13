@@ -42,6 +42,8 @@ class LightComponentData {
 
     numCascades = 1;
 
+    cascadeBlend = 0;
+
     bakeNumSamples = 1;
 
     bakeArea = 0;
@@ -99,6 +101,12 @@ class LightComponentData {
     layers = [LAYERID_WORLD];
 
     penumbraSize = 1;
+
+    penumbraFalloff = 1;
+
+    shadowSamples = 16;
+
+    shadowBlockerSamples = 16;
 }
 
 const properties = Object.keys(new LightComponentData());

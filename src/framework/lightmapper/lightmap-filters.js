@@ -17,7 +17,7 @@ class LightmapFilters {
         this.pixelOffset = new Float32Array(2);
 
         // denoise is optional and gets created only when needed
-        this.shaderDenoise = null;
+        this.shaderDenoise = [];
         this.sigmas = null;
         this.constantSigmas = null;
         this.kernel = null;
@@ -35,10 +35,13 @@ class LightmapFilters {
         this.constantPixelOffset.setValue(this.pixelOffset);
     }
 
-    prepareDenoise(filterRange, filterSmoothness) {
+    prepareDenoise(filterRange, filterSmoothness, bakeHDR) {
 
-        if (!this.shaderDenoise) {
-            this.shaderDenoise = createShaderFromCode(this.device, shaderChunks.fullscreenQuadVS, shaderChunksLightmapper.bilateralDeNoisePS, 'lmBilateralDeNoise');
+        const index = bakeHDR ? 0 : 1;
+        if (!this.shaderDenoise[index]) {
+            const name = `lmBilateralDeNoise-${bakeHDR ? 'hdr' : 'rgbm'}`;
+            const define = bakeHDR ? '#define HDR\n' : '';
+            this.shaderDenoise[index] = createShaderFromCode(this.device, shaderChunks.fullscreenQuadVS, define + shaderChunksLightmapper.bilateralDeNoisePS, name);
             this.sigmas = new Float32Array(2);
             this.constantSigmas = this.device.scope.resolve('sigmas');
             this.constantKernel = this.device.scope.resolve('kernel[0]');
@@ -50,6 +53,21 @@ class LightmapFilters {
         this.constantSigmas.setValue(this.sigmas);
 
         this.evaluateDenoiseUniforms(filterRange, filterSmoothness);
+    }
+
+    getDenoise(bakeHDR) {
+        const index = bakeHDR ? 0 : 1;
+        return this.shaderDenoise[index];
+    }
+
+    getDilate(device, bakeHDR) {
+        const index = bakeHDR ? 0 : 1;
+        if (!this.shaderDilate[index]) {
+            const name = `lmDilate-${bakeHDR ? 'hdr' : 'rgbm'}`;
+            const define = bakeHDR ? '#define HDR\n' : '';
+            this.shaderDilate[index] = createShaderFromCode(device, shaderChunks.fullscreenQuadVS, define + shaderChunksLightmapper.dilatePS, name);
+        }
+        return this.shaderDilate[index];
     }
 
     evaluateDenoiseUniforms(filterRange, filterSmoothness) {

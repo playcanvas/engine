@@ -9,6 +9,7 @@ import { PostEffectQueue } from './post-effect-queue.js';
  * @import { CameraComponentSystem } from './system.js'
  * @import { Color } from '../../../core/math/color.js'
  * @import { Entity } from '../../entity.js'
+ * @import { EventHandle } from '../../../core/event-handle.js'
  * @import { Frustum } from '../../../core/shape/frustum.js'
  * @import { LayerComposition } from '../../../scene/composition/layer-composition.js'
  * @import { Layer } from '../../../scene/layer.js'
@@ -50,6 +51,7 @@ import { PostEffectQueue } from './post-effect-queue.js';
  * entity.camera.nearClip = 2;
  * ```
  *
+ * @hideconstructor
  * @category Graphics
  */
 class CameraComponent extends Component {
@@ -98,19 +100,19 @@ class CameraComponent extends Component {
     _camera = new Camera();
 
     /**
-     * @type {import('../../../core/event-handle.js').EventHandle|null}
+     * @type {EventHandle|null}
      * @private
      */
     _evtLayersChanged = null;
 
     /**
-     * @type {import('../../../core/event-handle.js').EventHandle|null}
+     * @type {EventHandle|null}
      * @private
      */
     _evtLayerAdded = null;
 
     /**
-     * @type {import('../../../core/event-handle.js').EventHandle|null}
+     * @type {EventHandle|null}
      * @private
      */
     _evtLayerRemoved = null;
@@ -619,7 +621,7 @@ class CameraComponent extends Component {
 
     /**
      * Sets whether the camera's field of view (`fov`) is horizontal or vertical. Defaults to
-     * false (meaning it is vertical be default).
+     * false (meaning it is vertical by default).
      *
      * @type {boolean}
      */
@@ -644,21 +646,23 @@ class CameraComponent extends Component {
      * @type {number[]}
      */
     set layers(newValue) {
-        const layers = this._camera.layers;
-        for (let i = 0; i < layers.length; i++) {
-            const layer = this.system.app.scene.layers.getLayerById(layers[i]);
-            if (!layer) continue;
-            layer.removeCamera(this);
-        }
+        const oldLayers = this._camera.layers;
+        const scene = this.system.app.scene;
+
+        // Remove from old layers
+        oldLayers.forEach((layerId) => {
+            const layer = scene.layers.getLayerById(layerId);
+            layer?.removeCamera(this);
+        });
 
         this._camera.layers = newValue;
 
-        if (!this.enabled || !this.entity.enabled) return;
-
-        for (let i = 0; i < newValue.length; i++) {
-            const layer = this.system.app.scene.layers.getLayerById(newValue[i]);
-            if (!layer) continue;
-            layer.addCamera(this);
+        // Only add to new layers if enabled
+        if (this.enabled && this.entity.enabled) {
+            newValue.forEach((layerId) => {
+                const layer = scene.layers.getLayerById(layerId);
+                layer?.addCamera(this);
+            });
         }
     }
 
@@ -1032,9 +1036,8 @@ class CameraComponent extends Component {
      */
     screenToWorld(screenx, screeny, cameraz, worldCoord) {
         const device = this.system.app.graphicsDevice;
-        const w = device.clientRect.width;
-        const h = device.clientRect.height;
-        return this._camera.screenToWorld(screenx, screeny, cameraz, w, h, worldCoord);
+        const { width, height } = device.clientRect;
+        return this._camera.screenToWorld(screenx, screeny, cameraz, width, height, worldCoord);
     }
 
     /**
@@ -1046,9 +1049,8 @@ class CameraComponent extends Component {
      */
     worldToScreen(worldCoord, screenCoord) {
         const device = this.system.app.graphicsDevice;
-        const w = device.clientRect.width;
-        const h = device.clientRect.height;
-        return this._camera.worldToScreen(worldCoord, w, h, screenCoord);
+        const { width, height } = device.clientRect;
+        return this._camera.worldToScreen(worldCoord, width, height, screenCoord);
     }
 
     /**

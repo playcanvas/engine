@@ -11,7 +11,6 @@ import {
 
 /**
  * @import { Entity } from '../../entity.js'
- * @import { RigidBodyComponentSystem } from './system.js'
  */
 
 // Shared math variable to avoid excessive allocation
@@ -55,6 +54,7 @@ const _vec3 = new Vec3();
  * - [Falling shapes](https://playcanvas.github.io/#/physics/falling-shapes)
  * - [Vehicle physics](https://playcanvas.github.io/#/physics/vehicle)
  *
+ * @hideconstructor
  * @category Physics
  */
 class RigidBodyComponent extends Component {
@@ -164,16 +164,6 @@ class RigidBodyComponent extends Component {
 
     /** @private */
     _type = BODYTYPE_STATIC;
-
-    /**
-     * Create a new RigidBodyComponent instance.
-     *
-     * @param {RigidBodyComponentSystem} system - The ComponentSystem that created this component.
-     * @param {Entity} entity - The entity this component is attached to.
-     */
-    constructor(system, entity) { // eslint-disable-line no-useless-constructor
-        super(system, entity);
-    }
 
     /** @ignore */
     static onLibraryLoaded() {

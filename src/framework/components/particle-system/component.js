@@ -8,6 +8,7 @@ import { Component } from '../component.js';
  * @import { CurveSet } from '../../../core/math/curve-set.js'
  * @import { Curve } from '../../../core/math/curve.js'
  * @import { Entity } from '../../entity.js'
+ * @import { EventHandle } from '../../../core/event-handle.js'
  * @import { ParticleSystemComponentData } from './data.js'
  * @import { ParticleSystemComponentSystem } from './system.js'
  * @import { Texture } from '../../../platform/graphics/texture.js'
@@ -103,6 +104,7 @@ let depthLayer;
  * time. Most of the curve parameters can also be specified by 2 minimum/maximum curves, this way
  * each particle will pick a random value in-between.
  *
+ * @hideconstructor
  * @category Graphics
  */
 class ParticleSystemComponent extends Component {
@@ -113,25 +115,25 @@ class ParticleSystemComponent extends Component {
     _drawOrder = 0;
 
     /**
-     * @type {import('../../../core/event-handle.js').EventHandle|null}
+     * @type {EventHandle|null}
      * @private
      */
     _evtLayersChanged = null;
 
     /**
-     * @type {import('../../../core/event-handle.js').EventHandle|null}
+     * @type {EventHandle|null}
      * @private
      */
     _evtLayerAdded = null;
 
     /**
-     * @type {import('../../../core/event-handle.js').EventHandle|null}
+     * @type {EventHandle|null}
      * @private
      */
     _evtLayerRemoved = null;
 
     /**
-     * @type {import('../../../core/event-handle.js').EventHandle|null}
+     * @type {EventHandle|null}
      * @private
      */
     _evtSetMeshes = null;

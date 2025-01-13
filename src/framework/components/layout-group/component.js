@@ -23,9 +23,40 @@ function isEnabledAndHasEnabledElement(entity) {
  * A LayoutGroupComponent enables the Entity to position and scale child {@link ElementComponent}s
  * according to configurable layout rules.
  *
+ * @hideconstructor
  * @category User Interface
  */
 class LayoutGroupComponent extends Component {
+    /** @private */
+    _orientation = ORIENTATION_HORIZONTAL;
+
+    /** @private */
+    _reverseX = false;
+
+    /** @private */
+    _reverseY = true;
+
+    /** @private */
+    _alignment = new Vec2(0, 1);
+
+    /** @private */
+    _padding = new Vec4();
+
+    /** @private */
+    _spacing = new Vec2();
+
+    /** @private */
+    _widthFitting = FITTING_NONE;
+
+    /** @private */
+    _heightFitting = FITTING_NONE;
+
+    /** @private */
+    _wrap = false;
+
+    /** @private */
+    _layoutCalculator = new LayoutCalculator();
+
     /**
      * Create a new LayoutGroupComponent instance.
      *
@@ -34,27 +65,6 @@ class LayoutGroupComponent extends Component {
      */
     constructor(system, entity) {
         super(system, entity);
-
-        /** @private */
-        this._orientation = ORIENTATION_HORIZONTAL;
-        /** @private */
-        this._reverseX = false;
-        /** @private */
-        this._reverseY = true;
-        /** @private */
-        this._alignment = new Vec2(0, 1);
-        /** @private */
-        this._padding = new Vec4();
-        /** @private */
-        this._spacing = new Vec2();
-        /** @private */
-        this._widthFitting = FITTING_NONE;
-        /** @private */
-        this._heightFitting = FITTING_NONE;
-        /** @private */
-        this._wrap = false;
-        /** @private */
-        this._layoutCalculator = new LayoutCalculator();
 
         // Listen for the group container being resized
         this._listenForReflowEvents(this.entity, 'on');

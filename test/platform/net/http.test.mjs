@@ -1,7 +1,7 @@
-import { http, Http } from '../../../src/platform/net/http.js';
-
 import { expect } from 'chai';
-import { restore, spy } from 'sinon';
+import { restore, spy, useFakeXMLHttpRequest } from 'sinon';
+
+import { http, Http } from '../../../src/platform/net/http.js';
 
 describe('Http', function () {
     let retryDelay;
@@ -19,7 +19,7 @@ describe('Http', function () {
     describe('#get()', function () {
 
         it('returns resource', (done) => {
-            http.get('http://localhost:3000/test/test-assets/test.json', (err, data) => {
+            http.get('http://localhost:3000/test/assets/test.json', (err, data) => {
                 expect(err).to.equal(null);
                 expect(data).to.deep.equal({
                     a: 1,
@@ -58,6 +58,83 @@ describe('Http', function () {
             }, (err) => {
                 expect(http.request.callCount).to.equal(6);
                 done();
+            });
+        });
+
+        it('retries resource and returns result if eventually found', function (done) {
+            spy(http, 'request');
+
+            let requests = 0;
+            const xhr = useFakeXMLHttpRequest();
+
+            // Store original XMLHttpRequest
+            const originalXHR = global.XMLHttpRequest;
+
+            // Replace JSDOM's XMLHttpRequest with Sinon's fake
+            global.XMLHttpRequest = xhr;
+
+            xhr.onCreate = function (xhr) {
+                setTimeout(function () {
+                    try {
+                        if (++requests === 3) {
+                            xhr.respond(200, { ContentType: 'application/json' }, JSON.stringify({ test: 'value' }));
+                        } else {
+                            xhr.error();
+                        }
+                    } catch (err) {
+                        done(new Error(`${err.message}\n${err.stack}`));
+                    }
+                });
+            };
+
+            http.get('/someurl.json', {
+                retry: true,
+                maxRetries: 2
+            }, function (err, data) {
+                expect(err).to.equal(null);
+                expect(http.request.callCount).to.equal(3);
+                expect(data).to.deep.equal({ test: 'value' });
+
+                // Restore original XMLHttpRequest
+                global.XMLHttpRequest = originalXHR;
+
+                done();
+            });
+        });
+
+        it('status 0 returns "Network error"', function (done) {
+            const xhr = useFakeXMLHttpRequest();
+            let isDone = false;
+
+            // Store original XMLHttpRequest
+            const originalXHR = global.XMLHttpRequest;
+
+            // Replace JSDOM's XMLHttpRequest with Sinon's fake
+            global.XMLHttpRequest = xhr;
+
+            xhr.onCreate = function (xhr) {
+                setTimeout(function () {
+                    try {
+                        xhr.error();
+                    } catch (err) {
+                        if (!isDone) {
+                            isDone = true;
+                            done(new Error(`${err.message}\n${err.stack}`));
+                        }
+                    }
+                });
+            };
+
+            http.get('/someurl.json', function (err, data) {
+                if (!isDone) {
+                    isDone = true;
+                    expect(err).to.equal('Network error');
+
+                    // Restore original XMLHttpRequest
+                    global.XMLHttpRequest = originalXHR;
+
+                    done();
+                }
             });
         });
 

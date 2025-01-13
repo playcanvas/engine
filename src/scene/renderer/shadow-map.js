@@ -3,6 +3,7 @@ import {
     ADDRESS_CLAMP_TO_EDGE,
     FILTER_LINEAR, FILTER_NEAREST,
     FUNC_LESS,
+    PIXELFORMAT_R32F, PIXELFORMAT_R16F,
     pixelFormatInfo,
     TEXHINT_SHADOWMAP
 } from '../../platform/graphics/constants.js';
@@ -83,14 +84,20 @@ class ShadowMap {
 
         const shadowInfo = shadowTypeInfo.get(shadowType);
         Debug.assert(shadowInfo);
+        let format = shadowInfo.format;
+
+        // when F32 is needed but not supported, fallback to F16 (PCSS)
+        if (format === PIXELFORMAT_R32F && !device.textureFloatRenderable && device.textureHalfFloatRenderable) {
+            format = PIXELFORMAT_R16F;
+        }
+        const formatName = pixelFormatInfo.get(format)?.name;
         const filter = this.getShadowFiltering(device, shadowType);
-        const formatName = pixelFormatInfo.get(shadowInfo.format)?.name;
 
         const texture = new Texture(device, {
             // #if _PROFILER
             profilerHint: TEXHINT_SHADOWMAP,
             // #endif
-            format: shadowInfo?.format,
+            format: format,
             width: size,
             height: size,
             mipmaps: false,

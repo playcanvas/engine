@@ -138,11 +138,31 @@ import { CameraFrameOptions, RenderPassCameraFrame } from './render-pass-camera-
  * in the rendered image by blending multiple frames together over time.
  *
  * @typedef {Object} Taa
- * @property {boolean} enabled - Whether Taa is enabled. Defaults to false.
+ * @property {boolean} enabled - Whether TAA is enabled. Defaults to false.
  * @property {number} jitter - The intensity of the camera jitter, 0-1 range. The larger the value,
  * the more jitter is applied to the camera, making the anti-aliasing effect more pronounced. This
  * also makes the image more blurry, and rendering.sharpness parameter can be used to counteract.
  * Defaults to 1.
+ */
+
+/**
+ * Properties related to Depth of Field (DOF), a technique used to simulate the optical effect where
+ * objects at certain distances appear sharp while others are blurred, enhancing the perception of
+ * focus and depth in the rendered scene.
+ *
+ * @typedef {Object} Dof
+ * @property {boolean} enabled - Whether DoF is enabled. Defaults to false.
+ * @property {boolean} nearBlur - Whether the near blur is enabled. Defaults to false.
+ * @property {number} focusDistance - The distance at which the focus is set. Defaults to 100.
+ * @property {number} focusRange - The range around the focus distance where the focus is sharp.
+ * Defaults to 10.
+ * @property {number} blurRadius - The radius of the blur effect, typically 2-10 range. Defaults to 3.
+ * @property {number} blurRings - The number of rings in the blur effect, typically 3-8 range. Defaults
+ * to 4.
+ * @property {number} blurRingPoints - The number of points in each ring of the blur effect, typically
+ * 3-8 range. Defaults to 5.
+ * @property {boolean} highQuality - Whether the high quality implementation is used. This will have
+ * a higher performance cost, but will produce better quality results. Defaults to true.
  */
 
 /**
@@ -240,9 +260,25 @@ class CameraFrame {
     };
 
     /**
+     * DoF settings.
+     *
+     * @type {Dof}
+     */
+    dof = {
+        enabled: false,
+        nearBlur: false,
+        focusDistance: 100,
+        focusRange: 10,
+        blurRadius: 3,
+        blurRings: 4,
+        blurRingPoints: 5,
+        highQuality: true
+    };
+
+    /**
      * Debug rendering. Set to null to disable.
      *
-     * @type {null|'scene'|'ssao'|'bloom'|'vignette'}
+     * @type {null|'scene'|'ssao'|'bloom'|'vignette'|'dofcoc'|'dofblur'}
      */
     debug = null;
 
@@ -332,6 +368,9 @@ class CameraFrame {
         options.ssaoType = ssao.type;
         options.ssaoBlurEnabled = ssao.blurEnabled;
         options.formats = rendering.renderFormats.slice();
+        options.dofEnabled = this.dof.enabled;
+        options.dofNearBlur = this.dof.nearBlur;
+        options.dofHighQuality = this.dof.highQuality;
     }
 
     /**
@@ -349,7 +388,7 @@ class CameraFrame {
         renderPassCamera.update(options);
 
         // update parameters of individual render passes
-        const { composePass, bloomPass, ssaoPass } = renderPassCamera;
+        const { composePass, bloomPass, ssaoPass, dofPass } = renderPassCamera;
 
         renderPassCamera.renderTargetScale = math.clamp(rendering.renderTargetScale, 0.1, 1);
         composePass.toneMapping = rendering.toneMapping;
@@ -358,6 +397,14 @@ class CameraFrame {
         if (options.bloomEnabled && bloomPass) {
             composePass.bloomIntensity = bloom.intensity;
             bloomPass.blurLevel = bloom.blurLevel;
+        }
+
+        if (options.dofEnabled) {
+            dofPass.focusDistance = this.dof.focusDistance;
+            dofPass.focusRange = this.dof.focusRange;
+            dofPass.blurRadius = this.dof.blurRadius;
+            dofPass.blurRings = this.dof.blurRings;
+            dofPass.blurRingPoints = this.dof.blurRingPoints;
         }
 
         if (options.ssaoType !== SSAOTYPE_NONE) {

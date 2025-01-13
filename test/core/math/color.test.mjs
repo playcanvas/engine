@@ -1,6 +1,6 @@
-import { Color } from '../../../src/core/math/color.js';
-
 import { expect } from 'chai';
+
+import { Color } from '../../../src/core/math/color.js';
 
 describe('Color', function () {
 

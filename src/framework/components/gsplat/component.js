@@ -6,6 +6,7 @@ import { Component } from '../component.js';
 /**
  * @import { BoundingBox } from '../../../core/shape/bounding-box.js'
  * @import { Entity } from '../../entity.js'
+ * @import { EventHandle } from '../../../core/event-handle.js'
  * @import { GSplatComponentSystem } from './system.js'
  * @import { GSplatInstance } from '../../../scene/gsplat/gsplat-instance.js'
  * @import { Material } from '../../../scene/materials/material.js'
@@ -22,6 +23,7 @@ import { Component } from '../component.js';
  * - [Loading a Splat](https://playcanvas.github.io/#/loaders/gsplat)
  * - [Custom Splat Shaders](https://playcanvas.github.io/#/loaders/gsplat-many)
  *
+ * @hideconstructor
  * @category Graphics
  */
 class GSplatComponent extends Component {
@@ -53,19 +55,19 @@ class GSplatComponent extends Component {
     _materialOptions = null;
 
     /**
-     * @type {import('../../../core/event-handle.js').EventHandle|null}
+     * @type {EventHandle|null}
      * @private
      */
     _evtLayersChanged = null;
 
     /**
-     * @type {import('../../../core/event-handle.js').EventHandle|null}
+     * @type {EventHandle|null}
      * @private
      */
     _evtLayerAdded = null;
 
     /**
-     * @type {import('../../../core/event-handle.js').EventHandle|null}
+     * @type {EventHandle|null}
      * @private
      */
     _evtLayerRemoved = null;

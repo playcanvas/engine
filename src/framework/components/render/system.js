@@ -11,7 +11,6 @@ import { RenderComponentData } from './data.js';
  */
 
 const _schema = [
-    { name: 'rootBone', type: 'entity' },
     'enabled'
 ];
 
@@ -30,7 +29,8 @@ const _properties = [
     'type',
     'layers',
     'isStatic',
-    'batchGroupId'
+    'batchGroupId',
+    'rootBone'
 ];
 
 /**
