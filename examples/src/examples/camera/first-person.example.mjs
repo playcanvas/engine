@@ -3,7 +3,7 @@ import { deviceType, fileImport, rootPath } from 'examples/utils';
 import * as pc from 'playcanvas';
 
 const {
-    DesktopInput,
+    KeyboardMouseInput,
     MobileInput,
     GamePadInput,
     FirstPersonController
@@ -124,7 +124,7 @@ function createCharacterController(camera) {
             jumpForce: 850
         }
     });
-    entity.script.create(DesktopInput);
+    entity.script.create(KeyboardMouseInput);
     entity.script.create(MobileInput);
     entity.script.create(GamePadInput);
 
