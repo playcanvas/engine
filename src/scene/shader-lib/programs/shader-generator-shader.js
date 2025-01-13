@@ -73,7 +73,10 @@ class ShaderGeneratorShader extends ShaderGenerator {
             definitionOptions.vertexCode = desc.vertexCode;
 
         } else {
-            const includes = new Map();
+            const includes = new Map(Object.entries({
+                ...shaderChunks,
+                ...options.chunks
+            }));
             const defines = new Map(options.defines);
 
             includes.set('shaderPassDefines', shaderPassInfo.shaderDefines);
