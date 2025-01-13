@@ -133,11 +133,11 @@ const fragmentShader = /* glsl */ `
         vec3 fringing(vec2 uv, vec3 color) {
 
             // offset depends on the direction from the center, raised to power to make it stronger away from the center
-            vec2 centerDistance = uv0 - 0.5;
+            vec2 centerDistance = uv - 0.5;
             vec2 offset = fringingIntensity * pow(centerDistance, vec2(2.0, 2.0));
 
-            color.r = texture2D(sceneTexture, uv0 - offset).r;
-            color.b = texture2D(sceneTexture, uv0 + offset).b;
+            color.r = texture2D(sceneTexture, uv - offset).r;
+            color.b = texture2D(sceneTexture, uv + offset).b;
             return color;
         }
 
@@ -218,7 +218,7 @@ const fragmentShader = /* glsl */ `
         #endif
 
         #ifdef BLOOM
-            vec3 bloom = texture2DLod(bloomTexture, uv, 0.0).rgb;
+            vec3 bloom = texture2DLod(bloomTexture, uv0, 0.0).rgb;
             result += bloom * bloomIntensity;
         #endif
 
