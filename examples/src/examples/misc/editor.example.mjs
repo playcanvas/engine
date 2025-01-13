@@ -129,11 +129,16 @@ app.root.addChild(camera);
 orbitCamera.distance = 5 * camera.camera?.aspectRatio;
 
 // grid
-const grid = new pc.Entity('grid');
-grid.setLocalScale(8, 1, 8);
-app.root.addChild(grid);
-grid.addComponent('script');
-grid.script.create(Grid);
+const gridEntity = new pc.Entity('grid');
+gridEntity.setLocalScale(8, 1, 8);
+app.root.addChild(gridEntity);
+gridEntity.addComponent('script');
+const grid = /** @type {Grid} */ (gridEntity.script.create(Grid));
+data.set('grid', {
+    colorX: Object.values(grid.colorX),
+    colorZ: Object.values(grid.colorZ),
+    resolution: grid.resolution + 1
+});
 
 // create light entity
 const light = new pc.Entity('light');
@@ -212,6 +217,7 @@ window.addEventListener('keyup', keyup);
 window.addEventListener('keypress', keypress);
 
 // gizmo and camera set handler
+const tmpC1 = new pc.Color();
 data.on('*:set', (/** @type {string} */ path, /** @type {any} */ value) => {
     const [category, key] = path.split('.');
     switch (category) {
@@ -238,6 +244,21 @@ data.on('*:set', (/** @type {string} */ path, /** @type {any} */ value) => {
             gizmoHandler.gizmo[key] = value;
             break;
         }
+        case 'grid': {
+            switch (key) {
+                case 'colorX':
+                    grid.colorX = tmpC1.set(value[0], value[1], value[2]);
+                    break;
+                case 'colorZ':
+                    grid.colorZ = tmpC1.set(value[0], value[1], value[2]);
+                    break;
+                case 'resolution':
+                    grid.resolution = value - 1;
+                    break;
+            }
+            break;
+        }
+
     }
 });
 

@@ -36,6 +36,7 @@ const fragmentCode = /* glsl */ `
     uniform vec2 uHalfExtents;
     uniform vec3 uColorX;
     uniform vec3 uColorZ;
+    uniform int uResolution;
 
     varying vec2 uv0;
 
@@ -99,6 +100,9 @@ const fragmentCode = /* glsl */ `
         levelSize = 1.0 / 100.0;
         levelAlpha = pristineGrid(levelPos, ddx, ddy, vec2(levelSize));
         if (levelAlpha > epsilon) {
+            if (uResolution < 1) {
+                discard;
+            }
             gl_FragColor = vec4(vec3(0.7), levelAlpha);
             return;
         }
@@ -107,6 +111,9 @@ const fragmentCode = /* glsl */ `
         levelSize = 1.0 / 100.0;
         levelAlpha = pristineGrid(levelPos, ddx * 10.0, ddy * 10.0, vec2(levelSize));
         if (levelAlpha > epsilon) {
+            if (uResolution < 2) {
+                discard;
+            }
             gl_FragColor = vec4(vec3(0.7), levelAlpha);
             return;
         }
@@ -116,6 +123,21 @@ const fragmentCode = /* glsl */ `
 `;
 
 class Grid extends Script {
+    /**
+     * @type {number}
+     */
+    static RESOLUTION_LOW = 0;
+
+    /**
+     * @type {number}
+     */
+    static RESOLUTION_MEDIUM = 1;
+
+    /**
+     * @type {number}
+     */
+    static RESOLUTION_HIGH = 2;
+
     /**
      * @type {ShaderMaterial}
      * @private
@@ -146,11 +168,18 @@ class Grid extends Script {
      */
     _colorZ = new Color(0.3, 0.3, 1);
 
+    /**
+     * @type {number}
+     * @private
+     */
+    _resolution = Grid.RESOLUTION_HIGH;
+
     constructor(args) {
         super(args);
         const {
             colorX,
-            colorZ
+            colorZ,
+            resolution
         } = args.attributes;
 
         // ensure the entity has a render component
@@ -181,6 +210,7 @@ class Grid extends Script {
         this.halfExtents = this._calcHalfExtents(tmpVa) ?? this.halfExtents;
         this.colorX = colorX ?? this.colorX;
         this.colorZ = colorZ ?? this.colorZ;
+        this.resolution = resolution ?? this.resolution;
 
         // update the half extents when the entity scale changes
         this.app.on('prerender', () => {
@@ -213,6 +243,10 @@ class Grid extends Script {
 
         if (value instanceof Vec2) {
             this._material.setParameter(name, [value.x, value.y]);
+        }
+
+        if (typeof value === 'number') {
+            this._material.setParameter(name, value);
         }
 
         this._material.update();
@@ -266,6 +300,19 @@ class Grid extends Script {
 
     get colorZ() {
         return this._colorZ;
+    }
+
+    /**
+     * @attribute
+     * @type {number}
+     */
+    set resolution(value) {
+        this._resolution = value;
+        this._set('uResolution', this._resolution);
+    }
+
+    get resolution() {
+        return this._resolution;
     }
 }
 
