@@ -10,8 +10,7 @@ const _schema = [
     { name: 'enabled', type: 'boolean' },
     { name: 'orientation', type: 'number' },
     { name: 'value', type: 'number' },
-    { name: 'handleSize', type: 'number' },
-    { name: 'handleEntity', type: 'entity' }
+    { name: 'handleSize', type: 'number' }
 ];
 
 /**
@@ -36,11 +35,17 @@ class ScrollbarComponentSystem extends ComponentSystem {
 
         this.schema = _schema;
 
+        this.on('add', this._onAddComponent, this);
         this.on('beforeremove', this._onRemoveComponent, this);
     }
 
     initializeComponentData(component, data, properties) {
         super.initializeComponentData(component, data, _schema);
+        component.handleEntity = data.handleEntity;
+    }
+
+    _onAddComponent(entity) {
+        entity.fire('scrollbar:add');
     }
 
     _onRemoveComponent(entity, component) {
