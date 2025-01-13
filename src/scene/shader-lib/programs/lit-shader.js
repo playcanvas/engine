@@ -399,6 +399,7 @@ class LitShader {
         let code = this._fsGetBeginCode();
         code += this.varyings;
         code += this.varyingDefines;
+        code += this.chunks.floatAsUintPS;
         code += this.frontendDecl;
         code += this.frontendCode;
         code += ShaderGenerator.begin();
@@ -410,13 +411,7 @@ class LitShader {
         ` :
             // storing linear depth float value in RGBA8
             `
-            uint intBits = floatBitsToUint(vLinearDepth);
-            gl_FragColor = vec4(
-                float((intBits >> 24u) & 0xFFu) / 255.0,
-                float((intBits >> 16u) & 0xFFu) / 255.0,
-                float((intBits >> 8u) & 0xFFu) / 255.0,
-                float(intBits & 0xFFu) / 255.0
-            );
+            gl_FragColor = float2uint(vLinearDepth);
         `;
         code += ShaderGenerator.end();
 
@@ -441,6 +436,7 @@ class LitShader {
         const shadowInfo = shadowTypeInfo.get(shadowType);
         Debug.assert(shadowInfo);
         const isVsm = shadowInfo?.vsm ?? false;
+        const isPcss = shadowInfo?.pcss ?? false;
 
         let code = this._fsGetBeginCode();
 
@@ -472,19 +468,26 @@ class LitShader {
         // Directional: Always since light has no position
         // Spot: If not using VSM
         // Point: Never
-        const usePerspectiveDepth = lightType === LIGHTTYPE_DIRECTIONAL || (!isVsm && lightType === LIGHTTYPE_SPOT);
+        const usePerspectiveDepth = (lightType === LIGHTTYPE_DIRECTIONAL || (!isVsm && lightType === LIGHTTYPE_SPOT));
 
         // Flag if we are using non-standard depth, i.e gl_FragCoord.z
         let hasModifiedDepth = false;
         if (usePerspectiveDepth) {
             code += '    float depth = gl_FragCoord.z;\n';
+            if (isPcss) {
+                // spot/omni shadows currently use linear depth.
+                // TODO: use perspective depth for spot/omni the same way as directional
+                if (lightType !== LIGHTTYPE_DIRECTIONAL) {
+                    code += '    depth = linearizeDepth(depth, camera_params);\n';
+                }
+            }
         } else {
             code += '    float depth = min(distance(view_position, vPositionW) / light_radius, 0.99999);\n';
             hasModifiedDepth = true;
         }
 
         if (!isVsm) {
-            const exportR32 = shadowType === SHADOW_PCSS_32F;
+            const exportR32 = isPcss;
 
             if (exportR32) {
                 code += '    gl_FragColor.r = depth;\n';
@@ -583,6 +586,10 @@ class LitShader {
             if (light._shadowType === SHADOW_PCSS_32F && light.castShadows && !options.noShadow) {
                 decl.append(`uniform float light${i}_shadowSearchArea;`);
                 decl.append(`uniform vec4 light${i}_cameraParams;`);
+
+                if (lightType === LIGHTTYPE_DIRECTIONAL) {
+                    decl.append(`uniform vec4 light${i}_softShadowParams;`);
+                }
             }
 
             if (lightType === LIGHTTYPE_DIRECTIONAL) {
@@ -610,8 +617,9 @@ class LitShader {
                 // directional (cascaded) shadows
                 if (lightType === LIGHTTYPE_DIRECTIONAL) {
                     decl.append(`uniform mat4 light${i}_shadowMatrixPalette[4];`);
-                    decl.append(`uniform float light${i}_shadowCascadeDistances[4];`);
-                    decl.append(`uniform float light${i}_shadowCascadeCount;`);
+                    decl.append(`uniform vec4 light${i}_shadowCascadeDistances;`);
+                    decl.append(`uniform int light${i}_shadowCascadeCount;`);
+                    decl.append(`uniform float light${i}_shadowCascadeBlend;`);
                 }
                 decl.append(`uniform vec4 light${i}_shadowParams;`); // Width, height, bias, radius
                 if (lightType === LIGHTTYPE_DIRECTIONAL) {
@@ -797,6 +805,7 @@ class LitShader {
             if (usePcss) {
                 func.append(chunks.linearizeDepthPS);
                 func.append(chunks.shadowPCSSPS);
+                func.append(chunks.shadowSoftPS);
             }
         }
 
@@ -938,7 +947,7 @@ class LitShader {
                     uniform sampler2D ssaoTexture;
                     uniform vec2 ssaoTextureSizeInv;
                 `);
-            backend.append('litArgs_ao *= texture2DLodEXT(ssaoTexture, gl_FragCoord.xy * ssaoTextureSizeInv, 0.0).r;');
+            backend.append('litArgs_ao *= texture2DLod(ssaoTexture, gl_FragCoord.xy * ssaoTextureSizeInv, 0.0).r;');
         }
 
         // transform tangent space normals to world space
@@ -1209,8 +1218,14 @@ class LitShader {
 
                         let shadowMatrix = `light${i}_shadowMatrix`;
                         if (lightType === LIGHTTYPE_DIRECTIONAL && light.numCascades > 1) {
-                            // compute which cascade matrix needs to be used
-                            backend.append(`    getShadowCascadeMatrix(light${i}_shadowMatrixPalette, light${i}_shadowCascadeDistances, light${i}_shadowCascadeCount);`);
+                            // select shadow cascade matrix
+                            backend.append(`int cascadeIndex = getShadowCascadeIndex(light${i}_shadowCascadeDistances, light${i}_shadowCascadeCount);`);
+
+                            if (light.cascadeBlend > 0) {
+                                backend.append(`cascadeIndex = ditherShadowCascadeIndex(cascadeIndex, light${i}_shadowCascadeDistances, light${i}_shadowCascadeCount, light${i}_shadowCascadeBlend);`);
+                            }
+
+                            backend.append(`mat4 cascadeShadowMat = light${i}_shadowMatrixPalette[cascadeIndex];`);
                             shadowMatrix = 'cascadeShadowMat';
                         }
 
@@ -1227,7 +1242,7 @@ class LitShader {
                             // VSM
                             shadowCoordArgs = `${shadowCoordArgs}, ${evsmExp}, dLightDirW`;
                         } else if (pcssShadows) {
-                            let penumbraSizeArg = `vec2(light${i}_shadowSearchArea)`;
+                            let penumbraSizeArg =  lightType === LIGHTTYPE_DIRECTIONAL ? `light${i}_softShadowParams` : `vec2(light${i}_shadowSearchArea)`;
                             if (lightShape !== LIGHTSHAPE_PUNCTUAL) {
                                 penumbraSizeArg = `vec2(length(light${i}_halfWidth), length(light${i}_halfHeight)) * light${i}_shadowSearchArea`;
                             }

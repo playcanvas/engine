@@ -1,5 +1,4 @@
 import playcanvasConfig from '@playcanvas/eslint-config';
-import babelParser from '@babel/eslint-parser';
 import globals from 'globals';
 
 // Extract or preserve existing JSDoc tags
@@ -15,10 +14,6 @@ export default [
         languageOptions: {
             ecmaVersion: 2022,
             sourceType: 'module',
-            parser: babelParser,
-            parserOptions: {
-                requireConfigFile: false
-            },
             globals: {
                 ...globals.browser,
                 ...globals.mocha,
@@ -52,13 +47,13 @@ export default [
     {
         files: ['test/**/*.mjs'],
         rules: {
+            'import/order': 'error',
             'no-unused-expressions': 'off',
             'prefer-arrow-callback': 'off' // Mocha uses function callbacks
         }
     },
     {
         ignores: [
-            'tests/**/*',
             'examples/lib/*',
             'scripts/textmesh/*.min.js',
             'src/polyfill/*',

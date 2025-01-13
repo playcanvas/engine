@@ -754,6 +754,21 @@ function resolveDuplicatedEntityReferenceProperties(oldSubtreeRoot, oldEntity, n
             newEntity.render.resolveDuplicatedEntityReferenceProperties(components.render, duplicatedIdsMap);
         }
 
+        // Handle entity button attributes
+        if (components.button) {
+            newEntity.button.resolveDuplicatedEntityReferenceProperties(components.button, duplicatedIdsMap);
+        }
+
+        // Handle entity scrollview attributes
+        if (components.scrollview) {
+            newEntity.scrollview.resolveDuplicatedEntityReferenceProperties(components.scrollview, duplicatedIdsMap);
+        }
+
+        // Handle entity scrollbar attributes
+        if (components.scrollbar) {
+            newEntity.scrollbar.resolveDuplicatedEntityReferenceProperties(components.scrollbar, duplicatedIdsMap);
+        }
+
         // Handle entity anim attributes
         if (components.anim) {
             newEntity.anim.resolveDuplicatedEntityReferenceProperties(components.anim, duplicatedIdsMap);

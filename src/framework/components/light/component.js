@@ -7,9 +7,8 @@ import { properties } from './data.js';
 
 /**
  * @import { Color } from '../../../core/math/color.js'
- * @import { Entity } from '../../entity.js'
+ * @import { EventHandle } from '../../../core/event-handle.js'
  * @import { LightComponentData } from './data.js'
- * @import { LightComponentSystem } from './system.js'
  * @import { Light } from '../../../scene/light.js'
  * @import { Texture } from '../../../platform/graphics/texture.js'
  * @import { Vec2 } from '../../../core/math/vec2.js'
@@ -39,41 +38,39 @@ import { properties } from './data.js';
  * entity.light.range = 20;
  * ```
  *
+ * @hideconstructor
  * @category Graphics
  */
 class LightComponent extends Component {
     /**
-     * @type {import('../../../core/event-handle.js').EventHandle|null}
+     * @type {EventHandle|null}
      * @private
      */
     _evtLayersChanged = null;
 
     /**
-     * @type {import('../../../core/event-handle.js').EventHandle|null}
+     * @type {EventHandle|null}
      * @private
      */
     _evtLayerAdded = null;
 
     /**
-     * @type {import('../../../core/event-handle.js').EventHandle|null}
+     * @type {EventHandle|null}
      * @private
      */
     _evtLayerRemoved = null;
 
-    /**
-     * Creates a new LightComponent instance.
-     *
-     * @param {LightComponentSystem} system - The ComponentSystem that created this Component.
-     * @param {Entity} entity - The Entity that this Component is attached to.
-     */
-    constructor(system, entity) {
-        super(system, entity);
+    /** @private */
+    _cookieAsset = null;
 
-        this._cookieAsset = null;
-        this._cookieAssetId = null;
-        this._cookieAssetAdd = false;
-        this._cookieMatrix = null;
-    }
+    /** @private */
+    _cookieAssetId = null;
+
+    /** @private */
+    _cookieAssetAdd = false;
+
+    /** @private */
+    _cookieMatrix = null;
 
     // TODO: Remove this override in upgrading component
     /**
@@ -386,6 +383,28 @@ class LightComponent extends Component {
      */
     get numCascades() {
         return this.data.numCascades;
+    }
+
+    /**
+     * Sets the blend factor for cascaded shadow maps, defining the fraction of each cascade level
+     * used for blending between adjacent cascades. The value should be between 0 and 1, with
+     * a default of 0, which disables blending between cascades.
+     *
+     * @type {number}
+     */
+    set cascadeBlend(value) {
+        this._setValue('cascadeBlend', value, function (newValue, oldValue) {
+            this.light.cascadeBlend = math.clamp(newValue, 0, 1);
+        });
+    }
+
+    /**
+     * Gets the blend factor for cascaded shadow maps.
+     *
+     * @type {number}
+     */
+    get cascadeBlend() {
+        return this.data.cascadeBlend;
     }
 
     /**
@@ -1101,6 +1120,51 @@ class LightComponent extends Component {
     }
 
     /**
+     * Sets the number of shadow samples used for soft shadows when the shadow type is
+     * {@link SHADOW_PCSS_32F}. This value must be a positive whole number starting at 1. Higher
+     * values result in smoother shadows but can significantly decrease performance. Defaults to 16.
+     *
+     * @type {number}
+     */
+    set shadowSamples(value) {
+        this.light.shadowSamples = value;
+    }
+
+    /**
+     * Gets the number of shadow samples used for soft shadows.
+     *
+     * @type {number}
+     */
+    get shadowSamples() {
+        return this.light.shadowSamples;
+    }
+
+    /**
+     * Sets the number of blocker samples used for soft shadows when the shadow type is
+     * {@link SHADOW_PCSS_32F}. These samples are used to estimate the distance between the shadow
+     * caster and the shadow receiver, which is then used for the estimation of contact hardening in
+     * the shadow. This value must be a positive whole number starting at 0. Higher values improve
+     * shadow quality by considering more occlusion points, but can decrease performance. When set
+     * to 0, contact hardening is disabled and the shadow has constant softness. Defaults to 16. Note
+     * that this values can be lower than shadowSamples to optimize performance, often without large
+     * impact on quality.
+     *
+     * @type {number}
+     */
+    set shadowBlockerSamples(value) {
+        this.light.shadowBlockerSamples = value;
+    }
+
+    /**
+     * Gets the number of blocker samples used for contact hardening shadows.
+     *
+     * @type {number}
+     */
+    get shadowBlockerSamples() {
+        return this.light.shadowBlockerSamples;
+    }
+
+    /**
      * Sets the size of penumbra for contact hardening shadows. For area lights, acts as a
      * multiplier with the dimensions of the area light. For punctual and directional lights it's
      * the area size of the light. Defaults to 1.
@@ -1118,6 +1182,27 @@ class LightComponent extends Component {
      */
     get penumbraSize() {
         return this.light.penumbraSize;
+    }
+
+    /**
+     * Sets the falloff rate for shadow penumbra for contact hardening shadows. This is a value larger
+     * than or equal to 1. This parameter determines how quickly the shadow softens with distance.
+     * Higher values result in a faster softening of the shadow, while lower values produce a more
+     * gradual transition. Defaults to 1.
+     *
+     * @type {number}
+     */
+    set penumbraFalloff(value) {
+        this.light.penumbraFalloff = value;
+    }
+
+    /**
+     * Gets the falloff rate for shadow penumbra for contact hardening shadows.
+     *
+     * @type {number}
+     */
+    get penumbraFalloff() {
+        return this.light.penumbraFalloff;
     }
 
     /** @ignore */

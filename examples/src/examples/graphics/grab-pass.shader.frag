@@ -34,7 +34,7 @@ void main(void)
     float mipmap = roughness * 5.0;
 
     // get background pixel color with distorted offset
-    vec3 grabColor = texture2DLodEXT(uSceneColorMap, grabUv + offset, mipmap).rgb;
+    vec3 grabColor = texture2DLod(uSceneColorMap, grabUv + offset, mipmap).rgb;
 
     // tint the material based on mipmap
     float tintIndex = clamp(mipmap, 0.0, 3.0);

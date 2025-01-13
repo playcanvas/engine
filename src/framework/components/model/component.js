@@ -11,6 +11,7 @@ import { Component } from '../component.js';
 /**
  * @import { BoundingBox } from '../../../core/shape/bounding-box.js'
  * @import { Entity } from '../../entity.js'
+ * @import { EventHandle } from '../../../core/event-handle.js'
  * @import { LayerComposition } from '../../../scene/composition/layer-composition.js'
  * @import { Layer } from '../../../scene/layer.js'
  * @import { Material } from '../../../scene/materials/material.js'
@@ -21,6 +22,7 @@ import { Component } from '../component.js';
  * Enables an Entity to render a model or a primitive shape. This Component attaches additional
  * model geometry in to the scene graph below the Entity.
  *
+ * @hideconstructor
  * @category Graphics
  */
 class ModelComponent extends Component {
@@ -130,19 +132,19 @@ class ModelComponent extends Component {
     // #endif
 
     /**
-     * @type {import('../../../core/event-handle.js').EventHandle|null}
+     * @type {EventHandle|null}
      * @private
      */
     _evtLayersChanged = null;
 
     /**
-     * @type {import('../../../core/event-handle.js').EventHandle|null}
+     * @type {EventHandle|null}
      * @private
      */
     _evtLayerAdded = null;
 
     /**
-     * @type {import('../../../core/event-handle.js').EventHandle|null}
+     * @type {EventHandle|null}
      * @private
      */
     _evtLayerRemoved = null;

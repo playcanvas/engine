@@ -77,23 +77,11 @@ class ScriptHandler extends ResourceHandler {
         });
 
         // check if we're loading a module or a classic script
-        const [basePath, search] = url.load.split('?');
+        const [basePath] = url.load.split('?');
         const isEsmScript = basePath.endsWith('.mjs');
 
         if (isEsmScript) {
-
-            // The browser will hold its own cache of the script, so we need to bust it
-            let path = url.load;
-            if (path.startsWith(this._app.assets.prefix)) {
-                path = path.replace(this._app.assets.prefix, '');
-            }
-
-            const hash = this._app.assets.getByUrl(path).file.hash;
-            const searchParams = new URLSearchParams(search);
-            searchParams.set('hash', hash);
-            const urlWithHash = `${basePath}?${searchParams.toString()}`;
-
-            this._loadModule(urlWithHash, onScriptLoad);
+            this._loadModule(basePath, onScriptLoad);
         } else {
             this._loadScript(url.load, onScriptLoad);
         }

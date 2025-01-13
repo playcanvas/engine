@@ -46,6 +46,8 @@ const dataTypeMap = new Map([
 class StreamBuf {
     reader;
 
+    progressFunc;
+
     data;
 
     view;
@@ -54,8 +56,9 @@ class StreamBuf {
 
     tail = 0;
 
-    constructor(reader) {
+    constructor(reader, progressFunc) {
         this.reader = reader;
+        this.progressFunc = progressFunc;
     }
 
     // read the next chunk of data
@@ -67,6 +70,7 @@ class StreamBuf {
         }
 
         this.push(value);
+        this.progressFunc?.(value.byteLength);
     }
 
     // append data to the buffer
@@ -162,12 +166,16 @@ class StreamBuf {
 // string containing the ply format
 const parseHeader = (lines) => {
     const elements = [];
+    const comments = [];
     let format;
 
     for (let i = 1; i < lines.length; ++i) {
         const words = lines[i].split(' ');
 
         switch (words[0]) {
+            case 'comment':
+                comments.push(words.slice(1).join(' '));
+                break;
             case 'format':
                 format = words[1];
                 break;
@@ -196,7 +204,7 @@ const parseHeader = (lines) => {
         }
     }
 
-    return { elements, format };
+    return { elements, format, comments };
 };
 
 // return true if the array of elements references a compressed ply file
@@ -239,7 +247,7 @@ const isFloatPly = (elements) => {
 };
 
 // read the data of a compressed ply file
-const readCompressedPly = async (streamBuf, elements, littleEndian) => {
+const readCompressedPly = async (streamBuf, elements) => {
     const result = new GSplatCompressedData();
 
     const numChunks = elements[0].count;
@@ -294,7 +302,7 @@ const readCompressedPly = async (streamBuf, elements, littleEndian) => {
 };
 
 // read the data of a floating point ply file
-const readFloatPly = async (streamBuf, elements, littleEndian) => {
+const readFloatPly = async (streamBuf, elements) => {
     // calculate the size of an input element record
     const element = elements[0];
     const properties = element.properties;
@@ -336,7 +344,7 @@ const readFloatPly = async (streamBuf, elements, littleEndian) => {
     return new GSplatData(elements);
 };
 
-const readGeneralPly = async (streamBuf, elements, littleEndian) => {
+const readGeneralPly = async (streamBuf, elements) => {
     // read and deinterleave the data
     for (let i = 0; i < elements.length; ++i) {
         const element = elements[i];
@@ -391,9 +399,10 @@ const readGeneralPly = async (streamBuf, elements, littleEndian) => {
  *
  * @param {ReadableStreamDefaultReader<Uint8Array>} reader - The reader.
  * @param {Function|null} propertyFilter - Function to filter properties with.
- * @returns {Promise<GSplatData | GSplatCompressedData>} The ply file data.
+ * @param {Function|null} progressFunc - Function to call with progress updates.
+ * @returns {Promise<{ data: GSplatData | GSplatCompressedData, comments: string[] }>} The ply file data.
  */
-const readPly = async (reader, propertyFilter = null) => {
+const readPly = async (reader, propertyFilter = null, progressFunc = null) => {
     /**
      * Searches for the first occurrence of a sequence within a buffer.
      * @example
@@ -440,7 +449,7 @@ const readPly = async (reader, propertyFilter = null) => {
         return true;
     };
 
-    const streamBuf = new StreamBuf(reader);
+    const streamBuf = new StreamBuf(reader, progressFunc);
     let headerLength;
 
     while (true) {
@@ -464,14 +473,13 @@ const readPly = async (reader, propertyFilter = null) => {
     // decode buffer header text and split into lines and remove comments
     const lines = new TextDecoder('ascii')
     .decode(streamBuf.data.subarray(0, headerLength))
-    .split('\n')
-    .filter(line => !line.startsWith('comment '));
+    .split('\n');
 
     // decode header and build element and property list
-    const { elements, format } = parseHeader(lines);
+    const { elements, format, comments } = parseHeader(lines);
 
     // check format is supported
-    if (format !== 'binary_little_endian' && format !== 'binary_big_endian') {
+    if (format !== 'binary_little_endian') {
         throw new Error('Unsupported ply format');
     }
 
@@ -480,29 +488,36 @@ const readPly = async (reader, propertyFilter = null) => {
     streamBuf.head = headerLength + endHeaderBytes.length;
     streamBuf.compact();
 
-    // load compressed PLY with fast path
-    if (isCompressedPly(elements)) {
-        return await readCompressedPly(streamBuf, elements, format === 'binary_little_endian');
-    }
+    const readData = async () => {
+        // load compressed PLY with fast path
+        if (isCompressedPly(elements)) {
+            return await readCompressedPly(streamBuf, elements);
+        }
 
-    // allocate element storage
-    elements.forEach((e) => {
-        e.properties.forEach((p) => {
-            const storageType = dataTypeMap.get(p.type);
-            if (storageType) {
-                const storage = (!propertyFilter || propertyFilter(p.name)) ? new storageType(e.count) : null;
-                p.storage = storage;
-            }
+        // allocate element storage
+        elements.forEach((e) => {
+            e.properties.forEach((p) => {
+                const storageType = dataTypeMap.get(p.type);
+                if (storageType) {
+                    const storage = (!propertyFilter || propertyFilter(p.name)) ? new storageType(e.count) : null;
+                    p.storage = storage;
+                }
+            });
         });
-    });
 
-    // load float32 PLY with fast path
-    if (isFloatPly(elements)) {
-        return await readFloatPly(streamBuf, elements, format === 'binary_little_endian');
-    }
+        // load float32 PLY with fast path
+        if (isFloatPly(elements)) {
+            return await readFloatPly(streamBuf, elements);
+        }
 
-    // fallback, general case
-    return await readGeneralPly(streamBuf, elements, format === 'binary_little_endian');
+        // fallback, general case
+        return await readGeneralPly(streamBuf, elements);
+    };
+
+    return {
+        data: await readData(),
+        comments
+    };
 };
 
 // by default load everything
@@ -543,19 +558,32 @@ class PlyParser {
             if (!response || !response.body) {
                 callback('Error loading resource', null);
             } else {
-                const gsplatData = await readPly(response.body.getReader(), asset.data.elementFilter ?? defaultElementFilter);
+                const totalLength = parseInt(response.headers.get('content-length') ?? '0', 10);
+                let totalReceived = 0;
+
+                const { data, comments } = await readPly(
+                    response.body.getReader(),
+                    asset.data.elementFilter ?? defaultElementFilter,
+                    (bytes) => {
+                        totalReceived += bytes;
+                        if (asset) {
+                            asset.fire('progress', totalReceived, totalLength);
+                        }
+                    }
+                );
 
                 // reorder data
-                if (!gsplatData.isCompressed) {
+                if (!data.isCompressed) {
                     if (asset.data.reorder ?? true) {
-                        gsplatData.reorderData();
+                        data.reorderData();
                     }
                 }
 
                 // construct the resource
                 const resource = new GSplatResource(
                     this.device,
-                    gsplatData.isCompressed && asset.data.decompress ? gsplatData.decompress() : gsplatData
+                    data.isCompressed && asset.data.decompress ? data.decompress() : data,
+                    comments
                 );
 
                 callback(null, resource);

@@ -1,13 +1,14 @@
 export default /* glsl */`
 
 /**
- * PCSS is a shadow sampling method that provides contact hardening soft shadows. 
+ * PCSS is a shadow sampling method that provides contact hardening soft shadows, used for omni and spot lights.
  * Based on: 
  * - https://www.gamedev.net/tutorials/programming/graphics/effect-area-light-shadows-part-1-pcss-r4971/
  * - https://github.com/pboechat/PCSS 
  */
 
 #define PCSS_SAMPLE_COUNT 16
+
 uniform float pcssDiskSamples[PCSS_SAMPLE_COUNT];
 uniform float pcssSphereSamples[PCSS_SAMPLE_COUNT];
 
@@ -40,7 +41,7 @@ float viewSpaceDepth(float depth, mat4 invProjection) {
     return viewSpace.z;
 }
 
-float PCSSBlockerDistance(TEXTURE_ACCEPT(shadowMap), vec2 sampleCoords[PCSS_SAMPLE_COUNT], vec2 shadowCoords, vec2 searchSize, float z) {
+float PCSSBlockerDistance(TEXTURE_ACCEPT(shadowMap), vec2 sampleCoords[PCSS_SAMPLE_COUNT], vec2 shadowCoords, vec2 searchSize, float z, vec4 cameraParams) {
 
     float blockers = 0.0;
     float averageBlocker = 0.0;
@@ -48,19 +49,20 @@ float PCSSBlockerDistance(TEXTURE_ACCEPT(shadowMap), vec2 sampleCoords[PCSS_SAMP
         vec2 offset = sampleCoords[i] * searchSize;
         vec2 sampleUV = shadowCoords + offset;
 
-        float blocker = textureLod(shadowMap, sampleUV, 0.0).r;
+        float blocker = texture2DLod(shadowMap, sampleUV, 0.0).r;
         float isBlocking = step(blocker, z);
         blockers += isBlocking;
         averageBlocker += blocker * isBlocking;
     }
 
     if (blockers > 0.0)
-        return averageBlocker /= blockers;
+        return averageBlocker / blockers;
     return -1.0;
 }
 
 float PCSS(TEXTURE_ACCEPT(shadowMap), vec3 shadowCoords, vec4 cameraParams, vec2 shadowSearchArea) {
-    float receiverDepth = shadowCoords.z;
+    float receiverDepth = linearizeDepth(shadowCoords.z, cameraParams);
+
     vec2 samplePoints[PCSS_SAMPLE_COUNT];
     float noise = noise( gl_FragCoord.xy ) * 2.0 * PI;
     for (int i = 0; i < PCSS_SAMPLE_COUNT; i++) {
@@ -68,12 +70,12 @@ float PCSS(TEXTURE_ACCEPT(shadowMap), vec3 shadowCoords, vec4 cameraParams, vec2
         samplePoints[i] = vogelDisk(i, float(PCSS_SAMPLE_COUNT), noise, pcssPresample);
     }
 
-    float averageBlocker = PCSSBlockerDistance(TEXTURE_PASS(shadowMap), samplePoints, shadowCoords.xy, shadowSearchArea, receiverDepth);
+    float averageBlocker = PCSSBlockerDistance(TEXTURE_PASS(shadowMap), samplePoints, shadowCoords.xy, shadowSearchArea, receiverDepth, cameraParams);
     if (averageBlocker == -1.0) {
         return 1.0;
     } else {
-
-        vec2 filterRadius = ((receiverDepth - averageBlocker) / averageBlocker) * shadowSearchArea * cameraParams.x;
+        float depthDifference = (receiverDepth - averageBlocker) / 3.0;
+        vec2 filterRadius = depthDifference * shadowSearchArea;
 
         float shadow = 0.0;
 
@@ -82,12 +84,14 @@ float PCSS(TEXTURE_ACCEPT(shadowMap), vec3 shadowCoords, vec4 cameraParams, vec2
             vec2 sampleUV = samplePoints[i] * filterRadius;
             sampleUV = shadowCoords.xy + sampleUV;
 
-            float depth = textureLod(shadowMap, sampleUV, 0.0).r;
+            float depth = texture2DLod(shadowMap, sampleUV, 0.0).r;
             shadow += step(receiverDepth, depth);
         }
         return shadow / float(PCSS_SAMPLE_COUNT);
     } 
 }
+
+#ifndef WEBGPU
 
 float PCSSCubeBlockerDistance(samplerCube shadowMap, vec3 lightDirNorm, vec3 samplePoints[PCSS_SAMPLE_COUNT], float z, float shadowSearchArea) {
     float blockers = 0.0;
@@ -96,14 +100,14 @@ float PCSSCubeBlockerDistance(samplerCube shadowMap, vec3 lightDirNorm, vec3 sam
         vec3 sampleDir = lightDirNorm + samplePoints[i] * shadowSearchArea;
         sampleDir = normalize(sampleDir);
 
-        float blocker = textureCubeLodEXT(shadowMap, sampleDir, 0.0).r;
+        float blocker = textureCubeLod(shadowMap, sampleDir, 0.0).r;
         float isBlocking = step(blocker, z);
         blockers += isBlocking;
         averageBlocker += blocker * isBlocking;
     }
 
     if (blockers > 0.0)
-        return averageBlocker /= float(blockers);
+        return averageBlocker / blockers;
     return -1.0;
 }
 
@@ -133,7 +137,7 @@ float PCSSCube(samplerCube shadowMap, vec4 shadowParams, vec3 shadowCoords, vec4
             vec3 sampleDir = lightDirNorm + offset;
             sampleDir = normalize(sampleDir);
 
-            float depth = textureCubeLodEXT(shadowMap, sampleDir, 0.0).r;
+            float depth = textureCubeLod(shadowMap, sampleDir, 0.0).r;
             shadow += step(receiverDepth, depth);
         }
         return shadow / float(PCSS_SAMPLE_COUNT);
@@ -144,11 +148,9 @@ float getShadowPointPCSS(samplerCube shadowMap, vec3 shadowCoord, vec4 shadowPar
     return PCSSCube(shadowMap, shadowParams, shadowCoord, cameraParams, shadowSearchArea.x, lightDir);
 }
 
-float getShadowSpotPCSS(TEXTURE_ACCEPT(shadowMap), vec3 shadowCoord, vec4 shadowParams, vec4 cameraParams, vec2 shadowSearchArea, vec3 lightDir) {
-    return PCSS(TEXTURE_PASS(shadowMap), shadowCoord, cameraParams, shadowSearchArea);
-}
+#endif
 
-float getShadowPCSS(TEXTURE_ACCEPT(shadowMap), vec3 shadowCoord, vec4 shadowParams, vec4 cameraParams, vec2 shadowSearchArea, vec3 lightDir) {
+float getShadowSpotPCSS(TEXTURE_ACCEPT(shadowMap), vec3 shadowCoord, vec4 shadowParams, vec4 cameraParams, vec2 shadowSearchArea, vec3 lightDir) {
     return PCSS(TEXTURE_PASS(shadowMap), shadowCoord, cameraParams, shadowSearchArea);
 }
 

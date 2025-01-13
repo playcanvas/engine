@@ -15,7 +15,8 @@ import {
     isIntegerPixelFormat, FILTER_NEAREST, TEXTURELOCK_NONE, TEXTURELOCK_READ,
     TEXPROPERTY_MIN_FILTER, TEXPROPERTY_MAG_FILTER, TEXPROPERTY_ADDRESS_U, TEXPROPERTY_ADDRESS_V,
     TEXPROPERTY_ADDRESS_W, TEXPROPERTY_COMPARE_ON_READ, TEXPROPERTY_COMPARE_FUNC, TEXPROPERTY_ANISOTROPY,
-    TEXPROPERTY_ALL, requiresManualGamma
+    TEXPROPERTY_ALL, requiresManualGamma,
+    pixelFormatInfo
 
 } from './constants.js';
 import { TextureUtils } from './texture-utils.js';
@@ -295,7 +296,7 @@ class Texture {
         // track the texture
         graphicsDevice.textures.push(this);
 
-        Debug.trace(TRACEID_TEXTURE_ALLOC, `Alloc: Id ${this.id} ${this.name}: ${this.width}x${this.height} ` +
+        Debug.trace(TRACEID_TEXTURE_ALLOC, `Alloc: Id ${this.id} ${this.name}: ${this.width}x${this.height} [${pixelFormatInfo.get(this.format)?.name}]` +
             `${this.cubemap ? '[Cubemap]' : ''}` +
             `${this.volume ? '[Volume]' : ''}` +
             `${this.array ? '[Array]' : ''}` +
@@ -954,8 +955,13 @@ class Texture {
                     this._levelsUpdated[mipLevel] = true;
                 }
 
-                width = source.width;
-                height = source.height;
+                if (source instanceof HTMLVideoElement) {
+                    width = source.videoWidth;
+                    height = source.videoHeight;
+                } else {
+                    width = source.width;
+                    height = source.height;
+                }
             }
         }
 

@@ -220,6 +220,7 @@ class WebgpuGraphicsDevice extends GraphicsDevice {
             return supported;
         };
         this.textureFloatFilterable = requireFeature('float32-filterable');
+        this.textureFloatBlendable = requireFeature('float32-blendable');
         this.extCompressedTextureS3TC = requireFeature('texture-compression-bc');
         this.extCompressedTextureETC = requireFeature('texture-compression-etc2');
         this.extCompressedTextureASTC = requireFeature('texture-compression-astc');
