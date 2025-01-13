@@ -2,12 +2,7 @@
 import { deviceType, fileImport, rootPath } from 'examples/utils';
 import * as pc from 'playcanvas';
 
-const {
-    KeyboardMouseInput,
-    MobileInput,
-    GamePadInput,
-    FirstPersonController
-} = await fileImport(`${rootPath}/static/scripts/esm/first-person-controller.mjs`);
+const { FirstPersonController } = await fileImport(`${rootPath}/static/scripts/esm/first-person-controller.mjs`);
 
 const canvas = /** @type {HTMLCanvasElement} */ (document.getElementById('application-canvas'));
 window.focus();
@@ -124,9 +119,6 @@ function createCharacterController(camera) {
             jumpForce: 850
         }
     });
-    entity.script.create(KeyboardMouseInput);
-    entity.script.create(MobileInput);
-    entity.script.create(GamePadInput);
 
     return entity;
 }

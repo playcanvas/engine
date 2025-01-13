@@ -1,7 +1,7 @@
 /* eslint-disable-next-line import/no-unresolved */
 import { math, Script, Vec2, Vec3, Mat4 } from 'playcanvas';
 
-/** @import { GraphicsDevice, Entity, RigidBodyComponent } from 'playcanvas' */
+/** @import { AppBase, GraphicsDevice, Entity, RigidBodyComponent } from 'playcanvas' */
 
 const LOOK_MAX_ANGLE = 90;
 
@@ -31,7 +31,13 @@ const applyRadialDeadZone = (pos, remappedPos, deadZoneLow, deadZoneHigh) => {
     }
 };
 
-class KeyboardMouseInput extends Script {
+class KeyboardMouseInput {
+    /**
+     * @private
+     * @type {AppBase}
+     */
+    _app;
+
     /**
      * @type {HTMLCanvasElement}
      * @private
@@ -39,20 +45,41 @@ class KeyboardMouseInput extends Script {
     _canvas;
 
     /**
-     * @param {object} args - The script arguments.
+     * @type {boolean}
+     * @private
      */
-    constructor(args) {
-        super(args);
-        this._canvas = this.app.graphicsDevice.canvas;
+    _enabled = true;
+
+    /**
+     * @param {AppBase} app - The application.
+     */
+    constructor(app) {
+        this._app = app;
+        this._canvas = app.graphicsDevice.canvas;
 
         this._onKeyDown = this._onKeyDown.bind(this);
         this._onKeyUp = this._onKeyUp.bind(this);
         this._onMouseDown = this._onMouseDown.bind(this);
         this._onMouseMove = this._onMouseMove.bind(this);
 
-        this.on('enable', () => this._bind());
-        this.on('disable', () => this._unbind());
         this._bind();
+    }
+
+    set enabled(value) {
+        if (value === this._enabled) {
+            return;
+        }
+        this._enabled = value;
+
+        if (value) {
+            this._bind();
+        } else {
+            this._unbind();
+        }
+    }
+
+    get enabled() {
+        return this._enabled;
     }
 
     /**
@@ -84,25 +111,25 @@ class KeyboardMouseInput extends Script {
         switch (key.toLowerCase()) {
             case 'w':
             case 'arrowup':
-                this.app.fire('cc:move:forward', val);
+                this._app.fire('cc:move:forward', val);
                 break;
             case 's':
             case 'arrowdown':
-                this.app.fire('cc:move:backward', val);
+                this._app.fire('cc:move:backward', val);
                 break;
             case 'a':
             case 'arrowleft':
-                this.app.fire('cc:move:left', val);
+                this._app.fire('cc:move:left', val);
                 break;
             case 'd':
             case 'arrowright':
-                this.app.fire('cc:move:right', val);
+                this._app.fire('cc:move:right', val);
                 break;
             case ' ':
-                this.app.fire('cc:jump', !!val);
+                this._app.fire('cc:jump', !!val);
                 break;
             case 'shift':
-                this.app.fire('cc:sprint', !!val);
+                this._app.fire('cc:sprint', !!val);
                 break;
         }
     }
@@ -151,7 +178,7 @@ class KeyboardMouseInput extends Script {
         const movementX = e.movementX || 0;
         const movementY = e.movementY || 0;
 
-        this.app.fire('cc:look', movementX, movementY);
+        this._app.fire('cc:look', movementX, movementY);
     }
 
     destroy() {
@@ -159,7 +186,13 @@ class KeyboardMouseInput extends Script {
     }
 }
 
-class MobileInput extends Script {
+class MobileInput {
+    /**
+     * @type {AppBase}
+     * @private
+     */
+    _app;
+
     /**
      * @type {GraphicsDevice}
      * @private
@@ -211,6 +244,12 @@ class MobileInput extends Script {
     };
 
     /**
+     * @type {boolean}
+     * @private
+     */
+    _enabled = true;
+
+    /**
      * @attribute
      * @title Dead Zone
      * @description Radial thickness of inner dead zone of the virtual joysticks. This dead zone ensures the virtual joysticks report a value of 0 even if a touch deviates a small amount from the initial touch.
@@ -244,32 +283,48 @@ class MobileInput extends Script {
     doubleTapInterval = 300;
 
     /**
-     * @param {object} args - The script arguments.
+     * @param {AppBase} app - The application.
+     * @param {object} args - The arguments.
      */
-    constructor(args) {
-        super(args);
+    constructor(app, args = {}) {
+        this._app = app;
         const {
             deadZone,
             turnSpeed,
             radius,
             doubleTapInterval
-        } = args.attributes;
+        } = args;
 
         this.deadZone = deadZone ?? this.deadZone;
         this.turnSpeed = turnSpeed ?? this.turnSpeed;
         this.radius = radius ?? this.radius;
         this.doubleTapInterval = doubleTapInterval ?? this.doubleTapInterval;
 
-        this._device = this.app.graphicsDevice;
+        this._device = this._app.graphicsDevice;
         this._canvas = this._device.canvas;
 
         this._onTouchStart = this._onTouchStart.bind(this);
         this._onTouchMove = this._onTouchMove.bind(this);
         this._onTouchEnd = this._onTouchEnd.bind(this);
 
-        this.on('enable', () => this._bind());
-        this.on('disable', () => this._unbind());
         this._bind();
+    }
+
+    set enabled(value) {
+        if (value === this._enabled) {
+            return;
+        }
+        this._enabled = value;
+
+        if (value) {
+            this._bind();
+        } else {
+            this._unbind();
+        }
+    }
+
+    get enabled() {
+        return this._enabled;
     }
 
     /**
@@ -309,13 +364,13 @@ class MobileInput extends Script {
                 this._leftStick.identifier = touch.identifier;
                 this._leftStick.center.set(touch.pageX, touch.pageY);
                 this._leftStick.pos.set(0, 0);
-                this.app.fire('leftjoystick:enable', touch.pageX * xFactor, touch.pageY * yFactor);
+                this._app.fire('leftjoystick:enable', touch.pageX * xFactor, touch.pageY * yFactor);
             } else if (touch.pageX > this._canvas.clientWidth / 2 && this._rightStick.identifier === -1) {
                 // ...otherwise create a right virtual joystick
                 this._rightStick.identifier = touch.identifier;
                 this._rightStick.center.set(touch.pageX, touch.pageY);
                 this._rightStick.pos.set(0, 0);
-                this.app.fire('rightjoystick:enable', touch.pageX * xFactor, touch.pageY * yFactor);
+                this._app.fire('rightjoystick:enable', touch.pageX * xFactor, touch.pageY * yFactor);
 
                 // See how long since the last tap of the right virtual joystick to detect a double tap (jump)
                 const now = Date.now();
@@ -323,8 +378,8 @@ class MobileInput extends Script {
                     if (this._jumpTimeout) {
                         clearTimeout(this._jumpTimeout);
                     }
-                    this.app.fire('cc:jump', true);
-                    this._jumpTimeout = setTimeout(() => this.app.fire('cc:jump', false), 50);
+                    this._app.fire('cc:jump', true);
+                    this._jumpTimeout = setTimeout(() => this._app.fire('cc:jump', false), 50);
                 }
                 this._lastRightTap = now;
             }
@@ -350,12 +405,12 @@ class MobileInput extends Script {
                 this._leftStick.pos.set(touch.pageX, touch.pageY);
                 this._leftStick.pos.sub(this._leftStick.center);
                 this._leftStick.pos.scale(1 / this.radius);
-                this.app.fire('leftjoystick:move', touch.pageX * xFactor, touch.pageY * yFactor);
+                this._app.fire('leftjoystick:move', touch.pageX * xFactor, touch.pageY * yFactor);
             } else if (touch.identifier === this._rightStick.identifier) {
                 this._rightStick.pos.set(touch.pageX, touch.pageY);
                 this._rightStick.pos.sub(this._rightStick.center);
                 this._rightStick.pos.scale(1 / this.radius);
-                this.app.fire('rightjoystick:move', touch.pageX * xFactor, touch.pageY * yFactor);
+                this._app.fire('rightjoystick:move', touch.pageX * xFactor, touch.pageY * yFactor);
             }
         }
     }
@@ -374,19 +429,23 @@ class MobileInput extends Script {
             // If this touch is one of the sticks, get rid of it...
             if (touch.identifier === this._leftStick.identifier) {
                 this._leftStick.identifier = -1;
-                this.app.fire('cc:move:forward', 0);
-                this.app.fire('cc:move:backward', 0);
-                this.app.fire('cc:move:left', 0);
-                this.app.fire('cc:move:right', 0);
-                this.app.fire('leftjoystick:disable');
+                this._app.fire('cc:move:forward', 0);
+                this._app.fire('cc:move:backward', 0);
+                this._app.fire('cc:move:left', 0);
+                this._app.fire('cc:move:right', 0);
+                this._app.fire('leftjoystick:disable');
             } else if (touch.identifier === this._rightStick.identifier) {
                 this._rightStick.identifier = -1;
-                this.app.fire('rightjoystick:disable');
+                this._app.fire('rightjoystick:disable');
             }
         }
     }
 
     update() {
+        if (!this.enabled) {
+            return;
+        }
+
         // Moving
         if (this._leftStick.identifier !== -1) {
             // Apply a lower radial dead zone. We don't need an upper zone like with a real joypad
@@ -395,16 +454,16 @@ class MobileInput extends Script {
             const forward = -this._remappedPos.y;
             if (this._lastForward !== forward) {
                 if (forward > 0) {
-                    this.app.fire('cc:move:forward', Math.abs(forward));
-                    this.app.fire('cc:move:backward', 0);
+                    this._app.fire('cc:move:forward', Math.abs(forward));
+                    this._app.fire('cc:move:backward', 0);
                 }
                 if (forward < 0) {
-                    this.app.fire('cc:move:forward', 0);
-                    this.app.fire('cc:move:backward', Math.abs(forward));
+                    this._app.fire('cc:move:forward', 0);
+                    this._app.fire('cc:move:backward', Math.abs(forward));
                 }
                 if (forward === 0) {
-                    this.app.fire('cc:move:forward', 0);
-                    this.app.fire('cc:move:backward', 0);
+                    this._app.fire('cc:move:forward', 0);
+                    this._app.fire('cc:move:backward', 0);
                 }
                 this._lastForward = forward;
             }
@@ -412,16 +471,16 @@ class MobileInput extends Script {
             const strafe = this._remappedPos.x;
             if (this._lastStrafe !== strafe) {
                 if (strafe > 0) {
-                    this.app.fire('cc:move:left', 0);
-                    this.app.fire('cc:move:right', Math.abs(strafe));
+                    this._app.fire('cc:move:left', 0);
+                    this._app.fire('cc:move:right', Math.abs(strafe));
                 }
                 if (strafe < 0) {
-                    this.app.fire('cc:move:left', Math.abs(strafe));
-                    this.app.fire('cc:move:right', 0);
+                    this._app.fire('cc:move:left', Math.abs(strafe));
+                    this._app.fire('cc:move:right', 0);
                 }
                 if (strafe === 0) {
-                    this.app.fire('cc:move:left', 0);
-                    this.app.fire('cc:move:right', 0);
+                    this._app.fire('cc:move:left', 0);
+                    this._app.fire('cc:move:right', 0);
                 }
                 this._lastStrafe = strafe;
             }
@@ -434,7 +493,7 @@ class MobileInput extends Script {
 
             const movX = this._remappedPos.x * this.turnSpeed;
             const movY = this._remappedPos.y * this.turnSpeed;
-            this.app.fire('cc:look', movX, movY);
+            this._app.fire('cc:look', movX, movY);
         }
     }
 
@@ -443,7 +502,13 @@ class MobileInput extends Script {
     }
 }
 
-class GamePadInput extends Script {
+class GamePadInput {
+    /**
+     * @type {AppBase}
+     * @private
+     */
+    _app;
+
     /**
      * @type {ReturnType<typeof setTimeout> | null}
      * @private
@@ -493,6 +558,12 @@ class GamePadInput extends Script {
     };
 
     /**
+     * @type {boolean}
+     * @private
+     */
+    _enabled = true;
+
+    /**
      * @attribute
      * @title Dead Zone Low
      * @description Radial thickness of inner dead zone of pad's joysticks. This dead zone ensures that all pads report a value of 0 for each joystick axis when untouched.
@@ -519,22 +590,38 @@ class GamePadInput extends Script {
     turnSpeed = 30;
 
     /**
-     * @param {object} args - The script arguments.
+     * @param {AppBase} app - The application.
+     * @param {object} args - The arguments.
      */
-    constructor(args) {
-        super(args);
+    constructor(app, args = {}) {
+        this.app = app;
         const {
             deadZoneLow,
             deadZoneHigh,
             turnSpeed
-        } = args.attributes;
+        } = args;
 
         this.deadZoneLow = deadZoneLow ?? this.deadZoneLow;
         this.deadZoneHigh = deadZoneHigh ?? this.deadZoneHigh;
         this.turnSpeed = turnSpeed ?? this.turnSpeed;
     }
 
+    set enabled(value) {
+        if (value === this._enabled) {
+            return;
+        }
+        this._enabled = value;
+    }
+
+    get enabled() {
+        return this._enabled;
+    }
+
     update() {
+        if (!this.enabled) {
+            return;
+        }
+
         const gamepads = navigator.getGamepads ? navigator.getGamepads() : [];
 
         for (let i = 0; i < gamepads.length; i++) {
@@ -549,16 +636,16 @@ class GamePadInput extends Script {
                 const forward = -this._remappedPos.y;
                 if (this._lastForward !== forward) {
                     if (forward > 0) {
-                        this.app.fire('cc:move:forward', Math.abs(forward));
-                        this.app.fire('cc:move:backward', 0);
+                        this._app.fire('cc:move:forward', Math.abs(forward));
+                        this._app.fire('cc:move:backward', 0);
                     }
                     if (forward < 0) {
-                        this.app.fire('cc:move:forward', 0);
-                        this.app.fire('cc:move:backward', Math.abs(forward));
+                        this._app.fire('cc:move:forward', 0);
+                        this._app.fire('cc:move:backward', Math.abs(forward));
                     }
                     if (forward === 0) {
-                        this.app.fire('cc:move:forward', 0);
-                        this.app.fire('cc:move:backward', 0);
+                        this._app.fire('cc:move:forward', 0);
+                        this._app.fire('cc:move:backward', 0);
                     }
                     this._lastForward = forward;
                 }
@@ -566,16 +653,16 @@ class GamePadInput extends Script {
                 const strafe = this._remappedPos.x;
                 if (this._lastStrafe !== strafe) {
                     if (strafe > 0) {
-                        this.app.fire('cc:move:left', 0);
-                        this.app.fire('cc:move:right', Math.abs(strafe));
+                        this._app.fire('cc:move:left', 0);
+                        this._app.fire('cc:move:right', Math.abs(strafe));
                     }
                     if (strafe < 0) {
-                        this.app.fire('cc:move:left', Math.abs(strafe));
-                        this.app.fire('cc:move:right', 0);
+                        this._app.fire('cc:move:left', Math.abs(strafe));
+                        this._app.fire('cc:move:right', 0);
                     }
                     if (strafe === 0) {
-                        this.app.fire('cc:move:left', 0);
-                        this.app.fire('cc:move:right', 0);
+                        this._app.fire('cc:move:left', 0);
+                        this._app.fire('cc:move:right', 0);
                     }
                     this._lastStrafe = strafe;
                 }
@@ -586,19 +673,23 @@ class GamePadInput extends Script {
 
                 const movX = this._remappedPos.x * this.turnSpeed;
                 const movY = this._remappedPos.y * this.turnSpeed;
-                this.app.fire('cc:look', movX, movY);
+                this._app.fire('cc:look', movX, movY);
 
                 // Jumping (bottom button of right cluster)
                 if (gamepad.buttons[0].pressed && !this._lastJump) {
                     if (this._jumpTimeout) {
                         clearTimeout(this._jumpTimeout);
                     }
-                    this.app.fire('cc:jump', true);
-                    this._jumpTimeout = setTimeout(() => this.app.fire('cc:jump', false), 50);
+                    this._app.fire('cc:jump', true);
+                    this._jumpTimeout = setTimeout(() => this._app.fire('cc:jump', false), 50);
                 }
                 this._lastJump = gamepad.buttons[0].pressed;
             }
         }
+    }
+
+    destroy() {
+        this.enabled = false;
     }
 }
 
@@ -614,6 +705,24 @@ class FirstPersonController extends Script {
      * @private
      */
     _jumping = false;
+
+    /**
+     * @type {KeyboardMouseInput}
+     * @private
+     */
+    _keyboardMouseInput;
+
+    /**
+     * @type {MobileInput}
+     * @private
+     */
+    _mobileInput;
+
+    /**
+     * @type {GamePadInput}
+     * @private
+     */
+    _gamepadInput;
 
     /**
      * @type {Vec2}
@@ -747,6 +856,22 @@ class FirstPersonController extends Script {
         this.app.on('cc:sprint', (state) => {
             this.controls.sprint = state;
         });
+
+        // input
+        this._keyboardMouseInput = new KeyboardMouseInput(this.app);
+        this._mobileInput = new MobileInput(this.app);
+        this._gamepadInput = new GamePadInput(this.app);
+
+        this.on('enable', () => {
+            this._keyboardMouseInput.enabled = true;
+            this._mobileInput.enabled = true;
+            this._gamepadInput.enabled = true;
+        });
+        this.on('disable', () => {
+            this._keyboardMouseInput.enabled = false;
+            this._mobileInput.enabled = false;
+            this._gamepadInput.enabled = false;
+        });
     }
 
     /**
@@ -819,16 +944,20 @@ class FirstPersonController extends Script {
      * @param {number} dt - The delta time.
      */
     update(dt) {
+        this._mobileInput.update();
+        this._gamepadInput.update();
+
         this._checkIfGrounded();
         this._jump();
         this._look();
         this._move(dt);
     }
+
+    destroy() {
+        this._keyboardMouseInput.destroy();
+        this._mobileInput.destroy();
+        this._gamepadInput.destroy();
+    }
 }
 
-export {
-    KeyboardMouseInput,
-    MobileInput,
-    GamePadInput,
-    FirstPersonController
-};
+export { FirstPersonController };
