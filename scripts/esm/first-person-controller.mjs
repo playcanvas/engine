@@ -218,6 +218,18 @@ class MobileInput {
     _jumpTimeout = null;
 
     /**
+     * @type {number}
+     * @private
+     */
+    _lastForward = 0;
+
+    /**
+     * @type {number}
+     * @private
+     */
+    _lastStrafe = 0;
+
+    /**
      * @type {Vec2}
      * @private
      */
