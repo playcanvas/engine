@@ -250,55 +250,30 @@ class MobileInput {
     _enabled = true;
 
     /**
-     * @attribute
-     * @title Dead Zone
-     * @description Radial thickness of inner dead zone of the virtual joysticks. This dead zone ensures the virtual joysticks report a value of 0 even if a touch deviates a small amount from the initial touch.
      * @type {number}
-     * @range [0, 0.4]
      */
     deadZone = 0.3;
 
     /**
-     * @attribute
-     * @title Turn Speed
-     * @description Maximum turn speed in degrees per second
      * @type {number}
      */
     turnSpeed = 30;
 
     /**
-     * @attribute
-     * @title Radius
-     * @description The radius of the virtual joystick in CSS pixels.
      * @type {number}
      */
     radius = 50;
 
     /**
-     * @attribute
-     * @title Double Tap Interval
-     * @description The time in milliseconds between two taps of the right virtual joystick for a double tap to register. A double tap will trigger a cc:jump.
      * @type {number}
      */
     doubleTapInterval = 300;
 
     /**
      * @param {AppBase} app - The application.
-     * @param {object} args - The arguments.
      */
-    constructor(app, args = {}) {
+    constructor(app) {
         this._app = app;
-        const {
-            deadZone,
-            turnSpeed,
-            radius,
-            doubleTapInterval
-        } = args;
-
-        this.deadZone = deadZone ?? this.deadZone;
-        this.turnSpeed = turnSpeed ?? this.turnSpeed;
-        this.radius = radius ?? this.radius;
-        this.doubleTapInterval = doubleTapInterval ?? this.doubleTapInterval;
 
         this._device = this._app.graphicsDevice;
         this._canvas = this._device.canvas;
@@ -564,46 +539,25 @@ class GamePadInput {
     _enabled = true;
 
     /**
-     * @attribute
-     * @title Dead Zone Low
-     * @description Radial thickness of inner dead zone of pad's joysticks. This dead zone ensures that all pads report a value of 0 for each joystick axis when untouched.
      * @type {number}
-     * @range [0, 0.4]
      */
     deadZoneLow = 0.1;
 
     /**
-     * @attribute
-     * @title Dead Zone High
-     * @description Radial thickness of outer dead zone of pad's joysticks. This dead zone ensures that all pads can reach the -1 and 1 limits of each joystick axis.
      * @type {number}
-     * @range [0, 0.4]
      */
     deadZoneHigh = 0.1;
 
     /**
-     * @attribute
-     * @title Turn Speed
-     * @description Maximum turn speed in degrees per second
      * @type {number}
      */
     turnSpeed = 30;
 
     /**
      * @param {AppBase} app - The application.
-     * @param {object} args - The arguments.
      */
-    constructor(app, args = {}) {
+    constructor(app) {
         this.app = app;
-        const {
-            deadZoneLow,
-            deadZoneHigh,
-            turnSpeed
-        } = args;
-
-        this.deadZoneLow = deadZoneLow ?? this.deadZoneLow;
-        this.deadZoneHigh = deadZoneHigh ?? this.deadZoneHigh;
-        this.turnSpeed = turnSpeed ?? this.turnSpeed;
     }
 
     set enabled(value) {
@@ -719,10 +673,53 @@ class FirstPersonController extends Script {
     _mobileInput;
 
     /**
+     * @type {number}
+     * @private
+     */
+    _mobileDeadZone = 0.3;
+
+    /**
+     * @type {number}
+     * @private
+     */
+    _mobileTurnSpeed = 30;
+
+    /**
+     * @type {number}
+     * @private
+     */
+    _mobileRadius = 50;
+
+    /**
+     * @type {number}
+     * @private
+     */
+    _mobileDoubleTapInterval = 300;
+
+    /**
      * @type {GamePadInput}
      * @private
      */
-    _gamepadInput;
+    _gamePadInput;
+
+
+    /**
+     * @type {number}
+     * @private
+     */
+    _gamePadDeadZoneLow = 0.1;
+
+    /**
+     * @type {number}
+     * @private
+     */
+    _gamePadDeadZoneHigh = 0.1;
+
+    /**
+     * @type {number}
+     * @private
+     */
+    _gamePadTurnSpeed = 30;
 
     /**
      * @type {Vec2}
@@ -749,6 +746,8 @@ class FirstPersonController extends Script {
 
     /**
      * @attribute
+     * @title Look Sensitivity
+     * @description The sensitivity of the look controls.
      * @type {number}
      */
     lookSens = 0.08;
@@ -806,6 +805,23 @@ class FirstPersonController extends Script {
      */
     constructor(args) {
         super(args);
+
+        // input
+        this._keyboardMouseInput = new KeyboardMouseInput(this.app);
+        this._mobileInput = new MobileInput(this.app);
+        this._gamePadInput = new GamePadInput(this.app);
+
+        this.on('enable', () => {
+            this._keyboardMouseInput.enabled = true;
+            this._mobileInput.enabled = true;
+            this._gamePadInput.enabled = true;
+        });
+        this.on('disable', () => {
+            this._keyboardMouseInput.enabled = false;
+            this._mobileInput.enabled = false;
+            this._gamePadInput.enabled = false;
+        });
+
         const {
             camera,
             lookSens,
@@ -814,8 +830,23 @@ class FirstPersonController extends Script {
             sprintMult,
             velocityDampingGround,
             velocityDampingAir,
-            jumpForce
+            jumpForce,
+            mobileDeadZone,
+            mobileTurnSpeed,
+            mobileRadius,
+            mobileDoubleTapInterval,
+            gamePadDeadZoneLow,
+            gamePadDeadZoneHigh,
+            gamePadTurnSpeed
         } = args.attributes;
+
+        if (!camera) {
+            throw new Error('No camera entity found');
+        }
+        if (!this.entity.rigidbody) {
+            throw new Error('No rigidbody component found');
+        }
+        this._rigidbody = this.entity.rigidbody;
 
         this.camera = camera;
         this.lookSens = lookSens ?? this.lookSens;
@@ -825,14 +856,13 @@ class FirstPersonController extends Script {
         this.velocityDampingGround = velocityDampingGround ?? this.velocityDampingGround;
         this.velocityDampingAir = velocityDampingAir ?? this.velocityDampingAir;
         this.jumpForce = jumpForce ?? this.jumpForce;
-
-        if (!camera) {
-            throw new Error('No camera entity found');
-        }
-        if (!this.entity.rigidbody) {
-            throw new Error('No rigidbody component found');
-        }
-        this._rigidbody = this.entity.rigidbody;
+        this.mobileDeadZone = mobileDeadZone ?? this.mobileDeadZone;
+        this.mobileTurnSpeed = mobileTurnSpeed ?? this.mobileTurnSpeed;
+        this.mobileRadius = mobileRadius ?? this.mobileRadius;
+        this.mobileDoubleTapInterval = mobileDoubleTapInterval ?? this.mobileDoubleTapInterval;
+        this.gamePadDeadZoneLow = gamePadDeadZoneLow ?? this.gamePadDeadZoneLow;
+        this.gamePadDeadZoneHigh = gamePadDeadZoneHigh ?? this.gamePadDeadZoneHigh;
+        this.gamePadTurnSpeed = gamePadTurnSpeed ?? this.gamePadTurnSpeed;
 
         this.app.on('cc:look', (movX, movY) => {
             this.look.x = math.clamp(this.look.x - movY * this.lookSens, -LOOK_MAX_ANGLE, LOOK_MAX_ANGLE);
@@ -856,22 +886,133 @@ class FirstPersonController extends Script {
         this.app.on('cc:sprint', (state) => {
             this.controls.sprint = state;
         });
+    }
 
-        // input
-        this._keyboardMouseInput = new KeyboardMouseInput(this.app);
-        this._mobileInput = new MobileInput(this.app);
-        this._gamepadInput = new GamePadInput(this.app);
+    /**
+     * @attribute
+     * @title Mobile Dead Zone
+     * @description Radial thickness of inner dead zone of the virtual joysticks. This dead zone ensures the virtual joysticks report a value of 0 even if a touch deviates a small amount from the initial touch.
+     * @type {number}
+     * @range [0, 0.4]
+     */
+    set mobileDeadZone(value) {
+        if (value === this._mobileDeadZone) {
+            return;
+        }
+        this._mobileDeadZone = value;
+        this._mobileInput.deadZone = value;
+    }
 
-        this.on('enable', () => {
-            this._keyboardMouseInput.enabled = true;
-            this._mobileInput.enabled = true;
-            this._gamepadInput.enabled = true;
-        });
-        this.on('disable', () => {
-            this._keyboardMouseInput.enabled = false;
-            this._mobileInput.enabled = false;
-            this._gamepadInput.enabled = false;
-        });
+    get mobileDeadZone() {
+        return this._mobileDeadZone;
+    }
+
+    /**
+     * @attribute
+     * @title Mobile Turn Speed
+     * @description Maximum turn speed in degrees per second
+     * @type {number}
+     */
+    set mobileTurnSpeed(value) {
+        if (value === this._mobileTurnSpeed) {
+            return;
+        }
+        this._mobileTurnSpeed = value;
+        this._mobileInput.turnSpeed = value;
+    }
+
+    get mobileTurnSpeed() {
+        return this._mobileTurnSpeed;
+    }
+
+    /**
+     * @attribute
+     * @title Mobile Radius
+     * @description The radius of the virtual joystick in CSS pixels.
+     * @type {number}
+     */
+    set mobileRadius(value) {
+        if (value === this._mobileRadius) {
+            return;
+        }
+        this._mobileRadius = value;
+    }
+
+    get mobileRadius() {
+        return this._mobileRadius;
+    }
+
+    /**
+     * @attribute
+     * @title Mobile Double Tap Interval
+     * @description The time in milliseconds between two taps of the right virtual joystick for a double tap to register. A double tap will trigger a cc:jump.
+     * @type {number}
+     */
+    set mobileDoubleTapInterval(value) {
+        if (value === this._mobileDoubleTapInterval) {
+            return;
+        }
+        this._mobileDoubleTapInterval = value;
+    }
+
+    get mobileDoubleTapInterval() {
+        return this._mobileDoubleTapInterval;
+    }
+
+    /**
+     * @attribute
+     * @title GamePad Dead Zone Low
+     * @description Radial thickness of inner dead zone of pad's joysticks. This dead zone ensures that all pads report a value of 0 for each joystick axis when untouched.
+     * @type {number}
+     * @range [0, 0.4]
+     */
+    set gamePadDeadZoneLow(value) {
+        if (value === this._gamePadDeadZoneLow) {
+            return;
+        }
+        this._gamePadDeadZoneLow = value;
+        this._gamePadInput.deadZoneLow = value;
+    }
+
+    get gamePadDeadZoneLow() {
+        return this._gamePadDeadZoneLow;
+    }
+
+    /**
+     * @attribute
+     * @title GamePad Dead Zone High
+     * @description Radial thickness of outer dead zone of pad's joysticks. This dead zone ensures that all pads can reach the -1 and 1 limits of each joystick axis.
+     * @type {number}
+     * @range [0, 0.4]
+     */
+    set gamePadDeadZoneHigh(value) {
+        if (value === this._gamePadDeadZoneHigh) {
+            return;
+        }
+        this._gamePadDeadZoneHigh = value;
+        this._gamePadInput.deadZoneHigh = value;
+    }
+
+    get gamePadDeadZoneHigh() {
+        return this._gamePadDeadZoneHigh;
+    }
+
+    /**
+     * @attribute
+     * @title GamePad Turn Speed
+     * @description Maximum turn speed in degrees per second
+     * @type {number}
+     */
+    set gamePadTurnSpeed(value) {
+        if (value === this._gamePadTurnSpeed) {
+            return;
+        }
+        this._gamePadTurnSpeed = value;
+        this._gamePadInput.turnSpeed = value;
+    }
+
+    get gamePadTurnSpeed() {
+        return this._gamePadTurnSpeed;
     }
 
     /**
@@ -945,7 +1086,7 @@ class FirstPersonController extends Script {
      */
     update(dt) {
         this._mobileInput.update();
-        this._gamepadInput.update();
+        this._gamePadInput.update();
 
         this._checkIfGrounded();
         this._jump();
@@ -956,7 +1097,7 @@ class FirstPersonController extends Script {
     destroy() {
         this._keyboardMouseInput.destroy();
         this._mobileInput.destroy();
-        this._gamepadInput.destroy();
+        this._gamePadInput.destroy();
     }
 }
 
