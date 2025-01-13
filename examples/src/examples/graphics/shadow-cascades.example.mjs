@@ -153,7 +153,11 @@ assetListLoader.load(() => {
 
             // enable shadow casting
             castShadows: true,
-            shadowDistance: 1000
+            shadowDistance: 1000,
+
+            // parameters for PCSS
+            penumbraSize: 20,
+            penumbraFalloff: 4
         },
         ...data.get('settings.light')
     });
