@@ -1,3 +1,5 @@
+// Camera Frame v 1.0
+
 /* eslint-disable-next-line import/no-unresolved */
 import { CameraFrame as EngineCameraFrame, Script, Color } from 'playcanvas';
 
@@ -32,7 +34,9 @@ const DebugType = {
     SCENE: 'scene',
     SSAO: 'ssao',
     BLOOM: 'bloom',
-    VIGNETTE: 'vignette'
+    VIGNETTE: 'vignette',
+    DOFCOC: 'dofcoc',
+    DOFBLUR: 'dofblur'
 };
 
 /** @interface */
@@ -258,6 +262,47 @@ class Taa {
     jitter = 1;
 }
 
+/** @interface */
+class Dof {
+    enabled = false;
+
+    highQuality = true;
+
+    nearBlur = false;
+
+    /**
+     * @precision 2
+     * @step 1
+     */
+    focusDistance = 100;
+
+    /**
+     * @precision 2
+     * @step 1
+     */
+    focusRange = 10;
+
+    /**
+     * @precision 2
+     * @step 0.1
+     */
+    blurRadius = 3;
+
+    /**
+     * @range [1, 10]
+     * @precision 0
+     * @step 1
+     */
+    blurRings = 4;
+
+    /**
+     * @range [1, 10]
+     * @precision 0
+     * @step 1
+     */
+    blurRingPoints = 5;
+}
+
 class CameraFrame extends Script {
     /**
      * @attribute
@@ -301,6 +346,12 @@ class CameraFrame extends Script {
      */
     fringing = new Fringing();
 
+    /**
+     * @attribute
+     * @type {Dof}
+     */
+    dof = new Dof();
+
     engineCameraFrame = new EngineCameraFrame(this.app, this.entity.camera);
 
     initialize() {
@@ -321,7 +372,7 @@ class CameraFrame extends Script {
     postUpdate(dt) {
 
         const cf = this.engineCameraFrame;
-        const { rendering, bloom, grading, vignette, fringing, taa, ssao } = this;
+        const { rendering, bloom, grading, vignette, fringing, taa, ssao, dof } = this;
 
         const dstRendering = cf.rendering;
         dstRendering.renderFormats.length = 0;
@@ -384,6 +435,19 @@ class CameraFrame extends Script {
         // fringing
         const dstFringing = cf.fringing;
         dstFringing.intensity = fringing.enabled ? fringing.intensity : 0;
+
+        // dof
+        const dstDof = cf.dof;
+        dstDof.enabled = dof.enabled;
+        if (dof.enabled) {
+            dstDof.highQuality = dof.highQuality;
+            dstDof.nearBlur = dof.nearBlur;
+            dstDof.focusDistance = dof.focusDistance;
+            dstDof.focusRange = dof.focusRange;
+            dstDof.blurRadius = dof.blurRadius;
+            dstDof.blurRings = dof.blurRings;
+            dstDof.blurRingPoints = dof.blurRingPoints;
+        }
 
         // debugging
         cf.debug = rendering.debug;
