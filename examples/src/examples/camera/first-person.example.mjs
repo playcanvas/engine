@@ -7,7 +7,7 @@ const {
     MobileInput,
     GamePadInput,
     FirstPersonController
-} = await fileImport(`${rootPath}/static/scripts/esm/character-controls.mjs`);
+} = await fileImport(`${rootPath}/static/scripts/esm/first-person-controller.mjs`);
 
 const canvas = /** @type {HTMLCanvasElement} */ (document.getElementById('application-canvas'));
 window.focus();

@@ -31,7 +31,7 @@ const applyRadialDeadZone = (pos, remappedPos, deadZoneLow, deadZoneHigh) => {
     }
 };
 
-class DesktopInput extends Script {
+class KeyboardMouseInput extends Script {
     /**
      * @type {HTMLCanvasElement}
      * @private
@@ -827,7 +827,7 @@ class FirstPersonController extends Script {
 }
 
 export {
-    DesktopInput,
+    KeyboardMouseInput,
     MobileInput,
     GamePadInput,
     FirstPersonController
