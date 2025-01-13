@@ -147,6 +147,6 @@ export const controls = ({ observer, ReactPCUI, React, jsx, fragment }) => {
                     link: { observer, path: 'grid.colorZ' }
                 })
             )
-        ),
+        )
     );
 };
