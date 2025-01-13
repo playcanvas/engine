@@ -621,7 +621,7 @@ class CameraComponent extends Component {
 
     /**
      * Sets whether the camera's field of view (`fov`) is horizontal or vertical. Defaults to
-     * false (meaning it is vertical be default).
+     * false (meaning it is vertical by default).
      *
      * @type {boolean}
      */
