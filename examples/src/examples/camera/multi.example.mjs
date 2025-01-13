@@ -97,8 +97,7 @@ const createMultiCamera = (focus) => {
     const script = camera.script.create(CameraControls, {
         attributes: {
             focusPoint: bbox.center,
-            sceneSize: bbox.halfExtents.length(),
-            yBounds: tmpVa.set(1, 1)
+            sceneSize: bbox.halfExtents.length()
         }
     });
 
