@@ -11,7 +11,8 @@ const dummyUvs = [0, 1, 2, 3, 4, 5, 6, 7];
 
 class ShaderGeneratorLit extends ShaderGenerator {
     generateKey(options) {
-        const key = `lit${
+        const definesHash = ShaderGenerator.definesHash(options.defines);
+        const key = `lit_${definesHash}_${
             dummyUvs.map((dummy, index) => {
                 return options.usedUvs[index] ? '1' : '0';
             }).join('')

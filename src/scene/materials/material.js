@@ -21,7 +21,7 @@ import { getDefaultMaterial } from './default-material.js';
  * @import { GraphicsDevice } from '../../platform/graphics/graphics-device.js'
  * @import { Light } from '../light.js';
  * @import { MeshInstance } from '../mesh-instance.js'
- * @import { RenderingParams } from '../renderer/rendering-params.js'
+ * @import { CameraShaderParams } from '../camera-shader-params.js'
  * @import { Scene } from '../scene.js'
  * @import { Shader } from '../../platform/graphics/shader.js'
  * @import { StencilParameters } from '../../platform/graphics/stencil-parameters.js'
@@ -52,7 +52,7 @@ let id = 0;
  * @property {GraphicsDevice} device - The graphics device.
  * @property {Scene} scene - The scene.
  * @property {number} objDefs - The object definitions.
- * @property {RenderingParams} renderParams - The render parameters.
+ * @property {CameraShaderParams} cameraShaderParams - The camera shader parameters.
  * @property {number} pass - The shader pass.
  * @property {Light[][]} sortedLights - The sorted lights.
  * @property {UniformBufferFormat|undefined} viewUniformFormat - The view uniform format.
@@ -532,7 +532,7 @@ class Material {
 
         // defines
         this.defines.clear();
-        source.defines.forEach(define => this.defines.add(define));
+        source.defines.forEach((value, key) => this.defines.set(key, value));
 
         return this;
     }

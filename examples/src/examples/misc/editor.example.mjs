@@ -1,7 +1,7 @@
 // @config DESCRIPTION <div style='text-align:center'><div>Translate (1), Rotate (2), Scale (3)</div><div>World/Local (X)</div><div>Perspective (P), Orthographic (O)</div></div>
-import * as pc from 'playcanvas';
 import { data } from 'examples/observer';
 import { deviceType, rootPath, localImport } from 'examples/utils';
+import * as pc from 'playcanvas';
 
 const canvas = /** @type {HTMLCanvasElement} */ (document.getElementById('application-canvas'));
 window.focus();
@@ -13,8 +13,8 @@ const { Selector } = await localImport('selector.mjs');
 
 const gfxOptions = {
     deviceTypes: [deviceType],
-    glslangUrl: rootPath + '/static/lib/glslang/glslang.js',
-    twgslUrl: rootPath + '/static/lib/twgsl/twgsl.js'
+    glslangUrl: `${rootPath}/static/lib/glslang/glslang.js`,
+    twgslUrl: `${rootPath}/static/lib/twgsl/twgsl.js`
 };
 
 const device = await pc.createGraphicsDevice(canvas, gfxOptions);
@@ -42,8 +42,8 @@ app.setCanvasResolution(pc.RESOLUTION_AUTO);
 
 // load assets
 const assets = {
-    script: new pc.Asset('script', 'script', { url: rootPath + '/static/scripts/camera/orbit-camera.js' }),
-    font: new pc.Asset('font', 'font', { url: rootPath + '/static/assets/fonts/courier.json' })
+    script: new pc.Asset('script', 'script', { url: `${rootPath}/static/scripts/camera/orbit-camera.js` }),
+    font: new pc.Asset('font', 'font', { url: `${rootPath}/static/assets/fonts/courier.json` })
 };
 /**
  * @param {pc.Asset[] | number[]} assetList - The asset list.
@@ -168,22 +168,6 @@ const resize = () => {
 window.addEventListener('resize', resize);
 resize();
 
-// wrappers for control state changes
-const setType = (/** @type {string} */ value) => {
-    data.set('gizmo.type', value);
-
-    // call method from top context (same as controls)
-    // @ts-ignore
-    window.top.setType?.(value);
-};
-const setProj = (/** @type {number} */ value) => {
-    data.set('camera.proj', value + 1);
-
-    // call method from top context (same as controls)
-    // @ts-ignore
-    window.top.setProj?.(value);
-};
-
 // key event handlers
 const keydown = (/** @type {KeyboardEvent} */ e) => {
     gizmoHandler.gizmo.snap = !!e.shiftKey;
@@ -199,19 +183,19 @@ const keypress = (/** @type {KeyboardEvent} */ e) => {
             data.set('gizmo.coordSpace', data.get('gizmo.coordSpace') === 'world' ? 'local' : 'world');
             break;
         case '1':
-            setType('translate');
+            data.set('gizmo.type', 'translate');
             break;
         case '2':
-            setType('rotate');
+            data.set('gizmo.type', 'rotate');
             break;
         case '3':
-            setType('scale');
+            data.set('gizmo.type', 'scale');
             break;
         case 'p':
-            setProj(pc.PROJECTION_PERSPECTIVE);
+            data.set('camera.proj', pc.PROJECTION_PERSPECTIVE + 1);
             break;
         case 'o':
-            setProj(pc.PROJECTION_ORTHOGRAPHIC);
+            data.set('camera.proj', pc.PROJECTION_ORTHOGRAPHIC + 1);
             break;
     }
 };

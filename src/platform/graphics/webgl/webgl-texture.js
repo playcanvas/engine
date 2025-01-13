@@ -10,10 +10,10 @@ import {
     PIXELFORMAT_R32I, PIXELFORMAT_R32U, PIXELFORMAT_RG16I, PIXELFORMAT_RG16U, PIXELFORMAT_RG32I, PIXELFORMAT_RG32U,
     PIXELFORMAT_RG8I, PIXELFORMAT_RG8U, PIXELFORMAT_RGBA16I, PIXELFORMAT_RGBA16U, PIXELFORMAT_RGBA32I, PIXELFORMAT_RGBA32U,
     PIXELFORMAT_RGBA8I, PIXELFORMAT_RGBA8U, PIXELFORMAT_R16F, PIXELFORMAT_RG16F, PIXELFORMAT_R8, PIXELFORMAT_RG8,
-    PIXELFORMAT_DXT1_SRGB, PIXELFORMAT_DXT3_SRGBA, PIXELFORMAT_DXT5_SRGBA, PIXELFORMAT_PVRTC_2BPP_SRGB_1,
-    PIXELFORMAT_PVRTC_2BPP_SRGBA_1, PIXELFORMAT_PVRTC_4BPP_SRGB_1, PIXELFORMAT_PVRTC_4BPP_SRGBA_1,
+    PIXELFORMAT_DXT1_SRGB, PIXELFORMAT_DXT3_SRGBA, PIXELFORMAT_DXT5_SRGBA,
     PIXELFORMAT_ETC2_SRGB, PIXELFORMAT_ETC2_SRGBA, PIXELFORMAT_ASTC_4x4_SRGB, PIXELFORMAT_SBGRA8,
-    PIXELFORMAT_BC6F, PIXELFORMAT_BC6UF, PIXELFORMAT_BC7, PIXELFORMAT_BC7_SRGBA
+    PIXELFORMAT_BC6F, PIXELFORMAT_BC6UF, PIXELFORMAT_BC7, PIXELFORMAT_BC7_SRGBA,
+    PIXELFORMAT_DEPTH16
 } from '../constants.js';
 
 /**
@@ -251,22 +251,6 @@ class WebglTexture {
                 this._glFormat = gl.SRGB_ALPHA;
                 this._glInternalFormat = device.extCompressedTextureS3TC_SRGB.COMPRESSED_SRGB_ALPHA_S3TC_DXT5_EXT;
                 break;
-            case PIXELFORMAT_PVRTC_2BPP_SRGB_1:
-                this._glFormat = gl.SRGB;
-                this._glInternalFormat = device.extCompressedTexturePVRTC.COMPRESSED_SRGB_PVRTC_2BPPV1_EXT;
-                break;
-            case PIXELFORMAT_PVRTC_2BPP_SRGBA_1:
-                this._glFormat = gl.SRGB_ALPHA;
-                this._glInternalFormat = device.extCompressedTexturePVRTC.COMPRESSED_SRGB_ALPHA_PVRTC_2BPPV1_EXT;
-                break;
-            case PIXELFORMAT_PVRTC_4BPP_SRGB_1:
-                this._glFormat = gl.SRGB;
-                this._glInternalFormat = device.extCompressedTexturePVRTC.COMPRESSED_SRGB_PVRTC_4BPPV1_EXT;
-                break;
-            case PIXELFORMAT_PVRTC_4BPP_SRGBA_1:
-                this._glFormat = gl.SRGB_ALPHA;
-                this._glInternalFormat = device.extCompressedTexturePVRTC.COMPRESSED_SRGB_ALPHA_PVRTC_4BPPV1_EXT;
-                break;
             case PIXELFORMAT_ETC2_SRGB:
                 this._glFormat = gl.RGB;
                 this._glInternalFormat = device.extCompressedTextureETC.COMPRESSED_RGB8_ETC2;
@@ -323,8 +307,13 @@ class WebglTexture {
                 break;
             case PIXELFORMAT_DEPTH:
                 this._glFormat = gl.DEPTH_COMPONENT;
-                this._glInternalFormat = gl.DEPTH_COMPONENT32F; // should allow 16/24 bits?
+                this._glInternalFormat = gl.DEPTH_COMPONENT32F;
                 this._glPixelType = gl.FLOAT;
+                break;
+            case PIXELFORMAT_DEPTH16:
+                this._glFormat = gl.DEPTH_COMPONENT;
+                this._glInternalFormat = gl.DEPTH_COMPONENT16;
+                this._glPixelType = gl.UNSIGNED_SHORT;
                 break;
             case PIXELFORMAT_DEPTHSTENCIL:
                 this._glFormat = gl.DEPTH_STENCIL;
@@ -464,7 +453,7 @@ class WebglTexture {
         let mipObject;
         let resMult;
 
-        const requiredMipLevels = texture.requiredMipLevels;
+        const requiredMipLevels = texture.numLevels;
 
         if (texture.array) {
             // for texture arrays we reserve the space in advance

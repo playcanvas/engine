@@ -16,9 +16,9 @@ export const rootPath = root.replace(/\/iframe/g, '');
  */
 export function getQueryParams(url) {
     return Object.fromEntries(url
-        .split('?').pop()
-        .split('#')[0]
-        .split('&').map(s => s.split('=')));
+    .split('?').pop()
+    .split('#')[0]
+    .split('&').map(s => s.split('=')));
 }
 
 /**
@@ -90,14 +90,14 @@ export function clearImports() {
  * @returns {Record<string, any>} - The parsed config.
  */
 export function parseConfig(script) {
-    const regex = /\/\/ @config ([^ \n]+) ?([^\n]+)?/g;
+    const regex = /\/\/ @config (\S+)(?:\s+([^\n]+))?/g;
     let match;
     /** @type {Record<string, any>} */
     const config = {};
     while ((match = regex.exec(script)) !== null) {
         const key = match[1].trim();
         const val = match[2]?.trim();
-        config[key] = /true|false/g.test(val) ? val === 'true' : val ?? true;
+        config[key] = /true|false/.test(val) ? val === 'true' : val ?? true;
     }
     return config;
 }
@@ -113,7 +113,7 @@ export function updateDeviceType(config) {
     deviceType = DEVICE_TYPES.includes(savedDevice) ? savedDevice : 'webgl2';
 
     if (params.deviceType && DEVICE_TYPES.includes(params.deviceType)) {
-        console.warn("Overriding default device: ", params.deviceType);
+        console.warn('Overriding default device: ', params.deviceType);
         deviceType = params.deviceType;
         return;
     }

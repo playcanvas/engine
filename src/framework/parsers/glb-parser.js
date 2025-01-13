@@ -1112,17 +1112,22 @@ const extensionIridescence = (data, material, textures) => {
 const createMaterial = (gltfMaterial, textures) => {
     const material = new StandardMaterial();
 
+    if (gltfMaterial.hasOwnProperty('name')) {
+        material.name = gltfMaterial.name;
+    }
+
     // glTF doesn't define how to occlude specular
     material.occludeSpecular = SPECOCC_AO;
 
     material.diffuseVertexColor = true;
-
     material.specularTint = true;
     material.specularVertexColor = true;
 
-    if (gltfMaterial.hasOwnProperty('name')) {
-        material.name = gltfMaterial.name;
-    }
+    // Set glTF spec defaults
+    material.specular.set(1, 1, 1);
+    material.gloss = 1;
+    material.glossInvert = true;
+    material.useMetalness = true;
 
     let color, texture;
     if (gltfMaterial.hasOwnProperty('pbrMetallicRoughness')) {
@@ -1133,9 +1138,6 @@ const createMaterial = (gltfMaterial, textures) => {
             // Convert from linear space to sRGB space
             material.diffuse.set(Math.pow(color[0], 1 / 2.2), Math.pow(color[1], 1 / 2.2), Math.pow(color[2], 1 / 2.2));
             material.opacity = color[3];
-        } else {
-            material.diffuse.set(1, 1, 1);
-            material.opacity = 1;
         }
         if (pbrData.hasOwnProperty('baseColorTexture')) {
             const baseColorTexture = pbrData.baseColorTexture;
@@ -1148,19 +1150,12 @@ const createMaterial = (gltfMaterial, textures) => {
 
             extractTextureTransform(baseColorTexture, material, ['diffuse', 'opacity']);
         }
-        material.useMetalness = true;
-        material.specular.set(1, 1, 1);
         if (pbrData.hasOwnProperty('metallicFactor')) {
             material.metalness = pbrData.metallicFactor;
-        } else {
-            material.metalness = 1;
         }
         if (pbrData.hasOwnProperty('roughnessFactor')) {
             material.gloss = pbrData.roughnessFactor;
-        } else {
-            material.gloss = 1;
         }
-        material.glossInvert = true;
         if (pbrData.hasOwnProperty('metallicRoughnessTexture')) {
             const metallicRoughnessTexture = pbrData.metallicRoughnessTexture;
             material.metalnessMap = material.glossMap = textures[metallicRoughnessTexture.index];
@@ -1195,8 +1190,6 @@ const createMaterial = (gltfMaterial, textures) => {
         color = gltfMaterial.emissiveFactor;
         // Convert from linear space to sRGB space
         material.emissive.set(Math.pow(color[0], 1 / 2.2), Math.pow(color[1], 1 / 2.2), Math.pow(color[2], 1 / 2.2));
-    } else {
-        material.emissive.set(0, 0, 0);
     }
 
     if (gltfMaterial.hasOwnProperty('emissiveTexture')) {

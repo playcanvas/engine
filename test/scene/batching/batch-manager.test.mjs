@@ -1,23 +1,25 @@
-import { Application } from '../../../src/framework/application.js';
-import { Entity } from '../../../src/framework/entity.js';
-import { NullGraphicsDevice } from '../../../src/platform/graphics/null/null-graphics-device.js';
-import { LAYERID_WORLD } from '../../../src/scene/constants.js';
-
-import { Canvas } from 'skia-canvas';
-
 import { expect } from 'chai';
+
+import { Entity } from '../../../src/framework/entity.js';
+import { LAYERID_WORLD } from '../../../src/scene/constants.js';
+import { createApp } from '../../app.mjs';
+import { jsdomSetup, jsdomTeardown } from '../../jsdom.mjs';
 
 describe('BatchManager', function () {
 
-    beforeEach(function () {
-        const canvas = new Canvas(500, 500);
-        this.app = new Application(canvas, { graphicsDevice: new NullGraphicsDevice(canvas) });
+    let app;
 
-        this.bg = this.app.batcher.addGroup('Test Group', false, 100);
+    beforeEach(function () {
+        jsdomSetup();
+        app = createApp();
+
+        this.bg = app.batcher.addGroup('Test Group', false, 100);
     });
 
     afterEach(function () {
-        this.app.destroy();
+        app?.destroy();
+        app = null;
+        jsdomTeardown();
     });
 
     it('generate: removes model component mesh instances from layer', function () {
@@ -35,12 +37,12 @@ describe('BatchManager', function () {
             batchGroupId: this.bg.id
         });
 
-        this.app.root.addChild(e1);
-        this.app.root.addChild(e2);
+        app.root.addChild(e1);
+        app.root.addChild(e2);
 
-        this.app.batcher.generate();
+        app.batcher.generate();
 
-        const layer = this.app.scene.layers.getLayerById(LAYERID_WORLD);
+        const layer = app.scene.layers.getLayerById(LAYERID_WORLD);
         const instances = layer.meshInstances;
 
         expect(instances.length).to.equal(1);
@@ -63,14 +65,14 @@ describe('BatchManager', function () {
             batchGroupId: this.bg.id
         });
 
-        this.app.root.addChild(e1);
-        this.app.root.addChild(e2);
+        app.root.addChild(e1);
+        app.root.addChild(e2);
 
-        this.app.batcher.generate();
+        app.batcher.generate();
 
         e2.enabled = false;
 
-        expect(this.app.batcher._dirtyGroups[0]).to.equal(this.bg.id);
+        expect(app.batcher._dirtyGroups[0]).to.equal(this.bg.id);
     });
 
 
@@ -93,12 +95,12 @@ describe('BatchManager', function () {
         e1.model.meshInstances[0].visible = false;
         e2.model.meshInstances[0].visible = false;
 
-        this.app.root.addChild(e1);
-        this.app.root.addChild(e2);
+        app.root.addChild(e1);
+        app.root.addChild(e2);
 
-        this.app.batcher.generate();
+        app.batcher.generate();
 
-        expect(this.app.batcher._batchList.length).to.equal(0);
+        expect(app.batcher._batchList.length).to.equal(0);
 
     });
 });

@@ -31,22 +31,22 @@ class ScrollViewComponentData {
     mouseWheelSensitivity = new Vec2(1, 1);
 
     /** @type {number} */
-    horizontalScrollbarVisibility;
+    horizontalScrollbarVisibility = 0;
 
     /** @type {number} */
-    verticalScrollbarVisibility;
+    verticalScrollbarVisibility = 0;
 
-    /** @type {Entity} */
-    viewportEntity;
+    /** @type {Entity|null} */
+    viewportEntity = null;
 
-    /** @type {Entity} */
-    contentEntity;
+    /** @type {Entity|null} */
+    contentEntity = null;
 
-    /** @type {Entity} */
-    horizontalScrollbarEntity;
+    /** @type {Entity|null} */
+    horizontalScrollbarEntity = null;
 
-    /** @type {Entity} */
-    verticalScrollbarEntity;
+    /** @type {Entity|null} */
+    verticalScrollbarEntity = null;
 }
 
 export { ScrollViewComponentData };

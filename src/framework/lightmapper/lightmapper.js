@@ -19,7 +19,7 @@ import { drawQuadWithShader } from '../../scene/graphics/quad-render-utils.js';
 import { Texture } from '../../platform/graphics/texture.js';
 import {
     BAKE_COLORDIR,
-    FOG_NONE, GAMMA_NONE, TONEMAP_LINEAR,
+    GAMMA_NONE, TONEMAP_LINEAR,
     LIGHTTYPE_DIRECTIONAL, LIGHTTYPE_OMNI, LIGHTTYPE_SPOT,
     PROJECTION_ORTHOGRAPHIC, PROJECTION_PERSPECTIVE,
     SHADERDEF_DIRLM, SHADERDEF_LM, SHADERDEF_LMAMBIENT,
@@ -30,7 +30,6 @@ import {
 import { MeshInstance } from '../../scene/mesh-instance.js';
 import { LightingParams } from '../../scene/lighting/lighting-params.js';
 import { WorldClusters } from '../../scene/lighting/world-clusters.js';
-import { RenderingParams } from '../../scene/renderer/rendering-params.js';
 import { shaderChunks } from '../../scene/shader-lib/chunks/chunks.js';
 import { shaderChunksLightmapper } from '../../scene/shader-lib/chunks/chunks-lightmapper.js';
 import { Camera } from '../../scene/camera.js';
@@ -130,6 +129,8 @@ class Lightmapper {
 
     initBake(device) {
 
+        this.bakeHDR = this.scene.lightmapPixelFormat !== PIXELFORMAT_RGBA8;
+
         // only initialize one time
         if (!this._initCalled) {
             this._initCalled = true;
@@ -166,10 +167,8 @@ class Lightmapper {
             this.camera = camera;
 
             // baking uses HDR (no gamma / tone mapping)
-            const rp = new RenderingParams();
-            rp.gammaCorrection = GAMMA_NONE;
-            rp.toneMapping = TONEMAP_LINEAR;
-            this.camera.renderingParams = rp;
+            this.camera.shaderParams.gammaCorrection = GAMMA_NONE;
+            this.camera.shaderParams.toneMapping = TONEMAP_LINEAR;
         }
 
         // create light cluster structure
@@ -254,7 +253,7 @@ class Lightmapper {
             } else {
                 material.ambient = new Color(0, 0, 0);    // don't bake ambient
             }
-            material.chunks.basePS = shaderChunks.basePS + (scene.lightmapPixelFormat === PIXELFORMAT_RGBA8 ? '\n#define LIGHTMAP_RGBM\n' : '');
+            material.chunks.basePS = shaderChunks.basePS + (this.bakeHDR ? '' : '\n#define LIGHTMAP_RGBM\n');
             material.chunks.endPS = bakeLmEndChunk;
             material.lightMap = this.blackTex;
         } else {
@@ -302,7 +301,7 @@ class Lightmapper {
             height: size,
             format: this.scene.lightmapPixelFormat,
             mipmaps: false,
-            type: this.scene.lightmapPixelFormat === PIXELFORMAT_RGBA8 ? TEXTURETYPE_RGBM : TEXTURETYPE_DEFAULT,
+            type: this.bakeHDR ? TEXTURETYPE_DEFAULT : TEXTURETYPE_RGBM,
             minFilter: FILTER_NEAREST,
             magFilter: FILTER_NEAREST,
             addressU: ADDRESS_CLAMP_TO_EDGE,
@@ -684,11 +683,7 @@ class Lightmapper {
     setupScene() {
 
         // backup
-        this.fog = this.scene.rendering.fog;
         this.ambientLight.copy(this.scene.ambientLight);
-
-        // set up scene
-        this.scene.rendering.fog = FOG_NONE;
 
         // if not baking ambient, set it to black
         if (!this.scene.ambientBake) {
@@ -701,7 +696,6 @@ class Lightmapper {
 
     restoreScene() {
 
-        this.scene.rendering.fog = this.fog;
         this.scene.ambientLight.copy(this.ambientLight);
     }
 
@@ -884,12 +878,14 @@ class Lightmapper {
     postprocessTextures(device, bakeNodes, passCount) {
 
         const numDilates2x = 1; // 1 or 2 dilates (depending on filter being enabled)
-        const dilateShader = this.lightmapFilters.shaderDilate;
+        const dilateShader = this.lightmapFilters.getDilate(device, this.bakeHDR);
+        let denoiseShader;
 
         // bilateral denoise filter - runs as a first pass, before dilate
         const filterLightmap = this.scene.lightmapFilterEnabled;
         if (filterLightmap) {
-            this.lightmapFilters.prepareDenoise(this.scene.lightmapFilterRange, this.scene.lightmapFilterSmoothness);
+            this.lightmapFilters.prepareDenoise(this.scene.lightmapFilterRange, this.scene.lightmapFilterSmoothness, this.bakeHDR);
+            denoiseShader = this.lightmapFilters.getDenoise(this.bakeHDR);
         }
 
         device.setBlendState(BlendState.NOBLEND);
@@ -916,7 +912,7 @@ class Lightmapper {
 
                     this.lightmapFilters.setSourceTexture(lightmap);
                     const bilateralFilterEnabled = filterLightmap && pass === 0 && i === 0;
-                    drawQuadWithShader(device, tempRT, bilateralFilterEnabled ? this.lightmapFilters.shaderDenoise : dilateShader);
+                    drawQuadWithShader(device, tempRT, bilateralFilterEnabled ? denoiseShader : dilateShader);
 
                     this.lightmapFilters.setSourceTexture(tempTex);
                     drawQuadWithShader(device, nodeRT, dilateShader);

@@ -153,16 +153,18 @@ class WebglGraphicsDevice extends GraphicsDevice {
             Debug.log('Antialiasing has been turned off due to rendering issues on AppleWebKit 15.4');
         }
 
-        // #5856 - turn off antialiasing on Windows Firefox
-        if (platform.browserName === 'firefox' && platform.name === 'windows') {
+        // #5856 - turn off antialiasing on Firefox running on Windows / Android
+        if (platform.browserName === 'firefox') {
             const ua = (typeof navigator !== 'undefined') ? navigator.userAgent : '';
             const match = ua.match(/Firefox\/(\d+(\.\d+)*)/);
             const firefoxVersion = match ? match[1] : null;
             if (firefoxVersion) {
                 const version = parseFloat(firefoxVersion);
-                if (version >= 120 || version === 115) {
+                const disableAntialias = (platform.name === 'windows' && (version >= 120 || version === 115)) ||
+                                         (platform.name === 'android' && version >= 132);
+                if (disableAntialias) {
                     options.antialias = false;
-                    Debug.log(`Antialiasing has been turned off due to rendering issues on Windows Firefox esr115 and 120+. Current version: ${firefoxVersion}`);
+                    Debug.log(`Antialiasing has been turned off due to rendering issues on Firefox ${platform.name} platform version ${firefoxVersion}`);
                 }
             }
         }
@@ -2057,7 +2059,7 @@ class WebglGraphicsDevice extends GraphicsDevice {
                     renderTarget.destroy();
                 }
                 resolve(data);
-            });
+            }).catch(reject);
         });
     }
 

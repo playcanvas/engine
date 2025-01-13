@@ -1,10 +1,9 @@
-// @config DESCRIPTION <div style='text-align:center'><div>(<b>WASDQE</b>) Move</div><div>(<b>LMB</b>) Orbit, (<b>RMB</b>) Fly</div><div>(<b>Scroll Wheel</b>) zoom</div><div>(<b>MMB / Hold Shift</b>) Pan</div><div>(<b>F</b>) Focus</div></div>
-// @config HIDDEN
-import * as pc from 'playcanvas';
+// @config DESCRIPTION <div style='text-align:center'><div>(<b>WASDQE</b>) Move (Fly enabled)</div><div>(<b>LMB</b>) Orbit, (<b>LMB </b>(Orbit disabled)<b> / RMB</b>) Fly</div><div>(<b>Hold Shift / MMB / RMB </b>(Fly or Orbit disabled)) Pan</div><div>(<b>Scroll Wheel</b> (Orbit or Pan enabled)) Zoom</div><div>(<b>F</b>) Focus</div></div>
 import { data } from 'examples/observer';
 import { deviceType, rootPath, fileImport } from 'examples/utils';
+import * as pc from 'playcanvas';
 
-const { MultiCamera } = await fileImport(rootPath + '/static/scripts/camera/multi-camera.js');
+const { CameraControls } = await fileImport(`${rootPath}/static/scripts/esm/camera-controls.mjs`);
 
 const canvas = document.getElementById('application-canvas');
 if (!(canvas instanceof HTMLCanvasElement)) {
@@ -14,18 +13,18 @@ window.focus();
 
 const gfxOptions = {
     deviceTypes: [deviceType],
-    glslangUrl: rootPath + '/static/lib/glslang/glslang.js',
-    twgslUrl: rootPath + '/static/lib/twgsl/twgsl.js'
+    glslangUrl: `${rootPath}/static/lib/glslang/glslang.js`,
+    twgslUrl: `${rootPath}/static/lib/twgsl/twgsl.js`
 };
 
 const assets = {
     helipad: new pc.Asset(
         'helipad-env-atlas',
         'texture',
-        { url: rootPath + '/static/assets/cubemaps/helipad-env-atlas.png' },
+        { url: `${rootPath}/static/assets/cubemaps/helipad-env-atlas.png` },
         { type: pc.TEXTURETYPE_RGBP, mipmaps: false }
     ),
-    statue: new pc.Asset('statue', 'container', { url: rootPath + '/static/assets/models/statue.glb' })
+    statue: new pc.Asset('statue', 'container', { url: `${rootPath}/static/assets/models/statue.glb` })
 };
 
 const device = await pc.createGraphicsDevice(canvas, gfxOptions);
@@ -80,20 +79,22 @@ const calcEntityAABB = (bbox, entity) => {
 
 /**
  * @param {pc.Entity} focus - The entity to focus the camera on.
- * @returns {MultiCamera} The multi-camera script.
+ * @returns {CameraControls} The camera-controls script.
  */
 const createMultiCamera = (focus) => {
     const camera = new pc.Entity();
     camera.addComponent('camera');
     camera.addComponent('script');
+    camera.setPosition(0, 20, 30);
+    app.root.addChild(camera);
 
-    const start = new pc.Vec3(0, 20, 30);
     const bbox = calcEntityAABB(new pc.BoundingBox(), focus);
-    const cameraDist = start.distance(bbox.center);
+    const cameraDist = camera.getPosition().distance(bbox.center);
 
-    /** @type {MultiCamera} */
-    const script = camera.script.create(MultiCamera, {
+    /** @type {CameraControls} */
+    const script = camera.script.create(CameraControls, {
         attributes: {
+            focusPoint: bbox.center,
             sceneSize: bbox.halfExtents.length()
         }
     });
@@ -101,23 +102,18 @@ const createMultiCamera = (focus) => {
     // focus on entity when 'f' key is pressed
     const onKeyDown = (/** @type {KeyboardEvent} */ e) => {
         if (e.key === 'f') {
-            if (data.get('example.zoomReset')) {
-                script.resetZoom(cameraDist);
-            }
-            script.focus(bbox.center);
+            script.refocus(
+                bbox.center,
+                null,
+                data.get('example.zoomReset') ? cameraDist : null,
+                data.get('example.smoothedFocus')
+            );
         }
     };
     window.addEventListener('keydown', onKeyDown);
     app.on('destroy', () => {
         window.removeEventListener('keydown', onKeyDown);
     });
-
-    // wait until after canvas resized to focus on entity
-    const resize = new ResizeObserver(() => {
-        resize.disconnect();
-        script.focus(bbox.center, start);
-    });
-    resize.observe(canvas);
 
     return script;
 };
@@ -144,25 +140,52 @@ const multiCameraScript = createMultiCamera(statue);
 
 // Bind controls to camera attributes
 data.set('example', {
-    zoomReset: true
+    zoomReset: true,
+    smoothedFocus: true
 });
-data.set('attr', {
-    focusFov: 75,
-    lookSensitivity: 0.2,
-    lookDamping: 0.97,
-    moveDamping: 0.98,
-    pinchSpeed: 5,
-    wheelSpeed: 0.005,
-    zoomMin: 0.001,
-    zoomMax: 10,
-    zoomScaleMin: 0.01,
-    moveSpeed: 2,
-    sprintSpeed: 4,
-    crouchSpeed: 1
-});
+
+data.set('attr', [
+    'enableOrbit',
+    'enablePan',
+    'enableFly',
+    'lookSensitivity',
+    'lookDamping',
+    'moveDamping',
+    'pitchRange',
+    'pinchSpeed',
+    'wheelSpeed',
+    'zoomMin',
+    'zoomMax',
+    'zoomScaleMin',
+    'moveSpeed',
+    'sprintSpeed',
+    'crouchSpeed'
+].reduce((/** @type {Record<string, any>} */ obj, key) => {
+    const value = multiCameraScript[key];
+
+    if (value instanceof pc.Vec2) {
+        obj[key] = [value.x, value.y];
+        return obj;
+    }
+
+    obj[key] = multiCameraScript[key];
+    return obj;
+}, {}));
+
+const tmpVa = new pc.Vec2();
 data.on('*:set', (/** @type {string} */ path, /** @type {any} */ value) => {
-    const [category, key] = path.split('.');
+    const [category, key, index] = path.split('.');
     if (category !== 'attr') {
+        return;
+    }
+
+    if (Array.isArray(value)) {
+        multiCameraScript[key] = tmpVa.set(value[0], value[1]);
+        return;
+    }
+    if (index !== undefined) {
+        const arr = data.get(`${category}.${key}`);
+        multiCameraScript[key] = tmpVa.set(arr[0], arr[1]);
         return;
     }
     multiCameraScript[key] = value;

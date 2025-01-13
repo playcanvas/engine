@@ -2,9 +2,7 @@ import { math } from '../../core/math/math.js';
 import { Color } from '../../core/math/color.js';
 import { RenderPassShaderQuad } from '../../scene/graphics/render-pass-shader-quad.js';
 import { shaderChunks } from '../../scene/shader-lib/chunks/chunks.js';
-import { TONEMAP_LINEAR } from '../../scene/constants.js';
-import { ShaderGenerator } from '../../scene/shader-lib/programs/shader-generator.js';
-
+import { TONEMAP_LINEAR, tonemapNames } from '../../scene/constants.js';
 
 // Contrast Adaptive Sharpening (CAS) is used to apply the sharpening. It's based on AMD's
 // FidelityFX CAS, WebGL implementation: https://www.shadertoy.com/view/wtlSWB. It's best to run it
@@ -13,6 +11,11 @@ import { ShaderGenerator } from '../../scene/shader-lib/programs/shader-generato
 // before the tone-mapping.
 
 const fragmentShader = /* glsl */ `
+
+    #include "tonemappingPS"
+    #include "decodePS"
+    #include "gamma2_2PS"
+
     varying vec2 uv0;
     uniform sampler2D sceneTexture;
     uniform vec2 sceneTextureInvRes;
@@ -22,7 +25,57 @@ const fragmentShader = /* glsl */ `
         uniform float bloomIntensity;
     #endif
 
+    #ifdef DOF
+        uniform sampler2D cocTexture;
+        uniform sampler2D blurTexture;
+
+        // Samples the DOF blur and CoC textures. When the blur texture was generated at lower resolution,
+        // upscale it to the full resolution using bilinear interpolation to hide the blockiness along COC edges.
+        vec3 dofBlur(vec2 uv, out vec2 coc) {
+            coc = texture2DLod(cocTexture, uv, 0.0).rg;
+
+            #if DOF_UPSCALE
+                vec2 blurTexelSize = 1.0 / vec2(textureSize(blurTexture, 0));
+                vec3 bilinearBlur = vec3(0.0);
+                float totalWeight = 0.0;
+
+                // 3x3 grid of neighboring texels
+                for (int i = -1; i <= 1; i++) {
+                    for (int j = -1; j <= 1; j++) {
+                        vec2 offset = vec2(i, j) * blurTexelSize;
+                        vec2 cocSample = texture2DLod(cocTexture, uv + offset, 0.0).rg;
+                        vec3 blurSample = texture2DLod(blurTexture, uv + offset, 0.0).rgb;
+
+                        // Accumulate the weighted blur sample
+                        float cocWeight = clamp(cocSample.r + cocSample.g, 0.0, 1.0);
+                        bilinearBlur += blurSample * cocWeight;
+                        totalWeight += cocWeight;
+                    }
+                }
+
+                // normalize the accumulated color
+                if (totalWeight > 0.0) {
+                    bilinearBlur /= totalWeight;
+                }
+
+                return bilinearBlur;
+            #else
+                // when blurTexture is full resolution, just sample it, no upsampling
+                return texture2DLod(blurTexture, uv, 0.0).rgb;
+            #endif
+        }
+
+    #endif
+
     #ifdef SSAO
+        #define SSAO_TEXTURE
+    #endif
+
+    #if DEBUG_COMPOSE == ssao
+        #define SSAO_TEXTURE
+    #endif
+
+    #ifdef SSAO_TEXTURE
         uniform sampler2D ssaoTexture;
     #endif
 
@@ -106,11 +159,11 @@ const fragmentShader = /* glsl */ `
             float y = sceneTextureInvRes.y;
 
             // sample 4 neighbors around the already sampled pixel, and convert it to SDR
-            vec3 a = toSDR(texture2DLodEXT(sceneTexture, uv + vec2(0.0, -y), 0.0).rgb);
-            vec3 b = toSDR(texture2DLodEXT(sceneTexture, uv + vec2(-x, 0.0), 0.0).rgb);
+            vec3 a = toSDR(texture2DLod(sceneTexture, uv + vec2(0.0, -y), 0.0).rgb);
+            vec3 b = toSDR(texture2DLod(sceneTexture, uv + vec2(-x, 0.0), 0.0).rgb);
             vec3 c = toSDR(color.rgb);
-            vec3 d = toSDR(texture2DLodEXT(sceneTexture, uv + vec2(x, 0.0), 0.0).rgb);
-            vec3 e = toSDR(texture2DLodEXT(sceneTexture, uv + vec2(0.0, y), 0.0).rgb);
+            vec3 d = toSDR(texture2DLod(sceneTexture, uv + vec2(x, 0.0), 0.0).rgb);
+            vec3 e = toSDR(texture2DLod(sceneTexture, uv + vec2(0.0, y), 0.0).rgb);
 
             // apply the sharpening
             float min_g = min(a.g, min(b.g, min(c.g, min(d.g, e.g))));
@@ -139,15 +192,25 @@ const fragmentShader = /* glsl */ `
         #endif
         #endif
 
-        vec4 scene = texture2DLodEXT(sceneTexture, uv, 0.0);
+        vec4 scene = texture2DLod(sceneTexture, uv, 0.0);
         vec3 result = scene.rgb;
 
         #ifdef CAS
             result = cas(result, uv, sharpness);
         #endif
 
+        #ifdef DOF
+            vec2 coc;
+            vec3 blur = dofBlur(uv, coc);
+            result = mix(result, blur, coc.r + coc.g);
+        #endif
+
+        #ifdef SSAO_TEXTURE
+            mediump float ssao = texture2DLod(ssaoTexture, uv0, 0.0).r;
+        #endif
+
         #ifdef SSAO
-            result *= texture2DLodEXT(ssaoTexture, uv0, 0.0).r;
+            result *= ssao;
         #endif
 
         #ifdef FRINGING
@@ -155,7 +218,7 @@ const fragmentShader = /* glsl */ `
         #endif
 
         #ifdef BLOOM
-            vec3 bloom = texture2DLodEXT(bloomTexture, uv, 0.0).rgb;
+            vec3 bloom = texture2DLod(bloomTexture, uv, 0.0).rgb;
             result += bloom * bloomIntensity;
         #endif
 
@@ -167,7 +230,40 @@ const fragmentShader = /* glsl */ `
         result = toneMap(result);
 
         #ifdef VIGNETTE
-            result *= vignette(uv);
+            mediump float vig = vignette(uv);
+            result *= vig;
+        #endif
+
+        // debug output
+        #ifdef DEBUG_COMPOSE
+
+            #ifdef BLOOM
+                #if DEBUG_COMPOSE == bloom
+                    result = bloom * bloomIntensity;
+                #endif
+            #endif
+
+            #ifdef DOF
+                #ifdef DEBUG_COMPOSE == dofcoc
+                    result = vec3(coc, 0.0);
+                #endif
+                #ifdef DEBUG_COMPOSE == dofblur
+                    result = blur;
+                #endif
+            #endif
+
+            #if DEBUG_COMPOSE == ssao
+                result = vec3(ssao);
+            #endif
+
+            #if DEBUG_COMPOSE == vignette
+                result = vec3(vig);
+            #endif
+
+            #if DEBUG_COMPOSE == scene
+                result = scene.rgb;
+            #endif
+
         #endif
 
         #ifdef GAMMA_CORRECT_OUTPUT
@@ -190,6 +286,12 @@ class RenderPassCompose extends RenderPassShaderQuad {
     bloomIntensity = 0.01;
 
     _bloomTexture = null;
+
+    _cocTexture = null;
+
+    blurTexture = null;
+
+    blurTextureUpscale = false;
 
     _ssaoTexture = null;
 
@@ -229,13 +331,17 @@ class RenderPassCompose extends RenderPassShaderQuad {
 
     _key = '';
 
+    _debug = null;
+
     constructor(graphicsDevice) {
         super(graphicsDevice);
 
         const { scope } = graphicsDevice;
         this.sceneTextureId = scope.resolve('sceneTexture');
         this.bloomTextureId = scope.resolve('bloomTexture');
+        this.cocTextureId = scope.resolve('cocTexture');
         this.ssaoTextureId = scope.resolve('ssaoTexture');
+        this.blurTextureId = scope.resolve('blurTexture');
         this.bloomIntensityId = scope.resolve('bloomIntensity');
         this.bcsId = scope.resolve('brightnessContrastSaturation');
         this.tintId = scope.resolve('tint');
@@ -244,6 +350,17 @@ class RenderPassCompose extends RenderPassShaderQuad {
         this.sceneTextureInvResId = scope.resolve('sceneTextureInvRes');
         this.sceneTextureInvResValue = new Float32Array(2);
         this.sharpnessId = scope.resolve('sharpness');
+    }
+
+    set debug(value) {
+        if (this._debug !== value) {
+            this._debug = value;
+            this._shaderDirty = true;
+        }
+    }
+
+    get debug() {
+        return this._debug;
     }
 
     set bloomTexture(value) {
@@ -255,6 +372,17 @@ class RenderPassCompose extends RenderPassShaderQuad {
 
     get bloomTexture() {
         return this._bloomTexture;
+    }
+
+    set cocTexture(value) {
+        if (this._cocTexture !== value) {
+            this._cocTexture = value;
+            this._shaderDirty = true;
+        }
+    }
+
+    get cocTexture() {
+        return this._cocTexture;
     }
 
     set ssaoTexture(value) {
@@ -361,33 +489,40 @@ class RenderPassCompose extends RenderPassShaderQuad {
 
             const key = `${this.toneMapping}` +
                 `-${this.bloomTexture ? 'bloom' : 'nobloom'}` +
+                `-${this.cocTexture ? 'dof' : 'nodof'}` +
+                `-${this.blurTextureUpscale ? 'dofupscale' : ''}` +
                 `-${this.ssaoTexture ? 'ssao' : 'nossao'}` +
                 `-${this.gradingEnabled ? 'grading' : 'nograding'}` +
                 `-${this.vignetteEnabled ? 'vignette' : 'novignette'}` +
                 `-${this.fringingEnabled ? 'fringing' : 'nofringing'}` +
                 `-${this.taaEnabled ? 'taa' : 'notaa'}` +
                 `-${this.isSharpnessEnabled ? 'cas' : 'nocas'}` +
-                `-${this._srgb ? 'srgb' : 'linear'}`;
+                `-${this._srgb ? 'srgb' : 'linear'}` +
+                `-${this._debug ?? ''}`;
 
             if (this._key !== key) {
                 this._key = key;
 
-                const defines =
-                    (this.bloomTexture ? '#define BLOOM\n' : '') +
-                    (this.ssaoTexture ? '#define SSAO\n' : '') +
-                    (this.gradingEnabled ? '#define GRADING\n' : '') +
-                    (this.vignetteEnabled ? '#define VIGNETTE\n' : '') +
-                    (this.fringingEnabled ? '#define FRINGING\n' : '') +
-                    (this.taaEnabled ? '#define TAA\n' : '') +
-                    (this.isSharpnessEnabled ? '#define CAS\n' : '') +
-                    (this._srgb ? '' : '#define GAMMA_CORRECT_OUTPUT\n');
+                const defines = new Map();
+                defines.set('TONEMAP', tonemapNames[this.toneMapping]);
+                if (this.bloomTexture) defines.set('BLOOM', true);
+                if (this.cocTexture) defines.set('DOF', true);
+                if (this.blurTextureUpscale) defines.set('DOF_UPSCALE', true);
+                if (this.ssaoTexture) defines.set('SSAO', true);
+                if (this.gradingEnabled) defines.set('GRADING', true);
+                if (this.vignetteEnabled) defines.set('VIGNETTE', true);
+                if (this.fringingEnabled) defines.set('FRINGING', true);
+                if (this.taaEnabled) defines.set('TAA', true);
+                if (this.isSharpnessEnabled) defines.set('CAS', true);
+                if (!this._srgb) defines.set('GAMMA_CORRECT_OUTPUT', true);
+                if (this._debug) defines.set('DEBUG_COMPOSE', this._debug);
 
-                const fsChunks =
-                shaderChunks.decodePS +
-                shaderChunks.gamma2_2PS +
-                ShaderGenerator.tonemapCode(this.toneMapping);
+                const includes = new Map(Object.entries(shaderChunks));
 
-                this.shader = this.createQuadShader(`ComposeShader-${key}`, defines + fsChunks + fragmentShader);
+                this.shader = this.createQuadShader(`ComposeShader-${key}`, fragmentShader, {
+                    fragmentIncludes: includes,
+                    fragmentDefines: defines
+                });
             }
         }
     }
@@ -402,6 +537,11 @@ class RenderPassCompose extends RenderPassShaderQuad {
         if (this._bloomTexture) {
             this.bloomTextureId.setValue(this._bloomTexture);
             this.bloomIntensityId.setValue(this.bloomIntensity);
+        }
+
+        if (this._cocTexture) {
+            this.cocTextureId.setValue(this._cocTexture);
+            this.blurTextureId.setValue(this.blurTexture);
         }
 
         if (this._ssaoTexture) {

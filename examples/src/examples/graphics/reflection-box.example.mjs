@@ -1,20 +1,20 @@
-import * as pc from 'playcanvas';
 import { data } from 'examples/observer';
 import { deviceType, rootPath } from 'examples/utils';
+import * as pc from 'playcanvas';
 
 const canvas = /** @type {HTMLCanvasElement} */ (document.getElementById('application-canvas'));
 window.focus();
 
 const assets = {
-    script1: new pc.Asset('script', 'script', { url: rootPath + '/static/scripts/camera/orbit-camera.js' }),
-    script2: new pc.Asset('script', 'script', { url: rootPath + '/static/scripts/utils/cubemap-renderer.js' }),
-    normal: new pc.Asset('normal', 'texture', { url: rootPath + '/static/assets/textures/normal-map.png' })
+    script1: new pc.Asset('script', 'script', { url: `${rootPath}/static/scripts/camera/orbit-camera.js` }),
+    script2: new pc.Asset('script', 'script', { url: `${rootPath}/static/scripts/utils/cubemap-renderer.js` }),
+    normal: new pc.Asset('normal', 'texture', { url: `${rootPath}/static/assets/textures/normal-map.png` })
 };
 
 const gfxOptions = {
     deviceTypes: [deviceType],
-    glslangUrl: rootPath + '/static/lib/glslang/glslang.js',
-    twgslUrl: rootPath + '/static/lib/twgsl/twgsl.js'
+    glslangUrl: `${rootPath}/static/lib/glslang/glslang.js`,
+    twgslUrl: `${rootPath}/static/lib/twgsl/twgsl.js`
 };
 
 const device = await pc.createGraphicsDevice(canvas, gfxOptions);
@@ -147,14 +147,14 @@ assetListLoader.load(() => {
         'style',
         'display: block; width: 1px; height: 1px; position: absolute; opacity: 0; z-index: -1000; top: 0px; pointer-events: none'
     );
-    video.src = rootPath + '/static/assets/video/SampleVideo_1280x720_1mb.mp4';
+    video.src = `${rootPath}/static/assets/video/SampleVideo_1280x720_1mb.mp4`;
     document.body.append(video);
-    video.addEventListener('canplaythrough', function () {
+    video.addEventListener('canplaythrough', () => {
         videoTexture.setSource(video);
     });
 
     // Listen for the 'loadedmetadata' event to resize the texture appropriately
-    video.addEventListener('loadedmetadata', function () {
+    video.addEventListener('loadedmetadata', () => {
         videoTexture.resize(video.videoWidth, video.videoHeight);
     });
 
@@ -315,7 +315,7 @@ assetListLoader.load(() => {
     let time = 0;
     let updateProbeCount = 1;
     let updateVideo = true;
-    app.on('update', function (/** @type {number} */ dt) {
+    app.on('update', (/** @type {number} */ dt) => {
         time += dt * 0.3;
 
         // Update the video data to the texture every other frame

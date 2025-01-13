@@ -9,6 +9,8 @@ import { SHADERLANGUAGE_WGSL } from '../../platform/graphics/constants.js';
 /**
  * @import { GraphicsDevice } from '../../platform/graphics/graphics-device.js'
  * @import { ShaderProcessorOptions } from '../../platform/graphics/shader-processor-options.js'
+ * @import { CameraShaderParams } from '../camera-shader-params.js'
+ * @import { Material } from '../materials/material.js'
  */
 
 /**
@@ -166,4 +168,21 @@ function processShader(shader, processingOptions) {
     return variant;
 }
 
-export { createShader, createShaderFromCode, processShader };
+/**
+ * Create a map of defines for the shader for a material, rendered by a camera with the specified
+ * shader parameters.
+ *
+ * @param {Material} material - The material to create the shader defines for.
+ * @param {CameraShaderParams} cameraShaderParams - The camera shader parameters.
+ * @returns {Map<string, string>} The map of shader defines.
+ * @ignore
+ */
+const getMaterialShaderDefines = (material, cameraShaderParams) => {
+
+    // merge both maps, with camera shader params taking precedence
+    const defines = new Map(material.defines);
+    cameraShaderParams.defines.forEach((value, key) => defines.set(key, value));
+    return defines;
+};
+
+export { createShader, createShaderFromCode, processShader, getMaterialShaderDefines };

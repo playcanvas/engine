@@ -1,5 +1,5 @@
-import * as pc from 'playcanvas';
 import { deviceType, rootPath } from 'examples/utils';
+import * as pc from 'playcanvas';
 
 const canvas = /** @type {HTMLCanvasElement} */ (document.getElementById('application-canvas'));
 window.focus();
@@ -8,13 +8,13 @@ window.focus();
 // lights and cameras, and switches between the cameras every 2 seconds.
 
 const assets = {
-    scene: new pc.Asset('scene', 'container', { url: rootPath + '/static/assets/models/geometry-camera-light.glb' })
+    scene: new pc.Asset('scene', 'container', { url: `${rootPath}/static/assets/models/geometry-camera-light.glb` })
 };
 
 const gfxOptions = {
     deviceTypes: [deviceType],
-    glslangUrl: rootPath + '/static/lib/glslang/glslang.js',
-    twgslUrl: rootPath + '/static/lib/twgsl/twgsl.js'
+    glslangUrl: `${rootPath}/static/lib/glslang/glslang.js`,
+    twgslUrl: `${rootPath}/static/lib/twgsl/twgsl.js`
 };
 
 const device = await pc.createGraphicsDevice(canvas, gfxOptions);
@@ -78,7 +78,7 @@ assetListLoader.load(() => {
 
     let time = 0;
     let activeCamera = 0;
-    app.on('update', function (dt) {
+    app.on('update', (dt) => {
         time -= dt;
 
         // change the camera every few seconds

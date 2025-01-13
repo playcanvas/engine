@@ -1,7 +1,6 @@
-import * as pc from 'playcanvas';
 import { data } from 'examples/observer';
-import { deviceType, rootPath, fileImport } from 'examples/utils';
-const { CameraFrame } = await fileImport(rootPath + '/static/assets/scripts/misc/camera-frame.mjs');
+import { deviceType, rootPath } from 'examples/utils';
+import * as pc from 'playcanvas';
 
 const canvas = /** @type {HTMLCanvasElement} */ (document.getElementById('application-canvas'));
 window.focus();
@@ -10,18 +9,18 @@ const assets = {
     envAtlas: new pc.Asset(
         'env-atlas',
         'texture',
-        { url: rootPath + '/static/assets/cubemaps/table-mountain-env-atlas.png' },
+        { url: `${rootPath}/static/assets/cubemaps/table-mountain-env-atlas.png` },
         { type: pc.TEXTURETYPE_RGBP, mipmaps: false }
     ),
-    table: new pc.Asset('table', 'container', { url: rootPath + '/static/assets/models/glass-table.glb' }),
-    script: new pc.Asset('script', 'script', { url: rootPath + '/static/scripts/camera/orbit-camera.js' }),
-    diffuse: new pc.Asset('color', 'texture', { url: rootPath + '/static/assets/textures/playcanvas.png' })
+    table: new pc.Asset('table', 'container', { url: `${rootPath}/static/assets/models/glass-table.glb` }),
+    script: new pc.Asset('script', 'script', { url: `${rootPath}/static/scripts/camera/orbit-camera.js` }),
+    diffuse: new pc.Asset('color', 'texture', { url: `${rootPath}/static/assets/textures/playcanvas.png` })
 };
 
 const gfxOptions = {
     deviceTypes: [deviceType],
-    glslangUrl: rootPath + '/static/lib/glslang/glslang.js',
-    twgslUrl: rootPath + '/static/lib/twgsl/twgsl.js',
+    glslangUrl: `${rootPath}/static/lib/glslang/glslang.js`,
+    twgslUrl: `${rootPath}/static/lib/twgsl/twgsl.js`,
 
     // disable anti-aliasing as TAA is used to smooth edges
     antialias: false
@@ -127,7 +126,7 @@ assetListLoader.load(() => {
         range: 200,
         castShadows: true,
         shadowResolution: 2048,
-        shadowType: pc.SHADOW_VSM16,
+        shadowType: pc.SHADOW_VSM_16F,
         vsmBlurSize: 20,
         shadowBias: 0.1,
         normalOffsetBias: 0.1
@@ -159,15 +158,16 @@ assetListLoader.load(() => {
 
     // ------ Custom render passes set up ------
 
-    /** @type { CameraFrame } */
-    const cameraFrame = cameraEntity.script.create(CameraFrame);
+    const cameraFrame = new pc.CameraFrame(app, cameraEntity.camera);
     cameraFrame.rendering.toneMapping = pc.TONEMAP_ACES;
     cameraFrame.rendering.sceneColorMap = true;
     cameraFrame.taa.jitter = 1;
+    cameraFrame.update();
 
     const applySettings = () => {
         cameraFrame.taa.enabled = data.get('data.taa');
         cameraFrame.rendering.sharpness = cameraFrame.taa.enabled ? 1 : 0;
+        cameraFrame.update();
     };
 
     // ------

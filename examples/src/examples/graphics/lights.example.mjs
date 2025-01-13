@@ -1,6 +1,6 @@
-import * as pc from 'playcanvas';
 import { data } from 'examples/observer';
 import { deviceType, rootPath } from 'examples/utils';
+import * as pc from 'playcanvas';
 
 const canvas = /** @type {HTMLCanvasElement} */ (document.getElementById('application-canvas'));
 window.focus();
@@ -15,32 +15,32 @@ function createMaterial(colors) {
 }
 
 const assets = {
-    statue: new pc.Asset('statue', 'container', { url: rootPath + '/static/assets/models/statue.glb' }),
-    heart: new pc.Asset('heart', 'texture', { url: rootPath + '/static/assets/textures/heart.png' }),
+    statue: new pc.Asset('statue', 'container', { url: `${rootPath}/static/assets/models/statue.glb` }),
+    heart: new pc.Asset('heart', 'texture', { url: `${rootPath}/static/assets/textures/heart.png` }),
     xmas_negx: new pc.Asset('xmas_negx', 'texture', {
-        url: rootPath + '/static/assets/cubemaps/xmas_faces/xmas_negx.png'
+        url: `${rootPath}/static/assets/cubemaps/xmas_faces/xmas_negx.png`
     }),
     xmas_negy: new pc.Asset('xmas_negy', 'texture', {
-        url: rootPath + '/static/assets/cubemaps/xmas_faces/xmas_negy.png'
+        url: `${rootPath}/static/assets/cubemaps/xmas_faces/xmas_negy.png`
     }),
     xmas_negz: new pc.Asset('xmas_negz', 'texture', {
-        url: rootPath + '/static/assets/cubemaps/xmas_faces/xmas_negz.png'
+        url: `${rootPath}/static/assets/cubemaps/xmas_faces/xmas_negz.png`
     }),
     xmas_posx: new pc.Asset('xmas_posx', 'texture', {
-        url: rootPath + '/static/assets/cubemaps/xmas_faces/xmas_posx.png'
+        url: `${rootPath}/static/assets/cubemaps/xmas_faces/xmas_posx.png`
     }),
     xmas_posy: new pc.Asset('xmas_posy', 'texture', {
-        url: rootPath + '/static/assets/cubemaps/xmas_faces/xmas_posy.png'
+        url: `${rootPath}/static/assets/cubemaps/xmas_faces/xmas_posy.png`
     }),
     xmas_posz: new pc.Asset('xmas_posz', 'texture', {
-        url: rootPath + '/static/assets/cubemaps/xmas_faces/xmas_posz.png'
+        url: `${rootPath}/static/assets/cubemaps/xmas_faces/xmas_posz.png`
     })
 };
 
 const gfxOptions = {
     deviceTypes: [deviceType],
-    glslangUrl: rootPath + '/static/lib/glslang/glslang.js',
-    twgslUrl: rootPath + '/static/lib/twgsl/twgsl.js'
+    glslangUrl: `${rootPath}/static/lib/glslang/glslang.js`,
+    twgslUrl: `${rootPath}/static/lib/twgsl/twgsl.js`
 };
 
 const device = await pc.createGraphicsDevice(canvas, gfxOptions);
@@ -184,7 +184,7 @@ assetListLoader.load(() => {
             castShadows: true,
             shadowBias: 0.05,
             normalOffsetBias: 0.03,
-            shadowType: pc.SHADOW_PCF3,
+            shadowType: pc.SHADOW_PCF3_32F,
             shadowResolution: 256,
             range: 111,
             cookieAsset: cubemapAsset,
@@ -218,7 +218,7 @@ assetListLoader.load(() => {
     // Allow user to toggle individual lights
     app.keyboard.on(
         'keydown',
-        function (e) {
+        (e) => {
             // if the user is editing an input field, ignore key presses
             if (e.element.constructor.name === 'HTMLInputElement') return;
             switch (e.key) {
@@ -238,7 +238,7 @@ assetListLoader.load(() => {
 
     // Simple update loop to rotate the light
     let angleRad = 1;
-    app.on('update', function (dt) {
+    app.on('update', (dt) => {
         angleRad += 0.3 * dt;
         if (entity) {
             lights.spot.lookAt(new pc.Vec3(0, -5, 0));

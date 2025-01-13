@@ -12,7 +12,7 @@ import { LightingParams } from './lighting/lighting-params.js';
 import { Sky } from './skybox/sky.js';
 import { Immediate } from './immediate/immediate.js';
 import { EnvLighting } from './graphics/env-lighting.js';
-import { RenderingParams } from './renderer/rendering-params.js';
+import { FogParams } from './fog-params.js';
 
 /**
  * @import { Entity } from '../framework/entity.js'
@@ -66,6 +66,80 @@ class Scene extends EventHandler {
      * });
      */
     static EVENT_SETSKYBOX = 'set:skybox';
+
+    /**
+     * Fired before the camera renders the scene. The handler is passed the {@link CameraComponent}
+     * that will render the scene.
+     *
+     * @event
+     * @example
+     * app.scene.on('prerender', (camera) => {
+     *    console.log(`Camera ${camera.entity.name} will render the scene`);
+     * });
+     */
+    static EVENT_PRERENDER = 'prerender';
+
+    /**
+     * Fired when the camera renders the scene. The handler is passed the {@link CameraComponent}
+     * that rendered the scene.
+     *
+     * @event
+     * @example
+     * app.scene.on('postrender', (camera) => {
+     *    console.log(`Camera ${camera.entity.name} rendered the scene`);
+     * });
+     */
+    static EVENT_POSTRENDER = 'postrender';
+
+    /**
+     * Fired before the camera renders a layer. The handler is passed the {@link CameraComponent},
+     * the {@link Layer} that will be rendered, and a boolean parameter set to true if the layer is
+     * transparent. This is called during rendering to a render target or a default framebuffer, and
+     * additional rendering can be performed here, for example using {@link QuadRender#render}.
+     *
+     * @event
+     * @example
+     * app.scene.on('prerender:layer', (camera, layer, transparent) => {
+     *    console.log(`Camera ${camera.entity.name} will render the layer ${layer.name} (transparent: ${transparent})`);
+     * });
+     */
+    static EVENT_PRERENDER_LAYER = 'prerender:layer';
+
+    /**
+     * Fired when the camera renders a layer. The handler is passed the {@link CameraComponent},
+     * the {@link Layer} that will be rendered, and a boolean parameter set to true if the layer is
+     * transparent. This is called during rendering to a render target or a default framebuffer, and
+     * additional rendering can be performed here, for example using {@link QuadRender#render}.
+     *
+     * @event
+     * @example
+     * app.scene.on('postrender:layer', (camera, layer, transparent) => {
+     *    console.log(`Camera ${camera.entity.name} rendered the layer ${layer.name} (transparent: ${transparent})`);
+     * });
+     */
+    static EVENT_POSTRENDER_LAYER = 'postrender:layer';
+
+    /**
+     * Fired before visibility culling is performed for the camera.
+     *
+     * @event
+     * @example
+     * app.scene.on('precull', (camera) => {
+     *    console.log(`Visibility culling will be performed for camera ${camera.entity.name}`);
+     * });
+     */
+    static EVENT_PRECULL = 'precull';
+
+    /**
+     * Fired after visibility culling is performed for the camera.
+     *
+     * @event
+     * @example
+     * app.scene.on('postcull', (camera) => {
+     *    console.log(`Visibility culling was performed for camera ${camera.entity.name}`);
+     * });
+     */
+    static EVENT_POSTCULL = 'postcull';
 
     /**
      * If enabled, the ambient lighting will be baked into lightmaps. This will be either the
@@ -192,11 +266,11 @@ class Scene extends EventHandler {
     _skyboxCubeMap = null;
 
     /**
-     * The rendering parameters.
+     * The fog parameters.
      *
      * @private
      */
-    _renderingParams = new RenderingParams();
+    _fogParams = new FogParams();
 
     /**
      * Create a new Scene instance.
@@ -363,7 +437,7 @@ class Scene extends EventHandler {
     /**
      * Sets the environment lighting atlas.
      *
-     * @type {Texture}
+     * @type {Texture|null}
      */
     set envAtlas(value) {
         if (value !== this._envAtlas) {
@@ -391,7 +465,7 @@ class Scene extends EventHandler {
     /**
      * Gets the environment lighting atlas.
      *
-     * @type {Texture}
+     * @type {Texture|null}
      */
     get envAtlas() {
         return this._envAtlas;
@@ -417,6 +491,11 @@ class Scene extends EventHandler {
         return this._layers;
     }
 
+    /**
+     * Gets the {@link Sky} that defines sky properties.
+     *
+     * @type {Sky}
+     */
     get sky() {
         return this._sky;
     }
@@ -431,12 +510,12 @@ class Scene extends EventHandler {
     }
 
     /**
-     * A {@link RenderingParams} that defines rendering parameters.
+     * Gets the {@link FogParams} that define fog parameters.
      *
-     * @type {RenderingParams}
+     * @type {FogParams}
      */
-    get rendering() {
-        return this._renderingParams;
+    get fog() {
+        return this._fogParams;
     }
 
     /**
@@ -524,7 +603,7 @@ class Scene extends EventHandler {
     /**
      * Sets the base cubemap texture used as the scene's skybox when skyboxMip is 0. Defaults to null.
      *
-     * @type {Texture}
+     * @type {Texture|null}
      */
     set skybox(value) {
         if (value !== this._skyboxCubeMap) {
@@ -536,7 +615,7 @@ class Scene extends EventHandler {
     /**
      * Gets the base cubemap texture used as the scene's skybox when skyboxMip is 0.
      *
-     * @type {Texture}
+     * @type {Texture|null}
      */
     get skybox() {
         return this._skyboxCubeMap;
@@ -695,13 +774,11 @@ class Scene extends EventHandler {
         this._gravity.set(physics.gravity[0], physics.gravity[1], physics.gravity[2]);
         this.ambientLight.set(render.global_ambient[0], render.global_ambient[1], render.global_ambient[2]);
         this.ambientLuminance = render.ambientLuminance;
-        this._renderingParams.fog = render.fog;
-        this._renderingParams.fogColor.set(render.fog_color[0], render.fog_color[1], render.fog_color[2]);
-        this._renderingParams.fogStart = render.fog_start;
-        this._renderingParams.fogEnd = render.fog_end;
-        this._renderingParams.fogDensity = render.fog_density;
-        this._renderingParams.gammaCorrection = render.gamma_correction;
-        this._renderingParams.toneMapping = render.tonemapping;
+        this.fog.type = render.fog;
+        this.fog.color.set(render.fog_color[0], render.fog_color[1], render.fog_color[2]);
+        this.fog.start = render.fog_start;
+        this.fog.end = render.fog_end;
+        this.fog.density = render.fog_density;
         this.lightmapSizeMultiplier = render.lightmapSizeMultiplier;
         this.lightmapMaxResolution = render.lightmapMaxResolution;
         this.lightmapMode = render.lightmapMode;

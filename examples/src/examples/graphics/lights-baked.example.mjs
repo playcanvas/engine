@@ -1,14 +1,14 @@
 // @config WEBGPU_DISABLED
-import * as pc from 'playcanvas';
 import { deviceType, rootPath } from 'examples/utils';
+import * as pc from 'playcanvas';
 
 const canvas = /** @type {HTMLCanvasElement} */ (document.getElementById('application-canvas'));
 window.focus();
 
 const gfxOptions = {
     deviceTypes: [deviceType],
-    glslangUrl: rootPath + '/static/lib/glslang/glslang.js',
-    twgslUrl: rootPath + '/static/lib/twgsl/twgsl.js'
+    glslangUrl: `${rootPath}/static/lib/glslang/glslang.js`,
+    twgslUrl: `${rootPath}/static/lib/twgsl/twgsl.js`
 };
 
 const device = await pc.createGraphicsDevice(canvas, gfxOptions);
@@ -87,7 +87,7 @@ light.addComponent('light', {
     shadowBias: 0.2,
     shadowDistance: 50,
     shadowResolution: 2048,
-    shadowType: pc.SHADOW_PCF3,
+    shadowType: pc.SHADOW_PCF3_32F,
     color: pc.Color.GREEN,
     type: 'directional'
 });
@@ -105,7 +105,7 @@ lightPoint.addComponent('light', {
     shadowBias: 0.2,
     shadowDistance: 50,
     shadowResolution: 512,
-    shadowType: pc.SHADOW_PCF3,
+    shadowType: pc.SHADOW_PCF3_32F,
     color: pc.Color.RED,
     range: 100,
     type: 'point'
@@ -134,7 +134,7 @@ app.lightmapper.bake(null, pc.BAKE_COLORDIR);
 
 // Set an update function on the app's update event
 let time = 4;
-app.on('update', function (dt) {
+app.on('update', (dt) => {
     time += dt;
 
     // orbit camera

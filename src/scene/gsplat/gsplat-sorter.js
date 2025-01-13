@@ -3,15 +3,6 @@ import { TEXTURELOCK_READ } from '../../platform/graphics/constants.js';
 
 // sort blind set of data
 function SortWorker() {
-
-    // number of bits used to store the distance in integer array. Smaller number gives it a smaller
-    // precision but faster sorting. Could be dynamic for less precise sorting.
-    // 16bit seems plenty of large scenes (train), 10bits is enough for sled.
-    const compareBits = 16;
-
-    // number of buckets for count sorting to represent each unique distance using compareBits bits
-    const bucketCount = (2 ** compareBits) + 1;
-
     let order;
     let centers;
     let mapping;
@@ -45,7 +36,7 @@ function SortWorker() {
     };
 
     const update = () => {
-        if (!order || !centers || !cameraPosition || !cameraDirection) return;
+        if (!order || !centers || centers.length === 0 || !cameraPosition || !cameraDirection) return;
 
         const px = cameraPosition.x;
         const py = cameraPosition.y;
@@ -75,12 +66,6 @@ function SortWorker() {
         lastCameraDirection.y = dy;
         lastCameraDirection.z = dz;
 
-        // create distance buffer
-        const numVertices = centers.length / 3;
-        if (distances?.length !== numVertices) {
-            distances = new Uint32Array(numVertices);
-        }
-
         // calc min/max distance using bound
         let minDist;
         let maxDist;
@@ -97,7 +82,18 @@ function SortWorker() {
             }
         }
 
-        if (!countBuffer) {
+        const numVertices = centers.length / 3;
+
+        // calculate number of bits needed to store sorting result
+        const compareBits = Math.max(10, Math.min(20, Math.round(Math.log2(numVertices / 4))));
+        const bucketCount = 2 ** compareBits + 1;
+
+        // create distance buffer
+        if (distances?.length !== numVertices) {
+            distances = new Uint32Array(numVertices);
+        }
+
+        if (!countBuffer || countBuffer.length !== bucketCount) {
             countBuffer = new Uint32Array(bucketCount);
         } else {
             countBuffer.fill(0);
@@ -112,6 +108,9 @@ function SortWorker() {
             const y = centers[istride + 1] - py;
             const z = centers[istride + 2] - pz;
             const d = x * dx + y * dy + z * dz;
+            if (isNaN(d)) {
+                continue;
+            }
             const sortKey = Math.floor((d - minDist) * divider);
 
             distances[i] = sortKey;
@@ -164,24 +163,36 @@ function SortWorker() {
             centers = new Float32Array(message.data.centers);
 
             // calculate bounds
-            boundMin.x = boundMax.x = centers[0];
-            boundMin.y = boundMax.y = centers[1];
-            boundMin.z = boundMax.z = centers[2];
-
+            let initialized = false;
             const numVertices = centers.length / 3;
-            for (let i = 1; i < numVertices; ++i) {
+            for (let i = 0; i < numVertices; ++i) {
                 const x = centers[i * 3 + 0];
                 const y = centers[i * 3 + 1];
                 const z = centers[i * 3 + 2];
 
-                boundMin.x = Math.min(boundMin.x, x);
-                boundMin.y = Math.min(boundMin.y, y);
-                boundMin.z = Math.min(boundMin.z, z);
+                if (isNaN(x) || isNaN(y) || isNaN(z)) {
+                    continue;
+                }
 
-                boundMax.x = Math.max(boundMax.x, x);
-                boundMax.y = Math.max(boundMax.y, y);
-                boundMax.z = Math.max(boundMax.z, z);
+                if (!initialized) {
+                    initialized = true;
+                    boundMin.x = boundMax.x = x;
+                    boundMin.y = boundMax.y = y;
+                    boundMin.z = boundMax.z = z;
+                } else {
+                    boundMin.x = Math.min(boundMin.x, x);
+                    boundMax.x = Math.max(boundMax.x, x);
+                    boundMin.y = Math.min(boundMin.y, y);
+                    boundMax.y = Math.max(boundMax.y, y);
+                    boundMin.z = Math.min(boundMin.z, z);
+                    boundMax.z = Math.max(boundMax.z, z);
+                }
             }
+
+            if (!initialized) {
+                boundMin.x = boundMax.x = boundMin.y = boundMax.y = boundMin.z = boundMax.z = 0;
+            }
+
             forceUpdate = true;
         }
         if (message.data.hasOwnProperty('mapping')) {

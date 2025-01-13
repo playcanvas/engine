@@ -1,101 +1,88 @@
-import { CULLFACE_NONE } from '../../platform/graphics/constants.js';
+import { CULLFACE_NONE, SEMANTIC_ATTR13, SEMANTIC_POSITION } from '../../platform/graphics/constants.js';
 import { ShaderProcessorOptions } from '../../platform/graphics/shader-processor-options.js';
-import { BLEND_NONE, BLEND_NORMAL, DITHER_NONE } from '../constants.js';
+import { BLEND_NONE, BLEND_NORMAL, DITHER_NONE, GAMMA_NONE, GAMMA_SRGB, tonemapNames } from '../constants.js';
 import { ShaderMaterial } from '../materials/shader-material.js';
 import { getProgramLibrary } from '../shader-lib/get-program-library.js';
-import { gsplat } from './shader-generator-gsplat.js';
+import { getMaterialShaderDefines } from '../shader-lib/utils.js';
+import { ShaderUtils } from '../../platform/graphics/shader-utils.js';
+import { shaderChunks } from '../shader-lib/chunks/chunks.js';
+import { ShaderGenerator } from '../shader-lib/programs/shader-generator.js';
+import { ShaderPass } from '../shader-pass.js';
+import { hashCode } from '../../core/hash.js';
 
-const splatMainVS = /* glsl */ `
-    uniform vec3 view_position;
+const gammaNames = {
+    [GAMMA_NONE]: 'NONE',
+    [GAMMA_SRGB]: 'SRGB'
+};
 
-    uniform sampler2D splatColor;
+const defaultChunks = new Map(Object.entries(shaderChunks));
 
-    varying mediump vec2 texCoord;
-    varying mediump vec4 color;
-
-    mediump vec4 discardVec = vec4(0.0, 0.0, 2.0, 1.0);
-
-    void main(void)
-    {
-        // calculate splat uv
-        if (!calcSplatUV()) {
-            gl_Position = discardVec;
-            return;
-        }
-
-        // get center
-        vec3 center = getCenter();
-
-        // handle transforms
-        mat4 model_view = matrix_view * matrix_model;
-        vec4 splat_cam = model_view * vec4(center, 1.0);
-        vec4 splat_proj = matrix_projection * splat_cam;
-
-        // cull behind camera
-        if (splat_proj.z < -splat_proj.w) {
-            gl_Position = discardVec;
-            return;
-        }
-
-        // get covariance
-        vec3 covA, covB;
-        getCovariance(covA, covB);
-
-        vec4 v1v2 = calcV1V2(splat_cam.xyz, covA, covB, transpose(mat3(model_view)));
-
-        // get color
-        color = texelFetch(splatColor, splatUV, 0);
-
-        // calculate scale based on alpha
-        float scale = min(1.0, sqrt(-log(1.0 / 255.0 / color.a)) / 2.0);
-
-        v1v2 *= scale;
-
-        // early out tiny splats
-        if (dot(v1v2.xy, v1v2.xy) < 4.0 && dot(v1v2.zw, v1v2.zw) < 4.0) {
-            gl_Position = discardVec;
-            return;
-        }
-
-        gl_Position = splat_proj + vec4((vertex_position.x * v1v2.xy + vertex_position.y * v1v2.zw) / viewport * splat_proj.w, 0, 0);
-
-        texCoord = vertex_position.xy * scale / 2.0;
-
-        #ifdef USE_SH1
-            vec4 worldCenter = matrix_model * vec4(center, 1.0);
-            vec3 viewDir = normalize((worldCenter.xyz / worldCenter.w - view_position) * mat3(matrix_model));
-            color.xyz = max(color.xyz + evalSH(viewDir), 0.0);
-        #endif
-
-        #ifndef DITHER_NONE
-            id = float(splatId);
-        #endif
+class GSplatShaderGenerator {
+    generateKey(options) {
+        const { pass, gamma, toneMapping, vertex, fragment, dither, defines, chunks } = options;
+        return `splat-${pass}-${gamma}-${toneMapping}-${hashCode(vertex)}-${hashCode(fragment)}-${dither}-${ShaderGenerator.definesHash(defines)}-${chunks && Object.keys(chunks).sort().join(':')}`;
     }
-`;
 
-const splatMainFS = /* glsl */ `
-    varying mediump vec2 texCoord;
-    varying mediump vec4 color;
+    createShaderDefinition(device, options) {
+        const shaderPassInfo = ShaderPass.get(device).getByIndex(options.pass);
+        const shaderPassDefines = shaderPassInfo.shaderDefines;
 
-    void main(void)
-    {
-        gl_FragColor = evalSplat(texCoord, color);
+        const defineMap = new Map();
+
+        // define tonemap
+        defineMap.set('TONEMAP', tonemapNames[options.toneMapping] ?? true);
+
+        // define gamma
+        defineMap.set('GAMMA', gammaNames[options.gamma] ?? true);
+
+        // it would nice if DITHER type was defined like the others
+        defineMap.set(`DITHER_${options.dither.toUpperCase()}`, true);
+
+        // add user defines
+        options.defines.forEach((value, key) => {
+            defineMap.set(key, value);
+        });
+
+        const defines = `${shaderPassDefines}\n`;
+        const vs = defines + (options.vertex ?? shaderChunks.gsplatVS);
+        const fs = defines + (options.fragment ?? shaderChunks.gsplatPS);
+        const includes = options.chunks ? new Map(Object.entries({
+            ...shaderChunks,
+            ...options.chunks
+        })) : defaultChunks;
+
+        return ShaderUtils.createDefinition(device, {
+            name: 'SplatShader',
+            attributes: {
+                vertex_position: SEMANTIC_POSITION,
+                vertex_id_attrib: SEMANTIC_ATTR13
+            },
+            vertexCode: vs,
+            vertexDefines: defineMap,
+            vertexIncludes: includes,
+            fragmentCode: fs,
+            fragmentDefines: defineMap,
+            fragmentIncludes: includes
+        });
     }
-`;
+}
+
+const gsplat = new GSplatShaderGenerator();
 
 /**
  * @typedef {object} SplatMaterialOptions - The options.
  * @property {string} [vertex] - Custom vertex shader, see SPLAT MANY example.
  * @property {string} [fragment] - Custom fragment shader, see SPLAT MANY example.
- * @property {string} [dither] - Opacity dithering enum.
  * @property {string[]} [defines] - List of shader defines.
+ * @property {Object<string, string>} [chunks] - Custom shader chunks.
+ * @property {string} [dither] - Opacity dithering enum.
  *
  * @ignore
  */
 
 /**
  * @param {SplatMaterialOptions} [options] - The options.
- * @returns {Material} The GS material.
+ * @returns {ShaderMaterial} The GS material.
  */
 const createGSplatMaterial = (options = {}) => {
 
@@ -110,13 +97,15 @@ const createGSplatMaterial = (options = {}) => {
 
     material.getShaderVariant = function (params) {
 
+        const { cameraShaderParams } = params;
         const programOptions = {
-            defines: material.defines,
+            defines: getMaterialShaderDefines(material, cameraShaderParams),
             pass: params.pass,
-            gamma: params.renderParams.shaderOutputGamma,
-            toneMapping: params.renderParams.toneMapping,
-            vertex: options.vertex ?? splatMainVS,
-            fragment: options.fragment ?? splatMainFS,
+            gamma: cameraShaderParams.shaderOutputGamma,
+            toneMapping: cameraShaderParams.toneMapping,
+            vertex: options.vertex,
+            fragment: options.fragment,
+            chunks: options.chunks,
             dither: ditherEnum
         };
 

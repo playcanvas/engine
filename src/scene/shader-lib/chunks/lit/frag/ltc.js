@@ -128,7 +128,7 @@ vec3 ccLTCSpecFres;
 #endif
 vec3 getLTCLightSpecFres(vec2 uv, vec3 specularity)
 {
-    vec4 t2 = texture2DLodEXT(areaLightsLutTex2, uv, 0.0);
+    vec4 t2 = texture2DLod(areaLightsLutTex2, uv, 0.0);
     return specularity * t2.x + ( vec3( 1.0 ) - specularity) * t2.y;
 }
 
@@ -360,7 +360,7 @@ float LTC_EvaluateDisk(vec3 N, vec3 V, vec3 P, mat3 Minv, Coords points)
     vec2 uv = vec2(avgDir.z * 0.5 + 0.5, formFactor);
     uv = uv*LUT_SCALE + LUT_BIAS;
 
-    float scale = texture2DLodEXT(areaLightsLutTex2, uv, 0.0).w;
+    float scale = texture2DLod(areaLightsLutTex2, uv, 0.0).w;
 
     return formFactor*scale;
 }
@@ -381,7 +381,7 @@ float getSphereLightDiffuse(vec3 worldNormal, vec3 viewDir, vec3 lightDir, vec3 
 
 mat3 getLTCLightInvMat(vec2 uv)
 {
-    vec4 t1 = texture2DLodEXT(areaLightsLutTex1, uv, 0.0);
+    vec4 t1 = texture2DLod(areaLightsLutTex1, uv, 0.0);
 
     return mat3(
         vec3( t1.x, 0, t1.y ),

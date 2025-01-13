@@ -1,31 +1,39 @@
-import { FILLMODE_KEEP_ASPECT, RESOLUTION_FIXED } from '../../src/framework/constants.js';
-import { Application } from '../../src/framework/application.js';
+import { expect } from 'chai';
+
 import { AssetRegistry } from '../../src/framework/asset/asset-registry.js';
-import { BatchManager } from '../../src/scene/batching/batch-manager.js';
 import { ComponentSystemRegistry } from '../../src/framework/components/registry.js';
+import { FILLMODE_KEEP_ASPECT, RESOLUTION_FIXED } from '../../src/framework/constants.js';
 import { Entity } from '../../src/framework/entity.js';
-import { GraphicsDevice } from '../../src/platform/graphics/graphics-device.js';
+import { ResourceLoader } from '../../src/framework/handlers/loader.js';
 import { I18n } from '../../src/framework/i18n/i18n.js';
 import { Lightmapper } from '../../src/framework/lightmapper/lightmapper.js';
-import { ResourceLoader } from '../../src/framework/handlers/loader.js';
-import { Scene } from '../../src/scene/scene.js';
 import { SceneRegistry } from '../../src/framework/scene-registry.js';
 import { ScriptRegistry } from '../../src/framework/script/script-registry.js';
 import { XrManager } from '../../src/framework/xr/xr-manager.js';
-import { NullGraphicsDevice } from '../../src/platform/graphics/null/null-graphics-device.js';
-
-import { Canvas } from 'skia-canvas';
-
-import { expect } from 'chai';
+import { GraphicsDevice } from '../../src/platform/graphics/graphics-device.js';
+import { BatchManager } from '../../src/scene/batching/batch-manager.js';
+import { Scene } from '../../src/scene/scene.js';
+import { createApp } from '../app.mjs';
+import { jsdomSetup, jsdomTeardown } from '../jsdom.mjs';
 
 describe('Application', function () {
+
+    let app;
+
+    beforeEach(function () {
+        jsdomSetup();
+        app = createApp();
+    });
+
+    afterEach(function () {
+        app?.destroy();
+        app = null;
+        jsdomTeardown();
+    });
 
     describe('#constructor', function () {
 
         it('support no options', function () {
-            const canvas = new Canvas(500, 500);
-            const app = new Application(canvas, { graphicsDevice: new NullGraphicsDevice(canvas) });
-
             expect(app.assets).to.be.instanceOf(AssetRegistry);
             expect(app.autoRender).to.be.true;
             expect(app.batcher).to.be.instanceOf(BatchManager);
@@ -56,11 +64,9 @@ describe('Application', function () {
     describe('#destroy', function () {
 
         it('destroys the application', function () {
-            const canvas = new Canvas(500, 500);
-            const app = new Application(canvas, { graphicsDevice: new NullGraphicsDevice(canvas) });
-
             app.destroy();
-            //            expect(app.assets).to.be.null;
+
+            // expect(app.assets).to.be.null;
             expect(app.batcher).to.be.null;
             expect(app.elementInput).to.be.null;
             expect(app.gamepads).to.be.null;
@@ -76,7 +82,9 @@ describe('Application', function () {
             expect(app.scripts).to.be.null;
             expect(app.systems).to.be.null;
             expect(app.touch).to.be.null;
-            //            expect(app.xr).to.be.null;
+            // expect(app.xr).to.be.null;
+
+            app = null;
         });
 
     });

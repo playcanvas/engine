@@ -107,6 +107,21 @@ class Asset extends EventHandler {
     static EVENT_CHANGE = 'change';
 
     /**
+     * Fired when the asset's stream download progresses.
+     *
+     * Please note:
+     * - only gsplat assets current emit this event
+     * - totalBytes may not be reliable as it is based on the content-length header of the response
+     *
+     * @event
+     * @example
+     * asset.on('progress', (receivedBytes, totalBytes) => {
+     *    console.log(`Asset ${asset.name} progress ${readBytes / totalBytes}`);
+     * });
+     */
+    static EVENT_PROGRESS = 'progress';
+
+    /**
      * Fired when we add a new localized asset id to the asset.
      *
      * @event

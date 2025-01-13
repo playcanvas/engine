@@ -33,6 +33,22 @@ vec4 encodeRGBM(vec3 color) { // modified RGBM
     return encoded;
 }
 
+vec3 decode(vec4 pixel) {
+    #if HDR
+        return pixel.rgb;
+    #else
+        return decodeRGBM(pixel);
+    #endif
+}
+
+bool isUsed(vec4 pixel) {
+    #if HDR
+        return any(greaterThan(pixel.rgb, vec3(0.0)));
+    #else
+        return pixel.a > 0.0;
+    #endif
+}
+
 // filter size
 #define MSIZE 15
 
@@ -45,13 +61,13 @@ uniform float kernel[MSIZE];
 
 void main(void) {
     
-    vec4 pixelRgbm = texture2DLodEXT(source, vUv0, 0.0);
+    vec4 pixel = texture2DLod(source, vUv0, 0.0);
 
     // lightmap specific optimization - skip pixels that were not baked
     // this also allows dilate filter that work on the output of this to work correctly, as it depends on .a being zero
     // to dilate, which the following blur filter would otherwise modify
-    if (pixelRgbm.a <= 0.0) {
-        gl_FragColor = pixelRgbm;
+    if (!isUsed(pixel)) {
+        gl_FragColor = pixel;
         return ;
     }
 
@@ -61,9 +77,9 @@ void main(void) {
     // domain sigma - controls blurriness based on a pixel similarity (to preserve edges)
     float bSigma = sigmas.y;
 
-    vec3 pixelHdr = decodeRGBM(pixelRgbm);
+    vec3 pixelHdr = decode(pixel);
     vec3 accumulatedHdr = vec3(0.0);
-    float accumulatedFactor = 0.0;
+    float accumulatedFactor = 0.000001;  // avoid division by zero
 
     // read out the texels
     const int kSize = (MSIZE-1)/2;
@@ -72,11 +88,11 @@ void main(void) {
             
             // sample the pixel with offset
             vec2 coord = vUv0 + vec2(float(i), float(j)) * pixelOffset;
-            vec4 rgbm = texture2DLodEXT(source, coord, 0.0);
+            vec4 pix = texture2DLod(source, coord, 0.0);
 
             // lightmap - only use baked pixels
-            if (rgbm.a > 0.0) {
-                vec3 hdr = decodeRGBM(rgbm);
+            if (isUsed(pix)) {
+                vec3 hdr = decode(pix);
 
                 // bilateral factors
                 float factor = kernel[kSize + j] * kernel[kSize + i];
@@ -89,6 +105,12 @@ void main(void) {
         }
     }
 
-    gl_FragColor = encodeRGBM(accumulatedHdr / accumulatedFactor);
+    vec3 finalHDR = accumulatedHdr / accumulatedFactor;
+
+    #if HDR
+        gl_FragColor = vec4(finalHDR, 1.0);
+    #else
+        gl_FragColor = encodeRGBM(finalHDR);
+    #endif
 }
 `;

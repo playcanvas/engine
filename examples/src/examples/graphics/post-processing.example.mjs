@@ -1,35 +1,34 @@
-import * as pc from 'playcanvas';
 import { data } from 'examples/observer';
-import { deviceType, rootPath, fileImport } from 'examples/utils';
-const { CameraFrame } = await fileImport(rootPath + '/static/assets/scripts/misc/camera-frame.mjs');
+import { deviceType, rootPath } from 'examples/utils';
+import * as pc from 'playcanvas';
 
 const canvas = /** @type {HTMLCanvasElement} */ (document.getElementById('application-canvas'));
 window.focus();
 
 // set up and load draco module, as the glb we load is draco compressed
 pc.WasmModule.setConfig('DracoDecoderModule', {
-    glueUrl: rootPath + '/static/lib/draco/draco.wasm.js',
-    wasmUrl: rootPath + '/static/lib/draco/draco.wasm.wasm',
-    fallbackUrl: rootPath + '/static/lib/draco/draco.js'
+    glueUrl: `${rootPath}/static/lib/draco/draco.wasm.js`,
+    wasmUrl: `${rootPath}/static/lib/draco/draco.wasm.wasm`,
+    fallbackUrl: `${rootPath}/static/lib/draco/draco.js`
 });
 
 const assets = {
-    orbit: new pc.Asset('script', 'script', { url: rootPath + '/static/scripts/camera/orbit-camera.js' }),
-    platform: new pc.Asset('statue', 'container', { url: rootPath + '/static/assets/models/scifi-platform.glb' }),
-    mosquito: new pc.Asset('mosquito', 'container', { url: rootPath + '/static/assets/models/MosquitoInAmber.glb' }),
-    font: new pc.Asset('font', 'font', { url: rootPath + '/static/assets/fonts/arial.json' }),
+    orbit: new pc.Asset('script', 'script', { url: `${rootPath}/static/scripts/camera/orbit-camera.js` }),
+    platform: new pc.Asset('statue', 'container', { url: `${rootPath}/static/assets/models/scifi-platform.glb` }),
+    mosquito: new pc.Asset('mosquito', 'container', { url: `${rootPath}/static/assets/models/MosquitoInAmber.glb` }),
+    font: new pc.Asset('font', 'font', { url: `${rootPath}/static/assets/fonts/arial.json` }),
     helipad: new pc.Asset(
         'helipad-env-atlas',
         'texture',
-        { url: rootPath + '/static/assets/cubemaps/helipad-env-atlas.png' },
+        { url: `${rootPath}/static/assets/cubemaps/helipad-env-atlas.png` },
         { type: pc.TEXTURETYPE_RGBP, mipmaps: false }
     )
 };
 
 const gfxOptions = {
     deviceTypes: [deviceType],
-    glslangUrl: rootPath + '/static/lib/glslang/glslang.js',
-    twgslUrl: rootPath + '/static/lib/twgsl/twgsl.js',
+    glslangUrl: `${rootPath}/static/lib/glslang/glslang.js`,
+    twgslUrl: `${rootPath}/static/lib/twgsl/twgsl.js`,
 
     // The scene is rendered to an antialiased texture, so we disable antialiasing on the canvas
     // to avoid the additional cost. This is only used for the UI which renders on top of the
@@ -216,9 +215,9 @@ assetListLoader.load(() => {
 
     // ------ Custom render passes set up ------
 
-    /** @type { CameraFrame } */
-    const cameraFrame = cameraEntity.script.create(CameraFrame);
+    const cameraFrame = new pc.CameraFrame(app, cameraEntity.camera);
     cameraFrame.rendering.sceneColorMap = true;
+    cameraFrame.update();
 
     const applySettings = () => {
 
@@ -247,9 +246,8 @@ assetListLoader.load(() => {
         cameraFrame.taa.jitter = data.get('data.taa.jitter');
 
         // Bloom
-        cameraFrame.bloom.enabled = data.get('data.bloom.enabled');
-        cameraFrame.bloom.intensity = pc.math.lerp(0, 0.1, data.get('data.bloom.intensity') / 100);
-        cameraFrame.bloom.lastMipLevel = data.get('data.bloom.lastMipLevel');
+        cameraFrame.bloom.intensity = data.get('data.bloom.enabled') ? pc.math.lerp(0, 0.1, data.get('data.bloom.intensity') / 100) : 0;
+        cameraFrame.bloom.blurLevel = data.get('data.bloom.blurLevel');
 
         // grading
         cameraFrame.grading.enabled = data.get('data.grading.enabled');
@@ -258,15 +256,24 @@ assetListLoader.load(() => {
         cameraFrame.grading.contrast = data.get('data.grading.contrast');
 
         // vignette
-        cameraFrame.vignette.enabled = data.get('data.vignette.enabled');
         cameraFrame.vignette.inner = data.get('data.vignette.inner');
         cameraFrame.vignette.outer = data.get('data.vignette.outer');
         cameraFrame.vignette.curvature = data.get('data.vignette.curvature');
-        cameraFrame.vignette.intensity = data.get('data.vignette.intensity');
+        cameraFrame.vignette.intensity = data.get('data.vignette.enabled') ? data.get('data.vignette.intensity') : 0;
 
         // fringing
-        cameraFrame.fringing.enabled = data.get('data.fringing.enabled');
-        cameraFrame.fringing.intensity = data.get('data.fringing.intensity');
+        cameraFrame.fringing.intensity = data.get('data.fringing.enabled') ? data.get('data.fringing.intensity') : 0;
+
+        // debug
+        switch (data.get('data.scene.debug')) {
+            case 0: cameraFrame.debug = null; break;
+            case 1: cameraFrame.debug = 'bloom'; break;
+            case 2: cameraFrame.debug = 'vignette'; break;
+            case 3: cameraFrame.debug = 'scene'; break;
+        }
+
+        // apply all settings
+        cameraFrame.update();
     };
 
     // apply UI changes
@@ -280,12 +287,13 @@ assetListLoader.load(() => {
             scale: 1.8,
             background: 6,
             emissive: 200,
-            tonemapping: pc.TONEMAP_ACES
+            tonemapping: pc.TONEMAP_ACES,
+            debug: 0
         },
         bloom: {
             enabled: true,
             intensity: 5,
-            lastMipLevel: 1
+            blurLevel: 16
         },
         grading: {
             enabled: false,
@@ -312,7 +320,7 @@ assetListLoader.load(() => {
 
     // update things every frame
     let angle = 0;
-    app.on('update', function (/** @type {number} */ dt) {
+    app.on('update', (/** @type {number} */ dt) => {
         angle += dt;
 
         // scale the boxes

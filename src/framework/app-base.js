@@ -322,8 +322,8 @@ class AppBase extends EventHandler {
      *
      * @type {Scene}
      * @example
-     * // Set the tone mapping property of the application's scene
-     * this.app.scene.rendering.toneMapping = pc.TONEMAP_FILMIC;
+     * // Set the fog type property of the application's scene
+     * this.app.scene.fog.type = pc.FOG_LINEAR;
      */
     scene;
 
@@ -1416,9 +1416,12 @@ class AppBase extends EventHandler {
      * @param {number} settings.render.lightingMaxLightsPerCell - Maximum number of lights a cell can store.
      * @param {number} settings.render.lightingShadowType - The type of shadow filtering used by all shadows. Can be:
      *
-     * - {@link SHADOW_PCF1}: PCF 1x1 sampling.
-     * - {@link SHADOW_PCF3}: PCF 3x3 sampling.
-     * - {@link SHADOW_PCF5}: PCF 5x5 sampling.
+     * - {@link SHADOW_PCF1_32F}
+     * - {@link SHADOW_PCF3_32F}
+     * - {@link SHADOW_PCF5_32F}
+     * - {@link SHADOW_PCF1_16F}
+     * - {@link SHADOW_PCF3_16F}
+     * - {@link SHADOW_PCF5_16F}
      *
      * @param {Vec3} settings.render.lightingCells - Number of cells along each world space axis the space containing lights
      * is subdivided into.

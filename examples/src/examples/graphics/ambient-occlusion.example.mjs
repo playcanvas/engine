@@ -1,34 +1,33 @@
-import * as pc from 'playcanvas';
 import { data } from 'examples/observer';
-import { deviceType, rootPath, fileImport } from 'examples/utils';
-const { CameraFrame } = await fileImport(rootPath + '/static/assets/scripts/misc/camera-frame.mjs');
+import { deviceType, rootPath } from 'examples/utils';
+import * as pc from 'playcanvas';
 
 const canvas = /** @type {HTMLCanvasElement} */ (document.getElementById('application-canvas'));
 window.focus();
 
 // set up and load draco module, as the glb we load is draco compressed
 pc.WasmModule.setConfig('DracoDecoderModule', {
-    glueUrl: rootPath + '/static/lib/draco/draco.wasm.js',
-    wasmUrl: rootPath + '/static/lib/draco/draco.wasm.wasm',
-    fallbackUrl: rootPath + '/static/lib/draco/draco.js'
+    glueUrl: `${rootPath}/static/lib/draco/draco.wasm.js`,
+    wasmUrl: `${rootPath}/static/lib/draco/draco.wasm.wasm`,
+    fallbackUrl: `${rootPath}/static/lib/draco/draco.js`
 });
 
 const assets = {
-    laboratory: new pc.Asset('statue', 'container', { url: rootPath + '/static/assets/models/laboratory.glb' }),
-    orbit: new pc.Asset('orbit', 'script', { url: rootPath + '/static/scripts/camera/orbit-camera.js' }),
-    ssao: new pc.Asset('ssao', 'script', { url: rootPath + '/static/scripts/posteffects/posteffect-ssao.js' }),
+    laboratory: new pc.Asset('statue', 'container', { url: `${rootPath}/static/assets/models/laboratory.glb` }),
+    orbit: new pc.Asset('orbit', 'script', { url: `${rootPath}/static/scripts/camera/orbit-camera.js` }),
+    ssao: new pc.Asset('ssao', 'script', { url: `${rootPath}/static/scripts/posteffects/posteffect-ssao.js` }),
     helipad: new pc.Asset(
         'helipad-env-atlas',
         'texture',
-        { url: rootPath + '/static/assets/cubemaps/helipad-env-atlas.png' },
+        { url: `${rootPath}/static/assets/cubemaps/helipad-env-atlas.png` },
         { type: pc.TEXTURETYPE_RGBP, mipmaps: false }
     )
 };
 
 const gfxOptions = {
     deviceTypes: [deviceType],
-    glslangUrl: rootPath + '/static/lib/glslang/glslang.js',
-    twgslUrl: rootPath + '/static/lib/twgsl/twgsl.js'
+    glslangUrl: `${rootPath}/static/lib/glslang/glslang.js`,
+    twgslUrl: `${rootPath}/static/lib/twgsl/twgsl.js`
 };
 
 const device = await pc.createGraphicsDevice(canvas, gfxOptions);
@@ -168,10 +167,11 @@ assetListLoader.load(() => {
 
     // ------ Custom render passes set up ------
 
-    /** @type { CameraFrame } */
-    const cameraFrame = cameraEntity.script.create(CameraFrame);
-    cameraFrame.rendering.samples = 4;
+    const cameraFrame = new pc.CameraFrame(app, cameraEntity.camera);
     cameraFrame.rendering.toneMapping = pc.TONEMAP_NEUTRAL;
+
+    // use 16but render target for better precision, improves quality with TAA and randomized SSAO
+    cameraFrame.rendering.renderFormats = [pc.PIXELFORMAT_RGBA16F];
 
     const applySettings = () => {
 
@@ -183,6 +183,16 @@ assetListLoader.load(() => {
         cameraFrame.ssao.samples = data.get('data.ssao.samples');
         cameraFrame.ssao.minAngle = data.get('data.ssao.minAngle');
         cameraFrame.ssao.scale = data.get('data.ssao.scale');
+        cameraFrame.ssao.randomize = data.get('data.ssao.randomize');
+        cameraFrame.debug = data.get('data.ssao.debug') ? 'ssao' : null;
+
+        // TAA or MSAA
+        const taa = data.get('data.ssao.taa');
+        cameraFrame.taa.enabled = taa;
+        cameraFrame.rendering.samples = taa ? 1 : 4;    // disable MSAA when TAA is enabled
+        cameraFrame.rendering.sharpness = taa ? 1 : 0;  // sharpen the image when TAA is enabled
+
+        cameraFrame.update();
     };
 
     // apply UI changes
@@ -193,12 +203,13 @@ assetListLoader.load(() => {
         // if scale has changed, adjust min angle based on scale to avoid depth related artifacts
         const pathArray = path.split('.');
         if (pathArray[2] === 'scale') {
-            if (value < 0.6)
+            if (value < 0.6) {
                 data.set('data.ssao.minAngle', 40);
-            else if (value < 0.8)
+            } else if (value < 0.8) {
                 data.set('data.ssao.minAngle', 20);
-            else
+            } else {
                 data.set('data.ssao.minAngle', 10);
+            }
         }
     });
 
@@ -212,7 +223,10 @@ assetListLoader.load(() => {
             intensity: 0.4,
             power: 6,
             minAngle: 10,
-            scale: 1
+            scale: 1,
+            taa: false,
+            randomize: false,
+            debug: false
         }
     });
 });

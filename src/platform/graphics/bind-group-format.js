@@ -359,19 +359,17 @@ class BindGroupFormat {
 
             let textureType = textureDimensionInfo[format.textureDimension];
             Debug.assert(textureType, 'Unsupported texture type', format.textureDimension);
+            const isArray = textureType === 'texture2DArray';
+
+            const sampleTypePrefix = format.sampleType === SAMPLETYPE_UINT ? 'u' : (format.sampleType === SAMPLETYPE_INT ? 'i' : '');
+            textureType = `${sampleTypePrefix}${textureType}`;
 
             // handle texture2DArray by renaming the texture object and defining a replacement macro
             let namePostfix = '';
             let extraCode = '';
-            if (textureType === 'texture2DArray') {
+            if (isArray) {
                 namePostfix = '_texture';
-                extraCode = `#define ${format.name} sampler2DArray(${format.name}${namePostfix}, ${format.name}_sampler)\n`;
-            }
-
-            if (format.sampleType === SAMPLETYPE_INT) {
-                textureType = `i${textureType}`;
-            } else if (format.sampleType === SAMPLETYPE_UINT) {
-                textureType = `u${textureType}`;
+                extraCode = `#define ${format.name} ${sampleTypePrefix}sampler2DArray(${format.name}${namePostfix}, ${format.name}_sampler)\n`;
             }
 
             code += `layout(set = ${bindGroup}, binding = ${format.slot}) uniform ${textureType} ${format.name}${namePostfix};\n`;
