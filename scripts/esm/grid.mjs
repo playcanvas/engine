@@ -13,6 +13,16 @@ import {
 /* eslint-disable-next-line import/no-unresolved */
 } from 'playcanvas';
 
+/** @import { AppBase, Entity } from 'playcanvas' */
+
+/**
+ * @typedef {object} ScriptArgs
+ * @property {AppBase} app - The app.
+ * @property {Entity} entity - The entity.
+ * @property {boolean} [enabled] - The enabled state.
+ * @property {object} [attributes] - The attributes.
+ */
+
 const tmpVa = new Vec2();
 
 const EPISILON = 1e-3;
@@ -174,6 +184,9 @@ class Grid extends Script {
      */
     _resolution = Grid.RESOLUTION_HIGH;
 
+    /**
+     * @param {ScriptArgs} args - The arguments.
+     */
     constructor(args) {
         super(args);
         const {
@@ -214,10 +227,21 @@ class Grid extends Script {
 
         // update the half extents when the entity scale changes
         this.app.on('prerender', () => {
+            if (!this.enabled) {
+                return;
+            }
             const halfExtents = this._calcHalfExtents(tmpVa);
             if (this.halfExtents.distance(halfExtents) > EPISILON) {
                 this.halfExtents = halfExtents;
             }
+        });
+
+        // enable/disable the mesh instance
+        this.on('enable', () => {
+            this.entity.render.meshInstances = [this._meshInstance];
+        });
+        this.on('disable', () => {
+            this.entity.render.meshInstances = [];
         });
     }
 
