@@ -638,15 +638,19 @@ class CameraControls extends Script {
         event.stopPropagation();
         switch (event.key.toLowerCase()) {
             case 'w':
+            case 'arrowup':
                 this._key.forward = true;
                 break;
             case 's':
+            case 'arrowdown':
                 this._key.backward = true;
                 break;
             case 'a':
+            case 'arrowleft':
                 this._key.left = true;
                 break;
             case 'd':
+            case 'arrowright':
                 this._key.right = true;
                 break;
             case 'q':
@@ -672,15 +676,19 @@ class CameraControls extends Script {
         event.stopPropagation();
         switch (event.key.toLowerCase()) {
             case 'w':
+            case 'arrowup':
                 this._key.forward = false;
                 break;
             case 's':
+            case 'arrowdown':
                 this._key.backward = false;
                 break;
             case 'a':
+            case 'arrowleft':
                 this._key.left = false;
                 break;
             case 'd':
+            case 'arrowright':
                 this._key.right = false;
                 break;
             case 'q':
