@@ -225,9 +225,14 @@ class Light {
         this._normalOffsetBias = 0.0;
         this.shadowUpdateMode = SHADOWUPDATE_REALTIME;
         this.shadowUpdateOverrides = null;
-        this._penumbraSize = 1.0;
         this._isVsm = false;
         this._isPcf = true;
+
+        this._softShadowParams = new Float32Array(4);
+        this.shadowSamples = 16;
+        this.shadowBlockerSamples = 16;
+        this.penumbraSize = 1.0;
+        this.penumbraFalloff = 1.0;
 
         // cookie matrix (used in case the shadow mapping is disabled and so the shadow matrix cannot be used)
         this._cookieMatrix = null;
@@ -278,6 +283,22 @@ class Light {
 
     removeLayer(layer) {
         this.layers.delete(layer);
+    }
+
+    set shadowSamples(value) {
+        this._softShadowParams[0] = value;
+    }
+
+    get shadowSamples() {
+        return this._softShadowParams[0];
+    }
+
+    set shadowBlockerSamples(value) {
+        this._softShadowParams[1] = value;
+    }
+
+    get shadowBlockerSamples() {
+        return this._softShadowParams[1];
     }
 
     set shadowBias(value) {
@@ -405,6 +426,11 @@ class Light {
         }
 
         const device = this.device;
+
+        // PCSS requires F16 or F32 render targets
+        if (value === SHADOW_PCSS_32F && !device.textureFloatRenderable && !device.textureHalfFloatRenderable) {
+            value = SHADOW_PCF3_32F;
+        }
 
         // omni light supports PCF1, PCF3 and PCSS only
         if (this._type === LIGHTTYPE_OMNI && value !== SHADOW_PCF1_32F && value !== SHADOW_PCF3_32F &&
@@ -555,10 +581,19 @@ class Light {
 
     set penumbraSize(value) {
         this._penumbraSize = value;
+        this._softShadowParams[2] = value;
     }
 
     get penumbraSize() {
         return this._penumbraSize;
+    }
+
+    set penumbraFalloff(value) {
+        this._softShadowParams[3] = value;
+    }
+
+    get penumbraFalloff() {
+        return this._softShadowParams[3];
     }
 
     _updateOuterAngle(angle) {
@@ -777,7 +812,6 @@ class Light {
         clone.vsmBlurSize = this._vsmBlurSize;
         clone.vsmBlurMode = this.vsmBlurMode;
         clone.vsmBias = this.vsmBias;
-        clone.penumbraSize = this.penumbraSize;
         clone.shadowUpdateMode = this.shadowUpdateMode;
         clone.mask = this.mask;
 
@@ -804,6 +838,11 @@ class Light {
         clone.shadowResolution = this._shadowResolution;
         clone.shadowDistance = this.shadowDistance;
         clone.shadowIntensity = this.shadowIntensity;
+
+        clone.shadowSamples = this.shadowSamples;
+        clone.shadowBlockerSamples = this.shadowBlockerSamples;
+        clone.penumbraSize = this.penumbraSize;
+        clone.penumbraFalloff = this.penumbraFalloff;
 
         // Cookies properties
         // clone.cookie = this._cookie;

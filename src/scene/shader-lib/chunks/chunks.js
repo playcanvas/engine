@@ -44,6 +44,7 @@ import envMultiplyPS from './common/frag/envMultiply.js';
 import falloffInvSquaredPS from './lit/frag/falloffInvSquared.js';
 import falloffLinearPS from './lit/frag/falloffLinear.js';
 import floatUnpackingPS from './lit/frag/float-unpacking.js';
+import floatAsUintPS from './common/frag/float-as-uint.js';
 import fogExpPS from './lit/frag/fogExp.js';
 import fogExp2PS from './lit/frag/fogExp2.js';
 import fogLinearPS from './lit/frag/fogLinear.js';
@@ -163,6 +164,7 @@ import shadowEVSMPS from './lit/frag/shadowEVSM.js';
 import shadowEVSMnPS from './lit/frag/shadowEVSMn.js';
 import shadowPCSSPS from './lit/frag/shadowPCSS.js';
 import shadowSampleCoordPS from './lit/frag/shadowSampleCoord.js';
+import shadowSoftPS from './lit/frag/shadowSoft.js';
 import shadowStandardPS from './lit/frag/shadowStandard.js';
 import shadowStandardGL2PS from './lit/frag/shadowStandardGL2.js';
 import shadowVSM_commonPS from './lit/frag/shadowVSM_common.js';
@@ -257,6 +259,7 @@ const shaderChunks = {
     falloffInvSquaredPS,
     falloffLinearPS,
     floatUnpackingPS,
+    floatAsUintPS,
     fogExpPS,
     fogExp2PS,
     fogLinearPS,
@@ -376,6 +379,7 @@ const shaderChunks = {
     shadowEVSMnPS,
     shadowPCSSPS,
     shadowSampleCoordPS,
+    shadowSoftPS,
     shadowStandardPS,
     shadowStandardGL2PS,
     shadowVSM_commonPS,
