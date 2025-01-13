@@ -23,16 +23,6 @@ const ZOOM_SCALE_SCENE_MULT = 10;
  */
 const lerpRate = (damping, dt) => 1 - Math.pow(damping, dt * 1000);
 
-/**
- * @enum {number}
- */
-const Bound = {
-    NONE: 0,
-    LOWER: 1,
-    UPPER: 2,
-    BOTH: 3
-};
-
 class CameraControls extends Script {
     /**
      * @private
@@ -69,42 +59,6 @@ class CameraControls extends Script {
      * @type {Vec2}
      */
     _pitchRange = new Vec2(-360, 360);
-
-    /**
-     * @private
-     * @type {Vec3}
-     */
-    _xRange = new Vec3();
-
-    /**
-     * @private
-     * @type {Vec3}
-     */
-    _yRange = new Vec3();
-
-    /**
-     * @private
-     * @type {Vec3}
-     */
-    _zRange = new Vec3();
-
-    /**
-     * @private
-     * @type {Bound}
-     */
-    _xBound = Bound.NONE;
-
-    /**
-     * @private
-     * @type {Bound}
-     */
-    _yBound = Bound.NONE;
-
-    /**
-     * @private
-     * @type {Bound}
-     */
-    _zBound = Bound.NONE;
 
     /**
      * @private
@@ -325,12 +279,6 @@ class CameraControls extends Script {
             lookDamping,
             moveDamping,
             pitchRange,
-            xRange,
-            yRange,
-            zRange,
-            xBound,
-            yBound,
-            zBound,
             pinchSpeed,
             wheelSpeed,
             zoomMin,
@@ -371,12 +319,6 @@ class CameraControls extends Script {
 
         this.focusPoint = focusPoint ?? this.focusPoint;
         this.pitchRange = pitchRange ?? this.pitchRange;
-        this.xRange = xRange ?? this.xRange;
-        this.yRange = yRange ?? this.yRange;
-        this.zRange = zRange ?? this.zRange;
-        this.xBound = xBound ?? this.xBound;
-        this.yBound = yBound ?? this.yBound;
-        this.zBound = zBound ?? this.zBound;
         this.zoomMin = zoomMin ?? this.zoomMin;
         this.zoomMax = zoomMax ?? this.zoomMax;
     }
@@ -423,99 +365,12 @@ class CameraControls extends Script {
      */
     set pitchRange(value) {
         this._pitchRange.copy(value);
-        this._dir.x = this._clampPitch(this._dir.x);
+        this._clampLook(this._dir);
         this._smoothTransform(-1);
     }
 
     get pitchRange() {
         return this._pitchRange;
-    }
-
-    /**
-     * The camera's x range. These constaints are used long with xBound to clamp the camera's
-     * position.
-     *
-     * @attribute
-     * @type {Vec3}
-     */
-    set xRange(value) {
-        this._xRange.copy(value);
-    }
-
-    get xRange() {
-        return this._xRange;
-    }
-
-    /**
-     * The camera's y range. These constaints are used long with yBound to clamp the camera's
-     * position.
-     *
-     * @attribute
-     * @type {Vec3}
-     */
-    set yRange(value) {
-        this._yRange.copy(value);
-    }
-
-    get yRange() {
-        return this._yRange;
-    }
-
-    /**
-     * The camera's z range. These constaints are used long with zBound to clamp the camera's
-     * position.
-     *
-     * @attribute
-     * @type {Vec3}
-     */
-    set zRange(value) {
-        this._zRange.copy(value);
-    }
-
-    get zRange() {
-        return this._zRange;
-    }
-
-    /**
-     * The x bound. This is used to clamp the camera's x position. Default is NONE.
-     *
-     * @attribute
-     * @type {Bound}
-     */
-    set xBound(value) {
-        this._xBound = value;
-    }
-
-    get xBound() {
-        return this._xBound;
-    }
-
-    /**
-     * The y bound. This is used to clamp the camera's y position. Default is NONE.
-     *
-     * @attribute
-     * @type {Bound}
-     */
-    set yBound(value) {
-        this._yBound = value;
-    }
-
-    get yBound() {
-        return this._yBound;
-    }
-
-    /**
-     * The z bound. This is used to clamp the camera's z position. Default is NONE.
-     *
-     * @attribute
-     * @type {Bound}
-     */
-    set zBound(value) {
-        this._zBound = value;
-    }
-
-    get zBound() {
-        return this._zBound;
     }
 
     /**
@@ -563,19 +418,20 @@ class CameraControls extends Script {
 
     /**
      * @private
-     * @param {number} value - The value to clamp.
-     * @returns {number} - The clamped value.
+     * @param {Vec2} look - The value to clamp.
      */
-    _clampPitch(value) {
+    _clampLook(look) {
         const min = this._pitchRange.x === -360 ? -Infinity : this._pitchRange.x;
         const max = this._pitchRange.y === 360 ? Infinity : this._pitchRange.y;
-        return math.clamp(value, min, max);
+        look.x = math.clamp(look.x, min, max);
+
+        // emit clamp event
+        this.fire('clamp:look', look);
     }
 
     /**
      * @private
      * @param {Vec3} position - The position to clamp.
-     * @returns {Vec3} - The clamped position.
      */
     _clampPosition(position) {
         if (this._flying) {
@@ -584,19 +440,10 @@ class CameraControls extends Script {
             this._focusDir(tmpV1);
         }
 
-        let min = this._xBound & Bound.LOWER ? tmpV1.x + this._xRange.x : -Infinity;
-        let max = this._xBound & Bound.UPPER ? tmpV1.x + this._xRange.y : Infinity;
-        position.x = math.clamp(position.x, min, max);
-
-        min = this._yBound & Bound.LOWER ? tmpV1.y + this._yRange.x : -Infinity;
-        max = this._yBound & Bound.UPPER ? tmpV1.y + this._yRange.y : Infinity;
-        position.y = math.clamp(position.y, min, max);
-
-        min = this._zBound & Bound.LOWER ? tmpV1.z + this._zRange.x : -Infinity;
-        max = this._zBound & Bound.UPPER ? tmpV1.z + this._zRange.y : Infinity;
-        position.z = math.clamp(position.z, min, max);
-
-        return position;
+        // emit clamp event
+        position.sub(tmpV1);
+        this.fire('clamp:position', position);
+        position.add(tmpV1);
     }
 
     /**
@@ -861,8 +708,9 @@ class CameraControls extends Script {
         }
         const movementX = event.movementX || 0;
         const movementY = event.movementY || 0;
-        this._dir.x = this._clampPitch(this._dir.x - movementY * this.lookSensitivity);
+        this._dir.x -= movementY * this.lookSensitivity;
         this._dir.y -= movementX * this.lookSensitivity;
+        this._clampLook(this._dir);
     }
 
     /**
@@ -1044,7 +892,7 @@ class CameraControls extends Script {
         tmpV1.sub2(start, point);
         const elev = Math.atan2(tmpV1.y, Math.sqrt(tmpV1.x * tmpV1.x + tmpV1.z * tmpV1.z)) * math.RAD_TO_DEG;
         const azim = Math.atan2(tmpV1.x, tmpV1.z) * math.RAD_TO_DEG;
-        this._dir.set(this._clampPitch(-elev), azim);
+        this._clampLook(this._dir.set(-elev, azim));
 
         this._origin.copy(point);
 
@@ -1169,4 +1017,4 @@ class CameraControls extends Script {
     }
 }
 
-export { Bound, CameraControls };
+export { CameraControls };

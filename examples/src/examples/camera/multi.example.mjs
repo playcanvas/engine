@@ -155,12 +155,6 @@ data.set('attr', [
     'lookDamping',
     'moveDamping',
     'pitchRange',
-    'xRange',
-    'yRange',
-    'zRange',
-    'xBound',
-    'yBound',
-    'zBound',
     'pinchSpeed',
     'wheelSpeed',
     'zoomMin',
@@ -174,11 +168,6 @@ data.set('attr', [
 
     if (value instanceof pc.Vec2) {
         obj[key] = [value.x, value.y];
-        return obj;
-    }
-
-    if (key.includes('Bound')) {
-        obj[key] = value + 1;
         return obj;
     }
 
@@ -199,11 +188,6 @@ data.on('*:set', (/** @type {string} */ path, /** @type {any} */ value) => {
     if (index !== undefined) {
         const arr = data.get(`${category}.${key}`);
         multiCameraScript[key] = tmpVa.set(arr[0], arr[1]);
-        return;
-    }
-
-    if (key.includes('Bound')) {
-        multiCameraScript[key] = value - 1;
         return;
     }
 

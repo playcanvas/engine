@@ -3,14 +3,7 @@
  * @returns {JSX.Element} The returned JSX Element.
  */
 export const controls = ({ observer, ReactPCUI, React, jsx, fragment }) => {
-    const { BindingTwoWay, LabelGroup, Panel, BooleanInput, SelectInput, SliderInput, VectorInput } = ReactPCUI;
-
-    const boundOptions = [
-        { t: 'None', v: 1 },
-        { t: 'Lower', v: 2 },
-        { t: 'Upper', v: 3 },
-        { t: 'Both', v: 4 }
-    ];
+    const { BindingTwoWay, LabelGroup, Panel, BooleanInput, SliderInput, VectorInput } = ReactPCUI;
 
     return fragment(
         jsx(
@@ -103,60 +96,6 @@ export const controls = ({ observer, ReactPCUI, React, jsx, fragment }) => {
                     binding: new BindingTwoWay(),
                     link: { observer, path: 'attr.pitchRange' },
                     dimensions: 2
-                })
-            ),
-            jsx(
-                LabelGroup,
-                { text: 'X range' },
-                jsx(VectorInput, {
-                    binding: new BindingTwoWay(),
-                    link: { observer, path: 'attr.xRange' },
-                    dimensions: 2
-                })
-            ),
-            jsx(
-                LabelGroup,
-                { text: 'Y range' },
-                jsx(VectorInput, {
-                    binding: new BindingTwoWay(),
-                    link: { observer, path: 'attr.yRange' },
-                    dimensions: 2
-                })
-            ),
-            jsx(
-                LabelGroup,
-                { text: 'Z range' },
-                jsx(VectorInput, {
-                    binding: new BindingTwoWay(),
-                    link: { observer, path: 'attr.zRange' },
-                    dimensions: 2
-                })
-            ),
-            jsx(
-                LabelGroup,
-                { text: 'X bound' },
-                jsx(SelectInput, {
-                    binding: new BindingTwoWay(),
-                    link: { observer, path: 'attr.xBound' },
-                    options: boundOptions
-                })
-            ),
-            jsx(
-                LabelGroup,
-                { text: 'Y bound' },
-                jsx(SelectInput, {
-                    binding: new BindingTwoWay(),
-                    link: { observer, path: 'attr.yBound' },
-                    options: boundOptions
-                })
-            ),
-            jsx(
-                LabelGroup,
-                { text: 'Z bound' },
-                jsx(SelectInput, {
-                    binding: new BindingTwoWay(),
-                    link: { observer, path: 'attr.zBound' },
-                    options: boundOptions
                 })
             ),
             jsx(
