@@ -150,18 +150,19 @@ data.set('attr', [
     'enableOrbit',
     'enablePan',
     'enableFly',
-    'lookSensitivity',
-    'lookDamping',
-    'moveDamping',
     'pitchRange',
-    'pinchSpeed',
-    'wheelSpeed',
+    'rotateSpeed',
+    'rotateDamping',
+    'moveSpeed',
+    'moveFastSpeed',
+    'moveSlowSpeed',
+    'moveDamping',
+    'zoomSpeed',
+    'zoomPinchSens',
+    'zoomDamping',
     'zoomMin',
     'zoomMax',
-    'zoomScaleMin',
-    'moveSpeed',
-    'sprintSpeed',
-    'crouchSpeed'
+    'zoomScaleMin'
 ].reduce((/** @type {Record<string, any>} */ obj, key) => {
     const value = multiCameraScript[key];
 

@@ -125,13 +125,13 @@ app.root.addChild(statue);
 const multiCameraScript = createFlyCamera(statue);
 
 data.set('attr', [
-    'lookSensitivity',
-    'lookDamping',
-    'moveDamping',
     'pitchRange',
+    'rotateSpeed',
+    'rotateDamping',
     'moveSpeed',
-    'sprintSpeed',
-    'crouchSpeed'
+    'moveFastSpeed',
+    'moveSlowSpeed',
+    'moveDamping'
 ].reduce((/** @type {Record<string, any>} */ obj, key) => {
     const value = multiCameraScript[key];
 
