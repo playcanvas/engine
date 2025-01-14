@@ -1,7 +1,15 @@
 /* eslint-disable-next-line import/no-unresolved */
 import { Vec2, Vec3, Ray, Plane, Mat4, Quat, Script, math } from 'playcanvas';
 
-/** @import { CameraComponent } from 'playcanvas' */
+/** @import { AppBase, Entity, CameraComponent } from 'playcanvas' */
+
+/**
+ * @typedef {object} ScriptArgs
+ * @property {AppBase} app - The app.
+ * @property {Entity} entity - The entity.
+ * @property {boolean} [enabled] - The enabled state.
+ * @property {object} [attributes] - The attributes.
+ */
 
 const tmpVa = new Vec2();
 const tmpV1 = new Vec3();
@@ -24,6 +32,28 @@ const ZOOM_SCALE_SCENE_MULT = 10;
 const lerpRate = (damping, dt) => 1 - Math.pow(damping, dt * 1000);
 
 class CameraControls extends Script {
+    /**
+     * Fired to clamp the position.
+     *
+     * @event
+     * @example
+     * cameraControls.on('clamp:position', (position) => {
+     *     position.y = Math.max(0, position.y);
+     * });
+     */
+    static EVENT_CLAMP_POSITION = 'clamp:position';
+
+    /**
+     * Fired to clamp the look.
+     *
+     * @event
+     * @example
+     * cameraControls.on('clamp:look', (look) => {
+     *    look.x = Math.max(-90, Math.min(90, look.x));
+     * });
+     */
+    static EVENT_CLAMP_LOOK = 'clamp:look';
+
     /**
      * @private
      * @type {CameraComponent}
@@ -160,33 +190,33 @@ class CameraControls extends Script {
     _baseTransform = new Mat4();
 
     /**
-     * The scene size. The zoom, pan and fly speeds are relative to this size.
-     *
      * @attribute
+     * @title Scene Size
+     * @description The scene size. The zoom, pan and fly speeds are relative to this size.
      * @type {number}
      */
     sceneSize = 100;
 
     /**
-     * The look sensitivity.
-     *
      * @attribute
+     * @title Look Sensitivity
+     * @description The look sensitivity.
      * @type {number}
      */
     lookSensitivity = 0.2;
 
     /**
-     * The look damping. A higher value means less damping. A value of 1 means no damping.
-     *
      * @attribute
+     * @title Look Damping
+     * @description The look damping. A higher value means less damping. A value of 1 means no damping.
      * @type {number}
      */
     lookDamping = 0.97;
 
     /**
-     * The move damping. A higher value means less damping. A value of 1 means no damping.
-     *
      * @attribute
+     * @title Move Damping
+     * @description The move damping. A higher value means less damping. A value of 1 means no damping.
      * @type {number}
      */
     moveDamping = 0.98;
@@ -195,70 +225,72 @@ class CameraControls extends Script {
      * Enable orbit camera controls.
      *
      * @attribute
+     * @title Enable Orbit
+     * @description Enable orbit camera controls.
      * @type {boolean}
      */
     enableOrbit = true;
 
     /**
-     * Enable pan camera controls.
-     *
      * @attribute
+     * @title Enable Pan
+     * @description Enable pan camera controls.
      * @type {boolean}
      */
     enablePan = true;
 
     /**
-     * Enable fly camera controls.
-     *
      * @attribute
+     * @title Enable Fly
+     * @description Enable fly camera controls.
      * @type {boolean}
      */
     enableFly = true;
 
     /**
-     * The touch pinch speed.
-     *
      * @attribute
+     * @title Pinch Speed
+     * @description The touch pinch speed.
      * @type {number}
      */
     pinchSpeed = 5;
 
     /**
-     * The mouse wheel speed.
-     *
      * @attribute
+     * @title Wheel Speed
+     * @description The mouse wheel speed.
      * @type {number}
      */
     wheelSpeed = 0.005;
 
     /**
-     * The minimum scale the camera can zoom (absolute value).
-     *
      * @attribute
+     * @title Zoom Scale Min
+     * @description The minimum scale the camera can zoom (absolute value).
      * @type {number}
      */
     zoomScaleMin = 0;
 
     /**
-     * The fly move speed relative to the scene size.
-     *
      * @attribute
+     * @title Move Speed
+     * @description The fly move speed relative to the scene size.
      * @type {number}
      */
     moveSpeed = 2;
 
     /**
-     * The fly sprint speed relative to the scene size.
-     *
      * @attribute
+     * @title Sprint Speed
+     * @description The fly sprint speed relative to the scene size.
      * @type {number}
      */
     sprintSpeed = 4;
 
     /**
-     * The fly crouch speed relative to the scene size.
-     *
      * @attribute
+     * @title Crouch Speed
+     * @description The fly crouch speed relative to the scene size.
      * @type {number}
      */
     crouchSpeed = 1;
@@ -341,9 +373,11 @@ class CameraControls extends Script {
     }
 
     /**
-     * The camera's focus point.
-     *
-     * @param {Vec3} point - The focus point.
+     * @attribute
+     * @title Focus Point
+     * @description The camera's focus point.
+     * @type {Vec3}
+     * @default [0, 0, 0]
      */
     set focusPoint(point) {
         if (!this._camera) {
@@ -357,11 +391,12 @@ class CameraControls extends Script {
     }
 
     /**
-     * The camera's pitch range. Having a value of -360 means no minimum pitch and 360 means no
-     * maximum pitch.
-     *
      * @attribute
+     * @title Pitch Range
+     * @description The camera's pitch range. Having a value of -360 means no minimum pitch and 360
+     * means no maximum pitch.
      * @type {Vec2}
+     * @default [-360, 360]
      */
     set pitchRange(value) {
         this._pitchRange.copy(value);
@@ -374,10 +409,11 @@ class CameraControls extends Script {
     }
 
     /**
-     * The minimum zoom distance relative to the scene size.
-     *
      * @attribute
+     * @title Zoom Min
+     * @description The minimum zoom distance relative to the scene size.
      * @type {number}
+     * @default 0
      */
     set zoomMin(value) {
         this._zoomMin = value;
@@ -390,11 +426,12 @@ class CameraControls extends Script {
     }
 
     /**
-     * The maximum zoom distance relative to the scene size. Having a value less than or equal to
-     * zoomMin means no maximum zoom.
-     *
      * @attribute
+     * @title Zoom Max
+     * @description The maximum zoom distance relative to the scene size. Having a value less than
+     * or equal to zoomMin means no maximum zoom.
      * @type {number}
+     * @default 0
      */
     set zoomMax(value) {
         this._zoomMax = value;
@@ -426,7 +463,7 @@ class CameraControls extends Script {
         look.x = math.clamp(look.x, min, max);
 
         // emit clamp event
-        this.fire('clamp:look', look);
+        this.fire(CameraControls.EVENT_CLAMP_LOOK, look);
     }
 
     /**
@@ -442,7 +479,7 @@ class CameraControls extends Script {
 
         // emit clamp event
         position.sub(tmpV1);
-        this.fire('clamp:position', position);
+        this.fire(CameraControls.EVENT_CLAMP_POSITION, position);
         position.add(tmpV1);
     }
 
