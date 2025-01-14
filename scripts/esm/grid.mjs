@@ -220,10 +220,12 @@ class Grid extends Script {
         this.entity.render.meshInstances = [this._meshInstance];
 
         // set the initial values
-        this.halfExtents = this._calcHalfExtents(tmpVa) ?? this.halfExtents;
         this.colorX = colorX ?? this.colorX;
         this.colorZ = colorZ ?? this.colorZ;
         this.resolution = resolution ?? this.resolution;
+
+        // calculate half extents
+        this._set('uHalfExtents', this._calcHalfExtents(tmpVa));
 
         // update the half extents when the entity scale changes
         this.app.on('prerender', () => {
@@ -231,8 +233,8 @@ class Grid extends Script {
                 return;
             }
             const halfExtents = this._calcHalfExtents(tmpVa);
-            if (this.halfExtents.distance(halfExtents) > EPISILON) {
-                this.halfExtents = halfExtents;
+            if (this._halfExtents.distance(halfExtents) > EPISILON) {
+                this._set('uHalfExtents', halfExtents);
             }
         });
 
@@ -280,23 +282,10 @@ class Grid extends Script {
 
     /**
      * @attribute
-     * @type {Vec2}
-     */
-    set halfExtents(value) {
-        if (!(value instanceof Vec2)) {
-            return;
-        }
-        this._halfExtents.copy(value);
-        this._set('uHalfExtents', this._halfExtents);
-    }
-
-    get halfExtents() {
-        return this._halfExtents;
-    }
-
-    /**
-     * @attribute
+     * @title Grid Color X
+     * @description The color of the grid lines along the X axis.
      * @type {Color}
+     * @default [1, 0.3, 0.3]
      */
     set colorX(value) {
         if (!(value instanceof Color)) {
@@ -312,7 +301,10 @@ class Grid extends Script {
 
     /**
      * @attribute
+     * @title Grid Color Z
+     * @description The color of the grid lines along the Z axis.
      * @type {Color}
+     * @default [0.3, 0.3, 1]
      */
     set colorZ(value) {
         if (!(value instanceof Color)) {
@@ -328,7 +320,10 @@ class Grid extends Script {
 
     /**
      * @attribute
+     * @title Grid Resolution
+     * @description The resolution of the grid.
      * @type {number}
+     * @default 2
      */
     set resolution(value) {
         this._resolution = value;
