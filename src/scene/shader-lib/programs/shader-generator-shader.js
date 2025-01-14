@@ -84,7 +84,7 @@ class ShaderGeneratorShader extends ShaderGenerator {
             includes.set('transformCoreVS', shaderChunks.transformCoreVS);
             includes.set('transformInstancingVS', ''); // no default instancing, needs to be implemented in the user shader
             includes.set('normalCoreVS', shaderChunks.normalCoreVS);
-            includes.set('skinTexVS', shaderChunks.skinTexVS);
+            includes.set('skinVS', shaderChunks.skinVS);
 
             if (options.skin) defines.set('SKIN', true);
             if (options.useInstancing) defines.set('INSTANCING', true);
