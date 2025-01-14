@@ -266,7 +266,6 @@ data.on('*:set', (/** @type {string} */ path, /** @type {any} */ value) => {
             if (skipObserverFire) {
                 return;
             }
-            console.log('gizmo', key, value);
             if (key === 'type') {
                 gizmoHandler.switch(value);
                 setGizmoControls();
