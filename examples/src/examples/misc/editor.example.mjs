@@ -52,25 +52,26 @@ const assets = {
  * @param {pc.AssetRegistry} assetRegistry - The asset registry.
  * @returns {Promise<void>} The promise.
  */
-function loadAssets(assetList, assetRegistry) {
+const loadAssets = (assetList, assetRegistry) => {
     return new Promise((resolve) => {
         const assetListLoader = new pc.AssetListLoader(assetList, assetRegistry);
         assetListLoader.load(resolve);
     });
-}
+};
 await loadAssets(Object.values(assets), app.assets);
 
 app.start();
+
 /**
  * @param {pc.Color} color - The color.
  * @returns {pc.Material} - The standard material.
  */
-function createColorMaterial(color) {
+const createColorMaterial = (color) => {
     const material = new pc.StandardMaterial();
     material.diffuse = color;
     material.update();
     return material;
-}
+};
 
 // scene settings
 app.scene.ambientLight = new pc.Color(0.2, 0.2, 0.2);
@@ -125,13 +126,12 @@ camera.addComponent('camera', {
 const cameraOffset = 4 * camera.camera?.aspectRatio;
 camera.setPosition(cameraOffset, cameraOffset, cameraOffset);
 app.root.addChild(camera);
-/** @type {CameraControls} */
-const cameraControls = camera.script.create(CameraControls, {
+const cameraControls = /** @type {CameraControls} */ (camera.script.create(CameraControls, {
     attributes: {
         focusPoint: pc.Vec3.ZERO,
         sceneSize: 5
     }
-});
+}));
 
 // grid
 const gridEntity = new pc.Entity('grid');
