@@ -33,7 +33,7 @@ const lerpRate = (damping, dt) => 1 - Math.pow(damping, dt * 1000);
 
 class CameraControls extends Script {
     /**
-     * Fired to clamp the position.
+     * Fired to clamp the position (Vec3).
      *
      * @event
      * @example
@@ -44,15 +44,15 @@ class CameraControls extends Script {
     static EVENT_CLAMP_POSITION = 'clamp:position';
 
     /**
-     * Fired to clamp the look.
+     * Fired to clamp the angles (Vec2).
      *
      * @event
      * @example
-     * cameraControls.on('clamp:look', (look) => {
-     *    look.x = Math.max(-90, Math.min(90, look.x));
+     * cameraControls.on('clamp:angles', (angles) => {
+     *    angles.x = Math.max(-90, Math.min(90, angles.x));
      * });
      */
-    static EVENT_CLAMP_LOOK = 'clamp:look';
+    static EVENT_CLAMP_ANGLES = 'clamp:angles';
 
     /**
      * @private
@@ -463,7 +463,7 @@ class CameraControls extends Script {
         look.x = math.clamp(look.x, min, max);
 
         // emit clamp event
-        this.fire(CameraControls.EVENT_CLAMP_LOOK, look);
+        this.fire(CameraControls.EVENT_CLAMP_ANGLES, look);
     }
 
     /**
