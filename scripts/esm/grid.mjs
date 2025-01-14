@@ -285,7 +285,7 @@ class Grid extends Script {
      * @title Grid Color X
      * @description The color of the grid lines along the X axis.
      * @type {Color}
-     * @default [1, 0.3, 0.3]
+     * @default [1, 0.3, 0.3, 1]
      */
     set colorX(value) {
         if (!(value instanceof Color)) {
@@ -304,7 +304,7 @@ class Grid extends Script {
      * @title Grid Color Z
      * @description The color of the grid lines along the Z axis.
      * @type {Color}
-     * @default [0.3, 0.3, 1]
+     * @default [0.3, 0.3, 1, 1]
      */
     set colorZ(value) {
         if (!(value instanceof Color)) {
