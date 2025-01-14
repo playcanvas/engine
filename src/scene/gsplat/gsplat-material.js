@@ -1,6 +1,6 @@
 import { CULLFACE_NONE, SEMANTIC_ATTR13, SEMANTIC_POSITION } from '../../platform/graphics/constants.js';
 import { ShaderProcessorOptions } from '../../platform/graphics/shader-processor-options.js';
-import { BLEND_NONE, BLEND_NORMAL, DITHER_NONE, GAMMA_NONE, GAMMA_SRGB, tonemapNames } from '../constants.js';
+import { BLEND_NONE, BLEND_NORMAL, DITHER_NONE, gammaNames, tonemapNames } from '../constants.js';
 import { ShaderMaterial } from '../materials/shader-material.js';
 import { getProgramLibrary } from '../shader-lib/get-program-library.js';
 import { getMaterialShaderDefines } from '../shader-lib/utils.js';
@@ -9,11 +9,6 @@ import { shaderChunks } from '../shader-lib/chunks/chunks.js';
 import { ShaderGenerator } from '../shader-lib/programs/shader-generator.js';
 import { ShaderPass } from '../shader-pass.js';
 import { hashCode } from '../../core/hash.js';
-
-const gammaNames = {
-    [GAMMA_NONE]: 'NONE',
-    [GAMMA_SRGB]: 'SRGB'
-};
 
 const defaultChunks = new Map(Object.entries(shaderChunks));
 
