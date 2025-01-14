@@ -1,7 +1,7 @@
 import { hashCode } from '../../../core/hash.js';
 import { SEMANTIC_ATTR15, SEMANTIC_BLENDINDICES, SEMANTIC_BLENDWEIGHT, SHADERLANGUAGE_WGSL } from '../../../platform/graphics/constants.js';
 import { ShaderUtils } from '../../../platform/graphics/shader-utils.js';
-import { tonemapNames } from '../../constants.js';
+import { gammaNames, tonemapNames } from '../../constants.js';
 import { ShaderPass } from '../../shader-pass.js';
 import { shaderChunks } from '../chunks/chunks.js';
 import { ShaderGenerator } from './shader-generator.js';
@@ -61,6 +61,10 @@ class ShaderGeneratorShader extends ShaderGenerator {
         definitionOptions.attributes = attributes;
     }
 
+    addSharedDefines(defines, options) {
+        defines.set('TONEMAP', tonemapNames[options.toneMapping]);
+        defines.set('GAMMA', gammaNames[options.gamma]);
+    }
 
     createVertexDefinition(definitionOptions, options, shaderPassInfo) {
 
@@ -78,6 +82,7 @@ class ShaderGeneratorShader extends ShaderGenerator {
                 ...options.chunks
             }));
             const defines = new Map(options.defines);
+            this.addSharedDefines(defines, options);
 
             includes.set('shaderPassDefines', shaderPassInfo.shaderDefines);
             includes.set('userCode', desc.vertexCode);
@@ -120,7 +125,7 @@ class ShaderGeneratorShader extends ShaderGenerator {
             includes.set('userCode', desc.fragmentCode);
 
             const defines = new Map(options.defines);
-            defines.set('TONEMAP', tonemapNames[options.toneMapping]);
+            this.addSharedDefines(defines, options);
 
             definitionOptions.fragmentCode = fShader;
             definitionOptions.fragmentIncludes = includes;
