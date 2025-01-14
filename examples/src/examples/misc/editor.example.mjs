@@ -132,6 +132,13 @@ const cameraControls = /** @type {CameraControls} */ (camera.script.create(Camer
         sceneSize: 5
     }
 }));
+app.on('gizmo:pointer', (/** @type {boolean} */ hasPointer) => {
+    if (hasPointer) {
+        cameraControls.detach();
+    } else {
+        cameraControls.attach(camera.camera);
+    }
+});
 
 // grid
 const gridEntity = new pc.Entity('grid');
@@ -153,7 +160,7 @@ light.addComponent('light', {
 app.root.addChild(light);
 light.setEulerAngles(0, 0, -60);
 
-// create gizmo
+// gizmos
 let skipObserverFire = false;
 const gizmoHandler = new GizmoHandler(camera.camera);
 const setGizmoControls = () => {
@@ -174,6 +181,16 @@ gizmoHandler.switch('translate');
 setGizmoControls();
 gizmoHandler.add(box);
 window.focus();
+
+// selector
+const layers = app.scene.layers;
+const selector = new Selector(app, camera.camera, [layers.getLayerByName('World')]);
+selector.on('select', (/** @type {pc.GraphNode} */ node, /** @type {boolean} */ clear) => {
+    gizmoHandler.add(node, clear);
+});
+selector.on('deselect', () => {
+    gizmoHandler.clear();
+});
 
 // ensure canvas is resized when window changes size + keep gizmo size consistent to canvas size
 const resize = () => {
@@ -249,6 +266,7 @@ data.on('*:set', (/** @type {string} */ path, /** @type {any} */ value) => {
             if (skipObserverFire) {
                 return;
             }
+            console.log('gizmo', key, value);
             if (key === 'type') {
                 gizmoHandler.switch(value);
                 setGizmoControls();
@@ -273,19 +291,6 @@ data.on('*:set', (/** @type {string} */ path, /** @type {any} */ value) => {
         }
 
     }
-});
-
-// selector
-const layers = app.scene.layers;
-const selector = new Selector(app, camera.camera, [layers.getLayerByName('World')]);
-selector.on('select', (/** @type {pc.GraphNode} */ node, /** @type {boolean} */ clear) => {
-    if (gizmoHandler.hasPointer) {
-        return;
-    }
-    gizmoHandler.add(node, clear);
-});
-selector.on('deselect', () => {
-    gizmoHandler.clear();
 });
 
 app.on('destroy', () => {

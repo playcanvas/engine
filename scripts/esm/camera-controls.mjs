@@ -989,6 +989,9 @@ class CameraControls extends Script {
      * @param {CameraComponent} camera - The camera component.
      */
     attach(camera) {
+        if (this._camera === camera) {
+            return;
+        }
         this._camera = camera;
 
         // Attach events to canvas instead of window
@@ -1004,6 +1007,10 @@ class CameraControls extends Script {
     }
 
     detach() {
+        if (!this._camera) {
+            return;
+        }
+
         // Remove from canvas instead of window
         this._element.removeEventListener('wheel', this._onWheel, PASSIVE);
         this._element.removeEventListener('pointermove', this._onPointerMove);
