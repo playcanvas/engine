@@ -7,5 +7,5 @@ attribute vec4 vertex_color;
 vec3 dPositionW;
 mat4 dModelMatrix;
 
-#include "transformCore"
+#include "transformCoreVS"
 `;

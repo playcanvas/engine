@@ -39,12 +39,12 @@ const createHatchMaterial = (device, textures) => {
             // declares vertex_position attribute, and handles skinning and morphing if necessary.
             // It also adds uniforms: matrix_viewProjection, matrix_model, matrix_normal.
             // Functions added: getModelMatrix, getLocalPosition
-            #include "transformCore"
+            #include "transformCoreVS"
 
             // include code for normal shader functionality provided by the engine. It automatically
             // declares vertex_normal attribute, and handles skinning and morphing if necessary.
             // Functions added: getNormalMatrix, getLocalNormal
-            #include "normalCore"
+            #include "normalCoreVS"
 
             // add additional attributes we need
             attribute vec2 aUv0;
