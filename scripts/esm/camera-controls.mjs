@@ -415,7 +415,7 @@ class CameraControls extends Script {
      */
     set pitchRange(value) {
         this._pitchRange.copy(value);
-        this._clampLook(this._dir);
+        this._clampAngles(this._dir);
         this._smoothTransform(-1);
     }
 
@@ -470,15 +470,15 @@ class CameraControls extends Script {
 
     /**
      * @private
-     * @param {Vec2} look - The value to clamp.
+     * @param {Vec2} angles - The value to clamp.
      */
-    _clampLook(look) {
+    _clampAngles(angles) {
         const min = this._pitchRange.x === -360 ? -Infinity : this._pitchRange.x;
         const max = this._pitchRange.y === 360 ? Infinity : this._pitchRange.y;
-        look.x = math.clamp(look.x, min, max);
+        angles.x = math.clamp(angles.x, min, max);
 
         // emit clamp event
-        this.fire(CameraControls.EVENT_CLAMP_ANGLES, look);
+        this.fire(CameraControls.EVENT_CLAMP_ANGLES, angles);
     }
 
     /**
@@ -770,7 +770,7 @@ class CameraControls extends Script {
         const movementY = event.movementY || 0;
         this._dir.x -= movementY * this.rotateSpeed;
         this._dir.y -= movementX * this.rotateSpeed;
-        this._clampLook(this._dir);
+        this._clampAngles(this._dir);
     }
 
     /**
@@ -953,7 +953,7 @@ class CameraControls extends Script {
         tmpV1.sub2(start, point);
         const elev = Math.atan2(tmpV1.y, Math.sqrt(tmpV1.x * tmpV1.x + tmpV1.z * tmpV1.z)) * math.RAD_TO_DEG;
         const azim = Math.atan2(tmpV1.x, tmpV1.z) * math.RAD_TO_DEG;
-        this._clampLook(this._dir.set(-elev, azim));
+        this._clampAngles(this._dir.set(-elev, azim));
 
         this._origin.copy(point);
 
