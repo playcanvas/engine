@@ -3,6 +3,7 @@ import { data } from 'examples/observer';
 import { deviceType, rootPath, localImport, fileImport } from 'examples/utils';
 import * as pc from 'playcanvas';
 
+const { CameraControls } = await fileImport(`${rootPath}/static/scripts/esm/camera-controls.mjs`);
 const { Grid } = await fileImport(`${rootPath}/static/scripts/esm/grid.mjs`);
 
 const canvas = /** @type {HTMLCanvasElement} */ (document.getElementById('application-canvas'));
@@ -108,7 +109,7 @@ capsule.addComponent('render', {
 capsule.setPosition(1, 0, -1);
 app.root.addChild(capsule);
 
-// create camera entity
+// camera
 data.set('camera', {
     proj: pc.PROJECTION_PERSPECTIVE + 1,
     dist: 1,
@@ -116,17 +117,21 @@ data.set('camera', {
     orthoHeight: 10
 });
 const camera = new pc.Entity('camera');
+camera.addComponent('script');
 camera.addComponent('camera', {
     clearColor: new pc.Color(0.1, 0.1, 0.1),
     farClip: 1000
 });
-camera.addComponent('script');
-const orbitCamera = camera.script.create('orbitCamera');
-camera.script.create('orbitCameraInputMouse');
-camera.script.create('orbitCameraInputTouch');
-camera.setPosition(1, 1, 1);
+const cameraOffset = 4 * camera.camera?.aspectRatio;
+camera.setPosition(cameraOffset, cameraOffset, cameraOffset);
 app.root.addChild(camera);
-orbitCamera.distance = 5 * camera.camera?.aspectRatio;
+/** @type {CameraControls} */
+const cameraControls = camera.script.create(CameraControls, {
+    attributes: {
+        focusPoint: pc.Vec3.ZERO,
+        sceneSize: 5
+    }
+});
 
 // grid
 const gridEntity = new pc.Entity('grid');
@@ -185,6 +190,14 @@ resize();
 const keydown = (/** @type {KeyboardEvent} */ e) => {
     gizmoHandler.gizmo.snap = !!e.shiftKey;
     gizmoHandler.gizmo.uniform = !e.ctrlKey;
+
+    if (e.key === 'f') {
+        cameraControls.refocus(
+            gizmoHandler.gizmo.root.getPosition(),
+            null,
+            cameraOffset
+        );
+    }
 };
 const keyup = (/** @type {KeyboardEvent} */ e) => {
     gizmoHandler.gizmo.snap = !!e.shiftKey;
