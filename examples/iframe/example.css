@@ -1,7 +1,8 @@
 body {
     margin: 0;
-    overflow-y: hidden;
+    overflow: hidden;
     background-color: #000;
+    touch-action: none;
 }
 
 #application-canvas {

@@ -147,12 +147,12 @@ data.set('example', {
 
 data.set('attr', [
     'enablePan',
-    'lookSensitivity',
-    'lookDamping',
-    'moveDamping',
     'pitchRange',
-    'pinchSpeed',
-    'wheelSpeed',
+    'rotateSpeed',
+    'rotateDamping',
+    'zoomSpeed',
+    'zoomPinchSens',
+    'zoomDamping',
     'zoomMin',
     'zoomMax',
     'zoomScaleMin'

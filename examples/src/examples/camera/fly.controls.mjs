@@ -11,10 +11,19 @@ export const controls = ({ observer, ReactPCUI, jsx, fragment }) => {
             { headerText: 'Attributes' },
             jsx(
                 LabelGroup,
-                { text: 'Look sensitivity' },
+                { text: 'Pitch range' },
+                jsx(VectorInput, {
+                    binding: new BindingTwoWay(),
+                    link: { observer, path: 'attr.pitchRange' },
+                    dimensions: 2
+                })
+            ),
+            jsx(
+                LabelGroup,
+                { text: 'Rotate speed' },
                 jsx(SliderInput, {
                     binding: new BindingTwoWay(),
-                    link: { observer, path: 'attr.lookSensitivity' },
+                    link: { observer, path: 'attr.rotateSpeed' },
                     min: 0.1,
                     max: 1,
                     step: 0.01
@@ -22,35 +31,14 @@ export const controls = ({ observer, ReactPCUI, jsx, fragment }) => {
             ),
             jsx(
                 LabelGroup,
-                { text: 'Look damping' },
+                { text: 'Rotate damping' },
                 jsx(SliderInput, {
                     binding: new BindingTwoWay(),
-                    link: { observer, path: 'attr.lookDamping' },
+                    link: { observer, path: 'attr.rotateDamping' },
                     min: 0,
                     max: 0.999,
                     step: 0.001,
                     precision: 3
-                })
-            ),
-            jsx(
-                LabelGroup,
-                { text: 'Move damping' },
-                jsx(SliderInput, {
-                    binding: new BindingTwoWay(),
-                    link: { observer, path: 'attr.moveDamping' },
-                    min: 0,
-                    max: 0.999,
-                    step: 0.001,
-                    precision: 3
-                })
-            ),
-            jsx(
-                LabelGroup,
-                { text: 'Pitch range' },
-                jsx(VectorInput, {
-                    binding: new BindingTwoWay(),
-                    link: { observer, path: 'attr.pitchRange' },
-                    dimensions: 2
                 })
             ),
             jsx(
@@ -65,22 +53,34 @@ export const controls = ({ observer, ReactPCUI, jsx, fragment }) => {
             ),
             jsx(
                 LabelGroup,
-                { text: 'Sprint speed' },
+                { text: 'Move fast speed' },
                 jsx(SliderInput, {
                     binding: new BindingTwoWay(),
-                    link: { observer, path: 'attr.sprintSpeed' },
+                    link: { observer, path: 'attr.moveFastSpeed' },
                     min: 1,
                     max: 10
                 })
             ),
             jsx(
                 LabelGroup,
-                { text: 'Crouch speed' },
+                { text: 'Move slow speed' },
                 jsx(SliderInput, {
                     binding: new BindingTwoWay(),
-                    link: { observer, path: 'attr.crouchSpeed' },
+                    link: { observer, path: 'attr.moveSlowSpeed' },
                     min: 1,
                     max: 10
+                })
+            ),
+            jsx(
+                LabelGroup,
+                { text: 'Move damping' },
+                jsx(SliderInput, {
+                    binding: new BindingTwoWay(),
+                    link: { observer, path: 'attr.moveDamping' },
+                    min: 0,
+                    max: 0.999,
+                    step: 0.001,
+                    precision: 3
                 })
             )
         )
