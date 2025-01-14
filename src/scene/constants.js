@@ -607,6 +607,12 @@ export const GAMMA_NONE = 0;
  */
 export const GAMMA_SRGB = 1;
 
+// names of the gamma correction modes
+export const gammaNames = {
+    [GAMMA_NONE]: 'NONE',
+    [GAMMA_SRGB]: 'SRGB'
+};
+
 /**
  * Linear tonemapping. The colors are preserved, but the exposure is applied.
  *

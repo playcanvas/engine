@@ -90,7 +90,7 @@ const createGoochMaterial = (texture, color) => {
                 uniform sampler2D uDiffuseMap;
             #endif
 
-            // Good shading constants - could be exposed as uniforms instead
+            // Gooch shading constants - could be exposed as uniforms instead
             float diffuseCool = 0.4;
             float diffuseWarm = 0.4;
             vec3 cool = vec3(0, 0, 0.6);
