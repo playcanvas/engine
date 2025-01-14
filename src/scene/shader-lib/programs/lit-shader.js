@@ -1537,8 +1537,8 @@ class LitShader {
     getDefinition(options) {
 
         const vIncludes = new Map();
-        vIncludes.set('transformCore', this.chunks.transformCoreVS);
-        vIncludes.set('transformInstancing', this.chunks.transformInstancingVS);
+        vIncludes.set('transformCoreVS', this.chunks.transformCoreVS);
+        vIncludes.set('transformInstancingVS', this.chunks.transformInstancingVS);
         vIncludes.set('skinTexVS', this.chunks.skinTexVS);
         vIncludes.set('skinBatchTexVS', this.chunks.skinBatchTexVS);
 

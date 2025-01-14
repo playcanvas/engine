@@ -50,7 +50,7 @@ uniform mat3 matrix_normal;
 
 #elif defined(INSTANCING)
 
-    #include "transformInstancing"
+    #include "transformInstancingVS"
 
 #else
 

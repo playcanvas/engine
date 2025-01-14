@@ -81,10 +81,9 @@ class ShaderGeneratorShader extends ShaderGenerator {
 
             includes.set('shaderPassDefines', shaderPassInfo.shaderDefines);
             includes.set('userCode', desc.vertexCode);
-            includes.set('transformCore', shaderChunks.transformCoreVS);
-            includes.set('transformInstancing', ''); // no default instancing, needs to be implemented in the user shader
-            includes.set('normalCore', shaderChunks.normalCoreVS);
-            includes.set('skinCode', shaderChunks.skinTexVS);
+            includes.set('transformCoreVS', shaderChunks.transformCoreVS);
+            includes.set('transformInstancingVS', ''); // no default instancing, needs to be implemented in the user shader
+            includes.set('normalCoreVS', shaderChunks.normalCoreVS);
             includes.set('skinTexVS', shaderChunks.skinTexVS);
 
             if (options.skin) defines.set('SKIN', true);
