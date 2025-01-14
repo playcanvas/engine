@@ -1,14 +1,15 @@
 // @config DESCRIPTION <div style='text-align:center'><div>Translate (1), Rotate (2), Scale (3)</div><div>World/Local (X)</div><div>Perspective (P), Orthographic (O)</div></div>
 import { data } from 'examples/observer';
-import { deviceType, rootPath, localImport } from 'examples/utils';
+import { deviceType, rootPath, localImport, fileImport } from 'examples/utils';
 import * as pc from 'playcanvas';
+
+const { Grid } = await fileImport(`${rootPath}/static/scripts/esm/grid.mjs`);
 
 const canvas = /** @type {HTMLCanvasElement} */ (document.getElementById('application-canvas'));
 window.focus();
 
 // class for handling gizmo
 const { GizmoHandler } = await localImport('gizmo-handler.mjs');
-const { Grid } = await localImport('grid.mjs');
 const { Selector } = await localImport('selector.mjs');
 
 const gfxOptions = {
@@ -127,6 +128,18 @@ camera.setPosition(1, 1, 1);
 app.root.addChild(camera);
 orbitCamera.distance = 5 * camera.camera?.aspectRatio;
 
+// grid
+const gridEntity = new pc.Entity('grid');
+gridEntity.setLocalScale(8, 1, 8);
+app.root.addChild(gridEntity);
+gridEntity.addComponent('script');
+const grid = /** @type {Grid} */ (gridEntity.script.create(Grid));
+data.set('grid', {
+    colorX: Object.values(grid.colorX),
+    colorZ: Object.values(grid.colorZ),
+    resolution: grid.resolution + 1
+});
+
 // create light entity
 const light = new pc.Entity('light');
 light.addComponent('light', {
@@ -204,6 +217,7 @@ window.addEventListener('keyup', keyup);
 window.addEventListener('keypress', keypress);
 
 // gizmo and camera set handler
+const tmpC1 = new pc.Color();
 data.on('*:set', (/** @type {string} */ path, /** @type {any} */ value) => {
     const [category, key] = path.split('.');
     switch (category) {
@@ -230,6 +244,21 @@ data.on('*:set', (/** @type {string} */ path, /** @type {any} */ value) => {
             gizmoHandler.gizmo[key] = value;
             break;
         }
+        case 'grid': {
+            switch (key) {
+                case 'colorX':
+                    grid.colorX = tmpC1.set(value[0], value[1], value[2]);
+                    break;
+                case 'colorZ':
+                    grid.colorZ = tmpC1.set(value[0], value[1], value[2]);
+                    break;
+                case 'resolution':
+                    grid.resolution = value - 1;
+                    break;
+            }
+            break;
+        }
+
     }
 });
 
@@ -244,13 +273,6 @@ selector.on('select', (/** @type {pc.GraphNode} */ node, /** @type {boolean} */ 
 });
 selector.on('deselect', () => {
     gizmoHandler.clear();
-});
-
-// grid
-const grid = new Grid();
-
-app.on('update', (/** @type {number} */ dt) => {
-    grid.draw(app);
 });
 
 app.on('destroy', () => {
