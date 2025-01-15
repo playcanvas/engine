@@ -368,7 +368,7 @@ class CameraFrame extends Script {
             this.engineCameraFrame.destroy();
         });
 
-        this.on("state", (enabled) => {
+        this.on('state', (enabled) => {
             this.engineCameraFrame.enabled = enabled;
         });
     }
