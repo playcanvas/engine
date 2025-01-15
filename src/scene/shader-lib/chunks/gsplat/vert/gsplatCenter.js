@@ -4,11 +4,11 @@ uniform mat4 matrix_view;
 uniform mat4 matrix_projection;
 
 // project the model space gaussian center to view and clip space
-bool initCenter(SplatSource source, vec3 modelCenter, out SplatCenter center) {
+bool initCenter(vec3 modelCenter, out SplatCenter center) {
     mat4 modelView = matrix_view * matrix_model;
     vec4 centerView = modelView * vec4(modelCenter, 1.0);
 
-    // early out if splat is behind the camear
+    // early out if splat is behind the camera
     if (centerView.z > 0.0) {
         return false;
     }

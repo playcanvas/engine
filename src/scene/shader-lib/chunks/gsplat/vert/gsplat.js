@@ -21,7 +21,7 @@ void main(void) {
     vec3 modelCenter = readCenter(source);
 
     SplatCenter center;
-    if (!initCenter(source, modelCenter, center)) {
+    if (!initCenter(modelCenter, center)) {
         gl_Position = discardVec;
         return;
     }
