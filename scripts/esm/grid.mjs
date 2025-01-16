@@ -15,14 +15,6 @@ import {
 
 /** @import { AppBase, Entity } from 'playcanvas' */
 
-/**
- * @typedef {object} ScriptArgs
- * @property {AppBase} app - The app.
- * @property {Entity} entity - The entity.
- * @property {boolean} [enabled] - The enabled state.
- * @property {object} [attributes] - The attributes.
- */
-
 const tmpVa = new Vec2();
 
 const EPISILON = 1e-3;
@@ -250,7 +242,7 @@ class Grid extends Script {
 
     /**
      * @param {string} name - The name of the parameter.
-     * @param {Color|Vec2} value - The value of the parameter.
+     * @param {Color|Vec2|number} value - The value of the parameter.
      * @private
      */
     _set(name, value) {
