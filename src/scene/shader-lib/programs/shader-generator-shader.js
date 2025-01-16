@@ -22,6 +22,10 @@ const fShader = `
 
 class ShaderGeneratorShader extends ShaderGenerator {
     generateKey(options) {
+
+        // Note: options.chunks are not included in the key as currently shader variants are removed
+        // from the material when its chunks are modified.
+
         const desc = options.shaderDesc;
         const vsHash = desc.vertexCode ? hashCode(desc.vertexCode) : 0;
         const fsHash = desc.fragmentCode ? hashCode(desc.fragmentCode) : 0;
@@ -66,7 +70,7 @@ class ShaderGeneratorShader extends ShaderGenerator {
         defines.set('GAMMA', gammaNames[options.gamma]);
     }
 
-    createVertexDefinition(definitionOptions, options, shaderPassInfo) {
+    createVertexDefinition(definitionOptions, options, shaderPassInfo, sharedIncludes) {
 
         const desc = options.shaderDesc;
 
@@ -77,10 +81,7 @@ class ShaderGeneratorShader extends ShaderGenerator {
             definitionOptions.vertexCode = desc.vertexCode;
 
         } else {
-            const includes = new Map(Object.entries({
-                ...shaderChunks,
-                ...options.chunks
-            }));
+            const includes = new Map(sharedIncludes);
             const defines = new Map(options.defines);
             this.addSharedDefines(defines, options);
 
@@ -103,7 +104,7 @@ class ShaderGeneratorShader extends ShaderGenerator {
         }
     }
 
-    createFragmentDefinition(definitionOptions, options, shaderPassInfo) {
+    createFragmentDefinition(definitionOptions, options, shaderPassInfo, sharedIncludes) {
 
         const desc = options.shaderDesc;
 
@@ -114,11 +115,7 @@ class ShaderGeneratorShader extends ShaderGenerator {
             definitionOptions.fragmentCode = desc.fragmentCode;
 
         } else {
-            const includes = new Map(Object.entries({
-                ...shaderChunks,
-                ...options.chunks
-            }));
-
+            const includes = new Map(sharedIncludes);
             includes.set('shaderPassDefines', shaderPassInfo.shaderDefines);
             includes.set('gamma', ShaderGenerator.gammaCode(options.gamma));
             includes.set('fog', ShaderGenerator.fogCode(options.fog));
@@ -146,9 +143,14 @@ class ShaderGeneratorShader extends ShaderGenerator {
             meshBindGroupFormat: desc.meshBindGroupFormat
         };
 
+        const sharedIncludes = new Map(Object.entries({
+            ...shaderChunks,  // default chunks
+            ...options.chunks // material override chunks
+        }));
+
         this.createAttributesDefinition(definitionOptions, options);
-        this.createVertexDefinition(definitionOptions, options, shaderPassInfo);
-        this.createFragmentDefinition(definitionOptions, options, shaderPassInfo);
+        this.createVertexDefinition(definitionOptions, options, shaderPassInfo, sharedIncludes);
+        this.createFragmentDefinition(definitionOptions, options, shaderPassInfo, sharedIncludes);
 
         return ShaderUtils.createDefinition(device, definitionOptions);
     }

@@ -24,8 +24,6 @@ class LitMaterial extends Material {
 
     shaderChunk = 'void evaluateFrontend() {}\n';
 
-    chunks = null;
-
     useLighting = true;
 
     useFog = true;
