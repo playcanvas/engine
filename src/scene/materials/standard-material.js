@@ -588,27 +588,7 @@ class StandardMaterial extends Material {
             this[`_${name}`] = _props[name].value();
         });
 
-        /**
-         * @type {Object<string, string>}
-         * @private
-         */
-        this._chunks = { };
         this._uniformCache = { };
-    }
-
-    /**
-     * Object containing custom shader chunks that will replace default ones.
-     *
-     * @type {Object<string, string>}
-     */
-    set chunks(value) {
-        this._dirtyShader = true;
-        this._chunks = value;
-    }
-
-    get chunks() {
-        this._dirtyShader = true;
-        return this._chunks;
     }
 
     /**
@@ -624,13 +604,6 @@ class StandardMaterial extends Material {
         Object.keys(_props).forEach((k) => {
             this[k] = source[k];
         });
-
-        // clone chunks
-        for (const p in source._chunks) {
-            if (source._chunks.hasOwnProperty(p)) {
-                this._chunks[p] = source._chunks[p];
-            }
-        }
 
         // clone user attributes
         this.userAttributes = new Map(source.userAttributes);
