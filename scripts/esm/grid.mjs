@@ -10,7 +10,6 @@ import {
     Color,
     Script,
     Vec2
-/* eslint-disable-next-line import/no-unresolved */
 } from 'playcanvas';
 
 /** @import { AppBase, Entity } from 'playcanvas' */
