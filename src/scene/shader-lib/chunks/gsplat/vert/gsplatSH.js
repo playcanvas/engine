@@ -35,11 +35,11 @@ void fetch(in uint t, out vec3 a) {
 #elif SH_BANDS == 2
     uniform highp usampler2D splatSH_1to3;
     uniform highp usampler2D splatSH_4to7;
-    uniform highp usampler2D splatSH_8;
+    uniform highp usampler2D splatSH_8to11;
     void readSHData(in SplatSource source, out vec3 sh[8], out float scale) {
         fetchScale(texelFetch(splatSH_1to3, source.uv, 0), scale, sh[0], sh[1], sh[2]);
         fetch(texelFetch(splatSH_4to7, source.uv, 0), sh[3], sh[4], sh[5], sh[6]);
-        fetch(texelFetch(splatSH_8, source.uv, 0).x, sh[7]);
+        fetch(texelFetch(splatSH_8to11, source.uv, 0).x, sh[7]);
     }
 #else
     uniform highp usampler2D splatSH_1to3;
