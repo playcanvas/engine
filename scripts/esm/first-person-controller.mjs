@@ -1,4 +1,3 @@
-/* eslint-disable-next-line import/no-unresolved */
 import { math, Script, Vec2, Vec3, Mat4 } from 'playcanvas';
 
 /** @import { AppBase, GraphicsDevice, Entity, RigidBodyComponent } from 'playcanvas' */
