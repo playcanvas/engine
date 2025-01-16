@@ -251,6 +251,12 @@ class GSplatSorter extends EventHandler {
         const orderBuffer = this.orderTexture.lock({
             mode: TEXTURELOCK_READ
         }).buffer.slice();
+
+        // initialize order data
+        for (let i = 0; i < orderBuffer.length; ++i) {
+            orderBuffer[i] = i;
+        }
+
         this.orderTexture.unlock();
 
         // send the initial buffer to worker

@@ -58,9 +58,6 @@ class GSplat {
     sh4to7Texture;
 
     /** @type {Texture | undefined} */
-    sh8Texture;
-
-    /** @type {Texture | undefined} */
     sh8to11Texture;
 
     /** @type {Texture | undefined} */
@@ -102,7 +99,7 @@ class GSplat {
                     this.sh8to11Texture = this.createTexture('splatSH_8to11', PIXELFORMAT_RGBA32U, size);
                     this.sh12to15Texture = this.createTexture('splatSH_12to15', PIXELFORMAT_RGBA32U, size);
                 } else {
-                    this.sh8Texture = this.createTexture('splatSH_8', PIXELFORMAT_R32U, size);
+                    this.sh8to11Texture = this.createTexture('splatSH_8to11', PIXELFORMAT_R32U, size);
                 }
             }
 
@@ -116,7 +113,6 @@ class GSplat {
         this.transformBTexture?.destroy();
         this.sh1to3Texture?.destroy();
         this.sh4to7Texture?.destroy();
-        this.sh8Texture?.destroy();
         this.sh8to11Texture?.destroy();
         this.sh12to15Texture?.destroy();
     }
@@ -133,7 +129,6 @@ class GSplat {
         result.setDefine('SH_BANDS', this.shBands);
         result.setParameter('splatSH_1to3', this.sh1to3Texture);
         result.setParameter('splatSH_4to7', this.sh4to7Texture);
-        result.setParameter('splatSH_8', this.sh8Texture);
         result.setParameter('splatSH_8to11', this.sh8to11Texture);
         result.setParameter('splatSH_12to15', this.sh12to15Texture);
         return result;
@@ -292,7 +287,6 @@ class GSplat {
     updateSHData(gsplatData) {
         const sh1to3Data = this.sh1to3Texture.lock();
         const sh4to7Data = this.sh4to7Texture?.lock();
-        const sh8Data = this.sh8Texture?.lock();
         const sh8to11Data = this.sh8to11Texture?.lock();
         const sh12to15Data = this.sh12to15Texture?.lock();
 
@@ -363,14 +357,13 @@ class GSplat {
                     sh12to15Data[i * 4 + 2] = c[39] << 21 | c[40] << 11 | c[41];
                     sh12to15Data[i * 4 + 3] = c[42] << 21 | c[43] << 11 | c[44];
                 } else {
-                    sh8Data[i] = c[21] << 21 | c[22] << 11 | c[23];
+                    sh8to11Data[i] = c[21] << 21 | c[22] << 11 | c[23];
                 }
             }
         }
 
         this.sh1to3Texture.unlock();
         this.sh4to7Texture?.unlock();
-        this.sh8Texture?.unlock();
         this.sh8to11Texture?.unlock();
         this.sh12to15Texture?.unlock();
     }

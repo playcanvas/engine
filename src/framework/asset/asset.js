@@ -200,6 +200,10 @@ class Asset extends EventHandler {
         this.tags = new Tags(this);
 
         this._preload = false;
+
+        /**
+         * @type {AssetFile | null}
+         */
         this._file = null;
         this._data = data || { };
 
