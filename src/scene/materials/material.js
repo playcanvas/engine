@@ -205,7 +205,7 @@ class Material {
         this.clearVariants();
         return this._chunks;
     }
-    
+
     /**
      * Sets the offset for the output depth buffer value. Useful for decals to prevent z-fighting.
      * Typically a small negative value (-0.1) is used to render the mesh slightly closer to the
@@ -567,7 +567,7 @@ class Material {
                 this._chunks[p] = srcChunks[p];
             }
         }
-        
+
         return this;
     }
 
