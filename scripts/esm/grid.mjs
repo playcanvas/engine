@@ -184,16 +184,7 @@ class Grid extends Script {
      */
     _resolution = Grid.RESOLUTION_HIGH;
 
-    /**
-     * @param {ScriptArgs} args - The arguments.
-     */
-    constructor(args) {
-        super(args);
-        const {
-            colorX,
-            colorZ,
-            resolution
-        } = args.attributes;
+    initialize() {
 
         // ensure the entity has a render component
         if (!this.entity.render) {
@@ -220,9 +211,9 @@ class Grid extends Script {
         this.entity.render.meshInstances = [this._meshInstance];
 
         // set the initial values
-        this.colorX = colorX ?? this.colorX;
-        this.colorZ = colorZ ?? this.colorZ;
-        this.resolution = resolution ?? this.resolution;
+        this.colorX = this._colorX;
+        this.colorZ = this._colorZ;
+        this.resolution = this._resolution;
 
         // calculate half extents
         this._set('uHalfExtents', this._calcHalfExtents(tmpVa));
@@ -263,6 +254,11 @@ class Grid extends Script {
      * @private
      */
     _set(name, value) {
+
+        if (!this._material) {
+            return;
+        }
+
         if (value instanceof Color) {
             this._material.setParameter(name, [value.r, value.g, value.b]);
         }
