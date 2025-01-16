@@ -127,7 +127,7 @@ const cameraOffset = 4 * camera.camera?.aspectRatio;
 camera.setPosition(cameraOffset, cameraOffset, cameraOffset);
 app.root.addChild(camera);
 const cameraControls = /** @type {CameraControls} */ (camera.script.create(CameraControls, {
-    attributes: {
+    properties: {
         focusPoint: pc.Vec3.ZERO,
         sceneSize: 5
     }
