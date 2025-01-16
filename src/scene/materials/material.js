@@ -173,6 +173,12 @@ class Material {
      */
     stencilBack = null;
 
+    /**
+     * @type {Object<string, string>}
+     * @private
+     */
+    _chunks = { };
+
     /** @protected */
     constructor() {
         if (new.target === Material) {
@@ -180,6 +186,26 @@ class Material {
         }
     }
 
+    /**
+     * Sets the object containing custom shader chunks that will replace default ones.
+     *
+     * @type {Object<string, string>}
+     */
+    set chunks(value) {
+        this.clearVariants();
+        this._chunks = value;
+    }
+
+    /**
+     * Gets the object containing custom shader chunks.
+     *
+     * @type {Object<string, string>}
+     */
+    get chunks() {
+        this.clearVariants();
+        return this._chunks;
+    }
+    
     /**
      * Sets the offset for the output depth buffer value. Useful for decals to prevent z-fighting.
      * Typically a small negative value (-0.1) is used to render the mesh slightly closer to the
@@ -534,6 +560,14 @@ class Material {
         this.defines.clear();
         source.defines.forEach((value, key) => this.defines.set(key, value));
 
+        // chunks
+        const srcChunks = source._chunks;
+        for (const p in srcChunks) {
+            if (srcChunks.hasOwnProperty(p)) {
+                this._chunks[p] = srcChunks[p];
+            }
+        }
+        
         return this;
     }
 
