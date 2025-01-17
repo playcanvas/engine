@@ -49,7 +49,7 @@ void main(void) {
     vec3 centerPos = animatePosition(readCenter(source));
 
     SplatCenter center;
-    initCenter(source, centerPos, center);
+    initCenter(centerPos, center);
 
     // project center to screen space
     SplatCorner corner;
