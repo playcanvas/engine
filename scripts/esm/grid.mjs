@@ -14,14 +14,6 @@ import {
 
 /** @import { AppBase, Entity } from 'playcanvas' */
 
-/**
- * @typedef {object} ScriptArgs
- * @property {AppBase} app - The app.
- * @property {Entity} entity - The entity.
- * @property {boolean} [enabled] - The enabled state.
- * @property {object} [attributes] - The attributes.
- */
-
 const tmpVa = new Vec2();
 
 const EPISILON = 1e-3;
@@ -183,16 +175,7 @@ class Grid extends Script {
      */
     _resolution = Grid.RESOLUTION_HIGH;
 
-    /**
-     * @param {ScriptArgs} args - The arguments.
-     */
-    constructor(args) {
-        super(args);
-        const {
-            colorX,
-            colorZ,
-            resolution
-        } = args.attributes;
+    initialize() {
 
         // ensure the entity has a render component
         if (!this.entity.render) {
@@ -219,9 +202,9 @@ class Grid extends Script {
         this.entity.render.meshInstances = [this._meshInstance];
 
         // set the initial values
-        this.colorX = colorX ?? this.colorX;
-        this.colorZ = colorZ ?? this.colorZ;
-        this.resolution = resolution ?? this.resolution;
+        this.colorX = this._colorX;
+        this.colorZ = this._colorZ;
+        this.resolution = this._resolution;
 
         // calculate half extents
         this._set('uHalfExtents', this._calcHalfExtents(tmpVa));
@@ -258,10 +241,15 @@ class Grid extends Script {
 
     /**
      * @param {string} name - The name of the parameter.
-     * @param {Color|Vec2} value - The value of the parameter.
+     * @param {Color|Vec2|number} value - The value of the parameter.
      * @private
      */
     _set(name, value) {
+
+        if (!this._material) {
+            return;
+        }
+
         if (value instanceof Color) {
             this._material.setParameter(name, [value.r, value.g, value.b]);
         }
