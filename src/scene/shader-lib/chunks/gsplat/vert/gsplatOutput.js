@@ -1,10 +1,10 @@
 export default /* glsl */`
 
 #include "tonemappingPS"
+#include "decodePS"
 
 #if TONEMAP != NONE
     #if GAMMA == SRGB
-        #include "decodePS"
         #include "gamma2_2PS"
     #else
         #include "gamma1_0PS"
