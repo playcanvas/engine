@@ -4,42 +4,37 @@ import {
     SEMANTIC_TEXCOORD0,
     BLEND_NORMAL,
     CULLFACE_NONE,
-    PlaneGeometry,
-    Mesh,
-    MeshInstance,
     Color,
-    Script,
-    Vec2
+    Script
 } from 'playcanvas';
 
 /** @import { AppBase, Entity } from 'playcanvas' */
 
-const tmpVa = new Vec2();
-
-const EPISILON = 1e-3;
-
 const vertexCode = /* glsl */ `
     attribute vec3 vertex_position;
-    attribute vec2 aUv0;
 
     uniform mat4 matrix_model;
     uniform mat4 matrix_viewProjection;
 
-    varying vec2 uv0;
+    varying vec3 vPosition;
 
     void main(void) {
-        gl_Position = matrix_viewProjection * matrix_model * vec4(vertex_position, 1.0);
-        uv0 = aUv0;
+        vec4 worldPosition = matrix_model * vec4(vertex_position, 1.0);
+        vPosition = worldPosition.xyz;
+        gl_Position = matrix_viewProjection * worldPosition;
     }
 `;
 
 const fragmentCode = /* glsl */ `
-    uniform vec2 uHalfExtents;
     uniform vec3 uColorX;
     uniform vec3 uColorZ;
     uniform int uResolution;
+    uniform sampler2D blueNoiseTex32;
 
-    varying vec2 uv0;
+    uniform vec3 view_position;
+    uniform mat4 matrix_viewProjection;
+
+    varying vec3 vPosition;
 
     // https://bgolus.medium.com/the-best-darn-grid-shader-yet-727f9278b9d8#1e7c
     float pristineGrid(in vec2 uv, in vec2 ddx, in vec2 ddy, vec2 lineWidth) {
@@ -64,58 +59,77 @@ const fragmentCode = /* glsl */ `
         return mix(grid2.x, 1.0, grid2.y);
     }
 
-    void main(void) {
-        vec2 uv = uv0;
+    float calcDepth(vec3 p) {
+        vec4 v = matrix_viewProjection * vec4(p, 1.0);
+        return (v.z / v.w) * 0.5 + 0.5;
+    }
+  
+    bool writeDepth(float alpha) {
+        vec2 uv = fract(gl_FragCoord.xy / 32.0);
+        float noise = texture2DLod(blueNoiseTex32, uv, 0.0).y;
+        return alpha > noise;
+    }
 
-        vec2 pos = (uv * 2.0 - 1.0) * uHalfExtents;
-        vec2 ddx = dFdx(pos);
-        vec2 ddy = dFdy(pos);
+    void main(void) {
+        vec3 pos = vPosition;
+        vec2 ddx = dFdx(pos.xz);
+        vec2 ddy = dFdy(pos.xz);
 
         float epsilon = 1.0 / 255.0;
 
-        vec2 levelPos;
+        // calculate fade
+        float fade = 1.0 - smoothstep(400.0, 1000.0, length(pos - view_position));
+        if (fade < epsilon) {
+            discard;
+        }
+
+        vec3 levelPos;
         float levelSize;
         float levelAlpha;
 
         levelPos = pos * 0.1;
         levelSize = 2.0 / 1000.0;
-        levelAlpha = pristineGrid(levelPos, ddx * 0.1, ddy * 0.1, vec2(levelSize));
+        levelAlpha = pristineGrid(levelPos.xz, ddx * 0.1, ddy * 0.1, vec2(levelSize)) * fade;
         if (levelAlpha > epsilon) {
             vec3 color;
-            if (abs(levelPos.x) < levelSize) {
-                if (abs(levelPos.y) < levelSize) {
+            vec2 loc = max(vec2(0.0), abs(levelPos.xz) - abs(ddx * 0.1) - abs(ddy * 0.1));
+            if (loc.x < levelSize) {
+                if (loc.y < levelSize) {
                     color = vec3(1.0);
                 } else {
                     color = uColorZ;
                 }
-            } else if (abs(levelPos.y) < levelSize) {
+            } else if (loc.y < levelSize) {
                 color = uColorX;
             } else {
                 color = vec3(0.9);
             }
             gl_FragColor = vec4(color, levelAlpha);
+            gl_FragDepth = writeDepth(levelAlpha) ? calcDepth(pos) : 1.0;
             return;
         }
 
         levelPos = pos;
         levelSize = 1.0 / 100.0;
-        levelAlpha = pristineGrid(levelPos, ddx, ddy, vec2(levelSize));
+        levelAlpha = pristineGrid(levelPos.xz, ddx, ddy, vec2(levelSize)) * fade;
         if (levelAlpha > epsilon) {
             if (uResolution < 1) {
                 discard;
             }
             gl_FragColor = vec4(vec3(0.7), levelAlpha);
+            gl_FragDepth = writeDepth(levelAlpha) ? calcDepth(pos) : 1.0;
             return;
         }
 
         levelPos = pos * 10.0;
         levelSize = 1.0 / 100.0;
-        levelAlpha = pristineGrid(levelPos, ddx * 10.0, ddy * 10.0, vec2(levelSize));
+        levelAlpha = pristineGrid(levelPos.xz, ddx * 10.0, ddy * 10.0, vec2(levelSize)) * fade;
         if (levelAlpha > epsilon) {
             if (uResolution < 2) {
                 discard;
             }
             gl_FragColor = vec4(vec3(0.7), levelAlpha);
+            gl_FragDepth = writeDepth(levelAlpha) ? calcDepth(pos) : 1.0;
             return;
         }
 
@@ -146,18 +160,6 @@ class Grid extends Script {
     _material;
 
     /**
-     * @type {MeshInstance}
-     * @private
-     */
-    _meshInstance;
-
-    /**
-     * @type {Vec2}
-     * @private
-     */
-    _halfExtents = new Vec2();
-
-    /**
      * @type {Color}
      * @private
      */
@@ -179,7 +181,7 @@ class Grid extends Script {
 
         // ensure the entity has a render component
         if (!this.entity.render) {
-            this.entity.addComponent('render');
+            this.entity.addComponent('render', { type: 'plane' });
         }
 
         // create shader material
@@ -196,52 +198,17 @@ class Grid extends Script {
         this._material.cull = CULLFACE_NONE;
         this._material.update();
 
-        // create mesh
-        const mesh = Mesh.fromGeometry(this.app.graphicsDevice, new PlaneGeometry());
-        this._meshInstance = new MeshInstance(mesh, this._material);
-        this.entity.render.meshInstances = [this._meshInstance];
+        this.entity.render.material = this._material;
 
         // set the initial values
         this.colorX = this._colorX;
         this.colorZ = this._colorZ;
         this.resolution = this._resolution;
-
-        // calculate half extents
-        this._set('uHalfExtents', this._calcHalfExtents(tmpVa));
-
-        // update the half extents when the entity scale changes
-        this.app.on('prerender', () => {
-            if (!this.enabled) {
-                return;
-            }
-            const halfExtents = this._calcHalfExtents(tmpVa);
-            if (this._halfExtents.distance(halfExtents) > EPISILON) {
-                this._set('uHalfExtents', halfExtents);
-            }
-        });
-
-        // enable/disable the mesh instance
-        this.on('enable', () => {
-            this.entity.render.meshInstances = [this._meshInstance];
-        });
-        this.on('disable', () => {
-            this.entity.render.meshInstances = [];
-        });
-    }
-
-    /**
-     * @param {Vec2} vec - The vector to copy the half extents to.
-     * @returns {Vec2} - The half extents.
-     * @private
-     */
-    _calcHalfExtents(vec) {
-        const scale = this.entity.getLocalScale();
-        return vec.set(scale.x / 2, scale.z / 2);
     }
 
     /**
      * @param {string} name - The name of the parameter.
-     * @param {Color|Vec2|number} value - The value of the parameter.
+     * @param {Color|number} value - The value of the parameter.
      * @private
      */
     _set(name, value) {
@@ -254,17 +221,10 @@ class Grid extends Script {
             this._material.setParameter(name, [value.r, value.g, value.b]);
         }
 
-        if (value instanceof Vec2) {
-            this._material.setParameter(name, [value.x, value.y]);
-        }
-
         if (typeof value === 'number') {
             this._material.setParameter(name, value);
         }
 
-        this._material.update();
-
-        this._meshInstance.material = this._material;
     }
 
     /**
