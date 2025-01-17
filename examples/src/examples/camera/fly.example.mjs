@@ -92,7 +92,7 @@ const createFlyCamera = (focus) => {
 
     /** @type {CameraControls} */
     const script = camera.script.create(CameraControls, {
-        attributes: {
+        properties: {
             enableOrbit: false,
             enablePan: false,
             focusPoint: bbox.center,
