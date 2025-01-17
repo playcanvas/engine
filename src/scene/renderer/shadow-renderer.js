@@ -300,16 +300,13 @@ class ShadowRenderer {
                 material.dirty = false;
             }
 
-            if (material.chunks) {
+            renderer.setupCullMode(true, 1, meshInstance);
 
-                renderer.setupCullMode(true, 1, meshInstance);
+            // Uniforms I (shadow): material
+            material.setParameters(device);
 
-                // Uniforms I (shadow): material
-                material.setParameters(device);
-
-                // Uniforms II (shadow): meshInstance overrides
-                meshInstance.setParameters(device, passFlags);
-            }
+            // Uniforms II (shadow): meshInstance overrides
+            meshInstance.setParameters(device, passFlags);
 
             const shaderInstance = meshInstance.getShaderInstance(shadowPass, 0, scene, cameraShaderParams, this.viewUniformFormat, this.viewBindGroupFormat);
             const shadowShader = shaderInstance.shader;
