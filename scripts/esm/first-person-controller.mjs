@@ -68,9 +68,9 @@ class KeyboardMouseInput {
         if (value === this._enabled) {
             return;
         }
-        this._enabled = value;
+        this._enabled = value ?? this._enabled;
 
-        if (value) {
+        if (this._enabled) {
             this._bind();
         } else {
             this._unbind();
@@ -300,9 +300,9 @@ class MobileInput {
         if (value === this._enabled) {
             return;
         }
-        this._enabled = value;
+        this._enabled = value ?? this._enabled;
 
-        if (value) {
+        if (this._enabled) {
             this._bind();
         } else {
             this._unbind();
@@ -575,7 +575,7 @@ class GamePadInput {
         if (value === this._enabled) {
             return;
         }
-        this._enabled = value;
+        this._enabled = value ?? this._enabled;
     }
 
     get enabled() {
@@ -894,7 +894,7 @@ class FirstPersonController extends Script {
     set mobileDeadZone(value) {
         this._mobileDeadZone = value ?? this._mobileDeadZone;
         if (this._mobileInput) {
-            this._mobileInput.deadZone = value;
+            this._mobileInput.deadZone = this._mobileDeadZone;
         }
     }
 
@@ -911,7 +911,7 @@ class FirstPersonController extends Script {
     set mobileTurnSpeed(value) {
         this._mobileTurnSpeed = value ?? this._mobileTurnSpeed;
         if (this._mobileInput) {
-            this._mobileInput.turnSpeed = value;
+            this._mobileInput.turnSpeed = this._mobileTurnSpeed;
         }
     }
 
@@ -957,7 +957,7 @@ class FirstPersonController extends Script {
     set gamePadDeadZoneLow(value) {
         this._gamePadDeadZoneLow = value ?? this._gamePadDeadZoneLow;
         if (this._gamePadInput) {
-            this._gamePadInput.deadZoneLow = value;
+            this._gamePadInput.deadZoneLow = this._gamePadDeadZoneLow;
         }
     }
 
@@ -975,7 +975,7 @@ class FirstPersonController extends Script {
     set gamePadDeadZoneHigh(value) {
         this._gamePadDeadZoneHigh = value ?? this._gamePadDeadZoneHigh;
         if (this._gamePadInput) {
-            this._gamePadInput.deadZoneHigh = value;
+            this._gamePadInput.deadZoneHigh = this._gamePadDeadZoneHigh;
         }
     }
 
@@ -992,7 +992,7 @@ class FirstPersonController extends Script {
     set gamePadTurnSpeed(value) {
         this._gamePadTurnSpeed = value ?? this._gamePadTurnSpeed;
         if (this._gamePadInput) {
-            this._gamePadInput.turnSpeed = value;
+            this._gamePadInput.turnSpeed = this._gamePadTurnSpeed;
         }
     }
 
