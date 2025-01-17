@@ -572,7 +572,7 @@ class GamePadInput {
      * @param {AppBase} app - The application.
      */
     constructor(app) {
-        this.app = app;
+        this._app = app;
     }
 
     set enabled(value) {
