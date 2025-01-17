@@ -114,7 +114,7 @@ function createCharacterController(camera) {
     });
     entity.addComponent('script');
     entity.script.create(FirstPersonController, {
-        attributes: {
+        properties: {
             camera,
             jumpForce: 850
         }
