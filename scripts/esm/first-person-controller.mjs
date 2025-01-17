@@ -828,10 +828,29 @@ class FirstPersonController extends Script {
         });
 
         if (!this.camera) {
-            throw new Error('No camera entity found');
+            this.camera = this.entity.findComponent('camera').entity;
+            if (!this.camera) {
+                throw new Error('FirstPersonController expects a camera entity');
+            }
+        }
+        if (!this.entity.collision) {
+            this.entity.addComponent('collision', {
+                type: 'capsule',
+                radius: 0.5,
+                height: 2
+            });
         }
         if (!this.entity.rigidbody) {
-            throw new Error('No rigidbody component found');
+            this.entity.addComponent('rigidbody', {
+                type: 'dynamic',
+                mass: 100,
+                linearDamping: 0,
+                angularDamping: 0,
+                linearFactor: Vec3.ONE,
+                angularFactor: Vec3.ZERO,
+                friction: 0.5,
+                restitution: 0
+            });
         }
         this._rigidbody = this.entity.rigidbody;
 
@@ -873,7 +892,7 @@ class FirstPersonController extends Script {
      * @range [0, 0.4]
      */
     set mobileDeadZone(value) {
-        this._mobileDeadZone = value;
+        this._mobileDeadZone = value ?? this._mobileDeadZone;
         if (this._mobileInput) {
             this._mobileInput.deadZone = value;
         }
@@ -890,7 +909,7 @@ class FirstPersonController extends Script {
      * @type {number}
      */
     set mobileTurnSpeed(value) {
-        this._mobileTurnSpeed = value;
+        this._mobileTurnSpeed = value ?? this._mobileTurnSpeed;
         if (this._mobileInput) {
             this._mobileInput.turnSpeed = value;
         }
@@ -907,10 +926,7 @@ class FirstPersonController extends Script {
      * @type {number}
      */
     set mobileRadius(value) {
-        if (value === this._mobileRadius) {
-            return;
-        }
-        this._mobileRadius = value;
+        this._mobileRadius = value ?? this._mobileRadius;
     }
 
     get mobileRadius() {
@@ -924,10 +940,7 @@ class FirstPersonController extends Script {
      * @type {number}
      */
     set mobileDoubleTapInterval(value) {
-        if (value === this._mobileDoubleTapInterval) {
-            return;
-        }
-        this._mobileDoubleTapInterval = value;
+        this._mobileDoubleTapInterval = value ?? this._mobileDoubleTapInterval;
     }
 
     get mobileDoubleTapInterval() {
@@ -942,7 +955,7 @@ class FirstPersonController extends Script {
      * @range [0, 0.4]
      */
     set gamePadDeadZoneLow(value) {
-        this._gamePadDeadZoneLow = value;
+        this._gamePadDeadZoneLow = value ?? this._gamePadDeadZoneLow;
         if (this._gamePadInput) {
             this._gamePadInput.deadZoneLow = value;
         }
@@ -960,7 +973,7 @@ class FirstPersonController extends Script {
      * @range [0, 0.4]
      */
     set gamePadDeadZoneHigh(value) {
-        this._gamePadDeadZoneHigh = value;
+        this._gamePadDeadZoneHigh = value ?? this._gamePadDeadZoneHigh;
         if (this._gamePadInput) {
             this._gamePadInput.deadZoneHigh = value;
         }
@@ -977,7 +990,7 @@ class FirstPersonController extends Script {
      * @type {number}
      */
     set gamePadTurnSpeed(value) {
-        this._gamePadTurnSpeed = value;
+        this._gamePadTurnSpeed = value ?? this._gamePadTurnSpeed;
         if (this._gamePadInput) {
             this._gamePadInput.turnSpeed = value;
         }
