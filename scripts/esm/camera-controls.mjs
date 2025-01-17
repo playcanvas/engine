@@ -348,7 +348,9 @@ class CameraControls extends Script {
      */
     set focusPoint(point) {
         if (!this._camera) {
-            this._origin.copy(point);
+            if (point instanceof Vec3) {
+                this._origin.copy(point);
+            }
             return;
         }
         this.focus(point, this.entity.getPosition(), false);
@@ -367,6 +369,9 @@ class CameraControls extends Script {
      * @default [-360, 360]
      */
     set pitchRange(value) {
+        if (!(value instanceof Vec2)) {
+            return;
+        }
         this._pitchRange.copy(value);
         this._clampAngles(this._dir);
         this._smoothTransform(-1);
@@ -384,7 +389,7 @@ class CameraControls extends Script {
      * @default 0
      */
     set zoomMin(value) {
-        this._zoomMin = value;
+        this._zoomMin = value ?? this._zoomMin;
         this._zoomDist = this._clampZoom(this._zoomDist);
         this._smoothZoom(-1);
     }
@@ -402,7 +407,7 @@ class CameraControls extends Script {
      * @default 0
      */
     set zoomMax(value) {
-        this._zoomMax = value;
+        this._zoomMax = value ?? this._zoomMax;
         this._zoomDist = this._clampZoom(this._zoomDist);
         this._smoothZoom(-1);
 
