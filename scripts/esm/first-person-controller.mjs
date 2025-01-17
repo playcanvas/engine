@@ -159,8 +159,12 @@ class KeyboardMouseInput {
         this._handleKey(e.key, 0);
     }
 
+    /**
+     * @param {MouseEvent} e - The mouse event.
+     * @private
+     */
     _onMouseDown(e) {
-        if (document.pointerLockElement !== this._canvas) {
+        if (e.target === this._canvas && document.pointerLockElement !== this._canvas) {
             this._canvas.requestPointerLock();
         }
     }
