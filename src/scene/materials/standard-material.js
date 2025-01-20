@@ -569,8 +569,6 @@ class StandardMaterial extends Material {
     constructor() {
         super();
 
-        this._dirtyShader = true;
-
         // storage for texture and cubemap asset references
         this._assetReferences = {};
 
@@ -800,9 +798,7 @@ class StandardMaterial extends Material {
         // remove unused params
         this._processParameters('_activeParams');
 
-        if (this._dirtyShader) {
-            this.clearVariants();
-        }
+        super.updateUniforms(device, scene);
     }
 
     updateEnvUniforms(device, scene) {

@@ -24,7 +24,7 @@ const applyRadialDeadZone = (pos, remappedPos, deadZoneLow, deadZoneHigh) => {
     if (magnitude > deadZoneLow) {
         const legalRange = 1 - deadZoneHigh - deadZoneLow;
         const normalizedMag = Math.min(1, (magnitude - deadZoneLow) / legalRange);
-        remappedPos.copy(pos).scale(normalizedMag / magnitude);
+        remappedPos.copy(pos).mulScalar(normalizedMag / magnitude);
     } else {
         remappedPos.set(0, 0);
     }
@@ -159,8 +159,12 @@ class KeyboardMouseInput {
         this._handleKey(e.key, 0);
     }
 
+    /**
+     * @param {MouseEvent} e - The mouse event.
+     * @private
+     */
     _onMouseDown(e) {
-        if (document.pointerLockElement !== this._canvas) {
+        if (e.target === this._canvas && document.pointerLockElement !== this._canvas) {
             this._canvas.requestPointerLock();
         }
     }
@@ -390,12 +394,12 @@ class MobileInput {
             if (touch.identifier === this._leftStick.identifier) {
                 this._leftStick.pos.set(touch.pageX, touch.pageY);
                 this._leftStick.pos.sub(this._leftStick.center);
-                this._leftStick.pos.scale(1 / this.radius);
+                this._leftStick.pos.mulScalar(1 / this.radius);
                 this._app.fire('leftjoystick:move', touch.pageX * xFactor, touch.pageY * yFactor);
             } else if (touch.identifier === this._rightStick.identifier) {
                 this._rightStick.pos.set(touch.pageX, touch.pageY);
                 this._rightStick.pos.sub(this._rightStick.center);
-                this._rightStick.pos.scale(1 / this.radius);
+                this._rightStick.pos.mulScalar(1 / this.radius);
                 this._app.fire('rightjoystick:move', touch.pageX * xFactor, touch.pageY * yFactor);
             }
         }
@@ -568,7 +572,7 @@ class GamePadInput {
      * @param {AppBase} app - The application.
      */
     constructor(app) {
-        this.app = app;
+        this._app = app;
     }
 
     set enabled(value) {
