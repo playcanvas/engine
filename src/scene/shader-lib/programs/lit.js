@@ -51,7 +51,7 @@ class ShaderGeneratorLit extends ShaderGenerator {
         const definitionOptions = {
             name: 'LitShader',
             shaderLanguage: SHADERLANGUAGE_GLSL,
-            tag: litShader.shaderPassInfo.isForward ? SHADERTAG_MATERIAL : undefined,
+            tag: litShader.shaderPassInfo.isForward ? SHADERTAG_MATERIAL : undefined
         };
 
         litShader.generateVertexShader(usedUvSets, usedUvSets, mapTransforms);

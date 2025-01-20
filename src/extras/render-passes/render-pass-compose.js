@@ -488,7 +488,7 @@ class RenderPassCompose extends RenderPassShaderQuad {
 
             const gammaCorrectionName = gammaNames[this._gammaCorrection];
 
-            const key = 
+            const key =
                 `${this.toneMapping}` +
                 `-${gammaCorrectionName}` +
                 `-${this.bloomTexture ? 'bloom' : 'nobloom'}` +
