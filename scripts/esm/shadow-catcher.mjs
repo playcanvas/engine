@@ -9,14 +9,19 @@ import {
     Vec2
 } from 'playcanvas';
 
-/** @import { AppBase, Entity, Light } from 'playcanvas' */
+/** @import { AppBase, Entity } from 'playcanvas' */
 
 const endPS = `
     litArgs_opacity = mix(light0_shadowIntensity, 0.0, shadow0);
     gl_FragColor.rgb = vec3(0.0);
   `;
 
-export class ShadowCatcherScript extends Script {
+/**
+ * This script generates a simple shadow plane for any render-able objects within
+ * it's hierarchy. This means you can attach it to a parent entity and quickly get 
+ * visible ground plane, which helps to stage models.
+ */
+class ShadowCatcherScript extends Script {
     /**
      * The shadow distance of the shadow catcher light.
      * @type {number}
@@ -51,7 +56,6 @@ export class ShadowCatcherScript extends Script {
     initialize() {
         // create shadow catcher material
         const material = new StandardMaterial();
-        material.useSkybox = false;
         material.blendType = BLEND_NORMAL;
         material.chunks = {
             APIVersion: CHUNKAPI_1_70,
@@ -99,3 +103,5 @@ export class ShadowCatcherScript extends Script {
         this._light.light.vsmBlurSize = this.blurSize;
     }
 }
+
+export { ShadowCatcherScript }
