@@ -3,7 +3,7 @@ import {
     Entity,
     StandardMaterial,
     BLEND_NORMAL,
-    SHADOW_VSM16,
+    SHADOW_VSM_16F,
     SHADOWUPDATE_REALTIME,
     CHUNKAPI_1_70,
     Vec2
