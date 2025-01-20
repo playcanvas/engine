@@ -179,6 +179,8 @@ class Material {
      */
     _chunks = { };
 
+    _dirtyShader = true;
+
     /** @protected */
     constructor() {
         if (new.target === Material) {
@@ -192,7 +194,7 @@ class Material {
      * @type {Object<string, string>}
      */
     set chunks(value) {
-        this.clearVariants();
+        this._dirtyShader = true;
         this._chunks = value;
     }
 
@@ -202,7 +204,7 @@ class Material {
      * @type {Object<string, string>}
      */
     get chunks() {
-        this.clearVariants();
+        this._dirtyShader = true;
         return this._chunks;
     }
 
@@ -589,6 +591,9 @@ class Material {
     }
 
     updateUniforms(device, scene) {
+        if (this._dirtyShader) {
+            this.clearVariants();
+        }
     }
 
     /**
