@@ -18,7 +18,7 @@ const endPS = `
 
 /**
  * This script generates a simple shadow plane for any render-able objects within
- * it's hierarchy. This means you can attach it to a parent entity and quickly get 
+ * it's hierarchy. This means you can attach it to a parent entity and quickly get
  * visible ground plane, which helps to stage models.
  */
 class ShadowCatcherScript extends Script {
@@ -105,4 +105,4 @@ class ShadowCatcherScript extends Script {
     }
 }
 
-export { ShadowCatcherScript }
+export { ShadowCatcherScript };
