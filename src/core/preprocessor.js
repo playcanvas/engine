@@ -196,7 +196,7 @@ class Preprocessor {
                             source = source.substring(0, define.index - 1) + source.substring(DEFINE.lastIndex);
 
                             // continue processing on the next symbol
-                            KEYWORD.lastIndex = define.index;
+                            KEYWORD.lastIndex = define.index - 1;
                         }
                     }
 
@@ -228,7 +228,7 @@ class Preprocessor {
                             source = source.substring(0, undef.index - 1) + source.substring(UNDEF.lastIndex);
 
                             // continue processing on the next symbol
-                            KEYWORD.lastIndex = undef.index;
+                            KEYWORD.lastIndex = undef.index - 1;
                         }
                     }
 
@@ -362,7 +362,7 @@ class Preprocessor {
                             source = source.substring(0, include.index - 1) + includeSource + source.substring(INCLUDE.lastIndex);
 
                             // process the just included test
-                            KEYWORD.lastIndex = include.index;
+                            KEYWORD.lastIndex = include.index - 1;
                         } else {
                             console.error(`Include "${identifier}" not resolved while preprocessing a shader`, { source: originalSource });
                             error = true;
