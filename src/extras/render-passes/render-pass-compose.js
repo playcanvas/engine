@@ -2,7 +2,7 @@ import { math } from '../../core/math/math.js';
 import { Color } from '../../core/math/color.js';
 import { RenderPassShaderQuad } from '../../scene/graphics/render-pass-shader-quad.js';
 import { shaderChunks } from '../../scene/shader-lib/chunks/chunks.js';
-import { TONEMAP_LINEAR, tonemapNames } from '../../scene/constants.js';
+import { GAMMA_NONE, GAMMA_SRGB, gammaNames, TONEMAP_LINEAR, tonemapNames } from '../../scene/constants.js';
 
 // Contrast Adaptive Sharpening (CAS) is used to apply the sharpening. It's based on AMD's
 // FidelityFX CAS, WebGL implementation: https://www.shadertoy.com/view/wtlSWB. It's best to run it
@@ -14,7 +14,7 @@ const fragmentShader = /* glsl */ `
 
     #include "tonemappingPS"
     #include "decodePS"
-    #include "gamma2_2PS"
+    #include "gammaPS"
 
     varying vec2 uv0;
     uniform sampler2D sceneTexture;
@@ -266,9 +266,7 @@ const fragmentShader = /* glsl */ `
 
         #endif
 
-        #ifdef GAMMA_CORRECT_OUTPUT
-            result = gammaCorrectOutput(result);
-        #endif
+        result = gammaCorrectOutput(result);
 
         gl_FragColor = vec4(result, scene.a);
     }
@@ -327,7 +325,7 @@ class RenderPassCompose extends RenderPassShaderQuad {
 
     _sharpness = 0.5;
 
-    _srgb = false;
+    _gammaCorrection = GAMMA_SRGB;
 
     _key = '';
 
@@ -478,8 +476,9 @@ class RenderPassCompose extends RenderPassShaderQuad {
         // detect if the render target is srgb vs execute manual srgb conversion
         const rt = this.renderTarget ?? this.device.backBuffer;
         const srgb = rt.isColorBufferSrgb(0);
-        if (this._srgb !== srgb) {
-            this._srgb = srgb;
+        const neededGammaCorrection = srgb ? GAMMA_NONE : GAMMA_SRGB;
+        if (this._gammaCorrection !== neededGammaCorrection) {
+            this._gammaCorrection = neededGammaCorrection;
             this._shaderDirty = true;
         }
 
@@ -487,7 +486,11 @@ class RenderPassCompose extends RenderPassShaderQuad {
         if (this._shaderDirty) {
             this._shaderDirty = false;
 
-            const key = `${this.toneMapping}` +
+            const gammaCorrectionName = gammaNames[this._gammaCorrection];
+
+            const key =
+                `${this.toneMapping}` +
+                `-${gammaCorrectionName}` +
                 `-${this.bloomTexture ? 'bloom' : 'nobloom'}` +
                 `-${this.cocTexture ? 'dof' : 'nodof'}` +
                 `-${this.blurTextureUpscale ? 'dofupscale' : ''}` +
@@ -497,7 +500,6 @@ class RenderPassCompose extends RenderPassShaderQuad {
                 `-${this.fringingEnabled ? 'fringing' : 'nofringing'}` +
                 `-${this.taaEnabled ? 'taa' : 'notaa'}` +
                 `-${this.isSharpnessEnabled ? 'cas' : 'nocas'}` +
-                `-${this._srgb ? 'srgb' : 'linear'}` +
                 `-${this._debug ?? ''}`;
 
             if (this._key !== key) {
@@ -505,6 +507,7 @@ class RenderPassCompose extends RenderPassShaderQuad {
 
                 const defines = new Map();
                 defines.set('TONEMAP', tonemapNames[this.toneMapping]);
+                defines.set('GAMMA', gammaCorrectionName);
                 if (this.bloomTexture) defines.set('BLOOM', true);
                 if (this.cocTexture) defines.set('DOF', true);
                 if (this.blurTextureUpscale) defines.set('DOF_UPSCALE', true);
@@ -514,7 +517,6 @@ class RenderPassCompose extends RenderPassShaderQuad {
                 if (this.fringingEnabled) defines.set('FRINGING', true);
                 if (this.taaEnabled) defines.set('TAA', true);
                 if (this.isSharpnessEnabled) defines.set('CAS', true);
-                if (!this._srgb) defines.set('GAMMA_CORRECT_OUTPUT', true);
                 if (this._debug) defines.set('DEBUG_COMPOSE', this._debug);
 
                 const includes = new Map(Object.entries(shaderChunks));

@@ -23,8 +23,8 @@ class ShaderPassInfo {
     /** @type {string} */
     name;
 
-    /** @type {string} */
-    shaderDefines;
+    /** @type {Map<string, string} */
+    defines = new Map();
 
     /**
      * @param {string} name - The name, for example 'depth'. Must contain only letters, numbers,
@@ -46,7 +46,7 @@ class ShaderPassInfo {
         // assign options as properties to this object
         Object.assign(this, options);
 
-        this.shaderDefines = this.buildShaderDefines();
+        this.buildShaderDefines();
     }
 
     buildShaderDefines() {
@@ -62,13 +62,8 @@ class ShaderPassInfo {
             keyword = 'PICK';
         }
 
-        // define based on on the options based name
-        const define1 = keyword ? `#define ${keyword}_PASS\n` : '';
-
-        // define based on the name
-        const define2 = `#define ${this.name.toUpperCase()}_PASS\n`;
-
-        return define1 + define2;
+        this.defines.set(`${keyword}_PASS`, '');
+        this.defines.set(`${this.name.toUpperCase()}_PASS`, '');
     }
 }
 
