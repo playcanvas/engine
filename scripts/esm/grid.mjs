@@ -28,10 +28,7 @@ const fragmentCode = /* glsl */ `
     uniform vec3 uColorX;
     uniform vec3 uColorZ;
     uniform int uResolution;
-    uniform sampler2D blueNoiseTex32;
-
     uniform vec3 view_position;
-    uniform mat4 matrix_viewProjection;
 
     varying vec3 vPosition;
 
@@ -56,17 +53,6 @@ const fragmentCode = /* glsl */ `
         grid2.y = invertLine.y ? 1.0 - grid2.y : grid2.y;
 
         return mix(grid2.x, 1.0, grid2.y);
-    }
-
-    float calcDepth(vec3 p) {
-        vec4 v = matrix_viewProjection * vec4(p, 1.0);
-        return (v.z / v.w) * 0.5 + 0.5;
-    }
-
-    bool writeDepth(float alpha) {
-        vec2 uv = fract(gl_FragCoord.xy / 32.0);
-        float noise = texture2DLod(blueNoiseTex32, uv, 0.0).y;
-        return alpha > noise;
     }
 
     void main(void) {
@@ -104,7 +90,6 @@ const fragmentCode = /* glsl */ `
                 color = vec3(0.9);
             }
             gl_FragColor = vec4(color, levelAlpha);
-            gl_FragDepth = writeDepth(levelAlpha) ? calcDepth(pos) : 1.0;
             return;
         }
 
@@ -116,7 +101,6 @@ const fragmentCode = /* glsl */ `
                 discard;
             }
             gl_FragColor = vec4(vec3(0.7), levelAlpha);
-            gl_FragDepth = writeDepth(levelAlpha) ? calcDepth(pos) : 1.0;
             return;
         }
 
@@ -128,7 +112,6 @@ const fragmentCode = /* glsl */ `
                 discard;
             }
             gl_FragColor = vec4(vec3(0.7), levelAlpha);
-            gl_FragDepth = writeDepth(levelAlpha) ? calcDepth(pos) : 1.0;
             return;
         }
 
