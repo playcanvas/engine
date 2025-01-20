@@ -193,6 +193,7 @@ class Grid extends Script {
             }
         });
         this._material.blendType = BLEND_NORMAL;
+        this._material.depthWrite = false;
         this._material.update();
 
         this.entity.render.material = this._material;
