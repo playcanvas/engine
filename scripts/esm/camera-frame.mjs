@@ -1,6 +1,5 @@
 // Camera Frame v 1.0
 
-
 import { CameraFrame as EngineCameraFrame, Script, Color } from 'playcanvas';
 
 /** @enum {number} */
