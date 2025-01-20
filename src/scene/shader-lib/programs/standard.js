@@ -530,7 +530,7 @@ class ShaderGeneratorStandard extends ShaderGenerator {
 
         litShader.generateFragmentShader(decl.code, code.code, func.code, lightingUv);
 
-        const vIncludes = new Map(Object.entries({
+        const includes = new Map(Object.entries({
             ...Object.getPrototypeOf(litShader.chunks), // the prototype stores the default chunks
             ...litShader.chunks,  // user overrides are supplied as instance properties
             ...options.litOptions.chunks
@@ -543,7 +543,8 @@ class ShaderGeneratorStandard extends ShaderGenerator {
             attributes: litShader.attributes,
             vertexCode: litShader.vshader,
             fragmentCode: litShader.fshader,
-            vertexIncludes: vIncludes,
+            vertexIncludes: includes,
+            fragmentIncludes: includes,
             fragmentDefines: defines,
             vertexDefines: defines
         });

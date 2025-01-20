@@ -194,6 +194,7 @@ class OutlineRenderer {
 
                         // custom shader for the outline shader pass, renders single color meshes using emissive color
                         const opts = new StandardMaterialOptions();
+                        opts.defines = options.defines;
                         opts.opacityMap = options.opacityMap;
                         opts.opacityMapUv = options.opacityMapUv;
                         opts.opacityMapChannel = options.opacityMapChannel;

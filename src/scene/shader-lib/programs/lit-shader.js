@@ -348,14 +348,12 @@ class LitShader {
             }
         });
 
-        const shaderPassDefines = this.shaderPassInfo.shaderDefines;
-        this.vshader = shaderPassDefines + codeDefines + this.varyings + code;
+        this.vshader = codeDefines + this.varyings + code;
     }
 
     _fsGetBeginCode() {
 
-        let code = this.shaderPassInfo.shaderDefines;
-
+        let code = '';
         for (let i = 0; i < this.defines.length; i++) {
             code += `#define ${this.defines[i]}\n`;
         }
@@ -676,13 +674,11 @@ class LitShader {
             }
         }
 
-        // FIXME: only add these when needed
         func.append(chunks.sphericalPS);
         func.append(chunks.decodePS);
-        func.append(ShaderGenerator.gammaCode(options.gamma, chunks));
-        func.append(ShaderGenerator.tonemapCode(options.toneMap, chunks));
-        func.append(ShaderGenerator.fogCode(options.fog, chunks));
-
+        func.append(chunks.gammaPS);
+        func.append(chunks.tonemappingPS);
+        func.append(chunks.fogPS);
         // frontend
         func.append(this.frontendCode);
 
