@@ -82,7 +82,7 @@ class ShadowCatcherScript extends Script {
             shadowBias: 0,
             shadowDistance: this.shadowDistance,
             shadowResolution: 1024,
-            shadowType: SHADOW_VSM16,
+            shadowType: SHADOW_VSM_16F,
             shadowUpdateMode: SHADOWUPDATE_REALTIME,
             vsmBlurSize: this.blurSize,
             shadowIntensity: 1,
