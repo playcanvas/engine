@@ -2337,3 +2337,4 @@ export const CHUNKAPI_1_65 = '1.65';
 export const CHUNKAPI_1_70 = '1.70';
 export const CHUNKAPI_2_1 = '2.1';
 export const CHUNKAPI_2_3 = '2.3';
+export const CHUNKAPI_2_5 = '2.5';

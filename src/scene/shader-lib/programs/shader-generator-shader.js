@@ -1,22 +1,18 @@
 import { hashCode } from '../../../core/hash.js';
 import { SEMANTIC_ATTR15, SEMANTIC_BLENDINDICES, SEMANTIC_BLENDWEIGHT, SHADERLANGUAGE_WGSL } from '../../../platform/graphics/constants.js';
 import { ShaderUtils } from '../../../platform/graphics/shader-utils.js';
-import { gammaNames, tonemapNames } from '../../constants.js';
-import { ShaderPass } from '../../shader-pass.js';
 import { shaderChunks } from '../chunks/chunks.js';
 import { ShaderGenerator } from './shader-generator.js';
 
 const vShader = `
-    #include "shaderPassDefines"
     #include "userCode"
 `;
 
 const fShader = `
-    #include "shaderPassDefines"
     #include "decodePS"
-    #include "gamma"
+    #include "gammaPS"
     #include "tonemappingPS"
-    #include "fog"
+    #include "fogPS"
     #include "userCode"
 `;
 
@@ -32,10 +28,6 @@ class ShaderGeneratorShader extends ShaderGenerator {
         const definesHash = ShaderGenerator.definesHash(options.defines);
 
         let key = `${desc.uniqueName}_${vsHash}_${fsHash}_${definesHash}`;
-        key += `_${options.pass}`;
-        key += `_${options.gamma}`;
-        key += `_${options.toneMapping}`;
-        key += `_${options.fog}`;
 
         if (options.skin)                       key += '_skin';
         if (options.useInstancing)              key += '_inst';
@@ -65,12 +57,7 @@ class ShaderGeneratorShader extends ShaderGenerator {
         definitionOptions.attributes = attributes;
     }
 
-    addSharedDefines(defines, options) {
-        defines.set('TONEMAP', tonemapNames[options.toneMapping]);
-        defines.set('GAMMA', gammaNames[options.gamma]);
-    }
-
-    createVertexDefinition(definitionOptions, options, shaderPassInfo, sharedIncludes) {
+    createVertexDefinition(definitionOptions, options, sharedIncludes) {
 
         const desc = options.shaderDesc;
 
@@ -83,9 +70,7 @@ class ShaderGeneratorShader extends ShaderGenerator {
         } else {
             const includes = new Map(sharedIncludes);
             const defines = new Map(options.defines);
-            this.addSharedDefines(defines, options);
 
-            includes.set('shaderPassDefines', shaderPassInfo.shaderDefines);
             includes.set('userCode', desc.vertexCode);
             includes.set('transformInstancingVS', ''); // no default instancing, needs to be implemented in the user shader
 
@@ -104,7 +89,7 @@ class ShaderGeneratorShader extends ShaderGenerator {
         }
     }
 
-    createFragmentDefinition(definitionOptions, options, shaderPassInfo, sharedIncludes) {
+    createFragmentDefinition(definitionOptions, options, sharedIncludes) {
 
         const desc = options.shaderDesc;
 
@@ -116,13 +101,9 @@ class ShaderGeneratorShader extends ShaderGenerator {
 
         } else {
             const includes = new Map(sharedIncludes);
-            includes.set('shaderPassDefines', shaderPassInfo.shaderDefines);
-            includes.set('gamma', ShaderGenerator.gammaCode(options.gamma));
-            includes.set('fog', ShaderGenerator.fogCode(options.fog));
             includes.set('userCode', desc.fragmentCode);
 
             const defines = new Map(options.defines);
-            this.addSharedDefines(defines, options);
 
             definitionOptions.fragmentCode = fShader;
             definitionOptions.fragmentIncludes = includes;
@@ -132,7 +113,6 @@ class ShaderGeneratorShader extends ShaderGenerator {
 
     createShaderDefinition(device, options) {
 
-        const shaderPassInfo = ShaderPass.get(device).getByIndex(options.pass);
         const desc = options.shaderDesc;
 
         const definitionOptions = {
@@ -149,8 +129,8 @@ class ShaderGeneratorShader extends ShaderGenerator {
         }));
 
         this.createAttributesDefinition(definitionOptions, options);
-        this.createVertexDefinition(definitionOptions, options, shaderPassInfo, sharedIncludes);
-        this.createFragmentDefinition(definitionOptions, options, shaderPassInfo, sharedIncludes);
+        this.createVertexDefinition(definitionOptions, options, sharedIncludes);
+        this.createFragmentDefinition(definitionOptions, options, sharedIncludes);
 
         return ShaderUtils.createDefinition(device, definitionOptions);
     }

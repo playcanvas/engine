@@ -1,5 +1,5 @@
 import { hashCode } from '../core/hash.js';
-import { FOG_NONE, GAMMA_NONE, GAMMA_SRGB, TONEMAP_LINEAR } from './constants.js';
+import { FOG_NONE, GAMMA_NONE, GAMMA_SRGB, gammaNames, TONEMAP_LINEAR, tonemapNames } from './constants.js';
 
 /**
  * Internal camera shader parameters, used to generate and use matching shaders.
@@ -66,9 +66,10 @@ class CameraShaderParams {
             this._definesDirty = false;
             defines.clear();
 
-            // TODO:  add defines for all members, and remove the code selection handling these in shader generators, to make it all automatic
-
             if (this._sceneDepthMapLinear) defines.set('SCENE_DEPTHMAP_LINEAR', true);
+            defines.set('FOG', this._fog.toUpperCase());
+            defines.set('TONEMAP', tonemapNames[this._toneMapping]);
+            defines.set('GAMMA', gammaNames[this.shaderOutputGamma]);
         }
         return defines;
     }

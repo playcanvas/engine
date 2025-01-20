@@ -100,6 +100,9 @@ CubemapRenderer.prototype.initialize = function () {
             farClip: camera.farClip,
             nearClip: camera.nearClip,
             frustumCulling: camera.frustumCulling,
+            gammaCorrection: camera.gammaCorrection,
+            toneMapping: camera.toneMapping,
+            fog: camera.fog,
 
             // this camera renders into texture target
             renderTarget: renderTarget

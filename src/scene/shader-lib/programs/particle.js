@@ -1,5 +1,5 @@
 import { ShaderUtils } from '../../../platform/graphics/shader-utils.js';
-import { BLEND_ADDITIVE, BLEND_MULTIPLICATIVE, BLEND_NORMAL, tonemapNames } from '../../constants.js';
+import { BLEND_ADDITIVE, BLEND_MULTIPLICATIVE, BLEND_NORMAL } from '../../constants.js';
 import { shaderChunks } from '../chunks/chunks.js';
 import { ShaderGenerator } from './shader-generator.js';
 
@@ -84,9 +84,9 @@ class ShaderGeneratorParticle extends ShaderGenerator {
         if (options.soft) fshader += '\nvarying float vDepth;\n';
 
         fshader += shaderChunks.decodePS;
-        fshader += ShaderGenerator.gammaCode(options.gamma);
+        fshader += '#include "gammaPS"\n';
         fshader += '#include "tonemappingPS"\n';
-        fshader += ShaderGenerator.fogCode(options.fog);
+        fshader += '#include "fogPS"\n';
 
         if (options.normal === 2) fshader += '\nuniform sampler2D normalMap;\n';
         if (options.soft > 0) fshader += shaderChunks.screenDepthPS;
@@ -110,14 +110,11 @@ class ShaderGeneratorParticle extends ShaderGenerator {
             ...options.chunks
         }));
 
-        const fragmentDefines = new Map(options.defines);
-        fragmentDefines.set('TONEMAP', tonemapNames[options.toneMap]);
-
         return ShaderUtils.createDefinition(device, {
             name: 'ParticleShader',
             vertexCode: vshader,
             fragmentCode: fshader,
-            fragmentDefines: fragmentDefines,
+            fragmentDefines: options.defines,
             fragmentIncludes: includes,
             vertexDefines: options.defines
         });

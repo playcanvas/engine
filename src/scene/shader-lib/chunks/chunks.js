@@ -45,15 +45,11 @@ import falloffInvSquaredPS from './lit/frag/falloffInvSquared.js';
 import falloffLinearPS from './lit/frag/falloffLinear.js';
 import floatUnpackingPS from './lit/frag/float-unpacking.js';
 import floatAsUintPS from './common/frag/float-as-uint.js';
-import fogExpPS from './lit/frag/fogExp.js';
-import fogExp2PS from './lit/frag/fogExp2.js';
-import fogLinearPS from './lit/frag/fogLinear.js';
-import fogNonePS from './lit/frag/fogNone.js';
+import fogPS from './common/frag/fog.js';
 import fresnelSchlickPS from './lit/frag/fresnelSchlick.js';
 import fullscreenQuadPS from './common/frag/fullscreenQuad.js';
 import fullscreenQuadVS from './common/vert/fullscreenQuad.js';
-import gamma1_0PS from './common/frag/gamma1_0.js';
-import gamma2_2PS from './common/frag/gamma2_2.js';
+import gammaPS from './common/frag/gamma.js';
 import gles3PS from '../../../platform/graphics/shader-chunks/frag/gles3.js';
 import gles3VS from '../../../platform/graphics/shader-chunks/vert/gles3.js';
 import glossPS from './standard/frag/gloss.js';
@@ -260,15 +256,11 @@ const shaderChunks = {
     falloffLinearPS,
     floatUnpackingPS,
     floatAsUintPS,
-    fogExpPS,
-    fogExp2PS,
-    fogLinearPS,
-    fogNonePS,
+    fogPS,
     fresnelSchlickPS,
     fullscreenQuadPS,
     fullscreenQuadVS,
-    gamma1_0PS,
-    gamma2_2PS,
+    gammaPS,
     gles3PS,
     gles3VS,
     glossPS,
