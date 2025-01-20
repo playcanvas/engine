@@ -3,7 +3,6 @@ import {
     SEMANTIC_POSITION,
     SEMANTIC_TEXCOORD0,
     BLEND_NORMAL,
-    CULLFACE_NONE,
     Color,
     Script
 } from 'playcanvas';
@@ -63,7 +62,7 @@ const fragmentCode = /* glsl */ `
         vec4 v = matrix_viewProjection * vec4(p, 1.0);
         return (v.z / v.w) * 0.5 + 0.5;
     }
-  
+
     bool writeDepth(float alpha) {
         vec2 uv = fract(gl_FragCoord.xy / 32.0);
         float noise = texture2DLod(blueNoiseTex32, uv, 0.0).y;
@@ -178,7 +177,6 @@ class Grid extends Script {
     _resolution = Grid.RESOLUTION_HIGH;
 
     initialize() {
-
         // ensure the entity has a render component
         if (!this.entity.render) {
             this.entity.addComponent('render', { type: 'plane' });
@@ -195,10 +193,10 @@ class Grid extends Script {
             }
         });
         this._material.blendType = BLEND_NORMAL;
-        this._material.cull = CULLFACE_NONE;
         this._material.update();
 
         this.entity.render.material = this._material;
+        this.entity.render.castShadows = false;
 
         // set the initial values
         this.colorX = this._colorX;
@@ -224,7 +222,6 @@ class Grid extends Script {
         if (typeof value === 'number') {
             this._material.setParameter(name, value);
         }
-
     }
 
     /**
