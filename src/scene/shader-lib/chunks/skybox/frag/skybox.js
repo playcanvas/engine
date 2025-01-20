@@ -1,6 +1,6 @@
 export default /* glsl */`
     #include "decodePS"
-    #include "gamma"
+    #include "gammaPS"
     #include "tonemappingPS"
     #include "envMultiplyPS"
 

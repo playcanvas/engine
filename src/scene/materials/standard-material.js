@@ -20,7 +20,7 @@ import { Material } from './material.js';
 import { StandardMaterialOptionsBuilder } from './standard-material-options-builder.js';
 import { standardMaterialCubemapParameters, standardMaterialTextureParameters } from './standard-material-parameters.js';
 import { DebugGraphics } from '../../platform/graphics/debug-graphics.js';
-import { getMaterialShaderDefines } from '../shader-lib/utils.js';
+import { getCoreDefines } from '../shader-lib/utils.js';
 
 /**
  * @import { BoundingBox } from '../../core/shape/bounding-box.js'
@@ -829,7 +829,7 @@ class StandardMaterial extends Material {
         const shaderPassInfo = ShaderPass.get(device).getByIndex(pass);
         const minimalOptions = pass === SHADER_DEPTH || pass === SHADER_PICK || pass === SHADER_PREPASS || shaderPassInfo.isShadow;
         let options = minimalOptions ? standard.optionsContextMin : standard.optionsContext;
-        options.defines = getMaterialShaderDefines(this, cameraShaderParams);
+        options.defines = getCoreDefines(this, params);
 
         if (minimalOptions) {
             this.shaderOptBuilder.updateMinRef(options, scene, this, objDefs, pass, sortedLights);
