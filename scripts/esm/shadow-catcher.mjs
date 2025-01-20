@@ -9,7 +9,7 @@ import {
     Vec2
 } from 'playcanvas';
 
-/** @import { AppBase, Entity } from 'playcanvas' */
+/** @import { AppBase, Entity, Light } from 'playcanvas' */
 
 const endPS = `
     litArgs_opacity = mix(light0_shadowIntensity, 0.0, shadow0);
@@ -56,6 +56,7 @@ class ShadowCatcherScript extends Script {
     initialize() {
         // create shadow catcher material
         const material = new StandardMaterial();
+        material.useSkybox = false;
         material.blendType = BLEND_NORMAL;
         material.chunks = {
             APIVersion: CHUNKAPI_1_70,
