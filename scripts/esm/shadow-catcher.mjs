@@ -23,18 +23,60 @@ const endPS = `
  */
 class ShadowCatcherScript extends Script {
     /**
-     * The shadow distance of the shadow catcher light.
+     * @see {pc.Light#shadowDistance}
      * @type {number}
      * @attribute
      */
     shadowDistance = 16;
 
     /**
-     * The VSM blur size of the shadow catcher light.
+     * @see {pc.Light#vsmBlurSize}
      * @type {number}
      * @attribute
      */
-    blurSize = 32;
+    vsmBlurSize = 32;
+
+    /**
+     * @see {pc.Light#normalOffsetBias}
+     * @type {number}
+     * @attribute
+     */
+    normalOffsetBias = 0;
+
+    /**
+     * @see {pc.Light#shadowBias}
+     * @type {number}
+     * @attribute
+     */
+    shadowBias = -0.0005;
+
+    /**
+     * @see {pc.Light#shadowResolution}
+     * @type {number}
+     * @attribute
+     */
+    shadowResolution = 1024;
+
+    /**
+     * @see {pc.Light#shadowType}
+     * @type {number}
+     * @attribute
+     */
+    shadowType = SHADOW_VSM_16F;
+
+    /**
+     * @see {pc.Light#shadowUpdateMode}
+     * @type {number}
+     * @attribute
+     */
+    shadowUpdateMode = SHADOWUPDATE_REALTIME;
+
+    /**
+     * @see {pc.Light#shadowIntensity}
+     * @type {number}
+     * @attribute
+     */
+    shadowIntensity = 0.98;
 
     /**
      * The size of the shadow catcher.
@@ -78,14 +120,14 @@ class ShadowCatcherScript extends Script {
         this._light.addComponent('light', {
             type: 'directional',
             castShadows: true,
-            normalOffsetBias: 0,
-            shadowBias: 0,
+            normalOffsetBias: this.normalOffsetBias,
+            shadowBias: this.shadowBias,
             shadowDistance: this.shadowDistance,
-            shadowResolution: 1024,
-            shadowType: SHADOW_VSM_16F,
-            shadowUpdateMode: SHADOWUPDATE_REALTIME,
-            vsmBlurSize: this.blurSize,
-            shadowIntensity: 1,
+            shadowResolution: this.shadowResolution,
+            shadowType: this.shadowType,
+            shadowUpdateMode: this.shadowUpdateMode,
+            vsmBlurSize: this.vsmBlurSize,
+            shadowIntensity: this.shadowIntensity,
             intensity: 0
         });
 
@@ -101,7 +143,17 @@ class ShadowCatcherScript extends Script {
 
     update() {
         this._plane.setLocalScale(this.size.x, 1, this.size.y ?? this.size.x);
-        this._light.light.vsmBlurSize = this.blurSize;
+
+        const light = this._light.light;
+        light.vsmBlurSize = this.vsmBlurSize;
+        light.normalOffsetBias = this.normalOffsetBias;
+        light.shadowBias = this.shadowBias;
+        light.shadowDistance = this.shadowDistance;
+        light.shadowResolution = this.shadowResolution;
+        light.shadowType = this.shadowType;
+        light.shadowUpdateMode = this.shadowUpdateMode;
+        light.vsmBlurSize = this.vsmBlurSize;
+        light.shadowIntensity = this.shadowIntensity;
     }
 }
 
