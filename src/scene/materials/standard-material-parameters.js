@@ -188,7 +188,8 @@ const standardMaterialRemovedParameters = {
     diffuseTint: 'boolean',
     sheenTint: 'boolean',
     conserveEnergy: 'boolean',
-    useGamma: 'boolean'
+    useGamma: 'boolean',
+    sheenGlossTint: 'boolean'
 };
 
 export {
