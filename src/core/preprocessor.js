@@ -143,20 +143,20 @@ class Preprocessor {
     }
 
     static injectDefines(source, injectDefines) {
-        
+
         if (source !== null && injectDefines.size > 0) {
 
             // replace all instances of the injected defines with the value itself
             const lines = source.split('\n');
             injectDefines.forEach((value, key) => {
-            const regex = new RegExp(`\\b${key}\\b`, 'g');
-            for (let i = 0; i < lines.length; i++) {
+                const regex = new RegExp(`\\b${key}\\b`, 'g');
+                for (let i = 0; i < lines.length; i++) {
 
-                // replace them on lines that do not contain a preprocessor directive (the define itself for example)
-                if (!lines[i].includes('#')) {
-                    lines[i] = lines[i].replace(regex, value);
+                    // replace them on lines that do not contain a preprocessor directive (the define itself for example)
+                    if (!lines[i].includes('#')) {
+                        lines[i] = lines[i].replace(regex, value);
+                    }
                 }
-            }
             });
             source = lines.join('\n');
         }
