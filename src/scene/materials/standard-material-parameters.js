@@ -189,6 +189,7 @@ const standardMaterialRemovedParameters = {
     sheenTint: 'boolean',
     conserveEnergy: 'boolean',
     useGamma: 'boolean',
+    useGammaTonemap: 'boolean',
     sheenGlossTint: 'boolean'
 };
 
