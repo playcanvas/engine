@@ -173,6 +173,9 @@ import { CameraFrameOptions, RenderPassCameraFrame } from './render-pass-camera-
  * @category Render Pass
  */
 class CameraFrame {
+    /** @private */
+    _enabled = true;
+
     /**
      * Rendering settings.
      *
@@ -303,7 +306,7 @@ class CameraFrame {
         Debug.assert(cameraComponent, 'CameraFrame: cameraComponent must be defined');
 
         this.updateOptions();
-        this.enabled = true;
+        this.enable();
     }
 
     /**
@@ -314,40 +317,44 @@ class CameraFrame {
     }
 
     enable() {
-        if (!this.renderPassCamera) {
-            const cameraComponent = this.cameraComponent;
-            this.renderPassCamera = new RenderPassCameraFrame(this.app, cameraComponent, this.options);
-            cameraComponent.renderPasses = [this.renderPassCamera];
-        }
+        Debug.assert(!this.renderPassCamera);
+
+        const cameraComponent = this.cameraComponent;
+        this.renderPassCamera = new RenderPassCameraFrame(this.app, cameraComponent, this.options);
+        cameraComponent.renderPasses = [this.renderPassCamera];
     }
 
     disable() {
-        if (this.renderPassCamera) {
-            const cameraComponent = this.cameraComponent;
-            cameraComponent.renderPasses?.forEach((renderPass) => {
-                renderPass.destroy();
-            });
-            cameraComponent.renderPasses = [];
-            cameraComponent.rendering = null;
+        Debug.assert(this.renderPassCamera);
 
-            cameraComponent.jitter = 0;
+        const cameraComponent = this.cameraComponent;
+        cameraComponent.renderPasses?.forEach((renderPass) => {
+            renderPass.destroy();
+        });
+        cameraComponent.renderPasses = [];
+        cameraComponent.rendering = null;
 
-            // no longer HDR rendering
-            cameraComponent.gammaCorrection = GAMMA_SRGB;
-        }
+        cameraComponent.jitter = 0;
+
+        // no longer HDR rendering
+        cameraComponent.gammaCorrection = GAMMA_SRGB;
+
+        this.renderPassCamera = null;
     }
 
     /**
-     * Sets the enabled state of the camera frame. This disabled the render passes, and releases
-     * any resources.
+     * Sets the enabled state of the camera frame. Passing false will release associated resources.
      *
      * @type {boolean}
      */
     set enabled(value) {
-        if (value) {
-            this.enable();
-        } else {
-            this.disable();
+        if (this._enabled !== value) {
+            if (value) {
+                this.enable();
+            } else {
+                this.disable();
+            }
+            this._enabled = value;
         }
     }
 
@@ -357,7 +364,7 @@ class CameraFrame {
      * @type {boolean}
      */
     get enabled() {
-        return this.renderPassCamera !== null;
+        return this._enabled;
     }
 
     updateOptions() {
@@ -382,7 +389,7 @@ class CameraFrame {
      */
     update() {
 
-        if (!this.enabled) return;
+        if (!this._enabled) return;
 
         const cameraComponent = this.cameraComponent;
         const { options, renderPassCamera, rendering, bloom, grading, vignette, fringing, taa, ssao } = this;

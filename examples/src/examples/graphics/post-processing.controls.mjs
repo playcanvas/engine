@@ -8,6 +8,15 @@ export const controls = ({ observer, ReactPCUI, React, jsx, fragment }) => {
     const { BindingTwoWay, BooleanInput, LabelGroup, Panel, SelectInput, SliderInput } = ReactPCUI;
     return fragment(
         jsx(
+            LabelGroup,
+            { text: 'enabled' },
+            jsx(BooleanInput, {
+                type: 'toggle',
+                binding: new BindingTwoWay(),
+                link: { observer, path: 'data.enabled' }
+            })
+        ),
+        jsx(
             Panel,
             { headerText: 'Scene Rendering' },
             jsx(
