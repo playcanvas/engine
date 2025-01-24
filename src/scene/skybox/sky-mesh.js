@@ -43,7 +43,7 @@ class SkyMesh {
         });
 
         // defines
-        material.setDefine('SKYBOX_DECODE_FNC', ChunkUtils.decodeFunc(texture.encoding));
+        material.setDefine('__INJECT_SKYBOX_DECODE_FNC', ChunkUtils.decodeFunc(texture.encoding));
         if (type !== SKYTYPE_INFINITE) material.setDefine('SKYMESH', '');
         if (texture.cubemap) material.setDefine('SKY_CUBEMAP', '');
 
