@@ -146,7 +146,8 @@ assetListLoader.load(() => {
     cameraEntity.addComponent('camera', {
         clearColor: new pc.Color(0.4, 0.45, 0.5),
         nearClip: 1,
-        farClip: 600
+        farClip: 600,
+        toneMapping: pc.TONEMAP_NEUTRAL
     });
 
     // add orbit camera script
@@ -174,6 +175,9 @@ assetListLoader.load(() => {
     cameraFrame.rendering.renderFormats = [pc.PIXELFORMAT_RGBA16F];
 
     const applySettings = () => {
+
+        // enabled
+        cameraFrame.enabled = data.get('data.enabled');
 
         cameraFrame.ssao.type = data.get('data.ssao.type');
         cameraFrame.ssao.blurEnabled = data.get('data.ssao.blurEnabled');
@@ -215,6 +219,7 @@ assetListLoader.load(() => {
 
     // initial settings
     data.set('data', {
+        enabled: true,
         ssao: {
             type: pc.SSAOTYPE_LIGHTING,
             blurEnabled: true,
