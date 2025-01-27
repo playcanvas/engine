@@ -573,7 +573,7 @@ class Vec3 {
     /**
      * Sets the specified 3-dimensional vector to the supplied numerical values.
      *
-     * @param {number | number[]} x - The value to set on the first component of the vector.
+     * @param {number} x - The value to set on the first component of the vector.
      * @param {number} y - The value to set on the second component of the vector.
      * @param {number} z - The value to set on the third component of the vector.
      * @returns {Vec3} Self for chaining.
@@ -585,15 +585,9 @@ class Vec3 {
      * console.log("The result of the vector set is: " + v.toString());
      */
     set(x, y, z) {
-        if (x?.length === 3) {
-            this.x = x[0];
-            this.y = x[1];
-            this.z = x[2];
-        } else {
-            this.x = x;
-            this.y = y;
-            this.z = z;
-        }
+        this.x = x;
+        this.y = y;
+        this.z = z;
 
         return this;
     }
@@ -661,6 +655,24 @@ class Vec3 {
         this.x -= scalar;
         this.y -= scalar;
         this.z -= scalar;
+
+        return this;
+    }
+
+    /**
+     * Set the values of the vector from an array.
+     *
+     * @param {number[]} array - The array to set the vector values from.
+     * @returns {Vec3} Self for chaining.
+     * @example
+     * const v = new pc.Vec3();
+     * v.fromArray([20, 10, 5]);
+     * // v is set to [20, 10, 5]
+     */
+    fromArray(array) {
+        this.x = array[0];
+        this.y = array[1];
+        this.z = array[2];
 
         return this;
     }

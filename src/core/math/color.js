@@ -112,25 +112,17 @@ class Color {
     /**
      * Assign values to the color components, including alpha.
      *
-     * @param {number | number[]} r - The value for red (0-1).
+     * @param {number} r - The value for red (0-1).
      * @param {number} g - The value for blue (0-1).
      * @param {number} b - The value for green (0-1).
      * @param {number} [a] - The value for the alpha (0-1), defaults to 1.
      * @returns {Color} Self for chaining.
      */
     set(r, g, b, a = 1) {
-        const length = r?.length;
-        if (length === 3 || length === 4) {
-            a = r[3] ?? 1;
-            b = r[2];
-            g = r[1];
-            r = r[0];
-        } else {
-            this.r = r;
-            this.g = g;
-            this.b = b;
-            this.a = a;
-        }
+        this.r = r;
+        this.g = g;
+        this.b = b;
+        this.a = a;
 
         return this;
     }
@@ -230,6 +222,25 @@ class Color {
     }
 
     /**
+     * Set the values of the vector from an array.
+     *
+     * @param {number[]} array - The array to set the vector values from.
+     * @returns {Color} Self for chaining.
+     * @example
+     * const c = new pc.Color();
+     * c.fromArray([1, 0, 1, 1]);
+     * // c is set to [1, 0, 1, 1]
+     */
+    fromArray(array) {
+        this.r = array[0];
+        this.g = array[1];
+        this.b = array[2];
+        this.a = array[3] ?? 1;
+
+        return this;
+    }
+
+    /**
      * Converts the color to string form. The format is '#RRGGBBAA', where RR, GG, BB, AA are the
      * red, green, blue and alpha values. When the alpha value is not included (the default), this
      * is the same format as used in HTML/CSS.
@@ -266,7 +277,7 @@ class Color {
     /**
      * Converts the color to an array of numbers.
      *
-     * @param {boolean} alpha - If true, the output array will include the alpha value.
+     * @param {boolean} [alpha] - If true, the output array will include the alpha value.
      * @returns {number[]} The color as an array of numbers.
      * @example
      * const c = new pc.Color(1, 1, 1);

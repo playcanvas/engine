@@ -561,7 +561,7 @@ class Vec2 {
     /**
      * Sets the specified 2-dimensional vector to the supplied numerical values.
      *
-     * @param {number | number[]} x - The value to set on the first component of the vector.
+     * @param {number} x - The value to set on the first component of the vector.
      * @param {number} y - The value to set on the second component of the vector.
      * @returns {Vec2} Self for chaining.
      * @example
@@ -572,13 +572,8 @@ class Vec2 {
      * console.log("The result of the vector set is: " + v.toString());
      */
     set(x, y) {
-        if (x.length === 2) {
-            this.x = x[0];
-            this.y = x[1];
-        } else {
-            this.x = x;
-            this.y = y;
-        }
+        this.x = x;
+        this.y = y;
 
         return this;
     }
@@ -643,6 +638,23 @@ class Vec2 {
     subScalar(scalar) {
         this.x -= scalar;
         this.y -= scalar;
+
+        return this;
+    }
+
+    /**
+     * Set the values of the vector from an array.
+     *
+     * @param {number[]} array - The array to set the vector values from.
+     * @returns {Vec2} Self for chaining.
+     * @example
+     * const v = new pc.Vec2();
+     * v.fromArray([20, 10]);
+     * // v is set to [20, 10]
+     */
+    fromArray(array) {
+        this.x = array[0];
+        this.y = array[1];
 
         return this;
     }
