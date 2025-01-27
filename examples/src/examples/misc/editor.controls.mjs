@@ -153,16 +153,6 @@ export const controls = ({ observer, ReactPCUI, React, jsx, fragment }) => {
             { headerText: 'View Cube' },
             jsx(
                 LabelGroup,
-                { text: 'Size' },
-                jsx(SliderInput, {
-                    binding: new BindingTwoWay(),
-                    link: { observer, path: 'viewCube.size' },
-                    min: 10,
-                    max: 200
-                })
-            ),
-            jsx(
-                LabelGroup,
                 { text: 'Color X' },
                 jsx(ColorPicker, {
                     binding: new BindingTwoWay(),
@@ -202,7 +192,7 @@ export const controls = ({ observer, ReactPCUI, React, jsx, fragment }) => {
                     binding: new BindingTwoWay(),
                     link: { observer, path: 'viewCube.textSize' },
                     min: 1,
-                    max: 30
+                    max: 50
                 })
             ),
             jsx(
@@ -212,7 +202,7 @@ export const controls = ({ observer, ReactPCUI, React, jsx, fragment }) => {
                     binding: new BindingTwoWay(),
                     link: { observer, path: 'viewCube.lineThickness' },
                     min: 1,
-                    max: 10
+                    max: 20
                 })
             ),
             jsx(
@@ -222,7 +212,7 @@ export const controls = ({ observer, ReactPCUI, React, jsx, fragment }) => {
                     binding: new BindingTwoWay(),
                     link: { observer, path: 'viewCube.lineLength' },
                     min: 10,
-                    max: 100
+                    max: 200
                 })
             )
         )

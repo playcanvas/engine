@@ -27,13 +27,7 @@ class ViewCube extends EventHandler {
      * @type {number}
      * @private
      */
-    _width = 140;
-
-    /**
-     * @type {number}
-     * @private
-     */
-    _height = 140;
+    _size = 0;
 
     /**
      * @type {SVGSVGElement}
@@ -127,8 +121,6 @@ class ViewCube extends EventHandler {
         this.dom.id = 'view-cube-container';
         this.dom.style.cssText = [
             'position: absolute',
-            `width: ${this._width}px`,
-            `height: ${this._height}px`,
             'margin: auto',
             'pointer-events: none'
         ].join(';');
@@ -141,7 +133,9 @@ class ViewCube extends EventHandler {
         this._svg.id = 'view-cube-svg';
         this._group = document.createElementNS(this._svg.namespaceURI, 'g');
         this._svg.appendChild(this._group);
-        this._resize(this._width, this._height);
+
+        // size
+        this._resize();
 
         const colX = this._colorX.toString(false);
         const colY = this._colorY.toString(false);
@@ -269,6 +263,8 @@ class ViewCube extends EventHandler {
         this._shapes.nx.children[0].setAttribute('r', `${value}`);
         this._shapes.ny.children[0].setAttribute('r', `${value}`);
         this._shapes.nz.children[0].setAttribute('r', `${value}`);
+
+        this._resize();
     }
 
     get radius() {
@@ -305,6 +301,8 @@ class ViewCube extends EventHandler {
         this._shapes.nx.children[0].setAttribute('stroke-width', `${value}`);
         this._shapes.ny.children[0].setAttribute('stroke-width', `${value}`);
         this._shapes.nz.children[0].setAttribute('stroke-width', `${value}`);
+
+        this._resize();
     }
 
     get lineThickness() {
@@ -316,6 +314,8 @@ class ViewCube extends EventHandler {
      */
     set lineLength(value) {
         this._lineLength = value;
+
+        this._resize();
     }
 
     get lineLength() {
@@ -324,13 +324,16 @@ class ViewCube extends EventHandler {
 
     /**
      * @private
-     * @param {number} x - The x.
-     * @param {number} y - The y.
      */
-    _resize(x, y) {
-        this._svg.setAttribute('width', `${x}`);
-        this._svg.setAttribute('height', `${y}`);
-        this._group.setAttribute('transform', `translate(${x * 0.5}, ${y * 0.5})`);
+    _resize() {
+        this._size = 2 * (this.lineLength + this.radius + this.lineThickness);
+
+        this.dom.style.width = `${this._size}px`;
+        this.dom.style.height = `${this._size}px`;
+
+        this._svg.setAttribute('width', `${this._size}`);
+        this._svg.setAttribute('height', `${this._size}`);
+        this._group.setAttribute('transform', `translate(${this._size * 0.5}, ${this._size * 0.5})`);
     }
 
     /**
@@ -410,19 +413,9 @@ class ViewCube extends EventHandler {
      * @param {Mat4} cameraMatrix - The camera matrix.
      */
     update(cameraMatrix) {
-        const w = this.dom.clientWidth;
-        const h = this.dom.clientHeight;
-
         // skip if the container is not visible
-        if (!w || !h) {
+        if (!this._size) {
             return;
-        }
-
-        // skip if the size has not changed
-        if (w !== this._width || h !== this._height) {
-            this._width = w;
-            this._height = h;
-            this._resize(w, h);
         }
 
         tmpM1.invert(cameraMatrix);

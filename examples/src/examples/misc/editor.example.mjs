@@ -185,7 +185,6 @@ window.focus();
 // view cube
 const viewCube = new pc.ViewCube(new pc.Vec4(1, 1, 1, 1));
 data.set('viewCube', {
-    size: 140,
     colorX: Object.values(viewCube.colorX),
     colorY: Object.values(viewCube.colorY),
     colorZ: Object.values(viewCube.colorZ),
