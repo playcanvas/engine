@@ -231,7 +231,7 @@ class Color {
      * // c is set to [1, 0, 1, 1]
      */
     fromArray(array) {
-        [this.r, this.g, this.b, this.a = 1] = array;
+        [this.r = this.r, this.g = this.g, this.b = this.b, this.a = this.a] = array;
 
         return this;
     }

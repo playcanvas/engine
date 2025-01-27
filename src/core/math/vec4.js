@@ -633,7 +633,7 @@ class Vec4 {
      * // v is set to [20, 10, 5, 0]
      */
     fromArray(array) {
-        [this.x, this.y, this.z, this.w] = array;
+        [this.x = this.x, this.y = this.y, this.z = this.z, this.w = this.w] = array;
 
         return this;
     }

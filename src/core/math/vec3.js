@@ -670,7 +670,7 @@ class Vec3 {
      * // v is set to [20, 10, 5]
      */
     fromArray(array) {
-        [this.x, this.y, this.z] = array;
+        [this.x = this.x, this.y = this.y, this.z = this.z] = array;
 
         return this;
     }
