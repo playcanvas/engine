@@ -653,8 +653,7 @@ class Vec2 {
      * // v is set to [20, 10]
      */
     fromArray(array) {
-        this.x = array[0];
-        this.y = array[1];
+        [this.x, this.y] = array;
 
         return this;
     }

@@ -231,10 +231,7 @@ class Color {
      * // c is set to [1, 0, 1, 1]
      */
     fromArray(array) {
-        this.r = array[0];
-        this.g = array[1];
-        this.b = array[2];
-        this.a = array[3] ?? 1;
+        [this.r, this.g, this.b, this.a = 1] = array;
 
         return this;
     }
@@ -284,10 +281,7 @@ class Color {
      * console.log(c.toArray(true));
      */
     toArray(alpha) {
-        if (alpha === true) {
-            return [this.r, this.g, this.b, this.a];
-        }
-        return [this.r, this.g, this.b];
+        return alpha ? [this.r, this.g, this.b, this.a] : [this.r, this.g, this.b];
     }
 
     /**
