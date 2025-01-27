@@ -183,7 +183,17 @@ gizmoHandler.add(box);
 window.focus();
 
 // view cube
-const viewCube = new pc.ViewCube(new pc.Vec4(0, 1, 1, 0));
+const viewCube = new pc.ViewCube(new pc.Vec4(1, 1, 1, 1));
+data.set('viewCube', {
+    size: 140,
+    colorX: Object.values(viewCube.colorX),
+    colorY: Object.values(viewCube.colorY),
+    colorZ: Object.values(viewCube.colorZ),
+    radius: viewCube.radius,
+    textSize: viewCube.textSize,
+    lineThickness: viewCube.lineThickness,
+    lineLength: viewCube.lineLength
+});
 app.on('prerender', () => {
     viewCube.update(camera.getWorldTransform());
 });
@@ -290,6 +300,36 @@ data.on('*:set', (/** @type {string} */ path, /** @type {any} */ value) => {
                     break;
                 case 'resolution':
                     grid.resolution = value - 1;
+                    break;
+            }
+            break;
+        }
+        case 'viewCube': {
+            switch (key) {
+                case 'size':
+                    viewCube.dom.style.width = `${value}px`;
+                    viewCube.dom.style.height = `${value}px`;
+                    break;
+                case 'colorX':
+                    viewCube.colorX = tmpC1.set(value[0], value[1], value[2]);
+                    break;
+                case 'colorY':
+                    viewCube.colorY = tmpC1.set(value[0], value[1], value[2]);
+                    break;
+                case 'colorZ':
+                    viewCube.colorZ = tmpC1.set(value[0], value[1], value[2]);
+                    break;
+                case 'radius':
+                    viewCube.radius = value;
+                    break;
+                case 'textSize':
+                    viewCube.textSize = value;
+                    break;
+                case 'lineThickness':
+                    viewCube.lineThickness = value;
+                    break;
+                case 'lineLength':
+                    viewCube.lineLength = value;
                     break;
             }
             break;

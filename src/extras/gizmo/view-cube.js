@@ -1,10 +1,9 @@
 import { EventHandler } from '../../core/event-handler.js';
+import { Color } from '../../core/math/color.js';
 import { Mat4 } from '../../core/math/mat4.js';
 import { Vec3 } from '../../core/math/vec3.js';
 import { Vec4 } from '../../core/math/vec4.js';
 import { COLOR_BLUE, COLOR_GREEN, COLOR_RED } from './color.js';
-
-/** @import { Color } from '../../core/math/color.js' */
 
 const tmpV1 = new Vec3();
 const tmpV2 = new Vec3();
@@ -23,6 +22,18 @@ class ViewCube extends EventHandler {
      * });
      */
     static EVENT_CAMERAALIGN = 'camera:align';
+
+    /**
+     * @type {number}
+     * @private
+     */
+    _width = 140;
+
+    /**
+     * @type {number}
+     * @private
+     */
+    _height = 140;
 
     /**
      * @type {SVGSVGElement}
@@ -61,28 +72,46 @@ class ViewCube extends EventHandler {
     _colorZ = COLOR_BLUE.clone();
 
     /**
-     * @type {number}
+     * @type {Color}
      * @private
      */
-    _width = 0;
+    _colorNeg = new Color(0.3, 0.3, 0.3);
 
     /**
      * @type {number}
      * @private
      */
-    _height = 0;
+    _radius = 10;
+
+    /**
+     * @type {number}
+     * @private
+     */
+    _textSize = 10;
+
+    /**
+     * @type {number}
+     * @private
+     */
+    _lineThickness = 2;
+
+    /**
+     * @type {number}
+     * @private
+     */
+    _lineLength = 40;
 
     /**
      * @type {{
      *     nx: SVGAElement,
      *     ny: SVGAElement,
      *     nz: SVGAElement,
-     *     xaxis: SVGLineElement,
-     *     yaxis: SVGLineElement,
-     *     zaxis: SVGLineElement,
      *     px: SVGAElement,
      *     py: SVGAElement,
-     *     pz: SVGAElement
+     *     pz: SVGAElement,
+     *     xaxis: SVGLineElement,
+     *     yaxis: SVGLineElement,
+     *     zaxis: SVGLineElement
      * }}
      */
     _shapes;
@@ -98,8 +127,8 @@ class ViewCube extends EventHandler {
         this.dom.id = 'view-cube-container';
         this.dom.style.cssText = [
             'position: absolute',
-            'width: 140px',
-            'height: 140px',
+            `width: ${this._width}px`,
+            `height: ${this._height}px`,
             'margin: auto',
             'pointer-events: none'
         ].join(';');
@@ -112,6 +141,7 @@ class ViewCube extends EventHandler {
         this._svg.id = 'view-cube-svg';
         this._group = document.createElementNS(this._svg.namespaceURI, 'g');
         this._svg.appendChild(this._group);
+        this._resize(this._width, this._height);
 
         const colX = this._colorX.toString(false);
         const colY = this._colorY.toString(false);
@@ -121,12 +151,12 @@ class ViewCube extends EventHandler {
             nx: this._circle(colX),
             ny: this._circle(colY),
             nz: this._circle(colZ),
-            xaxis: this._line(colX),
-            yaxis: this._line(colY),
-            zaxis: this._line(colZ),
             px: this._circle(colX, true, 'X'),
             py: this._circle(colY, true, 'Y'),
-            pz: this._circle(colZ, true, 'Z')
+            pz: this._circle(colZ, true, 'Z'),
+            xaxis: this._line(colX),
+            yaxis: this._line(colY),
+            zaxis: this._line(colZ)
         };
 
         this._shapes.px.children[0].addEventListener('pointerdown', () => {
@@ -165,7 +195,6 @@ class ViewCube extends EventHandler {
     }
 
     /**
-     * @attribute
      * @type {Color}
      */
     set colorX(value) {
@@ -182,7 +211,6 @@ class ViewCube extends EventHandler {
     }
 
     /**
-     * @attribute
      * @type {Color}
      */
     set colorY(value) {
@@ -199,7 +227,6 @@ class ViewCube extends EventHandler {
     }
 
     /**
-     * @attribute
      * @type {Color}
      */
     set colorZ(value) {
@@ -216,13 +243,104 @@ class ViewCube extends EventHandler {
     }
 
     /**
+     * @type {Color}
+     */
+    set colorNeg(value) {
+        this._colorNeg.copy(value);
+
+        this._shapes.px.children[0].setAttribute('fill', this._colorNeg.toString(false));
+        this._shapes.py.children[0].setAttribute('fill', this._colorNeg.toString(false));
+        this._shapes.pz.children[0].setAttribute('fill', this._colorNeg.toString(false));
+    }
+
+    get colorNeg() {
+        return this._colorNeg;
+    }
+
+    /**
+     * @type {number}
+     */
+    set radius(value) {
+        this._radius = value;
+
+        this._shapes.px.children[0].setAttribute('r', `${value}`);
+        this._shapes.py.children[0].setAttribute('r', `${value}`);
+        this._shapes.pz.children[0].setAttribute('r', `${value}`);
+        this._shapes.nx.children[0].setAttribute('r', `${value}`);
+        this._shapes.ny.children[0].setAttribute('r', `${value}`);
+        this._shapes.nz.children[0].setAttribute('r', `${value}`);
+    }
+
+    get radius() {
+        return this._radius;
+    }
+
+    /**
+     * @type {number}
+     */
+    set textSize(value) {
+        this._textSize = value;
+
+        this._shapes.px.children[1].setAttribute('font-size', `${value}`);
+        this._shapes.py.children[1].setAttribute('font-size', `${value}`);
+        this._shapes.pz.children[1].setAttribute('font-size', `${value}`);
+    }
+
+    get textSize() {
+        return this._textSize;
+    }
+
+    /**
+     * @type {number}
+     */
+    set lineThickness(value) {
+        this._lineThickness = value;
+
+        this._shapes.xaxis.setAttribute('stroke-width', `${value}`);
+        this._shapes.yaxis.setAttribute('stroke-width', `${value}`);
+        this._shapes.zaxis.setAttribute('stroke-width', `${value}`);
+        this._shapes.px.children[0].setAttribute('stroke-width', `${value}`);
+        this._shapes.py.children[0].setAttribute('stroke-width', `${value}`);
+        this._shapes.pz.children[0].setAttribute('stroke-width', `${value}`);
+        this._shapes.nx.children[0].setAttribute('stroke-width', `${value}`);
+        this._shapes.ny.children[0].setAttribute('stroke-width', `${value}`);
+        this._shapes.nz.children[0].setAttribute('stroke-width', `${value}`);
+    }
+
+    get lineThickness() {
+        return this._lineThickness;
+    }
+
+    /**
+     * @type {number}
+     */
+    set lineLength(value) {
+        this._lineLength = value;
+    }
+
+    get lineLength() {
+        return this._lineLength;
+    }
+
+    /**
+     * @private
+     * @param {number} x - The x.
+     * @param {number} y - The y.
+     */
+    _resize(x, y) {
+        this._svg.setAttribute('width', `${x}`);
+        this._svg.setAttribute('height', `${y}`);
+        this._group.setAttribute('transform', `translate(${x * 0.5}, ${y * 0.5})`);
+    }
+
+    /**
      * @private
      * @param {SVGAElement} group - The group.
      * @param {number} x - The x.
      * @param {number} y - The y.
      */
     _transform(group, x, y) {
-        group.setAttribute('transform', `translate(${x * 40}, ${y * 40})`);
+        group.setAttribute('transform', `translate(${x * this._lineLength}, ${y * this._lineLength})`);
     }
 
     /**
@@ -232,8 +350,8 @@ class ViewCube extends EventHandler {
      * @param {number} y - The y.
      */
     _x2y2(line, x, y) {
-        line.setAttribute('x2', `${x * 40}`);
-        line.setAttribute('y2', `${y * 40}`);
+        line.setAttribute('x2', `${x * this._lineLength}`);
+        line.setAttribute('y2', `${y * this._lineLength}`);
     }
 
     /**
@@ -244,7 +362,7 @@ class ViewCube extends EventHandler {
     _line(color) {
         const result = /** @type {SVGLineElement} */ (document.createElementNS(this._svg.namespaceURI, 'line'));
         result.setAttribute('stroke', color);
-        result.setAttribute('stroke-width', '2');
+        result.setAttribute('stroke-width', `${this._lineThickness}`);
         this._group.appendChild(result);
         return result;
     }
@@ -257,35 +375,35 @@ class ViewCube extends EventHandler {
      * @returns {SVGAElement} - The circle.
      */
     _circle(color, fill = false, text) {
-        const result = /** @type {SVGAElement} */ (document.createElementNS(this._svg.namespaceURI, 'g'));
+        const group = /** @type {SVGAElement} */ (document.createElementNS(this._svg.namespaceURI, 'g'));
 
         const circle = /** @type {SVGCircleElement} */ (document.createElementNS(this._svg.namespaceURI, 'circle'));
-        circle.setAttribute('fill', fill ? color : '#555');
+        circle.setAttribute('fill', fill ? color : this._colorNeg.toString(false));
         circle.setAttribute('stroke', color);
-        circle.setAttribute('stroke-width', '2');
-        circle.setAttribute('r', '10');
+        circle.setAttribute('stroke-width', `${this._lineThickness}`);
+        circle.setAttribute('r', `${this._radius}`);
         circle.setAttribute('cx', '0');
         circle.setAttribute('cy', '0');
         circle.setAttribute('pointer-events', 'all');
 
-        result.appendChild(circle);
+        group.appendChild(circle);
 
         if (text) {
             const t = /** @type {SVGTextElement} */ (document.createElementNS(this._svg.namespaceURI, 'text'));
-            t.setAttribute('font-size', '10');
+            t.setAttribute('font-size', `${this._textSize}`);
             t.setAttribute('font-family', 'Arial');
             t.setAttribute('font-weight', 'bold');
             t.setAttribute('text-anchor', 'middle');
             t.setAttribute('alignment-baseline', 'central');
             t.textContent = text;
-            result.appendChild(t);
+            group.appendChild(t);
         }
 
-        result.setAttribute('cursor', 'pointer');
+        group.setAttribute('cursor', 'pointer');
 
-        this._group.appendChild(result);
+        this._group.appendChild(group);
 
-        return result;
+        return group;
     }
 
     /**
@@ -302,12 +420,9 @@ class ViewCube extends EventHandler {
 
         // skip if the size has not changed
         if (w !== this._width || h !== this._height) {
-            // resize elements
-            this._svg.setAttribute('width', w.toString());
-            this._svg.setAttribute('height', h.toString());
-            this._group.setAttribute('transform', `translate(${w * 0.5}, ${h * 0.5})`);
             this._width = w;
             this._height = h;
+            this._resize(w, h);
         }
 
         tmpM1.invert(cameraMatrix);
