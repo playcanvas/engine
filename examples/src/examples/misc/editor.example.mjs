@@ -182,6 +182,13 @@ setGizmoControls();
 gizmoHandler.add(box);
 window.focus();
 
+// view cube
+const viewCube = new pc.ViewCube();
+viewCube.anchor = new pc.Vec4(0, 1, 1, 0);
+app.on('prerender', () => {
+    viewCube.update(camera.getWorldTransform());
+});
+
 // selector
 const layers = app.scene.layers;
 const selector = new Selector(app, camera.camera, [layers.getLayerByName('World')]);
