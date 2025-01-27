@@ -585,7 +585,7 @@ class Vec3 {
      * console.log("The result of the vector set is: " + v.toString());
      */
     set(x, y, z) {
-        if (x.length === 3) {
+        if (x?.length === 3) {
             this.x = x[0];
             this.y = x[1];
             this.z = x[2];

@@ -119,7 +119,7 @@ class Color {
      * @returns {Color} Self for chaining.
      */
     set(r, g, b, a = 1) {
-        const length = r.length;
+        const length = r?.length;
         if (length === 3 || length === 4) {
             a = r[3] ?? 1;
             b = r[2];
