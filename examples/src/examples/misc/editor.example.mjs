@@ -305,10 +305,6 @@ data.on('*:set', (/** @type {string} */ path, /** @type {any} */ value) => {
         }
         case 'viewCube': {
             switch (key) {
-                case 'size':
-                    viewCube.dom.style.width = `${value}px`;
-                    viewCube.dom.style.height = `${value}px`;
-                    break;
                 case 'colorX':
                     viewCube.colorX = tmpC1.set(value[0], value[1], value[2]);
                     break;
