@@ -173,6 +173,19 @@ describe('Color', function () {
 
     });
 
+    describe('#fromArray', function () {
+
+        it('sets a color from an array', function () {
+            const c = new Color();
+            c.fromArray([0.1, 0.2, 0.3, 0.4]);
+            expect(c.r).to.equal(0.1);
+            expect(c.g).to.equal(0.2);
+            expect(c.b).to.equal(0.3);
+            expect(c.a).to.equal(0.4);
+        });
+
+    });
+
     describe('#toString', function () {
 
         it('returns a string representation of black (no alpha)', function () {
@@ -196,6 +209,18 @@ describe('Color', function () {
         it('returns a string representation of an arbitrary color (with double digit alpha)', function () {
             const c = new Color(0.1, 0.2, 0.3, 0.4);
             expect(c.toString(true)).to.equal('#1a334d66');
+        });
+
+    });
+
+    describe('#toArray', function () {
+
+        it('returns an array of 3 values', function () {
+            expect(Color.RED.toArray()).to.eql([1, 0, 0]);
+        });
+
+        it('returns an array of 4 values', function () {
+            expect(Color.RED.toArray(true)).to.eql([1, 0, 0, 1]);
         });
 
     });

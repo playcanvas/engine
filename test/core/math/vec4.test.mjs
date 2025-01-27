@@ -590,11 +590,33 @@ describe('Vec4', function () {
 
     });
 
+    describe('#fromArray', function () {
+
+        it('sets a vector from an array', function () {
+            const v = new Vec4();
+            v.fromArray([1, 2, 3, 4]);
+            expect(v.x).to.equal(1);
+            expect(v.y).to.equal(2);
+            expect(v.z).to.equal(3);
+            expect(v.w).to.equal(4);
+        });
+
+    });
+
     describe('#toString', function () {
 
         it('returns a string representation of a vector', function () {
             const v = new Vec4(1, 2, 3, 4);
             expect(v.toString()).to.equal('[1, 2, 3, 4]');
+        });
+
+    });
+
+    describe('#toArray', function () {
+
+        it('returns an array representation of a vector', function () {
+            const v = new Vec4(1, 2, 3, 4);
+            expect(v.toArray()).to.eql([1, 2, 3, 4]);
         });
 
     });

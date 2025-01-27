@@ -533,6 +533,17 @@ describe('Vec2', function () {
 
     });
 
+    describe('#fromArray', function () {
+
+        it('sets a vector from an array of 2 values', function () {
+            const v = new Vec2();
+            v.fromArray([1, 2]);
+            expect(v.x).to.equal(1);
+            expect(v.y).to.equal(2);
+        });
+
+    });
+
     describe('#toString', function () {
 
         it('returns a string representation of a vector', function () {
@@ -542,4 +553,12 @@ describe('Vec2', function () {
 
     });
 
+    describe('#toArray', function () {
+
+        it('returns an array representation of a vector', function () {
+            const v = new Vec2(1, 2);
+            expect(v.toArray()).to.eql([1, 2]);
+        });
+
+    });
 });
