@@ -197,7 +197,6 @@ class Color {
         return this;
     }
 
-
     /**
      * Set the values of the color from a string representation '#11223344' or '#112233'.
      *
