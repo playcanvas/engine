@@ -87,8 +87,13 @@ class ViewCube extends EventHandler {
      */
     _shapes;
 
-    constructor() {
+    /**
+     * @param {Vec4} [anchor] - The anchor.
+     */
+    constructor(anchor) {
         super();
+
+        this._anchor = anchor ?? this._anchor;
 
         // container
         this.dom = document.createElement('div');

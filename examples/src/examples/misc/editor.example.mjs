@@ -183,8 +183,7 @@ gizmoHandler.add(box);
 window.focus();
 
 // view cube
-const viewCube = new pc.ViewCube();
-viewCube.anchor = new pc.Vec4(0, 1, 1, 0);
+const viewCube = new pc.ViewCube(new pc.Vec4(0, 1, 1, 0));
 app.on('prerender', () => {
     viewCube.update(camera.getWorldTransform());
 });
