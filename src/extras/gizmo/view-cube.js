@@ -154,22 +154,22 @@ class ViewCube extends EventHandler {
         };
 
         this._shapes.px.children[0].addEventListener('pointerdown', () => {
-            this.fire(ViewCube.EVENT_CAMERAALIGN, 'px');
+            this.fire(ViewCube.EVENT_CAMERAALIGN, Vec3.RIGHT);
         });
         this._shapes.py.children[0].addEventListener('pointerdown', () => {
-            this.fire(ViewCube.EVENT_CAMERAALIGN, 'py');
+            this.fire(ViewCube.EVENT_CAMERAALIGN, Vec3.UP);
         });
         this._shapes.pz.children[0].addEventListener('pointerdown', () => {
-            this.fire(ViewCube.EVENT_CAMERAALIGN, 'pz');
+            this.fire(ViewCube.EVENT_CAMERAALIGN, Vec3.BACK);
         });
         this._shapes.nx.children[0].addEventListener('pointerdown', () => {
-            this.fire(ViewCube.EVENT_CAMERAALIGN, 'nx');
+            this.fire(ViewCube.EVENT_CAMERAALIGN, Vec3.LEFT);
         });
         this._shapes.ny.children[0].addEventListener('pointerdown', () => {
-            this.fire(ViewCube.EVENT_CAMERAALIGN, 'ny');
+            this.fire(ViewCube.EVENT_CAMERAALIGN, Vec3.DOWN);
         });
         this._shapes.nz.children[0].addEventListener('pointerdown', () => {
-            this.fire(ViewCube.EVENT_CAMERAALIGN, 'nz');
+            this.fire(ViewCube.EVENT_CAMERAALIGN, Vec3.FORWARD);
         });
 
         this.dom.appendChild(this._svg);

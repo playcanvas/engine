@@ -183,7 +183,7 @@ gizmoHandler.add(box);
 window.focus();
 
 // view cube
-const viewCube = new pc.ViewCube(new pc.Vec4(1, 1, 1, 1));
+const viewCube = new pc.ViewCube(new pc.Vec4(0, 1, 1, 0));
 data.set('viewCube', {
     colorX: Object.values(viewCube.colorX),
     colorY: Object.values(viewCube.colorY),
@@ -192,6 +192,14 @@ data.set('viewCube', {
     textSize: viewCube.textSize,
     lineThickness: viewCube.lineThickness,
     lineLength: viewCube.lineLength
+});
+const tmpV1 = new pc.Vec3();
+viewCube.on(pc.ViewCube.EVENT_CAMERAALIGN, (/** @type {pc.Vec3} */ dir) => {
+    const cameraPos = camera.getPosition();
+    const focusPoint = cameraControls.focusPoint;
+    const cameraDist = focusPoint.distance(cameraPos);
+    const cameraStart = tmpV1.copy(dir).mulScalar(cameraDist).add(focusPoint);
+    cameraControls.refocus(focusPoint, cameraStart);
 });
 app.on('prerender', () => {
     viewCube.update(camera.getWorldTransform());
