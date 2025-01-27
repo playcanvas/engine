@@ -93,8 +93,6 @@ class ViewCube extends EventHandler {
     constructor(anchor) {
         super();
 
-        this._anchor = anchor ?? this._anchor;
-
         // container
         this.dom = document.createElement('div');
         this.dom.id = 'view-cube-container';
@@ -102,14 +100,12 @@ class ViewCube extends EventHandler {
             'position: absolute',
             'width: 140px',
             'height: 140px',
-            `top: ${this._anchor.x ? '0px' : 'auto'}`,
-            `right: ${this._anchor.y ? '0px' : 'auto'}`,
-            `bottom: ${this._anchor.z ? '0px' : 'auto'}`,
-            `left: ${this._anchor.w ? '0px' : 'auto'}`,
             'margin: auto',
             'pointer-events: none'
         ].join(';');
         document.body.appendChild(this.dom);
+
+        this.anchor = anchor ?? this._anchor;
 
         // construct svg root and group
         this._svg = document.createElementNS('http://www.w3.org/2000/svg', 'svg');
@@ -221,6 +217,27 @@ class ViewCube extends EventHandler {
 
     /**
      * @private
+     * @param {SVGAElement} group - The group.
+     * @param {number} x - The x.
+     * @param {number} y - The y.
+     */
+    _transform(group, x, y) {
+        group.setAttribute('transform', `translate(${x * 40}, ${y * 40})`);
+    }
+
+    /**
+     * @private
+     * @param {SVGLineElement} line - The line.
+     * @param {number} x - The x.
+     * @param {number} y - The y.
+     */
+    _x2y2(line, x, y) {
+        line.setAttribute('x2', `${x * 40}`);
+        line.setAttribute('y2', `${y * 40}`);
+    }
+
+    /**
+     * @private
      * @param {string} color - The color.
      * @returns {SVGLineElement} - The line.
      */
@@ -298,35 +315,16 @@ class ViewCube extends EventHandler {
         tmpM1.getY(tmpV2);
         tmpM1.getZ(tmpV3);
 
-        /**
-         * @param {SVGAElement} group - The group.
-         * @param {number} x - The x.
-         * @param {number} y - The y.
-         */
-        const transform = (group, x, y) => {
-            group.setAttribute('transform', `translate(${x * 40}, ${y * 40})`);
-        };
+        this._transform(this._shapes.px, tmpV1.x, -tmpV1.y);
+        this._transform(this._shapes.nx, -tmpV1.x, tmpV1.y);
+        this._transform(this._shapes.py, tmpV2.x, -tmpV2.y);
+        this._transform(this._shapes.ny, -tmpV2.x, tmpV2.y);
+        this._transform(this._shapes.pz, tmpV3.x, -tmpV3.y);
+        this._transform(this._shapes.nz, -tmpV3.x, tmpV3.y);
 
-        /**
-         * @param {SVGLineElement} line - The line.
-         * @param {number} x - The x.
-         * @param {number} y - The y.
-         */
-        const x2y2 = (line, x, y) => {
-            line.setAttribute('x2', (x * 40).toString());
-            line.setAttribute('y2', (y * 40).toString());
-        };
-
-        transform(this._shapes.px, tmpV1.x, -tmpV1.y);
-        transform(this._shapes.nx, -tmpV1.x, tmpV1.y);
-        transform(this._shapes.py, tmpV2.x, -tmpV2.y);
-        transform(this._shapes.ny, -tmpV2.x, tmpV2.y);
-        transform(this._shapes.pz, tmpV3.x, -tmpV3.y);
-        transform(this._shapes.nz, -tmpV3.x, tmpV3.y);
-
-        x2y2(this._shapes.xaxis, tmpV1.x, -tmpV1.y);
-        x2y2(this._shapes.yaxis, tmpV2.x, -tmpV2.y);
-        x2y2(this._shapes.zaxis, tmpV3.x, -tmpV3.y);
+        this._x2y2(this._shapes.xaxis, tmpV1.x, -tmpV1.y);
+        this._x2y2(this._shapes.yaxis, tmpV2.x, -tmpV2.y);
+        this._x2y2(this._shapes.zaxis, tmpV3.x, -tmpV3.y);
 
         // reorder dom for the mighty svg painter's algorithm
         const order = [
