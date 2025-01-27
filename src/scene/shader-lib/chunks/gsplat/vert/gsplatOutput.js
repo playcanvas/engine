@@ -1,15 +1,8 @@
 export default /* glsl */`
 
 #include "tonemappingPS"
-
-#if TONEMAP != NONE
-    #if GAMMA == SRGB
-        #include "decodePS"
-        #include "gamma2_2PS"
-    #else
-        #include "gamma1_0PS"
-    #endif
-#endif
+#include "decodePS"
+#include "gammaPS"
 
 // prepare the output color for the given gamma-space color
 vec3 prepareOutputFromGamma(vec3 gammaColor) {

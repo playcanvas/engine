@@ -5,7 +5,7 @@ import { LitMaterialOptions } from './lit-material-options.js';
 import { LitMaterialOptionsBuilder } from './lit-material-options-builder.js';
 import { getProgramLibrary } from '../shader-lib/get-program-library.js';
 import { lit } from '../shader-lib/programs/lit.js';
-import { getMaterialShaderDefines } from '../shader-lib/utils.js';
+import { getCoreDefines } from '../shader-lib/utils.js';
 
 const options = new LitMaterialOptions();
 
@@ -23,8 +23,6 @@ class LitMaterial extends Material {
     usedUvs = [true];
 
     shaderChunk = 'void evaluateFrontend() {}\n';
-
-    chunks = null;
 
     useLighting = true;
 
@@ -87,11 +85,9 @@ class LitMaterial extends Material {
 
     getShaderVariant(params) {
 
-        const { cameraShaderParams } = params;
-
         options.usedUvs = this.usedUvs.slice();
         options.shaderChunk = this.shaderChunk;
-        options.defines = getMaterialShaderDefines(this, cameraShaderParams);
+        options.defines = getCoreDefines(this, params);
 
         LitMaterialOptionsBuilder.update(options.litOptions, this, params.scene, params.cameraShaderParams, params.objDefs, params.pass, params.sortedLights);
         const processingOptions = new ShaderProcessorOptions(params.viewUniformFormat, params.viewBindGroupFormat, params.vertexFormat);

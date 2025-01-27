@@ -1,7 +1,14 @@
-/* eslint-disable-next-line import/no-unresolved */
 import { Vec2, Vec3, Ray, Plane, Mat4, Quat, Script, math } from 'playcanvas';
 
-/** @import { CameraComponent } from 'playcanvas' */
+/** @import { AppBase, Entity, CameraComponent } from 'playcanvas' */
+
+/**
+ * @typedef {object} ScriptArgs
+ * @property {AppBase} app - The app.
+ * @property {Entity} entity - The entity.
+ * @property {boolean} [enabled] - The enabled state.
+ * @property {object} [attributes] - The attributes.
+ */
 
 const tmpVa = new Vec2();
 const tmpV1 = new Vec3();
@@ -24,6 +31,28 @@ const ZOOM_SCALE_SCENE_MULT = 10;
 const lerpRate = (damping, dt) => 1 - Math.pow(damping, dt * 1000);
 
 class CameraControls extends Script {
+    /**
+     * Fired to clamp the position (Vec3).
+     *
+     * @event
+     * @example
+     * cameraControls.on('clamp:position', (position) => {
+     *     position.y = Math.max(0, position.y);
+     * });
+     */
+    static EVENT_CLAMP_POSITION = 'clamp:position';
+
+    /**
+     * Fired to clamp the angles (Vec2).
+     *
+     * @event
+     * @example
+     * cameraControls.on('clamp:angles', (angles) => {
+     *    angles.x = Math.max(-90, Math.min(90, angles.x));
+     * });
+     */
+    static EVENT_CLAMP_ANGLES = 'clamp:angles';
+
     /**
      * @private
      * @type {CameraComponent}
@@ -121,6 +150,12 @@ class CameraControls extends Script {
     _flying = false;
 
     /**
+     * @type {boolean}
+     * @private
+     */
+    _moving = false;
+
+    /**
      * @type {Record<string, boolean>}
      * @private
      */
@@ -139,7 +174,7 @@ class CameraControls extends Script {
      * @type {HTMLElement}
      * @private
      */
-    _element;
+    _element = this.app.graphicsDevice.canvas;
 
     /**
      * @type {Mat4}
@@ -154,150 +189,120 @@ class CameraControls extends Script {
     _baseTransform = new Mat4();
 
     /**
-     * The scene size. The zoom, pan and fly speeds are relative to this size.
-     *
      * @attribute
+     * @title Scene Size
+     * @description The scene size. The zoom, pan and fly speeds are relative to this size.
      * @type {number}
      */
     sceneSize = 100;
 
     /**
-     * The look sensitivity.
-     *
-     * @attribute
-     * @type {number}
-     */
-    lookSensitivity = 0.2;
-
-    /**
-     * The look damping. A higher value means less damping. A value of 1 means no damping.
-     *
-     * @attribute
-     * @type {number}
-     */
-    lookDamping = 0.97;
-
-    /**
-     * The move damping. A higher value means less damping. A value of 1 means no damping.
-     *
-     * @attribute
-     * @type {number}
-     */
-    moveDamping = 0.98;
-
-    /**
      * Enable orbit camera controls.
      *
      * @attribute
+     * @title Enable Orbit
+     * @description Enable orbit camera controls.
      * @type {boolean}
      */
     enableOrbit = true;
 
     /**
-     * Enable pan camera controls.
-     *
      * @attribute
+     * @title Enable Pan
+     * @description Enable pan camera controls.
      * @type {boolean}
      */
     enablePan = true;
 
     /**
-     * Enable fly camera controls.
-     *
      * @attribute
+     * @title Enable Fly
+     * @description Enable fly camera controls.
      * @type {boolean}
      */
     enableFly = true;
 
     /**
-     * The touch pinch speed.
-     *
      * @attribute
+     * @title Rotate Speed
+     * @description The rotation speed.
      * @type {number}
      */
-    pinchSpeed = 5;
+    rotateSpeed = 0.2;
 
     /**
-     * The mouse wheel speed.
-     *
      * @attribute
+     * @title Rotate Damping
+     * @description The rotation damping. A higher value means more damping. A value of 0 means no damping.
      * @type {number}
      */
-    wheelSpeed = 0.005;
+    rotateDamping = 0.97;
 
     /**
-     * The minimum scale the camera can zoom (absolute value).
-     *
      * @attribute
-     * @type {number}
-     */
-    zoomScaleMin = 0;
-
-    /**
-     * The fly move speed relative to the scene size.
-     *
-     * @attribute
+     * @title Move Speed
+     * @description The fly move speed relative to the scene size.
      * @type {number}
      */
     moveSpeed = 2;
 
     /**
-     * The fly sprint speed relative to the scene size.
-     *
      * @attribute
+     * @title Move Fast Speed
+     * @description The fast fly move speed relative to the scene size.
      * @type {number}
      */
-    sprintSpeed = 4;
+    moveFastSpeed = 4;
 
     /**
-     * The fly crouch speed relative to the scene size.
-     *
      * @attribute
+     * @title Move Slow Speed
+     * @description The slow fly move speed relative to the scene size.
      * @type {number}
      */
-    crouchSpeed = 1;
+    moveSlowSpeed = 1;
 
     /**
-     * @param {object} args - The script arguments.
+     * @attribute
+     * @title Move Damping
+     * @description The movement damping. A higher value means more damping. A value of 0 means no damping.
+     * @type {number}
      */
-    constructor(args) {
-        super(args);
-        const {
-            element,
-            enableOrbit,
-            enablePan,
-            enableFly,
-            focusPoint,
-            sceneSize,
-            lookSensitivity,
-            lookDamping,
-            moveDamping,
-            pitchRange,
-            pinchSpeed,
-            wheelSpeed,
-            zoomMin,
-            zoomMax,
-            moveSpeed,
-            sprintSpeed,
-            crouchSpeed
-        } = args.attributes;
+    moveDamping = 0.98;
 
-        this._element = element ?? this.app.graphicsDevice.canvas;
+    /**
+     * @attribute
+     * @title Zoom Speed
+     * @description The zoom speed relative to the scene size.
+     * @type {number}
+     */
+    zoomSpeed = 0.005;
 
-        this.enableOrbit = enableOrbit ?? this.enableOrbit;
-        this.enablePan = enablePan ?? this.enablePan;
-        this.enableFly = enableFly ?? this.enableFly;
-        this.sceneSize = sceneSize ?? this.sceneSize;
-        this.lookSensitivity = lookSensitivity ?? this.lookSensitivity;
-        this.lookDamping = lookDamping ?? this.lookDamping;
-        this.moveDamping = moveDamping ?? this.moveDamping;
-        this.pinchSpeed = pinchSpeed ?? this.pinchSpeed;
-        this.wheelSpeed = wheelSpeed ?? this.wheelSpeed;
+    /**
+     * @attribute
+     * @title Zoom Pinch Sensitivity
+     * @description The touch zoom pinch sensitivity.
+     * @type {number}
+     */
+    zoomPinchSens = 5;
 
-        this.moveSpeed = moveSpeed ?? this.moveSpeed;
-        this.sprintSpeed = sprintSpeed ?? this.sprintSpeed;
-        this.crouchSpeed = crouchSpeed ?? this.crouchSpeed;
+    /**
+     * @attribute
+     * @title Zoom Damping
+     * @description The zoom damping. A higher value means more damping. A value of 0 means no damping.
+     * @type {number}
+     */
+    zoomDamping = 0.98;
 
+    /**
+     * @attribute
+     * @title Zoom Scale Min
+     * @description The minimum scale the camera can zoom (absolute value).
+     * @type {number}
+     */
+    zoomScaleMin = 0;
+
+    initialize() {
         this._onWheel = this._onWheel.bind(this);
         this._onKeyDown = this._onKeyDown.bind(this);
         this._onKeyUp = this._onKeyUp.bind(this);
@@ -311,10 +316,10 @@ class CameraControls extends Script {
         }
         this.attach(this.entity.camera);
 
-        this.focusPoint = focusPoint ?? this.focusPoint;
-        this.pitchRange = pitchRange ?? this.pitchRange;
-        this.zoomMin = zoomMin ?? this.zoomMin;
-        this.zoomMax = zoomMax ?? this.zoomMax;
+        this.focusPoint = this._origin ?? this.focusPoint;
+        this.pitchRange = this._pitchRange ?? this.pitchRange;
+        this.zoomMin = this._zoomMin ?? this.zoomMin;
+        this.zoomMax = this._zoomMax ?? this.zoomMax;
     }
 
     /**
@@ -335,15 +340,20 @@ class CameraControls extends Script {
     }
 
     /**
-     * The camera's focus point.
-     *
-     * @param {Vec3} point - The focus point.
+     * @attribute
+     * @title Focus Point
+     * @description The camera's focus point.
+     * @type {Vec3}
+     * @default [0, 0, 0]
      */
     set focusPoint(point) {
         if (!this._camera) {
+            if (point instanceof Vec3) {
+                this._origin.copy(point);
+            }
             return;
         }
-        this.focus(point, this._camera.entity.getPosition(), false);
+        this.focus(point, this.entity.getPosition(), false);
     }
 
     get focusPoint() {
@@ -351,15 +361,19 @@ class CameraControls extends Script {
     }
 
     /**
-     * The camera's pitch range. Having a value of -360 means no minimum pitch and 360 means no
-     * maximum pitch.
-     *
      * @attribute
+     * @title Pitch Range
+     * @description The camera's pitch range. Having a value of -360 means no minimum pitch and 360
+     * means no maximum pitch.
      * @type {Vec2}
+     * @default [-360, 360]
      */
     set pitchRange(value) {
+        if (!(value instanceof Vec2)) {
+            return;
+        }
         this._pitchRange.copy(value);
-        this._dir.x = this._clampPitch(this._dir.x);
+        this._clampAngles(this._dir);
         this._smoothTransform(-1);
     }
 
@@ -368,13 +382,14 @@ class CameraControls extends Script {
     }
 
     /**
-     * The minimum zoom distance relative to the scene size.
-     *
      * @attribute
+     * @title Zoom Min
+     * @description The minimum zoom distance relative to the scene size.
      * @type {number}
+     * @default 0
      */
     set zoomMin(value) {
-        this._zoomMin = value;
+        this._zoomMin = value ?? this._zoomMin;
         this._zoomDist = this._clampZoom(this._zoomDist);
         this._smoothZoom(-1);
     }
@@ -384,14 +399,15 @@ class CameraControls extends Script {
     }
 
     /**
-     * The maximum zoom distance relative to the scene size. Having a value less than or equal to
-     * zoomMin means no maximum zoom.
-     *
      * @attribute
+     * @title Zoom Max
+     * @description The maximum zoom distance relative to the scene size. Having a value less than
+     * or equal to zoomMin means no maximum zoom.
      * @type {number}
+     * @default 0
      */
     set zoomMax(value) {
-        this._zoomMax = value;
+        this._zoomMax = value ?? this._zoomMax;
         this._zoomDist = this._clampZoom(this._zoomDist);
         this._smoothZoom(-1);
 
@@ -401,15 +417,43 @@ class CameraControls extends Script {
         return this._zoomMax;
     }
 
+
+    /**
+     * @param {Vec3} out - The output vector.
+     * @returns {Vec3} - The focus vector.
+     */
+    _focusDir(out) {
+        return out.copy(this.entity.forward).mulScalar(this._zoomDist);
+    }
+
     /**
      * @private
-     * @param {number} value - The value to clamp.
-     * @returns {number} - The clamped value.
+     * @param {Vec2} angles - The value to clamp.
      */
-    _clampPitch(value) {
+    _clampAngles(angles) {
         const min = this._pitchRange.x === -360 ? -Infinity : this._pitchRange.x;
         const max = this._pitchRange.y === 360 ? Infinity : this._pitchRange.y;
-        return math.clamp(value, min, max);
+        angles.x = math.clamp(angles.x, min, max);
+
+        // emit clamp event
+        this.fire(CameraControls.EVENT_CLAMP_ANGLES, angles);
+    }
+
+    /**
+     * @private
+     * @param {Vec3} position - The position to clamp.
+     */
+    _clampPosition(position) {
+        if (this._flying) {
+            tmpV1.set(0, 0, 0);
+        } else {
+            this._focusDir(tmpV1);
+        }
+
+        // emit clamp event
+        position.sub(tmpV1);
+        this.fire(CameraControls.EVENT_CLAMP_POSITION, position);
+        position.add(tmpV1);
     }
 
     /**
@@ -515,7 +559,7 @@ class CameraControls extends Script {
         if (startFly) {
             // start fly
             this._zoomDist = this._cameraDist;
-            this._origin.copy(this._camera.entity.getPosition());
+            this._origin.copy(this.entity.getPosition());
             this._position.copy(this._origin);
             this._cameraTransform.setTranslate(0, 0, 0);
             this._flying = true;
@@ -555,7 +599,7 @@ class CameraControls extends Script {
             // pinch zoom
             const pinchDist = this._getPinchDist();
             if (this._lastPinchDist > 0) {
-                this._zoom((this._lastPinchDist - pinchDist) * this.pinchSpeed);
+                this._zoom((this._lastPinchDist - pinchDist) * this.zoomPinchSens);
             }
             this._lastPinchDist = pinchDist;
         }
@@ -580,7 +624,7 @@ class CameraControls extends Script {
             this._panning = false;
         }
         if (this._flying) {
-            tmpV1.copy(this._camera.entity.forward).mulScalar(this._zoomDist);
+            this._focusDir(tmpV1);
             this._origin.add(tmpV1);
             this._position.add(tmpV1);
             this._flying = false;
@@ -682,8 +726,9 @@ class CameraControls extends Script {
         }
         const movementX = event.movementX || 0;
         const movementY = event.movementY || 0;
-        this._dir.x = this._clampPitch(this._dir.x - movementY * this.lookSensitivity);
-        this._dir.y -= movementX * this.lookSensitivity;
+        this._dir.x -= movementY * this.rotateSpeed;
+        this._dir.y -= movementX * this.rotateSpeed;
+        this._clampAngles(this._dir);
     }
 
     /**
@@ -696,27 +741,33 @@ class CameraControls extends Script {
 
         tmpV1.set(0, 0, 0);
         if (this._key.forward) {
-            tmpV1.add(this._camera.entity.forward);
+            tmpV1.add(this.entity.forward);
         }
         if (this._key.backward) {
-            tmpV1.sub(this._camera.entity.forward);
+            tmpV1.sub(this.entity.forward);
         }
         if (this._key.left) {
-            tmpV1.sub(this._camera.entity.right);
+            tmpV1.sub(this.entity.right);
         }
         if (this._key.right) {
-            tmpV1.add(this._camera.entity.right);
+            tmpV1.add(this.entity.right);
         }
         if (this._key.up) {
-            tmpV1.add(this._camera.entity.up);
+            tmpV1.add(this.entity.up);
         }
         if (this._key.down) {
-            tmpV1.sub(this._camera.entity.up);
+            tmpV1.sub(this.entity.up);
         }
         tmpV1.normalize();
-        const speed = this._key.crouch ? this.crouchSpeed : this._key.sprint ? this.sprintSpeed : this.moveSpeed;
+        this._moving = tmpV1.length() > 0;
+        const speed = this._key.crouch ? this.moveSlowSpeed : this._key.sprint ? this.moveFastSpeed : this.moveSpeed;
         tmpV1.mulScalar(this.sceneSize * speed * dt);
         this._origin.add(tmpV1);
+
+        // clamp movement if locked
+        if (this._moving) {
+            this._clampPosition(this._origin);
+        }
     }
 
     /**
@@ -748,12 +799,15 @@ class CameraControls extends Script {
      * @param {Vec3} point - The output point.
      */
     _screenToWorldPan(pos, point) {
+        if (!this._camera) {
+            return;
+        }
         const mouseW = this._camera.screenToWorld(pos.x, pos.y, 1);
-        const cameraPos = this._camera.entity.getPosition();
+        const cameraPos = this.entity.getPosition();
 
-        const focusDirScaled = tmpV1.copy(this._camera.entity.forward).mulScalar(this._zoomDist);
-        const focalPos = tmpV2.add2(cameraPos, focusDirScaled);
-        const planeNormal = focusDirScaled.mulScalar(-1).normalize();
+        const focusDir = this._focusDir(tmpV1);
+        const focalPos = tmpV2.add2(cameraPos, focusDir);
+        const planeNormal = focusDir.mulScalar(-1).normalize();
 
         const plane = tmpP1.setFromPointNormal(focalPos, planeNormal);
         const ray = tmpR1.set(cameraPos, mouseW.sub(cameraPos).normalize());
@@ -790,13 +844,16 @@ class CameraControls extends Script {
         if (!this.enableOrbit && !this.enablePan) {
             return;
         }
+        if (this._flying) {
+            return;
+        }
 
         if (!this._camera) {
             return;
         }
         const distNormalized = this._zoomDist / (ZOOM_SCALE_SCENE_MULT * this.sceneSize);
         const scale = math.clamp(distNormalized, this.zoomScaleMin, 1);
-        this._zoomDist += (delta * this.wheelSpeed * this.sceneSize * scale);
+        this._zoomDist += (delta * this.zoomSpeed * this.sceneSize * scale);
         this._zoomDist = this._clampZoom(this._zoomDist);
     }
 
@@ -805,7 +862,7 @@ class CameraControls extends Script {
      * @param {number} dt - The delta time.
      */
     _smoothZoom(dt) {
-        const a = dt === -1 ? 1 : lerpRate(this.moveDamping, dt);
+        const a = dt === -1 ? 1 : lerpRate(this.zoomDamping, dt);
         this._cameraDist = math.lerp(this._cameraDist, this._zoomDist, a);
         this._cameraTransform.setTranslate(0, 0, this._cameraDist);
     }
@@ -815,10 +872,11 @@ class CameraControls extends Script {
      * @param {number} dt - The delta time.
      */
     _smoothTransform(dt) {
-        const a = dt === -1 ? 1 : lerpRate(this.lookDamping, dt);
-        this._angles.x = math.lerp(this._angles.x, this._dir.x, a);
-        this._angles.y = math.lerp(this._angles.y, this._dir.y, a);
-        this._position.lerp(this._position, this._origin, a);
+        const ar = dt === -1 ? 1 : lerpRate(this.rotateDamping, dt);
+        const am = dt === -1 ? 1 : lerpRate(this.moveDamping, dt);
+        this._angles.x = math.lerp(this._angles.x, this._dir.x, ar);
+        this._angles.y = math.lerp(this._angles.y, this._dir.y, ar);
+        this._position.lerp(this._position, this._origin, am);
         this._baseTransform.setTRS(this._position, tmpQ1.setFromEulerAngles(this._angles), Vec3.ONE);
     }
 
@@ -827,8 +885,8 @@ class CameraControls extends Script {
      */
     _updateTransform() {
         tmpM1.copy(this._baseTransform).mul(this._cameraTransform);
-        this._camera.entity.setPosition(tmpM1.getTranslation());
-        this._camera.entity.setEulerAngles(tmpM1.getEulerAngles());
+        this.entity.setPosition(tmpM1.getTranslation());
+        this.entity.setEulerAngles(tmpM1.getEulerAngles());
     }
 
     /**
@@ -856,14 +914,14 @@ class CameraControls extends Script {
         tmpV1.sub2(start, point);
         const elev = Math.atan2(tmpV1.y, Math.sqrt(tmpV1.x * tmpV1.x + tmpV1.z * tmpV1.z)) * math.RAD_TO_DEG;
         const azim = Math.atan2(tmpV1.x, tmpV1.z) * math.RAD_TO_DEG;
-        this._dir.set(this._clampPitch(-elev), azim);
+        this._clampAngles(this._dir.set(-elev, azim));
 
         this._origin.copy(point);
 
         this._cameraTransform.setTranslate(0, 0, 0);
 
-        const pos = this._camera.entity.getPosition();
-        const rot = this._camera.entity.getRotation();
+        const pos = this.entity.getPosition();
+        const rot = this.entity.getRotation();
         this._baseTransform.setTRS(pos, rot, Vec3.ONE);
 
         this._zoomDist = this._clampZoom(tmpV1.length());
@@ -908,6 +966,9 @@ class CameraControls extends Script {
      * @param {CameraComponent} camera - The camera component.
      */
     attach(camera) {
+        if (this._camera === camera) {
+            return;
+        }
         this._camera = camera;
 
         // Attach events to canvas instead of window
@@ -923,6 +984,10 @@ class CameraControls extends Script {
     }
 
     detach() {
+        if (!this._camera) {
+            return;
+        }
+
         // Remove from canvas instead of window
         this._element.removeEventListener('wheel', this._onWheel, PASSIVE);
         this._element.removeEventListener('pointermove', this._onPointerMove);

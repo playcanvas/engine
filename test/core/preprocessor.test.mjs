@@ -16,6 +16,8 @@ describe('Preprocessor', function () {
 
     const srcData = `
         
+        #define __INJECT_COUNT 2
+        #define __INJECT_STRING hello
         #define FEATURE1
         #define FEATURE2
 
@@ -95,6 +97,9 @@ describe('Preprocessor', function () {
         #if NAME != hello
             CMP5
         #endif
+
+        TESTINJECTION __INJECT_COUNT
+        INJECTSTRING __INJECT_STRING(x)
     `;
 
     it('returns false for MORPH_A', function () {
@@ -199,6 +204,14 @@ describe('Preprocessor', function () {
 
     it('returns false for any leftover hash symbols', function () {
         expect(Preprocessor.run(srcData, includes, { stripDefines: true }).includes('#')).to.equal(false);
+    });
+
+    it('returns true for working integer injection', function () {
+        expect(Preprocessor.run(srcData, includes).includes('TESTINJECTION 2')).to.equal(true);
+    });
+
+    it('returns true for working string injection', function () {
+        expect(Preprocessor.run(srcData, includes).includes('INJECTSTRING hello(x)')).to.equal(true);
     });
 
 });

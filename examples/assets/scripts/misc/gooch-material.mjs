@@ -19,12 +19,12 @@ const createGoochMaterial = (texture, color) => {
             // declares vertex_position attribute, and handles skinning and morphing if necessary.
             // It also adds uniforms: matrix_viewProjection, matrix_model, matrix_normal.
             // Functions added: getModelMatrix, getLocalPosition
-            #include "transformCore"
+            #include "transformCoreVS"
 
             // include code for normal shader functionality provided by the engine. It automatically
             // declares vertex_normal attribute, and handles skinning and morphing if necessary.
             // Functions added: getNormalMatrix, getLocalNormal
-            #include "normalCore"
+            #include "normalCoreVS"
 
             // add additional attributes we need
             attribute vec2 aUv0;
@@ -90,7 +90,7 @@ const createGoochMaterial = (texture, color) => {
                 uniform sampler2D uDiffuseMap;
             #endif
 
-            // Good shading constants - could be exposed as uniforms instead
+            // Gooch shading constants - could be exposed as uniforms instead
             float diffuseCool = 0.4;
             float diffuseWarm = 0.4;
             vec3 cool = vec3(0, 0, 0.6);

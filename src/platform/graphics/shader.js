@@ -118,7 +118,9 @@ class Shader {
             Debug.assert(definition.fshader, 'No fragment shader has been specified when creating a shader.');
 
             // pre-process shader sources
-            definition.vshader = Preprocessor.run(definition.vshader, definition.vincludes);
+            definition.vshader = Preprocessor.run(definition.vshader, definition.vincludes, {
+                sourceName: `vertex shader for ${this.label}`
+            });
 
             // if not attributes are specified, try to extract the default names after the shader has been pre-processed
             definition.attributes ??= ShaderUtils.collectAttributes(definition.vshader);
@@ -128,7 +130,8 @@ class Shader {
             // written to generate metal linking errors. This is fixed on iOS 16, and iOS 14 does not support WebGL2.
             const stripUnusedColorAttachments = graphicsDevice.isWebGL2 && (platform.name === 'osx' || platform.name === 'ios');
             definition.fshader = Preprocessor.run(definition.fshader, definition.fincludes, {
-                stripUnusedColorAttachments
+                stripUnusedColorAttachments,
+                sourceName: `fragment shader for ${this.label}`
             });
         }
 

@@ -45,15 +45,11 @@ import falloffInvSquaredPS from './lit/frag/falloffInvSquared.js';
 import falloffLinearPS from './lit/frag/falloffLinear.js';
 import floatUnpackingPS from './lit/frag/float-unpacking.js';
 import floatAsUintPS from './common/frag/float-as-uint.js';
-import fogExpPS from './lit/frag/fogExp.js';
-import fogExp2PS from './lit/frag/fogExp2.js';
-import fogLinearPS from './lit/frag/fogLinear.js';
-import fogNonePS from './lit/frag/fogNone.js';
+import fogPS from './common/frag/fog.js';
 import fresnelSchlickPS from './lit/frag/fresnelSchlick.js';
 import fullscreenQuadPS from './common/frag/fullscreenQuad.js';
 import fullscreenQuadVS from './common/vert/fullscreenQuad.js';
-import gamma1_0PS from './common/frag/gamma1_0.js';
-import gamma2_2PS from './common/frag/gamma2_2.js';
+import gammaPS from './common/frag/gamma.js';
 import gles3PS from '../../../platform/graphics/shader-chunks/frag/gles3.js';
 import gles3VS from '../../../platform/graphics/shader-chunks/vert/gles3.js';
 import glossPS from './standard/frag/gloss.js';
@@ -168,8 +164,8 @@ import shadowSoftPS from './lit/frag/shadowSoft.js';
 import shadowStandardPS from './lit/frag/shadowStandard.js';
 import shadowStandardGL2PS from './lit/frag/shadowStandardGL2.js';
 import shadowVSM_commonPS from './lit/frag/shadowVSM_common.js';
-import skinBatchTexVS from './common/vert/skinBatchTex.js';
-import skinTexVS from './common/vert/skinTex.js';
+import skinBatchVS from './common/vert/skinBatch.js';
+import skinVS from './common/vert/skin.js';
 import skyboxPS from './skybox/frag/skybox.js';
 import skyboxVS from './skybox/vert/skybox.js';
 import specularPS from './standard/frag/specular.js';
@@ -260,15 +256,11 @@ const shaderChunks = {
     falloffLinearPS,
     floatUnpackingPS,
     floatAsUintPS,
-    fogExpPS,
-    fogExp2PS,
-    fogLinearPS,
-    fogNonePS,
+    fogPS,
     fresnelSchlickPS,
     fullscreenQuadPS,
     fullscreenQuadVS,
-    gamma1_0PS,
-    gamma2_2PS,
+    gammaPS,
     gles3PS,
     gles3VS,
     glossPS,
@@ -383,8 +375,8 @@ const shaderChunks = {
     shadowStandardPS,
     shadowStandardGL2PS,
     shadowVSM_commonPS,
-    skinBatchTexVS,
-    skinTexVS,
+    skinBatchVS,
+    skinVS,
     skyboxPS,
     skyboxVS,
     specularPS,

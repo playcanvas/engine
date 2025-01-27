@@ -1,11 +1,9 @@
-import { CULLFACE_FRONT } from '../../platform/graphics/constants.js';
-import { ShaderProcessorOptions } from '../../platform/graphics/shader-processor-options.js';
-import { LAYERID_SKYBOX } from '../constants.js';
+import { CULLFACE_FRONT, SEMANTIC_POSITION } from '../../platform/graphics/constants.js';
+import { LAYERID_SKYBOX, SKYTYPE_INFINITE } from '../constants.js';
 import { ShaderMaterial } from '../materials/shader-material.js';
 import { MeshInstance } from '../mesh-instance.js';
-import { getProgramLibrary } from '../shader-lib/get-program-library.js';
-import { skybox } from '../shader-lib/programs/skybox.js';
-import { getMaterialShaderDefines } from '../shader-lib/utils.js';
+import { ChunkUtils } from '../shader-lib/chunk-utils.js';
+import { shaderChunks } from '../shader-lib/chunks/chunks.js';
 import { SkyGeometry } from './sky-geometry.js';
 
 /**
@@ -35,34 +33,20 @@ class SkyMesh {
      */
     constructor(device, scene, node, texture, type) {
 
-        const material = new ShaderMaterial();
-        material.name = 'SkyMaterial';
-
-        material.getShaderVariant = function (params) {
-
-            const { scene, cameraShaderParams } = params;
-            const options = {
-                defines: getMaterialShaderDefines(this, cameraShaderParams),
-                pass: params.pass,
-                encoding: texture.encoding,
-                gamma: cameraShaderParams.shaderOutputGamma,
-                toneMapping: cameraShaderParams.toneMapping,
-                skymesh: type
-            };
-
-            if (texture.cubemap) {
-                options.type = 'cubemap';
-                options.mip = scene.skyboxMip;
-            } else {
-                options.type = 'envAtlas';
+        const material = new ShaderMaterial({
+            uniqueName: 'SkyMaterial',
+            vertexCode: shaderChunks.skyboxVS,
+            fragmentCode: shaderChunks.skyboxPS,
+            attributes: {
+                aPosition: SEMANTIC_POSITION
             }
+        });
 
-            const processingOptions = new ShaderProcessorOptions(params.viewUniformFormat, params.viewBindGroupFormat);
+        // defines
+        material.setDefine('__INJECT_SKYBOX_DECODE_FNC', ChunkUtils.decodeFunc(texture.encoding));
+        if (type !== SKYTYPE_INFINITE) material.setDefine('SKYMESH', '');
+        if (texture.cubemap) material.setDefine('SKY_CUBEMAP', '');
 
-            const library = getProgramLibrary(device);
-            library.register('skybox', skybox);
-            return library.getProgram('skybox', options, processingOptions);
-        };
 
         material.setParameter('skyboxHighlightMultiplier', scene.skyboxHighlightMultiplier);
 

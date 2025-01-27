@@ -92,7 +92,7 @@ const createFlyCamera = (focus) => {
 
     /** @type {CameraControls} */
     const script = camera.script.create(CameraControls, {
-        attributes: {
+        properties: {
             enableOrbit: false,
             enablePan: false,
             focusPoint: bbox.center,
@@ -125,13 +125,13 @@ app.root.addChild(statue);
 const multiCameraScript = createFlyCamera(statue);
 
 data.set('attr', [
-    'lookSensitivity',
-    'lookDamping',
-    'moveDamping',
     'pitchRange',
+    'rotateSpeed',
+    'rotateDamping',
     'moveSpeed',
-    'sprintSpeed',
-    'crouchSpeed'
+    'moveFastSpeed',
+    'moveSlowSpeed',
+    'moveDamping'
 ].reduce((/** @type {Record<string, any>} */ obj, key) => {
     const value = multiCameraScript[key];
 

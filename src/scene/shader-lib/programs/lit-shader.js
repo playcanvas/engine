@@ -1,8 +1,7 @@
 import {
     SEMANTIC_ATTR8, SEMANTIC_ATTR9, SEMANTIC_ATTR12, SEMANTIC_ATTR13, SEMANTIC_ATTR14, SEMANTIC_ATTR15,
     SEMANTIC_BLENDINDICES, SEMANTIC_BLENDWEIGHT, SEMANTIC_COLOR, SEMANTIC_NORMAL, SEMANTIC_POSITION, SEMANTIC_TANGENT,
-    SEMANTIC_TEXCOORD0, SEMANTIC_TEXCOORD1,
-    SHADERTAG_MATERIAL
+    SEMANTIC_TEXCOORD0, SEMANTIC_TEXCOORD1
 } from '../../../platform/graphics/constants.js';
 import {
     BLEND_ADDITIVEALPHA, BLEND_NORMAL, BLEND_PREMULTIPLIED,
@@ -21,7 +20,6 @@ import { ChunkUtils } from '../chunk-utils.js';
 import { LightsBuffer } from '../../lighting/lights-buffer.js';
 import { ShaderPass } from '../../shader-pass.js';
 import { validateUserChunks } from '../chunks/chunk-validation.js';
-import { ShaderUtils } from '../../../platform/graphics/shader-utils.js';
 import { ChunkBuilder } from '../chunk-builder.js';
 import { ShaderGenerator } from './shader-generator.js';
 import { Debug } from '../../../core/debug.js';
@@ -350,14 +348,12 @@ class LitShader {
             }
         });
 
-        const shaderPassDefines = this.shaderPassInfo.shaderDefines;
-        this.vshader = shaderPassDefines + codeDefines + this.varyings + code;
+        this.vshader = codeDefines + this.varyings + code;
     }
 
     _fsGetBeginCode() {
 
-        let code = this.shaderPassInfo.shaderDefines;
-
+        let code = '';
         for (let i = 0; i < this.defines.length; i++) {
             code += `#define ${this.defines[i]}\n`;
         }
@@ -678,13 +674,11 @@ class LitShader {
             }
         }
 
-        // FIXME: only add these when needed
         func.append(chunks.sphericalPS);
         func.append(chunks.decodePS);
-        func.append(ShaderGenerator.gammaCode(options.gamma, chunks));
-        func.append(ShaderGenerator.tonemapCode(options.toneMap, chunks));
-        func.append(ShaderGenerator.fogCode(options.fog, chunks));
-
+        func.append(chunks.gammaPS);
+        func.append(chunks.tonemappingPS);
+        func.append(chunks.fogPS);
         // frontend
         func.append(this.frontendCode);
 
@@ -1500,10 +1494,7 @@ class LitShader {
     }
 
     /**
-     * Generates a fragment shader. Please make sure to update src/deprecated/deprecated.js in
-     * case `this.fshader` does not longer contain the entire fragment shader once this function
-     * is done because we handle backwards compatibility there for old shaders. This allows us
-     * to have deprecation-free tree shaking while still fixing shaders for full builds.
+     * Generates a fragment shader.
      *
      * @param {string} frontendDecl - Frontend declarations like `float dAlpha;`
      * @param {string} frontendCode - Frontend code containing `getOpacity()` etc.
@@ -1531,34 +1522,8 @@ class LitShader {
         } else {
             this.fshader = this._fsGetLitPassCode();
         }
-        this.handleCompatibility?.();
-    }
 
-    getDefinition(options) {
-
-        const vIncludes = new Map();
-        vIncludes.set('transformCore', this.chunks.transformCoreVS);
-        vIncludes.set('transformInstancing', this.chunks.transformInstancingVS);
-        vIncludes.set('skinTexVS', this.chunks.skinTexVS);
-        vIncludes.set('skinBatchTexVS', this.chunks.skinBatchTexVS);
-
-        const defines = new Map(options.defines);
-
-        const definition = ShaderUtils.createDefinition(this.device, {
-            name: 'LitShader',
-            attributes: this.attributes,
-            vertexCode: this.vshader,
-            fragmentCode: this.fshader,
-            vertexIncludes: vIncludes,
-            fragmentDefines: defines,
-            vertexDefines: defines
-        });
-
-        if (this.shaderPassInfo.isForward) {
-            definition.tag = SHADERTAG_MATERIAL;
-        }
-
-        return definition;
+        Debug.assert(!this.fshader.includes('litShaderArgs'), 'Automatic compatibility with shaders using litShaderArgs has been removed. Please update the shader to use the new system.');
     }
 }
 

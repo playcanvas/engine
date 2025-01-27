@@ -237,6 +237,9 @@ assetListLoader.load(() => {
             material.update();
         });
 
+        // enabled
+        cameraFrame.enabled = data.get('data.enabled');
+
         // Scene
         cameraFrame.rendering.renderTargetScale = data.get('data.scene.scale');
         cameraFrame.rendering.toneMapping = data.get('data.scene.tonemapping');
@@ -283,6 +286,7 @@ assetListLoader.load(() => {
 
     // set initial values
     data.set('data', {
+        enabled: true,
         scene: {
             scale: 1.8,
             background: 6,

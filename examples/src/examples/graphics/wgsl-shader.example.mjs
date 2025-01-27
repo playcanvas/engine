@@ -46,8 +46,8 @@ app.on('destroy', () => {
 
 const material = new pc.ShaderMaterial({
     uniqueName: 'MyWGSLShader',
-    vertexCode: files['shader.wgsl'],
-    fragmentCode: files['shader.wgsl'],
+    vertexCode: files['shader.vert.wgsl'],
+    fragmentCode: files['shader.frag.wgsl'],
     shaderLanguage: pc.SHADERLANGUAGE_WGSL,
 
     // For now WGSL shaders need to provide their own bind group formats as they aren't processed.

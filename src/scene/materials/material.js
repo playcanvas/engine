@@ -173,11 +173,39 @@ class Material {
      */
     stencilBack = null;
 
+    /**
+     * @type {Object<string, string>}
+     * @private
+     */
+    _chunks = { };
+
+    _dirtyShader = true;
+
     /** @protected */
     constructor() {
         if (new.target === Material) {
             Debug.error('Material class cannot be instantiated, use ShaderMaterial instead');
         }
+    }
+
+    /**
+     * Sets the object containing custom shader chunks that will replace default ones.
+     *
+     * @type {Object<string, string>}
+     */
+    set chunks(value) {
+        this._dirtyShader = true;
+        this._chunks = value;
+    }
+
+    /**
+     * Gets the object containing custom shader chunks.
+     *
+     * @type {Object<string, string>}
+     */
+    get chunks() {
+        this._dirtyShader = true;
+        return this._chunks;
     }
 
     /**
@@ -534,6 +562,14 @@ class Material {
         this.defines.clear();
         source.defines.forEach((value, key) => this.defines.set(key, value));
 
+        // chunks
+        const srcChunks = source._chunks;
+        for (const p in srcChunks) {
+            if (srcChunks.hasOwnProperty(p)) {
+                this._chunks[p] = srcChunks[p];
+            }
+        }
+
         return this;
     }
 
@@ -555,6 +591,9 @@ class Material {
     }
 
     updateUniforms(device, scene) {
+        if (this._dirtyShader) {
+            this.clearVariants();
+        }
     }
 
     /**
@@ -611,6 +650,13 @@ class Material {
     }
 
     _setParameterSimple(name, data) {
+
+        Debug.call(() => {
+            if (data === undefined) {
+                Debug.warnOnce(`Material#setParameter: Attempting to set undefined data for parameter "${name}", this is likely not expected.`);
+            }
+        });
+
         const param = this.parameters[name];
         if (param) {
             param.data = data;

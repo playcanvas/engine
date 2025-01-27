@@ -93,7 +93,7 @@ const createOrbitCamera = (focus) => {
 
     /** @type {CameraControls} */
     const script = camera.script.create(CameraControls, {
-        attributes: {
+        properties: {
             enableFly: false,
             focusPoint: bbox.center,
             sceneSize: bbox.halfExtents.length()
@@ -147,12 +147,12 @@ data.set('example', {
 
 data.set('attr', [
     'enablePan',
-    'lookSensitivity',
-    'lookDamping',
-    'moveDamping',
     'pitchRange',
-    'pinchSpeed',
-    'wheelSpeed',
+    'rotateSpeed',
+    'rotateDamping',
+    'zoomSpeed',
+    'zoomPinchSens',
+    'zoomDamping',
     'zoomMin',
     'zoomMax',
     'zoomScaleMin'

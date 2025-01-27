@@ -45,6 +45,13 @@ export default [
         }
     },
     {
+        files: ['scripts/**/*.mjs'],
+        rules: {
+            'jsdoc/no-defaults': 'off', // Attributes use default values
+            'import/no-unresolved': 'off' // PlayCanvas is not installed for scripts
+        }
+    },
+    {
         files: ['test/**/*.mjs'],
         rules: {
             'import/order': 'error',

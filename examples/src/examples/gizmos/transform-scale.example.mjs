@@ -1,6 +1,8 @@
 import { data } from 'examples/observer';
-import { deviceType, rootPath } from 'examples/utils';
+import { deviceType, fileImport, rootPath } from 'examples/utils';
 import * as pc from 'playcanvas';
+
+const { Grid } = await fileImport(`${rootPath}/static/scripts/esm/grid.mjs`);
 
 const canvas = /** @type {HTMLCanvasElement} */ (document.getElementById('application-canvas'));
 window.focus();
@@ -112,6 +114,13 @@ data.set('gizmo', {
     axisCenterSize: gizmo.axisCenterSize
 });
 
+// create grid
+const gridEntity = new pc.Entity('grid');
+gridEntity.setLocalScale(4, 1, 4);
+app.root.addChild(gridEntity);
+gridEntity.addComponent('script');
+gridEntity.script.create(Grid);
+
 // controls hook
 const tmpC = new pc.Color();
 data.on('*:set', (/** @type {string} */ path, /** @type {any} */ value) => {
@@ -149,31 +158,6 @@ const resize = () => {
 };
 window.addEventListener('resize', resize);
 resize();
-
-// grid lines
-const createGridLines = (size = 1) => {
-    const lines = [];
-    for (let i = -size; i < size + 1; i++) {
-        lines.push(
-            new pc.Vec3(-size, 0, i),
-            new pc.Vec3(size, 0, i),
-            new pc.Vec3(i, 0, -size),
-            new pc.Vec3(i, 0, size)
-        );
-    }
-    return lines;
-};
-
-const lines = createGridLines(2);
-const gridCol = new pc.Color(1, 1, 1, 0.5);
-app.on('update', () => app.drawLines(lines, gridCol));
-
-// view cube
-const viewCube = new pc.ViewCube();
-viewCube.anchor = new pc.Vec4(0, 1, 1, 0);
-app.on('prerender', () => {
-    viewCube.update(camera.getWorldTransform());
-});
 
 app.on('destroy', () => {
     window.removeEventListener('resize', resize);

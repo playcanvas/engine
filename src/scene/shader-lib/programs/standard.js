@@ -11,6 +11,8 @@ import { ChunkUtils } from '../chunk-utils.js';
 import { StandardMaterialOptions } from '../../materials/standard-material-options.js';
 import { LitOptionsUtils } from './lit-options-utils.js';
 import { ShaderGenerator } from './shader-generator.js';
+import { ShaderUtils } from '../../../platform/graphics/shader-utils.js';
+import { SHADERTAG_MATERIAL } from '../../../platform/graphics/constants.js';
 
 /**
  * @import { GraphicsDevice } from '../../../platform/graphics/graphics-device.js'
@@ -528,7 +530,30 @@ class ShaderGeneratorStandard extends ShaderGenerator {
 
         litShader.generateFragmentShader(decl.code, code.code, func.code, lightingUv);
 
-        return litShader.getDefinition(options);
+        const includes = new Map(Object.entries({
+            ...Object.getPrototypeOf(litShader.chunks), // the prototype stores the default chunks
+            ...litShader.chunks,  // user overrides are supplied as instance properties
+            ...options.litOptions.chunks
+        }));
+
+        const defines = new Map(options.defines);
+
+        const definition = ShaderUtils.createDefinition(device, {
+            name: 'StandardShader',
+            attributes: litShader.attributes,
+            vertexCode: litShader.vshader,
+            fragmentCode: litShader.fshader,
+            vertexIncludes: includes,
+            fragmentIncludes: includes,
+            fragmentDefines: defines,
+            vertexDefines: defines
+        });
+
+        if (litShader.shaderPassInfo.isForward) {
+            definition.tag = SHADERTAG_MATERIAL;
+        }
+
+        return definition;
     }
 }
 

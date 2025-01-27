@@ -1,4 +1,3 @@
-/* eslint-disable-next-line import/no-unresolved */
 import { Script } from 'playcanvas';
 
 export default class XrControllers extends Script {

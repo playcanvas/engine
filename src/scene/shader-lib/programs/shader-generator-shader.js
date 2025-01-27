@@ -1,37 +1,33 @@
 import { hashCode } from '../../../core/hash.js';
 import { SEMANTIC_ATTR15, SEMANTIC_BLENDINDICES, SEMANTIC_BLENDWEIGHT, SHADERLANGUAGE_WGSL } from '../../../platform/graphics/constants.js';
 import { ShaderUtils } from '../../../platform/graphics/shader-utils.js';
-import { tonemapNames } from '../../constants.js';
-import { ShaderPass } from '../../shader-pass.js';
 import { shaderChunks } from '../chunks/chunks.js';
 import { ShaderGenerator } from './shader-generator.js';
 
 const vShader = `
-    #include "shaderPassDefines"
     #include "userCode"
 `;
 
 const fShader = `
-    #include "shaderPassDefines"
     #include "decodePS"
-    #include "gamma"
+    #include "gammaPS"
     #include "tonemappingPS"
-    #include "fog"
+    #include "fogPS"
     #include "userCode"
 `;
 
 class ShaderGeneratorShader extends ShaderGenerator {
     generateKey(options) {
+
+        // Note: options.chunks are not included in the key as currently shader variants are removed
+        // from the material when its chunks are modified.
+
         const desc = options.shaderDesc;
         const vsHash = desc.vertexCode ? hashCode(desc.vertexCode) : 0;
         const fsHash = desc.fragmentCode ? hashCode(desc.fragmentCode) : 0;
         const definesHash = ShaderGenerator.definesHash(options.defines);
 
         let key = `${desc.uniqueName}_${vsHash}_${fsHash}_${definesHash}`;
-        key += `_${options.pass}`;
-        key += `_${options.gamma}`;
-        key += `_${options.toneMapping}`;
-        key += `_${options.fog}`;
 
         if (options.skin)                       key += '_skin';
         if (options.useInstancing)              key += '_inst';
@@ -61,8 +57,7 @@ class ShaderGeneratorShader extends ShaderGenerator {
         definitionOptions.attributes = attributes;
     }
 
-
-    createVertexDefinition(definitionOptions, options, shaderPassInfo) {
+    createVertexDefinition(definitionOptions, options, sharedIncludes) {
 
         const desc = options.shaderDesc;
 
@@ -73,19 +68,11 @@ class ShaderGeneratorShader extends ShaderGenerator {
             definitionOptions.vertexCode = desc.vertexCode;
 
         } else {
-            const includes = new Map(Object.entries({
-                ...shaderChunks,
-                ...options.chunks
-            }));
+            const includes = new Map(sharedIncludes);
             const defines = new Map(options.defines);
 
-            includes.set('shaderPassDefines', shaderPassInfo.shaderDefines);
             includes.set('userCode', desc.vertexCode);
-            includes.set('transformCore', shaderChunks.transformCoreVS);
-            includes.set('transformInstancing', ''); // no default instancing, needs to be implemented in the user shader
-            includes.set('normalCore', shaderChunks.normalCoreVS);
-            includes.set('skinCode', shaderChunks.skinTexVS);
-            includes.set('skinTexVS', shaderChunks.skinTexVS);
+            includes.set('transformInstancingVS', ''); // no default instancing, needs to be implemented in the user shader
 
             if (options.skin) defines.set('SKIN', true);
             if (options.useInstancing) defines.set('INSTANCING', true);
@@ -102,7 +89,7 @@ class ShaderGeneratorShader extends ShaderGenerator {
         }
     }
 
-    createFragmentDefinition(definitionOptions, options, shaderPassInfo) {
+    createFragmentDefinition(definitionOptions, options, sharedIncludes) {
 
         const desc = options.shaderDesc;
 
@@ -113,18 +100,10 @@ class ShaderGeneratorShader extends ShaderGenerator {
             definitionOptions.fragmentCode = desc.fragmentCode;
 
         } else {
-            const includes = new Map(Object.entries({
-                ...shaderChunks,
-                ...options.chunks
-            }));
-
-            includes.set('shaderPassDefines', shaderPassInfo.shaderDefines);
-            includes.set('gamma', ShaderGenerator.gammaCode(options.gamma));
-            includes.set('fog', ShaderGenerator.fogCode(options.fog));
+            const includes = new Map(sharedIncludes);
             includes.set('userCode', desc.fragmentCode);
 
             const defines = new Map(options.defines);
-            defines.set('TONEMAP', tonemapNames[options.toneMapping]);
 
             definitionOptions.fragmentCode = fShader;
             definitionOptions.fragmentIncludes = includes;
@@ -134,7 +113,6 @@ class ShaderGeneratorShader extends ShaderGenerator {
 
     createShaderDefinition(device, options) {
 
-        const shaderPassInfo = ShaderPass.get(device).getByIndex(options.pass);
         const desc = options.shaderDesc;
 
         const definitionOptions = {
@@ -145,9 +123,14 @@ class ShaderGeneratorShader extends ShaderGenerator {
             meshBindGroupFormat: desc.meshBindGroupFormat
         };
 
+        const sharedIncludes = new Map(Object.entries({
+            ...shaderChunks,  // default chunks
+            ...options.chunks // material override chunks
+        }));
+
         this.createAttributesDefinition(definitionOptions, options);
-        this.createVertexDefinition(definitionOptions, options, shaderPassInfo);
-        this.createFragmentDefinition(definitionOptions, options, shaderPassInfo);
+        this.createVertexDefinition(definitionOptions, options, sharedIncludes);
+        this.createFragmentDefinition(definitionOptions, options, sharedIncludes);
 
         return ShaderUtils.createDefinition(device, definitionOptions);
     }

@@ -44,6 +44,8 @@ const INCLUDE = /include[ \t]+"([\w-]+)"\r?(?:\n|$)/g;
  * inspired by: https://github.com/dcodeIO/Preprocessor.js
  */
 class Preprocessor {
+    static sourceName;
+
     /**
      * Run c-like preprocessor on the source code, and resolves the code based on the defines and ifdefs
      *
@@ -53,9 +55,12 @@ class Preprocessor {
      * @param {object} [options] - Optional parameters.
      * @param {boolean} [options.stripUnusedColorAttachments] - If true, strips unused color attachments.
      * @param {boolean} [options.stripDefines] - If true, strips all defines from the source.
+     * @param {string} [options.sourceName] - The name of the source file.
      * @returns {string|null} Returns preprocessed source code, or null in case of error.
      */
     static run(source, includes = new Map(), options = {}) {
+
+        Preprocessor.sourceName = options.sourceName;
 
         // strips comments, handles // and many cases of /*
         source = this.stripComments(source);
@@ -97,6 +102,14 @@ class Preprocessor {
             }
         });
 
+        // extract defines with name starting with __INJECT_
+        const injectDefines = new Map();
+        defines.forEach((value, key) => {
+            if (key.startsWith('__INJECT_')) {
+                injectDefines.set(key, value);
+            }
+        });
+
         // strip comments again after the includes have been resolved
         source = this.stripComments(source);
 
@@ -105,6 +118,9 @@ class Preprocessor {
 
         // process array sizes
         source = this.processArraySize(source, intDefines);
+
+        // inject defines
+        source = this.injectDefines(source, injectDefines);
 
         return source;
     }
@@ -121,6 +137,28 @@ class Preprocessor {
             intDefines.forEach((value, key) => {
                 source = source.replace(new RegExp(`\\[${key}\\]`, 'g'), `[${value}]`);
             });
+        }
+
+        return source;
+    }
+
+    static injectDefines(source, injectDefines) {
+
+        if (source !== null && injectDefines.size > 0) {
+
+            // replace all instances of the injected defines with the value itself
+            const lines = source.split('\n');
+            injectDefines.forEach((value, key) => {
+                const regex = new RegExp(`\\b${key}\\b`, 'g');
+                for (let i = 0; i < lines.length; i++) {
+
+                    // replace them on lines that do not contain a preprocessor directive (the define itself for example)
+                    if (!lines[i].includes('#')) {
+                        lines[i] = lines[i].replace(regex, value);
+                    }
+                }
+            });
+            source = lines.join('\n');
         }
 
         return source;
@@ -196,7 +234,7 @@ class Preprocessor {
                             source = source.substring(0, define.index - 1) + source.substring(DEFINE.lastIndex);
 
                             // continue processing on the next symbol
-                            KEYWORD.lastIndex = define.index;
+                            KEYWORD.lastIndex = define.index - 1;
                         }
                     }
 
@@ -228,7 +266,7 @@ class Preprocessor {
                             source = source.substring(0, undef.index - 1) + source.substring(UNDEF.lastIndex);
 
                             // continue processing on the next symbol
-                            KEYWORD.lastIndex = undef.index;
+                            KEYWORD.lastIndex = undef.index - 1;
                         }
                     }
 
@@ -362,9 +400,9 @@ class Preprocessor {
                             source = source.substring(0, include.index - 1) + includeSource + source.substring(INCLUDE.lastIndex);
 
                             // process the just included test
-                            KEYWORD.lastIndex = include.index;
+                            KEYWORD.lastIndex = include.index - 1;
                         } else {
-                            console.error(`Include "${identifier}" not resolved while preprocessing a shader`, { source: originalSource });
+                            console.error(`Include "${identifier}" not resolved while preprocessing ${Preprocessor.sourceName}`, { source: originalSource });
                             error = true;
                         }
                     }
