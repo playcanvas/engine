@@ -112,17 +112,25 @@ class Color {
     /**
      * Assign values to the color components, including alpha.
      *
-     * @param {number} r - The value for red (0-1).
+     * @param {number | number[]} r - The value for red (0-1).
      * @param {number} g - The value for blue (0-1).
      * @param {number} b - The value for green (0-1).
      * @param {number} [a] - The value for the alpha (0-1), defaults to 1.
      * @returns {Color} Self for chaining.
      */
     set(r, g, b, a = 1) {
-        this.r = r;
-        this.g = g;
-        this.b = b;
-        this.a = a;
+        const length = r.length;
+        if (length === 3 || length === 4) {
+            a = r[3] ?? 1;
+            b = r[2];
+            g = r[1];
+            r = r[0];
+        } else {
+            this.r = r;
+            this.g = g;
+            this.b = b;
+            this.a = a;
+        }
 
         return this;
     }
@@ -197,6 +205,7 @@ class Color {
         return this;
     }
 
+
     /**
      * Set the values of the color from a string representation '#11223344' or '#112233'.
      *
@@ -252,6 +261,23 @@ class Color {
             }
         }
         return s;
+    }
+
+    /**
+     * Converts the color to an array of numbers.
+     *
+     * @param {boolean} alpha - If true, the output array will include the alpha value.
+     * @returns {number[]} The color as an array of numbers.
+     * @example
+     * const c = new pc.Color(1, 1, 1);
+     * // Outputs [1, 1, 1, 1]
+     * console.log(c.toArray(true));
+     */
+    toArray(alpha) {
+        if (alpha === true) {
+            return [this.r, this.g, this.b, this.a];
+        }
+        return [this.r, this.g, this.b];
     }
 
     /**

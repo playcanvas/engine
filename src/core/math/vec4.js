@@ -531,7 +531,7 @@ class Vec4 {
     /**
      * Sets the specified 4-dimensional vector to the supplied numerical values.
      *
-     * @param {number} x - The value to set on the first component of the vector.
+     * @param {number | number[]} x - The value to set on the first component of the vector.
      * @param {number} y - The value to set on the second component of the vector.
      * @param {number} z - The value to set on the third component of the vector.
      * @param {number} w - The value to set on the fourth component of the vector.
@@ -544,10 +544,17 @@ class Vec4 {
      * console.log("The result of the vector set is: " + v.toString());
      */
     set(x, y, z, w) {
-        this.x = x;
-        this.y = y;
-        this.z = z;
-        this.w = w;
+        if (x.length === 4) {
+            this.x = x[0];
+            this.y = x[1];
+            this.z = x[2];
+            this.w = x[3];
+        } else {
+            this.x = x;
+            this.y = y;
+            this.z = z;
+            this.w = w;
+        }
 
         return this;
     }
@@ -633,6 +640,19 @@ class Vec4 {
      */
     toString() {
         return `[${this.x}, ${this.y}, ${this.z}, ${this.w}]`;
+    }
+
+    /**
+     * Converts the vector to an array.
+     *
+     * @returns {number[]} The vector as an array.
+     * @example
+     * const v = new pc.Vec3(20, 10, 5, 1);
+     * // Outputs [20, 10, 5, 1]
+     * console.log(v.toArray());
+     */
+    toArray() {
+        return [this.x, this.y, this.z, this.w];
     }
 
     /**
