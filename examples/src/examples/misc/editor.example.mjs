@@ -184,6 +184,7 @@ window.focus();
 
 // view cube
 const viewCube = new pc.ViewCube(new pc.Vec4(0, 1, 1, 0));
+viewCube.dom.style.margin = '20px';
 data.set('viewCube', {
     colorX: Object.values(viewCube.colorX),
     colorY: Object.values(viewCube.colorY),
