@@ -619,6 +619,14 @@ describe('Vec3', function () {
             expect(v.z).to.equal(3);
         });
 
+        it('sets a vector from an array with an offset', function () {
+            const v = new Vec3();
+            v.fromArray([0, 0, 1, 2, 3], 2);
+            expect(v.x).to.equal(1);
+            expect(v.y).to.equal(2);
+            expect(v.z).to.equal(3);
+        });
+
     });
 
     describe('#toString', function () {
@@ -635,6 +643,13 @@ describe('Vec3', function () {
         it('returns an array representation of a vector', function () {
             const v = new Vec3(1, 2, 3);
             expect(v.toArray()).to.eql([1, 2, 3]);
+        });
+
+        it('returns an array representation of a vector with an offset and target array', function () {
+            const v = new Vec3(1, 2, 3);
+            const array = [0, 0, 0, 0, 0, 0];
+            v.toArray(array, 2);
+            expect(array).to.eql([0, 0, 1, 2, 3, 0]);
         });
 
     });

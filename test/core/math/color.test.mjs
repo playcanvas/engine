@@ -184,6 +184,15 @@ describe('Color', function () {
             expect(c.a).to.equal(0.4);
         });
 
+        it('sets a color from an array with an offset', function () {
+            const c = new Color();
+            c.fromArray([0, 0.1, 0.2, 0.3, 0.4, 0.5], 1);
+            expect(c.r).to.equal(0.1);
+            expect(c.g).to.equal(0.2);
+            expect(c.b).to.equal(0.3);
+            expect(c.a).to.equal(0.4);
+        });
+
     });
 
     describe('#toString', function () {
@@ -221,6 +230,12 @@ describe('Color', function () {
 
         it('returns an array of 4 values', function () {
             expect(Color.RED.toArray(true)).to.eql([1, 0, 0, 1]);
+        });
+
+        it('returns an array of 3 values with an offset and target array', function () {
+            const target = [0, 0, 0, 0, 0, 0];
+            Color.RED.toArray(false, target, 3);
+            expect(target).to.eql([0, 0, 0, 1, 0, 0]);
         });
 
     });
