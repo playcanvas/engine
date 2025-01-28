@@ -663,14 +663,18 @@ class Vec3 {
      * Set the values of the vector from an array.
      *
      * @param {number[]} array - The array to set the vector values from.
+     * @param {number} [offset] - The zero-based index at which to start copying elements from the
+     * array. Default is 0.
      * @returns {Vec3} Self for chaining.
      * @example
      * const v = new pc.Vec3();
      * v.fromArray([20, 10, 5]);
      * // v is set to [20, 10, 5]
      */
-    fromArray(array) {
-        [this.x = this.x, this.y = this.y, this.z = this.z] = array;
+    fromArray(array, offset = 0) {
+        this.x = array[offset] ?? this.x;
+        this.y = array[offset + 1] ?? this.y;
+        this.z = array[offset + 2] ?? this.z;
 
         return this;
     }
@@ -691,14 +695,22 @@ class Vec3 {
     /**
      * Converts the vector to an array.
      *
+     * @param {number[]} [out] - The array to populate with the color components. If not specified,
+     * a new array is created.
+     * @param {number} [offset] - The zero-based index at which to start copying elements to the
+     * array. Default is 0.
      * @returns {number[]} The vector as an array.
      * @example
      * const v = new pc.Vec3(20, 10, 5);
      * // Outputs [20, 10, 5]
      * console.log(v.toArray());
      */
-    toArray() {
-        return [this.x, this.y, this.z];
+    toArray(out = [], offset = 0) {
+        out[offset] = this.x;
+        out[offset + 1] = this.y;
+        out[offset + 2] = this.z;
+
+        return out;
     }
 
     /**
