@@ -4,7 +4,7 @@ import { parseConfig } from '../../scripts/utils.mjs';
 
 /** @import { Plugin } from 'rollup' */
 
-const EXAMPLE_HTML = fs.readFileSync('iframe/example.html', 'utf-8');
+const EXAMPLE_TEMPLATE = fs.readFileSync('iframe/example.html', 'utf-8');
 
 /**
  * Choose engine based on `Example#ENGINE`, e.g. ClusteredLightingExample picks PERFORMANCE.
@@ -43,7 +43,7 @@ export const buildHtml = ({ categoryKebab, exampleNameKebab, files, enginePath, 
             const engineType = enginePath ? 'development' : nodeEnv === 'development' ? 'debug' : config.ENGINE;
 
             // Apply templating
-            const html = EXAMPLE_HTML
+            const html = EXAMPLE_TEMPLATE
             .replace(/'@TITLE'/g, `${categoryKebab}: ${exampleNameKebab}`)
             .replace(/'@FILES'/g, JSON.stringify(files))
             .replace(/'@ENGINE'/g, JSON.stringify(engineUrl(engineType)));

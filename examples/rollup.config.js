@@ -13,6 +13,7 @@ import { isModuleWithExternalDependencies } from './utils/utils.mjs';
 import { treeshakeIgnore } from '../utils/plugins/rollup-treeshake-ignore.mjs';
 import { buildTarget } from '../utils/rollup-build-target.mjs';
 import { buildHtml } from './utils/plugins/rollup-build-html.mjs';
+import { buildShare } from './utils/plugins/rollup-build-share.mjs';
 import { removePc } from './utils/plugins/rollup-remove-pc.mjs';
 
 /** @import { RollupOptions } from 'rollup' */
@@ -89,7 +90,11 @@ const exampleRollupOptions = ({ categoryKebab, exampleNameKebab, path }) => {
                     'examples/utils'
                 ],
                 plugins: [
-                    removePc()
+                    removePc(),
+                    NODE_ENV === 'production' && buildShare({
+                        categoryKebab,
+                        exampleNameKebab
+                    })
                 ]
             });
             continue;
