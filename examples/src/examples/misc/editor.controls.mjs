@@ -147,6 +147,74 @@ export const controls = ({ observer, ReactPCUI, React, jsx, fragment }) => {
                     link: { observer, path: 'grid.colorZ' }
                 })
             )
+        ),
+        jsx(
+            Panel,
+            { headerText: 'View Cube' },
+            jsx(
+                LabelGroup,
+                { text: 'Color X' },
+                jsx(ColorPicker, {
+                    binding: new BindingTwoWay(),
+                    link: { observer, path: 'viewCube.colorX' }
+                })
+            ),
+            jsx(
+                LabelGroup,
+                { text: 'Color Y' },
+                jsx(ColorPicker, {
+                    binding: new BindingTwoWay(),
+                    link: { observer, path: 'viewCube.colorY' }
+                })
+            ),
+            jsx(
+                LabelGroup,
+                { text: 'Color Z' },
+                jsx(ColorPicker, {
+                    binding: new BindingTwoWay(),
+                    link: { observer, path: 'viewCube.colorZ' }
+                })
+            ),
+            jsx(
+                LabelGroup,
+                { text: 'Radius' },
+                jsx(SliderInput, {
+                    binding: new BindingTwoWay(),
+                    link: { observer, path: 'viewCube.radius' },
+                    min: 10,
+                    max: 50
+                })
+            ),
+            jsx(
+                LabelGroup,
+                { text: 'Text Size' },
+                jsx(SliderInput, {
+                    binding: new BindingTwoWay(),
+                    link: { observer, path: 'viewCube.textSize' },
+                    min: 1,
+                    max: 50
+                })
+            ),
+            jsx(
+                LabelGroup,
+                { text: 'Line Thickness' },
+                jsx(SliderInput, {
+                    binding: new BindingTwoWay(),
+                    link: { observer, path: 'viewCube.lineThickness' },
+                    min: 1,
+                    max: 20
+                })
+            ),
+            jsx(
+                LabelGroup,
+                { text: 'Line Length' },
+                jsx(SliderInput, {
+                    binding: new BindingTwoWay(),
+                    link: { observer, path: 'viewCube.lineLength' },
+                    min: 10,
+                    max: 200
+                })
+            )
         )
     );
 };
