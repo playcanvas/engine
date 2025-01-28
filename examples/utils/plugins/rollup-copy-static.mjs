@@ -1,7 +1,8 @@
 import fse from 'fs-extra';
 
-// custom plugins
 import { watch } from '../rollup-watch.mjs';
+
+/** @import { Plugin } from 'rollup' */
 
 const YELLOW_OUT = '\x1b[33m';
 const BOLD_OUT = '\x1b[1m';
@@ -18,7 +19,7 @@ const copied = new Set();
  * @param {string} targets.dest - File or entire dir, usually into `dist/`.
  * @param {boolean} [targets.once] - Copy files only once for speed-up (external libs).
  * @param {boolean} log - Log the copy status.
- * @returns {import('rollup').Plugin} The plugin.
+ * @returns {Plugin} The plugin.
  */
 export function copyStatic(nodeEnv, targets, log = false) {
     return {

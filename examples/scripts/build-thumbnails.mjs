@@ -10,7 +10,6 @@ import { fileURLToPath } from 'url';
 import puppeteer from 'puppeteer';
 import sharp from 'sharp';
 
-import { sleep } from './utils.mjs';
 import { exampleMetaData } from '../cache/metadata.mjs';
 
 // @ts-ignore
@@ -21,6 +20,16 @@ const MAIN_DIR = `${__dirname}/../`;
 const TIMEOUT = 1e8;
 const DEBUG = process.argv.includes('--debug');
 const CLEAN = process.argv.includes('--clean');
+
+/**
+ * @param {number} ms - The milliseconds to sleep.
+ * @returns {Promise<void>} - The sleep promise.
+ */
+const sleep = (ms = 0) => {
+    return new Promise((resolve) => {
+        setTimeout(resolve, ms);
+    });
+};
 
 class PuppeteerPool {
     /**
