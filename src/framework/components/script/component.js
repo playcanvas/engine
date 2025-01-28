@@ -5,8 +5,7 @@ import { Component } from '../component.js';
 import { Entity } from '../../entity.js';
 import {
     SCRIPT_INITIALIZE, SCRIPT_POST_INITIALIZE, SCRIPT_UPDATE,
-    SCRIPT_POST_UPDATE, SCRIPT_SWAP,
-    SCRIPT_DESTROY
+    SCRIPT_POST_UPDATE, SCRIPT_SWAP
 } from '../../script/constants.js';
 import { ScriptType } from '../../script/script-type.js';
 import { getScriptName } from '../../script/script.js';
@@ -829,9 +828,6 @@ class ScriptComponent extends Component {
 
         this.fire('destroy', scriptName, scriptInstance || null);
         this.fire(`destroy:${scriptName}`, scriptInstance || null);
-        if (scriptInstance.destroy) {
-            this._scriptMethod(scriptInstance, SCRIPT_DESTROY);
-        }
 
         if (scriptInstance) {
             scriptInstance.fire('destroy');

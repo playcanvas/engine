@@ -336,13 +336,6 @@ export class Script extends EventHandler {
      * new Script has a `swap` method, then it will be executed to perform hot-reload at runtime.
      * @param {Script} old - Old instance of the scriptType to copy data to the new instance.
      */
-
-    /**
-     * @function
-     * @name Script#[destroy]
-     * @description Called when the script instance is destroyed or the script component has been
-     * removed from the entity.
-     */
 }
 
 // eslint-disable-next-line regexp/no-super-linear-backtracking, regexp/no-useless-escape
