@@ -217,10 +217,6 @@ const takeScreenshots = async (metadata) => {
 
 const main = async () => {
     console.log('Spawn server on', PORT);
-    // We need this kind of command:
-    // npx serve dist --config ../serve.json
-    // Reason: https://github.com/vercel/serve/issues/732
-    // (who *ever* thought that stripping .html was a good idea in the first place...)
     const isWin = process.platform === 'win32';
     const cmd = isWin ? 'npx.cmd' : 'npx';
     const server = spawn(cmd, ['serve', 'dist', '-l', PORT, '--no-request-logging', '--config', '../serve.json']);
