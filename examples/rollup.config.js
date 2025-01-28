@@ -15,7 +15,7 @@ import { buildTarget } from '../utils/rollup-build-target.mjs';
 import { buildHtml } from './utils/plugins/rollup-build-html.mjs';
 import { removePc } from './utils/plugins/rollup-remove-pc.mjs';
 
-/** @import { Plugin } from 'rollup' */
+/** @import { RollupOptions } from 'rollup' */
 
 const NODE_ENV = process.env.NODE_ENV ?? '';
 const ENGINE_PATH = !process.env.ENGINE_PATH && NODE_ENV === 'development' ?
@@ -40,25 +40,20 @@ const getEnginePathFiles = () => {
     return [{ src, dest }];
 };
 
-const checkAppEngine = () => {
-    // types
-    if (!fs.existsSync('../build/playcanvas.d.ts')) {
-        const cmd = 'npm run build target:types --prefix ../';
-        console.log('\x1b[32m%s\x1b[0m', cmd);
-        execSync(cmd);
-    }
-};
-
 /**
+ * Rollup options for each example.
+ *
  * @param {object} data - The example data.
  * @param {string} data.categoryKebab - The category kebab name.
  * @param {string} data.exampleNameKebab - The example kebab name.
  * @param {string} data.path - The path to the example directory.
- * @returns {{ input: string, output: string, plugins?: Plugin[] }[]} The targets.
+ * @returns {RollupOptions[]} - The rollup options.
  */
-const getExampleTargets = ({ categoryKebab, exampleNameKebab, path }) => {
+const exampleRollupOptions = ({ categoryKebab, exampleNameKebab, path }) => {
+    /** @type {RollupOptions[]} */
+    const options = [];
+
     const name = `${categoryKebab}_${exampleNameKebab}`;
-    const targets = [];
     const dir = fs.readdirSync(path);
     const files = [];
     for (let i = 0; i < dir.length; i++) {
@@ -80,9 +75,19 @@ const getExampleTargets = ({ categoryKebab, exampleNameKebab, path }) => {
         const input = `${path}/${exampleNameKebab}.${file}`;
         const output = `dist/iframe/${name}.${file}`;
         if (file === 'controls.mjs') {
-            targets.push({
+            options.push({
                 input: fs.existsSync(input) ? input : 'templates/controls.mjs',
-                output,
+                output: {
+                    file: output,
+                    format: 'esm'
+                },
+                context: 'this',
+                external: [
+                    'playcanvas',
+                    'examples/files',
+                    'examples/observer',
+                    'examples/utils'
+                ],
                 plugins: [
                     removePc()
                 ]
@@ -91,9 +96,19 @@ const getExampleTargets = ({ categoryKebab, exampleNameKebab, path }) => {
         }
 
         if (file === 'example.mjs') {
-            targets.push({
+            options.push({
                 input,
-                output,
+                output: {
+                    file: output,
+                    format: 'esm'
+                },
+                context: 'this',
+                external: [
+                    'playcanvas',
+                    'examples/files',
+                    'examples/observer',
+                    'examples/utils'
+                ],
                 plugins: [
                     removePc(),
                     buildHtml({
@@ -108,25 +123,39 @@ const getExampleTargets = ({ categoryKebab, exampleNameKebab, path }) => {
             continue;
         }
 
-        targets.push({
+        options.push({
             input,
-            output
+            output: {
+                file: output,
+                format: 'esm'
+            },
+            context: 'this'
         });
     }
-    return targets;
+    return options;
 };
 
-const getEngineTargets = () => {
+/**
+ * Rollup options for the engine.
+ *
+ * @returns {RollupOptions[]} - The rollup options;
+ */
+const engineRollupOptions = () => {
     // Checks for types and engien for app building
-    checkAppEngine();
+    if (!fs.existsSync('../build/playcanvas.d.ts')) {
+        const cmd = 'npm run build target:types --prefix ../';
+        console.log('\x1b[32m%s\x1b[0m', cmd);
+        execSync(cmd);
+    }
 
-    const targets = [];
+    /** @type {RollupOptions[]} */
+    const options = [];
     if (ENGINE_PATH) {
-        return targets;
+        return options;
     }
     if (NODE_ENV === 'production') {
         // Outputs: dist/iframe/playcanvas.mjs
-        targets.push(
+        options.push(
             ...buildTarget({
                 moduleFormat: 'esm',
                 buildType: 'release',
@@ -138,7 +167,7 @@ const getEngineTargets = () => {
     }
     if (NODE_ENV === 'production' || NODE_ENV === 'development') {
         // Outputs: dist/iframe/playcanvas.dbg.mjs
-        targets.push(
+        options.push(
             ...buildTarget({
                 moduleFormat: 'esm',
                 buildType: 'debug',
@@ -150,7 +179,7 @@ const getEngineTargets = () => {
     }
     if (NODE_ENV === 'production' || NODE_ENV === 'profiler') {
         // Outputs: dist/iframe/playcanvas.prf.mjs
-        targets.push(
+        options.push(
             ...buildTarget({
                 moduleFormat: 'esm',
                 buildType: 'profiler',
@@ -160,7 +189,7 @@ const getEngineTargets = () => {
             })
         );
     }
-    return targets;
+    return options;
 };
 
 const STATIC_FILES = [
@@ -203,26 +232,8 @@ const STATIC_FILES = [
 ];
 
 export default [
-    ...exampleMetaData.flatMap((data) => {
-        return getExampleTargets(data).map((target) => {
-            return {
-                input: target.input,
-                output: {
-                    file: target.output,
-                    format: 'esm'
-                },
-                context: 'this',
-                treeshake: 'smallest',
-                external: [
-                    'playcanvas',
-                    'examples/files',
-                    'examples/observer',
-                    'examples/utils'
-                ],
-                plugins: target.plugins
-            };
-        });
-    }),
+    ...exampleMetaData.flatMap(data => exampleRollupOptions(data)),
+    ...engineRollupOptions(),
     {
         // used as a placeholder to copy static files
         input: 'src/static/index.html',
@@ -262,5 +273,4 @@ export default [
             NODE_ENV === 'production' && terser()
         ]
     },
-    ...getEngineTargets()
 ];
