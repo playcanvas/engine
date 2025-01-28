@@ -1,7 +1,6 @@
 /**
  * This file spawns a pool of puppeteer instances to take screenshots of each example for thumbnail.
  */
-/* eslint-disable no-await-in-loop */
 import fs from 'fs';
 import { spawn, execSync } from 'node:child_process';
 
@@ -64,9 +63,15 @@ class PuppeteerPool {
      * @param {import("puppeteer").PuppeteerLaunchOptions} options - Launch options.
      */
     async launch(options = {}) {
+        const promises = [];
         for (let i = 0; i < this._size; i++) {
+            promises.push(puppeteer.launch(options));
+        }
+        const browsers = await Promise.all(promises);
+
+        for (let i = 0; i < browsers.length; i++) {
             this._pool.push({
-                browser: await puppeteer.launch(options),
+                browser: browsers[i],
                 pages: 0
             });
         }
