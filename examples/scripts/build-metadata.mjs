@@ -1,8 +1,8 @@
 import fs from 'fs';
 import path from 'path';
 
-import { parseConfig } from './utils.mjs';
 import { toKebabCase } from '../src/app/strings.mjs';
+import { parseConfig } from '../utils/utils.mjs';
 
 /**
  * @type {{

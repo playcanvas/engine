@@ -1,36 +1,56 @@
+import fs from 'fs';
+import path from 'path';
+
 import fse from 'fs-extra';
 
-import { watch } from '../rollup-watch.mjs';
-
-/** @import { Plugin } from 'rollup' */
-
-const YELLOW_OUT = '\x1b[33m';
-const BOLD_OUT = '\x1b[1m';
-const REGULAR_OUT = '\x1b[22m';
+/** @import { Plugin, PluginContext } from 'rollup' */
 
 const copied = new Set();
+
+
+/**
+ * @param {PluginContext} context - The Rollup plugin context.
+ * @param {string} src - File or path to watch.
+ */
+const addWatch = (context, src) => {
+    const srcStats = fs.statSync(src);
+    if (srcStats.isFile()) {
+        context.addWatchFile(path.resolve('.', src));
+        return;
+    }
+    const filesToWatch = fs.readdirSync(src);
+    for (const file of filesToWatch) {
+        const fullPath = path.join(src, file);
+        const stats = fs.statSync(fullPath);
+        if (stats.isFile()) {
+            context.addWatchFile(path.resolve('.', fullPath));
+        } else if (stats.isDirectory()) {
+            addWatch(context, fullPath);
+        }
+    }
+}
+
 
 /**
  * This plugin copies static files from source to destination.
  *
- * @param {string} nodeEnv - The node environment.
  * @param {object[]} targets - Array of source and destination objects.
  * @param {string} targets.src - File or entire dir.
  * @param {string} targets.dest - File or entire dir, usually into `dist/`.
  * @param {boolean} [targets.once] - Copy files only once for speed-up (external libs).
- * @param {boolean} log - Log the copy status.
+ * @param {boolean} watch - Watch the files.
  * @returns {Plugin} The plugin.
  */
-export function copyStatic(nodeEnv, targets, log = false) {
+export function copyStatic(targets, watch = false) {
     return {
         name: 'copy-static',
         load() {
             return 'console.log(\'UNUSED ROLLUP OUTPUT FILE\');';
         },
         buildStart() {
-            if (nodeEnv === 'development') {
+            if (watch) {
                 targets.forEach((target) => {
-                    watch(this, target.src);
+                    addWatch(this, target.src);
                 });
             }
         },
@@ -38,9 +58,6 @@ export function copyStatic(nodeEnv, targets, log = false) {
             for (let i = 0; i < targets.length; i++) {
                 const target = targets[i];
                 if (target.once && copied.has(target.src)) {
-                    if (log) {
-                        console.log(`${YELLOW_OUT}skipped copying ${BOLD_OUT}${target.src}${REGULAR_OUT}`);
-                    }
                     continue;
                 }
                 fse.copySync(target.src, target.dest, { overwrite: true });

@@ -26,7 +26,7 @@ export const buildShare = ({ categoryKebab, exampleNameKebab }) => {
 
             const dirPath = `dist/share/${categoryKebab}_${exampleNameKebab}`;
             if (!fs.existsSync(dirPath)) {
-                fs.mkdirSync(dirPath);
+                fs.mkdirSync(dirPath, { recursive: true });
             }
             fs.writeFileSync(`${dirPath}/index.html`, html);
         }

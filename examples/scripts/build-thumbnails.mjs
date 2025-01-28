@@ -4,19 +4,13 @@
 /* eslint-disable no-await-in-loop */
 import fs from 'fs';
 import { spawn, execSync } from 'node:child_process';
-import { dirname } from 'path';
-import { fileURLToPath } from 'url';
 
 import puppeteer from 'puppeteer';
 import sharp from 'sharp';
 
 import { exampleMetaData } from '../cache/metadata.mjs';
 
-// @ts-ignore
-const __filename = fileURLToPath(import.meta.url);
-const __dirname = dirname(__filename);
 const PORT = process.env.PORT || '12321';
-const MAIN_DIR = `${__dirname}/../`;
 const TIMEOUT = 1e8;
 const DEBUG = process.argv.includes('--debug');
 const CLEAN = process.argv.includes('--clean');
@@ -154,24 +148,24 @@ const takeThumbnails = async (pool, categoryKebab, exampleNameKebab) => {
     await page.waitForFunction('window?.pc?.app?._time > 1000', { timeout: TIMEOUT });
 
     // screenshot page
-    await page.screenshot({ path: `${MAIN_DIR}/thumbnails/${categoryKebab}_${exampleNameKebab}.webp`, type: 'webp' });
+    await page.screenshot({ path: `thumbnails/${categoryKebab}_${exampleNameKebab}.webp`, type: 'webp' });
 
     // read in image as data
     // N.B. Cannot use path because of file locking (https://github.com/lovell/sharp/issues/346)
-    const imgData = fs.readFileSync(`${MAIN_DIR}/thumbnails/${categoryKebab}_${exampleNameKebab}.webp`);
+    const imgData = fs.readFileSync(`thumbnails/${categoryKebab}_${exampleNameKebab}.webp`);
 
     // copy and crop image for large thumbnail
     await sharp(imgData)
     .resize(320, 240)
-    .toFile(`${MAIN_DIR}/thumbnails/${categoryKebab}_${exampleNameKebab}_large.webp`);
+    .toFile(`thumbnails/${categoryKebab}_${exampleNameKebab}_large.webp`);
 
     // copy and crop image for small thumbnail
     await sharp(imgData)
     .resize(64, 48)
-    .toFile(`${MAIN_DIR}/thumbnails/${categoryKebab}_${exampleNameKebab}_small.webp`);
+    .toFile(`thumbnails/${categoryKebab}_${exampleNameKebab}_small.webp`);
 
     // remove screenshot
-    fs.unlinkSync(`${MAIN_DIR}/thumbnails/${categoryKebab}_${exampleNameKebab}.webp`);
+    fs.unlinkSync(`thumbnails/${categoryKebab}_${exampleNameKebab}.webp`);
 
     // close page
     await pool.closePage(poolItem, page);
@@ -188,22 +182,22 @@ const takeScreenshots = async (metadata) => {
     }
 
     if (CLEAN) {
-        fs.rmSync(`${MAIN_DIR}/thumbnails`, { recursive: true, force: true });
+        fs.rmSync('thumbnails', { recursive: true, force: true });
     }
-    if (!fs.existsSync(`${MAIN_DIR}/thumbnails`)) {
-        fs.mkdirSync(`${MAIN_DIR}/thumbnails`);
+    if (!fs.existsSync('thumbnails')) {
+        fs.mkdirSync('thumbnails');
     }
 
     // create browser instance with new page
     const pool = new PuppeteerPool(4);
-    await pool.launch({ headless: 'new' });
+    await pool.launch({ headless: true });
 
     const screenshotPromises = [];
     for (let i = 0; i < metadata.length; i++) {
         const { categoryKebab, exampleNameKebab } = metadata[i];
 
         // check if thumbnail exists
-        if (fs.existsSync(`${MAIN_DIR}/thumbnails/${categoryKebab}_${exampleNameKebab}_large.webp`)) {
+        if (fs.existsSync(`thumbnails/${categoryKebab}_${exampleNameKebab}_large.webp`)) {
             console.log(`skipped (cached): ${categoryKebab}/${exampleNameKebab}`);
             continue;
         }

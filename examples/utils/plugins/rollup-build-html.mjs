@@ -1,6 +1,6 @@
 import fs from 'fs';
 
-import { parseConfig } from '../../scripts/utils.mjs';
+import { parseConfig } from '../utils.mjs';
 
 /** @import { Plugin } from 'rollup' */
 

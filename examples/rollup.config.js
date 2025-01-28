@@ -251,7 +251,7 @@ export default [
         },
         treeshake: false,
         plugins: [
-            copyStatic(NODE_ENV, STATIC_FILES)
+            copyStatic(STATIC_FILES, NODE_ENV === 'development')
         ]
     },
     {
