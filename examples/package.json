@@ -5,16 +5,14 @@
   "main": "index.js",
   "type": "module",
   "scripts": {
-    "build": "npm run -s build:pre && cross-env NODE_ENV=production rollup -c",
-    "build:pre": "npm run -s build:metadata && npm run -s build:sharing",
+    "build": "npm run -s build:metadata && cross-env NODE_ENV=production rollup -c",
     "build:metadata": "node ./scripts/build-metadata.mjs",
-    "build:sharing": "node ./scripts/build-sharing.mjs",
     "build:thumbnails": "node ./scripts/build-thumbnails.mjs",
     "clean": "node ./scripts/clean.mjs",
     "develop": "cross-env NODE_ENV=development concurrently --kill-others \"npm run watch\" \"npm run serve\"",
     "lint": "eslint .",
     "serve": "serve dist -l 5555 --no-request-logging --config ../serve.json",
-    "watch": "npm run -s build:pre && cross-env NODE_ENV=development rollup -c -w"
+    "watch": "npm run -s build:metadata && cross-env NODE_ENV=development rollup -c -w"
   },
   "devDependencies": {
     "@babel/standalone": "^7.26.2",
