@@ -28,8 +28,7 @@ const addWatch = (context, src) => {
             addWatch(context, fullPath);
         }
     }
-}
-
+};
 
 /**
  * This plugin copies static files from source to destination.
