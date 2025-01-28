@@ -4,7 +4,7 @@ import { parseConfig } from '../utils.mjs';
 
 /** @import { Plugin } from 'rollup' */
 
-const EXAMPLE_TEMPLATE = fs.readFileSync('iframe/example.html', 'utf-8');
+const EXAMPLE_TEMPLATE = fs.readFileSync('templates/example.html', 'utf-8');
 
 /**
  * Choose engine based on `Example#ENGINE`, e.g. ClusteredLightingExample picks PERFORMANCE.
