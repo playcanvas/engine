@@ -120,8 +120,9 @@ const exampleRollupOptions = ({ categoryKebab, exampleNameKebab, path }) => {
                         categoryKebab,
                         exampleNameKebab,
                         files,
-                        enginePath: ENGINE_PATH,
-                        nodeEnv: NODE_ENV
+                        engineType: ENGINE_PATH ?
+                            'development' : NODE_ENV === 'development' ?
+                                'debug' : undefined
                     })
                 ]
             });

@@ -9,7 +9,7 @@ const EXAMPLE_TEMPLATE = fs.readFileSync('iframe/example.html', 'utf-8');
 /**
  * Choose engine based on `Example#ENGINE`, e.g. ClusteredLightingExample picks PERFORMANCE.
  *
- * @param {'development' | 'performance' | 'debug'  | undefined} type - The engine type.
+ * @param {'development' | 'performance' | 'debug'} [type] - The engine type.
  * @returns {string} - The build file.
  */
 export const engineUrl = (type) => {
@@ -31,22 +31,20 @@ export const engineUrl = (type) => {
  * @param {string} data.categoryKebab - The category kebab name.
  * @param {string} data.exampleNameKebab - The example kebab name.
  * @param {string[]} data.files - The files in the example directory.
- * @param {string} data.enginePath - The engine path.
- * @param {string} data.nodeEnv - The node environment.
+ * @param {'development' | 'performance' | 'debug'} [data.engineType] - The engine type.
  * @returns {Plugin} The plugin.
  */
-export const buildHtml = ({ categoryKebab, exampleNameKebab, files, enginePath, nodeEnv }) => {
+export const buildHtml = ({ categoryKebab, exampleNameKebab, files, engineType }) => {
     return {
         name: 'build-html',
         transform(code) {
             const config = parseConfig(code);
-            const engineType = enginePath ? 'development' : nodeEnv === 'development' ? 'debug' : config.ENGINE;
 
             // Apply templating
             const html = EXAMPLE_TEMPLATE
             .replace(/'@TITLE'/g, `${categoryKebab}: ${exampleNameKebab}`)
             .replace(/'@FILES'/g, JSON.stringify(files))
-            .replace(/'@ENGINE'/g, JSON.stringify(engineUrl(engineType)));
+            .replace(/'@ENGINE'/g, JSON.stringify(engineUrl(engineType ?? config.ENGINE)));
             if (/'@[A-Z0-9_]+'/.test(html)) {
                 throw new Error('HTML file still has unreplaced values');
             }
