@@ -182,6 +182,30 @@ setGizmoControls();
 gizmoHandler.add(box);
 window.focus();
 
+// view cube
+const viewCube = new pc.ViewCube(new pc.Vec4(0, 1, 1, 0));
+viewCube.dom.style.margin = '20px';
+data.set('viewCube', {
+    colorX: Object.values(viewCube.colorX),
+    colorY: Object.values(viewCube.colorY),
+    colorZ: Object.values(viewCube.colorZ),
+    radius: viewCube.radius,
+    textSize: viewCube.textSize,
+    lineThickness: viewCube.lineThickness,
+    lineLength: viewCube.lineLength
+});
+const tmpV1 = new pc.Vec3();
+viewCube.on(pc.ViewCube.EVENT_CAMERAALIGN, (/** @type {pc.Vec3} */ dir) => {
+    const cameraPos = camera.getPosition();
+    const focusPoint = cameraControls.focusPoint;
+    const cameraDist = focusPoint.distance(cameraPos);
+    const cameraStart = tmpV1.copy(dir).mulScalar(cameraDist).add(focusPoint);
+    cameraControls.refocus(focusPoint, cameraStart);
+});
+app.on('prerender', () => {
+    viewCube.update(camera.getWorldTransform());
+});
+
 // selector
 const layers = app.scene.layers;
 const selector = new Selector(app, camera.camera, [layers.getLayerByName('World')]);
@@ -284,6 +308,32 @@ data.on('*:set', (/** @type {string} */ path, /** @type {any} */ value) => {
                     break;
                 case 'resolution':
                     grid.resolution = value - 1;
+                    break;
+            }
+            break;
+        }
+        case 'viewCube': {
+            switch (key) {
+                case 'colorX':
+                    viewCube.colorX = tmpC1.set(value[0], value[1], value[2]);
+                    break;
+                case 'colorY':
+                    viewCube.colorY = tmpC1.set(value[0], value[1], value[2]);
+                    break;
+                case 'colorZ':
+                    viewCube.colorZ = tmpC1.set(value[0], value[1], value[2]);
+                    break;
+                case 'radius':
+                    viewCube.radius = value;
+                    break;
+                case 'textSize':
+                    viewCube.textSize = value;
+                    break;
+                case 'lineThickness':
+                    viewCube.lineThickness = value;
+                    break;
+                case 'lineLength':
+                    viewCube.lineLength = value;
                     break;
             }
             break;
