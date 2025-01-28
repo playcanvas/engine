@@ -147,6 +147,7 @@ data.set('example', {
 
 data.set('attr', [
     'enablePan',
+    'focusDamping',
     'pitchRange',
     'rotateSpeed',
     'rotateDamping',
