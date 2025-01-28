@@ -278,5 +278,5 @@ export default [
             // @ts-ignore
             NODE_ENV === 'production' && terser()
         ]
-    },
+    }
 ];
