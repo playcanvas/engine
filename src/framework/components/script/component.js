@@ -691,7 +691,7 @@ class ScriptComponent extends Component {
         if (typeof scriptType === 'string') {
             scriptType = this.system.app.scripts.get(scriptType);
         } else if (scriptType) {
-            scriptName = scriptType.__name ?? toLowerCamelCase(getScriptName(scriptType));
+            scriptName = scriptType.__name ??= toLowerCamelCase(getScriptName(scriptType));
         }
 
         if (scriptType) {
