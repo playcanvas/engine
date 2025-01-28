@@ -2,20 +2,21 @@ import { execSync } from 'child_process';
 import fs from 'fs';
 import path from 'path';
 
-// 1st party Rollup plugins
 import commonjs from '@rollup/plugin-commonjs';
 import resolve from '@rollup/plugin-node-resolve';
 import replace from '@rollup/plugin-replace';
 import terser from '@rollup/plugin-terser';
 
-// custom plugins
-import { buildExamples } from './utils/plugins/rollup-build-examples.mjs';
+import { exampleMetaData } from './cache/metadata.mjs';
 import { copyStatic } from './utils/plugins/rollup-copy-static.mjs';
 import { isModuleWithExternalDependencies } from './utils/utils.mjs';
 import { treeshakeIgnore } from '../utils/plugins/rollup-treeshake-ignore.mjs';
 import { buildTarget } from '../utils/rollup-build-target.mjs';
+import { buildHtml } from './utils/plugins/rollup-build-html.mjs';
+import { buildShare } from './utils/plugins/rollup-build-share.mjs';
+import { removePc } from './utils/plugins/rollup-remove-pc.mjs';
 
-// util functions
+/** @import { RollupOptions } from 'rollup' */
 
 const NODE_ENV = process.env.NODE_ENV ?? '';
 const ENGINE_PATH =
@@ -40,26 +41,127 @@ const getEnginePathFiles = () => {
     return [{ src, dest }];
 };
 
-const checkAppEngine = () => {
-    // types
+/**
+ * Rollup options for each example.
+ *
+ * @param {object} data - The example data.
+ * @param {string} data.categoryKebab - The category kebab name.
+ * @param {string} data.exampleNameKebab - The example kebab name.
+ * @param {string} data.path - The path to the example directory.
+ * @returns {RollupOptions[]} - The rollup options.
+ */
+const exampleRollupOptions = ({ categoryKebab, exampleNameKebab, path }) => {
+    /** @type {RollupOptions[]} */
+    const options = [];
+
+    const name = `${categoryKebab}_${exampleNameKebab}`;
+    const dir = fs.readdirSync(path);
+    const files = [];
+    for (let i = 0; i < dir.length; i++) {
+        const file = dir[i];
+        if (!/\.(?:mjs|js)$/.test(file)) {
+            continue;
+        }
+        if (!file.startsWith(`${exampleNameKebab}.`)) {
+            continue;
+        }
+        files.push(file.replace(`${exampleNameKebab}.`, ''));
+    }
+    if (!files.includes('controls.mjs')) {
+        files.push('controls.mjs');
+    }
+
+    for (let i = 0; i < files.length; i++) {
+        const file = files[i];
+        const input = `${path}/${exampleNameKebab}.${file}`;
+        const output = `dist/iframe/${name}.${file}`;
+        if (file === 'controls.mjs') {
+            options.push({
+                input: fs.existsSync(input) ? input : 'templates/controls.mjs',
+                output: {
+                    file: output,
+                    format: 'esm'
+                },
+                context: 'this',
+                external: [
+                    'playcanvas',
+                    'examples/files',
+                    'examples/observer',
+                    'examples/utils'
+                ],
+                plugins: [
+                    removePc(),
+                    NODE_ENV === 'production' && buildShare({
+                        categoryKebab,
+                        exampleNameKebab
+                    })
+                ]
+            });
+            continue;
+        }
+
+        if (file === 'example.mjs') {
+            options.push({
+                input,
+                output: {
+                    file: output,
+                    format: 'esm'
+                },
+                context: 'this',
+                external: [
+                    'playcanvas',
+                    'examples/files',
+                    'examples/observer',
+                    'examples/utils'
+                ],
+                plugins: [
+                    removePc(),
+                    buildHtml({
+                        categoryKebab,
+                        exampleNameKebab,
+                        files,
+                        engineType: ENGINE_PATH ?
+                            'development' : NODE_ENV === 'development' ?
+                                'debug' : undefined
+                    })
+                ]
+            });
+            continue;
+        }
+
+        options.push({
+            input,
+            output: {
+                file: output,
+                format: 'esm'
+            },
+            context: 'this'
+        });
+    }
+    return options;
+};
+
+/**
+ * Rollup options for the engine.
+ *
+ * @returns {RollupOptions[]} - The rollup options;
+ */
+const engineRollupOptions = () => {
+    // Checks for types for app building
     if (!fs.existsSync('../build/playcanvas.d.ts')) {
         const cmd = 'npm run build target:types --prefix ../';
         console.log('\x1b[32m%s\x1b[0m', cmd);
         execSync(cmd);
     }
-};
 
-const getEngineTargets = () => {
-    // Checks for types and engien for app building
-    checkAppEngine();
-
-    const targets = [];
+    /** @type {RollupOptions[]} */
+    const options = [];
     if (ENGINE_PATH) {
-        return targets;
+        return options;
     }
     if (NODE_ENV === 'production') {
         // Outputs: dist/iframe/playcanvas.mjs
-        targets.push(
+        options.push(
             ...buildTarget({
                 moduleFormat: 'esm',
                 buildType: 'release',
@@ -71,7 +173,7 @@ const getEngineTargets = () => {
     }
     if (NODE_ENV === 'production' || NODE_ENV === 'development') {
         // Outputs: dist/iframe/playcanvas.dbg.mjs
-        targets.push(
+        options.push(
             ...buildTarget({
                 moduleFormat: 'esm',
                 buildType: 'debug',
@@ -83,7 +185,7 @@ const getEngineTargets = () => {
     }
     if (NODE_ENV === 'production' || NODE_ENV === 'profiler') {
         // Outputs: dist/iframe/playcanvas.prf.mjs
-        targets.push(
+        options.push(
             ...buildTarget({
                 moduleFormat: 'esm',
                 buildType: 'profiler',
@@ -93,7 +195,7 @@ const getEngineTargets = () => {
             })
         );
     }
-    return targets;
+    return options;
 };
 
 const STATIC_FILES = [
@@ -136,8 +238,10 @@ const STATIC_FILES = [
 ];
 
 export default [
+    ...exampleMetaData.flatMap(data => exampleRollupOptions(data)),
+    ...engineRollupOptions(),
     {
-        // used as a placeholder
+        // used as a placeholder to copy static files
         input: 'src/static/index.html',
         output: {
             file: 'cache/output.tmp'
@@ -146,7 +250,9 @@ export default [
             skipWrite: true
         },
         treeshake: false,
-        plugins: [buildExamples(NODE_ENV, ENGINE_PATH), copyStatic(NODE_ENV, STATIC_FILES)]
+        plugins: [
+            copyStatic(STATIC_FILES, NODE_ENV === 'development')
+        ]
     },
     {
         // A debug build is ~2.3MB and a release build ~0.6MB
@@ -157,17 +263,20 @@ export default [
         },
         treeshake: 'smallest',
         plugins: [
+            // @ts-ignore
             commonjs(),
             treeshakeIgnore([/@playcanvas\/pcui/g]), // ignore PCUI treeshake
+            // @ts-ignore
             resolve(),
+            // @ts-ignore
             replace({
                 values: {
                     'process.env.NODE_ENV': JSON.stringify(NODE_ENV) // for REACT bundling
                 },
                 preventAssignment: true
             }),
+            // @ts-ignore
             NODE_ENV === 'production' && terser()
         ]
-    },
-    ...getEngineTargets()
+    }
 ];
