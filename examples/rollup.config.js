@@ -141,7 +141,7 @@ const exampleRollupOptions = ({ categoryKebab, exampleNameKebab, path }) => {
  * @returns {RollupOptions[]} - The rollup options;
  */
 const engineRollupOptions = () => {
-    // Checks for types and engien for app building
+    // Checks for types for app building
     if (!fs.existsSync('../build/playcanvas.d.ts')) {
         const cmd = 'npm run build target:types --prefix ../';
         console.log('\x1b[32m%s\x1b[0m', cmd);
