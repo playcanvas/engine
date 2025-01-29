@@ -97,7 +97,7 @@ const staticRollupOption = (item) => {
     return {
         input: 'templates/placeholder.html',
         output: {
-            file: item.dest
+            file: 'cache/output.tmp'
         },
         watch: {
             skipWrite: true

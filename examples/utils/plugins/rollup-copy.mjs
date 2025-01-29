@@ -1,7 +1,9 @@
 import fs from 'fs';
 import path from 'path';
 
-import fse from 'fs-extra';
+const GREEN_OUT = '\x1b[32m';
+const BOLD_OUT = '\x1b[1m';
+const REGULAR_OUT = '\x1b[22m';
 
 /** @import { Plugin, PluginContext } from 'rollup' */
 
@@ -53,7 +55,8 @@ export function copy(targets, watch = false) {
         buildEnd() {
             for (let i = 0; i < targets.length; i++) {
                 const target = targets[i];
-                fse.copySync(target.src, target.dest, { overwrite: true });
+                fs.cpSync(target.src, target.dest, { recursive: true });
+                console.log(`${GREEN_OUT}copied ${BOLD_OUT}${target.src}${REGULAR_OUT} → ${BOLD_OUT}${target.dest}${REGULAR_OUT}`);
             }
         }
     };
