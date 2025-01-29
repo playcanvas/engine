@@ -236,7 +236,7 @@ class CameraControls extends Script {
      * @description The focus damping. A higher value means more damping. A value of 0 means no damping.
      * @type {number}
      */
-    focusDamping = 0.97;
+    focusDamping = 0.98;
 
     /**
      * @attribute
@@ -252,7 +252,7 @@ class CameraControls extends Script {
      * @description The rotation damping. A higher value means more damping. A value of 0 means no damping.
      * @type {number}
      */
-    rotateDamping = 0.97;
+    rotateDamping = 0.98;
 
     /**
      * @attribute
@@ -575,7 +575,6 @@ class CameraControls extends Script {
             this._lastPinchDist = this._getPinchDist();
             this._getMidPoint(this._lastPosition);
             this._panning = true;
-            this._focusing = false;
         }
         if (startMousePan) {
             // start mouse pan
