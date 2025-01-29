@@ -22,6 +22,11 @@ const NODE_ENV = process.env.NODE_ENV ?? '';
 const ENGINE_PATH = !process.env.ENGINE_PATH && NODE_ENV === 'development' ?
     '../src/index.js' : process.env.ENGINE_PATH ?? '';
 
+/**
+ * Get the engine path files.
+ *
+ * @returns {{ src: string, dest: string }[]} - The engine path files.
+ */
 const getEnginePathFiles = () => {
     if (!ENGINE_PATH) {
         return [];
@@ -39,6 +44,69 @@ const getEnginePathFiles = () => {
     // packed module builds
     const dest = 'dist/iframe/ENGINE_PATH/index.js';
     return [{ src, dest }];
+};
+
+const STATIC_FILES = [
+    // static main page src
+    { src: './src/static', dest: 'dist/' },
+
+    // static iframe src
+    { src: './iframe', dest: 'dist/iframe' },
+
+    // assets used in examples
+    { src: './assets', dest: 'dist/static/assets/' },
+
+    // thumbnails used in examples
+    { src: './thumbnails', dest: 'dist/thumbnails/' },
+
+    // external libraries used in examples
+    { src: './src/lib', dest: 'dist/static/lib/' },
+
+    // engine scripts
+    { src: '../scripts', dest: 'dist/static/scripts/' },
+
+    // playcanvas engine types
+    { src: '../build/playcanvas.d.ts', dest: 'dist/playcanvas.d.ts' },
+
+    // playcanvas observer
+    {
+        src: './node_modules/@playcanvas/observer/dist/index.mjs',
+        dest: 'dist/iframe/playcanvas-observer.mjs'
+    },
+
+    // monaco loader
+    { src: './node_modules/monaco-editor/min/vs', dest: 'dist/modules/monaco-editor/min/vs' },
+
+    // fflate (for when using ENGINE_PATH)
+    { src: '../node_modules/fflate/esm/', dest: 'dist/modules/fflate/esm' },
+
+    // engine path
+    ...getEnginePathFiles()
+];
+
+/**
+ * Rollup options for static files.
+ *
+ * @param {object} item - The static files.
+ * @param {string} item.src - The source directory.
+ * @param {string} item.dest - The destination directory.
+ * @param {boolean} [item.once] - Copy only once.
+ * @returns {RollupOptions} - The rollup option.
+ */
+const staticFilesRollupOption = (item) => {
+    return {
+        input: 'templates/placeholder.html',
+        output: {
+            file: item.dest
+        },
+        watch: {
+            skipWrite: true
+        },
+        treeshake: false,
+        plugins: [
+            copy([item], NODE_ENV === 'development')
+        ]
+    };
 };
 
 /**
@@ -139,7 +207,10 @@ const exampleRollupOptions = ({ categoryKebab, exampleNameKebab, path }) => {
             continue;
         }
 
-        fs.copyFileSync(input, output);
+        options.push(staticFilesRollupOption({
+            src: input,
+            dest: output
+        }));
     }
     return options;
 };
@@ -201,73 +272,10 @@ const engineRollupOptions = () => {
     return options;
 };
 
-const STATIC_FILES = [
-    // static main page src
-    { src: './src/static', dest: 'dist/' },
-
-    // static iframe src
-    { src: './iframe', dest: 'dist/iframe' },
-
-    // assets used in examples
-    { src: './assets', dest: 'dist/static/assets/' },
-
-    // thumbnails used in examples
-    { src: './thumbnails', dest: 'dist/thumbnails/' },
-
-    // external libraries used in examples
-    { src: './src/lib', dest: 'dist/static/lib/' },
-
-    // engine scripts
-    { src: '../scripts', dest: 'dist/static/scripts/' },
-
-    // playcanvas engine types
-    { src: '../build/playcanvas.d.ts', dest: 'dist/playcanvas.d.ts' },
-
-    // playcanvas observer
-    {
-        src: './node_modules/@playcanvas/observer/dist/index.mjs',
-        dest: 'dist/iframe/playcanvas-observer.mjs'
-    },
-
-    // monaco loader
-    { src: './node_modules/monaco-editor/min/vs', dest: 'dist/modules/monaco-editor/min/vs' },
-
-    // fflate (for when using ENGINE_PATH)
-    { src: '../node_modules/fflate/esm/', dest: 'dist/modules/fflate/esm' },
-
-    // engine path
-    ...getEnginePathFiles()
-];
-
-/**
- * Rollup options for static files.
- *
- * @param {object} item - The static files.
- * @param {string} item.src - The source directory.
- * @param {string} item.dest - The destination directory.
- * @param {boolean} [item.once] - Copy only once.
- * @returns {RollupOptions[]} - The rollup options.
- */
-const staticFilesRollupOptions = (item) => {
-    return [{
-        input: 'templates/placeholder.html',
-        output: {
-            file: item.dest
-        },
-        watch: {
-            skipWrite: true
-        },
-        treeshake: false,
-        plugins: [
-            copy([item], NODE_ENV === 'development')
-        ]
-    }];
-};
-
 export default [
     ...exampleMetaData.flatMap(data => exampleRollupOptions(data)),
     ...engineRollupOptions(),
-    ...STATIC_FILES.flatMap(item => staticFilesRollupOptions(item)),
+    ...STATIC_FILES.map(item => staticFilesRollupOption(item)),
     {
         // A debug build is ~2.3MB and a release build ~0.6MB
         input: 'src/app/index.mjs',
