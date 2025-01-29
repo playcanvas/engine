@@ -233,7 +233,7 @@ describe('Color', function () {
 
         it('returns an array of 3 values with an offset and target array', function () {
             const target = [0, 0, 0, 0, 0, 0];
-            Color.RED.toArray(false, target, 3);
+            Color.RED.toArray(target, 3, false);
             expect(target).to.eql([0, 0, 0, 1, 0, 0]);
         });
 
