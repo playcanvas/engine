@@ -886,6 +886,8 @@ class FirstPersonController extends Script {
         this.app.on('cc:sprint', (state) => {
             this.controls.sprint = state;
         });
+
+        this.on('destroy', this.destroy, this);
     }
 
     /**
