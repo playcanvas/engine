@@ -665,7 +665,7 @@ class Vec4 {
      * array. Default is 0.
      * @returns {number[]} The vector as an array.
      * @example
-     * const v = new pc.Vec3(20, 10, 5, 1);
+     * const v = new pc.Vec4(20, 10, 5, 1);
      * // Outputs [20, 10, 5, 1]
      * console.log(v.toArray());
      */

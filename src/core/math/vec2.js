@@ -683,7 +683,7 @@ class Vec2 {
      * array. Default is 0.
      * @returns {number[]} The vector as an array.
      * @example
-     * const v = new pc.Vec3(20, 10);
+     * const v = new pc.Vec2(20, 10);
      * // Outputs [20, 10]
      * console.log(v.toArray());
      */
