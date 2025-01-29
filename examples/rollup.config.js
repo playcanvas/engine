@@ -68,6 +68,7 @@ const exampleRollupOptions = ({ categoryKebab, exampleNameKebab, path }) => {
         files.push('controls.mjs');
     }
 
+    fs.mkdirSync('dist/iframe', { recursive: true });
     for (let i = 0; i < files.length; i++) {
         const file = files[i];
         const input = `${path}/${exampleNameKebab}.${file}`;
