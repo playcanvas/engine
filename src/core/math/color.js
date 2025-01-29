@@ -278,18 +278,18 @@ class Color {
     /**
      * Converts the color to an array of numbers.
      *
-     * @param {boolean} [alpha] - If true, the output array will include the alpha value.
      * @param {number[]} [arr] - The array to populate with the color components. If not specified,
-     * a new array is created.
+     * a new array is created. Default is true.
      * @param {number} [offset] - The zero-based index at which to start copying elements to the
      * array. Default is 0.
+     * @param {boolean} [alpha] - If true, the output array will include the alpha value.
      * @returns {number[]} The color as an array of numbers.
      * @example
      * const c = new pc.Color(1, 1, 1);
      * // Outputs [1, 1, 1, 1]
-     * console.log(c.toArray(true));
+     * console.log(c.toArray());
      */
-    toArray(alpha, arr = [], offset = 0) {
+    toArray(arr = [], offset = 0, alpha = true) {
         arr[offset] = this.r;
         arr[offset + 1] = this.g;
         arr[offset + 2] = this.b;

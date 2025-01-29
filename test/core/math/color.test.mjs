@@ -223,13 +223,12 @@ describe('Color', function () {
     });
 
     describe('#toArray', function () {
-
-        it('returns an array of 3 values', function () {
-            expect(Color.RED.toArray()).to.eql([1, 0, 0]);
+        it('returns an array of 4 values', function () {
+            expect(Color.RED.toArray()).to.eql([1, 0, 0, 1]);
         });
 
-        it('returns an array of 4 values', function () {
-            expect(Color.RED.toArray(true)).to.eql([1, 0, 0, 1]);
+        it('returns an array of 3 values', function () {
+            expect(Color.RED.toArray(undefined, undefined, false)).to.eql([1, 0, 0]);
         });
 
         it('returns an array of 3 values with an offset and target array', function () {
