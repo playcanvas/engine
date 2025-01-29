@@ -233,7 +233,8 @@ class CameraControls extends Script {
     /**
      * @attribute
      * @title Focus Damping
-     * @description The focus damping. A higher value means more damping. A value of 0 means no damping.
+     * @description The damping applied when calling {@link CameraControls#focus}. A higher value means
+     * more damping. A value of 0 means no damping.
      * @type {number}
      */
     focusDamping = 0.98;
