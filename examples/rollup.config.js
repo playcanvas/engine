@@ -59,9 +59,6 @@ const exampleRollupOptions = ({ categoryKebab, exampleNameKebab, path }) => {
     const files = [];
     for (let i = 0; i < dir.length; i++) {
         const file = dir[i];
-        if (!/\.(?:mjs|js)$/.test(file)) {
-            continue;
-        }
         if (!file.startsWith(`${exampleNameKebab}.`)) {
             continue;
         }
@@ -129,14 +126,19 @@ const exampleRollupOptions = ({ categoryKebab, exampleNameKebab, path }) => {
             continue;
         }
 
-        options.push({
-            input,
-            output: {
-                file: output,
-                format: 'esm'
-            },
-            context: 'this'
-        });
+        if (/\.(?:mjs|js)$/.test(file)) {
+            options.push({
+                input,
+                output: {
+                    file: output,
+                    format: 'esm'
+                },
+                context: 'this'
+            });
+            continue;
+        }
+
+        fs.copyFileSync(input, output);
     }
     return options;
 };
