@@ -85,7 +85,7 @@ const STATIC_FILES = [
 ];
 
 /**
- * Rollup options for static files.
+ * Rollup option for static files.
  *
  * @param {object} item - The static files.
  * @param {string} item.src - The source directory.
@@ -93,7 +93,7 @@ const STATIC_FILES = [
  * @param {boolean} [item.once] - Copy only once.
  * @returns {RollupOptions} - The rollup option.
  */
-const staticFilesRollupOption = (item) => {
+const staticRollupOption = (item) => {
     return {
         input: 'templates/placeholder.html',
         output: {
@@ -207,7 +207,7 @@ const exampleRollupOptions = ({ categoryKebab, exampleNameKebab, path }) => {
             continue;
         }
 
-        options.push(staticFilesRollupOption({
+        options.push(staticRollupOption({
             src: input,
             dest: output
         }));
@@ -275,7 +275,7 @@ const engineRollupOptions = () => {
 export default [
     ...exampleMetaData.flatMap(data => exampleRollupOptions(data)),
     ...engineRollupOptions(),
-    ...STATIC_FILES.map(item => staticFilesRollupOption(item)),
+    ...STATIC_FILES.map(item => staticRollupOption(item)),
     {
         // A debug build is ~2.3MB and a release build ~0.6MB
         input: 'src/app/index.mjs',
