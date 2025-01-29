@@ -56,6 +56,18 @@ export const controls = ({ observer, ReactPCUI, React, jsx, fragment }) => {
             ),
             jsx(
                 LabelGroup,
+                { text: 'Focus damping' },
+                jsx(SliderInput, {
+                    binding: new BindingTwoWay(),
+                    link: { observer, path: 'attr.focusDamping' },
+                    min: 0,
+                    max: 0.999,
+                    step: 0.001,
+                    precision: 3
+                })
+            ),
+            jsx(
+                LabelGroup,
                 { text: 'Pitch range' },
                 jsx(VectorInput, {
                     binding: new BindingTwoWay(),

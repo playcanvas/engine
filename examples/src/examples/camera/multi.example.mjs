@@ -150,6 +150,7 @@ data.set('attr', [
     'enableOrbit',
     'enablePan',
     'enableFly',
+    'focusDamping',
     'pitchRange',
     'rotateSpeed',
     'rotateDamping',

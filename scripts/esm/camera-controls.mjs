@@ -18,8 +18,10 @@ const tmpQ1 = new Quat();
 const tmpR1 = new Ray();
 const tmpP1 = new Plane();
 
+/** @type {AddEventListenerOptions & EventListenerOptions} */
 const PASSIVE = { passive: false };
 const ZOOM_SCALE_SCENE_MULT = 10;
+const EPSILON = 0.0001;
 
 /**
  * Calculate the lerp rate.
@@ -55,7 +57,7 @@ class CameraControls extends Script {
 
     /**
      * @private
-     * @type {CameraComponent}
+     * @type {CameraComponent | null}
      */
     _camera = null;
 
@@ -156,6 +158,12 @@ class CameraControls extends Script {
     _moving = false;
 
     /**
+     * @type {boolean}
+     * @private
+     */
+    _focusing = false;
+
+    /**
      * @type {Record<string, boolean>}
      * @private
      */
@@ -224,6 +232,15 @@ class CameraControls extends Script {
 
     /**
      * @attribute
+     * @title Focus Damping
+     * @description The damping applied when calling {@link CameraControls#focus}. A higher value means
+     * more damping. A value of 0 means no damping.
+     * @type {number}
+     */
+    focusDamping = 0.98;
+
+    /**
+     * @attribute
      * @title Rotate Speed
      * @description The rotation speed.
      * @type {number}
@@ -236,7 +253,7 @@ class CameraControls extends Script {
      * @description The rotation damping. A higher value means more damping. A value of 0 means no damping.
      * @type {number}
      */
-    rotateDamping = 0.97;
+    rotateDamping = 0.98;
 
     /**
      * @attribute
@@ -334,7 +351,9 @@ class CameraControls extends Script {
 
         const camera = this._camera;
         this.detach();
-        this.attach(camera);
+        if (camera) {
+            this.attach(camera);
+        }
     }
 
     get element() {
@@ -546,6 +565,11 @@ class CameraControls extends Script {
         const startMousePan = this._isStartMousePan(event);
         const startFly = this._isStartFly(event);
         const startOrbit = this._isStartOrbit(event);
+
+        if (this._focusing) {
+            this._cancelSmoothTransform();
+            this._focusing = false;
+        }
 
         if (startTouchPan) {
             // start touch pan
@@ -768,6 +792,11 @@ class CameraControls extends Script {
 
         // clamp movement if locked
         if (this._moving) {
+            if (this._focusing) {
+                this._cancelSmoothTransform();
+                this._focusing = false;
+            }
+
             this._clampPosition(this._origin);
         }
     }
@@ -874,12 +903,34 @@ class CameraControls extends Script {
      * @param {number} dt - The delta time.
      */
     _smoothTransform(dt) {
-        const ar = dt === -1 ? 1 : lerpRate(this.rotateDamping, dt);
-        const am = dt === -1 ? 1 : lerpRate(this.moveDamping, dt);
+        const ar = dt === -1 ? 1 : lerpRate(this._focusing ? this.focusDamping : this.rotateDamping, dt);
+        const am = dt === -1 ? 1 : lerpRate(this._focusing ? this.focusDamping : this.moveDamping, dt);
         this._angles.x = math.lerp(this._angles.x, this._dir.x, ar);
         this._angles.y = math.lerp(this._angles.y, this._dir.y, ar);
         this._position.lerp(this._position, this._origin, am);
         this._baseTransform.setTRS(this._position, tmpQ1.setFromEulerAngles(this._angles), Vec3.ONE);
+
+        const focusDelta = this._position.distance(this._origin) +
+            Math.abs(this._angles.x - this._dir.x) +
+            Math.abs(this._angles.y - this._dir.y);
+        if (this._focusing && focusDelta < EPSILON) {
+            this._focusing = false;
+        }
+    }
+
+    /**
+     * @private
+     */
+    _cancelSmoothZoom() {
+        this._cameraDist = this._zoomDist;
+    }
+
+    /**
+     * @private
+     */
+    _cancelSmoothTransform() {
+        this._origin.copy(this._position);
+        this._dir.set(this._angles.x, this._angles.y);
     }
 
     /**
@@ -894,8 +945,8 @@ class CameraControls extends Script {
     /**
      * Focus the camera on a point.
      *
-     * @param {Vec3} point - The point.
-     * @param {Vec3} [start] - The start.
+     * @param {Vec3} point - The focus point.
+     * @param {Vec3} [start] - The camera start position.
      * @param {boolean} [smooth] - Whether to smooth the focus.
      */
     focus(point, start, smooth = true) {
@@ -905,35 +956,39 @@ class CameraControls extends Script {
         if (this._flying) {
             return;
         }
-        if (!start) {
+
+        if (start) {
+            tmpV1.sub2(start, point);
+            const elev = Math.atan2(tmpV1.y, Math.sqrt(tmpV1.x * tmpV1.x + tmpV1.z * tmpV1.z)) * math.RAD_TO_DEG;
+            const azim = Math.atan2(tmpV1.x, tmpV1.z) * math.RAD_TO_DEG;
+            this._clampAngles(this._dir.set(-elev, azim));
+
+            this._origin.copy(point);
+
+            this._cameraTransform.setTranslate(0, 0, 0);
+
+            const pos = this.entity.getPosition();
+            const rot = this.entity.getRotation();
+            this._baseTransform.setTRS(pos, rot, Vec3.ONE);
+
+            this._zoomDist = this._clampZoom(tmpV1.length());
+
+            if (!smooth) {
+                this._smoothZoom(-1);
+                this._smoothTransform(-1);
+            }
+
+            this._updateTransform();
+        } else {
             this._origin.copy(point);
             if (!smooth) {
                 this._position.copy(point);
             }
-            return;
         }
 
-        tmpV1.sub2(start, point);
-        const elev = Math.atan2(tmpV1.y, Math.sqrt(tmpV1.x * tmpV1.x + tmpV1.z * tmpV1.z)) * math.RAD_TO_DEG;
-        const azim = Math.atan2(tmpV1.x, tmpV1.z) * math.RAD_TO_DEG;
-        this._clampAngles(this._dir.set(-elev, azim));
-
-        this._origin.copy(point);
-
-        this._cameraTransform.setTranslate(0, 0, 0);
-
-        const pos = this.entity.getPosition();
-        const rot = this.entity.getRotation();
-        this._baseTransform.setTRS(pos, rot, Vec3.ONE);
-
-        this._zoomDist = this._clampZoom(tmpV1.length());
-
-        if (!smooth) {
-            this._smoothZoom(-1);
-            this._smoothTransform(-1);
+        if (smooth) {
+            this._focusing = true;
         }
-
-        this._updateTransform();
     }
 
     /**
@@ -957,7 +1012,7 @@ class CameraControls extends Script {
      * @param {number} [zoomDist] - The zoom distance.
      * @param {boolean} [smooth] - Whether to smooth the refocus.
      */
-    refocus(point, start = null, zoomDist, smooth = true) {
+    refocus(point, start, zoomDist, smooth = true) {
         if (typeof zoomDist === 'number') {
             this.resetZoom(zoomDist, smooth);
         }
@@ -1003,9 +1058,8 @@ class CameraControls extends Script {
 
         this._camera = null;
 
-        this._dir.x = this._angles.x;
-        this._dir.y = this._angles.y;
-        this._origin.copy(this._position);
+        this._cancelSmoothZoom();
+        this._cancelSmoothTransform();
 
         this._pointerEvents.clear();
         this._lastPinchDist = -1;
