@@ -129,7 +129,9 @@ app.root.addChild(camera);
 const cameraControls = /** @type {CameraControls} */ (camera.script.create(CameraControls, {
     properties: {
         focusPoint: pc.Vec3.ZERO,
-        sceneSize: 5
+        sceneSize: 5,
+        rotateDamping: 0,
+        moveDamping: 0
     }
 }));
 app.on('gizmo:pointer', (/** @type {boolean} */ hasPointer) => {
