@@ -8,7 +8,7 @@ import replace from '@rollup/plugin-replace';
 import terser from '@rollup/plugin-terser';
 
 import { exampleMetaData } from './cache/metadata.mjs';
-import { copyStatic } from './utils/plugins/rollup-copy-static.mjs';
+import { copy } from './utils/plugins/rollup-copy.mjs';
 import { isModuleWithExternalDependencies } from './utils/utils.mjs';
 import { treeshakeIgnore } from '../utils/plugins/rollup-treeshake-ignore.mjs';
 import { buildTarget } from '../utils/rollup-build-target.mjs';
@@ -22,6 +22,11 @@ const NODE_ENV = process.env.NODE_ENV ?? '';
 const ENGINE_PATH =
     !process.env.ENGINE_PATH && NODE_ENV === 'development' ? '../src/index.js' : process.env.ENGINE_PATH ?? '';
 
+/**
+ * Get the engine path files.
+ *
+ * @returns {{ src: string, dest: string }[]} - The engine path files.
+ */
 const getEnginePathFiles = () => {
     if (!ENGINE_PATH) {
         return [];
@@ -39,6 +44,69 @@ const getEnginePathFiles = () => {
     // packed module builds
     const dest = 'dist/iframe/ENGINE_PATH/index.js';
     return [{ src, dest }];
+};
+
+const STATIC_FILES = [
+    // static main page src
+    { src: './src/static', dest: 'dist/' },
+
+    // static iframe src
+    { src: './iframe', dest: 'dist/iframe' },
+
+    // assets used in examples
+    { src: './assets', dest: 'dist/static/assets/' },
+
+    // thumbnails used in examples
+    { src: './thumbnails', dest: 'dist/thumbnails/' },
+
+    // external libraries used in examples
+    { src: './src/lib', dest: 'dist/static/lib/' },
+
+    // engine scripts
+    { src: '../scripts', dest: 'dist/static/scripts/' },
+
+    // playcanvas engine types
+    { src: '../build/playcanvas.d.ts', dest: 'dist/playcanvas.d.ts' },
+
+    // playcanvas observer
+    {
+        src: './node_modules/@playcanvas/observer/dist/index.mjs',
+        dest: 'dist/iframe/playcanvas-observer.mjs'
+    },
+
+    // monaco loader
+    { src: './node_modules/monaco-editor/min/vs', dest: 'dist/modules/monaco-editor/min/vs' },
+
+    // fflate (for when using ENGINE_PATH)
+    { src: '../node_modules/fflate/esm/', dest: 'dist/modules/fflate/esm' },
+
+    // engine path
+    ...getEnginePathFiles()
+];
+
+/**
+ * Rollup option for static files.
+ *
+ * @param {object} item - The static files.
+ * @param {string} item.src - The source directory.
+ * @param {string} item.dest - The destination directory.
+ * @param {boolean} [item.once] - Copy only once.
+ * @returns {RollupOptions} - The rollup option.
+ */
+const staticRollupOption = (item) => {
+    return {
+        input: 'templates/placeholder.html',
+        output: {
+            file: 'cache/output.tmp'
+        },
+        watch: {
+            skipWrite: true
+        },
+        treeshake: false,
+        plugins: [
+            copy([item], NODE_ENV === 'development')
+        ]
+    };
 };
 
 /**
@@ -139,7 +207,10 @@ const exampleRollupOptions = ({ categoryKebab, exampleNameKebab, path }) => {
             continue;
         }
 
-        fs.copyFileSync(input, output);
+        options.push(staticRollupOption({
+            src: input,
+            dest: output
+        }));
     }
     return options;
 };
@@ -201,62 +272,10 @@ const engineRollupOptions = () => {
     return options;
 };
 
-const STATIC_FILES = [
-    // static main page src
-    { src: './src/static', dest: 'dist/' },
-
-    // static iframe src
-    { src: './iframe', dest: 'dist/iframe' },
-
-    // assets used in examples
-    { src: './assets', dest: 'dist/static/assets/', once: true },
-
-    // thumbnails used in examples
-    { src: './thumbnails', dest: 'dist/thumbnails/', once: true },
-
-    // external libraries used in examples
-    { src: './src/lib', dest: 'dist/static/lib/', once: true },
-
-    // engine scripts
-    { src: '../scripts', dest: 'dist/static/scripts/' },
-
-    // playcanvas engine types
-    { src: '../build/playcanvas.d.ts', dest: 'dist/playcanvas.d.ts' },
-
-    // playcanvas observer
-    {
-        src: './node_modules/@playcanvas/observer/dist/index.mjs',
-        dest: 'dist/iframe/playcanvas-observer.mjs',
-        once: true
-    },
-
-    // modules (N.B. destination folder is 'modules' as 'node_modules' are automatically excluded by git pages)
-    { src: './node_modules/monaco-editor/min/vs', dest: 'dist/modules/monaco-editor/min/vs', once: true },
-
-    // fflate (for when using ENGINE_PATH)
-    { src: '../node_modules/fflate/esm/', dest: 'dist/modules/fflate/esm', once: true },
-
-    // engine path
-    ...getEnginePathFiles()
-];
-
 export default [
     ...exampleMetaData.flatMap(data => exampleRollupOptions(data)),
     ...engineRollupOptions(),
-    {
-        // used as a placeholder to copy static files
-        input: 'src/static/index.html',
-        output: {
-            file: 'cache/output.tmp'
-        },
-        watch: {
-            skipWrite: true
-        },
-        treeshake: false,
-        plugins: [
-            copyStatic(STATIC_FILES, NODE_ENV === 'development')
-        ]
-    },
+    ...STATIC_FILES.map(item => staticRollupOption(item)),
     {
         // A debug build is ~2.3MB and a release build ~0.6MB
         input: 'src/app/index.mjs',
