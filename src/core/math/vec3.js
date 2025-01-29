@@ -662,7 +662,7 @@ class Vec3 {
     /**
      * Set the values of the vector from an array.
      *
-     * @param {number[]} arr - The array to set the vector values from.
+     * @param {number[]|ArrayBufferView} arr - The array to set the vector values from.
      * @param {number} [offset] - The zero-based index at which to start copying elements from the
      * array. Default is 0.
      * @returns {Vec3} Self for chaining.
@@ -695,11 +695,11 @@ class Vec3 {
     /**
      * Converts the vector to an array.
      *
-     * @param {number[]} [arr] - The array to populate with the color components. If not specified,
+     * @param {number[]|ArrayBufferView} [arr] - The array to populate with the color components. If not specified,
      * a new array is created.
      * @param {number} [offset] - The zero-based index at which to start copying elements to the
      * array. Default is 0.
-     * @returns {number[]} The vector as an array.
+     * @returns {number[]|ArrayBufferView} The vector as an array.
      * @example
      * const v = new pc.Vec3(20, 10, 5);
      * // Outputs [20, 10, 5]
