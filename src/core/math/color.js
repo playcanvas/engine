@@ -223,7 +223,7 @@ class Color {
     /**
      * Set the values of the vector from an array.
      *
-     * @param {number[]} array - The array to set the vector values from.
+     * @param {number[]} arr - The array to set the vector values from.
      * @param {number} [offset] - The zero-based index at which to start copying elements from the
      * array. Default is 0.
      * @returns {Color} Self for chaining.
@@ -232,11 +232,11 @@ class Color {
      * c.fromArray([1, 0, 1, 1]);
      * // c is set to [1, 0, 1, 1]
      */
-    fromArray(array, offset = 0) {
-        this.r = array[offset] ?? this.r;
-        this.g = array[offset + 1] ?? this.g;
-        this.b = array[offset + 2] ?? this.b;
-        this.a = array[offset + 3] ?? this.a;
+    fromArray(arr, offset = 0) {
+        this.r = arr[offset] ?? this.r;
+        this.g = arr[offset + 1] ?? this.g;
+        this.b = arr[offset + 2] ?? this.b;
+        this.a = arr[offset + 3] ?? this.a;
 
         return this;
     }
@@ -279,7 +279,7 @@ class Color {
      * Converts the color to an array of numbers.
      *
      * @param {boolean} [alpha] - If true, the output array will include the alpha value.
-     * @param {number[]} [out] - The array to populate with the color components. If not specified,
+     * @param {number[]} [arr] - The array to populate with the color components. If not specified,
      * a new array is created.
      * @param {number} [offset] - The zero-based index at which to start copying elements to the
      * array. Default is 0.
@@ -289,14 +289,14 @@ class Color {
      * // Outputs [1, 1, 1, 1]
      * console.log(c.toArray(true));
      */
-    toArray(alpha, out = [], offset = 0) {
-        out[offset] = this.r;
-        out[offset + 1] = this.g;
-        out[offset + 2] = this.b;
+    toArray(alpha, arr = [], offset = 0) {
+        arr[offset] = this.r;
+        arr[offset + 1] = this.g;
+        arr[offset + 2] = this.b;
         if (alpha) {
-            out[offset + 3] = this.a;
+            arr[offset + 3] = this.a;
         }
-        return out;
+        return arr;
     }
 
     /**
