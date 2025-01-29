@@ -336,6 +336,8 @@ class CameraControls extends Script {
         this.pitchRange = this._pitchRange ?? this.pitchRange;
         this.zoomMin = this._zoomMin ?? this.zoomMin;
         this.zoomMax = this._zoomMax ?? this.zoomMax;
+
+        this.on('destroy', this.destroy, this);
     }
 
     /**

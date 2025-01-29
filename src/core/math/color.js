@@ -221,6 +221,27 @@ class Color {
     }
 
     /**
+     * Set the values of the vector from an array.
+     *
+     * @param {number[]} arr - The array to set the vector values from.
+     * @param {number} [offset] - The zero-based index at which to start copying elements from the
+     * array. Default is 0.
+     * @returns {Color} Self for chaining.
+     * @example
+     * const c = new pc.Color();
+     * c.fromArray([1, 0, 1, 1]);
+     * // c is set to [1, 0, 1, 1]
+     */
+    fromArray(arr, offset = 0) {
+        this.r = arr[offset] ?? this.r;
+        this.g = arr[offset + 1] ?? this.g;
+        this.b = arr[offset + 2] ?? this.b;
+        this.a = arr[offset + 3] ?? this.a;
+
+        return this;
+    }
+
+    /**
      * Converts the color to string form. The format is '#RRGGBBAA', where RR, GG, BB, AA are the
      * red, green, blue and alpha values. When the alpha value is not included (the default), this
      * is the same format as used in HTML/CSS.
@@ -252,6 +273,30 @@ class Color {
             }
         }
         return s;
+    }
+
+    /**
+     * Converts the color to an array of numbers.
+     *
+     * @param {number[]} [arr] - The array to populate with the color components. If not specified,
+     * a new array is created. Default is true.
+     * @param {number} [offset] - The zero-based index at which to start copying elements to the
+     * array. Default is 0.
+     * @param {boolean} [alpha] - If true, the output array will include the alpha value.
+     * @returns {number[]} The color as an array of numbers.
+     * @example
+     * const c = new pc.Color(1, 1, 1);
+     * // Outputs [1, 1, 1, 1]
+     * console.log(c.toArray());
+     */
+    toArray(arr = [], offset = 0, alpha = true) {
+        arr[offset] = this.r;
+        arr[offset + 1] = this.g;
+        arr[offset + 2] = this.b;
+        if (alpha) {
+            arr[offset + 3] = this.a;
+        }
+        return arr;
     }
 
     /**

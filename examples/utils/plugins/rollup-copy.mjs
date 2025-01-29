@@ -1,12 +1,11 @@
 import fs from 'fs';
 import path from 'path';
 
-import fse from 'fs-extra';
+const GREEN_OUT = '\x1b[32m';
+const BOLD_OUT = '\x1b[1m';
+const REGULAR_OUT = '\x1b[22m';
 
 /** @import { Plugin, PluginContext } from 'rollup' */
-
-const copied = new Set();
-
 
 /**
  * @param {PluginContext} context - The Rollup plugin context.
@@ -36,30 +35,28 @@ const addWatch = (context, src) => {
  * @param {object[]} targets - Array of source and destination objects.
  * @param {string} targets.src - File or entire dir.
  * @param {string} targets.dest - File or entire dir, usually into `dist/`.
- * @param {boolean} [targets.once] - Copy files only once for speed-up (external libs).
  * @param {boolean} watch - Watch the files.
  * @returns {Plugin} The plugin.
  */
-export function copyStatic(targets, watch = false) {
+export function copy(targets, watch = false) {
     return {
-        name: 'copy-static',
+        name: 'copy',
         load() {
-            return 'console.log(\'UNUSED ROLLUP OUTPUT FILE\');';
+            return '';
         },
         buildStart() {
             if (watch) {
-                targets.forEach((target) => {
+                for (let i = 0; i < targets.length; i++) {
+                    const target = targets[i];
                     addWatch(this, target.src);
-                });
+                }
             }
         },
         buildEnd() {
             for (let i = 0; i < targets.length; i++) {
                 const target = targets[i];
-                if (target.once && copied.has(target.src)) {
-                    continue;
-                }
-                fse.copySync(target.src, target.dest, { overwrite: true });
+                fs.cpSync(target.src, target.dest, { recursive: true });
+                console.log(`${GREEN_OUT}copied ${BOLD_OUT}${target.src}${REGULAR_OUT} → ${BOLD_OUT}${target.dest}${REGULAR_OUT}`);
             }
         }
     };
