@@ -40,17 +40,18 @@ const addWatch = (context, src) => {
  * @param {boolean} watch - Watch the files.
  * @returns {Plugin} The plugin.
  */
-export function copyStatic(targets, watch = false) {
+export function copy(targets, watch = false) {
     return {
-        name: 'copy-static',
+        name: 'copy',
         load() {
-            return 'console.log(\'UNUSED ROLLUP OUTPUT FILE\');';
+            return '';
         },
         buildStart() {
             if (watch) {
-                targets.forEach((target) => {
+                for (let i = 0; i < targets.length; i++) {
+                    const target = targets[i];
                     addWatch(this, target.src);
-                });
+                }
             }
         },
         buildEnd() {
