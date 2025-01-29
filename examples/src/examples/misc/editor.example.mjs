@@ -140,6 +140,14 @@ app.on('gizmo:pointer', (/** @type {boolean} */ hasPointer) => {
     }
 });
 
+// outline renderer
+const outlineRenderer = new pc.OutlineRenderer(app);
+outlineRenderer.addEntity(box, pc.Color.WHITE);
+const immediateLayer = /** @type {pc.Layer} */ (app.scene.layers.getLayerByName('Immediate'));
+app.on('update', (/** @type {number} */ dt) => {
+    outlineRenderer.frameUpdate(camera, immediateLayer, false);
+});
+
 // grid
 const gridEntity = new pc.Entity('grid');
 gridEntity.setLocalScale(8, 1, 8);
