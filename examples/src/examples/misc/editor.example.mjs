@@ -361,6 +361,7 @@ data.on('*:set', (/** @type {string} */ path, /** @type {any} */ value) => {
 app.on('destroy', () => {
     gizmoHandler.destroy();
     selector.destroy();
+    viewCube.destroy();
 
     window.removeEventListener('resize', resize);
     window.removeEventListener('keydown', keydown);
