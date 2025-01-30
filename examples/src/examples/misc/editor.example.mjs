@@ -24,8 +24,6 @@ device.maxPixelRatio = Math.min(window.devicePixelRatio, 2);
 
 const createOptions = new pc.AppOptions();
 createOptions.graphicsDevice = device;
-createOptions.mouse = new pc.Mouse(document.body);
-createOptions.keyboard = new pc.Keyboard(window);
 
 createOptions.componentSystems = [
     pc.RenderComponentSystem,
