@@ -27,13 +27,15 @@ import { BindGroupFormat, BindStorageBufferFormat, BindTextureFormat } from '../
 const KEYWORD = /^[ \t]*(attribute|varying|uniform)[\t ]+/gm;
 
 // match 'attribute' and anything else till ';'
-// eslint-disable-next-line regexp/no-unused-capturing-group, regexp/no-super-linear-backtracking
+// eslint-disable-next-line
 const KEYWORD_LINE = /^[ \t]*(attribute|varying|uniform)[ \t]*([^;]+)(;+)/gm;
 
 // match global variables of type texture, storage buffer, storage texture or external texture
+// eslint-disable-next-line
 const KEYWORD_RESOURCE = /^[ \t]*var\s*(<[^>]+>)?\s*[\w\d_]+\s*:\s*(texture_.*|storage_texture_.*|storage.*|external_texture|array<.*>|sampler|sampler_comparison).*;\s*$/gm;
 
 // match varying name from string like: '@interpolate(perspective, centroid) smoothColor : vec3f;'
+// eslint-disable-next-line
 const VARYING = /(?:@interpolate\([^)]*\)\s*)?([\w]+)\s*:/;
 
 // marker for a place in the source code to be replaced by code
@@ -114,11 +116,17 @@ class UniformLine {
 //     var<storage, read_write> storageBuffer : Buffer;
 //     var storageTexture : texture_storage_2d<rgba8unorm, write>;
 //     var videoTexture : texture_external;
+// eslint-disable-next-line
 const ARRAY_REGEX = /^\s*var\s+([\w\d_]+)\s*:\s*array<([\w\d_<>]+),\s*(\d+)>;\s*$/;
+// eslint-disable-next-line
 const TEXTURE_REGEX = /^\s*var\s+([\w\d_]+)\s*:\s*texture_(\w+)<([a-zA-Z0-9_,<>]*)>;\s*$/;
+// eslint-disable-next-line
 const STORAGE_TEXTURE_REGEX = /^\s*var\s+([\w\d_]+)\s*:\s*(texture_storage_2d|texture_storage_2d_array)<([\w\d_]+),\s*(\w+)>\s*;\s*$/;
+// eslint-disable-next-line
 const STORAGE_BUFFER_REGEX = /^\s*var\s*<storage,\s*(read|write)?>\s*([\w\d_]+)\s*:\s*(.*)\s*;\s*$/;
+// eslint-disable-next-line
 const EXTERNAL_TEXTURE_REGEX = /^\s*var\s+([\w\d_]+)\s*:\s*texture_external;\s*$/;
+// eslint-disable-next-line
 const SAMPLER_REGEX = /^\s*var\s+([\w\d_]+)\s*:\s*(sampler|sampler_comparison)\s*;\s*$/;
 
 // ResourceLine class to parse the resource declarations
