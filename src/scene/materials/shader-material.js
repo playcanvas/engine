@@ -9,6 +9,12 @@ import { Material } from './material.js';
  * @typedef {object} ShaderDesc - The description of the shader used by the {@link ShaderMaterial}.
  * @property {string} uniqueName - Unique name for the shader. If a shader with this name already
  * exists, it will be returned instead of a new shader instance.
+ * @property {string} [shaderLanguage] - The language used by the shader source. Can be:
+ *
+ * - {@link SHADERLANGUAGE_GLSL}
+ * - {@link SHADERLANGUAGE_WGSL}
+ *
+ * Defaults to {@link SHADERLANGUAGE_GLSL}.
  * @property {string} [vertexCode] - The vertex shader code.
  * @property {string} [fragmentCode] - The fragment shader code.
  * @property {Object<string, string>} [attributes] - Object detailing the mapping of vertex shader

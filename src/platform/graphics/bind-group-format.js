@@ -73,6 +73,14 @@ class BindUniformBufferFormat extends BindBaseFormat {
  */
 class BindStorageBufferFormat extends BindBaseFormat {
     /**
+     * Format, extracted from vertex and fragment shader.
+     *
+     * @type {string}
+     * @ignore
+     */
+    format = '';
+
+    /**
      * Create a new instance.
      *
      * @param {string} name - The name of the storage buffer.
@@ -134,8 +142,9 @@ class BindTextureFormat extends BindBaseFormat {
      * @param {boolean} [hasSampler] - True if the sampler for the texture is needed. Note that if the
      * sampler is used, it will take up an additional slot, directly following the texture slot.
      * Defaults to true.
+     * @param {string|null} [samplerName] - Optional name of the sampler. Defaults to null.
      */
-    constructor(name, visibility, textureDimension = TEXTUREDIMENSION_2D, sampleType = SAMPLETYPE_FLOAT, hasSampler = true) {
+    constructor(name, visibility, textureDimension = TEXTUREDIMENSION_2D, sampleType = SAMPLETYPE_FLOAT, hasSampler = true, samplerName = null) {
         super(name, visibility);
 
         // TEXTUREDIMENSION_***
@@ -146,6 +155,9 @@ class BindTextureFormat extends BindBaseFormat {
 
         // whether to use a sampler with this texture
         this.hasSampler = hasSampler;
+
+        // optional name of the sampler (its automatically generated if not provided)
+        this.samplerName = samplerName ?? `${name}_sampler`;
     }
 }
 
