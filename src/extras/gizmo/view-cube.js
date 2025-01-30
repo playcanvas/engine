@@ -452,6 +452,11 @@ class ViewCube extends EventHandler {
 
         this._group.appendChild(fragment);
     }
+
+    destroy() {
+        this.dom.remove();
+        this.off();
+    }
 }
 
 export { ViewCube };
