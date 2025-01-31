@@ -339,6 +339,9 @@ class CameraFrame {
         // no longer HDR rendering
         cameraComponent.gammaCorrection = GAMMA_SRGB;
 
+        // disable SSAO included in the lighting pass
+        cameraComponent.shaderParams.ssaoEnabled = false;
+
         this.renderPassCamera = null;
     }
 
