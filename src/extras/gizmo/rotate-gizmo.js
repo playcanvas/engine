@@ -127,6 +127,13 @@ class RotateGizmo extends TransformGizmo {
     snapIncrement = 5;
 
     /**
+     * This forces the rotation to always be calculated based on the mouse position around the gizmo.
+     *
+     * @type {boolean}
+     */
+    orbitRotation = false;
+
+    /**
      * Creates a new RotateGizmo object.
      *
      * @param {CameraComponent} camera - The camera component.
@@ -471,7 +478,7 @@ class RotateGizmo extends TransformGizmo {
         // calculate angle
         const facingDir = tmpV2.copy(this.facing);
         const facingDot = plane.normal.dot(facingDir);
-        if (Math.abs(facingDot) > FACING_THRESHOLD) {
+        if (this.orbitRotation || Math.abs(facingDot) > FACING_THRESHOLD) {
             // plane facing camera so based on mouse position around gizmo
             tmpV1.sub2(point, gizmoPos);
 
