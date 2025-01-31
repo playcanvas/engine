@@ -15,9 +15,8 @@ import {
     isIntegerPixelFormat, FILTER_NEAREST, TEXTURELOCK_NONE, TEXTURELOCK_READ,
     TEXPROPERTY_MIN_FILTER, TEXPROPERTY_MAG_FILTER, TEXPROPERTY_ADDRESS_U, TEXPROPERTY_ADDRESS_V,
     TEXPROPERTY_ADDRESS_W, TEXPROPERTY_COMPARE_ON_READ, TEXPROPERTY_COMPARE_FUNC, TEXPROPERTY_ANISOTROPY,
-    TEXPROPERTY_ALL, requiresManualGamma,
-    pixelFormatInfo
-
+    TEXPROPERTY_ALL,
+    requiresManualGamma, pixelFormatInfo, isSrgbPixelFormat, pixelFormatLinearToGamma, pixelFormatGammaToLinear
 } from './constants.js';
 import { TextureUtils } from './texture-utils.js';
 
@@ -278,20 +277,16 @@ class Texture {
             this.projection = options.projection;
         }
 
-        this.impl = graphicsDevice.createTextureImpl(this);
-
         // #if _PROFILER
         this.profilerHint = options.profilerHint ?? 0;
         // #endif
 
-        this.dirtyAll();
-
         this._levels = options.levels;
-        if (this._levels) {
-            this.upload();
-        } else {
+        if (!this._levels) {
             this._levels = this._cubemap ? [[null, null, null, null, null, null]] : [null];
         }
+
+        this.recreateImpl();
 
         // track the texture
         graphicsDevice.textures.push(this);
@@ -330,6 +325,20 @@ class Texture {
             this._levels = null;
             this.device = null;
         }
+    }
+
+    recreateImpl() {
+
+        const { device } = this;
+
+        // destroy existing
+        this.impl?.destroy(device);
+        this.impl = null;
+
+        // create new
+        this.impl = device.createTextureImpl(this);
+        this.dirtyAll();
+        this.upload();
     }
 
     /**
@@ -779,6 +788,53 @@ class Texture {
      */
     get volume() {
         return this._volume;
+    }
+
+    /**
+     * Sets the texture's internal format to an sRGB or linear equivalent of its current format.
+     * When set to true, the texture is stored in sRGB format and automatically converted to linear
+     * space when sampled. When set to false, the texture remains in a linear format. Changing this
+     * property recreates the texture on the GPU, which is an expensive operation, so it is
+     * preferable to create the texture with the correct format from the start. If the texture
+     * format has no sRGB variant, this operation is ignored.
+     *
+     * @type {boolean}
+     */
+    set srgb(value) {
+        const currentSrgb = isSrgbPixelFormat(this.format);
+        if (value !== currentSrgb) {
+
+            if (value) {
+
+                // switch to sRGB
+                const srgbFormat = pixelFormatLinearToGamma(this.format);
+                if (this._format !== srgbFormat) {
+                    Debug.warn(`Switching format of texture '${this.name}' to sRGB equivalent: ${pixelFormatInfo.get(this.format)?.name} -> ${pixelFormatInfo.get(srgbFormat)?.name}. This is an expensive operation, and the texture should be created using the right format to avoid this.`, this);
+                    this._format = srgbFormat;
+                    this.recreateImpl();
+                }
+
+            } else {
+
+                // switch to linear
+                const linearFormat = pixelFormatGammaToLinear(this.format);
+                if (this._format !== linearFormat) {
+                    Debug.warn(`Switching format of texture '${this.name}' to linear equivalent: ${pixelFormatInfo.get(this.format)?.name} -> ${pixelFormatInfo.get(linearFormat)?.name}. This is an expensive operation, and the texture should be created using the right format to avoid this.`, this);
+                    this._format = linearFormat;
+                    this.recreateImpl();
+                }
+            }
+        }
+    }
+
+    /**
+     * Returns true if the texture is stored in an sRGB format, meaning it will be converted to
+     * linear space when sampled. Returns false if the texture is stored in a linear format.
+     *
+     * @type {boolean}
+     */
+    get srgb() {
+        return isSrgbPixelFormat(this.format);
     }
 
     /**

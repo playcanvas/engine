@@ -1159,6 +1159,24 @@ export const pixelFormatLinearToGamma = (format) => {
 };
 
 /**
+ * Returns the linear equivalent format for the supplied sRGB format. If it does not exist, the input
+ * format is returned. For example for {@link PIXELFORMAT_SRGBA8} the return value is
+ * {@link PIXELFORMAT_RGBA8}.
+ *
+ * @param {number} format - The texture format.
+ * @returns {number} The equivalent format without automatic sRGB conversion.
+ * @ignore
+ */
+export const pixelFormatGammaToLinear = (format) => {
+    for (const [key, value] of pixelFormatInfo) {
+        if (value.srgbFormat === format) {
+            return key;
+        }
+    }
+    return format;
+};
+
+/**
  * For a pixel format that stores color information, this function returns true if the texture
  * sample is in sRGB space and needs to be decoded to linear space.
  *
