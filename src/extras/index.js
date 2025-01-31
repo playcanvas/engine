@@ -22,6 +22,7 @@ export { RenderPassDof } from './render-passes/render-pass-dof.js';
 export { RenderPassDownsample } from './render-passes/render-pass-downsample.js';
 export { RenderPassUpsample } from './render-passes/render-pass-upsample.js';
 export { RenderPassBloom } from './render-passes/render-pass-bloom.js';
+export { RenderPassPrepass } from './render-passes/render-pass-prepass.js';
 export { RenderPassSsao } from './render-passes/render-pass-ssao.js';
 export { RenderPassTAA } from './render-passes/render-pass-taa.js';
 export { CameraFrame } from './render-passes/camera-frame.js';

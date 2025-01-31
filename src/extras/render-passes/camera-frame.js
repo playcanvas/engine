@@ -319,9 +319,8 @@ class CameraFrame {
     enable() {
         Debug.assert(!this.renderPassCamera);
 
-        const cameraComponent = this.cameraComponent;
-        this.renderPassCamera = new RenderPassCameraFrame(this.app, cameraComponent, this.options);
-        cameraComponent.renderPasses = [this.renderPassCamera];
+        this.renderPassCamera = this.createRenderPass();
+        this.cameraComponent.renderPasses = [this.renderPassCamera];
     }
 
     disable() {
@@ -343,6 +342,16 @@ class CameraFrame {
         cameraComponent.shaderParams.ssaoEnabled = false;
 
         this.renderPassCamera = null;
+    }
+
+    /**
+     * Creates a render pass for the camera frame. Override this method to utilize a custom render
+     * pass, typically one that extends {@link RenderPassCameraFrame}.
+     *
+     * @returns {RenderPassCameraFrame} - The render pass.
+     */
+    createRenderPass() {
+        return new RenderPassCameraFrame(this.app, this.cameraComponent, this.options);
     }
 
     /**
