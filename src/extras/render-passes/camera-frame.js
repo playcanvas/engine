@@ -320,7 +320,7 @@ class CameraFrame {
         Debug.assert(!this.renderPassCamera);
 
         const cameraComponent = this.cameraComponent;
-        this.renderPassCamera = new RenderPassCameraFrame(this.app, cameraComponent, this.options);
+        this.renderPassCamera = this.createRenderPass(this.app, cameraComponent);
         cameraComponent.renderPasses = [this.renderPassCamera];
     }
 
@@ -340,6 +340,18 @@ class CameraFrame {
         cameraComponent.gammaCorrection = GAMMA_SRGB;
 
         this.renderPassCamera = null;
+    }
+
+    /**
+     * Creates a render pass for the camera frame. Override this method to utilize a custom render
+     * pass, typically one that extends {@link RenderPassCameraFrame}.
+     *
+     * @param {AppBase} app - The application.
+     * @param {CameraComponent} cameraComponent - The camera component.
+     * @returns {RenderPassCameraFrame} - The render pass.
+     */
+    createRenderPass(app, cameraComponent) {
+        return new RenderPassCameraFrame(app, cameraComponent, this.options);
     }
 
     /**
