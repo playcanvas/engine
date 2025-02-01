@@ -436,6 +436,19 @@ class WebglTexture {
         this._glCreated = false;
     }
 
+    uploadImmediate(device, texture, immediate) {
+        if (immediate) {
+            if (!texture._glTexture) {
+                this.initialize(device, texture);
+            }
+
+            device.bindTexture(texture);
+            this.upload(device, texture);
+            texture._needsUpload = false;
+            texture._needsMipmapsUpload = false;
+        }
+    }
+
     /**
      * @param {WebglGraphicsDevice} device - The device.
      * @param {Texture} texture - The texture to update.
