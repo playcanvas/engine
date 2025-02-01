@@ -109,8 +109,8 @@ class WebglTexture {
 
         this._glTexture = gl.createTexture();
 
-        this._glTarget = texture._cubemap ? gl.TEXTURE_CUBE_MAP :
-            (texture._volume ? gl.TEXTURE_3D :
+        this._glTarget = texture.cubemap ? gl.TEXTURE_CUBE_MAP :
+            (texture.volume ? gl.TEXTURE_3D :
                 (texture.array ? gl.TEXTURE_2D_ARRAY : gl.TEXTURE_2D));
 
         switch (texture._format) {
@@ -436,6 +436,19 @@ class WebglTexture {
         this._glCreated = false;
     }
 
+    uploadImmediate(device, texture, immediate) {
+        if (immediate) {
+            if (!this._glTexture) {
+                this.initialize(device, texture);
+            }
+
+            device.bindTexture(texture);
+            this.upload(device, texture);
+            texture._needsUpload = false;
+            texture._needsMipmapsUpload = false;
+        }
+    }
+
     /**
      * @param {WebglGraphicsDevice} device - The device.
      * @param {Texture} texture - The texture to update.
@@ -455,14 +468,14 @@ class WebglTexture {
 
         const requiredMipLevels = texture.numLevels;
 
-        if (texture.array) {
+        if (texture.array && !this._glCreated) {
             // for texture arrays we reserve the space in advance
             gl.texStorage3D(gl.TEXTURE_2D_ARRAY,
                 requiredMipLevels,
                 this._glInternalFormat,
                 texture._width,
                 texture._height,
-                texture._arrayLength);
+                texture._layers);
         }
 
         // Upload all existing mip levels. Initialize 0 mip anyway.
@@ -486,18 +499,18 @@ class WebglTexture {
                 texture._mipmapsUploaded = true;
             }
 
-            if (texture._cubemap) {
+            if (texture.cubemap) {
                 // ----- CUBEMAP -----
                 let face;
 
                 if (device._isBrowserInterface(mipObject[0])) {
                     // Upload the image, canvas or video
-                    for (face = 0; face < 6; face++) {
-                        if (!texture._levelsUpdated[0][face]) {
+                    for (face = 0; face < texture.layers; face++) {
+                        let src = mipObject[face];
+                        if (!texture._levelsUpdated[0][face] || !src) {
                             continue;
                         }
 
-                        let src = mipObject[face];
                         // Downsize images that are too large to be used as cube maps
                         if (device._isImageBrowserInterface(src)) {
                             if (src.width > device.maxCubeMapSize || src.height > device.maxCubeMapSize) {
@@ -535,12 +548,12 @@ class WebglTexture {
                 } else {
                     // Upload the byte array
                     resMult = 1 / Math.pow(2, mipLevel);
-                    for (face = 0; face < 6; face++) {
+                    for (face = 0; face < texture.layers; face++) {
+                        const texData = mipObject[face];
                         if (!texture._levelsUpdated[0][face]) {
                             continue;
                         }
 
-                        const texData = mipObject[face];
                         if (texture._compressed) {
                             if (this._glCreated && texData) {
                                 gl.compressedTexSubImage2D(
@@ -592,7 +605,7 @@ class WebglTexture {
                         }
                     }
                 }
-            } else if (texture._volume) {
+            } else if (texture.volume) {
                 // ----- 3D -----
                 // Image/canvas/video not supported (yet?)
                 // Upload the byte array
@@ -602,7 +615,7 @@ class WebglTexture {
                         this._glInternalFormat,
                         Math.max(texture._width * resMult, 1),
                         Math.max(texture._height * resMult, 1),
-                        Math.max(texture._depth * resMult, 1),
+                        Math.max(texture._layers * resMult, 1),
                         0,
                         mipObject);
                 } else {
@@ -613,45 +626,49 @@ class WebglTexture {
                         this._glInternalFormat,
                         Math.max(texture._width * resMult, 1),
                         Math.max(texture._height * resMult, 1),
-                        Math.max(texture._depth * resMult, 1),
+                        Math.max(texture._layers * resMult, 1),
                         0,
                         this._glFormat,
                         this._glPixelType,
                         mipObject);
                 }
             } else if (texture.array && typeof mipObject === 'object') {
-                if (texture._arrayLength === mipObject.length) {
-                    if (texture._compressed) {
-                        for (let index = 0; index < texture._arrayLength; index++) {
-                            gl.compressedTexSubImage3D(
-                                gl.TEXTURE_2D_ARRAY,
-                                mipLevel,
-                                0,
-                                0,
-                                index,
-                                Math.max(Math.floor(texture._width * resMult), 1),
-                                Math.max(Math.floor(texture._height * resMult), 1),
-                                1,
-                                this._glFormat,
-                                mipObject[index]
-                            );
+                if (texture._compressed) {
+                    for (let index = 0; index < texture._layers; index++) {
+                        if (!texture._levelsUpdated[0][index] || !mipObject[index]) {
+                            continue;
                         }
-                    } else {
-                        for (let index = 0; index < texture._arrayLength; index++) {
-                            gl.texSubImage3D(
-                                gl.TEXTURE_2D_ARRAY,
-                                mipLevel,
-                                0,
-                                0,
-                                index,
-                                Math.max(Math.floor(texture._width * resMult), 1),
-                                Math.max(Math.floor(texture._height * resMult), 1),
-                                1,
-                                this._glFormat,
-                                this._glPixelType,
-                                mipObject[index]
-                            );
+                        gl.compressedTexSubImage3D(
+                            gl.TEXTURE_2D_ARRAY,
+                            mipLevel,
+                            0,
+                            0,
+                            index,
+                            Math.max(Math.floor(texture._width * resMult), 1),
+                            Math.max(Math.floor(texture._height * resMult), 1),
+                            1,
+                            this._glFormat,
+                            mipObject[index]
+                        );
+                    }
+                } else {
+                    for (let index = 0; index < texture.layers; index++) {
+                        if (!texture._levelsUpdated[0][index] || !mipObject[index]) {
+                            continue;
                         }
+                        gl.texSubImage3D(
+                            gl.TEXTURE_2D_ARRAY,
+                            mipLevel,
+                            0,
+                            0,
+                            index,
+                            Math.max(Math.floor(texture._width * resMult), 1),
+                            Math.max(Math.floor(texture._height * resMult), 1),
+                            1,
+                            this._glFormat,
+                            this._glPixelType,
+                            mipObject[index]
+                        );
                     }
                 }
             } else {
@@ -766,8 +783,8 @@ class WebglTexture {
         }
 
         if (texture._needsUpload) {
-            if (texture._cubemap) {
-                for (let i = 0; i < 6; i++) {
+            if (texture.cubemap || texture.array) {
+                for (let i = 0; i < texture.layers; i++) {
                     texture._levelsUpdated[0][i] = false;
                 }
             } else {
