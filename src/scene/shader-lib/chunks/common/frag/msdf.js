@@ -28,7 +28,7 @@ varying vec2 shadow_offset;
 vec4 applyMsdf(vec4 color) {
 
     // Convert to linear space before processing
-    // TODO: ideally this would received the color in linear space, but that would require larger changes
+    // TODO: ideally this would receive the color in linear space, but that would require larger changes
     // on the engine side, with the way premultiplied alpha is handled as well.
     color.rgb = gammaCorrectInput(color.rgb);
 
