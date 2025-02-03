@@ -16,6 +16,7 @@ import { BoxLineShape } from './shape/boxline-shape.js';
 // temporary variables
 const tmpV1 = new Vec3();
 const tmpV2 = new Vec3();
+const tmpV3 = new Vec3();
 const tmpQ1 = new Quat();
 
 // constants
@@ -139,7 +140,8 @@ class ScaleGizmo extends TransformGizmo {
             this._storeNodeScales();
         });
 
-        this.on(TransformGizmo.EVENT_TRANSFORMMOVE, (pointDelta) => {
+        this.on(TransformGizmo.EVENT_TRANSFORMMOVE, (point) => {
+            const pointDelta = tmpV3.copy(point).sub(this._selectionStartPoint);
             if (this.snap) {
                 pointDelta.mulScalar(1 / this.snapIncrement);
                 pointDelta.round();

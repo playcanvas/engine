@@ -123,14 +123,6 @@ class TransformGizmo extends Gizmo {
     };
 
     /**
-     * Internal point delta.
-     *
-     * @type {Vec3}
-     * @private
-     */
-    _pointDelta = new Vec3();
-
-    /**
      * Internal gizmo starting rotation in world space.
      *
      * @type {Vec3}
@@ -307,8 +299,7 @@ class TransformGizmo extends Gizmo {
             }
 
             const point = this._screenToPoint(x, y);
-            this._pointDelta.copy(point).sub(this._selectionStartPoint);
-            this.fire(TransformGizmo.EVENT_TRANSFORMMOVE, this._pointDelta, point, x, y);
+            this.fire(TransformGizmo.EVENT_TRANSFORMMOVE, point, x, y);
 
             this._hoverAxis = '';
             this._hoverIsPlane = false;

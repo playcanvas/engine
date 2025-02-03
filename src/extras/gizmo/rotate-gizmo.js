@@ -168,7 +168,7 @@ class RotateGizmo extends TransformGizmo {
             this._drag(true);
         });
 
-        this.on(TransformGizmo.EVENT_TRANSFORMMOVE, (_pointDelta, point, x, y) => {
+        this.on(TransformGizmo.EVENT_TRANSFORMMOVE, (point, x, y) => {
             const axis = this._selectedAxis;
 
             const angle = this._calculateAngle(point, x, y);
