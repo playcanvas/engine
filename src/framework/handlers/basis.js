@@ -230,7 +230,7 @@ class BasisClient {
 
 // defaults
 const defaultNumWorkers = 1;
-const defaultRgbPriority = ['etc1', 'etc2', 'astc', 'dxt', 'pvr', 'atc'];
+const defaultRgbPriority = ['etc2', 'etc1', 'astc', 'dxt', 'pvr', 'atc'];
 const defaultRgbaPriority = ['astc', 'dxt', 'etc2', 'pvr', 'atc'];
 const defaultMaxRetries = 5;
 
