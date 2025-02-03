@@ -171,8 +171,7 @@ class RotateGizmo extends TransformGizmo {
         this.on(TransformGizmo.EVENT_TRANSFORMMOVE, (point, x, y) => {
             const axis = this._selectedAxis;
 
-            const angle = this._calculateAngle(point, x, y);
-            let angleDelta = angle - this._selectionStartAngle;
+            let angleDelta = this._calculateAngle(point, x, y) - this._selectionStartAngle;
             if (this.snap) {
                 angleDelta = Math.round(angleDelta / this.snapIncrement) * this.snapIncrement;
             }
