@@ -227,14 +227,6 @@ class TransformGizmo extends Gizmo {
     _selectionStartPoint = new Vec3();
 
     /**
-     * Internal selection starting angle in world space.
-     *
-     * @type {number}
-     * @protected
-     */
-    _selectionStartAngle = 0;
-
-    /**
      * Internal state for if the gizmo is being dragged.
      *
      * @type {boolean}
@@ -296,9 +288,8 @@ class TransformGizmo extends Gizmo {
             this._rootStartRot.copy(this.root.getRotation());
             const pointInfo = this._screenToPoint(x, y);
             this._selectionStartPoint.copy(pointInfo.point);
-            this._selectionStartAngle = pointInfo.angle;
             this._dragging = true;
-            this.fire(TransformGizmo.EVENT_TRANSFORMSTART);
+            this.fire(TransformGizmo.EVENT_TRANSFORMSTART, pointInfo.point, x, y);
         });
 
         this.on(Gizmo.EVENT_POINTERMOVE, (x, y, meshInstance) => {
@@ -317,8 +308,7 @@ class TransformGizmo extends Gizmo {
 
             const pointInfo = this._screenToPoint(x, y);
             this._pointDelta.copy(pointInfo.point).sub(this._selectionStartPoint);
-            const angleDelta = pointInfo.angle - this._selectionStartAngle;
-            this.fire(TransformGizmo.EVENT_TRANSFORMMOVE, this._pointDelta, angleDelta);
+            this.fire(TransformGizmo.EVENT_TRANSFORMMOVE, this._pointDelta, pointInfo.point, x, y);
 
             this._hoverAxis = '';
             this._hoverIsPlane = false;

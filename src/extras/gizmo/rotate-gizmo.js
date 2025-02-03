@@ -74,6 +74,14 @@ class RotateGizmo extends TransformGizmo {
     };
 
     /**
+     * Internal selection starting angle in world space.
+     *
+     * @type {number}
+     * @private
+     */
+    _selectionStartAngle = 0;
+
+    /**
      * Internal mapping from each attached node to their starting rotation in local space.
      *
      * @type {Map<GraphNode, Quat>}
@@ -146,7 +154,11 @@ class RotateGizmo extends TransformGizmo {
 
         this._createTransform();
 
-        this.on(TransformGizmo.EVENT_TRANSFORMSTART, () => {
+        this.on(TransformGizmo.EVENT_TRANSFORMSTART, (point, x, y) => {
+            // store start angle
+            this._selectionStartAngle = this._calculateAngle(point, x, y);
+
+            // store initial node rotations
             this._storeNodeRotations();
 
             // store guide points
@@ -156,9 +168,11 @@ class RotateGizmo extends TransformGizmo {
             this._drag(true);
         });
 
-        this.on(TransformGizmo.EVENT_TRANSFORMMOVE, (pointDelta, angleDelta) => {
+        this.on(TransformGizmo.EVENT_TRANSFORMMOVE, (_pointDelta, point, x, y) => {
             const axis = this._selectedAxis;
 
+            const angle = this._calculateAngle(point, x, y);
+            let angleDelta = angle - this._selectionStartAngle;
             if (this.snap) {
                 angleDelta = Math.round(angleDelta / this.snapIncrement) * this.snapIncrement;
             }
@@ -462,7 +476,6 @@ class RotateGizmo extends TransformGizmo {
      * @protected
      */
     _screenToPoint(x, y) {
-        const gizmoPos = this.root.getPosition();
         const mouseWPos = this._camera.screenToWorld(x, y, 1);
 
         const axis = this._selectedAxis;
@@ -471,9 +484,28 @@ class RotateGizmo extends TransformGizmo {
         const plane = this._createPlane(axis, axis === GIZMOAXIS_FACE, false);
 
         const point = new Vec3();
-        let angle = 0;
+        const angle = 0;
 
         plane.intersectsRay(ray, point);
+
+        return { point, angle };
+    }
+
+    /**
+     * @param {Vec3} point - The point.
+     * @param {number} x - The x coordinate.
+     * @param {number} y - The y coordinate.
+     * @returns {number} The angle.
+     * @protected
+     */
+    _calculateAngle(point, x, y) {
+        const gizmoPos = this.root.getPosition();
+
+        const axis = this._selectedAxis;
+
+        const plane = this._createPlane(axis, axis === GIZMOAXIS_FACE, false);
+
+        let angle = 0;
 
         // calculate angle
         const facingDir = tmpV2.copy(this.facing);
@@ -498,7 +530,7 @@ class RotateGizmo extends TransformGizmo {
             angle = tmpV1.dot(tmpV2);
         }
 
-        return { point, angle };
+        return angle;
     }
 }
 
