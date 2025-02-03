@@ -472,7 +472,7 @@ class RotateGizmo extends TransformGizmo {
     /**
      * @param {number} x - The x coordinate.
      * @param {number} y - The y coordinate.
-     * @returns {{ point: Vec3, angle: number }} The point and angle.
+     * @returns {Vec3} The point in world space.
      * @protected
      */
     _screenToPoint(x, y) {
@@ -484,11 +484,10 @@ class RotateGizmo extends TransformGizmo {
         const plane = this._createPlane(axis, axis === GIZMOAXIS_FACE, false);
 
         const point = new Vec3();
-        const angle = 0;
 
         plane.intersectsRay(ray, point);
 
-        return { point, angle };
+        return point;
     }
 
     /**

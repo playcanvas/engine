@@ -286,10 +286,10 @@ class TransformGizmo extends Gizmo {
             this._selectedIsPlane =  this._getIsPlane(meshInstance);
             this._rootStartPos.copy(this.root.getPosition());
             this._rootStartRot.copy(this.root.getRotation());
-            const pointInfo = this._screenToPoint(x, y);
-            this._selectionStartPoint.copy(pointInfo.point);
+            const point = this._screenToPoint(x, y);
+            this._selectionStartPoint.copy(point);
             this._dragging = true;
-            this.fire(TransformGizmo.EVENT_TRANSFORMSTART, pointInfo.point, x, y);
+            this.fire(TransformGizmo.EVENT_TRANSFORMSTART, point, x, y);
         });
 
         this.on(Gizmo.EVENT_POINTERMOVE, (x, y, meshInstance) => {
@@ -306,9 +306,9 @@ class TransformGizmo extends Gizmo {
                 return;
             }
 
-            const pointInfo = this._screenToPoint(x, y);
-            this._pointDelta.copy(pointInfo.point).sub(this._selectionStartPoint);
-            this.fire(TransformGizmo.EVENT_TRANSFORMMOVE, this._pointDelta, pointInfo.point, x, y);
+            const point = this._screenToPoint(x, y);
+            this._pointDelta.copy(point).sub(this._selectionStartPoint);
+            this.fire(TransformGizmo.EVENT_TRANSFORMMOVE, this._pointDelta, point, x, y);
 
             this._hoverAxis = '';
             this._hoverIsPlane = false;
@@ -603,7 +603,7 @@ class TransformGizmo extends Gizmo {
      * @param {number} y - The y coordinate.
      * @param {boolean} isFacing - Whether the axis is facing the camera.
      * @param {boolean} isLine - Whether the axis is a line.
-     * @returns {{ point: Vec3, angle: number }} - The point and angle.
+     * @returns {Vec3} - The point.
      * @protected
      */
     _screenToPoint(x, y, isFacing = false, isLine = false) {
@@ -615,10 +615,9 @@ class TransformGizmo extends Gizmo {
         const plane = this._createPlane(axis, isFacing, isLine);
 
         const point = new Vec3();
-        const angle = 0;
         plane.intersectsRay(ray, point);
 
-        return { point, angle };
+        return point;
     }
 
     /**

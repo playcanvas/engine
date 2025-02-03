@@ -445,7 +445,7 @@ class TranslateGizmo extends TransformGizmo {
     /**
      * @param {number} x - The x coordinate.
      * @param {number} y - The y coordinate.
-     * @returns {{ point: Vec3, angle: number }} The point and angle.
+     * @returns {Vec3} The point in world space.
      * @protected
      */
     _screenToPoint(x, y) {
@@ -458,7 +458,6 @@ class TranslateGizmo extends TransformGizmo {
         const plane = this._createPlane(axis, axis === GIZMOAXIS_FACE, !isPlane);
 
         const point = new Vec3();
-        const angle = 0;
 
         plane.intersectsRay(ray, point);
 
@@ -469,7 +468,7 @@ class TranslateGizmo extends TransformGizmo {
             this._projectToAxis(point, axis);
         }
 
-        return { point, angle };
+        return point;
     }
 }
 

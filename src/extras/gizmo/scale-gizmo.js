@@ -437,7 +437,7 @@ class ScaleGizmo extends TransformGizmo {
     /**
      * @param {number} x - The x coordinate.
      * @param {number} y - The y coordinate.
-     * @returns {{ point: Vec3, angle: number }} The point and angle.
+     * @returns {Vec3} The point in world space.
      * @protected
      */
     _screenToPoint(x, y) {
@@ -453,7 +453,6 @@ class ScaleGizmo extends TransformGizmo {
         const plane = this._createPlane(axis, isScaleUniform, !isPlane);
 
         const point = new Vec3();
-        const angle = 0;
 
         plane.intersectsRay(ray, point);
 
@@ -489,7 +488,7 @@ class ScaleGizmo extends TransformGizmo {
                 point[axis] = 1;
             }
 
-            return { point, angle };
+            return point;
         }
 
         // rotate point back to world coords
@@ -499,7 +498,7 @@ class ScaleGizmo extends TransformGizmo {
             this._projectToAxis(point, axis);
         }
 
-        return { point, angle };
+        return point;
     }
 }
 
