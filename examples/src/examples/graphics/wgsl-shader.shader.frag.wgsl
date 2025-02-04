@@ -1,23 +1,18 @@
-struct ub_mesh {
-    matrix_model : mat4x4f,
-    amount : f32,
-}
+varying fragPosition: vec4f;
+varying texCoord: vec2f;
 
-struct ub_view {
-    matrix_viewProjection : mat4x4f,
-}
-
-struct VertexOutput {
-    @builtin(position) position : vec4f,
-    @location(0) fragPosition: vec4f,
-}
-
-@group(2) @binding(0) var<uniform> uvMesh : ub_mesh;
-@group(0) @binding(0) var<uniform> ubView : ub_view;
+uniform amount : f32;
+var diffuseTexture : texture_2d<f32>;
+var diffuseSampler : sampler;
 
 @fragment
-fn fragmentMain(input : VertexOutput) -> @location(0) vec4f {
+fn fragmentMain(input : FragmentInput) -> FragmentOutput {
+
     var color : vec3f = input.fragPosition.rgb;
-    var roloc : vec3f = vec3f(1.0) - color;
-    return vec4f(mix(color, roloc, uvMesh.amount), 1.0);
+    var roloc : vec3f = vec3f(uniform.amount) + color;
+    var diffuseColor : vec4f = textureSample(diffuseTexture, diffuseSampler, input.texCoord);
+
+    var output: FragmentOutput;
+    output.color = vec4f(diffuseColor.xyz * roloc, 1.0);
+    return output;
 }
