@@ -74,6 +74,14 @@ class RotateGizmo extends TransformGizmo {
     };
 
     /**
+     * Internal selection starting angle in world space.
+     *
+     * @type {number}
+     * @private
+     */
+    _selectionStartAngle = 0;
+
+    /**
      * Internal mapping from each attached node to their starting rotation in local space.
      *
      * @type {Map<GraphNode, Quat>}
@@ -127,6 +135,13 @@ class RotateGizmo extends TransformGizmo {
     snapIncrement = 5;
 
     /**
+     * This forces the rotation to always be calculated based on the mouse position around the gizmo.
+     *
+     * @type {boolean}
+     */
+    orbitRotation = false;
+
+    /**
      * Creates a new RotateGizmo object.
      *
      * @param {CameraComponent} camera - The camera component.
@@ -139,7 +154,11 @@ class RotateGizmo extends TransformGizmo {
 
         this._createTransform();
 
-        this.on(TransformGizmo.EVENT_TRANSFORMSTART, () => {
+        this.on(TransformGizmo.EVENT_TRANSFORMSTART, (point, x, y) => {
+            // store start angle
+            this._selectionStartAngle = this._calculateAngle(point, x, y);
+
+            // store initial node rotations
             this._storeNodeRotations();
 
             // store guide points
@@ -149,9 +168,10 @@ class RotateGizmo extends TransformGizmo {
             this._drag(true);
         });
 
-        this.on(TransformGizmo.EVENT_TRANSFORMMOVE, (pointDelta, angleDelta) => {
+        this.on(TransformGizmo.EVENT_TRANSFORMMOVE, (point, x, y) => {
             const axis = this._selectedAxis;
 
+            let angleDelta = this._calculateAngle(point, x, y) - this._selectionStartAngle;
             if (this.snap) {
                 angleDelta = Math.round(angleDelta / this.snapIncrement) * this.snapIncrement;
             }
@@ -406,17 +426,12 @@ class RotateGizmo extends TransformGizmo {
     _setNodeRotations(axis, angleDelta) {
         const gizmoPos = this.root.getPosition();
         const isFacing = axis === GIZMOAXIS_FACE;
+
+        // calculate rotation from axis and angle
+        tmpQ1.setFromAxisAngle(this._dirFromAxis(axis, tmpV1), angleDelta);
+
         for (let i = 0; i < this.nodes.length; i++) {
             const node = this.nodes[i];
-            if (isFacing) {
-                tmpV1.copy(this._camera.entity.forward).mulScalar(-1);
-            } else {
-                tmpV1.set(0, 0, 0);
-                tmpV1[axis] = 1;
-            }
-
-            tmpQ1.setFromAxisAngle(tmpV1, angleDelta);
-
             if (!isFacing && this._coordSpace === GIZMOSPACE_LOCAL) {
                 const rot = this._nodeLocalRotations.get(node);
                 if (!rot) {
@@ -451,11 +466,10 @@ class RotateGizmo extends TransformGizmo {
     /**
      * @param {number} x - The x coordinate.
      * @param {number} y - The y coordinate.
-     * @returns {{ point: Vec3, angle: number }} The point and angle.
+     * @returns {Vec3} The point in world space.
      * @protected
      */
     _screenToPoint(x, y) {
-        const gizmoPos = this.root.getPosition();
         const mouseWPos = this._camera.screenToWorld(x, y, 1);
 
         const axis = this._selectedAxis;
@@ -464,14 +478,32 @@ class RotateGizmo extends TransformGizmo {
         const plane = this._createPlane(axis, axis === GIZMOAXIS_FACE, false);
 
         const point = new Vec3();
-        let angle = 0;
 
         plane.intersectsRay(ray, point);
+
+        return point;
+    }
+
+    /**
+     * @param {Vec3} point - The point.
+     * @param {number} x - The x coordinate.
+     * @param {number} y - The y coordinate.
+     * @returns {number} The angle.
+     * @protected
+     */
+    _calculateAngle(point, x, y) {
+        const gizmoPos = this.root.getPosition();
+
+        const axis = this._selectedAxis;
+
+        const plane = this._createPlane(axis, axis === GIZMOAXIS_FACE, false);
+
+        let angle = 0;
 
         // calculate angle
         const facingDir = tmpV2.copy(this.facing);
         const facingDot = plane.normal.dot(facingDir);
-        if (Math.abs(facingDot) > FACING_THRESHOLD) {
+        if (this.orbitRotation || Math.abs(facingDot) > FACING_THRESHOLD) {
             // plane facing camera so based on mouse position around gizmo
             tmpV1.sub2(point, gizmoPos);
 
@@ -484,14 +516,18 @@ class RotateGizmo extends TransformGizmo {
             // convert rotation axis to screen space
             tmpV1.copy(gizmoPos);
             tmpV2.cross(plane.normal, facingDir).normalize().add(gizmoPos);
+
+            // convert world space vectors to screen space
             this._camera.worldToScreen(tmpV1, tmpV3);
             this._camera.worldToScreen(tmpV2, tmpV4);
+
+            // angle is dot product with mouse position
             tmpV1.sub2(tmpV4, tmpV3).normalize();
             tmpV2.set(x, y, 0);
             angle = tmpV1.dot(tmpV2);
         }
 
-        return { point, angle };
+        return angle;
     }
 }
 

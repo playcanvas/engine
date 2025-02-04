@@ -97,6 +97,7 @@ gizmo.attach(box);
 data.set('gizmo', {
     size: gizmo.size,
     snapIncrement: gizmo.snapIncrement,
+    orbitRotation: gizmo.orbitRotation,
     xAxisColor: Object.values(gizmo.xAxisColor),
     yAxisColor: Object.values(gizmo.yAxisColor),
     zAxisColor: Object.values(gizmo.zAxisColor),
