@@ -15,7 +15,7 @@ import {
     color3from4,
     color4from3
 } from './color.js';
-import { GIZMOAXIS_X, GIZMOAXIS_XYZ, GIZMOAXIS_Y, GIZMOAXIS_Z } from './constants.js';
+import { GIZMOAXIS_FACE, GIZMOAXIS_X, GIZMOAXIS_XYZ, GIZMOAXIS_Y, GIZMOAXIS_Z } from './constants.js';
 import { Gizmo } from './gizmo.js';
 
 /**
@@ -570,6 +570,22 @@ class TransformGizmo extends Gizmo {
         }
 
         return tmpP1.setFromPointNormal(this._rootStartPos, normal);
+    }
+
+    /**
+     * @param {string} axis - The axis
+     * @param {Vec3} dir - The direction
+     * @returns {Vec3} - The direction
+     * @protected
+     */
+    _dirFromAxis(axis, dir) {
+        if (axis === GIZMOAXIS_FACE) {
+            dir.copy(this._camera.entity.forward).mulScalar(-1);
+        } else {
+            dir.set(0, 0, 0);
+            dir[axis] = 1;
+        }
+        return dir;
     }
 
     /**

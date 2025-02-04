@@ -426,17 +426,9 @@ class RotateGizmo extends TransformGizmo {
     _setNodeRotations(axis, angleDelta) {
         const gizmoPos = this.root.getPosition();
         const isFacing = axis === GIZMOAXIS_FACE;
+        tmpQ1.setFromAxisAngle(this._dirFromAxis(axis, tmpV1), angleDelta);
         for (let i = 0; i < this.nodes.length; i++) {
             const node = this.nodes[i];
-            if (isFacing) {
-                tmpV1.copy(this._camera.entity.forward).mulScalar(-1);
-            } else {
-                tmpV1.set(0, 0, 0);
-                tmpV1[axis] = 1;
-            }
-
-            tmpQ1.setFromAxisAngle(tmpV1, angleDelta);
-
             if (!isFacing && this._coordSpace === GIZMOSPACE_LOCAL) {
                 const rot = this._nodeLocalRotations.get(node);
                 if (!rot) {
