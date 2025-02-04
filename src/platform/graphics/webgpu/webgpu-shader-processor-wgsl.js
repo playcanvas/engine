@@ -433,7 +433,9 @@ class WebgpuShaderProcessorWGSL {
         uniforms.forEach((uniform) => {
             const srcName = `uniform.${uniform.name}`;
             const dstName = `${uniform.ubName}.${uniform.name}`;
-            source = source.split(srcName).join(dstName);
+            // Use a regular expression to match `uniform.name` as a whole word.
+            const regex = new RegExp(`\\b${srcName}\\b`, 'g');
+            source = source.replace(regex, dstName);
         });
         return source;
     }
