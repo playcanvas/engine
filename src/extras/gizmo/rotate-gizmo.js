@@ -521,8 +521,12 @@ class RotateGizmo extends TransformGizmo {
             // convert rotation axis to screen space
             tmpV1.copy(gizmoPos);
             tmpV2.cross(plane.normal, facingDir).normalize().add(gizmoPos);
+
+            // convert world space vectors to screen space
             this._camera.worldToScreen(tmpV1, tmpV3);
             this._camera.worldToScreen(tmpV2, tmpV4);
+
+            // angle is dot product with mouse position
             tmpV1.sub2(tmpV4, tmpV3).normalize();
             tmpV2.set(x, y, 0);
             angle = tmpV1.dot(tmpV2);
