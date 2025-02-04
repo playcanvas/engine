@@ -1,4 +1,4 @@
-// @config DESCRIPTION <div style='text-align:center'><div>(<b>WASDQE</b>) Move (Fly enabled)</div><div>(<b>LMB</b>) Orbit, (<b>LMB </b>(Orbit disabled)<b> / RMB</b>) Fly</div><div>(<b>Hold Shift / MMB / RMB </b>(Fly or Orbit disabled)) Pan</div><div>(<b>Scroll Wheel</b> (Orbit or Pan enabled)) Zoom</div><div>(<b>F</b>) Focus</div></div>
+// @config DESCRIPTION <div style='text-align:center'><div>(<b>WASDQE</b>) Move (Fly enabled)</div><div>(<b>LMB</b>) Orbit, (<b>LMB </b>(Orbit disabled)<b> / RMB</b>) Fly</div><div>(<b>Hold Shift / MMB / RMB </b>(Fly or Orbit disabled)) Pan</div><div>(<b>Scroll Wheel</b> (Orbit or Pan enabled)) Zoom</div><div>(<b>F</b>) Focus (<b>R</b>) Reset</div></div>
 import { data } from 'examples/observer';
 import { deviceType, rootPath, fileImport } from 'examples/utils';
 import * as pc from 'playcanvas';
@@ -84,14 +84,16 @@ const calcEntityAABB = (bbox, entity) => {
  * @returns {CameraControls} The camera-controls script.
  */
 const createMultiCamera = (focus) => {
+    const start = new pc.Vec3(0, 20, 30);
+
     const camera = new pc.Entity();
     camera.addComponent('camera');
     camera.addComponent('script');
-    camera.setPosition(0, 20, 30);
+    camera.setPosition(start);
     app.root.addChild(camera);
 
     const bbox = calcEntityAABB(new pc.BoundingBox(), focus);
-    const cameraDist = camera.getPosition().distance(bbox.center);
+    const cameraDist = start.distance(bbox.center);
 
     /** @type {CameraControls} */
     const script = camera.script.create(CameraControls, {
@@ -103,13 +105,24 @@ const createMultiCamera = (focus) => {
 
     // focus on entity when 'f' key is pressed
     const onKeyDown = (/** @type {KeyboardEvent} */ e) => {
-        if (e.key === 'f') {
-            script.refocus(
-                bbox.center,
-                null,
-                data.get('example.zoomReset') ? cameraDist : null,
-                data.get('example.smoothedFocus')
-            );
+        switch (e.key) {
+            case 'f': {
+                script.refocus(
+                    bbox.center,
+                    null,
+                    data.get('example.zoomReset') ? cameraDist : null,
+                    data.get('example.smoothedFocus')
+                );
+                break;
+            }
+            case 'r': {
+                script.refocus(
+                    bbox.center,
+                    start,
+                    data.get('example.zoomReset') ? cameraDist : null,
+                    data.get('example.smoothedFocus')
+                );
+            }
         }
     };
     window.addEventListener('keydown', onKeyDown);
