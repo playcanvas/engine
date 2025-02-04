@@ -252,8 +252,8 @@ class WebglTexture {
                 this._glInternalFormat = device.extCompressedTextureS3TC_SRGB.COMPRESSED_SRGB_ALPHA_S3TC_DXT5_EXT;
                 break;
             case PIXELFORMAT_ETC2_SRGB:
-                this._glFormat = gl.RGB;
-                this._glInternalFormat = device.extCompressedTextureETC.COMPRESSED_RGB8_ETC2;
+                this._glFormat = gl.SRGB;
+                this._glInternalFormat = device.extCompressedTextureETC.COMPRESSED_SRGB8_ETC2;
                 break;
             case PIXELFORMAT_ETC2_SRGBA:
                 this._glFormat = gl.SRGB_ALPHA;
