@@ -905,8 +905,8 @@ class CameraControls extends Script {
     _smoothTransform(dt) {
         const ar = dt === -1 ? 1 : lerpRate(this._focusing ? this.focusDamping : this.rotateDamping, dt);
         const am = dt === -1 ? 1 : lerpRate(this._focusing ? this.focusDamping : this.moveDamping, dt);
-        this._angles.x = math.lerp(this._angles.x, this._dir.x, ar);
-        this._angles.y = math.lerp(this._angles.y, this._dir.y, ar);
+        this._angles.x = math.lerpAngle(this._angles.x % 360, this._dir.x % 360, ar);
+        this._angles.y = math.lerpAngle(this._angles.y % 360, this._dir.y % 360, ar);
         this._position.lerp(this._position, this._origin, am);
         this._baseTransform.setTRS(this._position, tmpQ1.setFromEulerAngles(this._angles), Vec3.ONE);
 
