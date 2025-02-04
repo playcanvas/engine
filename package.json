@@ -68,7 +68,7 @@
     "@webgpu/types": "^0.1.52"
   },
   "devDependencies": {
-    "@playcanvas/eslint-config": "2.0.8",
+    "@playcanvas/eslint-config": "2.0.9",
     "@rollup/plugin-node-resolve": "16.0.0",
     "@rollup/plugin-strip": "3.0.4",
     "@rollup/plugin-swc": "0.4.0",
