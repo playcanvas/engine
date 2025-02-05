@@ -1,3 +1,4 @@
+#include "gammaPS"
 
 precision mediump float;
 varying float vertOutTexCoord;

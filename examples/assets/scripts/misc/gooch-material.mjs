@@ -82,6 +82,10 @@ const createGoochMaterial = (texture, color) => {
             }
         `,
         fragmentCode: /* glsl */ `
+            #include "gammaPS"
+            #include "tonemappingPS"
+            #include "fogPS"
+
             varying float brightness;
             varying vec2 uv0;
 

@@ -1,4 +1,8 @@
 export default /* glsl */`
+
+#ifndef _DECODE_INCLUDED_
+#define _DECODE_INCLUDED_
+
 vec3 decodeLinear(vec4 raw) {
     return raw.rgb;
 }
@@ -36,4 +40,6 @@ vec3 decodeRGBE(vec4 raw) {
 vec4 passThrough(vec4 raw) {
     return raw;
 }
+
+#endif
 `;

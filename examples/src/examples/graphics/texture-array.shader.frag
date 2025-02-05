@@ -1,3 +1,5 @@
+#include "gammaPS"
+
 varying vec2 vUv0;
 varying vec3 worldNormal;
 uniform float uTime;
