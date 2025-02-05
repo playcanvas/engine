@@ -28,6 +28,7 @@ const lineShaderDesc = {
         }
     `,
     fragmentCode: /* glsl */ `
+        #include "gammaPS"
         varying vec4 color;
         void main(void) {
             gl_FragColor = vec4(gammaCorrectOutput(decodeGamma(color.rgb)), color.a);
@@ -137,6 +138,7 @@ class Immediate {
     getTextureShaderDesc(encoding) {
         const decodeFunc = ChunkUtils.decodeFunc(encoding);
         return this.getShaderDesc(`textureShader-${encoding}`, /* glsl */ `
+            #include "gammaPS"
             varying vec2 uv0;
             uniform sampler2D colorMap;
             void main (void) {
@@ -162,6 +164,7 @@ class Immediate {
     getDepthTextureShaderDesc() {
         return this.getShaderDesc('depthTextureShader', /* glsl */ `
             ${shaderChunks.screenDepthPS}
+            #include "gammaPS"
             varying vec2 uv0;
             void main() {
                 float depth = getLinearScreenDepth(getImageEffectUV(uv0)) * camera_params.x;

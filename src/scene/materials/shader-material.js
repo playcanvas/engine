@@ -1,3 +1,4 @@
+import { Debug } from '../../core/debug.js';
 import { ShaderProcessorOptions } from '../../platform/graphics/shader-processor-options.js';
 import { SHADERDEF_INSTANCING, SHADERDEF_MORPH_NORMAL, SHADERDEF_MORPH_POSITION, SHADERDEF_MORPH_TEXTURE_BASED_INT, SHADERDEF_SKIN } from '../constants.js';
 import { getProgramLibrary } from '../shader-lib/get-program-library.js';
@@ -74,6 +75,11 @@ class ShaderMaterial extends Material {
      * @type {ShaderDesc|undefined}
      */
     set shaderDesc(value) {
+
+        if (value) {
+            Debug.assert(value.vertexCode, 'ShaderMaterial: shaderDesc must contain vertexCode');
+            Debug.assert(value.fragmentCode, 'ShaderMaterial: shaderDesc must contain fragmentCode');
+        }
 
         // shallow clone the object
         this._shaderDesc = value ? { ...value } : undefined;

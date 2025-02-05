@@ -1,4 +1,7 @@
 export default /* glsl */`
+
+#include "decodePS"
+
 #if (GAMMA == SRGB)
 
     float gammaCorrectInput(float color) {
