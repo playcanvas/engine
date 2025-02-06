@@ -2,6 +2,7 @@
  * @import { BindGroup } from '../../platform/graphics/bind-group.js'
  * @import { Layer } from '../layer.js'
  * @import { RenderTarget } from '../../platform/graphics/render-target.js'
+ * @import { CameraComponent } from '../../../playcanvas.js'
  */
 
 /**
@@ -9,6 +10,11 @@
  * this is populated at runtime based on LayerComposition
  */
 class RenderAction {
+    /**
+     * @type {CameraComponent|null}
+     */
+    camera = null;
+
     constructor() {
 
         // the layer
@@ -17,9 +23,6 @@ class RenderAction {
 
         // true if this uses transparent sublayer, opaque otherwise
         this.transparent = false;
-
-        // camera of type CameraComponent
-        this.camera = null;
 
         /**
          * Render target this render action renders to.

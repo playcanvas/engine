@@ -43,6 +43,20 @@ class RenderPassForward extends RenderPass {
     renderActions = [];
 
     /**
+     * The gamma correction setting for the render pass. In not set, setting from the camera is used.
+     *
+     * @type {number|undefined}
+     */
+    gammaCorrection;
+
+    /**
+     * The tone mapping setting for the render pass. In not set, setting from the camera is used.
+     *
+     * @type {number|undefined}
+     */
+    toneMapping;
+
+    /**
      * If true, do not clear the depth buffer before rendering, as it was already primed by a depth
      * pre-pass.
      *
@@ -263,6 +277,12 @@ class RenderPassForward extends RenderPass {
 
         if (camera) {
 
+            // override gamma correction and tone mapping settings
+            const originalGammaCorrection = camera.gammaCorrection;
+            const originalToneMapping = camera.toneMapping;
+            if (this.gammaCorrection !== undefined) camera.gammaCorrection = this.gammaCorrection;
+            if (this.toneMapping !== undefined) camera.toneMapping = this.toneMapping;
+
             // layer pre render event
             scene.fire(EVENT_PRERENDER_LAYER, camera, layer, transparent);
 
@@ -294,6 +314,10 @@ class RenderPassForward extends RenderPass {
 
             // layer post render event
             scene.fire(EVENT_POSTRENDER_LAYER, camera, layer, transparent);
+
+            // restore gamma correction and tone mapping settings
+            if (this.gammaCorrection !== undefined) camera.gammaCorrection = originalGammaCorrection;
+            if (this.toneMapping !== undefined) camera.toneMapping = originalToneMapping;
         }
 
         DebugGraphics.popGpuMarker(this.device);

@@ -4,7 +4,7 @@ import { Color } from '../../core/math/color.js';
 import {
     ADDRESS_CLAMP_TO_EDGE,
     FILTER_LINEAR, FILTER_LINEAR_MIPMAP_LINEAR,
-    PIXELFORMAT_RGBA8
+    PIXELFORMAT_SRGBA8
 } from '../../platform/graphics/constants.js';
 import { Texture } from '../../platform/graphics/texture.js';
 
@@ -23,7 +23,7 @@ class Atlas {
 
         this.texture = new Texture(device, {
             name: name,
-            format: PIXELFORMAT_RGBA8,
+            format: PIXELFORMAT_SRGBA8,
             width: width,
             height: height,
             mipmaps: true,

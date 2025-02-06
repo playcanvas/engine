@@ -1,7 +1,7 @@
 import { Color } from '../../../core/math/color.js';
 import { Vec2 } from '../../../core/math/vec2.js';
 import { Vec4 } from '../../../core/math/vec4.js';
-import { PIXELFORMAT_RGBA8 } from '../../../platform/graphics/constants.js';
+import { PIXELFORMAT_SRGBA8 } from '../../../platform/graphics/constants.js';
 import { Texture } from '../../../platform/graphics/texture.js';
 import { BLEND_PREMULTIPLIED, SPRITE_RENDERMODE_SLICED, SPRITE_RENDERMODE_TILED } from '../../../scene/constants.js';
 import { StandardMaterial } from '../../../scene/materials/standard-material.js';
@@ -44,7 +44,7 @@ class ElementComponentSystem extends ComponentSystem {
         this._defaultTexture = new Texture(app.graphicsDevice, {
             width: 1,
             height: 1,
-            format: PIXELFORMAT_RGBA8,
+            format: PIXELFORMAT_SRGBA8,
             name: 'element-system'
         });
         const pixels = this._defaultTexture.lock();

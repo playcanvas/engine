@@ -1,7 +1,7 @@
 import { Vec2 } from '../../core/math/vec2.js';
 import { Vec4 } from '../../core/math/vec4.js';
 
-import { ADDRESS_CLAMP_TO_EDGE, FILTER_NEAREST, PIXELFORMAT_RGBA8 } from '../../platform/graphics/constants.js';
+import { ADDRESS_CLAMP_TO_EDGE, FILTER_NEAREST, PIXELFORMAT_SRGBA8 } from '../../platform/graphics/constants.js';
 import { RenderTarget } from '../../platform/graphics/render-target.js';
 import { Texture } from '../../platform/graphics/texture.js';
 
@@ -41,7 +41,7 @@ class LightTextureAtlas {
             name: 'CookieAtlas',
             width: this.cookieAtlasResolution,
             height: this.cookieAtlasResolution,
-            format: PIXELFORMAT_RGBA8,
+            format: PIXELFORMAT_SRGBA8,
             cubemap: false,
             mipmaps: false,
             minFilter: FILTER_NEAREST,
