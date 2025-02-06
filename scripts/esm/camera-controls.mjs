@@ -137,7 +137,13 @@ class CameraControls extends Script {
      * @type {boolean}
      * @private
      */
-    _orbiting = false;
+    _dragging = false;
+
+    /**
+     * @type {boolean}
+     * @private
+     */
+    _orbiting = true;
 
     /**
      * @type {boolean}
@@ -552,6 +558,43 @@ class CameraControls extends Script {
 
     /**
      * @private
+     * @returns {boolean} Whether the switch to orbit was successful.
+     */
+    _switchToOrbit() {
+        if (!this.enableOrbit) {
+            return false;
+        }
+        if (this._flying) {
+            this._flying = false;
+            this._focusDir(tmpV1);
+            this._origin.add(tmpV1);
+            this._position.add(tmpV1);
+        }
+        this._orbiting = true;
+        return true;
+    }
+
+    /**
+     * @private
+     * @returns {boolean} Whether the switch to fly was successful.
+     */
+    _switchToFly() {
+        if (!this.enableFly) {
+            return false;
+        }
+        if (this._orbiting) {
+            this._orbiting = false;
+            this._zoomDist = this._cameraDist;
+            this._origin.copy(this.entity.getPosition());
+            this._position.copy(this._origin);
+            this._cameraTransform.setTranslate(0, 0, 0);
+        }
+        this._flying = true;
+        return true;
+    }
+
+    /**
+     * @private
      * @param {PointerEvent} event - The pointer event.
      */
     _onPointerDown(event) {
@@ -581,18 +624,17 @@ class CameraControls extends Script {
             // start mouse pan
             this._lastPosition.set(event.clientX, event.clientY);
             this._panning = true;
+            this._dragging = true;
         }
         if (startFly) {
             // start fly
-            this._zoomDist = this._cameraDist;
-            this._origin.copy(this.entity.getPosition());
-            this._position.copy(this._origin);
-            this._cameraTransform.setTranslate(0, 0, 0);
-            this._flying = true;
+            this._switchToFly();
+            this._dragging = true;
         }
         if (startOrbit) {
             // start orbit
-            this._orbiting = true;
+            this._switchToOrbit();
+            this._dragging = true;
         }
     }
 
@@ -605,6 +647,11 @@ class CameraControls extends Script {
             return;
         }
         this._pointerEvents.set(event.pointerId, event);
+
+        if (this._focusing) {
+            this._cancelSmoothTransform();
+            this._focusing = false;
+        }
 
         if (this._pointerEvents.size === 1) {
             if (this._panning) {
@@ -643,17 +690,11 @@ class CameraControls extends Script {
             this._lastPinchDist = -1;
             this._panning = false;
         }
-        if (this._orbiting) {
-            this._orbiting = false;
-        }
         if (this._panning) {
             this._panning = false;
         }
-        if (this._flying) {
-            this._focusDir(tmpV1);
-            this._origin.add(tmpV1);
-            this._position.add(tmpV1);
-            this._flying = false;
+        if (this._dragging) {
+            this._dragging = false;
         }
     }
 
@@ -876,7 +917,12 @@ class CameraControls extends Script {
             return;
         }
         if (this._flying) {
-            return;
+            if (this._dragging) {
+                return;
+            }
+            if (!this._switchToOrbit()) {
+                return;
+            }
         }
 
         if (!this._camera) {
@@ -954,7 +1000,12 @@ class CameraControls extends Script {
             return;
         }
         if (this._flying) {
-            return;
+            if (this._dragging) {
+                return;
+            }
+            if (!this._switchToOrbit()) {
+                return;
+            }
         }
 
         if (start) {
