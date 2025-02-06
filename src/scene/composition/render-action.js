@@ -2,7 +2,6 @@
  * @import { BindGroup } from '../../platform/graphics/bind-group.js'
  * @import { Layer } from '../layer.js'
  * @import { RenderTarget } from '../../platform/graphics/render-target.js'
- * @import { CameraComponent } from '../../../playcanvas.js'
  */
 
 /**
@@ -10,9 +9,7 @@
  * this is populated at runtime based on LayerComposition
  */
 class RenderAction {
-    /**
-     * @type {CameraComponent|null}
-     */
+    // {CameraComponent|null}
     camera = null;
 
     constructor() {
