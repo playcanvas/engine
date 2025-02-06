@@ -1,5 +1,4 @@
-
-precision mediump float;
+#include "gammaPS"
 
 varying vec2 vUv0;
 

@@ -91,6 +91,15 @@ const createHatchMaterial = (device, textures) => {
             }
         `,
         fragmentCode: /* glsl */ `
+            // this gives us gamma correction functions, such as gammaCorrectOutput
+            #include "gammaPS"
+
+            // this give us tonemapping functionality: toneMap
+            #include "tonemappingPS"
+
+            // this gives us for functionality: addFog
+            #include "fogPS"
+
             varying float brightness;
             varying vec2 uv0;
 

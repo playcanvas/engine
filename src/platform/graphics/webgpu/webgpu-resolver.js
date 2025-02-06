@@ -51,7 +51,7 @@ class WebgpuResolver {
             fn fragmentMain(@builtin(position) fragColor: vec4f) -> @location(0) vec4f {
                 // load th depth value from sample index 0
                 var depth = textureLoad(img, vec2i(fragColor.xy), 0u);
-                return vec4<f32>(depth, 0.0, 0.0, 0.0);
+                return vec4f(depth, 0.0, 0.0, 0.0);
             }
         `;
 

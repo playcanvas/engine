@@ -56,6 +56,7 @@ const shaderDesc = {
         }
     `,
     fragmentCode: /* glsl */`
+        #include "gammaPS"
         precision highp float;
         varying vec4 vColor;
         void main(void) {

@@ -1,28 +1,17 @@
-struct ub_mesh {
-    matrix_model : mat4x4f,
-    amount : f32,
-}
+attribute position: vec4f;
+attribute texCoords: vec2f;
 
-struct ub_view {
-    matrix_viewProjection : mat4x4f,
-}
+varying fragPosition: vec4f;
+varying texCoord: vec2f;
 
-struct VertexOutput {
-    @builtin(position) position : vec4f,
-    @location(0) fragPosition: vec4f,
-}
-
-@group(2) @binding(0) var<uniform> uvMesh : ub_mesh;
-@group(0) @binding(0) var<uniform> ubView : ub_view;
-
-struct VertexInput {
-    @location(0) position : vec4f,
-}
+uniform matrix_model : mat4x4f;
+uniform matrix_viewProjection : mat4x4f;
 
 @vertex
 fn vertexMain(input : VertexInput) -> VertexOutput {
     var output : VertexOutput;
-    output.position = ubView.matrix_viewProjection * (uvMesh.matrix_model * input.position);
+    output.position = uniform.matrix_viewProjection * (uniform.matrix_model * input.position);
     output.fragPosition = 0.5 * (input.position + vec4(1.0));
+    output.texCoord = input.texCoords;
     return output;
 }
