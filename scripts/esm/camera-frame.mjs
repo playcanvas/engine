@@ -351,9 +351,11 @@ class CameraFrame extends Script {
      */
     dof = new Dof();
 
-    engineCameraFrame = new EngineCameraFrame(this.app, this.entity.camera);
+    engineCameraFrame;
 
     initialize() {
+
+        this.engineCameraFrame = new EngineCameraFrame(this.app, this.entity.camera);
 
         this.on('enable', () => {
             this.engineCameraFrame.enabled = true;

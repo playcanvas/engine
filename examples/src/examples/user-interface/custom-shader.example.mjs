@@ -6,7 +6,7 @@ const canvas = /** @type {HTMLCanvasElement} */ (document.getElementById('applic
 window.focus();
 
 const assets = {
-    playcanvas: new pc.Asset('playcanvas', 'texture', { url: `${rootPath}/static/assets/textures/playcanvas.png` })
+    playcanvas: new pc.Asset('playcanvas', 'texture', { url: `${rootPath}/static/assets/textures/playcanvas.png` }, { srgb: true })
 };
 
 const gfxOptions = {

@@ -4,18 +4,6 @@ import { ShaderUtils } from '../../../platform/graphics/shader-utils.js';
 import { shaderChunks } from '../chunks/chunks.js';
 import { ShaderGenerator } from './shader-generator.js';
 
-const vShader = `
-    #include "userCode"
-`;
-
-const fShader = `
-    #include "decodePS"
-    #include "gammaPS"
-    #include "tonemappingPS"
-    #include "fogPS"
-    #include "userCode"
-`;
-
 class ShaderGeneratorShader extends ShaderGenerator {
     generateKey(options) {
 
@@ -71,7 +59,6 @@ class ShaderGeneratorShader extends ShaderGenerator {
             const includes = new Map(sharedIncludes);
             const defines = new Map(options.defines);
 
-            includes.set('userCode', desc.vertexCode);
             includes.set('transformInstancingVS', ''); // no default instancing, needs to be implemented in the user shader
 
             if (options.skin) defines.set('SKIN', true);
@@ -83,7 +70,7 @@ class ShaderGeneratorShader extends ShaderGenerator {
                 if (options.useMorphNormal) defines.set('MORPHING_NORMAL', true);
             }
 
-            definitionOptions.vertexCode = vShader;
+            definitionOptions.vertexCode = desc.vertexCode;
             definitionOptions.vertexIncludes = includes;
             definitionOptions.vertexDefines = defines;
         }
@@ -101,11 +88,9 @@ class ShaderGeneratorShader extends ShaderGenerator {
 
         } else {
             const includes = new Map(sharedIncludes);
-            includes.set('userCode', desc.fragmentCode);
-
             const defines = new Map(options.defines);
 
-            definitionOptions.fragmentCode = fShader;
+            definitionOptions.fragmentCode = desc.fragmentCode;
             definitionOptions.fragmentIncludes = includes;
             definitionOptions.fragmentDefines = defines;
         }

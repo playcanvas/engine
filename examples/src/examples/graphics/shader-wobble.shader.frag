@@ -1,5 +1,4 @@
-
-precision mediump float;
+#include "gammaPS"
 
 uniform sampler2D uDiffuseMap;
 

@@ -1,5 +1,7 @@
 export default /* glsl */`
     #include "envMultiplyPS"
+    #include "gammaPS"
+    #include "tonemappingPS"
 
     varying vec3 vViewDir;
     uniform float skyboxHighlightMultiplier;
