@@ -243,7 +243,7 @@ class CameraControls extends Script {
      * @attribute
      * @title Rotate Speed
      * @description The rotation speed.
-     * @enabledif {enableOrbit && false }
+     * @enabledif {enableOrbit}
      * @type {number}
      */
     rotateSpeed = 0.2;
@@ -252,7 +252,7 @@ class CameraControls extends Script {
      * @attribute
      * @title Rotate Damping
      * @description The rotation damping. A higher value means more damping. A value of 0 means no damping.
-     * @enabledif {enableOrbit && false }
+     * @enabledif {enableOrbit}
      * @type {number}
      */
     rotateDamping = 0.98;
