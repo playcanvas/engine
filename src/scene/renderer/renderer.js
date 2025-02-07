@@ -1229,7 +1229,7 @@ class Renderer {
     beginFrame(comp) {
 
         const scene = this.scene;
-        const updateShaders = scene.updateShaders;
+        const updateShaders = scene.updateShaders || this.device._shadersDirty;
 
         let totalMeshInstances = 0;
         const layers = comp.layerList;
@@ -1266,9 +1266,10 @@ class Renderer {
 
         // update shaders if needed
         if (updateShaders) {
-            const onlyLitShaders = !scene.updateShaders;
+            const onlyLitShaders = !scene.updateShaders || !this.device._shadersDirty;
             this.updateShaders(_tempMeshInstances, onlyLitShaders);
             scene.updateShaders = false;
+            this.device._shadersDirty = false;
             scene._shaderVersion++;
         }
 

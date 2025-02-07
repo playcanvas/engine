@@ -392,6 +392,14 @@ class GraphicsDevice extends EventHandler {
         height: 0
     };
 
+    /**
+     * A very heavy handed way to force all shaders to be rebuilt. Avoid using as much as possible.
+     *
+     * @type {boolean}
+     * @ignore
+     */
+    _shadersDirty = false;
+
     static EVENT_RESIZE = 'resizecanvas';
 
     constructor(canvas, options) {

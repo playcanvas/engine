@@ -797,8 +797,11 @@ class Texture {
      * property recreates the texture on the GPU, which is an expensive operation, so it is
      * preferable to create the texture with the correct format from the start. If the texture
      * format has no sRGB variant, this operation is ignored.
+     * This is not a public API and is used by Editor only to update rendering when the sRGB
+     * property is changed in the inspector. The higher cost is acceptable in this case.
      *
      * @type {boolean}
+     * @ignore
      */
     set srgb(value) {
         const currentSrgb = isSrgbPixelFormat(this.format);
@@ -812,6 +815,9 @@ class Texture {
                     Debug.warn(`Switching format of texture '${this.name}' to sRGB equivalent: ${pixelFormatInfo.get(this.format)?.name} -> ${pixelFormatInfo.get(srgbFormat)?.name}. This is an expensive operation, and the texture should be created using the right format to avoid this.`, this);
                     this._format = srgbFormat;
                     this.recreateImpl();
+
+                    // update all shaders to respect the encoding of the texture (needed by the standard material)
+                    this.device._shadersDirty = true;
                 }
 
             } else {
@@ -822,6 +828,9 @@ class Texture {
                     Debug.warn(`Switching format of texture '${this.name}' to linear equivalent: ${pixelFormatInfo.get(this.format)?.name} -> ${pixelFormatInfo.get(linearFormat)?.name}. This is an expensive operation, and the texture should be created using the right format to avoid this.`, this);
                     this._format = linearFormat;
                     this.recreateImpl();
+
+                    // update all shaders to respect the encoding of the texture (needed by the standard material)
+                    this.device._shadersDirty = true;
                 }
             }
         }
