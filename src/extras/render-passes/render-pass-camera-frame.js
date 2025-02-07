@@ -249,10 +249,6 @@ class RenderPassCameraFrame extends RenderPass {
         // bloom and DOF needs half resolution scene texture
         this._sceneHalfEnabled = this._bloomEnabled || options.dofEnabled;
 
-        // camera renders in HDR mode (linear output, no tonemapping)
-        cameraComponent.gammaCorrection = GAMMA_NONE;
-        cameraComponent.toneMapping = TONEMAP_NONE;
-
         // set up internal rendering parameters - this affect the shader generation to apply SSAO during forward pass
         cameraComponent.shaderParams.ssaoEnabled = options.ssaoType === SSAOTYPE_LIGHTING;
 
@@ -323,6 +319,12 @@ class RenderPassCameraFrame extends RenderPass {
         }
     }
 
+    setupScenePassSettings(pass) {
+        // forward passes render in HDR
+        pass.gammaCorrection = GAMMA_NONE;
+        pass.toneMapping = TONEMAP_NONE;
+    }
+
     setupScenePass(options) {
 
         const { app, device, cameraComponent } = this;
@@ -333,6 +335,7 @@ class RenderPassCameraFrame extends RenderPass {
         // matches the back-buffer size with the optional scale. Note that the scale parameters
         // allow us to render the 3d scene at lower resolution, improving performance.
         this.scenePass = new RenderPassForward(device, composition, scene, renderer);
+        this.setupScenePassSettings(this.scenePass);
         this.scenePass.init(this.rt, this.sceneOptions);
 
         // layers this pass renders depend on the grab pass being used
@@ -356,6 +359,7 @@ class RenderPassCameraFrame extends RenderPass {
 
             // if grab pass is used, render the layers after it (otherwise they were already rendered)
             this.scenePassTransparent = new RenderPassForward(device, composition, scene, renderer);
+            this.setupScenePassSettings(this.scenePassTransparent);
             this.scenePassTransparent.init(this.rt);
             ret.lastAddedIndex = this.scenePassTransparent.addLayers(composition, cameraComponent, ret.lastAddedIndex, ret.clearRenderTarget, options.lastSceneLayerId, options.lastSceneLayerIsTransparent);
 

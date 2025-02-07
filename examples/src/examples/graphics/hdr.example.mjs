@@ -9,7 +9,7 @@ const assets = {
     orbit: new pc.Asset('script', 'script', { url: `${rootPath}/static/scripts/camera/orbit-camera.js` }),
     apartment: new pc.Asset('apartment', 'container', { url: `${rootPath}/static/assets/models/apartment.glb` }),
     love: new pc.Asset('love', 'container', { url: `${rootPath}/static/assets/models/love.glb` }),
-    cat: new pc.Asset('cat', 'container', { url: `${rootPath}/static/assets/models/cat.glb` }),
+    colors: new pc.Asset('colors', 'texture', { url: `${rootPath}/static/assets/textures/colors.webp` }, { srgb: true }),
     helipad: new pc.Asset(
         'helipad-env-atlas',
         'texture',
@@ -42,12 +42,16 @@ createOptions.componentSystems = [
     pc.RenderComponentSystem,
     pc.CameraComponentSystem,
     pc.LightComponentSystem,
-    pc.ScriptComponentSystem
+    pc.ScriptComponentSystem,
+    pc.ScreenComponentSystem,
+    pc.ButtonComponentSystem,
+    pc.ElementComponentSystem
 ];
 createOptions.resourceHandlers = [
     pc.TextureHandler,
     pc.ContainerHandler,
-    pc.ScriptHandler
+    pc.ScriptHandler,
+    pc.FontHandler
 ];
 
 const app = new pc.AppBase(canvas);
@@ -79,8 +83,9 @@ assetListLoader.load(() => {
 
     // load a love sign model and add it to the scene
     const loveEntity = assets.love.resource.instantiateRenderEntity();
-    loveEntity.setLocalPosition(-335, 180, 0);
+    loveEntity.setLocalPosition(-80, 30, -20);
     loveEntity.setLocalScale(130, 130, 130);
+    loveEntity.rotate(0, -90, 0);
     app.root.addChild(loveEntity);
 
     // make the love sign emissive to bloom
@@ -95,12 +100,6 @@ assetListLoader.load(() => {
         });
     });
 
-    // add a cat model to the scene
-    const cat = assets.cat.resource.instantiateRenderEntity();
-    cat.setLocalPosition(-80, 80, -20);
-    cat.setLocalScale(80, 80, 80);
-    app.root.addChild(cat);
-
     // Create an Entity with a camera component
     const cameraEntity = new pc.Entity();
     cameraEntity.addComponent('camera', {
@@ -108,12 +107,15 @@ assetListLoader.load(() => {
         fov: 80
     });
 
+    const focusPoint = new pc.Entity();
+    focusPoint.setLocalPosition(-80, 80, -20);
+
     // add orbit camera script with a mouse and a touch support
     cameraEntity.addComponent('script');
     cameraEntity.script.create('orbitCamera', {
         attributes: {
             inertiaFactor: 0.2,
-            focusEntity: cat,
+            focusEntity: focusPoint,
             distanceMax: 500,
             frameOnStart: false
         }
@@ -125,10 +127,35 @@ assetListLoader.load(() => {
     cameraEntity.lookAt(0, 0, 100);
     app.root.addChild(cameraEntity);
 
+    // Create a 2D screen
+    const screen = new pc.Entity();
+    screen.addComponent('screen', {
+        referenceResolution: new pc.Vec2(1280, 720),
+        scaleBlend: 0.5,
+        scaleMode: pc.SCALEMODE_BLEND,
+        screenSpace: true
+    });
+    app.root.addChild(screen);
+
+    // Create a new entity for the UI element
+    const uiElement = new pc.Entity();
+
+    // Add a UI component with an image type
+    const texture = assets.colors.resource;
+    uiElement.addComponent('element', {
+        type: 'image',
+        anchor: [1, 0, 1, 0],
+        pivot: [1, 0],
+        width: texture.width * 0.5,
+        height: texture.height * 0.5,
+        texture: texture
+    });
+    uiElement.setLocalPosition(-0.1 * texture.width, 0.1 * texture.height, 0);
+    screen.addChild(uiElement);
+
     // ------ Custom render passes set up ------
 
     const cameraFrame = new pc.CameraFrame(app, cameraEntity.camera);
-    cameraFrame.rendering.toneMapping = pc.TONEMAP_ACES;
     cameraFrame.rendering.samples = 4;
     cameraFrame.bloom.intensity = 0.03;
     cameraFrame.bloom.blurLevel = 7;
@@ -136,72 +163,33 @@ assetListLoader.load(() => {
     cameraFrame.vignette.outer = 1;
     cameraFrame.vignette.curvature = 0.5;
     cameraFrame.vignette.intensity = 0.5;
-
     cameraFrame.update();
 
-    const applySettings = () => {
+    // apply UI changes
+    data.on('*:set', (/** @type {string} */ path, value) => {
 
-        // TAA
-        const taa = data.get('data.taa.enabled');
-        cameraFrame.taa.enabled = taa;
-        cameraFrame.taa.jitter = data.get('data.taa.jitter');
-        cameraFrame.rendering.sharpness = taa ? 1 : 0;
-
-        // DOF
-        cameraFrame.dof.enabled = data.get('data.dof.enabled');
-        cameraFrame.dof.nearBlur = data.get('data.dof.nearBlur');
-        cameraFrame.dof.focusDistance = data.get('data.dof.focusDistance');
-        cameraFrame.dof.focusRange = data.get('data.dof.focusRange');
-        cameraFrame.dof.blurRadius = data.get('data.dof.blurRadius');
-        cameraFrame.dof.blurRings = data.get('data.dof.blurRings');
-        cameraFrame.dof.blurRingPoints = data.get('data.dof.blurRingPoints');
-        cameraFrame.dof.highQuality = data.get('data.dof.highQuality');
-
-        // display number of bluring samples are used
-        const kernel = pc.Kernel.concentric(cameraFrame.dof.blurRings, cameraFrame.dof.blurRingPoints);
-        data.set('data.stats.blurSamples', `${kernel.length >> 1}`);
-
-        // debug
-        switch (data.get('data.scene.debug')) {
-            case 0: cameraFrame.debug = null; break;
-            case 1: cameraFrame.debug = 'bloom'; break;
-            case 2: cameraFrame.debug = 'vignette'; break;
-            case 3: cameraFrame.debug = 'dofcoc'; break;
-            case 4: cameraFrame.debug = 'dofblur'; break;
-            case 5: cameraFrame.debug = 'scene'; break;
+        if (path === 'data.hdr') {
+            cameraFrame.enabled = value;
+            cameraFrame.update();
         }
 
-        // apply all settings
-        cameraFrame.update();
-    };
+        if (path === 'data.sceneTonemapping') {
+            // postprocessing tone mapping
+            cameraFrame.rendering.toneMapping = value;
+            cameraFrame.update();
+        }
 
-    // apply UI changes
-    data.on('*:set', (/** @type {string} */ path) => {
-        const pathArray = path.split('.');
-        if (pathArray[1] !== 'stats') {
-            applySettings();
+        if (path === 'data.uiTonemapping') {
+            // camera tone mapping is applied to the UI
+            cameraEntity.camera.toneMapping = value;
         }
     });
 
     // set initial values
     data.set('data', {
-        scene: {
-            debug: 0
-        },
-        taa: {
-            enabled: false,
-            jitter: 1
-        },
-        dof: {
-            enabled: true,
-            nearBlur: true,
-            focusDistance: 200,
-            focusRange: 100,
-            blurRadius: 5,
-            blurRings: 4,
-            blurRingPoints: 5,
-            highQuality: true
-        }
+        hdr: true,
+        sceneTonemapping: pc.TONEMAP_ACES,
+        uiTonemapping: pc.TONEMAP_NONE
     });
 });
 
