@@ -2,7 +2,6 @@ import { Debug } from '../../core/debug.js';
 import { Color } from '../../core/math/color.js';
 import { math } from '../../core/math/math.js';
 import { PIXELFORMAT_111110F, PIXELFORMAT_RGBA16F, PIXELFORMAT_RGBA32F } from '../../platform/graphics/constants.js';
-import { GAMMA_SRGB } from '../../scene/constants.js';
 import { SSAOTYPE_NONE } from './constants.js';
 import { CameraFrameOptions, RenderPassCameraFrame } from './render-pass-camera-frame.js';
 
@@ -334,9 +333,6 @@ class CameraFrame {
         cameraComponent.rendering = null;
 
         cameraComponent.jitter = 0;
-
-        // no longer HDR rendering
-        cameraComponent.gammaCorrection = GAMMA_SRGB;
 
         // disable SSAO included in the lighting pass
         cameraComponent.shaderParams.ssaoEnabled = false;

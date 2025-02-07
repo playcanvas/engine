@@ -8,7 +8,7 @@ const assets = {
     font: new pc.Asset('font', 'font', { url: `${rootPath}/static/assets/fonts/courier.json` }),
     red_button_atlas: new pc.Asset('red_button_atlas', 'texture', {
         url: `${rootPath}/static/assets/button/red_button_atlas.png`
-    })
+    }, { srgb: true })
 };
 
 const gfxOptions = {

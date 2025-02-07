@@ -249,6 +249,7 @@ class CameraControls extends Script {
      * @attribute
      * @title Rotate Speed
      * @description The rotation speed.
+     * @enabledif {enableOrbit}
      * @type {number}
      */
     rotateSpeed = 0.2;
@@ -257,6 +258,7 @@ class CameraControls extends Script {
      * @attribute
      * @title Rotate Damping
      * @description The rotation damping. A higher value means more damping. A value of 0 means no damping.
+     * @enabledif {enableOrbit}
      * @type {number}
      */
     rotateDamping = 0.98;
@@ -265,6 +267,7 @@ class CameraControls extends Script {
      * @attribute
      * @title Move Speed
      * @description The fly move speed relative to the scene size.
+     * @enabledif {enableFly || enablePan}
      * @type {number}
      */
     moveSpeed = 2;
@@ -273,6 +276,7 @@ class CameraControls extends Script {
      * @attribute
      * @title Move Fast Speed
      * @description The fast fly move speed relative to the scene size.
+     * @enabledif {enableFly || enablePan}
      * @type {number}
      */
     moveFastSpeed = 4;
@@ -281,6 +285,7 @@ class CameraControls extends Script {
      * @attribute
      * @title Move Slow Speed
      * @description The slow fly move speed relative to the scene size.
+     * @enabledif {enableFly || enablePan}
      * @type {number}
      */
     moveSlowSpeed = 1;
@@ -289,6 +294,7 @@ class CameraControls extends Script {
      * @attribute
      * @title Move Damping
      * @description The movement damping. A higher value means more damping. A value of 0 means no damping.
+     * @enabledif {enableFly || enablePan}
      * @type {number}
      */
     moveDamping = 0.98;
