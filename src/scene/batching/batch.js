@@ -59,7 +59,7 @@ class Batch {
     }
 
     /**
-     * Removes the batch meshes from the layers and destroys it.
+     * Removes the batch from the layers and destroys it.
      *
      * @param {Scene} scene - The scene.
      * @param {number[]} layers - The layers to remove the batch from.
