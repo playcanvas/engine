@@ -127,10 +127,10 @@ class GSplat {
         result.setParameter('transformB', this.transformBTexture);
         result.setParameter('numSplats', this.numSplatsVisible);
         result.setDefine('SH_BANDS', this.shBands);
-        result.setParameter('splatSH_1to3', this.sh1to3Texture);
-        result.setParameter('splatSH_4to7', this.sh4to7Texture);
-        result.setParameter('splatSH_8to11', this.sh8to11Texture);
-        result.setParameter('splatSH_12to15', this.sh12to15Texture);
+        if (this.sh1to3Texture) result.setParameter('splatSH_1to3', this.sh1to3Texture);
+        if (this.sh4to7Texture) result.setParameter('splatSH_4to7', this.sh4to7Texture);
+        if (this.sh8to11Texture) result.setParameter('splatSH_8to11', this.sh8to11Texture);
+        if (this.sh12to15Texture) result.setParameter('splatSH_12to15', this.sh12to15Texture);
         return result;
     }
 
