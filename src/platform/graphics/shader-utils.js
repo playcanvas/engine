@@ -10,6 +10,8 @@ import gles3FS from './shader-chunks/frag/gles3.js';
 import gles3VS from './shader-chunks/vert/gles3.js';
 import webgpuFS from './shader-chunks/frag/webgpu.js';
 import webgpuVS from './shader-chunks/vert/webgpu.js';
+import wgslFS from './shader-chunks/frag/webgpu-wgsl.js';
+import wgslVS from './shader-chunks/vert/webgpu-wgsl.js';
 import sharedFS from './shader-chunks/frag/shared.js';
 
 /**
@@ -107,31 +109,40 @@ class ShaderUtils {
         let vertCode;
         let fragCode;
 
-        if (options.shaderLanguage === SHADERLANGUAGE_WGSL) {
+        const vertexDefinesCode = ShaderUtils.getDefinesCode(options.vertexDefines);
+        const fragmentDefinesCode = ShaderUtils.getDefinesCode(options.fragmentDefines);
+        const wgsl = options.shaderLanguage === SHADERLANGUAGE_WGSL;
 
-            vertCode = options.vertexCode;
-            fragCode = options.fragmentCode;
+        if (wgsl) {
+
+            vertCode = `${wgslVS}
+                ${vertexDefinesCode}
+                ${options.vertexCode}`;
+
+            fragCode = `${wgslFS}
+                ${fragmentDefinesCode}
+                ${options.fragmentCode}`;
 
         } else {
 
             // vertex code
             vertCode = `${ShaderUtils.versionCode(device) +
                 getDefines(webgpuVS, gles3VS, true, options) +
-                ShaderUtils.getDefinesCode(options.vertexDefines) +
-                ShaderUtils.precisionCode(device)}\n${
-                sharedFS
-            }${ShaderUtils.getShaderNameCode(name)
-            }${options.vertexCode}`;
+                vertexDefinesCode +
+                ShaderUtils.precisionCode(device)}
+                ${sharedFS}
+                ${ShaderUtils.getShaderNameCode(name)}
+                ${options.vertexCode}`;
 
             // fragment code
             fragCode = `${(options.fragmentPreamble || '') +
                 ShaderUtils.versionCode(device) +
                 getDefines(webgpuFS, gles3FS, false, options) +
-                ShaderUtils.getDefinesCode(options.fragmentDefines) +
-                ShaderUtils.precisionCode(device)}\n${
-                sharedFS
-            }${ShaderUtils.getShaderNameCode(name)
-            }${options.fragmentCode || ShaderUtils.dummyFragmentCode()}`;
+                fragmentDefinesCode +
+                ShaderUtils.precisionCode(device)}
+                ${sharedFS}
+                ${ShaderUtils.getShaderNameCode(name)}
+                ${options.fragmentCode || ShaderUtils.dummyFragmentCode()}`;
         }
 
         return {

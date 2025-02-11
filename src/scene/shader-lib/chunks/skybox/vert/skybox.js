@@ -1,5 +1,5 @@
 export default /* glsl */`
-attribute vec3 aPosition;
+attribute vec4 aPosition;
 
 #ifndef VIEWMATRIX
 #define VIEWMATRIX
@@ -22,15 +22,15 @@ void main(void) {
 
     #ifdef SKYMESH
 
-        vec4 worldPos = matrix_model * vec4(aPosition, 1.0);
+        vec4 worldPos = matrix_model * aPosition;
         vWorldPos = worldPos.xyz;
-        gl_Position = matrix_projectionSkybox * view * worldPos;
+        gl_Position = matrix_projectionSkybox * (view * worldPos);
 
     #else
 
         view[3][0] = view[3][1] = view[3][2] = 0.0;
-        gl_Position = matrix_projectionSkybox * view * vec4(aPosition, 1.0);
-        vViewDir = aPosition * cubeMapRotationMatrix;
+        gl_Position = matrix_projectionSkybox * (view * aPosition);
+        vViewDir = aPosition.xyz * cubeMapRotationMatrix;
 
     #endif
 
