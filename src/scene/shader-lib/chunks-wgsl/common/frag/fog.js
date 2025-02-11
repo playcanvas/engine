@@ -14,12 +14,10 @@ export default /* glsl */`
 uniform dBlendModeFogFactor : f32;
 
 fn getFogFactor() -> f32 {
-    //let depth = gl_FragCoord.z / gl_FragCoord.w;
+
+    // TODO: find a way to do this in WGSL, for now the fog is not working
+    // let depth = gl_FragCoord.z / gl_FragCoord.w;
     let depth = 1.0;
-
-
-
-
 
     var fogFactor : f32 = 0.0;
 
