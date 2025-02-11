@@ -400,7 +400,7 @@ const shaderChunksWGSL = {
     tonemappingHejlPS,
     tonemappingLinearPS,
     tonemappingNeutralPS,
-    tonemappingNonePS,
+    tonemappingNonePS
     // transformVS,
     // transformCoreVS,
     // transformInstancingVS,
