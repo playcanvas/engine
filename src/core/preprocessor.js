@@ -36,8 +36,11 @@ const COMPARISON = /([a-z_]\w*)\s*(==|!=|<|<=|>|>=)\s*([\w"']+)/i;
 // currently unsupported characters in the expression: | & < > = + -
 const INVALID = /[|&+-]/g;
 
-// #include "identifier"
-const INCLUDE = /include[ \t]+"([\w-]+)"\r?(?:\n|$)/g;
+// #include "identifier" or optional second identifier #include "identifier1, identifier2"
+const INCLUDE = /include[ \t]+"([\w-]+)(?:\s*,\s*([\w-]+))?"\r?(?:\n|$)/g;
+
+// loop index to replace, in the format {i}
+const LOOP_INDEX = /\{i\}/g;
 
 /**
  * Pure static class implementing subset of C-style preprocessor.
@@ -388,6 +391,7 @@ class Preprocessor {
                     error ||= include === null;
                     Debug.assert(include, `Invalid [${keyword}]: ${source.substring(match.index, match.index + 100)}...`);
                     const identifier = include[1].trim();
+                    const countIdentifier = include[2]?.trim();
 
                     // are we inside if-blocks that are accepted
                     const keep = Preprocessor._keep(stack);
@@ -395,8 +399,29 @@ class Preprocessor {
                     if (keep) {
 
                         // cut out the include line and replace it with the included string
-                        const includeSource = includes?.get(identifier);
+                        let includeSource = includes?.get(identifier);
                         if (includeSource !== undefined) {
+
+                            // handle second identifier specifying loop count
+                            if (countIdentifier) {
+                                const countString = defines.get(countIdentifier);
+                                const count = parseFloat(countString);
+                                if (Number.isInteger(count)) {
+
+                                    // add the include count times
+                                    let result = '';
+                                    for (let i = 0; i < count; i++) {
+                                        result += includeSource.replace(LOOP_INDEX, String(i));
+                                    }
+                                    includeSource = result;
+
+                                } else {
+                                    console.error(`Include Count identifier "${countIdentifier}" not resolved while preprocessing ${Preprocessor.sourceName} on line: ${source.substring(match.index, match.index + 100)}...`, { source: originalSource });
+                                    error = true;
+                                }
+                            }
+
+                            // replace the include by the included string
                             source = source.substring(0, include.index - 1) + includeSource + source.substring(INCLUDE.lastIndex);
 
                             // process the just included test

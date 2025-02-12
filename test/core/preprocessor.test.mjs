@@ -11,15 +11,19 @@ describe('Preprocessor', function () {
                 nested
             #endif
         `],
-        ['inc2', 'block2']
+        ['inc2', 'block2'],
+        ['incLoop', 'inserted{i}\n']
     ]);
 
     const srcData = `
         
+        #define LOOP_COUNT 3
         #define __INJECT_COUNT 2
         #define __INJECT_STRING hello
         #define FEATURE1
         #define FEATURE2
+
+        #include "incLoop, LOOP_COUNT"
 
         #ifdef FEATURE1
             TEST1
@@ -212,6 +216,13 @@ describe('Preprocessor', function () {
 
     it('returns true for working string injection', function () {
         expect(Preprocessor.run(srcData, includes).includes('INJECTSTRING hello(x)')).to.equal(true);
+    });
+
+    it('returns true for loop injection', function () {
+        expect(Preprocessor.run(srcData, includes).includes('inserted0')).to.equal(true);
+        expect(Preprocessor.run(srcData, includes).includes('inserted1')).to.equal(true);
+        expect(Preprocessor.run(srcData, includes).includes('inserted2')).to.equal(true);
+        expect(Preprocessor.run(srcData, includes).includes('inserted3')).to.equal(false);
     });
 
 });
