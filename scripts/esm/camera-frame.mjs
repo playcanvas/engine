@@ -1,5 +1,3 @@
-// Camera Frame v 1.0
-
 import { CameraFrame as EngineCameraFrame, Script, Color } from 'playcanvas';
 
 /** @enum {number} */
@@ -108,10 +106,14 @@ class Ssao {
      */
     type = SsaoType.NONE;
 
+    /**
+     * @visibleif {type !== 'none'}
+     */
     blurEnabled = true;
 
     /**
      * @range [0, 1]
+     * @visibleif {type !== 'none'}
      * @precision 3
      * @step 0.001
      */
@@ -119,6 +121,7 @@ class Ssao {
 
     /**
      * @range [0, 100]
+     * @visibleif {type !== 'none'}
      * @precision 3
      * @step 0.001
      */
@@ -126,6 +129,7 @@ class Ssao {
 
     /**
      * @range [1, 64]
+     * @visibleif {type !== 'none'}
      * @precision 0
      * @step 1
      */
@@ -133,6 +137,7 @@ class Ssao {
 
     /**
      * @range [0.1, 10]
+     * @visibleif {type !== 'none'}
      * @precision 3
      * @step 0.001
      */
@@ -140,6 +145,7 @@ class Ssao {
 
     /**
      * @range [1, 90]
+     * @visibleif {type !== 'none'}
      * @precision 1
      * @step 1
      */
@@ -147,6 +153,7 @@ class Ssao {
 
     /**
      * @range [0.5, 1]
+     * @visibleif {type !== 'none'}
      * @precision 3
      * @step 0.001
      */
@@ -158,6 +165,7 @@ class Bloom {
     enabled = false;
 
     /**
+     * @visibleif {enabled}
      * @range [0, 0.1]
      * @precision 3
      * @step 0.001
@@ -166,6 +174,7 @@ class Bloom {
 
     /**
      * @attribute
+     * @visibleif {enabled}
      * @range [0, 16]
      * @precision 0
      * @step 0
@@ -178,6 +187,7 @@ class Grading {
     enabled = false;
 
     /**
+     * @visibleif {enabled}
      * @range [0, 3]
      * @precision 3
      * @step 0.001
@@ -185,6 +195,7 @@ class Grading {
     brightness = 1;
 
     /**
+     * @visibleif {enabled}
      * @range [0.5, 1.5]
      * @precision 3
      * @step 0.001
@@ -192,6 +203,7 @@ class Grading {
     contrast = 1;
 
     /**
+     * @visibleif {enabled}
      * @range [0, 2]
      * @precision 3
      * @step 0.001
@@ -200,6 +212,7 @@ class Grading {
 
     /**
      * @attribute
+     * @visibleif {enabled}
      */
     tint = new Color(1, 1, 1, 1);
 }
@@ -209,6 +222,7 @@ class Vignette {
     enabled = false;
 
     /**
+     * @visibleif {enabled}
      * @range [0, 1]
      * @precision 3
      * @step 0.001
@@ -216,6 +230,7 @@ class Vignette {
     intensity = 0.5;
 
     /**
+     * @visibleif {enabled}
      * @range [0, 3]
      * @precision 3
      * @step 0.001
@@ -223,6 +238,7 @@ class Vignette {
     inner = 0.5;
 
     /**
+     * @visibleif {enabled}
      * @range [0, 3]
      * @precision 3
      * @step 0.001
@@ -230,6 +246,7 @@ class Vignette {
     outer = 1;
 
     /**
+     * @visibleif {enabled}
      * @range [0.01, 10]
      * @precision 3
      * @step 0.001
@@ -242,6 +259,7 @@ class Fringing {
     enabled = false;
 
     /**
+     * @visibleif {enabled}
      * @range [0, 100]
      * @precision 1
      * @step 0.1
@@ -254,6 +272,7 @@ class Taa {
     enabled = false;
 
     /**
+     * @visibleif {enabled}
      * @range [0, 1]
      * @precision 2
      * @step 0.1
@@ -265,29 +284,39 @@ class Taa {
 class Dof {
     enabled = false;
 
+    /**
+     * @visibleif {enabled}
+     */
     highQuality = true;
 
+    /**
+     * @visibleif {enabled}
+     */
     nearBlur = false;
 
     /**
+     * @visibleif {enabled}
      * @precision 2
      * @step 1
      */
     focusDistance = 100;
 
     /**
+     * @visibleif {enabled}
      * @precision 2
      * @step 1
      */
     focusRange = 10;
 
     /**
+     * @visibleif {enabled}
      * @precision 2
      * @step 0.1
      */
     blurRadius = 3;
 
     /**
+     * @visibleif {enabled}
      * @range [1, 10]
      * @precision 0
      * @step 1
@@ -295,6 +324,7 @@ class Dof {
     blurRings = 4;
 
     /**
+     * @visibleif {enabled}
      * @range [1, 10]
      * @precision 0
      * @step 1
