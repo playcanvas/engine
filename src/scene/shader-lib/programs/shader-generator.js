@@ -1,10 +1,6 @@
 import { hashCode } from '../../../core/hash.js';
 
 class ShaderGenerator {
-    static begin() {
-        return 'void main(void)\n{\n';
-    }
-
     static end() {
         return '}\n';
     }

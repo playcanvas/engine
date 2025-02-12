@@ -122,7 +122,6 @@ class LitShader {
         // supplied by caller
         this.frontendDecl = null;
         this.frontendCode = null;
-        this.frontendFunc = null;
         this.lightingUv = null;
 
         // defines set by the shader generation
@@ -361,145 +360,97 @@ class LitShader {
         return code;
     }
 
-    _fsGetPickPassCode() {
-        return `
-            ${this._fsGetBeginCode()}
-            ${this.varyings}
-            ${this.varyingDefines}
-            ${this.frontendDecl}
-            ${this.frontendCode}
-            ${this.chunks.pickPS}
-
-            void main(void) {
-                ${this.frontendFunc}
-                gl_FragColor = getPickOutput();
-            }
-        `;
-    }
-
-    _fsGetDepthPassCode() {
-        let code = this._fsGetBeginCode();
-        code += this.varyings;
-        code += this.varyingDefines;
-        code += this.frontendDecl;
-        code += this.frontendCode;
-        code += ShaderGenerator.begin();
-        code += this.frontendFunc;
-        code += '    gl_FragColor = vec4(1.0, 1.0, 1.0, 1.0);\n';
-        code += ShaderGenerator.end();
-
-        return code;
-    }
-
-    _fsGetPrePassCode() {
-        let code = this._fsGetBeginCode();
-        code += this.varyings;
-        code += this.varyingDefines;
-        code += this.chunks.floatAsUintPS;
-        code += this.frontendDecl;
-        code += this.frontendCode;
-        code += ShaderGenerator.begin();
-        code += this.frontendFunc;
-        code += this.device.textureFloatRenderable ?
-            // storing linear depth in a single F32 channel
-            `
-            gl_FragColor = vec4(vLinearDepth, 1.0, 1.0, 1.0);
-        ` :
-            // storing linear depth float value in RGBA8
-            `
-            gl_FragColor = float2uint(vLinearDepth);
-        `;
-        code += ShaderGenerator.end();
-
-        return code;
-    }
-
     _fsGetShadowPassCode() {
         const options = this.options;
-        const chunks = this.chunks;
-        const varyings = this.varyings;
 
         const lightType = this.shaderPassInfo.lightType;
         let shadowType = this.shaderPassInfo.shadowType;
 
+        const shadowInfo = shadowTypeInfo.get(shadowType);
+        Debug.assert(shadowInfo);
+        const { vsm, pcss, pcf } = shadowInfo;
+
         // If not a directional light and using clustered, fall back to using PCF3x3 if shadow type isn't supported
         if (lightType !== LIGHTTYPE_DIRECTIONAL && options.clusteredLightingEnabled) {
-            if (shadowType === SHADOW_VSM_16F || shadowType === SHADOW_VSM_32F || shadowType === SHADOW_PCSS_32F) {
+            if (!pcf) {
                 shadowType = SHADOW_PCF3_32F;
             }
         }
-
-        const shadowInfo = shadowTypeInfo.get(shadowType);
-        Debug.assert(shadowInfo);
-        const isVsm = shadowInfo?.vsm ?? false;
-        const isPcss = shadowInfo?.pcss ?? false;
-
-        let code = this._fsGetBeginCode();
-
-        if (shadowType === SHADOW_VSM_32F) {
-            code += '#define VSM_EXPONENT 15.0\n\n';
-        } else if (shadowType === SHADOW_VSM_16F) {
-            code += '#define VSM_EXPONENT 5.54\n\n';
-        }
-
-        if (lightType !== LIGHTTYPE_DIRECTIONAL) {
-            code += 'uniform vec3 view_position;\n';
-            code += 'uniform float light_radius;\n';
-        }
-
-        code += varyings;
-        code += this.varyingDefines;
-        code += this.frontendDecl;
-        code += this.frontendCode;
-
-        if (shadowType === SHADOW_PCSS_32F) {
-            code += shaderChunks.linearizeDepthPS;
-        }
-
-        code += ShaderGenerator.begin();
-
-        code += this.frontendFunc;
 
         // Use perspective depth for:
         // Directional: Always since light has no position
         // Spot: If not using VSM
         // Point: Never
-        const usePerspectiveDepth = (lightType === LIGHTTYPE_DIRECTIONAL || (!isVsm && lightType === LIGHTTYPE_SPOT));
+        const usePerspectiveDepth = (lightType === LIGHTTYPE_DIRECTIONAL || (!vsm && lightType === LIGHTTYPE_SPOT));
 
-        // Flag if we are using non-standard depth, i.e gl_FragCoord.z
-        let hasModifiedDepth = false;
-        if (usePerspectiveDepth) {
-            code += '    float depth = gl_FragCoord.z;\n';
-            if (isPcss) {
-                // spot/omni shadows currently use linear depth.
-                // TODO: use perspective depth for spot/omni the same way as directional
-                if (lightType !== LIGHTTYPE_DIRECTIONAL) {
-                    code += '    depth = linearizeDepth(depth, camera_params);\n';
-                }
+        const code = `
+
+            ${this._fsGetBeginCode()}
+            ${this.varyings}
+            ${this.varyingDefines}
+            ${this.frontendDecl}
+            ${this.frontendCode}
+
+            // Flag if we are using non-standard depth, i.e gl_FragCoord.z
+            ${usePerspectiveDepth ? '#define PERSPECTIVE_DEPTH' : ''}
+            ${pcss ? '#define PCSS' : ''}
+            ${vsm ? '#define VSM' : ''}
+            ${shadowType === SHADOW_VSM_32F ? '#define VSM_32F' : ''}
+            ${lightType === LIGHTTYPE_DIRECTIONAL ? '#define DIRECTIONAL_LIGHT' : ''}
+
+            #ifndef DIRECTIONAL_LIGHT
+                uniform vec3 view_position;
+                uniform float light_radius;
+            #endif
+
+            #ifdef PCSS
+                #include "linearizeDepthPS"
+            #endif
+
+            void main(void) {
+                evaluateFrontend();
+
+                #ifdef PERSPECTIVE_DEPTH
+                    float depth = gl_FragCoord.z;
+
+                    #ifdef PCSS
+                        // spot/omni shadows currently use linear depth.
+                        // TODO: use perspective depth for spot/omni the same way as directional
+                        #ifndef DIRECTIONAL_LIGHT
+                            depth = linearizeDepth(depth, camera_params);
+                        #endif
+                    #endif
+
+                #else
+                    float depth = min(distance(view_position, vPositionW) / light_radius, 0.99999);
+                    #define MODIFIED_DEPTH
+                #endif
+
+                #ifdef VSM
+                    #ifdef VSM_32F
+                        float exponent = 15.0;
+                    #else
+                        float exponent = 5.54;
+                    #endif
+                    depth = 2.0 * depth - 1.0;
+                    depth =  exp(exponent * depth);
+                    gl_FragColor = vec4(depth, depth*depth, 1.0, 1.0);
+                #else
+                    #ifdef PCSS
+                        // store depth into R32
+                        gl_FragColor.r = depth;
+                    #else
+                        #ifdef MODIFIED_DEPTH
+                            // If we end up using modified depth, it needs to be explicitly written to gl_FragDepth
+                            gl_FragDepth = depth;
+                        #endif
+
+                        // just the simplest code, color is not written anyway
+                        gl_FragColor = vec4(1.0);
+                    #endif
+                #endif
             }
-        } else {
-            code += '    float depth = min(distance(view_position, vPositionW) / light_radius, 0.99999);\n';
-            hasModifiedDepth = true;
-        }
-
-        if (!isVsm) {
-            const exportR32 = isPcss;
-
-            if (exportR32) {
-                code += '    gl_FragColor.r = depth;\n';
-            } else {
-
-                // If we end up using modified depth, it needs to be explicitly written to gl_FragDepth
-                if (hasModifiedDepth) {
-                    code += '    gl_FragDepth = depth;\n';
-                }
-                code += '    gl_FragColor = vec4(1.0);\n'; // just the simplest code, color is not written anyway
-            }
-        } else {
-            code += chunks.storeEVSMPS;
-        }
-
-        code += ShaderGenerator.end();
+        `;
 
         return code;
     }
@@ -933,7 +884,7 @@ class LitShader {
         }
 
         // invoke frontend functions
-        code.append(this.frontendFunc);
+        code.append('    evaluateFrontend();');
 
         // apply SSAO
         if (options.ssao) {
@@ -1498,23 +1449,55 @@ class LitShader {
      *
      * @param {string} frontendDecl - Frontend declarations like `float dAlpha;`
      * @param {string} frontendCode - Frontend code containing `getOpacity()` etc.
-     * @param {string} frontendFunc - E.g. `evaluateFrontend();`
      * @param {string} lightingUv - E.g. `vUv0`
      */
-    generateFragmentShader(frontendDecl, frontendCode, frontendFunc, lightingUv) {
+    generateFragmentShader(frontendDecl, frontendCode, lightingUv) {
         const options = this.options;
 
         this.frontendDecl = frontendDecl;
         this.frontendCode = frontendCode;
-        this.frontendFunc = frontendFunc;
         this.lightingUv = lightingUv;
 
-        if (options.pass === SHADER_PICK) {
-            this.fshader = this._fsGetPickPassCode();
-        } else if (options.pass === SHADER_DEPTH) {
-            this.fshader = this._fsGetDepthPassCode();
-        } else if (options.pass === SHADER_PREPASS) {
-            this.fshader = this._fsGetPrePassCode();
+        if (options.pass === SHADER_PICK || options.pass === SHADER_DEPTH || options.pass === SHADER_PREPASS) {
+
+            this.fshader = `
+
+                ${this.device.textureFloatRenderable ? '#define TEXTURE_FLOAT_RENDERABLE' : ''}
+
+                ${this._fsGetBeginCode()}
+                ${this.varyings}
+                ${this.varyingDefines}
+                ${this.frontendDecl}
+                ${this.frontendCode}
+
+                #ifdef PICK_PASS
+                    #include "pickPS"
+                #endif
+
+                #ifdef PREPASS_PASS
+                    #include "floatAsUintPS"
+                #endif
+
+                void main(void) {
+                    evaluateFrontend();
+
+                    #ifdef PICK_PASS
+                        gl_FragColor = getPickOutput();
+                    #endif
+
+                    #ifdef DEPTH_PASS
+                        gl_FragColor = vec4(1.0, 1.0, 1.0, 1.0);
+                    #endif
+
+                    #ifdef PREPASS_PASS
+                        #if defined(TEXTURE_FLOAT_RENDERABLE)
+                            gl_FragColor = vec4(vLinearDepth, 1.0, 1.0, 1.0);
+                        #else
+                            gl_FragColor = float2uint(vLinearDepth);
+                        #endif
+                    #endif
+                }
+            `;
         } else if (this.shadowPass) {
             this.fshader = this._fsGetShadowPassCode();
         } else if (options.customFragmentShader) {
