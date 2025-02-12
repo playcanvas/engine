@@ -5,7 +5,9 @@ import {
     SAMPLETYPE_FLOAT, SAMPLETYPE_DEPTH, SAMPLETYPE_UNFILTERABLE_FLOAT,
     TEXTUREDIMENSION_2D, TEXTUREDIMENSION_2D_ARRAY, TEXTUREDIMENSION_CUBE, TEXTUREDIMENSION_3D,
     TYPE_FLOAT32, TYPE_INT8, TYPE_INT16, TYPE_INT32, TYPE_FLOAT16, SAMPLETYPE_INT, SAMPLETYPE_UINT,
-    BINDGROUP_MESH_UB
+    BINDGROUP_MESH_UB,
+    UNUSED_UNIFORM_NAME,
+    UNIFORMTYPE_FLOAT
 } from './constants.js';
 import { UniformFormat, UniformBufferFormat } from './uniform-buffer-format.js';
 import { BindGroupFormat, BindTextureFormat } from './bind-group-format.js';
@@ -109,7 +111,7 @@ class ShaderProcessor {
      *
      * @param {GraphicsDevice} device - The graphics device.
      * @param {object} shaderDefinition - The shader definition.
-     * @param {Shader} shader - The shader definition.
+     * @param {Shader} shader - The shader.
      * @returns {object} - The processed shader data.
      */
     static run(device, shaderDefinition, shader) {
@@ -271,6 +273,13 @@ class ShaderProcessor {
             // validate types in else
 
         });
+
+        // if we don't have any uniform, add a dummy uniform to avoid empty uniform buffer - WebGPU rendering does not
+        // support rendering will NULL bind group as binding a null buffer changes placement of other bindings
+        if (meshUniforms.length === 0) {
+            meshUniforms.push(new UniformFormat(UNUSED_UNIFORM_NAME, UNIFORMTYPE_FLOAT));
+        }
+
         const meshUniformBufferFormat = meshUniforms.length ? new UniformBufferFormat(device, meshUniforms) : null;
 
         // build mesh bind group format - this contains the textures, but not the uniform buffer as that is a separate binding

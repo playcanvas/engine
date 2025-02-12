@@ -179,8 +179,7 @@ class GlbContainerResource {
             if (attachedMi) {
                 entity.addComponent('render', Object.assign({
                     type: 'asset',
-                    meshInstances: attachedMi,
-                    rootBone: root
+                    meshInstances: attachedMi
                 }, options));
 
                 // assign asset id without recreating mesh instances which are already set up with materials
@@ -206,6 +205,7 @@ class GlbContainerResource {
         // now that the hierarchy is created, create skin instances and resolve bones using the hierarchy
         skinnedMeshInstances.forEach((data) => {
             data.meshInstance.skinInstance = SkinInstanceCache.createCachedSkinInstance(data.meshInstance.mesh.skin, data.rootBone, data.entity);
+            data.meshInstance.node.render.rootBone = data.rootBone;
         });
 
         // return the scene hierarchy created from scene clones

@@ -17,9 +17,12 @@ export const controls = ({ observer, ReactPCUI, React, jsx, fragment }) => {
                 link: { observer, path: 'settings.shadowType' },
                 type: 'number',
                 options: [
-                    { v: pc.SHADOW_PCF1, t: 'PCF1' },
-                    { v: pc.SHADOW_PCF3, t: 'PCF3' },
-                    { v: pc.SHADOW_PCF5, t: 'PCF5' }
+                    { v: pc.SHADOW_PCF1_32F, t: 'PCF1_32F' },
+                    { v: pc.SHADOW_PCF3_32F, t: 'PCF3_32F' },
+                    { v: pc.SHADOW_PCF5_32F, t: 'PCF5_32F' },
+                    { v: pc.SHADOW_PCF1_16F, t: 'PCF1_16F' },
+                    { v: pc.SHADOW_PCF3_16F, t: 'PCF3_16F' },
+                    { v: pc.SHADOW_PCF5_16F, t: 'PCF5_16F' }
                 ]
             })
         ),

@@ -1,8 +1,8 @@
 // @config DESCRIPTION <div style='text-align:center'><div>(<b>WASD</b>) Move</div><div>(<b>Space</b>) Jump</div><div>(<b>Mouse</b>) Look</div></div>
-import { deviceType, rootPath, fileImport } from 'examples/utils';
+import { deviceType, fileImport, rootPath } from 'examples/utils';
 import * as pc from 'playcanvas';
 
-const { CameraFrame } = await fileImport(`${rootPath}/static/assets/scripts/misc/camera-frame.mjs`);
+const { FirstPersonController } = await fileImport(`${rootPath}/static/scripts/esm/first-person-controller.mjs`);
 
 const canvas = /** @type {HTMLCanvasElement} */ (document.getElementById('application-canvas'));
 window.focus();
@@ -25,7 +25,6 @@ const gfxOptions = {
 
 const assets = {
     map: new pc.Asset('map', 'container', { url: `${rootPath}/static/assets/models/fps-map.glb` }),
-    script: new pc.Asset('script', 'script', { url: `${rootPath}/static/scripts/camera/first-person-camera.js` }),
     helipad: new pc.Asset(
         'helipad-env-atlas',
         'texture',
@@ -114,15 +113,12 @@ function createCharacterController(camera) {
         restitution: 0
     });
     entity.addComponent('script');
-    entity.script.create('characterController', {
-        attributes: {
-            camera: camera,
+    entity.script.create(FirstPersonController, {
+        properties: {
+            camera,
             jumpForce: 850
         }
     });
-    entity.script.create('desktopInput');
-    entity.script.create('mobileInput');
-    entity.script.create('gamePadInput');
 
     return entity;
 }
@@ -148,15 +144,12 @@ cameraEntity.setLocalPosition(0, 0.5, 0);
 
 // ------ Custom render passes set up ------
 
-cameraEntity.addComponent('script');
-/** @type { CameraFrame } */
-const cameraFrame = cameraEntity.script.create(CameraFrame);
-
+const cameraFrame = new pc.CameraFrame(app, cameraEntity.camera);
 cameraFrame.rendering.samples = 4;
 cameraFrame.rendering.toneMapping = pc.TONEMAP_ACES2;
-
 cameraFrame.bloom.enabled = true;
 cameraFrame.bloom.intensity = 0.01;
+cameraFrame.update();
 
 // ------------------------------------------
 

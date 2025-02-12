@@ -71,7 +71,6 @@ assetListLoader.load(() => {
 
     // instantiate guitar with a custom shader
     const guitar = assets.guitar.resource.instantiate({
-        fragment: files['shader.frag'],
         vertex: files['shader.vert']
     });
     guitar.name = 'guitar';

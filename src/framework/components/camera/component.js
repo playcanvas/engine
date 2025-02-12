@@ -9,6 +9,7 @@ import { PostEffectQueue } from './post-effect-queue.js';
  * @import { CameraComponentSystem } from './system.js'
  * @import { Color } from '../../../core/math/color.js'
  * @import { Entity } from '../../entity.js'
+ * @import { EventHandle } from '../../../core/event-handle.js'
  * @import { Frustum } from '../../../core/shape/frustum.js'
  * @import { LayerComposition } from '../../../scene/composition/layer-composition.js'
  * @import { Layer } from '../../../scene/layer.js'
@@ -27,14 +28,6 @@ import { PostEffectQueue } from './post-effect-queue.js';
  * @callback CalculateMatrixCallback
  * @param {Mat4} transformMatrix - Output of the function.
  * @param {number} view - Type of view. Can be {@link VIEW_CENTER}, {@link VIEW_LEFT} or {@link VIEW_RIGHT}. Left and right are only used in stereo rendering.
- */
-
-/**
- * Callback used by {@link CameraComponent#onPreRenderLayer} and {@link CameraComponent#onPostRenderLayer}.
- *
- * @callback RenderLayerCallback
- * @param {Layer} layer - The layer.
- * @param {boolean} transparent - True for transparent sublayer, otherwise opaque sublayer.
  */
 
 /**
@@ -58,6 +51,7 @@ import { PostEffectQueue } from './post-effect-queue.js';
  * entity.camera.nearClip = 2;
  * ```
  *
+ * @hideconstructor
  * @category Graphics
  */
 class CameraComponent extends Component {
@@ -68,52 +62,6 @@ class CameraComponent extends Component {
      * @ignore
      */
     onPostprocessing = null;
-
-    /**
-     * Custom function that is called before the camera renders the scene.
-     *
-     * @type {Function|null}
-     */
-    onPreRender = null;
-
-    /**
-     * Custom function that is called before the camera renders a layer. This is called during
-     * rendering to a render target or a default framebuffer, and additional rendering can be
-     * performed here, for example using ${@link QuadRender#render}.
-     *
-     * @type {RenderLayerCallback|null}
-     */
-    onPreRenderLayer = null;
-
-    /**
-     * Custom function that is called after the camera renders the scene.
-     *
-     * @type {Function|null}
-     */
-    onPostRender = null;
-
-    /**
-     * Custom function that is called after the camera renders a layer. This is called during
-     * rendering to a render target or a default framebuffer, and additional rendering can be
-     * performed here, for example using ${@link QuadRender#render}.
-     *
-     * @type {RenderLayerCallback|null}
-     */
-    onPostRenderLayer = null;
-
-    /**
-     * Custom function that is called before visibility culling is performed for this camera.
-     *
-     * @type {Function|null}
-     */
-    onPreCull = null;
-
-    /**
-     * Custom function that is called after visibility culling is performed for this camera.
-     *
-     * @type {Function|null}
-     */
-    onPostCull = null;
 
     /**
      * A counter of requests of depth map rendering.
@@ -150,6 +98,24 @@ class CameraComponent extends Component {
 
     /** @private */
     _camera = new Camera();
+
+    /**
+     * @type {EventHandle|null}
+     * @private
+     */
+    _evtLayersChanged = null;
+
+    /**
+     * @type {EventHandle|null}
+     * @private
+     */
+    _evtLayerAdded = null;
+
+    /**
+     * @type {EventHandle|null}
+     * @private
+     */
+    _evtLayerRemoved = null;
 
     /**
      * Create a new CameraComponent instance.
@@ -655,7 +621,7 @@ class CameraComponent extends Component {
 
     /**
      * Sets whether the camera's field of view (`fov`) is horizontal or vertical. Defaults to
-     * false (meaning it is vertical be default).
+     * false (meaning it is vertical by default).
      *
      * @type {boolean}
      */
@@ -680,21 +646,23 @@ class CameraComponent extends Component {
      * @type {number[]}
      */
     set layers(newValue) {
-        const layers = this._camera.layers;
-        for (let i = 0; i < layers.length; i++) {
-            const layer = this.system.app.scene.layers.getLayerById(layers[i]);
-            if (!layer) continue;
-            layer.removeCamera(this);
-        }
+        const oldLayers = this._camera.layers;
+        const scene = this.system.app.scene;
+
+        // Remove from old layers
+        oldLayers.forEach((layerId) => {
+            const layer = scene.layers.getLayerById(layerId);
+            layer?.removeCamera(this);
+        });
 
         this._camera.layers = newValue;
 
-        if (!this.enabled || !this.entity.enabled) return;
-
-        for (let i = 0; i < newValue.length; i++) {
-            const layer = this.system.app.scene.layers.getLayerById(newValue[i]);
-            if (!layer) continue;
-            layer.addCamera(this);
+        // Only add to new layers if enabled
+        if (this.enabled && this.entity.enabled) {
+            newValue.forEach((layerId) => {
+                const layer = scene.layers.getLayerById(layerId);
+                layer?.addCamera(this);
+            });
         }
     }
 
@@ -1068,9 +1036,8 @@ class CameraComponent extends Component {
      */
     screenToWorld(screenx, screeny, cameraz, worldCoord) {
         const device = this.system.app.graphicsDevice;
-        const w = device.clientRect.width;
-        const h = device.clientRect.height;
-        return this._camera.screenToWorld(screenx, screeny, cameraz, w, h, worldCoord);
+        const { width, height } = device.clientRect;
+        return this._camera.screenToWorld(screenx, screeny, cameraz, width, height, worldCoord);
     }
 
     /**
@@ -1082,9 +1049,8 @@ class CameraComponent extends Component {
      */
     worldToScreen(worldCoord, screenCoord) {
         const device = this.system.app.graphicsDevice;
-        const w = device.clientRect.width;
-        const h = device.clientRect.height;
-        return this._camera.worldToScreen(worldCoord, w, h, screenCoord);
+        const { width, height } = device.clientRect;
+        return this._camera.worldToScreen(worldCoord, width, height, screenCoord);
     }
 
     /**
@@ -1153,16 +1119,20 @@ class CameraComponent extends Component {
     }
 
     onEnable() {
-        const system = this.system;
-        const scene = system.app.scene;
+        const scene = this.system.app.scene;
         const layers = scene.layers;
 
-        system.addCamera(this);
+        this.system.addCamera(this);
 
-        scene.on('set:layers', this.onLayersChanged, this);
+        this._evtLayersChanged?.off();
+        this._evtLayersChanged = scene.on('set:layers', this.onLayersChanged, this);
+
         if (layers) {
-            layers.on('add', this.onLayerAdded, this);
-            layers.on('remove', this.onLayerRemoved, this);
+            this._evtLayerAdded?.off();
+            this._evtLayerAdded = layers.on('add', this.onLayerAdded, this);
+
+            this._evtLayerRemoved?.off();
+            this._evtLayerRemoved = layers.on('remove', this.onLayerRemoved, this);
         }
 
         if (this.enabled && this.entity.enabled) {
@@ -1173,21 +1143,24 @@ class CameraComponent extends Component {
     }
 
     onDisable() {
-        const system = this.system;
-        const scene = system.app.scene;
+        const scene = this.system.app.scene;
         const layers = scene.layers;
 
         this.postEffects.disable();
 
         this.removeCameraFromLayers();
 
-        scene.off('set:layers', this.onLayersChanged, this);
+        this._evtLayersChanged?.off();
+        this._evtLayersChanged = null;
+
         if (layers) {
-            layers.off('add', this.onLayerAdded, this);
-            layers.off('remove', this.onLayerRemoved, this);
+            this._evtLayerAdded?.off();
+            this._evtLayerAdded = null;
+            this._evtLayerRemoved?.off();
+            this._evtLayerRemoved = null;
         }
 
-        system.removeCamera(this);
+        this.system.removeCamera(this);
     }
 
     onRemove() {

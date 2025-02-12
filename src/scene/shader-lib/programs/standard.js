@@ -11,6 +11,8 @@ import { ChunkUtils } from '../chunk-utils.js';
 import { StandardMaterialOptions } from '../../materials/standard-material-options.js';
 import { LitOptionsUtils } from './lit-options-utils.js';
 import { ShaderGenerator } from './shader-generator.js';
+import { ShaderUtils } from '../../../platform/graphics/shader-utils.js';
+import { SHADERTAG_MATERIAL } from '../../../platform/graphics/constants.js';
 
 /**
  * @import { GraphicsDevice } from '../../../platform/graphics/graphics-device.js'
@@ -513,7 +515,6 @@ class ShaderGeneratorStandard extends ShaderGenerator {
 
         decl.append(litShader.chunks.litShaderArgsPS);
         code.append(`void evaluateFrontend() { \n${func.code}\n${args.code}\n }\n`);
-        func.code = 'evaluateFrontend();';
 
         for (const texture in textureMapping) {
             decl.append(`uniform sampler2D ${textureMapping[texture]};`);
@@ -523,12 +524,32 @@ class ShaderGeneratorStandard extends ShaderGenerator {
         // code.append('//-------- frontend code begin', code.code, '//-------- frontend code end');
         // func.append('//-------- frontend func begin\n${func}//-------- frontend func end\n`;
 
-        // format func
-        func.code = `\n${func.code.split('\n').map(l => `    ${l}`).join('\n')}\n\n`;
+        litShader.generateFragmentShader(decl.code, code.code, lightingUv);
 
-        litShader.generateFragmentShader(decl.code, code.code, func.code, lightingUv);
+        const includes = new Map(Object.entries({
+            ...Object.getPrototypeOf(litShader.chunks), // the prototype stores the default chunks
+            ...litShader.chunks,  // user overrides are supplied as instance properties
+            ...options.litOptions.chunks
+        }));
 
-        return litShader.getDefinition(options);
+        const defines = new Map(options.defines);
+
+        const definition = ShaderUtils.createDefinition(device, {
+            name: 'StandardShader',
+            attributes: litShader.attributes,
+            vertexCode: litShader.vshader,
+            fragmentCode: litShader.fshader,
+            vertexIncludes: includes,
+            fragmentIncludes: includes,
+            fragmentDefines: defines,
+            vertexDefines: defines
+        });
+
+        if (litShader.shaderPassInfo.isForward) {
+            definition.tag = SHADERTAG_MATERIAL;
+        }
+
+        return definition;
     }
 }
 

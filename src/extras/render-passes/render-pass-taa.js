@@ -6,9 +6,10 @@ import { Texture } from '../../platform/graphics/texture.js';
 import { shaderChunks } from '../../scene/shader-lib/chunks/chunks.js';
 import { RenderPassShaderQuad } from '../../scene/graphics/render-pass-shader-quad.js';
 import { RenderTarget } from '../../platform/graphics/render-target.js';
+import { PROJECTION_ORTHOGRAPHIC } from '../../scene/constants.js';
+import { ChunkUtils } from '../../scene/shader-lib/chunk-utils.js';
 
 const fs = /* glsl */ `
-    uniform highp sampler2D uSceneDepthMap;
     uniform sampler2D sourceTexture;
     uniform sampler2D historyTexture;
     uniform mat4 matrix_viewProjectionPrevious;
@@ -76,8 +77,9 @@ const fs = /* glsl */ `
         // current frame
         vec4 srcColor = texture2D(sourceTexture, uv);
 
-        // current depth
-        float depth = texture2DLodEXT(uSceneDepthMap, uv, 0.0).r;
+        // current depth is in linear space, convert it to non-linear space
+        float linearDepth = getLinearScreenDepth(uv0);
+        float depth = delinearizeDepth(linearDepth);
 
         // previous frame
         vec2 historyUv = reproject(uv0, depth);
@@ -142,7 +144,8 @@ class RenderPassTAA extends RenderPassShaderQuad {
         const defines = /* glsl */`
             #define QUALITY_HIGH
         `;
-        const fsChunks = shaderChunks.sampleCatmullRomPS;
+        const screenDepth = ChunkUtils.getScreenDepthChunk(device, cameraComponent.shaderParams);
+        const fsChunks = shaderChunks.sampleCatmullRomPS + screenDepth;
         this.shader = this.createQuadShader('TaaResolveShader', defines + fsChunks + fs);
 
         const { scope } = device;
@@ -153,6 +156,8 @@ class RenderPassTAA extends RenderPassShaderQuad {
         this.viewProjPrevId = scope.resolve('matrix_viewProjectionPrevious');
         this.viewProjInvId = scope.resolve('matrix_viewProjectionInverse');
         this.jittersId = scope.resolve('jitters');
+        this.cameraParams = new Float32Array(4);
+        this.cameraParamsId = scope.resolve('camera_params');
 
         this.setup();
     }
@@ -205,6 +210,13 @@ class RenderPassTAA extends RenderPassShaderQuad {
         this.viewProjPrevId.setValue(camera._viewProjPrevious.data);
         this.viewProjInvId.setValue(camera._viewProjInverse.data);
         this.jittersId.setValue(camera._jitters);
+
+        const f = camera._farClip;
+        this.cameraParams[0] = 1 / f;
+        this.cameraParams[1] = f;
+        this.cameraParams[2] = camera._nearClip;
+        this.cameraParams[3] = camera.projection === PROJECTION_ORTHOGRAPHIC ? 1 : 0;
+        this.cameraParamsId.setValue(this.cameraParams);
     }
 
     // called when the parent render pass gets added to the frame graph

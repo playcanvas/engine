@@ -1,5 +1,5 @@
 import { hashCode } from '../core/hash.js';
-import { FOG_NONE, GAMMA_NONE, GAMMA_SRGB, TONEMAP_LINEAR } from './constants.js';
+import { FOG_NONE, GAMMA_NONE, GAMMA_SRGB, gammaNames, TONEMAP_LINEAR, tonemapNames } from './constants.js';
 
 /**
  * Internal camera shader parameters, used to generate and use matching shaders.
@@ -22,6 +22,9 @@ class CameraShaderParams {
     /** @private */
     _fog = FOG_NONE;
 
+    /** @private */
+    _sceneDepthMapLinear = false;
+
     /**
      * The hash of the rendering parameters, or undefined if the hash has not been computed yet.
      *
@@ -31,6 +34,17 @@ class CameraShaderParams {
     _hash;
 
     /**
+     * Content of this class relevant to shader generation, which is supplied as defines for the
+     * shader.
+     *
+     * @type {Map<string, string>}
+     * @private
+     */
+    _defines = new Map();
+
+    _definesDirty = true;
+
+    /**
      * The hash of the rendering parameters.
      *
      * @type {number}
@@ -38,22 +52,31 @@ class CameraShaderParams {
      */
     get hash() {
         if (this._hash === undefined) {
-            const key = `${this.gammaCorrection}_${this.toneMapping}_${this.srgbRenderTarget}_${this.fog}_${this.ssaoEnabled}`;
+            const key = `${this.gammaCorrection}_${this.toneMapping}_${this.srgbRenderTarget}_${this.fog}_${this.ssaoEnabled}_${this.sceneDepthMapLinear}`;
             this._hash = hashCode(key);
         }
         return this._hash;
     }
 
-    initDefaults() {
-        this._gammaCorrection = GAMMA_SRGB;
-        this._toneMapping = TONEMAP_LINEAR;
-        this._srgbRenderTarget = false;
-        this._ssaoEnabled = false;
-        this._fog = FOG_NONE;
+    get defines() {
+
+        const defines = this._defines;
+
+        if (this._definesDirty) {
+            this._definesDirty = false;
+            defines.clear();
+
+            if (this._sceneDepthMapLinear) defines.set('SCENE_DEPTHMAP_LINEAR', true);
+            defines.set('FOG', this._fog.toUpperCase());
+            defines.set('TONEMAP', tonemapNames[this._toneMapping]);
+            defines.set('GAMMA', gammaNames[this.shaderOutputGamma]);
+        }
+        return defines;
     }
 
     markDirty() {
         this._hash = undefined;
+        this._definesDirty = true;
     }
 
     set fog(type) {
@@ -110,6 +133,17 @@ class CameraShaderParams {
 
     get srgbRenderTarget() {
         return this._srgbRenderTarget;
+    }
+
+    set sceneDepthMapLinear(value) {
+        if (this._sceneDepthMapLinear !== value) {
+            this._sceneDepthMapLinear = value;
+            this.markDirty();
+        }
+    }
+
+    get sceneDepthMapLinear() {
+        return this._sceneDepthMapLinear;
     }
 
     /**

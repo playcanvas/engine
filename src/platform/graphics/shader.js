@@ -2,6 +2,7 @@ import { TRACEID_SHADER_ALLOC } from '../../core/constants.js';
 import { Debug } from '../../core/debug.js';
 import { platform } from '../../core/platform.js';
 import { Preprocessor } from '../../core/preprocessor.js';
+import { SHADERLANGUAGE_GLSL, SHADERLANGUAGE_WGSL } from './constants.js';
 import { DebugGraphics } from './debug-graphics.js';
 import { ShaderUtils } from './shader-utils.js';
 
@@ -117,17 +118,30 @@ class Shader {
             Debug.assert(definition.vshader, 'No vertex shader has been specified when creating a shader.');
             Debug.assert(definition.fshader, 'No fragment shader has been specified when creating a shader.');
 
-            // pre-process shader sources
-            definition.vshader = Preprocessor.run(definition.vshader, definition.vincludes);
+            const wgsl = definition.shaderLanguage === SHADERLANGUAGE_WGSL;
 
-            // if not attributes are specified, try to extract the default names after the shader has been pre-processed
-            definition.attributes ??= ShaderUtils.collectAttributes(definition.vshader);
+            // pre-process vertex shader source
+            definition.vshader = Preprocessor.run(definition.vshader, definition.vincludes, {
+                sourceName: `vertex shader for ${this.label}`,
+                stripDefines: wgsl
+            });
+
+            // if no attributes are specified, try to extract the default names after the shader has been pre-processed
+            if (definition.shaderLanguage === SHADERLANGUAGE_GLSL) {
+                definition.attributes ??= ShaderUtils.collectAttributes(definition.vshader);
+            }
 
             // Strip unused color attachments from fragment shader.
             // Note: this is only needed for iOS 15 on WebGL2 where there seems to be a bug where color attachments that are not
             // written to generate metal linking errors. This is fixed on iOS 16, and iOS 14 does not support WebGL2.
             const stripUnusedColorAttachments = graphicsDevice.isWebGL2 && (platform.name === 'osx' || platform.name === 'ios');
-            definition.fshader = Preprocessor.run(definition.fshader, definition.fincludes, stripUnusedColorAttachments);
+
+            // pre-process fragment shader source
+            definition.fshader = Preprocessor.run(definition.fshader, definition.fincludes, {
+                stripUnusedColorAttachments,
+                stripDefines: wgsl,
+                sourceName: `fragment shader for ${this.label}`
+            });
         }
 
         this.impl = graphicsDevice.createShaderImpl(this);

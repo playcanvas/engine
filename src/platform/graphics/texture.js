@@ -15,8 +15,8 @@ import {
     isIntegerPixelFormat, FILTER_NEAREST, TEXTURELOCK_NONE, TEXTURELOCK_READ,
     TEXPROPERTY_MIN_FILTER, TEXPROPERTY_MAG_FILTER, TEXPROPERTY_ADDRESS_U, TEXPROPERTY_ADDRESS_V,
     TEXPROPERTY_ADDRESS_W, TEXPROPERTY_COMPARE_ON_READ, TEXPROPERTY_COMPARE_FUNC, TEXPROPERTY_ANISOTROPY,
-    TEXPROPERTY_ALL, requiresManualGamma
-
+    TEXPROPERTY_ALL,
+    requiresManualGamma, pixelFormatInfo, isSrgbPixelFormat, pixelFormatLinearToGamma, pixelFormatGammaToLinear
 } from './constants.js';
 import { TextureUtils } from './texture-utils.js';
 
@@ -89,6 +89,12 @@ class Texture {
     /** @protected */
     _storage = false;
 
+    /** @protected */
+    _numLevels = 0;
+
+    /** @protected */
+    _numLevelsRequested;
+
     /**
      * Create a new Texture instance.
      *
@@ -149,6 +155,9 @@ class Texture {
      * {@link ADDRESS_REPEAT}.
      * @param {boolean} [options.mipmaps] - When enabled try to generate or use mipmaps for this
      * texture. Default is true.
+     * @param {number} [options.numLevels] - Specifies the number of mip levels to generate. If not
+     * specified, the number is calculated based on the texture size. When this property is set,
+     * the mipmaps property is ignored.
      * @param {boolean} [options.cubemap] - Specifies whether the texture is to be a cubemap.
      * Defaults to false.
      * @param {number} [options.arrayLength] - Specifies whether the texture is to be a 2D texture array.
@@ -186,7 +195,7 @@ class Texture {
      * - {@link FUNC_NOTEQUAL}
      *
      * Defaults to {@link FUNC_LESS}.
-     * @param {Uint8Array[]|HTMLCanvasElement[]|HTMLImageElement[]|HTMLVideoElement[]|Uint8Array[][]} [options.levels]
+     * @param {Uint8Array[]|Uint16Array[]|Uint32Array[]|Float32Array[]|HTMLCanvasElement[]|HTMLImageElement[]|HTMLVideoElement[]|Uint8Array[][]} [options.levels]
      * - Array of Uint8Array or other supported browser interface; or a two-dimensional array
      * of Uint8Array if options.arrayLength is defined and greater than zero.
      * @param {boolean} [options.storage] - Defines if texture can be used as a storage texture by
@@ -227,7 +236,6 @@ class Texture {
         this._compressed = isCompressedPixelFormat(this._format);
         this._integerFormat = isIntegerPixelFormat(this._format);
         if (this._integerFormat) {
-            options.mipmaps = false;
             options.minFilter = FILTER_NEAREST;
             options.magFilter = FILTER_NEAREST;
         }
@@ -241,7 +249,13 @@ class Texture {
         this._flipY = options.flipY ?? false;
         this._premultiplyAlpha = options.premultiplyAlpha ?? false;
 
-        this._mipmaps = options.mipmaps ?? options.autoMipmap ?? true;
+        this._mipmaps = options.mipmaps ?? true;
+        this._numLevelsRequested = options.numLevels;
+        if (options.numLevels !== undefined) {
+            this._numLevels = options.numLevels;
+        }
+        this._updateNumLevel();
+
         this._minFilter = options.minFilter ?? FILTER_LINEAR_MIPMAP_LINEAR;
         this._magFilter = options.magFilter ?? FILTER_LINEAR;
         this._anisotropy = options.anisotropy ?? 1;
@@ -263,29 +277,25 @@ class Texture {
             this.projection = options.projection;
         }
 
-        this.impl = graphicsDevice.createTextureImpl(this);
-
         // #if _PROFILER
         this.profilerHint = options.profilerHint ?? 0;
         // #endif
 
-        this.dirtyAll();
-
         this._levels = options.levels;
-        if (this._levels) {
-            this.upload();
-        } else {
+        if (!this._levels) {
             this._levels = this._cubemap ? [[null, null, null, null, null, null]] : [null];
         }
+
+        this.recreateImpl();
 
         // track the texture
         graphicsDevice.textures.push(this);
 
-        Debug.trace(TRACEID_TEXTURE_ALLOC, `Alloc: Id ${this.id} ${this.name}: ${this.width}x${this.height} ` +
+        Debug.trace(TRACEID_TEXTURE_ALLOC, `Alloc: Id ${this.id} ${this.name}: ${this.width}x${this.height} [${pixelFormatInfo.get(this.format)?.name}]` +
             `${this.cubemap ? '[Cubemap]' : ''}` +
             `${this.volume ? '[Volume]' : ''}` +
             `${this.array ? '[Array]' : ''}` +
-            `${this.mipmaps ? '[Mipmaps]' : ''}`, this);
+            `[MipLevels:${this.numLevels}]`, this);
     }
 
     /**
@@ -317,6 +327,20 @@ class Texture {
         }
     }
 
+    recreateImpl() {
+
+        const { device } = this;
+
+        // destroy existing
+        this.impl?.destroy(device);
+        this.impl = null;
+
+        // create new
+        this.impl = device.createTextureImpl(this);
+        this.dirtyAll();
+        this.upload();
+    }
+
     /**
      * Resizes the texture. Only supported for render target textures, as it does not resize the
      * existing content of the texture, but only the allocated buffer for rendering into.
@@ -336,6 +360,7 @@ class Texture {
         this._width = Math.floor(width);
         this._height = Math.floor(height);
         this._depth = Math.floor(depth);
+        this._updateNumLevel();
 
         // re-create the implementation
         this.impl = device.createTextureImpl(this);
@@ -379,14 +404,16 @@ class Texture {
         this.renderVersionDirty = this.device.renderVersion;
     }
 
-    /**
-     * Returns number of required mip levels for the texture based on its dimensions and parameters.
-     *
-     * @ignore
-     * @type {number}
-     */
-    get requiredMipLevels() {
-        return this.mipmaps ? TextureUtils.calcMipLevelsCount(this.width, this.height) : 1;
+    _updateNumLevel() {
+
+        const maxLevels = this.mipmaps ? TextureUtils.calcMipLevelsCount(this.width, this.height) : 1;
+        const requestedLevels = this._numLevelsRequested;
+        if (requestedLevels !== undefined && requestedLevels > maxLevels) {
+            Debug.warn('Texture#numLevels: requested mip level count is greater than the maximum possible, will be clamped to', maxLevels, this);
+        }
+
+        this._numLevels = Math.min(requestedLevels ?? maxLevels, maxLevels);
+        this._mipmaps = this._numLevels > 1;
     }
 
     /**
@@ -645,6 +672,15 @@ class Texture {
     }
 
     /**
+     * Gets the number of mip levels.
+     *
+     * @type {number}
+     */
+    get numLevels() {
+        return this._numLevels;
+    }
+
+    /**
      * Defines if texture can be used as a storage texture by a compute shader.
      *
      * @type {boolean}
@@ -752,6 +788,62 @@ class Texture {
      */
     get volume() {
         return this._volume;
+    }
+
+    /**
+     * Sets the texture's internal format to an sRGB or linear equivalent of its current format.
+     * When set to true, the texture is stored in sRGB format and automatically converted to linear
+     * space when sampled. When set to false, the texture remains in a linear format. Changing this
+     * property recreates the texture on the GPU, which is an expensive operation, so it is
+     * preferable to create the texture with the correct format from the start. If the texture
+     * format has no sRGB variant, this operation is ignored.
+     * This is not a public API and is used by Editor only to update rendering when the sRGB
+     * property is changed in the inspector. The higher cost is acceptable in this case.
+     *
+     * @type {boolean}
+     * @ignore
+     */
+    set srgb(value) {
+        const currentSrgb = isSrgbPixelFormat(this.format);
+        if (value !== currentSrgb) {
+
+            if (value) {
+
+                // switch to sRGB
+                const srgbFormat = pixelFormatLinearToGamma(this.format);
+                if (this._format !== srgbFormat) {
+                    Debug.warn(`Switching format of texture '${this.name}' to sRGB equivalent: ${pixelFormatInfo.get(this.format)?.name} -> ${pixelFormatInfo.get(srgbFormat)?.name}. This is an expensive operation, and the texture should be created using the right format to avoid this.`, this);
+                    this._format = srgbFormat;
+                    this.recreateImpl();
+
+                    // update all shaders to respect the encoding of the texture (needed by the standard material)
+                    this.device._shadersDirty = true;
+                }
+
+            } else {
+
+                // switch to linear
+                const linearFormat = pixelFormatGammaToLinear(this.format);
+                if (this._format !== linearFormat) {
+                    Debug.warn(`Switching format of texture '${this.name}' to linear equivalent: ${pixelFormatInfo.get(this.format)?.name} -> ${pixelFormatInfo.get(linearFormat)?.name}. This is an expensive operation, and the texture should be created using the right format to avoid this.`, this);
+                    this._format = linearFormat;
+                    this.recreateImpl();
+
+                    // update all shaders to respect the encoding of the texture (needed by the standard material)
+                    this.device._shadersDirty = true;
+                }
+            }
+        }
+    }
+
+    /**
+     * Returns true if the texture is stored in an sRGB format, meaning it will be converted to
+     * linear space when sampled. Returns false if the texture is stored in a linear format.
+     *
+     * @type {boolean}
+     */
+    get srgb() {
+        return isSrgbPixelFormat(this.format);
     }
 
     /**
@@ -928,8 +1020,13 @@ class Texture {
                     this._levelsUpdated[mipLevel] = true;
                 }
 
-                width = source.width;
-                height = source.height;
+                if (source instanceof HTMLVideoElement) {
+                    width = source.videoWidth;
+                    height = source.videoHeight;
+                } else {
+                    width = source.width;
+                    height = source.height;
+                }
             }
         }
 

@@ -68,6 +68,80 @@ class Scene extends EventHandler {
     static EVENT_SETSKYBOX = 'set:skybox';
 
     /**
+     * Fired before the camera renders the scene. The handler is passed the {@link CameraComponent}
+     * that will render the scene.
+     *
+     * @event
+     * @example
+     * app.scene.on('prerender', (camera) => {
+     *    console.log(`Camera ${camera.entity.name} will render the scene`);
+     * });
+     */
+    static EVENT_PRERENDER = 'prerender';
+
+    /**
+     * Fired when the camera renders the scene. The handler is passed the {@link CameraComponent}
+     * that rendered the scene.
+     *
+     * @event
+     * @example
+     * app.scene.on('postrender', (camera) => {
+     *    console.log(`Camera ${camera.entity.name} rendered the scene`);
+     * });
+     */
+    static EVENT_POSTRENDER = 'postrender';
+
+    /**
+     * Fired before the camera renders a layer. The handler is passed the {@link CameraComponent},
+     * the {@link Layer} that will be rendered, and a boolean parameter set to true if the layer is
+     * transparent. This is called during rendering to a render target or a default framebuffer, and
+     * additional rendering can be performed here, for example using {@link QuadRender#render}.
+     *
+     * @event
+     * @example
+     * app.scene.on('prerender:layer', (camera, layer, transparent) => {
+     *    console.log(`Camera ${camera.entity.name} will render the layer ${layer.name} (transparent: ${transparent})`);
+     * });
+     */
+    static EVENT_PRERENDER_LAYER = 'prerender:layer';
+
+    /**
+     * Fired when the camera renders a layer. The handler is passed the {@link CameraComponent},
+     * the {@link Layer} that will be rendered, and a boolean parameter set to true if the layer is
+     * transparent. This is called during rendering to a render target or a default framebuffer, and
+     * additional rendering can be performed here, for example using {@link QuadRender#render}.
+     *
+     * @event
+     * @example
+     * app.scene.on('postrender:layer', (camera, layer, transparent) => {
+     *    console.log(`Camera ${camera.entity.name} rendered the layer ${layer.name} (transparent: ${transparent})`);
+     * });
+     */
+    static EVENT_POSTRENDER_LAYER = 'postrender:layer';
+
+    /**
+     * Fired before visibility culling is performed for the camera.
+     *
+     * @event
+     * @example
+     * app.scene.on('precull', (camera) => {
+     *    console.log(`Visibility culling will be performed for camera ${camera.entity.name}`);
+     * });
+     */
+    static EVENT_PRECULL = 'precull';
+
+    /**
+     * Fired after visibility culling is performed for the camera.
+     *
+     * @event
+     * @example
+     * app.scene.on('postcull', (camera) => {
+     *    console.log(`Visibility culling was performed for camera ${camera.entity.name}`);
+     * });
+     */
+    static EVENT_POSTCULL = 'postcull';
+
+    /**
      * If enabled, the ambient lighting will be baked into lightmaps. This will be either the
      * {@link Scene#skybox} if set up, otherwise {@link Scene#ambientLight}. Defaults to false.
      *
@@ -363,7 +437,7 @@ class Scene extends EventHandler {
     /**
      * Sets the environment lighting atlas.
      *
-     * @type {Texture}
+     * @type {Texture|null}
      */
     set envAtlas(value) {
         if (value !== this._envAtlas) {
@@ -391,7 +465,7 @@ class Scene extends EventHandler {
     /**
      * Gets the environment lighting atlas.
      *
-     * @type {Texture}
+     * @type {Texture|null}
      */
     get envAtlas() {
         return this._envAtlas;
@@ -529,7 +603,7 @@ class Scene extends EventHandler {
     /**
      * Sets the base cubemap texture used as the scene's skybox when skyboxMip is 0. Defaults to null.
      *
-     * @type {Texture}
+     * @type {Texture|null}
      */
     set skybox(value) {
         if (value !== this._skyboxCubeMap) {
@@ -541,7 +615,7 @@ class Scene extends EventHandler {
     /**
      * Gets the base cubemap texture used as the scene's skybox when skyboxMip is 0.
      *
-     * @type {Texture}
+     * @type {Texture|null}
      */
     get skybox() {
         return this._skyboxCubeMap;

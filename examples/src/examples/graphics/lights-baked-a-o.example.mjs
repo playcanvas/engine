@@ -96,7 +96,7 @@ assetListLoader.load(() => {
         shadowBias: 0.2,
         shadowDistance: 100,
         shadowResolution: 2048,
-        shadowType: pc.SHADOW_PCF3,
+        shadowType: pc.SHADOW_PCF3_32F,
         color: new pc.Color(0.7, 0.7, 0.5),
         intensity: 1.6
     });
@@ -115,7 +115,7 @@ assetListLoader.load(() => {
         shadowBias: 0.2,
         shadowDistance: 25,
         shadowResolution: 512,
-        shadowType: pc.SHADOW_PCF3,
+        shadowType: pc.SHADOW_PCF3_32F,
         color: pc.Color.YELLOW,
         range: 25,
         intensity: 0.9
@@ -135,7 +135,7 @@ assetListLoader.load(() => {
         shadowBias: 0.2,
         shadowDistance: 50,
         shadowResolution: 512,
-        shadowType: pc.SHADOW_PCF3,
+        shadowType: pc.SHADOW_PCF3_32F,
         color: pc.Color.RED,
         range: 10,
         intensity: 2.5

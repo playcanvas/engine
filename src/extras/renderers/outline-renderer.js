@@ -97,9 +97,11 @@ class OutlineRenderer {
         this.outlineShaderPass = this.outlineCameraEntity.camera.setShaderPass('OutlineShaderPass');
 
         // function called after the camera has rendered the outline objects to the texture
-        this.outlineCameraEntity.camera.onPostRender = () => {
-            this.onPostRender();
-        };
+        app.scene.on('postrender', (cameraComponent) => {
+            if (this.outlineCameraEntity.camera === cameraComponent) {
+                this.onPostRender();
+            }
+        });
 
         // add the camera to the scene
         this.app.root.addChild(this.outlineCameraEntity);
@@ -192,6 +194,7 @@ class OutlineRenderer {
 
                         // custom shader for the outline shader pass, renders single color meshes using emissive color
                         const opts = new StandardMaterialOptions();
+                        opts.defines = options.defines;
                         opts.opacityMap = options.opacityMap;
                         opts.opacityMapUv = options.opacityMapUv;
                         opts.opacityMapChannel = options.opacityMapChannel;
@@ -201,6 +204,11 @@ class OutlineRenderer {
                         opts.litOptions.vertexColors = options.litOptions.vertexColors;
                         opts.litOptions.alphaTest = options.litOptions.alphaTest;
                         opts.litOptions.skin = options.litOptions.skin;
+                        opts.litOptions.batch = options.litOptions.batch;
+                        opts.litOptions.useInstancing = options.litOptions.useInstancing;
+                        opts.litOptions.useMorphPosition = options.litOptions.useMorphPosition;
+                        opts.litOptions.useMorphNormal = options.litOptions.useMorphNormal;
+                        opts.litOptions.useMorphTextureBasedInt = options.litOptions.useMorphTextureBasedInt;
                         return opts;
                     }
 
@@ -331,15 +339,12 @@ class OutlineRenderer {
         this.updateRenderTarget(sceneCamera);
 
         // function called before the scene camera renders a layer
-        sceneCameraEntity.camera.onPreRenderLayer = (layer, transparent) => {
-
-            // when specified blend layer is rendered, add outline before its rendering
-            if (transparent === blendLayerTransparent && layer === blendLayer) {
+        const evt = this.app.scene.on('prerender:layer', (cameraComponent, layer, transparent) => {
+            if (sceneCamera === cameraComponent && transparent === blendLayerTransparent && layer === blendLayer) {
                 this.blendOutlines();
-
-                sceneCameraEntity.camera.onPreRenderLayer = null;
+                evt.off();
             }
-        };
+        });
 
         // copy the transform
         this.outlineCameraEntity.setLocalPosition(sceneCameraEntity.getPosition());

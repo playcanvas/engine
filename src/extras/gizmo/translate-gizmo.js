@@ -22,6 +22,7 @@ import { SphereShape } from './shape/sphere-shape.js';
 // temporary variables
 const tmpV1 = new Vec3();
 const tmpV2 = new Vec3();
+const tmpV3 = new Vec3();
 const tmpQ1 = new Quat();
 
 // constants
@@ -136,7 +137,8 @@ class TranslateGizmo extends TransformGizmo {
             this._storeNodePositions();
         });
 
-        this.on(TransformGizmo.EVENT_TRANSFORMMOVE, (pointDelta) => {
+        this.on(TransformGizmo.EVENT_TRANSFORMMOVE, (point) => {
+            const pointDelta = tmpV3.copy(point).sub(this._selectionStartPoint);
             if (this.snap) {
                 pointDelta.mulScalar(1 / this.snapIncrement);
                 pointDelta.round();
@@ -445,7 +447,7 @@ class TranslateGizmo extends TransformGizmo {
     /**
      * @param {number} x - The x coordinate.
      * @param {number} y - The y coordinate.
-     * @returns {{ point: Vec3, angle: number }} The point and angle.
+     * @returns {Vec3} The point in world space.
      * @protected
      */
     _screenToPoint(x, y) {
@@ -458,7 +460,6 @@ class TranslateGizmo extends TransformGizmo {
         const plane = this._createPlane(axis, axis === GIZMOAXIS_FACE, !isPlane);
 
         const point = new Vec3();
-        const angle = 0;
 
         plane.intersectsRay(ray, point);
 
@@ -469,7 +470,7 @@ class TranslateGizmo extends TransformGizmo {
             this._projectToAxis(point, axis);
         }
 
-        return { point, angle };
+        return point;
     }
 }
 

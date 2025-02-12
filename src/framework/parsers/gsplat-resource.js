@@ -34,13 +34,21 @@ class GSplatResource {
     splat = null;
 
     /**
-     * @param {GraphicsDevice} device - The graphics device.
-     * @param {GSplatData} splatData - The splat data.
+     * @type {string[] | null}
      * @ignore
      */
-    constructor(device, splatData) {
+    comments = null;
+
+    /**
+     * @param {GraphicsDevice} device - The graphics device.
+     * @param {GSplatData} splatData - The splat data.
+     * @param {string[]} comments - The PLY file header comments
+     * @ignore
+     */
+    constructor(device, splatData, comments) {
         this.device = device;
         this.splatData = splatData;
+        this.comments = comments;
     }
 
     destroy() {

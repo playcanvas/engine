@@ -6,7 +6,7 @@ import {
     BLEND_NONE,
     LIGHTTYPE_DIRECTIONAL, LIGHTTYPE_OMNI, LIGHTTYPE_SPOT,
     MASK_AFFECT_DYNAMIC,
-    SHADER_PREPASS_VELOCITY,
+    SHADER_PREPASS,
     SHADERDEF_DIRLM, SHADERDEF_INSTANCING, SHADERDEF_LM, SHADERDEF_MORPH_POSITION, SHADERDEF_MORPH_NORMAL, SHADERDEF_NOSHADOW,
     SHADERDEF_SCREENSPACE, SHADERDEF_SKIN, SHADERDEF_TANGENTS, SHADERDEF_UV0, SHADERDEF_UV1, SHADERDEF_VCOLOR, SHADERDEF_LMAMBIENT,
     TONEMAP_NONE,
@@ -192,8 +192,9 @@ class StandardMaterialOptionsBuilder {
     _updateMinOptions(options, stdMat, pass) {
 
         // pre-pass uses the same dither setting as forward pass, otherwise shadow dither
-        const isPrepass = pass === SHADER_PREPASS_VELOCITY;
+        const isPrepass = pass === SHADER_PREPASS;
         options.litOptions.opacityShadowDither = isPrepass ? stdMat.opacityDither : stdMat.opacityShadowDither;
+        options.litOptions.linearDepth = isPrepass;
 
         options.litOptions.lights = [];
     }
@@ -327,7 +328,7 @@ class StandardMaterialOptionsBuilder {
             options.litOptions.ambientEncoding = null;
         } else {
             const envAtlas = stdMat.envAtlas || (stdMat.useSkybox && scene.envAtlas ? scene.envAtlas : null);
-            if (envAtlas) {
+            if (envAtlas && !stdMat.sphereMap) {
                 options.litOptions.ambientSource = 'envAtlas';
                 options.litOptions.ambientEncoding = envAtlas.encoding;
             } else {

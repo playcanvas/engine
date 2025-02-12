@@ -1,4 +1,7 @@
-import { CHUNKAPI_1_51, CHUNKAPI_1_55, CHUNKAPI_1_56, CHUNKAPI_1_57, CHUNKAPI_1_60, CHUNKAPI_1_62, CHUNKAPI_1_65, CHUNKAPI_1_70, CHUNKAPI_2_1 } from '../../../platform/graphics/constants.js';
+import {
+    CHUNKAPI_1_51, CHUNKAPI_1_55, CHUNKAPI_1_56, CHUNKAPI_1_57, CHUNKAPI_1_60, CHUNKAPI_1_62, CHUNKAPI_1_65,
+    CHUNKAPI_1_70, CHUNKAPI_2_1, CHUNKAPI_2_3, CHUNKAPI_2_5, CHUNKAPI_2_6
+} from '../../../platform/graphics/constants.js';
 import { Debug } from '../../../core/debug.js';
 import { shaderChunks } from './chunks.js';
 
@@ -63,7 +66,6 @@ const chunkVersions = {
     shadowEVSMnPS: CHUNKAPI_1_62,
     shadowStandardPS: CHUNKAPI_1_62,
     shadowStandardGL2PS: CHUNKAPI_1_62,
-    shadowVSM8PS: CHUNKAPI_1_62,
     spotPS: CHUNKAPI_1_62,
     TBNPS: CHUNKAPI_1_62,
     TBNObjectSpacePS: CHUNKAPI_1_62,
@@ -104,7 +106,15 @@ const removedChunks = {
     specularAaToksvigPS: CHUNKAPI_1_55,
     specularAaToksvigFastPS: CHUNKAPI_1_55,
     skyboxEnvPS: CHUNKAPI_2_1,
-    skyboxHDRPS: CHUNKAPI_2_1
+    skyboxHDRPS: CHUNKAPI_2_1,
+    shadowVSM8PS: CHUNKAPI_2_3,
+    fogExpPS: CHUNKAPI_2_5,
+    fogExp2PS: CHUNKAPI_2_5,
+    fogLinearPS: CHUNKAPI_2_5,
+    fogNonePS: CHUNKAPI_2_5,
+    gamma1_0PS: CHUNKAPI_2_5,
+    gamma2_2PS: CHUNKAPI_2_5,
+    storeEVSMPS: CHUNKAPI_2_6
 };
 
 // compare two "major.minor" semantic version strings and return true if a is a smaller version than b.

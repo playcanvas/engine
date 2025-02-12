@@ -10,10 +10,7 @@
  *   varying vec2 vUv0: for the UV.
  */
 
-// The following line is for setting the shader precision for floats. It is commented out because, ideally, it must be configured
-// on a per-device basis before loading the Shader. Please check the accompanying TypeScript code and look for 'app.graphicsDevice.precision'.
-
-// precision mediump float;
+#include "gammaPS"
 
 // Additional varying from vertex shader
 varying vec2 vUv0;
@@ -26,5 +23,5 @@ void main(void)
 {
     vec4 color = texture2D(uDiffuseMap, vUv0);
     vec3 roloc = 1.0 - color.rgb;
-    gl_FragColor = vec4(mix(color.rgb, roloc, amount), color.a);
+    gl_FragColor = vec4(gammaCorrectOutput(mix(color.rgb, roloc, amount)), color.a);
 }

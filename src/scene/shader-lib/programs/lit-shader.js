@@ -1,8 +1,7 @@
 import {
     SEMANTIC_ATTR8, SEMANTIC_ATTR9, SEMANTIC_ATTR12, SEMANTIC_ATTR13, SEMANTIC_ATTR14, SEMANTIC_ATTR15,
     SEMANTIC_BLENDINDICES, SEMANTIC_BLENDWEIGHT, SEMANTIC_COLOR, SEMANTIC_NORMAL, SEMANTIC_POSITION, SEMANTIC_TANGENT,
-    SEMANTIC_TEXCOORD0, SEMANTIC_TEXCOORD1,
-    SHADERTAG_MATERIAL
+    SEMANTIC_TEXCOORD0, SEMANTIC_TEXCOORD1
 } from '../../../platform/graphics/constants.js';
 import {
     BLEND_ADDITIVEALPHA, BLEND_NORMAL, BLEND_PREMULTIPLIED,
@@ -11,16 +10,16 @@ import {
     LIGHTSHAPE_PUNCTUAL, LIGHTSHAPE_RECT, LIGHTSHAPE_DISK, LIGHTSHAPE_SPHERE,
     LIGHTTYPE_DIRECTIONAL, LIGHTTYPE_OMNI, LIGHTTYPE_SPOT,
     SHADER_DEPTH, SHADER_PICK,
-    SHADOW_PCF1, SHADOW_PCF3, SHADOW_PCF5, SHADOW_VSM8, SHADOW_VSM16, SHADOW_VSM32, SHADOW_PCSS,
+    SHADOW_PCF1_32F, SHADOW_PCF3_32F, SHADOW_PCF5_32F, SHADOW_VSM_16F, SHADOW_VSM_32F, SHADOW_PCSS_32F,
     SPECOCC_AO, SPECOCC_GLOSSDEPENDENT,
-    SPRITE_RENDERMODE_SLICED, SPRITE_RENDERMODE_TILED, shadowTypeToString, SHADER_PREPASS_VELOCITY
+    SPRITE_RENDERMODE_SLICED, SPRITE_RENDERMODE_TILED, shadowTypeInfo, SHADER_PREPASS,
+    SHADOW_PCF1_16F, SHADOW_PCF5_16F, SHADOW_PCF3_16F
 } from '../../constants.js';
 import { shaderChunks } from '../chunks/chunks.js';
 import { ChunkUtils } from '../chunk-utils.js';
 import { LightsBuffer } from '../../lighting/lights-buffer.js';
 import { ShaderPass } from '../../shader-pass.js';
 import { validateUserChunks } from '../chunks/chunk-validation.js';
-import { ShaderUtils } from '../../../platform/graphics/shader-utils.js';
 import { ChunkBuilder } from '../chunk-builder.js';
 import { ShaderGenerator } from './shader-generator.js';
 import { Debug } from '../../../core/debug.js';
@@ -49,7 +48,8 @@ const builtinVaryings = {
     vBinormalW: 'vec3',
     vObjectSpaceUpW: 'vec3',
     vUv0: 'vec2',
-    vUv1: 'vec2'
+    vUv1: 'vec2',
+    vLinearDepth: 'float'
 };
 
 class LitShader {
@@ -122,7 +122,6 @@ class LitShader {
         // supplied by caller
         this.frontendDecl = null;
         this.frontendCode = null;
-        this.frontendFunc = null;
         this.lightingUv = null;
 
         // defines set by the shader generation
@@ -203,23 +202,19 @@ class LitShader {
 
         code = this._vsAddBaseCode(code, chunks, options);
 
-        codeBody += '   vPositionW    = getWorldPosition();\n';
+        codeBody += '   vPositionW = getWorldPosition();\n';
 
-        if (this.options.pass === SHADER_DEPTH || this.options.pass === SHADER_PREPASS_VELOCITY) {
-            code += 'varying float vDepth;\n';
-            code += '#ifndef VIEWMATRIX\n';
-            code += '#define VIEWMATRIX\n';
-            code += 'uniform mat4 matrix_view;\n';
-            code += '#endif\n';
-            code += '#ifndef CAMERAPLANES\n';
-            code += '#define CAMERAPLANES\n';
-            code += 'uniform vec4 camera_params;\n\n';
-            code += '#endif\n';
-            codeBody += '    vDepth = -(matrix_view * vec4(vPositionW,1.0)).z * camera_params.x;\n';
-        }
-
-        if (this.options.pass === SHADER_PREPASS_VELOCITY) {
-            Debug.warnOnce('SHADER_PREPASS_VELOCITY not implemented');
+        if (this.options.linearDepth) {
+            codeDefines += `
+                #ifndef VIEWMATRIX
+                #define VIEWMATRIX
+                    uniform mat4 matrix_view;
+                #endif
+            `;
+            codeBody += `
+                // linear depth from the worldPosition, see getLinearDepth
+                vLinearDepth = -(matrix_view * vec4(vPositionW, 1.0)).z;
+            `;
         }
 
         if (this.options.useInstancing) {
@@ -352,14 +347,12 @@ class LitShader {
             }
         });
 
-        const shaderPassDefines = this.shaderPassInfo.shaderDefines;
-        this.vshader = shaderPassDefines + codeDefines + this.varyings + code;
+        this.vshader = codeDefines + this.varyings + code;
     }
 
     _fsGetBeginCode() {
 
-        let code = this.shaderPassInfo.shaderDefines;
-
+        let code = '';
         for (let i = 0; i < this.defines.length; i++) {
             code += `#define ${this.defines[i]}\n`;
         }
@@ -367,129 +360,97 @@ class LitShader {
         return code;
     }
 
-    _fsGetPickPassCode() {
-        return `
-            ${this._fsGetBeginCode()}
-            ${this.varyings}
-            ${this.varyingDefines}
-            ${this.frontendDecl}
-            ${this.frontendCode}
-            ${this.chunks.pickPS}
-
-            void main(void) {
-                ${this.frontendFunc}
-                gl_FragColor = getPickOutput();
-            }
-        `;
-    }
-
-    _fsGetDepthPassCode() {
-        let code = this._fsGetBeginCode();
-        code += this.varyings;
-        code += this.varyingDefines;
-        code += this.frontendDecl;
-        code += this.frontendCode;
-        code += ShaderGenerator.begin();
-        code += this.frontendFunc;
-        code += '    gl_FragColor = vec4(1.0, 1.0, 1.0, 1.0);\n';
-        code += ShaderGenerator.end();
-
-        return code;
-    }
-
-    _fsGetPrePassVelocityCode() {
-
-        // till the velocity is implemented, just output the depth
-        return this._fsGetDepthPassCode();
-    }
-
     _fsGetShadowPassCode() {
         const options = this.options;
-        const chunks = this.chunks;
-        const varyings = this.varyings;
 
         const lightType = this.shaderPassInfo.lightType;
         let shadowType = this.shaderPassInfo.shadowType;
 
+        const shadowInfo = shadowTypeInfo.get(shadowType);
+        Debug.assert(shadowInfo);
+        const { vsm, pcss, pcf } = shadowInfo;
+
         // If not a directional light and using clustered, fall back to using PCF3x3 if shadow type isn't supported
         if (lightType !== LIGHTTYPE_DIRECTIONAL && options.clusteredLightingEnabled) {
-            if (shadowType === SHADOW_VSM8 || shadowType === SHADOW_VSM16 || shadowType === SHADOW_VSM32 || shadowType === SHADOW_PCSS) {
-                shadowType = SHADOW_PCF3;
+            if (!pcf) {
+                shadowType = SHADOW_PCF3_32F;
             }
         }
-
-        let code = this._fsGetBeginCode();
-
-        if (shadowType === SHADOW_VSM32) {
-            code += '#define VSM_EXPONENT 15.0\n\n';
-        } else if (shadowType === SHADOW_VSM16) {
-            code += '#define VSM_EXPONENT 5.54\n\n';
-        }
-
-        if (lightType !== LIGHTTYPE_DIRECTIONAL) {
-            code += 'uniform vec3 view_position;\n';
-            code += 'uniform float light_radius;\n';
-        }
-
-        code += varyings;
-        code += this.varyingDefines;
-        code += this.frontendDecl;
-        code += this.frontendCode;
-
-        if (shadowType === SHADOW_VSM8) {
-            code += 'vec2 encodeFloatRG( float v ) {\n';
-            code += '    vec2 enc = vec2(1.0, 255.0) * v;\n';
-            code += '    enc = fract(enc);\n';
-            code += '    enc -= enc.yy * vec2(1.0/255.0, 1.0/255.0);\n';
-            code += '    return enc;\n';
-            code += '}\n\n';
-        }
-
-        if (shadowType === SHADOW_PCSS) {
-            code += shaderChunks.linearizeDepthPS;
-        }
-
-        code += ShaderGenerator.begin();
-
-        code += this.frontendFunc;
-
-        const isVsm = shadowType === SHADOW_VSM8 || shadowType === SHADOW_VSM16 || shadowType === SHADOW_VSM32;
 
         // Use perspective depth for:
         // Directional: Always since light has no position
         // Spot: If not using VSM
         // Point: Never
-        const usePerspectiveDepth = lightType === LIGHTTYPE_DIRECTIONAL || (!isVsm && lightType === LIGHTTYPE_SPOT);
+        const usePerspectiveDepth = (lightType === LIGHTTYPE_DIRECTIONAL || (!vsm && lightType === LIGHTTYPE_SPOT));
 
-        // Flag if we are using non-standard depth, i.e gl_FragCoord.z
-        let hasModifiedDepth = false;
-        if (usePerspectiveDepth) {
-            code += '    float depth = gl_FragCoord.z;\n';
-        } else {
-            code += '    float depth = min(distance(view_position, vPositionW) / light_radius, 0.99999);\n';
-            hasModifiedDepth = true;
-        }
+        const code = `
 
-        if (!isVsm) {
-            const exportR32 = shadowType === SHADOW_PCSS;
+            ${this._fsGetBeginCode()}
+            ${this.varyings}
+            ${this.varyingDefines}
+            ${this.frontendDecl}
+            ${this.frontendCode}
 
-            if (exportR32) {
-                code += '    gl_FragColor.r = depth;\n';
-            } else {
+            // Flag if we are using non-standard depth, i.e gl_FragCoord.z
+            ${usePerspectiveDepth ? '#define PERSPECTIVE_DEPTH' : ''}
+            ${pcss ? '#define PCSS' : ''}
+            ${vsm ? '#define VSM' : ''}
+            ${shadowType === SHADOW_VSM_32F ? '#define VSM_32F' : ''}
+            ${lightType === LIGHTTYPE_DIRECTIONAL ? '#define DIRECTIONAL_LIGHT' : ''}
 
-                // If we end up using modified depth, it needs to be explicitly written to gl_FragDepth
-                if (hasModifiedDepth) {
-                    code += '    gl_FragDepth = depth;\n';
-                }
-                code += '    gl_FragColor = vec4(1.0);\n'; // just the simplest code, color is not written anyway
+            #ifndef DIRECTIONAL_LIGHT
+                uniform vec3 view_position;
+                uniform float light_radius;
+            #endif
+
+            #ifdef PCSS
+                #include "linearizeDepthPS"
+            #endif
+
+            void main(void) {
+                evaluateFrontend();
+
+                #ifdef PERSPECTIVE_DEPTH
+                    float depth = gl_FragCoord.z;
+
+                    #ifdef PCSS
+                        // spot/omni shadows currently use linear depth.
+                        // TODO: use perspective depth for spot/omni the same way as directional
+                        #ifndef DIRECTIONAL_LIGHT
+                            depth = linearizeDepth(depth, camera_params);
+                        #endif
+                    #endif
+
+                #else
+                    float depth = min(distance(view_position, vPositionW) / light_radius, 0.99999);
+                    #define MODIFIED_DEPTH
+                #endif
+
+                #ifdef VSM
+                    #ifdef VSM_32F
+                        float exponent = 15.0;
+                    #else
+                        float exponent = 5.54;
+                    #endif
+                    depth = 2.0 * depth - 1.0;
+                    depth =  exp(exponent * depth);
+                    gl_FragColor = vec4(depth, depth*depth, 1.0, 1.0);
+                #else
+                    #ifdef PCSS
+                        // store depth into R32
+                        gl_FragColor.r = depth;
+                    #else
+                        #ifdef MODIFIED_DEPTH
+                            // If we end up using modified depth, it needs to be explicitly written to gl_FragDepth
+                            gl_FragDepth = depth;
+                        #endif
+
+                        // just the simplest code, color is not written anyway
+                        gl_FragColor = vec4(1.0);
+                    #endif
+                #endif
             }
-        } else if (shadowType === SHADOW_VSM8) {
-            code += '    gl_FragColor = vec4(encodeFloatRG(depth), encodeFloatRG(depth*depth));\n';
-        } else {
-            code += chunks.storeEVSMPS;
-        }
-
-        code += ShaderGenerator.end();
+        `;
 
         return code;
     }
@@ -569,9 +530,13 @@ class LitShader {
 
             decl.append(`uniform vec3 light${i}_color;`);
 
-            if (light._shadowType === SHADOW_PCSS && light.castShadows && !options.noShadow) {
+            if (light._shadowType === SHADOW_PCSS_32F && light.castShadows && !options.noShadow) {
                 decl.append(`uniform float light${i}_shadowSearchArea;`);
                 decl.append(`uniform vec4 light${i}_cameraParams;`);
+
+                if (lightType === LIGHTTYPE_DIRECTIONAL) {
+                    decl.append(`uniform vec4 light${i}_softShadowParams;`);
+                }
             }
 
             if (lightType === LIGHTTYPE_DIRECTIONAL) {
@@ -599,8 +564,9 @@ class LitShader {
                 // directional (cascaded) shadows
                 if (lightType === LIGHTTYPE_DIRECTIONAL) {
                     decl.append(`uniform mat4 light${i}_shadowMatrixPalette[4];`);
-                    decl.append(`uniform float light${i}_shadowCascadeDistances[4];`);
-                    decl.append(`uniform float light${i}_shadowCascadeCount;`);
+                    decl.append(`uniform vec4 light${i}_shadowCascadeDistances;`);
+                    decl.append(`uniform int light${i}_shadowCascadeCount;`);
+                    decl.append(`uniform float light${i}_shadowCascadeBlend;`);
                 }
                 decl.append(`uniform vec4 light${i}_shadowParams;`); // Width, height, bias, radius
                 if (lightType === LIGHTTYPE_DIRECTIONAL) {
@@ -614,7 +580,7 @@ class LitShader {
                 numShadowLights++;
                 shadowTypeUsed[light._shadowType] = true;
                 if (light._isVsm) useVsm = true;
-                if (light._shadowType === SHADOW_PCSS) usePcss = true;
+                if (light._shadowType === SHADOW_PCSS_32F) usePcss = true;
             }
             if (light._cookie) {
                 if (light._cookie._cubemap) {
@@ -659,13 +625,11 @@ class LitShader {
             }
         }
 
-        // FIXME: only add these when needed
         func.append(chunks.sphericalPS);
         func.append(chunks.decodePS);
-        func.append(ShaderGenerator.gammaCode(options.gamma, chunks));
-        func.append(ShaderGenerator.tonemapCode(options.toneMap, chunks));
-        func.append(ShaderGenerator.fogCode(options.fog, chunks));
-
+        func.append(chunks.gammaPS);
+        func.append(chunks.tonemappingPS);
+        func.append(chunks.fogPS);
         // frontend
         func.append(this.frontendCode);
 
@@ -758,9 +722,9 @@ class LitShader {
 
             // include shadow chunks clustered lights support
             if (options.clusteredLightingShadowsEnabled && !options.noShadow) {
-                shadowTypeUsed[SHADOW_PCF3] = true;
-                shadowTypeUsed[SHADOW_PCF5] = true;
-                shadowTypeUsed[SHADOW_PCSS] = true;
+                shadowTypeUsed[SHADOW_PCF3_32F] = true;
+                shadowTypeUsed[SHADOW_PCF5_32F] = true;
+                shadowTypeUsed[SHADOW_PCSS_32F] = true;
             }
         }
 
@@ -768,27 +732,25 @@ class LitShader {
             if (shadowedDirectionalLightUsed) {
                 func.append(chunks.shadowCascadesPS);
             }
-            if (shadowTypeUsed[SHADOW_PCF1] || shadowTypeUsed[SHADOW_PCF3]) {
+            if (shadowTypeUsed[SHADOW_PCF1_32F] || shadowTypeUsed[SHADOW_PCF3_32F] || shadowTypeUsed[SHADOW_PCF1_16F] || shadowTypeUsed[SHADOW_PCF3_16F]) {
                 func.append(chunks.shadowStandardPS);
             }
-            if (shadowTypeUsed[SHADOW_PCF5]) {
+            if (shadowTypeUsed[SHADOW_PCF5_32F] || shadowTypeUsed[SHADOW_PCF5_16F]) {
                 func.append(chunks.shadowStandardGL2PS);
             }
             if (useVsm) {
                 func.append(chunks.shadowVSM_commonPS);
-                if (shadowTypeUsed[SHADOW_VSM8]) {
-                    func.append(chunks.shadowVSM8PS);
-                }
-                if (shadowTypeUsed[SHADOW_VSM16]) {
+                if (shadowTypeUsed[SHADOW_VSM_16F]) {
                     func.append(chunks.shadowEVSMPS.replace(/\$/g, '16'));
                 }
-                if (shadowTypeUsed[SHADOW_VSM32]) {
+                if (shadowTypeUsed[SHADOW_VSM_32F]) {
                     func.append(device.extTextureFloatLinear ? chunks.shadowEVSMPS.replace(/\$/g, '32') : chunks.shadowEVSMnPS.replace(/\$/g, '32'));
                 }
             }
             if (usePcss) {
                 func.append(chunks.linearizeDepthPS);
                 func.append(chunks.shadowPCSSPS);
+                func.append(chunks.shadowSoftPS);
             }
         }
 
@@ -880,8 +842,11 @@ class LitShader {
                 decl.append('#define CLUSTER_COOKIES');
             }
             if (options.clusteredLightingShadowsEnabled && !options.noShadow) {
+                const shadowTypeName = shadowTypeInfo.get(options.clusteredLightingShadowType)?.name;
+                Debug.assert(shadowTypeName);
+                const clusteredSampleType = shadowTypeName.substring(0, 4);     // PCF1 from PCF1_FLOAT16
                 decl.append('#define CLUSTER_SHADOWS');
-                decl.append(`#define CLUSTER_SHADOW_TYPE_${shadowTypeToString[options.clusteredLightingShadowType]}`);
+                decl.append(`#define CLUSTER_SHADOW_TYPE_${clusteredSampleType}`);
             }
 
             if (options.clusteredLightingAreaLightsEnabled) {
@@ -919,7 +884,7 @@ class LitShader {
         }
 
         // invoke frontend functions
-        code.append(this.frontendFunc);
+        code.append('    evaluateFrontend();');
 
         // apply SSAO
         if (options.ssao) {
@@ -927,7 +892,7 @@ class LitShader {
                     uniform sampler2D ssaoTexture;
                     uniform vec2 ssaoTextureSizeInv;
                 `);
-            backend.append('litArgs_ao *= texture2DLodEXT(ssaoTexture, gl_FragCoord.xy * ssaoTextureSizeInv, 0.0).r;');
+            backend.append('litArgs_ao *= texture2DLod(ssaoTexture, gl_FragCoord.xy * ssaoTextureSizeInv, 0.0).r;');
         }
 
         // transform tangent space normals to world space
@@ -1137,34 +1102,36 @@ class LitShader {
                 }
 
                 if (light.castShadows && !options.noShadow) {
-                    const pcssShadows = light._shadowType === SHADOW_PCSS;
-                    const vsmShadows = light._shadowType === SHADOW_VSM8 || light._shadowType === SHADOW_VSM16 || light._shadowType === SHADOW_VSM32;
-                    const pcfShadows = light._shadowType === SHADOW_PCF1 || light._shadowType === SHADOW_PCF3 || light._shadowType === SHADOW_PCF5;
+                    const shadowInfo = shadowTypeInfo.get(light._shadowType);
+                    Debug.assert(shadowInfo);
+
+                    const pcssShadows = light._shadowType === SHADOW_PCSS_32F;
+                    const vsmShadows = shadowInfo?.vsm;
+                    const pcfShadows = shadowInfo?.pcf;
                     let shadowReadMode = null;
                     let evsmExp;
                     switch (light._shadowType) {
-                        case SHADOW_VSM8:
-                            shadowReadMode = 'VSM8';
-                            evsmExp = '0.0';
-                            break;
-                        case SHADOW_VSM16:
+                        case SHADOW_VSM_16F:
                             shadowReadMode = 'VSM16';
                             evsmExp = '5.54';
                             break;
-                        case SHADOW_VSM32:
+                        case SHADOW_VSM_32F:
                             shadowReadMode = 'VSM32';
                             evsmExp = '15.0';
                             break;
-                        case SHADOW_PCF1:
+                        case SHADOW_PCF1_32F:
+                        case SHADOW_PCF1_16F:
                             shadowReadMode = 'PCF1x1';
                             break;
-                        case SHADOW_PCF5:
+                        case SHADOW_PCF5_32F:
+                        case SHADOW_PCF5_16F:
                             shadowReadMode = 'PCF5x5';
                             break;
-                        case SHADOW_PCSS:
+                        case SHADOW_PCSS_32F:
                             shadowReadMode = 'PCSS';
                             break;
-                        case SHADOW_PCF3:
+                        case SHADOW_PCF3_32F:
+                        case SHADOW_PCF3_16F:
                         default:
                             shadowReadMode = 'PCF3x3';
                             break;
@@ -1196,8 +1163,14 @@ class LitShader {
 
                         let shadowMatrix = `light${i}_shadowMatrix`;
                         if (lightType === LIGHTTYPE_DIRECTIONAL && light.numCascades > 1) {
-                            // compute which cascade matrix needs to be used
-                            backend.append(`    getShadowCascadeMatrix(light${i}_shadowMatrixPalette, light${i}_shadowCascadeDistances, light${i}_shadowCascadeCount);`);
+                            // select shadow cascade matrix
+                            backend.append(`int cascadeIndex = getShadowCascadeIndex(light${i}_shadowCascadeDistances, light${i}_shadowCascadeCount);`);
+
+                            if (light.cascadeBlend > 0) {
+                                backend.append(`cascadeIndex = ditherShadowCascadeIndex(cascadeIndex, light${i}_shadowCascadeDistances, light${i}_shadowCascadeCount, light${i}_shadowCascadeBlend);`);
+                            }
+
+                            backend.append(`mat4 cascadeShadowMat = light${i}_shadowMatrixPalette[cascadeIndex];`);
                             shadowMatrix = 'cascadeShadowMat';
                         }
 
@@ -1214,7 +1187,7 @@ class LitShader {
                             // VSM
                             shadowCoordArgs = `${shadowCoordArgs}, ${evsmExp}, dLightDirW`;
                         } else if (pcssShadows) {
-                            let penumbraSizeArg = `vec2(light${i}_shadowSearchArea)`;
+                            let penumbraSizeArg =  lightType === LIGHTTYPE_DIRECTIONAL ? `light${i}_softShadowParams` : `vec2(light${i}_shadowSearchArea)`;
                             if (lightShape !== LIGHTSHAPE_PUNCTUAL) {
                                 penumbraSizeArg = `vec2(length(light${i}_halfWidth), length(light${i}_halfHeight)) * light${i}_shadowSearchArea`;
                             }
@@ -1472,30 +1445,59 @@ class LitShader {
     }
 
     /**
-     * Generates a fragment shader. Please make sure to update src/deprecated/deprecated.js in
-     * case `this.fshader` does not longer contain the entire fragment shader once this function
-     * is done because we handle backwards compatibility there for old shaders. This allows us
-     * to have deprecation-free tree shaking while still fixing shaders for full builds.
+     * Generates a fragment shader.
      *
      * @param {string} frontendDecl - Frontend declarations like `float dAlpha;`
      * @param {string} frontendCode - Frontend code containing `getOpacity()` etc.
-     * @param {string} frontendFunc - E.g. `evaluateFrontend();`
      * @param {string} lightingUv - E.g. `vUv0`
      */
-    generateFragmentShader(frontendDecl, frontendCode, frontendFunc, lightingUv) {
+    generateFragmentShader(frontendDecl, frontendCode, lightingUv) {
         const options = this.options;
 
         this.frontendDecl = frontendDecl;
         this.frontendCode = frontendCode;
-        this.frontendFunc = frontendFunc;
         this.lightingUv = lightingUv;
 
-        if (options.pass === SHADER_PICK) {
-            this.fshader = this._fsGetPickPassCode();
-        } else if (options.pass === SHADER_DEPTH) {
-            this.fshader = this._fsGetDepthPassCode();
-        } else if (options.pass === SHADER_PREPASS_VELOCITY) {
-            this.fshader = this._fsGetPrePassVelocityCode();
+        if (options.pass === SHADER_PICK || options.pass === SHADER_DEPTH || options.pass === SHADER_PREPASS) {
+
+            this.fshader = `
+
+                ${this.device.textureFloatRenderable ? '#define TEXTURE_FLOAT_RENDERABLE' : ''}
+
+                ${this._fsGetBeginCode()}
+                ${this.varyings}
+                ${this.varyingDefines}
+                ${this.frontendDecl}
+                ${this.frontendCode}
+
+                #ifdef PICK_PASS
+                    #include "pickPS"
+                #endif
+
+                #ifdef PREPASS_PASS
+                    #include "floatAsUintPS"
+                #endif
+
+                void main(void) {
+                    evaluateFrontend();
+
+                    #ifdef PICK_PASS
+                        gl_FragColor = getPickOutput();
+                    #endif
+
+                    #ifdef DEPTH_PASS
+                        gl_FragColor = vec4(1.0, 1.0, 1.0, 1.0);
+                    #endif
+
+                    #ifdef PREPASS_PASS
+                        #if defined(TEXTURE_FLOAT_RENDERABLE)
+                            gl_FragColor = vec4(vLinearDepth, 1.0, 1.0, 1.0);
+                        #else
+                            gl_FragColor = float2uint(vLinearDepth);
+                        #endif
+                    #endif
+                }
+            `;
         } else if (this.shadowPass) {
             this.fshader = this._fsGetShadowPassCode();
         } else if (options.customFragmentShader) {
@@ -1503,34 +1505,8 @@ class LitShader {
         } else {
             this.fshader = this._fsGetLitPassCode();
         }
-        this.handleCompatibility?.();
-    }
 
-    getDefinition(options) {
-
-        const vIncludes = new Map();
-        vIncludes.set('transformCore', this.chunks.transformCoreVS);
-        vIncludes.set('transformInstancing', this.chunks.transformInstancingVS);
-        vIncludes.set('skinTexVS', this.chunks.skinTexVS);
-        vIncludes.set('skinBatchTexVS', this.chunks.skinBatchTexVS);
-
-        const defines = new Map(options.defines);
-
-        const definition = ShaderUtils.createDefinition(this.device, {
-            name: 'LitShader',
-            attributes: this.attributes,
-            vertexCode: this.vshader,
-            fragmentCode: this.fshader,
-            vertexIncludes: vIncludes,
-            fragmentDefines: defines,
-            vertexDefines: defines
-        });
-
-        if (this.shaderPassInfo.isForward) {
-            definition.tag = SHADERTAG_MATERIAL;
-        }
-
-        return definition;
+        Debug.assert(!this.fshader.includes('litShaderArgs'), 'Automatic compatibility with shaders using litShaderArgs has been removed. Please update the shader to use the new system.');
     }
 }
 

@@ -81,13 +81,15 @@ const createPixelColorBuffer = (i) => {
         name: `PixelBuffer_${i}`,
         width: TEXTURE_WIDTH,
         height: TEXTURE_HEIGHT,
+        mipmaps: false,
+        addressU: pc.ADDRESS_CLAMP_TO_EDGE,
+        addressV: pc.ADDRESS_CLAMP_TO_EDGE,
+
         // Note that we are using an unsigned integer format here.
         // This can be helpful for storing bitfields in each pixel.
         // In this example, we are storing 3 different properties
         // in a single Uint8 value.
-        format: pc.PIXELFORMAT_R8U,
-        addressU: pc.ADDRESS_CLAMP_TO_EDGE,
-        addressV: pc.ADDRESS_CLAMP_TO_EDGE
+        format: pc.PIXELFORMAT_R8U
     });
 };
 const createPixelRenderTarget = (i, colorBuffer) => {
@@ -114,6 +116,7 @@ const outputTexture = new pc.Texture(device, {
     name: 'OutputTexture',
     width: TEXTURE_WIDTH,
     height: TEXTURE_HEIGHT,
+    mipmaps: false,
     format: pc.PIXELFORMAT_RGBA8,
     minFilter: pc.FILTER_LINEAR_MIPMAP_LINEAR,
     magFilter: pc.FILTER_LINEAR,

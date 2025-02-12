@@ -113,19 +113,19 @@ assetListLoader.load(() => {
             enabled: true,
             intensity: 16.0,
             size: 2,
-            shadowType: pc.SHADOW_PCSS
+            shadowType: pc.SHADOW_PCSS_32F
         },
         point: {
             enabled: true,
             intensity: 4.0,
             size: 2,
-            shadowType: pc.SHADOW_PCSS
+            shadowType: pc.SHADOW_PCSS_32F
         },
         directional: {
             enabled: true,
             intensity: 2.0,
             size: 1,
-            shadowType: pc.SHADOW_PCSS
+            shadowType: pc.SHADOW_PCSS_32F
         }
     });
 

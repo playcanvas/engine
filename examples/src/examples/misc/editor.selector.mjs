@@ -48,8 +48,7 @@ class Selector extends pc.EventHandler {
         this._onPointerDown = this._onPointerDown.bind(this);
         this._onPointerUp = this._onPointerUp.bind(this);
 
-        window.addEventListener('pointerdown', this._onPointerDown);
-        window.addEventListener('pointerup', this._onPointerUp);
+        this.bind();
     }
 
     /**
@@ -83,9 +82,18 @@ class Selector extends pc.EventHandler {
         this.fire('select', selection[0].node, !e.ctrlKey && !e.metaKey);
     }
 
-    destroy() {
+    bind() {
+        window.addEventListener('pointerdown', this._onPointerDown);
+        window.addEventListener('pointerup', this._onPointerUp);
+    }
+
+    unbind() {
         window.removeEventListener('pointerdown', this._onPointerDown);
         window.removeEventListener('pointerup', this._onPointerUp);
+    }
+
+    destroy() {
+        this.unbind();
     }
 }
 

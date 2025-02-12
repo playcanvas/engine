@@ -35,14 +35,14 @@ uniform mat3 matrix_normal;
 #endif
 
 #ifdef defined(BATCH)
-    #include "skinBatchTexVS"
+    #include "skinBatchVS"
 
     mat4 getModelMatrix() {
         return getBoneMatrix(vertex_boneIndices);
     }
 
 #elif defined(SKIN)
-    #include "skinTexVS"
+    #include "skinVS"
 
     mat4 getModelMatrix() {
         return matrix_model * getSkinMatrix(vertex_boneIndices, vertex_boneWeights);
@@ -50,7 +50,7 @@ uniform mat3 matrix_normal;
 
 #elif defined(INSTANCING)
 
-    #include "transformInstancing"
+    #include "transformInstancingVS"
 
 #else
 

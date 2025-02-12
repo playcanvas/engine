@@ -9,6 +9,9 @@
  * this is populated at runtime based on LayerComposition
  */
 class RenderAction {
+    // {CameraComponent|null}
+    camera = null;
+
     constructor() {
 
         // the layer
@@ -17,9 +20,6 @@ class RenderAction {
 
         // true if this uses transparent sublayer, opaque otherwise
         this.transparent = false;
-
-        // camera of type CameraComponent
-        this.camera = null;
 
         /**
          * Render target this render action renders to.

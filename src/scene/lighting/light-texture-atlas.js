@@ -1,11 +1,11 @@
 import { Vec2 } from '../../core/math/vec2.js';
 import { Vec4 } from '../../core/math/vec4.js';
 
-import { ADDRESS_CLAMP_TO_EDGE, FILTER_NEAREST, PIXELFORMAT_RGBA8 } from '../../platform/graphics/constants.js';
+import { ADDRESS_CLAMP_TO_EDGE, FILTER_NEAREST, PIXELFORMAT_SRGBA8 } from '../../platform/graphics/constants.js';
 import { RenderTarget } from '../../platform/graphics/render-target.js';
 import { Texture } from '../../platform/graphics/texture.js';
 
-import { LIGHTTYPE_OMNI, LIGHTTYPE_SPOT, SHADOW_PCF3 } from '../constants.js';
+import { LIGHTTYPE_OMNI, LIGHTTYPE_SPOT, SHADOW_PCF3_32F, shadowTypeInfo } from '../constants.js';
 import { ShadowMap } from '../renderer/shadow-map.js';
 
 const _tempArray = [];
@@ -41,7 +41,7 @@ class LightTextureAtlas {
             name: 'CookieAtlas',
             width: this.cookieAtlasResolution,
             height: this.cookieAtlasResolution,
-            format: PIXELFORMAT_RGBA8,
+            format: PIXELFORMAT_SRGBA8,
             cubemap: false,
             mipmaps: false,
             minFilter: FILTER_NEAREST,
@@ -98,15 +98,17 @@ class LightTextureAtlas {
         this.cookieRenderTarget = null;
     }
 
-    allocateShadowAtlas(resolution) {
+    allocateShadowAtlas(resolution, shadowType = SHADOW_PCF3_32F) {
 
-        if (!this.shadowAtlas || this.shadowAtlas.texture.width !== resolution) {
+        const existingFormat = this.shadowAtlas?.texture.format;
+        const requiredFormat = shadowTypeInfo.get(shadowType).format;
+        if (!this.shadowAtlas || this.shadowAtlas.texture.width !== resolution || existingFormat !== requiredFormat) {
 
             // content of atlas is lost, force re-render of static shadows
             this.version++;
 
             this.destroyShadowAtlas();
-            this.shadowAtlas = ShadowMap.createAtlas(this.device, resolution, SHADOW_PCF3);
+            this.shadowAtlas = ShadowMap.createAtlas(this.device, resolution, shadowType);
 
             // avoid it being destroyed by lights
             this.shadowAtlas.cached = true;
@@ -254,7 +256,7 @@ class LightTextureAtlas {
         });
 
         if (needsShadowAtlas) {
-            this.allocateShadowAtlas(this.shadowAtlasResolution);
+            this.allocateShadowAtlas(this.shadowAtlasResolution, lightingParams.shadowType);
         }
 
         if (needsCookieAtlas) {

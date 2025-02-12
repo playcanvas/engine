@@ -1,5 +1,9 @@
 import { math } from './math.js';
 
+/**
+ * @import { Color } from './color.js'
+ */
+
 let checkRange = 5;
 const oneDiv255 = 1 / 255;
 const floatView = new Float32Array(1);
@@ -121,26 +125,21 @@ class FloatPacking {
     }
 
     /**
-     * Packs a float into specified number of bytes, using 1 byte for exponent and the remaining
-     * bytes for the mantissa.
+     * Converts bits of a 32-bit float into RGBA8 format and stores the result in a provided color.
+     * The float can be reconstructed in shader using the uintBitsToFloat instruction.
      *
-     * @param {number} value - The float value to pack.
-     * @param {Uint8ClampedArray} array - The array to store the packed value in.
-     * @param {number} offset - The start offset in the array to store the packed value at.
-     * @param {number} numBytes - The number of bytes to pack the value to.
+     * @param {number} value - The float value to convert.
+     * @param {Color} data - The color to store the RGBA8 packed value in.
      *
      * @ignore
      */
-    static float2MantissaExponent(value, array, offset, numBytes) {
-        // exponent is increased by one, so that 2^exponent is larger than the value
-        const exponent = Math.floor(Math.log2(Math.abs(value))) + 1;
-        value /= Math.pow(2, exponent);
-
-        // value is now in -1..1 range, store it using specified number of bytes less one
-        FloatPacking.float2BytesRange(value, array, offset, -1, 1, numBytes - 1);
-
-        // last byte for the exponent (positive or negative)
-        array[offset + numBytes - 1] = Math.round(exponent + 127);
+    static float2RGBA8(value, data) {
+        floatView[0] = value;
+        const intBits = int32View[0];
+        data.r = ((intBits >> 24) & 0xFF) / 255.0;
+        data.g = ((intBits >> 16) & 0xFF) / 255.0;
+        data.b = ((intBits >> 8) & 0xFF) / 255.0;
+        data.a = (intBits & 0xFF) / 255.0;
     }
 }
 

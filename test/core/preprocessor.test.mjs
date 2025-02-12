@@ -1,6 +1,6 @@
-import { Preprocessor } from '../../src/core/preprocessor.js';
-
 import { expect } from 'chai';
+
+import { Preprocessor } from '../../src/core/preprocessor.js';
 
 describe('Preprocessor', function () {
 
@@ -11,13 +11,19 @@ describe('Preprocessor', function () {
                 nested
             #endif
         `],
-        ['inc2', 'block2']
+        ['inc2', 'block2'],
+        ['incLoop', 'inserted{i}\n']
     ]);
 
     const srcData = `
         
+        #define LOOP_COUNT 3
+        #define __INJECT_COUNT 2
+        #define __INJECT_STRING hello
         #define FEATURE1
         #define FEATURE2
+
+        #include "incLoop, LOOP_COUNT"
 
         #ifdef FEATURE1
             TEST1
@@ -73,6 +79,31 @@ describe('Preprocessor', function () {
         #ifdef (UNKNOWN)
             #define TEST14  // this should not be defined
         #endif
+
+        #define INDEX 3
+        #if INDEX == 3
+            CMP1
+        #endif
+
+        #if INDEX != 3
+            CMP2
+        #endif
+
+        #if INDEX > 2
+            CMP3
+        #endif
+
+        #define NAME hello
+        #if NAME == hello
+            CMP4
+        #endif
+
+        #if NAME != hello
+            CMP5
+        #endif
+
+        TESTINJECTION __INJECT_COUNT
+        INJECTSTRING __INJECT_STRING(x)
     `;
 
     it('returns false for MORPH_A', function () {
@@ -154,4 +185,44 @@ describe('Preprocessor', function () {
     it('returns true for nested', function () {
         expect(Preprocessor.run(srcData, includes).includes('nested')).to.equal(true);
     });
+
+    it('returns true for CMP1', function () {
+        expect(Preprocessor.run(srcData, includes).includes('CMP1')).to.equal(true);
+    });
+
+    it('returns false for CMP2', function () {
+        expect(Preprocessor.run(srcData, includes).includes('CMP2')).to.equal(false);
+    });
+
+    it('returns true for CMP3', function () {
+        expect(Preprocessor.run(srcData, includes).includes('CMP3')).to.equal(true);
+    });
+
+    it('returns true for CMP4', function () {
+        expect(Preprocessor.run(srcData, includes).includes('CMP4')).to.equal(true);
+    });
+
+    it('returns false for CMP5', function () {
+        expect(Preprocessor.run(srcData, includes).includes('CMP5')).to.equal(false);
+    });
+
+    it('returns false for any leftover hash symbols', function () {
+        expect(Preprocessor.run(srcData, includes, { stripDefines: true }).includes('#')).to.equal(false);
+    });
+
+    it('returns true for working integer injection', function () {
+        expect(Preprocessor.run(srcData, includes).includes('TESTINJECTION 2')).to.equal(true);
+    });
+
+    it('returns true for working string injection', function () {
+        expect(Preprocessor.run(srcData, includes).includes('INJECTSTRING hello(x)')).to.equal(true);
+    });
+
+    it('returns true for loop injection', function () {
+        expect(Preprocessor.run(srcData, includes).includes('inserted0')).to.equal(true);
+        expect(Preprocessor.run(srcData, includes).includes('inserted1')).to.equal(true);
+        expect(Preprocessor.run(srcData, includes).includes('inserted2')).to.equal(true);
+        expect(Preprocessor.run(srcData, includes).includes('inserted3')).to.equal(false);
+    });
+
 });

@@ -276,6 +276,14 @@ class GraphicsDevice extends EventHandler {
     supportsUniformBuffers = false;
 
     /**
+     * True if the device supports clip distances (WebGPU only). Clip distances allow you to restrict
+     * primitives' clip volume with user-defined half-spaces in the output of vertex stage.
+     *
+     * @type {boolean}
+     */
+    supportsClipDistances = false;
+
+    /**
      * True if 32-bit floating-point textures can be used as a frame buffer.
      *
      * @type {boolean}
@@ -383,6 +391,14 @@ class GraphicsDevice extends EventHandler {
         width: 0,
         height: 0
     };
+
+    /**
+     * A very heavy handed way to force all shaders to be rebuilt. Avoid using as much as possible.
+     *
+     * @type {boolean}
+     * @ignore
+     */
+    _shadersDirty = false;
 
     static EVENT_RESIZE = 'resizecanvas';
 

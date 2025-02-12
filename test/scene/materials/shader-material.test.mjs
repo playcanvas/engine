@@ -1,8 +1,8 @@
+import { expect } from 'chai';
+
 import { CULLFACE_BACK, FUNC_LESSEQUAL } from '../../../src/platform/graphics/constants.js';
 import { BLEND_NONE } from '../../../src/scene/constants.js';
 import { ShaderMaterial } from '../../../src/scene/materials/shader-material.js';
-
-import { expect } from 'chai';
 
 describe('Material', function () {
 

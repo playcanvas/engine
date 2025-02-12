@@ -1,6 +1,7 @@
 /**
  * @import { Asset } from './asset.js'
  * @import { AssetRegistry } from './asset-registry.js'
+ * @import { EventHandle } from '../../core/event-handle.js'
  */
 
 /**
@@ -11,6 +12,48 @@
  * @category Asset
  */
 class AssetReference {
+    /**
+     * @type {EventHandle|null}
+     * @private
+     */
+    _evtLoadById = null;
+
+    /**
+     * @type {EventHandle|null}
+     * @private
+     */
+    _evtUnloadById = null;
+
+    /**
+     * @type {EventHandle|null}
+     * @private
+     */
+    _evtAddById = null;
+
+    /**
+     * @type {EventHandle|null}
+     * @private
+     */
+    _evtRemoveById = null;
+
+    /**
+     * @type {EventHandle|null}
+     * @private
+     */
+    _evtLoadByUrl = null;
+
+    /**
+     * @type {EventHandle|null}
+     * @private
+     */
+    _evtAddByUrl = null;
+
+    /**
+     * @type {EventHandle|null}
+     * @private
+     */
+    _evtRemoveByUrl = null;
+
     /**
      * Create a new AssetReference instance.
      *
@@ -109,30 +152,37 @@ class AssetReference {
 
     _bind() {
         if (this.id) {
-            if (this._onAssetLoad) this._registry.on(`load:${this.id}`, this._onLoad, this);
-            if (this._onAssetAdd) this._registry.once(`add:${this.id}`, this._onAdd, this);
-            if (this._onAssetRemove) this._registry.on(`remove:${this.id}`, this._onRemove, this);
-            if (this._onAssetUnload) this._registry.on(`unload:${this.id}`, this._onUnload, this);
+            if (this._onAssetLoad) this._evtLoadById = this._registry.on(`load:${this.id}`, this._onLoad, this);
+            if (this._onAssetAdd) this._evtAddById = this._registry.once(`add:${this.id}`, this._onAdd, this);
+            if (this._onAssetRemove) this._evtRemoveById = this._registry.on(`remove:${this.id}`, this._onRemove, this);
+            if (this._onAssetUnload) this._evtUnloadById = this._registry.on(`unload:${this.id}`, this._onUnload, this);
         }
 
         if (this.url) {
-            if (this._onAssetLoad) this._registry.on(`load:url:${this.url}`, this._onLoad, this);
-            if (this._onAssetAdd) this._registry.once(`add:url:${this.url}`, this._onAdd, this);
-            if (this._onAssetRemove) this._registry.on(`remove:url:${this.url}`, this._onRemove, this);
+            if (this._onAssetLoad) this._evtLoadByUrl = this._registry.on(`load:url:${this.url}`, this._onLoad, this);
+            if (this._onAssetAdd) this._evtAddByUrl = this._registry.once(`add:url:${this.url}`, this._onAdd, this);
+            if (this._onAssetRemove) this._evtRemoveByUrl = this._registry.on(`remove:url:${this.url}`, this._onRemove, this);
         }
     }
 
     _unbind() {
         if (this.id) {
-            if (this._onAssetLoad) this._registry.off(`load:${this.id}`, this._onLoad, this);
-            if (this._onAssetAdd) this._registry.off(`add:${this.id}`, this._onAdd, this);
-            if (this._onAssetRemove) this._registry.off(`remove:${this.id}`, this._onRemove, this);
-            if (this._onAssetUnload) this._registry.off(`unload:${this.id}`, this._onUnload, this);
+            this._evtLoadById?.off();
+            this._evtLoadById = null;
+            this._evtAddById?.off();
+            this._evtAddById = null;
+            this._evtRemoveById?.off();
+            this._evtRemoveById = null;
+            this._evtUnloadById?.off();
+            this._evtUnloadById = null;
         }
         if (this.url) {
-            if (this._onAssetLoad) this._registry.off(`load:${this.url}`, this._onLoad, this);
-            if (this._onAssetAdd) this._registry.off(`add:${this.url}`, this._onAdd, this);
-            if (this._onAssetRemove) this._registry.off(`remove:${this.url}`, this._onRemove, this);
+            this._evtLoadByUrl?.off();
+            this._evtLoadByUrl = null;
+            this._evtAddByUrl?.off();
+            this._evtAddByUrl = null;
+            this._evtRemoveByUrl?.off();
+            this._evtRemoveByUrl = null;
         }
     }
 

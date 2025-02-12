@@ -25,7 +25,9 @@ import {
     SORTKEY_DEPTH, SORTKEY_FORWARD,
     VIEW_CENTER, PROJECTION_ORTHOGRAPHIC,
     LIGHTTYPE_DIRECTIONAL, MASK_AFFECT_DYNAMIC, MASK_AFFECT_LIGHTMAPPED, MASK_BAKE,
-    SHADOWUPDATE_NONE, SHADOWUPDATE_THISFRAME
+    SHADOWUPDATE_NONE, SHADOWUPDATE_THISFRAME,
+    EVENT_PRECULL,
+    EVENT_POSTCULL
 } from '../constants.js';
 import { LightCube } from '../graphics/light-cube.js';
 import { getBlueNoiseTexture } from '../graphics/noise-textures.js';
@@ -1129,6 +1131,8 @@ class Renderer {
         const cullTime = now();
         // #endif
 
+        const { scene } = this;
+
         this.processingMeshInstances.clear();
 
         // for all cameras
@@ -1138,8 +1142,8 @@ class Renderer {
         for (let i = 0; i < numCameras; i++) {
             const camera = comp.cameras[i];
 
-            // callback before the camera is culling
-            camera.onPreCull?.();
+            // event before the camera is culling
+            scene?.fire(EVENT_PRECULL, camera);
 
             // update camera and frustum
             const renderTarget = camera.renderTarget;
@@ -1162,13 +1166,13 @@ class Renderer {
                 }
             }
 
-            // callback after the camera is done with culling
-            camera.onPostCull?.();
+            // event after the camera is done with culling
+            scene?.fire(EVENT_POSTCULL, camera);
         }
 
         // update shadow / cookie atlas allocation for the visible lights. Update it after the ligthts were culled,
         // but before shadow maps were culling, as it might force some 'update once' shadows to cull.
-        if (this.scene.clusteredLightingEnabled) {
+        if (scene.clusteredLightingEnabled) {
             this.updateLightTextureAtlas();
         }
 
@@ -1225,7 +1229,7 @@ class Renderer {
     beginFrame(comp) {
 
         const scene = this.scene;
-        const updateShaders = scene.updateShaders;
+        const updateShaders = scene.updateShaders || this.device._shadersDirty;
 
         let totalMeshInstances = 0;
         const layers = comp.layerList;
@@ -1262,9 +1266,10 @@ class Renderer {
 
         // update shaders if needed
         if (updateShaders) {
-            const onlyLitShaders = !scene.updateShaders;
+            const onlyLitShaders = !scene.updateShaders || !this.device._shadersDirty;
             this.updateShaders(_tempMeshInstances, onlyLitShaders);
             scene.updateShaders = false;
+            this.device._shadersDirty = false;
             scene._shaderVersion++;
         }
 

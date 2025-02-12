@@ -9,7 +9,7 @@ import {
     DITHER_NONE,
     FRESNEL_SCHLICK,
     SHADER_DEPTH, SHADER_PICK,
-    SHADER_PREPASS_VELOCITY,
+    SHADER_PREPASS,
     SPECOCC_AO
 } from '../constants.js';
 import { ShaderPass } from '../shader-pass.js';
@@ -20,6 +20,7 @@ import { Material } from './material.js';
 import { StandardMaterialOptionsBuilder } from './standard-material-options-builder.js';
 import { standardMaterialCubemapParameters, standardMaterialTextureParameters } from './standard-material-parameters.js';
 import { DebugGraphics } from '../../platform/graphics/debug-graphics.js';
+import { getCoreDefines } from '../shader-lib/utils.js';
 
 /**
  * @import { BoundingBox } from '../../core/shape/bounding-box.js'
@@ -568,8 +569,6 @@ class StandardMaterial extends Material {
     constructor() {
         super();
 
-        this._dirtyShader = true;
-
         // storage for texture and cubemap asset references
         this._assetReferences = {};
 
@@ -587,27 +586,7 @@ class StandardMaterial extends Material {
             this[`_${name}`] = _props[name].value();
         });
 
-        /**
-         * @type {Object<string, string>}
-         * @private
-         */
-        this._chunks = { };
         this._uniformCache = { };
-    }
-
-    /**
-     * Object containing custom shader chunks that will replace default ones.
-     *
-     * @type {Object<string, string>}
-     */
-    set chunks(value) {
-        this._dirtyShader = true;
-        this._chunks = value;
-    }
-
-    get chunks() {
-        this._dirtyShader = true;
-        return this._chunks;
     }
 
     /**
@@ -623,13 +602,6 @@ class StandardMaterial extends Material {
         Object.keys(_props).forEach((k) => {
             this[k] = source[k];
         });
-
-        // clone chunks
-        for (const p in source._chunks) {
-            if (source._chunks.hasOwnProperty(p)) {
-                this._chunks[p] = source._chunks[p];
-            }
-        }
 
         // clone user attributes
         this.userAttributes = new Map(source.userAttributes);
@@ -826,9 +798,7 @@ class StandardMaterial extends Material {
         // remove unused params
         this._processParameters('_activeParams');
 
-        if (this._dirtyShader) {
-            this.clearVariants();
-        }
+        super.updateUniforms(device, scene);
     }
 
     updateEnvUniforms(device, scene) {
@@ -857,9 +827,9 @@ class StandardMaterial extends Material {
 
         // Minimal options for Depth, Shadow and Prepass passes
         const shaderPassInfo = ShaderPass.get(device).getByIndex(pass);
-        const minimalOptions = pass === SHADER_DEPTH || pass === SHADER_PICK || pass === SHADER_PREPASS_VELOCITY || shaderPassInfo.isShadow;
+        const minimalOptions = pass === SHADER_DEPTH || pass === SHADER_PICK || pass === SHADER_PREPASS || shaderPassInfo.isShadow;
         let options = minimalOptions ? standard.optionsContextMin : standard.optionsContext;
-        options.defines = this.defines;
+        options.defines = getCoreDefines(this, params);
 
         if (minimalOptions) {
             this.shaderOptBuilder.updateMinRef(options, scene, this, objDefs, pass, sortedLights);

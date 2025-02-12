@@ -14,7 +14,6 @@ pc.WasmModule.setConfig('DracoDecoderModule', {
 const assets = {
     laboratory: new pc.Asset('statue', 'container', { url: `${rootPath}/static/assets/models/laboratory.glb` }),
     orbit: new pc.Asset('orbit', 'script', { url: `${rootPath}/static/scripts/camera/orbit-camera.js` }),
-    ssao: new pc.Asset('ssao', 'script', { url: `${rootPath}/static/scripts/posteffects/posteffect-ssao.js` }),
     helipad: new pc.Asset(
         'helipad-env-atlas',
         'texture',

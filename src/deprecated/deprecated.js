@@ -57,8 +57,8 @@ import {
 } from '../framework/components/rigid-body/constants.js';
 import { RigidBodyComponent } from '../framework/components/rigid-body/component.js';
 import { RigidBodyComponentSystem } from '../framework/components/rigid-body/system.js';
-import { LitShader } from '../scene/shader-lib/programs/lit-shader.js';
 import { Geometry } from '../scene/geometry/geometry.js';
+import { CameraComponent } from '../framework/components/camera/component.js';
 
 // MATH
 
@@ -178,41 +178,6 @@ Object.keys(deprecatedChunks).forEach((chunkName) => {
         }
     });
 });
-
-// We only provide backwards compatibility in debug builds, production builds have to be
-// as fast and small as possible.
-
-// #if _DEBUG
-
-/**
- * Helper function to ensure a bit of backwards compatibility.
- *
- * @example
- * toLitArgs('litShaderArgs.sheen.specularity'); // Result: 'litArgs_sheen_specularity'
- * @param {string} src - The shader source which may generate shader errors.
- * @returns {string} The backwards compatible shader source.
- * @ignore
- */
-function compatibilityForLitArgs(src) {
-    if (src.includes('litShaderArgs')) {
-        // eslint-disable-next-line regexp/no-misleading-capturing-group
-        src = src.replace(/litShaderArgs([.a-zA-Z]+)+/g, (a, b) => {
-            const newSource = `litArgs${b.replace(/\./g, '_')}`;
-            Debug.deprecated(`Nested struct property access is deprecated, because it's crashing some devices. Please update your custom chunks manually. In particular ${a} should be ${newSource} now.`);
-            return newSource;
-        });
-    }
-    return src;
-}
-
-/**
- * Add more backwards compatibility functions as needed.
- */
-LitShader.prototype.handleCompatibility = function () {
-    this.fshader = compatibilityForLitArgs(this.fshader);
-};
-
-// #endif
 
 // Note: This was never public interface, but has been used in external scripts
 Object.defineProperties(RenderTarget.prototype, {
@@ -564,30 +529,37 @@ Object.defineProperty(Scene.prototype, 'models', {
     }
 });
 
-// A helper function to add deprecated set and get property on a Layer
-function _removedLayerProperty(name) {
-    Object.defineProperty(Layer.prototype, name, {
+// A helper function to add deprecated set and get property on a class
+function _removedClassProperty(targetClass, name, comment = '') {
+    Object.defineProperty(targetClass.prototype, name, {
         set: function (value) {
-            Debug.errorOnce(`pc.Layer#${name} has been removed.`);
+            Debug.errorOnce(`${targetClass.name}#${name} has been removed. ${comment}`);
         },
         get: function () {
-            Debug.errorOnce(`pc.Layer#${name} has been removed.`);
+            Debug.errorOnce(`${targetClass.name}#${name} has been removed. ${comment}`);
             return undefined;
         }
     });
 }
 
-_removedLayerProperty('renderTarget');
-_removedLayerProperty('onPreCull');
-_removedLayerProperty('onPreRender');
-_removedLayerProperty('onPreRenderOpaque');
-_removedLayerProperty('onPreRenderTransparent');
-_removedLayerProperty('onPostCull');
-_removedLayerProperty('onPostRender');
-_removedLayerProperty('onPostRenderOpaque');
-_removedLayerProperty('onPostRenderTransparent');
-_removedLayerProperty('onDrawCall');
-_removedLayerProperty('layerReference');
+_removedClassProperty(Layer, 'renderTarget');
+_removedClassProperty(Layer, 'onPreCull');
+_removedClassProperty(Layer, 'onPreRender');
+_removedClassProperty(Layer, 'onPreRenderOpaque');
+_removedClassProperty(Layer, 'onPreRenderTransparent');
+_removedClassProperty(Layer, 'onPostCull');
+_removedClassProperty(Layer, 'onPostRender');
+_removedClassProperty(Layer, 'onPostRenderOpaque');
+_removedClassProperty(Layer, 'onPostRenderTransparent');
+_removedClassProperty(Layer, 'onDrawCall');
+_removedClassProperty(Layer, 'layerReference');
+
+_removedClassProperty(CameraComponent, 'onPreCull', 'Use Scene#EVENT_PRECULL event instead.');
+_removedClassProperty(CameraComponent, 'onPostCull', 'Use Scene#EVENT_POSTCULL event instead.');
+_removedClassProperty(CameraComponent, 'onPreRender', 'Use Scene#EVENT_PRERENDER event instead.');
+_removedClassProperty(CameraComponent, 'onPostRender', 'Use Scene#EVENT_POSTRENDER event instead.');
+_removedClassProperty(CameraComponent, 'onPreRenderLayer', 'Use Scene#EVENT_PRERENDER_LAYER event instead.');
+_removedClassProperty(CameraComponent, 'onPostRenderLayer', 'Use Scene#EVENT_POSTRENDER_LAYER event instead.');
 
 ForwardRenderer.prototype.renderComposition = function (comp) {
     Debug.deprecated('pc.ForwardRenderer#renderComposition is deprecated. Use pc.AppBase.renderComposition instead.');

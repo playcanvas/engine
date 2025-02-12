@@ -1,7 +1,6 @@
 import { data } from 'examples/observer';
-import { deviceType, rootPath, fileImport } from 'examples/utils';
+import { deviceType, rootPath } from 'examples/utils';
 import * as pc from 'playcanvas';
-const { CameraFrame } = await fileImport(`${rootPath}/static/assets/scripts/misc/camera-frame.mjs`);
 
 const canvas = /** @type {HTMLCanvasElement} */ (document.getElementById('application-canvas'));
 window.focus();
@@ -216,9 +215,9 @@ assetListLoader.load(() => {
 
     // ------ Custom render passes set up ------
 
-    /** @type { CameraFrame } */
-    const cameraFrame = cameraEntity.script.create(CameraFrame);
+    const cameraFrame = new pc.CameraFrame(app, cameraEntity.camera);
     cameraFrame.rendering.sceneColorMap = true;
+    cameraFrame.update();
 
     const applySettings = () => {
 
@@ -238,6 +237,9 @@ assetListLoader.load(() => {
             material.update();
         });
 
+        // enabled
+        cameraFrame.enabled = data.get('data.enabled');
+
         // Scene
         cameraFrame.rendering.renderTargetScale = data.get('data.scene.scale');
         cameraFrame.rendering.toneMapping = data.get('data.scene.tonemapping');
@@ -247,9 +249,8 @@ assetListLoader.load(() => {
         cameraFrame.taa.jitter = data.get('data.taa.jitter');
 
         // Bloom
-        cameraFrame.bloom.enabled = data.get('data.bloom.enabled');
-        cameraFrame.bloom.intensity = pc.math.lerp(0, 0.1, data.get('data.bloom.intensity') / 100);
-        cameraFrame.bloom.lastMipLevel = data.get('data.bloom.lastMipLevel');
+        cameraFrame.bloom.intensity = data.get('data.bloom.enabled') ? pc.math.lerp(0, 0.1, data.get('data.bloom.intensity') / 100) : 0;
+        cameraFrame.bloom.blurLevel = data.get('data.bloom.blurLevel');
 
         // grading
         cameraFrame.grading.enabled = data.get('data.grading.enabled');
@@ -258,15 +259,24 @@ assetListLoader.load(() => {
         cameraFrame.grading.contrast = data.get('data.grading.contrast');
 
         // vignette
-        cameraFrame.vignette.enabled = data.get('data.vignette.enabled');
         cameraFrame.vignette.inner = data.get('data.vignette.inner');
         cameraFrame.vignette.outer = data.get('data.vignette.outer');
         cameraFrame.vignette.curvature = data.get('data.vignette.curvature');
-        cameraFrame.vignette.intensity = data.get('data.vignette.intensity');
+        cameraFrame.vignette.intensity = data.get('data.vignette.enabled') ? data.get('data.vignette.intensity') : 0;
 
         // fringing
-        cameraFrame.fringing.enabled = data.get('data.fringing.enabled');
-        cameraFrame.fringing.intensity = data.get('data.fringing.intensity');
+        cameraFrame.fringing.intensity = data.get('data.fringing.enabled') ? data.get('data.fringing.intensity') : 0;
+
+        // debug
+        switch (data.get('data.scene.debug')) {
+            case 0: cameraFrame.debug = null; break;
+            case 1: cameraFrame.debug = 'bloom'; break;
+            case 2: cameraFrame.debug = 'vignette'; break;
+            case 3: cameraFrame.debug = 'scene'; break;
+        }
+
+        // apply all settings
+        cameraFrame.update();
     };
 
     // apply UI changes
@@ -276,16 +286,18 @@ assetListLoader.load(() => {
 
     // set initial values
     data.set('data', {
+        enabled: true,
         scene: {
             scale: 1.8,
             background: 6,
             emissive: 200,
-            tonemapping: pc.TONEMAP_ACES
+            tonemapping: pc.TONEMAP_ACES,
+            debug: 0
         },
         bloom: {
             enabled: true,
             intensity: 5,
-            lastMipLevel: 1
+            blurLevel: 16
         },
         grading: {
             enabled: false,

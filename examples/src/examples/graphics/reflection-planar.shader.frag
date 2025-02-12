@@ -1,3 +1,5 @@
+#include "gammaPS"
+
 // engine built-in constant storing render target size in .xy and inverse size in .zw
 uniform vec4 uScreenSize;
 

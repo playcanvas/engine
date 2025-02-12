@@ -1,6 +1,5 @@
-import { deviceType, rootPath, fileImport } from 'examples/utils';
+import { deviceType, rootPath } from 'examples/utils';
 import * as pc from 'playcanvas';
-const { CameraFrame } = await fileImport(`${rootPath}/static/assets/scripts/misc/camera-frame.mjs`);
 
 const canvas = /** @type {HTMLCanvasElement} */ (document.getElementById('application-canvas'));
 window.focus();
@@ -159,13 +158,11 @@ assetListLoader.load(() => {
 
     // ------ Custom render passes set up ------
 
-    camera.addComponent('script');
-    /** @type { CameraFrame } */
-    const cameraFrame = camera.script.create(CameraFrame);
-
+    const cameraFrame = new pc.CameraFrame(app, camera.camera);
     cameraFrame.rendering.stencil = true;
     cameraFrame.rendering.samples = 4;
     cameraFrame.rendering.toneMapping = pc.TONEMAP_ACES2;
+    cameraFrame.update();
 
     // ------------------------------------------
 

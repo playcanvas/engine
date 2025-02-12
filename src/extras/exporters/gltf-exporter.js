@@ -139,6 +139,7 @@ class GltfExporter extends CoreExporter {
             cameras: [],
             entities: [],
             materials: [],
+            skins: [],
             textures: [],
 
             // entry: { node, meshInstances}
@@ -200,6 +201,11 @@ class GltfExporter extends CoreExporter {
                 if (buffers.indexOf(indexBuffer) < 0) {
                     buffers.push(indexBuffer);
                 }
+
+                // Collect skin
+                if (mesh.skin && resources.skins.indexOf(mesh.skin) < 0) {
+                    resources.skins.push(mesh.skin);
+                }
             });
         };
 
@@ -242,14 +248,20 @@ class GltfExporter extends CoreExporter {
 
         // FIXME: don't create the function every time
         const addBufferView = (target, byteLength, byteOffset, byteStride) => {
-
             const bufferView = {
-                target: target,
                 buffer: 0,
                 byteLength: byteLength,
-                byteOffset: byteOffset,
-                byteStride: byteStride
+                byteOffset: byteOffset
             };
+
+            // Only add target if it's a vertex or index buffer
+            if (target === ARRAY_BUFFER || target === ELEMENT_ARRAY_BUFFER) {
+                bufferView.target = target;
+            }
+
+            if (byteStride !== undefined) {
+                bufferView.byteStride = byteStride;
+            }
 
             return json.bufferViews.push(bufferView) - 1;
         };
@@ -260,16 +272,12 @@ class GltfExporter extends CoreExporter {
 
             const format = buffer.getFormat();
             if (format.interleaved) {
-
                 const bufferViewIndex = addBufferView(ARRAY_BUFFER, arrayBuffer.byteLength, offset, format.size);
                 resources.bufferViewMap.set(buffer, [bufferViewIndex]);
-
             } else {
-
                 // generate buffer view per element
                 const bufferViewIndices = [];
                 for (const element of format.elements) {
-
                     const bufferViewIndex = addBufferView(
                         ARRAY_BUFFER,
                         element.size * format.vertexCount,
@@ -277,25 +285,18 @@ class GltfExporter extends CoreExporter {
                         element.size
                     );
                     bufferViewIndices.push(bufferViewIndex);
-
                 }
-
                 resources.bufferViewMap.set(buffer, bufferViewIndices);
             }
-
-        } else if (buffer instanceof IndexBuffer) {    // index buffer
+        } else if (buffer instanceof IndexBuffer) {
             arrayBuffer = buffer.lock();
-
-            const bufferViewIndex = addBufferView(ARRAY_BUFFER, arrayBuffer.byteLength, offset);
-            resources.bufferViewMap.set(buffer, [bufferViewIndex]);
-
-        } else {
-            // buffer is an array buffer
-            arrayBuffer = buffer;
-
             const bufferViewIndex = addBufferView(ELEMENT_ARRAY_BUFFER, arrayBuffer.byteLength, offset);
             resources.bufferViewMap.set(buffer, [bufferViewIndex]);
-
+        } else {
+            // buffer is an array buffer (for images)
+            arrayBuffer = buffer;
+            const bufferViewIndex = addBufferView(undefined, arrayBuffer.byteLength, offset);
+            resources.bufferViewMap.set(buffer, [bufferViewIndex]);
         }
 
         // increment buffer by the size of the array buffer to allocate buffer with enough space
@@ -477,6 +478,12 @@ class GltfExporter extends CoreExporter {
                 const entityMeshInstance = resources.entityMeshInstances.find(e => e.node === entity);
                 if (entityMeshInstance) {
                     node.mesh = resources.entityMeshInstances.indexOf(entityMeshInstance);
+
+                    // Add skin reference if this node has a skinned mesh
+                    const meshInstance = entityMeshInstance.meshInstances[0];
+                    if (meshInstance && meshInstance.mesh.skin) {
+                        node.skin = resources.skins.indexOf(meshInstance.mesh.skin);
+                    }
                 }
 
                 if (entity.children.length > 0) {
@@ -492,21 +499,20 @@ class GltfExporter extends CoreExporter {
         }
     }
 
-    writeMeshes(resources, json) {
+    writeMeshes(resources, json, options) {
         if (resources.entityMeshInstances.length > 0) {
             json.accessors = [];
             json.meshes = [];
 
             resources.entityMeshInstances.forEach((entityMeshInstances) => {
-
                 const mesh = {
                     primitives: []
                 };
 
-                // all mesh instances of a single node are stores as a single gltf mesh with multiple primitives
+                // all mesh instances of a single node are stored as a single gltf mesh with multiple primitives
                 const meshInstances = entityMeshInstances.meshInstances;
                 meshInstances.forEach((meshInstance) => {
-                    const primitive = GltfExporter.createPrimitive(resources, json, meshInstance.mesh);
+                    const primitive = GltfExporter.createPrimitive(resources, json, meshInstance.mesh, options);
 
                     primitive.material = resources.materials.indexOf(meshInstance.material);
 
@@ -518,7 +524,7 @@ class GltfExporter extends CoreExporter {
         }
     }
 
-    static createPrimitive(resources, json, mesh) {
+    static createPrimitive(resources, json, mesh, options = {}) {
         const primitive = {
             attributes: {}
         };
@@ -529,6 +535,43 @@ class GltfExporter extends CoreExporter {
         const { interleaved, elements } = format;
         const numVertices = vertexBuffer.getNumVertices();
         elements.forEach((element, elementIndex) => {
+            const semantic = getSemantic(element.name);
+
+            // Skip unused attributes if stripping is enabled
+            if (options.stripUnusedAttributes) {
+                let isUsed = true;
+
+                // Check texture coordinates
+                if (semantic.startsWith('TEXCOORD_')) {
+                    const texCoordIndex = parseInt(semantic.split('_')[1], 10);
+                    isUsed = resources.materials.some((material) => {
+                        return textureSemantics.some((texSemantic) => {
+                            const texture = material[texSemantic];
+                            // Most materials use UV0 by default, so keep TEXCOORD_0 unless explicitly using a different UV set
+                            return texture && (texCoordIndex === 0 || material[`${texSemantic}Tiling`]?.uv === texCoordIndex);
+                        });
+                    });
+                }
+
+                // Check vertex colors
+                if (semantic === 'COLOR_0') {
+                    isUsed = resources.materials.some(material => material.vertexColors);
+                }
+
+                // Check tangents
+                if (semantic === 'TANGENT') {
+                    isUsed = resources.materials.some(material => material.normalMap);
+                }
+
+                // Check skinning attributes
+                if (semantic === 'JOINTS_0' || semantic === 'WEIGHTS_0') {
+                    isUsed = resources.entityMeshInstances.some(emi => emi.meshInstances.some(mi => mi.mesh.skin));
+                }
+
+                if (!isUsed) {
+                    return; // Skip this attribute
+                }
+            }
 
             let bufferView = resources.bufferViewMap.get(vertexBuffer);
             if (!bufferView) {
@@ -548,11 +591,10 @@ class GltfExporter extends CoreExporter {
             };
 
             const idx = json.accessors.push(accessor) - 1;
-            primitive.attributes[getSemantic(element.name)] = idx;
+            primitive.attributes[semantic] = idx;
 
             // Position accessor also requires min and max properties
             if (element.name === SEMANTIC_POSITION) {
-
                 // compute min and max from positions, as the BoundingBox stores center and extents,
                 // and we get precision warnings from gltf validator
                 const positions = [];
@@ -590,6 +632,46 @@ class GltfExporter extends CoreExporter {
         }
 
         return primitive;
+    }
+
+    writeSkins(resources, json) {
+        if (resources.skins.length > 0) {
+            json.skins = resources.skins.map((skin) => {
+                // Create float32 array for inverse bind matrices
+                const matrices = new Float32Array(skin.inverseBindPose.length * 16);
+                for (let i = 0; i < skin.inverseBindPose.length; i++) {
+                    const ibm = skin.inverseBindPose[i];
+                    matrices.set(ibm.data, i * 16);
+                }
+
+                // Create buffer view for matrices
+                const matrixBuffer = matrices.buffer;
+                GltfExporter.writeBufferView(resources, json, matrixBuffer);
+                resources.buffers.push(matrixBuffer);
+                const bufferView = resources.bufferViewMap.get(matrixBuffer);
+
+                // Create accessor for inverse bind matrices
+                const accessor = {
+                    bufferView: bufferView[0],
+                    componentType: getComponentType(TYPE_FLOAT32),
+                    count: skin.inverseBindPose.length,
+                    type: 'MAT4'
+                };
+                const accessorIndex = json.accessors.push(accessor) - 1;
+
+                // Find joint nodes by bone names
+                const joints = skin.boneNames.map((boneName) => {
+                    const node = resources.entities.find(entity => entity.name === boneName);
+                    return resources.entities.indexOf(node);
+                });
+
+                // Create skin
+                return {
+                    inverseBindMatrices: accessorIndex,
+                    joints: joints
+                };
+            });
+        }
     }
 
     convertTextures(srcTextures, options) {
@@ -728,9 +810,10 @@ class GltfExporter extends CoreExporter {
 
             this.writeBufferViews(resources, json);
             this.writeCameras(resources, json);
-            this.writeMeshes(resources, json);
+            this.writeMeshes(resources, json, options);
             this.writeMaterials(resources, json);
             this.writeNodes(resources, json, options);
+            this.writeSkins(resources, json);
             await this.writeTextures(resources, textureCanvases, json, options);
 
             // delete unused properties
@@ -747,8 +830,15 @@ class GltfExporter extends CoreExporter {
      *
      * @param {Entity} entity - The root of the entity hierarchy to convert.
      * @param {object} options - Object for passing optional arguments.
-     * @param {number} [options.maxTextureSize] - Maximum texture size. Texture is resized if over
-     * the size.
+     * @param {number} [options.maxTextureSize] - Maximum texture size. Texture is resized if over the size.
+     * @param {boolean} [options.stripUnusedAttributes] - If true, removes unused vertex attributes:
+     *
+     * - Texture coordinates not referenced by materials
+     * - Vertex colors if not used by materials
+     * - Tangents if no normal maps are used
+     * - Skinning data if no skinned meshes exist
+     *
+     * Defaults to false.
      * @returns {Promise<ArrayBuffer>} - The GLB file content.
      */
     build(entity, options = {}) {
