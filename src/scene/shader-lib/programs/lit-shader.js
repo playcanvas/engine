@@ -368,13 +368,11 @@ class LitShader {
 
         const shadowInfo = shadowTypeInfo.get(shadowType);
         Debug.assert(shadowInfo);
-        const isVsm = shadowInfo.vsm;
-        const isPcss = shadowInfo.pcss;
-        const isPcf = shadowInfo.pcf;
+        const { vsm, pcss, pcf } = shadowInfo;
 
         // If not a directional light and using clustered, fall back to using PCF3x3 if shadow type isn't supported
         if (lightType !== LIGHTTYPE_DIRECTIONAL && options.clusteredLightingEnabled) {
-            if (!isPcf) {
+            if (!pcf) {
                 shadowType = SHADOW_PCF3_32F;
             }
         }
@@ -383,7 +381,7 @@ class LitShader {
         // Directional: Always since light has no position
         // Spot: If not using VSM
         // Point: Never
-        const usePerspectiveDepth = (lightType === LIGHTTYPE_DIRECTIONAL || (!isVsm && lightType === LIGHTTYPE_SPOT));
+        const usePerspectiveDepth = (lightType === LIGHTTYPE_DIRECTIONAL || (!vsm && lightType === LIGHTTYPE_SPOT));
 
         const code = `
 
@@ -395,8 +393,8 @@ class LitShader {
 
             // Flag if we are using non-standard depth, i.e gl_FragCoord.z
             ${usePerspectiveDepth ? '#define PERSPECTIVE_DEPTH' : ''}
-            ${isPcss ? '#define PCSS' : ''}
-            ${isVsm ? '#define VSM' : ''}
+            ${pcss ? '#define PCSS' : ''}
+            ${vsm ? '#define VSM' : ''}
             ${shadowType === SHADOW_VSM_32F ? '#define VSM_32F' : ''}
             ${lightType === LIGHTTYPE_DIRECTIONAL ? '#define DIRECTIONAL_LIGHT' : ''}
 
