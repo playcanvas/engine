@@ -416,7 +416,7 @@ class Preprocessor {
                                     includeSource = result;
 
                                 } else {
-                                    console.error(`include Count identifier "${countIdentifier}" not resolved while preprocessing ${Preprocessor.sourceName} on line: ${source.substring(match.index, match.index + 100)}...`, { source: originalSource });
+                                    console.error(`Include Count identifier "${countIdentifier}" not resolved while preprocessing ${Preprocessor.sourceName} on line: ${source.substring(match.index, match.index + 100)}...`, { source: originalSource });
                                     error = true;
                                 }
                             }
