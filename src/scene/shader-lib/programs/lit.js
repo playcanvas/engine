@@ -35,16 +35,13 @@ class ShaderGeneratorLit extends ShaderGenerator {
 
         const decl = new ChunkBuilder();
         const code = new ChunkBuilder();
-        const func = new ChunkBuilder();
 
         // global texture bias for standard textures
         decl.append('uniform float textureBias;');
 
         decl.append(litShader.chunks.litShaderArgsPS);
         code.append(options.shaderChunk);
-        func.code = 'evaluateFrontend();';
 
-        func.code = `\n${func.code.split('\n').map(l => `    ${l}`).join('\n')}\n\n`;
         const usedUvSets = options.usedUvs || [true];
         const mapTransforms = [];
 
@@ -55,7 +52,7 @@ class ShaderGeneratorLit extends ShaderGenerator {
         };
 
         litShader.generateVertexShader(usedUvSets, usedUvSets, mapTransforms);
-        litShader.generateFragmentShader(decl.code, code.code, func.code, 'vUv0');
+        litShader.generateFragmentShader(decl.code, code.code, 'vUv0');
 
         const includes = new Map(Object.entries({
             ...Object.getPrototypeOf(litShader.chunks), // the prototype stores the default chunks

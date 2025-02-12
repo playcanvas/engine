@@ -176,7 +176,6 @@ import startPS from './lit/frag/start.js';
 import startVS from './lit/vert/start.js';
 import startNineSlicedPS from './lit/frag/startNineSliced.js';
 import startNineSlicedTiledPS from './lit/frag/startNineSlicedTiled.js';
-import storeEVSMPS from './lit/frag/storeEVSM.js';
 import tangentBinormalVS from './lit/vert/tangentBinormal.js';
 import TBNPS from './lit/frag/TBN.js';
 import TBNderivativePS from './lit/frag/TBNderivative.js';
@@ -387,7 +386,6 @@ const shaderChunks = {
     startVS,
     startNineSlicedPS,
     startNineSlicedTiledPS,
-    storeEVSMPS,
     tangentBinormalVS,
     TBNPS,
     TBNderivativePS,
