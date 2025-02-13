@@ -309,7 +309,7 @@ class BottomBar extends TypedComponent {
                     link: { observer, path: 'largeThumbnails' }
                 })
             ),
-            //jsx(Container, { id: 'bottomBar-contents' }, this.renderContents())
+            jsx(Container, { id: 'bottomBar-contents' }, this.renderContents())
         );
     }
 }

@@ -5,7 +5,7 @@
   "main": "index.js",
   "type": "module",
   "scripts": {
-    "build": "npm run -s build:metadata && cross-env NODE_ENV=production rollup -c",
+    "build": "npm run -s build:metadata && cross-env NODE_ENV=production RTI=on rollup -c",
     "build:metadata": "node ./scripts/build-metadata.mjs",
     "build:thumbnails": "node ./scripts/build-thumbnails.mjs",
     "clean": "node ./scripts/clean.mjs",
