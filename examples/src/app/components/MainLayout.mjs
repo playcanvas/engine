@@ -75,7 +75,7 @@ class MainLayout extends TypedComponent {
                         Route,
                         { path: '/:category/:example' },
                         jsx(SideBar, null),
-                        jsx(BottomBar, null),
+                        // jsx(BottomBar, null),
                         jsx(
                             Container,
                             { id: 'main-view-wrapper' },

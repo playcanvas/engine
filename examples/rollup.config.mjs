@@ -230,16 +230,10 @@ const engineRollupOptions = () => {
         execSync(cmd);
     }
 
-};
-
-const getEngineTargets = () => {
-    // Checks for types and engien for app building
-    checkAppEngine();
-
     /** @type {RollupOptions[]} */
     const options = [];
     if (RTI === 'on') {
-        targets.push(buildTargetRTI('es', '../src/index.rti.js', 'dist/iframe/ENGINE_PATH'));
+        options.push(buildTargetRTI('es', '../src/index.rti.js', 'dist/iframe/ENGINE_PATH'));
     }
     if (ENGINE_PATH) {
         return options;

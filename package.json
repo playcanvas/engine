@@ -74,6 +74,7 @@
     "@rollup/plugin-swc": "0.4.0",
     "@rollup/plugin-terser": "0.4.4",
     "@rollup/pluginutils": "5.1.4",
+    "@runtime-type-inspector/plugin-rollup": "^4.0.4",
     "@swc/core": "1.10.7",
     "@types/node": "22.10.5",
     "c8": "10.1.3",

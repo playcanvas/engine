@@ -94,7 +94,7 @@ class BottomBar extends TypedComponent {
      * @param {CustomEvent} e - The event with possible RTI type infos.
      */
     _onMessage(e) {
-        console.log("GOT", e);
+        // console.log("GOT", e);
     }
 
     componentWillUnmount() {
