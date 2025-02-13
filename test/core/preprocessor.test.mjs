@@ -22,8 +22,32 @@ describe('Preprocessor', function () {
         #define __INJECT_STRING hello
         #define FEATURE1
         #define FEATURE2
+        #define AND1
+        #define AND2
+        #define OR1
+        #define OR2
 
         #include "incLoop, LOOP_COUNT"
+
+        #if (defined(AND1) && defined(AND2))
+            ANDS1
+        #endif
+
+        #if (defined(UNDEFINED) && defined(AND2))
+            ANDS2
+        #endif
+
+        #if (defined(OR1) || defined(OR2))
+            ORS1
+        #endif
+
+        #if (defined(UNDEFINED) || defined(OR2))
+            ORS2
+        #endif
+
+        #if (defined(UNDEFINED) || defined(UNDEFINED2) || defined(OR2))
+            ORS3
+        #endif
 
         #ifdef FEATURE1
             TEST1
@@ -225,4 +249,23 @@ describe('Preprocessor', function () {
         expect(Preprocessor.run(srcData, includes).includes('inserted3')).to.equal(false);
     });
 
+    it('returns true for ANDS1', function () {
+        expect(Preprocessor.run(srcData, includes).includes('ANDS1')).to.equal(true);
+    });
+
+    it('returns false for ANDS2', function () {
+        expect(Preprocessor.run(srcData, includes).includes('ANDS2')).to.equal(false);
+    });
+
+    it('returns true for ORS1', function () {
+        expect(Preprocessor.run(srcData, includes).includes('ORS1')).to.equal(true);
+    });
+
+    it('returns true for ORS2', function () {
+        expect(Preprocessor.run(srcData, includes).includes('ORS2')).to.equal(true);
+    });
+
+    it('returns true for ORS3', function () {
+        expect(Preprocessor.run(srcData, includes).includes('ORS3')).to.equal(true);
+    });
 });

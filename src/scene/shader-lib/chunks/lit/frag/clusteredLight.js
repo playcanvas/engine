@@ -3,15 +3,6 @@ uniform highp sampler2D clusterWorldTexture;
 uniform highp sampler2D lightsTexture8;
 uniform highp sampler2D lightsTextureFloat;
 
-// complex ifdef expression are not supported, handle it here
-// defined(CLUSTER_COOKIES) || defined(CLUSTER_SHADOWS)
-#if defined(CLUSTER_COOKIES)
-    #define CLUSTER_COOKIES_OR_SHADOWS
-#endif
-#if defined(CLUSTER_SHADOWS)
-    #define CLUSTER_COOKIES_OR_SHADOWS
-#endif
-
 #ifdef CLUSTER_SHADOWS
     // TODO: when VSM shadow is supported, it needs to use sampler2D in webgl2
     uniform sampler2DShadow shadowAtlasTexture;
@@ -309,7 +300,7 @@ void evaluateLight(
             falloffAttenuation *= getSpotEffect(light.direction, light.innerConeAngleCos, light.outerConeAngleCos, dLightDirNormW);
         }
 
-        #if defined(CLUSTER_COOKIES_OR_SHADOWS)
+        #if defined(CLUSTER_COOKIES) || defined(CLUSTER_SHADOWS)
 
         if (falloffAttenuation > 0.00001) {
 

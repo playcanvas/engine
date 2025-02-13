@@ -33,8 +33,8 @@ const DEFINED = /(!|\s)?defined\(([\w-]+)\)/;
 // Matches comparison operators like ==, !=, <, <=, >, >=
 const COMPARISON = /([a-z_]\w*)\s*(==|!=|<|<=|>|>=)\s*([\w"']+)/i;
 
-// currently unsupported characters in the expression: | & < > = + -
-const INVALID = /[|&+-]/g;
+// currently unsupported characters in the expression: + -
+const INVALID = /[+\-]/g;
 
 // #include "identifier" or optional second identifier #include "identifier1, identifier2"
 const INCLUDE = /include[ \t]+"([\w-]+)(?:\s*,\s*([\w-]+))?"\r?(?:\n|$)/g;
@@ -458,40 +458,35 @@ class Preprocessor {
     }
 
     /**
-     * Very simple expression evaluation, handles cases:
+     * Evaluates a single atomic expression, which can be:
+     * - `defined(EXPRESSION)` or `!defined(EXPRESSION)`
+     * - Comparisons such as `A == B`, `A != B`, `A > B`, etc.
+     * - Simple checks for the existence of a define.
      *
-     * - expression
-     * - defined(expression)
-     * - !defined(expression)
-     * - simple comparisons like "XX == 3" or "XX != test"
-     *
-     * But does not handle more complex cases, which would require more complex system:
-     *
-     * - defined(A) || defined(B)
-     *
-     * @param {string} expression - The expression to evaluate.
+     * @param {string} expr - The atomic expression to evaluate.
      * @param {Map<string, string>} defines - A map containing key-value pairs of defines.
      * @returns {object} Returns an object containing the result of the evaluation and an error flag.
      */
-    static evaluate(expression, defines) {
-
-        const correct = INVALID.exec(expression) === null;
-        Debug.assert(correct, `Resolving expression like this is not supported: ${expression}`);
-
-        // if the format is 'defined(expression)', extract expression
+    static evaluateAtomicExpression(expr, defines) {
+        let error = false;
+        expr = expr.trim();
         let invert = false;
-        const defined = DEFINED.exec(expression);
-        if (defined) {
-            invert = defined[1] === '!';
-            expression = defined[2];
+
+        // Handle defined(expr) and !defined(expr)
+        const definedMatch = DEFINED.exec(expr);
+        if (definedMatch) {
+            invert = definedMatch[1] === '!';
+            expr = definedMatch[2].trim();
+            const exists = defines.has(expr);
+            return { result: invert ? !exists : exists, error };
         }
 
-        // if the expression is a comparison, evaluate it
-        const comparison = COMPARISON.exec(expression);
-        if (comparison) {
-            const left = defines.get(comparison[1]) ?? comparison[1];
-            const right = defines.get(comparison[3]) ?? comparison[3];
-            const operator = comparison[2];
+        // Handle comparisons
+        const comparisonMatch = COMPARISON.exec(expr);
+        if (comparisonMatch) {
+            const left = defines.get(comparisonMatch[1].trim()) ?? comparisonMatch[1].trim();
+            const right = defines.get(comparisonMatch[3].trim()) ?? comparisonMatch[3].trim();
+            const operator = comparisonMatch[2].trim();
 
             let result = false;
             switch (operator) {
@@ -501,27 +496,54 @@ class Preprocessor {
                 case '<=': result = left <= right; break;
                 case '>': result = left > right; break;
                 case '>=': result = left >= right; break;
+                default: error = true;
             }
 
-            return {
-                result,
-                error: !correct
-            };
+            return { result, error };
         }
 
-        // test if expression define exists
-        expression = expression.trim();
-        let exists = defines.has(expression);
+        // Default case: check if expression is defined
+        const result = defines.has(expr);
+        return { result, error };
+    }
 
-        // handle inversion
-        if (invert) {
-            exists = !exists;
+    /**
+     * Evaluates a complex expression with support for `defined`, `!defined`, comparisons, `&&`,
+     * and `||`. It does not currently handle ( and ).
+     *
+     * @param {string} expression - The expression to evaluate.
+     * @param {Map<string, string>} defines - A map containing key-value pairs of defines.
+     * @returns {object} Returns an object containing the result of the evaluation and an error flag.
+     */
+    static evaluate(expression, defines) {
+        const correct = INVALID.exec(expression) === null;
+        Debug.assert(correct, `Resolving expression like this is not supported: ${expression}`);
+
+        // Step 1: Split by "||" to handle OR conditions
+        const orSegments = expression.split('||');
+        for (const orSegment of orSegments) {
+
+            // Step 2: Split each OR segment by "&&" to handle AND conditions
+            const andSegments = orSegment.split('&&');
+
+            // Step 3: Evaluate each AND segment
+            let andResult = true;
+            for (const andSegment of andSegments) {
+                const { result, error } = Preprocessor.evaluateAtomicExpression(andSegment.trim(), defines);
+                if (!result || error) {
+                    andResult = false;
+                    break; // Short-circuit AND evaluation
+                }
+            }
+
+            // Step 4: If any OR segment evaluates to true, short-circuit and return true
+            if (andResult) {
+                return { result: true, error: !correct };
+            }
         }
 
-        return {
-            result: exists,
-            error: !correct
-        };
+        // If no OR segment is true, the whole expression is false
+        return { result: false, error: !correct };
     }
 }
 
