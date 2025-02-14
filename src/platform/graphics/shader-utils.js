@@ -109,8 +109,8 @@ class ShaderUtils {
         let vertCode;
         let fragCode;
 
-        const vertexDefinesCode = ShaderUtils.getDefinesCode(options.vertexDefines);
-        const fragmentDefinesCode = ShaderUtils.getDefinesCode(options.fragmentDefines);
+        const vertexDefinesCode = ShaderUtils.getDefinesCode(device, options.vertexDefines);
+        const fragmentDefinesCode = ShaderUtils.getDefinesCode(device, options.fragmentDefines);
         const wgsl = options.shaderLanguage === SHADERLANGUAGE_WGSL;
 
         if (wgsl) {
@@ -160,15 +160,24 @@ class ShaderUtils {
     }
 
     /**
+     * @param {GraphicsDevice} device - The graphics device.
      * @param {Map<string, string>} [defines] - A map containing key-value pairs.
      * @returns {string} The shader code for the defines.
      * @private
      */
-    static getDefinesCode(defines) {
+    static getDefinesCode(device, defines) {
         let code = '';
+
+        device.capsDefines.forEach((value, key) => {
+            code += `#define ${key} ${value}\n`;
+        });
+        code += '\n';
+
         defines?.forEach((value, key) => {
             code += `#define ${key} ${value}\n`;
         });
+        code += '\n';
+
         return code;
     }
 

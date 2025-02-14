@@ -532,7 +532,11 @@ class ShaderGeneratorStandard extends ShaderGenerator {
             ...options.litOptions.chunks
         }));
 
-        const defines = new Map(options.defines);
+        const vDefines = litShader.vDefines;
+        options.defines.forEach((value, key) => vDefines.set(key, value));
+
+        const fDefines = litShader.fDefines;
+        options.defines.forEach((value, key) => fDefines.set(key, value));
 
         const definition = ShaderUtils.createDefinition(device, {
             name: 'StandardShader',
@@ -541,8 +545,8 @@ class ShaderGeneratorStandard extends ShaderGenerator {
             fragmentCode: litShader.fshader,
             vertexIncludes: includes,
             fragmentIncludes: includes,
-            fragmentDefines: defines,
-            vertexDefines: defines
+            fragmentDefines: fDefines,
+            vertexDefines: vDefines
         });
 
         if (litShader.shaderPassInfo.isForward) {

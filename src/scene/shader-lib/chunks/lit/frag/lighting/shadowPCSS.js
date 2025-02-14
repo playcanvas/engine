@@ -64,6 +64,7 @@ float PCSS(TEXTURE_ACCEPT(shadowMap), vec3 shadowCoords, vec4 cameraParams, vec2
     float receiverDepth = linearizeDepth(shadowCoords.z, cameraParams);
 
     vec2 samplePoints[PCSS_SAMPLE_COUNT];
+    const float PI = 3.141592653589793;
     float noise = noise( gl_FragCoord.xy ) * 2.0 * PI;
     for (int i = 0; i < PCSS_SAMPLE_COUNT; i++) {
         float pcssPresample = pcssDiskSamples[i];
@@ -114,6 +115,7 @@ float PCSSCubeBlockerDistance(samplerCube shadowMap, vec3 lightDirNorm, vec3 sam
 float PCSSCube(samplerCube shadowMap, vec4 shadowParams, vec3 shadowCoords, vec4 cameraParams, float shadowSearchArea, vec3 lightDir) {
     
     vec3 samplePoints[PCSS_SAMPLE_COUNT];
+    const float PI = 3.141592653589793;
     float noise = noise( gl_FragCoord.xy ) * 2.0 * PI;
     for (int i = 0; i < PCSS_SAMPLE_COUNT; i++) {
         float r = pcssSphereSamples[i];
