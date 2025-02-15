@@ -1,4 +1,4 @@
-import { PRIMITIVE_TRISTRIP, SEMANTIC_COLOR, SEMANTIC_POSITION } from '../../platform/graphics/constants.js';
+import { PRIMITIVE_TRISTRIP, SEMANTIC_COLOR, SEMANTIC_POSITION, SHADERLANGUAGE_GLSL, SHADERLANGUAGE_WGSL } from '../../platform/graphics/constants.js';
 
 import { BLEND_NORMAL } from '../constants.js';
 import { GraphNode } from '../graph-node.js';
@@ -6,6 +6,7 @@ import { Mesh } from '../mesh.js';
 import { MeshInstance } from '../mesh-instance.js';
 import { ShaderMaterial } from '../materials/shader-material.js';
 import { shaderChunks } from '../shader-lib/chunks/chunks.js';
+import { shaderChunksWGSL } from '../shader-lib/chunks-wgsl/chunks-wgsl.js';
 import { ImmediateBatches } from './immediate-batches.js';
 
 import { Vec3 } from '../../core/math/vec3.js';
@@ -14,26 +15,22 @@ import { ChunkUtils } from '../shader-lib/chunk-utils.js';
 const tempPoints = [];
 const vec = new Vec3();
 
-const lineShaderDesc = {
+const lineShaderDescGLSL = {
     uniqueName: 'ImmediateLine',
-    vertexCode: /* glsl */ `
-        attribute vec3 vertex_position;
-        attribute vec4 vertex_color;
-        uniform mat4 matrix_model;
-        uniform mat4 matrix_viewProjection;
-        varying vec4 color;
-        void main(void) {
-            color = vertex_color;
-            gl_Position = matrix_viewProjection * matrix_model * vec4(vertex_position, 1);
-        }
-    `,
-    fragmentCode: /* glsl */ `
-        #include "gammaPS"
-        varying vec4 color;
-        void main(void) {
-            gl_FragColor = vec4(gammaCorrectOutput(decodeGamma(color.rgb)), color.a);
-        }
-    `,
+    vertexCode: shaderChunks.immediateLineVS,
+    fragmentCode: shaderChunks.immediateLinePS,
+    shaderLanguage: SHADERLANGUAGE_GLSL,
+    attributes: {
+        vertex_position: SEMANTIC_POSITION,
+        vertex_color: SEMANTIC_COLOR
+    }
+};
+
+const lineShaderDescWGSL = {
+    uniqueName: 'ImmediateLine',
+    vertexCode: shaderChunksWGSL.immediateLineVS,
+    fragmentCode: shaderChunksWGSL.immediateLinePS,
+    shaderLanguage: SHADERLANGUAGE_WGSL,
     attributes: {
         vertex_position: SEMANTIC_POSITION,
         vertex_color: SEMANTIC_COLOR
@@ -70,7 +67,7 @@ class Immediate {
 
     // creates material for line rendering
     createMaterial(depthTest) {
-        const material = new ShaderMaterial(lineShaderDesc);
+        const material = new ShaderMaterial(this.device.isWebGPU ? lineShaderDescWGSL : lineShaderDescGLSL);
         material.blendType = BLEND_NORMAL;
         material.depthTest = depthTest;
         material.update();
