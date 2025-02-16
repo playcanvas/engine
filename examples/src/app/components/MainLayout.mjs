@@ -2,6 +2,7 @@ import { Container } from '@playcanvas/pcui/react';
 import { Component } from 'react';
 import { HashRouter, Switch, Route, Redirect } from 'react-router-dom';
 
+import { BottomBar } from './Bottombar.mjs';
 import { CodeEditorDesktop } from './code-editor/CodeEditorDesktop.mjs';
 import { Example } from './Example.mjs';
 import { Menu } from './Menu.mjs';
@@ -74,6 +75,7 @@ class MainLayout extends TypedComponent {
                         Route,
                         { path: '/:category/:example' },
                         jsx(SideBar, null),
+                        jsx(BottomBar, null),
                         jsx(
                             Container,
                             { id: 'main-view-wrapper' },
