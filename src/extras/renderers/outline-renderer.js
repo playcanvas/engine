@@ -157,14 +157,14 @@ class OutlineRenderer {
 
         const renders = recursive ? entity.findComponents('render') : (entity.render ? [entity.render] : []);
         renders.forEach((render) => {
-            if (render.entity.enabled && render.enabled) {
+            if (render.entity.enabled && render.enabled && render.meshInstances) {
                 meshInstances.push(...render.meshInstances);
             }
         });
 
         const models = recursive ? entity.findComponents('model') : (entity.model ? [entity.model] : []);
         models.forEach((model) => {
-            if (model.entity.enabled && model.enabled) {
+            if (model.entity.enabled && model.enabled && model.meshInstances) {
                 meshInstances.push(...model.meshInstances);
             }
         });
