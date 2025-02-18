@@ -96,6 +96,9 @@
     "typescript": "^5.7.2",
     "xhr2": "^0.2.1"
   },
+  "optionalDependencies": {
+    "canvas": "^2.11.2"
+  },
   "scripts": {
     "build": "node build.mjs",
     "build:release": "npm run build target:release",
