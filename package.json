@@ -94,6 +94,9 @@
     "typedoc-plugin-mdn-links": "4.0.7",
     "typescript": "5.7.3"
   },
+  "optionalDependencies": {
+    "canvas": "3.0.1"
+  },
   "scripts": {
     "build": "node build.mjs",
     "build:release": "npm run build target:release",
