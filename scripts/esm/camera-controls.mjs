@@ -24,6 +24,120 @@ const EPSILON = 0.0001;
  */
 const lerpRate = (damping, dt) => 1 - Math.pow(damping, dt * 1000);
 
+const MOBILE_SCREEN_SIZE = 768;
+
+class JoyStick {
+    /**
+     * @type {number}
+     * @private
+     */
+    _size = 100;
+
+    /**
+     * @type {HTMLDivElement}
+     * @private
+     */
+    _base;
+
+    /**
+     * @type {HTMLDivElement}
+     * @private
+     */
+    _inner;
+
+    /**
+     * @type {Vec2}
+     * @private
+     */
+    _basePos = new Vec2();
+
+    /**
+     * @type {Vec2}
+     * @private
+     */
+    _innerPos = new Vec2();
+
+    /**
+     * @type {number}
+     * @private
+     */
+    _innerScale = 0.6;
+
+    /**
+     * @type {number}
+     * @private
+     */
+    _innerMaxDist = 70;
+
+    /**
+     * @type {Vec2}
+     * @private
+     */
+    _value = new Vec2();
+
+    constructor(size) {
+        this._size = size ?? this._size;
+
+        this._base = document.createElement('div');
+        this._base.id = 'joystick-base';
+        Object.assign(this._base.style, {
+            display: 'none',
+            position: 'absolute',
+            width: `${this._size}px`,
+            height: `${this._size}px`,
+            borderRadius: '50%',
+            backgroundColor: 'rgba(255, 255, 255, 0.5)'
+        });
+
+        this._inner = document.createElement('div');
+        this._inner.id = 'joystick-inner';
+        Object.assign(this._inner.style, {
+            display: 'none',
+            position: 'absolute',
+            width: `${this._size * this._innerScale}px`,
+            height: `${this._size * this._innerScale}px`,
+            borderRadius: '50%',
+            backgroundColor: 'rgba(0, 0, 0, 0.5)'
+        });
+    }
+
+    get dom() {
+        return [this._base, this._inner];
+    }
+
+    set hidden(value) {
+        const display = value ? 'none' : 'block';
+        this._base.style.display = display;
+        this._inner.style.display = display;
+        this._value.set(0, 0);
+    }
+
+    get hidden() {
+        return this._base.style.display === 'none';
+    }
+
+    setBase(x, y) {
+        this._basePos.set(x, y);
+        this._base.style.left = `${this._basePos.x - this._size * 0.5}px`;
+        this._base.style.top = `${this._basePos.y - this._size * 0.5}px`;
+    }
+
+    setInner(x, y) {
+        this._innerPos.set(x, y);
+        tmpVa.sub2(this._innerPos, this._basePos);
+        const dist = tmpVa.length();
+        if (dist > this._innerMaxDist) {
+            tmpVa.normalize().mulScalar(this._innerMaxDist);
+            this._innerPos.add2(this._basePos, tmpVa);
+        }
+        const vx = math.clamp(tmpVa.x / this._innerMaxDist, -1, 1);
+        const vy = math.clamp(tmpVa.y / this._innerMaxDist, -1, 1);
+        this._value.set(vx, vy);
+        this._inner.style.left = `${this._innerPos.x - this._size * this._innerScale * 0.5}px`;
+        this._inner.style.top = `${this._innerPos.y - this._size * this._innerScale * 0.5}px`;
+    }
+}
+
 class Input extends EventHandler {
     /**
      * @private
@@ -58,6 +172,12 @@ class Input extends EventHandler {
      */
     _lastPinchDist = -1;
 
+    /**
+     * @type {JoyStick}
+     * @private
+     */
+    _joystick = new JoyStick();
+
     constructor() {
         super();
 
@@ -68,6 +188,14 @@ class Input extends EventHandler {
         this._onContextMenu = this._onContextMenu.bind(this);
         this._onKeyDown = this._onKeyDown.bind(this);
         this._onKeyUp = this._onKeyUp.bind(this);
+
+        if (this.isMobile) {
+            document.body.append(...this._joystick.dom);
+        }
+    }
+
+    get isMobile() {
+        return Math.min(window.screen.width, window.screen.height) < MOBILE_SCREEN_SIZE;
     }
 
     /**
@@ -91,7 +219,18 @@ class Input extends EventHandler {
             this._lastPinchDist = this.getPinchDist();
         }
 
-        this.fire('start', event, this._pointerEvents.size);
+        if (this.isMobile) {
+            if (event.clientX < window.innerWidth * 0.5) {
+                this._joystick.hidden = false;
+                this._joystick.setBase(event.clientX, event.clientY);
+                this._joystick.setInner(event.clientX, event.clientY);
+            } else {
+                this.fire('start', event, this._pointerEvents.size);
+            }
+        } else {
+            this.fire('start', event, this._pointerEvents.size);
+        }
+
     }
 
     /**
@@ -113,7 +252,16 @@ class Input extends EventHandler {
             this._lastPinchDist = pinchDist;
         }
 
-        this.fire('move', event, this._pointerEvents.size);
+        if (this.isMobile) {
+            this._joystick.setInner(event.clientX, event.clientY);
+
+            if (event.clientX > window.innerWidth * 0.5) {
+                this.fire('move', event, this._pointerEvents.size);
+            }
+        } else {
+            this.fire('move', event, this._pointerEvents.size);
+        }
+
     }
 
     /**
@@ -128,7 +276,16 @@ class Input extends EventHandler {
             this._lastPinchDist = -1;
         }
 
-        this.fire('end', event, this._pointerEvents.size);
+        if (this.isMobile) {
+            this._joystick.hidden = true;
+
+            if (event.clientX > window.innerWidth * 0.5) {
+                this.fire('end', event, this._pointerEvents.size);
+            }
+        } else {
+            this.fire('end', event, this._pointerEvents.size);
+        }
+
     }
 
     /**
