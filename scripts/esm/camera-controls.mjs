@@ -2,14 +2,6 @@ import { Vec2, Vec3, Ray, Plane, Mat4, Quat, Script, math, EventHandler } from '
 
 /** @import { AppBase, Entity, CameraComponent } from 'playcanvas' */
 
-/**
- * @typedef {object} ScriptArgs
- * @property {AppBase} app - The app.
- * @property {Entity} entity - The entity.
- * @property {boolean} [enabled] - The enabled state.
- * @property {object} [attributes] - The attributes.
- */
-
 const tmpVa = new Vec2();
 const tmpV1 = new Vec3();
 const tmpV2 = new Vec3();
