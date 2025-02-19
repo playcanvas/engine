@@ -1,4 +1,4 @@
-import { Vec2, Vec3, Ray, Plane, Mat4, Quat, Script, math } from 'playcanvas';
+import { Vec2, Vec3, Ray, Plane, Mat4, Quat, Script, math, EventHandler } from 'playcanvas';
 
 /** @import { AppBase, Entity, CameraComponent } from 'playcanvas' */
 
@@ -31,6 +31,102 @@ const EPSILON = 0.0001;
  * @returns {number} - The lerp rate.
  */
 const lerpRate = (damping, dt) => 1 - Math.pow(damping, dt * 1000);
+
+class MouseInput extends EventHandler {
+    /**
+     * @private
+     * @type {HTMLElement | null}
+     */
+    _element = null;
+
+    /**
+     * @private
+     * @type {Map<number, PointerEvent>}
+     */
+    _pointerEvents = new Map();
+
+    constructor() {
+        super();
+
+        this._onPointerDown = this._onPointerDown.bind(this);
+        this._onPointerMove = this._onPointerMove.bind(this);
+        this._onPointerUp = this._onPointerUp.bind(this);
+        this._onContextMenu = this._onContextMenu.bind(this);
+    }
+
+    /**
+     * @type {Map<number, PointerEvent>}
+     */
+    get pointerEvents() {
+        return this._pointerEvents;
+    }
+
+    /**
+     * @private
+     * @param {PointerEvent} event - The pointer event.
+     */
+    _onPointerDown(event) {
+        this._element?.setPointerCapture(event.pointerId);
+        this._pointerEvents.set(event.pointerId, event);
+        this.fire('start', event);
+    }
+
+    /**
+     * @private
+     * @param {PointerEvent} event - The pointer event.
+     */
+    _onPointerMove(event) {
+        if (this._pointerEvents.size === 0) {
+            return;
+        }
+        this._pointerEvents.set(event.pointerId, event);
+        this.fire('move', event);
+    }
+
+    /**
+     * @private
+     * @param {PointerEvent} event - The pointer event.
+     */
+    _onPointerUp(event) {
+        this._element?.releasePointerCapture(event.pointerId);
+        this._pointerEvents.delete(event.pointerId);
+        this.fire('end', event);
+    }
+
+    /**
+     * @private
+     * @param {MouseEvent} event - The wheel event.
+     */
+    _onContextMenu(event) {
+        event.preventDefault();
+    }
+
+    /**
+     * @param {HTMLElement} element - The element.
+     */
+    attach(element) {
+        if (this._element) {
+            this.detach();
+        }
+        this._element = element;
+        this._element.addEventListener('pointerdown', this._onPointerDown);
+        this._element.addEventListener('pointermove', this._onPointerMove);
+        this._element.addEventListener('pointerup', this._onPointerUp);
+        this._element.addEventListener('contextmenu', this._onContextMenu);
+    }
+
+    detach() {
+        if (!this._element) {
+            return;
+        }
+        this._element.removeEventListener('pointerdown', this._onPointerDown);
+        this._element.removeEventListener('pointermove', this._onPointerMove);
+        this._element.removeEventListener('pointerup', this._onPointerUp);
+        this._element.removeEventListener('contextmenu', this._onContextMenu);
+
+        this._pointerEvents.clear();
+    }
+}
 
 class CameraControls extends Script {
     /**
@@ -116,10 +212,10 @@ class CameraControls extends Script {
     _cameraDist = 0;
 
     /**
-     * @type {Map<number, PointerEvent>}
+     * @type {MouseInput}
      * @private
      */
-    _pointerEvents = new Map();
+    _mouseInput = new MouseInput();
 
     /**
      * @type {number}
@@ -329,10 +425,10 @@ class CameraControls extends Script {
         this._onWheel = this._onWheel.bind(this);
         this._onKeyDown = this._onKeyDown.bind(this);
         this._onKeyUp = this._onKeyUp.bind(this);
-        this._onPointerDown = this._onPointerDown.bind(this);
-        this._onPointerMove = this._onPointerMove.bind(this);
-        this._onPointerUp = this._onPointerUp.bind(this);
-        this._onContextMenu = this._onContextMenu.bind(this);
+
+        this._mouseInput.on('start', this._onInputStart, this);
+        this._mouseInput.on('move', this._onInputMove, this);
+        this._mouseInput.on('end', this._onInputEnd, this);
 
         if (!this.entity.camera) {
             throw new Error('CameraControls script requires a camera component');
@@ -496,14 +592,6 @@ class CameraControls extends Script {
 
     /**
      * @private
-     * @param {MouseEvent} event - The mouse event.
-     */
-    _onContextMenu(event) {
-        event.preventDefault();
-    }
-
-    /**
-     * @private
      * @param {PointerEvent} event - The pointer event.
      * @returns {boolean} Whether the mouse pan should start.
      */
@@ -597,14 +685,12 @@ class CameraControls extends Script {
      * @private
      * @param {PointerEvent} event - The pointer event.
      */
-    _onPointerDown(event) {
+    _onInputStart(event) {
         if (!this._camera) {
             return;
         }
-        this._element.setPointerCapture(event.pointerId);
-        this._pointerEvents.set(event.pointerId, event);
 
-        const startTouchPan = this.enablePan && this._pointerEvents.size === 2;
+        const startTouchPan = this.enablePan && this._mouseInput.pointerEvents.size === 2;
         const startMousePan = this._isStartMousePan(event);
         const startFly = this._isStartFly(event);
         const startOrbit = this._isStartOrbit(event);
@@ -639,18 +725,13 @@ class CameraControls extends Script {
      * @private
      * @param {PointerEvent} event - The pointer event.
      */
-    _onPointerMove(event) {
-        if (this._pointerEvents.size === 0) {
-            return;
-        }
-        this._pointerEvents.set(event.pointerId, event);
-
+    _onInputMove(event) {
         if (this._focusing) {
             this._cancelSmoothTransform();
             this._focusing = false;
         }
 
-        if (this._pointerEvents.size === 1) {
+        if (this._mouseInput.pointerEvents.size === 1) {
             if (this._panning) {
                 // mouse pan
                 this._pan(tmpVa.set(event.clientX, event.clientY));
@@ -660,7 +741,7 @@ class CameraControls extends Script {
             return;
         }
 
-        if (this._pointerEvents.size === 2) {
+        if (this._mouseInput.pointerEvents.size === 2) {
             // touch pan
             if (this._panning) {
                 this._pan(this._getMidPoint(tmpVa));
@@ -680,10 +761,10 @@ class CameraControls extends Script {
      * @private
      * @param {PointerEvent} event - The pointer event.
      */
-    _onPointerUp(event) {
+    _onInputEnd(event) {
         this._element.releasePointerCapture(event.pointerId);
-        this._pointerEvents.delete(event.pointerId);
-        if (this._pointerEvents.size < 2) {
+        this._mouseInput.pointerEvents.delete(event.pointerId);
+        if (this._mouseInput.pointerEvents.size < 2) {
             this._lastPinchDist = -1;
             this._panning = false;
         }
@@ -842,7 +923,7 @@ class CameraControls extends Script {
      * @returns {Vec2} The mid point.
      */
     _getMidPoint(out) {
-        const [a, b] = this._pointerEvents.values();
+        const [a, b] = this._mouseInput.pointerEvents.values();
         const dx = a.clientX - b.clientX;
         const dy = a.clientY - b.clientY;
         return out.set(b.clientX + dx * 0.5, b.clientY + dy * 0.5);
@@ -853,7 +934,7 @@ class CameraControls extends Script {
      * @returns {number} The pinch distance.
      */
     _getPinchDist() {
-        const [a, b] = this._pointerEvents.values();
+        const [a, b] = this._mouseInput.pointerEvents.values();
         const dx = a.clientX - b.clientX;
         const dy = a.clientY - b.clientY;
         return Math.sqrt(dx * dx + dy * dy);
@@ -1069,11 +1150,7 @@ class CameraControls extends Script {
 
         // Attach events to canvas instead of window
         this._element.addEventListener('wheel', this._onWheel, PASSIVE);
-        this._element.addEventListener('pointerdown', this._onPointerDown);
-        this._element.addEventListener('pointermove', this._onPointerMove);
-        this._element.addEventListener('pointerup', this._onPointerUp);
-        this._element.addEventListener('pointercancel', this._onPointerUp);
-        this._element.addEventListener('contextmenu', this._onContextMenu);
+        this._mouseInput.attach(this._element);
 
         // These can stay on window since they're keyboard events
         window.addEventListener('keydown', this._onKeyDown, false);
@@ -1087,11 +1164,7 @@ class CameraControls extends Script {
 
         // Remove from canvas instead of window
         this._element.removeEventListener('wheel', this._onWheel, PASSIVE);
-        this._element.removeEventListener('pointermove', this._onPointerMove);
-        this._element.removeEventListener('pointerdown', this._onPointerDown);
-        this._element.removeEventListener('pointerup', this._onPointerUp);
-        this._element.removeEventListener('pointercancel', this._onPointerUp);
-        this._element.removeEventListener('contextmenu', this._onContextMenu);
+        this._mouseInput.detach();
 
         // Remove keyboard events from window
         window.removeEventListener('keydown', this._onKeyDown, false);
@@ -1102,7 +1175,6 @@ class CameraControls extends Script {
         this._cancelSmoothZoom();
         this._cancelSmoothTransform();
 
-        this._pointerEvents.clear();
         this._lastPinchDist = -1;
         this._panning = false;
         this._key = {
@@ -1140,6 +1212,10 @@ class CameraControls extends Script {
 
     destroy() {
         this.detach();
+
+        this._mouseInput.off('start', this._onInputStart, this);
+        this._mouseInput.off('move', this._onInputMove, this);
+        this._mouseInput.off('end', this._onInputEnd, this);
     }
 }
 
