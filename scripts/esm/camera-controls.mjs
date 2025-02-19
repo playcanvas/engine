@@ -137,12 +137,6 @@ class CameraControls extends Script {
      * @type {boolean}
      * @private
      */
-    _dragging = false;
-
-    /**
-     * @type {boolean}
-     * @private
-     */
     _orbiting = true;
 
     /**
@@ -630,17 +624,14 @@ class CameraControls extends Script {
             // start mouse pan
             this._lastPosition.set(event.clientX, event.clientY);
             this._panning = true;
-            this._dragging = true;
         }
         if (startFly) {
             // start fly
             this._switchToFly();
-            this._dragging = true;
         }
         if (startOrbit) {
             // start orbit
             this._switchToOrbit();
-            this._dragging = true;
         }
     }
 
@@ -698,9 +689,6 @@ class CameraControls extends Script {
         }
         if (this._panning) {
             this._panning = false;
-        }
-        if (this._dragging) {
-            this._dragging = false;
         }
     }
 
@@ -923,9 +911,6 @@ class CameraControls extends Script {
             return;
         }
         if (this._flying) {
-            if (this._dragging) {
-                return;
-            }
             if (!this._switchToOrbit()) {
                 return;
             }
@@ -1006,9 +991,6 @@ class CameraControls extends Script {
             return;
         }
         if (this._flying) {
-            if (this._dragging) {
-                return;
-            }
             if (!this._switchToOrbit()) {
                 return;
             }
