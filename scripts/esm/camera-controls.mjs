@@ -1,6 +1,6 @@
 import { Vec2, Vec3, Ray, Plane, Mat4, Quat, Script, math, EventHandler } from 'playcanvas';
 
-/** @import { AppBase, Entity, CameraComponent } from 'playcanvas' */
+/** @import { CameraComponent } from 'playcanvas' */
 
 const tmpVa = new Vec2();
 const tmpV1 = new Vec3();
