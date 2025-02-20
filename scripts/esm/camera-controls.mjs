@@ -116,6 +116,10 @@ class JoyStick {
         return this._base.style.display === 'none';
     }
 
+    get value() {
+        return this._value;
+    }
+
     setBase(x, y) {
         this._basePos.set(x, y);
         this._base.style.left = `${this._basePos.x - this._size * 0.5}px`;
@@ -152,18 +156,18 @@ class Input extends EventHandler {
     _pointerEvents = new Map();
 
     /**
-     * @type {Record<string, boolean>}
+     * @type {Record<string, number>}
      * @private
      */
     _key = {
-        forward: false,
-        backward: false,
-        left: false,
-        right: false,
-        up: false,
-        down: false,
-        sprint: false,
-        crouch: false
+        forward: 0,
+        backward: 0,
+        left: 0,
+        right: 0,
+        up: 0,
+        down: 0,
+        sprint: 0,
+        crouch: 0
     };
 
     /**
@@ -301,31 +305,31 @@ class Input extends EventHandler {
         switch (event.key.toLowerCase()) {
             case 'w':
             case 'arrowup':
-                this._key.forward = true;
+                this._key.forward = 1;
                 break;
             case 's':
             case 'arrowdown':
-                this._key.backward = true;
+                this._key.backward = 1;
                 break;
             case 'a':
             case 'arrowleft':
-                this._key.left = true;
+                this._key.left = 1;
                 break;
             case 'd':
             case 'arrowright':
-                this._key.right = true;
+                this._key.right = 1;
                 break;
             case 'q':
-                this._key.up = true;
+                this._key.up = 1;
                 break;
             case 'e':
-                this._key.down = true;
+                this._key.down = 1;
                 break;
             case 'shift':
-                this._key.sprint = true;
+                this._key.sprint = 1;
                 break;
             case 'control':
-                this._key.crouch = true;
+                this._key.crouch = 1;
                 break;
         }
     }
@@ -335,41 +339,56 @@ class Input extends EventHandler {
         switch (event.key.toLowerCase()) {
             case 'w':
             case 'arrowup':
-                this._key.forward = false;
+                this._key.forward = 0;
                 break;
             case 's':
             case 'arrowdown':
-                this._key.backward = false;
+                this._key.backward = 0;
                 break;
             case 'a':
             case 'arrowleft':
-                this._key.left = false;
+                this._key.left = 0;
                 break;
             case 'd':
             case 'arrowright':
-                this._key.right = false;
+                this._key.right = 0;
                 break;
             case 'q':
-                this._key.up = false;
+                this._key.up = 0;
                 break;
             case 'e':
-                this._key.down = false;
+                this._key.down = 0;
                 break;
             case 'shift':
-                this._key.sprint = false;
+                this._key.sprint = 0;
                 break;
             case 'control':
-                this._key.crouch = false;
+                this._key.crouch = 0;
                 break;
         }
     }
 
     /**
      * @param {string} name - The key name.
-     * @returns {boolean} - Whether the key is pressed.
+     * @returns {number} - The key value.
      */
     key(name) {
-        return !!this._key[name];
+        if (this.isMobile) {
+            switch (name) {
+                case 'forward':
+                    return Math.max(0, -this._joystick.value.y);
+                case 'backward':
+                    return Math.max(0, this._joystick.value.y);
+                case 'left':
+                    return Math.max(0, -this._joystick.value.x);
+                case 'right':
+                    return Math.max(0, this._joystick.value.x);
+                default:
+                    return 0;
+            }
+        }
+
+        return +this._key[name];
     }
 
     /**
@@ -428,14 +447,14 @@ class Input extends EventHandler {
         this._pointerEvents.clear();
 
         this._key = {
-            forward: false,
-            backward: false,
-            left: false,
-            right: false,
-            up: false,
-            down: false,
-            sprint: false,
-            crouch: false
+            forward: 0,
+            backward: 0,
+            left: 0,
+            right: 0,
+            up: 0,
+            down: 0,
+            sprint: 0,
+            crouch: 0
         };
     }
 }
@@ -1075,27 +1094,13 @@ class CameraControls extends Script {
         if (!this.enableFly) {
             return;
         }
-
         tmpV1.set(0, 0, 0);
-        if (this._input.key('forward')) {
-            tmpV1.add(this.entity.forward);
-        }
-        if (this._input.key('backward')) {
-            tmpV1.sub(this.entity.forward);
-        }
-        if (this._input.key('left')) {
-            tmpV1.sub(this.entity.right);
-        }
-        if (this._input.key('right')) {
-            tmpV1.add(this.entity.right);
-        }
-        if (this._input.key('up')) {
-            tmpV1.add(this.entity.up);
-        }
-        if (this._input.key('down')) {
-            tmpV1.sub(this.entity.up);
-        }
-        tmpV1.normalize();
+        tmpV1.add(tmpV2.copy(this.entity.forward).mulScalar(this._input.key('forward')));
+        tmpV1.sub(tmpV2.copy(this.entity.forward).mulScalar(this._input.key('backward')));
+        tmpV1.sub(tmpV2.copy(this.entity.right).mulScalar(this._input.key('left')));
+        tmpV1.add(tmpV2.copy(this.entity.right).mulScalar(this._input.key('right')));
+        tmpV1.add(tmpV2.copy(this.entity.up).mulScalar(this._input.key('up')));
+        tmpV1.sub(tmpV2.copy(this.entity.up).mulScalar(this._input.key('down')));
         this._moving = tmpV1.length() > 0;
         const speed = this._input.key('crouch') ? this.moveSlowSpeed : this._input.key('sprint') ? this.moveFastSpeed : this.moveSpeed;
         tmpV1.mulScalar(this.sceneSize * speed * dt);
