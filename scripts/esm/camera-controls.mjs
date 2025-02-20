@@ -150,10 +150,10 @@ class Input extends EventHandler {
     _element = null;
 
     /**
-     * @type {Map<number, PointerEvent>}
+     * @type {Map<number, { x, y, left }>}
      * @private
      */
-    _pointerEvents = new Map();
+    _pointerData = new Map();
 
     /**
      * @type {Record<string, number>}
@@ -217,24 +217,31 @@ class Input extends EventHandler {
      */
     _onPointerDown(event) {
         this._element?.setPointerCapture(event.pointerId);
-        this._pointerEvents.set(event.pointerId, event);
 
-        if (this._pointerEvents.size === 2) {
+        const left = event.clientX < window.innerWidth * 0.5;
+        this._pointerData.set(event.pointerId, {
+            x: event.clientX,
+            y: event.clientY,
+            left
+        });
+
+        // track pinch distance
+        if (this._pointerData.size === 2) {
             this._lastPinchDist = this.getPinchDist();
         }
 
         if (this.isMobile) {
-            if (event.clientX < window.innerWidth * 0.5) {
+            // manage left and right touch
+            if (left) {
                 this._joystick.hidden = false;
                 this._joystick.setBase(event.clientX, event.clientY);
                 this._joystick.setInner(event.clientX, event.clientY);
             } else {
-                this.fire('start', event, this._pointerEvents.size);
+                this.fire('drag:start', event, false);
             }
         } else {
-            this.fire('start', event, this._pointerEvents.size);
+            this.fire('drag:start', event, this._pointerData.size === 2);
         }
-
     }
 
     /**
@@ -242,12 +249,16 @@ class Input extends EventHandler {
      * @param {PointerEvent} event - The pointer event.
      */
     _onPointerMove(event) {
-        if (this._pointerEvents.size === 0) {
+        const data = this._pointerData.get(event.pointerId);
+        if (!data) {
             return;
         }
-        this._pointerEvents.set(event.pointerId, event);
+        const { left } = data;
+        data.x = event.clientX;
+        data.y = event.clientY;
 
-        if (this._pointerEvents.size === 2) {
+        // calculate pinch delta
+        if (this._pointerData.size === 2) {
             const pinchDist = this.getPinchDist();
             if (this._lastPinchDist > 0) {
                 const pinchDelta = this._lastPinchDist - pinchDist;
@@ -257,13 +268,15 @@ class Input extends EventHandler {
         }
 
         if (this.isMobile) {
-            if (event.clientX < window.innerWidth * 0.5) {
+
+            // move joystick or fire move event
+            if (left) {
                 this._joystick.setInner(event.clientX, event.clientY);
             } else {
-                this.fire('move', event, this._pointerEvents.size);
+                this.fire('drag:move', event, false);
             }
         } else {
-            this.fire('move', event, this._pointerEvents.size);
+            this.fire('drag:move', event, this._pointerData.size === 2);
         }
 
     }
@@ -274,20 +287,26 @@ class Input extends EventHandler {
      */
     _onPointerUp(event) {
         this._element?.releasePointerCapture(event.pointerId);
-        this._pointerEvents.delete(event.pointerId);
 
-        if (this._pointerEvents.size < 2) {
+        const data = this._pointerData.get(event.pointerId);
+        if (!data) {
+            return;
+        }
+        const { left } = data;
+        this._pointerData.delete(event.pointerId);
+
+        if (this._pointerData.size < 2) {
             this._lastPinchDist = -1;
         }
 
         if (this.isMobile) {
-            this._joystick.hidden = true;
-
-            if (event.clientX > window.innerWidth * 0.5) {
-                this.fire('end', event, this._pointerEvents.size);
+            if (left) {
+                this._joystick.hidden = true;
+            } else {
+                this.fire('drag:end', event, false);
             }
         } else {
-            this.fire('end', event, this._pointerEvents.size);
+            this.fire('drag:end', event, this._pointerData.size === 2);
         }
 
     }
@@ -300,6 +319,10 @@ class Input extends EventHandler {
         event.preventDefault();
     }
 
+    /**
+     * @private
+     * @param {KeyboardEvent} event - The keyboard event.
+     */
     _onKeyDown(event) {
         event.stopPropagation();
         switch (event.key.toLowerCase()) {
@@ -334,6 +357,10 @@ class Input extends EventHandler {
         }
     }
 
+    /**
+     * @private
+     * @param {KeyboardEvent} event - The keyboard event.
+     */
     _onKeyUp(event) {
         event.stopPropagation();
         switch (event.key.toLowerCase()) {
@@ -396,19 +423,19 @@ class Input extends EventHandler {
      * @returns {Vec2} The mid point.
      */
     getMidPoint(out) {
-        const [a, b] = this._pointerEvents.values();
-        const dx = a.clientX - b.clientX;
-        const dy = a.clientY - b.clientY;
-        return out.set(b.clientX + dx * 0.5, b.clientY + dy * 0.5);
+        const [a, b] = this._pointerData.values();
+        const dx = a.x - b.y;
+        const dy = a.x - b.y;
+        return out.set(b.x + dx * 0.5, b.y + dy * 0.5);
     }
 
     /**
      * @returns {number} The pinch distance.
      */
     getPinchDist() {
-        const [a, b] = this._pointerEvents.values();
-        const dx = a.clientX - b.clientX;
-        const dy = a.clientY - b.clientY;
+        const [a, b] = this._pointerData.values();
+        const dx = a.x - b.x;
+        const dy = a.y - b.y;
         return Math.sqrt(dx * dx + dy * dy);
     }
 
@@ -444,7 +471,7 @@ class Input extends EventHandler {
         window.removeEventListener('keydown', this._onKeyDown, false);
         window.removeEventListener('keyup', this._onKeyUp, false);
 
-        this._pointerEvents.clear();
+        this._pointerData.clear();
 
         this._key = {
             forward: 0,
@@ -734,9 +761,9 @@ class CameraControls extends Script {
     initialize() {
         this._input.on('wheel', wheelDelta => this._zoom(wheelDelta));
         this._input.on('pinch', pinchDelta => this._zoom(pinchDelta * this.zoomPinchSens));
-        this._input.on('start', this._onInputStart, this);
-        this._input.on('move', this._onInputMove, this);
-        this._input.on('end', this._onInputEnd, this);
+        this._input.on('drag:start', this._onDragStart, this);
+        this._input.on('drag:move', this._onDragMove, this);
+        this._input.on('drag:end', this._onDragEnd, this);
 
         if (!this.entity.camera) {
             throw new Error('CameraControls script requires a camera component');
@@ -903,7 +930,7 @@ class CameraControls extends Script {
      * @param {PointerEvent} event - The pointer event.
      * @returns {boolean} Whether the mouse pan should start.
      */
-    _isStartMousePan(event) {
+    _isStartPan(event) {
         if (!this.enablePan) {
             return false;
         }
@@ -992,38 +1019,35 @@ class CameraControls extends Script {
     /**
      * @private
      * @param {PointerEvent} event - The pointer event.
-     * @param {number} pointerCount - The pointer count.
+     * @param {boolean} mobilePan - Whether the pan is mobile.
      */
-    _onInputStart(event, pointerCount) {
+    _onDragStart(event, mobilePan) {
         if (!this._camera) {
             return;
         }
-
-        const startTouchPan = this.enablePan && pointerCount === 2;
-        const startMousePan = this._isStartMousePan(event);
-        const startFly = this._isStartFly(event);
-        const startOrbit = this._isStartOrbit(event);
 
         if (this._focusing) {
             this._cancelSmoothTransform();
             this._focusing = false;
         }
 
-        if (startTouchPan) {
+        if (this.enablePan && mobilePan) {
             // start touch pan
             this._input.getMidPoint(this._lastPosition);
             this._panning = true;
+            return;
         }
-        if (startMousePan) {
+
+        if (this._isStartPan(event)) {
             // start mouse pan
             this._lastPosition.set(event.clientX, event.clientY);
             this._panning = true;
         }
-        if (startFly) {
+        if (this._isStartFly(event)) {
             // start fly
             this._switchToFly();
         }
-        if (startOrbit) {
+        if (this._isStartOrbit(event)) {
             // start orbit
             this._switchToOrbit();
         }
@@ -1032,29 +1056,27 @@ class CameraControls extends Script {
     /**
      * @private
      * @param {PointerEvent} event - The pointer event.
-     * @param {number} pointerCount - Whether there is a single pointer.
+     * @param {boolean} mobilePan - Whether the pan is mobile.
      */
-    _onInputMove(event, pointerCount) {
+    _onDragMove(event, mobilePan) {
         if (this._focusing) {
             this._cancelSmoothTransform();
             this._focusing = false;
         }
 
-        if (pointerCount === 1) {
-            if (this._panning) {
-                // mouse pan
-                this._pan(tmpVa.set(event.clientX, event.clientY));
-            } else if (this._orbiting || this._flying) {
-                this._look(event.movementX, event.movementY, event.target);
-            }
-            return;
-        }
-
-        if (pointerCount === 2) {
+        if (mobilePan) {
             // touch pan
             if (this._panning) {
                 this._pan(this._input.getMidPoint(tmpVa));
             }
+            return;
+        }
+
+        if (this._panning) {
+            // mouse pan
+            this._pan(tmpVa.set(event.clientX, event.clientY));
+        } else if (this._orbiting || this._flying) {
+            this._look(event.movementX, event.movementY, event.target);
         }
 
     }
@@ -1062,9 +1084,9 @@ class CameraControls extends Script {
     /**
      * @private
      * @param {PointerEvent} event - The pointer event.
-     * @param {boolean} pointerCount - Whether there is a single pointer.
+     * @param {boolean} mobilePan - Whether the pan is mobile.
      */
-    _onInputEnd(event, pointerCount) {
+    _onDragEnd(event, mobilePan) {
         if (this._panning) {
             this._panning = false;
         }
