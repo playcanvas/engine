@@ -1,7 +1,5 @@
 import { Vec2, Vec3, Mat4, Quat, math, EventHandler } from 'playcanvas';
 
-/** @import { CameraComponent } from 'playcanvas' */
-
 const tmpVa = new Vec2();
 const tmpV1 = new Vec3();
 const tmpV2 = new Vec3();
