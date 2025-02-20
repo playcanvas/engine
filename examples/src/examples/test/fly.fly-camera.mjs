@@ -1,5 +1,7 @@
 import { Vec2, Vec3, Mat4, Quat, math, EventHandler } from 'playcanvas';
 
+/** @import { EventHandle } from 'playcanvas' */
+
 const tmpVa = new Vec2();
 const tmpV1 = new Vec3();
 const tmpV2 = new Vec3();
@@ -143,9 +145,43 @@ class JoyStick {
         const vy = math.clamp(tmpVa.y / this._innerMaxDist, -1, 1);
         this._value.set(vx, vy);
     }
+
+    destroy() {
+        this._base.remove();
+        this._inner.remove();
+    }
 }
 
 class Input extends EventHandler {
+    static EVENT_ROTATESTART = 'rotate:start';
+
+    static EVENT_ROTATEMOVE = 'rotate:move';
+
+    static EVENT_ROTATEEND = 'rotate:end';
+
+    /**
+     * @returns {number} - The z axis input.
+     */
+    getZ() {
+        return 0;
+    }
+
+    /**
+     * @returns {number} - The x axis input.
+     */
+    getX() {
+        return 0;
+    }
+
+    /**
+     * @returns {number} - The y axis input.
+     */
+    getY() {
+        return 0;
+    }
+}
+
+class JoystickInput extends Input {
     /**
      * @private
      * @type {HTMLElement | null}
@@ -154,6 +190,155 @@ class Input extends EventHandler {
 
     /**
      * @type {Map<number, { x: number, y: number, left: boolean }>}
+     * @private
+     */
+    _pointerData = new Map();
+
+    /**
+     * @type {JoyStick}
+     * @private
+     */
+    _joystick = new JoyStick();
+
+    constructor() {
+        super();
+
+        this._onPointerDown = this._onPointerDown.bind(this);
+        this._onPointerMove = this._onPointerMove.bind(this);
+        this._onPointerUp = this._onPointerUp.bind(this);
+
+        document.body.append(...this._joystick.dom);
+    }
+
+    /**
+     * @private
+     * @param {PointerEvent} event - The pointer event.
+     */
+    _onPointerDown(event) {
+        this._element?.setPointerCapture(event.pointerId);
+
+        const left = event.clientX < window.innerWidth * 0.5;
+        this._pointerData.set(event.pointerId, {
+            x: event.clientX,
+            y: event.clientY,
+            left
+        });
+
+        if (left) {
+            this._joystick.hidden = false;
+            this._joystick.setBase(event.clientX, event.clientY);
+            this._joystick.setInner(event.clientX, event.clientY);
+        } else {
+            this.fire(Input.EVENT_ROTATESTART, event.clientX, event.clientY);
+        }
+    }
+
+    /**
+     * @private
+     * @param {PointerEvent} event - The pointer event.
+     */
+    _onPointerMove(event) {
+        if (event.target !== this._element) {
+            return;
+        }
+        const data = this._pointerData.get(event.pointerId);
+        if (!data) {
+            return;
+        }
+        const { left } = data;
+        data.x = event.clientX;
+        data.y = event.clientY;
+
+        if (left) {
+            this._joystick.setInner(event.clientX, event.clientY);
+        } else {
+            this.fire(Input.EVENT_ROTATEMOVE, event.movementX, event.movementY);
+        }
+
+    }
+
+    /**
+     * @private
+     * @param {PointerEvent} event - The pointer event.
+     */
+    _onPointerUp(event) {
+        this._element?.releasePointerCapture(event.pointerId);
+
+        const data = this._pointerData.get(event.pointerId);
+        if (!data) {
+            return;
+        }
+        const { left } = data;
+        this._pointerData.delete(event.pointerId);
+
+        if (left) {
+            this._joystick.hidden = true;
+        } else {
+            this.fire(Input.EVENT_ROTATEEND, event.clientX, event.clientY);
+        }
+
+    }
+
+    /**
+     * @returns {number} - The z axis input.
+     */
+    getZ() {
+        return -this._joystick.value.y;
+    }
+
+    /**
+     * @returns {number} - The x axis input.
+     */
+    getX() {
+        return this._joystick.value.x;
+    }
+
+    /**
+     * @returns {number} - The y axis input.
+     */
+    getY() {
+        return 0;
+    }
+
+    /**
+     * @param {HTMLElement} element - The element.
+     */
+    attach(element) {
+        if (this._element) {
+            this.detach();
+        }
+        this._element = element;
+        this._element.addEventListener('pointerdown', this._onPointerDown);
+        this._element.addEventListener('pointermove', this._onPointerMove);
+        this._element.addEventListener('pointerup', this._onPointerUp);
+    }
+
+    detach() {
+        if (!this._element) {
+            return;
+        }
+        this._element.removeEventListener('pointerdown', this._onPointerDown);
+        this._element.removeEventListener('pointermove', this._onPointerMove);
+        this._element.removeEventListener('pointerup', this._onPointerUp);
+
+        this._pointerData.clear();
+    }
+
+    destroy() {
+        this.detach();
+        this._joystick.destroy();
+    }
+}
+
+class KeyboardMouseInput extends Input {
+    /**
+     * @private
+     * @type {HTMLElement | null}
+     */
+    _element = null;
+
+    /**
+     * @type {Map<number, { x: number, y: number }>}
      * @private
      */
     _pointerData = new Map();
@@ -172,12 +357,6 @@ class Input extends EventHandler {
         sprint: 0,
         crouch: 0
     };
-
-    /**
-     * @type {JoyStick}
-     * @private
-     */
-    _joystick = new JoyStick();
 
     /**
      * @type {number}
@@ -199,14 +378,6 @@ class Input extends EventHandler {
         this._onContextMenu = this._onContextMenu.bind(this);
         this._onKeyDown = this._onKeyDown.bind(this);
         this._onKeyUp = this._onKeyUp.bind(this);
-
-        if (this.isMobile) {
-            document.body.append(...this._joystick.dom);
-        }
-    }
-
-    get isMobile() {
-        return /Mobi|Android|iPhone|iPad|iPod|Windows Phone/i.test(navigator.userAgent);
     }
 
     get speedMult() {
@@ -229,20 +400,12 @@ class Input extends EventHandler {
     _onPointerDown(event) {
         this._element?.setPointerCapture(event.pointerId);
 
-        const left = event.clientX < window.innerWidth * 0.5;
         this._pointerData.set(event.pointerId, {
             x: event.clientX,
-            y: event.clientY,
-            left
+            y: event.clientY
         });
 
-        if (this.isMobile && left) {
-            this._joystick.hidden = false;
-            this._joystick.setBase(event.clientX, event.clientY);
-            this._joystick.setInner(event.clientX, event.clientY);
-        } else {
-            this.fire('rotate:start', event);
-        }
+        this.fire(Input.EVENT_ROTATESTART, event.clientX, event.clientY);
     }
 
     /**
@@ -250,19 +413,17 @@ class Input extends EventHandler {
      * @param {PointerEvent} event - The pointer event.
      */
     _onPointerMove(event) {
+        if (event.target !== this._element) {
+            return;
+        }
         const data = this._pointerData.get(event.pointerId);
         if (!data) {
             return;
         }
-        const { left } = data;
         data.x = event.clientX;
         data.y = event.clientY;
 
-        if (this.isMobile && left) {
-            this._joystick.setInner(event.clientX, event.clientY);
-        } else {
-            this.fire('rotate:move', event);
-        }
+        this.fire(Input.EVENT_ROTATEMOVE, event.movementX, event.movementY);
 
     }
 
@@ -277,14 +438,9 @@ class Input extends EventHandler {
         if (!data) {
             return;
         }
-        const { left } = data;
         this._pointerData.delete(event.pointerId);
 
-        if (this.isMobile && left) {
-            this._joystick.hidden = true;
-        } else {
-            this.fire('rotate:end', event);
-        }
+        this.fire(Input.EVENT_ROTATEEND, event.clientX, event.clientY);
 
     }
 
@@ -376,9 +532,6 @@ class Input extends EventHandler {
      * @returns {number} - The z axis input.
      */
     getZ() {
-        if (this.isMobile) {
-            return -this._joystick.value.y;
-        }
         return (this._key.forward - this._key.backward) * this.speedMult;
     }
 
@@ -386,9 +539,6 @@ class Input extends EventHandler {
      * @returns {number} - The x axis input.
      */
     getX() {
-        if (this.isMobile) {
-            return this._joystick.value.x;
-        }
         return (this._key.right - this._key.left) * this.speedMult;
     }
 
@@ -396,9 +546,6 @@ class Input extends EventHandler {
      * @returns {number} - The y axis input.
      */
     getY() {
-        if (this.isMobile) {
-            return 0;
-        }
         return (this._key.up - this._key.down) * this.speedMult;
     }
 
@@ -446,14 +593,24 @@ class Input extends EventHandler {
             crouch: 0
         };
     }
+
+    destroy() {
+        this.detach();
+    }
 }
 
 class FlyCamera extends EventHandler {
     /**
-     * @type {HTMLElement | null}
+     * @type {Input | null}
      * @private
      */
-    _element = null;
+    _input = null;
+
+    /**
+     * @type {EventHandle[]}
+     * @private
+     */
+    _evts = [];
 
     /**
      * @private
@@ -484,12 +641,6 @@ class FlyCamera extends EventHandler {
      * @type {Vec2}
      */
     _pitchRange = new Vec2(-90, 90);
-
-    /**
-     * @type {Input}
-     * @private
-     */
-    _input = new Input();
 
     /**
      * @type {Mat4}
@@ -525,40 +676,6 @@ class FlyCamera extends EventHandler {
      */
     moveDamping = 0.98;
 
-    constructor() {
-        super();
-
-        this._input.on('rotate:move', (event) => {
-            this._look(event.movementX, event.movementY, event.target);
-        });
-    }
-
-    /**
-     * The multiplier for the fast movement speed.
-     *
-     * @type {number}
-     */
-    set moveFastMult(value) {
-        this._input.sprintMult = value;
-    }
-
-    get moveFastMult() {
-        return this._input.sprintMult;
-    }
-
-    /**
-     * The multiplier for the slow movement speed.
-     *
-     * @type {number}
-     */
-    set moveSlowMult(value) {
-        this._input.crouchMult = value;
-    }
-
-    get moveSlowMult() {
-        return this._input.crouchMult;
-    }
-
     /**
      * The camera's pitch range. Having a value of -360 means no minimum pitch and 360
      * means no maximum pitch.
@@ -581,12 +698,8 @@ class FlyCamera extends EventHandler {
      * @private
      * @param {number} x - The x value.
      * @param {number} y - The y value.
-     * @param {EventTarget | null} target - The target.
      */
-    _look(x, y, target) {
-        if (target !== this._element) {
-            return;
-        }
+    _look(x, y) {
         this._targetAngles.x -= (y || 0) * this.rotateSpeed;
         this._targetAngles.y -= (x || 0) * this.rotateSpeed;
     }
@@ -595,6 +708,10 @@ class FlyCamera extends EventHandler {
      * @param {number} dt - The delta time.
      */
     _move(dt) {
+        if (!this._input) {
+            return;
+        }
+
         const back = this._transform.getZ();
         const right = this._transform.getX();
         const up = this._transform.getY();
@@ -631,15 +748,15 @@ class FlyCamera extends EventHandler {
     }
 
     /**
-     * @param {HTMLElement} element - The element.
+     * @param {Input} input - The input.
      * @param {Mat4} transform - The transform.
      */
-    attach(element, transform) {
-        if (this._element) {
+    attach(input, transform) {
+        if (this._input) {
             this.detach();
         }
-        this._element = element;
-        this._input.attach(this._element);
+        this._input = input;
+        this._evts.push(this._input.on(Input.EVENT_ROTATEMOVE, this._look, this));
 
         this._position.copy(transform.getTranslation());
         this._targetPosition.copy(this._position);
@@ -651,11 +768,12 @@ class FlyCamera extends EventHandler {
     }
 
     detach() {
-        if (!this._element) {
+        if (!this._input) {
             return;
         }
-        this._element = null;
-        this._input.detach();
+        this._evts.forEach(evt => evt.off());
+        this._evts.length = 0;
+        this._input = null;
 
         this._cancelSmoothTransform();
     }
@@ -665,7 +783,7 @@ class FlyCamera extends EventHandler {
      * @returns {Mat4} - The camera transform.
      */
     update(dt) {
-        if (!this._element) {
+        if (!this._input) {
             return this._transform;
         }
 
@@ -678,8 +796,7 @@ class FlyCamera extends EventHandler {
 
     destroy() {
         this.detach();
-        this._input.off();
     }
 }
 
-export { FlyCamera };
+export { Input, JoystickInput, KeyboardMouseInput, FlyCamera };

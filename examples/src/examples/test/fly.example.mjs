@@ -2,7 +2,7 @@
 import { deviceType, rootPath, localImport } from 'examples/utils';
 import * as pc from 'playcanvas';
 
-const { FlyCamera } = await localImport('fly-camera.mjs');
+const { JoystickInput, KeyboardMouseInput, FlyCamera } = await localImport('fly-camera.mjs');
 
 const canvas = document.getElementById('application-canvas');
 if (!(canvas instanceof HTMLCanvasElement)) {
@@ -83,11 +83,18 @@ camera.setPosition(0, 20, 30);
 camera.setEulerAngles(-20, 0, 0);
 app.root.addChild(camera);
 
-/** @type {FlyCamera} */
+let input;
+if (pc.platform.mobile) {
+    input = new JoystickInput(canvas);
+} else {
+    input = new KeyboardMouseInput(canvas);
+}
+input.attach(canvas);
+
 const flyCamera = new FlyCamera();
 flyCamera.rotateSpeed = 0.3;
 flyCamera.rotateDamping = 0.95;
-flyCamera.attach(app.graphicsDevice.canvas, camera.getWorldTransform());
+flyCamera.attach(input, camera.getWorldTransform());
 
 app.on('update', (dt) => {
     if (app.xr?.active) {
@@ -100,6 +107,7 @@ app.on('update', (dt) => {
 });
 
 app.on('destroy', () => {
+    input.destroy();
     flyCamera.destroy();
 });
 
